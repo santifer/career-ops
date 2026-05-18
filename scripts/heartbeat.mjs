@@ -350,6 +350,64 @@ function renderSignalPulseSection() {
 //   2. Fallback: top-scored row in ACTIONABLE_STATUSES regardless of age.
 //   3. Fallback: "Queue empty" message with dashboard link.
 // Design: dominant card with #16a34a accent border, large CTA button.
+// ── NEXT MOVES section ───────────────────────────────────────────────────
+// Reads data/next-moves.json (baked by build-dashboard.mjs OR refreshed by
+// scripts/compute-next-moves.mjs). Renders the top 3 ranked actions with
+// cost/impact/composite + a "see all" link to the full drill-in.
+//
+// Sits ABOVE Tonight's Apply because it's the synthesis layer — answers
+// "what should I do next?" first, then "if you only do one thing tonight"
+// is the bigger green Tonight's Apply card below.
+function renderNextMovesSection() {
+  let nm = null;
+  try {
+    const fp = join(ROOT, 'data/next-moves.json');
+    if (existsSync(fp)) nm = JSON.parse(readFileSync(fp, 'utf-8'));
+  } catch (_) { return ''; }
+  if (!nm || !Array.isArray(nm.top_moves) || nm.top_moves.length === 0) return '';
+
+  const d = nm.deadline_stats || {};
+  const urgencyColor = d.days_left <= 30 ? '#dc2626' : d.days_left <= 60 ? '#d97706' : '#16a34a';
+  const urgencyBg    = d.days_left <= 30 ? '#fef2f2' : d.days_left <= 60 ? '#fffbeb' : '#f0fdf4';
+  const urgencyBorder = d.days_left <= 30 ? '#fca5a5' : d.days_left <= 60 ? '#fcd34d' : '#86efac';
+
+  const top3 = nm.top_moves.slice(0, 3);
+  const restCount = Math.max(0, nm.top_moves.length - 3);
+
+  const moveCards = top3.map((m) => {
+    const kindLabel = String(m.kind || '').replace(/_/g, ' ');
+    const cta = m.cta || {};
+    let ctaHref = `${DASHBOARD_PUBLIC_URL}/`;
+    if (cta.kind === 'open-row-drawer' && cta.row_num != null) ctaHref = deeplink('row', cta.row_num);
+    else if (cta.kind === 'open-company-profile' && cta.slug) ctaHref = `${DASHBOARD_PUBLIC_URL}/?focus=company-${cta.slug}`;
+    return `<div style="margin:6px 0;padding:10px 12px;background:#ffffff;border:1px solid #e5e7eb;border-left:3px solid ${urgencyColor};border-radius:6px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px">
+        <span style="font-size:10px;font-weight:700;color:${urgencyColor};text-transform:uppercase;letter-spacing:0.05em">${m.rank}. ${escapeHtml(kindLabel)}</span>
+        <span style="font-size:10px;color:#6b7280;font-family:monospace">~${m.cost_hours}h · ${m.composite_score}</span>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#111827;line-height:1.4;margin-bottom:3px">${escapeHtml(m.label || '')}</div>
+      <div style="font-size:11px;color:#6b7280;line-height:1.5">${escapeHtml(m.evidence || '')}</div>
+      <a href="${ctaHref}" style="display:inline-block;margin-top:6px;color:${urgencyColor};font-size:11px;text-decoration:underline">Open →</a>
+    </div>`;
+  }).join('');
+
+  const seeAllHref = `${DASHBOARD_PUBLIC_URL}/?focus=next-moves`;
+  return `<div class="next-moves-card" style="margin:6px 0 8px;padding:14px 16px;background:${urgencyBg};border:2px solid ${urgencyBorder};border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${urgencyColor};margin-bottom:4px">Next moves · ${d.days_left != null ? d.days_left + ' days left' : ''}</div>
+  <div style="font-size:12px;color:#374151;margin-bottom:8px">${d.apps_applied || 0} applied of ~${(d.apps_applied||0)+(d.apps_needed_estimate||0)} needed · <strong>${d.apps_per_week_required || '—'}/week required</strong></div>
+  ${moveCards}
+  ${restCount > 0 ? `<div style="margin-top:8px"><a href="${seeAllHref}" style="color:${urgencyColor};font-size:11px;text-decoration:none">+${restCount} more ranked action${restCount === 1 ? '' : 's'} · skip-this-week list →</a></div>` : ''}
+</div>`.trim();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function renderTonightsApplySection(applyNow) {
   if (!applyNow || applyNow.length === 0) {
     return `<div class="tonight-card" style="margin:6px 0 8px;padding:14px 16px;background:#f0fdf4;border:2px solid #86efac;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
@@ -544,6 +602,16 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   }
 
   let actionSectionsHtml = '';
+  // §0 NEXT MOVES — synthesis layer (top 3 + see-all link)
+  // Shows ONLY when data/next-moves.json exists with ranked moves; otherwise
+  // section is omitted (the function returns ''). Sits above Tonight's Apply
+  // because it's the ranked overview — Tonight's Apply is the one-thing-to-
+  // do-tonight pick that follows from the same data.
+  const nextMovesHtml = renderNextMovesSection();
+  if (nextMovesHtml) {
+    actionSectionsHtml += sectionLabel('Next Moves', true);
+    actionSectionsHtml += nextMovesHtml;
+  }
   // §1 TONIGHT'S APPLY — accent label (loudest)
   actionSectionsHtml += sectionLabel("Tonight's Apply", true);
   actionSectionsHtml += tonightsApplyHtml;

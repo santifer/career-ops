@@ -36,6 +36,8 @@ import { getIndustryGapRanking, renderIndustryGapTable }           from '../lib/
 import { assessTravelTradeoff, renderTravelChip }                  from '../lib/travel-cap.mjs';
 import { computeStrategyCeiling, renderStrategyCard }              from '../lib/strategy-ceiling.mjs';
 import { renderEquitySlidersHtml }                                 from '../lib/equity-calculator.mjs';
+import { computeNextMoves }                                        from '../lib/next-moves.mjs';
+import { loadNextMovesInputs }                                     from '../lib/next-moves-inputs.mjs';
 import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/negotiation-playbook.mjs';
 import { checkGap as llmCheckGap, renderEvidenceCard }            from '../lib/llm-evidence.mjs';
 import { checkGap as netCheckGap, findContactsAtCompany, findLeveragePathTo, renderNetworkCard } from '../lib/network-graph.mjs';
@@ -4076,6 +4078,21 @@ async function build() {
     // TPgM full widget HTML — stored for the readiness drill-in renderer.
     // Escaped so it can be JSON-stringified safely.
     _cbData.tpgmWidgetHtml = tpgmWidgetHtml;
+
+    // ── Next Moves (2026-05-18): synthesis layer that answers
+    //    "what should I do next?" by ranking actions across the
+    //    career-ops surface (apply / follow-up / DM / refresh / ship).
+    //    Pure function — no I/O at score time. Inputs loader does the
+    //    file reads. Also writes data/next-moves.json + .md so the
+    //    heartbeat email + standalone CLI can read the same result.
+    try {
+      const _nmInputs = loadNextMovesInputs();
+      const _nmResult = computeNextMoves({ ..._nmInputs, topN: 5, skipN: 8 });
+      _cbData.nextMoves = _nmResult;
+      try {
+        writeFileSync(join(ROOT, 'data/next-moves.json'), JSON.stringify(_nmResult, null, 2));
+      } catch (_) { /* non-fatal */ }
+    } catch (_) { _cbData.nextMoves = { top_moves: [], skip_list: [], deadline_stats: {} }; }
 
     // P0-2 fix (2026-05-18): previous strategy double-escaped apostrophes
     // (replace(/'/g, "\\'")) which produced JS-valid but JSON-INVALID output —
@@ -10370,6 +10387,33 @@ async function build() {
   ${funnelNudgeHtml}
 
   <div class="stats" id="overview-section">
+    ${(() => {
+      // 2026-05-18: Next Moves hero card — the synthesis layer that answers
+      // "what should I do next?" Reads data/next-moves.json (baked by
+      // computeNextMoves() in the cb-data section above; falls back to a
+      // disk read for the standalone CLI path).
+      let nm = null;
+      try {
+        const fp = join(ROOT, 'data/next-moves.json');
+        if (existsSync(fp)) nm = JSON.parse(readFileSync(fp, 'utf-8'));
+      } catch (_) {}
+      if (!nm || !nm.top_moves || !nm.top_moves.length) return '';
+      const m = nm.top_moves[0];
+      const d = nm.deadline_stats || {};
+      const kindLabel = String(m.kind || '').replace(/_/g, ' ');
+      const safeLabel = String(m.label || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const safeEvidence = String(m.evidence || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const otherCount = Math.max(0, nm.top_moves.length - 1);
+      return `<div class="next-move-hero" onclick="window.drillIn('next-moves','',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('next-moves','',event)}" role="button" tabindex="0" title="See all ranked moves + skip list" style="cursor:pointer;margin-bottom:12px;padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);border-left:4px solid var(--green-fg,#16a34a);border-radius:8px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+          <span style="font-size:10px;font-weight:700;color:var(--green-fg,#16a34a);text-transform:uppercase;letter-spacing:0.06em">Next move · ${String(kindLabel)}</span>
+          <span style="font-size:10px;color:var(--text-4);font-family:monospace">~${m.cost_hours}h · ${d.days_left != null ? d.days_left + ' days left' : ''}</span>
+        </div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px">${safeLabel}</div>
+        <div style="font-size:11.5px;color:var(--text-3);line-height:1.5">${safeEvidence}</div>
+        ${otherCount > 0 ? `<div style="margin-top:8px;font-size:11px;color:var(--text-4)">+${otherCount} more ranked action${otherCount === 1 ? '' : 's'} &middot; <span style="color:var(--link);text-decoration:underline">see all &rsaquo;</span></div>` : ''}
+      </div>`;
+    })()}
     <div class="stats-hero-row">
       <div class="stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue" role="button" tabindex="0">
         <div class="hero-sparkline-bg" aria-hidden="true">${heroSparklineSVG(kpiSpark.applyNow.daily, 'Apply-Now')}</div>
@@ -13619,6 +13663,85 @@ _drillInRegister('source-context', function(id) {
     }
   });
 })();
+
+// ── next-moves drill-in ──────────────────────────────────────────────────
+// Synthesis layer that answers "what should I do next?" by ranking actions
+// across the career-ops surface (apply / follow-up / DM / refresh / ship).
+// Reads window._waveCB.nextMoves baked at build time by scripts/build-
+// dashboard.mjs via lib/next-moves.mjs + lib/next-moves-inputs.mjs.
+_drillInRegister('next-moves', function() {
+  var cb = window._waveCB || {};
+  var nm = cb.nextMoves || { top_moves: [], skip_list: [], deadline_stats: {} };
+  function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  var d = nm.deadline_stats || {};
+  // Header — deadline burn-down
+  var urgencyColor = d.days_left <= 30 ? 'var(--red-fg,#dc2626)' : d.days_left <= 60 ? 'var(--amber-fg,#d97706)' : 'var(--green-fg,#16a34a)';
+  var headerHtml = '<div style="padding:12px 14px;background:var(--surface-2);border-left:3px solid ' + urgencyColor + ';border-radius:6px;margin-bottom:14px">'
+    + '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">'
+    +   '<span style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em">Deadline burn-down</span>'
+    +   '<span style="font-size:20px;font-weight:700;color:' + urgencyColor + ';line-height:1">' + (d.days_left == null ? '—' : d.days_left) + '</span>'
+    +   '<span style="font-size:11px;color:var(--text-3)">days left to ' + _esc(d.deadline_iso || '—') + '</span>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text-3);margin-top:6px">'
+    +   _esc(String(d.apps_applied || 0)) + ' applied of ~' + _esc(String((d.apps_applied||0)+(d.apps_needed_estimate||0))) + ' needed &middot; '
+    +   '<strong>' + _esc(String(d.apps_per_week_required || '—')) + '/week</strong> required'
+    + '</div>'
+    + '</div>';
+  // Top moves
+  var topHtml = '';
+  if (!nm.top_moves || !nm.top_moves.length) {
+    topHtml = '<p style="font-size:12px;color:var(--text-4);padding:10px 0">No actions ranked above threshold. Run a scan or evaluate something to populate the queue.</p>';
+  } else {
+    topHtml = '<div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px">Top ' + nm.top_moves.length + ' actions this week</div>';
+    topHtml += nm.top_moves.map(function(m) {
+      var kindBadgeColor = m.kind === 'apply' ? 'var(--green-fg,#16a34a)' : m.kind === 'follow_up' ? 'var(--amber-fg,#d97706)' : m.kind === 'dm' ? 'var(--blue-fg,#2563eb)' : 'var(--text-3)';
+      var cta = m.cta || {};
+      var ctaHtml = '';
+      if (cta.kind === 'open-row-drawer' && cta.row_num != null) {
+        ctaHtml = '<button type="button" class="dcard-btn" onclick="closeTopLevelDrillIn();(function(){var r=document.querySelector(&apos;tr.row[data-num=&quot;' + _esc(String(cta.row_num)) + '&quot;]&apos;);if(r){r.scrollIntoView({behavior:&apos;smooth&apos;,block:&apos;center&apos;});r.style.outline=&apos;2px solid var(--green)&apos;;setTimeout(function(){r.style.outline=&apos;&apos;;},2000);if(typeof toggleDetail===&apos;function&apos;){var id=r.dataset.rowId;if(id)toggleDetail(id);}}})()" style="margin-top:8px">Open row ' + _esc(String(cta.row_num)) + ' &rsaquo;</button>';
+      } else if (cta.kind === 'open-company-profile' && cta.slug) {
+        ctaHtml = '<button type="button" class="dcard-btn" onclick="window.drillIn(&apos;company&apos;,&apos;' + _esc(cta.slug) + '&apos;,event)" style="margin-top:8px">Open ' + _esc(cta.slug) + ' company profile &rsaquo;</button>';
+      } else if (cta.kind === 'open-outreach-contact' && cta.slug) {
+        ctaHtml = '<button type="button" class="dcard-btn" onclick="window.drillIn(&apos;company&apos;,&apos;' + _esc(cta.slug) + '&apos;,event)" style="margin-top:8px">Open ' + _esc(cta.slug) + ' outreach &rsaquo;</button>';
+      } else if (cta.kind === 'note' && cta.text) {
+        ctaHtml = '<div style="margin-top:8px;padding:6px 10px;background:var(--surface);border:1px dashed var(--border);border-radius:4px;font-size:11px;color:var(--text-2);font-family:monospace">' + _esc(cta.text) + '</div>';
+      }
+      return '<div style="padding:10px 12px;margin:8px 0;background:var(--surface);border:1px solid var(--border);border-left:3px solid ' + kindBadgeColor + ';border-radius:6px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px">'
+        +   '<span style="font-size:11px;font-weight:700;color:' + kindBadgeColor + ';text-transform:uppercase;letter-spacing:0.05em">' + m.rank + '. ' + _esc(m.kind.replace(/_/g,' ')) + '</span>'
+        +   '<span style="font-size:10px;color:var(--text-4);font-family:monospace">~' + _esc(String(m.cost_hours)) + 'h &middot; score ' + _esc(String(m.composite_score)) + '</span>'
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text);font-weight:600;line-height:1.4;margin-bottom:3px">' + _esc(m.label) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-3);line-height:1.5">' + _esc(m.evidence) + '</div>'
+        + ctaHtml
+        + '</div>';
+    }).join('');
+  }
+  // Skip list
+  var skipHtml = '';
+  if (nm.skip_list && nm.skip_list.length) {
+    skipHtml = '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">'
+      + '<div style="font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:6px">Skip this week (' + nm.skip_list.length + ')</div>'
+      + '<div style="font-size:10px;color:var(--text-4);margin-bottom:8px">Things that look actionable but fail a gate or score below threshold.</div>'
+      + nm.skip_list.map(function(s) {
+        return '<div style="font-size:11px;color:var(--text-3);padding:4px 0;border-bottom:1px solid var(--border);line-height:1.4">'
+          + '<span style="color:var(--text-2)">' + _esc(s.label) + '</span> &middot; <span style="color:var(--text-4)">' + _esc(s.reason) + '</span>'
+          + '</div>';
+      }).join('')
+      + '</div>';
+  }
+  // Scoring footer
+  var notes = nm.scoring_notes || {};
+  var noteHtml = '<div style="margin-top:14px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text-4);font-family:monospace;line-height:1.6">'
+    + (notes.candidate_count != null ? notes.candidate_count + ' candidates considered' : '')
+    + (notes.formula ? '<br>formula: ' + _esc(notes.formula) : '')
+    + (nm.generated_at ? '<br>generated: ' + _esc(nm.generated_at) : '')
+    + '</div>';
+  return {
+    title: 'Next moves — what to do this week',
+    html: headerHtml + topHtml + skipHtml + noteHtml,
+  };
+});
 
 _drillInRegister('status', function(id) {
   var status = id || '';
