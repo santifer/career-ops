@@ -348,6 +348,29 @@ export async function fanOutDrafts({
   const dmAgent    = unwrap(dmResult);
   const ffAgent    = unwrap(ffResult);
 
+  // Fix 3: completeness ledger — track which stages produced live output
+  // vs which fell back to scaffold stubs. Written to pack.json so Mitchell
+  // can see at a glance which artifacts need manual review.
+  // Schema: { live_stages: string[], scaffold_stages: string[] }
+  const completeness = {
+    live_stages: [],
+    scaffold_stages: [],
+  };
+  const stageMap = [
+    ['cv-tailor',     cvAgent],
+    ['cover-letter',  clAgent],
+    ['why-statement', whyAgent],
+    ['linkedin-dm',   dmAgent],
+    ['form-fields',   ffAgent],
+  ];
+  for (const [stageName, agentResult] of stageMap) {
+    if (agentResult && agentResult.status === 'ok' && agentResult.output !== null) {
+      completeness.live_stages.push(stageName);
+    } else {
+      completeness.scaffold_stages.push(stageName);
+    }
+  }
+
   // Scaffold fallback stubs — used when sub-agent output is null (dry-run or
   // error). In live mode, sub-agents will populate output directly and these
   // stubs will be bypassed by the non-null output branch below.
@@ -390,6 +413,9 @@ export async function fanOutDrafts({
     why_statement:    (whyAgent?.output ?? null) || whyFallback,
     linkedin_dm:      (dmAgent?.output  ?? null) || dmFallback,
     form_field_answers: (ffAgent?.output ?? null) || ffFallback,
+    // Fix 3: completeness field — surfaces which stages are live vs scaffold
+    // so Mitchell can see at a glance which artifacts need manual review.
+    completeness,
   };
 }
 
@@ -636,6 +662,15 @@ export async function orchestrateApplyPack({
 
 function renderReadme(pack, { dryRun }) {
   const policy = pack.inputs.company_ai_policy || {};
+  // Fix 3: completeness block in README header — surfaced so Mitchell can see
+  // at a glance which artifacts are live-generated vs scaffold stubs.
+  const completeness = pack.artifacts?.completeness || { live_stages: [], scaffold_stages: [] };
+  const completenessBlock = completeness.scaffold_stages.length > 0
+    ? `\n> **Completeness:** ${completeness.live_stages.length} live stages (${completeness.live_stages.join(', ') || 'none'}) · ${completeness.scaffold_stages.length} scaffold stages (${completeness.scaffold_stages.join(', ')}) — scaffold artifacts need manual review.\n`
+    : completeness.live_stages.length > 0
+      ? `\n> **Completeness:** All ${completeness.live_stages.length} stages live — no scaffolds.\n`
+      : '';
+
   return `# Apply Pack — ${pack.meta.company} — ${pack.meta.role}
 
 **Row:** ${pack.meta.row_id}
@@ -644,7 +679,7 @@ function renderReadme(pack, { dryRun }) {
 **Pipeline version:** ${pack.meta.pipeline_version}
 **Generated:** ${pack.meta.generated_at}
 **Status:** ${pack.status}
-${dryRun ? '\n> **DRY-RUN SCAFFOLD** — no live LLM calls were made. Stage outputs are stubs.\n' : ''}
+${dryRun ? '\n> **DRY-RUN SCAFFOLD** — no live LLM calls were made. Stage outputs are stubs.\n' : ''}${completenessBlock}
 
 ## AI policy
 
