@@ -39,12 +39,30 @@ services:
     environment:
       CAREEROPS_WORKSPACE: /workspace
       CAREEROPS_WEB_PORT: "7681"
+      SCRAPER_URL: http://careerops-scraper:8000
     volumes:
       - ${CAREEROPS_PROJECT_DIR:-.}:/workspace
     networks:
       - careerops-net
     expose:
       - "7681"
+    depends_on:
+      - careerops-scraper
+
+  # Scrapling sidecar — anti-bot-aware JD fetcher. Heavier image (Python +
+  # browser bundles) intentionally separated from the main container so the
+  # auth proxy + ttyd stay lean. Only the auth proxy talks to it.
+  careerops-scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    image: careerops-scraper:latest
+    container_name: careerops-scraper
+    restart: unless-stopped
+    networks:
+      - careerops-net
+    expose:
+      - "8000"
 
 networks:
   careerops-net:

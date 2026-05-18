@@ -47,6 +47,7 @@ ENV LANG=en_US.UTF-8 \
 COPY --from=dashboard-builder /out/career-dashboard /usr/local/bin/career-dashboard
 COPY --from=auth-builder /opt/auth/node_modules /opt/auth/node_modules
 COPY auth/package.json auth/server.mjs auth/login.html /opt/auth/
+COPY auth/overlay /opt/auth/overlay
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
