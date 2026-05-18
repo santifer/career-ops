@@ -7926,6 +7926,76 @@ function build() {
     display: flex; gap: 8px;
     position: sticky; bottom: 0;
   }
+  /* Inventory #12 (2026-05-18): sticky comparative ribbon — prev/next within current scope */
+  .drawer-ribbon {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+  }
+  .drawer-ribbon-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color .12s, color .12s, background .12s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .drawer-ribbon-btn:hover,
+  .drawer-ribbon-btn:focus-visible {
+    color: var(--text);
+    border-color: var(--text-3);
+    background: var(--surface);
+  }
+  .drawer-ribbon-btn[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .drawer-ribbon-arrow { color: var(--text-3); font-weight: 700; flex-shrink: 0; }
+  .drawer-ribbon-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--text-4); flex-shrink: 0;
+  }
+  .drawer-ribbon-text {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0; flex: 1;
+  }
+  .drawer-ribbon-scope {
+    font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 0 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .drawer-ribbon-kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-3);
+    background: var(--surface);
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+  @media (min-width: 721px) { .drawer-ribbon-kbd { display: inline-block; } }
   .drawer-action-bar button {
     flex: 1; padding: 10px 12px;
     border: 1px solid var(--border);
@@ -7968,6 +8038,17 @@ function build() {
   tr.row.row-selected > td { background: var(--surface-2); }
   tr.row.row-selected > td:first-child {
     box-shadow: inset 3px 0 0 var(--green-fg);
+  }
+  /* Inventory #10 (2026-05-18): deeplink pulse for ?focus= targets.
+     Brief glow so the user knows where the heartbeat link landed them. */
+  .deeplink-target {
+    animation: deeplinkPulse 1.8s ease-out;
+    border-radius: var(--radius-sm);
+  }
+  @keyframes deeplinkPulse {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--link, #0969da) 60%, transparent), 0 0 0 0 var(--link, #0969da); }
+    25%  { box-shadow: 0 0 0 4px color-mix(in srgb, var(--link, #0969da) 35%, transparent), 0 0 0 1px var(--link, #0969da); }
+    100% { box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent; }
   }
   /* Desktop ≥1280px: drawer is always 420px and the body gets right
      padding equal to the drawer so content can scroll under but isn't
@@ -9468,6 +9549,10 @@ function build() {
     <div class="drawer-header" id="right-rail-header"></div>
     <div class="drawer-body" id="right-rail-body"></div>
     <div class="drawer-action-bar" id="right-rail-actions"></div>
+    <!-- Inventory #12 (2026-05-18): sticky comparative ribbon. Treats the
+         current scope (Apply-Now queue OR full eval table) as a navigable
+         list. Keyboard: Alt+← / Alt+→ moves prev/next without leaving drawer. -->
+    <nav class="drawer-ribbon" id="right-rail-ribbon" aria-label="Drawer navigation"></nav>
   </aside>
 
   <!-- Pull-to-refresh indicator (mobile only, JS-driven) -->
@@ -11545,6 +11630,11 @@ function openRightRailForDetail(idx, detailRow) {
   document.querySelectorAll('tr.row.row-selected').forEach(el => el.classList.remove('row-selected'));
   if (row) row.classList.add('row-selected');
 
+  // Inventory #12 (2026-05-18): populate sticky prev/next ribbon. Scope is
+  // the same tbody as the originating row (Apply-Now or All Evals), so
+  // navigation stays inside the user's current view.
+  _populateDrawerRibbon(row);
+
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
   document.body.classList.add('right-rail-open');
@@ -11783,6 +11873,108 @@ function _drawerPollApplyPack(jobId, num, expectedDir, btnEl) {
 window.drawerCreateMaterials = drawerCreateMaterials;
 window.closeRightRail = closeRightRail;
 window.openRightRailForDetail = openRightRailForDetail;
+
+// Inventory #12 (2026-05-18): sticky drawer ribbon populator.
+// Resolves prev/next row within the same tbody (Apply-Now scope OR All Evals)
+// so navigation stays inside the user's current view. Keyboard shortcut:
+// Alt+ArrowLeft and Alt+ArrowRight while the drawer is open jumps to the
+// neighbor without leaving the drawer.
+function _populateDrawerRibbon(currentRow) {
+  var ribbon = document.getElementById('right-rail-ribbon');
+  if (!ribbon) return;
+  if (!currentRow) {
+    ribbon.innerHTML = '';
+    return;
+  }
+  var tbody = currentRow.closest('tbody');
+  var scopeLabel = 'All evals';
+  if (tbody && tbody.id === 'apply-now-tbody') scopeLabel = 'Apply-Now queue';
+  else if (tbody && tbody.id === 'all-tbody') scopeLabel = 'All evals';
+  else if (tbody && tbody.id) scopeLabel = tbody.id.replace(/-tbody$/, '').replace(/-/g, ' ');
+
+  // Visible peer rows in the same tbody (skip detail-row + display:none rows).
+  var peerRows = tbody
+    ? Array.from(tbody.querySelectorAll(':scope > tr.row')).filter(function(tr) {
+        if (tr.style.display === 'none') return false;
+        return true;
+      })
+    : [];
+  var idx = peerRows.indexOf(currentRow);
+  var prev = idx > 0 ? peerRows[idx - 1] : null;
+  var next = idx >= 0 && idx < peerRows.length - 1 ? peerRows[idx + 1] : null;
+
+  function _label(tr) {
+    if (!tr) return '';
+    var company = (tr.querySelector('a.company-link strong, td strong') || {}).textContent || '';
+    var role = (tr.querySelector('td.role-cell a.role-link, td.role-cell') || {}).textContent || '';
+    var text = (company + ' — ' + role).replace(/\s+/g, ' ').trim();
+    return text.slice(0, 60);
+  }
+
+  function _btn(side, peer, kbdLabel) {
+    if (!peer) {
+      return '<span class="drawer-ribbon-btn" aria-disabled="true"><span class="drawer-ribbon-arrow">' + (side === 'prev' ? '←' : '→') + '</span><span class="drawer-ribbon-text">' + (side === 'prev' ? 'No previous' : 'No next') + '</span></span>';
+    }
+    var rowId = peer.dataset.rowId || peer.dataset.num || '';
+    var label = _label(peer);
+    var arrow = side === 'prev' ? '<span class="drawer-ribbon-arrow">←</span>' : '';
+    var arrowRight = side === 'next' ? '<span class="drawer-ribbon-arrow">→</span>' : '';
+    var kbd = '<span class="drawer-ribbon-kbd">⌥' + (side === 'prev' ? '←' : '→') + '</span>';
+    var inner = side === 'prev'
+      ? (arrow + '<span class="drawer-ribbon-label">Prev</span><span class="drawer-ribbon-text">' + label + '</span>' + kbd)
+      : (kbd + '<span class="drawer-ribbon-label">Next</span><span class="drawer-ribbon-text">' + label + '</span>' + arrowRight);
+    return '<button type="button" class="drawer-ribbon-btn" data-ribbon-row="' + rowId + '" aria-label="' + (side === 'prev' ? 'Previous' : 'Next') + ' role: ' + label.replace(/"/g, '&quot;') + '">' + inner + '</button>';
+  }
+
+  var positionText = (idx >= 0)
+    ? (idx + 1) + ' / ' + peerRows.length
+    : '–';
+
+  ribbon.innerHTML =
+    _btn('prev', prev) +
+    '<span class="drawer-ribbon-scope" title="Scope: ' + scopeLabel + '">' + positionText + '</span>' +
+    _btn('next', next);
+
+  // Wire clicks to toggleDetail (same code path as clicking a row).
+  ribbon.querySelectorAll('button.drawer-ribbon-btn[data-ribbon-row]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var rowId = btn.dataset.ribbonRow;
+      if (rowId && typeof window.toggleDetail === 'function') {
+        window.toggleDetail(rowId);
+      }
+    });
+  });
+
+  // Keyboard handler: Alt+ArrowLeft / Alt+ArrowRight. Attach once globally;
+  // we keep a single _ribbonKeyHandler bound so re-population doesn't stack.
+  if (!window._ribbonKeyHandler) {
+    window._ribbonKeyHandler = function(e) {
+      if (!e.altKey) return;
+      var drawer = document.getElementById('right-rail-drawer');
+      if (!drawer || !drawer.classList.contains('open')) return;
+      var ribbon = document.getElementById('right-rail-ribbon');
+      if (!ribbon) return;
+      var btns = ribbon.querySelectorAll('button.drawer-ribbon-btn[data-ribbon-row]');
+      if (e.key === 'ArrowLeft' && btns[0]) {
+        e.preventDefault();
+        btns[0].click();
+      } else if (e.key === 'ArrowRight') {
+        var nextBtn = btns.length === 2 ? btns[1] : (btns[0]?.dataset?.ribbonRow && ribbon.querySelectorAll('.drawer-ribbon-btn').length === 2 ? btns[0] : null);
+        // simpler: the last button-with-data-ribbon-row is "next"
+        var rightBtn = btns[btns.length - 1];
+        if (rightBtn && rightBtn !== btns[0]) {
+          e.preventDefault();
+          rightBtn.click();
+        } else if (btns.length === 1) {
+          // only one visible; can't go right
+        }
+      }
+    };
+    document.addEventListener('keydown', window._ribbonKeyHandler);
+  }
+}
+window._populateDrawerRibbon = _populateDrawerRibbon;
 window.setUseInlineExpand = setUseInlineExpand;
 
 // ── Wave C-A Item 1 + C-B: Universal drill-in registry ──────────────────
@@ -20010,6 +20202,84 @@ _bulkUpdateBar();
     const haveDesc = curState[0]?.desc === true;
     if (haveDesc !== wantDesc) th.click();
   } catch (e) { /* never block dashboard load on URL parse error */ }
+})();
+
+// Inventory #10 (2026-05-18): consume ?focus= deeplinks emitted by the
+// heartbeat email. Recognized forms:
+//   ?focus=apply-now           — scroll to + briefly highlight Apply-Now section
+//   ?focus=outreach            — scroll to Outreach Pulse (or expand if collapsed)
+//   ?focus=row:42              — open the row drawer for row #42
+//   ?focus=company:anthropic   — open the company drill-in
+//   ?focus=section-id          — scroll to any element with id=section-id
+// Highlight uses a 1.8s pulse via the .deeplink-target class (defined below).
+(function _consumeFocusDeeplink() {
+  try {
+    var params = new URLSearchParams(location.search);
+    var focus = params.get('focus');
+    if (!focus) return;
+    // Defer so all sections, drill-in registry, and event listeners are ready.
+    var apply = function () {
+      var parts = focus.split(':');
+      var kind = parts[0] || '';
+      var id = parts.slice(1).join(':');
+      // Drill-in kinds resolve via window.drillIn (company / row / metric / etc.)
+      if (kind === 'row') {
+        // Find the row by num; toggleDetail handles the drawer open.
+        var row = document.querySelector('tr.row[data-num="' + id + '"]');
+        if (row) {
+          var rowId = row.dataset.rowId || row.dataset.num;
+          if (rowId && typeof window.toggleDetail === 'function') {
+            window.toggleDetail(rowId);
+          }
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          row.classList.add('deeplink-target');
+          setTimeout(function () { row.classList.remove('deeplink-target'); }, 1800);
+        }
+        return;
+      }
+      if (kind === 'company' && typeof window.drillIn === 'function') {
+        window.drillIn('company', id);
+        return;
+      }
+      if (kind === 'apply-now' || focus === 'apply-now') {
+        var sec = document.getElementById('apply-now-section') || document.querySelector('[id^="apply-now"]');
+        if (sec) {
+          sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          sec.classList.add('deeplink-target');
+          setTimeout(function () { sec.classList.remove('deeplink-target'); }, 1800);
+        }
+        return;
+      }
+      if (kind === 'outreach' || focus === 'outreach') {
+        var op = document.getElementById('outreach-pulse');
+        if (op) {
+          op.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Auto-expand the banner if collapsed.
+          var banner = op.querySelector('.op-banner');
+          var expanded = op.querySelector('.op-expanded');
+          if (banner && expanded && expanded.style.display === 'none') {
+            var chevron = banner.querySelector('.op-banner-toggle, [aria-controls]');
+            if (chevron) chevron.click();
+          }
+          op.classList.add('deeplink-target');
+          setTimeout(function () { op.classList.remove('deeplink-target'); }, 1800);
+        }
+        return;
+      }
+      // Generic fallback: try a direct ID match
+      var el = document.getElementById(focus);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.add('deeplink-target');
+        setTimeout(function () { el.classList.remove('deeplink-target'); }, 1800);
+      }
+    };
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(apply, 250);
+    } else {
+      document.addEventListener('DOMContentLoaded', function () { setTimeout(apply, 250); });
+    }
+  } catch (e) { /* never block dashboard load on deeplink parse error */ }
 })();
 
 // ── PWA service worker ─────────────────────────────────────────
