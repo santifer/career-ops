@@ -45,3 +45,15 @@ bun.lock
 .claude/memory/
 career-dashboard
 package-lock.json
+
+# Docker Compose local overrides (deployment-specific bind paths, networks…)
+*.override.yml
+
+# SMTP credentials for tools/send-application-mail.mjs
+.env.mail
+
+# Personal apply bundles (cover letters, rate-screen emails, etc. — per-user)
+batch/apply-docs/
+
+# Personal proof points (user-layer per DATA_CONTRACT.md)
+article-digest.md

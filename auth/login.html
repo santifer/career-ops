@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e1e2e">
+  <title>career-ops · sign in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ─────────────────────────────────────────────────────────────
+       Catppuccin Mocha — matches the TUI dashboard behind the auth
+       ───────────────────────────────────────────────────────────── */
+    :root {
+      --base:     #1e1e2e;
+      --mantle:   #181825;
+      --crust:    #11111b;
+      --text:     #cdd6f4;
+      --subtext1: #bac2de;
+      --subtext0: #a6adc8;
+      --overlay2: #9399b2;
+      --overlay1: #7f849c;
+      --overlay0: #6c7086;
+      --surface2: #585b70;
+      --surface1: #45475a;
+      --surface0: #313244;
+      --peach:    #fab387;
+      --yellow:   #f9e2af;
+      --green:    #a6e3a1;
+      --red:      #f38ba8;
+      --teal:     #94e2d5;
+      --mauve:    #cba6f7;
+      --pink:     #f5c2e7;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--base);
+      color: var(--text);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 14px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Grain — subtle film texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: -50%;
+      background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      opacity: 0.045;
+      pointer-events: none;
+      z-index: 1;
+      animation: grain 8s steps(8) infinite;
+    }
+
+    /* Soft vignette to settle the edges */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 90% 70% at 50% 50%, transparent 0%, var(--crust) 110%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes grain {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -5%); }
+      30% { transform: translate(3%, -8%); }
+      50% { transform: translate(-3%, 5%); }
+      70% { transform: translate(5%, 3%); }
+      90% { transform: translate(-2%, -3%); }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       Layout
+       ───────────────────────────────────────────────────────────── */
+    .pane {
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Titlebar — like a terminal window chrome, minimised */
+    .titlebar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+      color: var(--overlay0);
+      letter-spacing: 0.06em;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fade-in 400ms ease-out forwards;
+    }
+    .titlebar-host {
+      color: var(--overlay1);
+    }
+    .titlebar-host::before {
+      content: '●  ';
+      color: var(--green);
+      font-size: 10px;
+      letter-spacing: 0;
+    }
+
+    /* The banner — boxed, with a tab-label cut into the top border */
+    .banner {
+      position: relative;
+      border: 1px solid var(--surface1);
+      padding: 2.5rem 2.5rem 2.25rem;
+      margin-bottom: 2.5rem;
+      background:
+        linear-gradient(180deg, transparent 0%, rgba(49, 50, 68, 0.12) 100%),
+        var(--base);
+      clip-path: inset(0 0 100% 0);
+      animation: reveal-banner 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards;
+    }
+    .banner-label {
+      position: absolute;
+      top: -0.65rem;
+      left: 1.5rem;
+      background: var(--base);
+      padding: 0 0.75rem;
+      font-size: 11px;
+      color: var(--peach);
+      letter-spacing: 0.08em;
+      text-transform: lowercase;
+    }
+    .banner-corner {
+      position: absolute;
+      top: -1px;
+      right: -1px;
+      border-top: 1px solid var(--peach);
+      border-right: 1px solid var(--peach);
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+    }
+    .brand {
+      font-family: 'Fraunces', 'Times New Roman', serif;
+      font-variation-settings: "opsz" 144, "SOFT" 50;
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(2.75rem, 7vw, 4.5rem);
+      line-height: 0.95;
+      color: var(--text);
+      letter-spacing: -0.045em;
+      margin-bottom: 1.25rem;
+      opacity: 0;
+      animation: fade-up 500ms ease-out 400ms forwards;
+    }
+    .brand-em {
+      color: var(--peach);
+      font-style: italic;
+    }
+    .tagline {
+      color: var(--subtext0);
+      font-size: 13px;
+      line-height: 1.7;
+      max-width: 32em;
+      opacity: 0;
+      animation: fade-up 400ms ease-out 650ms forwards;
+    }
+    .tagline em {
+      font-style: italic;
+      color: var(--text);
+    }
+
+    /* System info grid — looks like the output of `careerops status` */
+    .meta {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0.35rem 1.5rem;
+      margin-bottom: 1rem;
+      font-size: 12.5px;
+    }
+    .meta-row {
+      display: contents;
+      opacity: 0;
+      animation: fade-up 350ms ease-out forwards;
+    }
+    .meta-row:nth-child(1) { animation-delay: 850ms; }
+    .meta-row:nth-child(2) { animation-delay: 920ms; }
+    .meta-row:nth-child(3) { animation-delay: 990ms; }
+    .meta-row:nth-child(4) { animation-delay: 1060ms; }
+    .meta-key {
+      color: var(--overlay0);
+      letter-spacing: 0.05em;
+      text-transform: lowercase;
+    }
+    .meta-val {
+      color: var(--subtext0);
+    }
+    .meta-val .pos { color: var(--green); }
+    .meta-val .neu { color: var(--yellow); }
+    .meta-val .num { color: var(--text); font-weight: 500; }
+    .meta-val a { color: var(--teal); text-decoration: none; border-bottom: 1px dotted var(--surface2); }
+    .meta-val a:hover { color: var(--peach); border-bottom-color: var(--peach); }
+
+    /* Divider — sweeps in horizontally */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        var(--surface1) 8%,
+        var(--surface1) 92%,
+        transparent 100%);
+      margin: 2.5rem 0;
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: sweep 500ms cubic-bezier(0.4, 0, 0.2, 1) 1200ms forwards;
+    }
+
+    /* Prompt line — the heart of the terminal aesthetic */
+    .prompt-line {
+      color: var(--text);
+      font-size: 15px;
+      margin-bottom: 2rem;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      animation: fade-up 350ms ease-out 1400ms forwards;
+    }
+    .prompt-line::before {
+      content: '$ ';
+      color: var(--green);
+      font-weight: 700;
+    }
+    .prompt-line strong {
+      font-weight: 500;
+      color: var(--peach);
+    }
+    .prompt-line .cursor {
+      display: inline-block;
+      width: 0.5em;
+      height: 1em;
+      background: var(--text);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      animation: blink 1s steps(2) infinite;
+    }
+
+    /* Form */
+    .form {
+      opacity: 0;
+      animation: fade-up 450ms ease-out 1500ms forwards;
+    }
+    .field {
+      margin-bottom: 1.25rem;
+    }
+    .field-label {
+      display: block;
+      color: var(--mauve);
+      font-size: 12.5px;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.04em;
+    }
+    .field-label::before {
+      content: '> ';
+      color: var(--overlay0);
+    }
+    .input-wrap {
+      position: relative;
+      border: 1px solid var(--surface1);
+      background: var(--mantle);
+      transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+    .input-wrap:focus-within {
+      border-color: var(--peach);
+      background: var(--base);
+      box-shadow: 0 0 0 1px var(--peach), 0 0 32px -10px var(--peach);
+    }
+    .input-wrap::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0.8rem;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--surface2);
+      transform: translateY(-50%);
+      transition: background 180ms ease, box-shadow 180ms ease;
+    }
+    .input-wrap:focus-within::before {
+      background: var(--peach);
+      box-shadow: 0 0 6px var(--peach);
+    }
+    .input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 0.85rem 1rem 0.85rem 1.75rem;
+      letter-spacing: 0.02em;
+      caret-color: var(--peach);
+    }
+    .input::placeholder {
+      color: var(--overlay0);
+      font-style: italic;
+    }
+
+    /* Submit */
+    .submit-row {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .submit {
+      position: relative;
+      isolation: isolate;
+      font-family: inherit;
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: lowercase;
+      color: var(--peach);
+      background: transparent;
+      border: 1px solid var(--peach);
+      padding: 0.85rem 1.75rem 0.85rem 2rem;
+      cursor: pointer;
+      overflow: hidden;
+      transition: color 220ms ease, letter-spacing 220ms ease;
+    }
+    .submit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--peach);
+      transform: translateX(-101%);
+      transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: -1;
+    }
+    .submit:hover:not(:disabled) {
+      color: var(--base);
+      letter-spacing: 0.22em;
+    }
+    .submit:hover:not(:disabled)::before {
+      transform: translateX(0);
+    }
+    .submit:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+    .submit.success {
+      color: var(--base);
+      border-color: var(--green);
+    }
+    .submit.success::before {
+      background: var(--green);
+      transform: translateX(0);
+    }
+    .submit-hint {
+      color: var(--overlay0);
+      font-size: 12px;
+    }
+    .submit-hint kbd {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid var(--surface1);
+      border-bottom-width: 2px;
+      border-radius: 2px;
+      background: var(--mantle);
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--subtext0);
+      margin: 0 0.2em;
+      font-weight: 500;
+    }
+
+    /* Status line */
+    .status {
+      margin-top: 1.5rem;
+      padding: 0.65rem 1rem;
+      font-size: 12.5px;
+      border-left: 2px solid;
+      background: var(--mantle);
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .status.visible {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .status.error {
+      color: var(--red);
+      border-color: var(--red);
+      animation: shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+    .status.error::before {
+      content: '✗ ';
+      font-weight: 700;
+    }
+    .status.success {
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .status.success::before {
+      content: '✓ ';
+      font-weight: 700;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px dashed var(--surface1);
+      color: var(--overlay0);
+      font-size: 11.5px;
+      line-height: 1.85;
+      letter-spacing: 0.02em;
+      opacity: 0;
+      animation: fade-up 400ms ease-out 1750ms forwards;
+    }
+    .footer a {
+      color: var(--teal);
+      text-decoration: none;
+      border-bottom: 1px dotted transparent;
+      transition: border-color 180ms ease, color 180ms ease;
+    }
+    .footer a:hover {
+      color: var(--peach);
+      border-bottom-color: var(--peach);
+    }
+    .footer .footer-sep {
+      color: var(--surface1);
+      margin: 0 0.5em;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       Keyframes
+       ───────────────────────────────────────────────────────────── */
+    @keyframes reveal-banner {
+      from { clip-path: inset(0 0 100% 0); }
+      to   { clip-path: inset(0 0 0 0); }
+    }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes sweep {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes blink {
+      from, 50% { opacity: 1; }
+      50.01%, to { opacity: 0; }
+    }
+    @keyframes shake {
+      0%, 100%       { transform: translateX(0); }
+      10%, 50%, 90%  { transform: translateX(-4px); }
+      30%, 70%       { transform: translateX(4px); }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       Reduced motion
+       ───────────────────────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .banner { clip-path: none !important; }
+      .divider { transform: scaleX(1) !important; }
+      .brand, .tagline, .meta-row, .prompt-line, .form, .footer, .titlebar { opacity: 1 !important; }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       Small viewports
+       ───────────────────────────────────────────────────────────── */
+    @media (max-width: 520px) {
+      body { padding: 2rem 1.25rem; }
+      .banner { padding: 1.5rem 1.5rem 1.25rem; }
+      .meta { grid-template-columns: 90px 1fr; gap: 0.3rem 1rem; font-size: 11.5px; }
+      .submit-row { gap: 0.75rem; }
+      .submit-hint { font-size: 11px; }
+      .footer { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="pane" role="main">
+    <div class="titlebar">
+      <span class="titlebar-host" id="host">—</span>
+      <time id="now" datetime=""></time>
+    </div>
+
+    <section class="banner" aria-labelledby="brand">
+      <span class="banner-label">~/career-ops</span>
+      <span class="banner-corner" aria-hidden="true"></span>
+      <h1 id="brand" class="brand">career<span class="brand-em">·</span>ops</h1>
+      <p class="tagline">
+        AI-powered job-search command center. <em>14 evaluation modes</em>,
+        batch processing, portal scanning, ATS-optimised CV generation.
+        Forked from <a href="https://github.com/santifer/career-ops">santifer/career-ops</a> · running locally on your terminal.
+      </p>
+    </section>
+
+    <div class="meta" aria-label="system status">
+      <div class="meta-row">
+        <span class="meta-key">runtime</span>
+        <span class="meta-val">ttyd <span class="num">1.7.7</span> · go tui · catppuccin mocha</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">pipeline</span>
+        <span class="meta-val"><span class="num">25</span> applications evaluated · top score <span class="pos">4.6 / 5</span></span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">queue</span>
+        <span class="meta-val"><span class="num">3</span> rate-screens drafted · <span class="num">7</span> tailored CVs ready</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">session</span>
+        <span class="meta-val" id="session-info">awaiting authentication</span>
+      </div>
+    </div>
+
+    <div class="divider" role="separator"></div>
+
+    <p class="prompt-line">careerops <strong>login</strong><span class="cursor" aria-hidden="true"></span></p>
+
+    <form class="form" id="login-form" autocomplete="on" novalidate>
+      <div class="field">
+        <label class="field-label" for="user">user</label>
+        <div class="input-wrap">
+          <input
+            class="input"
+            id="user"
+            name="user"
+            type="text"
+            autocomplete="username"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            inputmode="email"
+            placeholder="username"
+            required
+            autofocus
+          >
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="pass">pass</label>
+        <div class="input-wrap">
+          <input
+            class="input"
+            id="pass"
+            name="pass"
+            type="password"
+            autocomplete="current-password"
+            placeholder="•••••••••••"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button class="submit" type="submit" id="submit-btn">
+          <span id="submit-label">authenticate</span>
+        </button>
+        <span class="submit-hint">press <kbd>↵</kbd> to sign in</span>
+      </div>
+
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </form>
+
+    <footer class="footer">
+      careerops · <a href="https://github.com/santifer/career-ops">github.com/santifer/career-ops</a>
+      <span class="footer-sep">·</span> web-gui auth proxy
+      <span class="footer-sep">·</span> behind this login: a tmux pane streaming the Bubble Tea pipeline viewer
+    </footer>
+  </main>
+
+  <script>
+    // Titlebar: derive host from the page URL so the login adapts to any deployment
+    document.getElementById('host').textContent = window.location.host;
+
+    // Live clock in the titlebar
+    const $now = document.getElementById('now');
+    const $session = document.getElementById('session-info');
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop() || 'UTC';
+    function tick() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} ${tz}`;
+      $now.textContent = stamp;
+      $now.setAttribute('datetime', d.toISOString());
+    }
+    tick();
+    setInterval(tick, 30_000);
+
+    // Form submission
+    const $form   = document.getElementById('login-form');
+    const $btn    = document.getElementById('submit-btn');
+    const $label  = document.getElementById('submit-label');
+    const $status = document.getElementById('status');
+    const $user   = document.getElementById('user');
+    const $pass   = document.getElementById('pass');
+
+    function setStatus(kind, text) {
+      $status.className = 'status';
+      // force reflow so the animation re-fires on consecutive errors
+      void $status.offsetWidth;
+      if (kind) {
+        $status.classList.add(kind, 'visible');
+        $status.textContent = text;
+      }
+    }
+
+    $form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if ($btn.disabled) return;
+      $btn.disabled = true;
+      $label.textContent = 'authenticating…';
+      setStatus(null);
+
+      try {
+        const resp = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ user: $user.value, pass: $pass.value }),
+        });
+
+        if (resp.ok) {
+          $btn.classList.add('success');
+          $label.textContent = '✓ authenticated';
+          $session.textContent = 'granted · redirecting';
+          setStatus('success', 'session established · loading terminal…');
+          // Tiny pause so the success state is visible
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 550);
+        } else {
+          $btn.disabled = false;
+          $label.textContent = 'authenticate';
+          setStatus('error', 'authentication failed · verify credentials and try again');
+          $pass.value = '';
+          $pass.focus();
+        }
+      } catch (err) {
+        $btn.disabled = false;
+        $label.textContent = 'authenticate';
+        setStatus('error', `network error · ${err && err.message ? err.message : 'request failed'}`);
+      }
+    });
+
+    // ⌃C-style escape clears the form (terminal muscle-memory)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        $user.value = '';
+        $pass.value = '';
+        $user.focus();
+      }
+    });
+  </script>
+</body>
+</html>

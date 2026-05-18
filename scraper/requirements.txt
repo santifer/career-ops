@@ -1,0 +1,6 @@
+fastapi>=0.115,<0.116
+uvicorn[standard]>=0.32,<0.40
+pydantic>=2.7,<3
+# Scrapling 0.4.x split out optional fetcher deps. We need StealthyFetcher
+# (Camoufox) + DynamicFetcher (Playwright) — both pull curl_cffi and others.
+scrapling[fetchers]>=0.4,<1
