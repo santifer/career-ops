@@ -262,6 +262,23 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **Support**: help questions go to Discord/Discussions, not issues (see `SUPPORT.md`)
 - **Discord**: https://discord.gg/8pRpHETxa4
 
+## Scheduled vs. User-Initiated Scripts
+
+The 17 launchd plists in `scripts/launchd/` cover the unattended pipeline:
+scan, batch, heartbeat, weekly-intel, audit, company-pulse, signal-monitor,
+liveness-sweep, etc. — these run autonomously on a schedule.
+
+**Three scripts deliberately do NOT have launchd plists** and stay user-initiated:
+
+| Script | Why user-initiated | How to invoke |
+|---|---|---|
+| `scripts/hiring-manager-research.mjs` | Each run costs $5-$30 across 5+ LLM APIs (Sonnet, Opus, Grok-4.3, Grok-Heavy, Perplexity Deep, optional Gemini Deep + OpenAI Pro). Auto-scheduling would compound budget risk and could double-bill on overlapping daily runs. | CLI `--pilot` / `--all` / `--role` flags, or the drawer's "Re-run HM research" CTA |
+| `scripts/hm-gemini-backfill.mjs` | Each Gemini Deep Research interaction runs 20-60 min and Mitchell decides which roles deserve it. | CLI `--kickoff` then `--poll` later |
+| `scripts/process-all-pipeline.mjs` | Wraps triage + batch + rebuild + heartbeat-email into one chain. Manual trigger is the safety gate — auto-scheduling would risk Process All firing while triage or batch was already running from its own schedule. | Sidebar 🚀 **Process All** button (which POSTs to `/api/pipeline/process-all`) |
+
+The trigger matrix (16 surfaces) in the functionality inventory always reachable
+via the dashboard sidebar buttons + row drawer CLI snippets — no plist needed.
+
 ## Headless / Batch Mode
 
 When spawning headless workers for batch processing, use the appropriate command for your CLI:
