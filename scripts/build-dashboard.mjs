@@ -1956,8 +1956,17 @@ function loadLiveScanEvents(limit = 5, topRolesMap) {
   const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n').filter(l => l.trim());
   if (lines.length < 2) return { events: [], lastScanIso: new Date(mtime).toISOString() };
   const groups = new Map();
+  // Track the actual scanned roles per (date,company) so the ticker drill-in
+  // can show the list instead of just a count (Mitchell's "8 new roles" complaint).
+  const rolesByGroup = new Map();
   for (let i = 1; i < lines.length; i++) {
-    const [, first_seen, , , company, status] = lines[i].split('\t');
+    const cols = lines[i].split('\t');
+    const url = cols[0];
+    const first_seen = cols[1];
+    const portal = cols[2];
+    const title = cols[3];
+    const company = cols[4];
+    const status = cols[5];
     if (!first_seen || !company) continue;
     if (status && status.trim() !== 'added') continue;
     const trimmed = company.trim();
@@ -1965,11 +1974,13 @@ function loadLiveScanEvents(limit = 5, topRolesMap) {
     if (!trimmed || trimmed.startsWith('(') || /^unknown$/i.test(trimmed)) continue;
     const key = `${first_seen}__${trimmed}`;
     groups.set(key, (groups.get(key) || 0) + 1);
+    if (!rolesByGroup.has(key)) rolesByGroup.set(key, []);
+    rolesByGroup.get(key).push({ url, title: (title || '').trim(), portal });
   }
   const sorted = [...groups.entries()]
     .map(([k, count]) => {
       const [date, company] = k.split('__');
-      return { date, company, count };
+      return { date, company, count, key: k };
     })
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.count - a.count));
   const newestDate = sorted.length ? sorted[0].date : null;
@@ -1979,11 +1990,17 @@ function loadLiveScanEvents(limit = 5, topRolesMap) {
     // Attempt to find the top-scored evaluated role for this company.
     const slug = g.company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const topRole = (topRolesMap && topRolesMap.get(slug)) || null;
+    // Inventory bug fix (2026-05-18): include the actual N scanned role
+    // titles + URLs so the "N new roles" link can drill into a useful list
+    // instead of opening the generic scan-activity modal.
+    const roles = (rolesByGroup.get(g.key) || []).slice(0, 50);
     return {
       company: g.company,
+      slug,
       count: g.count,
       ts: new Date(ts).toISOString(),
       topRole: topRole ? { role: topRole.role, score: topRole.score, rowId: topRole.rowId } : null,
+      roles,
     };
   });
   return { events, lastScanIso: new Date(mtime).toISOString() };
@@ -10018,7 +10035,12 @@ async function build() {
        click-to-popout pattern). The previous in-place pill-popover on mc-health
        is replaced by the system-health modal for full launchd + tunnel detail. -->
   <div class="mc-strip" id="mc-strip" role="status" aria-label="Mission-control telemetry strip">
-    <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity — click to see all scans" tabindex="0" role="button" title="Click for recent scan activity (portal · jobs found · jobs new)" onclick="openScanActivityModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openScanActivityModal()}">
+    <!-- 2026-05-18 bug fix: wrapper-click stacking-modal regression.
+         Previous inline onclick fired openScanActivityModal() on EVERY click
+         inside the ticker, including drill-span clicks → user saw the
+         "useless queue" stacked above the company drill-in popout.
+         Wrapper now smart-skips when the click target is a specific drill. -->
+    <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity — click to see all scans" tabindex="0" role="button" title="Click for recent scan activity (portal · jobs found · jobs new)" onclick="if(!event.target.closest(&apos;.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]&apos;))openScanActivityModal()" onkeydown="if((event.key==='Enter'||event.key===' ')&&!event.target.closest('.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]')){event.preventDefault();openScanActivityModal()}">
       <span class="live-dot" id="live-dot" aria-hidden="true"></span>
       <span class="live-text" id="live-text">—</span>
     </div>
@@ -10945,19 +10967,32 @@ function _escHtmlTicker(s) {
 // Uses data-action attribute + delegated handler to avoid inline quote nesting issues.
 function _tickerMoreHtml(extra) {
   if (extra <= 0) return '';
-  return ' <span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles for this company">+' + extra + ' more</span>';
+  // 2026-05-18 bug fix: "+N more" + "N new roles" now drill into the
+  // scan-batch popout (which shows the actual scanned role titles + URLs
+  // for THIS company) instead of opening the generic scan-activity modal.
+  var slug = (window._currentTickerEv && window._currentTickerEv.slug) || '';
+  if (!slug) return ' <span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles">+' + extra + ' more</span>';
+  return ' <span class="ticker-more-link" tabindex="0" role="button" data-drill="scan-batch:' + slug + '" data-slug="' + slug + '" title="See all newly scanned roles for this company">+' + extra + ' more</span>';
 }
 function _liveFormat(ev) {
+  // Stash the current event so _tickerMoreHtml can reach the slug.
+  window._currentTickerEv = ev;
   var ageStr = _liveAge(Date.now() - new Date(ev.ts).getTime());
+  var slug = ev.slug || '';
   var countPart;
   if (ev.topRole && ev.topRole.role) {
     var extra = ev.count - 1;
     countPart = _tickerRoleHtml(ev.topRole.role, ev.topRole.rowId, ev.topRole.score)
       + (extra > 0 ? _tickerMoreHtml(extra) : '');
-  } else {
-    // Fallback: no evaluated role match — show aggregate count, clickable to modal
+  } else if (slug) {
+    // Useful fallback: no evaluated match, but we have the scanned roles list.
+    // Drill into scan-batch popout that shows the actual N role titles + URLs.
     var label = ev.count + ' new role' + (ev.count === 1 ? '' : 's');
-    countPart = '<span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles">' + label + '</span>';
+    countPart = '<span class="ticker-more-link" tabindex="0" role="button" data-drill="scan-batch:' + slug + '" data-slug="' + slug + '" title="See all newly scanned roles for ' + (ev.company || '') + '">' + label + '</span>';
+  } else {
+    // Legacy fallback when no slug — keep the old behavior.
+    var label2 = ev.count + ' new role' + (ev.count === 1 ? '' : 's');
+    countPart = '<span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles">' + label2 + '</span>';
   }
   return 'Scanned ' + _tickerCompanyHtml(ev.company) + ' &middot; ' + countPart + ' &middot; ' + ageStr;
 }
@@ -12583,7 +12618,7 @@ async function loadUpdateDrawerRecent() {
       const text = _updateDrawerEscape(e.text || '');
       return '<button type="button" class="update-drawer-recent-row" ' +
         'data-text="' + text + '" ' +
-        'onclick="openUpdateDrawer({prefillText: this.getAttribute(\'data-text\')})">' +
+        'onclick="openUpdateDrawer({prefillText: this.getAttribute(&apos;data-text&apos;)})">' +
         '<div class="update-drawer-recent-row-meta">' +
           '<span>' + date + '</span>' +
           '<span class="update-drawer-recent-tag">' + tag + '</span>' +
@@ -12617,7 +12652,7 @@ async function loadSidebarRecentUpdates() {
       return '<button type="button" class="sidebar-recent-update-row" ' +
         'data-text="' + fullText + '" ' +
         'title="' + preview + '" ' +
-        'onclick="openUpdateDrawer({prefillText: this.getAttribute(\'data-text\')})">' +
+        'onclick="openUpdateDrawer({prefillText: this.getAttribute(&apos;data-text&apos;)})">' +
         '<div class="sidebar-recent-update-meta">' +
           '<span class="sidebar-recent-update-date">' + date + '</span>' +
           '<span class="sidebar-recent-update-tag">' + tag + '</span>' +
@@ -13862,7 +13897,7 @@ _drillInRegister('wealth-ranking', function(id) {
   var sortHtml = '<div style="display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap">'
     + '<span style="font-size:11px;color:var(--text-3);letter-spacing:0.04em;text-transform:uppercase;font-weight:600">Sort by<\/span>'
     + '<select id="wealth-rank-sort" '
-    + 'onchange="window._wealthRankingSort=this.value;window.drillIn(\'wealth-ranking\',\'sort:\'+this.value,event)" '
+    + 'onchange="window._wealthRankingSort=this.value;window.drillIn(&apos;wealth-ranking&apos;,&apos;sort:&apos;+this.value,event)" '
     + 'style="font-size:12px;padding:4px 8px;border-radius:6px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);cursor:pointer">'
     + sortOptions.map(function(o) {
         var sel = (o.key === sortKey) ? ' selected' : '';
@@ -13896,9 +13931,9 @@ _drillInRegister('wealth-ranking', function(id) {
       : '';
     var scoreBarPct = Math.max(0, Math.min(100, r.score || 0));
     return '<tr class="wealth-rank-row" data-slug="' + _esc(r.slug) + '" '
-      + 'onclick="window.drillIn(\'company\',\'' + _esc(r.slug) + '\',event)" '
+      + 'onclick="window.drillIn(&apos;company&apos;,&apos;' + _esc(r.slug) + '&apos;,event)" '
       + 'role="button" tabindex="0" '
-      + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();window.drillIn(\'company\',\'' + _esc(r.slug) + '\',event)}" '
+      + 'onkeydown="if(event.key===&apos;Enter&apos;||event.key===&apos; &apos;){event.preventDefault();event.stopPropagation();window.drillIn(&apos;company&apos;,&apos;' + _esc(r.slug) + '&apos;,event)}" '
       + 'title="Click for the full company drill-in" '
       + 'style="cursor:pointer">'
       + '<td style="font-size:13px;color:var(--text-3);width:36px;padding:8px 6px;text-align:right;font-variant-numeric:tabular-nums">#' + rank + '<\/td>'
@@ -14019,6 +14054,65 @@ _drillInRegister('pack-stage-result', function(id) {
       + bodyHtml,
   };
 });
+
+// 2026-05-18 bug fix: scan-batch drill-in — surfaces the actual list of
+// N newly-scanned roles for a company. Replaces the "8 new roles" link's
+// old behavior of opening the generic scan-activity modal. Each role row
+// in the popout is clickable to its JD URL in a new tab. Source data:
+// the roles array baked into each LIVE_TICKER_DATA event.
+_drillInRegister('scan-batch', function(id) {
+  var slug = String(id || '').toLowerCase();
+  var data = (typeof LIVE_TICKER_DATA !== 'undefined' && LIVE_TICKER_DATA) ? LIVE_TICKER_DATA : (window.LIVE_TICKER_DATA || { events: [] });
+  var ev = (data.events || []).find(function(e) { return (e.slug || '').toLowerCase() === slug; });
+  if (!ev) {
+    return {
+      title: 'Newly scanned roles',
+      html: '<p style="font-size:12px;color:var(--text-3)">No scan event cached for this company in the last 5 batches. Open the scan activity modal for full history.</p>',
+    };
+  }
+  function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); }); }
+  var portalChip = function(p) {
+    var label = (p || '').replace(/-api$/, '').toLowerCase();
+    return '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:999px;background:var(--surface-2);color:var(--text-3);border:1px solid var(--border);margin-left:6px">' + _esc(label) + '</span>';
+  };
+  var rowsHtml = (ev.roles || []).map(function(r) {
+    return '<li style="margin:0;padding:9px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;justify-content:space-between">'
+      +   '<a href="' + _esc(r.url || '#') + '" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;flex:1;min-width:0;font-size:13px;line-height:1.4">'
+      +     _esc(r.title || '(no title)')
+      +   '</a>'
+      +   portalChip(r.portal || '')
+      + '</li>';
+  }).join('');
+  return {
+    title: ev.count + ' newly scanned · ' + (ev.company || slug),
+    html:
+      '<p style="font-size:12px;color:var(--text-3);margin:0 0 12px">Scanned ' + ev.ts.slice(0, 10) + ' via ' + ((ev.roles[0] || {}).portal || 'multi-portal') + '. These rows are pre-triage — none have been evaluated yet. Click a title to open the JD; the next batch run will pull whichever ones pass the title filter.</p>'
+      + '<ul style="list-style:none;padding:0;margin:0;max-height:520px;overflow:auto">' + rowsHtml + '</ul>'
+      + (ev.roles.length < ev.count ? '<p style="font-size:11px;color:var(--text-4);margin:12px 0 0">Showing ' + ev.roles.length + ' of ' + ev.count + ' (truncated). Run <code>node scripts/scan-stats.mjs --slug=' + _esc(slug) + '</code> for the full list.</p>' : ''),
+  };
+});
+
+// 2026-05-18: delegated handler for scan-batch drill links (the "N new roles"
+// span in the live ticker). e.stopPropagation prevents the wrapper's
+// openScanActivityModal from also firing.
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-drill^="scan-batch:"]');
+    if (!el) return;
+    e.stopPropagation();
+    var slug = el.dataset.slug || (el.dataset.drill || '').split(':')[1] || '';
+    if (slug && window.drillIn) window.drillIn('scan-batch', slug, e);
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('[data-drill^="scan-batch:"]');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation(); e.preventDefault();
+      var slug = el.dataset.slug || (el.dataset.drill || '').split(':')[1] || '';
+      if (slug && window.drillIn) window.drillIn('scan-batch', slug, e);
+    }
+  });
+})();
 
 // B2 (2026-05-18): Industry Gap Radar drill-in. v1 ships a 12-industry
 // composite-scored table (finance/health/legal/insurance/aerospace) — Mitchell
