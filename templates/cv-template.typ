@@ -80,7 +80,7 @@
 
 // ── Job entry macro ──────────────────────────────────────────────────────────
 
-#let job-entry(company: "", role: "", period: "", location: "", bullets: ()) = {
+#let job-entry(company: "", role: "", period: "", location: "", team_context: "", bullets: ()) = {
   grid(
     columns: (1fr, auto),
     gutter: 8pt,
@@ -94,6 +94,10 @@
       h(6pt)
       text(size: 10pt, fill: rgb("#888888"), location)
     }
+  }
+  if team_context != "" {
+    v(3pt)
+    text(size: 10pt, fill: body-gray, team_context)
   }
   v(3pt)
   if bullets.len() > 0 {
@@ -209,6 +213,11 @@
 
 #align(left)[
   #text(size: 26pt, weight: "bold", fill: ink, "{{NAME}}")
+  #if "{{TAGLINE}}" != "" [
+    #linebreak()
+    #v(2pt)
+    #text(size: 13pt, weight: "regular", fill: body-gray, "{{TAGLINE}}")
+  ]
   #linebreak()
   #v(3pt)
   #set text(size: 10pt, fill: muted)
@@ -236,13 +245,9 @@
 
 #v(4pt)
 
-// ── Core Competencies ────────────────────────────────────────────────────────
+// ── Core Competencies (rendered only when cv.md has a competencies section) ──
 
-#section-heading("Core Competencies")
-#set text(size: 10pt, fill: ink)
-{{COMPETENCIES}}
-
-#v(4pt)
+{{COMPETENCIES_BLOCK}}
 
 // ── Work Experience ──────────────────────────────────────────────────────────
 

@@ -91,6 +91,7 @@ function checkTypst() {
 function parseCvMarkdown(cvText) {
   const tokens = {
     NAME:               '',
+    TAGLINE:            '',
     PHONE:              '',
     EMAIL:              '',
     LINKEDIN_URL:       '',
@@ -100,6 +101,7 @@ function parseCvMarkdown(cvText) {
     LOCATION:           '',
     SUMMARY_TEXT:       '',
     COMPETENCIES:       '',
+    COMPETENCIES_BLOCK: '',
     EXPERIENCE:         '',
     PROJECTS:           '',
     EDUCATION:          '',
@@ -110,6 +112,10 @@ function parseCvMarkdown(cvText) {
   const lines = cvText.split('\n');
   let currentSection = '';
   const sectionBuffers = {};
+  let firstH2Consumed = false;
+  // Standard section names — anything else for the first H2 is treated as a
+  // tagline shown under the name.
+  const STANDARD_SECTIONS = /^(summary|professional summary|about|contact|header|experience|work experience|professional experience|employment|projects|personal projects|education|certifications|licenses & certifications|skills|technical skills|core competencies|competencies|skills summary)$/i;
 
   for (const line of lines) {
     // H1 = name
@@ -121,7 +127,15 @@ function parseCvMarkdown(cvText) {
     // H2 = top-level contact / section headings
     const h2 = line.match(/^## (.+)/);
     if (h2) {
-      currentSection = h2[1].trim().toLowerCase();
+      const heading = h2[1].trim();
+      if (!firstH2Consumed && !STANDARD_SECTIONS.test(heading)) {
+        // Non-standard first H2 → render as a tagline under the name.
+        tokens.TAGLINE = heading;
+        firstH2Consumed = true;
+        continue;
+      }
+      firstH2Consumed = true;
+      currentSection = heading.toLowerCase();
       sectionBuffers[currentSection] = sectionBuffers[currentSection] || [];
       continue;
     }
@@ -260,10 +274,23 @@ function parseCvMarkdown(cvText) {
       compTags.push(l);
     }
   }
-  // Build Typst inline code: wrap each in competency-tag()
-  tokens.COMPETENCIES = compTags.length
-    ? compTags.map(t => `#competency-tag("${escapeTypst(t)}")`).join('\n')
-    : '(see cv.md)';
+  // Build Typst inline code: wrap each in competency-tag(). If the cv.md has
+  // no competencies section, emit an empty block so the section heading is
+  // skipped entirely (template uses {{COMPETENCIES_BLOCK}} which contains the
+  // heading + content together).
+  if (compTags.length) {
+    const tagBlock = compTags.map(t => `#competency-tag("${escapeTypstStr(stripMarkdown(t))}")`).join('\n');
+    tokens.COMPETENCIES_BLOCK =
+      `#section-heading("Core Competencies")\n` +
+      `#set text(size: 10pt, fill: ink)\n` +
+      `${tagBlock}\n` +
+      `#v(4pt)`;
+  } else {
+    tokens.COMPETENCIES_BLOCK = '';
+  }
+  // Preserve COMPETENCIES for backward compatibility with any custom template
+  // that still substitutes the old token name.
+  tokens.COMPETENCIES = tokens.COMPETENCIES_BLOCK ? compTags.map(t => `#competency-tag("${escapeTypstStr(stripMarkdown(t))}")`).join('\n') : '';
 
   // ── Work Experience → Typst job-entry() calls ─────────────────────────────
 
@@ -319,8 +346,8 @@ function parseCvMarkdown(cvText) {
   // - NAME and *_URL land inside Typst string literals "..." → only \ and " need escaping.
   // - Other singletons (phone, email, location, *_DISPLAY, summary) land in content mode,
   //   where @ becomes a label reference, # is a command, and ** parses as a Typst delimiter.
-  const escapeTypstStr = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   tokens.NAME              = escapeTypstStr(tokens.NAME);
+  tokens.TAGLINE           = escapeTypstStr(stripMarkdown(tokens.TAGLINE));
   tokens.LINKEDIN_URL      = escapeTypstStr(tokens.LINKEDIN_URL);
   tokens.PORTFOLIO_URL     = escapeTypstStr(tokens.PORTFOLIO_URL);
   tokens.PHONE             = escapeTypst(tokens.PHONE);
@@ -339,12 +366,21 @@ function escapeTypst(s) {
   // Convert markdown **bold** → Typst *bold* (Typst uses single-* delimiters;
   // leaving raw ** produces unclosed-delimiter errors in inline content).
   // Then escape Typst special characters: # " \ @
+  // For values that land inside a Typst string literal "...", use
+  // escapeTypstStr instead — # and @ have no special meaning in strings, and
+  // backslash-escaping them produces visible \# / \@ in the output.
   return String(s)
     .replace(/\*\*(.+?)\*\*/g, '*$1*')
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
     .replace(/#/g, '\\#')
     .replace(/@/g, '\\@');
+}
+
+function escapeTypstStr(s) {
+  // For values that land inside a Typst string literal "...". Only the string
+  // delimiter and backslash need escaping; #, @, and * are literal inside strings.
+  return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
 // Strip markdown formatting markers from text that will be rendered as a
@@ -384,6 +420,7 @@ function convertSectionToTypst(lines, macroName) {
   let role = '';
   let period = '';
   let location = '';
+  let context = '';
   let bullets = [];
   let inEntry = false;
   let metaLineSeen = false;
@@ -391,17 +428,18 @@ function convertSectionToTypst(lines, macroName) {
 
   function flush() {
     if (!inEntry || (!company && !role)) return;
-    const bulletArgs = bullets.map(b => `"${escapeTypst(b)}"`).join(',\n    ');
+    const bulletArgs = bullets.map(b => `"${escapeTypstStr(b)}"`).join(',\n    ');
     typstBlocks.push(
       `#${macroName}(\n` +
-      `  company: "${escapeTypst(company)}",\n` +
-      `  role: "${escapeTypst(role)}",\n` +
-      `  period: "${escapeTypst(period)}",\n` +
-      `  location: "${escapeTypst(location)}",\n` +
+      `  company: "${escapeTypstStr(company)}",\n` +
+      `  role: "${escapeTypstStr(role)}",\n` +
+      `  period: "${escapeTypstStr(period)}",\n` +
+      `  location: "${escapeTypstStr(location)}",\n` +
+      `  team_context: "${escapeTypstStr(context)}",\n` +
       `  bullets: (${bulletArgs})\n` +
       `)`
     );
-    company = role = period = location = '';
+    company = role = period = location = context = '';
     bullets = [];
     inEntry = false;
     metaLineSeen = false;
@@ -451,7 +489,14 @@ function convertSectionToTypst(lines, macroName) {
       continue;
     }
 
-    // Otherwise: context paragraph or other non-bullet content — skip.
+    // Context paragraph: appears after the meta line and before any bullet.
+    // Multiple paragraph lines (separated by blank lines) are joined with a space.
+    if (metaLineSeen && !bulletsStarted) {
+      context = context ? `${context} ${stripMarkdown(l)}` : stripMarkdown(l);
+      continue;
+    }
+
+    // Otherwise: stray content after bullets — skip.
   }
   flush();
 
@@ -469,10 +514,10 @@ function convertProjectsToTypst(lines) {
     if (!title) return;
     blocks.push(
       `#project-entry(\n` +
-      `  title: "${escapeTypst(title)}",\n` +
-      `  meta: "${escapeTypst(badge)}",\n` +
-      `  description: "${escapeTypst(descLines.join(' '))}",\n` +
-      `  tech: "${escapeTypst(tech)}"\n` +
+      `  title: "${escapeTypstStr(title)}",\n` +
+      `  meta: "${escapeTypstStr(badge)}",\n` +
+      `  description: "${escapeTypstStr(descLines.join(' '))}",\n` +
+      `  tech: "${escapeTypstStr(tech)}"\n` +
       `)`
     );
     title = badge = tech = '';
@@ -512,10 +557,10 @@ function convertEduToTypst(lines) {
     if (!degree) return;
     blocks.push(
       `#edu-entry(\n` +
-      `  degree: "${escapeTypst(degree)}",\n` +
-      `  institution: "${escapeTypst(org)}",\n` +
-      `  year: "${escapeTypst(year)}",\n` +
-      `  detail: "${escapeTypst(desc)}"\n` +
+      `  degree: "${escapeTypstStr(degree)}",\n` +
+      `  institution: "${escapeTypstStr(org)}",\n` +
+      `  year: "${escapeTypstStr(year)}",\n` +
+      `  detail: "${escapeTypstStr(desc)}"\n` +
       `)`
     );
     degree = org = year = desc = '';
@@ -588,9 +633,9 @@ function convertCertToTypst(lines) {
 
     blocks.push(
       `#cert-entry(\n` +
-      `  title: "${escapeTypst(title)}",\n` +
-      `  issuer: "${escapeTypst(issuer)}",\n` +
-      `  date: "${escapeTypst(date)}"\n` +
+      `  title: "${escapeTypstStr(title)}",\n` +
+      `  issuer: "${escapeTypstStr(issuer)}",\n` +
+      `  date: "${escapeTypstStr(date)}"\n` +
       `)`
     );
   }
