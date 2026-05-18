@@ -3066,6 +3066,46 @@ const server = createServer((req, res) => {
     }
   }
 
+  // ── POST /api/queue-research ────────────────────────────────────────────
+  // Queues a researcher-agent run by writing data/company-research-queue/{slug}.json.
+  // Picked up by scripts/company-research-worker.mjs (cron). Sections supported:
+  // 'all', 'toxicity', 'comp-range', 'reviews', 'social-signals', 'ipo-funding',
+  // 'funding-cycles'. Repeated POSTs for the same slug merge into one queue file
+  // with section history so we don't lose a request between cron ticks.
+  if (url === '/api/queue-research' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const slug = String(parsed.slug || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      const section = String(parsed.section || 'all').toLowerCase().replace(/[^a-z0-9-]+/g, '');
+      const ts = parsed.ts || new Date().toISOString();
+      if (!slug)    return json({ ok: false, error: 'slug required' }, 400);
+      if (!section) return json({ ok: false, error: 'section required' }, 400);
+      const queueDir = join(ROOT, 'data/company-research-queue');
+      try {
+        if (!existsSync(queueDir)) mkdirSync(queueDir, { recursive: true });
+        const fp = join(queueDir, slug + '.json');
+        let existing = { slug, sections: [], created_at: ts, updated_at: ts };
+        if (existsSync(fp)) {
+          try { existing = JSON.parse(readFileSync(fp, 'utf-8')); } catch (_) {}
+        }
+        existing.sections = existing.sections || [];
+        existing.sections.push({ section, ts });
+        existing.updated_at = ts;
+        existing.slug = slug;
+        writeFileSync(fp, JSON.stringify(existing, null, 2));
+        return json({ ok: true, slug, section, queue_file: 'data/company-research-queue/' + slug + '.json' });
+      } catch (e) {
+        return json({ ok: false, error: 'queue write failed: ' + e.message }, 500);
+      }
+    });
+    return;
+  }
+
   // ── GET /api/liveness?url=... ──────────────────────────────────────────
   // Liveness Phase 2 (2026-05-18, inventory item from strategy doc).
   // Realtime probe used by the drawer-open hook. 6h cache keyed by URL so

@@ -13136,26 +13136,31 @@ _drillInRegister('company', function(id) {
     var srcScanned = Array.isArray(toxData.sources_scanned) ? toxData.sources_scanned : [];
     var stateMarker = toxData._state === 'checked-clean' ? '<span style="font-size:10px;color:var(--green-fg,#16a34a);margin-left:6px">checked &middot; no signals</span>' : '';
 
-    var headerRow = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">'
+    var headerRow = '<div class="tox-score-headerrow drill-trigger" data-drill="toxicity-detail:' + _esc(slug) + '" tabindex="0" role="button" title="Click for full toxicity breakdown + weighting math" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;cursor:pointer;padding:4px;border-radius:4px">'
       + '<span style="font-size:30px;font-weight:700;color:' + txColor + ';line-height:1">' + txScore + '</span>'
       + '<span style="font-size:11px;color:var(--text-4)">/10</span>'
       + '<span style="font-size:12px;font-weight:600;color:' + txColor + '">' + txLabel + '</span>'
       + '<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--surface-2);color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em">' + _esc(txConf) + ' confidence</span>'
       + stateMarker
+      + '<span style="font-size:10px;color:var(--text-4);margin-left:auto" aria-hidden="true">explore &rsaquo;</span>'
       + '</div>'
       + '<div style="font-size:10px;color:var(--text-4);margin-bottom:8px">0=healthiest &middot; ' + drivers.length + ' driver' + (drivers.length===1?'':'s') + ' &middot; scanned: ' + (srcScanned.length ? srcScanned.map(_esc).join(', ') : 'none') + '</div>';
 
     var driverCardsHtml = '';
     if (drivers.length) {
-      driverCardsHtml = drivers.map(function(d) {
+      driverCardsHtml = drivers.map(function(d, dIdx) {
         var kindLabel = String(d.kind || '').replace(/_/g, ' ');
-        return '<div class="tox-driver-card" style="padding:8px 10px;margin:4px 0;background:var(--surface-2);border-left:3px solid ' + txColor + ';border-radius:4px">'
+        var driverKey = _esc(slug) + ':' + _esc(String(d.kind||'') + ':' + dIdx);
+        return '<div class="tox-driver-card drill-trigger" data-drill="source-context:' + driverKey + '" tabindex="0" role="button" title="Click for full source context — open the evidence row" style="padding:8px 10px;margin:4px 0;background:var(--surface-2);border-left:3px solid ' + txColor + ';border-radius:4px;cursor:pointer">'
           + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px">'
           +   '<span style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:capitalize">' + _esc(kindLabel) + '</span>'
           +   '<span style="font-size:10px;color:var(--text-4)">+' + (d.weight || 0) + '</span>'
           + '</div>'
           + '<div style="font-size:11px;color:var(--text-3);margin-top:3px;line-height:1.4">' + _esc(d.evidence || '') + '</div>'
-          + '<div style="font-size:10px;color:var(--text-4);margin-top:4px;font-family:monospace">source: ' + _esc(d.source || 'unknown') + '</div>'
+          + '<div style="font-size:10px;color:var(--text-4);margin-top:4px;font-family:monospace;display:flex;justify-content:space-between;align-items:center">'
+          +   '<span>source: ' + _esc(d.source || 'unknown') + '</span>'
+          +   '<span style="font-family:inherit;color:var(--text-4)" aria-hidden="true">open &rsaquo;</span>'
+          + '</div>'
           + '</div>';
       }).join('');
     } else {
@@ -13451,6 +13456,170 @@ document.addEventListener('click', function(e) {
     return;
   }
 });
+// ── toxicity-detail drill-in ─────────────────────────────────────────────────
+// Opens when Mitchell clicks the Composite Toxicity Score header in the
+// company-profile drill-in. Shows the full driver breakdown with weighting
+// math + total score derivation + recommendation, drivers as embedded
+// source-context cards. ID format: "{slug}".
+_drillInRegister('toxicity-detail', function(id) {
+  var cb = window._waveCB || {};
+  var slug = String(id || '').toLowerCase();
+  function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  var toxData = ((cb.toxicity || {})[slug]) || null;
+  if (!toxData) {
+    return {
+      title: 'Toxicity Detail',
+      html: '<p style="font-size:12px;color:var(--text-4)">No toxicity composite cached for this company. Click Refresh in the company profile to queue a research run.</p>',
+    };
+  }
+  var drivers = Array.isArray(toxData.drivers) ? toxData.drivers : [];
+  var overrides = Array.isArray(toxData.overrides) ? toxData.overrides : [];
+  var srcScanned = Array.isArray(toxData.sources_scanned) ? toxData.sources_scanned : [];
+  var score = toxData.score;
+  var txColor = score <= 3 ? 'var(--green-fg,#16a34a)' : score <= 6 ? 'var(--amber-fg,#d97706)' : 'var(--red-fg,#dc2626)';
+  var label = score <= 3 ? 'Healthy' : score <= 6 ? 'Caution' : 'Avoid';
+  // Sum of weights = raw score; cap at 10 for display
+  var weightSum = drivers.reduce(function(a, d){ return a + (d.weight || 0); }, 0);
+  // Build math row
+  var mathHtml = '<div style="background:var(--surface-2);padding:10px 12px;border-radius:6px;margin-bottom:14px">'
+    + '<div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:6px">How this score was computed</div>'
+    + '<div style="font-family:monospace;font-size:11.5px;color:var(--text-3);line-height:1.7">'
+    +   drivers.map(function(d){
+          var k = String(d.kind||'').replace(/_/g,' ');
+          return '+' + (d.weight||0) + '  &middot; ' + _esc(k);
+        }).join('<br>')
+    +   (drivers.length ? '<br>' : '')
+    +   '<span style="color:var(--text-4)">─────────────</span><br>'
+    +   '<strong style="color:' + txColor + '">' + weightSum + ' raw &nbsp;&middot;&nbsp; capped at 10 &nbsp;&middot;&nbsp; ' + score + '/10 ' + label + '</strong>'
+    + '</div>'
+    + '<div style="font-size:10px;color:var(--text-4);margin-top:6px">Confidence: <strong>' + _esc(toxData.confidence||'low') + '</strong> &middot; Sources scanned: ' + (srcScanned.length ? srcScanned.map(_esc).join(', ') : 'none') + ' &middot; Hard rule: this score NEVER auto-trashes — Mitchell decides.</div>'
+    + '</div>';
+  // Driver breakdown
+  var driversHtml = '';
+  if (drivers.length) {
+    driversHtml = '<div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px">Driver breakdown</div>'
+      + drivers.map(function(d, dIdx){
+          var k = String(d.kind||'').replace(/_/g,' ');
+          var key = _esc(slug) + ':' + _esc(String(d.kind||'') + ':' + dIdx);
+          return '<div class="drill-trigger" data-drill="source-context:' + key + '" tabindex="0" role="button" style="padding:10px 12px;margin:6px 0;background:var(--surface);border:1px solid var(--border);border-left:3px solid ' + txColor + ';border-radius:6px;cursor:pointer">'
+            + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
+            +   '<span style="font-size:12px;font-weight:600;color:var(--text);text-transform:capitalize">' + _esc(k) + '</span>'
+            +   '<span style="font-size:11px;color:' + txColor + ';font-weight:600">+' + (d.weight||0) + '</span>'
+            + '</div>'
+            + '<div style="font-size:11.5px;color:var(--text-2);margin-top:5px;line-height:1.5">' + _esc(d.evidence||'') + '</div>'
+            + '<div style="font-size:10px;color:var(--text-4);margin-top:5px;font-family:monospace;display:flex;justify-content:space-between">'
+            +   '<span>' + _esc(d.source||'unknown') + '</span><span aria-hidden="true">open source row &rsaquo;</span>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+  } else {
+    driversHtml = '<p style="font-size:12px;color:var(--text-4);padding:6px 0">No toxicity drivers fired. This company is currently clean — score is purely a floor.</p>';
+  }
+  // Recommendation line
+  var recHtml = '<div style="margin-top:14px;padding:10px 12px;background:var(--surface-2);border-left:3px solid ' + txColor + ';border-radius:4px;font-size:11.5px;color:var(--text-2);line-height:1.5">';
+  if (score <= 3)      recHtml += '<strong>Recommendation:</strong> Proceed normally. No tradeoff to record.';
+  else if (score <= 6) recHtml += '<strong>Recommendation:</strong> Caution. Read the driver evidence above — if you still want to apply, use the team-level override button in the company profile to record the tradeoff.';
+  else                 recHtml += '<strong>Recommendation:</strong> Avoid by default. If you still apply, record an explicit override reason so future evals know you accepted the risk.';
+  recHtml += '</div>';
+  // Existing overrides
+  var ovrHtml = '';
+  if (overrides.length) {
+    ovrHtml = '<div style="margin-top:14px"><div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:6px">Existing tradeoff overrides</div>'
+      + overrides.map(function(o){
+          return '<div style="font-size:11px;color:var(--text-3);padding:4px 0;border-bottom:1px solid var(--border)">'
+            + '<span style="color:var(--text-4);font-size:10px">' + _esc((o.ts||'').slice(0,10)) + '</span> &middot; ' + _esc(o.override_reason||'')
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+  return {
+    title: 'Toxicity detail — ' + (toxData.company || slug),
+    html: mathHtml + driversHtml + recHtml + ovrHtml,
+  };
+});
+
+// ── source-context drill-in ──────────────────────────────────────────────────
+// Opens when Mitchell clicks a driver card. Shows the full evidence + source
+// file location + a deep-link button to open the source. ID format:
+// "{slug}:{kind}:{driverIdx}".
+_drillInRegister('source-context', function(id) {
+  var cb = window._waveCB || {};
+  function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  var parts = String(id || '').split(':');
+  var slug = (parts[0] || '').toLowerCase();
+  var kind = parts[1] || '';
+  var dIdx = parseInt(parts[2] || '0', 10);
+  var toxData = ((cb.toxicity || {})[slug]) || null;
+  if (!toxData) {
+    return {
+      title: 'Source context',
+      html: '<p style="font-size:12px;color:var(--text-4)">No source context available for this driver.</p>',
+    };
+  }
+  var drivers = Array.isArray(toxData.drivers) ? toxData.drivers : [];
+  // Match by kind + index (kind alone may not be unique if same source fires twice)
+  var d = drivers[dIdx] && drivers[dIdx].kind === kind ? drivers[dIdx]
+        : drivers.find(function(x){ return x.kind === kind; });
+  if (!d) {
+    return {
+      title: 'Source context',
+      html: '<p style="font-size:12px;color:var(--text-4)">Driver not found in cached toxicity data.</p>',
+    };
+  }
+  var kindLabel = String(d.kind||'').replace(/_/g,' ');
+  var src = String(d.source || '');
+  // Source deep-link: applications.md row → drawer; URL → open in new tab
+  var sourceCta = '';
+  var rowMatch = src.match(/applications\\.md\\s*\\(row\\s*(\\d+)\\)/i);
+  if (rowMatch) {
+    var rowN = rowMatch[1];
+    sourceCta = '<button type="button" class="dcard-btn" onclick="closeTopLevelDrillIn();(function(){var r=document.querySelector(&apos;tr.row[data-num=&quot;' + _esc(rowN) + '&quot;]&apos;);if(r){r.scrollIntoView({behavior:&apos;smooth&apos;,block:&apos;center&apos;});r.style.outline=&apos;2px solid var(--green)&apos;;setTimeout(function(){r.style.outline=&apos;&apos;;},2000);}else if(window.toast){window.toast(&apos;applications.md row ' + _esc(rowN) + ' not currently visible in tracker view&apos;,&apos;info&apos;);}})()" style="margin-top:10px">Jump to applications.md row ' + _esc(rowN) + ' &rsaquo;</button>';
+  } else if (/^https?:/.test(src)) {
+    sourceCta = '<a href="' + _esc(src) + '" target="_blank" rel="noopener" class="dcard-btn" style="display:inline-block;margin-top:10px;text-decoration:none">Open source URL &rsaquo;</a>';
+  } else {
+    sourceCta = '<span style="font-size:11px;color:var(--text-4);margin-top:10px;display:inline-block">Source: <code style="font-family:monospace">' + _esc(src) + '</code> (no deep-link available)</span>';
+  }
+  var html = '<div style="background:var(--surface-2);padding:14px;border-radius:6px;margin-bottom:14px">'
+    + '<div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;text-transform:capitalize">' + _esc(kindLabel) + '</div>'
+    + '<div style="font-size:12.5px;color:var(--text);line-height:1.6;white-space:pre-wrap">' + _esc(d.evidence||'') + '</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text-3);padding-top:8px;border-top:1px solid var(--border)">'
+    +   '<div><strong>Weight:</strong> +' + (d.weight||0) + ' on composite</div>'
+    +   '<div style="margin-top:4px"><strong>Source:</strong> <code style="font-family:monospace;font-size:10.5px">' + _esc(src) + '</code></div>'
+    +   sourceCta
+    + '</div>';
+  return {
+    title: 'Source context — ' + (toxData.company || slug) + ' · ' + kindLabel,
+    html: html,
+  };
+});
+
+// Delegated click + keyboard handlers for the new drill-trigger surfaces
+// (toxicity-detail, source-context). Other drill-in entrypoints have always-
+// inline onclick — these two use the data-drill attribute so card content
+// stays printable / nestable without quote-escape hell.
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-drill^="toxicity-detail:"], [data-drill^="source-context:"]');
+    if (!el) return;
+    e.stopPropagation();
+    var raw = el.dataset.drill || '';
+    var colon = raw.indexOf(':');
+    if (colon < 0) return;
+    var kind = raw.slice(0, colon);
+    var id = raw.slice(colon + 1);
+    if (window.drillIn) window.drillIn(kind, id, e);
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('[data-drill^="toxicity-detail:"], [data-drill^="source-context:"]');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault(); e.stopPropagation();
+      el.click();
+    }
+  });
+})();
+
 _drillInRegister('status', function(id) {
   var status = id || '';
   return {
@@ -14172,7 +14341,20 @@ function _ensureDrillInOverlay() {
   modal.setAttribute('aria-modal', 'true');
   modal.setAttribute('aria-labelledby', 'drill-in-title');
   modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1901;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;min-width:320px;max-width:min(540px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)';
-  modal.addEventListener('click', function(e) { e.stopPropagation(); });
+  // 2026-05-18: Don't blanket-stopPropagation. Drill-triggers nested INSIDE
+  // the drill-in modal (e.g., tox-score-headerrow → toxicity-detail,
+  // tox-driver-card → source-context) rely on document-level delegated
+  // handlers and were being swallowed. Only stop propagation when the click
+  // isn't on / inside something that wants to bubble (drill-trigger surfaces
+  // and refresh/override buttons). The backdrop has its own click listener
+  // for close — modal clicks not on the backdrop still won't close it.
+  modal.addEventListener('click', function(e) {
+    if (e.target.closest('.drill-trigger, [data-drill], .cp-refresh-btn, .tox-override-btn, .tox-override-submit, .tox-override-cancel, .dcard-btn, button, a, input, textarea')) {
+      // Let the click bubble to document-level delegated handlers
+      return;
+    }
+    e.stopPropagation();
+  });
   modal.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
     + '<h3 id="drill-in-title" style="margin:0;font-size:14px;font-weight:600"></h3>'
     + '<button type="button" onclick="closeTopLevelDrillIn()" aria-label="Close" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-3);line-height:1;padding:2px 6px">✕</button>'
