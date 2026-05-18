@@ -90,22 +90,21 @@ function checkTypst() {
  */
 function parseCvMarkdown(cvText) {
   const tokens = {
-    NAME:               '',
-    TAGLINE:            '',
-    PHONE:              '',
-    EMAIL:              '',
-    LINKEDIN_URL:       '',
-    LINKEDIN_DISPLAY:   '',
-    PORTFOLIO_URL:      '',
-    PORTFOLIO_DISPLAY:  '',
-    LOCATION:           '',
-    SUMMARY_TEXT:       '',
-    COMPETENCIES_BLOCK: '',
-    EXPERIENCE:         '',
-    PROJECTS:           '',
-    EDUCATION:          '',
-    CERTIFICATIONS:     '',
-    SKILLS:             '',
+    NAME:                  '',
+    TAGLINE:               '',
+    PHONE:                 '',
+    EMAIL:                 '',
+    LINKEDIN_URL:          '',
+    LINKEDIN_DISPLAY:      '',
+    PORTFOLIO_URL:         '',
+    PORTFOLIO_DISPLAY:     '',
+    LOCATION:              '',
+    SUMMARY_TEXT:          '',
+    COMPETENCIES_BLOCK:    '',
+    EXPERIENCE:            '',
+    PROJECTS_BLOCK:        '',
+    SKILLS_BLOCK:          '',
+    EDUCATION_CERT_BLOCK:  '',
   };
 
   const lines = cvText.split('\n');
@@ -295,48 +294,101 @@ function parseCvMarkdown(cvText) {
                    sectionBuffers['employment'] || [];
   tokens.EXPERIENCE = convertSectionToTypst(expLines, 'job-entry');
 
-  // ── Projects ──────────────────────────────────────────────────────────────
+  // ── Projects → wrapped section block ──────────────────────────────────────
 
   const projLines = sectionBuffers['personal projects'] ||
                     sectionBuffers['projects'] || [];
-  tokens.PROJECTS = convertProjectsToTypst(projLines);
+  const projContent = convertProjectsToTypst(projLines);
+  if (projLines.length && projContent !== '(see cv.md)') {
+    tokens.PROJECTS_BLOCK =
+      `#section-heading("Selected Projects")\n` +
+      `${projContent}\n` +
+      `#v(4pt)`;
+  } else {
+    tokens.PROJECTS_BLOCK = '';
+  }
 
-  // ── Education ─────────────────────────────────────────────────────────────
+  // ── Education + Certifications → combined section block ──────────────────
 
   const eduLines = sectionBuffers['education'] || [];
-  tokens.EDUCATION = convertEduToTypst(eduLines);
-
-  // ── Certifications ────────────────────────────────────────────────────────
-
   const certLines = sectionBuffers['certifications'] ||
                     sectionBuffers['licenses & certifications'] || [];
-  tokens.CERTIFICATIONS = convertCertToTypst(certLines);
+  const eduContent = convertEduToTypst(eduLines);
+  const certContent = convertCertToTypst(certLines);
+  const hasEdu  = eduLines.length  && eduContent  !== '(see cv.md)';
+  const hasCert = certLines.length && certContent !== '(see cv.md)';
+  if (hasEdu || hasCert) {
+    const heading = hasEdu && hasCert ? 'Education & Certifications'
+                   : hasEdu           ? 'Education'
+                   :                    'Certifications';
+    let body = '';
+    if (hasEdu)  body += eduContent + '\n';
+    if (hasEdu && hasCert) body += '#v(2pt)\n';
+    if (hasCert) body += certContent + '\n';
+    tokens.EDUCATION_CERT_BLOCK =
+      `#section-heading("${heading}")\n` +
+      `${body}` +
+      `#v(2pt)`;
+  } else {
+    tokens.EDUCATION_CERT_BLOCK = '';
+  }
 
-  // ── Technical Skills ──────────────────────────────────────────────────────
+  // ── Skills / Tech Stack → section block with categorized inline lists ─────
+  // Per dealbreaker D5: emit each `**Category:** items` line via the
+  // `#skill-category()` macro (inline category label + items text). Bullet-
+  // style evidence skills (e.g. cv.md's `- Skill Name — detail (week W##)`)
+  // collapse into a single leading paragraph so the section stays compact.
 
   const skillLines = sectionBuffers['technical skills'] ||
                      sectionBuffers['skills'] || [];
-  // Pass 1: drop HTML comments and merge wrapped continuation lines into the
-  // previous entry. A line is a continuation when it does NOT start with `-`,
-  // `*`, or `**Category:` and a previous entry exists.
+  // Pass 1: drop HTML comments + merge wrapped continuation lines.
   const skillEntries = [];
   for (const entry of skillLines) {
     if (typeof entry !== 'string') continue;
     const cleaned = entry.replace(/<!--[\s\S]*?-->/g, '').trimEnd();
     const l = cleaned.trim();
     if (!l) continue;
-    const isBullet     = /^[-*]\s+/.test(l);
-    const isCategory   = /^\*\*[^*]+:\*\*/.test(l);
+    const isBullet   = /^[-*]\s+/.test(l);
+    const isCategory = /^\*\*[^*]+:\*\*/.test(l);
     if (isBullet || isCategory || skillEntries.length === 0) {
       skillEntries.push(l);
     } else {
       skillEntries[skillEntries.length - 1] += ' ' + l;
     }
   }
-  const skillText = skillEntries
-    .map(l => `- ${escapeTypst(l.replace(/^[-*]\s+/, ''))}`)
-    .join('\n');
-  tokens.SKILLS = skillText || '(see cv.md)';
+  // Pass 2: split categories from bullet/free-text evidence entries.
+  const categoryLines = [];
+  const evidenceLines = [];
+  for (const e of skillEntries) {
+    if (/^\*\*[^*]+:\*\*/.test(e)) {
+      categoryLines.push(e);
+    } else {
+      evidenceLines.push(e.replace(/^[-*]\s+/, ''));
+    }
+  }
+  // Pass 3: emit Typst content. One `#skill-category()` per category line;
+  // evidence lines (if any) become a compact leading paragraph above the
+  // category grid.
+  let skillsBody = '';
+  if (evidenceLines.length) {
+    const evidenceText = evidenceLines.map(stripMarkdown).join(' ');
+    skillsBody += `#text(size: 9.5pt, fill: muted, "${escapeTypstStr(evidenceText)}")\n#v(3pt)\n`;
+  }
+  for (const c of categoryLines) {
+    const m = c.match(/^\*\*([^*]+):\*\*\s*(.*)$/);
+    if (!m) continue;
+    const label = stripMarkdown(m[1]);
+    const items = stripMarkdown(m[2]);
+    skillsBody += `#skill-category(label: "${escapeTypstStr(label)}", items: "${escapeTypstStr(items)}")\n`;
+  }
+  if (skillsBody) {
+    tokens.SKILLS_BLOCK =
+      `#section-heading("Skills & Tech Stack")\n` +
+      `${skillsBody}` +
+      `#v(4pt)`;
+  } else {
+    tokens.SKILLS_BLOCK = '';
+  }
 
   // Escape singleton text tokens before substitution.
   // - NAME and *_URL land inside Typst string literals "..." → only \ and " need escaping.
@@ -424,7 +476,12 @@ function convertSectionToTypst(lines, macroName) {
 
   function flush() {
     if (!inEntry || (!company && !role)) return;
-    const bulletArgs = bullets.map(b => `"${escapeTypstStr(b)}"`).join(',\n    ');
+    // Typst tuple syntax requires a trailing comma to distinguish a 1-element
+    // tuple `(x,)` from a parenthesized expression `(x)`. Always append `,` so
+    // any non-empty array renders as a tuple.
+    const bulletArgs = bullets.length
+      ? bullets.map(b => `"${escapeTypstStr(b)}"`).join(',\n    ') + ','
+      : '';
     typstBlocks.push(
       `#${macroName}(\n` +
       `  company: "${escapeTypstStr(company)}",\n` +
