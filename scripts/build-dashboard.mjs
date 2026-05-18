@@ -2888,7 +2888,7 @@ function renderRow(r, idx) {
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span></td>
   <td class="base-cell">${baseCell}</td>
-  <td><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
+  <td class="company-cell"><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="Open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
   <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)} drill-trigger" data-status="${statusKey(r.status)}" data-num="${r.num}" data-drill="status:${htmlEscape(statusKey(r.status))}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${htmlEscape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
@@ -3865,8 +3865,19 @@ function build() {
     // Escaped so it can be JSON-stringified safely.
     _cbData.tpgmWidgetHtml = tpgmWidgetHtml;
 
-    waveCBDataJson = JSON.stringify(_cbData).replace(/<\//g, '<\\/').replace(/'/g, "\\'");
-  } catch (topErr) { waveCBDataJson = '{}'; }
+    // P0-2 fix (2026-05-18): previous strategy double-escaped apostrophes
+    // (replace(/'/g, "\\'")) which produced JS-valid but JSON-INVALID output —
+    // browser would JS-unescape \' → ', then JSON.parse choked on the bare
+    // ' inside what it thought was an escape sequence. Symptom: window._waveCB
+    // was undefined, and the whole drillInRegistry block (initialized in the
+    // same script tag, right after the JSON.parse) silently failed, which
+    // broke every drill-in popout on the dashboard. Switch to Base64 transport
+    // so the data round-trips through atob/JSON.parse with zero escaping risk
+    // regardless of what apostrophes, slashes, backticks, etc. the source
+    // contains.
+    const jsonStr = JSON.stringify(_cbData);
+    waveCBDataJson = Buffer.from(jsonStr, 'utf-8').toString('base64');
+  } catch (topErr) { waveCBDataJson = ''; }
 
   // ── Cmd-K palette data ────────────────────────────────────────────
   // Compact index of every row + the 5 most recently dated reports.
@@ -3951,6 +3962,26 @@ function build() {
     --green-fg-dark: #166534;
     --green-bg: #dcfce7;
     --green-border: #86efac;
+    /* ── P0-4 (Council 2026-05-17): button + link tokens. ────────────
+       The previous --green-fg (#16a34a) was overloaded for both filled-action
+       backgrounds (where white text fails AA at 2.85:1) and positive-trend
+       text (where the contrast was fine on light backgrounds). Council
+       converged on splitting these:
+         --action         : filled CTA background (Tailwind green-700, 5.92:1 with #fff)
+         --action-hover   : darker hover (green-800, 6.41:1 with #fff)
+         --positive-text  : KPI/trend text only — NEVER a button fill
+         --link           : unified hyperlink color (GitHub Primer blue, 5.19:1 on white)
+         --link-hover     : link hover state
+         --focus-ring     : matches --link for consistency
+       Source: data/council-design-tokens-2026-05-18.md */
+    --action: #15803d;
+    --action-hover: #166534;
+    --action-active: #14532d;
+    --positive-text: #1a7f37;
+    --negative-text: #c0392b;
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --focus-ring-color: var(--link);
     /* ── Single-accent palette (Phase 7 Item 2, Wave I) ──────────
        Editorial-restraint move per data/dashboard-phase7-inspiration-2026-05-10.md:
        reserve saturation for green (act) and red (blocked) only.
@@ -4036,7 +4067,12 @@ function build() {
     --accent-bg: #dcfce7;
     --accent-border: #86efac;
     --ring: 0 0 0 2px var(--accent);
-    --focus-ring: 0 0 0 2px var(--accent), 0 0 0 4px rgba(22, 163, 74, 0.2);
+    /* P0-4 (2026-05-18): focus ring uses --link (blue) per council consensus.
+       Focus = "this element is interactive right now" (universal semantic);
+       --action (green) stays scoped to filled CTAs only. 2px ring + 2px offset
+       layered through the --bg color so the ring sits flush against the
+       focused element instead of overlapping its border. */
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link, #0969da);
     --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.05);
     --shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
@@ -4107,6 +4143,16 @@ function build() {
     --green-fg-dark: #bbf7d0;
     --green-bg: rgba(22,163,74,.12);
     --green-border: rgba(22,163,74,.3);
+    /* P0-4 dark-mode button + link tokens (Council 2026-05-17).
+       Source: data/council-design-tokens-2026-05-18.md */
+    --action: #238636;
+    --action-hover: #2a7f3f;
+    --action-active: #196127;
+    --positive-text: #4ac26b;
+    --negative-text: #f85149;
+    --link: #58a6ff;
+    --link-hover: #79c0ff;
+    --focus-ring-color: var(--link);
     /* Dark-mode equivalents of the Phase 7 single-accent palette.
        Greens + reds keep their saturated dark-mode values; blue / amber /
        purple are dropped to slate / muted-ochre / near-monochrome so the
@@ -4484,8 +4530,15 @@ function build() {
   h1 { margin: 0 0 2px; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
   h2 { margin: 32px 0 14px; font-size: 16px; font-weight: 600; padding-bottom: 8px;
        border-bottom: 1px solid var(--border); letter-spacing: -0.2px; }
-  a { color: var(--blue-fg); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  /* P0-4: unified hyperlink color across the dashboard. The Phase 7 single-
+     accent palette intentionally suppresses link blue inside row tables
+     (a.role-link / a.company-link use color:inherit + green/blue on hover);
+     this generic anchor rule applies to all OTHER links — body prose, help
+     text, footer, drawer-body links, etc. Council recommended GitHub Primer
+     blue for AA contrast on both surface tokens in both themes. */
+  a { color: var(--link); text-decoration: none; transition: color .12s ease; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  a:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 3px; }
   code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
          background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
   .subtle { color: var(--text-3); font-size: 12.5px; margin-bottom: 20px; }
@@ -4610,7 +4663,7 @@ function build() {
   .sidebar-brand-icon {
     width: 22px; height: 22px;
     display: inline-flex; align-items: center; justify-content: center;
-    background: var(--green-fg);
+    background: var(--action);
     color: #fff;
     border-radius: 5px;
     font-size: 13px; font-weight: 700;
@@ -5344,7 +5397,7 @@ function build() {
   .tonight-pick-score-chip { font-size: 12px !important; padding: 2px 7px !important; flex-shrink: 0; }
   .tonight-pick-status-chip {
     font-size: 10px; font-weight: 700; letter-spacing: .06em;
-    background: var(--green-fg); color: #fff;
+    background: var(--action); color: #fff;
     border-radius: var(--radius-sm); padding: 2px 7px; flex-shrink: 0;
   }
   /* Title row: company — full role title, wraps gracefully */
@@ -5374,11 +5427,17 @@ function build() {
   }
   /* Action buttons row */
   .tonight-pick-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 2px; }
+  /* P0-4: --action token (Tailwind green-700 light / Primer green-emphasis dark)
+     replaces --green-fg as the filled-CTA background. White text now meets WCAG
+     AA (5.92:1 light, 4.63:1 dark). The previous --green-fg (#16a34a/#86efac)
+     remains for non-button uses (chips, success backgrounds, trend text). */
   .tonight-pick-btn-primary {
-    background: var(--green-fg); color: #fff; border: none; border-radius: var(--radius-sm);
+    background: var(--action); color: #fff; border: 1px solid var(--action); border-radius: var(--radius-sm);
     padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: background .12s, border-color .12s;
   }
-  .tonight-pick-btn-primary:hover { filter: brightness(1.1); }
+  .tonight-pick-btn-primary:hover { background: var(--action-hover); border-color: var(--action-hover); }
+  .tonight-pick-btn-primary:active { background: var(--action-active); border-color: var(--action-active); }
   .tonight-pick-btn-secondary {
     background: transparent; color: var(--text-2); border: 1px solid var(--border-strong);
     border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
@@ -5577,8 +5636,21 @@ function build() {
       overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap; max-width: 0;
     }
-    /* Role wraps rather than truncates */
-    .panel .table-scroll table td.role-cell { white-space: normal; }
+    /* P0-1: role + company cells render full string (no truncation). title= remains as hover fallback. */
+    .panel .table-scroll table td.role-cell,
+    .panel .table-scroll table td.company-cell {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      max-width: none;
+      word-break: break-word;
+    }
+    /* P0-1: ensure inline anchors inside role/company cells also wrap */
+    .panel .table-scroll table td.role-cell a,
+    .panel .table-scroll table td.company-cell a {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
   /* Resize handle — 5px zone on right edge of each th */
   .col-resize-handle {
@@ -7105,10 +7177,11 @@ function build() {
   }
   .evidence-area:focus { outline: none; border-color: var(--blue-fg); box-shadow: var(--ring-blue); }
   .save-evidence-btn {
-    margin-top: 8px; background: var(--green-fg); color: #fff; border: none;
+    margin-top: 8px; background: var(--action); color: #fff; border: 1px solid var(--action);
     padding: 7px 16px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; font-family: inherit;
+    transition: background .12s, border-color .12s;
   }
-  .save-evidence-btn:hover { background: var(--green); }
+  .save-evidence-btn:hover { background: var(--action-hover); border-color: var(--action-hover); }
 
   /* ── Gap modal ───────────────────────────────────────────────── */
   #gap-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
@@ -7814,7 +7887,7 @@ function build() {
 
   /* Fix 2 (draft-sync-sse): "Updated" transient pill on draft file changes */
   .drawer-draft-updated-pill {
-    display: inline-block; background: var(--green-fg); color: #fff;
+    display: inline-block; background: var(--action); color: #fff;
     font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
     margin-left: auto; opacity: 0; transition: opacity .2s;
     pointer-events: none; white-space: nowrap;
@@ -11392,20 +11465,26 @@ function openRightRailForDetail(idx, detailRow) {
     setTimeout(() => hydrateNotesIn(bodyEl), 0);
   }
   if (actionsEl) {
+    // P0-2 (2026-05-18): every direct child of #right-rail-actions carries a
+    // data-drill attribute so the toolbar is fully discoverable via the same
+    // mechanism as every other drill-in surface. The onclick still drives the
+    // immediate action (open URL / start build / discard / defer); data-drill
+    // documents the action target for keyboard nav, screen readers, and the
+    // grep-based regression gate in DASHBOARD_INVARIANTS.md.
     const applyBtnHtml = applyHref
-      ? '<button type="button" class="drawer-btn-primary" data-drawer-action="apply">Apply</button>'
-      : '<button type="button" class="drawer-btn-primary" disabled>Apply</button>';
+      ? '<button type="button" class="drawer-btn-primary" data-drawer-action="apply" data-drill="drawer-action:apply:' + (num || '') + '" title="Open original job posting in a new tab">Apply</button>'
+      : '<button type="button" class="drawer-btn-primary" data-drill="drawer-action:apply:' + (num || '') + '" disabled>Apply</button>';
     // "Create materials" — between Apply and Skip. Disabled if there's no
     // row number (e.g. preview rows synthesized without a tracker #).
     const materialsBtnHtml = num
-      ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" title="Build apply pack (CV + cover letter + outreach + intel)">Generate apply pack</button>'
-      : '<button type="button" class="drawer-btn-materials" disabled title="No row number — apply pack needs a tracker row">Generate apply pack</button>';
+      ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" data-drill="drawer-action:materials:' + num + '" title="Build apply pack (CV + cover letter + outreach + intel)">Generate apply pack</button>'
+      : '<button type="button" class="drawer-btn-materials" data-drill="drawer-action:materials:" disabled title="No row number — apply pack needs a tracker row">Generate apply pack</button>';
     const skipBtnHtml = num
-      ? '<button type="button" data-drawer-action="skip">Skip this one</button>'
-      : '<button type="button" disabled>Skip this one</button>';
+      ? '<button type="button" data-drawer-action="skip" data-drill="drawer-action:skip:' + num + '" title="Discard this row — will prompt for a reason">Skip this one</button>'
+      : '<button type="button" data-drill="drawer-action:skip:" disabled>Skip this one</button>';
     const deferBtnHtml = num
-      ? '<button type="button" data-drawer-action="defer">Look at this later</button>'
-      : '<button type="button" disabled>Look at this later</button>';
+      ? '<button type="button" data-drawer-action="defer" data-drill="drawer-action:defer:' + num + '" title="Mark Evaluated and close the drawer">Look at this later</button>'
+      : '<button type="button" data-drill="drawer-action:defer:" disabled>Look at this later</button>';
     actionsEl.innerHTML = applyBtnHtml + materialsBtnHtml + skipBtnHtml + deferBtnHtml;
     // Wire actions after innerHTML — keeps the HTML-as-string clean of
     // nested-quote escaping and lets us close the rail in one place.
@@ -11711,7 +11790,23 @@ window.setUseInlineExpand = setUseInlineExpand;
 // that does NOT conflict with the existing drawer or status-popover.
 
 // ── Wave C-B: baked build-time data ────────────────────────────────────────
-window._waveCB = JSON.parse('${waveCBDataJson}');
+// Base64-encoded JSON (see P0-2 fix in scripts/build-dashboard.mjs — apostrophes
+// in the source data broke the previous \\' escape strategy).
+window._waveCB = (function() {
+  try {
+    var b64 = '${waveCBDataJson}';
+    if (!b64) return {};
+    // atob → UTF-8 decode (TextDecoder handles non-ASCII chars in source data)
+    var binary = atob(b64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    var jsonStr = new TextDecoder('utf-8').decode(bytes);
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.warn('[build] _waveCB decode failed:', e.message);
+    return {};
+  }
+})();
 
 var drillInRegistry = {};
 
@@ -12295,6 +12390,116 @@ _drillInRegister('network-leverage', function() {
     html: '<p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 6px">340 press contacts<\/p>'
       + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">Warm-intro paths to companies in your apply-now queue are computed by <code>lib\/network-graph.mjs<\/code> on each dashboard build. The count in the tile updates live when network-graph.json is populated.<\/p>'
       + '<p style="font-size:11px;color:var(--text-4)">Run <code>node scripts\/build-network-graph.mjs<\/code> to refresh warm-intro paths. Result populates <code>data\/network-graph.json<\/code>.<\/p>',
+  };
+});
+
+// P1-2 (2026-05-18): pack-stage-result drill-in — renders the SubAgentOutput
+// returned by /api/build-pack-stage for the 5 slash-command sub-agents
+// (cv-tailor, cover-letter, why-statement, linkedin-dm, form-fields). The
+// invokeBuildPackStage helper caches the result on window._packStageResults
+// keyed by "{rowId}:{stage}", then calls window.drillIn('pack-stage-result',
+// key) to surface this popout.
+_drillInRegister('pack-stage-result', function(id) {
+  var cache = window._packStageResults || {};
+  var result = cache[id] || null;
+  var parts = String(id || '').split(':');
+  var rowId = parts[0] || '';
+  var stage = parts[1] || '';
+  if (!result) {
+    return {
+      title: '/' + stage + ' result',
+      html: '<p style="font-size:13px;color:var(--text-3);margin:0">No cached result for row #' + rowId + ' stage <code>' + stage + '<\/code>. Re-run the slash command to populate.<\/p>',
+    };
+  }
+  function _esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  // Status chip
+  var statusColor = result.status === 'ok' ? 'var(--green-fg)'
+    : result.status === 'error' ? '#dc2626'
+    : 'var(--text-3)';
+  var statusChip = '<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,' + statusColor + ' 14%,var(--surface));color:' + statusColor + ';border:1px solid ' + statusColor + ';font-weight:600">' + _esc(result.status || 'unknown') + '<\/span>';
+  // Diagnostics row
+  var diag = result.diagnostics || {};
+  var diagHtml = '';
+  if (diag && Object.keys(diag).length) {
+    var parts2 = [];
+    if (typeof diag.duration_ms === 'number') parts2.push('<strong>' + (diag.duration_ms / 1000).toFixed(1) + 's<\/strong> wall-clock');
+    if (typeof diag.cost_estimate_usd === 'number') parts2.push('$' + diag.cost_estimate_usd.toFixed(3) + ' est');
+    if (typeof diag.tokens_used === 'number') parts2.push(diag.tokens_used.toLocaleString() + ' tokens');
+    if (diag.model_used) parts2.push('<code style="font-size:11px">' + _esc(diag.model_used) + '<\/code>');
+    if (parts2.length) {
+      diagHtml = '<div style="font-size:11px;color:var(--text-3);margin:0 0 12px;display:flex;gap:10px;flex-wrap:wrap">' + parts2.join('<span style="color:var(--border)">·<\/span>') + '<\/div>';
+    }
+  }
+  // Output body
+  var bodyHtml = '';
+  if (result.status === 'error') {
+    bodyHtml = '<div style="font-size:13px;line-height:1.5;color:var(--text-2);background:color-mix(in srgb,#dc2626 8%,var(--surface));border:1px solid color-mix(in srgb,#dc2626 30%,var(--border));border-radius:var(--radius-sm);padding:12px;margin:0 0 8px">'
+      + '<strong style="color:#dc2626">Error:<\/strong> ' + _esc(result.error || 'unknown failure')
+      + '<\/div>';
+  } else if (stage === 'form-fields' && Array.isArray(result.output)) {
+    bodyHtml = '<div style="font-size:13px;line-height:1.5">'
+      + result.output.map(function(qa) {
+          return '<div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">'
+            + '<div style="font-weight:600;color:var(--text);margin-bottom:4px">' + _esc(qa.question || qa.q || '(no question)') + '<\/div>'
+            + '<div style="color:var(--text-2);white-space:pre-wrap">' + _esc(qa.answer || qa.a || '(no answer)') + '<\/div>'
+            + '<\/div>';
+        }).join('')
+      + '<\/div>';
+  } else if (typeof result.output === 'string') {
+    bodyHtml = '<pre style="font-size:12.5px;line-height:1.55;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;white-space:pre-wrap;word-break:break-word;margin:0;max-height:520px;overflow:auto">'
+      + _esc(result.output)
+      + '<\/pre>';
+  } else if (result.output) {
+    bodyHtml = '<pre style="font-size:12px;line-height:1.4;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;white-space:pre-wrap;word-break:break-word;margin:0;max-height:520px;overflow:auto">'
+      + _esc(JSON.stringify(result.output, null, 2))
+      + '<\/pre>';
+  } else {
+    bodyHtml = '<p style="font-size:12px;color:var(--text-3);margin:0">No output payload returned.<\/p>';
+  }
+  var titles = {
+    'cv-tailor': 'CV tailored',
+    'cover-letter': 'Cover letter',
+    'why-statement': 'Why statement',
+    'linkedin-dm': 'LinkedIn DM',
+    'form-fields': 'Application form answers',
+  };
+  return {
+    title: (titles[stage] || stage) + ' · row #' + rowId,
+    html: '<div style="margin:0 0 10px">' + statusChip + '<\/div>'
+      + diagHtml
+      + bodyHtml,
+  };
+});
+
+// P0-2 (2026-05-18): drawer-action drill-in — explains what each
+// drawer-action-bar button does. Triggered when a screen reader, keyboard
+// user, or developer follows the data-drill attribute on Apply / Generate
+// apply pack / Skip / Look at this later. The button's onclick still drives
+// the primary action; this popout exists so the attribute resolves to
+// something meaningful rather than being inert documentation.
+_drillInRegister('drawer-action', function(id) {
+  var parts = String(id || '').split(':');
+  var action = parts[0] || '';
+  var num = parts[1] || '';
+  var titles = {
+    apply: 'Apply (opens external posting)',
+    materials: 'Generate apply pack',
+    skip: 'Skip this one',
+    defer: 'Look at this later',
+  };
+  var descriptions = {
+    apply: 'Opens the original job posting in a new browser tab. The dashboard does not submit the application — you do that on the company page, then mark the row <strong>Applied<\/strong> here.',
+    materials: 'Kicks off the apply-pack pipeline (~$2–5, ~3–5 min wall-clock). Outputs to <code>apply-pack\/{padded-num}-{slug}\/<\/code> with CV, cover letter, why-statement, LinkedIn DM, and form-field answers. You review every artifact before submitting.',
+    skip: 'Marks this row <strong>Discarded<\/strong> after prompting for a reason (comp, geography, culture, skill-gap, ethics, stage, velocity, role-shape, fit, other). The reason flows into <code>data\/discard-reasons.jsonl<\/code> so the next eval run can learn.',
+    defer: 'Marks this row <strong>Evaluated<\/strong> and closes the drawer. Use this when you want to revisit later without discarding the row.',
+  };
+  return {
+    title: titles[action] || 'Drawer action',
+    html: '<p style="font-size:13px;line-height:1.5;color:var(--text-2);margin:0 0 12px">' + (descriptions[action] || 'Documented drawer-toolbar action.') + '<\/p>'
+      + (num ? '<p style="font-size:11px;color:var(--text-3);margin:0">Targets row #' + num + ' · click the button in the drawer to execute<\/p>' : ''),
   };
 });
 
@@ -18480,6 +18685,11 @@ window.optimisticStatusChange = optimisticStatusChange;
 
 // ── D25: invokeBuildPackStage — wire drawer slash-command buttons ────────────
 // Calls POST /api/build-pack-stage; shows toast with stage result or error.
+// P1-2 (2026-05-18): slash-command result rendering. Previously this fired a
+// toast on completion and dropped the SubAgentOutput on the floor. Now the
+// full markdown/JSON output is cached on window._packStageResults[rowId+stage]
+// and rendered into a drill-in popout so the user can review it inline.
+window._packStageResults = window._packStageResults || {};
 async function invokeBuildPackStage(rowId, stage, btn) {
   if (!rowId || !stage) return;
   const origText = btn ? btn.textContent : '';
@@ -18492,11 +18702,22 @@ async function invokeBuildPackStage(rowId, stage, btn) {
     });
     const data = await r.json().catch(() => ({}));
     if (r.ok && data.ok) {
-      if (window.toast) window.toast('/' + stage + ' completed for #' + rowId, 'success');
+      window._packStageResults[String(rowId) + ':' + stage] = data.result || {};
+      if (window.toast) window.toast('/' + stage + ' completed for #' + rowId + ' — opening result', 'success');
+      // Open result in drill-in popout (registered renderer: 'pack-stage-result')
+      if (typeof window.drillIn === 'function') {
+        window.drillIn('pack-stage-result', String(rowId) + ':' + stage, null);
+      }
     } else {
+      window._packStageResults[String(rowId) + ':' + stage] = { status: 'error', error: data.error || ('HTTP ' + r.status), stage, output: null };
       if (window.toast) window.toast('/' + stage + ' failed: ' + (data.error || r.status), 'error');
+      // Still surface the error in a popout so user can see + retry
+      if (typeof window.drillIn === 'function') {
+        window.drillIn('pack-stage-result', String(rowId) + ':' + stage, null);
+      }
     }
   } catch (err) {
+    window._packStageResults[String(rowId) + ':' + stage] = { status: 'error', error: err.message || String(err), stage, output: null };
     if (window.toast) window.toast('/' + stage + ' error: ' + err.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }

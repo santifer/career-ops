@@ -77,18 +77,20 @@
   "email": {
     "_comment": "Email-specific overrides. MJML can't use CSS vars so these are flat values used directly in the template. Dark-mode values used in the mj-style @media block.",
 
-    "heroBg":              "#16a34a",
-    "heroBgGradient":      "linear-gradient(135deg, #15803d 0%, #16a34a 100%)",
+    "_p0_4_comment": "Hero + CTA values updated per council 2026-05-17 — every #fff text pair now passes WCAG AA. heroBg/heroBgGradient use #15803d→#166534 (5.92→6.41:1). tonightCTABg uses --action #15803d (5.92:1) so the Start-Tonight CTA is no longer #16a34a (which failed at 2.85:1).",
+    "heroBg":              "#15803d",
+    "heroBgGradient":      "linear-gradient(135deg, #166534 0%, #15803d 100%)",
     "heroText":            "#ffffff",
-    "heroSubtext":         "rgba(255,255,255,0.85)",
+    "heroSubtext":         "rgba(255,255,255,0.92)",
 
     "ctaButtonBg":         "#ffffff",
     "ctaButtonColor":      "#15803d",
     "ctaButtonHoverBg":    "#f0fdf4",
 
-    "tonightCTABg":        "#16a34a",
+    "tonightCTABg":        "#15803d",
     "tonightCTAColor":     "#ffffff",
     "tonightCTARadius":    "8px",
+    "tonightCTAHoverBg":   "#166534",
 
     "sectionLabelColor":   "#6b7280",
     "sectionLabelSize":    "10px",
@@ -106,9 +108,10 @@
     "chipPadding":         "2px 8px",
     "chipFontSize":        "11px",
 
-    "deltaGreen":          "#16a34a",
-    "deltaRed":            "#dc2626",
-    "deltaNeutral":        "#9ca3af",
+    "_delta_comment": "Delta text used on white card backgrounds — needs to clear 4.5:1 AA. #16a34a (2.85:1) replaced with #1a7f37 (--positive-text, 4.83:1) for parity with dashboard KPI trend text.",
+    "deltaGreen":          "#1a7f37",
+    "deltaRed":            "#c0392b",
+    "deltaNeutral":        "#6b7280",
 
     "darkHeroBg":          "linear-gradient(135deg, rgba(0,255,157,0.10) 0%, rgba(22,163,74,0.04) 50%, #11131c 100%)",
     "darkHeroBorder":      "#232737",
