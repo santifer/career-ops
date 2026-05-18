@@ -68,8 +68,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@biomejs/biome": "^2.4.15",
     "@lhci/cli": "^0.15.1",
-    "@playwright/test": "^1.58.1"
+    "@playwright/test": "^1.58.1",
+    "lighthouse": "^12.6.0"
   }
 }
