@@ -1,14 +1,20 @@
 // Career-Ops Typst CV Template
-// Port of cv-template.tex and cv-template.html to Typst 0.14
+// Port of cv-template.html to Typst 0.14
 //
 // Typst 0.14 — https://typst.app/docs
 // Placeholder tokens match the render-cv-typst.mjs substitution map.
 //
 // Design spec:
 //   Font:        Calibri 11pt body, 12pt bold headings
+//   Accent:      #16a34a (career-ops green, mirrors dashboard --accent token)
 //   Layout:      Single-column, 0.6in margins
-//   Line height: 1.15
+//   Line height: 1.18
 //   Page:        US Letter
+//
+// Section order (mirrors cv-template.html):
+//   Header > Highlights (if populated) > Summary > Competencies >
+//   Experience > Projects (if populated) > Learning (if populated) >
+//   Education > Certifications (if populated) > Skills
 //
 // Placeholder tokens (all replaced by render-cv-typst.mjs at compile time):
 //   {{NAME}}              Full name
@@ -19,12 +25,14 @@
 //   {{PORTFOLIO_URL}}     Portfolio URL
 //   {{PORTFOLIO_DISPLAY}} Portfolio display text
 //   {{LOCATION}}          City, State / Remote
+//   {{HIGHLIGHTS}}        Typst list content for highlights box (or empty string)
 //   {{SUMMARY_TEXT}}      Professional summary paragraph
-//   {{COMPETENCIES}}      Comma-separated core competencies
+//   {{COMPETENCIES}}      Comma-separated or Typst-tag content
 //   {{EXPERIENCE}}        Work experience blocks (Typst syntax)
-//   {{PROJECTS}}          Project blocks
+//   {{PROJECTS}}          Project blocks (or empty string)
+//   {{LEARNING}}          Continuous learning blocks (or empty string)
 //   {{EDUCATION}}         Education blocks
-//   {{CERTIFICATIONS}}    Certification rows
+//   {{CERTIFICATIONS}}    Certification rows (or empty string)
 //   {{SKILLS}}            Skills block
 
 #set page(
@@ -40,132 +48,158 @@
 )
 
 #set par(
-  leading: 0.65em,
-  spacing: 0.65em,
+  leading: 0.55em,
+  spacing: 0.55em,
 )
 
-// ── Color palette (mirrors cv-template.html) ────────────────────────────────
+// ── Color palette ────────────────────────────────────────────────────────────
 
-#let teal-dark    = rgb("#1a7a7a")  // hsl(187, 74%, 28%) approx
-#let purple-mid   = rgb("#6b21a8")  // hsl(270, 70%, 40%) approx
-#let ink          = rgb("#1a1a2e")
-#let body-gray    = rgb("#2f2f2f")
+#let accent       = rgb("#16a34a")  // career-ops green, matches dashboard --accent
+#let accent-light = rgb("#f5fdf7")  // highlights box background
+#let accent-border= rgb("#bbf7d0")  // highlights box border
+#let ink          = rgb("#1a1a1a")
+#let body-gray    = rgb("#333333")
 #let muted        = rgb("#555555")
-#let light-border = rgb("#e2e2e2")
-#let tag-bg       = rgb("#e8f5f5")
-#let tag-border   = rgb("#b2dada")
+#let light-rule   = rgb("#e5e7eb")
 
-// ── Section heading style ────────────────────────────────────────────────────
+// ── Section heading ──────────────────────────────────────────────────────────
 
-#let section-heading(title) = [
-  #v(4pt)
-  #text(
-    size: 11pt,
+#let section-heading(title) = {
+  v(8pt)
+  text(
+    size: 12pt,
     weight: "bold",
-    font: "Calibri",
-    fill: teal-dark,
-    tracking: 0.06em,
+    fill: accent,
+    tracking: 0.04em,
     upper(title)
   )
-  #line(length: 100%, stroke: 1.5pt + light-border)
-  #v(4pt)
-]
+  v(-4pt)
+  line(length: 100%, stroke: 0.75pt + accent)
+  v(4pt)
+}
 
 // ── Job entry macro ──────────────────────────────────────────────────────────
 
-#let job-entry(company: "", role: "", period: "", location: "", bullets: ()) = [
-  #grid(
+#let job-entry(company: "", role: "", period: "", location: "", bullets: ()) = {
+  grid(
     columns: (1fr, auto),
-    [
-      #text(size: 12pt, weight: "bold", fill: purple-mid, company)
-    ],
-    [
-      #text(size: 10pt, fill: muted, period)
-    ],
+    gutter: 8pt,
+    text(size: 11pt, weight: "bold", fill: ink, company),
+    text(size: 10pt, fill: muted, period),
   )
-  #text(size: 10.5pt, weight: "semibold", fill: body-gray, role)
-  #if location != "" [
-    #h(6pt)
-    #text(size: 10pt, fill: rgb("#888888"), location)
-  ]
-  #v(2pt)
-  #if bullets.len() > 0 [
-    #set list(marker: "•", body-indent: 1em)
-    #set text(size: 10pt, fill: body-gray)
-    #list(..bullets)
-  ]
-  #v(4pt)
-]
+  v(1pt)
+  if role != "" {
+    text(size: 10.5pt, style: "italic", fill: body-gray, role)
+    if location != "" {
+      h(6pt)
+      text(size: 10pt, fill: rgb("#888888"), location)
+    }
+  }
+  v(3pt)
+  if bullets.len() > 0 {
+    set list(marker: "-", body-indent: 1em)
+    set text(size: 10.5pt, fill: ink)
+    list(..bullets)
+  }
+  v(5pt)
+}
 
 // ── Project entry macro ──────────────────────────────────────────────────────
 
-#let project-entry(title: "", badge: "", description: "", tech: "") = [
-  #text(size: 11pt, weight: "semibold", fill: teal-dark, title)
-  #if badge != "" [
-    #h(6pt)
-    #box(
-      fill: tag-bg,
-      stroke: 1pt + tag-border,
-      radius: 2pt,
-      inset: (x: 6pt, y: 1pt),
-      text(size: 9pt, fill: teal-dark, badge)
-    )
-  ]
-  #linebreak()
-  #text(size: 10pt, fill: rgb("#444444"), description)
-  #if tech != "" [
-    #linebreak()
-    #text(size: 9.5pt, fill: rgb("#888888"), tech)
-  ]
-  #v(4pt)
-]
+#let project-entry(title: "", meta: "", description: "", tech: "") = {
+  text(size: 10.5pt, weight: "bold", fill: ink, title)
+  if meta != "" {
+    h(6pt)
+    text(size: 10pt, fill: muted, meta)
+  }
+  linebreak()
+  text(size: 10.5pt, fill: ink, description)
+  if tech != "" {
+    linebreak()
+    text(size: 9.5pt, fill: rgb("#777777"), tech)
+  }
+  v(5pt)
+}
+
+// ── Learning entry macro ─────────────────────────────────────────────────────
+
+#let learning-entry(title: "", org: "", date: "") = {
+  grid(
+    columns: (1fr, auto),
+    gutter: 8pt,
+    [
+      #text(size: 10.5pt, weight: "semibold", fill: ink, title)
+      #if org != "" {
+        h(4pt)
+        text(size: 10pt, fill: muted, org)
+      }
+    ],
+    text(size: 10pt, fill: muted, date),
+  )
+  v(3pt)
+}
 
 // ── Education entry macro ────────────────────────────────────────────────────
 
-#let edu-entry(degree: "", org: "", year: "", description: "") = [
-  #grid(
+#let edu-entry(degree: "", institution: "", year: "", detail: "") = {
+  grid(
     columns: (1fr, auto),
+    gutter: 8pt,
     [
-      #text(size: 10.5pt, weight: "semibold", fill: body-gray, degree)
-      #h(4pt)
-      #text(size: 10.5pt, weight: "medium", fill: purple-mid, org)
+      #text(size: 10.5pt, weight: "bold", fill: ink, degree)
+      #if institution != "" {
+        h(4pt)
+        text(size: 10.5pt, fill: body-gray, institution)
+      }
     ],
-    [
-      #text(size: 10pt, fill: muted, year)
-    ],
+    text(size: 10pt, fill: muted, year),
   )
-  #if description != "" [
-    #text(size: 10pt, fill: rgb("#666666"), description)
-  ]
-  #v(3pt)
-]
+  if detail != "" {
+    v(1pt)
+    text(size: 10pt, fill: muted, detail)
+  }
+  v(4pt)
+}
 
 // ── Certification entry macro ────────────────────────────────────────────────
 
-#let cert-entry(title: "", org: "", year: "") = [
-  #grid(
+#let cert-entry(title: "", issuer: "", date: "") = {
+  grid(
     columns: (1fr, auto),
+    gutter: 8pt,
     [
-      #text(size: 10.5pt, weight: "medium", fill: body-gray, title)
-      #h(4pt)
-      #text(size: 10.5pt, fill: purple-mid, org)
+      #text(size: 10.5pt, fill: ink, title)
+      #if issuer != "" {
+        h(4pt)
+        text(size: 10pt, fill: muted, issuer)
+      }
     ],
-    [
-      #text(size: 10pt, fill: muted, year)
-    ],
+    text(size: 10pt, fill: muted, date),
   )
-  #v(3pt)
-]
+  v(3pt)
+}
 
-// ── Competency tag ───────────────────────────────────────────────────────────
+// ── Highlights box ────────────────────────────────────────────────────────────
 
-#let competency-tag(label) = box(
-  fill: tag-bg,
-  stroke: 1pt + tag-border,
-  radius: 3pt,
-  inset: (x: 9pt, y: 3pt),
-  text(size: 9.5pt, weight: "medium", fill: teal-dark, label)
-)
+#let highlights-box(content) = {
+  rect(
+    fill: accent-light,
+    stroke: 0.75pt + accent-border,
+    radius: 6pt,
+    inset: (x: 14pt, y: 10pt),
+    width: 100%,
+  )[
+    #text(
+      size: 9pt,
+      weight: "bold",
+      fill: accent,
+      tracking: 0.07em,
+      upper("Highlights")
+    )
+    #v(4pt)
+    #content
+  ]
+}
 
 // ════════════════════════════════════════════════════════════════════════════
 // DOCUMENT BODY
@@ -174,44 +208,58 @@
 // ── Header ───────────────────────────────────────────────────────────────────
 
 #align(left)[
-  #text(size: 22pt, weight: "bold", fill: ink, "{{NAME}}")
+  #text(size: 26pt, weight: "bold", fill: ink, "{{NAME}}")
   #linebreak()
-  #v(2pt)
-  #line(length: 100%, stroke: gradient.linear(teal-dark, purple-mid))
-  #v(4pt)
-  #set text(size: 10.5pt, fill: muted)
-  {{PHONE}} | {{EMAIL}} | #link("{{LINKEDIN_URL}}")[{{LINKEDIN_DISPLAY}}] | #link("{{PORTFOLIO_URL}}")[{{PORTFOLIO_DISPLAY}}] | {{LOCATION}}
+  #v(3pt)
+  #set text(size: 10pt, fill: muted)
+  {{PHONE}} #h(3pt)·#h(3pt) {{EMAIL}} #h(3pt)·#h(3pt) #link("{{LINKEDIN_URL}}")[{{LINKEDIN_DISPLAY}}] #h(3pt)·#h(3pt) #link("{{PORTFOLIO_URL}}")[{{PORTFOLIO_DISPLAY}}] #h(3pt)·#h(3pt) {{LOCATION}}
 ]
 
 #v(6pt)
 
+// ── Highlights (conditional — only when HIGHLIGHTS is non-empty) ─────────────
+// ATS: text layer order is header → highlights → summary → competencies
+// → experience per finding #43. Parsers read single-column flow in order.
+//
+// HIGHLIGHTS token is populated by the calling agent (e.g. cv-tailor.mjs)
+// as a Typst list body. render-cv-typst.mjs will substitute the token at
+// compile time; if not populated it remains as the literal placeholder and
+// is treated as absent.
+//
+// {{HIGHLIGHTS}}
+
 // ── Professional Summary ──────────────────────────────────────────────────────
 
 #section-heading("Professional Summary")
-#set text(size: 10.5pt, fill: body-gray)
+#set text(size: 10.5pt, fill: ink)
 #par(leading: 0.75em)[{{SUMMARY_TEXT}}]
 
-#v(6pt)
+#v(4pt)
 
 // ── Core Competencies ────────────────────────────────────────────────────────
 
 #section-heading("Core Competencies")
-#wrap-content(
-  align: left,
-  [{{COMPETENCIES}}]
-)
+#set text(size: 10pt, fill: ink)
+{{COMPETENCIES}}
 
-#v(6pt)
+#v(4pt)
 
 // ── Work Experience ──────────────────────────────────────────────────────────
 
 #section-heading("Work Experience")
 {{EXPERIENCE}}
 
-// ── Personal Projects ────────────────────────────────────────────────────────
+// ── Selected Projects ────────────────────────────────────────────────────────
+// Rendered when PROJECTS token is populated by the calling agent.
+// render-cv-typst.mjs always populates PROJECTS (falls back to "(see cv.md)").
 
-#section-heading("Personal Projects")
+#section-heading("Selected Projects")
 {{PROJECTS}}
+
+// ── Continuous Learning ───────────────────────────────────────────────────────
+// Optional I2-trajectory section. Populated by calling agent when present.
+// {{LEARNING}} — token; omit this section if learning data is absent by
+// leaving the token as a comment or populating with an empty string at build time.
 
 // ── Education ────────────────────────────────────────────────────────────────
 
@@ -226,5 +274,5 @@
 // ── Technical Skills ─────────────────────────────────────────────────────────
 
 #section-heading("Technical Skills")
-#set text(size: 10.5pt, fill: rgb("#444444"))
+#set text(size: 10.5pt, fill: ink)
 {{SKILLS}}
