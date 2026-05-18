@@ -9205,7 +9205,7 @@ function build() {
          onclick="window.drillIn('readiness','',event)"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('readiness','',event);}">
       <div class="sidebar-readiness-header">
-        <span class="sidebar-readiness-title">READINESS</span>
+        <span class="sidebar-readiness-title">PM Readiness</span>
         <span class="sidebar-readiness-score">${tpgmChipScore}</span>
         <span class="sidebar-readiness-velocity">${tpgmChipArrow}</span>
       </div>
@@ -16781,7 +16781,7 @@ function _shRender(d) {
     ? '<ul style="font-family:monospace;font-size:11.5px;list-style:none;padding:0;margin:0;max-height:160px;overflow-y:auto">' +
         errors.map(e => '<li style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--text-2)">' + _shEsc(e) + '</li>').join('') +
       '</ul>'
-    : '<div style="color:var(--text-3);font-size:12.5px">No errors logged.</div>';
+    : '<div style="color:var(--text-3);font-size:12.5px">No errors today — clean run.</div>';
 
   body.innerHTML =
     '<details class="sh-block" open>' +
@@ -21674,7 +21674,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
         +   '<div class="op-action-text">' + escapeHtml(primary) + '</div>'
         + '</div>';
     } else {
-      actionHtml = '<div class="op-action op-action-empty">No recommendation yet — run <code>npm run outreach:recommend</code></div>';
+      actionHtml = '<div class="op-action op-action-empty">No outreach strategy yet — click to generate one</div>';
     }
 
     // Linked application — kept subdued (smaller, lower contrast) so the eye
@@ -21938,7 +21938,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     }
     function nextActionBlock() {
       var nx = c.next_action;
-      if (!nx) return '<li><em>no recommendation yet</em></li>';
+      if (!nx) return '<li><em>No outreach strategy yet — click to generate one</em></li>';
       var conf = (typeof nx.confidence === 'number') ? nx.confidence.toFixed(2) : '?';
       return '<li><strong>Strategy ' + nx.strategy_id + ': ' + escapeHtml(nx.strategy_name || '') + '</strong> (confidence ' + conf + ', due ' + escapeHtml(nx.due_date || '?') + ')</li>' +
              (nx.rationale ? '<li><em>' + escapeHtml(nx.rationale) + '</em></li>' : '') +
