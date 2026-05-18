@@ -478,13 +478,15 @@ export async function runCvTailor(input) {
         // Retry: try a second LLM call with a stricter prompt instructing JSON only
         try {
           const strictPrompt = [
-            'You previously produced a response that was not valid JSON. Produce ONLY a JSON object with no other text.',
-            'Required shape:',
-            '{"tailored_bullets": [{"text":"...", "original_rank":1, "cv_ref":"cv.md:N", "notes":"..."},...], "summary":"...", "warnings":[]}',
-            `Produce exactly ${rankedBullets.length} bullets.`,
+            'You previously produced a response that did not match the required schema.',
+            'Produce ONLY a JSON object with no other text. The shape MUST be exactly:',
+            '{"tailored_bullets":[{"text":"...","original_rank":1,"cv_ref":"cv.md:N","notes":"..."},...],"highlights":["h1","h2","h3","h4"],"summary":"...","warnings":[]}',
+            `tailored_bullets MUST have exactly ${rankedBullets.length} items.`,
+            'highlights MUST have between 4 and 6 items, each a short metric-first string (≤100 chars).',
+            'cv_ref values MUST be drawn from the preamble below.',
             '',
-            'Here is the original user request context (re-tailoring task):',
-            userPrompt.slice(0, 3000),
+            'Original user request context (re-tailoring task — full content; do NOT claim missing data):',
+            userPrompt,
           ].join('\n');
 
           const retry = await callCouncil({
