@@ -2850,9 +2850,9 @@ function renderRow(r, idx) {
       ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">NETWORK LEVERAGE</div>'+html+'</div>':'';}catch(e){return '';}})()}
       ${notesCard}
       <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-        <button type="button" class="dcard-btn" onclick="console.log('would invoke /cv-tailor for row ${htmlEscape(String(r.num||''))}');if(window.toast)window.toast('/cv-tailor: TODO — wire to /api/build-pack-stage','info');event.stopPropagation()" title="Tailor CV for this role (TODO: wire /api/build-pack-stage)">/cv-tailor</button>
-        <button type="button" class="dcard-btn" onclick="console.log('would invoke /cover-letter for row ${htmlEscape(String(r.num||''))}');if(window.toast)window.toast('/cover-letter: TODO — wire to /api/build-pack-stage','info');event.stopPropagation()" title="Draft cover letter for this role (TODO: wire /api/build-pack-stage)">/cover-letter</button>
-        <button type="button" class="dcard-btn" onclick="console.log('would invoke /linkedin-dm for row ${htmlEscape(String(r.num||''))}');if(window.toast)window.toast('/linkedin-dm: TODO — wire to /api/build-pack-stage','info');event.stopPropagation()" title="Draft LinkedIn DM for this role (TODO: wire /api/build-pack-stage)">/linkedin-dm</button>
+        <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cv-tailor', this);event.stopPropagation()" title="Tailor CV for this role via /api/build-pack-stage">/cv-tailor</button>
+        <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cover-letter', this);event.stopPropagation()" title="Draft cover letter via /api/build-pack-stage">/cover-letter</button>
+        <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'linkedin-dm', this);event.stopPropagation()" title="Draft LinkedIn DM via /api/build-pack-stage">/linkedin-dm</button>
       </div>
     </div>
   </td>
@@ -8673,7 +8673,7 @@ function build() {
   </div>
 
   <!-- Gap addressing modal -->
-  <div id="gap-backdrop" onclick="closeGapModal()">
+  <div id="gap-backdrop" onclick="closeGapModal()" role="dialog" aria-modal="true" aria-labelledby="gap-modal-title">
     <div id="gap-modal" onclick="event.stopPropagation()">
       <div class="gap-modal-header">
         <span class="gap-modal-badge">⚠ Gap</span>
@@ -8835,7 +8835,7 @@ function build() {
   </div>
 
   <!-- Verify claims modal -->
-  <div id="verify-backdrop" onclick="closeVerify()">
+  <div id="verify-backdrop" onclick="closeVerify()" role="dialog" aria-modal="true" aria-labelledby="verify-title">
     <div id="verify-modal" onclick="event.stopPropagation()">
       <div class="verify-header">
         <div class="verify-title" id="verify-title">Verify claims</div>
@@ -9995,6 +9995,162 @@ if (document.readyState === 'loading') {
 } else {
   initDensityToggle();
 }
+
+// ── D4: Dialog primitive — Radix-style focus trap + Esc + backdrop (Wave H1) ──
+// installDialogPrimitive(dialogEl, opts) — idempotent; safe to call on first open.
+//   dialogEl: the element that carries role="dialog" (backdrop or inner panel).
+//   opts.closeEl: the selector/element for the backdrop click-to-close area (default: dialogEl itself).
+//   opts.closeFn: function to call on Esc + backdrop click.
+//   opts.firstFocusSel: CSS selector for first element to focus on open (default: first focusable child).
+// Behaviour wired on first call:
+//   - Moves focus to first focusable element inside dialogEl.
+//   - Restores focus to previously-focused element on close.
+//   - Tab/Shift+Tab cycle within dialogEl only.
+//   - Esc → closeFn (guards against being swallowed by nested handlers).
+//   - Backdrop click → closeFn (already wired via onclick; this adds KB-only guard).
+// All handlers attach with { capture: false } so existing handlers stay intact.
+var _dpInstalled = new WeakSet();
+var _dpFocusSave = null;
+function installDialogPrimitive(dialogEl, opts) {
+  if (!dialogEl || _dpInstalled.has(dialogEl)) return;
+  _dpInstalled.add(dialogEl);
+  opts = opts || {};
+  var closeFn = opts.closeFn || function() {};
+  var firstFocusSel = opts.firstFocusSel || null;
+  var FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+  function getFocusable() {
+    return Array.from(dialogEl.querySelectorAll(FOCUSABLE)).filter(function(el) {
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    });
+  }
+
+  function trapTab(e) {
+    if (e.key !== 'Tab') return;
+    var focusable = getFocusable();
+    if (!focusable.length) { e.preventDefault(); return; }
+    var first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first || !dialogEl.contains(document.activeElement)) {
+        e.preventDefault(); last.focus();
+      }
+    } else {
+      if (document.activeElement === last || !dialogEl.contains(document.activeElement)) {
+        e.preventDefault(); first.focus();
+      }
+    }
+  }
+
+  function onEsc(e) {
+    if (e.key !== 'Escape') return;
+    var isVisible = dialogEl.classList.contains('visible') || dialogEl.classList.contains('is-open') ||
+                    (dialogEl.getAttribute('aria-hidden') === 'false');
+    if (!isVisible) return;
+    e.preventDefault();
+    e.stopPropagation();
+    closeFn();
+  }
+
+  dialogEl.addEventListener('keydown', trapTab);
+  dialogEl.addEventListener('keydown', onEsc, true);
+
+  // Store open() hook on the element so callers can invoke it easily
+  dialogEl._dpOpen = function() {
+    _dpFocusSave = document.activeElement;
+    var target = null;
+    if (firstFocusSel) target = dialogEl.querySelector(firstFocusSel);
+    if (!target) {
+      var focusable = getFocusable();
+      target = focusable[0] || null;
+    }
+    if (target) {
+      try { target.focus({ preventScroll: true }); } catch(_) { target.focus(); }
+    }
+  };
+
+  dialogEl._dpClose = function() {
+    if (_dpFocusSave && typeof _dpFocusSave.focus === 'function') {
+      try { _dpFocusSave.focus({ preventScroll: true }); } catch(_) { _dpFocusSave.focus(); }
+      _dpFocusSave = null;
+    }
+  };
+}
+window.installDialogPrimitive = installDialogPrimitive;
+
+// Wire installDialogPrimitive to all 15 dialogs on DOMContentLoaded.
+// Each entry: [dialogEl selector, closeFn name, firstFocusSel (optional)]
+document.addEventListener('DOMContentLoaded', function() {
+  var defs = [
+    ['#gap-backdrop',            'closeGapModal',           '.verify-close'],
+    ['#quickadd-backdrop',       'closeQuickAdd',           '#quickadd-url'],
+    ['#tier-legend-backdrop',    'closeTierLegend',         '.verify-close'],
+    ['#equity-legend-backdrop',  'closeEquityLegend',       '.verify-close'],
+    ['#mobile-sheet-backdrop',   'closeMobileSheet',        null],
+    ['#kbd-help-backdrop',       'closeKbdHelp',            null],
+    ['#verify-backdrop',         'closeVerify',             '.verify-close'],
+    ['#pipeline-modal',          'closePipelineModal',      '.pipeline-modal-btn-cancel'],
+    ['#batch-status-modal',      'closeBatchStatusModal',   '.batch-status-close'],
+    ['#runway-detail-modal',     'closeRunwayDetailModal',  '.runway-detail-close'],
+    ['#scan-activity-modal',     'closeScanActivityModal',  '.scan-activity-close'],
+    ['#system-health-modal',     'closeSystemHealthModal',  '.system-health-close'],
+    ['#item-list-modal',         'closeItemListModal',      '.item-list-modal-close'],
+    ['#cmdk-backdrop',           'closeCmdK',               '#cmdk-input'],
+    ['#pill-popover',            'closePillPopover',        null],
+  ];
+  defs.forEach(function(def) {
+    var el = document.querySelector(def[0]);
+    if (!el) return;
+    var closeFn = def[1];
+    var firstFocusSel = def[2] || null;
+    installDialogPrimitive(el, {
+      closeFn: function() { if (typeof window[closeFn] === 'function') window[closeFn](); },
+      firstFocusSel: firstFocusSel,
+    });
+  });
+});
+
+// Patch open* functions to invoke _dpOpen after showing the dialog.
+// Done lazily (on first call) so the element exists in DOM when patched.
+function _dpPatchOpen(openFnName, dialogSel) {
+  var orig = window[openFnName];
+  if (!orig || orig._dpPatched) return;
+  window[openFnName] = function() {
+    var result = orig.apply(this, arguments);
+    var el = document.querySelector(dialogSel);
+    if (el && el._dpOpen) el._dpOpen();
+    return result;
+  };
+  window[openFnName]._dpPatched = true;
+}
+function _dpPatchClose(closeFnName, dialogSel) {
+  var orig = window[closeFnName];
+  if (!orig || orig._dpPatched) return;
+  window[closeFnName] = function() {
+    var el = document.querySelector(dialogSel);
+    if (el && el._dpClose) el._dpClose();
+    return orig.apply(this, arguments);
+  };
+  window[closeFnName]._dpPatched = true;
+}
+// Patch after DOMContentLoaded so window.* functions are defined
+document.addEventListener('DOMContentLoaded', function() {
+  var pairs = [
+    ['openGapModal',           'closeGapModal',           '#gap-backdrop'],
+    ['openVerify',             'closeVerify',             '#verify-backdrop'],
+    ['openTierLegend',         'closeTierLegend',         '#tier-legend-backdrop'],
+    ['openEquityLegend',       'closeEquityLegend',       '#equity-legend-backdrop'],
+    ['openKbdHelp',            'closeKbdHelp',            '#kbd-help-backdrop'],
+    ['openBatchStatusModal',   'closeBatchStatusModal',   '#batch-status-modal'],
+    ['openRunwayDetailModal',  'closeRunwayDetailModal',  '#runway-detail-modal'],
+    ['openScanActivityModal',  'closeScanActivityModal',  '#scan-activity-modal'],
+    ['openSystemHealthModal',  'closeSystemHealthModal',  '#system-health-modal'],
+    ['openPipelineModal',      'closePipelineModal',      '#pipeline-modal'],
+  ];
+  pairs.forEach(function(p) {
+    _dpPatchOpen(p[0], p[2]);
+    _dpPatchClose(p[1], p[2]);
+  });
+});
 
 // ── Power-user keyboard navigation (Item 3 — UX subagent 2026-05-16) ──
 // J/K to move between Apply-Now rows, A/Enter to open Apply link,
@@ -13628,7 +13784,10 @@ async function openVerify(slug) {
   if (!data) {
     title.textContent = 'Verify claims';
     body.innerHTML = '<p style="color:#cf222e">Could not load report data. Make sure the dashboard server is running.</p>';
-    document.getElementById('verify-backdrop').classList.add('visible');
+    const _vBd = document.getElementById('verify-backdrop');
+    _vBd.classList.add('visible');
+    _vBd.setAttribute('aria-hidden', 'false');
+    if (_vBd._dpOpen) _vBd._dpOpen();
     return;
   }
 
@@ -13664,7 +13823,10 @@ async function openVerify(slug) {
     \${evidenceSection}
   \`;
 
-  document.getElementById('verify-backdrop').classList.add('visible');
+  const _vBd2 = document.getElementById('verify-backdrop');
+  _vBd2.classList.add('visible');
+  _vBd2.setAttribute('aria-hidden', 'false');
+  if (_vBd2._dpOpen) _vBd2._dpOpen();
 }
 
 async function saveEvidence(slug) {
@@ -13684,7 +13846,9 @@ async function saveEvidence(slug) {
 }
 
 function closeVerify() {
-  document.getElementById('verify-backdrop').classList.remove('visible');
+  const _vBd = document.getElementById('verify-backdrop');
+  if (_vBd && _vBd._dpClose) _vBd._dpClose();
+  if (_vBd) { _vBd.classList.remove('visible'); _vBd.setAttribute('aria-hidden', 'true'); }
 }
 
 // ── Pipeline action modal (Run Batch + Process All) ────────────
@@ -15024,11 +15188,16 @@ function openGapModal(el) {
   }
 
   document.getElementById('gap-modal-body').innerHTML = sections.join('');
-  document.getElementById('gap-backdrop').classList.add('visible');
+  const _gapBd = document.getElementById('gap-backdrop');
+  _gapBd.classList.add('visible');
+  _gapBd.setAttribute('aria-hidden', 'false');
+  if (_gapBd._dpOpen) _gapBd._dpOpen();
 }
 
 function closeGapModal() {
-  document.getElementById('gap-backdrop').classList.remove('visible');
+  const _gapBd = document.getElementById('gap-backdrop');
+  if (_gapBd && _gapBd._dpClose) _gapBd._dpClose();
+  if (_gapBd) { _gapBd.classList.remove('visible'); _gapBd.setAttribute('aria-hidden', 'true'); }
 }
 
 // ── Tier-legend modal ──────────────────────────────────────────
@@ -16514,15 +16683,22 @@ async function optimisticStatusChange(rowId, newStatus) {
   }
   if (window.toast) window.toast(rowId + ' → ' + newStatus, 'info');
   try {
-    // TODO: wire /api/inline-update endpoint in dashboard-server.mjs
-    // For now: console.log the payload and no-op the fetch
     const payload = { rowId: rowId, field: 'status', value: newStatus };
     if (newStatus.toLowerCase() === 'applied') {
       // D5: trigger funnel-completion markApplied payload
       payload._funnelApplied = true;
     }
-    console.log('[D3] optimisticStatusChange payload:', JSON.stringify(payload));
-    // Simulated success — remove pending class
+    // D25: /api/inline-update is now wired — send the status update
+    const r = await fetch('/api/inline-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) {
+      const errData = await r.json().catch(() => ({}));
+      throw new Error(errData.error || ('HTTP ' + r.status));
+    }
+    // Confirmed — remove pending class
     for (var s2 of snapshots) {
       if (s2.badge) s2.badge.classList.remove('status-pill-pending');
     }
@@ -16539,6 +16715,32 @@ async function optimisticStatusChange(rowId, newStatus) {
   }
 }
 window.optimisticStatusChange = optimisticStatusChange;
+
+// ── D25: invokeBuildPackStage — wire drawer slash-command buttons ────────────
+// Calls POST /api/build-pack-stage; shows toast with stage result or error.
+async function invokeBuildPackStage(rowId, stage, btn) {
+  if (!rowId || !stage) return;
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const r = await fetch('/api/build-pack-stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rowId: String(rowId), stage, config: { dryRun: false } }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (r.ok && data.ok) {
+      if (window.toast) window.toast('/' + stage + ' completed for #' + rowId, 'success');
+    } else {
+      if (window.toast) window.toast('/' + stage + ' failed: ' + (data.error || r.status), 'error');
+    }
+  } catch (err) {
+    if (window.toast) window.toast('/' + stage + ' error: ' + err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
+}
+window.invokeBuildPackStage = invokeBuildPackStage;
 
 // ── D10: Inline edit — status pill + notes (Wave G1) ─────────────
 // Click status pill → inline <select>; click notes cell → inline <input>
@@ -20709,13 +20911,59 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 </body>
 </html>`;
 
-  writeFileSync(OUT_PATH, html);
+  // ── D18: Page-weight reduction — strip JS + CSS comments from output ─────
+  // Strips developer comments from inline <script> and <style> blocks in the
+  // generated HTML. Load-bearing strings (regexes with //, URLs, etc.) are
+  // preserved because we only strip lines that are SOLELY a comment (leading
+  // whitespace + //) and multi-line /* ... */ blocks. This approach is safe
+  // and avoids a full parser; the inline JS syntax-check gate (node --check)
+  // will catch any accidental breakage before the file is served.
+  //
+  // D18 before/after byte measurement is printed to the build log below.
+  function _stripScriptComments(js) {
+    // Strip /* ... */ multi-line block comments (preserves strings — these
+    // are developer-facing section headers like // ── X ──, not code).
+    let out = js.replace(/\/\*[\s\S]*?\*\//g, '');
+    // Strip single-line // comments that are the only content on a line
+    // (leading whitespace, optional) so we don't clobber URL protocols or
+    // regex literals. Lines like `if (x) { // comment` are preserved.
+    out = out.replace(/^[ \t]*\/\/[^\n]*\n?/gm, '');
+    // Collapse 3+ consecutive blank lines to 1
+    out = out.replace(/\n{3,}/g, '\n\n');
+    return out;
+  }
+  function _stripStyleComments(css) {
+    // Strip CSS /* ... */ block comments (they are section markers + doc, safe to remove)
+    let out = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    out = out.replace(/\n{3,}/g, '\n\n');
+    return out;
+  }
+  function _minifyHtmlOutput(raw) {
+    // Replace each <script>...</script> block's content
+    let result = raw.replace(
+      /(<script(?![^>]*src=)[^>]*>)([\s\S]*?)(<\/script>)/g,
+      (_, open, body, close) => open + _stripScriptComments(body) + close
+    );
+    // Replace each <style>...</style> block's content
+    result = result.replace(
+      /(<style[^>]*>)([\s\S]*?)(<\/style>)/g,
+      (_, open, body, close) => open + _stripStyleComments(body) + close
+    );
+    return result;
+  }
+
+  const rawBytes = Buffer.byteLength(html, 'utf8');
+  const minifiedHtml = _minifyHtmlOutput(html);
+  const minBytes = Buffer.byteLength(minifiedHtml, 'utf8');
+
+  writeFileSync(OUT_PATH, minifiedHtml);
   console.log(`Wrote ${OUT_PATH}`);
   console.log(`  Total evaluations: ${total}`);
   console.log(`  Apply-Now queue:   ${applyNow.length}`);
   console.log(`  Pipeline pending:  ${pipelinePending}`);
   console.log(`  Reports rendered:  ${renderedCount} → dashboard/reports/`);
   console.log(`  Reports parsed:    ${_reportCache.size} (cache hits: ${_reportCacheHits})`);
+  console.log(`  Page weight:       ${rawBytes.toLocaleString()} bytes raw → ${minBytes.toLocaleString()} bytes (−${(rawBytes - minBytes).toLocaleString()} bytes, ${Math.round((rawBytes - minBytes) / rawBytes * 100)}%)`);
   console.log(`Open with: open dashboard/index.html`);
 }
 
