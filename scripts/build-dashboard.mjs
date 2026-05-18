@@ -175,7 +175,7 @@ function readReportOnce(reportPath) {
     const empty = {
       exists: false, text: '',
       archetype: '', url: '', finalRecommendation: '',
-      competitiveEdge: [], tldr: '', positioning: '', comp: '',
+      competitiveEdge: [], tldr: '', roleFunction: '', positioning: '', comp: '',
       compRaw: '', locationField: '',
       keyGaps: [], topStories: [], whyGapsDontBlock: '',
     };
@@ -191,6 +191,7 @@ function readReportOnce(reportPath) {
     finalRecommendation: _parseFinalRecommendation(text),
     competitiveEdge: _parseCompetitiveEdge(text),
     tldr: _parseTldr(text),
+    roleFunction: _parseRoleFunction(text),
     positioning: _parsePositioning(text),
     comp: _parseComp(text),
     compRaw: _parseCompRaw(text),
@@ -244,6 +245,7 @@ function readReportOnce(reportPath) {
           compRaw:          _hasReal(parsed.compRaw) ? parsed.compRaw : (sibCompRaw || parsed.compRaw),
           locationField:    parsed.locationField    || _parseLocationField(sibText),
           tldr:             parsed.tldr             || _parseTldr(sibText),
+          roleFunction:     parsed.roleFunction     || _parseRoleFunction(sibText),
           positioning:      parsed.positioning      || _parsePositioning(sibText),
           competitiveEdge:  parsed.competitiveEdge?.length ? parsed.competitiveEdge : _parseCompetitiveEdge(sibText),
           topStories:       parsed.topStories?.length      ? parsed.topStories      : _parseTopStories(sibText),
@@ -1437,6 +1439,21 @@ function _parseTldr(text) {
   return '';
 }
 
+// 2026-05-17 — pull "likely responsibilities" from Bloque A for Role-at-a-glance.
+// Looks for the "Function" row in the role-summary table (council-eval +
+// legacy formats both name the cell some variant of Function / Responsibilities).
+function _parseRoleFunction(text) {
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
+  if (!block) return '';
+  // Match any of: "| Function | ... |", "| Responsibilities | ... |", "| Role | ... |"
+  const labelRe = /^\s*\|\s*\*?\*?\s*(?:Function|Responsibilities|Role(?:\s+function)?|Función|Funciones)\s*\*?\*?\s*\|\s*([^\n]+?)\s*\|\s*$/im;
+  const m = block.match(labelRe);
+  if (m) {
+    return m[1].replace(/\*\*/g, '').trim().slice(0, 400);
+  }
+  return '';
+}
+
 // Extract positioning angle from Block C.
 function _parsePositioning(text) {
   const block = _extractSection(text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m, /^## Bloque C\b[^\n]*$/m]);
@@ -2589,6 +2606,10 @@ function renderRow(r, idx) {
 
   // Pull richer signals for the expand panel.
   const tldr = getTldr(r.reportPath);
+  // 2026-05-17 — "likely responsibilities" surface for Role-at-a-glance per
+  // Mitchell's mega-list. Pulls the Function/Responsibilities row from
+  // Bloque A. Falls back gracefully (empty string) when not present.
+  const roleFunction = readReportOnce(r.reportPath)?.roleFunction || '';
   const positioning = getPositioning(r.reportPath);
   const stories = getTopStories(r.reportPath, 3);
   const comp = getComp(r.reportPath);
@@ -2641,14 +2662,21 @@ function renderRow(r, idx) {
     }
   } catch (_) { /* never break drawer on scorer error */ }
 
-  const tldrCard = tldr ? `<div class="dcard" style="margin-bottom:8px">
+  // 2026-05-17 — Role-at-a-glance now surfaces "likely responsibilities"
+  // (from the Function row in Bloque A) between TL;DR and the alignment bars
+  // per Mitchell's mega-list. Compact one-line label + value; hidden when
+  // the report doesn't disclose function/responsibilities.
+  const respLine = roleFunction ? `<div class="dcard-resp-line">
+    <span class="dcard-resp-label">Likely responsibilities:</span>
+    <span class="dcard-resp-value">${htmlEscape(roleFunction)}</span>
+  </div>` : '';
+
+  const tldrCard = (tldr || roleFunction || alignmentBars) ? `<div class="dcard" style="margin-bottom:8px">
     <div class="dcard-label">Role at a glance</div>
-    <div class="dcard-body">${htmlEscape(tldr)}</div>
+    ${tldr ? `<div class="dcard-body">${htmlEscape(tldr)}</div>` : ''}
+    ${respLine}
     ${alignmentBars}
-  </div>` : (alignmentBars ? `<div class="dcard" style="margin-bottom:8px">
-    <div class="dcard-label">Role at a glance</div>
-    ${alignmentBars}
-  </div>` : '');
+  </div>` : '';
 
   // 2026-05-17 — Mitchell flagged "How to position" rendering as raw markdown
   // ('### Level Assessment | Dimension | ...'). Route through marked so
@@ -4644,6 +4672,29 @@ function build() {
     .mc-strip { margin-left: -12px; margin-right: -12px; }
   }
 
+  /* Fix 2: system telemetry summary chips in mc-strip */
+  .mc-sys-chip {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .12s, color .12s;
+    line-height: 1.4;
+  }
+  .mc-sys-chip:hover { border-color: var(--border-strong); color: var(--text-2); }
+  @media (max-width: 720px) { .mc-sys-chip { display: none; } }
+
+  /* Fix 2: career tile accent classes */
+  .stat-burndown-urgent::before { background: var(--red-fg, #dc2626); }
+  .stat-burndown-warn::before   { background: var(--amber-fg, #d97706); }
+  .stat-anchor-2031::before     { background: var(--blue-fg, #0969da); }
+
   /* ── Cmd-K command palette ─────────────────────────────────── */
   #cmdk-backdrop {
     display: none; position: fixed; inset: 0; z-index: 100;
@@ -5747,6 +5798,16 @@ function build() {
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  /* "Likely responsibilities" one-line surface in Role-at-a-glance (2026-05-17). */
+  .dcard-resp-line {
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
+    font-size: 12px; line-height: 1.5; color: var(--text-2);
+  }
+  .dcard-resp-label {
+    font-weight: 600; color: var(--text-3); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px;
+  }
+  .dcard-resp-value { color: var(--text-1); }
   /* Alignment-bar trio in Role-at-a-glance card — 3 horizontal % bars. */
   .alignment-bars { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
   .alignbar-row { display: grid; grid-template-columns: 150px 1fr 44px; align-items: center; gap: 8px; font-size: 11.5px; cursor: help; }
@@ -7579,11 +7640,27 @@ function build() {
   }
 
   /* ── Mobile bottom tab bar (Apply-Now / All / Charts / Settings) */
-  /* Native-iOS-feel tab strip pinned to the bottom of the viewport on
-     mobile. Honors safe-area-inset-bottom so the home indicator on
-     notched iPhones doesn't crowd the tap targets. Hidden ≥721px so
-     the desktop toolbar stays in charge. */
+  /* Fix 4: single canonical nav — sidebar at ≥1024px, bottom tab at <1024px.
+     The two navs cover the same destinations with the same labels (synced above).
+     @media breakpoints enforce mutual exclusivity:
+       ≥1024px: sidebar is the canonical nav; bottom tab bar is hidden.
+       <1024px: bottom tab bar is canonical; sidebar collapses to icon-rail (721-1023)
+                or slide-in overlay (≤720).
+     Kill switch: set localStorage key 'careerops.forceSidebar'=1 to always show sidebar,
+     or 'careerops.forceTabbar'=1 to always show the tab bar, overriding breakpoints.
+     DASHBOARD_INVARIANTS.md §4 scroll behavior unaffected (wrapping divs unchanged). */
   #mobile-tabbar { display: none; }
+  @media (min-width: 1024px) {
+    /* Above 1024px: sidebar is the canonical nav — bottom tab bar must be hidden. */
+    #mobile-tabbar { display: none !important; }
+    /* Sidebar nav is already visible above 720px (not affected by the old rule). */
+  }
+  @media (max-width: 1023px) {
+    /* Below 1024px: bottom tab bar is the canonical nav. Sidebar still shows as
+       icon-rail (721-1023px) or drawer (≤720px) for secondary access, but the
+       bottom tab bar carries the primary nav affordance on these sizes. */
+    #mobile-tabbar { display: grid; }
+  }
   @media (max-width: 720px) {
     #mobile-tabbar {
       display: grid;
@@ -8648,6 +8725,12 @@ function build() {
       <span class="mc-health-dot" aria-hidden="true"></span>
       <span class="mc-health-text" id="mc-health-text">all healthy</span>
     </div>
+    <!-- Fix 2: system telemetry summary chips — moved out of KPI row into mc-strip
+         so career KPIs can surface user-facing progress tiles (DESIGN_PRINCIPLES.md §Pillar 1).
+         Clicking each chip still routes to the same toggleStatPanel panels. -->
+    <button type="button" class="mc-sys-chip" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies" aria-label="${portals.tracked} companies tracked">${portals.tracked} companies</button>
+    <button type="button" class="mc-sys-chip" id="mc-scanned-chip" onclick="toggleStatPanel('scanned')" title="Click to see scan activity" aria-label="${scanTotal} URLs scanned">${scanTotal} scanned</button>
+    <button type="button" class="mc-sys-chip" id="mc-batches-chip" onclick="toggleStatPanel('batches')" title="Click to see batch run history" aria-label="${batchRuns} batches run">${batchRuns} batches</button>
   </div>
 
   <div class="subtle" id="dashboard-meta" title="${htmlEscape(generated)}"><span id="live-updated">Updated ${htmlEscape(generated)}</span> · ${reportsToday} reports today</div>
@@ -8773,20 +8856,22 @@ function build() {
     <span class="ptr-label" id="ptr-label">Pull to refresh</span>
   </div>
 
-  <!-- Mobile bottom tab bar (Apply-Now / All / Charts / Settings).
-       Hidden on desktop via CSS. Tabs scroll the corresponding section
-       into view; "Settings" reuses the mobile-sheet to expose the
-       theme toggle, demo mode, and command palette without needing the
-       cramped top toolbar on small screens. -->
+  <!-- Fix 4: single canonical nav — sidebar at ≥1024px, bottom tab bar at <1024px.
+       CSS enforces mutual exclusivity: .sidebar-nav display:none below 1024px;
+       #mobile-tabbar display:none above 1024px.
+       Labels synced to sidebar's longer-form names for consistency
+       (DESIGN_PRINCIPLES.md §Pillar 1 — same destinations, same language).
+       Tab keys match sidebar section IDs so switchMobileTab / sidebar link
+       both route to the same scrollTarget. -->
   <nav id="mobile-tabbar" role="tablist" aria-label="Sections">
     <button type="button" class="mobile-tab" role="tab" aria-selected="true" data-tab-target="apply-now-section" aria-controls="apply-now-section" onclick="switchMobileTab('apply-now-section', this)">
-      <span class="tab-icon" aria-hidden="true">⚡</span><span class="tab-label">Apply</span>
+      <span class="tab-icon" aria-hidden="true">⚡</span><span class="tab-label">Apply-Now</span>
     </button>
     <button type="button" class="mobile-tab" role="tab" aria-selected="false" data-tab-target="all-evaluations-section" aria-controls="all-evaluations-section" onclick="switchMobileTab('all-evaluations-section', this)">
-      <span class="tab-icon" aria-hidden="true">≡</span><span class="tab-label">All</span>
+      <span class="tab-icon" aria-hidden="true">≡</span><span class="tab-label">All Evals</span>
     </button>
     <button type="button" class="mobile-tab" role="tab" aria-selected="false" data-tab-target="charts-section" aria-controls="charts-section" onclick="switchMobileTab('charts-section', this)">
-      <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Charts</span>
+      <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Trends</span>
     </button>
     <button type="button" class="mobile-tab" role="tab" aria-selected="false" data-tab-target="__settings__" aria-controls="mobile-sheet" onclick="openMobileSettingsSheet(this)">
       <span class="tab-icon" aria-hidden="true">⚙︎</span><span class="tab-label">Settings</span>
@@ -8915,20 +9000,43 @@ function build() {
         <div class="stat-trend"><span class="stat-delta stat-delta-flat" title="Snapshot — pipeline depth has no daily history">— snapshot</span></div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat stat-cell" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies">
-        <div class="stat-label"><span class="label-full">Companies tracked</span><span class="label-short">Companies</span></div>
-        <div class="stat-value">${portals.tracked}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      <!-- Fix 2: replaced system KPI tiles (Companies / Scanned / Batches) with
+           career-facing progress tiles. System metrics moved to mc-strip chips.
+           DESIGN_PRINCIPLES.md §Pillar 1: daily-driver dashboard should surface
+           decision-grade career data, not system telemetry. -->
+      <!-- Tile 1: Time-to-Offer burn-down — Q3 2026 landing deadline -->
+      ${(() => {
+        const DEADLINE_ISO = '2026-09-30';
+        const deadline = new Date(DEADLINE_ISO).getTime();
+        const nowMs = Date.now();
+        const totalDays = Math.round((deadline - new Date('2026-05-16').getTime()) / 86400000); // calibration start
+        const daysLeft = Math.max(0, Math.round((deadline - nowMs) / 86400000));
+        const daysElapsed = totalDays - daysLeft;
+        const pctElapsed = totalDays > 0 ? Math.min(100, Math.round((daysElapsed / totalDays) * 100)) : 0;
+        // Required apply velocity: need ~1-3 strong apps/night until deadline
+        const appsNeeded = Math.max(1, applyNow.length === 0 ? 1 : applyNow.length);
+        const appsPerDay = daysLeft > 0 ? (appsNeeded / daysLeft).toFixed(2) : '—';
+        const urgencyCls = daysLeft <= 30 ? 'stat-cell stat-burndown-urgent' : daysLeft <= 60 ? 'stat-cell stat-burndown-warn' : 'stat-cell';
+        return `<div class="stat ${urgencyCls}" onclick="window.drillIn('anchor-2031','',event)" title="Q3 2026 landing deadline — ${daysLeft} days remaining · click for 2031 milestone detail" role="button" tabindex="0">
+          <div class="stat-label"><span class="label-full">Q3 2026 · Days left</span><span class="label-short">Days left</span></div>
+          <div class="stat-value" style="font-variant-numeric:tabular-nums">${daysLeft}</div>
+          <div class="stat-trend"><span class="stat-delta ${daysLeft <= 30 ? 'stat-delta-down' : 'stat-delta-flat'}" title="${pctElapsed}% of search window elapsed · ~${appsPerDay} apps/day needed">~${appsPerDay} apps/day</span></div>
+          <span class="stat-caret" aria-hidden="true">▾</span>
+        </div>`;
+      })()}
+      <!-- Tile 2: Network leverage — warm-intro paths -->
+      <div class="stat stat-cell" onclick="window.drillIn('network-leverage','',event)" title="Press contacts + warm-intro paths to active companies. Click for detail." role="button" tabindex="0">
+        <div class="stat-label"><span class="label-full">Press network</span><span class="label-short">Network</span></div>
+        <div class="stat-value">340</div>
+        <div class="stat-trend"><span class="stat-delta stat-delta-flat" id="live-warm-intros" title="Warm-intro paths to companies in your apply-now queue">loading…</span></div>
+        <span class="stat-caret" aria-hidden="true">▾</span>
       </div>
-      <div class="stat stat-cell" onclick="toggleStatPanel('scanned')" title="Click to see scan activity">
-        <div class="stat-label"><span class="label-full">URLs scanned</span><span class="label-short">Scanned</span></div>
-        <div class="stat-value" id="live-scanned">${scanTotal}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
-      </div>
-      <div class="stat stat-cell" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
-        <div class="stat-label"><span class="label-full">Batches run</span><span class="label-short">Batches</span></div>
-        <div class="stat-value" id="live-batches">${batchRuns}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      <!-- Tile 3: 2031 wealth-trajectory anchor — links to long-arc milestone -->
+      <div class="stat stat-cell stat-anchor-2031" onclick="window.drillIn('anchor-2031','',event)" title="2031 Business Class Freedom milestone — click for full milestone timeline" role="button" tabindex="0" aria-label="2031 long-arc wealth anchor — Business Class Freedom by January 2031">
+        <div class="stat-label"><span class="label-full">2031 anchor</span><span class="label-short">2031</span></div>
+        <div class="stat-value" style="font-size:14px;letter-spacing:0;font-family:inherit;font-weight:700">✈ Free</div>
+        <div class="stat-trend"><span class="stat-delta stat-delta-flat" title="Business Class Freedom · United Global Services · 1.75M miles by Jan 2031">Jan 2031</span></div>
+        <span class="stat-caret" aria-hidden="true">▾</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
         <div class="stat-label"><span class="label-full">Applied / In process</span><span class="label-short">Applied</span></div>
@@ -8944,6 +9052,50 @@ function build() {
   <div style="margin:12px 0 0;max-width:540px">
     ${tpgmWidgetHtml}
   </div>
+
+  <!-- Fix 5: 2031 long-arc anchor widget — below KPI tiles + TPgM widget.
+       Source: 00_Master_Knowledge_Base.md §Financial Strategy + §Travel & Lifestyle.
+       This job search is a means, not the end — surface the actual goal.
+       DESIGN_PRINCIPLES.md §Pillar 3: surface both the goal AND the bridge costs.
+       Click anywhere on the widget → anchor-2031 drill-in with full milestone timeline. -->
+  ${(() => {
+    const DEADLINE_ISO = '2026-09-30';
+    const daysToLand = Math.max(0, Math.round((new Date(DEADLINE_ISO).getTime() - Date.now()) / 86400000));
+    const milestones = [
+      { date: 'Q3 2026',  label: 'Land role',                  icon: '🏁' },
+      { date: 'Jun 2027', label: 'Premier 1K',                  icon: '✈' },
+      { date: 'Dec 2027', label: '1M miles',                    icon: '📍' },
+      { date: 'Q1 2030',  label: 'Global Services',             icon: '⭐' },
+      { date: 'Dec 2030', label: '1.75M miles',                 icon: '📍' },
+      { date: 'Jan 2031', label: 'FREEDOM',                     icon: '🌏' },
+    ];
+    const timelineItems = milestones.map((m, i) => {
+      const isFirst = i === 0;
+      const isLast = i === milestones.length - 1;
+      const accent = isFirst ? 'var(--green-fg)' : isLast ? 'var(--blue-fg)' : 'var(--border-strong)';
+      return `<div class="anchor-2031-step" style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:72px;max-width:90px">
+        <div style="font-size:15px;line-height:1">${m.icon}</div>
+        <div style="font-size:10px;font-weight:600;color:${accent};text-align:center;line-height:1.2">${m.date}</div>
+        <div style="font-size:11px;color:var(--text-2);text-align:center;line-height:1.2;word-break:keep-all">${m.label}</div>
+      </div>
+      ${i < milestones.length - 1 ? '<div style="flex:1 1 auto;height:2px;background:var(--border);align-self:center;margin-bottom:24px;min-width:8px"></div>' : ''}`;
+    }).join('');
+    return `<div class="anchor-2031-widget" onclick="window.drillIn('anchor-2031','',event)"
+      role="button" tabindex="0"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('anchor-2031','',event)}"
+      title="2031 anchor: Business Class Freedom · United Global Services · 1.75M miles — click for full milestone detail"
+      aria-label="2031 long-arc anchor: Business Class Freedom by January 2031 — click for details"
+      style="margin:16px 0 0;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);cursor:pointer;border-left:3px solid var(--blue-fg);transition:border-color .12s,box-shadow .12s;max-width:660px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em">2031 anchor · Business class freedom</div>
+        <div style="font-size:11px;color:var(--text-3)">${daysToLand}d to land ▸</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px">
+        ${timelineItems}
+      </div>
+      <div style="font-size:10px;color:var(--text-4);margin-top:10px;border-top:1px solid var(--border);padding-top:6px">Source: 00_Master_Knowledge_Base.md §Financial Strategy · §Travel &amp; Lifestyle</div>
+    </div>`;
+  })()}
 
   ${sideAllocations.length > 0 ? `
   <!-- I1 Wave G1: 20%-time / side-allocations tile -->
@@ -11081,6 +11233,49 @@ _drillInRegister('tpgm-gaps', function(id) {
     html: '<p style="font-size:12px;margin-bottom:8px">Open gap points &mdash; each represents a bridgeable PM-credibility signal:</p>'
       + items
       + '<p style="font-size:11px;color:var(--text-4);margin-top:10px">Add evidence via <button type="button" class="dcard-btn" style="font-size:11px;padding:2px 8px" onclick="drillIn(&quot;ingest-form&quot;,&quot;&quot;,event)">+ weekly ingest</button> to close gaps.</p>',
+  };
+});
+
+// Fix 2 + Fix 5: 2031 long-arc anchor drill-in
+// Source: 00_Master_Knowledge_Base.md §Financial Strategy + §Travel & Lifestyle
+// Milestones from §Key Milestones table, embedded at build time.
+// DESIGN_PRINCIPLES.md §Pillar 3: surface both the goal AND the bridge-cost.
+_drillInRegister('anchor-2031', function() {
+  var milestones = [
+    { date: 'Q3 2026',  label: 'Land role',                  detail: '$96k vesting from year 1 · target TC $250-320K' },
+    { date: 'Jun 2027', label: 'Premier 1K',                  detail: 'United Premier 1K status achievement' },
+    { date: 'Dec 2027', label: '1M award miles',               detail: 'First million-mile milestone · ~14 business class awards' },
+    { date: 'Q1 2030',  label: 'Global Services invitation',   detail: 'United Global Services — the top loyalty tier' },
+    { date: 'Dec 2030', label: '1.75M award miles',            detail: '22 business class redemptions total' },
+    { date: 'Jan 2031', label: 'FREEDOM',                      detail: 'Business class travel freedom — the actual goal of this job search' },
+  ];
+  var timelineHtml = milestones.map(function(m, i) {
+    var isNext = i === 0;
+    var accent = isNext ? 'var(--green-fg)' : 'var(--border-strong)';
+    return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+      + '<div style="flex:0 0 72px;font-size:11px;font-weight:600;color:' + (isNext ? 'var(--green-fg)' : 'var(--text-3)') + ';text-align:right;padding-top:2px">' + m.date + '<\/div>'
+      + '<div style="flex:0 0 3px;background:' + accent + ';border-radius:2px;margin:0 4px"><\/div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + m.label + '<\/div>'
+      + '<div style="font-size:11px;color:var(--text-3);margin-top:2px">' + m.detail + '<\/div>'
+      + '<\/div>'
+      + '<\/div>';
+  }).join('');
+  return {
+    title: '2031 anchor · Business Class Freedom',
+    html: '<p style="font-size:12px;color:var(--text-3);margin:0 0 12px">This job search is a means, not the end. The 2031 milestone is the actual goal.</p>'
+      + timelineHtml
+      + '<p style="font-size:10px;color:var(--text-4);margin-top:12px;border-top:1px solid var(--border);padding-top:8px">Source: 00_Master_Knowledge_Base.md §Financial Strategy · §Travel &amp; Lifestyle<\/p>',
+  };
+});
+
+// Fix 2: network-leverage drill-in
+_drillInRegister('network-leverage', function() {
+  return {
+    title: 'Network leverage',
+    html: '<p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 6px">340 press contacts<\/p>'
+      + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">Warm-intro paths to companies in your apply-now queue are computed by <code>lib\/network-graph.mjs<\/code> on each dashboard build. The count in the tile updates live when network-graph.json is populated.<\/p>'
+      + '<p style="font-size:11px;color:var(--text-4)">Run <code>node scripts\/build-network-graph.mjs<\/code> to refresh warm-intro paths. Result populates <code>data\/network-graph.json<\/code>.<\/p>',
   };
 });
 
