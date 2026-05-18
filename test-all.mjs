@@ -280,9 +280,69 @@ if (shared.includes('_profile.md')) {
   fail('_shared.md does NOT reference _profile.md');
 }
 
-// ── 9. AGENTS.md INTEGRITY ──────────────────────────────────────
+// ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
-console.log('\n9. AGENTS.md integrity');
+console.log('\n9. Local parser contract');
+
+const scanScript = readFile('scan.mjs');
+if (
+  scanScript.includes('typeof company.name !== \'string\'') &&
+  scanScript.includes('company.name.trim()') &&
+  scanScript.includes('company.name.toLowerCase()')
+) {
+  pass('scan.mjs guards company names before filtering');
+} else {
+  fail('scan.mjs does not guard company names before filtering');
+}
+
+if (
+  scanScript.includes("skipIds: ['local-parser']") &&
+  scanScript.includes('local parser failed, used API fallback') &&
+  scanScript.includes('resolveProvider(company, providers')
+) {
+  pass('scan.mjs falls back to ATS API when local parser fails');
+} else {
+  fail('scan.mjs does not fall back to ATS API when local parser fails');
+}
+
+if (fileExists('providers/local-parser.mjs')) {
+  pass('local-parser provider module exists');
+} else {
+  fail('local-parser provider module is missing');
+}
+
+const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
+if (
+  scanMode.includes('local_parser_ok') &&
+  scanMode.includes('no repetir scraping caro') &&
+  scanMode.includes('nombre no listado en `local_parser_ok`')
+) {
+  pass('scan.md skips expensive levels after successful local parser');
+} else {
+  fail('scan.md missing local_parser_ok skip rules for agent scan');
+}
+
+if (!fileExists('scripts/parsers/cohere_jobs.py')) {
+  pass('Cohere parser example is not bundled as a runtime script');
+} else {
+  fail('Cohere parser example is still bundled as a runtime script');
+}
+
+const portalExample = readFile('templates/portals.example.yml');
+if (
+  !portalExample.includes('cohere_jobs.py') &&
+  portalExample.includes('scripts/parsers/example-js-company-jobs.js') &&
+  portalExample.includes('scripts/parsers/example_python_company_jobs.py') &&
+  portalExample.includes('already know their target careers URL')
+) {
+  pass('portals example documents a generic local parser contract');
+} else {
+  fail('portals example still points at a bundled Cohere parser');
+}
+
+// ── 10. AGENTS.md INTEGRITY ─────────────────────────────────────
+
+console.log('\n10. AGENTS.md integrity');
 
 const agents = readFile('AGENTS.md');
 const requiredSections = [
@@ -299,9 +359,9 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 10. VERSION FILE ─────────────────────────────────────────────
+// ── 11. VERSION FILE ─────────────────────────────────────────────
 
-console.log('\n10. Version file');
+console.log('\n11. Version file');
 
 if (fileExists('VERSION')) {
   const version = readFile('VERSION').trim();

@@ -10,8 +10,9 @@
  *   - fetch(entry, ctx): [{title,url,company,location}] — required
  *
  * Files prefixed with _ are shared helpers (e.g. _http.mjs) and are never
- * loaded as providers. Adding a new source = drop a *.mjs into providers/,
- * no scan.mjs edits.
+ * loaded as providers. Adding a new HTTP/API source = drop a *.mjs into
+ * providers/. Local executable parsers use `providers/local-parser.mjs` when
+ * `parser.command` + `parser.script` are set in portals.yml.
  *
  * A tracked_companies entry can set `provider:` explicitly to bypass
  * URL-based auto-detection. The `transport:` field is reserved for future
@@ -36,7 +37,7 @@ const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const PORTALS_PATH = 'portals.yml';
+const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
 const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
@@ -81,14 +82,27 @@ async function loadProviders(dir) {
 
 // Resolve which provider handles a tracked_companies entry.
 // 1. Explicit `provider:` field wins (skips detect()).
-// 2. Otherwise each provider's detect() runs in load order; first hit wins.
-function resolveProvider(entry, providers) {
+// 2. local-parser when parser.command + script are configured (before API detect).
+// 3. Otherwise each provider's detect() runs in load order; first hit wins.
+function resolveProvider(entry, providers, { skipIds = [] } = {}) {
   if (entry.provider) {
     const p = providers.get(entry.provider);
     if (!p) return { error: `unknown provider: ${entry.provider}` };
     return { provider: p };
   }
+
+  const localParser = providers.get('local-parser');
+  if (localParser && !skipIds.includes('local-parser')) {
+    try {
+      const hit = localParser.detect?.(entry);
+      if (hit) return { provider: localParser };
+    } catch (err) {
+      console.error(`⚠️  local-parser: detect() threw for "${entry.name}" — ${err.message}`);
+    }
+  }
+
   for (const p of providers.values()) {
+    if (skipIds.includes(p.id)) continue;
     let hit;
     try {
       hit = p.detect?.(entry);
@@ -284,8 +298,9 @@ async function main() {
   let skippedCount = 0;
   const resolveErrors = [];
   for (const company of companies) {
+    if (!company || typeof company !== 'object') continue;
     if (company.enabled === false) continue;
-    if (typeof company.name !== 'string' || !company.name) {
+    if (typeof company.name !== 'string' || !company.name.trim()) {
       console.error(`⚠️  Skipping entry — missing or non-string 'name' field: ${JSON.stringify(company)}`);
       continue;
     }
@@ -296,7 +311,8 @@ async function main() {
     targets.push({ ...company, _provider: resolved.provider });
   }
 
-  console.log(`Scanning ${targets.length} companies via providers (${skippedCount} skipped — no provider matched)`);
+  const localParserCount = targets.filter(t => t._provider.id === 'local-parser').length;
+  console.log(`Scanning ${targets.length} companies via providers (${localParserCount} local parser; ${skippedCount} skipped — no provider matched)`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   // 4. Load dedup sets
@@ -313,10 +329,25 @@ async function main() {
   const errors = [...resolveErrors];
 
   const tasks = targets.map(company => async () => {
-    const provider = company._provider;
+    let provider = company._provider;
     const ctx = makeHttpCtx();
+    let sourceName = provider.id === 'local-parser' ? 'local-parser' : `${provider.id}-api`;
     try {
-      const jobs = await provider.fetch(company, ctx);
+      let jobs;
+      try {
+        jobs = await provider.fetch(company, ctx);
+      } catch (parserErr) {
+        if (provider.id !== 'local-parser') throw parserErr;
+        const fallback = resolveProvider(company, providers, { skipIds: ['local-parser'] });
+        if (!fallback || fallback.error) throw parserErr;
+        provider = fallback.provider;
+        sourceName = `${provider.id}-api`;
+        jobs = await provider.fetch(company, ctx);
+        errors.push({
+          company: company.name,
+          error: `local parser failed, used API fallback: ${parserErr.message}`,
+        });
+      }
       if (!Array.isArray(jobs)) {
         throw new Error(`${provider.id}: fetch() did not return an array`);
       }
@@ -343,9 +374,7 @@ async function main() {
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
-        // Source label keeps the `${provider.id}-api` suffix so existing
-        // scan-history.tsv rows continue to match for dedup.
-        newOffers.push({ ...job, source: `${provider.id}-api` });
+        newOffers.push({ ...job, source: sourceName });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
