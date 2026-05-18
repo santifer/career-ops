@@ -452,13 +452,18 @@ function convertCertToTypst(lines) {
 // ── Token substitution ────────────────────────────────────────────────────────
 
 function substituteTokens(templateSrc, tokens) {
-  let out = templateSrc;
-  for (const [key, value] of Object.entries(tokens)) {
-    const placeholder = `{{${key}}}`;
-    // Use split+join to replace all occurrences (no regex needed)
-    out = out.split(placeholder).join(value);
-  }
-  return out;
+  // Skip `//` comment lines so multi-line token values can't break out
+  // of a single-line Typst comment (e.g. the {{TOKEN}} reference docs at
+  // the top of cv-template.typ).
+  return templateSrc.split('\n').map(line => {
+    if (line.trimStart().startsWith('//')) return line;
+    let out = line;
+    for (const [key, value] of Object.entries(tokens)) {
+      const placeholder = `{{${key}}}`;
+      out = out.split(placeholder).join(value);
+    }
+    return out;
+  }).join('\n');
 }
 
 // ── Main render function ──────────────────────────────────────────────────────
