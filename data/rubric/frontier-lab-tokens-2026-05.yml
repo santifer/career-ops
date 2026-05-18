@@ -1,0 +1,46 @@
+# Frontier-lab mission-keyword tokens (audit Phase 7, dealbreaker-final
+# 2026-05-18-070912 §FL-*). Per-company regex tokens that recruiters expect
+# to see referenced in "Why this company" / "Why this role" form-field
+# answers and cover letter context paragraphs.
+#
+# Severity ladder per dealbreaker:
+#   - anthropic: WARN (regex verified against current RSP v3.2 messaging
+#                     2026-05-18; tokens current as of that fetch)
+#   - openai / xai / mistral: NOTE (converged-reasoning from research; not
+#                     yet per-company WebFetch-validated against current
+#                     2026 messaging — promote to WARN after validation)
+#
+# Used by FL-01..FL-04 checks in scripts/rubric-check.mjs.
+# Date-stamped filename signals staleness — revisit quarterly or on known
+# messaging changes.
+
+anthropic:
+  severity: WARN
+  regex: '(safety|RSP|responsible scaling|capability threshold|safeguards|ASL-3|frontier safety|alignment|steerable)'
+  verified_at: '2026-05-18T07:35:00Z'
+  source: 'anthropic.com/candidate-ai-guidance + RSP v3.2 messaging fetch (dealbreaker validation)'
+
+openai:
+  severity: NOTE
+  regex: '(AGI|safe AI|benefit humanity|broadly distributed|misuse|deployment safety|alignment)'
+  verified_at: null
+  source: 'researcher-report-20260518-070912 §FL-02 (3-model convergence, not primary-verified)'
+
+xai:
+  severity: NOTE
+  regex: '(maximally curious|truth-seeking|understand the universe|unbiased|first principles)'
+  verified_at: null
+  source: 'researcher-report-20260518-070912 §FL-03 (3-model convergence, not primary-verified)'
+
+mistral:
+  severity: NOTE
+  regex: '(open weight|EU sovereign|open-source|open weights|European AI|frontier open)'
+  verified_at: null
+  source: 'researcher-report-20260518-070912 §FL-04 (3-model convergence, not primary-verified)'
+
+# Add other-company tokens as needed. Format:
+#   <company-lowercase>:
+#     severity: WARN | NOTE
+#     regex: '(...)'
+#     verified_at: 'YYYY-MM-DDTHH:MM:SSZ' | null
+#     source: 'description'
