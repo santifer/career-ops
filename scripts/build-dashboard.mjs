@@ -2623,10 +2623,12 @@ function renderRow(r, idx) {
     : '';
 
   // ── Meta chips ──────────────────────────────────────────
+  // Wave C-A drill-in wiring: comp chip → comp:{num}:{base}, date chip → metric:{num}:evalDate
+  const _compBase = (() => { try { const m = String(comp||'').match(/\$\s*(\d{2,4})\s*K/i); return m ? parseInt(m[1],10)*1000 : 0; } catch(_){return 0;} })();
   const metaChips = [
-    comp ? `<span class="meta-chip meta-chip-comp">💰 ${htmlEscape(comp)}</span>` : '',
+    comp ? `<span class="meta-chip meta-chip-comp drill-trigger" data-drill="comp:${htmlEscape(String(r.num||''))}:${_compBase}" role="button" tabindex="0" title="Click for comp intelligence + equity calculator" onclick="event.stopPropagation();window.drillIn('comp','${htmlEscape(String(r.num||''))}:${_compBase}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('comp','${htmlEscape(String(r.num||''))}:${_compBase}',event)}">💰 ${htmlEscape(comp)}</span>` : '',
     archetype ? `<span class="meta-chip meta-chip-tier">${htmlEscape(archetype)}</span>` : '',
-    r.date ? `<span class="meta-chip">📅 ${htmlEscape(r.date)}</span>` : '',
+    r.date ? `<span class="meta-chip drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:evalDate" role="button" tabindex="0" title="Click for eval provenance — when scored, by what model" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:evalDate',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:evalDate',event)}">📅 ${htmlEscape(r.date)}</span>` : '',
   ].filter(Boolean).join('');
 
   // ── Intro: TL;DR + alignment bars + positioning (compact, full-width) ─────
@@ -2640,24 +2642,27 @@ function renderRow(r, idx) {
         companyName: r.company,
         hasReferralPath: false, // TODO: wire from linkedin-network when ready
       });
-      const bar = (pct, label, hint, color) => {
+      // Wave C-A drill-in: percentage pills each open strategy-ceiling drill-in
+      const _pctDrillKey = (key) => `${htmlEscape(String(r.num||''))}:${key}`;
+      const bar = (pct, label, hint, color, drillKey) => {
         const pctClamped = Math.max(0, Math.min(100, pct || 0));
         const colorClass = pctClamped >= 70 ? 'alignbar-strong'
                          : pctClamped >= 40 ? 'alignbar-mid'
                          : 'alignbar-weak';
+        const dk = _pctDrillKey(drillKey || color || 'pct');
         return `<div class="alignbar-row" title="${htmlEscape(hint)}">
           <span class="alignbar-label">${htmlEscape(label)}</span>
           <div class="alignbar-track"><div class="alignbar-fill ${colorClass}" style="width:${pctClamped}%"></div></div>
-          <span class="alignbar-pct">${pctClamped}%</span>
+          <span class="alignbar-pct drill-trigger" data-drill="percentage:${dk}" role="button" tabindex="0" title="Click for strategy ceiling — how to improve this metric" onclick="event.stopPropagation();window.drillIn('percentage','${dk}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('percentage','${dk}',event)}">${pctClamped}%</span>
         </div>`;
       };
       const alignTooltip = 'How well my CV + portfolio match this JD (Block B requirements + competitive edges + overall score).';
       const intvTooltip = 'Estimated % chance of converting Applied → recruiter screen. Base rate 12% for AI-native cold apps, modulated by score, archetype, comp match, prior outcomes at this company.';
       const hmTooltip = 'Estimated % chance the hiring manager or recruiter notices the application (vs ATS-filtered). Boosted by competitive edges, rare-combination markers, and referral path strength.';
       alignmentBars = `<div class="alignment-bars">
-        ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile')}
-        ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview')}
-        ${bar(align.hmNoticing, 'HM-noticing chance', hmTooltip, 'hm')}
+        ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile', 'profile_alignment')}
+        ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview', 'interview_likelihood')}
+        ${bar(align.hmNoticing, 'HM-noticing chance', hmTooltip, 'hm', 'hm_noticing_chance')}
       </div>`;
     }
   } catch (_) { /* never break drawer on scorer error */ }
@@ -2671,8 +2676,10 @@ function renderRow(r, idx) {
     <span class="dcard-resp-value">${htmlEscape(roleFunction)}</span>
   </div>` : '';
 
-  const tldrCard = (tldr || roleFunction || alignmentBars) ? `<div class="dcard" style="margin-bottom:8px">
-    <div class="dcard-label">Role at a glance</div>
+  // Wave C-A drill-in: Role at a glance card → metric:{num}:role_at_glance
+  const _rowDrillNum = htmlEscape(String(r.num||''));
+  const tldrCard = (tldr || roleFunction || alignmentBars) ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:role_at_glance" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full role context" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)}">
+    <div class="dcard-label">Role at a glance <span class="dcard-explore-hint">▸ explore</span></div>
     ${tldr ? `<div class="dcard-body">${htmlEscape(tldr)}</div>` : ''}
     ${respLine}
     ${alignmentBars}
@@ -2681,26 +2688,35 @@ function renderRow(r, idx) {
   // 2026-05-17 — Mitchell flagged "How to position" rendering as raw markdown
   // ('### Level Assessment | Dimension | ...'). Route through marked so
   // tables/headers/lists become real HTML. Wrap in `.htp-md` for table styling.
-  const posCard = positioning ? `<div class="dcard" style="margin-bottom:8px">
-    <div class="dcard-label">How to position</div>
+  // Wave C-A drill-in: How to position card → metric:{num}:how_to_position
+  const posCard = positioning ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:how_to_position" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for strategy ceiling per positioning point" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)}">
+    <div class="dcard-label">How to position <span class="dcard-explore-hint">▸ explore</span></div>
     <div class="dcard-body htp-md">${renderHowToPosition(positioning)}</div>
   </div>` : '';
 
   // ── Card 1: Match (green / WHAT FITS) ────────────────────
+  // Wave C-A drill-in: each bullet → story:{num}:{slugified-requirement}
+  const _slugifyReq = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const matchCard = edge.length ? `<div class="dcard dcard--match">
     <div class="dcard-label">WHAT FITS</div>
     <ul class="match-list">
-      ${edge.map(e => `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'}">
+      ${edge.map(e => {
+        const reqSlug = _slugifyReq(String(e.requirement||''));
+        const drillId = `${_rowDrillNum}:${reqSlug}`;
+        return `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'} drill-trigger" data-drill="story:${htmlEscape(drillId)}" role="button" tabindex="0" title="Click for story expansion" onclick="event.stopPropagation();window.drillIn('story','${htmlEscape(drillId)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('story','${htmlEscape(drillId)}',event)}">
         <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
         <div>
           <div class="match-req">${htmlEscape(String(e.requirement || '').replace(/\*\*/g, '').slice(0, 110))}</div>
           <div class="match-ev">${renderFitEvidence(e.evidence, 480)}</div>
         </div>
-      </li>`).join('')}
+      </li>`;
+      }).join('')}
     </ul>
   </div>` : '';
 
   // ── Card 2: Gap (amber / WHAT'S MISSING) ─────────────────
+  // Wave C-A drill-in: each gap chip → gap:{num}:{gap-key} (3-tier fallback: llm-evidence → network-graph → strategy-ceiling)
+  const _slugifyGap = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const gapCard = gaps.length ? `<div class="dcard dcard--gap">
     <div class="dcard-label">WHAT'S MISSING <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click for strategy</span></div>
     <div class="dcard-gaps">${gaps.map(g => {
@@ -2708,13 +2724,18 @@ function renderRow(r, idx) {
       const detailHtml = g.detail ? marked.parse(g.detail) : '';
       const strategyHtml = strategy ? marked.parse(strategy) : '';
       const whyHtml = whyOk ? marked.parse(whyOk) : '';
-      return `<span class="gap-chip gap-chip-interactive"
-        onclick="openGapModal(this);event.stopPropagation()"
+      const gapKey = _slugifyGap(g.title);
+      const gapDrillId = `${_rowDrillNum}:${gapKey}`;
+      return `<span class="gap-chip gap-chip-interactive drill-trigger"
+        data-drill="gap:${htmlEscape(gapDrillId)}"
+        onclick="window.drillIn('gap','${htmlEscape(gapDrillId)}',event);openGapModal(this);event.stopPropagation()"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('gap','${htmlEscape(gapDrillId)}',event)}"
+        role="button" tabindex="0"
         data-title="${htmlEscape(g.title)}"
         data-detail="${htmlEscape(detailHtml)}"
         data-strategy="${htmlEscape(strategyHtml)}"
         data-why="${htmlEscape(whyHtml)}"
-        title="Click for addressing strategy">⚠ ${htmlEscape(g.title)}</span>`;
+        title="Click for gap-closing strategy">⚠ ${htmlEscape(g.title)}</span>`;
     }).join('')}</div>
     ${whyOk ? `<div class="dcard-gap-prose">${htmlEscape(whyOk).replace(/\n/g, '<br>')}</div>` : ''}
   </div>` : '';
@@ -2729,16 +2750,19 @@ function renderRow(r, idx) {
     const fp = join(ROOT, 'dashboard/stories', `${slug}.html`);
     return existsSync(fp) ? `stories/${slug}.html` : null;
   };
+  // Wave C-A drill-in: each story row → story:{num}:{story-slug}
   const storyCard = stories.length ? `<div class="dcard dcard--story">
     <div class="dcard-label">STORIES TO LEAD WITH</div>
     ${stories.map((s, i) => {
       const childHref = _storyChildPath(s);
+      const storySlug = _slugifyStory(String(s.story || '').slice(0, 60));
+      const storyDrillId = `${_rowDrillNum}:${storySlug}`;
       const linkOpen = childHref
         ? `<a href="${htmlEscape(childHref)}" target="_blank" rel="noopener" class="story-child-link" onclick="event.stopPropagation()" title="Open full 500-1000 word expansion in voice-calibrated child page">`
         : '';
       const linkClose = childHref ? `</a>` : '';
       const fullBadge = childHref ? ` <span class="story-full-badge" title="Full voice-calibrated expansion available">↗ full</span>` : '';
-      return `<div class="dcard-story-row">
+      return `<div class="dcard-story-row drill-trigger" data-drill="story:${htmlEscape(storyDrillId)}" role="button" tabindex="0" title="Click for story child page" onclick="event.stopPropagation();window.drillIn('story','${htmlEscape(storyDrillId)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('story','${htmlEscape(storyDrillId)}',event)}">
         <span class="story-n">${i + 1}</span>
         <div>
           <div class="story-req">${linkOpen}${htmlEscape(s.requirement.slice(0, 110))}${fullBadge}${linkClose}</div>
@@ -2865,7 +2889,7 @@ function renderRow(r, idx) {
             </div>`
           : `<div class="throttle-banner throttle-${r._throttle.status}">${htmlEscape(r._throttle.label)}<br><span class="muted-text">${htmlEscape(r._throttle.note || '')}</span></div>`
       ) : ''}
-      ${r.notes ? `<div class="dcard dcard--tracker-note" style="margin-bottom:8px"><div class="dcard-label">TRACKER NOTE</div>${formatTrackerNote(r.notes)}</div>` : ''}
+      ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full Phase E decision provenance" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">TRACKER NOTE <span class="dcard-explore-hint">▸ explore</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
       ${tldrCard}${posCard}
       <div class="detail-grid">
@@ -10631,6 +10655,9 @@ function openRightRailForDetail(idx, detailRow) {
   const bodyEl = drawer.querySelector('#right-rail-body');
   const actionsEl = drawer.querySelector('#right-rail-actions');
 
+  // Wave C-A drawer header: company name gets data-drill="company:{slug}",
+  // score + status chips already carry data-drill from the table row (cloned via scoreHtml/statusHtml).
+  var _drawerCompanySlug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   if (headerEl) {
     headerEl.innerHTML = '<button type="button" class="drawer-close" aria-label="Close drawer" onclick="closeRightRail()">✕</button>'
       + '<div class="drawer-title-row">'
@@ -10638,8 +10665,8 @@ function openRightRailForDetail(idx, detailRow) {
       +   '<div class="drawer-title-meta">'
       +     '<div class="drawer-company">'
       +       (companyLinkHref
-            ? '<a href="' + _drawerEscape(companyLinkHref) + '" target="_blank" rel="noopener" class="drawer-company-link" title="Open company careers page"><span class="drawer-company-name">' + _drawerEscape(company) + '</span></a>'
-            : '<span class="drawer-company-name">' + _drawerEscape(company) + '</span>')
+            ? '<a href="' + _drawerEscape(companyLinkHref) + '" target="_blank" rel="noopener" class="drawer-company-link drill-trigger" data-drill="company:' + _drawerCompanySlug + '" title="Click for company network + pulse — or open careers page" onclick="window.drillIn(\'company\',\'' + _drawerCompanySlug + '\',event);event.preventDefault()"><span class="drawer-company-name">' + _drawerEscape(company) + '</span></a>'
+            : '<span class="drawer-company-name drill-trigger" data-drill="company:' + _drawerCompanySlug + '" role="button" tabindex="0" title="Click for company network + pulse" onclick="window.drillIn(\'company\',\'' + _drawerCompanySlug + '\',event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();window.drillIn(\'company\',\'' + _drawerCompanySlug + '\',event)}">' + _drawerEscape(company) + '</span>')
       +       (tierHtml || '')
       +     '</div>'
       +     (roleLinkHref
@@ -18759,6 +18786,89 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   }
   [data-drill].drill-trigger:not(.status-pill):focus-visible {
     outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* ── Wave C-A drawer drill-in: inline chip affordances ──────── */
+  /* Percentage bars: pct pill gets underline-dotted on hover */
+  .alignbar-pct.drill-trigger {
+    border-bottom: 1px dotted var(--text-3);
+    transition: background var(--dur-fast), color var(--dur-fast);
+    border-radius: 3px;
+    padding: 0 3px;
+  }
+  .alignbar-pct.drill-trigger:hover {
+    background: var(--accent-bg);
+    border-bottom-color: var(--accent);
+  }
+  /* Meta chips: comp + date chips get dotted underline when clickable */
+  .meta-chip.drill-trigger {
+    border-bottom: 1px dotted var(--text-3);
+    transition: background var(--dur-fast);
+  }
+  .meta-chip.drill-trigger:hover {
+    background: var(--accent-bg);
+  }
+  /* Story rows: clickable state */
+  .dcard-story-row.drill-trigger {
+    border-radius: 5px;
+    transition: background var(--dur-fast);
+    padding: 4px 6px;
+    margin: 0 -6px;
+  }
+  .dcard-story-row.drill-trigger:hover {
+    background: var(--accent-bg);
+  }
+  .dcard-story-row.drill-trigger:focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* Match list items: clickable state */
+  .match-list li.drill-trigger {
+    border-radius: 5px;
+    transition: background var(--dur-fast);
+    padding: 4px 4px;
+    margin: 0 -4px;
+    cursor: pointer;
+  }
+  .match-list li.drill-trigger:hover {
+    background: var(--accent-bg);
+  }
+  .match-list li.drill-trigger:focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* Card-level drill affordance: dcard with explore hint */
+  .dcard.dcard-drill, .dcard.dcard--tracker-note.dcard-drill {
+    position: relative;
+    transition: border-color var(--dur-fast), background var(--dur-fast);
+  }
+  .dcard.dcard-drill:hover, .dcard.dcard--tracker-note.dcard-drill:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-2);
+  }
+  .dcard.dcard-drill:focus-visible, .dcard.dcard--tracker-note.dcard-drill:focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* Explore hint chevron in card label corner */
+  .dcard-explore-hint {
+    float: right;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-4);
+    letter-spacing: .02em;
+    transition: color var(--dur-fast);
+  }
+  .dcard.dcard-drill:hover .dcard-explore-hint,
+  .dcard.dcard--tracker-note.dcard-drill:hover .dcard-explore-hint {
+    color: var(--accent);
+  }
+  /* Drawer company name: drill-in affordance */
+  .drawer-company-name.drill-trigger,
+  .drawer-company-link.drill-trigger .drawer-company-name {
+    border-bottom: 1px dotted var(--text-3);
+    transition: color var(--dur-fast);
+  }
+  .drawer-company-name.drill-trigger:hover,
+  .drawer-company-link.drill-trigger:hover .drawer-company-name {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
   /* Drill-in drawer overlay — dim the page behind the drawer on all viewports
      (Item 4 fix: was tablet-only). DASHBOARD_INVARIANTS.md §2 — preserving

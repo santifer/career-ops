@@ -2711,10 +2711,13 @@ const server = createServer((req, res) => {
   //        /api/pipeline/job-status endpoint + the new
   //        /api/drawer/apply-pack-status alias can both poll it
   //
-  // Voice-corpus passthrough: build-apply-pack.mjs scaffolds stubs only today
-  // — the deeper humanize-check / council passes are out of scope for this
-  // build task. When that pipeline lands, no endpoint changes are required:
-  // we'll just pass --strict to the script.
+  // 2026-05-17 — switched from build-apply-pack.mjs (stub scaffold) to
+  // build-apply-packs.mjs (canonical full builder: cover-letter via voice-
+  // reference-brief.md + humanize-check gate, form-fields with AI-detection
+  // flags, ATS keyword check, interview-prep, LinkedIn DMs, formatting
+  // guide). Mitchell's mega-list 2026-05-17 explicitly asked for the full
+  // artifact pipeline through voice corpus + checks + revisions on the
+  // Create Materials drawer button.
   if (url === '/api/drawer/build-apply-pack' && req.method === 'POST') {
     let body = '';
     let total = 0;
@@ -2788,7 +2791,11 @@ const server = createServer((req, res) => {
         .slice(0, 60);
       const expectedDir = `apply-pack/${prefix}${expectedSlug}`;
       try {
-        const scriptArgs = [join(ROOT, 'scripts/build-apply-pack.mjs'), `--row=${rowNum}`];
+        // 2026-05-17 — call the canonical full builder (plural) which writes
+        // the full ~12-file pack including cover-letter w/ humanize gate,
+        // form-fields w/ AI-detection flags, ATS check, interview-prep, etc.
+        // The plural script uses --num=N (not --row=N).
+        const scriptArgs = [join(ROOT, 'scripts/build-apply-packs.mjs'), `--num=${rowNum}`];
         if (force) scriptArgs.push('--force');
         import('child_process').then(({ spawn }) => {
           const proc = spawn('node', scriptArgs, {
@@ -2808,7 +2815,7 @@ const server = createServer((req, res) => {
                 state.jobs[jobId].status = code === 0 ? 'completed' : 'failed';
                 state.jobs[jobId].exit_code = code;
                 state.jobs[jobId].finished_at = new Date().toISOString();
-                if (code !== 0) state.jobs[jobId].error = `build-apply-pack.mjs exited ${code}`;
+                if (code !== 0) state.jobs[jobId].error = `build-apply-packs.mjs exited ${code}`;
                 writeFileSync(join(ROOT, 'data/pipeline-process-state.json'), JSON.stringify(state, null, 2));
               }
             } catch {}
