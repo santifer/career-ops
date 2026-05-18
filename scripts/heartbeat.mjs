@@ -22,6 +22,7 @@ import nodemailer from 'nodemailer';
 import { marked } from 'marked';
 import mjml2html from 'mjml';
 import { classifyLiveness } from '../liveness-core.mjs';
+import { verifyApplyNowLink as _libVerifyApplyNowLink, markRowAsExpired as _libMarkRowAsExpired } from '../lib/liveness.mjs';
 import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
 import { renderTpgmHeartbeatSection } from '../lib/tpgm-heartbeat-section.mjs';
 import { poolMap } from '../lib/fetch-utils.mjs';
@@ -1070,84 +1071,11 @@ function getApplyNowQueue(rows) {
 // when the role is open and 404/410 when removed (e.g., Greenhouse boards-
 // api). For Greenhouse/Ashby URLs we ALSO check the API endpoint as a
 // stronger expiry signal.
-async function verifyApplyNowLink(url) {
-  if (!url) return { result: 'no-url', reason: 'no URL' };
-
-  // Greenhouse: JD URL is /{board}/jobs/{id}. The boards-api endpoint
-  // /boards/{board}/jobs/{id} returns 404 when the job is removed.
-  const greenhouseMatch = url.match(/(?:job-boards|boards)\.(?:eu\.)?greenhouse\.io\/([\w-]+)\/jobs\/(\d+)/i);
-  if (greenhouseMatch) {
-    try {
-      const apiUrl = `https://boards-api.greenhouse.io/v1/boards/${greenhouseMatch[1]}/jobs/${greenhouseMatch[2]}`;
-      const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
-      if (res.status === 200) return { result: 'active', reason: 'Greenhouse API 200' };
-      if (res.status === 404 || res.status === 410) return { result: 'expired', reason: `Greenhouse API ${res.status}` };
-    } catch {}
-  }
-
-  // Ashby: jobs.ashbyhq.com/{board}/{uuid}. The posting-api returns 200
-  // with the role's data; the role disappears when removed.
-  const ashbyMatch = url.match(/jobs\.ashbyhq\.com\/([\w-]+)\/([\w-]+)/i);
-  if (ashbyMatch) {
-    try {
-      const apiUrl = `https://api.ashbyhq.com/posting-api/job-board/${ashbyMatch[1]}?includeCompensation=true`;
-      const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
-      if (res.ok) {
-        const json = await res.json();
-        const stillListed = (json.jobs || []).some(j => (j.jobUrl || '').includes(ashbyMatch[2]) || (j.id === ashbyMatch[2]));
-        return stillListed
-          ? { result: 'active', reason: 'Ashby API: role still listed' }
-          : { result: 'expired', reason: 'Ashby API: role no longer in board' };
-      }
-    } catch {}
-  }
-
-  // Generic fallback: HTTP fetch + permissive expired-phrase scan.
-  try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-        'Accept': 'text/html',
-      },
-    });
-    const status = res.status;
-    const finalUrl = res.url || url;
-    if (status === 404 || status === 410 || status === 451) {
-      return { result: 'expired', reason: `HTTP ${status}` };
-    }
-    if (status >= 500) return { result: 'uncertain', reason: `HTTP ${status} (server error)` };
-    if (status >= 400) return { result: 'expired', reason: `HTTP ${status}` };
-    // Redirect to listing/search page (no specific job ID in final URL)
-    if (/\/(jobs|positions|careers|search|listings)\/?(\?|$)/i.test(finalUrl) && !/\/(jobs|positions)\/[\w-]+/.test(finalUrl)) {
-      return { result: 'expired', reason: 'redirected to listing page' };
-    }
-    const html = await res.text();
-    const bodyText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-    if (/position has been filled|no longer accepting|job (?:posting )?no longer available|this job has expired|posting has expired|position is no longer|this role has been closed|role has been filled/i.test(bodyText)) {
-      return { result: 'expired', reason: 'expired phrase in body' };
-    }
-    return { result: 'active', reason: `HTTP ${status}` };
-  } catch (err) {
-    return { result: 'uncertain', reason: `fetch failed: ${err.message.slice(0, 60)}` };
-  }
-}
-
-// Mark a tracker row as Discarded with a closure note. Edits applications.md
-// in place so subsequent pipeline runs don't re-evaluate it.
-function markRowAsExpired(rowNum, urlReason) {
-  const path = join(ROOT, 'data/applications.md');
-  if (!existsSync(path)) return;
-  const text = readFileSync(path, 'utf-8');
-  const re = new RegExp(`^(\\| ${rowNum} \\|[^|]+\\|[^|]+\\|[^|]+\\|[^|]+\\|)\\s*Evaluated\\s*(\\|[^|]+\\|[^|]+\\|)\\s*([^|]*)\\s*\\|`, 'm');
-  if (!re.test(text)) return;
-  const updated = text.replace(re, (_, prefix, mid, notes) =>
-    `${prefix} Discarded ${mid} ⚠️ LINK EXPIRED on ${new Date().toISOString().slice(0,10)} (${urlReason}). Original notes: ${notes.trim()} |`
-  );
-  writeFileSync(path, updated);
-  console.log(`  ↓ Marked row #${rowNum} as Discarded (link expired: ${urlReason})`);
-}
+// Liveness primitives extracted to lib/liveness.mjs (2026-05-18) so
+// scripts/liveness-sweep.mjs can reuse them without importing heartbeat.mjs
+// and triggering its main(). Local aliases preserve call-site simplicity.
+const verifyApplyNowLink = _libVerifyApplyNowLink;
+const markRowAsExpired = _libMarkRowAsExpired;
 
 // Extract the strongest 3-5 matches from Block B with their emphasize hints.
 function getStrongMatches(reportPath, limit = 5) {

@@ -1,0 +1,258 @@
+{
+  "runs": [
+    {
+      "timestamp": "2026-05-18T06:04:47.003Z",
+      "rows_checked": 40,
+      "summary": {
+        "active": 37,
+        "expired_discarded": 3,
+        "expired_needs_review": 0,
+        "uncertain": 0,
+        "no_url": 0
+      },
+      "dry_run": false
+    }
+  ],
+  "rows": {
+    "1": {
+      "status": "active",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5153680008",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Greenhouse API 200"
+    },
+    "44": {
+      "status": "active",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5153586008",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Greenhouse API 200"
+    },
+    "48": {
+      "status": "active",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5138099008",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Greenhouse API 200"
+    },
+    "49": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/perplexity/2df92d4a-48eb-422f-af9c-4a963fd6135c",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "50": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/elevenlabs/522bda1f-a4ec-4cff-ad34-c4b2234ae390",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "51": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/openai/73c6e8aa-968a-4f7d-b87f-718aa0b3e82b",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "59": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/sierra/7053ca02-ee36-48cc-b331-9d795a966c4c",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "840": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/cursor/34cecd0c-c392-4454-8ef5-261310541011",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "851": {
+      "status": "active",
+      "url": "https://jobs.lever.co/mistral/b56f6523-b7d2-47a3-abe6-2c793c7672fc",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "853": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/mistral/d6a8457e-6a7b-4711-92be-8a3ee53bb1a1",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "854": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/pinecone/4433b308-1ff4-4b5f-9184-810e5d9844f6",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "1513": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/decagon/230ad153-85be-4f7b-a368-5bad59e513e2",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "2028": {
+      "status": "active",
+      "url": "https://jobs.lever.co/mistral/715aba24-6c75-40a6-a978-ac6ebbebece5",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2029": {
+      "status": "active",
+      "url": "https://www.amazon.jobs/en/jobs/10406768/sr-applied-ai-solutions-architect-public-sector-amazon-connect",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2037": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/ramp/deca582c-a1d0-4705-9975-60aed81ba89f",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2046": {
+      "status": "active",
+      "url": "https://www.amazon.jobs/en/jobs/10375124/principal-genai-specialist-sa",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2049": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/ramp/63df0ffc-bdc6-40ba-906f-fe03378536b0",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2059": {
+      "status": "active",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/4461444008",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Greenhouse API 200"
+    },
+    "2060": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4373800961",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2061": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4397758572",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2062": {
+      "status": "expired_discarded",
+      "url": "https://www.amazon.jobs/en/jobs/3177010/private-equity-ai-solutions-architect-aws-private-equity",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 404"
+    },
+    "2065": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4405977776",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2066": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4407541336",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2067": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4325645309",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2068": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/livekit/b889ef16-4d5d-4b71-b0a9-682026a0a1ee",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "2069": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/norm-ai?utm_source=7ow8wN5o3g",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2070": {
+      "status": "expired_discarded",
+      "url": "https://weworkremotely.com/remote-jobs/cast-ai-senior-product-manager-agentic-ai-product",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 403"
+    },
+    "2071": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/fathom.video",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2072": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/notion/3336e944-0970-48ef-9a97-4ebd6656d0c2",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2073": {
+      "status": "active",
+      "url": "https://sumble-inc.workable.com/",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2074": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/akur8",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2076": {
+      "status": "expired_discarded",
+      "url": "https://careers.withwaymo.com/jobs?gh_jid=7435887",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 404"
+    },
+    "2093": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4407464750",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2104": {
+      "status": "active",
+      "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=7930603",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2107": {
+      "status": "active",
+      "url": "https://jobs.lever.co/palantir/95a76f41-97a4-4696-ade3-9c5a47a569c7",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2110": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/deepgram/f4632ab4-f20b-4c8b-96a1-b2b9595c189e",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "2128": {
+      "status": "active",
+      "url": "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/US-CA-Santa-Clara/Developer-Advocate---Agentic-AI_JR2017689",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2144": {
+      "status": "active",
+      "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=8461168002",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "HTTP 200"
+    },
+    "2181": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/mistral/b152b555-32ed-4c6c-a003-3af6498b2e73",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    },
+    "2182": {
+      "status": "active",
+      "url": "https://jobs.ashbyhq.com/llamaindex/36a0249e-a672-44df-a08e-b5a5523dec26",
+      "lastChecked": "2026-05-18T06:04:47.003Z",
+      "reason": "Ashby API: role still listed"
+    }
+  }
+}
