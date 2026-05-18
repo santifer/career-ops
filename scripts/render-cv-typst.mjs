@@ -446,16 +446,24 @@ function parseCvMarkdown(cvText) {
 function escapeTypst(s) {
   // Convert markdown **bold** → Typst *bold* (Typst uses single-* delimiters;
   // leaving raw ** produces unclosed-delimiter errors in inline content).
-  // Then escape Typst special characters: # " \ @
+  // Then escape Typst special characters: # " \ @ < > $
+  // - < / > → Typst parses <label> syntax inside content blocks. Content like
+  //   "match cut to <20m" would otherwise create an unclosed-delimiter error
+  //   when '20m' is interpreted as a label name.
+  // - $ → Typst parses $...$ as math mode. Content like "$1M annual savings"
+  //   would otherwise open math mode and fail to find the closing $.
   // For values that land inside a Typst string literal "...", use
-  // escapeTypstStr instead — # and @ have no special meaning in strings, and
+  // escapeTypstStr instead — # @ < > $ have no special meaning in strings, and
   // backslash-escaping them produces visible \# / \@ in the output.
   return String(s)
     .replace(/\*\*(.+?)\*\*/g, '*$1*')
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
     .replace(/#/g, '\\#')
-    .replace(/@/g, '\\@');
+    .replace(/@/g, '\\@')
+    .replace(/</g, '\\<')
+    .replace(/>/g, '\\>')
+    .replace(/\$/g, '\\$');
 }
 
 function escapeTypstStr(s) {
