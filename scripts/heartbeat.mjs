@@ -1602,6 +1602,90 @@ function grokStatus(date) {
   return { spent, queries };
 }
 
+// ── Inventory B6: Weekly Gemini Calibration Prompt section ──────────────────
+// Surfaces a "This Week's Calibration Prompt" block in the heartbeat email
+// IF a fresh prompt (mtime within last 8 days) exists at
+// data/weekly-calibration-prompt-{YYYY-MM-DD}.md AND hasn't been answered yet
+// (calibration-state.json tracks last_prompt_answered).
+//
+// Returns markdown lines (heartbeat body is markdown; renderContentHtml()
+// adds the styled HTML treatment via marked()). Returns empty array when
+// no fresh prompt exists so the section auto-hides.
+function renderCalibrationPromptSection() {
+  const dataDir = join(ROOT, 'data');
+  if (!existsSync(dataDir)) return [];
+  let files;
+  try {
+    files = readdirSync(dataDir)
+      .filter(f => /^weekly-calibration-prompt-\d{4}-\d{2}-\d{2}\.md$/.test(f));
+  } catch { return []; }
+  if (!files.length) return [];
+
+  // Pick the most recent by filename (date in name) AND verify mtime is ≤ 8d.
+  files.sort((a, b) => b.localeCompare(a)); // YYYY-MM-DD sorts lexicographically
+  const latest = files[0];
+  const latestPath = join(dataDir, latest);
+  let stat;
+  try { stat = statSync(latestPath); } catch { return []; }
+  const ageDays = Math.round((Date.now() - stat.mtimeMs) / 86400000);
+  if (ageDays > 8) return [];
+
+  // Check if already answered — if so, auto-hide
+  const statePath = join(dataDir, 'calibration-state.json');
+  if (existsSync(statePath)) {
+    try {
+      const state = JSON.parse(readFileSync(statePath, 'utf-8'));
+      const answered = state.last_prompt_answered;
+      const generated = state.last_prompt_generated;
+      // If answered date >= generated date, suppress
+      if (answered && generated && answered >= generated) return [];
+    } catch { /* keep showing if state file is malformed */ }
+  }
+
+  // Extract the prompt date from the filename
+  const dateMatch = latest.match(/(\d{4}-\d{2}-\d{2})/);
+  const promptDate = dateMatch ? dateMatch[1] : '?';
+
+  // Pull out the GEMINI PROMPT block for the copy-friendly markdown.
+  // Use regex matching at start-of-line so we skip the docs reference at
+  // the top of the file (which has the markers inside backticks).
+  let promptBlock = '';
+  try {
+    const content = readFileSync(latestPath, 'utf-8');
+    const startMatch = content.match(/^=== GEMINI PROMPT START ===$/m);
+    const endMatch = content.match(/^=== GEMINI PROMPT END ===$/m);
+    if (startMatch && endMatch && endMatch.index > startMatch.index) {
+      promptBlock = content.slice(startMatch.index, endMatch.index + endMatch[0].length);
+    }
+  } catch { /* skip — show the heading only */ }
+
+  // Render a compact preview block — the QUESTION HEADERS only — instead
+  // of embedding the full Gemini prompt (which contains its own ```markdown
+  // fences that break the outer code block). Full prompt is in the linked
+  // data/ file + the dashboard's copy-prompt button.
+  const questionPreview = [];
+  const lines2 = promptBlock.split('\n');
+  for (const ln of lines2) {
+    const m = ln.match(/^###\s+Q(\d+)\.\s+(.+)$/);
+    if (m) questionPreview.push(`${m[1]}. ${m[2]}`);
+  }
+
+  const out = [];
+  out.push('## This Week\'s Calibration Prompt');
+  out.push('');
+  out.push(`> Generated ${promptDate} (${ageDays}d ago) — copy the prompt from the dashboard sidebar, paste into Gemini, then drop the response into the **Update Drawer**.`);
+  out.push('');
+  out.push(`[Open calibration card on dashboard →](${DASHBOARD_URL}/?focus=calibration) · [Read full prompt file →](${DASHBOARD_URL}/data/${latest})`);
+  out.push('');
+  if (questionPreview.length > 0) {
+    out.push(`**${questionPreview.length} questions waiting for you:**`);
+    out.push('');
+    for (const q of questionPreview) out.push(`- ${q}`);
+    out.push('');
+  }
+  return out;
+}
+
 async function generateHeartbeat() {
   const lines = [];
   // Phase 2 Day-1 (2026-05-17) — duplicate H1 killed (audit § 4 item 4).
@@ -1655,6 +1739,13 @@ async function generateHeartbeat() {
   // {{dueTodayHtml}} slot — we still emit a compact reference here so the
   // persisted .md file reflects the full session, but the HTML email shows the
   // compact §2 card, not this verbose block.
+
+  // Inventory B6: Weekly Calibration Prompt — auto-hides when no fresh
+  // (≤ 8d) prompt exists OR when the most recent prompt has already been
+  // answered. Surfaces at the top of the body (above What's New) so Mitchell
+  // sees the calibration ask the day the prompt is generated.
+  const calibrationLines = renderCalibrationPromptSection();
+  for (const line of calibrationLines) lines.push(line);
 
   // What's New Overnight (freshly surfaced roles)
   for (const line of formatWhatsNewSection(whatsNew, packEligibleNums)) lines.push(line);
