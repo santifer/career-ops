@@ -1,0 +1,82 @@
+# workers/wrangler-csp-deploy.toml
+# Cloudflare Wrangler deploy config for the CSP nonce + HSTS Worker (D20 / D24)
+#
+# Deploy commands (see workers/DEPLOY-INSTRUCTIONS.md for full walkthrough):
+#   Staging:    wrangler deploy --config workers/wrangler-csp-deploy.toml --env staging
+#   Production: wrangler deploy --config workers/wrangler-csp-deploy.toml --env production
+#
+# Prerequisites:
+#   - `wrangler login` completed (Cloudflare account with Workers access)
+#   - Cloudflare zone for careers-ops.com configured
+#   - (Optional) KV namespace created — see [kv_namespaces] comment below
+
+name = "csp-nonce-worker"
+main = "workers/csp-nonce-worker.mjs"
+
+# Cloudflare Workers bundling: treat the file as ES module.
+# This is required for `export default { fetch() {} }` syntax.
+compatibility_date = "2024-09-23"
+
+# ── Shared vars (apply to all environments unless overridden) ──────────────
+
+[vars]
+# When set to "enforce", the Worker uses Content-Security-Policy instead of
+# Content-Security-Policy-Report-Only. Leave unset for the first 7 days.
+# Override per-environment below, or update via: wrangler secret put CSP_ENFORCE_MODE
+CSP_ENFORCE_MODE = ""
+
+# ── Staging environment ────────────────────────────────────────────────────
+
+[env.staging]
+name = "csp-nonce-worker-staging"
+
+# Route: match the staging hostname. Update to your actual staging subdomain.
+# Cloudflare pattern: "hostname/path*" — trailing /* matches all paths.
+routes = [
+  { pattern = "staging-dashboard.careers-ops.com/*", zone_name = "careers-ops.com" }
+]
+
+[env.staging.vars]
+# In staging the origin is the local dashboard server proxied through a
+# Cloudflare Tunnel. Replace with your actual tunnel hostname or private IP.
+ORIGIN_URL = "https://staging-origin.careers-ops.com"
+CSP_ENFORCE_MODE = ""   # Always report-only in staging
+
+# KV namespace for CSP violation reports in staging.
+# Create with: wrangler kv:namespace create "CSP_REPORTS" --env staging
+# Then paste the returned id below.
+# [[env.staging.kv_namespaces]]
+# binding = "KV_CSP_REPORTS"
+# id = "<your-staging-kv-namespace-id>"
+
+# ── Production environment ─────────────────────────────────────────────────
+
+[env.production]
+name = "csp-nonce-worker-production"
+
+routes = [
+  { pattern = "dashboard.careers-ops.com/*", zone_name = "careers-ops.com" }
+]
+
+[env.production.vars]
+# Production origin: Cloudflare Tunnel hostname or private IP of dashboard server.
+# This value should point to the Node.js dashboard-server.mjs process.
+# Replace with your actual tunnel URL.
+ORIGIN_URL = "https://origin.careers-ops.com"
+# Start with report-only. After 7 days of clean CSP reports:
+#   1. Change to: CSP_ENFORCE_MODE = "enforce"
+#   2. Redeploy: wrangler deploy --config workers/wrangler-csp-deploy.toml --env production
+CSP_ENFORCE_MODE = ""
+
+# KV namespace for CSP violation reports in production.
+# Create with: wrangler kv:namespace create "CSP_REPORTS"
+# Then paste the returned id below and uncomment.
+# [[env.production.kv_namespaces]]
+# binding = "KV_CSP_REPORTS"
+# id = "<your-production-kv-namespace-id>"
+
+# ── Observability ──────────────────────────────────────────────────────────
+
+# Stream live logs during monitoring window:
+#   wrangler tail --env production
+# This shows console.warn CSP violation lines in real time.
