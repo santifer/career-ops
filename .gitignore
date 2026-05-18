@@ -148,3 +148,9 @@ data/process-all-council-intel-*.log
 # Weekly progress tracker output — personal extracted intel from Gmail/Drive/Calendar/git.
 data/weekly-progress/
 data/weekly-progress-tasks/
+
+# LLM usage knowledge base — local scanner cache, contains Mitchell's filesystem footprint
+data/llm-usage-knowledge.json
+
+# Network graph — private contact data, never commit
+data/network-graph.json
