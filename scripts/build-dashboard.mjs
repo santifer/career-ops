@@ -36,7 +36,7 @@ import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/
 import { checkGap as llmCheckGap, renderEvidenceCard }            from '../lib/llm-evidence.mjs';
 import { checkGap as netCheckGap, findContactsAtCompany, findLeveragePathTo, renderNetworkCard } from '../lib/network-graph.mjs';
 import { renderHmIntelCard, getHmIntelForRole }                    from '../lib/hm-intel-research.mjs';
-import { getPulseForCompany, renderPulseCard }                     from '../lib/company-pulse.mjs';
+import { getPulseForCompany, getCachedPulseSync, renderPulseCard } from '../lib/company-pulse.mjs';
 import { detectFunnelGap, renderFunnelNudge }                      from '../lib/funnel-completion.mjs';
 import { scoreStaleness, renderStalenessBadge }                    from '../lib/staleness-nudge.mjs';
 const parseYaml = yaml.load;
@@ -3464,11 +3464,11 @@ function build() {
           const _net = findContactsAtCompany(_s);
           const _lev = findLeveragePathTo(_r.company, '');
           const _nHtml = renderNetworkCard(_net, { company: _r.company, leverage: _lev });
-          // cacheOnly: do NOT dispatch researcher at build time — read cached
-          // pulse JSON if exists, else null. Lazy refresh happens via the
-          // scheduled launchd job or explicit user "refresh pulse" button.
-          const _pulseResult = await getPulseForCompany(_s, { cacheOnly: true });
-          const _pHtml = _pulseResult && _pulseResult.pulse ? renderPulseCard(_pulseResult.pulse) : '';
+          // Sync cached-only read at build time. NEVER dispatches researcher.
+          // Refresh happens via the scheduled launchd plist (daily 06:00 PT,
+          // --max-cost-usd 3) or an explicit user-triggered refresh button.
+          const _cachedPulse = getCachedPulseSync(_s);
+          const _pHtml = _cachedPulse ? renderPulseCard(_cachedPulse) : '';
           if (_nHtml || _pHtml) {
             _cbData.companyData[_s] = { networkHtml: _nHtml, pulseHtml: _pHtml };
           }
