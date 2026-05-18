@@ -53,8 +53,8 @@
 )
 
 #set par(
-  leading: 0.40em,
-  spacing: 0.40em,
+  leading: 0.35em,
+  spacing: 0.35em,
 )
 
 // ── Color palette ────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@
 // ── Section heading ──────────────────────────────────────────────────────────
 
 #let section-heading(title) = {
-  v(5pt)
+  v(3pt)
   text(
     size: 11pt,
     weight: "bold",
@@ -80,7 +80,7 @@
   )
   v(-3pt)
   line(length: 100%, stroke: 0.5pt + accent)
-  v(2pt)
+  v(1pt)
 }
 
 // ── Job entry macro ──────────────────────────────────────────────────────────

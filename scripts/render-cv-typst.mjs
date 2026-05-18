@@ -372,7 +372,7 @@ function parseCvMarkdown(cvText) {
   let skillsBody = '';
   if (evidenceLines.length) {
     const evidenceText = evidenceLines.map(stripMarkdown).join(' ');
-    skillsBody += `#text(size: 9.5pt, fill: muted, "${escapeTypstStr(evidenceText)}")\n#v(3pt)\n`;
+    skillsBody += `#text(size: 9pt, fill: muted, "${escapeTypstStr(evidenceText)}")\n#v(2pt)\n`;
   }
   for (const c of categoryLines) {
     const m = c.match(/^\*\*([^*]+):\*\*\s*(.*)$/);
