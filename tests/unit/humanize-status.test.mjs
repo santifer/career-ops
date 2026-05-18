@@ -10,6 +10,8 @@ import {
   humanizeMessage,
   expandJargon,
   gradeLevel,
+  humanizeBody,
+  assertHumanLikePassesAi,
 } from '../../lib/humanize-status.mjs';
 
 // ── humanizeScoreDelta ────────────────────────────────────────────────────────
@@ -200,4 +202,57 @@ test('gradeLevel scores complex jargon higher than plain text', () => {
   const jargonGrade = gradeLevel(jargon);
   const plainGrade  = gradeLevel(plain);
   assert.ok(jargonGrade > plainGrade, `Expected jargon (${jargonGrade}) > plain (${plainGrade})`);
+});
+
+// ── humanizeBody ──────────────────────────────────────────────────────────────
+
+test('humanizeBody replaces "leverage" with "use"', () => {
+  const out = humanizeBody('You should leverage this opportunity.');
+  assert.ok(!out.toLowerCase().includes('leverage'), `Expected "leverage" to be replaced, got: ${out}`);
+  assert.ok(out.toLowerCase().includes('use'), `Expected "use" in output, got: ${out}`);
+});
+
+test('humanizeBody replaces "delve into" with "look at"', () => {
+  const out = humanizeBody('Let us delve into the data.');
+  assert.ok(!out.toLowerCase().includes('delve'), `Expected "delve" removed, got: ${out}`);
+});
+
+test('humanizeBody replaces "deep dive" with "close look"', () => {
+  const out = humanizeBody('We need a deep dive on this topic.');
+  assert.ok(!out.toLowerCase().includes('deep dive'), `Expected "deep dive" removed, got: ${out}`);
+  assert.ok(out.toLowerCase().includes('close look'), `Expected "close look", got: ${out}`);
+});
+
+test('humanizeBody preserves capitalisation on sentence-start phrase', () => {
+  const out = humanizeBody('Leverage your skills here.');
+  assert.ok(out.startsWith('Use'), `Expected capitalised "Use" at start, got: ${out}`);
+});
+
+test('humanizeBody handles null/undefined gracefully', () => {
+  assert.equal(humanizeBody(null), null);
+  assert.equal(humanizeBody(undefined), undefined);
+});
+
+test('humanizeBody replaces "ensure that" with "make sure"', () => {
+  const out = humanizeBody('Please ensure that the report is ready.');
+  assert.ok(out.includes('make sure'), `Expected "make sure", got: ${out}`);
+});
+
+// ── assertHumanLikePassesAi ───────────────────────────────────────────────────
+
+test('assertHumanLikePassesAi returns { passes, gptzero_prob, originality_prob } shape', async () => {
+  // When keys are not set in the test env, passes = null (unchecked).
+  // This test verifies the shape contract — it does NOT make real API calls.
+  const result = await assertHumanLikePassesAi('This is a simple plain sentence written by a human.');
+  assert.ok('passes' in result, 'result must have passes field');
+  assert.ok('gptzero_prob' in result, 'result must have gptzero_prob field');
+  assert.ok('originality_prob' in result, 'result must have originality_prob field');
+  assert.ok('verdict' in result, 'result must have verdict field');
+  assert.ok('cost_usd_estimate' in result, 'result must have cost_usd_estimate field');
+});
+
+test('assertHumanLikePassesAi returns passes=null or boolean (never throws)', async () => {
+  const result = await assertHumanLikePassesAi('Short plain sentence.');
+  assert.ok(result.passes === null || typeof result.passes === 'boolean',
+    `passes must be null or boolean, got: ${result.passes}`);
 });
