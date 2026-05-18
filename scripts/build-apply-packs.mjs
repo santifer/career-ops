@@ -1943,6 +1943,42 @@ async function buildPack(role) {
     : ' — clean';
   console.log(`  ✓ Built apply-pack/${dirName}/${cvFile ? '  (CV linked: ' + cvFile + ')' : '  (no CV PDF found)'}`);
   console.log(`  ${humanize.risk.emoji} Cover letter AI risk: ${humanize.score}% ${humanize.risk.label}${phraseNote}`);
+
+  // Post-build quality gates (audit Items E + F 2026-05-18): JD-keyword
+  // overlap + claim-consistency. Run as a soft check — failure produces a
+  // warning, not a build error. The two scripts write keyword-alignment.md
+  // and claim-consistency.md into the pack dir; the build log surfaces the
+  // headline score so a reviewer can decide whether to drill in.
+  try {
+    const jdScore = execSync(
+      `node ${JSON.stringify(join(ROOT, 'scripts', 'jd-keyword-score.mjs'))} --slug ${JSON.stringify(dirName)}`,
+      { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] }
+    ).toString();
+    const j = JSON.parse(jdScore.slice(jdScore.indexOf('{')));
+    const cvHit = (j.results?.[0]?.artifacts || []).find(a => a.path.includes('tailored-cv') || a.path.includes('cv.md'));
+    if (cvHit) {
+      const icon = cvHit.score >= 50 ? '✓' : '⚠️';
+      console.log(`  ${icon} JD keyword overlap (CV): ${cvHit.score}% (${cvHit.misses} misses)`);
+    }
+  } catch (err) {
+    console.log(`  ⚠️ JD keyword score skipped: ${(err.message || '').slice(0, 80)}`);
+  }
+  try {
+    const claimResult = execSync(
+      `node ${JSON.stringify(join(ROOT, 'scripts', 'claim-consistency.mjs'))} --slug ${JSON.stringify(dirName)}`,
+      { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] }
+    ).toString();
+    const j = JSON.parse(claimResult.slice(claimResult.indexOf('{')));
+    const totalUnverified = (j.results?.[0]?.artifacts || []).reduce((s, a) => s + (a.unverified || 0), 0);
+    const totalClaims = (j.results?.[0]?.artifacts || []).reduce((s, a) => s + (a.total || 0), 0);
+    if (totalClaims > 0) {
+      const icon = totalUnverified === 0 ? '✓' : '⚠️';
+      console.log(`  ${icon} Claim consistency: ${totalClaims - totalUnverified}/${totalClaims} verified across outbound artifacts`);
+    }
+  } catch (err) {
+    console.log(`  ⚠️ Claim consistency skipped: ${(err.message || '').slice(0, 80)}`);
+  }
+
   return true;
 }
 
