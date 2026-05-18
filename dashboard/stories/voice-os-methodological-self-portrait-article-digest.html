@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation discipline — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>Evaluation discipline</h1>
+  <div class="meta">
+    <span>Source: Cohere — Applied AI Engineer – Agentic Workflows</span>
+    <span class="humanize-badge humanize-low">Humanize: 7% low</span>
+  </div>
+  <div class="body">
+<p>The problem with evaluating your own voice is that you're inside it. You can't see the water you're swimming in — which means when an AI system starts writing in a register that feels "close enough," you're the last person qualified to catch the drift.</p>
+<p>That's the gap Voice OS was built to close.</p>
+<p>The project started from a practical problem I kept running into while building the Executive RAG pipeline at xGE. I'd engineered a "Voice DNA" corpus for VP-level communications — legacy emails, exemplar messaging, rejected drafts tagged with rationale — and the stylistic fidelity was measurable: 90% reduction in drafting latency, 99% fidelity against the executive baseline across high-stakes cycles. The methodology worked because the corpus was curated with discipline, not just volume. But when I turned the same framework on myself, I realized I had an embarrassing blind spot: I knew a great deal about how to calibrate an agent to someone else's voice, and almost nothing about my own, in any rigorous sense.</p>
+<p>So I built the system. Voice OS ingested roughly 1.08 million words of personal output — Gmail from 2007 through 2026, Instagram from 2014, Facebook from 2005, LinkedIn from 2014, iMessage from 2022 — and ran analysis across the full corpus to surface voice signatures, banned phrases, and AI-detection risk patterns. The design logic borrowed directly from what had worked in the xGE RAG pipeline: negative training matters as much as positive exemplars. A "Kill List" of rejected constructions — phrases that felt generic, hedged, or institutionally smoothed — proved as calibration-useful as the passages that were unmistakably mine. The output was a written-voice self-portrait precise enough to serve as agent calibration data, not just a style guide someone reads and forgets.</p>
+<p>What the analysis returned was more specific than I expected. My professional emails had grown from an average of 289 words to 853 words across the documented trajectory — a nearly threefold expansion that projects to 1,000-plus words within 12 months at the current rate. That single finding reframed the AI-detection risk entirely: length, not vocabulary or syntax, is the variable most under my direct control and most likely to flag generated output. An agent calibrated to my voice but writing at 300 words would pass a stylistic check and fail an authenticity check simultaneously. The evaluation had to account for both dimensions or it was measuring the wrong thing.</p>
+<p>That's the result that matters here — not the corpus size, not the platform coverage, but the discipline of asking what the evaluation framework is actually testing. The 99% stylistic fidelity figure from the xGE RAG pipeline is only meaningful because the measurement was defined before deployment, not after. Voice OS produced the same kind of pre-deployment specification for my own output: a documented baseline against which agent-generated text could be checked, with the failure modes named in advance rather than discovered in production.</p>
+<p>The broadcast instinct underneath this is old. At The Stream in 2011, we were pulling editorial signal from TweetDeck, Trendsmap, SMS, and Skype simultaneously into a live rundown — treating audience data as a first-class input rather than supplementary color. The discipline that kept that workflow honest wasn't the technology; it was the agreement, made before air, about which signals counted and which ones didn't. Evaluation methodology is the same problem at a different scale. An agent without a defined evaluation framework is a live broadcast without a rundown — it moves fast and has no way to know when it's wrong.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

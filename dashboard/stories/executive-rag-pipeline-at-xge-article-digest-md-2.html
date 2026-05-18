@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Production RAG fluency — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>Production RAG fluency</h1>
+  <div class="meta">
+    <span>Source: Pinecone — Staff Developer Advocate</span>
+    <span class="humanize-badge humanize-low">Humanize: 7% low</span>
+  </div>
+  <div class="body">
+<p>The problem with VP-level communications isn't the writing — it's the reset cost. Every drafting cycle starts from scratch: who is this person, how do they think, what would they never say, where's the line between candor and exposure. For a communications team supporting an executive at scale, that reset tax compounds fast. At xGE, I decided to eliminate it.</p>
+<p>The Office of Cross-Google Engineering sits at an unusual intersection — a horizontal org driving technical change across all of Google, running programs for the top 0.5% of a 180,000-person engineering organization. The VP communications that flowed through that office weren't routine internal memos. They were change-management narratives, mandate announcements, and strategic framing addressed to the most technically sophisticated audience inside the company. Stylistic errors weren't cosmetic failures. They were credibility failures. So when I built the RAG pipeline, the architecture question wasn't only retrieval — it was fidelity.</p>
+<p>The core engineering decision was the corpus construction. I called the positive layer the "Voice DNA" — a curated set of legacy emails, executive constitutions, and exemplar messaging that established the rhetorical baseline: pace, sentence length, how the executive signals priority, how they open a difficult message, how they close one that requires action. But Voice DNA alone isn't enough. Any retrieval system trained only on what worked will drift toward safe, generic output over time — because the model doesn't know where the boundaries are. So I added a second layer I called the Kill List: a structured archive of rejected drafts, annotated with the reason each one failed. Not generic negative examples — specific, contextual rejections that taught the agent the executive's actual risk tolerance. A draft that was too deferential in a moment that required directness. A framing that hedged where the executive wanted to assert. A closing line that softened what needed to land hard. The Kill List turned passive retrieval into active calibration, training the agent on the shape of the failure space, not just the success surface.</p>
+<p>The retrieval architecture pulled from both layers dynamically based on the communication type — high-stakes external framing triggered heavier Kill List weighting; internal operational messages leaned harder on Voice DNA exemplars. The pipeline didn't ask the model to "sound like" the executive. It gave the model enough negative and positive signal to reconstruct the executive's rhetorical logic, not just their vocabulary.</p>
+<p>The production results were measurable and documented. Drafting latency dropped 90% across high-stakes communication cycles — measured via time-tracking before and after RAG deployment on comparable drafting tasks. Stylistic fidelity landed at 99% relative to the executive baseline, assessed against the same exemplar corpus used to train the Voice DNA layer. The executive could ship outputs without rewriting from scratch. That was the test. That was the threshold I built toward.</p>
+<p>What I learned from building this isn't a pipeline lesson — it's a data architecture lesson. The retrieval chain is only as good as the corpus design, and corpus design is an editorial judgment, not a technical one. Deciding what belongs in the Voice DNA, what belongs in the Kill List, and how to annotate rejections so they're actually useful to a retrieval system — that work requires understanding both the domain and the person. I had the editorial instincts to make those calls from a decade of writing toward specific principals under real deadline pressure. The RAG pipeline didn't replace that judgment. It ran on top of it.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

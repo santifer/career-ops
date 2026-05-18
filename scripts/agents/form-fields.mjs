@@ -31,6 +31,7 @@ import { createReadonlyFS } from '../../lib/readonly-fs.mjs';
 import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
 import { dryRunSkipped } from './types.mjs';
+import { checkText } from '../../lib/ai-detection-gate.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -454,6 +455,70 @@ export async function runFormFields(input) {
   const decisionsLog = buildDecisionsLog(parsed, company, role, modelUsed, tokensUsed);
   writeFileSync(join(outDirSecondary, 'decisions.md'), decisionsLog, 'utf-8');
 
+  // ── 7b. API-backed AI detection gate (prose answers only) ─────────────────
+  // Form answers are submitted to employers — check the combined prose.
+  // form-fields.json is JSON metadata, not prose; skip structured data fields.
+
+  const combinedProse = parsed.answers.map(a => a.answer).join('\n\n');
+  let apiDetection = null;
+  let apiDetectionRetried = false;
+
+  if (combinedProse.trim().length > 20) {
+    try {
+      apiDetection = await checkText(combinedProse, { budgetUsd: 0.10, skipCache: false });
+
+      if (apiDetection.passes === false) {
+        apiDetectionRetried = true;
+        const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
+        const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
+        const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
+          `The form answers scored > 50% AI probability on external detectors. ` +
+          `Rewrite answers with varied sentence rhythm, concrete specifics, and zero AI-detector tells. ` +
+          `Each answer must sound like a human typed it from notes, not polished by a committee.`;
+
+        try {
+          const r = await callHaikuOrFallback(userPrompt, stricterPrompt, MAX_COMPLETION_TOKENS);
+          const addTok = r.tokens || 0;
+          tokensUsed.input  += r.inputTokens || Math.round(addTok * 0.85);
+          tokensUsed.output += r.outputTokens || Math.round(addTok * 0.15);
+
+          try {
+            const retryParsed = FormFieldsLlmResponseSchema.parse(JSON.parse(extractJson(r.content)));
+            // Enforce char limits on retry too
+            for (const ans of retryParsed.answers) {
+              if (ans.char_limit && ans.answer.length > ans.char_limit) {
+                const truncated = ans.answer.slice(0, ans.char_limit);
+                const lastPeriod = truncated.lastIndexOf('.');
+                ans.answer = lastPeriod > ans.char_limit * 0.7
+                  ? truncated.slice(0, lastPeriod + 1)
+                  : truncated;
+              }
+            }
+            const retryProse = retryParsed.answers.map(a => a.answer).join('\n\n');
+            const retryDetection = await checkText(retryProse, { budgetUsd: 0.10, skipCache: true });
+            if (retryDetection.passes !== false || apiDetection.passes === false) {
+              parsed = retryParsed;
+              const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
+              writeFileSync(artifactPath, retryMarkdown, 'utf-8');
+              writeFileSync(join(outDirSecondary, 'form-fields.md'), retryMarkdown, 'utf-8');
+              const retryJson = JSON.stringify({
+                company, role, generated_at: new Date().toISOString(), version: '1.0.0',
+                predecessor_path: null, answers: retryParsed.answers, warnings: retryParsed.warnings,
+              }, null, 2);
+              writeFileSync(jsonPath, retryJson, 'utf-8');
+              writeFileSync(join(outDirSecondary, 'form-fields.json'), retryJson, 'utf-8');
+              apiDetection = retryDetection;
+            }
+          } catch { /* use original if retry fails */ }
+        } catch { /* ignore regeneration failure */ }
+      }
+    } catch (detectionErr) {
+      apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+    }
+  }
+
+  const apiDetectionFailed = apiDetection?.passes === false;
+
   // ── 8. Return ────────────────────────────────────────────────────────────
 
   // Output shape matching orchestrator's form_field_answers contract
@@ -464,9 +529,12 @@ export async function runFormFields(input) {
     voice_check_passed: a.voice_check_passed,
   }));
 
+  const gz   = apiDetection?.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : null;
+  const orig = apiDetection?.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : null;
+
   return {
     stage: STAGE,
-    status: 'ok',
+    status: apiDetectionFailed ? 'error' : 'ok',
     output: artifactOutput,
     diagnostics: {
       duration_ms: Date.now() - t0,
@@ -474,7 +542,11 @@ export async function runFormFields(input) {
       tokens_used: tokensUsed,
       model_used: modelUsed,
       questions_answered: parsed.answers.length,
+      api_detection: apiDetection,
+      api_detection_retried: apiDetectionRetried,
     },
-    error: null,
+    error: apiDetectionFailed
+      ? `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${[gz, orig].filter(Boolean).join(' / ')}`
+      : null,
   };
 }

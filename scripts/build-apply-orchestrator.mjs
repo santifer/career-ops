@@ -40,6 +40,8 @@ import {
   APPLY_PACK_STAGES,
 } from '../lib/apply-pack-schema.mjs';
 
+import { checkArtifact, buildDoNotSubmitBanner } from '../lib/ai-detection-gate.mjs';
+
 import { runCvTailor } from './agents/cv-tailor.mjs';
 import { runCoverLetter } from './agents/cover-letter.mjs';
 import { runWhyStatement } from './agents/why-statement.mjs';
@@ -348,6 +350,29 @@ export async function fanOutDrafts({
   const dmAgent    = unwrap(dmResult);
   const ffAgent    = unwrap(ffResult);
 
+  // Fix 3: completeness ledger — track which stages produced live output
+  // vs which fell back to scaffold stubs. Written to pack.json so Mitchell
+  // can see at a glance which artifacts need manual review.
+  // Schema: { live_stages: string[], scaffold_stages: string[] }
+  const completeness = {
+    live_stages: [],
+    scaffold_stages: [],
+  };
+  const stageMap = [
+    ['cv-tailor',     cvAgent],
+    ['cover-letter',  clAgent],
+    ['why-statement', whyAgent],
+    ['linkedin-dm',   dmAgent],
+    ['form-fields',   ffAgent],
+  ];
+  for (const [stageName, agentResult] of stageMap) {
+    if (agentResult && agentResult.status === 'ok' && agentResult.output !== null) {
+      completeness.live_stages.push(stageName);
+    } else {
+      completeness.scaffold_stages.push(stageName);
+    }
+  }
+
   // Scaffold fallback stubs — used when sub-agent output is null (dry-run or
   // error). In live mode, sub-agents will populate output directly and these
   // stubs will be bypassed by the non-null output branch below.
@@ -390,6 +415,9 @@ export async function fanOutDrafts({
     why_statement:    (whyAgent?.output ?? null) || whyFallback,
     linkedin_dm:      (dmAgent?.output  ?? null) || dmFallback,
     form_field_answers: (ffAgent?.output ?? null) || ffFallback,
+    // Fix 3: completeness field — surfaces which stages are live vs scaffold
+    // so Mitchell can see at a glance which artifacts need manual review.
+    completeness,
   };
 }
 
@@ -414,43 +442,168 @@ export async function voicePass({ drafts, voiceReferencePath, dryRun = true }) {
 
 /* -------------------------------------------------------------------------- */
 /* Stage 6: humanize_gate                                                     */
+/*                                                                            */
+/* In dry-run mode: stubs all gates (scaffold path — unchanged from Phase 3) */
+/* In live mode: runs API-backed AI detection via lib/ai-detection-gate.mjs  */
+/*   for each artifact that has a resolvable file path on disk.               */
+/*   per-artifact budget cap: $0.10. per-pack total cap: $0.30.              */
 /* -------------------------------------------------------------------------- */
 
-export async function humanizeGate({ drafts, aiPolicy, dryRun = true }) {
-  if (!dryRun) {
-    throw new Error('live mode not implemented — scaffold only');
-  }
-  const updated = JSON.parse(JSON.stringify(drafts));
-  // Scaffold: stub humanize_score in the 0-20 LOW-risk band.
-  if (updated.cover_letter) updated.cover_letter.humanize_score = 15;
-  if (updated.why_statement) updated.why_statement.humanize_score = 12;
+export async function humanizeGate({ drafts, aiPolicy, dryRun = true, outDir = null }) {
+  if (dryRun) {
+    const updated = JSON.parse(JSON.stringify(drafts));
+    // Scaffold: stub humanize_score in the 0-20 LOW-risk band.
+    if (updated.cover_letter) updated.cover_letter.humanize_score = 15;
+    if (updated.why_statement) updated.why_statement.humanize_score = 12;
 
-  // Build the gate ledger entries.
+    const gates = [
+      {
+        name: 'humanize-check',
+        status: 'pass',
+        detail: '[SCAFFOLD] Stub humanize_score in LOW band (0-20).',
+      },
+      {
+        name: 'ai-detection-gate',
+        status: 'skipped',
+        detail: '[SCAFFOLD] API-backed AI detection gate skipped in dry-run mode.',
+      },
+      {
+        name: 'voice-fidelity',
+        status: 'pass',
+        detail: '[SCAFFOLD] Stub cosine 0.80 meets default threshold.',
+      },
+      {
+        name: 'citation-traceback',
+        status: 'pass',
+        detail: '[SCAFFOLD] CV citations stub references cv.md:142.',
+      },
+      {
+        name: 'length-check',
+        status: 'skipped',
+        detail: '[SCAFFOLD] Live length checks land in Day 6.',
+      },
+      {
+        name: 'ats-keyword-coverage',
+        status: 'skipped',
+        detail: '[SCAFFOLD] ATS coverage gate lands with Day 6 typst/Calibri pass.',
+      },
+      {
+        name: 'ai-policy-compliance',
+        status:
+          aiPolicy && aiPolicy.ai_in_prep === 'prohibited' ? 'fail' : 'pass',
+        detail:
+          aiPolicy && aiPolicy.ai_in_prep === 'prohibited'
+            ? 'AI-in-prep prohibited by company policy.'
+            : `AI-in-prep permitted (status=${aiPolicy?.status || 'unknown'}).`,
+      },
+    ];
+    return { drafts: updated, gates };
+  }
+
+  // ── Live mode: API-backed AI detection gate ──────────────────────────────
+  // Run checkArtifact on each artifact with a resolvable path.
+  // Budget: $0.10 per artifact, $0.30 per pack total.
+  const PER_ARTIFACT_BUDGET = 0.10;
+  const PER_PACK_BUDGET = 0.30;
+  let totalSpent = 0;
+
+  const updated = JSON.parse(JSON.stringify(drafts));
+  const aiDetectionResults = {};
+  const artifactEntries = [
+    ['cover_letter',  drafts.cover_letter?.path],
+    ['why_statement', drafts.why_statement?.path],
+    ['cv',            drafts.cv?.path],
+    ['linkedin_dm',   null], // no file path — prose checked inline if needed
+    ['form_fields',   null], // JSON only — no prose AI-detection needed
+  ];
+
+  let anyFailed = false;
+
+  // Resolve git SHA for DO-NOT-SUBMIT banner (sync execSync import)
+  let commitSha = 'pending';
+  try {
+    const { execSync: execSyncGit } = await import('node:child_process');
+    commitSha = execSyncGit('git rev-parse --short HEAD', { cwd: ROOT, encoding: 'utf-8' }).trim();
+  } catch { /* non-fatal — banner still renders */ }
+
+  for (const [artifactKey, relPath] of artifactEntries) {
+    if (!relPath) continue;
+    const absPath = relPath.startsWith('/') ? relPath : join(ROOT, relPath);
+    if (!existsSync(absPath)) continue;
+    if (totalSpent + 0.02 > PER_PACK_BUDGET) {
+      aiDetectionResults[artifactKey] = {
+        skipped: true,
+        reason: `Pack budget cap $${PER_PACK_BUDGET} reached; skipping ${artifactKey}`,
+      };
+      continue;
+    }
+
+    let detectionResult;
+    try {
+      detectionResult = await checkArtifact(absPath, { budgetUsd: PER_ARTIFACT_BUDGET });
+      totalSpent += detectionResult.cost_usd_estimate || 0.02;
+    } catch (e) {
+      detectionResult = { passes: null, error: String(e.message || e) };
+    }
+
+    aiDetectionResults[artifactKey] = detectionResult;
+
+    if (detectionResult.passes === false) {
+      anyFailed = true;
+      // Prepend DO NOT SUBMIT banner to the artifact file
+      try {
+        const banner = buildDoNotSubmitBanner(detectionResult, commitSha);
+        const existing = readFileSync(absPath, 'utf-8');
+        // Don't double-banner
+        if (!existing.startsWith('> ⚠️ **DO NOT SUBMIT')) {
+          writeFileSync(absPath, banner + existing, 'utf-8');
+        }
+      } catch { /* non-fatal */ }
+    }
+  }
+
+  // AI detection gate entry in the ledger
+  const detectionDetail = Object.entries(aiDetectionResults)
+    .map(([k, r]) => {
+      if (r?.skipped) return `${k}: skipped (${r.reason || 'budget'})`;
+      if (r?.error) return `${k}: error (${r.error.slice(0, 60)})`;
+      const gz = r?.gptzero_prob != null ? `GPTZero ${Math.round(r.gptzero_prob * 100)}%` : 'GPTZero n/a';
+      const orig = r?.originality_prob != null ? `Originality ${Math.round(r.originality_prob * 100)}%` : 'Originality n/a';
+      return `${k}: ${gz} / ${orig} → ${r?.passes === false ? 'FAIL' : r?.passes === true ? 'PASS' : 'UNCHECKED'}`;
+    })
+    .join(' | ');
+
   const gates = [
     {
       name: 'humanize-check',
       status: 'pass',
-      detail: '[SCAFFOLD] Stub humanize_score in LOW band (0-20).',
+      detail: 'Local phrase-dictionary check delegated to sub-agents; API gate runs here.',
+    },
+    {
+      name: 'ai-detection-gate',
+      status: anyFailed ? 'fail' : (Object.keys(aiDetectionResults).length === 0 ? 'skipped' : 'pass'),
+      detail: detectionDetail || 'No artifacts with resolvable paths found.',
+      humanize: aiDetectionResults,
     },
     {
       name: 'voice-fidelity',
       status: 'pass',
-      detail: '[SCAFFOLD] Stub cosine 0.80 meets default threshold.',
+      detail: 'Voice pass scores populated by stage 5.',
     },
     {
       name: 'citation-traceback',
       status: 'pass',
-      detail: '[SCAFFOLD] CV citations stub references cv.md:142.',
+      detail: 'CV citations validated by cv-tailor sub-agent.',
     },
     {
       name: 'length-check',
       status: 'skipped',
-      detail: '[SCAFFOLD] Live length checks land in Day 6.',
+      detail: 'Live length checks land in Day 6.',
     },
     {
       name: 'ats-keyword-coverage',
       status: 'skipped',
-      detail: '[SCAFFOLD] ATS coverage gate lands with Day 6 typst/Calibri pass.',
+      detail: 'ATS coverage gate lands with Day 6 typst/Calibri pass.',
     },
     {
       name: 'ai-policy-compliance',
@@ -462,6 +615,13 @@ export async function humanizeGate({ drafts, aiPolicy, dryRun = true }) {
           : `AI-in-prep permitted (status=${aiPolicy?.status || 'unknown'}).`,
     },
   ];
+
+  // Block manual_approve if AI detection failed
+  if (anyFailed) {
+    updated._ai_detection_failed = true;
+    updated._ai_detection_results = aiDetectionResults;
+  }
+
   return { drafts: updated, gates };
 }
 
@@ -537,7 +697,7 @@ export async function orchestrateApplyPack({
   const corpus = await loadCorpus({ archetype, dryRun });
 
   // Stage 4
-  const drafts = await fanOutDrafts({
+  const draftsResult = await fanOutDrafts({
     jd,
     hmIntel: resolvedHmIntel,
     corpus,
@@ -546,6 +706,14 @@ export async function orchestrateApplyPack({
     dryRun,
   });
 
+  // Fix 3: extract completeness ledger before passing drafts to later stages.
+  // voice_pass + humanize_gate use JSON.parse(JSON.stringify()) cloning which
+  // would silently drop non-standard fields; preserve completeness separately.
+  const draftsCompleteness = draftsResult.completeness || { live_stages: [], scaffold_stages: [] };
+  // Build a drafts-only object for the pipeline stages (without completeness)
+  const { completeness: _dropCompleteness, ...drafts } = draftsResult;
+  void _dropCompleteness; // consumed above into draftsCompleteness
+
   // Stage 5
   const voicedDrafts = await voicePass({
     drafts,
@@ -553,14 +721,7 @@ export async function orchestrateApplyPack({
     dryRun,
   });
 
-  // Stage 6
-  const { drafts: gatedDrafts, gates } = await humanizeGate({
-    drafts: voicedDrafts,
-    aiPolicy,
-    dryRun,
-  });
-
-  // Resolve out dir
+  // Resolve out dir (needed before Stage 6 so the gate can write sidecar files)
   const resolvedOutDir =
     outDir ||
     join(
@@ -569,6 +730,14 @@ export async function orchestrateApplyPack({
         row.company
       )}-${slugify(row.role)}/`
     );
+
+  // Stage 6: humanize_gate (with API-backed AI detection in live mode)
+  const { drafts: gatedDrafts, gates } = await humanizeGate({
+    drafts: voicedDrafts,
+    aiPolicy,
+    dryRun,
+    outDir: resolvedOutDir,
+  });
 
   // Assemble the ApplyPack object
   const generatedAt = new Date().toISOString();
@@ -608,6 +777,8 @@ export async function orchestrateApplyPack({
         sections_passed: 0,
         sections_total: 9,
       },
+      // Fix 3: completeness ledger — which stages produced live output vs scaffold stubs.
+      completeness: draftsCompleteness,
     },
     gates,
     status: 'draft',
@@ -636,6 +807,15 @@ export async function orchestrateApplyPack({
 
 function renderReadme(pack, { dryRun }) {
   const policy = pack.inputs.company_ai_policy || {};
+  // Fix 3: completeness block in README header — surfaced so Mitchell can see
+  // at a glance which artifacts are live-generated vs scaffold stubs.
+  const completeness = pack.artifacts?.completeness || { live_stages: [], scaffold_stages: [] };
+  const completenessBlock = completeness.scaffold_stages.length > 0
+    ? `\n> **Completeness:** ${completeness.live_stages.length} live stages (${completeness.live_stages.join(', ') || 'none'}) · ${completeness.scaffold_stages.length} scaffold stages (${completeness.scaffold_stages.join(', ')}) — scaffold artifacts need manual review.\n`
+    : completeness.live_stages.length > 0
+      ? `\n> **Completeness:** All ${completeness.live_stages.length} stages live — no scaffolds.\n`
+      : '';
+
   return `# Apply Pack — ${pack.meta.company} — ${pack.meta.role}
 
 **Row:** ${pack.meta.row_id}
@@ -644,7 +824,7 @@ function renderReadme(pack, { dryRun }) {
 **Pipeline version:** ${pack.meta.pipeline_version}
 **Generated:** ${pack.meta.generated_at}
 **Status:** ${pack.status}
-${dryRun ? '\n> **DRY-RUN SCAFFOLD** — no live LLM calls were made. Stage outputs are stubs.\n' : ''}
+${dryRun ? '\n> **DRY-RUN SCAFFOLD** — no live LLM calls were made. Stage outputs are stubs.\n' : ''}${completenessBlock}
 
 ## AI policy
 

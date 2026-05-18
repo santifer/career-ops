@@ -28,6 +28,7 @@ import { createReadonlyFS } from '../../lib/readonly-fs.mjs';
 import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
 import { dryRunSkipped } from './types.mjs';
+import { checkText } from '../../lib/ai-detection-gate.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -372,29 +373,88 @@ export async function runLinkedinDm(input) {
   const decisionsLog = buildDecisionsLog(parsed, company, role, modelUsed, tokensUsed);
   writeFileSync(join(outDirSecondary, 'decisions.md'), decisionsLog, 'utf-8');
 
+  // ── 7b. API-backed AI detection gate ─────────────────────────────────────
+  // Run checkAndRegenerate on the cold variant (primary prose).
+
+  const primaryVariant = parsed.messages.find(m => m.variant === 'cold') || parsed.messages[0];
+  let apiDetection = null;
+  let apiDetectionRetried = false;
+
+  try {
+    apiDetection = await checkText(primaryVariant.text, { budgetUsd: 0.10, skipCache: false });
+
+    if (apiDetection.passes === false) {
+      apiDetectionRetried = true;
+      const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
+      const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
+      const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
+        `The DM variants scored > 50% AI probability. Rewrite with dramatically more varied sentence ` +
+        `rhythms, concrete personal details, and zero AI-detector tells. Make it sound genuinely human.`;
+
+      try {
+        const retryCouncil = await callCouncil({
+          prompt: userPrompt,
+          models: [modelKey],
+          opts: { systemPrompt: stricterPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
+        });
+        const rr = retryCouncil.results?.[0];
+        if (rr && !rr.error) {
+          const addTok = rr.tokens || 0;
+          tokensUsed.input  += Math.round(addTok * 0.85);
+          tokensUsed.output += Math.round(addTok * 0.15);
+
+          try {
+            const retryParsed = LinkedinDmLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
+            for (const msg of retryParsed.messages) { msg.char_count = msg.text.length; }
+            const retryPrimary   = retryParsed.messages.find(m => m.variant === 'cold') || retryParsed.messages[0];
+            const retryDetection = await checkText(retryPrimary.text, { budgetUsd: 0.10, skipCache: true });
+            if (retryDetection.passes !== false || apiDetection.passes === false) {
+              parsed = retryParsed;
+              const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
+              writeFileSync(artifactPath, retryMarkdown, 'utf-8');
+              writeFileSync(join(outDirSecondary, 'linkedin-dm.md'), retryMarkdown, 'utf-8');
+              apiDetection = retryDetection;
+            }
+          } catch { /* use original if retry fails */ }
+        }
+      } catch { /* ignore regeneration failure */ }
+    }
+  } catch (detectionErr) {
+    apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+  }
+
+  const apiDetectionFailed = apiDetection?.passes === false;
+
   // ── 8. Return ────────────────────────────────────────────────────────────
 
   // Build output shape matching orchestrator's linkedin_dm artifact contract
   // The orchestrator expects { body, channel } — we return the cold variant
   // as the primary body and include the full messages array in extra fields.
-  const primaryVariant = parsed.messages.find(m => m.variant === 'cold') || parsed.messages[0];
+  const finalPrimary = parsed.messages.find(m => m.variant === 'cold') || parsed.messages[0];
   const artifactOutput = {
-    body: primaryVariant.text,
+    body: finalPrimary.text,
     channel: 'linkedin-message',
     path: artifactPath.replace(ROOT + '/', ''),
     variants: parsed.messages.map(m => ({ variant: m.variant, char_count: m.char_count })),
+    api_detection: apiDetection,
   };
+
+  const gz   = apiDetection?.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : null;
+  const orig = apiDetection?.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : null;
 
   return {
     stage: STAGE,
-    status: 'ok',
+    status: apiDetectionFailed ? 'error' : 'ok',
     output: artifactOutput,
     diagnostics: {
       duration_ms: Date.now() - t0,
       cost_estimate_usd: estimateCostUsd(tokensUsed),
       tokens_used: tokensUsed,
       model_used: modelUsed,
+      api_detection_retried: apiDetectionRetried,
     },
-    error: null,
+    error: apiDetectionFailed
+      ? `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${[gz, orig].filter(Boolean).join(' / ')}`
+      : null,
   };
 }

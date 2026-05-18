@@ -1,6 +1,6 @@
 {
   "name": "career-ops",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
     "doctor": "node doctor.mjs",
@@ -55,13 +55,13 @@
   "homepage": "https://santifer.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/santifer/career-ops"
+    "url": "https://github.com/santifer/create-mitwilli"
   },
   "license": "MIT",
   "dependencies": {
     "@google/genai": "^2.3.0",
     "@google/generative-ai": "^0.24.1",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.0.0",
     "js-yaml": "^4.1.1",
     "marked": "^18.0.3",
     "mjml": "^5.2.1",

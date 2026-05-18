@@ -29,6 +29,7 @@ import { createReadonlyFS } from '../../lib/readonly-fs.mjs';
 import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
 import { dryRunSkipped } from './types.mjs';
+import { checkText } from '../../lib/ai-detection-gate.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -370,6 +371,58 @@ export async function runWhyStatement(input) {
   const humanize = runHumanizeCheckText(parsed.statement);
   const humanizeScore = typeof humanize.score === 'number' ? humanize.score : 0;
 
+  // ── 7b. API-backed AI detection gate ─────────────────────────────────────
+  // checkAndRegenerate: run API gate on statement prose; regenerate once on fail.
+
+  let apiDetection = null;
+  let apiDetectionRetried = false;
+
+  if (parsed.statement.trim().length > 0) {
+    try {
+      apiDetection = await checkText(parsed.statement, { budgetUsd: 0.10, skipCache: false });
+
+      if (apiDetection.passes === false) {
+        apiDetectionRetried = true;
+        const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
+        const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
+        const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
+          `The statement scored > 50% AI probability on external detectors. ` +
+          `Rewrite with dramatically more burstiness, irregular sentence structure, and embedded ` +
+          `specific personal details unique to Mitchell. Sound like real internal notes, not polished copy.`;
+
+        try {
+          const retryCouncil = await callCouncil({
+            prompt: userPrompt,
+            models: [modelKey],
+            opts: { systemPrompt: stricterPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
+          });
+          const rr = retryCouncil.results?.[0];
+          if (rr && !rr.error) {
+            const addTok = rr.tokens || 0;
+            tokensUsed.input  += Math.round(addTok * 0.85);
+            tokensUsed.output += Math.round(addTok * 0.15);
+
+            try {
+              const retryParsed = WhyStatementLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
+              const retryDetection = await checkText(retryParsed.statement, { budgetUsd: 0.10, skipCache: true });
+              if (retryDetection.passes !== false || apiDetection.passes === false) {
+                parsed = retryParsed;
+                const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
+                writeFileSync(artifactPath, retryMarkdown, 'utf-8');
+                writeFileSync(join(outDirSecondary, 'why-statement.md'), retryMarkdown, 'utf-8');
+                apiDetection = retryDetection;
+              }
+            } catch { /* use original if retry fails */ }
+          }
+        } catch { /* ignore regeneration failure */ }
+      }
+    } catch (detectionErr) {
+      apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+    }
+  }
+
+  const apiDetectionFailed = apiDetection?.passes === false;
+
   // ── 8. Decisions log (O9) ────────────────────────────────────────────────
 
   const decisionsLog = buildDecisionsLog(parsed, company, role, modelUsed, tokensUsed, humanizeScore);
@@ -377,15 +430,20 @@ export async function runWhyStatement(input) {
 
   // ── 9. Return ────────────────────────────────────────────────────────────
 
+  const finalMarkdown = buildMarkdownArtifact(parsed, company, role);
   const artifactOutput = {
     path: artifactPath.replace(ROOT + '/', ''),
-    body_markdown: markdown,
+    body_markdown: finalMarkdown,
     humanize_score: humanizeScore,
+    api_detection: apiDetection,
   };
+
+  const gz   = apiDetection?.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : null;
+  const orig = apiDetection?.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : null;
 
   return {
     stage: STAGE,
-    status: 'ok',
+    status: apiDetectionFailed ? 'error' : 'ok',
     output: artifactOutput,
     diagnostics: {
       duration_ms: Date.now() - t0,
@@ -394,7 +452,10 @@ export async function runWhyStatement(input) {
       model_used: modelUsed,
       humanize_risk_score: humanizeScore,
       humanize_risk_band: humanize.risk,
+      api_detection_retried: apiDetectionRetried,
     },
-    error: null,
+    error: apiDetectionFailed
+      ? `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${[gz, orig].filter(Boolean).join(' / ')}`
+      : null,
   };
 }

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software architecture / systems design — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>Software architecture / systems design</h1>
+  <div class="meta">
+    <span>Source: ElevenLabs — Forward Deployed Engineer - Software Engineer</span>
+    <span class="humanize-badge humanize-low">Humanize: 2% low</span>
+  </div>
+  <div class="body">
+<p>The system I built to run my AI job search wasn't a side project. It was a production decision about architecture.</p>
+<p>In April 2026, I forked an open-source project called `career-ops` and rebuilt it from the inside out — not as a personal script, but as a multi-stage agentic pipeline with parallel workers, a single Claude orchestrator, skill-based delegation across pipeline stages, and portal scanning that hits Greenhouse, Ashby, and Lever APIs at zero token cost. The public repo is at github.com/mitwilli-create/career-ops. I mention that first because the design philosophy matters more than the feature list: every architectural choice was made to answer a question I'd asked before about production systems at much larger scale. What fails under load? What breaks when you're not watching? What do you need to hand off cleanly to an agent and never touch again?</p>
+<p>The core engineering decision was orchestration topology. I built a single Claude orchestrator with skill-based delegation rather than a flat multi-agent architecture — one conductor, specialized workers, explicit hand-off contracts between stages. The corpus integration layer ingests my own voice profile, role artifacts, and project documentation so that outputs aren't generic. The portal scanning layer operates without burning tokens on page renders — it hits the APIs directly, which means the system can run cheaply at whatever cadence I set it without the cost curve of a browser-based scraper. Parallel-worker batch processing handles the volume: multiple roles assessed simultaneously, not sequentially, which is the only approach that survives at any meaningful throughput. The pipeline also integrates with a personal corpus calibration system — the Voice OS project — that analyzed roughly 1.08 million words of my own writing across Gmail, Instagram, Facebook, LinkedIn, and iMessage to surface voice signatures, banned phrases, and AI-detection risk patterns. That calibration output feeds the pipeline's generation stages directly, which closes the loop between corpus analysis and production output in a way that most job-search tooling doesn't attempt.</p>
+<p>The architectural instinct behind all of this is the same one I used building the triage agent at Google's Office of Cross-Google Engineering. That system — a three-prompt architecture (triage / revise / escalate) with conditional knowledge base loading — recaptured roughly 160 operational hours per year at greater than 90% classification accuracy for an audience of approximately 1,000 senior technical ICs at the Principal, Distinguished, and Google Fellow tiers. It also maintained 100% operational continuity through a multi-month medical absence in early 2026 with no human intervention. The design principle is identical: define the routing logic precisely enough that the system can make consequential decisions without you in the loop, and instrument it well enough that you can audit what it decided when you do come back. The `career-ops` fork applies that same principle at personal scale — it runs unattended, it processes in parallel, and it doesn't ask for help on decisions that are already scoped.</p>
+<p>The measurable output of the fork is production deployment in April 2026, a public repository, and a pipeline that has processed real job searches across real company portals at the cadences I set — not a prototype, not a proof of concept. The cross-model adjudication work I shipped the same week — a council-of-models approach that caught six hallucinated claims via strict web-verification — is part of the same discipline: you don't ship agent output without a verification layer, and you design that layer into the architecture before you need it, not after something goes wrong.</p>
+<p>What I keep returning to is that the software architecture questions in AI-native systems aren't fundamentally different from the ones I was answering in live broadcast. In both environments, the hard problems are the same: what do you route to a human versus an automated decision path, how do you maintain fidelity under time pressure, and what's the failure mode when the system runs without you? I built the first version of those answers in newsrooms. I built a production version of them at Google. The `career-ops` fork is the version I built for myself — and it's the clearest single artifact I have of what my systems instincts look like when I own the architecture end to end.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>"Stage speeches, all-hands, leadership emails" — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>"Stage speeches, all-hands, leadership emails"</h1>
+  <div class="meta">
+    <span>Source: Perplexity — Executive Communications Manager (Sr Manager, Exec Comms)</span>
+    <span class="humanize-badge humanize-low">Humanize: 5% low</span>
+  </div>
+  <div class="body">
+<p>The Senior Technical Leadership Summit — STIC — wasn't a recurring program when I took it over. It was a one-time event idea that needed to become an institutional architecture, fast. The Office of Cross-Google Engineering serves the top 0.5% of a 180,000-person engineering organization: roughly 1,000 Principal, Distinguished, and Google Fellow engineers who occupy the tier where each percentage point of attrition carries estimated eight-figure cost implications. Getting this population into a room — physically or virtually — and making them feel genuinely seen rather than administratively processed required more than good production values. It required a structural philosophy about what a summit is actually for.</p>
+<p>My starting premise was that senior IC populations distrust theater. Engineers at the Principal and Fellow tiers have attended enough all-hands and leadership summits to have fully mapped the genre: the opening video with swelling music, the executive who reads from a teleprompter while pretending not to, the Q&A that runs out of time. They arrive pre-skeptical, and they leave early. The format itself is the enemy if you don't redesign it from the first slide. So I didn't treat STIC as a production problem — I treated it as an editorial problem. What story does this population need to hear, told in what sequence, at what tempo, with what proof, delivered by which voice? Every session decision came from that question rather than from the conference-planning checklist.</p>
+<p>The architecture I built moved through three load-bearing layers. The first was principal selection and voice preparation. For a summit serving this cohort, the most credible messenger is a peer — a Distinguished Engineer explaining a technical direction carries more weight than a VP delivering the same content from a stage. So the speaker selection process was editorial: who in this population has the standing and the clarity to carry each section, and what do they need from me to deliver it at the level the room deserves? I ran briefing sessions that functioned less like prep calls and more like editorial conversations — working through the argument structure, identifying where the logic had gaps, pushing on claims that needed sharper evidence. The goal was speakers who sounded like themselves at their best, not speakers who sounded like they'd been media-trained. That distinction matters in a room full of people who can hear the difference immediately.</p>
+<p>The second layer was rundown engineering. A summit for senior engineers isn't a passive consumption event — the cohort wants surface area for actual exchange, not just airtime. I structured sessions to create deliberate transition moments where the energy could shift: a technical deep-dive that hands off to open Q&A at exactly the point of peak interest, not after it. Pacing decisions were made the same way I made them in live broadcast — where does attention peak, where does it drop, and what do you put in that trough to bring it back? The difference between a summit that feels alive and one that feels like a slide deck being narrated out loud is almost entirely a sequencing problem, and sequencing is an editorial skill, not a production one.</p>
+<p>The third layer was follow-on architecture. A summit that doesn't generate active participation beyond the room is a one-way broadcast — useful, but not what this cohort needs. I designed the follow-on forum structure to create ongoing surface area, specifically because I knew STIC's real value would be visible in whether it sustained engagement after the closing session rather than just during it.</p>
+<p>The 348 senior engineers who attended the primary summit gave it a 93% participant CSAT score. The follow-on forums drove more than 18% active participation across the global cohort — not passive viewership, but engineers who showed up again. Those two numbers together describe something harder to manufacture than production quality: a population that felt the event was worth their time the first time, and chose to keep coming back.</p>
+<p>What I took from this is that executive communications at the senior technical level is fundamentally a credibility problem, not a content problem. The writing can be clean, the speakers can be well-briefed, the production can be tight — and still the room leaves unconvinced if the architecture doesn't demonstrate that the people running it understood who was in the room before anyone took the stage. STIC worked because I treated the audience as the editorial constraint, not the speaker list.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

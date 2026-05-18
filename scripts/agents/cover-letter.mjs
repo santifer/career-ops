@@ -32,6 +32,7 @@ import { createReadonlyFS } from '../../lib/readonly-fs.mjs';
 import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
 import { dryRunSkipped } from './types.mjs';
+import { checkText } from '../../lib/ai-detection-gate.mjs';
 
 // Load .env from repo root so API keys are available when this agent is invoked
 // directly (not through a shell that already has the env exported).
@@ -539,19 +540,85 @@ export async function runCoverLetter(input) {
     }
   }
 
-  // ── 8. Write decisions log (O9) ─────────────────────────────────────────
+  // ── 8. API-backed AI detection gate ─────────────────────────────────────
+  // checkAndRegenerate: run API gate on prose sections; regenerate once on fail.
+
+  let apiDetection = null;
+  let apiDetectionRetried = false;
+
+  if (proseSections.trim().length > 0) {
+    try {
+      apiDetection = await checkText(proseSections, { budgetUsd: 0.10, skipCache: false });
+
+      if (apiDetection.passes === false) {
+        apiDetectionRetried = true;
+        const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
+        const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
+        const stricterSystemPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
+          `The prose scored > 50% AI probability on external detectors after the local humanize pass. ` +
+          `Rewrite with dramatically more burstiness, irregular sentence structure, and embedded specific ` +
+          `personal details only Mitchell would know. Sound like something dashed off in 20 minutes from notes.`;
+
+        try {
+          const retryCouncil = await callCouncil({
+            prompt: userPrompt,
+            models: [modelKey],
+            opts: { systemPrompt: stricterSystemPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
+          });
+          const rr = retryCouncil.results?.[0];
+          if (rr && !rr.error) {
+            const addTok = rr.tokens || 0;
+            tokensUsed.input  += Math.round(addTok * 0.85);
+            tokensUsed.output += Math.round(addTok * 0.15);
+
+            try {
+              const retryParsed = CoverLetterLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
+              const retryProse  = retryParsed.paragraphs
+                .filter(p => p.section !== 'hook' && p.section !== 'ask')
+                .map(p => p.text)
+                .join('\n\n');
+              const retryDetection = await checkText(retryProse, { budgetUsd: 0.10, skipCache: true });
+
+              // Accept retry if it improved (or at least no worse)
+              if (retryDetection.passes !== false || apiDetection.passes === false) {
+                parsed = retryParsed;
+                const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
+                writeFileSync(artifactPath, retryMarkdown, 'utf-8');
+                writeFileSync(join(outDirSecondary, 'cover-letter.md'), retryMarkdown, 'utf-8');
+                apiDetection = retryDetection;
+              }
+            } catch { /* use original if retry parse/detection fails */ }
+          }
+        } catch { /* ignore regeneration failure — surface original */ }
+      }
+    } catch (detectionErr) {
+      // Non-fatal: gate error should not block the artifact
+      apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+    }
+  }
+
+  const apiDetectionFailed = apiDetection?.passes === false;
+
+  // ── 9. Write decisions log (O9) ─────────────────────────────────────────
 
   const decisionsLog = buildDecisionsLog(parsed, company, role, modelUsed, tokensUsed, humanizeScore);
   writeFileSync(join(outDirSecondary, 'decisions.md'), decisionsLog, 'utf-8');
 
-  // ── 9. Return SubAgentOutput ─────────────────────────────────────────────
+  // ── 10. Return SubAgentOutput ────────────────────────────────────────────
 
   const costUsd = estimateCostUsd(tokensUsed);
+
+  const finalStatus = humanizeScore > 45 || apiDetectionFailed ? 'error' : 'ok';
+  const gz   = apiDetection?.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : null;
+  const orig = apiDetection?.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : null;
+  const apiErrMsg = apiDetectionFailed
+    ? `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${[gz, orig].filter(Boolean).join(' / ')}`
+    : null;
 
   // Build output shape matching orchestrator's cover_letter artifact contract
   const artifactOutput = {
     path: artifactPath.replace(ROOT + '/', ''),
-    body_markdown: markdown,
+    body_markdown: buildMarkdownArtifact(parsed, company, role),
     humanize_score: humanizeScore,
     voice_fidelity_cosine: 0,  // voice_pass stage fills this; sub-agent returns 0
     citations: parsed.paragraphs.flatMap(p =>
@@ -561,11 +628,12 @@ export async function runCoverLetter(input) {
         source_line: ref.includes(':') ? parseInt(ref.split(':')[1]) || 0 : 0,
       }))
     ),
+    api_detection: apiDetection,
   };
 
   return {
     stage: STAGE,
-    status: humanizeScore > 45 ? 'error' : 'ok',
+    status: finalStatus,
     output: artifactOutput,
     diagnostics: {
       duration_ms: Date.now() - t0,
@@ -575,9 +643,10 @@ export async function runCoverLetter(input) {
       humanize_retry: humanizeRetried,
       humanize_risk_score: humanizeScore,
       humanize_risk_band: humanize.risk,
+      api_detection_retried: apiDetectionRetried,
     },
     error: humanizeScore > 45
       ? `humanize-check score ${humanizeScore} still > 45 after retry (${humanize.risk})`
-      : null,
+      : apiErrMsg,
   };
 }

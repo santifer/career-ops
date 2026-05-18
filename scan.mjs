@@ -1,23 +1,37 @@
 #!/usr/bin/env node
 
 /**
- * scan.mjs — Zero-token portal scanner
+ * scan.mjs — Zero-token portal scanner with a plugin-based provider layer.
  *
- * Fetches Greenhouse, Ashby, Lever, Workday, and SmartRecruiters APIs
- * directly, applies title filters from portals.yml, deduplicates against
- * existing history, and appends new offers to pipeline.md + scan-history.tsv.
+ * Providers live in providers/*.mjs and are loaded at startup. Each provider
+ * exports a default object with:
+ *   - id: string — matched against `provider:` in portals.yml
+ *   - detect(entry): {url}|null — optional auto-detection from careers_url
+ *   - fetch(entry, ctx): [{title,url,company,location}] — required
+ *
+ * Files prefixed with _ are shared helpers (e.g. _http.mjs) and are never
+ * loaded as providers. Adding a new source = drop a *.mjs into providers/,
+ * no scan.mjs edits.
+ *
+ * A tracked_companies entry can set `provider:` explicitly to bypass
+ * URL-based auto-detection. The `transport:` field is reserved for future
+ * transports — Phase A only ships the http transport.
  *
  * Zero Claude API tokens — pure HTTP + JSON.
  *
  * Usage:
  *   node scan.mjs                  # scan all enabled companies
  *   node scan.mjs --dry-run        # preview without writing files
- *   node scan.mjs --company NVIDIA # scan a single company
+ *   node scan.mjs --company Cohere # scan a single company
  */
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { pathToFileURL, fileURLToPath } from 'url';
+import path from 'path';
 import yaml from 'js-yaml';
-import { fetchWithTimeout, poolMap } from './lib/fetch-utils.mjs';
+
+import { makeHttpCtx } from './providers/_http.mjs';
+
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
@@ -26,215 +40,70 @@ const PORTALS_PATH = 'portals.yml';
 const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
+const PROVIDERS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'providers');
 
 // Ensure required directories exist (fresh setup)
 mkdirSync('data', { recursive: true });
 
 const CONCURRENCY = 10;
-const FETCH_TIMEOUT_MS = 10_000;
 
-// ── API detection ───────────────────────────────────────────────────
+// ── Provider loading ────────────────────────────────────────────────
 
-export function detectApi(company) {
-  // Greenhouse: explicit api field
-  if (company.api && company.api.includes('greenhouse')) {
-    return { type: 'greenhouse', url: company.api };
-  }
-
-  const url = company.careers_url || '';
-
-  // Ashby
-  const ashbyMatch = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
-  if (ashbyMatch) {
-    return {
-      type: 'ashby',
-      url: `https://api.ashbyhq.com/posting-api/job-board/${ashbyMatch[1]}?includeCompensation=true`,
-    };
-  }
-
-  // Lever
-  const leverMatch = url.match(/jobs\.lever\.co\/([^/?#]+)/);
-  if (leverMatch) {
-    return {
-      type: 'lever',
-      url: `https://api.lever.co/v0/postings/${leverMatch[1]}`,
-    };
-  }
-
-  // Greenhouse EU boards
-  const ghEuMatch = url.match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
-  if (ghEuMatch && !company.api) {
-    return {
-      type: 'greenhouse',
-      url: `https://boards-api.greenhouse.io/v1/boards/${ghEuMatch[1]}/jobs`,
-    };
-  }
-
-  // Workday — matches {company}.wd{N}.myworkdayjobs.com/{career-site}
-  // Builds the internal CXS JSON endpoint (no auth required for public boards).
-  const wdMatch = url.match(/([a-z0-9-]+)\.(wd\d+)\.myworkdayjobs\.com\/(?:en-US\/)?([^/?#]+)/i);
-  if (wdMatch) {
-    const [, slug, wdN, site] = wdMatch;
-    return {
-      type: 'workday',
-      url: `https://${slug}.${wdN}.myworkdayjobs.com/wday/cxs/${slug}/${site}/jobs`,
-      meta: { slug, wdN, site },
-    };
-  }
-
-  // SmartRecruiters — matches careers.{company}.com or {company}.com/careers-home
-  // AMD, and others use this ATS. Public API requires no auth.
-  const srMatch = url.match(/careers\.([a-z0-9-]+)\.com\/careers-home/i) ||
-                  url.match(/([a-z0-9-]+)\.com\/careers-home/i);
-  if (srMatch && company.smartrecruiters_id) {
-    return {
-      type: 'smartrecruiters',
-      url: `https://api.smartrecruiters.com/v1/companies/${company.smartrecruiters_id}/postings?status=PUBLIC&limit=100`,
-    };
-  }
-
-  return null;
-}
-
-// ── API parsers ─────────────────────────────────────────────────────
-
-// ── Date normalizer ─────────────────────────────────────────────────
-// Returns YYYY-MM-DD string from various ATS date formats.
-
-function isoToDate(val) {
-  if (!val) return '';
-  try { return new Date(val).toISOString().slice(0, 10); } catch { return ''; }
-}
-
-// Workday returns human strings like "Posted 2 Days Ago", "Posted Today",
-// "Posted 30+ Days Ago". Convert to approximate YYYY-MM-DD.
-function workdayPostedToDate(str) {
-  if (!str) return '';
-  const s = str.toLowerCase();
-  const today = new Date();
-  if (s.includes('today') || s.includes('0 day')) return today.toISOString().slice(0, 10);
-  const m = s.match(/(\d+)\+?\s*day/);
-  if (m) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - parseInt(m[1], 10));
-    return (parseInt(m[1], 10) >= 30 ? '≥30d ' : '') + d.toISOString().slice(0, 10);
-  }
-  return '';
-}
-
-function parseGreenhouse(json, companyName) {
-  const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.absolute_url || '',
-    company: companyName,
-    location: j.location?.name || '',
-    posted: isoToDate(j.first_published || j.updated_at),
-  }));
-}
-
-function parseAshby(json, companyName) {
-  const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.jobUrl || '',
-    company: companyName,
-    location: j.location || '',
-    posted: isoToDate(j.publishedAt),
-  }));
-}
-
-function parseLever(json, companyName) {
-  if (!Array.isArray(json)) return [];
-  return json.map(j => ({
-    title: j.text || '',
-    url: j.hostedUrl || '',
-    company: companyName,
-    location: j.categories?.location || '',
-    // createdAt is Unix ms
-    posted: j.createdAt ? new Date(j.createdAt).toISOString().slice(0, 10) : '',
-  }));
-}
-
-function parseWorkday(json, companyName, meta) {
-  const postings = json.jobPostings || [];
-  const base = `https://${meta.slug}.${meta.wdN}.myworkdayjobs.com/en-US/${meta.site}`;
-  return postings.map(j => ({
-    title: j.title || '',
-    // externalPath is like "/job/Seattle/Solutions-Architect_R12345"
-    url: `${base}${j.externalPath || ''}`,
-    company: companyName,
-    location: j.locationsText || '',
-    posted: workdayPostedToDate(j.postedOn),
-  }));
-}
-
-function parseSmartRecruiters(json, companyName) {
-  const content = json.content || [];
-  return content.map(j => ({
-    title: j.name || '',
-    url: j.ref || `https://careers.smartrecruiters.com/${j.company?.identifier || ''}/${j.id}`,
-    company: companyName,
-    location: j.location?.city || j.location?.country || '',
-    posted: isoToDate(j.releasedDate || j.updatedAt),
-  }));
-}
-
-const PARSERS = {
-  greenhouse: parseGreenhouse,
-  ashby: parseAshby,
-  lever: parseLever,
-  workday: parseWorkday,
-  smartrecruiters: parseSmartRecruiters,
-};
-
-// ── Fetch with timeout ──────────────────────────────────────────────
-
-async function fetchJson(url) {
-  const { ok, status, text } = await fetchWithTimeout(url, {}, FETCH_TIMEOUT_MS);
-  if (!ok) throw new Error(`HTTP ${status}`);
-  return JSON.parse(text);
-}
-
-// Workday requires a POST with a JSON body; supports pagination via offset.
-// Each page gets its own timeout (FETCH_TIMEOUT_MS); a cumulative budget
-// scaled to maxResults caps the total request time so a single huge tenant
-// (e.g. Micron's 2,889-job board) doesn't stall the whole scan.
-async function fetchWorkday(apiUrl, { searchText = '', maxResults = 500 } = {}) {
-  const estimatedPages = Math.ceil(maxResults / 20);
-  const totalBudgetMs = Math.max(FETCH_TIMEOUT_MS * 2, estimatedPages * 500);
-  const startedAt = Date.now();
-
-  // Workday's public API caps at 20 results per page (limit > 20 → HTTP 400).
-  const LIMIT = 20;
-  let offset = 0;
-  let allPostings = [];
-  let total = Infinity;
-
-  while (offset < total && allPostings.length < maxResults) {
-    if (Date.now() - startedAt > totalBudgetMs) {
-      throw new Error(`workday fetch exceeded total budget (${totalBudgetMs}ms)`);
+async function loadProviders(dir) {
+  const providers = new Map();
+  if (!existsSync(dir)) return providers;
+  // Alphabetical order so detect() priority is deterministic across machines.
+  const entries = readdirSync(dir)
+    .filter(f => f.endsWith('.mjs') && !f.startsWith('_'))
+    .sort();
+  for (const file of entries) {
+    const full = path.join(dir, file);
+    let mod;
+    try {
+      mod = await import(pathToFileURL(full).href);
+    } catch (err) {
+      console.error(`⚠️  ${file}: failed to load — ${err.message}`);
+      continue;
     }
-    const { ok, status, text } = await fetchWithTimeout(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appliedFacets: {}, limit: LIMIT, offset, searchText }),
-    }, FETCH_TIMEOUT_MS);
-    if (!ok) throw new Error(`HTTP ${status}`);
-    const data = JSON.parse(text);
-    const postings = data.jobPostings || [];
-    total = data.total ?? postings.length;
-    allPostings = allPostings.concat(postings);
-    offset += postings.length;
-    if (postings.length < LIMIT) break; // no more pages
+    const p = mod.default;
+    if (!p || typeof p.fetch !== 'function' || !p.id) {
+      console.error(`⚠️  ${file}: skipping — default export must be { id, fetch }`);
+      continue;
+    }
+    if (providers.has(p.id)) {
+      console.error(`⚠️  ${file}: duplicate provider id "${p.id}" — keeping first`);
+      continue;
+    }
+    providers.set(p.id, p);
   }
+  return providers;
+}
 
-  return { jobPostings: allPostings, total: allPostings.length };
+// Resolve which provider handles a tracked_companies entry.
+// 1. Explicit `provider:` field wins (skips detect()).
+// 2. Otherwise each provider's detect() runs in load order; first hit wins.
+function resolveProvider(entry, providers) {
+  if (entry.provider) {
+    const p = providers.get(entry.provider);
+    if (!p) return { error: `unknown provider: ${entry.provider}` };
+    return { provider: p };
+  }
+  for (const p of providers.values()) {
+    let hit;
+    try {
+      hit = p.detect?.(entry);
+    } catch (err) {
+      console.error(`⚠️  ${p.id}: detect() threw for "${entry.name}" — ${err.message}`);
+      continue;
+    }
+    if (hit) return { provider: p };
+  }
+  return null;
 }
 
 // ── Title filter ────────────────────────────────────────────────────
 
-export function buildTitleFilter(titleFilter) {
+function buildTitleFilter(titleFilter) {
   const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
   const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
 
@@ -243,6 +112,29 @@ export function buildTitleFilter(titleFilter) {
     const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
     const hasNegative = negative.some(k => lower.includes(k));
     return hasPositive && !hasNegative;
+  };
+}
+
+// ── Location filter ─────────────────────────────────────────────────
+// Optional. If `location_filter` is absent from portals.yml, all locations pass.
+// Semantics:
+//   - Empty location string → pass (don't penalize missing data)
+//   - `block` matches → reject (takes precedence over allow)
+//   - `allow` empty → pass (already cleared block)
+//   - `allow` non-empty → must match at least one keyword
+// All matches are case-insensitive substring.
+
+function buildLocationFilter(locationFilter) {
+  if (!locationFilter) return () => true;
+  const allow = (locationFilter.allow || []).map(k => k.toLowerCase());
+  const block = (locationFilter.block || []).map(k => k.toLowerCase());
+
+  return (location) => {
+    if (!location) return true;
+    const lower = location.toLowerCase();
+    if (block.length > 0 && block.some(k => lower.includes(k))) return false;
+    if (allow.length === 0) return true;
+    return allow.some(k => lower.includes(k));
   };
 }
 
@@ -297,7 +189,7 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
-function appendToPipeline(offers, date) {
+function appendToPipeline(offers) {
   if (offers.length === 0) return;
 
   let text = readFileSync(PIPELINE_PATH, 'utf-8');
@@ -310,7 +202,7 @@ function appendToPipeline(offers, date) {
     const procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
     const block = `\n${marker}\n\n` + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title} | ${o.posted || date}`
+      `- [ ] ${o.url} | ${o.company} | ${o.title}`
     ).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
@@ -320,7 +212,7 @@ function appendToPipeline(offers, date) {
     const insertAt = nextSection === -1 ? text.length : nextSection;
 
     const block = '\n' + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title} | ${o.posted || date}`
+      `- [ ] ${o.url} | ${o.company} | ${o.title}`
     ).join('\n') + '\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   }
@@ -329,19 +221,37 @@ function appendToPipeline(offers, date) {
 }
 
 function appendToScanHistory(offers, date) {
-  // Ensure file + header exist
+  // Ensure file + header exist. Location appended as 7th column for non-breaking
+  // backward compat — older scan-history.tsv files with 6 columns still parse fine
+  // since loadSeenUrls only reads column 0.
   if (!existsSync(SCAN_HISTORY_PATH)) {
-    writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n', 'utf-8');
+    writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\n', 'utf-8');
   }
 
   const lines = offers.map(o =>
-    `${o.url}\t${date}\t${o.source}\t${o.title}\t${o.company}\tadded`
+    `${o.url}\t${date}\t${o.source}\t${o.title}\t${o.company}\tadded\t${o.location || ''}`
   ).join('\n') + '\n';
 
   appendFileSync(SCAN_HISTORY_PATH, lines, 'utf-8');
 }
 
-// parallelFetch replaced by poolMap from lib/fetch-utils.mjs (shared with triage/heartbeat).
+// ── Parallel fetch with concurrency limit ───────────────────────────
+
+async function parallelFetch(tasks, limit) {
+  const results = [];
+  let i = 0;
+
+  async function next() {
+    while (i < tasks.length) {
+      const task = tasks[i++];
+      results.push(await task());
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => next());
+  await Promise.all(workers);
+  return results;
+}
 
 // ── Main ────────────────────────────────────────────────────────────
 
@@ -351,7 +261,14 @@ async function main() {
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
 
-  // 1. Read portals.yml
+  // 1. Load providers
+  const providers = await loadProviders(PROVIDERS_DIR);
+  if (providers.size === 0) {
+    console.error('Error: no providers loaded from providers/');
+    process.exit(1);
+  }
+
+  // 2. Read portals.yml
   if (!existsSync(PORTALS_PATH)) {
     console.error('Error: portals.yml not found. Run onboarding first.');
     process.exit(1);
@@ -360,46 +277,58 @@ async function main() {
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
 
-  // 2. Filter to enabled companies with detectable APIs
-  const targets = companies
-    .filter(c => c.enabled !== false)
-    .filter(c => !filterCompany || c.name.toLowerCase().includes(filterCompany))
-    .map(c => ({ ...c, _api: detectApi(c) }))
-    .filter(c => c._api !== null);
+  // 3. Resolve a provider for each enabled company
+  const targets = [];
+  let skippedCount = 0;
+  const resolveErrors = [];
+  for (const company of companies) {
+    if (company.enabled === false) continue;
+    if (typeof company.name !== 'string' || !company.name) {
+      console.error(`⚠️  Skipping entry — missing or non-string 'name' field: ${JSON.stringify(company)}`);
+      continue;
+    }
+    if (filterCompany && !company.name.toLowerCase().includes(filterCompany)) continue;
+    const resolved = resolveProvider(company, providers);
+    if (!resolved) { skippedCount++; continue; }
+    if (resolved.error) { resolveErrors.push({ company: company.name, error: resolved.error }); continue; }
+    targets.push({ ...company, _provider: resolved.provider });
+  }
 
-  const skippedCount = companies.filter(c => c.enabled !== false).length - targets.length;
-
-  console.log(`Scanning ${targets.length} companies via API (${skippedCount} skipped — no API detected)`);
+  console.log(`Scanning ${targets.length} companies via providers (${skippedCount} skipped — no provider matched)`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
-  // 3. Load dedup sets
+  // 4. Load dedup sets
   const seenUrls = loadSeenUrls();
   const seenCompanyRoles = loadSeenCompanyRoles();
 
-  // 4. Fetch all APIs
+  // 5. Fetch from each target
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
-  let totalFiltered = 0;
+  let totalFilteredTitle = 0;
+  let totalFilteredLocation = 0;
   let totalDupes = 0;
   const newOffers = [];
-  const errors = [];
+  const errors = [...resolveErrors];
 
   const tasks = targets.map(company => async () => {
-    const { type, url, meta } = company._api;
+    const provider = company._provider;
+    const ctx = makeHttpCtx();
     try {
-      // Workday requires a POST-based paginated fetch; all others use GET.
-      const json = type === 'workday'
-        ? await fetchWorkday(url)
-        : await fetchJson(url);
-      const jobs = type === 'workday'
-        ? PARSERS.workday(json, company.name, meta)
-        : PARSERS[type](json, company.name);
+      const jobs = await provider.fetch(company, ctx);
+      if (!Array.isArray(jobs)) {
+        throw new Error(`${provider.id}: fetch() did not return an array`);
+      }
       totalFound += jobs.length;
 
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
-          totalFiltered++;
+          totalFilteredTitle++;
+          continue;
+        }
+        if (!locationFilter(job.location)) {
+          totalFilteredLocation++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -414,28 +343,31 @@ async function main() {
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
-        newOffers.push({ ...job, source: `${type}-api` });
+        // Source label keeps the `${provider.id}-api` suffix so existing
+        // scan-history.tsv rows continue to match for dedup.
+        newOffers.push({ ...job, source: `${provider.id}-api` });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
     }
   });
 
-  await poolMap(tasks, (task) => task(), CONCURRENCY);
+  await parallelFetch(tasks, CONCURRENCY);
 
-  // 5. Write results
+  // 6. Write results
   if (!dryRun && newOffers.length > 0) {
-    appendToPipeline(newOffers, date);
+    appendToPipeline(newOffers);
     appendToScanHistory(newOffers, date);
   }
 
-  // 6. Print summary
+  // 7. Print summary
   console.log(`\n${'━'.repeat(45)}`);
   console.log(`Portal Scan — ${date}`);
   console.log(`${'━'.repeat(45)}`);
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
-  console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
+  console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
@@ -449,7 +381,7 @@ async function main() {
   if (newOffers.length > 0) {
     console.log('\nNew offers:');
     for (const o of newOffers) {
-      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'} | posted:${o.posted || '?'}`);
+      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}`);
     }
     if (dryRun) {
       console.log('\n(dry run — run without --dry-run to save results)');
@@ -462,11 +394,7 @@ async function main() {
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 }
 
-// Guard: only run main() when invoked as the entrypoint, so test files can
-// import this module without triggering the script.
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(err => {
-    console.error('Fatal:', err.message);
-    process.exit(1);
-  });
-}
+main().catch(err => {
+  console.error('Fatal:', err.message);
+  process.exit(1);
+});

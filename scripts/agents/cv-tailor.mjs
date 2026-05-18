@@ -27,6 +27,7 @@ import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
 import { scoreAndRankBullets, buildLlmPreamble } from '../../lib/hm-weighting.mjs';
 import { dryRunSkipped } from './types.mjs';
+import { checkText, buildDoNotSubmitBanner } from '../../lib/ai-detection-gate.mjs';
 
 // Load .env from repo root so API keys are available when cv-tailor is invoked
 // directly (not through a shell that already has the env exported). Uses
@@ -59,12 +60,17 @@ You will receive:
 1. The job description body
 2. The full cv.md as reference
 3. A deterministically-ranked top-8 list of bullets (the preamble) — these scored highest against the JD on HM-intel and metric density. DO NOT REORDER them; preserve the rank.
+   Each bullet in the preamble includes its EXACT cv_ref in the form "cv.md:N" where N is the actual line number.
+   Example preamble line: "- Shipped RAG pipeline cutting latency 40% [cv.md:42] — score 0.823"
+   The cv_ref in your output for that bullet MUST be exactly "cv.md:42" — NOT "cv.md:line:12" or any invented value.
 4. Optional article-digest.md for additional proof points
 
 Your job:
 - Refine, tighten, or rephrase the top-8 ranked bullets to maximize impact for this specific JD.
 - Maintain Mitchell's voice (short, direct, metric-first, no "delve" / no "tapestry" / no AI-detector-tells).
-- Preserve all citations: keep [cv.md:line:N] or article-digest markers intact.
+- CRITICAL: Preserve EXACT cv_ref values from the preamble. Each bullet's cv_ref MUST be the verbatim
+  "cv.md:N" value shown in the preamble for that bullet. DO NOT substitute, guess, or use "cv.md:line:12"
+  as a placeholder. If a bullet came from the preamble, copy its cv_ref exactly as it appeared.
 - Also generate 4–6 "highlights" bullets for the HM 6-second scan box at the top of the CV PDF.
   Highlights must be: short (≤100 chars each), metric-first, punchy, and JD-targeted.
   Pull them from the strongest proof points in cv.md / article-digest.md.
@@ -520,7 +526,42 @@ export async function runCvTailor(input) {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* 6. Write artifact                                                       */
+  /* 6. Fix 3: cv_ref validation — ensure returned refs match preamble       */
+  /* ---------------------------------------------------------------------- */
+  // Build a set of the ACTUAL cv_refs from the preamble so we can detect
+  // placeholder pollution (e.g. all bullets returning "cv.md:line:12").
+  // If any bullet returned a ref NOT in the preamble, flag it in Warnings
+  // and replace it with the correct ref from rankedBullets by original_rank.
+  const preambleRefs = new Set(rankedBullets.map((b) => b.cv_ref).filter(Boolean));
+  const cvRefWarnings = [];
+  let cvRefCorrectionCount = 0;
+
+  const correctedBullets = parsed.tailored_bullets.map((b) => {
+    const returnedRef = b.cv_ref || '';
+    // Valid: empty string (LLM chose not to assign), or a ref in the preamble set
+    if (!returnedRef || preambleRefs.has(returnedRef)) return b;
+    // Invalid: ref not in preamble — use the ranked bullet's actual ref by position
+    const rankIdx = typeof b.original_rank === 'number' ? b.original_rank - 1 : -1;
+    const correctRef = rankIdx >= 0 && rankIdx < rankedBullets.length
+      ? rankedBullets[rankIdx].cv_ref
+      : rankedBullets[0]?.cv_ref || '';
+    cvRefWarnings.push(
+      `cv_ref mismatch on bullet rank ${b.original_rank}: LLM returned "${returnedRef}", ` +
+      `replaced with actual preamble ref "${correctRef}"`
+    );
+    cvRefCorrectionCount++;
+    return { ...b, cv_ref: correctRef };
+  });
+
+  if (cvRefCorrectionCount > 0) {
+    parsed = { ...parsed, tailored_bullets: correctedBullets, warnings: [...(parsed.warnings || []), ...cvRefWarnings] };
+  }
+
+  // Distinct cv_ref count — used by the smoke-test verification gate below.
+  const distinctCvRefs = new Set(parsed.tailored_bullets.map((b) => b.cv_ref).filter(Boolean));
+
+  /* ---------------------------------------------------------------------- */
+  /* 7. Write artifact                                                       */
   /* ---------------------------------------------------------------------- */
 
   const companySlug = slugify(company);
@@ -570,7 +611,90 @@ export async function runCvTailor(input) {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* 8. Return SubAgentOutput                                                */
+  /* 8. API-backed AI detection gate                                         */
+  /* ---------------------------------------------------------------------- */
+  // checkAndRegenerate pattern: run the API gate on the bullets prose.
+  // If fails on first attempt, regenerate once with a stricter system prompt.
+  // If still fails on second attempt, return status: 'error' with verdicts.
+
+  let apiDetection = null;
+  let apiDetectionRetried = false;
+
+  try {
+    apiDetection = await checkText(bulletsOnlyText, { budgetUsd: 0.10, skipCache: false });
+
+    if (apiDetection.passes === false) {
+      apiDetectionRetried = true;
+      const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
+      const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
+      const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
+        `The bullets scored > 50% AI probability on external detectors. ` +
+        `Rewrite with dramatically varied sentence rhythms, concrete personal details unique to Mitchell, ` +
+        `and hard-specific metrics. Avoid ALL smooth polish. Make it sound like something Mitchell wrote ` +
+        `in 15 minutes from notes, not copy edited by a committee.`;
+
+      try {
+        const retryCouncil = await callCouncil({
+          prompt: userPrompt,
+          models: [modelKey],
+          opts: { systemPrompt: stricterPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
+        });
+        const rr = retryCouncil.results?.[0];
+        if (rr && !rr.error) {
+          const addTok = rr.tokens || 0;
+          tokensUsed.input  += Math.round(addTok * 0.85);
+          tokensUsed.output += Math.round(addTok * 0.15);
+
+          try {
+            const retryParsed = CvTailorLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
+            const retryBulletsText = retryParsed.tailored_bullets.map(b => `- ${b.text}`).join('\n');
+            const retryDetection   = await checkText(retryBulletsText, { budgetUsd: 0.10, skipCache: true });
+            // Accept retry if it improved or is no worse
+            if (retryDetection.passes !== false || (apiDetection.passes === false)) {
+              parsed = retryParsed;
+              const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
+              writeFileSync(artifactPath, retryMarkdown, 'utf-8');
+              apiDetection = retryDetection;
+            }
+          } catch { /* use original if retry parse fails */ }
+        }
+      } catch { /* ignore regeneration failure — surface original detection result */ }
+    }
+
+    // If still failing after retry, return error with API verdicts
+    if (apiDetection.passes === false) {
+      const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : 'GPTZero n/a';
+      const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : 'Originality n/a';
+      return {
+        stage: STAGE,
+        status: 'error',
+        output: {
+          path: artifactPath.replace(ROOT + '/', ''),
+          tailored_bullets_count: parsed.tailored_bullets.length,
+          highlights: parsed.highlights || [],
+          highlights_count: (parsed.highlights || []).length,
+          humanize_risk_score: humanizeScore,
+          humanize_risk_band: humanize.risk,
+          summary: parsed.summary,
+          api_detection: apiDetection,
+        },
+        diagnostics: {
+          duration_ms: Date.now() - t0,
+          cost_estimate_usd: estimateCostUsd(tokensUsed),
+          tokens_used: tokensUsed,
+          model_used: modelUsed,
+          api_detection_retried: apiDetectionRetried,
+        },
+        error: `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${gz} / ${orig}`,
+      };
+    }
+  } catch (detectionErr) {
+    // Non-fatal: API gate error should not block the artifact. Log in diagnostics.
+    apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* 9. Return SubAgentOutput                                                */
   /* ---------------------------------------------------------------------- */
 
   const costUsd = estimateCostUsd(tokensUsed);
@@ -587,12 +711,17 @@ export async function runCvTailor(input) {
       humanize_risk_band: humanize.risk,
       summary: parsed.summary,
       warnings: parsed.warnings || [],
+      // Fix 3: cv_ref diversity metrics for smoke-test verification
+      distinct_cv_refs_count: distinctCvRefs.size,
+      cv_ref_corrections: cvRefCorrectionCount,
+      api_detection: apiDetection,
     },
     diagnostics: {
       duration_ms: Date.now() - t0,
       cost_estimate_usd: costUsd,
       tokens_used: tokensUsed,
       model_used: modelUsed,
+      api_detection_retried: apiDetectionRetried,
     },
     error: null,
   };

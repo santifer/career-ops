@@ -25,7 +25,7 @@
 
 import 'dotenv/config';
 import { readFileSync, writeFileSync } from 'fs';
-import { callCouncil, probeLineup } from '../lib/council.mjs';
+import { callCouncil, probeLineup, extractRichContent } from '../lib/council.mjs';
 
 const args = process.argv.slice(2);
 function arg(flag, fallback) {
@@ -88,16 +88,24 @@ console.log(JSON.stringify({
   jailbreakRetries,
   jailbreakRefused,
   totalMs: report.totalMs,
-  models: report.results.map(r => ({
-    model: r.model,
-    error: r.error || null,
-    tokens: r.tokens || 0,
-    citations: r.citations?.length || 0,
-    ms: r.ms,
-    chars: (r.content || '').length,
-    ...(r.jailbreakRetry ? { jailbreakRetry: true } : {}),
-    ...(r.jailbreakRefusal ? { jailbreakRefusal: r.jailbreakRefusal } : {}),
-  })),
+  models: report.results.map(r => {
+    // Use extractRichContent (added 2026-05-18 meta-audit v2 P0 #1) to capture
+    // the new `think` and `grounding_urls` fields uniformly — these were being
+    // silently dropped before.
+    const rich = extractRichContent(r);
+    return {
+      model: r.model,
+      error: r.error || null,
+      tokens: rich.tokens,
+      citations: rich.citations.length,
+      grounding_urls: rich.grounding_urls.length,
+      think_chars: rich.think.length,
+      ms: rich.ms,
+      chars: rich.content.length,
+      ...(r.jailbreakRetry ? { jailbreakRetry: true } : {}),
+      ...(r.jailbreakRefusal ? { jailbreakRefusal: r.jailbreakRefusal } : {}),
+    };
+  }),
   missingKeys: report.missingKeys,
   probe: probeResults || undefined,
   out: outPath,

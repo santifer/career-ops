@@ -14,11 +14,21 @@
  * Requires:
  *   GEMINI_API_KEY in .env (or environment variable)
  *
- * Default model: gemini-3-flash-preview (full Flash 3.0 preview;
- * gemini-3-flash-preview was deprecated 2026-02-18). Override via GEMINI_MODEL.
+ * Free-tier model: gemini-2.5-flash (generous quota, no billing required)
+ *
+ * Model deprecation reference (per Google AI for Developers, May 2026):
+ *   - gemini-2.0-flash       deprecated 2026-03-31  (do not use)
+ *   - gemini-2.0-flash-lite  deprecated 2026-03-31
+ *   - gemini-2.5-flash       deprecated 2026-06-17  (current default)
+ *   - gemini-2.5-flash-lite  deprecated 2026-07-22
+ * Stable Gemini models follow a 12-month lifecycle from their release date.
+ * Source: https://ai.google.dev/gemini-api/docs/models
+ *
+ * When the current default approaches its deprecation date, bump
+ * `modelName` below and the `--model` examples accordingly.
  */
 
-import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -33,7 +43,6 @@ try {
 }
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -42,13 +51,15 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 
 const PATHS = {
   // Primary evaluation logic lives in these two mode files
-  shared:   join(ROOT, 'modes', '_shared.md'),
-  oferta:   join(ROOT, 'modes', 'oferta.md'),
+  shared:      join(ROOT, 'modes', '_shared.md'),
+  oferta:      join(ROOT, 'modes', 'oferta.md'),
   // Canonical skill path referenced in Issue #344
-  evaluate: join(ROOT, '.claude', 'skills', 'career-ops', 'SKILL.md'),
-  cv:       join(ROOT, 'cv.md'),
-  reports:  join(ROOT, 'reports'),
-  tracker:  join(ROOT, 'data', 'applications.md'),
+  evaluate:    join(ROOT, '.claude', 'skills', 'career-ops', 'SKILL.md'),
+  cv:          join(ROOT, 'cv.md'),
+  profile:     join(ROOT, 'modes', '_profile.md'),
+  profileYml:  join(ROOT, 'config', 'profile.yml'),
+  reports:     join(ROOT, 'reports'),
+  tracker:     join(ROOT, 'data', 'applications.md'),
 };
 
 // ---------------------------------------------------------------------------
@@ -67,11 +78,11 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   USAGE
     node gemini-eval.mjs "<JD text>"
     node gemini-eval.mjs --file ./jds/my-job.txt
-    node gemini-eval.mjs --model gemini-3-flash-preview "<JD text>"
+    node gemini-eval.mjs --model gemini-2.5-flash "<JD text>"
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <name>   Gemini model to use (default: gemini-3-flash-preview)
+    --model <name>   Gemini model to use (default: gemini-2.5-flash)
     --no-save        Do not save report to reports/ directory
     --help           Show this help
 
@@ -89,28 +100,11 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText = '';
-// 2026-05-17 — gemini-3-flash-preview deprecated Feb 18 2026, shuts down June 1
-// 2026. Switched default to gemini-3-flash-preview (Mitchell's stated
-// preference: "Gemini 3.1 Pro when it makes sense and Gemini 3.1 Flash all
-// other times" — 3.1 Flash doesn't ship as a slug, 3-flash-preview is the
-// closest full-Flash 3.x option, live-verified API 200 on 2026-05-17).
-// Override via GEMINI_MODEL env var.
-let modelName = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+let modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 let saveReport = true;
-let batchMode = false;
-let batchReportNum = null;
-let batchId = null;
-let batchDate = null;
-let batchUrl = null;
-let triageMode = false;
-let triageTier = 2;
-let triageJdSnippet = '';
 
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--mode=triage' || args[i] === '--mode' && args[i + 1] === 'triage') {
-    triageMode = true;
-    if (args[i] === '--mode') i++;
-  } else if (args[i] === '--file' && args[i + 1]) {
+  if (args[i] === '--file' && args[i + 1]) {
     const filePath = args[++i];
     if (!existsSync(filePath)) {
       console.error(`❌  File not found: ${filePath}`);
@@ -121,94 +115,8 @@ for (let i = 0; i < args.length; i++) {
     modelName = args[++i];
   } else if (args[i] === '--no-save') {
     saveReport = false;
-  } else if (args[i] === '--batch') {
-    batchMode = true;
-  } else if (args[i] === '--report-num' && args[i + 1]) {
-    batchReportNum = args[++i];
-  } else if (args[i] === '--id' && args[i + 1]) {
-    batchId = args[++i];
-  } else if (args[i] === '--date' && args[i + 1]) {
-    batchDate = args[++i];
-  } else if (args[i] === '--url' && args[i + 1]) {
-    batchUrl = args[++i];
-  } else if (args[i] === '--tier' && args[i + 1]) {
-    triageTier = parseInt(args[++i]) || 2;
-  } else if (args[i] === '--jd-snippet' && args[i + 1]) {
-    triageJdSnippet = args[++i];
   } else if (!args[i].startsWith('--')) {
     jdText += (jdText ? '\n' : '') + args[i];
-  }
-}
-
-// ── Triage mode: quick-score via JSON output, then exit ──────────
-if (triageMode) {
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  if (!geminiApiKey) {
-    console.error('GEMINI_API_KEY not set — cannot run triage mode');
-    process.exit(1);
-  }
-  const triagePromptPath = join(ROOT, 'batch', 'triage-prompt.md');
-  if (!existsSync(triagePromptPath)) {
-    console.error(`triage-prompt.md not found at ${triagePromptPath}`);
-    process.exit(1);
-  }
-  // Append recent-discard brief so triage doesn't re-surface anti-patterns
-  // (modes/_shared.md "Discard Pattern Awareness"). Safe to skip on missing file.
-  let discardBrief = '';
-  try { discardBrief = renderDiscardPatternBrief({ limit: 20, format: 'markdown' }) || ''; }
-  catch (e) { console.error(`[gemini-triage] discard-pattern brief unavailable: ${e.message}`); }
-
-  const triagePrompt = readFileSync(triagePromptPath, 'utf8')
-    .replace('{{URL}}', batchUrl || '(url not provided)')
-    .replace('{{TIER}}', String(triageTier))
-    .replace('{{JD_SNIPPET}}', (triageJdSnippet || jdText || '(no JD available)').slice(0, 3000))
-    + discardBrief;
-
-  const { GoogleGenerativeAI: GeminiAI } = await import('@google/generative-ai');
-  const gai   = new GeminiAI(geminiApiKey);
-  // maxOutputTokens bumped from 80 → 250: triage JSON output is ~50–100
-  // tokens AT MINIMUM, and any preamble or longer reason field would silently
-  // truncate at 80 → parse failure → SKIP. Same failure mode as the 0.001
-  // --max-budget-usd cap discovered 2026-05-16. thinkingConfig:0 disables
-  // gemini-2.5's reasoning step (which eats output budget without benefit
-  // for this structured-output task).
-  const gmod  = gai.getGenerativeModel({
-    model: modelName,
-    generationConfig: {
-      temperature: 0,
-      maxOutputTokens: 250,
-      thinkingConfig: { thinkingBudget: 0 },
-    },
-  });
-  try {
-    const result = await gmod.generateContent([{ text: triagePrompt }]);
-    process.stdout.write(result.response.text().trim() + '\n');
-  } catch (err) {
-    console.error(`Gemini triage error: ${err.message}`);
-    process.exit(1);
-  }
-  process.exit(0);
-}
-
-if (!jdText && batchUrl) {
-  try {
-    const res = await fetch(batchUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 career-ops/1.7.0' },
-      signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    jdText = html
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
-      .replace(/\s{3,}/g, '\n\n')
-      .trim()
-      .slice(0, 20000);
-  } catch (err) {
-    console.error(`❌  Failed to fetch JD from ${batchUrl}: ${err.message}`);
-    process.exit(1);
   }
 }
 
@@ -253,17 +161,26 @@ function nextReportNumber() {
   return String(Math.max(...files) + 1).padStart(3, '0');
 }
 
+// Lazy import — only used when saving
+let readdirSync;
+try {
+  ({ readdirSync } = await import('fs'));
+} catch { /* already imported above via named exports */ }
+// Use named import fallback
+if (!readdirSync) {
+  readdirSync = (await import('fs')).readdirSync;
+}
 
 // ---------------------------------------------------------------------------
 // Load context files
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
-const sharedContext  = readFile(PATHS.shared,   'modes/_shared.md');
-const ofertaLogic    = readFile(PATHS.oferta,   'modes/oferta.md');
-const cvContent      = readFile(PATHS.cv,       'cv.md');
-const articleDigestPath = join(ROOT, 'article-digest.md');
-const articleDigest  = existsSync(articleDigestPath) ? readFileSync(articleDigestPath, 'utf-8').trim() : null;
+const sharedContext  = readFile(PATHS.shared,      'modes/_shared.md');
+const ofertaLogic    = readFile(PATHS.oferta,      'modes/oferta.md');
+const cvContent      = readFile(PATHS.cv,          'cv.md');
+const profileContent = readFile(PATHS.profile,     'modes/_profile.md');
+const profileYml     = readFile(PATHS.profileYml,  'config/profile.yml');
 
 // ---------------------------------------------------------------------------
 // Build the system prompt (mirrors the Claude skill router logic)
@@ -287,12 +204,17 @@ ${ofertaLogic}
 CANDIDATE RESUME (cv.md)
 ═══════════════════════════════════════════════════════
 ${cvContent}
-${articleDigest ? `
+
 ═══════════════════════════════════════════════════════
-PROOF POINTS (article-digest.md)
+CANDIDATE PROFILE & TARGETS (config/profile.yml)
 ═══════════════════════════════════════════════════════
-${articleDigest}
-` : ''}
+${profileYml}
+
+═══════════════════════════════════════════════════════
+USER ARCHETYPES & NARRATIVE (_profile.md)
+═══════════════════════════════════════════════════════
+${profileContent}
+
 ═══════════════════════════════════════════════════════
 IMPORTANT OPERATING RULES FOR THIS CLI SESSION
 ═══════════════════════════════════════════════════════
@@ -334,10 +256,11 @@ try {
   ]);
   evaluationText = result.response.text();
 } catch (err) {
-  console.error('❌  Gemini API error:', err.message);
-  if (err.message?.includes('API_KEY')) {
+  const sanitizedMsg = (err.message || '').split(apiKey).join('[REDACTED]');
+  console.error('❌  Gemini API error:', sanitizedMsg);
+  if (sanitizedMsg.includes('API_KEY')) {
     console.error('    Check your GEMINI_API_KEY in .env');
-  } else if (err.message?.includes('quota') || err.message?.includes('rate')) {
+  } else if (sanitizedMsg.includes('quota') || sanitizedMsg.includes('rate')) {
     console.error('    You may have hit the free-tier rate limit. Wait 60s and retry.');
   }
   process.exit(1);
@@ -367,8 +290,15 @@ let legitimacy = 'unknown';
 if (summaryMatch) {
   const block = summaryMatch[1];
   const extract = (key) => {
-    const m = block.match(new RegExp(`${key}:\\s*(.+)`));
-    return m ? m[1].trim() : 'unknown';
+    const prefix = `${key}:`;
+    const lines = block.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith(prefix)) {
+        return trimmed.slice(prefix.length).trim();
+      }
+    }
+    return 'unknown';
   };
   company    = extract('COMPANY');
   role       = extract('ROLE');
@@ -386,8 +316,8 @@ if (saveReport) {
       mkdirSync(PATHS.reports, { recursive: true });
     }
 
-    const num         = batchReportNum || nextReportNumber();
-    const today       = batchDate || new Date().toISOString().split('T')[0];
+    const num         = nextReportNumber();
+    const today       = new Date().toISOString().split('T')[0];
     const companySlug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const filename    = `${num}-${companySlug}-${today}.md`;
     const reportPath  = join(PATHS.reports, filename);
@@ -409,19 +339,9 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
     writeFileSync(reportPath, reportContent, 'utf-8');
     console.log(`\n✅  Report saved: reports/${filename}`);
 
-    if (batchMode && batchId) {
-      const tsvDir = join(ROOT, 'batch', 'tracker-additions');
-      if (!existsSync(tsvDir)) mkdirSync(tsvDir, { recursive: true });
-      const companySlugTsv = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const tsvPath = join(tsvDir, `${num}-${companySlugTsv}.tsv`);
-      const scoreForTsv = score !== '?' ? `${score}/5` : '-';
-      const reportLink = `[${num}](reports/${filename})`;
-      writeFileSync(tsvPath, `${num}\t${today}\t${company}\t${role}\tEvaluated\t${scoreForTsv}\t❌\t${reportLink}\tGemini (${modelName})\n`, 'utf-8');
-      console.log(`✅  TSV written: batch/tracker-additions/${num}-${companySlugTsv}.tsv`);
-    } else {
-      console.log(`\n📊  Tracker entry (add to data/applications.md):`);
-      console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score} | Evaluada | ❌ | [${num}](reports/${filename}) |`);
-    }
+    // Append tracker entry reminder
+    console.log(`\n📊  Tracker entry (add to data/applications.md):`);
+    console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score} | Evaluada | ❌ | [${num}](reports/${filename}) |`);
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
   }

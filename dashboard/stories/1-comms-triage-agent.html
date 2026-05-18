@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>"AI-native workflows in production — not just prototypes" — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>"AI-native workflows in production — not just prototypes"</h1>
+  <div class="meta">
+    <span>Source: Cursor (Anysphere) — Forward Deployed Engineer</span>
+    <span class="humanize-badge humanize-low">Humanize: 9% low</span>
+  </div>
+  <div class="body">
+<p>The inbound request stream for the Office of Cross-Google Engineering wasn't just noisy — it was structurally unmanageable. xGE supports roughly 1,000 of Google's most senior technical individual contributors: Principal Engineers, Distinguished Engineers, Google Fellows. The top 0.5% of a 180,000-person organization. Every hour of senior IC time lost to low-complexity communications triage isn't an abstract inefficiency. It's a retention signal, a frustration accumulation, and at that seniority tier, a cost event with eight-figure implications if it compounds into attrition. I needed to build a system that resolved the routine, escalated the genuinely complex, and did both without a human in the loop.</p>
+<p>The architecture I landed on was a single Gemini agent running a three-prompt sequential chain: triage, then revise, then escalate. The sequencing mattered — not multi-agent orchestration with separate models handing off state, but a single-model design with three discrete prompts each doing a bounded job. The first prompt classified inbound traffic into Low, Medium, and High touch tiers against a conditional knowledge base that loaded context specific to the request category. That conditional KB loading was the design decision I'm most glad I didn't skip. A flat, monolithic knowledge base would have introduced irrelevant retrieval noise on every pass; tiered loading kept the model's working context clean and the classification sharper. The second prompt applied Smart Brevity formatting to the Low-touch tier — resolved with documented rationale so the IC could audit the resolution rather than accept a black box. The third prompt generated a structured escalation package for High-touch traffic, with enough classification metadata attached that a human reviewer could triage the escalation queue without re-reading the original thread from scratch.</p>
+<p>The craft detail that doesn't appear in most agent postmortems: I built the rationale documentation into the Low-touch resolution layer deliberately, not as a compliance check but as an adoption mechanism. Senior engineers at the Principal and above tier don't accept opaque automation. They will route around a system they don't trust, and once they route around it, the classification accuracy data becomes useless because the input set is no longer representative. Documented rationale on every resolution kept the loop honest and kept the senior IC population inside the system rather than filing exceptions. That's not a prompt engineering decision — it's an organizational behavior decision expressed through prompt engineering.</p>
+<p>The system recaptured approximately 160 operational hours per year at greater than 90% classification accuracy across the full inbound stream. Those aren't projected figures from a pilot — the agent was in production, running against real traffic from the actual population it was built for. The more telling proof point came later: during a multi-month medical leave in early 2026, the triage system maintained 100% operational continuity without a single human intervention. No coverage arrangement, no handoff document, no deputy. The system held. That's the difference between an AI-native workflow and a prototype with good demo metrics — a prototype doesn't run unattended through an extended absence and come back intact.</p>
+<p>What I learned building this is that the hardest design problem in production agent work isn't the model — it's the organizational surface the agent is touching. The triage system worked because I understood the population it served well enough to build the right escalation thresholds, the right KB structure, and the right rationale format for that specific audience. The technical primitives — prompt chaining, conditional retrieval, structured output — are learnable by anyone in a weekend. Knowing which senior IC request patterns genuinely require human judgment versus which only feel like they do because no one has ever systematically categorized them — that's the knowledge that doesn't come from the documentation.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

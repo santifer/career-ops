@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Driving media campaigns in support of policy priorities — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>Driving media campaigns in support of policy priorities</h1>
+  <div class="meta">
+    <span>Source: OpenAI — Policy Communications Manager</span>
+    <span class="humanize-badge humanize-low">Humanize: 4% low</span>
+  </div>
+  <div class="body">
+<p>The brief I was handed at AJ+ wasn't complicated on its surface: build a video that could break through. The harder truth was that "breaking through" in 2016 meant something specific — the platform was Facebook, the window was the first three seconds, and the audience would scroll past anything that felt like a lecture. I was a Senior Producer on the Context team in San Francisco, and the assignment was to make a piece that combined explanatory depth with social-native reach. What we built hit 50 million views. What made it work was a set of decisions that were less about creativity than about engineering.</p>
+<p>AJ+ at that point operated two parallel content lines that rarely overlapped. Context — Dena Takruri's electoral college explainers, the longer studio pieces — ran deep and slow, three to four minutes, released weekly. Real Time ran fast and shallow, one-minute text-over-video with music, released daily. Both formats had their logic. Neither could catch breaking news with explanatory depth at the speed Facebook actually rewarded. The viral campaign I led wasn't just a video — it was the proof of concept for a third content line designed to occupy the gap: same-day turnaround on a breaking news hook, researched argument structure underneath it, full B-roll package, under two minutes. The format had no name yet. It became the standard operating format for news explainer video across the industry.</p>
+<p>The craft decisions on the viral piece came down to three levers. First, the hook had to do real work in the first three seconds — not tease, not intro, not brand. The opening frame had to answer the audience's implicit question ("why should I stop scrolling?") before they'd consciously asked it. Second, the argument structure had to be legible at zero volume, because a significant share of Facebook autoplay ran silent — every cut, every text line, every B-roll selection had to carry the logic without the audio track. Third, the pacing had to be calibrated to the platform's attention curve, not to broadcast rhythm or editorial tradition. Broadcast had trained producers — including me, through years at Al Jazeera English, HuffPost Live, and Fusion — to think in segments, in acts, in the conventions of a rundown. Social video had no rundown. It had a scroll. The discipline was unlearning the wrong tempo. The video that hit 50 million views and 40,000-plus comments at AJ+'s peak earned those numbers because every editorial decision had been made against platform behavior, not against broadcast convention.</p>
+<p>The result was documented. AJ+ was the second-largest news video producer on Facebook at its peak — that's a Variety citation, June 2015 — and the viral campaign I engineered sat at the high-water mark of that era. Fifty million views. More than 40,000 comments. Those aren't impressions or reach estimates — they're the platform's own engagement counters on a piece of policy journalism formatted for a two-minute window. The deeper result was structural: the day-of explainer format became a repeatable production line, not a single spike. I coached real-time producers Mara Van Ells and Yara Elmjouie from behind-camera roles into on-camera presenter positions using the format as the vehicle. Both went on to develop their own shows. Sana Saeed — also a producer I worked with directly — collected Emmy and Webby wins. The production line built the talent pipeline as a side effect.</p>
+<p>What I'd name now, looking back, is that this was fundamentally a systems problem dressed in editorial clothing. The question wasn't "what should the video say?" The question was "what are the platform's actual constraints, and how do you build a repeatable process that works inside them every time?" That's the same question I asked when I built the autonomous comms triage agent at Google — what are the actual intake constraints, what does the routing logic need to do, how do you make it hold under load without a human in the loop? The instinct that made the viral campaign work is the same instinct. The medium changed. The discipline didn't.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

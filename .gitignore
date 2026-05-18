@@ -155,3 +155,9 @@ data/llm-usage-knowledge.json
 # Network graph — private contact data, never commit
 data/network-graph.json
 data/heartbeat-cache/
+
+# AI detection gate cache — per-text SHA1 results, regenerable, 30-day TTL
+data/ai-detection-cache/
+
+# AI detection sidecar results (written next to each artifact)
+**/*.ai-detection.json

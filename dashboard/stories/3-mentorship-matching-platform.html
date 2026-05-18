@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>"Lead discovery with customer engineers to identify the real bottlenec — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>"Lead discovery with customer engineers to identify the real bottleneck and define clear success metrics"</h1>
+  <div class="meta">
+    <span>Source: Cursor (Anysphere) — Forward Deployed Engineer</span>
+    <span class="humanize-badge humanize-low">Humanize: 6% low</span>
+  </div>
+  <div class="body">
+<p>The problem wasn't the mentorship program. The program had been running for years, matching Google's most-senior engineers — Principal, Distinguished, and Fellow level, the top 0.5% of a 180,000-person organization — with mentors and development opportunities inside the Office of Cross-Google Engineering. People were getting matched. The program was, by any surface reading, functional. The real problem was that nobody had named what was actually broken: the matching process was consuming 3.5 hours of administrative time per cohort pairing, and the program's capacity ceiling was set not by demand or supply of senior engineers, but by how many hours a human program manager could physically spend on coordination logistics. I was the program manager.</p>
+<p>Naming that distinction mattered more than anything that came after it. The instinct to look past the stated problem toward the real constraint is something I'd been developing for fifteen years before Google — in live broadcast control rooms where the stated problem is always "we don't have enough time" and the real problem is usually "we haven't decided what we're making yet." In the mentorship platform case, my first move wasn't to start researching AI matching tools. It was to sit with the operational data and map exactly where the 3.5 hours went. What I found was that the bottleneck wasn't judgment — decisions about who should be matched with whom, what development goals were in play, what the cohort priorities were — it was data assembly and formatting. A human was spending roughly three hours per match pulling together information that existed in structured form across multiple internal systems, reformatting it into a comparison layer, and then spending the remaining thirty minutes on actual decisioning. The judgment work was a fraction of the load. The administrative work was the ceiling.</p>
+<p>That diagnosis changed what success looked like. If I'd accepted the original framing — "we need a more scalable mentorship program" — I might have spent months evaluating external platforms or redesigning the program's structure. Instead, the right intervention was narrower and faster: automate the data assembly layer completely, reduce the decisioning surface to just the work that actually required human judgment, and measure success not by program satisfaction scores or participation rates but by administrative hours per match and total deployment capacity. I set a concrete target before touching any tooling: get the per-match administrative time under 20 minutes, and define a deployment capacity metric that would tell us whether H1 2026 cohort growth was feasible without adding headcount. Those were the metrics that would tell us whether the intervention had worked — not proxy metrics, not activity metrics, but the two numbers that mapped directly to the ceiling I'd diagnosed.</p>
+<p>The platform I architected shifted the matching workflow to an AI-driven internal system that handled cohort data assembly, comparison formatting, and preliminary pairing logic autonomously, surfacing human-review checkpoints only at the decisioning stage. The result: 90% reduction in administrative processing time per match — 3.5 hours down to under 20 minutes — and a 300%-plus increase in active deployment capacity projected for H1 2026. The program still serves the top 0.5% of Google's engineering organization, a cohort where senior IC attrition carries estimated eight-figure cost implications per percentage point. The ceiling moved because the bottleneck was correctly identified before a single line of implementation work began.</p>
+<p>What I took from this is that the discovery conversation is the highest-leverage moment in any technical engagement — not because it delays action, but because it protects against the wrong action being taken quickly. The mentorship platform would have been a worse system, or a more expensive one, or both, if I'd let the surface problem definition stand. Finding the real constraint first, then defining success metrics that would verify the constraint had actually been removed — that sequence is the work. Everything else is execution.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

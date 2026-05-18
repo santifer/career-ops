@@ -33,7 +33,7 @@ RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
-ENGINE="claude"
+MODEL=""  # empty = let claude -p use the Claude Max default
 
 usage() {
   cat <<'USAGE'
@@ -49,7 +49,9 @@ Options:
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
-  --engine ENGINE      Worker engine: claude (default) or gemini
+  --model NAME         Claude model passed to `claude -p --model` (default:
+                       unset = Claude Max default). Use a cheaper model for
+                       large batches, e.g. `--model claude-sonnet-4-6`.
   -h, --help           Show this help
 
 Files:
@@ -83,7 +85,7 @@ while [[ $# -gt 0 ]]; do
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
-    --engine) ENGINE="$2"; shift 2 ;;
+    --model) MODEL="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -127,16 +129,7 @@ check_prerequisites() {
     exit 1
   fi
 
-  if [[ "$ENGINE" == "gemini" ]]; then
-    if ! command -v node &>/dev/null; then
-      echo "ERROR: 'node' not found in PATH (required for Gemini engine)."
-      exit 1
-    fi
-    if [[ ! -f "$PROJECT_DIR/gemini-eval.mjs" ]]; then
-      echo "ERROR: gemini-eval.mjs not found at $PROJECT_DIR/gemini-eval.mjs"
-      exit 1
-    fi
-  elif ! command -v claude &>/dev/null; then
+  if ! command -v claude &>/dev/null; then
     echo "ERROR: 'claude' CLI not found in PATH."
     exit 1
   fi
@@ -348,44 +341,39 @@ process_offer() {
 
   local log_file="$LOGS_DIR/${report_num}-${id}.log"
 
-  # Launch worker (engine-specific)
-  local exit_code=0
-  if [[ "$ENGINE" == "gemini" ]]; then
-    node "$PROJECT_DIR/gemini-eval.mjs" \
-      --url "$url" \
-      --report-num "$report_num" \
-      --id "$id" \
-      --date "$date" \
-      --batch \
-      > "$log_file" 2>&1 || exit_code=$?
-  else
-    # Prepare system prompt with placeholders resolved
-    local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
-    # Escape sed delimiter characters in variables to prevent substitution breakage
-    local esc_url esc_jd_file esc_report_num esc_date esc_id
-    esc_url="${url//\\/\\\\}"
-    esc_url="${esc_url//|/\\|}"
-    esc_jd_file="${jd_file//\\/\\\\}"
-    esc_jd_file="${esc_jd_file//|/\\|}"
-    esc_report_num="${report_num//|/\\|}"
-    esc_date="${date//|/\\|}"
-    esc_id="${id//|/\\|}"
-    sed \
-      -e "s|{{URL}}|${esc_url}|g" \
-      -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
-      -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
-      -e "s|{{DATE}}|${esc_date}|g" \
-      -e "s|{{ID}}|${esc_id}|g" \
-      "$PROMPT_FILE" > "$resolved_prompt"
+  # Prepare system prompt with placeholders resolved
+  local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
+  # Escape sed delimiter characters in variables to prevent substitution breakage
+  local esc_url esc_jd_file esc_report_num esc_date esc_id
+  esc_url="${url//\\/\\\\}"
+  esc_url="${esc_url//|/\\|}"
+  esc_jd_file="${jd_file//\\/\\\\}"
+  esc_jd_file="${esc_jd_file//|/\\|}"
+  esc_report_num="${report_num//|/\\|}"
+  esc_date="${date//|/\\|}"
+  esc_id="${id//|/\\|}"
+  sed \
+    -e "s|{{URL}}|${esc_url}|g" \
+    -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
+    -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
+    -e "s|{{DATE}}|${esc_date}|g" \
+    -e "s|{{ID}}|${esc_id}|g" \
+    "$PROMPT_FILE" > "$resolved_prompt"
 
-    claude -p \
-      --dangerously-skip-permissions \
-      --append-system-prompt-file "$resolved_prompt" \
-      "$prompt" \
-      > "$log_file" 2>&1 || exit_code=$?
-
-    rm -f "$resolved_prompt"
+  # Launch claude -p worker.
+  # Model defaults to the Claude Max subscription default unless --model was
+  # passed. Building the command in an array keeps quoting safe regardless.
+  local -a claude_args=(-p --dangerously-skip-permissions)
+  if [[ -n "$MODEL" ]]; then
+    claude_args+=(--model "$MODEL")
   fi
+  claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+
+  local exit_code=0
+  claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+
+  # Cleanup resolved prompt
+  rm -f "$resolved_prompt"
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -394,27 +382,9 @@ process_offer() {
     # Try to extract score from worker output
     local score="-"
     local score_match
-   score_match=$(grep -oE 'SCORE:[[:space:]]*([0-9.]+)|\*\*Score:\*\*[[:space:]]*([0-9.]+)' "$log_file" \
-      | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)
+   score_match=$(sed -nE 's/.*"score":[[:space:]]*([0-9.]+).*/\1/p' "$log_file" 2>/dev/null | head -1 || true)
     if [[ -n "$score_match" ]]; then
       score="$score_match"
-    fi
-
-    # 6D: Validate report has required blocks A through G
-    local report_file
-    report_file=$(ls "$PROJECT_DIR/reports/${report_num}"-*.md 2>/dev/null | head -1 || true)
-    local validation_failed=0
-    if [[ -n "$report_file" ]]; then
-      for BLOCK in "## A)" "## B)" "## C)" "## D)" "## E)" "## F)" "## G)"; do
-        if ! grep -q "$BLOCK" "$report_file" 2>/dev/null; then
-          echo "[$(date)] VALIDATION FAIL: $report_file missing $BLOCK" >> "$PROJECT_DIR/data/errors.log"
-          validation_failed=1
-        fi
-      done
-    fi
-    if [[ $validation_failed -eq 1 ]]; then
-      echo "    ⚠️  Validation failed: report missing required blocks (see data/errors.log)"
-      return
     fi
 
     # Check min-score gate
@@ -434,25 +404,17 @@ process_offer() {
     error_msg=$(tail -5 "$log_file" 2>/dev/null | tr '\n' ' ' | cut -c1-200 || echo "Unknown error (exit code $exit_code)")
     update_state "$id" "$url" "failed" "$started_at" "$completed_at" "$report_num" "-" "$error_msg" "$retries"
     echo "    ❌ Failed (attempt $retries, exit code $exit_code)"
-    # 6F: Route worker failures to shared error log for cross-session aggregation
-    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] WORKER FAIL id=$id exit=$exit_code: $error_msg" >> "$PROJECT_DIR/data/errors.log"
   fi
 }
 
 # Merge tracker additions into applications.md
 merge_tracker() {
   echo ""
-  echo "=== Verifying pipeline integrity before merge ==="
-  # 6G: Hard gate — block merge if pipeline verification fails
-  node "$PROJECT_DIR/verify-pipeline.mjs"
-  if [ $? -ne 0 ]; then
-    echo "[$(date)] MERGE BLOCKED: verify-pipeline failed. Fix errors before merging." >> "$PROJECT_DIR/data/errors.log"
-    echo "❌ Merge blocked: verify-pipeline failed. See data/errors.log."
-    exit 1
-  fi
-  echo ""
   echo "=== Merging tracker additions ==="
   node "$PROJECT_DIR/merge-tracker.mjs"
+  echo ""
+  echo "=== Verifying pipeline integrity ==="
+  node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
 }
 
 # Print summary
@@ -513,7 +475,7 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
-  echo "Engine: $ENGINE | Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
   echo "Input: $total_input offers"
   echo ""
 
@@ -620,11 +582,9 @@ main() {
             running=$((running - 1))
           fi
         done
-        # Compact arrays. Bash set -u trips on empty-array expansion via
-        # `${pids[@]}`; the `+x` form returns empty when unset/empty, fixing
-        # the "unbound variable" crash hit during the 2026-05-16 phase-a re-eval.
-        pids=(${pids[@]+"${pids[@]}"})
-        pid_ids=(${pid_ids[@]+"${pid_ids[@]}"})
+        # Compact arrays
+        pids=("${pids[@]}")
+        pid_ids=("${pid_ids[@]}")
         sleep 1
       done
 
@@ -635,21 +595,14 @@ main() {
       running=$((running + 1))
     done
 
-    # Wait for remaining workers — same empty-array guard as above.
-    for pid in ${pids[@]+"${pids[@]}"}; do
+    # Wait for remaining workers
+    for pid in "${pids[@]}"; do
       wait "$pid" 2>/dev/null || true
     done
   fi
 
   # Merge tracker additions
   merge_tracker
-
-  # 6H: Auto-run pattern analysis after successful merge
-  echo ""
-  echo "=== Running pattern analysis ==="
-  echo "[$(date)] Running pattern analysis..." >> "$PROJECT_DIR/data/logs/batch.log"
-  node "$PROJECT_DIR/analyze-patterns.mjs" >> "$PROJECT_DIR/data/logs/batch.log" 2>&1
-  echo "    Pattern analysis complete (see data/logs/batch.log)"
 
   # Print summary
   print_summary

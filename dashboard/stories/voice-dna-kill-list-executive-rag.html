@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>High-impact technical content / explain complex concepts — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>High-impact technical content / explain complex concepts</h1>
+  <div class="meta">
+    <span>Source: Mistral AI — Senior/Staff AI Developer Advocate</span>
+    <span class="humanize-badge humanize-low">Humanize: 5% low</span>
+  </div>
+  <div class="body">
+<p>The problem wasn't drafting speed. The problem was that every draft produced without the right constraints taught the model the wrong things — and nobody had named that yet.</p>
+<p>When I joined Google's Office of Cross-Google Engineering as Internal Communications Lead, VP-level comms was consuming drafting cycles that didn't scale. The population I supported — roughly 1,000 Principal, Distinguished, and Google Fellow engineers, the top 0.5% of a 180,000-person organization — operated under cycle-time pressure where a communications lag wasn't an inconvenience, it was a structural bottleneck. Every high-stakes message that went out under a VP signature had to carry that executive's specific rhetorical fingerprint: risk tolerance, sentence architecture, the particular places they accelerated and the particular places they stopped. Generic AI drafts, even competent ones, created more work than they saved. The executive would spend as much time rewriting toward voice as they would have spent writing from scratch.</p>
+<p>The solution I engineered wasn't a prompt template. It was a two-corpus RAG architecture — what I called Voice DNA and the Kill List — and the distinction between them is where the real technical content lives. The Voice DNA corpus was the positive training layer: legacy emails, executive constitutions, exemplar messaging from prior high-stakes cycles, all curated for register consistency. That corpus taught the model what the executive sounded like when they were operating at their best — the pace, the precision, the editorial choices that signaled this voice and not a generic approximation of it. Most people building these pipelines stop here. The Kill List is why this one worked differently.</p>
+<p>The Kill List was a restricted corpus of rejected drafts — outputs the executive had explicitly pushed back on, with the reasons documented. Not bad writing in the abstract, but specifically bad writing *for this principal*: the phrasings they flagged as too hedged, the structural moves that read as bureaucratic, the escalation patterns that felt off-register for their risk profile. Feeding rejected drafts as negative training data gave the model something a positive corpus alone cannot provide: a calibrated sense of what this particular executive would *not* ship. The result was a pipeline that understood rhetorical avoidance as much as rhetorical aspiration — and that distinction is the difference between a draft that requires rewriting and one that doesn't.</p>
+<p>The production result was a 90% reduction in drafting latency against the pre-RAG baseline, measured across high-stakes cycles where I tracked time-on-task before and after deployment. Stylistic fidelity — assessed against the executive's own edits on outputs I ran through the pipeline blind — came in at 99%. That number is not a self-assessment. It is a before-and-after rate on executive revision depth: how much the principal changed outputs before shipping them. The pipeline reached a point where outputs went out with minimal executive intervention on the language itself, which was the operational definition of fidelity we were targeting from the start.</p>
+<p>What this project taught me that I hadn't articulated before I built it: voice calibration at the model layer is an editorial problem, not just an engineering one. The people who build these pipelines as pure engineering problems optimize for coherence and fluency. Those are necessary conditions, not sufficient ones. Sufficient fidelity — the kind where a senior executive trusts the output enough to ship it under their name — requires the same judgment a veteran ghostwriter applies: understanding what the principal won't say as clearly as what they will. The Kill List was a formalization of that instinct. I'd spent a decade in broadcast making editorial decisions under pressure about what didn't belong in the segment — what source got cut, what framing was off-register, what angle violated the show's editorial constitution. The Kill List is that same discipline applied to an LLM context window. The form changed. The underlying problem didn't.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

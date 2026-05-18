@@ -1,29 +1,132 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Story Library — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; line-height: 1.55; }
-  h1 { font-size: 22px; }
-  ul { list-style: none; padding: 0; }
-  li { margin: 8px 0; padding: 10px 14px; background: #f5f5f5; border-radius: 6px; }
-  a { color: #0a66c2; text-decoration: none; font-weight: 500; }
-  @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #e8e8e8; } li { background: #2a2a2a; } }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    max-width: 760px;
+    margin: 48px auto;
+    padding: 0 24px;
+    line-height: 1.55;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 15px;
+  }
+  h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; color: var(--text); letter-spacing: -0.011em; }
+  .lead { font-size: 14px; color: var(--text-3); margin: 0 0 24px; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    margin: 0 0 8px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color .12s, background .12s;
+  }
+  li:hover { background: var(--surface-2); border-color: var(--text-3); }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color .12s ease;
+  }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  a:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 3px; }
+  .back { margin-top: 28px; font-size: 13px; }
+  .back a { color: var(--text-3); font-weight: 500; }
+  .back a:hover { color: var(--text); }
 </style>
 </head><body>
 <h1>Story Library</h1>
-<p>10 voice-calibrated story expansions, generated from Apply-Now report Block F.</p>
+<p class="lead">56 voice-calibrated story expansions, generated from Apply-Now report Block F.</p>
 <ul>
+  <li><a href="1-comms-triage-agent.html">1 comms triage agent</a></li>
+  <li><a href="17-aj-third-production-line.html">17 aj third production line</a></li>
+  <li><a href="2-executive-rag-voice-dna-kill-list.html">2 executive rag voice dna kill list</a></li>
+  <li><a href="3-mentorship-matching-platform.html">3 mentorship matching platform</a></li>
+  <li><a href="ahmed-shihab-eldin-kuwait-coalition-april-2026.html">ahmed shihab eldin kuwait coalition april 2026</a></li>
   <li><a href="ai-driven-mentorship-platform-google-xge.html">ai driven mentorship platform google xge</a></li>
+  <li><a href="aj-production-line-architecture-talent-pipeline-article.html">aj production line architecture talent pipeline article</a></li>
+  <li><a href="aj-talent-pipeline.html">aj talent pipeline</a></li>
+  <li><a href="aj-third-production-line-talent-pipeline-article-digest.html">aj third production line talent pipeline article digest</a></li>
+  <li><a href="aj-viral-video-campaign.html">aj viral video campaign</a></li>
+  <li><a href="aj-viral-video-format-design.html">aj viral video format design</a></li>
   <li><a href="approvals-matrix-overhaul-xge.html">approvals matrix overhaul xge</a></li>
+  <li><a href="breaking-news-control-room.html">breaking news control room</a></li>
+  <li><a href="career-ops-fork-cv-md-148-155.html">career ops fork cv md 148 155</a></li>
+  <li><a href="career-ops-fork-open-source-article-digest-4.html">career ops fork open source article digest 4</a></li>
+  <li><a href="career-ops-fork.html">career ops fork</a></li>
+  <li><a href="career-ops-zero-token-portal-scanning-greenhouse-ashby-lev.html">career ops zero token portal scanning greenhouse ashby lev</a></li>
+  <li><a href="comms-triage-agent-at-xge-article-digest-1.html">comms triage agent at xge article digest 1</a></li>
+  <li><a href="comms-triage-agent-at-xge-article-digest-md-1.html">comms triage agent at xge article digest md 1</a></li>
   <li><a href="comms-triage-agent-voice-dna-pipeline-google-xge.html">comms triage agent voice dna pipeline google xge</a></li>
+  <li><a href="comms-triage-agent-xge-article-digest-1.html">comms triage agent xge article digest 1</a></li>
   <li><a href="comms-triage-agent-xge.html">comms triage agent xge</a></li>
+  <li><a href="comms-triage-agent.html">comms triage agent</a></li>
   <li><a href="communications-triage-agent-3-prompt-architecture-160-hrs.html">communications triage agent 3 prompt architecture 160 hrs</a></li>
+  <li><a href="communications-triage-agent-3-prompt-architecture-conditi.html">communications triage agent 3 prompt architecture conditi</a></li>
+  <li><a href="communications-triage-agent-at-xge-article-digest-md-1.html">communications triage agent at xge article digest md 1</a></li>
+  <li><a href="communications-triage-agent.html">communications triage agent</a></li>
   <li><a href="day-one-technical-orientation-overhaul-google-corp-eng.html">day one technical orientation overhaul google corp eng</a></li>
   <li><a href="day-one-technical-orientation.html">day one technical orientation</a></li>
+  <li><a href="executive-rag-pipeline-at-xge-article-digest-md-2.html">executive rag pipeline at xge article digest md 2</a></li>
+  <li><a href="executive-rag-pipeline-voice-dna-article-digest-2.html">executive rag pipeline voice dna article digest 2</a></li>
+  <li><a href="executive-rag-pipeline-voice-dna-at-xge.html">executive rag pipeline voice dna at xge</a></li>
+  <li><a href="executive-rag-voice-dna.html">executive rag voice dna</a></li>
   <li><a href="huffpost-live-booked-anonymous-trans-navy-service-member-pa.html">huffpost live booked anonymous trans navy service member pa</a></li>
+  <li><a href="huffpost-live-scientology.html">huffpost live scientology</a></li>
+  <li><a href="senior-engineering-mentorship-platform-transition.html">senior engineering mentorship platform transition</a></li>
+  <li><a href="stic-summit-architecture-article-digest-md-11.html">stic summit architecture article digest md 11</a></li>
+  <li><a href="stic-summit-architecture.html">stic summit architecture</a></li>
+  <li><a href="stic-summit-quarterly-forums.html">stic summit quarterly forums</a></li>
   <li><a href="the-stream-launch-night-al-jazeera-english.html">the stream launch night al jazeera english</a></li>
   <li><a href="the-stream-launch-obl-night-from-751-to-59k-reallyvirtua.html">the stream launch obl night from 751 to 59k reallyvirtua</a></li>
+  <li><a href="triage-agent-at-xge.html">triage agent at xge</a></li>
+  <li><a href="voice-dna-kill-list-executive-rag.html">voice dna kill list executive rag</a></li>
+  <li><a href="voice-dna-kill-list-rag-pipeline-xge-article-digest-2.html">voice dna kill list rag pipeline xge article digest 2</a></li>
+  <li><a href="voice-dna-kill-list-rag-pipeline.html">voice dna kill list rag pipeline</a></li>
+  <li><a href="voice-dna-kill-list.html">voice dna kill list</a></li>
+  <li><a href="voice-dna-rag-pipeline-article-digest-2.html">voice dna rag pipeline article digest 2</a></li>
+  <li><a href="voice-dna-rag-pipeline-curated-corpus-kill-list-90-lat.html">voice dna rag pipeline curated corpus kill list 90 lat</a></li>
+  <li><a href="voice-os-methodological-self-portrait-article-digest.html">voice os methodological self portrait article digest</a></li>
+  <li><a href="xge-approvals-matrix-7-day-comment-freeze-article-digest.html">xge approvals matrix 7 day comment freeze article digest</a></li>
+  <li><a href="xge-approvals-matrix-comment-freeze-triage-agent.html">xge approvals matrix comment freeze triage agent</a></li>
+  <li><a href="xge-comms-agent-build.html">xge comms agent build</a></li>
+  <li><a href="xge-communications-triage-agent-article-digest-1.html">xge communications triage agent article digest 1</a></li>
+  <li><a href="xge-org-partnership-w-distinguished-engineers.html">xge org partnership w distinguished engineers</a></li>
+  <li><a href="xge-stic-summit-quarterly-forums.html">xge stic summit quarterly forums</a></li>
+  <li><a href="xge-voice-dna-kill-list.html">xge voice dna kill list</a></li>
 </ul>
-<p style="margin-top:24px"><a href="../index.html">← back to dashboard</a></p>
+<p class="back"><a href="../index.html">← back to dashboard</a></p>
 </body></html>

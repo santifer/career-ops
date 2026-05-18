@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>"Develop authentic executive voices" — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>"Develop authentic executive voices"</h1>
+  <div class="meta">
+    <span>Source: Perplexity — Executive Communications Manager (Sr Manager, Exec Comms)</span>
+    <span class="humanize-badge humanize-low">Humanize: 2% low</span>
+  </div>
+  <div class="body">
+<p>The problem with ghostwriting for executives at scale isn't the writing. It's that every draft either sounds like the writer or sounds like no one — a beige average of what the executive might say if they were trying to sound like an executive. When I took on VP-level communications inside the Office of Cross-Google Engineering, I wasn't interested in producing beige. I needed to build a system that could hold a specific person's voice under pressure, at speed, without me in the loop for every cycle.</p>
+<p>xGE sits at an unusual altitude inside Google — a horizontal engineering organization driving technical change across the entire company, managing roadmap shifts and mandate change management at the scale of 180,000 engineers, while simultaneously running enablement and career programs for the roughly 1,000 Principal, Distinguished, and Google Fellow ICs at the top of that pyramid. The communications cadence at that level isn't forgiving. The executives I supported were writing to audiences that could parse rhetorical inconsistency the way a copy editor parses a dangling modifier. A draft that didn't sound exactly right didn't just need a polish pass — it eroded trust in the institution behind the message.</p>
+<p>The RAG pipeline I engineered started from a different premise than most ghostwriting assistance does. Most systems ask: what does this person typically say? I asked a prior question: what does this person refuse to say? The architecture I built ran on two parallel inputs. The first was a curated Voice DNA corpus — legacy emails, executive constitutions, exemplar messaging pulled from high-stakes communications that the executive had already shipped and owned. These were the positive training signal: register, sentence rhythm, tolerance for directness, the specific place where the executive chose precision over hedging. The second input was what I called the Kill List — a restricted corpus of rejected drafts, marked-up revisions, and discarded language that the executive had explicitly pushed back on. Where the Voice DNA taught the agent what to aim for, the Kill List taught it risk tolerance and rhetorical pace through negative signal. The distinction matters. A system trained only on what someone approved will produce an averaged version of their best work. A system trained on what they rejected learns the edges — the constructions that feel off, the register that reads as corporate rather than personal, the place where a draft stops sounding like a human being who holds an opinion.</p>
+<p>The implementation was a single RAG pipeline with the curated corpus feeding retrieval at the drafting stage and the Kill List operating as a constraint layer on output evaluation. The technical architecture was less complicated than the corpus curation — the hard work was editorial, not infrastructural. Deciding what qualified as Voice DNA required the same close reading I spent a decade developing in broadcast: what does this person actually do with language, versus what do they think they do? Executives, like anyone, have a gap between their self-model and their output. The corpus had to reflect the output.</p>
+<p>The result was a 90% reduction in drafting latency and 99% stylistic fidelity relative to the executive baseline, measured against time-tracking on high-stakes drafting cycles before and after the pipeline went into production. Those numbers came from real deployment against real communications — not a prototype environment, not a benchmark suite. The VP could ship outputs without rebuilding from scratch. The cycle-time pressure that had been consuming disproportionate attention across the office collapsed.</p>
+<p>What I learned from building it is something I already knew from newsrooms but had never formalized at the infrastructure layer: voice isn't style. Style is the surface — sentence length, vocabulary range, punctuation habits. Voice is the decision-making substrate underneath — what the person will say when it's uncomfortable, what they won't say when it would be easy, where they trade clarity for precision or the reverse. A system that captures style produces imitation. A system that captures the decision-making substrate produces a draft the executive recognizes as their own. The Kill List was the mechanism that got me there. Rejected drafts are the most honest signal a communicator produces — they show the gap between what the system guesses you'd say and what you'd actually stand behind. That gap, mapped carefully, is what authentic voice looks like from the inside.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

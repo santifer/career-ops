@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hire / develop / retain world-class FDEs — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>Hire / develop / retain world-class FDEs</h1>
+  <div class="meta">
+    <span>Source: Anthropic — Manager, Forward Deployed Engineering</span>
+    <span class="humanize-badge humanize-low">Humanize: 7% low</span>
+  </div>
+  <div class="body">
+<p>The brief was exact: design a third production line that shipped explainer-quality depth at real-time speed, and use the format itself as a talent pipeline. Those were two different problems. Most production operations solve them separately, on different timelines, with different headcount. At AJ+, the directive was to solve them simultaneously — one format, one operational design, both outputs at once.</p>
+<p>AJ+ in 2016 ran two parallel content architectures that had stopped talking to each other. The Context team — Dena Takruri's territory — produced deep, researched, evergreen explainers: three to four minutes, released weekly, built for shelf life. The Real Time team moved fast: one-minute social-native clips with text-over-video and music, released daily, built for the feed. Both worked. Neither caught breaking news with explanatory depth. If something was moving that day, Real Time could surface it in hours — but surface was all it could do. Context could explain it with rigor, but not until the news cycle had moved on. Leadership — Ethar El-Katatney and Director Michael Shagoury — wanted the gap closed. They wanted a third line that lived in between.</p>
+<p>The format I designed ran on a same-day turnaround triggered by a breaking news hook, but carried Context-team architecture underneath: a researched debunk, a structured argument, a full B-roll package, cut to ninety seconds or under two minutes. That wasn't a compromise between the two existing lines — it was a different discipline entirely. It required a producer who could identify a hook at 9 a.m., scope an argument by noon, clear rights and pull B-roll by 2, and have a cut ready before the platform window closed. The production line had almost no slack in it. What made it work was building the day's sequencing so that each decision gate was already solved before the producer reached it — a pre-cleared asset pipeline, a research scaffold that could be populated quickly, a scripting architecture tight enough that an on-camera presenter could internalize it in under an hour. The format was the ops system. You couldn't separate the two.</p>
+<p>The talent pipeline was the part that required a different kind of coaching. Mara Van Ells was a real-time producer — skilled behind the camera, no on-camera reps. I moved her into the presenter role for the proof-of-concept piece. That meant coaching her through the specific register the format demanded: not anchor delivery, not documentary narration, but something closer to a knowledgeable colleague explaining a thing they had just worked out — authoritative enough to hold the argument, informal enough to hold the platform. The format did part of the work: because the script was structured around a clear argument rather than a wire summary, there was something real to present. Yara Elmjouie followed, then Sana Saeed. All three moved from real-time production into on-camera principal roles. All three went on to their own shows. The Emmy and Webby wins came after I left — but the on-camera muscle and the format fluency they built on that third line were the foundation.</p>
+<p>The measurable output sits in the CV without embellishment: a viral campaign that hit 50 million views and 40,000-plus comments at the high-water mark of AJ+'s digital-first era, produced by a team of more than 10 under that third-line format. Three producers I coached directly became on-camera principals with their own shows and award-winning output. That last number is the one that matters for a hiring conversation about developing world-class FDEs — not the view count, which is a platform metric, but the three careers that were built inside an operational system designed to produce them.</p>
+<p>What I understand now, in a way I couldn't have articulated at AJ+, is that the talent pipeline wasn't a side effect of the production line. It was the same design problem at a different layer. You build the format so the work teaches the skill. You build the ops system so the producer who does the work gets the reps. The coaching happens inside the structure, not alongside it. An FDE team works the same way — the cases they get, the pairing model, the escalation architecture, the review cadence. If the work is designed right, the team gets better through the work. If it isn't, you're coaching in the margins and wondering why it's slow.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

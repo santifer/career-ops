@@ -36,6 +36,32 @@ import { renderInlineDiff, renderSideBySideDiff } from './lib/diff-renderer.mjs'
 // can render "→ [#1511] OpenAI Onboarding FDE (4.65)" inline. Cached for 30s
 // so 60s dashboard polls don't re-parse the 136-row tracker each time.
 let _appsCache = { ts: 0, byNum: new Map() };
+
+// 2026-05-18 — Structured parser for data/errors.log lines. Shape:
+//   [ISO_TS] SEVERITY/SOURCE [id=N] [exit=N]: <free-form message>
+// Falls through gracefully for ad-hoc errors that don't match.
+function parseErrorLine(raw) {
+  if (!raw) return { ts: '', severity: 'unknown', source: '', worker_id: null, exit_code: null, message: '', raw: '' };
+  const out = { ts: '', severity: 'error', source: '', worker_id: null, exit_code: null, message: '', raw: raw.slice(0, 600) };
+  const tsMatch = raw.match(/^\[([^\]]+)\]\s*/);
+  let rest = raw;
+  if (tsMatch) { out.ts = tsMatch[1]; rest = raw.slice(tsMatch[0].length); }
+  const srcMatch = rest.match(/^([A-Z]+(?:\s+[A-Z]+)?)\s+/);
+  if (srcMatch) {
+    out.source = srcMatch[1];
+    if (/FAIL|ERROR|FATAL/.test(out.source)) out.severity = 'error';
+    else if (/WARN/.test(out.source)) out.severity = 'warning';
+    else if (/INFO/.test(out.source)) out.severity = 'info';
+    rest = rest.slice(srcMatch[0].length);
+  }
+  const idMatch = rest.match(/^id=(\d+)\s+/);
+  if (idMatch) { out.worker_id = parseInt(idMatch[1], 10); rest = rest.slice(idMatch[0].length); }
+  const exitMatch = rest.match(/^exit=(\d+)\s*:?\s*/);
+  if (exitMatch) { out.exit_code = parseInt(exitMatch[1], 10); rest = rest.slice(exitMatch[0].length); }
+  out.message = rest.replace(/^:\s*/, '').slice(0, 400).trim();
+  return out;
+}
+
 function appsByNum() {
   if (Date.now() - _appsCache.ts < 30_000 && _appsCache.byNum.size) return _appsCache.byNum;
   const apps = parseApplicationsFile(join(ROOT, 'data/applications.md'));
@@ -2711,10 +2737,13 @@ const server = createServer((req, res) => {
   //        /api/pipeline/job-status endpoint + the new
   //        /api/drawer/apply-pack-status alias can both poll it
   //
-  // Voice-corpus passthrough: build-apply-pack.mjs scaffolds stubs only today
-  // — the deeper humanize-check / council passes are out of scope for this
-  // build task. When that pipeline lands, no endpoint changes are required:
-  // we'll just pass --strict to the script.
+  // 2026-05-17 — switched from build-apply-pack.mjs (stub scaffold) to
+  // build-apply-packs.mjs (canonical full builder: cover-letter via voice-
+  // reference-brief.md + humanize-check gate, form-fields with AI-detection
+  // flags, ATS keyword check, interview-prep, LinkedIn DMs, formatting
+  // guide). Mitchell's mega-list 2026-05-17 explicitly asked for the full
+  // artifact pipeline through voice corpus + checks + revisions on the
+  // Create Materials drawer button.
   if (url === '/api/drawer/build-apply-pack' && req.method === 'POST') {
     let body = '';
     let total = 0;
@@ -2788,7 +2817,11 @@ const server = createServer((req, res) => {
         .slice(0, 60);
       const expectedDir = `apply-pack/${prefix}${expectedSlug}`;
       try {
-        const scriptArgs = [join(ROOT, 'scripts/build-apply-pack.mjs'), `--row=${rowNum}`];
+        // 2026-05-17 — call the canonical full builder (plural) which writes
+        // the full ~12-file pack including cover-letter w/ humanize gate,
+        // form-fields w/ AI-detection flags, ATS check, interview-prep, etc.
+        // The plural script uses --num=N (not --row=N).
+        const scriptArgs = [join(ROOT, 'scripts/build-apply-packs.mjs'), `--num=${rowNum}`];
         if (force) scriptArgs.push('--force');
         import('child_process').then(({ spawn }) => {
           const proc = spawn('node', scriptArgs, {
@@ -2808,7 +2841,7 @@ const server = createServer((req, res) => {
                 state.jobs[jobId].status = code === 0 ? 'completed' : 'failed';
                 state.jobs[jobId].exit_code = code;
                 state.jobs[jobId].finished_at = new Date().toISOString();
-                if (code !== 0) state.jobs[jobId].error = `build-apply-pack.mjs exited ${code}`;
+                if (code !== 0) state.jobs[jobId].error = `build-apply-packs.mjs exited ${code}`;
                 writeFileSync(join(ROOT, 'data/pipeline-process-state.json'), JSON.stringify(state, null, 2));
               }
             } catch {}
@@ -3204,6 +3237,83 @@ const server = createServer((req, res) => {
     return;  // keep connection open — do NOT call res.end()
   }
 
+  // ── Fix 2 (draft-sync-sse): per-row draft artifact SSE stream ──────────────
+  // Endpoint: GET /api/draft-updates-stream/{rowId}
+  // Fires a "draft-update" event whenever a file in the row's apply-pack
+  // directory (data/apply-packs/{N}-{slug}/ or data/applications/{N}-{slug}/)
+  // changes. The drawer subscribes when opened; EventSource is closed on close.
+  const draftStreamMatch = url.match(/^\/api\/draft-updates-stream\/(\d+)$/);
+  if (draftStreamMatch) {
+    const rowNum = draftStreamMatch[1];
+    res.writeHead(200, {
+      'Content-Type':  'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection':    'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'X-Accel-Buffering': 'no',
+    });
+    res.flushHeaders?.();
+
+    // Resolve the apply-pack directory for this row number.
+    function _draftDir(num) {
+      const apDir = join(ROOT, 'data', 'apply-packs');
+      const appDir = join(ROOT, 'data', 'applications');
+      for (const base of [apDir, appDir]) {
+        if (!existsSync(base)) continue;
+        try {
+          const entries = readdirSync(base);
+          const match = entries.find(e => e.startsWith(num + '-') || e.startsWith(num.padStart(3,'0') + '-'));
+          if (match) return join(base, match);
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    const dir = _draftDir(rowNum);
+    let _draftWatcher = null;
+    let _draftDebounce = null;
+
+    function _sendDraftUpdate() {
+      // Send list of artifact filenames in the directory as the update payload
+      let files = [];
+      if (dir && existsSync(dir)) {
+        try { files = readdirSync(dir).filter(f => !f.startsWith('.')); } catch (_) {}
+      }
+      try {
+        res.write(`event: draft-update\ndata: ${JSON.stringify({ rowNum, dir: dir || null, files })}\n\n`);
+      } catch (_) {}
+    }
+
+    // Send initial snapshot
+    _sendDraftUpdate();
+
+    if (dir && existsSync(dir)) {
+      try {
+        _draftWatcher = fsWatch(dir, { persistent: false, recursive: true }, () => {
+          clearTimeout(_draftDebounce);
+          _draftDebounce = setTimeout(_sendDraftUpdate, 300);
+        });
+      } catch (_) { /* fs.watch unavailable */ }
+    }
+
+    // Keepalive every 25s
+    const _draftKeepalive = setInterval(() => {
+      try { res.write(': keepalive\n\n'); } catch (_) { clearInterval(_draftKeepalive); }
+    }, 25_000);
+
+    req.on('close', () => {
+      clearInterval(_draftKeepalive);
+      clearTimeout(_draftDebounce);
+      try { _draftWatcher?.close(); } catch (_) {}
+    });
+    req.on('error', () => {
+      clearInterval(_draftKeepalive);
+      clearTimeout(_draftDebounce);
+      try { _draftWatcher?.close(); } catch (_) {}
+    });
+    return;  // keep connection open
+  }
+
   // ── Sidebar batch popout: detailed live status feed (2026-05-17) ──
   // Powers the clickable #sidebar-batch box → modal with real-time detail.
   // Composes batchLive() summary + detailBatches() recent-runs grouping +
@@ -3366,9 +3476,24 @@ const server = createServer((req, res) => {
     try {
       const daysRaw = parseInt(query.days, 10);
       const days = (!isNaN(daysRaw) && daysRaw >= 1 && daysRaw <= 3650) ? daysRaw : 30;
+      // 2026-05-18 — load active defers and filter them out. Defers older
+      // than their defer_until date are ignored (treat as expired).
+      const defersFp = join(ROOT, 'data/stale-defers.json');
+      let activeDefers = new Set();
+      if (existsSync(defersFp)) {
+        try {
+          const state = JSON.parse(readFileSync(defersFp, 'utf-8'));
+          const now = Date.now();
+          for (const [url, d] of Object.entries(state.defers || {})) {
+            if (!d?.defer_until) continue;
+            if (Date.parse(d.defer_until) > now) activeDefers.add(url);
+          }
+        } catch (_) { /* corrupt file → no filtering */ }
+      }
       const pending = detailPending();
       const items = (pending.items || [])
         .filter(it => it && it.daysInQueue != null && it.daysInQueue >= days)
+        .filter(it => !activeDefers.has(it.url || ''))
         .sort((a, b) => (b.daysInQueue || 0) - (a.daysInQueue || 0))
         .map(it => ({
           url:        it.url || '',
@@ -3380,7 +3505,13 @@ const server = createServer((req, res) => {
           scraped_at: it.dateAdded || null,
           already_discarded: !!it.alreadyDiscarded,
         }));
-      return json({ ok: true, days_threshold: days, count: items.length, items });
+      return json({
+        ok: true,
+        days_threshold: days,
+        count: items.length,
+        items,
+        deferred_count: activeDefers.size,
+      });
     } catch (err) {
       console.error('[stale-items] error:', err);
       return json({ ok: false, error: err.message }, 500);
@@ -3428,6 +3559,59 @@ const server = createServer((req, res) => {
         return json({ ok: false, error: 'Atomic write failed: ' + err.message }, 500);
       }
       return json({ ok: true, removed });
+    });
+    return;
+  }
+
+  // POST /api/pipeline/defer-url — 2026-05-18 "Defer" action.
+  // Records a deferral in data/stale-defers.json: { url, deferred_at,
+  // defer_until }. Default snooze = 14 days. The /api/pipeline/stale-items
+  // endpoint filters out items whose defer_until is still in the future.
+  // Body: { url, days? (default 14) }. Idempotent: same URL updates the
+  // deferral instead of duplicating.
+  if (url === '/api/pipeline/defer-url' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 4 * 1024) { req.destroy(); return; }
+      body += c;
+    });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch (_) { return json({ ok: false, error: 'Invalid JSON body' }, 400); }
+      const target = String(parsed.url || '').trim();
+      if (!target) return json({ ok: false, error: 'url is required' }, 400);
+      if (target.length > 2048) return json({ ok: false, error: 'URL too long' }, 400);
+      const daysRaw = parseInt(parsed.days, 10);
+      const days = (!isNaN(daysRaw) && daysRaw >= 1 && daysRaw <= 365) ? daysRaw : 14;
+      const fp = join(ROOT, 'data/stale-defers.json');
+      let state = { defers: {} };
+      try {
+        if (existsSync(fp)) state = JSON.parse(readFileSync(fp, 'utf-8'));
+        if (!state.defers || typeof state.defers !== 'object') state.defers = {};
+      } catch (_) { /* corrupt file → start fresh */ }
+      const now = new Date();
+      const until = new Date(now.getTime() + days * 86400000);
+      state.defers[target] = {
+        deferred_at: now.toISOString(),
+        defer_until: until.toISOString(),
+        days,
+      };
+      try {
+        if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+        const tmp = fp + '.tmp.' + process.pid + '.' + Date.now();
+        writeFileSync(tmp, JSON.stringify(state, null, 2));
+        renameSync(tmp, fp);
+      } catch (err) {
+        return json({ ok: false, error: 'Atomic write failed: ' + err.message }, 500);
+      }
+      return json({
+        ok: true,
+        deferred_until: until.toISOString().slice(0, 10),
+        days,
+      });
     });
     return;
   }
@@ -3490,11 +3674,29 @@ const server = createServer((req, res) => {
   // server uptime, and tail of data/errors.log. Best-effort — any check
   // that fails returns null/false rather than aborting the whole payload.
   if (url === '/api/system-health') {
-    try {
-      let jobs = [];
+    // 2026-05-18 — Refactored from synchronous execSync (which blocked the
+    // event loop ~150ms per call) to async execFile via Promise wrapper.
+    // Both spawn calls now run in PARALLEL via Promise.all. Plus: errors.log
+    // lines now parsed into structured { ts, severity, source, code, message }
+    // shape so the system-health modal can render rows in a table (not raw
+    // text). Closes two deferred items from prior session.
+    (async () => {
       try {
-        const out = _execSync('launchctl list', { encoding: 'utf-8', timeout: 4000 }).toString();
-        jobs = out.split('\n')
+        const _runProc = (cmd, args, timeoutMs) => new Promise((resolve) => {
+          import('child_process').then(({ execFile }) => {
+            execFile(cmd, args, { encoding: 'utf-8', timeout: timeoutMs }, (err, stdout) => {
+              if (err) return resolve('');
+              resolve(stdout || '');
+            });
+          }).catch(() => resolve(''));
+        });
+
+        const [launchctlOut, pgrepOut] = await Promise.all([
+          _runProc('launchctl', ['list'], 4000),
+          _runProc('pgrep', ['-af', 'cloudflared'], 2000),
+        ]);
+
+        const jobs = launchctlOut.split('\n')
           .filter(l => l && /career-ops|careerops/i.test(l))
           .map(l => {
             const cols = l.split(/\t+/);
@@ -3504,51 +3706,50 @@ const server = createServer((req, res) => {
               label:  cols[2] || '',
             };
           });
-      } catch (_) { /* launchctl not present or no agent — return empty list */ }
 
-      // Tunnel: check if cloudflared process is running.
-      let tunnel = { running: false, info: '' };
-      try {
-        const out = _execSync('pgrep -af cloudflared', { encoding: 'utf-8', timeout: 2000 }).toString().trim();
-        if (out) {
+        const tunnel = { running: false, info: '' };
+        const tunOut = pgrepOut.trim();
+        if (tunOut) {
           tunnel.running = true;
-          tunnel.info = out.split('\n')[0].slice(0, 240);
+          tunnel.info = tunOut.split('\n')[0].slice(0, 240);
         }
-      } catch (_) { /* not running */ }
 
-      // Server uptime + memory rough — process.uptime() returns seconds.
-      const memMB = Math.round(process.memoryUsage().rss / 1024 / 1024);
-      const server = {
-        uptime_seconds: Math.round(process.uptime()),
-        node_version:   process.version,
-        pid:            process.pid,
-        memory_mb:      memMB,
-      };
+        const memMB = Math.round(process.memoryUsage().rss / 1024 / 1024);
+        const server = {
+          uptime_seconds: Math.round(process.uptime()),
+          node_version:   process.version,
+          pid:            process.pid,
+          memory_mb:      memMB,
+        };
 
-      // Recent errors — last 20 lines of data/errors.log
-      const errLogPath = join(ROOT, 'data/errors.log');
-      let errors = [];
-      if (existsSync(errLogPath)) {
-        try {
-          const txt = readFileSync(errLogPath, 'utf-8');
-          const lines = txt.split('\n').filter(l => l && l.trim());
-          errors = lines.slice(-20).reverse().map(l => l.slice(0, 320));
-        } catch (_) {}
+        // Raw errors.log → structured rows. Each line is parsed into:
+        //   { ts, raw, severity, source, worker_id, exit_code, message }
+        // The dashboard's system-health modal can now render this as a
+        // table with sortable columns instead of grepping for substrings.
+        const errLogPath = join(ROOT, 'data/errors.log');
+        let errors = [];
+        if (existsSync(errLogPath)) {
+          try {
+            const txt = readFileSync(errLogPath, 'utf-8');
+            const lines = txt.split('\n').filter(l => l && l.trim()).slice(-20).reverse();
+            errors = lines.map(parseErrorLine);
+          } catch (_) {}
+        }
+
+        return json({
+          ok: true,
+          jobs,
+          tunnel,
+          server,
+          errors,
+          generated_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: e.message }));
       }
-
-      return json({
-        ok: true,
-        jobs,
-        tunnel,
-        server,
-        errors,
-        generated_at: new Date().toISOString(),
-      });
-    } catch (e) {
-      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(JSON.stringify({ ok: false, error: e.message }));
-      return;
-    }
+    })();
+    return;
   }
 
   // ── All-Evaluations bucket — Feature 2 (item-list-pop-out) ───────────

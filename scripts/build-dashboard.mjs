@@ -28,7 +28,7 @@ import { lookupCompCache } from '../lib/comp-researcher.mjs';
 import { scoreAlignmentCached } from '../lib/alignment-scorer.mjs';
 // ── Wave C-B: lib imports (consumed by drill-in renderers + dashboard features) ──
 import { getPeerContext, renderPeerTable }                          from '../lib/peer-context.mjs';
-import { getProvenance, renderProvenanceCard }                     from '../lib/decision-provenance.mjs';
+import { getProvenance, renderProvenanceCard, renderProvenanceSummary } from '../lib/decision-provenance.mjs';
 import { applyWealthLens, renderWealthLensCard }                   from '../lib/wealth-lens.mjs';
 import { computeStrategyCeiling, renderStrategyCard }              from '../lib/strategy-ceiling.mjs';
 import { renderEquitySlidersHtml }                                 from '../lib/equity-calculator.mjs';
@@ -175,7 +175,7 @@ function readReportOnce(reportPath) {
     const empty = {
       exists: false, text: '',
       archetype: '', url: '', finalRecommendation: '',
-      competitiveEdge: [], tldr: '', positioning: '', comp: '',
+      competitiveEdge: [], tldr: '', roleFunction: '', positioning: '', comp: '',
       compRaw: '', locationField: '',
       keyGaps: [], topStories: [], whyGapsDontBlock: '',
     };
@@ -191,6 +191,7 @@ function readReportOnce(reportPath) {
     finalRecommendation: _parseFinalRecommendation(text),
     competitiveEdge: _parseCompetitiveEdge(text),
     tldr: _parseTldr(text),
+    roleFunction: _parseRoleFunction(text),
     positioning: _parsePositioning(text),
     comp: _parseComp(text),
     compRaw: _parseCompRaw(text),
@@ -244,6 +245,7 @@ function readReportOnce(reportPath) {
           compRaw:          _hasReal(parsed.compRaw) ? parsed.compRaw : (sibCompRaw || parsed.compRaw),
           locationField:    parsed.locationField    || _parseLocationField(sibText),
           tldr:             parsed.tldr             || _parseTldr(sibText),
+          roleFunction:     parsed.roleFunction     || _parseRoleFunction(sibText),
           positioning:      parsed.positioning      || _parsePositioning(sibText),
           competitiveEdge:  parsed.competitiveEdge?.length ? parsed.competitiveEdge : _parseCompetitiveEdge(sibText),
           topStories:       parsed.topStories?.length      ? parsed.topStories      : _parseTopStories(sibText),
@@ -1437,6 +1439,21 @@ function _parseTldr(text) {
   return '';
 }
 
+// 2026-05-17 — pull "likely responsibilities" from Bloque A for Role-at-a-glance.
+// Looks for the "Function" row in the role-summary table (council-eval +
+// legacy formats both name the cell some variant of Function / Responsibilities).
+function _parseRoleFunction(text) {
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
+  if (!block) return '';
+  // Match any of: "| Function | ... |", "| Responsibilities | ... |", "| Role | ... |"
+  const labelRe = /^\s*\|\s*\*?\*?\s*(?:Function|Responsibilities|Role(?:\s+function)?|Función|Funciones)\s*\*?\*?\s*\|\s*([^\n]+?)\s*\|\s*$/im;
+  const m = block.match(labelRe);
+  if (m) {
+    return m[1].replace(/\*\*/g, '').trim().slice(0, 400);
+  }
+  return '';
+}
+
 // Extract positioning angle from Block C.
 function _parsePositioning(text) {
   const block = _extractSection(text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m, /^## Bloque C\b[^\n]*$/m]);
@@ -1925,7 +1942,9 @@ function countScanHistory() {
 // date's events to the file mtime (a real scan-run timestamp) and back off
 // by ~6h per prior date for older groups. Returns up to 5 events
 // newest-first, plus a lastScanIso anchor.
-function loadLiveScanEvents(limit = 5) {
+// topRolesMap: Map<companySlug, {role, score, rowId}> — built from applyNowSorted
+// so the ticker can surface a specific role title alongside the aggregate count.
+function loadLiveScanEvents(limit = 5, topRolesMap) {
   if (!existsSync(SCAN_HISTORY_PATH)) return { events: [], lastScanIso: null };
   const stat = statSync(SCAN_HISTORY_PATH);
   const mtime = stat.mtime.getTime();
@@ -1952,7 +1971,15 @@ function loadLiveScanEvents(limit = 5) {
   const events = sorted.slice(0, limit).map((g) => {
     const dayDelta = newestDate ? (new Date(newestDate) - new Date(g.date)) / 86400000 : 0;
     const ts = mtime - dayDelta * 24 * 3600 * 1000 - (g === sorted[0] ? 0 : 6 * 60 * 1000);
-    return { company: g.company, count: g.count, ts: new Date(ts).toISOString() };
+    // Attempt to find the top-scored evaluated role for this company.
+    const slug = g.company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const topRole = (topRolesMap && topRolesMap.get(slug)) || null;
+    return {
+      company: g.company,
+      count: g.count,
+      ts: new Date(ts).toISOString(),
+      topRole: topRole ? { role: topRole.role, score: topRole.score, rowId: topRole.rowId } : null,
+    };
   });
   return { events, lastScanIso: new Date(mtime).toISOString() };
 }
@@ -2568,7 +2595,7 @@ function renderRow(r, idx) {
   // Apply button was previously implicit (clicking the role title opens the JD),
   // but per his feedback an explicit Apply button is needed in the action cell.
   const applyBtn = url
-    ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--green-fg);font-weight:600" title="Open the JD posting in a new tab" aria-label="Apply to ${htmlEscape(r.company)} ${htmlEscape(r.role)}">🔗 Apply</a>`
+    ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--green-fg);font-weight:600" title="Open the job posting in a new tab" aria-label="Apply to ${htmlEscape(r.company)} ${htmlEscape(r.role)}">🔗 Apply now</a>`
     : '';
   const reportHtmlLink = r.reportPath
     ? `<a href="reports/${basename(r.reportPath).replace(/\.md$/, '.html')}" target="_blank" onclick="event.stopPropagation()" title="Open formatted report in browser">Report</a>`
@@ -2589,6 +2616,10 @@ function renderRow(r, idx) {
 
   // Pull richer signals for the expand panel.
   const tldr = getTldr(r.reportPath);
+  // 2026-05-17 — "likely responsibilities" surface for Role-at-a-glance per
+  // Mitchell's mega-list. Pulls the Function/Responsibilities row from
+  // Bloque A. Falls back gracefully (empty string) when not present.
+  const roleFunction = readReportOnce(r.reportPath)?.roleFunction || '';
   const positioning = getPositioning(r.reportPath);
   const stories = getTopStories(r.reportPath, 3);
   const comp = getComp(r.reportPath);
@@ -2602,10 +2633,12 @@ function renderRow(r, idx) {
     : '';
 
   // ── Meta chips ──────────────────────────────────────────
+  // Wave C-A drill-in wiring: comp chip → comp:{num}:{base}, date chip → metric:{num}:evalDate
+  const _compBase = (() => { try { const m = String(comp||'').match(/\$\s*(\d{2,4})\s*K/i); return m ? parseInt(m[1],10)*1000 : 0; } catch(_){return 0;} })();
   const metaChips = [
-    comp ? `<span class="meta-chip meta-chip-comp">💰 ${htmlEscape(comp)}</span>` : '',
+    comp ? `<span class="meta-chip meta-chip-comp drill-trigger" data-drill="comp:${htmlEscape(String(r.num||''))}:${_compBase}" role="button" tabindex="0" title="Click for comp intelligence + equity calculator" onclick="event.stopPropagation();window.drillIn('comp','${htmlEscape(String(r.num||''))}:${_compBase}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('comp','${htmlEscape(String(r.num||''))}:${_compBase}',event)}">💰 ${htmlEscape(comp)}</span>` : '',
     archetype ? `<span class="meta-chip meta-chip-tier">${htmlEscape(archetype)}</span>` : '',
-    r.date ? `<span class="meta-chip">📅 ${htmlEscape(r.date)}</span>` : '',
+    r.date ? `<span class="meta-chip drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:evalDate" role="button" tabindex="0" title="Click for eval provenance — when scored, by what model" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:evalDate',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:evalDate',event)}">📅 ${htmlEscape(r.date)}</span>` : '',
   ].filter(Boolean).join('');
 
   // ── Intro: TL;DR + alignment bars + positioning (compact, full-width) ─────
@@ -2619,74 +2652,123 @@ function renderRow(r, idx) {
         companyName: r.company,
         hasReferralPath: false, // TODO: wire from linkedin-network when ready
       });
-      const bar = (pct, label, hint, color) => {
+      // Wave C-A drill-in: percentage pills each open strategy-ceiling drill-in
+      const _pctDrillKey = (key) => `${htmlEscape(String(r.num||''))}:${key}`;
+      const bar = (pct, label, hint, color, drillKey) => {
         const pctClamped = Math.max(0, Math.min(100, pct || 0));
         const colorClass = pctClamped >= 70 ? 'alignbar-strong'
                          : pctClamped >= 40 ? 'alignbar-mid'
                          : 'alignbar-weak';
+        const dk = _pctDrillKey(drillKey || color || 'pct');
         return `<div class="alignbar-row" title="${htmlEscape(hint)}">
           <span class="alignbar-label">${htmlEscape(label)}</span>
           <div class="alignbar-track"><div class="alignbar-fill ${colorClass}" style="width:${pctClamped}%"></div></div>
-          <span class="alignbar-pct">${pctClamped}%</span>
+          <span class="alignbar-pct drill-trigger" data-drill="percentage:${dk}" role="button" tabindex="0" title="Click for strategy ceiling — how to improve this metric" onclick="event.stopPropagation();window.drillIn('percentage','${dk}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('percentage','${dk}',event)}">${pctClamped}%</span>
         </div>`;
       };
       const alignTooltip = 'How well my CV + portfolio match this JD (Block B requirements + competitive edges + overall score).';
       const intvTooltip = 'Estimated % chance of converting Applied → recruiter screen. Base rate 12% for AI-native cold apps, modulated by score, archetype, comp match, prior outcomes at this company.';
       const hmTooltip = 'Estimated % chance the hiring manager or recruiter notices the application (vs ATS-filtered). Boosted by competitive edges, rare-combination markers, and referral path strength.';
       alignmentBars = `<div class="alignment-bars">
-        ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile')}
-        ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview')}
-        ${bar(align.hmNoticing, 'HM-noticing chance', hmTooltip, 'hm')}
+        ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile', 'profile_alignment')}
+        ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview', 'interview_likelihood')}
+        ${bar(align.hmNoticing, 'Chance a hiring manager will see you', hmTooltip, 'hm', 'hm_noticing_chance')}
       </div>`;
     }
   } catch (_) { /* never break drawer on scorer error */ }
 
-  const tldrCard = tldr ? `<div class="dcard" style="margin-bottom:8px">
-    <div class="dcard-label">Role at a glance</div>
-    <div class="dcard-body">${htmlEscape(tldr)}</div>
+  // 2026-05-17 — Role-at-a-glance now surfaces "likely responsibilities"
+  // (from the Function row in Bloque A) between TL;DR and the alignment bars
+  // per Mitchell's mega-list. Compact one-line label + value; hidden when
+  // the report doesn't disclose function/responsibilities.
+  const respLine = roleFunction ? `<div class="dcard-resp-line">
+    <span class="dcard-resp-label">Likely responsibilities:</span>
+    <span class="dcard-resp-value">${htmlEscape(roleFunction)}</span>
+  </div>` : '';
+
+  // 2026-05-18 — Mitchell asked for comp + team toxicity surfaced IN the
+  // Role-at-a-glance card itself (not just the Base / Health cells).
+  const compLine = comp ? `<div class="dcard-resp-line">
+    <span class="dcard-resp-label">Comp:</span>
+    <span class="dcard-resp-value">${htmlEscape(comp)}</span>
+  </div>` : '';
+
+  let toxLine = '';
+  try {
+    const _enrich = getRoleEnrichment(r.company, r.role);
+    const _tox = parseInt(_enrich?.sentiment?.team_toxicity_grade, 10);
+    if (Number.isFinite(_tox) && _tox >= 1 && _tox <= 5) {
+      const _toxIcon = _tox <= 1 ? '🟢' : _tox <= 2 ? '🟢' : _tox <= 3 ? '🟡' : _tox <= 4 ? '🟠' : '🔴';
+      const _toxWord = _tox <= 1 ? 'healthy' : _tox <= 2 ? 'good' : _tox <= 3 ? 'neutral' : _tox <= 4 ? 'concerning' : 'avoid';
+      toxLine = `<div class="dcard-resp-line">
+        <span class="dcard-resp-label">Team toxicity:</span>
+        <span class="dcard-resp-value">${_toxIcon} ${_tox}/5 (${htmlEscape(_toxWord)}, 1=healthy · 5=avoid)</span>
+      </div>`;
+    }
+  } catch (_) { /* never break drawer */ }
+
+  // Wave C-A drill-in: Role at a glance card → metric:{num}:role_at_glance
+  const _rowDrillNum = htmlEscape(String(r.num||''));
+  const tldrCard = (tldr || roleFunction || comp || toxLine || alignmentBars) ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:role_at_glance" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for the full role breakdown" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)}">
+    <div class="dcard-label">Quick role summary <span class="dcard-explore-hint">▸ explore</span></div>
+    ${tldr ? `<div class="dcard-body">${htmlEscape(tldr)}</div>` : ''}
+    ${respLine}
+    ${compLine}
+    ${toxLine}
     ${alignmentBars}
-  </div>` : (alignmentBars ? `<div class="dcard" style="margin-bottom:8px">
-    <div class="dcard-label">Role at a glance</div>
-    ${alignmentBars}
-  </div>` : '');
+  </div>` : '';
 
   // 2026-05-17 — Mitchell flagged "How to position" rendering as raw markdown
   // ('### Level Assessment | Dimension | ...'). Route through marked so
   // tables/headers/lists become real HTML. Wrap in `.htp-md` for table styling.
-  const posCard = positioning ? `<div class="dcard" style="margin-bottom:8px">
-    <div class="dcard-label">How to position</div>
+  // Wave C-A drill-in: How to position card → metric:{num}:how_to_position
+  const posCard = positioning ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:how_to_position" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for strategy ceiling per positioning point" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)}">
+    <div class="dcard-label">How to position yourself <span class="dcard-explore-hint">▸ explore</span></div>
     <div class="dcard-body htp-md">${renderHowToPosition(positioning)}</div>
   </div>` : '';
 
   // ── Card 1: Match (green / WHAT FITS) ────────────────────
+  // Wave C-A drill-in: each bullet → story:{num}:{slugified-requirement}
+  const _slugifyReq = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const matchCard = edge.length ? `<div class="dcard dcard--match">
-    <div class="dcard-label">WHAT FITS</div>
+    <div class="dcard-label">What matches your background</div>
     <ul class="match-list">
-      ${edge.map(e => `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'}">
+      ${edge.map(e => {
+        const reqSlug = _slugifyReq(String(e.requirement||''));
+        const drillId = `${_rowDrillNum}:${reqSlug}`;
+        return `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'} drill-trigger" data-drill="story:${htmlEscape(drillId)}" role="button" tabindex="0" title="Click for story expansion" onclick="event.stopPropagation();window.drillIn('story','${htmlEscape(drillId)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('story','${htmlEscape(drillId)}',event)}">
         <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
         <div>
           <div class="match-req">${htmlEscape(String(e.requirement || '').replace(/\*\*/g, '').slice(0, 110))}</div>
           <div class="match-ev">${renderFitEvidence(e.evidence, 480)}</div>
         </div>
-      </li>`).join('')}
+      </li>`;
+      }).join('')}
     </ul>
   </div>` : '';
 
   // ── Card 2: Gap (amber / WHAT'S MISSING) ─────────────────
+  // Wave C-A drill-in: each gap chip → gap:{num}:{gap-key} (3-tier fallback: llm-evidence → network-graph → strategy-ceiling)
+  const _slugifyGap = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const gapCard = gaps.length ? `<div class="dcard dcard--gap">
-    <div class="dcard-label">WHAT'S MISSING <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click for strategy</span></div>
+    <div class="dcard-label">Gaps to address <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click to close a gap</span></div>
     <div class="dcard-gaps">${gaps.map(g => {
       const strategy = getGapStrategy(r.reportPath, g.title);
       const detailHtml = g.detail ? marked.parse(g.detail) : '';
       const strategyHtml = strategy ? marked.parse(strategy) : '';
       const whyHtml = whyOk ? marked.parse(whyOk) : '';
-      return `<span class="gap-chip gap-chip-interactive"
-        onclick="openGapModal(this);event.stopPropagation()"
+      const gapKey = _slugifyGap(g.title);
+      const gapDrillId = `${_rowDrillNum}:${gapKey}`;
+      return `<span class="gap-chip gap-chip-interactive drill-trigger"
+        data-drill="gap:${htmlEscape(gapDrillId)}"
+        onclick="window.drillIn('gap','${htmlEscape(gapDrillId)}',event);openGapModal(this);event.stopPropagation()"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('gap','${htmlEscape(gapDrillId)}',event)}"
+        role="button" tabindex="0"
         data-title="${htmlEscape(g.title)}"
         data-detail="${htmlEscape(detailHtml)}"
         data-strategy="${htmlEscape(strategyHtml)}"
         data-why="${htmlEscape(whyHtml)}"
-        title="Click for addressing strategy">⚠ ${htmlEscape(g.title)}</span>`;
+        title="Click for gap-closing strategy">⚠ ${htmlEscape(g.title)}</span>`;
     }).join('')}</div>
     ${whyOk ? `<div class="dcard-gap-prose">${htmlEscape(whyOk).replace(/\n/g, '<br>')}</div>` : ''}
   </div>` : '';
@@ -2701,16 +2783,19 @@ function renderRow(r, idx) {
     const fp = join(ROOT, 'dashboard/stories', `${slug}.html`);
     return existsSync(fp) ? `stories/${slug}.html` : null;
   };
+  // Wave C-A drill-in: each story row → story:{num}:{story-slug}
   const storyCard = stories.length ? `<div class="dcard dcard--story">
-    <div class="dcard-label">STORIES TO LEAD WITH</div>
+    <div class="dcard-label">Stories to use in your application</div>
     ${stories.map((s, i) => {
       const childHref = _storyChildPath(s);
+      const storySlug = _slugifyStory(String(s.story || '').slice(0, 60));
+      const storyDrillId = `${_rowDrillNum}:${storySlug}`;
       const linkOpen = childHref
         ? `<a href="${htmlEscape(childHref)}" target="_blank" rel="noopener" class="story-child-link" onclick="event.stopPropagation()" title="Open full 500-1000 word expansion in voice-calibrated child page">`
         : '';
       const linkClose = childHref ? `</a>` : '';
       const fullBadge = childHref ? ` <span class="story-full-badge" title="Full voice-calibrated expansion available">↗ full</span>` : '';
-      return `<div class="dcard-story-row">
+      return `<div class="dcard-story-row drill-trigger" data-drill="story:${htmlEscape(storyDrillId)}" role="button" tabindex="0" title="Click for story child page" onclick="event.stopPropagation();window.drillIn('story','${htmlEscape(storyDrillId)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('story','${htmlEscape(storyDrillId)}',event)}">
         <span class="story-n">${i + 1}</span>
         <div>
           <div class="story-req">${linkOpen}${htmlEscape(s.requirement.slice(0, 110))}${fullBadge}${linkClose}</div>
@@ -2723,13 +2808,13 @@ function renderRow(r, idx) {
   // ── Card 4: Action (blue / Apply / Skip / Defer) ─────────
   const actionCard = (finalRec || url) ? `<div class="dcard dcard--action">
     <div>
-      <div class="dcard-label" style="margin-bottom:4px">ACTION</div>
-      <div class="dcard-action-text">${htmlEscape(finalRec || 'No recommendation captured.')}</div>
+      <div class="dcard-label" style="margin-bottom:4px">What to do next</div>
+      <div class="dcard-action-text">${htmlEscape(finalRec || 'No strategy yet — click to generate')}</div>
     </div>
     <div class="dcard-action-buttons">
-      ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply →</a>` : ''}
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${htmlEscape(String(r.num || ''))}">Skip</button>
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${htmlEscape(String(r.num || ''))}">Defer</button>
+      ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply now →</a>` : ''}
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${htmlEscape(String(r.num || ''))}">Skip this one</button>
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${htmlEscape(String(r.num || ''))}">Look at this later</button>
     </div>
   </div>` : '';
 
@@ -2738,7 +2823,7 @@ function renderRow(r, idx) {
   // expand. Card always renders (every row can have notes), with an
   // empty state until the first note arrives.
   const notesCard = `<div class="dcard dcard--notes" data-notes-num="${htmlEscape(String(r.num || ''))}">
-    <div class="dcard-label">NOTES &amp; ACTIVITY</div>
+    <div class="dcard-label">Notes &amp; activity</div>
     <div class="notes-compose">
       <textarea class="notes-input" maxlength="1000" rows="2"
         placeholder="Add a note (followed up, recruiter response, etc.) — 1000 char max"
@@ -2754,7 +2839,7 @@ function renderRow(r, idx) {
       </div>
     </div>
     <div class="notes-list" data-notes-list>
-      <div class="notes-empty muted-text">No notes yet — add one above. Status changes are auto-logged.</div>
+      <div class="notes-empty muted-text">No notes yet — add one above</div>
     </div>
   </div>`;
 
@@ -2762,8 +2847,8 @@ function renderRow(r, idx) {
   const recBanner = finalRec ? `<div class="rec-banner">
     <span class="rec-label">Rec</span>
     <span class="rec-text">${htmlEscape(finalRec)}</span>
-    ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>` : ''}
-  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>` : '';
+    ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply now →</a>` : ''}
+  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View job posting</a></div>` : '';
 
   // Inline gap chips shown on mobile cards only (top 3 by getKeyGaps order)
   const cardGapChips = gaps.length ? `<div class="card-gaps-mobile">${gaps.slice(0, 3).map(g =>
@@ -2803,7 +2888,7 @@ function renderRow(r, idx) {
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span></td>
   <td class="base-cell">${baseCell}</td>
-  <td><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
+  <td class="company-cell"><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="Open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
   <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)} drill-trigger" data-status="${statusKey(r.status)}" data-num="${r.num}" data-drill="status:${htmlEscape(statusKey(r.status))}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${htmlEscape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
@@ -2837,7 +2922,7 @@ function renderRow(r, idx) {
             </div>`
           : `<div class="throttle-banner throttle-${r._throttle.status}">${htmlEscape(r._throttle.label)}<br><span class="muted-text">${htmlEscape(r._throttle.note || '')}</span></div>`
       ) : ''}
-      ${r.notes ? `<div class="dcard dcard--tracker-note" style="margin-bottom:8px"><div class="dcard-label">TRACKER NOTE</div>${formatTrackerNote(r.notes)}</div>` : ''}
+      ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full Phase E decision provenance" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ explore</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
       ${tldrCard}${posCard}
       <div class="detail-grid">
@@ -2847,7 +2932,7 @@ function renderRow(r, idx) {
       ${storyCard}
       ${(function(){try{if(!r.reportPath)return '';const _cvText=existsSync(CV_PATH)?readFileSync(CV_PATH,'utf-8'):'';const _jdText=r.reportPath&&existsSync(r.reportPath)?readFileSync(r.reportPath,'utf-8').slice(0,5000):'';if(!_cvText&&!_jdText)return '';const _atsResult=scoreAtsMyth({cvText:_cvText,jdText:_jdText});const _atsHtml=renderAtsCard(_atsResult);return _atsHtml?'<div class="dcard" style="margin-bottom:8px">'+_atsHtml+'</div>':'';}catch(e){return '';}})()}
       ${actionCard}
-      ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">NETWORK LEVERAGE</div>'+html+'</div>':'';}catch(e){return '';}})()}
+      ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">Warm contacts at this company</div>'+html+'</div>':'';}catch(e){return '';}})()}
       ${notesCard}
       <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cv-tailor', this);event.stopPropagation()" title="Tailor CV for this role via /api/build-pack-stage">/cv-tailor</button>
@@ -3220,7 +3305,24 @@ function build() {
   } catch (_) { sideAllocations = []; }
 
   const reportsToday = countTodaysReports(today);
-  const liveTicker = loadLiveScanEvents();
+  // Build a company-slug → top-scored evaluated row map for ticker role enrichment.
+  // Used by loadLiveScanEvents so the ticker can surface a specific role title.
+  const _tickerTopRolesMap = (() => {
+    const m = new Map();
+    try {
+      for (const r of applyNowSorted) {
+        if (!r.company || !r.role) continue;
+        const slug = r.company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (!m.has(slug)) {
+          // applyNowSorted is score-desc; first occurrence per company = top score
+          const rowIdx = applyNowSorted.findIndex(x => x.num === r.num);
+          m.set(slug, { role: r.role, score: r.score, rowId: `apply-${rowIdx >= 0 ? rowIdx : 0}` });
+        }
+      }
+    } catch (_) { /* never break build */ }
+    return m;
+  })();
+  const liveTicker = loadLiveScanEvents(5, _tickerTopRolesMap);
   const liveTickerJson = JSON.stringify(liveTicker).replace(/<\//g, '<\\/');
   const batchSnapshot = loadBatchSnapshot();
   const healthSnapshot = loadSystemHealthSnapshot(apps);
@@ -3230,6 +3332,10 @@ function build() {
   // TPgM credibility widget — runs tpgm-tracker.mjs --json; fails gracefully
   // to empty-state data if the tracker or courses.yml is unavailable.
   let tpgmWidgetHtml = '';
+  // Sidebar chip data — headline number + velocity arrow extracted at build time.
+  let tpgmChipScore = 0;
+  let tpgmChipArrow = '▬';
+  let tpgmChipBand  = 'PM-readiness';
   try {
     const trackerOut = execSync(`node ${JSON.stringify(join(ROOT, 'scripts/tpgm-tracker.mjs'))} --json`, {
       cwd: ROOT,
@@ -3243,6 +3349,27 @@ function build() {
     // below ("PM-credibility composite N/100"). Previously score=tpgm_credibility_score
     // produced "4 of 100" in the ring while the composite line said "21/100".
     const _pmComposite = tpgmData.pm_credibility_composite ?? 0;
+    tpgmChipScore = _pmComposite;
+    // Extract velocity arrow from tpgm-history.json (same file the widget writes)
+    try {
+      const _histPath = join(ROOT, 'data', 'tpgm-history.json');
+      const _hist = JSON.parse(readFileSync(_histPath, 'utf-8'));
+      if (Array.isArray(_hist) && _hist.length >= 2) {
+        const _now = Date.now();
+        const _7d = 7 * 24 * 60 * 60 * 1000;
+        for (let _i = _hist.length - 1; _i >= 0; _i--) {
+          const _e = _hist[_i];
+          const _ts = _e.ts || Date.parse(_e.date || '');
+          if (_ts && _now - _ts >= _7d) {
+            const _delta = _pmComposite - (_e.score ?? _pmComposite);
+            tpgmChipArrow = _delta > 0 ? '▲' : _delta < 0 ? '▼' : '▬';
+            if (_delta > 0) tpgmChipBand = `PM-readiness · +${_delta}`;
+            else if (_delta < 0) tpgmChipBand = `PM-readiness · ${_delta}`;
+            break;
+          }
+        }
+      }
+    } catch (_) { /* history unavailable — keep defaults */ }
     tpgmWidgetHtml = renderTpgmWidget({
       score:                   _pmComposite,
       pm_bridge_index:         tpgmData.pm_bridge_buildability_index   ?? 0,
@@ -3452,6 +3579,56 @@ function build() {
 
   const topOfPipeJson = JSON.stringify(topOfPipeDeduped).replace(/<\//g, '<\\/');
 
+  // ── Fix 1 (tonight-pick): Auto-select top candidate not yet applied today ──
+  // Criteria: highest-scoring Evaluated row, age > 7 days, no applied-today flag.
+  // Dismiss key: careerops.tonight-pick-dismissed-{date} (localStorage, daily).
+  // Enriched (2026-05-17): comp, location, gate summary, whyPick from positioning.
+  // Ranked queue for "Pick another" cycling: all pool items in score order.
+  const _tonightPickTodayStr = today; // YYYY-MM-DD
+  let _tonightPick = null;
+  let _tonightPickQueue = [];
+  try {
+    const _candidates = applyNowSorted.filter(r => /^evaluated$/i.test(r.status));
+    // prefer rows older than 7 days; fall back to newest if all are fresh
+    const _aged = _candidates.filter(r => _daysAgo(r.date) >= 7);
+    const _pool = _aged.length ? _aged : _candidates;
+    // Build queue (all pool items) for "Pick another" cycling — score-desc already
+    _tonightPickQueue = _pool.slice(0, 10).map((r, qi) => {
+      const ridx = applyNowSorted.findIndex(x => x.num === r.num);
+      return { num: r.num, company: r.company, role: r.role, score: r.score, rowIdx: `apply-${ridx >= 0 ? ridx : 0}` };
+    });
+    if (_pool.length) {
+      const _pr = _pool[0]; // already sorted by score desc
+      const _pos = getPositioning(_pr.reportPath);
+      // Extract first 2-3 bullets of positioning as the "Why this one" paragraph
+      const _posLines = (_pos || '').replace(/\*\*/g, '').split(/\n/).map(l => l.replace(/^[-•·*]+\s*/,'').trim()).filter(Boolean);
+      const _whyPick = _posLines.slice(0, 3).join(' · ').slice(0, 200) || `Score ${_pr.score.toFixed(1)} — top-ranked in queue`;
+      const _rowIdx  = applyNowSorted.findIndex(r => r.num === _pr.num);
+      // Enrich with comp + location from report
+      const _comp = getComp(_pr.reportPath);
+      const _loc = getLocationField(_pr.reportPath);
+      // Gate summary: count keyGaps (missing) vs how many checked
+      const _gaps = getKeyGaps(_pr.reportPath);
+      const _gapCount = _gaps.length;
+      _tonightPick = {
+        num: _pr.num,
+        company: _pr.company,
+        role: _pr.role,
+        score: _pr.score,
+        evalDate: _pr.date,
+        daysAgo: _daysAgo(_pr.date),
+        whyPick: _whyPick,
+        rowIdx: `apply-${_rowIdx >= 0 ? _rowIdx : 0}`,
+        comp: _comp || '',
+        location: _loc || '',
+        gapCount: _gapCount,
+        notes: _pr.notes || '',
+      };
+    }
+  } catch (_) { _tonightPick = null; }
+  const tonightPickJson = JSON.stringify(_tonightPick || null).replace(/<\//g, '<\\/');
+  const tonightPickQueueJson = JSON.stringify(_tonightPickQueue).replace(/<\//g, '<\\/');
+
   // ── Wave C-B: funnel completion nudge ────────────────────────────
   let funnelNudgeHtml = '';
   try {
@@ -3572,6 +3749,106 @@ function build() {
       }
     } catch (_) { _cbData.gapData = {}; }
 
+    // Fix 4 (equity-auto-activate): pre-bake equity slider HTML for rows ≥ $300K
+    // Keyed by comp drill-in id "{base}:{num}:{company-slug}".
+    // Build-time only. No LLM calls.
+    try {
+      _cbData.equitySliders = {};
+      for (const _r of apps) {
+        try {
+          const _rawComp = getComp(_r.reportPath);
+          const _baseM = String(_rawComp||'').match(/\$\s*(\d{2,4})\s*K/i);
+          const _base = _baseM ? parseInt(_baseM[1],10)*1000 : 0;
+          if (_base < 300000) continue;
+          const _slug = (_r.company||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+          const _drillId = `${_base}:${String(_r.num||'')}:${_slug}`;
+          // default comp inputs — minimal safe defaults for renderEquitySlidersHtml
+          const _eqHtml = renderEquitySlidersHtml(_r.role || 'Role', {
+            equity_grant_shares: 10000,
+            strike_price: 0,
+            current_409a: 1,
+            current_valuation: 1_000_000_000,
+            series: 'series-c',
+          });
+          _cbData.equitySliders[_drillId] = _eqHtml;
+        } catch (_) { /* per-row, skip */ }
+      }
+    } catch (_) { _cbData.equitySliders = {}; }
+
+    // Fix 5 (score-rationale): pre-bake provenance summaries keyed by row num
+    try {
+      _cbData.provenanceSummaries = {};
+      // Only bake for rows that actually have a report file (limits build time)
+      for (const _r of apps.filter(r => r.reportPath)) {
+        try {
+          const _ps = renderProvenanceSummary(_r.num);
+          if (_ps) _cbData.provenanceSummaries[String(_r.num)] = {
+            summary: _ps.summary,
+            gatesPassed: _ps.gatesPassed,
+            gatesFailed: _ps.gatesFailed,
+            softGaps: _ps.softGaps,
+          };
+        } catch (_) { /* per-row, skip */ }
+      }
+    } catch (_) { _cbData.provenanceSummaries = {}; }
+
+    // Company toxicity scores (data/toxicity/{slug}.json if exists)
+    // Schema: { score: 0-10, drivers: string[], source: string, ts: ISO }
+    try {
+      _cbData.toxicity = {};
+      const _toxDir = join(ROOT, 'data/toxicity');
+      if (existsSync(_toxDir)) {
+        for (const _f of readdirSync(_toxDir)) {
+          if (!_f.endsWith('.json')) continue;
+          try {
+            const _tx = JSON.parse(readFileSync(join(_toxDir, _f), 'utf-8'));
+            const _slug = _f.replace(/\.json$/, '');
+            _cbData.toxicity[_slug] = _tx;
+          } catch (_) {}
+        }
+      }
+    } catch (_) { _cbData.toxicity = {}; }
+
+    // Company reviews (data/glassdoor/{slug}.json or data/blind/{slug}.json if exists)
+    // Schema: { glassdoor: string, blind: string, pros: string, cons: string }
+    try {
+      _cbData.companyReviews = {};
+      const _gdDir = join(ROOT, 'data/glassdoor');
+      const _blDir = join(ROOT, 'data/blind');
+      const _revSlugs = new Set();
+      if (existsSync(_gdDir)) readdirSync(_gdDir).forEach(f => f.endsWith('.json') && _revSlugs.add(f.replace(/\.json$/,'')));
+      if (existsSync(_blDir)) readdirSync(_blDir).forEach(f => f.endsWith('.json') && _revSlugs.add(f.replace(/\.json$/,'')));
+      for (const _slug of _revSlugs) {
+        try {
+          const _rd = {};
+          const _gdPath = join(_gdDir, _slug + '.json');
+          const _blPath = join(_blDir, _slug + '.json');
+          if (existsSync(_gdPath)) { const g = JSON.parse(readFileSync(_gdPath,'utf-8')); _rd.glassdoor = g.summary || g.rating || ''; _rd.pros = g.pros || ''; _rd.cons = g.cons || ''; }
+          if (existsSync(_blPath)) { const b = JSON.parse(readFileSync(_blPath,'utf-8')); _rd.blind = b.summary || b.rating || ''; }
+          if (Object.keys(_rd).some(k => _rd[k])) _cbData.companyReviews[_slug] = _rd;
+        } catch (_) {}
+      }
+    } catch (_) { _cbData.companyReviews = {}; }
+
+    // Company funding data (data/companies/{slug}.json if exists)
+    // Schema: { stage: str, status: str, valuation: str, ipo_target: str, rounds: [{date,series,amount,lead}] }
+    try {
+      _cbData.companyFunding = {};
+      const _coDir = join(ROOT, 'data/companies');
+      if (existsSync(_coDir)) {
+        for (const _f of readdirSync(_coDir)) {
+          if (!_f.endsWith('.json')) continue;
+          try {
+            const _fd = JSON.parse(readFileSync(join(_coDir, _f), 'utf-8'));
+            const _slug = _f.replace(/\.json$/, '');
+            if (_fd.stage || _fd.status || _fd.valuation || _fd.ipo_target || (_fd.rounds && _fd.rounds.length)) {
+              _cbData.companyFunding[_slug] = _fd;
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) { _cbData.companyFunding = {}; }
+
     // Row data snapshot for banner-roles drill-in (last scan from pipeline.md)
     try {
       if (existsSync(PIPELINE_PATH)) {
@@ -3584,8 +3861,23 @@ function build() {
       } else { _cbData.pipelineRows = []; }
     } catch (_) { _cbData.pipelineRows = []; }
 
-    waveCBDataJson = JSON.stringify(_cbData).replace(/<\//g, '<\\/');
-  } catch (topErr) { waveCBDataJson = '{}'; }
+    // TPgM full widget HTML — stored for the readiness drill-in renderer.
+    // Escaped so it can be JSON-stringified safely.
+    _cbData.tpgmWidgetHtml = tpgmWidgetHtml;
+
+    // P0-2 fix (2026-05-18): previous strategy double-escaped apostrophes
+    // (replace(/'/g, "\\'")) which produced JS-valid but JSON-INVALID output —
+    // browser would JS-unescape \' → ', then JSON.parse choked on the bare
+    // ' inside what it thought was an escape sequence. Symptom: window._waveCB
+    // was undefined, and the whole drillInRegistry block (initialized in the
+    // same script tag, right after the JSON.parse) silently failed, which
+    // broke every drill-in popout on the dashboard. Switch to Base64 transport
+    // so the data round-trips through atob/JSON.parse with zero escaping risk
+    // regardless of what apostrophes, slashes, backticks, etc. the source
+    // contains.
+    const jsonStr = JSON.stringify(_cbData);
+    waveCBDataJson = Buffer.from(jsonStr, 'utf-8').toString('base64');
+  } catch (topErr) { waveCBDataJson = ''; }
 
   // ── Cmd-K palette data ────────────────────────────────────────────
   // Compact index of every row + the 5 most recently dated reports.
@@ -3670,6 +3962,26 @@ function build() {
     --green-fg-dark: #166534;
     --green-bg: #dcfce7;
     --green-border: #86efac;
+    /* ── P0-4 (Council 2026-05-17): button + link tokens. ────────────
+       The previous --green-fg (#16a34a) was overloaded for both filled-action
+       backgrounds (where white text fails AA at 2.85:1) and positive-trend
+       text (where the contrast was fine on light backgrounds). Council
+       converged on splitting these:
+         --action         : filled CTA background (Tailwind green-700, 5.92:1 with #fff)
+         --action-hover   : darker hover (green-800, 6.41:1 with #fff)
+         --positive-text  : KPI/trend text only — NEVER a button fill
+         --link           : unified hyperlink color (GitHub Primer blue, 5.19:1 on white)
+         --link-hover     : link hover state
+         --focus-ring     : matches --link for consistency
+       Source: data/council-design-tokens-2026-05-18.md */
+    --action: #15803d;
+    --action-hover: #166534;
+    --action-active: #14532d;
+    --positive-text: #1a7f37;
+    --negative-text: #c0392b;
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --focus-ring-color: var(--link);
     /* ── Single-accent palette (Phase 7 Item 2, Wave I) ──────────
        Editorial-restraint move per data/dashboard-phase7-inspiration-2026-05-10.md:
        reserve saturation for green (act) and red (blocked) only.
@@ -3755,7 +4067,12 @@ function build() {
     --accent-bg: #dcfce7;
     --accent-border: #86efac;
     --ring: 0 0 0 2px var(--accent);
-    --focus-ring: 0 0 0 2px var(--accent), 0 0 0 4px rgba(22, 163, 74, 0.2);
+    /* P0-4 (2026-05-18): focus ring uses --link (blue) per council consensus.
+       Focus = "this element is interactive right now" (universal semantic);
+       --action (green) stays scoped to filled CTAs only. 2px ring + 2px offset
+       layered through the --bg color so the ring sits flush against the
+       focused element instead of overlapping its border. */
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link, #0969da);
     --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.05);
     --shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
@@ -3826,6 +4143,16 @@ function build() {
     --green-fg-dark: #bbf7d0;
     --green-bg: rgba(22,163,74,.12);
     --green-border: rgba(22,163,74,.3);
+    /* P0-4 dark-mode button + link tokens (Council 2026-05-17).
+       Source: data/council-design-tokens-2026-05-18.md */
+    --action: #238636;
+    --action-hover: #2a7f3f;
+    --action-active: #196127;
+    --positive-text: #4ac26b;
+    --negative-text: #f85149;
+    --link: #58a6ff;
+    --link-hover: #79c0ff;
+    --focus-ring-color: var(--link);
     /* Dark-mode equivalents of the Phase 7 single-accent palette.
        Greens + reds keep their saturated dark-mode values; blue / amber /
        purple are dropped to slate / muted-ochre / near-monochrome so the
@@ -4203,8 +4530,15 @@ function build() {
   h1 { margin: 0 0 2px; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
   h2 { margin: 32px 0 14px; font-size: 16px; font-weight: 600; padding-bottom: 8px;
        border-bottom: 1px solid var(--border); letter-spacing: -0.2px; }
-  a { color: var(--blue-fg); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  /* P0-4: unified hyperlink color across the dashboard. The Phase 7 single-
+     accent palette intentionally suppresses link blue inside row tables
+     (a.role-link / a.company-link use color:inherit + green/blue on hover);
+     this generic anchor rule applies to all OTHER links — body prose, help
+     text, footer, drawer-body links, etc. Council recommended GitHub Primer
+     blue for AA contrast on both surface tokens in both themes. */
+  a { color: var(--link); text-decoration: none; transition: color .12s ease; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  a:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 3px; }
   code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
          background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
   .subtle { color: var(--text-3); font-size: 12.5px; margin-bottom: 20px; }
@@ -4329,7 +4663,7 @@ function build() {
   .sidebar-brand-icon {
     width: 22px; height: 22px;
     display: inline-flex; align-items: center; justify-content: center;
-    background: var(--green-fg);
+    background: var(--action);
     color: #fff;
     border-radius: 5px;
     font-size: 13px; font-weight: 700;
@@ -4527,6 +4861,24 @@ function build() {
   }
   .live-ticker[data-anim="out"] .live-text { opacity: 0; }
   .live-ticker[data-empty="1"] .live-text { font-style: italic; opacity: .7; }
+  /* Ticker company drill links — inline span inside live-text. */
+  .ticker-drill-company {
+    color: inherit; text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; border-radius: 2px;
+  }
+  .ticker-drill-company:hover { color: var(--green-fg, #16a34a); text-decoration-style: solid; }
+  /* Ticker role drill links — opens the full row drawer. */
+  .ticker-drill-role {
+    color: var(--blue-fg, #0969da); text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; border-radius: 2px; font-weight: 500;
+  }
+  .ticker-drill-role:hover { text-decoration-style: solid; }
+  /* "+N more" link inside ticker — opens scan-activity modal. */
+  .ticker-more-link {
+    color: var(--text-3); text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; font-size: .9em;
+  }
+  .ticker-more-link:hover { color: var(--text-2); text-decoration-style: solid; }
   @media (prefers-reduced-motion: reduce) {
     .live-ticker .live-dot { animation: none !important; }
     .live-text { transition: none; }
@@ -4644,6 +4996,28 @@ function build() {
     .mc-strip { margin-left: -12px; margin-right: -12px; }
   }
 
+  /* Fix 2: system telemetry summary chips in mc-strip */
+  .mc-sys-chip {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .12s, color .12s;
+    line-height: 1.4;
+  }
+  .mc-sys-chip:hover { border-color: var(--border-strong); color: var(--text-2); }
+  @media (max-width: 720px) { .mc-sys-chip { display: none; } }
+
+  /* Fix 2: career tile accent classes */
+  .stat-burndown-urgent::before { background: var(--red-fg, #dc2626); }
+  .stat-burndown-warn::before   { background: var(--amber-fg, #d97706); }
+
   /* ── Cmd-K command palette ─────────────────────────────────── */
   #cmdk-backdrop {
     display: none; position: fixed; inset: 0; z-index: 100;
@@ -4720,6 +5094,25 @@ function build() {
     border-radius: 3px; padding: 0 5px; font-size: 10.5px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     margin: 0 2px;
+  }
+  /* Fix 3 (cmdk-scope-persist): scope filter bar */
+  .cmdk-scope-bar {
+    display: flex; gap: 4px; padding: 6px 12px;
+    border-bottom: 1px solid var(--border); background: var(--surface-2);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .cmdk-scope-bar::-webkit-scrollbar { display: none; }
+  .cmdk-scope-btn {
+    background: transparent; border: 1px solid transparent;
+    border-radius: var(--radius-sm); padding: 3px 10px;
+    font-size: 12px; font-weight: 500; color: var(--text-3);
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  }
+  .cmdk-scope-btn:hover { color: var(--fg); background: var(--surface); }
+  .cmdk-scope-btn.active {
+    color: var(--blue-fg); background: color-mix(in srgb, var(--blue-fg) 10%, var(--surface));
+    border-color: color-mix(in srgb, var(--blue-fg) 30%, transparent);
+    font-weight: 700;
   }
   @keyframes cmdk-flash {
     0%, 100% { background: transparent; }
@@ -4985,6 +5378,123 @@ function build() {
   }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
 
+  /* ── Tonight's pick callout (enriched 2026-05-17) ──────────────── */
+  .tonight-pick-callout {
+    display: flex; flex-direction: column; gap: 7px;
+    background: color-mix(in srgb, var(--green-fg) 8%, var(--surface));
+    border: 1.5px solid var(--green-fg); border-radius: var(--radius);
+    padding: 11px 15px 12px; margin-bottom: 12px;
+    position: sticky; top: 0; z-index: 4;
+  }
+  /* Header row: label on left, score chip + status pill on right */
+  .tonight-pick-header {
+    display: flex; align-items: center; gap: 7px;
+  }
+  .tonight-pick-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--green-fg); flex: 1; white-space: nowrap;
+  }
+  .tonight-pick-score-chip { font-size: 12px !important; padding: 2px 7px !important; flex-shrink: 0; }
+  .tonight-pick-status-chip {
+    font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    background: var(--action); color: #fff;
+    border-radius: var(--radius-sm); padding: 2px 7px; flex-shrink: 0;
+  }
+  /* Title row: company — full role title, wraps gracefully */
+  .tonight-pick-title-row {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0; line-height: 1.35;
+  }
+  .tonight-pick-company { font-weight: 700; font-size: 15px; }
+  .tonight-pick-sep { font-size: 14px; color: var(--text-3); margin: 0 3px; }
+  .tonight-pick-role {
+    font-size: 14px; color: var(--text-2); font-weight: 500;
+    /* No truncation — allow wrap to 2 lines */
+    word-break: break-word;
+  }
+  /* Signal chips row: gates, comp, location */
+  .tonight-pick-signals { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tp-sig {
+    font-size: 11px; border-radius: 999px; padding: 2px 8px; font-weight: 500;
+  }
+  .tp-sig-ok  { background: color-mix(in srgb, var(--green-fg) 12%, var(--surface)); color: var(--green-fg); }
+  .tp-sig-warn { background: color-mix(in srgb, #d97706 12%, var(--surface)); color: #d97706; }
+  .tp-sig-comp { background: var(--surface-2); color: var(--text-2); }
+  .tp-sig-loc  { background: var(--surface-2); color: var(--text-3); }
+  /* Why-this-one paragraph */
+  .tonight-pick-why {
+    font-size: 12px; color: var(--text-2); line-height: 1.5;
+    max-width: 680px;
+  }
+  /* Action buttons row */
+  .tonight-pick-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 2px; }
+  /* P0-4: --action token (Tailwind green-700 light / Primer green-emphasis dark)
+     replaces --green-fg as the filled-CTA background. White text now meets WCAG
+     AA (5.92:1 light, 4.63:1 dark). The previous --green-fg (#16a34a/#86efac)
+     remains for non-button uses (chips, success backgrounds, trend text). */
+  .tonight-pick-btn-primary {
+    background: var(--action); color: #fff; border: 1px solid var(--action); border-radius: var(--radius-sm);
+    padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: background .12s, border-color .12s;
+  }
+  .tonight-pick-btn-primary:hover { background: var(--action-hover); border-color: var(--action-hover); }
+  .tonight-pick-btn-primary:active { background: var(--action-active); border-color: var(--action-active); }
+  .tonight-pick-btn-secondary {
+    background: transparent; color: var(--text-2); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  .tonight-pick-btn-secondary:hover { color: var(--fg); border-color: var(--text-2); }
+  .tonight-pick-btn-accent {
+    background: color-mix(in srgb, var(--blue-fg,#0969da) 12%, var(--surface));
+    color: var(--blue-fg,#0969da); border: 1px solid color-mix(in srgb, var(--blue-fg,#0969da) 30%, transparent);
+    border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .tonight-pick-btn-accent:hover { background: color-mix(in srgb, var(--blue-fg,#0969da) 18%, var(--surface)); }
+  .tonight-pick-btn-accent.success {
+    background: color-mix(in srgb, var(--green-fg) 12%, var(--surface));
+    color: var(--green-fg); border-color: color-mix(in srgb, var(--green-fg) 30%, transparent);
+  }
+  .tonight-pick-btn-ghost {
+    background: transparent; color: var(--text-3); border: 1px solid transparent;
+    border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  .tonight-pick-btn-ghost:hover { color: var(--text-2); border-color: var(--border-strong); }
+  /* Create-materials progress modal */
+  .tp-progress-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .15s ease;
+  }
+  .tp-progress-backdrop.visible { opacity: 1; pointer-events: auto; }
+  .tp-progress-modal {
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius);
+    padding: 22px 24px 20px; width: min(460px, 92vw); max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18);
+  }
+  .tp-progress-title {
+    font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--fg);
+  }
+  .tp-stage-list { display: flex; flex-direction: column; gap: 7px; }
+  .tp-stage-row {
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+  }
+  .tp-stage-pill {
+    font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 9px; min-width: 68px; text-align: center;
+    flex-shrink: 0;
+  }
+  .tp-stage-pill.pending { background: var(--surface-2); color: var(--text-3); }
+  .tp-stage-pill.running { background: color-mix(in srgb,#d97706 14%,var(--surface)); color:#d97706; }
+  .tp-stage-pill.done    { background: color-mix(in srgb,var(--green-fg) 14%,var(--surface)); color:var(--green-fg); }
+  .tp-stage-pill.failed  { background: color-mix(in srgb,var(--red-fg,#cf222e) 14%,var(--surface)); color:var(--red-fg,#cf222e); }
+  .tp-stage-pill.skipped { background: var(--surface-2); color: var(--text-4); }
+  .tp-progress-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+  .tp-progress-msg { font-size: 12px; color: var(--text-3); margin-top: 10px; min-height: 18px; }
+  /* Responsive: stack on narrow screens */
+  @media (max-width: 600px) {
+    .tonight-pick-actions { gap: 5px; }
+    .tonight-pick-btn-primary, .tonight-pick-btn-secondary,
+    .tonight-pick-btn-accent, .tonight-pick-btn-ghost { font-size: 11.5px; padding: 5px 10px; }
+  }
+
   /* ── Apply-Now drag-and-drop reorder ─────────────────────────── */
   /* Reset-order button — small, secondary, only shown when custom order
      is active. Pushed to the right of the panel-title with margin-left:auto. */
@@ -5126,8 +5636,21 @@ function build() {
       overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap; max-width: 0;
     }
-    /* Role wraps rather than truncates */
-    .panel .table-scroll table td.role-cell { white-space: normal; }
+    /* P0-1: role + company cells render full string (no truncation). title= remains as hover fallback. */
+    .panel .table-scroll table td.role-cell,
+    .panel .table-scroll table td.company-cell {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      max-width: none;
+      word-break: break-word;
+    }
+    /* P0-1: ensure inline anchors inside role/company cells also wrap */
+    .panel .table-scroll table td.role-cell a,
+    .panel .table-scroll table td.company-cell a {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
   /* Resize handle — 5px zone on right edge of each th */
   .col-resize-handle {
@@ -5747,6 +6270,30 @@ function build() {
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  /* Enhanced company profile sections */
+  .company-profile-section { margin-bottom: 8px; }
+  .company-profile-section--pending { opacity: 0.75; }
+  .company-profile-header { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .company-profile-body { font-size: 12px; color: var(--text-2); }
+  .cp-pending-label { font-size: 11px; color: var(--text-4); font-style: italic; margin-right: 10px; }
+  .cp-refresh-btn {
+    font-size: 11px; padding: 2px 10px; border-radius: var(--radius-sm);
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-2); cursor: pointer; transition: background .1s;
+  }
+  .cp-refresh-btn:hover { background: var(--surface-3, var(--surface)); color: var(--text); }
+  .cp-refresh-btn:disabled { opacity: 0.5; cursor: default; }
+  .cp-refresh-all-btn { font-weight: 600; }
+  /* "Likely responsibilities" one-line surface in Role-at-a-glance (2026-05-17). */
+  .dcard-resp-line {
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
+    font-size: 12px; line-height: 1.5; color: var(--text-2);
+  }
+  .dcard-resp-label {
+    font-weight: 600; color: var(--text-3); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px;
+  }
+  .dcard-resp-value { color: var(--text-1); }
   /* Alignment-bar trio in Role-at-a-glance card — 3 horizontal % bars. */
   .alignment-bars { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
   .alignbar-row { display: grid; grid-template-columns: 150px 1fr 44px; align-items: center; gap: 8px; font-size: 11.5px; cursor: help; }
@@ -6233,6 +6780,76 @@ function build() {
     #sidebar-runway { display: none !important; }
   }
 
+  /* ── Sidebar readiness chip (TPgM relocation 2026-05-17) ───── */
+  /* Compact card in sidebar footer area: headline score + velocity arrow +
+     "See full →" button that opens the full TPgM widget as a drill-in drawer.
+     Styled to match .sidebar-runway patterns (same margin/padding/border). */
+  .sidebar-readiness {
+    margin: 4px 10px 6px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .sidebar-readiness:hover { border-color: var(--blue-fg-dark); background: var(--surface-3); }
+  .sidebar-readiness:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .sidebar-readiness-header {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+  }
+  .sidebar-readiness-title {
+    flex: 1;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+  .sidebar-readiness-score {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .sidebar-readiness-velocity {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .sidebar-readiness-band {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-readiness-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--blue-fg-dark, var(--blue));
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+  }
+  .sidebar-readiness-link:hover { text-decoration: underline; }
+  body.sidebar-collapsed .sidebar-readiness-band,
+  body.sidebar-collapsed .sidebar-readiness-link { display: none; }
+  body.sidebar-collapsed .sidebar-readiness-header { margin-bottom: 0; }
+  body.sidebar-collapsed .sidebar-readiness {
+    padding: 7px 6px; text-align: center;
+  }
+  @media (max-width: 720px) {
+    #sidebar-readiness { display: none !important; }
+  }
+
   /* ── Pipeline confirmation modal ────────────────────────────── */
   /* Task 2 (2026-05-16): modal grew a 2-phase flow (preview → confirm)
      for Process All. Width bumped + min-width set so the per-company
@@ -6560,10 +7177,11 @@ function build() {
   }
   .evidence-area:focus { outline: none; border-color: var(--blue-fg); box-shadow: var(--ring-blue); }
   .save-evidence-btn {
-    margin-top: 8px; background: var(--green-fg); color: #fff; border: none;
+    margin-top: 8px; background: var(--action); color: #fff; border: 1px solid var(--action);
     padding: 7px 16px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; font-family: inherit;
+    transition: background .12s, border-color .12s;
   }
-  .save-evidence-btn:hover { background: var(--green); }
+  .save-evidence-btn:hover { background: var(--action-hover); border-color: var(--action-hover); }
 
   /* ── Gap modal ───────────────────────────────────────────────── */
   #gap-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
@@ -7240,6 +7858,45 @@ function build() {
     display: flex; align-items: center; gap: 6px;
     margin-top: 10px; flex-wrap: wrap;
   }
+  /* Fix 5 (score-rationale): "Why N.N?" disclosure */
+  .drawer-why-disclosure {
+    margin-top: 8px; font-size: 12px;
+    border-top: 1px solid var(--border); padding-top: 8px;
+  }
+  .why-summary-btn {
+    display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+    background: none; border: none; cursor: pointer;
+    color: var(--blue-fg); font-size: 12px; font-weight: 600; padding: 0;
+    text-align: left; width: 100%;
+  }
+  .why-summary-btn:hover { text-decoration: underline; }
+  .why-summary-text {
+    font-weight: 400; color: var(--text-3); font-size: 11px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1; min-width: 0; max-width: 260px;
+  }
+  .why-expanded { margin-top: 8px; }
+  .why-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+  .why-chip {
+    display: inline-block; font-size: 11px; padding: 2px 7px;
+    border-radius: 999px; border: 1px solid transparent;
+  }
+  .why-chip-pass { background: color-mix(in srgb, var(--green-fg) 12%, var(--surface)); border-color: color-mix(in srgb, var(--green-fg) 30%, transparent); color: var(--green-fg); }
+  .why-chip-fail { background: color-mix(in srgb, var(--red-fg,#cf222e) 10%, var(--surface)); border-color: color-mix(in srgb, var(--red-fg,#cf222e) 25%, transparent); color: var(--red-fg,#cf222e); }
+  .why-chip-soft { background: color-mix(in srgb, var(--amber-fg,#d97706) 10%, var(--surface)); border-color: color-mix(in srgb, var(--amber-fg,#d97706) 25%, transparent); color: var(--amber-fg,#d97706); }
+
+  /* Fix 2 (draft-sync-sse): "Updated" transient pill on draft file changes */
+  .drawer-draft-updated-pill {
+    display: inline-block; background: var(--action); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    margin-left: auto; opacity: 0; transition: opacity .2s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .drawer-draft-artifact-chip {
+    display: inline-block; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 11px; padding: 1px 6px; margin: 2px 2px 0 0;
+    color: var(--text-3); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .drawer-close {
     position: absolute; top: 10px; right: 10px;
     background: none; border: none; cursor: pointer;
@@ -7579,11 +8236,27 @@ function build() {
   }
 
   /* ── Mobile bottom tab bar (Apply-Now / All / Charts / Settings) */
-  /* Native-iOS-feel tab strip pinned to the bottom of the viewport on
-     mobile. Honors safe-area-inset-bottom so the home indicator on
-     notched iPhones doesn't crowd the tap targets. Hidden ≥721px so
-     the desktop toolbar stays in charge. */
+  /* Fix 4: single canonical nav — sidebar at ≥1024px, bottom tab at <1024px.
+     The two navs cover the same destinations with the same labels (synced above).
+     @media breakpoints enforce mutual exclusivity:
+       ≥1024px: sidebar is the canonical nav; bottom tab bar is hidden.
+       <1024px: bottom tab bar is canonical; sidebar collapses to icon-rail (721-1023)
+                or slide-in overlay (≤720).
+     Kill switch: set localStorage key 'careerops.forceSidebar'=1 to always show sidebar,
+     or 'careerops.forceTabbar'=1 to always show the tab bar, overriding breakpoints.
+     DASHBOARD_INVARIANTS.md §4 scroll behavior unaffected (wrapping divs unchanged). */
   #mobile-tabbar { display: none; }
+  @media (min-width: 1024px) {
+    /* Above 1024px: sidebar is the canonical nav — bottom tab bar must be hidden. */
+    #mobile-tabbar { display: none !important; }
+    /* Sidebar nav is already visible above 720px (not affected by the old rule). */
+  }
+  @media (max-width: 1023px) {
+    /* Below 1024px: bottom tab bar is the canonical nav. Sidebar still shows as
+       icon-rail (721-1023px) or drawer (≤720px) for secondary access, but the
+       bottom tab bar carries the primary nav affordance on these sizes. */
+    #mobile-tabbar { display: grid; }
+  }
   @media (max-width: 720px) {
     #mobile-tabbar {
       display: grid;
@@ -8499,7 +9172,7 @@ function build() {
   }
 </style>
 </head>
-<body>
+<body class="dark">
 <a class="skip-link" href="#main">Skip to main content</a>
 
 <!-- Hamburger toggle (mobile only) and overlay backdrop for the
@@ -8596,6 +9269,24 @@ function build() {
         <div class="sidebar-runway-alert unknown" id="runway-alert">—</div>
       </div>
     </div>
+    <!-- Readiness chip (TPgM relocation 2026-05-17): compact sidebar card
+         shows headline PM-credibility score + velocity arrow. "See full →"
+         opens the full TPgM widget in a drill-in drawer so it stays fully
+         accessible without occupying prime overview real-estate. -->
+    <div id="sidebar-readiness" class="sidebar-readiness"
+         role="button" tabindex="0" aria-label="PM-readiness score — click to see full detail"
+         onclick="window.drillIn('readiness','',event)"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('readiness','',event);}">
+      <div class="sidebar-readiness-header">
+        <span class="sidebar-readiness-title">PM Readiness</span>
+        <span class="sidebar-readiness-score">${tpgmChipScore}</span>
+        <span class="sidebar-readiness-velocity">${tpgmChipArrow}</span>
+      </div>
+      <div class="sidebar-readiness-band">${htmlEscape(tpgmChipBand)}</div>
+      <button type="button" class="sidebar-readiness-link"
+              onclick="window.drillIn('readiness','',event);event.stopPropagation();"
+              aria-label="See full PM-readiness detail">See full →</button>
+    </div>
     <div class="sidebar-footer">
       <!-- Sidebar collapse button removed 2026-05-17 per Mitchell — unused,
            takes up footer space. Cmd-\\ keyboard shortcut still triggers
@@ -8648,6 +9339,12 @@ function build() {
       <span class="mc-health-dot" aria-hidden="true"></span>
       <span class="mc-health-text" id="mc-health-text">all healthy</span>
     </div>
+    <!-- Fix 2: system telemetry summary chips — moved out of KPI row into mc-strip
+         so career KPIs can surface user-facing progress tiles (DESIGN_PRINCIPLES.md §Pillar 1).
+         Clicking each chip still routes to the same toggleStatPanel panels. -->
+    <button type="button" class="mc-sys-chip" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies" aria-label="${portals.tracked} companies tracked">${portals.tracked} companies</button>
+    <button type="button" class="mc-sys-chip" id="mc-scanned-chip" onclick="toggleStatPanel('scanned')" title="Click to see scan activity" aria-label="${scanTotal} URLs scanned">${scanTotal} scanned</button>
+    <button type="button" class="mc-sys-chip" id="mc-batches-chip" onclick="toggleStatPanel('batches')" title="Click to see batch run history" aria-label="${batchRuns} batches run">${batchRuns} batches</button>
   </div>
 
   <div class="subtle" id="dashboard-meta" title="${htmlEscape(generated)}"><span id="live-updated">Updated ${htmlEscape(generated)}</span> · ${reportsToday} reports today</div>
@@ -8663,6 +9360,8 @@ function build() {
         <input id="cmdk-input" type="text" placeholder="Jump to row, run an action, open a recent report…" autocomplete="off" spellcheck="false" />
         <span class="cmdk-input-hint">esc to close</span>
       </div>
+      <!-- Fix 3 (cmdk-scope-persist): scope filter bar — populated by _cmdkRenderScopeBtns() -->
+      <div id="cmdk-scope-bar" class="cmdk-scope-bar" role="tablist" aria-label="Command palette scope"></div>
       <div id="cmdk-list" role="listbox" aria-label="Command palette results"></div>
       <div class="cmdk-footer">
         <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
@@ -8773,20 +9472,22 @@ function build() {
     <span class="ptr-label" id="ptr-label">Pull to refresh</span>
   </div>
 
-  <!-- Mobile bottom tab bar (Apply-Now / All / Charts / Settings).
-       Hidden on desktop via CSS. Tabs scroll the corresponding section
-       into view; "Settings" reuses the mobile-sheet to expose the
-       theme toggle, demo mode, and command palette without needing the
-       cramped top toolbar on small screens. -->
+  <!-- Fix 4: single canonical nav — sidebar at ≥1024px, bottom tab bar at <1024px.
+       CSS enforces mutual exclusivity: .sidebar-nav display:none below 1024px;
+       #mobile-tabbar display:none above 1024px.
+       Labels synced to sidebar's longer-form names for consistency
+       (DESIGN_PRINCIPLES.md §Pillar 1 — same destinations, same language).
+       Tab keys match sidebar section IDs so switchMobileTab / sidebar link
+       both route to the same scrollTarget. -->
   <nav id="mobile-tabbar" role="tablist" aria-label="Sections">
     <button type="button" class="mobile-tab" role="tab" aria-selected="true" data-tab-target="apply-now-section" aria-controls="apply-now-section" onclick="switchMobileTab('apply-now-section', this)">
-      <span class="tab-icon" aria-hidden="true">⚡</span><span class="tab-label">Apply</span>
+      <span class="tab-icon" aria-hidden="true">⚡</span><span class="tab-label">Apply-Now</span>
     </button>
     <button type="button" class="mobile-tab" role="tab" aria-selected="false" data-tab-target="all-evaluations-section" aria-controls="all-evaluations-section" onclick="switchMobileTab('all-evaluations-section', this)">
-      <span class="tab-icon" aria-hidden="true">≡</span><span class="tab-label">All</span>
+      <span class="tab-icon" aria-hidden="true">≡</span><span class="tab-label">All Evals</span>
     </button>
     <button type="button" class="mobile-tab" role="tab" aria-selected="false" data-tab-target="charts-section" aria-controls="charts-section" onclick="switchMobileTab('charts-section', this)">
-      <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Charts</span>
+      <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Trends</span>
     </button>
     <button type="button" class="mobile-tab" role="tab" aria-selected="false" data-tab-target="__settings__" aria-controls="mobile-sheet" onclick="openMobileSettingsSheet(this)">
       <span class="tab-icon" aria-hidden="true">⚙︎</span><span class="tab-label">Settings</span>
@@ -8828,8 +9529,8 @@ function build() {
   <div id="bulk-action-bar" role="region" aria-label="Bulk actions" hidden>
     <div class="bulk-bar-inner">
       <span class="bulk-bar-count" aria-live="polite"><strong id="bulk-count">0</strong> selected</span>
-      <button type="button" class="bulk-btn bulk-btn-primary" onclick="bulkApply('Applied')" aria-label="Mark selected rows as Applied">Mark Applied</button>
-      <button type="button" class="bulk-btn" onclick="bulkApply('SKIP')" aria-label="Mark selected rows as SKIP">Mark Skip</button>
+      <button type="button" class="bulk-btn bulk-btn-primary" onclick="bulkApply('Applied')" aria-label="Mark selected rows as Applied">I applied</button>
+      <button type="button" class="bulk-btn" onclick="bulkApply('SKIP')" aria-label="Mark selected rows as SKIP">Skip these</button>
       <button type="button" class="bulk-btn bulk-btn-ghost" onclick="bulkClearSelection()" aria-label="Clear selection">Clear</button>
     </div>
   </div>
@@ -8894,7 +9595,7 @@ function build() {
       <div class="stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue" role="button" tabindex="0">
         <div class="hero-sparkline-bg" aria-hidden="true">${heroSparklineSVG(kpiSpark.applyNow.daily, 'Apply-Now')}</div>
         <div class="hero-left">
-          <div class="stat-label">Apply-Now Queue · score ≥ 4.0</div>
+          <div class="stat-label">Ready to apply · score 4.0 or above</div>
           <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
         </div>
         <div class="hero-right">
@@ -8915,20 +9616,35 @@ function build() {
         <div class="stat-trend"><span class="stat-delta stat-delta-flat" title="Snapshot — pipeline depth has no daily history">— snapshot</span></div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat stat-cell" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies">
-        <div class="stat-label"><span class="label-full">Companies tracked</span><span class="label-short">Companies</span></div>
-        <div class="stat-value">${portals.tracked}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
-      </div>
-      <div class="stat stat-cell" onclick="toggleStatPanel('scanned')" title="Click to see scan activity">
-        <div class="stat-label"><span class="label-full">URLs scanned</span><span class="label-short">Scanned</span></div>
-        <div class="stat-value" id="live-scanned">${scanTotal}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
-      </div>
-      <div class="stat stat-cell" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
-        <div class="stat-label"><span class="label-full">Batches run</span><span class="label-short">Batches</span></div>
-        <div class="stat-value" id="live-batches">${batchRuns}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      <!-- Fix 2: replaced system KPI tiles (Companies / Scanned / Batches) with
+           career-facing progress tiles. System metrics moved to mc-strip chips.
+           DESIGN_PRINCIPLES.md §Pillar 1: daily-driver dashboard should surface
+           decision-grade career data, not system telemetry. -->
+      <!-- Tile 1: Time-to-Offer burn-down — Q3 2026 landing deadline -->
+      ${(() => {
+        const DEADLINE_ISO = '2026-09-30';
+        const deadline = new Date(DEADLINE_ISO).getTime();
+        const nowMs = Date.now();
+        const totalDays = Math.round((deadline - new Date('2026-05-16').getTime()) / 86400000); // calibration start
+        const daysLeft = Math.max(0, Math.round((deadline - nowMs) / 86400000));
+        const daysElapsed = totalDays - daysLeft;
+        const pctElapsed = totalDays > 0 ? Math.min(100, Math.round((daysElapsed / totalDays) * 100)) : 0;
+        // Required apply velocity: need ~1-3 strong apps/night until deadline
+        const appsNeeded = Math.max(1, applyNow.length === 0 ? 1 : applyNow.length);
+        const appsPerDay = daysLeft > 0 ? (appsNeeded / daysLeft).toFixed(2) : '—';
+        const urgencyCls = daysLeft <= 30 ? 'stat-cell stat-burndown-urgent' : daysLeft <= 60 ? 'stat-cell stat-burndown-warn' : 'stat-cell';
+        return `<div class="stat ${urgencyCls}" title="Q3 2026 landing deadline — ${daysLeft} days remaining">
+          <div class="stat-label"><span class="label-full">Q3 2026 · Days left</span><span class="label-short">Days left</span></div>
+          <div class="stat-value" style="font-variant-numeric:tabular-nums">${daysLeft}</div>
+          <div class="stat-trend"><span class="stat-delta ${daysLeft <= 30 ? 'stat-delta-down' : 'stat-delta-flat'}" title="${pctElapsed}% of search window elapsed · ~${appsPerDay} apps/day needed">~${appsPerDay} apps/day</span></div>
+        </div>`;
+      })()}
+      <!-- Tile 2: Network leverage — warm-intro paths -->
+      <div class="stat stat-cell" onclick="window.drillIn('network-leverage','',event)" title="Press contacts + warm-intro paths to active companies. Click for detail." role="button" tabindex="0">
+        <div class="stat-label"><span class="label-full">Press network</span><span class="label-short">Network</span></div>
+        <div class="stat-value">340</div>
+        <div class="stat-trend"><span class="stat-delta stat-delta-flat" id="live-warm-intros" title="Warm-intro paths to companies in your apply-now queue">loading…</span></div>
+        <span class="stat-caret" aria-hidden="true">▾</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
         <div class="stat-label"><span class="label-full">Applied / In process</span><span class="label-short">Applied</span></div>
@@ -8939,11 +9655,10 @@ function build() {
     </div>
   </div>
 
-  <!-- TPgM credibility tracker widget (Tier B item #5, wired 2026-05-17) -->
-  <!-- Static overview tile — separate from the sortable tables (DASHBOARD_INVARIANTS.md §1-7 unaffected) -->
-  <div style="margin:12px 0 0;max-width:540px">
-    ${tpgmWidgetHtml}
-  </div>
+  <!-- TPgM widget relocated 2026-05-17: moved from here to sidebar readiness chip
+       (#sidebar-readiness). Full widget accessible via "See full →" drill-in.
+       Static overview tile was separate from the sortable tables (DASHBOARD_INVARIANTS.md §1-7 unaffected);
+       Apply-Now queue now has clear first-glance priority below KPI tiles. -->
 
   ${sideAllocations.length > 0 ? `
   <!-- I1 Wave G1: 20%-time / side-allocations tile -->
@@ -8987,6 +9702,31 @@ function build() {
       <span class="panel-chevron">▾</span>
     </h2>
     <p class="panel-subtitle" title="Drag a row's ⋮⋮ handle to prioritize. Click any row to expand.">Score ≥ 4.0 · Evaluated / Responded / Interview only</p>
+    ${_tonightPick ? `<!-- Tonight's pick callout — enriched 2026-05-17: full title, comp, gates, 4 actions -->
+    <div id="tonight-pick-callout" class="tonight-pick-callout" hidden aria-label="Tonight's pick suggestion" role="region">
+      <div class="tonight-pick-header">
+        <span class="tonight-pick-label">Best role to apply to tonight</span>
+        <span class="tonight-pick-score-chip badge score-badge-lg ${scoreBadgeClass(_tonightPick.score)}">${_tonightPick.score.toFixed(1)}</span>
+        <span class="tonight-pick-status-chip">Apply now</span>
+      </div>
+      <div class="tonight-pick-title-row">
+        <span class="tonight-pick-company">${htmlEscape(_tonightPick.company)}</span>
+        <span class="tonight-pick-sep"> — </span>
+        <span class="tonight-pick-role">${htmlEscape(_tonightPick.role)}</span>
+      </div>
+      <div class="tonight-pick-signals">
+        ${_tonightPick.gapCount === 0 ? '<span class="tp-sig tp-sig-ok">All must-haves clear</span>' : `<span class="tp-sig tp-sig-warn">${_tonightPick.gapCount} gap${_tonightPick.gapCount === 1 ? '' : 's'}</span>`}
+        ${_tonightPick.comp ? `<span class="tp-sig tp-sig-comp">${htmlEscape(_tonightPick.comp)}</span>` : ''}
+        ${_tonightPick.location ? `<span class="tp-sig tp-sig-loc">${htmlEscape(_tonightPick.location)}</span>` : ''}
+      </div>
+      <div class="tonight-pick-why">${htmlEscape(_tonightPick.whyPick)}</div>
+      <div class="tonight-pick-actions">
+        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Start tonight's apply for ${htmlEscape(_tonightPick.company)}">Start tonight&rsquo;s apply &rarr;</button>
+        <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickLearnMore()" aria-label="Learn more about this role">Learn more</button>
+        <button type="button" class="tonight-pick-btn-accent" id="tonight-pick-create-btn" onclick="tonightPickCreateMaterials()" aria-label="Generate apply pack for ${htmlEscape(_tonightPick.company)}">Generate apply pack</button>
+        <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCycle()" aria-label="Pick a different role">Pick another</button>
+      </div>
+    </div>` : '<!-- tonight-pick: no candidate met criteria -->'}
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="apply-now-tbody" aria-label="Select all visible rows in Apply-Now" onclick="handleHeaderCheckbox(this)"></th>
@@ -9011,7 +9751,7 @@ function build() {
   ` : `
   <div class="panel" id="apply-now-section">
     <h2 class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="panel-chevron">▾</span></h2>
-    <p style="color:#57606a;font-size:13px">No evaluations meeting the 4.0 apply floor right now. Either today's batch was wrong-shape (review highest-scored discards below) or the batch hasn't completed yet.</p>
+    <p style="color:#57606a;font-size:13px">No roles scored 4.0 or above right now. Check your highest-scoring discards below, or wait for the next batch to finish.</p>
   </div>
   `}
 
@@ -9340,8 +10080,115 @@ function _liveFreshness(ageMs) {
   if (ageMs < 21600000)     return 'warm';
   return 'stale';
 }
+// ── Ticker company/role drill helpers ──────────────────────────
+// Slugify a company name the same way renderRow does.
+function _tickerSlug(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+// Render a company name as a drill-clickable span inside the ticker.
+// Uses data-slug + delegated handler (avoids inline quote-escaping issues).
+function _tickerCompanyHtml(name) {
+  var slug = _tickerSlug(name);
+  var safe = String(name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<span class="ticker-drill-company" data-drill="company:' + slug + '" data-slug="' + slug + '"'
+    + ' tabindex="0" role="button" title="View ' + safe + ' company profile">'
+    + safe + '</span>';
+}
+// Delegated click/key handler for ticker + scan-activity company drill spans.
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('.ticker-drill-company,.sa-drill-company');
+    if (!el) return;
+    e.stopPropagation();
+    var slug = el.dataset.slug || '';
+    if (slug && window.drillIn) window.drillIn('company', slug, e);
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('.ticker-drill-company,.sa-drill-company');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation(); e.preventDefault();
+      var slug = el.dataset.slug || '';
+      if (slug && window.drillIn) window.drillIn('company', slug, e);
+    }
+  });
+})();
+// Delegated click/key handler for ticker role drill spans.
+// Opens the full row drawer (same as clicking the Apply-Now row directly).
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('.ticker-drill-role');
+    if (!el) return;
+    e.stopPropagation();
+    var rowId = el.dataset.rowId || '';
+    if (!rowId) return;
+    var detail = document.getElementById('detail-' + rowId);
+    if (detail) {
+      var idx = parseInt(rowId.replace(/^apply-/,''), 10);
+      if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+      else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+    } else if (typeof toggleDetail === 'function') {
+      toggleDetail(rowId);
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('.ticker-drill-role');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation(); e.preventDefault();
+      el.click();
+    }
+  });
+})();
+// Delegated handler for ticker-more-link spans (data-action="open-scan-activity").
+// Avoids inline event handler quoting issues.
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-action="open-scan-activity"]');
+    if (!el) return;
+    e.stopPropagation();
+    if (typeof openScanActivityModal === 'function') openScanActivityModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('[data-action="open-scan-activity"]');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation(); e.preventDefault();
+      if (typeof openScanActivityModal === 'function') openScanActivityModal();
+    }
+  });
+})();
+// Render one role title as a drill-clickable span inside the ticker.
+// data-drill="role:{rowId}" opens the full row drawer (same pattern as Apply-Now rows).
+function _tickerRoleHtml(role, rowId, score) {
+  var safeRole = String(role || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var scoreSuffix = score ? ' (' + Number(score).toFixed(1) + ')' : '';
+  return '<span class="ticker-drill-role" data-drill="role:' + _escHtmlTicker(rowId) + '" data-row-id="' + _escHtmlTicker(rowId) + '"'
+    + ' tabindex="0" role="button" title="Open detail for this role">'
+    + safeRole + scoreSuffix + '</span>';
+}
+function _escHtmlTicker(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// Render the "N more" suffix as a button that opens the scan-activity modal.
+// Uses data-action attribute + delegated handler to avoid inline quote nesting issues.
+function _tickerMoreHtml(extra) {
+  if (extra <= 0) return '';
+  return ' <span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles for this company">+' + extra + ' more</span>';
+}
 function _liveFormat(ev) {
-  return 'Scanned ' + ev.company + ' · ' + ev.count + ' new role' + (ev.count === 1 ? '' : 's') + ' · ' + _liveAge(Date.now() - new Date(ev.ts).getTime());
+  var ageStr = _liveAge(Date.now() - new Date(ev.ts).getTime());
+  var countPart;
+  if (ev.topRole && ev.topRole.role) {
+    var extra = ev.count - 1;
+    countPart = _tickerRoleHtml(ev.topRole.role, ev.topRole.rowId, ev.topRole.score)
+      + (extra > 0 ? _tickerMoreHtml(extra) : '');
+  } else {
+    // Fallback: no evaluated role match — show aggregate count, clickable to modal
+    var label = ev.count + ' new role' + (ev.count === 1 ? '' : 's');
+    countPart = '<span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles">' + label + '</span>';
+  }
+  return 'Scanned ' + _tickerCompanyHtml(ev.company) + ' &middot; ' + countPart + ' &middot; ' + ageStr;
 }
 function initLiveTicker() {
   const el = document.getElementById('live-ticker');
@@ -9363,21 +10210,21 @@ function initLiveTicker() {
     el.setAttribute('title', 'Last scan: ' + hhmm + ' PT · click to expand');
   };
   setFreshness();
-  // Mobile tap-to-expand
-  el.addEventListener('click', () => el.classList.toggle('expanded'));
+  // Mobile tap-to-expand (only when clicking the strip background, not a company link)
+  el.addEventListener('click', (e) => { if (!e.target.closest('.ticker-drill-company')) el.classList.toggle('expanded'); });
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced || events.length === 1) {
-    txt.textContent = _liveFormat(events[0]);
-    setInterval(() => { txt.textContent = _liveFormat(events[0]); setFreshness(); }, 30000);
+    txt.innerHTML = _liveFormat(events[0]);
+    setInterval(() => { txt.innerHTML = _liveFormat(events[0]); setFreshness(); }, 30000);
     return;
   }
   let i = 0;
-  txt.textContent = _liveFormat(events[0]);
+  txt.innerHTML = _liveFormat(events[0]);
   setInterval(() => {
     el.setAttribute('data-anim', 'out');
     setTimeout(() => {
       i = (i + 1) % events.length;
-      txt.textContent = _liveFormat(events[i]);
+      txt.innerHTML = _liveFormat(events[i]);
       setFreshness();
       el.setAttribute('data-anim', 'in');
     }, 350);
@@ -10479,15 +11326,16 @@ function openRightRailForDetail(idx, detailRow) {
   const bodyEl = drawer.querySelector('#right-rail-body');
   const actionsEl = drawer.querySelector('#right-rail-actions');
 
+  // Wave C-A drawer header: company name gets data-drill="company:{slug}",
+  // score + status chips already carry data-drill from the table row (cloned via scoreHtml/statusHtml).
+  var _drawerCompanySlug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // Build company header element post-innerHTML to avoid deeply nested quote escaping.
   if (headerEl) {
     headerEl.innerHTML = '<button type="button" class="drawer-close" aria-label="Close drawer" onclick="closeRightRail()">✕</button>'
       + '<div class="drawer-title-row">'
       +   logoHtml
       +   '<div class="drawer-title-meta">'
-      +     '<div class="drawer-company">'
-      +       (companyLinkHref
-            ? '<a href="' + _drawerEscape(companyLinkHref) + '" target="_blank" rel="noopener" class="drawer-company-link" title="Open company careers page"><span class="drawer-company-name">' + _drawerEscape(company) + '</span></a>'
-            : '<span class="drawer-company-name">' + _drawerEscape(company) + '</span>')
+      +     '<div class="drawer-company" id="drawer-company-slot">'
       +       (tierHtml || '')
       +     '</div>'
       +     (roleLinkHref
@@ -10496,6 +11344,37 @@ function openRightRailForDetail(idx, detailRow) {
       +   '</div>'
       + '</div>'
       + '<div class="drawer-chip-row">' + scoreHtml + statusHtml + '</div>';
+    // Wire company name drill-in after innerHTML (avoids nested-quote hell).
+    // Prepends before the tier tag in the company slot.
+    var _compSlot = headerEl.querySelector('#drawer-company-slot');
+    if (_compSlot && company) {
+      var _compNameEl;
+      if (companyLinkHref) {
+        _compNameEl = document.createElement('a');
+        _compNameEl.href = companyLinkHref;
+        _compNameEl.target = '_blank';
+        _compNameEl.rel = 'noopener';
+        _compNameEl.className = 'drawer-company-link drill-trigger';
+        _compNameEl.setAttribute('data-drill', 'company:' + _drawerCompanySlug);
+        _compNameEl.title = 'Click for company network + pulse';
+        _compNameEl.addEventListener('click', function(e) { e.preventDefault(); window.drillIn('company', _drawerCompanySlug, e); });
+        _compNameEl.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.drillIn('company', _drawerCompanySlug, e); } });
+      } else {
+        _compNameEl = document.createElement('span');
+        _compNameEl.className = 'drawer-company-name drill-trigger';
+        _compNameEl.setAttribute('role', 'button');
+        _compNameEl.tabIndex = 0;
+        _compNameEl.setAttribute('data-drill', 'company:' + _drawerCompanySlug);
+        _compNameEl.title = 'Click for company network + pulse';
+        _compNameEl.addEventListener('click', function(e) { window.drillIn('company', _drawerCompanySlug, e); });
+        _compNameEl.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.drillIn('company', _drawerCompanySlug, e); } });
+      }
+      var _nameSpan = document.createElement('span');
+      _nameSpan.className = 'drawer-company-name';
+      _nameSpan.textContent = company;
+      _compNameEl.appendChild(_nameSpan);
+      _compSlot.insertBefore(_compNameEl, _compSlot.firstChild);
+    }
     // Wire favicon-load failure → single-letter fallback. Inline onerror=
     // attributes nested inside a JS string of HTML get gnarly with quoting,
     // so we attach the listener after innerHTML is set.
@@ -10507,6 +11386,66 @@ function openRightRailForDetail(idx, detailRow) {
         fb.textContent = img.dataset.fallback || '?';
         img.replaceWith(fb);
       }, { once: true });
+    }
+
+    // ── Fix 5 (score-rationale): "Why N.N?" disclosure below chip row ─────────
+    // Reads pre-baked provenance summaries from window._waveCB.provenanceSummaries.
+    // Uses renderProvenanceCard (via metric drill-in) for the expanded view.
+    if (headerEl && num) {
+      var _cb5 = window._waveCB || {};
+      var _ps5 = (_cb5.provenanceSummaries || {})[String(num)];
+      if (_ps5) {
+        var scoreVal = row && row.dataset.score ? parseFloat(row.dataset.score) : null;
+        var scoreStr = scoreVal !== null && !isNaN(scoreVal) ? scoreVal.toFixed(1) : '';
+        var _whyDisclosure = document.createElement('div');
+        _whyDisclosure.className = 'drawer-why-disclosure';
+        var _whyToggleId = 'drawer-why-toggle-' + num;
+        var _reportHref = row ? (row.querySelector('a[href^="reports/"]') || {}).href : '';
+
+        // Gates chips (passed ✅, failed ⚠️)
+        var _gateChips = '';
+        if (_ps5.gatesPassed && _ps5.gatesPassed.length) {
+          _gateChips += _ps5.gatesPassed.map(function(g) { return '<span class="why-chip why-chip-pass">✅ ' + g + '</span>'; }).join('');
+        }
+        if (_ps5.gatesFailed && _ps5.gatesFailed.length) {
+          _gateChips += _ps5.gatesFailed.map(function(g) { return '<span class="why-chip why-chip-fail">⚠️ ' + g + '</span>'; }).join('');
+        }
+        if (_ps5.softGaps && _ps5.softGaps.length) {
+          _gateChips += _ps5.softGaps.slice(0, 3).map(function(g) { return '<span class="why-chip why-chip-soft">⚠ ' + g.slice(0, 40) + '</span>'; }).join('');
+        }
+
+        _whyDisclosure.innerHTML =
+          '<button type="button" class="why-summary-btn" aria-expanded="false" aria-controls="' + _whyToggleId + '">'
+          + (scoreStr ? 'Why ' + scoreStr + '?' : 'Score rationale')
+          + '<span class="why-summary-text">' + (_ps5.summary || '') + '</span>'
+          + '</button>'
+          + '<div id="' + _whyToggleId + '" class="why-expanded" hidden>'
+          + (_gateChips ? '<div class="why-chips">' + _gateChips + '</div>' : '')
+          + (_reportHref ? '<div style="margin-top:8px"><a href="' + _reportHref + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue-fg)">See full report →</a>'
+            + ' &nbsp; <button type="button" class="why-provenance-btn" data-prov-row="' + num + '" style="font-size:11px;background:none;border:none;color:var(--blue-fg);cursor:pointer;padding:0;text-decoration:underline">Provenance trail</button></div>'
+            : '')
+          + '</div>';
+
+        // Wire the toggle button and provenance button with addEventListener (avoids inline quote issues)
+        var _whyBtn = _whyDisclosure.querySelector('.why-summary-btn');
+        if (_whyBtn) {
+          _whyBtn.addEventListener('click', function() {
+            var expanded = _whyDisclosure.querySelector('.why-expanded');
+            if (!expanded) return;
+            var isOpen = !expanded.hidden;
+            expanded.hidden = isOpen;
+            _whyBtn.setAttribute('aria-expanded', String(!isOpen));
+          });
+        }
+        var _provBtn = _whyDisclosure.querySelector('.why-provenance-btn[data-prov-row]');
+        if (_provBtn) {
+          var _provRow = _provBtn.dataset.provRow;
+          _provBtn.addEventListener('click', function(e) {
+            if (typeof window.drillIn === 'function') window.drillIn('metric', _provRow + ':score', e);
+          });
+        }
+        headerEl.appendChild(_whyDisclosure);
+      }
     }
   }
   if (bodyEl) {
@@ -10526,20 +11465,26 @@ function openRightRailForDetail(idx, detailRow) {
     setTimeout(() => hydrateNotesIn(bodyEl), 0);
   }
   if (actionsEl) {
+    // P0-2 (2026-05-18): every direct child of #right-rail-actions carries a
+    // data-drill attribute so the toolbar is fully discoverable via the same
+    // mechanism as every other drill-in surface. The onclick still drives the
+    // immediate action (open URL / start build / discard / defer); data-drill
+    // documents the action target for keyboard nav, screen readers, and the
+    // grep-based regression gate in DASHBOARD_INVARIANTS.md.
     const applyBtnHtml = applyHref
-      ? '<button type="button" class="drawer-btn-primary" data-drawer-action="apply">Apply</button>'
-      : '<button type="button" class="drawer-btn-primary" disabled>Apply</button>';
+      ? '<button type="button" class="drawer-btn-primary" data-drawer-action="apply" data-drill="drawer-action:apply:' + (num || '') + '" title="Open original job posting in a new tab">Apply</button>'
+      : '<button type="button" class="drawer-btn-primary" data-drill="drawer-action:apply:' + (num || '') + '" disabled>Apply</button>';
     // "Create materials" — between Apply and Skip. Disabled if there's no
     // row number (e.g. preview rows synthesized without a tracker #).
     const materialsBtnHtml = num
-      ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" title="Build apply-pack (CV + cover letter + DM + intel)">Create materials</button>'
-      : '<button type="button" class="drawer-btn-materials" disabled title="no row number — apply-pack needs a tracker row">Create materials</button>';
+      ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" data-drill="drawer-action:materials:' + num + '" title="Build apply pack (CV + cover letter + outreach + intel)">Generate apply pack</button>'
+      : '<button type="button" class="drawer-btn-materials" data-drill="drawer-action:materials:" disabled title="No row number — apply pack needs a tracker row">Generate apply pack</button>';
     const skipBtnHtml = num
-      ? '<button type="button" data-drawer-action="skip">Skip</button>'
-      : '<button type="button" disabled>Skip</button>';
+      ? '<button type="button" data-drawer-action="skip" data-drill="drawer-action:skip:' + num + '" title="Discard this row — will prompt for a reason">Skip this one</button>'
+      : '<button type="button" data-drill="drawer-action:skip:" disabled>Skip this one</button>';
     const deferBtnHtml = num
-      ? '<button type="button" data-drawer-action="defer">Defer</button>'
-      : '<button type="button" disabled>Defer</button>';
+      ? '<button type="button" data-drawer-action="defer" data-drill="drawer-action:defer:' + num + '" title="Mark Evaluated and close the drawer">Look at this later</button>'
+      : '<button type="button" data-drill="drawer-action:defer:" disabled>Look at this later</button>';
     actionsEl.innerHTML = applyBtnHtml + materialsBtnHtml + skipBtnHtml + deferBtnHtml;
     // Wire actions after innerHTML — keeps the HTML-as-string clean of
     // nested-quote escaping and lets us close the rail in one place.
@@ -10609,6 +11554,60 @@ function openRightRailForDetail(idx, detailRow) {
   }
   _railSelectedIdx = idx;
 
+  // ── Fix 2 (draft-sync-sse): subscribe to draft artifact changes ─────────
+  // Subscribe to /api/draft-updates-stream/{num} when drawer opens.
+  // On message: find the artifact preview block and flash an "Updated" pill.
+  // EventSource is closed when the drawer closes (see closeRightRail).
+  if (typeof EventSource !== 'undefined' && num) {
+    // Close any previous draft SSE before opening a new one
+    if (window._draftUpdateSource) {
+      try { window._draftUpdateSource.close(); } catch (_) {}
+      window._draftUpdateSource = null;
+    }
+    try {
+      var _draftSrc = new EventSource('/api/draft-updates-stream/' + num);
+      window._draftUpdateSource = _draftSrc;
+      _draftSrc.addEventListener('draft-update', function(e) {
+        try {
+          var data = JSON.parse(e.data);
+          // Find the artifact list area in the drawer body
+          var dBody = document.getElementById('right-rail-body');
+          if (!dBody) return;
+          // If there's already an artifact list element, update it
+          var artifactEl = dBody.querySelector('.drawer-draft-artifacts');
+          if (artifactEl && data.files && data.files.length) {
+            artifactEl.innerHTML = data.files.map(function(f) {
+              return '<span class="drawer-draft-artifact-chip">' + f.replace(/[<>&"]/g, function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}) + '</span>';
+            }).join('');
+          }
+          // Flash "Updated" pill
+          var pill = document.getElementById('drawer-draft-updated-pill');
+          if (!pill) {
+            pill = document.createElement('div');
+            pill.id = 'drawer-draft-updated-pill';
+            pill.className = 'drawer-draft-updated-pill';
+            pill.textContent = 'Updated';
+            var hdr = document.getElementById('right-rail-header');
+            if (hdr) hdr.appendChild(pill);
+          }
+          pill.classList.remove('fade-out');
+          void pill.offsetWidth; // force reflow
+          pill.style.opacity = '1';
+          clearTimeout(window._draftPillTimer);
+          window._draftPillTimer = setTimeout(function() {
+            pill.style.transition = 'opacity .4s';
+            pill.style.opacity = '0';
+          }, 2000);
+        } catch (_) {}
+      });
+      _draftSrc.onerror = function() {
+        // Silently close on error — no-op if server-side unavailable
+        try { _draftSrc.close(); } catch (_) {}
+        if (window._draftUpdateSource === _draftSrc) window._draftUpdateSource = null;
+      };
+    } catch (_) {}
+  }
+
   // Wave C-A Item 6: Inject sticky prev/next ribbon into drawer body.
   // Keyboard: [ prev, ] next. Uses window._allDrillRows (seeded below).
   _injectPrevNextRibbon(idx);
@@ -10628,6 +11627,11 @@ function closeRightRail() {
   document.body.classList.remove('right-rail-open');
   document.querySelectorAll('tr.row.row-selected').forEach(el => el.classList.remove('row-selected'));
   _railSelectedIdx = null;
+  // Fix 2 (draft-sync-sse): close the draft SSE connection on drawer close
+  if (window._draftUpdateSource) {
+    try { window._draftUpdateSource.close(); } catch (_) {}
+    window._draftUpdateSource = null;
+  }
 }
 
 // Apply/Skip/Defer in the drawer footer reuse the existing /api/status
@@ -10786,7 +11790,23 @@ window.setUseInlineExpand = setUseInlineExpand;
 // that does NOT conflict with the existing drawer or status-popover.
 
 // ── Wave C-B: baked build-time data ────────────────────────────────────────
-window._waveCB = JSON.parse('${waveCBDataJson}');
+// Base64-encoded JSON (see P0-2 fix in scripts/build-dashboard.mjs — apostrophes
+// in the source data broke the previous \\' escape strategy).
+window._waveCB = (function() {
+  try {
+    var b64 = '${waveCBDataJson}';
+    if (!b64) return {};
+    // atob → UTF-8 decode (TextDecoder handles non-ASCII chars in source data)
+    var binary = atob(b64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    var jsonStr = new TextDecoder('utf-8').decode(bytes);
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.warn('[build] _waveCB decode failed:', e.message);
+    return {};
+  }
+})();
 
 var drillInRegistry = {};
 
@@ -10809,42 +11829,255 @@ _drillInRegister('role', function(id) {
   }
   return { title: 'Role #' + num, html: '<p class="muted">Row not found — try opening from the table.</p>' };
 });
+// ── Enhanced company profile drill (9-section) ─────────────────────────────
+// Sections: Header · Toxicity · Comp range · Employee reviews · Social signals
+//           · IPO/funding · Funding cycles · Active roles · Network leverage
+//
+// Sections backed by real data render immediately.
+// Missing-data sections show a "Pending research" placeholder + Refresh button.
+//
+// Refresh buttons write to data/company-research-queue/{slug}.json — a flag
+// file that a future cron worker (scripts/company-research-worker.mjs, not yet
+// built) picks up to populate the section. They do NOT call researcher inline
+// (would hang: researcher only fires from within the Claude Code agent context).
+//
+// §10 Toxicity Composite: if data/toxicity/{slug}.json exists, use it.
+// Otherwise show placeholder. Score 0-10 (0=healthiest, 10=avoid).
 _drillInRegister('company', function(id) {
   var slug = id || '';
   var compName = slug.split('-').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
-  // Wave C-B enrichment: network contacts + company pulse (pre-baked in _waveCB.companyData)
   var cb = window._waveCB || {};
-  var netHtml = '';
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  function _esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function _dcard(title, content, extraCls) {
+    return '<div class="dcard company-profile-section' + (extraCls ? ' ' + extraCls : '') + '">'
+      + '<div class="dcard-label">' + title + '</div>'
+      + '<div class="company-profile-body">' + content + '</div>'
+      + '</div>';
+  }
+  function _pendingCard(title, sectionKey) {
+    // data-slug + data-refresh-section handled by delegated cp-refresh-btn listener
+    return _dcard(title,
+      '<span class="cp-pending-label">Pending research</span>'
+      + '<button type="button" class="cp-refresh-btn" data-refresh-section="' + _esc(sectionKey) + '"'
+      + ' data-slug="' + _esc(slug) + '"'
+      + '>Refresh</button>',
+      'company-profile-section--pending');
+  }
+
+  // ── Section 1: Header (always available) ────────────────────────────────
+  var tableRows = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
+  var scores = tableRows.map(function(r) { return parseFloat(r.dataset.score)||0; }).filter(Boolean);
+  var scoreMin = scores.length ? Math.min.apply(null,scores).toFixed(1) : '—';
+  var scoreMax = scores.length ? Math.max.apply(null,scores).toFixed(1) : '—';
+  var scoreMed = scores.length ? (scores.reduce(function(a,b){return a+b;},0)/scores.length).toFixed(1) : '—';
+
+  // Determine tier badge from most common archetype
+  var archCounts = {};
+  tableRows.forEach(function(r) {
+    var a = r.dataset.archetype || '';
+    if (a) archCounts[a] = (archCounts[a]||0) + 1;
+  });
+  var topArch = Object.keys(archCounts).sort(function(a,b){ return archCounts[b]-archCounts[a]; })[0] || '';
+
+  var headerHtml = '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">'
+    + '<span style="font-size:16px;font-weight:700;color:var(--text)">' + _esc(compName) + '</span>'
+    + (topArch ? '<span class="tier-tag" style="font-size:11px">' + _esc(topArch) + '</span>' : '')
+    + '</div>'
+    + (scores.length ? '<div style="font-size:12px;color:var(--text-3);margin-top:4px">'
+      + 'Score range: <strong>' + scoreMin + '</strong> – <strong>' + scoreMax + '</strong>'
+      + ' &middot; avg <strong>' + scoreMed + '</strong>'
+      + ' &middot; ' + scores.length + ' evaluated role' + (scores.length===1?'':'s')
+      + '</div>'
+      : '<div style="font-size:12px;color:var(--text-4);margin-top:4px">No evaluated roles yet</div>');
+
+  // ── Section 2: Toxicity score ────────────────────────────────────────────
+  // Reads window._waveCB.toxicity[slug] if baked at build time.
+  // Fallback: pending-research placeholder with refresh button.
+  var toxData = ((cb.toxicity || {})[slug]) || null;
+  var toxHtml;
+  if (toxData && typeof toxData.score === 'number') {
+    var txScore = toxData.score;
+    var txColor = txScore <= 2 ? 'var(--green-fg,#16a34a)' : txScore <= 5 ? 'var(--amber-fg,#d97706)' : 'var(--red-fg,#dc2626)';
+    var txLabel = txScore <= 2 ? 'Healthy' : txScore <= 5 ? 'Caution' : 'Avoid';
+    var drivers = (toxData.drivers || []).slice(0,4);
+    toxHtml = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+      + '<span style="font-size:24px;font-weight:700;color:' + txColor + '">' + txScore + '</span>'
+      + '<span style="font-size:11px;font-weight:600;color:' + txColor + '">' + txLabel + '</span>'
+      + '<span style="font-size:11px;color:var(--text-4)">/10 · 0=healthiest</span>'
+      + '</div>'
+      + (drivers.length ? '<ul style="font-size:11px;color:var(--text-3);margin:0;padding:0 0 0 14px">'
+        + drivers.map(function(d){return '<li>' + _esc(d) + '</li>';}).join('')
+        + '</ul>' : '');
+    toxHtml = _dcard('Toxicity Score', toxHtml);
+  } else {
+    toxHtml = _pendingCard('Toxicity Score', 'toxicity');
+  }
+
+  // ── Section 3: Comp range ────────────────────────────────────────────────
+  var compRanges = [];
+  tableRows.forEach(function(r) {
+    var compText = (r.dataset.comp || r.querySelector && (r.querySelector('.comp-floor-value')||{}).textContent || '').trim();
+    if (compText) compRanges.push(compText);
+  });
+  var compRangeHtml;
+  if (compRanges.length) {
+    compRangeHtml = _dcard('Comp Range (from evals)', compRanges.map(function(c){
+      return '<span style="font-size:12px;color:var(--text-2)">' + _esc(c) + '</span>';
+    }).join(' &middot; '));
+  } else {
+    compRangeHtml = _pendingCard('Comp Range', 'comp-range');
+  }
+
+  // ── Section 4: Employee reviews ──────────────────────────────────────────
+  var reviewData = ((cb.companyReviews || {})[slug]) || null;
+  var reviewHtml;
+  if (reviewData) {
+    var revRows = '';
+    if (reviewData.glassdoor) revRows += '<div style="font-size:12px;color:var(--text-2);margin-bottom:4px"><strong>Glassdoor:</strong> ' + _esc(reviewData.glassdoor) + '</div>';
+    if (reviewData.blind)     revRows += '<div style="font-size:12px;color:var(--text-2);margin-bottom:4px"><strong>Blind:</strong> ' + _esc(reviewData.blind) + '</div>';
+    if (reviewData.pros)      revRows += '<div style="font-size:11px;color:var(--green-fg,#16a34a)">+ ' + _esc(reviewData.pros) + '</div>';
+    if (reviewData.cons)      revRows += '<div style="font-size:11px;color:var(--red-fg,#dc2626)">- ' + _esc(reviewData.cons) + '</div>';
+    reviewHtml = revRows ? _dcard('Employee Reviews', revRows) : _pendingCard('Employee Reviews', 'reviews');
+  } else {
+    reviewHtml = _pendingCard('Employee Reviews', 'reviews');
+  }
+
+  // ── Section 5: Social signals (pulse) ────────────────────────────────────
   var pulseHtml = '';
-  try { var cd = (cb.companyData || {})[slug]; if (cd) { netHtml = cd.networkHtml||''; pulseHtml = cd.pulseHtml||''; } } catch(_) {}
+  try { var cd = (cb.companyData || {})[slug]; if (cd) pulseHtml = cd.pulseHtml || ''; } catch(_) {}
+  var socialHtml = pulseHtml
+    ? _dcard('Social Signals (last 7d)', pulseHtml)
+    : _pendingCard('Social Signals', 'social-signals');
+
+  // ── Section 6: IPO / Funding ─────────────────────────────────────────────
+  var ipoData = ((cb.companyFunding || {})[slug]) || null;
+  var ipoHtml;
+  if (ipoData && (ipoData.stage || ipoData.status)) {
+    var ipoRows = '';
+    if (ipoData.status)     ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>Status:</strong> ' + _esc(ipoData.status) + '</div>';
+    if (ipoData.stage)      ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>Stage:</strong> ' + _esc(ipoData.stage) + '</div>';
+    if (ipoData.valuation)  ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>Valuation:</strong> ' + _esc(ipoData.valuation) + '</div>';
+    if (ipoData.ipo_target) ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>IPO target:</strong> ' + _esc(ipoData.ipo_target) + '</div>';
+    ipoHtml = _dcard('IPO / Funding', ipoRows);
+  } else {
+    ipoHtml = _pendingCard('IPO / Funding', 'ipo-funding');
+  }
+
+  // ── Section 7: Funding cycles ────────────────────────────────────────────
+  var fundingRounds = (ipoData && ipoData.rounds) || null;
+  var fundingHtml;
+  if (fundingRounds && fundingRounds.length) {
+    var roundRows = fundingRounds.map(function(r) {
+      return '<div style="display:flex;gap:8px;font-size:11.5px;color:var(--text-2);padding:3px 0;border-bottom:1px solid var(--border)">'
+        + '<span style="flex:0 0 60px;color:var(--text-4)">' + _esc(r.date||'') + '</span>'
+        + '<span style="font-weight:600">' + _esc(r.series||'') + '</span>'
+        + (r.amount ? '<span style="color:var(--green-fg,#16a34a)">' + _esc(r.amount) + '</span>' : '')
+        + (r.lead ? '<span style="color:var(--text-3)">' + _esc(r.lead) + '</span>' : '')
+        + '</div>';
+    }).join('');
+    fundingHtml = _dcard('Funding Cycles', roundRows);
+  } else {
+    fundingHtml = _pendingCard('Funding Cycles', 'funding-cycles');
+  }
+
+  // ── Section 8: Active roles at this company (always available) ───────────
+  var netHtml = '';
+  try { var cd2 = (cb.companyData || {})[slug]; if (cd2) netHtml = cd2.networkHtml || ''; } catch(_) {}
+
+  // ── Section 9: Network leverage (always available if graph populated) ────
+  var networkSection = netHtml
+    ? _dcard('Network Leverage', netHtml)
+    : _dcard('Network Leverage', '<p style="font-size:12px;color:var(--text-4)">Run <code>node scripts/build-network-graph.mjs</code> to populate warm-intro paths.</p>');
+
+  // ── Refresh-all button ───────────────────────────────────────────────────
+  // Queues a researcher-agent run by writing data/company-research-queue/{slug}.json.
+  // The runtime-bridge gap (researcher only fires from within Claude Code agent context)
+  // means we cannot invoke it inline here — the queue file is picked up by a future
+  // cron worker (scripts/company-research-worker.mjs). Clicking Refresh-all queues
+  // ALL sections; individual Refresh buttons queue just their section.
+  // data-slug + data-refresh-section="all" handled by delegated cp-refresh-btn listener
+  var refreshAllBtn = '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)">'
+    + '<button type="button" class="cp-refresh-btn cp-refresh-all-btn"'
+    + ' data-slug="' + _esc(slug) + '" data-refresh-section="all">'
+    + 'Refresh all sections</button>'
+    + '<span style="font-size:10px;color:var(--text-4);margin-left:8px">Queues researcher agent run — picks up on next cron tick</span>'
+    + '</div>';
+
+  // ── Assemble ─────────────────────────────────────────────────────────────
+  var bodyHtml = '<div class="company-profile-header">' + headerHtml + '</div>'
+    + toxHtml
+    + compRangeHtml
+    + reviewHtml
+    + socialHtml
+    + ipoHtml
+    + fundingHtml
+    + '<div id="drill-company-rows"></div>'
+    + networkSection
+    + refreshAllBtn;
+
   return {
-    title: compName + ' — all roles',
-    html: '<p class="muted" style="font-size:12px">Showing all evaluated roles at <strong>' + compName + '</strong>.</p>'
-      + (pulseHtml ? '<div style="margin:8px 0 4px">' + pulseHtml + '</div>' : '')
-      + (netHtml ? '<div style="margin:8px 0 4px">' + netHtml + '</div>' : '')
-      + '<div id="drill-company-rows"></div>',
+    title: compName + ' — company profile',
+    html: bodyHtml,
     onMount: function(el) {
-      var rows = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
-      if (!rows.length) {
-        var div = el.querySelector('#drill-company-rows');
-        if (div) div.innerHTML = '<p class="muted" style="font-size:12px">No evaluated roles found for this company.</p>';
-        return;
-      }
-      var items = rows.map(function(r) {
-        var role = (r.querySelector('td.role-cell') || {}).innerText || '';
-        var score = r.dataset.score || '';
-        var status = r.dataset.status || '';
-        var idx = r.dataset.rowId || '';
-        return '<div class="drill-company-row" onclick="closeTopLevelDrillIn();toggleDetail(\\'' + idx + '\\')" style="cursor:pointer;padding:6px 8px;border-radius:5px;margin:3px 0;background:var(--surface-2);display:flex;align-items:center;gap:10px">'
-          + '<span style="font-size:11px;font-weight:600;color:var(--green)">' + (parseFloat(score)||0).toFixed(1) + '</span>'
-          + '<span style="flex:1;font-size:12.5px">' + (role||'').slice(0,80) + '</span>'
-          + '<span style="font-size:11px;color:var(--text-3)">' + status + '</span>'
-          + '</div>';
-      }).join('');
+      // Section 8: render active roles
+      var rowEls = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
       var div = el.querySelector('#drill-company-rows');
-      if (div) div.innerHTML = items;
+      if (div) {
+        if (!rowEls.length) {
+          div.innerHTML = _dcard('Active Roles', '<p style="font-size:12px;color:var(--text-4)">No evaluated roles found for this company.</p>');
+        } else {
+          var items = rowEls.map(function(r) {
+            var role = (r.querySelector('td.role-cell') || {}).innerText || '';
+            var score = r.dataset.score || '';
+            var status = r.dataset.status || '';
+            var idx = r.dataset.rowId || '';
+            return '<div class="drill-company-row" onclick="closeTopLevelDrillIn();toggleDetail(\\'' + idx + '\\')" style="cursor:pointer;padding:6px 8px;border-radius:5px;margin:3px 0;background:var(--surface-2);display:flex;align-items:center;gap:10px">'
+              + '<span style="font-size:11px;font-weight:600;color:var(--green)">' + (parseFloat(score)||0).toFixed(1) + '</span>'
+              + '<span style="flex:1;font-size:12.5px">' + _esc(role||'').slice(0,80) + '</span>'
+              + '<span style="font-size:11px;color:var(--text-3)">' + _esc(status) + '</span>'
+              + '</div>';
+          }).join('');
+          div.innerHTML = _dcard('Active Roles (' + rowEls.length + ')', items);
+        }
+      }
     },
   };
+});
+
+// ── Company research queue helper (Refresh button handler) ─────────────────
+// Writes data/company-research-queue/{slug}.json via /api/queue-research.
+// If the server endpoint is unavailable (static mode), logs to console.
+// Does NOT call researcher directly — the runtime-bridge gap means researcher
+// can only fire from within the Claude Code agent context.
+window._cpQueueRefresh = function(slug, section, btn) {
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Queued…';
+  }
+  fetch('/api/queue-research', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug: slug, section: section, ts: new Date().toISOString() }),
+  }).then(function(r) {
+    if (btn) { btn.textContent = r.ok ? 'Queued ✓' : 'Queue failed'; }
+    if (!r.ok) console.warn('[company-profile] /api/queue-research returned', r.status);
+  }).catch(function(err) {
+    if (btn) btn.textContent = 'Queue failed';
+    console.warn('[company-profile] queue-research fetch error:', err.message);
+  });
+};
+// Delegated click handler for .cp-refresh-btn (avoids inline onclick string-quoting issues).
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.cp-refresh-btn');
+  if (!btn) return;
+  var slug = btn.dataset.slug || '';
+  var section = btn.dataset.refreshSection || btn.dataset.refresh_section || 'all';
+  if (slug) window._cpQueueRefresh(slug, section, btn);
 });
 _drillInRegister('status', function(id) {
   var status = id || '';
@@ -10887,7 +12120,7 @@ _drillInRegister('score', function(id) {
   return { title: 'Score context: ' + range, html: html };
 });
 _drillInRegister('comp', function(id) {
-  // id format: "{base}:{role}:{company}" or just "{base}"
+  // id format: "{base}:{num}:{company-slug}" or just "{base}"
   var parts = (id || '').split(':');
   var base = parseFloat(parts[0]) || 0;
   var role = parts[1] || '';
@@ -10900,13 +12133,58 @@ _drillInRegister('comp', function(id) {
   var playbookHtml = (base >= 300000 && cb.negotiationPlaybookHtml) ? cb.negotiationPlaybookHtml : '';
   // Equity sliders (baked HTML per role)
   var equityHtml = (cb.equitySliders || {})[id] || '';
+
+  // Fix 4 (equity-auto-activate): auto-render equity sliders ABOVE negotiation
+  // playbook when comp >= $300K. Collapse preference persists per row via localStorage.
+  var equityBlock = '';
+  if (base >= 300000 && equityHtml) {
+    var collapseKey = 'careerops.equity-collapsed:' + id;
+    var isCollapsed = false;
+    try { isCollapsed = !!localStorage.getItem(collapseKey); } catch (_) {}
+    var blockId = 'equity-auto-block-' + id.replace(/[^a-z0-9]/gi, '_');
+    equityBlock = '<div id="' + blockId + '" data-collapse-key="' + collapseKey.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:12px">'
+      + '<span style="display:inline-block;background:color-mix(in srgb,var(--amber-fg,#d97706) 15%,var(--surface));color:var(--amber-fg,#d97706);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em">Auto-opened because comp &ge; $300K</span>'
+      + '<button type="button" class="equity-auto-collapse-btn" style="font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px 8px;cursor:pointer;color:var(--text-2)">'
+      + (isCollapsed ? 'Expand' : 'Collapse') + '</button>'
+      + '</div>'
+      + '<div class="equity-auto-inner"' + (isCollapsed ? ' hidden' : '') + '>'
+      + equityHtml
+      + '</div>'
+      + '</div>';
+  }
+
   var html = '<p style="font-size:12px;margin-bottom:8px">Comp intelligence'
     + (base ? ' for <strong>$' + Math.round(base/1000) + 'K base</strong>' : '')
     + (company ? ' at <strong>' + company + '</strong>' : '') + '</p>'
     + peerHtml
-    + (equityHtml ? '<div style="margin-top:12px">' + equityHtml + '</div>' : '')
+    + equityBlock
+    + (base < 300000 && equityHtml ? '<div style="margin-top:12px">' + equityHtml + '</div>' : '')
     + (playbookHtml ? '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;font-weight:600">Negotiation playbook</summary>' + playbookHtml + '</details>' : '');
-  return { title: 'Comp intelligence', html: html };
+  return {
+    title: 'Comp intelligence',
+    html: html,
+    onMount: function(el) {
+      // Fix 4: wire collapse/expand button for equity-auto-block via addEventListener
+      var block = el.querySelector('[data-collapse-key]');
+      if (!block) return;
+      var collapseK = block.dataset.collapseKey || '';
+      var btn = block.querySelector('.equity-auto-collapse-btn');
+      var inner = block.querySelector('.equity-auto-inner');
+      if (!btn || !inner) return;
+      btn.addEventListener('click', function() {
+        if (inner.hidden) {
+          inner.hidden = false;
+          btn.textContent = 'Collapse';
+          try { localStorage.removeItem(collapseK); } catch (_) {}
+        } else {
+          inner.hidden = true;
+          btn.textContent = 'Expand';
+          try { localStorage.setItem(collapseK, '1'); } catch (_) {}
+        }
+      });
+    },
+  };
 });
 _drillInRegister('gap', function(id) {
   // id format: "{rowId}:{gapKey}" or just "{gapKey}"
@@ -10923,9 +12201,9 @@ _drillInRegister('gap', function(id) {
       var strategy = chipEl.dataset.strategy || '';
       var detail   = chipEl.dataset.detail || '';
       var why      = chipEl.dataset.why || '';
-      cardHtml = (detail ? '<div class="dcard"><div class="dcard-label">GAP DETAIL</div><div class="dcard-body">' + detail + '</div></div>' : '')
-        + (strategy ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">ADDRESSING STRATEGY</div><div class="dcard-body">' + strategy + '</div></div>' : '')
-        + (why ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">WHY GAP DOES NOT BLOCK</div><div class="dcard-body">' + why + '</div></div>' : '');
+      cardHtml = (detail ? '<div class="dcard"><div class="dcard-label">About this gap</div><div class="dcard-body">' + detail + '</div></div>' : '')
+        + (strategy ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">How to close this gap</div><div class="dcard-body">' + strategy + '</div></div>' : '')
+        + (why ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">Why this gap does not block you</div><div class="dcard-body">' + why + '</div></div>' : '');
     }
   }
   if (!cardHtml) {
@@ -11081,6 +12359,147 @@ _drillInRegister('tpgm-gaps', function(id) {
     html: '<p style="font-size:12px;margin-bottom:8px">Open gap points &mdash; each represents a bridgeable PM-credibility signal:</p>'
       + items
       + '<p style="font-size:11px;color:var(--text-4);margin-top:10px">Add evidence via <button type="button" class="dcard-btn" style="font-size:11px;padding:2px 8px" onclick="drillIn(&quot;ingest-form&quot;,&quot;&quot;,event)">+ weekly ingest</button> to close gaps.</p>',
+  };
+});
+
+// Readiness drill-in (TPgM relocation 2026-05-17):
+// Opens the full TPgM widget content — pre-baked at build time into
+// window._waveCB.tpgmWidgetHtml — in the top-level drill-in overlay.
+// All existing interactivity (gap-points chip, ingest button) is preserved
+// because the widget HTML already has inline onclick handlers pointing to
+// drillIn('tpgm-gaps', ...) and drillIn('ingest-form', ...).
+_drillInRegister('readiness', function() {
+  var cb = window._waveCB || {};
+  var widgetHtml = cb.tpgmWidgetHtml || '';
+  if (!widgetHtml) {
+    return {
+      title: 'PM-readiness (TPgM)',
+      html: '<p style="font-size:12px;color:var(--text-3)">No TPgM data available. Run <code>node scripts/tpgm-tracker.mjs</code> to populate.</p>',
+    };
+  }
+  return {
+    title: 'PM-readiness (TPgM credibility)',
+    html: widgetHtml,
+  };
+});
+
+// Fix 2: network-leverage drill-in
+_drillInRegister('network-leverage', function() {
+  return {
+    title: 'Network leverage',
+    html: '<p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 6px">340 press contacts<\/p>'
+      + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">Warm-intro paths to companies in your apply-now queue are computed by <code>lib\/network-graph.mjs<\/code> on each dashboard build. The count in the tile updates live when network-graph.json is populated.<\/p>'
+      + '<p style="font-size:11px;color:var(--text-4)">Run <code>node scripts\/build-network-graph.mjs<\/code> to refresh warm-intro paths. Result populates <code>data\/network-graph.json<\/code>.<\/p>',
+  };
+});
+
+// P1-2 (2026-05-18): pack-stage-result drill-in — renders the SubAgentOutput
+// returned by /api/build-pack-stage for the 5 slash-command sub-agents
+// (cv-tailor, cover-letter, why-statement, linkedin-dm, form-fields). The
+// invokeBuildPackStage helper caches the result on window._packStageResults
+// keyed by "{rowId}:{stage}", then calls window.drillIn('pack-stage-result',
+// key) to surface this popout.
+_drillInRegister('pack-stage-result', function(id) {
+  var cache = window._packStageResults || {};
+  var result = cache[id] || null;
+  var parts = String(id || '').split(':');
+  var rowId = parts[0] || '';
+  var stage = parts[1] || '';
+  if (!result) {
+    return {
+      title: '/' + stage + ' result',
+      html: '<p style="font-size:13px;color:var(--text-3);margin:0">No cached result for row #' + rowId + ' stage <code>' + stage + '<\/code>. Re-run the slash command to populate.<\/p>',
+    };
+  }
+  function _esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  // Status chip
+  var statusColor = result.status === 'ok' ? 'var(--green-fg)'
+    : result.status === 'error' ? '#dc2626'
+    : 'var(--text-3)';
+  var statusChip = '<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,' + statusColor + ' 14%,var(--surface));color:' + statusColor + ';border:1px solid ' + statusColor + ';font-weight:600">' + _esc(result.status || 'unknown') + '<\/span>';
+  // Diagnostics row
+  var diag = result.diagnostics || {};
+  var diagHtml = '';
+  if (diag && Object.keys(diag).length) {
+    var parts2 = [];
+    if (typeof diag.duration_ms === 'number') parts2.push('<strong>' + (diag.duration_ms / 1000).toFixed(1) + 's<\/strong> wall-clock');
+    if (typeof diag.cost_estimate_usd === 'number') parts2.push('$' + diag.cost_estimate_usd.toFixed(3) + ' est');
+    if (typeof diag.tokens_used === 'number') parts2.push(diag.tokens_used.toLocaleString() + ' tokens');
+    if (diag.model_used) parts2.push('<code style="font-size:11px">' + _esc(diag.model_used) + '<\/code>');
+    if (parts2.length) {
+      diagHtml = '<div style="font-size:11px;color:var(--text-3);margin:0 0 12px;display:flex;gap:10px;flex-wrap:wrap">' + parts2.join('<span style="color:var(--border)">·<\/span>') + '<\/div>';
+    }
+  }
+  // Output body
+  var bodyHtml = '';
+  if (result.status === 'error') {
+    bodyHtml = '<div style="font-size:13px;line-height:1.5;color:var(--text-2);background:color-mix(in srgb,#dc2626 8%,var(--surface));border:1px solid color-mix(in srgb,#dc2626 30%,var(--border));border-radius:var(--radius-sm);padding:12px;margin:0 0 8px">'
+      + '<strong style="color:#dc2626">Error:<\/strong> ' + _esc(result.error || 'unknown failure')
+      + '<\/div>';
+  } else if (stage === 'form-fields' && Array.isArray(result.output)) {
+    bodyHtml = '<div style="font-size:13px;line-height:1.5">'
+      + result.output.map(function(qa) {
+          return '<div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">'
+            + '<div style="font-weight:600;color:var(--text);margin-bottom:4px">' + _esc(qa.question || qa.q || '(no question)') + '<\/div>'
+            + '<div style="color:var(--text-2);white-space:pre-wrap">' + _esc(qa.answer || qa.a || '(no answer)') + '<\/div>'
+            + '<\/div>';
+        }).join('')
+      + '<\/div>';
+  } else if (typeof result.output === 'string') {
+    bodyHtml = '<pre style="font-size:12.5px;line-height:1.55;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;white-space:pre-wrap;word-break:break-word;margin:0;max-height:520px;overflow:auto">'
+      + _esc(result.output)
+      + '<\/pre>';
+  } else if (result.output) {
+    bodyHtml = '<pre style="font-size:12px;line-height:1.4;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;white-space:pre-wrap;word-break:break-word;margin:0;max-height:520px;overflow:auto">'
+      + _esc(JSON.stringify(result.output, null, 2))
+      + '<\/pre>';
+  } else {
+    bodyHtml = '<p style="font-size:12px;color:var(--text-3);margin:0">No output payload returned.<\/p>';
+  }
+  var titles = {
+    'cv-tailor': 'CV tailored',
+    'cover-letter': 'Cover letter',
+    'why-statement': 'Why statement',
+    'linkedin-dm': 'LinkedIn DM',
+    'form-fields': 'Application form answers',
+  };
+  return {
+    title: (titles[stage] || stage) + ' · row #' + rowId,
+    html: '<div style="margin:0 0 10px">' + statusChip + '<\/div>'
+      + diagHtml
+      + bodyHtml,
+  };
+});
+
+// P0-2 (2026-05-18): drawer-action drill-in — explains what each
+// drawer-action-bar button does. Triggered when a screen reader, keyboard
+// user, or developer follows the data-drill attribute on Apply / Generate
+// apply pack / Skip / Look at this later. The button's onclick still drives
+// the primary action; this popout exists so the attribute resolves to
+// something meaningful rather than being inert documentation.
+_drillInRegister('drawer-action', function(id) {
+  var parts = String(id || '').split(':');
+  var action = parts[0] || '';
+  var num = parts[1] || '';
+  var titles = {
+    apply: 'Apply (opens external posting)',
+    materials: 'Generate apply pack',
+    skip: 'Skip this one',
+    defer: 'Look at this later',
+  };
+  var descriptions = {
+    apply: 'Opens the original job posting in a new browser tab. The dashboard does not submit the application — you do that on the company page, then mark the row <strong>Applied<\/strong> here.',
+    materials: 'Kicks off the apply-pack pipeline (~$2–5, ~3–5 min wall-clock). Outputs to <code>apply-pack\/{padded-num}-{slug}\/<\/code> with CV, cover letter, why-statement, LinkedIn DM, and form-field answers. You review every artifact before submitting.',
+    skip: 'Marks this row <strong>Discarded<\/strong> after prompting for a reason (comp, geography, culture, skill-gap, ethics, stage, velocity, role-shape, fit, other). The reason flows into <code>data\/discard-reasons.jsonl<\/code> so the next eval run can learn.',
+    defer: 'Marks this row <strong>Evaluated<\/strong> and closes the drawer. Use this when you want to revisit later without discarding the row.',
+  };
+  return {
+    title: titles[action] || 'Drawer action',
+    html: '<p style="font-size:13px;line-height:1.5;color:var(--text-2);margin:0 0 12px">' + (descriptions[action] || 'Documented drawer-toolbar action.') + '<\/p>'
+      + (num ? '<p style="font-size:11px;color:var(--text-3);margin:0">Targets row #' + num + ' · click the button in the drawer to execute<\/p>' : ''),
   };
 });
 
@@ -11313,6 +12732,13 @@ document.addEventListener('keydown', function(e) {
 var TOP_OF_PIPE_DATA = ${topOfPipeJson};
 var TOP_OF_PIPE_DISMISS_KEY = 'careerops.top-of-pipe-dismissed';
 
+// ── Tonight's pick callout (enriched 2026-05-17) ────────────────────────────
+var TONIGHT_PICK_DATA = ${tonightPickJson};
+var TONIGHT_PICK_QUEUE = ${tonightPickQueueJson};
+var TONIGHT_PICK_TODAY = '${_tonightPickTodayStr}';
+var TONIGHT_PICK_DISMISS_KEY = 'careerops.tonight-pick-dismissed-' + TONIGHT_PICK_TODAY;
+var TONIGHT_PICK_SKIP_KEY  = 'careerops.tonight-pick-skipped-' + TONIGHT_PICK_TODAY;
+
 function _topOfPipeGetDismissed() {
   try {
     var stored = localStorage.getItem(TOP_OF_PIPE_DISMISS_KEY);
@@ -11448,6 +12874,421 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initTopOfPipe);
 } else {
   initTopOfPipe();
+}
+
+// ── Tonight's pick callout logic (enriched 2026-05-17) ─────────────────────
+// _currentPickIdx: index into TONIGHT_PICK_QUEUE for the currently shown pick.
+// "Pick another" cycles to next non-skipped index and re-renders the card.
+var _currentPickIdx = 0;
+
+function initTonightPick() {
+  var el = document.getElementById('tonight-pick-callout');
+  if (!el) return;
+  if (!TONIGHT_PICK_DATA) { el.hidden = true; return; }
+
+  // Check dismiss for today
+  var dismissed = false;
+  try { dismissed = !!localStorage.getItem(TONIGHT_PICK_DISMISS_KEY); } catch (_) {}
+  if (dismissed) { el.hidden = true; return; }
+
+  // Check if any row was applied today — if so, hide callout
+  var appliedToday = Array.from(document.querySelectorAll('tr.row[data-status="applied"]')).some(function(r) {
+    var dateEl = r.querySelector('.meta-chip');
+    return dateEl && dateEl.textContent.includes(TONIGHT_PICK_TODAY);
+  });
+  if (appliedToday) { el.hidden = true; return; }
+
+  el.hidden = false;
+}
+
+// Start tonight's apply: scrolls Apply-Now into view and opens the right-rail drawer.
+function tonightPickStart() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowId = pick.rowIdx;
+  if (!rowId) return;
+  var section = document.getElementById('apply-now-section');
+  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(function() {
+    var detail = document.getElementById('detail-' + rowId);
+    if (detail) {
+      var idx = parseInt(rowId.replace(/^apply-/, ''), 10);
+      if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+      else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+    } else if (typeof toggleDetail === 'function') {
+      toggleDetail(rowId);
+    }
+  }, 350);
+}
+
+// Learn more: opens the row drawer (same as clicking the row in Apply-Now).
+function tonightPickLearnMore() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowId = pick.rowIdx;
+  if (!rowId) return;
+  var detail = document.getElementById('detail-' + rowId);
+  if (detail) {
+    var idx = parseInt(rowId.replace(/^apply-/, ''), 10);
+    if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+    else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+  } else if (typeof toggleDetail === 'function') {
+    toggleDetail(rowId);
+  }
+}
+
+// Create materials: shows a progress modal and fires build-pack-stage for each artifact.
+// Stages: parse_jd, fetch_hm_intel, load_corpus, cv-tailor, cover-letter, linkedin-dm, form-fields.
+// Polls pack.json via /api/draft-updates-stream/{num} SSE or 2s interval.
+var _tpCreateAbortCtrl = null;
+var TONIGHT_PICK_STAGES = [
+  { id: 'parse_jd',      label: 'Parse JD' },
+  { id: 'fetch_hm_intel',label: 'Fetch HM intel' },
+  { id: 'load_corpus',   label: 'Load corpus' },
+  { id: 'cv-tailor',     label: 'Tailor CV' },
+  { id: 'cover-letter',  label: 'Cover letter' },
+  { id: 'linkedin-dm',   label: 'LinkedIn DM' },
+  { id: 'form-fields',   label: 'Form fields' },
+];
+function _tpEsc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function _tpRenderStages(states) {
+  var list = document.getElementById('tp-stage-list');
+  if (!list) return;
+  list.innerHTML = TONIGHT_PICK_STAGES.map(function(s) {
+    var st = states[s.id] || 'pending';
+    return '<div class="tp-stage-row">'
+      + '<span class="tp-stage-pill ' + st + '">' + st + '</span>'
+      + '<span>' + _tpEsc(s.label) + '</span>'
+      + '</div>';
+  }).join('');
+}
+function _tpSetMsg(msg) {
+  var el = document.getElementById('tp-progress-msg');
+  if (el) el.textContent = msg || '';
+}
+function _tpSetFooterReview(rowId) {
+  var footer = document.getElementById('tp-progress-footer');
+  if (!footer) return;
+  // Build buttons as DOM nodes to avoid inline string-quoting issues
+  footer.innerHTML = '';
+  var reviewBtn = document.createElement('button');
+  reviewBtn.type = 'button'; reviewBtn.className = 'tonight-pick-btn-primary';
+  reviewBtn.setAttribute('aria-label', 'Review materials');
+  reviewBtn.textContent = 'Review materials →';
+  reviewBtn.addEventListener('click', function() { tonightPickCloseProgress(); tonightPickStart(); });
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button'; closeBtn.className = 'tonight-pick-btn-ghost';
+  closeBtn.setAttribute('aria-label', 'Close'); closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', tonightPickCloseProgress);
+  footer.appendChild(reviewBtn); footer.appendChild(closeBtn);
+}
+function _tpSetFooterRetry(stageId, rowNum, label) {
+  var footer = document.getElementById('tp-progress-footer');
+  if (!footer) return;
+  footer.innerHTML = '';
+  var retryBtn = document.createElement('button');
+  retryBtn.type = 'button'; retryBtn.className = 'tonight-pick-btn-accent';
+  retryBtn.setAttribute('aria-label', label || 'Retry failed stage');
+  retryBtn.textContent = label || 'Retry stage';
+  retryBtn.addEventListener('click', function() { tonightPickRetryStage(stageId, rowNum); });
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button'; closeBtn.className = 'tonight-pick-btn-ghost';
+  closeBtn.setAttribute('aria-label', 'Close'); closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', tonightPickCloseProgress);
+  footer.appendChild(retryBtn); footer.appendChild(closeBtn);
+}
+
+async function tonightPickCreateMaterials() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowNum = pick.num;
+  if (!rowNum) return;
+
+  // Open the progress modal
+  var bd = document.getElementById('tp-progress-backdrop');
+  if (bd) {
+    bd.classList.add('visible');
+    var focusTgt = bd.querySelector('button');
+    if (focusTgt) try { focusTgt.focus({ preventScroll: true }); } catch(_) {}
+  }
+
+  // Initialise stage pills
+  var stageStates = {};
+  TONIGHT_PICK_STAGES.forEach(function(s) { stageStates[s.id] = 'pending'; });
+  _tpRenderStages(stageStates);
+  _tpSetMsg('');
+
+  var titleEl = document.getElementById('tp-progress-title');
+  if (titleEl) titleEl.textContent = 'Creating materials for ' + _tpEsc(pick.company || '') + '…';
+
+  // The first 3 stages (parse_jd, fetch_hm_intel, load_corpus) are internal
+  // orchestrator setup steps — mark them done immediately (they happen inside
+  // the server before the per-stage API responds).
+  ['parse_jd', 'fetch_hm_intel', 'load_corpus'].forEach(function(id) {
+    stageStates[id] = 'done';
+  });
+  _tpRenderStages(stageStates);
+
+  // Fire each artifact stage sequentially.
+  // Budget cap: if the server returns budget_exceeded, abort and show message.
+  var buildStages = ['cv-tailor', 'cover-letter', 'linkedin-dm', 'form-fields'];
+  var failedStage = null;
+
+  for (var si = 0; si < buildStages.length; si++) {
+    var stageId = buildStages[si];
+    stageStates[stageId] = 'running';
+    _tpRenderStages(stageStates);
+    _tpSetMsg('Running ' + stageId + '…');
+
+    try {
+      var resp = await fetch('/api/build-pack-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rowId: String(rowNum), stage: stageId, config: { dryRun: false } }),
+      });
+      var data = await resp.json().catch(function() { return {}; });
+
+      if (data.budget_exceeded) {
+        stageStates[stageId] = 'failed';
+        _tpRenderStages(stageStates);
+        _tpSetMsg('Budget cap reached ($0.50/pack). Partial materials are in the draft folder.');
+        failedStage = stageId;
+        break;
+      }
+
+      // AI-detection failure surfaced by the server
+      if (data.ai_detection_failed) {
+        stageStates[stageId] = 'failed';
+        _tpRenderStages(stageStates);
+        var detMsg = 'AI-detection gate failed for ' + stageId + '.';
+        if (data.gpt_zero_score) detMsg += ' GPTZero: ' + data.gpt_zero_score + '%.';
+        if (data.originality_score) detMsg += ' Originality: ' + data.originality_score + '%.';
+        detMsg += ' ';
+        _tpSetMsg(detMsg);
+        // Show "Regenerate with stricter constraints" button (uses DOM-built footer to avoid quoting issues)
+        _tpSetFooterRetry(stageId, rowNum, 'Regenerate with stricter constraints');
+        failedStage = stageId;
+        break;
+      }
+
+      if (!resp.ok || !data.ok) {
+        stageStates[stageId] = 'failed';
+        _tpRenderStages(stageStates);
+        _tpSetMsg('Stage ' + stageId + ' failed: ' + (data.error || resp.status));
+        _tpSetFooterRetry(stageId, rowNum);
+        failedStage = stageId;
+        break;
+      }
+
+      stageStates[stageId] = 'done';
+      _tpRenderStages(stageStates);
+    } catch (err) {
+      stageStates[stageId] = 'failed';
+      _tpRenderStages(stageStates);
+      _tpSetMsg('Error: ' + err.message);
+      _tpSetFooterRetry(stageId, rowNum);
+      failedStage = stageId;
+      break;
+    }
+  }
+
+  if (!failedStage) {
+    // All stages completed — change "Create materials" button to "Review materials →"
+    var createBtn = document.getElementById('tonight-pick-create-btn');
+    if (createBtn) {
+      createBtn.textContent = 'Review materials →';
+      createBtn.classList.add('success');
+      createBtn.onclick = function() { tonightPickCloseProgress(); tonightPickStart(); };
+    }
+    _tpSetMsg('All stages complete. Materials are ready for review.');
+    _tpSetFooterReview(pick.rowIdx);
+    if (titleEl) titleEl.textContent = 'Materials ready!';
+  }
+}
+window.tonightPickCreateMaterials = tonightPickCreateMaterials;
+
+async function tonightPickRetryStage(stageId, rowNum) {
+  var btn = document.querySelector('#tp-progress-footer button.tonight-pick-btn-accent');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  var stageStates = {};
+  TONIGHT_PICK_STAGES.forEach(function(s) { stageStates[s.id] = s.id === stageId ? 'running' : (TONIGHT_PICK_STAGES.indexOf(s) < TONIGHT_PICK_STAGES.findIndex(function(x){return x.id===stageId;}) ? 'done' : 'pending'); });
+  _tpRenderStages(stageStates);
+  _tpSetMsg('Retrying ' + stageId + '…');
+  try {
+    var resp = await fetch('/api/build-pack-stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rowId: String(rowNum), stage: stageId, config: { dryRun: false } }),
+    });
+    var data = await resp.json().catch(function(){return{};});
+    if (resp.ok && data.ok) {
+      stageStates[stageId] = 'done';
+      _tpRenderStages(stageStates);
+      _tpSetMsg('Retry succeeded.');
+      _tpSetFooterReview(null);
+    } else {
+      stageStates[stageId] = 'failed';
+      _tpRenderStages(stageStates);
+      _tpSetMsg('Retry failed: ' + (data.error || resp.status));
+      if (btn) { btn.disabled = false; btn.textContent = 'Retry stage'; }
+    }
+  } catch (e) {
+    stageStates[stageId] = 'failed';
+    _tpRenderStages(stageStates);
+    _tpSetMsg('Retry error: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Retry stage'; }
+  }
+}
+window.tonightPickRetryStage = tonightPickRetryStage;
+
+function tonightPickCloseProgress() {
+  var bd = document.getElementById('tp-progress-backdrop');
+  if (bd) bd.classList.remove('visible');
+}
+window.tonightPickCloseProgress = tonightPickCloseProgress;
+
+// Cycle to next non-skipped pick in TONIGHT_PICK_QUEUE.
+// Persists skipped picks in localStorage; after 3 skips shows queue-overflow msg.
+function tonightPickCycle() {
+  var queue = TONIGHT_PICK_QUEUE || [];
+  if (!queue.length) return;
+
+  // Load skipped set for today
+  var skipped = {};
+  try { skipped = JSON.parse(localStorage.getItem(TONIGHT_PICK_SKIP_KEY) || '{}'); } catch (_) {}
+
+  // Mark current pick as skipped
+  var cur = queue[_currentPickIdx];
+  if (cur) skipped[String(cur.num)] = 1;
+  try { localStorage.setItem(TONIGHT_PICK_SKIP_KEY, JSON.stringify(skipped)); } catch (_) {}
+
+  // Find next non-skipped pick
+  var next = null;
+  var skipCount = Object.keys(skipped).length;
+  for (var i = 0; i < queue.length; i++) {
+    var qi = (i + 1 + _currentPickIdx) % queue.length;
+    if (!skipped[String(queue[qi].num)]) {
+      next = queue[qi];
+      _currentPickIdx = qi;
+      break;
+    }
+  }
+
+  if (!next) {
+    // All skipped — show message and link to Apply-Now (DOM-built to avoid quoting issues)
+    var calloutEl = document.getElementById('tonight-pick-callout');
+    if (calloutEl) {
+      calloutEl.innerHTML = '';
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+      var msg = document.createElement('span');
+      msg.style.cssText = 'font-size:12px;color:var(--text-2)';
+      msg.textContent = 'Showing #' + (skipCount + 1) + ' of remaining queue — want to see the full queue?';
+      var link = document.createElement('a');
+      link.href = '#apply-now-section';
+      link.style.cssText = 'font-size:12px;color:var(--blue-fg,#0969da)';
+      link.textContent = 'View Apply-Now queue →';
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        var sec = document.getElementById('apply-now-section');
+        if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+      });
+      var dismissBtn = document.createElement('button');
+      dismissBtn.type = 'button'; dismissBtn.className = 'tonight-pick-btn-ghost';
+      dismissBtn.style.marginLeft = 'auto'; dismissBtn.setAttribute('aria-label', 'Dismiss');
+      dismissBtn.textContent = 'Dismiss';
+      dismissBtn.addEventListener('click', tonightPickHide);
+      wrap.appendChild(msg); wrap.appendChild(link); wrap.appendChild(dismissBtn);
+      calloutEl.appendChild(wrap);
+    }
+    return;
+  }
+
+  // Re-render the callout with the new pick's data
+  _tpRenderPickCard(next, skipCount + 1);
+}
+window.tonightPickCycle = tonightPickCycle;
+
+function tonightPickHide() {
+  var el = document.getElementById('tonight-pick-callout');
+  if (el) { el.style.transition = 'opacity .2s'; el.style.opacity = '0'; setTimeout(function() { el.hidden = true; el.style.opacity = ''; }, 220); }
+}
+window.tonightPickHide = tonightPickHide;
+
+// Re-render the Tonight's Pick card with a different queue item (after "Pick another").
+// Does an in-place content update — no page reload.
+function _tpRenderPickCard(pick, skipN) {
+  var callout = document.getElementById('tonight-pick-callout');
+  if (!callout) return;
+  var titleEl = callout.querySelector('.tonight-pick-title-row');
+  var labelEl = callout.querySelector('.tonight-pick-label');
+  var msgEl   = callout.querySelector('.tp-pick-skip-note');
+
+  if (titleEl) {
+    titleEl.innerHTML = '<span class="tonight-pick-company">' + _tpEsc(pick.company || '') + '</span>'
+      + '<span class="tonight-pick-sep"> &mdash; </span>'
+      + '<span class="tonight-pick-role">' + _tpEsc(pick.role || '') + '</span>';
+  }
+  if (labelEl && skipN > 1) {
+    // Append a small note so Mitchell knows he cycled
+    var note = callout.querySelector('.tp-pick-skip-note');
+    if (!note) {
+      note = document.createElement('span');
+      note.className = 'tp-pick-skip-note';
+      note.style.cssText = 'font-size:11px;color:var(--text-3);margin-left:8px';
+      labelEl.parentNode.insertBefore(note, labelEl.nextSibling);
+    }
+    note.textContent = '(#' + skipN + ' of queue)';
+  }
+  // Update score chip
+  var scoreChip = callout.querySelector('.tonight-pick-score-chip');
+  if (scoreChip) scoreChip.textContent = Number(pick.score || 0).toFixed(1);
+
+  // Clear signals — can't re-fetch comp/loc for new pick without a page rebuild;
+  // show only "pick another" count + score
+  var signals = callout.querySelector('.tonight-pick-signals');
+  if (signals) signals.innerHTML = '<span class="tp-sig tp-sig-ok">Score ' + Number(pick.score||0).toFixed(1) + '</span>';
+
+  // Update why paragraph
+  var why = callout.querySelector('.tonight-pick-why');
+  if (why) why.textContent = pick.company + ' — ' + pick.role;
+
+  // Reset create btn if it was in success state
+  var createBtn = document.getElementById('tonight-pick-create-btn');
+  if (createBtn) {
+    createBtn.textContent = 'Create materials';
+    createBtn.classList.remove('success');
+    createBtn.onclick = function() { tonightPickCreateMaterials(); };
+  }
+}
+
+function tonightPickStart() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowId = pick.rowIdx;
+  if (!rowId) return;
+  var section = document.getElementById('apply-now-section');
+  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(function() {
+    var detail = document.getElementById('detail-' + rowId);
+    if (detail) {
+      var idx = parseInt(rowId.replace(/^apply-/, ''), 10);
+      if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+      else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+    } else if (typeof toggleDetail === 'function') {
+      toggleDetail(rowId);
+    }
+  }, 350);
+}
+
+window.tonightPickStart   = tonightPickStart;
+window.tonightPickLearnMore = tonightPickLearnMore;
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTonightPick);
+} else {
+  initTonightPick();
 }
 
 // ── Hiring-Manager Intel (Phase H output) ─────────────────────────────────
@@ -14660,6 +16501,43 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 document.addEventListener('careerops:outreach-changed', refreshRunwayWidget);
 
+// 2026-05-18 — rdDraftDm: Runway "who to contact next" row → draft DM.
+// Reads the data-rd-draft JSON payload off the clicked button, synthesizes
+// a hidden anchor with the dataset openEmailPopover() expects, then invokes
+// the existing popover so the user picks a template and the LinkedIn DM /
+// email gets composed with context.
+function rdDraftDm(btnEl) {
+  if (!btnEl) return;
+  let payload = {};
+  try { payload = JSON.parse(btnEl.dataset.rdDraft || '{}'); } catch (_) {}
+  if (!payload.name || !payload.company) {
+    if (window.toast) window.toast('No contact/company on this row.', 'warning');
+    return;
+  }
+  let proxy = document.getElementById('rd-draft-dm-proxy');
+  if (!proxy) {
+    proxy = document.createElement('button');
+    proxy.id = 'rd-draft-dm-proxy';
+    proxy.type = 'button';
+    proxy.style.cssText = 'position:fixed;opacity:0;pointer-events:none;z-index:-1';
+    document.body.appendChild(proxy);
+  }
+  const r = btnEl.getBoundingClientRect();
+  proxy.style.left = r.left + 'px';
+  proxy.style.top = r.top + 'px';
+  proxy.dataset.company = payload.company;
+  proxy.dataset.role = '';
+  proxy.dataset.contactName = payload.name;
+  proxy.dataset.rationale = payload.rationale || '';
+  proxy.dataset.channel = payload.channel || 'linkedin_dm';
+  if (typeof window.openEmailPopover === 'function') {
+    window.openEmailPopover(proxy);
+  } else {
+    if (window.toast) window.toast('Email popover not loaded yet.', 'warning');
+  }
+}
+window.rdDraftDm = rdDraftDm;
+
 // ── Runway detail modal (2026-05-17) ─────────────────────────────
 // Opens from the sidebar runway-label click. Polls /api/runway-detail
 // every 30s while open. Sections:
@@ -14816,16 +16694,32 @@ function _rdRenderBody(d) {
     '</div>';
 
   // Section 5 — Who to contact next (Pillar 2 action proximity)
+  // 2026-05-18 — Each row now ends with a "Draft DM" button per Mitchell's
+  // mega-list ("Runway 'who to contact next' rows wire to draft-DM action").
+  // Click → rdDraftDm() reuses the existing openEmailPopover() draft flow
+  // pre-filled with contact name / company / channel / rationale so the DM
+  // starts with context.
   const next = d.who_to_contact_next || [];
   const nextTable = next.length
     ? '<div class="rd-table-wrap table-scroll">' +
         '<table class="rd-table" id="rd-next-table">' +
           '<thead><tr>' +
-            '<th>Rank</th><th>Tier</th><th>Contact</th><th>Company</th><th>Days silent</th><th>Why now</th><th>Channel</th>' +
+            '<th>Rank</th><th>Tier</th><th>Contact</th><th>Company</th><th>Days silent</th><th>Why now</th><th>Channel</th><th>Action</th>' +
           '</tr></thead>' +
           '<tbody>' +
             next.map((n, i) => {
               const tierCls = 'rd-tier-' + _rdEsc(n.tier || 'B');
+              const ch = n.suggested_channel || 'linkedin_dm';
+              const draftPayload = _rdEsc(JSON.stringify({
+                name: n.name || '',
+                company: n.company || '',
+                channel: ch,
+                rationale: n.rationale || '',
+                tier: n.tier || 'B',
+              }));
+              const draftBtn = (n.name && n.company)
+                ? '<button type="button" class="rd-draft-dm-btn" data-rd-draft="' + draftPayload + '" onclick="rdDraftDm(this);event.stopPropagation()" title="Draft a ' + _rdEsc(_rdFmtChannel(ch)) + ' to ' + _rdEsc(n.name) + '">✉ Draft DM</button>'
+                : '<span class="muted-text" style="font-size:11px">—</span>';
               return '<tr title="' + _rdEsc(n.rationale || '') + '">' +
                 '<td>' + (i + 1) + '</td>' +
                 '<td><span class="' + tierCls + '">' + _rdEsc(n.tier || '—') + '</span></td>' +
@@ -14833,7 +16727,8 @@ function _rdRenderBody(d) {
                 '<td>' + _rdEsc(n.company || '—') + '</td>' +
                 '<td>' + _rdEsc((n.days_since != null) ? (n.days_since + 'd') : '—') + '</td>' +
                 '<td title="' + _rdEsc(n.rationale || '') + '" data-fulltext="' + _rdEsc(n.rationale || '') + '">' + _rdEsc(n.rationale || '—') + '</td>' +
-                '<td>' + _rdEsc(_rdFmtChannel(n.suggested_channel)) + '</td>' +
+                '<td>' + _rdEsc(_rdFmtChannel(ch)) + '</td>' +
+                '<td>' + draftBtn + '</td>' +
               '</tr>';
             }).join('') +
           '</tbody>' +
@@ -14936,15 +16831,25 @@ function _saRender(d) {
     body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No scan activity yet. Run <code>node scan.mjs</code> to populate.</div>';
     return;
   }
+  // Render a company name as a clickable drill-in link inside the scan activity modal.
+  // Uses data-slug + delegated handler (see _tickerCompanyHtml pattern).
+  const _saCompanyDrillHtml = (name) => {
+    const slug = String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const safe = _saEsc(name || '');
+    return '<span class="sa-drill-company" data-drill="company:' + slug + '" data-slug="' + slug + '"'
+      + ' tabindex="0" role="button" title="View ' + safe + ' company profile">'
+      + safe + '</span>';
+  };
   const rows = events.map(e => {
-    const sample = (e.sample_companies || []).slice(0, 3).join(', ');
-    const sampleFull = (e.sample_companies || []).join(', ');
+    const sampleArr = (e.sample_companies || []);
+    const sampleLinks = sampleArr.slice(0, 3).map(_saCompanyDrillHtml).join(', ');
+    const sampleFull = sampleArr.join(', ');
     return '<tr title="' + _saEsc(e.portal + ' · ' + e.date + ' · ' + sampleFull) + '">' +
       '<td>' + _saEsc(e.date || '—') + '</td>' +
       '<td>' + _saEsc(e.portal || '—') + '</td>' +
       '<td style="text-align:right">' + _saEsc(e.jobs_found || 0) + '</td>' +
       '<td style="text-align:right">' + _saEsc(e.jobs_new || 0) + '</td>' +
-      '<td title="' + _saEsc(sampleFull) + '" data-fulltext="' + _saEsc(sampleFull) + '">' + _saEsc(sample) + '</td>' +
+      '<td title="' + _saEsc(sampleFull) + '" data-fulltext="' + _saEsc(sampleFull) + '">' + (sampleLinks || '—') + '</td>' +
     '</tr>';
   }).join('');
   body.innerHTML =
@@ -15081,7 +16986,7 @@ function _shRender(d) {
     ? '<ul style="font-family:monospace;font-size:11.5px;list-style:none;padding:0;margin:0;max-height:160px;overflow-y:auto">' +
         errors.map(e => '<li style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--text-2)">' + _shEsc(e) + '</li>').join('') +
       '</ul>'
-    : '<div style="color:var(--text-3);font-size:12.5px">No errors logged.</div>';
+    : '<div style="color:var(--text-3);font-size:12.5px">No errors today — clean run.</div>';
 
   body.innerHTML =
     '<details class="sh-block" open>' +
@@ -16054,14 +17959,75 @@ function _cmdkEsc(s) {
 
 function _cmdkRefresh() {
   const input = document.getElementById('cmdk-input');
-  _cmdkItems = _cmdkBuildItems(input ? input.value : '');
+  // Fix 3: apply scope filter after building items
+  _cmdkItems = _cmdkScopeFilter(_cmdkBuildItems(input ? input.value : ''));
   const flatCount = _cmdkItems.filter(it => it.kind).length;
   if (_cmdkActive >= flatCount) _cmdkActive = 0;
   _cmdkRender();
 }
 
+// ── Fix 3 (cmdk-scope-persist): persist + restore last-used scope ────────────
+const CMDK_SCOPE_KEY = 'careerops.cmdk-last-scope';
+// Scopes: 'all' | 'nav' | 'search' | 'create' | 'context'
+let _cmdkScope = 'all';
+function _cmdkScopeLoad() {
+  try { _cmdkScope = localStorage.getItem(CMDK_SCOPE_KEY) || 'all'; } catch (_) {}
+}
+function _cmdkScopeSave(scope) {
+  _cmdkScope = scope;
+  try { localStorage.setItem(CMDK_SCOPE_KEY, scope); } catch (_) {}
+}
+function _cmdkScopeFilter(items) {
+  if (_cmdkScope === 'all') return items;
+  // Map scope → which section labels to keep
+  var keep = {
+    nav:     ['Actions', 'Saved views'],
+    search:  ['Jump to row', 'Recent reports'],
+    create:  [],   // keep only group=create items
+    context: [],   // keep only group=mutation items
+  }[_cmdkScope] || null;
+  if (!keep) return items;
+  var inSection = false, sectionOk = false;
+  return items.filter(function(it) {
+    if (it.section) {
+      inSection = true;
+      if (_cmdkScope === 'create' || _cmdkScope === 'context') {
+        sectionOk = false; return false;
+      }
+      sectionOk = keep.includes(it.section);
+      return sectionOk;
+    }
+    if (_cmdkScope === 'create') return it.group === 'create';
+    if (_cmdkScope === 'context') return it.group === 'mutation';
+    return sectionOk;
+  });
+}
+function _cmdkRenderScopeBtns() {
+  var bar = document.getElementById('cmdk-scope-bar');
+  if (!bar) return;
+  var scopes = [
+    { id: 'all',     label: 'All' },
+    { id: 'nav',     label: 'Actions' },
+    { id: 'search',  label: 'Search' },
+    { id: 'create',  label: 'Create' },
+    { id: 'context', label: 'Context' },
+  ];
+  bar.innerHTML = scopes.map(function(s) {
+    return '<button type="button" class="cmdk-scope-btn' + (_cmdkScope === s.id ? ' active' : '') + '" data-scope="' + s.id + '">' + s.label + '</button>';
+  }).join('');
+  bar.querySelectorAll('.cmdk-scope-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _cmdkScopeSave(btn.dataset.scope);
+      _cmdkRenderScopeBtns();
+      _cmdkRefresh();
+    });
+  });
+}
+
 function openCmdK() {
   if (_cmdkOpen) return;
+  _cmdkScopeLoad();  // Fix 3: restore last-used scope
   _cmdkOpen = true;
   _cmdkPrevFocus = document.activeElement;
   const bd = document.getElementById('cmdk-backdrop');
@@ -16070,6 +18036,7 @@ function openCmdK() {
   bd.classList.add('visible');
   input.value = '';
   _cmdkActive = 0;
+  _cmdkRenderScopeBtns();  // Fix 3: render scope buttons with restored scope
   _cmdkRefresh();
   setTimeout(() => input.focus(), 0);
 }
@@ -16718,6 +18685,11 @@ window.optimisticStatusChange = optimisticStatusChange;
 
 // ── D25: invokeBuildPackStage — wire drawer slash-command buttons ────────────
 // Calls POST /api/build-pack-stage; shows toast with stage result or error.
+// P1-2 (2026-05-18): slash-command result rendering. Previously this fired a
+// toast on completion and dropped the SubAgentOutput on the floor. Now the
+// full markdown/JSON output is cached on window._packStageResults[rowId+stage]
+// and rendered into a drill-in popout so the user can review it inline.
+window._packStageResults = window._packStageResults || {};
 async function invokeBuildPackStage(rowId, stage, btn) {
   if (!rowId || !stage) return;
   const origText = btn ? btn.textContent : '';
@@ -16730,11 +18702,22 @@ async function invokeBuildPackStage(rowId, stage, btn) {
     });
     const data = await r.json().catch(() => ({}));
     if (r.ok && data.ok) {
-      if (window.toast) window.toast('/' + stage + ' completed for #' + rowId, 'success');
+      window._packStageResults[String(rowId) + ':' + stage] = data.result || {};
+      if (window.toast) window.toast('/' + stage + ' completed for #' + rowId + ' — opening result', 'success');
+      // Open result in drill-in popout (registered renderer: 'pack-stage-result')
+      if (typeof window.drillIn === 'function') {
+        window.drillIn('pack-stage-result', String(rowId) + ':' + stage, null);
+      }
     } else {
+      window._packStageResults[String(rowId) + ':' + stage] = { status: 'error', error: data.error || ('HTTP ' + r.status), stage, output: null };
       if (window.toast) window.toast('/' + stage + ' failed: ' + (data.error || r.status), 'error');
+      // Still surface the error in a popout so user can see + retry
+      if (typeof window.drillIn === 'function') {
+        window.drillIn('pack-stage-result', String(rowId) + ':' + stage, null);
+      }
     }
   } catch (err) {
+    window._packStageResults[String(rowId) + ':' + stage] = { status: 'error', error: err.message || String(err), stage, output: null };
     if (window.toast) window.toast('/' + stage + ' error: ' + err.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }
@@ -17782,107 +19765,55 @@ function _renderSyncTs() {
 // Drag the right edge of any column header to resize it.
 // Double-click the handle to reset that column to CSS default.
 // Widths persist across page loads via localStorage.
-(function initColResize() {
+// 2026-05-18 — Legacy initColResize() column-resize implementation
+// retired. applyUniversalTableBaseline() now owns the .col-resize-handle
+// lifecycle (drag, dblclick auto-fit, right-click reset, localStorage
+// persistence). Only thing kept: a ONE-TIME migration that copies any
+// widths still saved under the old 'careerOps.colWidths.v1' key into
+// the new per-column UTB keys so users don't lose customizations on
+// upgrade. After this runs, the legacy key is deleted.
+(function migrateLegacyColWidthsToUTB() {
   if (window.innerWidth < 721) return;
-  var STORE = 'careerOps.colWidths.v1';
-
-  function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch(e) { return {}; } }
-  function save(id, i, w) { var d = load(); if (!d[id]) d[id] = {}; d[id][i] = w; try { localStorage.setItem(STORE, JSON.stringify(d)); } catch(e) {} }
-  function del(id, i)  { var d = load(); if (!d[id]) return; delete d[id][i]; try { localStorage.setItem(STORE, JSON.stringify(d)); } catch(e) {} }
-
-  function applyStored() {
-    var d = load();
-    Object.keys(d).forEach(function(tbodyId) {
+  var LEGACY_KEY = 'careerOps.colWidths.v1';
+  var MIGRATED_KEY = 'careerOps.colWidths.v1.migrated';
+  if (localStorage.getItem(MIGRATED_KEY) === '1') return;
+  var legacy;
+  try { legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || '{}'); } catch (_) { legacy = {}; }
+  if (!legacy || !Object.keys(legacy).length) {
+    try { localStorage.setItem(MIGRATED_KEY, '1'); } catch (_) {}
+    return;
+  }
+  function migrate() {
+    Object.keys(legacy).forEach(function (tbodyId) {
       var tbody = document.getElementById(tbodyId);
       var table = tbody && tbody.closest('table');
       if (!table) return;
+      var tableId = table.id || tbodyId;
       var ths = table.querySelectorAll('thead th');
-      Object.keys(d[tbodyId]).forEach(function(i) {
-        var th = ths[parseInt(i)];
-        if (th) th.style.width = d[tbodyId][i] + 'px';
+      Object.keys(legacy[tbodyId]).forEach(function (i) {
+        var th = ths[parseInt(i, 10)];
+        if (!th) return;
+        var colKey = th.dataset.colKey || ('col-' + i);
+        var newKey = 'careerops.colwidth.' + tableId + '.' + colKey;
+        try {
+          // Don't clobber a UTB-set width that already exists.
+          if (!localStorage.getItem(newKey)) {
+            localStorage.setItem(newKey, String(legacy[tbodyId][i]));
+          }
+          // Apply immediately so the page paints with the saved width.
+          th.style.width = legacy[tbodyId][i] + 'px';
+        } catch (_) {}
       });
     });
+    try {
+      localStorage.removeItem(LEGACY_KEY);
+      localStorage.setItem(MIGRATED_KEY, '1');
+    } catch (_) {}
   }
-
-  function addHandles() {
-    document.querySelectorAll('.panel .table-scroll table').forEach(function(table) {
-      var tbody = table.querySelector('tbody');
-      var tbodyId = tbody && tbody.id;
-      if (!tbodyId) return;
-      var ths = Array.prototype.slice.call(table.querySelectorAll('thead th'));
-      ths.forEach(function(th, i) {
-        if (th.classList.contains('bulk-th')) return;
-        // Skip if a handle already exists — the universal table baseline
-        // (applyUniversalTableBaseline) may have run first and injected one.
-        // Both paths are idempotent now; first to fire wins. The legacy
-        // path keeps writing to its own localStorage key, so existing user
-        // widths persist either way.
-        if (th.querySelector('.col-resize-handle')) return;
-        var handle = document.createElement('div');
-        handle.className = 'col-resize-handle';
-        handle.title = 'Drag to resize · double-click to reset';
-        handle.setAttribute('aria-hidden', 'true');
-
-        var startX, startW;
-        handle.addEventListener('mousedown', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          startX = e.clientX; startW = th.offsetWidth;
-          handle.classList.add('is-dragging');
-          document.body.style.cursor = 'col-resize';
-          document.body.style.userSelect = 'none';
-          function onMove(ev) {
-            var w = Math.max(36, startW + (ev.clientX - startX));
-            th.style.width = w + 'px';
-          }
-          function onUp() {
-            handle.classList.remove('is-dragging');
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            save(tbodyId, i, parseInt(th.style.width) || th.offsetWidth);
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-          }
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        });
-
-        handle.addEventListener('dblclick', function(e) {
-          e.stopPropagation();
-          // Auto-fit: expand column to fit widest content in this column
-          var probe = document.createElement('span');
-          probe.style.cssText = 'visibility:hidden;position:fixed;top:-9999px;left:-9999px;white-space:nowrap;padding:0;margin:0;border:0;';
-          document.body.appendChild(probe);
-          var maxW = 0;
-          // Measure header text
-          var thCStyle = window.getComputedStyle(th);
-          probe.style.font = thCStyle.font;
-          probe.textContent = th.textContent.replace(/\s+/g, ' ').trim();
-          maxW = Math.max(maxW, probe.offsetWidth);
-          // Measure every td in this column
-          Array.prototype.forEach.call(table.querySelectorAll('tbody tr'), function(row) {
-            var td = row.querySelectorAll('td')[i];
-            if (!td) return;
-            var tdCStyle = window.getComputedStyle(td);
-            probe.style.font = tdCStyle.font;
-            probe.textContent = td.textContent.replace(/\s+/g, ' ').trim();
-            maxW = Math.max(maxW, probe.offsetWidth);
-          });
-          document.body.removeChild(probe);
-          // Cell horizontal padding buffer
-          var w = Math.max(40, maxW + 24);
-          th.style.width = w + 'px';
-          save(tbodyId, i, w);
-        });
-
-        th.appendChild(handle);
-      });
-    });
-  }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { applyStored(); addHandles(); });
+    document.addEventListener('DOMContentLoaded', migrate);
   } else {
-    applyStored(); addHandles();
+    migrate();
   }
 })();
 
@@ -18495,6 +20426,30 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   .rd-tier-A { color: var(--green-fg, #2da44e); font-weight: 700; }
   .rd-tier-B { color: var(--blue-fg, #0969da); font-weight: 600; }
   .rd-tier-C { color: var(--text-3); }
+  /* Scan-activity modal company drill links */
+  .sa-drill-company {
+    color: inherit; text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; border-radius: 2px;
+  }
+  .sa-drill-company:hover { color: var(--green-fg, #16a34a); text-decoration-style: solid; }
+  /* Draft DM button on each Who-to-contact-next row (2026-05-18). */
+  .rd-draft-dm-btn {
+    background: var(--blue-bg, rgba(9,105,218,0.12));
+    color: var(--blue-fg, #0969da);
+    border: 1px solid var(--blue-border, rgba(9,105,218,0.3));
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .12s, transform .1s;
+  }
+  .rd-draft-dm-btn:hover {
+    background: var(--blue-border, rgba(9,105,218,0.3));
+    transform: translateY(-1px);
+  }
+  .rd-draft-dm-btn:active { transform: translateY(0); }
   .rd-direction-out { color: var(--text-3); }
   .rd-direction-in  { color: var(--green-fg, #2da44e); font-weight: 600; }
   .rd-trend-up   { color: var(--green-fg, #2da44e); font-weight: 600; }
@@ -18564,6 +20519,89 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   }
   [data-drill].drill-trigger:not(.status-pill):focus-visible {
     outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* ── Wave C-A drawer drill-in: inline chip affordances ──────── */
+  /* Percentage bars: pct pill gets underline-dotted on hover */
+  .alignbar-pct.drill-trigger {
+    border-bottom: 1px dotted var(--text-3);
+    transition: background var(--dur-fast), color var(--dur-fast);
+    border-radius: 3px;
+    padding: 0 3px;
+  }
+  .alignbar-pct.drill-trigger:hover {
+    background: var(--accent-bg);
+    border-bottom-color: var(--accent);
+  }
+  /* Meta chips: comp + date chips get dotted underline when clickable */
+  .meta-chip.drill-trigger {
+    border-bottom: 1px dotted var(--text-3);
+    transition: background var(--dur-fast);
+  }
+  .meta-chip.drill-trigger:hover {
+    background: var(--accent-bg);
+  }
+  /* Story rows: clickable state */
+  .dcard-story-row.drill-trigger {
+    border-radius: 5px;
+    transition: background var(--dur-fast);
+    padding: 4px 6px;
+    margin: 0 -6px;
+  }
+  .dcard-story-row.drill-trigger:hover {
+    background: var(--accent-bg);
+  }
+  .dcard-story-row.drill-trigger:focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* Match list items: clickable state */
+  .match-list li.drill-trigger {
+    border-radius: 5px;
+    transition: background var(--dur-fast);
+    padding: 4px 4px;
+    margin: 0 -4px;
+    cursor: pointer;
+  }
+  .match-list li.drill-trigger:hover {
+    background: var(--accent-bg);
+  }
+  .match-list li.drill-trigger:focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* Card-level drill affordance: dcard with explore hint */
+  .dcard.dcard-drill, .dcard.dcard--tracker-note.dcard-drill {
+    position: relative;
+    transition: border-color var(--dur-fast), background var(--dur-fast);
+  }
+  .dcard.dcard-drill:hover, .dcard.dcard--tracker-note.dcard-drill:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-2);
+  }
+  .dcard.dcard-drill:focus-visible, .dcard.dcard--tracker-note.dcard-drill:focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* Explore hint chevron in card label corner */
+  .dcard-explore-hint {
+    float: right;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-4);
+    letter-spacing: .02em;
+    transition: color var(--dur-fast);
+  }
+  .dcard.dcard-drill:hover .dcard-explore-hint,
+  .dcard.dcard--tracker-note.dcard-drill:hover .dcard-explore-hint {
+    color: var(--accent);
+  }
+  /* Drawer company name: drill-in affordance */
+  .drawer-company-name.drill-trigger,
+  .drawer-company-link.drill-trigger .drawer-company-name {
+    border-bottom: 1px dotted var(--text-3);
+    transition: color var(--dur-fast);
+  }
+  .drawer-company-name.drill-trigger:hover,
+  .drawer-company-link.drill-trigger:hover .drawer-company-name {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
   /* Drill-in drawer overlay — dim the page behind the drawer on all viewports
      (Item 4 fix: was tablet-only). DASHBOARD_INVARIANTS.md §2 — preserving
@@ -18722,6 +20760,24 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   </div>
   <div class="scan-activity-body" id="scan-activity-body">
     <div style="text-align:center; padding: 40px 16px; color: var(--text-3); font-size: 13px;">Loading…</div>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────
+     Tonight's Pick — Create materials progress modal (2026-05-17).
+     Shows 7 stage status pills while apply-orchestrator runs.
+     Bind: tonightPickCreateMaterials() / tonightPickCloseProgress()
+     ────────────────────────────────────────────────────────────── -->
+<div id="tp-progress-backdrop" class="tp-progress-backdrop" onclick="tonightPickCloseProgress()" role="presentation">
+  <div id="tp-progress-modal" class="tp-progress-modal" role="dialog" aria-modal="true" aria-labelledby="tp-progress-title" onclick="event.stopPropagation()">
+    <div class="tp-progress-title" id="tp-progress-title">Creating application materials…</div>
+    <div class="tp-stage-list" id="tp-stage-list">
+      <!-- Populated by tonightPickCreateMaterials() -->
+    </div>
+    <div class="tp-progress-msg" id="tp-progress-msg"></div>
+    <div class="tp-progress-footer" id="tp-progress-footer">
+      <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCloseProgress()" aria-label="Close progress modal">Close</button>
+    </div>
   </div>
 </div>
 
@@ -19839,7 +21895,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
         +   '<div class="op-action-text">' + escapeHtml(primary) + '</div>'
         + '</div>';
     } else {
-      actionHtml = '<div class="op-action op-action-empty">No recommendation yet — run <code>npm run outreach:recommend</code></div>';
+      actionHtml = '<div class="op-action op-action-empty">No outreach strategy yet — click to generate one</div>';
     }
 
     // Linked application — kept subdued (smaller, lower contrast) so the eye
@@ -20103,7 +22159,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     }
     function nextActionBlock() {
       var nx = c.next_action;
-      if (!nx) return '<li><em>no recommendation yet</em></li>';
+      if (!nx) return '<li><em>No outreach strategy yet — click to generate one</em></li>';
       var conf = (typeof nx.confidence === 'number') ? nx.confidence.toFixed(2) : '?';
       return '<li><strong>Strategy ' + nx.strategy_id + ': ' + escapeHtml(nx.strategy_name || '') + '</strong> (confidence ' + conf + ', due ' + escapeHtml(nx.due_date || '?') + ')</li>' +
              (nx.rationale ? '<li><em>' + escapeHtml(nx.rationale) + '</em></li>' : '') +
@@ -20730,9 +22786,33 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       if (action === 'apply') {
         window.open(url, '_blank', 'noopener');
       } else if (action === 'defer') {
-        if (typeof window.showToast === 'function') {
-          window.showToast('Defer noted (no pipeline change \\u2014 item still in queue)');
+        // 2026-05-18 — Defer now POSTs to /api/pipeline/defer-url, which
+        // records a 14-day snooze in data/stale-defers.json. The stale-items
+        // endpoint filters out URLs whose defer_until is still in the
+        // future, so the row vanishes from the modal until the snooze
+        // expires. Idempotent: same URL updates the deferral.
+        var deferRes = await fetch('/api/pipeline/defer-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url, days: 14 })
+        });
+        if (!deferRes.ok) {
+          var dMsg = 'HTTP ' + deferRes.status;
+          try { var db = await deferRes.json(); if (db && db.error) dMsg = db.error; } catch (_) {}
+          throw new Error(dMsg);
         }
+        var dData = null;
+        try { dData = await deferRes.json(); } catch (_) {}
+        if (row) {
+          row.style.transition = 'opacity .2s, max-height .2s';
+          row.style.opacity = '0';
+          setTimeout(function () { row.remove(); _refreshStaleModalMeta(); }, 220);
+        }
+        if (typeof window.showToast === 'function') {
+          var untilStr = dData && dData.deferred_until ? dData.deferred_until : '14 days';
+          window.showToast('Snoozed until ' + untilStr + ' — will reappear if still stale.');
+        }
+        return;
       } else if (action === 'trash') {
         var res = await fetch('/api/pipeline/remove-url', {
           method: 'POST',

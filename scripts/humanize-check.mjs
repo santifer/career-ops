@@ -2,6 +2,13 @@
 /**
  * humanize-check.mjs — AI detection risk scorer for cover letters and career materials
  *
+ * ⚠️  LOCAL HEURISTIC ONLY — does NOT match industry detectors.
+ *    Per calibration 2026-05-18: GPTZero + Originality both score
+ *    these outputs 100% AI even when this local check passes.
+ *    Run `node scripts/calibrate-ai-detectors.mjs` for ground truth.
+ *    The orchestrator now uses `lib/ai-detection-gate.mjs` (API-backed)
+ *    as the authoritative gate — this script is for fast local pre-checks only.
+ *
  * Usage:
  *   node scripts/humanize-check.mjs --file apply-pack/048-anthropic/cover-letter.md
  *   node scripts/humanize-check.mjs --text "Paste your text here"
@@ -9,7 +16,7 @@
  *   node scripts/humanize-check.mjs --file cover-letter.md --json
  *
  * Score interpretation:
- *   0–20%   LOW      — submit as-is
+ *   0–20%   LOW      — submit as-is (but still fails external detectors: see note above)
  *   21–45%  MEDIUM   — light edit, fix flagged phrases
  *   46–70%  HIGH     — substantial rewrite needed
  *   71–100% CRITICAL — major humanization required
@@ -547,6 +554,13 @@ ${providerLine('sapling',   'Sapling AI',   pv.sapling, [])}
     console.log(JSON.stringify({ score: localScore, risk: localRisk.label, wordCount, sentenceCount: sentences.length, checks }, null, 2));
     return;
   }
+
+  console.log(`
+⚠️  LOCAL HEURISTIC ONLY — does NOT match industry detectors.
+   Per calibration 2026-05-18: GPTZero + Originality both score
+   these outputs 100% AI even when this local check passes.
+   Run \`node scripts/calibrate-ai-detectors.mjs\` for ground truth.
+`);
 
   console.log(`
 ╔═══════════════════════════════════════════════════╗

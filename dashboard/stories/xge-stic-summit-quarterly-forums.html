@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editorial strategy + calendar at fast-moving org — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>Editorial strategy + calendar at fast-moving org</h1>
+  <div class="meta">
+    <span>Source: Anthropic — Engineering Editorial Lead</span>
+    <span class="humanize-badge humanize-low">Humanize: 9% low</span>
+  </div>
+  <div class="body">
+<p>The problem wasn't that xGE lacked programming. The problem was that programming a horizontal engineering organization — one tasked with driving technical change across all of Google, serving more than 1,000 Principal, Distinguished, and Fellow engineers at the top 0.5% of a 180,000-person workforce — had no reliable architecture underneath it. Events happened. Forums ran. People showed up. But the connective tissue between a one-time summit and sustained, measurable cohort engagement didn't exist when I took the role. Building it from scratch, inside one of the most senior technical populations in the industry, turned out to be a systems problem disguised as a calendar problem.</p>
+<p>The Senior Technical Leadership Summit was the anchor. I architected the event structure, the content sequencing, the speaker pipeline, and the feedback instrumentation — not as a one-off production run, but as the top of a deliberate quarterly cadence designed to hold the cohort in active contact between major convenings. The summit itself drew 348 senior engineers and closed at 93% participant CSAT. That number matters less as a vanity metric than as a calibration point — 93% in a room of Principal and Distinguished engineers who have strong opinions and limited patience for programming that wastes their time is a meaningful signal that the content architecture was right. But a summit score is a trailing indicator. The real design question was what happened after the room emptied.</p>
+<p>The quarterly forums were the answer — and the harder editorial problem. A summit can be produced like a broadcast: contained time window, curated rundown, clear opening and close. A quarterly cadence demands a different discipline. The content has to be specific enough to pull senior engineers out of deep technical work, relevant enough to land for a globally distributed cohort with divergent technical focuses, and structured enough to generate the kind of participation data that justifies the program's continued resource claim. I built the forum programming against those three constraints simultaneously — treating each forum as both a standalone editorial unit and a chapter in a longer arc. Topic selection, speaker sequencing, and follow-up design were coordinated across the full calendar rather than planned event by event. The result was a cohort engagement rate that exceeded 18% active participation across the global population across the follow-on forums — a number that, for a voluntary program serving engineers who have no shortage of competing demands on their time, reflects sustained editorial pull rather than compliance attendance.</p>
+<p>The governance infrastructure underneath the calendar mattered as much as the content itself. Early in the build, the approvals and planning process was absorbing executive time at a rate that wasn't sustainable — ad hoc requests, subjective feedback loops with no data-backed rationale, no clear intake structure. I drove a full overhaul of the approvals architecture: an Approvals Matrix, a 7-day Comment Freeze for non-urgent requests, and a formal rejection threshold for feedback that lacked documented rationale. That framework cut low-value executive requests by 50% — which meant the calendar itself ran cleaner, with fewer late-cycle pivots and more planning depth on the forums that actually mattered. A senior technical population notices when the machine around them is disciplined. It's part of what makes the programming land.</p>
+<p>What the Summit and quarterly forum build proved, in aggregate, is that editorial strategy at a fast-moving technical organization isn't a content job. It's an infrastructure job. The calendar is the visible layer. Under it sits a feedback loop design, a governance model, an intake protocol, and a measurement framework that tells you whether you're building sustained engagement or just filling slots. I've built that infrastructure once, at scale, for the most technically demanding internal audience in the industry. The pattern transfers.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

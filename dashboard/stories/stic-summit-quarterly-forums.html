@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lead training + enablement programs — Mitchell Williams</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+</style>
+</head><body>
+<div class="reading-shell">
+  <h1>Lead training + enablement programs</h1>
+  <div class="meta">
+    <span>Source: Sierra — Developer Relations Engineer (SF)</span>
+    <span class="humanize-badge humanize-low">Humanize: 4% low</span>
+  </div>
+  <div class="body">
+<p>The summit was mine to build from the structural frame outward — no inherited playbook, no pre-cleared agenda, just the mandate to create a training and convening program worthy of the top 0.5% of a 180,000-person engineering organization.</p>
+<p>The Office of Cross-Google Engineering serves roughly 1,000 Principal, Distinguished, and Google Fellow engineers — the senior technical IC population whose institutional knowledge, mentorship capacity, and technical judgment sit at the center of how Google's engineering culture actually propagates. These are not people who need a lecture. They need programming that respects the density of their existing signal, surfaces connections they couldn't have made on their own, and gives them a reason to show up. The STIC Summit — the Senior Technical IC Summit — was the flagship answer to that need, and the quarterly forums were its operational follow-on.</p>
+<p>The design problem was deceptively specific: how do you build a learning and leadership convening program for an audience that has, by definition, already surpassed most conventional expert-speaker frameworks? The standard conference format — keynote, breakout, networking lunch — collapses under that scrutiny. I started from the program's strategic purpose rather than its event logistics. The primary deliverable wasn't content delivery; it was cross-cohort density. These engineers worked inside functional verticals. The summit's job was to create the horizontal connective tissue that Google's org chart doesn't build naturally — between principal engineers who had never been in the same room, between technical domains that shared underlying architectural problems without shared vocabulary, between career stages that needed both mentorship supply and demand in the same space at the same time. That framing determined everything downstream: speaker selection, session architecture, the ratio of structured programming to unstructured working time, and the feedback instrumentation that would tell me whether the connective tissue actually formed or just felt like it did.</p>
+<p>The quarterly forums were the sustained-engagement layer — the mechanism that kept the cohort in conversation between summits. A once-a-year event, however well-designed, creates a peak that dissipates. The forums were built to maintain the activation level and drive ongoing participation across a globally distributed population. I treated them as a separate design problem from the summit: shorter, more topically focused, lower production overhead, and optimized for return attendance by people who had already been through the primary event. The 18% active participation rate across the global cohort on follow-on events was the number I watched — it was the indicator that the forums were creating genuine ongoing engagement rather than courtesy attendance on the first one.</p>
+<p>The summit drew 348 senior engineers and closed at 93% participant CSAT — in an audience that grades on a steep curve, that number doesn't arrive by accident. It arrives because the session design solved a real problem for the people in the room, because the follow-on forums gave the summit's momentum somewhere to go, and because the program's feedback instrumentation was tight enough to surface what was working mid-cycle rather than six weeks after it was over.</p>
+<p>What the numbers don't capture is the design instinct underneath them — the same instinct I ran at AJ+ when I was building a format that had to work at both real-time speed and context-team depth simultaneously, and at HuffPost Live when I was integrating audience signals into a live editorial flow with no buffer between source booking and air. Enablement programs for high-density technical audiences aren't fundamentally different from live editorial programs for demanding audiences: you have to know what the room already knows, design for the gap, and build feedback loops fast enough to correct in motion. The STIC Summit was that discipline applied to engineering leadership development — and the quarterly forums were the proof that it was a program, not just an event.</p>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
+</div>
+</body></html>

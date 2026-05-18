@@ -111,7 +111,10 @@ for (const row of rows) {
 
   // ── Cell audits ────────────────────────────────────────
   // Score
-  const scoreMatch = tr.match(/<span class="badge score-badge-lg[^"]*">([^<]+)<\/span>/);
+  // 2026-05-17 — score badges now carry extra attributes (drill-trigger,
+  // data-drill, title, onclick) after the class, so anchor on class then
+  // skip any non-`>` chars before the value.
+  const scoreMatch = tr.match(/<span class="badge score-badge-lg[^>]*>([\d.]+)/);
   if (!scoreMatch || !/^\d/.test(scoreMatch[1])) {
     pushFinding('MAJOR', row, 'Score cell', `missing or unparseable: ${scoreMatch?.[1] || 'empty'}`);
   }
