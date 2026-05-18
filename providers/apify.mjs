@@ -26,8 +26,10 @@
 // `title` and `url` are required keys; items missing either are dropped.
 //
 // Optional `description` mapping causes the JD body to be persisted to
-// `jds/{slug}.md` (with YAML frontmatter for title/company/url/scraped/source)
-// and the returned record's `url` is replaced with `local:jds/{slug}.md`.
+// `jds/{slug}-{hash}.md` (with YAML frontmatter for title/company/url/
+// scraped/source; `{hash}` is sha1[:10] of the canonical URL so two distinct
+// postings sharing the same company+title slug don't collide on one file)
+// and the returned record's `url` is replaced with `local:jds/{slug}-{hash}.md`.
 // Downstream tools (batch evaluation) read that file directly instead
 // of re-fetching the remote URL — eliminates HTTP failures on stale
 // job-board links and avoids paying for the same Apify run twice. Original
@@ -88,7 +90,20 @@ function pickField(item, spec) {
 
 const ALLOWED_DEFAULT_KEYS = new Set(['title', 'url', 'company', 'location']);
 
-// ── Local-JD writer (mirrors providers/linkedin.mjs format) ─────────
+// Actors return URLs from arbitrary external sites — treat them as untrusted.
+// Rejecting anything that isn't https keeps `javascript:`, `data:`, `file:`,
+// and protocol-downgraded `http:` URLs from ending up clickable in pipeline.md
+// or fed into the JD-cache filename hash. Malformed strings throw inside the
+// URL constructor and fall through to false.
+function isHttpsUrl(value) {
+  try {
+    return new URL(String(value)).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+// ── Local-JD writer ────────────────────────────────────────────────
 
 function slugify(text) {
   const slug = String(text || '')
@@ -142,10 +157,10 @@ function htmlToText(s) {
 function saveJd(normalized, descriptionBody, sourceLabel) {
   mkdirSync(JDS_DIR, { recursive: true });
   const baseSlug = slugify(`${normalized.company}-${normalized.title}`);
-  // sha1 over the canonical URL (or applicationUrl / company-title fallback)
-  // gives every distinct posting its own cache file deterministically.
+  // sha1 over the canonical URL (or company-title fallback when the URL is
+  // absent) gives every distinct posting its own cache file deterministically.
   const urlHash = createHash('sha1')
-    .update(String(normalized.url || normalized.applicationUrl || `${normalized.company}-${normalized.title}`))
+    .update(String(normalized.url || `${normalized.company}-${normalized.title}`))
     .digest('hex')
     .slice(0, 10);
   const slug = `${baseSlug}-${urlHash}`;
@@ -228,6 +243,7 @@ export default {
       .map(item => {
         const normalized = normalizeItem(item, entry.field_map, entry.defaults);
         if (!normalized.title || !normalized.url) return null;
+        if (!isHttpsUrl(normalized.url)) return null;
         if (!useLocalJd) return normalized;
         const descriptionRaw = pickField(item, entry.field_map.description);
         const descriptionBody = htmlToText(descriptionRaw);
