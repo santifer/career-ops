@@ -3211,6 +3211,83 @@ const server = createServer((req, res) => {
     return;  // keep connection open — do NOT call res.end()
   }
 
+  // ── Fix 2 (draft-sync-sse): per-row draft artifact SSE stream ──────────────
+  // Endpoint: GET /api/draft-updates-stream/{rowId}
+  // Fires a "draft-update" event whenever a file in the row's apply-pack
+  // directory (data/apply-packs/{N}-{slug}/ or data/applications/{N}-{slug}/)
+  // changes. The drawer subscribes when opened; EventSource is closed on close.
+  const draftStreamMatch = url.match(/^\/api\/draft-updates-stream\/(\d+)$/);
+  if (draftStreamMatch) {
+    const rowNum = draftStreamMatch[1];
+    res.writeHead(200, {
+      'Content-Type':  'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection':    'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'X-Accel-Buffering': 'no',
+    });
+    res.flushHeaders?.();
+
+    // Resolve the apply-pack directory for this row number.
+    function _draftDir(num) {
+      const apDir = join(ROOT, 'data', 'apply-packs');
+      const appDir = join(ROOT, 'data', 'applications');
+      for (const base of [apDir, appDir]) {
+        if (!existsSync(base)) continue;
+        try {
+          const entries = readdirSync(base);
+          const match = entries.find(e => e.startsWith(num + '-') || e.startsWith(num.padStart(3,'0') + '-'));
+          if (match) return join(base, match);
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    const dir = _draftDir(rowNum);
+    let _draftWatcher = null;
+    let _draftDebounce = null;
+
+    function _sendDraftUpdate() {
+      // Send list of artifact filenames in the directory as the update payload
+      let files = [];
+      if (dir && existsSync(dir)) {
+        try { files = readdirSync(dir).filter(f => !f.startsWith('.')); } catch (_) {}
+      }
+      try {
+        res.write(`event: draft-update\ndata: ${JSON.stringify({ rowNum, dir: dir || null, files })}\n\n`);
+      } catch (_) {}
+    }
+
+    // Send initial snapshot
+    _sendDraftUpdate();
+
+    if (dir && existsSync(dir)) {
+      try {
+        _draftWatcher = fsWatch(dir, { persistent: false, recursive: true }, () => {
+          clearTimeout(_draftDebounce);
+          _draftDebounce = setTimeout(_sendDraftUpdate, 300);
+        });
+      } catch (_) { /* fs.watch unavailable */ }
+    }
+
+    // Keepalive every 25s
+    const _draftKeepalive = setInterval(() => {
+      try { res.write(': keepalive\n\n'); } catch (_) { clearInterval(_draftKeepalive); }
+    }, 25_000);
+
+    req.on('close', () => {
+      clearInterval(_draftKeepalive);
+      clearTimeout(_draftDebounce);
+      try { _draftWatcher?.close(); } catch (_) {}
+    });
+    req.on('error', () => {
+      clearInterval(_draftKeepalive);
+      clearTimeout(_draftDebounce);
+      try { _draftWatcher?.close(); } catch (_) {}
+    });
+    return;  // keep connection open
+  }
+
   // ── Sidebar batch popout: detailed live status feed (2026-05-17) ──
   // Powers the clickable #sidebar-batch box → modal with real-time detail.
   // Composes batchLive() summary + detailBatches() recent-runs grouping +
@@ -3497,11 +3574,29 @@ const server = createServer((req, res) => {
   // server uptime, and tail of data/errors.log. Best-effort — any check
   // that fails returns null/false rather than aborting the whole payload.
   if (url === '/api/system-health') {
-    try {
-      let jobs = [];
+    // 2026-05-18 — Refactored from synchronous execSync (which blocked the
+    // event loop ~150ms per call) to async execFile via Promise wrapper.
+    // Both spawn calls now run in PARALLEL via Promise.all. Plus: errors.log
+    // lines now parsed into structured { ts, severity, source, code, message }
+    // shape so the system-health modal can render rows in a table (not raw
+    // text). Closes two deferred items from prior session.
+    (async () => {
       try {
-        const out = _execSync('launchctl list', { encoding: 'utf-8', timeout: 4000 }).toString();
-        jobs = out.split('\n')
+        const _runProc = (cmd, args, timeoutMs) => new Promise((resolve) => {
+          import('child_process').then(({ execFile }) => {
+            execFile(cmd, args, { encoding: 'utf-8', timeout: timeoutMs }, (err, stdout) => {
+              if (err) return resolve('');
+              resolve(stdout || '');
+            });
+          }).catch(() => resolve(''));
+        });
+
+        const [launchctlOut, pgrepOut] = await Promise.all([
+          _runProc('launchctl', ['list'], 4000),
+          _runProc('pgrep', ['-af', 'cloudflared'], 2000),
+        ]);
+
+        const jobs = launchctlOut.split('\n')
           .filter(l => l && /career-ops|careerops/i.test(l))
           .map(l => {
             const cols = l.split(/\t+/);
@@ -3511,51 +3606,50 @@ const server = createServer((req, res) => {
               label:  cols[2] || '',
             };
           });
-      } catch (_) { /* launchctl not present or no agent — return empty list */ }
 
-      // Tunnel: check if cloudflared process is running.
-      let tunnel = { running: false, info: '' };
-      try {
-        const out = _execSync('pgrep -af cloudflared', { encoding: 'utf-8', timeout: 2000 }).toString().trim();
-        if (out) {
+        const tunnel = { running: false, info: '' };
+        const tunOut = pgrepOut.trim();
+        if (tunOut) {
           tunnel.running = true;
-          tunnel.info = out.split('\n')[0].slice(0, 240);
+          tunnel.info = tunOut.split('\n')[0].slice(0, 240);
         }
-      } catch (_) { /* not running */ }
 
-      // Server uptime + memory rough — process.uptime() returns seconds.
-      const memMB = Math.round(process.memoryUsage().rss / 1024 / 1024);
-      const server = {
-        uptime_seconds: Math.round(process.uptime()),
-        node_version:   process.version,
-        pid:            process.pid,
-        memory_mb:      memMB,
-      };
+        const memMB = Math.round(process.memoryUsage().rss / 1024 / 1024);
+        const server = {
+          uptime_seconds: Math.round(process.uptime()),
+          node_version:   process.version,
+          pid:            process.pid,
+          memory_mb:      memMB,
+        };
 
-      // Recent errors — last 20 lines of data/errors.log
-      const errLogPath = join(ROOT, 'data/errors.log');
-      let errors = [];
-      if (existsSync(errLogPath)) {
-        try {
-          const txt = readFileSync(errLogPath, 'utf-8');
-          const lines = txt.split('\n').filter(l => l && l.trim());
-          errors = lines.slice(-20).reverse().map(l => l.slice(0, 320));
-        } catch (_) {}
+        // Raw errors.log → structured rows. Each line is parsed into:
+        //   { ts, raw, severity, source, worker_id, exit_code, message }
+        // The dashboard's system-health modal can now render this as a
+        // table with sortable columns instead of grepping for substrings.
+        const errLogPath = join(ROOT, 'data/errors.log');
+        let errors = [];
+        if (existsSync(errLogPath)) {
+          try {
+            const txt = readFileSync(errLogPath, 'utf-8');
+            const lines = txt.split('\n').filter(l => l && l.trim()).slice(-20).reverse();
+            errors = lines.map(parseErrorLine);
+          } catch (_) {}
+        }
+
+        return json({
+          ok: true,
+          jobs,
+          tunnel,
+          server,
+          errors,
+          generated_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: e.message }));
       }
-
-      return json({
-        ok: true,
-        jobs,
-        tunnel,
-        server,
-        errors,
-        generated_at: new Date().toISOString(),
-      });
-    } catch (e) {
-      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(JSON.stringify({ ok: false, error: e.message }));
-      return;
-    }
+    })();
+    return;
   }
 
   // ── All-Evaluations bucket — Feature 2 (item-list-pop-out) ───────────
