@@ -46,3 +46,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 - "Tell me about a time you had to exercise discretion / navigate sensitive information"
 - "What does your network look like in [journalism / media]?" (media partnerships roles)
 - Any question probing whether the journalism experience is current or historical
+
+## Recent updates (auto-merged via Update Drawer)
+
+- 2026-05-18 [project] Shipped Update Drawer B5 MVP — sidebar trigger, slide-out form, JSONL backend, corpus auto-merger. End-to-end smoke test.
