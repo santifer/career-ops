@@ -12,57 +12,15 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 
 There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
-**User Layer (personalization lives HERE):**
+**User Layer (NEVER auto-updated, personalization goes HERE):**
 - `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
-- `data/*`, `reports/*`, `output/*`, `interview-prep/*`, `writing-samples/*`
+- `data/*`, `reports/*`, `output/*`, `interview-prep/*`
 
-**System Layer (auto-updatable via `update-system.mjs`, DON'T put user data here):**
-- `modes/_shared.md`, `modes/oferta.md`, all other shared modes
+**System Layer (auto-updatable, DON'T put user data here):**
+- `modes/_shared.md`, `modes/oferta.md`, all other modes
 - `AGENTS.md`, `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
-
-### Design principles (the North Star)
-
-**Before any UX work — read `DESIGN_PRINCIPLES.md` at the repo root.** It captures the 5 pillars every dashboard surface, every modal, every email section, and every agent output must satisfy: (1) Scannability over comprehensiveness; (2) Action proximity; (3) Strengths AND limitations, balanced; (4) Background transparency; (5) Future-action awareness with full cost/time/outcome preview. When a design decision is ambiguous, default to whichever option scores highest against those 5 pillars; if scores tie, surface the trade-off to Mitchell.
-
-### Dashboard regression invariants
-
-**Before editing `scripts/build-dashboard.mjs` (≥50 lines), `dashboard-server.mjs` endpoints, or any shared dashboard CSS:** read `DASHBOARD_INVARIANTS.md` at the repo root. It documents the 7 table interactions that must stay intact (sort, click→drawer, truncation, scroll, action buttons, density toggle, keyboard nav), the exact selectors + handlers that bind them, and a 1-minute audit pattern to run before and after the change. When a regression is caught (or knowingly accepted), append it to the "Recent regressions" section at the bottom of that file with date + what broke + what guard was added.
-
-### Corpus auto-edit (post-calibration 2026-05-16)
-
-**Per Mitchell's career calibration brief (2026-05-16): User-Layer files are fully autonomously editable by agents** when an edit is justified by research, calibration changes, or surfaced gaps. The audit trail is git — every change goes through `scripts/agent-commit.mjs` so it lands in the log with agent attribution and is fully revertable.
-
-**What this means in practice:**
-- Agents may edit `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `interview-prep/*.md`, `writing-samples/*.md`, and any `data/*-readiness/*.md` files autonomously.
-- Every corpus edit MUST be committed via `scripts/agent-commit.mjs` (see usage below). NEVER use raw `git commit` for corpus changes — the helper enforces the agent-attribution trailer and skips empty diffs.
-- Mitchell does NOT pre-approve corpus edits per file. He reviews via `git log` / `git diff` after the fact and reverts anything he disagrees with.
-
-**What still requires explicit approval (NOT autonomous):**
-- Outbound actions: sending email, LinkedIn DMs, or any external messages
-- `git push` to any remote (mitwilli-create or otherwise) — pushes are user-triggered or scheduled, not agent-triggered
-- Cost-ceiling raises: changing `MONTHLY_BUDGET_USD`, `PER_RUN_CAP_*`, or `MONTHLY_BUDGET_USD_BURST` env vars
-- Edits to System-Layer files (modes/_shared.md, *.mjs scripts, AGENTS.md/CLAUDE.md, etc.) — those still flow through `update-system.mjs` or explicit user approval
-- Changes that would push to the `santifer` upstream (NEVER, per standing memory rule)
-
-**How to use the agent-commit helper:**
-
-```bash
-node scripts/agent-commit.mjs \
-  --agent <agent-name> \
-  --files "cv.md,modes/_profile.md" \
-  --message "Update target archetypes per calibration brief 2026-05-16"
-```
-
-The helper:
-- Stages ONLY the specified files (never `git add -A` — avoids accidentally committing unrelated work)
-- Skips the commit if the staged diff is empty (returns `{ok: true, skipped: 'no_changes'}`)
-- Appends `Agent: <name>` and `Per: career-calibration brief 2026-05-16` trailers
-- Uses `--signoff` for author attribution
-- Runs pre-commit hooks normally (no `--no-verify`)
-- Supports `--dry-run` to preview what would commit
-- Returns JSON with `{ok, sha, files_changed, message, branch}` for the calling agent to log
 
 ## Update Check
 
@@ -214,6 +172,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
 - **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
+- **Turkish (Turkey market):** `modes/tr/` — native Turkish translations with Turkey-specific vocabulary (SGK, kıdem tazminatı, ihbar süresi, brüt/net maaş, AGİ, BES, yemek kartı, yol yardımı, TÜFE zammı, etc.). Includes `_shared.md`, `is-ilani.md` (evaluation), `basvuru.md` (apply), `pipeline.md`.
 
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
@@ -230,7 +189,12 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
+**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or asks for Turkish output. Either:
+1. User says "use Turkish modes" → read from `modes/tr/` instead of `modes/`
+2. User sets `language.modes_dir: modes/tr` in `config/profile.yml` → always use Turkish modes
+3. You detect a Turkish JD → suggest switching to Turkish modes
+
+**When NOT to:** If the user applies to English-language roles, even at French, German, Japanese, or Turkish companies, use the default English modes — *unless* the user has explicitly requested another mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection).
 
 ### Skill Modes
 
@@ -258,32 +222,6 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - `cv.md` in project root is the canonical CV
 - `article-digest.md` has detailed proof points (optional)
 - **NEVER hardcode metrics** -- read them from these files at evaluation time
-
-### Application Workflow Files (added 2026-05-07)
-
-When the user asks "what should I work on tonight" or "I'm sitting down to apply", route through these:
-
-| File | Purpose |
-|------|---------|
-| `data/TODAY.md` | Master nav for today's session work — opens here first |
-| `data/APPLY-NOW.md` | Ranked apply-now queue (18 rows ≥ 4.0); per-company guide pointers |
-| `data/HOW-TO-APPLY.md` | Step-by-step workflow for tonight's app build (~60-70 min/app) |
-| `data/pre-flight-checklist.md` | 9-section checklist before submitting |
-| `data/tailored-resume-bullets.md` | 35 archetype-tailored bullets with cv.md line citations |
-| `data/outreach-templates.md` | 5 channels × 2-3 variants for LinkedIn DM / cold email |
-| `templates/cover-letter-template.md` | 4-block cover-letter shape |
-| `interview-prep/story-bank.md` | 10 STAR+R stories (used in cover letters AND interviews) |
-| `corpus/sample-outputs/` | Voice anchor reference samples |
-| `data/apply-now-queue.json` | Machine-readable apply-now queue (Atlas / dashboard consumption) |
-
-### Scripts (added 2026-05-07)
-
-- `scripts/build-apply-pack.mjs --row=N` — lightweight scaffold for a single apply-pack (cv / cover-letter / linkedin-dm / README stubs)
-- `scripts/build-apply-packs.mjs --top=N` — canonical full pack builder (cover-letter, form-fields, interview prep, ATS check, formatting guide, LinkedIn DMs, one-pager, pre-flight checklist, Grok intel, tailored CV PDF). Use this for full packs.
-- `scripts/humanize-check.mjs --file <path>` — **MANDATORY before any cover letter submission.** Scores AI detection risk (0–100%) across 4 signal types: phrase dictionary, burstiness, passive voice, transition density. Risk bands: 🟢 LOW (0–20) submit as-is · 🟡 MEDIUM (21–45) fix flagged phrases · 🟠 HIGH (46–70) rewrite needed · 🔴 CRITICAL (71–100) major humanization required. Also accepts `--text "..."` or stdin; `--json` for pipeline use. **Run this on every cover letter and any AI-drafted form-field answer before presenting to the user.**
-- `scripts/grok-research.mjs` — daily Grok research runner (`--dry-run` / `--tools-only` / production)
-- `scripts/apply-pending-diff.mjs` — review tool for `data/pending-diffs/` (`--list` / `--view {file}` / `--mark-reviewed {file}` / interactive)
-- npm aliases: `npm run apply-pack`, `npm run apply-packs`, `npm run grok-research`, `npm run pending-diffs`, `npm run heartbeat`
 
 ---
 
@@ -323,10 +261,6 @@ When the user asks "what should I work on tonight" or "I'm sitting down to apply
 - **Security**: private vulnerability reporting via email (see `SECURITY.md`)
 - **Support**: help questions go to Discord/Discussions, not issues (see `SUPPORT.md`)
 - **Discord**: https://discord.gg/8pRpHETxa4
-
-## Performance — Context Pre-bake
-
-Run `node scripts/prebake-context.mjs` before batch sessions to bundle static context files into `data/baked-context.md`. Auto-skips if source files are unchanged (SHA-256 hash check). The baked file is read by `batch-runner-batches.mjs` instead of reading each source file separately — reduces 5 per-session file reads to 1.
 
 ## Headless / Batch Mode
 
@@ -402,9 +336,3 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 - No markdown bold (`**`) in status field
 - No dates in status field (use the date column)
 - No extra text (use the notes column)
-
-## Voice Calibration
-The voice corpus at `writing-samples/voice-reference.md` is used for stylistic calibration only.
-SCOPE: Use ONLY to match Mitchell's written register (precision, directness, editorial pace).
-NEVER use it to invent experience, fabricate metrics, or extend claims beyond what cv.md documents.
-The corpus is sourced from Mitchell's own journalism and analysis writing — it is proof of voice, not proof of events.

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM-powered systems + RAG — Mitchell Williams</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
+  .body { font-size: 15px; }
+  .body p { margin: 0 0 16px; }
+  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
+  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
+  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
+  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
+  a { color: #0a66c2; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a; color: #e8e8e8; }
+    .meta, .footer { color: #999; }
+    .footer { border-top-color: #333; }
+  }
+</style>
+</head><body>
+<h1>LLM-powered systems + RAG</h1>
+<div class="meta">
+  Source: Perplexity — Member of Technical Staff (Forward Deployed Engineer, Applied AI) ·
+  <span class="humanize-badge humanize-low">Humanize: 5% low</span>
+</div>
+<div class="body">
+<p>The problem wasn't the VP's calendar. It was the drafting cycle sitting underneath it — a slow, high-friction loop where executive communications consumed hours that should have been measured in minutes. Every high-stakes send required a round of stylistic reconstruction: pulling back register here, sharpening rhetorical pace there, removing anything that read like a staff writer rather than the person whose name was on it. I was the Comms Lead inside Google's Office of Cross-Google Engineering, supporting a VP whose output touched the most senior technical IC population in the company — roughly 1,000 Principal, Distinguished, and Google Fellow engineers, the top 0.5% of a 180,000-person organization. The fidelity bar wasn't optional. These were people who would notice immediately if the voice shifted.</p>
+<p>The architecture I built had two components that worked as a single system. The first was the Voice DNA corpus — a curated collection of legacy executive emails, approved messaging frameworks, and what I called "executive constitutions": documented statements of rhetorical stance, risk tolerance, and the specific register the VP used when the stakes were highest. Not a style guide. A behavioral record — the actual signal left by years of high-stakes communication decisions, aggregated into something a retrieval system could pull against at generation time. The second component was the Kill List, and this is where most RAG implementations stop short: a structured archive of rejected drafts, annotated for why they failed. Outputs that were too formal, too hedged, too casual, too long, too much like something a communications professional would write rather than something this particular VP would say. The Kill List taught the agent what not to produce — negative training through documented failure — and that negative signal turned out to be as load-bearing as the positive corpus. You cannot calibrate rhetorical pace by showing an agent only what success looks like. You have to show it the edge of the map.</p>
+<p>The retrieval logic pulled from both corpora simultaneously on every generation cycle. A draft would surface positive exemplars from the Voice DNA corpus to anchor register and pace, while the Kill List constrained the output space — flagging patterns the model might otherwise default toward that the executive had explicitly rejected in prior cycles. The system wasn't replacing editorial judgment. It was encoding the executive's existing judgment into the retrieval layer so that judgment didn't have to be reconstructed from scratch every time a draft entered the queue. Stylistic fidelity, in this framing, is a knowledge-management problem. The VP already knew what good looked like. My job was to make that knowledge retrievable at generation speed.</p>
+<p>The results held across production cycles, not just test conditions. Drafting latency dropped 90% — time tracked across high-stakes drafting cycles before and after the RAG pipeline went live. Stylistic fidelity measured at 99% relative to the executive's established baseline, which meant outputs were reaching the send stage with minimal reconstruction. The pipeline ran as a digital twin: fast enough to move inside the cycle, faithful enough that the executive could ship without rewriting from scratch.</p>
+<p>What I took from this project wasn't the latency number. It was the architectural insight that negative examples aren't secondary data — they're primary signal. Any RAG system trying to model a person's voice without a Kill List is working with half the map. The corpus tells you where to go. The Kill List tells you what the territory actually rejects.</p>
+</div>
+<div class="footer">
+  Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
+  <a href="../index.html">← back to dashboard</a>
+</div>
+</body></html>

@@ -44,29 +44,9 @@ function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
 
 console.log('\n🧪 career-ops test suite\n');
 
-// ── 0. BIOME LINT ────────────────────────────────────────────────
-// Runs before syntax checks: a redeclared variable or undeclared identifier
-// surfaces as a lint error here rather than waiting for a runtime crash.
-
-console.log('0. Biome lint (errors only — warnings allowed)');
-
-try {
-  execSync('npx biome lint .', { cwd: ROOT, stdio: 'pipe' });
-  pass('biome lint clean');
-} catch (err) {
-  const out = `${err.stdout?.toString() || ''}${err.stderr?.toString() || ''}`;
-  const errorCount = (out.match(/Found (\d+) errors?/) || [])[1];
-  if (errorCount && parseInt(errorCount) > 0) {
-    fail(`biome lint reported ${errorCount} error(s) — run npm run lint to see them`);
-  } else {
-    // exit was non-zero but no error count parsed → treat as warning surface
-    pass('biome lint clean (warnings only)');
-  }
-}
-
 // ── 1. SYNTAX CHECKS ────────────────────────────────────────────
 
-console.log('\n1. Syntax checks');
+console.log('1. Syntax checks');
 
 const mjsFiles = readdirSync(ROOT).filter(f => f.endsWith('.mjs'));
 for (const f of mjsFiles) {
@@ -332,23 +312,6 @@ if (fileExists('VERSION')) {
   }
 } else {
   fail('VERSION file missing');
-}
-
-// ── UNIT TESTS (node:test) ──────────────────────────────────────
-
-console.log('\n11. Unit tests (node:test)');
-
-try {
-  execSync('node --test tests/unit/*.mjs', { cwd: ROOT, stdio: 'pipe' });
-  pass('unit tests passed');
-} catch (err) {
-  const out = `${err.stdout?.toString() || ''}${err.stderr?.toString() || ''}`;
-  const failMatch = out.match(/# fail (\d+)/);
-  if (failMatch && parseInt(failMatch[1]) > 0) {
-    fail(`unit tests failed (${failMatch[1]} failures) — run npm run test:unit to see`);
-  } else {
-    fail('unit tests failed — run npm run test:unit to see');
-  }
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

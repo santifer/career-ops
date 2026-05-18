@@ -1,19 +1,15 @@
 %-------------------------
 % Career-Ops LaTeX CV Template
-% Design spec: Calibri-equivalent (lmodern/helvet), accent green #16a34a,
-%              single-column, 0.6in margins, ATS-safe.
-% Sections mirror cv-template.html in identical order:
-%   Header > Highlights (conditional) > Summary > Competencies >
-%   Experience > Projects (conditional) > Learning (conditional) >
-%   Education > Certifications > Skills
-% Conditional blocks use {{#if VAR}} / {{/if VAR}} — processed by renderTemplate()
-% in generate-pdf.mjs before the .tex is passed to generate-latex.mjs.
+% Based on: Gabriel Sison / sb2nov resume template
+% License: MIT
 %------------------------
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Random Stuff %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[letterpaper,11pt]{article}
 \usepackage{latexsym}
 \usepackage[empty]{fullpage}
 \usepackage{titlesec}
+\usepackage{marvosym}
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{verbatim}
 \usepackage{enumitem}
@@ -21,42 +17,31 @@
 \usepackage{fancyhdr}
 \usepackage[english]{babel}
 \usepackage{tabularx}
+\usepackage{fontawesome}
 \usepackage{multicol}
-\usepackage{tcolorbox}   % Highlights box
-\usepackage{xcolor}      % Accent color
 \setlength{\multicolsep}{-3.0pt}
 \setlength{\columnsep}{-1pt}
 \input{glyphtounicode}
-
-% --- Accent color (career-ops green, mirrors dashboard --accent) ---
-\definecolor{accentgreen}{HTML}{16a34a}
-\definecolor{highlightbg}{HTML}{f5fdf7}
-\definecolor{highlightborder}{HTML}{bbf7d0}
-
 \pagestyle{fancy}
-\fancyhf{}
+\fancyhf{} % clear all header and footer fields
 \fancyfoot{}
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
-
-% Margins (0.6in, mirroring HTML @page rule)
+% Adjust margins
 \addtolength{\oddsidemargin}{-0.6in}
 \addtolength{\evensidemargin}{-0.5in}
 \addtolength{\textwidth}{1.19in}
 \addtolength{\topmargin}{-.7in}
 \addtolength{\textheight}{1.4in}
-
 \urlstyle{same}
 \raggedbottom
 \raggedright
 \setlength{\tabcolsep}{0in}
-
-% Section heading style: accent green, uppercase, 1pt rule
+% Sections formatting
 \titleformat{\section}{
-  \vspace{-6pt}\scshape\raggedright\large\bfseries\color{accentgreen}
+  \vspace{-7pt}\scshape\raggedright\large\bfseries
 }{}{0em}{}[\color{black}\titlerule \vspace{0pt}]
-
-% ATS: machine-readable Unicode mapping
+% Ensure that generate pdf is machine readable/ATS parsable
 \pdfgentounicode=1
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%  Commands  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,69 +80,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%  Heading  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
     \begin{center}
-        {\Huge\scshape {{NAME}}} \\[4pt]
+        % NAME
+        {\Huge\scshape {{NAME}}}
+        % SUBHEADING
+        \\ {{CONTACT_LINE}}\\
         \small
-        {{PHONE}} ~$\cdot$~
-        \href{mailto:{{EMAIL}}}{\underline{{{EMAIL}}}} ~$\cdot$~
-        \href{{{LINKEDIN_URL}}}{\underline{{{LINKEDIN_DISPLAY}}}} ~$\cdot$~
-        \href{{{PORTFOLIO_URL}}}{\underline{{{PORTFOLIO_DISPLAY}}}} ~$\cdot$~
-        {{LOCATION}}
+        % EMAIL
+        \href{mailto:{{EMAIL_URL}}}{\raisebox{-0.2\height}\faEnvelope\  \underline{{{EMAIL_DISPLAY}}}} ~
+        % LINKEDIN
+        \href{{{LINKEDIN_URL}}}{\raisebox{-0.2\height}\faLinkedin\ \underline{{{LINKEDIN_DISPLAY}}}}  ~
+        % GITHUB
+        \href{{{GITHUB_URL}}}{\raisebox{-0.2\height}\faGithub\ \underline{{{GITHUB_DISPLAY}}}}
     \end{center}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Highlights  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% HM 6-second scan box. Conditional: only rendered when HIGHLIGHTS is non-empty.
-% ATS: text layer order matches HTML — highlights appear before Work Experience.
-{{#if HIGHLIGHTS}}
-\vspace{4pt}
-\begin{tcolorbox}[
-  colback=highlightbg,
-  colframe=highlightborder,
-  boxrule=0.5pt,
-  arc=4pt,
-  left=8pt, right=8pt, top=6pt, bottom=6pt,
-]
-  \textbf{\textcolor{accentgreen}{\small\scshape Highlights}}\\[4pt]
-  \begin{itemize}[leftmargin=0.15in, label={\small\textcolor{accentgreen}{$\bullet$}}, itemsep=1pt]
-    \small{
-{{HIGHLIGHTS}}
-    }
-  \end{itemize}
-\end{tcolorbox}
-\vspace{2pt}
-{{/if HIGHLIGHTS}}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Professional Summary  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Professional Summary}
-\small{{SUMMARY_TEXT}}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Core Competencies  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Core Competencies}
-\vspace{-7pt}
-\begin{itemize}[leftmargin=0.15in, label={}]
-  \small{\item{{{COMPETENCIES}}}}
-\end{itemize}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Work Experience  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Work Experience}
-  \resumeSubHeadingListStart
-{{EXPERIENCE}}
-  \resumeSubHeadingListEnd
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Selected Projects  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-{{#if PROJECTS}}
-\section{Selected Projects}
-\resumeSubHeadingListStart
-{{PROJECTS}}
-\resumeSubHeadingListEnd
-{{/if PROJECTS}}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Continuous Learning  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-{{#if LEARNING}}
-\section{Continuous Learning}
-\resumeSubHeadingListStart
-{{LEARNING}}
-\resumeSubHeadingListEnd
-{{/if LEARNING}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%  Education  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Education}
@@ -165,16 +99,19 @@
 {{EDUCATION}}
   \resumeSubHeadingListEnd
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Certifications  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-{{#if CERTIFICATIONS}}
-\section{Certifications}
-\vspace{-7pt}
-\begin{itemize}[leftmargin=0.15in, label={}]
-  \small{\item{{{CERTIFICATIONS}}}}
-\end{itemize}
-{{/if CERTIFICATIONS}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Experience  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Work Experience}
+  \resumeSubHeadingListStart
+{{EXPERIENCE}}
+  \resumeSubHeadingListEnd
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Skills  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  PROJECTS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Personal Projects}
+\resumeSubHeadingListStart
+{{PROJECTS}}
+\resumeSubHeadingListEnd
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Technical Skills  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Technical Skills}
 \vspace{-7pt}
 \begin{itemize}

@@ -3,30 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{NAME}} -- CV</title>
+<title>{{NAME}} — CV</title>
 <style>
-  /*
-   * CV Template — career-ops
-   * Design spec: Calibri 11pt, 0.6in margins, single-column, ATS-safe.
-   * Accent: #16a34a (career-ops green, matching dashboard --accent token).
-   * Verified 99.2% ATS parse rate (Workday/Greenhouse/Lever/iCIMS/Taleo).
-   *
-   * Template engine: renderTemplate() in generate-pdf.mjs supports:
-   *   {{VAR}}             — simple substitution
-   *   {{#if VAR}}...{{/if VAR}}   — conditional block (truthy = non-empty/non-false)
-   *   {{#each ARR}}...{{/each}}   — loop, {{this}} = current element
-   *   {{!-- comment --}}  — stripped from output
-   */
-
-  /* === PAGE SETUP === */
-  @page {
-    size: letter;
-    margin: 0.6in;
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
 
-  html {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
   }
 
   * {
@@ -35,375 +47,308 @@
     box-sizing: border-box;
   }
 
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   body {
-    font-family: Calibri, "Calibri Light", Arial, sans-serif;
-    font-size: 11pt;
-    line-height: 1.18;
-    color: #1a1a1a;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #1a1a2e;
     background: #ffffff;
+    padding: 0;
+    margin: 0;
   }
 
   .page {
     width: 100%;
     max-width: {{PAGE_WIDTH}};
     margin: 0 auto;
-    padding: 0;
-  }
-
-  /* === LINKS === */
-  a {
-    color: #1a1a1a;
-    text-decoration: none;
-    white-space: nowrap;
+    padding: 2px 0;
   }
 
   /* === HEADER === */
-  .cv-header {
-    margin-bottom: 14px;
+  .header {
+    margin-bottom: 20px;
   }
 
-  .cv-header h1 {
-    font-family: Calibri, "Calibri Light", Arial, sans-serif;
-    font-size: 26pt;
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
     font-weight: 700;
-    color: #1a1a1a;
-    letter-spacing: 0.01em;
-    line-height: 1.1;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
     margin-bottom: 6px;
+    line-height: 1.1;
+  }
+
+  .header-gradient {
+    height: 2px;
+    background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
+    border-radius: 1px;
+    margin-bottom: 10px;
   }
 
   .contact-row {
-    font-size: 10pt;
-    color: #444;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
     line-height: 1.4;
+    color: #555;
   }
 
   .contact-row a {
-    color: #444;
+    color: #555;
+    text-decoration: none;
   }
 
-  .contact-sep {
-    color: #aaa;
-    margin: 0 5px;
+  .contact-row .separator {
+    color: #ccc;
   }
 
-  /* === SECTION HEADINGS (real h2 elements for ATS) === */
-  h2.section-title {
-    font-family: Calibri, "Calibri Light", Arial, sans-serif;
-    font-size: 12pt;
+  /* === SECTIONS === */
+  .section {
+    margin-bottom: 18px;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
     font-weight: 700;
-    color: #16a34a;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding-bottom: 2px;
-    border-bottom: 1px solid #16a34a;
-    margin-bottom: 8px;
-    margin-top: 14px;
+    letter-spacing: 0.06em;
+    color: hsl(187, 74%, 32%);
+    border-bottom: 1.5px solid #e2e2e2;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
     line-height: 1.2;
-  }
-
-  /* First section has no top margin */
-  .section-first h2.section-title {
-    margin-top: 0;
-  }
-
-  /* Subtle separator rule between sections */
-  .section-rule {
-    border: none;
-    border-top: 0.5pt solid #e5e7eb;
-    margin: 2px 0 0 0;
-  }
-
-  /* === HIGHLIGHTS BOX (forced page-1, 6-second HM scan) === */
-  /*
-   * ATS note: text layer order is header -> highlights -> summary -> competencies
-   * -> experience -> projects -> learning -> education -> skills.
-   * Single-column block flow ensures parsers read in natural order.
-   */
-  .highlights-box {
-    background: #f5fdf7;
-    border: 1px solid rgba(22, 163, 74, 0.25);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 14px;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .highlights-box .highlights-label {
-    font-size: 9pt;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: #16a34a;
-    margin-bottom: 6px;
-  }
-
-  .highlights-box ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .highlights-box ul li {
-    font-size: 10.5pt;
-    font-weight: 600;
-    color: #1a1a1a;
-    line-height: 1.3;
-    padding-left: 14px;
-    position: relative;
-    margin-bottom: 4px;
-  }
-
-  .highlights-box ul li:last-child {
-    margin-bottom: 0;
-  }
-
-  .highlights-box ul li::before {
-    content: '';
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 7px;
-    width: 5px;
-    height: 5px;
-    background: #16a34a;
-    border-radius: 50%;
   }
 
   /* === PROFESSIONAL SUMMARY === */
   .summary-text {
-    font-size: 10.5pt;
-    line-height: 1.55;
-    color: #1a1a1a;
+    font-size: 11px;
+    line-height: 1.7;
+    color: #2f2f2f;
   }
 
-  /* === CORE COMPETENCIES — plain-text ATS-safe, visual separator === */
-  /*
-   * ATS note: real CSS pill elements (flex boxes) can confuse ATS text
-   * extraction by fragmenting the skill text. We render as inline spans
-   * separated by a visible dot; text layer reads as natural comma-separated.
-   */
-  .competencies-text {
-    font-size: 10pt;
-    color: #1a1a1a;
-    line-height: 1.6;
+  /* Links must never break across lines */
+  a {
+    white-space: nowrap;
   }
 
-  .competency-item {
-    display: inline;
+  /* === CORE COMPETENCIES === */
+  .competencies-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
-  .competency-sep {
-    color: #aaa;
-    margin: 0 4px;
-    font-size: 9pt;
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: hsl(187, 74%, 28%);
+    background: hsl(187, 40%, 95%);
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid hsl(187, 40%, 88%);
   }
 
   /* === WORK EXPERIENCE === */
   .job {
-    margin-bottom: 12px;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    margin-bottom: 14px;
   }
 
   .job-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 8px;
-    margin-bottom: 1px;
+    gap: 12px;
+    margin-bottom: 4px;
   }
 
   .job-company {
-    font-size: 11pt;
-    font-weight: 700;
-    color: #1a1a1a;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: hsl(270, 70%, 45%);
   }
 
   .job-period {
-    font-size: 10pt;
-    color: #555;
+    font-size: 10.5px;
+    color: #777;
     white-space: nowrap;
-    flex-shrink: 0;
   }
 
-  .job-title {
-    font-size: 10.5pt;
-    font-style: italic;
+  .job-role {
+    font-size: 11px;
+    font-weight: 600;
     color: #333;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+  }
+
+  .job-location {
+    font-size: 10px;
+    color: #888;
   }
 
   .job ul {
-    padding-left: 14px;
-    margin-top: 3px;
+    padding-left: 18px;
+    margin-top: 6px;
   }
 
   .job li {
-    font-size: 10.5pt;
-    line-height: 1.45;
-    color: #1a1a1a;
-    margin-bottom: 3px;
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 4px;
   }
 
-  .job li:last-child {
-    margin-bottom: 0;
+  .job li strong {
+    font-weight: 600;
   }
 
-  /* === SELECTED PROJECTS (optional — conditional block) === */
+  /* === PROJECTS === */
   .project {
-    margin-bottom: 10px;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    margin-bottom: 12px;
   }
 
   .project-title {
-    font-size: 10.5pt;
-    font-weight: 700;
-    color: #1a1a1a;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: hsl(270, 70%, 45%);
   }
 
-  .project-meta {
-    font-size: 9.5pt;
-    color: #555;
-    margin-bottom: 3px;
+  .project-badge {
+    font-size: 9px;
+    font-weight: 500;
+    color: hsl(187, 74%, 32%);
+    background: hsl(187, 40%, 95%);
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-left: 6px;
   }
 
   .project-desc {
-    font-size: 10.5pt;
-    color: #1a1a1a;
-    line-height: 1.45;
+    font-size: 10.5px;
+    color: #444;
+    margin-top: 3px;
+    line-height: 1.55;
   }
 
-  /* === CONTINUOUS LEARNING (optional — conditional block) === */
-  .learning-item {
-    margin-bottom: 5px;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .learning-item .learning-title {
-    font-size: 10.5pt;
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-
-  .learning-item .learning-org {
-    font-size: 10pt;
-    color: #555;
-  }
-
-  .learning-item .learning-date {
-    font-size: 10pt;
-    color: #777;
+  .project-tech {
+    font-size: 9.5px;
+    color: #888;
+    margin-top: 3px;
   }
 
   /* === EDUCATION === */
   .edu-item {
     margin-bottom: 8px;
-    break-inside: avoid;
-    page-break-inside: avoid;
   }
 
   .edu-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 8px;
+    gap: 12px;
   }
 
-  .edu-degree {
-    font-size: 10.5pt;
-    font-weight: 700;
-    color: #1a1a1a;
-  }
-
-  .edu-institution {
-    font-size: 10.5pt;
-    font-weight: 400;
+  .edu-title {
+    font-weight: 600;
+    font-size: 11px;
     color: #333;
   }
 
-  .edu-year {
-    font-size: 10pt;
-    color: #555;
-    white-space: nowrap;
-    flex-shrink: 0;
+  .edu-org {
+    color: hsl(270, 70%, 45%);
+    font-weight: 500;
   }
 
-  .edu-detail {
-    font-size: 10pt;
-    color: #555;
-    margin-top: 1px;
+  .edu-year {
+    font-size: 10px;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .edu-desc {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+    line-height: 1.5;
   }
 
   /* === CERTIFICATIONS === */
   .cert-item {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(90px, max-content) 44px;
     align-items: baseline;
-    gap: 8px;
-    margin-bottom: 5px;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    gap: 12px;
+    margin-bottom: 6px;
   }
 
   .cert-title {
-    font-size: 10.5pt;
-    color: #1a1a1a;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #333;
+    min-width: 0;
   }
 
-  .cert-issuer {
-    font-size: 10pt;
-    color: #555;
+  .cert-org {
+    color: hsl(270, 70%, 45%);
+    white-space: nowrap;
   }
 
-  .cert-date {
-    font-size: 10pt;
+  .cert-year {
+    font-size: 10px;
     color: #777;
     white-space: nowrap;
-    flex-shrink: 0;
+    text-align: right;
   }
 
   /* === SKILLS === */
-  .skills-text {
-    font-size: 10.5pt;
-    color: #1a1a1a;
-    line-height: 1.55;
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
   }
 
-  .skills-category {
-    font-weight: 700;
-    color: #1a1a1a;
+  .skill-item {
+    font-size: 10.5px;
+    color: #444;
   }
 
-  /* === PRINT MEDIA === */
+  .skill-category {
+    font-weight: 600;
+    color: #333;
+    font-size: 10.5px;
+  }
+
+  /* === PRINT === */
   @media print {
     body {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
 
-    .cv-header h1 {
-      /* Prevent name from orphaning at page break */
-      break-after: avoid;
-      page-break-after: avoid;
+    .page {
+      padding: 0;
     }
+  }
 
-    .highlights-box {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-
-    .job,
-    .project,
-    .edu-item,
-    .cert-item,
-    .learning-item {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
+  /* === PAGE BREAK CONTROL === */
+  .avoid-break,
+  .job,
+  .project,
+  .edu-item,
+  .cert-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 </style>
 </head>
@@ -411,78 +356,64 @@
 <div class="page">
 
   <!-- HEADER -->
-  <!-- ATS: Name is plain h1 text. Contact row is inline text, no table/flex tricks. -->
-  <div class="cv-header">
+  <div class="header avoid-break">
     <h1>{{NAME}}</h1>
+    <div class="header-gradient"></div>
     <div class="contact-row">
-      {{PHONE}}<span class="contact-sep">·</span>{{EMAIL}}<span class="contact-sep">·</span><a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a><span class="contact-sep">·</span><a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a><span class="contact-sep">·</span>{{LOCATION}}
+      <span>{{PHONE}}</span>
+      <span class="separator">|</span>
+      <span>{{EMAIL}}</span>
+      <span class="separator">|</span>
+      <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
+      <span class="separator">|</span>
+      <a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>
+      <span class="separator">|</span>
+      <span>{{LOCATION}}</span>
     </div>
   </div>
 
-  {{!-- HIGHLIGHTS: only rendered when HIGHLIGHTS field is populated. --}}
-  {{!-- ATS: appears in text stream BEFORE Work Experience per finding #43. --}}
-  {{#if HIGHLIGHTS}}
-  <div class="highlights-box">
-    <div class="highlights-label">{{SECTION_HIGHLIGHTS}}</div>
-    <ul>
-      {{HIGHLIGHTS}}
-    </ul>
-  </div>
-  {{/if HIGHLIGHTS}}
-
   <!-- PROFESSIONAL SUMMARY -->
-  <div class="section-first">
-    <h2 class="section-title">{{SECTION_SUMMARY}}</h2>
-    <p class="summary-text">{{SUMMARY_TEXT}}</p>
+  <div class="section avoid-break">
+    <div class="section-title">{{SECTION_SUMMARY}}</div>
+    <div class="summary-text">{{SUMMARY_TEXT}}</div>
   </div>
 
   <!-- CORE COMPETENCIES -->
-  <!-- ATS: plain inline text with separators, never real CSS pill boxes. -->
-  <div>
-    <h2 class="section-title">{{SECTION_COMPETENCIES}}</h2>
-    <div class="competencies-text">{{COMPETENCIES}}</div>
+  <div class="section">
+    <div class="section-title">{{SECTION_COMPETENCIES}}</div>
+    <div class="competencies-grid">
+      {{COMPETENCIES}}
+    </div>
   </div>
 
   <!-- WORK EXPERIENCE -->
-  <div>
-    <h2 class="section-title">{{SECTION_EXPERIENCE}}</h2>
+  <div class="section">
+    <div class="section-title">{{SECTION_EXPERIENCE}}</div>
     {{EXPERIENCE}}
   </div>
 
-  {{!-- SELECTED PROJECTS: optional section. --}}
-  {{#if PROJECTS}}
-  <div>
-    <h2 class="section-title">{{SECTION_PROJECTS}}</h2>
+  <!-- PROJECTS -->
+  <div class="section avoid-break">
+    <div class="section-title">{{SECTION_PROJECTS}}</div>
     {{PROJECTS}}
   </div>
-  {{/if PROJECTS}}
-
-  {{!-- CONTINUOUS LEARNING: optional I2-trajectory section. --}}
-  {{#if LEARNING}}
-  <div>
-    <h2 class="section-title">{{SECTION_LEARNING}}</h2>
-    {{LEARNING}}
-  </div>
-  {{/if LEARNING}}
 
   <!-- EDUCATION -->
-  <div>
-    <h2 class="section-title">{{SECTION_EDUCATION}}</h2>
+  <div class="section avoid-break">
+    <div class="section-title">{{SECTION_EDUCATION}}</div>
     {{EDUCATION}}
   </div>
 
-  {{!-- CERTIFICATIONS: optional. --}}
-  {{#if CERTIFICATIONS}}
-  <div>
-    <h2 class="section-title">{{SECTION_CERTIFICATIONS}}</h2>
+  <!-- CERTIFICATIONS -->
+  <div class="section avoid-break">
+    <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
     {{CERTIFICATIONS}}
   </div>
-  {{/if CERTIFICATIONS}}
 
-  <!-- SKILLS & TOOLS -->
-  <div>
-    <h2 class="section-title">{{SECTION_SKILLS}}</h2>
-    <div class="skills-text">{{SKILLS}}</div>
+  <!-- SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">{{SECTION_SKILLS}}</div>
+    {{SKILLS}}
   </div>
 
 </div>

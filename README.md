@@ -157,7 +157,7 @@ node gemini-eval.mjs --file ./jds/my-job.txt
 npm run gemini:eval -- "JD text here"
 ```
 
-> **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.0-flash` (15 RPM, 1M tokens/day free).
+> **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.5-flash` (15 RPM, 1M tokens/day free).
 
 ## Usage
 
@@ -228,44 +228,6 @@ go build -o career-dashboard .
 ```
 
 Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.
-
-### Running the Playwright dashboard test suite
-
-The browser dashboard (`scripts/build-dashboard.mjs` + `dashboard-server.mjs`) ships with an end-to-end Playwright suite that exercises the eight critical user-facing flows.
-
-**Setup (one time):**
-
-```bash
-npm install                       # installs @playwright/test
-npm run test:dashboard:install    # downloads the chromium browser
-```
-
-**Run the suite:**
-
-```bash
-# Terminal 1 — start the dashboard server (assumed to be on :3000)
-node dashboard-server.mjs --port=3000
-
-# Terminal 2 — run the tests
-npm run test:dashboard            # headless
-npm run test:dashboard:ui         # Playwright UI mode
-DASHBOARD_URL=http://localhost:4000 npm run test:dashboard   # custom port/host
-```
-
-**Coverage:**
-
-| # | Flow |
-|---|------|
-| 1 | Row expand/collapse — click toggles the inline detail panel |
-| 2 | Cmd-K palette — `⌘K`/`Ctrl+K` opens, `Esc` closes |
-| 3 | Status writeback — clicking a status pill opens the popover |
-| 4 | Batch overlay — `✕` dismissal stays sticky for ≥ 3 s |
-| 5 | Filter input — typing hides non-matching rows |
-| 6 | Dark-mode toggle — adds `body.dark`, persists in `localStorage` |
-| 7 | Mobile breakpoint (375 × 812) — Apply-Now table renders as cards |
-| 8 | Keyboard a11y — `Tab` reaches every interactive control with a visible focus ring |
-
-Tests skip cleanly (rather than failing) when the server isn't running or when the dashboard has no data yet.
 
 ## Project Structure
 

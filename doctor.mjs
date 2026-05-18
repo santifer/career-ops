@@ -8,7 +8,6 @@
 import { existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { spawnSync } from 'child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = __dirname;
@@ -165,7 +164,6 @@ async function main() {
     checkAutoDir('data'),
     checkAutoDir('output'),
     checkAutoDir('reports'),
-    await checkOllama(),
   ];
 
   let failures = 0;
@@ -192,38 +190,6 @@ async function main() {
     console.log('');
     console.log('Join the community: https://discord.gg/8pRpHETxa4');
     process.exit(0);
-  }
-}
-
-async function checkOllama() {
-  const whichResult = spawnSync('which', ['ollama'], { encoding: 'utf8' });
-  if (whichResult.status !== 0) {
-    return {
-      pass: true, // non-blocking — Ollama is optional
-      label: 'Ollama: not installed (optional — install for free local triage: https://ollama.ai)',
-    };
-  }
-  const ollamaPath = whichResult.stdout.trim();
-  // Check if running
-  try {
-    const res = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(1500) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const models = (data.models || []).map(m => m.name);
-    const preferred = ['qwen2.5:14b', 'qwen3:8b', 'llama3.2:3b'];
-    const found = preferred.find(p => models.some(m => m === p || m.startsWith(p.split(':')[0] + ':')));
-    if (found) {
-      return { pass: true, label: `Ollama: ✅ running at ${ollamaPath} | model: ${found} loaded` };
-    }
-    return {
-      pass: true,
-      label: `Ollama: installed at ${ollamaPath} | no triage models — run: ollama pull qwen2.5:14b`,
-    };
-  } catch {
-    return {
-      pass: true,
-      label: `Ollama: installed at ${ollamaPath} | not running — start with: ollama serve`,
-    };
   }
 }
 

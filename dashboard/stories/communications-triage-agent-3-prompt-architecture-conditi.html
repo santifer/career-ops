@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploy end-to-end integrations — Mitchell Williams</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
+  .body { font-size: 15px; }
+  .body p { margin: 0 0 16px; }
+  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
+  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
+  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
+  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
+  a { color: #0a66c2; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a; color: #e8e8e8; }
+    .meta, .footer { color: #999; }
+    .footer { border-top-color: #333; }
+  }
+</style>
+</head><body>
+<h1>Deploy end-to-end integrations</h1>
+<div class="meta">
+  Source: Perplexity — Member of Technical Staff (Forward Deployed Engineer, Applied AI) ·
+  <span class="humanize-badge humanize-low">Humanize: 5% low</span>
+</div>
+<div class="body">
+<p>The inbound stream for the Office of Cross-Google Engineering was a specific kind of noise problem. xGE supports roughly 1,000 of Google's most-senior technical individual contributors — Principals, Distinguished Engineers, Google Fellows — and the communications requests coming into that office carried a weight that made triage genuinely consequential. Route a Low-touch request to a human reviewer and you've spent senior IC time on something a template could have handled. Mis-classify a High-touch escalation and you've handed an executive a half-built response to something that needed careful judgment. The cost of getting it wrong wasn't abstract. So I built a system to get it right — and then get out of the way.</p>
+<p>The architecture I landed on was three prompts, sequenced with intent: triage, revise, escalate. The first prompt classified every inbound request into one of three tiers — Low, Medium, or High touch — based on a conditional knowledge base that loaded context relevant to the request type. That conditional KB loading was the piece that made classification meaningful rather than mechanical. A Low-touch request about an existing program got a different knowledge surface than a High-touch request touching a technical roadmap decision or a politically sensitive personnel matter. The triage prompt wasn't reading a static ruleset — it was reading the right ruleset for the situation in front of it. The second prompt handled revision for the resolved tier, applying Smart Brevity principles with documented rationale so outputs weren't just fast but defensible. The third prompt was the escalation path: structured handoff notes for anything the system correctly identified as requiring human judgment, with enough context baked in that a human reviewer could act on the handoff without re-reading the original thread.</p>
+<p>The single-agent design — one Gemini orchestrator, three sequential prompts — was a deliberate constraint. Multi-agent orchestration introduces coordination overhead and failure surfaces that compound when you're building for unattended production. I wanted something that would run without me, and that meant minimizing the number of things that could silently break. The conditional KB loading handled the complexity that multi-agent fanout would otherwise solve — routing intelligence built into the prompt layer rather than into a routing layer. I've since applied similar single-orchestrator thinking to the career-ops pipeline I built on Claude Code, where parallel workers run under one orchestrator with skill-based delegation. The instinct is the same: put the judgment in the right place and simplify everything around it.</p>
+<p>The system recaptured approximately 160 operational hours per year across the inbound stream at greater than 90% classification accuracy. Those are production numbers, not benchmark numbers — measured against real traffic from a cohort where each hour of recovered attention has compounding value. The most durable validation came later: when I was on medical leave for several months in early 2026, the triage system maintained 100% operational continuity without a single human intervention. That's the honest test of whether an end-to-end integration actually works. Not whether it demos well. Whether it runs when you're not in the room.</p>
+<p>What I keep coming back to is that this system's real job wasn't classification — it was trust calibration. The senior ICs it served needed to know that the Low-touch responses that came out the other end sounded right, that the escalations they received were real escalations, and that the whole thing wouldn't randomly misfire on something sensitive. Getting to that level of trust required building the conditional KB with the same editorial instinct I'd applied to rundown decisions in broadcast: what does this request actually need, and what does a wrong answer cost? That instinct isn't a communications background grafted onto an AI tool. It's the same discipline, applied at a different layer of the stack.</p>
+</div>
+<div class="footer">
+  Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
+  <a href="../index.html">← back to dashboard</a>
+</div>
+</body></html>

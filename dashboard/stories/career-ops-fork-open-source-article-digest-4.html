@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software architecture / systems design — Mitchell Williams</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
+  .body { font-size: 15px; }
+  .body p { margin: 0 0 16px; }
+  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
+  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
+  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
+  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
+  a { color: #0a66c2; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a; color: #e8e8e8; }
+    .meta, .footer { color: #999; }
+    .footer { border-top-color: #333; }
+  }
+</style>
+</head><body>
+<h1>Software architecture / systems design</h1>
+<div class="meta">
+  Source: ElevenLabs — Forward Deployed Engineer - Software Engineer ·
+  <span class="humanize-badge humanize-low">Humanize: 2% low</span>
+</div>
+<div class="body">
+<p>The system I built to run my AI job search wasn't a side project. It was a production decision about architecture.</p>
+<p>In April 2026, I forked an open-source project called `career-ops` and rebuilt it from the inside out — not as a personal script, but as a multi-stage agentic pipeline with parallel workers, a single Claude orchestrator, skill-based delegation across pipeline stages, and portal scanning that hits Greenhouse, Ashby, and Lever APIs at zero token cost. The public repo is at github.com/mitwilli-create/career-ops. I mention that first because the design philosophy matters more than the feature list: every architectural choice was made to answer a question I'd asked before about production systems at much larger scale. What fails under load? What breaks when you're not watching? What do you need to hand off cleanly to an agent and never touch again?</p>
+<p>The core engineering decision was orchestration topology. I built a single Claude orchestrator with skill-based delegation rather than a flat multi-agent architecture — one conductor, specialized workers, explicit hand-off contracts between stages. The corpus integration layer ingests my own voice profile, role artifacts, and project documentation so that outputs aren't generic. The portal scanning layer operates without burning tokens on page renders — it hits the APIs directly, which means the system can run cheaply at whatever cadence I set it without the cost curve of a browser-based scraper. Parallel-worker batch processing handles the volume: multiple roles assessed simultaneously, not sequentially, which is the only approach that survives at any meaningful throughput. The pipeline also integrates with a personal corpus calibration system — the Voice OS project — that analyzed roughly 1.08 million words of my own writing across Gmail, Instagram, Facebook, LinkedIn, and iMessage to surface voice signatures, banned phrases, and AI-detection risk patterns. That calibration output feeds the pipeline's generation stages directly, which closes the loop between corpus analysis and production output in a way that most job-search tooling doesn't attempt.</p>
+<p>The architectural instinct behind all of this is the same one I used building the triage agent at Google's Office of Cross-Google Engineering. That system — a three-prompt architecture (triage / revise / escalate) with conditional knowledge base loading — recaptured roughly 160 operational hours per year at greater than 90% classification accuracy for an audience of approximately 1,000 senior technical ICs at the Principal, Distinguished, and Google Fellow tiers. It also maintained 100% operational continuity through a multi-month medical absence in early 2026 with no human intervention. The design principle is identical: define the routing logic precisely enough that the system can make consequential decisions without you in the loop, and instrument it well enough that you can audit what it decided when you do come back. The `career-ops` fork applies that same principle at personal scale — it runs unattended, it processes in parallel, and it doesn't ask for help on decisions that are already scoped.</p>
+<p>The measurable output of the fork is production deployment in April 2026, a public repository, and a pipeline that has processed real job searches across real company portals at the cadences I set — not a prototype, not a proof of concept. The cross-model adjudication work I shipped the same week — a council-of-models approach that caught six hallucinated claims via strict web-verification — is part of the same discipline: you don't ship agent output without a verification layer, and you design that layer into the architecture before you need it, not after something goes wrong.</p>
+<p>What I keep returning to is that the software architecture questions in AI-native systems aren't fundamentally different from the ones I was answering in live broadcast. In both environments, the hard problems are the same: what do you route to a human versus an automated decision path, how do you maintain fidelity under time pressure, and what's the failure mode when the system runs without you? I built the first version of those answers in newsrooms. I built a production version of them at Google. The `career-ops` fork is the version I built for myself — and it's the clearest single artifact I have of what my systems instincts look like when I own the architecture end to end.</p>
+</div>
+<div class="footer">
+  Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
+  <a href="../index.html">← back to dashboard</a>
+</div>
+</body></html>
