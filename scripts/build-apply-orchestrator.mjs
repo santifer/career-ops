@@ -187,6 +187,22 @@ export function loadAiPolicy(company) {
 }
 
 /**
+ * Auto-load hm-intel for the orchestrator's inputs stage (O12).
+ *
+ * Called unconditionally after Stage 1 in orchestrateApplyPack — does NOT
+ * respect the dryRun flag because reading a local JSON file has no side
+ * effects and the intel should be wired to sub-agents even in dry-run mode
+ * (they guard their own dryRun gate internally).
+ *
+ * Returns the intel object (null if no file found) so the orchestrator can
+ * pass it via input.context.hmIntel to all sub-agents.
+ */
+export function autoLoadHmIntel(company, role) {
+  const result = loadHmIntel(company, role);
+  return result?.intel ?? null;
+}
+
+/**
  * Locate the data/hm-intel/{slug}.json file matching company + role.
  * Returns { path, intel } or null if no file matches.
  */
@@ -499,12 +515,23 @@ export async function orchestrateApplyPack({
   // Stage 1
   const jd = await parseJd({ row, dryRun });
 
-  // Stage 2
+  // O12: Auto-load hm-intel unconditionally after Stage 1 (no side-effects,
+  // no dryRun gate needed — just reads a local JSON file if it exists).
+  const hmIntelAutoLoaded = autoLoadHmIntel(jd.company, jd.role);
+
+  // Stage 2 (scaffold/dryRun path — hmIntel scaffold shape used in pack.inputs)
   const hmIntel = await fetchHmIntel({
     company: jd.company,
     role: jd.role,
     dryRun,
   });
+
+  // Merge: prefer the auto-loaded intel for sub-agent context (richer object),
+  // fall back to the Stage 2 scaffold shape. This ensures live sub-agents get
+  // real intel even when Stage 2 is still in scaffold mode.
+  const resolvedHmIntel = hmIntelAutoLoaded
+    ? { hm_intel_path: hmIntel.hm_intel_path, hm_intel_object: hmIntelAutoLoaded }
+    : hmIntel;
 
   // Stage 3
   const corpus = await loadCorpus({ archetype, dryRun });
@@ -512,7 +539,7 @@ export async function orchestrateApplyPack({
   // Stage 4
   const drafts = await fanOutDrafts({
     jd,
-    hmIntel,
+    hmIntel: resolvedHmIntel,
     corpus,
     archetype,
     aiPolicy,

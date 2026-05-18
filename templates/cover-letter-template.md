@@ -8,8 +8,15 @@
 
 ## Structure (4 blocks)
 
+> **Agent note:** `[[HUMAN:openingHook]]` and `[[HUMAN:closingAsk]]` are intentional
+> placeholder markers. The cover-letter sub-agent generates the surrounding paragraphs
+> and leaves these markers untouched. Mitchell fills them in manually before submission
+> (per Phase 3 finding #26 — human-authored hook/ask reduces AI detection risk by ~18pts).
+
 ```
-[HOOK — earns attention in sentence one]
+[[HUMAN:openingHook]]
+
+[HOOK — earns attention in sentence one — Mitchell fills this in after reviewing the AI draft]
 
 Sentence one is a specific observation about the company or role that no other applicant has the proof to make. Not "I'm excited about Anthropic" — that signals nothing. Instead: "The Anthropic Communications Manager, Research role asks for someone who can translate research output for a sophisticated audience under measurement discipline. I've spent eight years doing that for live broadcast, and the past two doing it for the production AI agents serving 1,000+ senior engineers at Google."
 
@@ -44,6 +51,10 @@ For warm intro / referred:
 
 For follow-up after LinkedIn DM:
 > "Following our exchange — attaching the formal application here. The Voice DNA / Kill List proof point is on page 1 of the CV."
+
+[[HUMAN:closingAsk]]
+
+[CLOSING ASK — Mitchell fills this in after reviewing the AI draft]
 ```
 
 ---
