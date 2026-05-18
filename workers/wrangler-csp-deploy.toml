@@ -11,7 +11,9 @@
 #   - (Optional) KV namespace created — see [kv_namespaces] comment below
 
 name = "csp-nonce-worker"
-main = "workers/csp-nonce-worker.mjs"
+# `main` is resolved relative to THIS toml file's directory, so the path
+# is just the filename (the file lives next to this config in workers/).
+main = "csp-nonce-worker.mjs"
 
 # Cloudflare Workers bundling: treat the file as ES module.
 # This is required for `export default { fetch() {} }` syntax.
