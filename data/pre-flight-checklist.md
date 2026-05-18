@@ -100,5 +100,18 @@ Run this before you click Submit / Send / Apply. Five minutes max. Catches the m
 
 ---
 
-**Last refresh:** 2026-05-07
+## CV freshness (audit Item V, added 2026-05-18)
+
+Before submission, run these four checks against `apply-pack/<slug>/tailored-cv.pdf` (or the master `output/cv-mitchell-williams-master-<today>.pdf` if no tailored variant exists):
+
+- [ ] `output/cv-mitchell-williams-master-$(date +%Y-%m-%d).pdf` exists for today's date — re-render with `node scripts/render-cv-typst.mjs --input cv.md --output output/cv-mitchell-williams-master-$(date +%Y-%m-%d).pdf` if it doesn't.
+- [ ] `tailored-cv.pdf` mtime is **later than** the most recent commit to `templates/cv-template.typ` or `scripts/render-cv-typst.mjs` — otherwise the PDF reflects a stale template. Check with `git log -1 --format=%cI -- templates/cv-template.typ scripts/render-cv-typst.mjs`.
+- [ ] `pdftotext -layout tailored-cv.pdf - | grep -ciE "FDE|Forward Deployed|Applied AI|Solutions Architect|AI Program Manager|MCP|RAG"` returns **≥ 3** keyword matches. Below 3 means ATS may filter the role out.
+- [ ] `pdftotext -layout tailored-cv.pdf - | grep -E '\\@|\\#|\(see cv\.md\)'` returns **no output** (no Typst escape leaks or placeholder strings).
+
+If any check fails, fix it before submitting — these are 30-second checks that catch artifacts trained against the wrong template / corrupted by escape leaks / missing the role's target keywords.
+
+---
+
+**Last refresh:** 2026-05-18 (added CV freshness section per audit Item V)
 **This file is operational, not a manifesto.** If a step starts feeling redundant after 10+ submissions, mark it as muscle-memory and skip the box-tick. Keep the steps that catch real mistakes.
