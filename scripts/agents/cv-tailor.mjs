@@ -8,9 +8,40 @@
  * re-phrase the most relevant cv.md bullets for this specific JD.
  * Implements Tier B #8 — cv-tailor live mode.
  *
+ * ── Output content type (audit Item K 2026-05-18, important distinction) ───
+ *
+ * This agent emits a BULLET LEDGER, not a renderable full CV:
+ *
+ *   data/apply-packs/<padded-rowid>-<companySlug>-<roleSlug>/cv-tailored.md
+ *
+ * The ledger contains:
+ *   - ## Highlights (4-6 short metric-first strings tailored to the JD)
+ *   - ## Tailored Bullets (top-N bullets with `[cv.md:N]` line citations)
+ *   - ## Summary (1-2 sentences on the tailoring angle)
+ *   - ## Warnings (overclaim risks the agent flagged)
+ *
+ * Consumers (build-apply-packs.mjs, dashboard) read a DIFFERENT file:
+ *
+ *   apply-pack/<slug>/tailored-cv.md   ← a complete tailored CV markdown
+ *
+ * These are NOT interchangeable. To produce the consumer-facing full CV from
+ * the ledger, an additional assembly step must splice the ledger's tailored
+ * bullets into a copy of cv.md (replacing the [cv.md:N]-referenced lines) and
+ * inject the highlights as a `## Highlights` H2 section consumed by the new
+ * {{HIGHLIGHTS}} token in templates/cv-template.typ. That assembly step is
+ * intentionally NOT in this agent — it would be a separate concern that
+ * writes a full CV from multiple sources, breaching the readonly-fs barrier.
+ * Phase 4.1 Item K of the cv-pipeline-uplevel handoff is the tracking line
+ * for that work.
+ *
+ * The wrapper at scripts/cv-tailor-batch.mjs surfaces the ledger location and
+ * also re-renders any existing apply-pack/<slug>/tailored-cv.md via Typst
+ * (with role-header trims) — but does NOT auto-assemble a new tailored-cv.md
+ * from the ledger.
+ *
  * LLM: openai:gpt-5 (falls through to gpt-5.5 at runtime) via lib/council.mjs
  * reasoning_effort: medium
- * Target cost: ~$0.05–0.10 per run
+ * Target cost: ~$0.05–0.10 per run (~$0.06 observed avg, 2026-05-18 batch)
  * Target latency: <90s end-to-end
  *
  * @typedef {import('./types.mjs').SubAgentInput} SubAgentInput
