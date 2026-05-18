@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "purpose": "Per-company skill-portability seed for lib/wealth-ranking.mjs. Each value is 0-10 representing how transferable Mitchell's skill set is to non-tech high-WTP sectors (finance, health, legal) by way of working at this company. Higher = more transferable.",
+    "rubric": "10 = product/skills directly portable to finance/health freelance (e.g., comms × AI deployment). 7-9 = strong AI-native but narrower vertical. 4-6 = transferable but requires re-platforming. 0-3 = niche tech-internal skill set.",
+    "updated": "2026-05-18",
+    "source": "Seed values derived from data/career-calibration-20260516-190152.md + data/overpay-signals/CURRENT.md. Override as live data sharpens."
+  },
+  "companies": {
+    "anthropic":         10,
+    "openai":            10,
+    "perplexity":         9,
+    "xai":                8,
+    "cohere":             9,
+    "mistral-ai":         8,
+    "cursor-anysphere":   7,
+    "sierra":             9,
+    "elevenlabs":         8,
+    "synthesia":          7,
+    "cognition":          7,
+    "databricks":         8,
+    "ramp":               9,
+    "pinecone":           6,
+    "deepgram":           7,
+    "hugging-face":       8,
+    "scale-ai":           7,
+    "together-ai":        7,
+    "waymo":              4,
+    "fireworks-ai":       6,
+    "ai21-labs":          6,
+    "replicate":          6,
+    "inflection-ai":      6
+  }
+}
