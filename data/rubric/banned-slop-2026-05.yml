@@ -1,0 +1,87 @@
+# Banned slop dictionary (audit Phase 7, dealbreaker-final 2026-05-18-070912)
+# Source: researcher-report-20260518-070912 §3 (3-model convergence) +
+# dealbreaker verification. Date-stamped — revisit each quarter or after a
+# known frontier-lab messaging change.
+#
+# Used by CL-06 + CL-07 (cover letter) and DM-08 (LinkedIn DM) checks.
+# CL-06 fires ERROR when any word from `words:` appears in the cover letter.
+# CL-07 fires ERROR when any phrase from `phrases:` appears as a substring.
+# DM-08 fires WARN (lower bar — DMs are shorter, more conversational).
+
+words:
+  # Slop adjectives — pure AI-tell, near-zero information content
+  - delve
+  - delving
+  - tapestry
+  - whimsical
+  - underscore
+  - underscores
+  - bustling
+  - intricate
+  - intricacies
+  - meticulous
+  - meticulously
+  - cornerstone
+  - paramount
+  - testament
+  - landscape
+  - realm
+  - paradigm
+  - quintessential
+  - synergy
+  - synergies
+  - leverage   # banned as verb in this context; "leveraged" also caught
+  - leveraging
+  - leveraged
+
+phrases:
+  # Slop openings — recruiter-skip signals
+  - "I am writing to apply"
+  - "I am excited to apply"
+  - "As a passionate"
+  - "Ever since I was"
+  - "In today's rapidly evolving"
+  - "In today's fast-paced"
+  - "To whom it may concern"
+  - "Dear Sir or Madam"
+  - "Dear Sir/Madam"
+
+  # Generic closing slop
+  - "at your earliest convenience"
+  - "look forward to hearing"
+  - "Thank you for your consideration"
+  - "I am confident that"
+  - "I would love the opportunity"
+  - "I am writing to express my interest"
+
+  # AI-tell phrases (verbatim from multiple AI-detection corpora)
+  - "navigate the complexities"
+  - "navigating the complexities"
+  - "in the realm of"
+  - "in the ever-evolving"
+  - "passionate about"
+  - "deeply passionate"
+  - "robust solutions"
+  - "cutting-edge"
+  - "state-of-the-art"
+  - "game-changing"
+  - "transformative impact"
+  - "drive impact"
+  - "deliver impactful"
+  - "best practices"   # bland enough to flag in cover letters
+  - "synergize"
+  - "circle back"
+  - "boots on the ground"
+
+  # Bland scaffolding
+  - "I am eager to"
+  - "I am thrilled to"
+  - "I would welcome the opportunity"
+  - "It would be a privilege"
+
+  # AI-pattern punctuation/structure tells (substring match)
+  - " — not only"
+  - "—not only"
+  - "but rather"
+  - "however, more importantly"
+  - "more importantly,"

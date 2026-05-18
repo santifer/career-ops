@@ -1,0 +1,49 @@
+# Preferred action verbs — positive-signal verbs that should appear in
+# cover letter + form-field project descriptions. Source: researcher report
+# §1 (convergence: metric-first openings + concrete action verbs).
+#
+# These are advisory (no ERROR severity); used by NOTE-level checks that
+# surface "weak verb diet" to humans. The cover-letter agent or human
+# editor can use this list to swap out weak verbs.
+
+# Strong / specific (preferred)
+strong:
+  - architected
+  - shipped
+  - engineered
+  - rebuilt
+  - cut
+  - reduced
+  - eliminated
+  - scaled
+  - migrated
+  - decomposed
+  - instrumented
+  - quantified
+  - benchmarked
+  - automated
+  - productionized
+  - operationalized
+  - de-risked
+  - rolled out
+  - field-produced
+  - directed
+
+# Weak / generic (deprefer — flag for replacement)
+weak:
+  - led         # too vague without metric
+  - managed     # too vague without scope
+  - worked on   # passive
+  - participated in
+  - helped
+  - assisted
+  - contributed to
+  - was responsible for
+  - was involved in
+  - took part in
+  - oversaw     # context-dependent; ok with metric, weak without
+
+# Note: Mitchell's voice corpus shows heavy use of "Architected" and
+# "Engineered" — these trigger humanize-MEDIUM in the dictionary check but
+# they ARE his pattern. The rubric WARNs only when verb diversity is low,
+# not when these specific verbs appear.
