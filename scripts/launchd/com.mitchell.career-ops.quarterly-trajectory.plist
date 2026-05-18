@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.quarterly-trajectory</string>
+
+    <!-- Runs at 07:00 PT on the first Monday of each month.            -->
+    <!-- Effectively catches the start of any new quarter near month 1. -->
+    <!-- Combined with Day=1 to ensure first-of-month fires even if     -->
+    <!-- the 1st is not a Monday (launchd will fire the next run on      -->
+    <!-- the next Monday — acceptable for a non-critical weekly cadence).-->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/build-quarterly-trajectory.mjs</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Fire every Monday at 07:00 PT.                                 -->
+    <!-- Weekday 2 = Monday (launchd: 0=Sunday, 1=Monday ... wait no,  -->
+    <!-- launchd Weekday: 0=Sunday, 1=Monday, 2=Tuesday...              -->
+    <!-- Monday = Weekday 1.                                            -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/quarterly-trajectory-launchd.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/quarterly-trajectory-launchd.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>
