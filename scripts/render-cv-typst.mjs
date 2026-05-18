@@ -48,14 +48,18 @@ const args = (() => {
     template: null,
     open: false,
     dryRun: false,
+    highlights: null,
+    tagline: null,
   };
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--open')     { a.open = true; continue; }
     if (argv[i] === '--dry-run')  { a.dryRun = true; continue; }
-    if (argv[i] === '--input'    && argv[i+1]) { a.input    = argv[++i]; continue; }
-    if (argv[i] === '--output'   && argv[i+1]) { a.output   = argv[++i]; continue; }
-    if (argv[i] === '--template' && argv[i+1]) { a.template = argv[++i]; continue; }
+    if (argv[i] === '--input'    && argv[i+1]) { a.input      = argv[++i]; continue; }
+    if (argv[i] === '--output'   && argv[i+1]) { a.output     = argv[++i]; continue; }
+    if (argv[i] === '--template' && argv[i+1]) { a.template   = argv[++i]; continue; }
+    if (argv[i] === '--highlights' && argv[i+1]) { a.highlights = argv[++i]; continue; }
+    if (argv[i] === '--tagline'  && argv[i+1]) { a.tagline    = argv[++i]; continue; }
   }
   return a;
 })();
@@ -105,6 +109,11 @@ function parseCvMarkdown(cvText) {
     PROJECTS_BLOCK:        '',
     SKILLS_BLOCK:          '',
     EDUCATION_CERT_BLOCK:  '',
+    // HIGHLIGHTS — pre-experience pull-quote box (audit Item H 2026-05-18).
+    // Populated either from a `## Highlights` H2 section in cv.md OR overridden
+    // by the renderer's `--highlights "line 1|line 2|..."` CLI flag. When
+    // empty, the conditional block in cv-template.typ renders nothing.
+    HIGHLIGHTS:            '',
   };
 
   const lines = cvText.split('\n');
@@ -113,7 +122,7 @@ function parseCvMarkdown(cvText) {
   let firstH2Consumed = false;
   // Standard section names — anything else for the first H2 is treated as a
   // tagline shown under the name.
-  const STANDARD_SECTIONS = /^(summary|professional summary|about|contact|header|experience|work experience|professional experience|employment|projects|personal projects|education|certifications|licenses & certifications|skills|technical skills|core competencies|competencies|skills summary)$/i;
+  const STANDARD_SECTIONS = /^(summary|professional summary|about|contact|header|experience|work experience|professional experience|employment|projects|personal projects|education|certifications|licenses & certifications|skills|technical skills|core competencies|competencies|skills summary|highlights)$/i;
 
   for (const line of lines) {
     // H1 = name
@@ -253,6 +262,30 @@ function parseCvMarkdown(cvText) {
     .filter(l => l.trim() && !/^-{3,}$/.test(l.trim()))
     .join(' ')
     .trim();
+
+  // ── Highlights → Typst highlights-box (audit Item H 2026-05-18) ───────────
+  // Extracts bullets from a `## Highlights` H2 section in cv.md. Each `- text`
+  // becomes a Typst list item inside the pre-experience pull-quote box.
+  // Empty section → empty token → template's `{{HIGHLIGHTS}}` substitution
+  // emits nothing (no rect, no whitespace). CLI flag --highlights overrides.
+
+  const highlightsLines = sectionBuffers['highlights'] || [];
+  const highlightItems = [];
+  for (const entry of highlightsLines) {
+    const l = typeof entry === 'string' ? entry.trim() : '';
+    if (l.startsWith('-') || l.startsWith('*')) {
+      const body = stripMarkdown(l.replace(/^[-*]\s*/, '').trim());
+      if (body) highlightItems.push(body);
+    }
+  }
+  if (highlightItems.length > 0) {
+    // Items land inside a Typst content block [...], so use escapeTypst (which
+    // handles #, @, **bold** → *bold*) rather than escapeTypstStr.
+    const listBody = highlightItems
+      .map(item => `  - ${escapeTypst(item)}`)
+      .join('\n');
+    tokens.HIGHLIGHTS = `#highlights-box[\n${listBody}\n]\n#v(4pt)`;
+  }
 
   // ── Core Competencies → Typst competency tags ─────────────────────────────
 
@@ -722,9 +755,14 @@ function substituteTokens(templateSrc, tokens) {
  * @param {string} opts.templatePath Absolute path to cv-template.typ
  * @param {string} opts.outputPdf    Absolute path for output PDF
  * @param {boolean} [opts.dryRun]    If true, print .typ source and return without compiling
+ * @param {string|string[]} [opts.highlights] Override for the {{HIGHLIGHTS}} pull-quote box.
+ *   Accepts a `"line 1|line 2|line 3"` pipe-separated string OR an array of strings.
+ *   When provided, overrides any `## Highlights` H2 section in cv.md.
+ * @param {string} [opts.tagline]    Override for the {{TAGLINE}} below the name.
+ *   When provided, overrides the first non-standard H2 in cv.md.
  * @returns {{ outputPath: string, typstVersion: string, dryRun: boolean, tmpTypPath?: string }}
  */
-export async function renderCvTypst({ cvPath, templatePath, outputPdf, dryRun = false } = {}) {
+export async function renderCvTypst({ cvPath, templatePath, outputPdf, dryRun = false, highlights = null, tagline = null } = {}) {
   const _cvPath       = cvPath       || join(ROOT, 'cv.md');
   const _templatePath = templatePath || join(ROOT, 'templates', 'cv-template.typ');
   const _outputPdf    = outputPdf    || join(ROOT, 'output', 'cv-typst.pdf');
@@ -741,6 +779,24 @@ export async function renderCvTypst({ cvPath, templatePath, outputPdf, dryRun = 
 
   // 3. Parse cv.md → token map
   const tokens       = parseCvMarkdown(cvText);
+
+  // 3b. Apply CLI overrides (audit Items H + S 2026-05-18).
+  if (tagline) {
+    tokens.TAGLINE = escapeTypstStr(stripMarkdown(String(tagline)));
+  }
+  if (highlights) {
+    const items = Array.isArray(highlights)
+      ? highlights
+      : String(highlights).split('|').map(s => s.trim()).filter(Boolean);
+    if (items.length > 0) {
+      const listBody = items
+        .map(item => `  - ${escapeTypst(stripMarkdown(item))}`)
+        .join('\n');
+      tokens.HIGHLIGHTS = `#highlights-box[\n${listBody}\n]\n#v(4pt)`;
+    } else {
+      tokens.HIGHLIGHTS = '';
+    }
+  }
 
   // 4. Substitute tokens into template
   const typstSource  = substituteTokens(templateSrc, tokens);
@@ -806,6 +862,8 @@ if (fileURLToPath(import.meta.url) === resolve(process.argv[1] || '')) {
       templatePath,
       outputPdf,
       dryRun: args.dryRun,
+      highlights: args.highlights,
+      tagline: args.tagline,
     });
 
     if (!result.dryRun) {
