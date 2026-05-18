@@ -1309,6 +1309,187 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
+// ── 15. PROVIDERS — Apify ──────────────────────────────────────
+
+console.log('\n15. Provider — apify');
+
+try {
+  const apifyMod = await import(pathToFileURL(join(ROOT, 'providers/apify.mjs')).href);
+  const apify = apifyMod.default;
+  const { isFieldSpec, isHttpsUrl, normalizeItem } = apifyMod;
+  const { normalizeActorId } = await import(pathToFileURL(join(ROOT, 'providers/_apify.mjs')).href);
+
+  // -- id + detect (no auto-detect — explicit provider: apify required) --
+  if (apify.id === 'apify') pass('apify.id is "apify"');
+  else fail(`apify.id is ${JSON.stringify(apify.id)}`);
+
+  if (apify.detect({ name: 'X', careers_url: 'https://anything.example' }) === null) {
+    pass('apify.detect() always returns null (no auto-detect)');
+  } else {
+    fail('apify.detect() must return null; provider: apify is required');
+  }
+
+  // -- isHttpsUrl — guards actor-supplied URLs at the boundary --
+  if (isHttpsUrl('https://example.com/job/123')) pass('isHttpsUrl accepts https URLs');
+  else fail('isHttpsUrl should accept https URLs');
+
+  for (const bad of [
+    'http://example.com',           // downgrade
+    'javascript:alert(1)',          // XSS-via-click
+    'data:text/html,<x>',           // arbitrary content
+    'file:///etc/passwd',           // local file
+    'ftp://example.com/x',          // wrong protocol
+    'not-a-url',                    // malformed → URL throws
+    '',                             // empty
+    null,                           // non-string
+    undefined,                      // non-string
+  ]) {
+    if (!isHttpsUrl(bad)) pass(`isHttpsUrl rejects ${JSON.stringify(bad)}`);
+    else fail(`isHttpsUrl must reject ${JSON.stringify(bad)}`);
+  }
+
+  // -- isFieldSpec — config-time validation of field_map shapes --
+  if (isFieldSpec('positionName')) pass('isFieldSpec accepts a single string key');
+  else fail('isFieldSpec should accept a single string key');
+
+  if (isFieldSpec(['positionName', 'title'])) pass('isFieldSpec accepts a non-empty string array');
+  else fail('isFieldSpec should accept a non-empty string array');
+
+  for (const bad of [
+    42,                  // number
+    [],                  // empty array
+    ['title', 42],       // mixed types
+    null,                // null
+    {},                  // object
+  ]) {
+    if (!isFieldSpec(bad)) pass(`isFieldSpec rejects ${JSON.stringify(bad)}`);
+    else fail(`isFieldSpec must reject ${JSON.stringify(bad)}`);
+  }
+
+  // -- normalizeItem — fallback ordering + defaults whitelist --
+  const item = { positionName: 'Senior PM', url: 'https://x.example/1', companyName: 'Acme' };
+  const fmap = {
+    title:    ['positionName', 'title'],
+    url:      'url',
+    company:  ['company', 'companyName'],
+    location: 'location',
+  };
+  const norm = normalizeItem(item, fmap, { company: 'IgnoredBecauseAlreadySet', location: 'Remote' });
+  if (norm.title === 'Senior PM' && norm.url === 'https://x.example/1' && norm.company === 'Acme' && norm.location === 'Remote') {
+    pass('normalizeItem picks first non-empty fallback and applies defaults only to empty fields');
+  } else {
+    fail(`normalizeItem returned ${JSON.stringify(norm)}`);
+  }
+
+  const blockedDefaults = normalizeItem({ positionName: 't', url: 'https://u' }, fmap, { malicious: 'should-not-appear' });
+  if (!('malicious' in blockedDefaults)) {
+    pass('normalizeItem ignores non-allowlisted default keys');
+  } else {
+    fail('normalizeItem must reject default keys outside title/url/company/location');
+  }
+
+  // -- normalizeActorId — SSRF guard on the actor path segment --
+  if (normalizeActorId('owner/actor') === `${encodeURIComponent('owner')}~${encodeURIComponent('actor')}`) {
+    pass('normalizeActorId accepts owner/actor');
+  } else {
+    fail('normalizeActorId should accept owner/actor');
+  }
+  if (normalizeActorId('owner~actor') === `${encodeURIComponent('owner')}~${encodeURIComponent('actor')}`) {
+    pass('normalizeActorId accepts owner~actor');
+  } else {
+    fail('normalizeActorId should accept owner~actor');
+  }
+
+  for (const bad of [
+    '../etc/passwd',          // path traversal
+    'owner/actor?x=1',        // query injection
+    'owner/actor#frag',       // fragment
+    'owner/actor/extra',      // extra path segment
+    'owner',                  // no separator
+    '',                       // empty
+    42,                       // non-string
+    null,                     // null
+  ]) {
+    let threw = false;
+    try { normalizeActorId(bad); } catch { threw = true; }
+    if (threw) pass(`normalizeActorId rejects ${JSON.stringify(bad)}`);
+    else fail(`normalizeActorId must reject ${JSON.stringify(bad)}`);
+  }
+
+  // -- fetch() guards — error before any network call --
+  const validEntry = {
+    name: 'Indeed',
+    actor: 'misceres/indeed-scraper',
+    field_map: { title: 'positionName', url: 'url' },
+  };
+
+  // Missing APIFY_TOKEN must throw a clear error (and never reach runActor).
+  // Save + restore the env var so this works whether or not the caller has it set.
+  const savedToken = process.env.APIFY_TOKEN;
+  delete process.env.APIFY_TOKEN;
+  try {
+    let threw = null;
+    try {
+      await apify.fetch(validEntry, {});
+    } catch (e) {
+      threw = e;
+    }
+    if (threw && /APIFY_TOKEN/.test(threw.message)) {
+      pass('fetch() throws clear APIFY_TOKEN error when env var is missing');
+    } else {
+      fail(`fetch() should throw APIFY_TOKEN error; got ${threw && threw.message}`);
+    }
+  } finally {
+    if (savedToken !== undefined) process.env.APIFY_TOKEN = savedToken;
+  }
+
+  // With a (fake) token set, the next guards fire before any network call.
+  process.env.APIFY_TOKEN = 'test-token-not-real';
+  try {
+    let threw = null;
+    try {
+      await apify.fetch({ name: 'NoActor', field_map: validEntry.field_map }, {});
+    } catch (e) {
+      threw = e;
+    }
+    if (threw && /missing 'actor'/.test(threw.message)) {
+      pass("fetch() throws when entry is missing 'actor'");
+    } else {
+      fail(`fetch() should reject missing actor; got ${threw && threw.message}`);
+    }
+
+    threw = null;
+    try {
+      await apify.fetch({ ...validEntry, field_map: { title: 42, url: 'url' } }, {});
+    } catch (e) {
+      threw = e;
+    }
+    if (threw && /invalid field_map/.test(threw.message)) {
+      pass('fetch() throws when field_map.title is malformed');
+    } else {
+      fail(`fetch() should reject malformed field_map; got ${threw && threw.message}`);
+    }
+
+    threw = null;
+    try {
+      await apify.fetch({ ...validEntry, field_map: { url: 'url' } }, {});
+    } catch (e) {
+      threw = e;
+    }
+    if (threw && /invalid field_map/.test(threw.message)) {
+      pass('fetch() throws when field_map.title is missing');
+    } else {
+      fail(`fetch() should reject field_map missing title; got ${threw && threw.message}`);
+    }
+  } finally {
+    if (savedToken !== undefined) process.env.APIFY_TOKEN = savedToken;
+    else delete process.env.APIFY_TOKEN;
+  }
+
+} catch (e) {
+  fail(`apify provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
