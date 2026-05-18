@@ -28,7 +28,7 @@ import { lookupCompCache } from '../lib/comp-researcher.mjs';
 import { scoreAlignmentCached } from '../lib/alignment-scorer.mjs';
 // ── Wave C-B: lib imports (consumed by drill-in renderers + dashboard features) ──
 import { getPeerContext, renderPeerTable }                          from '../lib/peer-context.mjs';
-import { getProvenance, renderProvenanceCard }                     from '../lib/decision-provenance.mjs';
+import { getProvenance, renderProvenanceCard, renderProvenanceSummary } from '../lib/decision-provenance.mjs';
 import { applyWealthLens, renderWealthLensCard }                   from '../lib/wealth-lens.mjs';
 import { computeStrategyCeiling, renderStrategyCard }              from '../lib/strategy-ceiling.mjs';
 import { renderEquitySlidersHtml }                                 from '../lib/equity-calculator.mjs';
@@ -2676,12 +2676,35 @@ function renderRow(r, idx) {
     <span class="dcard-resp-value">${htmlEscape(roleFunction)}</span>
   </div>` : '';
 
+  // 2026-05-18 — Mitchell asked for comp + team toxicity surfaced IN the
+  // Role-at-a-glance card itself (not just the Base / Health cells).
+  const compLine = comp ? `<div class="dcard-resp-line">
+    <span class="dcard-resp-label">Comp:</span>
+    <span class="dcard-resp-value">${htmlEscape(comp)}</span>
+  </div>` : '';
+
+  let toxLine = '';
+  try {
+    const _enrich = getRoleEnrichment(r.company, r.role);
+    const _tox = parseInt(_enrich?.sentiment?.team_toxicity_grade, 10);
+    if (Number.isFinite(_tox) && _tox >= 1 && _tox <= 5) {
+      const _toxIcon = _tox <= 1 ? '🟢' : _tox <= 2 ? '🟢' : _tox <= 3 ? '🟡' : _tox <= 4 ? '🟠' : '🔴';
+      const _toxWord = _tox <= 1 ? 'healthy' : _tox <= 2 ? 'good' : _tox <= 3 ? 'neutral' : _tox <= 4 ? 'concerning' : 'avoid';
+      toxLine = `<div class="dcard-resp-line">
+        <span class="dcard-resp-label">Team toxicity:</span>
+        <span class="dcard-resp-value">${_toxIcon} ${_tox}/5 (${htmlEscape(_toxWord)}, 1=healthy · 5=avoid)</span>
+      </div>`;
+    }
+  } catch (_) { /* never break drawer */ }
+
   // Wave C-A drill-in: Role at a glance card → metric:{num}:role_at_glance
   const _rowDrillNum = htmlEscape(String(r.num||''));
-  const tldrCard = (tldr || roleFunction || alignmentBars) ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:role_at_glance" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full role context" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)}">
+  const tldrCard = (tldr || roleFunction || comp || toxLine || alignmentBars) ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:role_at_glance" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full role context" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)}">
     <div class="dcard-label">Role at a glance <span class="dcard-explore-hint">▸ explore</span></div>
     ${tldr ? `<div class="dcard-body">${htmlEscape(tldr)}</div>` : ''}
     ${respLine}
+    ${compLine}
+    ${toxLine}
     ${alignmentBars}
   </div>` : '';
 
@@ -3654,6 +3677,49 @@ function build() {
       }
     } catch (_) { _cbData.gapData = {}; }
 
+    // Fix 4 (equity-auto-activate): pre-bake equity slider HTML for rows ≥ $300K
+    // Keyed by comp drill-in id "{base}:{num}:{company-slug}".
+    // Build-time only. No LLM calls.
+    try {
+      _cbData.equitySliders = {};
+      for (const _r of apps) {
+        try {
+          const _rawComp = getComp(_r.reportPath);
+          const _baseM = String(_rawComp||'').match(/\$\s*(\d{2,4})\s*K/i);
+          const _base = _baseM ? parseInt(_baseM[1],10)*1000 : 0;
+          if (_base < 300000) continue;
+          const _slug = (_r.company||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+          const _drillId = `${_base}:${String(_r.num||'')}:${_slug}`;
+          // default comp inputs — minimal safe defaults for renderEquitySlidersHtml
+          const _eqHtml = renderEquitySlidersHtml(_r.role || 'Role', {
+            equity_grant_shares: 10000,
+            strike_price: 0,
+            current_409a: 1,
+            current_valuation: 1_000_000_000,
+            series: 'series-c',
+          });
+          _cbData.equitySliders[_drillId] = _eqHtml;
+        } catch (_) { /* per-row, skip */ }
+      }
+    } catch (_) { _cbData.equitySliders = {}; }
+
+    // Fix 5 (score-rationale): pre-bake provenance summaries keyed by row num
+    try {
+      _cbData.provenanceSummaries = {};
+      // Only bake for rows that actually have a report file (limits build time)
+      for (const _r of apps.filter(r => r.reportPath)) {
+        try {
+          const _ps = renderProvenanceSummary(_r.num);
+          if (_ps) _cbData.provenanceSummaries[String(_r.num)] = {
+            summary: _ps.summary,
+            gatesPassed: _ps.gatesPassed,
+            gatesFailed: _ps.gatesFailed,
+            softGaps: _ps.softGaps,
+          };
+        } catch (_) { /* per-row, skip */ }
+      }
+    } catch (_) { _cbData.provenanceSummaries = {}; }
+
     // Row data snapshot for banner-roles drill-in (last scan from pipeline.md)
     try {
       if (existsSync(PIPELINE_PATH)) {
@@ -3666,7 +3732,7 @@ function build() {
       } else { _cbData.pipelineRows = []; }
     } catch (_) { _cbData.pipelineRows = []; }
 
-    waveCBDataJson = JSON.stringify(_cbData).replace(/<\//g, '<\\/');
+    waveCBDataJson = JSON.stringify(_cbData).replace(/<\//g, '<\\/').replace(/'/g, "\\'");
   } catch (topErr) { waveCBDataJson = '{}'; }
 
   // ── Cmd-K palette data ────────────────────────────────────────────
@@ -4826,6 +4892,25 @@ function build() {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     margin: 0 2px;
   }
+  /* Fix 3 (cmdk-scope-persist): scope filter bar */
+  .cmdk-scope-bar {
+    display: flex; gap: 4px; padding: 6px 12px;
+    border-bottom: 1px solid var(--border); background: var(--surface-2);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .cmdk-scope-bar::-webkit-scrollbar { display: none; }
+  .cmdk-scope-btn {
+    background: transparent; border: 1px solid transparent;
+    border-radius: var(--radius-sm); padding: 3px 10px;
+    font-size: 12px; font-weight: 500; color: var(--text-3);
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  }
+  .cmdk-scope-btn:hover { color: var(--fg); background: var(--surface); }
+  .cmdk-scope-btn.active {
+    color: var(--blue-fg); background: color-mix(in srgb, var(--blue-fg) 10%, var(--surface));
+    border-color: color-mix(in srgb, var(--blue-fg) 30%, transparent);
+    font-weight: 700;
+  }
   @keyframes cmdk-flash {
     0%, 100% { background: transparent; }
     20%, 60% { background: rgba(9, 105, 218, 0.12); }
@@ -5089,6 +5174,35 @@ function build() {
     letter-spacing: 0;
   }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
+
+  /* ── Fix 1 (tonight-pick): Tonight's pick callout ─────────────── */
+  .tonight-pick-callout {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: color-mix(in srgb, var(--green-fg) 8%, var(--surface));
+    border: 1.5px solid var(--green-fg); border-radius: var(--radius);
+    padding: 10px 14px; margin-bottom: 12px;
+    position: sticky; top: 0; z-index: 4;
+  }
+  .tonight-pick-body { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; flex-wrap: wrap; }
+  .tonight-pick-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--green-fg); white-space: nowrap;
+  }
+  .tonight-pick-company { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .tonight-pick-role { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+  .tonight-pick-score { font-size: 13px !important; padding: 2px 7px !important; flex-shrink: 0; }
+  .tonight-pick-why { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+  .tonight-pick-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .tonight-pick-btn-primary {
+    background: var(--green-fg); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .tonight-pick-btn-primary:hover { filter: brightness(1.1); }
+  .tonight-pick-btn-secondary {
+    background: transparent; color: var(--text-2); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  .tonight-pick-btn-secondary:hover { color: var(--fg); border-color: var(--text-2); }
 
   /* ── Apply-Now drag-and-drop reorder ─────────────────────────── */
   /* Reset-order button — small, secondary, only shown when custom order
@@ -7355,6 +7469,45 @@ function build() {
     display: flex; align-items: center; gap: 6px;
     margin-top: 10px; flex-wrap: wrap;
   }
+  /* Fix 5 (score-rationale): "Why N.N?" disclosure */
+  .drawer-why-disclosure {
+    margin-top: 8px; font-size: 12px;
+    border-top: 1px solid var(--border); padding-top: 8px;
+  }
+  .why-summary-btn {
+    display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+    background: none; border: none; cursor: pointer;
+    color: var(--blue-fg); font-size: 12px; font-weight: 600; padding: 0;
+    text-align: left; width: 100%;
+  }
+  .why-summary-btn:hover { text-decoration: underline; }
+  .why-summary-text {
+    font-weight: 400; color: var(--text-3); font-size: 11px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1; min-width: 0; max-width: 260px;
+  }
+  .why-expanded { margin-top: 8px; }
+  .why-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+  .why-chip {
+    display: inline-block; font-size: 11px; padding: 2px 7px;
+    border-radius: 999px; border: 1px solid transparent;
+  }
+  .why-chip-pass { background: color-mix(in srgb, var(--green-fg) 12%, var(--surface)); border-color: color-mix(in srgb, var(--green-fg) 30%, transparent); color: var(--green-fg); }
+  .why-chip-fail { background: color-mix(in srgb, var(--red-fg,#cf222e) 10%, var(--surface)); border-color: color-mix(in srgb, var(--red-fg,#cf222e) 25%, transparent); color: var(--red-fg,#cf222e); }
+  .why-chip-soft { background: color-mix(in srgb, var(--amber-fg,#d97706) 10%, var(--surface)); border-color: color-mix(in srgb, var(--amber-fg,#d97706) 25%, transparent); color: var(--amber-fg,#d97706); }
+
+  /* Fix 2 (draft-sync-sse): "Updated" transient pill on draft file changes */
+  .drawer-draft-updated-pill {
+    display: inline-block; background: var(--green-fg); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    margin-left: auto; opacity: 0; transition: opacity .2s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .drawer-draft-artifact-chip {
+    display: inline-block; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 11px; padding: 1px 6px; margin: 2px 2px 0 0;
+    color: var(--text-3); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .drawer-close {
     position: absolute; top: 10px; right: 10px;
     background: none; border: none; cursor: pointer;
@@ -8800,6 +8953,8 @@ function build() {
         <input id="cmdk-input" type="text" placeholder="Jump to row, run an action, open a recent report…" autocomplete="off" spellcheck="false" />
         <span class="cmdk-input-hint">esc to close</span>
       </div>
+      <!-- Fix 3 (cmdk-scope-persist): scope filter bar — populated by _cmdkRenderScopeBtns() -->
+      <div id="cmdk-scope-bar" class="cmdk-scope-bar" role="tablist" aria-label="Command palette scope"></div>
       <div id="cmdk-list" role="listbox" aria-label="Command palette results"></div>
       <div class="cmdk-footer">
         <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
@@ -9193,6 +9348,20 @@ function build() {
       <span class="panel-chevron">▾</span>
     </h2>
     <p class="panel-subtitle" title="Drag a row's ⋮⋮ handle to prioritize. Click any row to expand.">Score ≥ 4.0 · Evaluated / Responded / Interview only</p>
+    ${_tonightPick ? `<!-- Fix 1 (tonight-pick) -->
+    <div id="tonight-pick-callout" class="tonight-pick-callout" hidden aria-label="Tonight's pick suggestion" role="region">
+      <div class="tonight-pick-body">
+        <span class="tonight-pick-label">Tonight's pick</span>
+        <span class="tonight-pick-company">${htmlEscape(_tonightPick.company)}</span>
+        <span class="tonight-pick-role">${htmlEscape(_tonightPick.role)}</span>
+        <span class="tonight-pick-score badge score-badge-lg ${scoreBadgeClass(_tonightPick.score)}">${_tonightPick.score.toFixed(1)}</span>
+        <span class="tonight-pick-why">${htmlEscape(_tonightPick.whyPick)}</span>
+      </div>
+      <div class="tonight-pick-actions">
+        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Start tonight's apply for ${htmlEscape(_tonightPick.company)}">Start tonight's apply &rarr;</button>
+        <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickDismiss()" aria-label="Pick a different role">Pick a different one &rarr;</button>
+      </div>
+    </div>` : '<!-- tonight-pick: no candidate met criteria -->'}
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="apply-now-tbody" aria-label="Select all visible rows in Apply-Now" onclick="handleHeaderCheckbox(this)"></th>
@@ -10746,6 +10915,66 @@ function openRightRailForDetail(idx, detailRow) {
         img.replaceWith(fb);
       }, { once: true });
     }
+
+    // ── Fix 5 (score-rationale): "Why N.N?" disclosure below chip row ─────────
+    // Reads pre-baked provenance summaries from window._waveCB.provenanceSummaries.
+    // Uses renderProvenanceCard (via metric drill-in) for the expanded view.
+    if (headerEl && num) {
+      var _cb5 = window._waveCB || {};
+      var _ps5 = (_cb5.provenanceSummaries || {})[String(num)];
+      if (_ps5) {
+        var scoreVal = row && row.dataset.score ? parseFloat(row.dataset.score) : null;
+        var scoreStr = scoreVal !== null && !isNaN(scoreVal) ? scoreVal.toFixed(1) : '';
+        var _whyDisclosure = document.createElement('div');
+        _whyDisclosure.className = 'drawer-why-disclosure';
+        var _whyToggleId = 'drawer-why-toggle-' + num;
+        var _reportHref = row ? (row.querySelector('a[href^="reports/"]') || {}).href : '';
+
+        // Gates chips (passed ✅, failed ⚠️)
+        var _gateChips = '';
+        if (_ps5.gatesPassed && _ps5.gatesPassed.length) {
+          _gateChips += _ps5.gatesPassed.map(function(g) { return '<span class="why-chip why-chip-pass">✅ ' + g + '</span>'; }).join('');
+        }
+        if (_ps5.gatesFailed && _ps5.gatesFailed.length) {
+          _gateChips += _ps5.gatesFailed.map(function(g) { return '<span class="why-chip why-chip-fail">⚠️ ' + g + '</span>'; }).join('');
+        }
+        if (_ps5.softGaps && _ps5.softGaps.length) {
+          _gateChips += _ps5.softGaps.slice(0, 3).map(function(g) { return '<span class="why-chip why-chip-soft">⚠ ' + g.slice(0, 40) + '</span>'; }).join('');
+        }
+
+        _whyDisclosure.innerHTML =
+          '<button type="button" class="why-summary-btn" aria-expanded="false" aria-controls="' + _whyToggleId + '">'
+          + (scoreStr ? 'Why ' + scoreStr + '?' : 'Score rationale')
+          + '<span class="why-summary-text">' + (_ps5.summary || '') + '</span>'
+          + '</button>'
+          + '<div id="' + _whyToggleId + '" class="why-expanded" hidden>'
+          + (_gateChips ? '<div class="why-chips">' + _gateChips + '</div>' : '')
+          + (_reportHref ? '<div style="margin-top:8px"><a href="' + _reportHref + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue-fg)">See full report →</a>'
+            + ' &nbsp; <button type="button" class="why-provenance-btn" data-prov-row="' + num + '" style="font-size:11px;background:none;border:none;color:var(--blue-fg);cursor:pointer;padding:0;text-decoration:underline">Provenance trail</button></div>'
+            : '')
+          + '</div>';
+
+        // Wire the toggle button and provenance button with addEventListener (avoids inline quote issues)
+        var _whyBtn = _whyDisclosure.querySelector('.why-summary-btn');
+        if (_whyBtn) {
+          _whyBtn.addEventListener('click', function() {
+            var expanded = _whyDisclosure.querySelector('.why-expanded');
+            if (!expanded) return;
+            var isOpen = !expanded.hidden;
+            expanded.hidden = isOpen;
+            _whyBtn.setAttribute('aria-expanded', String(!isOpen));
+          });
+        }
+        var _provBtn = _whyDisclosure.querySelector('.why-provenance-btn[data-prov-row]');
+        if (_provBtn) {
+          var _provRow = _provBtn.dataset.provRow;
+          _provBtn.addEventListener('click', function(e) {
+            if (typeof window.drillIn === 'function') window.drillIn('metric', _provRow + ':score', e);
+          });
+        }
+        headerEl.appendChild(_whyDisclosure);
+      }
+    }
   }
   if (bodyEl) {
     bodyEl.innerHTML = '';
@@ -10847,6 +11076,60 @@ function openRightRailForDetail(idx, detailRow) {
   }
   _railSelectedIdx = idx;
 
+  // ── Fix 2 (draft-sync-sse): subscribe to draft artifact changes ─────────
+  // Subscribe to /api/draft-updates-stream/{num} when drawer opens.
+  // On message: find the artifact preview block and flash an "Updated" pill.
+  // EventSource is closed when the drawer closes (see closeRightRail).
+  if (typeof EventSource !== 'undefined' && num) {
+    // Close any previous draft SSE before opening a new one
+    if (window._draftUpdateSource) {
+      try { window._draftUpdateSource.close(); } catch (_) {}
+      window._draftUpdateSource = null;
+    }
+    try {
+      var _draftSrc = new EventSource('/api/draft-updates-stream/' + num);
+      window._draftUpdateSource = _draftSrc;
+      _draftSrc.addEventListener('draft-update', function(e) {
+        try {
+          var data = JSON.parse(e.data);
+          // Find the artifact list area in the drawer body
+          var dBody = document.getElementById('right-rail-body');
+          if (!dBody) return;
+          // If there's already an artifact list element, update it
+          var artifactEl = dBody.querySelector('.drawer-draft-artifacts');
+          if (artifactEl && data.files && data.files.length) {
+            artifactEl.innerHTML = data.files.map(function(f) {
+              return '<span class="drawer-draft-artifact-chip">' + f.replace(/[<>&"]/g, function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}) + '</span>';
+            }).join('');
+          }
+          // Flash "Updated" pill
+          var pill = document.getElementById('drawer-draft-updated-pill');
+          if (!pill) {
+            pill = document.createElement('div');
+            pill.id = 'drawer-draft-updated-pill';
+            pill.className = 'drawer-draft-updated-pill';
+            pill.textContent = 'Updated';
+            var hdr = document.getElementById('right-rail-header');
+            if (hdr) hdr.appendChild(pill);
+          }
+          pill.classList.remove('fade-out');
+          void pill.offsetWidth; // force reflow
+          pill.style.opacity = '1';
+          clearTimeout(window._draftPillTimer);
+          window._draftPillTimer = setTimeout(function() {
+            pill.style.transition = 'opacity .4s';
+            pill.style.opacity = '0';
+          }, 2000);
+        } catch (_) {}
+      });
+      _draftSrc.onerror = function() {
+        // Silently close on error — no-op if server-side unavailable
+        try { _draftSrc.close(); } catch (_) {}
+        if (window._draftUpdateSource === _draftSrc) window._draftUpdateSource = null;
+      };
+    } catch (_) {}
+  }
+
   // Wave C-A Item 6: Inject sticky prev/next ribbon into drawer body.
   // Keyboard: [ prev, ] next. Uses window._allDrillRows (seeded below).
   _injectPrevNextRibbon(idx);
@@ -10866,6 +11149,11 @@ function closeRightRail() {
   document.body.classList.remove('right-rail-open');
   document.querySelectorAll('tr.row.row-selected').forEach(el => el.classList.remove('row-selected'));
   _railSelectedIdx = null;
+  // Fix 2 (draft-sync-sse): close the draft SSE connection on drawer close
+  if (window._draftUpdateSource) {
+    try { window._draftUpdateSource.close(); } catch (_) {}
+    window._draftUpdateSource = null;
+  }
 }
 
 // Apply/Skip/Defer in the drawer footer reuse the existing /api/status
@@ -11125,7 +11413,7 @@ _drillInRegister('score', function(id) {
   return { title: 'Score context: ' + range, html: html };
 });
 _drillInRegister('comp', function(id) {
-  // id format: "{base}:{role}:{company}" or just "{base}"
+  // id format: "{base}:{num}:{company-slug}" or just "{base}"
   var parts = (id || '').split(':');
   var base = parseFloat(parts[0]) || 0;
   var role = parts[1] || '';
@@ -11138,13 +11426,58 @@ _drillInRegister('comp', function(id) {
   var playbookHtml = (base >= 300000 && cb.negotiationPlaybookHtml) ? cb.negotiationPlaybookHtml : '';
   // Equity sliders (baked HTML per role)
   var equityHtml = (cb.equitySliders || {})[id] || '';
+
+  // Fix 4 (equity-auto-activate): auto-render equity sliders ABOVE negotiation
+  // playbook when comp >= $300K. Collapse preference persists per row via localStorage.
+  var equityBlock = '';
+  if (base >= 300000 && equityHtml) {
+    var collapseKey = 'careerops.equity-collapsed:' + id;
+    var isCollapsed = false;
+    try { isCollapsed = !!localStorage.getItem(collapseKey); } catch (_) {}
+    var blockId = 'equity-auto-block-' + id.replace(/[^a-z0-9]/gi, '_');
+    equityBlock = '<div id="' + blockId + '" data-collapse-key="' + collapseKey.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:12px">'
+      + '<span style="display:inline-block;background:color-mix(in srgb,var(--amber-fg,#d97706) 15%,var(--surface));color:var(--amber-fg,#d97706);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em">Auto-opened because comp &ge; $300K</span>'
+      + '<button type="button" class="equity-auto-collapse-btn" style="font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px 8px;cursor:pointer;color:var(--text-2)">'
+      + (isCollapsed ? 'Expand' : 'Collapse') + '</button>'
+      + '</div>'
+      + '<div class="equity-auto-inner"' + (isCollapsed ? ' hidden' : '') + '>'
+      + equityHtml
+      + '</div>'
+      + '</div>';
+  }
+
   var html = '<p style="font-size:12px;margin-bottom:8px">Comp intelligence'
     + (base ? ' for <strong>$' + Math.round(base/1000) + 'K base</strong>' : '')
     + (company ? ' at <strong>' + company + '</strong>' : '') + '</p>'
     + peerHtml
-    + (equityHtml ? '<div style="margin-top:12px">' + equityHtml + '</div>' : '')
+    + equityBlock
+    + (base < 300000 && equityHtml ? '<div style="margin-top:12px">' + equityHtml + '</div>' : '')
     + (playbookHtml ? '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;font-weight:600">Negotiation playbook</summary>' + playbookHtml + '</details>' : '');
-  return { title: 'Comp intelligence', html: html };
+  return {
+    title: 'Comp intelligence',
+    html: html,
+    onMount: function(el) {
+      // Fix 4: wire collapse/expand button for equity-auto-block via addEventListener
+      var block = el.querySelector('[data-collapse-key]');
+      if (!block) return;
+      var collapseK = block.dataset.collapseKey || '';
+      var btn = block.querySelector('.equity-auto-collapse-btn');
+      var inner = block.querySelector('.equity-auto-inner');
+      if (!btn || !inner) return;
+      btn.addEventListener('click', function() {
+        if (inner.hidden) {
+          inner.hidden = false;
+          btn.textContent = 'Collapse';
+          try { localStorage.removeItem(collapseK); } catch (_) {}
+        } else {
+          inner.hidden = true;
+          btn.textContent = 'Expand';
+          try { localStorage.setItem(collapseK, '1'); } catch (_) {}
+        }
+      });
+    },
+  };
 });
 _drillInRegister('gap', function(id) {
   // id format: "{rowId}:{gapKey}" or just "{gapKey}"
@@ -11594,6 +11927,11 @@ document.addEventListener('keydown', function(e) {
 var TOP_OF_PIPE_DATA = ${topOfPipeJson};
 var TOP_OF_PIPE_DISMISS_KEY = 'careerops.top-of-pipe-dismissed';
 
+// ── Fix 1 (tonight-pick): tonight's first-submission callout ────────────────
+var TONIGHT_PICK_DATA = ${tonightPickJson};
+var TONIGHT_PICK_TODAY = '${_tonightPickTodayStr}';
+var TONIGHT_PICK_DISMISS_KEY = 'careerops.tonight-pick-dismissed-' + TONIGHT_PICK_TODAY;
+
 function _topOfPipeGetDismissed() {
   try {
     var stored = localStorage.getItem(TOP_OF_PIPE_DISMISS_KEY);
@@ -11729,6 +12067,54 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initTopOfPipe);
 } else {
   initTopOfPipe();
+}
+
+// ── Fix 1 (tonight-pick): Tonight's pick callout logic ──────────────────────
+function initTonightPick() {
+  var el = document.getElementById('tonight-pick-callout');
+  if (!el) return;
+  if (!TONIGHT_PICK_DATA) { el.hidden = true; return; }
+
+  // Check dismiss for today
+  var dismissed = false;
+  try { dismissed = !!localStorage.getItem(TONIGHT_PICK_DISMISS_KEY); } catch (_) {}
+  if (dismissed) { el.hidden = true; return; }
+
+  // Check if any row was applied today — if so, hide callout
+  var appliedToday = Array.from(document.querySelectorAll('tr.row[data-status="applied"]')).some(function(r) {
+    // Check date chip text for today's date
+    var dateEl = r.querySelector('.meta-chip');
+    return dateEl && dateEl.textContent.includes(TONIGHT_PICK_TODAY);
+  });
+  if (appliedToday) { el.hidden = true; return; }
+
+  el.hidden = false;
+}
+function tonightPickStart() {
+  if (!TONIGHT_PICK_DATA) return;
+  var rowId = TONIGHT_PICK_DATA.rowIdx;
+  if (rowId) {
+    // Scroll Apply-Now into view then open the drawer
+    var section = document.getElementById('apply-now-section');
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function() {
+      var detail = document.getElementById('detail-' + rowId);
+      if (detail) { openRightRailForDetail(parseInt(rowId.replace('apply-',''),10)||0, detail); }
+      else { toggleDetail(rowId); }
+    }, 350);
+  }
+}
+function tonightPickDismiss() {
+  try { localStorage.setItem(TONIGHT_PICK_DISMISS_KEY, '1'); } catch (_) {}
+  var el = document.getElementById('tonight-pick-callout');
+  if (el) { el.style.transition = 'opacity .2s'; el.style.opacity = '0'; setTimeout(function() { el.hidden = true; el.style.opacity = ''; }, 220); }
+}
+window.tonightPickStart = tonightPickStart;
+window.tonightPickDismiss = tonightPickDismiss;
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTonightPick);
+} else {
+  initTonightPick();
 }
 
 // ── Hiring-Manager Intel (Phase H output) ─────────────────────────────────
@@ -15097,16 +15483,32 @@ function _rdRenderBody(d) {
     '</div>';
 
   // Section 5 — Who to contact next (Pillar 2 action proximity)
+  // 2026-05-18 — Each row now ends with a "Draft DM" button per Mitchell's
+  // mega-list ("Runway 'who to contact next' rows wire to draft-DM action").
+  // Click → rdDraftDm() reuses the existing openEmailPopover() draft flow
+  // pre-filled with contact name / company / channel / rationale so the DM
+  // starts with context.
   const next = d.who_to_contact_next || [];
   const nextTable = next.length
     ? '<div class="rd-table-wrap table-scroll">' +
         '<table class="rd-table" id="rd-next-table">' +
           '<thead><tr>' +
-            '<th>Rank</th><th>Tier</th><th>Contact</th><th>Company</th><th>Days silent</th><th>Why now</th><th>Channel</th>' +
+            '<th>Rank</th><th>Tier</th><th>Contact</th><th>Company</th><th>Days silent</th><th>Why now</th><th>Channel</th><th>Action</th>' +
           '</tr></thead>' +
           '<tbody>' +
             next.map((n, i) => {
               const tierCls = 'rd-tier-' + _rdEsc(n.tier || 'B');
+              const ch = n.suggested_channel || 'linkedin_dm';
+              const draftPayload = _rdEsc(JSON.stringify({
+                name: n.name || '',
+                company: n.company || '',
+                channel: ch,
+                rationale: n.rationale || '',
+                tier: n.tier || 'B',
+              }));
+              const draftBtn = (n.name && n.company)
+                ? '<button type="button" class="rd-draft-dm-btn" data-rd-draft="' + draftPayload + '" onclick="rdDraftDm(this);event.stopPropagation()" title="Draft a ' + _rdEsc(_rdFmtChannel(ch)) + ' to ' + _rdEsc(n.name) + '">✉ Draft DM</button>'
+                : '<span class="muted-text" style="font-size:11px">—</span>';
               return '<tr title="' + _rdEsc(n.rationale || '') + '">' +
                 '<td>' + (i + 1) + '</td>' +
                 '<td><span class="' + tierCls + '">' + _rdEsc(n.tier || '—') + '</span></td>' +
@@ -15114,7 +15516,8 @@ function _rdRenderBody(d) {
                 '<td>' + _rdEsc(n.company || '—') + '</td>' +
                 '<td>' + _rdEsc((n.days_since != null) ? (n.days_since + 'd') : '—') + '</td>' +
                 '<td title="' + _rdEsc(n.rationale || '') + '" data-fulltext="' + _rdEsc(n.rationale || '') + '">' + _rdEsc(n.rationale || '—') + '</td>' +
-                '<td>' + _rdEsc(_rdFmtChannel(n.suggested_channel)) + '</td>' +
+                '<td>' + _rdEsc(_rdFmtChannel(ch)) + '</td>' +
+                '<td>' + draftBtn + '</td>' +
               '</tr>';
             }).join('') +
           '</tbody>' +
@@ -16335,14 +16738,75 @@ function _cmdkEsc(s) {
 
 function _cmdkRefresh() {
   const input = document.getElementById('cmdk-input');
-  _cmdkItems = _cmdkBuildItems(input ? input.value : '');
+  // Fix 3: apply scope filter after building items
+  _cmdkItems = _cmdkScopeFilter(_cmdkBuildItems(input ? input.value : ''));
   const flatCount = _cmdkItems.filter(it => it.kind).length;
   if (_cmdkActive >= flatCount) _cmdkActive = 0;
   _cmdkRender();
 }
 
+// ── Fix 3 (cmdk-scope-persist): persist + restore last-used scope ────────────
+const CMDK_SCOPE_KEY = 'careerops.cmdk-last-scope';
+// Scopes: 'all' | 'nav' | 'search' | 'create' | 'context'
+let _cmdkScope = 'all';
+function _cmdkScopeLoad() {
+  try { _cmdkScope = localStorage.getItem(CMDK_SCOPE_KEY) || 'all'; } catch (_) {}
+}
+function _cmdkScopeSave(scope) {
+  _cmdkScope = scope;
+  try { localStorage.setItem(CMDK_SCOPE_KEY, scope); } catch (_) {}
+}
+function _cmdkScopeFilter(items) {
+  if (_cmdkScope === 'all') return items;
+  // Map scope → which section labels to keep
+  var keep = {
+    nav:     ['Actions', 'Saved views'],
+    search:  ['Jump to row', 'Recent reports'],
+    create:  [],   // keep only group=create items
+    context: [],   // keep only group=mutation items
+  }[_cmdkScope] || null;
+  if (!keep) return items;
+  var inSection = false, sectionOk = false;
+  return items.filter(function(it) {
+    if (it.section) {
+      inSection = true;
+      if (_cmdkScope === 'create' || _cmdkScope === 'context') {
+        sectionOk = false; return false;
+      }
+      sectionOk = keep.includes(it.section);
+      return sectionOk;
+    }
+    if (_cmdkScope === 'create') return it.group === 'create';
+    if (_cmdkScope === 'context') return it.group === 'mutation';
+    return sectionOk;
+  });
+}
+function _cmdkRenderScopeBtns() {
+  var bar = document.getElementById('cmdk-scope-bar');
+  if (!bar) return;
+  var scopes = [
+    { id: 'all',     label: 'All' },
+    { id: 'nav',     label: 'Actions' },
+    { id: 'search',  label: 'Search' },
+    { id: 'create',  label: 'Create' },
+    { id: 'context', label: 'Context' },
+  ];
+  bar.innerHTML = scopes.map(function(s) {
+    return '<button type="button" class="cmdk-scope-btn' + (_cmdkScope === s.id ? ' active' : '') + '" data-scope="' + s.id + '">' + s.label + '</button>';
+  }).join('');
+  bar.querySelectorAll('.cmdk-scope-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _cmdkScopeSave(btn.dataset.scope);
+      _cmdkRenderScopeBtns();
+      _cmdkRefresh();
+    });
+  });
+}
+
 function openCmdK() {
   if (_cmdkOpen) return;
+  _cmdkScopeLoad();  // Fix 3: restore last-used scope
   _cmdkOpen = true;
   _cmdkPrevFocus = document.activeElement;
   const bd = document.getElementById('cmdk-backdrop');
@@ -16351,6 +16815,7 @@ function openCmdK() {
   bd.classList.add('visible');
   input.value = '';
   _cmdkActive = 0;
+  _cmdkRenderScopeBtns();  // Fix 3: render scope buttons with restored scope
   _cmdkRefresh();
   setTimeout(() => input.focus(), 0);
 }
