@@ -2781,14 +2781,18 @@ function renderRow(r, idx) {
   const benefitsCell = renderBenefitsCell(r.company, r.role);
   const peopleCell = renderPeopleCell(r.company, r.role);
 
+  // Wave C-A: company slug for drill-in data attributes
+  const companySlug = r.company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const scoreRange = r.score >= 4.5 ? '4.5+' : r.score >= 4.0 ? '4.0-4.4' : r.score >= 3.0 ? '3.0-3.9' : '2.0-2.9';
+
   return `
 <tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${htmlEscape(idx)}" data-score="${r.score}" data-archetype="${htmlEscape(archetype)}" data-company="${htmlEscape(r.company.toLowerCase())}" data-status="${htmlEscape(r.status.toLowerCase())}" data-role="${htmlEscape(r.role.toLowerCase())}" data-equity="${htmlEscape(equityStage)}" data-search="${htmlEscape(searchIndex)}" onclick="toggleDetail('${idx}')">
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
-  <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
+  <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span></td>
   <td class="base-cell">${baseCell}</td>
-  <td><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
+  <td><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="Open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
-  <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${htmlEscape(r.status)}</span></td>
+  <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)} drill-trigger" data-status="${statusKey(r.status)}" data-num="${r.num}" data-drill="status:${htmlEscape(statusKey(r.status))}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${htmlEscape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
   <td class="location-cell">${locationCell}</td>
   <td class="benefits-cell">${benefitsCell}</td>
@@ -3283,6 +3287,112 @@ function build() {
   const compFloors = loadCompFloors();
   _COMP_FLOORS = compFloors;
   const compAnalytics = computeCompAnalytics(apps);
+
+  // ── Wave C-A: Top-of-pipe build-time data ───────────────────────
+  // Computes the 3-5 highest-priority items for the "right now" ribbon.
+  // Signal 1: score>=4.0, Evaluated, eval date >=14 days ago (apply-now-stale)
+  // Signal 2: score>=4.0, Applied, apply date >=7 days ago (waiting-for-response)
+  // Signal 3: HM-intel freshly available (data/hm-intel/{slug}.json modified <24h)
+  // Signal 4: company-pulse delta (data/company-pulse/{slug}.json modified <24h)
+  // Dismissed items are filtered client-side from localStorage.
+  const TOP_OF_PIPE_DISMISS_KEY = 'careerops.top-of-pipe-dismissed';
+  const _topOfPipeNow = Date.now();
+  const _topOfPipeTodayMs = new Date(today + 'T00:00:00Z').getTime();
+  const topOfPipeItems = [];
+
+  // Helper: days between YYYY-MM-DD date string and today
+  const _daysAgo = (dateStr) => {
+    if (!dateStr) return Infinity;
+    const ms = new Date(dateStr + 'T00:00:00Z').getTime();
+    if (isNaN(ms)) return Infinity;
+    return Math.round((_topOfPipeTodayMs - ms) / 86400000);
+  };
+
+  // Helper: check if a file was modified within the last 24h
+  const _freshWithin24h = (filePath) => {
+    try {
+      const st = statSync(join(ROOT, filePath));
+      return (_topOfPipeNow - st.mtimeMs) < 86400000;
+    } catch { return false; }
+  };
+
+  // Signal 1: Evaluated + score>=4.0 + eval date >=14 days ago
+  for (const r of applyNow) {
+    if (!/^evaluated$/i.test(r.status)) continue;
+    const age = _daysAgo(r.date);
+    if (age < 14) continue;
+    topOfPipeItems.push({
+      num: r.num,
+      company: r.company,
+      role: r.role,
+      score: r.score,
+      status: r.status,
+      reason: `Evaluated ${age}d ago — ready to apply`,
+      reasonType: 'stale-eval',
+    });
+  }
+
+  // Signal 2: Applied + score>=4.0 + apply date >=7 days ago
+  for (const r of apps) {
+    if (r.score < 4.0) continue;
+    if (!/^applied$/i.test(r.status)) continue;
+    const age = _daysAgo(r.date);
+    if (age < 7) continue;
+    topOfPipeItems.push({
+      num: r.num,
+      company: r.company,
+      role: r.role,
+      score: r.score,
+      status: r.status,
+      reason: `Applied ${age}d ago — follow up now`,
+      reasonType: 'waiting-response',
+    });
+  }
+
+  // Signal 3: HM-intel freshly available (last 24h)
+  for (const r of apps) {
+    if (r.score < 3.5) continue;
+    const slug = String(r.company + '-' + r.role)
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+    if (_freshWithin24h('data/hm-intel/' + slug + '.json')) {
+      topOfPipeItems.push({
+        num: r.num,
+        company: r.company,
+        role: r.role,
+        score: r.score,
+        status: r.status,
+        reason: 'HM intel just updated',
+        reasonType: 'hm-intel-fresh',
+      });
+    }
+  }
+
+  // Signal 4: company-pulse freshly available (last 24h)
+  for (const r of apps) {
+    if (r.score < 3.5) continue;
+    const slug = r.company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+    if (_freshWithin24h('data/company-pulse/' + slug + '.json')) {
+      topOfPipeItems.push({
+        num: r.num,
+        company: r.company,
+        role: r.role,
+        score: r.score,
+        status: r.status,
+        reason: 'Company pulse updated (new signals)',
+        reasonType: 'pulse-fresh',
+      });
+    }
+  }
+
+  // Deduplicate by num (keep first hit — highest priority signal wins)
+  const _topOfPipeSeen = new Set();
+  const topOfPipeDeduped = topOfPipeItems.filter(it => {
+    if (_topOfPipeSeen.has(it.num)) return false;
+    _topOfPipeSeen.add(it.num);
+    return true;
+  }).slice(0, 5); // cap at 5
+
+  const topOfPipeJson = JSON.stringify(topOfPipeDeduped).replace(/<\//g, '<\\/');
 
   // Apply-now table rows
   const applyNowRows = applyNowSorted.map((r, i) => renderRow(r, `apply-${i}`)).join('\n');
@@ -8376,6 +8486,17 @@ function build() {
     <button class="overnight-dismiss" onclick="this.closest('#overnight-card').hidden=true;localStorage.setItem('overnight-dismissed',Date.now())" aria-label="Dismiss overnight summary">✕</button>
   </div>
 
+  <!-- Wave C-A Item 7 — Top of your pipe right now.
+       Auto-hides when empty or all items dismissed.
+       data-item-num used by JS for per-row dismiss + drill-in. -->
+  <div id="top-of-pipe" role="region" aria-label="Top of your pipe right now" class="top-of-pipe" hidden>
+    <div class="top-of-pipe-header">
+      <span class="top-of-pipe-title">&#8593; Top of your pipe &mdash; right now</span>
+      <button type="button" class="top-of-pipe-dismiss-all" onclick="topOfPipeDismissAll()" aria-label="Dismiss all top-of-pipe items for this session">Clear all</button>
+    </div>
+    <div class="top-of-pipe-list" id="top-of-pipe-list"></div>
+  </div>
+
   <div class="stats" id="overview-section">
     <div class="stats-hero-row">
       <div class="stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue" role="button" tabindex="0">
@@ -9845,14 +9966,19 @@ function openRightRailForDetail(idx, detailRow) {
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
   document.body.classList.add('right-rail-open');
-  if (backdrop && isTabletViewport()) {
+  // Wave C-A Item 4 fix: backdrop now dims on ALL viewports (was tablet-only).
+  // DASHBOARD_INVARIANTS.md §2 — closeRightRail() + click-backdrop preserved.
+  // On desktop the dim is subtle so the table stays readable; CSS sets
+  // rgba(0,0,0,0.45) which is the --overlay-dim value.
+  if (backdrop) {
     backdrop.classList.add('visible');
     backdrop.removeAttribute('aria-hidden');
-  } else if (backdrop) {
-    backdrop.classList.remove('visible');
-    backdrop.setAttribute('aria-hidden', 'true');
   }
   _railSelectedIdx = idx;
+
+  // Wave C-A Item 6: Inject sticky prev/next ribbon into drawer body.
+  // Keyboard: [ prev, ] next. Uses window._allDrillRows (seeded below).
+  _injectPrevNextRibbon(idx);
 }
 
 function closeRightRail() {
@@ -10017,6 +10143,462 @@ window.drawerCreateMaterials = drawerCreateMaterials;
 window.closeRightRail = closeRightRail;
 window.openRightRailForDetail = openRightRailForDetail;
 window.setUseInlineExpand = setUseInlineExpand;
+
+// ── Wave C-A Item 1: Universal drill-in registry ─────────────────────────
+// Provides window.drillIn(type, id, evt) + drillInRegistry.
+// Wave C-B will replace the placeholder renderers with full rich views
+// using lib/peer-context.mjs, lib/humanize-status.mjs, etc.
+//
+// DASHBOARD_INVARIANTS.md §2, §5 — drill-in opens the right-rail drawer for
+// 'role' type; for other types it opens a lightweight popover-style overlay
+// that does NOT conflict with the existing drawer or status-popover.
+
+var drillInRegistry = {};
+
+function _drillInRegister(type, rendererFn) {
+  drillInRegistry[type] = rendererFn;
+}
+
+// Pre-register placeholder renderers for all types. Each returns
+// { title, html } — Wave C-B will replace the html bodies.
+_drillInRegister('role', function(id) {
+  return {
+    title: 'Role drill-in',
+    html: '<p class="muted">Wave C-B will wire full role detail here.</p>',
+  };
+});
+_drillInRegister('company', function(id) {
+  var slug = id || '';
+  var compName = slug.split('-').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+  return {
+    title: compName + ' — all roles',
+    html: '<p class="muted">Showing all evaluated roles at ' + compName + '.</p>'
+      + '<div id="drill-company-rows"></div>',
+    onMount: function(el) {
+      // Collect all rows for this company from the main tables and render a mini-list.
+      var rows = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
+      if (!rows.length) {
+        var div = el.querySelector('#drill-company-rows');
+        if (div) div.innerHTML = '<p class="muted" style="font-size:12px">No evaluated roles found for this company.</p>';
+        return;
+      }
+      var items = rows.map(function(r) {
+        var role = (r.querySelector('td.role-cell') || {}).innerText || '';
+        var score = r.dataset.score || '';
+        var status = r.dataset.status || '';
+        var idx = r.dataset.rowId || '';
+        return '<div class="drill-company-row" onclick="closeTopLevelDrillIn();toggleDetail(\\'' + idx + '\\')" style="cursor:pointer;padding:6px 8px;border-radius:5px;margin:3px 0;background:var(--surface-2);display:flex;align-items:center;gap:10px">'
+          + '<span style="font-size:11px;font-weight:600;color:var(--green)">' + (parseFloat(score)||0).toFixed(1) + '</span>'
+          + '<span style="flex:1;font-size:12.5px">' + (role||'').slice(0,80) + '</span>'
+          + '<span style="font-size:11px;color:var(--text-3)">' + status + '</span>'
+          + '</div>';
+      }).join('');
+      var div = el.querySelector('#drill-company-rows');
+      if (div) div.innerHTML = items;
+    },
+  };
+});
+_drillInRegister('status', function(id) {
+  var status = id || '';
+  return {
+    title: 'Status: ' + (status.charAt(0).toUpperCase() + status.slice(1)),
+    html: '<p class="muted">Showing all roles with status "' + status + '".</p>'
+      + '<div id="drill-status-rows"></div>',
+    onMount: function(el) {
+      var rows = Array.from(document.querySelectorAll('tr.row[data-status="' + status + '"]'));
+      if (!rows.length) {
+        var div = el.querySelector('#drill-status-rows');
+        if (div) div.innerHTML = '<p class="muted" style="font-size:12px">No rows with this status.</p>';
+        return;
+      }
+      var items = rows.map(function(r) {
+        var company = (r.querySelector('a.company-link strong') || {}).innerText || r.dataset.company || '';
+        var role = (r.querySelector('td.role-cell') || {}).innerText || '';
+        var score = r.dataset.score || '';
+        var idx = r.dataset.rowId || '';
+        return '<div class="drill-company-row" onclick="closeTopLevelDrillIn();toggleDetail(\\'' + idx + '\\')" style="cursor:pointer;padding:6px 8px;border-radius:5px;margin:3px 0;background:var(--surface-2);display:flex;align-items:center;gap:10px">'
+          + '<span style="font-size:11px;font-weight:600;color:var(--green)">' + (parseFloat(score)||0).toFixed(1) + '</span>'
+          + '<span style="flex:1;font-size:12.5px">' + (company||'').slice(0,24) + ' — ' + (role||'').slice(0,50) + '</span>'
+          + '</div>';
+      }).join('');
+      var div = el.querySelector('#drill-status-rows');
+      if (div) div.innerHTML = items;
+    },
+  };
+});
+_drillInRegister('score', function(id) {
+  var range = id || '';
+  return {
+    title: 'Score range: ' + range,
+    html: '<p class="muted">Coming soon — Wave C-B will render full score-range detail.</p>',
+  };
+});
+_drillInRegister('comp', function(id) {
+  return { title: 'Comp intelligence', html: '<p class="muted">Coming soon — Wave C-B will wire comp peer context.</p>' };
+});
+_drillInRegister('gap', function(id) {
+  return { title: 'Gap: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render gap-close strategy.</p>' };
+});
+_drillInRegister('story', function(id) {
+  return { title: 'Story: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render STAR story detail.</p>' };
+});
+_drillInRegister('metric', function(id) {
+  return { title: 'Metric: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render metric context.</p>' };
+});
+_drillInRegister('banner-roles', function(id) {
+  return { title: 'Scan result: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render scan banner roles.</p>' };
+});
+_drillInRegister('percentage', function(id) {
+  return { title: 'Percentage detail', html: '<p class="muted">Coming soon — Wave C-B will render percentage breakdown.</p>' };
+});
+_drillInRegister('ingest-form', function(id) {
+  return { title: 'Add weekly skill evidence', html: '<p class="muted">Coming soon — Wave C-B will wire the skill-ingest form here.</p>' };
+});
+_drillInRegister('tpgm-gaps', function(id) {
+  return { title: 'TPgM gap points', html: '<p class="muted">Coming soon — Wave C-B will render gap-point list + action recommendations.</p>' };
+});
+
+// ── Top-level drill-in overlay (for non-role types) ──────────────────────
+// Avoids z-index / event conflicts with the right-rail drawer.
+// Role types delegate to toggleDetail() + openRightRailForDetail() instead.
+var _drillInOverlayOpen = false;
+function _ensureDrillInOverlay() {
+  var existing = document.getElementById('drill-in-overlay');
+  if (existing) return existing;
+  var bd = document.createElement('div');
+  bd.id = 'drill-in-backdrop';
+  bd.style.cssText = 'position:fixed;inset:0;z-index:1900;background:rgba(0,0,0,0.45);display:none';
+  bd.addEventListener('click', closeTopLevelDrillIn);
+  var modal = document.createElement('div');
+  modal.id = 'drill-in-overlay';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'drill-in-title');
+  modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1901;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;min-width:320px;max-width:min(540px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)';
+  modal.addEventListener('click', function(e) { e.stopPropagation(); });
+  modal.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+    + '<h3 id="drill-in-title" style="margin:0;font-size:14px;font-weight:600"></h3>'
+    + '<button type="button" onclick="closeTopLevelDrillIn()" aria-label="Close" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-3);line-height:1;padding:2px 6px">✕</button>'
+    + '</div>'
+    + '<div id="drill-in-body"></div>';
+  document.body.appendChild(bd);
+  document.body.appendChild(modal);
+  // ESC to close — guarded to not steal from existing drawer ESC handlers
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && _drillInOverlayOpen) {
+      closeTopLevelDrillIn();
+      e.preventDefault();
+    }
+  });
+  return modal;
+}
+
+function closeTopLevelDrillIn() {
+  _drillInOverlayOpen = false;
+  var bd = document.getElementById('drill-in-backdrop');
+  var modal = document.getElementById('drill-in-overlay');
+  if (bd) bd.style.display = 'none';
+  if (modal) { modal.style.display = 'none'; modal.setAttribute('aria-hidden', 'true'); }
+}
+window.closeTopLevelDrillIn = closeTopLevelDrillIn;
+
+function drillIn(type, id, evt) {
+  if (evt) evt.stopPropagation();
+  var renderer = drillInRegistry[type];
+  if (!renderer) return;
+  var result = renderer(id);
+  if (!result) return;
+  var modal = _ensureDrillInOverlay();
+  var titleEl = document.getElementById('drill-in-title');
+  var bodyEl  = document.getElementById('drill-in-body');
+  var bd = document.getElementById('drill-in-backdrop');
+  if (titleEl) titleEl.textContent = result.title || type;
+  if (bodyEl)  bodyEl.innerHTML    = result.html  || '';
+  if (bd)      bd.style.display    = 'block';
+  if (modal) {
+    modal.style.display = '';
+    modal.removeAttribute('aria-hidden');
+    modal.scrollTop = 0;
+  }
+  _drillInOverlayOpen = true;
+  // onMount callback for dynamic content (e.g. company row list)
+  if (typeof result.onMount === 'function' && modal) {
+    try { result.onMount(modal); } catch (e) { console.warn('drill-in onMount failed', e); }
+  }
+}
+window.drillIn = drillIn;
+window.drillInRegistry = drillInRegistry;
+
+// ── Wave C-A Item 2: company names in banners + drawer headers ───────────
+// Scan banner live-ticker gets data-drill on update via MutationObserver.
+// Drawer company name gets data-drill wired after openRightRailForDetail sets innerHTML.
+// (renderRow already emits data-drill="company:{slug}" on a.company-link elements)
+(function _wireDrillInOnDynamicContent() {
+  // When the drawer opens (body class change), wire data-drill="company:…" on
+  // the drawer company name span so it becomes clickable without breaking the
+  // existing drawer-company-link behavior.
+  var _lastBodyClasses = document.body.className;
+  var _drawerWireObs = new MutationObserver(function() {
+    var cls = document.body.className;
+    if (cls === _lastBodyClasses) return;
+    _lastBodyClasses = cls;
+    if (!cls.includes('right-rail-open')) return;
+    // Drawer just opened — wire company name
+    var nameEl = document.querySelector('#right-rail-header .drawer-company-name');
+    if (nameEl && !nameEl.dataset.drillWired) {
+      nameEl.dataset.drillWired = '1';
+      var company = nameEl.textContent.trim();
+      var slug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      nameEl.setAttribute('data-drill', 'company:' + slug);
+      nameEl.style.cursor = 'pointer';
+      nameEl.title = 'Click to see all roles at ' + company;
+      nameEl.addEventListener('click', function(e) {
+        e.stopPropagation();
+        drillIn('company', slug, e);
+      });
+    }
+  });
+  _drawerWireObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+})();
+
+// ── Wave C-A Item 6: Sticky prev/next ribbon + [ / ] keyboard nav ───────
+// DASHBOARD_INVARIANTS.md §7 — [ / ] guarded by _kbdAnyOverlayOpen().
+// Ribbon is appended to #right-rail-body as a sticky bottom element.
+// Window._allDrillRows is the flat ordered list of all visible detail-row idxs.
+
+function _buildAllDrillRows() {
+  // Order: apply-now rows first (by current DOM order), then all-evaluations rows.
+  var rows = [];
+  ['apply-now-tbody', 'all-tbody'].forEach(function(tbodyId) {
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    Array.from(tbody.querySelectorAll('tr.row[data-row-id]')).forEach(function(r) {
+      rows.push(r.dataset.rowId);
+    });
+  });
+  return rows;
+}
+
+function _injectPrevNextRibbon(currentIdx) {
+  var bodyEl = document.getElementById('right-rail-body');
+  if (!bodyEl) return;
+  // Remove old ribbon if present
+  var old = bodyEl.querySelector('.prev-next-ribbon');
+  if (old) old.remove();
+
+  var allRows = _buildAllDrillRows();
+  var pos = allRows.indexOf(String(currentIdx));
+  var prevIdx = pos > 0 ? allRows[pos - 1] : null;
+  var nextIdx = pos < allRows.length - 1 ? allRows[pos + 1] : null;
+
+  // Get company name for prev/next
+  function _getCompanyForIdx(idx) {
+    if (!idx) return '';
+    var row = document.querySelector('tr.row[data-row-id="' + idx + '"]');
+    if (!row) return '';
+    var strong = row.querySelector('a.company-link strong, td strong');
+    return strong ? strong.textContent.trim() : '';
+  }
+
+  var ribbon = document.createElement('div');
+  ribbon.className = 'prev-next-ribbon';
+  ribbon.setAttribute('role', 'navigation');
+  ribbon.setAttribute('aria-label', 'Navigate between roles');
+
+  var prevBtn = document.createElement('button');
+  prevBtn.textContent = prevIdx ? ('← ' + (_getCompanyForIdx(prevIdx) || 'prev')) : '← prev';
+  prevBtn.disabled = !prevIdx;
+  prevBtn.setAttribute('aria-label', prevIdx ? 'Previous role' : 'No previous role');
+  prevBtn.setAttribute('title', 'Previous role ([)'); // [
+  if (prevIdx) {
+    prevBtn.addEventListener('click', function() { openRightRailForDetail(prevIdx, document.getElementById('detail-' + prevIdx)); });
+  }
+
+  var midSpan = document.createElement('span');
+  midSpan.className = 'ribbon-mid';
+  midSpan.textContent = (pos >= 0 ? (pos + 1) + ' of ' + allRows.length : '');
+
+  var nextBtn = document.createElement('button');
+  nextBtn.textContent = nextIdx ? ((_getCompanyForIdx(nextIdx) || 'next') + ' →') : 'next →';
+  nextBtn.disabled = !nextIdx;
+  nextBtn.setAttribute('aria-label', nextIdx ? 'Next role' : 'No next role');
+  nextBtn.setAttribute('title', 'Next role (])'); // ]
+  if (nextIdx) {
+    nextBtn.addEventListener('click', function() { openRightRailForDetail(nextIdx, document.getElementById('detail-' + nextIdx)); });
+  }
+
+  ribbon.appendChild(prevBtn);
+  ribbon.appendChild(midSpan);
+  ribbon.appendChild(nextBtn);
+  bodyEl.appendChild(ribbon);
+}
+
+// [ / ] keyboard nav for prev/next in drawer.
+// Guard: only fires when right-rail is open, not in an input.
+document.addEventListener('keydown', function(e) {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (_kbdIsTypingTarget(e.target)) return;
+  var drawer = document.getElementById('right-rail-drawer');
+  if (!drawer || !drawer.classList.contains('open')) return;
+  if (e.key !== '[' && e.key !== ']') return;
+
+  var allRows = _buildAllDrillRows();
+  var pos = _railSelectedIdx !== null ? allRows.indexOf(String(_railSelectedIdx)) : -1;
+  var targetIdx = null;
+  if (e.key === '[' && pos > 0) targetIdx = allRows[pos - 1];
+  if (e.key === ']' && pos >= 0 && pos < allRows.length - 1) targetIdx = allRows[pos + 1];
+  if (targetIdx !== null) {
+    var detailRow = document.getElementById('detail-' + targetIdx);
+    if (detailRow) {
+      openRightRailForDetail(targetIdx, detailRow);
+      e.preventDefault();
+    }
+  }
+});
+
+// ── Wave C-A Item 7: Top-of-pipe section initializer ────────────────────
+// Data seeded at build time via TOP_OF_PIPE_DATA. Dismissed items stored in
+// localStorage keyed by row num. Section auto-hides when empty.
+
+var TOP_OF_PIPE_DATA = ${topOfPipeJson};
+var TOP_OF_PIPE_DISMISS_KEY = 'careerops.top-of-pipe-dismissed';
+
+function _topOfPipeGetDismissed() {
+  try {
+    var stored = localStorage.getItem(TOP_OF_PIPE_DISMISS_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (e) { return {}; }
+}
+function _topOfPipeSaveDismissed(map) {
+  try { localStorage.setItem(TOP_OF_PIPE_DISMISS_KEY, JSON.stringify(map)); } catch (e) {}
+}
+
+function topOfPipeDismiss(num) {
+  var map = _topOfPipeGetDismissed();
+  map[String(num)] = Date.now();
+  _topOfPipeSaveDismissed(map);
+  var item = document.querySelector('.top-of-pipe-item[data-item-num="' + num + '"]');
+  if (item) {
+    item.style.transition = 'opacity .2s';
+    item.style.opacity = '0';
+    setTimeout(function() {
+      item.remove();
+      _topOfPipeCheckHide();
+    }, 220);
+  }
+}
+window.topOfPipeDismiss = topOfPipeDismiss;
+
+function topOfPipeDismissAll() {
+  var map = _topOfPipeGetDismissed();
+  (TOP_OF_PIPE_DATA || []).forEach(function(it) {
+    map[String(it.num)] = Date.now();
+  });
+  _topOfPipeSaveDismissed(map);
+  var container = document.getElementById('top-of-pipe');
+  if (container) container.hidden = true;
+}
+window.topOfPipeDismissAll = topOfPipeDismissAll;
+
+function _topOfPipeCheckHide() {
+  var list = document.getElementById('top-of-pipe-list');
+  var container = document.getElementById('top-of-pipe');
+  if (list && container && !list.querySelector('.top-of-pipe-item')) {
+    container.hidden = true;
+  }
+}
+
+function initTopOfPipe() {
+  var container = document.getElementById('top-of-pipe');
+  var list = document.getElementById('top-of-pipe-list');
+  if (!container || !list) return;
+  var items = TOP_OF_PIPE_DATA || [];
+  if (!items.length) return;
+
+  var dismissed = _topOfPipeGetDismissed();
+  // Purge dismiss entries older than 7 days so dismissed items can resurface
+  var cutoff = Date.now() - 7 * 86400000;
+  var purged = false;
+  Object.keys(dismissed).forEach(function(k) {
+    if (dismissed[k] < cutoff) { delete dismissed[k]; purged = true; }
+  });
+  if (purged) _topOfPipeSaveDismissed(dismissed);
+
+  var visible = items.filter(function(it) { return !dismissed[String(it.num)]; });
+  if (!visible.length) return;
+
+  var reasonClass = function(type) {
+    if (type === 'waiting-response') return 'reason-waiting';
+    if (type === 'hm-intel-fresh' || type === 'pulse-fresh') return 'reason-fresh';
+    return '';
+  };
+
+  list.innerHTML = visible.map(function(it) {
+    // Find the row-id for this num so we can store as data attr (avoids
+    // single-quote nesting issues in inline onclick strings).
+    var rowEl = document.querySelector('tr.row[data-num="' + it.num + '"]');
+    var rowId = rowEl ? (rowEl.dataset.rowId || '') : '';
+    return '<div class="top-of-pipe-item" data-item-num="' + it.num + '" data-row-id="' + _escHtmlInline(rowId) + '"'
+      + ' onclick="topOfPipeOpenEl(this)"'
+      + ' title="Click to open detail for row #' + it.num + '"'
+      + ' role="button" tabindex="0"'
+      + ' data-kbd-open="1">'
+      + '<div class="top-of-pipe-item-body">'
+      +   '<span class="top-of-pipe-company">' + _escHtmlInline(it.company || '') + '</span>'
+      +   '<span class="top-of-pipe-role" title="' + _escHtmlInline(it.role || '') + '">' + _escHtmlInline((it.role||'').slice(0,60)) + '</span>'
+      +   '<span class="top-of-pipe-reason ' + reasonClass(it.reasonType) + '">' + _escHtmlInline(it.reason || '') + '</span>'
+      + '</div>'
+      + '<button type="button" class="top-of-pipe-dismiss" onclick="event.stopPropagation();topOfPipeDismiss(' + it.num + ')" aria-label="Dismiss ' + _escHtmlInline(it.company||'') + '">&times;</button>'
+      + '</div>';
+  }).join('');
+
+  container.hidden = false;
+
+  // Delegated keyboard handler for Enter / Space on pipe items.
+  list.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var item = e.target.closest('[data-kbd-open]');
+    if (item) { e.preventDefault(); topOfPipeOpenEl(item); }
+  });
+}
+
+// topOfPipeOpenEl reads rowId from data-row-id attribute (avoids inline string quoting).
+function topOfPipeOpenEl(el) {
+  if (!el) return;
+  var num = el.dataset.itemNum;
+  var rowId = el.dataset.rowId;
+  topOfPipeOpen(num, rowId);
+}
+window.topOfPipeOpenEl = topOfPipeOpenEl;
+
+function topOfPipeOpen(num, rowId) {
+  if (rowId) {
+    var detailRow = document.getElementById('detail-' + rowId);
+    if (detailRow) {
+      toggleDetail(rowId);
+      return;
+    }
+  }
+  // Fallback: find the row by num
+  var rowEl = document.querySelector('tr.row[data-num="' + num + '"]');
+  if (rowEl) {
+    var foundRowId = rowEl.dataset.rowId;
+    if (foundRowId) toggleDetail(foundRowId);
+  }
+}
+window.topOfPipeOpen = topOfPipeOpen;
+
+// Tiny inline HTML escaper for the top-of-pipe list (avoids re-using
+// the build-time htmlEscape function which isn't available at runtime).
+function _escHtmlInline(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTopOfPipe);
+} else {
+  initTopOfPipe();
+}
 
 // ── Hiring-Manager Intel (Phase H output) ─────────────────────────────────
 // Lazy-load the 7-LLM council intel pack for a row and render the 9
@@ -16406,6 +16988,118 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   .sh-status-dot.yellow { background: var(--orange-fg, #bc4c00); }
   .sh-status-dot.red    { background: var(--red-fg, #cf222e); }
   .sh-status-dot.grey   { background: var(--text-3); }
+
+  /* ── Wave C-A: Universal drill-in affordance ─────────────────── */
+  /* data-drill= elements get subtle click affordance. Avoids conflicting
+     with status-pill hover (those have their own :hover). */
+  [data-drill]:not(.status-pill):not(.equity-badge) {
+    cursor: pointer;
+  }
+  [data-drill].drill-trigger:not(.status-pill) {
+    cursor: pointer;
+  }
+  [data-drill].drill-trigger:not(.status-pill):hover {
+    text-decoration: underline dotted;
+    opacity: 0.85;
+  }
+  [data-drill].drill-trigger:not(.status-pill):focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 2px;
+  }
+  /* Drill-in drawer overlay — dim the page behind the drawer on all viewports
+     (Item 4 fix: was tablet-only). DASHBOARD_INVARIANTS.md §2 — preserving
+     existing close-on-backdrop-click behavior. */
+  #right-rail-backdrop.visible {
+    display: block;
+    background: rgba(0,0,0,0.45); /* --overlay-dim */
+  }
+
+  /* ── Wave C-A Item 7: Top-of-pipe section ─────────────────────── */
+  .top-of-pipe {
+    margin: 0 0 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green-fg);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+  }
+  body.dark .top-of-pipe {
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
+  .top-of-pipe-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .top-of-pipe-title {
+    font-weight: 600; font-size: 12px; color: var(--text-2);
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .top-of-pipe-dismiss-all {
+    background: none; border: none; font-size: 11px; color: var(--text-3);
+    cursor: pointer; padding: 2px 6px; border-radius: 4px;
+  }
+  .top-of-pipe-dismiss-all:hover { background: var(--surface-2); color: var(--text-2); }
+  .top-of-pipe-list {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .top-of-pipe-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px; border-radius: 6px; background: var(--surface-2);
+    cursor: pointer; transition: background .12s;
+    border: 1px solid var(--border);
+  }
+  .top-of-pipe-item:hover { background: var(--green-bg); border-color: var(--green-border); }
+  .top-of-pipe-item-body {
+    flex: 1; min-width: 0;
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  }
+  .top-of-pipe-company { font-weight: 600; color: var(--text); }
+  .top-of-pipe-role { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+  .top-of-pipe-reason {
+    font-size: 11px; color: var(--green);
+    background: var(--green-bg); border-radius: 4px; padding: 1px 6px;
+    white-space: nowrap;
+  }
+  .top-of-pipe-reason.reason-waiting {
+    color: var(--amber); background: var(--amber-bg);
+  }
+  .top-of-pipe-reason.reason-fresh {
+    color: var(--blue-fg); background: var(--blue-bg);
+  }
+  .top-of-pipe-dismiss {
+    background: none; border: none; color: var(--text-4); cursor: pointer;
+    font-size: 14px; line-height: 1; padding: 2px 4px; border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .top-of-pipe-dismiss:hover { background: var(--surface-2); color: var(--text-2); }
+  @media (max-width: 720px) {
+    .top-of-pipe { margin: 0 0 8px; }
+    .top-of-pipe-role { max-width: 140px; }
+  }
+
+  /* ── Wave C-A Item 6: Sticky prev/next ribbon inside drawer ───── */
+  /* DASHBOARD_INVARIANTS.md §2 — ribbon lives inside #right-rail-body as
+     a sticky footer. Does not replace or overlap the drawer-action-bar. */
+  .prev-next-ribbon {
+    position: sticky; bottom: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 14px; margin: 8px -14px -14px;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+    font-size: 11.5px; color: var(--text-3);
+    z-index: 2;
+  }
+  .prev-next-ribbon button {
+    background: none; border: none; color: var(--text-2);
+    cursor: pointer; font-size: 11.5px; padding: 3px 8px;
+    border-radius: 4px; transition: background .12s;
+  }
+  .prev-next-ribbon button:hover { background: var(--surface); }
+  .prev-next-ribbon button:disabled { opacity: .35; cursor: not-allowed; }
+  .prev-next-ribbon .ribbon-mid {
+    font-size: 10.5px; color: var(--text-4); text-align: center;
+  }
 </style>
 
 <div id="share-banner" role="status" aria-live="polite">
