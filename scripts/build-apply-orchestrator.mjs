@@ -563,7 +563,7 @@ export async function orchestrateApplyPack({
   const corpus = await loadCorpus({ archetype, dryRun });
 
   // Stage 4
-  const drafts = await fanOutDrafts({
+  const draftsResult = await fanOutDrafts({
     jd,
     hmIntel: resolvedHmIntel,
     corpus,
@@ -571,6 +571,14 @@ export async function orchestrateApplyPack({
     aiPolicy,
     dryRun,
   });
+
+  // Fix 3: extract completeness ledger before passing drafts to later stages.
+  // voice_pass + humanize_gate use JSON.parse(JSON.stringify()) cloning which
+  // would silently drop non-standard fields; preserve completeness separately.
+  const draftsCompleteness = draftsResult.completeness || { live_stages: [], scaffold_stages: [] };
+  // Build a drafts-only object for the pipeline stages (without completeness)
+  const { completeness: _dropCompleteness, ...drafts } = draftsResult;
+  void _dropCompleteness; // consumed above into draftsCompleteness
 
   // Stage 5
   const voicedDrafts = await voicePass({
@@ -634,6 +642,8 @@ export async function orchestrateApplyPack({
         sections_passed: 0,
         sections_total: 9,
       },
+      // Fix 3: completeness ledger — which stages produced live output vs scaffold stubs.
+      completeness: draftsCompleteness,
     },
     gates,
     status: 'draft',
