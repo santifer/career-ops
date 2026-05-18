@@ -1942,7 +1942,9 @@ function countScanHistory() {
 // date's events to the file mtime (a real scan-run timestamp) and back off
 // by ~6h per prior date for older groups. Returns up to 5 events
 // newest-first, plus a lastScanIso anchor.
-function loadLiveScanEvents(limit = 5) {
+// topRolesMap: Map<companySlug, {role, score, rowId}> — built from applyNowSorted
+// so the ticker can surface a specific role title alongside the aggregate count.
+function loadLiveScanEvents(limit = 5, topRolesMap) {
   if (!existsSync(SCAN_HISTORY_PATH)) return { events: [], lastScanIso: null };
   const stat = statSync(SCAN_HISTORY_PATH);
   const mtime = stat.mtime.getTime();
@@ -1969,7 +1971,15 @@ function loadLiveScanEvents(limit = 5) {
   const events = sorted.slice(0, limit).map((g) => {
     const dayDelta = newestDate ? (new Date(newestDate) - new Date(g.date)) / 86400000 : 0;
     const ts = mtime - dayDelta * 24 * 3600 * 1000 - (g === sorted[0] ? 0 : 6 * 60 * 1000);
-    return { company: g.company, count: g.count, ts: new Date(ts).toISOString() };
+    // Attempt to find the top-scored evaluated role for this company.
+    const slug = g.company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const topRole = (topRolesMap && topRolesMap.get(slug)) || null;
+    return {
+      company: g.company,
+      count: g.count,
+      ts: new Date(ts).toISOString(),
+      topRole: topRole ? { role: topRole.role, score: topRole.score, rowId: topRole.rowId } : null,
+    };
   });
   return { events, lastScanIso: new Date(mtime).toISOString() };
 }
@@ -3295,7 +3305,24 @@ function build() {
   } catch (_) { sideAllocations = []; }
 
   const reportsToday = countTodaysReports(today);
-  const liveTicker = loadLiveScanEvents();
+  // Build a company-slug → top-scored evaluated row map for ticker role enrichment.
+  // Used by loadLiveScanEvents so the ticker can surface a specific role title.
+  const _tickerTopRolesMap = (() => {
+    const m = new Map();
+    try {
+      for (const r of applyNowSorted) {
+        if (!r.company || !r.role) continue;
+        const slug = r.company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (!m.has(slug)) {
+          // applyNowSorted is score-desc; first occurrence per company = top score
+          const rowIdx = applyNowSorted.findIndex(x => x.num === r.num);
+          m.set(slug, { role: r.role, score: r.score, rowId: `apply-${rowIdx >= 0 ? rowIdx : 0}` });
+        }
+      }
+    } catch (_) { /* never break build */ }
+    return m;
+  })();
+  const liveTicker = loadLiveScanEvents(5, _tickerTopRolesMap);
   const liveTickerJson = JSON.stringify(liveTicker).replace(/<\//g, '<\\/');
   const batchSnapshot = loadBatchSnapshot();
   const healthSnapshot = loadSystemHealthSnapshot(apps);
@@ -3530,19 +3557,34 @@ function build() {
   // ── Fix 1 (tonight-pick): Auto-select top candidate not yet applied today ──
   // Criteria: highest-scoring Evaluated row, age > 7 days, no applied-today flag.
   // Dismiss key: careerops.tonight-pick-dismissed-{date} (localStorage, daily).
+  // Enriched (2026-05-17): comp, location, gate summary, whyPick from positioning.
+  // Ranked queue for "Pick another" cycling: all pool items in score order.
   const _tonightPickTodayStr = today; // YYYY-MM-DD
   let _tonightPick = null;
+  let _tonightPickQueue = [];
   try {
     const _candidates = applyNowSorted.filter(r => /^evaluated$/i.test(r.status));
     // prefer rows older than 7 days; fall back to newest if all are fresh
     const _aged = _candidates.filter(r => _daysAgo(r.date) >= 7);
     const _pool = _aged.length ? _aged : _candidates;
+    // Build queue (all pool items) for "Pick another" cycling — score-desc already
+    _tonightPickQueue = _pool.slice(0, 10).map((r, qi) => {
+      const ridx = applyNowSorted.findIndex(x => x.num === r.num);
+      return { num: r.num, company: r.company, role: r.role, score: r.score, rowIdx: `apply-${ridx >= 0 ? ridx : 0}` };
+    });
     if (_pool.length) {
       const _pr = _pool[0]; // already sorted by score desc
       const _pos = getPositioning(_pr.reportPath);
-      // Extract first bullet of positioning as one-liner
-      const _posLine = (_pos || '').replace(/\*\*/g, '').split(/\n|•|·/)[0].trim().slice(0, 120);
+      // Extract first 2-3 bullets of positioning as the "Why this one" paragraph
+      const _posLines = (_pos || '').replace(/\*\*/g, '').split(/\n/).map(l => l.replace(/^[-•·*]+\s*/,'').trim()).filter(Boolean);
+      const _whyPick = _posLines.slice(0, 3).join(' · ').slice(0, 200) || `Score ${_pr.score.toFixed(1)} — top-ranked in queue`;
       const _rowIdx  = applyNowSorted.findIndex(r => r.num === _pr.num);
+      // Enrich with comp + location from report
+      const _comp = getComp(_pr.reportPath);
+      const _loc = getLocationField(_pr.reportPath);
+      // Gate summary: count keyGaps (missing) vs how many checked
+      const _gaps = getKeyGaps(_pr.reportPath);
+      const _gapCount = _gaps.length;
       _tonightPick = {
         num: _pr.num,
         company: _pr.company,
@@ -3550,12 +3592,17 @@ function build() {
         score: _pr.score,
         evalDate: _pr.date,
         daysAgo: _daysAgo(_pr.date),
-        whyPick: _posLine || `Score ${_pr.score.toFixed(1)} — top-ranked in queue`,
+        whyPick: _whyPick,
         rowIdx: `apply-${_rowIdx >= 0 ? _rowIdx : 0}`,
+        comp: _comp || '',
+        location: _loc || '',
+        gapCount: _gapCount,
+        notes: _pr.notes || '',
       };
     }
   } catch (_) { _tonightPick = null; }
   const tonightPickJson = JSON.stringify(_tonightPick || null).replace(/<\//g, '<\\/');
+  const tonightPickQueueJson = JSON.stringify(_tonightPickQueue).replace(/<\//g, '<\\/');
 
   // ── Wave C-B: funnel completion nudge ────────────────────────────
   let funnelNudgeHtml = '';
@@ -4738,6 +4785,18 @@ function build() {
     text-underline-offset: 2px; cursor: pointer; border-radius: 2px;
   }
   .ticker-drill-company:hover { color: var(--green-fg, #16a34a); text-decoration-style: solid; }
+  /* Ticker role drill links — opens the full row drawer. */
+  .ticker-drill-role {
+    color: var(--blue-fg, #0969da); text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; border-radius: 2px; font-weight: 500;
+  }
+  .ticker-drill-role:hover { text-decoration-style: solid; }
+  /* "+N more" link inside ticker — opens scan-activity modal. */
+  .ticker-more-link {
+    color: var(--text-3); text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; font-size: .9em;
+  }
+  .ticker-more-link:hover { color: var(--text-2); text-decoration-style: solid; }
   @media (prefers-reduced-motion: reduce) {
     .live-ticker .live-dot { animation: none !important; }
     .live-text { transition: none; }
@@ -5237,24 +5296,55 @@ function build() {
   }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
 
-  /* ── Fix 1 (tonight-pick): Tonight's pick callout ─────────────── */
+  /* ── Tonight's pick callout (enriched 2026-05-17) ──────────────── */
   .tonight-pick-callout {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    display: flex; flex-direction: column; gap: 7px;
     background: color-mix(in srgb, var(--green-fg) 8%, var(--surface));
     border: 1.5px solid var(--green-fg); border-radius: var(--radius);
-    padding: 10px 14px; margin-bottom: 12px;
+    padding: 11px 15px 12px; margin-bottom: 12px;
     position: sticky; top: 0; z-index: 4;
   }
-  .tonight-pick-body { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; flex-wrap: wrap; }
-  .tonight-pick-label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--green-fg); white-space: nowrap;
+  /* Header row: label on left, score chip + status pill on right */
+  .tonight-pick-header {
+    display: flex; align-items: center; gap: 7px;
   }
-  .tonight-pick-company { font-weight: 700; font-size: 14px; white-space: nowrap; }
-  .tonight-pick-role { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
-  .tonight-pick-score { font-size: 13px !important; padding: 2px 7px !important; flex-shrink: 0; }
-  .tonight-pick-why { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
-  .tonight-pick-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .tonight-pick-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--green-fg); flex: 1; white-space: nowrap;
+  }
+  .tonight-pick-score-chip { font-size: 12px !important; padding: 2px 7px !important; flex-shrink: 0; }
+  .tonight-pick-status-chip {
+    font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    background: var(--green-fg); color: #fff;
+    border-radius: var(--radius-sm); padding: 2px 7px; flex-shrink: 0;
+  }
+  /* Title row: company — full role title, wraps gracefully */
+  .tonight-pick-title-row {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0; line-height: 1.35;
+  }
+  .tonight-pick-company { font-weight: 700; font-size: 15px; }
+  .tonight-pick-sep { font-size: 14px; color: var(--text-3); margin: 0 3px; }
+  .tonight-pick-role {
+    font-size: 14px; color: var(--text-2); font-weight: 500;
+    /* No truncation — allow wrap to 2 lines */
+    word-break: break-word;
+  }
+  /* Signal chips row: gates, comp, location */
+  .tonight-pick-signals { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tp-sig {
+    font-size: 11px; border-radius: 999px; padding: 2px 8px; font-weight: 500;
+  }
+  .tp-sig-ok  { background: color-mix(in srgb, var(--green-fg) 12%, var(--surface)); color: var(--green-fg); }
+  .tp-sig-warn { background: color-mix(in srgb, #d97706 12%, var(--surface)); color: #d97706; }
+  .tp-sig-comp { background: var(--surface-2); color: var(--text-2); }
+  .tp-sig-loc  { background: var(--surface-2); color: var(--text-3); }
+  /* Why-this-one paragraph */
+  .tonight-pick-why {
+    font-size: 12px; color: var(--text-2); line-height: 1.5;
+    max-width: 680px;
+  }
+  /* Action buttons row */
+  .tonight-pick-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 2px; }
   .tonight-pick-btn-primary {
     background: var(--green-fg); color: #fff; border: none; border-radius: var(--radius-sm);
     padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
@@ -5265,6 +5355,57 @@ function build() {
     border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
   }
   .tonight-pick-btn-secondary:hover { color: var(--fg); border-color: var(--text-2); }
+  .tonight-pick-btn-accent {
+    background: color-mix(in srgb, var(--blue-fg,#0969da) 12%, var(--surface));
+    color: var(--blue-fg,#0969da); border: 1px solid color-mix(in srgb, var(--blue-fg,#0969da) 30%, transparent);
+    border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .tonight-pick-btn-accent:hover { background: color-mix(in srgb, var(--blue-fg,#0969da) 18%, var(--surface)); }
+  .tonight-pick-btn-accent.success {
+    background: color-mix(in srgb, var(--green-fg) 12%, var(--surface));
+    color: var(--green-fg); border-color: color-mix(in srgb, var(--green-fg) 30%, transparent);
+  }
+  .tonight-pick-btn-ghost {
+    background: transparent; color: var(--text-3); border: 1px solid transparent;
+    border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  .tonight-pick-btn-ghost:hover { color: var(--text-2); border-color: var(--border-strong); }
+  /* Create-materials progress modal */
+  .tp-progress-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .15s ease;
+  }
+  .tp-progress-backdrop.visible { opacity: 1; pointer-events: auto; }
+  .tp-progress-modal {
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius);
+    padding: 22px 24px 20px; width: min(460px, 92vw); max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18);
+  }
+  .tp-progress-title {
+    font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--fg);
+  }
+  .tp-stage-list { display: flex; flex-direction: column; gap: 7px; }
+  .tp-stage-row {
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+  }
+  .tp-stage-pill {
+    font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 9px; min-width: 68px; text-align: center;
+    flex-shrink: 0;
+  }
+  .tp-stage-pill.pending { background: var(--surface-2); color: var(--text-3); }
+  .tp-stage-pill.running { background: color-mix(in srgb,#d97706 14%,var(--surface)); color:#d97706; }
+  .tp-stage-pill.done    { background: color-mix(in srgb,var(--green-fg) 14%,var(--surface)); color:var(--green-fg); }
+  .tp-stage-pill.failed  { background: color-mix(in srgb,var(--red-fg,#cf222e) 14%,var(--surface)); color:var(--red-fg,#cf222e); }
+  .tp-stage-pill.skipped { background: var(--surface-2); color: var(--text-4); }
+  .tp-progress-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+  .tp-progress-msg { font-size: 12px; color: var(--text-3); margin-top: 10px; min-height: 18px; }
+  /* Responsive: stack on narrow screens */
+  @media (max-width: 600px) {
+    .tonight-pick-actions { gap: 5px; }
+    .tonight-pick-btn-primary, .tonight-pick-btn-secondary,
+    .tonight-pick-btn-accent, .tonight-pick-btn-ghost { font-size: 11.5px; padding: 5px 10px; }
+  }
 
   /* ── Apply-Now drag-and-drop reorder ─────────────────────────── */
   /* Reset-order button — small, secondary, only shown when custom order
@@ -9372,18 +9513,29 @@ function build() {
       <span class="panel-chevron">▾</span>
     </h2>
     <p class="panel-subtitle" title="Drag a row's ⋮⋮ handle to prioritize. Click any row to expand.">Score ≥ 4.0 · Evaluated / Responded / Interview only</p>
-    ${_tonightPick ? `<!-- Fix 1 (tonight-pick) -->
+    ${_tonightPick ? `<!-- Tonight's pick callout — enriched 2026-05-17: full title, comp, gates, 4 actions -->
     <div id="tonight-pick-callout" class="tonight-pick-callout" hidden aria-label="Tonight's pick suggestion" role="region">
-      <div class="tonight-pick-body">
-        <span class="tonight-pick-label">Tonight's pick</span>
-        <span class="tonight-pick-company">${htmlEscape(_tonightPick.company)}</span>
-        <span class="tonight-pick-role">${htmlEscape(_tonightPick.role)}</span>
-        <span class="tonight-pick-score badge score-badge-lg ${scoreBadgeClass(_tonightPick.score)}">${_tonightPick.score.toFixed(1)}</span>
-        <span class="tonight-pick-why">${htmlEscape(_tonightPick.whyPick)}</span>
+      <div class="tonight-pick-header">
+        <span class="tonight-pick-label">TONIGHT'S PICK</span>
+        <span class="tonight-pick-score-chip badge score-badge-lg ${scoreBadgeClass(_tonightPick.score)}">${_tonightPick.score.toFixed(1)}</span>
+        <span class="tonight-pick-status-chip">APPLY</span>
       </div>
+      <div class="tonight-pick-title-row">
+        <span class="tonight-pick-company">${htmlEscape(_tonightPick.company)}</span>
+        <span class="tonight-pick-sep"> — </span>
+        <span class="tonight-pick-role">${htmlEscape(_tonightPick.role)}</span>
+      </div>
+      <div class="tonight-pick-signals">
+        ${_tonightPick.gapCount === 0 ? '<span class="tp-sig tp-sig-ok">All must-haves clear</span>' : `<span class="tp-sig tp-sig-warn">${_tonightPick.gapCount} gap${_tonightPick.gapCount === 1 ? '' : 's'}</span>`}
+        ${_tonightPick.comp ? `<span class="tp-sig tp-sig-comp">${htmlEscape(_tonightPick.comp)}</span>` : ''}
+        ${_tonightPick.location ? `<span class="tp-sig tp-sig-loc">${htmlEscape(_tonightPick.location)}</span>` : ''}
+      </div>
+      <div class="tonight-pick-why">${htmlEscape(_tonightPick.whyPick)}</div>
       <div class="tonight-pick-actions">
-        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Start tonight's apply for ${htmlEscape(_tonightPick.company)}">Start tonight's apply &rarr;</button>
-        <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickDismiss()" aria-label="Pick a different role">Pick a different one &rarr;</button>
+        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Start tonight's apply for ${htmlEscape(_tonightPick.company)}">Start tonight&rsquo;s apply &rarr;</button>
+        <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickLearnMore()" aria-label="Learn more about this role">Learn more</button>
+        <button type="button" class="tonight-pick-btn-accent" id="tonight-pick-create-btn" onclick="tonightPickCreateMaterials()" aria-label="Create application materials for ${htmlEscape(_tonightPick.company)}">Create materials</button>
+        <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCycle()" aria-label="Pick a different role">Pick another</button>
       </div>
     </div>` : '<!-- tonight-pick: no candidate met criteria -->'}
     <div class="table-scroll"><table>
@@ -9772,8 +9924,82 @@ function _tickerCompanyHtml(name) {
     }
   });
 })();
+// Delegated click/key handler for ticker role drill spans.
+// Opens the full row drawer (same as clicking the Apply-Now row directly).
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('.ticker-drill-role');
+    if (!el) return;
+    e.stopPropagation();
+    var rowId = el.dataset.rowId || '';
+    if (!rowId) return;
+    var detail = document.getElementById('detail-' + rowId);
+    if (detail) {
+      var idx = parseInt(rowId.replace(/^apply-/,''), 10);
+      if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+      else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+    } else if (typeof toggleDetail === 'function') {
+      toggleDetail(rowId);
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('.ticker-drill-role');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation(); e.preventDefault();
+      el.click();
+    }
+  });
+})();
+// Delegated handler for ticker-more-link spans (data-action="open-scan-activity").
+// Avoids inline event handler quoting issues.
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-action="open-scan-activity"]');
+    if (!el) return;
+    e.stopPropagation();
+    if (typeof openScanActivityModal === 'function') openScanActivityModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('[data-action="open-scan-activity"]');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation(); e.preventDefault();
+      if (typeof openScanActivityModal === 'function') openScanActivityModal();
+    }
+  });
+})();
+// Render one role title as a drill-clickable span inside the ticker.
+// data-drill="role:{rowId}" opens the full row drawer (same pattern as Apply-Now rows).
+function _tickerRoleHtml(role, rowId, score) {
+  var safeRole = String(role || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var scoreSuffix = score ? ' (' + Number(score).toFixed(1) + ')' : '';
+  return '<span class="ticker-drill-role" data-drill="role:' + _escHtmlTicker(rowId) + '" data-row-id="' + _escHtmlTicker(rowId) + '"'
+    + ' tabindex="0" role="button" title="Open detail for this role">'
+    + safeRole + scoreSuffix + '</span>';
+}
+function _escHtmlTicker(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// Render the "N more" suffix as a button that opens the scan-activity modal.
+// Uses data-action attribute + delegated handler to avoid inline quote nesting issues.
+function _tickerMoreHtml(extra) {
+  if (extra <= 0) return '';
+  return ' <span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles for this company">+' + extra + ' more</span>';
+}
 function _liveFormat(ev) {
-  return 'Scanned ' + _tickerCompanyHtml(ev.company) + ' &middot; ' + ev.count + ' new role' + (ev.count === 1 ? '' : 's') + ' &middot; ' + _liveAge(Date.now() - new Date(ev.ts).getTime());
+  var ageStr = _liveAge(Date.now() - new Date(ev.ts).getTime());
+  var countPart;
+  if (ev.topRole && ev.topRole.role) {
+    var extra = ev.count - 1;
+    countPart = _tickerRoleHtml(ev.topRole.role, ev.topRole.rowId, ev.topRole.score)
+      + (extra > 0 ? _tickerMoreHtml(extra) : '');
+  } else {
+    // Fallback: no evaluated role match — show aggregate count, clickable to modal
+    var label = ev.count + ' new role' + (ev.count === 1 ? '' : 's');
+    countPart = '<span class="ticker-more-link" tabindex="0" role="button" data-action="open-scan-activity" title="See all scanned roles">' + label + '</span>';
+  }
+  return 'Scanned ' + _tickerCompanyHtml(ev.company) + ' &middot; ' + countPart + ' &middot; ' + ageStr;
 }
 function initLiveTicker() {
   const el = document.getElementById('live-ticker');
@@ -12164,10 +12390,12 @@ document.addEventListener('keydown', function(e) {
 var TOP_OF_PIPE_DATA = ${topOfPipeJson};
 var TOP_OF_PIPE_DISMISS_KEY = 'careerops.top-of-pipe-dismissed';
 
-// ── Fix 1 (tonight-pick): tonight's first-submission callout ────────────────
+// ── Tonight's pick callout (enriched 2026-05-17) ────────────────────────────
 var TONIGHT_PICK_DATA = ${tonightPickJson};
+var TONIGHT_PICK_QUEUE = ${tonightPickQueueJson};
 var TONIGHT_PICK_TODAY = '${_tonightPickTodayStr}';
 var TONIGHT_PICK_DISMISS_KEY = 'careerops.tonight-pick-dismissed-' + TONIGHT_PICK_TODAY;
+var TONIGHT_PICK_SKIP_KEY  = 'careerops.tonight-pick-skipped-' + TONIGHT_PICK_TODAY;
 
 function _topOfPipeGetDismissed() {
   try {
@@ -12306,7 +12534,11 @@ if (document.readyState === 'loading') {
   initTopOfPipe();
 }
 
-// ── Fix 1 (tonight-pick): Tonight's pick callout logic ──────────────────────
+// ── Tonight's pick callout logic (enriched 2026-05-17) ─────────────────────
+// _currentPickIdx: index into TONIGHT_PICK_QUEUE for the currently shown pick.
+// "Pick another" cycles to next non-skipped index and re-renders the card.
+var _currentPickIdx = 0;
+
 function initTonightPick() {
   var el = document.getElementById('tonight-pick-callout');
   if (!el) return;
@@ -12319,7 +12551,6 @@ function initTonightPick() {
 
   // Check if any row was applied today — if so, hide callout
   var appliedToday = Array.from(document.querySelectorAll('tr.row[data-status="applied"]')).some(function(r) {
-    // Check date chip text for today's date
     var dateEl = r.querySelector('.meta-chip');
     return dateEl && dateEl.textContent.includes(TONIGHT_PICK_TODAY);
   });
@@ -12327,27 +12558,391 @@ function initTonightPick() {
 
   el.hidden = false;
 }
+
+// Start tonight's apply: scrolls Apply-Now into view and opens the right-rail drawer.
 function tonightPickStart() {
-  if (!TONIGHT_PICK_DATA) return;
-  var rowId = TONIGHT_PICK_DATA.rowIdx;
-  if (rowId) {
-    // Scroll Apply-Now into view then open the drawer
-    var section = document.getElementById('apply-now-section');
-    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(function() {
-      var detail = document.getElementById('detail-' + rowId);
-      if (detail) { openRightRailForDetail(parseInt(rowId.replace('apply-',''),10)||0, detail); }
-      else { toggleDetail(rowId); }
-    }, 350);
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowId = pick.rowIdx;
+  if (!rowId) return;
+  var section = document.getElementById('apply-now-section');
+  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(function() {
+    var detail = document.getElementById('detail-' + rowId);
+    if (detail) {
+      var idx = parseInt(rowId.replace(/^apply-/, ''), 10);
+      if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+      else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+    } else if (typeof toggleDetail === 'function') {
+      toggleDetail(rowId);
+    }
+  }, 350);
+}
+
+// Learn more: opens the row drawer (same as clicking the row in Apply-Now).
+function tonightPickLearnMore() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowId = pick.rowIdx;
+  if (!rowId) return;
+  var detail = document.getElementById('detail-' + rowId);
+  if (detail) {
+    var idx = parseInt(rowId.replace(/^apply-/, ''), 10);
+    if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+    else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+  } else if (typeof toggleDetail === 'function') {
+    toggleDetail(rowId);
   }
 }
-function tonightPickDismiss() {
-  try { localStorage.setItem(TONIGHT_PICK_DISMISS_KEY, '1'); } catch (_) {}
+
+// Create materials: shows a progress modal and fires build-pack-stage for each artifact.
+// Stages: parse_jd, fetch_hm_intel, load_corpus, cv-tailor, cover-letter, linkedin-dm, form-fields.
+// Polls pack.json via /api/draft-updates-stream/{num} SSE or 2s interval.
+var _tpCreateAbortCtrl = null;
+var TONIGHT_PICK_STAGES = [
+  { id: 'parse_jd',      label: 'Parse JD' },
+  { id: 'fetch_hm_intel',label: 'Fetch HM intel' },
+  { id: 'load_corpus',   label: 'Load corpus' },
+  { id: 'cv-tailor',     label: 'Tailor CV' },
+  { id: 'cover-letter',  label: 'Cover letter' },
+  { id: 'linkedin-dm',   label: 'LinkedIn DM' },
+  { id: 'form-fields',   label: 'Form fields' },
+];
+function _tpEsc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function _tpRenderStages(states) {
+  var list = document.getElementById('tp-stage-list');
+  if (!list) return;
+  list.innerHTML = TONIGHT_PICK_STAGES.map(function(s) {
+    var st = states[s.id] || 'pending';
+    return '<div class="tp-stage-row">'
+      + '<span class="tp-stage-pill ' + st + '">' + st + '</span>'
+      + '<span>' + _tpEsc(s.label) + '</span>'
+      + '</div>';
+  }).join('');
+}
+function _tpSetMsg(msg) {
+  var el = document.getElementById('tp-progress-msg');
+  if (el) el.textContent = msg || '';
+}
+function _tpSetFooterReview(rowId) {
+  var footer = document.getElementById('tp-progress-footer');
+  if (!footer) return;
+  // Build buttons as DOM nodes to avoid inline string-quoting issues
+  footer.innerHTML = '';
+  var reviewBtn = document.createElement('button');
+  reviewBtn.type = 'button'; reviewBtn.className = 'tonight-pick-btn-primary';
+  reviewBtn.setAttribute('aria-label', 'Review materials');
+  reviewBtn.textContent = 'Review materials →';
+  reviewBtn.addEventListener('click', function() { tonightPickCloseProgress(); tonightPickStart(); });
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button'; closeBtn.className = 'tonight-pick-btn-ghost';
+  closeBtn.setAttribute('aria-label', 'Close'); closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', tonightPickCloseProgress);
+  footer.appendChild(reviewBtn); footer.appendChild(closeBtn);
+}
+function _tpSetFooterRetry(stageId, rowNum, label) {
+  var footer = document.getElementById('tp-progress-footer');
+  if (!footer) return;
+  footer.innerHTML = '';
+  var retryBtn = document.createElement('button');
+  retryBtn.type = 'button'; retryBtn.className = 'tonight-pick-btn-accent';
+  retryBtn.setAttribute('aria-label', label || 'Retry failed stage');
+  retryBtn.textContent = label || 'Retry stage';
+  retryBtn.addEventListener('click', function() { tonightPickRetryStage(stageId, rowNum); });
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button'; closeBtn.className = 'tonight-pick-btn-ghost';
+  closeBtn.setAttribute('aria-label', 'Close'); closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', tonightPickCloseProgress);
+  footer.appendChild(retryBtn); footer.appendChild(closeBtn);
+}
+
+async function tonightPickCreateMaterials() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowNum = pick.num;
+  if (!rowNum) return;
+
+  // Open the progress modal
+  var bd = document.getElementById('tp-progress-backdrop');
+  if (bd) {
+    bd.classList.add('visible');
+    var focusTgt = bd.querySelector('button');
+    if (focusTgt) try { focusTgt.focus({ preventScroll: true }); } catch(_) {}
+  }
+
+  // Initialise stage pills
+  var stageStates = {};
+  TONIGHT_PICK_STAGES.forEach(function(s) { stageStates[s.id] = 'pending'; });
+  _tpRenderStages(stageStates);
+  _tpSetMsg('');
+
+  var titleEl = document.getElementById('tp-progress-title');
+  if (titleEl) titleEl.textContent = 'Creating materials for ' + _tpEsc(pick.company || '') + '…';
+
+  // The first 3 stages (parse_jd, fetch_hm_intel, load_corpus) are internal
+  // orchestrator setup steps — mark them done immediately (they happen inside
+  // the server before the per-stage API responds).
+  ['parse_jd', 'fetch_hm_intel', 'load_corpus'].forEach(function(id) {
+    stageStates[id] = 'done';
+  });
+  _tpRenderStages(stageStates);
+
+  // Fire each artifact stage sequentially.
+  // Budget cap: if the server returns budget_exceeded, abort and show message.
+  var buildStages = ['cv-tailor', 'cover-letter', 'linkedin-dm', 'form-fields'];
+  var failedStage = null;
+
+  for (var si = 0; si < buildStages.length; si++) {
+    var stageId = buildStages[si];
+    stageStates[stageId] = 'running';
+    _tpRenderStages(stageStates);
+    _tpSetMsg('Running ' + stageId + '…');
+
+    try {
+      var resp = await fetch('/api/build-pack-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rowId: String(rowNum), stage: stageId, config: { dryRun: false } }),
+      });
+      var data = await resp.json().catch(function() { return {}; });
+
+      if (data.budget_exceeded) {
+        stageStates[stageId] = 'failed';
+        _tpRenderStages(stageStates);
+        _tpSetMsg('Budget cap reached ($0.50/pack). Partial materials are in the draft folder.');
+        failedStage = stageId;
+        break;
+      }
+
+      // AI-detection failure surfaced by the server
+      if (data.ai_detection_failed) {
+        stageStates[stageId] = 'failed';
+        _tpRenderStages(stageStates);
+        var detMsg = 'AI-detection gate failed for ' + stageId + '.';
+        if (data.gpt_zero_score) detMsg += ' GPTZero: ' + data.gpt_zero_score + '%.';
+        if (data.originality_score) detMsg += ' Originality: ' + data.originality_score + '%.';
+        detMsg += ' ';
+        _tpSetMsg(detMsg);
+        // Show "Regenerate with stricter constraints" button (uses DOM-built footer to avoid quoting issues)
+        _tpSetFooterRetry(stageId, rowNum, 'Regenerate with stricter constraints');
+        failedStage = stageId;
+        break;
+      }
+
+      if (!resp.ok || !data.ok) {
+        stageStates[stageId] = 'failed';
+        _tpRenderStages(stageStates);
+        _tpSetMsg('Stage ' + stageId + ' failed: ' + (data.error || resp.status));
+        _tpSetFooterRetry(stageId, rowNum);
+        failedStage = stageId;
+        break;
+      }
+
+      stageStates[stageId] = 'done';
+      _tpRenderStages(stageStates);
+    } catch (err) {
+      stageStates[stageId] = 'failed';
+      _tpRenderStages(stageStates);
+      _tpSetMsg('Error: ' + err.message);
+      _tpSetFooterRetry(stageId, rowNum);
+      failedStage = stageId;
+      break;
+    }
+  }
+
+  if (!failedStage) {
+    // All stages completed — change "Create materials" button to "Review materials →"
+    var createBtn = document.getElementById('tonight-pick-create-btn');
+    if (createBtn) {
+      createBtn.textContent = 'Review materials →';
+      createBtn.classList.add('success');
+      createBtn.onclick = function() { tonightPickCloseProgress(); tonightPickStart(); };
+    }
+    _tpSetMsg('All stages complete. Materials are ready for review.');
+    _tpSetFooterReview(pick.rowIdx);
+    if (titleEl) titleEl.textContent = 'Materials ready!';
+  }
+}
+window.tonightPickCreateMaterials = tonightPickCreateMaterials;
+
+async function tonightPickRetryStage(stageId, rowNum) {
+  var btn = document.querySelector('#tp-progress-footer button.tonight-pick-btn-accent');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  var stageStates = {};
+  TONIGHT_PICK_STAGES.forEach(function(s) { stageStates[s.id] = s.id === stageId ? 'running' : (TONIGHT_PICK_STAGES.indexOf(s) < TONIGHT_PICK_STAGES.findIndex(function(x){return x.id===stageId;}) ? 'done' : 'pending'); });
+  _tpRenderStages(stageStates);
+  _tpSetMsg('Retrying ' + stageId + '…');
+  try {
+    var resp = await fetch('/api/build-pack-stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rowId: String(rowNum), stage: stageId, config: { dryRun: false } }),
+    });
+    var data = await resp.json().catch(function(){return{};});
+    if (resp.ok && data.ok) {
+      stageStates[stageId] = 'done';
+      _tpRenderStages(stageStates);
+      _tpSetMsg('Retry succeeded.');
+      _tpSetFooterReview(null);
+    } else {
+      stageStates[stageId] = 'failed';
+      _tpRenderStages(stageStates);
+      _tpSetMsg('Retry failed: ' + (data.error || resp.status));
+      if (btn) { btn.disabled = false; btn.textContent = 'Retry stage'; }
+    }
+  } catch (e) {
+    stageStates[stageId] = 'failed';
+    _tpRenderStages(stageStates);
+    _tpSetMsg('Retry error: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Retry stage'; }
+  }
+}
+window.tonightPickRetryStage = tonightPickRetryStage;
+
+function tonightPickCloseProgress() {
+  var bd = document.getElementById('tp-progress-backdrop');
+  if (bd) bd.classList.remove('visible');
+}
+window.tonightPickCloseProgress = tonightPickCloseProgress;
+
+// Cycle to next non-skipped pick in TONIGHT_PICK_QUEUE.
+// Persists skipped picks in localStorage; after 3 skips shows queue-overflow msg.
+function tonightPickCycle() {
+  var queue = TONIGHT_PICK_QUEUE || [];
+  if (!queue.length) return;
+
+  // Load skipped set for today
+  var skipped = {};
+  try { skipped = JSON.parse(localStorage.getItem(TONIGHT_PICK_SKIP_KEY) || '{}'); } catch (_) {}
+
+  // Mark current pick as skipped
+  var cur = queue[_currentPickIdx];
+  if (cur) skipped[String(cur.num)] = 1;
+  try { localStorage.setItem(TONIGHT_PICK_SKIP_KEY, JSON.stringify(skipped)); } catch (_) {}
+
+  // Find next non-skipped pick
+  var next = null;
+  var skipCount = Object.keys(skipped).length;
+  for (var i = 0; i < queue.length; i++) {
+    var qi = (i + 1 + _currentPickIdx) % queue.length;
+    if (!skipped[String(queue[qi].num)]) {
+      next = queue[qi];
+      _currentPickIdx = qi;
+      break;
+    }
+  }
+
+  if (!next) {
+    // All skipped — show message and link to Apply-Now (DOM-built to avoid quoting issues)
+    var calloutEl = document.getElementById('tonight-pick-callout');
+    if (calloutEl) {
+      calloutEl.innerHTML = '';
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+      var msg = document.createElement('span');
+      msg.style.cssText = 'font-size:12px;color:var(--text-2)';
+      msg.textContent = 'Showing #' + (skipCount + 1) + ' of remaining queue — want to see the full queue?';
+      var link = document.createElement('a');
+      link.href = '#apply-now-section';
+      link.style.cssText = 'font-size:12px;color:var(--blue-fg,#0969da)';
+      link.textContent = 'View Apply-Now queue →';
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        var sec = document.getElementById('apply-now-section');
+        if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+      });
+      var dismissBtn = document.createElement('button');
+      dismissBtn.type = 'button'; dismissBtn.className = 'tonight-pick-btn-ghost';
+      dismissBtn.style.marginLeft = 'auto'; dismissBtn.setAttribute('aria-label', 'Dismiss');
+      dismissBtn.textContent = 'Dismiss';
+      dismissBtn.addEventListener('click', tonightPickHide);
+      wrap.appendChild(msg); wrap.appendChild(link); wrap.appendChild(dismissBtn);
+      calloutEl.appendChild(wrap);
+    }
+    return;
+  }
+
+  // Re-render the callout with the new pick's data
+  _tpRenderPickCard(next, skipCount + 1);
+}
+window.tonightPickCycle = tonightPickCycle;
+
+function tonightPickHide() {
   var el = document.getElementById('tonight-pick-callout');
   if (el) { el.style.transition = 'opacity .2s'; el.style.opacity = '0'; setTimeout(function() { el.hidden = true; el.style.opacity = ''; }, 220); }
 }
-window.tonightPickStart = tonightPickStart;
-window.tonightPickDismiss = tonightPickDismiss;
+window.tonightPickHide = tonightPickHide;
+
+// Re-render the Tonight's Pick card with a different queue item (after "Pick another").
+// Does an in-place content update — no page reload.
+function _tpRenderPickCard(pick, skipN) {
+  var callout = document.getElementById('tonight-pick-callout');
+  if (!callout) return;
+  var titleEl = callout.querySelector('.tonight-pick-title-row');
+  var labelEl = callout.querySelector('.tonight-pick-label');
+  var msgEl   = callout.querySelector('.tp-pick-skip-note');
+
+  if (titleEl) {
+    titleEl.innerHTML = '<span class="tonight-pick-company">' + _tpEsc(pick.company || '') + '</span>'
+      + '<span class="tonight-pick-sep"> &mdash; </span>'
+      + '<span class="tonight-pick-role">' + _tpEsc(pick.role || '') + '</span>';
+  }
+  if (labelEl && skipN > 1) {
+    // Append a small note so Mitchell knows he cycled
+    var note = callout.querySelector('.tp-pick-skip-note');
+    if (!note) {
+      note = document.createElement('span');
+      note.className = 'tp-pick-skip-note';
+      note.style.cssText = 'font-size:11px;color:var(--text-3);margin-left:8px';
+      labelEl.parentNode.insertBefore(note, labelEl.nextSibling);
+    }
+    note.textContent = '(#' + skipN + ' of queue)';
+  }
+  // Update score chip
+  var scoreChip = callout.querySelector('.tonight-pick-score-chip');
+  if (scoreChip) scoreChip.textContent = Number(pick.score || 0).toFixed(1);
+
+  // Clear signals — can't re-fetch comp/loc for new pick without a page rebuild;
+  // show only "pick another" count + score
+  var signals = callout.querySelector('.tonight-pick-signals');
+  if (signals) signals.innerHTML = '<span class="tp-sig tp-sig-ok">Score ' + Number(pick.score||0).toFixed(1) + '</span>';
+
+  // Update why paragraph
+  var why = callout.querySelector('.tonight-pick-why');
+  if (why) why.textContent = pick.company + ' — ' + pick.role;
+
+  // Reset create btn if it was in success state
+  var createBtn = document.getElementById('tonight-pick-create-btn');
+  if (createBtn) {
+    createBtn.textContent = 'Create materials';
+    createBtn.classList.remove('success');
+    createBtn.onclick = function() { tonightPickCreateMaterials(); };
+  }
+}
+
+function tonightPickStart() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var rowId = pick.rowIdx;
+  if (!rowId) return;
+  var section = document.getElementById('apply-now-section');
+  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(function() {
+    var detail = document.getElementById('detail-' + rowId);
+    if (detail) {
+      var idx = parseInt(rowId.replace(/^apply-/, ''), 10);
+      if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
+      else if (typeof toggleDetail === 'function') toggleDetail(rowId);
+    } else if (typeof toggleDetail === 'function') {
+      toggleDetail(rowId);
+    }
+  }, 350);
+}
+
+window.tonightPickStart   = tonightPickStart;
+window.tonightPickLearnMore = tonightPickLearnMore;
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initTonightPick);
 } else {
@@ -19807,6 +20402,24 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   </div>
   <div class="scan-activity-body" id="scan-activity-body">
     <div style="text-align:center; padding: 40px 16px; color: var(--text-3); font-size: 13px;">Loading…</div>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────
+     Tonight's Pick — Create materials progress modal (2026-05-17).
+     Shows 7 stage status pills while apply-orchestrator runs.
+     Bind: tonightPickCreateMaterials() / tonightPickCloseProgress()
+     ────────────────────────────────────────────────────────────── -->
+<div id="tp-progress-backdrop" class="tp-progress-backdrop" onclick="tonightPickCloseProgress()" role="presentation">
+  <div id="tp-progress-modal" class="tp-progress-modal" role="dialog" aria-modal="true" aria-labelledby="tp-progress-title" onclick="event.stopPropagation()">
+    <div class="tp-progress-title" id="tp-progress-title">Creating application materials…</div>
+    <div class="tp-stage-list" id="tp-stage-list">
+      <!-- Populated by tonightPickCreateMaterials() -->
+    </div>
+    <div class="tp-progress-msg" id="tp-progress-msg"></div>
+    <div class="tp-progress-footer" id="tp-progress-footer">
+      <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCloseProgress()" aria-label="Close progress modal">Close</button>
+    </div>
   </div>
 </div>
 
