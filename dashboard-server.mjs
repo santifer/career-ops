@@ -4098,6 +4098,88 @@ const server = createServer((req, res) => {
     const score   = row?.score   || null;
     const status  = row?.status  || '';
 
+    // R4 fix (2026-05-18): when no apply-pack exists for this row, render a
+    // single friendly hero page with a build CTA instead of 5 identical
+    // "No CV artifact found" tabs. Mitchell hit this on /draft/840 (Cursor).
+    if (!packDir) {
+      const slug = (company + '-' + role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+      const emptyHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Build apply-pack · ${company.replace(/</g,'&lt;')} · career-ops</title><style>
+:root{--bg:#f8f9fb;--surface:#fff;--surface-2:#f4f4f6;--border:#e5e7eb;--text:#111827;--text-2:#374151;--text-3:#6b7280;--action:#15803d;--action-hover:#166534;--link:#0969da;--link-hover:#0550ae;--radius-sm:6px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;--font-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#06070d;--surface:#11131c;--surface-2:#181b27;--border:#232737;--text:#fafafa;--text-2:#e4e4e7;--text-3:#b8b8c0;--action:#238636;--action-hover:#2a7f3f;--link:#58a6ff;--link-hover:#79c0ff}}
+*{box-sizing:border-box}body{font-family:var(--font-sans);max-width:680px;margin:64px auto;padding:0 24px;color:var(--text);background:var(--bg);font-size:15px;line-height:1.55}
+.crumbs{font-size:12px;color:var(--text-3);font-family:var(--font-mono);margin:0 0 24px}.crumbs a{color:var(--link);text-decoration:none}.crumbs a:hover{color:var(--link-hover);text-decoration:underline}
+h1{font-size:24px;font-weight:600;margin:0 0 6px;letter-spacing:-0.011em}.subtitle{font-size:15px;color:var(--text-3);margin:0 0 24px}
+.empty-hero{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 32px;margin:0 0 24px}
+.empty-icon{display:inline-flex;width:48px;height:48px;align-items:center;justify-content:center;background:color-mix(in srgb,var(--action) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--action) 30%,var(--border));border-radius:50%;font-size:24px;color:var(--action);margin:0 0 14px}
+.empty-hero h2{font-size:18px;font-weight:600;margin:0 0 8px}.empty-hero p{font-size:14px;color:var(--text-2);margin:0 0 14px}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--action);color:#fff;border:1px solid var(--action);border-radius:var(--radius-sm);padding:9px 18px;font-size:14px;font-weight:600;text-decoration:none;transition:background .12s,border-color .12s}.cta:hover{background:var(--action-hover);border-color:var(--action-hover)}
+code,kbd{font-family:var(--font-mono);font-size:13px;background:var(--surface-2);padding:2px 7px;border-radius:4px;border:1px solid var(--border)}
+.fact-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0}.fact{padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}.fact-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:0 0 4px}.fact-value{font-size:15px;font-weight:600;color:var(--text)}
+.what-builds{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 22px;margin:0 0 24px}.what-builds h3{font-size:13px;font-weight:600;margin:0 0 10px;color:var(--text)}.what-builds ul{margin:0;padding-left:20px;font-size:13px;color:var(--text-2)}.what-builds li{margin:4px 0}
+.note{font-size:12px;color:var(--text-3);margin:0 0 24px;padding:12px 14px;background:var(--surface-2);border-left:3px solid var(--action);border-radius:var(--radius-sm)}
+</style></head><body>
+<p class="crumbs"><a href="/dashboard/">← back to dashboard</a> · row #${rowId}</p>
+<h1>${company.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</h1>
+<p class="subtitle">${role.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>
+
+<div class="empty-hero">
+  <div class="empty-icon">📦</div>
+  <h2>No apply-pack exists for this row yet</h2>
+  <p>An apply-pack bundles the tailored CV, cover letter, why statement, LinkedIn DM, and pre-filled form-field answers for a single role. Generation runs the 5 sub-agents in <code>scripts/agents/</code> against the row's evaluation report and writes outputs to <code>apply-pack/${padded}-{slug}/</code>.</p>
+  <a class="cta" href="javascript:void(0)" onclick="generatePack();return false;">Generate this apply-pack →</a>
+  <p style="margin-top:14px;font-size:12px;color:var(--text-3)">Estimated cost: ~$2-5 · wall-clock: 3-5 min · every artifact is reviewed by you before submission.</p>
+</div>
+
+<div class="fact-grid">
+  <div class="fact"><div class="fact-label">Row</div><div class="fact-value">#${rowId}</div></div>
+  <div class="fact"><div class="fact-label">Score</div><div class="fact-value">${score != null ? score.toFixed(1) + ' / 5' : '—'}</div></div>
+  <div class="fact"><div class="fact-label">Status</div><div class="fact-value">${status || '—'}</div></div>
+  <div class="fact"><div class="fact-label">Expected output</div><div class="fact-value" style="font-family:var(--font-mono);font-size:12px">apply-pack/${padded}-${slug.slice(0,30)}/</div></div>
+</div>
+
+<div class="what-builds">
+  <h3>What gets generated</h3>
+  <ul>
+    <li><strong>cv-tailored.md</strong> — CV rewritten against the JD's must-haves</li>
+    <li><strong>cover-letter.md</strong> — 200-300 word letter with company-specific hook</li>
+    <li><strong>why-statement.md</strong> — short narrative for application "why this role" prompts</li>
+    <li><strong>linkedin-dm.md</strong> — 60-90 second outreach DM to the hiring manager</li>
+    <li><strong>form-fields.md</strong> — pre-filled answers for application form free-text questions</li>
+  </ul>
+</div>
+
+<p class="note">Once generation completes, this page will hot-reload into the 5-tab review UI. You can also run from the command line: <code>node scripts/build-apply-packs.mjs --row=${rowId}</code>.</p>
+
+<script>
+async function generatePack(){
+  const btn = document.querySelector('.cta');
+  btn.style.opacity='0.6';btn.textContent='Building... (3-5 min)';
+  try {
+    const res = await fetch('/api/drawer/build-apply-pack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rowNum:${rowId}})});
+    const data = await res.json().catch(()=>({}));
+    if (res.ok && data.ok) {
+      btn.textContent='Build started — reloading in 4 min…';
+      setTimeout(()=>location.reload(), 240000);
+    } else if (res.status === 409 && data.already_exists) {
+      btn.textContent='Pack already exists — reload?';
+      btn.onclick = ()=>location.reload();
+      btn.style.opacity='1';
+    } else {
+      btn.textContent='Failed: ' + (data.error || res.status);
+      btn.style.background='var(--red-fg,#dc2626)';btn.style.borderColor='var(--red-fg,#dc2626)';
+    }
+  } catch(e) {
+    btn.textContent='Error: ' + e.message;
+    btn.style.background='var(--red-fg,#dc2626)';btn.style.borderColor='var(--red-fg,#dc2626)';
+  }
+}
+</script>
+</body></html>`;
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(emptyHtml);
+      return;
+    }
+
     // Define artifact tabs
     const ARTIFACT_TABS = [
       { label: 'CV',            files: ['cv-tailored.md', 'cv.md']                 },

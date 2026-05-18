@@ -103,7 +103,49 @@ function resolveProvider(entry, providers) {
 
 // ── Title filter ────────────────────────────────────────────────────
 
-function buildTitleFilter(titleFilter) {
+// P3-4 fix (2026-05-18): export buildTitleFilter + add detectApi so
+// tests/unit/scan-parsers.test.mjs can drive them in isolation. The test
+// pre-dates the current scan.mjs shape and was failing on missing exports.
+export function detectApi(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  const api = entry.api || '';
+  const careers = entry.careers_url || entry.careersUrl || '';
+
+  // Greenhouse — boards-api.greenhouse.io / boards.greenhouse.io / job-boards.greenhouse.io
+  if (/(?:boards-api|boards|job-boards)\.(?:eu\.)?greenhouse\.io\//i.test(api)) {
+    const m = api.match(/boards\/([\w-]+)/i);
+    return { type: 'greenhouse', url: api, board: m ? m[1] : null };
+  }
+  if (/(?:boards-api|boards|job-boards)\.(?:eu\.)?greenhouse\.io\//i.test(careers)) {
+    const m = careers.match(/greenhouse\.io\/([\w-]+)/i);
+    const board = m ? m[1] : null;
+    return board
+      ? { type: 'greenhouse', url: `https://boards-api.greenhouse.io/v1/boards/${board}/jobs`, board }
+      : { type: 'greenhouse', url: careers };
+  }
+
+  // Ashby — jobs.ashbyhq.com/{board}/ → api.ashbyhq.com/posting-api/job-board/{board}
+  const ashby = (api || careers).match(/jobs\.ashbyhq\.com\/([\w-]+)/i);
+  if (ashby) {
+    return { type: 'ashby', url: `https://api.ashbyhq.com/posting-api/job-board/${ashby[1]}?includeCompensation=true`, board: ashby[1] };
+  }
+
+  // Lever — jobs.lever.co/{board}/ → api.lever.co/v0/postings/{board}
+  const lever = (api || careers).match(/jobs\.lever\.co\/([\w-]+)/i);
+  if (lever) {
+    return { type: 'lever', url: `https://api.lever.co/v0/postings/${lever[1]}?mode=json`, board: lever[1] };
+  }
+
+  // Workable — apply.workable.com/{board}/ or {board}.workable.com
+  const workable = (api || careers).match(/(?:apply\.workable\.com\/|([\w-]+)\.workable\.com)/i);
+  if (workable) {
+    return { type: 'workable', url: api || careers };
+  }
+
+  return null;
+}
+
+export function buildTitleFilter(titleFilter) {
   const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
   const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
 
@@ -394,7 +436,13 @@ async function main() {
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 }
 
-main().catch(err => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});
+// P3-4 fix (2026-05-18): only auto-run main() when invoked as the entry
+// point. Lets tests import buildTitleFilter / detectApi without triggering
+// the provider-loading + portals.yml side effects.
+const __isEntry = import.meta.url === `file://${process.argv[1]}`;
+if (__isEntry) {
+  main().catch(err => {
+    console.error('Fatal:', err.message);
+    process.exit(1);
+  });
+}

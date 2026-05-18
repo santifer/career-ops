@@ -2902,7 +2902,7 @@ function renderRow(r, idx) {
     <button type="button" class="kebab-btn"
       data-drill="kebab:${idx}"
       aria-label="Actions for ${htmlEscape(r.company)} ${htmlEscape(r.role)}"
-      onclick="event.stopPropagation();openKebabMenu(this,'${idx}','${htmlEscape(url)}','${r.reportPath ? htmlEscape('reports/' + basename(r.reportPath).replace(/\\.md$/, '.html')) : ''}','${verifySlug}',${htmlEscape(String(r.num))})"
+      onclick="event.stopPropagation();openKebabMenu(this,'${idx}','${htmlEscape(url)}','${r.reportPath ? htmlEscape('reports/' + basename(r.reportPath).replace(/\.md$/, '.html')) : ''}','${verifySlug}',${htmlEscape(String(r.num))})"
       title="Actions: Apply, Report, Email, Verify">⋮</button>
     <!-- Legacy links (preserved for kbd nav apply via action-cell selector) -->
     <span class="sr-only">${applyLink}</span>
@@ -7839,11 +7839,15 @@ function build() {
     color: var(--blue-fg-dark);
     border-bottom-color: var(--blue-fg-dark);
   }
+  /* R2 fix (2026-05-18): drawer role title was 2-line clamped without a title=
+     tooltip or expand affordance. P0-1 only fixed table cells; this is the
+     drawer header — first thing the user reads on drawer open. Now wraps
+     freely; word-break:break-word handles edge cases like long URLs. */
   .drawer-role {
     margin-top: 2px;
     font-size: 13px; color: var(--text-2); line-height: 1.4;
-    overflow: hidden; text-overflow: ellipsis;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
   .drawer-role-link {
     color: var(--text-2); text-decoration: none;
@@ -9633,10 +9637,10 @@ function build() {
         const appsNeeded = Math.max(1, applyNow.length === 0 ? 1 : applyNow.length);
         const appsPerDay = daysLeft > 0 ? (appsNeeded / daysLeft).toFixed(2) : '—';
         const urgencyCls = daysLeft <= 30 ? 'stat-cell stat-burndown-urgent' : daysLeft <= 60 ? 'stat-cell stat-burndown-warn' : 'stat-cell';
-        return `<div class="stat ${urgencyCls}" title="Q3 2026 landing deadline — ${daysLeft} days remaining">
+        return `<div class="stat ${urgencyCls}" onclick="window.drillIn('time-to-offer','',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('time-to-offer','',event);}" role="button" tabindex="0" title="Q3 2026 landing deadline — ${daysLeft} days remaining. Click for burn-down detail.">
           <div class="stat-label"><span class="label-full">Q3 2026 · Days left</span><span class="label-short">Days left</span></div>
           <div class="stat-value" style="font-variant-numeric:tabular-nums">${daysLeft}</div>
-          <div class="stat-trend"><span class="stat-delta ${daysLeft <= 30 ? 'stat-delta-down' : 'stat-delta-flat'}" title="${pctElapsed}% of search window elapsed · ~${appsPerDay} apps/day needed">~${appsPerDay} apps/day</span></div>
+          <div class="stat-trend"><span class="stat-delta ${daysLeft <= 30 ? 'stat-delta-down' : 'stat-delta-flat'}" title="${pctElapsed}% of search window elapsed · ~${appsPerDay} apps/day needed">~${appsPerDay} apps/day</span><span class="stat-caret" aria-hidden="true">▾</span></div>
         </div>`;
       })()}
       <!-- Tile 2: Network leverage — warm-intro paths -->
@@ -12380,6 +12384,52 @@ _drillInRegister('readiness', function() {
   return {
     title: 'PM-readiness (TPgM credibility)',
     html: widgetHtml,
+  };
+});
+
+// R1 fix (2026-05-18): time-to-offer drill-in for the Q3 2026 KPI tile.
+// Previous commit 53f1930 removed the 2031 Anchor widget AND silently
+// stripped the click handler from the Q3 2026 tile, leaving it inert.
+// This restores popout behavior — clicking the tile now opens a burn-down
+// detail showing days elapsed, days left, % of search window consumed,
+// required apps/day to land by deadline, and the actual Apply-Now count.
+_drillInRegister('time-to-offer', function() {
+  var cb = window._waveCB || {};
+  // Recompute on-the-fly so values stay current as the day progresses.
+  var DEADLINE_ISO = '2026-09-30';
+  var deadline = new Date(DEADLINE_ISO).getTime();
+  var nowMs = Date.now();
+  var calibrationStart = new Date('2026-05-16').getTime();
+  var totalDays = Math.round((deadline - calibrationStart) / 86400000);
+  var daysLeft = Math.max(0, Math.round((deadline - nowMs) / 86400000));
+  var daysElapsed = Math.max(0, totalDays - daysLeft);
+  var pctElapsed = totalDays > 0 ? Math.min(100, Math.round((daysElapsed / totalDays) * 100)) : 0;
+  // Pull live Apply-Now count from the DOM so the popout always matches what's on screen.
+  var applyNowCount = document.querySelectorAll('#apply-now-tbody tr.row').length || 0;
+  var appsPerDay = daysLeft > 0 ? (Math.max(1, applyNowCount) / daysLeft).toFixed(2) : '—';
+  var urgency = daysLeft <= 30 ? 'critical' : daysLeft <= 60 ? 'warn' : 'on-track';
+  var urgencyColor = urgency === 'critical' ? 'var(--red-fg)' : urgency === 'warn' ? 'var(--amber-fg)' : 'var(--positive-text)';
+  var urgencyLabel = urgency === 'critical' ? 'Critical — under 30 days' : urgency === 'warn' ? 'Tight — under 60 days' : 'On track';
+  return {
+    title: 'Q3 2026 landing — ' + daysLeft + ' days left',
+    html:
+      '<div style="display:flex;flex-direction:column;gap:14px;font-size:13px;line-height:1.5;color:var(--text-2)">'
+      + '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">'
+      +   '<span style="font-size:28px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">' + daysLeft + '</span>'
+      +   '<span style="font-size:13px;color:var(--text-3)">days until ' + DEADLINE_ISO + '</span>'
+      +   '<span style="margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,' + urgencyColor + ' 14%,var(--surface));color:' + urgencyColor + ';border:1px solid ' + urgencyColor + '">' + urgencyLabel + '</span>'
+      + '</div>'
+      + '<div>'
+      +   '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin:0 0 6px"><span>Search window elapsed</span><span>' + pctElapsed + '%</span></div>'
+      +   '<div style="height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + pctElapsed + '%;background:' + urgencyColor + '"></div></div>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border)">'
+      +   '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:0 0 3px">Apply-Now queue</div><div style="font-size:18px;font-weight:600;color:var(--text)">' + applyNowCount + ' roles</div></div>'
+      +   '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:0 0 3px">Required velocity</div><div style="font-size:18px;font-weight:600;color:var(--text)">~' + appsPerDay + '/day</div></div>'
+      + '</div>'
+      + '<p style="font-size:12px;color:var(--text-3);margin:0">' + (daysLeft <= 30 ? 'Inside the 30-day landing window. Every Apply-Now row should ship tonight or tomorrow.' : daysLeft <= 60 ? 'Tight window. Aim for ~2-3 strong applications per night to keep pace.' : 'On track. Maintain the current pipeline cadence.') + '</p>'
+      + '<p style="font-size:11px;color:var(--text-4);margin:0">Calibration start: 2026-05-16 · totalDays=' + totalDays + ' · daysElapsed=' + daysElapsed + '</p>'
+      + '</div>',
   };
 });
 
@@ -21293,15 +21343,16 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   padding: 1px 7px;
   white-space: nowrap;
 }
+/* R3 fix (2026-05-18): Outreach Pulse action text was 3-line clamped with no
+   expand affordance — these are the EXACT instructions Mitchell needs to act on.
+   Now wraps freely; word-break + overflow-wrap handle long URLs gracefully. */
 #outreach-pulse .op-action-text {
   color: var(--text, #0f172a);
   font-weight: 500;
   font-size: 13.5px;
   line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 #outreach-pulse .op-action-empty {
   font-style: italic;
@@ -21514,12 +21565,14 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   padding: 10px var(--space-3, 12px);
   margin-top: 2px;
 }
+/* R3 fix (2026-05-18): Row v3 action text — same de-clamp as v2 above. */
 #outreach-pulse .op-row-v3 .op-action-text {
   color: var(--text, #0f172a);
   font-weight: 500;
   font-size: var(--fs-body, 13px);
   line-height: var(--lh-relaxed, 1.5);
-  -webkit-line-clamp: 3;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 #outreach-pulse .op-row-v3 .op-row-content > .op-linked-app {
   margin-top: var(--space-2, 8px);
