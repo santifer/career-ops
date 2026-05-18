@@ -1,0 +1,115 @@
+{
+  "calibrated_at": "2026-05-18T01:52:59.514Z",
+  "method": "local_deterministic_v1",
+  "formula": "0.5*trigram_cosine + 0.3*sentence_dist_sim + 0.2*vocab_jaccard",
+  "voice_reference_path": "writing-samples/voice-reference.md",
+  "sample_count": 10,
+  "samples": [
+    {
+      "id": "001-anthropic-communications-manager-research",
+      "path": "apply-pack/001-anthropic-communications-manager-research/cover-letter.md",
+      "bytes": 4130,
+      "composite": 0.55,
+      "trigram_cosine": 0.6652,
+      "sentence_dist_sim": 0.697,
+      "vocab_jaccard": 0.0417
+    },
+    {
+      "id": "044-anthropic-communications-lead-claude-code",
+      "path": "apply-pack/044-anthropic-communications-lead-claude-code/cover-letter.md",
+      "bytes": 4502,
+      "composite": 0.5306,
+      "trigram_cosine": 0.6833,
+      "sentence_dist_sim": 0.5855,
+      "vocab_jaccard": 0.0667
+    },
+    {
+      "id": "048-anthropic-engineering-editorial-lead",
+      "path": "apply-pack/048-anthropic-engineering-editorial-lead/cover-letter.md",
+      "bytes": 4558,
+      "composite": 0.6029,
+      "trigram_cosine": 0.7245,
+      "sentence_dist_sim": 0.7744,
+      "vocab_jaccard": 0.0417
+    },
+    {
+      "id": "049-perplexity-executive-communications-manager-sr-manager-exec-comms",
+      "path": "apply-pack/049-perplexity-executive-communications-manager-sr-manager-exec-comms/cover-letter.md",
+      "bytes": 4318,
+      "composite": 0.5542,
+      "trigram_cosine": 0.6668,
+      "sentence_dist_sim": 0.6917,
+      "vocab_jaccard": 0.0667
+    },
+    {
+      "id": "050-elevenlabs-communications-manager",
+      "path": "apply-pack/050-elevenlabs-communications-manager/cover-letter.md",
+      "bytes": 4922,
+      "composite": 0.5778,
+      "trigram_cosine": 0.7459,
+      "sentence_dist_sim": 0.6307,
+      "vocab_jaccard": 0.0782
+    },
+    {
+      "id": "051-openai-research-communications-manager",
+      "path": "apply-pack/051-openai-research-communications-manager/cover-letter.md",
+      "bytes": 4992,
+      "composite": 0.5754,
+      "trigram_cosine": 0.698,
+      "sentence_dist_sim": 0.7083,
+      "vocab_jaccard": 0.0695
+    },
+    {
+      "id": "053-openai-policy-communications-manager",
+      "path": "apply-pack/053-openai-policy-communications-manager/cover-letter.md",
+      "bytes": 5024,
+      "composite": 0.5473,
+      "trigram_cosine": 0.6917,
+      "sentence_dist_sim": 0.625,
+      "vocab_jaccard": 0.0695
+    },
+    {
+      "id": "059-sierra-developer-relations-engineer-london",
+      "path": "apply-pack/059-sierra-developer-relations-engineer-london/cover-letter.md",
+      "bytes": 4212,
+      "composite": 0.5421,
+      "trigram_cosine": 0.72,
+      "sentence_dist_sim": 0.5625,
+      "vocab_jaccard": 0.0667
+    },
+    {
+      "id": "059-sierra-developer-relations-engineer-nyc",
+      "path": "apply-pack/059-sierra-developer-relations-engineer-nyc/cover-letter.md",
+      "bytes": 3903,
+      "composite": 0.5561,
+      "trigram_cosine": 0.69,
+      "sentence_dist_sim": 0.6667,
+      "vocab_jaccard": 0.0554
+    },
+    {
+      "id": "059-sierra-developer-relations-engineer-sf",
+      "path": "apply-pack/059-sierra-developer-relations-engineer-sf/cover-letter.md",
+      "bytes": 4070,
+      "composite": 0.5425,
+      "trigram_cosine": 0.6917,
+      "sentence_dist_sim": 0.6167,
+      "vocab_jaccard": 0.0582
+    }
+  ],
+  "distribution": {
+    "composite_min": 0.5306,
+    "composite_q1": 0.5425,
+    "composite_median": 0.55,
+    "composite_q3": 0.5561,
+    "composite_max": 0.6029
+  },
+  "suggested_threshold": 0.54,
+  "current_default_threshold": 0.8,
+  "threshold_delta": -0.26,
+  "notes": [
+    "Composite range: 0.5306 – 0.6029",
+    "Suggested threshold (Q1 of sample distribution): 0.54",
+    "Strategy doc default was 0.80; empirical Q1 is lower (looser)",
+    "For embedding-based recalibration (semantic cosine via text-embedding-3-large), re-run with --use-embeddings (TODO; ~$0.05/run)"
+  ]
+}
