@@ -28,6 +28,8 @@ import {
 } from './lib/outreach-tracker.mjs';
 import { estimateTTO } from './lib/tto-estimator.mjs';
 import { scoreToxicity } from './lib/toxicity-scorer.mjs';
+import { renderChildPageHTML } from './lib/child-page-template.mjs';
+import { renderInlineDiff, renderSideBySideDiff } from './lib/diff-renderer.mjs';
 
 // ── Application enrichment for outreach API ────────────────────────────────
 // Join contact.linked_application_id → applications.md row so the dashboard
@@ -3858,6 +3860,293 @@ const server = createServer((req, res) => {
   if (reportMatch) {
     const summary = parseReportSummary('reports/' + reportMatch[1]);
     return json(summary);
+  }
+
+  // ── /draft/{rowId} — Apply-pack draft preview page ───────────────────────
+  // GET /draft/{rowId}
+  // Returns a full child-page HTML document for the apply-pack draft review UX:
+  //   • Tabbed: CV | Cover Letter | Why Statement | LinkedIn DM | Form Fields
+  //   • Floating AI risk badge per artifact (reads humanize-check sidecar JSON)
+  //   • Side-by-side diff toggle (uses lib/diff-renderer.mjs)
+  //   • Action buttons: Approve / Request revision / Mark applied
+  //   • Wires to POST /api/build-pack-stage for revision triggers
+  const draftMatch = url.match(/^\/draft\/(\d+)$/);
+  if (draftMatch) {
+    const rowId  = draftMatch[1];
+    const padded = String(rowId).padStart(3, '0');
+
+    // Locate the apply-pack directory for this row (first match: data/apply-packs/ or apply-pack/)
+    const PACK_ROOTS = [
+      join(ROOT, 'data/apply-packs'),
+      join(ROOT, 'apply-pack'),
+    ];
+    let packDir = null;
+    let packDirRel = null;
+    for (const root of PACK_ROOTS) {
+      if (!existsSync(root)) continue;
+      const entries = readdirSync(root);
+      const match = entries.find(e => e.startsWith(padded + '-'));
+      if (match) { packDir = join(root, match); packDirRel = `${root.replace(ROOT + '/', '')}/${match}`; break; }
+    }
+
+    // Find row metadata from applications.md
+    const apps = parseApplications();
+    const row  = apps.find(r => String(r.num) === String(rowId));
+    const company = row?.company || `Row #${rowId}`;
+    const role    = row?.role    || '';
+    const score   = row?.score   || null;
+    const status  = row?.status  || '';
+
+    // Define artifact tabs
+    const ARTIFACT_TABS = [
+      { label: 'CV',            files: ['cv-tailored.md', 'cv.md']                 },
+      { label: 'Cover Letter',  files: ['cover-letter.md']                         },
+      { label: 'Why Statement', files: ['why-statement.md', 'why.md']              },
+      { label: 'LinkedIn DM',   files: ['linkedin-dm.md', 'outreach.md']           },
+      { label: 'Form Fields',   files: ['form-fields.md', 'form-answers.md']       },
+    ];
+
+    function readArtifact(baseName) {
+      if (!packDir) return null;
+      const p = join(packDir, baseName);
+      if (existsSync(p)) return readFileSync(p, 'utf-8');
+      return null;
+    }
+
+    function readAnyArtifact(fileList) {
+      for (const f of fileList) {
+        const c = readArtifact(f);
+        if (c != null) return { content: c, file: f };
+      }
+      return null;
+    }
+
+    // Read humanize-check sidecar JSON (written by build-apply-pack.mjs as {artifact}.humanize.json)
+    function readHumanizeSidecar(artifactFile) {
+      if (!packDir) return null;
+      const sidecarPath = join(packDir, artifactFile.replace(/\.md$/, '.humanize.json'));
+      if (!existsSync(sidecarPath)) return null;
+      try { return JSON.parse(readFileSync(sidecarPath, 'utf-8')); } catch { return null; }
+    }
+
+    // AI risk badge HTML (green / amber / red per staleness-nudge color pattern)
+    function aiBadgeHtml(score) {
+      if (score == null) return '';
+      const pct = Math.round(score);
+      let color, label;
+      if (pct <= 20)      { color = 'var(--green-fg-dark, #166534)'; label = 'LOW'; }
+      else if (pct <= 45) { color = 'var(--amber-fg-dark, #6b5430)'; label = 'MED'; }
+      else if (pct <= 70) { color = 'var(--amber-fg,     #a87b48)'; label = 'HIGH'; }
+      else                { color = 'var(--red-fg-dark,  #991b1b)'; label = 'CRIT'; }
+      return `<span style="
+        display:inline-flex;align-items:center;gap:4px;
+        font-size:10px;font-weight:700;letter-spacing:.04em;
+        color:${color};
+        background:var(--surface-2,#f4f4f6);
+        border:1px solid currentColor;
+        border-radius:4px;padding:2px 7px;
+        vertical-align:middle;">AI ${pct}% ${label}</span>`;
+    }
+
+    // Build tab content (HTML) for a single artifact
+    function buildTabContent(tabLabel, artifactRes) {
+      if (!artifactRes) {
+        return `<p style="color:var(--text-3);font-style:italic;padding:16px 0;">
+          No ${tabLabel} artifact found in <code>${packDirRel || `data/apply-packs/${padded}-*`}</code>.
+          Run <code>node scripts/build-apply-packs.mjs --row=${rowId}</code> to generate materials.
+        </p>`;
+      }
+
+      const { content, file } = artifactRes;
+      const sidecar = readHumanizeSidecar(file);
+      const aiScore = sidecar?.score ?? sidecar?.consensusScore ?? null;
+      const badgeHtml = aiBadgeHtml(aiScore);
+
+      // Render markdown to HTML for display
+      let rendered = '';
+      try { rendered = marked.parse(content); } catch { rendered = `<pre>${content.replace(/</g, '&lt;')}</pre>`; }
+
+      // Diff toggle — reads .prev version if it exists (artifact.prev.md)
+      const prevFile = file.replace(/\.md$/, '.prev.md');
+      const prevContent = readArtifact(prevFile);
+      let diffHtml = '';
+      if (prevContent != null) {
+        const sbsDiff = renderSideBySideDiff(prevContent, content);
+        diffHtml = `
+          <details style="margin-top:16px;">
+            <summary style="cursor:pointer;font-size:12px;color:var(--accent,#5a76a6);font-weight:600;padding:4px 0;">
+              Show diff vs. previous version
+            </summary>
+            <div style="margin-top:8px;">${sbsDiff}</div>
+          </details>`;
+      }
+
+      return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--text-3);font-family:var(--font-mono);">${packDirRel || ''}/${file}</span>
+          ${badgeHtml}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px;font-size:13px;line-height:1.6;">
+          ${rendered}
+        </div>
+        ${diffHtml}`;
+    }
+
+    // Build all tab panels
+    const tabPanels = ARTIFACT_TABS.map(tab => {
+      const res = readAnyArtifact(tab.files);
+      return {
+        id:      tab.label.toLowerCase().replace(/\s+/g, '-'),
+        label:   tab.label,
+        content: buildTabContent(tab.label, res),
+      };
+    });
+
+    // Build tab JS + HTML structure
+    const tabNavItems = tabPanels.map((t, i) =>
+      `<button class="draft-tab${i === 0 ? ' active' : ''}" data-tab="${t.id}" type="button">${t.label}</button>`
+    ).join('\n      ');
+
+    const tabPanelDivs = tabPanels.map((t, i) =>
+      `<div class="draft-panel${i === 0 ? ' active' : ''}" id="panel-${t.id}">${t.content}</div>`
+    ).join('\n      ');
+
+    // Floating score + status badge
+    const scoreBadge = score != null
+      ? `<span style="font-size:18px;font-weight:700;color:var(--green-fg-dark,#166534)">${score}</span>`
+      : '';
+
+    // Action buttons
+    const actionBar = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+        <button onclick="triggerAction('approve')" style="
+          padding:8px 18px;border-radius:6px;border:none;cursor:pointer;
+          background:var(--green-bg,#dcfce7);color:var(--green-fg-dark,#166534);
+          font-weight:600;font-size:13px;">Approve</button>
+        <button onclick="triggerAction('revision')" style="
+          padding:8px 18px;border-radius:6px;border:none;cursor:pointer;
+          background:var(--amber-bg,#f4ede1);color:var(--amber-fg-dark,#6b5430);
+          font-weight:600;font-size:13px;">Request revision</button>
+        <button onclick="triggerAction('mark-applied')" style="
+          padding:8px 18px;border-radius:6px;border:none;cursor:pointer;
+          background:var(--blue-bg,#e8edf4);color:var(--blue-fg-dark,#3d4f6b);
+          font-weight:600;font-size:13px;">Mark applied</button>
+      </div>`;
+
+    const draftCss = `
+      <style>
+        .draft-tabs {
+          display:flex;gap:2px;border-bottom:2px solid var(--border,#e5e7eb);
+          margin-bottom:20px;
+        }
+        .draft-tab {
+          padding:7px 16px;font-size:13px;font-weight:500;
+          background:transparent;border:none;border-bottom:2px solid transparent;
+          margin-bottom:-2px;cursor:pointer;color:var(--text-3,#6b7280);
+          border-radius:4px 4px 0 0;
+          transition:color .15s,border-color .15s,background .15s;
+        }
+        .draft-tab:hover { color:var(--text-2,#374151);background:var(--surface-2,#f4f4f6); }
+        .draft-tab.active {
+          color:var(--accent,#5a76a6);
+          border-bottom-color:var(--accent,#5a76a6);
+          font-weight:600;
+        }
+        .draft-panel { display:none; }
+        .draft-panel.active { display:block; }
+      </style>
+      <script>
+        function switchTab(id) {
+          document.querySelectorAll('.draft-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === id));
+          document.querySelectorAll('.draft-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+          document.querySelectorAll('.draft-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+        });
+        function triggerAction(action) {
+          fetch('/api/build-pack-stage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ row_id: '${rowId}', action }),
+          }).then(r => r.json()).then(d => {
+            if (d.ok) { alert('Action "' + action + '" recorded.'); }
+            else { alert('Error: ' + (d.error || 'unknown')); }
+          }).catch(e => alert('Network error: ' + e.message));
+        }
+      </script>`;
+
+    const packStatus = packDir
+      ? `<p style="font-size:12px;color:var(--text-3);margin-bottom:4px;">Pack: <code>${packDirRel}</code></p>`
+      : `<p style="font-size:12px;color:var(--amber-fg,#a87b48);margin-bottom:4px;">
+           No apply-pack found for row ${rowId}. Generate with:
+           <code>node scripts/build-apply-packs.mjs --row=${rowId}</code>
+         </p>`;
+
+    const pageTitle = `Draft — ${company}${role ? ` · ${role}` : ''}`;
+
+    const pageHtml = renderChildPageHTML({
+      title: pageTitle,
+      breadcrumbs: [
+        { label: 'Dashboard', href: '/' },
+      ],
+      side_nav: tabPanels.map(t => ({ label: t.label, href: `#panel-${t.id}` })),
+      sections: [
+        {
+          heading: 'Overview',
+          kind: 'card',
+          body: `
+            <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:12px;">
+              ${scoreBadge}
+              <span style="font-size:13px;color:var(--text-3)">Score</span>
+              <span style="font-size:13px;font-weight:600;color:var(--text-2)">${status}</span>
+            </div>
+            ${packStatus}
+            ${actionBar}
+          `,
+        },
+        {
+          heading: 'Materials',
+          kind: 'default',
+          body: `${draftCss}
+            <div class="draft-tabs">
+              ${tabNavItems}
+            </div>
+            ${tabPanelDivs}`,
+        },
+      ],
+    });
+
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+    });
+    res.end(pageHtml);
+    return;
+  }
+
+  // ── POST /api/build-pack-stage — revision/approve/mark-applied actions ────
+  // Wired to the draft page action buttons. Lightweight stub that records the
+  // action and returns ok; full orchestration is handled by the orchestrator.
+  if (url === '/api/build-pack-stage' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { row_id, action } = JSON.parse(body || '{}');
+        if (!row_id || !action) return json({ ok: false, error: 'row_id and action are required' }, 400);
+        const valid = ['approve', 'revision', 'mark-applied'];
+        if (!valid.includes(action)) return json({ ok: false, error: `invalid action — must be one of: ${valid.join(', ')}` }, 400);
+        // Record to a lightweight log; full orchestration wired in a future wave
+        const logDir = join(ROOT, 'data/draft-actions');
+        mkdirSync(logDir, { recursive: true });
+        const logFile = join(logDir, `${String(row_id).padStart(3, '0')}-actions.jsonl`);
+        const entry = JSON.stringify({ ts: new Date().toISOString(), row_id: String(row_id), action }) + '\n';
+        appendFileSync(logFile, entry, 'utf-8');
+        return json({ ok: true, recorded: { row_id, action } });
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 500);
+      }
+    });
+    return; // end handled in 'end' event
   }
 
   // Share-token middleware: when ?share=<token> is on the dashboard request,
