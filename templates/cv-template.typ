@@ -40,7 +40,7 @@
 
 #set page(
   paper: "us-letter",
-  margin: (top: 0.40in, bottom: 0.40in, left: 0.55in, right: 0.55in),
+  margin: (top: 0.45in, bottom: 0.45in, left: 0.55in, right: 0.55in),
 )
 
 #set text(
@@ -53,8 +53,8 @@
 )
 
 #set par(
-  leading: 0.35em,
-  spacing: 0.35em,
+  leading: 0.40em,
+  spacing: 0.40em,
 )
 
 // ── Color palette ────────────────────────────────────────────────────────────
@@ -70,17 +70,17 @@
 // ── Section heading ──────────────────────────────────────────────────────────
 
 #let section-heading(title) = {
-  v(3pt)
+  v(10pt)
   text(
-    size: 11pt,
+    size: 11.5pt,
     weight: "bold",
     fill: accent,
-    tracking: 0.05em,
+    tracking: 0.06em,
     upper(title)
   )
-  v(-3pt)
+  v(-2pt)
   line(length: 100%, stroke: 0.5pt + accent)
-  v(1pt)
+  v(4pt)
 }
 
 // ── Job entry macro ──────────────────────────────────────────────────────────
@@ -112,16 +112,17 @@
   )
 
   if team_context != "" {
+    v(1pt)
     text(size: 9.5pt, fill: muted, team_context)
   }
 
   if bullets.len() > 0 {
-    v(1pt)
-    set list(marker: "•", body-indent: 0.10in, indent: 0.08in)
+    v(3pt)
+    set list(marker: "•", body-indent: 0.12in, indent: 0.10in)
     set text(size: 10pt, fill: ink)
     list(..bullets)
   }
-  v(3pt)
+  v(6pt)
 }
 
 // ── Project entry macro ──────────────────────────────────────────────────────
