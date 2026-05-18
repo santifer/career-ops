@@ -73,7 +73,7 @@ function getPath(obj, path) {
 // shape (number, object, array containing non-strings) would crash
 // `pickField()` with a confusing `path.split is not a function` mid-scan;
 // reject those at config-load time with a clear error instead.
-function isFieldSpec(spec) {
+export function isFieldSpec(spec) {
   if (typeof spec === 'string') return true;
   if (Array.isArray(spec) && spec.length > 0 && spec.every(s => typeof s === 'string')) return true;
   return false;
@@ -95,7 +95,7 @@ const ALLOWED_DEFAULT_KEYS = new Set(['title', 'url', 'company', 'location']);
 // and protocol-downgraded `http:` URLs from ending up clickable in pipeline.md
 // or fed into the JD-cache filename hash. Malformed strings throw inside the
 // URL constructor and fall through to false.
-function isHttpsUrl(value) {
+export function isHttpsUrl(value) {
   try {
     return new URL(String(value)).protocol === 'https:';
   } catch {
@@ -186,7 +186,7 @@ ${descriptionBody}
   return `${JDS_DIR}/${filename}`;
 }
 
-function normalizeItem(item, fieldMap, defaults) {
+export function normalizeItem(item, fieldMap, defaults) {
   const out = {
     title: String(pickField(item, fieldMap.title) || ''),
     url: String(pickField(item, fieldMap.url) || ''),

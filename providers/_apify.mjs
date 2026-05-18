@@ -27,7 +27,7 @@ export function hasToken() {
 // send our bearer token to an unintended endpoint on api.apify.com.
 const ACTOR_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_.-]*[~/][A-Za-z0-9][A-Za-z0-9_.-]*$/;
 
-function normalizeActorId(actorId) {
+export function normalizeActorId(actorId) {
   if (typeof actorId !== 'string' || !ACTOR_ID_RE.test(actorId)) {
     throw new Error(
       `apify: invalid actorId ${JSON.stringify(actorId)}. ` +
