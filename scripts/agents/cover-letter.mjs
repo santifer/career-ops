@@ -23,10 +23,11 @@
  * @typedef {import('./types.mjs').SubAgentOutput} SubAgentOutput
  */
 
-import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { createReadonlyFS } from '../../lib/readonly-fs.mjs';
 
 import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
@@ -41,6 +42,17 @@ try {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..');
+
+// O5 — Read-only filesystem barrier for corpus reads.
+const rfs = createReadonlyFS([
+  join(ROOT, 'cv.md'),
+  join(ROOT, 'article-digest.md'),
+  join(ROOT, 'writing-samples', 'voice-reference.md'),
+  join(ROOT, 'data', 'hm-intel'),
+  join(ROOT, 'interview-prep'),
+  join(ROOT, 'interview-prep', 'story-bank.md'),
+  join(ROOT, 'templates', 'cover-letter-template.md'),
+]);
 
 const STAGE = 'cover-letter';
 
@@ -278,24 +290,25 @@ export async function runCoverLetter(input) {
 
   // ── 1. Load corpus files ────────────────────────────────────────────────
 
+  // Corpus reads via readonly-fs barrier (O5)
   const cvPath = join(ROOT, 'cv.md');
-  if (!existsSync(cvPath)) {
+  if (!rfs.existsSync(cvPath)) {
     return {
       stage: STAGE, status: 'error', output: null,
       diagnostics: { duration_ms: Date.now() - t0, cost_estimate_usd: 0, tokens_used: { input: 0, output: 0, cached: 0 }, model_used: 'openai:gpt-5' },
       error: 'cv.md not found at repo root',
     };
   }
-  const cvText = readFileSync(cvPath, 'utf-8');
+  const cvText = rfs.readFileSync(cvPath, 'utf-8');
 
   const articleDigestPath = join(ROOT, 'article-digest.md');
-  const articleDigestText = existsSync(articleDigestPath) ? readFileSync(articleDigestPath, 'utf-8') : null;
+  const articleDigestText = rfs.existsSync(articleDigestPath) ? rfs.readFileSync(articleDigestPath, 'utf-8') : null;
 
   const voiceRefPath = join(ROOT, 'writing-samples', 'voice-reference.md');
-  const voiceRefText = existsSync(voiceRefPath) ? readFileSync(voiceRefPath, 'utf-8') : null;
+  const voiceRefText = rfs.existsSync(voiceRefPath) ? rfs.readFileSync(voiceRefPath, 'utf-8') : null;
 
   const templatePath = join(ROOT, 'templates', 'cover-letter-template.md');
-  const templateText = existsSync(templatePath) ? readFileSync(templatePath, 'utf-8') : null;
+  const templateText = rfs.existsSync(templatePath) ? rfs.readFileSync(templatePath, 'utf-8') : null;
 
   // ── 2. Extract metadata ─────────────────────────────────────────────────
 

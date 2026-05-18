@@ -17,10 +17,11 @@
  * @typedef {import('./types.mjs').SubAgentOutput} SubAgentOutput
  */
 
-import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { createReadonlyFS } from '../../lib/readonly-fs.mjs';
 
 import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
@@ -38,6 +39,17 @@ try {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..');
+
+// O5 — Read-only filesystem barrier: corpus reads go through this wrapper.
+// Sub-agents are only permitted to read these specific corpus paths.
+const rfs = createReadonlyFS([
+  join(ROOT, 'cv.md'),
+  join(ROOT, 'article-digest.md'),
+  join(ROOT, 'writing-samples', 'voice-reference.md'),
+  join(ROOT, 'data', 'hm-intel'),
+  join(ROOT, 'interview-prep'),
+  join(ROOT, 'interview-prep', 'story-bank.md'),
+]);
 
 const STAGE = 'cv-tailor';
 const TOP_N = 8;
@@ -288,9 +300,9 @@ export async function runCvTailor(input) {
   /* 1. Load and validate inputs                                             */
   /* ---------------------------------------------------------------------- */
 
-  // CV — mandatory
+  // CV — mandatory (read via readonly-fs barrier)
   const cvPath = join(ROOT, 'cv.md');
-  if (!existsSync(cvPath)) {
+  if (!rfs.existsSync(cvPath)) {
     return {
       stage: STAGE,
       status: 'error',
@@ -299,12 +311,12 @@ export async function runCvTailor(input) {
       error: 'cv.md not found at repo root',
     };
   }
-  const cvText = readFileSync(cvPath, 'utf-8');
+  const cvText = rfs.readFileSync(cvPath, 'utf-8');
 
-  // Article digest — optional
+  // Article digest — optional (read via readonly-fs barrier)
   const articleDigestPath = join(ROOT, 'article-digest.md');
-  const articleDigestText = existsSync(articleDigestPath)
-    ? readFileSync(articleDigestPath, 'utf-8')
+  const articleDigestText = rfs.existsSync(articleDigestPath)
+    ? rfs.readFileSync(articleDigestPath, 'utf-8')
     : null;
 
   // JD text — from input.pack.jd.jd_text (orchestrator stage 1 shape) or
