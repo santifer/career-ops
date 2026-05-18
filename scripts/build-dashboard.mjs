@@ -2595,7 +2595,7 @@ function renderRow(r, idx) {
   // Apply button was previously implicit (clicking the role title opens the JD),
   // but per his feedback an explicit Apply button is needed in the action cell.
   const applyBtn = url
-    ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--green-fg);font-weight:600" title="Open the JD posting in a new tab" aria-label="Apply to ${htmlEscape(r.company)} ${htmlEscape(r.role)}">🔗 Apply</a>`
+    ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--green-fg);font-weight:600" title="Open the job posting in a new tab" aria-label="Apply to ${htmlEscape(r.company)} ${htmlEscape(r.role)}">🔗 Apply now</a>`
     : '';
   const reportHtmlLink = r.reportPath
     ? `<a href="reports/${basename(r.reportPath).replace(/\.md$/, '.html')}" target="_blank" onclick="event.stopPropagation()" title="Open formatted report in browser">Report</a>`
@@ -2672,7 +2672,7 @@ function renderRow(r, idx) {
       alignmentBars = `<div class="alignment-bars">
         ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile', 'profile_alignment')}
         ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview', 'interview_likelihood')}
-        ${bar(align.hmNoticing, 'HM-noticing chance', hmTooltip, 'hm', 'hm_noticing_chance')}
+        ${bar(align.hmNoticing, 'Chance a hiring manager will see you', hmTooltip, 'hm', 'hm_noticing_chance')}
       </div>`;
     }
   } catch (_) { /* never break drawer on scorer error */ }
@@ -2709,8 +2709,8 @@ function renderRow(r, idx) {
 
   // Wave C-A drill-in: Role at a glance card → metric:{num}:role_at_glance
   const _rowDrillNum = htmlEscape(String(r.num||''));
-  const tldrCard = (tldr || roleFunction || comp || toxLine || alignmentBars) ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:role_at_glance" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full role context" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)}">
-    <div class="dcard-label">Role at a glance <span class="dcard-explore-hint">▸ explore</span></div>
+  const tldrCard = (tldr || roleFunction || comp || toxLine || alignmentBars) ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:role_at_glance" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for the full role breakdown" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)}">
+    <div class="dcard-label">Quick role summary <span class="dcard-explore-hint">▸ explore</span></div>
     ${tldr ? `<div class="dcard-body">${htmlEscape(tldr)}</div>` : ''}
     ${respLine}
     ${compLine}
@@ -2723,7 +2723,7 @@ function renderRow(r, idx) {
   // tables/headers/lists become real HTML. Wrap in `.htp-md` for table styling.
   // Wave C-A drill-in: How to position card → metric:{num}:how_to_position
   const posCard = positioning ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:how_to_position" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for strategy ceiling per positioning point" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)}">
-    <div class="dcard-label">How to position <span class="dcard-explore-hint">▸ explore</span></div>
+    <div class="dcard-label">How to position yourself <span class="dcard-explore-hint">▸ explore</span></div>
     <div class="dcard-body htp-md">${renderHowToPosition(positioning)}</div>
   </div>` : '';
 
@@ -2731,7 +2731,7 @@ function renderRow(r, idx) {
   // Wave C-A drill-in: each bullet → story:{num}:{slugified-requirement}
   const _slugifyReq = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const matchCard = edge.length ? `<div class="dcard dcard--match">
-    <div class="dcard-label">WHAT FITS</div>
+    <div class="dcard-label">What matches your background</div>
     <ul class="match-list">
       ${edge.map(e => {
         const reqSlug = _slugifyReq(String(e.requirement||''));
@@ -2751,7 +2751,7 @@ function renderRow(r, idx) {
   // Wave C-A drill-in: each gap chip → gap:{num}:{gap-key} (3-tier fallback: llm-evidence → network-graph → strategy-ceiling)
   const _slugifyGap = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const gapCard = gaps.length ? `<div class="dcard dcard--gap">
-    <div class="dcard-label">WHAT'S MISSING <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click for strategy</span></div>
+    <div class="dcard-label">Gaps to address <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click to close a gap</span></div>
     <div class="dcard-gaps">${gaps.map(g => {
       const strategy = getGapStrategy(r.reportPath, g.title);
       const detailHtml = g.detail ? marked.parse(g.detail) : '';
@@ -2785,7 +2785,7 @@ function renderRow(r, idx) {
   };
   // Wave C-A drill-in: each story row → story:{num}:{story-slug}
   const storyCard = stories.length ? `<div class="dcard dcard--story">
-    <div class="dcard-label">STORIES TO LEAD WITH</div>
+    <div class="dcard-label">Stories to use in your application</div>
     ${stories.map((s, i) => {
       const childHref = _storyChildPath(s);
       const storySlug = _slugifyStory(String(s.story || '').slice(0, 60));
@@ -2808,13 +2808,13 @@ function renderRow(r, idx) {
   // ── Card 4: Action (blue / Apply / Skip / Defer) ─────────
   const actionCard = (finalRec || url) ? `<div class="dcard dcard--action">
     <div>
-      <div class="dcard-label" style="margin-bottom:4px">ACTION</div>
-      <div class="dcard-action-text">${htmlEscape(finalRec || 'No recommendation captured.')}</div>
+      <div class="dcard-label" style="margin-bottom:4px">What to do next</div>
+      <div class="dcard-action-text">${htmlEscape(finalRec || 'No strategy yet — click to generate')}</div>
     </div>
     <div class="dcard-action-buttons">
-      ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply →</a>` : ''}
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${htmlEscape(String(r.num || ''))}">Skip</button>
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${htmlEscape(String(r.num || ''))}">Defer</button>
+      ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply now →</a>` : ''}
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${htmlEscape(String(r.num || ''))}">Skip this one</button>
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${htmlEscape(String(r.num || ''))}">Look at this later</button>
     </div>
   </div>` : '';
 
@@ -2823,7 +2823,7 @@ function renderRow(r, idx) {
   // expand. Card always renders (every row can have notes), with an
   // empty state until the first note arrives.
   const notesCard = `<div class="dcard dcard--notes" data-notes-num="${htmlEscape(String(r.num || ''))}">
-    <div class="dcard-label">NOTES &amp; ACTIVITY</div>
+    <div class="dcard-label">Notes &amp; activity</div>
     <div class="notes-compose">
       <textarea class="notes-input" maxlength="1000" rows="2"
         placeholder="Add a note (followed up, recruiter response, etc.) — 1000 char max"
@@ -2839,7 +2839,7 @@ function renderRow(r, idx) {
       </div>
     </div>
     <div class="notes-list" data-notes-list>
-      <div class="notes-empty muted-text">No notes yet — add one above. Status changes are auto-logged.</div>
+      <div class="notes-empty muted-text">No notes yet — add one above</div>
     </div>
   </div>`;
 
@@ -2847,8 +2847,8 @@ function renderRow(r, idx) {
   const recBanner = finalRec ? `<div class="rec-banner">
     <span class="rec-label">Rec</span>
     <span class="rec-text">${htmlEscape(finalRec)}</span>
-    ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>` : ''}
-  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>` : '';
+    ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply now →</a>` : ''}
+  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View job posting</a></div>` : '';
 
   // Inline gap chips shown on mobile cards only (top 3 by getKeyGaps order)
   const cardGapChips = gaps.length ? `<div class="card-gaps-mobile">${gaps.slice(0, 3).map(g =>
@@ -2922,7 +2922,7 @@ function renderRow(r, idx) {
             </div>`
           : `<div class="throttle-banner throttle-${r._throttle.status}">${htmlEscape(r._throttle.label)}<br><span class="muted-text">${htmlEscape(r._throttle.note || '')}</span></div>`
       ) : ''}
-      ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full Phase E decision provenance" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">TRACKER NOTE <span class="dcard-explore-hint">▸ explore</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
+      ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full Phase E decision provenance" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ explore</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
       ${tldrCard}${posCard}
       <div class="detail-grid">
@@ -2932,7 +2932,7 @@ function renderRow(r, idx) {
       ${storyCard}
       ${(function(){try{if(!r.reportPath)return '';const _cvText=existsSync(CV_PATH)?readFileSync(CV_PATH,'utf-8'):'';const _jdText=r.reportPath&&existsSync(r.reportPath)?readFileSync(r.reportPath,'utf-8').slice(0,5000):'';if(!_cvText&&!_jdText)return '';const _atsResult=scoreAtsMyth({cvText:_cvText,jdText:_jdText});const _atsHtml=renderAtsCard(_atsResult);return _atsHtml?'<div class="dcard" style="margin-bottom:8px">'+_atsHtml+'</div>':'';}catch(e){return '';}})()}
       ${actionCard}
-      ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">NETWORK LEVERAGE</div>'+html+'</div>':'';}catch(e){return '';}})()}
+      ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">Warm contacts at this company</div>'+html+'</div>':'';}catch(e){return '';}})()}
       ${notesCard}
       <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cv-tailor', this);event.stopPropagation()" title="Tailor CV for this role via /api/build-pack-stage">/cv-tailor</button>
@@ -3332,6 +3332,10 @@ function build() {
   // TPgM credibility widget — runs tpgm-tracker.mjs --json; fails gracefully
   // to empty-state data if the tracker or courses.yml is unavailable.
   let tpgmWidgetHtml = '';
+  // Sidebar chip data — headline number + velocity arrow extracted at build time.
+  let tpgmChipScore = 0;
+  let tpgmChipArrow = '▬';
+  let tpgmChipBand  = 'PM-readiness';
   try {
     const trackerOut = execSync(`node ${JSON.stringify(join(ROOT, 'scripts/tpgm-tracker.mjs'))} --json`, {
       cwd: ROOT,
@@ -3345,6 +3349,27 @@ function build() {
     // below ("PM-credibility composite N/100"). Previously score=tpgm_credibility_score
     // produced "4 of 100" in the ring while the composite line said "21/100".
     const _pmComposite = tpgmData.pm_credibility_composite ?? 0;
+    tpgmChipScore = _pmComposite;
+    // Extract velocity arrow from tpgm-history.json (same file the widget writes)
+    try {
+      const _histPath = join(ROOT, 'data', 'tpgm-history.json');
+      const _hist = JSON.parse(readFileSync(_histPath, 'utf-8'));
+      if (Array.isArray(_hist) && _hist.length >= 2) {
+        const _now = Date.now();
+        const _7d = 7 * 24 * 60 * 60 * 1000;
+        for (let _i = _hist.length - 1; _i >= 0; _i--) {
+          const _e = _hist[_i];
+          const _ts = _e.ts || Date.parse(_e.date || '');
+          if (_ts && _now - _ts >= _7d) {
+            const _delta = _pmComposite - (_e.score ?? _pmComposite);
+            tpgmChipArrow = _delta > 0 ? '▲' : _delta < 0 ? '▼' : '▬';
+            if (_delta > 0) tpgmChipBand = `PM-readiness · +${_delta}`;
+            else if (_delta < 0) tpgmChipBand = `PM-readiness · ${_delta}`;
+            break;
+          }
+        }
+      }
+    } catch (_) { /* history unavailable — keep defaults */ }
     tpgmWidgetHtml = renderTpgmWidget({
       score:                   _pmComposite,
       pm_bridge_index:         tpgmData.pm_bridge_buildability_index   ?? 0,
@@ -3835,6 +3860,10 @@ function build() {
         });
       } else { _cbData.pipelineRows = []; }
     } catch (_) { _cbData.pipelineRows = []; }
+
+    // TPgM full widget HTML — stored for the readiness drill-in renderer.
+    // Escaped so it can be JSON-stringified safely.
+    _cbData.tpgmWidgetHtml = tpgmWidgetHtml;
 
     waveCBDataJson = JSON.stringify(_cbData).replace(/<\//g, '<\\/').replace(/'/g, "\\'");
   } catch (topErr) { waveCBDataJson = '{}'; }
@@ -6679,6 +6708,76 @@ function build() {
     #sidebar-runway { display: none !important; }
   }
 
+  /* ── Sidebar readiness chip (TPgM relocation 2026-05-17) ───── */
+  /* Compact card in sidebar footer area: headline score + velocity arrow +
+     "See full →" button that opens the full TPgM widget as a drill-in drawer.
+     Styled to match .sidebar-runway patterns (same margin/padding/border). */
+  .sidebar-readiness {
+    margin: 4px 10px 6px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .sidebar-readiness:hover { border-color: var(--blue-fg-dark); background: var(--surface-3); }
+  .sidebar-readiness:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .sidebar-readiness-header {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+  }
+  .sidebar-readiness-title {
+    flex: 1;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+  .sidebar-readiness-score {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .sidebar-readiness-velocity {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .sidebar-readiness-band {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-readiness-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--blue-fg-dark, var(--blue));
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+  }
+  .sidebar-readiness-link:hover { text-decoration: underline; }
+  body.sidebar-collapsed .sidebar-readiness-band,
+  body.sidebar-collapsed .sidebar-readiness-link { display: none; }
+  body.sidebar-collapsed .sidebar-readiness-header { margin-bottom: 0; }
+  body.sidebar-collapsed .sidebar-readiness {
+    padding: 7px 6px; text-align: center;
+  }
+  @media (max-width: 720px) {
+    #sidebar-readiness { display: none !important; }
+  }
+
   /* ── Pipeline confirmation modal ────────────────────────────── */
   /* Task 2 (2026-05-16): modal grew a 2-phase flow (preview → confirm)
      for Process All. Width bumped + min-width set so the per-company
@@ -9097,6 +9196,24 @@ function build() {
         <div class="sidebar-runway-alert unknown" id="runway-alert">—</div>
       </div>
     </div>
+    <!-- Readiness chip (TPgM relocation 2026-05-17): compact sidebar card
+         shows headline PM-credibility score + velocity arrow. "See full →"
+         opens the full TPgM widget in a drill-in drawer so it stays fully
+         accessible without occupying prime overview real-estate. -->
+    <div id="sidebar-readiness" class="sidebar-readiness"
+         role="button" tabindex="0" aria-label="PM-readiness score — click to see full detail"
+         onclick="window.drillIn('readiness','',event)"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('readiness','',event);}">
+      <div class="sidebar-readiness-header">
+        <span class="sidebar-readiness-title">READINESS</span>
+        <span class="sidebar-readiness-score">${tpgmChipScore}</span>
+        <span class="sidebar-readiness-velocity">${tpgmChipArrow}</span>
+      </div>
+      <div class="sidebar-readiness-band">${htmlEscape(tpgmChipBand)}</div>
+      <button type="button" class="sidebar-readiness-link"
+              onclick="window.drillIn('readiness','',event);event.stopPropagation();"
+              aria-label="See full PM-readiness detail">See full →</button>
+    </div>
     <div class="sidebar-footer">
       <!-- Sidebar collapse button removed 2026-05-17 per Mitchell — unused,
            takes up footer space. Cmd-\\ keyboard shortcut still triggers
@@ -9339,8 +9456,8 @@ function build() {
   <div id="bulk-action-bar" role="region" aria-label="Bulk actions" hidden>
     <div class="bulk-bar-inner">
       <span class="bulk-bar-count" aria-live="polite"><strong id="bulk-count">0</strong> selected</span>
-      <button type="button" class="bulk-btn bulk-btn-primary" onclick="bulkApply('Applied')" aria-label="Mark selected rows as Applied">Mark Applied</button>
-      <button type="button" class="bulk-btn" onclick="bulkApply('SKIP')" aria-label="Mark selected rows as SKIP">Mark Skip</button>
+      <button type="button" class="bulk-btn bulk-btn-primary" onclick="bulkApply('Applied')" aria-label="Mark selected rows as Applied">I applied</button>
+      <button type="button" class="bulk-btn" onclick="bulkApply('SKIP')" aria-label="Mark selected rows as SKIP">Skip these</button>
       <button type="button" class="bulk-btn bulk-btn-ghost" onclick="bulkClearSelection()" aria-label="Clear selection">Clear</button>
     </div>
   </div>
@@ -9405,7 +9522,7 @@ function build() {
       <div class="stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue" role="button" tabindex="0">
         <div class="hero-sparkline-bg" aria-hidden="true">${heroSparklineSVG(kpiSpark.applyNow.daily, 'Apply-Now')}</div>
         <div class="hero-left">
-          <div class="stat-label">Apply-Now Queue · score ≥ 4.0</div>
+          <div class="stat-label">Ready to apply · score 4.0 or above</div>
           <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
         </div>
         <div class="hero-right">
@@ -9465,14 +9582,10 @@ function build() {
     </div>
   </div>
 
-  <!-- TPgM credibility tracker widget (Tier B item #5, wired 2026-05-17) -->
-  <!-- Static overview tile — separate from the sortable tables (DASHBOARD_INVARIANTS.md §1-7 unaffected) -->
-  <!-- Layout fix (2026-05-17): max-width raised to 720px to match side-alloc-tile;
-       eliminates dead space to the right. Widget itself uses width:100% so it fills
-       the column. Uses dashboard CSS variables for consistent dark-mode rendering. -->
-  <div style="margin:12px 0 0;max-width:720px">
-    ${tpgmWidgetHtml}
-  </div>
+  <!-- TPgM widget relocated 2026-05-17: moved from here to sidebar readiness chip
+       (#sidebar-readiness). Full widget accessible via "See full →" drill-in.
+       Static overview tile was separate from the sortable tables (DASHBOARD_INVARIANTS.md §1-7 unaffected);
+       Apply-Now queue now has clear first-glance priority below KPI tiles. -->
 
   ${sideAllocations.length > 0 ? `
   <!-- I1 Wave G1: 20%-time / side-allocations tile -->
@@ -9519,9 +9632,9 @@ function build() {
     ${_tonightPick ? `<!-- Tonight's pick callout — enriched 2026-05-17: full title, comp, gates, 4 actions -->
     <div id="tonight-pick-callout" class="tonight-pick-callout" hidden aria-label="Tonight's pick suggestion" role="region">
       <div class="tonight-pick-header">
-        <span class="tonight-pick-label">TONIGHT'S PICK</span>
+        <span class="tonight-pick-label">Best role to apply to tonight</span>
         <span class="tonight-pick-score-chip badge score-badge-lg ${scoreBadgeClass(_tonightPick.score)}">${_tonightPick.score.toFixed(1)}</span>
-        <span class="tonight-pick-status-chip">APPLY</span>
+        <span class="tonight-pick-status-chip">Apply now</span>
       </div>
       <div class="tonight-pick-title-row">
         <span class="tonight-pick-company">${htmlEscape(_tonightPick.company)}</span>
@@ -9537,7 +9650,7 @@ function build() {
       <div class="tonight-pick-actions">
         <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Start tonight's apply for ${htmlEscape(_tonightPick.company)}">Start tonight&rsquo;s apply &rarr;</button>
         <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickLearnMore()" aria-label="Learn more about this role">Learn more</button>
-        <button type="button" class="tonight-pick-btn-accent" id="tonight-pick-create-btn" onclick="tonightPickCreateMaterials()" aria-label="Create application materials for ${htmlEscape(_tonightPick.company)}">Create materials</button>
+        <button type="button" class="tonight-pick-btn-accent" id="tonight-pick-create-btn" onclick="tonightPickCreateMaterials()" aria-label="Generate apply pack for ${htmlEscape(_tonightPick.company)}">Generate apply pack</button>
         <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCycle()" aria-label="Pick a different role">Pick another</button>
       </div>
     </div>` : '<!-- tonight-pick: no candidate met criteria -->'}
@@ -9565,7 +9678,7 @@ function build() {
   ` : `
   <div class="panel" id="apply-now-section">
     <h2 class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="panel-chevron">▾</span></h2>
-    <p style="color:#57606a;font-size:13px">No evaluations meeting the 4.0 apply floor right now. Either today's batch was wrong-shape (review highest-scored discards below) or the batch hasn't completed yet.</p>
+    <p style="color:#57606a;font-size:13px">No roles scored 4.0 or above right now. Check your highest-scoring discards below, or wait for the next batch to finish.</p>
   </div>
   `}
 
@@ -11285,14 +11398,14 @@ function openRightRailForDetail(idx, detailRow) {
     // "Create materials" — between Apply and Skip. Disabled if there's no
     // row number (e.g. preview rows synthesized without a tracker #).
     const materialsBtnHtml = num
-      ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" title="Build apply-pack (CV + cover letter + DM + intel)">Create materials</button>'
-      : '<button type="button" class="drawer-btn-materials" disabled title="no row number — apply-pack needs a tracker row">Create materials</button>';
+      ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" title="Build apply pack (CV + cover letter + outreach + intel)">Generate apply pack</button>'
+      : '<button type="button" class="drawer-btn-materials" disabled title="No row number — apply pack needs a tracker row">Generate apply pack</button>';
     const skipBtnHtml = num
-      ? '<button type="button" data-drawer-action="skip">Skip</button>'
-      : '<button type="button" disabled>Skip</button>';
+      ? '<button type="button" data-drawer-action="skip">Skip this one</button>'
+      : '<button type="button" disabled>Skip this one</button>';
     const deferBtnHtml = num
-      ? '<button type="button" data-drawer-action="defer">Defer</button>'
-      : '<button type="button" disabled>Defer</button>';
+      ? '<button type="button" data-drawer-action="defer">Look at this later</button>'
+      : '<button type="button" disabled>Look at this later</button>';
     actionsEl.innerHTML = applyBtnHtml + materialsBtnHtml + skipBtnHtml + deferBtnHtml;
     // Wire actions after innerHTML — keeps the HTML-as-string clean of
     // nested-quote escaping and lets us close the rail in one place.
@@ -11993,9 +12106,9 @@ _drillInRegister('gap', function(id) {
       var strategy = chipEl.dataset.strategy || '';
       var detail   = chipEl.dataset.detail || '';
       var why      = chipEl.dataset.why || '';
-      cardHtml = (detail ? '<div class="dcard"><div class="dcard-label">GAP DETAIL</div><div class="dcard-body">' + detail + '</div></div>' : '')
-        + (strategy ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">ADDRESSING STRATEGY</div><div class="dcard-body">' + strategy + '</div></div>' : '')
-        + (why ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">WHY GAP DOES NOT BLOCK</div><div class="dcard-body">' + why + '</div></div>' : '');
+      cardHtml = (detail ? '<div class="dcard"><div class="dcard-label">About this gap</div><div class="dcard-body">' + detail + '</div></div>' : '')
+        + (strategy ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">How to close this gap</div><div class="dcard-body">' + strategy + '</div></div>' : '')
+        + (why ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">Why this gap does not block you</div><div class="dcard-body">' + why + '</div></div>' : '');
     }
   }
   if (!cardHtml) {
@@ -12151,6 +12264,27 @@ _drillInRegister('tpgm-gaps', function(id) {
     html: '<p style="font-size:12px;margin-bottom:8px">Open gap points &mdash; each represents a bridgeable PM-credibility signal:</p>'
       + items
       + '<p style="font-size:11px;color:var(--text-4);margin-top:10px">Add evidence via <button type="button" class="dcard-btn" style="font-size:11px;padding:2px 8px" onclick="drillIn(&quot;ingest-form&quot;,&quot;&quot;,event)">+ weekly ingest</button> to close gaps.</p>',
+  };
+});
+
+// Readiness drill-in (TPgM relocation 2026-05-17):
+// Opens the full TPgM widget content — pre-baked at build time into
+// window._waveCB.tpgmWidgetHtml — in the top-level drill-in overlay.
+// All existing interactivity (gap-points chip, ingest button) is preserved
+// because the widget HTML already has inline onclick handlers pointing to
+// drillIn('tpgm-gaps', ...) and drillIn('ingest-form', ...).
+_drillInRegister('readiness', function() {
+  var cb = window._waveCB || {};
+  var widgetHtml = cb.tpgmWidgetHtml || '';
+  if (!widgetHtml) {
+    return {
+      title: 'PM-readiness (TPgM)',
+      html: '<p style="font-size:12px;color:var(--text-3)">No TPgM data available. Run <code>node scripts/tpgm-tracker.mjs</code> to populate.</p>',
+    };
+  }
+  return {
+    title: 'PM-readiness (TPgM credibility)',
+    html: widgetHtml,
   };
 });
 
