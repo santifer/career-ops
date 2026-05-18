@@ -15327,6 +15327,43 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 document.addEventListener('careerops:outreach-changed', refreshRunwayWidget);
 
+// 2026-05-18 — rdDraftDm: Runway "who to contact next" row → draft DM.
+// Reads the data-rd-draft JSON payload off the clicked button, synthesizes
+// a hidden anchor with the dataset openEmailPopover() expects, then invokes
+// the existing popover so the user picks a template and the LinkedIn DM /
+// email gets composed with context.
+function rdDraftDm(btnEl) {
+  if (!btnEl) return;
+  let payload = {};
+  try { payload = JSON.parse(btnEl.dataset.rdDraft || '{}'); } catch (_) {}
+  if (!payload.name || !payload.company) {
+    if (window.toast) window.toast('No contact/company on this row.', 'warning');
+    return;
+  }
+  let proxy = document.getElementById('rd-draft-dm-proxy');
+  if (!proxy) {
+    proxy = document.createElement('button');
+    proxy.id = 'rd-draft-dm-proxy';
+    proxy.type = 'button';
+    proxy.style.cssText = 'position:fixed;opacity:0;pointer-events:none;z-index:-1';
+    document.body.appendChild(proxy);
+  }
+  const r = btnEl.getBoundingClientRect();
+  proxy.style.left = r.left + 'px';
+  proxy.style.top = r.top + 'px';
+  proxy.dataset.company = payload.company;
+  proxy.dataset.role = '';
+  proxy.dataset.contactName = payload.name;
+  proxy.dataset.rationale = payload.rationale || '';
+  proxy.dataset.channel = payload.channel || 'linkedin_dm';
+  if (typeof window.openEmailPopover === 'function') {
+    window.openEmailPopover(proxy);
+  } else {
+    if (window.toast) window.toast('Email popover not loaded yet.', 'warning');
+  }
+}
+window.rdDraftDm = rdDraftDm;
+
 // ── Runway detail modal (2026-05-17) ─────────────────────────────
 // Opens from the sidebar runway-label click. Polls /api/runway-detail
 // every 30s while open. Sections:
@@ -18528,107 +18565,55 @@ function _renderSyncTs() {
 // Drag the right edge of any column header to resize it.
 // Double-click the handle to reset that column to CSS default.
 // Widths persist across page loads via localStorage.
-(function initColResize() {
+// 2026-05-18 — Legacy initColResize() column-resize implementation
+// retired. applyUniversalTableBaseline() now owns the .col-resize-handle
+// lifecycle (drag, dblclick auto-fit, right-click reset, localStorage
+// persistence). Only thing kept: a ONE-TIME migration that copies any
+// widths still saved under the old 'careerOps.colWidths.v1' key into
+// the new per-column UTB keys so users don't lose customizations on
+// upgrade. After this runs, the legacy key is deleted.
+(function migrateLegacyColWidthsToUTB() {
   if (window.innerWidth < 721) return;
-  var STORE = 'careerOps.colWidths.v1';
-
-  function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch(e) { return {}; } }
-  function save(id, i, w) { var d = load(); if (!d[id]) d[id] = {}; d[id][i] = w; try { localStorage.setItem(STORE, JSON.stringify(d)); } catch(e) {} }
-  function del(id, i)  { var d = load(); if (!d[id]) return; delete d[id][i]; try { localStorage.setItem(STORE, JSON.stringify(d)); } catch(e) {} }
-
-  function applyStored() {
-    var d = load();
-    Object.keys(d).forEach(function(tbodyId) {
+  var LEGACY_KEY = 'careerOps.colWidths.v1';
+  var MIGRATED_KEY = 'careerOps.colWidths.v1.migrated';
+  if (localStorage.getItem(MIGRATED_KEY) === '1') return;
+  var legacy;
+  try { legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || '{}'); } catch (_) { legacy = {}; }
+  if (!legacy || !Object.keys(legacy).length) {
+    try { localStorage.setItem(MIGRATED_KEY, '1'); } catch (_) {}
+    return;
+  }
+  function migrate() {
+    Object.keys(legacy).forEach(function (tbodyId) {
       var tbody = document.getElementById(tbodyId);
       var table = tbody && tbody.closest('table');
       if (!table) return;
+      var tableId = table.id || tbodyId;
       var ths = table.querySelectorAll('thead th');
-      Object.keys(d[tbodyId]).forEach(function(i) {
-        var th = ths[parseInt(i)];
-        if (th) th.style.width = d[tbodyId][i] + 'px';
+      Object.keys(legacy[tbodyId]).forEach(function (i) {
+        var th = ths[parseInt(i, 10)];
+        if (!th) return;
+        var colKey = th.dataset.colKey || ('col-' + i);
+        var newKey = 'careerops.colwidth.' + tableId + '.' + colKey;
+        try {
+          // Don't clobber a UTB-set width that already exists.
+          if (!localStorage.getItem(newKey)) {
+            localStorage.setItem(newKey, String(legacy[tbodyId][i]));
+          }
+          // Apply immediately so the page paints with the saved width.
+          th.style.width = legacy[tbodyId][i] + 'px';
+        } catch (_) {}
       });
     });
+    try {
+      localStorage.removeItem(LEGACY_KEY);
+      localStorage.setItem(MIGRATED_KEY, '1');
+    } catch (_) {}
   }
-
-  function addHandles() {
-    document.querySelectorAll('.panel .table-scroll table').forEach(function(table) {
-      var tbody = table.querySelector('tbody');
-      var tbodyId = tbody && tbody.id;
-      if (!tbodyId) return;
-      var ths = Array.prototype.slice.call(table.querySelectorAll('thead th'));
-      ths.forEach(function(th, i) {
-        if (th.classList.contains('bulk-th')) return;
-        // Skip if a handle already exists — the universal table baseline
-        // (applyUniversalTableBaseline) may have run first and injected one.
-        // Both paths are idempotent now; first to fire wins. The legacy
-        // path keeps writing to its own localStorage key, so existing user
-        // widths persist either way.
-        if (th.querySelector('.col-resize-handle')) return;
-        var handle = document.createElement('div');
-        handle.className = 'col-resize-handle';
-        handle.title = 'Drag to resize · double-click to reset';
-        handle.setAttribute('aria-hidden', 'true');
-
-        var startX, startW;
-        handle.addEventListener('mousedown', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          startX = e.clientX; startW = th.offsetWidth;
-          handle.classList.add('is-dragging');
-          document.body.style.cursor = 'col-resize';
-          document.body.style.userSelect = 'none';
-          function onMove(ev) {
-            var w = Math.max(36, startW + (ev.clientX - startX));
-            th.style.width = w + 'px';
-          }
-          function onUp() {
-            handle.classList.remove('is-dragging');
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            save(tbodyId, i, parseInt(th.style.width) || th.offsetWidth);
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-          }
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        });
-
-        handle.addEventListener('dblclick', function(e) {
-          e.stopPropagation();
-          // Auto-fit: expand column to fit widest content in this column
-          var probe = document.createElement('span');
-          probe.style.cssText = 'visibility:hidden;position:fixed;top:-9999px;left:-9999px;white-space:nowrap;padding:0;margin:0;border:0;';
-          document.body.appendChild(probe);
-          var maxW = 0;
-          // Measure header text
-          var thCStyle = window.getComputedStyle(th);
-          probe.style.font = thCStyle.font;
-          probe.textContent = th.textContent.replace(/\s+/g, ' ').trim();
-          maxW = Math.max(maxW, probe.offsetWidth);
-          // Measure every td in this column
-          Array.prototype.forEach.call(table.querySelectorAll('tbody tr'), function(row) {
-            var td = row.querySelectorAll('td')[i];
-            if (!td) return;
-            var tdCStyle = window.getComputedStyle(td);
-            probe.style.font = tdCStyle.font;
-            probe.textContent = td.textContent.replace(/\s+/g, ' ').trim();
-            maxW = Math.max(maxW, probe.offsetWidth);
-          });
-          document.body.removeChild(probe);
-          // Cell horizontal padding buffer
-          var w = Math.max(40, maxW + 24);
-          th.style.width = w + 'px';
-          save(tbodyId, i, w);
-        });
-
-        th.appendChild(handle);
-      });
-    });
-  }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { applyStored(); addHandles(); });
+    document.addEventListener('DOMContentLoaded', migrate);
   } else {
-    applyStored(); addHandles();
+    migrate();
   }
 })();
 
@@ -19241,6 +19226,24 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   .rd-tier-A { color: var(--green-fg, #2da44e); font-weight: 700; }
   .rd-tier-B { color: var(--blue-fg, #0969da); font-weight: 600; }
   .rd-tier-C { color: var(--text-3); }
+  /* Draft DM button on each Who-to-contact-next row (2026-05-18). */
+  .rd-draft-dm-btn {
+    background: var(--blue-bg, rgba(9,105,218,0.12));
+    color: var(--blue-fg, #0969da);
+    border: 1px solid var(--blue-border, rgba(9,105,218,0.3));
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .12s, transform .1s;
+  }
+  .rd-draft-dm-btn:hover {
+    background: var(--blue-border, rgba(9,105,218,0.3));
+    transform: translateY(-1px);
+  }
+  .rd-draft-dm-btn:active { transform: translateY(0); }
   .rd-direction-out { color: var(--text-3); }
   .rd-direction-in  { color: var(--green-fg, #2da44e); font-weight: 600; }
   .rd-trend-up   { color: var(--green-fg, #2da44e); font-weight: 600; }
@@ -21559,9 +21562,33 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       if (action === 'apply') {
         window.open(url, '_blank', 'noopener');
       } else if (action === 'defer') {
-        if (typeof window.showToast === 'function') {
-          window.showToast('Defer noted (no pipeline change \\u2014 item still in queue)');
+        // 2026-05-18 — Defer now POSTs to /api/pipeline/defer-url, which
+        // records a 14-day snooze in data/stale-defers.json. The stale-items
+        // endpoint filters out URLs whose defer_until is still in the
+        // future, so the row vanishes from the modal until the snooze
+        // expires. Idempotent: same URL updates the deferral.
+        var deferRes = await fetch('/api/pipeline/defer-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url, days: 14 })
+        });
+        if (!deferRes.ok) {
+          var dMsg = 'HTTP ' + deferRes.status;
+          try { var db = await deferRes.json(); if (db && db.error) dMsg = db.error; } catch (_) {}
+          throw new Error(dMsg);
         }
+        var dData = null;
+        try { dData = await deferRes.json(); } catch (_) {}
+        if (row) {
+          row.style.transition = 'opacity .2s, max-height .2s';
+          row.style.opacity = '0';
+          setTimeout(function () { row.remove(); _refreshStaleModalMeta(); }, 220);
+        }
+        if (typeof window.showToast === 'function') {
+          var untilStr = dData && dData.deferred_until ? dData.deferred_until : '14 days';
+          window.showToast('Snoozed until ' + untilStr + ' — will reappear if still stale.');
+        }
+        return;
       } else if (action === 'trash') {
         var res = await fetch('/api/pipeline/remove-url', {
           method: 'POST',

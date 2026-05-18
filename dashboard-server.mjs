@@ -36,6 +36,32 @@ import { renderInlineDiff, renderSideBySideDiff } from './lib/diff-renderer.mjs'
 // can render "→ [#1511] OpenAI Onboarding FDE (4.65)" inline. Cached for 30s
 // so 60s dashboard polls don't re-parse the 136-row tracker each time.
 let _appsCache = { ts: 0, byNum: new Map() };
+
+// 2026-05-18 — Structured parser for data/errors.log lines. Shape:
+//   [ISO_TS] SEVERITY/SOURCE [id=N] [exit=N]: <free-form message>
+// Falls through gracefully for ad-hoc errors that don't match.
+function parseErrorLine(raw) {
+  if (!raw) return { ts: '', severity: 'unknown', source: '', worker_id: null, exit_code: null, message: '', raw: '' };
+  const out = { ts: '', severity: 'error', source: '', worker_id: null, exit_code: null, message: '', raw: raw.slice(0, 600) };
+  const tsMatch = raw.match(/^\[([^\]]+)\]\s*/);
+  let rest = raw;
+  if (tsMatch) { out.ts = tsMatch[1]; rest = raw.slice(tsMatch[0].length); }
+  const srcMatch = rest.match(/^([A-Z]+(?:\s+[A-Z]+)?)\s+/);
+  if (srcMatch) {
+    out.source = srcMatch[1];
+    if (/FAIL|ERROR|FATAL/.test(out.source)) out.severity = 'error';
+    else if (/WARN/.test(out.source)) out.severity = 'warning';
+    else if (/INFO/.test(out.source)) out.severity = 'info';
+    rest = rest.slice(srcMatch[0].length);
+  }
+  const idMatch = rest.match(/^id=(\d+)\s+/);
+  if (idMatch) { out.worker_id = parseInt(idMatch[1], 10); rest = rest.slice(idMatch[0].length); }
+  const exitMatch = rest.match(/^exit=(\d+)\s*:?\s*/);
+  if (exitMatch) { out.exit_code = parseInt(exitMatch[1], 10); rest = rest.slice(exitMatch[0].length); }
+  out.message = rest.replace(/^:\s*/, '').slice(0, 400).trim();
+  return out;
+}
+
 function appsByNum() {
   if (Date.now() - _appsCache.ts < 30_000 && _appsCache.byNum.size) return _appsCache.byNum;
   const apps = parseApplicationsFile(join(ROOT, 'data/applications.md'));
@@ -3450,9 +3476,24 @@ const server = createServer((req, res) => {
     try {
       const daysRaw = parseInt(query.days, 10);
       const days = (!isNaN(daysRaw) && daysRaw >= 1 && daysRaw <= 3650) ? daysRaw : 30;
+      // 2026-05-18 — load active defers and filter them out. Defers older
+      // than their defer_until date are ignored (treat as expired).
+      const defersFp = join(ROOT, 'data/stale-defers.json');
+      let activeDefers = new Set();
+      if (existsSync(defersFp)) {
+        try {
+          const state = JSON.parse(readFileSync(defersFp, 'utf-8'));
+          const now = Date.now();
+          for (const [url, d] of Object.entries(state.defers || {})) {
+            if (!d?.defer_until) continue;
+            if (Date.parse(d.defer_until) > now) activeDefers.add(url);
+          }
+        } catch (_) { /* corrupt file → no filtering */ }
+      }
       const pending = detailPending();
       const items = (pending.items || [])
         .filter(it => it && it.daysInQueue != null && it.daysInQueue >= days)
+        .filter(it => !activeDefers.has(it.url || ''))
         .sort((a, b) => (b.daysInQueue || 0) - (a.daysInQueue || 0))
         .map(it => ({
           url:        it.url || '',
@@ -3464,7 +3505,13 @@ const server = createServer((req, res) => {
           scraped_at: it.dateAdded || null,
           already_discarded: !!it.alreadyDiscarded,
         }));
-      return json({ ok: true, days_threshold: days, count: items.length, items });
+      return json({
+        ok: true,
+        days_threshold: days,
+        count: items.length,
+        items,
+        deferred_count: activeDefers.size,
+      });
     } catch (err) {
       console.error('[stale-items] error:', err);
       return json({ ok: false, error: err.message }, 500);
@@ -3512,6 +3559,59 @@ const server = createServer((req, res) => {
         return json({ ok: false, error: 'Atomic write failed: ' + err.message }, 500);
       }
       return json({ ok: true, removed });
+    });
+    return;
+  }
+
+  // POST /api/pipeline/defer-url — 2026-05-18 "Defer" action.
+  // Records a deferral in data/stale-defers.json: { url, deferred_at,
+  // defer_until }. Default snooze = 14 days. The /api/pipeline/stale-items
+  // endpoint filters out items whose defer_until is still in the future.
+  // Body: { url, days? (default 14) }. Idempotent: same URL updates the
+  // deferral instead of duplicating.
+  if (url === '/api/pipeline/defer-url' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 4 * 1024) { req.destroy(); return; }
+      body += c;
+    });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch (_) { return json({ ok: false, error: 'Invalid JSON body' }, 400); }
+      const target = String(parsed.url || '').trim();
+      if (!target) return json({ ok: false, error: 'url is required' }, 400);
+      if (target.length > 2048) return json({ ok: false, error: 'URL too long' }, 400);
+      const daysRaw = parseInt(parsed.days, 10);
+      const days = (!isNaN(daysRaw) && daysRaw >= 1 && daysRaw <= 365) ? daysRaw : 14;
+      const fp = join(ROOT, 'data/stale-defers.json');
+      let state = { defers: {} };
+      try {
+        if (existsSync(fp)) state = JSON.parse(readFileSync(fp, 'utf-8'));
+        if (!state.defers || typeof state.defers !== 'object') state.defers = {};
+      } catch (_) { /* corrupt file → start fresh */ }
+      const now = new Date();
+      const until = new Date(now.getTime() + days * 86400000);
+      state.defers[target] = {
+        deferred_at: now.toISOString(),
+        defer_until: until.toISOString(),
+        days,
+      };
+      try {
+        if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+        const tmp = fp + '.tmp.' + process.pid + '.' + Date.now();
+        writeFileSync(tmp, JSON.stringify(state, null, 2));
+        renameSync(tmp, fp);
+      } catch (err) {
+        return json({ ok: false, error: 'Atomic write failed: ' + err.message }, 500);
+      }
+      return json({
+        ok: true,
+        deferred_until: until.toISOString().slice(0, 10),
+        days,
+      });
     });
     return;
   }
