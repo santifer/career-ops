@@ -20,7 +20,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { callCouncil } from '../lib/council.mjs';
+import { callCouncil, extractRichContent } from '../lib/council.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -101,13 +101,21 @@ for (const c of companies) {
       results.push({ ...c, error: out.error });
       continue;
     }
+    // Use extractRichContent (added 2026-05-18 meta-audit v2 P0 #1) to capture
+    // Gemini's grounding_urls — gemini-2.5-pro is dispatched grounded, so the
+    // URLs are load-bearing evidence for the equity claims being made.
+    const rich = extractRichContent(out);
     const fpath = join(OUT_DIR, `${slug(c.company)}.md`);
-    writeFileSync(fpath, out.content);
-    const tok = out.tokens || 0;
-    const cost = tok * 0.000005; // ballpark gemini-2.5-pro pricing
+    // Append grounding URLs to the output file if Gemini returned any.
+    const groundingFooter = rich.grounding_urls.length
+      ? `\n\n---\n\n## Grounding sources (Gemini google_search)\n\n${rich.grounding_urls.map((u, i) => `${i + 1}. ${u}`).join('\n')}\n`
+      : '';
+    writeFileSync(fpath, rich.content + groundingFooter);
+    const cost = rich.tokens * 0.000005; // ballpark gemini-2.5-pro pricing
     totalCost += cost;
-    console.log(`✓ ${tok} tok · ${out.ms}ms · ~$${cost.toFixed(4)}`);
-    results.push({ ...c, content: out.content, tokens: tok, ms: out.ms, fpath });
+    const groundingNote = rich.grounding_urls.length ? ` · ${rich.grounding_urls.length} URLs` : '';
+    console.log(`✓ ${rich.tokens} tok · ${rich.ms}ms · ~$${cost.toFixed(4)}${groundingNote}`);
+    results.push({ ...c, content: rich.content, tokens: rich.tokens, ms: rich.ms, grounding_urls: rich.grounding_urls, fpath });
   } catch (e) {
     console.log(`❌ ${e.message}`);
     results.push({ ...c, error: e.message });
