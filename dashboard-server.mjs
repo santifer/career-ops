@@ -3006,6 +3006,59 @@ const server = createServer((req, res) => {
       return json({ ok: false, error: e.message }, 500);
     }
   }
+  // ── POST /api/toxicity-override ─────────────────────────────────────────
+  // Inventory item #4 (2026-05-18): records Mitchell's tradeoff override when
+  // he wants to apply to a flagged company anyway. Append to
+  // data/toxicity-overrides.jsonl (gitignored). Consumed by computeToxicityComposite
+  // at next dashboard build; surfaces in the drill-in render.
+  //
+  // Hard rule: this endpoint NEVER auto-trashes or auto-applies — it only
+  // records the override decision. Mitchell still hits Apply via the normal flow.
+  if (url === '/api/toxicity-override' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const slug = String(parsed.slug || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      const reason = String(parsed.override_reason || '').trim();
+      if (!slug)   return json({ ok: false, error: 'slug required' }, 400);
+      if (!reason) return json({ ok: false, error: 'override_reason required' }, 400);
+      if (reason.length > 1000) return json({ ok: false, error: 'reason too long (1000 char max)' }, 400);
+      const entry = {
+        ts: new Date().toISOString(),
+        slug,
+        override_reason: reason,
+      };
+      try {
+        if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+        appendFileSync(join(ROOT, 'data/toxicity-overrides.jsonl'), JSON.stringify(entry) + '\n');
+      } catch (e) {
+        return json({ ok: false, error: 'failed to persist: ' + e.message }, 500);
+      }
+      return json({ ok: true, entry });
+    });
+    return;
+  }
+  // ── GET /api/toxicity-override/list?slug=X ──────────────────────────────
+  // Returns existing overrides for a given slug (useful for the heartbeat
+  // and any future per-company override list view).
+  if (url.startsWith('/api/toxicity-override/list') && req.method === 'GET') {
+    try {
+      const parsed = new URL('http://localhost' + url);
+      const slug = (parsed.searchParams.get('slug') || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      const fp = join(ROOT, 'data/toxicity-overrides.jsonl');
+      if (!existsSync(fp)) return json({ ok: true, entries: [] });
+      const lines = readFileSync(fp, 'utf-8').split('\n').filter(Boolean);
+      const entries = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+      const filtered = slug ? entries.filter(e => e.slug === slug) : entries;
+      return json({ ok: true, entries: filtered });
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
+  }
 
   // ── GET /api/liveness?url=... ──────────────────────────────────────────
   // Liveness Phase 2 (2026-05-18, inventory item from strategy doc).

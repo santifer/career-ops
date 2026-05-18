@@ -18,6 +18,11 @@ data/logs/
 data/pending-diffs/*.md
 !data/pending-diffs/.gitkeep
 data/research-state.json
+# Update Drawer (B5 MVP, 2026-05-18) — Mitchell's career updates feed.
+# Append-only JSONL is personal data; cursor tracks merge progress for
+# scripts/merge-career-updates.mjs idempotency. Never commit either.
+data/career-updates.jsonl
+data/career-updates-merged-cursor.txt
 # Hiring-manager intel (7-LLM council output, contains contact info + outreach hooks)
 data/hm-intel/*.json
 !data/hm-intel/_SCHEMA.md
@@ -126,6 +131,12 @@ data/outreach-drafts/
 
 # Discard reasons — feeds back into triage prompt; personal data
 data/discard-reasons.jsonl
+
+# Composite toxicity score cache + Mitchell's tradeoff overrides (inventory
+# item #4, 2026-05-18). Cache regenerates on every dashboard build; overrides
+# are personal decisions — never commit either.
+data/toxicity-composite.json
+data/toxicity-overrides.jsonl
 
 # Evaluation-completeness audit output (scripts/audit-all-evaluations.mjs);
 # lists personal applications + scores. Re-generated on demand.

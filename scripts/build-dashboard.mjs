@@ -13084,27 +13084,81 @@ _drillInRegister('company', function(id) {
       + '</div>'
       : '<div style="font-size:12px;color:var(--text-4);margin-top:4px">No evaluated roles yet</div>');
 
-  // ── Section 2: Toxicity score ────────────────────────────────────────────
-  // Reads window._waveCB.toxicity[slug] if baked at build time.
-  // Fallback: pending-research placeholder with refresh button.
+  // ── Section 2: Composite Toxicity Score ─────────────────────────────────
+  // Reads window._waveCB.toxicity[slug] (baked by computeToxicityComposite at
+  // build time). Schema: { slug, score (0-10), drivers: [{kind, weight,
+  // evidence, source}], confidence, overrides, sources_scanned, auto_trash:false }.
+  // Hard rule (inventory item #4, 2026-05-18): NEVER auto-trash on this score.
   var toxData = ((cb.toxicity || {})[slug]) || null;
   var toxHtml;
   if (toxData && typeof toxData.score === 'number') {
     var txScore = toxData.score;
-    var txColor = txScore <= 2 ? 'var(--green-fg,#16a34a)' : txScore <= 5 ? 'var(--amber-fg,#d97706)' : 'var(--red-fg,#dc2626)';
-    var txLabel = txScore <= 2 ? 'Healthy' : txScore <= 5 ? 'Caution' : 'Avoid';
-    var drivers = (toxData.drivers || []).slice(0,4);
-    toxHtml = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
-      + '<span style="font-size:24px;font-weight:700;color:' + txColor + '">' + txScore + '</span>'
-      + '<span style="font-size:11px;font-weight:600;color:' + txColor + '">' + txLabel + '</span>'
-      + '<span style="font-size:11px;color:var(--text-4)">/10 · 0=healthiest</span>'
+    var txColor = txScore <= 3 ? 'var(--green-fg,#16a34a)' : txScore <= 6 ? 'var(--amber-fg,#d97706)' : 'var(--red-fg,#dc2626)';
+    var txLabel = txScore <= 3 ? 'Healthy' : txScore <= 6 ? 'Caution' : 'Avoid';
+    var txConf = toxData.confidence || 'low';
+    var drivers = Array.isArray(toxData.drivers) ? toxData.drivers : [];
+    var overrides = Array.isArray(toxData.overrides) ? toxData.overrides : [];
+    var srcScanned = Array.isArray(toxData.sources_scanned) ? toxData.sources_scanned : [];
+    var stateMarker = toxData._state === 'checked-clean' ? '<span style="font-size:10px;color:var(--green-fg,#16a34a);margin-left:6px">checked &middot; no signals</span>' : '';
+
+    var headerRow = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">'
+      + '<span style="font-size:30px;font-weight:700;color:' + txColor + ';line-height:1">' + txScore + '</span>'
+      + '<span style="font-size:11px;color:var(--text-4)">/10</span>'
+      + '<span style="font-size:12px;font-weight:600;color:' + txColor + '">' + txLabel + '</span>'
+      + '<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--surface-2);color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em">' + _esc(txConf) + ' confidence</span>'
+      + stateMarker
       + '</div>'
-      + (drivers.length ? '<ul style="font-size:11px;color:var(--text-3);margin:0;padding:0 0 0 14px">'
-        + drivers.map(function(d){return '<li>' + _esc(d) + '</li>';}).join('')
-        + '</ul>' : '');
-    toxHtml = _dcard('Toxicity Score', toxHtml);
+      + '<div style="font-size:10px;color:var(--text-4);margin-bottom:8px">0=healthiest &middot; ' + drivers.length + ' driver' + (drivers.length===1?'':'s') + ' &middot; scanned: ' + (srcScanned.length ? srcScanned.map(_esc).join(', ') : 'none') + '</div>';
+
+    var driverCardsHtml = '';
+    if (drivers.length) {
+      driverCardsHtml = drivers.map(function(d) {
+        var kindLabel = String(d.kind || '').replace(/_/g, ' ');
+        return '<div class="tox-driver-card" style="padding:8px 10px;margin:4px 0;background:var(--surface-2);border-left:3px solid ' + txColor + ';border-radius:4px">'
+          + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px">'
+          +   '<span style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:capitalize">' + _esc(kindLabel) + '</span>'
+          +   '<span style="font-size:10px;color:var(--text-4)">+' + (d.weight || 0) + '</span>'
+          + '</div>'
+          + '<div style="font-size:11px;color:var(--text-3);margin-top:3px;line-height:1.4">' + _esc(d.evidence || '') + '</div>'
+          + '<div style="font-size:10px;color:var(--text-4);margin-top:4px;font-family:monospace">source: ' + _esc(d.source || 'unknown') + '</div>'
+          + '</div>';
+      }).join('');
+    } else {
+      driverCardsHtml = '<div style="font-size:11px;color:var(--text-4);padding:6px 0">No negative-signal drivers fired. Sources scanned: ' + (srcScanned.length ? srcScanned.map(_esc).join(', ') : 'none') + '.</div>';
+    }
+
+    var overridesHtml = '';
+    if (overrides.length) {
+      overridesHtml = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">'
+        + '<div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:4px">Existing tradeoff overrides</div>'
+        + overrides.map(function(o) {
+          return '<div style="font-size:11px;color:var(--text-3);padding:3px 0">'
+            + '<span style="color:var(--text-4);font-size:10px">' + _esc((o.ts||'').slice(0,10)) + '</span> &middot; '
+            + _esc(o.override_reason || '')
+            + '</div>';
+        }).join('')
+        + '</div>';
+    }
+
+    var overrideCtaHtml = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+      + '<button type="button" class="tox-override-btn" data-slug="' + _esc(slug) + '"'
+      +   ' style="padding:5px 10px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer">'
+      +   'Apply anyway with team-level override'
+      + '</button>'
+      + '<span style="font-size:10px;color:var(--text-4)">Records the tradeoff so future evals know you accepted this risk.</span>'
+      + '</div>'
+      + '<div class="tox-override-form" data-slug="' + _esc(slug) + '" style="display:none;margin-top:8px;padding:8px;background:var(--surface-2);border-radius:4px">'
+      +   '<textarea class="tox-override-reason" placeholder="Why apply anyway? (e.g., team is shielded, comp justifies risk, role is on critical archetype path)" style="width:100%;min-height:60px;padding:6px;font-size:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:3px;box-sizing:border-box"></textarea>'
+      +   '<div style="margin-top:6px;display:flex;gap:6px">'
+      +     '<button type="button" class="tox-override-submit" data-slug="' + _esc(slug) + '" style="padding:5px 10px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:var(--green-fg,#16a34a);color:#fff;cursor:pointer">Record override</button>'
+      +     '<button type="button" class="tox-override-cancel" data-slug="' + _esc(slug) + '" style="padding:5px 10px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer">Cancel</button>'
+      +   '</div>'
+      +   '<div class="tox-override-status" style="font-size:10px;color:var(--text-4);margin-top:4px"></div>'
+      + '</div>';
+
+    toxHtml = _dcard('Composite Toxicity Score', headerRow + driverCardsHtml + overridesHtml + overrideCtaHtml);
   } else {
-    toxHtml = _pendingCard('Toxicity Score', 'toxicity');
+    toxHtml = _pendingCard('Composite Toxicity Score', 'toxicity');
   }
 
   // ── Section 3: Comp range ────────────────────────────────────────────────
@@ -13267,6 +13321,100 @@ document.addEventListener('click', function(e) {
   var slug = btn.dataset.slug || '';
   var section = btn.dataset.refreshSection || btn.dataset.refresh_section || 'all';
   if (slug) window._cpQueueRefresh(slug, section, btn);
+});
+
+// ── Composite Toxicity Score — override flow ───────────────────────────────
+// Inventory item #4 (2026-05-18): Mitchell can record a team-level override
+// when he wants to apply to a flagged company anyway. The override is POSTed
+// to /api/toxicity-override which appends to data/toxicity-overrides.jsonl.
+// On the NEXT dashboard build, the override appears in the drill-in render.
+document.addEventListener('click', function(e) {
+  // Open the override form
+  var openBtn = e.target.closest('.tox-override-btn');
+  if (openBtn) {
+    var slug = openBtn.dataset.slug || '';
+    if (!slug) return;
+    // Find the matching form (same drill-in container)
+    var form = document.querySelector('.tox-override-form[data-slug="' + slug + '"]');
+    if (form) {
+      form.style.display = '';
+      var ta = form.querySelector('.tox-override-reason');
+      if (ta) ta.focus();
+    }
+    return;
+  }
+  // Cancel
+  var cancelBtn = e.target.closest('.tox-override-cancel');
+  if (cancelBtn) {
+    var cslug = cancelBtn.dataset.slug || '';
+    var cform = document.querySelector('.tox-override-form[data-slug="' + cslug + '"]');
+    if (cform) {
+      cform.style.display = 'none';
+      var cta = cform.querySelector('.tox-override-reason');
+      if (cta) cta.value = '';
+      var cstatus = cform.querySelector('.tox-override-status');
+      if (cstatus) cstatus.textContent = '';
+    }
+    return;
+  }
+  // Submit
+  var submitBtn = e.target.closest('.tox-override-submit');
+  if (submitBtn) {
+    var sslug = submitBtn.dataset.slug || '';
+    if (!sslug) return;
+    var sform = document.querySelector('.tox-override-form[data-slug="' + sslug + '"]');
+    if (!sform) return;
+    var sta = sform.querySelector('.tox-override-reason');
+    var sstatus = sform.querySelector('.tox-override-status');
+    var reason = (sta && sta.value || '').trim();
+    if (!reason) {
+      if (sstatus) {
+        sstatus.textContent = 'Add a reason before saving.';
+        sstatus.style.color = 'var(--red-fg,#dc2626)';
+      }
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving…';
+    fetch('/api/toxicity-override', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: sslug, override_reason: reason }),
+    }).then(function(r) { return r.json().catch(function(){ return { ok: r.ok }; }); })
+      .then(function(d) {
+        if (d && d.ok) {
+          if (sstatus) {
+            sstatus.textContent = 'Override saved. Reflected on next dashboard build.';
+            sstatus.style.color = 'var(--green-fg,#16a34a)';
+          }
+          if (sta) sta.value = '';
+          submitBtn.textContent = 'Saved ✓';
+          // Auto-collapse after 2.5s
+          setTimeout(function() {
+            sform.style.display = 'none';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Record override';
+            if (sstatus) sstatus.textContent = '';
+          }, 2500);
+        } else {
+          if (sstatus) {
+            sstatus.textContent = 'Save failed: ' + (d && d.error || 'unknown error');
+            sstatus.style.color = 'var(--red-fg,#dc2626)';
+          }
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Record override';
+        }
+      })
+      .catch(function(err) {
+        if (sstatus) {
+          sstatus.textContent = 'Network error: ' + err.message;
+          sstatus.style.color = 'var(--red-fg,#dc2626)';
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Record override';
+      });
+    return;
+  }
 });
 _drillInRegister('status', function(id) {
   var status = id || '';
@@ -13656,6 +13804,138 @@ _drillInRegister('network-leverage', function() {
     html: '<p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 6px">340 press contacts<\/p>'
       + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">Warm-intro paths to companies in your apply-now queue are computed by <code>lib\/network-graph.mjs<\/code> on each dashboard build. The count in the tile updates live when network-graph.json is populated.<\/p>'
       + '<p style="font-size:11px;color:var(--text-4)">Run <code>node scripts\/build-network-graph.mjs<\/code> to refresh warm-intro paths. Result populates <code>data\/network-graph.json<\/code>.<\/p>',
+  };
+});
+
+// Wealth-Ranking Pop-Out (Inventory Doc B #1, 2026-05-18). Surfaces a
+// composite ranked view sorted by wealth-generation potential. Data baked
+// at build time into window._waveCB.wealthRanking by lib/wealth-ranking.mjs.
+//
+// Id format: '' (default sort = composite) or 'sort:<driver_key>' where
+// driver_key in equity_stage | ai_native | salary_band | ipo_trajectory |
+// skill_portability | composite.
+//
+// Click a company row -> opens the existing company drill-in (kind 'company').
+_drillInRegister('wealth-ranking', function(id) {
+  var cb = window._waveCB || {};
+  var rows = Array.isArray(cb.wealthRanking) ? cb.wealthRanking.slice() : [];
+  function _esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  var sortKey = 'composite';
+  var m = String(id || '').match(/^sort:([a-z_]+)$/);
+  if (m) sortKey = m[1];
+  else if (window._wealthRankingSort) sortKey = window._wealthRankingSort;
+
+  function _sortBy(key) {
+    if (key === 'composite') return rows.slice().sort(function(a, b) { return (b.score||0) - (a.score||0); });
+    return rows.slice().sort(function(a, b) {
+      var aDr = (a.drivers||[]).find(function(d){return d.key===key;}) || {points:0};
+      var bDr = (b.drivers||[]).find(function(d){return d.key===key;}) || {points:0};
+      if (bDr.points !== aDr.points) return bDr.points - aDr.points;
+      return (b.score||0) - (a.score||0);
+    });
+  }
+
+  var sorted = _sortBy(sortKey);
+  var shown = sorted.length <= 10 ? sorted : sorted.slice(0, 10);
+  var totalCount = sorted.length;
+
+  if (!shown.length) {
+    return {
+      title: 'Wealth-Ranking',
+      html: '<p style="font-size:13px;color:var(--text-3);margin:0">No wealth-ranking data yet. Run <code>node lib\/wealth-ranking.mjs --top=10<\/code> to verify, then rebuild the dashboard.<\/p>',
+    };
+  }
+
+  var sortOptions = [
+    { key: 'composite',         label: 'Composite (all drivers)' },
+    { key: 'equity_stage',      label: 'Equity stage only' },
+    { key: 'ai_native',         label: 'AI-native tier only' },
+    { key: 'salary_band',       label: 'Salary ceiling only' },
+    { key: 'ipo_trajectory',    label: 'IPO trajectory only' },
+    { key: 'skill_portability', label: 'Skill portability only' },
+  ];
+
+  var sortHtml = '<div style="display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap">'
+    + '<span style="font-size:11px;color:var(--text-3);letter-spacing:0.04em;text-transform:uppercase;font-weight:600">Sort by<\/span>'
+    + '<select id="wealth-rank-sort" '
+    + 'onchange="window._wealthRankingSort=this.value;window.drillIn(\'wealth-ranking\',\'sort:\'+this.value,event)" '
+    + 'style="font-size:12px;padding:4px 8px;border-radius:6px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);cursor:pointer">'
+    + sortOptions.map(function(o) {
+        var sel = (o.key === sortKey) ? ' selected' : '';
+        return '<option value="' + _esc(o.key) + '"' + sel + '>' + _esc(o.label) + '<\/option>';
+      }).join('')
+    + '<\/select>'
+    + '<\/div>';
+
+  var DRIVER_LABEL = {
+    equity_stage:      'equity',
+    ai_native:         'AI-native',
+    salary_band:       'salary',
+    ipo_trajectory:    'IPO',
+    skill_portability: 'portability',
+  };
+
+  var rowHtml = shown.map(function(r, i) {
+    var rank = i + 1;
+    var drivers = (r.drivers || []).slice().sort(function(a, b) { return (b.points||0) - (a.points||0); });
+    var topDrivers = drivers.slice(0, 2);
+    var chipHtml = topDrivers.map(function(d) {
+      var pct = d.max > 0 ? Math.round((d.points / d.max) * 100) : 0;
+      var color = pct >= 80 ? 'var(--green-fg)' : pct >= 50 ? 'var(--amber-fg)' : 'var(--text-3)';
+      var bg = pct >= 80 ? 'var(--green-bg)' : pct >= 50 ? 'color-mix(in srgb, var(--amber-fg) 14%, var(--surface))' : 'var(--surface-2)';
+      return '<span title="' + _esc(d.why || '') + '" style="display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;margin-right:4px;border-radius:999px;background:' + bg + ';color:' + color + ';border:1px solid var(--border)">'
+        + _esc(DRIVER_LABEL[d.key] || d.key) + ' ' + d.points + '\/' + d.max
+        + '<\/span>';
+    }).join('');
+    var partialBadge = r.hasPartialData
+      ? '<span title="One or more drivers had no data" style="display:inline-block;font-size:10px;padding:1px 6px;margin-left:6px;border-radius:999px;background:var(--surface-2);color:var(--text-4);border:1px solid var(--border)">partial data<\/span>'
+      : '';
+    var scoreBarPct = Math.max(0, Math.min(100, r.score || 0));
+    return '<tr class="wealth-rank-row" data-slug="' + _esc(r.slug) + '" '
+      + 'onclick="window.drillIn(\'company\',\'' + _esc(r.slug) + '\',event)" '
+      + 'role="button" tabindex="0" '
+      + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();window.drillIn(\'company\',\'' + _esc(r.slug) + '\',event)}" '
+      + 'title="Click for the full company drill-in" '
+      + 'style="cursor:pointer">'
+      + '<td style="font-size:13px;color:var(--text-3);width:36px;padding:8px 6px;text-align:right;font-variant-numeric:tabular-nums">#' + rank + '<\/td>'
+      + '<td style="font-size:13px;font-weight:600;color:var(--text);padding:8px 6px"><span>' + _esc(r.displayName || r.slug) + '<\/span>' + partialBadge + '<\/td>'
+      + '<td style="padding:8px 6px;min-width:140px">'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+          + '<div style="flex:1;height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden">'
+            + '<div style="height:100%;width:' + scoreBarPct + '%;background:var(--green-fg);border-radius:999px"><\/div>'
+          + '<\/div>'
+          + '<span style="font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;min-width:34px;text-align:right">' + (r.score || 0) + '<\/span>'
+        + '<\/div>'
+      + '<\/td>'
+      + '<td style="padding:8px 6px">' + chipHtml + '<\/td>'
+      + '<\/tr>';
+  }).join('');
+
+  var sortLabel = (sortOptions.find(function(o){return o.key===sortKey;}) || {}).label || 'Composite';
+  var headerNote = '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">Showing top ' + shown.length + ' of ' + totalCount + ' companies, sorted by <strong>' + _esc(sortLabel) + '<\/strong>. Click a row to open the full company drill-in.<\/p>';
+
+  var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    + '<thead><tr style="text-align:left;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em">'
+      + '<th style="padding:8px 6px;width:36px">#<\/th>'
+      + '<th style="padding:8px 6px">Company<\/th>'
+      + '<th style="padding:8px 6px;min-width:140px">Score (0&ndash;100)<\/th>'
+      + '<th style="padding:8px 6px">Top drivers<\/th>'
+    + '<\/tr><\/thead>'
+    + '<tbody>' + rowHtml + '<\/tbody>'
+    + '<\/table>';
+
+  var footerHtml = '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text-4);line-height:1.5">'
+    + '<strong>Re-rank uses:<\/strong> equity stage (up to 30 pts), AI-native tier (up to 25), salary ceiling (up to 25), IPO signals (up to 10), skill-portability (up to 10). '
+    + 'Built by <code>lib\/wealth-ranking.mjs<\/code> from <code>data\/overpay-signals\/CURRENT.md<\/code>, <code>data\/company-intel-cache\/<\/code>, <code>data\/applications.md<\/code>, and <code>data\/skill-portability.json<\/code>.'
+    + '<\/div>';
+
+  return {
+    title: 'Companies ranked by wealth potential',
+    html: sortHtml + headerNote + tableHtml + footerHtml,
   };
 });
 
