@@ -4,6 +4,21 @@ Single landing surface for this session's work. Open this when you need to find 
 
 ---
 
+## ⏰ Morning of 2026-05-18 — open this first
+
+While you slept, an autonomous build session ran ~5 hours. Read [data/morning-handoff-2026-05-18.md](morning-handoff-2026-05-18.md) for the full report. Headlines:
+
+- **13 tailored CV PDFs ready** at `apply-pack/<slug>/tailored-cv.pdf` for every live row in the apply-now queue (Anthropic Editorial Lead, ElevenLabs Comms, Mistral DevAdvocate, Sierra DRE-SF, plus 9 others).
+- **Per-pack quality reports** at `apply-pack/<slug>/PREFLIGHT.md` — single PASS/CAUTION/FAIL verdict from the new `scripts/preflight-pack.mjs` aggregator (PDF + humanize + JD-keyword overlap + claim-consistency). Run before submitting.
+- **All 13 URLs verified live as of 05:25 PDT.** Four others expired (Cursor #840, OpenAI ADE #1509, OpenAI Onboarding #1511, Anthropic Strategic Ops #2050) — all marked Discarded in `data/applications.md`.
+- **Master CV refreshed** at `output/cv-mitchell-williams-master-2026-05-18.pdf` (2 pages, all ATS keywords).
+- **Heartbeat email** now surfaces today's master CV path inline (Phase 2 Item L).
+- **Cost tonight:** $0.92 of the $50 pre-approved cap. ~$49 remaining.
+
+Quick apply order if you're picking the highest-leverage targets tonight: **#48 Anthropic Editorial Lead → #851 Mistral Sr/Staff AI DevAdvocate → #50 ElevenLabs Comms Mgr**. Anthropic 1-active-app rule means picking #48 blocks #1 and #44 (defer those).
+
+---
+
 ## 🎯 FIVE IMMEDIATE PRIORITIES
 
 ### 1. Python Sprint — Day 1
