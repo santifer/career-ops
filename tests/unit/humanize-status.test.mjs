@@ -5,6 +5,11 @@ import {
   humanizeScoreDelta,
   humanizeGateResult,
   humanizeDecision,
+  humanizeLabel,
+  humanizeButton,
+  humanizeMessage,
+  expandJargon,
+  gradeLevel,
 } from '../../lib/humanize-status.mjs';
 
 // ── humanizeScoreDelta ────────────────────────────────────────────────────────
@@ -115,4 +120,84 @@ test('humanizeTrackerNote picks up simple re-eval note format', () => {
   const out = humanizeTrackerNote(raw);
   assert.equal(out.date, '2026-05-17');
   assert.ok(out.lines.some(l => /4\.1.*4\.23|improved/i.test(l)));
+});
+
+// ── humanizeLabel ─────────────────────────────────────────────────────────────
+
+test('humanizeLabel rewrites WHAT FITS to plain English', () => {
+  assert.equal(humanizeLabel('WHAT FITS'), 'What matches your background');
+});
+
+test("humanizeLabel rewrites WHAT'S MISSING to plain English", () => {
+  assert.equal(humanizeLabel("WHAT'S MISSING"), 'Gaps to address');
+});
+
+test('humanizeLabel rewrites HM-noticing chance', () => {
+  assert.equal(humanizeLabel('HM-noticing chance'), 'Chance a hiring manager will see you');
+});
+
+test('humanizeLabel returns unknown labels unchanged', () => {
+  assert.equal(humanizeLabel('My custom label'), 'My custom label');
+});
+
+// ── humanizeButton ────────────────────────────────────────────────────────────
+
+test('humanizeButton rewrites Apply to Apply now', () => {
+  assert.equal(humanizeButton('Apply'), 'Apply now');
+});
+
+test('humanizeButton rewrites Skip to Skip this one', () => {
+  assert.equal(humanizeButton('Skip'), 'Skip this one');
+});
+
+test('humanizeButton rewrites Create materials to Generate apply pack', () => {
+  assert.equal(humanizeButton('Create materials'), 'Generate apply pack');
+});
+
+test('humanizeButton rewrites Mark Applied to I applied', () => {
+  assert.equal(humanizeButton('Mark Applied'), 'I applied');
+});
+
+// ── humanizeMessage ───────────────────────────────────────────────────────────
+
+test('humanizeMessage rewrites No recommendation captured', () => {
+  const out = humanizeMessage('No recommendation captured.');
+  assert.match(out, /No strategy yet/i);
+});
+
+test('humanizeMessage rewrites scaffold only', () => {
+  assert.match(humanizeMessage('scaffold only'), /Placeholder/i);
+});
+
+// ── expandJargon ──────────────────────────────────────────────────────────────
+
+test('expandJargon returns plain displayed text for A2 PgM', () => {
+  const { displayed, tooltip } = expandJargon('A2 PgM');
+  assert.equal(displayed, 'AI Program Manager');
+  assert.ok(tooltip.length > 0);
+});
+
+test('expandJargon returns the original term as displayed for unknown terms', () => {
+  const { displayed } = expandJargon('some-unknown-key');
+  assert.equal(displayed, 'some-unknown-key');
+});
+
+// ── gradeLevel ────────────────────────────────────────────────────────────────
+
+test('gradeLevel returns a number between 0 and 20', () => {
+  const g = gradeLevel('The quick brown fox jumps over the lazy dog. Simple sentence here.');
+  assert.ok(typeof g === 'number');
+  assert.ok(g >= 0 && g <= 20);
+});
+
+test('gradeLevel returns 0 for empty string', () => {
+  assert.equal(gradeLevel(''), 0);
+});
+
+test('gradeLevel scores complex jargon higher than plain text', () => {
+  const jargon = 'Leverage synergistic cross-functional paradigmatic orchestration methodologies utilizing transformational competencies.';
+  const plain  = 'Do your best work. Ask questions. Get things done.';
+  const jargonGrade = gradeLevel(jargon);
+  const plainGrade  = gradeLevel(plain);
+  assert.ok(jargonGrade > plainGrade, `Expected jargon (${jargonGrade}) > plain (${plainGrade})`);
 });
