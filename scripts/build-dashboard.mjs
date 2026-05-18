@@ -3348,6 +3348,154 @@ async function build() {
     }
   } catch (_) { sideAllocations = []; }
 
+  // ── Contacts directory (2026-05-18 sidebar add) ──────────────────
+  // Build a unified contacts feed for the sidebar Contacts modal.
+  // Sources, by priority:
+  //   1. data/outreach-state.json — active outreach contacts (email guess + X intel + LinkedIn)
+  //   2. data/linkedin/Connections.csv — full 1st-degree network (~2.9k rows)
+  //   3. data/linkedin/overrides.json — name → notes / now_at corrections
+  // Privacy: this dashboard is generated locally for Mitchell only;
+  // data/ is gitignored. Emails are surfaced here ON PURPOSE so Mitchell
+  // can click into Gmail compose for outreach. Do NOT bake these into
+  // anything that would ship to a public surface.
+  const contactsDirectory = (() => {
+    const CSV_PATH      = join(ROOT, 'data/linkedin/Connections.csv');
+    const OUTREACH_PATH = join(ROOT, 'data/outreach-state.json');
+    const OVERRIDES_PATH = join(ROOT, 'data/linkedin/overrides.json');
+    const map = new Map(); // key: normalized name OR linkedin url
+
+    function _norm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+    // 1. Active outreach contacts (richest signal — has email guess + X handle).
+    try {
+      if (existsSync(OUTREACH_PATH)) {
+        const raw = JSON.parse(readFileSync(OUTREACH_PATH, 'utf-8') || '{}');
+        const contacts = Array.isArray(raw.contacts) ? raw.contacts : [];
+        for (const c of contacts) {
+          const name = String(c.name || '').trim();
+          if (!name) continue;
+          const key = _norm(name);
+          const linkedinUrl = c.contact_id && /^linkedin\.com/.test(c.contact_id)
+            ? 'https://www.' + c.contact_id
+            : (c.linkedin_url || '');
+          const intel = c.intel || {};
+          const emailGuess = intel.email_guess && intel.email_guess.address ? intel.email_guess.address : '';
+          const xHandle = intel.x_handle ? String(intel.x_handle).replace(/^@/, '') : '';
+          map.set(key, {
+            name,
+            first_name: '', last_name: '',
+            linkedin_url: linkedinUrl,
+            email_professional: emailGuess,
+            email_personal: '',
+            x_handle: xHandle,
+            company: c.company || '',
+            position: c.title_at_send || '',
+            tier: c.tier || '',
+            outreach_status: c.status || '',
+            in_outreach: true,
+            last_touch_ts: (c.touches && c.touches.length) ? c.touches[c.touches.length - 1].ts : null,
+          });
+        }
+      }
+    } catch (_) { /* ignore */ }
+
+    // 2. LinkedIn Connections.csv — full 1st-degree network. Merges into
+    // outreach entries by normalized name; otherwise appends.
+    try {
+      if (existsSync(CSV_PATH)) {
+        const raw = readFileSync(CSV_PATH, 'utf-8');
+        const lines = raw.split(/\r?\n/);
+        let headerIdx = -1;
+        for (let i = 0; i < Math.min(lines.length, 10); i++) {
+          if (/^\s*First Name\s*,\s*Last Name\s*,/i.test(lines[i])) { headerIdx = i; break; }
+        }
+        if (headerIdx < 0) return Array.from(map.values());
+        function parseCsvLine(line) {
+          const fields = []; let cur = ''; let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuotes) {
+              if (ch === '"') {
+                if (line[i + 1] === '"') { cur += '"'; i++; }
+                else { inQuotes = false; }
+              } else { cur += ch; }
+            } else {
+              if (ch === ',') { fields.push(cur); cur = ''; }
+              else if (ch === '"' && cur === '') { inQuotes = true; }
+              else { cur += ch; }
+            }
+          }
+          fields.push(cur);
+          return fields;
+        }
+        const headerFields = parseCsvLine(lines[headerIdx]).map(c => c.trim().toLowerCase());
+        const idx = {
+          first:    headerFields.indexOf('first name'),
+          last:     headerFields.indexOf('last name'),
+          url:      headerFields.indexOf('url'),
+          email:    headerFields.indexOf('email address'),
+          company:  headerFields.indexOf('company'),
+          position: headerFields.indexOf('position'),
+          when:     headerFields.indexOf('connected on'),
+        };
+        for (let i = headerIdx + 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (!line.trim()) continue;
+          const f = parseCsvLine(line);
+          const first = (f[idx.first] || '').trim();
+          const last  = (f[idx.last]  || '').trim();
+          if (!first && !last) continue;
+          const name = (first + ' ' + last).trim();
+          const key = _norm(name);
+          const email = (f[idx.email] || '').trim();
+          const lUrl  = (f[idx.url]   || '').trim();
+          if (map.has(key)) {
+            const existing = map.get(key);
+            if (!existing.first_name) existing.first_name = first;
+            if (!existing.last_name)  existing.last_name  = last;
+            if (!existing.linkedin_url && lUrl) existing.linkedin_url = lUrl;
+            if (!existing.email_professional && email) existing.email_professional = email;
+            if (!existing.company)  existing.company  = (f[idx.company]  || '').trim();
+            if (!existing.position) existing.position = (f[idx.position] || '').trim();
+            if (!existing.connected_on) existing.connected_on = (f[idx.when] || '').trim();
+          } else {
+            map.set(key, {
+              name,
+              first_name: first,
+              last_name: last,
+              linkedin_url: lUrl,
+              email_professional: email,
+              email_personal: '',
+              x_handle: '',
+              company: (f[idx.company] || '').trim(),
+              position: (f[idx.position] || '').trim(),
+              connected_on: (f[idx.when] || '').trim(),
+              tier: '',
+              outreach_status: '',
+              in_outreach: false,
+              last_touch_ts: null,
+            });
+          }
+        }
+      }
+    } catch (_) { /* ignore */ }
+
+    return Array.from(map.values())
+      .sort((a, b) => {
+        // outreach contacts first, then by company, then by name
+        if (a.in_outreach !== b.in_outreach) return a.in_outreach ? -1 : 1;
+        const c = (a.company || '').localeCompare(b.company || '');
+        if (c) return c;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+  })();
+  const contactsDirectoryStats = {
+    total: contactsDirectory.length,
+    with_email: contactsDirectory.filter(c => c.email_professional).length,
+    with_x:     contactsDirectory.filter(c => c.x_handle).length,
+    in_outreach: contactsDirectory.filter(c => c.in_outreach).length,
+  };
+
   const reportsToday = countTodaysReports(today);
   // Build a company-slug → top-scored evaluated row map for ticker role enrichment.
   // Used by loadLiveScanEvents so the ticker can surface a specific role title.
@@ -5119,18 +5267,45 @@ async function build() {
      to the first 40 vertical pixels, alongside a batch-progress
      indicator and a system-health pill. The page should feel "alive"
      even when nothing is happening — pulsing dot + ticking elapsed. */
+  /* mc-strip redesigned 2026-05-18: structured 2-row layout. Top row =
+     system telemetry (scanner ticker, batch state, health). Bottom row =
+     KPI chips grouped semantically: tracked totals | apply-now filters.
+     Larger font + higher contrast addresses accessibility audit. */
   .mc-strip {
     position: sticky; top: 0; z-index: 12;
-    display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center; gap: 14px;
-    padding: 6px 14px; min-height: 40px;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 18px; min-height: 40px;
     background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
-    font-size: 11.5px; color: var(--text-3);
+    font-size: 12.5px; color: var(--text-2);
     backdrop-filter: blur(8px);
-    margin: 0 -28px 12px;  /* break out of body's 28px padding for full-bleed feel */
+    margin: 0 -28px 14px;  /* break out of body's 28px padding for full-bleed feel */
+  }
+  .mc-strip-row {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .mc-strip-row-top { justify-content: space-between; }
+  .mc-strip-row-bottom {
+    justify-content: flex-start; gap: 6px;
+    padding-top: 7px; border-top: 1px dashed color-mix(in srgb, var(--border) 60%, transparent);
+  }
+  .mc-strip-group {
+    display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .mc-strip-group-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--text-4); padding-right: 4px;
+  }
+  .mc-strip-group-sep {
+    display: inline-block; width: 1px; height: 14px;
+    background: color-mix(in srgb, var(--border) 80%, transparent);
+    margin: 0 4px;
+  }
+  .mc-strip-meta {
+    margin-left: auto; font-size: 11px; color: var(--text-3); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
   body.dark .mc-strip {
     background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(255,255,255,.01) 100%);
@@ -5139,14 +5314,19 @@ async function build() {
      since the strip itself provides the visual containment. */
   .mc-strip .live-ticker {
     background: transparent; border: none; padding: 0; max-width: none; gap: 8px;
+    font-size: 12.5px; color: var(--text-2);
   }
-  .mc-strip .live-ticker:hover { background: transparent; border: none; color: var(--text-2); }
+  .mc-strip .live-ticker:hover { background: transparent; border: none; color: var(--fg); }
   .mc-strip .live-text { font-family: inherit; }
 
   .mc-batch {
     display: inline-flex; align-items: center; gap: 8px;
-    color: var(--text-3); white-space: nowrap;
+    color: var(--text-2); white-space: nowrap;
+    font-size: 12.5px; cursor: pointer;
+    padding: 2px 8px; border-radius: var(--radius-sm);
+    transition: background .12s;
   }
+  .mc-batch:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--fg); }
   .mc-batch-dot {
     width: 7px; height: 7px; border-radius: 50%;
     background: var(--text-4); flex-shrink: 0;
@@ -5165,13 +5345,15 @@ async function build() {
 
   .mc-health {
     display: inline-flex; align-items: center; gap: 7px;
-    padding: 3px 10px;
+    padding: 3px 11px;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface);
-    font-size: 11px; color: var(--text-3);
+    font-size: 12px; color: var(--text-2); font-weight: 500;
     white-space: nowrap;
+    cursor: pointer; transition: border-color .12s, color .12s;
   }
+  .mc-health:hover { border-color: var(--border-strong); color: var(--fg); }
   .mc-health-dot {
     width: 7px; height: 7px; border-radius: 50%;
     background: var(--green-fg, #16a34a); flex-shrink: 0;
@@ -5225,23 +5407,41 @@ async function build() {
     .mc-strip { margin-left: -12px; margin-right: -12px; }
   }
 
-  /* Fix 2: system telemetry summary chips in mc-strip */
+  /* Fix 2 (revised 2026-05-18): system telemetry chips in mc-strip.
+     Higher contrast, larger font, value-bold for at-a-glance scan.
+     Strong variant (≥4.0, ≥$250K) gets a colored accent so it reads
+     as an actionable filter, not a passive count. */
   .mc-sys-chip {
     flex: 0 0 auto;
-    background: transparent;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 999px;
-    padding: 2px 9px;
-    font-size: 11px;
+    padding: 4px 12px;
+    font-size: 12.5px;
     font-weight: 500;
-    color: var(--text-3);
+    color: var(--text-2);
     cursor: pointer;
     white-space: nowrap;
-    transition: border-color .12s, color .12s;
+    transition: border-color .12s, color .12s, background .12s;
     line-height: 1.4;
+    font-variant-numeric: tabular-nums;
   }
-  .mc-sys-chip:hover { border-color: var(--border-strong); color: var(--text-2); }
-  @media (max-width: 720px) { .mc-sys-chip { display: none; } }
+  .mc-sys-chip:hover {
+    border-color: var(--border-strong); color: var(--fg);
+    background: color-mix(in srgb, var(--surface-2) 60%, var(--surface));
+  }
+  .mc-sys-chip-strong {
+    border-color: color-mix(in srgb, var(--blue-fg,#0969da) 35%, var(--border));
+    background: color-mix(in srgb, var(--blue-fg,#0969da) 8%, var(--surface));
+    color: var(--blue-fg,#0969da); font-weight: 600;
+  }
+  .mc-sys-chip-strong:hover {
+    background: color-mix(in srgb, var(--blue-fg,#0969da) 14%, var(--surface));
+    color: var(--blue-fg,#0969da); border-color: var(--blue-fg,#0969da);
+  }
+  @media (max-width: 720px) {
+    .mc-strip-row-bottom { display: none; }
+  }
 
   /* Fix 2: career tile accent classes */
   .stat-burndown-urgent::before { background: var(--red-fg, #dc2626); }
@@ -5667,26 +5867,56 @@ async function build() {
   }
   .tonight-pick-btn-primary:hover { background: var(--action-hover); border-color: var(--action-hover); }
   .tonight-pick-btn-primary:active { background: var(--action-active); border-color: var(--action-active); }
+  /* Tonight's Pick secondary/accent/ghost buttons — refreshed 2026-05-18 for
+     consistent height, higher contrast, and clearer visual hierarchy with
+     the primary green CTA. All three now share padding + font-weight so they
+     read as a coherent button group, not three random styles. */
   .tonight-pick-btn-secondary {
-    background: transparent; color: var(--text-2); border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: background .12s, border-color .12s, color .12s;
   }
-  .tonight-pick-btn-secondary:hover { color: var(--fg); border-color: var(--text-2); }
+  .tonight-pick-btn-secondary:hover {
+    background: var(--surface-2); color: var(--fg);
+    border-color: var(--text-3);
+  }
   .tonight-pick-btn-accent {
-    background: color-mix(in srgb, var(--blue-fg,#0969da) 12%, var(--surface));
-    color: var(--blue-fg,#0969da); border: 1px solid color-mix(in srgb, var(--blue-fg,#0969da) 30%, transparent);
-    border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    background: var(--surface);
+    color: var(--blue-fg,#0969da);
+    border: 1px solid var(--blue-fg,#0969da);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: background .12s, color .12s, border-color .12s;
   }
-  .tonight-pick-btn-accent:hover { background: color-mix(in srgb, var(--blue-fg,#0969da) 18%, var(--surface)); }
+  .tonight-pick-btn-accent:hover {
+    background: var(--blue-fg,#0969da); color: #fff;
+  }
   .tonight-pick-btn-accent.success {
-    background: color-mix(in srgb, var(--green-fg) 12%, var(--surface));
-    color: var(--green-fg); border-color: color-mix(in srgb, var(--green-fg) 30%, transparent);
+    background: var(--surface);
+    color: var(--green-fg);
+    border-color: var(--green-fg);
+  }
+  .tonight-pick-btn-accent.success:hover {
+    background: var(--green-fg); color: #fff;
   }
   .tonight-pick-btn-ghost {
-    background: transparent; color: var(--text-3); border: 1px solid transparent;
-    border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap;
+    background: transparent;
+    color: var(--text-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 6px 12px; font-size: 13px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    transition: background .12s, color .12s, border-color .12s;
   }
-  .tonight-pick-btn-ghost:hover { color: var(--text-2); border-color: var(--border-strong); }
+  .tonight-pick-btn-ghost:hover {
+    color: var(--fg); background: var(--surface-2);
+    border-color: var(--border);
+  }
   /* Create-materials progress modal */
   .tp-progress-backdrop {
     position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200;
@@ -9962,6 +10192,42 @@ async function build() {
               onclick="window.drillIn('readiness','',event);event.stopPropagation();"
               aria-label="See full PM-readiness detail">See full →</button>
     </div>
+    <!-- Side Allocations card (relocated to sidebar 2026-05-18). Compact
+         chip showing the count + active deliverables. Click opens a
+         pop-out modal with the full list. Hidden when no allocations. -->
+    ${sideAllocations.length > 0 ? `
+    <div id="sidebar-side-alloc" class="sidebar-readiness sidebar-side-alloc"
+         role="button" tabindex="0" aria-label="20% / Side Allocations — click for detail"
+         onclick="openSideAllocationsModal()"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSideAllocationsModal();}">
+      <div class="sidebar-readiness-header">
+        <span class="sidebar-readiness-title">20% / Side</span>
+        <span class="sidebar-readiness-score">${sideAllocations.length}</span>
+      </div>
+      <div class="sidebar-readiness-band">${
+        sideAllocations.filter(a => a.status === 'active').length
+      } active · ${
+        sideAllocations.reduce((n, a) => n + ((a.deliverables||[]).length), 0)
+      } deliverables</div>
+      <button type="button" class="sidebar-readiness-link"
+              onclick="openSideAllocationsModal();event.stopPropagation();"
+              aria-label="See all side allocations">See all →</button>
+    </div>` : ''}
+    <!-- Network / Contacts card (Inventory 2026-05-18). Opens directory
+         modal listing all known contacts with email/LinkedIn/X actions. -->
+    <div id="sidebar-contacts" class="sidebar-readiness sidebar-contacts"
+         role="button" tabindex="0" aria-label="Contacts directory — click to open"
+         onclick="openContactsDirectoryModal()"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openContactsDirectoryModal();}">
+      <div class="sidebar-readiness-header">
+        <span class="sidebar-readiness-title">Contacts</span>
+        <span class="sidebar-readiness-score" id="sidebar-contacts-count">—</span>
+      </div>
+      <div class="sidebar-readiness-band" id="sidebar-contacts-sub">network directory</div>
+      <button type="button" class="sidebar-readiness-link"
+              onclick="openContactsDirectoryModal();event.stopPropagation();"
+              aria-label="Open contacts directory">Open →</button>
+    </div>
     <!-- Weekly Calibration Prompt card (Inventory B6 MVP, 2026-05-18).
          Hides automatically when no fresh prompt exists OR when the latest
          prompt has been answered. "Copy prompt" puts the Gemini-ready text
@@ -10052,36 +10318,44 @@ async function build() {
        click-to-popout pattern). The previous in-place pill-popover on mc-health
        is replaced by the system-health modal for full launchd + tunnel detail. -->
   <div class="mc-strip" id="mc-strip" role="status" aria-label="Mission-control telemetry strip">
-    <!-- 2026-05-18 bug fix: wrapper-click stacking-modal regression.
-         Previous inline onclick fired openScanActivityModal() on EVERY click
-         inside the ticker, including drill-span clicks → user saw the
-         "useless queue" stacked above the company drill-in popout.
-         Wrapper now smart-skips when the click target is a specific drill. -->
-    <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity — click to see all scans" tabindex="0" role="button" title="Click for recent scan activity (portal · jobs found · jobs new)" onclick="if(!event.target.closest(&apos;.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]&apos;))openScanActivityModal()" onkeydown="if((event.key==='Enter'||event.key===' ')&&!event.target.closest('.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]')){event.preventDefault();openScanActivityModal()}">
-      <span class="live-dot" id="live-dot" aria-hidden="true"></span>
-      <span class="live-text" id="live-text">—</span>
+    <!-- Top row: live system telemetry (scanner ticker + batch state + health).
+         2026-05-18 bug fix: wrapper-click stacking-modal regression.
+         Wrapper smart-skips when click target is a specific drill. -->
+    <div class="mc-strip-row mc-strip-row-top">
+      <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity — click to see all scans" tabindex="0" role="button" title="Click for recent scan activity (portal · jobs found · jobs new)" onclick="if(!event.target.closest(&apos;.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]&apos;))openScanActivityModal()" onkeydown="if((event.key==='Enter'||event.key===' ')&&!event.target.closest('.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]')){event.preventDefault();openScanActivityModal()}">
+        <span class="live-dot" id="live-dot" aria-hidden="true"></span>
+        <span class="live-text" id="live-text">—</span>
+      </div>
+      <div class="mc-strip-group">
+        <div class="mc-batch" id="mc-batch" data-state="idle" aria-label="Batch progress — click for live detail" title="Click for live batch status (current run · recent runs · queue · failures)" role="button" tabindex="0" onclick="openBatchStatusModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBatchStatusModal()}">
+          <span class="mc-batch-dot" aria-hidden="true"></span>
+          <span class="mc-batch-text" id="mc-batch-text">No batch running</span>
+        </div>
+        <div class="mc-health" id="mc-health" data-status="healthy" aria-label="System health — click for full detail" title="Click for launchd jobs · tunnel · server · errors" role="button" tabindex="0" onclick="openSystemHealthModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSystemHealthModal()}">
+          <span class="mc-health-dot" aria-hidden="true"></span>
+          <span class="mc-health-text" id="mc-health-text">all healthy</span>
+        </div>
+      </div>
     </div>
-    <div class="mc-batch" id="mc-batch" data-state="idle" aria-label="Batch progress — click for live detail" title="Click for live batch status (current run · recent runs · queue · failures)" role="button" tabindex="0" onclick="openBatchStatusModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBatchStatusModal()}">
-      <span class="mc-batch-dot" aria-hidden="true"></span>
-      <span class="mc-batch-text" id="mc-batch-text">No batch running</span>
+    <!-- Bottom row: KPI chips grouped semantically.
+         Group 1 = tracked totals (companies/scanned/batches).
+         Group 2 = apply-now signal filters (≥4.0, ≥$250K). -->
+    <div class="mc-strip-row mc-strip-row-bottom">
+      <span class="mc-strip-group-label">Tracked</span>
+      <div class="mc-strip-group">
+        <button type="button" class="mc-sys-chip" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies" aria-label="${portals.tracked} companies tracked">${portals.tracked} companies</button>
+        <button type="button" class="mc-sys-chip" id="mc-scanned-chip" onclick="toggleStatPanel('scanned')" title="Click to see scan activity" aria-label="${scanTotal} URLs scanned">${scanTotal} scanned</button>
+        <button type="button" class="mc-sys-chip" id="mc-batches-chip" onclick="toggleStatPanel('batches')" title="Click to see batch run history" aria-label="${batchRuns} batches run">${batchRuns} batches</button>
+      </div>
+      <span class="mc-strip-group-sep" aria-hidden="true"></span>
+      <span class="mc-strip-group-label">Apply-Now</span>
+      <div class="mc-strip-group">
+        <button type="button" class="mc-sys-chip mc-sys-chip-strong" onclick="document.getElementById('apply-now-section')?.scrollIntoView({behavior:'smooth',block:'start'})" title="Apply-Now rows with score ≥ 4.0" aria-label="${applyNow.length} Apply-Now roles with score 4.0 or higher">${applyNow.length} ≥4.0</button>
+        <button type="button" class="mc-sys-chip mc-sys-chip-strong" onclick="document.getElementById('apply-now-section')?.scrollIntoView({behavior:'smooth',block:'start'})" title="Apply-Now rows with base salary ≥ $250K USD" aria-label="${applyNowHighComp} Apply-Now roles with base 250K or higher">${applyNowHighComp} ≥$250K</button>
+      </div>
+      <span class="mc-strip-meta" id="dashboard-meta" title="${htmlEscape(generated)}"><span id="live-updated">Updated ${htmlEscape(generated)}</span> · ${reportsToday} reports today</span>
     </div>
-    <div class="mc-health" id="mc-health" data-status="healthy" aria-label="System health — click for full detail" title="Click for launchd jobs · tunnel · server · errors" role="button" tabindex="0" onclick="openSystemHealthModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSystemHealthModal()}">
-      <span class="mc-health-dot" aria-hidden="true"></span>
-      <span class="mc-health-text" id="mc-health-text">all healthy</span>
-    </div>
-    <!-- Fix 2: system telemetry summary chips — moved out of KPI row into mc-strip
-         so career KPIs can surface user-facing progress tiles (DESIGN_PRINCIPLES.md §Pillar 1).
-         Clicking each chip still routes to the same toggleStatPanel panels. -->
-    <button type="button" class="mc-sys-chip" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies" aria-label="${portals.tracked} companies tracked">${portals.tracked} companies</button>
-    <button type="button" class="mc-sys-chip" id="mc-scanned-chip" onclick="toggleStatPanel('scanned')" title="Click to see scan activity" aria-label="${scanTotal} URLs scanned">${scanTotal} scanned</button>
-    <button type="button" class="mc-sys-chip" id="mc-batches-chip" onclick="toggleStatPanel('batches')" title="Click to see batch run history" aria-label="${batchRuns} batches run">${batchRuns} batches</button>
-    <!-- Inventory #8 (2026-05-18): pre-emptive context chips so the user knows
-         whether the Apply-Now queue is worth opening before clicking. -->
-    <button type="button" class="mc-sys-chip mc-sys-chip-strong" onclick="document.getElementById('apply-now-section')?.scrollIntoView({behavior:'smooth',block:'start'})" title="Apply-Now rows with score ≥ 4.0" aria-label="${applyNow.length} Apply-Now roles with score 4.0 or higher">${applyNow.length} ≥4.0</button>
-    <button type="button" class="mc-sys-chip mc-sys-chip-strong" onclick="document.getElementById('apply-now-section')?.scrollIntoView({behavior:'smooth',block:'start'})" title="Apply-Now rows with base salary ≥ $250K USD" aria-label="${applyNowHighComp} Apply-Now roles with base 250K or higher">${applyNowHighComp} ≥$250K</button>
   </div>
-
-  <div class="subtle" id="dashboard-meta" title="${htmlEscape(generated)}"><span id="live-updated">Updated ${htmlEscape(generated)}</span> · ${reportsToday} reports today</div>
 
   <main id="main">
 
@@ -10483,29 +10757,12 @@ async function build() {
        Static overview tile was separate from the sortable tables (DASHBOARD_INVARIANTS.md §1-7 unaffected);
        Apply-Now queue now has clear first-glance priority below KPI tiles. -->
 
-  ${sideAllocations.length > 0 ? `
-  <!-- I1 Wave G1: 20%-time / side-allocations tile -->
-  <div class="side-alloc-tile">
-    <div class="side-alloc-title">20% / Side Allocations <span class="pill" style="font-size:10px">${sideAllocations.length}</span></div>
-    ${sideAllocations.map((a, i) => {
-      const statusCls = a.status === 'active' ? 'active' : a.status === 'completed' ? 'completed' : 'paused';
-      const delivCount = (a.deliverables || []).length;
-      const safeCharter = htmlEscape(String(a.charter || ''));
-      const safeTeam = htmlEscape(String(a.team || ''));
-      const safeSponsor = htmlEscape(String(a.sponsor || ''));
-      const safeStatus = htmlEscape(String(a.status || 'unknown'));
-      return `<div class="side-alloc-row" role="button" tabindex="0"
-          onclick="window.drillIn('allocation','${i}',event)"
-          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('allocation','${i}',event)}"
-          title="${safeCharter}">
-        <div class="side-alloc-team">${safeTeam}</div>
-        <span class="side-alloc-status ${statusCls}">${safeStatus}</span>
-        ${delivCount > 0 ? `<span class="side-alloc-deliverables">${delivCount} deliverable${delivCount !== 1 ? 's' : ''}</span>` : ''}
-        ${safeSponsor ? `<span class="side-alloc-sponsor">↳ ${safeSponsor}</span>` : ''}
-      </div>`;
-    }).join('')}
-  </div>
-  ` : ''}
+  <!-- 20% / Side Allocations relocated 2026-05-18: now lives in the sidebar
+       (#sidebar-side-alloc) so it stays accessible globally without
+       occupying main-column real estate. Full drill-in detail still
+       available via window.drillIn('allocation', i) per row. -->
+  <!-- intentionally empty: side allocations moved to sidebar -->
+
 
   <!-- Expandable stat panels (loaded live from /api/detail/*) -->
   <div class="stat-panel" id="stat-panel-evaluations"></div>
@@ -16936,9 +17193,20 @@ function renderStatPanel(key, data) {
   if (key === 'pending') {
     const tiers = data.tiers || [];
     const items = data.items || [];
-    const tierCards = tiers.map(t =>
-      \`<div class="bucket-card"><div class="bval">\${t.count}</div><div class="blbl">\${esc(t.label)}</div></div>\`
-    ).join('');
+    // Issue 5 (2026-05-18): tiles are now clickable → opens source-filtered
+    // pop-out (openPipelinePendingBySource) showing per-source pending items.
+    // Tier label is normalized to the source key the modal expects.
+    const _sourceKey = (lbl) => {
+      const s = String(lbl || '').toLowerCase();
+      if (s.indexOf('linkedin') !== -1) return 'linkedin';
+      if (s.indexOf('ashby')    !== -1) return 'ashby';
+      if (s.indexOf('workday')  !== -1) return 'workday';
+      return 'other';
+    };
+    const tierCards = tiers.map(t => {
+      const sk = _sourceKey(t.label);
+      return \`<button type="button" class="bucket-card bucket-card-clickable" onclick="openPipelinePendingBySource('\${sk}')" aria-label="Open \${esc(t.label)} pending items (\${t.count} items)"><div class="bval">\${t.count}</div><div class="blbl">\${esc(t.label)}</div></button>\`;
+    }).join('');
     const platformColors = {
       LinkedIn: '#0a66c2', Ashby: '#6366f1', Greenhouse: '#1a7f37',
       Lever: '#e36b00', WWR: '#0ea5e9', RemoteOK: '#16a34a',
@@ -18495,6 +18763,42 @@ function rdDraftDm(btnEl) {
 }
 window.rdDraftDm = rdDraftDm;
 
+// Issue 7 (2026-05-18): scroll-to-section + contact-drilldown helpers for the
+// runway-detail modal. Summary cells use _rdScrollToSection; table rows use
+// _rdOpenContactRow which opens the contacts directory pre-filtered.
+function _rdScrollToSection(sectionId) {
+  var el = document.getElementById(sectionId);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  el.classList.add('rd-section-flash');
+  setTimeout(function () { el.classList.remove('rd-section-flash'); }, 1200);
+}
+window._rdScrollToSection = _rdScrollToSection;
+
+function _rdOpenContactRow(contactName) {
+  if (!contactName) return;
+  // Close the runway-detail modal first so the contact directory stacks
+  // cleanly on top instead of behind it.
+  if (typeof window.closeRunwayDetailModal === 'function') {
+    try { window.closeRunwayDetailModal(); } catch (_) {}
+  }
+  // Defer until after close transition so the new modal isn't ducked out
+  // by the closing one.
+  setTimeout(function () {
+    if (typeof window.openContactsDirectoryModal !== 'function') return;
+    window.openContactsDirectoryModal();
+    setTimeout(function () {
+      var input = document.getElementById('contacts-directory-search');
+      if (input) {
+        input.value = contactName;
+        var evt = new Event('input', { bubbles: true });
+        input.dispatchEvent(evt);
+      }
+    }, 80);
+  }, 100);
+}
+window._rdOpenContactRow = _rdOpenContactRow;
+
 // ── Runway detail modal (2026-05-17) ─────────────────────────────
 // Opens from the sidebar runway-label click. Polls /api/runway-detail
 // every 30s while open. Sections:
@@ -18552,17 +18856,20 @@ function _rdRenderBody(d) {
   const health = d.health || 'unknown';
   const healthLbl = health.charAt(0).toUpperCase() + health.slice(1);
   // Section 1 — Health summary (Pillar 1 scannability)
+  // Issue 7 (2026-05-18): cells are clickable. Runway → opens the
+  // calibration/sources; Health → scrolls to active conversations;
+  // Active conversations count → scrolls to the conversations table.
   const summary =
     '<div class="rd-summary">' +
-      '<div class="rd-summary-cell">' +
+      '<div class="rd-summary-cell rd-summary-cell-clickable" role="button" tabindex="0" onclick="_rdScrollToSection(\\'rd-section-runway\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdScrollToSection(\\'rd-section-runway\\')}" title="See runway calculation source">' +
         '<div class="rd-summary-label">Runway</div>' +
         '<div class="rd-summary-val">' + _rdEsc(d.runway_weeks ?? '—') + ' weeks</div>' +
       '</div>' +
-      '<div class="rd-summary-cell">' +
+      '<div class="rd-summary-cell rd-summary-cell-clickable" role="button" tabindex="0" onclick="_rdScrollToSection(\\'rd-section-active\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdScrollToSection(\\'rd-section-active\\')}" title="See what drives this health verdict">' +
         '<div class="rd-summary-label">Health</div>' +
         '<div class="rd-summary-val ' + _rdEsc(health) + '">' + _rdEsc(healthLbl) + '</div>' +
       '</div>' +
-      '<div class="rd-summary-cell">' +
+      '<div class="rd-summary-cell rd-summary-cell-clickable" role="button" tabindex="0" onclick="_rdScrollToSection(\\'rd-section-active\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdScrollToSection(\\'rd-section-active\\')}" title="See active conversations table below">' +
         '<div class="rd-summary-label">Active conversations</div>' +
         '<div class="rd-summary-val">' + _rdEsc((d.active_conversations || []).length) + '</div>' +
       '</div>' +
@@ -18583,7 +18890,9 @@ function _rdRenderBody(d) {
             active.map(c => {
               const tierCls = 'rd-tier-' + _rdEsc(c.tier || 'B');
               const days = (c.days_since != null) ? (c.days_since + 'd ago') : '—';
-              return '<tr title="' + _rdEsc((c.name || '') + ' · ' + (c.company || '') + ' · ' + (c.role_title || '')) + '">' +
+              // Issue 7 (2026-05-18): row click opens contacts directory pre-filtered to this contact.
+              const nameForFilter = _rdEsc(JSON.stringify(c.name || ''));
+              return '<tr class="rd-row-clickable" role="button" tabindex="0" data-contact-name="' + _rdEsc(c.name || '') + '" onclick="_rdOpenContactRow(' + nameForFilter + ')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdOpenContactRow(' + nameForFilter + ')}" title="' + _rdEsc((c.name || '') + ' · ' + (c.company || '') + ' · ' + (c.role_title || '') + ' — click for contact detail') + '">' +
                 '<td><span class="' + tierCls + '">' + _rdEsc(c.tier || '—') + '</span></td>' +
                 '<td>' + _rdEsc(c.name || '—') + '</td>' +
                 '<td>' + _rdEsc(c.company || '—') + '</td>' +
@@ -18610,7 +18919,11 @@ function _rdRenderBody(d) {
             touches.slice(0, 50).map(t => {
               const dir = t.outbound ? '↗ out' : '↙ in';
               const dirCls = t.outbound ? 'rd-direction-out' : 'rd-direction-in';
-              return '<tr title="' + _rdEsc(t.summary || '') + '">' +
+              const nameForFilter = _rdEsc(JSON.stringify(t.contact_name || ''));
+              const clickHandler = t.contact_name
+                ? ' class="rd-row-clickable" role="button" tabindex="0" onclick="_rdOpenContactRow(' + nameForFilter + ')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdOpenContactRow(' + nameForFilter + ')}"'
+                : '';
+              return '<tr' + clickHandler + ' title="' + _rdEsc(t.summary || '') + '">' +
                 '<td>' + _rdEsc(_rdFmtRelTime(t.ts_iso)) + '</td>' +
                 '<td class="' + dirCls + '">' + _rdEsc(dir) + '</td>' +
                 '<td>' + _rdEsc(_rdFmtChannel(t.channel)) + '</td>' +
@@ -18695,17 +19008,26 @@ function _rdRenderBody(d) {
 
   body.innerHTML =
     summary +
-    '<div class="rd-section">' +
+    '<div class="rd-section" id="rd-section-active">' +
       '<h4 class="rd-section-title">Active conversations (' + _rdEsc(active.length) + ')</h4>' + activeTable +
     '</div>' +
-    '<div class="rd-section">' +
+    '<div class="rd-section" id="rd-section-touches">' +
       '<h4 class="rd-section-title">Touches — last 7 days (' + _rdEsc(touches.length) + ')</h4>' + touchesTable +
     '</div>' +
-    '<div class="rd-section">' +
+    '<div class="rd-section" id="rd-section-trend">' +
       '<h4 class="rd-section-title">Response rate trend</h4>' + trendBlock +
     '</div>' +
-    '<div class="rd-section">' +
+    '<div class="rd-section" id="rd-section-next">' +
       '<h4 class="rd-section-title">Who to contact next</h4>' + nextTable +
+    '</div>' +
+    '<div class="rd-section" id="rd-section-runway">' +
+      '<h4 class="rd-section-title">Runway calculation</h4>' +
+      '<div class="rd-rationale" style="padding:10px 14px">' +
+        'Runway = (touches over last 30d ÷ weekly touch budget) + buffer weeks. ' +
+        'Computed by <code>lib/recruiter-pipeline-density.mjs</code>. ' +
+        'Healthy ≥ 5 active conversations + ≥ 10 touches/7d. ' +
+        '<a href="https://github.com/mitwilli-create/career-ops/blob/main/lib/recruiter-pipeline-density.mjs" target="_blank" rel="noopener">View source →</a>' +
+      '</div>' +
     '</div>';
 
   // Invariant #8 — apply universal table baseline to every freshly-rendered table
@@ -21101,6 +21423,23 @@ function renderNetworkGraphSvg(contacts, cx, cy, r) {
 }
 window.renderNetworkGraphSvg = renderNetworkGraphSvg;
 
+// ── Contacts directory (2026-05-18) ──────────────────────────────
+// Sidebar Contacts modal renders this list. Sources: outreach-state +
+// LinkedIn Connections.csv merged at build time. ~2.9k rows.
+var _CONTACTS_DATA = ${JSON.stringify(contactsDirectory).replace(/<\//g, '<\\/')};
+var _CONTACTS_STATS = ${JSON.stringify(contactsDirectoryStats).replace(/<\//g, '<\\/')};
+// Update sidebar chip on first paint so the count matches the dataset.
+(function () {
+  var n = (_CONTACTS_DATA || []).length;
+  var countEl = document.getElementById('sidebar-contacts-count');
+  var subEl   = document.getElementById('sidebar-contacts-sub');
+  if (countEl) countEl.textContent = n > 999 ? (n/1000).toFixed(1) + 'k' : String(n);
+  if (subEl) {
+    var s = _CONTACTS_STATS || {};
+    subEl.textContent = (s.in_outreach || 0) + ' in outreach · ' + (s.with_email || 0) + ' w/ email';
+  }
+})();
+
 // ── I1: Side-allocations drill-in renderer (Wave G1) ─────────────
 // Registered as drill-in type 'allocation:{index}'
 var _SIDE_ALLOC_DATA = ${JSON.stringify(sideAllocations).replace(/<\//g, '<\\/')};
@@ -22475,6 +22814,25 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   .rd-summary-val.healthy   { color: var(--green-fg, #2da44e); }
   .rd-summary-val.stretched { color: var(--orange-fg, #bc4c00); }
   .rd-summary-val.critical  { color: var(--red-fg, #cf222e); }
+  /* Issue 7 (2026-05-18): clickable summary cells + table rows in runway-detail. */
+  .rd-summary-cell-clickable {
+    cursor: pointer; transition: background .12s, border-color .12s, transform .08s;
+  }
+  .rd-summary-cell-clickable:hover {
+    background: var(--surface); border-color: var(--text-3);
+    transform: translateY(-1px);
+  }
+  .rd-summary-cell-clickable:focus-visible {
+    outline: none; box-shadow: var(--ring-blue); border-color: var(--blue-fg);
+  }
+  .rd-row-clickable { cursor: pointer; transition: background .12s; }
+  .rd-row-clickable:hover { background: var(--surface-2); }
+  .rd-row-clickable:focus-visible { outline: 2px solid var(--blue-fg); outline-offset: -2px; }
+  @keyframes rd-section-flash {
+    0%, 100% { background: transparent; }
+    20%, 60% { background: color-mix(in srgb, var(--blue-fg,#0969da) 8%, transparent); }
+  }
+  .rd-section-flash { animation: rd-section-flash 1.2s ease-in-out; }
   .rd-table-wrap,
   .sa-table-wrap,
   .sh-table-wrap {
@@ -24647,6 +25005,168 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     align-self: center;
   }
 
+  /* ── Contacts directory modal (2026-05-18 Issue 6) ────────────── */
+  .contacts-directory-wrap {
+    display: flex; flex-direction: column; min-height: 320px;
+  }
+  .contacts-directory-controls {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--surface);
+    padding: 12px 18px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  #contacts-directory-search {
+    width: 100%; padding: 8px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-2); color: var(--text);
+    font-size: 13px; font-family: inherit;
+    outline: none;
+  }
+  #contacts-directory-search:focus { border-color: var(--blue-fg); box-shadow: var(--ring-blue); }
+  .contacts-directory-filters {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .contacts-filter-btn {
+    background: transparent; color: var(--text-3);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 11px; font-size: 12px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .contacts-filter-btn:hover { color: var(--text); border-color: var(--text-3); }
+  .contacts-filter-btn.active {
+    background: color-mix(in srgb, var(--blue-fg,#0969da) 10%, var(--surface));
+    color: var(--blue-fg,#0969da); border-color: var(--blue-fg,#0969da); font-weight: 600;
+  }
+  .contact-directory-list {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 12px 18px;
+  }
+  .contact-row {
+    display: flex; gap: 14px; align-items: flex-start; justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    transition: border-color .12s, background .12s;
+  }
+  .contact-row:hover { border-color: var(--text-3); background: var(--surface); }
+  .contact-row-main { flex: 1 1 auto; min-width: 0; }
+  .contact-row-name {
+    font-size: 13.5px; font-weight: 600; color: var(--text);
+    margin-bottom: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .contact-row-sub {
+    font-size: 11.5px; color: var(--text-3);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .contact-row-company {
+    color: var(--text-2); font-weight: 500;
+  }
+  .contact-row-emails {
+    font-size: 11.5px; color: var(--text-3); margin-top: 4px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .contact-row-emails code {
+    background: var(--surface);
+    padding: 1px 5px; border-radius: 3px;
+    font-size: 11px; color: var(--text-2);
+  }
+  .contact-row-email-label {
+    font-weight: 700; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-4);
+  }
+  .contact-row-email-revealed {
+    margin-top: 6px; padding: 5px 8px;
+    background: color-mix(in srgb, var(--blue-fg,#0969da) 8%, var(--surface));
+    color: var(--blue-fg,#0969da);
+    border: 1px dashed color-mix(in srgb, var(--blue-fg,#0969da) 35%, transparent);
+    border-radius: var(--radius-sm); font-size: 11.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .contact-row-actions {
+    display: flex; flex-direction: column; gap: 4px;
+    flex-shrink: 0; align-items: stretch;
+  }
+  .contact-act {
+    display: inline-flex; align-items: center; justify-content: space-between; gap: 6px;
+    background: var(--surface); color: var(--text-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 10px; font-size: 11.5px; font-weight: 500;
+    text-decoration: none; cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    min-width: 100px; font-family: inherit;
+  }
+  .contact-act-arrow { font-size: 10px; opacity: .55; }
+  .contact-act:hover { background: var(--surface-2); color: var(--text); border-color: var(--text-3); }
+  .contact-act:hover .contact-act-arrow { opacity: 1; }
+  .contact-act-email:hover {
+    color: var(--blue-fg,#0969da); border-color: var(--blue-fg,#0969da);
+    background: color-mix(in srgb, var(--blue-fg,#0969da) 8%, var(--surface));
+  }
+  .contact-act-li:hover {
+    color: #0a66c2; border-color: #0a66c2;
+    background: color-mix(in srgb, #0a66c2 8%, var(--surface));
+  }
+  .contact-act-x:hover {
+    color: var(--text); border-color: var(--text);
+    background: color-mix(in srgb, var(--text) 8%, var(--surface));
+  }
+  .contact-act-disabled {
+    opacity: .35; cursor: not-allowed;
+  }
+  .contact-act-disabled:hover {
+    background: var(--surface); color: var(--text-2); border-color: var(--border);
+  }
+  .contact-row-pill {
+    display: inline-block;
+    font-size: 10.5px; font-weight: 600;
+    padding: 1px 7px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--text-3);
+    background: var(--surface);
+    font-variant-numeric: tabular-nums;
+  }
+  .contact-row-pill-outreach {
+    background: color-mix(in srgb, var(--green-fg) 10%, var(--surface));
+    color: var(--green-fg);
+    border-color: color-mix(in srgb, var(--green-fg) 35%, transparent);
+  }
+  .contact-row-tier {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 3px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-3);
+  }
+  .contact-row-tier.tier-a { color: #d97706; border-color: rgba(217,119,6,.4); }
+  .contact-row-tier.tier-b { color: var(--blue-fg,#0969da); border-color: color-mix(in srgb, var(--blue-fg,#0969da) 40%, transparent); }
+  .contact-row-tier.tier-c { color: var(--text-3); }
+  .contact-row-sponsor {
+    font-size: 11px; color: var(--text-3);
+  }
+  .contact-row-meta {
+    display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap;
+  }
+  .contacts-directory-more {
+    background: var(--surface); color: var(--text-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin: 0 18px 16px; padding: 8px 14px;
+    font-size: 12.5px; cursor: pointer; font-weight: 500;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .contacts-directory-more:hover { background: var(--surface-2); color: var(--text); border-color: var(--text-3); }
+  @media (max-width: 600px) {
+    .contact-row { flex-direction: column; }
+    .contact-row-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+    .contact-act { min-width: auto; flex: 1 1 calc(50% - 2px); }
+  }
+
+  /* sidebar-side-alloc + sidebar-contacts use sidebar-readiness base */
+  .sidebar-side-alloc, .sidebar-contacts {
+    margin-top: 8px;
+  }
+
   /* ── Bucket modal table (Feature 2) ─────────────────────────────── */
   .bucket-modal-table-wrap { padding: 14px 18px 18px; }
   .bucket-modal-table {
@@ -24862,6 +25382,241 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       '<div class="stale-item-list">' + rowsHtml + '</div>';
   }
   window.openStalePipelineModal = openStalePipelineModal;
+
+  // ── Side Allocations modal (2026-05-18, sidebar relocation) ────
+  function openSideAllocationsModal() {
+    var data = window._SIDE_ALLOC_DATA || [];
+    _showModal('20% / Side Allocations', data.length + ' allocation' + (data.length === 1 ? '' : 's'));
+    var scroll = document.getElementById('item-list-modal-scroll');
+    if (!scroll) return;
+    if (!data.length) {
+      scroll.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No side allocations defined.<br><span style="color:var(--text-2)">Add entries to <code>data/side-allocations.yml</code> to populate this list.</span></div>';
+      return;
+    }
+    var rowsHtml = data.map(function (a, i) {
+      var statusCls = a.status === 'active' ? 'active' : a.status === 'completed' ? 'completed' : 'paused';
+      var deliv = Array.isArray(a.deliverables) ? a.deliverables : [];
+      var delivCount = deliv.length;
+      return '<div class="contact-row" role="button" tabindex="0" onclick="window.drillIn(\\'allocation\\',\\'' + i + '\\',event);closeItemListModal()" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();window.drillIn(\\'allocation\\',\\'' + i + '\\',event);closeItemListModal()}">' +
+        '<div class="contact-row-main">' +
+          '<div class="contact-row-name">' + _escHtml(a.team || 'Untitled') + '</div>' +
+          '<div class="contact-row-sub">' + _escHtml(a.charter || '') + '</div>' +
+        '</div>' +
+        '<div class="contact-row-meta">' +
+          '<span class="side-alloc-status ' + statusCls + '">' + _escHtml(a.status || 'unknown') + '</span>' +
+          (delivCount ? '<span class="contact-row-pill">' + delivCount + ' deliv</span>' : '') +
+          (a.sponsor ? '<span class="contact-row-sponsor">↳ ' + _escHtml(a.sponsor) + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+    scroll.innerHTML = '<div class="contact-directory-list">' + rowsHtml + '</div>';
+  }
+  window.openSideAllocationsModal = openSideAllocationsModal;
+
+  // ── Contacts directory modal (2026-05-18, Issue 6) ────────────
+  // Renders Mitchell's full contacts list with email/LinkedIn/X actions.
+  // Clicking an email opens Gmail compose in a new tab (pre-filled).
+  var _contactsModalState = { query: '', filter: 'all', cursor: 0, pageSize: 60 };
+  function _gmailComposeUrl(to, subject, body) {
+    var qs = [];
+    if (to) qs.push('to=' + encodeURIComponent(to));
+    if (subject) qs.push('su=' + encodeURIComponent(subject));
+    if (body) qs.push('body=' + encodeURIComponent(body));
+    return 'https://mail.google.com/mail/?view=cm&fs=1' + (qs.length ? '&' + qs.join('&') : '');
+  }
+  function _filterContacts(data, q, filter) {
+    var query = (q || '').trim().toLowerCase();
+    return data.filter(function (c) {
+      if (filter === 'outreach' && !c.in_outreach) return false;
+      if (filter === 'email' && !c.email_professional) return false;
+      if (filter === 'x' && !c.x_handle) return false;
+      if (!query) return true;
+      var hay = (c.name + ' ' + (c.company || '') + ' ' + (c.position || '') + ' ' + (c.email_professional || '') + ' ' + (c.x_handle || '')).toLowerCase();
+      return hay.indexOf(query) !== -1;
+    });
+  }
+  function _renderContactsList() {
+    var data = window._CONTACTS_DATA || [];
+    var filtered = _filterContacts(data, _contactsModalState.query, _contactsModalState.filter);
+    var slice = filtered.slice(0, _contactsModalState.cursor + _contactsModalState.pageSize);
+    var metaEl = document.getElementById('item-list-modal-meta');
+    if (metaEl) metaEl.textContent = filtered.length + ' contact' + (filtered.length === 1 ? '' : 's') + (filtered.length > slice.length ? ' (showing ' + slice.length + ')' : '');
+    var rowsHtml = slice.map(function (c) {
+      var name = c.name || '';
+      var company = c.company || '';
+      var position = c.position || '';
+      var email = c.email_professional || '';
+      var personalEmail = c.email_personal || '';
+      var linkedinUrl = c.linkedin_url || '';
+      var xHandle = c.x_handle || '';
+      var tierBadge = c.tier ? '<span class="contact-row-tier tier-' + _escHtml(c.tier.toLowerCase()) + '">' + _escHtml(c.tier) + '</span>' : '';
+      var outreachBadge = c.in_outreach ? '<span class="contact-row-pill contact-row-pill-outreach" title="Currently in active outreach">in outreach</span>' : '';
+      function emailAction(addr, type) {
+        if (!addr) {
+          return '<button type="button" class="contact-act contact-act-disabled" disabled title="No ' + type + ' email on file" aria-label="' + type + ' email not available">' + type + ' ✉︎</button>';
+        }
+        var subj = 'Reaching out — ' + (company || 'quick note');
+        var body = 'Hi ' + (c.first_name || name.split(' ')[0] || '') + ',';
+        var url = _gmailComposeUrl(addr, subj, body);
+        return '<button type="button" class="contact-act contact-act-email" title="Compose to ' + _escHtml(addr) + ' (opens Gmail in new tab)" aria-label="Compose email to ' + _escHtml(addr) + '" onclick="window._contactsEmailClick(this, \\'' + _escHtml(addr) + '\\', \\'' + _escHtml(url) + '\\');event.stopPropagation()">' +
+          type + ' <span class="contact-act-arrow">→</span>' +
+        '</button>';
+      }
+      var linkedinAction = linkedinUrl
+        ? '<a class="contact-act contact-act-li" href="' + _escHtml(linkedinUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open LinkedIn profile" aria-label="LinkedIn profile">LinkedIn <span class="contact-act-arrow">→</span></a>'
+        : '<button type="button" class="contact-act contact-act-disabled" disabled title="No LinkedIn URL on file">LinkedIn</button>';
+      var xAction = xHandle
+        ? '<a class="contact-act contact-act-x" href="https://x.com/' + _escHtml(xHandle.replace(/^@/, '')) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open X profile @' + _escHtml(xHandle) + '" aria-label="X profile">X <span class="contact-act-arrow">→</span></a>'
+        : '<button type="button" class="contact-act contact-act-disabled" disabled title="No X handle on file">X</button>';
+      return '<div class="contact-row">' +
+        '<div class="contact-row-main">' +
+          '<div class="contact-row-name">' + _escHtml(name) + ' ' + tierBadge + ' ' + outreachBadge + '</div>' +
+          '<div class="contact-row-sub">' + _escHtml(position || '—') + (company ? ' · <span class="contact-row-company">' + _escHtml(company) + '</span>' : '') + '</div>' +
+          (email || personalEmail ? '<div class="contact-row-emails">' +
+            (email ? '<span class="contact-row-email-label">Pro:</span> <code>' + _escHtml(email) + '</code>' : '') +
+            (personalEmail ? '<span class="contact-row-email-label">Personal:</span> <code>' + _escHtml(personalEmail) + '</code>' : '') +
+          '</div>' : '') +
+        '</div>' +
+        '<div class="contact-row-actions">' +
+          emailAction(email, 'Pro') +
+          emailAction(personalEmail, 'Personal') +
+          linkedinAction +
+          xAction +
+        '</div>' +
+      '</div>';
+    }).join('');
+    var listEl = document.getElementById('contacts-directory-list');
+    if (listEl) {
+      listEl.innerHTML = rowsHtml || '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No contacts match this filter.</div>';
+    }
+    var moreBtn = document.getElementById('contacts-directory-more');
+    if (moreBtn) moreBtn.style.display = (slice.length < filtered.length) ? 'block' : 'none';
+  }
+  window._contactsEmailClick = function (btn, addr, url) {
+    // Reveal the address inline on first click, open Gmail on second.
+    if (!btn.dataset.revealed) {
+      var label = document.createElement('div');
+      label.className = 'contact-row-email-revealed';
+      label.textContent = addr + '  ↵ click again to compose';
+      var existing = btn.parentNode.parentNode.querySelector('.contact-row-email-revealed');
+      if (existing) existing.remove();
+      btn.parentNode.parentNode.querySelector('.contact-row-main').appendChild(label);
+      btn.dataset.revealed = '1';
+      setTimeout(function () { delete btn.dataset.revealed; if (label.parentNode) label.parentNode.removeChild(label); }, 6000);
+    } else {
+      window.open(url, '_blank', 'noopener');
+      delete btn.dataset.revealed;
+      var existing = btn.parentNode.parentNode.querySelector('.contact-row-email-revealed');
+      if (existing) existing.remove();
+    }
+  };
+  function openContactsDirectoryModal() {
+    _contactsModalState = { query: '', filter: 'all', cursor: 0, pageSize: 60 };
+    var stats = window._CONTACTS_STATS || {};
+    _showModal('Contacts directory', stats.total + ' total · ' + (stats.in_outreach || 0) + ' in outreach · ' + (stats.with_email || 0) + ' w/ email');
+    var scroll = document.getElementById('item-list-modal-scroll');
+    if (!scroll) return;
+    scroll.innerHTML = '<div class="contacts-directory-wrap">' +
+      '<div class="contacts-directory-controls">' +
+        '<input id="contacts-directory-search" type="search" placeholder="Search name, company, role, email…" autocomplete="off" spellcheck="false" />' +
+        '<div class="contacts-directory-filters" role="tablist">' +
+          '<button type="button" class="contacts-filter-btn active" data-filter="all" role="tab">All</button>' +
+          '<button type="button" class="contacts-filter-btn" data-filter="outreach" role="tab">In outreach</button>' +
+          '<button type="button" class="contacts-filter-btn" data-filter="email" role="tab">Has email</button>' +
+          '<button type="button" class="contacts-filter-btn" data-filter="x" role="tab">Has X</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="contacts-directory-list" class="contact-directory-list"></div>' +
+      '<button type="button" id="contacts-directory-more" class="contacts-directory-more" style="display:none">Load more contacts</button>' +
+    '</div>';
+    _renderContactsList();
+    var searchInput = document.getElementById('contacts-directory-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        _contactsModalState.query = searchInput.value;
+        _contactsModalState.cursor = 0;
+        _renderContactsList();
+      });
+      try { searchInput.focus(); } catch (_) {}
+    }
+    var filterBtns = scroll.querySelectorAll('.contacts-filter-btn');
+    filterBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        filterBtns.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        _contactsModalState.filter = btn.dataset.filter || 'all';
+        _contactsModalState.cursor = 0;
+        _renderContactsList();
+      });
+    });
+    var moreBtn = document.getElementById('contacts-directory-more');
+    if (moreBtn) moreBtn.addEventListener('click', function () {
+      _contactsModalState.cursor += _contactsModalState.pageSize;
+      _renderContactsList();
+    });
+  }
+  window.openContactsDirectoryModal = openContactsDirectoryModal;
+
+  // ── Pipeline-pending source-filter modal (2026-05-18, Issue 5) ──
+  // Clicking a Pipeline Pending tile (LinkedIn/Ashby/Workday/Other)
+  // opens this modal filtered to pending URLs from that source.
+  async function openPipelinePendingBySource(sourceKey) {
+    var label = sourceKey === 'other' ? 'Other'
+              : sourceKey === 'linkedin' ? 'LinkedIn'
+              : sourceKey === 'ashby'    ? 'Ashby'
+              : sourceKey === 'workday'  ? 'Workday'
+              : String(sourceKey || '').replace(/^./, function (c) { return c.toUpperCase(); });
+    _showModal(label + ' — pending', 'Loading\\u2026');
+    var scroll = document.getElementById('item-list-modal-scroll');
+    var metaEl = document.getElementById('item-list-modal-meta');
+    var data = null;
+    try {
+      // Reuse the existing /api/detail/pending endpoint which returns
+      // the same item shape as the stat-panel tile grid.
+      var res = await fetch('/api/detail/pending', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      data = await res.json();
+    } catch (err) {
+      if (scroll) scroll.innerHTML = '<div style="padding:24px;color:var(--red-fg);font-size:13px">Could not load pending items: ' + _escHtml(err.message) + '</div>';
+      return;
+    }
+    var items = Array.isArray(data && data.items) ? data.items : [];
+    function matchesSource(item) {
+      var p = String(item.platform || '').toLowerCase();
+      if (sourceKey === 'other') return ['linkedin','ashby','workday'].indexOf(p) === -1;
+      return p === sourceKey;
+    }
+    var filtered = items.filter(matchesSource);
+    if (metaEl) metaEl.textContent = filtered.length + ' item' + (filtered.length === 1 ? '' : 's');
+    if (!filtered.length) {
+      if (scroll) scroll.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No pending ' + _escHtml(label) + ' items right now.</div>';
+      return;
+    }
+    var rowsHtml = filtered.map(function (it) {
+      var company = it.company || '';
+      var role    = it.role    || '';
+      var url     = it.url     || '';
+      var safeUrlAttr = _jsAttrUrl(url);
+      var ageBadge = it.daysInQueue != null
+        ? (it.daysInQueue > 30
+            ? '<span class="contact-row-pill" style="color:#dc2626;border-color:rgba(220,38,38,.4)">' + it.daysInQueue + 'd</span>'
+            : '<span class="contact-row-pill">' + it.daysInQueue + 'd</span>')
+        : '';
+      return '<div class="stale-item-row" data-url="' + _escHtml(url) + '">' +
+        '<div class="stale-item-info">' +
+          '<strong>' + _escHtml(company || '(unknown)') + (role ? ' \\u2014 ' + _escHtml(role) : '') + '</strong>' +
+          '<span class="stale-item-meta">' + _escHtml(label) + (it.scraped_at ? ' \\u00b7 scraped ' + _escHtml(it.scraped_at) : '') + ' ' + ageBadge + '</span>' +
+          (url ? '<a href="' + _escHtml(url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open posting \\u2192</a>' : '') +
+        '</div>' +
+        '<div class="stale-item-actions">' +
+          (url ? '<button type="button" class="sia-apply" onclick="window.open(\\'' + safeUrlAttr + '\\',\\'_blank\\',\\'noopener\\')">Open</button>' : '') +
+          (typeof staleItemAction === 'function' && url ? '<button type="button" class="sia-defer" onclick="staleItemAction(\\'defer\\',\\'' + safeUrlAttr + '\\', this)">Defer</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+    if (scroll) scroll.innerHTML = '<div class="stale-item-list">' + rowsHtml + '</div>';
+  }
+  window.openPipelinePendingBySource = openPipelinePendingBySource;
 
   async function staleItemAction(action, url, btnEl) {
     if (!url) return;
