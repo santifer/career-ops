@@ -204,7 +204,11 @@ function fail(msg, extra = {}) {
 let jdText = '';
 
 if (jdFile && existsSync(jdFile)) {
-  jdText = readFileSync(jdFile, 'utf-8').trim();
+  try {
+    jdText = readFileSync(jdFile, 'utf-8').trim();
+  } catch (err) {
+    fail(`Could not read JD file "${jdFile}": ${err.message}`);
+  }
 }
 
 if (!jdText && url) {
