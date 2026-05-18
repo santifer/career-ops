@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.mitchell.career-ops.cloudflared-staging</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/cloudflared</string>
+    <string>tunnel</string>
+    <string>--url</string>
+    <string>http://localhost:3097</string>
+    <string>run</string>
+    <string>career-ops-staging</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/mitchellwilliams</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key><false/>
+    <key>Crashed</key><true/>
+  </dict>
+  <key>ThrottleInterval</key><integer>60</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/cloudflared-staging.out</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/cloudflared-staging.err</string>
+</dict>
+</plist>
