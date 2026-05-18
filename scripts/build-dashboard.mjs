@@ -3504,6 +3504,36 @@ function build() {
 
   const topOfPipeJson = JSON.stringify(topOfPipeDeduped).replace(/<\//g, '<\\/');
 
+  // ── Fix 1 (tonight-pick): Auto-select top candidate not yet applied today ──
+  // Criteria: highest-scoring Evaluated row, age > 7 days, no applied-today flag.
+  // Dismiss key: careerops.tonight-pick-dismissed-{date} (localStorage, daily).
+  const _tonightPickTodayStr = today; // YYYY-MM-DD
+  let _tonightPick = null;
+  try {
+    const _candidates = applyNowSorted.filter(r => /^evaluated$/i.test(r.status));
+    // prefer rows older than 7 days; fall back to newest if all are fresh
+    const _aged = _candidates.filter(r => _daysAgo(r.date) >= 7);
+    const _pool = _aged.length ? _aged : _candidates;
+    if (_pool.length) {
+      const _pr = _pool[0]; // already sorted by score desc
+      const _pos = getPositioning(_pr.reportPath);
+      // Extract first bullet of positioning as one-liner
+      const _posLine = (_pos || '').replace(/\*\*/g, '').split(/\n|•|·/)[0].trim().slice(0, 120);
+      const _rowIdx  = applyNowSorted.findIndex(r => r.num === _pr.num);
+      _tonightPick = {
+        num: _pr.num,
+        company: _pr.company,
+        role: _pr.role,
+        score: _pr.score,
+        evalDate: _pr.date,
+        daysAgo: _daysAgo(_pr.date),
+        whyPick: _posLine || `Score ${_pr.score.toFixed(1)} — top-ranked in queue`,
+        rowIdx: `apply-${_rowIdx >= 0 ? _rowIdx : 0}`,
+      };
+    }
+  } catch (_) { _tonightPick = null; }
+  const tonightPickJson = JSON.stringify(_tonightPick || null).replace(/<\//g, '<\\/');
+
   // ── Wave C-B: funnel completion nudge ────────────────────────────
   let funnelNudgeHtml = '';
   try {
@@ -10658,15 +10688,13 @@ function openRightRailForDetail(idx, detailRow) {
   // Wave C-A drawer header: company name gets data-drill="company:{slug}",
   // score + status chips already carry data-drill from the table row (cloned via scoreHtml/statusHtml).
   var _drawerCompanySlug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // Build company header element post-innerHTML to avoid deeply nested quote escaping.
   if (headerEl) {
     headerEl.innerHTML = '<button type="button" class="drawer-close" aria-label="Close drawer" onclick="closeRightRail()">✕</button>'
       + '<div class="drawer-title-row">'
       +   logoHtml
       +   '<div class="drawer-title-meta">'
-      +     '<div class="drawer-company">'
-      +       (companyLinkHref
-            ? '<a href="' + _drawerEscape(companyLinkHref) + '" target="_blank" rel="noopener" class="drawer-company-link drill-trigger" data-drill="company:' + _drawerCompanySlug + '" title="Click for company network + pulse — or open careers page" onclick="window.drillIn(\'company\',\'' + _drawerCompanySlug + '\',event);event.preventDefault()"><span class="drawer-company-name">' + _drawerEscape(company) + '</span></a>'
-            : '<span class="drawer-company-name drill-trigger" data-drill="company:' + _drawerCompanySlug + '" role="button" tabindex="0" title="Click for company network + pulse" onclick="window.drillIn(\'company\',\'' + _drawerCompanySlug + '\',event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();window.drillIn(\'company\',\'' + _drawerCompanySlug + '\',event)}">' + _drawerEscape(company) + '</span>')
+      +     '<div class="drawer-company" id="drawer-company-slot">'
       +       (tierHtml || '')
       +     '</div>'
       +     (roleLinkHref
@@ -10675,6 +10703,37 @@ function openRightRailForDetail(idx, detailRow) {
       +   '</div>'
       + '</div>'
       + '<div class="drawer-chip-row">' + scoreHtml + statusHtml + '</div>';
+    // Wire company name drill-in after innerHTML (avoids nested-quote hell).
+    // Prepends before the tier tag in the company slot.
+    var _compSlot = headerEl.querySelector('#drawer-company-slot');
+    if (_compSlot && company) {
+      var _compNameEl;
+      if (companyLinkHref) {
+        _compNameEl = document.createElement('a');
+        _compNameEl.href = companyLinkHref;
+        _compNameEl.target = '_blank';
+        _compNameEl.rel = 'noopener';
+        _compNameEl.className = 'drawer-company-link drill-trigger';
+        _compNameEl.setAttribute('data-drill', 'company:' + _drawerCompanySlug);
+        _compNameEl.title = 'Click for company network + pulse';
+        _compNameEl.addEventListener('click', function(e) { e.preventDefault(); window.drillIn('company', _drawerCompanySlug, e); });
+        _compNameEl.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.drillIn('company', _drawerCompanySlug, e); } });
+      } else {
+        _compNameEl = document.createElement('span');
+        _compNameEl.className = 'drawer-company-name drill-trigger';
+        _compNameEl.setAttribute('role', 'button');
+        _compNameEl.tabIndex = 0;
+        _compNameEl.setAttribute('data-drill', 'company:' + _drawerCompanySlug);
+        _compNameEl.title = 'Click for company network + pulse';
+        _compNameEl.addEventListener('click', function(e) { window.drillIn('company', _drawerCompanySlug, e); });
+        _compNameEl.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.drillIn('company', _drawerCompanySlug, e); } });
+      }
+      var _nameSpan = document.createElement('span');
+      _nameSpan.className = 'drawer-company-name';
+      _nameSpan.textContent = company;
+      _compNameEl.appendChild(_nameSpan);
+      _compSlot.insertBefore(_compNameEl, _compSlot.firstChild);
+    }
     // Wire favicon-load failure → single-letter fallback. Inline onerror=
     // attributes nested inside a JS string of HTML get gnarly with quoting,
     // so we attach the listener after innerHTML is set.
