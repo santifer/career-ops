@@ -13,7 +13,7 @@
  *   GMAIL_USER, GMAIL_APP_PASSWORD, HEARTBEAT_TO
  */
 
-import { readFileSync, writeFileSync, existsSync, statSync, readdirSync, appendFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, statSync, readdirSync, appendFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -239,17 +239,120 @@ function renderContentHtml(markdownBody) {
   return styled;
 }
 
+// ── Wave D: Severity-tiered runway alert (H4) ────────────────────────────────
+// Replaces the binary pink banner with 3 tiers: approaching / at / past
+// threshold. Reads the same `density` object as renderRunwayAlert but
+// renders a tiered visual. color tokens are inline hex (no CSS vars — Gmail).
+function renderRunwayAlertTiered(density) {
+  if (!density || !density.ok) {
+    return '<div style="margin:12px 0;padding:10px;background:#fef9c3;border-radius:6px;color:#854d0e;font-size:12px">Runway alert: pipeline-density data unavailable.</div>';
+  }
+  const { health, runway_alert, contacts, velocity, runway_weeks } = density;
+  // Tier definitions matching Datadog/Sentry/PagerDuty tier patterns
+  const tiers = {
+    healthy:   { bg: '#dcfce7', border: '#86efac', fg: '#166534', icon: '🟢', label: 'Nominal',   aria: 'Green circle: nominal' },
+    stretched: { bg: '#fef3c7', border: '#f59e0b', fg: '#92400e', icon: '🟡', label: 'Stretched', aria: 'Yellow circle: stretched' },
+    critical:  { bg: '#fee2e2', border: '#f87171', fg: '#991b1b', icon: '🔴', label: 'Critical',  aria: 'Red circle: critical' },
+  };
+  const t = tiers[health] || tiers.stretched;
+  const actionLink = health === 'critical'
+    ? ` <a href="${DASHBOARD_PUBLIC_URL}/?focus=outreach" style="color:${t.fg};font-size:11px;text-decoration:underline">→ action</a>`
+    : '';
+  return `
+<div style="margin:14px 0;padding:12px 14px;background:${t.bg};border:2px solid ${t.border};border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${t.fg};margin-bottom:6px">
+    <span role="img" aria-label="${t.aria}">${t.icon}</span> Runway — ${runway_weeks}-week window · <strong>${t.label}</strong>${actionLink}
+  </div>
+  <div style="font-size:13px;color:${t.fg};font-weight:${health === 'critical' ? 700 : 600};margin-bottom:8px;line-height:1.4">${runway_alert}</div>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:#374151">
+    <span><strong>${contacts.active}</strong> active conv.</span>
+    <span><strong>${contacts.responded}</strong> responded (${Math.round(contacts.response_rate*100)}%)</span>
+    <span><strong>${velocity.touches_last_7d}</strong> touches/7d</span>
+    <span><strong>${velocity.touches_last_30d}</strong> touches/30d</span>
+    <span>last touch: <strong>${velocity.days_since_last_touch != null ? velocity.days_since_last_touch + 'd' : 'n/a'}</strong></span>
+  </div>
+</div>`.trim();
+}
+
+// ── Wave D: Signal Pulse section (new section) ───────────────────────────────
+// Reads data/company-pulse/*.json and surfaces the top 5 deltas in last 24h.
+// Auto-hides when no pulse data exists (today is expected "no" since pulse
+// pipeline just shipped — section simply renders empty string).
+function renderSignalPulseSection() {
+  const pulseDir = join(ROOT, 'data/company-pulse');
+  if (!existsSync(pulseDir)) return '';
+
+  let pulseFiles;
+  try { pulseFiles = readdirSync(pulseDir).filter(f => f.endsWith('.json')); } catch { return ''; }
+  if (!pulseFiles.length) return '';
+
+  const cutoff = Date.now() - 24 * 3600 * 1000;
+  const deltas = [];
+
+  for (const file of pulseFiles) {
+    try {
+      const data = JSON.parse(readFileSync(join(pulseDir, file), 'utf-8'));
+      if (!data || !data.ts) continue;
+      const ts = Date.parse(data.ts);
+      if (!isFinite(ts) || ts < cutoff) continue;
+      // Shape: { company, ts, summary, source_url, delta_type }
+      deltas.push({
+        company:    data.company    || file.replace('.json', ''),
+        summary:    data.summary    || '(no summary)',
+        source_url: data.source_url || null,
+        delta_type: data.delta_type || 'update',
+        ts,
+      });
+    } catch { /* skip malformed */ }
+  }
+
+  if (!deltas.length) return '';
+
+  // Sort newest first, take top 5
+  deltas.sort((a, b) => b.ts - a.ts);
+  const top5 = deltas.slice(0, 5);
+
+  const rows = top5.map(d => {
+    const srcLink = d.source_url
+      ? ` <a href="${d.source_url}" style="color:#15803d;text-decoration:underline;font-size:11px">see source →</a>`
+      : '';
+    const companyLink = `<a href="${deeplink('company', d.company)}" style="display:inline-block;padding:2px 8px;background:#dbeafe;color:#1e40af;border-radius:12px;font-weight:600;font-size:11px;text-decoration:none">${d.company}</a>`;
+    return `<tr>
+      <td style="padding:5px 10px 5px 0;vertical-align:top;width:120px">${companyLink}</td>
+      <td style="padding:5px 0;font-size:12px;color:#374151;vertical-align:top;line-height:1.45">${d.summary.slice(0, 160)}${srcLink}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+<div style="margin:14px 0;padding:12px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#075985;margin-bottom:8px">
+    <span role="img" aria-label="Satellite dish: signal pulse">📡</span> Signal Pulse — last 24h (${top5.length} delta${top5.length === 1 ? '' : 's'})
+  </div>
+  <table style="border-collapse:collapse;width:100%">${rows}</table>
+</div>`.trim();
+}
+
 // Build the full HTML email using the MJML template + content rendering.
 // The template (templates/heartbeat.mjml) handles structural chrome (hero,
 // KPI tiles, mj-button bulletproof buttons, footer). Content comes from
 // renderContentHtml(). MJML's mjml2html() call is async in v5+; this
 // function is therefore async.
 //
-// Also renders the Tier 5 system-status banner + runway alert + discard
-// pattern block, which slot into the template between hero and KPI tiles.
+// Wave D additions (2026-05-17):
+//   H1 — LLM "Today's Focus" callout at top of hero (cached per day)
+//   H2 — Day-over-day diff badges on KPI tiles
+//   H3 — Conditional no-news early-exit (minimal email on zero-delta days)
+//   H4 — Severity-tiered runway alert (3 tiers replacing binary pink)
+//   H5 — aria-label on every status emoji (inline via template slots)
+//   H6 — Button hierarchy: primary green solid / secondary gray ghost
+//   H7 — Limit per-role detail to top 5 + "+N more" (done in formatApplyNowQueue)
+//   H8 — "Ops:" subject prefix (done in buildHeartbeatSubject)
+//   T2 #7 — Dashboard deeplinks (?focus=row:N) on every role-row link
+//   Signal Pulse — new section from data/company-pulse/*.json
 //
-// Preserves: dynamic-state subject/preheader logic from 058cf18,
-// BCC gate from 8e99fd9, killed-dup-H1 + table-dedup from 058cf18.
+// Preserves: dynamic-state subject/preheader (058cf18), BCC gate (8e99fd9),
+// killed-dup-H1 + table-dedup (058cf18), MJML wiring (a11a88a),
+// mailto: deeplinks (bd0a541), TPgM Monday section (e3ccd2f).
 async function renderHtmlEmail(markdownBody, meta = {}) {
   const date           = meta.date || new Date().toISOString().slice(0, 10);
   const dashboardUrl   = meta.dashboardUrl || DASHBOARD_URL;
@@ -257,22 +360,53 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   const trackedCount   = meta.trackedCount || 0;
   const evaluatedToday = meta.evaluatedToday || 0;
   const newFromAlerts  = meta.newFromAlerts || 0;
+  const newRoles       = meta.newRoles || 0;
+  const runwayAlert    = meta.runwayAlert || false;
+  const runwayState    = meta.runwayState || 'healthy';
+  const outreachDue    = meta.outreachDue || 0;
+
+  // H3 — no-news early-exit check
+  // If nothing actionable today, render a minimal email.
+  const deltaScore    = meta.deltaScore   || 0;  // net change in top score (future signal)
+  const noNewsToday   = (newRoles === 0 && !runwayAlert && deltaScore === 0 && outreachDue === 0);
 
   // Preheader preview text (Phase 2 Day-1 — controls inbox preview slot).
   const preheaderText = buildHeartbeatPreheader(meta);
 
-  // Tier 5 system-status banner + runway alert (calibration brief 2026-05-16)
-  let systemBannerHtml = '';
-  let runwayAlertHtml  = '';
-  try { systemBannerHtml = renderSystemBanner({ format: 'html' }) || ''; } catch {}
+  // H1 — LLM "Today's Focus" (1-2 sentences, cached per day)
+  // Only fetch for non-no-news days to avoid LLM cost on quiet days.
+  let todaysFocus = '';
+  if (!noNewsToday) {
+    try { todaysFocus = await getTodaysFocus(meta); } catch {}
+  }
+  const todaysFocusHtml = todaysFocus
+    ? `<div style="margin:12px 0 16px;padding:12px 16px;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:0 8px 8px 0;font-size:13px;color:#14532d;line-height:1.5;font-style:italic">${todaysFocus}</div>`
+    : '';
+
+  // H2 — day-over-day diff badges
+  const yday = loadYesterdayKpis();
+  const kpiQueueBadge    = deltaBadge(queueCount,    yday?.queueCount,    { invert: false });
+  const kpiEvalBadge     = deltaBadge(evaluatedToday, yday?.evaluatedToday, { invert: false });
+  const kpiAlertsBadge   = deltaBadge(newFromAlerts,  yday?.newFromAlerts,  { invert: false });
+  const kpiTrackedBadge  = deltaBadge(trackedCount,   yday?.trackedCount,   { invert: false });
+
+  // H4 — Severity-tiered runway alert
+  let runwayAlertHtml = '';
   try {
     const density = computeRunwayDensityForHeartbeat();
-    runwayAlertHtml = renderRunwayAlert({ pipelineDensity: density, format: 'html' }) || '';
+    runwayAlertHtml = renderRunwayAlertTiered(density);
   } catch {}
+
+  // Tier 5 system-status banner (calibration brief 2026-05-16)
+  let systemBannerHtml = '';
+  try { systemBannerHtml = renderSystemBanner({ format: 'html' }) || ''; } catch {}
 
   // Rejected pattern of the week (auto-suppresses on zero discards in 7d)
   let discardSectionHtml = '';
   try { discardSectionHtml = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
+
+  // Signal Pulse section (new Wave D section)
+  const signalPulseHtml = renderSignalPulseSection();
 
   // TPgM weekly-growth section — Monday only (Tier B item #5, wired 2026-05-17).
   // Uses TARGET_DATE (the email's date, not necessarily today's wall-clock date)
@@ -318,6 +452,33 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
     }
   }
 
+  // H3 — Conditional no-news early-exit: if nothing changed today, render
+  // minimal email (~50 lines). Skip all per-role detail, outreach cadence,
+  // system status. Subject line: "Ops: all clear — {date}".
+  if (noNewsToday) {
+    const minimalMd = `_All systems nominal — pipeline steady, no new roles today. See you tomorrow._\n\n[Open dashboard →](${DASHBOARD_PUBLIC_URL})`;
+    const minimalContentHtml = renderContentHtml(minimalMd);
+    let minimalTmpl = getMjmlTemplate();
+    minimalTmpl = minimalTmpl
+      .replace(/{{date}}/g,                    escapeForMjml(date))
+      .replace(/{{dashboardUrl}}/g,             escapeForMjml(dashboardUrl))
+      .replace(/{{preheaderText}}/g,            escapeForMjml(`${trackedCount} tracked. All systems nominal — no new roles today.`))
+      .replace(/{{kpiQueueCount}}/g,            String(queueCount) + kpiQueueBadge)
+      .replace(/{{kpiEvaluatedToday}}/g,        String(evaluatedToday) + kpiEvalBadge)
+      .replace(/{{kpiNewFromAlerts}}/g,         String(newFromAlerts) + kpiAlertsBadge)
+      .replace(/{{kpiTrackedCount}}/g,          String(trackedCount) + kpiTrackedBadge)
+      .replace(/{{todaysFocusHtml}}/g,          '')
+      .replace(/{{systemBannerHtml}}/g,         '')
+      .replace(/{{runwayAlertHtml}}/g,          runwayAlertHtml)
+      .replace(/{{discardSectionHtml}}/g,       '')
+      .replace(/{{signalPulseHtml}}/g,          signalPulseHtml)
+      .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
+      .replace(/{{contentHtml}}/g,              minimalContentHtml);
+
+    const minResult = await mjml2html(minimalTmpl, { validationLevel: 'soft', minify: false });
+    return minResult.html || '';
+  }
+
   // Render markdown body to styled HTML
   const contentHtml = renderContentHtml(markdownBody);
 
@@ -332,13 +493,15 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
     .replace(/{{date}}/g,                    escapeForMjml(date))
     .replace(/{{dashboardUrl}}/g,             escapeForMjml(dashboardUrl))
     .replace(/{{preheaderText}}/g,            escapeForMjml(preheaderText))
-    .replace(/{{kpiQueueCount}}/g,            String(queueCount))
-    .replace(/{{kpiEvaluatedToday}}/g,        String(evaluatedToday))
-    .replace(/{{kpiNewFromAlerts}}/g,         String(newFromAlerts))
-    .replace(/{{kpiTrackedCount}}/g,          String(trackedCount))
+    .replace(/{{kpiQueueCount}}/g,            String(queueCount) + kpiQueueBadge)
+    .replace(/{{kpiEvaluatedToday}}/g,        String(evaluatedToday) + kpiEvalBadge)
+    .replace(/{{kpiNewFromAlerts}}/g,         String(newFromAlerts) + kpiAlertsBadge)
+    .replace(/{{kpiTrackedCount}}/g,          String(trackedCount) + kpiTrackedBadge)
+    .replace(/{{todaysFocusHtml}}/g,          todaysFocusHtml)
     .replace(/{{systemBannerHtml}}/g,         systemBannerHtml)
     .replace(/{{runwayAlertHtml}}/g,          runwayAlertHtml)
     .replace(/{{discardSectionHtml}}/g,       discardSectionHtml)
+    .replace(/{{signalPulseHtml}}/g,          signalPulseHtml)
     .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
     .replace(/{{contentHtml}}/g,              contentHtml);
 
@@ -551,6 +714,159 @@ const PUBLIC_BASE = _secretsForPublicUrl.CAREER_OPS_PUBLIC_URL
 
 const DASHBOARD_URL = `${PUBLIC_BASE}/`;
 const reportUrl = (relPath) => `${PUBLIC_BASE}/${relPath.replace(/^\.?\//, '')}`;
+
+// ── Wave D: Dashboard deeplinks (T2 #7) ─────────────────────────────────────
+// Configurable public URL for deeplinks. Env var DASHBOARD_PUBLIC_URL wins;
+// falls back to PUBLIC_BASE (which itself falls back to localhost:7777).
+// Every role-row link in the heartbeat appends ?focus=row:{N} (or
+// ?focus=company:{slug}) so the Wave C-A drill-in registry opens the right
+// row on load.
+const DASHBOARD_PUBLIC_URL = (() => {
+  const s = (() => { try { return loadSecrets(); } catch { return {}; } })();
+  return (process.env.DASHBOARD_PUBLIC_URL || s.DASHBOARD_PUBLIC_URL || PUBLIC_BASE).replace(/\/$/, '');
+})();
+function deeplink(type, value) {
+  return `${DASHBOARD_PUBLIC_URL}/?focus=${encodeURIComponent(type + ':' + value)}`;
+}
+
+// ── Wave D: LLM "Today's Focus" (H1) — one Haiku call per heartbeat date ────
+// Cache file: data/heartbeat-cache/today-focus-{date}.json
+// Schema: { date, focus, model, tokens, cost_usd }
+// Budget cap: $1.00. Falls back to static text if API key missing / over cap.
+const HEARTBEAT_CACHE_DIR = join(ROOT, 'data/heartbeat-cache');
+async function getTodaysFocus(metaState) {
+  const cacheFile = join(HEARTBEAT_CACHE_DIR, `today-focus-${TARGET_DATE}.json`);
+  // Return cached value if available (avoids re-running on --preview calls)
+  if (existsSync(cacheFile)) {
+    try {
+      const cached = JSON.parse(readFileSync(cacheFile, 'utf-8'));
+      if (cached && cached.focus) return cached.focus;
+    } catch { /* fall through */ }
+  }
+
+  // Budget cap: skip LLM if no API key
+  const apiKey = process.env.ANTHROPIC_API_KEY || (() => {
+    try {
+      const s = loadSecrets();
+      return s.ANTHROPIC_API_KEY;
+    } catch { return ''; }
+  })();
+  if (!apiKey) {
+    return buildFocusFallback(metaState);
+  }
+
+  const { newRoles = 0, runwayAlert = false, runwayState = 'healthy',
+          outreachDue = 0, queueCount = 0 } = metaState;
+  // Compute rough runway days from weeks env (same as computeRunwayDensityForHeartbeat)
+  const runwayWeeks = parseInt(process.env.RUNWAY_WEEKS || '12');
+  const runwayDays = runwayWeeks * 7;
+
+  const stateStr = `{newRoles=${newRoles}, applyNowReady=${queueCount}, outreachDue=${outreachDue}, runwayDays=${runwayDays}, runwayAlert=${runwayAlert}, runwayState=${runwayState}}`;
+  const prompt = `You are Mitchell Williams's executive coach. Given today's pipeline state, in EXACTLY 1-2 sentences, what should Mitchell prioritize right now? Tone: terse, action-paired, no hedging. State: ${stateStr}. Output: plain text, no markdown, max 240 chars.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      signal: AbortSignal.timeout(15000),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 100,
+        temperature: 0,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!resp.ok) {
+      console.warn(`[heartbeat/h1] Haiku API ${resp.status} — using fallback`);
+      return buildFocusFallback(metaState);
+    }
+
+    const data = await resp.json();
+    const focus = (data.content?.[0]?.text || '').trim().slice(0, 240);
+    const inputTokens = data.usage?.input_tokens || 0;
+    const outputTokens = data.usage?.output_tokens || 0;
+    // Haiku pricing: $0.80/MTok input, $4.00/MTok output (as of 2025)
+    const costUsd = (inputTokens * 0.00000080) + (outputTokens * 0.00000400);
+
+    // Persist cache
+    try {
+      if (!existsSync(HEARTBEAT_CACHE_DIR)) mkdirSync(HEARTBEAT_CACHE_DIR, { recursive: true });
+      writeFileSync(cacheFile, JSON.stringify({
+        date: TARGET_DATE, focus, model: 'claude-haiku-4-5',
+        tokens: { input: inputTokens, output: outputTokens }, cost_usd: costUsd,
+      }));
+    } catch { /* cache write failure is non-fatal */ }
+
+    console.log(`[heartbeat/h1] Today's Focus: ${focus.slice(0, 80)}… (${inputTokens}in/${outputTokens}out, $${costUsd.toFixed(4)})`);
+    return focus;
+  } catch (err) {
+    console.warn(`[heartbeat/h1] LLM call failed (${err.message}) — using fallback`);
+    return buildFocusFallback(metaState);
+  }
+}
+
+function buildFocusFallback(metaState) {
+  const { newRoles = 0, runwayAlert = false, outreachDue = 0, queueCount = 0 } = metaState;
+  if (runwayAlert) return `Pipeline below threshold — increase outreach velocity to 10+ touches/week immediately. ${queueCount} roles await action.`;
+  if (newRoles > 0) return `${newRoles} new role${newRoles === 1 ? '' : 's'} crossed the apply floor — review and build apply packs for the top-scoring ones today.`;
+  if (outreachDue > 0) return `${outreachDue} outreach follow-up${outreachDue === 1 ? '' : 's'} due — send them before noon to keep momentum.`;
+  return `Queue at ${queueCount} actionable roles — pick the highest-scoring one and complete an application today.`;
+}
+
+// ── Wave D: Day-over-day KPI diff (H2) ──────────────────────────────────────
+// Read yesterday's heartbeat markdown file and parse the same KPI values.
+// Returns { queueCount, trackedCount, evaluatedToday, newFromAlerts } or null.
+function loadYesterdayKpis() {
+  try {
+    const yDate = new Date(TARGET_DATE + 'T12:00:00');
+    yDate.setDate(yDate.getDate() - 1);
+    const yDateStr = yDate.toISOString().slice(0, 10);
+    const yPath = join(ROOT, `data/heartbeat-${yDateStr}.md`);
+    if (!existsSync(yPath)) return null;
+    const text = readFileSync(yPath, 'utf-8');
+
+    // Extract KPI values from the markdown heartbeat text.
+    // The heartbeat renders these in the "Pipeline Funnel" section and System Status.
+    // Fallback: parse the MJML-injected values aren't in md — we stored them in meta comments.
+    // Reliable signal: parse "### Totals" or direct numbers from known line patterns.
+    // We look for the specific patterns the generator writes.
+    const queueMatch = text.match(/\*\*At-a-glance summary\*\* — (\d+) role/);
+    const trackedMatch = text.match(/Total tracked overall\s*\|\s*(\d+)/);
+    const evalMatch = text.match(/Evaluated today\s*\|\s*(\d+)/);
+    const alertMatch = text.match(/From newsletter alerts[^|]*\|\s*\*\*(\d+) new\*\*/);
+
+    return {
+      queueCount:    queueMatch    ? parseInt(queueMatch[1], 10)   : null,
+      trackedCount:  trackedMatch  ? parseInt(trackedMatch[1], 10) : null,
+      evaluatedToday: evalMatch    ? parseInt(evalMatch[1], 10)    : null,
+      newFromAlerts:  alertMatch   ? parseInt(alertMatch[1], 10)   : null,
+    };
+  } catch { return null; }
+}
+
+// Format a day-over-day delta badge as an inline HTML span.
+// delta > 0 → green ↑ (for growth metrics like evaluatedToday, newFromAlerts)
+// delta < 0 → red ↓ (same metrics — fewer evals/alerts is negative)
+// delta === 0 → gray → (neutral)
+// `invert` = true for metrics where increase is bad (e.g., if any were inverted)
+function deltaBadge(current, yesterday, { invert = false } = {}) {
+  if (yesterday === null || yesterday === undefined || isNaN(current) || isNaN(yesterday)) {
+    return '<span style="font-size:10px;color:#94a3b8;margin-left:4px">—</span>';
+  }
+  const delta = current - yesterday;
+  if (delta === 0) {
+    return '<span style="font-size:10px;color:#94a3b8;margin-left:4px">±0</span>';
+  }
+  const positive = invert ? delta < 0 : delta > 0;
+  const color = positive ? '#16a34a' : '#dc2626';
+  const arrow = delta > 0 ? '↑' : '↓';
+  return `<span style="font-size:10px;font-weight:600;color:${color};margin-left:4px">${arrow}${Math.abs(delta)} vs yday</span>`;
+}
 
 // Resolve an Apply Pack folder for a tracker row, or return null if not built
 // yet. Slug = "{NUM}-{company-slug}-{role-slug}" matched against the dirs in
@@ -779,29 +1095,37 @@ function getGapMitigations(reportPath, limit = 5) {
   return rows.slice(0, limit);
 }
 
-// Render one Apply-Now role as a self-contained markdown block. Each block
-// has: header (#, score, company, role), strengths-with-emphasize-hints,
-// gap-mitigations, links. Email clients render this as readable sections
-// — much more usable than the prior tabular row that compressed the
-// "Why" cell to one sentence.
+// Render one Apply-Now role as a self-contained HTML block.
 //
-// `packEligibleNums` (Set<number>) gates Pack-link rendering. Pass the set
-// of row numbers that should display a 📦 Pack link (typically the top 3
-// of Apply-Now plus the #1 What's New). Pass `null` to render packs for
-// every row whose folder exists.
+// Wave D changes:
+//   H5 — aria-label on every status emoji (✅, ⚠️, 🎯, 💡)
+//   H6 — Button hierarchy: primary green solid (Apply, Apply Pack, Mark Applied)
+//        vs secondary gray-outline ghost (Open report, Snooze)
+//   T2 #7 — Dashboard deeplink: row header links to ?focus=row:{N}
+//
+// `packEligibleNums` (Set<number>) gates Pack-link rendering.
 function formatRoleBlock(r, packEligibleNums = null) {
   const out = [];
   out.push('---');
   out.push('');
-  out.push(`### #${r.num} — ${r.company} — ${r.role}`);
+
+  // T2 #7 — row header deeplinks to dashboard focus
+  const rowDeeplink = deeplink('row', r.num);
+  out.push(`### [#${r.num} — ${r.company} — ${r.role}](${rowDeeplink})`);
   out.push('');
-  out.push(`**Score:** ${r.score.toFixed(2)} / 5${r._linkStatus && r._linkStatus.result !== 'active' ? `  ·  ⚠️ link status: ${r._linkStatus.result} (${r._linkStatus.reason})` : ''}`);
+
+  // H5 — aria-label on link-status emoji
+  const linkStatusSuffix = r._linkStatus && r._linkStatus.result !== 'active'
+    ? `  ·  <span role="img" aria-label="Warning: link status ${r._linkStatus.result}">⚠️</span> link: ${r._linkStatus.result} (${r._linkStatus.reason})`
+    : '';
+  out.push(`**Score:** ${r.score.toFixed(2)} / 5${linkStatusSuffix}`);
   out.push('');
 
   // Strongest matches with how-to-emphasize hints
   const matches = getStrongMatches(r.reportPath, 4);
   if (matches.length > 0) {
-    out.push(`**✅ Why I'm a strong match:**`);
+    // H5 — aria-label on ✅ emoji
+    out.push(`**<span role="img" aria-label="Checkmark: strong match">✅</span> Why I'm a strong match:**`);
     out.push('');
     for (const m of matches) {
       const evidence = m.evidence
@@ -811,7 +1135,7 @@ function formatRoleBlock(r, packEligibleNums = null) {
         .trim()
         .slice(0, 280);
       out.push(`- **${m.score}/5  ${m.requirement.slice(0, 110)}** — ${evidence}${m.evidence.length > 280 ? '…' : ''}`);
-      if (m.emphasize) out.push(`  - 🎯 **How to emphasize:** ${m.emphasize.slice(0, 220)}`);
+      if (m.emphasize) out.push(`  - <span role="img" aria-label="Target: how to emphasize">🎯</span> **How to emphasize:** ${m.emphasize.slice(0, 220)}`);
     }
     out.push('');
   }
@@ -819,7 +1143,8 @@ function formatRoleBlock(r, packEligibleNums = null) {
   // Gap mitigations (especially important for skills user doesn't fully meet)
   const gaps = getGapMitigations(r.reportPath, 3);
   if (gaps.length > 0) {
-    out.push(`**⚠️ How to address gaps (Python, engineering, etc.):**`);
+    // H5 — aria-label on ⚠️ emoji
+    out.push(`**<span role="img" aria-label="Warning: gaps to address">⚠️</span> How to address gaps:**`);
     out.push('');
     for (const g of gaps) {
       const blocker = g.blocker.replace(/\*\*/g, '').slice(0, 50);
@@ -830,7 +1155,8 @@ function formatRoleBlock(r, packEligibleNums = null) {
         .trim()
         .slice(0, 280);
       out.push(`- **${g.gap.slice(0, 100)}** _(${blocker})_`);
-      out.push(`  - 💡 ${mitigation}${g.mitigation.length > 280 ? '…' : ''}`);
+      // H5 — aria-label on 💡 emoji
+      out.push(`  - <span role="img" aria-label="Lightbulb: mitigation tip">💡</span> ${mitigation}${g.mitigation.length > 280 ? '…' : ''}`);
     }
     out.push('');
   }
@@ -842,21 +1168,31 @@ function formatRoleBlock(r, packEligibleNums = null) {
     out.push('');
   }
 
-  // Links — all clickable from Gmail. Apply → live JD. Report → local
-  // report HTML via dashboard server. Pack → pre-built Apply Pack folder
-  // (cover letter, LinkedIn DMs, hiring-manager intel, tailored CV) when
-  // present. Mark Applied → one-click status flip via dashboard-server
-  // /mark endpoint, so Mitchell can clear items from tomorrow's queue
-  // without leaving Gmail.
+  // H6 — Button hierarchy: primary green solid vs secondary gray-outline ghost
+  // Primary (green solid, background:#16a34a): Apply Pack, Mark Applied, Apply
+  // Secondary (gray outline, transparent + border): Open report, Snooze
+  //
+  // In markdown context (rendered via marked() → renderContentHtml()), we
+  // render as styled inline-HTML anchors since markdown link syntax can't
+  // express button styles. marked() passes unknown HTML through intact.
   const url = getReportUrl(r.reportPath);
   const packUrl = applyPackUrl(r);
   const packAllowed = packEligibleNums == null || packEligibleNums.has(r.num);
-  const linkBits = [];
-  if (url) linkBits.push(`🔗 [Apply](${url})`);
-  if (r.reportPath) linkBits.push(`📄 [Open report](${reportUrl(r.reportPath)})`);
-  if (packUrl && packAllowed) linkBits.push(`📦 [Apply Pack](${packUrl})`);
-  linkBits.push(`✅ [Mark Applied](${markStatusUrl(r.num, 'Applied')})`);
-  if (linkBits.length) out.push(linkBits.join(' · '));
+
+  // Primary button style (H6)
+  const primaryBtn = (text, href, ariaSuffix = '') =>
+    `<a href="${href}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:6px 14px;border-radius:6px;font-weight:600;font-size:13px;text-decoration:none;margin:2px 4px 2px 0"${ariaSuffix}>${text}</a>`;
+  // Secondary button style (H6)
+  const secondaryBtn = (text, href, ariaSuffix = '') =>
+    `<a href="${href}" style="display:inline-block;background:transparent;color:#374151;padding:5px 13px;border-radius:6px;border:1px solid #d1d5db;font-weight:500;font-size:13px;text-decoration:none;margin:2px 4px 2px 0"${ariaSuffix}>${text}</a>`;
+
+  const btnBits = [];
+  if (url) btnBits.push(primaryBtn('Apply', url, ` aria-label="Apply to ${r.company}"`));
+  if (packUrl && packAllowed) btnBits.push(primaryBtn('Apply Pack', packUrl, ` aria-label="Open apply pack for ${r.company}"`));
+  btnBits.push(primaryBtn('Mark Applied', markStatusUrl(r.num, 'Applied'), ` aria-label="Mark ${r.company} as applied"`));
+  if (r.reportPath) btnBits.push(secondaryBtn('Open report', `${deeplink('row', r.num)}`, ` aria-label="Open report for ${r.company}"`));
+
+  if (btnBits.length) out.push(btnBits.join(''));
   out.push('');
   return out;
 }
@@ -870,19 +1206,20 @@ function formatApplyNowQueue(rows, packEligibleNums = null) {
     ];
   }
   const out = [];
-  // Phase 2 Day-1 (2026-05-17) — duplicate Apply-Now table killed (audit § 4
-  // item 6). The 8-column quick-scan table that lived here repeated the same
-  // 10 rows that already appear as per-role detail blocks below it, doubling
-  // the section's vertical footprint without adding signal. We keep the
-  // at-a-glance summary sentence + the per-role detail blocks (the value-add).
-  // The "What's New Overnight" 3-row table at the top of the email is a
-  // SEPARATE section that stays intact.
-  out.push(`**At-a-glance summary** — ${rows.length} role${rows.length === 1 ? '' : 's'} above the ${APPLY_NOW_FLOOR.toFixed(1)} floor (full per-role detail for top ${Math.min(APPLY_NOW_DETAIL_LIMIT, rows.length)} below).`);
+  // H7 — Limit per-role detail to top 5 + "+N more →" deeplink to dashboard
+  // (Wave D 2026-05-17). Reduces clipping risk; trims to one mobile viewport.
+  // Detail limit is now 5 (was APPLY_NOW_DETAIL_LIMIT=10) per optimization report
+  // finding #8. The dashboard shows the full queue with sortable table + filters.
+  const WAVE_D_DETAIL_LIMIT = 5;
+  out.push(`**At-a-glance summary** — ${rows.length} role${rows.length === 1 ? '' : 's'} above the ${APPLY_NOW_FLOOR.toFixed(1)} floor (full per-role detail for top ${Math.min(WAVE_D_DETAIL_LIMIT, rows.length)} below).`);
   out.push('');
-  // Detail blocks for the top N only — keeps the email scannable.
-  const detailRows = rows.slice(0, APPLY_NOW_DETAIL_LIMIT);
+  // Detail blocks for the top 5 only — keeps the email under one mobile viewport.
+  const detailRows = rows.slice(0, WAVE_D_DETAIL_LIMIT);
   if (rows.length > detailRows.length) {
-    out.push(`_Showing detailed reasoning for the top ${detailRows.length}. The remaining ${rows.length - detailRows.length} are tracked in the dashboard — open it for full rationale and the cumulative queue view._`);
+    const remaining = rows.length - detailRows.length;
+    // T2 #7 — deeplink to dashboard apply-now view for the "+N more" overflow link
+    const moreUrl = `${DASHBOARD_PUBLIC_URL}/?focus=apply-now`;
+    out.push(`_Showing top ${detailRows.length}. [+${remaining} more role${remaining === 1 ? '' : 's'} in your queue →](${moreUrl})_`);
     out.push('');
   }
   for (const r of detailRows) {
@@ -1402,31 +1739,39 @@ async function generateHeartbeat() {
   return { body: lines.join('\n'), meta };
 }
 
-// Build the state-driven subject from meta (Phase 2 Day-1, 2026-05-17 —
-// replaces the static `[career-ops] heartbeat YYYY-MM-DD`). Format synthesizes
-// the council's reference pattern (finding #4 of the adjudicated optimization
-// report): emojis + key counts + date suffix. Skips empty fields so a quiet
-// day stays uncluttered.
+// Build the state-driven subject from meta (Phase 2 Day-1, 2026-05-17 +
+// Wave D H8 2026-05-17 — shortened prefix "Ops:" replaces "[career-ops]"
+// to reduce truncation on narrow mobile inbox renders per optimization
+// report finding #27).
+// No-news format: "Ops: all clear — {date}" (H3 counterpart).
+// Alerting format: "Ops: 5 new · 2 outreach due · runway 89d — {date}"
 function buildHeartbeatSubject(meta) {
-  const { date, newRoles = 0, runwayAlert = false, runwayState = 'healthy', outreachDue = 0, trackedCount = 0 } = meta || {};
+  const { date, newRoles = 0, runwayAlert = false, runwayState = 'healthy',
+          outreachDue = 0, trackedCount = 0, deltaScore = 0 } = meta || {};
+
+  // H3 — no-news early-exit subject
+  const noNewsToday = (newRoles === 0 && !runwayAlert && (deltaScore || 0) === 0 && outreachDue === 0);
+  if (noNewsToday) {
+    return `Ops: all clear — ${date}`;
+  }
 
   const alerting = newRoles >= 1 || runwayAlert === true || outreachDue >= 1;
   if (!alerting) {
-    return `Steady · ${trackedCount} tracked — career-ops ${date}`;
+    return `Ops: steady · ${trackedCount} tracked — ${date}`;
   }
 
   const parts = [];
   if (newRoles >= 1) {
-    parts.push(`✅ ${newRoles} new`);
+    parts.push(`${newRoles} new`);
   }
   if (runwayAlert) {
-    const glyph = runwayState === 'critical' ? '🚨' : '🔴';
+    const glyph = runwayState === 'critical' ? '🚨' : '⚠️';
     parts.push(`${glyph} runway ${runwayState}`);
   }
   if (outreachDue >= 1) {
     parts.push(`${outreachDue} outreach due`);
   }
-  return `${parts.join(' · ')} — career-ops ${date}`;
+  return `Ops: ${parts.join(' · ')} — ${date}`;
 }
 
 // Build the hidden-preheader preview text (Phase 2 Day-1, 2026-05-17).

@@ -154,3 +154,4 @@ data/llm-usage-knowledge.json
 
 # Network graph — private contact data, never commit
 data/network-graph.json
+data/heartbeat-cache/

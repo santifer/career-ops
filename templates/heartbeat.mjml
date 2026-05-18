@@ -49,6 +49,7 @@
         .score-pill-green { background: rgba(22,163,74,0.15) !important; color: #86efac !important; border-color: rgba(22,163,74,0.35) !important; }
         .score-pill-amber { background: rgba(168,123,72,0.14) !important; color: #d4ba84 !important; }
         .score-pill-red   { background: rgba(220,38,38,0.12) !important; color: #fca5a5 !important; }
+        .focus-callout  { background: rgba(22,163,74,0.10) !important; border-left-color: #86efac !important; color: #bbf7d0 !important; }
       }
     </mj-style>
     <mj-raw>
@@ -81,7 +82,7 @@
           text-transform="uppercase"
           font-weight="600"
           padding-bottom="4px"
-        >⚡ Career-Ops · Daily Heartbeat</mj-text>
+        ><span role="img" aria-label="Lightning bolt: career ops">⚡</span> Career-Ops · Daily Heartbeat</mj-text>
         <mj-text
           color="#ffffff"
           font-size="24px"
@@ -108,14 +109,24 @@
       </mj-column>
     </mj-section>
 
-    <!-- System status banner + runway alert (rendered HTML from lib/heartbeat-system-banner.mjs) -->
+    <!-- H1 — LLM "Today's Focus" callout (Wave D 2026-05-17).
+         1-2 sentence coaching directive from claude-haiku-4-5, cached per day.
+         Empty string on no-news days or when API key is absent. -->
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text padding="0">{{todaysFocusHtml}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- System status banner (rendered HTML from lib/heartbeat-system-banner.mjs) -->
     <mj-section padding="0">
       <mj-column>
         <mj-text padding="0">{{systemBannerHtml}}</mj-text>
       </mj-column>
     </mj-section>
 
-    <!-- Runway alert -->
+    <!-- H4 — Severity-tiered runway alert (3 tiers: nominal/stretched/critical)
+         Replaces binary pink banner. Rendered by renderRunwayAlertTiered(). -->
     <mj-section padding="0">
       <mj-column>
         <mj-text padding="0">{{runwayAlertHtml}}</mj-text>
@@ -129,6 +140,14 @@
       </mj-column>
     </mj-section>
 
+    <!-- Signal Pulse section — last 24h company-pulse deltas (Wave D 2026-05-17).
+         Auto-hides when data/company-pulse/ is empty or missing. -->
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text padding="0">{{signalPulseHtml}}</mj-text>
+      </mj-column>
+    </mj-section>
+
     <!-- TPgM weekly growth section — Monday only (Tier B item #5, wired 2026-05-17) -->
     <!-- Rendered by lib/tpgm-heartbeat-section.mjs; empty string on non-Monday days -->
     <mj-section padding="0">
@@ -139,6 +158,8 @@
 
     <!-- ═══════════════════════════════════════════════════════════════════
          KPI TILES — four stats in a 4-column layout.
+         H2 — day-over-day diff badges are injected inline with the value
+         (e.g. "14 <span ...>+2 vs yday</span>") by renderHtmlEmail().
          Each tile is a separate mj-column so they stack on mobile.
          ═══════════════════════════════════════════════════════════════════ -->
     <mj-section padding="0 0 18px 0">
@@ -258,6 +279,12 @@
          approach preserves all existing markdown-based section generators
          while getting MJML's structural chrome (hero, KPI tiles, buttons,
          footer) and bulletproof button rendering.
+
+         Wave D changes applied inside renderContentHtml():
+           H5 — aria-label on every status emoji
+           H6 — button hierarchy (primary green solid vs secondary ghost)
+           H7 — top 5 roles + "+N more" deeplink
+           T2 #7 — ?focus=row:{N} deeplinks on every role-row header
          ═══════════════════════════════════════════════════════════════════ -->
     <mj-section padding="0">
       <mj-column>
