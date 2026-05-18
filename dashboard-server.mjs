@@ -8,7 +8,7 @@ import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
-import { execSync as _execSync } from 'child_process';
+import { execSync as _execSync, spawn as _spawn } from 'child_process';
 import yaml from 'js-yaml';
 import { marked } from 'marked';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
@@ -3006,6 +3006,85 @@ const server = createServer((req, res) => {
       return json({ ok: false, error: e.message }, 500);
     }
   }
+
+  // ── GET /api/liveness?url=... ──────────────────────────────────────────
+  // Liveness Phase 2 (2026-05-18, inventory item from strategy doc).
+  // Realtime probe used by the drawer-open hook. 6h cache keyed by URL so
+  // repeated drawer opens don't hammer ATS hosts. Reuses lib/liveness.mjs.
+  if (url.startsWith('/api/liveness') && req.method === 'GET') {
+    (async () => {
+      try {
+        const parsed = new URL('http://localhost' + url);
+        const target = parsed.searchParams.get('url');
+        if (!target) return json({ ok: false, error: 'url param required' }, 400);
+
+        // 1) Check the overnight sweep's sidecar (most authoritative)
+        const statePath = join(ROOT, 'data/liveness-state.json');
+        if (existsSync(statePath)) {
+          try {
+            const state = JSON.parse(readFileSync(statePath, 'utf-8'));
+            for (const [num, row] of Object.entries(state.rows || {})) {
+              if (row && row.url === target) {
+                return json({
+                  ok: true,
+                  alive: row.status === 'active',
+                  status: row.status,
+                  reason: row.reason || '',
+                  lastChecked: row.lastChecked,
+                  source: 'overnight-sweep',
+                  row_num: num,
+                });
+              }
+            }
+          } catch (e) { _d25Log('[liveness] state read failed: ' + e.message); }
+        }
+
+        // 2) Check the 6h request cache
+        const cachePath = join(ROOT, 'data/liveness-cache.json');
+        let cache = {};
+        if (existsSync(cachePath)) {
+          try { cache = JSON.parse(readFileSync(cachePath, 'utf-8')); } catch {}
+        }
+        const cacheKey = target;
+        const cacheEntry = cache[cacheKey];
+        const SIX_HOURS = 6 * 60 * 60 * 1000;
+        if (cacheEntry && (Date.now() - cacheEntry.ts) < SIX_HOURS) {
+          return json({
+            ok: true,
+            alive: cacheEntry.status === 'active',
+            status: cacheEntry.status,
+            reason: cacheEntry.reason,
+            lastChecked: new Date(cacheEntry.ts).toISOString(),
+            source: 'cache',
+          });
+        }
+
+        // 3) Live probe via lib/liveness.mjs
+        const { verifyApplyNowLink } = await import(join(ROOT, 'lib/liveness.mjs'));
+        const result = await verifyApplyNowLink(target);
+        const status = result.result;
+
+        // Update the 6h cache
+        cache[cacheKey] = { status, reason: result.reason, ts: Date.now() };
+        try {
+          writeFileSync(cachePath, JSON.stringify(cache, null, 2));
+        } catch (e) { _d25Log('[liveness] cache write failed: ' + e.message); }
+
+        return json({
+          ok: true,
+          alive: status === 'active',
+          status,
+          reason: result.reason,
+          lastChecked: new Date().toISOString(),
+          source: 'live-probe',
+        });
+      } catch (e) {
+        _d25Log('[liveness] ' + e.message);
+        return json({ ok: false, error: e.message }, 500);
+      }
+    })();
+    return;
+  }
   if (url === '/api/pipeline/process-all' && req.method === 'POST') {
     let body = '';
     let total = 0;
@@ -4033,6 +4112,192 @@ const server = createServer((req, res) => {
         return json({ ok: true, week, file: weekFile, sections_written: appendix.length });
       } catch (err) {
         _d25Log(`[weekly-update] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
+  // ── 6. POST /api/career-update — Update Drawer (Inventory B5 MVP, 2026-05-18)
+  //   body: { tag: 'project'|'cert'|'training'|'1:1'|'note', text: string, date?: 'YYYY-MM-DD' }
+  //   1. Validate
+  //   2. Append { ts, date, tag, text } to data/career-updates.jsonl (atomic via
+  //      appendFile — JSONL tolerates partial writes line-by-line)
+  //   3. Spawn scripts/merge-career-updates.mjs as a detached child so the
+  //      response returns immediately; the merger updates corpus + commits via
+  //      agent-commit.mjs on its own clock. UPDATE_MERGER_DISABLED=1 env var
+  //      short-circuits the spawn (useful for tests).
+  //   Response: { ok: true, ts, file }
+  if (url === '/api/career-update' && req.method === 'POST') {
+    (async () => {
+      try {
+        const body = await _readBody(req);
+        const VALID_TAGS = new Set(['project', 'cert', 'training', '1:1', 'note']);
+        const tag = (body && typeof body.tag === 'string') ? body.tag.trim() : '';
+        const text = (body && typeof body.text === 'string') ? body.text.trim() : '';
+        if (!VALID_TAGS.has(tag)) {
+          return json({ ok: false, error: `tag must be one of: ${[...VALID_TAGS].join(', ')}` }, 400);
+        }
+        if (!text || text.length < 1) {
+          return json({ ok: false, error: 'text is required' }, 400);
+        }
+        if (text.length > 5000) {
+          return json({ ok: false, error: 'text exceeds 5000 chars' }, 400);
+        }
+        // Date — accept caller's YYYY-MM-DD or default to today (PDT)
+        let date = (body && typeof body.date === 'string') ? body.date.trim() : '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          date = new Date().toISOString().slice(0, 10);
+        }
+        const ts = new Date().toISOString();
+        const entry = { ts, date, tag, text };
+        const jsonlPath = join(ROOT, 'data/career-updates.jsonl');
+        // Ensure the data/ dir exists (it does by default, but tolerate fresh clones)
+        try { if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true }); } catch (_) {}
+        appendFileSync(jsonlPath, JSON.stringify(entry) + '\n');
+
+        // Spawn the merger detached + unref so it runs out-of-band.
+        if (process.env.UPDATE_MERGER_DISABLED !== '1') {
+          try {
+            const child = _spawn(
+              'node',
+              [join(ROOT, 'scripts/merge-career-updates.mjs'), '--limit', '10'],
+              { cwd: ROOT, stdio: 'ignore', detached: true },
+            );
+            child.unref();
+          } catch (e) {
+            // Merge failure must not block the user's save. Log and move on.
+            console.error('[career-update] merger spawn failed:', e.message);
+          }
+        }
+        return json({ ok: true, ts, date, tag, file: 'data/career-updates.jsonl' });
+      } catch (err) {
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
+  // GET /api/career-update/recent?limit=N — returns last N entries (newest first)
+  //   Default limit 5; capped at 50. Used by the drawer's recent-updates list
+  //   and the sidebar widget. Cache-Control: no-store so writes show instantly.
+  if (url === '/api/career-update/recent' && req.method === 'GET') {
+    try {
+      const jsonlPath = join(ROOT, 'data/career-updates.jsonl');
+      if (!existsSync(jsonlPath)) return json({ ok: true, entries: [] });
+      const limitRaw = parseInt(query.limit || '5', 10);
+      const limit = Math.min(50, Math.max(1, Number.isFinite(limitRaw) ? limitRaw : 5));
+      const lines = readFileSync(jsonlPath, 'utf-8').split('\n').filter(Boolean);
+      const entries = lines.slice(-limit).map(l => {
+        try { return JSON.parse(l); } catch { return null; }
+      }).filter(Boolean).reverse();
+      return json({ ok: true, entries });
+    } catch (err) {
+      return json({ ok: false, error: err.message }, 500);
+    }
+  }
+
+  // ── 7. Calibration prompt state (Inventory B6 MVP, 2026-05-18) ──────────────
+  //   GET /api/calibration/state
+  //     Returns the parsed data/calibration-state.json + the latest prompt
+  //     metadata (filename, date, age in days, content for clipboard).
+  //   POST /api/calibration/answered
+  //     Body: { date?: 'YYYY-MM-DD' } — defaults to today.
+  //     Writes data/calibration-state.json { last_prompt_answered: date } so
+  //     the dashboard card auto-hides on next rebuild. Does NOT delete the
+  //     prompt file itself; that survives for audit.
+  if (url === '/api/calibration/state' && req.method === 'GET') {
+    try {
+      const statePath = join(ROOT, 'data/calibration-state.json');
+      let state = {
+        last_prompt_generated: null,
+        last_prompt_path: null,
+        last_prompt_questions: 0,
+        last_prompt_answered: null,
+        history: [],
+      };
+      if (existsSync(statePath)) {
+        try { state = { ...state, ...JSON.parse(readFileSync(statePath, 'utf-8')) }; } catch {}
+      }
+      // Locate the most recent prompt file (defensively — state may be stale)
+      let latestFile = null;
+      let latestPath = null;
+      let latestContent = '';
+      let latestDate = null;
+      let ageDays = null;
+      try {
+        const files = readdirSync(join(ROOT, 'data'))
+          .filter(f => /^weekly-calibration-prompt-\d{4}-\d{2}-\d{2}\.md$/.test(f))
+          .sort((a, b) => b.localeCompare(a));
+        if (files.length > 0) {
+          latestFile = files[0];
+          latestPath = join(ROOT, 'data', latestFile);
+          const stat = statSync(latestPath);
+          ageDays = Math.round((Date.now() - stat.mtimeMs) / 86400000);
+          const m = latestFile.match(/(\d{4}-\d{2}-\d{2})/);
+          latestDate = m ? m[1] : null;
+          latestContent = readFileSync(latestPath, 'utf-8');
+        }
+      } catch (_) { /* fall through */ }
+      // Extract just the Gemini prompt block for clipboard-friendly copy.
+      // Match at start-of-line so we skip the docs reference at the top of
+      // the file (which has the markers inside backticks).
+      let promptBlock = '';
+      if (latestContent) {
+        const startMatch = latestContent.match(/^=== GEMINI PROMPT START ===$/m);
+        const endMatch = latestContent.match(/^=== GEMINI PROMPT END ===$/m);
+        if (startMatch && endMatch && endMatch.index > startMatch.index) {
+          promptBlock = latestContent.slice(startMatch.index, endMatch.index + endMatch[0].length);
+        }
+      }
+      const answered = state.last_prompt_answered && latestDate
+        ? state.last_prompt_answered >= latestDate
+        : false;
+      return json({
+        ok: true,
+        state,
+        latest: latestFile ? {
+          file:      latestFile,
+          path:      'data/' + latestFile,
+          date:      latestDate,
+          age_days:  ageDays,
+          questions: state.last_prompt_questions || 0,
+          answered,
+          prompt_block: promptBlock,
+        } : null,
+      });
+    } catch (err) {
+      return json({ ok: false, error: err.message }, 500);
+    }
+  }
+
+  if (url === '/api/calibration/answered' && req.method === 'POST') {
+    (async () => {
+      try {
+        const body = await _readBody(req);
+        let date = (body && typeof body.date === 'string') ? body.date.trim() : '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          date = new Date().toISOString().slice(0, 10);
+        }
+        const statePath = join(ROOT, 'data/calibration-state.json');
+        let state = {
+          last_prompt_generated: null,
+          last_prompt_path: null,
+          last_prompt_questions: 0,
+          last_prompt_answered: null,
+          history: [],
+        };
+        if (existsSync(statePath)) {
+          try { state = { ...state, ...JSON.parse(readFileSync(statePath, 'utf-8')) }; } catch {}
+          if (!Array.isArray(state.history)) state.history = [];
+        }
+        state.last_prompt_answered = date;
+        // Annotate the matching history entry so audit trail is complete
+        const entry = state.history.find(h => h && h.date === state.last_prompt_generated);
+        if (entry) entry.answered = date;
+        writeFileSync(statePath, JSON.stringify(state, null, 2));
+        return json({ ok: true, last_prompt_answered: date });
+      } catch (err) {
         return json({ ok: false, error: err.message }, 500);
       }
     })();

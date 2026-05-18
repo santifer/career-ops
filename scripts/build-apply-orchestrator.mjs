@@ -425,17 +425,29 @@ export async function fanOutDrafts({
 /* Stage 5: voice_pass                                                        */
 /* -------------------------------------------------------------------------- */
 
+// P2-7 (2026-05-18): voice-fidelity threshold promoted from 0.80 default to
+// 0.54 per data/voice-fidelity-calibration.json (Q1 of 10-sample empirical
+// distribution: composite 0.5306-0.6029, suggested_threshold 0.54). The 0.80
+// default was a strategy-doc placeholder; the actual cover-letter corpus runs
+// looser. Threshold is env-overridable so future calibration can adjust
+// without code changes.
+const VOICE_FIDELITY_THRESHOLD = (() => {
+  const v = parseFloat(process.env.VOICE_FIDELITY_THRESHOLD);
+  return Number.isFinite(v) && v >= 0 && v <= 1 ? v : 0.54;
+})();
+
 export async function voicePass({ drafts, voiceReferencePath, dryRun = true }) {
   if (!dryRun) {
     throw new Error('live mode not implemented — scaffold only');
   }
-  // Scaffold: populate voice_fidelity_cosine on cover_letter with a safe
-  // sentinel that passes the schema's [0,1] bounds. Day 5 / Day 7 will replace
+  // Scaffold: populate voice_fidelity_cosine on cover_letter with the
+  // calibration-derived threshold value (P2-7). Day 5 / Day 7 will replace
   // this with paragraph-level cosine vs voice-reference centroid.
   void voiceReferencePath;
   const updated = JSON.parse(JSON.stringify(drafts));
   if (updated.cover_letter) {
-    updated.cover_letter.voice_fidelity_cosine = 0.8;
+    updated.cover_letter.voice_fidelity_cosine = VOICE_FIDELITY_THRESHOLD;
+    updated.cover_letter.voice_fidelity_threshold = VOICE_FIDELITY_THRESHOLD;
   }
   return updated;
 }

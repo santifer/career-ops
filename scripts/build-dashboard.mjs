@@ -30,6 +30,10 @@ import { scoreAlignmentCached } from '../lib/alignment-scorer.mjs';
 import { getPeerContext, renderPeerTable }                          from '../lib/peer-context.mjs';
 import { getProvenance, renderProvenanceCard, renderProvenanceSummary } from '../lib/decision-provenance.mjs';
 import { applyWealthLens, renderWealthLensCard }                   from '../lib/wealth-lens.mjs';
+import { rankCompaniesByWealth }                                   from '../lib/wealth-ranking.mjs';
+import { resolveDeepApplyUrl }                                     from '../lib/ats-deep-apply.mjs';
+import { getIndustryGapRanking, renderIndustryGapTable }           from '../lib/industry-gap.mjs';
+import { assessTravelTradeoff, renderTravelChip }                  from '../lib/travel-cap.mjs';
 import { computeStrategyCeiling, renderStrategyCard }              from '../lib/strategy-ceiling.mjs';
 import { renderEquitySlidersHtml }                                 from '../lib/equity-calculator.mjs';
 import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/negotiation-playbook.mjs';
@@ -39,6 +43,7 @@ import { renderHmIntelCard, getHmIntelForRole }                    from '../lib/
 import { getPulseForCompany, getCachedPulseSync, renderPulseCard } from '../lib/company-pulse.mjs';
 import { detectFunnelGap, renderFunnelNudge }                      from '../lib/funnel-completion.mjs';
 import { scoreStaleness, renderStalenessBadge }                    from '../lib/staleness-nudge.mjs';
+import { computeToxicityComposite }                                from '../lib/toxicity-composite.mjs';
 const parseYaml = yaml.load;
 
 const ROOT = process.cwd();
@@ -2594,8 +2599,17 @@ function renderRow(r, idx) {
   // Phase G — Mitchell flagged that "no apply or verify options" were visible.
   // Apply button was previously implicit (clicking the role title opens the JD),
   // but per his feedback an explicit Apply button is needed in the action cell.
+  // A3 (2026-05-18): resolveDeepApplyUrl rewrites the URL to a deep-apply
+  // form URL where the ATS supports it (Ashby +/application, Lever +/apply,
+  // Workable +/apply, SmartRecruiters ?apply=1, Jobvite /apply, iCIMS ?mode=apply).
+  // Greenhouse returns the JD URL unchanged (its JD page IS the apply UX).
+  // Unknown ATSes fall back to the original URL. Title hint indicates which.
+  const _applyResolved = url ? resolveDeepApplyUrl(url) : { deepUrl: '', ats: null, style: 'unknown' };
+  const _applyTitle = _applyResolved.ats
+    ? (_applyResolved.style === 'deep' ? `Open the ${_applyResolved.ats} apply form directly` : `Open the ${_applyResolved.ats} job posting (apply inline)`)
+    : 'Open the job posting in a new tab';
   const applyBtn = url
-    ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--green-fg);font-weight:600" title="Open the job posting in a new tab" aria-label="Apply to ${htmlEscape(r.company)} ${htmlEscape(r.role)}">🔗 Apply now</a>`
+    ? `<a href="${htmlEscape(_applyResolved.deepUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--green-fg);font-weight:600" title="${htmlEscape(_applyTitle)}" data-ats="${htmlEscape(_applyResolved.ats || 'unknown')}" data-apply-style="${_applyResolved.style}" aria-label="Apply to ${htmlEscape(r.company)} ${htmlEscape(r.role)}">🔗 Apply now</a>`
     : '';
   const reportHtmlLink = r.reportPath
     ? `<a href="reports/${basename(r.reportPath).replace(/\.md$/, '.html')}" target="_blank" onclick="event.stopPropagation()" title="Open formatted report in browser">Report</a>`
@@ -3117,7 +3131,7 @@ function renderCompAnalytics(analytics, floors) {
   </div>`;
 }
 
-function build() {
+async function build() {
   // Reset the per-build report cache so successive invocations (e.g. tests
   // that import build()) don't carry stale parsed reports across builds.
   _resetReportCache();
@@ -3339,6 +3353,58 @@ function build() {
   const healthSnapshot = loadSystemHealthSnapshot(apps);
   const mcStripJson = JSON.stringify({ batch: batchSnapshot, health: healthSnapshot }).replace(/<\//g, '<\\/');
   const kpiSpark = computeKPISparklines(apps, today);
+
+  // Inventory B6: Weekly Calibration Prompt — load latest prompt metadata
+  // for the sidebar card. Per spec, the card:
+  //   • hides when no calibration prompt file exists at all
+  //   • hides when the latest prompt has already been answered
+  //   • hides when the latest prompt is < 4 days old AND not yet answered
+  //     (4-day grace period after the Monday plist fires so Mitchell isn't
+  //     nagged on the same day)
+  //   • surfaces ("nags") for ages 4-30 days, with Copy prompt + Mark
+  //     answered buttons
+  let calibrationCard = { visible: false, date: null, age_days: null, questions: 0, file: null };
+  try {
+    const dataDir = join(ROOT, 'data');
+    if (existsSync(dataDir)) {
+      const files = readdirSync(dataDir)
+        .filter(f => /^weekly-calibration-prompt-\d{4}-\d{2}-\d{2}\.md$/.test(f))
+        .sort((a, b) => b.localeCompare(a));
+      if (files.length > 0) {
+        const latest = files[0];
+        const latestPath = join(dataDir, latest);
+        const stat = statSync(latestPath);
+        const ageDays = Math.round((Date.now() - stat.mtimeMs) / 86400000);
+        const m = latest.match(/(\d{4}-\d{2}-\d{2})/);
+        const promptDate = m ? m[1] : null;
+        let answered = false;
+        let questions = 0;
+        const statePath = join(dataDir, 'calibration-state.json');
+        if (existsSync(statePath)) {
+          try {
+            const st = JSON.parse(readFileSync(statePath, 'utf-8'));
+            questions = st.last_prompt_questions || 0;
+            if (st.last_prompt_answered && promptDate) {
+              answered = st.last_prompt_answered >= promptDate;
+            }
+          } catch (_) {}
+        }
+        // Spec: hide if (age < 4d AND !answered) OR answered OR age > 30d.
+        // Otherwise the card surfaces as a "nag" reminder.
+        const inGracePeriod = ageDays < 4 && !answered;
+        const tooOld = ageDays > 30;
+        const showIt = !answered && !inGracePeriod && !tooOld;
+        calibrationCard = {
+          visible: showIt,
+          date: promptDate,
+          age_days: ageDays,
+          questions,
+          file: latest,
+          answered,
+        };
+      }
+    }
+  } catch (_) { /* keep defaults — card stays hidden */ }
 
   // TPgM credibility widget — runs tpgm-tracker.mjs --json; fails gracefully
   // to empty-state data if the tracker or courses.yml is unavailable.
@@ -3723,6 +3789,49 @@ function build() {
       }
     } catch (_) { _cbData.peerComp = {}; }
 
+    // B3 + C11 (2026-05-18): bake wealth-lens trajectory data for every row
+    // that has parseable comp. The lib at lib/wealth-lens.mjs has been imported
+    // since the original wave but never CALLED. Now we call it per row with
+    // live=false (deterministic, no LLM cost) and store the result so the
+    // comp drill-in can render the trajectory card alongside the peer table.
+    try {
+      _cbData.wealthLens = {};
+      const compRows = [...applyNow, ...applied];
+      const seenWlIds = new Set();
+      for (const r of compRows) {
+        if (!r || !r.num || !r.reportPath) continue;
+        const rawComp = getCompRaw(r.reportPath);
+        if (!rawComp) continue;
+        const parsedBase = parseBaseSalary(rawComp);
+        if (!parsedBase || !parsedBase.min || parsedBase.currency !== 'USD') continue;
+        const baseK = parsedBase.min;
+        const wlId = `${r.num}:${baseK}`;
+        if (seenWlIds.has(wlId)) continue;
+        seenWlIds.add(wlId);
+        try {
+          // applyWealthLens is async even with live:false (returns the
+          // deterministic classification synchronously inside the promise).
+          // We await each call serially; total budget is sub-second for ~30 rows.
+          // eslint-disable-next-line no-await-in-loop
+          const result = await applyWealthLens(
+            { base: baseK * 1000, total_comp: null, equity_annual_vest: 0, bonus_pct: 0 },
+            { company: r.company, stage: null, pre_ipo: null, ai_native: r.archetype && /A[12]/.test(r.archetype) },
+            { live: false },
+          );
+          _cbData.wealthLens[wlId] = result;
+        } catch (_) { /* skip this row */ }
+      }
+    } catch (_) { _cbData.wealthLens = {}; }
+
+    // B2 (2026-05-18): Industry Gap Radar — bake the ranked table HTML
+    // once so the drill-in renders instantly. SEED_TABLE in lib/industry-gap.mjs
+    // is editable so Mitchell can tune weights as he learns.
+    try {
+      const ranked = getIndustryGapRanking();
+      _cbData.industryGapHtml = renderIndustryGapTable(ranked);
+      _cbData.industryGapRanked = ranked;
+    } catch (_) { _cbData.industryGapHtml = ''; }
+
     // D6: per-row provenance — keyed by num for metric drill-in
     // Skipped at build time (too expensive for all rows); fetch lazily via API.
     // Documented as TODO: /api/drill/metric/{rowId}/{key}
@@ -3830,21 +3939,61 @@ function build() {
       }
     } catch (_) { _cbData.provenanceSummaries = {}; }
 
-    // Company toxicity scores (data/toxicity/{slug}.json if exists)
-    // Schema: { score: 0-10, drivers: string[], source: string, ts: ISO }
+    // Composite Company Toxicity Score (Inventory Document B item #4 — 2026-05-18)
+    // Aggregates negative signals from EXISTING data files (no new fetchers).
+    // Score 0-10, driver attribution, sources_scanned per company. NEVER auto-trash.
+    //
+    // Schema:
+    //   {
+    //     slug, score (0-10), drivers: [{kind, weight, evidence, source}],
+    //     confidence: 'low'|'med'|'high',
+    //     overrides: [{slug, override_reason, ts}],
+    //     sources_scanned: [...],
+    //     auto_trash: false (ALWAYS)
+    //   }
+    //
+    // We compute for every company that appears in Apply-Now (score≥4.0, evaluated|responded)
+    // PLUS every slug that has hm-intel or company-intel-cache data. This keeps the cache
+    // representative without exploding build time on hundreds of stale companies.
     try {
       _cbData.toxicity = {};
-      const _toxDir = join(ROOT, 'data/toxicity');
-      if (existsSync(_toxDir)) {
-        for (const _f of readdirSync(_toxDir)) {
-          if (!_f.endsWith('.json')) continue;
-          try {
-            const _tx = JSON.parse(readFileSync(join(_toxDir, _f), 'utf-8'));
-            const _slug = _f.replace(/\.json$/, '');
-            _cbData.toxicity[_slug] = _tx;
-          } catch (_) {}
-        }
+      const _slugSet = new Set();
+      // 1) Every company in applications.md gets a composite (slug derived from company cell)
+      for (const _r of apps) {
+        const _slug = (_r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (_slug) _slugSet.add(_slug);
       }
+      // 2) Every slug that has a company-intel-cache directory
+      const _intelCacheDir = join(ROOT, 'data/company-intel-cache');
+      if (existsSync(_intelCacheDir)) {
+        try {
+          for (const _d of readdirSync(_intelCacheDir)) {
+            try { if (statSync(join(_intelCacheDir, _d)).isDirectory()) _slugSet.add(_d); } catch (_) {}
+          }
+        } catch (_) {}
+      }
+      // 3) Compute composite for each slug — gracefully skip on any per-slug failure.
+      for (const _slug of _slugSet) {
+        try {
+          const _c = computeToxicityComposite(_slug);
+          // Only bake when we have something useful (score>0 OR sources_scanned has entries)
+          // — keeps the JSON payload smaller and prevents "no data" cards from rendering
+          // misleading "0/10 healthy" badges.
+          if (_c && (_c.score > 0 || (_c.drivers && _c.drivers.length) || (_c.overrides && _c.overrides.length))) {
+            _cbData.toxicity[_slug] = _c;
+          } else if (_c && _c.sources_scanned && _c.sources_scanned.length) {
+            // Sources were scanned but no drivers fired — record an empty composite so
+            // the drill-in can say "checked but clean" rather than "no signals yet".
+            _cbData.toxicity[_slug] = { ..._c, _state: 'checked-clean' };
+          }
+        } catch (_) { /* per-slug skip */ }
+      }
+      // Persist the cache to disk so manual `node lib/toxicity-composite.mjs --slug=X`
+      // sees the same values the dashboard rendered.
+      try {
+        const _cacheFp = join(ROOT, 'data/toxicity-composite.json');
+        writeFileSync(_cacheFp, JSON.stringify(_cbData.toxicity, null, 2));
+      } catch (_) { /* non-fatal */ }
     } catch (_) { _cbData.toxicity = {}; }
 
     // Company reviews (data/glassdoor/{slug}.json or data/blind/{slug}.json if exists)
@@ -3898,6 +4047,14 @@ function build() {
         });
       } else { _cbData.pipelineRows = []; }
     } catch (_) { _cbData.pipelineRows = []; }
+
+    // Wealth-ranking (Inventory Doc B #1) — composite 0-100 ranking of
+    // every company in data/overpay-signals/CURRENT.md, sorted by
+    // wealth-generation potential. Surfaced via the Top Companies card
+    // "Rank by wealth potential" button → drill-in kind 'wealth-ranking'.
+    try {
+      _cbData.wealthRanking = rankCompaniesByWealth(null) || [];
+    } catch (_) { _cbData.wealthRanking = []; }
 
     // TPgM full widget HTML — stored for the readiness drill-in renderer.
     // Escaped so it can be JSON-stringified safely.
@@ -6818,6 +6975,98 @@ function build() {
     #sidebar-runway { display: none !important; }
   }
 
+  /* ── Sidebar calibration card (Inventory B6 MVP 2026-05-18) ─── */
+  /* Surfaces the weekly Gemini calibration prompt. Hides itself when the
+     most recent prompt is < 4 days old AND not yet answered (so it doesn't
+     nag during the same-day window). Otherwise stays visible until Mitchell
+     hits "Mark answered" — that writes calibration-state.json and the next
+     dashboard rebuild auto-hides it. */
+  .sidebar-calibration {
+    margin: 4px 10px 6px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 11.5px;
+  }
+  .sidebar-calibration.hidden { display: none; }
+  .sidebar-calibration-header {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+  }
+  .sidebar-calibration-title {
+    flex: 1;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+  .sidebar-calibration-age {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .sidebar-calibration-body {
+    font-size: 11.5px;
+    color: var(--text-2);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .sidebar-calibration-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .sidebar-calibration-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 10.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .12s, background .12s, color .12s;
+    font-family: inherit;
+  }
+  .sidebar-calibration-btn:hover {
+    border-color: var(--action);
+    color: var(--action);
+  }
+  .sidebar-calibration-btn:focus-visible {
+    outline: 2px solid var(--action);
+    outline-offset: 2px;
+  }
+  .sidebar-calibration-btn-primary {
+    background: var(--action);
+    color: #fff;
+    border-color: var(--action);
+  }
+  .sidebar-calibration-btn-primary:hover {
+    background: var(--action-hover, var(--action));
+    color: #fff;
+    border-color: var(--action-hover, var(--action));
+  }
+  body.sidebar-collapsed .sidebar-calibration-body,
+  body.sidebar-collapsed .sidebar-calibration-actions {
+    display: none;
+  }
+  body.sidebar-collapsed .sidebar-calibration {
+    padding: 7px 6px;
+    text-align: center;
+  }
+  body.sidebar-collapsed .sidebar-calibration-header {
+    margin-bottom: 0;
+    justify-content: center;
+  }
+  @media (max-width: 720px) {
+    #sidebar-calibration { display: none !important; }
+  }
+
   /* ── Sidebar readiness chip (TPgM relocation 2026-05-17) ───── */
   /* Compact card in sidebar footer area: headline score + velocity arrow +
      "See full →" button that opens the full TPgM widget as a drill-in drawer.
@@ -6886,6 +7135,246 @@ function build() {
   }
   @media (max-width: 720px) {
     #sidebar-readiness { display: none !important; }
+  }
+
+  /* ── Update Drawer (Inventory B5 MVP, 2026-05-18) ──────────────
+     Sidebar trigger + recent-updates widget + slide-out drawer.
+     Drawer reuses the right-rail-drawer animation curve and shadow
+     but has its own ID + backdrop so it doesn't fight row-context. */
+  .sidebar-update-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin: 4px 10px 6px; padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--action, var(--blue));
+    background: var(--action, var(--blue));
+    color: var(--action-text, var(--action-on, #fff));
+    font-size: 12.5px; font-weight: 700;
+    cursor: pointer;
+    transition: filter .12s, transform .04s;
+  }
+  .sidebar-update-btn:hover { filter: brightness(1.07); }
+  .sidebar-update-btn:active { transform: translateY(1px); }
+  .sidebar-update-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .sidebar-update-btn-icon { font-size: 14px; line-height: 1; }
+  body.sidebar-collapsed .sidebar-update-btn-label { display: none; }
+  body.sidebar-collapsed .sidebar-update-btn { padding: 9px 6px; }
+  @media (max-width: 720px) {
+    #sidebar-update-btn, #sidebar-recent-updates { display: none !important; }
+  }
+  .sidebar-recent-updates {
+    margin: 4px 10px 6px; padding: 8px 10px 4px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 11.5px;
+  }
+  .sidebar-recent-updates-title {
+    font-weight: 700; font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase; letter-spacing: .07em;
+    margin-bottom: 6px;
+  }
+  .sidebar-recent-updates-list { display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-recent-updates-empty {
+    color: var(--text-3); font-size: 11px; line-height: 1.4;
+  }
+  .sidebar-recent-update-row {
+    display: block; padding: 4px 6px; border-radius: 4px;
+    background: none; border: 1px solid transparent;
+    color: var(--text-2); cursor: pointer; text-align: left;
+    line-height: 1.35; width: 100%; font: inherit;
+  }
+  .sidebar-recent-update-row:hover {
+    background: var(--surface-3, var(--surface));
+    border-color: var(--border);
+  }
+  .sidebar-recent-update-meta {
+    display: flex; gap: 6px; align-items: center;
+    font-size: 10px; color: var(--text-3); margin-bottom: 2px;
+  }
+  .sidebar-recent-update-date { font-variant-numeric: tabular-nums; }
+  .sidebar-recent-update-tag {
+    display: inline-block; padding: 1px 5px; border-radius: 4px;
+    background: var(--surface-3, var(--surface));
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-size: 9.5px; font-weight: 700;
+    text-transform: lowercase; letter-spacing: .03em;
+  }
+  .sidebar-recent-update-preview {
+    color: var(--text-2); font-size: 11px;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  body.sidebar-collapsed .sidebar-recent-updates { display: none; }
+  #update-drawer {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 460px; max-width: 100vw;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 28px rgba(0,0,0,.18);
+    transform: translateX(100%);
+    transition: transform .26s cubic-bezier(.16,1,.3,1);
+    z-index: 2500;
+    display: none;
+    flex-direction: column;
+    will-change: transform;
+  }
+  #update-drawer.open { display: flex; transform: translateX(0); }
+  #update-drawer-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.32);
+    z-index: 2499;
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s ease-out;
+    display: none;
+  }
+  #update-drawer-backdrop.visible { display: block; opacity: 1; pointer-events: auto; }
+  .update-drawer-header {
+    flex-shrink: 0;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .update-drawer-title-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .update-drawer-title {
+    margin: 0; font-size: 16px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .update-drawer-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-3); font-size: 16px; line-height: 1;
+    padding: 4px 6px; border-radius: 4px;
+  }
+  .update-drawer-close:hover { background: var(--surface-2); color: var(--text); }
+  .update-drawer-subtitle {
+    margin: 6px 0 0; font-size: 12.5px; color: var(--text-3); line-height: 1.4;
+  }
+  .update-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 18px 18px; }
+  .update-drawer-label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--text-3); text-transform: uppercase; letter-spacing: .04em;
+    margin-bottom: 6px;
+  }
+  .update-drawer-tagset { border: none; padding: 0; margin: 0 0 14px; }
+  .update-drawer-tagset legend { padding: 0; }
+  .update-drawer-tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .update-drawer-tag-chip {
+    display: inline-flex; align-items: center;
+    padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    transition: border-color .1s, background .1s, color .1s;
+    user-select: none;
+    position: relative;
+  }
+  .update-drawer-tag-chip:hover { border-color: var(--blue-fg-dark, var(--blue)); }
+  .update-drawer-tag-chip input[type="radio"] {
+    position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;
+  }
+  .update-drawer-tag-chip:has(input:checked) {
+    background: var(--action, var(--blue));
+    border-color: var(--action, var(--blue));
+    color: var(--action-text, var(--action-on, #fff));
+  }
+  .update-drawer-field { margin-bottom: 14px; }
+  .update-drawer-date {
+    width: 180px; max-width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .update-drawer-textarea {
+    width: 100%; box-sizing: border-box;
+    min-height: 110px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13.5px; line-height: 1.45;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .update-drawer-textarea:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+    border-color: var(--blue);
+  }
+  .update-drawer-counter {
+    margin-top: 4px;
+    font-size: 11px; color: var(--text-3);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .update-drawer-counter.over { color: var(--red-fg, #cf222e); font-weight: 700; }
+  .update-drawer-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+  .update-drawer-btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text);
+    transition: filter .1s, background .1s;
+  }
+  .update-drawer-btn-primary {
+    background: var(--action, var(--blue));
+    border-color: var(--action, var(--blue));
+    color: var(--action-text, var(--action-on, #fff));
+  }
+  .update-drawer-btn-primary:hover { filter: brightness(1.07); }
+  .update-drawer-btn-primary[disabled] { opacity: .55; cursor: progress; filter: none; }
+  .update-drawer-btn-ghost { background: var(--surface-2); }
+  .update-drawer-btn-ghost:hover { background: var(--surface-3, var(--surface)); }
+  .update-drawer-status { margin-top: 10px; font-size: 12px; min-height: 18px; line-height: 1.4; }
+  .update-drawer-status.ok { color: var(--green-fg, #1a7f37); }
+  .update-drawer-status.err { color: var(--red-fg, #cf222e); }
+  .update-drawer-recent { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .update-drawer-recent-title {
+    margin: 0 0 8px;
+    font-size: 11px; font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .update-drawer-recent-list { display: flex; flex-direction: column; gap: 6px; }
+  .update-drawer-recent-empty { color: var(--text-3); font-size: 12px; padding: 6px 0; }
+  .update-drawer-recent-row {
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-2);
+    cursor: pointer; text-align: left;
+    font: inherit; width: 100%;
+    line-height: 1.4;
+  }
+  .update-drawer-recent-row:hover {
+    background: var(--surface-3, var(--surface));
+    border-color: var(--blue-fg-dark, var(--blue));
+  }
+  .update-drawer-recent-row-meta {
+    display: flex; gap: 8px; align-items: center;
+    font-size: 11px; color: var(--text-3); margin-bottom: 4px;
+  }
+  .update-drawer-recent-row-preview {
+    font-size: 12.5px; color: var(--text-2);
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    white-space: pre-wrap;
+  }
+  @media (max-width: 720px) { #update-drawer { width: 100vw; } }
+  @media (prefers-reduced-motion: reduce) {
+    #update-drawer, #update-drawer-backdrop { transition: none !important; }
   }
 
   /* ── Pipeline confirmation modal ────────────────────────────── */
@@ -7963,6 +8452,22 @@ function build() {
     padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
     display: flex; gap: 8px;
     position: sticky; bottom: 0;
+  }
+  /* Liveness Phase 2 (2026-05-18): badge rendered when /api/liveness returns. */
+  .drawer-liveness-badge {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px;
+    border: 1px solid currentColor;
+  }
+  .drawer-liveness-alive {
+    color: var(--positive-text);
+    background: color-mix(in srgb, var(--positive-text) 12%, var(--surface));
+  }
+  .drawer-liveness-dead {
+    color: var(--red-fg);
+    background: color-mix(in srgb, var(--red-fg) 12%, var(--surface));
   }
   /* Inventory #12 (2026-05-18): sticky comparative ribbon — prev/next within current scope */
   .drawer-ribbon {
@@ -9333,6 +9838,19 @@ function build() {
       <a href="#companies-panel" class="sidebar-link" data-section="companies-panel" title="Companies">
         <span class="sidebar-icon" aria-hidden="true">🏢</span><span class="sidebar-label">Companies</span>
       </a>
+      <!-- A4 (2026-05-18): two new sidebar targets requested in popout audit
+           (inventory verification 2026-05-18). Pipeline-pending opens the
+           existing stat panel; batch-runs opens the existing batch modal. -->
+      <button type="button" class="sidebar-link" onclick="toggleStatPanel('pending');closeSidebar();" title="Pipeline pending — URLs queued for triage">
+        <span class="sidebar-icon" aria-hidden="true">⏳</span><span class="sidebar-label">Pipeline</span>
+      </button>
+      <button type="button" class="sidebar-link" onclick="openBatchStatusModal();closeSidebar();" title="Batch runs — recent eval batches + current run">
+        <span class="sidebar-icon" aria-hidden="true">📦</span><span class="sidebar-label">Batch Runs</span>
+      </button>
+      <!-- B2 (2026-05-18): Industry Gap Radar — non-tech high-WTP sectors -->
+      <button type="button" class="sidebar-link" onclick="window.drillIn('industry-gap','',event);closeSidebar();" title="Adjacent Industry Radar — finance/health/legal/insurance non-tech opportunities">
+        <span class="sidebar-icon" aria-hidden="true">🎯</span><span class="sidebar-label">Industries</span>
+      </button>
       <button type="button" class="sidebar-link" onclick="openMobileSettingsSheet();closeSidebar();" title="Settings">
         <span class="sidebar-icon" aria-hidden="true">⚙️</span><span class="sidebar-label">Settings</span>
       </button>
@@ -9409,6 +9927,56 @@ function build() {
       <button type="button" class="sidebar-readiness-link"
               onclick="window.drillIn('readiness','',event);event.stopPropagation();"
               aria-label="See full PM-readiness detail">See full →</button>
+    </div>
+    <!-- Weekly Calibration Prompt card (Inventory B6 MVP, 2026-05-18).
+         Hides automatically when no fresh prompt exists OR when the latest
+         prompt has been answered. "Copy prompt" puts the Gemini-ready text
+         on the clipboard. "Mark answered" POSTs to /api/calibration/answered
+         which writes data/calibration-state.json and hides the card on the
+         next rebuild. -->
+    <div id="sidebar-calibration"
+         class="sidebar-calibration${calibrationCard.visible ? '' : ' hidden'}"
+         aria-label="Weekly calibration prompt — copy to Gemini, then mark answered">
+      <div class="sidebar-calibration-header">
+        <span class="sidebar-calibration-title">Weekly Calibration</span>
+        <span class="sidebar-calibration-age" id="calibration-age">${calibrationCard.date ? htmlEscape(calibrationCard.date) : '—'}</span>
+      </div>
+      <div class="sidebar-calibration-body">
+        <span id="calibration-summary">${calibrationCard.questions
+          ? `${calibrationCard.questions} questions from Gemini are waiting on you.`
+          : 'New calibration prompt ready — paste into Gemini, then update.'}</span>
+      </div>
+      <div class="sidebar-calibration-actions">
+        <button type="button"
+                class="sidebar-calibration-btn sidebar-calibration-btn-primary"
+                onclick="window.copyCalibrationPrompt(event)"
+                aria-label="Copy the Gemini calibration prompt to clipboard">Copy prompt</button>
+        <button type="button"
+                class="sidebar-calibration-btn"
+                onclick="window.markCalibrationAnswered(event)"
+                aria-label="Mark this week's calibration as answered">Mark answered</button>
+      </div>
+    </div>
+    <!-- Update Drawer trigger (Inventory B5 MVP, 2026-05-18). Mitchell drops
+         work-project updates, certifications, training, and 1:1 notes here.
+         Backend appends to data/career-updates.jsonl and dispatches the
+         corpus auto-merger so story-bank.md + cv.md stay current. -->
+    <button type="button"
+            id="sidebar-update-btn"
+            class="sidebar-update-btn"
+            onclick="openUpdateDrawer()"
+            aria-label="Add a career update (work project, cert, training, 1:1 note)"
+            title="Add a career update — project, cert, training, 1:1 note">
+      <span class="sidebar-update-btn-icon" aria-hidden="true">＋</span>
+      <span class="sidebar-update-btn-label">Add update</span>
+    </button>
+    <!-- Recent updates widget — shows last 3 JSONL entries. Click → opens
+         the drawer with the full entry pre-loaded in a read-only preview. -->
+    <div id="sidebar-recent-updates" class="sidebar-recent-updates" aria-live="polite">
+      <div class="sidebar-recent-updates-title">Recent updates</div>
+      <div class="sidebar-recent-updates-list" id="sidebar-recent-updates-list">
+        <div class="sidebar-recent-updates-empty">No updates yet — click + Add update to start tracking.</div>
+      </div>
     </div>
     <div class="sidebar-footer">
       <!-- Sidebar collapse button removed 2026-05-17 per Mitchell — unused,
@@ -9595,6 +10163,64 @@ function build() {
          current scope (Apply-Now queue OR full eval table) as a navigable
          list. Keyboard: Alt+← / Alt+→ moves prev/next without leaving drawer. -->
     <nav class="drawer-ribbon" id="right-rail-ribbon" aria-label="Drawer navigation"></nav>
+  </aside>
+
+  <!-- Update Drawer (Inventory B5 MVP, 2026-05-18). Separate from #right-rail-drawer
+       to avoid stomping on row-context state. Slides in from the right; backdrop
+       click + Esc close it. Reuses the same CSS variables and animation curve
+       so it feels consistent. -->
+  <div id="update-drawer-backdrop" onclick="closeUpdateDrawer()" aria-hidden="true"></div>
+  <aside id="update-drawer" role="dialog" aria-modal="true" aria-label="Add career update" aria-hidden="true">
+    <header class="update-drawer-header">
+      <div class="update-drawer-title-row">
+        <h2 class="update-drawer-title">Add career update</h2>
+        <button type="button" class="update-drawer-close" onclick="closeUpdateDrawer()" aria-label="Close update drawer" title="Close (Esc)">✕</button>
+      </div>
+      <p class="update-drawer-subtitle">Work project, cert, training, 1:1 note, or quick note. Saved to your private feed and auto-merged into your corpus.</p>
+    </header>
+    <div class="update-drawer-body">
+      <form id="update-drawer-form" onsubmit="return submitUpdateDrawerForm(event)">
+        <fieldset class="update-drawer-tagset">
+          <legend class="update-drawer-label">Tag</legend>
+          <div class="update-drawer-tag-chips" role="radiogroup" aria-label="Update tag">
+            <label class="update-drawer-tag-chip"><input type="radio" name="tag" value="project" checked> <span>Project</span></label>
+            <label class="update-drawer-tag-chip"><input type="radio" name="tag" value="cert"> <span>Cert</span></label>
+            <label class="update-drawer-tag-chip"><input type="radio" name="tag" value="training"> <span>Training</span></label>
+            <label class="update-drawer-tag-chip"><input type="radio" name="tag" value="1:1"> <span>1:1</span></label>
+            <label class="update-drawer-tag-chip"><input type="radio" name="tag" value="note"> <span>Note</span></label>
+          </div>
+        </fieldset>
+        <div class="update-drawer-field">
+          <label class="update-drawer-label" for="update-drawer-date">Date</label>
+          <input type="date" id="update-drawer-date" name="date" class="update-drawer-date" />
+        </div>
+        <div class="update-drawer-field">
+          <label class="update-drawer-label" for="update-drawer-text">What happened?</label>
+          <textarea
+            id="update-drawer-text"
+            name="text"
+            class="update-drawer-textarea"
+            rows="6"
+            minlength="1"
+            maxlength="5000"
+            placeholder="e.g. Shipped v2 of the agentic Gmail labeler — cut hand-review by 73% on a 1.4k-message sample. Demo went to George + Adam."
+            required
+            oninput="autosizeUpdateDrawerTextarea(this);updateUpdateDrawerCharCounter();"></textarea>
+          <div class="update-drawer-counter" id="update-drawer-counter">0 / 5000</div>
+        </div>
+        <div class="update-drawer-actions">
+          <button type="button" class="update-drawer-btn update-drawer-btn-ghost" onclick="closeUpdateDrawer()">Cancel</button>
+          <button type="submit" class="update-drawer-btn update-drawer-btn-primary" id="update-drawer-save">Save</button>
+        </div>
+        <div class="update-drawer-status" id="update-drawer-status" aria-live="polite"></div>
+      </form>
+      <section class="update-drawer-recent" aria-label="Recent updates">
+        <h3 class="update-drawer-recent-title">Recent updates</h3>
+        <div class="update-drawer-recent-list" id="update-drawer-recent-list">
+          <div class="update-drawer-recent-empty">Loading…</div>
+        </div>
+      </section>
+    </div>
   </aside>
 
   <!-- Pull-to-refresh indicator (mobile only, JS-driven) -->
@@ -9996,6 +10622,20 @@ function build() {
 
   <div class="panel" id="companies-panel">
     <h2 class="panel-title collapsible" onclick="togglePanel('companies-panel',event)">Top Companies (by evaluation count) <span class="panel-chevron">▾</span></h2>
+    <!-- Wealth-Ranking Pop-Out (Inventory Doc B #1, 2026-05-18).
+         Surfaces the composite wealth-generation ranking built by lib/wealth-ranking.mjs.
+         Click opens drill-in kind 'wealth-ranking' with the full ranked table. -->
+    <div class="wealth-rank-cta-row" style="margin:6px 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button type="button"
+              class="wealth-rank-btn"
+              onclick="window.drillIn('wealth-ranking','',event);event.stopPropagation()"
+              title="Rank companies by composite wealth-generation potential (equity stage + AI-native tier + salary ceiling + IPO signals + skill-portability)"
+              aria-label="Open wealth-ranking pop-out"
+              style="font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--green-bg);color:var(--green-fg);border:1px solid var(--green-border);cursor:pointer;letter-spacing:0.01em">
+        Rank by wealth potential &#x21bb;
+      </button>
+      <span style="font-size:11px;color:var(--text-4)">Composite 0&ndash;100 across equity stage, AI-native tier, salary ceiling, IPO signals, skill-portability.</span>
+    </div>
     <div class="bar-chart" role="list" aria-label="Top companies by evaluation count">
       ${topCompanies.map(([company, count]) => {
         const max = topCompanies[0][1];
@@ -11677,6 +12317,14 @@ function openRightRailForDetail(idx, detailRow) {
   // navigation stays inside the user's current view.
   _populateDrawerRibbon(row);
 
+  // Liveness Phase 2 (2026-05-18): probe the JD URL via /api/liveness when
+  // the drawer opens. If dead, render a "Posting closed" badge over the
+  // Apply button + show a "Mark as Discarded" CTA so the user can clean up
+  // the tracker without leaving the drawer. The endpoint reads the
+  // overnight sweep's sidecar first (instant), falls back to a 6h cache,
+  // falls back to a live probe — so the typical case is 0ms latency.
+  _probeDrawerLiveness(applyHref, num);
+
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
   document.body.classList.add('right-rail-open');
@@ -11768,6 +12416,235 @@ function closeRightRail() {
     try { window._draftUpdateSource.close(); } catch (_) {}
     window._draftUpdateSource = null;
   }
+}
+
+// ── Update Drawer (Inventory B5 MVP, 2026-05-18) ───────────────────────────
+// Sidebar "+ Add update" trigger + slide-out form + JSONL POST + recent list.
+// Coexists with the row-context #right-rail-drawer; uses its own backdrop
+// and z-index so both can technically be open simultaneously (rare, but the
+// markup tolerates it).
+const _updateDrawerTagOptions = ['project', 'cert', 'training', '1:1', 'note'];
+
+function openUpdateDrawer(opts) {
+  const drawer = document.getElementById('update-drawer');
+  const backdrop = document.getElementById('update-drawer-backdrop');
+  if (!drawer || !backdrop) return;
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  backdrop.classList.add('visible');
+  backdrop.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('update-drawer-open');
+
+  const dateInput = document.getElementById('update-drawer-date');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().slice(0, 10);
+  }
+  const textarea = document.getElementById('update-drawer-text');
+  if (textarea) {
+    if (opts && typeof opts.prefillText === 'string') {
+      textarea.value = opts.prefillText;
+      textarea.readOnly = true;
+      const saveBtn = document.getElementById('update-drawer-save');
+      if (saveBtn) saveBtn.style.display = 'none';
+    } else {
+      textarea.readOnly = false;
+      const saveBtn = document.getElementById('update-drawer-save');
+      if (saveBtn) saveBtn.style.display = '';
+    }
+    autosizeUpdateDrawerTextarea(textarea);
+    updateUpdateDrawerCharCounter();
+    if (!opts || !opts.prefillText) {
+      setTimeout(() => { try { textarea.focus(); } catch (_) {} }, 30);
+    }
+  }
+  const statusEl = document.getElementById('update-drawer-status');
+  if (statusEl) { statusEl.textContent = ''; statusEl.className = 'update-drawer-status'; }
+  loadUpdateDrawerRecent();
+}
+window.openUpdateDrawer = openUpdateDrawer;
+
+function closeUpdateDrawer() {
+  const drawer = document.getElementById('update-drawer');
+  const backdrop = document.getElementById('update-drawer-backdrop');
+  if (drawer) {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+  if (backdrop) {
+    backdrop.classList.remove('visible');
+    backdrop.setAttribute('aria-hidden', 'true');
+  }
+  document.body.classList.remove('update-drawer-open');
+  // Reset readonly flag from prefill mode
+  const textarea = document.getElementById('update-drawer-text');
+  if (textarea) {
+    textarea.readOnly = false;
+    const saveBtn = document.getElementById('update-drawer-save');
+    if (saveBtn) saveBtn.style.display = '';
+  }
+}
+window.closeUpdateDrawer = closeUpdateDrawer;
+
+function autosizeUpdateDrawerTextarea(el) {
+  if (!el) return;
+  // Grow up to ~24 rows then scroll. Keeps the drawer body usable on small
+  // screens — the parent .update-drawer-body has overflow-y:auto.
+  el.style.height = 'auto';
+  const max = 24 * 22; // ~22px per row at 13.5px / 1.45 line-height
+  el.style.height = Math.min(el.scrollHeight, max) + 'px';
+}
+window.autosizeUpdateDrawerTextarea = autosizeUpdateDrawerTextarea;
+
+function updateUpdateDrawerCharCounter() {
+  const ta = document.getElementById('update-drawer-text');
+  const counter = document.getElementById('update-drawer-counter');
+  if (!ta || !counter) return;
+  const len = ta.value.length;
+  counter.textContent = len + ' / 5000';
+  counter.classList.toggle('over', len > 5000);
+}
+window.updateUpdateDrawerCharCounter = updateUpdateDrawerCharCounter;
+
+async function submitUpdateDrawerForm(ev) {
+  if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+  const form = document.getElementById('update-drawer-form');
+  const statusEl = document.getElementById('update-drawer-status');
+  const saveBtn = document.getElementById('update-drawer-save');
+  if (!form) return false;
+  const data = new FormData(form);
+  const tag = String(data.get('tag') || '').trim();
+  const text = String(data.get('text') || '').trim();
+  const date = String(data.get('date') || '').trim();
+  if (!_updateDrawerTagOptions.includes(tag)) {
+    if (statusEl) { statusEl.textContent = 'Pick a tag.'; statusEl.className = 'update-drawer-status err'; }
+    return false;
+  }
+  if (!text) {
+    if (statusEl) { statusEl.textContent = 'Add a quick note before saving.'; statusEl.className = 'update-drawer-status err'; }
+    return false;
+  }
+  if (text.length > 5000) {
+    if (statusEl) { statusEl.textContent = 'Trim to 5000 chars or fewer.'; statusEl.className = 'update-drawer-status err'; }
+    return false;
+  }
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+  if (statusEl) { statusEl.textContent = ''; statusEl.className = 'update-drawer-status'; }
+  try {
+    const r = await fetch('/api/career-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag, text, date }),
+    });
+    const payload = await r.json().catch(() => ({}));
+    if (!r.ok || !payload.ok) {
+      const msg = (payload && payload.error) || ('HTTP ' + r.status);
+      if (statusEl) { statusEl.textContent = 'Save failed: ' + msg; statusEl.className = 'update-drawer-status err'; }
+    } else {
+      if (statusEl) { statusEl.textContent = 'Saved. Corpus merge running in the background.'; statusEl.className = 'update-drawer-status ok'; }
+      // Reset textarea but keep tag + date so multiple entries flow easily
+      const ta = document.getElementById('update-drawer-text');
+      if (ta) { ta.value = ''; autosizeUpdateDrawerTextarea(ta); updateUpdateDrawerCharCounter(); }
+      loadUpdateDrawerRecent();
+      loadSidebarRecentUpdates();
+      if (window.toast) try { window.toast('Update saved', 'ok'); } catch (_) {}
+    }
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = 'Network error: ' + e.message; statusEl.className = 'update-drawer-status err'; }
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+  }
+  return false;
+}
+window.submitUpdateDrawerForm = submitUpdateDrawerForm;
+
+function _updateDrawerEscape(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+async function loadUpdateDrawerRecent() {
+  const list = document.getElementById('update-drawer-recent-list');
+  if (!list) return;
+  try {
+    const r = await fetch('/api/career-update/recent?limit=5', { cache: 'no-store' });
+    const payload = await r.json().catch(() => ({}));
+    const entries = (payload && payload.entries) || [];
+    if (!entries.length) {
+      list.innerHTML = '<div class="update-drawer-recent-empty">No updates yet. Drop a quick note above and it will show here.</div>';
+      return;
+    }
+    list.innerHTML = entries.map(e => {
+      const date = _updateDrawerEscape((e.date || '').slice(0, 10));
+      const tag = _updateDrawerEscape(e.tag || '');
+      const text = _updateDrawerEscape(e.text || '');
+      return '<button type="button" class="update-drawer-recent-row" ' +
+        'data-text="' + text + '" ' +
+        'onclick="openUpdateDrawer({prefillText: this.getAttribute(\'data-text\')})">' +
+        '<div class="update-drawer-recent-row-meta">' +
+          '<span>' + date + '</span>' +
+          '<span class="update-drawer-recent-tag">' + tag + '</span>' +
+        '</div>' +
+        '<div class="update-drawer-recent-row-preview">' + text + '</div>' +
+      '</button>';
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="update-drawer-recent-empty">Could not load recent updates: ' + _updateDrawerEscape(e.message) + '</div>';
+  }
+}
+window.loadUpdateDrawerRecent = loadUpdateDrawerRecent;
+
+async function loadSidebarRecentUpdates() {
+  const list = document.getElementById('sidebar-recent-updates-list');
+  if (!list) return;
+  try {
+    const r = await fetch('/api/career-update/recent?limit=3', { cache: 'no-store' });
+    const payload = await r.json().catch(() => ({}));
+    const entries = (payload && payload.entries) || [];
+    if (!entries.length) {
+      list.innerHTML = '<div class="sidebar-recent-updates-empty">No updates yet — click + Add update to start tracking.</div>';
+      return;
+    }
+    list.innerHTML = entries.map(e => {
+      const date = _updateDrawerEscape((e.date || '').slice(0, 10));
+      const tag = _updateDrawerEscape(e.tag || '');
+      const fullText = _updateDrawerEscape(e.text || '');
+      const trimmed = (e.text || '').replace(/\s+/g, ' ').trim();
+      const preview = _updateDrawerEscape(trimmed.length > 60 ? trimmed.slice(0, 60) + '…' : trimmed);
+      return '<button type="button" class="sidebar-recent-update-row" ' +
+        'data-text="' + fullText + '" ' +
+        'title="' + preview + '" ' +
+        'onclick="openUpdateDrawer({prefillText: this.getAttribute(\'data-text\')})">' +
+        '<div class="sidebar-recent-update-meta">' +
+          '<span class="sidebar-recent-update-date">' + date + '</span>' +
+          '<span class="sidebar-recent-update-tag">' + tag + '</span>' +
+        '</div>' +
+        '<div class="sidebar-recent-update-preview">' + preview + '</div>' +
+      '</button>';
+    }).join('');
+  } catch (_) {
+    // Silently fail; sidebar widget is non-essential.
+  }
+}
+window.loadSidebarRecentUpdates = loadSidebarRecentUpdates;
+
+// Initial sidebar load + Esc-to-close binding.
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadSidebarRecentUpdates);
+  } else {
+    setTimeout(loadSidebarRecentUpdates, 0);
+  }
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape') return;
+    const drawer = document.getElementById('update-drawer');
+    if (drawer && drawer.classList.contains('open')) {
+      closeUpdateDrawer();
+    }
+  });
 }
 
 // Apply/Skip/Defer in the drawer footer reuse the existing /api/status
@@ -11915,6 +12792,80 @@ function _drawerPollApplyPack(jobId, num, expectedDir, btnEl) {
 window.drawerCreateMaterials = drawerCreateMaterials;
 window.closeRightRail = closeRightRail;
 window.openRightRailForDetail = openRightRailForDetail;
+
+// Liveness Phase 2 (2026-05-18): drawer-open liveness probe.
+// Calls /api/liveness?url= when the drawer opens. If the posting is dead,
+// renders an inline "Posting closed" badge in the drawer header + replaces
+// the Apply button with a "Mark as Discarded" action. Endpoint reads the
+// overnight sweep's state first (instant cache hit for 90% of rows), so
+// the user typically sees status before the network roundtrip completes.
+async function _probeDrawerLiveness(applyHref, rowNum) {
+  if (!applyHref) return;
+  try {
+    const res = await fetch('/api/liveness?url=' + encodeURIComponent(applyHref), { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.ok) return;
+    var header = document.getElementById('right-rail-header');
+    if (!header) return;
+    // Don't render if drawer has already moved to a different row.
+    var actionsEl = document.getElementById('right-rail-actions');
+    if (!actionsEl) return;
+    var badge = header.querySelector('.drawer-liveness-badge');
+    if (badge) badge.remove();
+    var newBadge = document.createElement('span');
+    newBadge.className = 'drawer-liveness-badge';
+    if (data.alive) {
+      newBadge.classList.add('drawer-liveness-alive');
+      newBadge.title = 'Posting verified live · checked ' + (data.lastChecked || '') + ' · source: ' + (data.source || 'live-probe');
+      newBadge.innerHTML = '🟢 Live';
+    } else {
+      newBadge.classList.add('drawer-liveness-dead');
+      newBadge.title = 'Posting closed: ' + (data.reason || 'unknown') + ' · checked ' + (data.lastChecked || '') + ' · source: ' + (data.source || 'live-probe');
+      newBadge.innerHTML = '⚠ Posting closed';
+      // Disable apply button + add a Mark-as-Discarded CTA
+      var applyBtn = actionsEl.querySelector('button[data-drawer-action="apply"]');
+      if (applyBtn) {
+        applyBtn.disabled = true;
+        applyBtn.title = 'Posting verified closed: ' + (data.reason || 'unknown');
+        applyBtn.style.opacity = '0.5';
+      }
+      // Add a discard CTA if not already present
+      if (rowNum && !actionsEl.querySelector('button[data-drawer-action="discard-dead"]')) {
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.setAttribute('data-drawer-action', 'discard-dead');
+        discardBtn.style.background = 'var(--red-fg)';
+        discardBtn.style.color = '#fff';
+        discardBtn.style.borderColor = 'var(--red-fg)';
+        discardBtn.title = 'Mark this row as Discarded with LINK EXPIRED note';
+        discardBtn.textContent = 'Mark Discarded (posting closed)';
+        discardBtn.addEventListener('click', async function() {
+          if (!confirm('Mark row #' + rowNum + ' as Discarded (posting closed)?')) return;
+          discardBtn.disabled = true;
+          discardBtn.textContent = 'Marking...';
+          try {
+            await fetch('/api/discard-with-reason', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ row_num: rowNum, reason: 'Posting closed (drawer-probe): ' + (data.reason || 'unknown'), source: 'drawer-liveness-probe' }),
+            });
+            if (typeof window.optimisticStatusChange === 'function') {
+              window.optimisticStatusChange(rowNum, 'Discarded');
+            }
+            if (typeof window.closeRightRail === 'function') window.closeRightRail();
+          } catch (e) { discardBtn.textContent = 'Failed — see console'; console.warn(e); }
+        });
+        actionsEl.appendChild(discardBtn);
+      }
+    }
+    // Insert badge into drawer header chip row
+    var chipRow = header.querySelector('.drawer-chip-row');
+    if (chipRow) chipRow.appendChild(newBadge);
+    else header.appendChild(newBadge);
+  } catch (e) { /* liveness probe is best-effort — never block drawer */ }
+}
+window._probeDrawerLiveness = _probeDrawerLiveness;
 
 // Inventory #12 (2026-05-18): sticky drawer ribbon populator.
 // Resolves prev/next row within the same tbody (Apply-Now scope OR All Evals)
@@ -12392,10 +13343,41 @@ _drillInRegister('comp', function(id) {
       + '</div>';
   }
 
+  // B3 + C11 (2026-05-18): wealth-lens trajectory card — surfaces
+  // comp through Mitchell's calibration lens (pre-IPO equity, wealth
+  // generation potential, ceiling estimate). Baked at build time as a
+  // {signal, why, displayed, ceiling_estimate} object; rendered here
+  // with CSS variables (replaces the lib's hardcoded #fff/#e5e7eb so
+  // it adapts to dark mode).
+  var wealthLensHtml = '';
+  var wlData = (cb.wealthLens || {})[id];
+  if (wlData) {
+    var wlSignalColor = wlData.signal === 'wealth-aligned' ? 'var(--positive-text)'
+      : wlData.signal === 'wealth-mixed' ? 'var(--amber-fg)'
+      : wlData.signal === 'wealth-misaligned' ? 'var(--red-fg)'
+      : 'var(--text-3)';
+    var wlCeilStr = wlData.ceiling_estimate
+      ? '~$' + wlData.ceiling_estimate.toLocaleString()
+      : 'Unknown';
+    wealthLensHtml =
+      '<div class="wealth-lens-card" style="margin-top:14px;padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface-2)">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      +   '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + wlSignalColor + ';flex-shrink:0"></span>'
+      +   '<span style="font-size:13px;font-weight:600;color:var(--text)">Wealth-trajectory · ' + (wlData.displayed || '—') + '</span>'
+      + '</div>'
+      + '<p style="margin:0 0 8px;font-size:12px;color:var(--text-2);line-height:1.5">' + (wlData.why || '') + '</p>'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);border-top:1px solid var(--border);padding-top:6px;margin-top:6px">'
+      +   '<span>Wealth ceiling: <strong style="color:var(--text)">' + wlCeilStr + '</strong></span>'
+      +   '<span style="font-family:var(--font-mono);color:var(--text-4)">via lib/wealth-lens.mjs</span>'
+      + '</div>'
+      + '</div>';
+  }
+
   var html = '<p style="font-size:12px;margin-bottom:8px">Comp intelligence'
     + (base ? ' for <strong>$' + Math.round(base/1000) + 'K base</strong>' : '')
     + (company ? ' at <strong>' + company + '</strong>' : '') + '</p>'
     + peerHtml
+    + wealthLensHtml
     + equityBlock
     + (base < 300000 && equityHtml ? '<div style="margin-top:12px">' + equityHtml + '</div>' : '')
     + (playbookHtml ? '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;font-weight:600">Negotiation playbook</summary>' + playbookHtml + '</details>' : '');
@@ -12755,6 +13737,18 @@ _drillInRegister('pack-stage-result', function(id) {
     html: '<div style="margin:0 0 10px">' + statusChip + '<\/div>'
       + diagHtml
       + bodyHtml,
+  };
+});
+
+// B2 (2026-05-18): Industry Gap Radar drill-in. v1 ships a 12-industry
+// composite-scored table (finance/health/legal/insurance/aerospace) — Mitchell
+// can edit lib/industry-gap.mjs SEED_TABLE to tune weights or add rows.
+_drillInRegister('industry-gap', function() {
+  var cb = window._waveCB || {};
+  return {
+    title: 'Adjacent Industry Radar',
+    html: cb.industryGapHtml
+      || '<p style="color:var(--text-3);font-size:12px">Industry-gap data not baked. Re-run the dashboard build.</p>',
   };
 });
 
@@ -18821,6 +19815,52 @@ window.toast = function(msg, type) {
   return el;
 };
 
+// ── Weekly Calibration Prompt handlers (Inventory B6 MVP 2026-05-18) ────
+// copyCalibrationPrompt — fetches latest prompt content from
+// /api/calibration/state and copies the Gemini-ready block to the clipboard.
+// markCalibrationAnswered — POSTs to /api/calibration/answered which writes
+// data/calibration-state.json. The card hides on the next dashboard rebuild.
+window.copyCalibrationPrompt = async function(event) {
+  if (event && event.stopPropagation) event.stopPropagation();
+  try {
+    const res = await fetch('/api/calibration/state', { cache: 'no-store' });
+    const data = await res.json();
+    if (!data || !data.ok || !data.latest || !data.latest.prompt_block) {
+      if (window.toast) window.toast('No calibration prompt available yet', 'error');
+      return;
+    }
+    if (!navigator.clipboard) {
+      if (window.toast) window.toast('Clipboard unavailable in this browser', 'error');
+      return;
+    }
+    await navigator.clipboard.writeText(data.latest.prompt_block);
+    if (window.toast) window.toast('Calibration prompt copied — paste into Gemini', 'success');
+  } catch (err) {
+    if (window.toast) window.toast('Copy failed: ' + (err && err.message ? err.message : err), 'error');
+  }
+};
+
+window.markCalibrationAnswered = async function(event) {
+  if (event && event.stopPropagation) event.stopPropagation();
+  try {
+    const res = await fetch('/api/calibration/answered', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: new Date().toISOString().slice(0, 10) }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) {
+      if (window.toast) window.toast('Mark answered failed: ' + ((data && data.error) || 'unknown'), 'error');
+      return;
+    }
+    const card = document.getElementById('sidebar-calibration');
+    if (card) card.classList.add('hidden');
+    if (window.toast) window.toast('Calibration marked answered — see you next Monday', 'success');
+  } catch (err) {
+    if (window.toast) window.toast('Mark answered failed: ' + (err && err.message ? err.message : err), 'error');
+  }
+};
+
 // ═══════════════════════════════════════════════════════════════
 // Wave G1 — Dashboard polish + tables + interactions + visualizations
 // Items: D1, D2, D3, D5, D7, D8, D9, D10, D11, D12, D13, D14,
@@ -23416,4 +24456,4 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   console.log(`Open with: open dashboard/index.html`);
 }
 
-build();
+build().catch(err => { console.error('Build failed:', err); process.exit(1); });
