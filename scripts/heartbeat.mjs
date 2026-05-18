@@ -196,21 +196,30 @@ function renderContentHtml(markdownBody) {
   // Class-tagged inline styles. Class names are dark-mode hooks the
   // <style> block in the email <head> targets via prefers-color-scheme.
   // Inline rules are the light-mode default for clients that strip <style>.
+  // Visual hierarchy: section headings match dashboard style but are tightened
+  // so they don't compete with the TONIGHT'S APPLY dominant card above:
+  //   h2 → 13px uppercase bold with accent-left-border (matches dashboard section labels)
+  //   h3 → 14px semibold, subdued color (per-role headers, role names)
+  //   Tables → compact (8px padding) so multiple roles fit above-the-fold
+  //   Table cells → tighter vertical padding for density
   let styled = inner
-    .replace(/<table>/g, `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="card" style="border-collapse:separate;border-spacing:0;width:100%;margin:14px 0 18px;font-size:14px;border:1px solid ${BRAND.border};border-radius:8px;overflow:hidden;background:${BRAND.surface}">`)
+    .replace(/<table>/g, `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="card" style="border-collapse:separate;border-spacing:0;width:100%;margin:10px 0 14px;font-size:13px;border:1px solid ${BRAND.border};border-radius:8px;overflow:hidden;background:${BRAND.surface}">`)
     .replace(/<thead>/g, `<thead style="background:${BRAND.surface2}">`)
-    .replace(/<th>/g, `<th class="text-muted border" style="text-align:left;padding:10px 12px;border-bottom:1px solid ${BRAND.border};font-weight:600;color:${BRAND.text3};font-size:11px;text-transform:uppercase;letter-spacing:0.06em">`)
-    .replace(/<td>/g, `<td class="border" style="padding:10px 12px;border-bottom:1px solid ${BRAND.surface2};vertical-align:top;color:${BRAND.text2}">`)
-    .replace(/<blockquote>/g, `<blockquote class="card" style="margin:18px 0;padding:14px 18px;border-left:3px solid ${BRAND.green};background:${BRAND.greenBg};color:${BRAND.text};border-radius:0 8px 8px 0;font-size:14px;line-height:1.55">`)
-    .replace(/<h1>/g, `<h1 class="text-strong accent" style="font-size:26px;margin:0 0 6px;color:${BRAND.greenFg};font-weight:700;letter-spacing:-0.01em">`)
-    .replace(/<h2>/g, `<h2 class="text-strong" style="font-size:18px;margin:32px 0 10px;color:${BRAND.text};font-weight:700;border-left:3px solid ${BRAND.green};padding-left:12px;letter-spacing:-0.01em">`)
-    .replace(/<h3>/g, `<h3 class="text-strong" style="font-size:16px;margin:22px 0 8px;color:${BRAND.text2};font-weight:600;letter-spacing:-0.01em">`)
+    .replace(/<th>/g, `<th class="text-muted border" style="text-align:left;padding:8px 10px;border-bottom:1px solid ${BRAND.border};font-weight:700;color:${BRAND.text3};font-size:10px;text-transform:uppercase;letter-spacing:0.07em">`)
+    .replace(/<td>/g, `<td class="border" style="padding:8px 10px;border-bottom:1px solid ${BRAND.surface2};vertical-align:top;color:${BRAND.text2};font-size:13px">`)
+    .replace(/<blockquote>/g, `<blockquote class="card" style="margin:12px 0;padding:10px 14px;border-left:3px solid ${BRAND.green};background:${BRAND.greenBg};color:${BRAND.text};border-radius:0 8px 8px 0;font-size:13px;line-height:1.5">`)
+    .replace(/<h1>/g, `<h1 class="text-strong accent" style="font-size:22px;margin:0 0 6px;color:${BRAND.greenFg};font-weight:700;letter-spacing:-0.01em">`)
+    // h2 → compact section label style (matches dashboard --fs-meta + section heading pattern)
+    // Left border in accent green stays; reduced font and margin so it doesn't compete with §1
+    .replace(/<h2>/g, `<h2 class="text-strong" style="font-size:13px;margin:20px 0 6px;color:${BRAND.text3};font-weight:700;border-left:3px solid ${BRAND.green};padding-left:10px;letter-spacing:0.04em;text-transform:uppercase">`)
+    // h3 → per-role name / sub-section, subtle, no decoration
+    .replace(/<h3>/g, `<h3 class="text-strong" style="font-size:14px;margin:14px 0 5px;color:${BRAND.text2};font-weight:600;letter-spacing:-0.01em">`)
     .replace(/<a /g, `<a class="accent" style="color:${BRAND.greenFg};text-decoration:underline;text-underline-offset:2px;font-weight:500" `)
-    .replace(/<code>/g, `<code style="background:${BRAND.surface2};padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:${BRAND.greenFg}">`)
-    .replace(/<ul>/g, `<ul style="margin:8px 0 12px;padding-left:24px;color:${BRAND.text2}">`)
-    .replace(/<ol>/g, `<ol style="margin:8px 0 12px;padding-left:24px;color:${BRAND.text2}">`)
-    .replace(/<li>/g, '<li style="margin:4px 0;line-height:1.55">')
-    .replace(/<hr>/g, `<hr style="border:none;height:1px;background:linear-gradient(90deg,transparent 0%,${BRAND.border} 50%,transparent 100%);margin:28px 0">`);
+    .replace(/<code>/g, `<code style="background:${BRAND.surface2};padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:${BRAND.greenFg}">`)
+    .replace(/<ul>/g, `<ul style="margin:6px 0 10px;padding-left:20px;color:${BRAND.text2}">`)
+    .replace(/<ol>/g, `<ol style="margin:6px 0 10px;padding-left:20px;color:${BRAND.text2}">`)
+    .replace(/<li>/g, '<li style="margin:3px 0;line-height:1.5">')
+    .replace(/<hr>/g, `<hr style="border:none;height:1px;background:linear-gradient(90deg,transparent 0%,${BRAND.border} 50%,transparent 100%);margin:18px 0">`);
 
   // Color-code score callouts inside text content. Patterns we hit:
   //   "4.65 / 5"  →  pill-rendered score
