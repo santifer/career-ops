@@ -3,12 +3,14 @@
     <mj-title>Career-Ops Daily Heartbeat — {{date}}</mj-title>
     <mj-preview>{{preheaderText}}</mj-preview>
     <mj-attributes>
-      <!-- Default font/color for all text components -->
+      <!-- Design tokens sourced from templates/heartbeat-tokens.json (light.*)
+           Dashboard accent: #16a34a (--accent) | Surface: #ffffff | Border: #e5e7eb
+           Font: Inter (--font-sans) | Body: 14px / 1.5 (--text-base / --leading-normal) -->
       <mj-text
         font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
         font-size="14px"
-        line-height="1.55"
-        color="#1e293b"
+        line-height="1.5"
+        color="#374151"
       />
       <mj-button
         font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
@@ -16,300 +18,135 @@
         font-weight="600"
         letter-spacing="0.01em"
         border-radius="8px"
-        inner-padding="9px 16px"
+        inner-padding="10px 18px"
       />
-      <mj-section padding="0 0 12px 0" />
+      <mj-section padding="0 0 8px 0" />
     </mj-attributes>
+
     <mj-style>
-      /* Dark-mode overrides — Apple Mail, Gmail Web, Outlook 365 honor
-         prefers-color-scheme: dark. Class hooks (.card, .text-strong, .accent,
-         .header-banner, etc.) map to the dashboard's dark-mode token palette. */
+      /* ── Dark-mode overrides ──────────────────────────────────────────────
+         Tokens from heartbeat-tokens.json dark.* (mirrors dashboard body.dark).
+         Apple Mail, Gmail Web, Outlook 365 honor prefers-color-scheme: dark. */
       @media (prefers-color-scheme: dark) {
-        body, .body-bg  { background: #06070d !important; color: #fafafa !important; }
-        .card           { background: #11131c !important; border-color: #232737 !important; color: #e4e4e7 !important; }
-        .text-strong    { color: #fafafa !important; }
-        .text-muted     { color: #b8b8c0 !important; }
-        .text-subtle    { color: #9a9aa6 !important; }
-        .border         { border-color: #232737 !important; }
-        .accent         { color: #86efac !important; }
-        .accent-bg      { background: rgba(22,163,74,0.12) !important; color: #86efac !important; }
-        table           { border-color: #232737 !important; background: #11131c !important; }
-        thead, th       { background: #181b27 !important; color: #b8b8c0 !important; border-color: #232737 !important; }
-        td              { color: #e4e4e7 !important; border-color: #232737 !important; }
-        blockquote      { background: rgba(22,163,74,0.10) !important; color: #fafafa !important; border-left-color: #86efac !important; }
-        code            { background: #181b27 !important; color: #86efac !important; }
-        hr              { background: linear-gradient(90deg, transparent 0%, #232737 50%, transparent 100%) !important; }
-        a               { color: #86efac !important; }
-        .header-banner  {
+        body, .body-bg   { background: #06070d !important; color: #fafafa !important; }
+        .card            { background: #11131c !important; border-color: #232737 !important; color: #e4e4e7 !important; }
+        .text-strong     { color: #fafafa !important; }
+        .text-muted      { color: #b8b8c0 !important; }
+        .text-subtle     { color: #9a9aa6 !important; }
+        .border          { border-color: #232737 !important; }
+        .accent          { color: #86efac !important; }
+        table            { border-color: #232737 !important; background: #11131c !important; }
+        thead, th        { background: #181b27 !important; color: #b8b8c0 !important; border-color: #232737 !important; }
+        td               { color: #e4e4e7 !important; border-color: #232737 !important; }
+        blockquote       { background: rgba(22,163,74,0.10) !important; color: #fafafa !important; border-left-color: #86efac !important; }
+        code             { background: #181b27 !important; color: #86efac !important; }
+        hr               { background: linear-gradient(90deg, transparent 0%, #232737 50%, transparent 100%) !important; }
+        a                { color: #86efac !important; }
+        .header-banner   {
           background: linear-gradient(135deg, rgba(0,255,157,0.10) 0%, rgba(22,163,74,0.04) 50%, #11131c 100%) !important;
-          border: 1px solid #232737 !important;
-          color: #fafafa !important;
+          border: 1px solid #232737 !important; color: #fafafa !important;
         }
-        .cta-button     { background: #86efac !important; color: #06070d !important; }
+        .cta-button      { background: #86efac !important; color: #06070d !important; }
         .score-pill-green { background: rgba(22,163,74,0.15) !important; color: #86efac !important; border-color: rgba(22,163,74,0.35) !important; }
         .score-pill-amber { background: rgba(168,123,72,0.14) !important; color: #d4ba84 !important; }
         .score-pill-red   { background: rgba(220,38,38,0.12) !important; color: #fca5a5 !important; }
-        .focus-callout  { background: rgba(22,163,74,0.10) !important; border-left-color: #86efac !important; color: #bbf7d0 !important; }
+        .focus-callout   { background: rgba(22,163,74,0.10) !important; border-left-color: #86efac !important; color: #bbf7d0 !important; }
       }
     </mj-style>
+
     <mj-raw>
-      <!-- Colour-scheme meta ensures clients know we have dark-mode styles -->
       <meta name="color-scheme" content="light dark">
       <meta name="supported-color-schemes" content="light dark">
     </mj-raw>
   </mj-head>
 
-  <mj-body background-color="#f8fafc" css-class="body-bg">
+  <mj-body background-color="#f8f9fb" css-class="body-bg">
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         HERO BANNER — mission-control green gradient + dashboard CTA button.
-         mj-button generates bulletproof VML+CSS hybrid automatically so
-         this renders correctly in Classic Outlook (Word renderer, supported
-         through at least 2029 per Microsoft's extension).
+         HERO — #16a34a (dashboard --accent). Compact: title + date + CTA.
+         mj-button = bulletproof VML+CSS hybrid (Outlook 2016+ compatible).
          ═══════════════════════════════════════════════════════════════════ -->
     <mj-section
       background-color="#16a34a"
-      background-url=""
       css-class="header-banner"
-      border-radius="12px"
-      padding="22px 24px"
+      border-radius="10px"
+      padding="16px 20px"
     >
       <mj-column vertical-align="middle">
-        <mj-text
-          color="#ffffff"
-          font-size="11px"
-          letter-spacing="0.18em"
-          text-transform="uppercase"
-          font-weight="600"
-          padding-bottom="4px"
-        ><span role="img" aria-label="Lightning bolt: career ops">⚡</span> Career-Ops · Daily Heartbeat</mj-text>
-        <mj-text
-          color="#ffffff"
-          font-size="24px"
-          font-weight="700"
-          letter-spacing="-0.01em"
-          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
-          padding="0"
-        >{{date}}</mj-text>
+        <mj-text color="rgba(255,255,255,0.85)" font-size="10px" letter-spacing="0.18em" text-transform="uppercase" font-weight="700" padding-bottom="2px"><span role="img" aria-label="Lightning bolt: career ops">⚡</span> Career-Ops · Daily Heartbeat</mj-text>
+        <mj-text color="#ffffff" font-size="21px" font-weight="700" letter-spacing="-0.01em" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0">{{date}}</mj-text>
       </mj-column>
-      <mj-column vertical-align="middle" width="180px">
-        <!-- mj-button renders bulletproof VML+CSS hybrid. On Classic Outlook:
-             VML roundrect. On everything else: HTML/CSS button. Both link
-             to the same href. No manual VML boilerplate needed. -->
-        <mj-button
-          href="{{dashboardUrl}}"
-          background-color="#ffffff"
-          color="#15803d"
-          border-radius="8px"
-          font-size="13px"
-          font-weight="600"
-          css-class="cta-button"
-          align="right"
-        >Open Dashboard →</mj-button>
+      <mj-column vertical-align="middle" width="150px">
+        <mj-button href="{{dashboardUrl}}" background-color="#ffffff" color="#15803d" border-radius="8px" font-size="12px" font-weight="600" css-class="cta-button" align="right" inner-padding="8px 14px">Dashboard →</mj-button>
       </mj-column>
     </mj-section>
 
-    <!-- H1 — LLM "Today's Focus" callout (Wave D 2026-05-17).
-         1-2 sentence coaching directive from claude-haiku-4-5, cached per day.
-         Empty string on no-news days or when API key is absent. -->
-    <mj-section padding="0">
+    <!-- ═══════════════════════════════════════════════════════════════════
+         §1 TONIGHT'S APPLY + §2 DUE TODAY + §3 DELTAS + §4 TODAY'S FOCUS
+         All action/context sections in one mj-section to minimize MJML
+         table overhead. Section labels are inline (no separate mj-section).
+         ═══════════════════════════════════════════════════════════════════ -->
+    <mj-section padding="8px 0 4px 0">
       <mj-column>
-        <mj-text padding="0">{{todaysFocusHtml}}</mj-text>
+        <mj-text padding="0">{{actionSectionsHtml}}</mj-text>
       </mj-column>
     </mj-section>
 
-    <!-- System status banner (rendered HTML from lib/heartbeat-system-banner.mjs) -->
-    <mj-section padding="0">
-      <mj-column>
-        <mj-text padding="0">{{systemBannerHtml}}</mj-text>
-      </mj-column>
-    </mj-section>
-
-    <!-- H4 — Severity-tiered runway alert (3 tiers: nominal/stretched/critical)
-         Replaces binary pink banner. Rendered by renderRunwayAlertTiered(). -->
-    <mj-section padding="0">
-      <mj-column>
-        <mj-text padding="0">{{runwayAlertHtml}}</mj-text>
-      </mj-column>
-    </mj-section>
-
-    <!-- Discard pattern section -->
-    <mj-section padding="0">
-      <mj-column>
-        <mj-text padding="0">{{discardSectionHtml}}</mj-text>
-      </mj-column>
-    </mj-section>
-
-    <!-- Signal Pulse section — last 24h company-pulse deltas (Wave D 2026-05-17).
-         Auto-hides when data/company-pulse/ is empty or missing. -->
-    <mj-section padding="0">
-      <mj-column>
-        <mj-text padding="0">{{signalPulseHtml}}</mj-text>
-      </mj-column>
-    </mj-section>
-
-    <!-- TPgM weekly growth section — Monday only (Tier B item #5, wired 2026-05-17) -->
-    <!-- Rendered by lib/tpgm-heartbeat-section.mjs; empty string on non-Monday days -->
-    <mj-section padding="0">
+    <!-- ═══════════════════════════════════════════════════════════════════
+         §5 WEEKLY GROWTH (TPgM) — Monday only; empty string on other days.
+         §6a PIPELINE PULSE KPI tiles — 3 user-facing stats only.
+         Consolidated into one section to cut MJML overhead.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <mj-section padding="4px 0 4px 0">
       <mj-column>
         <mj-text padding="0">{{tpgmHeartbeatSectionHtml}}</mj-text>
       </mj-column>
     </mj-section>
 
-    <!-- ═══════════════════════════════════════════════════════════════════
-         KPI TILES — four stats in a 4-column layout.
-         H2 — day-over-day diff badges are injected inline with the value
-         (e.g. "14 <span ...>+2 vs yday</span>") by renderHtmlEmail().
-         Each tile is a separate mj-column so they stack on mobile.
-         ═══════════════════════════════════════════════════════════════════ -->
-    <mj-section padding="0 0 18px 0">
-      <mj-column
-        border="1px solid #e2e8f0"
-        border-radius="10px"
-        background-color="#ffffff"
-        padding="14px 16px"
-        css-class="card border"
-      >
-        <mj-text
-          color="#64748b"
-          font-size="10px"
-          font-weight="700"
-          letter-spacing="0.08em"
-          text-transform="uppercase"
-          align="center"
-          padding-bottom="4px"
-          css-class="text-muted"
-        >In queue ≥ 4.0</mj-text>
-        <mj-text
-          color="#16a34a"
-          font-size="24px"
-          font-weight="700"
-          align="center"
-          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
-          padding="0"
-          css-class="text-strong"
-        >{{kpiQueueCount}}</mj-text>
+    <!-- KPI tiles — 3 columns (Queue ≥4.0 / Eval'd today / Total tracked) -->
+    <mj-section padding="4px 0 12px 0">
+      <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Queue ≥ 4.0</mj-text>
+        <mj-text color="#16a34a" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong accent">{{kpiQueueCount}}</mj-text>
       </mj-column>
-      <mj-column
-        border="1px solid #e2e8f0"
-        border-radius="10px"
-        background-color="#ffffff"
-        padding="14px 16px"
-        css-class="card border"
-      >
-        <mj-text
-          color="#64748b"
-          font-size="10px"
-          font-weight="700"
-          letter-spacing="0.08em"
-          text-transform="uppercase"
-          align="center"
-          padding-bottom="4px"
-          css-class="text-muted"
-        >Evaluated today</mj-text>
-        <mj-text
-          color="#2563eb"
-          font-size="24px"
-          font-weight="700"
-          align="center"
-          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
-          padding="0"
-          css-class="text-strong"
-        >{{kpiEvaluatedToday}}</mj-text>
+      <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Eval'd today</mj-text>
+        <mj-text color="#5a76a6" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong">{{kpiEvaluatedToday}}</mj-text>
       </mj-column>
-      <mj-column
-        border="1px solid #e2e8f0"
-        border-radius="10px"
-        background-color="#ffffff"
-        padding="14px 16px"
-        css-class="card border"
-      >
-        <mj-text
-          color="#64748b"
-          font-size="10px"
-          font-weight="700"
-          letter-spacing="0.08em"
-          text-transform="uppercase"
-          align="center"
-          padding-bottom="4px"
-          css-class="text-muted"
-        >From alerts today</mj-text>
-        <mj-text
-          color="#15803d"
-          font-size="24px"
-          font-weight="700"
-          align="center"
-          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
-          padding="0"
-          css-class="text-strong"
-        >{{kpiNewFromAlerts}}</mj-text>
+      <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Total tracked</mj-text>
+        <mj-text color="#374151" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong">{{kpiTrackedCount}}</mj-text>
       </mj-column>
-      <mj-column
-        border="1px solid #e2e8f0"
-        border-radius="10px"
-        background-color="#ffffff"
-        padding="14px 16px"
-        css-class="card border"
-      >
-        <mj-text
-          color="#64748b"
-          font-size="10px"
-          font-weight="700"
-          letter-spacing="0.08em"
-          text-transform="uppercase"
-          align="center"
-          padding-bottom="4px"
-          css-class="text-muted"
-        >Tracked all-time</mj-text>
-        <mj-text
-          color="#475569"
-          font-size="24px"
-          font-weight="700"
-          align="center"
-          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
-          padding="0"
-          css-class="text-strong"
-        >{{kpiTrackedCount}}</mj-text>
+    </mj-section>
+
+    <!-- §6b Runway alert + system banner + discard pattern — all in one slot -->
+    <mj-section padding="0 0 8px 0">
+      <mj-column>
+        <mj-text padding="0">{{contextSectionsHtml}}</mj-text>
       </mj-column>
     </mj-section>
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         MAIN CONTENT — rendered from markdown via marked() + inline-style
-         transforms, then injected here as pre-rendered HTML. This hybrid
-         approach preserves all existing markdown-based section generators
-         while getting MJML's structural chrome (hero, KPI tiles, buttons,
-         footer) and bulletproof button rendering.
-
-         Wave D changes applied inside renderContentHtml():
-           H5 — aria-label on every status emoji
-           H6 — button hierarchy (primary green solid vs secondary ghost)
-           H7 — top 5 roles + "+N more" deeplink
-           T2 #7 — ?focus=row:{N} deeplinks on every role-row header
+         §7 MAIN CONTENT — markdown body rendered via renderContentHtml().
+         Contains: What's New Overnight → Apply-Now Queue → Activity Snapshot
+         → Pipeline Funnel → System Status → Errors → Interpretation guide.
+         Wave D changes (H5–H7, T2#7) applied inside renderContentHtml().
          ═══════════════════════════════════════════════════════════════════ -->
-    <mj-section padding="0">
+    <mj-section padding="0 0 8px 0">
       <mj-column>
         <mj-text padding="0">{{contentHtml}}</mj-text>
       </mj-column>
     </mj-section>
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         FOOTER
+         FOOTER — small, quiet. Matches dashboard footer visual weight.
          ═══════════════════════════════════════════════════════════════════ -->
-    <mj-section
-      padding="14px 0 8px 0"
-      border-top="1px solid #e2e8f0"
-      css-class="border"
-    >
+    <mj-section padding="10px 0 6px 0" border-top="1px solid #e5e7eb" css-class="border">
       <mj-column>
-        <mj-text
-          align="center"
-          font-size="12px"
-          color="#64748b"
-          css-class="text-muted"
-        >
-          Generated by <code style="background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:#15803d">scripts/heartbeat.mjs</code>
-          · <a href="{{dashboardUrl}}" style="color:#15803d;text-decoration:underline" class="accent">dashboard</a>
-          · scheduled daily 09:00 PT via launchd
+        <mj-text align="center" font-size="11px" color="#9ca3af" css-class="text-subtle" line-height="1.4">
+          <code style="background:#f4f4f6;padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace;font-size:11px;color:#16a34a">heartbeat.mjs</code>
+          · <a href="{{dashboardUrl}}" style="color:#16a34a;text-decoration:none" class="accent">dashboard</a>
+          · 09:00 PT
         </mj-text>
       </mj-column>
     </mj-section>
