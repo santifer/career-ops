@@ -253,7 +253,7 @@ function parseCvMarkdown(cvText) {
   const skillText = skillLines
     .map(l => (typeof l === 'string' ? l : ''))
     .filter(l => l.trim())
-    .map(l => `- ${l.replace(/^[-*]\s*/, '')}`)
+    .map(l => `- ${escapeTypst(l.replace(/^[-*]\s+/, ''))}`)
     .join('\n');
   tokens.SKILLS = skillText || '(see cv.md)';
 
@@ -263,8 +263,11 @@ function parseCvMarkdown(cvText) {
 // ── Typst conversion helpers ──────────────────────────────────────────────────
 
 function escapeTypst(s) {
-  // Escape Typst special characters: # " \ @
+  // Convert markdown **bold** → Typst *bold* (Typst uses single-* delimiters;
+  // leaving raw ** produces unclosed-delimiter errors in inline content).
+  // Then escape Typst special characters: # " \ @
   return String(s)
+    .replace(/\*\*(.+?)\*\*/g, '*$1*')
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
     .replace(/#/g, '\\#')
