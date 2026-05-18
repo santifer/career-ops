@@ -255,7 +255,7 @@ test('renderStoryChildPage shows generic note when no hmIntel', async () => {
     });
 
     assert.ok(
-      html.includes('no HM intel available'),
+      html.includes('no HM intel cached'),
       'generic note present when no hmIntel'
     );
   } finally {
@@ -330,6 +330,76 @@ test('renderStoryChildPage HTML is valid (no unclosed tags in skeleton)', async 
     const opens = (html.match(/<(html|head|body|main|aside|nav|footer)\b/g) || []).length;
     const closes = (html.match(/<\/(html|head|body|main|aside|nav|footer)>/g) || []).length;
     assert.equal(opens, closes, 'structural tags are balanced');
+  } finally {
+    cleanupTempRepo(root);
+  }
+});
+
+test('hm-intel-present: snapshot date shown in questions section', async () => {
+  // When hmIntel has refreshed_at, the Predicted Questions section must include
+  // "Calibrated to HM intel snapshot from {date}" with the date in a <time> element.
+  const root = makeTempRepo();
+  try {
+    const hmIntel = {
+      name: 'Jane Doe',
+      refreshed_at: '2026-05-17',
+      top_third_priority_keywords: ['system design', 'Python depth', 'cross-functional'],
+      top_value_dimension: 'system-design',
+      technical_depth_focus: ['Python', 'distributed systems'],
+    };
+    const { html } = await renderStoryChildPage({
+      story: { name: 'Led AI system redesign' },
+      role: 'Staff TPgM',
+      company: 'Anthropic',
+      rowId: 22,
+      hmIntel,
+      opts: { llmClient: mockLlmClient, repoRoot: root },
+    });
+
+    assert.ok(
+      html.includes('Calibrated to HM intel snapshot from'),
+      'snapshot calibration note present when refreshed_at set'
+    );
+    assert.ok(
+      html.includes('2026-05-17'),
+      'snapshot date value appears in HTML'
+    );
+    assert.ok(
+      html.includes('<time'),
+      'snapshot date wrapped in <time> element for semantics'
+    );
+    // Cover letter remix should reference the HM value dimension
+    assert.ok(
+      html.includes('system-design') || html.includes('system design'),
+      'HM value dimension surfaced in remix prompt area'
+    );
+  } finally {
+    cleanupTempRepo(root);
+  }
+});
+
+test('hm-intel-absent: generic calibration note shown in questions section', async () => {
+  // When no hmIntel is provided, the Predicted Questions section must show
+  // "Generic role-shape calibration (no HM intel cached)" to signal the fallback path.
+  const root = makeTempRepo();
+  try {
+    const { html } = await renderStoryChildPage({
+      story: { name: 'Led AI rollout' },
+      role: 'PM',
+      company: 'Acme',
+      rowId: 5,
+      // no hmIntel passed
+      opts: { llmClient: mockLlmClient, repoRoot: root },
+    });
+
+    assert.ok(
+      html.includes('Generic role-shape calibration (no HM intel cached)'),
+      'generic calibration note present when no hmIntel'
+    );
+    assert.ok(
+      !html.includes('Calibrated to HM intel snapshot from'),
+      'no snapshot date note when hmIntel absent'
+    );
   } finally {
     cleanupTempRepo(root);
   }
