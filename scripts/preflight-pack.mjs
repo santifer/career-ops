@@ -164,6 +164,27 @@ function checkClaimConsistency(slug) {
   };
 }
 
+function checkEngagementRubric(slug) {
+  // Phase 7 deterministic engagement rubric (51 checks across CL/DM/FF/FL/XA/EL).
+  // See data/rubric/ for the YAML data files and scripts/rubric-check.mjs for
+  // the check implementations. The rubric uses its own PASS/HUMAN_REVIEW/HOLD
+  // ladder; we map that to the preflight green/yellow/red triad.
+  const r = runShell(`node ${JSON.stringify(join(ROOT, 'scripts', 'rubric-check.mjs'))} --slug ${JSON.stringify(slug)}`);
+  if (!r.ok && !r.stdout) {
+    return { level: 'yellow', detail: `rubric-check failed: ${r.stderr.slice(0, 120)}`, metrics: {} };
+  }
+  const parsed = parseJsonTail(r.stdout);
+  const result = parsed?.results?.[0];
+  if (!result) return { level: 'yellow', detail: 'rubric-check returned no result', metrics: {} };
+  // Map verdict → preflight level. HOLD = red, HUMAN_REVIEW = yellow, PASS = green.
+  const level = ({ PASS: 'green', HUMAN_REVIEW: 'yellow', HOLD: 'red' })[result.verdict] || 'yellow';
+  return {
+    level,
+    detail: `${result.verdict}: ${result.errors} ERROR + ${result.warns} WARN fails of ${result.total_checks} checks (see rubric-check.md)`,
+    metrics: { verdict: result.verdict, errors: result.errors, warns: result.warns, total: result.total_checks },
+  };
+}
+
 function buildReport(slug, gates, verdict) {
   const lines = [];
   lines.push(`# Pre-flight — ${slug}`);
@@ -215,6 +236,15 @@ function buildReport(slug, gates, verdict) {
   lines.push(`- Verified: ${(gates.claimConsistency.metrics.totalClaims || 0) - (gates.claimConsistency.metrics.totalUnverified || 0)} / ${gates.claimConsistency.metrics.totalClaims || 0}`);
   lines.push(`- See [claim-consistency.md](claim-consistency.md) for unverified-claim list.`);
   lines.push('');
+  if (gates.engagementRubric.metrics.verdict) {
+    lines.push('### Engagement rubric (Phase 7 — 51 deterministic checks)');
+    lines.push(`- Verdict: ${gates.engagementRubric.metrics.verdict}`);
+    lines.push(`- ERROR fails: ${gates.engagementRubric.metrics.errors}`);
+    lines.push(`- WARN fails: ${gates.engagementRubric.metrics.warns}`);
+    lines.push(`- Total checks: ${gates.engagementRubric.metrics.total}`);
+    lines.push(`- See [rubric-check.md](rubric-check.md) for per-check detail.`);
+    lines.push('');
+  }
   lines.push('---');
   lines.push('');
   lines.push('Re-run any time: `node scripts/preflight-pack.mjs --slug ' + slug + '`');
@@ -243,6 +273,7 @@ function processPack(slug, opts) {
     humanize: checkHumanize(packDir),
     keywordAlignment: checkKeywordAlignment(slug),
     claimConsistency: checkClaimConsistency(slug),
+    engagementRubric: checkEngagementRubric(slug),
   };
   const verdict = aggregateVerdict(gates);
   const report = buildReport(slug, gates, verdict);
