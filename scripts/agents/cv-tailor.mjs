@@ -53,13 +53,20 @@ Your job:
 - Refine, tighten, or rephrase the top-8 ranked bullets to maximize impact for this specific JD.
 - Maintain Mitchell's voice (short, direct, metric-first, no "delve" / no "tapestry" / no AI-detector-tells).
 - Preserve all citations: keep [cv.md:line:N] or article-digest markers intact.
+- Also generate 4–6 "highlights" bullets for the HM 6-second scan box at the top of the CV PDF.
+  Highlights must be: short (≤100 chars each), metric-first, punchy, and JD-targeted.
+  Pull them from the strongest proof points in cv.md / article-digest.md.
+  These appear BEFORE work experience in the PDF for visual HM scanning.
+  The ATS text layer also sees them first — keep them truthful and verifiable from cv.md.
 - Output JSON with this exact shape:
   {
     "tailored_bullets": [{"text": "...", "original_rank": 1, "cv_ref": "cv.md:42", "notes": "what changed"}, ...],
+    "highlights": ["metric-first highlight 1", "highlight 2", "highlight 3", "highlight 4"],
     "summary": "1-2 sentence overall tailoring strategy",
     "warnings": ["any concerns about overclaiming or voice drift"]
   }
-- The number of bullets MUST equal the number you received in the ranked preamble (so 8 in, 8 out).
+- The number of tailored_bullets MUST equal the number you received in the ranked preamble (so 8 in, 8 out).
+- highlights must be 4–6 items.
 - NEVER invent metrics or experience not present in cv.md or article-digest.md.`;
 
 /* -------------------------------------------------------------------------- */
@@ -73,8 +80,21 @@ const TailoredBulletSchema = z.object({
   notes: z.string().default(''),
 });
 
+/**
+ * Schema for a single Highlights bullet (4–6 for HM 6-second scan box).
+ * Short, metric-first, punchy — no more than ~100 chars each.
+ */
+const HighlightBulletSchema = z.string().min(10).max(150);
+
 export const CvTailorLlmResponseSchema = z.object({
   tailored_bullets: z.array(TailoredBulletSchema).min(1),
+  /**
+   * highlights — 4–6 short punchy lines for the "## Highlights" box at the
+   * top of the CV PDF. Tailored to the JD. Metric-first, no AI-detector tells.
+   * Rendered via {{HIGHLIGHTS}} in templates/cv-template.html and .tex.
+   * ATS text-layer: appears before Work Experience (chronological order preserved).
+   */
+  highlights: z.array(HighlightBulletSchema).min(4).max(6),
   summary: z.string().min(1),
   warnings: z.array(z.string()).default([]),
 });
@@ -199,6 +219,7 @@ function unlinkSyncSafe(path) {
 
 /**
  * Build the markdown artifact content from the validated LLM response.
+ * Includes a ## Highlights section for use by generate-pdf.mjs ({{HIGHLIGHTS}}).
  */
 function buildMarkdownArtifact(llmResponse, company, role) {
   const lines = [
@@ -206,6 +227,21 @@ function buildMarkdownArtifact(llmResponse, company, role) {
     '',
   ];
 
+  // ## Highlights — written first in the artifact so generate-pdf.mjs can
+  // extract the {{HIGHLIGHTS}} template variable for the HM scan box.
+  // Each item renders as <li>text</li> in the HTML template via the
+  // HIGHLIGHTS variable substitution in generate-pdf.mjs.
+  if (llmResponse.highlights && llmResponse.highlights.length > 0) {
+    lines.push('## Highlights');
+    lines.push('');
+    for (const h of llmResponse.highlights) {
+      lines.push(`- ${h}`);
+    }
+    lines.push('');
+  }
+
+  lines.push('## Tailored Bullets');
+  lines.push('');
   for (const b of llmResponse.tailored_bullets) {
     const ref = b.cv_ref ? `  [${b.cv_ref}]` : '';
     lines.push(`- ${b.text}${ref}`);
@@ -505,6 +541,8 @@ export async function runCvTailor(input) {
       output: {
         path: artifactPath.replace(ROOT + '/', ''),
         tailored_bullets_count: parsed.tailored_bullets.length,
+        highlights: parsed.highlights || [],
+        highlights_count: (parsed.highlights || []).length,
         humanize_risk_score: humanizeScore,
         humanize_risk_band: humanize.risk,
         summary: parsed.summary,
@@ -531,6 +569,8 @@ export async function runCvTailor(input) {
     output: {
       path: artifactPath.replace(ROOT + '/', ''),
       tailored_bullets_count: parsed.tailored_bullets.length,
+      highlights: parsed.highlights || [],
+      highlights_count: (parsed.highlights || []).length,
       humanize_risk_score: humanizeScore,
       humanize_risk_band: humanize.risk,
       summary: parsed.summary,

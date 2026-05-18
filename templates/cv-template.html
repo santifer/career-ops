@@ -136,6 +136,55 @@
     line-height: 1.2;
   }
 
+  /* === HIGHLIGHTS (HM 6-second scan box) === */
+  .highlights-box {
+    background: linear-gradient(135deg, hsl(187, 40%, 97%) 0%, hsl(270, 30%, 97%) 100%);
+    border: 1.5px solid hsl(187, 40%, 85%);
+    border-radius: 5px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .highlights-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(187, 74%, 28%);
+    margin-bottom: 5px;
+  }
+
+  .highlights-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .highlights-list li {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #1a1a2e;
+    line-height: 1.4;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .highlights-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: hsl(187, 74%, 32%);
+    font-size: 9px;
+    top: 1px;
+  }
+
   /* === PROFESSIONAL SUMMARY === */
   .summary-text {
     font-size: 10.5px;
@@ -390,6 +439,18 @@
       <span>{{LOCATION}}</span>
     </div>
   </div>
+
+  <!-- HIGHLIGHTS (HM 6-second scan box — visually prominent, page 1 top) -->
+  <!-- ATS text layer: Highlights section appears here first so parsers see it  -->
+  <!-- before Work Experience; visual placement is enforced via block order.    -->
+  {{#if HIGHLIGHTS}}
+  <div class="highlights-box avoid-break">
+    <div class="highlights-title">{{SECTION_HIGHLIGHTS}}</div>
+    <ul class="highlights-list">
+      {{HIGHLIGHTS}}
+    </ul>
+  </div>
+  {{/if HIGHLIGHTS}}
 
   <!-- PROFESSIONAL SUMMARY -->
   <div class="section avoid-break">
