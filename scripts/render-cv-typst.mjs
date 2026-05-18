@@ -135,6 +135,9 @@ function parseCvMarkdown(cvText) {
     }
 
     if (currentSection) {
+      // Skip markdown horizontal rules — they sit between sections and would
+      // otherwise leak into the trailing section's buffer.
+      if (/^-{3,}\s*$/.test(line.trim())) continue;
       if (!sectionBuffers[currentSection]) sectionBuffers[currentSection] = [];
       sectionBuffers[currentSection].push(line);
     }
@@ -210,6 +213,23 @@ function parseCvMarkdown(cvText) {
     const pm = cvText.match(/\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
     if (pm) tokens.PHONE = pm[0].trim();
   }
+  if (!tokens.LOCATION) {
+    // Look for a "City, ST" or "City, Country" pattern on the first ~10 lines.
+    // Skip the H1 line and section headings.
+    const headerLines = cvText.split('\n').slice(0, 10);
+    for (const rawLine of headerLines) {
+      if (/^#/.test(rawLine)) continue;
+      // First pipe-separated segment that looks like "City, XX" wins.
+      const segments = rawLine.split('|').map(s => s.trim()).filter(Boolean);
+      for (const seg of segments) {
+        if (/^[A-Z][A-Za-z .'-]+,\s*[A-Z][A-Za-z .'-]+$/.test(seg)) {
+          tokens.LOCATION = seg;
+          break;
+        }
+      }
+      if (tokens.LOCATION) break;
+    }
+  }
 
   // ── Summary ───────────────────────────────────────────────────────────────
 
@@ -218,7 +238,7 @@ function parseCvMarkdown(cvText) {
                        sectionBuffers['about'] || [];
   tokens.SUMMARY_TEXT = summaryLines
     .map(l => (typeof l === 'string' ? l : ''))
-    .filter(l => l.trim())
+    .filter(l => l.trim() && !/^-{3,}$/.test(l.trim()))
     .join(' ')
     .trim();
 
@@ -273,9 +293,24 @@ function parseCvMarkdown(cvText) {
 
   const skillLines = sectionBuffers['technical skills'] ||
                      sectionBuffers['skills'] || [];
-  const skillText = skillLines
-    .map(l => (typeof l === 'string' ? l : ''))
-    .filter(l => l.trim())
+  // Pass 1: drop HTML comments and merge wrapped continuation lines into the
+  // previous entry. A line is a continuation when it does NOT start with `-`,
+  // `*`, or `**Category:` and a previous entry exists.
+  const skillEntries = [];
+  for (const entry of skillLines) {
+    if (typeof entry !== 'string') continue;
+    const cleaned = entry.replace(/<!--[\s\S]*?-->/g, '').trimEnd();
+    const l = cleaned.trim();
+    if (!l) continue;
+    const isBullet     = /^[-*]\s+/.test(l);
+    const isCategory   = /^\*\*[^*]+:\*\*/.test(l);
+    if (isBullet || isCategory || skillEntries.length === 0) {
+      skillEntries.push(l);
+    } else {
+      skillEntries[skillEntries.length - 1] += ' ' + l;
+    }
+  }
+  const skillText = skillEntries
     .map(l => `- ${escapeTypst(l.replace(/^[-*]\s+/, ''))}`)
     .join('\n');
   tokens.SKILLS = skillText || '(see cv.md)';
@@ -312,17 +347,36 @@ function escapeTypst(s) {
     .replace(/@/g, '\\@');
 }
 
+// Strip markdown formatting markers from text that will be rendered as a
+// plain string (e.g. as the `company` arg to job-entry, which Typst displays
+// verbatim). Use this for fields that go through escapeTypst-then-string
+// rather than escapeTypst-then-content.
+function stripMarkdown(s) {
+  return String(s)
+    .replace(/<!--[\s\S]*?-->/g, '')                    // HTML comments
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')          // [text](url) → text
+    .replace(/\*\*(.+?)\*\*/g, '$1')                    // **bold** → bold
+    .replace(/(?<![*\w])\*(?!\*)([^*\n]+?)\*(?!\*)/g, '$1') // *italic* → italic
+    .replace(/`([^`]+)`/g, '$1')                        // `code` → code
+    .trim();
+}
+
 /**
  * Convert a flat array of markdown lines (from a section buffer) to
- * Typst job-entry() calls. Expects H3 headings as company/role delimiters,
- * pipe-separated metadata on the line after the heading,
- * and bullet lines for the job content.
+ * Typst job-entry() calls.
  *
- * Pattern (in cv.md):
- *   ### Company Name
- *   Role Title | Period | Location
+ * Recognised cv.md format:
+ *   ### Role Title
+ *   **Company — Description**  |  Period[  |  Location]
+ *
+ *   Optional context paragraph (skipped).
+ *
  *   - Bullet one
+ *     wrapped continuation merged into the previous bullet
  *   - Bullet two
+ *
+ * Falls back to the legacy format (H3 = company, next line = "Role | Period | Location")
+ * when the line under the H3 doesn't carry a `**bold**` marker.
  */
 function convertSectionToTypst(lines, macroName) {
   const typstBlocks = [];
@@ -332,9 +386,11 @@ function convertSectionToTypst(lines, macroName) {
   let location = '';
   let bullets = [];
   let inEntry = false;
+  let metaLineSeen = false;
+  let bulletsStarted = false;
 
   function flush() {
-    if (!inEntry || !company) return;
+    if (!inEntry || (!company && !role)) return;
     const bulletArgs = bullets.map(b => `"${escapeTypst(b)}"`).join(',\n    ');
     typstBlocks.push(
       `#${macroName}(\n` +
@@ -348,30 +404,54 @@ function convertSectionToTypst(lines, macroName) {
     company = role = period = location = '';
     bullets = [];
     inEntry = false;
+    metaLineSeen = false;
+    bulletsStarted = false;
   }
 
   for (const entry of lines) {
     if (typeof entry === 'object' && entry.type === 'heading') {
       flush();
-      company = entry.text;
+      role = stripMarkdown(entry.text);
       inEntry = true;
       continue;
     }
-    const l = typeof entry === 'string' ? entry.trim() : '';
+    const rawLine = typeof entry === 'string' ? entry : '';
+    const l = rawLine.trim();
     if (!l) continue;
 
-    if (inEntry && !role && l.includes('|')) {
-      // "Role Title | Period | Location"
+    // Meta line under the H3 — first pipe-bearing line wins.
+    if (inEntry && !metaLineSeen && l.includes('|')) {
       const parts = l.split('|').map(s => s.trim());
-      role     = parts[0] || '';
-      period   = parts[1] || '';
-      location = parts[2] || '';
+      if (/^\*\*.+\*\*/.test(parts[0])) {
+        // cv.md format: **Company**  |  Period[  |  Location]
+        company  = stripMarkdown(parts[0]);
+        period   = stripMarkdown(parts[1] || '');
+        location = stripMarkdown(parts[2] || '');
+      } else {
+        // Legacy format: H3 was company, this line is Role | Period | Location
+        company  = role;
+        role     = stripMarkdown(parts[0] || '');
+        period   = stripMarkdown(parts[1] || '');
+        location = stripMarkdown(parts[2] || '');
+      }
+      metaLineSeen = true;
       continue;
     }
 
-    if ((l.startsWith('-') || l.startsWith('*')) && inEntry) {
-      bullets.push(l.replace(/^[-*]\s*/, ''));
+    if (l.startsWith('-') || l.startsWith('*')) {
+      bullets.push(stripMarkdown(l.replace(/^[-*]\s*/, '')));
+      bulletsStarted = true;
+      continue;
     }
+
+    // Wrapped continuation of the previous bullet: original line started with
+    // whitespace and we're inside a bullet group.
+    if (bulletsStarted && bullets.length > 0 && /^\s/.test(rawLine)) {
+      bullets[bullets.length - 1] += ' ' + stripMarkdown(l);
+      continue;
+    }
+
+    // Otherwise: context paragraph or other non-bullet content — skip.
   }
   flush();
 
@@ -402,20 +482,19 @@ function convertProjectsToTypst(lines) {
   for (const entry of lines) {
     if (typeof entry === 'object' && entry.type === 'heading') {
       flush();
-      // Allow "Title [badge]" syntax
       const badgeMatch = entry.text.match(/^(.+?)\s+\[([^\]]+)\]$/);
-      title = badgeMatch ? badgeMatch[1].trim() : entry.text;
-      badge = badgeMatch ? badgeMatch[2].trim() : '';
+      title = stripMarkdown(badgeMatch ? badgeMatch[1] : entry.text);
+      badge = stripMarkdown(badgeMatch ? badgeMatch[2] : '');
       continue;
     }
     const l = typeof entry === 'string' ? entry.trim() : '';
     if (!l) continue;
     if (/^tech:/i.test(l)) {
-      tech = l.replace(/^tech:\s*/i, '');
+      tech = stripMarkdown(l.replace(/^tech:\s*/i, ''));
     } else if (l.startsWith('-') || l.startsWith('*')) {
-      descLines.push(l.replace(/^[-*]\s*/, ''));
+      descLines.push(stripMarkdown(l.replace(/^[-*]\s*/, '')));
     } else {
-      descLines.push(l);
+      descLines.push(stripMarkdown(l));
     }
   }
   flush();
@@ -445,17 +524,27 @@ function convertEduToTypst(lines) {
   for (const entry of lines) {
     if (typeof entry === 'object' && entry.type === 'heading') {
       flush();
-      degree = entry.text;
+      degree = stripMarkdown(entry.text);
       continue;
     }
     const l = typeof entry === 'string' ? entry.trim() : '';
     if (!l) continue;
+    // `**Degree**  |  Institution[  |  Year]` — no H3 above means the line
+    // itself is the entry.
+    if (!degree && /^\*\*.+\*\*/.test(l) && l.includes('|')) {
+      flush();
+      const parts = l.split('|').map(s => s.trim());
+      degree = stripMarkdown(parts[0]);
+      org    = stripMarkdown(parts[1] || '');
+      year   = stripMarkdown(parts[2] || '');
+      continue;
+    }
     if (l.includes('|')) {
       const parts = l.split('|').map(s => s.trim());
-      org  = parts[0] || '';
-      year = parts[1] || '';
+      org  = stripMarkdown(parts[0] || '');
+      year = stripMarkdown(parts[1] || '');
     } else {
-      desc = l;
+      desc = stripMarkdown(l);
     }
   }
   flush();
@@ -467,22 +556,43 @@ function convertCertToTypst(lines) {
   for (const entry of lines) {
     const l = typeof entry === 'string' ? entry.trim() : '';
     if (!l) continue;
-    if (l.includes('|')) {
-      const parts = l.replace(/^[-*]\s*/, '').split('|').map(s => s.trim());
-      const title = parts[0] || '';
-      const org   = parts[1] || '';
-      const year  = parts[2] || '';
-      blocks.push(
-        `#cert-entry(\n` +
-        `  title: "${escapeTypst(title)}",\n` +
-        `  issuer: "${escapeTypst(org)}",\n` +
-        `  date: "${escapeTypst(year)}"\n` +
-        `)`
-      );
-    } else if ((l.startsWith('-') || l.startsWith('*')) && l.length > 2) {
-      const cleaned = l.replace(/^[-*]\s*/, '');
-      blocks.push(`#cert-entry(title: "${escapeTypst(cleaned)}", issuer: "", date: "")`);
+    const stripped = l.replace(/^[-*]\s*/, '');
+
+    // Format A: "**Title** — Issuer, Date" (em-dash or en-dash, comma-separated issuer/date)
+    const dashSplit = stripped.match(/^(.+?)\s+[—–-]\s+(.+)$/);
+    let title = '', issuer = '', date = '';
+    if (dashSplit && !stripped.includes('|')) {
+      title = stripMarkdown(dashSplit[1]);
+      const tail = dashSplit[2];
+      const commaIdx = tail.lastIndexOf(',');
+      if (commaIdx >= 0) {
+        issuer = stripMarkdown(tail.slice(0, commaIdx));
+        date   = stripMarkdown(tail.slice(commaIdx + 1));
+      } else {
+        issuer = stripMarkdown(tail);
+      }
     }
+    // Format B: "Title | Issuer | Date"
+    else if (l.includes('|')) {
+      const parts = stripped.split('|').map(s => s.trim());
+      title  = stripMarkdown(parts[0] || '');
+      issuer = stripMarkdown(parts[1] || '');
+      date   = stripMarkdown(parts[2] || '');
+    }
+    // Fallback: bare bullet, no issuer/date
+    else if ((l.startsWith('-') || l.startsWith('*')) && l.length > 2) {
+      title = stripMarkdown(stripped);
+    } else {
+      continue;
+    }
+
+    blocks.push(
+      `#cert-entry(\n` +
+      `  title: "${escapeTypst(title)}",\n` +
+      `  issuer: "${escapeTypst(issuer)}",\n` +
+      `  date: "${escapeTypst(date)}"\n` +
+      `)`
+    );
   }
   return blocks.join('\n') || '(see cv.md)';
 }

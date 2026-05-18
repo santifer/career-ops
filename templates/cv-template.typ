@@ -41,7 +41,7 @@
 )
 
 #set text(
-  font: "Calibri",
+  font: ("Calibri", "Helvetica Neue", "Helvetica", "Arial", "Liberation Sans"),
   size: 11pt,
   weight: "regular",
   fallback: true,
