@@ -106,15 +106,15 @@
     <!-- KPI tiles — 3 columns (Queue ≥4.0 / Eval'd today / Total tracked) -->
     <mj-section padding="4px 0 12px 0">
       <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
-        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Apply-Now</mj-text>
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Ready to Apply</mj-text>
         <mj-text color="#16a34a" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong accent">{{kpiQueueCount}}</mj-text>
       </mj-column>
       <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
-        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Evaluated</mj-text>
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Evaluated Today</mj-text>
         <mj-text color="#5a76a6" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong">{{kpiEvaluatedToday}}</mj-text>
       </mj-column>
       <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
-        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Tracked</mj-text>
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Total Tracked</mj-text>
         <mj-text color="#374151" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong">{{kpiTrackedCount}}</mj-text>
       </mj-column>
     </mj-section>

@@ -65,13 +65,13 @@ function computeRunwayDensityForHeartbeat() {
   let health, runway_alert;
   if (active >= 5 && touches7d >= 10) {
     health = 'healthy';
-    runway_alert = `✅ Pipeline density adequate for ${runwayWeeks}-week runway.`;
+    runway_alert = `✅ Cushion holding — pipeline on track for ${runwayWeeks}-week runway.`;
   } else if (active >= 3 || touches7d >= 5) {
     health = 'stretched';
-    runway_alert = `⚠️ Pipeline stretched for ${runwayWeeks}-week runway. Add ${Math.max(0, 5 - active)} more active conversations and ${Math.max(0, 10 - touches7d)} more touches this week.`;
+    runway_alert = `⚠️ Cushion shrinking — add ${Math.max(0, 5 - active)} more active conversations and ${Math.max(0, 10 - touches7d)} more touches this week to stay on track for ${runwayWeeks} weeks.`;
   } else {
     health = 'critical';
-    runway_alert = `🚨 Pipeline below threshold for ${runwayWeeks}-week runway. Increase outreach velocity to 10+ touches/week immediately.`;
+    runway_alert = `🚨 Past your runway floor — push outreach to 10+ touches/week right now. The ${runwayWeeks}-week window is at risk.`;
   }
   return {
     ok: true, runway_weeks: runwayWeeks, health, runway_alert,
@@ -259,9 +259,9 @@ function renderRunwayAlertTiered(density) {
   const { health, runway_alert, contacts, velocity, runway_weeks } = density;
   // Tier definitions matching Datadog/Sentry/PagerDuty tier patterns
   const tiers = {
-    healthy:   { bg: '#dcfce7', border: '#86efac', fg: '#166534', icon: '🟢', label: 'Nominal',   aria: 'Green circle: nominal' },
-    stretched: { bg: '#fef3c7', border: '#f59e0b', fg: '#92400e', icon: '🟡', label: 'Stretched', aria: 'Yellow circle: stretched' },
-    critical:  { bg: '#fee2e2', border: '#f87171', fg: '#991b1b', icon: '🔴', label: 'Critical',  aria: 'Red circle: critical' },
+    healthy:   { bg: '#dcfce7', border: '#86efac', fg: '#166534', icon: '🟢', label: 'On track',        aria: 'Green circle: on track' },
+    stretched: { bg: '#fef3c7', border: '#f59e0b', fg: '#92400e', icon: '🟡', label: 'Cushion shrinking', aria: 'Yellow circle: cushion shrinking' },
+    critical:  { bg: '#fee2e2', border: '#f87171', fg: '#991b1b', icon: '🔴', label: 'Past runway floor', aria: 'Red circle: past runway floor' },
   };
   const t = tiers[health] || tiers.stretched;
   const actionLink = health === 'critical'
@@ -627,13 +627,13 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
 
   // H3 — no-news early-exit: minimal email on zero-delta days.
   if (noNewsToday) {
-    const minimalMd = `_All systems nominal — pipeline steady, no new roles today. See you tomorrow._\n\n[Open dashboard →](${DASHBOARD_PUBLIC_URL})`;
+    const minimalMd = `_Nothing new today — pipeline running, no new roles above the threshold. See you tomorrow._\n\n[Open dashboard →](${DASHBOARD_PUBLIC_URL})`;
     const minimalContentHtml = renderContentHtml(minimalMd);
     let minimalTmpl = getMjmlTemplate();
     minimalTmpl = minimalTmpl
       .replace(/{{date}}/g,                    escapeForMjml(date))
       .replace(/{{dashboardUrl}}/g,             escapeForMjml(dashboardUrl))
-      .replace(/{{preheaderText}}/g,            escapeForMjml(`${trackedCount} tracked. All systems nominal — no new roles today.`))
+      .replace(/{{preheaderText}}/g,            escapeForMjml(`${trackedCount} tracked. Nothing new today — pipeline running smoothly.`))
       .replace(/{{actionSectionsHtml}}/g,       actionSectionsHtml)
       .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
       .replace(/{{kpiQueueCount}}/g,            String(queueCount) + kpiQueueBadge)
@@ -971,10 +971,10 @@ async function getTodaysFocus(metaState) {
 
 function buildFocusFallback(metaState) {
   const { newRoles = 0, runwayAlert = false, outreachDue = 0, queueCount = 0 } = metaState;
-  if (runwayAlert) return `Pipeline below threshold — increase outreach velocity to 10+ touches/week immediately. ${queueCount} roles await action.`;
-  if (newRoles > 0) return `${newRoles} new role${newRoles === 1 ? '' : 's'} crossed the apply floor — review and build apply packs for the top-scoring ones today.`;
-  if (outreachDue > 0) return `${outreachDue} outreach follow-up${outreachDue === 1 ? '' : 's'} due — send them before noon to keep momentum.`;
-  return `Queue at ${queueCount} actionable roles — pick the highest-scoring one and complete an application today.`;
+  if (runwayAlert) return `Outreach is below your runway floor — push to 10+ touches this week to stay on track. ${queueCount} role${queueCount === 1 ? '' : 's'} are ready to apply.`;
+  if (newRoles > 0) return `${newRoles} new role${newRoles === 1 ? '' : 's'} scored 4.0 or above — open the top one, build your apply pack, and submit tonight.`;
+  if (outreachDue > 0) return `${outreachDue} follow-up${outreachDue === 1 ? '' : 's'} due today — send them before noon so nothing stalls.`;
+  return `${queueCount} role${queueCount === 1 ? '' : 's'} ready to apply — pick the highest-scoring one and get an application out today.`;
 }
 
 // ── Wave D: Day-over-day KPI diff (H2) ──────────────────────────────────────
@@ -1645,7 +1645,7 @@ function formatPipelineFunnel(inflow, reportsToday, applyNowCount, totalTracked)
   out.push(`| 📚 Total tracked overall | ${totalTracked} | every role the system has ever evaluated |`);
   out.push('');
   if (inflow.emailMessages === 0 && inflow.emailNew === 0) {
-    out.push('> ⚠️ **No email alerts today.** Run `node scripts/find-unfiltered-alerts.mjs --apply` to patch missing Gmail filters.');
+    out.push('> ⚠️ **No email job alerts received today.** Run `node scripts/find-unfiltered-alerts.mjs --apply` to fix missing Gmail filters.');
     out.push('');
   }
   return out;

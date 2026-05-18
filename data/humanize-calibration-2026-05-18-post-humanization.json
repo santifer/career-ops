@@ -1,0 +1,109 @@
+{
+  "run_date": "2026-05-18",
+  "total_spend_usd": 0.14,
+  "budget_cap_usd": 0.5,
+  "calibration_finding": "Short UI copy (8-25 words) is not a valid target for AI detection APIs. Originality.ai states explicitly: texts under 50 words produce unreliable results. GPTZero also treats terse command-style sentences as AI-generated regardless of authorship. All 7 snippets tested are under 35 words. The API tools are calibrated for 100+ word body paragraphs (coaching notes, LLM-generated Today's Focus text, cover letter paragraphs). Short UI labels and status messages should be validated through human readability review (grade level + plain-language check), not AI detection APIs.",
+  "recommendation": "Reserve assertHumanLikePassesAi() for LLM-generated body-copy paragraphs ≥ 50 words. Do not run it on UI labels, status messages, or one-sentence callouts. The gradeLevel() + humanizeBody() helpers are the right tools for short copy.",
+  "gptzero_short_text_finding": "GPTZero returns prob=1 for the classic typing test phrase 'The quick brown fox...' (26 words). This confirms the detector is unreliable on short text regardless of actual authorship.",
+  "results": [
+    {
+      "id": "focus_fallback_new_roles",
+      "label": "Today's Focus fallback (new roles)",
+      "word_count": 17,
+      "text_preview": "3 new roles scored 4.0 or above — open the top one, build your apply pack, and submit tonight.",
+      "passes": false,
+      "verdict": "AI",
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "from_cache": false,
+      "cost_usd_estimate": 0.02,
+      "note": "Too short (<50 words). Originality.ai accuracy not valid at this length. Rewrite not needed — text is already plain and direct."
+    },
+    {
+      "id": "focus_fallback_queue",
+      "label": "Today's Focus fallback (queue nudge)",
+      "word_count": 15,
+      "text_preview": "5 roles ready to apply — pick the highest-scoring one and get an application out today.",
+      "passes": false,
+      "verdict": "AI",
+      "gptzero_prob": 0,
+      "originality_prob": 1,
+      "from_cache": false,
+      "cost_usd_estimate": 0.02,
+      "note": "GPTZero passes (0.0), Originality fails due to length. Text is already plain English. No rewrite needed."
+    },
+    {
+      "id": "runway_cushion_shrinking",
+      "label": "Runway alert (cushion shrinking)",
+      "word_count": 21,
+      "text_preview": "Cushion shrinking — add 2 more active conversations and 5 more touches this week to stay on track for 12 weeks.",
+      "passes": false,
+      "verdict": "AI",
+      "gptzero_prob": 0,
+      "originality_prob": 1,
+      "from_cache": false,
+      "cost_usd_estimate": 0.02,
+      "note": "GPTZero passes (0.0). Originality length issue only. Copy is concrete and action-specific — no rewrite needed."
+    },
+    {
+      "id": "runway_past_floor",
+      "label": "Runway alert (past floor)",
+      "word_count": 18,
+      "text_preview": "Past your runway floor — push outreach to 10+ touches/week right now. The 12-week window is at risk.",
+      "passes": false,
+      "verdict": "AI",
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "from_cache": false,
+      "cost_usd_estimate": 0.02,
+      "note": "Both flag. Length issue primary cause. Copy is urgent and plain — adequate for purpose."
+    },
+    {
+      "id": "funnel_nudge",
+      "label": "Funnel nudge (gap explanation)",
+      "word_count": 22,
+      "text_preview": "You evaluated 137 roles but marked 0 as Applied. Click ✓ on a row after you submit so this dashboard shows reality.",
+      "passes": false,
+      "verdict": "AI",
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "from_cache": false,
+      "cost_usd_estimate": 0.02,
+      "note": "Both flag. This is hand-written procedural copy in funnel-completion.mjs. Length issue primary."
+    },
+    {
+      "id": "tonight_pick_why",
+      "label": "Tonight's Pick 'why' prose (sample)",
+      "word_count": 20,
+      "text_preview": "This role matches your core PM background, has strong equity timing, and requires no gaps you can't close in one week.",
+      "passes": false,
+      "verdict": "AI",
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "from_cache": false,
+      "cost_usd_estimate": 0.02,
+      "note": "LLM-generated copy. For real 'why-this-one' paragraphs ≥50 words, assertHumanLikePassesAi() is appropriate. This sample is too short."
+    },
+    {
+      "id": "no_news_today",
+      "label": "No-news minimal email copy",
+      "word_count": 16,
+      "text_preview": "Nothing new today — pipeline running, no new roles above the threshold. See you tomorrow.",
+      "passes": false,
+      "verdict": "AI",
+      "gptzero_prob": 0,
+      "originality_prob": 1,
+      "from_cache": false,
+      "cost_usd_estimate": 0.02,
+      "note": "GPTZero passes (0.0). Hand-written copy. Originality length limitation only."
+    }
+  ],
+  "summary": {
+    "snippets_tested": 7,
+    "gptzero_passed": 3,
+    "originality_passed": 0,
+    "both_passed": 0,
+    "root_cause": "All snippets are under 35 words. AI detection APIs require 50+ words for reliable results. Short UI copy cannot be meaningfully validated this way.",
+    "action": "Use assertHumanLikePassesAi() only on ≥50-word LLM body paragraphs. Use gradeLevel() for short copy quality gating."
+  }
+}
