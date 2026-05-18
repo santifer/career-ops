@@ -1,18 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for LLM workers
+# Reads batch-input.tsv, delegates each offer to a worker (claude -p or Ollama),
 # tracks state in batch-state.tsv for resumability.
 #
-# NOTE: This script is Claude Code-specific. It uses claude -p with
-# --dangerously-skip-permissions and --append-system-prompt-file flags
-# that are not available in other CLIs. Multi-CLI support is out of scope
-# for now — contributions welcome.
+# Backends:
+#   claude  (default) — requires Claude Code CLI + Claude Max subscription
+#   ollama             — requires Ollama running locally (free, private)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BATCH_DIR="$SCRIPT_DIR"
+
+# Source .env from the project root so that OLLAMA_BASE_URL, OLLAMA_MODEL,
+# etc. are available to both the preflight checks here and the Node.js workers
+# without requiring users to export them from their shell.
+# set -a / set +a makes every sourced variable auto-exported to children.
+if [[ -f "$PROJECT_DIR/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$PROJECT_DIR/.env"
+  set +a
+fi
 INPUT_FILE="$BATCH_DIR/batch-input.tsv"
 STATE_FILE="$BATCH_DIR/batch-state.tsv"
 PROMPT_FILE="$BATCH_DIR/batch-prompt.md"
@@ -34,11 +44,11 @@ START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
 MODEL=""  # empty = let claude -p use the Claude Max default
+BACKEND="${CAREER_OPS_BACKEND:-claude}"
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via LLM workers
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -52,12 +62,23 @@ Options:
   --model NAME         Claude model passed to `claude -p --model` (default:
                        unset = Claude Max default). Use a cheaper model for
                        large batches, e.g. `--model claude-sonnet-4-6`.
+  --backend <name>     LLM backend: claude (default) or ollama
   -h, --help           Show this help
+
+Backends:
+  claude   Uses `claude -p` workers (requires Claude Code + Claude Max subscription)
+  ollama   Uses local Ollama (free, private — set OLLAMA_MODEL and OLLAMA_BASE_URL)
+
+Environment (Ollama backend):
+  OLLAMA_BASE_URL      Ollama server URL (default: http://localhost:11434)
+  OLLAMA_MODEL         Model name (default: llama3.3)
+  OLLAMA_TIMEOUT_MS    Per-offer timeout in ms (default: 300000)
+  CAREER_OPS_BACKEND   Set default backend without --backend flag
 
 Files:
   batch-input.tsv      Input offers (id, url, source, notes)
   batch-state.tsv      Processing state (auto-managed)
-  batch-prompt.md      Prompt template for workers
+  batch-prompt.md      Prompt template (claude backend only)
   logs/                Per-offer logs
   tracker-additions/   Tracker lines for post-batch merge
 
@@ -65,8 +86,14 @@ Examples:
   # Dry run to see pending offers
   ./batch-runner.sh --dry-run
 
-  # Process all pending
+  # Process all pending (Claude backend, default)
   ./batch-runner.sh
+
+  # Process with local Ollama
+  ./batch-runner.sh --backend ollama
+
+  # Ollama with a specific model, 2 workers
+  OLLAMA_MODEL=qwen2.5:72b ./batch-runner.sh --backend ollama --parallel 2
 
   # Retry only failed offers
   ./batch-runner.sh --retry-failed
@@ -86,6 +113,7 @@ while [[ $# -gt 0 ]]; do
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
+    --backend) BACKEND="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -124,15 +152,62 @@ check_prerequisites() {
     exit 1
   fi
 
-  if [[ ! -f "$PROMPT_FILE" ]]; then
-    echo "ERROR: $PROMPT_FILE not found."
-    exit 1
-  fi
-
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
-    exit 1
-  fi
+  case "$BACKEND" in
+    claude)
+      if [[ ! -f "$PROMPT_FILE" ]]; then
+        echo "ERROR: $PROMPT_FILE not found."
+        exit 1
+      fi
+      if ! command -v claude &>/dev/null; then
+        echo "ERROR: 'claude' CLI not found in PATH (required for claude backend)."
+        echo "       Install Claude Code: https://claude.ai/code"
+        exit 1
+      fi
+      ;;
+    ollama)
+      if ! command -v node &>/dev/null; then
+        echo "ERROR: 'node' not found in PATH (required for ollama backend)."
+        exit 1
+      fi
+      if [[ ! -f "$PROJECT_DIR/ollama-batch.mjs" ]]; then
+        echo "ERROR: ollama-batch.mjs not found in $PROJECT_DIR"
+        exit 1
+      fi
+      if ! command -v curl &>/dev/null; then
+        echo "ERROR: 'curl' not found in PATH (required to probe Ollama)."
+        exit 1
+      fi
+      # Map --model to OLLAMA_MODEL when the Ollama backend is selected.
+      # --model is defined for the claude backend; for Ollama the canonical
+      # env var is OLLAMA_MODEL. Bridge them so `--backend ollama --model X`
+      # works as expected without silently falling back to llama3.3.
+      if [[ -n "$MODEL" && -z "${OLLAMA_MODEL:-}" ]]; then
+        OLLAMA_MODEL="$MODEL"
+      fi
+      local ollama_url="${OLLAMA_BASE_URL:-http://localhost:11434}"
+      # Loopback guard: reject remote URLs early so we don't reserve report
+      # numbers before per-worker guards fire.
+      if [[ "${OLLAMA_ALLOW_REMOTE:-0}" != "1" ]]; then
+        if [[ ! "$ollama_url" =~ ^https?://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?(/.*)?$ ]]; then
+          echo "ERROR: OLLAMA_BASE_URL must point to localhost/127.0.0.1/::1"
+          echo "       Remote endpoint detected: ${ollama_url}"
+          echo "       Set OLLAMA_ALLOW_REMOTE=1 to use a remote endpoint intentionally."
+          exit 1
+        fi
+      fi
+      if ! curl -sf --connect-timeout 5 --max-time 10 "${ollama_url}/api/tags" -o /dev/null 2>/dev/null; then
+        echo "ERROR: Ollama not reachable at ${ollama_url}"
+        echo "       Start Ollama with: ollama serve"
+        echo "       Install Ollama:    https://ollama.com"
+        exit 1
+      fi
+      echo "Backend: ollama (model: ${OLLAMA_MODEL:-llama3.3}, url: ${ollama_url})"
+      ;;
+    *)
+      echo "ERROR: Unknown backend '$BACKEND'. Use 'claude' or 'ollama'."
+      exit 1
+      ;;
+  esac
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
 }
@@ -341,39 +416,45 @@ process_offer() {
 
   local log_file="$LOGS_DIR/${report_num}-${id}.log"
 
-  # Prepare system prompt with placeholders resolved
-  local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
-  # Escape sed delimiter characters in variables to prevent substitution breakage
-  local esc_url esc_jd_file esc_report_num esc_date esc_id
-  esc_url="${url//\\/\\\\}"
-  esc_url="${esc_url//|/\\|}"
-  esc_jd_file="${jd_file//\\/\\\\}"
-  esc_jd_file="${esc_jd_file//|/\\|}"
-  esc_report_num="${report_num//|/\\|}"
-  esc_date="${date//|/\\|}"
-  esc_id="${id//|/\\|}"
-  sed \
-    -e "s|{{URL}}|${esc_url}|g" \
-    -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
-    -e "s|{{DATE}}|${esc_date}|g" \
-    -e "s|{{ID}}|${esc_id}|g" \
-    "$PROMPT_FILE" > "$resolved_prompt"
-
-  # Launch claude -p worker.
-  # Model defaults to the Claude Max subscription default unless --model was
-  # passed. Building the command in an array keeps quoting safe regardless.
-  local -a claude_args=(-p --dangerously-skip-permissions)
-  if [[ -n "$MODEL" ]]; then
-    claude_args+=(--model "$MODEL")
-  fi
-  claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
-
+  # Launch worker — backend-specific
   local exit_code=0
-  claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+  if [[ "$BACKEND" == "ollama" ]]; then
+    node "$PROJECT_DIR/ollama-batch.mjs" \
+      --url        "$url" \
+      --jd-file    "$jd_file" \
+      --report-num "$report_num" \
+      --date       "$date" \
+      --batch-id   "$id" \
+      --min-score  "$MIN_SCORE" \
+      > "$log_file" 2>&1 || exit_code=$?
+  else
+    # claude backend: resolve placeholders into a temp system prompt file
+    local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
+    local esc_url esc_jd_file esc_report_num esc_date esc_id
+    esc_url="${url//\\/\\\\}";           esc_url="${esc_url//|/\\|}";           esc_url="${esc_url//&/\\&}"
+    esc_jd_file="${jd_file//\\/\\\\}";   esc_jd_file="${esc_jd_file//|/\\|}";   esc_jd_file="${esc_jd_file//&/\\&}"
+    esc_report_num="${report_num//|/\\|}"; esc_report_num="${esc_report_num//&/\\&}"
+    esc_date="${date//|/\\|}";           esc_date="${esc_date//&/\\&}"
+    esc_id="${id//|/\\|}";               esc_id="${esc_id//&/\\&}"
+    sed \
+      -e "s|{{URL}}|${esc_url}|g" \
+      -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
+      -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
+      -e "s|{{DATE}}|${esc_date}|g" \
+      -e "s|{{ID}}|${esc_id}|g" \
+      "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Cleanup resolved prompt
-  rm -f "$resolved_prompt"
+    # Build invocation array; --model is optional (defaults to Claude Max)
+    local -a claude_args=(-p --dangerously-skip-permissions)
+    if [[ -n "$MODEL" ]]; then
+      claude_args+=(--model "$MODEL")
+    fi
+    claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+
+    claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+
+    rm -f "$resolved_prompt"
+  fi
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -392,7 +473,7 @@ process_offer() {
       if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        return 0
       fi
     fi
 
@@ -513,8 +594,8 @@ main() {
         continue
       fi
     else
-      # Skip completed offers
-      if [[ "$status" == "completed" ]]; then
+      # Skip completed or previously skipped (low-score) offers
+      if [[ "$status" == "completed" || "$status" == "skipped" ]]; then
         continue
       fi
       # Skip failed offers that hit retry limit (unless --retry-failed)
