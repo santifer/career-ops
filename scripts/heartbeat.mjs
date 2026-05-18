@@ -332,23 +332,154 @@ function renderSignalPulseSection() {
 </div>`.trim();
 }
 
+// ── TONIGHT'S APPLY section ─────────────────────────────────────────────────
+// The loudest element in the email. Priority pick per INTJ-T action-first
+// mental model: one role, one primary CTA, one link. Logic (no LLM needed):
+//   1. Top-scored row with ACTIONABLE_STATUSES, evaluated >7 days ago (oldest
+//      unacted candidate — most overdue for action).
+//   2. Fallback: top-scored row in ACTIONABLE_STATUSES regardless of age.
+//   3. Fallback: "Queue empty" message with dashboard link.
+// Design: dominant card with #16a34a accent border, large CTA button.
+function renderTonightsApplySection(applyNow) {
+  if (!applyNow || applyNow.length === 0) {
+    return `<div class="tonight-card" style="margin:6px 0 8px;padding:14px 16px;background:#f0fdf4;border:2px solid #86efac;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#166534;margin-bottom:8px">Queue empty</div>
+  <div style="font-size:14px;color:#14532d;margin-bottom:12px;line-height:1.4">Nothing in the apply-now queue right now. Batch may not have run yet or all scored roles have been acted on.</div>
+  <a href="${DASHBOARD_PUBLIC_URL}/?focus=apply-now" style="display:inline-block;background:#16a34a;color:#ffffff;padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none">Open dashboard →</a>
+</div>`.trim();
+  }
+
+  // Prefer a row evaluated >7 days ago (overdue for action)
+  const sevenDaysAgoDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().slice(0, 10);
+  })();
+  const overdueRow = applyNow.find(r => r.date && r.date <= sevenDaysAgoDate);
+  const pick = overdueRow || applyNow[0];
+
+  const url = getReportUrl(pick.reportPath);
+  const packUrl = applyPackUrl(pick);
+  const draftLink = `${DASHBOARD_PUBLIC_URL}/draft/${pick.num}`;
+  const rowDeeplink = deeplink('row', pick.num);
+
+  // Primary CTA: "Open apply pack →" deeplinks to /draft/{rowId} (dashboard draft route)
+  // Falls back to the report URL if no draft route
+  const primaryCtaHref = url || draftLink;
+  const daysOld = pick.date ? Math.round((Date.now() - new Date(pick.date + 'T12:00:00').getTime()) / 86400000) : null;
+  const ageLabel = daysOld !== null ? `evaluated ${daysOld}d ago` : '';
+  const scoreDisplay = pick.score ? pick.score.toFixed(2) : '—';
+
+  return `<div class="tonight-card" style="margin:6px 0 8px;padding:16px 18px;background:#f0fdf4;border:2px solid #86efac;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <div style="font-size:12px;color:#166534;margin-bottom:10px;line-height:1.3">
+    <span style="display:inline-block;background:#dcfce7;color:#166534;border:1px solid #86efac;padding:2px 9px;border-radius:999px;font-weight:700;font-size:11px;margin-right:6px">${scoreDisplay}</span>
+    <strong style="font-size:15px;color:#14532d">${pick.company}</strong>
+    <span style="color:#374151;font-size:14px"> — ${(pick.role || '').slice(0, 70)}</span>
+    ${ageLabel ? `<span style="font-size:11px;color:#6b7280;margin-left:6px">${ageLabel}</span>` : ''}
+  </div>
+  <div style="margin-bottom:12px">
+    <a href="${primaryCtaHref}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none;margin-right:6px" aria-label="Open apply pack for ${pick.company}">Open apply pack →</a>
+    ${packUrl ? `<a href="${packUrl}" style="display:inline-block;background:transparent;color:#15803d;padding:9px 16px;border-radius:8px;border:1px solid #86efac;font-weight:600;font-size:12px;text-decoration:none;margin-right:6px" aria-label="Apply pack for ${pick.company}">Apply Pack</a>` : ''}
+    <a href="${rowDeeplink}" style="display:inline-block;background:transparent;color:#374151;padding:9px 14px;border-radius:8px;border:1px solid #e5e7eb;font-weight:500;font-size:12px;text-decoration:none" aria-label="Open report for ${pick.company}">Report</a>
+  </div>
+  <div style="font-size:12px;color:#6b7280;line-height:1.4">
+    ${applyNow.length > 1 ? `<a href="${DASHBOARD_PUBLIC_URL}/?focus=apply-now" style="color:#16a34a;text-decoration:none;font-size:11px">+${applyNow.length - 1} more in queue →</a>` : ''}
+  </div>
+</div>`.trim();
+}
+
+// ── DUE TODAY section ────────────────────────────────────────────────────────
+// Consolidates Outreach Cadence (due_today + breakup) into compact one-line-
+// per-contact cards with mailto: deeplinks. Auto-suppresses when nothing due.
+// Returns { html: string, label: string, count: number }.
+function renderDueTodaySection() {
+  let summary;
+  try { summary = buildOutreachSummary(); } catch { return { html: '', label: 'Due Today', count: 0 }; }
+  const due = summary.due_today || [];
+  const breakup = summary.breakup || [];
+  const referrals = summary.referrals || [];
+  const allDue = [...due, ...breakup, ...referrals];
+  if (!allDue.length) return { html: '', label: 'Due Today', count: 0 };
+
+  const label = `Due Today — ${allDue.length} outreach${allDue.length === 1 ? '' : 'es'}`;
+
+  const rows = allDue.map(c => {
+    const company = c.company || '(unknown)';
+    const title = c.title_at_send || c.contact_type || '';
+    const days = outreachDaysSince(c);
+    const urgencyLevel = outreachUrgency(c);
+    const urgencyColor = urgencyLevel === 'overdue' ? '#dc2626' : '#a87b48';
+    const urgencyBg    = urgencyLevel === 'overdue' ? '#fee2e2' : '#f4ede1';
+
+    // Mailto link
+    let actionLink = '';
+    try {
+      const emailGuessRaw = c.intel?.email_guess;
+      const emailStr = emailGuessRaw
+        ? (typeof emailGuessRaw === 'string' ? emailGuessRaw : (emailGuessRaw.address || ''))
+        : '';
+      const contactForMailto = emailStr
+        ? { ...c, intel: { ...(c.intel || {}), email_guess: emailStr } }
+        : c;
+      const { url: mailtoUrl } = buildOutreachMailto(contactForMailto, 'Mitchell');
+      if (emailStr) {
+        actionLink = `<a href="${mailtoUrl}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:4px 10px;border-radius:6px;font-weight:600;font-size:11px;text-decoration:none;margin-left:8px">Send email</a>`;
+      } else if (c.contact_id && c.contact_id.startsWith('https://')) {
+        actionLink = `<a href="${c.contact_id}" style="display:inline-block;background:transparent;color:#5a76a6;padding:3px 9px;border-radius:6px;border:1px solid #c0cad9;font-weight:500;font-size:11px;text-decoration:none;margin-left:8px">LinkedIn</a>`;
+      }
+    } catch { /* non-fatal */ }
+
+    const nx = c.next_action;
+    const stratBadge = nx ? `<span style="display:inline-block;background:#e8edf4;color:#3d4f6b;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600;margin-right:4px">S${nx.strategy_id}</span>` : '';
+    const daysBadge = days !== null
+      ? `<span style="display:inline-block;background:${urgencyBg};color:${urgencyColor};padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600;margin-right:4px">day ${days}</span>`
+      : '';
+
+    return `<div style="padding:8px 0;border-bottom:1px solid #f4f4f6;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+    ${daysBadge}${stratBadge}
+    <strong style="font-size:13px;color:#111827">${c.name || c.contact_id}</strong>
+    <span style="font-size:12px;color:#6b7280"> · ${company}${title ? ', ' + title : ''}</span>
+    ${actionLink}
+  </div>
+  ${nx && nx.rationale ? `<div style="font-size:11px;color:#6b7280;margin-top:3px;padding-left:2px;line-height:1.3">${nx.rationale.slice(0, 100)}${nx.rationale.length > 100 ? '…' : ''}</div>` : ''}
+</div>`;
+  }).join('');
+
+  const html = `<div class="due-today-card" style="margin:4px 0 8px;padding:10px 14px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+${rows}
+<div style="margin-top:8px;font-size:11px;color:#9ca3af">Log a touch: <code style="background:#f4f4f6;padding:1px 5px;border-radius:4px;font-size:11px;color:#16a34a">node scripts/log-touch.mjs</code></div>
+</div>`;
+
+  return { html, label, count: allDue.length };
+}
+
 // Build the full HTML email using the MJML template + content rendering.
 // The template (templates/heartbeat.mjml) handles structural chrome (hero,
-// KPI tiles, mj-button bulletproof buttons, footer). Content comes from
-// renderContentHtml(). MJML's mjml2html() call is async in v5+; this
-// function is therefore async.
+// section labels, KPI tiles, mj-button bulletproof buttons, footer).
+// Content comes from renderContentHtml(). MJML's mjml2html() call is async.
 //
-// Wave D additions (2026-05-17):
-//   H1 — LLM "Today's Focus" callout at top of hero (cached per day)
-//   H2 — Day-over-day diff badges on KPI tiles
-//   H3 — Conditional no-news early-exit (minimal email on zero-delta days)
-//   H4 — Severity-tiered runway alert (3 tiers replacing binary pink)
-//   H5 — aria-label on every status emoji (inline via template slots)
-//   H6 — Button hierarchy: primary green solid / secondary gray ghost
-//   H7 — Limit per-role detail to top 5 + "+N more" (done in formatApplyNowQueue)
-//   H8 — "Ops:" subject prefix (done in buildHeartbeatSubject)
-//   T2 #7 — Dashboard deeplinks (?focus=row:N) on every role-row link
-//   Signal Pulse — new section from data/company-pulse/*.json
+// Priority-order redesign (2026-05-17 heartbeat-priority-order):
+//   §1 TONIGHT'S APPLY — one dominant role + primary CTA (action first)
+//   §2 DUE TODAY — outreach + follow-ups consolidated (action second)
+//   §3 DELTAS — signal pulse + day-over-day changes (context)
+//   §4 TODAY'S FOCUS — LLM coaching directive (context, moved down from hero)
+//   §5 WEEKLY GROWTH — TPgM Monday section (de-emphasized)
+//   §6 PIPELINE PULSE — 3 KPI tiles + runway alert (minimal, delta-only)
+//   §7 MAIN CONTENT — What's New + Apply-Now Queue + Activity + Pipeline Funnel
+//   §8 FOOTER — small, quiet
+//
+// Wave D additions (2026-05-17) — preserved:
+//   H1 — LLM "Today's Focus" callout (moved to §4)
+//   H2 — Day-over-day diff badges on KPI tiles (preserved)
+//   H3 — Conditional no-news early-exit (preserved)
+//   H4 — Severity-tiered runway alert (in §6)
+//   H5 — aria-label on every status emoji (preserved)
+//   H6 — Button hierarchy: primary green solid / secondary gray ghost (preserved)
+//   H7 — Limit per-role detail to top 5 + "+N more" (preserved)
+//   H8 — "Ops:" subject prefix (updated to lead with TONIGHT'S APPLY company)
+//   T2 #7 — Dashboard deeplinks (?focus=row:N) on every role-row link (preserved)
+//   Signal Pulse — new section from data/company-pulse/*.json (now in §3)
 //
 // Preserves: dynamic-state subject/preheader (058cf18), BCC gate (8e99fd9),
 // killed-dup-H1 + table-dedup (058cf18), MJML wiring (a11a88a),
@@ -364,33 +495,74 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   const runwayAlert    = meta.runwayAlert || false;
   const runwayState    = meta.runwayState || 'healthy';
   const outreachDue    = meta.outreachDue || 0;
+  const applyNow       = meta.applyNow    || [];
 
   // H3 — no-news early-exit check
-  // If nothing actionable today, render a minimal email.
-  const deltaScore    = meta.deltaScore   || 0;  // net change in top score (future signal)
+  const deltaScore    = meta.deltaScore   || 0;
   const noNewsToday   = (newRoles === 0 && !runwayAlert && deltaScore === 0 && outreachDue === 0);
 
-  // Preheader preview text (Phase 2 Day-1 — controls inbox preview slot).
+  // Preheader preview text (state-driven, leads with TONIGHT'S APPLY company)
   const preheaderText = buildHeartbeatPreheader(meta);
 
-  // H1 — LLM "Today's Focus" (1-2 sentences, cached per day)
-  // Only fetch for non-no-news days to avoid LLM cost on quiet days.
+  // §1 TONIGHT'S APPLY — dominant action card
+  const tonightsApplyHtml = renderTonightsApplySection(applyNow);
+
+  // §2 DUE TODAY — outreach consolidation
+  const dueTodayResult = renderDueTodaySection();
+  const dueTodayHtml  = dueTodayResult.html;
+  const dueTodayCount = dueTodayResult.count;
+
+  // §3 DELTAS — signal pulse (from data/company-pulse/*.json)
+  const signalPulseHtml = renderSignalPulseSection();
+
+  // §4 TODAY'S FOCUS — LLM coaching directive (moved down from hero per INTJ-T priority)
+  // H1 from Wave D — cached per day, claude-haiku-4-5.
   let todaysFocus = '';
   if (!noNewsToday) {
     try { todaysFocus = await getTodaysFocus(meta); } catch {}
   }
   const todaysFocusHtml = todaysFocus
-    ? `<div style="margin:12px 0 16px;padding:12px 16px;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:0 8px 8px 0;font-size:13px;color:#14532d;line-height:1.5;font-style:italic">${todaysFocus}</div>`
+    ? `<div class="focus-callout" style="margin:4px 0 8px;padding:11px 14px;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:0 8px 8px 0;font-size:13px;color:#14532d;line-height:1.5;font-style:italic">${todaysFocus}</div>`
     : '';
 
-  // H2 — day-over-day diff badges
+  // Combine §1–§4 into one actionSectionsHtml blob (single mj-text → single
+  // MJML table, not 4 separate mj-sections). Section labels are inline spans
+  // matching dashboard section-label style (uppercase, small, muted).
+  function sectionLabel(text, accent = false) {
+    const color = accent ? '#16a34a' : '#6b7280';
+    return `<div style="font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:${color};margin:10px 0 3px;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif">${text}</div>`;
+  }
+
+  let actionSectionsHtml = '';
+  // §1 TONIGHT'S APPLY — accent label (loudest)
+  actionSectionsHtml += sectionLabel("Tonight's Apply", true);
+  actionSectionsHtml += tonightsApplyHtml;
+  // §2 DUE TODAY — show label even when empty (shows "Outreach — clear")
+  if (dueTodayHtml) {
+    const dueTodayLabelText = dueTodayCount > 0
+      ? `Due Today — ${dueTodayCount} outreach${dueTodayCount === 1 ? '' : 'es'}`
+      : 'Outreach';
+    actionSectionsHtml += sectionLabel(dueTodayLabelText);
+    actionSectionsHtml += dueTodayHtml;
+  }
+  // §3 DELTAS — only show when there are actual deltas
+  if (signalPulseHtml) {
+    actionSectionsHtml += sectionLabel('Deltas — Last 24h');
+    actionSectionsHtml += signalPulseHtml;
+  }
+  // §4 TODAY'S FOCUS — show only when content present
+  if (todaysFocusHtml) {
+    actionSectionsHtml += sectionLabel("Today's Focus");
+    actionSectionsHtml += todaysFocusHtml;
+  }
+
+  // H2 — day-over-day diff badges on KPI tiles
   const yday = loadYesterdayKpis();
   const kpiQueueBadge    = deltaBadge(queueCount,    yday?.queueCount,    { invert: false });
   const kpiEvalBadge     = deltaBadge(evaluatedToday, yday?.evaluatedToday, { invert: false });
-  const kpiAlertsBadge   = deltaBadge(newFromAlerts,  yday?.newFromAlerts,  { invert: false });
   const kpiTrackedBadge  = deltaBadge(trackedCount,   yday?.trackedCount,   { invert: false });
 
-  // H4 — Severity-tiered runway alert
+  // H4 — Severity-tiered runway alert (in §6 Pipeline Pulse)
   let runwayAlertHtml = '';
   try {
     const density = computeRunwayDensityForHeartbeat();
@@ -401,22 +573,13 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   let systemBannerHtml = '';
   try { systemBannerHtml = renderSystemBanner({ format: 'html' }) || ''; } catch {}
 
-  // Rejected pattern of the week (auto-suppresses on zero discards in 7d)
+  // Rejected pattern (auto-suppresses on zero discards in 7d)
   let discardSectionHtml = '';
   try { discardSectionHtml = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
 
-  // Signal Pulse section (new Wave D section)
-  const signalPulseHtml = renderSignalPulseSection();
-
-  // TPgM weekly-growth section — Monday only (Tier B item #5, wired 2026-05-17).
-  // Uses TARGET_DATE (the email's date, not necessarily today's wall-clock date)
-  // so --date= overrides work correctly for manual re-runs.
-  // Day-of-week in PT: parse TARGET_DATE as UTC midnight and check getUTCDay().
-  // PDT = UTC-7; a Monday in PT is getUTCDay() === 1 (midnight Mon UTC) or
-  // getUTCDay() === 2 if TARGET_DATE is a Sunday UTC+17h ... keeping simple:
-  // use ISO date + getDay() in local Node env which runs in PT per launchd.
+  // §5 WEEKLY GROWTH — TPgM section (Monday only, de-emphasized)
   let tpgmHeartbeatSectionHtml = '';
-  const _targetDateLocal = new Date(TARGET_DATE + 'T12:00:00'); // noon avoids DST edge
+  const _targetDateLocal = new Date(TARGET_DATE + 'T12:00:00');
   const _isMonday = _targetDateLocal.getDay() === 1;
   if (_isMonday) {
     try {
@@ -426,15 +589,12 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
       ).toString('utf-8');
       const tpgmData = JSON.parse(trackerOut);
       const latestEv = (tpgmData.latest_evidence || [])[0] || null;
-      // Week-over-week delta: compare latest two evidence weeks
       const prevEv   = (tpgmData.latest_evidence || [])[1] || null;
       const latestScore  = tpgmData.tpgm_credibility_score ?? 0;
       const prevScore    = prevEv
-        ? /* estimate: prior week score contribution via evidence count diff */
-          Math.max(0, latestScore - (latestEv ? latestEv.tpgm_evidence * 2 : 0))
+        ? Math.max(0, latestScore - (latestEv ? latestEv.tpgm_evidence * 2 : 0))
         : latestScore;
       const weeklyDelta  = prevEv ? Math.round(latestScore - prevScore) : 0;
-      // Gap points: sum of open high-leverage course pm_bridge_weight
       const gapPoints    = (tpgmData.skill_gaps || []).reduce((s, g) => s + (g.pm_bridge_weight || 0), 0);
       const nextAction   = gapPoints > 0
         ? `Close ${tpgmData.skill_gaps[0]?.name || 'top gap'} — +${gapPoints} PM-Bridge points available`
@@ -446,15 +606,17 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
         week:           latestEv ? latestEv.week : null,
         next_action:    nextAction,
       });
-    } catch (err) {
-      // Soft-fail: section simply omitted if tracker is unavailable on Monday
-      tpgmHeartbeatSectionHtml = '';
-    }
+    } catch { tpgmHeartbeatSectionHtml = ''; }
   }
 
-  // H3 — Conditional no-news early-exit: if nothing changed today, render
-  // minimal email (~50 lines). Skip all per-role detail, outreach cadence,
-  // system status. Subject line: "Ops: all clear — {date}".
+  // Combine §6b context signals into one contextSectionsHtml blob
+  // (runway alert + system banner + discard pattern — all in one mj-text slot)
+  let contextSectionsHtml = '';
+  if (runwayAlertHtml) contextSectionsHtml += runwayAlertHtml;
+  if (systemBannerHtml) contextSectionsHtml += systemBannerHtml;
+  if (discardSectionHtml) contextSectionsHtml += discardSectionHtml;
+
+  // H3 — no-news early-exit: minimal email on zero-delta days.
   if (noNewsToday) {
     const minimalMd = `_All systems nominal — pipeline steady, no new roles today. See you tomorrow._\n\n[Open dashboard →](${DASHBOARD_PUBLIC_URL})`;
     const minimalContentHtml = renderContentHtml(minimalMd);
@@ -463,50 +625,38 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
       .replace(/{{date}}/g,                    escapeForMjml(date))
       .replace(/{{dashboardUrl}}/g,             escapeForMjml(dashboardUrl))
       .replace(/{{preheaderText}}/g,            escapeForMjml(`${trackedCount} tracked. All systems nominal — no new roles today.`))
+      .replace(/{{actionSectionsHtml}}/g,       actionSectionsHtml)
+      .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
       .replace(/{{kpiQueueCount}}/g,            String(queueCount) + kpiQueueBadge)
       .replace(/{{kpiEvaluatedToday}}/g,        String(evaluatedToday) + kpiEvalBadge)
-      .replace(/{{kpiNewFromAlerts}}/g,         String(newFromAlerts) + kpiAlertsBadge)
       .replace(/{{kpiTrackedCount}}/g,          String(trackedCount) + kpiTrackedBadge)
-      .replace(/{{todaysFocusHtml}}/g,          '')
-      .replace(/{{systemBannerHtml}}/g,         '')
-      .replace(/{{runwayAlertHtml}}/g,          runwayAlertHtml)
-      .replace(/{{discardSectionHtml}}/g,       '')
-      .replace(/{{signalPulseHtml}}/g,          signalPulseHtml)
-      .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
+      .replace(/{{contextSectionsHtml}}/g,      contextSectionsHtml)
       .replace(/{{contentHtml}}/g,              minimalContentHtml);
 
     const minResult = await mjml2html(minimalTmpl, { validationLevel: 'soft', minify: false });
     return minResult.html || '';
   }
 
-  // Render markdown body to styled HTML
+  // Render markdown body to styled HTML (§7 content area)
   const contentHtml = renderContentHtml(markdownBody);
 
-  // Interpolate data into the MJML template.
-  // We do NOT use escapeForMjml() on the pre-rendered HTML blobs (contentHtml,
-  // systemBannerHtml, etc.) because they're already valid HTML and we want
-  // them to pass through verbatim into the compiled output.
-  // We DO escape scalar strings (date, URLs) that came from user-visible
-  // computed values.
+  // Interpolate data into the MJML template. Pre-rendered HTML blobs pass
+  // through verbatim (no escapeForMjml). Scalar strings are escaped.
   let tmpl = getMjmlTemplate();
   tmpl = tmpl
     .replace(/{{date}}/g,                    escapeForMjml(date))
     .replace(/{{dashboardUrl}}/g,             escapeForMjml(dashboardUrl))
     .replace(/{{preheaderText}}/g,            escapeForMjml(preheaderText))
+    .replace(/{{actionSectionsHtml}}/g,       actionSectionsHtml)
+    .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
     .replace(/{{kpiQueueCount}}/g,            String(queueCount) + kpiQueueBadge)
     .replace(/{{kpiEvaluatedToday}}/g,        String(evaluatedToday) + kpiEvalBadge)
-    .replace(/{{kpiNewFromAlerts}}/g,         String(newFromAlerts) + kpiAlertsBadge)
     .replace(/{{kpiTrackedCount}}/g,          String(trackedCount) + kpiTrackedBadge)
-    .replace(/{{todaysFocusHtml}}/g,          todaysFocusHtml)
-    .replace(/{{systemBannerHtml}}/g,         systemBannerHtml)
-    .replace(/{{runwayAlertHtml}}/g,          runwayAlertHtml)
-    .replace(/{{discardSectionHtml}}/g,       discardSectionHtml)
-    .replace(/{{signalPulseHtml}}/g,          signalPulseHtml)
-    .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
+    .replace(/{{contextSectionsHtml}}/g,      contextSectionsHtml)
     .replace(/{{contentHtml}}/g,              contentHtml);
 
   const result = await mjml2html(tmpl, {
-    validationLevel: 'soft', // warn but don't throw on unknown attributes
+    validationLevel: 'soft',
     minify: false,
   });
 
@@ -1578,8 +1728,16 @@ async function generateHeartbeat() {
   const packEligibleNums = new Set(applyNow.slice(0, APPLY_PACK_TOP_N).map(r => r.num));
   if (whatsNew[0]) packEligibleNums.add(whatsNew[0].num);
 
-  // What's New Overnight — sits ABOVE Apply-Now so freshly surfaced roles
-  // are the first thing Mitchell sees in the email.
+  // ── Markdown body section order: priority-first ──────────────────────────
+  // §1 TONIGHT'S APPLY is rendered in the HTML template via {{tonightsApplyHtml}},
+  // not in the markdown body. The markdown body feeds {{contentHtml}} (§7).
+  // New order: What's New → Apply-Now Queue → Activity Snapshot → Pipeline Funnel
+  // → System Status → Errors. Outreach Cadence moves to the HTML template
+  // {{dueTodayHtml}} slot — we still emit a compact reference here so the
+  // persisted .md file reflects the full session, but the HTML email shows the
+  // compact §2 card, not this verbose block.
+
+  // What's New Overnight (freshly surfaced roles)
   for (const line of formatWhatsNewSection(whatsNew, packEligibleNums)) lines.push(line);
   lines.push('');
 
@@ -1587,23 +1745,16 @@ async function generateHeartbeat() {
   lines.push('');
   lines.push(`_All evaluations with score ≥ ${APPLY_NOW_FLOOR.toFixed(1)} and status in {${[...ACTIONABLE_STATUSES].join(', ')}}, re-ranked every morning. Roles you've acted on (Applied / Interview / Discarded) are excluded — see **Activity Snapshot** below for those._`);
   lines.push('');
-  lines.push(`_Apply Packs (📦) are pre-built for the top ${APPLY_PACK_TOP_N} of this queue plus the #1 of "What's New Overnight" — the highest-leverage roles where having the cover letter, LinkedIn DMs, and tailored CV ready saves the most prep time. Other rows still link to the JD and full report._`);
-  lines.push('');
-  lines.push(`_Full interactive view: [open the dashboard →](${DASHBOARD_URL}) (sortable tables, filters, expand-on-click for full rationale)._`);
-  lines.push('');
-  lines.push(`_Each Apply link is verified live before email send — expired postings are auto-flagged, removed from this queue, and marked Discarded in the tracker._`);
+  lines.push(`_Apply Packs (📦) are pre-built for the top ${APPLY_PACK_TOP_N} of this queue plus the #1 of "What's New Overnight". [Full interactive view →](${DASHBOARD_URL})_`);
   lines.push('');
   for (const line of formatApplyNowQueue(applyNow, packEligibleNums)) lines.push(line);
   lines.push('');
 
-  // Outreach Cadence — LinkedIn / X / email contacts awaiting reply.
-  // Auto-suppresses on quiet days (no due_today, no breakup, no referrals).
+  // Outreach Cadence — compact reference in markdown body (HTML email uses
+  // the §2 DUE TODAY card from {{dueTodayHtml}} instead of this block).
   for (const line of formatOutreachCadence()) lines.push(line);
 
-  // Rejected Pattern of the Week (Item #2 of 2026-05-16 review). Auto-
-  // suppresses on quiet days (zero discards in last 7d). The markdown copy
-  // mirrors the HTML block injected in renderHtmlEmail() so the persisted
-  // data/heartbeat-{date}.md file matches what hits the inbox.
+  // Rejected Pattern of the Week
   try {
     const discardMd = renderDiscardPatternSection({ format: 'markdown', days: 7 });
     if (discardMd) {
@@ -1611,16 +1762,14 @@ async function generateHeartbeat() {
       lines.push('');
     }
   } catch (e) {
-    // Soft failure — discard pattern is informational, never block the heartbeat
     console.warn(`[heartbeat] discard pattern section unavailable: ${e.message}`);
   }
 
-  // Activity Snapshot — full status funnel so the user can see at a glance
-  // how many applications are outstanding vs filtered out.
+  // Activity Snapshot — full status funnel
   const buckets = getStatusBreakdown(trackerRows);
   for (const line of formatActivitySnapshot(buckets)) lines.push(line);
 
-  // Pipeline Funnel — today's inflow by source, including newsletter alerts.
+  // Pipeline Funnel — today's inflow by source
   const inflow = getInflowStats(TARGET_DATE);
   const reportsToday = countReports(TARGET_DATE);
   const applicationsRows = countApplicationsRows(join(ROOT, 'data/applications.md'));
@@ -1628,9 +1777,8 @@ async function generateHeartbeat() {
     lines.push(line);
   }
 
-  // Compact System Status block — replaces the four separate Pipeline /
-  // Scan / Batch / Grok sections from the prior layout. Same data, half
-  // the visual weight.
+  // System Status — compact table, visually de-emphasized in HTML (last visible
+  // section before footer; no accent color on heading).
   lines.push('## System Status');
   lines.push('');
 
@@ -1735,19 +1883,24 @@ async function generateHeartbeat() {
     runwayAlert: runwayAlertFiring,
     outreachDue,
     topRole,
+    // Pass applyNow so renderHtmlEmail can derive TONIGHT'S APPLY independently
+    // of the markdown body. This avoids coupling the HTML email to the markdown
+    // content structure for the §1 action card.
+    applyNow,
   };
   return { body: lines.join('\n'), meta };
 }
 
-// Build the state-driven subject from meta (Phase 2 Day-1, 2026-05-17 +
-// Wave D H8 2026-05-17 — shortened prefix "Ops:" replaces "[career-ops]"
-// to reduce truncation on narrow mobile inbox renders per optimization
-// report finding #27).
-// No-news format: "Ops: all clear — {date}" (H3 counterpart).
-// Alerting format: "Ops: 5 new · 2 outreach due · runway 89d — {date}"
+// Build the state-driven subject from meta.
+// Priority-first format (heartbeat redesign 2026-05-17):
+//   §1 lead = TONIGHT'S APPLY company+score (the most actionable signal)
+//   §2 = outreach due count if >0
+//   §3 = runway alert if not healthy
+// No-news: "Ops: all clear — {date}"
+// Normal:  "Ops: apply ElevenLabs Comms (4.6) · 2 outreach due — {date}"
 function buildHeartbeatSubject(meta) {
   const { date, newRoles = 0, runwayAlert = false, runwayState = 'healthy',
-          outreachDue = 0, trackedCount = 0, deltaScore = 0 } = meta || {};
+          outreachDue = 0, trackedCount = 0, deltaScore = 0, applyNow = [] } = meta || {};
 
   // H3 — no-news early-exit subject
   const noNewsToday = (newRoles === 0 && !runwayAlert && (deltaScore || 0) === 0 && outreachDue === 0);
@@ -1755,40 +1908,59 @@ function buildHeartbeatSubject(meta) {
     return `Ops: all clear — ${date}`;
   }
 
-  const alerting = newRoles >= 1 || runwayAlert === true || outreachDue >= 1;
+  const alerting = (applyNow && applyNow.length > 0) || newRoles >= 1 || runwayAlert === true || outreachDue >= 1;
   if (!alerting) {
     return `Ops: steady · ${trackedCount} tracked — ${date}`;
   }
 
   const parts = [];
-  if (newRoles >= 1) {
+
+  // Lead with TONIGHT'S APPLY — company + role fragment + score
+  if (applyNow && applyNow.length > 0) {
+    const pick = applyNow[0];
+    const co = (pick.company || '').slice(0, 22);
+    const roleFragment = (pick.role || '').slice(0, 20);
+    const scoreStr = pick.score ? pick.score.toFixed(1) : '';
+    parts.push(`apply ${co}${roleFragment ? ' ' + roleFragment : ''}${scoreStr ? ' (' + scoreStr + ')' : ''}`);
+  } else if (newRoles >= 1) {
     parts.push(`${newRoles} new`);
+  }
+
+  if (outreachDue >= 1) {
+    parts.push(`${outreachDue} outreach due`);
   }
   if (runwayAlert) {
     const glyph = runwayState === 'critical' ? '🚨' : '⚠️';
     parts.push(`${glyph} runway ${runwayState}`);
   }
-  if (outreachDue >= 1) {
-    parts.push(`${outreachDue} outreach due`);
-  }
-  return `Ops: ${parts.join(' · ')} — ${date}`;
+
+  const subject = `Ops: ${parts.join(' · ')} — ${date}`;
+  // Cap at 80 chars to avoid mobile truncation
+  return subject.length > 80 ? subject.slice(0, 77).trimEnd() + '…' : subject;
 }
 
-// Build the hidden-preheader preview text (Phase 2 Day-1, 2026-05-17).
-// This is the line Gmail/Apple Mail show beside the subject in the inbox
-// list. Capped at ~110 chars to fit Gmail's preview width without truncation.
+// Build the hidden-preheader preview text (state-driven, leads with TONIGHT'S
+// APPLY company so inbox preview reinforces the subject's priority signal).
+// Capped at ~110 chars to fit Gmail's preview width without truncation.
 function buildHeartbeatPreheader(meta) {
-  const { newRoles = 0, runwayAlert = false, runwayState = 'healthy', outreachDue = 0, trackedCount = 0, topRole = null } = meta || {};
+  const { newRoles = 0, runwayAlert = false, runwayState = 'healthy',
+          outreachDue = 0, trackedCount = 0, topRole = null, applyNow = [] } = meta || {};
 
-  const alerting = newRoles >= 1 || runwayAlert === true || outreachDue >= 1;
+  const alerting = (applyNow && applyNow.length > 0) || newRoles >= 1 || runwayAlert === true || outreachDue >= 1;
   let text;
   if (alerting) {
-    const topPart = topRole
-      ? `Top: ${topRole.name} (${Number(topRole.score).toFixed(2)}).`
-      : `Top: queue active.`;
-    text = `${topPart} Runway: ${runwayState}. Due: ${outreachDue} outreach.`;
+    // Lead with TONIGHT'S APPLY company + score, then outreach count
+    const pick = applyNow && applyNow.length > 0 ? applyNow[0] : null;
+    const topPart = pick
+      ? `Tonight: ${pick.company} (${Number(pick.score).toFixed(2)}).`
+      : topRole
+        ? `Top: ${topRole.name} (${Number(topRole.score).toFixed(2)}).`
+        : `Queue active.`;
+    const outreachPart = outreachDue > 0 ? ` ${outreachDue} outreach due.` : '';
+    const runwayPart = runwayAlert ? ` Runway: ${runwayState}.` : '';
+    text = `${topPart}${outreachPart}${runwayPart}`;
   } else {
-    text = `${trackedCount} tracked. ${newRoles} new today. Steady week.`;
+    text = `${trackedCount} tracked. ${newRoles} new today. Steady.`;
   }
   if (text.length > 110) text = text.slice(0, 107).trimEnd() + '...';
   return text;
