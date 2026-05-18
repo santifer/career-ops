@@ -171,20 +171,47 @@ function parseCvMarkdown(cvText) {
     }
   }
 
-  // Fallback: scan entire cv.md for inline contact patterns
+  // Fallback: scan the header block (everything before the first `---` divider)
+  // for inline contact patterns. cv.md commonly uses bare hostnames
+  // (e.g. `linkedin.com/in/foo`, `mydomain.com`) rather than full URLs.
+  const dividerIdx = cvText.indexOf('\n---');
+  const headerBlock = dividerIdx > -1 ? cvText.slice(0, dividerIdx) : cvText.slice(0, 1500);
+
   if (!tokens.EMAIL) {
-    const em = cvText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
+    const em = headerBlock.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
     if (em) tokens.EMAIL = em[0];
   }
   if (!tokens.LINKEDIN_URL) {
-    const lm = cvText.match(/https?:\/\/(www\.)?linkedin\.com\/[^\s")]+/);
+    const lm = headerBlock.match(/(?:https?:\/\/)?(?:www\.)?(linkedin\.com\/[^\s")|,]+)/i);
     if (lm) {
-      tokens.LINKEDIN_URL     = lm[0];
-      tokens.LINKEDIN_DISPLAY = lm[0].replace('https://', '').replace(/\/$/, '');
+      const path = lm[1].replace(/\/+$/, '');
+      tokens.LINKEDIN_DISPLAY = path;
+      tokens.LINKEDIN_URL     = `https://${path}`;
+    }
+  }
+  if (!tokens.PORTFOLIO_URL) {
+    // Find bare hostnames in header. Prefer a custom personal domain over
+    // github / linkedin / email-provider domains.
+    const hostRe = /([a-zA-Z][a-zA-Z0-9-]*\.(?:com|io|net|org|me|app|dev|tech|co|xyz|design|art|so|ai|page)(?:\/[^\s")|,]+)?)/gi;
+    const candidates = [...headerBlock.matchAll(hostRe)]
+      .filter(m => {
+        const idx = m.index ?? 0;
+        // Skip matches that are part of an email (preceded by '@')
+        return idx === 0 || headerBlock[idx - 1] !== '@';
+      })
+      .map(m => m[1])
+      .filter(h => !/^linkedin\.com/i.test(h))
+      .filter(h => !/^(gmail|yahoo|hotmail|outlook|icloud|proton(mail)?)\.com$/i.test(h));
+    const personal = candidates.find(h => !/^github\.com/i.test(h));
+    const portfolio = personal || candidates[0];
+    if (portfolio) {
+      const clean = portfolio.replace(/\/+$/, '');
+      tokens.PORTFOLIO_DISPLAY = clean;
+      tokens.PORTFOLIO_URL     = `https://${clean}`;
     }
   }
   if (!tokens.PHONE) {
-    const pm = cvText.match(/\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
+    const pm = headerBlock.match(/\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
     if (pm) tokens.PHONE = pm[0].trim();
   }
 
@@ -256,6 +283,14 @@ function parseCvMarkdown(cvText) {
     .map(l => `- ${escapeTypst(l.replace(/^[-*]\s+/, ''))}`)
     .join('\n');
   tokens.SKILLS = skillText || '(see cv.md)';
+
+  // Escape Typst special characters in tokens that are interpolated into
+  // markup/content (not into pre-built Typst code or string literals).
+  // `@` is a Typst label-ref delimiter and must be escaped in inline content
+  // (e.g. the `@` in `mitwilli@gmail.com`).
+  ['PHONE', 'EMAIL', 'LINKEDIN_DISPLAY', 'PORTFOLIO_DISPLAY', 'LOCATION', 'SUMMARY_TEXT'].forEach(k => {
+    if (tokens[k]) tokens[k] = escapeTypst(tokens[k]);
+  });
 
   return tokens;
 }
@@ -352,7 +387,7 @@ function convertProjectsToTypst(lines) {
     blocks.push(
       `#project-entry(\n` +
       `  title: "${escapeTypst(title)}",\n` +
-      `  badge: "${escapeTypst(badge)}",\n` +
+      `  meta: "${escapeTypst(badge)}",\n` +
       `  description: "${escapeTypst(descLines.join(' '))}",\n` +
       `  tech: "${escapeTypst(tech)}"\n` +
       `)`
@@ -396,9 +431,9 @@ function convertEduToTypst(lines) {
     blocks.push(
       `#edu-entry(\n` +
       `  degree: "${escapeTypst(degree)}",\n` +
-      `  org: "${escapeTypst(org)}",\n` +
+      `  institution: "${escapeTypst(org)}",\n` +
       `  year: "${escapeTypst(year)}",\n` +
-      `  description: "${escapeTypst(desc)}"\n` +
+      `  detail: "${escapeTypst(desc)}"\n` +
       `)`
     );
     degree = org = year = desc = '';
@@ -437,13 +472,13 @@ function convertCertToTypst(lines) {
       blocks.push(
         `#cert-entry(\n` +
         `  title: "${escapeTypst(title)}",\n` +
-        `  org: "${escapeTypst(org)}",\n` +
-        `  year: "${escapeTypst(year)}"\n` +
+        `  issuer: "${escapeTypst(org)}",\n` +
+        `  date: "${escapeTypst(year)}"\n` +
         `)`
       );
     } else if ((l.startsWith('-') || l.startsWith('*')) && l.length > 2) {
       const cleaned = l.replace(/^[-*]\s*/, '');
-      blocks.push(`#cert-entry(title: "${escapeTypst(cleaned)}", org: "", year: "")`);
+      blocks.push(`#cert-entry(title: "${escapeTypst(cleaned)}", issuer: "", date: "")`);
     }
   }
   return blocks.join('\n') || '(see cv.md)';
@@ -452,13 +487,18 @@ function convertCertToTypst(lines) {
 // ── Token substitution ────────────────────────────────────────────────────────
 
 function substituteTokens(templateSrc, tokens) {
-  let out = templateSrc;
-  for (const [key, value] of Object.entries(tokens)) {
-    const placeholder = `{{${key}}}`;
-    // Use split+join to replace all occurrences (no regex needed)
-    out = out.split(placeholder).join(value);
-  }
-  return out;
+  // Skip substitution inside `//` comment lines: multi-line tokens
+  // (EXPERIENCE, PROJECTS, SKILLS) would otherwise break out of the
+  // single-line comment and leak orphan macro calls into the document body.
+  return templateSrc.split('\n').map(line => {
+    if (line.trimStart().startsWith('//')) return line;
+    let out = line;
+    for (const [key, value] of Object.entries(tokens)) {
+      const placeholder = `{{${key}}}`;
+      out = out.split(placeholder).join(value);
+    }
+    return out;
+  }).join('\n');
 }
 
 // ── Main render function ──────────────────────────────────────────────────────
