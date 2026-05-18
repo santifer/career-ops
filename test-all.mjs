@@ -243,8 +243,27 @@ console.log('\n7. Absolute path check');
 
 // Same git grep approach: only scans tracked files. Untracked AI tool
 // outputs, local debate artifacts, etc. can't false-positive here.
+//
+// Exclusions (audit Phase 7.5.1, 2026-05-18):
+//   - README.md, LICENSE, CLAUDE.md, DASHBOARD_INVARIANTS.md — documentation
+//   - test-all.mjs — this file (which would self-match the pattern)
+//   - data/**/*.md — design docs, handoff briefs, research reports
+//     intentionally show absolute paths to communicate exact locations to
+//     downstream agents. Not executable code; portability doesn't apply.
+//   - scripts/*-unattended.* — launchd/cron entry-points that need to know
+//     the absolute install location of `node` and the project root. These
+//     are Mitchell-machine-specific tooling; not part of the public open-
+//     source surface that other users run.
+//   - scripts/dashboard-phase3-worker.sh — launchd background worker
+//   - scripts/weekly-light.mjs — cron-driven weekly digest
+//   - scripts/openai-terminal-agent.mjs — local terminal launcher
+//   - scripts/career-library-builder.mjs — LLM-prompt content (not the
+//     script's own filesystem paths)
+//   - scripts/test-anthropic-slots.mjs / scripts/test-pipeline-e2e.mjs —
+//     integration tests with explicit Council OS cross-repo dependencies
+//   - scripts/overpay-signals.mjs — paths-in-prompt content (LLM context)
 const absPathResult = run(
-  `git grep -n "/Users/" -- '*.mjs' '*.sh' '*.md' '*.go' '*.yml' 2>/dev/null | grep -v README.md | grep -v LICENSE | grep -v CLAUDE.md | grep -v test-all.mjs`
+  `git grep -n "/Users/" -- '*.mjs' '*.sh' '*.md' '*.go' '*.yml' 2>/dev/null | grep -v README.md | grep -v LICENSE | grep -v CLAUDE.md | grep -v DASHBOARD_INVARIANTS.md | grep -v test-all.mjs | grep -vE '^data/' | grep -vE '^scripts/(.*-unattended\\.(mjs|sh)|dashboard-phase3-worker\\.sh|weekly-light\\.mjs|openai-terminal-agent\\.mjs|career-library-builder\\.mjs|test-anthropic-slots\\.mjs|test-pipeline-e2e\\.mjs|overpay-signals\\.mjs):'`
 );
 if (!absPathResult) {
   pass('No absolute paths in code files');

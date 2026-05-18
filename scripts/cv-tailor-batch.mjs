@@ -31,10 +31,20 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
-// Resolve repo root regardless of whether we're running from the worktree
-// or the main repo (worktree scripts/ symlinks back to main repo).
+// Resolve repo root portably: prefer the parent of the script's location
+// (<repo>/scripts/ → <repo>), but fall back to process.cwd() if the parent
+// doesn't contain cv.md. This handles invocations from a git worktree where
+// the script is symlinked back to the main repo but cv.md only lives in the
+// main repo's root.
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = '/Users/mitchellwilliams/Documents/career-ops';
+function resolveRoot() {
+  const parent = dirname(__dirname);
+  if (existsSync(join(parent, 'cv.md')) || existsSync(join(parent, 'AGENTS.md'))) {
+    return parent;
+  }
+  return process.cwd();
+}
+const ROOT = resolveRoot();
 
 // Load .env BEFORE importing runCvTailor (which itself loads .env, but we
 // load it here too so our own logging picks up env state).
