@@ -3149,6 +3149,17 @@ function build() {
   // status (already in motion) per his preference.
   const applyNow = apps.filter(r => r.score >= 4.0 && /^(evaluated|responded)$/i.test(r.status));
 
+  // Inventory #8 (2026-05-18): pre-emptive context for the mc-strip.
+  // Mitchell asked for the headline to tell him whether drill-in is worth it.
+  // applyNow already filters score ≥ 4.0; we additionally count rows with
+  // base salary ≥ $250K (USD floor) so the chip reads e.g. "10 ≥$250K".
+  const applyNowHighComp = applyNow.filter(r => {
+    const raw = getCompRaw(r.reportPath);
+    if (!raw) return false;
+    const parsed = parseBaseSalary(raw);
+    return parsed && parsed.currency === 'USD' && parsed.min >= 250;
+  }).length;
+
   // Throttle policy — heuristic guidance based on aggregated candidate
   // reports (Blind, Reddit, LinkedIn, Grok-verified April 2026). NOT
   // official company policy. Real cooldown depends on rejection stage:
@@ -3684,6 +3695,33 @@ function build() {
         _cbData.peerScore[rng] = { html: renderPeerTable(ctx), ctx };
       }
     } catch (_) { _cbData.peerScore = {}; }
+
+    // Inventory #2 + #6 (2026-05-18): peer-comp context — precompute per
+    // Apply-Now + Applied row so the comp drill-in renders the actual
+    // peer table instead of the "Peer comp data not available — run
+    // node lib/peer-context.mjs to populate" fallback.
+    // Drill-in id format (matches scripts/build-dashboard.mjs:2639):
+    //   "{num}:{base}"  — where base is min in K (e.g., "44:185").
+    try {
+      _cbData.peerComp = {};
+      const compRows = [...applyNow, ...applied];
+      const seenIds = new Set();
+      for (const r of compRows) {
+        if (!r || !r.num || !r.reportPath) continue;
+        const rawComp = getCompRaw(r.reportPath);
+        if (!rawComp) continue;
+        const parsedBase = parseBaseSalary(rawComp);
+        if (!parsedBase || !parsedBase.min || parsedBase.currency !== 'USD') continue;
+        const baseK = parsedBase.min; // already in K
+        const id = `${r.num}:${baseK}`;
+        if (seenIds.has(id)) continue;
+        seenIds.add(id);
+        try {
+          const ctx = getPeerContext('comp', baseK * 1000, { company: r.company, excludeRowId: r.num });
+          _cbData.peerComp[id] = { html: renderPeerTable(ctx), ctx };
+        } catch (_) { /* skip this row, keep going */ }
+      }
+    } catch (_) { _cbData.peerComp = {}; }
 
     // D6: per-row provenance — keyed by num for metric drill-in
     // Skipped at build time (too expensive for all rows); fetch lazily via API.
@@ -9430,6 +9468,10 @@ function build() {
     <button type="button" class="mc-sys-chip" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies" aria-label="${portals.tracked} companies tracked">${portals.tracked} companies</button>
     <button type="button" class="mc-sys-chip" id="mc-scanned-chip" onclick="toggleStatPanel('scanned')" title="Click to see scan activity" aria-label="${scanTotal} URLs scanned">${scanTotal} scanned</button>
     <button type="button" class="mc-sys-chip" id="mc-batches-chip" onclick="toggleStatPanel('batches')" title="Click to see batch run history" aria-label="${batchRuns} batches run">${batchRuns} batches</button>
+    <!-- Inventory #8 (2026-05-18): pre-emptive context chips so the user knows
+         whether the Apply-Now queue is worth opening before clicking. -->
+    <button type="button" class="mc-sys-chip mc-sys-chip-strong" onclick="document.getElementById('apply-now-section')?.scrollIntoView({behavior:'smooth',block:'start'})" title="Apply-Now rows with score ≥ 4.0" aria-label="${applyNow.length} Apply-Now roles with score 4.0 or higher">${applyNow.length} ≥4.0</button>
+    <button type="button" class="mc-sys-chip mc-sys-chip-strong" onclick="document.getElementById('apply-now-section')?.scrollIntoView({behavior:'smooth',block:'start'})" title="Apply-Now rows with base salary ≥ $250K USD" aria-label="${applyNowHighComp} Apply-Now roles with base 250K or higher">${applyNowHighComp} ≥$250K</button>
   </div>
 
   <div class="subtle" id="dashboard-meta" title="${htmlEscape(generated)}"><span id="live-updated">Updated ${htmlEscape(generated)}</span> · ${reportsToday} reports today</div>
@@ -22149,6 +22191,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     var days = daysAgoFromISO(lastTouchTs(c));
     var touches = (c.touches || []).length;
     var nx = c.next_action;
+    var rawCompany = c.company || '';
+    var companySlug = rawCompany ? rawCompany.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : '';
     var company = escapeHtml(c.company || '(unknown)');
     var title = escapeHtml(c.title_at_send || c.contact_type || '');
     var name = escapeHtml(c.name || c.contact_id);
@@ -22282,7 +22326,9 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       +     '<div class="op-identity">'
       +       '<span class="op-name">' + name + '</span>'
       +       '<span class="op-identity-sep">·</span>'
-      +       '<span class="op-affil">' + company + (title ? ' · ' + title : '') + '</span>'
+      +       (companySlug
+            ? '<span class="op-affil drill-trigger" role="button" tabindex="0" data-drill="company:' + companySlug + '" title="Open company profile" onclick="event.stopPropagation();window.drillIn(&quot;company&quot;,&quot;' + companySlug + '&quot;,event)" onkeydown="if(event.key===&quot;Enter&quot;||event.key===&quot; &quot;){event.preventDefault();event.stopPropagation();window.drillIn(&quot;company&quot;,&quot;' + companySlug + '&quot;,event)}">' + company + (title ? ' · ' + title : '') + '</span>'
+            : '<span class="op-affil">' + (title ? title : '') + '</span>')
       +     '</div>'
       +     actionHtml
       +     linkedHtml

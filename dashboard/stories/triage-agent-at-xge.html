@@ -166,10 +166,17 @@
   }
   .back-link { color: var(--text-3); font-weight: 500; }
   .back-link:hover { color: var(--text); }
+  /* Inventory #4 (2026-05-18): Download-as-PDF action bar */
+  .story-actions { display: flex; justify-content: flex-end; gap: 10px; margin: 0 0 16px; }
+  .story-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; cursor: pointer; transition: border-color .12s, color .12s, background .12s; font-family: var(--font-mono); }
+  .story-action-btn:hover { color: var(--text); border-color: var(--text-3); background: var(--surface-2); }
+  .story-action-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  @media print { .story-actions, .back-link { display: none; } body { max-width: none; margin: 24px 36px; } .reading-shell::before { display: none; } .reading-shell { padding-left: 0; } a { color: black; text-decoration: underline; } }
 </style>
 </head><body>
 <div class="reading-shell">
-  <h1>Translate technical → developer narratives</h1>
+  <div class="story-actions" aria-hidden="false"><button type="button" class="story-action-btn" onclick="window.print()" title="Download as PDF (uses browser print)" aria-label="Download as PDF">⤓ PDF</button></div>
+    <h1>Translate technical → developer narratives</h1>
   <div class="meta">
     <span>Source: Anthropic — Communications Lead, Claude Code</span>
     <span class="humanize-badge humanize-low">Humanize: 5% low</span>
