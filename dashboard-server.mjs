@@ -1647,9 +1647,15 @@ function buildBatchStatusDetailed() {
     triage_advance:    countTriageAdvanceQueued(),
     pipeline_pending:  countPipelinePending(),
     batch_input:       (() => {
+      // 2026-05-18: defend against EISDIR — earlier a batch-input.tsv-named
+      // directory existed transiently, crashing the launchd-managed server
+      // every request to /api/system-status. statSync isFile() check first.
       const fp = join(ROOT, 'batch/batch-input.tsv');
       if (!existsSync(fp)) return 0;
-      return readFileSync(fp, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('id')).length;
+      try {
+        if (!statSync(fp).isFile()) return 0;
+        return readFileSync(fp, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('id')).length;
+      } catch (_) { return 0; }
     })(),
   };
 
