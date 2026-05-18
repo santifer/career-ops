@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.weekly-calibration</string>
+
+    <!-- Inventory B6 (2026-05-18): Weekly Gemini Calibration Prompt generator -->
+    <!-- Runs every Monday at 06:00 PT — before Mitchell's day starts so the -->
+    <!-- 09:00 PT heartbeat email picks up the fresh prompt automatically. -->
+    <!-- The generator only writes data/weekly-calibration-prompt-{date}.md + -->
+    <!-- updates data/calibration-state.json. No API spend, no network calls. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/weekly-calibration-prompt.mjs</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Monday 06:00 PT (Weekday 1 = Monday in launchd) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/weekly-calibration.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/weekly-calibration.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>
