@@ -12,7 +12,7 @@
  */
 
 import { execSync, execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -72,6 +72,7 @@ const scripts = [
   { name: 'merge-tracker.mjs', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
+  { name: 'archive-posting.mjs --help', expectExit: 0 },
 ];
 
 for (const { name, allowFail } of scripts) {
@@ -501,6 +502,79 @@ if (fileExists('VERSION')) {
   }
 } else {
   fail('VERSION file missing');
+}
+
+// ── 11. ARCHIVE-POSTING ─────────────────────────────────────────
+
+console.log('\n11. archive-posting.mjs');
+
+const JDS_DIR = join(ROOT, 'jds');
+const todayStr = new Date().toISOString().split('T')[0];
+
+// dry-run: URL-based company detection across each supported ATS
+for (const [url, expected] of [
+  ['https://boards.greenhouse.io/openai/jobs/123', 'openai'],
+  ['https://jobs.ashbyhq.com/ElevenLabs/abc',      'elevenlabs'],
+  ['https://jobs.lever.co/retool/xyz',              'retool'],
+]) {
+  const out = run(`node archive-posting.mjs --dry-run "${url}"`);
+  const { hostname } = new URL(url);
+  out?.toLowerCase().includes(expected)
+    ? pass(`dry-run: company detected from ${hostname}`)
+    : fail(`dry-run: company not detected from ${hostname}`);
+}
+
+// dry-run: --company / --role overrides win over URL detection
+const overrideOut = run(
+  'node archive-posting.mjs --dry-run "https://jobs.lever.co/retool/xyz" --company=Acme --role="Staff Engineer"'
+);
+overrideOut?.includes('Acme') && overrideOut?.includes('staff-engineer')
+  ? pass('dry-run: --company and --role overrides respected')
+  : fail('dry-run: --company / --role overrides not reflected in output');
+
+// dry-run: output always contains a local:jds/ reference and today's date
+const refOut = run('node archive-posting.mjs --dry-run "https://boards.greenhouse.io/openai/jobs/123"');
+refOut?.includes('local:jds/') && refOut?.includes(todayStr)
+  ? pass('dry-run: local:jds/ reference and date emitted')
+  : fail('dry-run: reference or date missing from output');
+
+// live integration: real Playwright capture against a public Greenhouse posting
+let liveJobUrl = null;
+try {
+  const res = await fetch('https://boards-api.greenhouse.io/v1/boards/anthropic/jobs?content=false');
+  const { jobs } = await res.json();
+  liveJobUrl = jobs?.[0]?.absolute_url ?? null;
+} catch { /* offline — degrade gracefully */ }
+
+if (!liveJobUrl) {
+  warn('live archive skipped (Greenhouse API unreachable)');
+} else {
+  const startedAt = Date.now();
+  const archiveOut = run(`node archive-posting.mjs "${liveJobUrl}"`, [], { timeout: 60000 });
+
+  if (archiveOut === null) {
+    fail('live archive: script exited non-zero on live URL');
+  } else {
+    pass('live archive: exited 0');
+
+    // detect by mtime — handles re-archiving the same URL (overwrite, not new file)
+    const recent = existsSync(JDS_DIR)
+      ? readdirSync(JDS_DIR)
+          .filter(f => f.endsWith('.pdf'))
+          .filter(f => statSync(join(JDS_DIR, f)).mtimeMs >= startedAt)
+      : [];
+
+    if (recent.length === 0) {
+      fail('live archive: no PDF written to jds/ during test run');
+    } else {
+      const pdf = join(JDS_DIR, recent[0]);
+      const { size } = statSync(pdf);
+      size > 50 * 1024
+        ? pass(`live archive: PDF has real content (${(size / 1024).toFixed(0)} KB)`)
+        : fail(`live archive: PDF suspiciously small — likely empty page (${size} bytes)`);
+      unlinkSync(pdf);
+    }
+  }
 }
 
 // ── 11. LOCATION FILTER — always_allow tier ───────────────────────
