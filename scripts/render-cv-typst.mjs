@@ -177,10 +177,33 @@ function parseCvMarkdown(cvText) {
     if (em) tokens.EMAIL = em[0];
   }
   if (!tokens.LINKEDIN_URL) {
-    const lm = cvText.match(/https?:\/\/(www\.)?linkedin\.com\/[^\s")]+/);
+    // Accept 'https://linkedin.com/...', 'linkedin.com/...', or 'www.linkedin.com/...'
+    const lm = cvText.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/[^\s")|,]+/i);
     if (lm) {
-      tokens.LINKEDIN_URL     = lm[0];
-      tokens.LINKEDIN_DISPLAY = lm[0].replace('https://', '').replace(/\/$/, '');
+      const raw = lm[0];
+      tokens.LINKEDIN_URL     = /^https?:/i.test(raw) ? raw : `https://${raw}`;
+      tokens.LINKEDIN_DISPLAY = tokens.LINKEDIN_URL.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+    }
+  }
+  if (!tokens.PORTFOLIO_URL) {
+    // Look for a personal portfolio URL/hostname in the header area
+    // (first ~20 lines). Skip social platforms, common email providers, and
+    // hostnames embedded in emails.
+    const SOCIAL_OR_MAIL = /^(?:linkedin|github|gitlab|bitbucket|twitter|x|gmail|yahoo|outlook|hotmail|icloud|protonmail|proton)\./i;
+    const headerLines = cvText.split('\n').slice(0, 20);
+    for (const rawLine of headerLines) {
+      const line = rawLine.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/gi, '');
+      const matches = line.match(/(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s")|,]*)?/gi);
+      if (!matches) continue;
+      for (const raw of matches) {
+        const stripped = raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+        if (SOCIAL_OR_MAIL.test(stripped)) continue;
+        if (!/\.[a-z]{2,}(?:\/|$)/i.test(stripped)) continue;
+        tokens.PORTFOLIO_URL     = /^https?:/i.test(raw) ? raw : `https://${stripped}`;
+        tokens.PORTFOLIO_DISPLAY = stripped.replace(/\/$/, '');
+        break;
+      }
+      if (tokens.PORTFOLIO_URL) break;
     }
   }
   if (!tokens.PHONE) {
@@ -256,6 +279,21 @@ function parseCvMarkdown(cvText) {
     .map(l => `- ${escapeTypst(l.replace(/^[-*]\s+/, ''))}`)
     .join('\n');
   tokens.SKILLS = skillText || '(see cv.md)';
+
+  // Escape singleton text tokens before substitution.
+  // - NAME and *_URL land inside Typst string literals "..." → only \ and " need escaping.
+  // - Other singletons (phone, email, location, *_DISPLAY, summary) land in content mode,
+  //   where @ becomes a label reference, # is a command, and ** parses as a Typst delimiter.
+  const escapeTypstStr = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  tokens.NAME              = escapeTypstStr(tokens.NAME);
+  tokens.LINKEDIN_URL      = escapeTypstStr(tokens.LINKEDIN_URL);
+  tokens.PORTFOLIO_URL     = escapeTypstStr(tokens.PORTFOLIO_URL);
+  tokens.PHONE             = escapeTypst(tokens.PHONE);
+  tokens.EMAIL             = escapeTypst(tokens.EMAIL);
+  tokens.LOCATION          = escapeTypst(tokens.LOCATION);
+  tokens.LINKEDIN_DISPLAY  = escapeTypst(tokens.LINKEDIN_DISPLAY);
+  tokens.PORTFOLIO_DISPLAY = escapeTypst(tokens.PORTFOLIO_DISPLAY);
+  tokens.SUMMARY_TEXT      = escapeTypst(tokens.SUMMARY_TEXT);
 
   return tokens;
 }
@@ -352,7 +390,7 @@ function convertProjectsToTypst(lines) {
     blocks.push(
       `#project-entry(\n` +
       `  title: "${escapeTypst(title)}",\n` +
-      `  badge: "${escapeTypst(badge)}",\n` +
+      `  meta: "${escapeTypst(badge)}",\n` +
       `  description: "${escapeTypst(descLines.join(' '))}",\n` +
       `  tech: "${escapeTypst(tech)}"\n` +
       `)`
@@ -396,9 +434,9 @@ function convertEduToTypst(lines) {
     blocks.push(
       `#edu-entry(\n` +
       `  degree: "${escapeTypst(degree)}",\n` +
-      `  org: "${escapeTypst(org)}",\n` +
+      `  institution: "${escapeTypst(org)}",\n` +
       `  year: "${escapeTypst(year)}",\n` +
-      `  description: "${escapeTypst(desc)}"\n` +
+      `  detail: "${escapeTypst(desc)}"\n` +
       `)`
     );
     degree = org = year = desc = '';
@@ -437,13 +475,13 @@ function convertCertToTypst(lines) {
       blocks.push(
         `#cert-entry(\n` +
         `  title: "${escapeTypst(title)}",\n` +
-        `  org: "${escapeTypst(org)}",\n` +
-        `  year: "${escapeTypst(year)}"\n` +
+        `  issuer: "${escapeTypst(org)}",\n` +
+        `  date: "${escapeTypst(year)}"\n` +
         `)`
       );
     } else if ((l.startsWith('-') || l.startsWith('*')) && l.length > 2) {
       const cleaned = l.replace(/^[-*]\s*/, '');
-      blocks.push(`#cert-entry(title: "${escapeTypst(cleaned)}", org: "", year: "")`);
+      blocks.push(`#cert-entry(title: "${escapeTypst(cleaned)}", issuer: "", date: "")`);
     }
   }
   return blocks.join('\n') || '(see cv.md)';
