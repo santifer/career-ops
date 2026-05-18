@@ -3464,8 +3464,11 @@ function build() {
           const _net = findContactsAtCompany(_s);
           const _lev = findLeveragePathTo(_r.company, '');
           const _nHtml = renderNetworkCard(_net, { company: _r.company, leverage: _lev });
-          const _pulse = getPulseForCompany(_s, {});
-          const _pHtml = _pulse ? renderPulseCard(_pulse) : '';
+          // cacheOnly: do NOT dispatch researcher at build time — read cached
+          // pulse JSON if exists, else null. Lazy refresh happens via the
+          // scheduled launchd job or explicit user "refresh pulse" button.
+          const _pulseResult = await getPulseForCompany(_s, { cacheOnly: true });
+          const _pHtml = _pulseResult && _pulseResult.pulse ? renderPulseCard(_pulseResult.pulse) : '';
           if (_nHtml || _pHtml) {
             _cbData.companyData[_s] = { networkHtml: _nHtml, pulseHtml: _pHtml };
           }
