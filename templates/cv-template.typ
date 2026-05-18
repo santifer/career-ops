@@ -282,7 +282,10 @@
 #v(6pt)
 
 // ── Highlights (conditional — only when HIGHLIGHTS is non-empty) ─────────────
-// {{HIGHLIGHTS}}
+// The renderer emits `#highlights-box[ ... ] #v(4pt)` when cv.md has a
+// `## Highlights` H2 section or when `--highlights "h1|h2|h3"` is passed on the
+// CLI. When empty, the substitution emits nothing.
+{{HIGHLIGHTS}}
 
 // ── Professional Summary (no section heading; medium-weight body text) ───────
 // Per dealbreaker D7: heavier-weight body without a "Summary" heading gives

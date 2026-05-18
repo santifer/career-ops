@@ -153,7 +153,7 @@ const readme = `# Apply Pack — ${row.company} — ${row.role}
 
 ## Files in this pack
 
-- \`cv-mitchell-williams.html\` — tailored CV (HTML source). Generate PDF: \`node ../../generate-pdf.mjs --in=cv-mitchell-williams.html --out=cv-mitchell-williams.pdf\`
+- \`tailored-cv.md\` — tailored CV (markdown source). Render PDF via Typst (preferred path, audit Item B): \`node ../../scripts/render-cv-typst.mjs --input tailored-cv.md --output tailored-cv.pdf\`. Or use the legacy HTML path: \`cv-mitchell-williams.html\` + \`node ../../generate-pdf.mjs --in=cv-mitchell-williams.html --out=cv-mitchell-williams.pdf\`. Or LaTeX: \`node ../../generate-latex.mjs --in=cv-mitchell-williams.tex --out=cv-mitchell-williams.pdf\`.
 - \`cover-letter.md\` — cover letter draft. Use \`templates/cover-letter-template.md\` as the base.
 - \`linkedin-dm.md\` — LinkedIn DM / cold email draft. Use \`data/outreach-templates.md\` Variant A/B/C.
 - \`essay-prompts.md\` — populated when the application has free-text fields.
@@ -190,11 +190,16 @@ if (!existsSync(cvPath) || FORCE) {
   writeFileSync(cvPath, `<!--
 Tailored CV stub for ${row.company} — ${row.role}.
 
-To build:
-1. Copy templates/cv-template.html as the base
+To build (preferred: Typst path per audit Item B 2026-05-18):
+1. Copy cv.md as the base → tailored-cv.md
 2. Use data/tailored-resume-bullets.md per-company guide for ${row.company}
 3. Strip [cv.md:L{line}] citations from final bullet text
-4. Generate PDF: node ../../generate-pdf.mjs --in=cv-mitchell-williams.html --out=cv-mitchell-williams.pdf
+4. Render PDF: node ../../scripts/render-cv-typst.mjs --input tailored-cv.md --output tailored-cv.pdf
+   (Optional flags: --highlights "h1|h2|h3" --tagline "per-role tagline")
+
+Legacy paths still available:
+- HTML: copy templates/cv-template.html → cv-mitchell-williams.html → node ../../generate-pdf.mjs --in=cv-mitchell-williams.html --out=cv-mitchell-williams.pdf
+- LaTeX: copy templates/cv-template.tex → cv-mitchell-williams.tex → node ../../generate-latex.mjs --in=cv-mitchell-williams.tex --out=cv-mitchell-williams.pdf
 -->
 
 <!DOCTYPE html>

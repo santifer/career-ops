@@ -46,6 +46,7 @@ import {
 } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { execSync } from 'child_process';
 import { runCheck as humanizeCheck } from './humanize-check.mjs';
 import { SONNET } from '../lib/models.mjs';
 
@@ -1899,13 +1900,43 @@ async function buildPack(role) {
   writeFileSync(join(linkedinDir, 'peer-referral.md'), buildPeerReferral(role, report));
   writeFileSync(join(linkedinDir, 'connection-search.md'), buildConnectionSearch(role, report));
 
-  // Symlink the tailored CV PDF if one exists in /output/.
-  const cvFile = findCvPdf(role);
-  if (cvFile) {
-    const linkPath = join(dir, 'tailored-cv.pdf');
-    try { unlinkSync(linkPath); } catch {}
-    symlinkSync(`../../output/${cvFile}`, linkPath);
+  // CV PDF wiring — additive path (audit Item B 2026-05-18):
+  //   1. If `apply-pack/<slug>/tailored-cv.md` exists, render via Typst →
+  //      `tailored-cv.pdf` as a real file (preferred path; reflects the
+  //      tonight's-design Typst template).
+  //   2. Otherwise fall back to the legacy behavior: symlink to a matching
+  //      tailored CV PDF in /output/ if `findCvPdf(role)` resolves one.
+  // The HTML/Playwright path (generate-pdf.mjs) and the LaTeX path
+  // (generate-latex.mjs) remain available as alternates — this is additive,
+  // not a deprecation.
+  const tailoredMdPath = join(dir, 'tailored-cv.md');
+  const tailoredPdfPath = join(dir, 'tailored-cv.pdf');
+  let cvWired = '';
+  if (existsSync(tailoredMdPath)) {
+    try {
+      try { unlinkSync(tailoredPdfPath); } catch {}
+      execSync(
+        `node ${JSON.stringify(join(ROOT, 'scripts', 'render-cv-typst.mjs'))} --input ${JSON.stringify(tailoredMdPath)} --output ${JSON.stringify(tailoredPdfPath)}`,
+        { cwd: ROOT, stdio: 'pipe' }
+      );
+      cvWired = 'rendered Typst from tailored-cv.md';
+    } catch (err) {
+      console.warn(`  ⚠ Typst render failed for ${dirName}: ${(err.message || '').slice(0, 200)} — falling back to symlink path`);
+      cvWired = '';
+    }
   }
+  if (!cvWired) {
+    const cvFile = findCvPdf(role);
+    if (cvFile) {
+      try { unlinkSync(tailoredPdfPath); } catch {}
+      symlinkSync(`../../output/${cvFile}`, tailoredPdfPath);
+      cvWired = `symlinked output/${cvFile}`;
+    }
+  }
+  // Legacy compatibility: keep cvFile populated for the closing log line.
+  const cvFile = cvWired.startsWith('symlinked')
+    ? cvWired.replace('symlinked output/', '')
+    : (cvWired || null);
 
   const phraseNote = humanize.checks.phrases.hits.length > 0
     ? ` — flagged: ${humanize.checks.phrases.hits.map(h => `"${h.label}"`).join(', ')}`

@@ -583,6 +583,28 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   let systemBannerHtml = '';
   try { systemBannerHtml = renderSystemBanner({ format: 'html' }) || ''; } catch {}
 
+  // Master CV freshness banner (audit Item L 2026-05-18) — surfaces today's
+  // master PDF path or a re-render reminder. Renders inline so it stacks with
+  // the other system-status signals already in contextSectionsHtml.
+  let cvFreshnessHtml = '';
+  try {
+    const cvBasename = `cv-mitchell-williams-master-${date}.pdf`;
+    const cvPath = join(ROOT, 'output', cvBasename);
+    if (existsSync(cvPath)) {
+      cvFreshnessHtml =
+        `<p style="margin:6px 0;font-size:13px;color:#0f172a;">` +
+        `📄 <strong>Master CV ready:</strong> ` +
+        `<a href="file://${cvPath}" style="color:#15803d;text-decoration:none;">${cvBasename}</a>` +
+        `</p>`;
+    } else {
+      cvFreshnessHtml =
+        `<p style="margin:6px 0;font-size:13px;color:#475569;">` +
+        `📄 <strong>Master CV:</strong> re-render via ` +
+        `<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;">node scripts/render-cv-typst.mjs --input cv.md --output output/${cvBasename}</code>` +
+        `</p>`;
+    }
+  } catch { /* non-fatal */ }
+
   // Rejected pattern (auto-suppresses on zero discards in 7d)
   let discardSectionHtml = '';
   try { discardSectionHtml = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
@@ -624,6 +646,7 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   let contextSectionsHtml = '';
   if (runwayAlertHtml) contextSectionsHtml += runwayAlertHtml;
   if (systemBannerHtml) contextSectionsHtml += systemBannerHtml;
+  if (cvFreshnessHtml) contextSectionsHtml += cvFreshnessHtml;
   if (discardSectionHtml) contextSectionsHtml += discardSectionHtml;
 
   // H3 — no-news early-exit: minimal email on zero-delta days.
