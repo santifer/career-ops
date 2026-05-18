@@ -100,7 +100,6 @@ function parseCvMarkdown(cvText) {
     PORTFOLIO_DISPLAY:  '',
     LOCATION:           '',
     SUMMARY_TEXT:       '',
-    COMPETENCIES:       '',
     COMPETENCIES_BLOCK: '',
     EXPERIENCE:         '',
     PROJECTS:           '',
@@ -288,9 +287,6 @@ function parseCvMarkdown(cvText) {
   } else {
     tokens.COMPETENCIES_BLOCK = '';
   }
-  // Preserve COMPETENCIES for backward compatibility with any custom template
-  // that still substitutes the old token name.
-  tokens.COMPETENCIES = tokens.COMPETENCIES_BLOCK ? compTags.map(t => `#competency-tag("${escapeTypstStr(stripMarkdown(t))}")`).join('\n') : '';
 
   // ── Work Experience → Typst job-entry() calls ─────────────────────────────
 

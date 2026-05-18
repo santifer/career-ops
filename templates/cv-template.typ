@@ -17,23 +17,29 @@
 //   Education > Certifications (if populated) > Skills
 //
 // Placeholder tokens (all replaced by render-cv-typst.mjs at compile time):
-//   {{NAME}}              Full name
-//   {{PHONE}}             Phone number
-//   {{EMAIL}}             Email address
-//   {{LINKEDIN_URL}}      LinkedIn URL
-//   {{LINKEDIN_DISPLAY}}  LinkedIn display text
-//   {{PORTFOLIO_URL}}     Portfolio URL
-//   {{PORTFOLIO_DISPLAY}} Portfolio display text
-//   {{LOCATION}}          City, State / Remote
-//   {{HIGHLIGHTS}}        Typst list content for highlights box (or empty string)
-//   {{SUMMARY_TEXT}}      Professional summary paragraph
-//   {{COMPETENCIES}}      Comma-separated or Typst-tag content
-//   {{EXPERIENCE}}        Work experience blocks (Typst syntax)
-//   {{PROJECTS}}          Project blocks (or empty string)
-//   {{LEARNING}}          Continuous learning blocks (or empty string)
-//   {{EDUCATION}}         Education blocks
-//   {{CERTIFICATIONS}}    Certification rows (or empty string)
-//   {{SKILLS}}            Skills block
+//   {{NAME}}                Full name (string literal context)
+//   {{TAGLINE}}             Optional sub-tagline shown under the name; empty when
+//                           cv.md has no non-section H2 between H1 and the first
+//                           standard section (content context, conditional)
+//   {{PHONE}}               Phone number (content context)
+//   {{EMAIL}}               Email address (content context)
+//   {{LINKEDIN_URL}}        LinkedIn URL (string literal context)
+//   {{LINKEDIN_DISPLAY}}    LinkedIn display text (content context)
+//   {{PORTFOLIO_URL}}       Portfolio URL (string literal context)
+//   {{PORTFOLIO_DISPLAY}}   Portfolio display text (content context)
+//   {{LOCATION}}            City, State / Remote (content context)
+//   {{HIGHLIGHTS}}          Typst list content for highlights box (or empty string)
+//   {{SUMMARY_TEXT}}        Professional summary paragraph (content context)
+//   {{COMPETENCIES_BLOCK}}  Full Core Competencies section (heading + tags) — emitted
+//                           by the renderer or empty string when cv.md has no
+//                           competencies section. Substituting an empty string makes
+//                           the section vanish cleanly.
+//   {{EXPERIENCE}}          Work experience blocks (Typst syntax — pre-rendered)
+//   {{PROJECTS}}            Project blocks (or empty string)
+//   {{LEARNING}}            Continuous learning blocks (or empty string)
+//   {{EDUCATION}}           Education blocks
+//   {{CERTIFICATIONS}}      Certification rows (or empty string)
+//   {{SKILLS}}              Skills block (Typst list content)
 
 #set page(
   paper: "us-letter",
