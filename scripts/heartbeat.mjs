@@ -274,11 +274,11 @@ function renderRunwayAlertTiered(density) {
   </div>
   <div style="font-size:13px;color:${t.fg};font-weight:${health === 'critical' ? 700 : 600};margin-bottom:8px;line-height:1.4">${runway_alert}</div>
   <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:#374151">
-    <span><strong>${contacts.active}</strong> active conv.</span>
-    <span><strong>${contacts.responded}</strong> responded (${Math.round(contacts.response_rate*100)}%)</span>
-    <span><strong>${velocity.touches_last_7d}</strong> touches/7d</span>
-    <span><strong>${velocity.touches_last_30d}</strong> touches/30d</span>
-    <span>last touch: <strong>${velocity.days_since_last_touch != null ? velocity.days_since_last_touch + 'd' : 'n/a'}</strong></span>
+    <span><strong>${contacts.active}</strong> active</span>
+    <span><strong>${contacts.responded}</strong> replied (${Math.round(contacts.response_rate*100)}%)</span>
+    <span><strong>${velocity.touches_last_7d}</strong>/7d</span>
+    <span><strong>${velocity.touches_last_30d}</strong>/30d</span>
+    <span>last: <strong>${velocity.days_since_last_touch != null ? velocity.days_since_last_touch + 'd' : 'n/a'}</strong></span>
   </div>
 </div>`.trim();
 }
@@ -335,7 +335,7 @@ function renderSignalPulseSection() {
   return `
 <div style="margin:14px 0;padding:12px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
   <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#075985;margin-bottom:8px">
-    <span role="img" aria-label="Satellite dish: signal pulse">📡</span> Signal Pulse — last 24h (${top5.length} delta${top5.length === 1 ? '' : 's'})
+    <span role="img" aria-label="Satellite dish: signal pulse">📡</span> Signal Pulse — ${top5.length} delta${top5.length === 1 ? '' : 's'} · last 24h
   </div>
   <table style="border-collapse:collapse;width:100%">${rows}</table>
 </div>`.trim();
@@ -353,7 +353,7 @@ function renderTonightsApplySection(applyNow) {
   if (!applyNow || applyNow.length === 0) {
     return `<div class="tonight-card" style="margin:6px 0 8px;padding:14px 16px;background:#f0fdf4;border:2px solid #86efac;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
   <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#166534;margin-bottom:8px">Queue empty</div>
-  <div style="font-size:14px;color:#14532d;margin-bottom:12px;line-height:1.4">Nothing in the apply-now queue right now. Batch may not have run yet or all scored roles have been acted on.</div>
+  <div style="font-size:14px;color:#14532d;margin-bottom:12px;line-height:1.4">No actionable roles — batch may not have run or all scored roles are already acted on.</div>
   <a href="${DASHBOARD_PUBLIC_URL}/?focus=apply-now" style="display:inline-block;background:#16a34a;color:#ffffff;padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none">Open dashboard →</a>
 </div>`.trim();
   }
@@ -376,7 +376,7 @@ function renderTonightsApplySection(applyNow) {
   // Falls back to the report URL if no draft route
   const primaryCtaHref = url || draftLink;
   const daysOld = pick.date ? Math.round((Date.now() - new Date(pick.date + 'T12:00:00').getTime()) / 86400000) : null;
-  const ageLabel = daysOld !== null ? `evaluated ${daysOld}d ago` : '';
+  const ageLabel = daysOld !== null ? `${daysOld}d ago` : '';
   const scoreDisplay = pick.score ? pick.score.toFixed(2) : '—';
 
   return `<div class="tonight-card" style="margin:6px 0 8px;padding:16px 18px;background:#f0fdf4;border:2px solid #86efac;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
@@ -420,7 +420,7 @@ function renderDueTodaySection() {
     const urgencyColor = urgencyLevel === 'overdue' ? '#dc2626' : '#a87b48';
     const urgencyBg    = urgencyLevel === 'overdue' ? '#fee2e2' : '#f4ede1';
 
-    // Mailto link
+      // Mailto link
     let actionLink = '';
     try {
       const emailGuessRaw = c.intel?.email_guess;
@@ -457,7 +457,7 @@ function renderDueTodaySection() {
 
   const html = `<div class="due-today-card" style="margin:4px 0 8px;padding:10px 14px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
 ${rows}
-<div style="margin-top:8px;font-size:11px;color:#9ca3af">Log a touch: <code style="background:#f4f4f6;padding:1px 5px;border-radius:4px;font-size:11px;color:#16a34a">node scripts/log-touch.mjs</code></div>
+<div style="margin-top:8px;font-size:11px;color:#9ca3af"><a href="${DASHBOARD_PUBLIC_URL}/?focus=outreach" style="color:#16a34a;text-decoration:none;font-size:11px">log-touch.mjs →</a></div>
 </div>`;
 
   return { html, label, count: allDue.length };
@@ -549,7 +549,7 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   // §2 DUE TODAY — show label even when empty (shows "Outreach — clear")
   if (dueTodayHtml) {
     const dueTodayLabelText = dueTodayCount > 0
-      ? `Due Today — ${dueTodayCount} outreach${dueTodayCount === 1 ? '' : 'es'}`
+      ? `Due Today — ${dueTodayCount}`
       : 'Outreach';
     actionSectionsHtml += sectionLabel(dueTodayLabelText);
     actionSectionsHtml += dueTodayHtml;
@@ -1359,9 +1359,7 @@ function formatRoleBlock(r, packEligibleNums = null) {
 function formatApplyNowQueue(rows, packEligibleNums = null) {
   if (rows.length === 0) {
     return [
-      `_No evaluations meeting the ${APPLY_NOW_FLOOR.toFixed(1)} apply floor right now._`,
-      '',
-      `_The system filters hard-blockers before scoring, so a thin queue means today's batch was wrong-shape — not that you're out of options. Review the highest-scored discards if you want to override._`,
+      `_Queue empty — nothing above the ${APPLY_NOW_FLOOR.toFixed(1)} floor. Review top discards to override._`,
     ];
   }
   const out = [];
@@ -1370,7 +1368,7 @@ function formatApplyNowQueue(rows, packEligibleNums = null) {
   // Detail limit is now 5 (was APPLY_NOW_DETAIL_LIMIT=10) per optimization report
   // finding #8. The dashboard shows the full queue with sortable table + filters.
   const WAVE_D_DETAIL_LIMIT = 5;
-  out.push(`**At-a-glance summary** — ${rows.length} role${rows.length === 1 ? '' : 's'} above the ${APPLY_NOW_FLOOR.toFixed(1)} floor (full per-role detail for top ${Math.min(WAVE_D_DETAIL_LIMIT, rows.length)} below).`);
+  out.push(`**${rows.length} role${rows.length === 1 ? '' : 's'} above ${APPLY_NOW_FLOOR.toFixed(1)}** — detail for top ${Math.min(WAVE_D_DETAIL_LIMIT, rows.length)} below.`);
   out.push('');
   // Detail blocks for the top 5 only — keeps the email under one mobile viewport.
   const detailRows = rows.slice(0, WAVE_D_DETAIL_LIMIT);
@@ -1397,11 +1395,11 @@ function formatWhatsNewSection(whatsNew, packEligibleNums) {
   out.push('## What\'s New Overnight');
   out.push('');
   if (whatsNew.length === 0) {
-    out.push(`_No new roles surfaced overnight. The batch ran but nothing scored ≥ ${APPLY_NOW_FLOOR.toFixed(1)}, OR everything scored met the floor was already in yesterday's queue. The full Apply-Now Queue below is unchanged from the previous heartbeat._`);
+    out.push(`_No new roles overnight. Batch ran — nothing new scored ≥ ${APPLY_NOW_FLOOR.toFixed(1)}. Queue unchanged._`);
     out.push('');
     return out;
   }
-  out.push(`_${whatsNew.length} role${whatsNew.length === 1 ? '' : 's'} crossed the ${APPLY_NOW_FLOOR.toFixed(1)} floor in the overnight batch. The #1 row below has a freshly built Apply Pack; the rest link to their reports for review._`);
+  out.push(`_${whatsNew.length} new role${whatsNew.length === 1 ? '' : 's'} above ${APPLY_NOW_FLOOR.toFixed(1)} — top row has a built Apply Pack._`);
   out.push('');
 
   // Compact summary table for ALL of today's new roles
@@ -1421,7 +1419,7 @@ function formatWhatsNewSection(whatsNew, packEligibleNums) {
 
   // Full detail block for the #1 only — keeps the section focused on
   // "what's the single most exciting thing that landed overnight".
-  out.push(`### 🌟 Highest scoring new role`);
+  out.push(`### Top new role`);
   out.push('');
   for (const line of formatRoleBlock(whatsNew[0], packEligibleNums)) out.push(line);
   return out;
@@ -1472,9 +1470,8 @@ function formatOutreachCadence() {
   if (breakup.length)   subParts.push(`${breakup.length} breakup window`);
   if (referrals.length) subParts.push(`${referrals.length} referral angle`);
 
-  out.push(`## ${headerGlyph} Outreach Cadence — ${subParts.join(', ')}`);
+  out.push(`## ${headerGlyph} Outreach — ${subParts.join(' · ')}`);
   out.push('');
-  out.push(`_LinkedIn / X / email contacts you've messaged and are awaiting a reply from. Recommended next action follows the 10-strategy consensus playbook ([data/linkedin-followup-strategy-2026-05-15.md](${DASHBOARD_URL}data/linkedin-followup-strategy-2026-05-15.md)). Log a touch with \`node scripts/log-touch.mjs\` — silent days emit nothing._`);
   out.push('');
 
   function renderRow(c, label) {
@@ -1546,12 +1543,12 @@ function formatOutreachCadence() {
     for (const c of due) renderRow(c, 'next');
   }
   if (breakup.length) {
-    out.push('### Breakup window (≥ 3 touches, ≥ 14 days silent)');
+    out.push('### Breakup window');
     out.push('');
     for (const c of breakup) renderRow(c, 'graceful exit');
   }
   if (referrals.length) {
-    out.push('### Referral opportunities (2nd-degree contacts at silent companies)');
+    out.push('### Referral angles');
     out.push('');
     for (const c of referrals) renderRow(c, 'referral activation');
   }
@@ -1562,8 +1559,6 @@ function formatOutreachCadence() {
 function formatActivitySnapshot(buckets) {
   const out = [];
   out.push('## Activity Snapshot');
-  out.push('');
-  out.push('_How every evaluated role is currently classified. The system updates these as you act on roles (`/career-ops apply <URL>` flips Evaluated → Applied; recruiter replies flip to Responded; etc.). If your "Applied" bucket is empty, no application has been submitted through the assistant yet — open a top-queue role and run `/career-ops apply` to begin._');
   out.push('');
   out.push('| Status | Count | Most recent (top 3) |');
   out.push('|--------|------:|---------------------|');
@@ -1635,9 +1630,8 @@ function getInflowStats(date) {
 function formatPipelineFunnel(inflow, reportsToday, applyNowCount, totalTracked) {
   const totalNewToday = inflow.portalNew + inflow.rssNew + inflow.emailNew;
   const out = [];
-  out.push('## Pipeline Funnel — today\'s flow');
+  out.push('## Pipeline Funnel — today');
   out.push('');
-  out.push(`_How offers move from inbound source → tracked decision. Newsletter / job-board alerts arrive at the \`career-ops/alerts\` Gmail label; \`scan-email.mjs\` extracts the URLs and merges them into the same pipeline as the company-direct ATS scanner. Anything counted under "from email" is fully accounted for downstream._`);
   out.push('');
   out.push('| Stage | Today | Notes |');
   out.push('|-------|------:|-------|');
@@ -1651,7 +1645,7 @@ function formatPipelineFunnel(inflow, reportsToday, applyNowCount, totalTracked)
   out.push(`| 📚 Total tracked overall | ${totalTracked} | every role the system has ever evaluated |`);
   out.push('');
   if (inflow.emailMessages === 0 && inflow.emailNew === 0) {
-    out.push('> ⚠️ **No newsletter alerts processed today.** If you signed up for LinkedIn / Indeed / Mediabistro / etc. but nothing is arriving here, the most likely cause is a Gmail filter gap (alert sender domain not yet covered). Run `node scripts/find-unfiltered-alerts.mjs` to detect senders sitting in Inbox without the `career-ops/alerts` label, then `--apply` to patch the filter set.');
+    out.push('> ⚠️ **No email alerts today.** Run `node scripts/find-unfiltered-alerts.mjs --apply` to patch missing Gmail filters.');
     out.push('');
   }
   return out;
@@ -1659,19 +1653,7 @@ function formatPipelineFunnel(inflow, reportsToday, applyNowCount, totalTracked)
 
 function getInterpretationGuide() {
   return [
-    '> **How to read this email:**',
-    '> ',
-    '> - **What\'s New Overnight** — the freshly surfaced roles. Anything that crossed the apply floor in last night\'s batch lands here at the top. The #1 row gets a fully built Apply Pack so you can act on it within minutes. Empty section = batch ran but nothing new scored ≥ floor.',
-    `> - **Apply-Now Queue** — the cumulative list: every evaluation with status \`Evaluated\` or \`Responded\` and score ≥ ${APPLY_NOW_FLOOR.toFixed(1)}/5, sorted high → low. Re-ranks every morning. Apply Packs (📦) are pre-built for the **top ${APPLY_PACK_TOP_N}** of this queue plus the **#1 What\'s New** — the highest-leverage roles. Other rows still link to the JD and full report; just no pre-built outreach drafts.`,
-    '> - **Activity Snapshot** — the full status funnel for every role the system has ever evaluated (Applied / Interview / Offer / Rejected / Discarded). Where you can see at a glance how many applications are actually outstanding versus how much was filtered as wrong-fit.',
-    '> - **Pipeline Funnel** — today\'s inflow broken down by source. The **`scan-email.mjs`** row is your newsletter-and-alerts feed: every job alert from LinkedIn / Indeed / Mediabistro / etc. that landed under the `career-ops/alerts` Gmail label gets URLs extracted and merged into the same pipeline as the direct ATS scanner.',
-    '> - **System Status** — proves the unattended pipeline ran (scan / triage / batch / Grok). `YES` everywhere = healthy.',
-    '> ',
-    '> **The ✅ Mark Applied button** — every row has one. Click it and you\'re done — the dashboard server flips that row\'s status from `Evaluated` to `Applied`, drops it from tomorrow\'s queue, and shows you a confirmation page with an Undo link. You don\'t need to come back to the terminal to report applications anymore.',
-    '> ',
-    `> **What to do:** Click **Open report** to read the full A–G reasoning, then **Apply** to go straight to the JD. After you submit on the company\'s site, hit **✅ Applied** in this email to clear the row. Or run \`/career-ops apply <URL>\` from the terminal for the assisted-fill flow that drafts answers per question.`,
-    '> ',
-    `> **Dashboard:** [Open the live dashboard →](${DASHBOARD_URL}) (sortable tables, filters, expand-on-click for full rationale).`,
+    `> **Open report** → read A–G reasoning · **Apply** → go straight to JD · **✅ Mark Applied** → clears the row from tomorrow's queue. [Dashboard →](${DASHBOARD_URL})`,
   ];
 }
 
@@ -1752,9 +1734,7 @@ async function generateHeartbeat() {
 
   lines.push('## Apply-Now Queue');
   lines.push('');
-  lines.push(`_All evaluations with score ≥ ${APPLY_NOW_FLOOR.toFixed(1)} and status in {${[...ACTIONABLE_STATUSES].join(', ')}}, re-ranked every morning. Roles you've acted on (Applied / Interview / Discarded) are excluded — see **Activity Snapshot** below for those._`);
-  lines.push('');
-  lines.push(`_Apply Packs (📦) are pre-built for the top ${APPLY_PACK_TOP_N} of this queue plus the #1 of "What's New Overnight". [Full interactive view →](${DASHBOARD_URL})_`);
+  lines.push(`_Score ≥ ${APPLY_NOW_FLOOR.toFixed(1)}, status Evaluated/Responded, re-ranked daily. Apply Packs built for top ${APPLY_PACK_TOP_N} + #1 What's New. [Full view →](${DASHBOARD_URL})_`);
   lines.push('');
   for (const line of formatApplyNowQueue(applyNow, packEligibleNums)) lines.push(line);
   lines.push('');
@@ -1849,7 +1829,7 @@ async function generateHeartbeat() {
   for (const line of getInterpretationGuide()) lines.push(line);
   lines.push('');
 
-  lines.push(`*Heartbeat generated by \`scripts/heartbeat.mjs\` · [Open dashboard →](${DASHBOARD_URL}) · scheduled daily 09:00 PT via launchd.*`);
+  lines.push(`*[Dashboard →](${DASHBOARD_URL}) · heartbeat.mjs · 09:00 PT*`);
 
   // Pull state for the dynamic subject + hidden preheader (Phase 2 Day-1 quick
   // wins, 2026-05-17). The four signals all-7-models converged on:

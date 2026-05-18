@@ -8,17 +8,17 @@
            Font: Inter (--font-sans) | Body: 14px / 1.5 (--text-base / --leading-normal) -->
       <mj-text
         font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-        font-size="14px"
-        line-height="1.5"
+        font-size="13px"
+        line-height="1.45"
         color="#374151"
       />
       <mj-button
         font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-        font-size="13px"
+        font-size="12px"
         font-weight="600"
         letter-spacing="0.01em"
         border-radius="8px"
-        inner-padding="10px 18px"
+        inner-padding="8px 16px"
       />
       <mj-section padding="0 0 8px 0" />
     </mj-attributes>
@@ -73,7 +73,7 @@
       padding="16px 20px"
     >
       <mj-column vertical-align="middle">
-        <mj-text color="rgba(255,255,255,0.85)" font-size="10px" letter-spacing="0.18em" text-transform="uppercase" font-weight="700" padding-bottom="2px"><span role="img" aria-label="Lightning bolt: career ops">⚡</span> Career-Ops · Daily Heartbeat</mj-text>
+        <mj-text color="rgba(255,255,255,0.85)" font-size="10px" letter-spacing="0.15em" text-transform="uppercase" font-weight="700" padding-bottom="2px"><span role="img" aria-label="Lightning bolt: career ops">⚡</span> Career-Ops</mj-text>
         <mj-text color="#ffffff" font-size="21px" font-weight="700" letter-spacing="-0.01em" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0">{{date}}</mj-text>
       </mj-column>
       <mj-column vertical-align="middle" width="150px">
@@ -106,15 +106,15 @@
     <!-- KPI tiles — 3 columns (Queue ≥4.0 / Eval'd today / Total tracked) -->
     <mj-section padding="4px 0 12px 0">
       <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
-        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Queue ≥ 4.0</mj-text>
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Apply-Now</mj-text>
         <mj-text color="#16a34a" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong accent">{{kpiQueueCount}}</mj-text>
       </mj-column>
       <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
-        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Eval'd today</mj-text>
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Evaluated</mj-text>
         <mj-text color="#5a76a6" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong">{{kpiEvaluatedToday}}</mj-text>
       </mj-column>
       <mj-column border="1px solid #e5e7eb" border-radius="8px" background-color="#ffffff" padding="10px 12px" css-class="card border">
-        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Total tracked</mj-text>
+        <mj-text color="#6b7280" font-size="10px" font-weight="700" letter-spacing="0.08em" text-transform="uppercase" align="center" padding-bottom="3px" css-class="text-muted">Tracked</mj-text>
         <mj-text color="#374151" font-size="21px" font-weight="700" align="center" font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace" padding="0" css-class="text-strong">{{kpiTrackedCount}}</mj-text>
       </mj-column>
     </mj-section>
@@ -144,9 +144,7 @@
     <mj-section padding="10px 0 6px 0" border-top="1px solid #e5e7eb" css-class="border">
       <mj-column>
         <mj-text align="center" font-size="11px" color="#9ca3af" css-class="text-subtle" line-height="1.4">
-          <code style="background:#f4f4f6;padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace;font-size:11px;color:#16a34a">heartbeat.mjs</code>
-          · <a href="{{dashboardUrl}}" style="color:#16a34a;text-decoration:none" class="accent">dashboard</a>
-          · 09:00 PT
+          <a href="{{dashboardUrl}}" style="color:#16a34a;text-decoration:none" class="accent">dashboard</a> · 09:00 PT
         </mj-text>
       </mj-column>
     </mj-section>
