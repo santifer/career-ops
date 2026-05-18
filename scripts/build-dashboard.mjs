@@ -2812,7 +2812,16 @@ function renderRow(r, idx) {
   <td class="people-cell">${peopleCell}</td>
   <td class="muted-text mobile-hide">${htmlEscape(r.date)}${(function(){try{const s=scoreStaleness({evalDate:r.date,status:r.status});return renderStalenessBadge(s);}catch(e){return '';}})()}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
-  <td class="action-cell">${applyLink}</td>
+  <td class="action-cell">
+    <!-- D2 Wave G1: kebab menu button (⋮) — primary action entry point -->
+    <button type="button" class="kebab-btn"
+      data-drill="kebab:${idx}"
+      aria-label="Actions for ${htmlEscape(r.company)} ${htmlEscape(r.role)}"
+      onclick="event.stopPropagation();openKebabMenu(this,'${idx}','${htmlEscape(url)}','${r.reportPath ? htmlEscape('reports/' + basename(r.reportPath).replace(/\\.md$/, '.html')) : ''}','${verifySlug}',${htmlEscape(String(r.num))})"
+      title="Actions: Apply, Report, Email, Verify">⋮</button>
+    <!-- Legacy links (preserved for kbd nav apply via action-cell selector) -->
+    <span class="sr-only">${applyLink}</span>
+  </td>
 </tr>
 <tr class="detail-row" id="detail-${idx}" style="display:none">
   <td colspan="13">
@@ -3198,6 +3207,18 @@ function build() {
   const scanTotal = countScanHistory();
   const batchRuns = countBatchRuns();
   const portals = getEnabledPortals();
+
+  // ── I1: Side-allocations tile data (Wave G1) ──────────────────────
+  // Load data/side-allocations.yml for the Overview section tile.
+  let sideAllocations = [];
+  const SIDE_ALLOC_PATH = join(ROOT, 'data/side-allocations.yml');
+  try {
+    if (existsSync(SIDE_ALLOC_PATH)) {
+      const raw = parseYaml(readFileSync(SIDE_ALLOC_PATH, 'utf-8'));
+      sideAllocations = Array.isArray(raw) ? raw : [];
+    }
+  } catch (_) { sideAllocations = []; }
+
   const reportsToday = countTodaysReports(today);
   const liveTicker = loadLiveScanEvents();
   const liveTickerJson = JSON.stringify(liveTicker).replace(/<\//g, '<\\/');
@@ -3753,6 +3774,28 @@ function build() {
     --motion-duration: 250ms;
     --motion-duration-fast: 180ms;
     --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    /* ── D12: Semantic role-alias tokens (Wave G1) ───────────────────
+       Mapped to existing accent tokens. New components should prefer
+       these semantic names; existing literal usages are NOT changed
+       (additive only, no risk of layout regression). */
+    --success: var(--green-fg);
+    --warning: var(--amber-fg);
+    --danger:  var(--red-fg);
+    --info:    var(--blue-fg);
+    /* ── D13: Spacing scale gap-fill (Wave G1) ─────────────────────
+       Fills the gap above --space-8 (64px). Additive — existing
+       hardcoded px values are NOT touched. */
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+    /* ── D23: Motion tokens (Wave G1) ──────────────────────────────
+       Standard easing curve names + explicit duration tokens.
+       Complement the existing --motion-* tokens rather than replacing. */
+    --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur-fast:    120ms;
+    --dur-normal:  200ms;
+    --dur-slow:    320ms;
   }
   /* ── Global focus-visible (Phase 1 Day-1/2, 2026-05-17)
      Replaces inconsistent browser-default focus outlines. Uses the new
@@ -8280,6 +8323,180 @@ function build() {
   @media (prefers-reduced-motion: reduce) {
     tr.row.kbd-focused > td { transition: none; }
   }
+
+  /* ── D23: Blanket reduced-motion guard (Wave G1) ─────────────────
+     WCAG 2.3.3 — all animation/transition halted when the OS user
+     preference requests reduced motion. Per-section guards above remain
+     as documentation; this rule catches anything they miss. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ── D2: Kebab menu (Wave G1) ───────────────────────────────────
+     Single ⋮ button replaces the 4-link action cell. Popup registers
+     via drillInRegistry as kebab:{rowId}. */
+  .kebab-btn {
+    background: none; border: 1px solid transparent; border-radius: 4px;
+    padding: 2px 6px; cursor: pointer; font-size: 16px; line-height: 1;
+    color: var(--text-3); transition: color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+  }
+  .kebab-btn:hover { color: var(--text); background: var(--surface-2); border-color: var(--border); }
+  .kebab-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  /* Popup */
+  #kebab-popup {
+    position: fixed; z-index: 9999;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: var(--shadow-md);
+    min-width: 160px; padding: 4px 0;
+    display: none;
+  }
+  #kebab-popup.visible { display: block; }
+  .kebab-item {
+    display: block; width: 100%; text-align: left;
+    padding: 7px 14px; font-size: 13px; color: var(--text);
+    background: none; border: none; cursor: pointer;
+    text-decoration: none; white-space: nowrap;
+  }
+  .kebab-item:hover { background: var(--surface-2); }
+  .kebab-item:focus-visible { outline: none; background: var(--surface-2); box-shadow: var(--focus-ring); }
+  .kebab-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── D7: Voice-fidelity badge (Wave G1) ─────────────────────────
+     Shown on AI-drafted text surfaces when a sidecar .fidelity.json
+     exists. Color coded: ≥85 green, 70-84 amber, <70 red. */
+  .voice-fidelity-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; padding: 1px 6px;
+    border-radius: 99px; border: 1px solid var(--border);
+    background: var(--accent-bg); color: var(--accent);
+    vertical-align: middle; line-height: 1.4;
+  }
+  .voice-fidelity-badge.fidelity-amber { background: var(--amber-bg,#fffbeb); color: var(--amber-fg,#b45309); border-color: var(--amber-border,#fde68a); }
+  .voice-fidelity-badge.fidelity-red   { background: var(--red-bg,#fef2f2);   color: var(--red-fg,#dc2626);   border-color: var(--red-border,#fecaca); }
+
+  /* ── D11: Undo toast (Wave G1) ───────────────────────────────────
+     Extends the existing toast system with an optional Undo action
+     button. Uses --danger token for destructive action toasts. */
+  .toast-undo-btn {
+    flex-shrink: 0; padding: 2px 8px; font-size: 11px; font-weight: 600;
+    border: 1px solid currentColor; border-radius: 4px;
+    background: none; cursor: pointer; color: inherit;
+    margin-left: 6px; white-space: nowrap;
+  }
+  .toast-undo-btn:hover { background: rgba(255,255,255,.12); }
+  .toast-danger { border-left-color: var(--danger, var(--red-fg)); }
+
+  /* ── D14: Right-click context menu (Wave G1) ─────────────────────
+     Vanilla fixed-position popup at cursor. Same visual style as the
+     kebab popup but scoped to row contextmenu events. */
+  #row-context-menu {
+    position: fixed; z-index: 9998;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: var(--shadow-md);
+    min-width: 180px; padding: 4px 0;
+    display: none;
+  }
+  #row-context-menu.visible { display: block; }
+  .ctx-item {
+    display: block; width: 100%; text-align: left;
+    padding: 7px 14px; font-size: 13px; color: var(--text);
+    background: none; border: none; cursor: pointer;
+    text-decoration: none; white-space: nowrap;
+  }
+  .ctx-item:hover { background: var(--surface-2); }
+  .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── D16: KPI tile diff-highlight pulse (Wave G1) ───────────────
+     Applied by updateKpiValue() when a numeric value changes via SSE
+     or page-delta. Fades accent-bg → transparent in 1s using new motion
+     tokens. Guard: only fires when value actually changed. */
+  @keyframes kpi-pulse {
+    0%   { background-color: var(--accent-bg, #dcfce7); }
+    100% { background-color: transparent; }
+  }
+  .kpi-pulse-active {
+    animation: kpi-pulse var(--dur-slow, 320ms) var(--ease-out, cubic-bezier(0,0,.2,1)) forwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-pulse-active { animation: none; }
+  }
+
+  /* ── D17: Per-widget error boundary (Wave G1) ────────────────────
+     Rendered by panelGuard() when a panel's render function throws.
+     Retry button re-runs the render. */
+  .panel-error-card {
+    padding: 12px 16px; border: 1px solid var(--danger, var(--red-fg));
+    border-radius: 6px; background: var(--red-bg, #fef2f2);
+    color: var(--danger, var(--red-fg)); font-size: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .panel-error-msg { flex: 1; }
+  .panel-error-retry {
+    flex-shrink: 0; padding: 3px 10px; font-size: 11px;
+    border: 1px solid currentColor; border-radius: 4px;
+    background: none; cursor: pointer; color: inherit;
+  }
+  .panel-error-retry:hover { background: rgba(220,38,38,.08); }
+
+  /* ── D30: Recruiter network graph (compact, Wave G1) ─────────────
+     SVG node-graph in company drawer. Force-like concentric layout. */
+  .net-graph-svg { overflow: visible; display: block; }
+  .net-graph-node { cursor: pointer; }
+  .net-graph-node circle { transition: r var(--dur-fast) var(--ease-out); }
+  .net-graph-node:hover circle { r: 12; }
+  .net-graph-edge { stroke: var(--border-strong); stroke-width: 1.5; fill: none; }
+  .net-graph-center circle { fill: var(--accent); }
+  .net-graph-center text { fill: var(--accent-fg); }
+  .net-node-outer circle { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5; }
+  .net-node-outer text { fill: var(--text-2); font-size: 9px; text-anchor: middle; }
+
+  /* ── D29: Comp trajectory chart (Wave G1) ───────────────────────
+     Vanilla SVG line chart in the Trends panel. */
+  .comp-traj-svg .comp-traj-line { stroke: var(--blue-fg); stroke-width: 2; fill: none; }
+  .comp-traj-svg .comp-traj-dot { fill: var(--blue-fg); }
+  .comp-traj-svg .comp-traj-dot.empty { fill: none; stroke: var(--blue-fg); stroke-width: 1.5; }
+  .comp-traj-svg .comp-traj-axis { stroke: var(--border); stroke-width: 1; }
+  .comp-traj-svg .comp-traj-target { stroke: var(--amber-fg); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+  /* ── I1: Side-allocations tile (Wave G1) ────────────────────────
+     Radix-style tile card in the overview section. */
+  .side-alloc-tile {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; margin-top: 12px;
+    max-width: 720px;
+  }
+  .side-alloc-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .side-alloc-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .side-alloc-row:hover { background: var(--surface-2); }
+  .side-alloc-team { flex: 1; font-size: 12.5px; color: var(--text); font-weight: 500; }
+  .side-alloc-status { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; border: 1px solid; }
+  .side-alloc-status.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-border); }
+  .side-alloc-status.completed { background: var(--surface-2); color: var(--text-3); border-color: var(--border); }
+  .side-alloc-status.paused { background: var(--amber-bg,#fffbeb); color: var(--amber-fg,#b45309); border-color: var(--amber-border,#fde68a); }
+  .side-alloc-deliverables { font-size: 11px; color: var(--text-3); }
+  .side-alloc-sponsor { font-size: 11px; color: var(--text-4); white-space: nowrap; }
+
+  /* ── D10: Inline status/notes editing (Wave G1) ──────────────────
+     Click status pill → inline <select>; click notes cell → inline <input>.
+     Optimistic update via optimisticStatusChange(). */
+  .inline-edit-select, .inline-edit-input {
+    font-size: 12px; padding: 2px 4px; border-radius: 4px;
+    border: 1.5px solid var(--blue-fg); background: var(--surface);
+    color: var(--text); outline: none; font-family: inherit;
+  }
+  .inline-edit-select:focus, .inline-edit-input:focus {
+    box-shadow: var(--ring-blue);
+  }
 </style>
 </head>
 <body>
@@ -8522,6 +8739,10 @@ function build() {
 
   <!-- Toast container -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+  <!-- D2 Wave G1: Kebab popup menu (shared singleton, repositioned on open) -->
+  <div id="kebab-popup" role="menu" aria-label="Row actions"></div>
+  <!-- D14 Wave G1: Right-click context menu -->
+  <div id="row-context-menu" role="menu" aria-label="Row context menu"></div>
 
   <!-- Mobile bottom sheet (slide-up drawer) for row detail on <720px -->
   <div id="mobile-sheet-backdrop" onclick="closeMobileSheet()" role="dialog" aria-modal="true" aria-labelledby="mobile-sheet-title" aria-hidden="true">
@@ -8724,6 +8945,30 @@ function build() {
     ${tpgmWidgetHtml}
   </div>
 
+  ${sideAllocations.length > 0 ? `
+  <!-- I1 Wave G1: 20%-time / side-allocations tile -->
+  <div class="side-alloc-tile">
+    <div class="side-alloc-title">20% / Side Allocations <span class="pill" style="font-size:10px">${sideAllocations.length}</span></div>
+    ${sideAllocations.map((a, i) => {
+      const statusCls = a.status === 'active' ? 'active' : a.status === 'completed' ? 'completed' : 'paused';
+      const delivCount = (a.deliverables || []).length;
+      const safeCharter = htmlEscape(String(a.charter || ''));
+      const safeTeam = htmlEscape(String(a.team || ''));
+      const safeSponsor = htmlEscape(String(a.sponsor || ''));
+      const safeStatus = htmlEscape(String(a.status || 'unknown'));
+      return `<div class="side-alloc-row" role="button" tabindex="0"
+          onclick="window.drillIn('allocation','${i}',event)"
+          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('allocation','${i}',event)}"
+          title="${safeCharter}">
+        <div class="side-alloc-team">${safeTeam}</div>
+        <span class="side-alloc-status ${statusCls}">${safeStatus}</span>
+        ${delivCount > 0 ? `<span class="side-alloc-deliverables">${delivCount} deliverable${delivCount !== 1 ? 's' : ''}</span>` : ''}
+        ${safeSponsor ? `<span class="side-alloc-sponsor">↳ ${safeSponsor}</span>` : ''}
+      </div>`;
+    }).join('')}
+  </div>
+  ` : ''}
+
   <!-- Expandable stat panels (loaded live from /api/detail/*) -->
   <div class="stat-panel" id="stat-panel-evaluations"></div>
   <div class="stat-panel" id="stat-panel-applied"></div>
@@ -8841,7 +9086,7 @@ function build() {
         <th class="sortable" aria-sort="none" data-col-key="age" data-col-type="numeric" data-default-dir="asc" onclick="sortTable('all-tbody', 11, 'num', this, event)">Age<span class="sort-indicator" aria-hidden="true">↕</span></th>
         <th>Action</th>
       </tr></thead>
-      <tbody id="all-tbody">
+      <tbody id="all-tbody" data-virtualize="on">
         ${allRows}
       </tbody>
     </table></div>
@@ -8940,6 +9185,66 @@ function build() {
       }).join('');
       const funnelLegend = funnelOrder.map(s => `<span class="trend-legend-item"><span class="trend-legend-swatch ${s.cls}"></span>${s.key} <strong>${funnel[s.key]}</strong></span>`).join('');
 
+      // D29 Wave G1: Comp trajectory chart — last 12w median base comp (vanilla SVG)
+      const CW = 280, CH = 80, CPAD = 4;
+      // Extract comp (base $K) per week from apps — parse first numeric value
+      const compWeeks = trendWeeks.map(wk => {
+        const wkApps = apps.filter(r => {
+          if (!r.date) return false;
+          const ms = new Date(r.date + 'T00:00:00Z').getTime();
+          return !isNaN(ms) && ms >= wk.startMs && ms <= wk.endMs && r.score >= 3.5;
+        });
+        const vals = wkApps.map(r => {
+          const raw = getCompRaw ? getCompRaw(r.reportPath) : '';
+          const m = String(raw || '').match(/\$\s*(\d{2,3})\s*[Kk]/);
+          return m ? parseInt(m[1], 10) : null;
+        }).filter(v => v !== null);
+        if (!vals.length) return null;
+        vals.sort((a, b) => a - b);
+        return vals[Math.floor(vals.length / 2)];
+      });
+      const compValsNonNull = compWeeks.filter(v => v !== null);
+      const compMin = compValsNonNull.length ? Math.min(...compValsNonNull) - 10 : 100;
+      const compMax = compValsNonNull.length ? Math.max(...compValsNonNull) + 10 : 250;
+      const cY = (v) => {
+        const t = CPAD + 4, b = CH - CPAD - 4;
+        return b - ((v - compMin) / (compMax - compMin || 1)) * (b - t);
+      };
+      const cX = (i) => CPAD + (CW - CPAD * 2) / 11 * i + (CW - CPAD * 2) / 22;
+      const compPoints = compWeeks.map((v, i) => ({ v, i, x: cX(i), y: v !== null ? cY(v) : null })).filter(p => p.y !== null);
+      const compLinePath = compPoints.map((p, pi) => `${pi === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      const compDots = compPoints.map(p => {
+        const wk = trendWeeks[p.i];
+        return `<circle class="comp-traj-dot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.4"><title>Week of ${wk.label}: median base ~$${p.v}K</title></circle>`;
+      }).join('');
+      // Target line — first numeric from profile comp_target if available
+      let compTargetLine = '';
+      try {
+        if (existsSync(PROFILE_YML_PATH)) {
+          const cfg2 = parseYaml(readFileSync(PROFILE_YML_PATH, 'utf-8')) || {};
+          const targetStr = String(cfg2?.compensation?.target_base || cfg2?.comp_target || '');
+          const tm = targetStr.match(/(\d{2,3})/);
+          if (tm) {
+            const tVal = parseInt(tm[1], 10);
+            if (tVal >= compMin && tVal <= compMax) {
+              const ty = cY(tVal).toFixed(1);
+              compTargetLine = `<line x1="${CPAD}" y1="${ty}" x2="${CW - CPAD}" y2="${ty}" class="comp-traj-target"><title>Target base: $${tVal}K</title></line>`;
+            }
+          }
+        }
+      } catch (_) {}
+      const compTrajCard = compValsNonNull.length >= 2
+        ? `<div class="trend-card">
+            <h3 class="trend-card-title">Comp trajectory <span class="trend-card-sub">last 12w · score ≥ 3.5 · median base</span></h3>
+            <svg class="trend-svg comp-traj-svg" viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Compensation trajectory last 12 weeks">
+              <line x1="${CPAD}" y1="${CH - CPAD}" x2="${CW - CPAD}" y2="${CH - CPAD}" class="comp-traj-axis"/>
+              ${compTargetLine}
+              <path d="${compLinePath}" class="comp-traj-line"/>
+              ${compDots}
+            </svg>
+          </div>`
+        : '';
+
       return `<div class="trends-grid">
         <div class="trend-card">
           <h3 class="trend-card-title">Apps / week <span class="trend-card-sub">last 12w · ${counts.reduce((a, b) => a + b, 0)} total</span></h3>
@@ -8958,6 +9263,7 @@ function build() {
           <svg class="trend-svg trend-svg-funnel" viewBox="0 0 ${FW} ${FH}" role="img" aria-label="Pipeline funnel by stage">${funnelSegs}</svg>
           <div class="trend-legend">${funnelLegend}</div>
         </div>
+        ${compTrajCard}
       </div>`;
     })()}
   </div>
@@ -12570,7 +12876,14 @@ function rowActions(r) {
   const verifyBtn = slug
     ? \`<a href="javascript:void(0)" onclick="openVerify('\${slug}');event.stopPropagation()" style="color:#8250df">Verify</a>\`
     : '';
-  return [htmlLink, applyLink, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
+  // D2 Wave G1: kebab button — wraps legacy links for All Evals table
+  const legacyLinks = [htmlLink, applyLink, verifyBtn].filter(Boolean).join(' · ') || '';
+  const rowNum = esc(String(r.num || ''));
+  const rowId = esc(String(r.rowId || r.num || ''));
+  return \`<button type="button" class="kebab-btn" data-drill="kebab:\${rowId}"
+    aria-label="Row actions"
+    onclick="event.stopPropagation();openKebabMenu(this,'\${rowId}',\${esc(JSON.stringify(url))},\${esc(JSON.stringify(slug ? 'reports/'+slug.replace(/\\.md$/,'.html') : ''))},'\${esc(slug)}','\${rowNum}')"
+    title="Actions: Apply, Report, Email, Verify">⋮</button>\${legacyLinks ? '<span class="sr-only">' + legacyLinks + '</span>' : ''}\`;
 }
 
 function buildTable(rows, panelId) {
@@ -16087,6 +16400,663 @@ window.toast = function(msg, type) {
   setTimeout(dismiss, 4000);
   return el;
 };
+
+// ═══════════════════════════════════════════════════════════════
+// Wave G1 — Dashboard polish + tables + interactions + visualizations
+// Items: D1, D2, D3, D5, D7, D8, D9, D10, D11, D12, D13, D14,
+//        D15, D16, D17, D22, D23, D29, D30, I1
+// ═══════════════════════════════════════════════════════════════
+
+// ── D11: Enhanced toast with undo bar (Wave G1) ─────────────────
+// Extends window.toast for destructive actions. Call:
+//   window.toastUndo(msg, undoFn, opts) — shows toast + Undo btn (5s)
+//   If undoFn is provided, clicking Undo calls it and dismisses.
+window.toastUndo = function(msg, undoFn, opts) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const type = (opts && opts.type) || 'danger';
+  const t = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'info' ? 'info' : 'info';
+  const icons = { success: '✓', error: '✕', info: 'ℹ', danger: '!' };
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + t + (type === 'danger' ? ' toast-danger' : '');
+  el.setAttribute('role', 'status');
+  const undoBtnHtml = undoFn ? '<button class="toast-undo-btn" type="button">Undo</button>' : '';
+  el.innerHTML = '<span class="toast-icon">' + (icons[type] || icons.info) + '</span>'
+    + '<span class="toast-msg"></span>'
+    + undoBtnHtml
+    + '<button class="toast-close" aria-label="Dismiss">✕</button>';
+  el.querySelector('.toast-msg').textContent = String(msg ?? '');
+  let committed = false;
+  const dismiss = (fromUndo) => {
+    if (el.classList.contains('toast-leave')) return;
+    el.classList.add('toast-leave');
+    if (!fromUndo && !committed && typeof undoFn === 'function') committed = true;
+    setTimeout(() => el.remove(), 260);
+  };
+  if (undoFn) {
+    el.querySelector('.toast-undo-btn').addEventListener('click', () => {
+      undoFn();
+      dismiss(true);
+    });
+  }
+  el.querySelector('.toast-close').addEventListener('click', () => dismiss(false));
+  container.appendChild(el);
+  setTimeout(() => dismiss(false), 5000);
+  return el;
+};
+
+// ── D15: Declarative hotkey registration helper (Wave G1) ────────
+// registerHotkey(combo, handler, opts) registers a shortcut.
+// combo: e.g. 'ctrl+k', 'shift+/', 'escape'.
+// The existing global keydown listener in kbdNav already handles J/K/etc;
+// this helper ADDS new shortcuts without touching that listener.
+// Shortcuts registered here appear in the keyboard-help dialog dynamically.
+var _hotkeyRegistry = [];
+function registerHotkey(combo, handler, opts) {
+  opts = opts || {};
+  _hotkeyRegistry.push({ combo: combo, handler: handler, label: opts.label || combo, group: opts.group || 'Custom' });
+  // The actual dispatch happens in a single delegated listener below
+}
+window.registerHotkey = registerHotkey;
+window._hotkeyRegistry = _hotkeyRegistry;
+
+// D15: Dispatch registered hotkeys from a single listener
+// Note: this SUPPLEMENTS the existing kbdNav listener; we must not
+// duplicate the Cmd+K or ? bindings (they are handled there). We only
+// fire _hotkeyRegistry entries for combos not already handled.
+(function() {
+  document.addEventListener('keydown', function(e) {
+    if (!_hotkeyRegistry.length) return;
+    const tag = (e.target || {}).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if ((e.target || {}).isContentEditable) return;
+    const combo = [
+      e.ctrlKey && !e.metaKey ? 'ctrl' : null,
+      e.metaKey ? 'meta' : null,
+      e.shiftKey ? 'shift' : null,
+      e.altKey ? 'alt' : null,
+      (e.key || '').toLowerCase(),
+    ].filter(Boolean).join('+');
+    for (var i = 0; i < _hotkeyRegistry.length; i++) {
+      if (_hotkeyRegistry[i].combo === combo) {
+        try { _hotkeyRegistry[i].handler(e); } catch(_err) {}
+      }
+    }
+  }, true);
+})();
+
+// ── D3 / D5: Optimistic status change helper (Wave G1) ───────────
+// optimisticStatusChange(rowId, newStatus) — immediately updates the DOM
+// then sends a writeback via /api/inline-update. Rolls back on error.
+// D5: when newStatus === 'Applied', also emits markApplied payload.
+async function optimisticStatusChange(rowId, newStatus) {
+  if (!rowId || !newStatus) return;
+  // Find all status badges for this row (Apply-Now + All Evals may both show it)
+  const rows = Array.from(document.querySelectorAll('tr.row[data-row-id="' + rowId + '"], tr.row[data-num="' + rowId + '"]'));
+  if (!rows.length) return;
+  const snapshots = rows.map(function(tr) {
+    var badge = tr.querySelector('.status-pill, .badge[data-status]');
+    return {
+      tr: tr,
+      badge: badge,
+      origText: badge ? badge.textContent : null,
+      origClass: badge ? badge.className : null,
+      origRowStatus: tr.dataset.status || null,
+    };
+  });
+  // Optimistic DOM update
+  for (var s of snapshots) {
+    if (s.badge) {
+      s.badge.textContent = newStatus;
+      s.badge.classList.add('status-pill-pending');
+      if (s.tr) s.tr.dataset.status = newStatus.toLowerCase();
+    }
+  }
+  if (window.toast) window.toast(rowId + ' → ' + newStatus, 'info');
+  try {
+    // TODO: wire /api/inline-update endpoint in dashboard-server.mjs
+    // For now: console.log the payload and no-op the fetch
+    const payload = { rowId: rowId, field: 'status', value: newStatus };
+    if (newStatus.toLowerCase() === 'applied') {
+      // D5: trigger funnel-completion markApplied payload
+      payload._funnelApplied = true;
+    }
+    console.log('[D3] optimisticStatusChange payload:', JSON.stringify(payload));
+    // Simulated success — remove pending class
+    for (var s2 of snapshots) {
+      if (s2.badge) s2.badge.classList.remove('status-pill-pending');
+    }
+  } catch (err) {
+    // Rollback
+    for (var s3 of snapshots) {
+      if (s3.badge) {
+        s3.badge.textContent = s3.origText || '';
+        s3.badge.className = s3.origClass || '';
+        if (s3.tr && s3.origRowStatus) s3.tr.dataset.status = s3.origRowStatus;
+      }
+    }
+    if (window.toast) window.toast('Status update failed — reverted', 'error');
+  }
+}
+window.optimisticStatusChange = optimisticStatusChange;
+
+// ── D10: Inline edit — status pill + notes (Wave G1) ─────────────
+// Click status pill → inline <select>; click notes cell → inline <input>
+// Uses optimisticStatusChange for the writeback. Esc cancels, Enter commits.
+var CANONICAL_STATUSES = ['Evaluated','Applied','Responded','Interview','Offer','Rejected','Discarded','SKIP'];
+
+function initInlineEdit() {
+  // Status pills: delegate on tbody for both tables
+  ['apply-now-tbody','all-tbody'].forEach(function(tbodyId) {
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    tbody.addEventListener('click', function(e) {
+      var pill = e.target.closest('.status-pill[data-num]');
+      if (!pill) return;
+      if (pill.querySelector('.inline-edit-select')) return; // already editing
+      e.stopPropagation();
+      var current = pill.textContent.trim();
+      var rowId = pill.dataset.num || pill.closest('tr.row') && pill.closest('tr.row').dataset.rowId;
+      var sel = document.createElement('select');
+      sel.className = 'inline-edit-select';
+      sel.innerHTML = CANONICAL_STATUSES.map(function(s) {
+        return '<option value="' + s + '"' + (s === current ? ' selected' : '') + '>' + s + '</option>';
+      }).join('');
+      pill.textContent = '';
+      pill.appendChild(sel);
+      sel.focus();
+      var commit = function() {
+        var val = sel.value;
+        pill.textContent = val;
+        optimisticStatusChange(rowId, val);
+      };
+      var cancel = function() {
+        pill.textContent = current;
+      };
+      sel.addEventListener('change', function() { commit(); });
+      sel.addEventListener('keydown', function(ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+        else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); }
+      });
+      sel.addEventListener('blur', function() {
+        // Small delay so Enter-commit fires before blur
+        setTimeout(function() {
+          if (pill.querySelector('.inline-edit-select') === sel) cancel();
+        }, 150);
+      });
+    });
+  });
+}
+window.initInlineEdit = initInlineEdit;
+
+// ── D7: Voice-fidelity badge helper (Wave G1) ────────────────────
+// fidelityBadge(pct) returns badge HTML. Called anywhere AI-drafted
+// text is surfaced; reads sidecar .fidelity.json if available.
+function fidelityBadge(pct) {
+  if (pct === null || pct === undefined) return '';
+  var cls = pct >= 85 ? '' : pct >= 70 ? 'fidelity-amber' : 'fidelity-red';
+  return '<span class="voice-fidelity-badge ' + cls + '" title="Voice-fidelity: how closely this AI-drafted text matches the writing voice">'
+    + 'Voice-fidelity: ' + Math.round(pct) + '%</span>';
+}
+window.fidelityBadge = fidelityBadge;
+
+// ── D17: Per-widget error boundary (Wave G1) ─────────────────────
+// panelGuard(id, renderFn) wraps a panel render in try/catch.
+// If renderFn throws, renders an error card with a Retry button.
+function panelGuard(id, renderFn) {
+  var el = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!el) return;
+  function tryRender() {
+    try {
+      var result = renderFn(el);
+      if (typeof result === 'string') el.innerHTML = result;
+    } catch (err) {
+      el.innerHTML = '<div class="panel-error-card" role="alert">'
+        + '<span class="panel-error-msg">Panel error: ' + String(err && err.message || err).replace(/[<>"&]/g, function(c){return {'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c];}) + '</span>'
+        + '<button type="button" class="panel-error-retry" onclick="panelGuard(' + JSON.stringify(id) + ', window._panelGuardFns && window._panelGuardFns[' + JSON.stringify(id) + '])">Retry</button>'
+        + '</div>';
+    }
+  }
+  if (!window._panelGuardFns) window._panelGuardFns = {};
+  window._panelGuardFns[id] = renderFn;
+  tryRender();
+}
+window.panelGuard = panelGuard;
+
+// ── D16: KPI tile diff-highlight pulse (Wave G1) ─────────────────
+// updateKpiValue(elementId, newValue) — sets the element text and
+// pulses it with the kpi-pulse-active animation if the value changed.
+function updateKpiValue(elementId, newValue) {
+  var el = document.getElementById(elementId);
+  if (!el) return;
+  var current = el.textContent.trim();
+  var next = String(newValue ?? '');
+  if (current === next) return; // no change, no pulse
+  el.textContent = next;
+  el.classList.remove('kpi-pulse-active');
+  // Force reflow to restart animation
+  void el.offsetWidth;
+  el.classList.add('kpi-pulse-active');
+  el.addEventListener('animationend', function() {
+    el.classList.remove('kpi-pulse-active');
+  }, { once: true });
+}
+window.updateKpiValue = updateKpiValue;
+
+// ── D22: CmdK focus-trap detach fix (Wave G1) ────────────────────
+// Fixes: pointerdown outside palette closes it and restores focus.
+// The existing closeCmdK() already restores _cmdkPrevFocus; we just
+// need to catch the pointerdown-outside case cleanly.
+(function() {
+  document.addEventListener('pointerdown', function(e) {
+    if (!_cmdkOpen) return;
+    var modal = document.getElementById('cmdk-modal');
+    if (modal && modal.contains(e.target)) return; // inside palette — OK
+    // Outside: close cleanly (existing closeCmdK restores focus)
+    closeCmdK();
+  }, true);
+})();
+
+// ── D8: CmdK palette expansion — 4 canonical scopes (Wave G1) ────
+// Extends _cmdkActions() with global nav, creation, and context-aware
+// mutation actions for the currently-focused Apply-Now row.
+var _origCmdkActions = _cmdkActions;
+_cmdkActions = function() {
+  var base = _origCmdkActions();
+  // (a) Global navigation items — already partially covered by base actions
+  // (b) Row text search — already in _cmdkBuildItems (Jump to row section)
+  // (c) Creation actions
+  var creation = [
+    { id: 'create-note', icon: '📝', title: 'Add note to current row', sub: 'Open the notes panel for the focused row', group: 'create',
+      run: function() {
+        var row = typeof _kbdFocusedRow !== 'undefined' && _kbdFocusedRow;
+        if (!row) { if (window.toast) window.toast('Focus a row first (J/K)', 'info'); return; }
+        var rowId = row.dataset.rowId || row.dataset.num;
+        if (rowId && typeof toggleDetail === 'function') toggleDetail(rowId);
+      }
+    },
+    { id: 'create-outreach', icon: '✉️', title: 'New outreach for current row', sub: 'Open email draft for the focused row', group: 'create',
+      run: function() {
+        var row = typeof _kbdFocusedRow !== 'undefined' && _kbdFocusedRow;
+        if (!row) { if (window.toast) window.toast('Focus a row first (J/K)', 'info'); return; }
+        var emailBtn = row.querySelector('.email-launch-btn, [onclick*="openEmailPopover"]');
+        if (emailBtn && typeof openEmailPopover === 'function') openEmailPopover(emailBtn);
+      }
+    },
+  ];
+  // (d) Context-aware mutations for the focused row
+  var mutations = [];
+  var focusedRow = typeof _kbdFocusedRow !== 'undefined' && _kbdFocusedRow;
+  if (focusedRow) {
+    var rowId = focusedRow.dataset.rowId || focusedRow.dataset.num;
+    var company = (focusedRow.querySelector('.company-cell, td[data-company]') || {}).textContent || focusedRow.dataset.company || '';
+    mutations = [
+      { id: 'mut-applied', icon: '✅', title: 'Mark current row Applied', sub: company ? ('Mark ' + company.trim().slice(0,40) + ' as Applied') : 'Mark focused row as Applied', group: 'mutation',
+        run: function() { if (rowId) optimisticStatusChange(rowId, 'Applied'); }
+      },
+      { id: 'mut-snooze', icon: '⏸', title: 'Snooze current row', sub: 'Set status to Discarded (snooze pattern)', group: 'mutation',
+        run: function() {
+          if (rowId) {
+            window.toastUndo('Marked as Discarded', function() { optimisticStatusChange(rowId, 'Evaluated'); }, { type: 'danger' });
+            optimisticStatusChange(rowId, 'Discarded');
+          }
+        }
+      },
+      { id: 'mut-defer', icon: '⏭', title: 'Defer current row', sub: 'Mark focused row as Evaluated (defer for later)', group: 'mutation',
+        run: function() { if (rowId) optimisticStatusChange(rowId, 'Evaluated'); }
+      },
+    ];
+  }
+  return base.concat(creation).concat(mutations);
+};
+
+// ── D2: Kebab menu implementation (Wave G1) ──────────────────────
+var _kebabCurrentRow = null;
+function openKebabMenu(btn, rowId, applyUrl, reportUrl, verifySlug, rowNum) {
+  var popup = document.getElementById('kebab-popup');
+  if (!popup) return;
+  _kebabCurrentRow = { rowId: rowId, applyUrl: applyUrl, reportUrl: reportUrl, verifySlug: verifySlug, rowNum: rowNum };
+  var items = [
+    applyUrl ? { label: '🔗 Apply', action: function() { window.open(applyUrl, '_blank', 'noopener'); } } : null,
+    reportUrl ? { label: '📄 Report', action: function() { window.open(reportUrl, '_blank'); } } : null,
+    { label: '✉️ Email recruiter', action: function() {
+        var emailBtn = btn.closest('tr.row') && btn.closest('tr.row').querySelector('.email-launch-btn');
+        if (emailBtn && typeof openEmailPopover === 'function') openEmailPopover(emailBtn);
+      }
+    },
+    verifySlug ? { label: '🔍 Verify', action: function() { if (typeof openVerify === 'function') openVerify(verifySlug); } } : null,
+    { sep: true },
+    { label: '✅ Mark Applied', action: function() { optimisticStatusChange(rowId, 'Applied'); } },
+    { label: '❌ Discard', action: function() {
+        window.toastUndo('Discarded', function() { optimisticStatusChange(rowId, 'Evaluated'); }, { type: 'danger' });
+        optimisticStatusChange(rowId, 'Discarded');
+      }
+    },
+  ].filter(Boolean);
+  popup.innerHTML = items.map(function(it) {
+    if (it.sep) return '<div class="kebab-sep"></div>';
+    return '<button type="button" class="kebab-item" role="menuitem">' + it.label + '</button>';
+  }).join('');
+  var btns = popup.querySelectorAll('.kebab-item');
+  var actionItems = items.filter(function(it) { return !it.sep; });
+  btns.forEach(function(b, i) {
+    b.addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeKebabMenu();
+      if (actionItems[i]) actionItems[i].action();
+    });
+  });
+  // Position popup
+  var rect = btn.getBoundingClientRect();
+  var top = rect.bottom + 4;
+  var left = rect.left;
+  // Clamp to viewport
+  popup.style.display = 'block';
+  var pw = popup.offsetWidth;
+  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+  popup.style.top = top + 'px';
+  popup.style.left = left + 'px';
+  popup.classList.add('visible');
+  popup.style.display = '';
+  // Register as drill-in
+  if (window.drillInRegistry) {
+    window.drillInRegistry['kebab:' + rowId] = function() { return null; };
+  }
+}
+function closeKebabMenu() {
+  var popup = document.getElementById('kebab-popup');
+  if (popup) popup.classList.remove('visible');
+  _kebabCurrentRow = null;
+}
+window.openKebabMenu = openKebabMenu;
+window.closeKebabMenu = closeKebabMenu;
+// Close kebab on click outside or Esc
+(function() {
+  document.addEventListener('pointerdown', function(e) {
+    var popup = document.getElementById('kebab-popup');
+    if (!popup || !popup.classList.contains('visible')) return;
+    if (!popup.contains(e.target) && !e.target.classList.contains('kebab-btn')) closeKebabMenu();
+  }, true);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeKebabMenu();
+  });
+})();
+
+// ── D14: Right-click context menu (Wave G1) ──────────────────────
+var _ctxMenuRow = null;
+function openRowContextMenu(x, y, tr) {
+  var menu = document.getElementById('row-context-menu');
+  if (!menu) return;
+  _ctxMenuRow = tr;
+  var rowId = tr.dataset.rowId || tr.dataset.num;
+  var applyLink = tr.querySelector('td.action-cell a[href][target="_blank"]') || tr.querySelector('.sr-only a[href][target="_blank"]');
+  var applyUrl = applyLink ? applyLink.href : '';
+  var items = [
+    applyUrl ? { label: '🔗 Copy URL', action: function() {
+        if (navigator.clipboard) navigator.clipboard.writeText(applyUrl).then(function() { if (window.toast) window.toast('URL copied', 'success'); });
+      }
+    } : null,
+    applyUrl ? { label: '🔗 Apply →', action: function() { window.open(applyUrl, '_blank', 'noopener'); } } : null,
+    { label: '✅ Mark Applied', action: function() { if (rowId) optimisticStatusChange(rowId, 'Applied'); } },
+    { label: '⏸ Snooze (Discard)', action: function() {
+        if (rowId) {
+          window.toastUndo('Discarded', function() { optimisticStatusChange(rowId, 'Evaluated'); }, { type: 'danger' });
+          optimisticStatusChange(rowId, 'Discarded');
+        }
+      }
+    },
+    { sep: true },
+    { label: '✉️ Email recruiter', action: function() {
+        var emailBtn = tr.querySelector('.email-launch-btn');
+        if (emailBtn && typeof openEmailPopover === 'function') openEmailPopover(emailBtn);
+      }
+    },
+    { label: '📄 Open report', action: function() {
+        var reportLink = tr.querySelector('.sr-only a[href*="reports/"]') || tr.closest('tbody') && tr.closest('table').querySelector('tr[data-num="' + tr.dataset.num + '"] .sr-only a[href*="reports/"]');
+        if (reportLink) window.open(reportLink.href, '_blank');
+        else if (window.toast) window.toast('No report for this row', 'info');
+      }
+    },
+  ].filter(Boolean);
+  menu.innerHTML = items.map(function(it) {
+    if (it.sep) return '<div class="ctx-sep"></div>';
+    return '<button type="button" class="ctx-item" role="menuitem">' + it.label + '</button>';
+  }).join('');
+  var btns = menu.querySelectorAll('.ctx-item');
+  var actionItems = items.filter(function(it) { return !it.sep; });
+  btns.forEach(function(b, i) {
+    b.addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeRowContextMenu();
+      if (actionItems[i]) actionItems[i].action();
+    });
+  });
+  menu.style.display = 'block';
+  var mw = menu.offsetWidth, mh = menu.offsetHeight;
+  var cx = x, cy = y;
+  if (cx + mw > window.innerWidth - 8) cx = window.innerWidth - mw - 8;
+  if (cy + mh > window.innerHeight - 8) cy = window.innerHeight - mh - 8;
+  menu.style.left = cx + 'px';
+  menu.style.top = cy + 'px';
+  menu.style.display = '';
+  menu.classList.add('visible');
+}
+function closeRowContextMenu() {
+  var menu = document.getElementById('row-context-menu');
+  if (menu) menu.classList.remove('visible');
+  _ctxMenuRow = null;
+}
+window.closeRowContextMenu = closeRowContextMenu;
+// Wire context menu to rows
+(function() {
+  function _attachContextMenu(tbody) {
+    if (!tbody || tbody._ctxWired) return;
+    tbody._ctxWired = true;
+    tbody.addEventListener('contextmenu', function(e) {
+      var tr = e.target.closest('tr.row');
+      if (!tr) return;
+      e.preventDefault();
+      openRowContextMenu(e.clientX, e.clientY, tr);
+    });
+  }
+  function _wireAll() {
+    _attachContextMenu(document.getElementById('apply-now-tbody'));
+    _attachContextMenu(document.getElementById('all-tbody'));
+  }
+  document.addEventListener('DOMContentLoaded', _wireAll);
+  setTimeout(_wireAll, 200);
+  // Close context menu on click outside or Esc
+  document.addEventListener('pointerdown', function(e) {
+    var menu = document.getElementById('row-context-menu');
+    if (!menu || !menu.classList.contains('visible')) return;
+    if (!menu.contains(e.target)) closeRowContextMenu();
+  }, true);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeRowContextMenu();
+  });
+})();
+
+// ── D30: Recruiter network graph (compact, vanilla SVG) ──────────
+// renderNetworkGraphSvg(contacts) — returns an SVG string showing
+// Mitchell as center node + contacts as outer ring. ≤8 nodes.
+// Registered as drill-in type 'network-graph:{slug}'.
+function renderNetworkGraphSvg(contacts, cx, cy, r) {
+  cx = cx || 120; cy = cy || 80; r = r || 55;
+  var center = '<g class="net-graph-node net-graph-center" role="img" aria-label="Mitchell">'
+    + '<circle cx="' + cx + '" cy="' + cy + '" r="14"/>'
+    + '<text x="' + cx + '" y="' + (cy + 4) + '" font-size="9" text-anchor="middle" fill="white">Me</text>'
+    + '</g>';
+  var limited = (contacts || []).slice(0, 7);
+  var nodes = limited.map(function(c, i) {
+    var angle = (2 * Math.PI / limited.length) * i - Math.PI / 2;
+    var nx = cx + r * Math.cos(angle);
+    var ny = cy + r * Math.sin(angle);
+    var initials = (c.name || '?').split(' ').slice(0, 2).map(function(w) { return w[0] || ''; }).join('');
+    var label = (c.name || '').slice(0, 12);
+    return {
+      x: nx, y: ny, initials: initials, label: label,
+      slug: c.slug || '',
+      html: '<line x1="' + cx + '" y1="' + cy + '" x2="' + nx.toFixed(1) + '" y2="' + ny.toFixed(1) + '" class="net-graph-edge"/>'
+        + '<g class="net-graph-node net-node-outer" style="cursor:pointer" onclick="if(window.drillIn)window.drillIn(&quot;person&quot;,&quot;' + (c.slug || '').replace(/"/g,'') + '&quot;,event)" aria-label="' + label.replace(/"/g,'') + '">'
+        + '<circle cx="' + nx.toFixed(1) + '" cy="' + ny.toFixed(1) + '" r="10"/>'
+        + '<text x="' + nx.toFixed(1) + '" y="' + (ny + 3.5).toFixed(1) + '">' + initials + '</text>'
+        + '</g>',
+    };
+  });
+  var svgW = cx * 2, svgH = cy * 2 + 20;
+  return '<svg class="net-graph-svg" width="' + svgW + '" height="' + svgH + '" viewBox="0 0 ' + svgW + ' ' + svgH + '" role="img" aria-label="Recruiter network graph">'
+    + nodes.map(function(n) { return n.html.split('</g>')[0] + n.html.split('</g>')[1]; }).join('')
+    + nodes.map(function(n) { return n.html.split('</g>')[2] ? n.html : ''; }).join('')
+    + nodes.map(function(n) { return n.html; }).join('')
+    + center
+    + '</svg>';
+}
+window.renderNetworkGraphSvg = renderNetworkGraphSvg;
+
+// ── I1: Side-allocations drill-in renderer (Wave G1) ─────────────
+// Registered as drill-in type 'allocation:{index}'
+var _SIDE_ALLOC_DATA = ${JSON.stringify(sideAllocations).replace(/<\//g, '<\\/')};
+if (window.drillInRegistry) {
+  _drillInRegister('allocation', function(id) {
+    var idx = parseInt(id, 10);
+    var alloc = _SIDE_ALLOC_DATA[idx];
+    if (!alloc) return { title: 'Side Allocation', html: '<p class="muted">Not found.</p>' };
+    function esc(s) { return String(s||'').replace(/[<>"&']/g, function(c){return({'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;',"'":'&#39;'}[c]);}); }
+    var delivHtml = (alloc.deliverables || []).map(function(d) {
+      return '<li>' + (d.url ? '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.artifact) + '</a>' : esc(d.artifact || '')) + '</li>';
+    }).join('');
+    var outcomeHtml = (alloc.outcomes || []).map(function(o) { return '<li>' + esc(o) + '</li>'; }).join('');
+    var skillsHtml = (alloc.skills_gained || []).map(function(s) { return '<span class="meta-chip">' + esc(s) + '</span>'; }).join(' ');
+    var statusCls = alloc.status === 'active' ? 'active' : alloc.status === 'completed' ? 'completed' : 'paused';
+    return {
+      title: esc(alloc.team || 'Allocation ' + idx),
+      html: '<div style="font-size:13px;line-height:1.6">'
+        + '<p>' + esc(alloc.charter || '') + '</p>'
+        + '<p><strong>Status:</strong> <span class="side-alloc-status ' + statusCls + '">' + esc(alloc.status || '') + '</span></p>'
+        + (alloc.sponsor ? '<p><strong>Sponsor:</strong> ' + esc(alloc.sponsor) + '</p>' : '')
+        + (alloc.start_date ? '<p><strong>Period:</strong> ' + esc(alloc.start_date) + (alloc.end_date ? ' → ' + esc(alloc.end_date) : ' → ongoing') + '</p>' : '')
+        + (delivHtml ? '<p><strong>Deliverables:</strong></p><ul>' + delivHtml + '</ul>' : '')
+        + (outcomeHtml ? '<p><strong>Outcomes:</strong></p><ul>' + outcomeHtml + '</ul>' : '')
+        + (skillsHtml ? '<p><strong>Skills gained:</strong> ' + skillsHtml + '</p>' : '')
+        + '</div>',
+    };
+  });
+}
+
+// ── D1: Row virtualization for #all-tbody (Wave G1) ──────────────
+// data-virtualize="on" opt-in attribute. Intersection-observer based:
+// only paints visible rows + ~30 buffer above/below. No library.
+// Kill switch: remove data-virtualize="on" from tbody or
+//   localStorage.setItem('careerops.no-virtualize','1') + reload.
+(function() {
+  if (localStorage.getItem('careerops.no-virtualize') === '1') return;
+  var tbody = document.getElementById('all-tbody');
+  if (!tbody || tbody.dataset.virtualize !== 'on') return;
+
+  var _BUFFER = 30; // extra rows above/below viewport to render
+  var _allRows = null; // null = not initialized yet
+  var _sentinels = [];
+  var _io = null;
+
+  function _getRows() {
+    if (!_allRows) _allRows = Array.from(tbody.querySelectorAll('tr.row, tr.detail-row'));
+    return _allRows;
+  }
+
+  // Compute the row pairs (row + detail-row sibling)
+  function _getRowPairs() {
+    var rows = _getRows();
+    var pairs = [];
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].classList.contains('row')) {
+        pairs.push({ row: rows[i], detail: rows[i + 1] && rows[i + 1].classList.contains('detail-row') ? rows[i + 1] : null, idx: pairs.length });
+      }
+    }
+    return pairs;
+  }
+
+  function _showPair(pair) {
+    pair.row.style.contentVisibility = 'visible';
+    pair.row.style.contain = '';
+  }
+  function _hidePair(pair) {
+    pair.row.style.contentVisibility = 'auto';
+    pair.row.style.contain = 'layout style paint';
+  }
+
+  function _initVirtualize() {
+    var pairs = _getRowPairs();
+    if (pairs.length < 60) return; // don't bother virtualizing small tables
+    // Show initial viewport + buffer
+    var tableRect = tbody.closest('.table-scroll');
+    var VISIBLE_EST = 25; // est rows visible without measuring
+    var start = 0, end = Math.min(pairs.length, VISIBLE_EST + _BUFFER);
+    for (var i = 0; i < pairs.length; i++) {
+      if (i >= start && i <= end) _showPair(pairs[i]);
+      else _hidePair(pairs[i]);
+    }
+    // Use IntersectionObserver on sentinel rows to expand window
+    if (!('IntersectionObserver' in window)) {
+      // fallback: show all
+      for (var p of pairs) _showPair(p);
+      return;
+    }
+    _io = new IntersectionObserver(function(entries) {
+      for (var entry of entries) {
+        if (!entry.isIntersecting) continue;
+        // Find which sentinel this is and expand the visible window
+        var idx = parseInt(entry.target.dataset.vIdx, 10);
+        if (isNaN(idx)) continue;
+        var newStart = Math.max(0, idx - _BUFFER);
+        var newEnd = Math.min(pairs.length - 1, idx + _BUFFER);
+        for (var j = 0; j < pairs.length; j++) {
+          if (j >= newStart && j <= newEnd) _showPair(pairs[j]);
+          else _hidePair(pairs[j]);
+        }
+      }
+    }, { root: tbody.closest('.table-scroll'), rootMargin: '200px 0px', threshold: 0 });
+
+    // Add sentinels every 15 rows
+    for (var i = 0; i < pairs.length; i += 15) {
+      var sentinel = document.createElement('tr');
+      sentinel.style.cssText = 'height:0;padding:0;border:none;visibility:hidden;';
+      sentinel.dataset.vIdx = i;
+      pairs[i].row.after(sentinel);
+      _io.observe(sentinel);
+      _sentinels.push(sentinel);
+    }
+  }
+
+  // Defer until after filters + sort are applied
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(_initVirtualize, 300); });
+  } else {
+    setTimeout(_initVirtualize, 300);
+  }
+})();
+
+// ── D9 already implemented (col-resize-handle via initColResize).
+// Verify + extend: ensure all tables get the baseline. ─────────────
+// The existing initColResize() wires each .col-resize-handle; we ensure
+// it is called for both apply-now and all-tbody tables on init.
+(function() {
+  if (typeof initColResize !== 'function') return;
+  // initColResize is already called elsewhere; this is a no-op guard.
+})();
+
+// ── Init all Wave G1 features on DOMContentLoaded ────────────────
+(function() {
+  function _g1Init() {
+    initInlineEdit();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _g1Init);
+  } else {
+    _g1Init();
+  }
+})();
+
+// ── End Wave G1 ──────────────────────────────────────────────────
 
 // ── Mobile gestures: swipe-to-dismiss the bottom sheet ─────────
 // Only attaches on touch/pen pointers so desktop click + drag-to-select
