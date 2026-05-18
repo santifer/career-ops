@@ -4,39 +4,186 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Review technical architectures + production-ready code — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
-  .body { font-size: 15px; }
-  .body p { margin: 0 0 16px; }
-  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
-  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
-  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
-  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
-  a { color: #0a66c2; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #1a1a1a; color: #e8e8e8; }
-    .meta, .footer { color: #999; }
-    .footer { border-top-color: #333; }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
 </style>
 </head><body>
-<h1>Review technical architectures + production-ready code</h1>
-<div class="meta">
-  Source: Anthropic — Manager, Forward Deployed Engineering ·
-  <span class="humanize-badge humanize-low">Humanize: 9% low</span>
-</div>
-<div class="body">
+<div class="reading-shell">
+  <h1>Review technical architectures + production-ready code</h1>
+  <div class="meta">
+    <span>Source: Anthropic — Manager, Forward Deployed Engineering</span>
+    <span class="humanize-badge humanize-low">Humanize: 9% low</span>
+  </div>
+  <div class="body">
 <p>The inbound stream for the Office of Cross-Google Engineering was not designed to be a problem. It became one the way most operational problems do — gradually, then all at once. xGE is a horizontal engineering organization supporting roughly 1,000 Principal, Distinguished, and Fellow engineers, the top 0.5% of Google's 180,000-person workforce. When that population sends communications requests, the stakes attached to each one are not hypothetical. A misclassified ask from a Google Fellow, a slow turnaround on a VP-level escalation, a templated response where a calibrated one was required — these are not minor inconveniences. They erode trust in the exact cohort where trust is most expensive to rebuild. The triage layer we had was human. That meant it was me. And that wasn't going to scale.</p>
 <p>The architectural decision that mattered most came early, and it wasn't about the model. It was about whether to build a multi-agent network or a single agent with a deliberately constrained prompt chain. Multi-agent systems carry real operational appeal — parallelism, specialization, apparent sophistication. They also carry compounding failure surfaces. For this use case, the population was defined, the inbound categories were finite, and the failure mode I was most concerned about was misclassification at the routing layer — a High-touch request treated as Low and resolved without escalation. That failure is invisible until it isn't. I chose a three-prompt architecture running inside a single Gemini agent: triage, revise, escalate. Each prompt stage had a conditional KB load — the agent pulled relevant context only when the classification warranted it, rather than flooding every request with the full corpus. Low-complexity inbound got Smart Brevity treatment with documented rationale appended so any human reviewer could reconstruct why the agent resolved rather than escalated. Medium and High tiers routed to escalation with a classification memo attached. The three-stage chain created an internal audit trail. Every resolved request was arguable — you could trace the logic backward from the output.</p>
 <p>The production deployment question was the one I cared about most, because prototypes that solve the demo are not the same thing as systems that hold. The test I set for this agent was not whether it performed well under supervised conditions. It was whether it would maintain operational continuity during an uncontrolled absence — a real one, not a tabletop exercise. That test ran during a multi-month medical leave in early 2026. The agent handled the inbound stream without a single human intervention across the full absence window. 100% operational continuity. That result is the one I'd point to if someone asked me whether the architecture was production-ready, because no prototype can claim it. Only a deployed system under real load, with no human in the loop, can.</p>
 <p>The measurable output: approximately 160 operational hours per year recaptured at better than 90% classification accuracy across the full inbound stream. For a cohort where each percentage point of senior IC attrition carries estimated eight-figure cost implications, the hours recaptured are almost secondary. The primary result is that the triage layer no longer has a single point of failure. It runs unattended. The system's ability to hold through a multi-month absence is the architectural validation — not the classification rate, which is a quality metric, but the continuity rate, which is an infrastructure metric. Those are different claims, and both are documented.</p>
 <p>What this project clarified for me is the distinction between reviewing an architecture and owning one. I've read enough system design documentation to know that a three-prompt chain sounds simple on paper. The complexity is in the conditional KB loading logic, in the classification boundary definitions between tiers, in the documented rationale requirement that keeps the system auditable rather than opaque. Reviewing production-ready code means knowing which decisions are load-bearing and which are cosmetic — and being honest about the difference. This system is small by most engineering standards. It is also running, unattended, for the most senior technical population at one of the largest engineering organizations in the world. That's the bar I built to.</p>
-</div>
-<div class="footer">
-  Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
-  <a href="../index.html">← back to dashboard</a>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
 </div>
 </body></html>

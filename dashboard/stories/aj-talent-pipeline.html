@@ -4,31 +4,177 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Coaching engineers through writing — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
-  .body { font-size: 15px; }
-  .body p { margin: 0 0 16px; }
-  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
-  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
-  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
-  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
-  a { color: #0a66c2; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #1a1a1a; color: #e8e8e8; }
-    .meta, .footer { color: #999; }
-    .footer { border-top-color: #333; }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
 </style>
 </head><body>
-<h1>Coaching engineers through writing</h1>
-<div class="meta">
-  Source: Anthropic — Engineering Editorial Lead ·
-  <span class="humanize-badge humanize-low">Humanize: 6% low</span>
-</div>
-<div class="body">
+<div class="reading-shell">
+  <h1>Coaching engineers through writing</h1>
+  <div class="meta">
+    <span>Source: Anthropic — Engineering Editorial Lead</span>
+    <span class="humanize-badge humanize-low">Humanize: 6% low</span>
+  </div>
+  <div class="body">
 <p>The brief I was handed at AJ+ in 2017 sounded like a production problem. It wasn't. It was a talent problem wearing a format problem as a disguise.</p>
 <p>AJ+ at that point ran two parallel content lines. Context — Dena Takruri's team — produced 3-to-4-minute evergreen studio pieces with full research depth, releasing weekly. Real Time produced 1-minute social-native explainers with text-over-video and music, releasing daily. Both lines worked on their own terms. Neither could catch a breaking news story and explain it the same day. Ethar El-Katatney and Director Michael Shagoury asked me to design a third line that closed that gap: explainer-quality depth at real-time speed, same-day turnaround, 1-to-2 minutes. They also asked me to use that format as an on-camera talent pipeline — moving producers who had spent their careers behind the camera into presenter roles. Two problems, one format, one production line. That was the assignment.</p>
 <p>The format design came first, and it was architectural before it was editorial. I built a day-of production logic that combined a breaking news hook with the research structure of a Context piece — a debunk or explanatory argument, supported by sourced B-roll, resolved in under two minutes. The structural constraint mattered: the 1-to-2 minute length forced every script to have exactly one throughline, which made it teachable. A producer who couldn't write a 4-minute documentary could write one argument with a setup, a pivot, and a payoff. That was the entry point for the coaching work.</p>
@@ -36,9 +182,10 @@
 <p>The production outcome is documented. One video from that line hit 50 million views and 40,000 comments during AJ+'s peak digital-first era. But the outcome I track is the talent result: all three producers I coached directly — Mara, Yara, Sana — became on-camera principals with their own shows. All three went on to Emmy and Webby wins. I didn't make them good. They were already good. What I did was design a format that gave them a structured, low-stakes entry into a new capability, then stayed close enough through the first several pieces to catch the specific technical problems each one was solving — and name them precisely enough that the fix could stick.</p>
 <p>That is the part that transfers. I've done a version of this work at every scale since: at Google's Office of Cross-Google Engineering, coaching Principal and Distinguished Engineers through the communications architecture behind agent deployment documentation; on the mentorship platform I rebuilt there, where the design question was how to systematize the knowledge transfer that had previously lived only in the heads of senior practitioners. The discipline is the same. You design a format that makes the skill learnable. You identify the specific breakdown for the specific person — not the general category of breakdown, the exact one. You name it with enough precision that they can recognize it themselves the next time. And you build the structure so it holds them long enough to internalize the logic, then gets out of the way.</p>
 <p>The three producers who left AJ+ as on-camera principals didn't need a production manager. They needed someone who had thought carefully about what the format was actually asking of them — and could translate that into a coaching intervention precise enough to be useful on deadline, on a story that broke four hours ago, with a camera hot and a script that wasn't done yet.</p>
-</div>
-<div class="footer">
-  Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
-  <a href="../index.html">← back to dashboard</a>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
 </div>
 </body></html>

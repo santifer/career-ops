@@ -210,42 +210,168 @@ async function checkHumanize(text) {
   }
 }
 
+// P0-3 (2026-05-18): story child pages use the dashboard's CSS token set so a
+// story page opened side-by-side with the dashboard feels like one product.
+// Reading-mode tokens converged by Council of Models (2026-05-17 22:09 PT):
+//   - 68ch measure (unanimous)
+//   - 18px body, 1.62 line-height (3-of-4 consensus)
+//   - System sans-serif for prose, mono for meta/footer (unanimous)
+//   - h1 28px / weight 600 / letter-spacing -0.015em (3-of-4 consensus)
+//   - Link color #0969da → #58a6ff (GitHub Primer; 3-of-4 consensus)
+//   - "Proof rail": 2px vertical accent in left gutter (gpt-5 pick — ties
+//     thematically to "proof point" purpose, single CSS rule, no scroll-
+//     timeline dependency)
+// Source: data/council-design-tokens-2026-05-18.md
 const PAGE_TEMPLATE = (story, body, riskBand, scoreNum) => `<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${story.requirement.slice(0, 70)} — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
-  .body { font-size: 15px; }
-  .body p { margin: 0 0 16px; }
-  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
-  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
-  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
-  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
-  a { color: #0a66c2; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #1a1a1a; color: #e8e8e8; }
-    .meta, .footer { color: #999; }
-    .footer { border-top-color: #333; }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  .reading-shell { position: relative; padding-left: 18px; }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+  }
+  .humanize-low { background: var(--green-bg); color: var(--green-fg-dark); border-color: var(--green-border); }
+  .humanize-medium { background: var(--amber-bg); color: var(--amber-fg); border-color: var(--amber-border); }
+  .humanize-high, .humanize-critical { background: var(--red-bg); color: var(--red-fg); border-color: var(--red-border); }
+  .humanize-unknown { background: var(--surface-2); color: var(--text-3); border-color: var(--border); }
+  a { color: var(--link); text-decoration: none; transition: color .12s ease; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  a:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 3px; }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
 </style>
 </head><body>
-<h1>${story.requirement.slice(0, 110)}</h1>
-<div class="meta">
-  Source: ${story.sourceCompany} — ${story.sourceRole} ·
-  <span class="humanize-badge humanize-${riskBand}">Humanize: ${scoreNum}% ${riskBand}</span>
-</div>
-<div class="body">
+<div class="reading-shell">
+  <h1>${story.requirement.slice(0, 110)}</h1>
+  <div class="meta">
+    <span>Source: ${story.sourceCompany} — ${story.sourceRole}</span>
+    <span class="humanize-badge humanize-${riskBand}">Humanize: ${scoreNum}% ${riskBand}</span>
+  </div>
+  <div class="body">
 ${body.split(/\n{2,}/).map(p => '<p>' + p.replace(/\n/g, ' ').trim() + '</p>').join('\n')}
-</div>
-<div class="footer">
-  Generated ${new Date().toISOString().slice(0, 10)} · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
-  <a href="../index.html">← back to dashboard</a>
+  </div>
+  <div class="footer">
+    <span>Generated ${new Date().toISOString().slice(0, 10)} · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
 </div>
 </body></html>`;
 
@@ -293,25 +419,83 @@ for (let i = 0; i < toGenerate.length; i++) {
 
 // Step 5: Build/refresh index page listing all generated stories.
 const allStoryFiles = readdirSync(STORIES_DIR).filter(f => f.endsWith('.html') && f !== 'index.html');
+// P0-3 (2026-05-18): index page uses the same council-converged tokens.
 const INDEX_TEMPLATE = `<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Story Library — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; line-height: 1.55; }
-  h1 { font-size: 22px; }
-  ul { list-style: none; padding: 0; }
-  li { margin: 8px 0; padding: 10px 14px; background: #f5f5f5; border-radius: 6px; }
-  a { color: #0a66c2; text-decoration: none; font-weight: 500; }
-  @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #e8e8e8; } li { background: #2a2a2a; } }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    max-width: 760px;
+    margin: 48px auto;
+    padding: 0 24px;
+    line-height: 1.55;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 15px;
+  }
+  h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; color: var(--text); letter-spacing: -0.011em; }
+  .lead { font-size: 14px; color: var(--text-3); margin: 0 0 24px; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    margin: 0 0 8px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color .12s, background .12s;
+  }
+  li:hover { background: var(--surface-2); border-color: var(--text-3); }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color .12s ease;
+  }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  a:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 3px; }
+  .back { margin-top: 28px; font-size: 13px; }
+  .back a { color: var(--text-3); font-weight: 500; }
+  .back a:hover { color: var(--text); }
 </style>
 </head><body>
 <h1>Story Library</h1>
-<p>${allStoryFiles.length} voice-calibrated story expansions, generated from Apply-Now report Block F.</p>
+<p class="lead">${allStoryFiles.length} voice-calibrated story expansions, generated from Apply-Now report Block F.</p>
 <ul>
 ${allStoryFiles.map(f => `  <li><a href="${f}">${f.replace(/\.html$/, '').replace(/-/g, ' ')}</a></li>`).join('\n')}
 </ul>
-<p style="margin-top:24px"><a href="../index.html">← back to dashboard</a></p>
+<p class="back"><a href="../index.html">← back to dashboard</a></p>
 </body></html>`;
 writeFileSync(join(STORIES_DIR, 'index.html'), INDEX_TEMPLATE);
 

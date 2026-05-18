@@ -4,40 +4,187 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fill operational gaps + lightweight process before permanent systems — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
-  .body { font-size: 15px; }
-  .body p { margin: 0 0 16px; }
-  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
-  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
-  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
-  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
-  a { color: #0a66c2; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #1a1a1a; color: #e8e8e8; }
-    .meta, .footer { color: #999; }
-    .footer { border-top-color: #333; }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
 </style>
 </head><body>
-<h1>Fill operational gaps + lightweight process before permanent systems</h1>
-<div class="meta">
-  Source: Anthropic — Strategic Operations Manager, Claude Marketplace ·
-  <span class="humanize-badge humanize-unknown">Humanize: 7% unknown</span>
-</div>
-<div class="body">
+<div class="reading-shell">
+  <h1>Fill operational gaps + lightweight process before permanent systems</h1>
+  <div class="meta">
+    <span>Source: Anthropic — Strategic Operations Manager, Claude Marketplace</span>
+    <span class="humanize-badge humanize-unknown">Humanize: 7% unknown</span>
+  </div>
+  <div class="body">
 <p>The operational gap appeared before anyone had time to name it. The Office of Cross-Google Engineering supports roughly 1,000 senior technical ICs at the Principal, Distinguished, and Fellow tiers — the top 0.5% of a 180,000-person engineering organization. Inbound communications requests were landing without a triage layer, consuming senior staff time on traffic that ranged from genuinely high-stakes executive escalations to requests that should have been resolved in under three minutes. There was no system sorting one from the other. There was just volume, and people absorbing it manually.</p>
 <p>The brief I gave myself was narrow and specific: build something that classifies, resolves, or escalates that inbound stream without human intervention — and does it without sacrificing voice fidelity on the responses it handles autonomously. The second constraint was the harder one. The population this system served had worked with senior communications staff long enough to have calibrated expectations. An agent that classified accurately but wrote like a template would fail the moment it hit send. So the architecture had to hold two things simultaneously: routing logic precise enough to be trusted without supervision, and output quality disciplined enough to represent the office.</p>
 <p>The design I settled on was a three-prompt architecture — triage, revise, escalate — with conditional knowledge-base loading at each stage. Inbound traffic lands in triage first, where the agent categorizes it into Low, Medium, or High touch. Low-touch requests get resolved autonomously using Smart Brevity principles, with documented rationale for why the traffic was classified at that tier — an audit layer, not decoration. Medium-touch requests get the revise prompt, which drafts a response against the relevant KB and flags judgment calls for human review. High-touch escalations route to a human immediately, with a brief from the agent summarizing what it already knows about the thread. The KB loading is conditional — it doesn't pull the full corpus for every inbound request, it loads what's relevant to the classification tier and the content category. That distinction matters for latency and for output coherence. A system that over-retrieves writes like it over-retrieved.</p>
 <p>I built this on a single-agent Gemini design, not multi-agent orchestration. The three-prompt sequence handles what a multi-agent architecture would overcomplicate. One of the persistent mistakes in early agentic deployments is reaching for complexity before exhausting what a well-scoped single agent can do. The triage system didn't need a constellation of specialized agents. It needed a routing architecture with enough classification depth to be trusted at production and enough output discipline to represent senior communications quality without a human in the loop on resolved traffic.</p>
 <p>The result was about 160 operational hours recaptured per year, at greater than 90% classification accuracy across the full inbound stream. That number is a production measurement, not a benchmark run in a controlled environment — it comes from sustained operational deployment against real traffic. The more consequential test came later, in early 2026, when a multi-month medical leave removed the primary human from the system entirely. The agent maintained 100% operational continuity across that absence. Not degraded continuity. Not continuity with occasional intervention. No single escalation that required reaching back to the person who built it. The system ran unattended because the architecture was designed to run unattended — the leave didn't reveal a gap, it proved the design.</p>
 <p>What I take from this has less to do with the agent itself and more to do with the discipline that built it. The newsroom decade that preceded this work — live broadcasts running on broken rundowns, editorial operations under active litigation scrutiny, field production executed from a backpack during active civil confrontations — trained a specific instinct: design for the moment when you're not there. The best operational system is the one that doesn't need you to function. The triage agent is the cleanest expression of that instinct I've built in a technology context. The permanent system it was meant to precede never arrived. The lightweight process became the infrastructure.</p>
-</div>
-<div class="footer">
-  Generated 2026-05-17 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
-  <a href="../index.html">← back to dashboard</a>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-17 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
 </div>
 </body></html>

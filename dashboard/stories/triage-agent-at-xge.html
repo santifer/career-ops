@@ -4,40 +4,187 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Translate technical → developer narratives — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
-  .body { font-size: 15px; }
-  .body p { margin: 0 0 16px; }
-  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
-  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
-  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
-  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
-  a { color: #0a66c2; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #1a1a1a; color: #e8e8e8; }
-    .meta, .footer { color: #999; }
-    .footer { border-top-color: #333; }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
 </style>
 </head><body>
-<h1>Translate technical → developer narratives</h1>
-<div class="meta">
-  Source: Anthropic — Communications Lead, Claude Code ·
-  <span class="humanize-badge humanize-low">Humanize: 5% low</span>
-</div>
-<div class="body">
+<div class="reading-shell">
+  <h1>Translate technical → developer narratives</h1>
+  <div class="meta">
+    <span>Source: Anthropic — Communications Lead, Claude Code</span>
+    <span class="humanize-badge humanize-low">Humanize: 5% low</span>
+  </div>
+  <div class="body">
 <p>The problem wasn't volume. The problem was that every inbound communications request hitting the Office of Cross-Google Engineering looked, on the surface, like it required a human — and the humans it was interrupting were Principal, Distinguished, and Fellow-level engineers, the top 0.5% of a 180,000-person organization.</p>
 <p>When I joined xGE as Internal Communications Lead, the office was the connective tissue between Google's most senior technical ICs and the broader engineering org. That meant managing a constant inbound stream: comms requests, approval asks, content drafts, routing decisions. The work wasn't complicated in aggregate — but it arrived with no triage layer, no classification logic, no way to distinguish what needed a human from what just needed a clear answer. Senior IC time was being taxed on problems that, properly framed, had deterministic resolutions. That's a systems failure dressed up as a workload problem.</p>
 <p>I scoped and built an autonomous communications triage agent — a three-prompt architecture with conditional knowledge base loading — to handle that inbound stream without human intervention. The architecture wasn't complicated by design: triage, revise, escalate, in that sequence, with each stage loading only the KB context relevant to the request tier. Low-complexity inbound traffic got Smart Brevity treatment and a documented rationale trail. Medium-complexity requests got a draft with flagged assumptions. High-touch requests — the ones with genuine ambiguity, political surface area, or escalation risk — got routed up with a structured brief rather than a raw forward. The agent categorized inbound traffic into those three tiers and routed accordingly, without a human in the loop on the resolution path.</p>
 <p>The craft decision that made it work wasn't the architecture — it was the negative training layer. Knowing what not to do mattered as much as the routing logic. The same instinct that later shaped the Voice DNA RAG pipeline's "Kill List" methodology was at work here: you don't build reliable agent behavior by showing the system good examples. You build it by also showing the system what got rejected and why. The triage agent's KB included explicit reasoning artifacts from prior escalations — why a given request had required human intervention, what the classification failure looked like, what the correction was. That gave the agent a risk-tolerance model, not just a routing table. It's the difference between a system that follows rules and a system that understands why the rules exist.</p>
 <p>The production result: more than 160 operational hours per year recaptured at greater than 90% classification accuracy across the full inbound stream. Not a prototype. Not a pilot. A production deployment serving Google's senior-most IC cohort — a population where each percentage point of attrition carries estimated eight-figure cost implications, which means every failure in the support infrastructure around them compounds in ways that don't show up on a triage dashboard. The system maintained 100% operational continuity through a multi-month absence in early 2026 without a single human intervention. It ran unattended. That's the only meaningful test of whether an agent is actually autonomous.</p>
 <p>What this story is actually about — for a role translating technical systems into developer narratives — is that I built the agent first and narrated what I built second. The triage system generated its own proof of concept for what I'd eventually have to explain to principals, to leadership, to anyone asking why the inbound queue had gone quiet. The discipline of building a system that could document its own reasoning — structured rationale trails, explicit KB references, tier classifications with logged justifications — is the same discipline that makes technical-to-narrative translation work. You cannot explain a system you don't understand mechanically. You cannot write for developers if you've only ever watched developers work. The triage agent taught me, through the act of building it, exactly which seams in an agent architecture require explanation and which ones are self-evident once you've seen them fail.</p>
-</div>
-<div class="footer">
-  Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
-  <a href="../index.html">← back to dashboard</a>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
 </div>
 </body></html>

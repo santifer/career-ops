@@ -4,40 +4,187 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>"Strong understanding of AI, ML, or adjacent scientific domains" + "tr — Mitchell Williams</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.65; color: #1a1a1a; background: #fafafa; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
-  .body { font-size: 15px; }
-  .body p { margin: 0 0 16px; }
-  .footer { font-size: 11px; color: #888; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; }
-  .humanize-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .humanize-low { background: #d4f4dd; color: #1a6b2b; }
-  .humanize-medium { background: #fff4d4; color: #6b5b1a; }
-  .humanize-high { background: #f4d4d4; color: #6b1a1a; }
-  a { color: #0a66c2; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #1a1a1a; color: #e8e8e8; }
-    .meta, .footer { color: #999; }
-    .footer { border-top-color: #333; }
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --green-fg: #16a34a;
+    --green-fg-dark: #166534;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --amber-fg: #a87b48;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    /* Council convergent tokens (P0-4): --link unified across dashboard + stories. */
+    --link: #0969da;
+    --link-hover: #0550ae;
+    --radius-sm: 6px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #06070d;
+      --surface: #11131c;
+      --surface-2: #181b27;
+      --border: #232737;
+      --text: #fafafa;
+      --text-2: #e4e4e7;
+      --text-3: #b8b8c0;
+      --green-fg: #86efac;
+      --green-fg-dark: #bbf7d0;
+      --green-bg: rgba(22,163,74,.12);
+      --green-border: rgba(22,163,74,.3);
+      --amber-fg: #d4ba84;
+      --amber-bg: rgba(168,123,72,.14);
+      --amber-border: rgba(168,123,72,.3);
+      --red-fg: #fca5a5;
+      --red-bg: rgba(220,38,38,.12);
+      --red-border: rgba(220,38,38,.3);
+      --link: #58a6ff;
+      --link-hover: #79c0ff;
+      --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--link);
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Reading-mode container: 68ch measure (council unanimous), 18px body, 1.62 line-height. */
+  body {
+    font-family: var(--font-sans);
+    max-width: 68ch;
+    margin: 56px auto;
+    padding: 0 24px;
+    line-height: 1.62;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 16px;
+  }
+  /* Proof-rail: 2px vertical accent in the left gutter — gpt-5's recommendation,
+     thematically ties to "proof point" content rather than blog-post styling. */
+  .reading-shell {
+    position: relative;
+    padding-left: 18px;
+  }
+  .reading-shell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--link);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 32px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .body {
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--text-2);
+  }
+  .body p { margin: 0 0 22px; }
+  .footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    letter-spacing: 0.005em;
+  }
+  .humanize-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .humanize-low {
+    background: var(--green-bg);
+    color: var(--green-fg-dark);
+    border-color: var(--green-border);
+  }
+  .humanize-medium {
+    background: var(--amber-bg);
+    color: var(--amber-fg);
+    border-color: var(--amber-border);
+  }
+  .humanize-high, .humanize-critical {
+    background: var(--red-bg);
+    color: var(--red-fg);
+    border-color: var(--red-border);
+  }
+  .humanize-unknown {
+    background: var(--surface-2);
+    color: var(--text-3);
+    border-color: var(--border);
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color .12s ease;
+  }
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 3px;
+  }
+  .back-link { color: var(--text-3); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
 </style>
 </head><body>
-<h1>"Strong understanding of AI, ML, or adjacent scientific domains" + "translate complex technical work"</h1>
-<div class="meta">
-  Source: OpenAI — Research Communications Manager ·
-  <span class="humanize-badge humanize-low">Humanize: 2% low</span>
-</div>
-<div class="body">
+<div class="reading-shell">
+  <h1>"Strong understanding of AI, ML, or adjacent scientific domains" + "translate complex technical work"</h1>
+  <div class="meta">
+    <span>Source: OpenAI — Research Communications Manager</span>
+    <span class="humanize-badge humanize-low">Humanize: 2% low</span>
+  </div>
+  <div class="body">
 <p>The problem wasn't volume. It was that the volume was invisible until it wasn't — until a senior engineer's request had been sitting in a queue for three days because nothing in the workflow knew it was high-stakes, and the person holding that triage decision was me.</p>
 <p>Inside Google's Office of Cross-Google Engineering, I supported roughly 1,000 of the most senior technical individual contributors in the company — Principal, Distinguished, and Google Fellow engineers representing the top 0.5% of a 180,000-person organization. Inbound communications requests came in at every complexity level simultaneously: a low-stakes calendar note that needed Smart Brevity applied, a VP's external announcement requiring careful voice calibration, an escalation with reputational implications that needed a human call within hours. The workflow treating all of them as equivalent was the problem. Building something that could tell them apart — and act on the difference without waiting for me — was the assignment I gave myself.</p>
 <p>The architecture I settled on was deliberately constrained: three prompts, one agent, conditional knowledge base loading. The first prompt triaged and classified — Low, Medium, or High touch — based on a signal set that included sender seniority, subject-line semantics, and whether the request touched anything flagged in the KB as sensitive territory. The second prompt handled resolution on Low-touch inbound, applying Smart Brevity with a documented rationale log so every automated output had a traceable decision chain I could audit. The third prompt composed a structured escalation brief for anything the first two couldn't safely resolve — including the specific classification confidence score and the triggering signals, so when something reached me it came with a diagnosis, not just a flag. Conditional KB loading meant the agent wasn't pulling the full knowledge base on every request; it loaded only the relevant context slice for the tier it had classified, which cut latency and kept the outputs clean. The whole system ran on a single Gemini agent. No multi-agent orchestration, no redundant scaffolding. The constraint was the point — I needed something I could trust to run unattended, which meant I needed something simple enough to audit when it made a mistake.</p>
 <p>What I understood coming into the build — and what I think is genuinely hard to understand without a decade of live editorial production — is that classification accuracy and voice fidelity are different problems that feel like the same problem until they're not. Classification accuracy is about the triage prompt reading signal correctly. Voice fidelity is about the revision prompt knowing what the organization sounds like under pressure, at speed, for a specific tier of audience. The work I'd done on the Executive RAG pipeline — the Voice DNA corpus methodology, the Kill List of rejected drafts that taught the agent what the VP would never say — directly informed how I built the knowledge base for the triage system's resolution layer. The KB wasn't a FAQ. It was a behavioral model: how this organization communicates with senior ICs, what register lands for a Fellow versus a Principal, what level of directness is appropriate at each touch tier. That's not an AI problem. That's an editorial problem that an AI system can execute once someone who has actually worked editorial has solved it.</p>
 <p>The deployed system recaptured approximately 160 operational hours per year at greater than 90% classification accuracy across the full inbound stream. Those aren't prototype numbers from a controlled evaluation — that's production throughput from a system running on live organizational traffic for the senior IC population it was built to serve. The clearest validation came later, during a multi-month absence in early 2026: the triage system maintained 100% operational continuity without a single human intervention across the full period. Nothing broke. Nothing escalated incorrectly. The work I had put into the decision logic meant the agent wasn't just pattern-matching — it was executing a judgment framework that held up when I wasn't there to catch its errors.</p>
 <p>What this story is really about is the specific kind of knowledge that makes an AI system trustworthy at the edge cases. The classification accuracy on straightforward requests isn't the hard part — any reasonably scoped prompt can handle those. The hard part is the request that looks routine but isn't, the one where the right call is "escalate this immediately" and the wrong call is "resolve with Smart Brevity." Building a system that gets those calls right requires someone who has internalized what makes communications high-stakes in an organizational context — who has worked in environments where the cost of a wrong editorial decision is measurable, documented, and sometimes litigated. The decade I spent making live editorial calls under exactly those conditions is not separate from the engineering work. It is the engineering work.</p>
-</div>
-<div class="footer">
-  Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md ·
-  <a href="../index.html">← back to dashboard</a>
+  </div>
+  <div class="footer">
+    <span>Generated 2026-05-18 · voice-calibrated against writing-samples/voice-reference.md, cv.md, article-digest.md</span>
+    <span style="margin-left:auto"><a href="../index.html" class="back-link">← back to dashboard</a></span>
+  </div>
 </div>
 </body></html>
