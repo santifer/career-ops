@@ -3720,6 +3720,63 @@ function build() {
       }
     } catch (_) { _cbData.provenanceSummaries = {}; }
 
+    // Company toxicity scores (data/toxicity/{slug}.json if exists)
+    // Schema: { score: 0-10, drivers: string[], source: string, ts: ISO }
+    try {
+      _cbData.toxicity = {};
+      const _toxDir = join(ROOT, 'data/toxicity');
+      if (existsSync(_toxDir)) {
+        for (const _f of readdirSync(_toxDir)) {
+          if (!_f.endsWith('.json')) continue;
+          try {
+            const _tx = JSON.parse(readFileSync(join(_toxDir, _f), 'utf-8'));
+            const _slug = _f.replace(/\.json$/, '');
+            _cbData.toxicity[_slug] = _tx;
+          } catch (_) {}
+        }
+      }
+    } catch (_) { _cbData.toxicity = {}; }
+
+    // Company reviews (data/glassdoor/{slug}.json or data/blind/{slug}.json if exists)
+    // Schema: { glassdoor: string, blind: string, pros: string, cons: string }
+    try {
+      _cbData.companyReviews = {};
+      const _gdDir = join(ROOT, 'data/glassdoor');
+      const _blDir = join(ROOT, 'data/blind');
+      const _revSlugs = new Set();
+      if (existsSync(_gdDir)) readdirSync(_gdDir).forEach(f => f.endsWith('.json') && _revSlugs.add(f.replace(/\.json$/,'')));
+      if (existsSync(_blDir)) readdirSync(_blDir).forEach(f => f.endsWith('.json') && _revSlugs.add(f.replace(/\.json$/,'')));
+      for (const _slug of _revSlugs) {
+        try {
+          const _rd = {};
+          const _gdPath = join(_gdDir, _slug + '.json');
+          const _blPath = join(_blDir, _slug + '.json');
+          if (existsSync(_gdPath)) { const g = JSON.parse(readFileSync(_gdPath,'utf-8')); _rd.glassdoor = g.summary || g.rating || ''; _rd.pros = g.pros || ''; _rd.cons = g.cons || ''; }
+          if (existsSync(_blPath)) { const b = JSON.parse(readFileSync(_blPath,'utf-8')); _rd.blind = b.summary || b.rating || ''; }
+          if (Object.keys(_rd).some(k => _rd[k])) _cbData.companyReviews[_slug] = _rd;
+        } catch (_) {}
+      }
+    } catch (_) { _cbData.companyReviews = {}; }
+
+    // Company funding data (data/companies/{slug}.json if exists)
+    // Schema: { stage: str, status: str, valuation: str, ipo_target: str, rounds: [{date,series,amount,lead}] }
+    try {
+      _cbData.companyFunding = {};
+      const _coDir = join(ROOT, 'data/companies');
+      if (existsSync(_coDir)) {
+        for (const _f of readdirSync(_coDir)) {
+          if (!_f.endsWith('.json')) continue;
+          try {
+            const _fd = JSON.parse(readFileSync(join(_coDir, _f), 'utf-8'));
+            const _slug = _f.replace(/\.json$/, '');
+            if (_fd.stage || _fd.status || _fd.valuation || _fd.ipo_target || (_fd.rounds && _fd.rounds.length)) {
+              _cbData.companyFunding[_slug] = _fd;
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) { _cbData.companyFunding = {}; }
+
     // Row data snapshot for banner-roles drill-in (last scan from pipeline.md)
     try {
       if (existsSync(PIPELINE_PATH)) {
@@ -4675,6 +4732,12 @@ function build() {
   }
   .live-ticker[data-anim="out"] .live-text { opacity: 0; }
   .live-ticker[data-empty="1"] .live-text { font-style: italic; opacity: .7; }
+  /* Ticker company drill links — inline span inside live-text. */
+  .ticker-drill-company {
+    color: inherit; text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; border-radius: 2px;
+  }
+  .ticker-drill-company:hover { color: var(--green-fg, #16a34a); text-decoration-style: solid; }
   @media (prefers-reduced-motion: reduce) {
     .live-ticker .live-dot { animation: none !important; }
     .live-text { transition: none; }
@@ -4813,7 +4876,6 @@ function build() {
   /* Fix 2: career tile accent classes */
   .stat-burndown-urgent::before { background: var(--red-fg, #dc2626); }
   .stat-burndown-warn::before   { background: var(--amber-fg, #d97706); }
-  .stat-anchor-2031::before     { background: var(--blue-fg, #0969da); }
 
   /* ── Cmd-K command palette ─────────────────────────────────── */
   #cmdk-backdrop {
@@ -5966,6 +6028,20 @@ function build() {
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  /* Enhanced company profile sections */
+  .company-profile-section { margin-bottom: 8px; }
+  .company-profile-section--pending { opacity: 0.75; }
+  .company-profile-header { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .company-profile-body { font-size: 12px; color: var(--text-2); }
+  .cp-pending-label { font-size: 11px; color: var(--text-4); font-style: italic; margin-right: 10px; }
+  .cp-refresh-btn {
+    font-size: 11px; padding: 2px 10px; border-radius: var(--radius-sm);
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-2); cursor: pointer; transition: background .1s;
+  }
+  .cp-refresh-btn:hover { background: var(--surface-3, var(--surface)); color: var(--text); }
+  .cp-refresh-btn:disabled { opacity: 0.5; cursor: default; }
+  .cp-refresh-all-btn { font-weight: 600; }
   /* "Likely responsibilities" one-line surface in Role-at-a-glance (2026-05-17). */
   .dcard-resp-line {
     margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
@@ -8783,7 +8859,7 @@ function build() {
   }
 </style>
 </head>
-<body>
+<body class="dark">
 <a class="skip-link" href="#main">Skip to main content</a>
 
 <!-- Hamburger toggle (mobile only) and overlay backdrop for the
@@ -9226,11 +9302,10 @@ function build() {
         const appsNeeded = Math.max(1, applyNow.length === 0 ? 1 : applyNow.length);
         const appsPerDay = daysLeft > 0 ? (appsNeeded / daysLeft).toFixed(2) : '—';
         const urgencyCls = daysLeft <= 30 ? 'stat-cell stat-burndown-urgent' : daysLeft <= 60 ? 'stat-cell stat-burndown-warn' : 'stat-cell';
-        return `<div class="stat ${urgencyCls}" onclick="window.drillIn('anchor-2031','',event)" title="Q3 2026 landing deadline — ${daysLeft} days remaining · click for 2031 milestone detail" role="button" tabindex="0">
+        return `<div class="stat ${urgencyCls}" title="Q3 2026 landing deadline — ${daysLeft} days remaining">
           <div class="stat-label"><span class="label-full">Q3 2026 · Days left</span><span class="label-short">Days left</span></div>
           <div class="stat-value" style="font-variant-numeric:tabular-nums">${daysLeft}</div>
           <div class="stat-trend"><span class="stat-delta ${daysLeft <= 30 ? 'stat-delta-down' : 'stat-delta-flat'}" title="${pctElapsed}% of search window elapsed · ~${appsPerDay} apps/day needed">~${appsPerDay} apps/day</span></div>
-          <span class="stat-caret" aria-hidden="true">▾</span>
         </div>`;
       })()}
       <!-- Tile 2: Network leverage — warm-intro paths -->
@@ -9238,13 +9313,6 @@ function build() {
         <div class="stat-label"><span class="label-full">Press network</span><span class="label-short">Network</span></div>
         <div class="stat-value">340</div>
         <div class="stat-trend"><span class="stat-delta stat-delta-flat" id="live-warm-intros" title="Warm-intro paths to companies in your apply-now queue">loading…</span></div>
-        <span class="stat-caret" aria-hidden="true">▾</span>
-      </div>
-      <!-- Tile 3: 2031 wealth-trajectory anchor — links to long-arc milestone -->
-      <div class="stat stat-cell stat-anchor-2031" onclick="window.drillIn('anchor-2031','',event)" title="2031 Business Class Freedom milestone — click for full milestone timeline" role="button" tabindex="0" aria-label="2031 long-arc wealth anchor — Business Class Freedom by January 2031">
-        <div class="stat-label"><span class="label-full">2031 anchor</span><span class="label-short">2031</span></div>
-        <div class="stat-value" style="font-size:14px;letter-spacing:0;font-family:inherit;font-weight:700">✈ Free</div>
-        <div class="stat-trend"><span class="stat-delta stat-delta-flat" title="Business Class Freedom · United Global Services · 1.75M miles by Jan 2031">Jan 2031</span></div>
         <span class="stat-caret" aria-hidden="true">▾</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
@@ -9261,50 +9329,6 @@ function build() {
   <div style="margin:12px 0 0;max-width:540px">
     ${tpgmWidgetHtml}
   </div>
-
-  <!-- Fix 5: 2031 long-arc anchor widget — below KPI tiles + TPgM widget.
-       Source: 00_Master_Knowledge_Base.md §Financial Strategy + §Travel & Lifestyle.
-       This job search is a means, not the end — surface the actual goal.
-       DESIGN_PRINCIPLES.md §Pillar 3: surface both the goal AND the bridge costs.
-       Click anywhere on the widget → anchor-2031 drill-in with full milestone timeline. -->
-  ${(() => {
-    const DEADLINE_ISO = '2026-09-30';
-    const daysToLand = Math.max(0, Math.round((new Date(DEADLINE_ISO).getTime() - Date.now()) / 86400000));
-    const milestones = [
-      { date: 'Q3 2026',  label: 'Land role',                  icon: '🏁' },
-      { date: 'Jun 2027', label: 'Premier 1K',                  icon: '✈' },
-      { date: 'Dec 2027', label: '1M miles',                    icon: '📍' },
-      { date: 'Q1 2030',  label: 'Global Services',             icon: '⭐' },
-      { date: 'Dec 2030', label: '1.75M miles',                 icon: '📍' },
-      { date: 'Jan 2031', label: 'FREEDOM',                     icon: '🌏' },
-    ];
-    const timelineItems = milestones.map((m, i) => {
-      const isFirst = i === 0;
-      const isLast = i === milestones.length - 1;
-      const accent = isFirst ? 'var(--green-fg)' : isLast ? 'var(--blue-fg)' : 'var(--border-strong)';
-      return `<div class="anchor-2031-step" style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:72px;max-width:90px">
-        <div style="font-size:15px;line-height:1">${m.icon}</div>
-        <div style="font-size:10px;font-weight:600;color:${accent};text-align:center;line-height:1.2">${m.date}</div>
-        <div style="font-size:11px;color:var(--text-2);text-align:center;line-height:1.2;word-break:keep-all">${m.label}</div>
-      </div>
-      ${i < milestones.length - 1 ? '<div style="flex:1 1 auto;height:2px;background:var(--border);align-self:center;margin-bottom:24px;min-width:8px"></div>' : ''}`;
-    }).join('');
-    return `<div class="anchor-2031-widget" onclick="window.drillIn('anchor-2031','',event)"
-      role="button" tabindex="0"
-      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('anchor-2031','',event)}"
-      title="2031 anchor: Business Class Freedom · United Global Services · 1.75M miles — click for full milestone detail"
-      aria-label="2031 long-arc anchor: Business Class Freedom by January 2031 — click for details"
-      style="margin:16px 0 0;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);cursor:pointer;border-left:3px solid var(--blue-fg);transition:border-color .12s,box-shadow .12s;max-width:660px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em">2031 anchor · Business class freedom</div>
-        <div style="font-size:11px;color:var(--text-3)">${daysToLand}d to land ▸</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px">
-        ${timelineItems}
-      </div>
-      <div style="font-size:10px;color:var(--text-4);margin-top:10px;border-top:1px solid var(--border);padding-top:6px">Source: 00_Master_Knowledge_Base.md §Financial Strategy · §Travel &amp; Lifestyle</div>
-    </div>`;
-  })()}
 
   ${sideAllocations.length > 0 ? `
   <!-- I1 Wave G1: 20%-time / side-allocations tile -->
@@ -9715,8 +9739,41 @@ function _liveFreshness(ageMs) {
   if (ageMs < 21600000)     return 'warm';
   return 'stale';
 }
+// ── Ticker company/role drill helpers ──────────────────────────
+// Slugify a company name the same way renderRow does.
+function _tickerSlug(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+// Render a company name as a drill-clickable span inside the ticker.
+// Uses data-slug + delegated handler (avoids inline quote-escaping issues).
+function _tickerCompanyHtml(name) {
+  var slug = _tickerSlug(name);
+  var safe = String(name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<span class="ticker-drill-company" data-drill="company:' + slug + '" data-slug="' + slug + '"'
+    + ' tabindex="0" role="button" title="View ' + safe + ' company profile">'
+    + safe + '</span>';
+}
+// Delegated click/key handler for ticker + scan-activity company drill spans.
+(function() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('.ticker-drill-company,.sa-drill-company');
+    if (!el) return;
+    e.stopPropagation();
+    var slug = el.dataset.slug || '';
+    if (slug && window.drillIn) window.drillIn('company', slug, e);
+  });
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('.ticker-drill-company,.sa-drill-company');
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation(); e.preventDefault();
+      var slug = el.dataset.slug || '';
+      if (slug && window.drillIn) window.drillIn('company', slug, e);
+    }
+  });
+})();
 function _liveFormat(ev) {
-  return 'Scanned ' + ev.company + ' · ' + ev.count + ' new role' + (ev.count === 1 ? '' : 's') + ' · ' + _liveAge(Date.now() - new Date(ev.ts).getTime());
+  return 'Scanned ' + _tickerCompanyHtml(ev.company) + ' &middot; ' + ev.count + ' new role' + (ev.count === 1 ? '' : 's') + ' &middot; ' + _liveAge(Date.now() - new Date(ev.ts).getTime());
 }
 function initLiveTicker() {
   const el = document.getElementById('live-ticker');
@@ -9738,21 +9795,21 @@ function initLiveTicker() {
     el.setAttribute('title', 'Last scan: ' + hhmm + ' PT · click to expand');
   };
   setFreshness();
-  // Mobile tap-to-expand
-  el.addEventListener('click', () => el.classList.toggle('expanded'));
+  // Mobile tap-to-expand (only when clicking the strip background, not a company link)
+  el.addEventListener('click', (e) => { if (!e.target.closest('.ticker-drill-company')) el.classList.toggle('expanded'); });
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced || events.length === 1) {
-    txt.textContent = _liveFormat(events[0]);
-    setInterval(() => { txt.textContent = _liveFormat(events[0]); setFreshness(); }, 30000);
+    txt.innerHTML = _liveFormat(events[0]);
+    setInterval(() => { txt.innerHTML = _liveFormat(events[0]); setFreshness(); }, 30000);
     return;
   }
   let i = 0;
-  txt.textContent = _liveFormat(events[0]);
+  txt.innerHTML = _liveFormat(events[0]);
   setInterval(() => {
     el.setAttribute('data-anim', 'out');
     setTimeout(() => {
       i = (i + 1) % events.length;
-      txt.textContent = _liveFormat(events[i]);
+      txt.innerHTML = _liveFormat(events[i]);
       setFreshness();
       el.setAttribute('data-anim', 'in');
     }, 350);
@@ -11335,42 +11392,255 @@ _drillInRegister('role', function(id) {
   }
   return { title: 'Role #' + num, html: '<p class="muted">Row not found — try opening from the table.</p>' };
 });
+// ── Enhanced company profile drill (9-section) ─────────────────────────────
+// Sections: Header · Toxicity · Comp range · Employee reviews · Social signals
+//           · IPO/funding · Funding cycles · Active roles · Network leverage
+//
+// Sections backed by real data render immediately.
+// Missing-data sections show a "Pending research" placeholder + Refresh button.
+//
+// Refresh buttons write to data/company-research-queue/{slug}.json — a flag
+// file that a future cron worker (scripts/company-research-worker.mjs, not yet
+// built) picks up to populate the section. They do NOT call researcher inline
+// (would hang: researcher only fires from within the Claude Code agent context).
+//
+// §10 Toxicity Composite: if data/toxicity/{slug}.json exists, use it.
+// Otherwise show placeholder. Score 0-10 (0=healthiest, 10=avoid).
 _drillInRegister('company', function(id) {
   var slug = id || '';
   var compName = slug.split('-').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
-  // Wave C-B enrichment: network contacts + company pulse (pre-baked in _waveCB.companyData)
   var cb = window._waveCB || {};
-  var netHtml = '';
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  function _esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function _dcard(title, content, extraCls) {
+    return '<div class="dcard company-profile-section' + (extraCls ? ' ' + extraCls : '') + '">'
+      + '<div class="dcard-label">' + title + '</div>'
+      + '<div class="company-profile-body">' + content + '</div>'
+      + '</div>';
+  }
+  function _pendingCard(title, sectionKey) {
+    // data-slug + data-refresh-section handled by delegated cp-refresh-btn listener
+    return _dcard(title,
+      '<span class="cp-pending-label">Pending research</span>'
+      + '<button type="button" class="cp-refresh-btn" data-refresh-section="' + _esc(sectionKey) + '"'
+      + ' data-slug="' + _esc(slug) + '"'
+      + '>Refresh</button>',
+      'company-profile-section--pending');
+  }
+
+  // ── Section 1: Header (always available) ────────────────────────────────
+  var tableRows = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
+  var scores = tableRows.map(function(r) { return parseFloat(r.dataset.score)||0; }).filter(Boolean);
+  var scoreMin = scores.length ? Math.min.apply(null,scores).toFixed(1) : '—';
+  var scoreMax = scores.length ? Math.max.apply(null,scores).toFixed(1) : '—';
+  var scoreMed = scores.length ? (scores.reduce(function(a,b){return a+b;},0)/scores.length).toFixed(1) : '—';
+
+  // Determine tier badge from most common archetype
+  var archCounts = {};
+  tableRows.forEach(function(r) {
+    var a = r.dataset.archetype || '';
+    if (a) archCounts[a] = (archCounts[a]||0) + 1;
+  });
+  var topArch = Object.keys(archCounts).sort(function(a,b){ return archCounts[b]-archCounts[a]; })[0] || '';
+
+  var headerHtml = '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">'
+    + '<span style="font-size:16px;font-weight:700;color:var(--text)">' + _esc(compName) + '</span>'
+    + (topArch ? '<span class="tier-tag" style="font-size:11px">' + _esc(topArch) + '</span>' : '')
+    + '</div>'
+    + (scores.length ? '<div style="font-size:12px;color:var(--text-3);margin-top:4px">'
+      + 'Score range: <strong>' + scoreMin + '</strong> – <strong>' + scoreMax + '</strong>'
+      + ' &middot; avg <strong>' + scoreMed + '</strong>'
+      + ' &middot; ' + scores.length + ' evaluated role' + (scores.length===1?'':'s')
+      + '</div>'
+      : '<div style="font-size:12px;color:var(--text-4);margin-top:4px">No evaluated roles yet</div>');
+
+  // ── Section 2: Toxicity score ────────────────────────────────────────────
+  // Reads window._waveCB.toxicity[slug] if baked at build time.
+  // Fallback: pending-research placeholder with refresh button.
+  var toxData = ((cb.toxicity || {})[slug]) || null;
+  var toxHtml;
+  if (toxData && typeof toxData.score === 'number') {
+    var txScore = toxData.score;
+    var txColor = txScore <= 2 ? 'var(--green-fg,#16a34a)' : txScore <= 5 ? 'var(--amber-fg,#d97706)' : 'var(--red-fg,#dc2626)';
+    var txLabel = txScore <= 2 ? 'Healthy' : txScore <= 5 ? 'Caution' : 'Avoid';
+    var drivers = (toxData.drivers || []).slice(0,4);
+    toxHtml = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+      + '<span style="font-size:24px;font-weight:700;color:' + txColor + '">' + txScore + '</span>'
+      + '<span style="font-size:11px;font-weight:600;color:' + txColor + '">' + txLabel + '</span>'
+      + '<span style="font-size:11px;color:var(--text-4)">/10 · 0=healthiest</span>'
+      + '</div>'
+      + (drivers.length ? '<ul style="font-size:11px;color:var(--text-3);margin:0;padding:0 0 0 14px">'
+        + drivers.map(function(d){return '<li>' + _esc(d) + '</li>';}).join('')
+        + '</ul>' : '');
+    toxHtml = _dcard('Toxicity Score', toxHtml);
+  } else {
+    toxHtml = _pendingCard('Toxicity Score', 'toxicity');
+  }
+
+  // ── Section 3: Comp range ────────────────────────────────────────────────
+  var compRanges = [];
+  tableRows.forEach(function(r) {
+    var compText = (r.dataset.comp || r.querySelector && (r.querySelector('.comp-floor-value')||{}).textContent || '').trim();
+    if (compText) compRanges.push(compText);
+  });
+  var compRangeHtml;
+  if (compRanges.length) {
+    compRangeHtml = _dcard('Comp Range (from evals)', compRanges.map(function(c){
+      return '<span style="font-size:12px;color:var(--text-2)">' + _esc(c) + '</span>';
+    }).join(' &middot; '));
+  } else {
+    compRangeHtml = _pendingCard('Comp Range', 'comp-range');
+  }
+
+  // ── Section 4: Employee reviews ──────────────────────────────────────────
+  var reviewData = ((cb.companyReviews || {})[slug]) || null;
+  var reviewHtml;
+  if (reviewData) {
+    var revRows = '';
+    if (reviewData.glassdoor) revRows += '<div style="font-size:12px;color:var(--text-2);margin-bottom:4px"><strong>Glassdoor:</strong> ' + _esc(reviewData.glassdoor) + '</div>';
+    if (reviewData.blind)     revRows += '<div style="font-size:12px;color:var(--text-2);margin-bottom:4px"><strong>Blind:</strong> ' + _esc(reviewData.blind) + '</div>';
+    if (reviewData.pros)      revRows += '<div style="font-size:11px;color:var(--green-fg,#16a34a)">+ ' + _esc(reviewData.pros) + '</div>';
+    if (reviewData.cons)      revRows += '<div style="font-size:11px;color:var(--red-fg,#dc2626)">- ' + _esc(reviewData.cons) + '</div>';
+    reviewHtml = revRows ? _dcard('Employee Reviews', revRows) : _pendingCard('Employee Reviews', 'reviews');
+  } else {
+    reviewHtml = _pendingCard('Employee Reviews', 'reviews');
+  }
+
+  // ── Section 5: Social signals (pulse) ────────────────────────────────────
   var pulseHtml = '';
-  try { var cd = (cb.companyData || {})[slug]; if (cd) { netHtml = cd.networkHtml||''; pulseHtml = cd.pulseHtml||''; } } catch(_) {}
+  try { var cd = (cb.companyData || {})[slug]; if (cd) pulseHtml = cd.pulseHtml || ''; } catch(_) {}
+  var socialHtml = pulseHtml
+    ? _dcard('Social Signals (last 7d)', pulseHtml)
+    : _pendingCard('Social Signals', 'social-signals');
+
+  // ── Section 6: IPO / Funding ─────────────────────────────────────────────
+  var ipoData = ((cb.companyFunding || {})[slug]) || null;
+  var ipoHtml;
+  if (ipoData && (ipoData.stage || ipoData.status)) {
+    var ipoRows = '';
+    if (ipoData.status)     ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>Status:</strong> ' + _esc(ipoData.status) + '</div>';
+    if (ipoData.stage)      ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>Stage:</strong> ' + _esc(ipoData.stage) + '</div>';
+    if (ipoData.valuation)  ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>Valuation:</strong> ' + _esc(ipoData.valuation) + '</div>';
+    if (ipoData.ipo_target) ipoRows += '<div style="font-size:12px;color:var(--text-2)"><strong>IPO target:</strong> ' + _esc(ipoData.ipo_target) + '</div>';
+    ipoHtml = _dcard('IPO / Funding', ipoRows);
+  } else {
+    ipoHtml = _pendingCard('IPO / Funding', 'ipo-funding');
+  }
+
+  // ── Section 7: Funding cycles ────────────────────────────────────────────
+  var fundingRounds = (ipoData && ipoData.rounds) || null;
+  var fundingHtml;
+  if (fundingRounds && fundingRounds.length) {
+    var roundRows = fundingRounds.map(function(r) {
+      return '<div style="display:flex;gap:8px;font-size:11.5px;color:var(--text-2);padding:3px 0;border-bottom:1px solid var(--border)">'
+        + '<span style="flex:0 0 60px;color:var(--text-4)">' + _esc(r.date||'') + '</span>'
+        + '<span style="font-weight:600">' + _esc(r.series||'') + '</span>'
+        + (r.amount ? '<span style="color:var(--green-fg,#16a34a)">' + _esc(r.amount) + '</span>' : '')
+        + (r.lead ? '<span style="color:var(--text-3)">' + _esc(r.lead) + '</span>' : '')
+        + '</div>';
+    }).join('');
+    fundingHtml = _dcard('Funding Cycles', roundRows);
+  } else {
+    fundingHtml = _pendingCard('Funding Cycles', 'funding-cycles');
+  }
+
+  // ── Section 8: Active roles at this company (always available) ───────────
+  var netHtml = '';
+  try { var cd2 = (cb.companyData || {})[slug]; if (cd2) netHtml = cd2.networkHtml || ''; } catch(_) {}
+
+  // ── Section 9: Network leverage (always available if graph populated) ────
+  var networkSection = netHtml
+    ? _dcard('Network Leverage', netHtml)
+    : _dcard('Network Leverage', '<p style="font-size:12px;color:var(--text-4)">Run <code>node scripts/build-network-graph.mjs</code> to populate warm-intro paths.</p>');
+
+  // ── Refresh-all button ───────────────────────────────────────────────────
+  // Queues a researcher-agent run by writing data/company-research-queue/{slug}.json.
+  // The runtime-bridge gap (researcher only fires from within Claude Code agent context)
+  // means we cannot invoke it inline here — the queue file is picked up by a future
+  // cron worker (scripts/company-research-worker.mjs). Clicking Refresh-all queues
+  // ALL sections; individual Refresh buttons queue just their section.
+  // data-slug + data-refresh-section="all" handled by delegated cp-refresh-btn listener
+  var refreshAllBtn = '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)">'
+    + '<button type="button" class="cp-refresh-btn cp-refresh-all-btn"'
+    + ' data-slug="' + _esc(slug) + '" data-refresh-section="all">'
+    + 'Refresh all sections</button>'
+    + '<span style="font-size:10px;color:var(--text-4);margin-left:8px">Queues researcher agent run — picks up on next cron tick</span>'
+    + '</div>';
+
+  // ── Assemble ─────────────────────────────────────────────────────────────
+  var bodyHtml = '<div class="company-profile-header">' + headerHtml + '</div>'
+    + toxHtml
+    + compRangeHtml
+    + reviewHtml
+    + socialHtml
+    + ipoHtml
+    + fundingHtml
+    + '<div id="drill-company-rows"></div>'
+    + networkSection
+    + refreshAllBtn;
+
   return {
-    title: compName + ' — all roles',
-    html: '<p class="muted" style="font-size:12px">Showing all evaluated roles at <strong>' + compName + '</strong>.</p>'
-      + (pulseHtml ? '<div style="margin:8px 0 4px">' + pulseHtml + '</div>' : '')
-      + (netHtml ? '<div style="margin:8px 0 4px">' + netHtml + '</div>' : '')
-      + '<div id="drill-company-rows"></div>',
+    title: compName + ' — company profile',
+    html: bodyHtml,
     onMount: function(el) {
-      var rows = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
-      if (!rows.length) {
-        var div = el.querySelector('#drill-company-rows');
-        if (div) div.innerHTML = '<p class="muted" style="font-size:12px">No evaluated roles found for this company.</p>';
-        return;
-      }
-      var items = rows.map(function(r) {
-        var role = (r.querySelector('td.role-cell') || {}).innerText || '';
-        var score = r.dataset.score || '';
-        var status = r.dataset.status || '';
-        var idx = r.dataset.rowId || '';
-        return '<div class="drill-company-row" onclick="closeTopLevelDrillIn();toggleDetail(\\'' + idx + '\\')" style="cursor:pointer;padding:6px 8px;border-radius:5px;margin:3px 0;background:var(--surface-2);display:flex;align-items:center;gap:10px">'
-          + '<span style="font-size:11px;font-weight:600;color:var(--green)">' + (parseFloat(score)||0).toFixed(1) + '</span>'
-          + '<span style="flex:1;font-size:12.5px">' + (role||'').slice(0,80) + '</span>'
-          + '<span style="font-size:11px;color:var(--text-3)">' + status + '</span>'
-          + '</div>';
-      }).join('');
+      // Section 8: render active roles
+      var rowEls = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
       var div = el.querySelector('#drill-company-rows');
-      if (div) div.innerHTML = items;
+      if (div) {
+        if (!rowEls.length) {
+          div.innerHTML = _dcard('Active Roles', '<p style="font-size:12px;color:var(--text-4)">No evaluated roles found for this company.</p>');
+        } else {
+          var items = rowEls.map(function(r) {
+            var role = (r.querySelector('td.role-cell') || {}).innerText || '';
+            var score = r.dataset.score || '';
+            var status = r.dataset.status || '';
+            var idx = r.dataset.rowId || '';
+            return '<div class="drill-company-row" onclick="closeTopLevelDrillIn();toggleDetail(\\'' + idx + '\\')" style="cursor:pointer;padding:6px 8px;border-radius:5px;margin:3px 0;background:var(--surface-2);display:flex;align-items:center;gap:10px">'
+              + '<span style="font-size:11px;font-weight:600;color:var(--green)">' + (parseFloat(score)||0).toFixed(1) + '</span>'
+              + '<span style="flex:1;font-size:12.5px">' + _esc(role||'').slice(0,80) + '</span>'
+              + '<span style="font-size:11px;color:var(--text-3)">' + _esc(status) + '</span>'
+              + '</div>';
+          }).join('');
+          div.innerHTML = _dcard('Active Roles (' + rowEls.length + ')', items);
+        }
+      }
     },
   };
+});
+
+// ── Company research queue helper (Refresh button handler) ─────────────────
+// Writes data/company-research-queue/{slug}.json via /api/queue-research.
+// If the server endpoint is unavailable (static mode), logs to console.
+// Does NOT call researcher directly — the runtime-bridge gap means researcher
+// can only fire from within the Claude Code agent context.
+window._cpQueueRefresh = function(slug, section, btn) {
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Queued…';
+  }
+  fetch('/api/queue-research', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug: slug, section: section, ts: new Date().toISOString() }),
+  }).then(function(r) {
+    if (btn) { btn.textContent = r.ok ? 'Queued ✓' : 'Queue failed'; }
+    if (!r.ok) console.warn('[company-profile] /api/queue-research returned', r.status);
+  }).catch(function(err) {
+    if (btn) btn.textContent = 'Queue failed';
+    console.warn('[company-profile] queue-research fetch error:', err.message);
+  });
+};
+// Delegated click handler for .cp-refresh-btn (avoids inline onclick string-quoting issues).
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.cp-refresh-btn');
+  if (!btn) return;
+  var slug = btn.dataset.slug || '';
+  var section = btn.dataset.refreshSection || btn.dataset.refresh_section || 'all';
+  if (slug) window._cpQueueRefresh(slug, section, btn);
 });
 _drillInRegister('status', function(id) {
   var status = id || '';
@@ -11652,39 +11922,6 @@ _drillInRegister('tpgm-gaps', function(id) {
     html: '<p style="font-size:12px;margin-bottom:8px">Open gap points &mdash; each represents a bridgeable PM-credibility signal:</p>'
       + items
       + '<p style="font-size:11px;color:var(--text-4);margin-top:10px">Add evidence via <button type="button" class="dcard-btn" style="font-size:11px;padding:2px 8px" onclick="drillIn(&quot;ingest-form&quot;,&quot;&quot;,event)">+ weekly ingest</button> to close gaps.</p>',
-  };
-});
-
-// Fix 2 + Fix 5: 2031 long-arc anchor drill-in
-// Source: 00_Master_Knowledge_Base.md §Financial Strategy + §Travel & Lifestyle
-// Milestones from §Key Milestones table, embedded at build time.
-// DESIGN_PRINCIPLES.md §Pillar 3: surface both the goal AND the bridge-cost.
-_drillInRegister('anchor-2031', function() {
-  var milestones = [
-    { date: 'Q3 2026',  label: 'Land role',                  detail: '$96k vesting from year 1 · target TC $250-320K' },
-    { date: 'Jun 2027', label: 'Premier 1K',                  detail: 'United Premier 1K status achievement' },
-    { date: 'Dec 2027', label: '1M award miles',               detail: 'First million-mile milestone · ~14 business class awards' },
-    { date: 'Q1 2030',  label: 'Global Services invitation',   detail: 'United Global Services — the top loyalty tier' },
-    { date: 'Dec 2030', label: '1.75M award miles',            detail: '22 business class redemptions total' },
-    { date: 'Jan 2031', label: 'FREEDOM',                      detail: 'Business class travel freedom — the actual goal of this job search' },
-  ];
-  var timelineHtml = milestones.map(function(m, i) {
-    var isNext = i === 0;
-    var accent = isNext ? 'var(--green-fg)' : 'var(--border-strong)';
-    return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
-      + '<div style="flex:0 0 72px;font-size:11px;font-weight:600;color:' + (isNext ? 'var(--green-fg)' : 'var(--text-3)') + ';text-align:right;padding-top:2px">' + m.date + '<\/div>'
-      + '<div style="flex:0 0 3px;background:' + accent + ';border-radius:2px;margin:0 4px"><\/div>'
-      + '<div style="flex:1">'
-      + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + m.label + '<\/div>'
-      + '<div style="font-size:11px;color:var(--text-3);margin-top:2px">' + m.detail + '<\/div>'
-      + '<\/div>'
-      + '<\/div>';
-  }).join('');
-  return {
-    title: '2031 anchor · Business Class Freedom',
-    html: '<p style="font-size:12px;color:var(--text-3);margin:0 0 12px">This job search is a means, not the end. The 2031 milestone is the actual goal.</p>'
-      + timelineHtml
-      + '<p style="font-size:10px;color:var(--text-4);margin-top:12px;border-top:1px solid var(--border);padding-top:8px">Source: 00_Master_Knowledge_Base.md §Financial Strategy · §Travel &amp; Lifestyle<\/p>',
   };
 });
 
@@ -15657,15 +15894,25 @@ function _saRender(d) {
     body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No scan activity yet. Run <code>node scan.mjs</code> to populate.</div>';
     return;
   }
+  // Render a company name as a clickable drill-in link inside the scan activity modal.
+  // Uses data-slug + delegated handler (see _tickerCompanyHtml pattern).
+  const _saCompanyDrillHtml = (name) => {
+    const slug = String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const safe = _saEsc(name || '');
+    return '<span class="sa-drill-company" data-drill="company:' + slug + '" data-slug="' + slug + '"'
+      + ' tabindex="0" role="button" title="View ' + safe + ' company profile">'
+      + safe + '</span>';
+  };
   const rows = events.map(e => {
-    const sample = (e.sample_companies || []).slice(0, 3).join(', ');
-    const sampleFull = (e.sample_companies || []).join(', ');
+    const sampleArr = (e.sample_companies || []);
+    const sampleLinks = sampleArr.slice(0, 3).map(_saCompanyDrillHtml).join(', ');
+    const sampleFull = sampleArr.join(', ');
     return '<tr title="' + _saEsc(e.portal + ' · ' + e.date + ' · ' + sampleFull) + '">' +
       '<td>' + _saEsc(e.date || '—') + '</td>' +
       '<td>' + _saEsc(e.portal || '—') + '</td>' +
       '<td style="text-align:right">' + _saEsc(e.jobs_found || 0) + '</td>' +
       '<td style="text-align:right">' + _saEsc(e.jobs_new || 0) + '</td>' +
-      '<td title="' + _saEsc(sampleFull) + '" data-fulltext="' + _saEsc(sampleFull) + '">' + _saEsc(sample) + '</td>' +
+      '<td title="' + _saEsc(sampleFull) + '" data-fulltext="' + _saEsc(sampleFull) + '">' + (sampleLinks || '—') + '</td>' +
     '</tr>';
   }).join('');
   body.innerHTML =
@@ -19226,6 +19473,12 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   .rd-tier-A { color: var(--green-fg, #2da44e); font-weight: 700; }
   .rd-tier-B { color: var(--blue-fg, #0969da); font-weight: 600; }
   .rd-tier-C { color: var(--text-3); }
+  /* Scan-activity modal company drill links */
+  .sa-drill-company {
+    color: inherit; text-decoration: underline; text-decoration-style: dotted;
+    text-underline-offset: 2px; cursor: pointer; border-radius: 2px;
+  }
+  .sa-drill-company:hover { color: var(--green-fg, #16a34a); text-decoration-style: solid; }
   /* Draft DM button on each Who-to-contact-next row (2026-05-18). */
   .rd-draft-dm-btn {
     background: var(--blue-bg, rgba(9,105,218,0.12));
