@@ -484,7 +484,11 @@ const reportPath  = join(PATHS.reports, reportFile);
 // ---------------------------------------------------------------------------
 // Write report .md
 // ---------------------------------------------------------------------------
-mkdirSync(PATHS.reports, { recursive: true });
+try {
+  mkdirSync(PATHS.reports, { recursive: true });
+} catch (err) {
+  fail(`Could not prepare reports directory "${PATHS.reports}": ${err.message}`);
+}
 
 const cleanEval = evalText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').trim();
 
@@ -505,12 +509,20 @@ const reportContent = `# Evaluación: ${company} — ${role}
 ${cleanEval}
 `;
 
-writeFileSync(reportPath, reportContent, 'utf-8');
+try {
+  writeFileSync(reportPath, reportContent, 'utf-8');
+} catch (err) {
+  fail(`Could not write report "${reportPath}": ${err.message}`);
+}
 
 // ---------------------------------------------------------------------------
 // Write tracker TSV
 // ---------------------------------------------------------------------------
-mkdirSync(PATHS.tracker, { recursive: true });
+try {
+  mkdirSync(PATHS.tracker, { recursive: true });
+} catch (err) {
+  fail(`Could not prepare tracker directory "${PATHS.tracker}": ${err.message}`);
+}
 
 // Row ID (column 1) is intentionally set to 0 — merge-tracker.mjs assigns
 // the real sequential number during merge. Computing it here would race
@@ -529,7 +541,11 @@ const reportLink  = `[${reportNum}](reports/${reportFile})`;
 const notesStr    = sanitizeTsv(`${archetype} — ${legitimacy}`);
 const tsvLine     = [0, date, sanitizeTsv(company), sanitizeTsv(role), 'Evaluada', scoreStr, '❌', reportLink, notesStr].join('\t');
 
-writeFileSync(join(PATHS.tracker, `${batchId}.tsv`), tsvLine + '\n', 'utf-8');
+try {
+  writeFileSync(join(PATHS.tracker, `${batchId}.tsv`), tsvLine + '\n', 'utf-8');
+} catch (err) {
+  fail(`Could not write tracker TSV for batch "${batchId}": ${err.message}`);
+}
 
 // ---------------------------------------------------------------------------
 // JSON summary to stdout (parsed by batch-runner.sh)
