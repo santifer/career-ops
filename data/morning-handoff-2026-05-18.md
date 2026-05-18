@@ -86,3 +86,29 @@ URL correction landed: `data/hm-intel/anthropic-engineering-editorial-lead.json`
 ## CI gate
 
 `test-all.mjs --quick`: **75 passed / 0 failed / 23 warnings**. Was 71/177/22 at session start. The 4 real failures (broken SKILL.md symlink + 3 user files tracked-against-gitignore) are fixed; the remaining warnings are noise the gate is correctly filtering.
+
+## URL re-verification (05:25 PDT — last freshness check before bed)
+
+Re-ran `check-liveness.mjs` on all 13 ready-pack URLs to catch any expirations in the 4 hours since the prior check. **All 13 still active.** No overnight surprises.
+
+```
+Results: 13 active  0 expired  0 uncertain
+```
+
+## Suggested apply order tonight / morning
+
+Based on composite score + tailored-PDF readiness + URL liveness, these are the morning's highest-leverage targets:
+
+1. **#48 Anthropic Engineering Editorial Lead** — Composite 78, single highest-fit Anthropic posting per audit, original Phase 1.3 target. Tailored PDF + cover letter ready, keyword overlap 80%.
+2. **#851 Mistral AI Sr/Staff AI Developer Advocate** — Composite 75, fresh 2d, no Mistral throttle, Europe BATNA stream.
+3. **#50 ElevenLabs Communications Manager** — Composite 74, 70% offer probability per audit (highest in queue), B-tier primary.
+
+Anthropic 1-active-app rule: picking #48 blocks #1 + #44 (defer those). OpenAI 1-2 active limit: #51 + #53 can run in parallel if you want frontier-lab signaling.
+
+## Standing gated items (need your explicit go)
+
+| Item | Cost | Action when you decide |
+|---|---|---|
+| Phase 7 (4-cycle artifact engagement research) | $5–8 | `/council "What patterns differentiate top-quartile cover letters for AI/FDE roles in 2026?"` × 4 (cover letter / DM / form-fields / consistency). Or `/researcher` for cheaper KB-routed version. |
+| Phase 8 Item G (quarterly /researcher cron) | recurring | Run `/schedule` to set up a quarterly cadence; default to a $5 cap per quarter. |
+| Bulk humanize re-pass of cover-letter text | ~$1 | If you want every cover letter under humanize-LOW, run cv-tailor with reduced temperature + manual phrase replacement. Current scores are humanize MEDIUM on most rows due to em-dashes and "Architected"/"Engineered" which are your voice. |
