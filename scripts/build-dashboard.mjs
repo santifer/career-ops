@@ -9467,7 +9467,10 @@ function build() {
 
   <!-- TPgM credibility tracker widget (Tier B item #5, wired 2026-05-17) -->
   <!-- Static overview tile — separate from the sortable tables (DASHBOARD_INVARIANTS.md §1-7 unaffected) -->
-  <div style="margin:12px 0 0;max-width:540px">
+  <!-- Layout fix (2026-05-17): max-width raised to 720px to match side-alloc-tile;
+       eliminates dead space to the right. Widget itself uses width:100% so it fills
+       the column. Uses dashboard CSS variables for consistent dark-mode rendering. -->
+  <div style="margin:12px 0 0;max-width:720px">
     ${tpgmWidgetHtml}
   </div>
 
