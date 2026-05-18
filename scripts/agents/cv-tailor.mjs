@@ -27,6 +27,7 @@ import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
 import { scoreAndRankBullets, buildLlmPreamble } from '../../lib/hm-weighting.mjs';
 import { dryRunSkipped } from './types.mjs';
+import { checkText, buildDoNotSubmitBanner } from '../../lib/ai-detection-gate.mjs';
 
 // Load .env from repo root so API keys are available when cv-tailor is invoked
 // directly (not through a shell that already has the env exported). Uses
@@ -610,7 +611,90 @@ export async function runCvTailor(input) {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* 8. Return SubAgentOutput                                                */
+  /* 8. API-backed AI detection gate                                         */
+  /* ---------------------------------------------------------------------- */
+  // checkAndRegenerate pattern: run the API gate on the bullets prose.
+  // If fails on first attempt, regenerate once with a stricter system prompt.
+  // If still fails on second attempt, return status: 'error' with verdicts.
+
+  let apiDetection = null;
+  let apiDetectionRetried = false;
+
+  try {
+    apiDetection = await checkText(bulletsOnlyText, { budgetUsd: 0.10, skipCache: false });
+
+    if (apiDetection.passes === false) {
+      apiDetectionRetried = true;
+      const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
+      const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
+      const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
+        `The bullets scored > 50% AI probability on external detectors. ` +
+        `Rewrite with dramatically varied sentence rhythms, concrete personal details unique to Mitchell, ` +
+        `and hard-specific metrics. Avoid ALL smooth polish. Make it sound like something Mitchell wrote ` +
+        `in 15 minutes from notes, not copy edited by a committee.`;
+
+      try {
+        const retryCouncil = await callCouncil({
+          prompt: userPrompt,
+          models: [modelKey],
+          opts: { systemPrompt: stricterPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
+        });
+        const rr = retryCouncil.results?.[0];
+        if (rr && !rr.error) {
+          const addTok = rr.tokens || 0;
+          tokensUsed.input  += Math.round(addTok * 0.85);
+          tokensUsed.output += Math.round(addTok * 0.15);
+
+          try {
+            const retryParsed = CvTailorLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
+            const retryBulletsText = retryParsed.tailored_bullets.map(b => `- ${b.text}`).join('\n');
+            const retryDetection   = await checkText(retryBulletsText, { budgetUsd: 0.10, skipCache: true });
+            // Accept retry if it improved or is no worse
+            if (retryDetection.passes !== false || (apiDetection.passes === false)) {
+              parsed = retryParsed;
+              const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
+              writeFileSync(artifactPath, retryMarkdown, 'utf-8');
+              apiDetection = retryDetection;
+            }
+          } catch { /* use original if retry parse fails */ }
+        }
+      } catch { /* ignore regeneration failure — surface original detection result */ }
+    }
+
+    // If still failing after retry, return error with API verdicts
+    if (apiDetection.passes === false) {
+      const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : 'GPTZero n/a';
+      const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : 'Originality n/a';
+      return {
+        stage: STAGE,
+        status: 'error',
+        output: {
+          path: artifactPath.replace(ROOT + '/', ''),
+          tailored_bullets_count: parsed.tailored_bullets.length,
+          highlights: parsed.highlights || [],
+          highlights_count: (parsed.highlights || []).length,
+          humanize_risk_score: humanizeScore,
+          humanize_risk_band: humanize.risk,
+          summary: parsed.summary,
+          api_detection: apiDetection,
+        },
+        diagnostics: {
+          duration_ms: Date.now() - t0,
+          cost_estimate_usd: estimateCostUsd(tokensUsed),
+          tokens_used: tokensUsed,
+          model_used: modelUsed,
+          api_detection_retried: apiDetectionRetried,
+        },
+        error: `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${gz} / ${orig}`,
+      };
+    }
+  } catch (detectionErr) {
+    // Non-fatal: API gate error should not block the artifact. Log in diagnostics.
+    apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* 9. Return SubAgentOutput                                                */
   /* ---------------------------------------------------------------------- */
 
   const costUsd = estimateCostUsd(tokensUsed);
@@ -630,12 +714,14 @@ export async function runCvTailor(input) {
       // Fix 3: cv_ref diversity metrics for smoke-test verification
       distinct_cv_refs_count: distinctCvRefs.size,
       cv_ref_corrections: cvRefCorrectionCount,
+      api_detection: apiDetection,
     },
     diagnostics: {
       duration_ms: Date.now() - t0,
       cost_estimate_usd: costUsd,
       tokens_used: tokensUsed,
       model_used: modelUsed,
+      api_detection_retried: apiDetectionRetried,
     },
     error: null,
   };
