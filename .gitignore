@@ -165,6 +165,17 @@ data/llm-usage-knowledge.json
 
 # Network graph — private contact data, never commit
 data/network-graph.json
+# Network database (ZETA 2026-05-19) — aggregated personal-CRM index with
+# emails + confidence bands + verification timestamps. Never commit.
+data/network-database.json
+data/network-database-saved-searches.json
+data/network-database-cache/
+data/zeta-post-impl-snapshots/
+# Z-AAA fix 2026-05-19 — overlay files written by /api/network/person/:id/notes
+# (notes) and by network-enricher + network-emailer (enrichments). Both contain
+# personal data and must never reach the remote.
+data/network-database-notes.json
+data/network-database-enrichments.json
 data/heartbeat-cache/
 
 # AI detection gate cache — per-text SHA1 results, regenerable, 30-day TTL

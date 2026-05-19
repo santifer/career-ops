@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Network database · career-ops</title>
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f8fa; --surface: #ffffff; --surface-2: #f0f2f5;
+      --border: #e2e6eb; --text: #0f172a; --text-2: #334155;
+      --text-3: #64748b; --text-4: #94a3b8;
+      --green-fg: #047857; --green-bg: #ecfdf5;
+      --amber-fg: #b45309; --red-fg: #b91c1c;
+      --blue-fg: #2563eb; --blue-bg: #eff6ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f17; --surface: #111827; --surface-2: #1f2937;
+        --border: #1f2937; --text: #f9fafb; --text-2: #e5e7eb;
+        --text-3: #cbd5e1; --text-4: #94a3b8;
+        --green-fg: #6ee7b7; --green-bg: rgba(34,197,94,0.10);
+        --amber-fg: #fcd34d; --red-fg: #fca5a5;
+        --blue-fg: #93c5fd; --blue-bg: rgba(59,130,246,0.12);
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    header { padding: 18px 24px; border-bottom: 1px solid var(--border);
+      background: var(--surface); display: flex; align-items: center; gap: 18px;
+      flex-wrap: wrap; }
+    header h1 { font-size: 18px; font-weight: 600; margin: 0; }
+    header .head-meta { color: var(--text-3); font-size: 12px; }
+    .toolbar { padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .toolbar input[type="search"] { flex: 1; min-width: 280px; padding: 8px 12px;
+      border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2);
+      color: var(--text); font-size: 13px; }
+    .toolbar select, .toolbar button { padding: 6px 10px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+      cursor: pointer; font-size: 12px; }
+    .toolbar button.primary { background: var(--blue-bg); color: var(--blue-fg);
+      border-color: var(--blue-fg); font-weight: 600; }
+    .toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .chips { padding: 10px 24px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .chip { display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; margin: 0 5px 5px 0; border-radius: 999px;
+      background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border);
+      font-size: 11.5px; cursor: pointer; font-weight: 500; }
+    .chip.active { background: var(--blue-bg); color: var(--blue-fg); border-color: var(--blue-fg); }
+    main { padding: 0 24px 80px; max-width: 1500px; }
+    .stats { padding: 10px 0; color: var(--text-3); font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { position: sticky; top: 0; background: var(--surface);
+      text-align: left; font-size: 10.5px; color: var(--text-4);
+      text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px;
+      border-bottom: 1px solid var(--border); }
+    tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border);
+      vertical-align: top; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: var(--surface-2); }
+    .conf-badge { display: inline-block; padding: 1px 7px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 600; margin-left: 6px; }
+    .conf-high { background: var(--green-bg); color: var(--green-fg); }
+    .conf-medium { background: color-mix(in srgb, var(--amber-fg) 12%, var(--surface));
+      color: var(--amber-fg); }
+    .conf-low { background: var(--surface-2); color: var(--text-4); }
+    .pill { display: inline-block; padding: 1px 7px; margin: 1px 4px 1px 0;
+      border-radius: 999px; background: var(--surface-2); color: var(--text-2);
+      border: 1px solid var(--border); font-size: 10.5px; }
+    .pager { display: flex; align-items: center; gap: 10px; padding: 10px 0; color: var(--text-3); font-size: 12px; }
+    .pager button { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-3); cursor: pointer; font-size: 11px; }
+    #detail-pane { position: fixed; right: 0; top: 0; bottom: 0; width: min(480px, 90vw);
+      background: var(--surface); border-left: 1px solid var(--border);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.10);
+      padding: 20px; overflow: auto; transform: translateX(100%); transition: transform 200ms ease; }
+    #detail-pane.open { transform: translateX(0); }
+    #detail-pane .close-btn { float: right; background: transparent; border: none;
+      cursor: pointer; color: var(--text-3); font-size: 16px; padding: 0 6px; }
+    .saved-search-row { display: flex; align-items: center; gap: 6px;
+      padding: 4px 0; border-bottom: 1px dashed var(--border); }
+    .saved-search-row button.del { background: transparent; border: none; color: var(--red-fg); cursor: pointer; }
+    .empty-state { padding: 60px 20px; text-align: center; color: var(--text-3); }
+    .checkbox-cell { width: 28px; text-align: center; }
+    .actions-cell { text-align: right; }
+    .small { font-size: 11px; color: var(--text-4); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Network database</h1>
+  <span class="head-meta" id="head-meta">loading…</span>
+  <span style="flex:1"></span>
+  <a href="/" style="font-size: 12px; color: var(--text-3); text-decoration: underline;">← dashboard</a>
+</header>
+
+<div class="toolbar">
+  <input id="search" type="search" placeholder="Search name, company, role, email…" autocomplete="off">
+  <select id="sort">
+    <option value="warm_path_strength">Warm-path strength</option>
+    <option value="relevance">Relevance (search)</option>
+    <option value="recently_connected">Recently connected</option>
+    <option value="engagement_score">Engagement</option>
+  </select>
+  <label class="small"><input type="checkbox" id="flt-has-email"> Only with email</label>
+  <label class="small"><input type="checkbox" id="flt-1st"> 1st-degree only</label>
+  <button id="bulk-enrich" disabled>Enrich selected</button>
+  <button id="bulk-email" disabled>Find email selected</button>
+  <button id="export-csv">Export CSV</button>
+  <button id="open-saved" title="Saved searches">★</button>
+</div>
+
+<div class="chips" id="chip-row"></div>
+
+<main>
+  <div class="stats" id="stats">—</div>
+  <table id="netDbTable">
+    <thead>
+      <tr>
+        <th class="checkbox-cell"><input type="checkbox" id="select-all"></th>
+        <th>Name</th>
+        <th>Company · Role</th>
+        <th>Degree</th>
+        <th>Warm to</th>
+        <th>Email</th>
+        <th>Connected</th>
+        <th class="actions-cell"></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="pager" id="pager"></div>
+</main>
+
+<aside id="detail-pane" aria-hidden="true">
+  <button class="close-btn" id="detail-close" aria-label="Close">✕</button>
+  <div id="detail-body">Select a row.</div>
+</aside>
+
+<script src="/network-database.js"></script>
+
+</body>
+</html>
