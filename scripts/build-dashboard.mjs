@@ -18840,7 +18840,17 @@ function _renderBatchData(data) {
         + (recent.length
           ? '<div class="sidebar-batch-recent">'
             + recent.map(function(r) {
-                return '<div class="sidebar-batch-recent-item">✅ ' + (r.company || '') + ' — ' + (r.role || r.id || '') + '</div>';
+                // ζ Run-Batch 2026-05-19 — surface warm-intro signal in the
+                // live batch sidebar (DURING the run, not post-publish).
+                // Badge only shows when there's a FRESH (connected <18mo)
+                // path — stale paths get no badge so the signal stays honest.
+                var warmBadge = '';
+                if (r.network_fresh_count && r.network_fresh_count > 0) {
+                  var t = r.network_fresh_count + ' fresh warm-intro path' + (r.network_fresh_count === 1 ? '' : 's') + ' to ' + (r.company || 'this company');
+                  if (r.network_stale_count) t += ' (' + r.network_stale_count + ' stale also exist)';
+                  warmBadge = ' <span style="background:rgba(46,160,67,0.22);color:#7ee787;padding:1px 5px;border-radius:8px;font-size:10px" title="' + t.replace(/"/g, '&quot;') + '">🤝 ' + r.network_fresh_count + '</span>';
+                }
+                return '<div class="sidebar-batch-recent-item">✅ ' + (r.company || '') + ' — ' + (r.role || r.id || '') + warmBadge + '</div>';
               }).join('')
             + '</div>'
           : '');

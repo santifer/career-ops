@@ -1877,6 +1877,30 @@ function batchLive() {
     }
   }
 
+  // ζ Run-Batch 2026-05-19 — enrich each row with network-leverage signal
+  // so the live sidebar can render "🤝 N fresh warm" badges DURING a batch
+  // run (not only post-publish). findContactsAtCompany() is cached against
+  // the network-graph/database mtime so calling per-row is cheap.
+  // Skipped for generic ATS-host companies (Greenhouse/Ashby/Lever — the
+  // URL didn't resolve to a real company name yet) since the lookup would
+  // be meaningless.
+  const ATS_HOSTS = new Set(['Greenhouse', 'Ashby', 'Lever']);
+  for (const r of stateRows) {
+    if (!r.company || ATS_HOSTS.has(r.company)) continue;
+    try {
+      const slug = String(r.company).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      if (!slug) continue;
+      const contacts = networkFindContactsAtCompany(slug) || [];
+      const fresh = contacts.filter(c => !c._stale_warmth).length;
+      const stale = contacts.length - fresh;
+      const firstDegree = contacts.filter(c => !c._warm_via_target_name).length;
+      r.network_warm_count = contacts.length;
+      r.network_fresh_count = fresh;
+      r.network_stale_count = stale;
+      r.network_first_degree = firstDegree;
+    } catch { /* network signal optional — leave fields unset */ }
+  }
+
   // Sort: running first, then completed by time desc, then failed, then pending
   const sorted = [
     ...stateRows.filter(r => r.status === 'running').sort((a, b) => (b.started_at || '').localeCompare(a.started_at || '')),
