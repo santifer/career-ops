@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.9.0](https://github.com/santifer/career-ops/compare/career-ops-v1.8.0...career-ops-v1.9.0) (2026-05-19)
+
+
+### Features
+
+* **batch:** add --model flag to batch-runner.sh ([#504](https://github.com/santifer/career-ops/issues/504)) ([44def35](https://github.com/santifer/career-ops/commit/44def35c23c43e91d9633951d90f4ff50773c931))
+* **dashboard:** /-key live search across pipeline rows ([#526](https://github.com/santifer/career-ops/issues/526)) ([433f34f](https://github.com/santifer/career-ops/commit/433f34f20aec61c68fda5dd9274a06919d0d7fc2))
+* **i18n:** add Turkish (TR) language modes ([#341](https://github.com/santifer/career-ops/issues/341)) ([e87eb57](https://github.com/santifer/career-ops/commit/e87eb576df3aa394a7e28acd9f04a805ca0ca696))
+* **interview-prep:** split prep by interviewer audience ([#489](https://github.com/santifer/career-ops/issues/489)) ([d86b86c](https://github.com/santifer/career-ops/commit/d86b86c93ada6cd8d74213357a1566f17dccd280))
+
+
+### Bug Fixes
+
+* **dashboard:** width-aware Markdown rendering with table wrapping in viewer ([#513](https://github.com/santifer/career-ops/issues/513)) ([dc3a247](https://github.com/santifer/career-ops/commit/dc3a247733d9fb7eb7159836bed743a587231192))
+* **release:** sync VERSION file to 1.8.0 ([541917f](https://github.com/santifer/career-ops/commit/541917f627f3f328e5411a54685f5e8706761499))
+* **scan:** bootstrap providers/ on update + harden greenhouse detect() ([#696](https://github.com/santifer/career-ops/issues/696)) ([4b12081](https://github.com/santifer/career-ops/commit/4b120817fc1a07d4664ff764bf2a1c51e443b524))
+* **update-system:** apply() safety violation reverts cleanly and releases lock ([#484](https://github.com/santifer/career-ops/issues/484)) ([980153c](https://github.com/santifer/career-ops/commit/980153c315ec3fbbe6f9195c77d2f865b5a2e1a0))
+* **update-system:** rollback() removes paths absent from backup branch ([#483](https://github.com/santifer/career-ops/issues/483)) ([f94a3be](https://github.com/santifer/career-ops/commit/f94a3be25890d83ee2664175bbe1bebf1f3eb033))
+
 ## [1.8.0](https://github.com/santifer/career-ops/compare/career-ops-v1.7.1...career-ops-v1.8.0) (2026-05-15)
 
 
