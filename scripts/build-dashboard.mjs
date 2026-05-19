@@ -20061,6 +20061,13 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
     ? pCmp.companies.filter(c => !c.excluded)
     : [];
   const scopedSum = scopedRows.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  // OMEGA-proposal-2 (approved 2026-05-19): scoped AI-detection potential sum.
+  // Computed from per-row ai_detection_potential_usd that pCmp now ships.
+  const scopedDetection = scopedRows.reduce((s, c) => s + (c.ai_detection_potential_usd || 0), 0);
+  const optInPct = Math.round((pCmp && pCmp.pack_build_opt_in_rate ? pCmp.pack_build_opt_in_rate : 0.40) * 100);
+  const detectionLine = scopedDetection > 0.005
+    ? '<div id="pcp-headline-detection" style="font-size:11px;opacity:0.55;margin-top:2px">+ $' + scopedDetection.toFixed(2) + ' potential AI-detection (post-publish, if ' + optInPct + '% opt in to Build pack)</div>'
+    : '<div id="pcp-headline-detection" style="display:none;font-size:11px;opacity:0.55;margin-top:2px"></div>';
   const tier5Line = (tier5.total_cost_usd != null)
     ? '<span>Tier-5 estimate · ' + (tier5.unique_companies || 0) + ' companies: $' + tier5.total_cost_usd.toFixed(2) + '</span>'
     : '';
@@ -20071,7 +20078,8 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
     +     '<h4 style="margin:0">Scoped run · ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + '</h4>'
     +     '<span class="pipeline-stat-value pipeline-cost-headline" id="pcp-headline-cost">$' + scopedSum.toFixed(2) + '</span>'
     +   '</div>'
-    +   '<div style="font-size:11px;opacity:0.6;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">'
+    +   detectionLine
+    +   '<div style="font-size:11px;opacity:0.6;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px">'
     +     '<span>Realistic full drain · ' + (pAgg.process_all.triage_count || 0) + ' pipeline items: <strong>$' + realisticTotal.toFixed(2) + '</strong></span>'
     +     tier5Line
     +   '</div>'
@@ -20230,6 +20238,9 @@ function _pcpUpdateScopedCost() {
   if (!_pipelinePerCompany) return;
   const selected = _pipelinePerCompany.companies.filter(c => _pipelineSelectedSlugs.has(c.slug));
   const cost = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  // OMEGA-proposal-2 (approved 2026-05-19): scoped detection sum from the
+  // per-row potential field. Surfaces ~$0.06 × selected for typical 40% opt-in.
+  const detection = selected.reduce((s, c) => s + (c.ai_detection_potential_usd || 0), 0);
   const costEl  = document.getElementById('pcp-scoped-cost');
   const countEl = document.getElementById('pcp-scoped-count');
   if (costEl)  costEl.textContent  = '$' + cost.toFixed(2);
@@ -20243,6 +20254,17 @@ function _pcpUpdateScopedCost() {
   const heroLabel = heroSection && heroSection.querySelector('h4');
   if (heroLabel) {
     heroLabel.textContent = 'Scoped run · ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies');
+  }
+  // OMEGA-proposal-2: live-update the detection sub-line under the hero.
+  const detectEl = document.getElementById('pcp-headline-detection');
+  if (detectEl) {
+    const optInPct = Math.round((_pipelinePerCompany.pack_build_opt_in_rate || 0.40) * 100);
+    if (detection > 0.005) {
+      detectEl.style.display = '';
+      detectEl.innerHTML = '+ $' + detection.toFixed(2) + ' potential AI-detection (post-publish, if ' + optInPct + '% opt in to Build pack)';
+    } else {
+      detectEl.style.display = 'none';
+    }
   }
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   if (confirmBtn && _pipelinePhase === 'preview') {
@@ -20343,6 +20365,9 @@ function _advanceProcessAllToConfirm() {
   _pipelinePhase = 'confirm';
   const selected = _pipelinePerCompany.companies.filter(c => _pipelineSelectedSlugs.has(c.slug));
   const scopedCost = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  // OMEGA-proposal-2 (approved 2026-05-19): scoped detection sum for Phase B confirm.
+  const scopedDetection = selected.reduce((s, c) => s + (c.ai_detection_potential_usd || 0), 0);
+  const optInPct = Math.round((_pipelinePerCompany.pack_build_opt_in_rate || 0.40) * 100);
   const p = _pipelinePreview;
   const capUsd = p.per_run_caps.process_all_usd;
   const exceedsRun     = scopedCost > capUsd;
@@ -20354,6 +20379,11 @@ function _advanceProcessAllToConfirm() {
   if (!body) return;
   const sampleNames = selected.slice(0, 6).map(c => _esc(c.company)).join(', ');
   const moreSuffix  = selected.length > 6 ? ' + ' + (selected.length - 6) + ' more' : '';
+  // OMEGA-proposal-2: detection sub-line under the confirm hero. Shown only
+  // when scopedDetection rounds to ≥ $0.01 so we don't surface noise.
+  const detectionSubLine = scopedDetection > 0.005
+    ? '<div style="font-size:11px;opacity:0.55;margin-top:4px;text-align:right">+ $' + scopedDetection.toFixed(2) + ' potential AI-detection (post-publish, if ' + optInPct + '% opt in to Build pack)</div>'
+    : '';
   body.innerHTML = ''
     + '<div class="pipeline-modal-section">'
     +   '<div class="pcp-phase-pill" data-phase="confirm">'
@@ -20364,6 +20394,7 @@ function _advanceProcessAllToConfirm() {
     +     '<span class="pipeline-stat-label">Scoped cost (' + selected.length + ' companies)</span>'
     +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + scopedCost.toFixed(2) + '</span>'
     +   '</div>'
+    +   detectionSubLine
     + '</div>'
     + '<div class="pipeline-modal-section">'
     +   '<h4>Companies in this run</h4>'

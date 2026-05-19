@@ -1348,6 +1348,16 @@ function buildPerCompanyPipelinePreview() {
       if (meta.top_role_score != null && meta.top_role_score >= 4.5) cost += COST_PER_APPLY_PACK_PREGEN;
     }
 
+    // Per OMEGA-proposal-2 (approved 2026-05-19): expose per-row AI-detection
+    // potential cost as a SEPARATE field, NOT folded into cost_estimate_usd.
+    // Rationale: cost_estimate_usd is "would-spend-now-during-Process-All".
+    // Detection is "would-spend-LATER-if-user-clicks-Build-pack". Mixing them
+    // misleads the confirm-modal hero. Surfaced as a sub-line on the hero so
+    // the user sees both: "$15.00 + $0.60 detection (if 40% opt in)".
+    const aiDetectionPotential = isExcluded
+      ? 0
+      : COST_PER_AI_DETECTION_PACK * PACK_BUILD_OPT_IN_RATE;
+
     rows.push({
       slug:             meta.slug,
       company:          meta.company,
@@ -1372,6 +1382,7 @@ function buildPerCompanyPipelinePreview() {
       cache_age_days:   cache.age_days,
       excluded:         isExcluded,
       cost_estimate_usd: Math.round(cost * 100) / 100,
+      ai_detection_potential_usd: Math.round(aiDetectionPotential * 100) / 100,
     });
   }
 
@@ -1385,6 +1396,7 @@ function buildPerCompanyPipelinePreview() {
   });
 
   const totalCost = rows.reduce((s, r) => s + (r.cost_estimate_usd || 0), 0);
+  const totalDetectionPotential = rows.reduce((s, r) => s + (r.ai_detection_potential_usd || 0), 0);
   return {
     companies:           rows,
     total_companies:     rows.length,
@@ -1392,8 +1404,13 @@ function buildPerCompanyPipelinePreview() {
     excluded_count:      rows.filter(r =>  r.excluded).length,
     cache_hit_count:     rows.filter(r => r.cache_hit && !r.excluded).length,
     total_cost_estimate_usd: Math.round(totalCost * 100) / 100,
+    // Per OMEGA-proposal-2 (approved 2026-05-19): aggregate detection potential
+    // + constants so the Phase A/B JS can compute scoped detection live.
+    total_ai_detection_potential_usd: Math.round(totalDetectionPotential * 100) / 100,
+    ai_detection_per_pack_usd: Math.round(COST_PER_AI_DETECTION_PACK * 100) / 100,
+    pack_build_opt_in_rate: PACK_BUILD_OPT_IN_RATE,
     source:              'data/apply-now-queue.json + data/company-intel-cache/ + estimateTTO + scoreToxicity + data/network-database.json',
-    schema_note:         'Per-company Tier-5 economics — council cost suppressed on cache hit; apply-pack pre-gen added for score≥4.5. ζ Run-Batch 2026-05-19 added network_{warm,fresh,stale,first_degree,source}_count with honest >18mo stale-warmth gate.',
+    schema_note:         'Per-company Tier-5 economics — council cost suppressed on cache hit; apply-pack pre-gen added for score≥4.5. ζ Run-Batch 2026-05-19 added network_{warm,fresh,stale,first_degree,source}_count with honest >18mo stale-warmth gate. OMEGA-proposal-2 2026-05-19 added ai_detection_potential_usd (post-publish, opt-in-gated) per row.',
   };
 }
 
