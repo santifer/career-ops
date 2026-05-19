@@ -3243,9 +3243,9 @@ function renderRow(r, idx) {
       <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cover-letter', this);event.stopPropagation()" title="Draft cover letter via /api/build-pack-stage">/cover-letter</button>
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'linkedin-dm', this);event.stopPropagation()" title="Draft LinkedIn DM via /api/build-pack-stage">/linkedin-dm</button>
-        <!-- β.3 (2026-05-19): Polish pack + Refresh intel removed from row drawer.
-             Polish is now a stage in the pipeline, surfaced on the review surface after
-             Create materials completes. Refresh intel is accessible via /intel-refresh CLI. -->
+        <!-- refresh-master Phase 3 deliverable 6: ↻ Deep refresh CTA. Fires
+             full council-7 Layer-3 research. Confirm modal shows ~$25-$50 cost. -->
+        <button type="button" class="dcard-btn" style="background:linear-gradient(180deg,#1f2a44,#162035);border-color:#3b4f7a;color:#dbe4ff" onclick="invokeDeepRefresh(${htmlEscape(String(r.num||''))}, this);event.stopPropagation()" title="Phase 3 Layer-3 deep research: 7-model council, $25–$50 per fire. Confirm modal will appear.">↻ Deep refresh</button>
       </div>
     </div>
   </td>
@@ -23629,6 +23629,39 @@ async function invokeBuildPackStage(rowId, stage, btn) {
   }
 }
 window.invokeBuildPackStage = invokeBuildPackStage;
+
+// ── refresh-master Phase 3 deliverable 6: ↻ Deep refresh CTA ──
+// Confirms cost ~$25–$50, posts to /api/refresh-deep, opens job popout.
+async function invokeDeepRefresh(rowId, btn) {
+  rowId = String(rowId || '').trim();
+  if (!rowId || !/^\d+$/.test(rowId)) {
+    if (window.toast) window.toast('Deep refresh: numeric row required', 'error');
+    return;
+  }
+  const ok = window.confirm('Layer-3 Deep refresh fires the full 7-model council (Sonnet + Opus + GPT-5 + Gemini + Sonar Deep + Sonar Reasoning + Grok-x).\\n\\nProjected cost: $25–$50.\\nETA: 3–8 min.\\n\\nProceed?');
+  if (!ok) return;
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '↻ Deep refreshing…'; }
+  try {
+    const r = await fetch('/api/refresh-deep', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rowId }),
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'refresh-deep API error');
+    if (typeof window.drillIn === 'function') {
+      window.drillIn('alpha-job', data.jobId, null);
+    } else if (window.toast) {
+      window.toast('Deep refresh started: ' + data.jobId, 'info');
+    }
+  } catch (err) {
+    if (window.toast) window.toast('Deep refresh error: ' + (err.message || String(err)), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
+}
+window.invokeDeepRefresh = invokeDeepRefresh;
 
 // ── α ALPHA 2026-05-19: apply-pack-polish + intel-refresh dashboard wiring ──
 // Both buttons POST to a kick-off endpoint, get back a jobId, then open an

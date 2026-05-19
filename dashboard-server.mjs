@@ -4504,6 +4504,32 @@ const server = createServer((req, res) => {
     return json({ ok: true, active: true, job, log_tail: tail });
   }
 
+  // 2026-05-19 Mitchell instrumentation — pipeline health endpoint reads
+  // the most-recent pipeline-health.json (written every 5 min by
+  // scripts/agents/pipeline-health-check.mjs). Dashboard's "System healthy"
+  // chip polls this. Returns the file as-is + a freshness flag.
+  if (url === '/api/pipeline/health-status') {
+    const fp = join(ROOT, 'data', 'pipeline-health.json');
+    if (!existsSync(fp)) {
+      return json({ ok: false, present: false, error: 'health-check has not run yet — wait 5 min or run `node scripts/agents/pipeline-health-check.mjs`' }, 200);
+    }
+    try {
+      const data = JSON.parse(readFileSync(fp, 'utf-8'));
+      const checkedAt = data.checked_at ? Date.parse(data.checked_at) : 0;
+      const ageMs = Date.now() - checkedAt;
+      const stale = ageMs > (15 * 60 * 1000);  // healthy report > 15 min is stale
+      return json({
+        ok: true,
+        present: true,
+        stale,
+        age_seconds: Math.round(ageMs / 1000),
+        ...data,
+      });
+    } catch (err) {
+      return json({ ok: false, error: err.message }, 500);
+    }
+  }
+
   // ── Outreach API ────────────────────────────────────────────────────────
   // Powers the Outreach Pulse section + per-contact intel drawer.
   // resetOutreachCache() ensures every GET reads fresh state (writes come
@@ -6358,6 +6384,35 @@ async function generatePack(){
     return _alphaSSEStream(req, res, logPath);
   }
 
+  // ── POST /api/refresh-deep — refresh-master Phase 3 Deep Research CTA ──
+  //   body: { rowId: <num> }
+  //   Fires a Layer-3 deep refresh on demand. Confirmation modal upstream
+  //   shows projected cost (~$25-$50). Uses full council (council_size=7)
+  //   per refresh-master Phase 3 deliverable 6.
+  if (url === '/api/refresh-deep' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch (_) { return json({ ok: false, error: 'invalid JSON body' }, 400); }
+      const rowId = parsed.rowId || parsed.row;
+      if (!rowId || !/^\d+$/.test(String(rowId))) return json({ ok: false, error: 'rowId (numeric) required' }, 400);
+      const args = [join(ROOT, 'scripts/agents/intel-refresh.mjs'), '--row', String(rowId), '--slots', 'hm-intel,toxicity,positioning', '--force', '--mode', 'deep-council-7'];
+      const { jobId, logPath } = _alphaSpawn({ kind: 'refresh-deep', args });
+      return json({ ok: true, jobId, log_path: logPath, stream_url: `/api/refresh-deep-stream/${jobId}`, projected_cost_usd: 50, council_size: 7 });
+    });
+    return;
+  }
+  const refreshDeepStreamMatch = url.match(/^\/api\/refresh-deep-stream\/([\w-]+)$/);
+  if (refreshDeepStreamMatch) {
+    const jobId = refreshDeepStreamMatch[1];
+    const job = alphaJobs[jobId];
+    const logPath = job?.logPath || `/tmp/alpha-${jobId}.log`;
+    return _alphaSSEStream(req, res, logPath);
+  }
+
   // ── POST /api/rebuild — kick a dashboard rebuild ──
   //   Returns { ok, jobId, stream_url } so the ↻ mini-buttons on baked widgets
   //   can stream progress instead of hanging the click.
@@ -6396,6 +6451,136 @@ async function generatePack(){
       res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end('<!doctype html><meta charset="utf-8"><title>Invalid share link</title><body style="font-family:system-ui;padding:40px;max-width:520px;margin:0 auto"><h1>Invalid share link</h1><p>This share token is not recognized.</p></body>');
       return;
+    }
+  }
+
+  // ── Autobiography Phase 2 interview (2026-05-19) ────────────────────────
+  // Surfaces today's question, accepts answers, and reports per-tentpole progress.
+  // Backed by scripts/agents/interview-curator.mjs (generator) +
+  // scripts/agents/interview-scorer.mjs (scorer). Widget at /dashboard/autobiography-interview.html.
+  if (url === '/api/interview/today') {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const queueFile = join(ROOT, 'data/autobiography-project/interview-transcripts/queue', `${today}.md`);
+      if (!existsSync(queueFile)) return json({ date: today, question: null });
+      const content = readFileSync(queueFile, 'utf-8');
+      const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n/);
+      const fm = {};
+      if (fmMatch) {
+        for (const line of fmMatch[1].split('\n')) {
+          const kv = line.match(/^(\w+):\s*(.+)$/);
+          if (kv) {
+            let v = kv[2].trim();
+            try { v = JSON.parse(v); } catch { /* keep raw */ }
+            fm[kv[1]] = v;
+          }
+        }
+      }
+      let scored = null;
+      if (fm.status === 'complete') {
+        const scoredPath = join(ROOT, 'data/autobiography-project/interview-transcripts', `${today}.md`);
+        if (existsSync(scoredPath)) {
+          const sc = readFileSync(scoredPath, 'utf-8');
+          const scFm = sc.match(/^---\n([\s\S]*?)\n---\n/);
+          if (scFm) {
+            scored = {};
+            for (const line of scFm[1].split('\n')) {
+              const kv = line.match(/^(\w+):\s*(.+)$/);
+              if (kv) {
+                let v = kv[2].trim();
+                try { v = JSON.parse(v); } catch { /* keep raw */ }
+                scored[kv[1]] = v;
+              }
+            }
+          }
+        }
+      }
+      return json({
+        date: today,
+        question: fm.question || null,
+        context: fm.context || '',
+        tentpole: fm.tentpole || '',
+        axis: fm.axis || '',
+        status: fm.status || 'pending',
+        notes_for_future_claude: fm.notes_for_future_claude || '',
+        scored,
+      });
+    } catch (e) {
+      return json({ error: e.message }, 500);
+    }
+  }
+
+  if (url === '/api/interview/answer' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const parsed = JSON.parse(body || '{}');
+        const answer = String(parsed.answer || '').trim();
+        if (!answer) return json({ ok: false, error: 'empty answer' }, 400);
+        const today = new Date().toISOString().slice(0, 10);
+        const queueFile = join(ROOT, 'data/autobiography-project/interview-transcripts/queue', `${today}.md`);
+        if (!existsSync(queueFile)) return json({ ok: false, error: 'no queued question for today' }, 404);
+        // Inject answer into queue file
+        const content = readFileSync(queueFile, 'utf-8');
+        const updated = content.replace(/\*\[Answer goes here[\s\S]*?\]\*/, answer);
+        writeFileSync(queueFile, updated);
+        // Spawn scorer (uses _spawn imported at top of file)
+        const child = _spawn('node', [join(ROOT, 'scripts/agents/interview-scorer.mjs'), '--date', today], {
+          cwd: ROOT, env: process.env, detached: true, stdio: 'ignore',
+        });
+        child.unref();
+        return json({ ok: true, message: 'Answer received, scoring in background' });
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 500);
+      }
+    });
+    return;
+  }
+
+  if (url === '/api/interview/skip' && req.method === 'POST') {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const queueFile = join(ROOT, 'data/autobiography-project/interview-transcripts/queue', `${today}.md`);
+      if (existsSync(queueFile)) {
+        const content = readFileSync(queueFile, 'utf-8');
+        writeFileSync(queueFile, content.replace(/^status: pending$/m, 'status: skipped'));
+      }
+      return json({ ok: true });
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
+  }
+
+  if (url === '/api/interview/progress') {
+    try {
+      const dir = join(ROOT, 'data/autobiography-project/interview-transcripts');
+      const tentpoles = {};
+      for (let i = 0; i < 9; i++) tentpoles[String(i).padStart(2, '0')] = { answered: 0, total: 4 };
+      if (existsSync(dir)) {
+        const files = readdirSync(dir).filter(f => f.match(/^\d{4}-\d{2}-\d{2}\.md$/));
+        for (const f of files) {
+          const content = readFileSync(join(dir, f), 'utf-8');
+          const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n/);
+          if (!fmMatch) continue;
+          const tpMatch = fmMatch[1].match(/^tentpole:\s*"?(\d+)"?$/m);
+          if (tpMatch) {
+            const tp = String(tpMatch[1]).padStart(2, '0');
+            if (tentpoles[tp]) tentpoles[tp].answered++;
+          }
+        }
+      }
+      // Latest session-resume notes
+      let sessionResume = '';
+      const resumeLog = join(ROOT, 'data/autobiography-project/SESSION-RESUME.md');
+      if (existsSync(resumeLog)) {
+        const text = readFileSync(resumeLog, 'utf-8');
+        const latest = text.match(/## \d{4}-\d{2}-\d{2}\n\n([\s\S]+?)\n\n---/);
+        if (latest) sessionResume = latest[1].trim();
+      }
+      return json({ tentpoles, session_resume: sessionResume });
+    } catch (e) {
+      return json({ error: e.message }, 500);
     }
   }
 
