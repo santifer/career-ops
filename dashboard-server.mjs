@@ -3483,6 +3483,110 @@ const server = createServer((req, res) => {
     }
   }
 
+  // ── Phase A.1 (2026-05-19): relationship-intelligence per-contact endpoints ──
+  // GET /contact/:id → full server-side rendered detail page (lib/build-contact-detail-renderer.mjs)
+  const contactDetailMatch = url.match(/^\/contact\/([a-z0-9-]+)$/i);
+  if (contactDetailMatch && req.method === 'GET') {
+    const id = contactDetailMatch[1];
+    // Promise-chain import keeps the outer server callback non-async
+    import('./lib/build-contact-detail-renderer.mjs').then(mod => {
+      const { loadContactForDetail, renderContactDetailHtml } = mod;
+      const c = loadContactForDetail(id);
+      if (!c) {
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end(renderContactDetailHtml(null));
+      }
+      const html = renderContactDetailHtml(c);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    }).catch(e => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    });
+    return;
+  }
+
+  // POST /api/refresh-cache → body { cache, key, priority? }
+  // Queues a single cache key for the next refresh-master tick with optional priority bump.
+  if (url === '/api/refresh-cache' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; if (body.length > 50_000) req.connection.destroy(); });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const cache = String(payload.cache || '').slice(0, 80);
+        const key = String(payload.key || '').slice(0, 200);
+        const priority = String(payload.priority || 'user-triggered').slice(0, 40);
+        if (!cache || !key) return json({ ok: false, error: 'cache + key required' }, 400);
+        const queuePath = join(ROOT, 'data', 'refresh-master-queue.jsonl');
+        const job_id = randomBytes(6).toString('hex');
+        const rec = { job_id, cache, key, priority, queued_at: new Date().toISOString(), source: 'dashboard-server' };
+        appendFileSync(queuePath, JSON.stringify(rec) + '\n');
+        return json({ ok: true, job_id, eta_minutes: 360 }); // next 6h tick
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 400);
+      }
+    });
+    return;
+  }
+
+  // POST /api/scrape-photo → body { id, linkedin_url } → invokes scrape-contact-photo.mjs
+  if (url === '/api/scrape-photo' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; if (body.length > 10_000) req.connection.destroy(); });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const id = String(payload.id || '').slice(0, 200);
+        const linkedinUrl = String(payload.linkedin_url || '').slice(0, 400);
+        if (!id || !linkedinUrl) return json({ ok: false, error: 'id + linkedin_url required' }, 400);
+        // Append to scrape queue (consumed by scripts/scrape-contact-photo.mjs --queue-only mode)
+        const queuePath = join(ROOT, 'data', 'contact-photo-queue.jsonl');
+        const rec = { id, linkedin_url: linkedinUrl, queued_at: new Date().toISOString(), source: 'dashboard-server' };
+        appendFileSync(queuePath, JSON.stringify(rec) + '\n');
+        // Try to fire the script in the background (don't await)
+        try {
+          _spawn('node', [join(ROOT, 'scripts/scrape-contact-photo.mjs'), '--contact', id], {
+            cwd: ROOT,
+            detached: true,
+            stdio: 'ignore',
+          }).unref();
+        } catch { /* spawn failure is non-fatal; queue is the durable record */ }
+        return json({ ok: true, queued_at: rec.queued_at });
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 400);
+      }
+    });
+    return;
+  }
+
+  // POST /api/contact/:id/notes → body { text } → append to data/contact-notes/{id}.jsonl
+  const contactNotesMatch = url.match(/^\/api\/contact\/([a-z0-9-]+)\/notes$/i);
+  if (contactNotesMatch && req.method === 'POST') {
+    const id = contactNotesMatch[1];
+    let body = '';
+    req.on('data', chunk => { body += chunk; if (body.length > 50_000) req.connection.destroy(); });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const text = String(payload.text || '').slice(0, 8_000).trim();
+        if (!text) return json({ ok: false, error: 'text required' }, 400);
+        const dir = join(ROOT, 'data', 'contact-notes');
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+        const path = join(dir, `${id}.jsonl`);
+        const rec = { ts: new Date().toISOString(), text, source: 'dashboard-server' };
+        appendFileSync(path, JSON.stringify(rec) + '\n');
+        // Return updated notes list
+        const raw = readFileSync(path, 'utf8');
+        const notes = raw.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+        return json({ ok: true, id, notes });
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 400);
+      }
+    });
+    return;
+  }
+
   // ── Hiring-manager intel (from scripts/hiring-manager-research.mjs) ─────
   // GET /api/hm-intel?slug=anthropic-comms-manager  → returns the JSON
   // synthesized by the 7-LLM council, or 404 if no intel exists yet.
