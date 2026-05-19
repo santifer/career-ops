@@ -177,7 +177,16 @@ async function refreshToxicity(row, opts = {}) {
 /* -------- SLOT 3: strategy-ceiling — per-metric per-row -------- */
 async function refreshStrategyCeiling(row, opts = {}) {
   const padded = String(row.num).padStart(3, '0');
-  const cvText = existsSync(join(ROOT, 'cv.md')) ? readFileSync(join(ROOT, 'cv.md'), 'utf-8').slice(0, 5000) : '';
+  // refresh-master Phase 1.5: full cv.md goes into opts.cacheStableContent
+  // so Anthropic adapters cache it across all 3 metric refreshes (and across
+  // all rows in a single refresh-master pass). Anthropic min cacheable = 1024
+  // tokens (~3.5KB chars); full cv.md is ~7-10KB so it qualifies.
+  const cvText = existsSync(join(ROOT, 'cv.md')) ? readFileSync(join(ROOT, 'cv.md'), 'utf-8') : '';
+  const profileText = existsSync(join(ROOT, 'modes/_profile.md')) ? readFileSync(join(ROOT, 'modes/_profile.md'), 'utf-8') : '';
+  const stableCorpus = [
+    cvText ? `=== cv.md ===\n${cvText}` : '',
+    profileText ? `=== modes/_profile.md ===\n${profileText}` : '',
+  ].filter(Boolean).join('\n\n');
   const results = {};
   let totalCost = 0;
   for (const metric of SLOT_METRICS) {
@@ -191,10 +200,7 @@ async function refreshStrategyCeiling(row, opts = {}) {
     emit({ slot: 'strategy-ceiling', metric, row: row.num, step: 'computing' });
     const prompt = [
       `# Task — strategy-ceiling for metric "${metric}" — ${row.company} ${row.role}`,
-      `Mitchell is targeting this role. Given the JD + his cv.md + HM intel, what is Mitchell's CURRENT ceiling on ${metric}, and what concrete moves would raise it 5-15 points before he applies?`,
-      ``,
-      `## cv.md (trimmed)`,
-      cvText,
+      `Mitchell is targeting this role. Given the JD + the cv.md + modes/_profile.md context above + HM intel, what is Mitchell's CURRENT ceiling on ${metric}, and what concrete moves would raise it 5-15 points before he applies?`,
       ``,
       `## Role`,
       `${row.company} — ${row.role}`,
@@ -212,7 +218,15 @@ async function refreshStrategyCeiling(row, opts = {}) {
 
     let council;
     try {
-      council = await callCouncil({ prompt, models: ['anthropic:claude-sonnet-4-6', 'openai:gpt-5'], opts: { maxTokens: 2000 } });
+      council = await callCouncil({
+        prompt,
+        models: ['anthropic:claude-sonnet-4-6', 'openai:gpt-5'],
+        opts: {
+          maxTokens: 2000,
+          cacheStableContent: stableCorpus,
+          cacheCaller: `intel-refresh:strategy-ceiling:${metric}`,
+        },
+      });
       totalCost += council.report?.totalCost || 0;
     } catch (e) {
       emit({ slot: 'strategy-ceiling', metric, error: String(e.message || e) });
@@ -248,14 +262,17 @@ async function refreshPositioning(row, opts = {}) {
 
   const hmIntelPath = join(ROOT, 'data', 'hm-intel', `${slugify(row.company)}-${slugify(row.role)}.json`);
   const hmIntel = readJsonSafe(hmIntelPath) || {};
-  const cvText = existsSync(join(ROOT, 'cv.md')) ? readFileSync(join(ROOT, 'cv.md'), 'utf-8').slice(0, 5000) : '';
+  const cvText = existsSync(join(ROOT, 'cv.md')) ? readFileSync(join(ROOT, 'cv.md'), 'utf-8') : '';
+  const profileText = existsSync(join(ROOT, 'modes/_profile.md')) ? readFileSync(join(ROOT, 'modes/_profile.md'), 'utf-8') : '';
+  // refresh-master Phase 1.5 cached stable corpus.
+  const stableCorpus = [
+    cvText ? `=== cv.md ===\n${cvText}` : '',
+    profileText ? `=== modes/_profile.md ===\n${profileText}` : '',
+  ].filter(Boolean).join('\n\n');
 
   const prompt = [
     `# Task — strongest 3-sentence positioning for Mitchell at ${row.company} — ${row.role}`,
-    `Given Mitchell's cv.md, the JD, and HM intel below, what are the strongest 3 sentences that frame Mitchell's positioning for THIS role? Position him as: (1) the must-meet candidate the HM has on their short list, (2) a 90-day net positive, (3) someone who closes a specific team gap.`,
-    ``,
-    `## cv.md`,
-    cvText,
+    `Given Mitchell's cv.md + modes/_profile.md above, the JD, and HM intel below, what are the strongest 3 sentences that frame Mitchell's positioning for THIS role? Position him as: (1) the must-meet candidate the HM has on their short list, (2) a 90-day net positive, (3) someone who closes a specific team gap.`,
     ``,
     `## HM intel`,
     JSON.stringify(hmIntel).slice(0, 4000),
@@ -275,7 +292,11 @@ async function refreshPositioning(row, opts = {}) {
     council = await callCouncil({
       prompt,
       models: ['anthropic:claude-sonnet-4-6', 'openai:gpt-5', 'google:gemini-2.5-pro', 'perplexity:sonar-pro'],
-      opts: { maxTokens: 2500 },
+      opts: {
+        maxTokens: 2500,
+        cacheStableContent: stableCorpus,
+        cacheCaller: 'intel-refresh:positioning',
+      },
     });
     cost = council.report?.totalCost || 0;
   } catch (e) {
@@ -288,7 +309,6 @@ async function refreshPositioning(row, opts = {}) {
   const adjPrompt = [
     `You are the Opus dealbreaker layer. Adjudicate the council's positioning candidates for Mitchell at ${row.company} — ${row.role}.`,
     `Per-model responses: ${JSON.stringify(allParses).slice(0, 5000)}`,
-    `cv.md (trimmed): ${cvText.slice(0, 2500)}`,
     ``,
     `Return STRICT JSON with the FINAL positioning Mitchell should use:`,
     `{ "positioning_three_sentences": [...], "positioning_one_sentence": "...", "anti_positioning": [...], "evidence_citations": [...], "warnings": [...], "dealbreaker_notes": "..." }`,
@@ -298,7 +318,15 @@ async function refreshPositioning(row, opts = {}) {
 
   let final = allParses[0] || {};
   try {
-    const adj = await callCouncil({ prompt: adjPrompt, models: ['anthropic:claude-opus-4-7'], opts: { maxTokens: 2000 } });
+    const adj = await callCouncil({
+      prompt: adjPrompt,
+      models: ['anthropic:claude-opus-4-7'],
+      opts: {
+        maxTokens: 2000,
+        cacheStableContent: stableCorpus,
+        cacheCaller: 'intel-refresh:positioning:adjudicate',
+      },
+    });
     cost += adj.report?.totalCost || 0;
     const adjParsed = adj.results?.[0]?.content ? extractJson(adj.results[0].content) : null;
     if (adjParsed) final = adjParsed;

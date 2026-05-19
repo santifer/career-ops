@@ -1,0 +1,13 @@
+{
+  "first_run": false,
+  "last_check_at": "2026-05-19T20:04:06.353Z",
+  "last_check_authorized": false,
+  "last_change_count": 0,
+  "changes": [],
+  "checksums": {
+    "cv.md": "8b2541a4d6c9a881ee922d2da9225229718ac053a604289b0f0d1da276b0bb89",
+    "modes/_profile.md": null,
+    "config/profile.yml": null,
+    "article-digest.md": "6febc100bcc867c461b4eb3b083004b4656a07391604b1327e056f216ac99c6d"
+  }
+}

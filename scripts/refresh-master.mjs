@@ -37,6 +37,8 @@ import {
   inspectCacheForRow,
   buildCommand,
 } from '../lib/refresh-cache-registry.mjs';
+import { assertOrUpdateChecksums, IdentityLockViolation } from '../lib/identity-lock.mjs';
+import { recordAndCheck as recordDrift, buildDashboardMetricsSnapshot } from '../lib/metric-drift-tripwire.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -103,6 +105,32 @@ async function main() {
   log('═══ refresh-master start ═══');
   log(`flags: ${JSON.stringify(FLAG)}`);
 
+  // 0. Phase 1.5 — identity-lock checksums + drift snapshot BEFORE any work.
+  try {
+    const lock = assertOrUpdateChecksums();
+    log(`identity-lock: ok (first_run=${lock.first_run}, authorized=${lock.authorized}, changes=${lock.changes.length})`);
+  } catch (e) {
+    if (e instanceof IdentityLockViolation) {
+      log(`HALT: identity-lock violation — ${e.message}`);
+      log(`If this edit was intentional, run with MITCHELL_AUTHORIZED_EDIT=1`);
+      process.exit(3);
+    }
+    throw e;
+  }
+
+  const driftStart = recordDrift({
+    context: 'refresh-master:start',
+    metrics: buildDashboardMetricsSnapshot(),
+  });
+  if (driftStart.tripwires.length > 0) {
+    log(`HALT: ${driftStart.tripwires.length} metric drift tripwire(s) fired at start:`);
+    for (const t of driftStart.tripwires) {
+      log(`  - ${t.metric}: ${t.prior_value} → ${t.current_value} (${(t.drift_pct * 100).toFixed(1)}%; source unchanged)`);
+    }
+    log(`See data/drift-tripwire-${TODAY}.md and escalate via GAMMA truth-audit.`);
+    process.exit(4);
+  }
+
   const state = loadState();
   trim30dSpend(state);
 
@@ -138,16 +166,29 @@ async function main() {
         D: cadenceByTier.D_cold || 999,
       };
 
+      // Phase 1.5 deliverable 2: dedup queue entries by (cache.id, key) so
+      // company-scoped caches (toxicity_composite, company_pulse) fire once
+      // per company even when multiple rows reference that company.
+      const seen = new Set();
       for (const cache of layer2) {
         for (const row of rows) {
           const tier = row._classification.tier;
           const ttl = ttlByTier[tier];
           if (ttl >= 999) continue; // tier D — no auto-refresh
           const insp = inspectCacheForRow(cache, row);
-          // Refresh if missing OR stale beyond tier cadence (but never past hard max)
           const shouldRefresh = !insp.exists || insp.ageDays >= ttl;
           if (!shouldRefresh) continue;
-          // Hard-max enforcement (Mitchell's <7d guarantee for Layer 2)
+
+          // Dedup key uses the cache's documented keyFromRow (company-slug for
+          // company-scoped caches, row.num for row-scoped caches).
+          const dedupKey = `${cache.id}::${cache.keyFromRow ? cache.keyFromRow(row) : row.num}`;
+          if (seen.has(dedupKey)) {
+            // Already queued this cache for this entity at higher-tier priority;
+            // skip the lower-tier duplicate to avoid double-refresh.
+            continue;
+          }
+          seen.add(dedupKey);
+
           const ageDescription = insp.exists ? `${insp.ageDays.toFixed(1)}d old` : 'missing';
           refreshQueue.push({
             layer: 2,
@@ -157,6 +198,8 @@ async function main() {
             cost: cache.costEstimate,
             ageDescription,
             command: buildCommand(cache.refreshHandler, row),
+            provider: cache.provider || 'anthropic-sonnet',
+            dedupKey,
           });
         }
       }
@@ -210,7 +253,8 @@ async function main() {
   } else {
     log(`\n── Refresh plan ──`);
     for (const q of refreshQueue.slice(0, 30)) {
-      log(`  L${q.layer} · tier=${q.tier} · ${q.cache.id} · row #${q.row.num} ${q.row.company} ${q.row.role.slice(0, 32)} · ${q.ageDescription} · $${q.cost}`);
+      const prov = q.provider ? ` [${q.provider}]` : '';
+      log(`  L${q.layer} · tier=${q.tier} · ${q.cache.id}${prov} · row #${q.row.num} ${q.row.company} ${q.row.role.slice(0, 32)} · ${q.ageDescription} · $${q.cost}`);
     }
     if (refreshQueue.length > 30) log(`  ... and ${refreshQueue.length - 30} more`);
   }
