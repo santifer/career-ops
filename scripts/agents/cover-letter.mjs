@@ -33,6 +33,7 @@ import { z } from 'zod';
 import { callCouncil } from '../../lib/council.mjs';
 import { dryRunSkipped } from './types.mjs';
 import { checkText } from '../../lib/ai-detection-gate.mjs';
+import { runDetectionRetryPipeline } from '../../lib/ai-detection-retry.mjs';
 
 // Load .env from repo root so API keys are available when this agent is invoked
 // directly (not through a shell that already has the env exported).
@@ -543,61 +544,79 @@ export async function runCoverLetter(input) {
   // ── 8. API-backed AI detection gate ─────────────────────────────────────
   // checkAndRegenerate: run API gate on prose sections; regenerate once on fail.
 
+  // DELTA P1 — 3-stage retry pipeline (replaces previous 1-stage retry).
+  // Same model each stage; stricter prompts; band-aware exit conditions.
+  // See lib/ai-detection-retry.mjs for the staged-prompt construction.
+
   let apiDetection = null;
-  let apiDetectionRetried = false;
+  let retryFinalStatus = null;
+  let retryAttempts = [];
 
   if (proseSections.trim().length > 0) {
     try {
       apiDetection = await checkText(proseSections, { budgetUsd: 0.10, skipCache: false });
 
-      if (apiDetection.passes === false) {
-        apiDetectionRetried = true;
-        const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
-        const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
-        const stricterSystemPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
-          `The prose scored > 50% AI probability on external detectors after the local humanize pass. ` +
-          `Rewrite with dramatically more burstiness, irregular sentence structure, and embedded specific ` +
-          `personal details only Mitchell would know. Sound like something dashed off in 20 minutes from notes.`;
-
-        try {
-          const retryCouncil = await callCouncil({
-            prompt: userPrompt,
-            models: [modelKey],
-            opts: { systemPrompt: stricterSystemPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
-          });
-          const rr = retryCouncil.results?.[0];
-          if (rr && !rr.error) {
+      if (apiDetection.gateBlocks === true) {
+        const pipeline = await runDetectionRetryPipeline({
+          initialProse: proseSections,
+          initialDetection: apiDetection,
+          baseSystemPrompt: SYSTEM_PROMPT,
+          regenerate: async (systemPrompt) => {
+            // Same model, stricter system prompt. Model-switching as evasion is banned.
+            const retryCouncil = await callCouncil({
+              prompt: userPrompt,
+              models: [modelKey],
+              opts: { systemPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
+            });
+            const rr = retryCouncil.results?.[0];
+            if (!rr || rr.error) throw new Error(rr?.error || 'no result');
             const addTok = rr.tokens || 0;
-            tokensUsed.input  += Math.round(addTok * 0.85);
-            tokensUsed.output += Math.round(addTok * 0.15);
+            const inTok  = Math.round(addTok * 0.85);
+            const outTok = Math.round(addTok * 0.15);
+            const retryParsed = CoverLetterLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
+            const retryProse  = retryParsed.paragraphs
+              .filter(p => p.section !== 'hook' && p.section !== 'ask')
+              .map(p => p.text)
+              .join('\n\n');
+            return { prose: retryProse, tokens: { input: inTok, output: outTok } };
+          },
+        });
 
-            try {
-              const retryParsed = CoverLetterLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
-              const retryProse  = retryParsed.paragraphs
-                .filter(p => p.section !== 'hook' && p.section !== 'ask')
-                .map(p => p.text)
-                .join('\n\n');
-              const retryDetection = await checkText(retryProse, { budgetUsd: 0.10, skipCache: true });
+        retryFinalStatus = pipeline.final_status;
+        retryAttempts = pipeline.attempts;
+        tokensUsed.input  += pipeline.tokens_used.input;
+        tokensUsed.output += pipeline.tokens_used.output;
 
-              // Accept retry if it improved (or at least no worse)
-              if (retryDetection.passes !== false || apiDetection.passes === false) {
-                parsed = retryParsed;
-                const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
-                writeFileSync(artifactPath, retryMarkdown, 'utf-8');
-                writeFileSync(join(outDirSecondary, 'cover-letter.md'), retryMarkdown, 'utf-8');
-                apiDetection = retryDetection;
-              }
-            } catch { /* use original if retry parse/detection fails */ }
+        // If a stage produced an accepted result, splice its prose back into
+        // the body paragraphs (preserving the original hook/ask structure).
+        const acceptedIdx = pipeline.attempts.findIndex(a => a.accepted);
+        if (acceptedIdx >= 0) {
+          const acceptedProse = pipeline.final.prose;
+          const acceptedParagraphs = acceptedProse.split(/\n\n+/);
+          const bodySlots = parsed.paragraphs
+            .map((p, i) => ({ p, i }))
+            .filter(({ p }) => p.section !== 'hook' && p.section !== 'ask');
+          for (let i = 0; i < bodySlots.length; i++) {
+            const newText = i === bodySlots.length - 1
+              ? acceptedParagraphs.slice(i).join('\n\n')
+              : acceptedParagraphs[i] || bodySlots[i].p.text;
+            parsed.paragraphs[bodySlots[i].i] = { ...bodySlots[i].p, text: newText };
           }
-        } catch { /* ignore regeneration failure — surface original */ }
+          const retryMarkdown = buildMarkdownArtifact(parsed, company, role);
+          writeFileSync(artifactPath, retryMarkdown, 'utf-8');
+          writeFileSync(join(outDirSecondary, 'cover-letter.md'), retryMarkdown, 'utf-8');
+        }
+
+        apiDetection = pipeline.final.detection;
       }
     } catch (detectionErr) {
-      // Non-fatal: gate error should not block the artifact
-      apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+      apiDetection = { passes: null, gateBlocks: null, error: String(detectionErr.message || detectionErr) };
     }
   }
 
-  const apiDetectionFailed = apiDetection?.passes === false;
+  // Only block on the calibrated gateBlocks decision, NOT the legacy `passes`
+  // (which the DELTA Δ.1 baseline showed has ~100% FPR on Mitchell's voice).
+  const apiDetectionFailed = apiDetection?.gateBlocks === true;
 
   // ── 9. Write decisions log (O9) ─────────────────────────────────────────
 
@@ -611,8 +630,9 @@ export async function runCoverLetter(input) {
   const finalStatus = humanizeScore > 45 || apiDetectionFailed ? 'error' : 'ok';
   const gz   = apiDetection?.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : null;
   const orig = apiDetection?.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : null;
+  const stagesAttempted = retryAttempts.length;
   const apiErrMsg = apiDetectionFailed
-    ? `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${[gz, orig].filter(Boolean).join(' / ')}`
+    ? `AI detection gate failed after ${stagesAttempted + 1} attempt(s) (${retryFinalStatus || 'NO_RETRY'}): ${[gz, orig].filter(Boolean).join(' / ')}`
     : null;
 
   // Build output shape matching orchestrator's cover_letter artifact contract
@@ -643,7 +663,13 @@ export async function runCoverLetter(input) {
       humanize_retry: humanizeRetried,
       humanize_risk_score: humanizeScore,
       humanize_risk_band: humanize.risk,
-      api_detection_retried: apiDetectionRetried,
+      api_detection_retry_stages: stagesAttempted,
+      api_detection_retry_status: retryFinalStatus,
+      api_detection_band: apiDetection?.band ?? null,
+      api_detection_signal_quality: {
+        gptzero: apiDetection?.gptzero_signal_quality ?? null,
+        originality: apiDetection?.originality_signal_quality ?? null,
+      },
     },
     error: humanizeScore > 45
       ? `humanize-check score ${humanizeScore} still > 45 after retry (${humanize.risk})`

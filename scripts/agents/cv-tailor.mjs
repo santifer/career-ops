@@ -59,6 +59,7 @@ import { callCouncil } from '../../lib/council.mjs';
 import { scoreAndRankBullets, buildLlmPreamble } from '../../lib/hm-weighting.mjs';
 import { dryRunSkipped } from './types.mjs';
 import { checkText, buildDoNotSubmitBanner } from '../../lib/ai-detection-gate.mjs';
+import { runDetectionRetryPipeline } from '../../lib/ai-detection-retry.mjs';
 
 // Load .env from repo root so API keys are available when cv-tailor is invoked
 // directly (not through a shell that already has the env exported). Uses
@@ -646,56 +647,72 @@ export async function runCvTailor(input) {
   /* ---------------------------------------------------------------------- */
   /* 8. API-backed AI detection gate                                         */
   /* ---------------------------------------------------------------------- */
-  // checkAndRegenerate pattern: run the API gate on the bullets prose.
-  // If fails on first attempt, regenerate once with a stricter system prompt.
-  // If still fails on second attempt, return status: 'error' with verdicts.
+  // DELTA P1 — 3-stage retry pipeline (replaces previous 1-stage retry).
+  // Block decisions read `gateBlocks` (band-aware) not the legacy `passes`
+  // (which the Δ.1 baseline showed has ~100% FPR on Mitchell's own writing).
 
   let apiDetection = null;
-  let apiDetectionRetried = false;
+  let retryFinalStatus = null;
+  let retryAttempts = [];
 
   try {
     apiDetection = await checkText(bulletsOnlyText, { budgetUsd: 0.10, skipCache: false });
 
-    if (apiDetection.passes === false) {
-      apiDetectionRetried = true;
-      const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
-      const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
-      const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
-        `The bullets scored > 50% AI probability on external detectors. ` +
-        `Rewrite with dramatically varied sentence rhythms, concrete personal details unique to Mitchell, ` +
-        `and hard-specific metrics. Avoid ALL smooth polish. Make it sound like something Mitchell wrote ` +
-        `in 15 minutes from notes, not copy edited by a committee.`;
-
-      try {
-        const retryCouncil = await callCouncil({
-          prompt: userPrompt,
-          models: [modelKey],
-          opts: { systemPrompt: stricterPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
-        });
-        const rr = retryCouncil.results?.[0];
-        if (rr && !rr.error) {
+    if (apiDetection.gateBlocks === true) {
+      const pipeline = await runDetectionRetryPipeline({
+        initialProse: bulletsOnlyText,
+        initialDetection: apiDetection,
+        baseSystemPrompt: SYSTEM_PROMPT,
+        regenerate: async (systemPrompt) => {
+          // Same model, stricter system prompt. Model-switching as evasion is banned.
+          const retryCouncil = await callCouncil({
+            prompt: userPrompt,
+            models: [modelKey],
+            opts: { systemPrompt, maxTokens: MAX_COMPLETION_TOKENS, reasoningEffort },
+          });
+          const rr = retryCouncil.results?.[0];
+          if (!rr || rr.error) throw new Error(rr?.error || 'no result');
           const addTok = rr.tokens || 0;
-          tokensUsed.input  += Math.round(addTok * 0.85);
-          tokensUsed.output += Math.round(addTok * 0.15);
+          const retryParsed = CvTailorLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
+          const retryBulletsText = retryParsed.tailored_bullets.map(b => `- ${b.text}`).join('\n');
+          return {
+            prose: retryBulletsText,
+            tokens: { input: Math.round(addTok * 0.85), output: Math.round(addTok * 0.15) },
+            _parsed: retryParsed,
+          };
+        },
+      });
 
-          try {
-            const retryParsed = CvTailorLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
-            const retryBulletsText = retryParsed.tailored_bullets.map(b => `- ${b.text}`).join('\n');
-            const retryDetection   = await checkText(retryBulletsText, { budgetUsd: 0.10, skipCache: true });
-            // Accept retry if it improved or is no worse
-            if (retryDetection.passes !== false || (apiDetection.passes === false)) {
-              parsed = retryParsed;
-              const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
-              writeFileSync(artifactPath, retryMarkdown, 'utf-8');
-              apiDetection = retryDetection;
-            }
-          } catch { /* use original if retry parse fails */ }
+      retryFinalStatus = pipeline.final_status;
+      retryAttempts = pipeline.attempts;
+      tokensUsed.input  += pipeline.tokens_used.input;
+      tokensUsed.output += pipeline.tokens_used.output;
+
+      // If a stage produced an accepted result, re-parse from final.prose and persist.
+      const acceptedIdx = pipeline.attempts.findIndex(a => a.accepted);
+      if (acceptedIdx >= 0) {
+        // Re-derive `parsed` from the accepted bullets by re-creating the
+        // bullet objects (text only). Other fields (cv_refs, hm_priority,
+        // hm_signal_weight) are dropped from retries — the retry is allowed
+        // to differ in those because the citation/scoring layer is downstream.
+        const bullets = pipeline.final.prose
+          .split('\n')
+          .filter(l => l.trim().startsWith('- '))
+          .map(l => ({ text: l.replace(/^- /, '').trim(), cv_refs: [] }));
+        if (bullets.length > 0) {
+          parsed = { ...parsed, tailored_bullets: bullets };
+          const retryMarkdown = buildMarkdownArtifact(parsed, company, role);
+          writeFileSync(artifactPath, retryMarkdown, 'utf-8');
         }
-      } catch { /* ignore regeneration failure — surface original detection result */ }
+      }
+
+      apiDetection = pipeline.final.detection;
     }
 
-    // If still failing after retry, return error with API verdicts
-    if (apiDetection.passes === false) {
+    // After up to 3 stages: block only if gateBlocks still true (CRIT band +
+    // GOOD signal quality). The Δ.1 baseline showed signal quality is
+    // currently USELESS for Mitchell's voice, so this branch is rare.
+    if (apiDetection.gateBlocks === true) {
       const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : 'GPTZero n/a';
       const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : 'Originality n/a';
       return {
@@ -716,14 +733,15 @@ export async function runCvTailor(input) {
           cost_estimate_usd: estimateCostUsd(tokensUsed),
           tokens_used: tokensUsed,
           model_used: modelUsed,
-          api_detection_retried: apiDetectionRetried,
+          api_detection_retry_stages: retryAttempts.length,
+          api_detection_retry_status: retryFinalStatus,
         },
-        error: `AI detection gate failed after ${apiDetectionRetried ? '2 attempts' : '1 attempt'}: ${gz} / ${orig}`,
+        error: `AI detection gate failed after ${retryAttempts.length + 1} attempt(s) (${retryFinalStatus || 'NO_RETRY'}): ${gz} / ${orig}`,
       };
     }
   } catch (detectionErr) {
     // Non-fatal: API gate error should not block the artifact. Log in diagnostics.
-    apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+    apiDetection = { passes: null, gateBlocks: null, error: String(detectionErr.message || detectionErr) };
   }
 
   /* ---------------------------------------------------------------------- */
@@ -754,7 +772,13 @@ export async function runCvTailor(input) {
       cost_estimate_usd: costUsd,
       tokens_used: tokensUsed,
       model_used: modelUsed,
-      api_detection_retried: apiDetectionRetried,
+      api_detection_retry_stages: retryAttempts.length,
+      api_detection_retry_status: retryFinalStatus,
+      api_detection_band: apiDetection?.band ?? null,
+      api_detection_signal_quality: {
+        gptzero: apiDetection?.gptzero_signal_quality ?? null,
+        originality: apiDetection?.originality_signal_quality ?? null,
+      },
     },
     error: null,
   };
