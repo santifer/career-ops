@@ -7175,54 +7175,7 @@ async function build() {
   body.dark .tn-apply { background: #14532d; color: #86efac; }
   body.dark .tn-skip  { background: #450a0a; color: #fca5a5; }
   body.dark .tn-defer { background: #422006; color: #fde68a; }
-  /* ── Notes & activity card (5th card) ────────────────────────── */
-  .dcard--notes  { border-left: 3px solid var(--text-4); }
-  .notes-compose { display: flex; flex-direction: column; gap: 6px; }
-  .notes-input {
-    width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px;
-    padding: 7px 9px; font-family: inherit; font-size: 12.5px;
-    line-height: 1.45; color: var(--text); background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-  }
-  .notes-input:focus {
-    outline: none; border-color: var(--blue-fg);
-    box-shadow: 0 0 0 2px rgba(0,120,212,0.18);
-  }
-  .notes-compose-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  }
-  .notes-counter { font-size: 11px; color: var(--text-4); }
-  .notes-counter.over { color: var(--amber); font-weight: 600; }
-  .notes-list {
-    margin-top: 10px; display: flex; flex-direction: column; gap: 6px;
-    max-height: 320px; overflow-y: auto;
-  }
-  .notes-empty { font-size: 11.5px; padding: 4px 0; }
-  .note-entry {
-    display: flex; flex-direction: column; gap: 3px;
-    padding: 7px 9px; background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    font-size: 12px; line-height: 1.45;
-  }
-  .note-entry-head {
-    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
-    font-size: 10.5px; color: var(--text-4);
-  }
-  .note-type-badge {
-    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; padding: 1px 6px; border-radius: var(--radius-full);
-  }
-  .note-type-badge.type-note   { background: var(--surface); color: var(--text-3); border: 1px solid var(--border); }
-  .note-type-badge.type-status { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
-  .note-text {
-    color: var(--text-2); white-space: pre-wrap; word-break: break-word;
-  }
-  .note-toggle {
-    align-self: flex-start; background: none; border: none;
-    color: var(--blue); font-size: 11px; cursor: pointer; padding: 2px 0;
-    font-family: inherit;
-  }
-  .note-toggle:hover { text-decoration: underline; }
+  /* Notes & activity CSS scrubbed 2026-05-19 (removed with the card + JS + /api/notes routes). */
   .dcard-btn {
     padding: 5px 12px; border-radius: var(--radius-sm); font-size: 12px;
     font-weight: 600; text-decoration: none; white-space: nowrap;
@@ -9954,7 +9907,6 @@ async function build() {
   .score-badge-lg,
   td.num,
   td.muted-text,
-  .note-entry-head,
   .bucket-card .bval,
   .comp-hist-label,
   .comp-hist-count,
@@ -9972,8 +9924,6 @@ async function build() {
      reads ~5% larger than Inter at the same px size. Pull data cells in
      so columns don't look bloated next to prose. */
   td.muted-text { font-size: 11.5px; letter-spacing: -0.005em; }
-  .note-entry-head { font-feature-settings: "tnum" 1; }
-  .note-entry-head .note-type-badge { font-family: 'Inter', sans-serif; }
 
   /* ── Wave G — Filter / sort / expand micro-interactions (#1.2) ──
      250ms standard easing on the five high-traffic surfaces. The
@@ -21263,10 +21213,15 @@ function _renderPillPopover(d) {
   }
   if (d.kind === 'benefits') {
     if (d.empty) {
-      return '<div class="pill-popover-kind">Benefits + Sentiment</div>'
-        + '<h4 class="pill-popover-headline">Not researched yet</h4>'
-        + '<div class="pill-popover-body pill-popover-empty">' + esc(d.hint || '') + '</div>'
-        + '<div class="pill-popover-meta">Run <code>node scripts/enrich-roles.mjs --top=5</code> to populate.</div>';
+      // BRAVO 2026-05-19 (content sweep): name what this popover would show
+      // when populated + explain when it auto-fills. Command stays in the
+      // muted meta line for power users; data-pill JSON's populateCmd
+      // overrides if present.
+      var benefitsCmd = (d.populateCmd ? esc(d.populateCmd) : 'node scripts/enrich-roles.mjs --top=5');
+      return '<div class="pill-popover-kind">Benefits + Team Health</div>'
+        + '<h4 class="pill-popover-headline">Not researched for this company yet</h4>'
+        + '<div class="pill-popover-body pill-popover-empty">' + esc(d.hint || '') + ' Once populated, this shows the team-health grade (Glassdoor / Blind / Reddit sentiment, 1=healthy → 5=avoid), benefits summary (401k match, healthcare, parental leave), and biweekly take-home math.</div>'
+        + '<div class="pill-popover-meta">Auto-fills in the next role-enrichment pass. To populate now: <code>' + benefitsCmd + '</code></div>';
     }
     const b = d.benefits || {};
     const s = d.sentiment || {};
@@ -21306,10 +21261,13 @@ function _renderPillPopover(d) {
   }
   if (d.kind === 'people') {
     if (d.empty) {
+      // BRAVO 2026-05-19 (content sweep): name what would be here once
+      // populated + when it auto-fills.
+      var peopleCmd = (d.populateCmd ? esc(d.populateCmd) : 'node scripts/enrich-roles.mjs --top=5');
       return '<div class="pill-popover-kind">Recruiter + Hiring Manager</div>'
-        + '<h4 class="pill-popover-headline">Not researched yet</h4>'
-        + '<div class="pill-popover-body pill-popover-empty">' + esc(d.hint || '') + '</div>'
-        + '<div class="pill-popover-meta">Run <code>node scripts/enrich-roles.mjs --top=5</code> to populate.</div>';
+        + '<h4 class="pill-popover-headline">Not researched for this role yet</h4>'
+        + '<div class="pill-popover-body pill-popover-empty">' + esc(d.hint || '') + ' Once populated, this surfaces the likely recruiter and hiring manager (with LinkedIn links + the rationale chain that identified them), plus any first or second-degree LinkedIn connections you already have at the company.</div>'
+        + '<div class="pill-popover-meta">Auto-fills in the next role-enrichment pass. To populate now: <code>' + peopleCmd + '</code></div>';
     }
     const personBlock = (label, p) => {
       if (!p || !p.name || p.name === 'unknown') {
@@ -24114,7 +24072,6 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   body.share-mode .action-cell a[href]:not([href^="#"]):not([href^="reports/"]),
   body.share-mode .action-cell a[onclick*="openVerify"],
   body.share-mode .dcard--action,
-  body.share-mode .dcard--notes,
   body.share-mode .rec-btn,
   body.share-mode #sidebar-batch,
   body.share-mode .toolbar-btn.cmdk-trigger,
