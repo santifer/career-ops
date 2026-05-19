@@ -356,14 +356,19 @@ function parsePipeline() {
 //
 // All caps overridable via env vars so power-user / interview-week bursts can
 // raise the ceiling without code changes.
-const COST_PER_TRIAGE_HAIKU      = 0.005;
-const COST_PER_TRIAGE_SONNET_JD  = 0.07;   // Tier 5 enriched triage per item
-const COST_PER_BATCH_EVAL        = 0.060;
-const COST_PER_COMPANY_COUNCIL   = 2.00;   // council-of-models + dealbreaker per unique company
-const COST_PER_APPLY_PACK_PREGEN = 2.50;   // build-apply-packs.mjs per high-conf item
-const ADVANCE_RATE_ESTIMATE      = 0.50;   // historical: 11–72%; 50% is conservative mid
-const HIGH_CONFIDENCE_PREGEN_RATE = 0.20;  // % of items hitting ≥4.5 + high-conf flag
-const COMPANY_CACHE_HIT_RATE     = 0.50;   // % of unique companies already cached (30d TTL)
+// ε 2026-05-19 — promoted 5 cost-preview ratios to env-var overrides so ops
+// can tune them without code changes (e.g. when council pricing shifts or
+// publish rate drifts season-over-season). Defaults preserved bit-for-bit
+// to ensure no behavior change vs prior session. Env-var names follow the
+// existing PER_RUN_CAP_* / COST_PER_*_USD convention.
+const COST_PER_TRIAGE_HAIKU      = parseFloat(process.env.COST_PER_TRIAGE_HAIKU_USD      || '0.005');
+const COST_PER_TRIAGE_SONNET_JD  = parseFloat(process.env.COST_PER_TRIAGE_SONNET_JD_USD  || '0.07');    // Tier 5 enriched triage per item
+const COST_PER_BATCH_EVAL        = parseFloat(process.env.COST_PER_BATCH_EVAL_USD        || '0.060');
+const COST_PER_COMPANY_COUNCIL   = parseFloat(process.env.COST_PER_COMPANY_COUNCIL_USD   || '2.00');    // council-of-models + dealbreaker per unique company
+const COST_PER_APPLY_PACK_PREGEN = parseFloat(process.env.COST_PER_APPLY_PACK_PREGEN_USD || '2.50');    // build-apply-packs.mjs per high-conf item
+const ADVANCE_RATE_ESTIMATE       = parseFloat(process.env.ADVANCE_RATE_ESTIMATE        || '0.50');    // historical: 11–72%; 50% is conservative mid
+const HIGH_CONFIDENCE_PREGEN_RATE = parseFloat(process.env.HIGH_CONFIDENCE_PREGEN_RATE  || '0.20');    // % of items hitting ≥4.5 + high-conf flag
+const COMPANY_CACHE_HIT_RATE      = parseFloat(process.env.COMPANY_CACHE_HIT_RATE       || '0.50');    // % of unique companies already cached (30d TTL)
 
 const PER_RUN_CAP_RUN_BATCH    = parseFloat(process.env.PER_RUN_CAP_RUN_BATCH_USD    || '25');
 const PER_RUN_CAP_PROCESS_ALL  = parseFloat(process.env.PER_RUN_CAP_PROCESS_ALL_USD  || '250');
@@ -377,9 +382,9 @@ const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD 
 // Decomposed agent enrichment costs (surfaced per-stage in the preview modal)
 const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '4.00');
 const COST_PER_DEALBREAKER_CALL  = parseFloat(process.env.COST_PER_DEALBREAKER_CALL_USD || '0.30');
-const PUBLISH_RATE_ESTIMATE      = 0.40;  // % of evals scoring >= 4.0 → published to apply-now queue
-const RESEARCHER_ENRICHMENT_RATE = 0.30;  // % of published items triggering researcher (no cached HM intel)
-const THRESHOLD_FOR_PUBLISH      = 4.0;   // minimum score to publish to apply-now queue
+const PUBLISH_RATE_ESTIMATE      = parseFloat(process.env.PUBLISH_RATE_ESTIMATE      || '0.40');  // % of evals scoring >= 4.0 → published to apply-now queue
+const RESEARCHER_ENRICHMENT_RATE = parseFloat(process.env.RESEARCHER_ENRICHMENT_RATE || '0.30');  // % of published items triggering researcher (no cached HM intel)
+const THRESHOLD_FOR_PUBLISH      = parseFloat(process.env.THRESHOLD_FOR_PUBLISH      || '4.0');   // minimum score to publish to apply-now queue
 
 function countPipelinePending() {
   const fp = join(ROOT, 'data/pipeline.md');
