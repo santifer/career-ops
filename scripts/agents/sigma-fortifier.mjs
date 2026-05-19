@@ -162,8 +162,14 @@ function shSafe(cmd) {
 }
 
 function checkCleanTree() {
-  const status = shSafe('git status --porcelain').out.trim();
-  if (!status) return { ok: true };
+  // NOTE: do NOT .trim() the porcelain output — git porcelain always emits
+  // `XY ` (2 status chars + 1 space) before each filename. The unstaged-modify
+  // status is ` M` (leading SPACE + M), so trimming the whole output would
+  // strip the leading space from line 1 only and corrupt our slice indices.
+  const raw = shSafe('git status --porcelain').out;
+  if (!raw) return { ok: true };
+  const lines = raw.split('\n').filter(l => l.length >= 3);
+  if (lines.length === 0) return { ok: true };
   // SIGMA's commits are surgical (one finding.file per commit via agent-commit.mjs)
   // and rollback uses `git checkout -- <file>` against the HEAD. The only files
   // that affect SIGMA's safety are MODIFIED code files SIGMA might patch:
@@ -172,11 +178,10 @@ function checkCleanTree() {
   //     jobs and are never SIGMA targets — dirty state cannot affect SIGMA's commits.
   // Filter both out; only refuse if MODIFIED code files remain.
   const STATE_PREFIXES = ['data/', 'batch/'];
-  const codeLines = status.split('\n').filter(line => {
+  const codeLines = lines.filter(line => {
     const flags = line.slice(0, 2);
-    const isUntracked = flags === '??';
-    if (isUntracked) return false;
-    const p = line.length > 3 ? line.slice(3).replace(/^"|"$/g, '') : '';
+    if (flags === '??') return false;
+    const p = line.slice(3).replace(/^"|"$/g, '');
     return p && !STATE_PREFIXES.some(pre => p.startsWith(pre));
   });
   if (codeLines.length > 0) {
