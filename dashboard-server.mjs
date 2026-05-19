@@ -1436,29 +1436,36 @@ function buildPerCompanyPipelinePreview() {
   };
 }
 
-function spawnProcessAll({ sendEmail, force, companies }) {
+function spawnProcessAll({ sendEmail, force, companies, tier }) {
   // Cap enforcement (calibration 2026-05-16): refuse to spawn if per-run cap
   // or monthly budget exceeded. `force: true` overrides — for the user-explicit
   // "I know what I'm doing, fire it anyway" path.
+  // Tier-5 uses the tier5_estimate total instead of normal-tier total.
+  const isTier5 = String(tier) === '5';
   if (!force) {
     const preview = buildPipelinePreview();
-    if (preview.process_all.exceeds_per_run_cap) {
+    const costForCap = isTier5
+      ? (preview.process_all.tier5_estimate?.total_cost_usd || 0)
+      : preview.process_all.total_cost_usd;
+    if (costForCap > PER_RUN_CAP_PROCESS_ALL) {
       return {
         ok: false,
-        error: `Process All estimate $${preview.process_all.total_cost_usd} exceeds per-run cap $${PER_RUN_CAP_PROCESS_ALL}. Pass force:true to override, or raise PER_RUN_CAP_PROCESS_ALL_USD env.`,
+        error: `Process All${isTier5 ? ' (Tier-5)' : ''} estimate $${costForCap.toFixed(2)} exceeds per-run cap $${PER_RUN_CAP_PROCESS_ALL}. Pass force:true to override, or raise PER_RUN_CAP_PROCESS_ALL_USD env.`,
         cap_exceeded: 'per_run',
-        estimated_cost_usd: preview.process_all.total_cost_usd,
+        estimated_cost_usd: costForCap,
         cap_usd: PER_RUN_CAP_PROCESS_ALL,
+        tier: isTier5 ? '5' : 'normal',
       };
     }
-    if (preview.process_all.exceeds_budget) {
+    if (preview.spent_30d_usd + costForCap > preview.effective_budget_usd) {
       return {
         ok: false,
-        error: `Process All would push 30d spend ($${preview.spent_30d_usd} + $${preview.process_all.total_cost_usd}) past effective monthly budget $${preview.effective_budget_usd}. Activate burst mode (MONTHLY_BUDGET_USD_BURST + MONTHLY_BUDGET_BURST_UNTIL) or pass force:true.`,
+        error: `Process All${isTier5 ? ' (Tier-5)' : ''} would push 30d spend ($${preview.spent_30d_usd.toFixed(2)} + $${costForCap.toFixed(2)}) past effective monthly budget $${preview.effective_budget_usd}. Activate burst mode (MONTHLY_BUDGET_USD_BURST + MONTHLY_BUDGET_BURST_UNTIL) or pass force:true.`,
         cap_exceeded: 'monthly',
-        estimated_cost_usd: preview.process_all.total_cost_usd,
+        estimated_cost_usd: costForCap,
         spent_30d_usd: preview.spent_30d_usd,
         effective_budget_usd: preview.effective_budget_usd,
+        tier: isTier5 ? '5' : 'normal',
       };
     }
   }
@@ -1469,6 +1476,7 @@ function spawnProcessAll({ sendEmail, force, companies }) {
   const args = [join(ROOT, 'scripts/process-all-pipeline.mjs'), `--job-id=${jobId}`];
   if (sendEmail) args.push('--send-email');
   if (force) args.push('--cap-override');
+  if (isTier5) args.push('--tier=5');
   // Optional company subset (Task 2 — 2-phase modal). Pass through to the
   // orchestrator as a comma-separated list. Sanitized: only letters / digits /
   // hyphen / underscore / comma / space allowed so a malicious payload can't
@@ -4287,6 +4295,8 @@ const server = createServer((req, res) => {
         if (p.confirm !== true) return 'confirm must be boolean true';
         if (p.sendEmail !== undefined && typeof p.sendEmail !== 'boolean') return 'sendEmail must be boolean';
         if (p.force !== undefined && typeof p.force !== 'boolean') return 'force must be boolean';
+        // Quality tier — only 'normal' (default) or '5' accepted.
+        if (p.tier !== undefined && p.tier !== 'normal' && p.tier !== '5' && p.tier !== 5) return 'tier must be "normal" or "5"';
         if (p.companies !== undefined) {
           if (!Array.isArray(p.companies)) return 'companies must be an array of strings';
           if (p.companies.length > 200) return 'companies cap is 200 entries';
@@ -4310,6 +4320,7 @@ const server = createServer((req, res) => {
         sendEmail: parsed.sendEmail === true,
         force:     parsed.force === true,
         companies: Array.isArray(parsed.companies) ? parsed.companies : null,
+        tier:      String(parsed.tier || 'normal'),
       });
       // 402 (Payment Required) for cap-exceeded refusals so UI can distinguish from generic errors
       const statusCode = result.ok ? 200 : (result.cap_exceeded ? 402 : 400);

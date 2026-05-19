@@ -20073,7 +20073,14 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   // after this run" assurance on full drain, or an amber warning on partial.
   const tier5 = pAgg.process_all.tier5_estimate || {};
   const fullDrainCost = pAgg.process_all.total_cost_usd || 0;
+  // 2026-05-19 (Mitchell feedback — cohesion fix): the headline used to count
+  // only triage_count (pipeline.md unchecked items, e.g. 15), but Process All
+  // also drains the queued_for_batch set (already-triaged items waiting for
+  // batch eval, e.g. 172). The sidebar badge already shows the honest total
+  // (pending + queued, e.g. 187); the modal should match.
   const triageCount = pAgg.process_all.triage_count || 0;
+  const queuedForBatch = pAgg.queued_for_batch || 0;
+  const totalPipelineItems = triageCount + queuedForBatch;
   const scopedRows = (pCmp && Array.isArray(pCmp.companies))
     ? pCmp.companies.filter(c => !c.excluded)
     : [];
@@ -20088,16 +20095,33 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   const detectionLine = scopedDetection > 0.005
     ? '<div id="pcp-headline-detection" style="font-size:11px;opacity:0.55;margin-top:2px">+ $' + scopedDetection.toFixed(2) + ' potential AI-detection (post-publish, if ' + optInPct + '% opt in to Build pack)</div>'
     : '<div id="pcp-headline-detection" style="display:none;font-size:11px;opacity:0.55;margin-top:2px"></div>';
+  // 2026-05-19 (Mitchell feedback): Tier-5 line is now a real CTA that POSTs
+  // tier:5 to /api/pipeline/process-all. Opens a confirm dialog with cost +
+  // scope before any LLM spend. Inline-styled to look like a button (subtle).
   const tier5Line = (tier5.total_cost_usd != null)
-    ? '<span>Tier-5 estimate · ' + (tier5.unique_companies || 0) + ' companies: $' + tier5.total_cost_usd.toFixed(2) + '</span>'
+    ? '<button type="button" id="pcp-tier5-cta" onclick="confirmTier5Run()" '
+      + 'style="background:transparent;border:1px dashed rgba(255,255,255,0.18);border-radius:4px;padding:2px 8px;'
+      + 'font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;font-family:inherit" '
+      + 'title="Run Tier-5 (Sonnet JD enrichment + apply-pack pregen on high-confidence rows). Opens a confirm dialog before spending.">'
+      + '⚡ Run Tier-5 on all ' + totalPipelineItems + ' items '
+      + '<span style="opacity:0.6">· ' + (tier5.unique_companies || 0) + ' companies · $' + tier5.total_cost_usd.toFixed(2) + '</span>'
+      + '</button>'
     : '';
   // Drain assurance: green check on full drain (default state), recomputed
   // by _pcpUpdateScopedCost when user toggles checkboxes.
+  // Breakdown surfaces the 15 (to triage) + 172 (already queued) split so the
+  // 187 number visible in the sidebar reconciles inside the modal.
+  const breakdownText = queuedForBatch > 0
+    ? triageCount + ' to triage + ' + queuedForBatch + ' already queued'
+    : triageCount + ' item' + (triageCount === 1 ? '' : 's');
   const drainAssurance = ''
     + '<div id="pcp-drain-assurance" style="font-size:12px;margin-top:6px;color:#10b981;font-weight:500">'
-    +   '✓ Pipeline.md drains to 0 after this run · ' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ' + ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + ' fully processed'
+    +   '✓ Pipeline drains to 0 after this run · ' + totalPipelineItems + ' total ('
+    +   breakdownText + ') · ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + ' fully processed'
     + '</div>';
-  const initialLabel = 'Full pipeline drain · ' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ' + ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies');
+  const initialLabel = 'Full pipeline drain · ' + totalPipelineItems + ' item' + (totalPipelineItems === 1 ? '' : 's')
+    + ' <span style="font-size:11px;opacity:0.55;font-weight:400">(' + breakdownText + ') + '
+    + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + '</span>';
   const headline = ''
     + '<div class="pipeline-modal-section">'
     +   '<div class="pcp-phase-pill">Step 1 of 2 — preview</div>'
@@ -20107,7 +20131,7 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
     +   '</div>'
     +   detectionLine
     +   drainAssurance
-    +   '<div style="font-size:11px;opacity:0.55;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:6px">'
+    +   '<div style="font-size:11px;opacity:0.55;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:6px;align-items:center">'
     +     '<span>Per-company drilldown (council + apply-pack pregen): $' + allCompaniesCost.toFixed(2) + ' · uncheck rows below to reduce scope</span>'
     +     tier5Line
     +   '</div>'
@@ -20643,6 +20667,61 @@ async function refreshPipelineBadges() {
     if (allBadge)   allBadge.textContent   = p.pending_pipeline + p.queued_for_batch;
   } catch {}
 }
+// 2026-05-19 (Mitchell feedback — cohesion fix): Tier-5 click handler.
+// Reads the current preview's tier5_estimate, shows a native confirm() with
+// the cost, then POSTs tier:5 to /api/pipeline/process-all. Native confirm
+// is the right primitive here because we already have an open modal — opening
+// a second nested modal-on-modal would be worse UX than a one-line confirm.
+async function confirmTier5Run() {
+  if (!_pipelinePreview) {
+    if (window.toast) window.toast('Preview not loaded yet — try again', 'error');
+    return;
+  }
+  const t5 = _pipelinePreview.process_all && _pipelinePreview.process_all.tier5_estimate;
+  if (!t5 || t5.total_cost_usd == null) {
+    if (window.toast) window.toast('No Tier-5 estimate available', 'error');
+    return;
+  }
+  const cost = t5.total_cost_usd;
+  const companies = t5.unique_companies || 0;
+  const pending = _pipelinePreview.pending_pipeline || 0;
+  const queued = _pipelinePreview.queued_for_batch || 0;
+  const total = pending + queued;
+  const msg = 'Run Tier-5 pass on ' + total + ' pipeline items ('
+    + pending + ' to triage + ' + queued + ' already queued, ~' + companies + ' unique companies)?\n\n'
+    + 'Tier-5 upgrades:\n'
+    + '  · Triage uses Sonnet 4.6 (richer JD reasoning) instead of Haiku 4.5\n'
+    + '  · After batch, auto-generates apply-packs for top-10 high-confidence rows (≥4.5)\n\n'
+    + 'Estimated cost: $' + cost.toFixed(2) + '\n'
+    + 'Per-run cap: $' + (_pipelinePreview.per_run_caps?.process_all_usd ?? 'unknown') + '\n\n'
+    + 'Click OK to fire (cap is enforced server-side — will refuse if exceeded).';
+  if (!window.confirm(msg)) return;
+  const btn = document.getElementById('pcp-tier5-cta');
+  if (btn) { btn.disabled = true; btn.textContent = 'Starting…'; }
+  try {
+    const res = await fetch('/api/pipeline/process-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: true, tier: '5', sendEmail: false, force: false }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      if (res.status === 402 && data.cap_exceeded) {
+        throw new Error(data.error || ('Cap exceeded: ' + data.cap_exceeded));
+      }
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
+    _pipelineCurrentJob = { jobId: data.jobId, type: 'process-all', sendEmail: false, tier: '5' };
+    closePipelineModal();
+    showPipelineToast('process-all-tier5', false);
+    startPipelineStatusPoll(data.jobId);
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = '⚡ Retry Tier-5'; }
+    if (window.toast) window.toast('Tier-5 failed to start: ' + (err.message || err), 'error');
+    else alert('Tier-5 failed to start: ' + (err.message || err));
+  }
+}
+window.confirmTier5Run = confirmTier5Run;
 window.openPipelineModal = openPipelineModal;
 window.closePipelineModal = closePipelineModal;
 window.confirmPipelineAction = confirmPipelineAction;

@@ -31,7 +31,7 @@ try {
 } catch { /* dotenv optional */ }
 
 import { isCircuitOpen, withRetryBackoff, recordSuccess, recordFailure } from './lib/provider-client.mjs';
-import { HAIKU } from './lib/models.mjs';
+import { HAIKU, SONNET } from './lib/models.mjs';
 import { readCached, poolMap } from './lib/fetch-utils.mjs';
 import { guessCompany, buildCompanyMatcher } from './lib/ats-utils.mjs';
 import { checkUrl } from './lib/http-liveness.mjs';
@@ -67,6 +67,10 @@ const LIVENESS_ONLY  = ARGS['liveness-only'] === true || ARGS['liveness-only'] =
 const DRY_RUN        = ARGS['dry-run']       === true || ARGS['dry-run']       === 'true';
 const CONCURRENCY    = Math.max(1, parseInt(ARGS.concurrency ?? '1'));
 const LIVENESS_TIMEOUT_MS = 10_000;
+// Tier-5 quality flag — route triage scoring to Sonnet 4.6 (richer JD reasoning,
+// ~14× higher per-call cost vs Haiku). Default false → preserve historical
+// Haiku path. Activated by Process All's Tier-5 button.
+const USE_SONNET_JD  = ARGS['use-sonnet-jd'] === true || ARGS['use-sonnet-jd'] === 'true';
 
 // ── Paths ───────────────────────────────────────────────────────
 const PIPELINE_FILE   = join(ROOT, 'data/pipeline.md');
@@ -264,7 +268,7 @@ async function callHaiku(prompt) {
     throw new Error('ANTHROPIC_API_KEY not set in env');
   }
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 45_000);
+  const t = setTimeout(() => ctrl.abort(), USE_SONNET_JD ? 75_000 : 45_000);
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -274,8 +278,8 @@ async function callHaiku(prompt) {
         'content-type':      'application/json',
       },
       body: JSON.stringify({
-        model:       HAIKU,
-        max_tokens:  300,
+        model:       USE_SONNET_JD ? SONNET : HAIKU,
+        max_tokens:  USE_SONNET_JD ? 800 : 300,
         temperature: 0,
         messages:    [{ role: 'user', content: prompt }],
       }),

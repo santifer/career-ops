@@ -46,6 +46,14 @@ const DRY_RUN = !!ARGS['dry-run'];
 const JOB_ID = ARGS['job-id'] || ('proc-' + Date.now().toString(36) + '-' + randomBytes(3).toString('hex'));
 const LOG_PATH = `/tmp/process-all-${JOB_ID}.log`;
 
+// Quality tier — 'normal' (default, Haiku triage) or '5' (Sonnet triage + apply-pack pregen on high-confidence rows).
+// Tier 5 enriches the entire pipeline drain with Sonnet JD reasoning ($0.07/item vs $0.005)
+// AND pre-generates apply-packs for rows scoring ≥ HIGH_CONFIDENCE_PREGEN_FLOOR (default 4.5).
+// Triggered explicitly via the Tier-5 button in the Process All modal.
+const TIER = String(ARGS.tier || 'normal').trim();
+const IS_TIER5 = TIER === '5';
+const HIGH_CONFIDENCE_PREGEN_FLOOR = parseFloat(process.env.HIGH_CONFIDENCE_PREGEN_FLOOR || '4.5');
+
 // Optional company scope from the Process All Phase A modal. When present,
 // passed through to triage.mjs and batch-runner-batches.mjs so both filter
 // at their respective layers (forward funnel — both must respect the scope
@@ -144,10 +152,12 @@ function runScript(name, args = [], env = {}) {
 
 // ── Phase wrappers ────────────────────────────────────────────────────────
 async function phaseTriage() {
-  updateJob({ phase: 'triage', phase_started_at: new Date().toISOString() });
-  log('━━━ Phase 1/4: TRIAGE ━━━');
+  updateJob({ phase: 'triage', phase_started_at: new Date().toISOString(), tier: TIER });
+  log(`━━━ Phase 1/4: TRIAGE ${IS_TIER5 ? '(TIER-5: Sonnet JD)' : '(Haiku)'} ━━━`);
   if (DRY_RUN) { log('(dry-run) skipping triage'); return { ok: true, advanced: 0 }; }
-  const code = await runScript('triage.mjs', ['--daily-limit=300', ...SCOPED_ARGS]);
+  const triageArgs = ['--daily-limit=300', ...SCOPED_ARGS];
+  if (IS_TIER5) triageArgs.push('--use-sonnet-jd');
+  const code = await runScript('triage.mjs', triageArgs);
   // Parse triage's output for advanced count (best-effort)
   let advanced = 0;
   try {
@@ -306,6 +316,29 @@ async function phaseMergeTracker() {
   return { ok: true };
 }
 
+// Tier-5 only — pre-generate apply-packs for high-confidence rows that just landed.
+// build-apply-packs.mjs reads applications.md, picks top-N by score (floor=4.0 hardcoded in that script),
+// and generates the full pack directory (cover-letter, form-fields, interview-prep, ATS check, etc.).
+// We cap N at TIER5_PREGEN_TOP_N (default 10) so a single run can't auto-generate 50 packs.
+async function phasePregen() {
+  if (!IS_TIER5) {
+    log('━━━ Phase 2.75/4: APPLY-PACK PREGEN ━━━ (skipped — Tier-5 only)');
+    return { ok: true, skipped: true };
+  }
+  updateJob({ phase: 'pregen', phase_started_at: new Date().toISOString() });
+  const topN = Math.max(1, Math.min(50, parseInt(process.env.TIER5_PREGEN_TOP_N || '10', 10)));
+  log(`━━━ Phase 2.75/4: APPLY-PACK PREGEN (TIER-5) — top ${topN} rows ≥${HIGH_CONFIDENCE_PREGEN_FLOOR} ━━━`);
+  if (DRY_RUN) { log('(dry-run) skipping pregen'); return { ok: true, generated: 0 }; }
+  const code = await runScript('scripts/build-apply-packs.mjs', [`--top=${topN}`, '--include-todays-top']);
+  if (code !== 0) {
+    log(`⚠ apply-pack pregen exited ${code} — continuing (soft-fail per phasePolish convention)`);
+    return { ok: true, generated: 0, exit_code: code };
+  }
+  log(`✓ apply-pack pregen complete (top ${topN})`);
+  updateJob({ pregen_top_n: topN });
+  return { ok: true, top_n: topN };
+}
+
 async function phaseRebuild() {
   updateJob({ phase: 'rebuild', phase_started_at: new Date().toISOString() });
   log('━━━ Phase 3/4: DASHBOARD REBUILD ━━━');
@@ -379,6 +412,9 @@ async function main() {
     // Soft-fail: log and continue. Polish failures shouldn't block the rest.
     log('⚠️  polish phase reported failure — continuing pipeline');
   }
+  // Tier-5 only — apply-pack pregen for top-N high-confidence rows.
+  // Soft-fail: pregen failure does not block merge/rebuild.
+  phases.pregen = await phasePregen();
   phases.merge   = await phaseMergeTracker();
   if (!phases.merge.ok) {
     // Non-fatal — tracker merge failure shouldn't block rebuild
