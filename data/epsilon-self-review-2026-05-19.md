@@ -149,12 +149,69 @@ Findings:
 | Finding | Severity | Action taken | Status |
 |---|---|---|---|
 | Cognition Ashby API slug wrong (-ai 404) | MEDIUM | Fixed slug in portals.yml | RESOLVED |
-| 1 dead inline link in 538 to never-existed 536.md | LOW | Documented; leave for Mitchell | INFORMATIONAL |
-| dashboard-server flap (EX_CONFIG 78) | HIGH | Documented fix path | NEEDS_HUMAN |
-| telegram-bot flap | LOW | Documented | NEEDS_HUMAN |
-| scan.mjs missing provider files | MEDIUM | Documented | NEEDS_HUMAN (out of EPSILON scope) |
+| 1 dead inline link in 538 to never-existed 536.md | LOW | Mitchell decision 2026-05-19: leave | INFORMATIONAL (closed) |
+| dashboard-server flap (EX_CONFIG 78) | HIGH | Mitchell decision 2026-05-19: rebootstrap LAST (after other items). See sequence below. | PENDING — Mitchell runs commands |
+| telegram-bot flap | LOW | Mitchell decision 2026-05-19: rebootstrap | PENDING — Mitchell runs commands (see below) |
+| scan.mjs missing provider files | MEDIUM | Mitchell decision 2026-05-19: real gap — restore providers/*.mjs | UPGRADED to real bug — out of EPSILON scope; owner to restore |
 | 8 apply-packs no-tracker-ref (forward-built) | LOW | Documented | INFORMATIONAL (intentional, NOT orphans) |
-| AGENTS.md plist count drift (19→25 overnight) | LOW | Fix coming in this commit | RESOLVING |
+| AGENTS.md plist count drift (19→25 overnight) | LOW | Tightened to refer to system-maintainer | RESOLVED |
 | Null-pointer in system-maintainer for missing data | MEDIUM | Fixed before commit | RESOLVED |
+| Loose-end A: sibling staging-plist fix not committed | LOW | Committed `699c1c2` per Mitchell auth 2026-05-19 | RESOLVED |
+| Loose-end B: nohup wrapper not bootstrapped | LOW | Bootstrapped 2026-05-19 (`launchctl bootstrap gui/$(id -u)/...`) — wrapper job loaded, idempotency check fired, no-op'd correctly on existing PID 72341 | RESOLVED |
 
-**No critical regressions from EPSILON's pass. 4 NEEDS_HUMAN items, all documented with reversal/fix steps Mitchell can execute in under 60 seconds.**
+---
+
+## Mitchell's morning sequence (after waking up)
+
+Run these in order. Each is one or two commands. The dashboard-server item is intentionally last because rebootstrap kills the manual PID 43518 currently serving :3097 — if rebootstrap fails, dashboard is down until you re-spawn manually.
+
+### Step 1 — telegram-bot rebootstrap
+
+```bash
+# Locate the plist (it's in ~/Library/LaunchAgents/, not scripts/launchd/)
+ls ~/Library/LaunchAgents/ | grep telegram-bot
+# Standard rebootstrap pattern:
+launchctl bootout gui/$(id -u)/com.mitchell.career-ops.telegram-bot 2>/dev/null
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.mitchell.career-ops.telegram-bot.plist
+launchctl list com.mitchell.career-ops.telegram-bot | grep -E 'PID|LastExit'
+```
+
+If LastExit goes from 78 → 0 with a real PID, it's fixed. If still EX_CONFIG 78, the plist itself has an issue separate from this overnight pass.
+
+### Step 2 — scan.mjs providers restoration (upgraded to real bug)
+
+This is the gap that prevents `node scan.mjs --company Cognition` from working against my new 10 portal entries. EPSILON cannot restore the providers (out of file-ownership scope). Owner of `scan.mjs` needs to:
+1. Recover greenhouse/ashby/lever provider modules from prior commit or rebuild from `_http.mjs` helper.
+2. Verify with `node scan.mjs --dry-run --company Cognition` returning at least one role.
+
+### Step 3 — dashboard-server rebootstrap (LAST)
+
+```bash
+# Find the manual PID
+PID=$(lsof -nP -iTCP:3097 -sTCP:LISTEN -t)
+echo "Manual PID currently serving :3097: $PID"
+# Stop it cleanly so launchd can take over
+kill -TERM $PID
+sleep 2
+# Clear the stale launchd job
+launchctl bootout gui/$(id -u)/com.mitchell.career-ops.dashboard-server
+# Reinstall the canonical plist
+cp /Users/mitchellwilliams/Documents/career-ops/scripts/launchd/com.mitchell.career-ops.dashboard-server.plist ~/Library/LaunchAgents/
+# Bootstrap fresh
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.mitchell.career-ops.dashboard-server.plist
+sleep 3
+# Verify
+launchctl list com.mitchell.career-ops.dashboard-server | grep -E 'PID|LastExit'
+lsof -nP -iTCP:3097 | head -3
+curl -s -o /dev/null -w "HTTP %{http_code}\n" http://localhost:3097/api/stats
+```
+
+Expected: PID is a number (not "-"), LastExit is 0, port 3097 has a listener owned by the new node process, /api/stats returns HTTP 200.
+
+If LastExit is still 78 after rebootstrap: `log show --predicate 'subsystem == "com.apple.launchd"' --last 1m` will surface the actual error. Most likely cause if it still fails is the LimitLoadToSessionType key persisting from the stale registration — try a full session logout + login, then re-bootstrap.
+
+**Rollback if rebootstrap fails:** `node /Users/mitchellwilliams/Documents/career-ops/dashboard-server.mjs --port=3097 &` brings the manual server back.
+
+---
+
+**Net: all NEEDS_HUMAN items have Mitchell decisions + concrete commands. No critical regressions from EPSILON's pass.**
