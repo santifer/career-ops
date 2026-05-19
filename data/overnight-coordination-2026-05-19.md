@@ -325,3 +325,12 @@ Files touched (no conflicts with other personas per coordination matrix):
 - Findings + cost comparison will land in `data/alpha-polish-cv-scope-comparison-2026-05-19.md`
 
 — α (NEEDS_HUMAN resolution, 14:54 PT)
+
+## 2026-05-19 — α ALPHA Run-Batch eval — final
+- α merged + restarted at bd971a8 (audit fixes) + 9397ef9 (report + snapshots).
+- Dashboard-server restarted via launchctl kickstart (PID 82616 → 86803). HTTP 200 on localhost:3097, 302→CF Access on https://dashboard.careers-ops.com/.
+- Live API verification: `agent_enrichment.polish` block present in /api/pipeline/preview; with POLISH_PACK_ENABLED=1 (sibling test port), total_cost_usd jumps $95.60 → $395.60 (the $300 hidden polish spend is now disclosed).
+- Snapshots: data/runbatch-eval-snapshots/alpha/preview-polish-{off,on}-2026-05-19.json
+- Report: data/alpha-runbatch-eval-2026-05-19.md
+
+— α (final)
