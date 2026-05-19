@@ -18224,7 +18224,19 @@ async function toggleStatPanel(key) {
 
   const data = await apiFetch('/api/detail/' + key);
   if (!data) {
-    panel.innerHTML = '<div class="skeleton-error">Could not reach live server — view the table below for static data.</div>';
+    // BRAVO 2026-05-19 (content sweep): the prior "Could not reach live
+    // server — view the table below for static data" gave the user no
+    // recourse. Be specific about what went wrong (the dashboard origin
+    // is unreachable from this browser), what still works (the baked
+    // tables below), and the most common fix (the launchd plist was
+    // flapping all night — sibling-instance epsilon documented the
+    // bootstrap recipe in data/epsilon-self-review-2026-05-19.md).
+    panel.innerHTML = '<div class="skeleton-error">'
+      + '<strong>Live data unavailable.</strong> '
+      + 'The dashboard server (localhost:3097) is not responding — usually a launchd hiccup. '
+      + 'The static tables further down the page are still accurate as of the last full build. '
+      + '<span style="display:block;font-size:11px;color:var(--text-4);margin-top:6px">Restart with: <code>launchctl kickstart -k gui/$(id -u)/com.mitchell.career-ops.dashboard-server</code> — or fall back to the nohup recipe in <code>data/epsilon-self-review-2026-05-19.md</code> if launchd keeps flapping.</span>'
+      + '</div>';
     return;
   }
 
