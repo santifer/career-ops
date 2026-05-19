@@ -51,6 +51,21 @@ File-ownership matrix is in `data/overnight-haul-2026-05-19.md` § Coordination.
 
 — ε
 
+## 2026-05-19 — ε EPSILON (needhuman instance) — landed
+
+- Worktree: `../career-ops-epsilon-needhuman-2026-05-19` on `needhuman-epsilon-2026-05-19`
+- Actioned all 7 Mitchell NEEDS_HUMAN decisions from morning handoff.
+- **ε.1 / ε.NH.1:** Dashboard-server was already healthy (PID 80936, launchd-managed, HTTP 200). No rebootstrap needed.
+- **ε.2:** Restored `providers/greenhouse.mjs`, `providers/ashby.mjs`, `providers/lever.mjs`, `providers/workable.mjs` from scratch. All 10 pre-IPO companies return jobs. Full scan: 92 companies, 5721 jobs found.
+- **ε.3:** `scripts/hooks/pre-push` + `scripts/install-hooks.sh` committed. Hook blocks pushes on HIGH security findings touching `dashboard-server.mjs`.
+- **ε.NH.2:** `scripts/launchd/com.mitchell.career-ops.telegram-bot.plist` now tracked in repo (was only in ~/Library/LaunchAgents/).
+- **ε.NH.3:** No scan gate found. Blocker was missing providers (fixed by ε.2). All enabled companies scan.
+- **ε.NH.4:** Removed dead `<a href>` anchor to never-existed report 536 from `dashboard/reports/538-*.html` (gitignored, disk-only edit).
+- Files touched: `providers/greenhouse.mjs`, `providers/ashby.mjs`, `providers/lever.mjs`, `providers/workable.mjs`, `scripts/hooks/pre-push`, `scripts/install-hooks.sh`, `scripts/launchd/com.mitchell.career-ops.telegram-bot.plist`, `data/epsilon-needhuman-resolution-2026-05-19.md`
+- No overlap with α/β/γ/δ/ζ territory. `dashboard-server.mjs` not touched.
+
+— ε
+
 ## 2026-05-19 — γ GAMMA — landed
 - Worktree: `../career-ops-gamma-2026-05-19` on `overnight-gamma-2026-05-19` (branched from origin/main @ 4a04f4f).
 - Inventory + audit + 9 commits + recurring-auditor agent shipped. Merge commit landed cleanly atop origin/main with no conflict on files α/ζ/ε own.
@@ -239,3 +254,122 @@ If the launchd plist rebootstrap is the right NEEDS_HUMAN call in the morning, t
 - NEEDS_HUMAN: none new. Inherited ε-1 launchd flap items unchanged.
 
 — ε (final)
+
+## 2026-05-19 — α ALPHA Run-Batch eval — merged + ready for restart
+- Branch overnight-alpha-runbatch-2026-05-19 rebased onto origin/main (γ+ε+ζ run-batch evals already landed); 2 conflict files resolved (dashboard-server.mjs / build-dashboard.mjs — merged my polish constants + agent enrichment item alongside γ's truth-audit provenance metadata).
+- Merge SHA bd971a8 on main, pushed to mitwilli-create.
+- 6 commits: 222477c (slice→scopedCost), 901c089 (phaseOrder + polish bar), 0761c4c (preview polish cost), fcf729e (cost-cap+status+live), 4a14714 (preflight call), 78bee83 (env clamp + skipped progress).
+- Touched dashboard-server.mjs and scripts/build-dashboard.mjs — NEEDS dashboard-server restart to pick up changes (currently serving pre-merge 7255a0e code).
+
+— α (runbatch eval)
+
+## 2026-05-19 — γ GAMMA (Run-Batch eval) — SELF-REVIEW HALLUCINATION
+- During adversarial self-review I caught my own hallucination: I had cited `scripts/hiring-manager-research.mjs` as the source for COST_PER_RESEARCHER_CALL=$11.30. That file DOES NOT EXIST in the codebase. The real path is `lib/hm-intel-research.mjs:335` with `budgetUsd = 3`.
+- Logged honestly to `data/agent-hallucination-log.md` (new file, append-only).
+- Corrected to $3.00 budget cap with observed-mean note ($0.625 from N=2 in cost-log).
+- Confidence band widened from ±20% (hallucinated certainty) to ±100% (honest about small N).
+- Commit: `0cc11a4` — restart pending.
+
+— γ (Run-Batch eval)
+
+## 2026-05-19 — ζ ZETA Run-Batch — LANDED (08:00 PT)
+
+- Branch `overnight-zeta-runbatch-2026-05-19` merged into main as `0fec500` (--no-ff) + post-merge adversarial-fix merge `1e8f935`. Both pushed to mitwilli-create:main (push range `bd971a8..1e8f935`).
+- 5 commits + 2 merges:
+  - `d0463b9` AAA-1 lib/network-graph.mjs fallback to network-database.json + honest-warmth
+  - `0f71d27` AAA-2 Phase B per-company preview Network column
+  - `c6aa9af` AAA-3 referrals.mjs unified DB (stale-excluded LLM prompt)
+  - `72fa756` AAA-4 mid-batch warm-intro sidebar badge
+  - `3f5fe31` adversarial self-review (HTML escape + LLM prompt consistency)
+- Live verified at https://dashboard.careers-ops.com/ — Process All modal renders new Network column with green chips. API returns `network_warm_count` / `network_fresh_count` / `network_stale_count` / `network_first_degree` / `network_source` per company. Server restarted via launchctl kickstart -k (PID changed 80936 → 82616).
+- Files ζ run-batch touched:
+  - `lib/network-graph.mjs` (+218/-34) — DB fallback + honest-warmth gating + stale annotation
+  - `dashboard-server.mjs` (narrow ranges: import block + buildPerCompanyPipelinePreview + batchLive enrichment)
+  - `scripts/build-dashboard.mjs` (narrow ranges: Phase B header + row renderer + CSS + sidebar batch-recent)
+  - `scripts/agents/referrals.mjs` (+91/-5) — unified DB consumer + stale-excluded prompt
+- NEW: `data/zeta-runbatch-eval-2026-05-19.md` (findings doc), `data/runbatch-eval-snapshots/zeta/phase-b-network-column-2026-05-19.json` (live-verification snapshot)
+- 3 NEEDS_HUMAN flags surfaced in the findings doc (engagement scraper scope, network-graph.json regen vs deprecation, regenerate-referrals-against-existing-packs).
+- No conflicts with α/β/γ/δ/ε territory. Pre-existing batch widget HTML-escape gap fixed defense-in-depth.
+
+— ζ (run-batch)
+
+## 2026-05-19 — β BRAVO (Run-Batch eval) — landing
+- Branch `overnight-bravo-runbatch-2026-05-19` rebased onto post-γ/ε/ζ/δ/α run-batch landings. My `fcc496f` (slice→scopedCost) is functionally identical to ALPHA's `a04aadd` — left both in place since git applied cleanly and my commit carries a longer rationale comment. No conflict.
+- 5 commits on top: `fcc496f` (slice ReferenceError fix on Phase B), `cdc3ab0` (published_count after phaseBatch — complements γ's main-end version: mine streams during rebuild, γ's overrides at end-of-job), `28da46a` (cap-warning copy explains agent-enrichment dominance — "Of that, $132.30 (93%) is agent enrichment on 21 published items"), `2c02fdc` (hero recolor red + "OVER CAP" pill next to headline when est.exceeds_per_run_cap or est.exceeds_budget — at-a-glance signal so the user does not confidently scroll past the warning), `d27d0f9` (Phase A hero now shows SCOPED cost not aggregate Tier-5 hypothetical — fixes the long-standing "$210.60 headline vs $15.00 scoped" disconnect; hero auto-updates as user toggles per-company checkboxes).
+- Touched `scripts/build-dashboard.mjs` (4 commits) + `scripts/process-all-pipeline.mjs` (1 commit). Build clean, all 4 inline scripts parse, dashboard rebuild 1.18MB raw → 1.00MB minified.
+- Pre-merge live verification: Run Batch + Process All Phase A modals captured at https://dashboard.careers-ops.com/ on 1440px viewport. Phase B (`_advanceProcessAllToConfirm`) tested via JS console — reconciles correctly. ReferenceError repro'd + fix verified via direct function call. (Live build still serves pre-merge code; visual verification against MY changes happens after merge + rebuild.)
+- Coordination flags:
+  - δ DELTA (df2c258 / f88280c): your AI-detection cost line in Phase A preview is preserved — my Phase A hero rewrite sits ABOVE your row injection, not over it.
+  - ζ ZETA (c14ae0d / c798ad0): your NETWORK column + warm-intro chips render correctly inside my new Phase A scope-aware hero. Phase B per-company table preserved bit-for-bit.
+  - α ALPHA (a04aadd): no conflict on slice→scopedCost; we landed identical code changes with slightly different comment phrasing.
+  - γ GAMMA (ada23bb / 8ec78e3): your provenance pills (MED · N=10 · ±50% etc.) render correctly inside my recolored hero. count_unknown stale-state handling preserved.
+  - ε EPSILON: my changes only touch scripts/build-dashboard.mjs + scripts/process-all-pipeline.mjs — no `dashboard-server.mjs` edits, so no server restart required for my pass. A simple `node scripts/build-dashboard.mjs` after merge picks up automatically.
+- Merge + push step next.
+
+— β (Run-Batch eval)
+
+
+## 2026-05-19 — α NEEDS_HUMAN resolution (this session, ~14:50 PT)
+
+Worktree: `../career-ops-alpha-needhuman-2026-05-19` on `needhuman-alpha-2026-05-19`
+
+**Decision α.1 — intel-refresh launchd:** COMPLETE.
+- Plist `com.mitchell.career-ops.intel-refresh.plist` copied to `~/Library/LaunchAgents/` + `launchctl load -w`. Verified via `launchctl list | grep intel-refresh` → label registered, exit code 0.
+- `KeepAlive=false` on the plist → no Tahoe `launchctl start` workaround needed.
+- No `--dry-run` flag on `intel-refresh.mjs` (script requires `--row <N>` or `--all`; running with no args exits with usage). Documented in final report.
+- No code commit needed (system-state change only).
+
+**Decision α.2 — polish-loop council cost tracking:** COMPLETE. 4 commits:
+- `60e38f1` — `lib/council.mjs`: Added `MODEL_COST_RATES` table (13 provider:model entries, blended $/1K rates web-verified 2026-05-19), `estimateCostUsd()` export, `writeCostTrace()` + `initCostTrace()` exports, `costUsd` field on every `callCouncil` result, `opts.onCostRecord` callback.
+- `265a431` — `scripts/agents/apply-pack-polish.mjs`: `import { initCostTrace }`, call `initCostTrace('apply-pack-polish', ROOT)`, pass `onCostRecord` through Phase 1 (`harvestPolishSignals`) and Phase 2 (`polishArtifact`).
+- `85345ff` — `lib/polish-signals.mjs`: forward `opts.onCostRecord` + `opts.phase` in the two inner `callCouncil` calls (council + dealbreaker).
+- `528b979` — `lib/polish-loop.mjs`: `costTraceOpts` helper at start of `polishArtifact`, forwarded to all 4 inner `callCouncil` calls (critics, author, adjudicator, adversarial sweep).
+
+Files touched (no conflicts with other personas per coordination matrix):
+- `lib/council.mjs` — ALPHA territory
+- `lib/polish-signals.mjs` — ALPHA territory
+- `lib/polish-loop.mjs` — ALPHA territory
+- `scripts/agents/apply-pack-polish.mjs` — ALPHA territory
+
+**Decision α.3 — full 6-artifact polish on row 044:** IN PROGRESS at time of this coordination entry (~14:54 PT).
+- Run: `node scripts/agents/apply-pack-polish.mjs --row 044 --artifacts cv,cover,form,impact,refs,referrals --target-confidence 0.99 --cost-cap 500`
+- Phase 1 cache HIT (signals fresh from this morning's smoke test)
+- Phase 2 started on cv-tailored (artifact 1 of 6)
+- PID 87920 running in background. Output → `/tmp/polish-044-stdout.json`, progress → `/tmp/polish-044-stderr.log`
+- cv.md confirmed in corpus (`apply-pack-polish.mjs:224`)
+- Findings + cost comparison will land in `data/alpha-polish-cv-scope-comparison-2026-05-19.md`
+
+— α (NEEDS_HUMAN resolution, 14:54 PT)
+
+## 2026-05-19 — α ALPHA Run-Batch eval — final
+- α merged + restarted at bd971a8 (audit fixes) + 9397ef9 (report + snapshots).
+- Dashboard-server restarted via launchctl kickstart (PID 82616 → 86803). HTTP 200 on localhost:3097, 302→CF Access on https://dashboard.careers-ops.com/.
+- Live API verification: `agent_enrichment.polish` block present in /api/pipeline/preview; with POLISH_PACK_ENABLED=1 (sibling test port), total_cost_usd jumps $95.60 → $395.60 (the $300 hidden polish spend is now disclosed).
+- Snapshots: data/runbatch-eval-snapshots/alpha/preview-polish-{off,on}-2026-05-19.json
+- Report: data/alpha-runbatch-eval-2026-05-19.md
+
+— α (final)
+
+## 2026-05-19 — δ DELTA Run-Batch eval — LANDED
+- Branch `overnight-delta-runbatch-2026-05-19` rebased atop origin/main (α + γ + ζ Run-Batch already landed). 2 conflicts in dashboard-server.mjs auto-resolved to **keep both** — α's polish-cost addition + δ's detection-cost addition are sibling adds at the same struct level.
+- Merge commit: **`190ff48 δ: Run-Batch + Process All AI-detection gate placement audit + 5-fix landing`** — pushed to mitwilli-create:main.
+- 7 commits shipped (final SHAs after rebase):
+  - `519ba3d` form-fields.mjs gate uses gateBlocks (band-aware) not legacy passes
+  - `a670868` why-statement.mjs gate uses gateBlocks (band-aware) not legacy passes
+  - `43d12f9` linkedin-dm.mjs gate uses gateBlocks (band-aware) not legacy passes
+  - `465db97` build-apply-orchestrator gate uses gateBlocks (band-aware) not passes
+  - `52073f9` add AI-detection cost line to Phase A + Phase B preview tables
+  - `da3621b` integrate AI-detection cost with γ's provenance-chip pattern
+  - `7f41530` audit + 5-fix landing findings doc
+- Files touched: 8 — no overlap with α/γ/ζ except dashboard-server.mjs preview struct + scripts/build-dashboard.mjs modal renderer; both auto-merged cleanly via rebase.
+- Live verification on PID 88540: localhost:3097/api/pipeline/preview now returns `process_all.ai_detection.{packs,cost_usd,cost_per_pack_usd,vendors,notes,threshold_conditional}` populated. Current state: 15 pending + 172 queued → 16 detection packs ($2.40) ProcessAll / 15 detection packs ($2.25) RunBatch. The user can now see detection cost in the Phase A modal where it was previously invisible.
+- Snapshots: `data/runbatch-eval-snapshots/delta/preview-pre-merge.json` (ai_detection ABSENT) + `preview-post-merge.json` (ai_detection PRESENT). Diff proves the gap closure.
+- Report: `data/delta-runbatch-eval-2026-05-19.md` — 6-objective table, 14-path gate-placement matrix, 4 NEEDS_HUMAN items, adversarial self-review of 4 concerns, math reconciliation.
+- Key audit insight: the brief assumed "the gate runs on the batch publish path". **It does not.** Detection only fires on user-triggered row-drawer "Build pack" requests. Process All / Run Batch / polish loop / preflight all have ZERO API-backed AI-detection invocations. The audit pivoted from "verify gate behavior on batch" to "fix per-artifact gate inconsistency + add cost visibility for post-publish downstream spend".
+- NEEDS_HUMAN (see findings doc):
+  1. UNCALIBRATED fail-secure enhancement — current gate treats UNCALIBRATED ≠ USELESS; should it require ackDetectionDegraded?
+  2. Should impact-doc.md / references.md / referrals.md (3 new ALPHA artifacts) also run the gate?
+  3. Current-thresholds.json missing — needs ≥20+10 sample corpus.
+  4. Honest claim: "we have a gate" — today it blocks ~0% of Mitchell's prose; UX gap.
+
+— δ (Run-Batch eval LANDED, 07:56 PT)
