@@ -183,3 +183,13 @@ data/ai-detection-cache/
 
 # AI detection sidecar results (written next to each artifact)
 **/*.ai-detection.json
+
+# Contacts month-1 launch (2026-05-19, Phase A.8) — relationship-intelligence
+# layer. Photos are scraped from LinkedIn auth'd sessions; enrichment cache
+# carries LLM-synthesized outreach positioning + engagement topics; notes are
+# Mitchell's per-contact annotations; second-brain index is a local file scan
+# that fingerprints content for popover-citation lookups. All personal.
+data/contact-photos/
+data/contact-enrichment-cache/
+data/contact-notes/
+data/second-brain-index-*.md

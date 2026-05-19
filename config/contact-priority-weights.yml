@@ -1,0 +1,71 @@
+# config/contact-priority-weights.yml — relationship-intelligence priority queue knobs.
+#
+# Read by: lib/contact-priority-scorer.mjs + scripts/refresh-master.mjs
+# (per-contact handler). Edit + save + next refresh-master tick re-scores.
+#
+# Established 2026-05-19 — Phase A.4 of the contacts month-1 launch.
+# pause_after_date computed AT RUN START to today + 30 days.
+
+version: 1
+last_modified: '2026-05-19'
+
+# How many contacts the orchestrator enriches per refresh-master tick.
+# Spread across Day-1 + 4×6h ticks = up to ~50/day. Top-100 + Next-400 batches
+# fire OUTSIDE this knob (manual one-shot scripts) — daily_count governs the
+# steady-state cadence.
+daily_count: 50
+
+# Month-1 cap. After this much spend on contact_enrichment across the running
+# 30-day window, the orchestrator auto-pauses NEW enrichment and the Day-30
+# audit (lib/contact-enrichment-month-1-audit.mjs) fires.
+month_1_budget_usd: 800
+
+# Compute at run start: 2026-05-19 + 30 days = 2026-06-18.
+# When today > pause_after_date the orchestrator auto-pauses contact_enrichment
+# refreshes and escalates to data/contact-enrichment-paused.md with reason.
+pause_after_date: '2026-06-18'
+
+# Tier-1 target companies. A contact CURRENTLY at any of these gets multiplied
+# by tier_boost.multiplier. Composition: pre-IPO equity + AI-native + clear
+# archetype match against Mitchell's modes/_profile.md.
+tier_boost:
+  multiplier: 1.5
+  target_companies:
+    - anthropic
+    - openai
+    - perplexity
+    - elevenlabs
+    - sierra
+    - xai
+    - cursor
+    - cognition
+    - cohere
+    - mistral
+    - databricks
+    - pinecone
+    - deepgram
+    - suno
+    - figure
+    - runway
+    - synthesia
+    - glean
+    - crusoe
+    - ramp
+
+# Per-signal weight. The composite score is the sum of (weight × signal_present).
+# Weights chosen by composite-relevance to Mitchell's goal: high-likelihood-reply
+# outreach to people who can move the needle on his job search.
+weights:
+  current_at_target_co: 1.0                   # he's currently at a target company
+  active_outreach_replied: 0.9                # we already have a live thread
+  hiring_authority: 0.8                       # he's a hiring manager / decision-maker
+  recruiter_at_target_co: 0.7                 # internal recruiter at a target co
+  archetype_adjacent_role: 0.6                # role overlaps Mitchell's archetypes
+  shared_past_employer: 0.5                   # we worked at the same place once
+  pre_ipo_equity: 0.5                         # his current co is pre-IPO equity-stage
+  active_outreach_pending: 0.4                # we've reached out, no reply yet
+  recent_linkedin_engagement_30d: 0.3         # has been active on LI in last 30d
+  second_degree_path_to_target: 0.3           # he's a warm-intro path to a target co
+  mutual_connections_in_directory: 0.3        # we share connections in Mitchell's directory
+  has_email_and_linkedin: 0.2                 # actionable contact details
+  has_x_handle: 0.1                           # X handle resolved
