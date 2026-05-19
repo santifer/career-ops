@@ -41,6 +41,8 @@ import { loadNextMovesInputs }                                     from '../lib/
 import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/negotiation-playbook.mjs';
 import { checkGap as llmCheckGap, renderEvidenceCard }            from '../lib/llm-evidence.mjs';
 import { checkGap as netCheckGap, findContactsAtCompany, findLeveragePathTo, renderNetworkCard } from '../lib/network-graph.mjs';
+// ZETA 2026-05-19 — network-database preview for the redesigned drillIn
+import { topByWarmPath as networkTopByWarmPath, networkDatabaseHeadline } from '../lib/network-database-search.mjs';
 import { renderHmIntelCard, getHmIntelForRole }                    from '../lib/hm-intel-research.mjs';
 import { getPulseForCompany, getCachedPulseSync, renderPulseCard } from '../lib/company-pulse.mjs';
 import { detectFunnelGap, renderFunnelNudge }                      from '../lib/funnel-completion.mjs';
@@ -4415,6 +4417,19 @@ async function build() {
     try {
       _cbData.wealthRanking = rankCompaniesByWealth(null) || [];
     } catch (_) { _cbData.wealthRanking = []; }
+
+    // ZETA 2026-05-19 — bake network-database preview for the redesigned
+    // network-leverage drillIn. First-paint uses these 100 rows; the search
+    // box hits /api/network/search for everything beyond. The headline
+    // counts (total / warm / w/email / target_companies) drive the popout
+    // header without a second API call.
+    try {
+      _cbData.networkDatabasePreview = networkTopByWarmPath(100) || [];
+      _cbData.networkDatabaseHeadline = networkDatabaseHeadline() || null;
+    } catch (_) {
+      _cbData.networkDatabasePreview = [];
+      _cbData.networkDatabaseHeadline = null;
+    }
 
     // TPgM full widget HTML — stored for the readiness drill-in renderer.
     // Escaped so it can be JSON-stringified safely.
@@ -11016,10 +11031,11 @@ async function build() {
         </div>`;
       })()}
       <!-- Tile 2: Network leverage — warm-intro paths.
-           2026-05-18: replaced the hardcoded "340" + permanent "loading…"
-           with build-time-computed values from contactsDirectory ∩ apply-now
-           companies. Now shows actual network size + actual warm-intro count
-           to apply-now companies. -->
+           ZETA 2026-05-19: prefer the rich network-database headline counts
+           (2,824 connections · 194 warm · 838 w/ email) when network-database.json
+           exists; fall back to the contactsDirectory ∩ apply-now compute when
+           the canonical DB hasn't been built yet. The drillIn at line ~14779
+           uses the same data shape. -->
       ${(() => {
         const _norm = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,40);
         const _applyNowCompanies = new Set((applyNow || []).map(r => _norm(r.company)).filter(Boolean));
@@ -11027,10 +11043,24 @@ async function build() {
           if (!c.company) return false;
           return _applyNowCompanies.has(_norm(c.company));
         });
-        const _totalNetwork = (contactsDirectory || []).length;
-        const _warmCount = _warmIntros.length;
-        const _withEmail = _warmIntros.filter(c => c.email_professional).length;
-        return `<div class="stat stat-cell" onclick="window.drillIn('network-leverage','',event)" title="${_totalNetwork.toLocaleString()} total contacts · ${_warmCount} at apply-now companies · ${_withEmail} of those with verified email. Click for detail." role="button" tabindex="0">
+        // Try ZETA's canonical headline first.
+        let _totalNetwork, _warmCount, _withEmail, _source;
+        try {
+          const _h = networkDatabaseHeadline();
+          if (_h && _h.headline) {
+            _totalNetwork = _h.headline.total_connections;
+            _warmCount    = _h.headline.warm_to_apply_now_targets;
+            _withEmail    = _h.headline.with_verified_or_medium_email;
+            _source       = 'network-database.json (' + (_h.last_run || '').slice(0, 10) + ')';
+          }
+        } catch (_) { /* fall through */ }
+        if (_totalNetwork == null) {
+          _totalNetwork = (contactsDirectory || []).length;
+          _warmCount    = _warmIntros.length;
+          _withEmail    = _warmIntros.filter(c => c.email_professional).length;
+          _source       = 'contactsDirectory fallback (network-database.json not built)';
+        }
+        return `<div class="stat stat-cell" onclick="window.drillIn('network-leverage','',event)" title="${_totalNetwork.toLocaleString()} connections · ${_warmCount} warm to apply-now targets · ${_withEmail} with verified/medium email. Source: ${_source}. Click for detail." role="button" tabindex="0">
         <div class="stat-label"><span class="label-full">Network</span><span class="label-short">Network</span></div>
         <div class="stat-value">${_totalNetwork > 999 ? (_totalNetwork/1000).toFixed(1) + 'k' : _totalNetwork}</div>
         <div class="stat-trend"><span class="stat-delta ${_warmCount > 0 ? 'stat-delta-up' : 'stat-delta-flat'}" id="live-warm-intros" title="Warm-intro paths to companies in your apply-now queue">${_warmCount} warm · ${_withEmail} w/ email</span></div>
@@ -14827,13 +14857,487 @@ _drillInRegister('time-to-offer', function() {
   };
 });
 
-// Fix 2: network-leverage drill-in
+// network-leverage drill-in — searchable, filterable, paginated network table
+// (ZETA 2026-05-19, replaces the static "340 press contacts" placeholder).
+//
+// Architecture:
+//   * First-paint: window._waveCB.networkDatabasePreview (top-100 by
+//     warm_path_strength baked at build time).
+//   * Searches beyond top-100 → /api/network/search.
+//   * Row click → inline accordion (Z.6 person panel: LinkedIn/X links,
+//     emails with confidence badges, 2nd-degree paths, inferred block,
+//     notes, "Run enricher" / "Find email" actions).
+//   * Empty state (no DB) → "Build now" CTA → POST /api/network/build.
+//
+// Behavior is wired through onMount(modal) which fires AFTER drill-in.js
+// inserts the html into the popout. innerHTML doesn't run <script> tags,
+// so we attach listeners imperatively via the onMount callback instead.
 _drillInRegister('network-leverage', function() {
+  var cb = window._waveCB || {};
+  var preview = Array.isArray(cb.networkDatabasePreview) ? cb.networkDatabasePreview.slice() : [];
+  var headline = cb.networkDatabaseHeadline || null;
+
+  function _esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // Empty state: database has never been built.
+  if (!preview.length && !headline) {
+    var emptyHtml = '<div style="padding:18px;border:1px dashed var(--border);border-radius:10px;background:var(--surface-2);color:var(--text-2);font-size:13px;line-height:1.6">'
+      + '<p style="margin:0 0 10px;font-weight:600;color:var(--text)">No network database yet.</p>'
+      + '<p style="margin:0 0 14px">Build it now to index your 2,910 LinkedIn connections, 2nd-degree paths, engagement signals, professional emails, and confidence-banded enrichment.</p>'
+      + '<button id="zeta-build-btn" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer">Build now</button> '
+      + '<span style="margin-left:10px;font-size:11px;color:var(--text-4)">Runs <code>node scripts\/build-network-database.mjs</code></span>'
+      + '<p id="zeta-build-status" style="font-size:11px;color:var(--text-3);margin:10px 0 0">&nbsp;</p>'
+      + '</div>';
+    return {
+      title: 'Network database',
+      html: emptyHtml,
+      onMount: function(modal) {
+        var btn = modal.querySelector('#zeta-build-btn');
+        var statusEl = modal.querySelector('#zeta-build-status');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+          btn.disabled = true;
+          btn.textContent = 'Building…';
+          if (statusEl) statusEl.textContent = 'Starting build…';
+          fetch('/api/network/build', { method: 'POST' })
+            .then(function(r) { return r.json(); })
+            .then(function(j) {
+              if (statusEl) statusEl.textContent = 'Build started (job ' + (j.jobId || '?') + '). Refresh in ~5s.';
+            })
+            .catch(function(e) {
+              if (statusEl) statusEl.textContent = 'Build failed: ' + e.message;
+              btn.disabled = false;
+              btn.textContent = 'Build now';
+            });
+        });
+      },
+    };
+  }
+
+  var totals = (headline && headline.headline) || {};
+  var totalsByTarget = (headline && headline.totals_by_target) || {};
+  var lastRun = (headline && headline.last_run) || null;
+  var titleCounts = (totals.total_connections || preview.length) + ' connections · '
+    + (totals.warm_to_apply_now_targets || 0) + ' warm · '
+    + (totals.with_verified_or_medium_email || 0) + ' w/ email';
+
+  // Target-company chip row.
+  var chipKeys = Object.keys(totalsByTarget).sort(function(a, b) {
+    return (totalsByTarget[b].second || 0) - (totalsByTarget[a].second || 0);
+  });
+  var chipsHtml = chipKeys.map(function(slug) {
+    var t = totalsByTarget[slug];
+    return '<button data-zeta-chip="' + _esc(slug) + '" type="button" '
+      + 'style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;margin:0 5px 5px 0;border-radius:999px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);font-size:11px;cursor:pointer;font-weight:500">'
+      + _esc(t.display || slug)
+      + '<span style="font-weight:700;color:var(--text);margin-left:2px">' + (t.second || 0) + '</span>'
+      + '<span style="color:var(--text-4);margin-left:2px">· ' + (t.with_email || 0) + ' w/✉</span>'
+      + '</button>';
+  }).join('');
+  var clearChipHtml = '<button data-zeta-chip="" type="button" '
+    + 'style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:transparent;color:var(--text-4);border:1px dashed var(--border);font-size:11px;cursor:pointer">'
+    + 'all targets</button>';
+
+  var sortHtml = '<select data-zeta-ctrl="sort" style="font-size:12px;padding:4px 8px;border-radius:6px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);cursor:pointer">'
+    + '<option value="warm_path_strength">Warm-path strength</option>'
+    + '<option value="relevance">Relevance (search)</option>'
+    + '<option value="recently_connected">Recently connected</option>'
+    + '<option value="engagement_score">Engagement</option>'
+    + '</select>';
+
+  var filterRowHtml = '<div style="display:flex;align-items:center;gap:12px;margin:0 0 10px;flex-wrap:wrap">'
+    + '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-3);cursor:pointer">'
+      + '<input type="checkbox" data-zeta-ctrl="has-email" style="margin:0;cursor:pointer"> Only with email</label>'
+    + '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-3);cursor:pointer">'
+      + '<input type="checkbox" data-zeta-ctrl="first-deg" style="margin:0;cursor:pointer"> 1st-degree only</label>'
+    + sortHtml
+    + '<span style="flex:1"></span>'
+    + '<a href="/network-database.html" target="_blank" rel="noopener" style="font-size:11px;color:var(--text-3);text-decoration:underline;cursor:pointer">Open full database →</a>'
+    + '</div>';
+
+  var searchBoxHtml = '<div style="margin:0 0 8px">'
+    + '<input data-zeta-ctrl="search" type="search" placeholder="Search name, company, role, email…" '
+    + 'style="width:100%;padding:8px 12px;border-radius:8px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);font-size:13px;box-sizing:border-box">'
+    + '</div>';
+
+  var headerHtml = '<div style="margin:0 0 10px">'
+    + '<p style="font-size:12px;font-weight:600;color:var(--text-2);margin:0 0 4px;letter-spacing:0.02em">'
+      + _esc(titleCounts)
+      + (lastRun ? '<span style="font-weight:400;color:var(--text-4);margin-left:8px">· last built ' + _esc(String(lastRun).slice(0, 10)) + '</span>' : '')
+    + '</p>'
+    + '<div data-zeta-chips style="margin:6px 0">' + chipsHtml + clearChipHtml + '</div>'
+    + '</div>';
+
+  var tableHtml = '<div style="min-height:200px;max-height:480px;overflow:auto;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+      + '<thead style="position:sticky;top:0;background:var(--surface);z-index:1">'
+        + '<tr style="text-align:left;border-bottom:1px solid var(--border);font-size:10.5px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em">'
+          + '<th style="padding:6px 6px;width:28%">Name</th>'
+          + '<th style="padding:6px 6px;width:25%">Company · Role</th>'
+          + '<th style="padding:6px 6px;width:8%">Deg</th>'
+          + '<th style="padding:6px 6px;width:18%">Warm to</th>'
+          + '<th style="padding:6px 6px;width:16%">Email</th>'
+          + '<th style="padding:6px 6px;width:5%"></th>'
+        + '</tr>'
+      + '</thead>'
+      + '<tbody data-zeta-tbody></tbody>'
+    + '</table>'
+    + '</div>';
+
+  var footerHtml = '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:11.5px;color:var(--text-3)">'
+    + '<span data-zeta-stats>—</span>'
+    + '<span data-zeta-pager></span>'
+    + '</div>';
+
   return {
-    title: 'Network leverage',
-    html: '<p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 6px">340 press contacts<\/p>'
-      + '<p style="font-size:12px;color:var(--text-3);margin:0 0 10px">Warm-intro paths to companies in your apply-now queue are computed by <code>lib\/network-graph.mjs<\/code> on each dashboard build. The count in the tile updates live when network-graph.json is populated.<\/p>'
-      + '<p style="font-size:11px;color:var(--text-4)">Run <code>node scripts\/build-network-graph.mjs<\/code> to refresh warm-intro paths. Result populates <code>data\/network-graph.json<\/code>.<\/p>',
+    title: 'Network database',
+    html: headerHtml + searchBoxHtml + filterRowHtml + tableHtml + footerHtml,
+    onMount: function(modal) {
+      // ── STATE ──
+      var STATE = {
+        query: '',
+        filters: {},
+        sort: 'warm_path_strength',
+        page: 1,
+        pageSize: 50,
+        lastFetchAt: 0,
+        expandedId: null,
+        preview: (window._waveCB && window._waveCB.networkDatabasePreview) || [],
+      };
+
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function confidenceBadge(c) {
+        var color = 'var(--text-4)', bg = 'var(--surface-2)';
+        if (c === 'high') { color = 'var(--green-fg)'; bg = 'var(--green-bg)'; }
+        else if (c === 'medium') { color = 'var(--amber-fg)'; bg = 'color-mix(in srgb, var(--amber-fg) 12%, var(--surface))'; }
+        return '<span style="display:inline-block;padding:1px 6px;border-radius:999px;background:' + bg + ';color:' + color + ';font-size:10px;font-weight:600;margin-left:5px">' + esc(c) + '</span>';
+      }
+      function topEmailFor(p) {
+        if (!p) return null;
+        if (p.top_email) return p.top_email;
+        var profs = (p.emails && p.emails.professional) || [];
+        if (!profs.length) return null;
+        var order = { high: 3, medium: 2, low: 1 };
+        return profs.slice().sort(function(a, b) { return (order[b.confidence] || 0) - (order[a.confidence] || 0); })[0];
+      }
+      function renderTopEmailCell(p) {
+        var e = topEmailFor(p);
+        if (!e) return '<span style="color:var(--text-4)">—</span>';
+        return '<span style="font-family:ui-monospace,monospace;font-size:11px">' + esc(e.email) + '</span>' + confidenceBadge(e.confidence || 'low');
+      }
+      function renderWarmCell(p) {
+        var warm = p.warm_to_target_companies || [];
+        if (!warm.length) return '<span style="color:var(--text-4)">—</span>';
+        var shown = warm.slice(0, 4).map(function(w) {
+          var ev = esc(w.evidence || '');
+          return '<span title="' + ev + '" style="display:inline-block;font-size:10.5px;padding:1px 6px;margin:1px 4px 1px 0;border-radius:999px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)">' + esc(w.company_slug) + '</span>';
+        }).join('');
+        if (warm.length > 4) shown += '<span style="font-size:10px;color:var(--text-4)">+' + (warm.length - 4) + '</span>';
+        return shown;
+      }
+      function renderRow(p) {
+        var degBadge = p.degree === 1 ? '1st' : (p.degree === 2 ? '2nd' : esc(String(p.degree || '?')));
+        var rowId = 'zeta-row-' + esc(p.id);
+        var nameCell = '<a href="' + esc(p.linkedin_url || '#') + '" target="_blank" rel="noopener" data-zeta-stop style="color:var(--text);font-weight:600;text-decoration:none">' + esc(p.full_name) + '</a>';
+        if (p.x_url) nameCell += ' <a href="' + esc(p.x_url) + '" target="_blank" rel="noopener" data-zeta-stop style="font-size:10px;color:var(--text-4);text-decoration:none;margin-left:3px">𝕏</a>';
+        var compCell = esc(p.current_company || '') + (p.current_role ? '<br><span style="color:var(--text-4);font-size:11px">' + esc(p.current_role) + '</span>' : '');
+        return '<tr id="' + rowId + '" data-zeta-id="' + esc(p.id) + '" '
+          + 'style="border-bottom:1px solid var(--border);cursor:pointer">'
+          + '<td style="padding:6px 6px;vertical-align:top">' + nameCell + '</td>'
+          + '<td style="padding:6px 6px;vertical-align:top">' + compCell + '</td>'
+          + '<td style="padding:6px 6px;vertical-align:top;color:var(--text-3);font-size:11px;font-weight:600">' + degBadge + '</td>'
+          + '<td style="padding:6px 6px;vertical-align:top">' + renderWarmCell(p) + '</td>'
+          + '<td style="padding:6px 6px;vertical-align:top">' + renderTopEmailCell(p) + '</td>'
+          + '<td style="padding:6px 6px;vertical-align:top;text-align:right;color:var(--text-3);font-size:11px">▾</td>'
+          + '</tr>';
+      }
+
+      function localFilter(items) {
+        return items.filter(function(p) {
+          if (STATE.filters.target_company) {
+            var has = (p.warm_to_target_companies || []).some(function(w) { return w.company_slug === STATE.filters.target_company; });
+            if (!has) return false;
+          }
+          if (STATE.filters.has_email === 'true') {
+            var has2 = ((p.emails && p.emails.professional) || []).some(function(e) { return e.confidence !== 'low'; }) || p.has_email;
+            if (!has2) return false;
+          }
+          if (STATE.filters.degree) {
+            if (Number(p.degree) !== Number(STATE.filters.degree)) return false;
+          }
+          return true;
+        });
+      }
+
+      var tbody = modal.querySelector('[data-zeta-tbody]');
+      var statsEl = modal.querySelector('[data-zeta-stats]');
+      var pagerEl = modal.querySelector('[data-zeta-pager]');
+      var searchEl = modal.querySelector('[data-zeta-ctrl="search"]');
+      var sortEl = modal.querySelector('[data-zeta-ctrl="sort"]');
+      var hasEmailEl = modal.querySelector('[data-zeta-ctrl="has-email"]');
+      var firstDegEl = modal.querySelector('[data-zeta-ctrl="first-deg"]');
+      var chipsEl = modal.querySelector('[data-zeta-chips]');
+
+      function renderTable(items, total) {
+        if (!tbody) return;
+        if (!items.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-4)">No matches.</td></tr>';
+          if (statsEl) statsEl.textContent = '0 results';
+          if (pagerEl) pagerEl.innerHTML = '';
+          return;
+        }
+        tbody.innerHTML = items.map(renderRow).join('');
+        if (statsEl) statsEl.textContent = items.length + ' of ' + total + ' shown (page ' + STATE.page + ')';
+        var pages = Math.max(1, Math.ceil(total / STATE.pageSize));
+        if (pagerEl) {
+          if (pages > 1) {
+            pagerEl.innerHTML = '<button data-zeta-pager-dir="-1" ' + (STATE.page <= 1 ? 'disabled' : '') + ' style="padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-3);cursor:pointer;font-size:11px;margin-right:6px">‹</button>'
+              + '<span style="color:var(--text-3);font-size:11px">' + STATE.page + ' / ' + pages + '</span>'
+              + '<button data-zeta-pager-dir="1" ' + (STATE.page >= pages ? 'disabled' : '') + ' style="padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-3);cursor:pointer;font-size:11px;margin-left:6px">›</button>';
+          } else {
+            pagerEl.innerHTML = '';
+          }
+        }
+      }
+
+      function readUiState() {
+        STATE.query = searchEl ? searchEl.value : '';
+        STATE.sort = sortEl ? sortEl.value : 'warm_path_strength';
+        if (hasEmailEl && hasEmailEl.checked) STATE.filters.has_email = 'true';
+        else delete STATE.filters.has_email;
+        if (firstDegEl && firstDegEl.checked) STATE.filters.degree = 1;
+        else delete STATE.filters.degree;
+      }
+
+      function render() {
+        readUiState();
+        // Clear any stale expanded-row state; the tbody is about to be re-rendered.
+        STATE.expandedId = null;
+        // Local-only path: NO query AND NO filters → use the pre-baked top-100.
+        // If ANY filter is active (target_company, has_email, degree) we fire
+        // the API instead so chip badges match the table count. Z.10 self-review
+        // fix: prevented "chip says 45 but table shows 30 of top-100" mismatch.
+        var hasFilter = Object.keys(STATE.filters).length > 0;
+        if (!STATE.query && !hasFilter) {
+          var items = STATE.preview.slice();
+          if (STATE.sort === 'recently_connected') {
+            items.sort(function(a, b) { return String(b.connected_on || '').localeCompare(String(a.connected_on || '')); });
+          } else if (STATE.sort === 'warm_path_strength') {
+            items.sort(function(a, b) { return (b.warm_path_strength || 0) - (a.warm_path_strength || 0); });
+          }
+          var start = (STATE.page - 1) * STATE.pageSize;
+          renderTable(items.slice(start, start + STATE.pageSize), items.length);
+          return;
+        }
+        var url = '/api/network/search?q=' + encodeURIComponent(STATE.query || '')
+          + '&page=' + STATE.page + '&pageSize=' + STATE.pageSize + '&sort=' + STATE.sort;
+        for (var k in STATE.filters) {
+          url += '&filters[' + k + ']=' + encodeURIComponent(STATE.filters[k]);
+        }
+        var fetchAt = STATE.lastFetchAt = Date.now();
+        fetch(url).then(function(r) { return r.json(); }).then(function(j) {
+          if (fetchAt !== STATE.lastFetchAt) return;
+          renderTable(j.hits || [], j.total || 0);
+        }).catch(function(e) {
+          if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--red-fg)">Search error: ' + esc(e.message) + '</td></tr>';
+        });
+      }
+
+      // ── Search debounce ──
+      var debounceTimer = null;
+      if (searchEl) {
+        searchEl.addEventListener('input', function() {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(function() { STATE.page = 1; render(); }, 200);
+        });
+      }
+      if (sortEl) sortEl.addEventListener('change', render);
+      if (hasEmailEl) hasEmailEl.addEventListener('change', render);
+      if (firstDegEl) firstDegEl.addEventListener('change', render);
+
+      // ── Chip clicks (target_company filter) ──
+      if (chipsEl) {
+        chipsEl.addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-zeta-chip]');
+          if (!btn) return;
+          var slug = btn.getAttribute('data-zeta-chip');
+          if (slug) STATE.filters.target_company = slug;
+          else delete STATE.filters.target_company;
+          STATE.page = 1;
+          // Visual: light up the active chip
+          chipsEl.querySelectorAll('[data-zeta-chip]').forEach(function(b) {
+            var active = b.getAttribute('data-zeta-chip') === slug && !!slug;
+            b.style.background = active ? 'var(--blue-bg, var(--surface))' : (b.getAttribute('data-zeta-chip') ? 'var(--surface-2)' : 'transparent');
+            b.style.color = active ? 'var(--blue-fg, var(--text))' : (b.getAttribute('data-zeta-chip') ? 'var(--text-2)' : 'var(--text-4)');
+          });
+          render();
+        });
+      }
+
+      // ── Pager clicks ──
+      if (pagerEl) {
+        pagerEl.addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-zeta-pager-dir]');
+          if (!btn || btn.disabled) return;
+          STATE.page = Math.max(1, STATE.page + Number(btn.getAttribute('data-zeta-pager-dir')));
+          render();
+        });
+      }
+
+      // ── Row expand (delegated) ──
+      function toggleRow(id) {
+        var prev = modal.querySelector('[data-zeta-detail="' + id + '"]');
+        if (prev) {
+          prev.remove();
+          STATE.expandedId = null;
+          return;
+        }
+        if (STATE.expandedId) {
+          var prev2 = modal.querySelector('[data-zeta-detail="' + STATE.expandedId + '"]');
+          if (prev2) prev2.remove();
+        }
+        STATE.expandedId = id;
+        var row = modal.querySelector('#zeta-row-' + cssEscape(id));
+        if (!row) return;
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-zeta-detail', id);
+        tr.innerHTML = '<td colspan="6" style="padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--border)">'
+          + '<div data-zeta-detail-body="' + esc(id) + '" style="font-size:12px;color:var(--text-2)">Loading…</div></td>';
+        row.parentNode.insertBefore(tr, row.nextSibling);
+        fetch('/api/network/person/' + encodeURIComponent(id))
+          .then(function(r) { return r.json(); })
+          .then(function(j) {
+            var body = modal.querySelector('[data-zeta-detail-body="' + cssEscape(id) + '"]');
+            if (!body) return;
+            if (!j.ok) { body.textContent = 'Error: ' + (j.error || 'failed'); return; }
+            renderDetailInto(body, j.person);
+          })
+          .catch(function(e) {
+            var body = modal.querySelector('[data-zeta-detail-body="' + cssEscape(id) + '"]');
+            if (body) body.textContent = 'Error: ' + e.message;
+          });
+      }
+
+      function cssEscape(s) {
+        // Restrict to safe chars (a-z 0-9 - _) — our IDs are slugged so this
+        // is enough for querySelector lookup without pulling in CSS.escape.
+        return String(s).replace(/[^a-zA-Z0-9_-]/g, '_');
+      }
+
+      if (tbody) {
+        tbody.addEventListener('click', function(e) {
+          if (e.target.closest('[data-zeta-stop]')) {
+            e.stopPropagation();
+            return;
+          }
+          var row = e.target.closest('tr[data-zeta-id]');
+          if (!row) return;
+          toggleRow(row.getAttribute('data-zeta-id'));
+        });
+      }
+
+      function renderDetailInto(container, p) {
+        if (!container || !p) return;
+        var x = esc;
+        var emails = (p.emails && p.emails.professional) || [];
+        var emailRows = emails.map(function(e) {
+          var dt = e.verified_at ? ' · verified ' + x(String(e.verified_at).slice(0, 10)) : '';
+          return '<div style="font-family:ui-monospace,monospace;font-size:11.5px;margin:2px 0">'
+            + x(e.email) + confidenceBadge(e.confidence || 'low')
+            + '<span style="color:var(--text-4);font-size:10px;margin-left:6px">' + x(e.source || '') + dt + '</span></div>';
+        }).join('');
+        if (!emails.length) {
+          emailRows = '<div style="color:var(--text-4);font-size:11px">no email on file · '
+            + '<button data-zeta-find-email="' + x(p.id) + '" style="padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-3);cursor:pointer;font-size:11px">find email</button></div>';
+        }
+        var paths = (p._warm_intro_paths || []).map(function(w) {
+          var via = w.intro_path ? '<strong>' + x(w.intro_path.via_name || '?') + '</strong>' : '';
+          var to = w.target_name
+            ? '<a href="' + x(w.target_url || '#') + '" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">' + x(w.target_name) + '</a>'
+            : x(w.company_slug);
+          var ev = '<span style="color:var(--text-4);font-size:10.5px;margin-left:6px">[' + x(w.evidence || '') + ']</span>';
+          return '<li style="margin:3px 0">' + via + ' → ' + to + ' <span style="color:var(--text-4);font-size:10.5px">(' + x(w.target_company_slug) + ')</span>' + ev + '</li>';
+        }).join('');
+        var pathsHtml = paths
+          ? '<div style="margin:8px 0"><strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-4)">Warm-intro paths</strong><ul style="margin:4px 0 0 0;padding:0 0 0 18px">' + paths + '</ul></div>'
+          : '';
+        var inf = p.inferred || {};
+        var infHtml;
+        if (inf.current_team || (inf.likely_projects && inf.likely_projects.length) || (inf.drives && inf.drives.length)) {
+          infHtml = '<div style="margin:8px 0;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border)">'
+            + '<strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-4)">Inferred</strong>'
+            + (inf.current_team ? '<div style="margin-top:4px"><span style="color:var(--text-4)">team:</span> ' + x(inf.current_team) + '</div>' : '')
+            + (inf.likely_projects && inf.likely_projects.length ? '<div style="margin-top:4px"><span style="color:var(--text-4)">projects:</span> ' + inf.likely_projects.map(x).join(', ') + '</div>' : '')
+            + (inf.drives && inf.drives.length ? '<div style="margin-top:4px"><span style="color:var(--text-4)">drives:</span> ' + inf.drives.map(x).join(', ') + '</div>' : '')
+            + (inf.evidence_urls && inf.evidence_urls.length ? '<div style="margin-top:6px;font-size:10.5px;color:var(--text-4)">sources: ' + inf.evidence_urls.slice(0, 5).map(function(u) {
+              var host = '';
+              try { host = new URL(u, window.location.href).hostname; } catch (_) { host = u.slice(0, 40); }
+              return '<a href="' + x(u) + '" target="_blank" rel="noopener" style="color:var(--text-3)">[' + x(host) + ']</a>';
+            }).join(' ') + '</div>' : '')
+            + '</div>';
+        } else {
+          infHtml = '<div style="margin:8px 0;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px dashed var(--border);font-size:11px;color:var(--text-4)">No inferred data yet. '
+            + '<button data-zeta-enrich="' + x(p.id) + '" style="padding:2px 6px;margin-left:4px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-3);cursor:pointer;font-size:11px">Run enricher</button></div>';
+        }
+        var headerLine = x(p.full_name) + (p.current_company ? ' · ' + x(p.current_company) : '') + (p.current_role ? ' · ' + x(p.current_role) : '');
+        var links = '';
+        if (p.linkedin_url) links += '<a href="' + x(p.linkedin_url) + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--text-3);text-decoration:underline;margin-right:8px">LinkedIn ↗</a>';
+        if (p.x_url) links += '<a href="' + x(p.x_url) + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--text-3);text-decoration:underline;margin-right:8px">𝕏 ↗</a>';
+        container.innerHTML = '<div style="font-size:12px">'
+          + '<div style="font-weight:600;color:var(--text);margin-bottom:2px">' + headerLine + '</div>'
+          + '<div style="margin-bottom:8px">' + links + '</div>'
+          + '<div style="margin:8px 0"><strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-4)">Email</strong><div style="margin-top:4px">' + emailRows + '</div></div>'
+          + pathsHtml + infHtml
+          + '<div style="margin-top:10px"><textarea data-zeta-notes="' + x(p.id) + '" placeholder="Notes…" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12px;font-family:inherit;min-height:50px;box-sizing:border-box">' + x(p.notes || '') + '</textarea></div>'
+          + '</div>';
+
+        // Wire detail-level actions
+        var enrichBtn = container.querySelector('[data-zeta-enrich]');
+        if (enrichBtn) {
+          enrichBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm('Run LLM enricher for this person? (~$0.05 spend)')) return;
+            fetch('/api/network/enrich/' + encodeURIComponent(p.id), { method: 'POST' })
+              .then(function(r) { return r.json(); })
+              .then(function(j) { alert('enricher started · job ' + (j.jobId || '?')); })
+              .catch(function(err) { alert(err.message); });
+          });
+        }
+        var findEmailBtn = container.querySelector('[data-zeta-find-email]');
+        if (findEmailBtn) {
+          findEmailBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fetch('/api/network/find-email/' + encodeURIComponent(p.id), { method: 'POST' })
+              .then(function(r) { return r.json(); })
+              .then(function(j) { alert('email-finder started · job ' + (j.jobId || '?')); })
+              .catch(function(err) { alert(err.message); });
+          });
+        }
+        var notesEl = container.querySelector('[data-zeta-notes]');
+        if (notesEl) {
+          notesEl.addEventListener('blur', function() {
+            fetch('/api/network/person/' + encodeURIComponent(p.id) + '/notes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ note: notesEl.value }),
+            }).catch(function(_) {});
+          });
+        }
+        // Stop click bubbling for the entire detail panel so accidental row collapses don't happen
+        container.addEventListener('click', function(e) { e.stopPropagation(); });
+      }
+
+      // ── First paint ──
+      render();
+    },
   };
 });
 

@@ -30,6 +30,15 @@ import { estimateTTO } from './lib/tto-estimator.mjs';
 import { scoreToxicity } from './lib/toxicity-scorer.mjs';
 import { renderChildPageHTML } from './lib/child-page-template.mjs';
 import { renderInlineDiff, renderSideBySideDiff } from './lib/diff-renderer.mjs';
+// ZETA 2026-05-19 — network-database search + person lookups
+import {
+  searchNetwork as networkSearch,
+  personById as networkPersonById,
+  resolveWarmIntros as networkResolveWarmIntros,
+  networkDatabaseHeadline,
+  topByWarmPath as networkTopByWarmPath,
+  loadDatabase as networkLoadDatabase,
+} from './lib/network-database-search.mjs';
 
 // ── Application enrichment for outreach API ────────────────────────────────
 // Join contact.linked_application_id → applications.md row so the dashboard
@@ -2825,6 +2834,202 @@ const server = createServer((req, res) => {
       .filter(f => f.endsWith('.json') && !f.startsWith('_'))
       .map(f => f.replace(/\.json$/, ''));
     return json({ slugs });
+  }
+
+  // ── Network database (ZETA 2026-05-19) ──────────────────────────────────
+  // The popout + full-page surface that replaces the static "340 press
+  // contacts" string. Backed by lib/network-database-search.mjs over
+  // data/network-database.json (gitignored). `dashboard-server` itself
+  // sits behind Cloudflare Access + service token; surfacing personal
+  // emails here is protected by that, not by query-param secrets.
+
+  // GET /api/network/search?q=&filters[degree]=1&page=1&pageSize=50&sort=relevance
+  if (url === '/api/network/search') {
+    try {
+      const filters = {};
+      for (const [k, v] of Object.entries(query)) {
+        const m = k.match(/^filters\[(.+)\]$/);
+        if (m) filters[m[1]] = v;
+      }
+      const r = networkSearch({
+        query: query.q || '',
+        filters,
+        sort: query.sort || 'relevance',
+        page: Number(query.page) || 1,
+        pageSize: Number(query.pageSize) || 50,
+      });
+      return json(r);
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
+  }
+
+  // GET /api/network/headline → headline counts + totals_by_target + last_run
+  if (url === '/api/network/headline') {
+    const h = networkDatabaseHeadline();
+    if (!h) return json({ ok: false, error: 'database_not_built', last_run: null }, 404);
+    return json({ ok: true, ...h });
+  }
+
+  // GET /api/network/preview → top-100 by warm_path_strength, pre-baked
+  // shape suitable for first-paint of the popout.
+  if (url === '/api/network/preview') {
+    return json({ items: networkTopByWarmPath(100) });
+  }
+
+  // GET /api/network/person/:id → full record + resolved 2nd-degree paths
+  const personMatch = url.match(/^\/api\/network\/person\/([a-z0-9-]+)$/i);
+  if (personMatch && req.method === 'GET') {
+    const id = personMatch[1];
+    const p = networkPersonById(id);
+    if (!p) return json({ ok: false, error: 'not_found', id }, 404);
+    return json({ ok: true, person: networkResolveWarmIntros(p) });
+  }
+
+  // POST /api/network/person/:id/notes → write a free-text note
+  // Stored in data/network-database-notes.json (gitignored). The aggregator
+  // does NOT round-trip these back into the build; this is a thin overlay
+  // so the popout can persist Mitchell's reminders without re-running build.
+  if (personMatch && req.method === 'POST' && url.endsWith('/notes')) {
+    // Path matched only if it ends with /notes (separate handler below)
+  }
+  const notesMatch = url.match(/^\/api\/network\/person\/([a-z0-9-]+)\/notes$/i);
+  if (notesMatch && req.method === 'POST') {
+    const id = notesMatch[1];
+    let body = '';
+    req.on('data', chunk => { body += chunk; if (body.length > 50_000) req.connection.destroy(); });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const note = String(payload.note || '').slice(0, 5_000);
+        const NOTES_PATH = join(ROOT, 'data/network-database-notes.json');
+        const cur = existsSync(NOTES_PATH) ? JSON.parse(readFileSync(NOTES_PATH, 'utf-8') || '{}') : {};
+        cur[id] = { note, updated_at: new Date().toISOString() };
+        writeFileSync(NOTES_PATH, JSON.stringify(cur, null, 2));
+        json({ ok: true, id, note });
+      } catch (e) {
+        json({ ok: false, error: e.message }, 400);
+      }
+    });
+    return;
+  }
+
+  // POST /api/network/build → spawn a fresh aggregator run, return 202 + job_id
+  if (url === '/api/network/build' && req.method === 'POST') {
+    const jobId = randomBytes(6).toString('hex');
+    const logsDir = join(ROOT, 'batch/logs');
+    if (!existsSync(logsDir)) mkdirSync(logsDir, { recursive: true });
+    const logPath = join(logsDir, `network-build-${jobId}.log`);
+    try {
+      const child = _spawn('node', [join(ROOT, 'scripts/build-network-database.mjs'), '--verbose'], {
+        detached: true, stdio: ['ignore', 'pipe', 'pipe'], cwd: ROOT,
+      });
+      const out = (data) => appendFileSync(logPath, data);
+      child.stdout.on('data', out);
+      child.stderr.on('data', out);
+      child.unref();
+      return json({ ok: true, jobId, log_path: logPath, status_url: `/api/network/build-status?job_id=${jobId}` }, 202);
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
+  }
+
+  // GET /api/network/build-status?job_id=...
+  if (url === '/api/network/build-status' && req.method === 'GET') {
+    const jobId = String(query.job_id || '').replace(/[^a-z0-9]/gi, '').slice(0, 32);
+    if (!jobId) return json({ ok: false, error: 'missing job_id' }, 400);
+    const logPath = join(ROOT, 'batch/logs', `network-build-${jobId}.log`);
+    if (!existsSync(logPath)) return json({ ok: true, jobId, status: 'pending', log: '' });
+    const log = readFileSync(logPath, 'utf-8');
+    const isDone = /\[zeta\]\s+per-target counts:/.test(log);
+    return json({ ok: true, jobId, status: isDone ? 'completed' : 'running', log: log.slice(-4000) });
+  }
+
+  // POST /api/network/enrich/:id → kick off Z.3 enricher for one person
+  const enrichMatch = url.match(/^\/api\/network\/enrich\/([a-z0-9-]+)$/i);
+  if (enrichMatch && req.method === 'POST') {
+    const id = enrichMatch[1];
+    const jobId = randomBytes(6).toString('hex');
+    const logsDir = join(ROOT, 'batch/logs');
+    if (!existsSync(logsDir)) mkdirSync(logsDir, { recursive: true });
+    const logPath = join(logsDir, `network-enrich-${jobId}.log`);
+    try {
+      const child = _spawn('node', [join(ROOT, 'scripts/agents/network-enricher.mjs'), '--person', id], {
+        detached: true, stdio: ['ignore', 'pipe', 'pipe'], cwd: ROOT,
+      });
+      const out = (data) => appendFileSync(logPath, data);
+      child.stdout.on('data', out);
+      child.stderr.on('data', out);
+      child.unref();
+      return json({ ok: true, jobId, person_id: id, log_path: logPath, status_url: `/api/network/build-status?job_id=${jobId}` }, 202);
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
+  }
+
+  // POST /api/network/find-email/:id → kick off Z.4 emailer for one person
+  const emailMatch = url.match(/^\/api\/network\/find-email\/([a-z0-9-]+)$/i);
+  if (emailMatch && req.method === 'POST') {
+    const id = emailMatch[1];
+    const jobId = randomBytes(6).toString('hex');
+    const logsDir = join(ROOT, 'batch/logs');
+    if (!existsSync(logsDir)) mkdirSync(logsDir, { recursive: true });
+    const logPath = join(logsDir, `network-email-${jobId}.log`);
+    try {
+      const child = _spawn('node', [join(ROOT, 'scripts/agents/network-emailer.mjs'), '--person', id], {
+        detached: true, stdio: ['ignore', 'pipe', 'pipe'], cwd: ROOT,
+      });
+      const out = (data) => appendFileSync(logPath, data);
+      child.stdout.on('data', out);
+      child.stderr.on('data', out);
+      child.unref();
+      return json({ ok: true, jobId, person_id: id, log_path: logPath, status_url: `/api/network/build-status?job_id=${jobId}` }, 202);
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
+  }
+
+  // GET /api/network/export?filters[...]=...&format=csv → CSV download of
+  // the filtered set. Used by the full-page view's "Export CSV" button.
+  if (url === '/api/network/export') {
+    try {
+      const filters = {};
+      for (const [k, v] of Object.entries(query)) {
+        const m = k.match(/^filters\[(.+)\]$/);
+        if (m) filters[m[1]] = v;
+      }
+      const r = networkSearch({
+        query: query.q || '',
+        filters,
+        sort: query.sort || 'relevance',
+        page: 1,
+        pageSize: 100_000, // cap by total count
+      });
+      const cols = ['full_name', 'current_company', 'current_role', 'linkedin_url', 'x_url', 'degree', 'warm_to', 'professional_emails', 'connected_on'];
+      const rows = [cols.join(',')];
+      const csvEscape = (s) => {
+        const v = s == null ? '' : String(s);
+        if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+        return v;
+      };
+      for (const p of r.hits) {
+        const warmSlugs = (p.warm_to_target_companies || []).map(w => w.company_slug).join('|');
+        const profEmails = (p.emails?.professional || []).map(e => `${e.email}:${e.confidence}`).join('|');
+        rows.push([
+          p.full_name, p.current_company, p.current_role,
+          p.linkedin_url, p.x_url, p.degree,
+          warmSlugs, profEmails, p.connected_on,
+        ].map(csvEscape).join(','));
+      }
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="network-database-${new Date().toISOString().slice(0,10)}.csv"`,
+        'Cache-Control': 'no-store',
+      });
+      return res.end(rows.join('\n'));
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
   }
 
   // ── Pipeline processing — "Run Batch" + "Process All" buttons ───────────
