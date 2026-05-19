@@ -154,22 +154,26 @@ function htmlToText(s) {
 // multiple openings of "Software Engineer" at one large employer) don't
 // collide on a single file. If the same posting was already saved, the
 // existing file is preserved (first save wins, scan-history dedups the rest).
+// Best-effort: any FS failure (disk full, EACCES, EROFS, Windows EBUSY, …)
+// returns null so the caller falls back to the remote URL. A single bad-cache
+// item should not abort the rest of a multi-source scan.
 function saveJd(normalized, descriptionBody, sourceLabel) {
-  mkdirSync(JDS_DIR, { recursive: true });
-  const baseSlug = slugify(`${normalized.company}-${normalized.title}`);
-  // sha1 over the canonical URL (or company-title fallback when the URL is
-  // absent) gives every distinct posting its own cache file deterministically.
-  const urlHash = createHash('sha1')
-    .update(String(normalized.url || `${normalized.company}-${normalized.title}`))
-    .digest('hex')
-    .slice(0, 10);
-  const slug = `${baseSlug}-${urlHash}`;
-  const filename = `${slug}.md`;
-  const filepath = join(JDS_DIR, filename);
-  if (existsSync(filepath)) return `${JDS_DIR}/${filename}`;
+  try {
+    mkdirSync(JDS_DIR, { recursive: true });
+    const baseSlug = slugify(`${normalized.company}-${normalized.title}`);
+    // sha1 over the canonical URL (or company-title fallback when the URL is
+    // absent) gives every distinct posting its own cache file deterministically.
+    const urlHash = createHash('sha1')
+      .update(String(normalized.url || `${normalized.company}-${normalized.title}`))
+      .digest('hex')
+      .slice(0, 10);
+    const slug = `${baseSlug}-${urlHash}`;
+    const filename = `${slug}.md`;
+    const filepath = join(JDS_DIR, filename);
+    if (existsSync(filepath)) return `${JDS_DIR}/${filename}`;
 
-  const today = new Date().toISOString().slice(0, 10);
-  const content = `---
+    const today = new Date().toISOString().slice(0, 10);
+    const content = `---
 title: ${yamlEscape(normalized.title)}
 company: ${yamlEscape(normalized.company)}
 url: ${yamlEscape(normalized.url)}
@@ -182,8 +186,12 @@ source: ${sourceLabel}
 
 ${descriptionBody}
 `;
-  writeFileSync(filepath, content, 'utf-8');
-  return `${JDS_DIR}/${filename}`;
+    writeFileSync(filepath, content, 'utf-8');
+    return `${JDS_DIR}/${filename}`;
+  } catch (err) {
+    console.warn(`apify: JD cache write failed for ${normalized.title} (${err.code || err.name}: ${err.message}); falling back to remote URL`);
+    return null;
+  }
 }
 
 export function normalizeItem(item, fieldMap, defaults) {
@@ -252,6 +260,7 @@ export default {
         }
         const remoteUrl = normalized.url;
         const jdPath = saveJd(normalized, descriptionBody, sourceLabel);
+        if (jdPath === null) return normalized; // FS write failed → keep remote URL
         normalized.url = `local:${jdPath}`;
         normalized._remote_url = remoteUrl;
         return normalized;
