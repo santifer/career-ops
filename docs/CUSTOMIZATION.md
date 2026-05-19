@@ -66,7 +66,7 @@ Career-ops can integrate with external systems via Claude Code hooks. Example ho
 }
 ```
 
-Save hooks in `.claude/settings.json`.
+Save hooks in `.claude/settings.json` or `.opencode/settings.local.json`.
 
 ## States (templates/states.yml)
 
