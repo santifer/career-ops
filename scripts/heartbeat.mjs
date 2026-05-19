@@ -37,7 +37,7 @@ import { buildOutreachMailto } from '../lib/mailto-helpers.mjs';
 // 2026-05-17 — inline compute below (mirrors dashboard-server.mjs's
 // computeRecruiterPipelineDensity so heartbeat doesn't depend on the
 // dashboard server being running).
-import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert, renderCdpAuthHealthSection, renderPolishSummarySection } from '../lib/heartbeat-system-banner.mjs';
+import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert, renderCdpAuthHealthSection, renderPolishSummarySection, renderCronHealthBanner } from '../lib/heartbeat-system-banner.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -650,8 +650,17 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   } catch {}
 
   // Tier 5 system-status banner (calibration brief 2026-05-16)
+  // Phase A · A3 · HIGH-1 (2026-05-19) — banner now renders as a one-liner with
+  // a "details →" link pointing at the dashboard, not the 7-row table.
   let systemBannerHtml = '';
-  try { systemBannerHtml = renderSystemBanner({ format: 'html' }) || ''; } catch {}
+  try { systemBannerHtml = renderSystemBanner({ format: 'html', dashboardUrl: DASHBOARD_PUBLIC_URL }) || ''; } catch {}
+
+  // Cron-health watchdog (added 2026-05-19). Auto-suppresses when all
+  // tracked jobs (scan / scan-rss / scan-email) are healthy; lights up
+  // a red/amber banner when one is failing or stale. Goal: surface
+  // silent failures within 24h instead of 4 days.
+  let cronHealthHtml = '';
+  try { cronHealthHtml = renderCronHealthBanner({ format: 'html' }) || ''; } catch {}
 
   // CDP-attached Chrome auth-health banner — only renders if CDP is down OR
   // LinkedIn auth has broken. Self-suppresses when healthy. Reads
@@ -732,6 +741,7 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   if (runwayAlertHtml) contextSectionsHtml += runwayAlertHtml;
   if (polishSummaryHtml) contextSectionsHtml += polishSummaryHtml;
   if (systemBannerHtml) contextSectionsHtml += systemBannerHtml;
+  if (cronHealthHtml) contextSectionsHtml += cronHealthHtml;
   if (cvFreshnessHtml) contextSectionsHtml += cvFreshnessHtml;
   if (discardSectionHtml) contextSectionsHtml += discardSectionHtml;
 
