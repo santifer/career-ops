@@ -43,6 +43,7 @@ try {
 import { harvestPolishSignals } from '../../lib/polish-signals.mjs';
 import { polishArtifact } from '../../lib/polish-loop.mjs';
 import { checkPackCoherence } from '../../lib/polish-coherence.mjs';
+import { initCostTrace } from '../../lib/council.mjs';
 import { runImpactDoc } from './impact-doc.mjs';
 import { runReferences } from './references.mjs';
 import { runReferrals } from './referrals.mjs';
@@ -219,6 +220,13 @@ export async function runPolishPack(opts = {}) {
   const dataDir = join(ROOT, 'data', 'apply-packs', packInfo.slug);
   mkdirSync(dataDir, { recursive: true });
 
+  // ── Cost trace (Mitchell decision α.2) ─────────────────────────────────────
+  // initCostTrace returns an opts.onCostRecord callback. Pass it through every
+  // callCouncil invocation (directly and via harvestPolishSignals / polishArtifact)
+  // so per-call cost is logged to data/polish-cost-trace-<date>.json.
+  // The callback is best-effort — a trace write failure never blocks polish.
+  const onCostRecord = initCostTrace('apply-pack-polish', ROOT);
+
   const jdText = readJdText(packInfo.slug);
   const hmIntel = readHmIntel(packInfo.company, packInfo.role);
   const cvText = existsSync(join(ROOT, 'cv.md')) ? readFileSync(join(ROOT, 'cv.md'), 'utf-8') : '';
@@ -232,7 +240,7 @@ export async function runPolishPack(opts = {}) {
     company: packInfo.company,
     role: packInfo.role,
     jdText,
-    opts: { refresh: noCache, costCap: 40 },
+    opts: { refresh: noCache, costCap: 40, onCostRecord, phase: 'phase-1' },
   });
   emitProgress({ phase: 'phase-1', step: 'signals-ready', priorities: signals.hiring_manager_priorities?.length || 0, pruned: signals.dealbreaker_pruned?.length || 0, cost_usd: signals.meta?.cost_usd ?? 0, cache: signals.meta?.cache });
 
@@ -289,13 +297,16 @@ export async function runPolishPack(opts = {}) {
           outerRetries: 3,
           costCap: Math.max(10, Math.min(120, (costCap - cumulativeCost) / Math.max(artifacts.length - Object.keys(perArtifact).length, 1))),
           tracePath,
+          onCostRecord,                 // Mitchell decision α.2 — pass cost trace callback
+          phase: 'phase-2',
+          artifactSlug: conf.kind,
           onSignalsRefresh: async () => {
             const refreshed = await harvestPolishSignals({
               slug: packInfo.slug,
               company: packInfo.company,
               role: packInfo.role,
               jdText,
-              opts: { refresh: true, costCap: 50 },
+              opts: { refresh: true, costCap: 50, onCostRecord, phase: 'phase-2-refresh' },
             });
             return refreshed;
           },
