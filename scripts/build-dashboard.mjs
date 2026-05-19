@@ -6195,7 +6195,7 @@ async function build() {
   .tonight-pick-role {
     font-size: 14px; color: var(--text-2); font-weight: 500;
     /* No truncation — allow wrap to 2 lines */
-    word-break: break-word;
+    word-break: normal;
   }
   /* Signal chips row: gates, comp, location */
   .tonight-pick-signals { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -6511,20 +6511,31 @@ async function build() {
       overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap; max-width: 0;
     }
-    /* P0-1: role + company cells render full string (no truncation). title= remains as hover fallback. */
+    /* P0-1: role + company cells render full string (no truncation).
+       2026-05-19 fix: word-break: break-word + overflow-wrap: anywhere were
+       causing one-character-per-line vertical wrap when the column got
+       squeezed (narrow viewport, sidebar opened). Safer pattern: word-break
+       normal + overflow-wrap break-word — breaks at WORD boundaries only,
+       never mid-word. Cells get a min-width floor so a single long token
+       can still expand the column rather than wrapping into a vertical bar.
+       title= remains as hover fallback. */
     .panel .table-scroll table td.role-cell,
     .panel .table-scroll table td.company-cell {
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
       max-width: none;
-      word-break: break-word;
+      min-width: 8ch;
+      word-break: normal;
+      overflow-wrap: break-word;
+      hyphens: auto;
     }
     /* P0-1: ensure inline anchors inside role/company cells also wrap */
     .panel .table-scroll table td.role-cell a,
     .panel .table-scroll table td.company-cell a {
       white-space: normal;
-      overflow-wrap: anywhere;
+      word-break: normal;
+      overflow-wrap: break-word;
     }
   }
   /* Resize handle — 5px zone on right edge of each th */
@@ -9070,8 +9081,8 @@ async function build() {
   .drawer-role {
     margin-top: 2px;
     font-size: 13px; color: var(--text-2); line-height: 1.4;
-    word-break: break-word;
-    overflow-wrap: anywhere;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
   .drawer-role-link {
     color: var(--text-2); text-decoration: none;
@@ -12097,7 +12108,7 @@ document.addEventListener('careerops:tables-rendered', _utbInitAll);
   s.id = 'utb-expanded-css';
   s.textContent =
     'tr.utb-expanded td, tr.expanded td { white-space: normal !important; max-height: 200px; overflow-y: auto; }' +
-    'tr.utb-expanded td, tr.expanded td { word-break: break-word; }';
+    'tr.utb-expanded td, tr.expanded td { word-break: normal; }';
   document.head.appendChild(s);
 })();
 
@@ -13489,12 +13500,15 @@ function initAlphaPollingSweep() {
   if (window._alphaPolled) return;
   window._alphaPolled = true;
 
-  // (1) Poll /api/stats every 60s and update KPI chips that have data-stat attrs
+  // (1) Poll /api/stats every 60s and update KPI chips that have data-stat attrs.
+  // 2026-05-19 first-paint fix: KPI chips are already build-time-baked into
+  // the HTML with [data-stat] values. The immediate fetch was a no-op visual
+  // flash (same value re-set after 200–500ms network round-trip). Skip the
+  // immediate fetch — let the build-time bake render on first paint, then
+  // pick up live updates 60s later. Eliminates the perceived load delay.
   function _alphaPoll60s() {
     fetch('/api/stats').then(r => r.ok ? r.json() : null).then(stats => {
       if (!stats) return;
-      // The dashboard renders stats into elements with [data-stat] attrs (e.g. data-stat="batchesRun")
-      // Re-fill them from the live JSON when present
       try {
         document.querySelectorAll('[data-stat]').forEach(function(el) {
           var key = el.dataset.stat;
@@ -13506,10 +13520,12 @@ function initAlphaPollingSweep() {
       } catch (_) {}
     }).catch(() => {});
   }
-  _alphaPoll60s();
+  // Skip immediate call — build-time bake covers first paint.
+  // First fetch happens 60s in; subsequent every 60s.
   setInterval(_alphaPoll60s, 60000);
 
-  // (2) Poll /api/contacts/stats every 120s to update the sidebar-contacts chip
+  // (2) Poll /api/contacts/stats every 120s to update the sidebar-contacts chip.
+  // Same first-paint optimization as (1): sidebar-contacts is build-time-baked.
   function _alphaPollContacts() {
     fetch('/api/contacts/stats').then(r => r.ok ? r.json() : null).then(data => {
       if (!data) return;
@@ -13521,7 +13537,7 @@ function initAlphaPollingSweep() {
       } catch (_) {}
     }).catch(() => {});
   }
-  _alphaPollContacts();
+  // Skip immediate call — build-time bake covers first paint.
   setInterval(_alphaPollContacts, 120000);
 
   // (3) Inject ↻ rebuild mini-buttons next to baked widgets
@@ -24952,7 +24968,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   }
   .batch-status-runs tbody tr:hover { background: var(--surface-2); }
   .batch-status-runs tr.expanded td {
-    white-space: normal; max-width: none; word-break: break-word;
+    white-space: normal; max-width: none; word-break: normal;
   }
   .batch-status-runs .run-status {
     display: inline-block; padding: 2px 8px; border-radius: 999px;
@@ -26122,8 +26138,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   font-weight: 500;
   font-size: 13.5px;
   line-height: 1.45;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 #outreach-pulse .op-action-empty {
   font-style: italic;
@@ -26342,8 +26358,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   font-weight: 500;
   font-size: var(--fs-body, 13px);
   line-height: var(--lh-relaxed, 1.5);
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 #outreach-pulse .op-row-v3 .op-row-content > .op-linked-app {
   margin-top: var(--space-2, 8px);
