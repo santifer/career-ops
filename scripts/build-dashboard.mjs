@@ -18685,16 +18685,16 @@ function _renderPipelineModalBody(action, p) {
     // Stage rows
     var stageData = isAll
       ? [
-          { label: '① Triage',   count: stgs.triage.count,   model: stgs.triage.model,   cost: stgs.triage.cost_usd,  note: 'JD enrichment' },
-          { label: '② Sort',     count: stgs.sort.count,     model: stgs.sort.model,     cost: 0, muted: true,         note: 'rule-based, free' },
-          { label: '③ Process',  count: stgs.process.count,  model: stgs.process.model,  cost: stgs.process.cost_usd, note: Math.round((est.assumed_advance_rate || 0.5) * 100) + '% advance rate' },
-          { label: '④ Evaluate', count: stgs.evaluate.count, model: stgs.evaluate.model, cost: 0, muted: true,         note: 'rubric + gates · runs with Process' },
-          { label: '⑤ Publish',  count: stgs.publish.count,  model: stgs.publish.model,  cost: 0, muted: true,         note: 'only if score ≥ ' + thr + ' · triggers enrichment', cond: true },
+          { label: 'Triage',   count: stgs.triage.count,   model: stgs.triage.model,   cost: stgs.triage.cost_usd,  note: 'JD enrichment' },
+          { label: 'Sort',     count: stgs.sort.count,     model: stgs.sort.model,     cost: 0, muted: true,         note: 'rule-based, free' },
+          { label: 'Process',  count: stgs.process.count,  model: stgs.process.model,  cost: stgs.process.cost_usd, note: Math.round((est.assumed_advance_rate || 0.5) * 100) + '% advance rate' },
+          { label: 'Evaluate', count: stgs.evaluate.count, model: stgs.evaluate.model, cost: 0, muted: true,         note: 'rubric + gates · runs with Process' },
+          { label: 'Publish',  count: stgs.publish.count,  model: stgs.publish.model,  cost: 0, muted: true,         note: 'only if score ≥ ' + thr + ' · triggers enrichment', cond: true },
         ]
       : [
-          { label: '③ Process',  count: stgs.process.count,  model: stgs.process.model,  cost: stgs.process.cost_usd, note: 'queued items' },
-          { label: '④ Evaluate', count: stgs.evaluate.count, model: stgs.evaluate.model, cost: 0, muted: true,         note: 'rubric + gates · runs with Process' },
-          { label: '⑤ Publish',  count: stgs.publish.count,  model: stgs.publish.model,  cost: 0, muted: true,         note: 'only if score ≥ ' + thr + ' · triggers enrichment', cond: true },
+          { label: 'Process',  count: stgs.process.count,  model: stgs.process.model,  cost: stgs.process.cost_usd, note: 'queued items' },
+          { label: 'Evaluate', count: stgs.evaluate.count, model: stgs.evaluate.model, cost: 0, muted: true,         note: 'rubric + gates · runs with Process' },
+          { label: 'Publish',  count: stgs.publish.count,  model: stgs.publish.model,  cost: 0, muted: true,         note: 'only if score ≥ ' + thr + ' · triggers enrichment', cond: true },
         ];
 
     var stageRows = stageData.map(function(s) {
