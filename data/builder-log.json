@@ -2,59 +2,59 @@
   "skills": {
     "bug-class-lint": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "instrumentation-first": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "dedup-on-append": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "drain-loop": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "persistent-progress-bar": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "postmortem-driven-fix": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "cost-tracking": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "cohesion-fix": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "tier-routing": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "detector-calibration": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "apply-pack-polish": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "voice-corpus": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "network-database": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "fail-secure": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "council-orchestration": {
       "first_seen": "2026-04-21",
@@ -64,35 +64,35 @@
   "apis": {
     "anthropic": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "mcp": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "pangram": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "launchd": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "ashby": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "workable": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "greenhouse": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "cloudflare": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "typst": {
       "first_seen": "2026-04-21",
@@ -121,62 +121,94 @@
     "perplexity": {
       "first_seen": "2026-04-21",
       "count": 2
+    },
+    "gptzero": {
+      "first_seen": "2026-05-19",
+      "count": 1
+    },
+    "originality": {
+      "first_seen": "2026-05-19",
+      "count": 1
+    },
+    "hunter": {
+      "first_seen": "2026-05-19",
+      "count": 1
+    },
+    "assemblyai": {
+      "first_seen": "2026-05-19",
+      "count": 1
+    },
+    "descript": {
+      "first_seen": "2026-05-19",
+      "count": 1
+    },
+    "notion": {
+      "first_seen": "2026-05-19",
+      "count": 1
+    },
+    "telegram": {
+      "first_seen": "2026-05-19",
+      "count": 1
+    },
+    "gmail": {
+      "first_seen": "2026-05-19",
+      "count": 1
     }
   },
   "bug_classes": {
     "outer-template-unescape": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "duplicate-bloat": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "limit-cap-leakage": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "frontmatter-cloak": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "hardcoded-date": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     }
   },
   "pm_signals": {
     "instrumentation-first": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "audit-trail-design": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "observability": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "postmortem-then-fix": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "cohesion-driven-ux": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "failure-mode-doc": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "cost-discipline": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     },
     "reversible-changes": {
       "first_seen": "2026-04-21",
-      "count": 2
+      "count": 3
     }
   },
   "history": [
@@ -313,6 +345,78 @@
         {
           "bug_class": "limit-cap-leakage",
           "n": 2
+        },
+        {
+          "bug_class": "frontmatter-cloak",
+          "n": 1
+        },
+        {
+          "bug_class": "hardcoded-date",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "generated_at": "2026-05-19T19:29:32.422Z",
+      "since": "24 hours ago",
+      "commits": 185,
+      "streak": 2,
+      "top_skills": [
+        {
+          "skill": "detector-calibration",
+          "n": 15
+        },
+        {
+          "skill": "postmortem-driven-fix",
+          "n": 14
+        },
+        {
+          "skill": "apply-pack-polish",
+          "n": 8
+        },
+        {
+          "skill": "network-database",
+          "n": 7
+        },
+        {
+          "skill": "cost-tracking",
+          "n": 5
+        }
+      ],
+      "top_apis": [
+        {
+          "api": "launchd",
+          "n": 17
+        },
+        {
+          "api": "anthropic",
+          "n": 13
+        },
+        {
+          "api": "pangram",
+          "n": 3
+        },
+        {
+          "api": "mcp",
+          "n": 2
+        },
+        {
+          "api": "ashby",
+          "n": 2
+        }
+      ],
+      "top_bug_classes": [
+        {
+          "bug_class": "outer-template-unescape",
+          "n": 3
+        },
+        {
+          "bug_class": "limit-cap-leakage",
+          "n": 2
+        },
+        {
+          "bug_class": "duplicate-bloat",
+          "n": 1
         },
         {
           "bug_class": "frontmatter-cloak",

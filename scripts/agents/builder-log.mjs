@@ -194,6 +194,11 @@ const API_HINTS = {
   'playwright':      /\bplaywright\b/i,
   'mcp':             /\bMCP\b|model\s+context\s+protocol/i,
   'github-actions':  /\bGitHub\s+Actions\b|\.github\/workflows/i,
+  'assemblyai':      /\bassemblyai\b/i,
+  'descript':        /\bdescript\b/i,
+  'notion':          /\bnotion(?:\.so)?\b|notion[- ]?api/i,
+  'telegram':        /\btelegram\b|telegram[- ]?bot/i,
+  'gmail':           /\bgmail\b|gmail[- ]?app[- ]?password|smtp\.gmail/i,
 };
 
 const SKILL_HINTS = {
