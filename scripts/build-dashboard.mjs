@@ -6444,14 +6444,18 @@ async function build() {
   .col-badge { font-size: 10px; font-weight: 500; margin-left: 6px; white-space: nowrap; cursor: help; }
   .base-fx-wrap { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 2px; }
 
-  /* Column-header (?) info button that opens the full legend modal. */
+  /* Column-header (?) info button that opens the full legend modal.
+     BRAVO 2026-05-19 (AA-1): bumped 16px → 18px and added a subtle blue
+     hint so the affordance is visible without aggressive contrast. The
+     button is the only resolution for HEALTH/PEOPLE/EQUITY/COMPANY column
+     legends; missing it is a Mitchell-lens failure-mode #3 hit. */
   .tier-legend-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; padding: 0;
-    border: 1px solid var(--border); border-radius: 50%;
-    background: var(--surface); color: var(--text-3);
-    font-size: 10px; font-weight: 700; font-family: inherit;
-    cursor: pointer; vertical-align: middle; line-height: 1;
+    width: 18px; height: 18px; margin-left: 5px; padding: 0;
+    border: 1px solid var(--blue-border); border-radius: 50%;
+    background: var(--surface-2); color: var(--text-2);
+    font-size: 11px; font-weight: 700; font-family: inherit;
+    cursor: help; vertical-align: middle; line-height: 1;
     transition: background .12s, color .12s, border-color .12s;
   }
   .tier-legend-btn:hover, .tier-legend-btn:focus-visible {
