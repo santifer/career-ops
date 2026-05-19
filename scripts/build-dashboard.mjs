@@ -24498,21 +24498,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 #outreach-pulse .op-banner-toggle[aria-expanded="true"] .op-banner-chevron {
   transform: rotate(180deg);
 }
-#outreach-pulse .op-banner-close {
-  padding: 0 12px;
-  background: none;
-  border: 0;
-  border-left: 1px solid var(--border, #e2e8f0);
-  color: var(--text-3, #94a3b8);
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-#outreach-pulse .op-banner-close:hover {
-  color: var(--text, #0f172a);
-  background: var(--surface-2, #f8fafc);
-}
+/* .op-banner-close removed 2026-05-19 — banner must never fully disappear */
 #outreach-pulse .op-expanded {
   background: var(--surface, #ffffff);
   border: 1px solid var(--border, #e2e8f0);
@@ -24534,8 +24520,6 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   #outreach-pulse .op-banner:hover { border-color: #2d3142; }
   #outreach-pulse .op-banner-headline { color: #fafafa; }
   #outreach-pulse .op-banner-label { color: #9a9aa6; }
-  #outreach-pulse .op-banner-close { color: #6b7280; border-left-color: #232737; }
-  #outreach-pulse .op-banner-close:hover { color: #fafafa; background: #181b27; }
   #outreach-pulse .op-banner-stat-due strong      { color: #fca5a5; }
   #outreach-pulse .op-banner-stat-breakup strong  { color: #fca5a5; }
   #outreach-pulse .op-banner-stat-referral strong { color: #86efac; }
@@ -25419,7 +25403,10 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     var referral = counts.referral_opportunities || 0;
     var totalAction = dueToday + breakup + referral;
     var awaiting   = (counts.by_status && counts.by_status.awaiting_reply) || 0;
-    if (!totalAction && !(counts.total || 0)) { sec.style.display = 'none'; return; }
+    // Banner must never fully disappear (2026-05-19 ask). When there's no
+    // activity at all, still render the collapsed strip with an idle headline
+    // so the surface stays sticky + Mitchell can see at-a-glance status.
+    var idle = (!totalAction && !(counts.total || 0));
 
     // Banner: compact horizontal strip with badge counts + expand toggle.
     // Default collapsed — user opens on demand. Persisted via localStorage.
@@ -25428,7 +25415,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     if (dueToday) headlineParts.push('<span class="op-banner-stat op-banner-stat-due"><strong>' + dueToday + '</strong> due today</span>');
     if (breakup)  headlineParts.push('<span class="op-banner-stat op-banner-stat-breakup"><strong>' + breakup + '</strong> breakup</span>');
     if (referral) headlineParts.push('<span class="op-banner-stat op-banner-stat-referral"><strong>' + referral + '</strong> referral</span>');
-    if (!headlineParts.length) headlineParts.push('<span class="op-banner-stat"><strong>' + awaiting + '</strong> awaiting reply</span>');
+    if (!headlineParts.length && awaiting) headlineParts.push('<span class="op-banner-stat"><strong>' + awaiting + '</strong> awaiting reply</span>');
+    if (!headlineParts.length) headlineParts.push('<span class="op-banner-stat" style="color:var(--text-3,#94a3b8)">no outreach activity — log a touch to start</span>');
     var headline = headlineParts.join('<span class="op-banner-dot">·</span>');
 
     var groups = renderGroup('Due today', summary.due_today, 'due_today') +
@@ -25439,14 +25427,15 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     groups = groups + snoozedHtml;
 
     sec.innerHTML = ''
-      + '<div class="op-banner op-banner-' + bannerKind + '" role="region" aria-label="Outreach Pulse summary">'
+      // Banner has no dismiss affordance (2026-05-19 ask: never fully disappears).
+      // Chevron is the only state control: collapsed by default on every load/reload.
+      + '<div class="op-banner op-banner-' + (idle ? 'fresh' : bannerKind) + '" role="region" aria-label="Outreach Pulse summary">'
       +   '<button type="button" class="op-banner-toggle" aria-expanded="false" aria-controls="op-expanded">'
-      +     '<span class="op-banner-icon" aria-hidden="true">' + (breakup ? '🔥' : dueToday ? '🔔' : '✉️') + '</span>'
+      +     '<span class="op-banner-icon" aria-hidden="true">' + (idle ? '✉️' : (breakup ? '🔥' : dueToday ? '🔔' : '✉️')) + '</span>'
       +     '<span class="op-banner-label">Outreach</span>'
       +     '<span class="op-banner-headline">' + headline + '</span>'
       +     '<span class="op-banner-chevron" aria-hidden="true">▾</span>'
       +   '</button>'
-      +   '<button type="button" class="op-banner-close" aria-label="Dismiss for this session" data-action="dismiss-banner">×</button>'
       + '</div>'
       + '<div class="op-expanded" id="op-expanded" hidden>'
       +   '<div class="op-expanded-header">'
@@ -25476,12 +25465,10 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       try { sessionStorage.setItem(SESSION_KEY, open ? '1' : '0'); } catch (_) {}
     });
-    // Wire dismiss (hides for the session — re-renders on next data refresh).
-    var closeBtn = sec.querySelector('[data-action="dismiss-banner"]');
-    if (closeBtn) closeBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      sec.style.display = 'none';
-    });
+    // Dismiss handler intentionally removed (2026-05-19): the banner must never
+    // fully disappear. The chevron toggle is the only state control. If the user
+    // wants to "dismiss" the surface, collapsing it via the chevron is the
+    // intended affordance. Banner re-renders in collapsed form on every reload.
     // Wire legend toggle inside the expanded panel.
     var toggle = sec.querySelector('[data-action="toggle-legend"]');
     if (toggle) toggle.addEventListener('click', function (e) {
