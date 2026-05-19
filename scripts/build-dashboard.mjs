@@ -6229,6 +6229,16 @@ async function build() {
   .comp-top-table th { background: var(--surface-2); color: var(--text-3); padding: 7px 10px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; text-align: left; border-bottom: 1px solid var(--border); }
   .comp-top-table th.num, .comp-top-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .comp-top-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+  /* BRAVO 2026-05-19 (AAA-3): without per-column constraints the Company
+     column was collapsing to a single character ("O…") at 1440px and the
+     Role column was wrapping one word per line. Pin the load-bearing
+     columns at legible minimum widths; the wrapper's overflow-x:auto
+     handles horizontal scroll for narrow viewports. */
+  .comp-top-table th:nth-child(1), .comp-top-table td:nth-child(1) { min-width: 130px; white-space: nowrap; }
+  .comp-top-table th:nth-child(2), .comp-top-table td:nth-child(2) { min-width: 220px; }
+  .comp-top-table th:nth-child(3), .comp-top-table td:nth-child(3) { min-width: 110px; white-space: nowrap; }
+  .comp-top-table th:nth-child(4), .comp-top-table td:nth-child(4) { min-width:  80px; white-space: nowrap; }
+  .comp-top-table th:nth-child(5), .comp-top-table td:nth-child(5) { min-width: 110px; white-space: nowrap; }
   .comp-top-table td.num { font-weight: 600; color: var(--text); }
   .comp-top-table tr.top-earner-green td:first-child { box-shadow: inset 3px 0 0 0 var(--green-fg); }
   .comp-top-table tr.top-earner-blue td:first-child { box-shadow: inset 3px 0 0 0 var(--blue-fg); }
