@@ -19445,24 +19445,50 @@ function _renderPipelineModalBody(action, p) {
     }).join('');
 
     // AAA-3: Agent enrichment as primary card section (it's ~93% of cost)
+    // γ GAMMA 2026-05-19: provenance + confidence band rendered per-line.
+    // Falls back gracefully when p.calibration_provenance is absent.
+    var prov = p.calibration_provenance || {};
+    function _confChip(provKey) {
+      var pr = prov[provKey];
+      if (!pr) return '';
+      var conf = pr.confidence || 'MED';
+      var band = pr.confidence_band_pct;
+      var n    = pr.sample_size;
+      var tone = conf === 'HIGH' ? '#2ea043' : conf === 'MED' ? '#d29922' : '#f85149';
+      var sampleTxt = (n != null) ? (' · N=' + n) : '';
+      var bandTxt   = (band != null) ? (' · ±' + band + '%') : '';
+      var titleAttr = (pr.source || '').replace(/"/g, '&quot;');
+      return '<span title="' + titleAttr + '" '
+        + 'style="font-size:9px;color:' + tone + ';border:1px solid ' + tone + ';border-radius:3px;padding:0 4px;margin-left:4px;letter-spacing:0.04em;opacity:0.75">'
+        + conf + sampleTxt + bandTxt
+        + '</span>';
+    }
     var agentSection = '';
     if (ae) {
       var agentDetailRows = [
-          { label: 'Council',     count: ae.council.count,     model: ae.council.model,     cost: ae.council.cost_usd,     note: Math.round((ae.council.cache_hit_rate || 0.5) * 100) + '% cached' },
-          { label: 'Researcher',  count: ae.researcher.count,  model: ae.researcher.model,  cost: ae.researcher.cost_usd,  note: 'HM + comp intel' },
-          { label: 'Dealbreaker', count: ae.dealbreaker.count, model: ae.dealbreaker.model, cost: ae.dealbreaker.cost_usd, note: 'adjudicates researcher' },
+          { label: 'Council',     count: ae.council.count,     model: ae.council.model,     cost: ae.council.cost_usd,     note: Math.round((ae.council.cache_hit_rate || 0.5) * 100) + '% cached', provKey: 'company_cache_hit_rate' },
+          { label: 'Researcher',  count: ae.researcher.count,  model: ae.researcher.model,  cost: ae.researcher.cost_usd,  note: 'HM + comp intel',                                              provKey: 'researcher_cost' },
+          { label: 'Dealbreaker', count: ae.dealbreaker.count, model: ae.dealbreaker.model, cost: ae.dealbreaker.cost_usd, note: 'adjudicates researcher',                                       provKey: 'dealbreaker_cost' },
         ].map(function(a) {
           var unitCost = a.count > 0 ? (a.cost / a.count) : 0;
           var unitStr  = unitCost >= 1 ? '$' + unitCost.toFixed(2) : (unitCost >= 0.10 ? '$' + unitCost.toFixed(2) : '$' + unitCost.toFixed(3));
           var sub = ' <span style="opacity:0.45;font-size:10px">(' + a.count + ' &times; ' + unitStr + ' · ' + a.model + ' · ' + a.note + ')</span>';
-          return '<span class="pipeline-stat-label" style="padding-left:6px">' + a.label + sub + '</span>'
+          return '<span class="pipeline-stat-label" style="padding-left:6px">' + a.label + sub + _confChip(a.provKey) + '</span>'
                + '<span class="pipeline-stat-value pipeline-enrichment-cost">' + (a.cost > 0 ? '$' + a.cost.toFixed(2) : '<span class="muted">$0.00</span>') + '</span>';
         }).join('');
+      // Footer line: surface that publish-rate is itself an estimate with N + band.
+      var publishProv = _confChip('publish_rate');
+      var publishProvLine = publishProv
+        ? '<div style="font-size:10px;opacity:0.55;margin-top:4px;padding-left:6px">'
+            + 'Publish rate ' + Math.round((prov.publish_rate ? prov.publish_rate.value : 0.22) * 100) + '%' + publishProv
+          + '</div>'
+        : '';
       agentSection = '<div style="background:rgba(124,107,234,0.07);border-radius:6px;padding:8px 10px;margin-bottom:8px">'
         + '<div style="font-weight:600;font-size:11px;margin-bottom:6px;opacity:0.9">'
         +   'Agent enrichment <span style="font-weight:400;opacity:0.55;font-size:10px">(' + (est.stages ? est.stages.publish.count : 0) + ' published · score ≥ ' + thr + ')</span>'
         + '</div>'
         + '<div class="pipeline-stat-grid">' + agentDetailRows + '</div>'
+        + publishProvLine
         + '</div>';
     }
 

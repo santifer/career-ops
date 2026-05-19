@@ -379,12 +379,94 @@ const DAILY_CAP_OVERNIGHT      = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD 
 // the council + humanize-check passes — budget for that future state so the
 // cap meaningfully gates power-user "regenerate everything" loops.
 const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD || '2.50');
-// Decomposed agent enrichment costs (surfaced per-stage in the preview modal)
-const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '4.00');
+// Decomposed agent enrichment costs (surfaced per-stage in the preview modal).
+//
+// γ GAMMA 2026-05-19 truth-audit: calibrated constants below replaced earlier
+// vibes-defaults. Sources cited inline; cost-decomp modal renders provenance.
+//
+// COST_PER_RESEARCHER_CALL: $11.30 — sum of scripts/hiring-manager-research.mjs
+//   `COST_ESTIMATE` table (Gemini Deep Max $4.80 + OpenAI Pro $2.00 + Grok 4.3
+//   $0.40 + Grok Heavy $0.80 + Sonnet search $0.50 + Opus search $1.50 +
+//   Perplexity Deep $1.00 + Synthesize $0.30). The file's own header reads
+//   "Per-role cost: ~$10-12. 17 roles = ~$170-200 worst case". Prior $4.00
+//   captured only the Gemini Deep portion (1 of 8 providers), 2.8× under-real.
+//   Confidence: HIGH (deterministic sum of vendor-published rates; calibration
+//   refreshed by `scripts/hiring-manager-research.mjs:117-128`).
+const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '11.30');
+// COST_PER_DEALBREAKER_CALL: $0.30 — observed mean of N=2 logged runs in
+//   `data/cost-log.tsv` is $0.25 ($0.20 + $0.30). $0.30 kept as a +20% buffer
+//   over observed mean; falls inside the small-N confidence band.
+//   Confidence: MED (only 2 logged runs; widen to ±$0.10).
 const COST_PER_DEALBREAKER_CALL  = parseFloat(process.env.COST_PER_DEALBREAKER_CALL_USD || '0.30');
-const PUBLISH_RATE_ESTIMATE      = parseFloat(process.env.PUBLISH_RATE_ESTIMATE      || '0.40');  // % of evals scoring >= 4.0 → published to apply-now queue
-const RESEARCHER_ENRICHMENT_RATE = parseFloat(process.env.RESEARCHER_ENRICHMENT_RATE || '0.30');  // % of published items triggering researcher (no cached HM intel)
-const THRESHOLD_FOR_PUBLISH      = parseFloat(process.env.THRESHOLD_FOR_PUBLISH      || '4.0');   // minimum score to publish to apply-now queue
+// γ GAMMA 2026-05-19 truth-audit + ε EPSILON env-override (merged):
+// Defaults are calibrated to real data; env overrides honored for ops tuning.
+//
+// PUBLISH_RATE_ESTIMATE: 0.22 — `data/applications.md` shows 29 of 131 scored
+//   rows at >=4.0 (22.1%). Prior 0.40 was a vibes estimate ~80% above real.
+//   Confidence: HIGH (N=131, multi-month historical).
+const PUBLISH_RATE_ESTIMATE      = parseFloat(process.env.PUBLISH_RATE_ESTIMATE      || '0.22');
+// RESEARCHER_ENRICHMENT_RATE: 0.19 — `data/apply-now-queue.json` ranked has 21
+//   roles; `data/hm-intel/*.json` (excluding _SCHEMA, _weights) has 17 cached
+//   intel files (80.9% coverage). 4 of 21 uncached = 19.0% trigger rate.
+//   Prior 0.30 over-estimated by ~58%. This rate WILL drift as queue churns;
+//   re-calibrate when queue size changes by >50%.
+//   Confidence: MED (N=21, single-day snapshot).
+const RESEARCHER_ENRICHMENT_RATE = parseFloat(process.env.RESEARCHER_ENRICHMENT_RATE || '0.19');
+// THRESHOLD_FOR_PUBLISH: 4.0 — verified in `lib/funnel-completion.mjs:128`,
+//   `lib/next-moves.mjs:121`, `lib/eval-council.mjs:144`. PASS — gated by real code.
+const THRESHOLD_FOR_PUBLISH      = parseFloat(process.env.THRESHOLD_FOR_PUBLISH      || '4.0');
+// γ GAMMA truth-audit metadata (rendered in modal as provenance).
+const COST_CALIBRATION_PROVENANCE = {
+  publish_rate: {
+    value: PUBLISH_RATE_ESTIMATE,
+    source: 'data/applications.md (29 of 131 scored rows ≥ 4.0)',
+    confidence: 'HIGH',
+    sample_size: 131,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 5,    // ±5% absolute (N=131 → SE ≈ 3.6%)
+  },
+  researcher_cost: {
+    value: COST_PER_RESEARCHER_CALL,
+    source: 'scripts/hiring-manager-research.mjs:117-128 COST_ESTIMATE sum',
+    confidence: 'HIGH',
+    sample_size: 8,             // 8 providers, each with vendor-published rates
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 20,    // ±20% absolute (provider rates vary by run)
+  },
+  dealbreaker_cost: {
+    value: COST_PER_DEALBREAKER_CALL,
+    source: 'data/cost-log.tsv (observed mean N=2, +20% buffer)',
+    confidence: 'MED',
+    sample_size: 2,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 50,    // ±50% wide band (N=2 — very low statistical power)
+  },
+  researcher_enrichment_rate: {
+    value: RESEARCHER_ENRICHMENT_RATE,
+    source: 'data/apply-now-queue.json vs data/hm-intel/*.json (4 of 21 uncached)',
+    confidence: 'MED',
+    sample_size: 21,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 30,    // ±30% — drifts with queue churn
+  },
+  publish_threshold: {
+    value: THRESHOLD_FOR_PUBLISH,
+    source: 'lib/funnel-completion.mjs:128 + lib/next-moves.mjs:121 + lib/eval-council.mjs:144',
+    confidence: 'HIGH',
+    sample_size: null,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 0,     // ±0 — verified against code
+  },
+  company_cache_hit_rate: {
+    value: 0.50,                // Note: actual is 1.00 today; preview keeps conservative 0.50
+    source: 'data/company-intel-cache/ (10 of 10 queue companies cached, oldest 2d)',
+    confidence: 'MED',
+    sample_size: 10,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 50,    // ±50% — TTL is 30d, churn unpredictable
+    note: 'observed today=100%, kept conservative 50% to absorb cache expiry',
+  },
+};
 
 function countPipelinePending() {
   const fp = join(ROOT, 'data/pipeline.md');
@@ -945,6 +1027,10 @@ function buildPipelinePreview() {
       apply_pack_pregen:     COST_PER_APPLY_PACK_PREGEN,
       source:                'data/cost-log.tsv observed average + calibration brief 2026-05-16',
     },
+    // γ GAMMA 2026-05-19 — provenance metadata for every estimate constant.
+    // Rendered in the cost-decomp modal as "calibrated from N runs · confidence ±X%"
+    // so a numeric value never appears without a citation + confidence band.
+    calibration_provenance: COST_CALIBRATION_PROVENANCE,
   };
 }
 
