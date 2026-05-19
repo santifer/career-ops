@@ -2593,12 +2593,13 @@ function createShareToken() {
 // ── Per-row notes & activity log ───────────────────────────────
 // Append-only timestamped events keyed by row num. Stored at
 // data/row-notes.json (gitignored). Two event types:
-//   { ts, type: 'note',   text: '<freeform user note>' }
 //   { ts, type: 'status', text: 'OldStatus → NewStatus' }
-// Atomic writes via tmp + rename. Per-note text capped at 1000 chars.
+// Note: 2026-05-19 — type 'note' entries no longer written. The UI
+// composer + /api/notes/* routes that produced them are gone. Existing
+// 'note'-type entries in data/row-notes.json (from prior usage) remain
+// readable. Atomic writes via tmp + rename.
 
 const ROW_NOTES_PATH    = join(ROOT, 'data/row-notes.json');
-const NOTE_MAX_CHARS    = 1000;
 
 function loadRowNotes() {
   try {
@@ -2620,7 +2621,7 @@ function saveRowNotes(data) {
 
 function appendRowEvent(num, entry) {
   // Internal — unconditionally append. Validation happens at the public
-  // entry points (appendRowNote, status-change call sites).
+  // entry points (status-change call sites in /mark and bulk-mark handlers).
   const parsed = parseInt(num, 10);
   if (Number.isNaN(parsed)) return false;
   const key = String(parsed);
@@ -2635,40 +2636,9 @@ function appendRowEvent(num, entry) {
   }
 }
 
-function appendRowNote({ num, text }) {
-  if (num === undefined || num === null || Number.isNaN(parseInt(num, 10))) {
-    return { ok: false, code: 400, error: 'num is required and must be an integer' };
-  }
-  if (typeof text !== 'string') {
-    return { ok: false, code: 400, error: 'text is required (string)' };
-  }
-  const trimmed = text.trim();
-  if (!trimmed) {
-    return { ok: false, code: 400, error: 'text must not be empty' };
-  }
-  if (trimmed.length > NOTE_MAX_CHARS) {
-    return { ok: false, code: 400, error: `text exceeds ${NOTE_MAX_CHARS}-char limit` };
-  }
-
-  const entry = { ts: new Date().toISOString(), type: 'note', text: trimmed };
-  const ok = appendRowEvent(num, entry);
-  if (!ok) {
-    return { ok: false, code: 500, error: 'Failed to write row-notes.json' };
-  }
-  const all = loadRowNotes()[String(parseInt(num, 10))] || [];
-  // Newest first to match the UI expectation.
-  return { ok: true, num: String(parseInt(num, 10)), entries: [...all].reverse() };
-}
-
-function getRowNotes(num) {
-  const parsed = parseInt(num, 10);
-  if (Number.isNaN(parsed)) {
-    return { ok: false, code: 400, error: 'num must be an integer' };
-  }
-  const key = String(parsed);
-  const all = loadRowNotes()[key] || [];
-  return { ok: true, num: key, entries: [...all].reverse() };
-}
+// appendRowNote() + getRowNotes() removed 2026-05-19 — were only called
+// from the now-deleted /api/notes/add and GET /api/notes/:num routes.
+// Status-change auto-logging via appendRowEvent() (above) is unaffected.
 
 // ── /mark + report HTML renderer ──────────────────────────────
 
@@ -4116,38 +4086,10 @@ const server = createServer((req, res) => {
     return;
   }
 
-  // ── Notes & activity (per-row append-only log) ───────────────
-  if (url === '/api/notes/add' && req.method === 'POST') {
-    let body = '';
-    let total = 0;
-    req.on('data', c => {
-      total += c.length;
-      if (total > 8 * 1024) { req.destroy(); return; }
-      body += c;
-    });
-    req.on('end', () => {
-      let parsed;
-      try { parsed = JSON.parse(body); }
-      catch (_) {
-        return json({ ok: false, error: 'Invalid JSON body' }, 400);
-      }
-      const result = appendRowNote({ num: parsed.num, text: parsed.text });
-      const code = result.ok ? 200 : (result.code || 400);
-      return json(result.ok
-        ? { ok: true, num: result.num, entries: result.entries }
-        : { ok: false, error: result.error }, code);
-    });
-    return;
-  }
-
-  const notesGetMatch = url.match(/^\/api\/notes\/(\d+)$/);
-  if (notesGetMatch && req.method === 'GET') {
-    const result = getRowNotes(notesGetMatch[1]);
-    const code = result.ok ? 200 : (result.code || 400);
-    return json(result.ok
-      ? { ok: true, num: result.num, entries: result.entries }
-      : { ok: false, error: result.error }, code);
-  }
+  // /api/notes/add (POST) + /api/notes/:num (GET) routes removed 2026-05-19.
+  // The Notes & Activity card was removed from the row drawer; these routes
+  // had no other callers. Status-change auto-logging into data/row-notes.json
+  // continues via appendRowEvent() in the /mark and bulk-mark code paths.
 
   // ── Stale pipeline items (>=N days) — Feature 1 (item-list-pop-out) ───
   // GET /api/pipeline/stale-items?days=30
