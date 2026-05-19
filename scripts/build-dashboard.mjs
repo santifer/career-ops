@@ -3836,14 +3836,21 @@ async function build() {
     if (!/^evaluated$/i.test(r.status)) continue;
     const age = _daysAgo(r.date);
     if (age < 14) continue;
+    // BRAVO 2026-05-19 (AAA-5): when an evaluation is 21+ days old the
+    // "ready to apply" framing is misleading — JD edits, company state
+    // shifts, rejection cooldowns may have triggered since. Surface a
+    // re-verify nudge instead. 14-20d: keep the original framing.
+    const reasonText = age >= 21
+      ? `Evaluated ${age}d ago — re-verify, then apply`
+      : `Evaluated ${age}d ago — ready to apply`;
     topOfPipeItems.push({
       num: r.num,
       company: r.company,
       role: r.role,
       score: r.score,
       status: r.status,
-      reason: `Evaluated ${age}d ago — ready to apply`,
-      reasonType: 'stale-eval',
+      reason: reasonText,
+      reasonType: age >= 21 ? 'stale-eval-warn' : 'stale-eval',
     });
   }
 
@@ -15444,6 +15451,9 @@ function initTopOfPipe() {
   var reasonClass = function(type) {
     if (type === 'waiting-response') return 'reason-waiting';
     if (type === 'hm-intel-fresh' || type === 'pulse-fresh') return 'reason-fresh';
+    // BRAVO 2026-05-19 (AAA-5): when an eval is 21d+ stale, surface an amber
+    // re-verify warning instead of the green "ready to apply" optimism.
+    if (type === 'stale-eval-warn') return 'reason-warn';
     return '';
   };
 
@@ -23934,6 +23944,11 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   }
   .top-of-pipe-reason.reason-fresh {
     color: var(--blue-fg); background: var(--blue-bg);
+  }
+  /* BRAVO 2026-05-19 (AAA-5): 21d+ stale eval gets amber, not green —
+     visually distinguishes "re-verify before apply" from "ready to apply". */
+  .top-of-pipe-reason.reason-warn {
+    color: var(--amber); background: var(--amber-bg);
   }
   .top-of-pipe-dismiss {
     background: none; border: none; color: var(--text-4); cursor: pointer;
