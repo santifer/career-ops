@@ -245,6 +245,28 @@ function buildReport(slug, gates, verdict) {
     lines.push(`- See [rubric-check.md](rubric-check.md) for per-check detail.`);
     lines.push('');
   }
+  if (gates.polishSummary?.metrics?.polish_present) {
+    lines.push('### Polish summary (Gate 6 — α ALPHA 2026-05-19)');
+    lines.push(`- Recommendation: ${gates.polishSummary.metrics.recommendation}`);
+    const confs = gates.polishSummary.metrics.per_artifact_confidence || {};
+    if (Object.keys(confs).length) {
+      lines.push(`- Per-artifact confidence:`);
+      for (const [k, v] of Object.entries(confs)) lines.push(`  - ${k}: ${Number(v).toFixed(3)}`);
+    }
+    const xc = gates.polishSummary.metrics.cross_coherence || {};
+    if (Object.keys(xc).length) {
+      lines.push(`- Cross-coherence:`);
+      for (const [k, v] of Object.entries(xc)) lines.push(`  - ${k}: ${v ?? '—'}`);
+    }
+    lines.push(`- Blocking issues: ${gates.polishSummary.metrics.blocking_count || 0}`);
+    lines.push(`- See \`data/apply-packs/${slug}/polish-summary.md\` for the full polish trace.`);
+    lines.push('');
+  } else if (gates.polishSummary) {
+    lines.push('### Polish summary (Gate 6 — α ALPHA 2026-05-19)');
+    lines.push(`- ${gates.polishSummary.detail}`);
+    lines.push(`- Run \`node scripts/agents/apply-pack-polish.mjs --row <N>\` or click the dashboard "Polish pack ✨" button.`);
+    lines.push('');
+  }
   lines.push('---');
   lines.push('');
   lines.push('Re-run any time: `node scripts/preflight-pack.mjs --slug ' + slug + '`');
@@ -262,6 +284,42 @@ function aggregateVerdict(gates) {
   return { level, blockers, cautions };
 }
 
+function checkPolishSummary(slug) {
+  // Gate 6 (α ALPHA 2026-05-19): polish-summary.md.final_recommendation must be 'APPROVED'.
+  // SKIPs (level: yellow, but does NOT block) when polish hasn't been run yet —
+  // so packs built before the polish pipeline existed still preflight cleanly.
+  // Becomes a hard requirement only when POLISH_PACK_ENABLED=1 is set.
+  const summaryPath = join(ROOT, 'data', 'apply-packs', slug, 'polish-summary.json');
+  if (!existsSync(summaryPath)) {
+    const enabled = String(process.env.POLISH_PACK_ENABLED || '').trim() === '1';
+    return {
+      level: enabled ? 'red' : 'yellow',
+      detail: enabled ? 'polish-summary.json missing (POLISH_PACK_ENABLED=1)' : 'polish not run yet (SKIP — set POLISH_PACK_ENABLED=1 to require)',
+      metrics: { recommendation: null, polish_present: false },
+    };
+  }
+  try {
+    const sum = JSON.parse(readFileSync(summaryPath, 'utf-8'));
+    const rec = sum.final_recommendation || 'UNKNOWN';
+    const level = rec === 'APPROVED' ? 'green' : rec === 'NEEDS_HUMAN' ? 'yellow' : 'red';
+    const confidences = sum.per_artifact_confidence || {};
+    const minConf = Math.min(...Object.values(confidences).map(Number).filter(Number.isFinite));
+    return {
+      level,
+      detail: `${rec} (min artifact confidence: ${Number.isFinite(minConf) ? minConf.toFixed(3) : '—'})`,
+      metrics: {
+        recommendation: rec,
+        per_artifact_confidence: confidences,
+        cross_coherence: sum.cross_coherence || {},
+        blocking_count: (sum.blocking_issues || []).length,
+        polish_present: true,
+      },
+    };
+  } catch (e) {
+    return { level: 'yellow', detail: `polish-summary parse error: ${e.message.slice(0, 80)}`, metrics: { polish_present: true, parse_error: true } };
+  }
+}
+
 function processPack(slug, opts) {
   const packDir = join(ROOT, 'apply-pack', slug);
   if (!existsSync(packDir) || !statSync(packDir).isDirectory()) {
@@ -274,6 +332,7 @@ function processPack(slug, opts) {
     keywordAlignment: checkKeywordAlignment(slug),
     claimConsistency: checkClaimConsistency(slug),
     engagementRubric: checkEngagementRubric(slug),
+    polishSummary: checkPolishSummary(slug),
   };
   const verdict = aggregateVerdict(gates);
   const report = buildReport(slug, gates, verdict);

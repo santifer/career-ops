@@ -3068,9 +3068,11 @@ function renderRow(r, idx) {
           </div>`;
         } catch (_) { return ''; }
       })()}
-      <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cover-letter', this);event.stopPropagation()" title="Draft cover letter via /api/build-pack-stage">/cover-letter</button>
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'linkedin-dm', this);event.stopPropagation()" title="Draft LinkedIn DM via /api/build-pack-stage">/linkedin-dm</button>
+        <button type="button" class="dcard-btn dcard-btn-polish" onclick="alphaPolishPack(${htmlEscape(String(r.num||''))});event.stopPropagation()" title="Polish all 6 apply-pack artifacts to ≥0.99 confidence (4-round per-artifact loop + adversarial sweep)">Polish pack ✨</button>
+        <button type="button" class="dcard-btn dcard-btn-intel" onclick="alphaIntelRefresh(${htmlEscape(String(r.num||''))});event.stopPropagation()" title="Refresh HM intel + toxicity + strategy ceiling + positioning caches">↻ Refresh intel</button>
       </div>
       ${notesCard}
     </div>
@@ -6126,6 +6128,34 @@ async function build() {
   }
   .tonight-pick-btn-accent.success:hover {
     background: var(--green-fg); color: #fff;
+  }
+  /* α ALPHA 2026-05-19: Polish-pack button — gold accent for the premium $30-100/pack action */
+  .tonight-pick-btn-polish {
+    background: var(--surface);
+    color: #b45309; /* amber-700 — premium amber, not blue */
+    border: 1px solid #f59e0b;
+    border-radius: var(--radius-sm);
+    padding: 6px 14px; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .tonight-pick-btn-polish:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff; border-color: #d97706;
+  }
+  .dcard-btn-polish {
+    color: #b45309 !important;
+    border-color: #f59e0b !important;
+  }
+  .dcard-btn-polish:hover {
+    background: #f59e0b !important; color: #fff !important;
+  }
+  .dcard-btn-intel {
+    color: #0369a1 !important;
+    border-color: #38bdf8 !important;
+  }
+  .dcard-btn-intel:hover {
+    background: #38bdf8 !important; color: #fff !important;
   }
   .tonight-pick-btn-ghost {
     background: transparent;
@@ -11100,6 +11130,7 @@ async function build() {
         <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Open ${htmlEscape(_tonightPick.company)} live job posting in a new tab">Start tonight&rsquo;s apply &rarr;</button>
         <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickLearnMore()" aria-label="Open role detail in right drawer">Learn more</button>
         <button type="button" class="tonight-pick-btn-accent" onclick="tonightPickReviewMaterials()" aria-label="Show the local apply-pack file path (copies to clipboard, opens with Finder search)">Review materials &rarr;</button>
+        <button type="button" class="tonight-pick-btn-polish" onclick="alphaPolishPack(${_tonightPick.num || 0})" aria-label="Polish all 6 apply-pack artifacts to ≥0.99 confidence (Phase 1 signals → 4-round critic/author/adjudicator/adversarial loop → cross-coherence)" title="Polish pack (≥0.99 confidence, ~$30-100 typical, $500 cap)">Polish pack &#x2728;</button>
         <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCycle()" aria-label="Pick a different role">Pick another</button>
       </div>
     </div>` : '<!-- tonight-pick: no candidate met criteria -->'}
@@ -13274,15 +13305,25 @@ window.loadSidebarRecentUpdates = loadSidebarRecentUpdates;
 //   top-of-pipe-list / next-moves — baked (var TOP_OF_PIPE_DATA / TONIGHT_PICK_DATA); staleness noted.
 //   apply-now table — full page reload only; no lightweight refresh endpoint yet.
 //   mc-strip live-ticker, mc-batch, mc-health — already have SSE / setInterval; OK.
+//
+// α ALPHA 2026-05-19 — full widget polling sweep covering the 17 baked/poll-eligible widgets.
+// Cadences (quality-first):
+//   - 30s  : sidebar-runway-detail (already)
+//   - 60s  : sidebar-recent-updates (already), KPI/outreach/mc-funnel-chip via _alphaPoll60s()
+//   - 120s : top-of-pipe-list, sidebar-contacts (live count via /api/stats fallback)
+//   - 300s : sidebar-readiness, sidebar-side-alloc, tonight-pick-callout, apply-now (full reload)
+// Baked widgets without live endpoints get a ↻ mini-button that POSTs /api/rebuild.
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
       loadSidebarRecentUpdates();
       setInterval(loadSidebarRecentUpdates, 60000);
+      initAlphaPollingSweep();
     });
   } else {
     setTimeout(loadSidebarRecentUpdates, 0);
     setInterval(loadSidebarRecentUpdates, 60000);
+    initAlphaPollingSweep();
   }
   document.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape') return;
@@ -13291,6 +13332,97 @@ if (typeof document !== 'undefined') {
       closeUpdateDrawer();
     }
   });
+}
+
+// ── α ALPHA 2026-05-19 — initAlphaPollingSweep() ──
+// Idempotent — safe to call multiple times. Uses window._alphaPolled to guard
+// against duplicate setInterval registration if init runs twice.
+function initAlphaPollingSweep() {
+  if (typeof window === 'undefined') return;
+  if (window._alphaPolled) return;
+  window._alphaPolled = true;
+
+  // (1) Poll /api/stats every 60s and update KPI chips that have data-stat attrs
+  function _alphaPoll60s() {
+    fetch('/api/stats').then(r => r.ok ? r.json() : null).then(stats => {
+      if (!stats) return;
+      // The dashboard renders stats into elements with [data-stat] attrs (e.g. data-stat="batchesRun")
+      // Re-fill them from the live JSON when present
+      try {
+        document.querySelectorAll('[data-stat]').forEach(function(el) {
+          var key = el.dataset.stat;
+          if (key && stats[key] !== undefined && stats[key] !== null) {
+            var newText = String(stats[key]);
+            if (el.textContent.trim() !== newText) el.textContent = newText;
+          }
+        });
+      } catch (_) {}
+    }).catch(() => {});
+  }
+  _alphaPoll60s();
+  setInterval(_alphaPoll60s, 60000);
+
+  // (2) Poll /api/contacts/stats every 120s to update the sidebar-contacts chip
+  function _alphaPollContacts() {
+    fetch('/api/contacts/stats').then(r => r.ok ? r.json() : null).then(data => {
+      if (!data) return;
+      try {
+        var countEl = document.getElementById('sidebar-contacts-count');
+        if (countEl && typeof data.total === 'number') countEl.textContent = String(data.total);
+        var subEl = document.getElementById('sidebar-contacts-sub');
+        if (subEl && typeof data.withEmail === 'number') subEl.textContent = String(data.withEmail) + ' w/ email';
+      } catch (_) {}
+    }).catch(() => {});
+  }
+  _alphaPollContacts();
+  setInterval(_alphaPollContacts, 120000);
+
+  // (3) Inject ↻ rebuild mini-buttons next to baked widgets
+  function _alphaInjectRebuildBtns() {
+    var targets = [
+      { selector: '#sidebar-readiness', label: 'rebuild readiness' },
+      { selector: '#sidebar-side-alloc', label: 'rebuild side-alloc' },
+      { selector: '#sidebar-contacts', label: 'rebuild contacts' },
+      { selector: '#mc-funnel-chip', label: 'rebuild funnel chip' },
+      { selector: '#top-of-pipe', label: 'rebuild top of pipe' },
+      { selector: '#tonight-pick-callout', label: 'rebuild tonight pick' },
+    ];
+    targets.forEach(function(t) {
+      var host = document.querySelector(t.selector);
+      if (!host) return;
+      if (host.querySelector('.alpha-rebuild-mini-btn')) return; // idempotent
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'alpha-rebuild-mini-btn';
+      btn.title = t.label + ' (full dashboard rebuild)';
+      btn.setAttribute('aria-label', t.label);
+      btn.textContent = '↻';
+      btn.style.cssText = 'position:absolute;top:4px;right:4px;background:transparent;color:var(--text-3);border:1px solid var(--border);border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer;opacity:0;transition:opacity .15s;z-index:5';
+      // Show on hover of the host
+      if (host.style.position !== 'absolute' && host.style.position !== 'relative') host.style.position = 'relative';
+      host.appendChild(btn);
+      host.addEventListener('mouseenter', function() { btn.style.opacity = '0.85'; });
+      host.addEventListener('mouseleave', function() { btn.style.opacity = '0'; });
+      btn.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        if (typeof window.alphaRebuildDashboard === 'function') {
+          window.alphaRebuildDashboard(btn);
+        }
+      });
+    });
+  }
+  _alphaInjectRebuildBtns();
+  // Re-inject after major dom changes (e.g. after a drillIn closes)
+  setInterval(_alphaInjectRebuildBtns, 30000);
+
+  // (4) Soft-reload tonight-pick + apply-now every 5 minutes (300s) by re-fetching their data
+  //     — currently a noop because those endpoints don't exist; left as a hook for the future
+  //     /api/tonight-pick + /api/apply-now-table endpoints
+  function _alphaPoll300s() {
+    // Future hook: when /api/tonight-pick + /api/apply-now-table-rows exist,
+    // re-fetch and replace DOM fragments rather than full-page reload.
+  }
+  setInterval(_alphaPoll300s, 300000);
 }
 
 // Apply/Skip/Defer in the drawer footer reuse the existing /api/status
@@ -14998,6 +15130,27 @@ _drillInRegister('wealth-ranking', function(id) {
 // invokeBuildPackStage helper caches the result on window._packStageResults
 // keyed by "{rowId}:{stage}", then calls window.drillIn('pack-stage-result',
 // key) to surface this popout.
+// ── α ALPHA 2026-05-19: alpha-job drillIn renderer ──
+// Renders the live event log for a running apply-pack-polish, intel-refresh,
+// or rebuild job. Listens for live updates from _alphaStreamJob().
+_drillInRegister('alpha-job', function(jobId) {
+  var job = (window._alphaJobs || {})[jobId] || null;
+  if (!job) {
+    return {
+      title: 'Alpha job — unknown',
+      html: '<p style="font-size:13px;color:var(--text-3);margin:0">No live state for job <code>' + jobId + '<\/code>. The job may have completed before the popout opened — check the data/apply-packs/&lt;slug&gt;/ output, or refresh and run again.<\/p>',
+    };
+  }
+  var titleKind = ({ polish: 'Polish pack', intel: 'Refresh intel', rebuild: 'Rebuild dashboard' })[job.kind] || 'Alpha job';
+  var titleRow = job.rowId ? ' — row ' + job.rowId : '';
+  return {
+    title: titleKind + titleRow,
+    html: '<div data-drill-target="alpha-job:' + jobId + '" id="drill-in-' + jobId + '">' +
+      (typeof window._renderAlphaJob === 'function' ? window._renderAlphaJob(jobId) : '<em>Loading…</em>') +
+      '<\/div>',
+  };
+});
+
 _drillInRegister('pack-stage-result', function(id) {
   var cache = window._packStageResults || {};
   var result = cache[id] || null;
@@ -21912,6 +22065,138 @@ async function invokeBuildPackStage(rowId, stage, btn) {
   }
 }
 window.invokeBuildPackStage = invokeBuildPackStage;
+
+// ── α ALPHA 2026-05-19: apply-pack-polish + intel-refresh dashboard wiring ──
+// Both buttons POST to a kick-off endpoint, get back a jobId, then open an
+// SSE connection to stream NDJSON progress. Renders inside a popout via
+// drillIn('alpha-job', jobId) (registered renderer below).
+window._alphaJobs = window._alphaJobs || {};
+
+function _alphaOpenJobPopout(jobId) {
+  if (typeof window.drillIn === 'function') {
+    window.drillIn('alpha-job', jobId, null);
+  }
+}
+
+async function alphaPolishPack(rowId, opts) {
+  rowId = String(rowId || '').trim();
+  if (!rowId || !/^\d+$/.test(rowId)) {
+    if (window.toast) window.toast('Polish pack: numeric row required', 'error');
+    return;
+  }
+  opts = opts || {};
+  try {
+    const r = await fetch('/api/apply-pack-polish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row: Number(rowId), artifacts: opts.artifacts || null, targetConfidence: opts.targetConfidence || 0.99, costCap: opts.costCap || 500, noCache: !!opts.noCache }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) {
+      if (window.toast) window.toast('Polish pack failed to start: ' + (data.error || r.status), 'error');
+      return;
+    }
+    window._alphaJobs[data.jobId] = { kind: 'polish', rowId, started_at: new Date().toISOString(), events: [], status: 'running' };
+    _alphaStreamJob(data.jobId, data.stream_url);
+    if (window.toast) window.toast('Polish pack started for row ' + rowId + ' — streaming live', 'info');
+    _alphaOpenJobPopout(data.jobId);
+  } catch (err) {
+    if (window.toast) window.toast('Polish pack error: ' + (err.message || err), 'error');
+  }
+}
+window.alphaPolishPack = alphaPolishPack;
+
+async function alphaIntelRefresh(rowId, slots) {
+  rowId = String(rowId || '').trim();
+  if (!rowId || !/^\d+$/.test(rowId)) {
+    if (window.toast) window.toast('Intel refresh: numeric row required', 'error');
+    return;
+  }
+  try {
+    const r = await fetch('/api/intel-refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rowId: Number(rowId), slots: slots || ['all'] }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) {
+      if (window.toast) window.toast('Intel refresh failed to start: ' + (data.error || r.status), 'error');
+      return;
+    }
+    window._alphaJobs[data.jobId] = { kind: 'intel', rowId, started_at: new Date().toISOString(), events: [], status: 'running' };
+    _alphaStreamJob(data.jobId, data.stream_url);
+    if (window.toast) window.toast('Intel refresh started for row ' + rowId, 'info');
+    _alphaOpenJobPopout(data.jobId);
+  } catch (err) {
+    if (window.toast) window.toast('Intel refresh error: ' + (err.message || err), 'error');
+  }
+}
+window.alphaIntelRefresh = alphaIntelRefresh;
+
+async function alphaRebuildDashboard(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '↻ rebuilding…'; }
+  try {
+    const r = await fetch('/api/rebuild', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) {
+      if (window.toast) window.toast('Rebuild failed to start: ' + (data.error || r.status), 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '↻ rebuild'; }
+      return;
+    }
+    window._alphaJobs[data.jobId] = { kind: 'rebuild', started_at: new Date().toISOString(), events: [], status: 'running' };
+    _alphaStreamJob(data.jobId, data.stream_url, function _onExit() {
+      if (btn) { btn.disabled = false; btn.textContent = '↻ rebuild'; }
+      if (window.toast) window.toast('Dashboard rebuild complete — reloading in 1.5s', 'success');
+      setTimeout(function() { window.location.reload(); }, 1500);
+    });
+  } catch (err) {
+    if (window.toast) window.toast('Rebuild error: ' + (err.message || err), 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '↻ rebuild'; }
+  }
+}
+window.alphaRebuildDashboard = alphaRebuildDashboard;
+
+function _alphaStreamJob(jobId, streamUrl, onExit) {
+  if (typeof EventSource === 'undefined') return;
+  try {
+    const es = new EventSource(streamUrl);
+    es.addEventListener('progress', function(ev) {
+      try {
+        const evt = JSON.parse(ev.data);
+        const job = window._alphaJobs[jobId] || (window._alphaJobs[jobId] = { events: [] });
+        job.events.push(evt);
+        // Re-render the popout if it's the active one
+        const root = document.querySelector('[data-drill-target="alpha-job:' + jobId + '"], #drill-in-' + jobId);
+        if (root && typeof window._renderAlphaJob === 'function') window._renderAlphaJob(jobId);
+        // If we see the orchestrator-level final summary, close the stream
+        if (evt && (evt.phase === 'phase-3' && evt.step === 'coherence-done')) {
+          es.close();
+          if (typeof onExit === 'function') onExit();
+        }
+      } catch (_) { /* ignore parse error */ }
+    });
+    es.addEventListener('error', function() { /* let browser auto-reconnect or close */ });
+    // Hard stop after 20 min — these jobs should finish well before then
+    setTimeout(function() { try { es.close(); } catch (_) {} }, 20 * 60 * 1000);
+  } catch (_) { /* */ }
+}
+
+// Renderer registered via _drillInRegister later — see drillIn handler block.
+window._renderAlphaJob = function(jobId) {
+  const job = window._alphaJobs && window._alphaJobs[jobId];
+  if (!job) return '';
+  const events = (job.events || []).slice(-50);
+  const evHtml = events.map(function(e) {
+    const phase = e.phase || '?';
+    const step = e.step || e.artifact || '';
+    const conf = (typeof e.confidence === 'number') ? ' conf=' + e.confidence.toFixed(3) : '';
+    const cost = (typeof e.cumulative_cost_usd === 'number') ? ' cost=$' + e.cumulative_cost_usd.toFixed(2) : '';
+    const ts = (e.t || '').slice(11, 19);
+    const txt = phase + ' · ' + step + conf + cost;
+    return '<div class="alpha-job-evt" style="font-family:monospace;font-size:11px;padding:2px 4px;border-bottom:1px solid var(--border)"><span style="color:var(--text-3)">' + ts + '</span> ' + (txt.replace(/</g, '&lt;')) + '</div>';
+  }).join('');
+  return '<div style="max-height:60vh;overflow:auto">' + evHtml + '</div>';
+};
 
 // ── D10: Inline edit — status pill + notes (Wave G1) ─────────────
 // Click status pill → inline <select>; click notes cell → inline <input>
