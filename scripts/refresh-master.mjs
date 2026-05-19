@@ -30,6 +30,14 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
+// Load .env BEFORE any adapter imports. Mitchell's shell sometimes pre-sets
+// ANTHROPIC_API_KEY to empty, so override: true is required to let .env win.
+// Memory: see ~/.claude/projects/...career-ops/memory/reference_env_secrets.md.
+try {
+  const { config } = await import('dotenv');
+  config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env'), override: true });
+} catch { /* dotenv optional — if missing, fall back to whatever's in shell env */ }
+
 import { classifyAllRows } from '../lib/refresh-priority.mjs';
 import {
   CACHES,
