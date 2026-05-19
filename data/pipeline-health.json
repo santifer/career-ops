@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-05-19T20:21:18.536Z",
+  "healthy": true,
+  "checks": {
+    "file_counts": {
+      "pending_pipeline": 0,
+      "queued_for_batch": 0,
+      "total": 0
+    },
+    "api": {
+      "ok": true,
+      "pending_pipeline": 0,
+      "queued_for_batch": 0
+    },
+    "drift": {
+      "pending_pipeline": null,
+      "queued_for_batch": null,
+      "drift_detected": false
+    },
+    "triage_queue": {
+      "mtime": "2026-05-19T20:14:35.819Z",
+      "age_hours": 0.11177916666666667,
+      "stuck": false,
+      "threshold_hours": 2
+    },
+    "orchestrator_pids": [],
+    "orchestrator_warning": null
+  },
+  "summary": "all checks pass"
+}

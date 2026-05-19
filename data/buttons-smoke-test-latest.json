@@ -1,0 +1,81 @@
+{
+  "date": "2026-05-19",
+  "generated_at": "2026-05-19T20:19:22.764Z",
+  "verdict": "PASS",
+  "passed": 14,
+  "failed": 0,
+  "total": 14,
+  "report_path": "data/buttons-smoke-test-2026-05-19.md",
+  "assertions": [
+    {
+      "name": "process-all exits with code 0 in dry-run",
+      "passed": true,
+      "detail": "exit_code=0"
+    },
+    {
+      "name": "process-all dry-run does NOT time out (>60s)",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "process-all log contains \"Phase 1/4: TRIAGE\"",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "process-all log contains \"Phase 2/4: BATCH EVAL\"",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "process-all log contains \"Phase 3/4: DASHBOARD REBUILD\"",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "process-all dry-run flag is honored (skips actual work)",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "process-all reports correct pending_before from snapshot",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "batch-runner exits with code 0 in dry-run",
+      "passed": true,
+      "detail": "exit_code=0"
+    },
+    {
+      "name": "batch-runner does NOT time out",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "batch-runner dry-run reports the expected queue size",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "pipeline.md unchecked count UNCHANGED by dry-run",
+      "passed": true,
+      "detail": "0 → 0"
+    },
+    {
+      "name": "triage-advance.tsv row count UNCHANGED by dry-run",
+      "passed": true,
+      "detail": "0 → 0"
+    },
+    {
+      "name": "applications.md size UNCHANGED by dry-run",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PER_RUN_CAP_PROCESS_ALL env override is accepted",
+      "passed": true,
+      "detail": null
+    }
+  ]
+}

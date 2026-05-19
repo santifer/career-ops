@@ -6265,6 +6265,31 @@ async function build() {
   }
   .be-footer code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
 
+  /* 2026-05-19 Mitchell trust-fix — sidebar freshness + health chips. */
+  .sidebar-pipeline-status {
+    display: flex; flex-direction: column; gap: 4px;
+    margin: 6px 8px 8px 8px;
+    font-size: 10px;
+  }
+  .pipeline-freshness-chip, .pipeline-health-chip {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-3); line-height: 1.3;
+    letter-spacing: 0.02em;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .pipeline-health-chip { cursor: pointer; }
+  .pipeline-health-chip:hover { border-color: var(--text-3); }
+  .pipeline-freshness-chip.fresh, .pipeline-health-chip.healthy {
+    border-color: rgba(16,185,129,0.5); color: #10b981;
+  }
+  .pipeline-freshness-chip.stale, .pipeline-health-chip.unhealthy {
+    border-color: rgba(245,158,11,0.55); color: #fbbf24;
+  }
+  .pipeline-health-chip.critical {
+    border-color: rgba(220,38,38,0.55); color: #ef4444;
+  }
+
   .panel-strong {
     border-color: var(--green-fg);
     box-shadow: var(--shadow-sm), 0 0 0 1px var(--green-fg), 0 4px 20px rgba(22,163,74,.08);
@@ -10781,6 +10806,13 @@ async function build() {
         <span class="pipeline-btn-label">Process All</span>
         <span class="pipeline-btn-count" id="pipeline-btn-all-count">—</span>
       </button>
+    </div>
+    <!-- 2026-05-19 Mitchell trust-fix — freshness chip + health chip.
+         Chip shows "updated Ns ago" with live ticking. Color-codes on staleness.
+         "System healthy" chip reads /api/pipeline/health-status. -->
+    <div id="sidebar-pipeline-status" class="sidebar-pipeline-status" aria-label="Pipeline status freshness">
+      <span id="pipeline-freshness-chip" class="pipeline-freshness-chip" title="Time since last badge refresh">badges loading…</span>
+      <span id="pipeline-health-chip" class="pipeline-health-chip" title="Health check (every 5 min) — click to view full status" onclick="window.open('/api/pipeline/health-status','_blank')">health: —</span>
     </div>
     <!-- Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16)
          Chevron toggles inline detail. Label click opens full runway modal
@@ -21146,6 +21178,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2026-05-19 Mitchell feedback — auto-restore active-job toast so users
   // arriving mid-run (any browser, any session) see the in-flight status.
   restoreActiveJobToast();
+  // Real-time freshness + health chips
+  refreshHealthChip();
+  startFreshnessTicker();
 });
 document.addEventListener('careerops:status-changed', () => { refreshPipelineBadges(); });
 // Re-check for active jobs every 30s so a user sitting on the dashboard
@@ -21157,6 +21192,101 @@ setInterval(() => {
     restoreActiveJobToast();
   }
 }, 30000);
+
+// 2026-05-19 Mitchell trust-fix — real-time badge refresh.
+// - Refreshes every 15s while page is visible (Page Visibility API)
+// - Pauses when tab is hidden (don't burn requests on idle tabs)
+// - Updates _pipelineBadgesLastRefreshed timestamp so the freshness chip ticks
+let _pipelineBadgesLastRefreshed = 0;
+let _pipelineBadgeInterval = null;
+const _origRefreshPipelineBadges = refreshPipelineBadges;
+async function refreshPipelineBadgesWrapped() {
+  await _origRefreshPipelineBadges();
+  _pipelineBadgesLastRefreshed = Date.now();
+  updateFreshnessChip();
+}
+window.refreshPipelineBadges = refreshPipelineBadgesWrapped;
+function _startBadgeAutoRefresh() {
+  if (_pipelineBadgeInterval) clearInterval(_pipelineBadgeInterval);
+  _pipelineBadgeInterval = setInterval(() => {
+    if (document.visibilityState === 'visible') refreshPipelineBadgesWrapped();
+  }, 15000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // Tab just became visible — refresh immediately + restart the timer
+    refreshPipelineBadgesWrapped();
+    refreshHealthChip();
+    _startBadgeAutoRefresh();
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+  _startBadgeAutoRefresh();
+  refreshPipelineBadgesWrapped();
+});
+
+// Freshness chip — ticks every second showing "updated Ns ago"
+function updateFreshnessChip() {
+  const chip = document.getElementById('pipeline-freshness-chip');
+  if (!chip) return;
+  if (!_pipelineBadgesLastRefreshed) {
+    chip.textContent = 'badges loading…';
+    chip.className = 'pipeline-freshness-chip';
+    return;
+  }
+  const sec = Math.floor((Date.now() - _pipelineBadgesLastRefreshed) / 1000);
+  const label = sec < 60 ? sec + 's ago' : Math.floor(sec / 60) + 'm ago';
+  chip.textContent = 'badges · ' + label;
+  // Color-code: fresh < 30s, stale > 60s
+  chip.className = 'pipeline-freshness-chip ' + (sec < 30 ? 'fresh' : sec > 60 ? 'stale' : '');
+}
+function startFreshnessTicker() {
+  setInterval(updateFreshnessChip, 1000);
+}
+
+// Health chip — reads /api/pipeline/health-status (written every 5 min by
+// scripts/agents/pipeline-health-check.mjs via launchd).
+async function refreshHealthChip() {
+  const chip = document.getElementById('pipeline-health-chip');
+  if (!chip) return;
+  try {
+    const res = await fetch('/api/pipeline/health-status', { cache: 'no-store' });
+    if (!res.ok) {
+      chip.textContent = 'health: ?';
+      chip.className = 'pipeline-health-chip';
+      return;
+    }
+    const data = await res.json();
+    if (!data.present) {
+      chip.textContent = 'health: not run';
+      chip.className = 'pipeline-health-chip';
+      chip.title = 'Health check has not run yet — wait 5 min or run scripts/agents/pipeline-health-check.mjs';
+      return;
+    }
+    const ageMin = Math.floor((data.age_seconds || 0) / 60);
+    const ageLabel = ageMin < 1 ? 'just now' : ageMin + 'm ago';
+    if (data.healthy && !data.stale) {
+      chip.textContent = 'health: ✓ ' + ageLabel;
+      chip.className = 'pipeline-health-chip healthy';
+      chip.title = 'All checks passing (badge↔file consistency, no stuck queue, single orchestrator). Last checked ' + ageLabel + '.';
+    } else if (data.stale) {
+      chip.textContent = 'health: stale ' + ageLabel;
+      chip.className = 'pipeline-health-chip unhealthy';
+      chip.title = 'Health report > 15 min old — launchd job may have stopped firing.';
+    } else {
+      chip.textContent = 'health: ✗ ' + (data.summary || 'check failed');
+      chip.className = 'pipeline-health-chip critical';
+      chip.title = (data.summary || 'health check failed') + ' · click for details';
+    }
+  } catch (err) {
+    chip.textContent = 'health: ?';
+    chip.className = 'pipeline-health-chip';
+  }
+}
+// Re-fetch health every 60s (it only updates every 5 min server-side anyway)
+setInterval(() => {
+  if (document.visibilityState === 'visible') refreshHealthChip();
+}, 60000);
 
 // ── Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16) ─
 // Fetches /api/recruiter-pipeline-density every 5 minutes (and on load), renders
