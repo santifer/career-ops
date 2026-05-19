@@ -254,6 +254,64 @@ function parseReportSummary(reportPath) {
   }
 }
 
+// ── DELTA P1 — Editing Priority callout ────────────────────────────────────
+// Maps a band-aware AI-detection result + signal-quality state into a
+// single "Editing Priority" object the dashboard renders as a coloured
+// chip + sentence list. Reads:
+//   apiDet.band                              CRIT|HIGH|MED|CLEAR|null
+//   apiDet.gptzero_signal_quality            GOOD|WEAK|USELESS|UNCALIBRATED
+//   apiDet.originality_signal_quality        GOOD|WEAK|USELESS|UNCALIBRATED
+//   apiDet.sentences[].generated_prob        per-sentence GPTZero score
+//   apiDet.sentences[].highlight_for_ai      GPTZero's own highlight flag
+//   apiDet.sentence_signals.highlighted_count
+// Returns null if no detection ran.
+function computeEditingPriority(apiDet, _result) {
+  if (!apiDet || apiDet.error) return null;
+  const band = apiDet.band || null;
+  const gz   = apiDet.gptzero_signal_quality     || 'UNCALIBRATED';
+  const orig = apiDet.originality_signal_quality || 'UNCALIBRATED';
+
+  // Priority logic:
+  //   - HIGH/CRIT band AND any GOOD-signal detector → ACTION (block ship; rewrite)
+  //   - HIGH/CRIT band AND no GOOD signal           → ADVISORY (detectors useless;
+  //                                                   show highlights but don't block)
+  //   - MED band                                    → REVIEW (light touch-up suggested)
+  //   - CLEAR or null                               → NONE
+  let priority = 'NONE';
+  let blocking = false;
+  if (band === 'CRIT' || band === 'HIGH') {
+    if (gz === 'GOOD' || orig === 'GOOD') { priority = 'ACTION'; blocking = true; }
+    else                                   { priority = 'ADVISORY'; }
+  } else if (band === 'MED') {
+    priority = 'REVIEW';
+  }
+
+  // Top flagged sentences (cap at 5 to keep callout readable).
+  const sentences = Array.isArray(apiDet.sentences) ? apiDet.sentences : [];
+  const top_flagged = sentences
+    .filter(s => typeof s?.generated_prob === 'number')
+    .map(s => ({
+      sentence: (s.sentence || '').slice(0, 300),
+      generated_prob: Math.round((s.generated_prob || 0) * 1000) / 1000,
+      highlight: !!s.highlight_for_ai,
+    }))
+    .sort((a, b) => b.generated_prob - a.generated_prob)
+    .slice(0, 5);
+
+  return {
+    priority,            // 'ACTION' | 'ADVISORY' | 'REVIEW' | 'NONE'
+    blocking,            // true if pack should not ship without rewrite
+    band,                // CRIT/HIGH/MED/CLEAR/null
+    gptzero_signal_quality:     gz,
+    originality_signal_quality: orig,
+    flagged_sentence_count: apiDet.sentence_signals?.highlighted_count ?? top_flagged.length,
+    top_flagged,
+    advisory_note: priority === 'ADVISORY'
+      ? 'Both detectors are calibrated USELESS against Mitchell\'s voice baseline — the high score is likely a false positive, not a signal to rewrite.'
+      : null,
+  };
+}
+
 // ── Shared parsers ─────────────────────────────────────────────
 
 // parseApplications lives in lib/parse-applications.mjs (single source of
@@ -4530,6 +4588,69 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // ── GET /api/ai-detection/signal-quality ─────────────────────────────────
+  // DELTA P2 — exposes the current calibrated thresholds + signal-quality
+  // summary so the dashboard can render an honest "Detection signal quality"
+  // section instead of asking the user to interpret a 99% GPTZero score as
+  // a real failure when the calibration baseline shows it's a known FPR.
+  if (url === '/api/ai-detection/signal-quality' && req.method === 'GET') {
+    (async () => {
+      try {
+        const thresholdsPath = join(ROOT, 'data', 'ai-detection-calibration', 'current-thresholds.json');
+        const baselineGlob = join(ROOT, 'data', 'ai-detection-calibration');
+        let thresholds = null;
+        if (existsSync(thresholdsPath)) {
+          thresholds = JSON.parse(readFileSync(thresholdsPath, 'utf-8'));
+        }
+        // Find most recent baseline summary file
+        const { readdirSync } = await import('node:fs');
+        const baselineFiles = existsSync(baselineGlob)
+          ? readdirSync(baselineGlob).filter(f => f.startsWith('baseline-') && f.endsWith('.json')).sort().reverse()
+          : [];
+        const latestBaseline = baselineFiles[0]
+          ? JSON.parse(readFileSync(join(baselineGlob, baselineFiles[0]), 'utf-8'))
+          : null;
+
+        const summary = thresholds ? {
+          calibrated_at: thresholds.derived_at,
+          gptzero: {
+            clear_ceiling: thresholds.gptzero?.CLEAR?.max ?? null,
+            crit_floor: thresholds.gptzero?.CRIT?.min ?? null,
+            gap: ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)),
+            signal_quality:
+              ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)) >= 0.20 ? 'GOOD'
+              : ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)) >= 0.05 ? 'WEAK' : 'USELESS',
+          },
+          originality: {
+            clear_ceiling: thresholds.originality?.CLEAR?.max ?? null,
+            crit_floor: thresholds.originality?.CRIT?.min ?? null,
+            gap: ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)),
+            signal_quality:
+              ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)) >= 0.20 ? 'GOOD'
+              : ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)) >= 0.05 ? 'WEAK' : 'USELESS',
+          },
+        } : null;
+
+        return json({
+          ok: true,
+          thresholds,
+          summary,
+          baseline_sample_counts: latestBaseline?.summary?.sample_counts ?? null,
+          baseline_file: baselineFiles[0] ?? null,
+          interpretation: summary && summary.gptzero.signal_quality === 'USELESS' && summary.originality.signal_quality === 'USELESS'
+            ? 'Both detectors are calibrated USELESS against Mitchell\'s voice baseline — they cannot distinguish authentic Mitchell prose from generic AI text. The gate refuses to BLOCK on USELESS-quality scores; it surfaces them as ADVISORY only. Re-calibration after a voice-corpus refresh may change this.'
+            : summary
+              ? `GPTZero signal quality: ${summary.gptzero.signal_quality}. Originality signal quality: ${summary.originality.signal_quality}. The gate blocks artifacts only when band severe AND at least one detector has GOOD signal.`
+              : 'No calibration baseline present. Run `node scripts/ai-detection-calibrate-baseline.mjs --refresh` to populate.',
+        });
+      } catch (err) {
+        _d25Log(`[ai-detection/signal-quality] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
   // ── 1. POST /api/build-pack-stage ─────────────────────────────────────────
   // body: { rowId, stage: 'cv-tailor'|'cover-letter'|'why-statement'|'linkedin-dm'|'form-fields', config? }
   // Invokes scripts/agents/{stage}.mjs and returns SubAgentOutput JSON.
@@ -4566,16 +4687,32 @@ const server = createServer((req, res) => {
           context: {},
           config: { dryRun: true, ...(config || {}) },
         });
-        // Flatten AI detection fields to top level so dashboard JS can read them
-        const apiDet = result?.output?.api_detection;
-        const detectionFailed = result?.status === 'error' && apiDet && apiDet.passes === false;
-        return json({
+        // DELTA P1 — surface band-aware AI-detection state in the response
+        // so the dashboard client can render the Editing Priority callout
+        // without parsing nested SubAgentOutput shapes. Merged with HEAD's
+        // ok=(status !== 'error') propagation so legacy "error" results
+        // don't get reported as ok=true.
+        const apiDet = result?.output?.api_detection ?? null;
+        const editingPriority = computeEditingPriority(apiDet, result);
+        const respPayload = {
           ok: result?.status !== 'error',
-          stage, rowId, result,
-          ai_detection_failed: detectionFailed || false,
-          gpt_zero_score:  apiDet?.gptzero_prob    != null ? Math.round(apiDet.gptzero_prob    * 100) : null,
+          stage,
+          rowId,
+          result,
+          // top-level convenience fields read by build-dashboard.mjs client code
+          ai_detection_failed: apiDet?.gateBlocks === true,
+          ai_detection_band: apiDet?.band ?? null,
+          gpt_zero_score:    apiDet?.gptzero_prob   != null ? Math.round(apiDet.gptzero_prob   * 100) : null,
           originality_score: apiDet?.originality_prob != null ? Math.round(apiDet.originality_prob * 100) : null,
-        });
+          ai_detection_signal_quality: {
+            gptzero:     apiDet?.gptzero_signal_quality     ?? null,
+            originality: apiDet?.originality_signal_quality ?? null,
+          },
+          editing_priority: editingPriority,
+          ai_detection_retry_status: result?.diagnostics?.api_detection_retry_status ?? null,
+          ai_detection_retry_stages: result?.diagnostics?.api_detection_retry_stages ?? 0,
+        };
+        return json(respPayload);
       } catch (err) {
         _d25Log(`[build-pack-stage] ${err.message}`);
         return json({ ok: false, error: err.message }, 500);

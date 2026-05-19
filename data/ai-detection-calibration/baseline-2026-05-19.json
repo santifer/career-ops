@@ -1,0 +1,162 @@
+{
+  "summary": {
+    "calibrated_at": "2026-05-19T07:08:11.032Z",
+    "sample_counts": {
+      "human": 5,
+      "ai_decoy": 3
+    },
+    "human": {
+      "gptzero": {
+        "mean": 1,
+        "max": 1,
+        "min": 1
+      },
+      "originality": {
+        "mean": 1,
+        "max": 1,
+        "min": 1
+      }
+    },
+    "ai": {
+      "gptzero": {
+        "mean": 1,
+        "max": 1,
+        "min": 1
+      },
+      "originality": {
+        "mean": 1,
+        "max": 1,
+        "min": 1
+      }
+    }
+  },
+  "human_results": [
+    {
+      "id": "voice-reference-full",
+      "elapsed_ms": 1234,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "writing-samples/voice-reference.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "voice-reference-canonical-exemplar",
+      "elapsed_ms": 1074,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "writing-samples/voice-reference.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "cv-mitchell",
+      "elapsed_ms": 1020,
+      "options": {
+        "confidence": "medium",
+        "register": "bullet",
+        "path": "cv.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "article-digest",
+      "elapsed_ms": 1085,
+      "options": {
+        "confidence": "medium",
+        "register": "mixed",
+        "path": "article-digest.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "voice-reference-brief",
+      "elapsed_ms": 1080,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/voice-reference-brief.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    }
+  ],
+  "ai_results": [
+    {
+      "id": "ai-decoy-corporate-jargon",
+      "elapsed_ms": 919,
+      "options": {
+        "register": "narrative"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-generic-cover-letter",
+      "elapsed_ms": 934,
+      "options": {
+        "register": "narrative"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-buzzword-paragraph",
+      "elapsed_ms": 857,
+      "options": {
+        "register": "mixed"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    }
+  ],
+  "thresholds": null,
+  "degenerate": true,
+  "degenerate_reason": "sample size too small (have 5 human + 3 AI; need ≥20 + ≥10)"
+}

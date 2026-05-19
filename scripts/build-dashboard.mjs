@@ -16456,6 +16456,50 @@ function _tpSetMsg(msg) {
   var el = document.getElementById('tp-progress-msg');
   if (el) el.textContent = msg || '';
 }
+
+// DELTA P1 — Editing Priority callout. Renders an inline chip + (when not
+// NONE) the top flagged sentences GPTZero surfaced. Anchored beneath the
+// progress message so user sees it without scrolling.
+function _tpRenderEditingPriority(ep, stageId) {
+  var host = document.getElementById('tp-progress-msg');
+  if (!host) return;
+  var existing = document.getElementById('tp-editing-priority-' + stageId);
+  if (existing) existing.remove();
+  if (!ep || ep.priority === 'NONE') return;
+  var wrap = document.createElement('div');
+  wrap.id = 'tp-editing-priority-' + stageId;
+  wrap.style.cssText = 'margin-top:8px;padding:8px 10px;border-radius:6px;font-size:12px;line-height:1.4;';
+  var color = ep.priority === 'ACTION' ? '#b71c1c'
+            : ep.priority === 'ADVISORY' ? '#9a7b00'
+            : '#3f5b80';
+  var bg    = ep.priority === 'ACTION' ? '#ffe6e6'
+            : ep.priority === 'ADVISORY' ? '#fff5cc'
+            : '#e8eef7';
+  wrap.style.background = bg;
+  wrap.style.color = color;
+  var head = document.createElement('div');
+  head.style.fontWeight = '600';
+  head.textContent = '[' + stageId + '] Editing Priority: ' + ep.priority + ' · band ' + (ep.band || 'n/a') + ' · ' + (ep.flagged_sentence_count || 0) + ' flagged';
+  wrap.appendChild(head);
+  if (ep.advisory_note) {
+    var note = document.createElement('div');
+    note.style.cssText = 'margin-top:4px;font-style:italic;opacity:0.85;';
+    note.textContent = ep.advisory_note;
+    wrap.appendChild(note);
+  }
+  if (Array.isArray(ep.top_flagged) && ep.top_flagged.length > 0) {
+    var ul = document.createElement('ul');
+    ul.style.cssText = 'margin:6px 0 0 16px;padding:0;';
+    ep.top_flagged.slice(0, 3).forEach(function(s) {
+      var li = document.createElement('li');
+      li.style.cssText = 'margin-bottom:4px;';
+      li.textContent = '(' + Math.round((s.generated_prob || 0) * 100) + '%) ' + (s.sentence || '');
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+  }
+  host.parentNode.insertBefore(wrap, host.nextSibling);
+}
 function _tpSetFooterReview(rowId) {
   var footer = document.getElementById('tp-progress-footer');
   if (!footer) return;
@@ -16559,21 +16603,36 @@ async function tonightPickCreateMaterials() {
         break;
       }
 
-      // AI-detection failure surfaced by the server
-      if (data.ai_detection_failed) {
+      // AI-detection failure surfaced by the server. DELTA P1: only treat
+      // as a blocking failure when editing_priority.blocking === true
+      // (i.e. CRIT/HIGH band AND a detector with GOOD signal quality).
+      // When signal quality is USELESS, the high score is a known false
+      // positive (Δ.1 baseline: GPTZero scores all Mitchell's writing 1.0),
+      // so we surface as ADVISORY without blocking the stage.
+      var ep = data.editing_priority || null;
+      var epBlocks = !!(ep && ep.blocking);
+      if (data.ai_detection_failed && epBlocks) {
         _tpStopStageTimer(stageId, 'failed');
         stageStates[stageId] = 'failed';
         _tpRenderStages(stageStates);
-        var detMsg = 'AI-detection gate failed for ' + stageId + '.';
+        var detMsg = 'AI-detection gate BLOCKING for ' + stageId + ' (' + (ep && ep.band || 'CRIT') + ' band, ' + (ep && ep.flagged_sentence_count || '?') + ' flagged sentences).';
         if (data.gpt_zero_score) detMsg += ' GPTZero: ' + data.gpt_zero_score + '%.';
         if (data.originality_score) detMsg += ' Originality: ' + data.originality_score + '%.';
-        detMsg += ' ';
+        if (data.ai_detection_retry_status) detMsg += ' Retry: ' + data.ai_detection_retry_status + '.';
         _tpSetMsg(detMsg);
-        // Show "Regenerate with stricter constraints" button (uses DOM-built footer to avoid quoting issues)
         _tpSetFooterRetry(stageId, rowNum, 'Regenerate with stricter constraints');
         failedStage = stageId;
         break;
+      } else if (data.ai_detection_failed && ep && ep.priority === 'ADVISORY') {
+        // ADVISORY: signal quality USELESS — surface a non-blocking notice and
+        // continue the build. The Editing Priority callout in the drawer shows
+        // top flagged sentences for optional human review.
+        _tpSetMsg('AI-detection ADVISORY (' + (ep.band || '?') + ' band, ' + (ep.flagged_sentence_count || 0) + ' flagged) — detectors calibrated USELESS vs Mitchell’s voice; not blocking.');
+        // Continue to the "stage done" branch below.
       }
+      // DELTA P1 — Editing Priority callout (renders even when not failing,
+      // for REVIEW band + ADVISORY priority).
+      if (ep) _tpRenderEditingPriority(ep, stageId);
 
       if (!resp.ok || !data.ok) {
         _tpStopStageTimer(stageId, 'failed');
