@@ -39,6 +39,12 @@ import {
   topByWarmPath as networkTopByWarmPath,
   loadDatabase as networkLoadDatabase,
 } from './lib/network-database-search.mjs';
+// ζ Run-Batch 2026-05-19 — unified warm-contact lookup for the Phase B
+// per-company preview + future surfaces. Reads from network-graph.json
+// when present, falls back to network-database.json. Returns
+// _stale_warmth-flagged contacts so the per-company preview can render
+// honest fresh-vs-stale counts.
+import { findContactsAtCompany as networkFindContactsAtCompany } from './lib/network-graph.mjs';
 
 // ── Application enrichment for outreach API ────────────────────────────────
 // Join contact.linked_application_id → applications.md row so the dashboard
@@ -1150,6 +1156,12 @@ function buildPerCompanyPipelinePreview() {
   // data/company-intel-cache/{slug}/intel-{date}.json under .toxicity_score
   // (populated by scripts/process-all-council-intel.mjs). New strategy: read
   // from cache first, fall back to scoreToxicity() only if no cache.
+  //
+  // ζ Run-Batch addition 2026-05-19: per-company network-leverage signal
+  // for tier decisions. Returns { warm, fresh, stale, first_degree, source }
+  // so a Phase B reader can decide "boost this company because there's a
+  // warm intro path". Source is `network-graph.json` or `network-database.json`
+  // — surfaced so the consumer can disclose freshness.
   const rows = [];
   for (const meta of byCompany.values()) {
     const ttoRaw = (() => { try { return estimateTTO(meta.company); } catch { return null; } })();
@@ -1168,6 +1180,24 @@ function buildPerCompanyPipelinePreview() {
       tox = (() => { try { return scoreToxicity(meta.company); } catch { return null; } })();
     }
     const isExcluded = excluded.has(meta.slug);
+
+    // ζ Run-Batch — fan out to the network lookup, count fresh-vs-stale.
+    // findContactsAtCompany() reads from the unified network graph/db with
+    // _stale_warmth flag set when connected_on > 18mo with no engagement.
+    let netLev = { warm: 0, fresh: 0, stale: 0, first_degree: 0, source: 'none' };
+    try {
+      const contacts = networkFindContactsAtCompany(meta.slug) || [];
+      const fresh = contacts.filter(c => !c._stale_warmth).length;
+      const stale = contacts.length - fresh;
+      const firstDegree = contacts.filter(c => !c._warm_via_target_name).length;
+      netLev = {
+        warm:         contacts.length,
+        fresh,
+        stale,
+        first_degree: firstDegree,
+        source:       contacts.length > 0 ? 'network-database.json' : 'none',
+      };
+    } catch { /* network signal optional — leave defaults */ }
 
     // Cost: zero if excluded (orchestrator auto-trashes), else council cost
     // (skipped on cache hit) + optional apply-pack pre-gen for high-score rows.
@@ -1190,6 +1220,12 @@ function buildPerCompanyPipelinePreview() {
       toxicity_verdict: tox?.verdict           ?? null,
       toxicity_score:   tox?.score             ?? null,
       toxicity_emoji:   tox?.verdict_emoji     ?? null,
+      // ζ Run-Batch network-leverage decomposition (honest fresh-vs-stale)
+      network_warm_count:   netLev.warm,
+      network_fresh_count:  netLev.fresh,
+      network_stale_count:  netLev.stale,
+      network_first_degree: netLev.first_degree,
+      network_source:       netLev.source,
       cache_hit:        cache.hit,
       last_intel_date:  cache.last_intel_date,
       cache_age_days:   cache.age_days,
@@ -1215,8 +1251,8 @@ function buildPerCompanyPipelinePreview() {
     excluded_count:      rows.filter(r =>  r.excluded).length,
     cache_hit_count:     rows.filter(r => r.cache_hit && !r.excluded).length,
     total_cost_estimate_usd: Math.round(totalCost * 100) / 100,
-    source:              'data/apply-now-queue.json + data/company-intel-cache/ + estimateTTO + scoreToxicity',
-    schema_note:         'Per-company Tier-5 economics — council cost suppressed on cache hit; apply-pack pre-gen added for score≥4.5.',
+    source:              'data/apply-now-queue.json + data/company-intel-cache/ + estimateTTO + scoreToxicity + data/network-database.json',
+    schema_note:         'Per-company Tier-5 economics — council cost suppressed on cache hit; apply-pack pre-gen added for score≥4.5. ζ Run-Batch 2026-05-19 added network_{warm,fresh,stale,first_degree,source}_count with honest >18mo stale-warmth gate.',
   };
 }
 
@@ -1839,6 +1875,30 @@ function batchLive() {
       const [url, tier, score, archetype, reason] = l.split('\t');
       triageItems.push({ url, tier, score, archetype, reason });
     }
+  }
+
+  // ζ Run-Batch 2026-05-19 — enrich each row with network-leverage signal
+  // so the live sidebar can render "🤝 N fresh warm" badges DURING a batch
+  // run (not only post-publish). findContactsAtCompany() is cached against
+  // the network-graph/database mtime so calling per-row is cheap.
+  // Skipped for generic ATS-host companies (Greenhouse/Ashby/Lever — the
+  // URL didn't resolve to a real company name yet) since the lookup would
+  // be meaningless.
+  const ATS_HOSTS = new Set(['Greenhouse', 'Ashby', 'Lever']);
+  for (const r of stateRows) {
+    if (!r.company || ATS_HOSTS.has(r.company)) continue;
+    try {
+      const slug = String(r.company).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      if (!slug) continue;
+      const contacts = networkFindContactsAtCompany(slug) || [];
+      const fresh = contacts.filter(c => !c._stale_warmth).length;
+      const stale = contacts.length - fresh;
+      const firstDegree = contacts.filter(c => !c._warm_via_target_name).length;
+      r.network_warm_count = contacts.length;
+      r.network_fresh_count = fresh;
+      r.network_stale_count = stale;
+      r.network_first_degree = firstDegree;
+    } catch { /* network signal optional — leave fields unset */ }
   }
 
   // Sort: running first, then completed by time desc, then failed, then pending

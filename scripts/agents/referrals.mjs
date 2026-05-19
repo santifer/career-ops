@@ -129,6 +129,58 @@ function loadWarmPaths(companySlug) {
   return [];
 }
 
+/**
+ * ζ Run-Batch 2026-05-19 — supplement 2nd-degree warm paths with the
+ * unified network-database.json signal. Returns 1st-degree connections
+ * of Mitchell's whose `warm_to_target_companies` arrays point at the
+ * target slug, annotated with engagement freshness (connected_on age)
+ * so the LLM can prefer recent-connection paths over 2-year-old ones.
+ *
+ * Returns [] if the database isn't present or the slug isn't a known
+ * target. Honest gate: connected_on age IS surfaced to the LLM so the
+ * generated message doesn't claim recent intimacy with a stale contact.
+ */
+function loadUnifiedWarmPaths(companySlug) {
+  const dbPath = join(ROOT, 'data', 'network-database.json');
+  const db = readJsonSafe(dbPath);
+  if (!db || !Array.isArray(db.people)) return [];
+  // ζ Honest-warmth: hard-cap on >18mo without engagement so the LLM
+  // doesn't see paths it shouldn't recommend.
+  const eighteenMoMs = Date.now() - (18 * 30 * 86_400_000);
+  const matchingSlug = String(companySlug).toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const out = [];
+  for (const p of db.people) {
+    const warm = Array.isArray(p.warm_to_target_companies) ? p.warm_to_target_companies : [];
+    if (!warm.length) continue;
+    const hit = warm.find(w => {
+      const wSlug = String(w.company_slug || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+      return wSlug && (wSlug === matchingSlug || wSlug.includes(matchingSlug) || matchingSlug.includes(wSlug));
+    });
+    if (!hit) continue;
+    let stale = false;
+    if (p.connected_on) {
+      try {
+        const ts = new Date(p.connected_on).getTime();
+        if (Number.isFinite(ts) && ts < eighteenMoMs) stale = true;
+      } catch { /* leave stale=false */ }
+    }
+    out.push({
+      contact_name: p.full_name || `${p.first || ''} ${p.last || ''}`.trim(),
+      contact_role: p.current_role || '',
+      contact_employer: p.current_company || '',
+      target_at_company: hit.target_name || null,
+      target_url: hit.target_url || null,
+      connection_evidence: hit.evidence || 'unknown',
+      connected_on: p.connected_on || null,
+      stale_warmth: stale,
+      degree: p.degree || null,
+    });
+  }
+  // Sort: fresh-first so the LLM prefers them.
+  out.sort((a, b) => (a.stale_warmth ? 1 : 0) - (b.stale_warmth ? 1 : 0));
+  return out;
+}
+
 function buildMarkdown(d, company, role) {
   const lines = [
     `# Referrals & warm-path outreach — ${role} at ${company}`,
@@ -187,15 +239,33 @@ export async function runReferrals(input) {
   const url = input?.pack?.jd?.url || '';
   const rowId = input?.pack?.meta?.row_id || 0;
   const hmIntel = input?.context?.hmIntel || {};
-  const warmPaths = loadWarmPaths(slugify(company));
+  const slug = slugify(company);
+  const warmPaths = loadWarmPaths(slug);
+  // ζ Run-Batch addition — supplement legacy 2nd-degree JSON with the
+  // unified network-database.json signal (1st-degree intros). The LLM
+  // gets BOTH sources clearly labeled and freshness-flagged so it can
+  // prioritize fresh paths and disclose stale ones honestly.
+  const unifiedPaths = loadUnifiedWarmPaths(slug);
+  const freshUnifiedPaths = unifiedPaths.filter(p => !p.stale_warmth);
+  const stalePathsCount = unifiedPaths.length - freshUnifiedPaths.length;
 
   const userPrompt = [
     `## Target`,
     `${company} — ${role}`,
     url ? `URL: ${url}` : '',
     '',
-    `## Warm paths (from data/linkedin/2nd-degree/${slugify(company)}.json — use these names verbatim)`,
-    JSON.stringify(warmPaths, null, 2).slice(0, 4500),
+    `## Warm paths — source 1: data/linkedin/2nd-degree/${slug}.json (mutual-connection scrape)`,
+    JSON.stringify(warmPaths, null, 2).slice(0, 3500),
+    '',
+    `## Warm paths — source 2: data/network-database.json (1st-degree connections of Mitchell with warm_to_target_companies pointing at this target)`,
+    `Fresh paths (connected <18mo, prefer these): ${freshUnifiedPaths.length} found`,
+    `Stale paths (connected >18mo, no recent engagement — only mention with explicit re-engagement caveat, ${stalePathsCount} total): ${stalePathsCount} excluded from prompt to prevent oversell`,
+    JSON.stringify(freshUnifiedPaths, null, 2).slice(0, 2500),
+    '',
+    `## Voice + writing constraints`,
+    `- Prefer fresh paths over 2nd-degree where both exist. If recommending a stale path, the draft message MUST acknowledge time gap honestly ("We connected in 2024 — hope this finds you well…").`,
+    `- Never claim recent intimacy with a contact in the stale list.`,
+    `- For 2nd-degree paths, the introducer + the target are both named — make clear which is which in the draft.`,
     '',
     `## cv.md`,
     cvText,
@@ -207,7 +277,7 @@ export async function runReferrals(input) {
     voiceBrief,
     '',
     `Output referrals doc per schema. Strict JSON only.`,
-    `If warm_paths array above is empty, return empty warm_paths and a non-empty cold_outreach_fallback.`,
+    `If both warm-path sources are empty, return empty warm_paths and a non-empty cold_outreach_fallback.`,
   ].join('\n');
 
   const modelKey = input?.config?.model || DEFAULT_MODEL;
@@ -253,7 +323,18 @@ export async function runReferrals(input) {
   return {
     stage: STAGE, status: 'ok',
     output: { path: path.replace(ROOT + '/', ''), warm_paths: parsed.warm_paths.length, warnings: parsed.warnings },
-    diagnostics: { duration_ms: Date.now() - t0, cost_estimate_usd: estimateCostUsd(tokens), tokens_used: tokens, model_used: modelUsed, warm_paths_input: warmPaths.length },
+    diagnostics: {
+      duration_ms: Date.now() - t0,
+      cost_estimate_usd: estimateCostUsd(tokens),
+      tokens_used: tokens,
+      model_used: modelUsed,
+      // ζ Run-Batch — surface BOTH sources so a polish-loop verifier can
+      // tell if the LLM was paths-poor (cold-outreach fallback expected)
+      // vs. paths-rich (warm-paths section should be substantial).
+      warm_paths_input: warmPaths.length,
+      unified_db_fresh_paths: freshUnifiedPaths.length,
+      unified_db_stale_paths_excluded: stalePathsCount,
+    },
     error: null,
   };
 }
