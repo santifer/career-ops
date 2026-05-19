@@ -1,0 +1,657 @@
+{
+  "audited_at": "2026-05-19T06:33:52.210Z",
+  "samples": {
+    "human": {
+      "word_count": 79,
+      "preview": "I started writing this at 11 pm because my brain finally let go of the\nspreadsheet I'd been chewing on all day. Three ro"
+    },
+    "ai": {
+      "word_count": 47,
+      "preview": "In today's rapidly evolving landscape, it is important to leverage data-driven\ninsights to navigate complex challenges. "
+    }
+  },
+  "gptzero": {
+    "human": {
+      "http_status": 200,
+      "raw_body": "{\"version\":\"2026-05-11-base\",\"neatVersion\":\"4.6b\",\"documents\":[{\"paragraphs\":[{\"start_sentence_index\":0,\"num_sentences\":1,\"completely_generated_prob\":0.8181818033057853},{\"start_sentence_index\":1,\"num_sentences\":2,\"completely_generated_prob\":0.8254776901813464},{\"start_sentence_index\":3,\"num_sentences\":1,\"completely_generated_prob\":0.8181818033057853},{\"start_sentence_index\":4,\"num_sentences\":2,\"completely_generated_prob\":0.8254776901813464},{\"start_sentence_index\":6,\"num_sentences\":1,\"completely_generated_prob\":0.8181818033057853},{\"start_sentence_index\":7,\"num_sentences\":3,\"completely_generated_prob\":0.850090677245877},{\"start_sentence_index\":10,\"num_sentences\":1,\"completely_generated_prob\":0.8181818033057853}],\"completely_generated_prob\":0.9999840881420216,\"average_generated_prob\":1,\"predicted_class\":\"ai\",\"confidence_score\":1,\"confidence_category\":\"high\",\"overall_burstiness\":0,\"writing_stats\":{},\"confidence_thresholds_raw\":{\"identity\":{\"ai\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8},\"human\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8},\"mixed\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8}}},\"sentences\":[{\"generated_prob\":0.9999943286803656,\"sentence\":\"I started writing this at 11 pm because my brain finally let go of the\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000005671319634353102,\"ai\":0.9999379533458631,\"paraphrased\":0.00005637533450249113},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999940952802281,\"sentence\":\"spreadsheet I'd been chewing on all day.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000005904719771876742,\"ai\":0.9999380955621341,\"paraphrased\":0.000055999718094042546},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999940379780462,\"sentence\":\"Three rows in pivot, one merged cell\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000005962021953810985,\"ai\":0.9999359790089278,\"paraphrased\":0.00005805896911836291},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999949409206201,\"sentence\":\"that wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000005059079379908464,\"ai\":0.9999365094808755,\"paraphrased\":0.0000584314397445845},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999956953007861,\"sentence\":\"blanks because somebody had typed \\\"n/a\\\" into a column expecting numbers.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000004304699213794856,\"ai\":0.999930586316246,\"paraphrased\":0.00006510898454018863},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999936202709401,\"sentence\":\"I\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.0000063797290599238094,\"ai\":0.9999487324787008,\"paraphrased\":0.0000448877922393268},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.999995045638432,\"sentence\":\"killed the merge, swapped the n/a's for empty cells, and the pivot finally\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000004954361568076805,\"ai\":0.9999314826162787,\"paraphrased\":0.00006356302215322506},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999931596599869,\"sentence\":\"agreed with the source-of-truth dashboard.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000006840340013042049,\"ai\":0.9999373994720165,\"paraphrased\":0.00005576018797036799},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999914660560825,\"sentence\":\"Tiny win.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000008533943917553899,\"ai\":0.9999468932023451,\"paraphrased\":0.00004457285373736628},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999826903475892,\"sentence\":\"Still annoyed about the\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000017309652410756885,\"ai\":0.9999232343867004,\"paraphrased\":0.00005945596088890641},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999665058372603,\"sentence\":\"two hours.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000033494162739739194,\"ai\":0.9999128958846744,\"paraphrased\":0.000053609952585927484},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null}],\"class_probabilities\":{\"human\":0,\"ai\":1,\"mixed\":0},\"confidence_scores_raw\":{\"identity\":{\"ai\":1,\"mixed\":0,\"human\":0}},\"subclass\":{\"ai\":{\"predicted_class\":\"pure_ai\",\"result_message\":\"\",\"confidence_score\":1,\"confidence_category\":\"high\",\"class_probabilities\":{\"pure_ai\":1,\"ai_paraphrased\":0},\"confidence_scores_raw\":{\"identity\":{\"pure_ai\":1,\"ai_paraphrased\":0}},\"confidence_thresholds_raw\":{\"identity\":{\"ai_paraphrased\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8},\"pure_ai\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8}}}}},\"pageNumber\":0,\"neatVersion\":\"4.6b\",\"version\":\"2026-05-11-base\",\"language\":\"en\",\"result_message\":\"Our detector is highly confident that the text is written by AI.\",\"result_sub_message\":null,\"document_classification\":\"AI_ONLY\",\"inputText\":\"I started writing this at 11 pm because my brain finally let go of the\\nspreadsheet I'd been chewing on all day. Three rows in pivot, one merged cell\\nthat wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping\\nblanks because somebody had typed \\\"n/a\\\" into a column expecting numbers. I\\nkilled the merge, swapped the n/a's for empty cells, and the pivot finally\\nagreed with the source-of-truth dashboard. Tiny win. Still annoyed about the\\ntwo hours.\",\"document_id\":null}]}",
+      "parsed": {
+        "version": "2026-05-11-base",
+        "neatVersion": "4.6b",
+        "documents": [
+          {
+            "paragraphs": [
+              {
+                "start_sentence_index": 0,
+                "num_sentences": 1,
+                "completely_generated_prob": 0.8181818033057853
+              },
+              {
+                "start_sentence_index": 1,
+                "num_sentences": 2,
+                "completely_generated_prob": 0.8254776901813464
+              },
+              {
+                "start_sentence_index": 3,
+                "num_sentences": 1,
+                "completely_generated_prob": 0.8181818033057853
+              },
+              {
+                "start_sentence_index": 4,
+                "num_sentences": 2,
+                "completely_generated_prob": 0.8254776901813464
+              },
+              {
+                "start_sentence_index": 6,
+                "num_sentences": 1,
+                "completely_generated_prob": 0.8181818033057853
+              },
+              {
+                "start_sentence_index": 7,
+                "num_sentences": 3,
+                "completely_generated_prob": 0.850090677245877
+              },
+              {
+                "start_sentence_index": 10,
+                "num_sentences": 1,
+                "completely_generated_prob": 0.8181818033057853
+              }
+            ],
+            "completely_generated_prob": 0.9999840881420216,
+            "average_generated_prob": 1,
+            "predicted_class": "ai",
+            "confidence_score": 1,
+            "confidence_category": "high",
+            "overall_burstiness": 0,
+            "writing_stats": {},
+            "confidence_thresholds_raw": {
+              "identity": {
+                "ai": {
+                  "reject": 0.33,
+                  "low": 0.6,
+                  "medium": 0.8
+                },
+                "human": {
+                  "reject": 0.33,
+                  "low": 0.6,
+                  "medium": 0.8
+                },
+                "mixed": {
+                  "reject": 0.33,
+                  "low": 0.6,
+                  "medium": 0.8
+                }
+              }
+            },
+            "sentences": [
+              {
+                "generated_prob": 0.9999943286803656,
+                "sentence": "I started writing this at 11 pm because my brain finally let go of the",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000005671319634353102,
+                  "ai": 0.9999379533458631,
+                  "paraphrased": 0.00005637533450249113
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999940952802281,
+                "sentence": "spreadsheet I'd been chewing on all day.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000005904719771876742,
+                  "ai": 0.9999380955621341,
+                  "paraphrased": 0.000055999718094042546
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999940379780462,
+                "sentence": "Three rows in pivot, one merged cell",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000005962021953810985,
+                  "ai": 0.9999359790089278,
+                  "paraphrased": 0.00005805896911836291
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999949409206201,
+                "sentence": "that wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000005059079379908464,
+                  "ai": 0.9999365094808755,
+                  "paraphrased": 0.0000584314397445845
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999956953007861,
+                "sentence": "blanks because somebody had typed \"n/a\" into a column expecting numbers.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000004304699213794856,
+                  "ai": 0.999930586316246,
+                  "paraphrased": 0.00006510898454018863
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999936202709401,
+                "sentence": "I",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.0000063797290599238094,
+                  "ai": 0.9999487324787008,
+                  "paraphrased": 0.0000448877922393268
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.999995045638432,
+                "sentence": "killed the merge, swapped the n/a's for empty cells, and the pivot finally",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000004954361568076805,
+                  "ai": 0.9999314826162787,
+                  "paraphrased": 0.00006356302215322506
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999931596599869,
+                "sentence": "agreed with the source-of-truth dashboard.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000006840340013042049,
+                  "ai": 0.9999373994720165,
+                  "paraphrased": 0.00005576018797036799
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999914660560825,
+                "sentence": "Tiny win.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000008533943917553899,
+                  "ai": 0.9999468932023451,
+                  "paraphrased": 0.00004457285373736628
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999826903475892,
+                "sentence": "Still annoyed about the",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000017309652410756885,
+                  "ai": 0.9999232343867004,
+                  "paraphrased": 0.00005945596088890641
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999665058372603,
+                "sentence": "two hours.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000033494162739739194,
+                  "ai": 0.9999128958846744,
+                  "paraphrased": 0.000053609952585927484
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              }
+            ],
+            "class_probabilities": {
+              "human": 0,
+              "ai": 1,
+              "mixed": 0
+            },
+            "confidence_scores_raw": {
+              "identity": {
+                "ai": 1,
+                "mixed": 0,
+                "human": 0
+              }
+            },
+            "subclass": {
+              "ai": {
+                "predicted_class": "pure_ai",
+                "result_message": "",
+                "confidence_score": 1,
+                "confidence_category": "high",
+                "class_probabilities": {
+                  "pure_ai": 1,
+                  "ai_paraphrased": 0
+                },
+                "confidence_scores_raw": {
+                  "identity": {
+                    "pure_ai": 1,
+                    "ai_paraphrased": 0
+                  }
+                },
+                "confidence_thresholds_raw": {
+                  "identity": {
+                    "ai_paraphrased": {
+                      "reject": 0.33,
+                      "low": 0.6,
+                      "medium": 0.8
+                    },
+                    "pure_ai": {
+                      "reject": 0.33,
+                      "low": 0.6,
+                      "medium": 0.8
+                    }
+                  }
+                }
+              }
+            },
+            "pageNumber": 0,
+            "neatVersion": "4.6b",
+            "version": "2026-05-11-base",
+            "language": "en",
+            "result_message": "Our detector is highly confident that the text is written by AI.",
+            "result_sub_message": null,
+            "document_classification": "AI_ONLY",
+            "inputText": "I started writing this at 11 pm because my brain finally let go of the\nspreadsheet I'd been chewing on all day. Three rows in pivot, one merged cell\nthat wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping\nblanks because somebody had typed \"n/a\" into a column expecting numbers. I\nkilled the merge, swapped the n/a's for empty cells, and the pivot finally\nagreed with the source-of-truth dashboard. Tiny win. Still annoyed about the\ntwo hours.",
+            "document_id": null
+          }
+        ]
+      }
+    },
+    "ai": {
+      "http_status": 200,
+      "raw_body": "{\"version\":\"2026-05-11-base\",\"neatVersion\":\"4.6b\",\"documents\":[{\"paragraphs\":[{\"start_sentence_index\":0,\"num_sentences\":1,\"completely_generated_prob\":0.8181818033057853},{\"start_sentence_index\":1,\"num_sentences\":2,\"completely_generated_prob\":0.8254776901813464},{\"start_sentence_index\":3,\"num_sentences\":2,\"completely_generated_prob\":0.8254776901813464},{\"start_sentence_index\":5,\"num_sentences\":1,\"completely_generated_prob\":0.8181818033057853},{\"start_sentence_index\":6,\"num_sentences\":1,\"completely_generated_prob\":0.8181818033057853}],\"completely_generated_prob\":0.9999694654251953,\"average_generated_prob\":1,\"predicted_class\":\"ai\",\"confidence_score\":1,\"confidence_category\":\"high\",\"overall_burstiness\":0,\"writing_stats\":{},\"confidence_thresholds_raw\":{\"identity\":{\"ai\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8},\"human\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8},\"mixed\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8}}},\"sentences\":[{\"generated_prob\":0.9999865020543457,\"sentence\":\"In today's rapidly evolving landscape, it is important to leverage data-driven\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000013497945654350184,\"ai\":0.999892776818679,\"paraphrased\":0.00009372523566662729},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999837792609636,\"sentence\":\"insights to navigate complex challenges.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000016220739036390364,\"ai\":0.9998862284571624,\"paraphrased\":0.0000975508038012475},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999843679702921,\"sentence\":\"Furthermore, organizations must\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000015632029707921394,\"ai\":0.9999029886306143,\"paraphrased\":0.00008137933967779374},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999872401065959,\"sentence\":\"streamline operations and foster a culture of continuous improvement.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000012759893404168256,\"ai\":0.9999060749867297,\"paraphrased\":0.00008116511986617744},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999876340277586,\"sentence\":\"By\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000012365972241394478,\"ai\":0.9998883206167903,\"paraphrased\":0.00009931341096827112},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.999969885988045,\"sentence\":\"harnessing the power of artificial intelligence, stakeholders can unlock new\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.000030114011954982753,\"ai\":0.999858507737894,\"paraphrased\":0.0001113782501510923},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null},{\"generated_prob\":0.9999811747494365,\"sentence\":\"opportunities and drive transformative growth across the enterprise.\",\"perplexity\":0,\"class_probabilities\":{\"human\":0.00001882525056353133,\"ai\":0.9998879379733375,\"paraphrased\":0.00009323677609897958},\"interpretability_value\":null,\"interpretability_normalized_value\":null,\"interpretability_designation\":null,\"interpretability_alpha\":null,\"highlight_sentence_for_ai\":true,\"special_highlight_type\":null}],\"class_probabilities\":{\"human\":0,\"ai\":1,\"mixed\":0},\"confidence_scores_raw\":{\"identity\":{\"ai\":1,\"mixed\":0,\"human\":0}},\"subclass\":{\"ai\":{\"predicted_class\":\"pure_ai\",\"result_message\":\"\",\"confidence_score\":1,\"confidence_category\":\"high\",\"class_probabilities\":{\"pure_ai\":1,\"ai_paraphrased\":0},\"confidence_scores_raw\":{\"identity\":{\"pure_ai\":1,\"ai_paraphrased\":0}},\"confidence_thresholds_raw\":{\"identity\":{\"ai_paraphrased\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8},\"pure_ai\":{\"reject\":0.33,\"low\":0.6,\"medium\":0.8}}}}},\"pageNumber\":0,\"neatVersion\":\"4.6b\",\"version\":\"2026-05-11-base\",\"language\":\"en\",\"result_message\":\"Our detector is highly confident that the text is written by AI.\",\"result_sub_message\":null,\"document_classification\":\"AI_ONLY\",\"inputText\":\"In today's rapidly evolving landscape, it is important to leverage data-driven\\ninsights to navigate complex challenges. Furthermore, organizations must\\nstreamline operations and foster a culture of continuous improvement. By\\nharnessing the power of artificial intelligence, stakeholders can unlock new\\nopportunities and drive transformative growth across the enterprise.\",\"document_id\":null}]}",
+      "parsed": {
+        "version": "2026-05-11-base",
+        "neatVersion": "4.6b",
+        "documents": [
+          {
+            "paragraphs": [
+              {
+                "start_sentence_index": 0,
+                "num_sentences": 1,
+                "completely_generated_prob": 0.8181818033057853
+              },
+              {
+                "start_sentence_index": 1,
+                "num_sentences": 2,
+                "completely_generated_prob": 0.8254776901813464
+              },
+              {
+                "start_sentence_index": 3,
+                "num_sentences": 2,
+                "completely_generated_prob": 0.8254776901813464
+              },
+              {
+                "start_sentence_index": 5,
+                "num_sentences": 1,
+                "completely_generated_prob": 0.8181818033057853
+              },
+              {
+                "start_sentence_index": 6,
+                "num_sentences": 1,
+                "completely_generated_prob": 0.8181818033057853
+              }
+            ],
+            "completely_generated_prob": 0.9999694654251953,
+            "average_generated_prob": 1,
+            "predicted_class": "ai",
+            "confidence_score": 1,
+            "confidence_category": "high",
+            "overall_burstiness": 0,
+            "writing_stats": {},
+            "confidence_thresholds_raw": {
+              "identity": {
+                "ai": {
+                  "reject": 0.33,
+                  "low": 0.6,
+                  "medium": 0.8
+                },
+                "human": {
+                  "reject": 0.33,
+                  "low": 0.6,
+                  "medium": 0.8
+                },
+                "mixed": {
+                  "reject": 0.33,
+                  "low": 0.6,
+                  "medium": 0.8
+                }
+              }
+            },
+            "sentences": [
+              {
+                "generated_prob": 0.9999865020543457,
+                "sentence": "In today's rapidly evolving landscape, it is important to leverage data-driven",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000013497945654350184,
+                  "ai": 0.999892776818679,
+                  "paraphrased": 0.00009372523566662729
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999837792609636,
+                "sentence": "insights to navigate complex challenges.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000016220739036390364,
+                  "ai": 0.9998862284571624,
+                  "paraphrased": 0.0000975508038012475
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999843679702921,
+                "sentence": "Furthermore, organizations must",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000015632029707921394,
+                  "ai": 0.9999029886306143,
+                  "paraphrased": 0.00008137933967779374
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999872401065959,
+                "sentence": "streamline operations and foster a culture of continuous improvement.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000012759893404168256,
+                  "ai": 0.9999060749867297,
+                  "paraphrased": 0.00008116511986617744
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999876340277586,
+                "sentence": "By",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000012365972241394478,
+                  "ai": 0.9998883206167903,
+                  "paraphrased": 0.00009931341096827112
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.999969885988045,
+                "sentence": "harnessing the power of artificial intelligence, stakeholders can unlock new",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.000030114011954982753,
+                  "ai": 0.999858507737894,
+                  "paraphrased": 0.0001113782501510923
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              },
+              {
+                "generated_prob": 0.9999811747494365,
+                "sentence": "opportunities and drive transformative growth across the enterprise.",
+                "perplexity": 0,
+                "class_probabilities": {
+                  "human": 0.00001882525056353133,
+                  "ai": 0.9998879379733375,
+                  "paraphrased": 0.00009323677609897958
+                },
+                "interpretability_value": null,
+                "interpretability_normalized_value": null,
+                "interpretability_designation": null,
+                "interpretability_alpha": null,
+                "highlight_sentence_for_ai": true,
+                "special_highlight_type": null
+              }
+            ],
+            "class_probabilities": {
+              "human": 0,
+              "ai": 1,
+              "mixed": 0
+            },
+            "confidence_scores_raw": {
+              "identity": {
+                "ai": 1,
+                "mixed": 0,
+                "human": 0
+              }
+            },
+            "subclass": {
+              "ai": {
+                "predicted_class": "pure_ai",
+                "result_message": "",
+                "confidence_score": 1,
+                "confidence_category": "high",
+                "class_probabilities": {
+                  "pure_ai": 1,
+                  "ai_paraphrased": 0
+                },
+                "confidence_scores_raw": {
+                  "identity": {
+                    "pure_ai": 1,
+                    "ai_paraphrased": 0
+                  }
+                },
+                "confidence_thresholds_raw": {
+                  "identity": {
+                    "ai_paraphrased": {
+                      "reject": 0.33,
+                      "low": 0.6,
+                      "medium": 0.8
+                    },
+                    "pure_ai": {
+                      "reject": 0.33,
+                      "low": 0.6,
+                      "medium": 0.8
+                    }
+                  }
+                }
+              }
+            },
+            "pageNumber": 0,
+            "neatVersion": "4.6b",
+            "version": "2026-05-11-base",
+            "language": "en",
+            "result_message": "Our detector is highly confident that the text is written by AI.",
+            "result_sub_message": null,
+            "document_classification": "AI_ONLY",
+            "inputText": "In today's rapidly evolving landscape, it is important to leverage data-driven\ninsights to navigate complex challenges. Furthermore, organizations must\nstreamline operations and foster a culture of continuous improvement. By\nharnessing the power of artificial intelligence, stakeholders can unlock new\nopportunities and drive transformative growth across the enterprise.",
+            "document_id": null
+          }
+        ]
+      }
+    },
+    "key_present": true
+  },
+  "originality": {
+    "human": {
+      "http_status": 200,
+      "raw_body": "{\"success\":true,\"disclaimer\":\"If you are trying to scan content that is under 50 words in length, you will run into AI accuracy issues.\",\"public_link\":\"https:\\/\\/app.originality.ai\\/share\\/qlreh39p4yizdj0x\",\"title\":\"API V1 Scan\",\"score\":{\"original\":0.0001,\"ai\":0.9999},\"blocks\":[{\"text\":\"I started writing this at 11 pm because my brain finally let go of the\\nspreadsheet I'd been chewing on all day. \",\"result\":{\"fake\":0.9999075885141087,\"real\":9.241148589134163e-5,\"status\":\"success\"}},{\"text\":\"Three rows in pivot, one merged cell\\nthat wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping\\nblanks because somebody had typed \\\"n\\/a\\\" into a column expecting numbers. \",\"result\":{\"fake\":0.9999574934197175,\"real\":4.250658028248644e-5,\"status\":\"success\"}},{\"text\":\"I\\nkilled the merge, swapped the n\\/a's for empty cells, and the pivot finally\\nagreed with the source-of-truth dashboard. \",\"result\":{\"fake\":0.9999309308720716,\"real\":6.906912792836728e-5,\"status\":\"success\"}},{\"text\":\"Tiny win. Still annoyed about the\\ntwo hours.\",\"result\":{\"fake\":0.9998039871941022,\"real\":0.0001960128058977606,\"status\":\"success\"}}],\"credits_used\":1,\"credits\":0,\"subscription\":14915,\"content\":\"I started writing this at 11 pm because my brain finally let go of the\\nspreadsheet I'd been chewing on all day. Three rows in pivot, one merged cell\\nthat wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping\\nblanks because somebody had typed \\\"n\\/a\\\" into a column expecting numbers. I\\nkilled the merge, swapped the n\\/a's for empty cells, and the pivot finally\\nagreed with the source-of-truth dashboard. Tiny win. Still annoyed about the\\ntwo hours.\",\"aiModelVersion\":5,\"id\":48111424}",
+      "parsed": {
+        "success": true,
+        "disclaimer": "If you are trying to scan content that is under 50 words in length, you will run into AI accuracy issues.",
+        "public_link": "https://app.originality.ai/share/qlreh39p4yizdj0x",
+        "title": "API V1 Scan",
+        "score": {
+          "original": 0.0001,
+          "ai": 0.9999
+        },
+        "blocks": [
+          {
+            "text": "I started writing this at 11 pm because my brain finally let go of the\nspreadsheet I'd been chewing on all day. ",
+            "result": {
+              "fake": 0.9999075885141087,
+              "real": 0.00009241148589134163,
+              "status": "success"
+            }
+          },
+          {
+            "text": "Three rows in pivot, one merged cell\nthat wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping\nblanks because somebody had typed \"n/a\" into a column expecting numbers. ",
+            "result": {
+              "fake": 0.9999574934197175,
+              "real": 0.00004250658028248644,
+              "status": "success"
+            }
+          },
+          {
+            "text": "I\nkilled the merge, swapped the n/a's for empty cells, and the pivot finally\nagreed with the source-of-truth dashboard. ",
+            "result": {
+              "fake": 0.9999309308720716,
+              "real": 0.00006906912792836728,
+              "status": "success"
+            }
+          },
+          {
+            "text": "Tiny win. Still annoyed about the\ntwo hours.",
+            "result": {
+              "fake": 0.9998039871941022,
+              "real": 0.0001960128058977606,
+              "status": "success"
+            }
+          }
+        ],
+        "credits_used": 1,
+        "credits": 0,
+        "subscription": 14915,
+        "content": "I started writing this at 11 pm because my brain finally let go of the\nspreadsheet I'd been chewing on all day. Three rows in pivot, one merged cell\nthat wasn't supposed to be merged, and the AVERAGEIFS was quietly skipping\nblanks because somebody had typed \"n/a\" into a column expecting numbers. I\nkilled the merge, swapped the n/a's for empty cells, and the pivot finally\nagreed with the source-of-truth dashboard. Tiny win. Still annoyed about the\ntwo hours.",
+        "aiModelVersion": 5,
+        "id": 48111424
+      }
+    },
+    "ai": {
+      "http_status": 200,
+      "raw_body": "{\"success\":true,\"disclaimer\":\"If you are trying to scan content that is under 50 words in length, you will run into AI accuracy issues.\",\"public_link\":\"https:\\/\\/app.originality.ai\\/share\\/wy8e2zbmja05d1gn\",\"title\":\"API V1 Scan\",\"score\":{\"original\":0,\"ai\":1},\"blocks\":[{\"text\":\"In today's rapidly evolving landscape, it is important to leverage data-driven\\ninsights to navigate complex challenges. \",\"result\":{\"fake\":1,\"real\":0,\"status\":\"success\"}},{\"text\":\"Furthermore, organizations must\\nstreamline operations and foster a culture of continuous improvement. \",\"result\":{\"fake\":1,\"real\":0,\"status\":\"success\"}},{\"text\":\"By\\nharnessing the power of artificial intelligence, stakeholders can unlock new\\nopportunities and drive transformative growth across the enterprise.\",\"result\":{\"fake\":0.9999861088496497,\"real\":1.3891150350294382e-5,\"status\":\"success\"}}],\"credits_used\":1,\"credits\":0,\"subscription\":14914,\"content\":\"In today's rapidly evolving landscape, it is important to leverage data-driven\\ninsights to navigate complex challenges. Furthermore, organizations must\\nstreamline operations and foster a culture of continuous improvement. By\\nharnessing the power of artificial intelligence, stakeholders can unlock new\\nopportunities and drive transformative growth across the enterprise.\",\"aiModelVersion\":5,\"id\":48111427}",
+      "parsed": {
+        "success": true,
+        "disclaimer": "If you are trying to scan content that is under 50 words in length, you will run into AI accuracy issues.",
+        "public_link": "https://app.originality.ai/share/wy8e2zbmja05d1gn",
+        "title": "API V1 Scan",
+        "score": {
+          "original": 0,
+          "ai": 1
+        },
+        "blocks": [
+          {
+            "text": "In today's rapidly evolving landscape, it is important to leverage data-driven\ninsights to navigate complex challenges. ",
+            "result": {
+              "fake": 1,
+              "real": 0,
+              "status": "success"
+            }
+          },
+          {
+            "text": "Furthermore, organizations must\nstreamline operations and foster a culture of continuous improvement. ",
+            "result": {
+              "fake": 1,
+              "real": 0,
+              "status": "success"
+            }
+          },
+          {
+            "text": "By\nharnessing the power of artificial intelligence, stakeholders can unlock new\nopportunities and drive transformative growth across the enterprise.",
+            "result": {
+              "fake": 0.9999861088496497,
+              "real": 0.000013891150350294382,
+              "status": "success"
+            }
+          }
+        ],
+        "credits_used": 1,
+        "credits": 0,
+        "subscription": 14914,
+        "content": "In today's rapidly evolving landscape, it is important to leverage data-driven\ninsights to navigate complex challenges. Furthermore, organizations must\nstreamline operations and foster a culture of continuous improvement. By\nharnessing the power of artificial intelligence, stakeholders can unlock new\nopportunities and drive transformative growth across the enterprise.",
+        "aiModelVersion": 5,
+        "id": 48111427
+      }
+    },
+    "key_present": true
+  }
+}

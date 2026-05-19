@@ -1,0 +1,41 @@
+{
+  "derived_at": "2026-05-19T06:39:09.973Z",
+  "rationale": "Bands anchored to empirical baseline: CLEAR ceiling = max prob observed on Mitchell's own writing; CRIT floor = min prob observed on AI decoys; HIGH = upper-mid; MED = lower-mid.",
+  "gptzero": {
+    "CLEAR": {
+      "max": 1
+    },
+    "MED": {
+      "min": 1,
+      "max": 1
+    },
+    "HIGH": {
+      "min": 1,
+      "max": 1
+    },
+    "CRIT": {
+      "min": 1
+    }
+  },
+  "originality": {
+    "CLEAR": {
+      "max": 1
+    },
+    "MED": {
+      "min": 1,
+      "max": 1
+    },
+    "HIGH": {
+      "min": 1,
+      "max": 1
+    },
+    "CRIT": {
+      "min": 1
+    }
+  },
+  "notes": [
+    "These bands are RELATIVE to Mitchell's baseline, not absolute. A 0.95 GPTZero score may sit in CLEAR if Mitchell's own writing scores 0.99 — the gate is calibrated to authenticity vs Mitchell, not detection-evasion vs the platform.",
+    "Re-run `node scripts/ai-detection-calibrate-baseline.mjs --refresh` after every meaningful voice-corpus update to refresh these bands.",
+    "AUTHENTICITY band reports the worst (max) prob across both detectors after band assignment — a single CRIT detector dominates, since false-positive-on-AI is the costly error."
+  ]
+}
