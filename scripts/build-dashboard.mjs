@@ -20074,7 +20074,9 @@ function _renderScopedCapWarning(reason, scopedCost, capUsd, p) {
            + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>. '
            + 'Shrink the run, activate burst mode, or force-override below.';
   }
-  // AAA-2: Force-override separated from heartbeat checkbox; destructive styling + explicit spend amount
+  // AAA-2: Force-override separated from heartbeat checkbox; destructive styling + explicit spend amount.
+  // α Run-Batch fix 2026-05-19: was slice.total_cost_usd (undefined ReferenceError) — use scopedCost,
+  // which is the live Phase-B cost the user is being asked to accept.
   return ''
     + '<div class="pipeline-cap-warning">'
     +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
@@ -20082,7 +20084,7 @@ function _renderScopedCapWarning(reason, scopedCost, capUsd, p) {
     +   '<label class="pipeline-force-override" for="pipeline-force-override"'
     +     ' style="margin-top:10px;border-top:1px solid rgba(239,68,68,0.3);padding-top:10px;display:flex;align-items:flex-start;gap:8px;cursor:pointer">'
     +     '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()" style="margin-top:2px;accent-color:#ef4444">'
-    +     '<span style="color:#f87171;font-weight:600">I accept the cost. Force-run $' + slice.total_cost_usd.toFixed(2) + ' anyway.</span>'
+    +     '<span style="color:#f87171;font-weight:600">I accept the cost. Force-run $' + scopedCost.toFixed(2) + ' anyway.</span>'
     +   '</label>'
     + '</div>';
 }
