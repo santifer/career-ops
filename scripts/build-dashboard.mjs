@@ -20687,14 +20687,19 @@ async function confirmTier5Run() {
   const pending = _pipelinePreview.pending_pipeline || 0;
   const queued = _pipelinePreview.queued_for_batch || 0;
   const total = pending + queued;
+  // NB: the surrounding HTML is rendered via an outer template literal so any
+  // raw \\n in source would be unescaped to literal newlines, breaking this
+  // JS string. Use String.fromCharCode(10) so the outer template emits the
+  // characters \\n verbatim and the browser parses real newlines at runtime.
+  const NL = String.fromCharCode(10);
   const msg = 'Run Tier-5 pass on ' + total + ' pipeline items ('
-    + pending + ' to triage + ' + queued + ' already queued, ~' + companies + ' unique companies)?\n\n'
-    + 'Tier-5 upgrades:\n'
-    + '  · Triage uses Sonnet 4.6 (richer JD reasoning) instead of Haiku 4.5\n'
-    + '  · After batch, auto-generates apply-packs for top-10 high-confidence rows (≥4.5)\n\n'
-    + 'Estimated cost: $' + cost.toFixed(2) + '\n'
-    + 'Per-run cap: $' + (_pipelinePreview.per_run_caps?.process_all_usd ?? 'unknown') + '\n\n'
-    + 'Click OK to fire (cap is enforced server-side — will refuse if exceeded).';
+    + pending + ' to triage + ' + queued + ' already queued, ~' + companies + ' unique companies)?' + NL + NL
+    + 'Tier-5 upgrades:' + NL
+    + '  - Triage uses Sonnet 4.6 (richer JD reasoning) instead of Haiku 4.5' + NL
+    + '  - After batch, auto-generates apply-packs for top-10 high-confidence rows (>=4.5)' + NL + NL
+    + 'Estimated cost: $' + cost.toFixed(2) + NL
+    + 'Per-run cap: $' + (_pipelinePreview.per_run_caps?.process_all_usd ?? 'unknown') + NL + NL
+    + 'Click OK to fire (cap is enforced server-side - will refuse if exceeded).';
   if (!window.confirm(msg)) return;
   const btn = document.getElementById('pcp-tier5-cta');
   if (btn) { btn.disabled = true; btn.textContent = 'Starting…'; }
