@@ -15585,7 +15585,7 @@ _drillInRegister('network-leverage', function() {
           return '<button data-zeta-draft-intro="' + x(p.id) + '" data-zeta-target-company="' + x(w.company_slug) + '" '
             + 'style="padding:2px 8px;margin:2px 2px 0 0;border:1px solid var(--border);border-radius:4px;background:transparent;'
             + 'color:var(--text-3);cursor:pointer;font-size:11px" '
-            + 'title="Draft LinkedIn DM in Mitchell\'s voice for ' + x(w.company_slug) + ' warm intro">'
+            + 'title="Draft LinkedIn DM in Mitchell\\'s voice for ' + x(w.company_slug) + ' warm intro">'
             + '✍ Draft DM → ' + x(w.company_slug) + '</button>';
         }).join('');
         var pathsHtml = paths
@@ -15664,7 +15664,7 @@ _drillInRegister('network-leverage', function() {
             var personId = btn.getAttribute('data-zeta-draft-intro');
             var targetCompany = btn.getAttribute('data-zeta-target-company');
             var format = confirm(
-              'Draft format:\n\nOK = post-connection DM (longer, ~3 paragraphs)\nCancel = connection request note (≤300 chars)'
+              'Draft format:\\n\\nOK = post-connection DM (longer, ~3 paragraphs)\\nCancel = connection request note (<=300 chars)'
             ) ? 'dm' : 'connection';
             btn.disabled = true;
             btn.textContent = '⏳ Drafting…';
@@ -15678,8 +15678,8 @@ _drillInRegister('network-leverage', function() {
                 btn.disabled = false;
                 btn.textContent = '✍ Draft DM → ' + targetCompany;
                 if (!j.ok) { alert('Draft failed: ' + (j.error || 'unknown error')); return; }
-                var overNote = j.over_limit ? '\n\n⚠️ Over 300 chars (' + j.note_count + '). Trim before sending as connection note.' : '';
-                var costNote = '\n\nCost: $' + (j.cost_usd || 0).toFixed(4) + ' · ' + (j.tokens ? j.tokens.input + '+' + j.tokens.output + ' tokens' : '');
+                var overNote = j.over_limit ? '\\n\\n⚠️ Over 300 chars (' + j.note_count + '). Trim before sending as connection note.' : '';
+                var costNote = '\\n\\nCost: $' + (j.cost_usd || 0).toFixed(4) + ' · ' + (j.tokens ? j.tokens.input + '+' + j.tokens.output + ' tokens' : '');
                 // Show the draft in a modal-style textarea overlay
                 var overlay = document.createElement('div');
                 overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
