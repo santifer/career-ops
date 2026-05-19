@@ -3834,11 +3834,131 @@ async function build() {
         return (a.name || '').localeCompare(b.name || '');
       });
   })();
+
+  // 2026-05-19 — enrich each contact with deterministic relationship-intel
+  // fields per data/contact-card-schema-2026-05-19.md. LLM-required fields
+  // (engagement, outreach.positioning, inferred.*) are left as `null` here
+  // and filled in by network-enricher when refresh-master fires the
+  // `contact_enrichment` cache for that contact.
+  (function _enrichContactsDeterministic() {
+    // Build a name+slug index for fast cross-lookup
+    function _slug(s) { return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80); }
+    function _contactId(c) {
+      const first = (c.first_name || c.name.split(' ')[0] || '').trim();
+      const last = (c.last_name || c.name.split(' ').slice(1).join(' ') || '').trim();
+      return _slug(first + '-' + last + '-' + (c.company || ''));
+    }
+    // Group all directory contacts by company-slug for "others at same company"
+    const byCompanySlug = new Map();
+    for (const c of contactsDirectory) {
+      const cs = _slug(c.company);
+      if (!cs) continue;
+      if (!byCompanySlug.has(cs)) byCompanySlug.set(cs, []);
+      byCompanySlug.get(cs).push(c);
+    }
+    // Pre-load 2nd-degree paths per company (cached existence check)
+    const twoDegDir = join(ROOT, 'data/linkedin/2nd-degree');
+    const twoDegCache = new Map();
+    function _twoDegFor(companySlug) {
+      if (twoDegCache.has(companySlug)) return twoDegCache.get(companySlug);
+      const fp = join(twoDegDir, `${companySlug}.json`);
+      let data = null;
+      if (existsSync(fp)) { try { data = JSON.parse(readFileSync(fp,'utf8')); } catch(_) {} }
+      twoDegCache.set(companySlug, data);
+      return data;
+    }
+    // Parse cv.md employer history once for overlap detection
+    const cvPath = join(ROOT, 'cv.md');
+    const mitchellEmployers = [];
+    if (existsSync(cvPath)) {
+      const cvText = readFileSync(cvPath, 'utf8');
+      // Light regex extraction — Mitchell's CV uses "## Company · Role" headers with date ranges
+      // Best-effort: pull any line with "20XX" date range markers
+      const empRe = /^\s*(?:##+|\*\*)\s*([A-Z][A-Za-z0-9&\.\- ]+?)(?:\s*·|\s*—|\s*-)\s*.+?(\d{4})(?:\s*[—\-–]\s*(\d{4}|present|now))?/gm;
+      let m;
+      while ((m = empRe.exec(cvText)) !== null) {
+        mitchellEmployers.push({ company: m[1].trim(), start: parseInt(m[2],10), end: /present|now/i.test(m[3]||'') ? 9999 : parseInt(m[3]||m[2],10) });
+      }
+    }
+    function _overlapWithMitchell(contact) {
+      const cName = (contact.company || '').toLowerCase();
+      if (!cName) return [];
+      // Match if the contact's company appears in Mitchell's employer history
+      const out = [];
+      for (const e of mitchellEmployers) {
+        if (e.company.toLowerCase().includes(cName) || cName.includes(e.company.toLowerCase())) {
+          out.push({ company: e.company, mitchell_years: `${e.start}–${e.end === 9999 ? 'present' : e.end}` });
+        }
+      }
+      return out;
+    }
+    // Target archetypes for goal_alignment scoring
+    const TARGET_ARCHETYPES = /\b(ai|ml|machine learning|llm|product|program|forward[ -]?deployed|solutions|comms|communications|developer relations|devrel|enablement)\b/i;
+    // Pre-IPO companies (best-effort heuristic — cross-checked with target list)
+    const PRE_IPO_COMPANIES = new Set(['anthropic','openai','perplexity','cohere','mistral','cursor','anysphere','elevenlabs','databricks','cognition','sierra','pinecone','ramp','deepgram','crusoe','suno','figure','character ai','character','runway','synthesia','glean']);
+    function _goalAlignment(contact) {
+      const cs = _slug(contact.company);
+      const preIpo = PRE_IPO_COMPANIES.has(cs) ? 1.0 : 0.0;
+      const archetypeMatch = TARGET_ARCHETYPES.test(contact.position || '') ? 1.0 : 0.0;
+      const inOutreach = contact.in_outreach ? 0.5 : 0.0;
+      const score = (preIpo * 0.5) + (archetypeMatch * 0.3) + (inOutreach * 0.2);
+      return { pre_ipo_match: !!preIpo, archetype_match: !!archetypeMatch, composite_score: +score.toFixed(2) };
+    }
+    // Path to enrichment cache (lazily check existence; populated by refresh-master)
+    const enrichmentCacheDir = join(ROOT, 'data/contact-enrichment-cache');
+    function _enrichmentFor(id) {
+      const fp = join(enrichmentCacheDir, `${id}.json`);
+      if (!existsSync(fp)) return null;
+      try { return JSON.parse(readFileSync(fp, 'utf8')); } catch(_) { return null; }
+    }
+    const photosDir = join(ROOT, 'data/contact-photos');
+    function _photoPath(id) {
+      const fp = join(photosDir, `${id}.jpg`);
+      return existsSync(fp) ? `data/contact-photos/${id}.jpg` : null;
+    }
+
+    for (const c of contactsDirectory) {
+      c.id = _contactId(c);
+      c.photo_path = _photoPath(c.id);
+      c.overlap_with_mitchell = _overlapWithMitchell(c);
+      const otherAtCo = (byCompanySlug.get(_slug(c.company)) || []).filter(o => o !== c);
+      c.others_at_company = otherAtCo.slice(0, 12).map(o => ({
+        id: _contactId(o),
+        name: o.name,
+        position: o.position || '',
+        in_outreach: !!o.in_outreach,
+        archetype_match: TARGET_ARCHETYPES.test(o.position || ''),
+      }));
+      const twoDeg = _twoDegFor(_slug(c.company));
+      c.two_degree_path = (twoDeg && twoDeg.contacts && twoDeg.contacts.length) ? {
+        company: twoDeg.company,
+        candidate_count: twoDeg.contacts.length,
+      } : null;
+      c.goal_alignment = _goalAlignment(c);
+      // Pull touches array if outreach-state has it (existing pipeline only kept last_touch_ts)
+      // We can re-read outreach-state here cheaply since it's already parsed elsewhere
+      // For now: surface what's present + provenance flag for LLM enrichment
+      c.enrichment_status = _enrichmentFor(c.id) ? 'complete' : 'pending';
+      const enrich = _enrichmentFor(c.id);
+      if (enrich) {
+        c.engagement = enrich.engagement || null;
+        c.outreach_recommendation = enrich.outreach_recommendation || null;
+        c.inferred_relationship = enrich.inferred_relationship || null;
+        c.enrichment_fetched_at = enrich.fetched_at || null;
+        c.enrichment_verifier_passed = enrich.verifier_passed || false;
+      }
+    }
+  })();
+
   const contactsDirectoryStats = {
     total: contactsDirectory.length,
     with_email: contactsDirectory.filter(c => c.email_professional).length,
     with_x:     contactsDirectory.filter(c => c.x_handle).length,
     in_outreach: contactsDirectory.filter(c => c.in_outreach).length,
+    with_overlap: contactsDirectory.filter(c => (c.overlap_with_mitchell || []).length > 0).length,
+    with_photo: contactsDirectory.filter(c => c.photo_path).length,
+    enriched: contactsDirectory.filter(c => c.enrichment_status === 'complete').length,
+    pre_ipo: contactsDirectory.filter(c => c.goal_alignment && c.goal_alignment.pre_ipo_match).length,
   };
 
   const reportsToday = countTodaysReports(today);
@@ -10746,6 +10866,10 @@ async function build() {
       <button type="button" class="sidebar-link" onclick="openBatchStatusModal();closeSidebar();" title="Batch runs — recent eval batches + current run">
         <span class="sidebar-icon" aria-hidden="true">📦</span><span class="sidebar-label">Batch Runs</span>
       </button>
+      <!-- 2026-05-19: full-screen relationship-intelligence directory (rich contact cards) -->
+      <a href="contacts.html" class="sidebar-link" title="Contacts directory — full relationship-intelligence cards">
+        <span class="sidebar-icon" aria-hidden="true">👥</span><span class="sidebar-label">Contacts</span>
+      </a>
       <!-- B2 (2026-05-18): Industry Gap Radar — non-tech high-WTP sectors -->
       <button type="button" class="sidebar-link" onclick="window.drillIn('industry-gap','',event);closeSidebar();" title="Adjacent Industry Radar — finance/health/legal/insurance non-tech opportunities">
         <span class="sidebar-icon" aria-hidden="true">🎯</span><span class="sidebar-label">Industries</span>
@@ -27965,9 +28089,93 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     color: var(--blue-fg,#0969da); border-color: var(--blue-fg,#0969da); font-weight: 600;
   }
   .contact-directory-list {
-    display: flex; flex-direction: column; gap: 6px;
+    display: flex; flex-direction: column; gap: 10px;
     padding: 12px 18px;
   }
+  /* ── Rich contact card (2026-05-19 schema) ───────────────────────── */
+  .contact-card {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    transition: border-color .12s, background .12s;
+  }
+  .contact-card:hover { border-color: var(--text-3); background: var(--surface); }
+  .contact-card-head { display: flex; gap: 14px; align-items: flex-start; }
+  .contact-card-avatar { width: 60px; height: 60px; flex-shrink: 0; position: relative; }
+  .contact-card-photo {
+    width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+    border: 1px solid var(--border);
+  }
+  .contact-card-photo-fallback {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-bg), var(--surface-2));
+    color: var(--text-2); font-weight: 700; font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); letter-spacing: 0.02em;
+  }
+  .contact-card-identity { flex: 1 1 auto; min-width: 0; }
+  .contact-card-name {
+    font-size: 14.5px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px;
+  }
+  .contact-card-role { font-size: 13px; }
+  .contact-card-company { color: var(--text-2); font-weight: 500; }
+  .contact-card-connected { font-size: 11.5px; margin-top: 4px; }
+  .contact-card-goals { font-size: 11px; margin-top: 6px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .contact-card-section-label {
+    display: inline-block;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-4); margin-right: 8px;
+  }
+  .contact-card-overlap, .contact-card-others, .contact-card-twodeg {
+    font-size: 12.5px; padding: 8px 10px; border-radius: var(--radius-sm);
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .contact-card-overlap { border-left: 3px solid var(--green-fg, #16a34a); }
+  .contact-card-overlap-item { font-weight: 600; color: var(--text); margin-right: 10px; }
+  .contact-card-others-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .contact-card-other-btn {
+    text-align: left; background: none; border: 0; padding: 4px 6px;
+    border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 12.5px; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .contact-card-other-btn:hover { background: var(--surface-2); }
+  .contact-card-twodeg-count { color: var(--green-fg, #16a34a); font-weight: 600; }
+  .contact-card-enriched {
+    padding: 10px 12px; border-radius: var(--radius-sm);
+    background: var(--blue-bg); border-left: 3px solid var(--blue-fg, #2563eb);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .contact-card-enriched p { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text); }
+  .contact-card-enrich-pending {
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    background: var(--surface); border: 1px dashed var(--border);
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px;
+  }
+  .contact-card-emails { font-size: 12px; padding: 6px 0; border-top: 1px dashed var(--border); }
+  .contact-card-email-label { font-weight: 600; color: var(--text-3); margin-right: 4px; }
+  .contact-card-emails code { background: var(--surface); padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+  .contact-card-actions { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--border); }
+  .contact-act-enrich, .contact-act-photo {
+    background: var(--blue-bg); color: var(--blue-fg, #2563eb);
+    border: 1px solid var(--blue-border, rgba(37,99,235,0.4));
+    font-weight: 600;
+  }
+  .pill-tiny {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 1px 7px; border-radius: var(--radius-full);
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text-3);
+    margin-right: 4px;
+  }
+  .pill-tiny.pill-preipo { background: var(--green-bg); color: var(--green-fg, #16a34a); border-color: var(--green-fg, #16a34a); }
+  .pill-tiny.pill-archetype { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-fg, #d97706); }
+  .pill-tiny.pill-outreach { background: var(--blue-bg); color: var(--blue-fg, #2563eb); border-color: var(--blue-fg, #2563eb); }
+  .contact-card.contact-card-flash {
+    box-shadow: 0 0 0 2px var(--amber-fg, #d97706);
+    transition: box-shadow 0.6s ease-out;
+  }
+  /* ── /Rich contact card ────────────────────────────────────────── */
   .contact-row {
     display: flex; gap: 14px; align-items: flex-start; justify-content: space-between;
     padding: 10px 12px;
@@ -28393,20 +28601,108 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       var xAction = xHandle
         ? '<a class="contact-act contact-act-x" href="https://x.com/' + _escHtml(xHandle.replace(/^@/, '')) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open X profile @' + _escHtml(xHandle) + '" aria-label="X profile">X <span class="contact-act-arrow">→</span></a>'
         : '<button type="button" class="contact-act contact-act-disabled" disabled title="No X handle on file">X</button>';
-      return '<div class="contact-row">' +
-        '<div class="contact-row-main">' +
-          '<div class="contact-row-name">' + _escHtml(name) + ' ' + tierBadge + ' ' + outreachBadge + '</div>' +
-          '<div class="contact-row-sub">' + _escHtml(position || '—') + (company ? ' · <span class="contact-row-company">' + _escHtml(company) + '</span>' : '') + '</div>' +
-          (email || personalEmail ? '<div class="contact-row-emails">' +
-            (email ? '<span class="contact-row-email-label">Pro:</span> <code>' + _escHtml(email) + '</code>' : '') +
-            (personalEmail ? '<span class="contact-row-email-label">Personal:</span> <code>' + _escHtml(personalEmail) + '</code>' : '') +
-          '</div>' : '') +
+      // 2026-05-19 — rich relationship-intelligence card per
+      // data/contact-card-schema-2026-05-19.md. Deterministic fields render
+      // immediately; LLM-enriched fields show placeholders + "↻ Enrich" CTA
+      // until refresh-master fires the contact_enrichment cache.
+      var photoHtml;
+      var _initials = ((c.first_name||'')[0] || (name||'?')[0] || '?') + ((c.last_name||'')[0] || ((name||'').split(' ').slice(-1)[0]||'')[0] || '');
+      _initials = _initials.toUpperCase();
+      if (c.photo_path) {
+        photoHtml = '<img class="contact-card-photo" src="' + _escHtml(c.photo_path) + '" alt="' + _escHtml(name) + '" loading="lazy" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'flex\\'" />' +
+                    '<div class="contact-card-photo-fallback" style="display:none">' + _escHtml(_initials) + '</div>';
+      } else {
+        photoHtml = '<div class="contact-card-photo-fallback">' + _escHtml(_initials) + '</div>';
+      }
+      var overlapHtml = '';
+      if (c.overlap_with_mitchell && c.overlap_with_mitchell.length) {
+        overlapHtml = '<div class="contact-card-overlap">' +
+          '<span class="contact-card-section-label">↗ Shared employer</span>' +
+          c.overlap_with_mitchell.map(function(o){
+            return '<span class="contact-card-overlap-item">' + _escHtml(o.company) + ' <span class="muted-text">(' + _escHtml(o.mitchell_years) + ')</span></span>';
+          }).join('') +
+        '</div>';
+      }
+      var othersHtml = '';
+      if (c.others_at_company && c.others_at_company.length) {
+        var topOthers = c.others_at_company.slice(0, 6);
+        othersHtml = '<div class="contact-card-others">' +
+          '<span class="contact-card-section-label">Other contacts at ' + _escHtml(company) + ' (' + c.others_at_company.length + ')</span>' +
+          '<div class="contact-card-others-list">' +
+          topOthers.map(function(o){
+            var pill = o.in_outreach ? '<span class="pill-tiny pill-outreach">in outreach</span>' : '';
+            var aMatch = o.archetype_match ? '<span class="pill-tiny pill-archetype">★</span>' : '';
+            return '<button type="button" class="contact-card-other-btn" onclick="window._focusContactById(\\'' + _escHtml(o.id) + '\\');event.stopPropagation()" title="Show ' + _escHtml(o.name) + '">' +
+              _escHtml(o.name) + ' <span class="muted-text">' + _escHtml(o.position.slice(0, 28)) + '</span> ' + aMatch + pill +
+            '</button>';
+          }).join('') +
+          (c.others_at_company.length > 6 ? '<span class="muted-text">+' + (c.others_at_company.length - 6) + ' more</span>' : '') +
+          '</div>' +
+        '</div>';
+      }
+      var twoDegHtml = c.two_degree_path && c.two_degree_path.candidate_count > 0 ?
+        '<div class="contact-card-twodeg">' +
+          '<span class="contact-card-section-label">2nd-degree paths at ' + _escHtml(company) + '</span>' +
+          '<span class="contact-card-twodeg-count">' + c.two_degree_path.candidate_count + ' warm-intro candidates</span>' +
+        '</div>' : '';
+      var goalHtml = '';
+      if (c.goal_alignment) {
+        var ga = c.goal_alignment;
+        var marks = [];
+        if (ga.pre_ipo_match) marks.push('<span class="pill-tiny pill-preipo">pre-IPO</span>');
+        if (ga.archetype_match) marks.push('<span class="pill-tiny pill-archetype">archetype-match</span>');
+        if (marks.length) {
+          goalHtml = '<div class="contact-card-goals">' + marks.join('') +
+            ' <span class="muted-text">alignment ' + ga.composite_score + '</span></div>';
+        }
+      }
+      var connectedHtml = '';
+      if (c.connected_on || c.position) {
+        var connRole = c.position_at_connection || c.position || '';
+        connectedHtml = '<div class="contact-card-connected muted-text">Connected ' +
+          (c.connected_on ? _escHtml(c.connected_on) : 'date unknown') +
+          (connRole ? ' as ' + _escHtml(connRole) : '') +
+        '</div>';
+      }
+      // LLM-enriched block — show real content if enriched, placeholder otherwise
+      var enrichHtml;
+      if (c.enrichment_status === 'complete' && c.outreach_recommendation) {
+        enrichHtml = '<div class="contact-card-enriched">' +
+          (c.outreach_recommendation.positioning ? '<div class="contact-card-positioning"><span class="contact-card-section-label">Positioning recommendation</span><p>' + _escHtml(c.outreach_recommendation.positioning) + '</p></div>' : '') +
+          (c.outreach_recommendation.best_channel ? '<div class="contact-card-channel"><span class="contact-card-section-label">Best channel</span> ' + _escHtml(c.outreach_recommendation.best_channel) + '</div>' : '') +
+          (c.engagement && c.engagement.linkedin_topics ? '<div class="contact-card-topics"><span class="contact-card-section-label">Engages with</span> ' + (c.engagement.linkedin_topics || []).map(function(t){return '<span class="pill-tiny">'+_escHtml(t)+'</span>';}).join('') + '</div>' : '') +
+          (c.inferred_relationship && c.inferred_relationship.arc ? '<div class="contact-card-arc"><span class="contact-card-section-label">Relationship context</span><p class="muted-text">' + _escHtml(c.inferred_relationship.arc) + '</p></div>' : '') +
+        '</div>';
+      } else {
+        enrichHtml = '<div class="contact-card-enrich-pending">' +
+          '<span class="muted-text">Engagement topics, outreach positioning, and inferred relationship context are pending LLM enrichment.</span> ' +
+          '<button type="button" class="contact-act contact-act-enrich" onclick="window._enrichContactNow(\\'' + _escHtml(c.id) + '\\');event.stopPropagation()" title="Queue this contact for the next refresh-master tick (~$0.50)">↻ Enrich now</button>' +
+        '</div>';
+      }
+      return '<div class="contact-card" id="contact-card-' + _escHtml(c.id) + '">' +
+        '<div class="contact-card-head">' +
+          '<div class="contact-card-avatar">' + photoHtml + '</div>' +
+          '<div class="contact-card-identity">' +
+            '<div class="contact-card-name">' + _escHtml(name) + ' ' + tierBadge + ' ' + outreachBadge + '</div>' +
+            '<div class="contact-card-role muted-text">' + _escHtml(position || '—') + (company ? ' · <span class="contact-card-company">' + _escHtml(company) + '</span>' : '') + '</div>' +
+            connectedHtml +
+            goalHtml +
+          '</div>' +
         '</div>' +
-        '<div class="contact-row-actions">' +
+        overlapHtml +
+        othersHtml +
+        twoDegHtml +
+        enrichHtml +
+        (email || personalEmail ? '<div class="contact-card-emails">' +
+          (email ? '<span class="contact-card-email-label">Pro:</span> <code>' + _escHtml(email) + '</code>' : '') +
+          (personalEmail ? ' <span class="contact-card-email-label">Personal:</span> <code>' + _escHtml(personalEmail) + '</code>' : '') +
+        '</div>' : '') +
+        '<div class="contact-card-actions">' +
           emailAction(email, 'Pro') +
           emailAction(personalEmail, 'Personal') +
           linkedinAction +
           xAction +
+          (c.photo_path ? '' : '<button type="button" class="contact-act contact-act-photo" onclick="window._scrapePhoto(\\'' + _escHtml(c.id) + '\\',\\'' + _escHtml(linkedinUrl) + '\\');event.stopPropagation()" title="Scrape photo from LinkedIn">📸 Photo</button>') +
         '</div>' +
       '</div>';
     }).join('');
@@ -28417,6 +28713,67 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     var moreBtn = document.getElementById('contacts-directory-more');
     if (moreBtn) moreBtn.style.display = (slice.length < filtered.length) ? 'block' : 'none';
   }
+  // 2026-05-19 — rich-card UX helpers
+  window._focusContactById = function (id) {
+    // Search the modal for the contact card with this id and scroll to it,
+    // flash-highlight briefly. If not in current paged slice, search the
+    // full window._CONTACTS_DATA and pivot the modal filter so it appears.
+    var el = document.getElementById('contact-card-' + id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('contact-card-flash');
+      setTimeout(function () { el.classList.remove('contact-card-flash'); }, 1600);
+      return;
+    }
+    // Not in current view — pivot the search box to surface them
+    var match = (window._CONTACTS_DATA || []).find(function (c) { return c.id === id; });
+    if (!match) return;
+    var search = document.getElementById('contacts-directory-search');
+    if (search) {
+      search.value = match.name;
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+      setTimeout(function () { window._focusContactById(id); }, 80);
+    }
+  };
+  window._enrichContactNow = function (id) {
+    // POST to refresh-master orchestrator's manual-trigger endpoint with
+    // priority=user-triggered so it jumps the queue. Cost ~$0.50 per
+    // contact. Server returns a job id; the card flashes "queued" + the
+    // dashboard will re-render with the enriched fields on next rebuild
+    // (which fires automatically after the refresh-master cache write).
+    if (!confirm('Queue this contact for LLM enrichment (~$0.50)?\\n\\nFills in: engagement topics, outreach positioning, inferred relationship context. Result lands on next dashboard rebuild after the refresh-master tick fires (within minutes).')) return;
+    fetch('/api/refresh-cache', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cache: 'contact_enrichment', key: id, priority: 'user-triggered' }),
+    }).then(function (r) {
+      if (r.ok) {
+        var card = document.getElementById('contact-card-' + id);
+        if (card) {
+          var pending = card.querySelector('.contact-card-enrich-pending');
+          if (pending) pending.innerHTML = '<span class="muted-text">✓ Queued for next refresh-master tick — result lands within ~10 min.</span>';
+        }
+      } else {
+        alert('Could not queue enrichment. Check dashboard-server logs for /api/refresh-cache.');
+      }
+    }).catch(function (e) { alert('Network error: ' + e.message); });
+  };
+  window._scrapePhoto = function (id, linkedinUrl) {
+    if (!linkedinUrl) { alert('No LinkedIn URL on file for this contact — cannot scrape photo.'); return; }
+    fetch('/api/scrape-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id, linkedin_url: linkedinUrl }),
+    }).then(function (r) {
+      if (r.ok) {
+        var card = document.getElementById('contact-card-' + id);
+        var btn = card && card.querySelector('.contact-act-photo');
+        if (btn) btn.textContent = '✓ Queued';
+      } else {
+        alert('Could not queue photo scrape. Check dashboard-server logs.');
+      }
+    }).catch(function (e) { alert('Network error: ' + e.message); });
+  };
   window._contactsEmailClick = function (btn, addr, url) {
     // Reveal the address inline on first click, open Gmail on second.
     if (!btn.dataset.revealed) {
