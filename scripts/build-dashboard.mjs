@@ -18976,6 +18976,14 @@ async function toggleStatPanel(key) {
   }
 
   panel.innerHTML = renderStatPanel(key, data);
+  // BRAVO 2026-05-19 (Phase A.10 / AAA-3): retrofit the universal table baseline
+  // onto every freshly-rendered table inside the stat-panel — gives Recent Evals
+  // (and bucket-modal tables that use buildTable()) col-resize handles + title=
+  // tooltips + double-click expand for parity with Apply-Now. Mirrors the same
+  // pattern at :19899 (batch status modal) and :20107 (process-all modal).
+  if (typeof window.applyUniversalTableBaseline === 'function') {
+    try { window.applyUniversalTableBaseline({ root: panel }); } catch (_) {}
+  }
 }
 
 function esc(s) {
@@ -19113,6 +19121,10 @@ function rowActions(r) {
 
 function buildTable(rows, panelId) {
   if (!rows || !rows.length) return '<p style="color:#57606a;font-size:13px;margin:0">No items.</p>';
+  // BRAVO 2026-05-19 (Phase A.10): scope tbody id per-panel so multiple
+  // buildTable() invocations on the same page (Recent Evals + bucket modals)
+  // each get unique tbody ids that sortTable() can target.
+  const tbodyId = 'stat-panel-tbody-' + esc(String(panelId || 'unknown'));
   const trows = rows.map((r, i) => {
     const slug = (r.reportPath || r.report || '').replace(/^reports\\//,'');
     const archetypeFull = r.reportSummary?.archetype || r.archetype || '';
@@ -19126,10 +19138,12 @@ function buildTable(rows, panelId) {
     const url = r.reportSummary?.url || '';
     const rec = r.reportSummary?.recommendation || '';
     const colTag = colBadge(comp, location);
+    // BRAVO 2026-05-19 (Phase A.10 / AAA-4): title= hover-reveal on company + role cells
+    // so narrow columns still expose full text. Matches Apply-Now :3093-3094.
     return \`<tr class="row" onclick="toggleDetail('sp-\${panelId}-\${i}')">
       <td>\${scoreBadge(r.score)}</td>
-      <td><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag" tabindex="0" role="button" data-tooltip="\${esc(tierTooltipJS(archetype))}" aria-label="Tier \${esc(archetype)}: \${esc(tierTooltipJS(archetype))}" onclick="event.stopPropagation();openTierLegend('\${esc(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('\${esc(archetype)}')}">\${esc(archetype)}</span>\` : ''}\${sub ? \`<span class="tier-tag tier-tag-sub">\${esc(sub)}</span>\` : ''}</td>
-      <td class="role-cell">\${esc(r.role||'')}</td>
+      <td class="company-cell" title="\${esc(r.company||'')}"><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag" tabindex="0" role="button" data-tooltip="\${esc(tierTooltipJS(archetype))}" aria-label="Tier \${esc(archetype)}: \${esc(tierTooltipJS(archetype))}" onclick="event.stopPropagation();openTierLegend('\${esc(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('\${esc(archetype)}')}">\${esc(archetype)}</span>\` : ''}\${sub ? \`<span class="tier-tag tier-tag-sub">\${esc(sub)}</span>\` : ''}</td>
+      <td class="role-cell" title="\${esc(r.role||'')}" data-fulltext="\${esc(r.role||'')}">\${esc(r.role||'')}</td>
       <td>\${statusBadge(r.status, r.num)}</td>
       <td class="muted-text">\${esc(r.date||'')}</td>
       <td class="muted-text">\${evalAge(r.date||'')}</td>
@@ -19149,11 +19163,21 @@ function buildTable(rows, panelId) {
     </tr>\`;
   }).join('');
 
-  return \`<div style="overflow-x:auto"><table>
+  // BRAVO 2026-05-19 (Phase A.10 / AAA-1+2): sortable + aria-sort + sort-indicator
+  // on every data column. Eval Date defaults to descending (newest-first matches
+  // the server-side pre-sort). Age defaults to ascending (smallest = freshest).
+  // Reuses the legacy sortTable() path at :18454+ (non-all-tbody branch).
+  return \`<div class="table-scroll"><table>
     <thead><tr>
-      <th>Score</th><th>Company</th><th>Role</th><th>Status</th><th>Eval Date</th><th>Age</th><th>Action</th>
+      <th class="sortable" aria-sort="none" data-col-key="score" data-col-type="numeric" onclick="sortTable('\${tbodyId}', 0, 'num', this, event)">Score<span class="sort-indicator" aria-hidden="true">↕</span></th>
+      <th class="sortable" aria-sort="none" data-col-key="company" data-col-type="string" onclick="sortTable('\${tbodyId}', 1, 'str', this, event)">Company<span class="sort-indicator" aria-hidden="true">↕</span></th>
+      <th class="sortable" aria-sort="none" data-col-key="role" data-col-type="string" onclick="sortTable('\${tbodyId}', 2, 'str', this, event)">Role<span class="sort-indicator" aria-hidden="true">↕</span></th>
+      <th class="sortable" aria-sort="none" data-col-key="status" data-col-type="status" onclick="sortTable('\${tbodyId}', 3, 'status', this, event)">Status<span class="sort-indicator" aria-hidden="true">↕</span></th>
+      <th class="sortable" aria-sort="descending" data-col-key="evalDate" data-col-type="date" onclick="sortTable('\${tbodyId}', 4, 'date', this, event)">Eval Date<span class="sort-indicator" aria-hidden="true">↕</span></th>
+      <th class="sortable" aria-sort="none" data-col-key="age" data-col-type="numeric" data-default-dir="asc" onclick="sortTable('\${tbodyId}', 5, 'num', this, event)">Age<span class="sort-indicator" aria-hidden="true">↕</span></th>
+      <th>Action</th>
     </tr></thead>
-    <tbody>\${trows}</tbody>
+    <tbody id="\${tbodyId}">\${trows}</tbody>
   </table></div>\`;
 }
 
