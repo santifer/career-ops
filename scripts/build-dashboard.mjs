@@ -20180,13 +20180,41 @@ function _renderPerCompanyPreview(pCmp) {
     +       '<tbody>' + rows + '</tbody>'
     +     '</table>'
     +   '</div>'
+    // 2026-05-19 (Mitchell feedback — cohesion fix #2): the footer summary
+    // used to show only the per-company drilldown subtotal ($15 = apply-pack
+    // pregen on 10 companies), labeled "Scoped cost (selected rows)". That
+    // hid the $63.68 full-drain cost the user was actually committing to. Now
+    // we surface BOTH: items processed (187 = 15 + 172), companies in drilldown
+    // (10), full drain cost ($63.68), with the $15 subtotal labeled as the
+    // per-company sub-line so the relationship is explicit.
     +   '<div class="pcp-summary-grid">'
-    +     '<span class="pcp-summary-label">Scoped cost (selected rows)</span>'
-    +     '<span class="pcp-summary-val" id="pcp-scoped-cost">$' + (pCmp.total_cost_estimate_usd || 0).toFixed(2) + '</span>'
-    +     '<span class="pcp-summary-label">Selected companies</span>'
+    +     '<span class="pcp-summary-label">Pipeline items processed</span>'
+    +     '<span class="pcp-summary-val" id="pcp-scoped-items">' + _scopedItemsLabel(pCmp) + '</span>'
+    +     '<span class="pcp-summary-label">Companies in per-company drilldown</span>'
     +     '<span class="pcp-summary-val" id="pcp-scoped-count">' + pCmp.actionable_count + '</span>'
+    +     '<span class="pcp-summary-label">Full drain cost (this is what you pay)</span>'
+    +     '<span class="pcp-summary-val" id="pcp-scoped-cost">$' + _scopedFullDrainCost(pCmp) + '</span>'
+    +     '<span class="pcp-summary-label" style="opacity:0.55;font-size:11px">↳ per-company drilldown subtotal (subset of full drain)</span>'
+    +     '<span class="pcp-summary-val" id="pcp-scoped-percompany" style="opacity:0.55;font-size:11px">$' + (pCmp.total_cost_estimate_usd || 0).toFixed(2) + '</span>'
     +   '</div>'
     + '</div>';
+}
+
+// Helpers for the footer summary — pull live counts off the global preview so
+// the footer reconciles with the Phase A headline ("187 items + 10 companies").
+function _scopedItemsLabel(pCmp) {
+  const p = _pipelinePreview || {};
+  const pending = (p.pending_pipeline != null) ? p.pending_pipeline : 0;
+  const queued = (p.queued_for_batch != null) ? p.queued_for_batch : 0;
+  const total = pending + queued;
+  if (total === 0) return '—';
+  if (queued === 0) return String(pending);
+  return total + ' (' + pending + ' to triage + ' + queued + ' queued)';
+}
+function _scopedFullDrainCost(pCmp) {
+  const p = _pipelinePreview || {};
+  const cost = (p.process_all && p.process_all.total_cost_usd) || 0;
+  return cost.toFixed(2);
 }
 
 function _renderPerCompanyRow(r) {
@@ -20460,7 +20488,16 @@ function _advanceProcessAllToConfirm() {
   const cappedReason   = exceedsRun ? 'per-run' : (exceedsMonthly ? 'monthly' : '');
   const subtitle = document.getElementById('pipeline-modal-subtitle');
   const intentLabel = isFullDrain ? 'Full drain' : 'Partial run';
-  if (subtitle) subtitle.textContent = 'Step 2 of 2 — confirm. ' + intentLabel + ' · ' + selected.length + ' companies · $' + scopedCost.toFixed(2) + '.';
+  // 2026-05-19 (Mitchell feedback — cohesion fix #2): subtitle now shows
+  // item count alongside company count so Step 2 reconciles with Step 1's
+  // "187 items + 10 companies" headline.
+  const pendingCount = (_pipelinePreview.pending_pipeline != null) ? _pipelinePreview.pending_pipeline : 0;
+  const queuedCount = (_pipelinePreview.queued_for_batch != null) ? _pipelinePreview.queued_for_batch : 0;
+  const totalItemsOnDrain = pendingCount + queuedCount;
+  const itemsBreakdown = (isFullDrain && queuedCount > 0)
+    ? totalItemsOnDrain + ' items (' + pendingCount + ' + ' + queuedCount + ' queued)'
+    : (isFullDrain ? totalItemsOnDrain + ' items' : selected.length + ' companies');
+  if (subtitle) subtitle.textContent = 'Step 2 of 2 — confirm. ' + intentLabel + ' · ' + itemsBreakdown + ' · $' + scopedCost.toFixed(2) + '.';
   const body = document.getElementById('pipeline-modal-body');
   if (!body) return;
   const sampleNames = selected.slice(0, 6).map(c => _esc(c.company)).join(', ');
@@ -20471,11 +20508,18 @@ function _advanceProcessAllToConfirm() {
     ? '<div style="font-size:11px;opacity:0.55;margin-top:4px;text-align:right">+ $' + scopedDetection.toFixed(2) + ' potential AI-detection (post-publish, if ' + optInPct + '% opt in to Build pack)</div>'
     : '';
   // Drain-assurance / partial warning on Phase B too.
+  // 2026-05-19 (Mitchell feedback — cohesion fix #2): assurance + headline
+  // now name the 187 items the pipeline actually drains, not just the 15
+  // pipeline.md unchecked. queuedCount > 0 → spell out the breakdown.
   const drainConfirm = isFullDrain
-    ? '<div style="font-size:12px;color:#10b981;margin-top:8px;font-weight:500">✓ Pipeline.md (' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ') will drain to 0 after this run</div>'
-    : '<div style="font-size:12px;color:#f59e0b;margin-top:8px;font-weight:500">⚠ Partial run — ' + (availableRows.length - selected.length) + ' compan' + ((availableRows.length - selected.length) === 1 ? 'y' : 'ies') + ' deferred · pipeline.md will NOT fully drain</div>';
+    ? '<div style="font-size:12px;color:#10b981;margin-top:8px;font-weight:500">✓ Pipeline drains to 0 after this run · ' + totalItemsOnDrain + ' total'
+      + (queuedCount > 0 ? ' (' + pendingCount + ' to triage + ' + queuedCount + ' already queued)' : '')
+      + ' · ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies') + ' fully processed</div>'
+    : '<div style="font-size:12px;color:#f59e0b;margin-top:8px;font-weight:500">⚠ Partial run — ' + (availableRows.length - selected.length) + ' compan' + ((availableRows.length - selected.length) === 1 ? 'y' : 'ies') + ' deferred · pipeline will NOT fully drain</div>';
   const headlineLabel = isFullDrain
-    ? 'Full pipeline drain (' + selected.length + ' companies)'
+    ? 'Full pipeline drain · ' + totalItemsOnDrain + ' items'
+      + (queuedCount > 0 ? ' <span style="font-size:11px;opacity:0.55;font-weight:400">(' + pendingCount + ' + ' + queuedCount + ' queued)</span>' : '')
+      + ' + ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies')
     : 'Scoped run (' + selected.length + ' of ' + availableRows.length + ' companies)';
   body.innerHTML = ''
     + '<div class="pipeline-modal-section">'
@@ -20518,7 +20562,12 @@ function _advanceProcessAllToConfirm() {
     + '</label>';
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   if (confirmBtn) {
-    confirmBtn.textContent = 'Process ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies');
+    // 2026-05-19 (Mitchell feedback — cohesion fix #2): button label now
+    // names items processed on full drain (matches headline), not company
+    // count which under-represented the actual scope.
+    confirmBtn.textContent = isFullDrain
+      ? 'Process ' + totalItemsOnDrain + ' item' + (totalItemsOnDrain === 1 ? '' : 's') + ' · $' + scopedCost.toFixed(2)
+      : 'Process ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies') + ' · $' + scopedCost.toFixed(2);
     confirmBtn.className = cappedReason ? 'pipeline-modal-btn pipeline-modal-btn-nuclear' : 'pipeline-modal-btn pipeline-modal-btn-primary';
     if (cappedReason) {
       confirmBtn.disabled = true;
