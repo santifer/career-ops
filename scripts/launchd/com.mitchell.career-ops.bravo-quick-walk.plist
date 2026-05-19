@@ -16,7 +16,8 @@
         <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
         <string>bravo-quick-walk</string>
         <string>biweekly-even</string>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <!-- node binary resolved by cron-run.sh (nvm default alias) — do NOT pin a versioned path here; breaks on nvm upgrade. -->
+        <string>node</string>
         <string>scripts/agents/dashboard-ux-auditor.mjs</string>
         <string>--quick-walk</string>
     </array>

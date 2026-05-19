@@ -7,9 +7,9 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
-        <string>/Users/mitchellwilliams/Documents/career-ops/dashboard-server.mjs</string>
-        <string>--port=3097</string>
+        <string>/bin/zsh</string>
+        <string>-lc</string>
+        <string>export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; exec node /Users/mitchellwilliams/Documents/career-ops/dashboard-server.mjs --port=3097</string>
     </array>
 
     <key>WorkingDirectory</key>

@@ -15,7 +15,7 @@
         <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
         <string>gamma-truth-audit</string>
         <string>always</string>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>node</string>
         <string>scripts/agents/data-truth-auditor.mjs</string>
         <string>--all</string>
     </array>

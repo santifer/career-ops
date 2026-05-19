@@ -7,8 +7,9 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
-        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/agents/buttons-smoke-test.mjs</string>
+        <string>/bin/zsh</string>
+        <string>-lc</string>
+        <string>export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"; nvm use default >/dev/null; exec node /Users/mitchellwilliams/Documents/career-ops/scripts/agents/buttons-smoke-test.mjs</string>
     </array>
 
     <key>WorkingDirectory</key>

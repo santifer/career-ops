@@ -7,9 +7,16 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
-    <string>/Users/mitchellwilliams/Documents/career-ops/community-scan.mjs</string>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>exec "$NVM_DIR/nvm-exec" node /Users/mitchellwilliams/Documents/career-ops/community-scan.mjs</string>
   </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NVM_DIR</key>
+    <string>/Users/mitchellwilliams/.nvm</string>
+  </dict>
 
   <key>WorkingDirectory</key>
   <string>/Users/mitchellwilliams/Documents/career-ops</string>

@@ -15,7 +15,7 @@
         <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
         <string>delta-ats-watch</string>
         <string>always</string>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>node</string>
         <string>scripts/agents/ai-detection-hardener.mjs</string>
         <string>--ats-watch</string>
     </array>
