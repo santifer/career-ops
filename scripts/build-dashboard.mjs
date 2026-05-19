@@ -11068,7 +11068,7 @@ async function build() {
       </div>
       <div id="saved-view-prompt" class="saved-view-prompt" hidden>
         <input type="text" id="saved-view-name" maxlength="30"
-          placeholder="View name (max 30 chars, letters/numbers/spaces)"
+          placeholder="Name this view (e.g. Anthropic high-comp)"
           aria-label="Saved view name"
           onkeydown="if(event.key==='Enter'){event.preventDefault();confirmSaveView();}else if(event.key==='Escape'){event.preventDefault();cancelSaveView();}">
         <button type="button" class="saved-view-btn primary" onclick="confirmSaveView()">Save</button>
