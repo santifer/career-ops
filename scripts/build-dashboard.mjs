@@ -20867,7 +20867,22 @@ function _updatePipelineToast(job, logTail) {
     fillEl.style.background = 'var(--red-fg, #dc2626)';
   } else {
     titleEl.textContent = (job.type === 'process-all' ? '🚀 Processing all…' : '⚡ Running batch…');
-    phaseEl.textContent = info.label + (logTail && logTail.length ? ' · ' + (logTail[logTail.length - 1] || '').slice(0, 80) : '');
+    // 2026-05-19 Mitchell screenshot fix — batch-runner polls Anthropic
+    // every 60s and writes the progress line with CR (carriage return) so
+    // the terminal overwrites. In log files CR accumulates, so the last
+    // log "line" ends up as "0/107 complete (in_progress) ... 0/107 com…".
+    // Split on CR and take only the most-recent segment so the toast shows
+    // one clean progress message.
+    // NB: the outer build template unescapes backslash sequences, so we use
+    // String.fromCharCode(13) instead of literal CR escape (same trick we
+    // used for NL in confirmTier5Run).
+    const CR = String.fromCharCode(13);
+    let lastLine = (logTail && logTail.length) ? (logTail[logTail.length - 1] || '') : '';
+    if (lastLine.indexOf(CR) >= 0) {
+      const segments = lastLine.split(CR).map(s => s.trim()).filter(Boolean);
+      lastLine = segments[segments.length - 1] || lastLine;
+    }
+    phaseEl.textContent = info.label + (lastLine ? ' · ' + lastLine.slice(0, 80) : '');
     fillEl.style.width = info.pct + '%';
   }
 }
