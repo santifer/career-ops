@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.contact-enrichment-audit</string>
+
+    <!-- Phase A.9 Day-30 audit. Fires on the pause_after_date computed at run
+         start of Phase A.6 (2026-06-18 from a 2026-05-19 launch). When this
+         fires, contact_enrichment is auto-paused by refresh-master and the
+         audit synthesizes weight-adjustment recommendations + a
+         NEEDS_HUMAN list for Mitchell. Edit pause_after_date in
+         config/contact-priority-weights.yml + update this plist's StartCalendarInterval
+         when Mitchell re-enables enrichment for a new 30-day cycle. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/maintenance/contact-enrichment-month-1-audit.mjs</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- 2026-06-18 09:00 PT — Day-30 from 2026-05-19 launch. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Year</key>
+        <integer>2026</integer>
+        <key>Month</key>
+        <integer>6</integer>
+        <key>Day</key>
+        <integer>18</integer>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/contact-enrichment-audit.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/contact-enrichment-audit.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>
