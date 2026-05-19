@@ -19827,12 +19827,36 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   // Phase A: aggregate cost preview + per-company table with checkboxes
   // and per-row actions. Mitchell can uncheck rows to scope the run before
   // advancing to Phase B (confirm + send-email + force-override).
+  //
+  // β Run-Batch eval 2026-05-19: Hero number changed from
+  //   pAgg.process_all.tier5_estimate.total_cost_usd ($210.60 in this snapshot)
+  // to the scoped-row sum because the prior layout had a confusing mismatch:
+  // headline read $210.60 (108 companies, hypothetical Tier-5 upgrade) while
+  // the bottom of the same modal showed "Scoped cost (selected rows) $15.00".
+  // Mitchell would commit to a $15 run wondering "where does the $210 come
+  // from?" The Tier-5 estimate is still surfaced as a sub-line so the upgrade-
+  // planning use case (the original intent per session note 2026-05-18) is
+  // preserved, but the primary signal is now the cost the user is actually
+  // about to spend.
+  const tier5 = pAgg.process_all.tier5_estimate || {};
+  const realisticTotal = pAgg.process_all.total_cost_usd || 0;
+  const scopedRows = (pCmp && Array.isArray(pCmp.companies))
+    ? pCmp.companies.filter(c => !c.excluded)
+    : [];
+  const scopedSum = scopedRows.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  const tier5Line = (tier5.total_cost_usd != null)
+    ? '<span>Tier-5 estimate · ' + (tier5.unique_companies || 0) + ' companies: $' + tier5.total_cost_usd.toFixed(2) + '</span>'
+    : '';
   const headline = ''
     + '<div class="pipeline-modal-section">'
     +   '<div class="pcp-phase-pill">Step 1 of 2 — preview</div>'
-    +   '<div class="pipeline-stat-grid">'
-    +     '<span class="pipeline-stat-label">Aggregate Tier-5 estimate (' + pAgg.process_all.tier5_estimate.unique_companies + ' unique companies, ' + pAgg.process_all.triage_count + ' pipeline items)</span>'
-    +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + pAgg.process_all.tier5_estimate.total_cost_usd.toFixed(2) + '</span>'
+    +   '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">'
+    +     '<h4 style="margin:0">Scoped run · ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + '</h4>'
+    +     '<span class="pipeline-stat-value pipeline-cost-headline" id="pcp-headline-cost">$' + scopedSum.toFixed(2) + '</span>'
+    +   '</div>'
+    +   '<div style="font-size:11px;opacity:0.6;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">'
+    +     '<span>Realistic full drain · ' + (pAgg.process_all.triage_count || 0) + ' pipeline items: <strong>$' + realisticTotal.toFixed(2) + '</strong></span>'
+    +     tier5Line
     +   '</div>'
     + '</div>';
   return headline + _renderPerCompanyPreview(pCmp);
@@ -19993,6 +20017,16 @@ function _pcpUpdateScopedCost() {
   const countEl = document.getElementById('pcp-scoped-count');
   if (costEl)  costEl.textContent  = '$' + cost.toFixed(2);
   if (countEl) countEl.textContent = String(selected.length);
+  // β Run-Batch eval 2026-05-19: also update the new top-of-modal scoped headline
+  // so toggling checkboxes immediately reconciles the hero number with the
+  // bottom-of-modal summary instead of staying stuck on the open-time value.
+  const heroEl = document.getElementById('pcp-headline-cost');
+  if (heroEl) heroEl.textContent = '$' + cost.toFixed(2);
+  const heroSection = heroEl && heroEl.closest('.pipeline-modal-section');
+  const heroLabel = heroSection && heroSection.querySelector('h4');
+  if (heroLabel) {
+    heroLabel.textContent = 'Scoped run · ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies');
+  }
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   if (confirmBtn && _pipelinePhase === 'preview') {
     confirmBtn.disabled = selected.length === 0;
