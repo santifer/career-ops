@@ -211,8 +211,12 @@ async function phasePolish() {
   }
   let apq;
   try { apq = JSON.parse(readFileSync(apqPath, 'utf-8')); } catch (_) { return { ok: true }; }
-  const topN     = parseInt(process.env.POLISH_TOP_N_PER_RUN || '5', 10);
-  const costCap  = process.env.POLISH_PER_PACK_COST_CAP_USD || '120';
+  // Clamp to sane bounds — topN: 1-20 (above 20 is almost certainly a typo since the
+  // cost would explode), costCap: $10-$500 (matches polish agent's spec range).
+  const rawTopN  = parseInt(process.env.POLISH_TOP_N_PER_RUN || '5', 10);
+  const topN     = Number.isFinite(rawTopN) && rawTopN > 0 ? Math.min(rawTopN, 20) : 5;
+  const rawCap   = parseFloat(process.env.POLISH_PER_PACK_COST_CAP_USD || '120');
+  const costCap  = String(Number.isFinite(rawCap) && rawCap > 0 ? Math.min(Math.max(rawCap, 10), 500) : 120);
   // Polish applies to Evaluated (pre-application materials), Applied (waiting-for-recruiter
   // tightening), and Interview (closing-stage materials). All three states ship downstream
   // artifacts that benefit from the loop.
@@ -222,6 +226,12 @@ async function phasePolish() {
   let polished = 0;
   let failed = 0;
   let skipped = 0;
+  // Surface running totals at top-level (dashboard SSE bar reads polish_progress.*
+  // since phases.polish only commits at the end of main()). Helper makes sure every
+  // path through the loop — skipped, polished, failed — emits live progress.
+  const writeProgress = () => updateJob({
+    polish_progress: { polished, failed, skipped, total: ranked.length, cap_per_pack_usd: Number(costCap) },
+  });
   for (const r of ranked) {
     const slug = `${String(r.num).padStart(3, '0')}-${String(r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${String(r.role || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
     const polishSummary = join(ROOT, 'data', 'apply-packs', slug, 'polish-summary.json');
@@ -230,6 +240,7 @@ async function phasePolish() {
       if (ageMs < 3 * 24 * 60 * 60 * 1000) {
         log(`  ↪ row ${r.num} polish-summary fresh (<3d) — skipping`);
         skipped++;
+        writeProgress();
         continue;
       }
     }
@@ -249,9 +260,7 @@ async function phasePolish() {
       failed++;
       log(`  ⚠ row ${r.num} polish failed (exit ${code}) — continuing`);
     }
-    // Surface running totals at top-level (dashboard SSE bar reads polish_progress.*
-    // since phases.polish only commits at the end of main()).
-    updateJob({ polish_progress: { polished, failed, skipped, total: ranked.length, cap_per_pack_usd: Number(costCap) } });
+    writeProgress();
   }
   log(`  polish stage done: ${polished} polished, ${failed} failed, ${skipped} skipped (cap=$${costCap}/pack, topN=${topN})`);
   return { ok: true, polished, failed, skipped, cost_cap_per_pack_usd: Number(costCap), top_n: topN };
