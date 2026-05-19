@@ -321,13 +321,32 @@ async function fetchJD(url) {
 }
 
 // ── Triage-advance reader ─────────────────────────────────────────
+// 2026-05-19 (Mitchell duplicate-bloat fix) — defensive dedup on load.
+// Historically triage.mjs would append the same URL multiple times across
+// Process All runs (each run added 15+ rows even when those URLs were already
+// queued). Some URLs ended up appearing 5× in the queue. This reader collapses
+// duplicates by URL on load — keeping the highest-scored row per URL so the
+// dedup is non-destructive (downstream eval gets the best signal).
 function readAdvanceItems() {
   if (!existsSync(ADVANCE_FILE)) return [];
   const lines = readFileSync(ADVANCE_FILE, 'utf8').split('\n').filter(l => l.trim() && !l.startsWith('url'));
-  return lines.map(l => {
+  const byUrl = new Map();
+  for (const l of lines) {
     const [url, tier, score, archetype, reason] = l.split('\t');
-    return { url: url?.trim(), tier: parseInt(tier) || 1, score: parseFloat(score) || 0, archetype: archetype?.trim() || '?', reason: reason?.trim() || '' };
-  }).filter(i => i.url && i.url.startsWith('http'));
+    if (!url || !url.startsWith('http')) continue;
+    const item = {
+      url: url.trim(),
+      tier: parseInt(tier) || 1,
+      score: parseFloat(score) || 0,
+      archetype: (archetype || '?').trim(),
+      reason: (reason || '').trim(),
+    };
+    const prior = byUrl.get(item.url);
+    if (!prior || item.score > prior.score) {
+      byUrl.set(item.url, item);
+    }
+  }
+  return [...byUrl.values()];
 }
 
 // ── Build evaluation prompt for one item ─────────────────────────

@@ -204,9 +204,36 @@ function writeSkip(url, reason) {
   appendFileSync(SKIPS_TSV, line);
 }
 
-// Write ADVANCE entry for full-eval queue
+// In-memory dedup index — URLs already in ADVANCE_FILE at session start +
+// URLs appended during this triage session. Prevents the same URL from being
+// appended multiple times (the duplicate-bloat bug Mitchell hit 2026-05-19
+// where some URLs appeared 5× in the queue).
+const _advanceUrlIndex = new Set();
+let _advanceIndexLoaded = false;
+function _loadAdvanceIndex() {
+  if (_advanceIndexLoaded) return;
+  _advanceIndexLoaded = true;
+  if (!existsSync(ADVANCE_FILE)) return;
+  try {
+    const lines = readFileSync(ADVANCE_FILE, 'utf8').split('\n');
+    for (const line of lines) {
+      if (!line.trim() || line.startsWith('url\t')) continue;
+      const url = line.split('\t')[0];
+      if (url) _advanceUrlIndex.add(url);
+    }
+  } catch (e) {
+    // Soft-fail — if the file is unreadable we lose dedup but don't crash triage.
+    console.warn(`[triage] could not load advance-file dedup index: ${e.message}`);
+  }
+}
+
+// Write ADVANCE entry for full-eval queue. Skips silently if URL is already
+// in the queue (prevents duplicate-bloat).
 function writeAdvance(url, tier, score, archetype, reason) {
   if (DRY_RUN) return;
+  _loadAdvanceIndex();
+  if (_advanceUrlIndex.has(url)) return;  // dedup — already queued
+  _advanceUrlIndex.add(url);
   const header = !existsSync(ADVANCE_FILE) ? 'url\ttier\tscore\tarchetype\treason\n' : '';
   appendFileSync(ADVANCE_FILE, header + [url, tier, score, archetype, reason].join('\t') + '\n');
 }
