@@ -18772,13 +18772,18 @@ function _renderBatchData(data) {
       ];
       stagesEl.innerHTML = stageList.filter(function(s) { return ph.stages[s.key]; }).map(function(s) {
         var st    = ph.stages[s.key];
-        var ttl   = st.total || 0;
-        var done  = st.completed || 0;
-        var pct   = st.done ? 100 : (ttl > 0 ? Math.round((done / ttl) * 100) : 0);
-        var barClr = st.done ? '#2ea043' : st.active ? '#1f6feb' : 'rgba(255,255,255,0.12)';
-        var txtClr = st.done ? '#2ea043' : st.active ? '#58a6ff' : 'rgba(255,255,255,0.3)';
+        // γ GAMMA 2026-05-19: count_unknown ('✓' string) is the truth-fix for
+        // the publish-stage-shows-0/0 misleading state. Treat it as done.
+        var countUnknown = st.count_unknown;
+        var ttl   = typeof st.total === 'number' ? st.total : 0;
+        var done  = typeof st.completed === 'number' ? st.completed : 0;
+        var pct   = (st.done || countUnknown) ? 100 : (ttl > 0 ? Math.round((done / ttl) * 100) : 0);
+        var barClr = (st.done || countUnknown) ? '#2ea043' : st.active ? '#1f6feb' : 'rgba(255,255,255,0.12)';
+        var txtClr = (st.done || countUnknown) ? '#2ea043' : st.active ? '#58a6ff' : 'rgba(255,255,255,0.3)';
         var cnt;
-        if (st.done) {
+        if (countUnknown) {
+          cnt = '✓';  // phase done, exact count not persisted by old runs
+        } else if (st.done) {
           cnt = ttl > 0 ? (ttl + ' / ' + ttl) : '✓';
         } else if (st.active) {
           cnt = ttl > 0 ? (done + ' / ' + ttl) : '—';
@@ -18794,8 +18799,15 @@ function _renderBatchData(data) {
           + '<span style="color:' + txtClr + '">' + cnt + '</span></div>';
       }).join('');
       var phaseLbl = ph.current_phase || 'running';
-      document.getElementById('sidebar-batch-title').textContent =
-        '⚡ ' + phaseLbl.charAt(0).toUpperCase() + phaseLbl.slice(1) + '…';
+      // γ GAMMA: append staleness chip so user sees a 6h-old failed job is NOT live.
+      var staleChip = '';
+      if (ph.staleness_seconds != null && ph.staleness_seconds > 300) {
+        var mins = Math.round(ph.staleness_seconds / 60);
+        staleChip = ' <span style="color:#d29922;font-size:10px;font-weight:400">'
+          + '· last update ' + (mins < 60 ? (mins + 'm') : (Math.round(mins / 60) + 'h')) + ' ago</span>';
+      }
+      document.getElementById('sidebar-batch-title').innerHTML =
+        '⚡ ' + phaseLbl.charAt(0).toUpperCase() + phaseLbl.slice(1) + (ph.status === 'running' ? '…' : '') + staleChip;
       document.getElementById('sidebar-batch-stats').innerHTML = '';
     } else {
       // ── Legacy single-bar mode ──────────────────────────────────────────

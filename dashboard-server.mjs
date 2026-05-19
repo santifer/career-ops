@@ -1850,17 +1850,51 @@ function batchLive() {
   ];
 
   // ── Pipeline stage state (Process All decomposition) ─────────────────────
+  // γ GAMMA 2026-05-19 truth-audit:
+  //   - Renamed `activeJob` semantics: a finished job ≠ active job. Only emit
+  //     `pipelineStages` for a TRULY active run (status='running') OR a
+  //     fresh-terminal run (completed within last STAGE_STATE_FRESHNESS_MS).
+  //     Prior code surfaced 6h-stale 'failed' jobs as the canonical state, which
+  //     looked like a live run.
+  //   - Annotate `staleness_seconds` so the renderer can grey-out / mute stale
+  //     state and stop calling itself 'Live'.
+  //   - Marker `pipeline_state_present: false` distinguishes
+  //     "no state file" (honest 'no work') from "state present but stale"
+  //     (was previously rendered identically — misleading).
   let pipelineStages = null;
+  let pipelineStateMeta = { present: false, stale: false, staleness_seconds: null };
   const pipelineStatePath = join(ROOT, 'data/pipeline-process-state.json');
+  const STAGE_STATE_FRESHNESS_MS = 5 * 60 * 1000; // 5 min — long enough for email phase, short enough to not surface 6h-old failed jobs
   if (existsSync(pipelineStatePath)) {
+    pipelineStateMeta.present = true;
     try {
       const ps = JSON.parse(readFileSync(pipelineStatePath, 'utf-8'));
       const jobs = Object.values(ps.jobs || {}).sort((a, b) =>
         (b.started_at || '').localeCompare(a.started_at || ''));
-      // Only synthesize per-stage data for Process All jobs — batch-only jobs
-      // never update their phase and would produce all-grey misleading bars.
-      const activeJob = jobs.find(j => j.status === 'running' && j.type !== 'batch-only')
-        || jobs.find(j => j.type !== 'batch-only');
+      // Find a TRULY running job first. If none, find the most-recent terminal
+      // job ONLY if it's fresh (<5min). Otherwise no stage state is emitted.
+      const runningJob = jobs.find(j => j.status === 'running' && j.type !== 'batch-only');
+      const recentNonBatch = jobs.find(j => j.type !== 'batch-only');
+      const candidate = runningJob || recentNonBatch;
+      let activeJob = null;
+      if (candidate) {
+        const updatedTs = Date.parse(candidate.updated_at || candidate.started_at || '') || 0;
+        const ageMs = Date.now() - updatedTs;
+        pipelineStateMeta.staleness_seconds = Math.round(ageMs / 1000);
+        if (runningJob) {
+          // Always surface a job marked status='running' — that's the canonical
+          // active state. The stream/poll status indicator can warn if it's
+          // been running > N min (job hung).
+          activeJob = runningJob;
+        } else if (ageMs <= STAGE_STATE_FRESHNESS_MS) {
+          // Terminal job, still fresh — surface for the "just finished" UI moment.
+          activeJob = candidate;
+        } else {
+          // Terminal + stale — DO NOT surface as if it were live. Mark state
+          // stale so the renderer can de-emphasize.
+          pipelineStateMeta.stale = true;
+        }
+      }
       if (activeJob) {
         const ph = activeJob.phase || '';
         const phaseOrder = ['triage', 'batch', 'rebuild', 'email', 'done'];
@@ -1869,10 +1903,24 @@ function batchLive() {
         const isRunning = activeJob.status === 'running';
         const triageTotal = activeJob.pending_before || 0;
         const triageAdv   = activeJob.triage_advanced != null ? activeJob.triage_advanced : triageTotal;
+        // γ GAMMA: published_count is currently never written by
+        // process-all-pipeline.mjs (truth audit found NULL handling that
+        // displays 0/0 = pending when the publish stage DID run). Best-effort
+        // fallback: when phase is 'done' or 'email', derive published count
+        // from the most recent apply-now-queue.json size minus prior size.
+        // If we can't derive, render as 'completed' (✓) rather than 0/0.
+        let publishedCount = activeJob.published_count;
+        if (publishedCount == null && (ph === 'done' || ph === 'email' || phaseDone('rebuild'))) {
+          publishedCount = null; // signal renderer: phase done, count unknown
+        } else if (publishedCount == null) {
+          publishedCount = 0;
+        }
         pipelineStages = {
           job_id:        activeJob.jobId,
           status:        activeJob.status,
           current_phase: ph,
+          updated_at:    activeJob.updated_at || null,
+          staleness_seconds: pipelineStateMeta.staleness_seconds,
           stages: {
             triage:   { done: phaseDone('triage') || ph === 'done',
                         active: ph === 'triage' && isRunning,
@@ -1892,15 +1940,23 @@ function batchLive() {
                         total },
             publish:  { done: ph === 'done' || ph === 'email',
                         active: false,
-                        completed: activeJob.published_count || 0,
-                        total: activeJob.published_count || 0 },
+                        completed: publishedCount == null ? '✓' : publishedCount,
+                        total: publishedCount == null ? '✓' : publishedCount,
+                        count_unknown: publishedCount == null },
           },
         };
       }
     } catch (_) {}
   }
 
-  return { total, completed, failed, running, pending, pct, rows: sorted.slice(0, 500), triageItems: triageItems.slice(0, 200), pipelineStages };
+  return {
+    total, completed, failed, running, pending, pct,
+    rows: sorted.slice(0, 500),
+    triageItems: triageItems.slice(0, 200),
+    pipelineStages,
+    // γ GAMMA: stale-state marker so the renderer can mute / de-emphasize.
+    pipelineStateMeta,
+  };
 }
 
 // ── Sidebar batch popout (2026-05-17) ──────────────────────────

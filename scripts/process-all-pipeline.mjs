@@ -325,15 +325,33 @@ async function main() {
 
   const pendingAfter = countPendingPipeline();
   const processed = Math.max(0, pendingBefore - pendingAfter);
+
+  // γ GAMMA 2026-05-19 truth-audit: persist published_count so the SSE
+  // batchLive stream renders the publish stage correctly. Before this fix the
+  // publish stage always showed `0/0` even when items were promoted. Derive
+  // from apply-now-queue.json (post-rebuild) by counting `Evaluated` entries
+  // with score ≥ THRESHOLD_FOR_PUBLISH (4.0).
+  let publishedCount = null;
+  try {
+    const apqPath = join(ROOT, 'data/apply-now-queue.json');
+    if (existsSync(apqPath)) {
+      const apq = JSON.parse(readFileSync(apqPath, 'utf-8'));
+      publishedCount = (apq.ranked || []).filter(r =>
+        r && (r.score >= 4.0 || parseFloat(r.score) >= 4.0)
+      ).length;
+    }
+  } catch (_) { /* leave null — renderer falls back to ✓ */ }
+
   updateJob({
-    status:          'completed',
-    finished_at:     new Date().toISOString(),
-    pending_after:   pendingAfter,
+    status:           'completed',
+    finished_at:      new Date().toISOString(),
+    pending_after:    pendingAfter,
     processed,
+    published_count:  publishedCount,
     phases,
-    phase:           'done',
+    phase:            'done',
   });
-  log(`✓ Done. Processed ${processed} items (${pendingBefore} → ${pendingAfter}).`);
+  log(`✓ Done. Processed ${processed} items (${pendingBefore} → ${pendingAfter}). Published: ${publishedCount == null ? 'unknown' : publishedCount}`);
 }
 
 main().catch(err => {
