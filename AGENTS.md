@@ -261,6 +261,28 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ---
 
+## UI-Change Verification -- MANDATORY (added 2026-05-19, hook-enforced)
+
+**Every code change that can affect a visible UI surface MUST be verified live via Chrome MCP before being claimed done.** Applies to every agent, every subagent spawned by orchestrators, every overnight haul instance, every persona. No exceptions.
+
+A PostToolUse hook in `.claude/settings.json` fires after every Edit / Write / MultiEdit on UI-affecting files (`build-dashboard.mjs`, `dashboard-server.mjs`, `dashboard/*`, `*.html`, `*.css`, render-time `lib/*.mjs`). The hook prints a reminder banner with the required verification sequence. The banner is NOT optional — action it.
+
+**Required sequence after editing any UI-affecting file:**
+1. `node scripts/build-dashboard.mjs`
+2. `launchctl kickstart -k gui/$(id -u)/com.mitchell.career-ops.dashboard-server`
+3. Chrome MCP: navigate to `https://dashboard.careers-ops.com/` (CF Access service token in `.env`) OR `https://staging-dashboard.careers-ops.com/` (no auth, same dashboard)
+4. Screenshot at **two widths minimum**: 1440×900 AND ≤900px to catch responsive regressions
+5. For table/layout CSS: also run `mcp__Claude_in_Chrome__javascript_tool` with `getBoundingClientRect()` + `getComputedStyle()` queries on the affected elements — DOM-level proof, not just declared CSS
+6. Only THEN commit and report
+
+**Agent report requirement:** every agent that ships a UI change MUST attach the Chrome MCP screenshot path(s) to its deliverable. Reports without screenshots are tagged NEEDS_HUMAN-AGAIN and re-queued.
+
+**Why this rule exists:** the 2026-05-19 role-column-collapse incident. Three consecutive CSS fixes "looked right" in source but produced 0-width columns / vertical character wrap / silently-broken widgets in actual render. Only the fourth fix — Chrome-MCP-verified first — was correct. The lesson cost real user trust.
+
+**Fallback if Chrome MCP is unavailable in headless / batch context:** `curl -s https://staging-dashboard.careers-ops.com/ | grep <expected>` at minimum, to confirm the served HTML contains the expected change. Document the fallback explicitly in the agent report; do NOT skip verification silently.
+
+---
+
 ## CI/CD and Quality
 
 - **GitHub Actions** run on every PR: `test-all.mjs` (63+ checks), auto-labeler (risk-based: 🔴 core-architecture, ⚠️ agent-behavior, 📄 docs), welcome bot for first-time contributors

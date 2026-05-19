@@ -12,6 +12,32 @@
 2. Verify changes by hitting the public URL, not localhost
 3. Handoff notes, PR descriptions, and commit messages must reference the public URL
 
+## UI-Change Verification — MANDATORY (added 2026-05-19, enforced via hook)
+
+**Every code change that can affect a visible UI surface MUST be verified live via Chrome MCP before being claimed done.** No exceptions. Applies to every Claude instance, every model, every version, every agent, every skill, every overnight haul subagent.
+
+**This rule is enforced by a PostToolUse hook in `.claude/settings.json`.** The hook prints a reminder banner after every Edit / Write / MultiEdit on UI-affecting files. Do NOT dismiss the banner — action it.
+
+Triggers (any one is enough):
+- Edits to `scripts/build-dashboard.mjs`, `dashboard-server.mjs`, anything under `dashboard/`, any `*.html` or `*.css` file
+- Edits to render-time code in `lib/*.mjs` that produces DOM
+- Build-script changes that produce visible output
+- Any "fix" responding to a user-reported visual issue
+
+Required verification steps after the edit, BEFORE claiming done or committing:
+1. `node scripts/build-dashboard.mjs` (or whatever build step applies)
+2. `launchctl kickstart -k gui/$(id -u)/com.mitchell.career-ops.dashboard-server`
+3. Open Chrome MCP, navigate to `https://dashboard.careers-ops.com/` (CF Access service token in `.env`) OR `https://staging-dashboard.careers-ops.com/` (no auth, same dashboard)
+4. Screenshot at **two widths minimum**: full (1440×900) AND narrow (≤900px) to catch responsive regressions
+5. If the change touched table/layout CSS, run `mcp__Claude_in_Chrome__javascript_tool` to inspect computed styles on affected elements — `getBoundingClientRect()` + `getComputedStyle()` proves the visible width/height, not just the declared CSS
+6. Only THEN commit and report done
+
+**The screenshot IS the proof.** "Looks correct in source" is not sufficient. The 2026-05-19 role-column-collapse incident: three CSS fixes shipped in a row, each "looked right" in source, each produced 0-width column / vertical character wrap / silently-broken widgets in actual render. Only the fourth attempt — verified via Chrome MCP first — was correct. The lesson cost real user trust.
+
+If Chrome MCP is unavailable in your context, say so explicitly + fall back to: `curl -s https://staging-dashboard.careers-ops.com/ | grep <expected pattern>` to at minimum confirm the served HTML contains the expected change. Do NOT skip verification silently.
+
+**For overnight autonomous runs:** each subagent's report MUST include the Chrome MCP screenshot path(s) for any UI change it shipped. Reports without screenshots are NEEDS_HUMAN-AGAIN.
+
 ## cv.md audit trail (audit Item M, 2026-05-18)
 
 `cv.md` is `.gitignore:2` — it is personal data that lives on disk only, NEVER tracked in git. The same applies to `data/applications.md`, `data/hm-intel/*.json`, `apply-pack/*`, and everything else listed in `.gitignore` for personal-data reasons.

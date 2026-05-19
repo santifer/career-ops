@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment_": "Project-scoped Claude Code settings for career-ops. Committed to main; applies to every Claude Code instance / agent / subagent operating in this repo. See CLAUDE.md and AGENTS.md for the policies behind these hooks.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/mitchellwilliams/Documents/career-ops/scripts/hooks/ui-edit-verify-reminder.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
