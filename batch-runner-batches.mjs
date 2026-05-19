@@ -30,7 +30,7 @@ import { fileURLToPath } from 'url';
 import { logBatchCost } from './scripts/cost-logger.mjs';
 import { SONNET } from './lib/models.mjs';
 import { readCached } from './lib/fetch-utils.mjs';
-import { guessCompany } from './lib/ats-utils.mjs';
+import { guessCompany, buildCompanyMatcher } from './lib/ats-utils.mjs';
 import { checkUrl } from './lib/http-liveness.mjs';
 import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
 
@@ -432,7 +432,25 @@ function saveState(state) {
 
 // ── PHASE: submit ─────────────────────────────────────────────────
 async function phaseSubmit(apiKey) {
-  const items = readAdvanceItems().slice(0, LIMIT).filter(i => TIERS.includes(i.tier));
+  // ── Company filter (--companies, optional) ────────────────────────
+  // Applied BEFORE the slice so a small scoped run isn't starved by LIMIT
+  // capping the unscoped portion of triage-advance.tsv. When active, an empty
+  // result set exits cleanly (no zero-row payload to Anthropic).
+  const companyMatcher = buildCompanyMatcher(ARGS.companies);
+  if (companyMatcher.isActive) console.log(`[companies-filter] scope: ${companyMatcher.describe()}`);
+
+  const rawItems = readAdvanceItems();
+  const scopedItems = companyMatcher.isActive
+    ? rawItems.filter(i => companyMatcher.matchesUrl(i.url))
+    : rawItems;
+  if (companyMatcher.isActive) {
+    console.log(`[companies-filter] advance.tsv: ${rawItems.length} → ${scopedItems.length} after company filter`);
+    if (scopedItems.length === 0) {
+      console.log('[companies-filter] no advance.tsv rows matched scope — batch is a no-op');
+      return;
+    }
+  }
+  const items = scopedItems.slice(0, LIMIT).filter(i => TIERS.includes(i.tier));
   if (items.length === 0) {
     console.log('No items in batch/triage-advance.tsv. Run triage.mjs first.');
     console.log('  node triage.mjs --liveness-only --concurrency=20 --limit=1000');

@@ -33,7 +33,7 @@ try {
 import { isCircuitOpen, withRetryBackoff, recordSuccess, recordFailure } from './lib/provider-client.mjs';
 import { HAIKU } from './lib/models.mjs';
 import { readCached, poolMap } from './lib/fetch-utils.mjs';
-import { guessCompany } from './lib/ats-utils.mjs';
+import { guessCompany, buildCompanyMatcher } from './lib/ats-utils.mjs';
 import { checkUrl } from './lib/http-liveness.mjs';
 import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
 
@@ -477,8 +477,27 @@ async function main() {
   // Sort freshest first so quota is spent on highest-probability-live items
   freshItems.sort((a, b) => a._age - b._age);
 
-  const items = freshItems.filter(i => TIERS.includes(i.tier)).slice(0, LIMIT);
-  console.log(`Found ${freshItems.filter(i => TIERS.includes(i.tier)).length} fresh items in tiers [${TIERS.join(',')}] (${staleUrls.length} expired, ${allItems.length} total pending)`);
+  // ── Company filter (--companies, optional) ─────────────────────
+  // Applied BEFORE the LIMIT slice so the quota / liveness / Haiku budget is
+  // never spent on filtered-out items. Quota counts only scored items (the
+  // increment lives in the SKIP/ADVANCE branch below), so filtered-out items
+  // are free in every sense.
+  const companyMatcher = buildCompanyMatcher(ARGS.companies);
+  if (companyMatcher.isActive) {
+    console.log(`[companies-filter] scope: ${companyMatcher.describe()}`);
+  }
+  const tierItems = freshItems.filter(i => TIERS.includes(i.tier));
+  const scopedItems = companyMatcher.isActive
+    ? tierItems.filter(i => companyMatcher.matchesUrl(i.url))
+    : tierItems;
+  if (companyMatcher.isActive) {
+    console.log(`[companies-filter] tier-eligible items: ${tierItems.length} → ${scopedItems.length} after company filter`);
+    if (scopedItems.length === 0 && tierItems.length > 0) {
+      console.log(`[companies-filter] WARNING: 0 items matched scope ${companyMatcher.describe()} across ${tierItems.length} tier-eligible items — possible alias gap in lib/ats-utils.mjs:COMPANY_SLUG_ALIASES?`);
+    }
+  }
+  const items = scopedItems.slice(0, LIMIT);
+  console.log(`Found ${scopedItems.length} fresh items in tiers [${TIERS.join(',')}] (${staleUrls.length} expired, ${allItems.length} total pending)`);
   console.log(`Processing:  ${items.length} this run\n`);
 
   let processed = 0, dead = 0, skipped = 0, advanced = 0, uncertain = 0;

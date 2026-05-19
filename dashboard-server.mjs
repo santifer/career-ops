@@ -1102,8 +1102,11 @@ function spawnProcessAll({ sendEmail, force, companies }) {
   if (Array.isArray(companies) && companies.length) {
     const safe = companies
       .map(c => String(c || '').trim())
-      .filter(c => c && /^[A-Za-z0-9 _.\-]+$/.test(c))
+      .filter(c => c && /^[A-Za-z0-9 _.\-()]+$/.test(c))
       .slice(0, 200); // hard cap so a runaway client can't blow the arg list
+    if (safe.length < companies.length) {
+      console.warn(`[process-all] companies sanitization dropped ${companies.length - safe.length}/${companies.length} entries — check for unsupported characters`);
+    }
     if (safe.length) args.push(`--companies=${safe.join(',')}`);
   }
   try {

@@ -46,6 +46,14 @@ const DRY_RUN = !!ARGS['dry-run'];
 const JOB_ID = ARGS['job-id'] || ('proc-' + Date.now().toString(36) + '-' + randomBytes(3).toString('hex'));
 const LOG_PATH = `/tmp/process-all-${JOB_ID}.log`;
 
+// Optional company scope from the Process All Phase A modal. When present,
+// passed through to triage.mjs and batch-runner-batches.mjs so both filter
+// at their respective layers (forward funnel — both must respect the scope
+// or work leaks through one side). Merge + rebuild operate on global output
+// artifacts and are intentionally NOT scoped.
+const COMPANIES_ARG = typeof ARGS.companies === 'string' && ARGS.companies.trim() ? ARGS.companies.trim() : '';
+const SCOPED_ARGS = COMPANIES_ARG ? [`--companies=${COMPANIES_ARG}`] : [];
+
 // ── State helpers ─────────────────────────────────────────────────────────
 function loadState() {
   if (!existsSync(STATE_FILE)) return { jobs: {} };
@@ -97,7 +105,7 @@ async function phaseTriage() {
   updateJob({ phase: 'triage', phase_started_at: new Date().toISOString() });
   log('━━━ Phase 1/4: TRIAGE ━━━');
   if (DRY_RUN) { log('(dry-run) skipping triage'); return { ok: true, advanced: 0 }; }
-  const code = await runScript('triage.mjs', ['--daily-limit=300']);
+  const code = await runScript('triage.mjs', ['--daily-limit=300', ...SCOPED_ARGS]);
   // Parse triage's output for advanced count (best-effort)
   let advanced = 0;
   try {
@@ -119,7 +127,7 @@ async function phaseBatch() {
   log('━━━ Phase 2/4: BATCH EVAL ━━━');
   if (DRY_RUN) { log('(dry-run) skipping batch'); return { ok: true }; }
   // batch-runner-batches.mjs run = submit + poll + process in one
-  const code = await runScript('batch-runner-batches.mjs', ['run']);
+  const code = await runScript('batch-runner-batches.mjs', ['run', ...SCOPED_ARGS]);
   if (code !== 0) {
     log(`✗ batch run failed (exit ${code})`);
     return { ok: false };
@@ -192,6 +200,7 @@ async function main() {
   log(`  pending items before: ${pendingBefore}`);
   log(`  send_email: ${SEND_EMAIL}`);
   log(`  dry_run: ${DRY_RUN}`);
+  log(`  company scope: ${COMPANIES_ARG || '(none — full drain)'}`);
 
   const phases = {};
   phases.triage  = await phaseTriage();
