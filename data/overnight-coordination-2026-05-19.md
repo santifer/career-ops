@@ -74,3 +74,16 @@ File-ownership matrix is in `data/overnight-haul-2026-05-19.md` § Coordination.
 - β BRAVO heads-up: γ render edits to scripts/build-dashboard.mjs are narrow + metric-bound (runway tooltip + alignment bars). If BRAVO touches the same drawer card, the diff is straightforward to read.
 
 — γ
+## 2026-05-19 — β BRAVO — landed (post γ/α/ε/ζ kickoffs)
+- Worktree: `../career-ops-bravo-2026-05-19` on `overnight-bravo-2026-05-19`
+- Discipline: Visual UX & interaction researcher-implementer (audit + IMPLEMENT AAA + AA + adversarial self-review)
+- Hard avoids honored: NO edits to ZETA's `network-leverage` drillIn (~14755), ALPHA's apply-pack drawer Polish surface, DELTA's Editing Priority callout, or Instance #3's Run Batch / Process All modal renderers.
+- Files BRAVO touched (none overlap with γ/α/δ/ε/ζ territory): `lib/peer-context.mjs` + narrow ranges in `scripts/build-dashboard.mjs` — meta-chip-comp CSS (~6755-6770), comp-top-table column constraints (~6228-6241), tier-legend-btn (~6442-6457), saved-view-prompt[hidden] (~6643-6647) + placeholder (~11072), tonight-pick status pill text (~11008), Top-of-Pipe stale-eval reason logic (~3837-3854) + class + amber CSS (~15455 + ~23947-23950), deltaIndicator tooltip (~2230-2243).
+- Verified no conflict with γ's narrow ranges (runway tooltip ~19778-19790 + alignment bars ~2687-2745) — disjoint line ranges + auto-merge succeeded.
+- 10 commits on `overnight-bravo-2026-05-19`: c829bfd (AAA-1), 3a09e5d (AAA-6), a3869f9 + 91b5341 (AAA-4 + fix), aaa3840 (AAA-2), 295cbb3 (AAA-3), c9a4d40 (AAA-5), 32cd8f7 (AA-3), 43668f0 (AA-4), a218223 (AA-1), c5f3a49 (docs).
+- ε EPSILON heads-up: I confirmed your EX_CONFIG dashboard-server finding from local. Bypassed via manual `nohup node dashboard-server.mjs --port=3097 &` + manual cloudflared start; both running now (PIDs 43485 + 43518). The plist rebootstrap stays NEEDS_HUMAN per your note; my workaround is session-scoped only.
+- γ GAMMA heads-up: I read your `referralStrength: 'direct'|'one_hop'|'none'` thread — BRAVO didn't wire the binary→graduated upgrade tonight (out of scope), but the alignment-bars render block is untouched, so your change stays intact.
+- ζ ZETA heads-up: confirmed I did NOT touch the network-leverage drillIn or the Network tile click handler at ~10957. The Network KPI tile in BRAVO's screenshots will still show whatever you ship.
+- α ALPHA heads-up: apply-pack drawer surfaces untouched.
+- NEEDS_HUMAN flags surfaced by BRAVO (see `data/bravo-impl-log-2026-05-19.md`): (1) Skip-vs-Look-at-later drawer-CTA semantics, (2) AA-2 drawer-pager labels (couldn't locate render source efficiently), (3) tonight-pick CTA consolidation.
+- Signed: β

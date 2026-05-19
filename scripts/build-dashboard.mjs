@@ -2229,10 +2229,16 @@ function sparklineSVG(daily, color, label) {
   return `<svg class="sparkline" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}"><title>${title}</title><path d="M${pts.join(' L')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 function deltaIndicator(delta) {
-  if (delta === 0) return `<span class="stat-delta stat-delta-flat">±0 vs last week</span>`;
+  // BRAVO 2026-05-19 (AA-4): a big-red "-47 vs last week" with no provenance
+  // reads as catastrophic-but-unexplained. The number can move because (a)
+  // new evaluations were added, (b) dedup or tracker normalization removed
+  // rows, or (c) status churn moved rows between groups. Adding a title attr
+  // gives the user a hover-explanation without bloating the visual.
+  const titleAttr = ' title="Change vs the same 7-day window last week. Drops can reflect dedup, status churn, or archived rows — open the tile for a row-by-row breakdown."';
+  if (delta === 0) return `<span class="stat-delta stat-delta-flat"${titleAttr}>±0 vs last week</span>`;
   const sign = delta > 0 ? '+' : '';
   const cls = delta > 0 ? 'stat-delta-up' : 'stat-delta-down';
-  return `<span class="stat-delta ${cls}">${sign}${delta} vs last week</span>`;
+  return `<span class="stat-delta ${cls}"${titleAttr}>${sign}${delta} vs last week</span>`;
 }
 // Hero-balance sparkline: stretches to fill the card width as a background fill.
 function heroSparklineSVG(daily, label) {
@@ -3862,14 +3868,21 @@ async function build() {
     if (!/^evaluated$/i.test(r.status)) continue;
     const age = _daysAgo(r.date);
     if (age < 14) continue;
+    // BRAVO 2026-05-19 (AAA-5): when an evaluation is 21+ days old the
+    // "ready to apply" framing is misleading — JD edits, company state
+    // shifts, rejection cooldowns may have triggered since. Surface a
+    // re-verify nudge instead. 14-20d: keep the original framing.
+    const reasonText = age >= 21
+      ? `Evaluated ${age}d ago — re-verify, then apply`
+      : `Evaluated ${age}d ago — ready to apply`;
     topOfPipeItems.push({
       num: r.num,
       company: r.company,
       role: r.role,
       score: r.score,
       status: r.status,
-      reason: `Evaluated ${age}d ago — ready to apply`,
-      reasonType: 'stale-eval',
+      reason: reasonText,
+      reasonType: age >= 21 ? 'stale-eval-warn' : 'stale-eval',
     });
   }
 
@@ -6255,6 +6268,16 @@ async function build() {
   .comp-top-table th { background: var(--surface-2); color: var(--text-3); padding: 7px 10px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; text-align: left; border-bottom: 1px solid var(--border); }
   .comp-top-table th.num, .comp-top-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .comp-top-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+  /* BRAVO 2026-05-19 (AAA-3): without per-column constraints the Company
+     column was collapsing to a single character ("O…") at 1440px and the
+     Role column was wrapping one word per line. Pin the load-bearing
+     columns at legible minimum widths; the wrapper's overflow-x:auto
+     handles horizontal scroll for narrow viewports. */
+  .comp-top-table th:nth-child(1), .comp-top-table td:nth-child(1) { min-width: 130px; white-space: nowrap; }
+  .comp-top-table th:nth-child(2), .comp-top-table td:nth-child(2) { min-width: 220px; }
+  .comp-top-table th:nth-child(3), .comp-top-table td:nth-child(3) { min-width: 110px; white-space: nowrap; }
+  .comp-top-table th:nth-child(4), .comp-top-table td:nth-child(4) { min-width:  80px; white-space: nowrap; }
+  .comp-top-table th:nth-child(5), .comp-top-table td:nth-child(5) { min-width: 110px; white-space: nowrap; }
   .comp-top-table td.num { font-weight: 600; color: var(--text); }
   .comp-top-table tr.top-earner-green td:first-child { box-shadow: inset 3px 0 0 0 var(--green-fg); }
   .comp-top-table tr.top-earner-blue td:first-child { box-shadow: inset 3px 0 0 0 var(--blue-fg); }
@@ -6447,14 +6470,18 @@ async function build() {
   .col-badge { font-size: 10px; font-weight: 500; margin-left: 6px; white-space: nowrap; cursor: help; }
   .base-fx-wrap { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 2px; }
 
-  /* Column-header (?) info button that opens the full legend modal. */
+  /* Column-header (?) info button that opens the full legend modal.
+     BRAVO 2026-05-19 (AA-1): bumped 16px → 18px and added a subtle blue
+     hint so the affordance is visible without aggressive contrast. The
+     button is the only resolution for HEALTH/PEOPLE/EQUITY/COMPANY column
+     legends; missing it is a Mitchell-lens failure-mode #3 hit. */
   .tier-legend-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; padding: 0;
-    border: 1px solid var(--border); border-radius: 50%;
-    background: var(--surface); color: var(--text-3);
-    font-size: 10px; font-weight: 700; font-family: inherit;
-    cursor: pointer; vertical-align: middle; line-height: 1;
+    width: 18px; height: 18px; margin-left: 5px; padding: 0;
+    border: 1px solid var(--blue-border); border-radius: 50%;
+    background: var(--surface-2); color: var(--text-2);
+    font-size: 11px; font-weight: 700; font-family: inherit;
+    cursor: help; vertical-align: middle; line-height: 1;
     transition: background .12s, color .12s, border-color .12s;
   }
   .tier-legend-btn:hover, .tier-legend-btn:focus-visible {
@@ -6666,6 +6693,11 @@ async function build() {
     display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
     padding: 6px 0;
   }
+  /* BRAVO 2026-05-19 (AAA-4): the display:flex rule above was masking the
+     hidden HTML attribute on the save-prompt, leaving the input + Save +
+     Cancel visible before the user opted in. Restore hidden as source of
+     truth. */
+  .saved-view-prompt[hidden] { display: none !important; }
   .saved-view-prompt input[type="text"] {
     flex: 1; min-width: 200px;
     padding: 6px 10px; font-size: 13px; font-family: inherit;
@@ -6784,7 +6816,19 @@ async function build() {
     border-radius: var(--radius-full); font-size: 11px; font-weight: 600;
     background: var(--surface-2); border: 1px solid var(--border); color: var(--text-3); gap: 3px;
   }
-  .meta-chip-comp { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+  .meta-chip-comp {
+    background: var(--green-bg); border-color: var(--green-border); color: var(--green);
+    /* BRAVO 2026-05-19 (AAA-2): long comp strings (e.g. "$255,000 – $320,000
+       USD annually (range disclosed under CA/NY pay-transparency mandate;
+       presumed base — equity and benefits not disclosed in JD)") were
+       truncating at the right drawer edge, cutting the equity-disclosure
+       clause — the single most load-bearing phrase. Allow the comp chip
+       (and only the comp chip; tier + date chips stay compact) to wrap. */
+    white-space: normal;
+    line-height: 1.4;
+    max-width: 100%;
+    align-items: flex-start;
+  }
   .meta-chip-tier { background: var(--blue-bg);  border-color: var(--blue-border);  color: var(--blue-fg-dark); }
   /* Equity / IPO posture badge — primary filter signal */
   .equity-cell { white-space: nowrap; }
@@ -11031,7 +11075,7 @@ async function build() {
       <div class="tonight-pick-header">
         <span class="tonight-pick-label">Best role to apply to tonight</span>
         <span class="tonight-pick-score-chip badge score-badge-lg ${scoreBadgeClass(_tonightPick.score)}">${_tonightPick.score.toFixed(1)}</span>
-        <span class="tonight-pick-status-chip">Apply now</span>
+        <span class="tonight-pick-status-chip" title="BRAVO 2026-05-19 (AA-3): pill is status, not CTA — the green button is the action">Top pick</span>
       </div>
       <div class="tonight-pick-title-row">
         <span class="tonight-pick-company">${htmlEscape(_tonightPick.company)}</span>
@@ -11094,7 +11138,7 @@ async function build() {
       </div>
       <div id="saved-view-prompt" class="saved-view-prompt" hidden>
         <input type="text" id="saved-view-name" maxlength="30"
-          placeholder="View name (max 30 chars, letters/numbers/spaces)"
+          placeholder="Name this view (e.g. Anthropic high-comp)"
           aria-label="Saved view name"
           onkeydown="if(event.key==='Enter'){event.preventDefault();confirmSaveView();}else if(event.key==='Escape'){event.preventDefault();cancelSaveView();}">
         <button type="button" class="saved-view-btn primary" onclick="confirmSaveView()">Save</button>
@@ -15443,6 +15487,9 @@ function initTopOfPipe() {
   var reasonClass = function(type) {
     if (type === 'waiting-response') return 'reason-waiting';
     if (type === 'hm-intel-fresh' || type === 'pulse-fresh') return 'reason-fresh';
+    // BRAVO 2026-05-19 (AAA-5): when an eval is 21d+ stale, surface an amber
+    // re-verify warning instead of the green "ready to apply" optimism.
+    if (type === 'stale-eval-warn') return 'reason-warn';
     return '';
   };
 
@@ -23939,6 +23986,11 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   }
   .top-of-pipe-reason.reason-fresh {
     color: var(--blue-fg); background: var(--blue-bg);
+  }
+  /* BRAVO 2026-05-19 (AAA-5): 21d+ stale eval gets amber, not green —
+     visually distinguishes "re-verify before apply" from "ready to apply". */
+  .top-of-pipe-reason.reason-warn {
+    color: var(--amber); background: var(--amber-bg);
   }
   .top-of-pipe-dismiss {
     background: none; border: none; color: var(--text-4); cursor: pointer;
