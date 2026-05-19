@@ -478,11 +478,12 @@ export async function runCoverLetter(input) {
   mkdirSync(outDirSecondary, { recursive: true });
 
   const markdown = buildMarkdownArtifact(parsed, company, role);
-  const artifactPath = join(outDirPrimary, 'cover-letter.md');
+  const artifactName = `Mitchell Williams - ${company} - ${role} - Cover Letter.md`;
+  const artifactPath = join(outDirPrimary, artifactName);
   writeFileSync(artifactPath, markdown, 'utf-8');
 
   // Mirror to secondary path
-  writeFileSync(join(outDirSecondary, 'cover-letter.md'), markdown, 'utf-8');
+  writeFileSync(join(outDirSecondary, artifactName), markdown, 'utf-8');
 
   // ── 7. Humanize-check (prose sections only — skip HUMAN markers) ────────
 
@@ -533,7 +534,7 @@ export async function runCoverLetter(input) {
               humanize = retryHumanize;
               const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
               writeFileSync(artifactPath, retryMarkdown, 'utf-8');
-              writeFileSync(join(outDirSecondary, 'cover-letter.md'), retryMarkdown, 'utf-8');
+              writeFileSync(join(outDirSecondary, artifactName), retryMarkdown, 'utf-8');
             }
           } catch { /* use original if retry parse fails */ }
         }
@@ -604,7 +605,7 @@ export async function runCoverLetter(input) {
           }
           const retryMarkdown = buildMarkdownArtifact(parsed, company, role);
           writeFileSync(artifactPath, retryMarkdown, 'utf-8');
-          writeFileSync(join(outDirSecondary, 'cover-letter.md'), retryMarkdown, 'utf-8');
+          writeFileSync(join(outDirSecondary, artifactName), retryMarkdown, 'utf-8');
         }
 
         apiDetection = pipeline.final.detection;

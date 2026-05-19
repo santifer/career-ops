@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        com.mitchell.career-ops.cloudflared-staging-nohup-wrapper
+
+        Workaround for the macOS Tahoe (15.x) launchd regression that cannot
+        spawn a second cloudflared instance. The canonical staging plist
+        (com.mitchell.career-ops.cloudflared-staging.plist) is correct on
+        disk + would work on prior macOS, but as of 15.x launchd refuses to
+        actually launch the cloudflared binary as a second instance even
+        when the throttle window has passed.
+
+        This wrapper fires once at boot/login (RunAtLoad=true, KeepAlive=false),
+        shells out to scripts/launchd/cloudflared-staging-nohup.sh which
+        idempotency-checks then nohup's the staging tunnel into a detached
+        session. The script exits after spawning; cloudflared keeps running.
+
+        REMOVE this wrapper when Apple patches the launchd spawn bug and a
+        clean `launchctl bootstrap` on the canonical staging plist works
+        again. Document the patch version in the EPSILON code-review log
+        at data/epsilon-code-review-findings-2026-05-19.md.
+
+        Bootstrap:
+            cp scripts/launchd/com.mitchell.career-ops.cloudflared-staging-nohup-wrapper.plist \
+               ~/Library/LaunchAgents/
+            launchctl bootstrap gui/$(id -u) \
+                ~/Library/LaunchAgents/com.mitchell.career-ops.cloudflared-staging-nohup-wrapper.plist
+    -->
+
+    <key>Label</key>
+    <string>com.mitchell.career-ops.cloudflared-staging-nohup-wrapper</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/launchd/cloudflared-staging-nohup.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/cloudflared-staging-nohup-wrapper.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/cloudflared-staging-nohup-wrapper.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

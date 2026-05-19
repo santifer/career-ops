@@ -108,3 +108,43 @@ Both reference "17 launchd plists" — actual count is **19** in `scripts/launch
 - Commit 3: `a61dd22` — buildVerifyPayload path-traversal fix + 3 more test cases (15 total)
 
 Hygiene findings #3 (magic numbers) and #5 (CORS) deferred to a follow-up session because the right time to refactor is when ALPHA + DELTA + ZETA's dashboard-server.mjs edits have merged — premature merge-conflict risk tonight.
+
+---
+
+## Platform finding — macOS Tahoe (15.x) launchd cannot spawn a second `cloudflared` instance
+
+**Surfaced mid-overnight (2026-05-19) by a sibling instance who resolved a tunnel collapse + fixed the broken staging plist. EPSILON folded it into the code-review log per scope addition.**
+
+### State now
+
+- **Prod cloudflared** — launchd, **PID 43518**, healthy. Pattern: `cloudflared tunnel --config /Users/mitchellwilliams/.cloudflared/config.yml run`.
+- **Staging cloudflared** — `nohup`, **PID 72341**, healthy. Pattern: `cloudflared tunnel --config /Users/mitchellwilliams/.cloudflared/config-staging.yml run`. NOT launchd-managed right now.
+- `scripts/launchd/com.mitchell.career-ops.cloudflared-staging.plist` — JUST FIXED on disk to mirror prod (`--config` flag, not `--url`). HEAD still has the old broken `--url http://localhost:3097 run career-ops-staging` pattern; sibling instance hasn't committed yet. **EPSILON did NOT re-edit the plist per scope-addition directive.**
+
+### Diagnosis
+
+macOS 15.x (Tahoe) launchd has a regression that prevents launching a second `cloudflared` binary instance, even when:
+- The second plist is well-formed
+- The throttle interval is past
+- The first cloudflared instance is healthy
+- The two instances manage different named tunnels via separate `--config` files
+
+Equivalent invocation via shell (`/opt/homebrew/bin/cloudflared tunnel --config ... run`) starts cleanly and stays up. That's how PID 72341 was spawned, via `nohup`.
+
+### Open items
+
+- **Reboot survival:** if Mitchell reboots, staging cloudflared is gone until someone manually re-`nohup`s it. **EPSILON shipped a boot-time wrapper plist + script** to close this gap — see `scripts/launchd/com.mitchell.career-ops.cloudflared-staging-nohup-wrapper.plist` + `scripts/launchd/cloudflared-staging-nohup.sh`.
+- **Apple patch tracking:** track macOS minor updates. Re-run `launchctl bootstrap` on the staging plist after any 15.x → 15.y bump. Remove the nohup wrapper when launchd can spawn the second instance cleanly again.
+- **Future multi-cloudflared deploys:** this Tahoe quirk affects ANY future setup that runs >1 cloudflared instance on the same macOS host. Now documented here.
+
+### Adversarial grep for the same broken pattern across `scripts/launchd/`
+
+```
+for p in scripts/launchd/*.plist; do
+  if grep -q "<string>--url</string>" "$p" && grep -q "<string>run</string>" "$p"; then
+    echo "FLAG: $p"
+  fi
+done
+```
+
+**Result:** the only flagged file is `com.mitchell.career-ops.cloudflared-staging.plist` itself — and that match comes from HEAD's committed state, which is the broken version still in the git index but no longer on disk (the sibling instance fixed it but hasn't committed). On-disk content is the correct `--config` pattern. **No other plists combine `--url` + `run <name>` — the broken pattern is isolated to this single file in its committed state, and is already fixed on disk.**

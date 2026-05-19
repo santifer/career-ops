@@ -17,8 +17,8 @@ Snapshotted first (per Section EPSILON Ε.1 ordering) so concurrent instances ca
 | 1 | `com.mitchell.career-ops.audit` | UNLOADED | n/a | not in `launchctl list`; audit.out last May 17 02:30 |
 | 2 | `com.mitchell.career-ops.batch` | loaded | 0 | logs current through 2026-05-18 08:06 |
 | 3 | `com.mitchell.career-ops.career-library` | UNLOADED | n/a | never observed in `launchctl list` |
-| 4 | `com.mitchell.career-ops.cloudflared-staging` | UNLOADED | n/a | err log 119KB stale; stopped intentionally per recent staging shutdown |
-| 5 | `com.mitchell.career-ops.cloudflared` | UNLOADED | n/a | err log 545KB; tunnel previously failing — currently unloaded |
+| 4 | `com.mitchell.career-ops.cloudflared-staging` | UNLOADED (intentional) | n/a | **NOTE (2026-05-19 mid-overnight update):** plist on disk is CORRECT (mirrors prod `--config` pattern). Another instance fixed it during this overnight run. Staging cloudflared is currently running via **`nohup` (PID 72341)** as an intentional exception due to a macOS Tahoe (15.x) `launchd` spawn bug that prevents launching a second cloudflared instance even when the plist is correct + outside the throttle window. See `data/epsilon-code-review-findings-2026-05-19.md` for the Tahoe-quirk write-up. **Do NOT re-edit this plist** — when Apple patches the spawn bug, re-run `launchctl bootstrap` and the plist takes over from the nohup wrapper. |
+| 5 | `com.mitchell.career-ops.cloudflared` | LOADED (prod) | 0 | Prod tunnel **PID 43518 healthy** (mid-overnight update). `--config /Users/mitchellwilliams/.cloudflared/config.yml run` pattern. |
 | 6 | `com.mitchell.career-ops.community-scan` | loaded | 0 | last successful 2026-05-18 10:30 |
 | 7 | `com.mitchell.career-ops.company-pulse` | loaded | 0 | last successful 2026-05-18 06:00 |
 | 8 | `com.mitchell.career-ops.dashboard-phase3` | UNLOADED | n/a | err 460B 2026-05-18 06:00 |
