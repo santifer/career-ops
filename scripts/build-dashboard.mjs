@@ -15540,7 +15540,10 @@ _drillInRegister('wealth-ranking', function(id) {
   if (!shown.length) {
     return {
       title: 'Wealth-Ranking',
-      html: '<p style="font-size:13px;color:var(--text-3);margin:0">No wealth-ranking data yet. Run <code>node lib\/wealth-ranking.mjs --top=10<\/code> to verify, then rebuild the dashboard.<\/p>',
+      // BRAVO 2026-05-19 (content sweep): plain-language empty state.
+      // Wealth-ranking is a pre-IPO equity scorecard — name what would be
+      // here when populated.
+      html: '<p style="font-size:13px;color:var(--text-3);margin:0 0 6px">No wealth-ranking data yet. Once populated, this ranks the companies in your apply-now queue by expected 4-year wealth-generation potential — base + signing + 4-year RSU value + skill-portability premium — so you can compare offers on the metric that actually matters for pre-IPO bets.<\/p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Computed by <code>lib\/wealth-ranking.mjs<\/code> at build time.<\/p>',
     };
   }
 
@@ -21166,11 +21169,14 @@ function _renderPillPopover(d) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   if (d.kind === 'equity') {
     if (d.empty) {
+      // BRAVO 2026-05-19 (content sweep): name what's missing + when it
+      // auto-fills. Command moves to muted footer.
+      var equityCmd = (d.populateCmd ? esc(d.populateCmd) : 'node scripts/overpay-signals.mjs');
       return '<div class="pill-popover-kind">Equity / IPO posture</div>'
-        + '<h4 class="pill-popover-headline">' + esc(d.company || '?') + ' — no entry yet</h4>'
+        + '<h4 class="pill-popover-headline">' + esc(d.company || '?') + ' — no equity stage on file yet</h4>'
         + '<div class="pill-popover-body pill-popover-empty">'
-        + esc(d.hint || '') + '</div>'
-        + '<div class="pill-popover-meta">Run <code>node scripts/overpay-signals.mjs</code> to enrich.</div>';
+        + esc(d.hint || '') + ' When populated, this shows the company\'s funding stage (Seed / Series A-B / Series C-D / Pre-IPO Late / Public), an equity-disclosure posture (transparent / opaque / hostile), a confidence band, and links to the public signals that informed the call.</div>'
+        + '<div class="pill-popover-meta">Run <code>' + equityCmd + '</code> to enrich.</div>';
     }
     const sources = (d.sources || []).slice(0, 4)
       .map(u => '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(u) + '</a>').join('');
