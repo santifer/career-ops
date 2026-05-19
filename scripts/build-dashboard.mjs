@@ -19686,19 +19686,38 @@ function _renderCapWarning(action, p) {
   const capUsd = isAll ? p.per_run_caps.process_all_usd : p.per_run_caps.run_batch_usd;
   const actionLabel = isAll ? 'Process All' : 'Run Batch';
 
+  // β Run-Batch eval 2026-05-19: surface the dominant cost driver so the
+  // user understands why $142.80 exceeds a $25 cap when batch eval itself
+  // is only $10.50. Agent enrichment is mandatory on items that publish
+  // (score >= threshold) and accounts for ~93% of typical run cost.
+  let enrichBlurb = '';
+  if (slice.agent_enrichment) {
+    const ae = slice.agent_enrichment;
+    const enrichSum = (ae.council.cost_usd || 0) + (ae.researcher.cost_usd || 0) + (ae.dealbreaker.cost_usd || 0);
+    const publishN = slice.stages && slice.stages.publish ? slice.stages.publish.count : 0;
+    const enrichPct = slice.total_cost_usd > 0 ? Math.round((enrichSum / slice.total_cost_usd) * 100) : 0;
+    if (enrichSum > 0 && publishN > 0) {
+      enrichBlurb = ' Of that, <strong>$' + enrichSum.toFixed(2) + '</strong> (' + enrichPct + '%) is agent enrichment on '
+                  + publishN + ' published item' + (publishN === 1 ? '' : 's') + ' — fires automatically when score &ge; '
+                  + (slice.threshold_for_publish || 4) + '.';
+    }
+  }
+
   let title, detail;
   if (reason === 'per-run') {
     title = 'EXCEEDS $' + capUsd + '/RUN CAP';
-    detail = actionLabel + ' estimate <strong>$' + slice.total_cost_usd.toFixed(2) + '</strong> exceeds the per-run cap of <strong>$' + capUsd + '</strong>. '
-           + 'Raise the cap with <code>' + (isAll ? 'PER_RUN_CAP_PROCESS_ALL_USD' : 'PER_RUN_CAP_RUN_BATCH_USD') + '</code> env, '
+    detail = actionLabel + ' estimate <strong>$' + slice.total_cost_usd.toFixed(2) + '</strong> exceeds the per-run cap of <strong>$' + capUsd + '</strong>.'
+           + enrichBlurb
+           + ' Raise the cap with <code>' + (isAll ? 'PER_RUN_CAP_PROCESS_ALL_USD' : 'PER_RUN_CAP_RUN_BATCH_USD') + '</code> env, '
            + 'or check the force-override below if you knowingly want to proceed.';
   } else {
     title = 'EXCEEDS MONTHLY BUDGET';
     detail = actionLabel + ' would push 30-day spend from <strong>$' + p.spent_30d_usd.toFixed(2) + '</strong> '
            + 'to <strong>$' + (p.spent_30d_usd + slice.total_cost_usd).toFixed(2) + '</strong>, past the '
            + (p.burst_budget_usd > 0 ? 'effective (burst-enabled) ' : '')
-           + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>. '
-           + 'Activate burst mode (<code>MONTHLY_BUDGET_USD_BURST</code> + <code>MONTHLY_BUDGET_BURST_UNTIL</code>), '
+           + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>.'
+           + enrichBlurb
+           + ' Activate burst mode (<code>MONTHLY_BUDGET_USD_BURST</code> + <code>MONTHLY_BUDGET_BURST_UNTIL</code>), '
            + 'raise <code>MONTHLY_BUDGET_USD</code>, or force-override below.';
   }
 
