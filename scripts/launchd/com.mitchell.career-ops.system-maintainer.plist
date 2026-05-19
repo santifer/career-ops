@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        com.mitchell.career-ops.system-maintainer
+
+        Built as part of epsilon Ε.8 (2026-05-19).
+
+        Runs scripts/agents/system-maintainer.mjs --all once nightly at
+        03:00 PT. KeepAlive=false (one-shot per day; if it crashes or the
+        machine is asleep, the next 03:00 picks it up — no flap loop).
+        StartCalendarInterval is hour:3 minute:0 in the machine's local TZ,
+        which matches the user's PT default.
+
+        Logs:
+          stdout → data/logs/system-maintainer-launchd.out
+          stderr → data/logs/system-maintainer-launchd.err
+        The agent itself logs to data/logs/system-maintainer-<DATE>.log.
+
+        Bootstrap (after merging to main):
+            launchctl bootstrap gui/$(id -u) \
+                /Users/mitchellwilliams/Documents/career-ops/scripts/launchd/com.mitchell.career-ops.system-maintainer.plist
+
+        Or copy to ~/Library/LaunchAgents/ and reload.
+    -->
+
+    <key>Label</key>
+    <string>com.mitchell.career-ops.system-maintainer</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/agents/system-maintainer.mjs</string>
+        <string>--all</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/system-maintainer-launchd.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/system-maintainer-launchd.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>
