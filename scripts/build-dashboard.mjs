@@ -20007,8 +20007,20 @@ async function refreshRunwayWidget() {
       alertEl.textContent = d.runway_alert || '—';
     }
   } catch (err) {
+    // γ GAMMA fix 2026-05-19 (post-tunnel-resolution): on fetch error or
+    // 5xx, the dot + label + alert correctly switched to "unavailable" — but
+    // the numeric IDs (runway-active, runway-touches7d, etc.) were left
+    // populated with whatever stale values the LAST successful fetch wrote.
+    // Mitchell would see "5 active conversations" displayed under a dot that
+    // said "unavailable". Now we explicitly null those numbers too.
     dot.className = 'sidebar-runway-dot unknown';
     label.textContent = 'runway · unavailable';
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('runway-active',     '—');
+    setText('runway-touches7d',  '—');
+    setText('runway-touches30d', '—');
+    setText('runway-response',   '—');
+    setText('runway-lasttouch',  '—');
     const alertEl = document.getElementById('runway-alert');
     if (alertEl) { alertEl.className = 'sidebar-runway-alert unknown'; alertEl.textContent = 'Pipeline-density data unavailable: ' + (err.message || err); }
   }
@@ -20407,10 +20419,16 @@ async function _rdFetchAndRender() {
   let data;
   try {
     const r = await fetch('/api/runway-detail', { cache: 'no-store' });
+    // γ GAMMA fix 2026-05-19 (post-tunnel-resolution): previously this
+    // accepted a 502/503/504 response and tried to .json() it, which usually
+    // threw on HTML error bodies — but if a 5xx returned valid JSON without
+    // an `ok` field, the bug surfaced as a generic "Unknown error" in
+    // _rdRenderBody instead of naming the HTTP status. Surface the status.
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     data = await r.json();
   } catch (e) {
     const body = document.getElementById('runway-detail-body');
-    if (body) body.innerHTML = '<div style="text-align:center; padding: 30px 16px; color: var(--red-fg, #cf222e); font-size: 13px;">Failed to load runway detail — is dashboard-server.mjs running?</div>';
+    if (body) body.innerHTML = '<div style="text-align:center; padding: 30px 16px; color: var(--red-fg, #cf222e); font-size: 13px;">Failed to load runway detail (' + (e && e.message ? e.message : 'network error') + ') — is dashboard-server.mjs running?</div>';
     return;
   }
   _rdRenderBody(data);
