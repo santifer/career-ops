@@ -11039,7 +11039,7 @@ async function build() {
       <div class="tonight-pick-header">
         <span class="tonight-pick-label">Best role to apply to tonight</span>
         <span class="tonight-pick-score-chip badge score-badge-lg ${scoreBadgeClass(_tonightPick.score)}">${_tonightPick.score.toFixed(1)}</span>
-        <span class="tonight-pick-status-chip">Apply now</span>
+        <span class="tonight-pick-status-chip" title="BRAVO 2026-05-19 (AA-3): pill is status, not CTA — the green button is the action">Top pick</span>
       </div>
       <div class="tonight-pick-title-row">
         <span class="tonight-pick-company">${htmlEscape(_tonightPick.company)}</span>
