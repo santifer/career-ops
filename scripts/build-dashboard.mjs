@@ -40,7 +40,7 @@ import { computeNextMoves }                                        from '../lib/
 import { loadNextMovesInputs }                                     from '../lib/next-moves-inputs.mjs';
 import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/negotiation-playbook.mjs';
 import { checkGap as llmCheckGap, renderEvidenceCard }            from '../lib/llm-evidence.mjs';
-import { checkGap as netCheckGap, findContactsAtCompany, findLeveragePathTo, renderNetworkCard } from '../lib/network-graph.mjs';
+import { checkGap as netCheckGap, findContactsAtCompany, findLeveragePathTo, renderNetworkCard, getNetworkGraphFreshness } from '../lib/network-graph.mjs';
 // ZETA 2026-05-19 — network-database preview for the redesigned drillIn
 import { topByWarmPath as networkTopByWarmPath, networkDatabaseHeadline } from '../lib/network-database-search.mjs';
 import { renderHmIntelCard, getHmIntelForRole }                    from '../lib/hm-intel-research.mjs';
@@ -2730,10 +2730,25 @@ function renderRow(r, idx) {
   let alignmentBars = '';
   try {
     if (r.reportPath) {
+      // γ GAMMA fix 2026-05-19 (Γ.15): wire referralStrength from
+      // lib/network-graph.mjs::findLeveragePathTo into the alignment-scorer
+      // call. Previously hasReferralPath was hardcoded false — the HM-noticing
+      // formula silently lost the referral bonus on every row regardless of
+      // actual network proximity. Now: 'direct' (1st-degree at company) >
+      // 'one_hop' (mentioned in evidence_sources) > 'none'.
+      let _referralStrength = 'none';
+      try {
+        const _lev = findLeveragePathTo(r.company || '', r.role || '');
+        if (_lev && Array.isArray(_lev.direct) && _lev.direct.length > 0) {
+          _referralStrength = 'direct';
+        } else if (_lev && Array.isArray(_lev.one_hop) && _lev.one_hop.length > 0) {
+          _referralStrength = 'one_hop';
+        }
+      } catch (_) { /* network graph unavailable — fall back to 'none' */ }
       const align = scoreAlignmentCached({
         reportPath: r.reportPath,
         companyName: r.company,
-        hasReferralPath: false, // TODO: wire from linkedin-network when ready
+        referralStrength: _referralStrength,
       });
       // γ GAMMA fix 2026-05-19 (audit HIGH-1): when the source report is
       // missing, scoreAlignment now returns { unavailable: true, alignment:
@@ -3061,7 +3076,7 @@ function renderRow(r, idx) {
       ${gapCard}
       ${storyCard}
       ${(function(){try{if(!r.reportPath)return '';const _cvText=existsSync(CV_PATH)?readFileSync(CV_PATH,'utf-8'):'';const _jdText=r.reportPath&&existsSync(r.reportPath)?readFileSync(r.reportPath,'utf-8').slice(0,5000):'';if(!_cvText&&!_jdText)return '';const _atsResult=scoreAtsMyth({cvText:_cvText,jdText:_jdText});const _atsHtml=renderAtsCard(_atsResult);return _atsHtml?'<div class="dcard" style="margin-bottom:8px">'+_atsHtml+'</div>':'';}catch(e){return '';}})()}
-      ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">Warm contacts at this company</div>'+html+'</div>':'';}catch(e){return '';}})()}
+      ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});if(!html)return '';/* γ GAMMA Γ.16 — surface graph freshness as a provenance chip so Mitchell can see when the warm-contact list was last regenerated. Pulled from getNetworkGraphFreshness() at render time, not baked. */ let freshChip='';try{const fr=getNetworkGraphFreshness();if(fr&&fr.available){const ageStr=fr.age_days>=1?(fr.age_days+'d ago'):(fr.age_hours>=1?(fr.age_hours+'h ago'):'minutes ago');const staleCue=fr.age_days>=14?' color:#92400e;background:#fde68a;':' color:var(--text-4);';freshChip='<span style="display:inline-block;font-size:10px;padding:2px 8px;margin-left:8px;border-radius:999px;border:1px solid var(--border);'+staleCue+'" title="data/network-graph.json mtime: '+fr.source_mtime_iso+'. Regenerate via scripts/scan-network.mjs.">graph: '+ageStr+'</span>';}else if(fr&&!fr.available){freshChip='<span style="display:inline-block;font-size:10px;padding:2px 8px;margin-left:8px;border-radius:999px;border:1px solid #f59e0b;color:#92400e;background:#fde68a" title="'+fr.reason+'">graph: not built</span>';}}catch(_){/* freshness unavailable — silently omit chip */}return '<div class="dcard dcard--network"><div class="dcard-label">Warm contacts at this company'+freshChip+'</div>'+html+'</div>';}catch(e){return '';}})()}
       ${(function(){
         // 2026-05-18 Wave B: Comp Intelligence consolidated to a single
         // surface at the bottom of the drawer. Was previously duplicated in
@@ -14495,7 +14510,7 @@ _drillInRegister('comp', function(id) {
   // BRAVO 2026-05-19 (content sweep): empty state used to leak a path +
   // command. New copy explains what this section is FOR; technical recipe
   // is stepped down to a muted footer.
-  var peerHtml = ctx.html || '<p class="muted" style="font-size:12px;margin:0 0 6px">Once you\'ve evaluated more roles in this comp band, I\'ll show how this offer compares — same-company history, peer companies with similar base salaries, percentile against the pipeline.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Peer context is computed at build time by <code>lib/peer-context.mjs</code>.</p>';
+  var peerHtml = ctx.html || '<p class="muted" style="font-size:12px;margin:0 0 6px">Once you have evaluated more roles in this comp band, this section will show how the current offer compares — same-company history, peer companies with similar base salaries, percentile against the pipeline.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Peer context is computed at build time by <code>lib/peer-context.mjs</code>.</p>';
   // Negotiation playbook (baked for base >= 300K)
   var playbookHtml = (base >= 300000 && cb.negotiationPlaybookHtml) ? cb.negotiationPlaybookHtml : '';
   // Equity sliders (baked HTML per role)
@@ -14822,7 +14837,7 @@ _drillInRegister('percentage', function(id) {
     // for it yet — say that, and tell them where to look.
     var d = defs[key] || {
       title: _humanizeKey(key),
-      definition: 'This number was computed from your evaluation pipeline, but I haven\'t written a plain-language definition for it yet. The compute logic lives in lib/strategy-ceiling.mjs and lib/alignment-scorer.mjs — read those if you need the math today; the definition will be added on the next content pass.',
+      definition: 'This number was computed from your evaluation pipeline, but a plain-language definition has not been written for it yet. The compute logic lives in lib/strategy-ceiling.mjs and lib/alignment-scorer.mjs — read those if you need the math today; the definition will be added on the next content pass.',
       closeActions: [],
     };
     cardHtml = '<div style="font-size:13px;line-height:1.55">'
@@ -14880,7 +14895,7 @@ _drillInRegister('percentage', function(id) {
           // and unspecific "live refresh skipped" — read like a debug log.
           // Be explicit about what failed and what's still useful.
           refreshTag.textContent = err.name === 'TimeoutError'
-            ? 'Couldn\'t reach the strategy compute (timed out after 15s). The general definition above still applies.'
+            ? 'Could not reach the strategy compute (timed out after 15s). The general definition above still applies.'
             : 'Strategy compute is offline — the general definition above is what I have right now.';
         });
     },
@@ -14923,7 +14938,7 @@ _drillInRegister('tpgm-gaps', function(id) {
       title: 'TPgM gap points',
       // BRAVO 2026-05-19 (content sweep): tell the user what this is for,
       // not what command to run. The tracker name moves to a muted footer.
-      html: '<p class="muted" style="font-size:12px;margin:0 0 6px">No tracked PM-readiness gaps yet — once the weekly readiness tracker has run, this will show the specific skills or evidence you\'re missing for AI PgM roles.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Populated by <code>scripts/tpgm-tracker.mjs</code>.</p>',
+      html: '<p class="muted" style="font-size:12px;margin:0 0 6px">No tracked PM-readiness gaps yet — once the weekly readiness tracker has run, this will show the specific skills or evidence you are missing for AI PgM roles.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Populated by <code>scripts/tpgm-tracker.mjs</code>.</p>',
     };
   }
   var totalPts = gaps.reduce(function(s, g) { return s + (g.weight || 0); }, 0);
@@ -18698,7 +18713,7 @@ function selectBatch(batchId) {
       navigator.clipboard.writeText(batchId);
     }
   } catch (_) { /* clipboard blocked — toast still useful */ }
-  if (typeof toast === 'function') toast('Copied batch ID ' + batchId + ' to clipboard. (Per-row breakdown isn\\'t wired yet — see batch/batch-state.tsv for now.)', 'info');
+  if (typeof toast === 'function') toast('Copied batch ID ' + batchId + ' to clipboard. (Per-row breakdown is not wired yet — see batch/batch-state.tsv for now.)', 'info');
   console.log('[selectBatch] batch_id=' + batchId);
 }
 
@@ -21175,7 +21190,7 @@ function _renderPillPopover(d) {
       return '<div class="pill-popover-kind">Equity / IPO posture</div>'
         + '<h4 class="pill-popover-headline">' + esc(d.company || '?') + ' — no equity stage on file yet</h4>'
         + '<div class="pill-popover-body pill-popover-empty">'
-        + esc(d.hint || '') + ' When populated, this shows the company\'s funding stage (Seed / Series A-B / Series C-D / Pre-IPO Late / Public), an equity-disclosure posture (transparent / opaque / hostile), a confidence band, and links to the public signals that informed the call.</div>'
+        + esc(d.hint || '') + ' When populated, this shows the funding stage for this company (Seed / Series A-B / Series C-D / Pre-IPO Late / Public), an equity-disclosure posture (transparent / opaque / hostile), a confidence band, and links to the public signals that informed the call.</div>'
         + '<div class="pill-popover-meta">Run <code>' + equityCmd + '</code> to enrich.</div>';
     }
     const sources = (d.sources || []).slice(0, 4)
