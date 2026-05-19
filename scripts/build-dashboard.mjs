@@ -20143,6 +20143,11 @@ function _renderScopedCapWarning(reason, scopedCost, capUsd, p) {
   // AAA-2: Force-override separated from heartbeat checkbox; destructive styling + explicit spend amount.
   // α Run-Batch fix 2026-05-19: was slice.total_cost_usd (undefined ReferenceError) — use scopedCost,
   // which is the live Phase-B cost the user is being asked to accept.
+  // β Run-Batch eval (rebase 2026-05-19): independently confirmed and repro'd
+  // the ReferenceError via direct console call on the live dashboard. Same fix.
+  // The bug surfaced whenever a user selected enough companies in Phase B to
+  // cross either PER_RUN_CAP_PROCESS_ALL_USD or the monthly budget — the
+  // cap-warning panel went silently blank instead of rendering the warning.
   return ''
     + '<div class="pipeline-cap-warning">'
     +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
