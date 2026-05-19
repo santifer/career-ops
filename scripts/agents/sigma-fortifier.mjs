@@ -166,14 +166,148 @@ const MAX_FINDINGS = (() => {
 // don't reflect SIGMA-introduced regressions.
 const SKIP_BASELINE_TEST = args.includes('--skip-baseline-test');
 
+// Cost caps — belt-and-suspenders backstops against a recurrence of the 2026-05-19
+// "$344-per-finding" reporting bug (was actually $0.34 due to a units bug in
+// lib/council.mjs:estimateCostUsd, now fixed). Per-finding fires when a single
+// council fan-out exceeds the cap; total fires when cumulative spend does.
+// With the cost-calc fix in place, neither should fire under normal operation.
+function readNumFlag(flag, fallback) {
+  const i = args.indexOf(flag);
+  if (i >= 0 && args[i + 1]) {
+    const n = parseFloat(args[i + 1]);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return fallback;
+}
+const MAX_COST_PER_FINDING = readNumFlag('--max-cost-per-finding', 5);
+const MAX_TOTAL_COST = readNumFlag('--max-total-cost', 50);
+const USE_WORKTREE = args.includes('--worktree');
+
+// Baseline fail set — populated by preflight, consulted by runTestGate so the
+// post-patch test gate counts only NEW failures introduced by SIGMA's patch.
+// Without this, every patch rolls back because baseline failures (which are
+// SIGMA-independent) make the test gate's `failLines.length === 0` check fail.
+let BASELINE_FAILS = new Set();
+
+// Working directory for git operations and source-file reads. Default = REPO_ROOT.
+// With --worktree, SIGMA creates a sibling worktree under REPO_ROOT/.worktrees/
+// and points WORK_DIR there, so concurrent SIGMA instances can patch the same
+// repo without git-lock contention killing each other (Blocker 7).
+// DATA_DIR, LOG_DIR, and the coordination registry stay on REPO_ROOT so all
+// instances share one source of truth for status and audit output.
+let WORK_DIR = REPO_ROOT;
+let WORKTREE_PATH = null;  // set by setupWorktree()
+const INSTANCE_ID = `${process.pid}-${Date.now().toString(36)}`;
+const REGISTRY_PATH = join(DATA_DIR, 'sigma-active-instances.json');
+const LEADER_LOCK_PATH = join(REPO_ROOT, '.git', 'sigma-leader.lock');
+
 // ─── Git helpers ───────────────────────────────────────────────────────────────
 
 function sh(cmd, opts = {}) {
-  return execSync(cmd, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts });
+  // Default cwd is WORK_DIR (worktree when --worktree, else REPO_ROOT). Callers
+  // can override (e.g. main-repo ops like registry writes use { cwd: REPO_ROOT }).
+  return execSync(cmd, { cwd: WORK_DIR, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts });
 }
-function shSafe(cmd) {
-  try { return { ok: true, out: sh(cmd) }; }
+function shSafe(cmd, opts = {}) {
+  try { return { ok: true, out: sh(cmd, opts) }; }
   catch (e) { return { ok: false, out: String(e.stdout || '') + String(e.stderr || ''), code: e.status }; }
+}
+
+// ─── Worktree + multi-instance coordination (Blocker 7) ────────────────────────
+
+function setupWorktree() {
+  if (!USE_WORKTREE) return { ok: true, path: WORK_DIR };
+  const wtRoot = join(REPO_ROOT, '.worktrees');
+  if (!existsSync(wtRoot)) mkdirSync(wtRoot, { recursive: true });
+  const wtPath = join(wtRoot, `sigma-${DATE}-${ptTimeStamp()}-${process.pid}`);
+  // `git worktree add -b <branch> <path> main` creates the worktree AND the
+  // sigma audit branch in one shot, branched from current main.
+  const r = shSafe(`git worktree add -b ${BRANCH_NAME} "${wtPath}" main`, { cwd: REPO_ROOT });
+  if (!r.ok) return { ok: false, reason: r.out };
+  WORK_DIR = wtPath;
+  WORKTREE_PATH = wtPath;
+  log(`  ✓ worktree created at ${relative(REPO_ROOT, wtPath)}`);
+  return { ok: true, path: wtPath };
+}
+
+function readRegistry() {
+  if (!existsSync(REGISTRY_PATH)) return { instances: [] };
+  try { return JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')); }
+  catch { return { instances: [] }; }
+}
+function writeRegistry(reg) {
+  reg.lastUpdated = ptIsoStamp();
+  writeFileSync(REGISTRY_PATH, JSON.stringify(reg, null, 2));
+}
+function registerInstance() {
+  const reg = readRegistry();
+  // Drop stale instances (started > 6h ago and never marked done) — defensive
+  // cleanup so a crashed run doesn't block the leader-election forever.
+  const cutoff = Date.now() - 6 * 3600 * 1000;
+  reg.instances = (reg.instances || []).filter(i => i.status === 'completed' && new Date(i.completed || 0).getTime() > cutoff - 1 || (i.startedMs || 0) > cutoff);
+  reg.instances.push({
+    id: INSTANCE_ID, pid: process.pid, branch: BRANCH_NAME,
+    worktree: WORKTREE_PATH ? relative(REPO_ROOT, WORKTREE_PATH) : null,
+    started: ptIsoStamp(), startedMs: Date.now(),
+    status: 'running', applied: 0, rolledBack: 0,
+  });
+  writeRegistry(reg);
+}
+function updateInstance(patch) {
+  const reg = readRegistry();
+  const me = reg.instances.find(i => i.id === INSTANCE_ID);
+  if (me) Object.assign(me, patch);
+  writeRegistry(reg);
+}
+function markInstanceComplete(summary) {
+  updateInstance({ status: 'completed', completed: ptIsoStamp(), ...summary });
+}
+function tryBecomeLeader() {
+  // Atomic file creation via openSync O_EXCL. If we win, we hold the lock;
+  // if EEXIST, another instance is the leader.
+  try {
+    const fd = openSync(LEADER_LOCK_PATH, 'wx');
+    closeSync(fd);
+    writeFileSync(LEADER_LOCK_PATH, JSON.stringify({ leader: INSTANCE_ID, ts: ptIsoStamp() }));
+    return true;
+  } catch (e) {
+    if (e.code === 'EEXIST') return false;
+    throw e;
+  }
+}
+function releaseLeaderLock() {
+  try { unlinkSync(LEADER_LOCK_PATH); } catch {}
+}
+function leaderMergeAndPush() {
+  // Read the registry, find all sibling sigma branches with applied > 0,
+  // merge them into main, push. Each step is best-effort + logged.
+  const reg = readRegistry();
+  const merged = [];
+  for (const inst of reg.instances) {
+    if (inst.id === INSTANCE_ID) continue;            // self handled separately
+    if (inst.status !== 'completed') continue;        // skip in-progress
+    if (!inst.branch || !inst.applied || inst.applied === 0) continue;
+    log(`  ↳ leader: merging ${inst.branch} (${inst.applied} applied)`);
+    const m = shSafe(`git -c user.email=sigma@career-ops.local -c user.name=sigma merge --no-edit ${inst.branch}`, { cwd: REPO_ROOT });
+    if (m.ok) merged.push(inst.branch);
+    else log(`    ✗ merge failed (${(m.out || '').slice(0, 200)})`);
+  }
+  // Merge self (we're on a sigma branch — but only in main-repo flow, not worktree).
+  // In worktree mode, the main repo is still on `main`, so we merge our own branch too.
+  const selfMerge = shSafe(`git -c user.email=sigma@career-ops.local -c user.name=sigma merge --no-edit ${BRANCH_NAME}`, { cwd: REPO_ROOT });
+  if (selfMerge.ok) merged.push(BRANCH_NAME);
+  // Push
+  const push = shSafe(`git -c credential.helper="!gh auth git-credential" push origin main`, { cwd: REPO_ROOT });
+  if (push.ok) log(`  ✓ leader pushed origin/main — ${merged.length} sigma branches merged`);
+  else log(`  ✗ push failed: ${(push.out || '').slice(0, 200)}`);
+  return { merged, pushed: push.ok };
+}
+function cleanupWorktree() {
+  if (!WORKTREE_PATH) return;
+  // Best-effort prune; keep the worktree files (they hold the audit branch tip)
+  // so Mitchell can `git worktree list` to find them if he wants to inspect.
+  // Only remove when the leader has merged + pushed successfully.
+  log(`  ◇ worktree at ${relative(REPO_ROOT, WORKTREE_PATH)} retained for inspection (run 'git worktree remove' manually)`);
 }
 
 function checkCleanTree() {
@@ -239,15 +373,15 @@ function preflight() {
   if (!test.ok && !SKIP_BASELINE_TEST) {
     return { ok: false, reason: `baseline test-all FAILED: ${(test.out || '').slice(-2000)}` };
   }
-  const failLines = (test.out.match(/^.*❌.*$/gm) || []);
-  if (failLines.length > 0) {
-    if (SKIP_BASELINE_TEST) {
-      log(`  ⚠ baseline has ${failLines.length} pre-existing failing tests (--skip-baseline-test set, recording and proceeding)`);
-      // Persist for post-run comparison; SIGMA's per-finding test gate still catches new fails.
-      try { writeFileSync(join(DATA_DIR, `sigma-baseline-fails-${DATE}.txt`), failLines.join('\n')); } catch {}
-    } else {
-      return { ok: false, reason: `baseline has ${failLines.length} pre-existing failing tests:\n${failLines.join('\n')}` };
-    }
+  const baselineFailLines = (test.out.match(/^.*❌.*$/gm) || []);
+  // Always capture baseline fails so the per-finding test gate compares against
+  // them (instead of demanding zero fails — which never holds in this repo).
+  BASELINE_FAILS = new Set(baselineFailLines);
+  try {
+    writeFileSync(join(DATA_DIR, `sigma-baseline-fails-${DATE}.txt`), baselineFailLines.join('\n'));
+  } catch {}
+  if (baselineFailLines.length > 0) {
+    log(`  ⚠ baseline has ${baselineFailLines.length} pre-existing failing tests — recorded; test-gate will compare against this set`);
   } else {
     log(`  ✓ baseline tests pass (${(test.out.match(/✅/g) || []).length} green)`);
   }
@@ -256,10 +390,25 @@ function preflight() {
     log(`  ◇ skipping branch creation (mode=${MODE})`);
     return { ok: true, branch: currentBranch() };
   }
-  log(`▶ pre-flight: creating branch ${BRANCH_NAME}`);
-  const br = createSigmaBranch();
-  if (!br.ok) return { ok: false, reason: `branch creation failed: ${br.reason}` };
+
+  // --worktree: create an isolated worktree with the sigma branch already
+  // checked out. Without this, concurrent SIGMA instances clobber each other
+  // via git lock contention (Blocker 7, 2026-05-19).
+  if (USE_WORKTREE) {
+    log(`▶ pre-flight: setting up worktree`);
+    const wt = setupWorktree();
+    if (!wt.ok) return { ok: false, reason: `worktree setup failed: ${wt.reason}` };
+    // setupWorktree already created the branch via `git worktree add -b`,
+    // so skip the explicit createSigmaBranch step below.
+  } else {
+    log(`▶ pre-flight: creating branch ${BRANCH_NAME}`);
+    const br = createSigmaBranch();
+    if (!br.ok) return { ok: false, reason: `branch creation failed: ${br.reason}` };
+  }
   log(`  ✓ on ${BRANCH_NAME}`);
+
+  // Register this instance for multi-instance coordination (Blocker 7).
+  registerInstance();
   return { ok: true, branch: BRANCH_NAME };
 }
 
@@ -749,7 +898,9 @@ function parseProposal(content) {
 }
 
 async function councilFanOut(finding) {
-  const filePath = join(REPO_ROOT, finding.file);
+  // Read from WORK_DIR so worktree-mode instances see their own (potentially
+  // already-patched) source, not the main repo's.
+  const filePath = join(WORK_DIR, finding.file);
   const fileContent = existsSync(filePath) ? readFileSafe(filePath) : '';
   const prompt = buildFindingPrompt(finding, fileContent);
 
@@ -807,7 +958,8 @@ async function councilFanOut(finding) {
 // ─── Self-implementation ───────────────────────────────────────────────────────
 
 function applyPatch(finding, winner) {
-  const filePath = join(REPO_ROOT, finding.file);
+  // Write to WORK_DIR so the patch lands in the worktree (concurrent SIGMAs).
+  const filePath = join(WORK_DIR, finding.file);
   if (isOffLimits(finding.file)) {
     return { ok: false, reason: `OFF_LIMITS: ${finding.file}` };
   }
@@ -835,29 +987,41 @@ function applyPatch(finding, winner) {
 
 function writeRegressionTest(finding, winner) {
   if (!winner.proposal.testCode) return { ok: false, reason: 'no test code provided' };
-  const testDir = join(REPO_ROOT, 'tests/unit');
+  // Write the test inside WORK_DIR so it's tracked on the SIGMA branch the
+  // patch is committed to (and rolls back cleanly if the test gate fails).
+  const testDir = join(WORK_DIR, 'tests/unit');
   if (!existsSync(testDir)) mkdirSync(testDir, { recursive: true });
   const testName = `sigma-${finding.id}.test.mjs`;
   const testPath = join(testDir, testName);
   // Wrap the test code with a banner comment
   const banner = `/**\n * sigma-${finding.id}.test.mjs — Regression test written by SIGMA on ${DATE}\n * Finding: ${finding.headline}\n * Severity: ${finding.severity}\n * Category: ${finding.category}\n * File: ${finding.file}\n */\n\n`;
   writeFileSync(testPath, banner + winner.proposal.testCode);
-  return { ok: true, testPath: relative(REPO_ROOT, testPath) };
+  return { ok: true, testPath: relative(WORK_DIR, testPath) };
 }
 
 function runTestGate() {
   log('  ▶ test-gate: node test-all.mjs --quick');
   const r = shSafe('node test-all.mjs --quick');
   const failLines = ((r.out || '').match(/^.*❌.*$/gm) || []);
-  return { ok: r.ok && failLines.length === 0, fails: failLines, out: r.out };
+  // Compare against the saved baseline (captured in preflight). The gate passes
+  // if the patch did not INTRODUCE any new failures — pre-existing baseline
+  // fails are tolerated. Without this comparison, every patch rolls back.
+  const newFails = failLines.filter(l => !BASELINE_FAILS.has(l));
+  return {
+    ok: r.ok && newFails.length === 0,
+    fails: newFails,             // only NEW failures (post-patch)
+    baselineCount: BASELINE_FAILS.size,
+    totalCount: failLines.length,
+    out: r.out,
+  };
 }
 
 function rollbackFinding(finding, applyResult, testPath) {
-  // git checkout the patched file
+  // git checkout the patched file (in WORK_DIR via shSafe's default cwd)
   shSafe(`git checkout -- "${finding.file}"`);
-  // If we wrote a regression test, delete it
+  // If we wrote a regression test, delete it from the worktree
   if (testPath) {
-    const fullTest = join(REPO_ROOT, testPath);
+    const fullTest = join(WORK_DIR, testPath);
     if (existsSync(fullTest)) {
       try { unlinkSync(fullTest); } catch {}
     }
@@ -1043,6 +1207,22 @@ async function main() {
       continue;
     }
 
+    // Cost-cap backstops (Blocker 6, 2026-05-19). Per-finding cap catches a
+    // single runaway call; total cap catches an accumulation of mid-range calls.
+    if (councilResult.cost > MAX_COST_PER_FINDING) {
+      err(`COST CAP: finding ${finding.id} cost $${councilResult.cost.toFixed(2)} exceeds --max-cost-per-finding $${MAX_COST_PER_FINDING}. ABORTING run.`);
+      results.push({ id: finding.id, outcome: 'NEEDS_HUMAN', reason: `per-finding cost cap exceeded ($${councilResult.cost.toFixed(2)} > $${MAX_COST_PER_FINDING})`, cost: councilResult.cost });
+      implLog.push(`## ${finding.id} — NEEDS_HUMAN (cost cap)\n\nPer-finding cost \$${councilResult.cost.toFixed(2)} exceeded --max-cost-per-finding $${MAX_COST_PER_FINDING}. Verify lib/council.mjs cost calc and finding context size.\n`);
+      break; // halt the whole run — accumulating more findings only deepens the hole
+    }
+    const cumulativeCost = results.reduce((s, r) => s + (r.cost || 0), 0) + councilResult.cost;
+    if (cumulativeCost > MAX_TOTAL_COST) {
+      err(`COST CAP: cumulative cost $${cumulativeCost.toFixed(2)} exceeds --max-total-cost $${MAX_TOTAL_COST}. ABORTING run.`);
+      results.push({ id: finding.id, outcome: 'NEEDS_HUMAN', reason: `cumulative cost cap exceeded ($${cumulativeCost.toFixed(2)} > $${MAX_TOTAL_COST})`, cost: councilResult.cost });
+      implLog.push(`## ${finding.id} — NEEDS_HUMAN (total cost cap)\n\nCumulative cost \$${cumulativeCost.toFixed(2)} exceeded --max-total-cost $${MAX_TOTAL_COST}. Halting run.\n`);
+      break;
+    }
+
     if (councilResult.verdict === 'NOT_A_BUG') {
       log(`  ◇ NOT_A_BUG verdict — skipping`);
       results.push({ id: finding.id, outcome: 'NOT_A_BUG', reason: councilResult.reason, cost: councilResult.cost });
@@ -1079,18 +1259,18 @@ async function main() {
     // Test gate
     const test = runTestGate();
     if (!test.ok) {
-      log(`  ✗ test gate FAILED (${test.fails.length} red) — rolling back`);
+      log(`  ✗ test gate FAILED (${test.fails.length} NEW fails on top of ${test.baselineCount} baseline) — rolling back`);
       rollbackFinding(finding, apply, testResult.ok ? testResult.testPath : null);
       results.push({
         id: finding.id, outcome: 'ROLLED_BACK',
-        reason: `test gate failed: ${test.fails.slice(0, 3).join('; ')}`,
+        reason: `test gate introduced ${test.fails.length} new fails: ${test.fails.slice(0, 3).join('; ')}`,
         cost: councilResult.cost,
       });
-      implLog.push(`## ${finding.id} — ROLLED_BACK\n\nPatch applied (sha ${apply.beforeSha} → ${apply.afterSha}), then test gate failed:\n\n${test.fails.slice(0, 5).join('\n')}\n\nReverted via git checkout. Council cost: $${councilResult.cost.toFixed(2)}\n`);
+      implLog.push(`## ${finding.id} — ROLLED_BACK\n\nPatch applied (sha ${apply.beforeSha} → ${apply.afterSha}), then test gate introduced ${test.fails.length} NEW failures on top of the ${test.baselineCount}-line baseline:\n\n${test.fails.slice(0, 5).join('\n')}\n\nReverted via git checkout. Council cost: $${councilResult.cost.toFixed(2)}\n`);
       continue;
     }
 
-    log(`  ✓ test gate green`);
+    log(`  ✓ test gate green (${test.totalCount} total fails matches baseline ${test.baselineCount})`);
 
     // Commit
     const commit = commitFinding(finding, apply, testResult.ok ? testResult.testPath : null, winner);
@@ -1149,6 +1329,29 @@ async function main() {
   };
   log(`▶ SIGMA done: ${summary.applied} applied, ${summary.rolledBack} rolled-back, ${summary.skipped} skipped, ${summary.needsHuman} needs-human, total $${summary.totalCost.toFixed(2)}`);
   log(`  branch: ${BRANCH_NAME} — review with: git log ${BRANCH_NAME}`);
+
+  // Multi-instance coordination (Blocker 7) — mark this instance completed,
+  // then try to become the "last instance" leader. The leader merges every
+  // completed peer's sigma branch into main and pushes once. If we're NOT
+  // last, another running peer will do it later. Skip entirely in dry-run.
+  if (MODE !== 'dry-run') {
+    markInstanceComplete({ applied: summary.applied, rolledBack: summary.rolledBack, totalCost: summary.totalCost });
+    const reg = readRegistry();
+    const stillRunning = reg.instances.filter(i => i.id !== INSTANCE_ID && i.status === 'running').length;
+    if (stillRunning > 0) {
+      log(`  ◇ ${stillRunning} sibling SIGMA instance(s) still running — they will merge + push when last to finish`);
+    } else if (tryBecomeLeader()) {
+      log(`▶ leader: all SIGMA instances complete — merging + pushing`);
+      try {
+        leaderMergeAndPush();
+      } finally {
+        releaseLeaderLock();
+        cleanupWorktree();
+      }
+    } else {
+      log(`  ◇ another instance won the leader election — they will merge + push`);
+    }
+  }
 }
 
 // ─── Entry ────────────────────────────────────────────────────────────────────
