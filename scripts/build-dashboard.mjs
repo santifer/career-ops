@@ -13898,7 +13898,8 @@ _drillInRegister('company', function(id) {
       + '<span style="font-size:30px;font-weight:700;color:' + txColor + ';line-height:1">' + txScore + '</span>'
       + '<span style="font-size:11px;color:var(--text-4)">/10</span>'
       + '<span style="font-size:12px;font-weight:600;color:' + txColor + '">' + txLabel + '</span>'
-      + '<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--surface-2);color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em">' + _esc(txConf) + ' confidence</span>'
+      + '<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--surface-2);color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em" title="' + _esc((typeof toxData.confidence_weight === 'number') ? ('Source-weighted confidence: ' + toxData.confidence_weight.toFixed(1) + ' (high ≥ 3.0, med ≥ 1.5). Weights: council=2.0, hm-intel=1.5, applications=1.0, discard=0.5.') : 'Confidence band derived from source quality.') + '">' + _esc(txConf) + ' confidence' + ((typeof toxData.confidence_weight === 'number') ? (' (' + toxData.confidence_weight.toFixed(1) + ')') : '') + '</span>'
+      + ((typeof toxData.oldest_driver_age_days === 'number') ? ((toxData.oldest_driver_age_days >= 30) ? ('<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:#fde68a;color:#92400e;border:1px solid #f59e0b" title="Oldest driver is ' + toxData.oldest_driver_age_days + ' days old — signal may be stale">stale: ' + toxData.oldest_driver_age_days + 'd</span>') : ('<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--surface-2);color:var(--text-4)" title="All drivers within last ' + toxData.oldest_driver_age_days + ' days">fresh: ' + toxData.oldest_driver_age_days + 'd</span>')) : '')
       + stateMarker
       + '<span style="font-size:10px;color:var(--text-4);margin-left:auto" aria-hidden="true">explore &rsaquo;</span>'
       + '</div>'
@@ -13915,8 +13916,8 @@ _drillInRegister('company', function(id) {
           +   '<span style="font-size:10px;color:var(--text-4)">+' + (d.weight || 0) + '</span>'
           + '</div>'
           + '<div style="font-size:11px;color:var(--text-3);margin-top:3px;line-height:1.4">' + _esc(d.evidence || '') + '</div>'
-          + '<div style="font-size:10px;color:var(--text-4);margin-top:4px;font-family:monospace;display:flex;justify-content:space-between;align-items:center">'
-          +   '<span>source: ' + _esc(d.source || 'unknown') + '</span>'
+          + '<div style="font-size:10px;color:var(--text-4);margin-top:4px;font-family:monospace;display:flex;justify-content:space-between;align-items:center;gap:6px">'
+          +   '<span>source: ' + _esc(d.source || 'unknown') + (typeof d.source_age_days === 'number' ? (' <span style="font-family:inherit;' + (d.source_age_days >= 30 ? 'color:#92400e' : 'color:var(--text-4)') + '" title="Source file mtime age">· ' + d.source_age_days + 'd old</span>') : '') + '</span>'
           +   '<span style="font-family:inherit;color:var(--text-4)" aria-hidden="true">open &rsaquo;</span>'
           + '</div>'
           + '</div>';
