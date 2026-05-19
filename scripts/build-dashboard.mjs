@@ -2748,10 +2748,18 @@ function renderRow(r, idx) {
         const intvTooltip = 'Estimated % chance of converting Applied → recruiter screen. Base rate 12% for AI-native cold apps, modulated by score, archetype, comp match, prior outcomes at this company.';
         const hmTooltip = 'Estimated % chance the hiring manager or recruiter notices the application (vs ATS-filtered). Boosted by competitive edges, rare-combination markers, and referral path strength.';
         const dc = align.data_completeness || {};
+        // BRAVO 2026-05-19 (content sweep): drillKey MUST match the keys in
+        // the percentage-popout defs map below (~line 14790). Previously we
+        // emitted snake_case (profile_alignment), the defs used camelCase
+        // (alignment), and every click on a percentage bar fell through to
+        // the generic "Computed metric. Detail not pre-baked yet." placeholder
+        // — turning the most important drill-in on each drawer row into a
+        // dead end. Aligning to camelCase resolves the lookup so the rich
+        // definition + close-actions render.
         alignmentBars = `<div class="alignment-bars">
-          ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile', 'profile_alignment', dc.alignment)}
-          ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview', 'interview_likelihood', dc.interview)}
-          ${bar(align.hmNoticing, 'Chance a hiring manager will see you', hmTooltip, 'hm', 'hm_noticing_chance', dc.hmNoticing)}
+          ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile', 'alignment', dc.alignment)}
+          ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview', 'interview', dc.interview)}
+          ${bar(align.hmNoticing, 'Chance a hiring manager will see you', hmTooltip, 'hm', 'hmNoticing', dc.hmNoticing)}
         </div>`;
       }
     }
@@ -2922,32 +2930,16 @@ function renderRow(r, idx) {
     }).join('')}
   </div>` : '';
 
-  // ── Card 4: Notes & activity (slate / append-only log) ──
-  // Action card removed 2026-05-18 — redundant w/ top-of-drawer apply
-  // banner + per-row kebab actions.
-  // Server populates entries lazily via GET /api/notes/:num on first
-  // expand. Card always renders (every row can have notes), with an
-  // empty state until the first note arrives.
-  const notesCard = `<div class="dcard dcard--notes" data-notes-num="${htmlEscape(String(r.num || ''))}">
-    <div class="dcard-label">Notes &amp; activity</div>
-    <div class="notes-compose">
-      <textarea class="notes-input" maxlength="1000" rows="2"
-        placeholder="Add a note (followed up, recruiter response, etc.) — 1000 char max"
-        onclick="event.stopPropagation()"
-        oninput="updateNotesCounter(this);event.stopPropagation()"
-        onkeydown="event.stopPropagation()"
-        aria-label="Add a note for row #${htmlEscape(String(r.num || ''))}"></textarea>
-      <div class="notes-compose-row">
-        <span class="notes-counter" aria-live="polite">0 / 1000</span>
-        <button type="button" class="dcard-btn notes-add-btn"
-          onclick="addRowNote(this);event.stopPropagation()"
-          data-num="${htmlEscape(String(r.num || ''))}">Add note</button>
-      </div>
-    </div>
-    <div class="notes-list" data-notes-list>
-      <div class="notes-empty muted-text">No notes yet — add one above</div>
-    </div>
-  </div>`;
+  // ── Notes & activity card REMOVED 2026-05-19 per Mitchell ask ──
+  // Drawer no longer surfaces a per-row notes composer. Status changes
+  // remain auto-logged in applications.md. CSS for .dcard--notes and
+  // the JS handlers (addRowNote, updateNotesCounter, loadDrawerNotes)
+  // left as harmless dead code — they no-op when no .dcard--notes
+  // elements exist in the DOM. /api/notes/* server endpoints in
+  // dashboard-server.mjs are intentionally preserved (no callers in
+  // the active UI, but keeping them avoids breaking any external
+  // tooling that may POST notes from outside the dashboard).
+  const notesCard = '';
 
   // ── Recommendation banner ────────────────────────────────
   const recBanner = finalRec ? `<div class="rec-banner">
