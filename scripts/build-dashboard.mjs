@@ -14765,14 +14765,41 @@ _drillInRegister('banner-roles', function(id) {
     html: '<p style="font-size:12px;margin-bottom:8px">Latest pipeline entries from last scan run:</p>' + items,
   };
 });
+// BRAVO 2026-05-19 (content sweep): turn raw machine-keys into human labels.
+// "profile_alignment" → "Profile alignment". "hmNoticing" → "Hm noticing"
+// (which the explicit defs map below overrides to the proper "Chance a
+// hiring manager will see you"). Used as a safety net so no popout title
+// ever ships with a literal underscore or camelCase identifier.
+function _humanizeKey(k) {
+  if (!k) return 'Detail';
+  // snake_case + kebab-case → spaces
+  var s = String(k).replace(/[_-]+/g, ' ').trim();
+  // camelCase → spaces (insert before each interior uppercase)
+  s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+  // Sentence-case the first letter, lowercase the rest (so abbreviations
+  // stay readable — "HM" should pre-register through the explicit defs map).
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
 _drillInRegister('percentage', function(id) {
   // id format: "{rowId}:{key}" — e.g. "42:alignment" or "42:interview" or "42:hmNoticing"
   // 2026-05-18 Wave D: when strategyData isn't baked, fall back to an
   // explainer that defines the metric + reads the actual % from the DOM
   // + lists concrete close-actions. No more TODO leak to the user.
+  // BRAVO 2026-05-19 (content sweep): normalize legacy snake_case keys
+  // (profile_alignment / interview_likelihood / hm_noticing_chance) to the
+  // canonical camelCase forms (alignment / interview / hmNoticing) used by
+  // the defs map. Belt-and-suspenders against any caller that still emits
+  // the old keys before its build hits prod.
   var parts = (id || '').split(':');
   var rowId = parts[0] || '';
   var key = parts.slice(1).join(':') || '';
+  var KEY_NORMALIZE = {
+    'profile_alignment': 'alignment',
+    'interview_likelihood': 'interview',
+    'hm_noticing_chance': 'hmNoticing',
+    'hm_noticing': 'hmNoticing',
+  };
+  if (KEY_NORMALIZE[key]) key = KEY_NORMALIZE[key];
   var cb = window._waveCB || {};
   var stratData = (cb.strategyData || {})[id] || {};
   var cardHtml = stratData.html || '';
@@ -14808,7 +14835,15 @@ _drillInRegister('percentage', function(id) {
         ],
       },
     };
-    var d = defs[key] || { title: key, definition: 'Computed metric. Detail not pre-baked yet.', closeActions: [] };
+    // BRAVO 2026-05-19 (content sweep): if a future metric arrives that's
+    // not in the defs map, give the user honest copy instead of a TODO leak.
+    // The metric was computed; we just don't have a documented definition
+    // for it yet — say that, and tell them where to look.
+    var d = defs[key] || {
+      title: _humanizeKey(key),
+      definition: 'This number was computed from your evaluation pipeline, but I haven\'t written a plain-language definition for it yet. The compute logic lives in lib/strategy-ceiling.mjs and lib/alignment-scorer.mjs — read those if you need the math today; the definition will be added on the next content pass.',
+      closeActions: [],
+    };
     cardHtml = '<div style="font-size:13px;line-height:1.55">'
       + (pct ? '<div style="display:inline-block;background:var(--surface-2);padding:4px 12px;border-radius:999px;font-weight:700;color:var(--text);margin-bottom:10px">Current: ' + pct + '</div>' : '')
       + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:4px">Definition</div>'
@@ -14821,7 +14856,10 @@ _drillInRegister('percentage', function(id) {
           : '')
       + '</div>';
   }
-  var defTitle = ({alignment:'Profile alignment',interview:'Interview likelihood',hmNoticing:'Chance an HM will see you'})[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) + ' breakdown' : 'Percentage breakdown');
+  // BRAVO 2026-05-19 (content sweep): use the humanizer so unknown keys
+  // (snake_case or otherwise) never leak their raw form into the popout
+  // title. "profile_alignment" → "Profile alignment", never "Profile_alignment".
+  var defTitle = ({alignment:'Profile alignment',interview:'Interview likelihood',hmNoticing:'Chance a hiring manager will see you'})[key] || _humanizeKey(key);
   return {
     title: defTitle,
     html: cardHtml,
@@ -14835,21 +14873,34 @@ _drillInRegister('percentage', function(id) {
       if (!bodyEl) return;
       var refreshTag = document.createElement('div');
       refreshTag.style.cssText = 'font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)';
-      refreshTag.textContent = '↻ Computing role-specific strategy…';
+      refreshTag.textContent = 'Looking for role-specific advice…';
       bodyEl.appendChild(refreshTag);
       fetch('/api/drill/percentage/' + encodeURIComponent(rowId) + '/' + encodeURIComponent(key), {
         signal: AbortSignal.timeout(15000),
       }).then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           if (!data || !data.ok || !data.html) {
-            refreshTag.textContent = '↻ Using generic definition (no role-specific strategy cached)';
+            // BRAVO 2026-05-19 (content sweep): the prior copy
+            // ("↻ Using generic definition (no role-specific strategy
+            // cached)") read like a stack trace. Mitchell sees this when
+            // strategy-ceiling has never been computed for this row+metric.
+            // Tell him plainly what's missing and how to fill it.
+            refreshTag.innerHTML = 'Showing the general definition above. '
+              + 'No role-specific strategy has been computed for this metric yet — '
+              + 'run <code style="font-size:11px;padding:1px 5px;background:var(--surface-2);border-radius:3px">node scripts/agents/intel-refresh.mjs --row ' + (rowId || 'N') + ' --slots strategy</code> '
+              + 'to generate one (~$1 per metric).';
             return;
           }
           bodyEl.innerHTML = '<div class="strat-live">' + data.html + '</div>'
-            + '<div style="font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)">↻ Refreshed live from /api/drill/percentage — role-specific strategy via lib/strategy-ceiling.mjs.</div>';
+            + '<div style="font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)">Tailored to this role + company by lib/strategy-ceiling.mjs. Refreshed live.</div>';
         })
         .catch(function (err) {
-          refreshTag.textContent = '↻ Live refresh skipped (' + (err.name === 'TimeoutError' ? 'timed out' : 'offline') + ') — using generic definition';
+          // BRAVO 2026-05-19 (content sweep): the prior copy used a ↻ glyph
+          // and unspecific "live refresh skipped" — read like a debug log.
+          // Be explicit about what failed and what's still useful.
+          refreshTag.textContent = err.name === 'TimeoutError'
+            ? 'Couldn\'t reach the strategy compute (timed out after 15s). The general definition above still applies.'
+            : 'Strategy compute is offline — the general definition above is what I have right now.';
         });
     },
   };
