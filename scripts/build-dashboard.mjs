@@ -3076,7 +3076,7 @@ function renderRow(r, idx) {
               <span class="throttle-cooldown-msg">${htmlEscape(r._throttle.label)}</span>
               ${r._throttle.note ? `<details class="throttle-cooldown-why"><summary>Why?</summary><span class="muted-text">${htmlEscape(r._throttle.note)}</span></details>` : ''}
             </div>`
-          : `<div class="throttle-banner throttle-${r._throttle.status}">${htmlEscape(r._throttle.label)}<br><span class="muted-text">${htmlEscape(r._throttle.note || '')}</span></div>`
+          : `<div class="throttle-banner throttle-${r._throttle.status}">${r._throttle.labelHtml || htmlEscape(r._throttle.label)}<br><span class="muted-text">${r._throttle.noteHtml || htmlEscape(r._throttle.note || '')}</span></div>`
       ) : ''}
       ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full Phase E decision provenance" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ explore</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
@@ -3549,7 +3549,37 @@ async function build() {
     } else if (policy && active >= policy.cap) {
       r._throttle = { status: 'blocked', label: `🛑 ${policy.cap} active app${policy.cap === 1 ? '' : 's'} at ${r.company} — defer until resolved`, note: policy.note };
     } else if (groupRows.length > 1 && !isTopOfCompany) {
-      r._throttle = { status: 'defer', label: `⏸ Defer — apply to higher-scored ${r.company} role first`, note: policy?.note || 'Pick highest-scored at the same company first.' };
+      // 2026-05-19 enhancement: name the higher-scored sibling(s) explicitly
+      // and hyperlink to them so the user can jump to the recommended role
+      // immediately from the drawer/popout (per Mitchell ask).
+      // groupRows is sorted by score descending; higher-scored siblings are
+      // those with strictly higher score (we use > not >= to avoid listing
+      // self when scores tie).
+      const higherScored = groupRows.filter(g => g.score > r.score);
+      const top = groupRows[0]; // highest-scored at this company
+      // Plain-text fallback for any consumer that doesn't render HTML.
+      const plainLabel = `⏸ Defer — apply to ${top.role} (${top.score.toFixed(1)}) at ${r.company} first`;
+      const plainNote = higherScored.length > 1
+        ? `${higherScored.length} higher-scored ${r.company} role${higherScored.length === 1 ? '' : 's'} ahead: ${higherScored.map(s => `${s.role} (${s.score.toFixed(1)})`).join(', ')}.`
+        : (policy?.note || `Pick highest-scored at the same company first.`);
+      // HTML versions with clickable sibling links — focusRow(num) scrolls
+      // to + expands the target row (defined client-side near toggleDetail).
+      const mkSiblingLink = (s) =>
+        `<a href="javascript:void(0)" class="throttle-sibling-link" data-num="${s.num}" `
+        + `onclick="event.preventDefault();event.stopPropagation();window.focusRow(${s.num})" `
+        + `title="Jump to ${htmlEscape(s.role)} at ${htmlEscape(r.company)} (score ${s.score.toFixed(1)}, row #${s.num})">`
+        + `${htmlEscape(s.role)} <span class="throttle-sibling-score">(${s.score.toFixed(1)})</span></a>`;
+      const labelHtml = `⏸ Defer — apply to ${mkSiblingLink(top)} at ${htmlEscape(r.company)} first`;
+      const noteHtml = higherScored.length > 1
+        ? `${higherScored.length} higher-scored ${htmlEscape(r.company)} roles ahead: ${higherScored.map(mkSiblingLink).join(', ')}.`
+        : (policy?.note ? htmlEscape(policy.note) : 'Pick the highest-scored at the same company first.');
+      r._throttle = {
+        status: 'defer',
+        label: plainLabel,
+        labelHtml,
+        note: plainNote,
+        noteHtml,
+      };
     } else if (groupRows.length > 1 && isTopOfCompany) {
       const cooldownNote = cooldown ? ` · Past cooldown cleared ${cooldown.latestEnd.toISOString().slice(0, 10)}` : '';
       r._throttle = { status: 'pickone', label: `⭐ Apply this ONE first (${groupRows.length - 1} other ${r.company} roles deferred${cooldownNote})`, note: policy?.note || '' };
@@ -6718,6 +6748,39 @@ async function build() {
   .throttle-defer    { background: var(--surface-2); color: var(--text-3); border-left: 3px solid var(--text-4); }
   .throttle-blocked, .throttle-cooldown { background: var(--red-bg); color: var(--red-fg); border-left: 3px solid var(--red-fg); }
   .throttle-open     { background: var(--green-bg);  color: var(--green);  border-left: 3px solid var(--green-fg); }
+  /* 2026-05-19: clickable sibling links inside throttle banners — when a
+     row is deferred behind a higher-scored sibling, the sibling's role
+     name is rendered as a link that scrolls to + expands the target row.
+     Specificity bumped (.throttle-banner a.throttle-sibling-link, 0/2/1)
+     to beat the parent .throttle-defer color inheritance. */
+  .throttle-banner a.throttle-sibling-link {
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .throttle-banner a.throttle-sibling-link:hover,
+  .throttle-banner a.throttle-sibling-link:focus-visible {
+    color: #1d4ed8;
+    text-decoration-thickness: 2px;
+    outline: none;
+  }
+  .throttle-banner .throttle-sibling-score {
+    font-weight: 500;
+    opacity: 0.7;
+    font-size: 0.9em;
+  }
+  @media (prefers-color-scheme: dark) {
+    .throttle-banner a.throttle-sibling-link { color: #60a5fa; }
+    .throttle-banner a.throttle-sibling-link:hover,
+    .throttle-banner a.throttle-sibling-link:focus-visible { color: #93c5fd; }
+  }
+  /* Brief flash highlight on the target row when focusRow() lands. */
+  tr.row.throttle-focus-flash > td {
+    background: var(--amber-bg, rgba(251, 191, 36, 0.18)) !important;
+    transition: background 0.6s ease-out;
+  }
   /* FIX 2 (2026-05-17) — compact single-line rejection cooldown banner.
      One row, ~40-50px tall, with collapsed <details> for driver info. */
   .throttle-cooldown--compact {
@@ -12837,6 +12900,39 @@ function toggleDetail(idx) {
   }
   detail.style.display = detail.style.display === 'none' ? '' : 'none';
 }
+
+// focusRow(num) — scrolls the apply-now row identified by data-num=N into
+// view and opens its detail (drawer/inline/mobile-sheet, whichever applies).
+// Used by the deferred-sibling links inside throttle banners
+// (e.g., "⏸ Defer — apply to <link>Higher-scored Role</link> first").
+// Falls back gracefully if the target row isn't on the page (search filter
+// hiding it, etc.) by surfacing a brief toast.
+function focusRow(num) {
+  const tr = document.querySelector('tr.row[data-num="' + num + '"]');
+  if (!tr) {
+    if (typeof window.showToast === 'function') {
+      window.showToast('Row #' + num + ' not visible — clear filters and try again.');
+    }
+    return;
+  }
+  const idx = tr.getAttribute('data-row-id');
+  // If the row's current detail is already open, just scroll to it.
+  const detail = idx ? document.getElementById('detail-' + idx) : null;
+  const alreadyOpen = detail && detail.style.display !== 'none' && detail.style.display !== '';
+  // Close any other open right-rail to avoid stacking.
+  if (typeof closeRightRail === 'function' && _railSelectedIdx != null && _railSelectedIdx !== idx) {
+    try { closeRightRail(); } catch (_) {}
+  }
+  // Briefly highlight the target row so the user sees where focus landed.
+  tr.classList.add('throttle-focus-flash');
+  setTimeout(() => tr.classList.remove('throttle-focus-flash'), 1600);
+  tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (!alreadyOpen && idx != null) {
+    // Small delay so the scroll animation can settle before the drawer opens.
+    setTimeout(() => toggleDetail(idx), 240);
+  }
+}
+window.focusRow = focusRow;
 
 function _drawerEscape(s) {
   return String(s == null ? '' : s)
