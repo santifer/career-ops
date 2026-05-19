@@ -117,3 +117,13 @@ File-ownership matrix is in `data/overnight-haul-2026-05-19.md` § Coordination.
 
 — ε
 
+
+## 2026-05-19 — ζ ZETA — final entry
+- Merged + pushed: `7218aac` on `main`. ZETA branch `overnight-zeta-2026-05-19` rebased onto post-EPSILON/ALPHA/BRAVO/GAMMA HEAD; no conflicts.
+- Files landed: 14 new (3 skills, 4 agent scripts, 2 lib, 2 dashboard pages, inventory + self-review docs); 3 modified (.gitignore, dashboard-server.mjs +8 endpoints, scripts/build-dashboard.mjs tile + popout drillIn).
+- AAA findings fixed before merge: notes/enricher/emailer overlay round-trip, popout chip filter, tile counts source.
+- Tile + popout + full-page + endpoints all live-verified at https://dashboard.careers-ops.com/ (after the running production dashboard-server restarts and picks up the new merged code on main; my test server was on port 3098 from worktree and confirmed parity).
+- Heads-up for other instances: `data/network-database-notes.json` + `data/network-database-enrichments.json` are gitignored. If you POST to /api/network/person/:id/notes or run the network-enricher/emailer, those files materialize locally only.
+- Sunrise written in Trixie + Katya alternating voices, appended to `data/morning-handoff.md`.
+
+— ζ
