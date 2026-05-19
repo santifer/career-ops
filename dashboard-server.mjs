@@ -371,24 +371,43 @@ function parsePipeline() {
 // publish rate drifts season-over-season). Defaults preserved bit-for-bit
 // to ensure no behavior change vs prior session. Env-var names follow the
 // existing PER_RUN_CAP_* / COST_PER_*_USD convention.
-const COST_PER_TRIAGE_HAIKU      = parseFloat(process.env.COST_PER_TRIAGE_HAIKU_USD      || '0.005');
-const COST_PER_TRIAGE_SONNET_JD  = parseFloat(process.env.COST_PER_TRIAGE_SONNET_JD_USD  || '0.07');    // Tier 5 enriched triage per item
-const COST_PER_BATCH_EVAL        = parseFloat(process.env.COST_PER_BATCH_EVAL_USD        || '0.060');
-const COST_PER_COMPANY_COUNCIL   = parseFloat(process.env.COST_PER_COMPANY_COUNCIL_USD   || '2.00');    // council-of-models + dealbreaker per unique company
-const COST_PER_APPLY_PACK_PREGEN = parseFloat(process.env.COST_PER_APPLY_PACK_PREGEN_USD || '2.50');    // build-apply-packs.mjs per high-conf item
-const ADVANCE_RATE_ESTIMATE       = parseFloat(process.env.ADVANCE_RATE_ESTIMATE        || '0.50');    // historical: 11–72%; 50% is conservative mid
-const HIGH_CONFIDENCE_PREGEN_RATE = parseFloat(process.env.HIGH_CONFIDENCE_PREGEN_RATE  || '0.20');    // % of items hitting ≥4.5 + high-conf flag
-const COMPANY_CACHE_HIT_RATE      = parseFloat(process.env.COMPANY_CACHE_HIT_RATE       || '0.50');    // % of unique companies already cached (30d TTL)
+//
+// OMEGA-proposal-3 (approved 2026-05-19): unify env-var input validation.
+// Bare parseFloat() lets a typo like PUBLISH_RATE_ESTIMATE="abc" propagate NaN
+// through every downstream multiplication, breaking the cost-preview JSON +
+// modal layout. clampEnvFloat/Int wraps parseFloat/parseInt with Number.isFinite
+// + Math.min/Math.max, mirroring α's POLISH_* loader pattern. Standardized
+// ranges: rates [0.0, 1.0], costs [0.0, 500.0], caps [0.0, 10_000.0],
+// thresholds [0.0, 10.0]. On bad input (NaN or out-of-range), the default is
+// used instead so the dashboard renders cleanly.
+function clampEnvFloat(envVar, defaultValue, min, max) {
+  const raw = parseFloat(process.env[envVar] ?? '');
+  if (!Number.isFinite(raw)) return defaultValue;
+  return Math.min(Math.max(raw, min), max);
+}
+function clampEnvInt(envVar, defaultValue, min, max) {
+  const raw = parseInt(process.env[envVar] ?? '', 10);
+  if (!Number.isFinite(raw)) return defaultValue;
+  return Math.min(Math.max(raw, min), max);
+}
+const COST_PER_TRIAGE_HAIKU      = clampEnvFloat('COST_PER_TRIAGE_HAIKU_USD',      0.005, 0, 500);
+const COST_PER_TRIAGE_SONNET_JD  = clampEnvFloat('COST_PER_TRIAGE_SONNET_JD_USD',  0.07,  0, 500);   // Tier 5 enriched triage per item
+const COST_PER_BATCH_EVAL        = clampEnvFloat('COST_PER_BATCH_EVAL_USD',        0.060, 0, 500);
+const COST_PER_COMPANY_COUNCIL   = clampEnvFloat('COST_PER_COMPANY_COUNCIL_USD',   2.00,  0, 500);   // council-of-models + dealbreaker per unique company
+const COST_PER_APPLY_PACK_PREGEN = clampEnvFloat('COST_PER_APPLY_PACK_PREGEN_USD', 2.50,  0, 500);   // build-apply-packs.mjs per high-conf item
+const ADVANCE_RATE_ESTIMATE       = clampEnvFloat('ADVANCE_RATE_ESTIMATE',        0.50,  0, 1);     // historical: 11–72%; 50% is conservative mid
+const HIGH_CONFIDENCE_PREGEN_RATE = clampEnvFloat('HIGH_CONFIDENCE_PREGEN_RATE',  0.20,  0, 1);     // % of items hitting ≥4.5 + high-conf flag
+const COMPANY_CACHE_HIT_RATE      = clampEnvFloat('COMPANY_CACHE_HIT_RATE',       0.50,  0, 1);     // % of unique companies already cached (30d TTL)
 
-const PER_RUN_CAP_RUN_BATCH    = parseFloat(process.env.PER_RUN_CAP_RUN_BATCH_USD    || '25');
-const PER_RUN_CAP_PROCESS_ALL  = parseFloat(process.env.PER_RUN_CAP_PROCESS_ALL_USD  || '250');
-const PER_RUN_CAP_APPLY_PACK   = parseFloat(process.env.PER_RUN_CAP_APPLY_PACK_USD   || '5');
-const DAILY_CAP_OVERNIGHT      = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD      || '20');
+const PER_RUN_CAP_RUN_BATCH    = clampEnvFloat('PER_RUN_CAP_RUN_BATCH_USD',    25,  0, 10_000);
+const PER_RUN_CAP_PROCESS_ALL  = clampEnvFloat('PER_RUN_CAP_PROCESS_ALL_USD',  250, 0, 10_000);
+const PER_RUN_CAP_APPLY_PACK   = clampEnvFloat('PER_RUN_CAP_APPLY_PACK_USD',   5,   0, 10_000);
+const DAILY_CAP_OVERNIGHT      = clampEnvFloat('DAILY_CAP_OVERNIGHT_USD',      20,  0, 10_000);
 // Single-row apply-pack estimate (council pricing). build-apply-pack.mjs today
 // only scaffolds stubs (~$0), but the prompt assumes it will eventually run
 // the council + humanize-check passes — budget for that future state so the
 // cap meaningfully gates power-user "regenerate everything" loops.
-const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD || '2.50');
+const COST_PER_APPLY_PACK_USD  = clampEnvFloat('COST_PER_APPLY_PACK_USD', 2.50, 0, 500);
 // Decomposed agent enrichment costs (surfaced per-stage in the preview modal).
 //
 // γ GAMMA 2026-05-19 truth-audit (CORRECTED after self-review hallucination):
@@ -405,29 +424,29 @@ const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD 
 //   data/agent-hallucination-log.md entry 2026-05-19-γ-runbatch for details.
 //   Confidence: MED (budget cap, not observed mean; observed mean from N=2
 //   logged runs is $0.625 — actual cost likely $0.5-$3 per call).
-const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '3.00');
+const COST_PER_RESEARCHER_CALL   = clampEnvFloat('COST_PER_RESEARCHER_CALL_USD',  3.00, 0, 500);
 // COST_PER_DEALBREAKER_CALL: $0.30 — observed mean of N=2 logged runs in
 //   `data/cost-log.tsv` is $0.25 ($0.20 + $0.30). $0.30 kept as a +20% buffer
 //   over observed mean; falls inside the small-N confidence band.
 //   Confidence: MED (only 2 logged runs; widen to ±$0.10).
-const COST_PER_DEALBREAKER_CALL  = parseFloat(process.env.COST_PER_DEALBREAKER_CALL_USD || '0.30');
+const COST_PER_DEALBREAKER_CALL  = clampEnvFloat('COST_PER_DEALBREAKER_CALL_USD', 0.30, 0, 500);
 // γ GAMMA 2026-05-19 truth-audit + ε EPSILON env-override (merged):
 // Defaults are calibrated to real data; env overrides honored for ops tuning.
 //
 // PUBLISH_RATE_ESTIMATE: 0.22 — `data/applications.md` shows 29 of 131 scored
 //   rows at >=4.0 (22.1%). Prior 0.40 was a vibes estimate ~80% above real.
 //   Confidence: HIGH (N=131, multi-month historical).
-const PUBLISH_RATE_ESTIMATE      = parseFloat(process.env.PUBLISH_RATE_ESTIMATE      || '0.22');
+const PUBLISH_RATE_ESTIMATE      = clampEnvFloat('PUBLISH_RATE_ESTIMATE',      0.22, 0, 1);
 // RESEARCHER_ENRICHMENT_RATE: 0.19 — `data/apply-now-queue.json` ranked has 21
 //   roles; `data/hm-intel/*.json` (excluding _SCHEMA, _weights) has 17 cached
 //   intel files (80.9% coverage). 4 of 21 uncached = 19.0% trigger rate.
 //   Prior 0.30 over-estimated by ~58%. This rate WILL drift as queue churns;
 //   re-calibrate when queue size changes by >50%.
 //   Confidence: MED (N=21, single-day snapshot).
-const RESEARCHER_ENRICHMENT_RATE = parseFloat(process.env.RESEARCHER_ENRICHMENT_RATE || '0.19');
+const RESEARCHER_ENRICHMENT_RATE = clampEnvFloat('RESEARCHER_ENRICHMENT_RATE', 0.19, 0, 1);
 // THRESHOLD_FOR_PUBLISH: 4.0 — verified in `lib/funnel-completion.mjs:128`,
 //   `lib/next-moves.mjs:121`, `lib/eval-council.mjs:144`. PASS — gated by real code.
-const THRESHOLD_FOR_PUBLISH      = parseFloat(process.env.THRESHOLD_FOR_PUBLISH      || '4.0');
+const THRESHOLD_FOR_PUBLISH      = clampEnvFloat('THRESHOLD_FOR_PUBLISH',      4.0, 0, 10);
 // α Run-Batch eval 2026-05-19 — polish stage costs (only surface when POLISH_PACK_ENABLED=1).
 // Default of ~$60/pack is the calibrated typical (per overnight smoke @ 14021db: cover-letter
 // only converged at $46 + $0 cached signals; full 6-artifact ranges $40-180 from operational
@@ -523,10 +542,10 @@ const COST_CALIBRATION_PROVENANCE = {
 // NOT invoked anywhere on the Process All / Run Batch publish path itself
 // (per δ Run-Batch audit 2026-05-19). The preview surfaces this cost as a
 // post-publish potential spend the user should know about.
-const COST_PER_AI_DETECTION_ARTIFACT = parseFloat(process.env.COST_PER_AI_DETECTION_ARTIFACT_USD || '0.02');
+const COST_PER_AI_DETECTION_ARTIFACT = clampEnvFloat('COST_PER_AI_DETECTION_ARTIFACT_USD', 0.02, 0, 500);
 const AI_DETECTION_ARTIFACTS_PER_PACK = 5;
 const AI_DETECTION_RETRY_MULTIPLIER   = 1.5;   // average across CLEAR / MED / HIGH / CRIT outcomes
-const PACK_BUILD_OPT_IN_RATE          = parseFloat(process.env.PACK_BUILD_OPT_IN_RATE || '0.40');
+const PACK_BUILD_OPT_IN_RATE          = clampEnvFloat('PACK_BUILD_OPT_IN_RATE', 0.40, 0, 1);
 // Per-pack detection cost = artifacts × per-call × retry multiplier (~$0.15/pack)
 // Multiplied by PACK_BUILD_OPT_IN_RATE (the % of published items the user
 // actually generates a pack for) to avoid over-stating cost on packs the
@@ -552,14 +571,17 @@ function getMonthlyBudget() {
   // Calibration 2026-05-16: default raised from $50 to $500 to accommodate
   // Tier 5 nightly enrichment + manual Run Batch + occasional Process All.
   // Override via MONTHLY_BUDGET_USD env if running heavier or lighter.
-  return parseFloat(process.env.MONTHLY_BUDGET_USD || '500');
+  // OMEGA-proposal-3 (approved 2026-05-19): clamped to [0, 100_000] so a
+  // typo (e.g. MONTHLY_BUDGET_USD="abc") doesn't propagate NaN through
+  // headroom math + cap-warning copy.
+  return clampEnvFloat('MONTHLY_BUDGET_USD', 500, 0, 100_000);
 }
 
 function getBurstBudget() {
   // Burst-mode for interview weeks: raise the ceiling temporarily, deduct
   // from next month's cap. Set MONTHLY_BUDGET_USD_BURST=1000 + MONTHLY_BUDGET_BURST_UNTIL=YYYY-MM-DD
   // to activate. Returns 0 if burst is disabled or expired.
-  const burst = parseFloat(process.env.MONTHLY_BUDGET_USD_BURST || '0');
+  const burst = clampEnvFloat('MONTHLY_BUDGET_USD_BURST', 0, 0, 100_000);
   if (!burst) return 0;
   const until = process.env.MONTHLY_BUDGET_BURST_UNTIL;
   if (until && Date.now() > Date.parse(until)) return 0;
