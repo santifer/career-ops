@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.gamma-truth-audit</string>
+
+    <!-- GAMMA recurring: data-truth audit across all dashboard-computed metrics. -->
+    <!-- Weekly Sunday 05:00 PT. Catches metric drift as lib/*.mjs evolves. -->
+    <!-- Underlying agent: scripts/agents/data-truth-auditor.mjs (shipped by GAMMA overnight 2026-05-19). -->
+    <!-- Self-implementation: agent runs in --all mode (inventory + trace + audit + implement AAA fixes + verify). -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
+        <string>gamma-truth-audit</string>
+        <string>always</string>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>scripts/agents/data-truth-auditor.mjs</string>
+        <string>--all</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Sunday 05:00 PT -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>5</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/gamma-truth-audit.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/gamma-truth-audit.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

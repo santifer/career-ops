@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.bravo-quick-walk</string>
+
+    <!-- BRAVO recurring: lightweight Chrome MCP walk of the dashboard, surface regressions only. -->
+    <!-- Biweekly Monday 06:00 PT. NOT a full audit — that's $100-300 manual-only. This is the $20-50 quick-walk. -->
+    <!-- Underlying agent: scripts/agents/dashboard-ux-auditor.mjs --quick-walk (shipped by BRAVO overnight 2026-05-19). -->
+    <!-- Cadence: launchd fires every Monday at 06:00 PT; wrapper biweekly-even guard skips alternate weeks. -->
+    <!-- Note: if BRAVO didn't ship --quick-walk as a distinct CLI mode, the wrapper's existence-guard short-circuits. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
+        <string>bravo-quick-walk</string>
+        <string>biweekly-even</string>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>scripts/agents/dashboard-ux-auditor.mjs</string>
+        <string>--quick-walk</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Monday 06:00 PT (Weekday 1 = Monday) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/bravo-quick-walk.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/bravo-quick-walk.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

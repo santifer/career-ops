@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.network-enrich-batch</string>
+
+    <!-- ZETA recurring: enrich + email-find top-200 priority backlog. Weekly Sunday 04:00 PT. -->
+    <!-- $50/wk LLM cap enforced inside scripts/agents/network-enricher.mjs (shipped by ZETA overnight 2026-05-19). -->
+    <!-- Cadence guard: always (launchd handles the weekly cadence). -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
+        <string>network-enrich-batch</string>
+        <string>always</string>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>scripts/agents/network-enricher.mjs</string>
+        <string>--priority-batch</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Sunday 04:00 PT (Weekday 0 = Sunday) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>4</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/network-enrich-batch.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/network-enrich-batch.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

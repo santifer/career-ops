@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.delta-ats-watch</string>
+
+    <!-- DELTA recurring: ATS-platform detection-deployment scan (vendor blog posts + press releases). -->
+    <!-- Weekly Sunday 06:00 PT. Cheap researcher call ($5-20). Triggers escalation if anything material shipped. -->
+    <!-- Underlying agent: scripts/agents/ai-detection-hardener.mjs --ats-watch (shipped by DELTA overnight 2026-05-19). -->
+    <!-- Note: if DELTA didn't ship --ats-watch as a CLI flag, the wrapper's existence-guard short-circuits cleanly. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
+        <string>delta-ats-watch</string>
+        <string>always</string>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>scripts/agents/ai-detection-hardener.mjs</string>
+        <string>--ats-watch</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Sunday 06:00 PT -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/delta-ats-watch.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/delta-ats-watch.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.delta-full-recalibration</string>
+
+    <!-- DELTA recurring: full AI-detection-pipeline recalibration. -->
+    <!-- Monthly 1st Sunday 07:00 PT (when voice corpus has grown enough to re-fit bands). $50-200/run. -->
+    <!-- Underlying agent: scripts/agents/ai-detection-hardener.mjs --recalibrate (shipped by DELTA overnight 2026-05-19). -->
+    <!-- Cadence: launchd fires every Sunday at 07:00 PT; wrapper monthly-first guard skips if day-of-month > 7. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
+        <string>delta-full-recalibration</string>
+        <string>monthly-first</string>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>scripts/agents/ai-detection-hardener.mjs</string>
+        <string>--recalibrate</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Sunday 07:00 PT (Weekday 0); monthly-first guard in wrapper limits to first Sunday of each month -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/delta-full-recalibration.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/delta-full-recalibration.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>
