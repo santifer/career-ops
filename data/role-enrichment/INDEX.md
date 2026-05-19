@@ -38,3 +38,8 @@ Generated: 2026-05-10T20:50:32.228Z
 - **bf2110. Deepgram — Senior Developer Advocate** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L
 - **bf2181. Mistral AI — Senior/Staff DevRel** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L
 - **bf2198. OpenAI — AI Deployment Manager - Pilots** | toxicity 3/5 | recruiter unknown | relocation $25000-$45000 | confidence M
+
+## Backfill rows 2110,2181 (generated 2026-05-19T22:48:47.729Z)
+
+- **bf2110. Deepgram — Senior Developer Advocate** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L
+- **bf2181. Mistral AI — Senior/Staff DevRel** | toxicity 3/5 | recruiter unknown | relocation unknown | confidence L

@@ -157,7 +157,21 @@ function loadRoles() {
 
 // Anti-hallucination + integer-only toxicity rules baked in.
 function buildPrompt(company, role) {
-  return `You are a hiring-intelligence researcher for Mitchell Williams's career-ops job search. Today is ${new Date().toISOString().slice(0, 10)}. Mitchell targets senior comms / forward-deployed / solutions-architect / AI-enablement / strategic-ops roles at frontier AI labs. He's currently Seattle-based. PRIMARY filter: total comp + pre-IPO equity timing + RSU value-at-vest.
+  // OUTPUT-FORMAT prelude: hardens the JSON-only contract. Empirically the
+  // 2026-05-19 backfill saw a 62% parse-fail rate (mostly Gemini emitting
+  // chain-of-thought + a code-fenced JSON whose closing brace exceeded the
+  // 2500-token limit). The 4-line preamble below targets that failure mode:
+  // (1) leads with the literal "{" so models that mirror the leading token
+  // start in JSON mode, (2) forbids reasoning preamble explicitly, (3) names
+  // the bug class for the model to avoid, (4) reminds it about the token
+  // budget so it doesn't blow past it.
+  return `OUTPUT FORMAT (MANDATORY — read this first):
+- Your ENTIRE response MUST be a single JSON object. The first character of your output MUST be \`{\` and the last character MUST be \`}\`.
+- DO NOT emit chain-of-thought, "Sure, here is...", \`\`\`json fences, markdown headings, or any text outside the JSON object.
+- If you start with reasoning prose before the JSON, your output WILL FAIL parsing and be discarded — costing Mitchell money for no result.
+- Stay under 2500 tokens. Compress; prefer one-line values; truncate quotes; drop optional examples. If you exceed the budget the JSON closer is lost.
+
+You are a hiring-intelligence researcher for Mitchell Williams's career-ops job search. Today is ${new Date().toISOString().slice(0, 10)}. Mitchell targets senior comms / forward-deployed / solutions-architect / AI-enablement / strategic-ops roles at frontier AI labs. He's currently Seattle-based. PRIMARY filter: total comp + pre-IPO equity timing + RSU value-at-vest.
 
 Research **${company} — ${role}**. Use Google Search aggressively. Cite sources inline.
 

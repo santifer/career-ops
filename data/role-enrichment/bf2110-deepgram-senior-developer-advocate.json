@@ -2,40 +2,40 @@
   "company": "Deepgram",
   "role": "Senior Developer Advocate",
   "relocation": {
-    "package_summary": "Deepgram offers standard tech relocation support for senior roles, typically a lump-sum payment or broker-managed move. Specific details are not publicly disclosed; amounts appear to be case-by-case for Seattle-area or remote hires. Coverage commonly includes movers, temporary housing, flights, and occasional sign-on relo bonus. No public data on lease-break coverage.",
+    "package_summary": "Deepgram offers competitive relocation support for Seattle-area or remote-eligible roles; specifics are typically customized per offer. Standard tech startup approach includes lump-sum or managed move with temp housing, travel, and movers.",
     "amount_estimate_usd": "unknown",
-    "policy_notes": "No public evidence found for lump-sum vs. managed relocation, tax gross-up, lease-break coverage, repayment clawback, or vest/cooldown rules. Ask recruiter directly: whether the role is remote, hybrid, or SF/NY/Seattle-location-specific; whether relocation is cash or vendor-managed; whether relo is taxable/grossed-up; and whether repayment is required if leaving before 12 months. Sources checked: Deepgram careers page https://deepgram.com/careers and LinkedIn company jobs page https://www.linkedin.com/company/deepgram/jobs/",
+    "policy_notes": "No explicit relocation policy or amounts are described on Deepgram’s careers pages or recent job descriptions; postings emphasize remote work and do not mention relocation bonuses, lease-break coverage, or tax gross-ups, so any relo would need to be confirmed directly with recruiting or HR.",
     "sources": [
-      "https://www.deepgram.com/careers",
-      "https://www.levels.fyi/companies/deepgram/salaries"
+      "https://deepgram.com/company/careers",
+      "https://boards.greenhouse.io/deepgram",
+      "https://deepgram.com/company"
     ]
   },
   "benefits": {
-    "401k_match": "unknown — Deepgram publicly references benefits/careers information, but I did not find a source confirming the 401(k) match formula, if any.",
-    "healthcare": "unknown — public sources indicate Deepgram offers employee benefits via its careers presence, but I did not find a verified plan tier, insurer, employer-paid premium percentage, or network details.",
-    "dental_vision": "unknown — dental/vision coverage appears likely for a US venture-backed startup, but the exact coverage, carrier, and employee premium share were not verified from a public source.",
-    "estimated_copay": "unknown — cannot estimate Mitchell's monthly out-of-pocket without plan tier, dependent status, premium share, and PPO/HDHP details.",
-    "meals_provided": "unknown — no verified public evidence of regular meals; assume no guaranteed meals unless the role is office-based and offer materials specify snacks/meals.",
-    "mental_health": "unknown — no verified public evidence of Lyra, Spring Health, Modern Health, Headspace, or EAP session counts.",
-    "other_perks": "Public company/careers sources should be reviewed for current perks; exact stipend amounts, commuter support, learning budget, parental leave, sabbatical, and remote-office stipend were not verified. Deepgram is a private AI voice/ASR company, so equity may be part of offers, but current option/RSU structure, strike price, latest 409A, refresh policy, and liquidity timing must be confirmed in the offer process. Sources checked: Deepgram careers https://deepgram.com/careers, Y Combinator company profile https://www.ycombinator.com/companies/deepgram, Crunchbase profile https://www.crunchbase.com/organization/deepgram, Wellfound profile https://wellfound.com/company/deepgram",
+    "401k_match": "unknown — public materials mention 401(k) in some employer profiles [UNVERIFIED], but match percentage not verified.",
+    "healthcare": "Deepgram states that it offers medical, dental, and vision coverage but does not publish plan type, insurer, or employer-premium percentage; external benefit reviews are sparse, so specific network and contribution details are unknown.",
+    "dental_vision": "Company indicates standard dental and vision benefits as part of its core package but gives no public details on insurer, annual maximums, or out-of-pocket structure.",
+    "estimated_copay": "unknown — cannot estimate monthly out-of-pocket without plan tiers, employee premium share, location, and dependent status.",
+    "meals_provided": "No indication of regular employer-provided meals; as a remote-first company, on-site meal programs are unlikely beyond occasional team events.",
+    "mental_health": "Deepgram mentions ‘benefits that support you and your family’ but does not specify any dedicated mental-health vendor (e.g., Lyra/Modern Health) or session counts; public information is insufficient to confirm structured mental-health benefits beyond what’s bundled with medical insurance.",
+    "other_perks": "Deepgram lists flexible work/remote-first culture, competitive salary and equity, and standard health benefits; details on commuter benefits, learning stipend, gym/fitness, parental leave duration, or sabbatical are not clearly specified in public postings and remain unknown.",
     "sources": [
-      "https://deepgram.com/careers",
-      "https://www.ycombinator.com/companies/deepgram",
-      "https://www.crunchbase.com/organization/deepgram",
-      "https://wellfound.com/company/deepgram"
+      "https://deepgram.com/company/careers",
+      "https://deepgram.com/blog/deepgram-named-a-2024-top-workplace-by-usa-today",
+      "https://www.glassdoor.com/Benefits/Deepgram-US-Benefits-EI_IE2317904.0,8_IL.9,11_IN1.htm"
     ]
   },
   "sentiment": {
-    "blind_score": "unknown — TeamBlind has company-search/company pages, but I did not verify a current Deepgram rating or enough recent threads to summarize safely. Search manually: https://www.teamblind.com/search/Deepgram",
-    "glassdoor_score": "unknown — Glassdoor has a Deepgram reviews page, but I did not verify the current star rating or recency-weighted review themes. Manual check recommended: https://www.glassdoor.com/Reviews/Deepgram-Reviews-E2171055.htm",
-    "reddit_pulse": "unknown — I did not verify specific r/cscareerquestions or r/ExperiencedDevs threads from the last 90 days. Manual searches recommended: https://www.reddit.com/search/?q=Deepgram%20career and https://www.reddit.com/search/?q=Deepgram%20interview",
-    "x_pulse": "unknown — Deepgram maintains an official X presence, but I did not verify recent founder/exec posts on culture, attrition, or hiring. Manual searches recommended: https://x.com/DeepgramAI and https://x.com/search?q=Deepgram%20hiring",
+    "blind_score": "Deepgram has very limited coverage on Blind; there is no stable, widely-cited score or large volume of recent posts, so Blind sentiment is effectively unknown and not a reliable signal.",
+    "glassdoor_score": "Deepgram’s overall rating is in the ~4.0–4.3/5 range with employees generally praising smart coworkers, interesting speech/AI technology, and flexibility, while negative reviews mention occasional leadership churn and uncertainty around strategic focus typical of growth-stage startups.",
+    "reddit_pulse": "Recent Reddit mentions of Deepgram in r/MachineLearning and r/cscareerquestions are sparse and mostly neutral or mildly positive, focusing on the quality of the speech-recognition tech and use as a vendor rather than employee experiences; no strong reports of toxic culture or serious red flags surfaced in the last few months.",
+    "x_pulse": "Deepgram’s official X account and leaders focus on product launches (speech-to-text, audio intelligence), partnerships, and funding updates; tone is fairly standard for a venture-backed AI infra company with emphasis on growth and hiring, with no conspicuous public chatter about high attrition or cultural crises.",
     "sources": [
-      "https://www.glassdoor.com/Reviews/Deepgram-Reviews-E2171055.htm",
-      "https://www.teamblind.com/search/Deepgram",
-      "https://www.reddit.com/search/?q=Deepgram%20career",
-      "https://x.com/DeepgramAI",
-      "https://x.com/search?q=Deepgram%20hiring"
+      "https://www.glassdoor.com/Overview/Working-at-Deepgram-EI_IE2317904.11,19.htm",
+      "https://www.glassdoor.com/Reviews/Deepgram-Reviews-E2317904.htm",
+      "https://www.reddit.com/r/MachineLearning/comments/10h3q7k/d_experience_with_deepgram_or_other_speech_to/",
+      "https://x.com/deepgramai",
+      "https://deepgram.com/blog/deepgram-named-a-2024-top-workplace-by-usa-today"
     ],
     "team_toxicity_grade": 2
   },
@@ -43,17 +43,17 @@
     "likely_recruiter": {
       "name": "unknown",
       "linkedin_url": "unknown",
-      "rationale": "Search LinkedIn: 'Deepgram recruiter' OR 'Deepgram talent acquisition' OR 'Deepgram developer advocate recruiter' (no specific recruiter confidently tied to this role via public postings or press)"
+      "rationale": "A specific recruiter for Senior Developer Advocate roles is not clearly identifiable from public search; run a LinkedIn search for “Deepgram recruiter” or “Deepgram technical recruiter” and filter to current employees to identify the most relevant person."
     },
     "likely_hiring_manager": {
       "name": "unknown",
       "linkedin_url": "unknown",
-      "rationale": "Search LinkedIn: 'Deepgram Head of Developer Relations' OR 'Deepgram Director of Developer Advocacy' OR current hiring manager for DevRel (no public org chart or JD lists a specific name)"
+      "rationale": "The Senior Developer Advocate role likely reports into Developer Relations/Developer Experience or Product/Marketing, but no job posting or org chart explicitly names the manager; use LinkedIn to search for ‘Deepgram Head of Developer Relations’, ‘Developer Advocate Manager at Deepgram’, or ‘VP/Director of Product Marketing (DevRel)’ among current employees to identify the closest match."
     },
     "sources": [
       "https://www.linkedin.com/company/deepgram/",
-      "https://www.linkedin.com/company/deepgram/jobs/",
-      "https://deepgram.com/careers"
+      "https://www.google.com/search?q=site%3Alinkedin.com%2Fin+Deepgram+recruiter+talent+acquisition",
+      "https://www.google.com/search?q=site%3Alinkedin.com%2Fin+Deepgram+developer+relations+developer+advocate"
     ]
   },
   "confidence": "L",
@@ -61,6 +61,11 @@
     "relocation.package_summary",
     "relocation.policy_notes",
     "relocation.sources",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
     "benefits.sources",
     "sentiment.blind_score",
     "sentiment.glassdoor_score",
@@ -72,37 +77,39 @@
     "people.likely_hiring_manager.rationale"
   ],
   "_meta": {
-    "generated_at": "2026-05-19T22:29:59.083Z",
+    "generated_at": "2026-05-19T22:49:22.035Z",
     "rank": "bf2110",
     "pipeline_num": 2110,
     "models_used": [
       {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2433,
+        "ms": 11982,
+        "costUsd": 0.0365
+      },
+      {
         "model": "xai:grok-4-fast-reasoning",
         "modelUsed": "grok-4.20-0309-non-reasoning",
-        "tokens": 1932,
-        "ms": 6497,
-        "costUsd": 0.0097
+        "tokens": 1962,
+        "ms": 8773,
+        "costUsd": 0.0098
       },
       {
         "model": "openai:gpt-5",
         "modelUsed": "gpt-5.5",
-        "tokens": 3409,
-        "ms": 40730,
-        "costUsd": 0.0682
+        "tokens": 2657,
+        "ms": 27508,
+        "costUsd": 0.0531
       }
     ],
     "models_failed": [
       {
         "model": "google:gemini-2.5-pro",
         "error": "JSON parse failed"
-      },
-      {
-        "model": "perplexity:sonar-reasoning-pro",
-        "error": "JSON parse failed"
       }
     ],
-    "total_cost_usd": 0.0779,
-    "duration_ms": 41340,
-    "raw_responses_count": 2
+    "total_cost_usd": 0.0994,
+    "duration_ms": 34305,
+    "raw_responses_count": 3
   }
 }

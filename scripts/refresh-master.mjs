@@ -146,6 +146,25 @@ async function main() {
   const state = loadState();
   trim30dSpend(state);
 
+  // 0.5. Sync apply-now-queue.json with applications.md BEFORE classification.
+  // Without this step, classifyAllRows() only sees the curated queue —
+  // applications.md rows that are >=4.0 + Evaluated/Responded but not yet
+  // in the queue never enter the refresh loop, so their role_enrichment /
+  // toxicity_composite / positioning files stay missing forever and the
+  // dashboard Health column drifts back to "—".
+  // The rebuild script preserves Mitchell's curated factor metadata + only
+  // ADDS new rows and updates status fields. Soft-fail: if it errors,
+  // continue with the existing queue rather than abort the whole refresh.
+  try {
+    log('syncing apply-now-queue.json from applications.md...');
+    const out = execSync('node scripts/rebuild-apply-now-queue.mjs', {
+      cwd: REPO_ROOT, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    for (const line of out.split('\n').filter(Boolean).slice(0, 8)) log(`  ${line}`);
+  } catch (e) {
+    log(`WARN: rebuild-apply-now-queue.mjs failed: ${e.message.slice(0, 200)} — continuing with existing queue`);
+  }
+
   // 1. Classify rows
   const { rows, counts, policy } = classifyAllRows();
   log(`tier counts: A=${counts.A} B=${counts.B} C=${counts.C} D=${counts.D} (${rows.length} rows total)`);

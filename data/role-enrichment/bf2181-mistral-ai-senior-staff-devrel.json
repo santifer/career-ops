@@ -2,85 +2,106 @@
   "company": "Mistral AI",
   "role": "Senior/Staff DevRel",
   "relocation": {
-    "package_summary": "Mistral AI is primarily Paris-based with a growing remote-friendly posture for senior technical roles (including DevRel). Relocation support for US hires is handled case-by-case; no standardized public policy found. Typical packages for European tech firms at this stage tend to be lump-sum or partially broker-managed moves with temporary housing and flights covered.",
+    "package_summary": "unknown; I do not have live Google access in this environment and found no reliable public Mistral AI relocation-policy source in static knowledge. Treat relocation as a negotiation item: ask whether support is lump-sum, vendor-managed, tax-grossed-up, and whether it covers movers, temporary housing, flights, visa, lease-break, and sign-on true-up.",
     "amount_estimate_usd": "unknown",
-    "policy_notes": "No public information on cooldown periods, tax gross-up, or vesting cliffs for relocation bonuses. Most Mistral offers for senior roles are Paris-centric; US/Seattle remote offers are rare and negotiated individually. Sources below contain no specific relo language.",
+    "policy_notes": "No public, detailed information on Mistral AI’s relocation policies for senior DevRel roles could be verified. Any relocation support (e.g., lump-sum vs. broker-managed, coverage of movers/temporary housing/flights/lease-break) appears to be negotiated case-by-case rather than documented in a standardized policy. [UNVERIFIED]",
     "sources": [
-      "https://mistral.ai/careers/",
-      "https://www.linkedin.com/company/mistral-ai/jobs/"
+      "https://www.levels.fyi/companies/mistral-ai/salaries",
+      "https://mistral.ai/careers/"
     ]
   },
   "benefits": {
     "401k_match": "unknown",
-    "healthcare": "unknown",
+    "healthcare": "unknown; Mistral has US roles but public plan tier/insurer/employer-paid premium details are not verified here.",
     "dental_vision": "unknown",
-    "estimated_copay": "unknown",
-    "meals_provided": "unknown",
+    "estimated_copay": "unknown; for a senior US hire, assume material employee premium variability until benefits guide is provided.",
+    "meals_provided": "unknown; public sources do not verify meal cadence or office-only policy.",
     "mental_health": "unknown",
-    "other_perks": "Competitive equity (French BSPCE + potential stock options), generous PTO, learning budget, and parental leave in line with French labor law (plus top-up). US-based or remote hires receive localized benefits through a US partner (details not public). No specific 401k, healthcare carrier, or mental health vendor disclosed.",
+    "other_perks": "unknown; ask for US benefits guide, equity plan docs, PTO/holiday policy, parental leave, immigration support, learning stipend, commuter/fitness, and remote-work rules.",
     "sources": [
       "https://mistral.ai/careers/",
       "https://www.wellfound.com/company/mistral-ai"
     ]
   },
   "sentiment": {
-    "blind_score": "unknown — very few public Blind threads on Mistral AI as of 2026",
-    "glassdoor_score": "unknown — limited Glassdoor presence; company is still relatively opaque",
-    "reddit_pulse": "Minimal discussion on r/cscareerquestions or r/ExperiencedDevs in last 90 days. Occasional mentions of high equity upside but concerns about Paris-centric culture and rapid scaling stress. No strong negative or positive pulse specific to DevRel.",
-    "x_pulse": "Founder Arthur Mensch and execs regularly post about hiring, model releases, and open culture. Emphasis on 'no politics' and high agency. Some attrition commentary around speed and intensity common to frontier labs. Overall positive founder signaling.",
+    "blind_score": "unknown; TeamBlind score/recent thread sentiment not verifiable without live search/login. Do not rely on uncited scraped snippets.",
+    "glassdoor_score": "unknown; current Glassdoor rating/themes not verified here. Manual check recommended for recent reviews filtered by Paris/US/Go-to-Market/DevRel.",
+    "reddit_pulse": "There is very little recent discussion specifically about working at Mistral AI in Senior/Staff DevRel or similar go-to-market roles on major subreddits like r/cscareerquestions or r/ExperiencedDevs; no robust signal on work-life balance or culture could be derived. [UNVERIFIED]",
+    "x_pulse": "Public posts from Mistral AI’s founders and executives generally emphasize a fast-moving, research-heavy, product-focused culture typical of frontier AI labs, but they do not provide concrete details about team health, management quality, or attrition patterns in DevRel. [UNVERIFIED]",
     "sources": [
-      "https://www.reddit.com/r/cscareerquestions/search/?q=mistral&sort=new",
-      "https://x.com/ArthurMensch"
+      "https://www.glassdoor.com/Search/results.htm?keyword=Mistral%20AI",
+      "https://www.teamblind.com/search/Mistral%20AI",
+      "https://www.reddit.com/search/?q=%22Mistral%20AI%22",
+      "https://x.com/MistralAI"
     ],
-    "team_toxicity_grade": 2
+    "team_toxicity_grade": 3
   },
   "people": {
     "likely_recruiter": {
       "name": "unknown",
       "linkedin_url": "unknown",
-      "rationale": "Search LinkedIn: 'Mistral AI' recruiter OR sourcer OR talent acquisition + 'DevRel' OR 'Developer Relations' OR 'Solutions Architect' — company is small and recruiters change frequently"
+      "rationale": "Not confidently identifiable from public information; for a Senior/Staff DevRel search, manually search LinkedIn for “Mistral AI” + “Talent Acquisition” / “Recruiter” and then filter by people located in Paris, London, or the SF Bay Area."
     },
     "likely_hiring_manager": {
       "name": "unknown",
       "linkedin_url": "unknown",
-      "rationale": "Search LinkedIn: 'Mistral AI' 'Head of Developer Relations' OR 'Director DevRel' OR 'DevRel' 'Staff' — no public org chart or specific hiring manager named for this role on careers page or recent posts"
+      "rationale": "Not confidently identifiable from public information; for a Senior/Staff DevRel role, manually search LinkedIn for “Mistral AI” + “Head of Developer Relations”, “Developer Advocate Lead”, “Head of Product Engineering”, or “Head of Ecosystem/Platform” and then inspect reporting lines and DevRel-adjacent titles."
     },
     "sources": [
-      "https://mistral.ai/careers/",
-      "https://www.linkedin.com/company/mistral-ai/people/"
+      "https://www.linkedin.com/company/mistralai/people/",
+      "https://www.linkedin.com/company/mistralai/jobs/"
     ]
   },
   "confidence": "L",
-  "_disagreements": [],
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
   "_meta": {
-    "generated_at": "2026-05-19T22:30:50.771Z",
+    "generated_at": "2026-05-19T22:49:57.092Z",
     "rank": "bf2181",
     "pipeline_num": 2181,
     "models_used": [
       {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 1870,
+        "ms": 23811,
+        "costUsd": 0.0281
+      },
+      {
         "model": "xai:grok-4-fast-reasoning",
         "modelUsed": "grok-4.20-0309-non-reasoning",
-        "tokens": 2032,
-        "ms": 13087,
-        "costUsd": 0.0102
+        "tokens": 1992,
+        "ms": 8849,
+        "costUsd": 0.01
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "gpt-5.5",
+        "tokens": 2547,
+        "ms": 20331,
+        "costUsd": 0.0509
       }
     ],
     "models_failed": [
       {
         "model": "google:gemini-2.5-pro",
         "error": "JSON parse failed"
-      },
-      {
-        "model": "perplexity:sonar-reasoning-pro",
-        "error": "JSON parse failed"
-      },
-      {
-        "model": "openai:gpt-5",
-        "error": "JSON parse failed"
       }
     ],
-    "total_cost_usd": 0.0102,
-    "duration_ms": 51687,
-    "raw_responses_count": 1
+    "total_cost_usd": 0.089,
+    "duration_ms": 35056,
+    "raw_responses_count": 3
   }
 }

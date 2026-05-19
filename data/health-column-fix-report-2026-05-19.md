@@ -202,12 +202,19 @@ No identity-lock violations.
    the script header so future Claude instances know not to assume citation
    gating when invoking directly.
 
-4. **The `8ce2a72` overnight-haul auto-commit picked up my code changes
+4. **The `8ce2a72` "overnight-haul" commit picked up my code changes
    (.gitignore, refresh-cache-registry.mjs, enrich-apply-now.mjs) before I
-   could commit them manually.** The commit message describes the changes
-   accurately, but Mitchell may want to verify the commit-hook behavior next
-   time he's at the keyboard. Branch is `main`, HEAD = `66bbfee`, my
-   contribution is `8ce2a72` (ancestor of HEAD).
+   could batch them manually.** ✓ Investigated 2026-05-19: this is NOT a
+   passive Claude Code hook. `.claude/settings.json` only configures the
+   PostToolUse UI-edit reminder. The commit was made by an explicit
+   invocation of `scripts/agent-commit.mjs` by a parallel agent process
+   (`Agent: overnight-haul-popped` per the commit trailer). That script is
+   the project's intentional corpus auto-edit + git audit infrastructure
+   per the 2026-05-16 calibration brief — every edit Mitchell wants
+   agent-audited gets a git commit; he reviews via `git log`. No rogue
+   hook. The race condition (parallel agent committing while I was working)
+   is the only ergonomic issue; a soft-lock on shared paths would prevent
+   it but isn't necessary.
 
 ## Anti-pattern checklist — all clean
 
