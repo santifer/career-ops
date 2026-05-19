@@ -70,6 +70,48 @@ function updateJob(patch) {
   saveState(s);
 }
 
+// ε 2026-05-19 — Orphan state cleanup on startup. Previously
+// pipeline-process-state.json grew unbounded (every job, every run, forever)
+// AND any 'running' job from a crashed prior pipeline kept that job marked
+// running indefinitely — confusing batchLive()'s "active job" detection.
+// Strategy:
+//   - Mark jobs status='running' or 'queued' with updated_at >2h ago as 'crashed'
+//     so the next dashboard rebuild and batchLive() don't treat them as active.
+//   - Prune any job (any status) with updated_at >7d ago. Audit trail lives in
+//     /tmp/process-all-*.log (each job has its own log).
+// Bounded by ORPHAN_AGE_HOURS + STATE_TTL_DAYS env vars for ops tuning.
+const ORPHAN_AGE_HOURS = parseFloat(process.env.PIPELINE_STATE_ORPHAN_AGE_HOURS || '2');
+const STATE_TTL_DAYS   = parseFloat(process.env.PIPELINE_STATE_TTL_DAYS         || '7');
+function cleanupOrphanState() {
+  const s = loadState();
+  if (!s.jobs || typeof s.jobs !== 'object') return;
+  const now = Date.now();
+  let markedCrashed = 0;
+  let pruned = 0;
+  for (const [jid, j] of Object.entries(s.jobs)) {
+    if (!j || typeof j !== 'object') { delete s.jobs[jid]; pruned++; continue; }
+    const tsStr = j.updated_at || j.started_at;
+    if (!tsStr) continue;
+    const ts = Date.parse(tsStr);
+    if (!Number.isFinite(ts)) continue;
+    const ageHours = (now - ts) / (1000 * 60 * 60);
+    // Mark stale running/queued as crashed
+    if ((j.status === 'running' || j.status === 'queued') && ageHours > ORPHAN_AGE_HOURS) {
+      s.jobs[jid] = { ...j, status: 'crashed', crashed_at: new Date().toISOString(), updated_at: new Date().toISOString(), crash_reason: `no update for ${ageHours.toFixed(1)}h (orphan-cleanup at ${new Date().toISOString()})` };
+      markedCrashed++;
+    }
+    // Prune anything older than TTL
+    if (ageHours > STATE_TTL_DAYS * 24) {
+      delete s.jobs[jid];
+      pruned++;
+    }
+  }
+  if (markedCrashed || pruned) {
+    saveState(s);
+    log(`[cleanup] orphan-state pass: ${markedCrashed} marked crashed, ${pruned} pruned (TTL ${STATE_TTL_DAYS}d, orphan-age ${ORPHAN_AGE_HOURS}h)`);
+  }
+}
+
 function log(msg) {
   const line = `[${new Date().toISOString()}] ${msg}`;
   console.log(line);
@@ -233,6 +275,9 @@ function countPendingPipeline() {
 }
 
 async function main() {
+  // ε 2026-05-19 — run orphan-state cleanup BEFORE registering ourselves so
+  // we don't accidentally mark our own brand-new row as crashed.
+  try { cleanupOrphanState(); } catch (err) { log(`[cleanup] error (non-fatal): ${err.message}`); }
   const pendingBefore = countPendingPipeline();
   updateJob({
     status:          'running',
