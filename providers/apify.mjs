@@ -126,24 +126,36 @@ function yamlEscape(str) {
 // Lightweight HTML → text. Most Apify scrapers return rich HTML in their
 // description fields; we don't need a full parser, just enough to make the
 // JD readable for downstream snippet extraction and full evaluation.
-function htmlToText(s) {
+export function htmlToText(s) {
   const raw = String(s || '');
   if (!raw || !/[<&]/.test(raw)) return raw.trim();
-  return raw
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+  // Strip script/style first. `\b` requires a word boundary so `<scripty>` is
+  // not treated as a script open; `\s*>` on the close tag tolerates the
+  // whitespace variant `</script >` that loose scraped HTML occasionally emits.
+  let cleaned = raw
+    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, ' ')
+    .replace(/<style\b[\s\S]*?<\/style\s*>/gi, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n\n')
     .replace(/<li[^>]*>/gi, '- ')
-    .replace(/<\/li>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<\/li>/gi, '\n');
+  // Strip remaining tags iteratively: a malformed polyglot like `<<a>b>`
+  // leaves a dangling `<` after one pass that the next pass picks up.
+  let prev;
+  do {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<[^>]+>/g, '');
+  } while (cleaned !== prev);
+  return cleaned
+    // Decode named/numeric entities; `&amp;` LAST so an input like
+    // `&amp;#60;` round-trips to `&#60;` instead of double-decoding to `<`.
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&amp;/g, '&')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
