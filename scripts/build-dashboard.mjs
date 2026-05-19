@@ -685,12 +685,17 @@ function equityBadge(company) {
   const data = getEquityForCompany(company);
   const { updated } = parseOverpaySignals();
   if (!data) {
+    // BRAVO 2026-05-19 (content sweep): the prior tooltip leaked a file
+    // path + command into user-facing text. Tooltip now reads as plain
+    // English; the technical "how to populate" line moves down into the
+    // popover detail where power users can still find it.
     const tip = updated
-      ? `No equity posture entry for ${company || 'this company'} (overpay-signals as of ${updated}).`
-      : 'data/overpay-signals/CURRENT.md not present yet — run scripts/overpay-signals.mjs to populate.';
+      ? `No equity stage on file for ${company || 'this company'} (last overpay-signals refresh ${updated}).`
+      : `I don't have an equity stage on file for ${company || 'this company'} yet — click for how to add one.`;
     const detail = JSON.stringify({
       kind: 'equity', company: company || '', stage: 'unknown', posture: '',
       confidence: '', updated: updated || '', empty: true, hint: tip,
+      populateCmd: 'node scripts/overpay-signals.mjs',
     });
     return `<span class="equity-badge equity-badge-empty pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
@@ -852,9 +857,13 @@ function renderBaseCell(reportPath, floors, locationRaw, company, role) {
     }
   }
   if (!parsed) {
+    // BRAVO 2026-05-19 (content sweep): the prior "Comp not parsed: ..."
+    // tooltip read like a regex error message. Friendlier copy that names
+    // what would actually help — opening the source report to see the
+    // raw Block A cell.
     const tip = compRaw
-      ? `Comp not parsed: ${compRaw.slice(0, 160)}`
-      : 'Comp not parsed — see report';
+      ? `Couldn\'t parse a base-salary number out of "${compRaw.slice(0, 140)}" — open the role report's Block A to see the raw comp cell.`
+      : 'No comp listed in this role\'s Block A — open the full report to confirm.';
     const detail = JSON.stringify({
       kind: 'base', empty: true, raw: compRaw || '', hint: tip,
     });
@@ -986,8 +995,10 @@ function renderLocationCell(reportPath, company, role) {
   const enrich = company ? getRoleEnrichment(company, role) : null;
   const reloc = enrich?.relocation || null;
   if (!rawField) {
-    const detail = JSON.stringify({ kind: 'location', empty: true, raw: '', hint: 'Location not parsed — see report', relocation: reloc });
-    return `<span class="location-chip location-chip-empty pill-popover-trigger" title="Location not parsed — see report" aria-label="Location not parsed — see report" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    // BRAVO 2026-05-19 (content sweep): friendlier empty-state copy.
+    const emptyTip = 'I couldn\'t find a location in the role report\'s Block A — open the full report for the source line.';
+    const detail = JSON.stringify({ kind: 'location', empty: true, raw: '', hint: emptyTip, relocation: reloc });
+    return `<span class="location-chip location-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const cls = classifyLocation(rawField, '');
   let icon = '';
@@ -1025,8 +1036,17 @@ function renderLocationCell(reportPath, company, role) {
 function renderBenefitsCell(company, role) {
   const enrich = getRoleEnrichment(company, role);
   if (!enrich || (!enrich.benefits && !enrich.sentiment)) {
-    const detail = JSON.stringify({ kind: 'benefits', empty: true, hint: 'No enrichment data yet — run scripts/enrich-roles.mjs to populate.' });
-    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" title="No benefits data yet" aria-label="No benefits data yet" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    // BRAVO 2026-05-19 (content sweep): the tooltip used to read "No
+    // benefits data yet" — accurate but uninformative. Tell the user what
+    // would put it there, in plain language. The command moves to the
+    // popover detail.
+    const emptyTip = 'No team-health or benefits data for this role yet — usually fills in after a role-enrichment pass.';
+    const detail = JSON.stringify({
+      kind: 'benefits', empty: true,
+      hint: emptyTip,
+      populateCmd: 'node scripts/enrich-roles.mjs --top=5',
+    });
+    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const tox = parseInt(enrich.sentiment?.team_toxicity_grade, 10);
   const toxValid = Number.isFinite(tox) && tox >= 1 && tox <= 5;
@@ -1071,8 +1091,17 @@ function renderPeopleCell(company, role) {
   const has_research = !!(people && (people.likely_recruiter?.name || people.likely_hiring_manager?.name));
   // Empty state requires NO research AND NO network signal.
   if (!has_research && !has1st && !has2nd) {
-    const detail = JSON.stringify({ kind: 'people', empty: true, hint: 'No recruiter/hiring-manager research yet — run scripts/enrich-roles.mjs.' });
-    return `<span class="people-chip people-chip-empty pill-popover-trigger" title="No people data yet" aria-label="No people data yet" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    // BRAVO 2026-05-19 (content sweep): tooltip used to read "No people
+    // data yet" — passive + unactionable. Tell the user what's missing:
+    // we haven't researched a recruiter / HM contact yet AND we haven't
+    // found a first/second-degree LinkedIn connection. That's actionable.
+    const emptyTip = 'No recruiter or hiring-manager researched yet, and I don\'t see a 1st or 2nd-degree LinkedIn connection at this company either.';
+    const detail = JSON.stringify({
+      kind: 'people', empty: true,
+      hint: emptyTip,
+      populateCmd: 'node scripts/enrich-roles.mjs --top=5',
+    });
+    return `<span class="people-chip people-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const rec = people?.likely_recruiter?.name && people.likely_recruiter.name !== 'unknown' ? '👤' : '';
   const hm  = people?.likely_hiring_manager?.name && people.likely_hiring_manager.name !== 'unknown' ? '👔' : '';
@@ -18675,7 +18704,7 @@ function renderStatPanel(key, data) {
       const failedCell = b.failed > 0
         ? \`<span style="color:var(--red-fg);font-weight:600">\${b.failed}</span>\`
         : \`<span class="muted">0</span>\`;
-      return \`<tr class="row" onclick="selectBatch('\${esc(b.batch_id || '')}')" title="Drill into batch (coming soon)">
+      return \`<tr class="row" onclick="selectBatch('\${esc(b.batch_id || '')}')" title="Click to copy the batch ID — per-batch row drill-down is still on the backlog">
         <td class="muted-text">\${esc(fmtTime(b.started_at))}</td>
         <td><strong>\${b.completed}</strong></td>
         <td>\${failedCell}</td>
@@ -18840,7 +18869,16 @@ function showCompanyFilterBanner(name) {
 // row (URL, status, report link, score, error). For now, log + toast.
 function selectBatch(batchId) {
   if (!batchId) return;
-  if (typeof toast === 'function') toast('Per-batch drill-down coming soon — batch ' + batchId, 'info');
+  // BRAVO 2026-05-19 (content sweep): "coming soon" is the worst kind of
+  // copy — it tells the user they hit a feature you decided not to build.
+  // Copy the ID to clipboard so the click is at least useful, and say
+  // plainly that per-row drill is still on the backlog.
+  try {
+    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(batchId);
+    }
+  } catch (_) { /* clipboard blocked — toast still useful */ }
+  if (typeof toast === 'function') toast('Copied batch ID ' + batchId + ' to clipboard. (Per-row breakdown isn\\'t wired yet — see batch/batch-state.tsv for now.)', 'info');
   console.log('[selectBatch] batch_id=' + batchId);
 }
 
