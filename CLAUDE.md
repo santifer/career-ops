@@ -1,6 +1,17 @@
 @AGENTS.md
 <!-- Add anything Claude Code specific that other agents don't need -->
 
+## Dashboard — public URL (MANDATORY for all dashboard work)
+
+**The dashboard is publicly reachable at https://dashboard.careers-ops.com/**
+- Infrastructure: Cloudflare Tunnel → localhost:3097, served by launchd-managed `dashboard-server.mjs`
+- Find the PID: `ps aux | grep dashboard-server`
+
+**Rules that apply to every dashboard edit, optimization, build, or rebuild:**
+1. All links, test instructions, and external references MUST point at `https://dashboard.careers-ops.com/` — NEVER `localhost:3097`
+2. Verify changes by hitting the public URL, not localhost
+3. Handoff notes, PR descriptions, and commit messages must reference the public URL
+
 ## cv.md audit trail (audit Item M, 2026-05-18)
 
 `cv.md` is `.gitignore:2` — it is personal data that lives on disk only, NEVER tracked in git. The same applies to `data/applications.md`, `data/hm-intel/*.json`, `apply-pack/*`, and everything else listed in `.gitignore` for personal-data reasons.
@@ -38,3 +49,14 @@ Continuing on top of the 7 commits from earlier tonight. Mitchell explicitly aut
 - Phase 8 Item N (Carlito font): installed via `brew install --cask font-carlito`. The font stack in `templates/cv-template.typ` (Inter → Carlito → Aptos → Arial → Liberation Sans) now has a real metric-compatible Calibri fallback when Inter is absent.
 - Phase 5 quality gates wired: `scripts/build-apply-packs.mjs` now runs `scripts/jd-keyword-score.mjs` + `scripts/claim-consistency.mjs` as post-build steps per pack. The build log surfaces headline scores (CV keyword overlap % + cross-artifact claim verification ratio); failure is soft (warning, not build error) so a pack with a 35% keyword score still builds — the warning tells the human reviewer to drill into `keyword-alignment.md` and `claim-consistency.md`.
 - Phase 3 Item I (evidence bullets decision): keeping the current compromise (muted paragraph above the Skills categories). Rationale: the dealbreaker spec called for a 3-line grid without bullet lists, you re-added evidence bullets, and the current renderer collapses them into a muted paragraph. Three options were on the table per the handoff (keep / drop / promote to first-class). Keeping the current state preserves your edits + isn't spec-violating in a load-bearing way (the spec was D-tier guidance, not a hard requirement). If you want to revisit, the toggle lives in `scripts/render-cv-typst.mjs:395-415` (skillsBody construction).
+
+## Session Notes — 2026-05-18 (pipeline preview + progress decomposition)
+
+Implemented Tasks 1+2+4 from the Run Batch / Process All UX overhaul brief. Task 3 (council review) is stubbed — manual trigger required.
+
+- **Task 1 (cost decomposition):** `dashboard-server.mjs:buildPipelinePreview()` rewritten to return `stages` + `agent_enrichment` sub-objects with per-stage counts, model labels, cost, and threshold-conditional flags. Added 5 new constants: `COST_PER_RESEARCHER_CALL=$4`, `COST_PER_DEALBREAKER_CALL=$0.30`, `PUBLISH_RATE_ESTIMATE=0.40`, `RESEARCHER_ENRICHMENT_RATE=0.30`, `THRESHOLD_FOR_PUBLISH=4.0`. New total for 175-item Run Batch: **$142.80** (was $10.50 — researcher/dealbreaker/council are now included). Process All total: **$149.66** (was $11.06). Legacy fields kept for backward compat.
+- **Task 1b (modal render):** `scripts/build-dashboard.mjs:_renderPipelineModalBody()` rewritten to render a stacked table: numbered stages with counts+notes, then agent enrichment sub-section with ★ threshold gating label. Falls back to old 2-line grid if `est.stages` is absent (backward compat).
+- **Task 2 (per-stage progress):** `batchLive()` in dashboard-server.mjs now reads `data/pipeline-process-state.json` and emits `pipelineStages` with 5-stage state derived from the current phase + batch-state.tsv counts. `_renderBatchData()` in build-dashboard.mjs updated to render multi-stage mini bars when `data.pipelineStages` is present; falls back to single bar when absent. `scripts/process-all-pipeline.mjs:phaseTriage()` now saves `triage_advanced` count to job state so the Triage/Sort bar counts are accurate on the next SSE tick.
+- **Task 3 (council):** Deferred — council prompt + full context written to `data/council-report-runbatch-uiux-2026-05-18.md`. Run `/council` manually when ready to spend ~$10.
+- **Task 4 (smoke test):** All 3 files passed `node --check`. Dashboard rebuild clean (8.97MB, −160KB). Run Batch modal verified in browser: shows all 5 stages + agent enrichment breakdown. Sidebar multi-stage bars verified against last-run pipeline state (all green, 15/15 triage, 15/15 sort, 13/13 process/eval, ✓ publish).
+- **Known edge case:** Process All Phase B (Step 2 of 2) uses its own renderer `_renderProcessAllPhaseB`, not `_renderPipelineModalBody`. Phase B shows scoped cost from the per-company preview only — it doesn't show the full stage decomposition. The full decomposition is in Phase A (aggregate estimate at top: $215.31 Tier-5) and in the Run Batch modal. The fallback path for Process All (when per-company preview fails) DOES use `_renderPipelineModalBody` and will show the decomposed view.

