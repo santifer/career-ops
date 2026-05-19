@@ -15,7 +15,9 @@
         <string>/Users/mitchellwilliams/Documents/career-ops/scripts/wrappers/cron-run.sh</string>
         <string>delta-full-recalibration</string>
         <string>monthly-first</string>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <!-- Use nvm default-alias symlink so this survives `nvm install`/`nvm uninstall` of any specific version.
+             Maintained by: `nvm alias default <version>`. If this ever breaks, run `nvm alias default node`. -->
+        <string>/Users/mitchellwilliams/.nvm/alias/default/bin/node</string>
         <string>scripts/agents/ai-detection-hardener.mjs</string>
         <string>--recalibrate</string>
     </array>
