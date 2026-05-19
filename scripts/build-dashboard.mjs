@@ -3825,6 +3825,35 @@ async function build() {
       }
     } catch (_) { /* ignore */ }
 
+    // 4. Apply data/linkedin/overrides.json `no_longer_at` + `now_at` to the
+    //    directory itself (the loader at lib/linkedin-network.mjs applies
+    //    these to warm-intro/network-graph functions, but the directory
+    //    bake was missing them — Rita Kumar override was being honored in
+    //    network-graph but she still appeared under OpenAI in the directory).
+    //    2026-05-19 fix per Mitchell.
+    try {
+      if (existsSync(OVERRIDES_PATH)) {
+        const ov = JSON.parse(readFileSync(OVERRIDES_PATH, 'utf-8') || '{}');
+        const noLonger = ov.no_longer_at || {};
+        const nowAt = ov.now_at || {};
+        const notes = ov.notes || {};
+        for (const [nameKey, entry] of map.entries()) {
+          const noLongerCompanies = (noLonger[nameKey] || []).map(s => String(s||'').toLowerCase().trim());
+          if (noLongerCompanies.includes(String(entry.company||'').toLowerCase().trim())) {
+            entry.former_company = entry.company;  // preserve for "history" surfacing
+            entry.company = '';                     // remove from current-company grouping
+          }
+          if (nowAt[nameKey] && nowAt[nameKey].company) {
+            entry.company = nowAt[nameKey].company;
+            if (nowAt[nameKey].position) entry.position = nowAt[nameKey].position;
+          }
+          if (notes[nameKey]) {
+            entry.override_note = notes[nameKey];
+          }
+        }
+      }
+    } catch (_) { /* ignore */ }
+
     return Array.from(map.values())
       .sort((a, b) => {
         // outreach contacts first, then by company, then by name
