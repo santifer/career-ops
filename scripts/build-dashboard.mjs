@@ -2764,6 +2764,16 @@ function renderRow(r, idx) {
           // at company, etc.). Avoids the previous behavior where a metric
           // backed by 0 Block B requirements rendered identically to one
           // backed by 12 strong matches.
+          // γ GAMMA fix 2026-05-19 (Γ.12 HIGH-1 full-fix): baseline-only is
+          // a HARD-MUTE — bar replaced with "low signal / data incomplete".
+          // Catches score=0 + prior_outcomes=0 where the formula's
+          // BASE_INTERVIEW_RATE (12) would otherwise render as confident 12%.
+          if (completeness === 'baseline-only') {
+            return `<div class="alignbar-row alignbar-baseline-only" title="${htmlEscape(hint)} — surfacing the formula baseline; no signal modifiers available" style="opacity:0.55">
+              <span class="alignbar-label">${htmlEscape(label)} <span style="font-size:10px;color:#9ca3af;margin-left:6px;font-style:italic" title="No signal modifiers — formula baseline only. Re-run the eval to populate.">low signal</span></span>
+              <span class="alignbar-pct" style="color:var(--text-4);font-style:italic;font-size:11px">data incomplete</span>
+            </div>`;
+          }
           const lowDataChip = (completeness && completeness !== 'full')
             ? `<span class="alignbar-lowdata" style="font-size:10px;color:#f59e0b;margin-left:6px" title="Partial signal — ${htmlEscape(completeness)}">⚠</span>`
             : '';
