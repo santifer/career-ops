@@ -23,8 +23,15 @@
  * Designed to be invoked by the council-of-models agent in ~/.claude/agents/.
  */
 
-import 'dotenv/config';
 import { readFileSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+try {
+  const { config } = await import('dotenv');
+  config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env'), override: true });
+} catch { /* dotenv optional */ }
+
 import { callCouncil, probeLineup, extractRichContent } from '../lib/council.mjs';
 
 const args = process.argv.slice(2);

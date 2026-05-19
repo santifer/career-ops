@@ -163,8 +163,24 @@ function shSafe(cmd) {
 
 function checkCleanTree() {
   const status = shSafe('git status --porcelain').out.trim();
-  if (status) {
-    return { ok: false, reason: `working tree dirty (${status.split('\n').length} files); commit or stash first` };
+  if (!status) return { ok: true };
+  // SIGMA's commits are surgical (one finding.file per commit via agent-commit.mjs)
+  // and rollback uses `git checkout -- <file>` against the HEAD. The only files
+  // that affect SIGMA's safety are MODIFIED code files SIGMA might patch:
+  //   - Untracked files (??) cannot be patched — SIGMA only edits files named in findings.
+  //   - State paths (data/, batch/) are constantly rewritten by background launchd
+  //     jobs and are never SIGMA targets — dirty state cannot affect SIGMA's commits.
+  // Filter both out; only refuse if MODIFIED code files remain.
+  const STATE_PREFIXES = ['data/', 'batch/'];
+  const codeLines = status.split('\n').filter(line => {
+    const flags = line.slice(0, 2);
+    const isUntracked = flags === '??';
+    if (isUntracked) return false;
+    const p = line.length > 3 ? line.slice(3).replace(/^"|"$/g, '') : '';
+    return p && !STATE_PREFIXES.some(pre => p.startsWith(pre));
+  });
+  if (codeLines.length > 0) {
+    return { ok: false, reason: `working tree has dirty code files (${codeLines.length}); commit or stash first:\n${codeLines.slice(0, 10).join('\n')}` };
   }
   return { ok: true };
 }
