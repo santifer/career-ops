@@ -193,3 +193,9 @@ data/contact-photos/
 data/contact-enrichment-cache/
 data/contact-notes/
 data/second-brain-index-*.md
+data/contact-photo-queue.jsonl
+data/contact-photos-failed.md
+data/linkedin-storage-state.json
+data/contact-enrichment-paused.md
+data/contact-enrichment-month-1-audit.md
+data/builder-evolution-popovers/
