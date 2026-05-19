@@ -18,6 +18,8 @@ data/logs/
 data/pending-diffs/*.md
 !data/pending-diffs/.gitkeep
 data/research-state.json
+# Health column coverage report (derived from applications.md — personal pipeline state)
+data/health-column-coverage.json
 # Update Drawer (B5 MVP, 2026-05-18) — Mitchell's career updates feed.
 # Append-only JSONL is personal data; cursor tracks merge progress for
 # scripts/merge-career-updates.mjs idempotency. Never commit either.

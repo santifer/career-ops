@@ -17,6 +17,11 @@
  *   source ~/.career-ops-secrets && node scripts/enrich-apply-now.mjs --ranks=1-5
  *   source ~/.career-ops-secrets && node scripts/enrich-apply-now.mjs --ranks=6-23
  *   node scripts/enrich-apply-now.mjs --ranks=1-23 --dry-run    # plan only, no API calls
+ *   node scripts/enrich-apply-now.mjs --rows=2049,2059,2110     # backfill specific apps.md row numbers
+ *
+ * --rows pulls each row from data/applications.md (filtered by score >= 4 and
+ * Evaluated/Responded status — the same filter the dashboard uses for the
+ * apply-now table). Use this mode for sparse backfill when ranks are stale.
  *
  * Env:
  *   ENRICH_BUDGET_CAP_USD  — hard cap for total spend per run (default $5)
@@ -25,12 +30,23 @@
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { callCouncil } from '../lib/council.mjs';
+
+// Load .env BEFORE importing council.mjs so provider.envKey lookups work
+// even when the shell pre-sets ANTHROPIC_API_KEY (and others) to empty.
+// override:true matches the pattern used by scripts/refresh-master.mjs.
+try {
+  const { config } = await import('dotenv');
+  config({ path: new URL('../.env', import.meta.url).pathname, override: true });
+} catch { /* dotenv optional — fall back to shell env */ }
+
+const { callCouncil } = await import('../lib/council.mjs');
+const { parseApplicationsFile } = await import('../lib/parse-applications.mjs');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const OUT_DIR = join(ROOT, 'data', 'role-enrichment');
 const QUEUE_PATH = join(ROOT, 'data', 'apply-now-queue.json');
+const APPS_PATH = join(ROOT, 'data', 'applications.md');
 
 const ARGS = Object.fromEntries(
   process.argv.slice(2)
@@ -38,25 +54,43 @@ const ARGS = Object.fromEntries(
     .map(a => { const [k, v = true] = a.slice(2).split('='); return [k, v]; })
 );
 const RANKS_ARG = ARGS.ranks || ARGS.rank;
+const ROWS_ARG = ARGS.rows;
 const DRY_RUN = ARGS['dry-run'] === true || ARGS['dry-run'] === 'true';
 const BUDGET_CAP_USD = Number(process.env.ENRICH_BUDGET_CAP_USD || '5');
 
-if (!RANKS_ARG) {
-  console.error('Usage: node scripts/enrich-apply-now.mjs --ranks=N-M [--dry-run]');
-  console.error('Example: --ranks=1-5  or  --ranks=6-23');
+if (!RANKS_ARG && !ROWS_ARG) {
+  console.error('Usage:');
+  console.error('  node scripts/enrich-apply-now.mjs --ranks=N-M [--dry-run]');
+  console.error('  node scripts/enrich-apply-now.mjs --rows=NN,NN,NN [--dry-run]');
+  console.error('Examples:');
+  console.error('  --ranks=1-5     enrich queue ranks 1..5 (from data/apply-now-queue.json)');
+  console.error('  --ranks=6-23    enrich queue ranks 6..23');
+  console.error('  --rows=2049,2110   enrich specific applications.md row numbers (sparse backfill)');
   process.exit(2);
 }
 
-const rangeMatch = String(RANKS_ARG).match(/^(\d+)\s*-\s*(\d+)$/);
-if (!rangeMatch) {
-  console.error(`Invalid --ranks value: ${RANKS_ARG} (expected N-M, e.g. 6-23)`);
-  process.exit(2);
-}
-const RANK_START = Number(rangeMatch[1]);
-const RANK_END = Number(rangeMatch[2]);
-if (RANK_START < 1 || RANK_END < RANK_START) {
-  console.error(`Invalid range: ${RANK_START}-${RANK_END}`);
-  process.exit(2);
+let RANK_START = null;
+let RANK_END = null;
+let ROW_NUMS = null;
+
+if (ROWS_ARG) {
+  ROW_NUMS = String(ROWS_ARG).split(',').map(s => Number(s.trim())).filter(n => Number.isInteger(n) && n > 0);
+  if (ROW_NUMS.length === 0) {
+    console.error(`Invalid --rows value: ${ROWS_ARG} (expected comma-separated integers, e.g. 2049,2110,2198)`);
+    process.exit(2);
+  }
+} else {
+  const rangeMatch = String(RANKS_ARG).match(/^(\d+)\s*-\s*(\d+)$/);
+  if (!rangeMatch) {
+    console.error(`Invalid --ranks value: ${RANKS_ARG} (expected N-M, e.g. 6-23)`);
+    process.exit(2);
+  }
+  RANK_START = Number(rangeMatch[1]);
+  RANK_END = Number(rangeMatch[2]);
+  if (RANK_START < 1 || RANK_END < RANK_START) {
+    console.error(`Invalid range: ${RANK_START}-${RANK_END}`);
+    process.exit(2);
+  }
 }
 
 if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
@@ -70,7 +104,7 @@ function slugify(s, maxLen = 60) {
 }
 
 // Reads ranks [RANK_START..RANK_END] from the queue (1-indexed ranks → 0-indexed slice).
-function loadRoles() {
+function loadRolesByRank() {
   const queue = JSON.parse(readFileSync(QUEUE_PATH, 'utf8'));
   const ranked = queue.ranked || queue.entries || queue;
   if (!Array.isArray(ranked)) throw new Error('apply-now-queue.json: no `ranked` array found');
@@ -84,6 +118,41 @@ function loadRoles() {
     const slug = `${rankPad}-${slugify(company)}-${slugify(role)}`.slice(0, 120);
     return { rank, num, company, role, slug };
   });
+}
+
+// Pulls specific row numbers from data/applications.md. Used for sparse backfill
+// when ranks in apply-now-queue.json are stale and the rows you need to enrich
+// aren't represented there. Filename gets a `bf` (backfill) prefix in place of
+// the rank so it sorts after the curated 01..NN ranks but is still picked up by
+// `filePattern: '{rank}-{slug}.json'` matching in the cache registry (matches by
+// `-${slug}.json` suffix).
+function loadRolesByNum() {
+  const apps = parseApplicationsFile(APPS_PATH);
+  const byNum = new Map(apps.map(r => [r.num, r]));
+  const out = [];
+  for (const num of ROW_NUMS) {
+    const r = byNum.get(num);
+    if (!r) {
+      console.error(`  [warn] #${num} not found in applications.md — skipping`);
+      continue;
+    }
+    if (!r.company || !r.role) {
+      console.error(`  [warn] #${num} missing company or role — skipping`);
+      continue;
+    }
+    out.push({
+      rank: `bf${String(num)}`,
+      num: r.num,
+      company: r.company,
+      role: r.role,
+      slug: `bf${String(num)}-${slugify(r.company)}-${slugify(r.role)}`.slice(0, 120),
+    });
+  }
+  return out;
+}
+
+function loadRoles() {
+  return ROW_NUMS ? loadRolesByNum() : loadRolesByRank();
 }
 
 // Anti-hallucination + integer-only toxicity rules baked in.
@@ -278,7 +347,9 @@ function mergeResponses(parsed, role) {
 async function main() {
   const t0 = Date.now();
   const ROLES = loadRoles();
-  const tag = `enrich-${RANK_START}-${RANK_END}`;
+  const tag = ROW_NUMS
+    ? `enrich-rows-${ROW_NUMS.join(',')}`
+    : `enrich-${RANK_START}-${RANK_END}`;
   console.log(`[${tag}] starting ${ROLES.length}-role council enrichment`);
 
   if (DRY_RUN) {
@@ -297,7 +368,13 @@ async function main() {
   ];
   if (process.env.OPENAI_API_KEY) councilModels.push('openai:gpt-5');
 
-  const indexLines = ['', `## Ranks ${RANK_START}-${RANK_END} (generated ${new Date().toISOString()})`, ''];
+  const indexLines = [
+    '',
+    ROW_NUMS
+      ? `## Backfill rows ${ROW_NUMS.join(',')} (generated ${new Date().toISOString()})`
+      : `## Ranks ${RANK_START}-${RANK_END} (generated ${new Date().toISOString()})`,
+    '',
+  ];
   let totalCost = 0;
   const summary = [];
 
