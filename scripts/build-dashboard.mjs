@@ -19564,6 +19564,9 @@ function _renderPipelineModalBody(action, p) {
     // Detection fires only when user clicks "Build pack" on a row drawer.
     // Surfaced here so the user knows the downstream cost they'll incur if
     // they build packs after a Run Batch / Process All publishes rows.
+    // Style aligned with γ GAMMA's provenance-chip pattern (HIGH/MED/LOW
+    // confidence chips render via _confChip()) so the user can audit the
+    // cost line the same way as researcher/dealbreaker/publish_rate.
     var detectionSection = '';
     var det = est.ai_detection;
     if (det && det.packs > 0) {
@@ -19578,7 +19581,7 @@ function _renderPipelineModalBody(action, p) {
         +   'AI-detection gate <span style="font-weight:400;opacity:0.55;font-size:10px">(post-publish · user-triggered Build-pack only)</span>'
         + '</div>'
         + '<div class="pipeline-stat-grid">'
-        +   '<span class="pipeline-stat-label" style="padding-left:6px">Detection' + detSub + '</span>'
+        +   '<span class="pipeline-stat-label" style="padding-left:6px">Detection' + detSub + _confChip('ai_detection_cost') + '</span>'
         +   '<span class="pipeline-stat-value pipeline-enrichment-cost">$' + (det.cost_usd || 0).toFixed(2) + '</span>'
         + '</div>'
         + '</div>';

@@ -493,6 +493,16 @@ const COST_CALIBRATION_PROVENANCE = {
     confidence_band_pct: 100,   // ±100% — single-pack telemetry is fragile
     note: 'env-tunable via COST_PER_POLISH_PACK_USD',
   },
+  // δ DELTA Run-Batch 2026-05-19 — AI-detection cost provenance
+  ai_detection_cost: {
+    value: 0.02,                // per artifact, see COST_PER_AI_DETECTION_ARTIFACT
+    source: 'lib/ai-detection-gate.mjs:36-38 (GPTZero $0.01 + Originality $0.01 per call, vendor-published rates)',
+    confidence: 'HIGH',
+    sample_size: 2,             // 2 vendors with documented per-call pricing
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 10,    // ±10% — Originality.ai pricing fluctuates by plan tier
+    note: 'Retry multiplier 1.5× accounts for CLEAR/MED/HIGH/CRIT distribution; 5 artifacts/pack; opt-in rate 40% (set PACK_BUILD_OPT_IN_RATE=1.0 for worst-case)',
+  },
 };
 
 // δ DELTA Run-Batch 2026-05-19 — AI-detection gate cost (per artifact).
