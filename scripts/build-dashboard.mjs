@@ -27,7 +27,7 @@ import { networkSummary as _linkedInNetworkSummary, networkMeta as _linkedInNetw
 import { lookupCompCache } from '../lib/comp-researcher.mjs';
 import { scoreAlignmentCached } from '../lib/alignment-scorer.mjs';
 // ── Wave C-B: lib imports (consumed by drill-in renderers + dashboard features) ──
-import { getPeerContext, renderPeerTable }                          from '../lib/peer-context.mjs';
+import { getPeerContext, renderPeerTable, renderPeerTableHtml }    from '../lib/peer-context.mjs';
 import { getProvenance, renderProvenanceCard, renderProvenanceSummary } from '../lib/decision-provenance.mjs';
 import { applyWealthLens, renderWealthLensCard }                   from '../lib/wealth-lens.mjs';
 import { rankCompaniesByWealth }                                   from '../lib/wealth-ranking.mjs';
@@ -3905,7 +3905,7 @@ async function build() {
     if (_topOfPipeSeen.has(it.num)) return false;
     _topOfPipeSeen.add(it.num);
     return true;
-  }).slice(0, 5); // cap at 5
+  }).slice(0, 3); // cap at 3 (user request 2026-05-19: tighter focus, NEXT MOVE hero removed since apply-tonight emphasis in apply-now queue does the same job)
 
   const topOfPipeJson = JSON.stringify(topOfPipeDeduped).replace(/<\//g, '<\\/');
 
@@ -3925,14 +3925,28 @@ async function build() {
     // Build queue (all pool items) for "Pick another" cycling — score-desc already
     _tonightPickQueue = _pool.slice(0, 10).map((r, qi) => {
       const ridx = applyNowSorted.findIndex(x => x.num === r.num);
-      return { num: r.num, company: r.company, role: r.role, score: r.score, rowIdx: `apply-${ridx >= 0 ? ridx : 0}` };
+      const qUrl = r.reportPath ? getReportUrl(r.reportPath) : '';
+      return { num: r.num, company: r.company, role: r.role, score: r.score, rowIdx: `apply-${ridx >= 0 ? ridx : 0}`, url: qUrl || '' };
     });
     if (_pool.length) {
       const _pr = _pool[0]; // already sorted by score desc
       const _pos = getPositioning(_pr.reportPath);
       // Extract first 2-3 bullets of positioning as the "Why this one" paragraph
       const _posLines = (_pos || '').replace(/\*\*/g, '').split(/\n/).map(l => l.replace(/^[-•·*]+\s*/,'').trim()).filter(Boolean);
-      const _whyPick = _posLines.slice(0, 3).join(' · ').slice(0, 200) || `Score ${_pr.score.toFixed(1)} — top-ranked in queue`;
+      // Word-aware cap: take up to 3 bullets, hard cap ~340 chars,
+      // truncate at a word boundary and append … so we never cut mid-word
+      // (2026-05-19 fix: was .slice(0, 200) → chopped "engineers" → "enginee").
+      const _whyRaw = _posLines.slice(0, 3).join(' · ');
+      let _whyPick;
+      if (!_whyRaw) {
+        _whyPick = `Score ${_pr.score.toFixed(1)} — top-ranked in queue`;
+      } else if (_whyRaw.length <= 340) {
+        _whyPick = _whyRaw;
+      } else {
+        const _trimmed = _whyRaw.slice(0, 340);
+        const _lastSpace = _trimmed.lastIndexOf(' ');
+        _whyPick = (_lastSpace > 280 ? _trimmed.slice(0, _lastSpace) : _trimmed) + '…';
+      }
       const _rowIdx  = applyNowSorted.findIndex(r => r.num === _pr.num);
       // Enrich with comp + location from report
       const _comp = getComp(_pr.reportPath);
@@ -3940,6 +3954,9 @@ async function build() {
       // Gate summary: count keyGaps (missing) vs how many checked
       const _gaps = getKeyGaps(_pr.reportPath);
       const _gapCount = _gaps.length;
+      // 2026-05-19: include the live JD url so tonightPickStart() can open
+      // it directly in a new tab instead of falling through to the drawer.
+      const _pickUrl = _pr.reportPath ? getReportUrl(_pr.reportPath) : '';
       _tonightPick = {
         num: _pr.num,
         company: _pr.company,
@@ -3949,6 +3966,7 @@ async function build() {
         daysAgo: _daysAgo(_pr.date),
         whyPick: _whyPick,
         rowIdx: `apply-${_rowIdx >= 0 ? _rowIdx : 0}`,
+        url: _pickUrl || '',
         comp: _comp || '',
         location: _loc || '',
         gapCount: _gapCount,
@@ -4018,7 +4036,7 @@ async function build() {
       for (const rng of scoreRanges) {
         const midpoint = rng === '4.5+' ? 4.7 : rng === '4.0-4.4' ? 4.2 : rng === '3.0-3.9' ? 3.5 : 2.5;
         const ctx = getPeerContext('score', midpoint, {});
-        _cbData.peerScore[rng] = { html: renderPeerTable(ctx), ctx };
+        _cbData.peerScore[rng] = { html: renderPeerTableHtml(ctx, { kind: 'score' }), ctx };
       }
     } catch (_) { _cbData.peerScore = {}; }
 
@@ -4044,7 +4062,7 @@ async function build() {
         seenIds.add(id);
         try {
           const ctx = getPeerContext('comp', baseK * 1000, { company: r.company, excludeRowId: r.num });
-          _cbData.peerComp[id] = { html: renderPeerTable(ctx), ctx };
+          _cbData.peerComp[id] = { html: renderPeerTableHtml(ctx, { kind: 'comp' }), ctx };
         } catch (_) { /* skip this row, keep going */ }
       }
     } catch (_) { _cbData.peerComp = {}; }
@@ -6002,6 +6020,13 @@ async function build() {
   .tp-sig-warn { background: color-mix(in srgb, #d97706 12%, var(--surface)); color: #d97706; }
   .tp-sig-comp { background: var(--surface-2); color: var(--text-2); }
   .tp-sig-loc  { background: var(--surface-2); color: var(--text-3); }
+  /* Clickable variant — used when chip opens detail drawer (e.g. gaps) */
+  .tp-sig-clickable {
+    cursor: pointer; border: none; font-family: inherit;
+    transition: background 120ms ease, transform 120ms ease;
+  }
+  .tp-sig-clickable:hover { background: color-mix(in srgb, #d97706 22%, var(--surface)); transform: translateY(-1px); }
+  .tp-sig-clickable:focus-visible { outline: 2px solid #d97706; outline-offset: 2px; }
   /* Why-this-one paragraph */
   .tonight-pick-why {
     font-size: 12px; color: var(--text-2); line-height: 1.5;
@@ -10863,33 +10888,9 @@ async function build() {
   <!-- ${funnelNudgeHtml ? 'funnel banner suppressed; chip lives in mc-strip' : ''} -->
 
   <div class="stats" id="overview-section">
-    ${(() => {
-      // 2026-05-18: Next Moves hero card — the synthesis layer that answers
-      // "what should I do next?" Reads data/next-moves.json (baked by
-      // computeNextMoves() in the cb-data section above; falls back to a
-      // disk read for the standalone CLI path).
-      let nm = null;
-      try {
-        const fp = join(ROOT, 'data/next-moves.json');
-        if (existsSync(fp)) nm = JSON.parse(readFileSync(fp, 'utf-8'));
-      } catch (_) {}
-      if (!nm || !nm.top_moves || !nm.top_moves.length) return '';
-      const m = nm.top_moves[0];
-      const d = nm.deadline_stats || {};
-      const kindLabel = String(m.kind || '').replace(/_/g, ' ');
-      const safeLabel = String(m.label || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const safeEvidence = String(m.evidence || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const otherCount = Math.max(0, nm.top_moves.length - 1);
-      return `<div class="next-move-hero" onclick="window.drillIn('next-moves','',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.drillIn('next-moves','',event)}" role="button" tabindex="0" title="See all ranked moves + skip list" style="cursor:pointer;margin-bottom:12px;padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);border-left:4px solid var(--green-fg,#16a34a);border-radius:8px">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px">
-          <span style="font-size:10px;font-weight:700;color:var(--green-fg,#16a34a);text-transform:uppercase;letter-spacing:0.06em">Next move · ${String(kindLabel)}</span>
-          <span style="font-size:10px;color:var(--text-4);font-family:monospace">~${m.cost_hours}h · ${d.days_left != null ? d.days_left + ' days left' : ''}</span>
-        </div>
-        <div style="font-size:14px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px">${safeLabel}</div>
-        <div style="font-size:11.5px;color:var(--text-3);line-height:1.5">${safeEvidence}</div>
-        ${otherCount > 0 ? `<div style="margin-top:8px;font-size:11px;color:var(--text-4)">+${otherCount} more ranked action${otherCount === 1 ? '' : 's'} &middot; <span style="color:var(--link);text-decoration:underline">see all &rsaquo;</span></div>` : ''}
-      </div>`;
-    })()}
+    <!-- 2026-05-19: NEXT MOVE hero card removed per user request — redundant with
+         apply-tonight emphasis in apply-now queue. The full ranked list is still
+         accessible via window.drillIn('next-moves','') if needed elsewhere. -->
     <div class="stats-hero-row">
       <div class="stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue" role="button" tabindex="0">
         <div class="hero-sparkline-bg" aria-hidden="true">${heroSparklineSVG(kpiSpark.applyNow.daily, 'Apply-Now')}</div>
@@ -11012,7 +11013,9 @@ async function build() {
         <span class="tonight-pick-role">${htmlEscape(_tonightPick.role)}</span>
       </div>
       <div class="tonight-pick-signals">
-        ${_tonightPick.gapCount === 0 ? '<span class="tp-sig tp-sig-ok">All must-haves clear</span>' : `<span class="tp-sig tp-sig-warn">${_tonightPick.gapCount} gap${_tonightPick.gapCount === 1 ? '' : 's'}</span>`}
+        ${_tonightPick.gapCount === 0
+          ? '<span class="tp-sig tp-sig-ok">All must-haves clear</span>'
+          : `<button type="button" class="tp-sig tp-sig-warn tp-sig-clickable" onclick="tonightPickLearnMore()" aria-label="See the ${_tonightPick.gapCount} gap${_tonightPick.gapCount === 1 ? '' : 's'} for this role" title="Click to see the gaps detail in the role drawer">${_tonightPick.gapCount} gap${_tonightPick.gapCount === 1 ? '' : 's'} →</button>`}
         ${_tonightPick.comp ? `<span class="tp-sig tp-sig-comp">${htmlEscape(_tonightPick.comp)}</span>` : ''}
         ${_tonightPick.location ? `<span class="tp-sig tp-sig-loc">${htmlEscape(_tonightPick.location)}</span>` : ''}
       </div>
@@ -14264,11 +14267,12 @@ _drillInRegister('score', function(id) {
   var cb = window._waveCB || {};
   var peerData = (cb.peerScore || {})[range] || {};
   var peerHtml = peerData.html || '';
-  var ctx = peerData.ctx || {};
-  var pctStr = typeof ctx.percentile === 'number' ? ('Pipeline percentile: <strong>' + ctx.percentile + '%</strong>') : '';
-  var html = '<p style="font-size:12px;margin-bottom:8px">Score range <strong>' + range + '</strong>'
-    + (pctStr ? ' &mdash; ' + pctStr : '') + '</p>'
-    + (peerHtml || '<p class="muted" style="font-size:12px">No peer data available for this score range.</p>');
+  var lead = '<p style="font-size:12px;opacity:0.75;margin-bottom:10px;line-height:1.5">'
+    + 'How this score range stacks up against the rest of your evaluated pipeline. '
+    + 'Use it to gut-check whether a <strong>' + range + '</strong> role is actually in the upper tier of what you&rsquo;ve seen, '
+    + 'or just average for your search.'
+    + '</p>';
+  var html = lead + (peerHtml || '<p class="muted" style="font-size:12px">No peer data for this range yet — keep evaluating to populate.</p>');
   return { title: 'Score context: ' + range, html: html };
 });
 _drillInRegister('comp', function(id) {
@@ -16035,24 +16039,10 @@ function _tpRenderPickCard(pick, skipN) {
   }
 }
 
-function tonightPickStart() {
-  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
-  if (!pick) return;
-  var rowId = pick.rowIdx;
-  if (!rowId) return;
-  var section = document.getElementById('apply-now-section');
-  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  setTimeout(function() {
-    var detail = document.getElementById('detail-' + rowId);
-    if (detail) {
-      var idx = parseInt(rowId.replace(/^apply-/, ''), 10);
-      if (typeof openRightRailForDetail === 'function') openRightRailForDetail(isNaN(idx) ? 0 : idx, detail);
-      else if (typeof toggleDetail === 'function') toggleDetail(rowId);
-    } else if (typeof toggleDetail === 'function') {
-      toggleDetail(rowId);
-    }
-  }, 350);
-}
+// 2026-05-19: removed duplicate tonightPickStart definition that was here.
+// The canonical version at line ~15513 opens pick.url in a new tab (the
+// expected primary-CTA behavior). The duplicate was the legacy
+// scroll-and-open-drawer version which silently overrode the new behavior.
 
 window.tonightPickStart   = tonightPickStart;
 window.tonightPickLearnMore = tonightPickLearnMore;
