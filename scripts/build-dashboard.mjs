@@ -11648,6 +11648,12 @@ async function build() {
   </div>
   </div>
 
+  <!-- BRAVO 2026-05-19 (content sweep): Trends panel moved BELOW comp-analytics
+       per Mitchell — he doesn't need trends in his immediate view. The
+       <div id="charts-dots"> indicator strip stays adjacent to the chart
+       block above so the dots reflect score-dist + companies + trends. -->
+  <div class="charts-dots" id="charts-dots"></div>
+  ${renderCompAnalytics(compAnalytics, compFloors)}
   <div class="panel" id="trends-panel">
     <h2 class="panel-title collapsible" onclick="togglePanel('trends-panel',event)">Trends <span class="panel-chevron">▾</span></h2>
     ${(() => {
@@ -11775,9 +11781,6 @@ async function build() {
       </div>`;
     })()}
   </div>
-  <div class="charts-dots" id="charts-dots"></div>
-  ${renderCompAnalytics(compAnalytics, compFloors)}
-
   </main>
   </div><!-- /.app-main -->
 </div><!-- /.app-shell -->
