@@ -6763,7 +6763,19 @@ async function build() {
     border-radius: var(--radius-full); font-size: 11px; font-weight: 600;
     background: var(--surface-2); border: 1px solid var(--border); color: var(--text-3); gap: 3px;
   }
-  .meta-chip-comp { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+  .meta-chip-comp {
+    background: var(--green-bg); border-color: var(--green-border); color: var(--green);
+    /* BRAVO 2026-05-19 (AAA-2): long comp strings (e.g. "$255,000 – $320,000
+       USD annually (range disclosed under CA/NY pay-transparency mandate;
+       presumed base — equity and benefits not disclosed in JD)") were
+       truncating at the right drawer edge, cutting the equity-disclosure
+       clause — the single most load-bearing phrase. Allow the comp chip
+       (and only the comp chip; tier + date chips stay compact) to wrap. */
+    white-space: normal;
+    line-height: 1.4;
+    max-width: 100%;
+    align-items: flex-start;
+  }
   .meta-chip-tier { background: var(--blue-bg);  border-color: var(--blue-border);  color: var(--blue-fg-dark); }
   /* Equity / IPO posture badge — primary filter signal */
   .equity-cell { white-space: nowrap; }
