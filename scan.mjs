@@ -107,12 +107,20 @@ function resolveProvider(entry, providers) {
 function buildTitleFilter(titleFilter) {
   const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
   const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+  const negativeRegex = (titleFilter?.negative_regex || []).map(pattern => {
+    try {
+      return new RegExp(pattern, 'i');
+    } catch (err) {
+      throw new Error(`Invalid title_filter.negative_regex pattern "${pattern}": ${err.message}`);
+    }
+  });
 
   return (title) => {
     const lower = title.toLowerCase();
     const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
     const hasNegative = negative.some(k => lower.includes(k));
-    return hasPositive && !hasNegative;
+    const hasNegativeRegex = negativeRegex.some(re => re.test(title));
+    return hasPositive && !hasNegative && !hasNegativeRegex;
   };
 }
 
@@ -195,14 +203,17 @@ function appendToPipeline(offers) {
 
   let text = readFileSync(PIPELINE_PATH, 'utf-8');
 
-  // Find "## Pendientes" section and append after it
-  const marker = '## Pendientes';
+  // Prefer the English "Pending" section. Older local files may still have
+  // "Pendientes", so keep it as a compatibility fallback.
+  const marker = text.includes('## Pending') ? '## Pending' : '## Pendientes';
   const idx = text.indexOf(marker);
   if (idx === -1) {
-    // No Pendientes section — append at end before Procesadas
-    const procIdx = text.indexOf('## Procesadas');
+    // No pending section — append before a processed section if present.
+    const processedMarkers = ['## Processed', '## Procesadas'];
+    const procIdxs = processedMarkers.map(m => text.indexOf(m)).filter(i => i !== -1);
+    const procIdx = procIdxs.length > 0 ? Math.min(...procIdxs) : -1;
     const insertAt = procIdx === -1 ? text.length : procIdx;
-    const block = `\n${marker}\n\n` + offers.map(o =>
+    const block = `\n## Pending\n\n` + offers.map(o =>
       `- [ ] ${o.url} | ${o.company} | ${o.title}`
     ).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
@@ -446,7 +457,7 @@ async function main() {
   let droppedOffers = [];
   let invalidOffers = [];
   if (verify && newOffers.length > 0) {
-    console.log(`\nVerifying liveness of ${newOffers.length} new offer(s) with Playwright (sequential)...`);
+    console.log(`\nVerifying liveness of ${newOffers.length} new job posting(s) with Playwright (sequential)...`);
     const result = await verifyOffers(newOffers);
     verifiedOffers = result.verified;
     expiredOffers = result.expired;
@@ -497,7 +508,7 @@ async function main() {
     console.log(`No apply control:      ${droppedOffers.length} dropped`);
     console.log(`Invalid (guarded):     ${invalidOffers.length} dropped`);
   }
-  console.log(`New offers added:      ${verifiedOffers.length}`);
+  console.log(`New job postings:      ${verifiedOffers.length}`);
 
   if (errors.length > 0) {
     console.log(`\nErrors (${errors.length}):`);
@@ -507,7 +518,7 @@ async function main() {
   }
 
   if (verifiedOffers.length > 0) {
-    console.log('\nNew offers:');
+    console.log('\nNew job postings:');
     for (const o of verifiedOffers) {
       console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}`);
     }
@@ -518,7 +529,7 @@ async function main() {
     }
   }
 
-  console.log(`\n→ Run /career-ops pipeline to evaluate new offers.`);
+  console.log(`\n→ Run /career-ops pipeline to evaluate new job postings.`);
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 }
 

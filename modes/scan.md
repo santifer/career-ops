@@ -1,6 +1,6 @@
-# Modo: scan — Portal Scanner (Descubrimiento de Ofertas)
+# Modo: scan — Portal Scanner (Descubrimiento de Puestos)
 
-Escanea portales de empleo configurados, filtra por relevancia de título, y añade nuevas ofertas al pipeline para evaluación posterior.
+Escanea portales de empleo configurados, filtra por relevancia de título, y añade nuevos puestos al pipeline para evaluación posterior.
 
 > **Nota (v1.5+):** El escáner por defecto (`scan.mjs` / `npm run scan`) es **zero-token** y sólo consulta directamente las APIs públicas de Greenhouse, Ashby y Lever. Los niveles con Playwright/WebSearch descritos abajo son el flujo **agente** (ejecutado por Claude/Codex), no lo que hace `scan.mjs`. Si una empresa no tiene API Greenhouse/Ashby/Lever, `scan.mjs` la ignorará; para esos casos, el agente debe completar manualmente el Nivel 1 (Playwright) o Nivel 3 (WebSearch).
 
@@ -21,7 +21,7 @@ Agent(
 Leer `portals.yml` que contiene:
 - `search_queries`: Lista de queries WebSearch con `site:` filters por portal (descubrimiento amplio)
 - `tracked_companies`: Empresas específicas con `careers_url` para navegación directa
-- `title_filter`: Keywords positive/negative/seniority_boost para filtrado de títulos
+- `title_filter`: Keywords positive/negative, `negative_regex`, y seniority_boost para filtrado de títulos
 
 ## Estrategia de descubrimiento (3 niveles)
 
@@ -109,6 +109,7 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 6. **Filtrar por título** usando `title_filter` de `portals.yml`:
    - Al menos 1 keyword de `positive` debe aparecer en el título (case-insensitive)
    - 0 keywords de `negative` deben aparecer
+   - 0 patrones de `negative_regex` deben coincidir
    - `seniority_boost` keywords dan prioridad pero no son obligatorios
 
 6b. **Filtrar por ubicación (opcional)** usando `location_filter` de `portals.yml`:
@@ -143,13 +144,13 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 
    **No interrumpir el scan entero si una URL falla.** Si `browser_navigate` da error (timeout, 403, etc.), marcar como `skipped_expired` y continuar con la siguiente.
 
-8. **Para cada oferta nueva verificada que pase filtros**:
+8. **Para cada puesto nuevo verificado que pase filtros**:
    a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
    b. Registrar en `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
-9. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
-10. **Ofertas duplicadas**: registrar con status `skipped_dup`
-11. **Ofertas expiradas (Nivel 3)**: registrar con status `skipped_expired`
+9. **Puestos filtrados por título**: registrar en `scan-history.tsv` con status `skipped_title`
+10. **Puestos duplicados**: registrar con status `skipped_dup`
+11. **Puestos expirados (Nivel 3)**: registrar con status `skipped_expired`
 
 ## Extracción de título y empresa de WebSearch results
 
