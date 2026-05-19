@@ -69,3 +69,10 @@ weights:
   mutual_connections_in_directory: 0.3        # we share connections in Mitchell's directory
   has_email_and_linkedin: 0.2                 # actionable contact details
   has_x_handle: 0.1                           # X handle resolved
+
+  # ── Phase A.3+ (2026-05-19 second-brain optimization) — Mitchell-specific signals ──
+  # Grounded in personality-strengths-profile.md + personality-values-motivations.md.
+  excellence_threshold_met: 0.4               # at a target-list (high-craft) company — VIA #1 Beauty/Excellence
+  vision_arc_match: 0.4                       # pre-IPO + target-co + archetype-match — CliftonStrengths Futuristic #2
+  clear_action_unlock: 0.5                    # actionable channel + positioning hook = concrete step this week — CliftonStrengths Activator #1
+  authenticity_match: 0.4                     # non-generic title / specific topic signal — Authenticity non-negotiable value
