@@ -1,0 +1,377 @@
+{
+  "audit_persona": "γ GAMMA — Data Truth & Narrative Architect",
+  "audit_date": "2026-05-19",
+  "worktree": "/Users/mitchellwilliams/Documents/career-ops-gamma-2026-05-19",
+  "base_commit": "4a04f4f",
+  "scope": "Every computed numeric metric surfaced on the dashboard. Inventory built by direct file:line reads — no fabrication.",
+  "metric_count": 22,
+  "metrics": [
+    {
+      "metric_name": "Profile Alignment %",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:2713 (drawer bar)",
+        "scripts/build-dashboard.mjs:14553-14594 (drill-in popout)"
+      ],
+      "computing_lib": "lib/alignment-scorer.mjs:scoreAlignment → computeAlignment",
+      "compute_formula_summary": "0.6 × (blockB match% with partial=0.5) + 0.4 × (score/5 × 100); +5 bonus if ≥3 competitive edges; +5 bonus if score ≥ 4.5; capped at 100",
+      "source_data": [
+        "reports/{nnn}-{slug}-{date}.md → Block B match grid + final Score header",
+        "data/applications.md (for prior-outcome adjustments)"
+      ],
+      "freshness_signal_present": "no — no last_computed_at or mtime check",
+      "confidence_band_present": "no",
+      "last_computed_at_present": "no",
+      "null_handling": "LIE — returns alignment:0, interview:0, hmNoticing:0 with breakdown.error:'report missing' when report file is missing; UI renders 0% bars with no warning. (alignment-scorer.mjs:188-191)",
+      "smell": "HIGH — three metrics silently collapse to 0% when source report is missing. User cannot distinguish 'truly 0% match' from 'no data'."
+    },
+    {
+      "metric_name": "Interview Likelihood %",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:2713 (drawer bar)",
+        "scripts/build-dashboard.mjs:14594 (drill-in popout)"
+      ],
+      "computing_lib": "lib/alignment-scorer.mjs:computeInterview",
+      "compute_formula_summary": "BASE_INTERVIEW_RATE(12) + max(0, score-3)*12 + archetype_bonus(A1=10,B=5,A2=3,other=0) + comp_match_bonus(±5) + prior_outcome_adj(±8); capped [2, 85]",
+      "source_data": ["report Block B archetype + Score", "data/applications.md prior outcomes", "report Comp string for floor match"],
+      "freshness_signal_present": "no",
+      "confidence_band_present": "no — single percentage with no uncertainty band even though weights are heuristic",
+      "last_computed_at_present": "no",
+      "null_handling": "Same 0% silent-fail as Profile Alignment if report missing. Returns 12% (BASE_INTERVIEW_RATE) for any never-applied-here company with no signals — that's a baseline default but not labeled as such in the bar.",
+      "smell": "MEDIUM — formula constants (BASE_RATE=12, ±12 per score point, archetype bonuses 10/5/3) are uncited heuristics frozen in code. No backing calibration data referenced."
+    },
+    {
+      "metric_name": "Chance HM Sees You / HM-Noticing %",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:2713 (drawer bar)",
+        "scripts/build-dashboard.mjs:14594 (drill-in popout)"
+      ],
+      "computing_lib": "lib/alignment-scorer.mjs:computeHmNoticing",
+      "compute_formula_summary": "score × 14 + min(15, competitiveEdges × 3) + 15 if rare-combo detected + 15 if referral path; capped [2, 95]",
+      "source_data": ["report text for rare-combo regex", "scoreAlignment.hasReferralPath flag passed by caller"],
+      "freshness_signal_present": "no",
+      "confidence_band_present": "no",
+      "last_computed_at_present": "no",
+      "null_handling": "hasReferralPath defaults to false at call sites — if caller forgets to pass it, the metric silently loses 15 points with no indication.",
+      "smell": "HIGH — referral-path bonus is binary (+15 or 0) but the actual network strength is graded in lib/network-graph.mjs (direct vs one_hop). Bar is overstating noise."
+    },
+    {
+      "metric_name": "Recruiter Pipeline Density / Health",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:19374-19395 (sidebar widget poll)",
+        "scripts/build-dashboard.mjs:19778-19786 (runway-detail rationale block)",
+        "scripts/build-dashboard.mjs:10408 (drill-in)",
+        "dashboard-server.mjs:3132 (/api/recruiter-pipeline-density endpoint)"
+      ],
+      "computing_lib": "dashboard-server.mjs:381 computeRecruiterPipelineDensity (NOT lib/recruiter-pipeline-density.mjs — that file does not exist)",
+      "compute_formula_summary": "Aggregates listOutreachContacts() into active/responded/dead counts, touches in 7d/30d, lastTouch age. Health verdict via PIPELINE_HEALTH_THRESHOLDS constants (active_healthy:5, touches_healthy:10, response_rate_healthy:0.30).",
+      "source_data": ["data/outreach-contacts.json via listOutreachContacts()"],
+      "freshness_signal_present": "partial — computed_at ISO timestamp returned, but UI does not surface it",
+      "confidence_band_present": "no — health verdict is healthy/stretched/critical with no uncertainty",
+      "last_computed_at_present": "yes (returned but not rendered)",
+      "null_handling": "Returns {ok:false, error:'outreach tracker unavailable'} if listOutreachContacts() throws — UI behavior unverified for this branch.",
+      "smell": "CRITICAL — three lies in one tooltip at build-dashboard.mjs:19782-19784: (1) claims source file is lib/recruiter-pipeline-density.mjs which DOES NOT EXIST; (2) View source GitHub link points to that 404 path; (3) Runway formula description 'touches over 30d ÷ weekly budget + buffer weeks' is invented — actual code uses a static RUNWAY_WEEKS_DEFAULT=12 env constant, not a touch-derived calculation."
+    },
+    {
+      "metric_name": "Days Since Last Touch",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:19395+ (runway detail)",
+        "dashboard-server.mjs:464 (velocity.days_since_last_touch)"
+      ],
+      "computing_lib": "dashboard-server.mjs:381 computeRecruiterPipelineDensity",
+      "compute_formula_summary": "Math.round((now - max(touch.ts)) / 86400000)",
+      "source_data": ["data/outreach-contacts.json[].touches[].ts"],
+      "freshness_signal_present": "yes — value IS the freshness",
+      "confidence_band_present": "n/a",
+      "last_computed_at_present": "yes (parent object computed_at)",
+      "null_handling": "Returns null if no touches found; rendered as ?-or-? blank in widget.",
+      "smell": "LOW — value is correct; only smell is silent null when contacts file has no touches at all."
+    },
+    {
+      "metric_name": "Composite Company Toxicity Score (0-10)",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:4293 (build-time computeToxicityComposite)",
+        "scripts/build-dashboard.mjs:13657 (drawer composite card)",
+        "scripts/build-dashboard.mjs:14071 (toxicity drill-in modal)"
+      ],
+      "computing_lib": "lib/toxicity-composite.mjs:computeToxicityComposite",
+      "compute_formula_summary": "Sum of unique-kind driver weights, capped at 10. Driver weights: layoffs(3), leadership_exit(2), manual_toxic(3), culture_ethics_discard(2), hiring_freeze(1), public_scandal(2), short_tenure(1), funding_distress(2).",
+      "source_data": [
+        "data/company-intel-cache/{slug}/intel-*.json (council-of-models negative_signals)",
+        "data/hm-intel/{slug}*.json company_signals_90d text-scan",
+        "data/applications.md notes column patterns",
+        "data/discard-reasons.jsonl culture-tagged entries"
+      ],
+      "freshness_signal_present": "partial — computed_at on each result + sources_scanned list, BUT no per-source freshness (e.g., 'intel-cache is 45 days stale')",
+      "confidence_band_present": "yes — low/med/high based on driver count (≥3=high, 2=med, ≤1=low)",
+      "last_computed_at_present": "yes (computed_at ISO timestamp on every return)",
+      "null_handling": "Empty slug returns score:0, drivers:[], confidence:'low', auto_trash:false with schema_note — GOOD. Per-source absence handled via sources_scanned inventory.",
+      "smell": "MEDIUM — confidence band uses driver-count only, not source quality. A single council-of-models driver (high-confidence multi-LLM consensus) is 'low' confidence; two noisy regex matches in hm-intel notes are 'med'. Heuristic is too coarse."
+    },
+    {
+      "metric_name": "Wealth Ranking Score (0-100)",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:11169 (wealth-ranking pop-out)",
+        "scripts/build-dashboard.mjs:14766 (build-time bake into window._waveCB.wealthRanking)"
+      ],
+      "computing_lib": "lib/wealth-ranking.mjs:rankCompaniesByWealth",
+      "compute_formula_summary": "Sum of 5 driver scores: equity_stage(0-30) + ai_native(0-25) + salary_band(0-25) + ipo_trajectory(0-10) + skill_portability(0-10) = 0-100",
+      "source_data": [
+        "data/overpay-signals/CURRENT.md (equity + overpay blocks)",
+        "data/company-intel-cache/{slug}/intel-*.json",
+        "data/applications.md (max comp parsed from rows)",
+        "modes/_profile.md (A1/A2/B tier lists)",
+        "data/skill-portability.json (optional seed)"
+      ],
+      "freshness_signal_present": "no — no overall computed_at; CURRENT.md mtime not checked",
+      "confidence_band_present": "partial — hasPartialData boolean + per-driver hasData; no aggregate confidence",
+      "last_computed_at_present": "no",
+      "null_handling": "AGGRESSIVE FALLBACK — scoreSkillPortability returns 10/10 (the max) by default for unknown verticals with hasData:false. Score inflated when data missing.",
+      "smell": "HIGH — companies with 60%+ missing data still rank visibly because of optimistic defaults (especially skill_portability's default-10). hasPartialData boolean is too coarse to convey severity."
+    },
+    {
+      "metric_name": "Wealth Lens — Comp Anchor + Lifestyle %",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:14338 (drawer wealth-lens chip)",
+        "scripts/build-dashboard.mjs:7992 (apply-now-queue score card)"
+      ],
+      "computing_lib": "lib/wealth-lens.mjs:applyWealthLens (LLM-backed)",
+      "compute_formula_summary": "openai:gpt-5 call with prompt baked at line 164, hardcoded 'Today is 2026-05-17 PT'",
+      "source_data": ["Mitchell's stored walk-line/target", "JD comp text", "intel-cache equity_story"],
+      "freshness_signal_present": "no — LLM cache TTL not exposed in render",
+      "confidence_band_present": "no",
+      "last_computed_at_present": "partial (cache file has generated_at; not surfaced in UI)",
+      "null_handling": "LLM fallback path returns a stub if call fails — verified in wealth-lens.mjs.",
+      "smell": "HIGH — wealth-lens.mjs:164 hardcodes 'Today is 2026-05-17 PT' in the prompt. Every LLM call from now on lies about today. Same lie at line 348 in the comp benchmarking prompt."
+    },
+    {
+      "metric_name": "Strategy Ceiling % + Gap + 3-5 Actions",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:14599-14619 (drill-in 'Refreshed live' card)",
+        "scripts/build-dashboard.mjs:14398 (gap chip tooltip)"
+      ],
+      "computing_lib": "lib/strategy-ceiling.mjs:computeStrategyCeiling (openai:gpt-5)",
+      "compute_formula_summary": "LLM-only — gpt-5 returns ceiling/gap_pct/actions array, schema-validated.",
+      "source_data": ["JD snippet ≤1500 chars", "hm-intel JSON ≤600 chars", "Mitchell brand string baked in prompt"],
+      "freshness_signal_present": "cache age tracked via generated_at; UI shows 'Cached result' label but not the age in days/hours",
+      "confidence_band_present": "no — single ceiling number with no uncertainty band even though it's a free-form LLM output",
+      "last_computed_at_present": "yes in data, no in UI",
+      "null_handling": "Degraded fallback at strategy-ceiling.mjs:278-313 caches 3 GENERIC ACTIONS with fabricated expected_lift_pct values (10+8+15=33% lift from no data) and writes that to disk for 1 hour. User cannot distinguish 'real strategy' from 'LLM failed, here's a placeholder.' The _degraded:true flag IS shown in render as 'LLM unavailable — showing fallback actions' but the action lift numbers are still presented as if real.",
+      "smell": "CRITICAL — hardcoded date 'Today is 2026-05-17 PT' at strategy-ceiling.mjs:119. Plus the degraded-fallback shows fabricated lift percentages with the _degraded warning banner but no removal of the misleading lift numbers."
+    },
+    {
+      "metric_name": "Days Left to Deadline",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs (sidebar runway + apply-now headers)",
+        "dashboard widgets that consume computeNextMoves output"
+      ],
+      "computing_lib": "lib/next-moves.mjs:computeNextMoves (deadline_stats.days_left)",
+      "compute_formula_summary": "Math.max(0, round((deadlineMs - todayMs) / 86400000))",
+      "source_data": ["profile.deadline_iso, defaulting to hardcoded '2026-09-30' at next-moves.mjs:55"],
+      "freshness_signal_present": "yes — generated_at",
+      "confidence_band_present": "n/a — deterministic count",
+      "last_computed_at_present": "yes (generated_at)",
+      "null_handling": "If profile.deadline_iso missing, SILENTLY uses 2026-09-30 hardcoded constant. UI does not indicate the deadline source was profile vs default.",
+      "smell": "MEDIUM — hardcoded 2026-09-30 deadline-default in code. Drift risk: when Mitchell's actual deadline changes, the default still lingers as a fallback."
+    },
+    {
+      "metric_name": "Apps Per Week Required (burn-down)",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs (Mission Control strip + sidebar runway)",
+        "dashboard-server.mjs (/api/next-moves consumer)"
+      ],
+      "computing_lib": "lib/next-moves.mjs:computeNextMoves",
+      "compute_formula_summary": "(target_applications_for_offer || 25 - appsApplied) / (daysLeft/7); rendered with .toFixed(1)",
+      "source_data": ["profile.target_applications_for_offer (default 25)", "applications.md status counts", "deadline"],
+      "freshness_signal_present": "yes (generated_at)",
+      "confidence_band_present": "no",
+      "last_computed_at_present": "yes",
+      "null_handling": "If daysLeft == 0, renders '—'.",
+      "smell": "MEDIUM — target_applications_for_offer default is hardcoded 25 with no source/calibration. Some users may have a target of 5 or 50 — defaulting to 25 silently anchors apps-per-week."
+    },
+    {
+      "metric_name": "Next Moves — Top N Composite Scores",
+      "surface_locations": ["scripts/build-dashboard.mjs (Next Moves card)", "scripts/build-dashboard.mjs:14162 (consumer comment)"],
+      "computing_lib": "lib/next-moves.mjs:computeNextMoves",
+      "compute_formula_summary": "composite = impact / sqrt(cost + 0.1); impact = quality × leverage × time_sensitivity × confidence (0-1 each)",
+      "source_data": ["apps tracker", "throttle map", "liveness map", "outreach contacts", "queue files"],
+      "freshness_signal_present": "yes (generated_at)",
+      "confidence_band_present": "partial — confidence factor is baked into impact but not exposed alongside the composite_score",
+      "last_computed_at_present": "yes",
+      "null_handling": "Composite includes a confidence factor — graceful when subsystems missing.",
+      "smell": "LOW — the COST_FLOOR=0.1 constant prevents inf, but the choice of sqrt cost penalty (vs linear or log) is unjustified in comments."
+    },
+    {
+      "metric_name": "TTO Estimate (weeks) + velocity_tier + confidence",
+      "surface_locations": ["scripts/build-dashboard.mjs:18967 (Apply-Now-Queue TTO column)", "scripts/build-dashboard.mjs:18994 (fallback unknown TTO chip)"],
+      "computing_lib": "lib/tto-estimator.mjs:estimateTTO",
+      "compute_formula_summary": "4-tier resolution: overrides JSON > COMPANY_SPECIFIC table > STAGE_DEFAULTS table > 'unknown' fallback (10 weeks).",
+      "source_data": ["data/tto-overrides.json (user-curated)", "lib/tto-estimator.mjs in-code tables"],
+      "freshness_signal_present": "partial — basis field tells you which tier produced the value, but no computed_at",
+      "confidence_band_present": "yes — high/med/low per-entry",
+      "last_computed_at_present": "no",
+      "null_handling": "Falls back through tiers, never returns null. basis:'unknown' + confidence:'low' indicates inferred.",
+      "smell": "MEDIUM — COMPANY_SPECIFIC table is hardcoded in source code with timestamp commit '2026-05' baked into comments. Cycle-time signals rot. Apple may have changed its loop length and the table is silently stale. No mechanism to refresh from a current source."
+    },
+    {
+      "metric_name": "Network Graph — direct + one_hop contact counts",
+      "surface_locations": [
+        "scripts/build-dashboard.mjs:14755 (warm path display)",
+        "scripts/build-dashboard.mjs (drawer network card)"
+      ],
+      "computing_lib": "lib/network-graph.mjs:findLeveragePathTo / findContactsAtCompany",
+      "compute_formula_summary": "Filter people array by current_company substring match (direct) and evidence_sources context match (one_hop).",
+      "source_data": ["data/network-graph.json (scan-network.mjs output)", "data/linkedin/overrides.json (current-employer corrections)"],
+      "freshness_signal_present": "no — graph file mtime not surfaced",
+      "confidence_band_present": "no",
+      "last_computed_at_present": "no",
+      "null_handling": "Returns empty arrays + no_path:true if graph file missing. Returns null from getNetworkSummary if missing. UI consumer behavior unverified.",
+      "smell": "MEDIUM — in-process cache `_cache = null` at line 19 never expires after first load; long-running dashboard-server processes pin to whichever version of graph file was first read. Stale-cache bug latent."
+    },
+    {
+      "metric_name": "Funnel Completion — Evaluated/Applied counts + gap nudge",
+      "surface_locations": ["scripts/build-dashboard.mjs:3787 (funnel rendering)", "scripts/build-dashboard.mjs:3983 (funnel-nudge chip)"],
+      "computing_lib": "lib/funnel-completion.mjs:detectFunnelGap",
+      "compute_formula_summary": "Count rows with status in {Evaluated, Responded, Interview} vs {Applied}. has_gap = evaluated > 0 && applied == 0.",
+      "source_data": ["data/applications.md via lib/parse-applications.mjs"],
+      "freshness_signal_present": "no",
+      "confidence_band_present": "n/a — deterministic count",
+      "last_computed_at_present": "no",
+      "null_handling": "Returns has_gap:false with explanation 'No rows provided.' if input not array.",
+      "smell": "LOW — fine; just lacks a last_computed_at."
+    },
+    {
+      "metric_name": "Industry Gap Ranking Table",
+      "surface_locations": ["scripts/build-dashboard.mjs:4105 (B2 Industry Gap Radar)", "scripts/build-dashboard.mjs:10344"],
+      "computing_lib": "lib/industry-gap.mjs:getIndustryGapRanking",
+      "compute_formula_summary": "SEED_TABLE 12-row scoring table, weighted by Mitchell's archetype mappings.",
+      "source_data": ["lib/industry-gap.mjs SEED_TABLE (in-code)"],
+      "freshness_signal_present": "no",
+      "confidence_band_present": "no — table values are static",
+      "last_computed_at_present": "no",
+      "null_handling": "Static — never null.",
+      "smell": "MEDIUM — entirely seed-table driven; comment at build-dashboard.mjs:15038 says 'can edit lib/industry-gap.mjs SEED_TABLE to tune weights or add rows' — that's a code-as-data anti-pattern but acceptable for a 12-row table. No freshness indicator anywhere."
+    },
+    {
+      "metric_name": "Staleness Score per Row",
+      "surface_locations": ["scripts/build-dashboard.mjs (drawer/row badges)"],
+      "computing_lib": "lib/staleness-nudge.mjs:scoreStaleness",
+      "compute_formula_summary": "Days since last touch + last report regen — into bands.",
+      "source_data": ["row data + applications.md timestamps"],
+      "freshness_signal_present": "yes — IS the freshness metric",
+      "confidence_band_present": "n/a",
+      "last_computed_at_present": "n/a",
+      "null_handling": "Returns 'fresh' band for rows with no signals.",
+      "smell": "LOW — by design."
+    },
+    {
+      "metric_name": "Comp Anchor Range ($K low – $K high)",
+      "surface_locations": ["scripts/build-dashboard.mjs (apply-now drawer comp chip)", "drawer wealth-lens card"],
+      "computing_lib": "lib/comp-researcher.mjs:lookupCompCache",
+      "compute_formula_summary": "Lookup against cached comp research JSON per company-slug. LLM-backed when cache miss.",
+      "source_data": ["data/comp-cache/{slug}.json"],
+      "freshness_signal_present": "partial — cache file mtime not surfaced",
+      "confidence_band_present": "no",
+      "last_computed_at_present": "partial (cache has timestamp; not rendered)",
+      "null_handling": "Returns null on cache miss; UI shows '—'.",
+      "smell": "MEDIUM — when LLM call needed (no cache), the prompt embeds 'Today is 2026-05-17 PT' via wealth-lens.mjs:348. Bad date anchor."
+    },
+    {
+      "metric_name": "Equity Calculator — vest schedule + cliff payouts",
+      "surface_locations": ["scripts/build-dashboard.mjs:38 (import)", "drawer equity sliders"],
+      "computing_lib": "lib/equity-calculator.mjs:renderEquitySlidersHtml",
+      "compute_formula_summary": "Standard 4-year vest with 1-year cliff, monthly accrual after cliff.",
+      "source_data": ["User input via slider — no upstream source"],
+      "freshness_signal_present": "n/a (interactive)",
+      "confidence_band_present": "n/a",
+      "last_computed_at_present": "n/a",
+      "null_handling": "Defaults to placeholder values until user moves sliders.",
+      "smell": "LOW — uses 'calibration brief 2026-05-16' as anchor for floor/target ($175K/$250-320K). Acceptable since these are personal preferences; ideally read from config/profile.yml instead of in-code constants."
+    },
+    {
+      "metric_name": "Peer Context Table (median + p25 + p75 comp)",
+      "surface_locations": ["scripts/build-dashboard.mjs:4046 (build-time fallback note)", "drawer peer table"],
+      "computing_lib": "lib/peer-context.mjs:getPeerContext + renderPeerTable[Html]",
+      "compute_formula_summary": "Quartile summary across cached peer compensation data.",
+      "source_data": ["lib/peer-context.mjs cache or seed"],
+      "freshness_signal_present": "no",
+      "confidence_band_present": "yes — sample size + p25/p75 spread visible",
+      "last_computed_at_present": "no",
+      "null_handling": "Renders 'Peer comp data not available — run node lib/peer-context.mjs to populate.' (build-dashboard.mjs:14287) — GOOD, explicit empty-state.",
+      "smell": "LOW — this is a model citizen for empty-state design. Other metrics should copy this pattern."
+    },
+    {
+      "metric_name": "Provenance Card (decision-provenance.mjs)",
+      "surface_locations": ["scripts/build-dashboard.mjs:31 (import)", "drawer provenance section"],
+      "computing_lib": "lib/decision-provenance.mjs:getProvenance + renderProvenanceCard",
+      "compute_formula_summary": "Surfaces the evaluation chain that produced a row (council inputs, dealbreaker passes, eval-citation-validator).",
+      "source_data": ["per-row provenance manifest"],
+      "freshness_signal_present": "partial — surfaces individual call timestamps when available",
+      "confidence_band_present": "n/a (data-flow narrative, not numeric)",
+      "last_computed_at_present": "varies",
+      "null_handling": "Returns minimal placeholder if no provenance found.",
+      "smell": "LOW — this is what other metrics should look like."
+    },
+    {
+      "metric_name": "Hiring Manager Weighting (priorities ordering)",
+      "surface_locations": ["scripts/build-dashboard.mjs:14619 (drill-in refresh card)", "drawer HM intel section"],
+      "computing_lib": "lib/hm-weighting.mjs + lib/hm-intel-research.mjs",
+      "compute_formula_summary": "Aggregates HM priorities from hm-intel JSON, weights against role keywords.",
+      "source_data": ["data/hm-intel/{slug}*.json"],
+      "freshness_signal_present": "partial — file mtime is checkable; UI surfaces 'researched at' timestamp on the card",
+      "confidence_band_present": "partial — uses the hm-intel research's own confidence_level when present",
+      "last_computed_at_present": "yes (inherited from hm-intel research record)",
+      "null_handling": "Renders pending state if no hm-intel for slug.",
+      "smell": "LOW — best of breed for provenance surfacing. Other metrics should copy."
+    }
+  ],
+  "false_attributions": [
+    {
+      "claim_location": "scripts/build-dashboard.mjs:19782-19784",
+      "false_claim": "Computed by <code>lib/recruiter-pipeline-density.mjs</code>",
+      "claim_link": "https://github.com/mitwilli-create/career-ops/blob/main/lib/recruiter-pipeline-density.mjs",
+      "actual_location": "dashboard-server.mjs:381 function computeRecruiterPipelineDensity",
+      "severity": "CRITICAL — falsely attributes computation to a file that does not exist; GitHub link returns 404"
+    }
+  ],
+  "hardcoded_dates": [
+    {
+      "location": "lib/strategy-ceiling.mjs:119",
+      "string": "Today is 2026-05-17 PT.",
+      "consequence": "Every gpt-5 strategy-ceiling call lies about today's date. LLM 'in the last X days' reasoning anchors to wrong day."
+    },
+    {
+      "location": "lib/wealth-lens.mjs:164",
+      "string": "Today is 2026-05-17 PT.",
+      "consequence": "Wealth-lens LLM call lies about today's date."
+    },
+    {
+      "location": "lib/wealth-lens.mjs:348",
+      "string": "Today is 2026-05-17 PT.",
+      "consequence": "Comp-benchmarking LLM call lies about today's date."
+    },
+    {
+      "location": "lib/next-moves.mjs:55",
+      "string": "const deadlineIso = (i.profile && i.profile.deadline_iso) || '2026-09-30'",
+      "consequence": "If profile.deadline_iso missing, days_left silently uses 2026-09-30 default."
+    }
+  ],
+  "silent_zero_fallbacks": [
+    {
+      "location": "lib/alignment-scorer.mjs:188-191",
+      "metric_collapse": "alignment=0, interview=0, hmNoticing=0 when reportPath missing or does not exist",
+      "user_visible_smell": "3 bars render at 0% with no warning"
+    },
+    {
+      "location": "lib/wealth-ranking.mjs:347",
+      "metric_collapse": "scoreSkillPortability returns 10/10 default (the max) for unknown verticals",
+      "user_visible_smell": "Composite wealth score inflated by up to 10 points when skill_portability has no data"
+    }
+  ],
+  "stale_in_process_caches": [
+    {
+      "location": "lib/network-graph.mjs:19",
+      "issue": "let _cache = null with no TTL; never re-reads data/network-graph.json after first load",
+      "impact": "long-running dashboard-server processes serve stale network graph"
+    }
+  ]
+}
