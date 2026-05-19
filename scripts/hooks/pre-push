@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# scripts/hooks/pre-push — career-ops pre-push safety gate.
+#
+# Fires on every `git push`. If the push includes commits that modified
+# dashboard-server.mjs, runs `node scripts/agents/system-maintainer.mjs --review`.
+#
+# Gate logic:
+#   - HIGH severity findings → BLOCK the push (exit 1)
+#   - MEDIUM severity findings → LOG as warning, allow the push (exit 0)
+#   - 0 findings → allow (exit 0)
+#
+# Install: bash scripts/install-hooks.sh
+# Manual bypass (ONLY in emergencies): git push --no-verify
+#
+# Context: installed by epsilon-needhuman-resolution-2026-05-19 per
+# Mitchell decision ε.3. Catches path-traversal regressions in
+# dashboard-server.mjs before they land on main.
+
+set -euo pipefail
+
+REMOTE="$1"
+URL="$2"
+
+# ── Resolve repo root from hook location ────────────────────────────────────
+# .git/hooks → .git → repo root
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
+
+DASHBOARD_SERVER="$REPO_ROOT/dashboard-server.mjs"
+MAINTAINER_SCRIPT="$REPO_ROOT/scripts/agents/system-maintainer.mjs"
+
+# ── Check if node is available ───────────────────────────────────────────────
+if ! command -v node &>/dev/null; then
+  echo "[pre-push] WARNING: node not found in PATH — skipping system-maintainer review" >&2
+  exit 0
+fi
+
+# ── Read push info from stdin (git protocol) ─────────────────────────────────
+# Format: <local ref> <local sha1> <remote ref> <remote sha1>
+# Multiple lines for multiple refs. We collect them all.
+touched_dashboard=false
+
+while read local_ref local_sha remote_ref remote_sha; do
+  # Skip deletes (local_sha is zeros)
+  if [[ "$local_sha" == "0000000000000000000000000000000000000000" ]]; then
+    continue
+  fi
+
+  # If remote_sha is zeros, this is a new branch — compare against HEAD~10 or root.
+  if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]]; then
+    base="$(git -C "$REPO_ROOT" rev-list --max-parents=0 "$local_sha" 2>/dev/null || echo "")"
+    range="${base:+$base..}$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  # Check if any commit in range touched dashboard-server.mjs
+  if git -C "$REPO_ROOT" diff --name-only "$range" 2>/dev/null | grep -q "^dashboard-server\.mjs$"; then
+    touched_dashboard=true
+    break
+  fi
+done
+
+if [[ "$touched_dashboard" != "true" ]]; then
+  # No dashboard-server.mjs changes in this push — skip the review gate.
+  exit 0
+fi
+
+# ── Run system-maintainer --review ───────────────────────────────────────────
+echo "[pre-push] dashboard-server.mjs changed — running system-maintainer --review..." >&2
+
+if [[ ! -f "$MAINTAINER_SCRIPT" ]]; then
+  echo "[pre-push] WARNING: $MAINTAINER_SCRIPT not found — skipping review" >&2
+  exit 0
+fi
+
+# Capture output (both stdout and stderr go to terminal; we also capture stdout
+# to check finding counts via the findings markdown).
+NODE_PATH=""
+# Load nvm if present so node resolves in non-interactive shells (launchd, CI)
+if [[ -f "$HOME/.nvm/nvm.sh" ]]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.nvm/nvm.sh" --no-use 2>/dev/null || true
+fi
+
+review_output="$(node "$MAINTAINER_SCRIPT" --review 2>&1)"
+review_exit=$?
+
+echo "$review_output" >&2
+
+if [[ $review_exit -ne 0 ]]; then
+  echo "[pre-push] WARNING: system-maintainer --review exited with code $review_exit — allowing push" >&2
+  exit 0
+fi
+
+# ── Parse the findings markdown for HIGH severity items ──────────────────────
+# The review writes to data/system-review-findings-YYYY-MM-DD.md
+# Also parse stdout for the "N findings" line as a fast check.
+findings_count=0
+high_count=0
+
+# Fast path — parse the log line "  N findings"
+if echo "$review_output" | grep -qE '^\[.*\]\s+[0-9]+ findings$'; then
+  findings_count="$(echo "$review_output" | grep -oE '[0-9]+ findings' | grep -oE '[0-9]+' | tail -1)"
+fi
+
+if [[ "$findings_count" -gt 0 ]]; then
+  # Read the findings markdown for severity breakdown
+  DATE_STAMP="$(date +%Y-%m-%d)"
+  findings_file="$REPO_ROOT/data/system-review-findings-${DATE_STAMP}.md"
+  if [[ -f "$findings_file" ]]; then
+    high_count="$(grep -c '| HIGH |' "$findings_file" 2>/dev/null || echo 0)"
+  fi
+fi
+
+echo "" >&2
+echo "[pre-push] Review summary: ${findings_count} finding(s), ${high_count} HIGH" >&2
+echo "" >&2
+
+if [[ "$high_count" -gt 0 ]]; then
+  echo "╔══════════════════════════════════════════════════════════════╗" >&2
+  echo "║  PUSH BLOCKED — HIGH severity finding(s) in dashboard-server ║" >&2
+  echo "╚══════════════════════════════════════════════════════════════╝" >&2
+  echo "" >&2
+  echo "Fix the HIGH findings above, then re-push." >&2
+  echo "Emergency bypass: git push --no-verify  (use sparingly, log in overnight-coordination.md)" >&2
+  exit 1
+fi
+
+if [[ "$findings_count" -gt 0 ]]; then
+  echo "[pre-push] MEDIUM/LOW findings present — review data/system-review-findings-${DATE_STAMP}.md" >&2
+  echo "[pre-push] Allowing push (only HIGH findings block)." >&2
+fi
+
+exit 0
