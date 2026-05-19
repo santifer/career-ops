@@ -39,6 +39,9 @@ import {
 } from '../lib/refresh-cache-registry.mjs';
 import { assertOrUpdateChecksums, IdentityLockViolation } from '../lib/identity-lock.mjs';
 import { recordAndCheck as recordDrift, buildDashboardMetricsSnapshot } from '../lib/metric-drift-tripwire.mjs';
+import { getAdapter } from '../lib/provider-adapters/index.mjs';
+import { verifyCacheWrite } from '../lib/refresh-verifier.mjs';
+import { validateCacheWrite } from '../lib/cache-write-validator.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -54,6 +57,7 @@ const FLAG = {
   forceExecute: argv.includes('--execute'),
   layerOnly: argv.includes('--layer') ? parseInt(argv[argv.indexOf('--layer') + 1], 10) : null,
   reportOnly: argv.includes('--report'),
+  forceShellOut: argv.includes('--shell-out'),  // Phase 2: bypass adapters, use legacy shell handlers
 };
 
 // ── State + logging ─────────────────────────────────────────────────────────
@@ -281,26 +285,130 @@ async function main() {
     }
 
     if (dryRun) {
-      log(`  PLAN: $${q.cost} → ${q.command}`);
+      log(`  PLAN: $${q.cost} → ${q.command}  [provider=${q.provider}; verifier=${q.cache.verifierProvider || 'default-cross-arch'}]`);
       continue;
     }
 
     // Real execution
-    log(`  EXEC: $${q.cost} → ${q.command}`);
-    try {
-      execSync(q.command, { cwd: REPO_ROOT, stdio: 'inherit', timeout: 600_000 });
-      actualSpent += q.cost;
-      firedCount++;
-      state.spend_window_30d.push({ ts: ts(), usd: q.cost, cache: q.cache.id, key: String(q.row.num) });
-      state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
-      state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'OK' };
-      if (q.isRotation) state.refresh_history['_layer3_rotation_last_fired_at'] = ts();
-    } catch (e) {
-      log(`  ERROR: refresh failed: ${e.message.slice(0, 200)}`);
-      errorCount++;
-      state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
-      state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'ERROR', error: e.message.slice(0, 200) };
+    // Phase 2: prefer the provider-adapter path when available (so verifier
+    // lane + validator gate fire). Fall back to shell-out command if the
+    // cache is registered with a non-adapter handler.
+    const adapterProvider = q.provider && q.provider !== 'anthropic-sonnet'
+      ? q.provider
+      : (q.cache.provider || 'anthropic-sonnet');
+    const adapter = getAdapter(adapterProvider);
+    const useAdapter = !!adapter && !FLAG.forceShellOut && !q.cache.adapterDisabled;
+
+    if (useAdapter) {
+      log(`  EXEC (adapter): $${q.cost} → ${adapterProvider} :: ${q.cache.id} :: row ${q.row.num} ${q.row.company}`);
+      try {
+        const writerResult = await adapter.refresh(q.cache, q.row, {
+          caller: `refresh-master:${q.cache.id}`,
+          maxTokens: q.cache.maxTokens || 3500,
+          ...q.cache.providerOpts,
+        });
+        if (!writerResult.ok) {
+          log(`  WRITER FAILED: ${(writerResult.errors || []).join(' | ')}`);
+          errorCount++;
+          state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
+          state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'WRITER_FAILED', error: (writerResult.errors || []).join(' | ').slice(0, 240) };
+          continue;
+        }
+
+        // Cross-architecture verifier
+        let priorCache = null;
+        try {
+          const inspectedPath = inspectCacheForRow(q.cache, q.row).path;
+          if (inspectedPath && existsSync(inspectedPath)) priorCache = JSON.parse(readFileSync(inspectedPath, 'utf8'));
+        } catch { /* prior cache read best-effort */ }
+
+        const verifyResult = await verifyCacheWrite({
+          writerResult,
+          priorCache,
+          cache: q.cache,
+          row: q.row,
+          opts: { verifierProvider: q.cache.verifierProvider },
+        });
+
+        // Validate the write envelope
+        const envelope = {
+          source_urls: writerResult.sourceUrls || [],
+          retrieved_at: new Date().toISOString(),
+          model: writerResult.model,
+          verifier_passed: verifyResult.verified,
+          diff_summary: priorCache ? 'updated' : 'initial',
+        };
+        const validation = validateCacheWrite({
+          cache: q.cache,
+          envelope,
+          contentJson: writerResult.contentJson,
+          priorCacheJson: priorCache,
+        });
+
+        if (!validation.ok) {
+          log(`  VALIDATOR BLOCKED: ${validation.errors.join('; ')}`);
+          state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
+          state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'VALIDATOR_BLOCKED', errors: validation.errors.slice(0, 3) };
+          errorCount++;
+          continue;
+        }
+
+        if (verifyResult.verified === false) {
+          log(`  VERIFIER REJECTED: escalate=${verifyResult.escalateToCouncil}, notes=${(verifyResult.notes || []).slice(0, 2).join('; ')}`);
+          state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
+          state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'VERIFIER_REJECTED', escalate: verifyResult.escalateToCouncil };
+          // Phase 3 will adjudicate via council-3; Phase 2 just logs + skips write.
+          errorCount++;
+          continue;
+        }
+
+        // Write the cache file with the augmented envelope
+        const targetPath = inspectCacheForRow(q.cache, q.row).path || _materializeCachePath(q.cache, q.row);
+        const cacheBody = {
+          ...validation.augmented,
+          ...(writerResult.contentJson || {}),
+          provider_metadata: writerResult.providerMetadata,
+        };
+        mkdirSync(dirname(targetPath), { recursive: true });
+        writeFileSync(targetPath, JSON.stringify(cacheBody, null, 2));
+        log(`  OK: wrote ${q.cache.id}/${q.row.num} (verifier=PASS, citations=${envelope.source_urls.length})`);
+        actualSpent += writerResult.costUsd || q.cost;
+        firedCount++;
+        state.spend_window_30d.push({ ts: ts(), usd: writerResult.costUsd || q.cost, cache: q.cache.id, key: String(q.row.num), provider: adapterProvider });
+        state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
+        state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'OK', verifier_passed: true, citations: envelope.source_urls.length };
+        if (q.isRotation) state.refresh_history['_layer3_rotation_last_fired_at'] = ts();
+      } catch (e) {
+        log(`  ERROR (adapter): ${e.message.slice(0, 200)}`);
+        errorCount++;
+        state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
+        state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'ERROR', error: e.message.slice(0, 200) };
+      }
+    } else {
+      // Legacy shell-out path
+      log(`  EXEC: $${q.cost} → ${q.command}`);
+      try {
+        execSync(q.command, { cwd: REPO_ROOT, stdio: 'inherit', timeout: 600_000 });
+        actualSpent += q.cost;
+        firedCount++;
+        state.spend_window_30d.push({ ts: ts(), usd: q.cost, cache: q.cache.id, key: String(q.row.num) });
+        state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
+        state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'OK' };
+        if (q.isRotation) state.refresh_history['_layer3_rotation_last_fired_at'] = ts();
+      } catch (e) {
+        log(`  ERROR: refresh failed: ${e.message.slice(0, 200)}`);
+        errorCount++;
+        state.refresh_history[q.cache.id] = state.refresh_history[q.cache.id] || {};
+        state.refresh_history[q.cache.id][String(q.row.num)] = { lastRefreshedAt: ts(), result: 'ERROR', error: e.message.slice(0, 200) };
+      }
     }
+  }
+
+  function _materializeCachePath(cache, row) {
+    // Fall back to constructing the path from the cache descriptor + key.
+    if (!cache.dir) return null;
+    const key = cache.keyFromRow ? cache.keyFromRow(row) : String(row.num);
+    return join(REPO_ROOT, cache.dir, `${key}.json`);
   }
 
   // 8. Trigger dashboard rebuild if anything actually fired
