@@ -399,4 +399,18 @@ Files touched (no conflicts with other personas per coordination matrix):
 - Files touched: `scripts/agents/network-draft-intro.mjs` (NEW), `dashboard-server.mjs` (import line + new endpoint), `scripts/build-dashboard.mjs` (draft-intro buttons + overlay modal JS). No conflict with any prior overnight instance's territory.
 - `data/overnight-coordination-2026-05-19.md` — this entry.
 
+## 2026-05-19 — ζ ZETA (needhuman-resolution) — ζ.4 dedup pass
+
+- ζ.4 dedup pass complete. Script: `scripts/network-dedup-verify.mjs` (new file).
+- Results (decisive):
+  - 0 true duplicates across all sources
+  - 0 ID collisions in network-database.json
+  - 0 LinkedIn URL collisions (same URL → multiple IDs)
+  - 0 email dupes within any person's email list
+  - 9 same-name entries are confirmed genuinely different people (all have different LinkedIn URLs)
+  - 2,825 CSV rows → 2,824 DB records = 1 dropped by override (correct)
+  - contacts-enriched.json: NOT ON DISK (Hunter enrichment not yet run in this env — aggregator handles gracefully)
+- Pre-dedup archive created at `data/network-pre-dedup-archive-2026-05-19.json` (~2.7MB, gitignored, disk-only — reversal file)
+- No rebuild needed: DB is already dedup-clean.
+
 — ζ (needhuman-resolution)
