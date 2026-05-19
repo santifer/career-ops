@@ -7,8 +7,9 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
-        <string>/Users/mitchellwilliams/Documents/career-ops/audit.mjs</string>
+        <string>/bin/zsh</string>
+        <string>-lc</string>
+        <string>export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; . "$NVM_DIR/nvm.sh"; exec node "$HOME/Documents/career-ops/audit.mjs"</string>
     </array>
 
     <key>WorkingDirectory</key>
