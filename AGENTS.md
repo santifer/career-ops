@@ -264,9 +264,10 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ## Scheduled vs. User-Initiated Scripts
 
-The 17 launchd plists in `scripts/launchd/` cover the unattended pipeline:
+The 19 launchd plists in `scripts/launchd/` cover the unattended pipeline:
 scan, batch, heartbeat, weekly-intel, audit, company-pulse, signal-monitor,
-liveness-sweep, etc. — these run autonomously on a schedule.
+liveness-sweep, etc. — these run autonomously on a schedule. (12 are currently
+loaded; the remainder are weekly/quarterly cycles unloaded between runs.)
 
 **Three scripts deliberately do NOT have launchd plists** and stay user-initiated:
 
