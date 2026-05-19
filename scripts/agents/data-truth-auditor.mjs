@@ -303,7 +303,15 @@ function checkSilentZeroPatterns() {
       if (hasCohortIndicator) continue;
 
       // Must have an error/missing/fallback word to be a candidate at all.
-      if (!/(error|missing|unavailable|not\s*found|fallback)/i.test(window)) continue;
+      // γ needhuman-resolution 2026-05-19 (Mitchell decision γ.4b): added
+      // 'fallback-to-score' and 'low-data' as explicit keyword catches.
+      // Rationale: the HIGH-1 malformed-report fix in lib/alignment-scorer.mjs
+      // uses data_completeness: 'fallback-to-score' — a non-null value that
+      // does NOT contain the bare word "fallback" in the same return block
+      // (the metric zeros and the word appear in different code branches).
+      // Adding the full phrase ensures future code using these patterns
+      // gets caught even if the surrounding return block looks clean.
+      if (!/(error|missing|unavailable|not\s*found|fallback-to-score|fallback|low-data)/i.test(window)) continue;
 
       // (2) Suspicious-name match: look for "<name>: 0" where <name> is in
       // the allowlist of metric-implying field names.

@@ -2774,26 +2774,36 @@ function renderRow(r, idx) {
                            : pctClamped >= 40 ? 'alignbar-mid'
                            : 'alignbar-weak';
           const dk = _pctDrillKey(drillKey || color || 'pct');
-          // γ GAMMA: surface a "low-data" indicator when this specific metric
-          // fell back to a partial signal (no Block B grid, no prior outcomes
-          // at company, etc.). Avoids the previous behavior where a metric
-          // backed by 0 Block B requirements rendered identically to one
-          // backed by 12 strong matches.
-          // γ GAMMA fix 2026-05-19 (Γ.12 HIGH-1 full-fix): baseline-only is
-          // a HARD-MUTE — bar replaced with "low signal / data incomplete".
-          // Catches score=0 + prior_outcomes=0 where the formula's
-          // BASE_INTERVIEW_RATE (12) would otherwise render as confident 12%.
-          if (completeness === 'baseline-only') {
-            return `<div class="alignbar-row alignbar-baseline-only" title="${htmlEscape(hint)} — surfacing the formula baseline; no signal modifiers available" style="opacity:0.55">
-              <span class="alignbar-label">${htmlEscape(label)} <span style="font-size:10px;color:#9ca3af;margin-left:6px;font-style:italic" title="No signal modifiers — formula baseline only. Re-run the eval to populate.">low signal</span></span>
-              <span class="alignbar-pct" style="color:var(--text-4);font-style:italic;font-size:11px">data incomplete</span>
+          // γ GAMMA needhuman-resolution 2026-05-19 (Mitchell decision γ.3):
+          // MUTE THE BAR ENTIRELY when data_completeness !== 'full'.
+          // Previously only 'baseline-only' was hard-muted; 'fallback-to-score'
+          // and 'no-prior-outcomes' still rendered a bar with a ⚠ chip. Mitchell's
+          // decision: any non-full completeness = bar suppressed. The ⚠ chip
+          // alone was not sufficient — a bar rendered from partial data
+          // (fallback-to-score uses score as proxy for Block B) is misleading
+          // even with a warning icon. No bar > misleading bar.
+          //
+          // Completeness states that trigger suppression:
+          //   'baseline-only'      — score=0 + no prior outcomes; formula baseline only
+          //   'fallback-to-score'  — no Block B grid; alignment derived from score proxy
+          //   'no-prior-outcomes'  — interview likelihood has no prior-outcome modifiers
+          //   (any other non-'full' string is treated as insufficient and suppressed)
+          if (completeness && completeness !== 'full') {
+            // Human-readable reason strings per completeness state.
+            const suppressReasonMap = {
+              'baseline-only':     'formula baseline only — no signal modifiers available',
+              'fallback-to-score': 'no Block B match grid found — alignment uses score proxy',
+              'no-prior-outcomes': 'no prior application outcomes at this company',
+            };
+            const suppressReason = suppressReasonMap[completeness]
+              || `data insufficient (${completeness})`;
+            return `<div class="alignbar-row alignbar-suppressed" title="${htmlEscape(hint)} — bar suppressed: ${htmlEscape(suppressReason)}" style="opacity:0.6">
+              <span class="alignbar-label">${htmlEscape(label)} <span class="alignbar-suppress-chip" style="font-size:10px;color:#f59e0b;margin-left:6px;font-style:italic" title="Bar suppressed: ${htmlEscape(suppressReason)}. Re-run eval to populate.">⚠ data insufficient</span></span>
+              <span class="alignbar-pct" style="color:var(--text-4);font-style:italic;font-size:11px">bar suppressed</span>
             </div>`;
           }
-          const lowDataChip = (completeness && completeness !== 'full')
-            ? `<span class="alignbar-lowdata" style="font-size:10px;color:#f59e0b;margin-left:6px" title="Partial signal — ${htmlEscape(completeness)}">⚠</span>`
-            : '';
           return `<div class="alignbar-row" title="${htmlEscape(hint)}">
-            <span class="alignbar-label">${htmlEscape(label)}${lowDataChip}</span>
+            <span class="alignbar-label">${htmlEscape(label)}</span>
             <div class="alignbar-track"><div class="alignbar-fill ${colorClass}" style="width:${pctClamped}%"></div></div>
             <span class="alignbar-pct drill-trigger" data-drill="percentage:${dk}" role="button" tabindex="0" title="Click for strategy ceiling — how to improve this metric" onclick="event.stopPropagation();window.drillIn('percentage','${dk}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('percentage','${dk}',event)}">${pctClamped}%</span>
           </div>`;
