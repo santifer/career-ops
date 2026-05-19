@@ -235,8 +235,20 @@ async function phasePolish() {
     }
     log(`  → polishing row ${r.num} (${r.company} — ${r.role}) [cap $${costCap}]`);
     const code = await runScript('scripts/agents/apply-pack-polish.mjs', ['--row', String(r.num), '--cost-cap', String(costCap)]);
-    if (code === 0) { polished++; log(`  ✓ row ${r.num} polish ok`); }
-    else { failed++; log(`  ⚠ row ${r.num} polish failed (exit ${code}) — continuing`); }
+    if (code === 0) {
+      polished++;
+      log(`  ✓ row ${r.num} polish ok`);
+      // α Run-Batch eval 2026-05-19: now also run preflight-pack against the slug so
+      // gate 6 (polish-summary.final_recommendation === 'APPROVED') is enforced. The
+      // result is PREFLIGHT.md on disk — non-fatal here (we don't gate the rest of the
+      // pipeline), but the visible NEEDS_HUMAN / FAIL on the dashboard gives Mitchell
+      // a reason not to ship a pack that didn't converge.
+      const pfCode = await runScript('scripts/preflight-pack.mjs', ['--slug', slug]);
+      log(`  ↪ preflight row ${r.num} exit=${pfCode} (0=PASS, 1=CAUTION, 2=FAIL)`);
+    } else {
+      failed++;
+      log(`  ⚠ row ${r.num} polish failed (exit ${code}) — continuing`);
+    }
     // Surface running totals at top-level (dashboard SSE bar reads polish_progress.*
     // since phases.polish only commits at the end of main()).
     updateJob({ polish_progress: { polished, failed, skipped, total: ranked.length, cap_per_pack_usd: Number(costCap) } });
