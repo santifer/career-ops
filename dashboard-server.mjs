@@ -2806,6 +2806,25 @@ const server = createServer((req, res) => {
 
   if (url === '/api/stats') return json(computeStats());
 
+  // ── α ALPHA 2026-05-19: /api/contacts/stats — cheap live count for sidebar-contacts polling
+  if (url === '/api/contacts/stats') {
+    try {
+      const path = join(ROOT, 'data', 'contacts-enriched.json');
+      if (!existsSync(path)) return json({ total: 0, withEmail: 0, last_update: null });
+      const raw = JSON.parse(readFileSync(path, 'utf-8'));
+      const entries = raw.entries || {};
+      const ids = Object.keys(entries);
+      let withEmail = 0;
+      for (const id of ids) {
+        const e = entries[id];
+        if (e && (e.email_guess || e.email || (Array.isArray(e.emails) && e.emails.length))) withEmail++;
+      }
+      return json({ total: ids.length, withEmail, last_update: raw.last_run || raw.last_update || null });
+    } catch (e) {
+      return json({ total: 0, withEmail: 0, error: e.message }, 500);
+    }
+  }
+
   // ── Hiring-manager intel (from scripts/hiring-manager-research.mjs) ─────
   // GET /api/hm-intel?slug=anthropic-comms-manager  → returns the JSON
   // synthesized by the 7-LLM council, or 404 if no intel exists yet.
@@ -5320,6 +5339,165 @@ async function generatePack(){
       }
     });
     return; // end handled in 'end' event
+  }
+
+  // ── α ALPHA 2026-05-19: apply-pack-polish + intel-refresh + rebuild ──────
+  // Three new endpoint families wired by ALPHA's overnight haul. All three
+  // spawn a long-running child process, log NDJSON progress to /tmp, and
+  // expose an SSE stream for the dashboard buttons.
+
+  // In-process job registry for the new spawners. Keys = jobId.
+  // Survives only as long as the dashboard-server process.
+  if (typeof globalThis.__alphaJobs === 'undefined') globalThis.__alphaJobs = {};
+  const alphaJobs = globalThis.__alphaJobs;
+
+  function _alphaSpawn({ kind, args, env = {} }) {
+    const jobId = `${kind}-${Date.now().toString(36)}-${randomBytes(3).toString('hex')}`;
+    const logPath = `/tmp/alpha-${jobId}.log`;
+    // Open the log file synchronously so SSE can tail it from the get-go
+    // Use existing imported `_spawn` (child_process) + native fs APIs.
+    import('fs').then((fs) => {
+      const fd = fs.openSync(logPath, 'w');
+      const proc = _spawn('node', args, {
+        cwd: ROOT,
+        env: { ...process.env, ...env },
+        detached: true,
+        stdio: ['ignore', fd, fd],
+      });
+      proc.on('exit', (code) => {
+        const j = alphaJobs[jobId];
+        if (j) { j.exit_code = code; j.completed_at = new Date().toISOString(); }
+        try { fs.closeSync(fd); } catch (_) {}
+      });
+      proc.unref();
+      alphaJobs[jobId] = { jobId, kind, pid: proc.pid, logPath, args, started_at: new Date().toISOString(), exit_code: null };
+    }).catch(err => {
+      alphaJobs[jobId] = { jobId, kind, error: String(err.message || err), started_at: new Date().toISOString() };
+    });
+    return { jobId, logPath };
+  }
+
+  function _alphaSSEStream(req, res, logPath) {
+    res.writeHead(200, {
+      'Content-Type':  'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection':    'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'X-Accel-Buffering': 'no',
+    });
+    res.flushHeaders?.();
+
+    let lastSize = 0;
+    let closed = false;
+    function readAndSend() {
+      if (closed) return;
+      try {
+        if (!existsSync(logPath)) return;
+        const st = statSync(logPath);
+        if (st.size <= lastSize) return;
+        const chunk = readFileSync(logPath, 'utf-8').slice(lastSize);
+        lastSize = st.size;
+        for (const line of chunk.split('\n')) {
+          if (!line.trim()) continue;
+          try { res.write(`event: progress\ndata: ${line}\n\n`); } catch (_) { closed = true; }
+        }
+      } catch (_) { /* file may not exist yet */ }
+    }
+    readAndSend();
+    const interval = setInterval(readAndSend, 750);
+    const onClose = () => { closed = true; clearInterval(interval); try { res.end(); } catch (_) {} };
+    req.on('close', onClose);
+    req.on('error', onClose);
+  }
+
+  // ── POST /api/apply-pack-polish — kick off polish on a row ──
+  //   body: { row: 044, artifacts?: ['cv','cover','impact'], targetConfidence?: 0.99, costCap?: 500, noCache?: false }
+  //   returns: { ok, jobId, stream_url, log_path }
+  if (url === '/api/apply-pack-polish' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch (_) { return json({ ok: false, error: 'invalid JSON body' }, 400); }
+      const row = parsed.row;
+      if (!row || !/^\d+$/.test(String(row))) return json({ ok: false, error: 'row (numeric) required' }, 400);
+      const args = [join(ROOT, 'scripts/agents/apply-pack-polish.mjs'), '--row', String(row)];
+      if (Array.isArray(parsed.artifacts) && parsed.artifacts.length) {
+        args.push('--artifacts', parsed.artifacts.filter(a => /^[a-z]+$/.test(a)).join(','));
+      }
+      if (Number.isFinite(Number(parsed.targetConfidence))) args.push('--target-confidence', String(Number(parsed.targetConfidence)));
+      if (Number.isFinite(Number(parsed.costCap))) args.push('--cost-cap', String(Number(parsed.costCap)));
+      if (parsed.noCache === true) args.push('--no-cache');
+      const { jobId, logPath } = _alphaSpawn({ kind: 'polish', args });
+      return json({ ok: true, jobId, log_path: logPath, stream_url: `/api/apply-pack-polish-stream/${jobId}` });
+    });
+    return;
+  }
+
+  // ── GET /api/apply-pack-polish-stream/{jobId} — SSE of NDJSON progress ──
+  const polishStreamMatch = url.match(/^\/api\/apply-pack-polish-stream\/([\w-]+)$/);
+  if (polishStreamMatch) {
+    const jobId = polishStreamMatch[1];
+    // Tolerate "job hasn't appeared yet" race — fall back to expected logPath
+    const job = alphaJobs[jobId];
+    const logPath = job?.logPath || `/tmp/alpha-${jobId}.log`;
+    return _alphaSSEStream(req, res, logPath);
+  }
+
+  // ── POST /api/intel-refresh — refresh cached intel slots for a row ──
+  //   body: { rowId: 044, slots?: ['hm-intel','toxicity','strategy','positioning','all'] }
+  if (url === '/api/intel-refresh' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch (_) { return json({ ok: false, error: 'invalid JSON body' }, 400); }
+      const rowId = parsed.rowId || parsed.row;
+      if (!rowId || !/^\d+$/.test(String(rowId))) return json({ ok: false, error: 'rowId (numeric) required' }, 400);
+      const args = [join(ROOT, 'scripts/agents/intel-refresh.mjs'), '--row', String(rowId)];
+      if (Array.isArray(parsed.slots) && parsed.slots.length) {
+        args.push('--slots', parsed.slots.filter(s => /^[a-z-]+$/.test(s)).join(','));
+      }
+      const { jobId, logPath } = _alphaSpawn({ kind: 'intel', args });
+      return json({ ok: true, jobId, log_path: logPath, stream_url: `/api/intel-refresh-stream/${jobId}` });
+    });
+    return;
+  }
+  const intelStreamMatch = url.match(/^\/api\/intel-refresh-stream\/([\w-]+)$/);
+  if (intelStreamMatch) {
+    const jobId = intelStreamMatch[1];
+    const job = alphaJobs[jobId];
+    const logPath = job?.logPath || `/tmp/alpha-${jobId}.log`;
+    return _alphaSSEStream(req, res, logPath);
+  }
+
+  // ── POST /api/rebuild — kick a dashboard rebuild ──
+  //   Returns { ok, jobId, stream_url } so the ↻ mini-buttons on baked widgets
+  //   can stream progress instead of hanging the click.
+  if (url === '/api/rebuild' && req.method === 'POST') {
+    const args = [join(ROOT, 'scripts/build-dashboard.mjs')];
+    const { jobId, logPath } = _alphaSpawn({ kind: 'rebuild', args });
+    return json({ ok: true, jobId, log_path: logPath, stream_url: `/api/rebuild-stream/${jobId}` });
+  }
+  const rebuildStreamMatch = url.match(/^\/api\/rebuild-stream\/([\w-]+)$/);
+  if (rebuildStreamMatch) {
+    const jobId = rebuildStreamMatch[1];
+    const job = alphaJobs[jobId];
+    const logPath = job?.logPath || `/tmp/alpha-${jobId}.log`;
+    return _alphaSSEStream(req, res, logPath);
+  }
+
+  // ── GET /api/alpha-job/{jobId} — poll one job's exit state (for non-SSE clients) ──
+  const alphaJobMatch = url.match(/^\/api\/alpha-job\/([\w-]+)$/);
+  if (alphaJobMatch) {
+    const jobId = alphaJobMatch[1];
+    const job = alphaJobs[jobId];
+    if (!job) return json({ ok: false, error: 'unknown job' }, 404);
+    return json({ ok: true, job });
   }
 
   // Share-token middleware: when ?share=<token> is on the dashboard request,

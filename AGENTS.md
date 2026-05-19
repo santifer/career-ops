@@ -22,6 +22,20 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
 
+## Decision-Maximization Policy (quality-first)
+
+Mitchell's stated decision pattern: **"I almost always choose the most robust, quality, and costly option — despite time needed to complete or spend."**
+
+When acting autonomously in this repo:
+- Quality > speed > cost. No "MVP" shortcuts. No "sensible default" downgrades.
+- Council fan-out: full lineup, no subsets — unless an explicit cost cap is in force.
+- Researcher: engage Gemini Deep Research Max when applicable. `--no-skip-deep`.
+- Cache TTLs: 3 days (not 7). Re-validate aggressively.
+- Persona dialogue: 5+ rounds, adversarial sweep on convergence. Convergence-on-praise without dissent is a failure signal — restart with adversarial framing.
+- Persist the rationale for any quality-vs-cost trade-off in the deliverable, so future runs can audit.
+
+Established 2026-05-19 by ALPHA overnight instance per `data/overnight-haul-2026-05-19.md` Global Charter § Decision-Maximization Policy.
+
 ## Update Check
 
 On the first message of each session, run the update checker silently:

@@ -20,7 +20,7 @@
  *   node scripts/process-all-pipeline.mjs --job-id=xxx    # use specific job ID (server pre-allocates)
  */
 
-import { readFileSync, writeFileSync, existsSync, appendFileSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, appendFileSync, mkdirSync, statSync } from 'fs';
 import { spawn } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -136,6 +136,52 @@ async function phaseBatch() {
   return { ok: true };
 }
 
+// α ALPHA 2026-05-19 — optional polish stage between batch and pack zip.
+// Gated by POLISH_PACK_ENABLED env var so this stage is OPT-IN.
+// Reads the apply-now-queue, scans for top-N rows whose pack has artifacts
+// but no polish-summary.json (or one >3d old), runs apply-pack-polish on each.
+// Soft-fail: a polish failure does NOT block the rest of the pipeline.
+async function phasePolish() {
+  const enabled = String(process.env.POLISH_PACK_ENABLED || '').trim() === '1';
+  if (!enabled) {
+    log('━━━ Phase 2.6/4: POLISH PACKS ━━━ (skipped — POLISH_PACK_ENABLED!=1)');
+    return { ok: true, skipped: true };
+  }
+  updateJob({ phase: 'polish', phase_started_at: new Date().toISOString() });
+  log('━━━ Phase 2.6/4: POLISH PACKS ━━━');
+  if (DRY_RUN) { log('(dry-run) skipping polish'); return { ok: true, skipped: true }; }
+
+  // Find rows that have at least one outbound artifact + no recent polish-summary
+  const apqPath = join(ROOT, 'data/apply-now-queue.json');
+  if (!existsSync(apqPath)) {
+    log('  no apply-now-queue.json — skipping');
+    return { ok: true };
+  }
+  let apq;
+  try { apq = JSON.parse(readFileSync(apqPath, 'utf-8')); } catch (_) { return { ok: true }; }
+  const ranked = (apq.ranked || []).filter(r => r && r.num && r.status === 'Evaluated').slice(0, 5); // top 5 max per run
+
+  let polished = 0;
+  let failed = 0;
+  for (const r of ranked) {
+    const slug = `${String(r.num).padStart(3, '0')}-${String(r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${String(r.role || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+    const polishSummary = join(ROOT, 'data', 'apply-packs', slug, 'polish-summary.json');
+    if (existsSync(polishSummary)) {
+      const ageMs = Date.now() - statSync(polishSummary).mtimeMs;
+      if (ageMs < 3 * 24 * 60 * 60 * 1000) {
+        log(`  ↪ row ${r.num} polish-summary fresh (<3d) — skipping`);
+        continue;
+      }
+    }
+    log(`  → polishing row ${r.num} (${r.company} — ${r.role})`);
+    const code = await runScript('scripts/agents/apply-pack-polish.mjs', ['--row', String(r.num)]);
+    if (code === 0) { polished++; log(`  ✓ row ${r.num} polish ok`); }
+    else { failed++; log(`  ⚠ row ${r.num} polish failed (exit ${code}) — continuing`); }
+  }
+  log(`  polish stage done: ${polished} polished, ${failed} failed, ${ranked.length - polished - failed} skipped`);
+  return { ok: true, polished, failed };
+}
+
 async function phaseMergeTracker() {
   updateJob({ phase: 'merge', phase_started_at: new Date().toISOString() });
   log('━━━ Phase 2.5/4: MERGE TRACKER ━━━');
@@ -212,6 +258,12 @@ async function main() {
   if (!phases.batch.ok) {
     updateJob({ status: 'failed', failed_at: new Date().toISOString(), failure_phase: 'batch' });
     process.exit(2);
+  }
+  // α ALPHA 2026-05-19 — opt-in polish stage (POLISH_PACK_ENABLED=1)
+  phases.polish = await phasePolish();
+  if (!phases.polish.ok) {
+    // Soft-fail: log and continue. Polish failures shouldn't block the rest.
+    log('⚠️  polish phase reported failure — continuing pipeline');
   }
   phases.merge   = await phaseMergeTracker();
   if (!phases.merge.ok) {
