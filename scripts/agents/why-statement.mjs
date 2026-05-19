@@ -381,12 +381,20 @@ export async function runWhyStatement(input) {
     try {
       apiDetection = await checkText(parsed.statement, { budgetUsd: 0.10, skipCache: false });
 
-      if (apiDetection.passes === false) {
+      // δ DELTA Run-Batch 2026-05-19 — switched from legacy `passes` to
+      // band-aware `gateBlocks`. The legacy `passes` field has ~100% FPR
+      // on Mitchell's authentic prose (Δ.1 baseline: every detector returns
+      // 1.0). `gateBlocks` is true ONLY when CRIT band AND at least one
+      // detector has GOOD signal quality — i.e. the gate has a defensible
+      // reason to block. USELESS-on-both fail-secure (passes=null) is
+      // distinct from gateBlocks=true and does NOT trip the retry here.
+      if (apiDetection.gateBlocks === true) {
         apiDetectionRetried = true;
         const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
         const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
-        const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
-          `The statement scored > 50% AI probability on external detectors. ` +
+        const band = apiDetection.band || 'CRIT';
+        const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig} (band: ${band}). ` +
+          `The statement triggered the CRIT-band block with at least one detector at GOOD signal quality. ` +
           `Rewrite with dramatically more burstiness, irregular sentence structure, and embedded ` +
           `specific personal details unique to Mitchell. Sound like real internal notes, not polished copy.`;
 
@@ -405,7 +413,8 @@ export async function runWhyStatement(input) {
             try {
               const retryParsed = WhyStatementLlmResponseSchema.parse(JSON.parse(extractJson(rr.content)));
               const retryDetection = await checkText(retryParsed.statement, { budgetUsd: 0.10, skipCache: true });
-              if (retryDetection.passes !== false || apiDetection.passes === false) {
+              // Accept retry if it cleared CRIT-band block OR is not worse.
+              if (retryDetection.gateBlocks !== true || apiDetection.gateBlocks === true) {
                 parsed = retryParsed;
                 const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
                 writeFileSync(artifactPath, retryMarkdown, 'utf-8');
@@ -417,11 +426,12 @@ export async function runWhyStatement(input) {
         } catch { /* ignore regeneration failure */ }
       }
     } catch (detectionErr) {
-      apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+      apiDetection = { passes: null, gateBlocks: null, error: String(detectionErr.message || detectionErr) };
     }
   }
 
-  const apiDetectionFailed = apiDetection?.passes === false;
+  // δ DELTA Run-Batch 2026-05-19 — `gateBlocks` is the band-aware authority.
+  const apiDetectionFailed = apiDetection?.gateBlocks === true;
 
   // ── 8. Decisions log (O9) ────────────────────────────────────────────────
 
