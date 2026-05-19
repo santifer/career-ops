@@ -124,7 +124,7 @@ Note: Perplexity is currently above 35% target due to the catch-up phase (toxici
 
 ## Top 5 things Mitchell should look at first when he checks in
 
-1. **Set PERPLEXITY_API_KEY + XAI_API_KEY in `.env`** if not already set. Phase 2's multi-provider routing falls back to anthropic-only when these are absent (logged per-call as `NEEDS_HUMAN: PERPLEXITY_API_KEY not set`).
+1. ~~Set PERPLEXITY_API_KEY + XAI_API_KEY in `.env`~~ — **corrected 2026-05-19 post-build:** both keys were ALREADY present in `.env` (verified via `grep`). The original NEEDS_HUMAN flag was inaccurate. All provider adapters auth-ready out of the box.
 2. **Flip `config/refresh-policy.yml: budget.dry_run: false`** when ready to spend the projected $101.50 catch-up. Run `node scripts/refresh-master.mjs --plan` once more to re-confirm the queue before flipping.
 3. **Review `data/phase-{1.5,2,3,4,5}-complete.md` reports.** Each documents the 30 deliverables + their NEEDS_HUMAN flags (11 total across the 5 reports).
 4. **Click ↻ Deep refresh on one apply-now row** at https://dashboard.careers-ops.com/ — the new Phase 3 CTA. The confirm modal shows projected $25-50 + ETA 3-8 min, then opens the alpha-job popout with SSE-streaming progress.

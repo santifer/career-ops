@@ -24,7 +24,7 @@ budget:
   daily_target_usd:  45        # informational target
   daily_cap_usd:     80        # orchestrator aborts the run if next refresh would push past
   monthly_cap_usd:   2400      # checked against running 30-day window
-  dry_run: true                # SAFETY: defaults to ON; flip to false to enable real spend
+  dry_run: false               # 2026-05-19: live spend enabled by Mitchell post-Phase-5 ship
   manual_override_cost_usd: 25 # max single user-triggered refresh that fires without confirmation
 
 # ──────────────────────────────────────────────────────────────────────────

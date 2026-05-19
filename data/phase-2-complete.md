@@ -36,7 +36,7 @@ Per the Global Charter, I applied the same anti-hallucination protocol to my Pha
 
 ## NEEDS_HUMAN flags
 
-1. **PERPLEXITY_API_KEY + XAI_API_KEY confirmation.** Both adapters require these in `.env`. If absent, refresh-master will continue with anthropic-sonnet fallback and log the NEEDS_HUMAN error per cache. Verify both keys present before flipping `config/refresh-policy.yml: budget.dry_run=false`.
+1. ~~PERPLEXITY_API_KEY + XAI_API_KEY confirmation.~~ **Corrected 2026-05-19 post-build:** both keys verified already present in `.env`. No action needed.
 2. **Grok-x-search live-search regression (EPSILON 2026-05-19).** Adapter surfaces `regression_flag_zero_citations` in providerMetadata. If the regression persists, verifier-lane will reject grok-x writes and fall back to perplexity-agent. Mitchell may want to wait for an xAI fix before routing toxicity verifier through grok-x.
 
 ## End-to-end verification
