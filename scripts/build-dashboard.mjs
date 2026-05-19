@@ -22122,7 +22122,8 @@ function _shFmtUptime(seconds) {
   if (m > 0) return m + 'm';
   return seconds + 's';
 }
-function _shRender(d) {
+function _shRender(d, w) {
+  // d = /api/system-health payload, w = /api/hang-watchdog/status payload (optional)
   const body = document.getElementById('system-health-body');
   if (!body) return;
   if (!d || !d.ok) {
@@ -22178,11 +22179,55 @@ function _shRender(d) {
       '</ul>'
     : '<div style="color:var(--text-3);font-size:12.5px">No errors today — clean run.</div>';
 
+  // Hang Watchdog section (added 2026-05-19, hang-prevention PR #52).
+  // Surfaces plist-loaded status, last pass complete, PIDs tracked, recent
+  // postmortems. Watchdog runs every 5 min in REPORT-ONLY mode by default.
+  let hangBlock = '';
+  if (w && w.ok) {
+    const plistDot = w.plist_loaded ? 'green' : 'grey';
+    const plistLbl = w.plist_loaded ? 'Plist loaded' : 'Plist NOT installed';
+    const stateInfo = w.state ? w.state : null;
+    const pidsTracked = stateInfo ? stateInfo.pids_tracked : 0;
+    const historyCount = stateInfo ? stateInfo.history_count : 0;
+    const lastRun = stateInfo && stateInfo.last_run ? stateInfo.last_run : null;
+    const lpc = w.last_pass_complete || {};
+    const lastFlagged = lpc.flagged_count != null ? lpc.flagged_count : 0;
+    const lastScanned = lpc.procs_scanned != null ? lpc.procs_scanned : 0;
+    const autoKill = lpc.auto_kill_mode === true;
+    const postmortems = w.postmortems || [];
+    const dotColor = lastFlagged > 0 ? 'yellow' : (w.plist_loaded ? 'green' : 'grey');
+    const installCmd = 'cp scripts/launchd/com.mitchell.career-ops.hang-watchdog.plist ~/Library/LaunchAgents/ ' + String.fromCharCode(38) + String.fromCharCode(38) + ' launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.mitchell.career-ops.hang-watchdog.plist';
+    hangBlock =
+      '<details class="sh-block"' + (lastFlagged > 0 ? ' open' : '') + '>' +
+        '<summary><span class="sh-status-dot ' + dotColor + '"></span>Hang Watchdog ' +
+          '(' + lastScanned + ' procs scanned · ' + lastFlagged + ' flagged · ' + postmortems.length + ' postmortems)' +
+        '</summary>' +
+        '<div class="sh-block-body" style="font-size:12.5px;color:var(--text-2)">' +
+          '<div><span class="sh-status-dot ' + plistDot + '"></span>' + _shEsc(plistLbl) +
+            (autoKill ? ' · <strong style="color:var(--red-fg)">auto-kill ENABLED</strong>' : ' · report-only mode') +
+          '</div>' +
+          (lastRun ? '<div style="font-size:11.5px;color:var(--text-3);margin-top:4px">Last run: ' + _shEsc(lastRun) + '</div>' : '') +
+          (pidsTracked > 0 ? '<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">Tracking ' + pidsTracked + ' suspect PID(s) · ' + historyCount + ' event(s) in history</div>' : '') +
+          (postmortems.length > 0
+            ? '<div style="margin-top:8px"><strong style="font-size:11.5px">Recent postmortems:</strong>' +
+                '<ul style="font-family:monospace;font-size:11.5px;list-style:none;padding:0;margin:4px 0 0">' +
+                  postmortems.map(p => '<li style="padding:2px 0;color:var(--text-2)">' + _shEsc(p.name) + '</li>').join('') +
+                '</ul>' +
+              '</div>'
+            : '') +
+          (!w.plist_loaded
+            ? '<div style="margin-top:8px;padding:8px;background:var(--bg-2);border-radius:4px;font-size:11.5px"><strong>To install:</strong><br><code style="font-size:10.5px;color:var(--text-2);word-break:break-all">' + _shEsc(installCmd) + '</code></div>'
+            : '') +
+        '</div>' +
+      '</details>';
+  }
+
   body.innerHTML =
     '<details class="sh-block" open>' +
       '<summary><span class="sh-status-dot ' + (jobs.some(j => j.pid) ? 'green' : 'grey') + '"></span>Launchd jobs (' + jobs.length + ')</summary>' +
       '<div class="sh-block-body">' + jobsTable + '</div>' +
     '</details>' +
+    hangBlock +
     '<details class="sh-block" open>' +
       '<summary><span class="sh-status-dot ' + tunnelDot + '"></span>Cloudflared tunnel</summary>' +
       '<div class="sh-block-body">' + tunnelBlock + '</div>' +
@@ -22201,16 +22246,22 @@ function _shRender(d) {
   }
 }
 async function _shFetchAndRender() {
-  let data;
+  let data, hang;
   try {
-    const r = await fetch('/api/system-health', { cache: 'no-store' });
-    data = await r.json();
+    // Fetch system-health + hang-watchdog status in parallel. Watchdog fetch
+    // is best-effort, never blocks the modal render if it errors.
+    const [shRes, hwRes] = await Promise.all([
+      fetch('/api/system-health', { cache: 'no-store' }),
+      fetch('/api/hang-watchdog/status', { cache: 'no-store' }).catch(() => null),
+    ]);
+    data = await shRes.json();
+    hang = hwRes ? await hwRes.json().catch(() => null) : null;
   } catch (_) {
     const body = document.getElementById('system-health-body');
     if (body) body.innerHTML = '<div style="padding:24px;color:var(--red-fg);font-size:13px;text-align:center">Failed to load system health — is dashboard-server.mjs running?</div>';
     return;
   }
-  _shRender(data);
+  _shRender(data, hang);
   _systemHealthLastFetchMs = Date.now();
   const stamp = document.getElementById('system-health-updated');
   if (stamp) { stamp.classList.add('live'); stamp.textContent = 'updated just now'; }
