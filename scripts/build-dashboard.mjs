@@ -19626,13 +19626,24 @@ function _renderPipelineModalBody(action, p) {
   // council has cache hits but researcher/dealbreaker run on all publishN)
   var cacheHits  = est.agent_enrichment ? Math.round((est.agent_enrichment.council.cache_hit_rate || 0) * publishN) : 0;
   var totalUsd   = est.total_cost_usd || 0;
+  // β Run-Batch eval 2026-05-19: detect cap state up here so the hero number
+  // can recolor + carry a small inline pill. Without this the user sees the
+  // big green/accent $142.80 and only learns it busts the cap by scrolling
+  // 350px down to the cap-warning card — too easy to miss.
+  var heroCapped = !!(est.exceeds_per_run_cap || est.exceeds_budget);
+  var heroColor  = heroCapped ? 'var(--red-fg,#dc2626)' : 'var(--accent,#7c6bea)';
+  var heroPill   = heroCapped
+    ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#b91c1c;background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.35);padding:2px 6px;border-radius:999px;vertical-align:middle;margin-left:6px">'
+        + (est.exceeds_per_run_cap ? 'over cap' : 'over budget')
+      + '</span>'
+    : '';
 
   return ''
     // AAA-4: Hero number right-aligned on same visual line as headline noun
     + '<div class="pipeline-modal-section">'
     +   '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">'
-    +     '<h4 style="margin:0">' + count + ' ' + headlineNoun + '</h4>'
-    +     '<span style="font-size:28px;font-weight:700;color:var(--accent,#7c6bea);white-space:nowrap;line-height:1">$' + totalUsd.toFixed(2) + '</span>'
+    +     '<h4 style="margin:0">' + count + ' ' + headlineNoun + heroPill + '</h4>'
+    +     '<span style="font-size:28px;font-weight:700;color:' + heroColor + ';white-space:nowrap;line-height:1">$' + totalUsd.toFixed(2) + '</span>'
     +   '</div>'
     // AAA-1: Funnel uses publishN for enriched (reconciled — matches breakdown rows)
     +   '<div class="pipeline-funnel" style="font-size:12px;opacity:0.75;margin:0 0 4px 0">'
@@ -19686,19 +19697,38 @@ function _renderCapWarning(action, p) {
   const capUsd = isAll ? p.per_run_caps.process_all_usd : p.per_run_caps.run_batch_usd;
   const actionLabel = isAll ? 'Process All' : 'Run Batch';
 
+  // β Run-Batch eval 2026-05-19: surface the dominant cost driver so the
+  // user understands why $142.80 exceeds a $25 cap when batch eval itself
+  // is only $10.50. Agent enrichment is mandatory on items that publish
+  // (score >= threshold) and accounts for ~93% of typical run cost.
+  let enrichBlurb = '';
+  if (slice.agent_enrichment) {
+    const ae = slice.agent_enrichment;
+    const enrichSum = (ae.council.cost_usd || 0) + (ae.researcher.cost_usd || 0) + (ae.dealbreaker.cost_usd || 0);
+    const publishN = slice.stages && slice.stages.publish ? slice.stages.publish.count : 0;
+    const enrichPct = slice.total_cost_usd > 0 ? Math.round((enrichSum / slice.total_cost_usd) * 100) : 0;
+    if (enrichSum > 0 && publishN > 0) {
+      enrichBlurb = ' Of that, <strong>$' + enrichSum.toFixed(2) + '</strong> (' + enrichPct + '%) is agent enrichment on '
+                  + publishN + ' published item' + (publishN === 1 ? '' : 's') + ' — fires automatically when score &ge; '
+                  + (slice.threshold_for_publish || 4) + '.';
+    }
+  }
+
   let title, detail;
   if (reason === 'per-run') {
     title = 'EXCEEDS $' + capUsd + '/RUN CAP';
-    detail = actionLabel + ' estimate <strong>$' + slice.total_cost_usd.toFixed(2) + '</strong> exceeds the per-run cap of <strong>$' + capUsd + '</strong>. '
-           + 'Raise the cap with <code>' + (isAll ? 'PER_RUN_CAP_PROCESS_ALL_USD' : 'PER_RUN_CAP_RUN_BATCH_USD') + '</code> env, '
+    detail = actionLabel + ' estimate <strong>$' + slice.total_cost_usd.toFixed(2) + '</strong> exceeds the per-run cap of <strong>$' + capUsd + '</strong>.'
+           + enrichBlurb
+           + ' Raise the cap with <code>' + (isAll ? 'PER_RUN_CAP_PROCESS_ALL_USD' : 'PER_RUN_CAP_RUN_BATCH_USD') + '</code> env, '
            + 'or check the force-override below if you knowingly want to proceed.';
   } else {
     title = 'EXCEEDS MONTHLY BUDGET';
     detail = actionLabel + ' would push 30-day spend from <strong>$' + p.spent_30d_usd.toFixed(2) + '</strong> '
            + 'to <strong>$' + (p.spent_30d_usd + slice.total_cost_usd).toFixed(2) + '</strong>, past the '
            + (p.burst_budget_usd > 0 ? 'effective (burst-enabled) ' : '')
-           + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>. '
-           + 'Activate burst mode (<code>MONTHLY_BUDGET_USD_BURST</code> + <code>MONTHLY_BUDGET_BURST_UNTIL</code>), '
+           + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>.'
+           + enrichBlurb
+           + ' Activate burst mode (<code>MONTHLY_BUDGET_USD_BURST</code> + <code>MONTHLY_BUDGET_BURST_UNTIL</code>), '
            + 'raise <code>MONTHLY_BUDGET_USD</code>, or force-override below.';
   }
 
@@ -19797,12 +19827,36 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   // Phase A: aggregate cost preview + per-company table with checkboxes
   // and per-row actions. Mitchell can uncheck rows to scope the run before
   // advancing to Phase B (confirm + send-email + force-override).
+  //
+  // β Run-Batch eval 2026-05-19: Hero number changed from
+  //   pAgg.process_all.tier5_estimate.total_cost_usd ($210.60 in this snapshot)
+  // to the scoped-row sum because the prior layout had a confusing mismatch:
+  // headline read $210.60 (108 companies, hypothetical Tier-5 upgrade) while
+  // the bottom of the same modal showed "Scoped cost (selected rows) $15.00".
+  // Mitchell would commit to a $15 run wondering "where does the $210 come
+  // from?" The Tier-5 estimate is still surfaced as a sub-line so the upgrade-
+  // planning use case (the original intent per session note 2026-05-18) is
+  // preserved, but the primary signal is now the cost the user is actually
+  // about to spend.
+  const tier5 = pAgg.process_all.tier5_estimate || {};
+  const realisticTotal = pAgg.process_all.total_cost_usd || 0;
+  const scopedRows = (pCmp && Array.isArray(pCmp.companies))
+    ? pCmp.companies.filter(c => !c.excluded)
+    : [];
+  const scopedSum = scopedRows.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  const tier5Line = (tier5.total_cost_usd != null)
+    ? '<span>Tier-5 estimate · ' + (tier5.unique_companies || 0) + ' companies: $' + tier5.total_cost_usd.toFixed(2) + '</span>'
+    : '';
   const headline = ''
     + '<div class="pipeline-modal-section">'
     +   '<div class="pcp-phase-pill">Step 1 of 2 — preview</div>'
-    +   '<div class="pipeline-stat-grid">'
-    +     '<span class="pipeline-stat-label">Aggregate Tier-5 estimate (' + pAgg.process_all.tier5_estimate.unique_companies + ' unique companies, ' + pAgg.process_all.triage_count + ' pipeline items)</span>'
-    +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + pAgg.process_all.tier5_estimate.total_cost_usd.toFixed(2) + '</span>'
+    +   '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">'
+    +     '<h4 style="margin:0">Scoped run · ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + '</h4>'
+    +     '<span class="pipeline-stat-value pipeline-cost-headline" id="pcp-headline-cost">$' + scopedSum.toFixed(2) + '</span>'
+    +   '</div>'
+    +   '<div style="font-size:11px;opacity:0.6;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">'
+    +     '<span>Realistic full drain · ' + (pAgg.process_all.triage_count || 0) + ' pipeline items: <strong>$' + realisticTotal.toFixed(2) + '</strong></span>'
+    +     tier5Line
     +   '</div>'
     + '</div>';
   return headline + _renderPerCompanyPreview(pCmp);
@@ -19963,6 +20017,16 @@ function _pcpUpdateScopedCost() {
   const countEl = document.getElementById('pcp-scoped-count');
   if (costEl)  costEl.textContent  = '$' + cost.toFixed(2);
   if (countEl) countEl.textContent = String(selected.length);
+  // β Run-Batch eval 2026-05-19: also update the new top-of-modal scoped headline
+  // so toggling checkboxes immediately reconciles the hero number with the
+  // bottom-of-modal summary instead of staying stuck on the open-time value.
+  const heroEl = document.getElementById('pcp-headline-cost');
+  if (heroEl) heroEl.textContent = '$' + cost.toFixed(2);
+  const heroSection = heroEl && heroEl.closest('.pipeline-modal-section');
+  const heroLabel = heroSection && heroSection.querySelector('h4');
+  if (heroLabel) {
+    heroLabel.textContent = 'Scoped run · ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies');
+  }
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   if (confirmBtn && _pipelinePhase === 'preview') {
     confirmBtn.disabled = selected.length === 0;
@@ -20143,6 +20207,11 @@ function _renderScopedCapWarning(reason, scopedCost, capUsd, p) {
   // AAA-2: Force-override separated from heartbeat checkbox; destructive styling + explicit spend amount.
   // α Run-Batch fix 2026-05-19: was slice.total_cost_usd (undefined ReferenceError) — use scopedCost,
   // which is the live Phase-B cost the user is being asked to accept.
+  // β Run-Batch eval (rebase 2026-05-19): independently confirmed and repro'd
+  // the ReferenceError via direct console call on the live dashboard. Same fix.
+  // The bug surfaced whenever a user selected enough companies in Phase B to
+  // cross either PER_RUN_CAP_PROCESS_ALL_USD or the monthly budget — the
+  // cap-warning panel went silently blank instead of rendering the warning.
   return ''
     + '<div class="pipeline-cap-warning">'
     +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
