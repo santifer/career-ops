@@ -13,7 +13,7 @@ last_modified: '2026-05-19'
 # Spread across Day-1 + 4×6h ticks = up to ~50/day. Top-100 + Next-400 batches
 # fire OUTSIDE this knob (manual one-shot scripts) — daily_count governs the
 # steady-state cadence.
-daily_count: 50
+daily_count: 0  # 2026-05-19 — paused after Phase B cost-overrun ($97/contact vs $0.50 budgeted); see data/phase-B-cost-overrun-2026-05-19.md. Re-enable after Mitchell picks a pivot option (LinkedIn auth + Playwright scrape, OR 2-way council with reduced maxTokens).
 
 # Month-1 cap. After this much spend on contact_enrichment across the running
 # 30-day window, the orchestrator auto-pauses NEW enrichment and the Day-30
