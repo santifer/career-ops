@@ -6640,9 +6640,10 @@ async function build() {
     display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
     padding: 6px 0;
   }
-  /* BRAVO 2026-05-19 (AAA-4): `display:flex` was masking the `hidden` HTML
-     attribute on the save-prompt, leaving the input + Save/Cancel visible
-     before the user opted in. Restore `hidden` as source of truth. */
+  /* BRAVO 2026-05-19 (AAA-4): the display:flex rule above was masking the
+     hidden HTML attribute on the save-prompt, leaving the input + Save +
+     Cancel visible before the user opted in. Restore hidden as source of
+     truth. */
   .saved-view-prompt[hidden] { display: none !important; }
   .saved-view-prompt input[type="text"] {
     flex: 1; min-width: 200px;
