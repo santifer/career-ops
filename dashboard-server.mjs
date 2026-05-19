@@ -1909,8 +1909,27 @@ function recent_runs_lookupModel(costRows, startMs) {
 
 // ── Claim verification helpers ─────────────────────────────────
 
+// Canonical report slug pattern per AGENTS.md: NNN-company-role-YYYY-MM-DD.md
+// (or NNNN-* for high-id reports). Allows only [0-9a-z-] in the slug body.
+// Disallows ".." traversal segments and absolute paths by construction.
+// Defined here (above first use) so both buildVerifyPayload and saveEvidence
+// reference the same source of truth.
+const REPORT_SLUG_RE = /^\d{1,5}-[a-z0-9][a-z0-9-]*-\d{4}-\d{2}-\d{2}\.md$/;
+const EVIDENCE_TEXT_MAX_CHARS = 50_000;
+
 function buildVerifyPayload(reportSlug) {
+  // Path-traversal hardening (epsilon Ε.3 2026-05-19): reportSlug came from
+  // the /api/verify/(.+\.md) capture group — the regex captures any path
+  // up to .md including ../../etc/passwd.md. Validate against canonical
+  // slug pattern + verify resolved path is inside reports/.
+  if (typeof reportSlug !== 'string' || !REPORT_SLUG_RE.test(reportSlug)) {
+    return null;
+  }
+  const reportsRoot = join(ROOT, 'reports') + '/';
   const reportPath = join(ROOT, 'reports', reportSlug);
+  if (!reportPath.startsWith(reportsRoot)) {
+    return null;
+  }
   if (!existsSync(reportPath)) return null;
   const text = readFileSync(reportPath, 'utf8');
   const lines = text.split('\n');
@@ -1996,7 +2015,24 @@ function buildVerifyPayload(reportSlug) {
 }
 
 function saveEvidence(reportSlug, evidenceText) {
+  // Path-traversal hardening (epsilon Ε.3 2026-05-19): reportSlug came from
+  // unsanitized POST body. Reject any slug that doesn't match the canonical
+  // pattern, then defense-in-depth verify the resolved path is inside the
+  // reports/ dir before any fs read/write.
+  if (typeof reportSlug !== 'string' || !REPORT_SLUG_RE.test(reportSlug)) {
+    return { ok: false, error: 'Invalid report slug' };
+  }
+  if (typeof evidenceText !== 'string') {
+    return { ok: false, error: 'evidenceText must be a string' };
+  }
+  if (evidenceText.length > EVIDENCE_TEXT_MAX_CHARS) {
+    return { ok: false, error: `evidenceText exceeds ${EVIDENCE_TEXT_MAX_CHARS}-char limit` };
+  }
+  const reportsRoot = join(ROOT, 'reports') + '/';
   const reportPath = join(ROOT, 'reports', reportSlug);
+  if (!reportPath.startsWith(reportsRoot)) {
+    return { ok: false, error: 'Resolved path escapes reports directory' };
+  }
   if (!existsSync(reportPath)) return { ok: false, error: 'Report not found' };
   const text = readFileSync(reportPath, 'utf8');
 
@@ -3690,8 +3726,16 @@ const server = createServer((req, res) => {
   }
 
   if (url === '/api/save-evidence' && req.method === 'POST') {
+    // Body-size cap (epsilon Ε.3 2026-05-19): refuse payloads larger than
+    // 64 KB. Aligned with EVIDENCE_TEXT_MAX_CHARS=50_000 + JSON wrapper
+    // overhead headroom. saveEvidence() does the full input validation.
     let body = '';
-    req.on('data', c => body += c);
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 64 * 1024) { req.destroy(); return; }
+      body += c;
+    });
     req.on('end', () => {
       try {
         const { reportSlug, evidenceText } = JSON.parse(body);
@@ -4298,7 +4342,16 @@ const server = createServer((req, res) => {
           context: {},
           config: { dryRun: true, ...(config || {}) },
         });
-        return json({ ok: true, stage, rowId, result });
+        // Flatten AI detection fields to top level so dashboard JS can read them
+        const apiDet = result?.output?.api_detection;
+        const detectionFailed = result?.status === 'error' && apiDet && apiDet.passes === false;
+        return json({
+          ok: result?.status !== 'error',
+          stage, rowId, result,
+          ai_detection_failed: detectionFailed || false,
+          gpt_zero_score:  apiDet?.gptzero_prob    != null ? Math.round(apiDet.gptzero_prob    * 100) : null,
+          originality_score: apiDet?.originality_prob != null ? Math.round(apiDet.originality_prob * 100) : null,
+        });
       } catch (err) {
         _d25Log(`[build-pack-stage] ${err.message}`);
         return json({ ok: false, error: err.message }, 500);
@@ -4817,12 +4870,31 @@ async function generatePack(){
       return null;
     }
 
-    // Read humanize-check sidecar JSON (written by build-apply-pack.mjs as {artifact}.humanize.json)
+    // Read AI detection sidecar JSON. Checks two conventions:
+    //   1. {artifact}.md.ai-detection.json  — written by lib/ai-detection-gate.mjs checkArtifact()
+    //   2. {artifact}.humanize.json         — legacy name (nothing currently writes this)
     function readHumanizeSidecar(artifactFile) {
       if (!packDir) return null;
-      const sidecarPath = join(packDir, artifactFile.replace(/\.md$/, '.humanize.json'));
-      if (!existsSync(sidecarPath)) return null;
-      try { return JSON.parse(readFileSync(sidecarPath, 'utf-8')); } catch { return null; }
+      const candidates = [
+        join(packDir, artifactFile + '.ai-detection.json'),
+        join(packDir, artifactFile.replace(/\.md$/, '.humanize.json')),
+      ];
+      for (const p of candidates) {
+        if (existsSync(p)) {
+          try {
+            const raw = JSON.parse(readFileSync(p, 'utf-8'));
+            // Normalise to { score, consensusScore } shape the badge reader expects
+            if (raw.gptzero_prob != null || raw.originality_prob != null) {
+              const gz   = raw.gptzero_prob    != null ? raw.gptzero_prob    * 100 : null;
+              const orig = raw.originality_prob != null ? raw.originality_prob * 100 : null;
+              const both = [gz, orig].filter(v => v != null);
+              raw.score = both.length ? Math.round(both.reduce((a, b) => a + b, 0) / both.length) : null;
+            }
+            return raw;
+          } catch { /* try next */ }
+        }
+      }
+      return null;
     }
 
     // AI risk badge HTML (green / amber / red per staleness-nudge color pattern)
