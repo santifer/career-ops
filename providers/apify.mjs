@@ -170,6 +170,8 @@ export function htmlToText(s) {
 // returns null so the caller falls back to the remote URL. A single bad-cache
 // item should not abort the rest of a multi-source scan.
 function saveJd(normalized, descriptionBody, sourceLabel) {
+  // Hoisted so the catch block can return the path on EEXIST.
+  let relPath = null;
   try {
     mkdirSync(JDS_DIR, { recursive: true });
     const baseSlug = slugify(`${normalized.company}-${normalized.title}`);
@@ -182,7 +184,11 @@ function saveJd(normalized, descriptionBody, sourceLabel) {
     const slug = `${baseSlug}-${urlHash}`;
     const filename = `${slug}.md`;
     const filepath = join(JDS_DIR, filename);
-    if (existsSync(filepath)) return `${JDS_DIR}/${filename}`;
+    relPath = `${JDS_DIR}/${filename}`;
+    // Fast-path: already cached. The atomic guard below handles the TOCTOU
+    // race where a sibling worker creates the file between this check and
+    // the write — scan.mjs runs up to 10 workers in parallel.
+    if (existsSync(filepath)) return relPath;
 
     const today = new Date().toISOString().slice(0, 10);
     const content = `---
@@ -198,9 +204,13 @@ source: ${sourceLabel}
 
 ${descriptionBody}
 `;
-    writeFileSync(filepath, content, 'utf-8');
-    return `${JDS_DIR}/${filename}`;
+    // `flag: 'wx'` closes the TOCTOU race with the existsSync check above:
+    // the OS atomically fails the open with EEXIST if a sibling worker beat
+    // us to the file. We then return the path in the catch (first save wins).
+    writeFileSync(filepath, content, { encoding: 'utf-8', flag: 'wx' });
+    return relPath;
   } catch (err) {
+    if (err?.code === 'EEXIST' && relPath) return relPath;
     console.warn(`apify: JD cache write failed for ${normalized.title} (${err.code || err.name}: ${err.message}); falling back to remote URL`);
     return null;
   }
