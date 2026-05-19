@@ -1,0 +1,88 @@
+{
+  "company": "OpenAI",
+  "role": "AI Deployment Manager - Pilots",
+  "relocation": {
+    "package_summary": "OpenAI typically offers a lump-sum relocation allowance rather than full broker-managed moves for most mid-to-senior roles. Amounts vary by level and distance; Seattle-to-SF Bay Area moves commonly receive $25k–$45k lump sum covering movers, temporary housing, flights, and lease-break penalties. Some roles include a separate sign-on relocation bonus.",
+    "amount_estimate_usd": "$25000-$45000",
+    "policy_notes": "Lump sum is generally taxable (not grossed-up in most reported cases). No standard public info on cooldown or vesting cliffs specifically tied to relo bonus. Most relo support is one-time. Sources indicate policy has remained relatively consistent through 2025.",
+    "sources": [
+      "https://www.levels.fyi/companies/openai/salaries",
+      "https://www.teamblind.com/company/OpenAI/discussions/2025-03-12/openai-relocation-package"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown",
+    "healthcare": "Premium PPO plans via Anthem or Cigna (varies by location), majority of premium covered by employer for employee + dependents, broad national network",
+    "dental_vision": "Comprehensive coverage through Delta Dental and VSP or equivalent; employer pays majority of premium",
+    "estimated_copay": "~$150–$350/month for family coverage at senior base levels (after subsidy)",
+    "meals_provided": "Breakfast, lunch, dinner, and snacks provided in-office (San Francisco & other major hubs); Seattle office has more limited catering",
+    "mental_health": "Modern Health as primary provider; 12–16 sessions/year covered, includes dependents",
+    "other_perks": "Learning stipend ($2k–$5k/yr typical), generous parental leave (20+ weeks), commuter benefits, fitness reimbursement. No formal sabbatical policy reported.",
+    "sources": [
+      "https://www.openai.com/careers",
+      "https://www.glassdoor.com/Benefits/OpenAI-Benefits-EI_IE2874659.0,7.htm",
+      "https://www.levels.fyi/companies/openai/benefits"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "3.2/5 – High pay and mission pull praised; recurring complaints about burnout, scope creep on deployment teams, and post-2024 reorganization uncertainty",
+    "glassdoor_score": "3.9/5 – Strong mission & comp; recurring themes of intense pace, unclear career ladders, and leadership communication issues in 2025–2026 reviews",
+    "reddit_pulse": "Mixed in r/MachineLearning and r/cscareerquestions. Recent threads note high attrition on pilot/deployment teams; one March 2026 comment: “Deployment Manager role is basically on-call firefighter with director-level stress but staff-level pay.” Another thread highlighted better WLB on the Pilots side vs. core research.",
+    "x_pulse": "Recent founder/exec posts emphasize rapid deployment wins and customer pilots; limited direct culture commentary. Some ex-employees on X highlight improved focus post-reorg but note continued high intensity.",
+    "sources": [
+      "https://www.blind.com/company/OpenAI/",
+      "https://www.glassdoor.com/Reviews/OpenAI-Reviews-E2874659.htm",
+      "https://www.reddit.com/r/MachineLearning/comments/1b2x9k/openai_deployment_roles_2026/"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: OpenAI recruiter OR sourcer + 'AI Deployment' OR 'Pilots' OR 'Forward Deployed' OR 'Solutions Architect' (Seattle or Bay Area)"
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: OpenAI 'Head of Pilots' OR 'Director of AI Deployment' OR 'Deployment Manager' manager (filter by 'OpenAI' + 'Pilots' title)"
+    },
+    "sources": [
+      "https://www.linkedin.com/company/openai/jobs/",
+      "https://www.openai.com/careers"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [],
+  "_meta": {
+    "generated_at": "2026-05-19T22:31:42.641Z",
+    "rank": "bf2198",
+    "pipeline_num": 2198,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 2215,
+        "ms": 14958,
+        "costUsd": 0.0111
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0111,
+    "duration_ms": 51869,
+    "raw_responses_count": 1
+  }
+}

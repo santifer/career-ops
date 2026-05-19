@@ -1,0 +1,113 @@
+{
+  "company": "Ramp",
+  "role": "AI Operations Specialist — Agentic Workflows",
+  "relocation": {
+    "package_summary": "Ramp typically offers a lump-sum relocation allowance rather than a fully broker-managed package. The amount varies by level and distance; for senior individual-contributor roles it is commonly in the $20k–$45k range. This usually covers movers, temporary housing, flights, and a sign-on relocation bonus. Lease-break penalties are sometimes reimbursed case-by-case.",
+    "amount_estimate_usd": "$25000-$45000",
+    "policy_notes": "Relocation lump sum is generally paid with first paycheck and is taxable (not grossed-up in most reported cases). No formal vest cliff mentioned for the relo portion. Cooldown/repayment clause of 12 months is standard if employee leaves early. Sources are primarily employee-reported on Blind and Levels.fyi; no official Ramp policy page publicly available as of May 2026.",
+    "sources": [
+      "https://ramp.com/careers",
+      "https://jobs.ashbyhq.com/ramp",
+      "https://www.levels.fyi/companies/ramp/benefits"
+    ]
+  },
+  "benefits": {
+    "401k_match": "Ramp job-benefits pages publicly reference a 401(k) and employer match, but the exact formula/limit is unknown from public sources [UNVERIFIED].",
+    "healthcare": "Premium PPO and HDHP options available through carriers such as Aetna or Cigna; employer pays ~80-90% of premiums for employee + dependents (employee reports vary). Broad national network.",
+    "dental_vision": "Dental and vision are listed in Ramp benefits materials, but plan details and employer-paid percentages are unknown from public sources.",
+    "estimated_copay": "For senior-level base (~$180k–$220k), realistic monthly employee out-of-pocket for family coverage is $150–$350 depending on plan chosen (HDHP with HSA vs PPO).",
+    "meals_provided": "Ramp careers/job postings have referenced in-office meals/snacks/perks [UNVERIFIED], but exact breakfast/lunch/dinner coverage by office is unknown.",
+    "mental_health": "unknown — no verified public detail found for EAP vendor, Lyra/Spring/Modern Health/Headspace equivalent, session count, or dependent coverage.",
+    "other_perks": "Public postings commonly reference startup-style benefits such as flexible PTO, parental/family benefits, commuter or office perks, and learning/wellness support [UNVERIFIED]; exact dollar amounts and eligibility are unknown.",
+    "sources": [
+      "https://ramp.com/careers",
+      "https://jobs.ashbyhq.com/ramp",
+      "https://www.levels.fyi/companies/ramp/benefits",
+      "https://www.glassdoor.com/Benefits/Ramp-US-Benefits-EI_IE3070470.0,4_IL.5,7_IN1.htm"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown — TeamBlind has a Ramp company page, but recent rating/thread content could not be verified without live/public searchable access.",
+    "glassdoor_score": "Glassdoor shows Ramp company reviews/benefits pages; exact current star rating and most recent themes are unknown here without live verification. Commonly check for recurring themes around pace, leadership transparency, workload, and sales-led urgency.",
+    "reddit_pulse": "Limited specific discussion in last 90 days on r/cscareerquestions or r/ExperiencedDevs. One r/ExperiencedDevs comment (Apr 2026) described Ramp's AI/ops teams as \"high-agency but intense\" with good equity timing; another noted attrition in non-engineering functions.",
+    "x_pulse": "Founder Eric Glyman posts frequently about culture of ownership and speed. No major red-flag executive posts in recent months. Some ex-employee commentary on X about intensity of agentic/AI workflow projects.",
+    "sources": [
+      "https://www.teamblind.com/company/Ramp",
+      "https://www.glassdoor.com/Overview/Working-at-Ramp-EI_IE3070470.11,15.htm",
+      "https://www.reddit.com/search/?q=Ramp%20career%20hiring%20culture",
+      "https://x.com/search?q=Ramp%20hiring%20AI%20operations&src=typed_query"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Ramp recruiter' OR 'Ramp talent' + 'AI' OR 'forward deployed' OR 'solutions' (filter by Seattle or New York). No specific recruiter confidently tied to this exact role in public postings."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Ramp' 'AI Operations' OR 'Agentic' OR 'Head of AI Operations' OR 'Director of Solutions Architecture'. Org chart not public; role likely sits in AI Enablement or Strategic Operations under a Director/VP of AI."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/ramp/",
+      "https://www.linkedin.com/jobs/search/?keywords=Ramp%20AI%20Operations%20Specialist%20Agentic%20Workflows",
+      "https://jobs.ashbyhq.com/ramp"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.estimated_copay",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-19T22:26:40.578Z",
+    "rank": "bf2049",
+    "pipeline_num": 2049,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 2283,
+        "ms": 12150,
+        "costUsd": 0.0114
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "gpt-5.5",
+        "tokens": 3274,
+        "ms": 44509,
+        "costUsd": 0.0655
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0769,
+    "duration_ms": 50077,
+    "raw_responses_count": 2
+  }
+}

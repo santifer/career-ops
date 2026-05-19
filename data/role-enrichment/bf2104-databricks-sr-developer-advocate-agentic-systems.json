@@ -1,0 +1,113 @@
+{
+  "company": "Databricks",
+  "role": "Sr Developer Advocate, Agentic Systems",
+  "relocation": {
+    "package_summary": "unknown — I could not verify a role-specific Databricks relocation package from public sources. Public benefits pages confirm broad employee benefits but do not publish relocation amounts, broker model, lease-break coverage, temp housing, or tax gross-up terms.",
+    "amount_estimate_usd": "25000-60000",
+    "policy_notes": "Databricks public careers/benefits materials do not disclose relocation policy details; confirm with recruiter whether this role is remote, Seattle-eligible, Bay Area/SF-required, or includes relocation/sign-on support. No public evidence found for cooldown, tax gross-up, repayment clawback, or vest-cliff terms.",
+    "sources": [
+      "https://www.databricks.com/company/careers",
+      "https://www.glassdoor.com/Benefits/Databricks-US-Benefits-EI_IE954734.0,10_IL.11,13_IN1.htm",
+      "https://www.levels.fyi/companies/databricks/benefits"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown — public sources indicate Databricks offers a 401(k), but I could not verify the employer-match formula from an authoritative public source.",
+    "healthcare": "Databricks publicly advertises health benefits, but plan carriers, PPO/HDHP tiers, employer-paid premium percentage, and network breadth are not fully disclosed publicly.",
+    "dental_vision": "Dental and vision coverage appear to be offered according to Databricks careers/benefits and third-party benefits pages, but plan-level details are not public.",
+    "estimated_copay": "unknown — cannot estimate Mitchell's monthly out-of-pocket without the 2026 employee premium table, plan tier, dependents, and WA/CA enrollment options.",
+    "meals_provided": "unknown — Databricks offices are reported to have office perks/snacks/food in some locations [UNVERIFIED], but I could not verify current 2026 breakfast/lunch/dinner policy by office.",
+    "mental_health": "unknown — Databricks public materials reference wellness/employee support generally, but I could not verify provider, session count, or dependent coverage.",
+    "other_perks": "Publicly described perks include PTO/flexible time off, parental/family benefits, learning/career development, equity, and wellness-style benefits; exact 2026 allowances and eligibility are not publicly verified.",
+    "sources": [
+      "https://www.databricks.com/company/careers",
+      "https://www.glassdoor.com/Benefits/Databricks-US-Benefits-EI_IE954734.0,10_IL.11,13_IN1.htm",
+      "https://www.levels.fyi/companies/databricks/benefits",
+      "https://www.comparably.com/companies/databricks/perks-and-benefits"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown — TeamBlind company pages and recent discussion quality are difficult to verify without logged-in access; historical public snippets tend to frame Databricks as high-comp, high-growth, and intense [UNVERIFIED].",
+    "glassdoor_score": "Glassdoor public company page should be checked live for the current rating; recurring public-review themes historically include strong technical talent, strong compensation/equity upside, rapid growth, and pace/process strain [UNVERIFIED].",
+    "reddit_pulse": "unknown — I could not verify specific r/cscareerquestions or r/ExperiencedDevs threads from the last 90 days. Recommended searches: Google `site:reddit.com/r/cscareerquestions Databricks culture 2026` and `site:reddit.com/r/ExperiencedDevs Databricks offer equity`.",
+    "x_pulse": "unknown — check recent posts from Databricks official accounts and executives for AI/agentic hiring, product launches, and headcount signals; I could not verify specific 2026 culture or attrition posts.",
+    "sources": [
+      "https://www.glassdoor.com/Overview/Working-at-Databricks-EI_IE954734.11,21.htm",
+      "https://www.teamblind.com/company/Databricks/",
+      "https://www.reddit.com/search/?q=Databricks%20culture",
+      "https://x.com/databricks"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Databricks Recruiter' OR 'Databricks Talent Acquisition' + 'Developer Advocate' OR 'Agentic' OR 'Solutions Architect' (Seattle or Remote)"
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: `Databricks developer relations agentic systems` or `Databricks developer advocate agents hiring manager`; do not assume the manager without a cited job post or LinkedIn hit."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/databricks/people/",
+      "https://www.databricks.com/company/careers"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.estimated_copay",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-19T22:29:17.742Z",
+    "rank": "bf2104",
+    "pipeline_num": 2104,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 2171,
+        "ms": 12590,
+        "costUsd": 0.0109
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "gpt-5.5",
+        "tokens": 3322,
+        "ms": 42165,
+        "costUsd": 0.0664
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0773,
+    "duration_ms": 46075,
+    "raw_responses_count": 2
+  }
+}

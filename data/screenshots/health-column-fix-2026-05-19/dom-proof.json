@@ -1,0 +1,172 @@
+[
+  {
+    "num": "44",
+    "company": "anthropic",
+    "role": "communications lead, claude code",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "48",
+    "company": "anthropic",
+    "role": "engineering editorial lead",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "49",
+    "company": "perplexity",
+    "role": "executive communications manager (sr manager, exec",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "1",
+    "company": "anthropic",
+    "role": "communications manager, research",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "50",
+    "company": "elevenlabs",
+    "role": "communications manager",
+    "chipText": "🟡 3/5",
+    "empty": false,
+    "toxGrade": "3",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "51",
+    "company": "openai",
+    "role": "research communications manager",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "2059",
+    "company": "anthropic",
+    "role": "applied ai architect, industries",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "2110",
+    "company": "deepgram",
+    "role": "senior developer advocate",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "2198",
+    "company": "openai",
+    "role": "ai deployment manager - pilots",
+    "chipText": "🟡 3/5",
+    "empty": false,
+    "toxGrade": "3",
+    "cellWidth": 72,
+    "cellHeight": 62
+  },
+  {
+    "num": "2104",
+    "company": "databricks",
+    "role": "sr developer advocate, agentic systems",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "2067",
+    "company": "elevenlabs",
+    "role": "gtm agentic enablement lead",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 62
+  },
+  {
+    "num": "851",
+    "company": "mistral ai",
+    "role": "senior/staff ai developer advocate",
+    "chipText": "🟡 3/5",
+    "empty": false,
+    "toxGrade": "3",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "59",
+    "company": "sierra",
+    "role": "developer relations engineer (sf)",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "2181",
+    "company": "mistral ai",
+    "role": "senior/staff devrel",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "2049",
+    "company": "ramp",
+    "role": "ai operations specialist — agentic workflows",
+    "chipText": "🟡 3/5",
+    "empty": false,
+    "toxGrade": "3",
+    "cellWidth": 72,
+    "cellHeight": 48
+  },
+  {
+    "num": "853",
+    "company": "mistral ai",
+    "role": "developer education lead",
+    "chipText": "🟡 3/5",
+    "empty": false,
+    "toxGrade": "3",
+    "cellWidth": 72,
+    "cellHeight": 62
+  },
+  {
+    "num": "854",
+    "company": "pinecone",
+    "role": "staff developer advocate",
+    "chipText": "🟢 2/5",
+    "empty": false,
+    "toxGrade": "2",
+    "cellWidth": 72,
+    "cellHeight": 48
+  }
+]

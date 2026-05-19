@@ -1,0 +1,114 @@
+{
+  "company": "ElevenLabs",
+  "role": "GTM Agentic Enablement Lead",
+  "relocation": {
+    "package_summary": "unknown — I found no public ElevenLabs source that discloses a standardized US relocation package, lump-sum amount, broker-managed move, lease-break coverage, temp housing, or tax gross-up. Public careers/job pages should be treated as non-specific for relocation until confirmed with Talent.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "unknown — no public cooldown, repayment-clawback period, tax-gross-up, relo-sign-on vest/cliff, or Seattle-to-hub relocation policy found in public ElevenLabs careers materials. Verify directly with recruiter before valuing any offer.",
+    "sources": [
+      "https://elevenlabs.io/careers",
+      "https://jobs.ashbyhq.com/elevenlabs",
+      "https://www.google.com/search?q=ElevenLabs+relocation+package",
+      "https://www.google.com/search?q=site%3Ajobs.ashbyhq.com%2Felevenlabs+relocation+ElevenLabs"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown — public ElevenLabs careers/job pages do not clearly disclose a US 401(k) match percentage.",
+    "healthcare": "unknown — ElevenLabs public postings/careers materials reference employee benefits, but I could not verify US plan tier, insurer, employer-paid premium percentage, PPO vs HDHP, or network breadth from a primary source.",
+    "dental_vision": "unknown — dental/vision availability may exist for US employees, but plan type, premium split, and coverage levels were not publicly verifiable.",
+    "estimated_copay": "unknown — cannot estimate Mitchell's monthly out-of-pocket without ElevenLabs' US benefits guide or offer-stage plan documents.",
+    "meals_provided": "unknown — no reliable public source found confirming recurring breakfast/lunch/dinner policy, snacks-only policy, or office-specific meal coverage.",
+    "mental_health": "unknown — no public confirmation of Lyra, Spring Health, Modern Health, Headspace, EAP session count, or dependent coverage.",
+    "other_perks": "Public ElevenLabs careers pages emphasize joining a fast-growing AI company and open roles across locations, but specific US perks such as commuter stipend, fitness stipend, learning budget, parental leave duration, sabbatical, and home-office stipend were not reliably disclosed in public sources.",
+    "sources": [
+      "https://elevenlabs.io/careers",
+      "https://jobs.ashbyhq.com/elevenlabs",
+      "https://www.google.com/search?q=ElevenLabs+benefits+401k+match",
+      "https://www.google.com/search?q=ElevenLabs+health+insurance+benefits"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown — I could not verify a reliable TeamBlind company score or recent Blind thread set for ElevenLabs from public indexed results. Manual check recommended: search Blind for 'ElevenLabs offer', 'ElevenLabs culture', and 'ElevenLabs equity'.",
+    "glassdoor_score": "unknown — Glassdoor pages may exist for ElevenLabs, but I could not confidently verify a current star rating or recurring review themes from a primary indexed source here. Treat any scraped rating as volatile given likely small review count.",
+    "reddit_pulse": "unknown — no confidently verified last-90-day Reddit threads from r/cscareerquestions or r/ExperiencedDevs specific to ElevenLabs culture/toxicity were available from public indexed sources. Suggested queries: 'site:reddit.com/r/cscareerquestions ElevenLabs offer' and 'site:reddit.com/r/ExperiencedDevs ElevenLabs culture'.",
+    "x_pulse": "ElevenLabs maintains an active public company presence around product launches, voice AI, hiring, and growth, but I could not verify recent founder/exec posts specifically addressing attrition, burnout, or GTM-agentic enablement team culture from public sources.",
+    "sources": [
+      "https://www.glassdoor.com/Search/results.htm?keyword=ElevenLabs",
+      "https://www.teamblind.com/search/ElevenLabs",
+      "https://www.reddit.com/search/?q=ElevenLabs%20career",
+      "https://x.com/elevenlabsio",
+      "https://www.google.com/search?q=ElevenLabs+culture+reviews",
+      "https://www.google.com/search?q=site%3Areddit.com+ElevenLabs+offer+culture"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'ElevenLabs recruiter' OR 'ElevenLabs talent' + 'GTM' OR 'Solutions' OR 'Agentic' — no specific recruiter confidently tied to this role in public postings"
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'ElevenLabs' 'Head of GTM' OR 'Director of Solutions Engineering' OR 'GTM Enablement' OR 'Agentic' — org chart not public; role appears to sit in Go-to-Market / Product Enablement"
+    },
+    "sources": [
+      "https://www.linkedin.com/company/elevenlabs/",
+      "https://jobs.ashbyhq.com/elevenlabs",
+      "https://www.google.com/search?q=site%3Alinkedin.com%2Fin+ElevenLabs+recruiter+GTM",
+      "https://www.google.com/search?q=site%3Alinkedin.com%2Fin+ElevenLabs+%22GTM+Agentic+Enablement%22"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.meals_provided",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-19T22:28:31.666Z",
+    "rank": "bf2067",
+    "pipeline_num": 2067,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 2064,
+        "ms": 14054,
+        "costUsd": 0.0103
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "gpt-5.5",
+        "tokens": 3434,
+        "ms": 45629,
+        "costUsd": 0.0687
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.079,
+    "duration_ms": 46238,
+    "raw_responses_count": 2
+  }
+}

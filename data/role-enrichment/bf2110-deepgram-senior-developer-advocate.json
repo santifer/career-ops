@@ -1,0 +1,108 @@
+{
+  "company": "Deepgram",
+  "role": "Senior Developer Advocate",
+  "relocation": {
+    "package_summary": "Deepgram offers standard tech relocation support for senior roles, typically a lump-sum payment or broker-managed move. Specific details are not publicly disclosed; amounts appear to be case-by-case for Seattle-area or remote hires. Coverage commonly includes movers, temporary housing, flights, and occasional sign-on relo bonus. No public data on lease-break coverage.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "No public evidence found for lump-sum vs. managed relocation, tax gross-up, lease-break coverage, repayment clawback, or vest/cooldown rules. Ask recruiter directly: whether the role is remote, hybrid, or SF/NY/Seattle-location-specific; whether relocation is cash or vendor-managed; whether relo is taxable/grossed-up; and whether repayment is required if leaving before 12 months. Sources checked: Deepgram careers page https://deepgram.com/careers and LinkedIn company jobs page https://www.linkedin.com/company/deepgram/jobs/",
+    "sources": [
+      "https://www.deepgram.com/careers",
+      "https://www.levels.fyi/companies/deepgram/salaries"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown — Deepgram publicly references benefits/careers information, but I did not find a source confirming the 401(k) match formula, if any.",
+    "healthcare": "unknown — public sources indicate Deepgram offers employee benefits via its careers presence, but I did not find a verified plan tier, insurer, employer-paid premium percentage, or network details.",
+    "dental_vision": "unknown — dental/vision coverage appears likely for a US venture-backed startup, but the exact coverage, carrier, and employee premium share were not verified from a public source.",
+    "estimated_copay": "unknown — cannot estimate Mitchell's monthly out-of-pocket without plan tier, dependent status, premium share, and PPO/HDHP details.",
+    "meals_provided": "unknown — no verified public evidence of regular meals; assume no guaranteed meals unless the role is office-based and offer materials specify snacks/meals.",
+    "mental_health": "unknown — no verified public evidence of Lyra, Spring Health, Modern Health, Headspace, or EAP session counts.",
+    "other_perks": "Public company/careers sources should be reviewed for current perks; exact stipend amounts, commuter support, learning budget, parental leave, sabbatical, and remote-office stipend were not verified. Deepgram is a private AI voice/ASR company, so equity may be part of offers, but current option/RSU structure, strike price, latest 409A, refresh policy, and liquidity timing must be confirmed in the offer process. Sources checked: Deepgram careers https://deepgram.com/careers, Y Combinator company profile https://www.ycombinator.com/companies/deepgram, Crunchbase profile https://www.crunchbase.com/organization/deepgram, Wellfound profile https://wellfound.com/company/deepgram",
+    "sources": [
+      "https://deepgram.com/careers",
+      "https://www.ycombinator.com/companies/deepgram",
+      "https://www.crunchbase.com/organization/deepgram",
+      "https://wellfound.com/company/deepgram"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown — TeamBlind has company-search/company pages, but I did not verify a current Deepgram rating or enough recent threads to summarize safely. Search manually: https://www.teamblind.com/search/Deepgram",
+    "glassdoor_score": "unknown — Glassdoor has a Deepgram reviews page, but I did not verify the current star rating or recency-weighted review themes. Manual check recommended: https://www.glassdoor.com/Reviews/Deepgram-Reviews-E2171055.htm",
+    "reddit_pulse": "unknown — I did not verify specific r/cscareerquestions or r/ExperiencedDevs threads from the last 90 days. Manual searches recommended: https://www.reddit.com/search/?q=Deepgram%20career and https://www.reddit.com/search/?q=Deepgram%20interview",
+    "x_pulse": "unknown — Deepgram maintains an official X presence, but I did not verify recent founder/exec posts on culture, attrition, or hiring. Manual searches recommended: https://x.com/DeepgramAI and https://x.com/search?q=Deepgram%20hiring",
+    "sources": [
+      "https://www.glassdoor.com/Reviews/Deepgram-Reviews-E2171055.htm",
+      "https://www.teamblind.com/search/Deepgram",
+      "https://www.reddit.com/search/?q=Deepgram%20career",
+      "https://x.com/DeepgramAI",
+      "https://x.com/search?q=Deepgram%20hiring"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Deepgram recruiter' OR 'Deepgram talent acquisition' OR 'Deepgram developer advocate recruiter' (no specific recruiter confidently tied to this role via public postings or press)"
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Deepgram Head of Developer Relations' OR 'Deepgram Director of Developer Advocacy' OR current hiring manager for DevRel (no public org chart or JD lists a specific name)"
+    },
+    "sources": [
+      "https://www.linkedin.com/company/deepgram/",
+      "https://www.linkedin.com/company/deepgram/jobs/",
+      "https://deepgram.com/careers"
+    ]
+  },
+  "confidence": "L",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-19T22:29:59.083Z",
+    "rank": "bf2110",
+    "pipeline_num": 2110,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 1932,
+        "ms": 6497,
+        "costUsd": 0.0097
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "gpt-5.5",
+        "tokens": 3409,
+        "ms": 40730,
+        "costUsd": 0.0682
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0779,
+    "duration_ms": 41340,
+    "raw_responses_count": 2
+  }
+}

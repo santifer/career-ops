@@ -1,0 +1,86 @@
+{
+  "company": "Mistral AI",
+  "role": "Senior/Staff DevRel",
+  "relocation": {
+    "package_summary": "Mistral AI is primarily Paris-based with a growing remote-friendly posture for senior technical roles (including DevRel). Relocation support for US hires is handled case-by-case; no standardized public policy found. Typical packages for European tech firms at this stage tend to be lump-sum or partially broker-managed moves with temporary housing and flights covered.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "No public information on cooldown periods, tax gross-up, or vesting cliffs for relocation bonuses. Most Mistral offers for senior roles are Paris-centric; US/Seattle remote offers are rare and negotiated individually. Sources below contain no specific relo language.",
+    "sources": [
+      "https://mistral.ai/careers/",
+      "https://www.linkedin.com/company/mistral-ai/jobs/"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown",
+    "healthcare": "unknown",
+    "dental_vision": "unknown",
+    "estimated_copay": "unknown",
+    "meals_provided": "unknown",
+    "mental_health": "unknown",
+    "other_perks": "Competitive equity (French BSPCE + potential stock options), generous PTO, learning budget, and parental leave in line with French labor law (plus top-up). US-based or remote hires receive localized benefits through a US partner (details not public). No specific 401k, healthcare carrier, or mental health vendor disclosed.",
+    "sources": [
+      "https://mistral.ai/careers/",
+      "https://www.wellfound.com/company/mistral-ai"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown — very few public Blind threads on Mistral AI as of 2026",
+    "glassdoor_score": "unknown — limited Glassdoor presence; company is still relatively opaque",
+    "reddit_pulse": "Minimal discussion on r/cscareerquestions or r/ExperiencedDevs in last 90 days. Occasional mentions of high equity upside but concerns about Paris-centric culture and rapid scaling stress. No strong negative or positive pulse specific to DevRel.",
+    "x_pulse": "Founder Arthur Mensch and execs regularly post about hiring, model releases, and open culture. Emphasis on 'no politics' and high agency. Some attrition commentary around speed and intensity common to frontier labs. Overall positive founder signaling.",
+    "sources": [
+      "https://www.reddit.com/r/cscareerquestions/search/?q=mistral&sort=new",
+      "https://x.com/ArthurMensch"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Mistral AI' recruiter OR sourcer OR talent acquisition + 'DevRel' OR 'Developer Relations' OR 'Solutions Architect' — company is small and recruiters change frequently"
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Mistral AI' 'Head of Developer Relations' OR 'Director DevRel' OR 'DevRel' 'Staff' — no public org chart or specific hiring manager named for this role on careers page or recent posts"
+    },
+    "sources": [
+      "https://mistral.ai/careers/",
+      "https://www.linkedin.com/company/mistral-ai/people/"
+    ]
+  },
+  "confidence": "L",
+  "_disagreements": [],
+  "_meta": {
+    "generated_at": "2026-05-19T22:30:50.771Z",
+    "rank": "bf2181",
+    "pipeline_num": 2181,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 2032,
+        "ms": 13087,
+        "costUsd": 0.0102
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0102,
+    "duration_ms": 51687,
+    "raw_responses_count": 1
+  }
+}

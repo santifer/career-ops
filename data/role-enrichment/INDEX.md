@@ -28,3 +28,13 @@ Generated: 2026-05-10T20:50:32.228Z
 - **21. Cognition — AI Enablement Engineer** | toxicity 3/5 | recruiter unknown | relocation $10,000-$25,000 | confidence M
 - **22. OpenAI — Research Communications Manager** | toxicity 2/5 | recruiter unknown | relocation $25,000-$60,000 | confidence H
 - **23. Pinecone — Staff Developer Advocate** | toxicity 2/5 | recruiter unknown | relocation $15,000-$30,000 | confidence M
+
+## Backfill rows 2049,2059,2067,2104,2110,2181,2198 (generated 2026-05-19T22:25:50.500Z)
+
+- **bf2049. Ramp — AI Operations Specialist — Agentic Workflows** | toxicity 3/5 | recruiter unknown | relocation $25000-$45000 | confidence M
+- **bf2059. Anthropic — Applied AI Architect, Industries** | toxicity 2/5 | recruiter unknown | relocation $25000-$45000 | confidence M
+- **bf2067. ElevenLabs — GTM Agentic Enablement Lead** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence M
+- **bf2104. Databricks — Sr Developer Advocate, Agentic Systems** | toxicity 2/5 | recruiter unknown | relocation 25000-60000 | confidence M
+- **bf2110. Deepgram — Senior Developer Advocate** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L
+- **bf2181. Mistral AI — Senior/Staff DevRel** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L
+- **bf2198. OpenAI — AI Deployment Manager - Pilots** | toxicity 3/5 | recruiter unknown | relocation $25000-$45000 | confidence M

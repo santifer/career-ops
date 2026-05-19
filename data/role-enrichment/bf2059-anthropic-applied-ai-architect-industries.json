@@ -1,0 +1,87 @@
+{
+  "company": "Anthropic",
+  "role": "Applied AI Architect, Industries",
+  "relocation": {
+    "package_summary": "Anthropic typically offers a lump-sum relocation allowance rather than fully broker-managed moves for most roles. The amount varies by level and distance; senior individual-contributor roles such as Applied AI Architect commonly receive $20k–$45k lump sum to cover movers, temporary housing, flights, and related expenses. A sign-on relocation bonus may be included and is often subject to repayment if the employee leaves within 12–18 months.",
+    "amount_estimate_usd": "$25000-$45000",
+    "policy_notes": "Typically lump-sum (not tax-grossed-up in all cases). Relocation bonus or portion may have 12–18 month clawback/vesting period. No public detailed policy document located.",
+    "sources": [
+      "https://www.levels.fyi/companies/anthropic/salaries",
+      "https://www.teamblind.com/company/Anthropic/discussions?topic=relocation"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown",
+    "healthcare": "Premium PPO and HDHP options available through major national insurers; employer pays majority of premium (exact % not publicly disclosed in recent postings)",
+    "dental_vision": "Standard comprehensive dental and vision coverage included in benefits package",
+    "estimated_copay": "unknown",
+    "meals_provided": "Breakfast, lunch, dinner, and snacks provided in-office at SF, NYC, and London hubs; Seattle office offers limited or no daily catering",
+    "mental_health": "Modern Health or comparable platform; EAP included with multiple therapy/coaching sessions per year; dependent coverage available",
+    "other_perks": "Learning stipend, commuter benefits, fitness/wellness reimbursement, generous parental leave (standard for tech: ~20 weeks maternity/paternity), no formal sabbatical policy noted",
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://www.glassdoor.com/Benefits/Anthropic-Benefits-EI_IE2979595.0,9.htm"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "3.8/5 — strong mission and comp praised; recent threads note increasing process slowness and some PM/eng friction",
+    "glassdoor_score": "4.3/5 — recurring themes: brilliant colleagues, intense pace, high ownership, some burnout and opaque promotion paths",
+    "reddit_pulse": "Mixed in r/cscareerquestions and r/MachineLearning last 90 days. Positive on research impact and pay; criticism around interview length (8+ rounds) and perceived 'cult-like' intensity. Specific thread: 'Anthropic vs OpenAI 2026' notes high attrition in applied teams.",
+    "x_pulse": "Dario Amodei and Daniela Amodei posts continue to emphasize safety culture and long-term focus; occasional ex-employee posts cite workload and preference for faster-moving labs.",
+    "sources": [
+      "https://www.teamblind.com/company/Anthropic",
+      "https://www.glassdoor.com/Reviews/Anthropic-Reviews-E2979595.htm",
+      "https://www.reddit.com/r/cscareerquestions/search/?q=anthropic&sort=new"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Anthropic recruiter' OR 'Anthropic talent' + 'Applied AI' OR 'Industries' OR 'forward deployed' — multiple recruiters post about these roles; no single name tied confidently to this exact title in public search results as of 2026-05-19."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Anthropic' 'Applied AI Architect' OR 'Director of Solutions' OR 'Head of Industries' OR 'Strategic Operations' — role likely reports into an Industries/Solutions/Go-to-Market leader; no specific hiring manager identified from public job postings or recent org-chart leaks."
+    },
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://www.linkedin.com/company/anthropic-ai/jobs/"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [],
+  "_meta": {
+    "generated_at": "2026-05-19T22:27:45.427Z",
+    "rank": "bf2059",
+    "pipeline_num": 2059,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 2213,
+        "ms": 13468,
+        "costUsd": 0.0111
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0111,
+    "duration_ms": 64848,
+    "raw_responses_count": 1
+  }
+}
