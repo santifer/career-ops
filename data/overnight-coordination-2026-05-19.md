@@ -334,3 +334,27 @@ Files touched (no conflicts with other personas per coordination matrix):
 - Report: data/alpha-runbatch-eval-2026-05-19.md
 
 — α (final)
+
+## 2026-05-19 — δ DELTA Run-Batch eval — LANDED
+- Branch `overnight-delta-runbatch-2026-05-19` rebased atop origin/main (α + γ + ζ Run-Batch already landed). 2 conflicts in dashboard-server.mjs auto-resolved to **keep both** — α's polish-cost addition + δ's detection-cost addition are sibling adds at the same struct level.
+- Merge commit: **`190ff48 δ: Run-Batch + Process All AI-detection gate placement audit + 5-fix landing`** — pushed to mitwilli-create:main.
+- 7 commits shipped (final SHAs after rebase):
+  - `519ba3d` form-fields.mjs gate uses gateBlocks (band-aware) not legacy passes
+  - `a670868` why-statement.mjs gate uses gateBlocks (band-aware) not legacy passes
+  - `43d12f9` linkedin-dm.mjs gate uses gateBlocks (band-aware) not legacy passes
+  - `465db97` build-apply-orchestrator gate uses gateBlocks (band-aware) not passes
+  - `52073f9` add AI-detection cost line to Phase A + Phase B preview tables
+  - `da3621b` integrate AI-detection cost with γ's provenance-chip pattern
+  - `7f41530` audit + 5-fix landing findings doc
+- Files touched: 8 — no overlap with α/γ/ζ except dashboard-server.mjs preview struct + scripts/build-dashboard.mjs modal renderer; both auto-merged cleanly via rebase.
+- Live verification on PID 88540: localhost:3097/api/pipeline/preview now returns `process_all.ai_detection.{packs,cost_usd,cost_per_pack_usd,vendors,notes,threshold_conditional}` populated. Current state: 15 pending + 172 queued → 16 detection packs ($2.40) ProcessAll / 15 detection packs ($2.25) RunBatch. The user can now see detection cost in the Phase A modal where it was previously invisible.
+- Snapshots: `data/runbatch-eval-snapshots/delta/preview-pre-merge.json` (ai_detection ABSENT) + `preview-post-merge.json` (ai_detection PRESENT). Diff proves the gap closure.
+- Report: `data/delta-runbatch-eval-2026-05-19.md` — 6-objective table, 14-path gate-placement matrix, 4 NEEDS_HUMAN items, adversarial self-review of 4 concerns, math reconciliation.
+- Key audit insight: the brief assumed "the gate runs on the batch publish path". **It does not.** Detection only fires on user-triggered row-drawer "Build pack" requests. Process All / Run Batch / polish loop / preflight all have ZERO API-backed AI-detection invocations. The audit pivoted from "verify gate behavior on batch" to "fix per-artifact gate inconsistency + add cost visibility for post-publish downstream spend".
+- NEEDS_HUMAN (see findings doc):
+  1. UNCALIBRATED fail-secure enhancement — current gate treats UNCALIBRATED ≠ USELESS; should it require ackDetectionDegraded?
+  2. Should impact-doc.md / references.md / referrals.md (3 new ALPHA artifacts) also run the gate?
+  3. Current-thresholds.json missing — needs ≥20+10 sample corpus.
+  4. Honest claim: "we have a gate" — today it blocks ~0% of Mitchell's prose; UX gap.
+
+— δ (Run-Batch eval LANDED, 07:56 PT)
