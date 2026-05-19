@@ -1165,15 +1165,12 @@ function spawnBatchOnly({ sendEmail, force }) {
 
   const jobId = 'batch-' + Date.now().toString(36) + '-' + randomBytes(3).toString('hex');
   const logPath = `/tmp/batch-only-${jobId}.log`;
+  const args = [join(ROOT, 'scripts/batch-only-pipeline.mjs'), `--job-id=${jobId}`];
+  if (sendEmail) args.push('--send-email');
+  if (force) args.push('--cap-override');
   try {
     import('child_process').then(({ spawn }) => {
-      // Run batch + rebuild + (optional) email in sequence via a shell pipe
-      const cmd = [
-        `node "${join(ROOT, 'batch-runner-batches.mjs')}" run`,
-        `node "${join(ROOT, 'scripts/build-dashboard.mjs')}"`,
-        sendEmail ? `node "${join(ROOT, 'scripts/heartbeat.mjs')}" --send` : 'echo "(email skipped)"',
-      ].join(' && ');
-      const proc = spawn('bash', ['-c', `(${cmd}) > "${logPath}" 2>&1`], {
+      const proc = spawn('node', args, {
         cwd: ROOT,
         env: process.env,
         stdio: ['ignore', 'ignore', 'ignore'],
@@ -1184,6 +1181,7 @@ function spawnBatchOnly({ sendEmail, force }) {
   } catch (err) {
     return { ok: false, error: err.message };
   }
+  // State row pre-written as 'queued'; batch-only-pipeline.mjs transitions it to 'running' → 'completed'/'failed'
   const state = loadPipelineProcessState();
   state.jobs[jobId] = {
     jobId,
