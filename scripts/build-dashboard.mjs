@@ -3120,6 +3120,80 @@ function renderRow(r, idx) {
           </div>`;
         } catch (_) { return ''; }
       })()}
+      ${(function() {
+        // DELTA δ.3 (2026-05-19) — Editing Priority callout in apply-pack drawer.
+        // Non-blocking advisory: "These N sentences look AI-y — want to rewrite?"
+        // Reads the cover-letter AI-detection sidecar to surface editing_priority.
+        // Shows only when there are flagged sentences AND band is not CLEAR.
+        // Does NOT block ship — this is purely informational.
+        try {
+          const padded = String(r.num || '').padStart(3, '0');
+          // Find the apply-pack directory for this row number
+          let packDir = null;
+          const packBase = join(ROOT, 'data', 'apply-packs');
+          if (existsSync(packBase)) {
+            // readdirSync is already imported at module top (from 'fs')
+            const allPacks = readdirSync(packBase);
+            const matching = allPacks.filter(d => d.startsWith(padded + '-'));
+            if (matching.length > 0) packDir = join(packBase, matching[0]);
+          }
+          if (!packDir || !existsSync(packDir)) return '';
+
+          // Try cover-letter first, then cv-tailored
+          const candidates = ['cover-letter.md', 'cv-tailored.md'];
+          let sidecar = null;
+          for (const artifact of candidates) {
+            const sidecarPath = join(packDir, artifact + '.ai-detection.json');
+            if (existsSync(sidecarPath)) {
+              try { sidecar = JSON.parse(readFileSync(sidecarPath, 'utf-8')); break; } catch { /* try next */ }
+            }
+          }
+          if (!sidecar) return '';
+
+          // Compute editing priority from the sidecar (mirrors dashboard-server.mjs computeEditingPriority)
+          const band = sidecar.band || null;
+          if (!band || band === 'CLEAR') return '';
+          const sentences = Array.isArray(sidecar.sentences) ? sidecar.sentences : [];
+          const top_flagged = sentences
+            .filter(s => typeof s?.generated_prob === 'number')
+            .map(s => ({ sentence: (s.sentence || '').slice(0, 200), prob: Math.round((s.generated_prob || 0) * 100) }))
+            .sort((a, b) => b.prob - a.prob)
+            .slice(0, 3);
+
+          if (top_flagged.length === 0) return '';
+
+          const gz  = sidecar.gptzero_signal_quality     || 'UNCALIBRATED';
+          const orig = sidecar.originality_signal_quality || 'UNCALIBRATED';
+          const pang = sidecar.pangram_signal_quality     || 'UNCALIBRATED';
+          const useless = gz === 'USELESS' && orig === 'USELESS' && pang === 'USELESS';
+
+          // When ALL detectors are USELESS, show the advisory note explaining this is likely a false positive
+          const advisoryNote = useless
+            ? ' (detectors USELESS — likely false positive on authentic prose)'
+            : '';
+
+          const colorMap = { CRIT: '#991b1b', HIGH: '#92400e', MED: '#1e40af' };
+          const bgMap    = { CRIT: '#fee2e2', HIGH: '#fde68a', MED: '#dbeafe' };
+          const borderMap = { CRIT: '#fca5a5', HIGH: '#fcd34d', MED: '#93c5fd' };
+          const epColor  = colorMap[band] || '#6b7280';
+          const epBg     = bgMap[band]    || '#f3f4f6';
+          const epBorder = borderMap[band] || '#d1d5db';
+
+          const sentenceHtml = top_flagged.map(s =>
+            `<div style="margin-top:4px;padding:4px 8px;border-radius:4px;background:rgba(0,0,0,0.04);font-size:11px;font-style:italic;color:inherit">
+              <span style="font-weight:600;font-variant-numeric:tabular-nums">${s.prob}%</span> — "${htmlEscape(s.sentence)}…"
+            </div>`
+          ).join('');
+
+          return `<div style="margin-bottom:8px;padding:8px 10px;border-radius:6px;border:1px solid ${epBorder};background:${epBg};color:${epColor};font-size:12px;line-height:1.45">
+            <div style="font-weight:700;margin-bottom:4px">
+              ✏️ ${top_flagged.length} sentence${top_flagged.length !== 1 ? 's' : ''} look AI-y (band: ${band})${advisoryNote}
+              — <em style="font-weight:400">want to rewrite?</em>
+            </div>
+            ${sentenceHtml}
+          </div>`;
+        } catch (_epErr) { return ''; /* never break drawer on editing priority error */ }
+      })()}
       <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cover-letter', this);event.stopPropagation()" title="Draft cover letter via /api/build-pack-stage">/cover-letter</button>
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'linkedin-dm', this);event.stopPropagation()" title="Draft LinkedIn DM via /api/build-pack-stage">/linkedin-dm</button>
