@@ -3197,8 +3197,9 @@ function renderRow(r, idx) {
       <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'cover-letter', this);event.stopPropagation()" title="Draft cover letter via /api/build-pack-stage">/cover-letter</button>
         <button type="button" class="dcard-btn" onclick="invokeBuildPackStage(${htmlEscape(String(r.num||''))}, 'linkedin-dm', this);event.stopPropagation()" title="Draft LinkedIn DM via /api/build-pack-stage">/linkedin-dm</button>
-        <button type="button" class="dcard-btn dcard-btn-polish" onclick="alphaPolishPack(${htmlEscape(String(r.num||''))});event.stopPropagation()" title="Polish all 6 apply-pack artifacts to ≥0.99 confidence (4-round per-artifact loop + adversarial sweep)">Polish pack ✨</button>
-        <button type="button" class="dcard-btn dcard-btn-intel" onclick="alphaIntelRefresh(${htmlEscape(String(r.num||''))});event.stopPropagation()" title="Refresh HM intel + toxicity + strategy ceiling + positioning caches">↻ Refresh intel</button>
+        <!-- β.3 (2026-05-19): Polish pack + Refresh intel removed from row drawer.
+             Polish is now a stage in the pipeline, surfaced on the review surface after
+             Create materials completes. Refresh intel is accessible via /intel-refresh CLI. -->
       </div>
     </div>
   </td>
@@ -11243,11 +11244,18 @@ async function build() {
         ${_tonightPick.location ? `<span class="tp-sig tp-sig-loc">${htmlEscape(_tonightPick.location)}</span>` : ''}
       </div>
       <div class="tonight-pick-why">${htmlEscape(_tonightPick.whyPick)}</div>
+      <!-- β.3 (2026-05-19): Row-action workflow restructured — 3 buttons in priority order.
+           PRIMARY  "Apply now"       → opens JD in new tab (= former "Start tonight's apply")
+           SECONDARY "Learn more"     → opens right drawer (unchanged)
+           TERTIARY "Create materials"→ invokes apply-pack creation flow
+           Polish pack ✨ removed — polish is now a STAGE in the pipeline, surfaced on the
+           review surface after materials are created + reviewed. Polish fires only after
+           Mitchell has reviewed and edited the drafted materials.
+           Review materials → accessible via the Create materials success footer (review btn). -->
       <div class="tonight-pick-actions">
-        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Open ${htmlEscape(_tonightPick.company)} live job posting in a new tab">Start tonight&rsquo;s apply &rarr;</button>
+        <button type="button" class="tonight-pick-btn-primary" onclick="tonightPickStart()" aria-label="Open ${htmlEscape(_tonightPick.company)} live job posting in a new tab">Apply now &rarr;</button>
         <button type="button" class="tonight-pick-btn-secondary" onclick="tonightPickLearnMore()" aria-label="Open role detail in right drawer">Learn more</button>
-        <button type="button" class="tonight-pick-btn-accent" onclick="tonightPickReviewMaterials()" aria-label="Show the local apply-pack file path (copies to clipboard, opens with Finder search)">Review materials &rarr;</button>
-        <button type="button" class="tonight-pick-btn-polish" onclick="alphaPolishPack(${_tonightPick.num || 0})" aria-label="Polish all 6 apply-pack artifacts to ≥0.99 confidence (Phase 1 signals → 4-round critic/author/adjudicator/adversarial loop → cross-coherence)" title="Polish pack (≥0.99 confidence, ~$30-100 typical, $500 cap)">Polish pack &#x2728;</button>
+        <button type="button" id="tonight-pick-create-btn" class="tonight-pick-btn-accent" onclick="tonightPickCreateMaterials()" aria-label="Build apply-pack artifacts (CV, cover letter, LinkedIn DM, form fields)">Create materials</button>
         <button type="button" class="tonight-pick-btn-ghost" onclick="tonightPickCycle()" aria-label="Pick a different role">Pick another</button>
       </div>
     </div>` : '<!-- tonight-pick: no candidate met criteria -->'}
@@ -13018,21 +13026,29 @@ function openRightRailForDetail(idx, detailRow) {
     // immediate action (open URL / start build / discard / defer); data-drill
     // documents the action target for keyboard nav, screen readers, and the
     // grep-based regression gate in DASHBOARD_INVARIANTS.md.
+    //
+    // β.1 (2026-05-19): DISCARD vs DISMISS semantics separated.
+    //   DISCARD ("Discard this row") = permanent — writes Discarded to applications.md.
+    //                                  Destructive action with confirmation prompt.
+    //   DISMISS ("Dismiss for today") = day-only — hides row from Apply-Now queue
+    //                                  until midnight PT. Status unchanged. No confirm.
     const applyBtnHtml = applyHref
       ? '<button type="button" class="drawer-btn-primary" data-drawer-action="apply" data-drill="drawer-action:apply:' + (num || '') + '" title="Open original job posting in a new tab">Apply</button>'
       : '<button type="button" class="drawer-btn-primary" data-drill="drawer-action:apply:' + (num || '') + '" disabled>Apply</button>';
-    // "Create materials" — between Apply and Skip. Disabled if there's no
+    // "Create materials" — between Apply and Discard. Disabled if there's no
     // row number (e.g. preview rows synthesized without a tracker #).
     const materialsBtnHtml = num
       ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" data-drill="drawer-action:materials:' + num + '" title="Build apply pack (CV + cover letter + outreach + intel)">Generate apply pack</button>'
       : '<button type="button" class="drawer-btn-materials" data-drill="drawer-action:materials:" disabled title="No row number — apply pack needs a tracker row">Generate apply pack</button>';
-    const skipBtnHtml = num
-      ? '<button type="button" data-drawer-action="skip" data-drill="drawer-action:skip:' + num + '" title="Discard this row — will prompt for a reason">Skip this one</button>'
-      : '<button type="button" data-drill="drawer-action:skip:" disabled>Skip this one</button>';
-    const deferBtnHtml = num
-      ? '<button type="button" data-drawer-action="defer" data-drill="drawer-action:defer:' + num + '" title="Mark Evaluated and close the drawer">Look at this later</button>'
-      : '<button type="button" data-drill="drawer-action:defer:" disabled>Look at this later</button>';
-    actionsEl.innerHTML = applyBtnHtml + materialsBtnHtml + skipBtnHtml + deferBtnHtml;
+    // DISCARD (permanent, destructive — requires confirm + optional reason)
+    const discardBtnHtml = num
+      ? '<button type="button" class="drawer-btn-discard" data-drawer-action="discard" data-drill="drawer-action:discard:' + num + '" title="Permanently discard this row (Status → Discarded). Will prompt for a reason. Irreversible from the queue." style="color:var(--red-fg,#cf222e);border-color:var(--red-fg,#cf222e)">Discard this row</button>'
+      : '<button type="button" class="drawer-btn-discard" data-drill="drawer-action:discard:" disabled style="color:var(--text-3)">Discard this row</button>';
+    // DISMISS (day-only soft action — no confirm, reappears tomorrow)
+    const dismissBtnHtml = num
+      ? '<button type="button" class="drawer-btn-dismiss" data-drawer-action="dismiss" data-drill="drawer-action:dismiss:' + num + '" title="Hide from Apply-Now queue until midnight PT. Status unchanged — row reappears tomorrow.">Dismiss for today</button>'
+      : '<button type="button" class="drawer-btn-dismiss" data-drill="drawer-action:dismiss:" disabled>Dismiss for today</button>';
+    actionsEl.innerHTML = applyBtnHtml + materialsBtnHtml + discardBtnHtml + dismissBtnHtml;
     // Wire actions after innerHTML — keeps the HTML-as-string clean of
     // nested-quote escaping and lets us close the rail in one place.
     const applyBtnEl = actionsEl.querySelector('button[data-drawer-action="apply"]');
@@ -13045,42 +13061,60 @@ function openRightRailForDetail(idx, detailRow) {
     if (materialsBtnEl && num) {
       materialsBtnEl.addEventListener('click', () => drawerCreateMaterials(num, company, role, materialsBtnEl));
     }
-    const skipBtnEl = actionsEl.querySelector('button[data-drawer-action="skip"]');
-    if (skipBtnEl && num) {
-      // Item #1 from 2026-05-16 incomplete-task review: capture WHY before
-      // marking discarded. Reason flows into data/discard-reasons.jsonl via
-      // /api/discard-with-reason so the next eval run can learn from the
-      // anti-pattern. Reason is optional — user may press Enter to skip and
-      // still discard (legacy behavior).
-      skipBtnEl.addEventListener('click', async () => {
+    // DISCARD: destructive, permanent. Prompts for a reason then writes Discarded status.
+    const discardBtnEl = actionsEl.querySelector('button[data-drawer-action="discard"]');
+    if (discardBtnEl && num) {
+      discardBtnEl.addEventListener('click', async () => {
         const row = document.querySelector('.status-pill[data-num="' + num + '"]')?.closest('tr');
-        const company = row?.dataset?.company || row?.querySelector('[data-col="company"]')?.textContent?.trim() || '';
-        const role    = row?.dataset?.role    || row?.querySelector('[data-col="role"]')?.textContent?.trim()    || '';
+        const rowCompany = row?.dataset?.company || row?.querySelector('[data-col="company"]')?.textContent?.trim() || company || '';
+        const rowRole    = row?.dataset?.role    || row?.querySelector('[data-col="role"]')?.textContent?.trim()    || role || '';
         const reason = window.prompt(
-          'Why are you discarding ' + (company ? company + (role ? ' — ' + role : '') : 'this row #' + num) + '?\\n\\n' +
+          'Permanently discard: ' + (rowCompany ? rowCompany + (rowRole ? ' — ' + rowRole : '') : 'row #' + num) + '\\n\\n' +
+          'Enter a reason (optional — used to tune future evals):\\n' +
           '(Tags auto-applied: comp, geography, culture, skill-gap, ethics, stage, velocity, role-shape, fit, other)\\n\\n' +
-          'Press Enter to discard without recording a reason.'
+          'Press Enter to discard without recording a reason. Click Cancel to abort.'
         );
-        if (reason === null) return; // User canceled — don’t discard
+        if (reason === null) return; // User canceled — don't discard
         const trimmed = (reason || '').trim();
         if (trimmed) {
           try {
             await fetch('/api/discard-with-reason', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ row_num: num, reason: trimmed.slice(0, 1000), company, role }),
+              body: JSON.stringify({ row_num: num, reason: trimmed.slice(0, 1000), company: rowCompany, role: rowRole }),
             });
           } catch (e) {
             console.warn('discard-with-reason persist failed:', e);
-            // Don’t block the status change on reason-persist failure
+            // Don't block the status change on reason-persist failure
           }
         }
         await drawerQuickStatus(num, 'Discarded');
       });
     }
-    const deferBtnEl = actionsEl.querySelector('button[data-drawer-action="defer"]');
-    if (deferBtnEl && num) {
-      deferBtnEl.addEventListener('click', () => drawerQuickStatus(num, 'Evaluated'));
+    // DISMISS: soft, day-only. Hides row from Apply-Now queue until midnight PT.
+    // Status remains Evaluated; row reappears tomorrow with no action needed.
+    const dismissBtnEl = actionsEl.querySelector('button[data-drawer-action="dismiss"]');
+    if (dismissBtnEl && num) {
+      dismissBtnEl.addEventListener('click', async () => {
+        try {
+          await fetch('/api/dismiss-row', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ num }),
+          });
+        } catch (e) {
+          console.warn('dismiss-row persist failed:', e);
+        }
+        // Optimistically remove from Apply-Now table without changing status badge
+        const rowEl = document.querySelector('tr.row[data-num="' + num + '"], #apply-now-tbody tr.row[data-row-id*="-' + num + '"]');
+        if (rowEl) {
+          rowEl.style.transition = 'opacity .25s';
+          rowEl.style.opacity = '0';
+          setTimeout(() => { rowEl.style.display = 'none'; }, 270);
+        }
+        closeRightRail();
+        if (window.toast) window.toast('Row #' + num + ' dismissed until midnight PT', 'info');
+      });
     }
   }
 
@@ -13810,13 +13844,15 @@ function _populateDrawerRibbon(currentRow) {
     return '<button type="button" class="drawer-ribbon-btn" data-ribbon-row="' + rowId + '" aria-label="' + (side === 'prev' ? 'Previous' : 'Next') + ' role: ' + label.replace(/"/g, '&quot;') + '">' + inner + '</button>';
   }
 
-  var positionText = (idx >= 0)
-    ? (idx + 1) + ' / ' + peerRows.length
-    : '–';
+  // β.2 (2026-05-19): Mitchell decision — strip the "1 / N" position counter label.
+  // Count remains available via title tooltip on the scope span for accessibility.
+  var positionTitle = (idx >= 0)
+    ? ((idx + 1) + ' / ' + peerRows.length + ' in ' + scopeLabel)
+    : scopeLabel;
 
   ribbon.innerHTML =
     _btn('prev', prev) +
-    '<span class="drawer-ribbon-scope" title="Scope: ' + scopeLabel + '">' + positionText + '</span>' +
+    '<span class="drawer-ribbon-scope" title="' + positionTitle + '"></span>' +
     _btn('next', next);
 
   // Wire clicks to toggleDetail (same code path as clicking a row).
@@ -16026,14 +16062,19 @@ _drillInRegister('drawer-action', function(id) {
   var titles = {
     apply: 'Apply (opens external posting)',
     materials: 'Generate apply pack',
-    skip: 'Skip this one',
-    defer: 'Look at this later',
+    discard: 'Discard this row (permanent)',
+    dismiss: 'Dismiss for today (day-only)',
+    // legacy aliases kept for backward compat with older drill-in IDs
+    skip: 'Discard this row (permanent)',
+    defer: 'Dismiss for today (day-only)',
   };
   var descriptions = {
     apply: 'Opens the original job posting in a new browser tab. The dashboard does not submit the application — you do that on the company page, then mark the row <strong>Applied<\/strong> here.',
     materials: 'Kicks off the apply-pack pipeline (~$2–5, ~3–5 min wall-clock). Outputs to <code>apply-pack\/{padded-num}-{slug}\/<\/code> with CV, cover letter, why-statement, LinkedIn DM, and form-field answers. You review every artifact before submitting.',
-    skip: 'Marks this row <strong>Discarded<\/strong> after prompting for a reason (comp, geography, culture, skill-gap, ethics, stage, velocity, role-shape, fit, other). The reason flows into <code>data\/discard-reasons.jsonl<\/code> so the next eval run can learn.',
-    defer: 'Marks this row <strong>Evaluated<\/strong> and closes the drawer. Use this when you want to revisit later without discarding the row.',
+    discard: '<strong>Permanent.<\/strong> Marks this row <strong>Discarded<\/strong> after prompting for an optional reason. The reason flows into <code>data\/discard-reasons.jsonl<\/code> so the next eval run can learn. This action removes the row from the Apply-Now queue forever.',
+    dismiss: '<strong>Day-only.<\/strong> Hides this row from the Apply-Now queue until midnight PT. Status remains <strong>Evaluated<\/strong> — the row reappears tomorrow with no action needed. Use this when you want to revisit later without making a permanent decision.',
+    skip: '<strong>Permanent.<\/strong> Marks this row <strong>Discarded<\/strong> after prompting for an optional reason.',
+    defer: '<strong>Day-only.<\/strong> Hides this row from the Apply-Now queue until midnight PT. Status remains <strong>Evaluated<\/strong>.',
   };
   return {
     title: titles[action] || 'Drawer action',
@@ -16264,7 +16305,10 @@ function _injectPrevNextRibbon(currentIdx) {
 
   var midSpan = document.createElement('span');
   midSpan.className = 'ribbon-mid';
-  midSpan.textContent = (pos >= 0 ? (pos + 1) + ' of ' + allRows.length : '');
+  // β.2 (2026-05-19): Mitchell decision — strip the "1 of N" count label entirely.
+  // Count is still reachable via hover tooltip on the ribbon-mid span.
+  midSpan.setAttribute('title', pos >= 0 ? ((pos + 1) + ' of ' + allRows.length + ' roles') : '');
+  midSpan.textContent = '';
 
   var nextBtn = document.createElement('button');
   nextBtn.textContent = nextIdx ? ((_getCompanyForIdx(nextIdx) || 'next') + ' →') : 'next →';
@@ -16717,16 +16761,38 @@ function _tpSetFooterReview(rowId) {
   if (!footer) return;
   // Build buttons as DOM nodes to avoid inline string-quoting issues
   footer.innerHTML = '';
+
+  // "Review materials" — opens the apply-pack file path toast
   var reviewBtn = document.createElement('button');
   reviewBtn.type = 'button'; reviewBtn.className = 'tonight-pick-btn-primary';
   reviewBtn.setAttribute('aria-label', 'Review materials');
   reviewBtn.textContent = 'Review materials →';
-  reviewBtn.addEventListener('click', function() { tonightPickCloseProgress(); tonightPickStart(); });
+  reviewBtn.addEventListener('click', function() { tonightPickCloseProgress(); tonightPickReviewMaterials(); });
+
+  // β.3 (2026-05-19): Polish CTA relocated from row drawer to the review surface.
+  // Polish fires AFTER materials are created + Mitchell has reviewed + edited.
+  // Gated by POLISH_PACK_ENABLED env (inherited from alphaPolishPack) — if the gate
+  // is off, button is visible but alphaPolishPack will surface the appropriate message.
+  var polishBtn = document.createElement('button');
+  polishBtn.type = 'button'; polishBtn.className = 'tonight-pick-btn-polish';
+  polishBtn.setAttribute('aria-label', 'Polish all apply-pack artifacts to ≥0.99 confidence');
+  polishBtn.setAttribute('title', 'Polish pack: 4-round critic/author/adjudicator/adversarial loop + cross-coherence check (~$30-100, ~$500 cap). Run AFTER reviewing + editing the drafted materials.');
+  polishBtn.textContent = 'Polish these materials ✨';
+  var pick = (TONIGHT_PICK_QUEUE && TONIGHT_PICK_QUEUE[_currentPickIdx]) || TONIGHT_PICK_DATA;
+  var polishRowId = (pick && pick.num) ? pick.num : (rowId ? parseInt(String(rowId).replace(/^apply-/, ''), 10) : 0);
+  polishBtn.addEventListener('click', function() {
+    if (typeof alphaPolishPack === 'function') {
+      tonightPickCloseProgress();
+      alphaPolishPack(polishRowId);
+    }
+  });
+
   var closeBtn = document.createElement('button');
   closeBtn.type = 'button'; closeBtn.className = 'tonight-pick-btn-ghost';
   closeBtn.setAttribute('aria-label', 'Close'); closeBtn.textContent = 'Close';
   closeBtn.addEventListener('click', tonightPickCloseProgress);
-  footer.appendChild(reviewBtn); footer.appendChild(closeBtn);
+
+  footer.appendChild(reviewBtn); footer.appendChild(polishBtn); footer.appendChild(closeBtn);
 }
 function _tpSetFooterRetry(stageId, rowNum, label) {
   var footer = document.getElementById('tp-progress-footer');
@@ -16839,7 +16905,7 @@ async function tonightPickCreateMaterials() {
         // ADVISORY: signal quality USELESS — surface a non-blocking notice and
         // continue the build. The Editing Priority callout in the drawer shows
         // top flagged sentences for optional human review.
-        _tpSetMsg('AI-detection ADVISORY (' + (ep.band || '?') + ' band, ' + (ep.flagged_sentence_count || 0) + ' flagged) — detectors calibrated USELESS vs Mitchell’s voice; not blocking.');
+        _tpSetMsg('AI-detection ADVISORY (' + (ep.band || '?') + ' band, ' + (ep.flagged_sentence_count || 0) + ' flagged) — detectors calibrated USELESS vs Mitchell\\'s voice; not blocking.');
         // Continue to the "stage done" branch below.
       }
       // DELTA P1 — Editing Priority callout (renders even when not failing,

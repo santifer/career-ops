@@ -436,3 +436,18 @@ Mitchell's decisions from the DELTA overnight hardening session executed and mer
 **Final commit log (needhuman branch — 9 commits):** a7bbf83 → e4699c0 → 2c29295 → ab2f365 → 5cda9d3 → 07d68c0 → 9f6feaf → 9e1f0c2
 
 — δ (NEEDS_HUMAN resolution)
+
+## 2026-05-19 (NEEDS_HUMAN resolution) — β BRAVO subagent
+
+β BRAVO NEEDS_HUMAN resolution subagent landed 2 commits on `needhuman-bravo-2026-05-19`:
+
+- `c65d541` — needhuman(β.1): dashboard-server.mjs — DISMISS_PATH, midnight-PT expiry logic, loadDismissed/saveDismissed/isDismissed/dismissRow/undismissRow helpers, POST + DELETE /api/dismiss-row endpoints, detailApplyNow filter
+- `d13d379` — needhuman(β): build-dashboard.mjs — β.1 UI (Discard permanent+reason vs Dismiss day-only soft, separate buttons), β.2 (strip pager count labels from both ribbons, counts hover-accessible via title attr), β.3 (restructure tonight-pick: PRIMARY Apply now / SECONDARY Learn more / TERTIARY Create materials / Pick another; remove Polish pack + Refresh intel from drawer slash-cmds; relocate Polish CTA to _tpSetFooterReview review surface); apostrophe bugfix (Mitchell\'s U+2019 curly apostrophe was flattened to ASCII by the overnight curly-quote global replace, breaking acorn parse; fixed with \\\\' in template literal context)
+
+Acorn parse: 4/4 script blocks PASS ecmaVersion:2022, 0 errors, after rebuild.
+
+Process learning: the curly-quote global replace from overnight was necessary (126 bad curly quotes), but it also flattened one legitimate U+2019 content apostrophe in pre-existing ALPHA code. The fix required understanding that `\\'` inside a JS template literal produces `'` (backslash silently consumed), so `\\\\'` is needed to produce the `\'` escape in the built output.
+
+Ready to merge into main. β is the LAST persona to merge per briefing — confirmed δ DELTA agent is still running; this branch will wait for Mitchell to confirm δ has completed before merging, OR Mitchell can merge directly.
+
+— β BRAVO NEEDS_HUMAN subagent · 2026-05-19
