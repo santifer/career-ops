@@ -8190,6 +8190,20 @@ async function build() {
   }
   .pcp-cache[data-state="hit"]   { color: var(--green-fg-dark); background: var(--green-bg); border-color: var(--green-border); }
   .pcp-cache[data-state="fresh"] { color: var(--text-3); }
+  /* ζ Run-Batch 2026-05-19 — Phase B network-leverage cell. Mirrors
+     the toxicity cell pattern (chip + state-colored fill) so the tier
+     decision is scannable. Fresh = green tier signal; stale = amber
+     "verify before treating warm"; none = neutral dash. */
+  .pcp-net {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; padding: 1px 6px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .pcp-net[data-state="fresh"] { color: var(--green-fg-dark); background: var(--green-bg); border-color: var(--green-border); font-weight: 600; }
+  .pcp-net[data-state="stale"] { color: var(--amber-fg-dark); background: var(--amber-bg); border-color: var(--amber-border); }
+  .pcp-net[data-state="none"]  { color: var(--text-4); }
   .pcp-cost { font-size: 12px; font-weight: 600; color: var(--text); text-align: right; }
   .pcp-cost-zero { color: var(--text-4); font-weight: 500; }
   .pcp-actions { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -19751,6 +19765,7 @@ function _renderPerCompanyPreview(pCmp) {
     +         '<th>Score</th>'
     +         '<th>TTO</th>'
     +         '<th>Toxicity</th>'
+    +         '<th title="Network-leverage: fresh warm-intro paths (connected <18mo) vs stale. ζ Run-Batch 2026-05-19 from data/network-database.json — fresh counts are tier-decision-quality; stale need re-engagement.">Network</th>'
     +         '<th>Cache</th>'
     +         '<th class="pcp-num">Cost</th>'
     +         '<th style="text-align:right">Actions</th>'
@@ -19780,6 +19795,21 @@ function _renderPerCompanyRow(r) {
   const toxHtml = (r.toxicity_verdict)
     ? '<span class="pcp-tox" data-verdict="' + _esc(r.toxicity_verdict) + '" title="score ' + (r.toxicity_score ?? 0) + '/100">' + (r.toxicity_emoji ? r.toxicity_emoji + ' ' : '') + _esc(r.toxicity_verdict) + '</span>'
     : '<span class="pcp-tox" title="no toxicity data on file">—</span>';
+  // ζ Run-Batch 2026-05-19 — render the new network-leverage column.
+  // Render rules:
+  //   • r.network_fresh_count >= 1: green tier signal, show "Nf · M direct"
+  //   • r.network_fresh_count == 0 && r.network_warm_count > 0: amber, show stale-only count + caveat
+  //   • r.network_warm_count == 0: dash
+  // Tooltip discloses the source file so the user can audit the data source.
+  let netHtml;
+  if (r.network_warm_count == null || r.network_warm_count === 0) {
+    netHtml = '<span class="pcp-net" data-state="none" title="no warm-intro paths found in data/network-database.json or data/network-graph.json">—</span>';
+  } else if (r.network_fresh_count >= 1) {
+    const subtle = r.network_first_degree > 0 ? ' · ' + r.network_first_degree + 'd' : '';
+    netHtml = '<span class="pcp-net" data-state="fresh" data-fresh="' + r.network_fresh_count + '" title="' + r.network_fresh_count + ' fresh warm-intro path(s) (connected <18mo) + ' + (r.network_stale_count || 0) + ' stale. ' + r.network_first_degree + ' first-degree direct. Source: ' + _esc(r.network_source || 'network-database.json') + '. Click drawer for full list.">' + r.network_fresh_count + 'f' + subtle + '</span>';
+  } else {
+    netHtml = '<span class="pcp-net" data-state="stale" title="' + r.network_warm_count + ' total warm-paths, but all are stale (>18mo since connected, no recent engagement). Re-engage before treating as warm. Source: ' + _esc(r.network_source || 'network-database.json') + '.">' + r.network_warm_count + 's</span>';
+  }
   const cacheHtml = r.cache_hit
     ? '<span class="pcp-cache" data-state="hit" title="last intel ' + _esc(r.last_intel_date || '?') + ' (' + (r.cache_age_days ?? '?') + 'd old)">cache</span>'
     : '<span class="pcp-cache" data-state="fresh" title="no recent intel on file — fresh run will fire">fresh</span>';
@@ -19799,6 +19829,7 @@ function _renderPerCompanyRow(r) {
     +   '<td><span class="' + scoreClass + '" aria-label="Top role score ' + score + '">' + score + '</span></td>'
     +   '<td>' + ttoHtml + '</td>'
     +   '<td>' + toxHtml + '</td>'
+    +   '<td>' + netHtml + '</td>'
     +   '<td>' + cacheHtml + '</td>'
     +   '<td class="pcp-cost">' + costHtml + '</td>'
     +   '<td style="text-align:right">'
