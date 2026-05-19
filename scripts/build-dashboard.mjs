@@ -3044,8 +3044,8 @@ function renderRow(r, idx) {
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span></td>
   <td class="base-cell">${baseCell}</td>
-  <td class="company-cell"><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
-  <td class="role-cell">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="Open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
+  <td class="company-cell" title="${htmlEscape(r.company)}"><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
+  <td class="role-cell" title="${htmlEscape(r.role)}">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="${htmlEscape(r.role)} — open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
   <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)} drill-trigger" data-status="${statusKey(r.status)}" data-num="${r.num}" data-drill="status:${htmlEscape(statusKey(r.status))}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${htmlEscape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
   <td class="location-cell">${locationCell}</td>
@@ -6498,6 +6498,7 @@ async function build() {
     .panel .table-scroll table th:nth-child(2)  { width: 58px; }
     .panel .table-scroll table th:nth-child(3)  { width: 84px; }
     .panel .table-scroll table th:nth-child(4)  { width: 130px; }
+    .panel .table-scroll table th:nth-child(5)  { width: 220px; }
     .panel .table-scroll table th:nth-child(6)  { width: 95px; }
     .panel .table-scroll table th:nth-child(7)  { width: 108px; }
     .panel .table-scroll table th:nth-child(8)  { width: 108px; }
@@ -6511,31 +6512,26 @@ async function build() {
       overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap; max-width: 0;
     }
-    /* P0-1: role + company cells render full string (no truncation).
-       2026-05-19 fix: word-break: break-word + overflow-wrap: anywhere were
-       causing one-character-per-line vertical wrap when the column got
-       squeezed (narrow viewport, sidebar opened). Safer pattern: word-break
-       normal + overflow-wrap break-word — breaks at WORD boundaries only,
-       never mid-word. Cells get a min-width floor so a single long token
-       can still expand the column rather than wrapping into a vertical bar.
-       title= remains as hover fallback. */
+    /* 2026-05-19 (final, per Mitchell): role + company cells TRUNCATE with
+       ellipsis when the column gets narrow. Full text stays in title= for
+       hover. The min-width gives the column a floor so it never collapses
+       to zero width (which happened when the column inherited the generic
+       td { max-width: 0 } rule). The max-width gives a ceiling so long
+       role titles truncate at a sensible width. */
     .panel .table-scroll table td.role-cell,
     .panel .table-scroll table td.company-cell {
-      white-space: normal;
-      overflow: visible;
-      text-overflow: clip;
-      max-width: none;
-      min-width: 8ch;
-      word-break: normal;
-      overflow-wrap: break-word;
-      hyphens: auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 140px;
+      max-width: 320px;
     }
-    /* P0-1: ensure inline anchors inside role/company cells also wrap */
     .panel .table-scroll table td.role-cell a,
     .panel .table-scroll table td.company-cell a {
-      white-space: normal;
-      word-break: normal;
-      overflow-wrap: break-word;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline;
     }
   }
   /* Resize handle — 5px zone on right edge of each th */
