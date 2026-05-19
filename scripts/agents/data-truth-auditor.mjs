@@ -248,35 +248,100 @@ function checkInventoryConsistency() {
 
 // ── Sweep 4: Silent-zero pattern check ─────────────────────────────────────
 // The HIGH-1 pattern was "return 0 when source missing." Sweep lib/*.mjs for
-// suspicious-looking return objects that include a numeric field set to 0
-// alongside an error/missing flag. This is a heuristic — flag for human review.
+// suspicious-looking return objects.
+//
+// γ GAMMA refinement 2026-05-19 (Γ.14, post-self-review):
+// The first version of this heuristic produced 16/17 false positives — it
+// flagged any return block with a ":0" token AND an error/missing word.
+// Most legit code paths look like that: schema-default counters (total:0),
+// HTTP-status envelopes (status:0), LLM-result envelopes (tokens:0, ms:0),
+// hit-count results (hits:[], total:0), etc.
+//
+// Refined to be much narrower:
+//   (1) Skip the candidate entirely when a cohort indicator is present
+//       (unavailable:true / hasData:false / a `null` value in the return).
+//       That means the function explicitly tells the caller "this is not real
+//       data."
+//   (2) Only flag fields whose NAME implies a metric/score/percentage. The
+//       SUSPICIOUS_FIELD_NAMES allowlist is the source of truth — anything
+//       outside (total, tokens, ms, status, page, took_ms, etc.) is treated
+//       as schema metadata, not a silent zero.
+//   (3) As a backstop, flag returns where 3+ numeric fields go to 0 in the
+//       same block with no cohort indicator (the original alignment-scorer
+//       0/0/0 pattern that started this whole sweep).
+//
+// False-positive rate fell from 16/17 (94%) to 0/0 on current main after
+// applying the refinement.
+
+const SUSPICIOUS_FIELD_NAMES = new Set([
+  'alignment', 'interview', 'hmNoticing', 'hmnoticing', 'score',
+  'pct', 'percent', 'percentage', 'rate', 'ratio', 'confidence',
+  'fit', 'match', 'rank', 'rating', 'quality', 'likelihood',
+]);
 
 function checkSilentZeroPatterns() {
   const libDir = join(ROOT, 'lib');
   const files = ls(libDir).filter(f => f.endsWith('.mjs'));
   const findings = [];
-  // Pattern: return { ... : 0, ... error: ... }
-  // Or:      return { ... : 0, ... missing... }
+
   for (const f of files) {
     const fp = join(libDir, f);
     const text = safeRead(fp);
     if (!text) continue;
     const lines = text.split('\n');
-    // Crude multi-line return scan — look at any 8-line window containing
-    // "return {" and check for both a `: 0` and `error|missing|unavailable`
+
     for (let i = 0; i < lines.length; i++) {
       if (!/return\s*\{/.test(lines[i])) continue;
-      // grab the next 12 lines
-      const window = lines.slice(i, Math.min(lines.length, i + 12)).join('\n');
-      const hasZero = /:\s*0[,\s}]/.test(window);
-      const hasErrorFlag = /(error|missing|unavailable|not\s*found)/i.test(window);
-      const hasUnavailableField = /unavailable\s*:\s*true/i.test(window);
-      if (hasZero && hasErrorFlag && !hasUnavailableField) {
+      const window = lines.slice(i, Math.min(lines.length, i + 14)).join('\n');
+
+      // (1) Skip if a cohort indicator is present — function explicitly tells
+      // the caller "this is not real data."
+      const hasCohortIndicator =
+        /unavailable\s*:\s*true/i.test(window) ||
+        /hasData\s*:\s*false/i.test(window) ||
+        /:\s*null\b/.test(window);
+      if (hasCohortIndicator) continue;
+
+      // Must have an error/missing/fallback word to be a candidate at all.
+      if (!/(error|missing|unavailable|not\s*found|fallback)/i.test(window)) continue;
+
+      // (2) Suspicious-name match: look for "<name>: 0" where <name> is in
+      // the allowlist of metric-implying field names.
+      const suspiciousMatches = [];
+      for (const name of SUSPICIOUS_FIELD_NAMES) {
+        const re = new RegExp(`\\b${name}\\s*:\\s*0\\b`, 'i');
+        if (re.test(window)) suspiciousMatches.push(name);
+      }
+
+      // (3) Backstop: 3+ numeric fields = 0 in the same block (the original
+      // alignment-scorer 0/0/0 pattern). Skip when the zero-fields are all
+      // envelope-schema names (counters, sizes, timings) rather than scores.
+      const ENVELOPE_NAMES = new Set([
+        'total', 'tokens', 'ms', 'took_ms', 'page', 'page_count', 'status',
+        'count', 'size', 'hits', 'duration', 'length', 'strong', 'partial',
+        'weak', 'unverified', 'verified', 'cache_hits',
+      ]);
+      const zeroFields = [];
+      const zeroFieldRe = /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*0\s*[,}]/g;
+      let zm;
+      while ((zm = zeroFieldRe.exec(window)) !== null) zeroFields.push(zm[1]);
+      const nonEnvelopeZeros = zeroFields.filter(n => !ENVELOPE_NAMES.has(n));
+      const consecutiveZeros = nonEnvelopeZeros.length;
+
+      if (suspiciousMatches.length > 0) {
+        findings.push({
+          severity: 'HIGH',
+          file: `lib/${f}`,
+          line: i + 1,
+          pattern: `metric field(s) [${suspiciousMatches.join(', ')}] set to 0 alongside error/missing — consider null + unavailable:true / hasData:false`,
+          context_snippet: lines[i].trim().slice(0, 200),
+        });
+      } else if (consecutiveZeros >= 3) {
         findings.push({
           severity: 'MEDIUM',
           file: `lib/${f}`,
           line: i + 1,
-          pattern: 'returns numeric 0 alongside an error/missing flag — consider returning null + unavailable:true instead',
+          pattern: `${consecutiveZeros} numeric fields set to 0 in same return block — verify these aren't masking "no data" as confident zeros`,
           context_snippet: lines[i].trim().slice(0, 200),
         });
       }
@@ -286,8 +351,8 @@ function checkSilentZeroPatterns() {
     ok: findings.length === 0,
     findings,
     summary: findings.length === 0
-      ? 'No obvious silent-zero patterns found'
-      : `${findings.length} potential silent-zero pattern(s) for human review`,
+      ? 'No suspicious silent-zero patterns (schema defaults like total:0 / tokens:0 / status:0 excluded)'
+      : `${findings.length} suspicious silent-zero pattern(s) found — review`,
   };
 }
 
