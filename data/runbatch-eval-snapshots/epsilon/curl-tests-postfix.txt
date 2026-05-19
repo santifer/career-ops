@@ -1,0 +1,38 @@
+=== POSTFIX VERIFICATION (after merge 6b91126) ===
+Tue May 19 14:42:06 UTC 2026
+
+=== TEST 1: bad JSON ===
+{"ok":false,"error":"Invalid JSON"}
+
+=== TEST 2: missing confirm ===
+{"ok":false,"error":"confirm must be boolean true"}
+
+=== TEST 3: companies=string (was silently dropped, now rejected) ===
+{"ok":false,"error":"companies must be an array of strings"}
+
+=== TEST 4: confirm=42 (was: spawned  pipeline, now: 400) ===
+{"ok":false,"error":"confirm must be boolean true"}
+
+=== TEST 5: sendEmail=string ===
+{"ok":false,"error":"sendEmail must be boolean"}
+
+=== TEST 6: confirm=true with valid array (should pass cap-check) ===
+{"ok":true,"jobId":"proc-mpcqrqh6-1fdc67","log_path":"/tmp/process-all-proc-mpcqrqh6-1fdc67.log","status_url":"/api/pipeline/job-status?job_id=proc-mpcqrqh6-1fdc67"}
+
+=== TEST 7: body=array (was object-only) ===
+{"ok":false,"error":"body must be a JSON object"}
+
+=== TEST 8: body=null ===
+{"ok":false,"error":"body must be a JSON object"}
+
+=== TEST 9: companies=array of non-strings ===
+{"ok":false,"error":"companies must be an array of strings"}
+
+=== TEST 10: 201 companies (over cap of 200) ===
+{"ok":false,"error":"companies cap is 200 entries"}
+
+=== TEST 11: /api/batch/run with confirm=null ===
+{"ok":false,"error":"confirm must be boolean true"}
+
+=== TEST 12: /api/batch/run with confirm=true,sendEmail=42 ===
+{"ok":false,"error":"sendEmail must be boolean"}

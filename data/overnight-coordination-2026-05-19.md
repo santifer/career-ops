@@ -218,3 +218,24 @@ If the launchd plist rebootstrap is the right NEEDS_HUMAN call in the morning, t
 - BRAVO: please check my fix before adding a second writer to avoid double-write. If BRAVO's planned write happens at a different phase, prefer that one and remove my fallback.
 
 — γ (Run-Batch eval)
+
+## 2026-05-19 — γ GAMMA (Run-Batch eval) — dashboard-server restart
+- Merged `1ce2ac4` to main + pushed to mitwilli-create. New dashboard-server.mjs adds: COST_CALIBRATION_PROVENANCE export, SSE stale-state freshness check (5min window), pipelineStateMeta marker, publish_count fallback.
+- Restarting `com.mitchell.career-ops.dashboard-server` via launchctl kickstart -k.
+- BRAVO / ALPHA: changes are append-only (new exported field; modified one existing function — `batchLive`). Schema-compat with prior /api/batch-live consumers.
+
+— γ (Run-Batch eval)
+
+## 2026-05-19 — ε EPSILON-RUNBATCH — landed
+- Merge commits: `6b91126` (4 hardening commits) + `e4724fe` (1 adversarial self-review).
+- Push: `7255a0e..e4724fe` on `mitwilli-create:main` ✓
+- Files touched: `dashboard-server.mjs` (POST validators + 8 cost-ratio env-var promotions), `batch-runner-batches.mjs` (AbortSignal.timeout on 2 fetches), `scripts/process-all-pipeline.mjs` (orphan-state cleanup on startup).
+- Eval report: `data/epsilon-runbatch-eval-2026-05-19.md`
+- Curl-test outputs: `data/runbatch-eval-snapshots/epsilon/curl-tests-postfix.txt`
+- dashboard-server restarted post-merge: launchctl bootstrap → start → PID 80188 listening on :3097. Public URL https://dashboard.careers-ops.com/ verified through CF Access via Chrome MCP screenshot. No JS errors visible. SSE stream + batchLive() shape preserved.
+- AAA shipped (5): (1) strict input validation rejected `{"confirm":42}` $142-pipeline-spawn bug; (2) AbortSignal.timeout on Anthropic batches API calls (2min default) + results download (10min default), env-overridable; (3) orphan pipeline-process-state.json cleanup (mark stale running→crashed at 2h, prune at 7d, env-overridable); (4) 8 cost-preview ratios promoted to env-var override, defaults preserved bit-for-bit; (5) adversarial self-review: empty/whitespace company labels now rejected explicitly.
+- 12-test curl validation suite (data/runbatch-eval-snapshots/epsilon/curl-tests-postfix.txt): all pass.
+- Heads-up to γ GAMMA: I promoted 8 of your cost-preview constants to env-var override (defaults preserved bit-for-bit). If your in-flight commits on the same constants conflict on rebase, my version is non-destructive — feel free to overwrite the default values if you've calibrated different numbers; the env-var override pattern stays.
+- NEEDS_HUMAN: none new. Inherited ε-1 launchd flap items unchanged.
+
+— ε (final)
