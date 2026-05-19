@@ -300,7 +300,76 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 10. VERSION FILE ─────────────────────────────────────────────
+// ── 10. CLI WRAPPER FILE INTEGRITY ──────────────────────────
+
+console.log('\n10. CLI wrapper file integrity');
+
+const cliWrappers = ['CLAUDE.md', 'OPENCODE.md', 'GEMINI.md'];
+for (const f of cliWrappers) {
+  if (!fileExists(f)) {
+    fail(`Missing CLI wrapper: ${f}`);
+    continue;
+  }
+  const content = readFile(f);
+  if (content.includes('AGENTS.md')) {
+    pass(`${f} references AGENTS.md`);
+  } else {
+    fail(`${f} does NOT reference AGENTS.md`);
+  }
+}
+
+// ── 11. SKILL SYMLINK INTEGRITY ─────────────────────────────
+
+console.log('\n11. Skill symlink integrity');
+
+const canonicalSkill = '.agents/skills/career-ops/SKILL.md';
+const symlinks = [
+  '.claude/skills/career-ops/SKILL.md',
+  '.opencode/skills/career-ops/SKILL.md',
+];
+
+const canonicalReal = run('readlink', ['-f', join(ROOT, canonicalSkill)]);
+if (canonicalReal !== null) {
+  pass(`Canonical skill resolves: ${canonicalSkill}`);
+} else {
+  fail(`Canonical skill not found: ${canonicalSkill}`);
+}
+
+for (const link of symlinks) {
+  const target = run('readlink', [join(ROOT, link)]);
+  if (target === null) {
+    fail(`Symlink missing: ${link}`);
+    continue;
+  }
+  const resolved = run('readlink', ['-f', join(ROOT, link)]);
+  if (resolved === canonicalReal) {
+    pass(`${link} → canonical skill`);
+  } else {
+    fail(`${link} resolves to ${resolved}, expected ${canonicalReal}`);
+  }
+}
+
+// ── 12. BATCH RUNNER CLI SUPPORT ────────────────────────────
+
+console.log('\n12. Batch runner CLI support');
+
+if (fileExists('batch/batch-runner.sh')) {
+  const runner = readFile('batch/batch-runner.sh');
+  if (runner.includes('opencode')) {
+    pass('batch-runner.sh mentions opencode');
+  } else {
+    fail('batch-runner.sh does NOT mention opencode');
+  }
+  if (runner.includes('--cli')) {
+    pass('batch-runner.sh has --cli flag');
+  } else {
+    fail('batch-runner.sh missing --cli flag');
+  }
+} else {
+  fail('batch/batch-runner.sh not found');
+}
+
+// ── 13. VERSION FILE ─────────────────────────────────────────────
 
 console.log('\n10. Version file');
 
