@@ -61,6 +61,55 @@ const SELF_FILES = [
     'data/omega-spec-2026-05-19.md',
 ];
 
+// Files in scripts/agents/ that are NOT agents (shared modules, type definitions).
+const NON_AGENT_FILES = new Set(['types']);
+
+// Code agents that legitimately share a SKILL.md with another code agent.
+// The right-hand side is the slug under .claude/skills/ that owns the manifest.
+// Fixes the silent-fallback bug: a code agent not on this map without its
+// own SKILL.md is a real MISSING finding (not a false OK).
+const SHARED_SKILL_MAP = {
+    'cover-letter': 'apply-pack-polish',
+    'cv-tailor': 'apply-pack-polish',
+    'form-fields': 'apply-pack-polish',
+    'impact-doc': 'apply-pack-polish',
+    'references': 'apply-pack-polish',
+    'referrals': 'apply-pack-polish',
+    'linkedin-dm': 'apply-pack-polish',
+    'why-statement': 'apply-pack-polish',
+    'data-truth-auditor': 'data-truth-audit',
+};
+
+// Per-code-agent evidence paths (relative to REPO_ROOT). Each entry is either:
+//   - a string: a path. If a dir, ALL files inside count as evidence (use for
+//     agent-owned directories).
+//   - an object { path, nameContains }: a path with a basename filter applied
+//     to every file encountered. Use for shared dirs like data/logs where
+//     unrelated files (e.g. dashboard-server.out) would otherwise win.
+// Agents not in this map fall back to the legacy data/logs/<name>* glob.
+const EVIDENCE_PATTERNS = {
+    'apply-pack-polish':     ['data/apply-packs', { path: 'data/logs', nameContains: 'apply-pack' }],
+    'cv-tailor':             ['data/apply-packs', { path: 'data/logs', nameContains: 'cv-tailor' }],
+    'cover-letter':          ['data/apply-packs', { path: 'data/logs', nameContains: 'cover-letter' }],
+    'form-fields':           ['data/apply-packs', { path: 'data/logs', nameContains: 'form-fields' }],
+    'impact-doc':            ['data/apply-packs', { path: 'data/logs', nameContains: 'impact-doc' }],
+    'references':            ['data/apply-packs', { path: 'data/logs', nameContains: 'references' }],
+    'referrals':             ['data/apply-packs', { path: 'data/logs', nameContains: 'referrals' }],
+    'linkedin-dm':           ['data/apply-packs', { path: 'data/logs', nameContains: 'linkedin-dm' }],
+    'why-statement':         ['data/apply-packs', { path: 'data/logs', nameContains: 'why-statement' }],
+    'intel-refresh':         ['data/intel-cache', 'data/intel-refresh-state.json', { path: 'data/logs', nameContains: 'intel-refresh' }],
+    'data-truth-auditor':    ['data/data-truth-audit', { path: 'data/logs', nameContains: 'data-truth' }],
+    'ai-detection-hardener': ['data/ai-detection-cache', 'data/ai-detection-calibration', { path: 'data/logs', nameContains: 'ai-detection' }],
+    'system-maintainer':     [{ path: 'data/logs', nameContains: 'system-maintainer' }, { path: 'data/logs', nameContains: 'audit' }],
+    'network-emailer':       ['data/network-database', { path: 'data/logs', nameContains: 'network-emailer' }],
+    'network-enricher':      ['data/network-database', { path: 'data/logs', nameContains: 'network-enricher' }],
+    'omega-steward':         ['data/omega-cache', { path: 'data/logs', nameContains: 'omega' }],
+};
+
+// Greek-letter autonomous instance lanes. Each lane is tracked via dated
+// deliverables in data/<lane>-*.md (e.g., data/alpha-self-review-2026-05-19.md).
+const GREEK_LANES = ['alpha', 'bravo', 'gamma', 'delta', 'epsilon', 'zeta'];
+
 // ── Utilities ────────────────────────────────────────────────────────────────
 
 function log(msg) {
@@ -77,6 +126,30 @@ function readTextSafe(path) {
 
 function sha256(s) {
     return createHash('sha256').update(s).digest('hex');
+}
+
+// Walk a path (file or dir) and return the most recent mtime found, along
+// with the file that produced it. Recurses into directories. If nameContains
+// is provided, only files whose basename includes that substring are eligible
+// (the directory traversal still recurses through unmatched dirs).
+// Returns null if the path doesn't exist or no matching files were found.
+function mostRecentMtimeUnder(absPath, nameContains = null) {
+    if (!existsSync(absPath)) return null;
+    const st = statSync(absPath);
+    if (st.isFile()) {
+        if (nameContains && !basename(absPath).includes(nameContains)) return null;
+        return { mtimeMs: st.mtimeMs, file: absPath };
+    }
+    if (!st.isDirectory()) return null;
+    let best = null;
+    let entries;
+    try { entries = readdirSync(absPath); } catch { return null; }
+    for (const entry of entries) {
+        const child = join(absPath, entry);
+        const r = mostRecentMtimeUnder(child, nameContains);
+        if (r && (!best || r.mtimeMs > best.mtimeMs)) best = r;
+    }
+    return best;
 }
 
 function parseArgs(argv) {
@@ -104,7 +177,7 @@ function inventoryAgents() {
         .reverse();
 
     if (manifests.length === 0) {
-        log('  no manifest found — falling back to filesystem enumeration');
+        log('  no manifest found — falling back to filesystem + lane enumeration');
         return enumerateAgentsFromFilesystem();
     }
 
@@ -120,97 +193,91 @@ function inventoryAgents() {
     const personaRegex = /\b(ALPHA|BRAVO|GAMMA|DELTA|EPSILON|ZETA|OMEGA)\b/g;
     let m;
     while ((m = personaRegex.exec(content)) !== null) {
-        const name = m[1];
+        const name = m[1].toLowerCase();
         if (!seenAgents.has(name)) {
             seenAgents.add(name);
-            agents.push({ name, manifestSource: manifests[0] });
+            agents.push({ name, kind: 'lane', manifestSource: manifests[0] });
         }
     }
-    log(`  inventoried ${agents.length} agents from manifest`);
+    log(`  inventoried ${agents.length} lanes from manifest`);
     return agents;
 }
 
 function enumerateAgentsFromFilesystem() {
-    // Fallback: list scripts/agents/*.mjs as agents
+    // Fallback: enumerate code agents from scripts/agents/*.mjs (minus shared
+    // modules listed in NON_AGENT_FILES), plus active Greek-letter lanes that
+    // have at least one dated deliverable under data/.
     const agentsDir = join(REPO_ROOT, 'scripts', 'agents');
-    if (!existsSync(agentsDir)) return [];
-    return readdirSync(agentsDir)
+    const codeAgents = !existsSync(agentsDir) ? [] : readdirSync(agentsDir)
         .filter(f => f.endsWith('.mjs'))
-        .map(f => ({ name: basename(f, '.mjs'), manifestSource: 'filesystem-fallback' }));
+        .map(f => basename(f, '.mjs'))
+        .filter(n => !NON_AGENT_FILES.has(n))
+        .map(name => ({ name, kind: 'code', manifestSource: 'filesystem-fallback' }));
+
+    const lanes = discoverLanes();
+    log(`  enumerated ${codeAgents.length} code agents + ${lanes.length} lanes`);
+    return [...codeAgents, ...lanes];
+}
+
+// Discover Greek-letter lanes by scanning data/ for dated deliverables.
+// A lane is "active" if it has at least one data/<lane>-*.{md,json} file.
+function discoverLanes() {
+    if (!existsSync(DATA_DIR)) return [];
+    const dataFiles = readdirSync(DATA_DIR);
+    const lanes = [];
+    for (const lane of GREEK_LANES) {
+        const pattern = new RegExp(`^${lane}-.*\\.(md|json)$`, 'i');
+        if (dataFiles.some(f => pattern.test(f))) {
+            lanes.push({ name: lane, kind: 'lane', manifestSource: 'data/<lane>-*.{md,json}' });
+        }
+    }
+    return lanes;
 }
 
 // ── Phase 2: Health diagnostic per agent ─────────────────────────────────────
 
 function healthCheckAgent(agent) {
+    return agent.kind === 'lane' ? healthCheckLane(agent) : healthCheckCodeAgent(agent);
+}
+
+function healthCheckCodeAgent(agent) {
     const findings = [];
     const name = agent.name.toLowerCase();
+    const STALE_HOURS = 168;
 
-    // 2a. Source code health — does the agent's .mjs file exist + parse?
-    const candidates = [
-        `scripts/agents/${name}.mjs`,
-        `scripts/agents/${name}-steward.mjs`,
-        `scripts/agents/apply-pack-polish.mjs`, // ALPHA's main
-        `scripts/agents/intel-refresh.mjs`,       // ALPHA's secondary
-        `scripts/agents/dashboard-ux-auditor.mjs`,// BRAVO
-        `scripts/agents/data-truth-auditor.mjs`,  // GAMMA
-        `scripts/agents/ai-detection-hardener.mjs`,// DELTA
-        `scripts/agents/system-maintainer.mjs`,    // EPSILON
-        `scripts/agents/network-enricher.mjs`,     // ZETA
-        `scripts/agents/network-emailer.mjs`,      // ZETA
-        `scripts/build-network-database.mjs`,      // ZETA aggregator
-    ];
-
-    const found = candidates.find(c => existsSync(join(REPO_ROOT, c)));
-    if (found) {
+    // 2a. Source code health — does the agent's exact .mjs file exist + parse?
+    // No fallback list: a code agent without its own source file is a real MISSING.
+    const srcRel = `scripts/agents/${name}.mjs`;
+    const srcAbs = join(REPO_ROOT, srcRel);
+    if (existsSync(srcAbs)) {
         try {
-            execSync(`node --check "${join(REPO_ROOT, found)}"`, { stdio: 'pipe' });
-            findings.push({ check: 'source-parses', status: 'OK', file: found });
+            execSync(`node --check "${srcAbs}"`, { stdio: 'pipe' });
+            findings.push({ check: 'source-parses', status: 'OK', file: srcRel });
         } catch (e) {
-            findings.push({ check: 'source-parses', status: 'FAIL', file: found, error: String(e.message).slice(0, 200) });
+            findings.push({ check: 'source-parses', status: 'FAIL', file: srcRel, error: String(e.message).slice(0, 200) });
         }
     } else {
-        findings.push({ check: 'source-file-exists', status: 'MISSING', searched: candidates });
+        findings.push({ check: 'source-file-exists', status: 'MISSING', searched: [srcRel] });
     }
 
-    // 2b. Skill manifest health
-    const skillCandidates = [
-        `.claude/skills/${name}/SKILL.md`,
-        `.claude/skills/apply-pack-polish/SKILL.md`,
-        `.claude/skills/intel-refresh/SKILL.md`,
-        `.claude/skills/dashboard-ux-audit/SKILL.md`,
-        `.claude/skills/data-truth-audit/SKILL.md`,
-        `.claude/skills/ai-detection-hardener/SKILL.md`,
-        `.claude/skills/system-maintainer/SKILL.md`,
-        `.claude/skills/network-database/SKILL.md`,
-    ];
-    const skillFound = skillCandidates.find(c => existsSync(join(REPO_ROOT, c)));
-    findings.push({
-        check: 'skill-manifest-exists',
-        status: skillFound ? 'OK' : 'MISSING',
-        file: skillFound || null,
-    });
-
-    // 2c. Last-run state — most recent log
-    const logsDir = join(DATA_DIR, 'logs');
-    if (existsSync(logsDir)) {
-        const logs = readdirSync(logsDir)
-            .filter(f => f.toLowerCase().includes(name))
-            .sort()
-            .reverse();
-        if (logs.length > 0) {
-            const latest = logs[0];
-            const stat = statSync(join(logsDir, latest));
-            const ageHours = (Date.now() - stat.mtimeMs) / 1000 / 3600;
-            findings.push({
-                check: 'last-run-log',
-                status: ageHours < 168 ? 'OK' : 'STALE',
-                file: latest,
-                ageHours: Math.round(ageHours),
-            });
+    // 2b. Skill manifest health: own SKILL.md → SHARED_SKILL_MAP → MISSING.
+    const ownSkillRel = `.claude/skills/${name}/SKILL.md`;
+    if (existsSync(join(REPO_ROOT, ownSkillRel))) {
+        findings.push({ check: 'skill-manifest-exists', status: 'OK', file: ownSkillRel });
+    } else if (SHARED_SKILL_MAP[name]) {
+        const sharedSlug = SHARED_SKILL_MAP[name];
+        const sharedRel = `.claude/skills/${sharedSlug}/SKILL.md`;
+        if (existsSync(join(REPO_ROOT, sharedRel))) {
+            findings.push({ check: 'skill-manifest-exists', status: 'OK', file: sharedRel, shared_with: sharedSlug });
         } else {
-            findings.push({ check: 'last-run-log', status: 'NO-LOGS' });
+            findings.push({ check: 'skill-manifest-exists', status: 'MISSING', searched: [ownSkillRel, sharedRel] });
         }
+    } else {
+        findings.push({ check: 'skill-manifest-exists', status: 'MISSING', searched: [ownSkillRel] });
     }
+
+    // 2c. Last-run evidence: walk EVIDENCE_PATTERNS or fall back to data/logs/<name>* glob.
+    findings.push(findRecentEvidence(name, STALE_HOURS));
 
     // 2d. Launchd plist (if applicable)
     const plistCandidates = readdirSync(join(REPO_ROOT, 'scripts', 'launchd'))
@@ -219,6 +286,79 @@ function healthCheckAgent(agent) {
         findings.push({ check: 'launchd-plist', status: 'OK', files: plistCandidates });
     }
 
+    return findings;
+}
+
+function findRecentEvidence(name, staleHours) {
+    const patterns = EVIDENCE_PATTERNS[name];
+    if (patterns && patterns.length > 0) {
+        let best = null;
+        for (const p of patterns) {
+            const pathStr = typeof p === 'string' ? p : p.path;
+            const filter = typeof p === 'string' ? null : (p.nameContains || null);
+            const r = mostRecentMtimeUnder(join(REPO_ROOT, pathStr), filter);
+            if (r && (!best || r.mtimeMs > best.mtimeMs)) best = r;
+        }
+        const searched = patterns.map(p => typeof p === 'string' ? p : `${p.path}/*${p.nameContains}*`);
+        if (!best) return { check: 'last-run-evidence', status: 'NO-EVIDENCE', searched };
+        const ageHours = (Date.now() - best.mtimeMs) / 1000 / 3600;
+        return {
+            check: 'last-run-evidence',
+            status: ageHours < staleHours ? 'OK' : 'STALE',
+            file: best.file.replace(REPO_ROOT + '/', ''),
+            ageHours: Math.round(ageHours),
+            searched,
+        };
+    }
+
+    // Legacy fallback: data/logs/<name>* glob.
+    const logsDir = join(DATA_DIR, 'logs');
+    if (!existsSync(logsDir)) {
+        return { check: 'last-run-evidence', status: 'NO-EVIDENCE', searched: ['data/logs'] };
+    }
+    const logs = readdirSync(logsDir).filter(f => f.toLowerCase().includes(name)).sort().reverse();
+    if (logs.length === 0) {
+        return { check: 'last-run-evidence', status: 'NO-EVIDENCE', searched: [`data/logs/*${name}*`] };
+    }
+    const latest = logs[0];
+    const st = statSync(join(logsDir, latest));
+    const ageHours = (Date.now() - st.mtimeMs) / 1000 / 3600;
+    return {
+        check: 'last-run-evidence',
+        status: ageHours < staleHours ? 'OK' : 'STALE',
+        file: `data/logs/${latest}`,
+        ageHours: Math.round(ageHours),
+    };
+}
+
+function healthCheckLane(agent) {
+    const findings = [];
+    const name = agent.name.toLowerCase();
+    const STALE_HOURS = 168;
+
+    // Lanes have no .mjs source — find the most recent dated deliverable instead.
+    if (!existsSync(DATA_DIR)) {
+        findings.push({ check: 'lane-deliverables', status: 'NO-EVIDENCE' });
+        return findings;
+    }
+    const pattern = new RegExp(`^${name}-.*\\.(md|json)$`, 'i');
+    const matches = readdirSync(DATA_DIR)
+        .filter(f => pattern.test(f))
+        .map(f => ({ file: f, mtimeMs: statSync(join(DATA_DIR, f)).mtimeMs }))
+        .sort((a, b) => b.mtimeMs - a.mtimeMs);
+    if (matches.length === 0) {
+        findings.push({ check: 'lane-deliverables', status: 'NO-EVIDENCE' });
+        return findings;
+    }
+    const latest = matches[0];
+    const ageHours = (Date.now() - latest.mtimeMs) / 1000 / 3600;
+    findings.push({
+        check: 'lane-deliverables',
+        status: ageHours < STALE_HOURS ? 'OK' : 'STALE',
+        file: `data/${latest.file}`,
+        ageHours: Math.round(ageHours),
+        total_deliverables: matches.length,
+    });
     return findings;
 }
 
@@ -261,7 +401,7 @@ function generateRecommendations(agents, healthReport, researchFindings) {
         const health = healthReport[agent.name] || [];
 
         // Anti-sycophancy: explicitly call out healthy agents with no recommendations.
-        const failingChecks = health.filter(h => ['FAIL', 'MISSING', 'STALE', 'NO-LOGS'].includes(h.status));
+        const failingChecks = health.filter(h => ['FAIL', 'MISSING', 'STALE', 'NO-LOGS', 'NO-EVIDENCE'].includes(h.status));
 
         if (failingChecks.length === 0) {
             recommendations.push({
@@ -269,6 +409,7 @@ function generateRecommendations(agents, healthReport, researchFindings) {
                 tag: 'NO-CHANGES-THIS-CYCLE',
                 target_agent: agent.name,
                 rationale: 'All health checks pass. No actionable findings this cycle.',
+                research_citations: [],
             });
             continue;
         }
@@ -278,6 +419,68 @@ function generateRecommendations(agents, healthReport, researchFindings) {
             const rec = buildRecommendation(agent, f, nextId++);
             recommendations.push(rec);
         }
+    }
+
+    // refresh-master Phase 4 deliverable 3: pull provider performance audit
+    // + outcome correlation into the recommendation stream. Both modules
+    // return structured proposals that OMEGA includes as NEEDS-APPROVAL.
+    try {
+        const pa = require('../../lib/provider-performance-auditor.mjs');
+        // dynamic import-via-require shim — fall back to fully ESM dynamic import
+    } catch (e) { /* node:require may not work for ESM; fall back below */ }
+    return recommendations;
+}
+
+/**
+ * Append refresh-master Phase 4 reroute + outcome proposals to the
+ * recommendation list. Called from runOmegaSteward after generateRecommendations.
+ */
+async function appendRefreshEcosystemProposals(recommendations) {
+    let nextId = recommendations.length ? Math.max(...recommendations.map(r => r.id || 0)) + 1 : 1;
+    try {
+        const auditor = await import('../../lib/provider-performance-auditor.mjs');
+        const report = auditor.auditProviderPerformance({ windowDays: 7 });
+        const reportPath = auditor.writePerformanceReport(report);
+        const reroutes = auditor.buildReroutingProposals(report);
+        for (const r of reroutes) {
+            recommendations.push({
+                id: nextId++,
+                target_agent: 'refresh-master',
+                tag: r.tag,
+                short_title: r.title,
+                current_state: r.evidence,
+                proposed_change: r.proposal,
+                rationale: 'refresh-master Phase 4 provider-performance auditor (weekly).',
+                research_citations: [{ url: reportPath, retrieved_at: new Date().toISOString(), confidence: 'high' }],
+                risk: 'LOW',
+                estimated_effort: 'S',
+                rollback: 'revert config/refresh-policy.yml provider override',
+            });
+        }
+        log(`phase 4: appended ${reroutes.length} reroute proposals from ${reportPath}`);
+    } catch (e) {
+        log(`phase 4: provider-performance-auditor failed: ${e.message.slice(0, 200)}`);
+    }
+    try {
+        const corr = await import('../../lib/outcome-correlator.mjs');
+        const r = corr.correlateOutcomes();
+        const corrPath = corr.writeOutcomeReport(r);
+        // Surface a single proposal summarizing outcome signals
+        recommendations.push({
+            id: nextId++,
+            target_agent: 'refresh-master',
+            tag: 'NEEDS-DESIGN-DISCUSSION',
+            short_title: `Outcome correlation snapshot — ${Object.values(r.row_counts || {}).reduce((s, x) => s + x, 0)} rows`,
+            current_state: `Conversion: apply=${(r.conversion?.apply_rate * 100 || 0).toFixed(1)}% · interview/applied=${(r.conversion?.interview_rate_among_applied * 100 || 0).toFixed(1)}% · offer/interview=${(r.conversion?.offer_rate_among_interview * 100 || 0).toFixed(1)}%`,
+            proposed_change: `Review ${corrPath} for which cache fields appear in Interview/Offer vs Rejected rows. ${r.sample_size_warning || ''}`,
+            rationale: 'refresh-master Phase 4 outcome correlator (weekly).',
+            research_citations: [{ url: corrPath, retrieved_at: new Date().toISOString(), confidence: 'low' }],
+            risk: 'LOW',
+            estimated_effort: 'M',
+        });
+        log(`phase 4: wrote outcome correlation ${corrPath}`);
+    } catch (e) {
+        log(`phase 4: outcome-correlator failed: ${e.message.slice(0, 200)}`);
     }
     return recommendations;
 }
@@ -319,25 +522,50 @@ function buildRecommendation(agent, finding, id) {
         };
     }
 
-    if (finding.check === 'last-run-log' && finding.status === 'NO-LOGS') {
+    if (finding.check === 'last-run-evidence' && finding.status === 'NO-EVIDENCE') {
+        const paths = Array.isArray(finding.searched) ? finding.searched.join(', ') : 'evidence paths';
         return {
             ...base,
             tag: 'NEEDS-DESIGN-DISCUSSION',
-            short_title: `${agent.name} has never run — investigate`,
-            current_state: 'No logs found for this agent in data/logs/',
-            proposed_change: 'Confirm with Mitchell whether agent is intentionally dormant or wiring is broken. No auto-fix.',
+            short_title: `${agent.name} has no run evidence — investigate`,
+            current_state: `No recent files found under: ${paths}`,
+            proposed_change: 'Confirm with Mitchell whether agent is intentionally dormant or wiring is broken. May need to widen EVIDENCE_PATTERNS or add a launchd schedule.',
             risk: 'LOW',
             estimated_effort: 'XS',
         };
     }
 
-    if (finding.check === 'last-run-log' && finding.status === 'STALE') {
+    if (finding.check === 'last-run-evidence' && finding.status === 'STALE') {
         return {
             ...base,
             tag: 'NEEDS-APPROVAL',
             short_title: `${agent.name} last ran ${finding.ageHours}h ago`,
-            current_state: `Last log: ${finding.file}, ${finding.ageHours}h old.`,
+            current_state: `Last evidence: ${finding.file}, ${finding.ageHours}h old.`,
             proposed_change: 'Check launchd plist (if any) for failed-restart loop. If no plist, surface to Mitchell whether agent should be scheduled.',
+            risk: 'LOW',
+            estimated_effort: 'S',
+        };
+    }
+
+    if (finding.check === 'lane-deliverables' && finding.status === 'NO-EVIDENCE') {
+        return {
+            ...base,
+            tag: 'NEEDS-DESIGN-DISCUSSION',
+            short_title: `Lane ${agent.name} has no deliverables — confirm scope`,
+            current_state: `No data/${agent.name}-*.{md,json} files found.`,
+            proposed_change: 'Confirm whether this lane is intentionally dormant or should be removed from GREEK_LANES.',
+            risk: 'LOW',
+            estimated_effort: 'XS',
+        };
+    }
+
+    if (finding.check === 'lane-deliverables' && finding.status === 'STALE') {
+        return {
+            ...base,
+            tag: 'NEEDS-APPROVAL',
+            short_title: `Lane ${agent.name} hasn't shipped in ${finding.ageHours}h`,
+            current_state: `Most recent deliverable: ${finding.file}, ${finding.ageHours}h old.`,
+            proposed_change: 'Surface to Mitchell whether the lane should be re-activated or retired.',
             risk: 'LOW',
             estimated_effort: 'S',
         };
@@ -468,7 +696,8 @@ export async function runOmegaSteward(opts = {}) {
         const agents = inventoryAgents();
         const health = phaseHealth(agents);
         const research = phaseResearch(agents);
-        const recommendations = generateRecommendations(agents, health, research);
+        let recommendations = generateRecommendations(agents, health, research);
+        recommendations = await appendRefreshEcosystemProposals(recommendations);
         const path = writeProposalFile(recommendations);
         log(`STOPPING at approval gate. Review ${path} and append approvals to data/omega-approvals.md.`);
         return { path, recommendations };
