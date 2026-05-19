@@ -70,6 +70,14 @@ If the final score is >= 4.5, generate a draft of responses for the application 
 
 ## Step 5 — Update Tracker
 
-Record it in `data/applications.md` with all columns including Report and PDF as ✅.
+Write one TSV tracker addition to `batch/tracker-additions/{###}-{company-slug}.tsv`, then run `node merge-tracker.mjs` to merge it into `data/applications.md`.
+
+Use the canonical TSV order:
+
+```tsv
+{num}	{date}	{company}	{role}	Evaluated	{score}/5	✅	[{num}](reports/{num}-{company-slug}-{YYYY-MM-DD}.md)	{one-line note}
+```
+
+Do not add a new tracker row by editing `data/applications.md` directly. Direct edits are only allowed for status or notes updates on existing rows.
 
 **If any step fails**, continue with the next ones and mark the failed step as pending in the tracker.

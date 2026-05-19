@@ -20,16 +20,24 @@ const PRIVATE_HOST_PATTERNS = [
   /^192\.168\./,
   /^172\.(1[6-9]|2\d|3[01])\./,
   /^169\.254\./,
+  /^::$/,
   /^::1$/,
-  /^fc[0-9a-f]{2}:/i,
-  /^fe80:/i,
+  /^::ffff:/i,
+  /^f[cd][0-9a-f]{2}:/i,
+  /^fe[89ab][0-9a-f]:/i,
 ];
+
+function normalizeHostnameForGuard(hostname) {
+  const normalized = hostname.toLowerCase().replace(/^\[(.*)\]$/, '$1');
+  const ipv4Mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  return ipv4Mapped ? ipv4Mapped[1] : normalized;
+}
 
 // Returns null when the URL is safe to fetch, otherwise a structured guard
 // result with a stable `code` (used for routing in scan.mjs) plus a human
 // `reason`. Stable codes — not regex on reason strings — drive downstream
 // dispatch so the wording can change freely without breaking callers.
-function rejectPrivateOrInvalid(url) {
+export function rejectPrivateOrInvalid(url) {
   let parsed;
   try {
     parsed = new URL(url);
@@ -39,7 +47,8 @@ function rejectPrivateOrInvalid(url) {
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return { code: 'unsupported_protocol', reason: `unsupported protocol ${parsed.protocol}` };
   }
-  if (PRIVATE_HOST_PATTERNS.some((pattern) => pattern.test(parsed.hostname))) {
+  const hostname = normalizeHostnameForGuard(parsed.hostname);
+  if (PRIVATE_HOST_PATTERNS.some((pattern) => pattern.test(hostname))) {
     return { code: 'blocked_host', reason: `blocked host ${parsed.hostname}` };
   }
   return null;

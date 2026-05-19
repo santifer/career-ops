@@ -44,6 +44,7 @@ Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML c
 - **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; detalle de una oferta `https://{company}.bamboohr.com/careers/{id}/detail`
 - **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
+- **USAJOBS**: `https://data.usajobs.gov/api/search`
 - **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
@@ -52,6 +53,7 @@ Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML c
 - `ashby`: GraphQL `ApiJobBoardWithTeams` con `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; construir URL pública si no viene en payload)
 - `bamboohr`: lista `result[]` → `jobOpeningName`, `id`; construir URL de detalle `https://{company}.bamboohr.com/careers/{id}/detail`; para leer el JD completo, hacer GET del detalle y usar `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
 - `lever`: array raíz `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
+- `usajobs`: `SearchResult.SearchResultItems[]` → `PositionTitle`, `PositionID`, `OrganizationName`, `PositionLocation`; requires `usajobs_keywords` and may require `usajobs_api_key`
 - `teamtailor`: RSS items → `title`, `link`
 - `workday`: `jobPostings[]`/`jobPostings` (según tenant) → `title`, `externalPath` o URL construida desde el host
 

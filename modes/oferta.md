@@ -200,7 +200,7 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### 2. Record in tracker
 
-**ALWAYS** record in `data/applications.md`:
+**ALWAYS** record the evaluation through the TSV merge flow:
 - Next sequential number
 - Current date
 - Company
@@ -209,9 +209,14 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Status: `Evaluated`
 - PDF: ❌ (or ✅ if auto-pipeline generated PDF)
 - Report: link relative to the report .md (e.g., `[001](reports/001-company-2026-01-01.md)`)
+- One-line note
 
-**Tracker format:**
+Write one TSV file to `batch/tracker-additions/{###}-{company-slug}.tsv`:
 
-```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report |
+```tsv
+{num}	{date}	{company}	{role}	Evaluated	{score}/5	{pdf_emoji}	[{num}](reports/{num}-{company-slug}-{YYYY-MM-DD}.md)	{one-line note}
 ```
+
+Then run `node merge-tracker.mjs` to merge the addition into `data/applications.md`.
+
+Do not add a new tracker row by editing `data/applications.md` directly. Direct edits are only allowed for status or notes updates on existing rows.

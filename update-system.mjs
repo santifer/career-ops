@@ -39,8 +39,11 @@ const SYSTEM_PATHS = [
   'modes/auto-pipeline.md',
   'modes/contacto.md',
   'modes/deep.md',
+  'modes/interview-prep.md',
   'modes/ofertas.md',
   'modes/pipeline.md',
+  'modes/patterns.md',
+  'modes/followup.md',
   'modes/project.md',
   'modes/tracker.md',
   'modes/training.md',
@@ -50,6 +53,7 @@ const SYSTEM_PATHS = [
   'modes/ja/',
   'modes/pt/',
   'modes/ru/',
+  'modes/tr/',
   'CLAUDE.md',
   'AGENTS.md',
   'GEMINI.md',
@@ -77,17 +81,46 @@ const SYSTEM_PATHS = [
   'fonts/',
   '.agents/',
   '.claude/skills/',
+  '.qwen/',
+  '.claude-plugin/',
   '.gemini/commands/',
   'docs/',
   'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
+  'CONTRIBUTORS.md',
+  'CHANGELOG.md',
+  'CODE_OF_CONDUCT.md',
+  'GOVERNANCE.md',
+  'LEGAL_DISCLAIMER.md',
+  'SECURITY.md',
+  'SUPPORT.md',
+  'TRADEMARK.md',
   'README.md',
+  'README.cn.md',
+  'README.es.md',
+  'README.ja.md',
+  'README.ko-KR.md',
+  'README.pt-BR.md',
+  'README.ru.md',
+  'README.zh-TW.md',
   'LICENSE',
   'CITATION.cff',
   '.github/',
+  '.env.example',
+  '.release-please-manifest.json',
+  'release-please-config.json',
+  'renovate.json',
+  'flake.nix',
+  'flake.lock',
   'package.json',
+];
+
+// System paths intentionally removed from current releases. These are deleted
+// only when absent from FETCH_HEAD, so a future upstream reintroduction wins.
+const REMOVED_SYSTEM_PATHS = [
+  '.opencode/commands/',
 ];
 
 // User layer paths — NEVER touch these (safety check)
@@ -150,6 +183,23 @@ function revertPaths(paths) {
 function addPaths(paths) {
   if (paths.length === 0) return;
   git('add', '--', ...paths);
+}
+
+function treeHasPath(ref, path) {
+  const pathspec = path.endsWith('/') ? path.slice(0, -1) : path;
+  try {
+    git('cat-file', '-e', `${ref}:${pathspec}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function removeSystemPath(path) {
+  const pathspec = path.endsWith('/') ? path.slice(0, -1) : path;
+  git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec);
+  rmSync(join(ROOT, pathspec), { recursive: true, force: true });
+  return pathspec;
 }
 
 // ── CHECK ───────────────────────────────────────────────────────
@@ -305,6 +355,13 @@ async function apply() {
       }
     }
 
+    // 3b. Remove system-owned paths that the target release deleted.
+    const removed = [];
+    for (const path of REMOVED_SYSTEM_PATHS) {
+      if (treeHasPath('FETCH_HEAD', path)) continue;
+      removed.push(removeSystemPath(path));
+    }
+
     // 4. Validate: check NO user files were touched.
     //
     // Track which user paths the update unexpectedly touched so we
@@ -391,7 +448,7 @@ async function apply() {
     }
 
     console.log(`\nUpdate complete: v${local} → v${remote}`);
-    console.log(`Updated ${updated.length} system paths.`);
+    console.log(`Updated ${updated.length} system paths; removed ${removed.length} stale system path(s).`);
     console.log(`Rollback available: node update-system.mjs rollback`);
 
   } finally {
@@ -433,18 +490,14 @@ function rollback() {
     // that but is a larger change; tracked separately if it ever bites.
     const restored = [];
     const removed = [];
-    for (const path of SYSTEM_PATHS) {
+    const rollbackPaths = [...SYSTEM_PATHS, ...REMOVED_SYSTEM_PATHS];
+    for (const path of rollbackPaths) {
       try {
         git('checkout', latest, '--', path);
         restored.push(path);
       } catch (err) {
         const pathspec = path.endsWith('/') ? path.slice(0, -1) : path;
-        let existedInBackup = true;
-        try {
-          git('cat-file', '-e', `${latest}:${pathspec}`);
-        } catch {
-          existedInBackup = false;
-        }
+        const existedInBackup = treeHasPath(latest, path);
         if (existedInBackup) {
           throw err;
         }
@@ -453,12 +506,7 @@ function rollback() {
         // for tracked files; `rmSync` cleans up the untracked-but-
         // on-disk case (e.g. an apply() that crashed between checkout
         // and commit, leaving the path untracked locally).
-        git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec);
-        try {
-          rmSync(join(ROOT, pathspec), { recursive: true, force: true });
-        } catch {
-          // Already gone, or not present on disk — fine.
-        }
+        removeSystemPath(pathspec);
         removed.push(pathspec);
       }
     }

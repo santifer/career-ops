@@ -346,7 +346,7 @@ search_queries:
 #
 # Provider routing (scan.mjs):
 #   By default each entry is auto-detected from `careers_url` against the
-#   loaded providers in providers/*.mjs (ashby, greenhouse, lever — the
+#   loaded providers in providers/*.mjs (ashby, greenhouse, lever, usajobs — the
 #   first one whose detect() matches wins, alphabetical order).
 #
 #   Optional fields on a tracked_companies entry:

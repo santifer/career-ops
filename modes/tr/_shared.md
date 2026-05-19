@@ -2,7 +2,7 @@
 
 <!-- ============================================================
      BU DOSYA OTOMATİK GÜNCELLENEBİLİR. Buraya kişisel veri ekleme.
-     
+
      Özelleştirmeler modes/_profile.md dosyasına gider (hiçbir zaman
      otomatik güncellenmez). Bu dosya sistem kurallarını, puanlama
      mantığını ve her sürümde gelişen araç yapılandırmasını içerir.

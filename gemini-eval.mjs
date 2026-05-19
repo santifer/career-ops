@@ -28,7 +28,7 @@
  * `modelName` below and the `--model` examples accordingly.
  */
 
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -37,7 +37,7 @@ import { fileURLToPath } from 'url';
 // ---------------------------------------------------------------------------
 try {
   const { config } = await import('dotenv');
-  config();
+  config({ quiet: true });
 } catch {
   // dotenv is optional — fall back to process.env if not installed
 }
@@ -60,6 +60,7 @@ const PATHS = {
   profileYml:  join(ROOT, 'config', 'profile.yml'),
   reports:     join(ROOT, 'reports'),
   tracker:     join(ROOT, 'data', 'applications.md'),
+  trackerAdditions: join(ROOT, 'batch', 'tracker-additions'),
 };
 
 // ---------------------------------------------------------------------------
@@ -82,6 +83,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
+    --url <url>      Source job posting URL for the saved report header
     --model <name>   Gemini model to use (default: gemini-2.5-flash)
     --no-save        Do not save report to reports/ directory
     --help           Show this help
@@ -102,6 +104,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 let jdText = '';
 let modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 let saveReport = true;
+let sourceUrl = 'N/A';
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--file' && args[i + 1]) {
@@ -111,6 +114,9 @@ for (let i = 0; i < args.length; i++) {
       process.exit(1);
     }
     jdText = readFileSync(filePath, 'utf-8').trim();
+    if (sourceUrl === 'N/A') sourceUrl = `local:${filePath}`;
+  } else if (args[i] === '--url' && args[i + 1]) {
+    sourceUrl = args[++i];
   } else if (args[i] === '--model' && args[i + 1]) {
     modelName = args[++i];
   } else if (args[i] === '--no-save') {
@@ -161,14 +167,28 @@ function nextReportNumber() {
   return String(Math.max(...files) + 1).padStart(3, '0');
 }
 
-// Lazy import — only used when saving
-let readdirSync;
-try {
-  ({ readdirSync } = await import('fs'));
-} catch { /* already imported above via named exports */ }
-// Use named import fallback
-if (!readdirSync) {
-  readdirSync = (await import('fs')).readdirSync;
+function slugify(value, fallback = 'unknown') {
+  const slug = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  return slug || fallback;
+}
+
+function normalizeScore(rawScore) {
+  const match = String(rawScore || '').match(/(\d+(?:\.\d+)?)/);
+  if (!match) return 'N/A';
+  const value = Number.parseFloat(match[1]);
+  if (!Number.isFinite(value)) return 'N/A';
+  return `${value.toFixed(1)}/5`;
+}
+
+function cleanTsvField(value) {
+  return String(value ?? '')
+    .replace(/\r?\n/g, ' ')
+    .replace(/\t/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -318,15 +338,17 @@ if (saveReport) {
 
     const num         = nextReportNumber();
     const today       = new Date().toISOString().split('T')[0];
-    const companySlug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const companySlug = slugify(company);
     const filename    = `${num}-${companySlug}-${today}.md`;
     const reportPath  = join(PATHS.reports, filename);
+    const scoreDisplay = normalizeScore(score);
 
     const reportContent = `# Evaluation: ${company} — ${role}
 
 **Date:** ${today}
 **Archetype:** ${archetype}
-**Score:** ${score}/5
+**Score:** ${scoreDisplay}
+**URL:** ${sourceUrl}
 **Legitimacy:** ${legitimacy}
 **PDF:** pending
 **Tool:** Gemini (${modelName})
@@ -339,14 +361,29 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
     writeFileSync(reportPath, reportContent, 'utf-8');
     console.log(`\n✅  Report saved: reports/${filename}`);
 
-    // Append tracker entry reminder
-    console.log(`\n📊  Tracker entry (add to data/applications.md):`);
-    console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score} | Evaluada | ❌ | [${num}](reports/${filename}) |`);
+    mkdirSync(PATHS.trackerAdditions, { recursive: true });
+    const tsvPath = join(PATHS.trackerAdditions, `${num}-${companySlug}.tsv`);
+    const note = `Gemini eval. Legitimacy: ${legitimacy}`;
+    const tsvLine = [
+      num,
+      today,
+      company,
+      role,
+      'Evaluated',
+      scoreDisplay,
+      '❌',
+      `[${num}](reports/${filename})`,
+      note,
+    ].map(cleanTsvField).join('\t') + '\n';
+
+    writeFileSync(tsvPath, tsvLine, 'utf-8');
+    console.log(`📊  Tracker TSV saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
+    console.log('    Run `node merge-tracker.mjs` to merge it into data/applications.md.');
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
   }
 }
 
 console.log('\n' + '─'.repeat(66));
-console.log(`  Score: ${score}/5  |  Archetype: ${archetype}  |  Legitimacy: ${legitimacy}`);
+console.log(`  Score: ${normalizeScore(score)}  |  Archetype: ${archetype}  |  Legitimacy: ${legitimacy}`);
 console.log('─'.repeat(66) + '\n');

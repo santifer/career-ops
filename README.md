@@ -115,7 +115,7 @@ See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
 ## Gemini CLI Integration
 
-Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) natively — the same way it supports Claude Code and OpenCode. All 15 slash commands are available, using the same `modes/*.md` evaluation logic.
+Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) through `GEMINI.md`, which points Gemini at the same agent instructions used by Claude Code and Codex. The repo also includes a standalone Gemini API evaluator for users who do not want to install the CLI.
 
 ### Option A — Native Gemini CLI (Recommended)
 
@@ -131,15 +131,13 @@ gemini auth
 cd career-ops
 gemini
 
-# 4. Use slash commands just like Claude Code
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops-evaluate --file ./jds/openai.txt
-/career-ops-scan
-/career-ops-pdf
-/career-ops-tracker
+# 4. Ask Gemini to use career-ops
+Evaluate this JD with career-ops and save the report.
+Scan my configured portals with career-ops.
+Generate a tailored PDF for this role with career-ops.
 ```
 
-The `GEMINI.md` file is auto-loaded as context. All 15 commands are defined in `.gemini/commands/*.toml`.
+The `GEMINI.md` file is auto-loaded as context. This release does not ship `.gemini/commands/*.toml` slash-command files; use natural-language prompts in Gemini CLI, or use the standalone script below for API-based evaluations.
 
 ### Option B — Standalone API Script (No CLI install needed)
 
@@ -248,7 +246,7 @@ career-ops/
 ├── config/
 │   └── profile.example.yml      # Template for your profile
 ├── modes/                       # 14 skill modes
-│   ├── _shared.md               # Shared context (customize this)
+│   ├── _shared.md               # Shared system context (do not personalize)
 │   ├── oferta.md                # Single evaluation
 │   ├── pdf.md                   # PDF generation
 │   ├── scan.md                  # Portal scanner

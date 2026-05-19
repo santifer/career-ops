@@ -88,6 +88,7 @@ console.log('\n3. Liveness classification');
 
 try {
   const { classifyLiveness } = await import(pathToFileURL(join(ROOT, 'liveness-core.mjs')).href);
+  const { rejectPrivateOrInvalid } = await import(pathToFileURL(join(ROOT, 'liveness-browser.mjs')).href);
 
   const expiredChromeApply = classifyLiveness({
     finalUrl: 'https://example.com/jobs/closed-role',
@@ -132,6 +133,20 @@ try {
     pass('Closed postings with "Applications have closed" banner are detected');
   } else {
     fail(`Closed mycareersfuture posting misclassified as ${closedMycareersfuture.result}`);
+  }
+
+  const privateHosts = [
+    'http://[::1]/',
+    'http://[fc00::1]/',
+    'http://[fd00::1]/',
+    'http://[fe80::1]/',
+    'http://[::ffff:127.0.0.1]/',
+  ];
+  const unblockedPrivateHost = privateHosts.find(url => rejectPrivateOrInvalid(url)?.code !== 'blocked_host');
+  if (!unblockedPrivateHost) {
+    pass('Private IPv6 and IPv4-mapped hosts are blocked before Playwright navigation');
+  } else {
+    fail(`Private host was not blocked: ${unblockedPrivateHost}`);
   }
 } catch (e) {
   fail(`Liveness classification tests crashed: ${e.message}`);
