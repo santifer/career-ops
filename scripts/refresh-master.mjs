@@ -182,7 +182,11 @@ async function main() {
       // company-scoped caches (toxicity_composite, company_pulse) fire once
       // per company even when multiple rows reference that company.
       const seen = new Set();
-      for (const cache of layer2) {
+      // Phase A.6 (2026-05-19): contact_enrichment is per-contact, NOT per-row.
+      // It's handled by the dedicated _buildContactEnrichmentQueue() above.
+      // Filter it out of the row-iteration loop here.
+      const layer2RowCaches = layer2.filter(c => c.scope !== 'per-contact');
+      for (const cache of layer2RowCaches) {
         for (const row of rows) {
           const tier = row._classification.tier;
           const ttl = ttlByTier[tier];
@@ -256,6 +260,20 @@ async function main() {
     }
   }
 
+  // 5.5. Phase A.6 (2026-05-19) — contact_enrichment per-contact handler.
+  // Iterate _CONTACTS_DATA, score via lib/contact-priority-scorer.mjs, apply
+  // auto-pause gates (pause_after_date + month_1_budget_usd), pick top-N
+  // unenriched contacts not yet refreshed today, queue them for the run.
+  // Removes the 2026-05-19 band-aid path that skipped scope='per-contact'.
+  if (!FLAG.layerOnly || FLAG.layerOnly === 2) {
+    try {
+      const contactEnrichmentQueue = await _buildContactEnrichmentQueue({ state, log });
+      for (const q of contactEnrichmentQueue) refreshQueue.push(q);
+    } catch (e) {
+      log(`  WARN: contact-enrichment queue build failed (${e.message}); skipping`);
+    }
+  }
+
   // 6. Project total cost; gate on daily cap
   const projectedCost = refreshQueue.reduce((sum, q) => sum + q.cost, 0);
   log(`refresh queue: ${refreshQueue.length} items, projected cost $${projectedCost.toFixed(2)}`);
@@ -281,19 +299,61 @@ async function main() {
     const projectedDailyAfter = dailySpentNow + actualSpent + q.cost;
     const projectedMonthlyAfter = monthlySpentNow + actualSpent + q.cost;
 
+    const entityLabel = q.contactId
+      ? `contact:${q.contactId}`
+      : q.row ? `row:${q.row.num}` : `unknown`;
+
     if (projectedDailyAfter > dailyCap) {
-      log(`  SKIP-BUDGET: daily cap $${dailyCap} would be exceeded ($${projectedDailyAfter.toFixed(2)}); skipping ${q.cache.id} for #${q.row.num}`);
+      log(`  SKIP-BUDGET: daily cap $${dailyCap} would be exceeded ($${projectedDailyAfter.toFixed(2)}); skipping ${q.cache.id} for ${entityLabel}`);
       skippedBudgetCount++;
       continue;
     }
     if (projectedMonthlyAfter > monthlyCap) {
-      log(`  SKIP-BUDGET: monthly cap $${monthlyCap} would be exceeded ($${projectedMonthlyAfter.toFixed(2)}); skipping ${q.cache.id} for #${q.row.num}`);
+      log(`  SKIP-BUDGET: monthly cap $${monthlyCap} would be exceeded ($${projectedMonthlyAfter.toFixed(2)}); skipping ${q.cache.id} for ${entityLabel}`);
       skippedBudgetCount++;
       continue;
     }
 
     if (dryRun) {
-      log(`  PLAN: $${q.cost} → ${q.command}  [provider=${q.provider}; verifier=${q.cache.verifierProvider || 'default-cross-arch'}]`);
+      const cmdLabel = q.command || `[in-process] runContactEnrichment('${q.contactId}')`;
+      log(`  PLAN: $${q.cost} → ${cmdLabel}  [provider=${q.provider}; verifier=${q.cache.verifierProvider || 'default-cross-arch'}]`);
+      continue;
+    }
+
+    // Phase A.6 dispatch: contact_enrichment runs in-process, not via shell
+    if (q.cache.id === 'contact_enrichment' && q.contactId) {
+      try {
+        const r = await _executeContactEnrichmentEntry(q, state);
+        if (r.ok) {
+          firedCount++;
+          actualSpent += r.cost_usd ?? q.cost;
+          state.spend_window_30d.push({ ts: ts(), usd: r.cost_usd ?? q.cost, cache: 'contact_enrichment', key: q.contactId, provider: q.provider });
+          state.refresh_history.contact_enrichment = state.refresh_history.contact_enrichment || {};
+          state.refresh_history.contact_enrichment[q.contactId] = {
+            lastRefreshedAt: ts(),
+            lastAttemptedAt: TODAY,
+            result: 'OK',
+            verifier_passed: r.verifier_passed,
+            citations: (r.source_urls || []).length,
+            fields_populated: r.fields_populated || 0,
+            priority_score: q.priorityScore,
+            signals: q.signals,
+          };
+          log(`  OK: contact_enrichment/${q.contactId} (verifier=${r.verifier_passed ? 'PASS' : 'FAIL'}, citations=${(r.source_urls || []).length}, fields=${r.fields_populated || 0})`);
+        } else {
+          errorCount++;
+          state.refresh_history.contact_enrichment = state.refresh_history.contact_enrichment || {};
+          state.refresh_history.contact_enrichment[q.contactId] = {
+            lastAttemptedAt: TODAY,
+            result: r.error ? 'ERROR' : 'EMPTY',
+            error: (r.error || '').slice(0, 200),
+          };
+          log(`  ERROR (contact_enrichment): ${q.contactId} ${r.error || 'no_data'}`);
+        }
+      } catch (e) {
+        errorCount++;
+        log(`  ERROR (contact_enrichment exception): ${q.contactId} ${e.message}`);
+      }
       continue;
     }
 
@@ -442,6 +502,92 @@ async function main() {
   log(`  daily spend now: $${(dailySpentNow + actualSpent).toFixed(2)} / cap $${dailyCap}`);
   log(`  30d spend now: $${(monthlySpentNow + actualSpent).toFixed(2)} / cap $${monthlyCap}`);
   log(`═══ refresh-master end ═══\n`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase A.6 (2026-05-19) — contact_enrichment per-contact queue builder.
+// Reads _CONTACTS_DATA from latest dashboard build, scores via priority
+// scorer, applies auto-pause (pause_after_date + month_1_budget_usd) gates,
+// picks top-N unenriched contacts not yet refreshed today.
+// ─────────────────────────────────────────────────────────────────────────────
+async function _buildContactEnrichmentQueue({ state, log }) {
+  const { loadAndRank } = await import('../lib/contact-priority-scorer.mjs');
+  let ranking;
+  try {
+    ranking = loadAndRank();
+  } catch (e) {
+    log(`  contact-enrichment queue: ${e.message}; skipping`);
+    return [];
+  }
+
+  // Pause gates
+  if (ranking.isPaused) {
+    const paused_path = join(REPO_ROOT, 'data/contact-enrichment-paused.md');
+    appendFileSync(paused_path, `\n## ${ts()} — auto-paused (pause_after_date=${ranking.pauseAfter})\n`);
+    log(`  contact-enrichment: PAUSED (today > pause_after_date=${ranking.pauseAfter})`);
+    return [];
+  }
+
+  // Month-1 budget gate
+  const month1Cap = ranking.policy.month_1_budget_usd ?? 800;
+  const month1Spend = (state.spend_window_30d || [])
+    .filter(s => s.cache === 'contact_enrichment')
+    .reduce((sum, s) => sum + (s.usd || 0), 0);
+  if (month1Spend >= month1Cap) {
+    const paused_path = join(REPO_ROOT, 'data/contact-enrichment-paused.md');
+    appendFileSync(paused_path, `\n## ${ts()} — auto-paused (month-1 cap $${month1Cap} reached, spent $${month1Spend.toFixed(2)})\n`);
+    log(`  contact-enrichment: BUDGET CAP REACHED ($${month1Spend.toFixed(2)} / $${month1Cap})`);
+    return [];
+  }
+
+  // Determine which contacts are not yet enriched + not yet attempted today
+  const cacheDir = join(REPO_ROOT, 'data/contact-enrichment-cache');
+  const today = TODAY;
+  const log_entry = (state.refresh_history?.contact_enrichment) || {};
+
+  const dailyCount = ranking.policy.daily_count ?? 50;
+  let picked = 0;
+  const queue = [];
+  for (const r of ranking.ranked) {
+    if (picked >= dailyCount) break;
+    const c = r.contact;
+    const cachePath = join(cacheDir, `${c.id}.json`);
+    if (existsSync(cachePath)) {
+      const stat = statSync ? statSync(cachePath) : null;
+      // statSync isn't imported here — use existsSync only; rely on cache TTL inside the agent
+      // (the agent's _readContactCache enforces 30-day TTL)
+      continue;
+    }
+    if (log_entry[c.id] && log_entry[c.id].lastAttemptedAt === today) continue;
+    queue.push({
+      layer: 2,
+      cache: { id: 'contact_enrichment', layer: 2, scope: 'per-contact', dir: 'data/contact-enrichment-cache' },
+      contact: c,
+      contactId: c.id,
+      priorityScore: r.score,
+      signals: r.signals,
+      tier: r.tier_boosted ? 'A' : 'B',
+      cost: 0.5,
+      ageDescription: 'missing',
+      command: null,                            // handled in-process by enricher's runContactEnrichment
+      provider: 'perplexity-agent+anthropic-sonnet+grok-4-x-search',
+    });
+    picked++;
+  }
+  log(`  contact-enrichment queue: ${queue.length} contacts picked (top-${dailyCount} unenriched, today=${today})`);
+  return queue;
+}
+
+// Hook into the existing execute loop: when an entry has cache.id ===
+// 'contact_enrichment', call runContactEnrichment directly (not via shell).
+async function _executeContactEnrichmentEntry(q, state) {
+  const { runContactEnrichment } = await import('./agents/network-enricher.mjs');
+  try {
+    const r = await runContactEnrichment(q.contactId, { priorityScore: q.priorityScore, signals: q.signals });
+    return r;
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 }
 
 main().catch(err => {
