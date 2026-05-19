@@ -20235,11 +20235,27 @@ function _scopedFullDrainCost(pCmp) {
 
 function _renderPerCompanyRow(r) {
   const checked = !r.excluded;
+  // 2026-05-19 (Mitchell cohesion fix #3): rows span 3 stages — evaluated /
+  // queued (batch queue) / pending (pipeline.md unchecked). Queued + pending
+  // have no eval score, so show a stage chip in the Score column instead.
+  const stage = r.stage || 'evaluated';
+  const isEvaluated = stage === 'evaluated';
   const score = (r.top_role_score != null) ? r.top_role_score.toFixed(2) : '—';
   const scoreClass = (r.top_role_score == null) ? 'pcp-score pcp-score-low'
                    : (r.top_role_score >= 4.5)  ? 'pcp-score'
                    : (r.top_role_score >= 4.0)  ? 'pcp-score pcp-score-mid'
                                                 : 'pcp-score pcp-score-low';
+  const stageChip = isEvaluated
+    ? ''
+    : '<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;letter-spacing:0.04em;'
+      + (stage === 'queued'
+          ? 'background:rgba(124,140,255,0.12);color:#a4b1ff;border:1px solid rgba(124,140,255,0.25)'
+          : 'background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)')
+      + '" title="'
+      + (stage === 'queued'
+          ? 'In batch queue (batch/triage-advance.tsv) - waiting for batch eval. Process All will evaluate this run.'
+          : 'In pipeline.md unchecked - waiting for triage. Process All will triage + evaluate this run.')
+      + '">' + (stage === 'queued' ? 'queued' : 'to triage') + '</span>';
   const ttoHtml = (r.tto_weeks != null)
     ? '<span class="pcp-tto" data-tier="' + _esc(r.tto_tier || 'med') + '" title="' + _esc(r.tto_tier || '') + ' · confidence ' + _esc(r.tto_confidence || 'unknown') + '">' + r.tto_weeks + 'w</span>'
     : '<span class="pcp-tto" data-tier="med" title="unknown TTO — fallback default">—</span>';
@@ -20270,14 +20286,23 @@ function _renderPerCompanyRow(r) {
   const excludedBadge = r.excluded ? '<span class="pcp-excluded-badge" title="auto-excluded (defense or manual trash)">excluded</span> ' : '';
   const packDisabled = (r.top_role_num == null) ? ' disabled title="no row number — apply-pack needs --row"' : ' title="Skip to apply-pack — runs build-apply-pack.mjs --row=' + r.top_role_num + '"';
   const slug = _esc(r.slug || '');
+  // For non-evaluated stages, surface role_count even when top_role is null
+  // (queued rows from triage-advance.tsv don't carry a role label).
+  const roleLine = r.top_role
+    ? '<span class="pcp-role-sub" title="' + _esc(r.top_role) + '">' + (r.role_count > 1 ? '(' + r.role_count + ' roles) ' : '') + _esc(r.top_role) + '</span>'
+    : (r.role_count > 1
+        ? '<span class="pcp-role-sub" style="opacity:0.6">' + r.role_count + ' roles in this company</span>'
+        : '');
   return ''
-    + '<tr class="' + (r.excluded ? 'pcp-row-excluded' : '') + '" data-slug="' + slug + '">'
+    + '<tr class="' + (r.excluded ? 'pcp-row-excluded' : '') + '" data-slug="' + slug + '" data-stage="' + stage + '">'
     +   '<td><input type="checkbox" class="pcp-checkbox" data-slug="' + slug + '" ' + (checked ? 'checked' : '') + (r.excluded ? ' disabled' : '') + ' onchange="_pcpToggleRow(this)" aria-label="Include ' + _esc(r.company) + '"></td>'
     +   '<td>'
     +     '<div class="pcp-company-cell" title="' + _esc(r.company) + '">' + excludedBadge + _esc(r.company) + '</div>'
-    +     (r.top_role ? '<span class="pcp-role-sub" title="' + _esc(r.top_role) + '">' + (r.role_count > 1 ? '(' + r.role_count + ' roles) ' : '') + _esc(r.top_role) + '</span>' : '')
+    +     roleLine
     +   '</td>'
-    +   '<td><span class="' + scoreClass + '" aria-label="Top role score ' + score + '">' + score + '</span></td>'
+    +   '<td>' + (isEvaluated
+          ? '<span class="' + scoreClass + '" aria-label="Top role score ' + score + '">' + score + '</span>'
+          : stageChip) + '</td>'
     +   '<td>' + ttoHtml + '</td>'
     +   '<td>' + toxHtml + '</td>'
     +   '<td>' + netHtml + '</td>'

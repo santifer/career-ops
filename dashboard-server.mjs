@@ -45,6 +45,7 @@ import {
 // _stale_warmth-flagged contacts so the per-company preview can render
 // honest fresh-vs-stale counts.
 import { findContactsAtCompany as networkFindContactsAtCompany } from './lib/network-graph.mjs';
+import { guessCompany as _guessCompanyFromUrl } from './lib/ats-utils.mjs';
 
 // ── Application enrichment for outreach API ────────────────────────────────
 // Join contact.linked_application_id → applications.md row so the dashboard
@@ -1277,36 +1278,132 @@ function loadCompanyIntelCacheState(slug) {
   }
 }
 
+// 2026-05-19 (Mitchell feedback — cohesion fix #3): pipeline.md unchecked
+// items are written as "- [ ] URL | Company | Role | Date". Extract company
+// from the third pipe-separated field; fall back to URL guessing when the
+// row is just "(from email)" or similar placeholder.
+function _loadPipelineMdRows() {
+  const fp = join(ROOT, 'data/pipeline.md');
+  if (!existsSync(fp)) return [];
+  const out = [];
+  for (const line of readFileSync(fp, 'utf-8').split('\n')) {
+    if (!line.startsWith('- [ ]')) continue;
+    const body = line.slice(5).trim();
+    const parts = body.split('|').map(s => s.trim());
+    const url = parts[0] || '';
+    let company = parts[1] || '';
+    if (!company || company === '(from email)' || company === 'view') {
+      try { company = _guessCompanyFromUrl(url) || 'Unknown'; }
+      catch { company = 'Unknown'; }
+    }
+    const role = parts[2] || null;
+    out.push({ url, company, role });
+  }
+  return out;
+}
+
+// triage-advance.tsv columns: url\ttier\tscore\tarchetype\treason. No company
+// column — extract via ats-utils.guessCompany() the same way triage.mjs does.
+function _loadTriageAdvanceRows() {
+  const fp = join(ROOT, 'batch/triage-advance.tsv');
+  if (!existsSync(fp)) return [];
+  const out = [];
+  const lines = readFileSync(fp, 'utf-8').split('\n').filter(l => l.trim());
+  // Skip header row (starts with "url\t")
+  const startIdx = (lines[0] && lines[0].startsWith('url\t')) ? 1 : 0;
+  for (let i = startIdx; i < lines.length; i++) {
+    const cols = lines[i].split('\t');
+    const url = cols[0];
+    const score = parseFloat(cols[2]);
+    const archetype = cols[3] || null;
+    if (!url) continue;
+    let company = 'Unknown';
+    try { company = _guessCompanyFromUrl(url) || 'Unknown'; } catch {}
+    out.push({ url, company, score: Number.isFinite(score) ? score : null, archetype });
+  }
+  return out;
+}
+
 function buildPerCompanyPipelinePreview() {
-  // Group the Apply-Now queue by unique company → one row per company.
-  // High-water score wins for the per-row badge so the most attractive
-  // role per company is what the user sees.
+  // Group ALL pipeline items by unique company → one row per company across
+  // three stages so the modal's company list reconciles with the 187-item
+  // headline (Mitchell cohesion feedback 2026-05-19):
+  //
+  //   stage = 'evaluated' → already in apply-now-queue.json with eval_score
+  //                         (the historical 10-company subset)
+  //   stage = 'queued'    → in batch/triage-advance.tsv (waiting for batch eval)
+  //   stage = 'pending'   → in data/pipeline.md `- [ ]` (waiting for triage)
+  //
+  // Companies appearing in multiple stages are merged (evaluated wins for
+  // top_role_score; role_count aggregates across all sources).
   const ranked = loadApplyNowQueueRanked();
   const excluded = loadExcludedCompanySlugs();
   const byCompany = new Map();
+
+  function upsert(slug, patch) {
+    const prior = byCompany.get(slug);
+    if (!prior) { byCompany.set(slug, patch); return; }
+    // Merge: prefer existing stage if higher priority (evaluated > queued > pending)
+    const stageRank = { evaluated: 3, queued: 2, pending: 1 };
+    if ((stageRank[patch.stage] || 0) > (stageRank[prior.stage] || 0)) {
+      prior.stage = patch.stage;
+    }
+    prior.role_count += patch.role_count || 1;
+    if (patch.top_role_score != null && (prior.top_role_score == null || patch.top_role_score > prior.top_role_score)) {
+      prior.top_role = patch.top_role || prior.top_role;
+      prior.top_role_num = patch.top_role_num || prior.top_role_num;
+      prior.top_role_score = patch.top_role_score;
+    }
+    if (!prior.top_role && patch.top_role) prior.top_role = patch.top_role;
+  }
+
+  // Stage 1: evaluated (apply-now-queue.json)
   for (const r of ranked) {
     if (!r?.company) continue;
     const slug = _slugifyCompanyForIntel(r.company);
     if (!slug) continue;
-    const prior = byCompany.get(slug);
     const score = (typeof r.eval_score === 'number') ? r.eval_score : null;
-    if (!prior) {
-      byCompany.set(slug, {
-        slug,
-        company: r.company,
-        top_role: r.role || null,
-        top_role_num: r.num || null,
-        top_role_score: score,
-        role_count: 1,
-      });
-    } else {
-      prior.role_count += 1;
-      if (score != null && (prior.top_role_score == null || score > prior.top_role_score)) {
-        prior.top_role = r.role || prior.top_role;
-        prior.top_role_num = r.num || prior.top_role_num;
-        prior.top_role_score = score;
-      }
-    }
+    upsert(slug, {
+      slug,
+      company: r.company,
+      top_role: r.role || null,
+      top_role_num: r.num || null,
+      top_role_score: score,
+      role_count: 1,
+      stage: 'evaluated',
+    });
+  }
+
+  // Stage 2: queued for batch (batch/triage-advance.tsv)
+  for (const r of _loadTriageAdvanceRows()) {
+    if (!r.company || r.company === 'Unknown') continue;
+    const slug = _slugifyCompanyForIntel(r.company);
+    if (!slug) continue;
+    upsert(slug, {
+      slug,
+      company: r.company,
+      top_role: null,
+      top_role_num: null,
+      top_role_score: null,
+      role_count: 1,
+      stage: 'queued',
+    });
+  }
+
+  // Stage 3: pending triage (pipeline.md `- [ ]`)
+  for (const r of _loadPipelineMdRows()) {
+    if (!r.company || r.company === 'Unknown') continue;
+    const slug = _slugifyCompanyForIntel(r.company);
+    if (!slug) continue;
+    upsert(slug, {
+      slug,
+      company: r.company,
+      top_role: r.role || null,
+      top_role_num: null,
+      top_role_score: null,
+      role_count: 1,
+      stage: 'pending',
+    });
   }
 
   // Per-row enrichment: TTO + toxicity + cache state + cost estimate.
@@ -1387,6 +1484,7 @@ function buildPerCompanyPipelinePreview() {
       top_role_num:     meta.top_role_num,
       top_role_score:   meta.top_role_score,
       role_count:       meta.role_count,
+      stage:            meta.stage || 'evaluated',
       tto_weeks:        ttoRaw?.weeks_estimate ?? null,
       tto_tier:         ttoRaw?.velocity_tier  ?? null,
       tto_confidence:   ttoRaw?.confidence     ?? null,
@@ -1408,9 +1506,14 @@ function buildPerCompanyPipelinePreview() {
     });
   }
 
-  // Sort: actionable rows first (highest score), excluded sink to bottom.
+  // Sort: stage rank (evaluated > queued > pending), then score within stage,
+  // then alphabetical. Excluded rows sink to the bottom regardless of stage.
+  const stageRank = { evaluated: 3, queued: 2, pending: 1 };
   rows.sort((a, b) => {
     if (a.excluded !== b.excluded) return a.excluded ? 1 : -1;
+    const sA = stageRank[a.stage] || 0;
+    const sB = stageRank[b.stage] || 0;
+    if (sA !== sB) return sB - sA;
     const aS = a.top_role_score ?? -1;
     const bS = b.top_role_score ?? -1;
     if (aS !== bS) return bS - aS;
@@ -1419,20 +1522,27 @@ function buildPerCompanyPipelinePreview() {
 
   const totalCost = rows.reduce((s, r) => s + (r.cost_estimate_usd || 0), 0);
   const totalDetectionPotential = rows.reduce((s, r) => s + (r.ai_detection_potential_usd || 0), 0);
+  // Stage counts so the UI can render group headers + sticky totals.
+  const stageCounts = {
+    evaluated: rows.filter(r => r.stage === 'evaluated').length,
+    queued:    rows.filter(r => r.stage === 'queued').length,
+    pending:   rows.filter(r => r.stage === 'pending').length,
+  };
   return {
     companies:           rows,
     total_companies:     rows.length,
     actionable_count:    rows.filter(r => !r.excluded).length,
     excluded_count:      rows.filter(r =>  r.excluded).length,
     cache_hit_count:     rows.filter(r => r.cache_hit && !r.excluded).length,
+    stage_counts:        stageCounts,
     total_cost_estimate_usd: Math.round(totalCost * 100) / 100,
     // Per OMEGA-proposal-2 (approved 2026-05-19): aggregate detection potential
     // + constants so the Phase A/B JS can compute scoped detection live.
     total_ai_detection_potential_usd: Math.round(totalDetectionPotential * 100) / 100,
     ai_detection_per_pack_usd: Math.round(COST_PER_AI_DETECTION_PACK * 100) / 100,
     pack_build_opt_in_rate: PACK_BUILD_OPT_IN_RATE,
-    source:              'data/apply-now-queue.json + data/company-intel-cache/ + estimateTTO + scoreToxicity + data/network-database.json',
-    schema_note:         'Per-company Tier-5 economics — council cost suppressed on cache hit; apply-pack pre-gen added for score≥4.5. ζ Run-Batch 2026-05-19 added network_{warm,fresh,stale,first_degree,source}_count with honest >18mo stale-warmth gate. OMEGA-proposal-2 2026-05-19 added ai_detection_potential_usd (post-publish, opt-in-gated) per row.',
+    source:              'data/apply-now-queue.json + data/pipeline.md + batch/triage-advance.tsv + data/company-intel-cache/ + estimateTTO + scoreToxicity + data/network-database.json',
+    schema_note:         'Per-company Tier-5 economics — council cost suppressed on cache hit; apply-pack pre-gen added for score≥4.5. ζ Run-Batch 2026-05-19 added network_{warm,fresh,stale,first_degree,source}_count with honest >18mo stale-warmth gate. OMEGA-proposal-2 2026-05-19 added ai_detection_potential_usd (post-publish, opt-in-gated) per row. Mitchell cohesion fix 2026-05-19 #3 added stage (evaluated/queued/pending) so the per-company table covers ALL 187 pipeline items, not just the apply-now subset.',
   };
 }
 
