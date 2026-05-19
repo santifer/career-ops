@@ -1,0 +1,17 @@
+═══ Pre-completion snapshot — 2026-05-19 11:08:06 ═══
+
+job_id: proc-mpcxwf1d-437113
+orchestrator PID: 58336
+batch-runner PID: 58402
+
+--- Counts at snapshot time ---
+pipeline.md unchecked:        15
+triage-advance.tsv data rows: 191
+apply-now-queue.json ranked:  21
+
+--- Batch submission (from log) ---
+94 requests ready (6 skipped due to fetch errors).
+Submitting to Batches API…
+   Batch ID:      msgbatch_01BTtVLcFhbiYA9K6CNTJ2kD
+   Requests:      94
+   Est. cost:     ~$3.29
