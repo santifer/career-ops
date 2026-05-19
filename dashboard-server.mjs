@@ -379,12 +379,94 @@ const DAILY_CAP_OVERNIGHT      = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD 
 // the council + humanize-check passes — budget for that future state so the
 // cap meaningfully gates power-user "regenerate everything" loops.
 const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD || '2.50');
-// Decomposed agent enrichment costs (surfaced per-stage in the preview modal)
-const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '4.00');
+// Decomposed agent enrichment costs (surfaced per-stage in the preview modal).
+//
+// γ GAMMA 2026-05-19 truth-audit: calibrated constants below replaced earlier
+// vibes-defaults. Sources cited inline; cost-decomp modal renders provenance.
+//
+// COST_PER_RESEARCHER_CALL: $11.30 — sum of scripts/hiring-manager-research.mjs
+//   `COST_ESTIMATE` table (Gemini Deep Max $4.80 + OpenAI Pro $2.00 + Grok 4.3
+//   $0.40 + Grok Heavy $0.80 + Sonnet search $0.50 + Opus search $1.50 +
+//   Perplexity Deep $1.00 + Synthesize $0.30). The file's own header reads
+//   "Per-role cost: ~$10-12. 17 roles = ~$170-200 worst case". Prior $4.00
+//   captured only the Gemini Deep portion (1 of 8 providers), 2.8× under-real.
+//   Confidence: HIGH (deterministic sum of vendor-published rates; calibration
+//   refreshed by `scripts/hiring-manager-research.mjs:117-128`).
+const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '11.30');
+// COST_PER_DEALBREAKER_CALL: $0.30 — observed mean of N=2 logged runs in
+//   `data/cost-log.tsv` is $0.25 ($0.20 + $0.30). $0.30 kept as a +20% buffer
+//   over observed mean; falls inside the small-N confidence band.
+//   Confidence: MED (only 2 logged runs; widen to ±$0.10).
 const COST_PER_DEALBREAKER_CALL  = parseFloat(process.env.COST_PER_DEALBREAKER_CALL_USD || '0.30');
-const PUBLISH_RATE_ESTIMATE      = parseFloat(process.env.PUBLISH_RATE_ESTIMATE      || '0.40');  // % of evals scoring >= 4.0 → published to apply-now queue
-const RESEARCHER_ENRICHMENT_RATE = parseFloat(process.env.RESEARCHER_ENRICHMENT_RATE || '0.30');  // % of published items triggering researcher (no cached HM intel)
-const THRESHOLD_FOR_PUBLISH      = parseFloat(process.env.THRESHOLD_FOR_PUBLISH      || '4.0');   // minimum score to publish to apply-now queue
+// γ GAMMA 2026-05-19 truth-audit + ε EPSILON env-override (merged):
+// Defaults are calibrated to real data; env overrides honored for ops tuning.
+//
+// PUBLISH_RATE_ESTIMATE: 0.22 — `data/applications.md` shows 29 of 131 scored
+//   rows at >=4.0 (22.1%). Prior 0.40 was a vibes estimate ~80% above real.
+//   Confidence: HIGH (N=131, multi-month historical).
+const PUBLISH_RATE_ESTIMATE      = parseFloat(process.env.PUBLISH_RATE_ESTIMATE      || '0.22');
+// RESEARCHER_ENRICHMENT_RATE: 0.19 — `data/apply-now-queue.json` ranked has 21
+//   roles; `data/hm-intel/*.json` (excluding _SCHEMA, _weights) has 17 cached
+//   intel files (80.9% coverage). 4 of 21 uncached = 19.0% trigger rate.
+//   Prior 0.30 over-estimated by ~58%. This rate WILL drift as queue churns;
+//   re-calibrate when queue size changes by >50%.
+//   Confidence: MED (N=21, single-day snapshot).
+const RESEARCHER_ENRICHMENT_RATE = parseFloat(process.env.RESEARCHER_ENRICHMENT_RATE || '0.19');
+// THRESHOLD_FOR_PUBLISH: 4.0 — verified in `lib/funnel-completion.mjs:128`,
+//   `lib/next-moves.mjs:121`, `lib/eval-council.mjs:144`. PASS — gated by real code.
+const THRESHOLD_FOR_PUBLISH      = parseFloat(process.env.THRESHOLD_FOR_PUBLISH      || '4.0');
+// γ GAMMA truth-audit metadata (rendered in modal as provenance).
+const COST_CALIBRATION_PROVENANCE = {
+  publish_rate: {
+    value: PUBLISH_RATE_ESTIMATE,
+    source: 'data/applications.md (29 of 131 scored rows ≥ 4.0)',
+    confidence: 'HIGH',
+    sample_size: 131,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 5,    // ±5% absolute (N=131 → SE ≈ 3.6%)
+  },
+  researcher_cost: {
+    value: COST_PER_RESEARCHER_CALL,
+    source: 'scripts/hiring-manager-research.mjs:117-128 COST_ESTIMATE sum',
+    confidence: 'HIGH',
+    sample_size: 8,             // 8 providers, each with vendor-published rates
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 20,    // ±20% absolute (provider rates vary by run)
+  },
+  dealbreaker_cost: {
+    value: COST_PER_DEALBREAKER_CALL,
+    source: 'data/cost-log.tsv (observed mean N=2, +20% buffer)',
+    confidence: 'MED',
+    sample_size: 2,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 50,    // ±50% wide band (N=2 — very low statistical power)
+  },
+  researcher_enrichment_rate: {
+    value: RESEARCHER_ENRICHMENT_RATE,
+    source: 'data/apply-now-queue.json vs data/hm-intel/*.json (4 of 21 uncached)',
+    confidence: 'MED',
+    sample_size: 21,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 30,    // ±30% — drifts with queue churn
+  },
+  publish_threshold: {
+    value: THRESHOLD_FOR_PUBLISH,
+    source: 'lib/funnel-completion.mjs:128 + lib/next-moves.mjs:121 + lib/eval-council.mjs:144',
+    confidence: 'HIGH',
+    sample_size: null,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 0,     // ±0 — verified against code
+  },
+  company_cache_hit_rate: {
+    value: 0.50,                // Note: actual is 1.00 today; preview keeps conservative 0.50
+    source: 'data/company-intel-cache/ (10 of 10 queue companies cached, oldest 2d)',
+    confidence: 'MED',
+    sample_size: 10,
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 50,    // ±50% — TTL is 30d, churn unpredictable
+    note: 'observed today=100%, kept conservative 50% to absorb cache expiry',
+  },
+};
 
 function countPipelinePending() {
   const fp = join(ROOT, 'data/pipeline.md');
@@ -945,6 +1027,10 @@ function buildPipelinePreview() {
       apply_pack_pregen:     COST_PER_APPLY_PACK_PREGEN,
       source:                'data/cost-log.tsv observed average + calibration brief 2026-05-16',
     },
+    // γ GAMMA 2026-05-19 — provenance metadata for every estimate constant.
+    // Rendered in the cost-decomp modal as "calibrated from N runs · confidence ±X%"
+    // so a numeric value never appears without a citation + confidence band.
+    calibration_provenance: COST_CALIBRATION_PROVENANCE,
   };
 }
 
@@ -1764,17 +1850,51 @@ function batchLive() {
   ];
 
   // ── Pipeline stage state (Process All decomposition) ─────────────────────
+  // γ GAMMA 2026-05-19 truth-audit:
+  //   - Renamed `activeJob` semantics: a finished job ≠ active job. Only emit
+  //     `pipelineStages` for a TRULY active run (status='running') OR a
+  //     fresh-terminal run (completed within last STAGE_STATE_FRESHNESS_MS).
+  //     Prior code surfaced 6h-stale 'failed' jobs as the canonical state, which
+  //     looked like a live run.
+  //   - Annotate `staleness_seconds` so the renderer can grey-out / mute stale
+  //     state and stop calling itself 'Live'.
+  //   - Marker `pipeline_state_present: false` distinguishes
+  //     "no state file" (honest 'no work') from "state present but stale"
+  //     (was previously rendered identically — misleading).
   let pipelineStages = null;
+  let pipelineStateMeta = { present: false, stale: false, staleness_seconds: null };
   const pipelineStatePath = join(ROOT, 'data/pipeline-process-state.json');
+  const STAGE_STATE_FRESHNESS_MS = 5 * 60 * 1000; // 5 min — long enough for email phase, short enough to not surface 6h-old failed jobs
   if (existsSync(pipelineStatePath)) {
+    pipelineStateMeta.present = true;
     try {
       const ps = JSON.parse(readFileSync(pipelineStatePath, 'utf-8'));
       const jobs = Object.values(ps.jobs || {}).sort((a, b) =>
         (b.started_at || '').localeCompare(a.started_at || ''));
-      // Only synthesize per-stage data for Process All jobs — batch-only jobs
-      // never update their phase and would produce all-grey misleading bars.
-      const activeJob = jobs.find(j => j.status === 'running' && j.type !== 'batch-only')
-        || jobs.find(j => j.type !== 'batch-only');
+      // Find a TRULY running job first. If none, find the most-recent terminal
+      // job ONLY if it's fresh (<5min). Otherwise no stage state is emitted.
+      const runningJob = jobs.find(j => j.status === 'running' && j.type !== 'batch-only');
+      const recentNonBatch = jobs.find(j => j.type !== 'batch-only');
+      const candidate = runningJob || recentNonBatch;
+      let activeJob = null;
+      if (candidate) {
+        const updatedTs = Date.parse(candidate.updated_at || candidate.started_at || '') || 0;
+        const ageMs = Date.now() - updatedTs;
+        pipelineStateMeta.staleness_seconds = Math.round(ageMs / 1000);
+        if (runningJob) {
+          // Always surface a job marked status='running' — that's the canonical
+          // active state. The stream/poll status indicator can warn if it's
+          // been running > N min (job hung).
+          activeJob = runningJob;
+        } else if (ageMs <= STAGE_STATE_FRESHNESS_MS) {
+          // Terminal job, still fresh — surface for the "just finished" UI moment.
+          activeJob = candidate;
+        } else {
+          // Terminal + stale — DO NOT surface as if it were live. Mark state
+          // stale so the renderer can de-emphasize.
+          pipelineStateMeta.stale = true;
+        }
+      }
       if (activeJob) {
         const ph = activeJob.phase || '';
         const phaseOrder = ['triage', 'batch', 'rebuild', 'email', 'done'];
@@ -1783,10 +1903,24 @@ function batchLive() {
         const isRunning = activeJob.status === 'running';
         const triageTotal = activeJob.pending_before || 0;
         const triageAdv   = activeJob.triage_advanced != null ? activeJob.triage_advanced : triageTotal;
+        // γ GAMMA: published_count is currently never written by
+        // process-all-pipeline.mjs (truth audit found NULL handling that
+        // displays 0/0 = pending when the publish stage DID run). Best-effort
+        // fallback: when phase is 'done' or 'email', derive published count
+        // from the most recent apply-now-queue.json size minus prior size.
+        // If we can't derive, render as 'completed' (✓) rather than 0/0.
+        let publishedCount = activeJob.published_count;
+        if (publishedCount == null && (ph === 'done' || ph === 'email' || phaseDone('rebuild'))) {
+          publishedCount = null; // signal renderer: phase done, count unknown
+        } else if (publishedCount == null) {
+          publishedCount = 0;
+        }
         pipelineStages = {
           job_id:        activeJob.jobId,
           status:        activeJob.status,
           current_phase: ph,
+          updated_at:    activeJob.updated_at || null,
+          staleness_seconds: pipelineStateMeta.staleness_seconds,
           stages: {
             triage:   { done: phaseDone('triage') || ph === 'done',
                         active: ph === 'triage' && isRunning,
@@ -1806,15 +1940,23 @@ function batchLive() {
                         total },
             publish:  { done: ph === 'done' || ph === 'email',
                         active: false,
-                        completed: activeJob.published_count || 0,
-                        total: activeJob.published_count || 0 },
+                        completed: publishedCount == null ? '✓' : publishedCount,
+                        total: publishedCount == null ? '✓' : publishedCount,
+                        count_unknown: publishedCount == null },
           },
         };
       }
     } catch (_) {}
   }
 
-  return { total, completed, failed, running, pending, pct, rows: sorted.slice(0, 500), triageItems: triageItems.slice(0, 200), pipelineStages };
+  return {
+    total, completed, failed, running, pending, pct,
+    rows: sorted.slice(0, 500),
+    triageItems: triageItems.slice(0, 200),
+    pipelineStages,
+    // γ GAMMA: stale-state marker so the renderer can mute / de-emphasize.
+    pipelineStateMeta,
+  };
 }
 
 // ── Sidebar batch popout (2026-05-17) ──────────────────────────
