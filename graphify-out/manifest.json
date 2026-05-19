@@ -1,0 +1,767 @@
+{
+  "/Users/atharv/career-ops/liveness-core.mjs": {
+    "mtime": 1777139351.6216612,
+    "ast_hash": "1965d984b22b876dd3eb9f88238d46ed",
+    "semantic_hash": "1965d984b22b876dd3eb9f88238d46ed"
+  },
+  "/Users/atharv/career-ops/analyze-patterns.mjs": {
+    "mtime": 1777139351.5353627,
+    "ast_hash": "906b521306ff981664a6d9aab5c45d22",
+    "semantic_hash": "906b521306ff981664a6d9aab5c45d22"
+  },
+  "/Users/atharv/career-ops/renovate.json": {
+    "mtime": 1777139351.6264594,
+    "ast_hash": "dad28e56604eb2d5f6f7d293dfd5d251",
+    "semantic_hash": "dad28e56604eb2d5f6f7d293dfd5d251"
+  },
+  "/Users/atharv/career-ops/generate-latex.mjs": {
+    "mtime": 1777139351.6213722,
+    "ast_hash": "e5f30acb31650017445b814f90df7587",
+    "semantic_hash": "e5f30acb31650017445b814f90df7587"
+  },
+  "/Users/atharv/career-ops/generate-pdf.mjs": {
+    "mtime": 1777139351.621447,
+    "ast_hash": "281dd271a7362eded8358ee1a3f0f43d",
+    "semantic_hash": "281dd271a7362eded8358ee1a3f0f43d"
+  },
+  "/Users/atharv/career-ops/scan.mjs": {
+    "mtime": 1777139351.6267145,
+    "ast_hash": "cc37f8e37f904a7cfd6e235244557b60",
+    "semantic_hash": "cc37f8e37f904a7cfd6e235244557b60"
+  },
+  "/Users/atharv/career-ops/normalize-statuses.mjs": {
+    "mtime": 1777139351.6262732,
+    "ast_hash": "2c33b5357853fe601d1f979713755380",
+    "semantic_hash": "2c33b5357853fe601d1f979713755380"
+  },
+  "/Users/atharv/career-ops/test-all.mjs": {
+    "mtime": 1777139351.6274507,
+    "ast_hash": "abc04c6c9007c2de107d0ec96e042697",
+    "semantic_hash": "abc04c6c9007c2de107d0ec96e042697"
+  },
+  "/Users/atharv/career-ops/package.json": {
+    "mtime": 1777139351.6263967,
+    "ast_hash": "828c3fb1f6182c096cfe455d4c04c75c",
+    "semantic_hash": "828c3fb1f6182c096cfe455d4c04c75c"
+  },
+  "/Users/atharv/career-ops/check-liveness.mjs": {
+    "mtime": 1777139351.5360286,
+    "ast_hash": "27cce6d0231002b727a9628020df1a26",
+    "semantic_hash": "27cce6d0231002b727a9628020df1a26"
+  },
+  "/Users/atharv/career-ops/gemini-eval.mjs": {
+    "mtime": 1777139351.6212976,
+    "ast_hash": "b95cf3c8866a4f3ab70f99aa7f293cc1",
+    "semantic_hash": "b95cf3c8866a4f3ab70f99aa7f293cc1"
+  },
+  "/Users/atharv/career-ops/merge-tracker.mjs": {
+    "mtime": 1777139351.621849,
+    "ast_hash": "194aee2170c403c54aff3dc66b9d5d09",
+    "semantic_hash": "194aee2170c403c54aff3dc66b9d5d09"
+  },
+  "/Users/atharv/career-ops/cv-sync-check.mjs": {
+    "mtime": 1777139351.5362287,
+    "ast_hash": "b6b6a3546adb1ad66111d6c8c8c34c7b",
+    "semantic_hash": "b6b6a3546adb1ad66111d6c8c8c34c7b"
+  },
+  "/Users/atharv/career-ops/verify-pipeline.mjs": {
+    "mtime": 1777139351.6277258,
+    "ast_hash": "1ba2373a64225347a9e10fd89e9bfaa5",
+    "semantic_hash": "1ba2373a64225347a9e10fd89e9bfaa5"
+  },
+  "/Users/atharv/career-ops/followup-cadence.mjs": {
+    "mtime": 1777139351.6206906,
+    "ast_hash": "12855b7c860b0a96b81bd03a45180acd",
+    "semantic_hash": "12855b7c860b0a96b81bd03a45180acd"
+  },
+  "/Users/atharv/career-ops/update-system.mjs": {
+    "mtime": 1777139351.6276429,
+    "ast_hash": "c0025878df48fa2b217ae95a4d2e33e2",
+    "semantic_hash": "c0025878df48fa2b217ae95a4d2e33e2"
+  },
+  "/Users/atharv/career-ops/doctor.mjs": {
+    "mtime": 1777139351.619703,
+    "ast_hash": "e728abd6938c756ac3bbdd2f8ca2985f",
+    "semantic_hash": "e728abd6938c756ac3bbdd2f8ca2985f"
+  },
+  "/Users/atharv/career-ops/dedup-tracker.mjs": {
+    "mtime": 1777139351.538085,
+    "ast_hash": "bab57df9319651e2b430095076c7ab4d",
+    "semantic_hash": "bab57df9319651e2b430095076c7ab4d"
+  },
+  "/Users/atharv/career-ops/.release-please-manifest.json": {
+    "mtime": 1777139351.5330026,
+    "ast_hash": "a0656e08367727d8781254d0594cca69",
+    "semantic_hash": "a0656e08367727d8781254d0594cca69"
+  },
+  "/Users/atharv/career-ops/dashboard/main.go": {
+    "mtime": 1777139351.537921,
+    "ast_hash": "936b9bdfbb7360fe07a153390f2579cb",
+    "semantic_hash": "936b9bdfbb7360fe07a153390f2579cb"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/ui/screens/viewer.go": {
+    "mtime": 1777139351.5378327,
+    "ast_hash": "cb6e68f5e4ecf940b93d2df36b75a056",
+    "semantic_hash": "cb6e68f5e4ecf940b93d2df36b75a056"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/ui/screens/pipeline_test.go": {
+    "mtime": 1777139351.5374544,
+    "ast_hash": "ac254b54756029c453778ade802f4bf4",
+    "semantic_hash": "ac254b54756029c453778ade802f4bf4"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/ui/screens/pipeline.go": {
+    "mtime": 1777139351.5373516,
+    "ast_hash": "285646e1040cd9e0a9b3e0fb0637f658",
+    "semantic_hash": "285646e1040cd9e0a9b3e0fb0637f658"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/ui/screens/progress.go": {
+    "mtime": 1777139351.5376823,
+    "ast_hash": "bc14e8482502e160aedf38cef15d738e",
+    "semantic_hash": "bc14e8482502e160aedf38cef15d738e"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/theme/theme.go": {
+    "mtime": 1777139351.5371158,
+    "ast_hash": "8f6ade91826331abf3979f55fbeb119e",
+    "semantic_hash": "8f6ade91826331abf3979f55fbeb119e"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/theme/catppuccin.go": {
+    "mtime": 1777139351.53694,
+    "ast_hash": "4e9b1aba3e1955ad2f2ef27860b3d24c",
+    "semantic_hash": "4e9b1aba3e1955ad2f2ef27860b3d24c"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/theme/catppuccin_latte.go": {
+    "mtime": 1777139351.5370295,
+    "ast_hash": "ad49264dbdf572eb9fa5886042667a19",
+    "semantic_hash": "ad49264dbdf572eb9fa5886042667a19"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/model/career.go": {
+    "mtime": 1777139351.5367923,
+    "ast_hash": "2aa978e6b84de4d926e40aba6b8a4073",
+    "semantic_hash": "2aa978e6b84de4d926e40aba6b8a4073"
+  },
+  "/Users/atharv/career-ops/dashboard/internal/data/career.go": {
+    "mtime": 1777139351.5366414,
+    "ast_hash": "7c8bc77aa77bc3b2ddd2dbdf5f5c6a62",
+    "semantic_hash": "7c8bc77aa77bc3b2ddd2dbdf5f5c6a62"
+  },
+  "/Users/atharv/career-ops/batch/batch-runner.sh": {
+    "mtime": 1777139351.5357573,
+    "ast_hash": "ee53ae8ae47884aa024fec70dfbccca1",
+    "semantic_hash": "ee53ae8ae47884aa024fec70dfbccca1"
+  },
+  "/Users/atharv/career-ops/CODE_OF_CONDUCT.md": {
+    "mtime": 1777139351.5334122,
+    "ast_hash": "614b5ef8111c2c3d48ef52b26be07532",
+    "semantic_hash": "614b5ef8111c2c3d48ef52b26be07532"
+  },
+  "/Users/atharv/career-ops/LEGAL_DISCLAIMER.md": {
+    "mtime": 1777139351.5338783,
+    "ast_hash": "437eb1662780cee4f48238a9d9c3dbb7",
+    "semantic_hash": "437eb1662780cee4f48238a9d9c3dbb7"
+  },
+  "/Users/atharv/career-ops/README.es.md": {
+    "mtime": 1777139351.5342884,
+    "ast_hash": "4a03fb14d1d2c15ab0a63c0e6deb0e37",
+    "semantic_hash": "4a03fb14d1d2c15ab0a63c0e6deb0e37"
+  },
+  "/Users/atharv/career-ops/README.cn.md": {
+    "mtime": 1777139351.534113,
+    "ast_hash": "b4ddba6a8c80b857337e43a99dad5222",
+    "semantic_hash": "b4ddba6a8c80b857337e43a99dad5222"
+  },
+  "/Users/atharv/career-ops/CHANGELOG.md": {
+    "mtime": 1777139351.5331397,
+    "ast_hash": "3746d38e3281f0998fc0135b468ea9df",
+    "semantic_hash": "3746d38e3281f0998fc0135b468ea9df"
+  },
+  "/Users/atharv/career-ops/GOVERNANCE.md": {
+    "mtime": 1777139351.5337894,
+    "ast_hash": "fc88abdba022ad057ca5d356bf2ce42b",
+    "semantic_hash": "fc88abdba022ad057ca5d356bf2ce42b"
+  },
+  "/Users/atharv/career-ops/README.md": {
+    "mtime": 1777139351.5346446,
+    "ast_hash": "7d2271708439bdc56b94405e1c1c71db",
+    "semantic_hash": "7d2271708439bdc56b94405e1c1c71db"
+  },
+  "/Users/atharv/career-ops/SUPPORT.md": {
+    "mtime": 1777139351.5352097,
+    "ast_hash": "d55b0ab2b3ec48506dd5453835a615f4",
+    "semantic_hash": "d55b0ab2b3ec48506dd5453835a615f4"
+  },
+  "/Users/atharv/career-ops/README.ja.md": {
+    "mtime": 1777139351.5343914,
+    "ast_hash": "176714aa34b8419e65b215496e9ede59",
+    "semantic_hash": "176714aa34b8419e65b215496e9ede59"
+  },
+  "/Users/atharv/career-ops/README.pt-BR.md": {
+    "mtime": 1777139351.5347877,
+    "ast_hash": "5ed5f675d30e11937fd116ef9dbec4a7",
+    "semantic_hash": "5ed5f675d30e11937fd116ef9dbec4a7"
+  },
+  "/Users/atharv/career-ops/README.zh-TW.md": {
+    "mtime": 1777139351.5350685,
+    "ast_hash": "f4cbf92ff4166e9c7af9ab8b7f1c3ba0",
+    "semantic_hash": "f4cbf92ff4166e9c7af9ab8b7f1c3ba0"
+  },
+  "/Users/atharv/career-ops/CONTRIBUTORS.md": {
+    "mtime": 1777139351.5335486,
+    "ast_hash": "a0e31461b8e16b64033600aaa1e512ef",
+    "semantic_hash": "a0e31461b8e16b64033600aaa1e512ef"
+  },
+  "/Users/atharv/career-ops/CONTRIBUTING.md": {
+    "mtime": 1777139351.533483,
+    "ast_hash": "a2eed0f634d0381b2df06e164997723d",
+    "semantic_hash": "a2eed0f634d0381b2df06e164997723d"
+  },
+  "/Users/atharv/career-ops/GEMINI.md": {
+    "mtime": 1777139351.5337172,
+    "ast_hash": "b0f7cb1b00746ab262b4a99a1ac48014",
+    "semantic_hash": "b0f7cb1b00746ab262b4a99a1ac48014"
+  },
+  "/Users/atharv/career-ops/AGENTS.md": {
+    "mtime": 1777139351.5330691,
+    "ast_hash": "93e18013e98b3a4f4508f302e3ec82ff",
+    "semantic_hash": "93e18013e98b3a4f4508f302e3ec82ff"
+  },
+  "/Users/atharv/career-ops/.coderabbit.yaml": {
+    "mtime": 1777139351.5293002,
+    "ast_hash": "0b6db85c3d140e0f8b6876970fd9c584",
+    "semantic_hash": "0b6db85c3d140e0f8b6876970fd9c584"
+  },
+  "/Users/atharv/career-ops/README.ru.md": {
+    "mtime": 1777139351.534944,
+    "ast_hash": "531325ed11ab1991e26f06bfc9fc854d",
+    "semantic_hash": "531325ed11ab1991e26f06bfc9fc854d"
+  },
+  "/Users/atharv/career-ops/README.ko-KR.md": {
+    "mtime": 1777139351.5345118,
+    "ast_hash": "122c6905c228c706373c6ae18b0cfbfe",
+    "semantic_hash": "122c6905c228c706373c6ae18b0cfbfe"
+  },
+  "/Users/atharv/career-ops/CLAUDE.md": {
+    "mtime": 1779167120.2386909,
+    "ast_hash": "37529746cccd337a8271e235e51d9f58",
+    "semantic_hash": ""
+  },
+  "/Users/atharv/career-ops/SECURITY.md": {
+    "mtime": 1777139351.5351436,
+    "ast_hash": "b08eef8ef3f01908a2e097fdad1d9664",
+    "semantic_hash": "b08eef8ef3f01908a2e097fdad1d9664"
+  },
+  "/Users/atharv/career-ops/DATA_CONTRACT.md": {
+    "mtime": 1777139351.5336223,
+    "ast_hash": "33c763fed8cae8f49c7f42bd0c21e1d0",
+    "semantic_hash": "33c763fed8cae8f49c7f42bd0c21e1d0"
+  },
+  "/Users/atharv/career-ops/modes/pipeline.md": {
+    "mtime": 1777139351.6246462,
+    "ast_hash": "ce8722634dffdcd277ecfc51befdc79f",
+    "semantic_hash": "ce8722634dffdcd277ecfc51befdc79f"
+  },
+  "/Users/atharv/career-ops/modes/tracker.md": {
+    "mtime": 1777139351.626147,
+    "ast_hash": "a3312886b9818c235e6e314301bc8fc6",
+    "semantic_hash": "a3312886b9818c235e6e314301bc8fc6"
+  },
+  "/Users/atharv/career-ops/modes/scan.md": {
+    "mtime": 1777139351.6260846,
+    "ast_hash": "d915b4a60de5b0053b08f6e4072d954a",
+    "semantic_hash": "d915b4a60de5b0053b08f6e4072d954a"
+  },
+  "/Users/atharv/career-ops/modes/auto-pipeline.md": {
+    "mtime": 1777139351.6221917,
+    "ast_hash": "211685be342b209035790995aa5d2efe",
+    "semantic_hash": "211685be342b209035790995aa5d2efe"
+  },
+  "/Users/atharv/career-ops/modes/oferta.md": {
+    "mtime": 1777139351.6242502,
+    "ast_hash": "c7c483c9be2f675fbf5523a8a01d2997",
+    "semantic_hash": "c7c483c9be2f675fbf5523a8a01d2997"
+  },
+  "/Users/atharv/career-ops/modes/ofertas.md": {
+    "mtime": 1777139351.624317,
+    "ast_hash": "fbf529cd61c7a7764c43bf780942e8cd",
+    "semantic_hash": "fbf529cd61c7a7764c43bf780942e8cd"
+  },
+  "/Users/atharv/career-ops/modes/followup.md": {
+    "mtime": 1777139351.6229548,
+    "ast_hash": "2b2ecd9a9f2f66a0c8e7242a05be85a7",
+    "semantic_hash": "2b2ecd9a9f2f66a0c8e7242a05be85a7"
+  },
+  "/Users/atharv/career-ops/modes/training.md": {
+    "mtime": 1777139351.6262054,
+    "ast_hash": "b46bfb9444730fc7c74a40064711c99a",
+    "semantic_hash": "b46bfb9444730fc7c74a40064711c99a"
+  },
+  "/Users/atharv/career-ops/modes/deep.md": {
+    "mtime": 1777139351.6228766,
+    "ast_hash": "f38280514d24137eadaa776db22af483",
+    "semantic_hash": "f38280514d24137eadaa776db22af483"
+  },
+  "/Users/atharv/career-ops/modes/apply.md": {
+    "mtime": 1777139351.6221228,
+    "ast_hash": "222b308ccc2785d682ad2fb90f6889b4",
+    "semantic_hash": "222b308ccc2785d682ad2fb90f6889b4"
+  },
+  "/Users/atharv/career-ops/modes/project.md": {
+    "mtime": 1777139351.624722,
+    "ast_hash": "f2e060810a8cda2c00af4e2c3f15aa16",
+    "semantic_hash": "f2e060810a8cda2c00af4e2c3f15aa16"
+  },
+  "/Users/atharv/career-ops/modes/latex.md": {
+    "mtime": 1777139351.6240554,
+    "ast_hash": "c55ea02b6d0db1c067a85b2fc1fd5d50",
+    "semantic_hash": "c55ea02b6d0db1c067a85b2fc1fd5d50"
+  },
+  "/Users/atharv/career-ops/modes/patterns.md": {
+    "mtime": 1777139351.6243935,
+    "ast_hash": "3589318a187a5dc6ed1adf437e00416e",
+    "semantic_hash": "3589318a187a5dc6ed1adf437e00416e"
+  },
+  "/Users/atharv/career-ops/modes/contacto.md": {
+    "mtime": 1777139351.6223335,
+    "ast_hash": "ae0187b152154e0e2b3f5c0429eb2141",
+    "semantic_hash": "ae0187b152154e0e2b3f5c0429eb2141"
+  },
+  "/Users/atharv/career-ops/modes/interview-prep.md": {
+    "mtime": 1777139351.623533,
+    "ast_hash": "b8b90138f386375d0aea56965de7047f",
+    "semantic_hash": "b8b90138f386375d0aea56965de7047f"
+  },
+  "/Users/atharv/career-ops/modes/pdf.md": {
+    "mtime": 1777139351.6245692,
+    "ast_hash": "92c1c6c20fe65d55521f9219436f4f93",
+    "semantic_hash": "92c1c6c20fe65d55521f9219436f4f93"
+  },
+  "/Users/atharv/career-ops/modes/_profile.template.md": {
+    "mtime": 1777139351.621963,
+    "ast_hash": "3388491ddc4f71e97267476d9a533247",
+    "semantic_hash": "3388491ddc4f71e97267476d9a533247"
+  },
+  "/Users/atharv/career-ops/modes/_shared.md": {
+    "mtime": 1777139351.6220489,
+    "ast_hash": "e9754eae9d1bca81eaebb8f488655252",
+    "semantic_hash": "e9754eae9d1bca81eaebb8f488655252"
+  },
+  "/Users/atharv/career-ops/modes/batch.md": {
+    "mtime": 1777139351.6222618,
+    "ast_hash": "912986742409ca76a21b778d05f217ef",
+    "semantic_hash": "912986742409ca76a21b778d05f217ef"
+  },
+  "/Users/atharv/career-ops/modes/ja/pipeline.md": {
+    "mtime": 1777139351.6239715,
+    "ast_hash": "63119a8c383339ae07af07d106dde3ec",
+    "semantic_hash": "63119a8c383339ae07af07d106dde3ec"
+  },
+  "/Users/atharv/career-ops/modes/ja/kyujin.md": {
+    "mtime": 1777139351.6238153,
+    "ast_hash": "1db980252ee143f199c0cf02a9d7c44c",
+    "semantic_hash": "1db980252ee143f199c0cf02a9d7c44c"
+  },
+  "/Users/atharv/career-ops/modes/ja/README.md": {
+    "mtime": 1777139351.6236384,
+    "ast_hash": "b0a0f74874561f0c4442f09d64e8d766",
+    "semantic_hash": "b0a0f74874561f0c4442f09d64e8d766"
+  },
+  "/Users/atharv/career-ops/modes/ja/oubo.md": {
+    "mtime": 1777139351.6239002,
+    "ast_hash": "e991db8b914f9b1307a01e7c86c11c7c",
+    "semantic_hash": "e991db8b914f9b1307a01e7c86c11c7c"
+  },
+  "/Users/atharv/career-ops/modes/ja/_shared.md": {
+    "mtime": 1777139351.6237235,
+    "ast_hash": "37b18b7f47561bc88e4fcdfcc48935f5",
+    "semantic_hash": "37b18b7f47561bc88e4fcdfcc48935f5"
+  },
+  "/Users/atharv/career-ops/modes/ru/pipeline.md": {
+    "mtime": 1777139351.6259475,
+    "ast_hash": "addf02de2991cac9061a7f4e4fba8cf1",
+    "semantic_hash": "addf02de2991cac9061a7f4e4fba8cf1"
+  },
+  "/Users/atharv/career-ops/modes/ru/oferta.md": {
+    "mtime": 1777139351.6258755,
+    "ast_hash": "5925a10e8931f6cc0b675811b3d0b927",
+    "semantic_hash": "5925a10e8931f6cc0b675811b3d0b927"
+  },
+  "/Users/atharv/career-ops/modes/ru/apply.md": {
+    "mtime": 1777139351.6255112,
+    "ast_hash": "f236f95346ae03b50e9a3490f4987ad2",
+    "semantic_hash": "f236f95346ae03b50e9a3490f4987ad2"
+  },
+  "/Users/atharv/career-ops/modes/ru/README.md": {
+    "mtime": 1777139351.6253428,
+    "ast_hash": "40cdfa4c2afe706829b91fc825cc41a6",
+    "semantic_hash": "40cdfa4c2afe706829b91fc825cc41a6"
+  },
+  "/Users/atharv/career-ops/modes/ru/interview-prep.md": {
+    "mtime": 1777139351.6256924,
+    "ast_hash": "ac11fd15ed6c215bfca965d68b5c1c59",
+    "semantic_hash": "ac11fd15ed6c215bfca965d68b5c1c59"
+  },
+  "/Users/atharv/career-ops/modes/ru/_shared.md": {
+    "mtime": 1777139351.6254244,
+    "ast_hash": "0d096bcc94d27f890030fd6deb7ef16c",
+    "semantic_hash": "0d096bcc94d27f890030fd6deb7ef16c"
+  },
+  "/Users/atharv/career-ops/modes/pt/pipeline.md": {
+    "mtime": 1777139351.625234,
+    "ast_hash": "03c112098b482ef45959916efeeec9a7",
+    "semantic_hash": "03c112098b482ef45959916efeeec9a7"
+  },
+  "/Users/atharv/career-ops/modes/pt/oferta.md": {
+    "mtime": 1777139351.6251543,
+    "ast_hash": "b1aadc65a580dbb810fa2fc7e520ddf0",
+    "semantic_hash": "b1aadc65a580dbb810fa2fc7e520ddf0"
+  },
+  "/Users/atharv/career-ops/modes/pt/README.md": {
+    "mtime": 1777139351.624835,
+    "ast_hash": "2fa77966d6913a0ea47a094fe2743ab5",
+    "semantic_hash": "2fa77966d6913a0ea47a094fe2743ab5"
+  },
+  "/Users/atharv/career-ops/modes/pt/aplicar.md": {
+    "mtime": 1777139351.6250803,
+    "ast_hash": "ede1cff9869a33f0d3793911b19abf03",
+    "semantic_hash": "ede1cff9869a33f0d3793911b19abf03"
+  },
+  "/Users/atharv/career-ops/modes/pt/_shared.md": {
+    "mtime": 1777139351.6249897,
+    "ast_hash": "50e01eaa622254218e60e54763882cdf",
+    "semantic_hash": "50e01eaa622254218e60e54763882cdf"
+  },
+  "/Users/atharv/career-ops/modes/de/pipeline.md": {
+    "mtime": 1777139351.622811,
+    "ast_hash": "ba71e33c7ce43ae6b2aae4231880e957",
+    "semantic_hash": "ba71e33c7ce43ae6b2aae4231880e957"
+  },
+  "/Users/atharv/career-ops/modes/de/bewerben.md": {
+    "mtime": 1777139351.622744,
+    "ast_hash": "f09507bec59c4672e83130ec562aa227",
+    "semantic_hash": "f09507bec59c4672e83130ec562aa227"
+  },
+  "/Users/atharv/career-ops/modes/de/README.md": {
+    "mtime": 1777139351.6224504,
+    "ast_hash": "0364cb951511b382fca3a114f72634a4",
+    "semantic_hash": "0364cb951511b382fca3a114f72634a4"
+  },
+  "/Users/atharv/career-ops/modes/de/_shared.md": {
+    "mtime": 1777139351.622581,
+    "ast_hash": "4da86ae6a106fe7d7a697d549af19141",
+    "semantic_hash": "4da86ae6a106fe7d7a697d549af19141"
+  },
+  "/Users/atharv/career-ops/modes/de/angebot.md": {
+    "mtime": 1777139351.6226678,
+    "ast_hash": "c426aa4ca0bf434a388cd8c5c117b9dc",
+    "semantic_hash": "c426aa4ca0bf434a388cd8c5c117b9dc"
+  },
+  "/Users/atharv/career-ops/modes/fr/pipeline.md": {
+    "mtime": 1777139351.62337,
+    "ast_hash": "8df44d767406a602448452dd53f7da88",
+    "semantic_hash": "8df44d767406a602448452dd53f7da88"
+  },
+  "/Users/atharv/career-ops/modes/fr/README.md": {
+    "mtime": 1777139351.6230655,
+    "ast_hash": "2191de5eb9d75399f9e4ff7db82554d4",
+    "semantic_hash": "2191de5eb9d75399f9e4ff7db82554d4"
+  },
+  "/Users/atharv/career-ops/modes/fr/postuler.md": {
+    "mtime": 1777139351.6234539,
+    "ast_hash": "9cc50901860c915cd0ed874d8fce527b",
+    "semantic_hash": "9cc50901860c915cd0ed874d8fce527b"
+  },
+  "/Users/atharv/career-ops/modes/fr/_shared.md": {
+    "mtime": 1777139351.623203,
+    "ast_hash": "cf3d353a8e37e3d7db57336b8a73cbef",
+    "semantic_hash": "cf3d353a8e37e3d7db57336b8a73cbef"
+  },
+  "/Users/atharv/career-ops/modes/fr/offre.md": {
+    "mtime": 1777139351.6232898,
+    "ast_hash": "32ad9504be2e03fb491a2af1b4bc03cc",
+    "semantic_hash": "32ad9504be2e03fb491a2af1b4bc03cc"
+  },
+  "/Users/atharv/career-ops/config/profile.example.yml": {
+    "mtime": 1777139351.5361536,
+    "ast_hash": "f4dbc9c00e02bee105a2bd6c93cddf6d",
+    "semantic_hash": "f4dbc9c00e02bee105a2bd6c93cddf6d"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops.md": {
+    "mtime": 1777139351.532936,
+    "ast_hash": "9f6db3f9f0936e52b31ea00c1258fbb6",
+    "semantic_hash": "9f6db3f9f0936e52b31ea00c1258fbb6"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-batch.md": {
+    "mtime": 1777139351.532221,
+    "ast_hash": "5fc77f330461a1f24ea0d414e268db54",
+    "semantic_hash": "5fc77f330461a1f24ea0d414e268db54"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-apply.md": {
+    "mtime": 1777139351.5321512,
+    "ast_hash": "444825d908268d53156a8b26d06b900d",
+    "semantic_hash": "444825d908268d53156a8b26d06b900d"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-training.md": {
+    "mtime": 1777139351.5328693,
+    "ast_hash": "4375b7dc5a6c501536faeb87ad5f1775",
+    "semantic_hash": "4375b7dc5a6c501536faeb87ad5f1775"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-tracker.md": {
+    "mtime": 1777139351.532805,
+    "ast_hash": "b586bcbdd6d06b0bb2c9822e53cc67c2",
+    "semantic_hash": "b586bcbdd6d06b0bb2c9822e53cc67c2"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-evaluate.md": {
+    "mtime": 1777139351.5324867,
+    "ast_hash": "8d990f189c0772cdf75dd6a31dc93ca7",
+    "semantic_hash": "8d990f189c0772cdf75dd6a31dc93ca7"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-deep.md": {
+    "mtime": 1777139351.5324218,
+    "ast_hash": "ec79a01c2e3a4563e0ab535de7b3f7ea",
+    "semantic_hash": "ec79a01c2e3a4563e0ab535de7b3f7ea"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-compare.md": {
+    "mtime": 1777139351.532291,
+    "ast_hash": "de22cbaae26fb05b0b775e2db803aca4",
+    "semantic_hash": "de22cbaae26fb05b0b775e2db803aca4"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-pipeline.md": {
+    "mtime": 1777139351.532615,
+    "ast_hash": "db8032ea378816f1d6b227724d180090",
+    "semantic_hash": "db8032ea378816f1d6b227724d180090"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-pdf.md": {
+    "mtime": 1777139351.5325487,
+    "ast_hash": "5ab2372ad59ad1977b2a274e5cfc3270",
+    "semantic_hash": "5ab2372ad59ad1977b2a274e5cfc3270"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-project.md": {
+    "mtime": 1777139351.5326786,
+    "ast_hash": "c20a820b6a1a3fd412139b8c06133f44",
+    "semantic_hash": "c20a820b6a1a3fd412139b8c06133f44"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-contact.md": {
+    "mtime": 1777139351.5323572,
+    "ast_hash": "add1e770759afab7beb1dcf98ef4e760",
+    "semantic_hash": "add1e770759afab7beb1dcf98ef4e760"
+  },
+  "/Users/atharv/career-ops/.opencode/commands/career-ops-scan.md": {
+    "mtime": 1777139351.5327423,
+    "ast_hash": "941092f232413d2144d65e88c8d0a8ac",
+    "semantic_hash": "941092f232413d2144d65e88c8d0a8ac"
+  },
+  "/Users/atharv/career-ops/.claude/skills/career-ops/SKILL.md": {
+    "mtime": 1777139351.5292075,
+    "ast_hash": "76d5b19eb695e96c82231211555bd1e8",
+    "semantic_hash": "76d5b19eb695e96c82231211555bd1e8"
+  },
+  "/Users/atharv/career-ops/docs/ARCHITECTURE.md": {
+    "mtime": 1777139351.5382073,
+    "ast_hash": "9543f30c9387409095c088551cd3506b",
+    "semantic_hash": "9543f30c9387409095c088551cd3506b"
+  },
+  "/Users/atharv/career-ops/docs/SETUP.md": {
+    "mtime": 1777139351.5385163,
+    "ast_hash": "de6b772e6a52964653c809e593ced9a3",
+    "semantic_hash": "de6b772e6a52964653c809e593ced9a3"
+  },
+  "/Users/atharv/career-ops/docs/CUSTOMIZATION.md": {
+    "mtime": 1777139351.5383558,
+    "ast_hash": "1ee0dd7c23562e02c6ecc47c10ca44d5",
+    "semantic_hash": "1ee0dd7c23562e02c6ecc47c10ca44d5"
+  },
+  "/Users/atharv/career-ops/docs/SCRIPTS.md": {
+    "mtime": 1777139351.5384495,
+    "ast_hash": "34cd7e0adb1084d8a5d0f81885d3516c",
+    "semantic_hash": "34cd7e0adb1084d8a5d0f81885d3516c"
+  },
+  "/Users/atharv/career-ops/docs/CODEX.md": {
+    "mtime": 1777139351.5382838,
+    "ast_hash": "cbbcdd1a11455010711fb1b705d5416a",
+    "semantic_hash": "cbbcdd1a11455010711fb1b705d5416a"
+  },
+  "/Users/atharv/career-ops/interview-prep/story-bank.md": {
+    "mtime": 1777139351.6215384,
+    "ast_hash": "639e091faaf4cba284f77e7a969efd98",
+    "semantic_hash": "639e091faaf4cba284f77e7a969efd98"
+  },
+  "/Users/atharv/career-ops/batch/batch-prompt.md": {
+    "mtime": 1777139351.5356643,
+    "ast_hash": "66aa8e2a4c3d2d7974e99ecc777341cf",
+    "semantic_hash": "66aa8e2a4c3d2d7974e99ecc777341cf"
+  },
+  "/Users/atharv/career-ops/batch/README.md": {
+    "mtime": 1777139351.5354912,
+    "ast_hash": "14928bd606c8a12e66db6e15121b7296",
+    "semantic_hash": "14928bd606c8a12e66db6e15121b7296"
+  },
+  "/Users/atharv/career-ops/examples/cv-example.md": {
+    "mtime": 1777139351.620056,
+    "ast_hash": "b9e7b23191b7a498607ba872ad9c0163",
+    "semantic_hash": "b9e7b23191b7a498607ba872ad9c0163"
+  },
+  "/Users/atharv/career-ops/examples/sample-report.md": {
+    "mtime": 1777139351.620399,
+    "ast_hash": "7c5f7bf5b864f9cf6ccfda4a6d31e8d5",
+    "semantic_hash": "7c5f7bf5b864f9cf6ccfda4a6d31e8d5"
+  },
+  "/Users/atharv/career-ops/examples/ats-normalization-test.md": {
+    "mtime": 1777139351.6199865,
+    "ast_hash": "03277211d4586ae3ad8d9d4d2aa4f6a5",
+    "semantic_hash": "03277211d4586ae3ad8d9d4d2aa4f6a5"
+  },
+  "/Users/atharv/career-ops/examples/README.md": {
+    "mtime": 1777139351.6198263,
+    "ast_hash": "8e1deb5abff55034e4d9545afa7c37ba",
+    "semantic_hash": "8e1deb5abff55034e4d9545afa7c37ba"
+  },
+  "/Users/atharv/career-ops/examples/article-digest-example.md": {
+    "mtime": 1777139351.6198978,
+    "ast_hash": "046be1628bbb1141813f7a236b5a114a",
+    "semantic_hash": "046be1628bbb1141813f7a236b5a114a"
+  },
+  "/Users/atharv/career-ops/examples/dual-track-engineer-instructor/cv.md": {
+    "mtime": 1777139351.6202497,
+    "ast_hash": "8b79c84be148a71da5fc0dc088c15362",
+    "semantic_hash": "8b79c84be148a71da5fc0dc088c15362"
+  },
+  "/Users/atharv/career-ops/examples/dual-track-engineer-instructor/profile.yml": {
+    "mtime": 1777139351.6203244,
+    "ast_hash": "3a4d6998e9e4bd9f632ac322fa926a37",
+    "semantic_hash": "3a4d6998e9e4bd9f632ac322fa926a37"
+  },
+  "/Users/atharv/career-ops/examples/dual-track-engineer-instructor/README.md": {
+    "mtime": 1777139351.6201892,
+    "ast_hash": "765a17ae4e800ba558a816c784e8ef70",
+    "semantic_hash": "765a17ae4e800ba558a816c784e8ef70"
+  },
+  "/Users/atharv/career-ops/.github/labeler.yml": {
+    "mtime": 1777139351.5313263,
+    "ast_hash": "b236f233e9e24de1c2787101d0fc538f",
+    "semantic_hash": "b236f233e9e24de1c2787101d0fc538f"
+  },
+  "/Users/atharv/career-ops/.github/PULL_REQUEST_TEMPLATE.md": {
+    "mtime": 1777139351.5311155,
+    "ast_hash": "fdf7d39e89996bda3de4b99ffb67d3bc",
+    "semantic_hash": "fdf7d39e89996bda3de4b99ffb67d3bc"
+  },
+  "/Users/atharv/career-ops/.github/dependabot.yml": {
+    "mtime": 1777139351.5312555,
+    "ast_hash": "bc7e3e899b60d804072d7aeb5227d1a2",
+    "semantic_hash": "bc7e3e899b60d804072d7aeb5227d1a2"
+  },
+  "/Users/atharv/career-ops/.github/SECURITY.md": {
+    "mtime": 1777139351.5311875,
+    "ast_hash": "b08eef8ef3f01908a2e097fdad1d9664",
+    "semantic_hash": "b08eef8ef3f01908a2e097fdad1d9664"
+  },
+  "/Users/atharv/career-ops/.github/workflows/release.yml": {
+    "mtime": 1777139351.5316527,
+    "ast_hash": "17c56205ae7924baf1747cad15821828",
+    "semantic_hash": "17c56205ae7924baf1747cad15821828"
+  },
+  "/Users/atharv/career-ops/.github/workflows/labeler.yml": {
+    "mtime": 1777139351.5315878,
+    "ast_hash": "6613ddba38d05238068fda7abcfbbb95",
+    "semantic_hash": "6613ddba38d05238068fda7abcfbbb95"
+  },
+  "/Users/atharv/career-ops/.github/workflows/welcome.yml": {
+    "mtime": 1777139351.5319295,
+    "ast_hash": "09dbe33c12b48cf74109228ef662ed0c",
+    "semantic_hash": "09dbe33c12b48cf74109228ef662ed0c"
+  },
+  "/Users/atharv/career-ops/.github/workflows/test.yml": {
+    "mtime": 1777139351.5318658,
+    "ast_hash": "744108c21e7266581fef6249d46817a5",
+    "semantic_hash": "744108c21e7266581fef6249d46817a5"
+  },
+  "/Users/atharv/career-ops/.github/workflows/codeql.yml": {
+    "mtime": 1777139351.531441,
+    "ast_hash": "7fc6c6a183bc72b068dc327c8d06edea",
+    "semantic_hash": "7fc6c6a183bc72b068dc327c8d06edea"
+  },
+  "/Users/atharv/career-ops/.github/workflows/dependency-review.yml": {
+    "mtime": 1777139351.531515,
+    "ast_hash": "f83f91f6170af8fdb070e1749b0276e3",
+    "semantic_hash": "f83f91f6170af8fdb070e1749b0276e3"
+  },
+  "/Users/atharv/career-ops/.github/workflows/stale.yml": {
+    "mtime": 1777139351.531798,
+    "ast_hash": "65bcf9122aa3015e136b6bf1538d8d68",
+    "semantic_hash": "65bcf9122aa3015e136b6bf1538d8d68"
+  },
+  "/Users/atharv/career-ops/.github/workflows/sbom.yml": {
+    "mtime": 1777139351.5317228,
+    "ast_hash": "826658ff1873f195fe107eef903b4f3b",
+    "semantic_hash": "826658ff1873f195fe107eef903b4f3b"
+  },
+  "/Users/atharv/career-ops/.github/ISSUE_TEMPLATE/feature_request.yml": {
+    "mtime": 1777139351.530951,
+    "ast_hash": "757405fcece80bca819299a11b9bb101",
+    "semantic_hash": "757405fcece80bca819299a11b9bb101"
+  },
+  "/Users/atharv/career-ops/.github/ISSUE_TEMPLATE/bug_report.yml": {
+    "mtime": 1777139351.5307808,
+    "ast_hash": "bacf89ec3fcc80e6910ad6b56c5d4406",
+    "semantic_hash": "bacf89ec3fcc80e6910ad6b56c5d4406"
+  },
+  "/Users/atharv/career-ops/.github/ISSUE_TEMPLATE/i-got-hired.yml": {
+    "mtime": 1777139351.5310411,
+    "ast_hash": "780b6cf70a4a87b079c38afe64ad0eba",
+    "semantic_hash": "780b6cf70a4a87b079c38afe64ad0eba"
+  },
+  "/Users/atharv/career-ops/.github/ISSUE_TEMPLATE/config.yml": {
+    "mtime": 1777139351.5308576,
+    "ast_hash": "f1a1ed34bf783ac80634c1d71f268561",
+    "semantic_hash": "f1a1ed34bf783ac80634c1d71f268561"
+  },
+  "/Users/atharv/career-ops/templates/cv-template.html": {
+    "mtime": 1777139351.627003,
+    "ast_hash": "b286ee48518de7255fbe2a706c0db3f0",
+    "semantic_hash": "b286ee48518de7255fbe2a706c0db3f0"
+  },
+  "/Users/atharv/career-ops/templates/portals.example.yml": {
+    "mtime": 1777139351.6271682,
+    "ast_hash": "ca1deb4c13131f46d15004bca998901a",
+    "semantic_hash": "ca1deb4c13131f46d15004bca998901a"
+  },
+  "/Users/atharv/career-ops/templates/README.md": {
+    "mtime": 1777139351.6268058,
+    "ast_hash": "71898b71709b74d96bbeaed08cae7821",
+    "semantic_hash": "71898b71709b74d96bbeaed08cae7821"
+  },
+  "/Users/atharv/career-ops/templates/states.yml": {
+    "mtime": 1777139351.6272566,
+    "ast_hash": "8685deff4259645a1c667dd17f8586dd",
+    "semantic_hash": "8685deff4259645a1c667dd17f8586dd"
+  },
+  "/Users/atharv/career-ops/docs/vision-banner.jpg": {
+    "mtime": 1777139351.619164,
+    "ast_hash": "cda0ef60b9595471dbaf7e6c36f60052",
+    "semantic_hash": "cda0ef60b9595471dbaf7e6c36f60052"
+  },
+  "/Users/atharv/career-ops/docs/og-image.jpg": {
+    "mtime": 1777139351.5812938,
+    "ast_hash": "55af5e6f13c9a8dcf358845a50932011",
+    "semantic_hash": "55af5e6f13c9a8dcf358845a50932011"
+  },
+  "/Users/atharv/career-ops/docs/hero-banner.jpg": {
+    "mtime": 1777139351.5662153,
+    "ast_hash": "311bb374aa42ab3348960efa0da9dee5",
+    "semantic_hash": "311bb374aa42ab3348960efa0da9dee5"
+  },
+  "/Users/atharv/career-ops/docs/demo.gif": {
+    "mtime": 1777139351.5641923,
+    "ast_hash": "54186efe8754b670b2c1710a77d54ecc",
+    "semantic_hash": "54186efe8754b670b2c1710a77d54ecc"
+  },
+  "/Users/atharv/career-ops/docs/roadmap-phases.jpg": {
+    "mtime": 1777139351.5983865,
+    "ast_hash": "b46e3403e385caf884f86870b89bb46b",
+    "semantic_hash": "b46e3403e385caf884f86870b89bb46b"
+  },
+  "/Users/atharv/career-ops/.claude/settings.json": {
+    "mtime": 1779167120.2388954,
+    "ast_hash": "87f0d903477984d0587a02f8fe185263",
+    "semantic_hash": ""
+  }
+}
