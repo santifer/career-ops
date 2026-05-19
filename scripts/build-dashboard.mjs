@@ -2692,28 +2692,54 @@ function renderRow(r, idx) {
         companyName: r.company,
         hasReferralPath: false, // TODO: wire from linkedin-network when ready
       });
-      // Wave C-A drill-in: percentage pills each open strategy-ceiling drill-in
-      const _pctDrillKey = (key) => `${htmlEscape(String(r.num||''))}:${key}`;
-      const bar = (pct, label, hint, color, drillKey) => {
-        const pctClamped = Math.max(0, Math.min(100, pct || 0));
-        const colorClass = pctClamped >= 70 ? 'alignbar-strong'
-                         : pctClamped >= 40 ? 'alignbar-mid'
-                         : 'alignbar-weak';
-        const dk = _pctDrillKey(drillKey || color || 'pct');
-        return `<div class="alignbar-row" title="${htmlEscape(hint)}">
-          <span class="alignbar-label">${htmlEscape(label)}</span>
-          <div class="alignbar-track"><div class="alignbar-fill ${colorClass}" style="width:${pctClamped}%"></div></div>
-          <span class="alignbar-pct drill-trigger" data-drill="percentage:${dk}" role="button" tabindex="0" title="Click for strategy ceiling — how to improve this metric" onclick="event.stopPropagation();window.drillIn('percentage','${dk}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('percentage','${dk}',event)}">${pctClamped}%</span>
+      // γ GAMMA fix 2026-05-19 (audit HIGH-1): when the source report is
+      // missing, scoreAlignment now returns { unavailable: true, alignment:
+      // null, interview: null, hmNoticing: null }. The previous version
+      // returned three confident 0% values that rendered as three 0% bars,
+      // masking missing data as "this is a terrible fit." Now we render a
+      // single muted "data unavailable" row that names the actual reason.
+      if (align.unavailable) {
+        const reason = htmlEscape(String(align.unavailable_reason || 'data not available'));
+        alignmentBars = `<div class="alignment-bars">
+          <div class="alignbar-row alignbar-unavailable" title="${reason}" style="opacity:0.65">
+            <span class="alignbar-label">Alignment metrics</span>
+            <span class="alignbar-pct" style="color:var(--text-4);font-style:italic;font-size:11px">data unavailable</span>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-4);margin-top:4px;padding-left:2px">↻ ${reason}. Run the evaluation to populate.</div>
         </div>`;
-      };
-      const alignTooltip = 'How well my CV + portfolio match this JD (Block B requirements + competitive edges + overall score).';
-      const intvTooltip = 'Estimated % chance of converting Applied → recruiter screen. Base rate 12% for AI-native cold apps, modulated by score, archetype, comp match, prior outcomes at this company.';
-      const hmTooltip = 'Estimated % chance the hiring manager or recruiter notices the application (vs ATS-filtered). Boosted by competitive edges, rare-combination markers, and referral path strength.';
-      alignmentBars = `<div class="alignment-bars">
-        ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile', 'profile_alignment')}
-        ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview', 'interview_likelihood')}
-        ${bar(align.hmNoticing, 'Chance a hiring manager will see you', hmTooltip, 'hm', 'hm_noticing_chance')}
-      </div>`;
+      } else {
+        // Wave C-A drill-in: percentage pills each open strategy-ceiling drill-in
+        const _pctDrillKey = (key) => `${htmlEscape(String(r.num||''))}:${key}`;
+        const bar = (pct, label, hint, color, drillKey, completeness) => {
+          const pctClamped = Math.max(0, Math.min(100, pct || 0));
+          const colorClass = pctClamped >= 70 ? 'alignbar-strong'
+                           : pctClamped >= 40 ? 'alignbar-mid'
+                           : 'alignbar-weak';
+          const dk = _pctDrillKey(drillKey || color || 'pct');
+          // γ GAMMA: surface a "low-data" indicator when this specific metric
+          // fell back to a partial signal (no Block B grid, no prior outcomes
+          // at company, etc.). Avoids the previous behavior where a metric
+          // backed by 0 Block B requirements rendered identically to one
+          // backed by 12 strong matches.
+          const lowDataChip = (completeness && completeness !== 'full')
+            ? `<span class="alignbar-lowdata" style="font-size:10px;color:#f59e0b;margin-left:6px" title="Partial signal — ${htmlEscape(completeness)}">⚠</span>`
+            : '';
+          return `<div class="alignbar-row" title="${htmlEscape(hint)}">
+            <span class="alignbar-label">${htmlEscape(label)}${lowDataChip}</span>
+            <div class="alignbar-track"><div class="alignbar-fill ${colorClass}" style="width:${pctClamped}%"></div></div>
+            <span class="alignbar-pct drill-trigger" data-drill="percentage:${dk}" role="button" tabindex="0" title="Click for strategy ceiling — how to improve this metric" onclick="event.stopPropagation();window.drillIn('percentage','${dk}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('percentage','${dk}',event)}">${pctClamped}%</span>
+          </div>`;
+        };
+        const alignTooltip = 'How well my CV + portfolio match this JD (Block B requirements + competitive edges + overall score).';
+        const intvTooltip = 'Estimated % chance of converting Applied → recruiter screen. Base rate 12% for AI-native cold apps, modulated by score, archetype, comp match, prior outcomes at this company.';
+        const hmTooltip = 'Estimated % chance the hiring manager or recruiter notices the application (vs ATS-filtered). Boosted by competitive edges, rare-combination markers, and referral path strength.';
+        const dc = align.data_completeness || {};
+        alignmentBars = `<div class="alignment-bars">
+          ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile', 'profile_alignment', dc.alignment)}
+          ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview', 'interview_likelihood', dc.interview)}
+          ${bar(align.hmNoticing, 'Chance a hiring manager will see you', hmTooltip, 'hm', 'hm_noticing_chance', dc.hmNoticing)}
+        </div>`;
+      }
     }
   } catch (_) { /* never break drawer on scorer error */ }
 
