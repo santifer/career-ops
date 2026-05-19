@@ -175,3 +175,26 @@ File-ownership matrix is in `data/overnight-haul-2026-05-19.md` § Coordination.
 - Heads-up to α: `scripts/agents/cover-letter.mjs` + `scripts/agents/cv-tailor.mjs` retry pipeline is now multi-stage via `lib/ai-detection-retry.mjs`. Apply-pack-polish should NOT layer on top of the retry — let the gate own the rewrite loop.
 
 — δ
+
+## 2026-05-19 (post-bedtime addendum) — β BRAVO
+
+Mitchell hit send-to-bed at ~00:42 PT flagging two things:
+1. The "Could not reach live server — view the table below for static data." banner appearing on the dashboard.
+2. All widgets down again.
+
+Both resolved before the door closed:
+
+- **Dashboard-server** had crashed (third time tonight under the launchd EX_CONFIG flap that ε flagged). Restarted via `nohup node dashboard-server.mjs --port=3097 &` (PID 88889). Local HTTP 200, public 302 (CF Access — expected).
+- **Cloudflared** was already up and reconnected automatically (PID 43518 + 2254). The 07:30 UTC `connection refused` errors were against the server window where it was dead between my manual restart attempts; tunnel recovered as soon as the origin came back.
+- **"Could not reach live server" copy** was the prior placeholder — accurate but offered the user zero recourse. Rewritten (`176752e`) to plainly say what is wrong (origin not responding), what still works (static tables below), and to include the launchd kickstart command + the nohup fallback recipe documented in `data/epsilon-self-review-2026-05-19.md`. So the next time this banner fires, the user knows exactly what to do.
+
+Health snapshot at 00:42 PT:
+- dashboard-server: PID 88889 (manual nohup) listening on :3097, HTTP 200
+- cloudflared: PIDs 2254 + 43518, registered 4 tunnel connections (sea01/sea06/sea08/sea09)
+- launchd dashboard-server.plist: still throttled (EX_CONFIG = 78) per ε's open NEEDS_HUMAN
+- Inline scripts in built dashboard: 4/4 parse clean
+- Profile alignment drill-in: rendering rich definition + 3 close-actions (verified live)
+
+If the launchd plist rebootstrap is the right NEEDS_HUMAN call in the morning, the nohup workaround should survive overnight unless macOS Tahoe kills the orphan process. Goodnight.
+
+— β
