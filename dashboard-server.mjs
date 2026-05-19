@@ -2053,13 +2053,27 @@ function batchLive() {
                         total },
             // α Run-Batch eval 2026-05-19: polish stage gated by POLISH_PACK_ENABLED.
             // When the env is OFF the stage is skipped server-side (process-all-pipeline.mjs
-            // line 146-149), so we never enter ph==='polish'. When ON, the agent emits
-            // polished/failed counts that we surface here. Total = top-5 ranked Evaluated rows.
-            polish:   { done: phaseDone('polish') || ph === 'done',
-                        active: ph === 'polish' && isRunning,
-                        completed: (activeJob.phases && activeJob.phases.polish && activeJob.phases.polish.polished) || 0,
-                        total: (activeJob.phases && activeJob.phases.polish && (activeJob.phases.polish.polished + activeJob.phases.polish.failed)) || 0,
-                        gated: true },
+            // line 146-149), so we never enter ph==='polish'. When ON, two sources of progress:
+            //   1. activeJob.polish_progress.* — live counts during the loop (mid-phase)
+            //   2. activeJob.phases.polish.{polished,failed} — final tally after phasePolish
+            //      returns (only written at the end of main()).
+            // Prefer live progress when present; fall back to final phases.polish.
+            polish: (function() {
+              const pp = activeJob.polish_progress;
+              const finalPolish = activeJob.phases && activeJob.phases.polish;
+              const polished = (pp && pp.polished) || (finalPolish && finalPolish.polished) || 0;
+              const failed   = (pp && pp.failed)   || (finalPolish && finalPolish.failed)   || 0;
+              const skipped  = (pp && pp.skipped)  || (finalPolish && finalPolish.skipped)  || 0;
+              const total    = (pp && pp.total)    || (finalPolish && (finalPolish.polished + finalPolish.failed + (finalPolish.skipped || 0))) || 0;
+              return {
+                done:      phaseDone('polish') || ph === 'done',
+                active:    ph === 'polish' && isRunning,
+                completed: polished + skipped,
+                total,
+                gated:     true,
+                failed,
+              };
+            })(),
             publish:  { done: ph === 'done' || ph === 'email',
                         active: false,
                         completed: publishedCount == null ? '✓' : publishedCount,

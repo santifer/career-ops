@@ -183,6 +183,16 @@ async function phaseBatch() {
 // Reads the apply-now-queue, scans for top-N rows whose pack has artifacts
 // but no polish-summary.json (or one >3d old), runs apply-pack-polish on each.
 // Soft-fail: a polish failure does NOT block the rest of the pipeline.
+//
+// α Run-Batch eval 2026-05-19 — additions:
+//   1. Honors POLISH_TOP_N_PER_RUN (default 5) so the dashboard preview slug-count
+//      matches the actual policy.
+//   2. Passes --cost-cap from POLISH_PER_PACK_COST_CAP_USD (default $120) so the
+//      polish agent's $500 spec ceiling can't silently blow $2500 across 5 rows.
+//   3. Includes 'Applied' and 'Interview' rows (not just 'Evaluated') — Mitchell
+//      benefits from polished interview-prep + post-applied materials too.
+//   4. Aggregates polished/failed/skipped + cumulative cost into the job state
+//      object so dashboard SSE bars can render real counts.
 async function phasePolish() {
   const enabled = String(process.env.POLISH_PACK_ENABLED || '').trim() === '1';
   if (!enabled) {
@@ -201,10 +211,17 @@ async function phasePolish() {
   }
   let apq;
   try { apq = JSON.parse(readFileSync(apqPath, 'utf-8')); } catch (_) { return { ok: true }; }
-  const ranked = (apq.ranked || []).filter(r => r && r.num && r.status === 'Evaluated').slice(0, 5); // top 5 max per run
+  const topN     = parseInt(process.env.POLISH_TOP_N_PER_RUN || '5', 10);
+  const costCap  = process.env.POLISH_PER_PACK_COST_CAP_USD || '120';
+  // Polish applies to Evaluated (pre-application materials), Applied (waiting-for-recruiter
+  // tightening), and Interview (closing-stage materials). All three states ship downstream
+  // artifacts that benefit from the loop.
+  const polishStatuses = new Set(['Evaluated', 'Applied', 'Interview']);
+  const ranked = (apq.ranked || []).filter(r => r && r.num && polishStatuses.has(r.status)).slice(0, topN);
 
   let polished = 0;
   let failed = 0;
+  let skipped = 0;
   for (const r of ranked) {
     const slug = `${String(r.num).padStart(3, '0')}-${String(r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${String(r.role || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
     const polishSummary = join(ROOT, 'data', 'apply-packs', slug, 'polish-summary.json');
@@ -212,16 +229,20 @@ async function phasePolish() {
       const ageMs = Date.now() - statSync(polishSummary).mtimeMs;
       if (ageMs < 3 * 24 * 60 * 60 * 1000) {
         log(`  ↪ row ${r.num} polish-summary fresh (<3d) — skipping`);
+        skipped++;
         continue;
       }
     }
-    log(`  → polishing row ${r.num} (${r.company} — ${r.role})`);
-    const code = await runScript('scripts/agents/apply-pack-polish.mjs', ['--row', String(r.num)]);
+    log(`  → polishing row ${r.num} (${r.company} — ${r.role}) [cap $${costCap}]`);
+    const code = await runScript('scripts/agents/apply-pack-polish.mjs', ['--row', String(r.num), '--cost-cap', String(costCap)]);
     if (code === 0) { polished++; log(`  ✓ row ${r.num} polish ok`); }
     else { failed++; log(`  ⚠ row ${r.num} polish failed (exit ${code}) — continuing`); }
+    // Surface running totals at top-level (dashboard SSE bar reads polish_progress.*
+    // since phases.polish only commits at the end of main()).
+    updateJob({ polish_progress: { polished, failed, skipped, total: ranked.length, cap_per_pack_usd: Number(costCap) } });
   }
-  log(`  polish stage done: ${polished} polished, ${failed} failed, ${ranked.length - polished - failed} skipped`);
-  return { ok: true, polished, failed };
+  log(`  polish stage done: ${polished} polished, ${failed} failed, ${skipped} skipped (cap=$${costCap}/pack, topN=${topN})`);
+  return { ok: true, polished, failed, skipped, cost_cap_per_pack_usd: Number(costCap), top_n: topN };
 }
 
 async function phaseMergeTracker() {
