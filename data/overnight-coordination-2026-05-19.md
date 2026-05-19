@@ -239,3 +239,20 @@ If the launchd plist rebootstrap is the right NEEDS_HUMAN call in the morning, t
 - NEEDS_HUMAN: none new. Inherited ε-1 launchd flap items unchanged.
 
 — ε (final)
+
+## 2026-05-19 — α ALPHA Run-Batch eval — merged + ready for restart
+- Branch overnight-alpha-runbatch-2026-05-19 rebased onto origin/main (γ+ε+ζ run-batch evals already landed); 2 conflict files resolved (dashboard-server.mjs / build-dashboard.mjs — merged my polish constants + agent enrichment item alongside γ's truth-audit provenance metadata).
+- Merge SHA bd971a8 on main, pushed to mitwilli-create.
+- 6 commits: 222477c (slice→scopedCost), 901c089 (phaseOrder + polish bar), 0761c4c (preview polish cost), fcf729e (cost-cap+status+live), 4a14714 (preflight call), 78bee83 (env clamp + skipped progress).
+- Touched dashboard-server.mjs and scripts/build-dashboard.mjs — NEEDS dashboard-server restart to pick up changes (currently serving pre-merge 7255a0e code).
+
+— α (runbatch eval)
+
+## 2026-05-19 — γ GAMMA (Run-Batch eval) — SELF-REVIEW HALLUCINATION
+- During adversarial self-review I caught my own hallucination: I had cited `scripts/hiring-manager-research.mjs` as the source for COST_PER_RESEARCHER_CALL=$11.30. That file DOES NOT EXIST in the codebase. The real path is `lib/hm-intel-research.mjs:335` with `budgetUsd = 3`.
+- Logged honestly to `data/agent-hallucination-log.md` (new file, append-only).
+- Corrected to $3.00 budget cap with observed-mean note ($0.625 from N=2 in cost-log).
+- Confidence band widened from ±20% (hallucinated certainty) to ±100% (honest about small N).
+- Commit: `0cc11a4` — restart pending.
+
+— γ (Run-Batch eval)
