@@ -150,6 +150,12 @@ const MAX_FINDINGS = (() => {
   }
   return 50;
 })();
+// --skip-baseline-test: record the baseline test-all failure list but don't block.
+// The per-finding test-gate inside the implementation loop still runs, so logic
+// regressions introduced by SIGMA's patches are still caught. Use this when the
+// baseline has known-pre-existing lint warnings (e.g. absolute-path checks) that
+// don't reflect SIGMA-introduced regressions.
+const SKIP_BASELINE_TEST = args.includes('--skip-baseline-test');
 
 // ─── Git helpers ───────────────────────────────────────────────────────────────
 
@@ -221,14 +227,21 @@ function preflight() {
 
   log('▶ pre-flight: baseline test-all --quick');
   const test = shSafe('node test-all.mjs --quick');
-  if (!test.ok) {
+  if (!test.ok && !SKIP_BASELINE_TEST) {
     return { ok: false, reason: `baseline test-all FAILED: ${(test.out || '').slice(-2000)}` };
   }
   const failLines = (test.out.match(/^.*❌.*$/gm) || []);
   if (failLines.length > 0) {
-    return { ok: false, reason: `baseline has ${failLines.length} pre-existing failing tests:\n${failLines.join('\n')}` };
+    if (SKIP_BASELINE_TEST) {
+      log(`  ⚠ baseline has ${failLines.length} pre-existing failing tests (--skip-baseline-test set, recording and proceeding)`);
+      // Persist for post-run comparison; SIGMA's per-finding test gate still catches new fails.
+      try { writeFileSync(join(DATA_DIR, `sigma-baseline-fails-${DATE}.txt`), failLines.join('\n')); } catch {}
+    } else {
+      return { ok: false, reason: `baseline has ${failLines.length} pre-existing failing tests:\n${failLines.join('\n')}` };
+    }
+  } else {
+    log(`  ✓ baseline tests pass (${(test.out.match(/✅/g) || []).length} green)`);
   }
-  log(`  ✓ baseline tests pass (${(test.out.match(/✅/g) || []).length} green)`);
 
   if (MODE === 'dry-run') {
     log(`  ◇ skipping branch creation (mode=${MODE})`);
