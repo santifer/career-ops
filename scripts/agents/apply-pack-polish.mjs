@@ -415,7 +415,7 @@ async function cliMain() {
     noCache,
   });
 
-  process.stdout.write(JSON.stringify(out, null, 2) + '\n');
+  process.stdout.write(JSON.stringify(out) + '\n');
   process.exit(out.ok === true ? 0 : 1);
 }
 
