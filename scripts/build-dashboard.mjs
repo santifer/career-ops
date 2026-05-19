@@ -18707,25 +18707,35 @@ function _renderPipelineModalBody(action, p) {
            + '<span class="pipeline-stat-value' + (s.muted ? ' muted' : '') + '">' + costStr + '</span>';
     }).join('');
 
-    // Agent enrichment header + rows
-    var agentRows = '';
+    // AAA-3: Agent enrichment as primary card section (it's ~93% of cost)
+    var agentSection = '';
     if (ae) {
-      agentRows = '<span class="pipeline-stat-label" style="grid-column:1/-1;font-weight:600;margin-top:8px;opacity:0.75;font-size:11px">'
-        + 'Agent enrichment <span style="font-weight:400;opacity:0.55;font-size:10px">(only on published items)</span></span>'
-        + [
-            { label: 'Council',     count: ae.council.count,     model: ae.council.model,     cost: ae.council.cost_usd,     note: Math.round((ae.council.cache_hit_rate || 0.5) * 100) + '% cached' },
-            { label: 'Researcher',  count: ae.researcher.count,  model: ae.researcher.model,  cost: ae.researcher.cost_usd,  note: 'HM + comp intel' },
-            { label: 'Dealbreaker', count: ae.dealbreaker.count, model: ae.dealbreaker.model, cost: ae.dealbreaker.cost_usd, note: 'adjudicates researcher' },
-          ].map(function(a) {
-            var unitCost = a.count > 0 ? (a.cost / a.count) : 0;
-            var unitStr  = unitCost >= 1 ? '$' + unitCost.toFixed(2) : (unitCost >= 0.10 ? '$' + unitCost.toFixed(2) : '$' + unitCost.toFixed(3));
-            var sub = ' <span style="opacity:0.45;font-size:10px">(' + a.count + ' &times; ' + unitStr + ' · ' + a.model + ' · ' + a.note + ')</span>';
-            return '<span class="pipeline-stat-label muted" style="padding-left:10px">↳ ' + a.label + sub + '</span>'
-                 + '<span class="pipeline-stat-value">' + (a.cost > 0 ? '$' + a.cost.toFixed(2) : '<span class="muted">$0.00</span>') + '</span>';
-          }).join('');
+      var agentDetailRows = [
+          { label: 'Council',     count: ae.council.count,     model: ae.council.model,     cost: ae.council.cost_usd,     note: Math.round((ae.council.cache_hit_rate || 0.5) * 100) + '% cached' },
+          { label: 'Researcher',  count: ae.researcher.count,  model: ae.researcher.model,  cost: ae.researcher.cost_usd,  note: 'HM + comp intel' },
+          { label: 'Dealbreaker', count: ae.dealbreaker.count, model: ae.dealbreaker.model, cost: ae.dealbreaker.cost_usd, note: 'adjudicates researcher' },
+        ].map(function(a) {
+          var unitCost = a.count > 0 ? (a.cost / a.count) : 0;
+          var unitStr  = unitCost >= 1 ? '$' + unitCost.toFixed(2) : (unitCost >= 0.10 ? '$' + unitCost.toFixed(2) : '$' + unitCost.toFixed(3));
+          var sub = ' <span style="opacity:0.45;font-size:10px">(' + a.count + ' &times; ' + unitStr + ' · ' + a.model + ' · ' + a.note + ')</span>';
+          return '<span class="pipeline-stat-label" style="padding-left:6px">' + a.label + sub + '</span>'
+               + '<span class="pipeline-stat-value pipeline-enrichment-cost">' + (a.cost > 0 ? '$' + a.cost.toFixed(2) : '<span class="muted">$0.00</span>') + '</span>';
+        }).join('');
+      agentSection = '<div style="background:rgba(124,107,234,0.07);border-radius:6px;padding:8px 10px;margin-bottom:8px">'
+        + '<div style="font-weight:600;font-size:11px;margin-bottom:6px;opacity:0.9">'
+        +   'Agent enrichment <span style="font-weight:400;opacity:0.55;font-size:10px">(' + (est.stages ? est.stages.publish.count : 0) + ' published · score ≥ ' + thr + ')</span>'
+        + '</div>'
+        + '<div class="pipeline-stat-grid">' + agentDetailRows + '</div>'
+        + '</div>';
     }
 
-    breakdown = '<div class="pipeline-stat-grid">' + stageRows + agentRows + '</div>';
+    // Core pipeline as secondary footnote (AAA-3: deterministic stages bundled)
+    var corePipelineSection = '<div style="opacity:0.65">'
+      + '<div style="font-size:10px;opacity:0.7;margin-bottom:4px">+ Core pipeline (deterministic stages)</div>'
+      + '<div class="pipeline-stat-grid">' + stageRows + '</div>'
+      + '</div>';
+
+    breakdown = agentSection + corePipelineSection;
   } else {
     // Legacy fallback
     breakdown = isAll
@@ -18743,34 +18753,34 @@ function _renderPipelineModalBody(action, p) {
           + '</div>';
   }
 
-  // Funnel math for header (Change 1 + 7 from council adjudication 2026-05-18)
+  // AAA-1/4/5: Hero number + reconciled funnel + Pulumi-style plan line
   var processN   = est.stages ? est.stages.process.count : (est.eval_count || count);
   var publishN   = est.stages ? est.stages.publish.count : 0;
-  var enrichN    = est.agent_enrichment ? est.agent_enrichment.council.count : 0;
   var publishPct = processN > 0 ? Math.round((publishN / processN) * 100) : 0;
-  var coreUsd    = (est.stages && est.stages.process) ? (est.stages.process.cost_usd || 0) : 0;
-  var enrichUsd  = est.agent_enrichment
-    ? ((est.agent_enrichment.council.cost_usd || 0)
-       + (est.agent_enrichment.researcher.cost_usd || 0)
-       + (est.agent_enrichment.dealbreaker.cost_usd || 0))
-    : 0;
+  // AAA-1: Use publishN as canonical enriched count (all published items get enriched;
+  // council has cache hits but researcher/dealbreaker run on all publishN)
+  var cacheHits  = est.agent_enrichment ? Math.round((est.agent_enrichment.council.cache_hit_rate || 0) * publishN) : 0;
+  var totalUsd   = est.total_cost_usd || 0;
 
   return ''
+    // AAA-4: Hero number right-aligned on same visual line as headline noun
     + '<div class="pipeline-modal-section">'
-    +   '<h4>' + count + ' ' + headlineNoun + '</h4>'
-    +   '<div class="pipeline-funnel" style="font-size:12px;opacity:0.75;margin:4px 0 8px 0">'
-    +     processN + ' queued → ~' + publishN + ' publish-eligible (' + publishPct + '%) → ' + enrichN + ' enriched'
+    +   '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">'
+    +     '<h4 style="margin:0">' + count + ' ' + headlineNoun + '</h4>'
+    +     '<span style="font-size:28px;font-weight:700;color:var(--accent,#7c6bea);white-space:nowrap;line-height:1">$' + totalUsd.toFixed(2) + '</span>'
     +   '</div>'
-    +   '<div class="pipeline-stat-grid">'
-    +     '<span class="pipeline-stat-label">Core pipeline</span>'
-    +     '<span class="pipeline-stat-value">$' + coreUsd.toFixed(2) + '</span>'
-    +     '<span class="pipeline-stat-label">Agent enrichment <span style="opacity:0.55;font-size:10px">(after publish ≥ ' + (est.threshold_for_publish || 4.0) + ')</span></span>'
-    +     '<span class="pipeline-stat-value">$' + enrichUsd.toFixed(2) + '</span>'
-    +     '<span class="pipeline-stat-label" style="font-weight:600;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;margin-top:2px">Estimated total</span>'
-    +     '<span class="pipeline-stat-value pipeline-cost-headline" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;margin-top:2px">$' + (est.total_cost_usd || 0).toFixed(2) + '</span>'
-    +     '<div style="grid-column:1/-1;font-size:11px;opacity:0.6;margin-top:6px">'
-    +       'Result: ~' + enrichN + ' fully-enriched roles (HM intel + dealbreaker review)'
-    +     '</div>'
+    // AAA-1: Funnel uses publishN for enriched (reconciled — matches breakdown rows)
+    +   '<div class="pipeline-funnel" style="font-size:12px;opacity:0.75;margin:0 0 4px 0">'
+    +     processN + ' queued → ' + publishN + ' published (' + publishPct + '%) → ' + publishN + ' enriched'
+    +     (cacheHits > 0 ? ' <span style="opacity:0.5;font-size:10px">(' + cacheHits + ' council cached)</span>' : '')
+    +   '</div>'
+    // AAA-5: Pulumi-style one-line plan summary (borrowing pulumi up "Resources: N to create" pattern)
+    +   '<div style="font-size:12px;font-weight:600;margin-bottom:2px">'
+    +     'Plan: ' + publishN + ' publish · ' + publishN + ' enrich · '
+    +     '<span style="color:var(--accent,#7c6bea)">~$' + totalUsd.toFixed(2) + '</span>'
+    +   '</div>'
+    +   '<div style="font-size:11px;opacity:0.6;margin-bottom:2px">'
+    +     '~' + publishN + ' fully-enriched roles (HM intel + dealbreaker review)'
     +   '</div>'
     + '</div>'
     + '<div class="pipeline-modal-section">'
@@ -18827,14 +18837,16 @@ function _renderCapWarning(action, p) {
            + 'raise <code>MONTHLY_BUDGET_USD</code>, or force-override below.';
   }
 
+  // AAA-2: Force-override separated from heartbeat checkbox; destructive styling + explicit spend amount
   return ''
     + '<div class="pipeline-cap-warning">'
     +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
-    +   '<label class="pipeline-force-override" for="pipeline-force-override" style="margin-top:8px">'
-    +     '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
-    +     '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
+    +   '<div class="pipeline-cap-warning-detail" style="margin-top:6px;opacity:0.65;font-size:11px">' + detail + '</div>'
+    +   '<label class="pipeline-force-override" for="pipeline-force-override"'
+    +     ' style="margin-top:10px;border-top:1px solid rgba(239,68,68,0.3);padding-top:10px;display:flex;align-items:flex-start;gap:8px;cursor:pointer">'
+    +     '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()" style="margin-top:2px;accent-color:#ef4444">'
+    +     '<span style="color:#f87171;font-weight:600">I accept the cost. Force-run $' + slice.total_cost_usd.toFixed(2) + ' anyway.</span>'
     +   '</label>'
-    +   '<div class="pipeline-cap-warning-detail" style="margin-top:8px;opacity:0.65;font-size:11px">' + detail + '</div>'
     + '</div>';
 }
 
@@ -19246,14 +19258,16 @@ function _renderScopedCapWarning(reason, scopedCost, capUsd, p) {
            + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>. '
            + 'Shrink the run, activate burst mode, or force-override below.';
   }
+  // AAA-2: Force-override separated from heartbeat checkbox; destructive styling + explicit spend amount
   return ''
     + '<div class="pipeline-cap-warning">'
     +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
-    +   '<label class="pipeline-force-override" for="pipeline-force-override" style="margin-top:8px">'
-    +     '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
-    +     '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
+    +   '<div class="pipeline-cap-warning-detail" style="margin-top:6px;opacity:0.65;font-size:11px">' + detail + '</div>'
+    +   '<label class="pipeline-force-override" for="pipeline-force-override"'
+    +     ' style="margin-top:10px;border-top:1px solid rgba(239,68,68,0.3);padding-top:10px;display:flex;align-items:flex-start;gap:8px;cursor:pointer">'
+    +     '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()" style="margin-top:2px;accent-color:#ef4444">'
+    +     '<span style="color:#f87171;font-weight:600">I accept the cost. Force-run $' + slice.total_cost_usd.toFixed(2) + ' anyway.</span>'
     +   '</label>'
-    +   '<div class="pipeline-cap-warning-detail" style="margin-top:8px;opacity:0.65;font-size:11px">' + detail + '</div>'
     + '</div>';
 }
 
