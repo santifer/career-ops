@@ -267,15 +267,17 @@ function parseReportSummary(reportPath) {
 //   apiDet.band                              CRIT|HIGH|MED|CLEAR|null
 //   apiDet.gptzero_signal_quality            GOOD|WEAK|USELESS|UNCALIBRATED
 //   apiDet.originality_signal_quality        GOOD|WEAK|USELESS|UNCALIBRATED
+//   apiDet.pangram_signal_quality            GOOD|WEAK|USELESS|UNCALIBRATED
 //   apiDet.sentences[].generated_prob        per-sentence GPTZero score
 //   apiDet.sentences[].highlight_for_ai      GPTZero's own highlight flag
 //   apiDet.sentence_signals.highlighted_count
 // Returns null if no detection ran.
 function computeEditingPriority(apiDet, _result) {
   if (!apiDet || apiDet.error) return null;
-  const band = apiDet.band || null;
-  const gz   = apiDet.gptzero_signal_quality     || 'UNCALIBRATED';
-  const orig = apiDet.originality_signal_quality || 'UNCALIBRATED';
+  const band    = apiDet.band || null;
+  const gz      = apiDet.gptzero_signal_quality     || 'UNCALIBRATED';
+  const orig    = apiDet.originality_signal_quality || 'UNCALIBRATED';
+  const pangram = apiDet.pangram_signal_quality     || 'UNCALIBRATED';
 
   // Priority logic:
   //   - HIGH/CRIT band AND any GOOD-signal detector → ACTION (block ship; rewrite)
@@ -283,11 +285,12 @@ function computeEditingPriority(apiDet, _result) {
   //                                                   show highlights but don't block)
   //   - MED band                                    → REVIEW (light touch-up suggested)
   //   - CLEAR or null                               → NONE
+  const anyGood = gz === 'GOOD' || orig === 'GOOD' || pangram === 'GOOD';
   let priority = 'NONE';
   let blocking = false;
   if (band === 'CRIT' || band === 'HIGH') {
-    if (gz === 'GOOD' || orig === 'GOOD') { priority = 'ACTION'; blocking = true; }
-    else                                   { priority = 'ADVISORY'; }
+    if (anyGood) { priority = 'ACTION'; blocking = true; }
+    else         { priority = 'ADVISORY'; }
   } else if (band === 'MED') {
     priority = 'REVIEW';
   }
@@ -310,10 +313,11 @@ function computeEditingPriority(apiDet, _result) {
     band,                // CRIT/HIGH/MED/CLEAR/null
     gptzero_signal_quality:     gz,
     originality_signal_quality: orig,
+    pangram_signal_quality:     pangram,
     flagged_sentence_count: apiDet.sentence_signals?.highlighted_count ?? top_flagged.length,
     top_flagged,
     advisory_note: priority === 'ADVISORY'
-      ? 'Both detectors are calibrated USELESS against Mitchell\'s voice baseline — the high score is likely a false positive, not a signal to rewrite.'
+      ? 'All three detectors are calibrated USELESS against Mitchell\'s voice baseline — the high score is likely a false positive, not a signal to rewrite.'
       : null,
   };
 }
@@ -5133,9 +5137,11 @@ const server = createServer((req, res) => {
           ai_detection_band: apiDet?.band ?? null,
           gpt_zero_score:    apiDet?.gptzero_prob   != null ? Math.round(apiDet.gptzero_prob   * 100) : null,
           originality_score: apiDet?.originality_prob != null ? Math.round(apiDet.originality_prob * 100) : null,
+          pangram_score: apiDet?.pangram_prob != null ? Math.round(apiDet.pangram_prob * 100) : null,
           ai_detection_signal_quality: {
             gptzero:     apiDet?.gptzero_signal_quality     ?? null,
             originality: apiDet?.originality_signal_quality ?? null,
+            pangram:     apiDet?.pangram_signal_quality     ?? null,
           },
           editing_priority: editingPriority,
           ai_detection_retry_status: result?.diagnostics?.api_detection_retry_status ?? null,
