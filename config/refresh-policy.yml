@@ -1,0 +1,140 @@
+# config/refresh-policy.yml — Cost-allocation knobs for the refresh-master orchestrator
+#
+# Established 2026-05-19 per Mitchell's hybrid budget design discussion.
+# Every knob below is independently dial-able — edit + save + the next
+# refresh-master run picks it up. No code changes required.
+#
+# Target spend: ~$45/day / ~$1,350/month  (cap: $80/day / $2,400/mo).
+# Architecture: 4 layers — continuous (free) → stratified Sonnet refresh
+# (cheap, tier-based) → council + Deep Research (event-triggered + scheduled
+# rotation) → monthly retrospective audit (learning layer).
+#
+# Read by:  scripts/refresh-master.mjs (orchestrator)
+#           lib/refresh-priority.mjs   (priority-tier classifier)
+#           lib/refresh-cache-registry.mjs (cache TTL bands)
+
+version: 1
+last_modified: '2026-05-19'
+last_modified_by: 'Mitchell + Claude (initial spec)'
+
+# ──────────────────────────────────────────────────────────────────────────
+# BUDGET — hard ceilings the orchestrator never crosses without manual override
+# ──────────────────────────────────────────────────────────────────────────
+budget:
+  daily_target_usd:  45        # informational target
+  daily_cap_usd:     80        # orchestrator aborts the run if next refresh would push past
+  monthly_cap_usd:   2400      # checked against running 30-day window
+  dry_run: true                # SAFETY: defaults to ON; flip to false to enable real spend
+  manual_override_cost_usd: 25 # max single user-triggered refresh that fires without confirmation
+
+# ──────────────────────────────────────────────────────────────────────────
+# PRIORITY TIERS — which rows get how much investment.
+# Classifier reads each row in data/apply-now-queue.json and assigns A/B/C/D.
+# ──────────────────────────────────────────────────────────────────────────
+priority_tiers:
+  watch_list_size: 5           # Tier A — top-N apply-now after weighting
+  active_queue_max_rank: 15    # Tier B — rank 6..15 (inclusive)
+  tracked_max_rank: 30         # Tier C — rank 16..30
+  # Below 30 → Tier D (cold storage, no auto-refresh, on-demand only)
+
+  # Mitchell's stated decision pattern: pre-IPO equity is the primary filter.
+  # Boost applied to a row's effective rank-score during classification:
+  #   pre-IPO Series B/C with recent fundraise → multiply composite by this
+  #   IPO'd / late-stage public → 1.0× (no boost)
+  pre_ipo_equity_weighting: 1.8
+
+  # Status-based boosts (multiplicative):
+  status_boosts:
+    Interview: 3.0     # row in active interview → always Tier A regardless of rank
+    Offer: 5.0         # offer received → always Tier A, immediate full council
+    Responded: 1.5     # recruiter has responded → bump
+    Applied: 1.2       # application sent → light bump (still iterating)
+    Evaluated: 1.0     # default
+    Discarded: 0.0     # → Tier D, no refresh
+    SKIP: 0.0          # → Tier D, no refresh
+
+# ──────────────────────────────────────────────────────────────────────────
+# LAYER 2 — Stratified Sonnet refresh (cheap, automated)
+# Per-tier cadence for the 4 mid-cost caches. Each refresh ~$1 (Sonnet only).
+# ──────────────────────────────────────────────────────────────────────────
+layer2_sonnet_refresh:
+  enabled: true
+  caches:
+    - hm_intel_delta          # Sonnet delta-only refresh; full Deep Research lives in Layer 3
+    - toxicity_composite
+    - positioning
+    - role_enrichment
+
+  cadence_days:
+    A_watch:     3      # ~$1.33/row/day across 4 caches
+    B_active:    7      # ~$0.57/row/day
+    C_tracked:   14     # ~$0.29/row/day
+    D_cold:      999    # effectively never; on-demand only
+
+  model: sonnet-4.6     # do NOT auto-upgrade to opus or gemini-deep; cost-bounded
+  per_refresh_cost_cap_usd: 2  # if a single Sonnet call exceeds this, log + skip + flag
+
+# ──────────────────────────────────────────────────────────────────────────
+# LAYER 3 — Council + Deep Research (expensive, event-triggered + scheduled)
+# Costs $25–$50 per fire; fires only when justified.
+# ──────────────────────────────────────────────────────────────────────────
+layer3_deep_research:
+  enabled: true
+  model: gemini-deep-research-max
+  council_size: 7      # full fan-out on deep events
+  per_fire_cost_cap_usd: 50
+
+  # Event triggers — when ANY of these fires for a row, run full deep research
+  triggers:
+    new_top_15_role: true           # row newly enters rank ≤15 → first-gen Deep Research
+    status_change_to_interview: true
+    status_change_to_offer: true
+    recruiter_message_received: false  # requires Gmail webhook wiring — disable until that exists
+    manual_deep_refresh_cta: true   # dashboard "↻ Deep refresh" button on row drawer
+    company_major_news_event: true  # surfaced by Layer 1 company-pulse
+
+  # Scheduled rotation — even if no events, top-N Watch-list gets the deep touch
+  scheduled_rotation:
+    enabled: true
+    target_tier: A
+    one_role_every_n_days: 2        # 1 Watch-list role / 2 days → ~$15/day amortized
+
+# ──────────────────────────────────────────────────────────────────────────
+# LAYER 4 — Monthly retrospective audit (learning layer)
+# Reviews which Layer 2/3 refreshes correlated with outcomes (interviews, offers,
+# recruiter responses) and writes data/cost-allocation-weights.json that the
+# orchestrator reads on next run.
+# ──────────────────────────────────────────────────────────────────────────
+layer4_monthly_audit:
+  enabled: true
+  cadence_days: 30
+  council_size: 7
+  cost_cap_usd: 100   # full-fat council retrospective; runs once/month
+
+# ──────────────────────────────────────────────────────────────────────────
+# NETWORK ENRICHMENT (separate budget from Layer 2/3 since it's not a row-level cache)
+# ──────────────────────────────────────────────────────────────────────────
+network_enrichment:
+  enabled: true
+  cadence: weekly
+  weekly_cap_usd: 50  # ~$7/day amortized
+  target: top-200-priority-contacts
+
+# ──────────────────────────────────────────────────────────────────────────
+# CONTINUOUS LAYER 1 — Free deterministic refreshes
+# Cadence overrides (defaults to existing plist cadences)
+# ──────────────────────────────────────────────────────────────────────────
+layer1_continuous:
+  dashboard_rebuild_after_cache_write: true
+  dashboard_rebuild_debounce_minutes: 5
+  network_db_rebuild_cadence_hours: 6
+  portal_scan_cadence_hours: 12
+
+# ──────────────────────────────────────────────────────────────────────────
+# OBSERVABILITY
+# ──────────────────────────────────────────────────────────────────────────
+observability:
+  per_cache_freshness_chip: true       # paint green/amber/red dot on every metric
+  cost_widget_on_dashboard: true       # sidebar cost-tracker
+  daily_report_path: 'data/refresh-master-daily-{date}.md'
+  state_path: 'data/refresh-master-state.json'

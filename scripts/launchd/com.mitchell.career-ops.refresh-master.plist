@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.refresh-master</string>
+
+    <!-- Cost-aware refresh orchestrator. Runs every 6 hours, reads
+         config/refresh-policy.yml to decide what to refresh per priority
+         tier + cadence, enforces budget caps before spending.
+         DEFAULTS TO DRY-RUN per policy.budget.dry_run=true.
+         Flip dry_run=false in config/refresh-policy.yml to enable real spend. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/refresh-master.mjs</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Every 6 hours: 00:00, 06:00, 12:00, 18:00 PT -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Hour</key><integer>0</integer><key>Minute</key><integer>15</integer></dict>
+        <dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>15</integer></dict>
+        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>15</integer></dict>
+        <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>15</integer></dict>
+    </array>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/refresh-master.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/refresh-master.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>
