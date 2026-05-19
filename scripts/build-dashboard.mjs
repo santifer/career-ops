@@ -14921,9 +14921,32 @@ _drillInRegister('wealth-ranking', function(id) {
         + _esc(DRIVER_LABEL[d.key] || d.key) + ' ' + d.points + '\/' + d.max
         + '<\/span>';
     }).join('');
-    var partialBadge = r.hasPartialData
-      ? '<span title="One or more drivers had no data" style="display:inline-block;font-size:10px;padding:1px 6px;margin-left:6px;border-radius:999px;background:var(--surface-2);color:var(--text-4);border:1px solid var(--border)">partial data<\/span>'
-      : '';
+    // γ GAMMA fix 2026-05-19 (adversarial-review #2): the partial-data
+    // badge used to be a single boolean chip — invisible to whether 1 of 5
+    // drivers was missing or 5 of 5. Now we surface the confidence band
+    // (high / med / low / very-low) emitted by lib/wealth-ranking.mjs as a
+    // color-coded chip whenever it is not 'high'.
+    var partialBadge = '';
+    var confLabel = (r.confidence || '').toLowerCase();
+    if (confLabel === 'very-low' || (r.drivers_missing_data && r.drivers_missing_data >= 3)) {
+      partialBadge = '<span title="' + (r.drivers_missing_data || 0) + ' of ' + (r.drivers_total || 5) + ' drivers had no data — score is mostly placeholders" '
+        + 'style="display:inline-block;font-size:10px;padding:1px 6px;margin-left:6px;border-radius:999px;background:#fde68a;color:#7c2d12;border:1px solid #f59e0b">'
+        + 'very low confidence ('+ (r.drivers_missing_data || 0) +'\/'+ (r.drivers_total || 5) +' missing)'
+        + '<\/span>';
+    } else if (confLabel === 'low') {
+      partialBadge = '<span title="' + (r.drivers_missing_data || 0) + ' of ' + (r.drivers_total || 5) + ' drivers had no data" '
+        + 'style="display:inline-block;font-size:10px;padding:1px 6px;margin-left:6px;border-radius:999px;background:var(--surface-2);color:#92400e;border:1px solid #f59e0b">'
+        + 'low confidence ('+ (r.drivers_missing_data || 0) +'\/'+ (r.drivers_total || 5) +' missing)'
+        + '<\/span>';
+    } else if (confLabel === 'med') {
+      partialBadge = '<span title="' + (r.drivers_missing_data || 0) + ' of ' + (r.drivers_total || 5) + ' drivers had no data" '
+        + 'style="display:inline-block;font-size:10px;padding:1px 6px;margin-left:6px;border-radius:999px;background:var(--surface-2);color:var(--text-4);border:1px solid var(--border)">'
+        + 'med confidence ('+ (r.drivers_missing_data || 0) +'\/'+ (r.drivers_total || 5) +' missing)'
+        + '<\/span>';
+    } else if (r.hasPartialData) {
+      // Legacy fallback for entries that pre-date the confidence-band fix.
+      partialBadge = '<span title="One or more drivers had no data" style="display:inline-block;font-size:10px;padding:1px 6px;margin-left:6px;border-radius:999px;background:var(--surface-2);color:var(--text-4);border:1px solid var(--border)">partial data<\/span>';
+    }
     var scoreBarPct = Math.max(0, Math.min(100, r.score || 0));
     return '<tr class="wealth-rank-row" data-slug="' + _esc(r.slug) + '" '
       + 'onclick="window.drillIn(&apos;company&apos;,&apos;' + _esc(r.slug) + '&apos;,event)" '
@@ -19574,7 +19597,7 @@ function _rdExplainHealth(health) {
   var defs = {
     healthy:   { title: 'Healthy', desc: '3+ active conversations across Tier A/B AND ≥3 outbound touches in the last 7 days. The pipeline is generating enough new density that a single rejection does not stall the search.' },
     stretched: { title: 'Stretched', desc: '1–2 active conversations OR &lt;3 outbound touches in the last 7 days. The search still has momentum but the funnel is thin — one ghost from a Tier-A contact and the pipeline drops below replacement rate.' },
-    critical:  { title: 'Critical', desc: '0 active conversations OR 0 outbound touches in the last 7 days. The search has lost density — every day at this level extends the runway calculation, because the model assumes incoming offers come from conversations already in flight.' },
+    critical:  { title: 'Critical', desc: '0 active conversations OR 0 outbound touches in the last 7 days. The search has lost density — every day at this level erodes confidence the existing runway window (the RUNWAY_WEEKS env constant) is enough, because incoming offers must come from conversations already in flight.' },
     unknown:   { title: 'Unknown', desc: 'Not enough touch data to compute a verdict. Log a couple of touches via /api/touches and re-open this modal.' },
   };
   var d = defs[health] || defs.unknown;
@@ -19695,7 +19718,7 @@ function _rdRenderBody(d) {
   // Active conversations count → scrolls to the conversations table.
   const summary =
     '<div class="rd-summary">' +
-      '<div class="rd-summary-cell rd-summary-cell-clickable" role="button" tabindex="0" onclick="_rdScrollToSection(\\'rd-section-runway\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdScrollToSection(\\'rd-section-runway\\')}" title="See runway calculation source">' +
+      '<div class="rd-summary-cell rd-summary-cell-clickable" role="button" tabindex="0" onclick="_rdScrollToSection(\\'rd-section-runway\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();_rdScrollToSection(\\'rd-section-runway\\')}" title="See pipeline-health source (runway is an input, not a calculation)">' +
         '<div class="rd-summary-label">Runway</div>' +
         '<div class="rd-summary-val">' + _rdEsc(d.runway_weeks ?? '—') + ' weeks</div>' +
       '</div>' +
