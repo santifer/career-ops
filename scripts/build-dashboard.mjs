@@ -20575,7 +20575,7 @@ async function _rdFetchAndRender() {
     // γ GAMMA fix 2026-05-19 (post-tunnel-resolution): previously this
     // accepted a 502/503/504 response and tried to .json() it, which usually
     // threw on HTML error bodies — but if a 5xx returned valid JSON without
-    // an `ok` field, the bug surfaced as a generic "Unknown error" in
+    // an "ok" field, the bug surfaced as a generic "Unknown error" in
     // _rdRenderBody instead of naming the HTTP status. Surface the status.
     if (!r.ok) throw new Error('HTTP ' + r.status);
     data = await r.json();
