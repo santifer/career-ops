@@ -467,12 +467,20 @@ export async function runFormFields(input) {
     try {
       apiDetection = await checkText(combinedProse, { budgetUsd: 0.10, skipCache: false });
 
-      if (apiDetection.passes === false) {
+      // δ DELTA Run-Batch 2026-05-19 — switched from legacy `passes` to
+      // band-aware `gateBlocks`. The legacy `passes` field has ~100% FPR
+      // on Mitchell's authentic prose (Δ.1 baseline: every detector returns
+      // 1.0). `gateBlocks` is true ONLY when CRIT band AND at least one
+      // detector has GOOD signal quality — i.e. the gate has a defensible
+      // reason to block. USELESS-on-both fail-secure (passes=null) is
+      // distinct from gateBlocks=true and does NOT trip the retry here.
+      if (apiDetection.gateBlocks === true) {
         apiDetectionRetried = true;
         const gz   = apiDetection.gptzero_prob    != null ? `GPTZero ${Math.round(apiDetection.gptzero_prob    * 100)}%` : '';
         const orig = apiDetection.originality_prob != null ? `Originality ${Math.round(apiDetection.originality_prob * 100)}%` : '';
-        const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig}. ` +
-          `The form answers scored > 50% AI probability on external detectors. ` +
+        const band = apiDetection.band || 'CRIT';
+        const stricterPrompt = SYSTEM_PROMPT + `\n\nCRITICAL — API detector override: ${gz} ${orig} (band: ${band}). ` +
+          `The form answers triggered the CRIT-band block with at least one detector at GOOD signal quality. ` +
           `Rewrite answers with varied sentence rhythm, concrete specifics, and zero AI-detector tells. ` +
           `Each answer must sound like a human typed it from notes, not polished by a committee.`;
 
@@ -496,7 +504,10 @@ export async function runFormFields(input) {
             }
             const retryProse = retryParsed.answers.map(a => a.answer).join('\n\n');
             const retryDetection = await checkText(retryProse, { budgetUsd: 0.10, skipCache: true });
-            if (retryDetection.passes !== false || apiDetection.passes === false) {
+            // Accept retry if it cleared the CRIT-band block OR if it didn't
+            // make things worse (defensive — never regress from a non-blocking
+            // initial result back to a blocked state).
+            if (retryDetection.gateBlocks !== true || apiDetection.gateBlocks === true) {
               parsed = retryParsed;
               const retryMarkdown = buildMarkdownArtifact(retryParsed, company, role);
               writeFileSync(artifactPath, retryMarkdown, 'utf-8');
@@ -513,11 +524,14 @@ export async function runFormFields(input) {
         } catch { /* ignore regeneration failure */ }
       }
     } catch (detectionErr) {
-      apiDetection = { passes: null, error: String(detectionErr.message || detectionErr) };
+      apiDetection = { passes: null, gateBlocks: null, error: String(detectionErr.message || detectionErr) };
     }
   }
 
-  const apiDetectionFailed = apiDetection?.passes === false;
+  // δ DELTA Run-Batch 2026-05-19 — `gateBlocks` is the band-aware authority
+  // (CRIT + at least one GOOD-signal-quality detector). `passes` is preserved
+  // for legacy diagnostics but is NOT the gating signal anymore.
+  const apiDetectionFailed = apiDetection?.gateBlocks === true;
 
   // ── 8. Return ────────────────────────────────────────────────────────────
 

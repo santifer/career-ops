@@ -555,12 +555,18 @@ export async function humanizeGate({ drafts, aiPolicy, dryRun = true, outDir = n
       detectionResult = await checkArtifact(absPath, { budgetUsd: PER_ARTIFACT_BUDGET });
       totalSpent += detectionResult.cost_usd_estimate || 0.02;
     } catch (e) {
-      detectionResult = { passes: null, error: String(e.message || e) };
+      detectionResult = { passes: null, gateBlocks: null, error: String(e.message || e) };
     }
 
     aiDetectionResults[artifactKey] = detectionResult;
 
-    if (detectionResult.passes === false) {
+    // δ DELTA Run-Batch 2026-05-19 — switched from legacy `passes` to
+    // band-aware `gateBlocks`. The legacy `passes` field has ~100% FPR on
+    // Mitchell's authentic prose (Δ.1 baseline: both detectors return 1.0
+    // on every sample). `gateBlocks` is true ONLY when CRIT band AND at
+    // least one detector has GOOD signal quality. USELESS fail-secure
+    // (passes=null) does NOT prepend the DO NOT SUBMIT banner.
+    if (detectionResult.gateBlocks === true) {
       anyFailed = true;
       // Prepend DO NOT SUBMIT banner to the artifact file
       try {
@@ -574,14 +580,27 @@ export async function humanizeGate({ drafts, aiPolicy, dryRun = true, outDir = n
     }
   }
 
-  // AI detection gate entry in the ledger
+  // AI detection gate entry in the ledger. Ledger emits both `passes` and
+  // `gateBlocks` so downstream consumers can see legacy + new state.
+  // `FAIL` is reserved for the band-aware gateBlocks=true case. Legacy
+  // passes=false without gateBlocks=true surfaces as `ADVISORY` (the gate
+  // didn't actively block; the score is informational).
   const detectionDetail = Object.entries(aiDetectionResults)
     .map(([k, r]) => {
       if (r?.skipped) return `${k}: skipped (${r.reason || 'budget'})`;
       if (r?.error) return `${k}: error (${r.error.slice(0, 60)})`;
       const gz = r?.gptzero_prob != null ? `GPTZero ${Math.round(r.gptzero_prob * 100)}%` : 'GPTZero n/a';
       const orig = r?.originality_prob != null ? `Originality ${Math.round(r.originality_prob * 100)}%` : 'Originality n/a';
-      return `${k}: ${gz} / ${orig} → ${r?.passes === false ? 'FAIL' : r?.passes === true ? 'PASS' : 'UNCHECKED'}`;
+      const band = r?.band ? ` band=${r.band}` : '';
+      const sig  = (r?.gptzero_signal_quality || r?.originality_signal_quality)
+        ? ` sig=${r?.gptzero_signal_quality || 'n/a'}/${r?.originality_signal_quality || 'n/a'}`
+        : '';
+      let verdict;
+      if (r?.gateBlocks === true) verdict = 'FAIL';
+      else if (r?.passes === false) verdict = 'ADVISORY';   // legacy ≥0.5 but not CRIT-with-GOOD
+      else if (r?.passes === true)  verdict = 'PASS';
+      else                          verdict = 'UNCHECKED';
+      return `${k}: ${gz} / ${orig}${band}${sig} → ${verdict}`;
     })
     .join(' | ');
 

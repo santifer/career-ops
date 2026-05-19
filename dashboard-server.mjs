@@ -498,7 +498,39 @@ const COST_CALIBRATION_PROVENANCE = {
     confidence_band_pct: 100,   // ±100% — single-pack telemetry is fragile
     note: 'env-tunable via COST_PER_POLISH_PACK_USD',
   },
+  // δ DELTA Run-Batch 2026-05-19 — AI-detection cost provenance
+  ai_detection_cost: {
+    value: 0.02,                // per artifact, see COST_PER_AI_DETECTION_ARTIFACT
+    source: 'lib/ai-detection-gate.mjs:36-38 (GPTZero $0.01 + Originality $0.01 per call, vendor-published rates)',
+    confidence: 'HIGH',
+    sample_size: 2,             // 2 vendors with documented per-call pricing
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 10,    // ±10% — Originality.ai pricing fluctuates by plan tier
+    note: 'Retry multiplier 1.5× accounts for CLEAR/MED/HIGH/CRIT distribution; 5 artifacts/pack; opt-in rate 40% (set PACK_BUILD_OPT_IN_RATE=1.0 for worst-case)',
+  },
 };
+
+// δ DELTA Run-Batch 2026-05-19 — AI-detection gate cost (per artifact).
+// GPTZero + Originality.ai charge ~$0.01/call each → $0.02/artifact baseline.
+// 5 artifacts per pack (cv-tailored, cover-letter, why-statement,
+// linkedin-dm, form-fields) → $0.10/pack baseline. Retry stages can triple
+// the call count → up to $0.30/pack worst-case. Detection cost ONLY fires
+// when the user clicks "Build pack" on a published row's drawer — it is
+// NOT invoked anywhere on the Process All / Run Batch publish path itself
+// (per δ Run-Batch audit 2026-05-19). The preview surfaces this cost as a
+// post-publish potential spend the user should know about.
+const COST_PER_AI_DETECTION_ARTIFACT = parseFloat(process.env.COST_PER_AI_DETECTION_ARTIFACT_USD || '0.02');
+const AI_DETECTION_ARTIFACTS_PER_PACK = 5;
+const AI_DETECTION_RETRY_MULTIPLIER   = 1.5;   // average across CLEAR / MED / HIGH / CRIT outcomes
+const PACK_BUILD_OPT_IN_RATE          = parseFloat(process.env.PACK_BUILD_OPT_IN_RATE || '0.40');
+// Per-pack detection cost = artifacts × per-call × retry multiplier (~$0.15/pack)
+// Multiplied by PACK_BUILD_OPT_IN_RATE (the % of published items the user
+// actually generates a pack for) to avoid over-stating cost on packs the
+// user never builds. Set PACK_BUILD_OPT_IN_RATE=1.0 to assume all published
+// items get a build (worst-case).
+const COST_PER_AI_DETECTION_PACK = COST_PER_AI_DETECTION_ARTIFACT
+                                 * AI_DETECTION_ARTIFACTS_PER_PACK
+                                 * AI_DETECTION_RETRY_MULTIPLIER;
 
 function countPipelinePending() {
   const fp = join(ROOT, 'data/pipeline.md');
@@ -916,9 +948,25 @@ function buildPipelinePreview() {
   const rbPolishCount = 0;
   const rbPolishCost  = 0;
 
-  // ── Full totals (stages + enrichment + polish if enabled) ────────────────
-  const processAllCost = triageCost + processCost + paAgentTotal + paPolishCost;
-  const runBatchCost   = rbProcessCost + rbAgentTotal + rbPolishCost;
+  // ── δ DELTA Run-Batch 2026-05-19 — AI-detection (post-publish, opt-in) ──
+  // Detection fires only when user clicks "Build pack" on a published row.
+  // Cost: ~$0.10-0.30/pack (5 artifacts × $0.02 × 1.5× retry multiplier),
+  // discounted by PACK_BUILD_OPT_IN_RATE since not every published row gets
+  // a pack built. NOT invoked anywhere on the Process All / Run Batch publish
+  // path itself (per δ Run-Batch audit 2026-05-19) — surfaced here so the
+  // budget is honest about downstream spend the user will incur if they
+  // build packs.
+  const paDetectionPacks   = Math.round(publishCount * PACK_BUILD_OPT_IN_RATE);
+  const paDetectionCost    = paDetectionPacks * COST_PER_AI_DETECTION_PACK;
+  const rbDetectionPacks   = Math.round(queuedPublishCount * PACK_BUILD_OPT_IN_RATE);
+  const rbDetectionCost    = rbDetectionPacks * COST_PER_AI_DETECTION_PACK;
+
+  // ── Full totals (stages + enrichment + polish + detection) ───────────────
+  // Polish is included only when POLISH_PACK_ENABLED=1 (α gate).
+  // Detection is post-publish + user-triggered, included at the
+  // PACK_BUILD_OPT_IN_RATE rate (δ gate).
+  const processAllCost = triageCost + processCost + paAgentTotal + paPolishCost + paDetectionCost;
+  const runBatchCost   = rbProcessCost + rbAgentTotal + rbPolishCost + rbDetectionCost;
 
   // ── Tier 5 estimates (post-Phase-3, upgrade planning) ────────────────────
   const tier5UniqueCompaniesEstimate = Math.max(1, Math.round(batchEvalCount * 0.60));
@@ -1005,6 +1053,23 @@ function buildPipelinePreview() {
             : 'OFF — set POLISH_PACK_ENABLED=1 to engage',
         },
       },
+      // ── δ DELTA Run-Batch 2026-05-19 — AI-detection (post-publish, opt-in) ──
+      // Fires only when user clicks "Build pack" on a row drawer.
+      // NOT invoked anywhere on the Process All / Run Batch publish path itself
+      // per δ Run-Batch audit 2026-05-19; surfaced here so the budget is honest
+      // about downstream spend the user will incur if they build packs.
+      ai_detection: {
+        packs: paDetectionPacks,
+        cost_usd: r2(paDetectionCost),
+        cost_per_pack_usd: r2(COST_PER_AI_DETECTION_PACK),
+        vendors: 'GPTZero + Originality.ai',
+        notes: 'post-publish · user-triggered "Build pack" · '
+             + Math.round(PACK_BUILD_OPT_IN_RATE * 100) + '% opt-in assumed · '
+             + AI_DETECTION_ARTIFACTS_PER_PACK + ' artifacts/pack × $'
+             + COST_PER_AI_DETECTION_ARTIFACT.toFixed(2) + ' × '
+             + AI_DETECTION_RETRY_MULTIPLIER + '× retry',
+        threshold_conditional: true,
+      },
       total_cost_usd:        r2(processAllCost),
       total_with_caps:       r2(Math.min(processAllCost, PER_RUN_CAP_PROCESS_ALL)),
       threshold_for_publish: THRESHOLD_FOR_PUBLISH,
@@ -1064,6 +1129,19 @@ function buildPipelinePreview() {
           notes: 'runs when researcher runs',
         },
       },
+      // ── δ DELTA Run-Batch 2026-05-19 — AI-detection (post-publish, opt-in) ──
+      ai_detection: {
+        packs: rbDetectionPacks,
+        cost_usd: r2(rbDetectionCost),
+        cost_per_pack_usd: r2(COST_PER_AI_DETECTION_PACK),
+        vendors: 'GPTZero + Originality.ai',
+        notes: 'post-publish · user-triggered "Build pack" · '
+             + Math.round(PACK_BUILD_OPT_IN_RATE * 100) + '% opt-in assumed · '
+             + AI_DETECTION_ARTIFACTS_PER_PACK + ' artifacts/pack × $'
+             + COST_PER_AI_DETECTION_ARTIFACT.toFixed(2) + ' × '
+             + AI_DETECTION_RETRY_MULTIPLIER + '× retry',
+        threshold_conditional: true,
+      },
       total_cost_usd:        r2(runBatchCost),
       threshold_for_publish: THRESHOLD_FOR_PUBLISH,
       exceeds_budget:        (spent30d + runBatchCost) > effectiveBudget,
@@ -1084,7 +1162,13 @@ function buildPipelinePreview() {
       researcher_per_role:   COST_PER_RESEARCHER_CALL,
       dealbreaker_per_run:   COST_PER_DEALBREAKER_CALL,
       apply_pack_pregen:     COST_PER_APPLY_PACK_PREGEN,
-      source:                'data/cost-log.tsv observed average + calibration brief 2026-05-16',
+      // δ DELTA Run-Batch 2026-05-19 — detection economics
+      ai_detection_per_artifact: COST_PER_AI_DETECTION_ARTIFACT,
+      ai_detection_per_pack:     COST_PER_AI_DETECTION_PACK,
+      ai_detection_artifacts_per_pack: AI_DETECTION_ARTIFACTS_PER_PACK,
+      ai_detection_retry_multiplier:   AI_DETECTION_RETRY_MULTIPLIER,
+      pack_build_opt_in_rate:    PACK_BUILD_OPT_IN_RATE,
+      source:                'data/cost-log.tsv observed average + calibration brief 2026-05-16; ai_detection_* per lib/ai-detection-gate.mjs:36-38 (GPTZero $0.01 + Originality $0.01)',
     },
     // γ GAMMA 2026-05-19 — provenance metadata for every estimate constant.
     // Rendered in the cost-decomp modal as "calibrated from N runs · confidence ±X%"
