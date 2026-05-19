@@ -98,7 +98,15 @@ function enrichOutreachSummary(summary) {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
-const PORT = parseInt(process.argv.find(a => a.startsWith('--port='))?.split('=')[1] || '3000');
+// 2026-05-18: respect PORT env var first (set by Claude Code preview harness),
+// then fall back to --port= CLI arg, then default 3000. Lets the preview
+// runner pick an available port while the launchd-managed instance keeps
+// holding 3097.
+const PORT = parseInt(
+  process.env.PORT
+  || process.argv.find(a => a.startsWith('--port='))?.split('=')[1]
+  || '3000'
+);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -299,6 +307,12 @@ const DAILY_CAP_OVERNIGHT      = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD 
 // the council + humanize-check passes — budget for that future state so the
 // cap meaningfully gates power-user "regenerate everything" loops.
 const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD || '2.50');
+// Decomposed agent enrichment costs (surfaced per-stage in the preview modal)
+const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '4.00');
+const COST_PER_DEALBREAKER_CALL  = parseFloat(process.env.COST_PER_DEALBREAKER_CALL_USD || '0.30');
+const PUBLISH_RATE_ESTIMATE      = 0.40;  // % of evals scoring >= 4.0 → published to apply-now queue
+const RESEARCHER_ENRICHMENT_RATE = 0.30;  // % of published items triggering researcher (no cached HM intel)
+const THRESHOLD_FOR_PUBLISH      = 4.0;   // minimum score to publish to apply-now queue
 
 function countPipelinePending() {
   const fp = join(ROOT, 'data/pipeline.md');
@@ -672,19 +686,44 @@ function buildPipelinePreview() {
   const spent30d        = getRolling30dSpend();
   const headroom        = Math.max(0, effectiveBudget - spent30d);
 
-  // ── Legacy estimate (Haiku triage + Sonnet batch eval) ──
-  // Still accurate for the currently-deployed pipeline. Tier 5 enrichment
-  // economics layer in once Phases 2-3 ship — see process_all.tier5_estimate.
-  const triageCost     = pending * COST_PER_TRIAGE_HAIKU;
-  const batchEvalCount = queued + Math.round(pending * ADVANCE_RATE_ESTIMATE);
-  const batchCost      = batchEvalCount * COST_PER_BATCH_EVAL;
-  const processAllCost = triageCost + batchCost;
-  const runBatchCost   = queued * COST_PER_BATCH_EVAL;
+  function r2(n) { return Math.round(n * 100) / 100; }
+  function r3(n) { return Math.round(n * 1000) / 1000; }
 
-  // ── Tier 5 estimate (post-Phase-3) ──
-  // For Process All: every advanced item gets JD-enriched triage, ~60% of
-  // items dedupe to unique companies (each company gets council intel with
-  // 50% cache hit rate), top-20% high-confidence items get apply-pack pre-gen.
+  // ── Stage counts ──────────────────────────────────────────────────────────
+  const batchEvalCount     = queued + Math.round(pending * ADVANCE_RATE_ESTIMATE);
+  const publishCount       = batchEvalCount === 0 ? 0 : Math.round(batchEvalCount * PUBLISH_RATE_ESTIMATE);
+  const queuedPublishCount = queued === 0 ? 0 : Math.round(queued * PUBLISH_RATE_ESTIMATE);
+
+  // ── Stage costs ───────────────────────────────────────────────────────────
+  const triageCost    = pending * COST_PER_TRIAGE_HAIKU;
+  const processCost   = batchEvalCount * COST_PER_BATCH_EVAL;
+  const rbProcessCost = queued * COST_PER_BATCH_EVAL;
+
+  // ── Agent enrichment counts (council deduped by company; researcher/dealbreaker per role) ──
+  const paUniqueCompanies  = publishCount === 0 ? 0 : Math.max(1, Math.round(publishCount * 0.60));
+  const paCouncilCount     = Math.round(paUniqueCompanies * (1 - COMPANY_CACHE_HIT_RATE));
+  const paResearcherCount  = Math.round(publishCount * RESEARCHER_ENRICHMENT_RATE);
+
+  const rbUniqueCompanies  = queuedPublishCount === 0 ? 0 : Math.max(1, Math.round(queuedPublishCount * 0.60));
+  const rbCouncilCount     = Math.round(rbUniqueCompanies * (1 - COMPANY_CACHE_HIT_RATE));
+  const rbResearcherCount  = Math.round(queuedPublishCount * RESEARCHER_ENRICHMENT_RATE);
+
+  // ── Agent enrichment costs ────────────────────────────────────────────────
+  const paCouncilCost      = paCouncilCount * COST_PER_COMPANY_COUNCIL;
+  const paResearcherCost   = paResearcherCount * COST_PER_RESEARCHER_CALL;
+  const paDealBreakerCost  = paResearcherCount * COST_PER_DEALBREAKER_CALL;
+  const paAgentTotal       = paCouncilCost + paResearcherCost + paDealBreakerCost;
+
+  const rbCouncilCost      = rbCouncilCount * COST_PER_COMPANY_COUNCIL;
+  const rbResearcherCost   = rbResearcherCount * COST_PER_RESEARCHER_CALL;
+  const rbDealBreakerCost  = rbResearcherCount * COST_PER_DEALBREAKER_CALL;
+  const rbAgentTotal       = rbCouncilCost + rbResearcherCost + rbDealBreakerCost;
+
+  // ── Full totals (stages + enrichment) ────────────────────────────────────
+  const processAllCost = triageCost + processCost + paAgentTotal;
+  const runBatchCost   = rbProcessCost + rbAgentTotal;
+
+  // ── Tier 5 estimates (post-Phase-3, upgrade planning) ────────────────────
   const tier5UniqueCompaniesEstimate = Math.max(1, Math.round(batchEvalCount * 0.60));
   const tier5CompaniesCouncilCost    = tier5UniqueCompaniesEstimate * COST_PER_COMPANY_COUNCIL * (1 - COMPANY_CACHE_HIT_RATE);
   const tier5TriageEnrichedCost      = batchEvalCount * COST_PER_TRIAGE_SONNET_JD;
@@ -697,56 +736,142 @@ function buildPipelinePreview() {
                           + (Math.round(queued * HIGH_CONFIDENCE_PREGEN_RATE) * COST_PER_APPLY_PACK_PREGEN);
 
   return {
-    pending_pipeline:    pending,
-    queued_for_batch:    queued,
-    monthly_budget_usd:  monthlyBudget,
-    burst_budget_usd:    burstBudget,
+    pending_pipeline:     pending,
+    queued_for_batch:     queued,
+    monthly_budget_usd:   monthlyBudget,
+    burst_budget_usd:     burstBudget,
     effective_budget_usd: effectiveBudget,
-    spent_30d_usd:       Math.round(spent30d * 100) / 100,
-    headroom_usd:        Math.round(headroom * 100) / 100,
+    spent_30d_usd:        r2(spent30d),
+    headroom_usd:         r2(headroom),
     per_run_caps: {
       run_batch_usd:    PER_RUN_CAP_RUN_BATCH,
       process_all_usd:  PER_RUN_CAP_PROCESS_ALL,
       overnight_usd:    DAILY_CAP_OVERNIGHT,
     },
     process_all: {
-      triage_count:       pending,
-      triage_cost_usd:    Math.round(triageCost * 1000) / 1000,
-      batch_eval_count:   batchEvalCount,
-      batch_eval_cost_usd:Math.round(batchCost * 100) / 100,
-      total_cost_usd:     Math.round(processAllCost * 100) / 100,
-      assumed_advance_rate: ADVANCE_RATE_ESTIMATE,
-      exceeds_budget:     (spent30d + processAllCost) > effectiveBudget,
-      exceeds_per_run_cap: processAllCost > PER_RUN_CAP_PROCESS_ALL,
-      recommended_cap_usd: Math.ceil((spent30d + processAllCost) * 1.1),
+      // ── Decomposed stages ─────────────────────────────────────────────────
+      stages: {
+        triage: {
+          count: pending, cost_usd: r3(triageCost),
+          model: 'haiku', notes: 'JD enrichment; Sonnet ($0.07/item) if Tier 5',
+        },
+        sort: {
+          count: pending, cost_usd: 0,
+          model: 'deterministic', notes: 'rule-based ordering & dedup — $0',
+        },
+        process: {
+          count: batchEvalCount, cost_usd: r2(processCost),
+          model: 'sonnet-batch',
+          notes: Math.round(ADVANCE_RATE_ESTIMATE * 100) + '% advance rate assumed',
+        },
+        evaluate: {
+          count: batchEvalCount, cost_usd: 0,
+          model: 'sonnet-eval', notes: 'rubric + preflight gates — included in process cost',
+        },
+        publish: {
+          count: publishCount, cost_usd: 0,
+          model: 'deterministic',
+          notes: 'only if score ≥ ' + THRESHOLD_FOR_PUBLISH + ' — triggers agent enrichment',
+          threshold_conditional: true,
+        },
+      },
+      // ── Agent enrichment (for published items only) ───────────────────────
+      agent_enrichment: {
+        council: {
+          count: paCouncilCount, cost_usd: r2(paCouncilCost),
+          model: '4-LLM consensus', cache_hit_rate: COMPANY_CACHE_HIT_RATE,
+          notes: 'company intel — per unique company, ' + Math.round(COMPANY_CACHE_HIT_RATE * 100) + '% cache hit rate',
+        },
+        researcher: {
+          count: paResearcherCount, cost_usd: r2(paResearcherCost),
+          model: 'opus + 4 LLMs',
+          notes: 'HM + comp intel — ' + Math.round(RESEARCHER_ENRICHMENT_RATE * 100) + '% of published roles lack cached intel',
+        },
+        dealbreaker: {
+          count: paResearcherCount, cost_usd: r2(paDealBreakerCost),
+          model: 'sonnet adjudicator',
+          notes: 'adjudicates researcher report — runs when researcher runs',
+        },
+      },
+      total_cost_usd:        r2(processAllCost),
+      total_with_caps:       r2(Math.min(processAllCost, PER_RUN_CAP_PROCESS_ALL)),
+      threshold_for_publish: THRESHOLD_FOR_PUBLISH,
+      exceeds_per_run_cap:   processAllCost > PER_RUN_CAP_PROCESS_ALL,
+      exceeds_budget:        (spent30d + processAllCost) > effectiveBudget,
+      // ── Legacy fields (backward compat) ──────────────────────────────────
+      triage_count:          pending,
+      triage_cost_usd:       r3(triageCost),
+      batch_eval_count:      batchEvalCount,
+      batch_eval_cost_usd:   r2(processCost),
+      assumed_advance_rate:  ADVANCE_RATE_ESTIMATE,
+      recommended_cap_usd:   Math.ceil((spent30d + processAllCost) * 1.1),
       tier5_estimate: {
-        unique_companies:        tier5UniqueCompaniesEstimate,
-        triage_enriched_cost_usd: Math.round(tier5TriageEnrichedCost * 100) / 100,
-        company_council_cost_usd: Math.round(tier5CompaniesCouncilCost * 100) / 100,
-        apply_pack_pregen_cost_usd: Math.round(tier5ApplyPackCost * 100) / 100,
-        total_cost_usd:           Math.round(tier5ProcessAllCost * 100) / 100,
-        assumed_cache_hit_rate:   COMPANY_CACHE_HIT_RATE,
-        exceeds_per_run_cap:      tier5ProcessAllCost > PER_RUN_CAP_PROCESS_ALL,
+        unique_companies:           tier5UniqueCompaniesEstimate,
+        triage_enriched_cost_usd:   r2(tier5TriageEnrichedCost),
+        company_council_cost_usd:   r2(tier5CompaniesCouncilCost),
+        apply_pack_pregen_cost_usd: r2(tier5ApplyPackCost),
+        total_cost_usd:             r2(tier5ProcessAllCost),
+        assumed_cache_hit_rate:     COMPANY_CACHE_HIT_RATE,
+        exceeds_per_run_cap:        tier5ProcessAllCost > PER_RUN_CAP_PROCESS_ALL,
       },
     },
     run_batch: {
-      eval_count:         queued,
-      total_cost_usd:     Math.round(runBatchCost * 100) / 100,
-      exceeds_budget:     (spent30d + runBatchCost) > effectiveBudget,
-      exceeds_per_run_cap: runBatchCost > PER_RUN_CAP_RUN_BATCH,
+      // ── Decomposed stages (no triage for run_batch) ───────────────────────
+      stages: {
+        process: {
+          count: queued, cost_usd: r2(rbProcessCost),
+          model: 'sonnet-batch', notes: 'queued items — parallel Anthropic batch API',
+        },
+        evaluate: {
+          count: queued, cost_usd: 0,
+          model: 'sonnet-eval', notes: 'rubric + preflight gates — included in process cost',
+        },
+        publish: {
+          count: queuedPublishCount, cost_usd: 0,
+          model: 'deterministic',
+          notes: 'only if score ≥ ' + THRESHOLD_FOR_PUBLISH,
+          threshold_conditional: true,
+        },
+      },
+      // ── Agent enrichment ──────────────────────────────────────────────────
+      agent_enrichment: {
+        council: {
+          count: rbCouncilCount, cost_usd: r2(rbCouncilCost),
+          model: '4-LLM consensus', cache_hit_rate: COMPANY_CACHE_HIT_RATE,
+          notes: 'company intel — per unique company',
+        },
+        researcher: {
+          count: rbResearcherCount, cost_usd: r2(rbResearcherCost),
+          model: 'opus + 4 LLMs',
+          notes: 'HM + comp intel — uncached roles only',
+        },
+        dealbreaker: {
+          count: rbResearcherCount, cost_usd: r2(rbDealBreakerCost),
+          model: 'sonnet adjudicator',
+          notes: 'runs when researcher runs',
+        },
+      },
+      total_cost_usd:        r2(runBatchCost),
+      threshold_for_publish: THRESHOLD_FOR_PUBLISH,
+      exceeds_budget:        (spent30d + runBatchCost) > effectiveBudget,
+      exceeds_per_run_cap:   runBatchCost > PER_RUN_CAP_RUN_BATCH,
+      // ── Legacy fields (backward compat) ──────────────────────────────────
+      eval_count:            queued,
       tier5_estimate: {
-        unique_companies:   tier5RunBatchUniqueCompanies,
-        total_cost_usd:     Math.round(tier5RunBatchCost * 100) / 100,
+        unique_companies:    tier5RunBatchUniqueCompanies,
+        total_cost_usd:      r2(tier5RunBatchCost),
         exceeds_per_run_cap: tier5RunBatchCost > PER_RUN_CAP_RUN_BATCH,
       },
     },
     per_item_rates: {
-      triage_haiku:        COST_PER_TRIAGE_HAIKU,
-      triage_sonnet_jd:    COST_PER_TRIAGE_SONNET_JD,
-      batch_sonnet:        COST_PER_BATCH_EVAL,
-      company_council:     COST_PER_COMPANY_COUNCIL,
-      apply_pack_pregen:   COST_PER_APPLY_PACK_PREGEN,
-      source:              'data/cost-log.tsv observed average + calibration brief 2026-05-16',
+      triage_haiku:          COST_PER_TRIAGE_HAIKU,
+      triage_sonnet_jd:      COST_PER_TRIAGE_SONNET_JD,
+      batch_sonnet:          COST_PER_BATCH_EVAL,
+      company_council:       COST_PER_COMPANY_COUNCIL,
+      researcher_per_role:   COST_PER_RESEARCHER_CALL,
+      dealbreaker_per_run:   COST_PER_DEALBREAKER_CALL,
+      apply_pack_pregen:     COST_PER_APPLY_PACK_PREGEN,
+      source:                'data/cost-log.tsv observed average + calibration brief 2026-05-16',
     },
   };
 }
@@ -1565,7 +1690,58 @@ function batchLive() {
     ...stateRows.filter(r => !['running','completed','failed'].includes(r.status)),
   ];
 
-  return { total, completed, failed, running, pending, pct, rows: sorted.slice(0, 500), triageItems: triageItems.slice(0, 200) };
+  // ── Pipeline stage state (Process All decomposition) ─────────────────────
+  let pipelineStages = null;
+  const pipelineStatePath = join(ROOT, 'data/pipeline-process-state.json');
+  if (existsSync(pipelineStatePath)) {
+    try {
+      const ps = JSON.parse(readFileSync(pipelineStatePath, 'utf-8'));
+      const jobs = Object.values(ps.jobs || {}).sort((a, b) =>
+        (b.started_at || '').localeCompare(a.started_at || ''));
+      // Only synthesize per-stage data for Process All jobs — batch-only jobs
+      // never update their phase and would produce all-grey misleading bars.
+      const activeJob = jobs.find(j => j.status === 'running' && j.type !== 'batch-only')
+        || jobs.find(j => j.type !== 'batch-only');
+      if (activeJob) {
+        const ph = activeJob.phase || '';
+        const phaseOrder = ['triage', 'batch', 'rebuild', 'email', 'done'];
+        const phaseIdx = phaseOrder.indexOf(ph);
+        const phaseDone = (p) => phaseOrder.indexOf(p) >= 0 && phaseIdx > phaseOrder.indexOf(p);
+        const isRunning = activeJob.status === 'running';
+        const triageTotal = activeJob.pending_before || 0;
+        const triageAdv   = activeJob.triage_advanced != null ? activeJob.triage_advanced : triageTotal;
+        pipelineStages = {
+          job_id:        activeJob.jobId,
+          status:        activeJob.status,
+          current_phase: ph,
+          stages: {
+            triage:   { done: phaseDone('triage') || ph === 'done',
+                        active: ph === 'triage' && isRunning,
+                        completed: phaseDone('triage') || ph === 'done' ? triageAdv : 0,
+                        total: triageTotal },
+            sort:     { done: phaseDone('batch') || ph === 'done',
+                        active: false,
+                        completed: phaseDone('batch') || ph === 'done' ? triageAdv : 0,
+                        total: triageAdv || triageTotal },
+            process:  { done: phaseDone('rebuild') || ph === 'done',
+                        active: ph === 'batch' && isRunning,
+                        completed,
+                        total },
+            evaluate: { done: phaseDone('rebuild') || ph === 'done',
+                        active: ph === 'batch' && isRunning,
+                        completed,
+                        total },
+            publish:  { done: ph === 'done' || ph === 'email',
+                        active: false,
+                        completed: activeJob.published_count || 0,
+                        total: activeJob.published_count || 0 },
+          },
+        };
+      }
+    } catch (_) {}
+  }
+
+  return { total, completed, failed, running, pending, pct, rows: sorted.slice(0, 500), triageItems: triageItems.slice(0, 200), pipelineStages };
 }
 
 // ── Sidebar batch popout (2026-05-17) ──────────────────────────
@@ -4011,6 +4187,78 @@ const server = createServer((req, res) => {
       });
       req.on('error', reject);
     });
+  }
+
+  // ── POST /api/finalize-apply-pack ─────────────────────────────────────────
+  // 2026-05-18 — backend half of the Wave D apply-pack flow. The five
+  // /api/build-pack-stage agents write to data/apply-packs/<num>-<company>-<role>/
+  // sequentially. Once they're all done, the frontend calls this endpoint to
+  // (a) zip that directory, (b) write the archive to ~/Documents/Apply Packs/
+  // under the council+dealbreaker-adjudicated filename
+  // (Company — Role (YYYY-MM-DD).zip with em-dash + surrounding spaces), and
+  // (c) call `mdimport` so Spotlight picks up the new file immediately even
+  // on macOS Tahoe where the daemon sometimes lags.
+  //
+  // body: { rowId, company, role, date? }
+  // returns: { ok, packPath, sourceDir, fileSizeBytes }
+  if (url === '/api/finalize-apply-pack' && req.method === 'POST') {
+    (async () => {
+      try {
+        const body = await _readBody(req);
+        const { rowId, company, role } = body || {};
+        const date = body?.date || new Date().toISOString().slice(0, 10);
+        if (!rowId || !company || !role) {
+          return json({ ok: false, error: 'rowId, company, and role are required' }, 400);
+        }
+        const padded = String(rowId).padStart(3, '0');
+        const slugify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        const sourceDir = join(ROOT, 'data', 'apply-packs', `${padded}-${slugify(company)}-${slugify(role)}`);
+        if (!existsSync(sourceDir)) {
+          return json({ ok: false, error: `Source dir not found: ${sourceDir}` }, 404);
+        }
+        const home = process.env.HOME || '/Users/mitchellwilliams';
+        const destDir = join(home, 'Documents', 'Apply Packs');
+        if (!existsSync(destDir)) mkdirSync(destDir, { recursive: true });
+        // Council+dealbreaker filename (adjudicated 2026-05-18):
+        //   "{Company} - {Role} ({YYYY-MM-DD}).zip"
+        // ASCII hyphen with surrounding spaces per convention. Strip
+        // apostrophes/accents so the filename is safe on all filesystems.
+        const _sanitizeZip = (s) => String(s)
+          .normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/[''`]/g, '')
+          .replace(/[^A-Za-z0-9 \-.,&()]/g, '')
+          .trim();
+        const zipName = `${_sanitizeZip(company)} - ${_sanitizeZip(role)} (${date}).zip`;
+        const zipPath = join(destDir, zipName);
+        const { execFile } = await import('child_process');
+        // zip -r {destZip} . — run inside sourceDir so the archive contains
+        // the pack files at the top level (not nested under data/apply-packs/...).
+        await new Promise((resolve, reject) => {
+          execFile('zip', ['-r', '-q', zipPath, '.'], { cwd: sourceDir, timeout: 60000 }, (err, stdout, stderr) => {
+            if (err) reject(new Error(`zip failed: ${err.message}${stderr ? ' · ' + stderr : ''}`));
+            else resolve();
+          });
+        });
+        // Force Spotlight to index the new file immediately. Best-effort —
+        // mdimport returns 0 on success, but we don't block on it.
+        try {
+          execFile('mdimport', [zipPath], { timeout: 5000 }, () => { /* fire and forget */ });
+        } catch (_) { /* mdimport is best-effort */ }
+        const stat = statSync(zipPath);
+        _d25Log(`[finalize-apply-pack] wrote ${zipPath} (${stat.size} bytes)`);
+        return json({
+          ok: true,
+          packPath: zipPath,
+          packPathDisplay: zipPath.replace(home, '~'),
+          sourceDir,
+          fileSizeBytes: stat.size,
+        });
+      } catch (err) {
+        _d25Log(`[finalize-apply-pack] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
   }
 
   // ── 1. POST /api/build-pack-stage ─────────────────────────────────────────

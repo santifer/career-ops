@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "dashboard": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["scripts/mcp-servers/dashboard-mcp.mjs"],
+      "env": {
+        "DASHBOARD_URL": "https://dashboard.careers-ops.com",
+        "DASHBOARD_MCP_SERVICE_TOKEN_ID": "${DASHBOARD_MCP_SERVICE_TOKEN_ID}",
+        "DASHBOARD_MCP_SERVICE_TOKEN_SECRET": "${DASHBOARD_MCP_SERVICE_TOKEN_SECRET}"
+      }
+    }
+  }
+}
