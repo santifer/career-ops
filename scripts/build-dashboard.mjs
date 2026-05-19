@@ -19626,13 +19626,24 @@ function _renderPipelineModalBody(action, p) {
   // council has cache hits but researcher/dealbreaker run on all publishN)
   var cacheHits  = est.agent_enrichment ? Math.round((est.agent_enrichment.council.cache_hit_rate || 0) * publishN) : 0;
   var totalUsd   = est.total_cost_usd || 0;
+  // β Run-Batch eval 2026-05-19: detect cap state up here so the hero number
+  // can recolor + carry a small inline pill. Without this the user sees the
+  // big green/accent $142.80 and only learns it busts the cap by scrolling
+  // 350px down to the cap-warning card — too easy to miss.
+  var heroCapped = !!(est.exceeds_per_run_cap || est.exceeds_budget);
+  var heroColor  = heroCapped ? 'var(--red-fg,#dc2626)' : 'var(--accent,#7c6bea)';
+  var heroPill   = heroCapped
+    ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#b91c1c;background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.35);padding:2px 6px;border-radius:999px;vertical-align:middle;margin-left:6px">'
+        + (est.exceeds_per_run_cap ? 'over cap' : 'over budget')
+      + '</span>'
+    : '';
 
   return ''
     // AAA-4: Hero number right-aligned on same visual line as headline noun
     + '<div class="pipeline-modal-section">'
     +   '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">'
-    +     '<h4 style="margin:0">' + count + ' ' + headlineNoun + '</h4>'
-    +     '<span style="font-size:28px;font-weight:700;color:var(--accent,#7c6bea);white-space:nowrap;line-height:1">$' + totalUsd.toFixed(2) + '</span>'
+    +     '<h4 style="margin:0">' + count + ' ' + headlineNoun + heroPill + '</h4>'
+    +     '<span style="font-size:28px;font-weight:700;color:' + heroColor + ';white-space:nowrap;line-height:1">$' + totalUsd.toFixed(2) + '</span>'
     +   '</div>'
     // AAA-1: Funnel uses publishN for enriched (reconciled — matches breakdown rows)
     +   '<div class="pipeline-funnel" style="font-size:12px;opacity:0.75;margin:0 0 4px 0">'
