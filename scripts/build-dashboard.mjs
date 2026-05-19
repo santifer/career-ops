@@ -20005,12 +20005,24 @@ async function confirmPipelineAction() {
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   confirmBtn.disabled = true;
   confirmBtn.textContent = 'Starting…';
-  // Companies subset only meaningful for Process All
-  const companies = (_pipelineAction === 'process-all' && _pipelinePerCompany)
-    ? Array.from(_pipelineSelectedSlugs)
-        .map(slug => _pipelinePerCompany.companies.find(c => c.slug === slug)?.company)
-        .filter(Boolean)
-    : null;
+  // 2026-05-19 (Mitchell feedback): Process All defaults to FULL DRAIN when
+  // every available company is selected. Sending the explicit companies list
+  // in that case would pass --companies=... to the script, which scopes
+  // triage + batch and prevents pipeline.md from fully draining. To honor
+  // Mitchell's "click Process All → pipeline → 0" mental model, only send
+  // the array when the user has actually unchecked some rows (partial scope).
+  let companies = null;
+  if (_pipelineAction === 'process-all' && _pipelinePerCompany) {
+    const availableRows = _pipelinePerCompany.companies.filter(c => !c.excluded);
+    const selected = availableRows.filter(c => _pipelineSelectedSlugs.has(c.slug));
+    const isFullDrain = selected.length === availableRows.length && availableRows.length > 0;
+    if (!isFullDrain && selected.length > 0) {
+      // Partial scope — explicitly pass company list so script scopes phases.
+      companies = selected.map(c => c.company).filter(Boolean);
+    }
+    // isFullDrain || nothing selected → leave companies=null → script runs
+    // full drain (or refuses if nothing selected via the disabled confirm btn).
+  }
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -20045,24 +20057,32 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   // and per-row actions. Mitchell can uncheck rows to scope the run before
   // advancing to Phase B (confirm + send-email + force-override).
   //
-  // β Run-Batch eval 2026-05-19: Hero number changed from
-  //   pAgg.process_all.tier5_estimate.total_cost_usd ($210.60 in this snapshot)
-  // to the scoped-row sum because the prior layout had a confusing mismatch:
-  // headline read $210.60 (108 companies, hypothetical Tier-5 upgrade) while
-  // the bottom of the same modal showed "Scoped cost (selected rows) $15.00".
-  // Mitchell would commit to a $15 run wondering "where does the $210 come
-  // from?" The Tier-5 estimate is still surfaced as a sub-line so the upgrade-
-  // planning use case (the original intent per session note 2026-05-18) is
-  // preserved, but the primary signal is now the cost the user is actually
-  // about to spend.
+  // 2026-05-19 (post-OMEGA, Mitchell feedback): Hero now defaults to the
+  // FULL PIPELINE DRAIN cost ($63.68 = triage + batch + council + dealbreaker
+  // + detection + apply-pack-pregen on all 15 pipeline items + all unique
+  // companies). The prior β-era hero ("Scoped run · 10 companies · $15.00")
+  // was misleading: $15 is only the per-row apply-pack-pregen subset and
+  // hides the dominant pipeline drain costs. Worse, the confirm handler
+  // was sending the auto-checked company list to the script, which scoped
+  // triage + batch to those companies — meaning pipeline.md items for any
+  // other company would stay queued.  Mitchell's mental model is "click
+  // Process All → pipeline → 0".  Default UX now honors that.
+  //
+  // When the user explicitly unchecks rows, the hero adapts to "Partial run"
+  // and shows the reduced cost. Sub-line surfaces a green "✓ Pipeline.md → 0
+  // after this run" assurance on full drain, or an amber warning on partial.
   const tier5 = pAgg.process_all.tier5_estimate || {};
-  const realisticTotal = pAgg.process_all.total_cost_usd || 0;
+  const fullDrainCost = pAgg.process_all.total_cost_usd || 0;
+  const triageCount = pAgg.process_all.triage_count || 0;
   const scopedRows = (pCmp && Array.isArray(pCmp.companies))
     ? pCmp.companies.filter(c => !c.excluded)
     : [];
-  const scopedSum = scopedRows.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  // Default = full drain (all rows selected). _pcpUpdateScopedCost() recomputes
+  // on every checkbox toggle.
+  const allCompaniesCost = scopedRows.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  // Initial cost = the FULL DRAIN cost (which already includes per-row pregen).
+  const initialCost = fullDrainCost;
   // OMEGA-proposal-2 (approved 2026-05-19): scoped AI-detection potential sum.
-  // Computed from per-row ai_detection_potential_usd that pCmp now ships.
   const scopedDetection = scopedRows.reduce((s, c) => s + (c.ai_detection_potential_usd || 0), 0);
   const optInPct = Math.round((pCmp && pCmp.pack_build_opt_in_rate ? pCmp.pack_build_opt_in_rate : 0.40) * 100);
   const detectionLine = scopedDetection > 0.005
@@ -20071,16 +20091,24 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   const tier5Line = (tier5.total_cost_usd != null)
     ? '<span>Tier-5 estimate · ' + (tier5.unique_companies || 0) + ' companies: $' + tier5.total_cost_usd.toFixed(2) + '</span>'
     : '';
+  // Drain assurance: green check on full drain (default state), recomputed
+  // by _pcpUpdateScopedCost when user toggles checkboxes.
+  const drainAssurance = ''
+    + '<div id="pcp-drain-assurance" style="font-size:12px;margin-top:6px;color:#10b981;font-weight:500">'
+    +   '✓ Pipeline.md drains to 0 after this run · ' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ' + ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + ' fully processed'
+    + '</div>';
+  const initialLabel = 'Full pipeline drain · ' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ' + ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies');
   const headline = ''
     + '<div class="pipeline-modal-section">'
     +   '<div class="pcp-phase-pill">Step 1 of 2 — preview</div>'
     +   '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">'
-    +     '<h4 style="margin:0">Scoped run · ' + scopedRows.length + ' compan' + (scopedRows.length === 1 ? 'y' : 'ies') + '</h4>'
-    +     '<span class="pipeline-stat-value pipeline-cost-headline" id="pcp-headline-cost">$' + scopedSum.toFixed(2) + '</span>'
+    +     '<h4 style="margin:0" id="pcp-headline-label">' + initialLabel + '</h4>'
+    +     '<span class="pipeline-stat-value pipeline-cost-headline" id="pcp-headline-cost">$' + initialCost.toFixed(2) + '</span>'
     +   '</div>'
     +   detectionLine
-    +   '<div style="font-size:11px;opacity:0.6;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px">'
-    +     '<span>Realistic full drain · ' + (pAgg.process_all.triage_count || 0) + ' pipeline items: <strong>$' + realisticTotal.toFixed(2) + '</strong></span>'
+    +   drainAssurance
+    +   '<div style="font-size:11px;opacity:0.55;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:6px">'
+    +     '<span>Per-company drilldown (council + apply-pack pregen): $' + allCompaniesCost.toFixed(2) + ' · uncheck rows below to reduce scope</span>'
     +     tier5Line
     +   '</div>'
     + '</div>';
@@ -20236,24 +20264,49 @@ function _pcpBulkToggle(checked) {
 
 function _pcpUpdateScopedCost() {
   if (!_pipelinePerCompany) return;
-  const selected = _pipelinePerCompany.companies.filter(c => _pipelineSelectedSlugs.has(c.slug));
-  const cost = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
-  // OMEGA-proposal-2 (approved 2026-05-19): scoped detection sum from the
-  // per-row potential field. Surfaces ~$0.06 × selected for typical 40% opt-in.
+  const availableRows = _pipelinePerCompany.companies.filter(c => !c.excluded);
+  const selected = availableRows.filter(c => _pipelineSelectedSlugs.has(c.slug));
+  // 2026-05-19 (Mitchell feedback): full-drain vs partial-scope distinction.
+  // Full drain = ALL available rows selected → script runs unscoped → pipeline
+  // drains to 0. Partial scope = some unchecked → script gets --companies=...
+  // → some pipeline.md items stay queued.
+  const isFullDrain = selected.length === availableRows.length && availableRows.length > 0;
+  const fullDrainCost = (_pipelinePreview && _pipelinePreview.process_all && _pipelinePreview.process_all.total_cost_usd) || 0;
+  const triageCount = (_pipelinePreview && _pipelinePreview.process_all && _pipelinePreview.process_all.triage_count) || 0;
+  // Cost: full drain shows the realistic_full_drain total; partial scope shows
+  // the per-row sum (a conservative proxy — under-estimates by the shared
+  // triage/batch costs the script will still incur).
+  const perRowSum = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  const cost = isFullDrain ? fullDrainCost : perRowSum;
+  // OMEGA-proposal-2: scoped detection sum from the per-row potential field.
   const detection = selected.reduce((s, c) => s + (c.ai_detection_potential_usd || 0), 0);
   const costEl  = document.getElementById('pcp-scoped-cost');
   const countEl = document.getElementById('pcp-scoped-count');
   if (costEl)  costEl.textContent  = '$' + cost.toFixed(2);
   if (countEl) countEl.textContent = String(selected.length);
-  // β Run-Batch eval 2026-05-19: also update the new top-of-modal scoped headline
-  // so toggling checkboxes immediately reconciles the hero number with the
-  // bottom-of-modal summary instead of staying stuck on the open-time value.
+  // Update hero cost + label to reflect mode (full drain vs partial scope).
   const heroEl = document.getElementById('pcp-headline-cost');
   if (heroEl) heroEl.textContent = '$' + cost.toFixed(2);
-  const heroSection = heroEl && heroEl.closest('.pipeline-modal-section');
-  const heroLabel = heroSection && heroSection.querySelector('h4');
+  const heroLabel = document.getElementById('pcp-headline-label');
   if (heroLabel) {
-    heroLabel.textContent = 'Scoped run · ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies');
+    heroLabel.textContent = isFullDrain
+      ? 'Full pipeline drain · ' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ' + ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies')
+      : 'Partial run · ' + selected.length + ' of ' + availableRows.length + ' companies';
+  }
+  // Drain assurance / partial warning — swap green check ↔ amber warning.
+  const drainEl = document.getElementById('pcp-drain-assurance');
+  if (drainEl) {
+    if (isFullDrain) {
+      drainEl.style.color = '#10b981';
+      drainEl.textContent = '✓ Pipeline.md drains to 0 after this run · ' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ' + ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies') + ' fully processed';
+    } else if (selected.length === 0) {
+      drainEl.style.color = '#ef4444';
+      drainEl.textContent = '✗ No companies selected — run blocked';
+    } else {
+      const skipped = availableRows.length - selected.length;
+      drainEl.style.color = '#f59e0b';
+      drainEl.textContent = '⚠ Partial run — ' + skipped + ' compan' + (skipped === 1 ? 'y' : 'ies') + ' deferred · pipeline.md will NOT fully drain';
+    }
   }
   // OMEGA-proposal-2: live-update the detection sub-line under the hero.
   const detectEl = document.getElementById('pcp-headline-detection');
@@ -20269,6 +20322,8 @@ function _pcpUpdateScopedCost() {
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   if (confirmBtn && _pipelinePhase === 'preview') {
     confirmBtn.disabled = selected.length === 0;
+    // Update CTA label to reflect intent: "Continue to drain" vs "Continue with partial scope"
+    confirmBtn.textContent = isFullDrain ? 'Continue → Full drain' : (selected.length === 0 ? 'No companies selected' : 'Continue → Partial run');
   }
 }
 
@@ -20363,9 +20418,15 @@ function _advanceProcessAllToConfirm() {
   // the scoped cost still exceeds the per-run cap.
   if (!_pipelinePreview || !_pipelinePerCompany) return;
   _pipelinePhase = 'confirm';
-  const selected = _pipelinePerCompany.companies.filter(c => _pipelineSelectedSlugs.has(c.slug));
-  const scopedCost = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
-  // OMEGA-proposal-2 (approved 2026-05-19): scoped detection sum for Phase B confirm.
+  const availableRows = _pipelinePerCompany.companies.filter(c => !c.excluded);
+  const selected = availableRows.filter(c => _pipelineSelectedSlugs.has(c.slug));
+  // 2026-05-19 (Mitchell feedback): full-drain vs partial-scope on Phase B.
+  const isFullDrain = selected.length === availableRows.length && availableRows.length > 0;
+  const fullDrainCost = (_pipelinePreview.process_all && _pipelinePreview.process_all.total_cost_usd) || 0;
+  const triageCount = (_pipelinePreview.process_all && _pipelinePreview.process_all.triage_count) || 0;
+  const perRowSum = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  const scopedCost = isFullDrain ? fullDrainCost : perRowSum;
+  // OMEGA-proposal-2: scoped detection sum for Phase B confirm.
   const scopedDetection = selected.reduce((s, c) => s + (c.ai_detection_potential_usd || 0), 0);
   const optInPct = Math.round((_pipelinePerCompany.pack_build_opt_in_rate || 0.40) * 100);
   const p = _pipelinePreview;
@@ -20374,7 +20435,8 @@ function _advanceProcessAllToConfirm() {
   const exceedsMonthly = (p.spent_30d_usd + scopedCost) > p.effective_budget_usd;
   const cappedReason   = exceedsRun ? 'per-run' : (exceedsMonthly ? 'monthly' : '');
   const subtitle = document.getElementById('pipeline-modal-subtitle');
-  if (subtitle) subtitle.textContent = 'Step 2 of 2 — confirm. ' + selected.length + ' companies, $' + scopedCost.toFixed(2) + ' scoped cost.';
+  const intentLabel = isFullDrain ? 'Full drain' : 'Partial run';
+  if (subtitle) subtitle.textContent = 'Step 2 of 2 — confirm. ' + intentLabel + ' · ' + selected.length + ' companies · $' + scopedCost.toFixed(2) + '.';
   const body = document.getElementById('pipeline-modal-body');
   if (!body) return;
   const sampleNames = selected.slice(0, 6).map(c => _esc(c.company)).join(', ');
@@ -20384,6 +20446,13 @@ function _advanceProcessAllToConfirm() {
   const detectionSubLine = scopedDetection > 0.005
     ? '<div style="font-size:11px;opacity:0.55;margin-top:4px;text-align:right">+ $' + scopedDetection.toFixed(2) + ' potential AI-detection (post-publish, if ' + optInPct + '% opt in to Build pack)</div>'
     : '';
+  // Drain-assurance / partial warning on Phase B too.
+  const drainConfirm = isFullDrain
+    ? '<div style="font-size:12px;color:#10b981;margin-top:8px;font-weight:500">✓ Pipeline.md (' + triageCount + ' item' + (triageCount === 1 ? '' : 's') + ') will drain to 0 after this run</div>'
+    : '<div style="font-size:12px;color:#f59e0b;margin-top:8px;font-weight:500">⚠ Partial run — ' + (availableRows.length - selected.length) + ' compan' + ((availableRows.length - selected.length) === 1 ? 'y' : 'ies') + ' deferred · pipeline.md will NOT fully drain</div>';
+  const headlineLabel = isFullDrain
+    ? 'Full pipeline drain (' + selected.length + ' companies)'
+    : 'Scoped run (' + selected.length + ' of ' + availableRows.length + ' companies)';
   body.innerHTML = ''
     + '<div class="pipeline-modal-section">'
     +   '<div class="pcp-phase-pill" data-phase="confirm">'
@@ -20391,10 +20460,11 @@ function _advanceProcessAllToConfirm() {
     +     'Step 2 of 2 — confirm'
     +   '</div>'
     +   '<div class="pipeline-stat-grid">'
-    +     '<span class="pipeline-stat-label">Scoped cost (' + selected.length + ' companies)</span>'
+    +     '<span class="pipeline-stat-label">' + headlineLabel + '</span>'
     +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + scopedCost.toFixed(2) + '</span>'
     +   '</div>'
     +   detectionSubLine
+    +   drainConfirm
     + '</div>'
     + '<div class="pipeline-modal-section">'
     +   '<h4>Companies in this run</h4>'
