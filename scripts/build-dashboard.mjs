@@ -2229,10 +2229,16 @@ function sparklineSVG(daily, color, label) {
   return `<svg class="sparkline" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}"><title>${title}</title><path d="M${pts.join(' L')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 function deltaIndicator(delta) {
-  if (delta === 0) return `<span class="stat-delta stat-delta-flat">±0 vs last week</span>`;
+  // BRAVO 2026-05-19 (AA-4): a big-red "-47 vs last week" with no provenance
+  // reads as catastrophic-but-unexplained. The number can move because (a)
+  // new evaluations were added, (b) dedup or tracker normalization removed
+  // rows, or (c) status churn moved rows between groups. Adding a title attr
+  // gives the user a hover-explanation without bloating the visual.
+  const titleAttr = ' title="Change vs the same 7-day window last week. Drops can reflect dedup, status churn, or archived rows — open the tile for a row-by-row breakdown."';
+  if (delta === 0) return `<span class="stat-delta stat-delta-flat"${titleAttr}>±0 vs last week</span>`;
   const sign = delta > 0 ? '+' : '';
   const cls = delta > 0 ? 'stat-delta-up' : 'stat-delta-down';
-  return `<span class="stat-delta ${cls}">${sign}${delta} vs last week</span>`;
+  return `<span class="stat-delta ${cls}"${titleAttr}>${sign}${delta} vs last week</span>`;
 }
 // Hero-balance sparkline: stretches to fill the card width as a background fill.
 function heroSparklineSVG(daily, label) {
