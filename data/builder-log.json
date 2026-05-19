@@ -1,0 +1,328 @@
+{
+  "skills": {
+    "bug-class-lint": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "instrumentation-first": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "dedup-on-append": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "drain-loop": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "persistent-progress-bar": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "postmortem-driven-fix": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "cost-tracking": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "cohesion-fix": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "tier-routing": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "detector-calibration": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "apply-pack-polish": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "voice-corpus": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "network-database": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "fail-secure": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "council-orchestration": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    }
+  },
+  "apis": {
+    "anthropic": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "mcp": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "pangram": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "launchd": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "ashby": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "workable": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "greenhouse": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "cloudflare": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "typst": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "gemini": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "github-actions": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "playwright": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "openai": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "grok": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "perplexity": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    }
+  },
+  "bug_classes": {
+    "outer-template-unescape": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "duplicate-bloat": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "limit-cap-leakage": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "frontmatter-cloak": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "hardcoded-date": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    }
+  },
+  "pm_signals": {
+    "instrumentation-first": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "audit-trail-design": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "observability": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "postmortem-then-fix": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "cohesion-driven-ux": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "failure-mode-doc": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "cost-discipline": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    },
+    "reversible-changes": {
+      "first_seen": "2026-04-21",
+      "count": 2
+    }
+  },
+  "history": [
+    {
+      "generated_at": "2026-05-19T19:17:48.507Z",
+      "since": "30 days ago",
+      "commits": 523,
+      "streak": 5,
+      "top_skills": [
+        {
+          "skill": "detector-calibration",
+          "n": 31
+        },
+        {
+          "skill": "postmortem-driven-fix",
+          "n": 14
+        },
+        {
+          "skill": "network-database",
+          "n": 9
+        },
+        {
+          "skill": "apply-pack-polish",
+          "n": 8
+        },
+        {
+          "skill": "tier-routing",
+          "n": 7
+        }
+      ],
+      "top_apis": [
+        {
+          "api": "anthropic",
+          "n": 42
+        },
+        {
+          "api": "launchd",
+          "n": 33
+        },
+        {
+          "api": "typst",
+          "n": 15
+        },
+        {
+          "api": "openai",
+          "n": 14
+        },
+        {
+          "api": "grok",
+          "n": 12
+        }
+      ],
+      "top_bug_classes": [
+        {
+          "bug_class": "duplicate-bloat",
+          "n": 4
+        },
+        {
+          "bug_class": "outer-template-unescape",
+          "n": 3
+        },
+        {
+          "bug_class": "limit-cap-leakage",
+          "n": 2
+        },
+        {
+          "bug_class": "frontmatter-cloak",
+          "n": 1
+        },
+        {
+          "bug_class": "hardcoded-date",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "generated_at": "2026-05-19T19:20:41.982Z",
+      "since": "30 days ago",
+      "commits": 523,
+      "streak": 5,
+      "top_skills": [
+        {
+          "skill": "detector-calibration",
+          "n": 31
+        },
+        {
+          "skill": "postmortem-driven-fix",
+          "n": 14
+        },
+        {
+          "skill": "network-database",
+          "n": 9
+        },
+        {
+          "skill": "apply-pack-polish",
+          "n": 8
+        },
+        {
+          "skill": "tier-routing",
+          "n": 7
+        }
+      ],
+      "top_apis": [
+        {
+          "api": "anthropic",
+          "n": 42
+        },
+        {
+          "api": "launchd",
+          "n": 33
+        },
+        {
+          "api": "typst",
+          "n": 15
+        },
+        {
+          "api": "openai",
+          "n": 14
+        },
+        {
+          "api": "grok",
+          "n": 12
+        }
+      ],
+      "top_bug_classes": [
+        {
+          "bug_class": "duplicate-bloat",
+          "n": 4
+        },
+        {
+          "bug_class": "outer-template-unescape",
+          "n": 3
+        },
+        {
+          "bug_class": "limit-cap-leakage",
+          "n": 2
+        },
+        {
+          "bug_class": "frontmatter-cloak",
+          "n": 1
+        },
+        {
+          "bug_class": "hardcoded-date",
+          "n": 1
+        }
+      ]
+    }
+  ]
+}

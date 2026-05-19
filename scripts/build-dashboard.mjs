@@ -3214,6 +3214,19 @@ function renderRow(r, idx) {
 // through main(). Recomputed if the dashboard process is re-imported.
 let _COMP_FLOORS = { floor: 175, seattleFloor: 180, targetMin: 200, targetMax: 320 };
 
+// 2026-05-19 Mitchell ask — load builder-evolution log for the dashboard widget.
+// data/builder-log.json is generated nightly by scripts/agents/builder-log.mjs.
+// Returns null if the file doesn't exist yet (widget renders an empty/install state).
+function loadBuilderLog() {
+  const fp = join(ROOT, 'data', 'builder-log.json');
+  if (!existsSync(fp)) return null;
+  try {
+    const data = JSON.parse(readFileSync(fp, 'utf-8'));
+    const latest = (data.history && data.history.length) ? data.history[data.history.length - 1] : null;
+    return { ...data, latest };
+  } catch { return null; }
+}
+
 function loadCompFloors() {
   const defaults = { floor: 175, seattleFloor: 180, targetMin: 200, targetMax: 320 };
   if (!existsSync(PROFILE_YML_PATH)) return defaults;
@@ -3592,6 +3605,10 @@ async function build() {
   }
   const applied = apps.filter(r => /applied|interview|offer/i.test(r.status));
   const pipelinePending = countPipelinePending();
+  // Builder Evolution log — loaded from data/builder-log.json (regenerated
+  // nightly by scripts/agents/builder-log.mjs). Surfaces skills/APIs/bug-classes
+  // for the PM-trajectory narrative.
+  const builderLog = loadBuilderLog();
   const scanTotal = countScanHistory();
   const batchRuns = countBatchRuns();
   const portals = getEnabledPortals();
@@ -6164,6 +6181,44 @@ async function build() {
     border: 1px solid var(--border); box-shadow: var(--shadow-sm);
     padding: 14px 18px; margin-bottom: 16px;
   }
+  /* 2026-05-19 Mitchell ask — Builder Evolution widget styles.
+     Surfaces skills/APIs/bug-classes/PM-signals extracted from git by
+     scripts/agents/builder-log.mjs. Visual language: bento tiles for stats,
+     pill tags for items, subtle group headers. */
+  .builder-evo-grid {
+    display: grid; gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin: 8px 0 14px 0;
+  }
+  .be-stat-tile {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+  .be-stat-label { font-size: 11px; opacity: 0.7; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
+  .be-stat-value { font-size: 22px; font-weight: 700; line-height: 1; }
+  .be-stat-cumulative { font-size: 11px; opacity: 0.55; font-weight: 400; margin-left: 6px; }
+  .be-section { margin: 10px 0; }
+  .be-section-label { font-size: 11px; opacity: 0.7; letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 6px; }
+  .be-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .be-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 9px; font-size: 12px; line-height: 1.2;
+  }
+  .be-tag-n { opacity: 0.55; font-size: 11px; }
+  .be-tag-api { border-color: rgba(124,140,255,0.35); background: rgba(124,140,255,0.08); }
+  .be-tag-skill { border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.08); }
+  .be-tag-bug { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.08); }
+  .be-footer {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin-top: 12px; padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    font-size: 11px; opacity: 0.7;
+  }
+  .be-footer code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+
   .panel-strong {
     border-color: var(--green-fg);
     box-shadow: var(--shadow-sm), 0 0 0 1px var(--green-fg), 0 4px 20px rgba(22,163,74,.08);
@@ -11283,6 +11338,57 @@ async function build() {
   <div class="stat-panel" id="stat-panel-companies"></div>
   <div class="stat-panel" id="stat-panel-scanned"></div>
   <div class="stat-panel" id="stat-panel-batches"></div>
+
+  ${builderLog && builderLog.latest ? (() => {
+    const L = builderLog.latest;
+    const topSkills    = (L.top_skills      || []).map(s => `<span class="be-tag be-tag-skill" title="${s.n} commits this window">${htmlEscape(s.skill)} <span class="be-tag-n">${s.n}</span></span>`).join('');
+    const topApis      = (L.top_apis        || []).map(a => `<span class="be-tag be-tag-api" title="${a.n} commits this window">${htmlEscape(a.api)} <span class="be-tag-n">${a.n}</span></span>`).join('');
+    const topBugs      = (L.top_bug_classes || []).map(b => `<span class="be-tag be-tag-bug" title="${b.n} commits this window">${htmlEscape(b.bug_class)} <span class="be-tag-n">${b.n}</span></span>`).join('');
+    const apiCount     = Object.keys(builderLog.apis        || {}).length;
+    const skillCount   = Object.keys(builderLog.skills      || {}).length;
+    const bugCount     = Object.keys(builderLog.bug_classes || {}).length;
+    const pmSigCount   = Object.keys(builderLog.pm_signals  || {}).length;
+    const generatedAt  = L.generated_at ? new Date(L.generated_at).toLocaleString() : 'unknown';
+    const sinceLabel   = L.since || '30 days ago';
+    return `
+  <div class="panel panel-strong" id="builder-evolution-section">
+    <h2 class="panel-title collapsible" onclick="togglePanel('builder-evolution-section',event)">
+      🛠 Builder Evolution
+      <span class="pill" title="${L.commits} commits · ${L.streak}d streak">${L.commits} · ${L.streak}d</span>
+      <span class="panel-chevron">▾</span>
+    </h2>
+    <p class="panel-subtitle">Skills, APIs, bug classes, PM signals — extracted from git history, last ${htmlEscape(sinceLabel)}. Updated nightly at 03:30 PT by <code>scripts/agents/builder-log.mjs</code>.</p>
+
+    <div class="builder-evo-grid">
+      <div class="be-stat-tile" title="Distinct APIs / SDKs / services touched in this window vs cumulative">
+        <div class="be-stat-label">APIs / tools</div>
+        <div class="be-stat-value">${(L.top_apis || []).length}<span class="be-stat-cumulative"> / ${apiCount} all-time</span></div>
+      </div>
+      <div class="be-stat-tile" title="Distinct skills / patterns demonstrated in this window vs cumulative">
+        <div class="be-stat-label">Skills demonstrated</div>
+        <div class="be-stat-value">${(L.top_skills || []).length}<span class="be-stat-cumulative"> / ${skillCount} all-time</span></div>
+      </div>
+      <div class="be-stat-tile" title="Bug classes identified or fixed in this window vs cumulative">
+        <div class="be-stat-label">Bug classes</div>
+        <div class="be-stat-value">${(L.top_bug_classes || []).length}<span class="be-stat-cumulative"> / ${bugCount} all-time</span></div>
+      </div>
+      <div class="be-stat-tile" title="PM-relevant signals triggered (postmortem-then-fix, instrumentation-first, cohesion-driven-UX, etc.)">
+        <div class="be-stat-label">PM signals</div>
+        <div class="be-stat-value">${pmSigCount}</div>
+      </div>
+    </div>
+
+    ${topApis ? `<div class="be-section"><div class="be-section-label">Top APIs / services this window</div><div class="be-tags">${topApis}</div></div>` : ''}
+    ${topSkills ? `<div class="be-section"><div class="be-section-label">Top skills this window</div><div class="be-tags">${topSkills}</div></div>` : ''}
+    ${topBugs ? `<div class="be-section"><div class="be-section-label">Top bug classes this window</div><div class="be-tags">${topBugs}</div></div>` : ''}
+
+    <div class="be-footer">
+      <span class="be-footer-meta">Last generated: ${generatedAt}</span>
+      <span class="be-footer-cta">→ See full digest: <code>data/builder-log-rolling-30d.md</code></span>
+      <span class="be-footer-cta">→ Resume bullets: <code>node scripts/agents/builder-log.mjs --export-resume-bullets</code></span>
+    </div>
+  </div>`;
+  })() : ''}
 
   ${applyNow.length > 0 ? `
   <div class="panel panel-strong" id="apply-now-section">
