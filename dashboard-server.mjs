@@ -8,7 +8,7 @@ import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
-import { execSync as _execSync, spawn as _spawn } from 'child_process';
+import { execSync as _execSync, spawn as _spawn, spawnSync as _spawnSync } from 'child_process';
 import yaml from 'js-yaml';
 import { marked } from 'marked';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
@@ -3449,6 +3449,82 @@ const server = createServer((req, res) => {
     } catch (e) {
       return json({ ok: false, error: e.message }, 500);
     }
+  }
+
+  // POST /api/network/draft-intro → draft a LinkedIn DM in Mitchell's voice
+  // (ζ needhuman-resolution 2026-05-19, Decision ζ.3)
+  //
+  // Body: { person_id: string, target_company: string, format?: "connection"|"dm" }
+  //   person_id       — stable ID from network-database.json
+  //   target_company  — company slug the person can warm-intro Mitchell to
+  //   format          — "connection" (≤300 chars) | "dm" (default, post-connection)
+  //
+  // Voice: Mitchell's LinkedIn-DM register, calibrated from:
+  //   - writing-samples/voice-reference.md (canonical exemplar rank=highest)
+  //   - feedback_linkedin_outreach_voice.md (4 structural rules)
+  //   - modes/contacto.md (3-sentence framework per contact type)
+  //
+  // Spawns scripts/agents/network-draft-intro.mjs (single Sonnet call, ~$0.003/call).
+  // Returns synchronously by waiting for the child process to complete (≤10s timeout).
+  if (url === '/api/network/draft-intro' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; if (body.length > 10_000) req.connection.destroy(); });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const personId     = String(payload.person_id     || '').replace(/[^a-z0-9-]/gi, '').slice(0, 120);
+        const targetCompany = String(payload.target_company || '').replace(/[^a-z0-9-]/gi, '').slice(0, 80);
+        const format        = ['connection', 'dm'].includes(payload.format) ? payload.format : 'dm';
+
+        if (!personId)      return json({ ok: false, error: 'person_id is required' }, 400);
+        if (!targetCompany) return json({ ok: false, error: 'target_company is required' }, 400);
+
+        // Validate person exists before spending an LLM call
+        const person = networkPersonById(personId);
+        if (!person) return json({ ok: false, error: `person not found: ${personId}` }, 404);
+
+        const warmPath = (person.warm_to_target_companies || []).find(
+          w => w.company_slug === targetCompany
+        );
+        if (!warmPath) return json({
+          ok: false,
+          error: `${person.full_name} has no warm path to ${targetCompany}`,
+          warm_companies: (person.warm_to_target_companies || []).map(w => w.company_slug),
+        }, 422);
+
+        // Spawn the draft-intro agent and wait for it to complete synchronously
+        // (short-lived Sonnet call — typically 2-5s). _spawnSync imported at top.
+        const args = [
+          join(ROOT, 'scripts/agents/network-draft-intro.mjs'),
+          '--person', personId,
+          '--target-company', targetCompany,
+          '--format', format,
+        ];
+        const result = _spawnSync('node', args, {
+          cwd: ROOT,
+          env: process.env,
+          timeout: 30_000, // 30s hard cap
+          encoding: 'utf-8',
+        });
+
+        if (result.status !== 0 || result.error) {
+          const errMsg = result.error?.message || result.stderr?.slice(0, 400) || 'unknown error';
+          return json({ ok: false, error: errMsg }, 500);
+        }
+
+        let parsed;
+        try {
+          parsed = JSON.parse(result.stdout || '{}');
+        } catch {
+          return json({ ok: false, error: 'draft-intro agent returned invalid JSON', raw: result.stdout?.slice(0, 400) }, 500);
+        }
+
+        return json(parsed, parsed.ok ? 200 : 500);
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 500);
+      }
+    });
+    return;
   }
 
   // ── Pipeline processing — "Run Batch" + "Process All" buttons ───────────

@@ -15448,6 +15448,10 @@ _drillInRegister('network-leverage', function() {
           emailRows = '<div style="color:var(--text-4);font-size:11px">no email on file · '
             + '<button data-zeta-find-email="' + x(p.id) + '" style="padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-3);cursor:pointer;font-size:11px">find email</button></div>';
         }
+        // ζ.3 needhuman-resolution: "Draft warm intro" button per warm-path target
+        // Uses Mitchell's LinkedIn-DM voice (calibrated from feedback_linkedin_outreach_voice.md
+        // + writing-samples/voice-reference.md canonical exemplar).
+        var warmPaths = p.warm_to_target_companies || [];
         var paths = (p._warm_intro_paths || []).map(function(w) {
           var via = w.intro_path ? '<strong>' + x(w.intro_path.via_name || '?') + '</strong>' : '';
           var to = w.target_name
@@ -15456,8 +15460,18 @@ _drillInRegister('network-leverage', function() {
           var ev = '<span style="color:var(--text-4);font-size:10.5px;margin-left:6px">[' + x(w.evidence || '') + ']</span>';
           return '<li style="margin:3px 0">' + via + ' → ' + to + ' <span style="color:var(--text-4);font-size:10.5px">(' + x(w.target_company_slug) + ')</span>' + ev + '</li>';
         }).join('');
+        // Per-target "Draft warm intro" buttons — one per warm_to_target_companies entry
+        var draftBtns = warmPaths.map(function(w) {
+          return '<button data-zeta-draft-intro="' + x(p.id) + '" data-zeta-target-company="' + x(w.company_slug) + '" '
+            + 'style="padding:2px 8px;margin:2px 2px 0 0;border:1px solid var(--border);border-radius:4px;background:transparent;'
+            + 'color:var(--text-3);cursor:pointer;font-size:11px" '
+            + 'title="Draft LinkedIn DM in Mitchell\'s voice for ' + x(w.company_slug) + ' warm intro">'
+            + '✍ Draft DM → ' + x(w.company_slug) + '</button>';
+        }).join('');
         var pathsHtml = paths
-          ? '<div style="margin:8px 0"><strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-4)">Warm-intro paths</strong><ul style="margin:4px 0 0 0;padding:0 0 0 18px">' + paths + '</ul></div>'
+          ? '<div style="margin:8px 0"><strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-4)">Warm-intro paths</strong><ul style="margin:4px 0 0 0;padding:0 0 0 18px">' + paths + '</ul>'
+            + (draftBtns ? '<div style="margin-top:6px">' + draftBtns + '</div>' : '')
+            + '</div>'
           : '';
         var inf = p.inferred || {};
         var infHtml;
@@ -15521,6 +15535,59 @@ _drillInRegister('network-leverage', function() {
             }).catch(function(_) {});
           });
         }
+        // ζ.3 needhuman-resolution: Draft warm intro button handlers
+        // Voice: Mitchell's LinkedIn-DM register (writing-samples/voice-reference.md +
+        // feedback_linkedin_outreach_voice.md 4-rule calibration)
+        container.querySelectorAll('[data-zeta-draft-intro]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var personId = btn.getAttribute('data-zeta-draft-intro');
+            var targetCompany = btn.getAttribute('data-zeta-target-company');
+            var format = confirm(
+              'Draft format:\n\nOK = post-connection DM (longer, ~3 paragraphs)\nCancel = connection request note (≤300 chars)'
+            ) ? 'dm' : 'connection';
+            btn.disabled = true;
+            btn.textContent = '⏳ Drafting…';
+            fetch('/api/network/draft-intro', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ person_id: personId, target_company: targetCompany, format: format }),
+            })
+              .then(function(r) { return r.json(); })
+              .then(function(j) {
+                btn.disabled = false;
+                btn.textContent = '✍ Draft DM → ' + targetCompany;
+                if (!j.ok) { alert('Draft failed: ' + (j.error || 'unknown error')); return; }
+                var overNote = j.over_limit ? '\n\n⚠️ Over 300 chars (' + j.note_count + '). Trim before sending as connection note.' : '';
+                var costNote = '\n\nCost: $' + (j.cost_usd || 0).toFixed(4) + ' · ' + (j.tokens ? j.tokens.input + '+' + j.tokens.output + ' tokens' : '');
+                // Show the draft in a modal-style textarea overlay
+                var overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+                overlay.innerHTML = '<div style="background:var(--bg,#18181b);border:1px solid var(--border);border-radius:8px;padding:20px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto">'
+                  + '<div style="font-weight:600;font-size:14px;margin-bottom:12px;color:var(--text)">Draft warm intro → ' + targetCompany + ' (via ' + j.full_name + ')</div>'
+                  + '<textarea id="draft-intro-text" style="width:100%;min-height:220px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box;line-height:1.5">' + j.draft.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>'
+                  + '<div style="font-size:11px;color:var(--text-4);margin-top:8px">'
+                  + j.note_count + ' chars' + (j.over_limit ? ' <span style=\"color:#f87171\">⚠️ over 300</span>' : '') + costNote
+                  + '</div>'
+                  + '<div style="margin-top:12px;display:flex;gap:8px">'
+                  + '<button id="draft-intro-copy" style="padding:6px 14px;background:var(--accent,#2563eb);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">Copy to clipboard</button>'
+                  + '<button id="draft-intro-close" style="padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-3);cursor:pointer;font-size:13px">Close</button>'
+                  + '</div></div>';
+                document.body.appendChild(overlay);
+                document.getElementById('draft-intro-copy').onclick = function() {
+                  var ta = document.getElementById('draft-intro-text');
+                  navigator.clipboard ? navigator.clipboard.writeText(ta.value).then(function() { document.getElementById('draft-intro-copy').textContent = '✓ Copied'; }) : ta.select();
+                };
+                document.getElementById('draft-intro-close').onclick = function() { document.body.removeChild(overlay); };
+                overlay.addEventListener('click', function(ev) { if (ev.target === overlay) document.body.removeChild(overlay); });
+              })
+              .catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = '✍ Draft DM → ' + targetCompany;
+                alert('Draft failed: ' + err.message);
+              });
+          });
+        });
         // Stop click bubbling for the entire detail panel so accidental row collapses don't happen
         container.addEventListener('click', function(e) { e.stopPropagation(); });
       }

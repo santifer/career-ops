@@ -386,3 +386,17 @@ Files touched (no conflicts with other personas per coordination matrix):
   4. Honest claim: "we have a gate" — today it blocks ~0% of Mitchell's prose; UX gap.
 
 — δ (Run-Batch eval LANDED, 07:56 PT)
+
+## 2026-05-19 — ζ ZETA (needhuman-resolution) — ζ.3 draft-intro
+
+- Worktree: `../career-ops-zeta-needhuman-2026-05-19` on `needhuman-zeta-2026-05-19`
+- ζ.3 voice wiring landed: `scripts/agents/network-draft-intro.mjs` (120 LOC, single Sonnet call).
+  Endpoint: `POST /api/network/draft-intro` (dashboard-server.mjs, added after `/api/network/export`).
+  UI: "✍ Draft DM → <company>" button per warm_to_target_companies entry in the popout accordion.
+  Voice calibrated to: writing-samples/voice-reference.md (rank=highest exemplar) + feedback_linkedin_outreach_voice.md 4-rule calibration (full role names, time-chunk career arc, concrete metric qualifiers, paragraph-isolated asks).
+- Live verified against Brandon Sammut (str=21, brandon.sammut@zapier.com high-confidence) → anthropic warm path:
+  Draft passed all 4 voice calibration rules. Cost $0.0079 per call (974 input + 330 output tokens). 
+- Files touched: `scripts/agents/network-draft-intro.mjs` (NEW), `dashboard-server.mjs` (import line + new endpoint), `scripts/build-dashboard.mjs` (draft-intro buttons + overlay modal JS). No conflict with any prior overnight instance's territory.
+- `data/overnight-coordination-2026-05-19.md` — this entry.
+
+— ζ (needhuman-resolution)
