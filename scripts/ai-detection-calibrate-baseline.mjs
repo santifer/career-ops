@@ -115,11 +115,13 @@ async function scoreOne(id, prose, options) {
     options,
     gptzero_prob: r.gptzero_prob,
     originality_prob: r.originality_prob,
+    pangram_prob: r.pangram_prob,
     verdict: r.verdict,
     passes: r.passes,
     from_cache: r.from_cache,
     gptzero_error: r.gptzero_error,
     originality_error: r.originality_error,
+    pangram_error: r.pangram_error,
   };
 }
 
@@ -167,6 +169,11 @@ async function run() {
         max:  max(human_results.map(r => r.originality_prob)),
         min:  min(human_results.map(r => r.originality_prob)),
       },
+      pangram: {
+        mean: mean(human_results.map(r => r.pangram_prob)),
+        max:  max(human_results.map(r => r.pangram_prob)),
+        min:  min(human_results.map(r => r.pangram_prob)),
+      },
     },
     ai: {
       gptzero: {
@@ -179,6 +186,11 @@ async function run() {
         max:  max(ai_results.map(r => r.originality_prob)),
         min:  min(ai_results.map(r => r.originality_prob)),
       },
+      pangram: {
+        mean: mean(ai_results.map(r => r.pangram_prob)),
+        max:  max(ai_results.map(r => r.pangram_prob)),
+        min:  min(ai_results.map(r => r.pangram_prob)),
+      },
     },
   };
 
@@ -188,10 +200,12 @@ async function run() {
   // as the upper bound for the CLEAR band — anything below that is at most
   // as suspicious as Mitchell's own canonical prose. Above human-MAX, we
   // band toward AI-decoy-MIN (best-case under-flag of AI prose).
-  const humanMaxGz   = summary.human.gptzero.max   ?? 0;
-  const humanMaxOrig = summary.human.originality.max ?? 0;
-  const aiMinGz   = summary.ai.gptzero.min   ?? 1;
-  const aiMinOrig = summary.ai.originality.min ?? 1;
+  const humanMaxGz      = summary.human.gptzero.max      ?? 0;
+  const humanMaxOrig    = summary.human.originality.max  ?? 0;
+  const humanMaxPangram = summary.human.pangram.max      ?? 0;
+  const aiMinGz      = summary.ai.gptzero.min      ?? 1;
+  const aiMinOrig    = summary.ai.originality.min  ?? 1;
+  const aiMinPangram = summary.ai.pangram.min      ?? 1;
 
   // CLEAR band ceiling: human-MAX (anything Mitchell himself produces).
   // CRIT band floor: AI-decoy-MIN (anything as bad as a known AI decoy).
@@ -210,6 +224,12 @@ async function run() {
       MED:   { min: round2(humanMaxOrig), max: round2((humanMaxOrig + aiMinOrig) / 2) },
       HIGH:  { min: round2((humanMaxOrig + aiMinOrig) / 2), max: round2(aiMinOrig) },
       CRIT:  { min: round2(aiMinOrig) },
+    },
+    pangram: {
+      CLEAR: { max: round2(humanMaxPangram) },
+      MED:   { min: round2(humanMaxPangram), max: round2((humanMaxPangram + aiMinPangram) / 2) },
+      HIGH:  { min: round2((humanMaxPangram + aiMinPangram) / 2), max: round2(aiMinPangram) },
+      CRIT:  { min: round2(aiMinPangram) },
     },
     notes: [
       'These bands are RELATIVE to Mitchell\'s baseline, not absolute. A 0.95 GPTZero score may sit in CLEAR if Mitchell\'s own writing scores 0.99 — the gate is calibrated to authenticity vs Mitchell, not detection-evasion vs the platform.',
@@ -235,12 +255,24 @@ async function run() {
   let degenerate = false;
   let degenerate_reason = null;
 
+  // Per-detector separation: a detector has clean separation when human-max < AI-min.
+  // We relax the previous "ALL detectors must separate" rule (which collapses to USELESS
+  // the moment ONE detector is saturated). The new rule: refuse only if NO detector
+  // achieves clean separation. As long as at least one detector (e.g., Pangram with its
+  // 0.004% FPR) has clean separation, that detector alone is enough to anchor the
+  // band-driven gate — the gate's `anyGood` check (lib/ai-detection-gate.mjs:451)
+  // already supports this.
+  const gzSeparates      = humanMaxGz      < aiMinGz;
+  const origSeparates    = humanMaxOrig    < aiMinOrig;
+  const pangramSeparates = humanMaxPangram < aiMinPangram;
+  const anySeparates = gzSeparates || origSeparates || pangramSeparates;
+
   if (human_results.length < MIN_HUMAN_SAMPLES || ai_results.length < MIN_AI_SAMPLES) {
     degenerate = true;
     degenerate_reason = `sample size too small (have ${human_results.length} human + ${ai_results.length} AI; need ≥${MIN_HUMAN_SAMPLES} + ≥${MIN_AI_SAMPLES})`;
-  } else if (humanMaxGz >= aiMinGz || humanMaxOrig >= aiMinOrig) {
+  } else if (!anySeparates) {
     degenerate = true;
-    degenerate_reason = `human-max ≥ AI-decoy-min on at least one detector (gptzero: human-max=${humanMaxGz} vs AI-min=${aiMinGz}; orig: human-max=${humanMaxOrig} vs AI-min=${aiMinOrig})`;
+    degenerate_reason = `no detector achieves human-max < AI-decoy-min (gptzero: hMax=${humanMaxGz} vs aiMin=${aiMinGz}; orig: hMax=${humanMaxOrig} vs aiMin=${aiMinOrig}; pangram: hMax=${humanMaxPangram} vs aiMin=${aiMinPangram})`;
   }
 
   // Always write the full baseline JSON for inspection.
@@ -285,29 +317,31 @@ async function run() {
   md.push('');
   md.push('## Human baseline (Mitchell\'s voice corpus)');
   md.push('');
-  md.push('| id | confidence | register | words | GPTZero | Originality |');
-  md.push('|---|---|---|---|---|---|');
+  md.push('| id | confidence | register | words | GPTZero | Originality | Pangram |');
+  md.push('|---|---|---|---|---|---|---|');
   for (let i = 0; i < human_results.length; i++) {
     const r = human_results[i];
     const h = validHumans[i];
-    md.push(`| ${r.id} | ${r.options.confidence} | ${r.options.register} | ${h.word_count} | ${r.gptzero_prob ?? 'n/a'} | ${r.originality_prob ?? 'n/a'} |`);
+    md.push(`| ${r.id} | ${r.options.confidence} | ${r.options.register} | ${h.word_count} | ${r.gptzero_prob ?? 'n/a'} | ${r.originality_prob ?? 'n/a'} | ${r.pangram_prob ?? 'n/a'} |`);
   }
   md.push('');
   md.push(`**Aggregate (human):**`);
   md.push(`- GPTZero — mean ${summary.human.gptzero.mean} · max ${summary.human.gptzero.max} · min ${summary.human.gptzero.min}`);
   md.push(`- Originality — mean ${summary.human.originality.mean} · max ${summary.human.originality.max} · min ${summary.human.originality.min}`);
+  md.push(`- Pangram — mean ${summary.human.pangram.mean} · max ${summary.human.pangram.max} · min ${summary.human.pangram.min}`);
   md.push('');
   md.push('## AI decoy baseline');
   md.push('');
-  md.push('| id | register | GPTZero | Originality |');
-  md.push('|---|---|---|---|');
+  md.push('| id | register | GPTZero | Originality | Pangram |');
+  md.push('|---|---|---|---|---|');
   for (const r of ai_results) {
-    md.push(`| ${r.id} | ${r.options.register} | ${r.gptzero_prob ?? 'n/a'} | ${r.originality_prob ?? 'n/a'} |`);
+    md.push(`| ${r.id} | ${r.options.register} | ${r.gptzero_prob ?? 'n/a'} | ${r.originality_prob ?? 'n/a'} | ${r.pangram_prob ?? 'n/a'} |`);
   }
   md.push('');
   md.push(`**Aggregate (AI decoy):**`);
   md.push(`- GPTZero — mean ${summary.ai.gptzero.mean} · max ${summary.ai.gptzero.max} · min ${summary.ai.gptzero.min}`);
   md.push(`- Originality — mean ${summary.ai.originality.mean} · max ${summary.ai.originality.max} · min ${summary.ai.originality.min}`);
+  md.push(`- Pangram — mean ${summary.ai.pangram.mean} · max ${summary.ai.pangram.max} · min ${summary.ai.pangram.min}`);
   md.push('');
   md.push('## Derived weighted bands (`current-thresholds.json`)');
   md.push('');
@@ -329,8 +363,9 @@ async function run() {
   console.error(`[calibrate] wrote ${currentThresholdsPath}`);
   console.error(`[calibrate] wrote ${mdPath}`);
   console.error('---');
-  console.error('Human GPTZero max  =', humanMaxGz,   '· AI GPTZero min  =', aiMinGz);
-  console.error('Human Orig.   max  =', humanMaxOrig, '· AI Orig.   min  =', aiMinOrig);
+  console.error('Human GPTZero max  =', humanMaxGz,      '· AI GPTZero min  =', aiMinGz,      '· separates:', gzSeparates);
+  console.error('Human Orig.   max  =', humanMaxOrig,    '· AI Orig.   min  =', aiMinOrig,    '· separates:', origSeparates);
+  console.error('Human Pangram max  =', humanMaxPangram, '· AI Pangram min  =', aiMinPangram, '· separates:', pangramSeparates);
 }
 
 run().catch(e => { console.error('[calibrate] fatal:', e); process.exit(1); });

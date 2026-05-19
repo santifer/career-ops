@@ -5207,25 +5207,27 @@ const server = createServer((req, res) => {
           ? JSON.parse(readFileSync(join(baselineGlob, baselineFiles[0]), 'utf-8'))
           : null;
 
+        function signalQualityFor(det) {
+          const gap = (det?.CRIT?.min ?? 1) - (det?.CLEAR?.max ?? 0);
+          return {
+            clear_ceiling: det?.CLEAR?.max ?? null,
+            crit_floor: det?.CRIT?.min ?? null,
+            gap,
+            signal_quality: gap >= 0.20 ? 'GOOD' : gap >= 0.05 ? 'WEAK' : 'USELESS',
+          };
+        }
         const summary = thresholds ? {
           calibrated_at: thresholds.derived_at,
-          gptzero: {
-            clear_ceiling: thresholds.gptzero?.CLEAR?.max ?? null,
-            crit_floor: thresholds.gptzero?.CRIT?.min ?? null,
-            gap: ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)),
-            signal_quality:
-              ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)) >= 0.20 ? 'GOOD'
-              : ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)) >= 0.05 ? 'WEAK' : 'USELESS',
-          },
-          originality: {
-            clear_ceiling: thresholds.originality?.CLEAR?.max ?? null,
-            crit_floor: thresholds.originality?.CRIT?.min ?? null,
-            gap: ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)),
-            signal_quality:
-              ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)) >= 0.20 ? 'GOOD'
-              : ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)) >= 0.05 ? 'WEAK' : 'USELESS',
-          },
+          gptzero: signalQualityFor(thresholds.gptzero),
+          originality: signalQualityFor(thresholds.originality),
+          pangram: signalQualityFor(thresholds.pangram),
         } : null;
+
+        const qualities = summary
+          ? [summary.gptzero.signal_quality, summary.originality.signal_quality, summary.pangram.signal_quality]
+          : [];
+        const anyGood = qualities.includes('GOOD');
+        const allUseless = qualities.length > 0 && qualities.every(q => q === 'USELESS');
 
         return json({
           ok: true,
@@ -5233,11 +5235,13 @@ const server = createServer((req, res) => {
           summary,
           baseline_sample_counts: latestBaseline?.summary?.sample_counts ?? null,
           baseline_file: baselineFiles[0] ?? null,
-          interpretation: summary && summary.gptzero.signal_quality === 'USELESS' && summary.originality.signal_quality === 'USELESS'
-            ? 'Both detectors are calibrated USELESS against Mitchell\'s voice baseline — they cannot distinguish authentic Mitchell prose from generic AI text. The gate refuses to BLOCK on USELESS-quality scores; it surfaces them as ADVISORY only. Re-calibration after a voice-corpus refresh may change this.'
-            : summary
-              ? `GPTZero signal quality: ${summary.gptzero.signal_quality}. Originality signal quality: ${summary.originality.signal_quality}. The gate blocks artifacts only when band severe AND at least one detector has GOOD signal.`
-              : 'No calibration baseline present. Run `node scripts/ai-detection-calibrate-baseline.mjs --refresh` to populate.',
+          interpretation: !summary
+            ? 'No calibration baseline present. Run `node scripts/ai-detection-calibrate-baseline.mjs` to populate.'
+            : allUseless
+              ? 'All three detectors are calibrated USELESS against Mitchell\'s voice baseline. The gate cannot distinguish authentic Mitchell prose from generic AI text. Artifacts surface as ADVISORY only — no blocking. Re-calibration after a voice-corpus refresh or Pangram API key add may change this.'
+              : anyGood
+                ? `Signal quality: GPTZero=${summary.gptzero.signal_quality}, Originality=${summary.originality.signal_quality}, Pangram=${summary.pangram.signal_quality}. At least one detector has GOOD signal — the gate WILL block artifacts in band=CRIT.`
+                : `Signal quality: GPTZero=${summary.gptzero.signal_quality}, Originality=${summary.originality.signal_quality}, Pangram=${summary.pangram.signal_quality}. No GOOD-signal detector — the gate surfaces findings as ADVISORY only.`,
         });
       } catch (err) {
         _d25Log(`[ai-detection/signal-quality] ${err.message}`);

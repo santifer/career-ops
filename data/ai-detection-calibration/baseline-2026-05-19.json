@@ -1,6 +1,6 @@
 {
   "summary": {
-    "calibrated_at": "2026-05-19T14:56:42.551Z",
+    "calibrated_at": "2026-05-19T17:23:27.476Z",
     "sample_counts": {
       "human": 26,
       "ai_decoy": 10
@@ -15,6 +15,11 @@
         "mean": 0.999,
         "max": 1,
         "min": 0.98
+      },
+      "pangram": {
+        "mean": null,
+        "max": null,
+        "min": null
       }
     },
     "ai": {
@@ -27,13 +32,18 @@
         "mean": 1,
         "max": 1,
         "min": 1
+      },
+      "pangram": {
+        "mean": null,
+        "max": null,
+        "min": null
       }
     }
   },
   "human_results": [
     {
       "id": "voice-reference-full",
-      "elapsed_ms": 1329,
+      "elapsed_ms": 1,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -41,15 +51,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": null
     },
     {
       "id": "voice-reference-canonical-exemplar",
-      "elapsed_ms": 1089,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -57,15 +69,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": null
     },
     {
       "id": "cv-mitchell",
-      "elapsed_ms": 1065,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "medium",
         "register": "bullet",
@@ -73,15 +87,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": null
     },
     {
       "id": "article-digest",
-      "elapsed_ms": 1117,
+      "elapsed_ms": 1,
       "options": {
         "confidence": "medium",
         "register": "mixed",
@@ -89,15 +105,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": null
     },
     {
       "id": "story-comms-triage-agent-xge",
-      "elapsed_ms": 1029,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -105,15 +123,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-stream-launch-breaking-news",
-      "elapsed_ms": 1073,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -121,15 +141,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-huffpost-live-scientology",
-      "elapsed_ms": 1073,
+      "elapsed_ms": 1,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -137,15 +159,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-ahmed-coalition-2026",
-      "elapsed_ms": 1051,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -153,15 +177,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-executive-rag-voice-dna-xge",
-      "elapsed_ms": 1047,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -169,15 +195,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-mentorship-platform-xge",
-      "elapsed_ms": 1065,
+      "elapsed_ms": 1,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -185,15 +213,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-aj-viral-video-production",
-      "elapsed_ms": 1050,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -201,15 +231,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-aj-talent-pipeline",
-      "elapsed_ms": 1097,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -217,15 +249,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-approvals-matrix-xge",
-      "elapsed_ms": 1129,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -233,15 +267,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-day-one-orientation-xge",
-      "elapsed_ms": 1041,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -249,15 +285,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-career-ops-open-source",
-      "elapsed_ms": 1014,
+      "elapsed_ms": 1,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -265,15 +303,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 0.98,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-stic-summit-architecture",
-      "elapsed_ms": 1017,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -281,15 +321,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-xge-org-partnership-des",
-      "elapsed_ms": 1059,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -297,15 +339,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-voice-dna-kill-list-rag",
-      "elapsed_ms": 1070,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -313,15 +357,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-stream-751-to-59k",
-      "elapsed_ms": 1020,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -329,15 +375,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-huffpost-live-trans-navy",
-      "elapsed_ms": 1083,
+      "elapsed_ms": 1,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -345,15 +393,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-xge-voice-dna-kill-list",
-      "elapsed_ms": 1163,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -361,15 +411,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-career-ops-zero-token-scanner",
-      "elapsed_ms": 1056,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -377,15 +429,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-xge-comms-agent-build",
-      "elapsed_ms": 1081,
+      "elapsed_ms": 1,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -393,15 +447,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-senior-eng-mentorship-transition",
-      "elapsed_ms": 1063,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -409,15 +465,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "cover-letter-044-anthropic-comms-lead",
-      "elapsed_ms": 952,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "medium",
         "register": "narrative",
@@ -425,15 +483,17 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "story-bank-ahmed-coalition",
-      "elapsed_ms": 1013,
+      "elapsed_ms": 0,
       "options": {
         "confidence": "high",
         "register": "mixed",
@@ -441,156 +501,234 @@
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     }
   ],
   "ai_results": [
     {
       "id": "ai-decoy-corporate-jargon",
-      "elapsed_ms": 929,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": null
     },
     {
       "id": "ai-decoy-generic-cover-letter",
-      "elapsed_ms": 1133,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": null
     },
     {
       "id": "ai-decoy-buzzword-paragraph",
-      "elapsed_ms": 948,
+      "elapsed_ms": 1,
       "options": {
         "register": "mixed"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": null
     },
     {
       "id": "ai-decoy-strategic-vision",
-      "elapsed_ms": 951,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "ai-decoy-communications-professional",
-      "elapsed_ms": 3275,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "ai-decoy-technical-narrative",
-      "elapsed_ms": 953,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "ai-decoy-leadership-reflection",
-      "elapsed_ms": 932,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "ai-decoy-product-launch",
-      "elapsed_ms": 2780,
+      "elapsed_ms": 1,
       "options": {
         "register": "mixed"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "ai-decoy-journalism-generic",
-      "elapsed_ms": 912,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     },
     {
       "id": "ai-decoy-ai-comms-essay",
-      "elapsed_ms": 1361,
+      "elapsed_ms": 0,
       "options": {
         "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
+      "pangram_prob": null,
       "verdict": "AI",
       "passes": false,
-      "from_cache": false,
+      "from_cache": true,
       "gptzero_error": null,
-      "originality_error": null
+      "originality_error": null,
+      "pangram_error": "fetch failed"
     }
   ],
-  "thresholds": null,
-  "degenerate": true,
-  "degenerate_reason": "human-max ≥ AI-decoy-min on at least one detector (gptzero: human-max=1 vs AI-min=1; orig: human-max=1 vs AI-min=1)"
+  "thresholds": {
+    "derived_at": "2026-05-19T17:23:27.476Z",
+    "rationale": "Bands anchored to empirical baseline: CLEAR ceiling = max prob observed on Mitchell's own writing; CRIT floor = min prob observed on AI decoys; HIGH = upper-mid; MED = lower-mid.",
+    "gptzero": {
+      "CLEAR": {
+        "max": 1
+      },
+      "MED": {
+        "min": 1,
+        "max": 1
+      },
+      "HIGH": {
+        "min": 1,
+        "max": 1
+      },
+      "CRIT": {
+        "min": 1
+      }
+    },
+    "originality": {
+      "CLEAR": {
+        "max": 1
+      },
+      "MED": {
+        "min": 1,
+        "max": 1
+      },
+      "HIGH": {
+        "min": 1,
+        "max": 1
+      },
+      "CRIT": {
+        "min": 1
+      }
+    },
+    "pangram": {
+      "CLEAR": {
+        "max": 0
+      },
+      "MED": {
+        "min": 0,
+        "max": 0.5
+      },
+      "HIGH": {
+        "min": 0.5,
+        "max": 1
+      },
+      "CRIT": {
+        "min": 1
+      }
+    },
+    "notes": [
+      "These bands are RELATIVE to Mitchell's baseline, not absolute. A 0.95 GPTZero score may sit in CLEAR if Mitchell's own writing scores 0.99 — the gate is calibrated to authenticity vs Mitchell, not detection-evasion vs the platform.",
+      "Re-run `node scripts/ai-detection-calibrate-baseline.mjs --refresh` after every meaningful voice-corpus update to refresh these bands.",
+      "AUTHENTICITY band reports the worst (max) prob across both detectors after band assignment — a single CRIT detector dominates, since false-positive-on-AI is the costly error."
+    ]
+  },
+  "degenerate": false,
+  "degenerate_reason": null
 }
