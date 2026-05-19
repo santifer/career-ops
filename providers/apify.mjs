@@ -130,11 +130,12 @@ export function htmlToText(s) {
   const raw = String(s || '');
   if (!raw || !/[<&]/.test(raw)) return raw.trim();
   // Strip script/style first. `\b` requires a word boundary so `<scripty>` is
-  // not treated as a script open; `\s*>` on the close tag tolerates the
-  // whitespace variant `</script >` that loose scraped HTML occasionally emits.
+  // not treated as a script open; `\b[^>]*>` on the close tag tolerates both
+  // whitespace (`</script >`) and the parser-tolerated junk-attribute form
+  // (`</script\t\n foo>`) that some scrapers emit even though it's invalid HTML.
   let cleaned = raw
-    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, ' ')
-    .replace(/<style\b[\s\S]*?<\/style\s*>/gi, ' ')
+    .replace(/<script\b[\s\S]*?<\/script\b[^>]*>/gi, ' ')
+    .replace(/<style\b[\s\S]*?<\/style\b[^>]*>/gi, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n\n')
     .replace(/<li[^>]*>/gi, '- ')

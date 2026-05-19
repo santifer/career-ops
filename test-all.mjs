@@ -402,6 +402,13 @@ try {
     fail(`htmlToText leaked script content with whitespace close: ${JSON.stringify(scriptSpaceClose)}`);
   }
 
+  const scriptJunkAttrs = htmlToText('keep<script>evil()</script\t\n foo bar>after');
+  if (!/evil\(\)/.test(scriptJunkAttrs) && /keep/.test(scriptJunkAttrs) && /after/.test(scriptJunkAttrs)) {
+    pass('htmlToText strips </script ...> with parser-tolerated junk attributes');
+  } else {
+    fail(`htmlToText leaked script content with junk-attr close: ${JSON.stringify(scriptJunkAttrs)}`);
+  }
+
   const polyglot = htmlToText('<<a>safe-text<b>');
   if (!polyglot.includes('<')) {
     pass('htmlToText iterates to strip dangling < from polyglot input');
