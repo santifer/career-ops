@@ -3405,10 +3405,12 @@ for (const rel of _batchWatchPaths) {
 
 // Fallback interval: push every 30s even without file-change events,
 // so SSE clients never see stale state when fs.watch is unavailable.
-setInterval(_sseBroadcast, 30_000);
+// Hang-prevention Pattern 9 (2026-05-19): paired clearInterval in SIGTERM/SIGINT
+// handlers below ensures launchd-managed restarts don't leak resources.
+const _sseBroadcastInterval = setInterval(_sseBroadcast, 30_000);
 
 // Keepalive comment every 25s to prevent proxy / CDN timeout disconnects.
-setInterval(() => {
+const _sseKeepaliveInterval = setInterval(() => {
   for (const client of _sseClients) {
     try {
       client.res.write(': keepalive\n\n');
@@ -3417,6 +3419,16 @@ setInterval(() => {
     }
   }
 }, 25_000);
+
+// Pattern 9: clear top-level SSE intervals on graceful shutdown so launchd
+// restarts don't leak setInterval handles. Process-exit intervals are GC'd
+// by the kernel; clearing them helps catch logic bugs during test runs.
+function _clearSseIntervals() {
+  try { clearInterval(_sseBroadcastInterval); } catch {}
+  try { clearInterval(_sseKeepaliveInterval); } catch {}
+}
+process.on('SIGTERM', _clearSseIntervals);
+process.on('SIGINT', _clearSseIntervals);
 
 // ── HTTP server ────────────────────────────────────────────────
 
@@ -5295,6 +5307,76 @@ const server = createServer((req, res) => {
           server,
           errors,
           generated_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      }
+    })();
+    return;
+  }
+
+  // ── GET /api/hang-watchdog/status ────────────────────────────────────
+  // Surfaces hang-watchdog state for the dashboard system-health widget.
+  // Reads data/hang-watchdog-state.json + tail of data/logs/hang-watchdog.out
+  // (last NDJSON pass-complete event) + checks launchctl list for plist load.
+  if (url === '/api/hang-watchdog/status') {
+    (async () => {
+      try {
+        const statePath = join(ROOT, 'data', 'hang-watchdog-state.json');
+        const logPath = join(ROOT, 'data', 'logs', 'hang-watchdog.out');
+        let state = null;
+        if (existsSync(statePath)) {
+          try { state = JSON.parse(readFileSync(statePath, 'utf-8')); } catch {}
+        }
+        let lastPassComplete = null;
+        const recentEvents = [];
+        if (existsSync(logPath)) {
+          try {
+            const txt = readFileSync(logPath, 'utf-8');
+            const lines = txt.split('\n').filter(l => l.startsWith('{')).slice(-50);
+            for (const ln of lines) {
+              try {
+                const obj = JSON.parse(ln);
+                if (obj.event === 'pass-complete') lastPassComplete = obj;
+                if (obj.event === 'pass-complete' || obj.event === 'postmortem' || obj.event === 'kill-attempt') {
+                  recentEvents.push(obj);
+                }
+              } catch {}
+            }
+          } catch {}
+        }
+        const _runProc = (cmd, args, timeoutMs) => new Promise((resolve) => {
+          import('child_process').then(({ execFile }) => {
+            execFile(cmd, args, { encoding: 'utf-8', timeout: timeoutMs }, (err, stdout) => {
+              if (err) return resolve('');
+              resolve(stdout || '');
+            });
+          }).catch(() => resolve(''));
+        });
+        const listOut = await _runProc('launchctl', ['list'], 3000);
+        const plistLoaded = /com\.mitchell\.career-ops\.hang-watchdog/.test(listOut);
+        const dataDir = join(ROOT, 'data');
+        let postmortems = [];
+        try {
+          postmortems = readdirSync(dataDir)
+            .filter(f => /^hang-postmortem-\d{4}-\d{2}-\d{2}.*\.md$/.test(f))
+            .sort()
+            .slice(-10)
+            .map(f => ({ name: f, path: `data/${f}` }));
+        } catch {}
+        return json({
+          ok: true,
+          plist_loaded: plistLoaded,
+          state: state ? {
+            last_run: state.lastRun || null,
+            pids_tracked: Object.keys(state.pidFlags || {}).length,
+            history_count: (state.history || []).length,
+            recent_history: (state.history || []).slice(-5),
+          } : null,
+          last_pass_complete: lastPassComplete,
+          recent_events: recentEvents.slice(-10),
+          postmortems,
         });
       } catch (e) {
         res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
