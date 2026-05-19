@@ -1,7 +1,7 @@
 ---
 name: career-ops
 description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
-arguments: mode # Claude Code specific
+arguments: mode
 user-invocable: true
 argument-hint: "[scan | deep | pdf | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
 license: MIT

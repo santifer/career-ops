@@ -40,8 +40,10 @@ bun.lock
 *.mov
 *.mp4
 
-# Claude Code local
+# CLI-specific local config
 .claude/settings.local.json
 .claude/memory/
+.opencode/settings.local.json
+.opencode/memory/
 career-dashboard
 package-lock.json

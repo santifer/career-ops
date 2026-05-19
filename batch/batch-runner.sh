@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for headless AI CLI workers
+# Reads batch-input.tsv, delegates each offer to a headless CLI worker,
 # tracks state in batch-state.tsv for resumability.
 #
-# NOTE: This script is Claude Code-specific. It uses claude -p with
-# --dangerously-skip-permissions and --append-system-prompt-file flags
-# that are not available in other CLIs. Multi-CLI support is out of scope
-# for now — contributions welcome.
+# Supports: Claude Code (`claude -p`), OpenCode (`opencode run`).
+# Set CLI with --cli flag (default: claude).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -33,25 +31,24 @@ RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
-MODEL=""  # empty = let claude -p use the Claude Max default
+CLI="claude"  # default CLI
+MODEL=""      # empty = let claude -p use the Claude Max default
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via headless CLI workers
 
 Usage: batch-runner.sh [OPTIONS]
 
 Options:
   --parallel N         Number of parallel workers (default: 1)
+  --cli NAME           CLI to use: "claude" (default) or "opencode"
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
-  --model NAME         Claude model passed to `claude -p --model` (default:
-                       unset = Claude Max default). Use a cheaper model for
-                       large batches, e.g. `--model claude-sonnet-4-6`.
+  --model NAME         Model name passed to the CLI's --model flag (only supported by claude -p)
   -h, --help           Show this help
 
 Files:
@@ -65,8 +62,11 @@ Examples:
   # Dry run to see pending offers
   ./batch-runner.sh --dry-run
 
-  # Process all pending
+  # Process all pending with Claude Code
   ./batch-runner.sh
+
+  # Process all pending with OpenCode
+  ./batch-runner.sh --cli opencode
 
   # Retry only failed offers
   ./batch-runner.sh --retry-failed
@@ -80,6 +80,7 @@ USAGE
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --parallel) PARALLEL="$2"; shift 2 ;;
+    --cli) CLI="$2"; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --retry-failed) RETRY_FAILED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
@@ -129,8 +130,8 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  if ! command -v "$CLI" &>/dev/null; then
+    echo "ERROR: '$CLI' CLI not found in PATH."
     exit 1
   fi
 
@@ -360,17 +361,31 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker.
-  # Model defaults to the Claude Max subscription default unless --model was
-  # passed. Building the command in an array keeps quoting safe regardless.
-  local -a claude_args=(-p --dangerously-skip-permissions)
-  if [[ -n "$MODEL" ]]; then
-    claude_args+=(--model "$MODEL")
-  fi
-  claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
-
+  # Launch headless CLI worker.
+  # Uses the appropriate command for the selected CLI.
   local exit_code=0
-  claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+
+  case "$CLI" in
+    claude)
+      local -a cli_args=(-p --dangerously-skip-permissions)
+      if [[ -n "$MODEL" ]]; then
+        cli_args+=(--model "$MODEL")
+      fi
+      cli_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+      claude "${cli_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    opencode)
+      local -a cli_args=(run "$prompt")
+      if [[ -n "$MODEL" ]]; then
+        cli_args+=(--model "$MODEL")
+      fi
+      opencode "${cli_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    *)
+      echo "ERROR: Unsupported CLI '$CLI'. Use 'claude' or 'opencode'."
+      exit 1
+      ;;
+  esac
 
   # Cleanup resolved prompt
   rm -f "$resolved_prompt"

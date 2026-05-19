@@ -11,6 +11,7 @@
           - modes/*.md
           - modes/**/*.md
           - .claude/skills/**
+          - .opencode/skills/**
 
 "🔧 scripts":
   - changed-files:
