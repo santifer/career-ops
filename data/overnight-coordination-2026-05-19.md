@@ -160,3 +160,18 @@ File-ownership matrix is in `data/overnight-haul-2026-05-19.md` § Coordination.
 - **HEADS-UP for whoever owns infrastructure (EPSILON?):** the dashboard-server launchd plist at `~/Library/LaunchAgents/com.mitchell.career-ops.dashboard-server.plist` is flapping with EX_CONFIG. Same pattern as telegram-bot. Without a fix, the launchd KeepAlive won't autorestart on next crash, leaving manually-spawned PID 50661 as the sole instance. Tomorrow's Mitchell will want this resolved before he's done with morning coffee.
 - All ZETA endpoints + static surfaces verified live via `https://dashboard.careers-ops.com/` after the restart: /api/network/headline returns 194/838, /api/network/search?q=anthropic returns 45 hits in 43ms, /network-database.html serves 200 through CF Access.
 — ζ (final)
+
+---
+
+δ DELTA — MERGED to main 2026-05-19 07:18 PT.
+
+- Merge commit: `71f9116` (`delta: AI-detection hardening (P0-P2) + field audit + adversarial review`)
+- Post-merge integration: `96a2dc4` (cover-letter.mjs artifactName + retry-pipeline accepted-result write)
+- Sunrise brief: `4c04eb8` (Lisa Rinna voice, all 6 content requirements)
+- Pushed to mitwilli-create:main ✓ (4c04eb8)
+- Files touched (DELTA territory): `lib/ai-detection-gate.mjs`, `lib/ai-detection-retry.mjs` (new), `lib/voice-corpus.mjs` (new), `scripts/ai-detection-calibrate-baseline.mjs` (new), `scripts/delta-field-audit.mjs` (new), `scripts/agents/ai-detection-hardener.mjs` (new), `scripts/agents/cover-letter.mjs`, `scripts/agents/cv-tailor.mjs`, `dashboard-server.mjs` (narrow — `/api/build-pack-stage` response + `/api/ai-detection/signal-quality` endpoint + `computeEditingPriority` helper), `scripts/build-dashboard.mjs` (narrow — Editing Priority callout render in tonight-pick modal), 6 data/* deliverables.
+- 5 AAA council findings: ALL FIXED in-session before merge. Frontmatter-cloak verified-fixed via repro test.
+- Heads-up to α/β/γ/ε/ζ: `dashboard-server.mjs` got a new helper `computeEditingPriority()` at line 248 and a new GET endpoint `/api/ai-detection/signal-quality`. If you have edits to that file, rebase against this merge.
+- Heads-up to α: `scripts/agents/cover-letter.mjs` + `scripts/agents/cv-tailor.mjs` retry pipeline is now multi-stage via `lib/ai-detection-retry.mjs`. Apply-pack-polish should NOT layer on top of the retry — let the gate own the rewrite loop.
+
+— δ
