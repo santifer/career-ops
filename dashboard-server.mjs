@@ -421,6 +421,18 @@ const RESEARCHER_ENRICHMENT_RATE = parseFloat(process.env.RESEARCHER_ENRICHMENT_
 // THRESHOLD_FOR_PUBLISH: 4.0 — verified in `lib/funnel-completion.mjs:128`,
 //   `lib/next-moves.mjs:121`, `lib/eval-council.mjs:144`. PASS — gated by real code.
 const THRESHOLD_FOR_PUBLISH      = parseFloat(process.env.THRESHOLD_FOR_PUBLISH      || '4.0');
+// α Run-Batch eval 2026-05-19 — polish stage costs (only surface when POLISH_PACK_ENABLED=1).
+// Default of ~$60/pack is the calibrated typical (per overnight smoke @ 14021db: cover-letter
+// only converged at $46 + $0 cached signals; full 6-artifact ranges $40-180 from operational
+// telemetry). The $500 cap from spec is the hard ceiling, not the expected mean.
+// Bounded same as scripts/process-all-pipeline.mjs:phasePolish so dashboard preview stays
+// in sync with the agent's actual behavior.
+const _rawPolishCost = parseFloat(process.env.COST_PER_POLISH_PACK_USD || '60.00');
+const COST_PER_POLISH_PACK_USD     = Number.isFinite(_rawPolishCost) && _rawPolishCost > 0 ? _rawPolishCost : 60;
+const _rawPolishTopN = parseInt(process.env.POLISH_TOP_N_PER_RUN || '5', 10);
+const POLISH_TOP_N_PER_RUN         = Number.isFinite(_rawPolishTopN) && _rawPolishTopN > 0 ? Math.min(_rawPolishTopN, 20) : 5;
+const _rawPolishCap = parseFloat(process.env.POLISH_PER_PACK_COST_CAP_USD || '120.00');
+const POLISH_PER_PACK_COST_CAP_USD = Number.isFinite(_rawPolishCap) && _rawPolishCap > 0 ? Math.min(Math.max(_rawPolishCap, 10), 500) : 120;
 // γ GAMMA truth-audit metadata (rendered in modal as provenance).
 const COST_CALIBRATION_PROVENANCE = {
   publish_rate: {
@@ -471,6 +483,15 @@ const COST_CALIBRATION_PROVENANCE = {
     last_calibrated: '2026-05-19',
     confidence_band_pct: 50,    // ±50% — TTL is 30d, churn unpredictable
     note: 'observed today=100%, kept conservative 50% to absorb cache expiry',
+  },
+  polish_typical_cost: {
+    value: COST_PER_POLISH_PACK_USD,
+    source: 'overnight smoke @ 14021db + apply-pack-polish.mjs operational telemetry',
+    confidence: 'MED',
+    sample_size: 1,             // single full pack run observed
+    last_calibrated: '2026-05-19',
+    confidence_band_pct: 100,   // ±100% — single-pack telemetry is fragile
+    note: 'env-tunable via COST_PER_POLISH_PACK_USD',
   },
 };
 
@@ -879,9 +900,20 @@ function buildPipelinePreview() {
   const rbDealBreakerCost  = rbResearcherCount * COST_PER_DEALBREAKER_CALL;
   const rbAgentTotal       = rbCouncilCost + rbResearcherCost + rbDealBreakerCost;
 
-  // ── Full totals (stages + enrichment) ────────────────────────────────────
-  const processAllCost = triageCost + processCost + paAgentTotal;
-  const runBatchCost   = rbProcessCost + rbAgentTotal;
+  // α Run-Batch eval 2026-05-19 — polish stage cost (only when POLISH_PACK_ENABLED=1).
+  // process-all-pipeline.mjs:phasePolish targets top-N Evaluated rows from the apply-now
+  // queue (default 5). Each pack converges around $60 typical, $120 cap. The cap is what
+  // we surface so the user sees the WORST-case figure before they confirm.
+  const polishEnabled = String(process.env.POLISH_PACK_ENABLED || '').trim() === '1';
+  const paPolishCount = polishEnabled ? POLISH_TOP_N_PER_RUN : 0;
+  const paPolishCost  = paPolishCount * COST_PER_POLISH_PACK_USD;
+  // Run Batch doesn't invoke polish today (polish is in process-all-pipeline.mjs only).
+  const rbPolishCount = 0;
+  const rbPolishCost  = 0;
+
+  // ── Full totals (stages + enrichment + polish if enabled) ────────────────
+  const processAllCost = triageCost + processCost + paAgentTotal + paPolishCost;
+  const runBatchCost   = rbProcessCost + rbAgentTotal + rbPolishCost;
 
   // ── Tier 5 estimates (post-Phase-3, upgrade planning) ────────────────────
   const tier5UniqueCompaniesEstimate = Math.max(1, Math.round(batchEvalCount * 0.60));
@@ -952,10 +984,26 @@ function buildPipelinePreview() {
           model: 'sonnet adjudicator',
           notes: 'adjudicates researcher report — runs when researcher runs',
         },
+        // α Run-Batch eval 2026-05-19: only surfaced when POLISH_PACK_ENABLED=1.
+        // Process All's phasePolish targets top-N Evaluated rows; each pack runs
+        // 3-Haiku-critics / Sonnet author / Opus adjudicator / adversarial sweep
+        // until ≥0.99 confidence — typical $60, cap $120 (env-tunable).
+        polish: {
+          count: paPolishCount,
+          cost_usd: r2(paPolishCost),
+          model: 'Haiku x3 + Sonnet + Opus + adversarial',
+          enabled: polishEnabled,
+          per_pack_typical_usd: COST_PER_POLISH_PACK_USD,
+          per_pack_cap_usd: POLISH_PER_PACK_COST_CAP_USD,
+          notes: polishEnabled
+            ? 'top-' + POLISH_TOP_N_PER_RUN + ' Evaluated rows polished to ≥0.99 confidence (POLISH_PACK_ENABLED=1)'
+            : 'OFF — set POLISH_PACK_ENABLED=1 to engage',
+        },
       },
       total_cost_usd:        r2(processAllCost),
       total_with_caps:       r2(Math.min(processAllCost, PER_RUN_CAP_PROCESS_ALL)),
       threshold_for_publish: THRESHOLD_FOR_PUBLISH,
+      polish_enabled:        polishEnabled,
       exceeds_per_run_cap:   processAllCost > PER_RUN_CAP_PROCESS_ALL,
       exceeds_budget:        (spent30d + processAllCost) > effectiveBudget,
       // ── Legacy fields (backward compat) ──────────────────────────────────

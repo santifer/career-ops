@@ -19512,15 +19512,36 @@ function _renderPipelineModalBody(action, p) {
     }
     var agentSection = '';
     if (ae) {
-      var agentDetailRows = [
+      var enrichmentItems = [
           { label: 'Council',     count: ae.council.count,     model: ae.council.model,     cost: ae.council.cost_usd,     note: Math.round((ae.council.cache_hit_rate || 0.5) * 100) + '% cached', provKey: 'company_cache_hit_rate' },
           { label: 'Researcher',  count: ae.researcher.count,  model: ae.researcher.model,  cost: ae.researcher.cost_usd,  note: 'HM + comp intel',                                              provKey: 'researcher_cost' },
           { label: 'Dealbreaker', count: ae.dealbreaker.count, model: ae.dealbreaker.model, cost: ae.dealbreaker.cost_usd, note: 'adjudicates researcher',                                       provKey: 'dealbreaker_cost' },
-        ].map(function(a) {
+      ];
+      // α Run-Batch eval 2026-05-19: surface the polish stage when present in the payload
+      // (server only includes the polish block on Process All previews — Run Batch doesn't run
+      // polish today). Cost reads 0 when POLISH_PACK_ENABLED is OFF, with an inline OFF/ON tag.
+      // Provenance key 'polish_typical_cost' renders a MED · N=1 · ±100% chip alongside.
+      if (ae.polish) {
+        var polishNote = ae.polish.enabled
+          ? 'top-' + ae.polish.count + ' Evaluated rows · ' + ae.polish.model
+          : 'OFF — set POLISH_PACK_ENABLED=1 to engage';
+        enrichmentItems.push({
+          label:    ae.polish.enabled ? 'Polish' : 'Polish <span style="opacity:0.45;font-size:9px;border:1px solid rgba(255,255,255,0.18);border-radius:3px;padding:0 4px;margin-left:4px">OFF</span>',
+          count:    ae.polish.count,
+          model:    ae.polish.model,
+          cost:     ae.polish.cost_usd,
+          note:     polishNote,
+          provKey:  'polish_typical_cost',
+          rawLabel: 'Polish',
+          isPolish: true,
+        });
+      }
+      var agentDetailRows = enrichmentItems.map(function(a) {
           var unitCost = a.count > 0 ? (a.cost / a.count) : 0;
           var unitStr  = unitCost >= 1 ? '$' + unitCost.toFixed(2) : (unitCost >= 0.10 ? '$' + unitCost.toFixed(2) : '$' + unitCost.toFixed(3));
           var sub = ' <span style="opacity:0.45;font-size:10px">(' + a.count + ' &times; ' + unitStr + ' · ' + a.model + ' · ' + a.note + ')</span>';
-          return '<span class="pipeline-stat-label" style="padding-left:6px">' + a.label + sub + _confChip(a.provKey) + '</span>'
+          var lblStyle = a.isPolish && !ae.polish.enabled ? ' style="padding-left:6px;opacity:0.55"' : ' style="padding-left:6px"';
+          return '<span class="pipeline-stat-label"' + lblStyle + '>' + a.label + sub + _confChip(a.provKey) + '</span>'
                + '<span class="pipeline-stat-value pipeline-enrichment-cost">' + (a.cost > 0 ? '$' + a.cost.toFixed(2) : '<span class="muted">$0.00</span>') + '</span>';
         }).join('');
       // Footer line: surface that publish-rate is itself an estimate with N + band.
