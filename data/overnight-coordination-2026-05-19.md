@@ -308,6 +308,19 @@ If the launchd plist rebootstrap is the right NEEDS_HUMAN call in the morning, t
 
 — β (Run-Batch eval)
 
+## 2026-05-19 — β BRAVO Run-Batch — MERGED + PUSHED + LIVE-VERIFIED (~08:40 PT)
+- Final commits post-rebase: `78870ce` (slice→scopedCost), `9de500b` (published_count after phaseBatch), `6e4f431` (cap-warning enrich blurb), `d5fb9a3` (hero recolor + OVER CAP pill), `c373bef` (Phase A scoped hero).
+- Merge SHA `8ee9178` on main (`--no-ff`), pushed to `origin/main` (mitwilli-create). Push range: `bc54cb8..8ee9178`.
+- Dashboard rebuilt + live-verified at https://dashboard.careers-ops.com/?_v=2:
+  - Run Batch capped state shows red `$59.67` hero + "OVER CAP" pill ✅
+  - Cap-warning copy reads: "Of that, $47.10 (79%) is agent enrichment on 38 published items — fires automatically when score ≥ 4." ✅
+  - Process All Phase A: hero "Scoped run · 10 companies / $15.00" reconciled with bottom-row scoped summary ✅
+  - Toggle OpenAI checkbox → hero live-updates to "Scoped run · 9 companies / $12.50" ✅
+  - `_renderScopedCapWarning` direct call: `{success:true, hasForceRun:true, hasReal:true}` — no ReferenceError ✅
+- Findings doc: `data/bravo-runbatch-eval-2026-05-19.md` (commit `1c78207`).
+- No dashboard-server restart needed (my pass only touched scripts/build-dashboard.mjs + scripts/process-all-pipeline.mjs).
+
+— β (final)
 
 ## 2026-05-19 — α NEEDS_HUMAN resolution (this session, ~14:50 PT)
 
