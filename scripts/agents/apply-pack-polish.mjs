@@ -40,6 +40,26 @@ try {
   config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.env'), override: true });
 } catch { /* dotenv optional */ }
 
+// ── Polish hang fix Part A (2026-05-19) ───────────────────────────────────
+// The 2h41m hang Mitchell hit and the CV-only smoke-test re-hang both showed
+// the same signature: process alive, 0% CPU, 1 ESTABLISHED HTTPS socket held
+// open after the LLM response. Cause: Node undici keeps the TCP socket alive
+// even after AbortSignal fires on the body read — the abort closes the
+// request handler but the underlying socket lingers, and Promise.all/race in
+// the polish loop's critic fan-out doesn't resolve until the awaited fetch
+// settles.
+//
+// Fix: monkey-patch globalThis.fetch at polish-orchestrator entry to ALWAYS
+// add a `Connection: close` header. LinkedIn / Anthropic / Perplexity / xAI /
+// OpenAI all honor the spec — connection closes after each request, no
+// keep-alive trap. Scoped to the polish chain only (this file is the only
+// orchestrator entry); other consumers of council.mjs are unaffected.
+const _polishOriginalFetch = globalThis.fetch;
+globalThis.fetch = (input, init = {}) => {
+  const headers = { ...(init.headers || {}), Connection: 'close' };
+  return _polishOriginalFetch(input, { ...init, headers, keepalive: false });
+};
+
 import { harvestPolishSignals } from '../../lib/polish-signals.mjs';
 import { polishArtifact } from '../../lib/polish-loop.mjs';
 import { checkPackCoherence } from '../../lib/polish-coherence.mjs';
