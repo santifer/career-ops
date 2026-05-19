@@ -4588,6 +4588,69 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // ── GET /api/ai-detection/signal-quality ─────────────────────────────────
+  // DELTA P2 — exposes the current calibrated thresholds + signal-quality
+  // summary so the dashboard can render an honest "Detection signal quality"
+  // section instead of asking the user to interpret a 99% GPTZero score as
+  // a real failure when the calibration baseline shows it's a known FPR.
+  if (url === '/api/ai-detection/signal-quality' && req.method === 'GET') {
+    (async () => {
+      try {
+        const thresholdsPath = join(ROOT, 'data', 'ai-detection-calibration', 'current-thresholds.json');
+        const baselineGlob = join(ROOT, 'data', 'ai-detection-calibration');
+        let thresholds = null;
+        if (existsSync(thresholdsPath)) {
+          thresholds = JSON.parse(readFileSync(thresholdsPath, 'utf-8'));
+        }
+        // Find most recent baseline summary file
+        const { readdirSync } = await import('node:fs');
+        const baselineFiles = existsSync(baselineGlob)
+          ? readdirSync(baselineGlob).filter(f => f.startsWith('baseline-') && f.endsWith('.json')).sort().reverse()
+          : [];
+        const latestBaseline = baselineFiles[0]
+          ? JSON.parse(readFileSync(join(baselineGlob, baselineFiles[0]), 'utf-8'))
+          : null;
+
+        const summary = thresholds ? {
+          calibrated_at: thresholds.derived_at,
+          gptzero: {
+            clear_ceiling: thresholds.gptzero?.CLEAR?.max ?? null,
+            crit_floor: thresholds.gptzero?.CRIT?.min ?? null,
+            gap: ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)),
+            signal_quality:
+              ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)) >= 0.20 ? 'GOOD'
+              : ((thresholds.gptzero?.CRIT?.min ?? 1) - (thresholds.gptzero?.CLEAR?.max ?? 0)) >= 0.05 ? 'WEAK' : 'USELESS',
+          },
+          originality: {
+            clear_ceiling: thresholds.originality?.CLEAR?.max ?? null,
+            crit_floor: thresholds.originality?.CRIT?.min ?? null,
+            gap: ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)),
+            signal_quality:
+              ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)) >= 0.20 ? 'GOOD'
+              : ((thresholds.originality?.CRIT?.min ?? 1) - (thresholds.originality?.CLEAR?.max ?? 0)) >= 0.05 ? 'WEAK' : 'USELESS',
+          },
+        } : null;
+
+        return json({
+          ok: true,
+          thresholds,
+          summary,
+          baseline_sample_counts: latestBaseline?.summary?.sample_counts ?? null,
+          baseline_file: baselineFiles[0] ?? null,
+          interpretation: summary && summary.gptzero.signal_quality === 'USELESS' && summary.originality.signal_quality === 'USELESS'
+            ? 'Both detectors are calibrated USELESS against Mitchell\'s voice baseline — they cannot distinguish authentic Mitchell prose from generic AI text. The gate refuses to BLOCK on USELESS-quality scores; it surfaces them as ADVISORY only. Re-calibration after a voice-corpus refresh may change this.'
+            : summary
+              ? `GPTZero signal quality: ${summary.gptzero.signal_quality}. Originality signal quality: ${summary.originality.signal_quality}. The gate blocks artifacts only when band severe AND at least one detector has GOOD signal.`
+              : 'No calibration baseline present. Run `node scripts/ai-detection-calibrate-baseline.mjs --refresh` to populate.',
+        });
+      } catch (err) {
+        _d25Log(`[ai-detection/signal-quality] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
   // ── 1. POST /api/build-pack-stage ─────────────────────────────────────────
   // body: { rowId, stage: 'cv-tailor'|'cover-letter'|'why-statement'|'linkedin-dm'|'form-fields', config? }
   // Invokes scripts/agents/{stage}.mjs and returns SubAgentOutput JSON.
