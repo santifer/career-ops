@@ -3273,6 +3273,15 @@ function loadBuilderLog() {
   } catch { return null; }
 }
 
+// 2026-05-19 — adjudicated target API/tool stack (council-of-models → dealbreaker).
+// Source: data/council-target-apis-2026-05-19-adjudicated.md
+function loadTargetApis() {
+  const fp = join(ROOT, 'data', 'builder-target-apis.json');
+  if (!existsSync(fp)) return null;
+  try { return JSON.parse(readFileSync(fp, 'utf-8')); }
+  catch { return null; }
+}
+
 function loadCompFloors() {
   const defaults = { floor: 175, seattleFloor: 180, targetMin: 200, targetMax: 320 };
   if (!existsSync(PROFILE_YML_PATH)) return defaults;
@@ -3655,6 +3664,7 @@ async function build() {
   // nightly by scripts/agents/builder-log.mjs). Surfaces skills/APIs/bug-classes
   // for the PM-trajectory narrative.
   const builderLog = loadBuilderLog();
+  const targetApis = loadTargetApis();
   const scanTotal = countScanHistory();
   const batchRuns = countBatchRuns();
   const portals = getEnabledPortals();
@@ -11581,6 +11591,30 @@ async function build() {
     const pmSigCount   = Object.keys(builderLog.pm_signals  || {}).length;
     const generatedAt  = L.generated_at ? new Date(L.generated_at).toLocaleString() : 'unknown';
     const sinceLabel   = L.since || '30 days ago';
+
+    // 2026-05-19 — APIs/tools tile reframed from "recent activity / cumulative"
+    // (builder-momentum framing) to "demonstrated / target stack" (hiring-signal
+    // framing). Source: data/builder-target-apis.json adjudicated from
+    // council-of-models 2026-05-19 → dealbreaker. Falls back to old format if
+    // the data file is absent.
+    const tApi          = targetApis;
+    const tA_demo       = tApi?.summary?.tier_a_demonstrated  || 0;
+    const tA_total      = tApi?.summary?.tier_a_total         || 0;
+    const tAll_demo     = tApi?.summary?.demonstrated_full    || 0;
+    const tAll_total    = tApi?.summary?.total_target_entries || 0;
+    const tAll_partial  = tApi?.summary?.demonstrated_partial || 0;
+    const tierAGaps     = tApi
+      ? Object.entries(tApi.entries || {})
+          .filter(([_, v]) => v.tier === 'A' && v.demonstrated === 'no')
+          .map(([k]) => k).join(', ')
+      : '';
+    const apiTileTitle  = tApi
+      ? `Target API stack for AI PgM / FDE / Solutions Architect roles (council research + dealbreaker, 2026-05-19). ${tA_demo}/${tA_total} Tier-A gating items demonstrated · ${tAll_demo}/${tAll_total} total stack (+${tAll_partial} partial). Tier-A gaps: ${tierAGaps || 'none'}. 30-day closure plan in data/builder-target-apis.json.`
+      : 'Distinct APIs / SDKs / services touched in this window vs cumulative';
+    const apiTileLabel  = tApi ? 'APIs / tools · Tier-A gating' : 'APIs / tools';
+    const apiTileValue  = tApi
+      ? `${tA_demo}<span class="be-stat-cumulative"> / ${tA_total} · ${tAll_demo}/${tAll_total} stack</span>`
+      : `${(L.top_apis || []).length}<span class="be-stat-cumulative"> / ${apiCount} all-time</span>`;
     return `
   <div class="panel panel-strong" id="builder-evolution-section">
     <h2 class="panel-title collapsible" onclick="togglePanel('builder-evolution-section',event)">
@@ -11591,9 +11625,9 @@ async function build() {
     <p class="panel-subtitle">Skills, APIs, bug classes, PM signals — extracted from git history, last ${htmlEscape(sinceLabel)}. Updated nightly at 03:30 PT by <code>scripts/agents/builder-log.mjs</code>.</p>
 
     <div class="builder-evo-grid">
-      <div class="be-stat-tile" title="Distinct APIs / SDKs / services touched in this window vs cumulative">
-        <div class="be-stat-label">APIs / tools</div>
-        <div class="be-stat-value">${(L.top_apis || []).length}<span class="be-stat-cumulative"> / ${apiCount} all-time</span></div>
+      <div class="be-stat-tile" title="${htmlEscape(apiTileTitle)}">
+        <div class="be-stat-label">${apiTileLabel}</div>
+        <div class="be-stat-value">${apiTileValue}</div>
       </div>
       <div class="be-stat-tile" title="Distinct skills / patterns demonstrated in this window vs cumulative">
         <div class="be-stat-label">Skills demonstrated</div>
@@ -11617,6 +11651,7 @@ async function build() {
       <span class="be-footer-meta">Last generated: ${generatedAt}</span>
       <span class="be-footer-cta">→ See full digest: <code>data/builder-log-rolling-30d.md</code></span>
       <span class="be-footer-cta">→ Resume bullets: <code>node scripts/agents/builder-log.mjs --export-resume-bullets</code></span>
+      ${tApi ? `<span class="be-footer-cta">→ Target stack audit: <code>data/council-target-apis-2026-05-19-adjudicated.md</code></span>` : ''}
     </div>
   </div>`;
   })() : ''}

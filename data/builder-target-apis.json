@@ -1,0 +1,456 @@
+{
+  "generated_at": "2026-05-19T22:00:00Z",
+  "source": {
+    "council_report": "data/council-target-apis-2026-05-19.md",
+    "adjudicated_report": "data/council-target-apis-2026-05-19-adjudicated.md",
+    "council_models": 7,
+    "council_cost_usd": 1.85,
+    "dealbreaker_websearches": 5,
+    "target_role_families": [
+      "AI Program Manager / Technical PgM-AI",
+      "Forward Deployed Engineer (FDE) / Applied AI",
+      "Solutions Architect (Applied AI / Enterprise)",
+      "AI Enablement Engineer / Customer Engineer",
+      "Developer Relations Engineer (AI/agentic)",
+      "Strategic Operations / Strategy Manager (AI products)",
+      "Communications Manager (AI research / Claude-Code-style devtools)"
+    ]
+  },
+  "summary": {
+    "total_target_entries": 39,
+    "demonstrated_full": 13,
+    "demonstrated_partial": 3,
+    "tier_a_total": 8,
+    "tier_a_demonstrated": 3,
+    "tier_a_coverage_pct": 37.5,
+    "tier_b_total": 15,
+    "tier_b_demonstrated_full": 2,
+    "tier_b_demonstrated_partial": 2,
+    "tier_c_total": 14,
+    "tier_c_demonstrated_full": 6,
+    "tier_c_demonstrated_partial": 1,
+    "tier_d_total": 3,
+    "tier_d_demonstrated": 1,
+    "tier_c_minority_total": 7,
+    "tier_c_minority_demonstrated": 1,
+    "headline": "3 / 8 Tier-A gating · 13 / 39 target stack (full) · +3 partial · 100% reachable in 30 days"
+  },
+  "entries": {
+    "anthropic": {
+      "tier": "A",
+      "category": "llm-provider",
+      "demonstrated": "yes",
+      "evidence": "ANTHROPIC_API_KEY + Sonnet/Opus/Haiku/Web-Search in .env; powers council, cv-tailor, apply-pack-polish, and 15+ agents",
+      "citations": ["https://docs.anthropic.com/", "https://www.anthropic.com/careers"],
+      "action_priority": null
+    },
+    "openai": {
+      "tier": "A",
+      "category": "llm-provider",
+      "demonstrated": "yes",
+      "evidence": "OPENAI_API_KEY + gpt-5 Pro/Thinking in .env; powers council and gap-research",
+      "citations": ["https://platform.openai.com/docs", "https://cookbook.openai.com/"],
+      "action_priority": null
+    },
+    "mcp": {
+      "tier": "A",
+      "category": "mcp-tool-use",
+      "demonstrated": "yes",
+      "evidence": "scripts/mcp-servers/dashboard-mcp.mjs — production MCP server, 7 tools (navigate, render_widget, click_drill_in, read_popout, screenshot, list_widgets, api_fetch), CF Access auth, @modelcontextprotocol/sdk v1.29.0, committed 8a03f4a. Also daily Claude Code MCP client use.",
+      "citations": ["https://modelcontextprotocol.io/", "https://job-boards.greenhouse.io/anthropic/jobs/4985877008"],
+      "action_priority": "Make publicly discoverable — cite in cv.md, public README. Zero engineering work; massive narrative leverage."
+    },
+    "langgraph": {
+      "tier": "A",
+      "category": "agent-framework",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://langchain-ai.github.io/langgraph/"],
+      "action_priority": "Build public LangGraph demo (stateful agent on career-ops corpus). ~4-8 hrs."
+    },
+    "langsmith": {
+      "tier": "A",
+      "category": "eval-observability",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.smith.langchain.com/"],
+      "action_priority": "Pair with LangGraph demo — public trace URLs. ~30 min add-on."
+    },
+    "pinecone": {
+      "tier": "A",
+      "category": "vector-db",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.pinecone.io/"],
+      "action_priority": "Pinecone Serverless index against cv-knowledge corpus. ~2 hrs."
+    },
+    "vercel-ai-sdk": {
+      "tier": "A",
+      "category": "agent-framework",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://ai-sdk.dev/", "https://sdk.vercel.ai/docs"],
+      "action_priority": "Next.js + Vercel AI SDK chat-with-tools demo on subdomain. ~6-10 hrs."
+    },
+    "temporal": {
+      "tier": "A",
+      "category": "orchestration",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://temporal.io/", "https://temporal.io/blog/build-durable-ai-agents-pydantic-ai-and-temporal"],
+      "action_priority": "Deploy one career-ops job (e.g., cv-tailor-batch) as Temporal workflow + Pydantic AI agent loop. ~10 hrs unlocks two Tier-A/B claims."
+    },
+    "langchain": {
+      "tier": "B",
+      "category": "agent-framework",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.langchain.com/"],
+      "action_priority": null
+    },
+    "llamaindex": {
+      "tier": "B",
+      "category": "retrieval-rag",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.llamaindex.ai/"],
+      "action_priority": null
+    },
+    "pgvector": {
+      "tier": "B",
+      "category": "vector-db",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://github.com/pgvector/pgvector"],
+      "action_priority": "Pair with Pinecone in Week 3 demo."
+    },
+    "github-actions": {
+      "tier": "B",
+      "category": "ci-cd",
+      "demonstrated": "yes",
+      "evidence": ".github/workflows in career-ops; runs test-all.mjs + auto-labeler on every PR",
+      "citations": ["https://docs.github.com/en/actions"],
+      "action_priority": null
+    },
+    "docker": {
+      "tier": "B",
+      "category": "container-runtime",
+      "demonstrated": "partial",
+      "evidence": "Development use only; no production deploys yet",
+      "citations": ["https://docs.docker.com/"],
+      "action_priority": null
+    },
+    "kubernetes": {
+      "tier": "B",
+      "category": "deploy-infra",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://kubernetes.io/docs/"],
+      "action_priority": null
+    },
+    "hugging-face": {
+      "tier": "B",
+      "category": "llm-provider",
+      "demonstrated": "partial",
+      "evidence": "Read-only Hub use; no HF account/uploads or Inference Endpoint demos",
+      "citations": ["https://huggingface.co/docs"],
+      "action_priority": null
+    },
+    "modal": {
+      "tier": "B",
+      "category": "deploy-infra",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://modal.com/docs"],
+      "action_priority": null
+    },
+    "braintrust": {
+      "tier": "B",
+      "category": "eval-observability",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://www.braintrust.dev/docs"],
+      "action_priority": "Pair with Pinecone demo in Week 3."
+    },
+    "cursor": {
+      "tier": "B",
+      "category": "cli-shell",
+      "demonstrated": "no",
+      "evidence": "Uses Claude Code as primary; Cursor not installed",
+      "citations": ["https://docs.cursor.com/"],
+      "action_priority": null
+    },
+    "anthropic-agent-sdk": {
+      "tier": "B",
+      "category": "agent-framework",
+      "demonstrated": "no",
+      "evidence": "career-ops uses raw Messages API, not the Agent SDK",
+      "citations": ["https://docs.anthropic.com/en/api/agent-sdk"],
+      "action_priority": null
+    },
+    "openai-agents-sdk": {
+      "tier": "B",
+      "category": "agent-framework",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://openai.github.io/openai-agents-python/"],
+      "action_priority": null
+    },
+    "claude-code": {
+      "tier": "B",
+      "category": "cli-shell",
+      "demonstrated": "yes",
+      "evidence": "Daily driver — .claude/ directory, agents/runs/, hooks, custom skills, council orchestration",
+      "citations": ["https://docs.claude.com/en/docs/claude-code/overview"],
+      "action_priority": "HIGHEST-LEVERAGE ZERO-WORK item: surface this publicly via session logs."
+    },
+    "turbopuffer": {
+      "tier": "B",
+      "category": "vector-db",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://turbopuffer.com/docs", "https://turbopuffer.com/customers/cursor"],
+      "action_priority": null
+    },
+    "pydantic-ai": {
+      "tier": "B",
+      "category": "agent-framework",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://ai.pydantic.dev/", "https://github.com/pydantic/pydantic-ai"],
+      "action_priority": "Pair with Temporal in Week 4 demo."
+    },
+    "aws-bedrock": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.aws.amazon.com/bedrock/"],
+      "action_priority": null
+    },
+    "azure-openai": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://learn.microsoft.com/en-us/azure/ai-services/openai/"],
+      "action_priority": null
+    },
+    "google-vertex-ai": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "partial",
+      "evidence": "Gemini API key in .env; not Vertex AI directly",
+      "citations": ["https://cloud.google.com/vertex-ai/docs"],
+      "action_priority": null
+    },
+    "together-ai": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.together.ai/"],
+      "action_priority": null
+    },
+    "mistral": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.mistral.ai/"],
+      "action_priority": null
+    },
+    "cohere": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.cohere.com/"],
+      "action_priority": null
+    },
+    "elevenlabs": {
+      "tier": "C",
+      "category": "voice-audio",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://elevenlabs.io/docs"],
+      "action_priority": null
+    },
+    "replicate": {
+      "tier": "C",
+      "category": "deploy-infra",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://replicate.com/docs"],
+      "action_priority": null
+    },
+    "perplexity-api": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "yes",
+      "evidence": "PERPLEXITY_API_KEY + 5 model configs (deep, pro, reasoning) in .env; used by council research",
+      "citations": ["https://docs.perplexity.ai/"],
+      "action_priority": null
+    },
+    "xai-grok": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "yes",
+      "evidence": "XAI_API_KEY + heavy/beta/reasoning + X-search tool configs in .env; used by council research",
+      "citations": ["https://docs.x.ai/"],
+      "action_priority": null
+    },
+    "gemini": {
+      "tier": "C",
+      "category": "llm-provider",
+      "demonstrated": "yes",
+      "evidence": "GEMINI_API_KEY + 3 deep-research configs (research/research-pro/research-max) in .env",
+      "citations": ["https://ai.google.dev/gemini-api/docs"],
+      "action_priority": null
+    },
+    "openai-function-calling": {
+      "tier": "C",
+      "category": "mcp-tool-use",
+      "demonstrated": "yes",
+      "evidence": "Anthropic tool-use proven via career-ops agents; OpenAI side trivial port",
+      "citations": ["https://platform.openai.com/docs"],
+      "action_priority": null
+    },
+    "notion": {
+      "tier": "C",
+      "category": "knowledge-base",
+      "demonstrated": "yes",
+      "evidence": "NOTION_API_KEY in .env",
+      "citations": ["https://developers.notion.com/"],
+      "action_priority": null
+    },
+    "assemblyai": {
+      "tier": "C",
+      "category": "voice-audio",
+      "demonstrated": "yes",
+      "evidence": "ASSEMBLYAI_API_KEY in .env",
+      "citations": ["https://www.assemblyai.com/docs"],
+      "action_priority": null
+    },
+    "synthesia-api": {
+      "tier": "D",
+      "category": "voice-audio",
+      "demonstrated": "no",
+      "evidence": "Target-company-specific (Synthesia)",
+      "citations": ["https://docs.synthesia.io/"],
+      "action_priority": null
+    },
+    "sierra-agent-platform": {
+      "tier": "D",
+      "category": "agent-framework",
+      "demonstrated": "no",
+      "evidence": "Target-company-specific (Sierra). Proprietary, not portable.",
+      "citations": ["https://sierra.ai/careers"],
+      "action_priority": null
+    },
+    "cloudflare": {
+      "tier": "D",
+      "category": "deploy-infra",
+      "demonstrated": "yes",
+      "evidence": "CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCESS_TOKEN in .env; CF Tunnel fronts dashboard.careers-ops.com; CF Access service token gates dashboard-mcp",
+      "citations": ["https://developers.cloudflare.com/"],
+      "action_priority": null
+    },
+    "vllm": {
+      "tier": "C-minority",
+      "category": "deploy-infra",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.vllm.ai/"],
+      "action_priority": null
+    },
+    "ollama": {
+      "tier": "C-minority",
+      "category": "deploy-infra",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://ollama.com/"],
+      "action_priority": null
+    },
+    "linear": {
+      "tier": "C-minority",
+      "category": "knowledge-base",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://linear.app/"],
+      "action_priority": null
+    },
+    "chroma": {
+      "tier": "C-minority",
+      "category": "vector-db",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.trychroma.com/"],
+      "action_priority": null
+    },
+    "qdrant": {
+      "tier": "C-minority",
+      "category": "vector-db",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://qdrant.tech/documentation/"],
+      "action_priority": null
+    },
+    "playwright": {
+      "tier": "C-minority",
+      "category": "automation-browser",
+      "demonstrated": "yes",
+      "evidence": "Used throughout career-ops: check-liveness.mjs, dashboard-mcp.mjs, scan.mjs",
+      "citations": ["https://playwright.dev/"],
+      "action_priority": null
+    },
+    "browserbase": {
+      "tier": "C-minority",
+      "category": "automation-browser",
+      "demonstrated": "no",
+      "evidence": null,
+      "citations": ["https://docs.browserbase.com/"],
+      "action_priority": null
+    }
+  },
+  "gap_closure_30day": [
+    {
+      "phase": "Day 1 (FREE win)",
+      "action": "Publish dashboard-mcp README at public URL. Cite in cv.md: 'Shipped: dashboard MCP server with 7 tools, CF-Access-authenticated, served at dashboard.careers-ops.com.'",
+      "tier_a_unlocked": [],
+      "cost_hours": 1,
+      "note": "MCP work already done; this is pure surfacing."
+    },
+    {
+      "phase": "Week 1",
+      "action": "LangGraph + LangSmith demo on career-ops corpus (e.g., role-archetype matcher) with public trace URLs",
+      "tier_a_unlocked": ["langgraph", "langsmith"],
+      "cost_hours": 8
+    },
+    {
+      "phase": "Week 2",
+      "action": "Vercel AI SDK + Next.js chat-with-tools demo deployed to fresh subdomain",
+      "tier_a_unlocked": ["vercel-ai-sdk"],
+      "cost_hours": 8
+    },
+    {
+      "phase": "Week 3",
+      "action": "Pinecone Serverless + pgvector parity + Braintrust eval — three items in one project",
+      "tier_a_unlocked": ["pinecone"],
+      "tier_b_unlocked": ["pgvector", "braintrust"],
+      "cost_hours": 6
+    },
+    {
+      "phase": "Week 4",
+      "action": "Temporal workflow wrapping cv-tailor-batch + Pydantic AI agent loop — two items in one project",
+      "tier_a_unlocked": ["temporal"],
+      "tier_b_unlocked": ["pydantic-ai"],
+      "cost_hours": 10
+    }
+  ],
+  "narrative_driven_role_warning": {
+    "role_families": ["Strategic Operations / Strategy Manager", "Communications Manager"],
+    "claim": "Verified via Anthropic Comms Lead Claude Code JD: zero specific tool/API requirements. Hiring is narrative-driven for these 4 role families in the apply-now-queue.",
+    "implication": "API-stack gap-closure for these roles is a misallocation. Invest in writing artifacts (storytellermitch.com, Substack, public Claude Code session logs, article-digest) instead."
+  }
+}
