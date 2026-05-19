@@ -61,6 +61,45 @@ const AI_DECOYS = [
     register: 'mixed',
     text: `As we navigate the complexities of the modern business landscape, it becomes increasingly important to align cross-functional teams around a unified vision. By fostering collaboration and breaking down silos, we can unlock synergies that propel organizations toward sustainable growth. Embracing a holistic approach to talent development empowers individuals to thrive while driving collective success.`,
   },
+
+  // ── Expanded AI decoys (δ.NH.1 — 2026-05-19) ─────────────────────────────
+  // 7 additional decoys to reach ≥10 total. Calibrated for diversity of
+  // register, length, and sycophancy pattern so the high-end band is robust.
+  {
+    id: 'ai-decoy-strategic-vision',
+    register: 'narrative',
+    text: `Our strategic vision encompasses a comprehensive approach to transforming organizational capabilities through the thoughtful application of emerging technologies. By establishing a robust framework for digital transformation, we can position ourselves to capitalize on opportunities while mitigating inherent risks. This multifaceted initiative requires sustained commitment from leadership and a culture of continuous learning. Through careful execution of our roadmap, we will achieve operational excellence and drive meaningful value creation for all stakeholders.`,
+  },
+  {
+    id: 'ai-decoy-communications-professional',
+    register: 'narrative',
+    text: `With over a decade of experience in strategic communications and stakeholder engagement, I have developed a comprehensive skill set that positions me ideally for this role. My track record demonstrates consistent success in driving impactful narratives across complex, matrixed organizations. I excel at translating technical concepts into compelling stories that resonate with diverse audiences. My collaborative approach and data-driven mindset have consistently delivered measurable results in fast-paced environments. I am excited about the opportunity to bring my expertise to your organization and contribute to your continued growth trajectory.`,
+  },
+  {
+    id: 'ai-decoy-technical-narrative',
+    register: 'narrative',
+    text: `The implementation of this machine learning pipeline represents a significant advancement in our data processing capabilities. By leveraging state-of-the-art transformer architectures and optimizing for both accuracy and latency, we have achieved remarkable improvements across key performance indicators. The system seamlessly integrates with existing infrastructure while providing enhanced scalability for future growth. Through rigorous testing and iterative refinement, we have established a robust foundation that will power our next generation of AI-driven products and services.`,
+  },
+  {
+    id: 'ai-decoy-leadership-reflection',
+    register: 'narrative',
+    text: `Throughout my leadership journey, I have come to understand that effective management is fundamentally about empowering teams to achieve their highest potential. By cultivating psychological safety and fostering open communication, leaders can unlock discretionary effort and drive innovation at scale. My approach centers on establishing clear expectations while providing the autonomy and resources team members need to excel. Through consistent coaching and recognition of both effort and outcomes, I have successfully built high-performing teams that consistently exceed organizational objectives.`,
+  },
+  {
+    id: 'ai-decoy-product-launch',
+    register: 'mixed',
+    text: `We are thrilled to announce the launch of our groundbreaking platform, which represents a paradigm shift in how organizations approach workflow automation. This innovative solution combines cutting-edge artificial intelligence with intuitive user experience design to deliver unprecedented value across the enterprise. Our platform's robust feature set addresses the most pressing challenges facing modern businesses, from enhanced productivity to seamless collaboration. Early adopters have already reported significant improvements in operational efficiency and employee satisfaction. We look forward to partnering with forward-thinking organizations ready to embrace the future of work.`,
+  },
+  {
+    id: 'ai-decoy-journalism-generic',
+    register: 'narrative',
+    text: `Throughout my career in digital journalism, I have witnessed firsthand the transformative impact of social media on how stories are discovered, told, and consumed. My experience spans multiple platforms and formats, allowing me to develop a nuanced understanding of audience behavior and content optimization. I am passionate about leveraging data insights to inform editorial strategy while maintaining the highest standards of journalistic integrity. The intersection of technology and storytelling represents an exciting frontier, and I am committed to being at the forefront of this evolution. My work has consistently demonstrated the power of authentic narrative to drive meaningful engagement and societal impact.`,
+  },
+  {
+    id: 'ai-decoy-ai-comms-essay',
+    register: 'narrative',
+    text: `Effective AI communications requires a sophisticated understanding of both technical nuance and human psychology. As organizations increasingly deploy artificial intelligence across their operations, the ability to translate complex algorithmic concepts into accessible narratives has become a critical organizational capability. Skilled AI communicators must bridge the gap between technical teams and diverse stakeholder groups, including executives, customers, regulators, and the broader public. This requires not only deep technical knowledge but also exceptional storytelling ability, empathy, and cultural sensitivity. By developing robust AI communication frameworks, organizations can build trust, manage expectations, and unlock the full potential of their AI investments.`,
+  },
 ];
 
 function chunkForDetector(text) {

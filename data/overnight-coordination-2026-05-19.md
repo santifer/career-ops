@@ -414,3 +414,25 @@ Files touched (no conflicts with other personas per coordination matrix):
 - No rebuild needed: DB is already dedup-clean.
 
 — ζ (needhuman-resolution)
+
+## 2026-05-19 — δ DELTA (NEEDS_HUMAN resolution) — landed
+
+Mitchell's decisions from the DELTA overnight hardening session executed and merged.
+
+**Decisions resolved:**
+- δ.1 (voice corpus ≥20): DONE — 22 new samples mined from portfolio stories, cover letter, story-bank. Total corpus: 27 entries (was 5). Committed `a7bbf83`.
+- δ.2 (third detector): DONE — Pangram wired into `lib/ai-detection-gate.mjs` via `callPangram()`. Council report at `data/delta-third-detector-council-2026-05-19.md`; dealbreaker adjudication at `data/delta-third-detector-selection-2026-05-19.md`. Pangram selected: UChicago BFI FPR=0.004%. Committed `5cda9d3`.
+- δ.3 (editing_priority callout in drawer): DONE — Static synchronous IIFE in `scripts/build-dashboard.mjs` reads cover-letter.md.ai-detection.json sidecar, renders top-3 CRIT/HIGH/MED flagged sentences. Non-blocking. Committed `07d68c0`.
+- δ.NH.1 (iterate calibration until clean separation): HONEST DEGENERATE — GPTZero + Originality.AI both return 1.0 for ALL text (human + AI decoys). With 26 human + 10 AI decoys, human-max=1.0 = AI-min=1.0. Calibrator correctly refuses to write thresholds. Third detector (Pangram) is expected to break this with GOOD signal quality once keyed. Expanded decoys from 3→10 for richer AI coverage when Pangram key is available. Committed `2c29295`, `ab2f365`.
+- δ.NH.2 (weekly detector-health launchd plist): DONE — `scripts/agents/detector-health-check.mjs` (three-detector sweep, snapshot writer, flip alerter) + `scripts/launchd/com.mitchell.career-ops.detector-health.plist` (Sunday 08:00 PT). `computeEditingPriority` in `dashboard-server.mjs` updated to include `pangram_signal_quality` in `anyGood` check. Committed `9f6feaf`, `9e1f0c2`.
+- δ.NH.3 (council + dealbreaker to pick third detector): DONE — See δ.2 above. WebSearch-based council report + dealbreaker adjudication both written. Pangram unanimous.
+- δ.NH.4 (cloudflared-staging plist review): DONE — Read `data/epsilon-self-review-2026-05-19.md`. EPSILON confirmed the nohup wrapper plist (`96a2dc4`) is intentional (Tahoe launchd bug workaround) + already bootstrapped. δ takes NO action — it stays.
+
+**NEEDS_HUMAN-AGAIN escalations:**
+- PANGRAM_API_KEY not yet configured — Mitchell obtains from pangram.com/solutions/api, adds to `.env`. Until keyed, Pangram is skipped (gate degrades gracefully to two USELESS detectors, fail-secure still applies).
+- Calibration thresholds remain unwritten (UNCALIBRATED state) until Pangram provides GOOD signal. Run `node scripts/ai-detection-calibrate-baseline.mjs` once Pangram key is live.
+- Detector health plist needs `launchctl bootstrap` — same pattern as other plists per EPSILON's Tahoe note.
+
+**Final commit log (needhuman branch — 9 commits):** a7bbf83 → e4699c0 → 2c29295 → ab2f365 → 5cda9d3 → 07d68c0 → 9f6feaf → 9e1f0c2
+
+— δ (NEEDS_HUMAN resolution)
