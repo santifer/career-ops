@@ -64,16 +64,30 @@ The 2 in flight when BRAVO's session errored:
 
 ---
 
-## Phase B HALT — what actually happened
+## Phase B HALT — what actually happened (and the cost-calc bug sigma found mid-haul)
 
-Halted Phase B at 1/50 contacts, $97 spent. The 3-way LLM council (Perplexity Sonar Pro + Sonnet 4.6 + Grok-4-X-search) couldn't see LinkedIn behind auth — it returned empty engagement data with 5 hallucinated citations to unrelated documents (Duke law school hearings, US-China commission reports, INCOSE vol 28-4, etc).
+Halted Phase B at 1/50 contacts. Cache file reported `cost_usd: 97.22` for Jake Standish — that triggered the halt.
 
-**Through your second-brain lens, this was a value-misalignment failure, not just a cost overrun:**
-- The output violated VIA #1 (Beauty/Excellence detects performed vs true)
+**Sigma-fortifier then discovered + fixed a 1000× cost-calculator bug** (commit `8e83ffa`): the rates table in `lib/council.mjs` was written as per-1K tokens when published prices are per-1M tokens. Actual cost for Jake's enrichment was **~$0.097, not $97**.
+
+**This means:**
+- The "162× cost overrun" was a *cost-reporting* overrun. Real cost was within the brief's estimate.
+- Phase B at 100 contacts would have been ~$10 actual spend (not $9,700).
+- I could safely re-run Phase B now with the corrected cost calc.
+
+**Why I'm still recommending Phase B' over re-running Phase B:**
+
+The cost was never the deepest issue. Even at $0.10/contact, the LLM output was empty hallucinations:
+- `fields_populated: 1` (just `best_channel: 'linkedin_dm'`)
+- 5 source URLs ALL unrelated to Jake (Duke law school hearings, US-China commission reports, INCOSE vol 28-4, etc.) — **fabricated citations**
+- `no_data_reason: "I could not access any public content or activity for Jake Standish's LinkedIn profile (only the bare profile shell is visible without connections, and no posts or activity are shown)"`
+
+**Through your second-brain lens, this is a value-alignment failure, not a cost failure:**
+- The output violated VIA #1 (Beauty/Excellence detects performed vs true at a sensory level)
 - The fabricated citations violated Authenticity (the throughline of your entire profile)
-- The empty fields with high cost violated Independence (you can't trust a tool that returns junk at full price)
+- The empty fields at any cost violated Independence (you can't trust a tool that fabricates citations)
 
-**Phase B' is the corrective.** Real authenticated scrape → real data → one Sonnet synthesis call. Authenticity preserved. $5/100 contacts (162× cheaper). See `scripts/maintenance/phase-B-prime-mechanical-enrich.mjs`.
+**Phase B' is the corrective.** Real authenticated scrape → real data → ONE Sonnet synthesis call against the actual scrape. Authenticity preserved. ~$5/100 contacts. The math: ~$0.05/contact, $5/100 → far cheaper AND fundamentally better data quality. See `scripts/maintenance/phase-B-prime-mechanical-enrich.mjs`.
 
 ---
 
@@ -86,7 +100,7 @@ After you shared `~/Downloads/second-brain.zip`, I re-evaluated my work. **5 opt
 | 1 | Detail renderer: TONIGHT'S MOVE + WHY NOW + DRAFT DM lead, supporting context collapsed | Shared Vision 93 / Concise Facts 7 → conclusion-first. Activator #1 → specific action this week. Security Scanner → uncertainties explicit. |
 | 2 | Priority scorer: 4 new signals (excellence_threshold_met, vision_arc_match, clear_action_unlock, authenticity_match) | VIA #1 Excellence + Futuristic #2 + Activator #1 + Authenticity value. Jake Standish 5.7→8.25. |
 | 3 | Contact-enrichment prompt: voice-overhauled with your psychological architecture, kill list, authenticity gate | Voice authenticity. Models now know who they're writing for. |
-| 4 | Phase B' pivot: Playwright scrape + Sonnet synthesis ($5 vs $97/contact) | Real data = no hallucinated citations = Authenticity + VIA #1 preserved. |
+| 4 | Phase B' pivot: Playwright scrape + Sonnet synthesis ($5/100 vs Phase B's empty-output) | Real data = no hallucinated citations = Authenticity + VIA #1 preserved. |
 | 5 | This synthesis: action-led, 1-page, lead-with-conclusion | Concise Facts 7 + DISC DI. The 200-line detail version lives below if you want it. |
 
 The original full-detail synthesis is at [data/contacts-month-1-launch-2026-05-19.md](./contacts-month-1-launch-2026-05-19.md) for when you want the full ladder.
