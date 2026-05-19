@@ -217,7 +217,7 @@ export async function runImpactDoc(input) {
     const cr = await callCouncil({
       prompt: userPrompt,
       models: [modelKey],
-      opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3500 },
+      opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3500, timeoutMs: 300_000 },
     });
     const r = cr.results?.[0];
     if (!r || r.error) throw new Error(r?.error || 'no result');
@@ -243,7 +243,7 @@ export async function runImpactDoc(input) {
         // Retry with stricter prompt
         try {
           const strict = userPrompt + '\n\nPREVIOUS RESPONSE DID NOT MATCH SCHEMA. Re-emit STRICT JSON only — no fences, no prose. Exactly 3 wedges, 2 risks, 2-5 commitments per 30/60/90.';
-          const retry = await callCouncil({ prompt: strict, models: [modelKey], opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3500 } });
+          const retry = await callCouncil({ prompt: strict, models: [modelKey], opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3500, timeoutMs: 300_000 } });
           const rr = retry.results?.[0];
           if (rr && !rr.error) { llm = rr; tokensUsed += rr.tokens || 0; }
         } catch { /* fall */ }

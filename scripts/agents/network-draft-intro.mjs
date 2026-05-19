@@ -182,15 +182,24 @@ async function callSonnet(prompt) {
     system: `You are a voice-matching assistant. You draft LinkedIn messages that sound exactly like Mitchell Williams — a specific human being with a calibrated written voice. You match his register: em-dash density, problem-statement openers, concrete metric anchoring, earned closers. You never write corporate PR language.`,
   };
 
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(body),
-  });
+  let resp;
+  try {
+    resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(120_000), // Phase A.0 hardening — LLM API timeout
+    });
+  } catch (e) {
+    if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+      throw new Error('Anthropic API timeout after 120s — slow upstream. Not retrying.');
+    }
+    throw e;
+  }
 
   if (!resp.ok) {
     const txt = await resp.text();

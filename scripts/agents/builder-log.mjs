@@ -304,6 +304,7 @@ ${summary}`;
         temperature: 0,
         messages: [{ role: 'user', content: prompt }],
       }),
+      signal: AbortSignal.timeout(120_000), // Phase A.0 hardening — LLM API timeout
     });
     if (!res.ok) { console.error('[builder-log] llm-tag HTTP', res.status); return null; }
     const data = await res.json();
@@ -318,6 +319,10 @@ ${summary}`;
     } catch {}
     return tags;
   } catch (err) {
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      console.error('[builder-log] llm-tag TIMEOUT after 120s — slow upstream. Skipping; not retrying.');
+      return null;
+    }
     console.error('[builder-log] llm-tag error:', err.message);
     return null;
   }

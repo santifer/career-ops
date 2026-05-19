@@ -148,7 +148,10 @@ async function hunterFind({ first, last, domain }) {
   });
   const url = `https://api.hunter.io/v2/email-finder?${params}`;
   try {
-    const r = await fetch(url, { method: 'GET' });
+    const r = await fetch(url, {
+      method: 'GET',
+      signal: AbortSignal.timeout(30_000), // Phase A.0 hardening — third-party API timeout
+    });
     if (!r.ok) {
       log(`Hunter HTTP ${r.status} for ${first} ${last} @ ${domain}`);
       return null;
@@ -163,6 +166,10 @@ async function hunterFind({ first, last, domain }) {
       sources_count: Array.isArray(json.data.sources) ? json.data.sources.length : 0,
     };
   } catch (e) {
+    if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+      log(`Hunter TIMEOUT after 30s for ${first} ${last} @ ${domain} — slow upstream. Skipping; not retrying.`);
+      return null;
+    }
     log(`Hunter error: ${e.message}`);
     return null;
   }

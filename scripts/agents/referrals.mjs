@@ -285,7 +285,7 @@ export async function runReferrals(input) {
   let tokens = 0;
   let modelUsed = modelKey;
   try {
-    const cr = await callCouncil({ prompt: userPrompt, models: [modelKey], opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3000 } });
+    const cr = await callCouncil({ prompt: userPrompt, models: [modelKey], opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3000, timeoutMs: 300_000 } });
     const r = cr.results?.[0];
     if (!r || r.error) throw new Error(r?.error || 'no result');
     llm = r; tokens = r.tokens || 0; modelUsed = r.modelUsed || modelKey;
@@ -305,7 +305,7 @@ export async function runReferrals(input) {
       parseError = String(e.message || e);
       if (i === 0) {
         try {
-          const retry = await callCouncil({ prompt: userPrompt + '\n\nPREVIOUS RESPONSE FAILED SCHEMA. Re-emit STRICT JSON only matching the spec.', models: [modelKey], opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3000 } });
+          const retry = await callCouncil({ prompt: userPrompt + '\n\nPREVIOUS RESPONSE FAILED SCHEMA. Re-emit STRICT JSON only matching the spec.', models: [modelKey], opts: { systemPrompt: SYSTEM_PROMPT, maxTokens: 3000, timeoutMs: 300_000 } });
           const rr = retry.results?.[0];
           if (rr && !rr.error) { llm = rr; tokens += rr.tokens || 0; }
         } catch { /* */ }
