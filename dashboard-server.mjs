@@ -3683,6 +3683,10 @@ const server = createServer((req, res) => {
           for (const c of p.companies) {
             if (typeof c !== 'string') return 'companies must be an array of strings';
             if (c.length > 200) return 'each company label cap is 200 chars';
+            // ε 2026-05-19 self-review — reject empty / whitespace-only strings
+            // so the UI knows immediately that an empty selection is invalid,
+            // rather than silently passing an empty filter to the orchestrator.
+            if (c.trim() === '') return 'company labels cannot be empty or whitespace-only';
           }
         }
         return null;
