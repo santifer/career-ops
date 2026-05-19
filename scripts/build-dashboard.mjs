@@ -1499,7 +1499,13 @@ function _parseComp(text) {
   // prompt schema update. Without this, the 5 council-format Apply-Now rows
   // (ElevenLabs, Mistral x3, Perplexity) showed "—" in the Base column.
   const m = block.match(/\|\s*\*{0,2}\s*(?:Listed\s+(?:Annual\s+)?(?:Comp(?:ensation)?|Salary)|Total\s+Comp(?:ensation)?|Comp(?:ensation)?|Salary)\s*\*{0,2}\s*\|\s*([^|\n]+?)\s*\|/im);
-  return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 120) : '';
+  // BRAVO 2026-05-19 (AAA-2 data-layer half): the 120-char slice was
+  // chopping comp strings mid-word — "...equity and benef" instead of
+  // "...equity and benefits not disclosed in JD". AAA-2 made the chip wrap
+  // visually; this raises the source cap so the wrap actually has full
+  // content to display. 240 chars still bounds the field against
+  // pathological inputs but covers every realistic Block A comp cell.
+  return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 240) : '';
 }
 
 // Pull the broader Comp cell (any "Comp..." prefix variant) for base-salary
