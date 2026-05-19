@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
 import { execSync as _execSync, spawn as _spawn, spawnSync as _spawnSync } from 'child_process';
+import { homedir } from 'os';
 import yaml from 'js-yaml';
 import { marked } from 'marked';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
@@ -5413,7 +5414,7 @@ const server = createServer((req, res) => {
         if (!existsSync(sourceDir)) {
           return json({ ok: false, error: `Source dir not found: ${sourceDir}` }, 404);
         }
-        const home = process.env.HOME || '/Users/mitchellwilliams';
+        const home = process.env.HOME || homedir();
         const destDir = join(home, 'Documents', 'Apply Packs');
         if (!existsSync(destDir)) mkdirSync(destDir, { recursive: true });
         // Council+dealbreaker filename (adjudicated 2026-05-18):

@@ -58,7 +58,7 @@ The schema is in `scripts/build-network-database.mjs:24`. Key invariants:
 
 End-to-end demo path:
 ```bash
-cd /Users/mitchellwilliams/Documents/career-ops
+cd ~/Documents/career-ops
 node scripts/build-network-database.mjs --verbose         # 2,824 people
 node lib/network-database-search.mjs "anthropic"          # 45 warm hits
 curl -s localhost:3097/api/network/headline | jq          # JSON headline

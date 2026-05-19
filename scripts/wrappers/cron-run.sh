@@ -24,7 +24,7 @@ LABEL="${1:?missing agent-label}"
 GUARD="${2:?missing cadence-guard}"
 shift 2
 
-REPO="/Users/mitchellwilliams/Documents/career-ops"
+REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 LOG_DIR="$REPO/data/logs"
 LOG="$LOG_DIR/${LABEL}-$(date +%Y-%m-%d).log"
 mkdir -p "$LOG_DIR"

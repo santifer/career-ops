@@ -7,11 +7,11 @@
 import { chromium } from 'playwright';
 import { writeFileSync } from 'fs';
 import { createRequire } from 'module';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = '/Users/mitchellwilliams/Documents/career-ops';
+const ROOT = resolve(__dirname, '..');
 
 try {
   const r = createRequire(import.meta.url);

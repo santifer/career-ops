@@ -22,7 +22,7 @@
 # Launched detached via nohup; logs to data/post-polish-cost-trace-chain.log.
 
 set -u
-ROOT="/Users/mitchellwilliams/Documents/career-ops"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 LOG="$ROOT/data/post-polish-cost-trace-chain.log"

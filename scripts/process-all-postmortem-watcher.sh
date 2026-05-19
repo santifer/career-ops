@@ -12,7 +12,7 @@
 # Detached via nohup; logs to data/process-all-postmortem-watcher.log.
 
 set -u
-ROOT="/Users/mitchellwilliams/Documents/career-ops"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 LOG="$ROOT/data/process-all-postmortem-watcher.log"

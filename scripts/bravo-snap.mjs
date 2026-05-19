@@ -4,8 +4,11 @@
 // identical to https://dashboard.careers-ops.com/.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
-const OUT = '/Users/mitchellwilliams/Documents/career-ops/data/bravo-post-impl-snapshots';
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const OUT = join(REPO, 'data', 'bravo-post-impl-snapshots');
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });

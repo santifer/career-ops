@@ -18,8 +18,9 @@
 
 set -u
 
-CONFIG="/Users/mitchellwilliams/.cloudflared/config-staging.yml"
-LOG_DIR="/Users/mitchellwilliams/Documents/career-ops/data/logs"
+CONFIG="${HOME}/.cloudflared/config-staging.yml"
+REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+LOG_DIR="${REPO}/data/logs"
 LOG_OUT="${LOG_DIR}/cloudflared-staging-nohup.out"
 LOG_ERR="${LOG_DIR}/cloudflared-staging-nohup.err"
 
