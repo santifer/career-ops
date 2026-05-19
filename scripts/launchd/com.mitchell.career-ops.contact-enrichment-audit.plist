@@ -12,10 +12,14 @@
          NEEDS_HUMAN list for Mitchell. Edit pause_after_date in
          config/contact-priority-weights.yml + update this plist's StartCalendarInterval
          when Mitchell re-enables enrichment for a new 30-day cycle. -->
+    <!-- Invoke node via a login zsh so nvm.sh sourcing resolves the user's
+         current default node. Avoids hardcoding a version-pinned path that
+         breaks on `nvm install`/`nvm alias default` upgrades. -->
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
-        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/maintenance/contact-enrichment-month-1-audit.mjs</string>
+        <string>/bin/zsh</string>
+        <string>-lc</string>
+        <string>exec "$HOME/.nvm/nvm-exec" node /Users/mitchellwilliams/Documents/career-ops/scripts/maintenance/contact-enrichment-month-1-audit.mjs</string>
     </array>
 
     <key>WorkingDirectory</key>
