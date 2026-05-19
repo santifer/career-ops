@@ -175,6 +175,33 @@ async function phaseBatch() {
     return { ok: false };
   }
   log('✓ batch eval complete');
+  // β Run-Batch eval 2026-05-19: persist published_count so the sidebar's
+  // 5-stage Publish bar can render a real ratio (was hard-coded 0/0 because
+  // dashboard-server.mjs:batchLive() reads activeJob.published_count and no
+  // upstream phase ever set it). "Published" = items that finished with a
+  // score ≥ THRESHOLD_FOR_PUBLISH (4.0 — matches buildPipelinePreview).
+  // Soft-fail on parse error: we'd rather log 0 than crash the whole orchestrator.
+  try {
+    const PUBLISH_THRESHOLD = parseFloat(process.env.THRESHOLD_FOR_PUBLISH || '4.0');
+    const statePath = join(ROOT, 'batch/batch-state.tsv');
+    let publishedCount = 0;
+    if (existsSync(statePath)) {
+      const lines = readFileSync(statePath, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('id'));
+      for (const l of lines) {
+        const cols = l.split('\t');
+        const status = cols[2];
+        const score = parseFloat(cols[6] || '0');
+        if (status === 'completed' && !Number.isNaN(score) && score >= PUBLISH_THRESHOLD) {
+          publishedCount++;
+        }
+      }
+    }
+    updateJob({ published_count: publishedCount });
+    log(`  published_count: ${publishedCount} (score ≥ ${PUBLISH_THRESHOLD})`);
+  } catch (err) {
+    log(`  ⚠ could not compute published_count: ${err.message} — defaulting to 0`);
+    updateJob({ published_count: 0 });
+  }
   return { ok: true };
 }
 
