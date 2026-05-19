@@ -2536,11 +2536,35 @@ function _translateTechnicalToPlain(s) {
   out = out.replace(/RE-EVAL\s+(\d{4}-\d{2}-\d{2})(?:\s*\(([^)]+)\))?:\s*([\d.]+)\/5\s*[→\->]\s*([\d.]+)\/5/gi,
     (_, date, phase, a, b) => {
       const delta = (parseFloat(b) - parseFloat(a)).toFixed(2);
+      const phaseStr = phase ? ` (${phase})` : '';
+      // BRAVO 2026-05-19 (content sweep — Mitchell second pass): when the
+      // delta is zero, "improved from 4.6 to 4.6 (+0.00)" is nonsense — say
+      // "score held" instead, and drop the trailing zero-delta noise.
+      if (Math.abs(parseFloat(delta)) < 0.005) {
+        return `Re-scored on ${date}${phaseStr}: score held at ${a}`;
+      }
       const dir = delta >= 0 ? 'improved' : 'dropped';
       const sign = delta >= 0 ? '+' : '';
-      const phaseStr = phase ? ` (${phase})` : '';
       return `Re-evaluated ${date}${phaseStr}: score ${dir} from ${a} to ${b} (${sign}${delta})`;
     });
+  // BRAVO 2026-05-19 (content sweep — Mitchell second pass): catch the already-
+  // expanded form "Re-evaluated 2026-05-16 (Phase E): score improved from 4.6
+  // to 4.6 (+0.00) (Δ0)" — the prior rule only matched the abbreviated RE-EVAL
+  // input, so notes already authored in expanded form fell through unchanged.
+  out = out.replace(/Re-evaluated\s+(\d{4}-\d{2}-\d{2})(?:\s*\(([^)]+)\))?:\s*score\s+(?:improved|dropped)\s+from\s+([\d.]+)\s+to\s+([\d.]+)\s*\(\+?(-?[\d.]+)\)(?:\s*\(Δ-?[\d.]+\))?/gi,
+    (_, date, phase, a, b, _delta) => {
+      const realDelta = parseFloat(b) - parseFloat(a);
+      const phaseStr = phase ? ` (${phase})` : '';
+      if (Math.abs(realDelta) < 0.005) {
+        return `Re-scored on ${date}${phaseStr}: score held at ${a}`;
+      }
+      const dir = realDelta >= 0 ? 'improved' : 'dropped';
+      const sign = realDelta >= 0 ? '+' : '';
+      return `Re-evaluated ${date}${phaseStr}: score ${dir} from ${a} to ${b} (${sign}${realDelta.toFixed(2)})`;
+    });
+  // Drop any orphan (Δ0) / (+0.00) zero markers left behind by upstream copy.
+  out = out.replace(/\s*\(Δ-?0(?:\.0+)?\)/gi, '');
+  out = out.replace(/\s*\(\+?-?0\.0+\)/g, '');
   out = out.replace(/\bΔ\s*([+-]?[\d.]+)/g, '$1');
   out = out.replace(/\bGATES:\s*none\s+fired\b/gi, 'No blocking gates triggered');
   out = out.replace(/\bGATES:\s*([^·\n]+)\bfired/gi, 'Gates triggered: $1');
@@ -2591,6 +2615,28 @@ function _translateTechnicalToPlain(s) {
   // "Tier B" / "Tier A1" → keep but make scannable
   // "Previous notes: Tier B" → "Previously categorized as Tier B"
   out = out.replace(/\bPrevious\s+notes?:\s*Tier\s+([A-Z]\d?)\b/gi, 'Previously categorized as Tier $1');
+
+  // BRAVO 2026-05-19 (content sweep — Mitchell second pass): second-person
+  // voice normalization. Tracker notes are authored in third-person analyst
+  // voice ("his network", "Mitchell's roster", "he ships") because the eval
+  // pipeline writes about Mitchell as a subject. When rendered to Mitchell
+  // himself in the dashboard, that reads as alienating. Swap to second-person
+  // so the popout speaks TO him, not ABOUT him. Word-boundary anchored to
+  // avoid corrupting "history" → "yourtory" etc.
+  out = out.replace(/\bhis\s+network\b/gi, 'your network');
+  out = out.replace(/\bhis\s+(CV|portfolio|background|profile|comp|reach|cohort|roster|cv\.md|article-digest|resume)\b/gi, 'your $1');
+  out = out.replace(/\bhe\s+(ships|built|brings|gets|holds|sits|has|is|will|can|would|should|may|might)\b/gi, 'you $1');
+  out = out.replace(/\bhim\b/gi, 'you');
+  out = out.replace(/\bMitchell['']s\b/g, 'your');
+  out = out.replace(/\bMitchell-shaped\b/gi, 'aligned with your profile');
+
+  // Common analyst-jargon swaps the popout surfaces frequently.
+  out = out.replace(/\bmitigable\b/gi, 'addressable');
+  out = out.replace(/\buniquely satisfied\b/gi, 'cleanly hit');
+  out = out.replace(/\bbuildout\b/gi, 'build');
+  out = out.replace(/\b(\d+)-yr\b/gi, '$1-year');
+  out = out.replace(/\b(\d+)\s+yrs?\b/gi, '$1 years');
+  out = out.replace(/\bvs\s+JD\s+(\d+(?:-\d+)?)\s+ask\b/gi, 'against the JD’s $1-year requirement');
 
   // Cleanup extra middots / spaces
   out = out.replace(/\s*·\s*/g, ' · ').replace(/\s{2,}/g, ' ').trim();
@@ -3078,7 +3124,7 @@ function renderRow(r, idx) {
             </div>`
           : `<div class="throttle-banner throttle-${r._throttle.status}">${r._throttle.labelHtml || htmlEscape(r._throttle.label)}<br><span class="muted-text">${r._throttle.noteHtml || htmlEscape(r._throttle.note || '')}</span></div>`
       ) : ''}
-      ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Click for full Phase E decision provenance" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ explore</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
+      ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Open the full Why-this-score popout — score band, council consensus, what is backing this score, and what might block it" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ see more</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
       ${tldrCard}
       ${matchCard}
@@ -13186,8 +13232,13 @@ function openRightRailForDetail(idx, detailRow) {
           + '</button>'
           + '<div id="' + _whyToggleId + '" class="why-expanded" hidden>'
           + (_gateChips ? '<div class="why-chips">' + _gateChips + '</div>' : '')
-          + (_reportHref ? '<div style="margin-top:8px"><a href="' + _reportHref + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue-fg)">See full report →</a>'
-            + ' &nbsp; <button type="button" class="why-provenance-btn" data-prov-row="' + num + '" style="font-size:11px;background:none;border:none;color:var(--blue-fg);cursor:pointer;padding:0;text-decoration:underline">Provenance trail</button></div>'
+          // BRAVO 2026-05-19 (content sweep — Mitchell second pass): the
+          // prior pair was "See full report →" + "Provenance trail" — two
+          // links with overlapping meaning. Renamed to plain English:
+          // "Read the full eval" opens the rendered report; "Why this score"
+          // opens the in-app explanation popout (matches its title).
+          + (_reportHref ? '<div style="margin-top:8px"><a href="' + _reportHref + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue-fg)" title="Open the full eval report in a new tab — all blocks, gates, council math">Read the full eval →</a>'
+            + ' &nbsp; <button type="button" class="why-provenance-btn" data-prov-row="' + num + '" style="font-size:11px;background:none;border:none;color:var(--blue-fg);cursor:pointer;padding:0;text-decoration:underline" title="See the score band, council consensus, what is backing this score, and what might block it">Why this score</button></div>'
             : '')
           + '</div>';
 
@@ -15010,11 +15061,13 @@ _drillInRegister('metric', function(id) {
   var provData = (cb.provenanceData || {})[id] || {};
   var rowMeta = (cb.rowMeta || {})[rowId] || {};
   var cardHtml = provData.html || '';
+  // BRAVO 2026-05-19 (content sweep — Mitchell second pass): drop "Provenance"
+  // jargon from titles. Lead with the user-facing question the popout answers.
   var prettyTitle = 'Why this score';
   if (metricKey === 'tracker_note') prettyTitle = 'Why this score';
-  else if (metricKey === 'evalDate') prettyTitle = 'Evaluation provenance';
-  else if (metricKey === 'how_to_position') prettyTitle = 'How to position — provenance';
-  else prettyTitle = 'Provenance · ' + metricKey;
+  else if (metricKey === 'evalDate') prettyTitle = 'When was this scored';
+  else if (metricKey === 'how_to_position') prettyTitle = 'How to position yourself';
+  else prettyTitle = _humanizeKey ? _humanizeKey(metricKey) : metricKey;
 
   // Fallback 1: the formatted tracker_note (same source the drawer card uses).
   if (!cardHtml && metricKey === 'tracker_note' && (cb.trackerNotes||{})[rowId]) {
@@ -15050,8 +15103,15 @@ _drillInRegister('metric', function(id) {
              + '</div>';
   }
 
+  // BRAVO 2026-05-19 (content sweep — Mitchell second pass): replace "row #N"
+  // suffix with the company name when available — "row #44" means nothing to
+  // a human reader. Only fall back to row# if we genuinely have nothing else.
+  var titleSuffix = '';
+  if (rowMeta.company) titleSuffix = ' · ' + rowMeta.company;
+  else if (rowId) titleSuffix = ' · entry ' + rowId; // friendlier than "row #"
+
   return {
-    title: prettyTitle + (rowId ? ' · row #' + rowId : ''),
+    title: prettyTitle + titleSuffix,
     html: metaLine + cardHtml,
     // 2026-05-18 Wave I: runtime fetch fallback. If the build-time data was
     // empty, hit /api/drill/metric/{rowId}/{key} and swap in the live result
@@ -15065,23 +15125,30 @@ _drillInRegister('metric', function(id) {
       // Add a quiet "refreshing…" indicator below the existing content
       var refreshTag = document.createElement('div');
       refreshTag.style.cssText = 'font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)';
-      refreshTag.textContent = '↻ Checking server for fresher provenance…';
+      // BRAVO 2026-05-19 (content sweep — Mitchell second pass): the prior
+      // refresh footer leaked /api/drill/metric and used "provenance" jargon.
+      // Replaced with quiet, user-facing copy that does not flash an API
+      // route at someone who just clicked a popout.
+      refreshTag.textContent = 'Looking for newer details…';
       bodyEl.appendChild(refreshTag);
       fetch('/api/drill/metric/' + encodeURIComponent(rowId) + '/' + encodeURIComponent(metricKey), {
         signal: AbortSignal.timeout(8000),
       }).then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           if (!data || !data.ok || !data.html) {
-            refreshTag.textContent = '↻ Using cached provenance (server has no fresher data)';
+            refreshTag.textContent = 'Showing the version baked at the last full build (no newer details on the server).';
             return;
           }
-          // Replace body content with the fetched HTML, keeping the metaLine
+          // Replace body content with the fetched HTML, keeping the metaLine.
+          // The footer is hidden by default so the popout reads clean; expose
+          // it on a small "Refreshed just now" line that is itself muted.
           bodyEl.innerHTML = metaLine + '<div class="prov-live">' + data.html + '</div>'
-            + '<div style="font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)">↻ Refreshed live from /api/drill/metric — provenance regenerated at request time.</div>';
+            + '<div style="font-size:10.5px;color:var(--text-4);margin-top:14px;padding-top:8px;border-top:1px dashed var(--border)">Refreshed just now from the live server.</div>';
         })
         .catch(function (err) {
-          // Network failure or timeout — keep the cached content, just note it
-          refreshTag.textContent = '↻ Live refresh skipped (' + (err.name === 'TimeoutError' ? 'timed out' : 'offline') + ') — using cached provenance';
+          refreshTag.textContent = err.name === 'TimeoutError'
+            ? 'The server took too long to send newer details — showing the last full-build version above.'
+            : 'Live refresh is offline — showing the last full-build version above.';
         });
     },
   };
