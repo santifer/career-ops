@@ -100,35 +100,150 @@ async function scrapeLinkedinAuthenticated(contact, browser) {
   const page = await ctx.newPage();
   let scraped = null;
   try {
+    // ── Pass 1: profile page (name, headline, location, mutual count) ──────
     await page.goto(contact.linkedin_url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    await page.waitForTimeout(2000);
-    scraped = await page.evaluate(() => {
-      const out = { ok: true };
-      const nameEl = document.querySelector('h1.text-heading-xlarge') || document.querySelector('h1');
+    await page.waitForTimeout(2500);
+
+    // Auth-wall detection — if redirected to /authwall or /login, abort.
+    const profileUrl = page.url();
+    if (/\/(authwall|login|checkpoint)/.test(profileUrl)) {
+      return { ok: false, reason: `redirected_to_${profileUrl.split('/').slice(0,5).join('/')}` };
+    }
+
+    const profileData = await page.evaluate(() => {
+      const out = {};
+      // Profile name: LinkedIn moved this around. Use sections + section-aria-label.
+      // From observed DOM (2026-05-19 via Chrome MCP): the name is inside the top card
+      // section and shows up as an h2 (not h1) at the start of allHeadingsBelowH1.
+      const nameEl =
+        document.querySelector('main section:first-of-type h1') ||
+        document.querySelector('main section:first-of-type h2') ||
+        document.querySelector('main h1') ||
+        document.querySelector('main h2');
       out.name = nameEl ? nameEl.textContent.trim() : null;
-      const headlineEl = document.querySelector('.text-body-medium.break-words') || document.querySelector('.pv-text-details__left-panel .text-body-medium');
-      out.headline = headlineEl ? headlineEl.textContent.trim() : null;
-      const aboutEl = document.querySelector('.pv-about-section .full-width') || document.querySelector('[data-section="summary"]');
-      out.about = aboutEl ? aboutEl.textContent.trim().slice(0, 2000) : null;
-      const locationEl = document.querySelector('.text-body-small.inline.t-black--light');
-      out.location = locationEl ? locationEl.textContent.trim() : null;
-      // Recent activity (posts/articles/reactions)
-      const activityEls = document.querySelectorAll('.feed-shared-update-v2, .occludable-update, [data-id^="urn:li:activity:"]');
-      out.recent_posts = Array.from(activityEls).slice(0, 15).map(el => {
-        const summaryEl = el.querySelector('.feed-shared-update-v2__commentary, .update-components-text');
-        const timeEl = el.querySelector('.update-components-actor__sub-description time, .feed-shared-actor__sub-description time');
-        const linkEl = el.querySelector('a[href*="/posts/"], a[href*="/feed/update/"]');
-        return {
-          summary: summaryEl ? summaryEl.textContent.trim().slice(0, 600) : '',
-          ts: timeEl ? (timeEl.getAttribute('datetime') || timeEl.textContent.trim()) : null,
-          url: linkEl ? linkEl.href : null,
-        };
-      }).filter(p => p.summary);
-      // Experience (just first 5)
-      const expEls = document.querySelectorAll('[data-section="experience"] li, #experience ~ * .pvs-list__item--no-padding-when-nested');
-      out.experience = Array.from(expEls).slice(0, 8).map(el => el.textContent.trim().replace(/\s+/g, ' ').slice(0, 240));
+
+      // Headline: in the same top card, below the name.
+      const topCardText = (document.querySelector('main section:first-of-type') || document).innerText || '';
+      const headlineMatch = topCardText.split('\n').find(line => line.length > 10 && line.length < 250 && !line.includes(out.name || '___'));
+      out.headline = (headlineMatch || '').trim().slice(0, 240) || null;
+
+      // Location + followers via text mining the top card section
+      const fullText = topCardText.replace(/\s+/g, ' ');
+      const locMatch = fullText.match(/([A-Z][a-z]+(?:\s[A-Z][a-z]+){0,3},\s*(?:[A-Z][a-z]+\s*,\s*)?[A-Z][a-z]+(?:\sStates|\sKingdom)?)/);
+      out.location = locMatch ? locMatch[1].slice(0, 120) : null;
+      const followerMatch = fullText.match(/([\d,]+)\s+followers?/i);
+      out.followers = followerMatch ? followerMatch[1].replace(/,/g, '') : null;
+      // Connection degree (1st / 2nd / 3rd)
+      const degMatch = fullText.match(/·\s*(1st|2nd|3rd)\b/);
+      out.connection_degree = degMatch ? degMatch[1] : null;
+
+      // About section text (if visible)
+      const aboutHeading = Array.from(document.querySelectorAll('main section')).find(s => /^About\b/i.test((s.querySelector('h2')||{}).textContent||''));
+      if (aboutHeading) {
+        const aboutText = (aboutHeading.innerText || '').replace(/^About\s*/i, '').trim();
+        out.about = aboutText.slice(0, 2500);
+      }
+
+      // Recent activity link — separate URL we'll navigate to next
+      const activityLink = Array.from(document.querySelectorAll('a')).find(a => /\/recent-activity\//.test(a.href || ''));
+      out.activity_url = activityLink ? activityLink.href : null;
       return out;
     });
+
+    // ── Pass 2: scroll main profile to lazy-load Activity section ────────
+    // LinkedIn's /in/{user}/recent-activity/all/ URL redirects to authwall
+    // for non-Premium scrapes — but the Activity preview embedded in the
+    // main profile loads the most recent ~2-3 posts when scrolled to.
+    let activityPosts = [];
+    let activityUrl = profileData.activity_url || contact.linkedin_url.replace(/\/$/, '') + '/recent-activity/all/';
+    try {
+      // Scroll progressively to trigger lazy-loaded sections (Experience,
+      // Education, Activity, Recommendations all load as you scroll past).
+      for (let scroll = 0; scroll < 5; scroll++) {
+        await page.evaluate(() => window.scrollBy(0, 800));
+        await page.waitForTimeout(700);
+      }
+      // Then scroll to the Activity heading specifically if it exists
+      await page.evaluate(() => {
+        const headings = Array.from(document.querySelectorAll('main section h2'));
+        const actHeading = headings.find(h => /^Activity\b/i.test(h.textContent.trim()));
+        if (actHeading) actHeading.scrollIntoView({ block: 'center' });
+      });
+      await page.waitForTimeout(1500);
+
+      activityPosts = await page.evaluate(() => {
+        // First find the Activity section by its h2
+        const sections = Array.from(document.querySelectorAll('main section'));
+        const actSection = sections.find(s => {
+          const h2 = s.querySelector('h2');
+          return h2 && /^Activity\b/i.test(h2.textContent.trim());
+        });
+        if (!actSection) return [];
+
+        // Within the Activity section, find post-like elements. LinkedIn's
+        // embedded activity preview uses different selectors than the full
+        // activity feed.
+        const cards = actSection.querySelectorAll(
+          '[data-urn^="urn:li:activity"], [data-id^="urn:li:activity"], ' +
+          '.feed-shared-update-v2, .occludable-update, ' +
+          '.update-components-text, .update-components-actor__sub-description, ' +
+          'article'
+        );
+
+        // De-duplicate by closest ancestor with the activity URN/id.
+        const seen = new Set();
+        const out = [];
+        for (const card of cards) {
+          // Find the URN/id by walking up
+          let urn = null;
+          let walker = card;
+          while (walker && walker !== actSection) {
+            urn = walker.getAttribute('data-urn') || walker.getAttribute('data-id');
+            if (urn && urn.startsWith('urn:li:activity')) break;
+            walker = walker.parentElement;
+          }
+          if (urn && seen.has(urn)) continue;
+          if (urn) seen.add(urn);
+
+          // Find the text content
+          const root = walker && walker !== actSection ? walker : card;
+          const textEl =
+            root.querySelector('.update-components-text, .feed-shared-update-v2__commentary, .feed-shared-text') ||
+            (card.matches('.update-components-text, .feed-shared-text') ? card : null);
+          if (!textEl) continue;
+
+          const timeEl = root.querySelector('time') || root.querySelector('.update-components-actor__sub-description span');
+          const linkEl = root.querySelector('a[href*="/feed/update/"], a[href*="/posts/"]') ||
+                         (urn ? root.querySelector(`a[href*="${urn.split(':').pop()}"]`) : null);
+
+          const summary = textEl.innerText.trim().slice(0, 700);
+          if (!summary || summary.length < 20) continue;
+
+          out.push({
+            summary,
+            ts: timeEl ? (timeEl.getAttribute('datetime') || timeEl.textContent.trim()) : null,
+            url: linkEl ? linkEl.href : (urn ? `https://www.linkedin.com/feed/update/${urn}` : null),
+          });
+          if (out.length >= 15) break;
+        }
+        return out;
+      });
+    } catch (e) {
+      if (VERBOSE) log(`activity scrape failed for ${contact.id}: ${e.message.slice(0, 160)}`);
+    }
+
+    scraped = {
+      ok: true,
+      name: profileData.name,
+      headline: profileData.headline,
+      location: profileData.location,
+      followers: profileData.followers,
+      connection_degree: profileData.connection_degree,
+      about: profileData.about || null,
+      recent_posts: activityPosts,
+      profile_url: profileUrl,
+      activity_url: activityUrl,
+    };
   } catch (e) {
     if (VERBOSE) log(`scrape error for ${contact.id}: ${e.message.slice(0, 160)}`);
     scraped = { ok: false, reason: `scrape_error: ${e.message.slice(0, 200)}` };

@@ -175,7 +175,8 @@ function _parseYamlTierMultiplier(text) {
 
 async function setupAuth() {
   log('Opening Chromium (NOT headless) for manual LinkedIn login…');
-  log('Log into https://www.linkedin.com in the browser; the script will detect login and save state.');
+  log('Log in with email + password (not Google SSO). If LinkedIn challenges, complete the captcha.');
+  log('The script waits for the li_at cookie (the real session cookie) before saving — not just URL change.');
   let chromium;
   try {
     chromium = (await import('playwright')).chromium;
@@ -187,10 +188,30 @@ async function setupAuth() {
   const ctx = await browser.newContext({ viewport: { width: 1200, height: 800 } });
   const page = await ctx.newPage();
   await page.goto('https://www.linkedin.com/login');
-  // Wait until URL leaves /login (indicates logged-in feed redirect)
-  await page.waitForURL(url => !String(url).includes('/login'), { timeout: 5 * 60_000 });
+  // Wait for the li_at session cookie to appear. This is the cookie LinkedIn
+  // sets when authentication completes; URL changes happen earlier (e.g., on
+  // /checkpoint/challenge) and would save incomplete state.
+  const t0 = Date.now();
+  const timeoutMs = 5 * 60_000;
+  let liAtPresent = false;
+  while (Date.now() - t0 < timeoutMs) {
+    const cookies = await ctx.cookies('https://www.linkedin.com');
+    if (cookies.some(c => c.name === 'li_at')) {
+      liAtPresent = true;
+      break;
+    }
+    await page.waitForTimeout(1500);
+  }
+  if (!liAtPresent) {
+    log('TIMEOUT — li_at cookie never appeared. Auth did not complete. Not saving state.');
+    await browser.close();
+    process.exit(2);
+  }
+  // Sanity check: also ensure URL is on a logged-in page (feed/in/profile)
+  await page.waitForTimeout(2000); // let any final redirects settle
   await ctx.storageState({ path: STORAGE_STATE_PATH });
-  log(`storage state saved to ${STORAGE_STATE_PATH}`);
+  const finalCookies = await ctx.cookies('https://www.linkedin.com');
+  log(`storage state saved to ${STORAGE_STATE_PATH} (${finalCookies.length} cookies, li_at present)`);
   await browser.close();
 }
 
