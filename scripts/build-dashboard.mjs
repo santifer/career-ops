@@ -2959,16 +2959,10 @@ function renderRow(r, idx) {
     }).join('')}
   </div>` : '';
 
-  // ── Notes & activity card REMOVED 2026-05-19 per Mitchell ask ──
-  // Drawer no longer surfaces a per-row notes composer. Status changes
-  // remain auto-logged in applications.md. CSS for .dcard--notes and
-  // the JS handlers (addRowNote, updateNotesCounter, loadDrawerNotes)
-  // left as harmless dead code — they no-op when no .dcard--notes
-  // elements exist in the DOM. /api/notes/* server endpoints in
-  // dashboard-server.mjs are intentionally preserved (no callers in
-  // the active UI, but keeping them avoids breaking any external
-  // tooling that may POST notes from outside the dashboard).
-  const notesCard = '';
+  // Notes & activity card fully scrubbed 2026-05-19 (UI removed first;
+  // dead CSS + JS + server routes scrubbed in follow-up commit). Status
+  // changes still auto-log to data/row-notes.json via appendRowEvent()
+  // in dashboard-server.mjs — that infra stays. No UI surfaces it.
 
   // ── Recommendation banner ────────────────────────────────
   const recBanner = finalRec ? `<div class="rec-banner">
@@ -3097,7 +3091,6 @@ function renderRow(r, idx) {
         <button type="button" class="dcard-btn dcard-btn-polish" onclick="alphaPolishPack(${htmlEscape(String(r.num||''))});event.stopPropagation()" title="Polish all 6 apply-pack artifacts to ≥0.99 confidence (4-round per-artifact loop + adversarial sweep)">Polish pack ✨</button>
         <button type="button" class="dcard-btn dcard-btn-intel" onclick="alphaIntelRefresh(${htmlEscape(String(r.num||''))});event.stopPropagation()" title="Refresh HM intel + toxicity + strategy ceiling + positioning caches">↻ Refresh intel</button>
       </div>
-      ${notesCard}
     </div>
   </td>
 </tr>`;
@@ -12744,8 +12737,6 @@ function toggleDetail(idx) {
   if (!detail) return;
   if (isMobileViewport()) {
     openMobileSheetForDetail(detail);
-    // Lazy-load notes for the cloned card inside the bottom sheet.
-    setTimeout(() => hydrateNotesIn(document.getElementById('mobile-sheet-body')), 0);
     return;
   }
   if (!useInlineExpand()) {
@@ -12757,7 +12748,6 @@ function toggleDetail(idx) {
     return;
   }
   detail.style.display = detail.style.display === 'none' ? '' : 'none';
-  if (detail.style.display !== 'none') hydrateNotesIn(detail);
 }
 
 function _drawerEscape(s) {
@@ -12947,7 +12937,6 @@ function openRightRailForDetail(idx, detailRow) {
     bodyEl.appendChild(hmMount);
     if (company && role) _loadHMIntel(company, role, hmMount);
     bodyEl.scrollTop = 0;
-    setTimeout(() => hydrateNotesIn(bodyEl), 0);
   }
   if (actionsEl) {
     // P0-2 (2026-05-18): every direct child of #right-rail-actions carries a
@@ -14543,7 +14532,10 @@ _drillInRegister('comp', function(id) {
   var cb = window._waveCB || {};
   // Peer comp context
   var ctx = (cb.peerComp || {})[id] || {};
-  var peerHtml = ctx.html || '<p class="muted" style="font-size:12px">Peer comp data not available — run node lib/peer-context.mjs to populate.</p>';
+  // BRAVO 2026-05-19 (content sweep): empty state used to leak a path +
+  // command. New copy explains what this section is FOR; technical recipe
+  // is stepped down to a muted footer.
+  var peerHtml = ctx.html || '<p class="muted" style="font-size:12px;margin:0 0 6px">Once you\'ve evaluated more roles in this comp band, I\'ll show how this offer compares — same-company history, peer companies with similar base salaries, percentile against the pipeline.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Peer context is computed at build time by <code>lib/peer-context.mjs</code>.</p>';
   // Negotiation playbook (baked for base >= 300K)
   var playbookHtml = (base >= 300000 && cb.negotiationPlaybookHtml) ? cb.negotiationPlaybookHtml : '';
   // Equity sliders (baked HTML per role)
@@ -14969,7 +14961,9 @@ _drillInRegister('tpgm-gaps', function(id) {
   if (!gaps.length) {
     return {
       title: 'TPgM gap points',
-      html: '<p class="muted" style="font-size:12px">No gap data available. Run <code>node scripts/tpgm-tracker.mjs</code> to populate.</p>',
+      // BRAVO 2026-05-19 (content sweep): tell the user what this is for,
+      // not what command to run. The tracker name moves to a muted footer.
+      html: '<p class="muted" style="font-size:12px;margin:0 0 6px">No tracked PM-readiness gaps yet — once the weekly readiness tracker has run, this will show the specific skills or evidence you\'re missing for AI PgM roles.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Populated by <code>scripts/tpgm-tracker.mjs</code>.</p>',
     };
   }
   var totalPts = gaps.reduce(function(s, g) { return s + (g.weight || 0); }, 0);
@@ -15006,7 +15000,9 @@ _drillInRegister('readiness', function() {
   if (!widgetHtml) {
     return {
       title: 'PM-readiness (TPgM)',
-      html: '<p style="font-size:12px;color:var(--text-3)">No TPgM data available. Run <code>node scripts/tpgm-tracker.mjs</code> to populate.</p>',
+      // BRAVO 2026-05-19 (content sweep): user-language empty state; the
+      // command leaks down to a muted footer.
+      html: '<p style="font-size:12px;color:var(--text-3);margin:0 0 6px">No PM-readiness data yet. This section tracks your weekly progress on AI Program Manager evidence — skills demonstrated, frameworks practiced, deliverables shipped — against the role bar.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Populated by <code>scripts/tpgm-tracker.mjs</code>.</p>',
     };
   }
   return {
@@ -17217,151 +17213,12 @@ async function _loadHMIntel(company, role, mountEl) {
 }
 window._loadHMIntel = _loadHMIntel;
 
-// ── Notes & activity (per-row append-only log) ──────────────────
-const NOTE_MAX_CHARS = 1000;
-const NOTE_PREVIEW_CHARS = 200;
-
-function htmlEscapeNoteHtml(str) {
-  return String(str == null ? '' : str)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function formatNoteTs(iso) {
-  try {
-    const d = new Date(iso);
-    if (isNaN(d)) return iso || '';
-    return d.toLocaleString(undefined, {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
-  } catch (_) { return iso || ''; }
-}
-
-function renderNoteEntry(entry) {
-  const ts = formatNoteTs(entry.ts);
-  const type = entry.type === 'status' ? 'status' : 'note';
-  const label = type === 'status' ? 'Status' : 'Note';
-  const text = String(entry.text || '');
-  const isLong = text.length > NOTE_PREVIEW_CHARS;
-  const preview = isLong ? text.slice(0, NOTE_PREVIEW_CHARS) + '…' : text;
-  const previewHtml = htmlEscapeNoteHtml(preview);
-  const fullHtml = htmlEscapeNoteHtml(text);
-  const toggle = isLong
-    ? '<button type="button" class="note-toggle" onclick="toggleNoteExpand(this);event.stopPropagation()" data-collapsed="1">Show more</button>'
-    : '';
-  return '<div class="note-entry">'
-    + '<div class="note-entry-head">'
-    +   '<span class="note-type-badge type-' + type + '">' + label + '</span>'
-    +   '<span>' + htmlEscapeNoteHtml(ts) + '</span>'
-    + '</div>'
-    + '<div class="note-text" data-preview="' + previewHtml + '" data-full="' + fullHtml + '">' + previewHtml + '</div>'
-    + toggle
-    + '</div>';
-}
-
-function toggleNoteExpand(btn) {
-  const entry = btn.closest('.note-entry');
-  if (!entry) return;
-  const textEl = entry.querySelector('.note-text');
-  if (!textEl) return;
-  const collapsed = btn.dataset.collapsed === '1';
-  if (collapsed) {
-    textEl.textContent = textEl.dataset.full || '';
-    btn.textContent = 'Show less';
-    btn.dataset.collapsed = '0';
-  } else {
-    textEl.textContent = textEl.dataset.preview || '';
-    btn.textContent = 'Show more';
-    btn.dataset.collapsed = '1';
-  }
-}
-window.toggleNoteExpand = toggleNoteExpand;
-
-function renderNotesList(listEl, entries) {
-  if (!listEl) return;
-  if (!Array.isArray(entries) || entries.length === 0) {
-    listEl.innerHTML = '<div class="notes-empty muted-text">No notes yet — add one above. Status changes are auto-logged.</div>';
-    return;
-  }
-  listEl.innerHTML = entries.map(renderNoteEntry).join('');
-}
-
-function hydrateNotesIn(container) {
-  if (!container) return;
-  const cards = container.querySelectorAll('.dcard--notes[data-notes-num]');
-  cards.forEach(card => {
-    if (card.dataset.notesLoaded === '1') return;
-    const num = card.dataset.notesNum;
-    if (!num) return;
-    card.dataset.notesLoaded = '1';
-    fetch('/api/notes/' + encodeURIComponent(num))
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data || !data.ok) return;
-        const list = card.querySelector('[data-notes-list]');
-        renderNotesList(list, data.entries);
-      })
-      .catch(() => {
-        card.dataset.notesLoaded = '';
-      });
-  });
-}
-
-function updateNotesCounter(textarea) {
-  const card = textarea.closest('.dcard--notes');
-  if (!card) return;
-  const counter = card.querySelector('.notes-counter');
-  if (!counter) return;
-  const len = textarea.value.length;
-  counter.textContent = len + ' / ' + NOTE_MAX_CHARS;
-  counter.classList.toggle('over', len >= NOTE_MAX_CHARS);
-}
-window.updateNotesCounter = updateNotesCounter;
-
-function addRowNote(btn) {
-  const card = btn.closest('.dcard--notes');
-  if (!card) return;
-  const num = card.dataset.notesNum || btn.dataset.num;
-  const textarea = card.querySelector('.notes-input');
-  if (!textarea || !num) return;
-  const text = textarea.value.trim();
-  if (!text) {
-    textarea.focus();
-    return;
-  }
-  if (text.length > NOTE_MAX_CHARS) {
-    alert('Note exceeds ' + NOTE_MAX_CHARS + ' characters.');
-    return;
-  }
-  btn.disabled = true;
-  const originalLabel = btn.textContent;
-  btn.textContent = 'Saving…';
-  fetch('/api/notes/add', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ num: parseInt(num, 10), text }),
-  })
-    .then(r => r.json().then(j => ({ ok: r.ok, body: j })))
-    .then(({ ok, body }) => {
-      if (!ok || !body || !body.ok) {
-        const msg = (body && body.error) || 'Failed to save note';
-        alert(msg);
-        return;
-      }
-      textarea.value = '';
-      updateNotesCounter(textarea);
-      const list = card.querySelector('[data-notes-list]');
-      renderNotesList(list, body.entries);
-    })
-    .catch(err => alert('Network error: ' + err.message))
-    .finally(() => {
-      btn.disabled = false;
-      btn.textContent = originalLabel;
-    });
-}
-window.addRowNote = addRowNote;
-window.hydrateNotesIn = hydrateNotesIn;
+// Notes & activity client code scrubbed 2026-05-19 — UI removed earlier
+// same day; the renderNoteEntry / hydrateNotesIn / updateNotesCounter /
+// addRowNote / renderNotesList / toggleNoteExpand block + NOTE_MAX_CHARS
+// constant + formatNoteTs/htmlEscapeNoteHtml helpers all deleted along
+// with /api/notes/* server routes. Status changes still auto-log to
+// data/row-notes.json via appendRowEvent() server-side.
 
 function openMobileSheetForDetail(detailRow) {
   const block = detailRow.querySelector('.detail-block');
@@ -20785,7 +20642,9 @@ function _saRender(d) {
   }
   const events = d.events || [];
   if (!events.length) {
-    body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No scan activity yet. Run <code>node scan.mjs</code> to populate.</div>';
+    // BRAVO 2026-05-19 (content sweep): plain-language empty state with
+    // the command available but stepped down.
+    body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px"><p style="margin:0 0 6px">No scan history yet. Once your portal scanner runs (Greenhouse / Ashby / Lever), new roles surfaced in each pass will appear here.</p><p class="muted" style="font-size:11px;color:var(--text-4);margin:0">Trigger a scan with <code>node scan.mjs</code> or the &quot;Run scan&quot; sidebar button.</p></div>';
     return;
   }
   // Render a company name as a clickable drill-in link inside the scan activity modal.
