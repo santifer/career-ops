@@ -1,6 +1,6 @@
 {
   "summary": {
-    "calibrated_at": "2026-05-19T06:39:09.973Z",
+    "calibrated_at": "2026-05-19T07:08:11.032Z",
     "sample_counts": {
       "human": 5,
       "ai_decoy": 3
@@ -33,7 +33,7 @@
   "human_results": [
     {
       "id": "voice-reference-full",
-      "elapsed_ms": 1446,
+      "elapsed_ms": 1234,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -49,7 +49,7 @@
     },
     {
       "id": "voice-reference-canonical-exemplar",
-      "elapsed_ms": 1104,
+      "elapsed_ms": 1074,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -65,7 +65,7 @@
     },
     {
       "id": "cv-mitchell",
-      "elapsed_ms": 1026,
+      "elapsed_ms": 1020,
       "options": {
         "confidence": "medium",
         "register": "bullet",
@@ -81,7 +81,7 @@
     },
     {
       "id": "article-digest",
-      "elapsed_ms": 1107,
+      "elapsed_ms": 1085,
       "options": {
         "confidence": "medium",
         "register": "mixed",
@@ -97,7 +97,7 @@
     },
     {
       "id": "voice-reference-brief",
-      "elapsed_ms": 1119,
+      "elapsed_ms": 1080,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -115,7 +115,7 @@
   "ai_results": [
     {
       "id": "ai-decoy-corporate-jargon",
-      "elapsed_ms": 906,
+      "elapsed_ms": 919,
       "options": {
         "register": "narrative"
       },
@@ -129,7 +129,7 @@
     },
     {
       "id": "ai-decoy-generic-cover-letter",
-      "elapsed_ms": 904,
+      "elapsed_ms": 934,
       "options": {
         "register": "narrative"
       },
@@ -143,7 +143,7 @@
     },
     {
       "id": "ai-decoy-buzzword-paragraph",
-      "elapsed_ms": 909,
+      "elapsed_ms": 857,
       "options": {
         "register": "mixed"
       },
@@ -156,45 +156,7 @@
       "originality_error": null
     }
   ],
-  "thresholds": {
-    "derived_at": "2026-05-19T06:39:09.973Z",
-    "rationale": "Bands anchored to empirical baseline: CLEAR ceiling = max prob observed on Mitchell's own writing; CRIT floor = min prob observed on AI decoys; HIGH = upper-mid; MED = lower-mid.",
-    "gptzero": {
-      "CLEAR": {
-        "max": 1
-      },
-      "MED": {
-        "min": 1,
-        "max": 1
-      },
-      "HIGH": {
-        "min": 1,
-        "max": 1
-      },
-      "CRIT": {
-        "min": 1
-      }
-    },
-    "originality": {
-      "CLEAR": {
-        "max": 1
-      },
-      "MED": {
-        "min": 1,
-        "max": 1
-      },
-      "HIGH": {
-        "min": 1,
-        "max": 1
-      },
-      "CRIT": {
-        "min": 1
-      }
-    },
-    "notes": [
-      "These bands are RELATIVE to Mitchell's baseline, not absolute. A 0.95 GPTZero score may sit in CLEAR if Mitchell's own writing scores 0.99 — the gate is calibrated to authenticity vs Mitchell, not detection-evasion vs the platform.",
-      "Re-run `node scripts/ai-detection-calibrate-baseline.mjs --refresh` after every meaningful voice-corpus update to refresh these bands.",
-      "AUTHENTICITY band reports the worst (max) prob across both detectors after band assignment — a single CRIT detector dominates, since false-positive-on-AI is the costly error."
-    ]
-  }
+  "thresholds": null,
+  "degenerate": true,
+  "degenerate_reason": "sample size too small (have 5 human + 3 AI; need ≥20 + ≥10)"
 }

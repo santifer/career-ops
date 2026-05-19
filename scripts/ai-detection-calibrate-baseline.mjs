@@ -22,8 +22,9 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { loadCorpusProse } from '../lib/voice-corpus.mjs';
 import { checkText } from '../lib/ai-detection-gate.mjs';
 
@@ -184,8 +185,57 @@ async function run() {
   const jsonPath = join(OUT_DIR, `baseline-${stamp}.json`);
   const currentThresholdsPath = join(OUT_DIR, 'current-thresholds.json');
 
-  writeFileSync(jsonPath, JSON.stringify({ summary, human_results, ai_results, thresholds }, null, 2));
-  writeFileSync(currentThresholdsPath, JSON.stringify(thresholds, null, 2));
+  // AAA-1 guard: refuse to derive bands from a sample too small to support
+  // a USELESS / WEAK / GOOD classification (peer-reviewed AI-detection eval
+  // methodologies use hundreds-to-thousands of samples; 8 is laughably few).
+  // We still WRITE the baseline JSON for inspection, but we refuse to write
+  // current-thresholds.json — so the gate falls back to FALLBACK_THRESHOLDS
+  // (absolute bands) instead of declaring detectors USELESS.
+  const MIN_HUMAN_SAMPLES = 20;
+  const MIN_AI_SAMPLES = 10;
+  let degenerate = false;
+  let degenerate_reason = null;
+
+  if (human_results.length < MIN_HUMAN_SAMPLES || ai_results.length < MIN_AI_SAMPLES) {
+    degenerate = true;
+    degenerate_reason = `sample size too small (have ${human_results.length} human + ${ai_results.length} AI; need ≥${MIN_HUMAN_SAMPLES} + ≥${MIN_AI_SAMPLES})`;
+  } else if (humanMaxGz >= aiMinGz || humanMaxOrig >= aiMinOrig) {
+    degenerate = true;
+    degenerate_reason = `human-max ≥ AI-decoy-min on at least one detector (gptzero: human-max=${humanMaxGz} vs AI-min=${aiMinGz}; orig: human-max=${humanMaxOrig} vs AI-min=${aiMinOrig})`;
+  }
+
+  // Always write the full baseline JSON for inspection.
+  const baselineJson = {
+    summary,
+    human_results,
+    ai_results,
+    thresholds: degenerate ? null : thresholds,
+    degenerate,
+    degenerate_reason,
+  };
+  writeFileSync(jsonPath, JSON.stringify(baselineJson, null, 2));
+
+  if (degenerate) {
+    console.error(`[calibrate] REFUSING to write current-thresholds.json: ${degenerate_reason}`);
+    console.error('[calibrate] gate falls back to absolute thresholds (FALLBACK_THRESHOLDS); re-run with a larger / better-separated corpus.');
+    process.exitCode = 2;
+  } else {
+    // AAA-2: write provenance fields so the gate can verify the on-disk
+    // baseline matches what these thresholds were derived from.
+    const baselineSha = createHash('sha256')
+      .update(readFileSync(jsonPath))
+      .digest('hex');
+    const thresholdsWithProvenance = {
+      ...thresholds,
+      _provenance: {
+        baseline_path: relative(ROOT, jsonPath),
+        baseline_sha256: baselineSha,
+        derived_by: 'scripts/ai-detection-calibrate-baseline.mjs',
+        derived_at: thresholds.derived_at,
+      },
+    };
+    writeFileSync(currentThresholdsPath, JSON.stringify(thresholdsWithProvenance, null, 2));
+  }
 
   // Markdown summary
   const md = [];

@@ -38,6 +38,17 @@ Where no peer-reviewed citation exists OR my own baseline contradicts the vendor
 | 9 | "Aggregate-only scoring (no sentence breakdown)" | **VERIFIED via field audit** | Δ.1 audit confirmed `score.{ai, original}` are document-level only. No `sentences[]` array in the response. The dashboard's sentence-highlight callout sources EXCLUSIVELY from GPTZero's per-sentence data. |
 | 10 | "Plagiarism + AI in one call" | **VERIFIED** | The v1 endpoint `/api/v1/scan/ai` returns AI score only; plagiarism is a separate endpoint. Marketing copy "in one call" refers to other Originality products, not the AI endpoint used here. |
 
+## Correction (added 2026-05-19 post-Δ.5)
+
+The original P0 commit message claimed "Audited cover-letter.mjs + cv-tailor.mjs retry pipelines for model-switching-as-evasion: NONE FOUND. Retries reuse the same modelKey with a stricter system prompt." That claim is **narrower than originally stated**. The Δ.5 adversarial review surfaced the missing nuance:
+
+- `scripts/agents/cover-letter.mjs:376` and `scripts/agents/cv-tailor.mjs:444` both contain `const modelKey = input?.config?.model || 'openai:gpt-5'`.
+- The RETRY PIPELINE itself (`lib/ai-detection-retry.mjs`) does NOT switch models — it receives an opaque `regenerate()` callback and re-invokes it across all 3 stages with the same model.
+- BUT upstream orchestrators (build-apply-packs.mjs, apply-pack-orchestrator) can pass a DIFFERENT `config.model` per artifact. That is by-design diversity-of-voice (Haiku critics, Sonnet author, Opus adjudicator per the original architectural spec) — not detection evasion.
+- The correct claim: "The retry pipeline cannot switch models within a single artifact's retry loop. Per-artifact model variance is preserved by design upstream of the retry pipeline."
+
+The original commit message has been re-marked as "narrowed-claim" via this correction. The architecture is correct; the prior claim was overconfident in scope.
+
 ## Hallucination-penalty self-check
 
 Per the Anti-Hallucination Charter: every vendor field referenced in code must resolve to a field name observed in the Δ.1 audit. Cross-check against `lib/ai-detection-gate.mjs` after this audit landed:
