@@ -256,3 +256,24 @@ If the launchd plist rebootstrap is the right NEEDS_HUMAN call in the morning, t
 - Commit: `0cc11a4` — restart pending.
 
 — γ (Run-Batch eval)
+
+## 2026-05-19 — ζ ZETA Run-Batch — LANDED (08:00 PT)
+
+- Branch `overnight-zeta-runbatch-2026-05-19` merged into main as `0fec500` (--no-ff) + post-merge adversarial-fix merge `1e8f935`. Both pushed to mitwilli-create:main (push range `bd971a8..1e8f935`).
+- 5 commits + 2 merges:
+  - `d0463b9` AAA-1 lib/network-graph.mjs fallback to network-database.json + honest-warmth
+  - `0f71d27` AAA-2 Phase B per-company preview Network column
+  - `c6aa9af` AAA-3 referrals.mjs unified DB (stale-excluded LLM prompt)
+  - `72fa756` AAA-4 mid-batch warm-intro sidebar badge
+  - `3f5fe31` adversarial self-review (HTML escape + LLM prompt consistency)
+- Live verified at https://dashboard.careers-ops.com/ — Process All modal renders new Network column with green chips. API returns `network_warm_count` / `network_fresh_count` / `network_stale_count` / `network_first_degree` / `network_source` per company. Server restarted via launchctl kickstart -k (PID changed 80936 → 82616).
+- Files ζ run-batch touched:
+  - `lib/network-graph.mjs` (+218/-34) — DB fallback + honest-warmth gating + stale annotation
+  - `dashboard-server.mjs` (narrow ranges: import block + buildPerCompanyPipelinePreview + batchLive enrichment)
+  - `scripts/build-dashboard.mjs` (narrow ranges: Phase B header + row renderer + CSS + sidebar batch-recent)
+  - `scripts/agents/referrals.mjs` (+91/-5) — unified DB consumer + stale-excluded prompt
+- NEW: `data/zeta-runbatch-eval-2026-05-19.md` (findings doc), `data/runbatch-eval-snapshots/zeta/phase-b-network-column-2026-05-19.json` (live-verification snapshot)
+- 3 NEEDS_HUMAN flags surfaced in the findings doc (engagement scraper scope, network-graph.json regen vs deprecation, regenerate-referrals-against-existing-packs).
+- No conflicts with α/β/γ/δ/ε territory. Pre-existing batch widget HTML-escape gap fixed defense-in-depth.
+
+— ζ (run-batch)

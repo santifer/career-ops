@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-05-19T14:50:00Z",
+  "tab_url": "https://dashboard.careers-ops.com/",
+  "modal": "Process All Phase A/B per-company preview",
+  "headers": ["Include", "Company / top role", "Score", "TTO", "Toxicity", "Network", "Cache", "Cost", "Actions"],
+  "first_row": {
+    "company": "OpenAI",
+    "role": "AI Deployment Engineer",
+    "score": "4.70",
+    "tto": "7w",
+    "toxicity": "🚩 FLAG-REVIEW",
+    "network": "5f · 3d",
+    "cache": "cache",
+    "cost": "$2.50"
+  },
+  "net_cells_sample": [
+    {"company": "OpenAI",      "txt": "5f · 3d", "state": "fresh", "title": "5 fresh warm-intro path(s) (connected <18mo) + 61 stale. 3 first-degree direct."},
+    {"company": "Anthropic",   "txt": "3f",      "state": "fresh", "title": "3 fresh warm-intro path(s) (connected <18mo) + 42 stale. 0 first-degree direct."},
+    {"company": "ElevenLabs",  "txt": "1f",      "state": "fresh", "title": "1 fresh warm-intro path(s) (connected <18mo) + 32 stale. 0 first-degree direct."},
+    {"company": "Perplexity",  "txt": "1f",      "state": "fresh", "title": "1 fresh warm-intro path(s) (connected <18mo) + 41 stale. 0 first-degree direct."},
+    {"company": "Sierra",      "txt": "3f · 1d", "state": "fresh", "title": "3 fresh warm-intro path(s) (connected <18mo) + 27 stale. 1 first-degree direct."}
+  ],
+  "honest_warmth_audit": {
+    "claim": "Of 10 apply-now companies, every fresh count is honestly < warm count.",
+    "verification": "data confirms 18-month staleness gate is working: OpenAI 5/66, Anthropic 3/45, Sierra 3/30 etc. No company over-claims warmth.",
+    "source_disclosure": "Every tooltip surfaces 'data/network-database.json' as source per honest-source rule."
+  }
+}
