@@ -18777,14 +18777,25 @@ function _renderBatchData(data) {
       if (singleBarWrap) singleBarWrap.style.display = 'none';
       stagesEl.style.display = 'flex';
       const ph = data.pipelineStages;
+      // α Run-Batch eval 2026-05-19: 'polish' surfaces only when POLISH_PACK_ENABLED=1
+      // — the server omits it from ph.stages otherwise (gated:true flag carries the hint).
+      // We include it in the canonical render list so when the env is on, the bar renders;
+      // when off, the .filter(s => ph.stages[s.key]) line below drops it silently.
       var stageList = [
         { key: 'triage',   label: 'Triage'   },
         { key: 'sort',     label: 'Sort'     },
         { key: 'process',  label: 'Process'  },
         { key: 'evaluate', label: 'Evaluate' },
+        { key: 'polish',   label: 'Polish'   },
         { key: 'publish',  label: 'Publish'  },
       ];
-      stagesEl.innerHTML = stageList.filter(function(s) { return ph.stages[s.key]; }).map(function(s) {
+      stagesEl.innerHTML = stageList.filter(function(s) {
+        if (!ph.stages[s.key]) return false;
+        // Hide 'polish' when its server-side gate-flag is set but the stage hasn't
+        // run/completed and there's no in-flight active state to render.
+        if (s.key === 'polish' && ph.stages.polish.gated && !ph.stages.polish.active && !ph.stages.polish.done && (ph.stages.polish.total || 0) === 0) return false;
+        return true;
+      }).map(function(s) {
         var st    = ph.stages[s.key];
         // γ GAMMA 2026-05-19: count_unknown ('✓' string) is the truth-fix for
         // the publish-stage-shows-0/0 misleading state. Treat it as done.

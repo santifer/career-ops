@@ -1957,7 +1957,12 @@ function batchLive() {
       }
       if (activeJob) {
         const ph = activeJob.phase || '';
-        const phaseOrder = ['triage', 'batch', 'rebuild', 'email', 'done'];
+        // α Run-Batch eval 2026-05-19: phaseOrder now includes 'polish' and 'merge'.
+        // process-all-pipeline.mjs emits phase='polish' (line 150) and phase='merge'
+        // (line 186) between batch and rebuild — they were absent from this enum,
+        // so phaseIdx returned -1 and the per-stage done/active bits silently broke
+        // for the (~30-second to ~30-minute) window while those phases ran.
+        const phaseOrder = ['triage', 'batch', 'polish', 'merge', 'rebuild', 'email', 'done'];
         const phaseIdx = phaseOrder.indexOf(ph);
         const phaseDone = (p) => phaseOrder.indexOf(p) >= 0 && phaseIdx > phaseOrder.indexOf(p);
         const isRunning = activeJob.status === 'running';
@@ -1998,6 +2003,15 @@ function batchLive() {
                         active: ph === 'batch' && isRunning,
                         completed,
                         total },
+            // α Run-Batch eval 2026-05-19: polish stage gated by POLISH_PACK_ENABLED.
+            // When the env is OFF the stage is skipped server-side (process-all-pipeline.mjs
+            // line 146-149), so we never enter ph==='polish'. When ON, the agent emits
+            // polished/failed counts that we surface here. Total = top-5 ranked Evaluated rows.
+            polish:   { done: phaseDone('polish') || ph === 'done',
+                        active: ph === 'polish' && isRunning,
+                        completed: (activeJob.phases && activeJob.phases.polish && activeJob.phases.polish.polished) || 0,
+                        total: (activeJob.phases && activeJob.phases.polish && (activeJob.phases.polish.polished + activeJob.phases.polish.failed)) || 0,
+                        gated: true },
             publish:  { done: ph === 'done' || ph === 'email',
                         active: false,
                         completed: publishedCount == null ? '✓' : publishedCount,
