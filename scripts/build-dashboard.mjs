@@ -19776,12 +19776,18 @@ function _rdRenderBody(d) {
       '<h4 class="rd-section-title">Who to contact next</h4>' + nextTable +
     '</div>' +
     '<div class="rd-section" id="rd-section-runway">' +
-      '<h4 class="rd-section-title">Runway calculation</h4>' +
+      '<h4 class="rd-section-title">Pipeline health vs runway</h4>' +
       '<div class="rd-rationale" style="padding:10px 14px">' +
-        'Runway = (touches over last 30d ÷ weekly touch budget) + buffer weeks. ' +
-        'Computed by <code>lib/recruiter-pipeline-density.mjs</code>. ' +
-        'Healthy ≥ 5 active conversations + ≥ 10 touches/7d. ' +
-        '<a href="https://github.com/mitwilli-create/career-ops/blob/main/lib/recruiter-pipeline-density.mjs" target="_blank" rel="noopener">View source →</a>' +
+        '<strong>Runway is an input, not a calculation.</strong> ' +
+        'It defaults to 12 weeks via the <code>RUNWAY_WEEKS</code> env constant. ' +
+        'The numbers above measure pipeline DENSITY (active conversations, touches in 7d/30d, ' +
+        'response rate) and grade it against runway-aware thresholds: ' +
+        '<strong>healthy</strong> = ≥ 5 active conversations AND ≥ 10 touches/7d; ' +
+        '<strong>stretched</strong> = at least one of those, but not both; ' +
+        '<strong>critical</strong> = neither threshold met. ' +
+        'Computed by <code>computeRecruiterPipelineDensity</code> in ' +
+        '<a href="https://github.com/mitwilli-create/career-ops/blob/main/dashboard-server.mjs#L381" target="_blank" rel="noopener">dashboard-server.mjs:381</a>. ' +
+        'Thresholds tunable via <code>PIPELINE_HEALTH_THRESHOLDS</code> in that file.' +
       '</div>' +
     '</div>';
 
