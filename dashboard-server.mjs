@@ -1909,8 +1909,27 @@ function recent_runs_lookupModel(costRows, startMs) {
 
 // ── Claim verification helpers ─────────────────────────────────
 
+// Canonical report slug pattern per AGENTS.md: NNN-company-role-YYYY-MM-DD.md
+// (or NNNN-* for high-id reports). Allows only [0-9a-z-] in the slug body.
+// Disallows ".." traversal segments and absolute paths by construction.
+// Defined here (above first use) so both buildVerifyPayload and saveEvidence
+// reference the same source of truth.
+const REPORT_SLUG_RE = /^\d{1,5}-[a-z0-9][a-z0-9-]*-\d{4}-\d{2}-\d{2}\.md$/;
+const EVIDENCE_TEXT_MAX_CHARS = 50_000;
+
 function buildVerifyPayload(reportSlug) {
+  // Path-traversal hardening (epsilon Ε.3 2026-05-19): reportSlug came from
+  // the /api/verify/(.+\.md) capture group — the regex captures any path
+  // up to .md including ../../etc/passwd.md. Validate against canonical
+  // slug pattern + verify resolved path is inside reports/.
+  if (typeof reportSlug !== 'string' || !REPORT_SLUG_RE.test(reportSlug)) {
+    return null;
+  }
+  const reportsRoot = join(ROOT, 'reports') + '/';
   const reportPath = join(ROOT, 'reports', reportSlug);
+  if (!reportPath.startsWith(reportsRoot)) {
+    return null;
+  }
   if (!existsSync(reportPath)) return null;
   const text = readFileSync(reportPath, 'utf8');
   const lines = text.split('\n');
@@ -1994,12 +2013,6 @@ function buildVerifyPayload(reportSlug) {
     },
   };
 }
-
-// Canonical report slug pattern per AGENTS.md: NNN-company-role-YYYY-MM-DD.md
-// (or NNNN-* for high-id reports). Allows only [0-9a-z-] in the slug body.
-// Disallows ".." traversal segments and absolute paths by construction.
-const REPORT_SLUG_RE = /^\d{1,5}-[a-z0-9][a-z0-9-]*-\d{4}-\d{2}-\d{2}\.md$/;
-const EVIDENCE_TEXT_MAX_CHARS = 50_000;
 
 function saveEvidence(reportSlug, evidenceText) {
   // Path-traversal hardening (epsilon Ε.3 2026-05-19): reportSlug came from

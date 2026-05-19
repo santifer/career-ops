@@ -121,6 +121,29 @@ console.log('-----------------------------------------------------------');
   check('rejects slug not starting with digits', r.ok === false);
 }
 
+// 11) — Same regex protects buildVerifyPayload (paranoid: a regex-bypassed
+// string like `001a-foo-2026-05-16.md` should also be rejected).
+{
+  // Slug body must start with [a-z0-9] but the entire body (post numeric
+  // prefix and hyphen) must match [a-z0-9][a-z0-9-]*. The leading digits
+  // are anchored: `\d{1,5}-`. So `001a` followed by `-foo-...` is rejected
+  // because the prefix `\d{1,5}-` requires a non-digit right after the digits.
+  const r = validateInputs('001a-foo-2026-05-16.md', 'x');
+  check('rejects mixed digit-letter prefix', r.ok === false);
+}
+
+// 12) Slug with 6+ digit prefix — rejected (max 5 digits, ample for 99,999 reports)
+{
+  const r = validateInputs('123456-anthropic-2026-05-16.md', 'x');
+  check('rejects 6+ digit prefix', r.ok === false);
+}
+
+// 13) URL-encoded traversal — `%2e%2e%2f` URL-decoded by HTTP layer; raw should reject
+{
+  const r = validateInputs('%2e%2e%2fetc%2fpasswd', 'x');
+  check('rejects URL-encoded traversal string', r.ok === false);
+}
+
 console.log('-----------------------------------------------------------');
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
