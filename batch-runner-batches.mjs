@@ -105,17 +105,35 @@ Then re-run this script.
 }
 
 // ── Anthropic Batches API calls ───────────────────────────────────
-async function apiCall(method, path, body, apiKey) {
-  const res = await fetch(`${ANTHROPIC_API}${path}`, {
-    method,
-    headers: {
-      'x-api-key':         apiKey,
-      'anthropic-version': BATCHES_VERSION,
-      'anthropic-beta':    BETAS,
-      'content-type':      'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+// ε 2026-05-19 — fetch hardening. Every call now has an AbortSignal.timeout
+// so a hung Anthropic API endpoint can no longer freeze the entire batch
+// pipeline. Defaults to 2min (control-plane ops: submit/poll/cancel are fast)
+// but overridable per-call. Results-download is intentionally longer (10min)
+// because JSONL streams can be 100s of MB and the Anthropic SDK ships 300s
+// as its own ceiling for batch.results — we match.
+const FETCH_TIMEOUT_DEFAULT_MS = parseInt(process.env.BATCH_API_FETCH_TIMEOUT_MS || '120000', 10);
+const FETCH_TIMEOUT_RESULTS_MS = parseInt(process.env.BATCH_API_RESULTS_TIMEOUT_MS || '600000', 10);
+
+async function apiCall(method, path, body, apiKey, { timeoutMs = FETCH_TIMEOUT_DEFAULT_MS } = {}) {
+  let res;
+  try {
+    res = await fetch(`${ANTHROPIC_API}${path}`, {
+      method,
+      headers: {
+        'x-api-key':         apiKey,
+        'anthropic-version': BATCHES_VERSION,
+        'anthropic-beta':    BETAS,
+        'content-type':      'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (err) {
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      throw new Error(`API ${method} ${path} → timeout after ${timeoutMs}ms`);
+    }
+    throw err;
+  }
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`API ${method} ${path} → ${res.status}: ${err.slice(0, 200)}`);
@@ -655,9 +673,22 @@ async function phaseProcess(apiKey) {
     console.log(`\nProcessing batch ${batchRecord.id} (${batchRecord.request_count} requests)…`);
 
     // Download results (JSONL stream)
-    const res = await fetch(`${ANTHROPIC_API}/messages/batches/${batchRecord.id}/results`, {
-      headers: { 'x-api-key': apiKey, 'anthropic-version': BATCHES_VERSION, 'anthropic-beta': BETAS },
-    });
+    // ε 2026-05-19 — AbortSignal.timeout added. Anthropic's batches results
+    // endpoint can stream 100s of MB; 10min ceiling matches their official SDK
+    // and stops a stalled stream from blocking the rest of the run.
+    let res;
+    try {
+      res = await fetch(`${ANTHROPIC_API}/messages/batches/${batchRecord.id}/results`, {
+        headers: { 'x-api-key': apiKey, 'anthropic-version': BATCHES_VERSION, 'anthropic-beta': BETAS },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_RESULTS_MS),
+      });
+    } catch (err) {
+      const reason = (err.name === 'TimeoutError' || err.name === 'AbortError')
+        ? `timeout after ${FETCH_TIMEOUT_RESULTS_MS}ms`
+        : err.message;
+      console.error(`Failed to fetch results for ${batchRecord.id}: ${reason}`);
+      continue;
+    }
     if (!res.ok) { console.error(`Failed to fetch results: ${res.status}`); continue; }
 
     const text = await res.text();
