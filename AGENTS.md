@@ -290,6 +290,38 @@ A PostToolUse hook in `.claude/settings.json` fires after every Edit / Write / M
 - **Dependabot** monitors npm, Go modules, and GitHub Actions for security updates
 - **Contributing process**: issue first → discussion → PR with linked issue → CI passes → maintainer review → merge
 
+### Bug class: outer-template-unescape (`build-dashboard.mjs`)
+
+`scripts/build-dashboard.mjs` constructs the entire dashboard HTML as a single giant backtick template literal. The dashboard's client-side JS lives INSIDE that template as inline `<script>` blocks. This creates a subtle bug class agents must avoid:
+
+**The bug**: any single-backslash escape (`\n`, `\r`, `\t`, `\0`, `\b`) inside an INNER JS string literal in the source gets unescaped by the OUTER template literal BEFORE being written to disk. The output file then contains a literal control character inside what was meant to be a JS string literal, which is a SyntaxError when the browser parses it.
+
+```js
+// BROKEN — outer template unescapes \n to a real LF before writing
+const html = `<script>
+  function f() {
+    var msg = 'line1\n line2';  // ← \n is single-backslash; OUTER template eats it
+  }
+</script>`;
+```
+
+**The safe patterns** (use one of these):
+
+```js
+// 1) DOUBLE-BACKSLASH — most common, used throughout the codebase. The outer
+//    template processes \\ → \, leaving \n in the output. Browser parses \n
+//    correctly as a newline escape.
+'line1\\n line2'
+
+// 2) String.fromCharCode(N) — preferred when readability matters or when the
+//    escape is dynamic. Survives any number of template-literal layers.
+'line1' + String.fromCharCode(10) + ' line2'
+```
+
+**Build-time guard**: `scripts/build-dashboard.mjs` runs `scripts/lint-built-html-js.mjs` as a post-build sanity check. The lint extracts every inline `<script>` block from the written `dashboard/index.html` and validates each with `new Function(content)`. Any SyntaxError (which is how this bug always manifests) fails the build with a clear hint. Bypass via `DASHBOARD_SKIP_LINT=1` only in emergencies.
+
+**Known fixed instances** (do not re-introduce): `confirmTier5Run` uses `NL = String.fromCharCode(10)`. `_updatePipelineToast` uses `CR = String.fromCharCode(13)`. Both at 2026-05-19.
+
 ## Community and Governance
 
 - **Code of Conduct**: Contributor Covenant 2.1 with enforcement actions (see `CODE_OF_CONDUCT.md`)

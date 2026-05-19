@@ -28483,6 +28483,31 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   console.log(`  Reports parsed:    ${_reportCache.size} (cache hits: ${_reportCacheHits})`);
   console.log(`  Page weight:       ${rawBytes.toLocaleString()} bytes raw → ${minBytes.toLocaleString()} bytes (−${(rawBytes - minBytes).toLocaleString()} bytes, ${Math.round((rawBytes - minBytes) / rawBytes * 100)}%)`);
   console.log(`Open with: open dashboard/index.html`);
+
+  // 2026-05-19 Mitchell post-bug-class-audit — post-build sanity check.
+  // Validates every inline <script> block in the just-written HTML parses
+  // cleanly. Catches the outer-template-unescape bug class (\n / \r / \t in
+  // single quotes inside the outer backtick template gets unescaped to
+  // literal control chars in the output, corrupting JS string literals).
+  // Failing this check exits the build non-zero so CI / agents see the bug
+  // immediately rather than silently shipping a broken dashboard.
+  // Skipped when DASHBOARD_SKIP_LINT=1 (escape hatch for emergencies).
+  if (process.env.DASHBOARD_SKIP_LINT !== '1') {
+    const linter = await import(join(ROOT, 'scripts/lint-built-html-js.mjs').replace(ROOT, '.')).catch(() => null);
+    // Lint runs as its own process so the exit code reflects only its result;
+    // here we shell out for the simplest integration with the existing script.
+    const { spawnSync } = await import('node:child_process');
+    const res = spawnSync('node', [join(ROOT, 'scripts/lint-built-html-js.mjs')], {
+      cwd: ROOT,
+      stdio: 'inherit',
+    });
+    if (res.status !== 0) {
+      console.error('');
+      console.error('✗ build-dashboard: post-build JS lint failed (see above).');
+      console.error('  Set DASHBOARD_SKIP_LINT=1 to bypass (emergency only).');
+      process.exit(res.status || 1);
+    }
+  }
 }
 
 build().catch(err => { console.error('Build failed:', err); process.exit(1); });
