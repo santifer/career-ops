@@ -801,6 +801,15 @@ async function sendEmail({ subject, body, meta = {} }) {
   }
 
   const html = await renderHtmlEmail(body, meta);
+
+  // Archive rendered HTML for /email-review skill (added 2026-05-19).
+  // The email-review-strategist orchestrator at 09:30 PT reads
+  // data/heartbeat-archive/heartbeat-<date>.html as its primary input.
+  const archiveDir = join(ROOT, 'data/heartbeat-archive');
+  if (!existsSync(archiveDir)) mkdirSync(archiveDir, { recursive: true });
+  const archivePath = join(archiveDir, `heartbeat-${TARGET_DATE}.html`);
+  writeFileSync(archivePath, html, 'utf8');
+
   const info = await transporter.sendMail({
     from: secrets.GMAIL_USER,
     to: secrets.HEARTBEAT_TO,

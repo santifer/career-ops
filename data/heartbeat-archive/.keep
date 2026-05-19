@@ -1,0 +1,11 @@
+# Heartbeat HTML archive directory
+#
+# Populated by scripts/heartbeat.mjs once the setup wizard applies the
+# archive-injection diff. Filename pattern: heartbeat-<YYYY-MM-DD>.html
+#
+# This directory is the orchestrator's input. The wrapper checks for today's
+# file before spending API budget; absence means heartbeat did not run or did
+# not archive, and the review is a no-op for the day.
+#
+# Existing markdown archives (data/heartbeat-*.md) remain unchanged — the
+# email-review reads the HTML, not the markdown summary.

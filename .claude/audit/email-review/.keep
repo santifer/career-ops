@@ -1,0 +1,14 @@
+# Email-review audit directory
+#
+# Populated by the email-review-strategist orchestrator each run:
+#
+#   <YYYY-MM-DD>-report.md             Daily review report (polished)
+#   <YYYY-MM-DD>-changelog.md          What auto-applied + rollback commands
+#   <YYYY-MM-DD>-patches/              Per-finding unified diffs (one .patch each)
+#   <YYYY-MM-DD>-council-ledger.md     Council vote per contested finding
+#   <YYYY-MM-DD>-archived-findings.md  Findings cut at adjudication caps
+#   <YYYY-MM-DD>-trace.jsonl           Per-tool-call trace
+#   weekly-<ISO-week>-impact.md        Friday digest with trajectory
+#   cron.log                           Wrapper stdout/stderr (append-mode)
+#   launchd-stdout.log                 Raw launchd stdout
+#   launchd-stderr.log                 Raw launchd stderr

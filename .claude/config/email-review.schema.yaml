@@ -1,0 +1,161 @@
+# JSON Schema (2020-12) for .claude/config/email-review.yaml
+# Validated by email-review-setup-wizard on every run and by the orchestrator on Phase 0.
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://dashboard.careers-ops.com/schemas/email-review.yaml"
+title: "Email Review Configuration"
+type: object
+required: [schema_version, last_updated, last_wizard_run, email, audience, ctas, tracking_critical_patterns, repo, brain, corpus, caps, adjudication, novelty_rotation, reporting]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    enum: ["1.0"]
+  last_updated:
+    type: string
+    format: date-time
+  last_wizard_run:
+    type: string
+    format: date-time
+
+  email:
+    type: object
+    required: [source_type, generator_script, archive_dir, archive_filename_pattern, category, send_schedule, review_schedule]
+    properties:
+      source_type:
+        type: string
+        enum: [script_generated, authored, external]
+      generator_script: { type: string }
+      archive_dir: { type: string }
+      archive_filename_pattern: { type: string }
+      category:
+        type: string
+        enum: [operational-dashboard, marketing, transactional, lifecycle]
+      send_schedule: { type: string }
+      review_schedule: { type: string }
+
+  audience:
+    type: object
+    required: [segment, context_before_read, primary_action_targets, decision_state]
+    properties:
+      segment:
+        type: string
+        enum: [self, internal-team, external-prospect, customer]
+      context_before_read: { type: string }
+      primary_action_targets:
+        type: array
+        items: { type: string }
+        minItems: 1
+      decision_state: { type: string }
+
+  ctas:
+    type: object
+    required: [primary]
+    properties:
+      primary: { type: string }
+      secondary: { type: string }
+      tertiary: { type: string }
+
+  tracking_critical_patterns:
+    type: array
+    items: { type: string }
+    minItems: 1
+    description: "Regex patterns. Any patch that modifies a byte-string matching one of these is BLOCKED by change-verifier."
+
+  repo:
+    type: object
+    required: [root, environment, branch_strategy, base_branch, pr_mode, commit_message_prefix]
+    properties:
+      root: { type: string }
+      environment:
+        type: string
+        enum: [staging, production, single]
+      branch_strategy:
+        type: string
+        enum: [feature-branch, direct]
+        description: "feature-branch is required for career-ops (single-env production). direct is rejected by change-applier."
+      base_branch: { type: string }
+      pr_mode:
+        type: string
+        enum: [draft, ready, none]
+      commit_message_prefix: { type: string }
+
+  brain:
+    type: object
+    required: [source_path, copied_to, required_reads]
+    properties:
+      source_path: { type: string, description: "Path to extracted Second Brain folder OR path to second-brain.zip" }
+      copied_to: { type: string, default: ".claude/knowledge/brain" }
+      required_reads:
+        type: object
+        properties:
+          polisher: { type: array, items: { type: string } }
+          output_framing: { type: array, items: { type: string } }
+          adjudicator: { type: array, items: { type: string } }
+          analyzers: { type: array, items: { type: string } }
+          novelty_rotation: { type: array, items: { type: string } }
+
+  corpus:
+    type: object
+    required: [voice_reference, cv, modes_dir, data_dir, reports_dir, runway_status_source]
+    properties:
+      voice_reference: { type: string }
+      cv: { type: string }
+      profile_file: { type: string, description: "Resolved at wizard time. modes/_profile.md in this repo." }
+      profile_dir: { type: string, description: "Deprecated — use profile_file." }
+      story_bank_file: { type: string, description: "Resolved at wizard time. interview-prep/story-bank.md in this repo." }
+      story_bank_dir: { type: string, description: "Deprecated — use story_bank_file." }
+      modes_dir: { type: string }
+      data_dir: { type: string }
+      reports_dir: { type: string }
+      runway_status_source: { type: string }
+
+  caps:
+    type: object
+    required: [max_turns, max_budget_usd, monthly_review_budget_usd, dispatch_mode]
+    properties:
+      max_turns: { type: integer, minimum: 1, maximum: 200 }
+      max_budget_usd: { type: number, minimum: 0, maximum: 25 }
+      monthly_review_budget_usd: { type: number, minimum: 0, maximum: 500 }
+      dispatch_mode:
+        type: string
+        enum: [serial, parallel]
+      parallel_mode_override:
+        type: string
+        enum: [interactive_only, always, never]
+
+  adjudication:
+    type: object
+    required: [cap_findings_critical_high, cap_findings_medium, archive_rest, confidence_floor_for_auto_apply, council_threshold_unanimous_or_3of4, block_if_touches_tracking_critical, block_if_not_reversible]
+    properties:
+      cap_findings_critical_high: { type: integer, minimum: 1, maximum: 20 }
+      cap_findings_medium: { type: integer, minimum: 0, maximum: 20 }
+      archive_rest: { type: boolean }
+      confidence_floor_for_auto_apply: { type: number, minimum: 0, maximum: 1 }
+      council_threshold_unanimous_or_3of4: { type: boolean }
+      block_if_touches_tracking_critical: { type: boolean }
+      block_if_not_reversible: { type: boolean }
+
+  novelty_rotation:
+    type: object
+    required: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+    additionalProperties: false
+    properties:
+      monday: { type: string }
+      tuesday: { type: string }
+      wednesday: { type: string }
+      thursday: { type: string }
+      friday: { type: string }
+      saturday: { type: string }
+      sunday: { type: string }
+
+  reporting:
+    type: object
+    required: [daily_report_path, weekly_digest_path, weekly_digest_day, effort_acknowledgment]
+    properties:
+      daily_report_path: { type: string }
+      weekly_digest_path: { type: string }
+      weekly_digest_day:
+        type: string
+        enum: [monday, tuesday, wednesday, thursday, friday]
+      effort_acknowledgment: { type: boolean }
