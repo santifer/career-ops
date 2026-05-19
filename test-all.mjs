@@ -321,7 +321,7 @@ console.log('\n11. Provider — apify');
 try {
   const apifyMod = await import(pathToFileURL(join(ROOT, 'providers/apify.mjs')).href);
   const apify = apifyMod.default;
-  const { isFieldSpec, isHttpsUrl, normalizeItem } = apifyMod;
+  const { isFieldSpec, isHttpsUrl, normalizeItem, htmlToText } = apifyMod;
   const { normalizeActorId } = await import(pathToFileURL(join(ROOT, 'providers/_apify.mjs')).href);
 
   // -- id + detect (no auto-detect — explicit provider: apify required) --
@@ -391,6 +391,29 @@ try {
     pass('normalizeItem ignores non-allowlisted default keys');
   } else {
     fail('normalizeItem must reject default keys outside title/url/company/location');
+  }
+
+  // -- htmlToText — CodeQL hardening (script close-tag tolerance, polyglot
+  //    sanitization, entity-decode ordering) --
+  const scriptSpaceClose = htmlToText('keep<script>evil()</script >after');
+  if (!/evil\(\)/.test(scriptSpaceClose) && /keep/.test(scriptSpaceClose) && /after/.test(scriptSpaceClose)) {
+    pass('htmlToText strips <script>…</script > with whitespace before close >');
+  } else {
+    fail(`htmlToText leaked script content with whitespace close: ${JSON.stringify(scriptSpaceClose)}`);
+  }
+
+  const polyglot = htmlToText('<<a>safe-text<b>');
+  if (!polyglot.includes('<')) {
+    pass('htmlToText iterates to strip dangling < from polyglot input');
+  } else {
+    fail(`htmlToText left a dangling < in polyglot input: ${JSON.stringify(polyglot)}`);
+  }
+
+  const doubleEntity = htmlToText('value &amp;#60;b&amp;#62;');
+  if (doubleEntity.includes('&#60;') && doubleEntity.includes('&#62;') && !/<b>/.test(doubleEntity)) {
+    pass('htmlToText does not double-decode &amp;#60; into a literal tag');
+  } else {
+    fail(`htmlToText double-decoded entities: ${JSON.stringify(doubleEntity)}`);
   }
 
   // -- normalizeActorId — SSRF guard on the actor path segment --
