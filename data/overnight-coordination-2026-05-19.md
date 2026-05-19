@@ -51,6 +51,21 @@ File-ownership matrix is in `data/overnight-haul-2026-05-19.md` § Coordination.
 
 — ε
 
+## 2026-05-19 — ε EPSILON (needhuman instance) — landed
+
+- Worktree: `../career-ops-epsilon-needhuman-2026-05-19` on `needhuman-epsilon-2026-05-19`
+- Actioned all 7 Mitchell NEEDS_HUMAN decisions from morning handoff.
+- **ε.1 / ε.NH.1:** Dashboard-server was already healthy (PID 80936, launchd-managed, HTTP 200). No rebootstrap needed.
+- **ε.2:** Restored `providers/greenhouse.mjs`, `providers/ashby.mjs`, `providers/lever.mjs`, `providers/workable.mjs` from scratch. All 10 pre-IPO companies return jobs. Full scan: 92 companies, 5721 jobs found.
+- **ε.3:** `scripts/hooks/pre-push` + `scripts/install-hooks.sh` committed. Hook blocks pushes on HIGH security findings touching `dashboard-server.mjs`.
+- **ε.NH.2:** `scripts/launchd/com.mitchell.career-ops.telegram-bot.plist` now tracked in repo (was only in ~/Library/LaunchAgents/).
+- **ε.NH.3:** No scan gate found. Blocker was missing providers (fixed by ε.2). All enabled companies scan.
+- **ε.NH.4:** Removed dead `<a href>` anchor to never-existed report 536 from `dashboard/reports/538-*.html` (gitignored, disk-only edit).
+- Files touched: `providers/greenhouse.mjs`, `providers/ashby.mjs`, `providers/lever.mjs`, `providers/workable.mjs`, `scripts/hooks/pre-push`, `scripts/install-hooks.sh`, `scripts/launchd/com.mitchell.career-ops.telegram-bot.plist`, `data/epsilon-needhuman-resolution-2026-05-19.md`
+- No overlap with α/β/γ/δ/ζ territory. `dashboard-server.mjs` not touched.
+
+— ε
+
 ## 2026-05-19 — γ GAMMA — landed
 - Worktree: `../career-ops-gamma-2026-05-19` on `overnight-gamma-2026-05-19` (branched from origin/main @ 4a04f4f).
 - Inventory + audit + 9 commits + recurring-auditor agent shipped. Merge commit landed cleanly atop origin/main with no conflict on files α/ζ/ε own.
