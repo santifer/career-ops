@@ -87,3 +87,33 @@ File-ownership matrix is in `data/overnight-haul-2026-05-19.md` § Coordination.
 - α ALPHA heads-up: apply-pack drawer surfaces untouched.
 - NEEDS_HUMAN flags surfaced by BRAVO (see `data/bravo-impl-log-2026-05-19.md`): (1) Skip-vs-Look-at-later drawer-CTA semantics, (2) AA-2 drawer-pager labels (couldn't locate render source efficiently), (3) tonight-pick CTA consolidation.
 - Signed: β
+
+## 2026-05-19 — ε EPSILON — landed
+
+- Branch `overnight-epsilon-2026-05-19` (7 commits) merged into main as `ce2ed93` (`--no-ff`), then sunrise commit `2ea98ac`. Both pushed to mitwilli-create:main.
+- Final tip from epsilon work: `523ad22 epsilon(Ε.7): adversarial self-review` → merge `ce2ed93` → `2ea98ac epsilon(Ε.9): sunrise brief`.
+- Files ε touched (per file-ownership matrix):
+  - `dashboard-server.mjs` — 2 hardening fixes (saveEvidence + buildVerifyPayload path-traversal); also has BRAVO and DELTA in-flight edits (still uncommitted) which were preserved via stash/pop.
+  - `AGENTS.md` — plist count drift fix (was 17, now refers to system-maintainer agent for live count).
+  - `data/overnight-coordination-2026-05-19.md` — appended ε kickoff + landing.
+  - `portals.yml` — 10 pre-IPO companies appended (file is gitignored — disk only, NOT committed).
+  - NEW `lib/system-health-snapshot.mjs` + `lib/system-health-cleanup.mjs`.
+  - NEW `scripts/agents/system-maintainer.mjs`.
+  - NEW `.claude/skills/system-maintainer/SKILL.md`.
+  - NEW `scripts/launchd/com.mitchell.career-ops.system-maintainer.plist` (nightly 03:00 PT).
+  - NEW `scripts/maintenance/test-save-evidence-hardening.mjs` (15 cases, all pass).
+  - 6 new `data/epsilon-*.md` artifacts.
+- 4 NEEDS_HUMAN items documented in `data/epsilon-self-review-2026-05-19.md`:
+  - dashboard-server launchd flap (manual node PID currently serving :3097)
+  - telegram-bot plist flap
+  - scan.mjs needs providers/*.mjs files restored
+  - report 538 inline link to never-existed 536 (informational)
+- Heads-up for other instances:
+  - DELTA: my ATS landscape (`data/epsilon-ats-landscape-2026-05-19.md`) corroborates a DELTA-friendly finding — 0 of 7 ATSes ship AI-text-detection at apply-time. Greenhouse via Ezra is interview-stage only. Identity-fraud (Workday/Lever Fraud Signals + Greenhouse CLEAR) is distinct from AI-text-authorship. Use this to calibrate your detection-vendor bands.
+  - ALPHA: dashboard-server.mjs path-traversal hardening is upstream of any `/api/apply-pack-polish` etc. that takes user-supplied paths. If you add new endpoints that join user input into a file path, use the existing `REPORT_SLUG_RE` pattern (lib/system-health-snapshot.mjs:findRepoRoot uses similar containment).
+  - BRAVO: your concurrent edits to dashboard-server.mjs + ~50 dashboard/stories/*.html were stash/popped cleanly across my merge. Nothing lost.
+  - ZETA: confirmed I never wrote to `data/contacts-enriched.json` schema. Your aggregator is safe.
+  - γ: read your audit; my code-review pass didn't surface any computed-metric issues (different concern); your `network-graph.mjs` mtime cache fix is great — paired well with my system-maintainer agent finding the dashboard origin down.
+
+— ε
+
