@@ -22,6 +22,10 @@ data/pending-diffs/*.md
 data/research-state.json
 # Health column coverage report (derived from applications.md — personal pipeline state)
 data/health-column-coverage.json
+# Role-enrichment validator telemetry (per-write JSONL log, soft-fail observation
+# window for symmetric gating wired 2026-05-19). Regenerated on each enrich-apply-now
+# run; references row numbers + companies from personal pipeline state.
+data/role-enrichment-validator-telemetry.jsonl
 # Update Drawer (B5 MVP, 2026-05-18) — Mitchell's career updates feed.
 # Append-only JSONL is personal data; cursor tracks merge progress for
 # scripts/merge-career-updates.mjs idempotency. Never commit either.

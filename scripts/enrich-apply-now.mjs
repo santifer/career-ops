@@ -41,12 +41,48 @@ try {
 
 const { callCouncil } = await import('../lib/council.mjs');
 const { parseApplicationsFile } = await import('../lib/parse-applications.mjs');
+const { validateCacheWrite } = await import('../lib/cache-write-validator.mjs');
+const { CACHES } = await import('../lib/refresh-cache-registry.mjs');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const OUT_DIR = join(ROOT, 'data', 'role-enrichment');
 const QUEUE_PATH = join(ROOT, 'data', 'apply-now-queue.json');
 const APPS_PATH = join(ROOT, 'data', 'applications.md');
+const VALIDATOR_TELEMETRY_PATH = join(ROOT, 'data', 'role-enrichment-validator-telemetry.jsonl');
+
+// Cache-write-validator wiring (2026-05-19, symmetric gating).
+//
+// Soft-fail telemetry mode: every council write is validated against the
+// role_enrichment cache's minCitationsPer100Tokens floor (0.2 per the
+// 2026-05-19 recalibration in lib/refresh-cache-registry.mjs:158). Failures
+// log a warning + append a JSONL telemetry record but DO NOT block the write.
+// After ~1 week of observation Mitchell decides whether to hard-block.
+//
+// Cache reference loaded once at module init; immutable across the run.
+const ROLE_ENRICHMENT_CACHE = CACHES.find(c => c.id === 'role_enrichment');
+if (!ROLE_ENRICHMENT_CACHE) {
+  console.error('FATAL: role_enrichment cache entry not found in registry — wiring broken');
+  process.exit(2);
+}
+
+// Flatten every nested `sources[]` array under the merged JSON into a single
+// list of unique HTTPS URLs. Same logic as the audit script. The validator
+// reads source_urls from the envelope, not the contentJson, so this hoist
+// is required for density-gating to count the URLs that ARE in the file.
+function gatherSources(obj) {
+  const urls = [];
+  function walk(o) {
+    if (Array.isArray(o)) { o.forEach(walk); return; }
+    if (!o || typeof o !== 'object') return;
+    if (Array.isArray(o.sources)) {
+      for (const u of o.sources) if (typeof u === 'string') urls.push(u);
+    }
+    for (const k of Object.keys(o)) walk(o[k]);
+  }
+  walk(obj);
+  return [...new Set(urls.filter(u => /^https?:\/\//.test(u)))];
+}
 
 const ARGS = Object.fromEntries(
   process.argv.slice(2)
@@ -457,6 +493,59 @@ async function main() {
       duration_ms: Date.now() - tRole,
       raw_responses_count: parsed.length,
     };
+
+    // Symmetric gating (soft-fail telemetry, 2026-05-19). Build the envelope
+    // expected by validateCacheWrite from the merged contentJson + _meta. The
+    // validator checks: provenance shape, citation density, evidence
+    // allowlist. Failures get a warning + telemetry log, but the write
+    // proceeds — we're collecting 1 week of observation data, NOT blocking.
+    const sourceUrls = gatherSources(merged);
+    const validatorEnvelope = {
+      source_urls: sourceUrls,
+      retrieved_at: merged._meta.generated_at,
+      model: modelsUsed[0]?.model || 'council:multi-model',
+      verifier_passed: null,  // direct council path; no Sonnet verifier (yet)
+      diff_summary: existsSync(outFile) ? 'refreshed' : 'initial',
+    };
+    let validatorResult;
+    try {
+      validatorResult = validateCacheWrite({
+        cache: ROLE_ENRICHMENT_CACHE,
+        envelope: validatorEnvelope,
+        contentJson: merged,
+      });
+    } catch (e) {
+      validatorResult = { ok: false, errors: [`validator threw: ${e.message}`], warnings: [], augmented: null };
+    }
+    if (!validatorResult.ok) {
+      console.log(`  ⚠ validator WARN (soft-fail, write proceeding): ${validatorResult.errors.slice(0, 2).join(' · ')}`);
+    } else if (validatorResult.warnings.length) {
+      console.log(`  validator OK (${validatorResult.warnings.length} warning(s))`);
+    } else {
+      console.log(`  validator OK (${sourceUrls.length} URLs, density ${(sourceUrls.length / Math.ceil(JSON.stringify(merged).length / 3.5) * 100).toFixed(2)}/100tk)`);
+    }
+    // Append telemetry record (gitignored — see .gitignore). One JSONL line
+    // per write attempt; Mitchell tails this to decide whether to flip the
+    // soft-fail switch to hard-block after 1 week.
+    try {
+      const tokens = Math.ceil(JSON.stringify(merged).length / 3.5);
+      const telemetryLine = JSON.stringify({
+        ts: new Date().toISOString(),
+        file: `${role.slug}.json`,
+        num: String(role.num),
+        company: role.company,
+        role: role.role,
+        ok: validatorResult.ok,
+        errors: validatorResult.errors,
+        warnings_count: validatorResult.warnings.length,
+        source_url_count: sourceUrls.length,
+        tokens,
+        density_per_100tk: Number((sourceUrls.length / (tokens / 100)).toFixed(3)),
+        floor: ROLE_ENRICHMENT_CACHE.minCitationsPer100Tokens,
+        soft_fail_mode: true,
+      }) + '\n';
+      appendFileSync(VALIDATOR_TELEMETRY_PATH, telemetryLine);
+    } catch (_) { /* never break the write on telemetry failure */ }
 
     writeFileSync(outFile, JSON.stringify(merged, null, 2));
     console.log(`  → wrote ${outFile}`);
