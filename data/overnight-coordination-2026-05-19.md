@@ -386,3 +386,31 @@ Files touched (no conflicts with other personas per coordination matrix):
   4. Honest claim: "we have a gate" — today it blocks ~0% of Mitchell's prose; UX gap.
 
 — δ (Run-Batch eval LANDED, 07:56 PT)
+
+## 2026-05-19 — ζ ZETA (needhuman-resolution) — ζ.3 draft-intro
+
+- Worktree: `../career-ops-zeta-needhuman-2026-05-19` on `needhuman-zeta-2026-05-19`
+- ζ.3 voice wiring landed: `scripts/agents/network-draft-intro.mjs` (120 LOC, single Sonnet call).
+  Endpoint: `POST /api/network/draft-intro` (dashboard-server.mjs, added after `/api/network/export`).
+  UI: "✍ Draft DM → <company>" button per warm_to_target_companies entry in the popout accordion.
+  Voice calibrated to: writing-samples/voice-reference.md (rank=highest exemplar) + feedback_linkedin_outreach_voice.md 4-rule calibration (full role names, time-chunk career arc, concrete metric qualifiers, paragraph-isolated asks).
+- Live verified against Brandon Sammut (str=21, brandon.sammut@zapier.com high-confidence) → anthropic warm path:
+  Draft passed all 4 voice calibration rules. Cost $0.0079 per call (974 input + 330 output tokens). 
+- Files touched: `scripts/agents/network-draft-intro.mjs` (NEW), `dashboard-server.mjs` (import line + new endpoint), `scripts/build-dashboard.mjs` (draft-intro buttons + overlay modal JS). No conflict with any prior overnight instance's territory.
+- `data/overnight-coordination-2026-05-19.md` — this entry.
+
+## 2026-05-19 — ζ ZETA (needhuman-resolution) — ζ.4 dedup pass
+
+- ζ.4 dedup pass complete. Script: `scripts/network-dedup-verify.mjs` (new file).
+- Results (decisive):
+  - 0 true duplicates across all sources
+  - 0 ID collisions in network-database.json
+  - 0 LinkedIn URL collisions (same URL → multiple IDs)
+  - 0 email dupes within any person's email list
+  - 9 same-name entries are confirmed genuinely different people (all have different LinkedIn URLs)
+  - 2,825 CSV rows → 2,824 DB records = 1 dropped by override (correct)
+  - contacts-enriched.json: NOT ON DISK (Hunter enrichment not yet run in this env — aggregator handles gracefully)
+- Pre-dedup archive created at `data/network-pre-dedup-archive-2026-05-19.json` (~2.7MB, gitignored, disk-only — reversal file)
+- No rebuild needed: DB is already dedup-clean.
+
+— ζ (needhuman-resolution)
