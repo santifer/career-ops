@@ -1613,8 +1613,15 @@ function computeStats() {
 
 function detailApplyNow() {
   const apps = parseApplications();
+  // β.1: filter out rows dismissed until midnight PT
+  const dismissedMap = loadDismissed();
+  const nowMs = Date.now();
   const rows = apps
     .filter(a => a.score >= 4.0 && ['Evaluated','Applied','Interview','Offer'].includes(a.status))
+    .filter(a => {
+      const until = dismissedMap[String(a.num)];
+      return !until || new Date(until).getTime() <= nowMs; // include if not dismissed or expired
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, 200)
     .map(r => ({ ...r, reportSummary: r.report ? parseReportSummary(r.report) : {} }));
@@ -2512,6 +2519,96 @@ function appendDiscardEntry(entry) {
   const tmp = DISCARD_LOG_PATH + '.tmp.' + process.pid + '.' + Date.now();
   writeFileSync(tmp, JSON.stringify(log, null, 2));
   renameSync(tmp, DISCARD_LOG_PATH);
+}
+
+// ── Apply-Now dismiss persistence (β.1 — Discard vs Dismiss) ───────────────
+// DISMISS: hides a row from the Apply-Now queue until midnight PT (local
+// calendar day). Does NOT change the canonical status in applications.md.
+// Persisted in data/apply-now-dismissed.json (gitignored).
+// Format: { "<num>": "<ISO-8601 dismissed_until>" }
+const DISMISS_PATH = join(ROOT, 'data/apply-now-dismissed.json');
+
+function _nextMidnightPT() {
+  // Returns an ISO-8601 string for the next midnight in America/Los_Angeles
+  // (Pacific Time — PDT in summer, PST in winter). Uses toLocaleString with
+  // the tz so it works regardless of the host machine's local timezone.
+  const now = new Date();
+  // Build today's date in PT by asking the locale formatter
+  const ptDateStr = now.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); // YYYY-MM-DD
+  // Midnight PT for tomorrow = today-in-PT + 1 day, 00:00 PT
+  const [yyyy, mm, dd] = ptDateStr.split('-').map(Number);
+  // Construct tomorrow midnight PT as a Date object
+  const tomorrowMidnightPT = new Date(
+    new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T00:00:00`).toLocaleString(
+      'en-US', { timeZone: 'America/Los_Angeles' }
+    ).replace(/\//g, '-') // not reliable; use the safe approach below
+  );
+  // Safe approach: add 24h to today's midnight PT
+  // Today's midnight PT in UTC: find the UTC offset for PT right now
+  const ptFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
+  // Build midnight today PT as a UTC Date
+  const parts = ptFormatter.formatToParts(now).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const todayMidnightPTLocal = new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00`);
+  // That Date object is interpreted as LOCAL time. We need it as UTC equivalent of PT midnight.
+  // Simpler: just use fixed 8 or 7 hour offset as approximation (PDT=7, PST=8).
+  // Most robust: add 24h to now and then zero the PT-local clock.
+  const tomorrowNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const tomorrowPTStr = tomorrowNow.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+  // midnight of tomorrowPTStr in PT — expressed as UTC
+  // Use the offset trick: 00:00 PT is UTC+7 (PDT) or UTC+8 (PST)
+  const isPDT = (() => {
+    // DST heuristic: check if the hour in PT at 00:00 UTC differs by 7 or 8
+    const utcHour = new Date(`${tomorrowPTStr}T08:00:00Z`).toLocaleString('en-US', {
+      timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false,
+    });
+    return parseInt(utcHour, 10) === 1; // 08:00 UTC = 01:00 PDT (UTC-7) or 00:00 PST (UTC-8)
+  })();
+  const ptOffsetHours = isPDT ? 7 : 8;
+  // midnight tomorrow PT = tomorrowPTStr at 00:00 = (tomorrowPTStr + ptOffsetHours hours) UTC
+  const midnightUTC = new Date(`${tomorrowPTStr}T${String(ptOffsetHours).padStart(2,'0')}:00:00Z`);
+  return midnightUTC.toISOString();
+}
+
+function loadDismissed() {
+  try {
+    if (!existsSync(DISMISS_PATH)) return {};
+    return JSON.parse(readFileSync(DISMISS_PATH, 'utf8'));
+  } catch { return {}; }
+}
+
+function saveDismissed(map) {
+  // Prune expired entries (dismissed_until in the past) before saving
+  const now = Date.now();
+  const pruned = Object.fromEntries(
+    Object.entries(map).filter(([, until]) => new Date(until).getTime() > now)
+  );
+  const tmp = DISMISS_PATH + '.tmp.' + process.pid + '.' + Date.now();
+  writeFileSync(tmp, JSON.stringify(pruned, null, 2));
+  renameSync(tmp, DISMISS_PATH);
+  return pruned;
+}
+
+function isDismissed(num) {
+  const map = loadDismissed();
+  const until = map[String(num)];
+  if (!until) return false;
+  return new Date(until).getTime() > Date.now();
+}
+
+function dismissRow(num) {
+  const map = loadDismissed();
+  map[String(num)] = _nextMidnightPT();
+  saveDismissed(map);
+}
+
+function undismissRow(num) {
+  const map = loadDismissed();
+  delete map[String(num)];
+  saveDismissed(map);
 }
 
 function detailDiscarded() {
@@ -3916,6 +4013,33 @@ const server = createServer((req, res) => {
       return json({ ok: true, entry });
     });
     return;
+  }
+  // ── POST /api/dismiss-row ────────────────────────────────────────────────
+  // β.1: DISMISS a row from Apply-Now queue until midnight PT (day-only).
+  // Does NOT change Status in applications.md. Reads/writes
+  // data/apply-now-dismissed.json (gitignored). Expires at midnight PT.
+  // Body: { num: <integer> }
+  // DELETE /api/dismiss-row?num=<n>  — explicitly un-dismiss (optional)
+  if (url === '/api/dismiss-row' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); } catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const rowNum = parseInt(parsed.num, 10);
+      if (!rowNum) return json({ ok: false, error: 'num required (positive integer)' }, 400);
+      dismissRow(rowNum);
+      return json({ ok: true, num: rowNum, dismissed_until: loadDismissed()[String(rowNum)] });
+    });
+    return;
+  }
+  if (url.startsWith('/api/dismiss-row') && req.method === 'DELETE') {
+    const numStr = new URLSearchParams(url.split('?')[1] || '').get('num');
+    const rowNum = parseInt(numStr, 10);
+    if (!rowNum) return json({ ok: false, error: 'num query param required' }, 400);
+    undismissRow(rowNum);
+    return json({ ok: true, num: rowNum, undismissed: true });
   }
   if (url === '/api/discard-reasons/recent') {
     // Surfaced by heartbeat + future triage prompt enrichment. Last 30 entries.
