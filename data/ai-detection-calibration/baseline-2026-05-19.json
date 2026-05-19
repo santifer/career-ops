@@ -1,9 +1,9 @@
 {
   "summary": {
-    "calibrated_at": "2026-05-19T07:08:11.032Z",
+    "calibrated_at": "2026-05-19T14:56:42.551Z",
     "sample_counts": {
-      "human": 5,
-      "ai_decoy": 3
+      "human": 26,
+      "ai_decoy": 10
     },
     "human": {
       "gptzero": {
@@ -12,9 +12,9 @@
         "min": 1
       },
       "originality": {
-        "mean": 1,
+        "mean": 0.999,
         "max": 1,
-        "min": 1
+        "min": 0.98
       }
     },
     "ai": {
@@ -33,7 +33,7 @@
   "human_results": [
     {
       "id": "voice-reference-full",
-      "elapsed_ms": 1234,
+      "elapsed_ms": 1329,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -49,7 +49,7 @@
     },
     {
       "id": "voice-reference-canonical-exemplar",
-      "elapsed_ms": 1074,
+      "elapsed_ms": 1089,
       "options": {
         "confidence": "high",
         "register": "narrative",
@@ -65,7 +65,7 @@
     },
     {
       "id": "cv-mitchell",
-      "elapsed_ms": 1020,
+      "elapsed_ms": 1065,
       "options": {
         "confidence": "medium",
         "register": "bullet",
@@ -81,7 +81,7 @@
     },
     {
       "id": "article-digest",
-      "elapsed_ms": 1085,
+      "elapsed_ms": 1117,
       "options": {
         "confidence": "medium",
         "register": "mixed",
@@ -96,12 +96,348 @@
       "originality_error": null
     },
     {
-      "id": "voice-reference-brief",
-      "elapsed_ms": 1080,
+      "id": "story-comms-triage-agent-xge",
+      "elapsed_ms": 1029,
       "options": {
         "confidence": "high",
         "register": "narrative",
-        "path": "data/voice-reference-brief.md"
+        "path": "data/human-examples/sample-01-comms-triage-agent-google-xge.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-stream-launch-breaking-news",
+      "elapsed_ms": 1073,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-02-stream-launch-night-breaking-news.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-huffpost-live-scientology",
+      "elapsed_ms": 1073,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-03-huffpost-live-scientology-exclusive.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-ahmed-coalition-2026",
+      "elapsed_ms": 1051,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-04-ahmed-coalition-2026.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-executive-rag-voice-dna-xge",
+      "elapsed_ms": 1047,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-05-executive-rag-voice-dna-xge.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-mentorship-platform-xge",
+      "elapsed_ms": 1065,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-06-mentorship-platform-xge.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-aj-viral-video-production",
+      "elapsed_ms": 1050,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-07-aj-viral-video-production.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-aj-talent-pipeline",
+      "elapsed_ms": 1097,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-08-aj-talent-pipeline.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-approvals-matrix-xge",
+      "elapsed_ms": 1129,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-09-approvals-matrix-overhaul-xge.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-day-one-orientation-xge",
+      "elapsed_ms": 1041,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-10-day-one-orientation-xge.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-career-ops-open-source",
+      "elapsed_ms": 1014,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-11-career-ops-open-source-build.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 0.98,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-stic-summit-architecture",
+      "elapsed_ms": 1017,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-12-stic-summit-architecture.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-xge-org-partnership-des",
+      "elapsed_ms": 1059,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-13-xge-org-partnership-des.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-voice-dna-kill-list-rag",
+      "elapsed_ms": 1070,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-14-voice-dna-kill-list-rag.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-stream-751-to-59k",
+      "elapsed_ms": 1020,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-15-stream-launch-751-to-59k.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-huffpost-live-trans-navy",
+      "elapsed_ms": 1083,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-16-huffpost-live-trans-navy.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-xge-voice-dna-kill-list",
+      "elapsed_ms": 1163,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-17-xge-voice-dna-kill-list.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-career-ops-zero-token-scanner",
+      "elapsed_ms": 1056,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-18-career-ops-zero-token-scanner.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-xge-comms-agent-build",
+      "elapsed_ms": 1081,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-19-xge-comms-agent-build.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-senior-eng-mentorship-transition",
+      "elapsed_ms": 1063,
+      "options": {
+        "confidence": "high",
+        "register": "narrative",
+        "path": "data/human-examples/sample-20-senior-eng-mentorship-transition.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "cover-letter-044-anthropic-comms-lead",
+      "elapsed_ms": 952,
+      "options": {
+        "confidence": "medium",
+        "register": "narrative",
+        "path": "data/human-examples/sample-21-cover-letter-044-anthropic-comms-lead.md"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "story-bank-ahmed-coalition",
+      "elapsed_ms": 1013,
+      "options": {
+        "confidence": "high",
+        "register": "mixed",
+        "path": "data/human-examples/sample-22-story-bank-ahmed-coalition.md"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
@@ -115,7 +451,7 @@
   "ai_results": [
     {
       "id": "ai-decoy-corporate-jargon",
-      "elapsed_ms": 919,
+      "elapsed_ms": 929,
       "options": {
         "register": "narrative"
       },
@@ -129,7 +465,7 @@
     },
     {
       "id": "ai-decoy-generic-cover-letter",
-      "elapsed_ms": 934,
+      "elapsed_ms": 1133,
       "options": {
         "register": "narrative"
       },
@@ -143,9 +479,107 @@
     },
     {
       "id": "ai-decoy-buzzword-paragraph",
-      "elapsed_ms": 857,
+      "elapsed_ms": 948,
       "options": {
         "register": "mixed"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-strategic-vision",
+      "elapsed_ms": 951,
+      "options": {
+        "register": "narrative"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-communications-professional",
+      "elapsed_ms": 3275,
+      "options": {
+        "register": "narrative"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-technical-narrative",
+      "elapsed_ms": 953,
+      "options": {
+        "register": "narrative"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-leadership-reflection",
+      "elapsed_ms": 932,
+      "options": {
+        "register": "narrative"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-product-launch",
+      "elapsed_ms": 2780,
+      "options": {
+        "register": "mixed"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-journalism-generic",
+      "elapsed_ms": 912,
+      "options": {
+        "register": "narrative"
+      },
+      "gptzero_prob": 1,
+      "originality_prob": 1,
+      "verdict": "AI",
+      "passes": false,
+      "from_cache": false,
+      "gptzero_error": null,
+      "originality_error": null
+    },
+    {
+      "id": "ai-decoy-ai-comms-essay",
+      "elapsed_ms": 1361,
+      "options": {
+        "register": "narrative"
       },
       "gptzero_prob": 1,
       "originality_prob": 1,
@@ -158,5 +592,5 @@
   ],
   "thresholds": null,
   "degenerate": true,
-  "degenerate_reason": "sample size too small (have 5 human + 3 AI; need ≥20 + ≥10)"
+  "degenerate_reason": "human-max ≥ AI-decoy-min on at least one detector (gptzero: human-max=1 vs AI-min=1; orig: human-max=1 vs AI-min=1)"
 }
