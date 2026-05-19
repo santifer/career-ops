@@ -516,6 +516,26 @@ async function phaseSubmit(apiKey) {
 
   const requests = [];
   let fetchErrors = 0;
+  // 2026-05-19 Mitchell trust-fix — track URLs that fail fetch with terminal
+  // signals (HTTP 4xx, "no longer accepting" patterns). These are dead postings
+  // that will never come back. Without dequeuing them, the badge stays inflated
+  // and Process All falsely appears to "do nothing" on subsequent runs (it
+  // correctly skips submission but doesn't update the queue, so the same dead
+  // URLs keep showing).
+  const expiredUrls = new Set();
+  const EXPIRED_REASON_PATTERNS = [
+    /HTTP\s*4\d\d/i,             // any 4xx (404, 410, 403)
+    /no\s+longer\s+accepting/i,  // ATS "applications closed" pattern
+    /no\s+longer\s+available/i,
+    /expired/i,
+    /position\s+filled/i,
+    /position\s+closed/i,
+    /job\s+is\s+closed/i,
+  ];
+  function isTerminalFetchFailure(reason) {
+    if (!reason) return false;
+    return EXPIRED_REASON_PATTERNS.some(re => re.test(reason));
+  }
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
@@ -525,6 +545,9 @@ async function phaseSubmit(apiKey) {
     if (!ok) {
       process.stdout.write(` ❌ ${reason} — skipping\n`);
       fetchErrors++;
+      if (isTerminalFetchFailure(reason)) {
+        expiredUrls.add(item.url);
+      }
       continue;
     }
     process.stdout.write(` ✅\n`);
@@ -573,6 +596,36 @@ async function phaseSubmit(apiKey) {
 
   if (requests.length === 0) {
     console.log(`\nAll ${fetchErrors} items had fetch errors — nothing to submit.`);
+    // 2026-05-19 Mitchell trust-fix — even when nothing was submitted, dequeue
+    // URLs that hit terminal fetch failures so the queue doesn't stay inflated
+    // with dead postings. Same archive-on-remove pattern as the post-batch
+    // dequeue logic below.
+    if (expiredUrls.size > 0) {
+      try {
+        const lines = readFileSync(ADVANCE_FILE, 'utf8').split('\n');
+        const kept = [];
+        const removed = [];
+        for (const line of lines) {
+          if (!line.trim()) { kept.push(line); continue; }
+          if (line.startsWith('url\t')) { kept.push(line); continue; }
+          const url = line.split('\t')[0];
+          if (url && expiredUrls.has(url)) removed.push(line);
+          else kept.push(line);
+        }
+        if (removed.length > 0) {
+          writeFileSync(ADVANCE_FILE, kept.join('\n'));
+          const archiveDir = join(ROOT, 'batch/triage-advance-expired');
+          if (!existsSync(archiveDir)) mkdirSync(archiveDir, { recursive: true });
+          const archivePath = join(archiveDir, `${new Date().toISOString().slice(0,10)}-expired-${removed.length}.tsv`);
+          const header = 'url\ttier\tscore\tarchetype\treason';
+          writeFileSync(archivePath, [header, ...removed].join('\n') + '\n');
+          console.log(`  Dequeued ${removed.length} expired URL(s) (HTTP 4xx / "no longer accepting") → ${archivePath.replace(ROOT + '/', '')}`);
+          console.log(`  Queue size: was ${items.length}, now ${items.length - removed.length}`);
+        }
+      } catch (err) {
+        console.warn(`  ⚠ Could not dequeue expired URLs: ${err.message}`);
+      }
+    }
     return;
   }
 
