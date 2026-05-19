@@ -174,17 +174,54 @@ async function phaseTriage() {
   return { ok: true, advanced };
 }
 
+// 2026-05-19 cohesion fix (Mitchell postmortem) — count rows in the
+// triage-advance queue so phaseBatch can loop until drained. Skips the
+// header row. Returns 0 if the file doesn't exist.
+function countTriageAdvanceRows() {
+  const fp = join(ROOT, 'batch/triage-advance.tsv');
+  if (!existsSync(fp)) return 0;
+  const lines = readFileSync(fp, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('url\t'));
+  return lines.length;
+}
+
 async function phaseBatch() {
   updateJob({ phase: 'batch', phase_started_at: new Date().toISOString() });
   log('━━━ Phase 2/4: BATCH EVAL ━━━');
   if (DRY_RUN) { log('(dry-run) skipping batch'); return { ok: true }; }
-  // batch-runner-batches.mjs run = submit + poll + process in one
-  const code = await runScript('batch-runner-batches.mjs', ['run', ...SCOPED_ARGS]);
-  if (code !== 0) {
-    log(`✗ batch run failed (exit ${code})`);
-    return { ok: false };
+
+  // 2026-05-19 cohesion fix #1 (Mitchell postmortem) — drain loop. Was a
+  // single batch-runner call capped at LIMIT=100 (the script's default),
+  // which left items in triage-advance.tsv after queues > 100. Now loops
+  // up to MAX_ROUNDS calls with --limit=1000 each, breaking when queue
+  // empties OR no progress is made between rounds.
+  const MAX_ROUNDS = Math.max(1, Math.min(20, parseInt(process.env.PROCESS_ALL_MAX_BATCH_ROUNDS || '10', 10)));
+  const PER_ROUND_LIMIT = Math.max(1, parseInt(process.env.PROCESS_ALL_BATCH_LIMIT || '1000', 10));
+  let round = 1;
+  let totalDrained = 0;
+  while (round <= MAX_ROUNDS) {
+    const beforeCount = countTriageAdvanceRows();
+    if (beforeCount === 0) {
+      log(`  batch queue empty (round ${round}) — drain complete`);
+      break;
+    }
+    log(`━━━ Batch round ${round}/${MAX_ROUNDS} — ${beforeCount} items in queue ━━━`);
+    const code = await runScript('batch-runner-batches.mjs', ['run', `--limit=${PER_ROUND_LIMIT}`, ...SCOPED_ARGS]);
+    if (code !== 0) {
+      log(`✗ batch round ${round} failed (exit ${code})`);
+      return { ok: false };
+    }
+    const afterCount = countTriageAdvanceRows();
+    const drainedThisRound = beforeCount - afterCount;
+    totalDrained += drainedThisRound;
+    log(`  round ${round}: ${beforeCount} → ${afterCount} (drained ${drainedThisRound})`);
+    if (drainedThisRound <= 0) {
+      log(`  round ${round}: no drain detected — breaking (queue may be stuck behind expired postings or company-scope filter)`);
+      break;
+    }
+    round++;
   }
-  log('✓ batch eval complete');
+  log(`✓ batch eval complete — ${totalDrained} item(s) drained across ${round - 1} round(s)`);
+  updateJob({ batch_rounds_used: round - 1, batch_items_drained: totalDrained });
   // β Run-Batch eval 2026-05-19: persist published_count so the sidebar's
   // 5-stage Publish bar can render a real ratio (was hard-coded 0/0 because
   // dashboard-server.mjs:batchLive() reads activeJob.published_count and no

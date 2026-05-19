@@ -797,6 +797,46 @@ async function phaseProcess(apiKey) {
     console.log(`\n  Written: ${written} reports | Errors: ${errors}`);
     console.log(`  Run: node merge-tracker.mjs   to sync tracker`);
     if (written > 0) console.log(`  Run: node verify-pipeline.mjs  to validate`);
+
+    // 2026-05-19 cohesion fix (Mitchell postmortem) — dequeue processed URLs
+    // from batch/triage-advance.tsv so the modal "drains to 0" promise is
+    // honest. Without this, every Process All run re-submits the same URLs
+    // to Anthropic Batches API (real spend on duplicate evals; dedup happens
+    // only inside merge-tracker AFTER the API spend). Archive removed rows
+    // to batch/triage-advance-archive/{date}-{batchId}.tsv (audit trail
+    // preserved, reversible).
+    try {
+      const processedUrls = new Set(
+        (batchRecord.requests || []).map(r => r.url).filter(Boolean)
+      );
+      if (processedUrls.size > 0 && existsSync(ADVANCE_FILE)) {
+        const lines = readFileSync(ADVANCE_FILE, 'utf8').split('\n');
+        const kept = [];
+        const removed = [];
+        for (const line of lines) {
+          if (!line.trim()) { kept.push(line); continue; }
+          if (line.startsWith('url\t')) { kept.push(line); continue; } // header
+          const cols = line.split('\t');
+          const url = cols[0];
+          if (url && processedUrls.has(url)) {
+            removed.push(line);
+          } else {
+            kept.push(line);
+          }
+        }
+        if (removed.length > 0) {
+          writeFileSync(ADVANCE_FILE, kept.join('\n'));
+          const archiveDir = join(ROOT, 'batch/triage-advance-archive');
+          if (!existsSync(archiveDir)) mkdirSync(archiveDir, { recursive: true });
+          const archivePath = join(archiveDir, `${new Date().toISOString().slice(0,10)}-${batchRecord.id}.tsv`);
+          const header = 'url\ttier\tscore\tarchetype\treason';
+          writeFileSync(archivePath, [header, ...removed].join('\n') + '\n');
+          console.log(`  Dequeued ${removed.length} processed URL(s) from triage-advance.tsv → ${archivePath.replace(ROOT + '/', '')}`);
+        }
+      }
+    } catch (err) {
+      console.warn(`  ⚠ Could not dequeue from triage-advance.tsv: ${err.message} (non-fatal — items will re-submit next run)`);
+    }
   }
 
   saveState(state);

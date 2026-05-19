@@ -20683,10 +20683,45 @@ function showPipelineToast(action, sendEmail) {
   toast.classList.add('visible');
 }
 
+// 2026-05-19 Mitchell feedback — persistent progress bar. Per-jobId dismissal
+// stored in sessionStorage so a user can close the toast on their session but
+// a NEW job will re-show it. Across sessions / browsers, the toast auto-shows
+// for any in-flight job because the source-of-truth is server state.
+function _pipelineToastDismissed(jobId) {
+  try { return sessionStorage.getItem('pipeline-toast-dismissed-' + jobId) === '1'; }
+  catch { return false; }
+}
+function _pipelineMarkToastDismissed(jobId) {
+  try { sessionStorage.setItem('pipeline-toast-dismissed-' + jobId, '1'); } catch {}
+}
+
 function closePipelineToast() {
   document.getElementById('pipeline-toast').classList.remove('visible');
   if (_pipelinePollTimer) { clearTimeout(_pipelinePollTimer); _pipelinePollTimer = null; }
+  if (_pipelineCurrentJob && _pipelineCurrentJob.jobId) {
+    _pipelineMarkToastDismissed(_pipelineCurrentJob.jobId);
+  }
   _pipelineCurrentJob = null;
+}
+
+// On page load: check the server for any in-flight Process All / Run Batch
+// and restore the toast + poll so users entering the dashboard mid-run see
+// the status. Visible across sessions / browsers / devices.
+async function restoreActiveJobToast() {
+  try {
+    const res = await fetch('/api/pipeline/active-job', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.ok || !data.active || !data.job) return;
+    const job = data.job;
+    if (_pipelineToastDismissed(job.jobId)) return;
+    _pipelineCurrentJob = { jobId: job.jobId, type: job.type || 'process-all', sendEmail: !!job.send_email };
+    showPipelineToast(_pipelineCurrentJob.type, _pipelineCurrentJob.sendEmail);
+    _updatePipelineToast(job, data.log_tail || []);
+    startPipelineStatusPoll(job.jobId);
+  } catch (_) {
+    // Quiet — no active job is the common case; no need to log.
+  }
 }
 
 function startPipelineStatusPoll(jobId) {
@@ -20818,8 +20853,23 @@ window.closePipelineModal = closePipelineModal;
 window.confirmPipelineAction = confirmPipelineAction;
 window.closePipelineToast = closePipelineToast;
 window.refreshPipelineBadges = refreshPipelineBadges;
-document.addEventListener('DOMContentLoaded', () => { refreshPipelineBadges(); });
+window.restoreActiveJobToast = restoreActiveJobToast;
+document.addEventListener('DOMContentLoaded', () => {
+  refreshPipelineBadges();
+  // 2026-05-19 Mitchell feedback — auto-restore active-job toast so users
+  // arriving mid-run (any browser, any session) see the in-flight status.
+  restoreActiveJobToast();
+});
 document.addEventListener('careerops:status-changed', () => { refreshPipelineBadges(); });
+// Re-check for active jobs every 30s so a user sitting on the dashboard
+// catches a job that started from another session.
+setInterval(() => {
+  // Only restore if no toast is currently displayed (don't disturb in-progress poll)
+  const toast = document.getElementById('pipeline-toast');
+  if (toast && !toast.classList.contains('visible') && !_pipelineCurrentJob) {
+    restoreActiveJobToast();
+  }
+}, 30000);
 
 // ── Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16) ─
 // Fetches /api/recruiter-pipeline-density every 5 minutes (and on load), renders

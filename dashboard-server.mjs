@@ -4481,6 +4481,29 @@ const server = createServer((req, res) => {
     return json({ ok: true, job, log_tail: tail });
   }
 
+  // 2026-05-19 Mitchell feedback — persistent progress bar across sessions.
+  // Returns the most-recent active job (status in 'queued' or 'running') so
+  // any browser session can detect an in-flight Process All / Run Batch and
+  // restore the progress toast on page load. Returns 404 when no job is
+  // currently in-flight so the client knows to skip the toast.
+  if (url === '/api/pipeline/active-job') {
+    const state = loadPipelineProcessState();
+    const jobs = Object.values(state.jobs || {});
+    const active = jobs
+      .filter(j => j && (j.status === 'running' || j.status === 'queued'))
+      .sort((a, b) => String(b.started_at || '').localeCompare(String(a.started_at || '')));
+    if (active.length === 0) return json({ ok: true, active: false });
+    const job = active[0];
+    let tail = [];
+    if (job.log_path && existsSync(job.log_path)) {
+      try {
+        const lines = readFileSync(job.log_path, 'utf-8').split('\n').filter(Boolean);
+        tail = lines.slice(-20);
+      } catch {}
+    }
+    return json({ ok: true, active: true, job, log_tail: tail });
+  }
+
   // ── Outreach API ────────────────────────────────────────────────────────
   // Powers the Outreach Pulse section + per-contact intel drawer.
   // resetOutreachCache() ensures every GET reads fresh state (writes come
