@@ -54,12 +54,21 @@ import { fileURLToPath } from 'node:url';
 import { execSync, spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
-import { callCouncil, extractRichContent, estimateCostUsd } from '../../lib/council.mjs';
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 const DATA_DIR = join(REPO_ROOT, 'data');
 const LOG_DIR = join(DATA_DIR, 'logs');
+
+// Load .env with override:true BEFORE importing council. Mitchell's shell
+// pre-sets ANTHROPIC_API_KEY (and others) to empty string; without override,
+// dotenv would not overwrite the empty value and every council fan-out would
+// be skipped as "missing env". See memory: reference_env_secrets.
+try {
+  const { config: dotenvConfig } = await import('dotenv');
+  dotenvConfig({ path: join(REPO_ROOT, '.env'), override: true });
+} catch { /* dotenv optional — if missing, env vars must already be set by caller */ }
+
+const { callCouncil, extractRichContent, estimateCostUsd } = await import('../../lib/council.mjs');
 
 // ─── Date utils (PT-stamped, matching the rest of the codebase) ───────────────
 
