@@ -277,3 +277,51 @@ If the launchd plist rebootstrap is the right NEEDS_HUMAN call in the morning, t
 - No conflicts with α/β/γ/δ/ε territory. Pre-existing batch widget HTML-escape gap fixed defense-in-depth.
 
 — ζ (run-batch)
+
+## 2026-05-19 — β BRAVO (Run-Batch eval) — landing
+- Branch `overnight-bravo-runbatch-2026-05-19` rebased onto post-γ/ε/ζ/δ/α run-batch landings. My `fcc496f` (slice→scopedCost) is functionally identical to ALPHA's `a04aadd` — left both in place since git applied cleanly and my commit carries a longer rationale comment. No conflict.
+- 5 commits on top: `fcc496f` (slice ReferenceError fix on Phase B), `cdc3ab0` (published_count after phaseBatch — complements γ's main-end version: mine streams during rebuild, γ's overrides at end-of-job), `28da46a` (cap-warning copy explains agent-enrichment dominance — "Of that, $132.30 (93%) is agent enrichment on 21 published items"), `2c02fdc` (hero recolor red + "OVER CAP" pill next to headline when est.exceeds_per_run_cap or est.exceeds_budget — at-a-glance signal so the user does not confidently scroll past the warning), `d27d0f9` (Phase A hero now shows SCOPED cost not aggregate Tier-5 hypothetical — fixes the long-standing "$210.60 headline vs $15.00 scoped" disconnect; hero auto-updates as user toggles per-company checkboxes).
+- Touched `scripts/build-dashboard.mjs` (4 commits) + `scripts/process-all-pipeline.mjs` (1 commit). Build clean, all 4 inline scripts parse, dashboard rebuild 1.18MB raw → 1.00MB minified.
+- Pre-merge live verification: Run Batch + Process All Phase A modals captured at https://dashboard.careers-ops.com/ on 1440px viewport. Phase B (`_advanceProcessAllToConfirm`) tested via JS console — reconciles correctly. ReferenceError repro'd + fix verified via direct function call. (Live build still serves pre-merge code; visual verification against MY changes happens after merge + rebuild.)
+- Coordination flags:
+  - δ DELTA (df2c258 / f88280c): your AI-detection cost line in Phase A preview is preserved — my Phase A hero rewrite sits ABOVE your row injection, not over it.
+  - ζ ZETA (c14ae0d / c798ad0): your NETWORK column + warm-intro chips render correctly inside my new Phase A scope-aware hero. Phase B per-company table preserved bit-for-bit.
+  - α ALPHA (a04aadd): no conflict on slice→scopedCost; we landed identical code changes with slightly different comment phrasing.
+  - γ GAMMA (ada23bb / 8ec78e3): your provenance pills (MED · N=10 · ±50% etc.) render correctly inside my recolored hero. count_unknown stale-state handling preserved.
+  - ε EPSILON: my changes only touch scripts/build-dashboard.mjs + scripts/process-all-pipeline.mjs — no `dashboard-server.mjs` edits, so no server restart required for my pass. A simple `node scripts/build-dashboard.mjs` after merge picks up automatically.
+- Merge + push step next.
+
+— β (Run-Batch eval)
+
+
+## 2026-05-19 — α NEEDS_HUMAN resolution (this session, ~14:50 PT)
+
+Worktree: `../career-ops-alpha-needhuman-2026-05-19` on `needhuman-alpha-2026-05-19`
+
+**Decision α.1 — intel-refresh launchd:** COMPLETE.
+- Plist `com.mitchell.career-ops.intel-refresh.plist` copied to `~/Library/LaunchAgents/` + `launchctl load -w`. Verified via `launchctl list | grep intel-refresh` → label registered, exit code 0.
+- `KeepAlive=false` on the plist → no Tahoe `launchctl start` workaround needed.
+- No `--dry-run` flag on `intel-refresh.mjs` (script requires `--row <N>` or `--all`; running with no args exits with usage). Documented in final report.
+- No code commit needed (system-state change only).
+
+**Decision α.2 — polish-loop council cost tracking:** COMPLETE. 4 commits:
+- `60e38f1` — `lib/council.mjs`: Added `MODEL_COST_RATES` table (13 provider:model entries, blended $/1K rates web-verified 2026-05-19), `estimateCostUsd()` export, `writeCostTrace()` + `initCostTrace()` exports, `costUsd` field on every `callCouncil` result, `opts.onCostRecord` callback.
+- `265a431` — `scripts/agents/apply-pack-polish.mjs`: `import { initCostTrace }`, call `initCostTrace('apply-pack-polish', ROOT)`, pass `onCostRecord` through Phase 1 (`harvestPolishSignals`) and Phase 2 (`polishArtifact`).
+- `85345ff` — `lib/polish-signals.mjs`: forward `opts.onCostRecord` + `opts.phase` in the two inner `callCouncil` calls (council + dealbreaker).
+- `528b979` — `lib/polish-loop.mjs`: `costTraceOpts` helper at start of `polishArtifact`, forwarded to all 4 inner `callCouncil` calls (critics, author, adjudicator, adversarial sweep).
+
+Files touched (no conflicts with other personas per coordination matrix):
+- `lib/council.mjs` — ALPHA territory
+- `lib/polish-signals.mjs` — ALPHA territory
+- `lib/polish-loop.mjs` — ALPHA territory
+- `scripts/agents/apply-pack-polish.mjs` — ALPHA territory
+
+**Decision α.3 — full 6-artifact polish on row 044:** IN PROGRESS at time of this coordination entry (~14:54 PT).
+- Run: `node scripts/agents/apply-pack-polish.mjs --row 044 --artifacts cv,cover,form,impact,refs,referrals --target-confidence 0.99 --cost-cap 500`
+- Phase 1 cache HIT (signals fresh from this morning's smoke test)
+- Phase 2 started on cv-tailored (artifact 1 of 6)
+- PID 87920 running in background. Output → `/tmp/polish-044-stdout.json`, progress → `/tmp/polish-044-stderr.log`
+- cv.md confirmed in corpus (`apply-pack-polish.mjs:224`)
+- Findings + cost comparison will land in `data/alpha-polish-cv-scope-comparison-2026-05-19.md`
+
+— α (NEEDS_HUMAN resolution, 14:54 PT)
