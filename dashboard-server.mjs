@@ -387,18 +387,21 @@ const DAILY_CAP_OVERNIGHT      = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD 
 const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD || '2.50');
 // Decomposed agent enrichment costs (surfaced per-stage in the preview modal).
 //
-// γ GAMMA 2026-05-19 truth-audit: calibrated constants below replaced earlier
-// vibes-defaults. Sources cited inline; cost-decomp modal renders provenance.
+// γ GAMMA 2026-05-19 truth-audit (CORRECTED after self-review hallucination):
+// Sources cited inline; cost-decomp modal renders provenance.
 //
-// COST_PER_RESEARCHER_CALL: $11.30 — sum of scripts/hiring-manager-research.mjs
-//   `COST_ESTIMATE` table (Gemini Deep Max $4.80 + OpenAI Pro $2.00 + Grok 4.3
-//   $0.40 + Grok Heavy $0.80 + Sonnet search $0.50 + Opus search $1.50 +
-//   Perplexity Deep $1.00 + Synthesize $0.30). The file's own header reads
-//   "Per-role cost: ~$10-12. 17 roles = ~$170-200 worst case". Prior $4.00
-//   captured only the Gemini Deep portion (1 of 8 providers), 2.8× under-real.
-//   Confidence: HIGH (deterministic sum of vendor-published rates; calibration
-//   refreshed by `scripts/hiring-manager-research.mjs:117-128`).
-const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '11.30');
+// COST_PER_RESEARCHER_CALL: $3.00 — `lib/hm-intel-research.mjs:335` sets
+//   default `budgetUsd = 3` for the /researcher agent invocation per role.
+//   This is the BUDGET CAP, not observed mean; researcher agent self-budgets
+//   under this cap and may come in well below (data/cost-log.tsv N=2 observed
+//   mean = $0.625 for researcher-mixed entries).
+//   PRIOR HALLUCINATION (`$11.30 from scripts/hiring-manager-research.mjs
+//   COST_ESTIMATE`): that file does NOT exist in the codebase. The reference
+//   was generated, not read. Corrected to real $3 budget cap. See
+//   data/agent-hallucination-log.md entry 2026-05-19-γ-runbatch for details.
+//   Confidence: MED (budget cap, not observed mean; observed mean from N=2
+//   logged runs is $0.625 — actual cost likely $0.5-$3 per call).
+const COST_PER_RESEARCHER_CALL   = parseFloat(process.env.COST_PER_RESEARCHER_CALL_USD  || '3.00');
 // COST_PER_DEALBREAKER_CALL: $0.30 — observed mean of N=2 logged runs in
 //   `data/cost-log.tsv` is $0.25 ($0.20 + $0.30). $0.30 kept as a +20% buffer
 //   over observed mean; falls inside the small-N confidence band.
@@ -445,11 +448,13 @@ const COST_CALIBRATION_PROVENANCE = {
   },
   researcher_cost: {
     value: COST_PER_RESEARCHER_CALL,
-    source: 'scripts/hiring-manager-research.mjs:117-128 COST_ESTIMATE sum',
-    confidence: 'HIGH',
-    sample_size: 8,             // 8 providers, each with vendor-published rates
+    source: 'lib/hm-intel-research.mjs:335 budgetUsd default (cost cap, not mean)',
+    confidence: 'MED',
+    sample_size: 2,             // N=2 observed runs in cost-log.tsv (researcher-mixed)
+    observed_mean_usd: 0.625,   // mean of N=2 observed runs ($0.85 + $0.40)
     last_calibrated: '2026-05-19',
-    confidence_band_pct: 20,    // ±20% absolute (provider rates vary by run)
+    confidence_band_pct: 100,   // ±100% — budget cap is upper bound; actual highly variable
+    note: 'budget cap; actual cost likely $0.5-$3 per call. Corrected from hallucinated $11.30.',
   },
   dealbreaker_cost: {
     value: COST_PER_DEALBREAKER_CALL,
