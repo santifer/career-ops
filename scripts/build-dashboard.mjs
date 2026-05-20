@@ -697,7 +697,7 @@ function equityBadge(company) {
       confidence: '', updated: updated || '', empty: true, hint: tip,
       populateCmd: 'node scripts/overpay-signals.mjs',
     });
-    return `<span class="equity-badge equity-badge-empty pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="equity-badge equity-badge-empty pill-popover-trigger" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const meta = EQUITY_STAGE_META[data.stage] || EQUITY_STAGE_META.unknown;
   const tipParts = [data.posture];
@@ -867,7 +867,7 @@ function renderBaseCell(reportPath, floors, locationRaw, company, role) {
     const detail = JSON.stringify({
       kind: 'base', empty: true, raw: compRaw || '', hint: tip,
     });
-    return `<span class="base-chip base-chip-empty pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="base-chip base-chip-empty pill-popover-trigger" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const { min, max, currency, isTotalComp } = parsed;
   let cls = 'base-chip-unknown';
@@ -899,7 +899,7 @@ function renderBaseCell(reportPath, floors, locationRaw, company, role) {
   const researchedBadge = researchedTag
     ? `<sup class="base-researched-badge" title="Researched band (${researchedTag} confidence) — not posted in JD">R</sup>`
     : '';
-  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${htmlEscape(tipWithSource)}" aria-label="${htmlEscape(tipWithSource)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}${researchedBadge}</span>`;
+  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" aria-label="${htmlEscape(tipWithSource)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}${researchedBadge}</span>`;
   const badge = serverColBadge(parsed, locationRaw || '');
   return badge ? `<span class="base-fx-wrap">${chip}${badge}</span>` : chip;
 }
@@ -998,7 +998,7 @@ function renderLocationCell(reportPath, company, role) {
     // BRAVO 2026-05-19 (content sweep): friendlier empty-state copy.
     const emptyTip = 'I couldn\'t find a location in the role report\'s Block A — open the full report for the source line.';
     const detail = JSON.stringify({ kind: 'location', empty: true, raw: '', hint: emptyTip, relocation: reloc });
-    return `<span class="location-chip location-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="location-chip location-chip-empty pill-popover-trigger" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const cls = classifyLocation(rawField, '');
   let icon = '';
@@ -1046,7 +1046,7 @@ function renderBenefitsCell(company, role) {
       hint: emptyTip,
       populateCmd: 'node scripts/enrich-roles.mjs --top=5',
     });
-    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const tox = parseInt(enrich.sentiment?.team_toxicity_grade, 10);
   const toxValid = Number.isFinite(tox) && tox >= 1 && tox <= 5;
@@ -1074,7 +1074,7 @@ function renderBenefitsCell(company, role) {
     biweekly_math: enrich.biweekly_math || null,
     confidence: enrich.confidence || '',
   });
-  return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}</span>`;
+  return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}</span>`;
 }
 
 // People cell: shows recruiter + hiring-manager LinkedIn links. Compact chip
@@ -1101,7 +1101,7 @@ function renderPeopleCell(company, role) {
       hint: emptyTip,
       populateCmd: 'node scripts/enrich-roles.mjs --top=5',
     });
-    return `<span class="people-chip people-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="people-chip people-chip-empty pill-popover-trigger" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const rec = people?.likely_recruiter?.name && people.likely_recruiter.name !== 'unknown' ? '👤' : '';
   const hm  = people?.likely_hiring_manager?.name && people.likely_hiring_manager.name !== 'unknown' ? '👔' : '';
@@ -1124,7 +1124,7 @@ function renderPeopleCell(company, role) {
     network: network || null,
     confidence: enrich?.confidence || '',
   });
-  return `<span class="people-chip pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(labelMark)}</span>`;
+  return `<span class="people-chip pill-popover-trigger" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(labelMark)}</span>`;
 }
 
 // Safe wrapper — returns null if the CSV is absent so the dashboard
@@ -11305,7 +11305,7 @@ async function build() {
   <div class="container">
 
   <header class="toolbar" role="banner">
-    <button class="toolbar-btn sidebar-hamburger" onclick="toggleSidebar()" id="sidebar-hamburger-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false" title="Open navigation">☰</button>
+    <button class="toolbar-btn sidebar-hamburger" onclick="toggleSidebar()" id="sidebar-hamburger-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
     <h1 class="sr-only">Career-Ops Dashboard</h1>
     <div class="toolbar-brand" aria-hidden="true">
       <span class="brand-name">Career-Ops</span>
@@ -11321,7 +11321,7 @@ async function build() {
          so a power user can still flip density via DevTools or a future
          settings-menu toggle without re-doing the styling. -->
 
-    <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options" title="More options">···</button>
+    <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options">···</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
   </header>
 
@@ -28055,8 +28055,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     // would have to be triple-escaped to survive the outer template literal).
     var toolbarHtml = ''
       + '<div class="op-toolbar" data-op-toolbar="1">'
-      +   '<button type="button" class="op-tb-btn op-tb-btn-snooze" data-op-action="snooze" title="Snooze this card" aria-label="Snooze this card">↪ snooze</button>'
-      +   '<button type="button" class="op-tb-btn op-tb-btn-cancel" data-op-action="cancel-strategy" title="Cancel this strategy recommendation" aria-label="Cancel this strategy recommendation">✕</button>'
+      +   '<button type="button" class="op-tb-btn op-tb-btn-snooze" data-op-action="snooze" aria-label="Snooze this card">↪ snooze</button>'
+      +   '<button type="button" class="op-tb-btn op-tb-btn-cancel" data-op-action="cancel-strategy" aria-label="Cancel this strategy recommendation">✕</button>'
       + '</div>'
       + '<div class="op-snooze-pop" data-op-snooze-pop="1" role="dialog" aria-label="Snooze options" hidden>'
       +   '<div class="op-snooze-pop-head">Snooze until</div>'
