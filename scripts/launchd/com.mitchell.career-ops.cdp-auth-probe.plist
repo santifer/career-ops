@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.cdp-auth-probe</string>
+
+    <!-- Periodic health probe for the CDP-attached Chrome that powers the
+         daily Phase B' enrichment cadence. Writes
+         data/cdp-auth-state.json so the morning heartbeat email can render
+         a banner if CDP is down or LinkedIn auth has broken — without doing
+         the slow Playwright handshake itself.
+
+         Probe takes ~3s when healthy, exits 0 regardless. Cadence: every
+         30 minutes — fast enough to alarm before the morning heartbeat at
+         09:30 PT picks up the state file. -->
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/cdp-auth-probe.mjs</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Every 30 minutes — 48 runs/day, ~$0 cost (no LLM calls).
+         Fires on the half-hour for predictability. -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/cdp-auth-probe.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/cdp-auth-probe.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

@@ -33,7 +33,7 @@ import { buildOutreachMailto } from '../lib/mailto-helpers.mjs';
 // 2026-05-17 — inline compute below (mirrors dashboard-server.mjs's
 // computeRecruiterPipelineDensity so heartbeat doesn't depend on the
 // dashboard server being running).
-import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert } from '../lib/heartbeat-system-banner.mjs';
+import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert, renderCdpAuthHealthSection } from '../lib/heartbeat-system-banner.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -651,6 +651,12 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   let systemBannerHtml = '';
   try { systemBannerHtml = renderSystemBanner({ format: 'html' }) || ''; } catch {}
 
+  // CDP-attached Chrome auth-health banner — only renders if CDP is down OR
+  // LinkedIn auth has broken. Self-suppresses when healthy. Reads
+  // data/cdp-auth-state.json written by the 30-min cdp-auth-probe plist.
+  let cdpAuthBannerHtml = '';
+  try { cdpAuthBannerHtml = renderCdpAuthHealthSection({ format: 'html' }) || ''; } catch {}
+
   // Master CV freshness banner (audit Item L 2026-05-18) — surfaces today's
   // master PDF path or a re-render reminder. Renders inline so it stacks with
   // the other system-status signals already in contextSectionsHtml.
@@ -710,8 +716,10 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   }
 
   // Combine §6b context signals into one contextSectionsHtml blob
-  // (runway alert + system banner + discard pattern — all in one mj-text slot)
+  // (cdp-auth banner FIRST — if it renders, it's an alarm that demands action
+  // ahead of normal context; runway alert + system banner + discard pattern follow)
   let contextSectionsHtml = '';
+  if (cdpAuthBannerHtml) contextSectionsHtml += cdpAuthBannerHtml;
   if (runwayAlertHtml) contextSectionsHtml += runwayAlertHtml;
   if (systemBannerHtml) contextSectionsHtml += systemBannerHtml;
   if (cvFreshnessHtml) contextSectionsHtml += cvFreshnessHtml;
