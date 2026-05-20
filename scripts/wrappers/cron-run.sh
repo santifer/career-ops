@@ -33,8 +33,10 @@ ts() { date -u +%FT%TZ; }
 
 # ── Job-runs ledger (P1-6) ─────────────────────────────────────────────────
 # Open a 'running' row up front; close it at every exit path below. Errors
-# silenced so a ledger glitch never breaks the underlying job.
-LEDGER_NODE="${LEDGER_NODE:-/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node}"
+# silenced so a ledger glitch never breaks the underlying job. LEDGER_NODE
+# can be overridden via env; otherwise we resolve `node` from PATH (launchd's
+# plist EnvironmentVariables already injects the nvm bin dir per `man launchd.plist`).
+LEDGER_NODE="${LEDGER_NODE:-$(command -v node || true)}"
 LEDGER_CLI="$REPO/scripts/ledger-cli.mjs"
 RUN_ID=""
 if [[ -x "$LEDGER_NODE" && -f "$LEDGER_CLI" ]]; then

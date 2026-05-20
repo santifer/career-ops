@@ -11,11 +11,18 @@
 
 import { spawnSync } from 'child_process';
 import { existsSync, mkdirSync, openSync, writeSync, closeSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { startRun, finishRun } from '../lib/job-runs-ledger.mjs';
 
-const PROJECT_DIR = '/Users/mitchellwilliams/Documents/career-ops';
-const NODE_BIN = '/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node';
+// Derive locations from this file's path + the running node binary so the
+// script is portable + the test-all.mjs absolute-path check passes without
+// an explicit exclusion. This file lives at <repo>/scripts/, so the repo
+// root is one level up. NODE_BIN matches the binary that launched us.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_DIR = resolve(__dirname, '..');
+const NODE_BIN = process.execPath;
+const NODE_BIN_DIR = dirname(NODE_BIN);
 const LOG_DIR = join(PROJECT_DIR, 'data/logs');
 const DATE = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 const LOG_PATH = join(LOG_DIR, `scrape-${DATE}.log`);
@@ -36,7 +43,7 @@ function run(label, args) {
   const result = spawnSync(NODE_BIN, args, {
     cwd: PROJECT_DIR,
     encoding: 'utf-8',
-    env: { ...process.env, PATH: `/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:${process.env.PATH || ''}` },
+    env: { ...process.env, PATH: `${NODE_BIN_DIR}:${process.env.PATH || ''}` },
   });
   if (result.stdout) log(result.stdout.trimEnd());
   if (result.stderr) log('STDERR: ' + result.stderr.trimEnd());

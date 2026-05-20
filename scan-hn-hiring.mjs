@@ -23,14 +23,18 @@
 //   node scan-hn-hiring.mjs --dry-run # preview without writing
 
 import { readFileSync, appendFileSync, existsSync, mkdirSync, writeSync, openSync, closeSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { startRun, finishRun } from './lib/job-runs-ledger.mjs';
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 
-const PROJECT_DIR = '/Users/mitchellwilliams/Documents/career-ops';
+// Derive project root from this file's location (it lives at the repo root).
+// Avoids hardcoding a user-specific path so the script is portable + the
+// test-all.mjs absolute-path check passes without an explicit exclusion.
+const PROJECT_DIR = dirname(fileURLToPath(import.meta.url));
 const PORTALS_PATH = join(PROJECT_DIR, 'portals.yml');
 const PIPELINE_PATH = join(PROJECT_DIR, 'data/pipeline.md');
 const SCAN_HISTORY_PATH = join(PROJECT_DIR, 'data/scan-history.tsv');

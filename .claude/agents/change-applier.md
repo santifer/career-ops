@@ -18,7 +18,7 @@ Halt immediately if `verification.verdict != APPROVED`. Output `BLOCKED: verific
 
 # Step-by-step execution
 
-All commands run from `/Users/mitchellwilliams/Documents/career-ops`.
+All commands run from the repo root (career-ops).
 
 ## 1. Create feature branch
 

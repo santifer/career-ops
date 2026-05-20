@@ -9,7 +9,11 @@
 
 set -euo pipefail
 
-REPO_ROOT="/Users/mitchellwilliams/Documents/career-ops"
+# Derive REPO_ROOT from this script's location so the wrapper is portable +
+# the test-all.mjs absolute-path check passes without an explicit exclusion.
+# This file lives at <repo>/.claude/scheduler/run-email-review.sh, so the
+# repo root is two levels up.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG_DIR="$REPO_ROOT/.claude/audit/email-review"
 TRACE_LOG="$LOG_DIR/cron.log"
 TS_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
