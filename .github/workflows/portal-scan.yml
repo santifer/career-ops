@@ -1,0 +1,142 @@
+# P1-12 — portal-scan running on GitHub Actions (Linux), parallel to launchd.
+#
+# Why both: the macOS Tahoe launchd silent-skip class (see
+# memory/project_launchd_keepalive_tahoe_bug.md) can quarantine the local job
+# with no error / log / notification. P1-8 (lib/healthchecks-ping.mjs + the
+# launchd-wrapper retry shim) catches retryable failures; this workflow closes
+# the loop by being an EXTERNAL system that notices the absence of an expected
+# event — exactly the failure mode neither launchd nor a local wrapper can
+# detect.
+#
+# CUTOVER policy (per data/p1-12-migration-runbook.md):
+#   Days 0-14   — parallel mode, launchd + GH Actions both fire (dedup is safe)
+#   Day 14+     — bootout launchd if GH Actions has 14 consecutive green runs
+#
+# REQUIRED SECRETS (Settings → Secrets and variables → Actions):
+#   ANTHROPIC_API_KEY       — triage-pipeline uses Claude
+#   GMAIL_USER              — scan-email reads labelled Gmail alerts
+#   GMAIL_APP_PASSWORD      — Gmail app-specific password (not the account password)
+#   TELEGRAM_BOT_TOKEN      — failure alerting
+#   TELEGRAM_CHAT_ID        — Mitchell's chat ID
+#   HEALTHCHECKS_PORTAL_SCAN_PING — (optional) https://hc-ping.com/<uuid>
+#     This is the same env var lib/healthchecks-ping.mjs reads from
+#     ~/.career-ops-secrets when running locally; the workflow forwards it
+#     so the same hc('PORTAL_SCAN') calls inside scan-unattended.mjs work
+#     identically on the runner.
+
+name: portal-scan
+
+on:
+  schedule:
+    # Every 4 hours during business hours PT (UTC-7). 09-21 PT = 16-04 UTC.
+    # Matches the local com.mitchell.career-ops.scrape-frequent cadence so the
+    # two run on the same wall clock (easier to diff outputs during burn-in).
+    - cron: '0 16,20,0,4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: portal-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout career-ops
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Restore scan state cache
+        # State files (scan-history.tsv, pipeline.md, triage-batch.tsv) are
+        # personal data and gitignored. Persist them across runs via the
+        # Actions cache so dedup history survives run-to-run.
+        # CAVEAT: 7-day idle eviction. If scans stop firing for 8+ days, the
+        # dedup history is lost (re-scan duplicates show up once).
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/scan-history.tsv
+            data/pipeline.md
+            data/triage-batch.tsv
+            batch/batch-input.tsv
+          key: portal-scan-state-v1-${{ github.run_id }}
+          restore-keys: |
+            portal-scan-state-v1-
+
+      - name: Synthesize ~/.career-ops-secrets for healthchecks-ping
+        # lib/healthchecks-ping.mjs reads HEALTHCHECKS_*_PING from
+        # ~/.career-ops-secrets (the same file Mitchell uses locally). On the
+        # runner we don't have that file, so we write it from GitHub secrets.
+        # The synth file lives only for the duration of this job and is wiped
+        # when the runner is recycled.
+        if: env.HC_URL != ''
+        env:
+          HC_URL: ${{ secrets.HEALTHCHECKS_PORTAL_SCAN_PING }}
+        run: |
+          echo "HEALTHCHECKS_PORTAL_SCAN_PING=${HC_URL}" > ~/.career-ops-secrets
+          chmod 600 ~/.career-ops-secrets
+
+      - name: Run portal scan
+        env:
+          # scan-unattended.mjs reads these env overrides so the same code
+          # works under macOS launchd AND on a Linux runner. See the P1-12
+          # comment at the top of scripts/scan-unattended.mjs.
+          CAREER_OPS_DIR: ${{ github.workspace }}
+          CAREER_OPS_NODE: /usr/bin/node
+          CAREER_OPS_NODE_BIN_DIR: /usr/bin
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: node scripts/scan-unattended.mjs
+
+      - name: Save scan state cache
+        # Always run, even on partial failure — a partial scan-history.tsv
+        # update is still better than re-scanning the same URLs tomorrow.
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/scan-history.tsv
+            data/pipeline.md
+            data/triage-batch.tsv
+            batch/batch-input.tsv
+          key: portal-scan-state-v1-${{ github.run_id }}
+
+      - name: Upload scan log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-log-${{ github.run_id }}
+          path: data/logs/scan-*.log
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Telegram alert on failure
+        # The Healthchecks /start, /success, /fail pings happen INSIDE
+        # scan-unattended.mjs (it already calls hc('PORTAL_SCAN').start/success/fail
+        # at the right semantic points). This step adds an immediate push to
+        # Mitchell's phone for the specific "GH Actions run failed" case that
+        # Healthchecks's grace-period model would only surface 35+ minutes later.
+        if: failure()
+        env:
+          BOT: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -n "$BOT" ] && [ -n "$CHAT" ]; then
+            curl -fsS --max-time 10 -X POST "https://api.telegram.org/bot${BOT}/sendMessage" \
+              -d "chat_id=${CHAT}" \
+              -d "text=⚠️ portal-scan failed on GH Actions: ${URL}" || true
+          fi
