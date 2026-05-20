@@ -72,3 +72,24 @@ cv:
   # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
+
+# Auto-PDF threshold during evaluation (used by `/career-ops pipeline` and
+# `bash batch/batch-runner.sh`).
+#
+# Generating a tailored CV PDF costs ~30-60s per offer (Playwright launch +
+# HTML render) and most offers in a scan score 2.x/3.x and never become an
+# actual application — so the PDF goes unused. To avoid that waste, the
+# evaluation pipeline only auto-generates a PDF when the offer's score is
+# >= this threshold.
+#
+# Default (key absent OR commented out): 5.1 — effectively disabled, since
+# the maximum possible score is 5.0. Reports are always written; PDFs are
+# only generated when you opt-in.
+#
+# Set this to a real number (e.g. 4.0) to opt in to auto-PDF for offers at
+# or above that score. Fractional thresholds work (e.g. 3.5 — half-point
+# scores like 3.5/5 occur in evaluations). Setting to 0 effectively
+# disables the gate and generates a PDF for every offer (old behavior).
+# Whatever doesn't make the cut can still be produced on demand later
+# via `/career-ops pdf {company-slug}`.
+# auto_pdf_score_threshold: 4.0
