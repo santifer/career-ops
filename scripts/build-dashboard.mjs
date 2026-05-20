@@ -21736,9 +21736,29 @@ function _advanceProcessAllToConfirm() {
   const selected = availableRows.filter(c => _pipelineSelectedSlugs.has(c.slug));
   // 2026-05-19 (Mitchell feedback): full-drain vs partial-scope on Phase B.
   const isFullDrain = selected.length === availableRows.length && availableRows.length > 0;
-  const fullDrainCost = (_pipelinePreview.process_all && _pipelinePreview.process_all.total_cost_usd) || 0;
+  // 2026-05-20 — Honor the tier selection from Phase A. Previously Phase B
+  // read process_all.total_cost_usd (the legacy bundled estimate, ~$285)
+  // regardless of which tier the user picked — so selecting Tier 3
+  // ($369.81) silently fell back to $285.20 on confirm. The selected tier's
+  // total IS the contract. Fall back to the legacy total only when no tier
+  // estimates are available.
+  const selectedTierId = (typeof window._pcpGetSelectedTier === 'function')
+    ? window._pcpGetSelectedTier()
+    : '1';
+  const tierEst = _pipelinePreview.process_all && _pipelinePreview.process_all.tier_estimates;
+  const tierTotal = (tierEst && tierEst[selectedTierId])
+    ? tierEst[selectedTierId].total_cost_usd
+    : null;
+  const tierName = (tierEst && tierEst[selectedTierId])
+    ? tierEst[selectedTierId].name
+    : null;
+  const fullDrainCost = tierTotal != null
+    ? tierTotal
+    : ((_pipelinePreview.process_all && _pipelinePreview.process_all.total_cost_usd) || 0);
   const triageCount = (_pipelinePreview.process_all && _pipelinePreview.process_all.triage_count) || 0;
   const perRowSum = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  // For partial scope (user unchecked rows), still use the per-row sum
+  // since the tier estimator is full-pipeline. Full drain = tier total.
   const scopedCost = isFullDrain ? fullDrainCost : perRowSum;
   // OMEGA-proposal-2: scoped detection sum for Phase B confirm.
   const scopedDetection = selected.reduce((s, c) => s + (c.ai_detection_potential_usd || 0), 0);
@@ -21783,14 +21803,20 @@ function _advanceProcessAllToConfirm() {
       + (queuedCount > 0 ? ' <span style="font-size:11px;opacity:0.55;font-weight:400">(' + pendingCount + ' + ' + queuedCount + ' queued)</span>' : '')
       + ' + ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies')
     : 'Scoped run (' + selected.length + ' of ' + availableRows.length + ' companies)';
+  // 2026-05-20 — Tier label appended to headline when tier picker is active,
+  // so the user sees exactly which tier they confirmed (Standard / Premium
+  // Triage / Premium Eval) — the cost number alone wasn't enough signal.
+  const tierBadge = (isFullDrain && tierName)
+    ? ' <span style="font-size:11px;padding:2px 8px;background:rgba(59,130,246,.12);color:var(--blue-fg,#2563eb);border-radius:3px;font-weight:500;margin-left:4px">Tier ' + selectedTierId + ' · ' + _esc(tierName) + '</span>'
+    : '';
   body.innerHTML = ''
     + '<div class="pipeline-modal-section">'
-    +   '<div class="pcp-phase-pill" data-phase="confirm">'
-    +     '<button type="button" class="pcp-back-link" onclick="_returnToPhaseA()" aria-label="Back to per-company plan">← Back</button>'
-    +     'Step 2 of 2 — confirm'
+    +   '<div class="pcp-phase-pill" data-phase="confirm" style="display:flex;align-items:center;gap:8px">'
+    +     '<button type="button" class="pcp-back-link pcp-back-link-prominent" onclick="_returnToPhaseA()" aria-label="Back to per-company plan + tier picker" style="background:var(--surface-2);border:1px solid var(--border);padding:5px 10px;border-radius:4px;font-size:11.5px;cursor:pointer;color:var(--text-2)">← Back to tier picker</button>'
+    +     '<span>Step 2 of 2 — confirm</span>'
     +   '</div>'
     +   '<div class="pipeline-stat-grid">'
-    +     '<span class="pipeline-stat-label">' + headlineLabel + '</span>'
+    +     '<span class="pipeline-stat-label">' + headlineLabel + tierBadge + '</span>'
     +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + scopedCost.toFixed(2) + '</span>'
     +   '</div>'
     +   detectionSubLine
