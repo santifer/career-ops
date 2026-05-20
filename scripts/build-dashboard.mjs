@@ -11859,7 +11859,7 @@ async function build() {
     <h2 class="panel-title collapsible" onclick="togglePanel('builder-evolution-section',event)">
       🛠 Builder Evolution
       <button type="button" class="pill be-commits-pill" data-be-stat="commits"
-        onclick="event.stopPropagation()"
+        onclick="event.stopPropagation();openBeStatModal('commits')"
         aria-label="Open commit history drawer: last ${builderCommits.length} commits in the rolling window"
         aria-haspopup="dialog" aria-controls="be-stat-modal">${L.commits} · ${L.streak}d</button>
       <span class="panel-chevron">▾</span>
