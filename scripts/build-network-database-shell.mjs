@@ -72,6 +72,9 @@ body { display: block; }
 @media (max-width: 720px) {
   .netdb-page-wrap { grid-template-columns: 1fr; }
   .netdb-content { padding-top: 60px; }
+  /* Network DB hand-written header sits inside .netdb-content; pad left to
+     clear the fixed hamburger button (38px button + 12px left offset). */
+  .netdb-content > header { padding-left: 62px; }
 }
 header { background: var(--surface); }
 ${shellCSS}

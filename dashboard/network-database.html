@@ -91,7 +91,6 @@
 
 <!-- BRAVO 2026-05-19: shared dashboard shell injection -->
 <style>
-/* Wrap the page in a sidebar grid so the table content sits beside the sidebar */
 :root {
   --sidebar-w: 200px;
   --sidebar-w-collapsed: 56px;
@@ -99,18 +98,12 @@
   --radius-full: 9999px;
   --focus-ring: 0 0 0 3px var(--blue-bg);
   --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
-  /* The shell sidebar's :focus-visible token */
-  --green-fg: var(--green-fg);
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --border-strong: #353a52;
-  }
+  :root { --border-strong: #353a52; }
 }
 @media (prefers-color-scheme: light) {
-  :root {
-    --border-strong: #cbd5e1;
-  }
+  :root { --border-strong: #cbd5e1; }
 }
 body { display: block; }
 .netdb-page-wrap {
@@ -128,8 +121,10 @@ body { display: block; }
 @media (max-width: 720px) {
   .netdb-page-wrap { grid-template-columns: 1fr; }
   .netdb-content { padding-top: 60px; }
+  /* Network DB hand-written header sits inside .netdb-content; pad left to
+     clear the fixed hamburger button (38px button + 12px left offset). */
+  .netdb-content > header { padding-left: 62px; }
 }
-/* Override header background so it sits flush against the sidebar */
 header { background: var(--surface); }
 
 /* ── Dashboard shell — shared across all pages ──────────────────────── */
