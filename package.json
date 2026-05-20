@@ -61,6 +61,7 @@
   "dependencies": {
     "@google/genai": "^2.3.0",
     "@google/generative-ai": "^0.24.1",
+    "better-sqlite3": "^12.10.0",
     "dotenv": "^17.0.0",
     "googleapis": "^171.4.0",
     "js-yaml": "^4.1.1",

@@ -47,6 +47,23 @@ import {
 // honest fresh-vs-stale counts.
 import { findContactsAtCompany as networkFindContactsAtCompany } from './lib/network-graph.mjs';
 import { guessCompany as _guessCompanyFromUrl } from './lib/ats-utils.mjs';
+// P1-6 / P1-5 — SQLite job-run ledger + scraper health widget
+import { initSchema as _ledgerInitSchema, lastFinishedRun, recentRuns } from './lib/job-runs-ledger.mjs';
+
+// Registry of tracked scraper/scheduler jobs with expected cadence.
+// Add new jobs here; the /api/job-runs-status endpoint reads this list.
+const TRACKED_JOBS = [
+  { name: 'portal-scan',       expected_cadence_minutes: 1440 },
+  { name: 'scrape-frequent',   expected_cadence_minutes: 240  },
+  { name: 'liveness-sweep',    expected_cadence_minutes: 1440 },
+  { name: 'scan-hn-hiring',    expected_cadence_minutes: 1440 },
+  { name: 'heartbeat',         expected_cadence_minutes: 1440 },
+  { name: 'heartbeat-evening', expected_cadence_minutes: 1440 },
+];
+
+// Initialise the SQLite schema eagerly so the DB exists even before any job
+// has run (the dashboard widget renders 'unknown' for all jobs initially).
+try { _ledgerInitSchema(); } catch (_) {}
 
 // ── Application enrichment for outreach API ────────────────────────────────
 // Join contact.linked_application_id → applications.md row so the dashboard
@@ -5314,6 +5331,67 @@ const server = createServer((req, res) => {
       }
     })();
     return;
+  }
+
+  // ── GET /api/job-runs-status ─────────────────────────────────────────
+  // P1-5 scraper health widget data source.
+  // Returns one entry per TRACKED_JOBS job with state derivation:
+  //   green   — last_status='ok', finished within 1.0× cadence, urls_found > 0
+  //   yellow  — past 1.0× cadence but not yet 2.0×
+  //   red     — past 2.0× cadence
+  //   purple  — last_status='ok' but urls_found == 0
+  //   skipped — last_status='skipped'
+  //   unknown — no ledger entries yet
+  if (url === '/api/job-runs-status') {
+    try {
+      const nowMs = Date.now();
+      const jobs = TRACKED_JOBS.map(({ name, expected_cadence_minutes }) => {
+        const last = lastFinishedRun(name);
+        if (!last) {
+          return { name, expected_cadence_minutes, last_finished_at: null, last_status: null, last_urls_found: null, state: 'unknown' };
+        }
+        const cadenceMs = expected_cadence_minutes * 60 * 1000;
+        const finishedMs = last.finished_at ? new Date(last.finished_at).getTime() : 0;
+        const ageMs = nowMs - finishedMs;
+        let state;
+        if (last.status === 'skipped') {
+          state = 'skipped';
+        } else if (last.status === 'ok' && (last.urls_found ?? 0) === 0) {
+          state = 'purple';
+        } else if (last.status === 'ok' && ageMs <= cadenceMs) {
+          state = 'green';
+        } else if (ageMs <= cadenceMs * 2) {
+          state = 'yellow';
+        } else {
+          state = 'red';
+        }
+        return {
+          name,
+          expected_cadence_minutes,
+          last_finished_at: last.finished_at || null,
+          last_status: last.status,
+          last_urls_found: last.urls_found ?? null,
+          state,
+        };
+      });
+      return json({ jobs });
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
+  }
+
+  // ── GET /api/job-runs-history?job=<name>&limit=<n> ───────────────────
+  // Returns the last N runs for a single job (used by the widget's detail modal).
+  if (url === '/api/job-runs-history') {
+    try {
+      const jobName = String(query.job || '').trim();
+      const limit = Math.min(parseInt(query.limit || '10', 10) || 10, 100);
+      if (!jobName) return json({ ok: false, error: 'job param required' }, 400);
+      const rows = recentRuns(jobName, limit);
+      return json({ ok: true, job: jobName, rows });
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
   }
 
   // ── GET /api/hang-watchdog/status ────────────────────────────────────

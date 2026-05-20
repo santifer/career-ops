@@ -36,6 +36,7 @@ import { readCached, poolMap } from './lib/fetch-utils.mjs';
 import { guessCompany, buildCompanyMatcher } from './lib/ats-utils.mjs';
 import { checkUrl } from './lib/http-liveness.mjs';
 import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
+import { scoreZombie } from './lib/zombie-scorer.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -73,12 +74,13 @@ const LIVENESS_TIMEOUT_MS = 10_000;
 const USE_SONNET_JD  = ARGS['use-sonnet-jd'] === true || ARGS['use-sonnet-jd'] === 'true';
 
 // ── Paths ───────────────────────────────────────────────────────
-const PIPELINE_FILE   = join(ROOT, 'data/pipeline.md');
-const QUOTA_FILE      = join(ROOT, 'batch/daily-quota.json');
-const ADVANCE_FILE    = join(ROOT, 'batch/triage-advance.tsv');
-const SKIPS_TSV       = join(ROOT, 'batch/tracker-additions/triage-skips.tsv');
-const TRIAGE_PROMPT   = join(ROOT, 'batch/triage-prompt.md');
-const URL_CACHE_FILE  = join(ROOT, 'data/triage-cache.tsv');
+const PIPELINE_FILE        = join(ROOT, 'data/pipeline.md');
+const QUOTA_FILE           = join(ROOT, 'batch/daily-quota.json');
+const ADVANCE_FILE         = join(ROOT, 'batch/triage-advance.tsv');
+const SKIPS_TSV            = join(ROOT, 'batch/tracker-additions/triage-skips.tsv');
+const TRIAGE_PROMPT        = join(ROOT, 'batch/triage-prompt.md');
+const URL_CACHE_FILE       = join(ROOT, 'data/triage-cache.tsv');
+const ZOMBIE_DECISIONS_FILE = join(ROOT, 'data/zombie-decisions.tsv');
 const URL_CACHE_TTL_DAYS = 7;   // re-triage after 7 days
 
 // ── Persistent URL dedup cache ───────────────────────────────────
@@ -146,6 +148,45 @@ function getUrlAgeDays(url) {
 }
 
 loadScanHistory();
+
+// ── Zombie scorer integration ────────────────────────────────────
+// _zombieHistory is built once per triage run from scan-history.tsv so the
+// cluster scorer can detect multi-region duplicate postings without an extra
+// file read inside the hot path. Built lazily in buildZombieHistory().
+let _zombieHistory = null;
+
+function buildZombieHistory() {
+  if (_zombieHistory) return _zombieHistory;
+  const rows = [];
+  if (existsSync(SCAN_HISTORY_FILE)) {
+    for (const line of readFileSync(SCAN_HISTORY_FILE, 'utf8').split('\n').slice(1)) {
+      if (!line.trim()) continue;
+      const parts = line.split('\t');
+      // scan-history.tsv schema: url, first_seen, portal, title, company, status
+      const [url, , , title, company] = parts;
+      if (url?.trim()) rows.push({ url: url.trim(), title: title?.trim() || '', company: company?.trim() || '', location: '' });
+    }
+  }
+  _zombieHistory = rows;
+  return rows;
+}
+
+function logZombieDecision(url, result, ageDays, clusterN) {
+  if (DRY_RUN) return;
+  const header = !existsSync(ZOMBIE_DECISIONS_FILE)
+    ? 'timestamp\turl\tcomposite\tdecision\tage_d\tcluster_n\tevergreen_hit\n'
+    : '';
+  const line = [
+    new Date().toISOString(),
+    url,
+    result.composite.toFixed(4),
+    result.decision,
+    ageDays ?? '',
+    clusterN,
+    result.breakdown.evergreen,
+  ].join('\t') + '\n';
+  try { appendFileSync(ZOMBIE_DECISIONS_FILE, header + line); } catch {}
+}
 
 // ── Daily quota ─────────────────────────────────────────────────
 function getQuota() {
@@ -603,6 +644,39 @@ async function main() {
       }
 
       if (LIVENESS_ONLY) { processed++; continue; }
+
+      // ── Phase 0.5: Zombie gate (free — no LLM tokens) ────────────────
+      // Runs BEFORE the Haiku quick-score so zombie postings never reach
+      // the LLM eval path. scoreZombie is synchronous and O(history) only.
+      {
+        const ageDays = getUrlAgeDays(url);
+        const zombieHistory = buildZombieHistory();
+        const jdRow = { url, title: '', company: guessCompany(url), location: '', body: body || '', ageDays };
+        const zr = scoreZombie(jdRow, zombieHistory);
+        // Compute cluster_n for the decision log (cluster.locations count is
+        // internal to scorer — proxy by checking score)
+        const clusterN = zr.breakdown.cluster === 1.0 ? '≥4' : '<4';
+        logZombieDecision(url, zr, ageDays, clusterN);
+
+        if (zr.decision === 'skip') {
+          console.log(`🧟 ${zr.reason} → ZOMBIE SKIP`);
+          markChecked(url);
+          writeSkip(url, zr.reason);
+          skipped++;
+          quota.skipped++;
+          quota.triaged++;
+          processed++;
+          saveQuota(quota);
+          continue;
+        }
+
+        if (zr.decision === 'cheap-eval') {
+          // Force Haiku for borderline postings even in Tier-5 (Sonnet) mode.
+          // cheap-eval acknowledges the posting may be stale — Sonnet-level
+          // reasoning is wasted here. The 3-band design is the safety net.
+          process.stdout.write(`🔶 cheap-eval (${zr.composite.toFixed(2)})… `);
+        }
+      }
 
       // ── Phase 1: Quick-score (routed: local → anthropic → gemini) ──
       const threshold = ADVANCE_THRESHOLDS[tier] ?? ADVANCE_THRESHOLDS[2];
