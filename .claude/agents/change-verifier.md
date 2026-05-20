@@ -17,7 +17,7 @@ Derive `slug` from the patch filename (strip `.patch`).
 
 # Verification sequence — halt on first failure
 
-Run all Bash commands from `/Users/mitchellwilliams/Documents/career-ops`.
+Run all Bash commands from the repo root (career-ops).
 
 ## Setup (before checks)
 

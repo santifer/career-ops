@@ -15,7 +15,8 @@ test('gamma-truth-audit plist does not pin a versioned nvm node path', () => {
     'scripts/launchd/com.mitchell.career-ops.gamma-truth-audit.plist',
     'utf8'
   );
-  // Catches /Users/<anyone>/.nvm/versions/node/vX.Y.Z/bin/node
+  // Catches a versioned nvm node binary in the path string
+  // (e.g. `.nvm/versions/node/vX.Y.Z/bin/node`)
   const pinned = /\.nvm\/versions\/node\/v\d+\.\d+\.\d+\/bin\/node/;
   assert.ok(
     !pinned.test(plist),

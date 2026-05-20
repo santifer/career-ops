@@ -30,8 +30,7 @@
  * Integration notes for humans applying the rewrites (--write + manual launchctl):
  *   For each rewritten plist, reload into launchd:
  *     launchctl bootout gui/$(id -u)/com.mitchell.career-ops.<name> 2>/dev/null || true
- *     launchctl bootstrap gui/$(id -u) \
- *       /Users/mitchellwilliams/Documents/career-ops/scripts/launchd/<plist>
+ *     launchctl bootstrap gui/$(id -u) <repo>/scripts/launchd/<plist>
  *
  * Plists NOT rewritten by this script (they need special handling):
  *   - cloudflared*.plist   — these are persistent daemons (KeepAlive=true), not
@@ -183,7 +182,7 @@ function renderDiff(plistFile, oldItems, newItems) {
  * this script — consistent with how most plists already reference node.
  */
 function buildNewArgs(label, originalArgs) {
-  const nodeBin = process.execPath; // e.g. /Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node
+  const nodeBin = process.execPath; // path of the running node binary
   return [
     nodeBin,
     WRAPPER_PATH,
@@ -329,8 +328,12 @@ function main() {
   if (writeMode && diffedCount > 0) {
     console.log(`\nAll ${diffedCount} plists rewritten. Run the launchctl commands above for each.`);
     console.log('\nOr reload all at once (bash loop):');
+    // Render the bash loop using PLIST_DIR (derived above from this script's
+    // location) so the printed instructions are accurate on any host, not
+    // hardcoded to Mitchell's machine. Splice the literal value in so users
+    // can paste verbatim.
     console.log(
-      '  for plist in /Users/mitchellwilliams/Documents/career-ops/scripts/launchd/*.plist; do\n' +
+      `  for plist in ${PLIST_DIR}/*.plist; do\n` +
       '    label=$(plutil -extract Label raw "$plist" 2>/dev/null)\n' +
       '    [ -n "$label" ] && launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true\n' +
       '    launchctl bootstrap "gui/$(id -u)" "$plist"\n' +
