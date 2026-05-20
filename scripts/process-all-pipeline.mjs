@@ -157,41 +157,84 @@ async function phaseTriage() {
   if (DRY_RUN) { log('(dry-run) skipping triage'); return { ok: true, advanced: 0 }; }
   // 2026-05-20 — Process All is gated by an explicit cost-confirmation
   // modal (Run Batch $25 / Process All $250 / Monthly $500). That user
-  // consent IS the throughput governor; a hidden `--daily-limit=300`
-  // floor under it broke the contract — the cost preview promised "drain
-  // the pipeline" but the cap silently truncated to 300/run. Removed.
+  // consent IS the throughput governor; hidden caps below it break the
+  // contract — the cost preview promises "drain the pipeline" but the
+  // caps silently truncate.
   //
-  // Mitchell can still cap via:
-  //   - PROCESS_ALL_TRIAGE_LIMIT env var (e.g., 500), OR
-  //   - triage_daily_limit in data/dashboard-settings.json (default: none),
-  //     intended for the scheduled-launchd path, not Process All.
+  // triage.mjs has TWO caps:
+  //   --limit=N         per-session (default 50, the binding constraint)
+  //   --daily-limit=N   cumulative daily (default 200)
   //
-  // Standalone `node scripts/triage.mjs --daily-limit=N` still works for
-  // ad-hoc capped runs outside Process All.
+  // The original bug only overrode --daily-limit=300, leaving --limit at
+  // its 50 default → each Process All run processed at most 50 URLs
+  // regardless of confirmed cost. Now we override BOTH to effectively-
+  // unlimited values (high enough to drain any realistic queue), letting
+  // the modal's confirmed spend be the only governor.
+  //
+  // Mitchell can re-impose caps via:
+  //   - PROCESS_ALL_TRIAGE_LIMIT env var (sets both --limit and
+  //     --daily-limit to the same value), OR
+  //   - triage_daily_limit in data/dashboard-settings.json (only used
+  //     by the scheduled-launchd path, not Process All).
+  //
+  // Standalone `node triage.mjs --limit=N --daily-limit=M` still works
+  // for ad-hoc capped runs outside Process All.
   const triageArgs = [...SCOPED_ARGS];
   const envCap = process.env.PROCESS_ALL_TRIAGE_LIMIT;
-  if (envCap && /^\d+$/.test(envCap)) {
-    triageArgs.push(`--daily-limit=${envCap}`);
-    log(`  cap: --daily-limit=${envCap} (from PROCESS_ALL_TRIAGE_LIMIT env)`);
-  } else {
-    log('  cap: NONE — draining the full pipeline (per cost-confirmation contract)');
-  }
+  const cap = envCap && /^\d+$/.test(envCap) ? parseInt(envCap, 10) : 100000;
+  triageArgs.push(`--limit=${cap}`);
+  triageArgs.push(`--daily-limit=${cap}`);
+  log(envCap
+    ? `  cap: --limit=${cap} --daily-limit=${cap} (from PROCESS_ALL_TRIAGE_LIMIT env)`
+    : `  cap: --limit=${cap} --daily-limit=${cap} (effectively unlimited — per cost-confirmation contract)`);
   if (IS_TIER5) triageArgs.push('--use-sonnet-jd');
+
+  // 2026-05-20 — Per-run telemetry. Capture pipeline size BEFORE triage so we
+  // can detect cap-hits in post (if processed < pipeline_size_before AND cap
+  // < pipeline_size_before, the cap bound the throughput). Surfaced via
+  // pipeline-process-state.json + the dashboard Batch Status modal.
+  let pipelineBefore = 0;
+  try {
+    const pipeText = readFileSync(join(ROOT, 'data/pipeline.md'), 'utf-8');
+    pipelineBefore = (pipeText.match(/^- \[ \] https?:\/\//gm) || []).length;
+  } catch {}
+  updateJob({ triage_pipeline_before: pipelineBefore, triage_cap: cap });
+
   const code = await runScript('triage.mjs', triageArgs);
-  // Parse triage's output for advanced count (best-effort)
-  let advanced = 0;
+  // Parse triage's output for advanced + skipped + dead counts.
+  let advanced = 0, skipped = 0, dead = 0;
   try {
     const logText = readFileSync(LOG_PATH, 'utf-8');
-    const m = logText.match(/Advanced:\s+(\d+)/);
-    if (m) advanced = parseInt(m[1], 10);
+    const mA = logText.match(/Advanced:\s+(\d+)/);     if (mA) advanced = parseInt(mA[1], 10);
+    const mS = logText.match(/Skipped:\s+(\d+)/);      if (mS) skipped  = parseInt(mS[1], 10);
+    const mD = logText.match(/Dead:\s+(\d+)/);         if (mD) dead     = parseInt(mD[1], 10);
   } catch {}
   if (code !== 0) {
     log(`✗ triage failed (exit ${code})`);
     return { ok: false, advanced };
   }
-  log(`✓ triage complete — ${advanced} advanced to batch queue`);
-  updateJob({ triage_advanced: advanced });
-  return { ok: true, advanced };
+  // Cap-hit detection: triage processed (advanced + skipped + dead) URLs;
+  // if that equals the cap AND pipeline still has un-touched rows, the cap
+  // was the binding constraint.
+  const processed = advanced + skipped + dead;
+  let pipelineAfter = 0;
+  try {
+    const pipeText = readFileSync(join(ROOT, 'data/pipeline.md'), 'utf-8');
+    pipelineAfter = (pipeText.match(/^- \[ \] https?:\/\//gm) || []).length;
+  } catch {}
+  const capHit = processed >= cap && pipelineAfter > 0;
+  const missed = capHit ? pipelineAfter : 0;
+  log(`✓ triage complete — pipeline ${pipelineBefore} → ${pipelineAfter} · processed ${processed} (advanced=${advanced} skipped=${skipped} dead=${dead}) · cap=${cap}${capHit ? ` · ⚠ CAP HIT — ${missed} URL(s) missed this run` : ''}`);
+  updateJob({
+    triage_advanced: advanced,
+    triage_skipped:  skipped,
+    triage_dead:     dead,
+    triage_processed: processed,
+    triage_pipeline_after: pipelineAfter,
+    triage_cap_hit:  capHit,
+    triage_missed_this_run: missed,
+  });
+  return { ok: true, advanced, skipped, dead, processed, cap_hit: capHit, missed };
 }
 
 // 2026-05-19 cohesion fix (Mitchell postmortem) — count rows in the
