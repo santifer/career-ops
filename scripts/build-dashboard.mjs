@@ -6401,9 +6401,147 @@ async function build() {
     border-radius: var(--radius);
     padding: 10px 12px;
   }
+  /* 2026-05-19 BRAVO — clickable stat-tile chips. Reset button defaults, add
+     hover/focus affordances, keep visual parity with the original tiles. */
+  button.be-stat-tile-clickable {
+    font: inherit; color: inherit; text-align: left;
+    width: 100%; cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .12s ease;
+  }
+  button.be-stat-tile-clickable:hover {
+    border-color: var(--green-fg);
+    background: var(--surface);
+  }
+  button.be-stat-tile-clickable:focus-visible {
+    outline: none;
+    border-color: var(--green-fg);
+    box-shadow: 0 0 0 2px rgba(22,163,74,.25);
+  }
+  button.be-stat-tile-clickable:active { transform: translateY(1px); }
   .be-stat-label { font-size: 11px; opacity: 0.7; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
-  .be-stat-value { font-size: 22px; font-weight: 700; line-height: 1; }
+  .be-stat-value { font-size: 22px; font-weight: 700; line-height: 1; display: flex; align-items: baseline; gap: 6px; }
   .be-stat-cumulative { font-size: 11px; opacity: 0.55; font-weight: 400; margin-left: 6px; }
+  .be-stat-chevron {
+    font-size: 14px; font-weight: 500; opacity: 0; color: var(--text-3);
+    margin-left: auto; transition: opacity .15s ease, transform .15s ease;
+    transform: translateX(-4px);
+  }
+  button.be-stat-tile-clickable:hover .be-stat-chevron,
+  button.be-stat-tile-clickable:focus-visible .be-stat-chevron {
+    opacity: 0.85; transform: translateX(0);
+  }
+  .be-stat-hint {
+    font-size: 10.5px; opacity: 0.55; margin-top: 6px;
+    letter-spacing: 0.02em; font-weight: 400;
+  }
+  .be-subtitle-hint { opacity: 0.7; font-style: italic; }
+
+  /* Builder-evolution stat detail modal (BRAVO 2026-05-19).
+     Pattern lifted from #tier-legend-backdrop — same z-index (2000), shape,
+     animation, dismiss behavior (backdrop click + ESC). One shared modal,
+     content swaps based on which chip fired the open. */
+  #be-stat-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px);
+  }
+  #be-stat-backdrop.visible { display: block; }
+  #be-stat-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(680px, 96vw); max-height: 84vh; overflow-y: auto; z-index: 2001;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+  .be-stat-modal-header {
+    position: sticky; top: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border); padding: 14px 20px;
+    display: flex; align-items: flex-start; gap: 12px; z-index: 1;
+    border-radius: 12px 12px 0 0;
+  }
+  .be-stat-modal-title-wrap { flex: 1; min-width: 0; }
+  .be-stat-modal-title {
+    font-size: 15px; font-weight: 600; color: var(--text); margin: 0;
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  }
+  .be-stat-modal-headline {
+    font-size: 22px; font-weight: 700; color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .be-stat-modal-subhead {
+    font-size: 12px; color: var(--text-3); margin: 4px 0 0;
+    line-height: 1.45;
+  }
+  .be-stat-modal-body { padding: 16px 20px; }
+  .be-stat-modal-section { margin-bottom: 14px; }
+  .be-stat-modal-section:last-child { margin-bottom: 0; }
+  .be-stat-modal-section-label {
+    font-size: 11px; font-weight: 600; opacity: 0.75;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+  .be-stat-modal-list {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; gap: 6px;
+  }
+  .be-stat-modal-item {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 10px; padding: 8px 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .be-stat-modal-item-name {
+    font-weight: 600; color: var(--text);
+    word-break: break-word; min-width: 0;
+  }
+  .be-stat-modal-item-evidence {
+    font-size: 11.5px; color: var(--text-2);
+    margin-top: 4px; font-weight: 400;
+    grid-column: 1 / -1;
+  }
+  .be-stat-modal-item-count {
+    font-size: 12px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    align-self: start; white-space: nowrap;
+  }
+  .be-stat-modal-item-tier-a {
+    border-color: rgba(22,163,74,.45);
+    background: rgba(22,163,74,.08);
+  }
+  .be-stat-modal-item-gap {
+    border-color: rgba(245,158,11,.45);
+    background: rgba(245,158,11,.08);
+  }
+  .be-stat-modal-item-gap .be-stat-modal-item-count {
+    color: var(--amber-fg, #b45309);
+    font-weight: 600;
+  }
+  .be-stat-modal-footer {
+    border-top: 1px dashed var(--border);
+    padding: 10px 20px 14px;
+    font-size: 11px; opacity: 0.75;
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .be-stat-modal-footer code {
+    background: var(--surface-2); padding: 1px 5px;
+    border-radius: 3px; font-size: 10px;
+  }
+  .be-stat-modal-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; line-height: 1; color: var(--text-3);
+    padding: 4px 8px; border-radius: 4px;
+    transition: background .12s, color .12s;
+  }
+  .be-stat-modal-close:hover,
+  .be-stat-modal-close:focus-visible {
+    background: var(--surface-2); color: var(--text); outline: none;
+  }
+  @media (max-width: 720px) {
+    #be-stat-modal { width: 96vw; max-height: 88vh; }
+    .be-stat-modal-header { padding: 12px 16px; }
+    .be-stat-modal-body { padding: 14px 16px; }
+    .be-stat-modal-footer { padding: 10px 16px 14px; }
+  }
+
   .be-section { margin: 10px 0; }
   .be-section-label { font-size: 11px; opacity: 0.7; letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 6px; }
   .be-tags { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -11244,6 +11382,26 @@ async function build() {
     </div>
   </div>
 
+  <!-- Builder-evolution stat detail modal (BRAVO 2026-05-19).
+       Shared modal, content rendered by openBeStatModal(key) from a data
+       payload serialized inline below. Dismiss: backdrop click, ✕, ESC. -->
+  <div id="be-stat-backdrop" onclick="closeBeStatModal()" role="dialog" aria-modal="true" aria-labelledby="be-stat-modal-title" aria-hidden="true">
+    <div id="be-stat-modal" onclick="event.stopPropagation()">
+      <div class="be-stat-modal-header">
+        <div class="be-stat-modal-title-wrap">
+          <h3 class="be-stat-modal-title" id="be-stat-modal-title">
+            <span id="be-stat-modal-label"></span>
+            <span class="be-stat-modal-headline" id="be-stat-modal-headline"></span>
+          </h3>
+          <p class="be-stat-modal-subhead" id="be-stat-modal-subhead"></p>
+        </div>
+        <button type="button" class="be-stat-modal-close" onclick="closeBeStatModal()" aria-label="Close (Esc)">✕</button>
+      </div>
+      <div class="be-stat-modal-body" id="be-stat-modal-body"></div>
+      <div class="be-stat-modal-footer" id="be-stat-modal-footer"></div>
+    </div>
+  </div>
+
   <!-- Toast container -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
   <!-- D2 Wave G1: Kebab popup menu (shared singleton, repositioned on open) -->
@@ -11608,13 +11766,19 @@ async function build() {
           .filter(([_, v]) => v.tier === 'A' && v.demonstrated === 'no')
           .map(([k]) => k).join(', ')
       : '';
-    const apiTileTitle  = tApi
-      ? `Target API stack for AI PgM / FDE / Solutions Architect roles (council research + dealbreaker, 2026-05-19). ${tA_demo}/${tA_total} Tier-A gating items demonstrated · ${tAll_demo}/${tAll_total} total stack (+${tAll_partial} partial). Tier-A gaps: ${tierAGaps || 'none'}. 30-day closure plan in data/builder-target-apis.json.`
-      : 'Distinct APIs / SDKs / services touched in this window vs cumulative';
+    // 2026-05-19 BRAVO redesign — collapse sub-text out of chips into a click-triggered
+    // shared drawer. Primary big-number stays on each chip; secondary breakdown moves
+    // to be-stat-modal (one shared dialog, content swaps by chip key).
+    //
+    // Each chip is a focusable button (tabindex=0, role=button), Enter/Space and click
+    // open the drawer, Esc + backdrop-click close it. Drawer pattern matches
+    // #tier-legend-backdrop / #equity-legend-backdrop (z-index 2000, below the
+    // batch-running toast at z-index 3000).
+    const apiPrimary    = tApi ? tA_demo : (L.top_apis || []).length;
     const apiTileLabel  = tApi ? 'APIs / tools · Tier-A gating' : 'APIs / tools';
-    const apiTileValue  = tApi
-      ? `${tA_demo}<span class="be-stat-cumulative"> / ${tA_total} · ${tAll_demo}/${tAll_total} stack</span>`
-      : `${(L.top_apis || []).length}<span class="be-stat-cumulative"> / ${apiCount} all-time</span>`;
+    const apiHint       = tApi ? `${tA_total} Tier-A · ${tAll_total} stack` : `${apiCount} all-time`;
+    const skillsPrimary = (L.top_skills || []).length;
+    const bugsPrimary   = (L.top_bug_classes || []).length;
     return `
   <div class="panel panel-strong" id="builder-evolution-section">
     <h2 class="panel-title collapsible" onclick="togglePanel('builder-evolution-section',event)">
@@ -11622,25 +11786,29 @@ async function build() {
       <span class="pill" title="${L.commits} commits · ${L.streak}d streak">${L.commits} · ${L.streak}d</span>
       <span class="panel-chevron">▾</span>
     </h2>
-    <p class="panel-subtitle">Skills, APIs, bug classes, PM signals — extracted from git history, last ${htmlEscape(sinceLabel)}. Updated nightly at 03:30 PT by <code>scripts/agents/builder-log.mjs</code>.</p>
+    <p class="panel-subtitle">Skills, APIs, bug classes, PM signals — extracted from git history, last ${htmlEscape(sinceLabel)}. Updated nightly at 03:30 PT by <code>scripts/agents/builder-log.mjs</code>. <span class="be-subtitle-hint">Click any tile for detail.</span></p>
 
     <div class="builder-evo-grid">
-      <div class="be-stat-tile" title="${htmlEscape(apiTileTitle)}">
+      <button type="button" class="be-stat-tile be-stat-tile-clickable" data-be-stat="apis" aria-label="Open APIs and tools detail drawer" aria-haspopup="dialog" aria-controls="be-stat-modal" title="Click to open the full Tier-A gating stack and gap-closure plan">
         <div class="be-stat-label">${apiTileLabel}</div>
-        <div class="be-stat-value">${apiTileValue}</div>
-      </div>
-      <div class="be-stat-tile" title="Distinct skills / patterns demonstrated in this window vs cumulative">
+        <div class="be-stat-value">${apiPrimary}<span class="be-stat-chevron" aria-hidden="true">›</span></div>
+        <div class="be-stat-hint">${htmlEscape(apiHint)}</div>
+      </button>
+      <button type="button" class="be-stat-tile be-stat-tile-clickable" data-be-stat="skills" aria-label="Open skills detail drawer" aria-haspopup="dialog" aria-controls="be-stat-modal" title="Click to open the full demonstrated-skills list with commit counts">
         <div class="be-stat-label">Skills demonstrated</div>
-        <div class="be-stat-value">${(L.top_skills || []).length}<span class="be-stat-cumulative"> / ${skillCount} all-time</span></div>
-      </div>
-      <div class="be-stat-tile" title="Bug classes identified or fixed in this window vs cumulative">
+        <div class="be-stat-value">${skillsPrimary}<span class="be-stat-chevron" aria-hidden="true">›</span></div>
+        <div class="be-stat-hint">${skillCount} all-time</div>
+      </button>
+      <button type="button" class="be-stat-tile be-stat-tile-clickable" data-be-stat="bugs" aria-label="Open bug classes detail drawer" aria-haspopup="dialog" aria-controls="be-stat-modal" title="Click to open the full bug-classes list with commit counts">
         <div class="be-stat-label">Bug classes</div>
-        <div class="be-stat-value">${(L.top_bug_classes || []).length}<span class="be-stat-cumulative"> / ${bugCount} all-time</span></div>
-      </div>
-      <div class="be-stat-tile" title="PM-relevant signals triggered (postmortem-then-fix, instrumentation-first, cohesion-driven-UX, etc.)">
+        <div class="be-stat-value">${bugsPrimary}<span class="be-stat-chevron" aria-hidden="true">›</span></div>
+        <div class="be-stat-hint">${bugCount} all-time</div>
+      </button>
+      <button type="button" class="be-stat-tile be-stat-tile-clickable" data-be-stat="pm" aria-label="Open PM signals detail drawer" aria-haspopup="dialog" aria-controls="be-stat-modal" title="Click to open the full PM-relevant signals list with commit counts">
         <div class="be-stat-label">PM signals</div>
-        <div class="be-stat-value">${pmSigCount}</div>
-      </div>
+        <div class="be-stat-value">${pmSigCount}<span class="be-stat-chevron" aria-hidden="true">›</span></div>
+        <div class="be-stat-hint">postmortem · instrumentation · cohesion</div>
+      </button>
     </div>
 
     ${topApis ? `<div class="be-section"><div class="be-section-label">Top APIs / services this window</div><div class="be-tags">${topApis}</div></div>` : ''}
@@ -11653,7 +11821,99 @@ async function build() {
       <span class="be-footer-cta">→ Resume bullets: <code>node scripts/agents/builder-log.mjs --export-resume-bullets</code></span>
       ${tApi ? `<span class="be-footer-cta">→ Target stack audit: <code>data/council-target-apis-2026-05-19-adjudicated.md</code></span>` : ''}
     </div>
-  </div>`;
+  </div>
+  <script>
+  /* BRAVO 2026-05-19 — be-stat-modal payload + handlers.
+     Data serialized inline at build time, consumed by openBeStatModal(key).
+     Pattern matches TIER_LEGEND injection in the main inline-JS block. */
+  window.__BE_STAT_PAYLOAD__ = ${(() => {
+    // Build the modal payload — one entry per chip key.
+    const skillsAllSorted = Object.entries(builderLog.skills || {})
+      .map(([k, v]) => ({ name: k, n: (typeof v === 'object' && v !== null ? (v.count || v.commits || 0) : (Number(v) || 0)) }))
+      .sort((a, b) => b.n - a.n);
+    const bugsAllSorted = Object.entries(builderLog.bug_classes || {})
+      .map(([k, v]) => ({ name: k, n: (typeof v === 'object' && v !== null ? (v.count || v.commits || 0) : (Number(v) || 0)) }))
+      .sort((a, b) => b.n - a.n);
+    const pmAllSorted = Object.entries(builderLog.pm_signals || {})
+      .map(([k, v]) => ({ name: k, n: (typeof v === 'object' && v !== null ? (v.count || v.commits || 0) : (Number(v) || 0)) }))
+      .sort((a, b) => b.n - a.n);
+
+    // APIs payload — Tier-A demonstrated + Tier-A gaps split out with evidence
+    // and the next-step action from gap_closure_30day. Fallback to the
+    // commit-frequency view when builder-target-apis.json is absent.
+    let apisPayload;
+    if (tApi) {
+      const entries = tApi.entries || {};
+      const tierAEntries = Object.entries(entries).filter(([_, v]) => v.tier === 'A');
+      const tierADemo = tierAEntries.filter(([_, v]) => v.demonstrated === 'yes').map(([k, v]) => ({ name: k, evidence: v.evidence || '', citation: (v.citations || [])[0] || '' }));
+      const tierAGap  = tierAEntries.filter(([_, v]) => v.demonstrated !== 'yes').map(([k, v]) => ({ name: k, action: v.action_priority || '', evidence: v.evidence || '' }));
+      // Pull first 3 gap_closure_30day phases that unlock Tier-A items
+      const closurePlan = (tApi.gap_closure_30day || [])
+        .filter(p => Array.isArray(p.tier_a_unlocked) && p.tier_a_unlocked.length > 0)
+        .slice(0, 4)
+        .map(p => ({ phase: p.phase, action: p.action, unlocks: p.tier_a_unlocked, hours: p.cost_hours }));
+      apisPayload = {
+        label: 'APIs / tools',
+        headline: `${tA_demo} / ${tA_total} Tier-A`,
+        subhead: `${tAll_demo} / ${tAll_total} total target stack demonstrated (+${tAll_partial} partial). Council research + dealbreaker, 2026-05-19. ${(tApi.summary && tApi.summary.headline) || ''}`,
+        sections: [
+          { label: `Tier-A demonstrated (${tierADemo.length})`, items: tierADemo, kind: 'demo' },
+          { label: `Tier-A gaps (${tierAGap.length}) — 30-day reachable`, items: tierAGap, kind: 'gap' },
+          { label: '30-day closure plan', items: closurePlan, kind: 'plan' },
+        ],
+        sources: [
+          'data/builder-target-apis.json',
+          'data/council-target-apis-2026-05-19-adjudicated.md',
+        ],
+      };
+    } else {
+      const apisSorted = Object.entries(builderLog.apis || {})
+        .map(([k, v]) => ({ name: k, n: (typeof v === 'object' && v !== null ? (v.count || v.commits || 0) : (Number(v) || 0)) }))
+        .sort((a, b) => b.n - a.n);
+      apisPayload = {
+        label: 'APIs / tools',
+        headline: `${apisSorted.length} this window`,
+        subhead: `${apiCount} cumulative APIs / SDKs / services touched. builder-target-apis.json not present.`,
+        sections: [
+          { label: 'APIs touched this window', items: apisSorted.map(s => ({ name: s.name, n: s.n })), kind: 'count' },
+        ],
+        sources: ['data/builder-log-rolling-30d.md'],
+      };
+    }
+
+    const payload = {
+      apis: apisPayload,
+      skills: {
+        label: 'Skills demonstrated',
+        headline: `${skillsPrimary} top · ${skillsAllSorted.length} all`,
+        subhead: `Chip shows top ${skillsPrimary} this window; drawer lists all ${skillsAllSorted.length} skills demonstrated cumulatively across ${L.commits} commits in the last ${sinceLabel.replace(/\s+ago$/i, '')}.`,
+        sections: [
+          { label: `All skills (${skillsAllSorted.length} ranked by commit count)`, items: skillsAllSorted, kind: 'count' },
+        ],
+        sources: ['data/builder-log-rolling-30d.md'],
+      },
+      bugs: {
+        label: 'Bug classes',
+        headline: `${bugsPrimary} top · ${bugsAllSorted.length} all`,
+        subhead: `Chip shows top ${bugsPrimary} this window; drawer lists all ${bugsAllSorted.length} bug classes identified or fixed across ${L.commits} commits in the last ${sinceLabel.replace(/\s+ago$/i, '')}. Each entry is a documented prevention pattern.`,
+        sections: [
+          { label: `All bug classes (${bugsAllSorted.length} ranked by commit count)`, items: bugsAllSorted, kind: 'count' },
+        ],
+        sources: ['data/builder-log-rolling-30d.md'],
+      },
+      pm: {
+        label: 'PM signals',
+        headline: `${pmAllSorted.length} signals`,
+        subhead: `PM-relevant patterns surfaced from git history across ${L.commits} commits in the last ${sinceLabel.replace(/\s+ago$/i, '')}. Examples: postmortem-then-fix, instrumentation-first, cohesion-driven UX, cost-discipline.`,
+        sections: [
+          { label: `All PM signals (${pmAllSorted.length} ranked by commit count)`, items: pmAllSorted, kind: 'count' },
+        ],
+        sources: ['data/builder-log-rolling-30d.md'],
+      },
+    };
+    return JSON.stringify(payload);
+  })()};
+  </script>`;
   })() : ''}
 
   ${applyNow.length > 0 ? `
@@ -22402,6 +22662,103 @@ function closeEquityLegend() {
   }
 }
 
+// ── Builder-Evolution stat detail modal (BRAVO 2026-05-19) ─────
+// Click on any .be-stat-tile button opens this shared modal with
+// payload swapped from window.__BE_STAT_PAYLOAD__ keyed by data-be-stat.
+let _beStatLastFocus = null;
+function _renderBeStatBody(p) {
+  if (!p) return '<div style="opacity:.6">No data available.</div>';
+  const sections = (p.sections || []).map(function(sec) {
+    if (!sec.items || sec.items.length === 0) {
+      return '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">' + esc(sec.label) + '</div>' +
+        '<div style="opacity:.55;font-size:12px">None this window.</div>' +
+        '</div>';
+    }
+    const items = sec.items.map(function(it) {
+      if (sec.kind === 'demo') {
+        // Tier-A demonstrated: show evidence
+        return '<li class="be-stat-modal-item be-stat-modal-item-tier-a">' +
+          '<div><span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
+          (it.evidence ? '<div class="be-stat-modal-item-evidence">' + esc(it.evidence) + '</div>' : '') +
+          '</div>' +
+          '<div class="be-stat-modal-item-count">demonstrated</div>' +
+          '</li>';
+      }
+      if (sec.kind === 'gap') {
+        // Tier-A gap: show next action
+        return '<li class="be-stat-modal-item be-stat-modal-item-gap">' +
+          '<div><span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
+          (it.action ? '<div class="be-stat-modal-item-evidence">' + esc(it.action) + '</div>' : '') +
+          '</div>' +
+          '<div class="be-stat-modal-item-count">gap</div>' +
+          '</li>';
+      }
+      if (sec.kind === 'plan') {
+        // 30-day closure plan phase
+        const unlocks = Array.isArray(it.unlocks) ? it.unlocks.join(', ') : '';
+        return '<li class="be-stat-modal-item">' +
+          '<div><span class="be-stat-modal-item-name">' + esc(it.phase) + '</span>' +
+          (it.action ? '<div class="be-stat-modal-item-evidence">' + esc(it.action) + '</div>' : '') +
+          (unlocks ? '<div class="be-stat-modal-item-evidence">Unlocks: <strong>' + esc(unlocks) + '</strong></div>' : '') +
+          '</div>' +
+          '<div class="be-stat-modal-item-count">' + (it.hours != null ? (it.hours + 'h') : '—') + '</div>' +
+          '</li>';
+      }
+      // kind === 'count' default
+      return '<li class="be-stat-modal-item">' +
+        '<span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
+        '<span class="be-stat-modal-item-count">' + esc(String(it.n || 0)) + ' commits</span>' +
+        '</li>';
+    }).join('');
+    return '<div class="be-stat-modal-section">' +
+      '<div class="be-stat-modal-section-label">' + esc(sec.label) + '</div>' +
+      '<ul class="be-stat-modal-list">' + items + '</ul>' +
+      '</div>';
+  }).join('');
+  return sections;
+}
+function openBeStatModal(key) {
+  const payload = (window.__BE_STAT_PAYLOAD__ || {})[key];
+  if (!payload) return;
+  _beStatLastFocus = document.activeElement;
+  document.getElementById('be-stat-modal-label').textContent = payload.label + ' ·';
+  document.getElementById('be-stat-modal-headline').textContent = payload.headline || '';
+  document.getElementById('be-stat-modal-subhead').textContent = payload.subhead || '';
+  document.getElementById('be-stat-modal-body').innerHTML = _renderBeStatBody(payload);
+  const footer = document.getElementById('be-stat-modal-footer');
+  if (payload.sources && payload.sources.length) {
+    footer.innerHTML = payload.sources.map(function(s) {
+      return '<span>&rarr; Source: <code>' + esc(s) + '</code></span>';
+    }).join('');
+  } else {
+    footer.innerHTML = '';
+  }
+  const backdrop = document.getElementById('be-stat-backdrop');
+  backdrop.classList.add('visible');
+  backdrop.setAttribute('aria-hidden', 'false');
+  const close = backdrop.querySelector('.be-stat-modal-close');
+  if (close) close.focus();
+}
+function closeBeStatModal() {
+  const backdrop = document.getElementById('be-stat-backdrop');
+  if (!backdrop) return;
+  backdrop.classList.remove('visible');
+  backdrop.setAttribute('aria-hidden', 'true');
+  if (_beStatLastFocus && _beStatLastFocus.focus) {
+    _beStatLastFocus.focus();
+    _beStatLastFocus = null;
+  }
+}
+// Event delegation — chips render before this script runs; native button click
+// + Enter/Space work via native semantics, we just route to openBeStatModal.
+document.addEventListener('click', function(e) {
+  const tile = e.target.closest && e.target.closest('.be-stat-tile-clickable');
+  if (!tile) return;
+  const key = tile.getAttribute('data-be-stat');
+  if (key) openBeStatModal(key);
+});
+
 // ── Live stats refresh ──────────────────────────────────────────
 async function refreshLiveStats() {
   const data = await apiFetch('/api/stats');
@@ -23383,7 +23740,7 @@ document.addEventListener('keydown', e => {
 // ── Keyboard shortcuts ──────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (typeof _cmdkOpen !== 'undefined' && _cmdkOpen) return;
-  if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); closeStatusPopover(); closeQuickAdd(); }
+  if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); closeEquityLegend(); closeBeStatModal(); closeStatusPopover(); closeQuickAdd(); }
 });
 
 // ── Inline status writeback ─────────────────────────────────────
