@@ -48,7 +48,7 @@ Options:
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
-  --model NAME         Model name passed to the CLI's --model flag (only supported by claude -p)
+  --model NAME         Model name passed to the CLI's --model flag (both claude -p and opencode run)
   -h, --help           Show this help
 
 Files:
@@ -375,7 +375,9 @@ process_offer() {
       claude "${cli_args[@]}" > "$log_file" 2>&1 || exit_code=$?
       ;;
     opencode)
-      local -a cli_args=(run "$prompt")
+      local opencode_prompt
+      opencode_prompt="$(cat "$resolved_prompt")"$'\n\n'"$prompt"
+      local -a cli_args=(run "$opencode_prompt")
       if [[ -n "$MODEL" ]]; then
         cli_args+=(--model "$MODEL")
       fi

@@ -12,7 +12,7 @@
  */
 
 import { execSync, execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, realpathSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -328,20 +328,31 @@ const symlinks = [
   '.opencode/skills/career-ops/SKILL.md',
 ];
 
-const canonicalReal = run('readlink', ['-f', join(ROOT, canonicalSkill)]);
-if (canonicalReal !== null) {
+let canonicalReal = null;
+try {
+  canonicalReal = realpathSync(join(ROOT, canonicalSkill));
   pass(`Canonical skill resolves: ${canonicalSkill}`);
-} else {
+} catch {
   fail(`Canonical skill not found: ${canonicalSkill}`);
 }
 
 for (const link of symlinks) {
-  const target = run('readlink', [join(ROOT, link)]);
+  let resolved = null;
+  let target = null;
+  try {
+    target = realpathSync(join(ROOT, link));
+  } catch {
+    target = null;
+  }
   if (target === null) {
     fail(`Symlink missing: ${link}`);
     continue;
   }
-  const resolved = run('readlink', ['-f', join(ROOT, link)]);
+  try {
+    resolved = realpathSync(join(ROOT, link));
+  } catch {
+    resolved = null;
+  }
   if (resolved === canonicalReal) {
     pass(`${link} → canonical skill`);
   } else {

@@ -269,8 +269,7 @@ When spawning headless workers for batch processing, use the appropriate command
 | CLI | Command |
 |-----|---------|
 | Claude Code | `claude -p "prompt"` |
-| **OpenCode** | **`opencode run "prompt"`** |
-| [OpenCode](https://opencode.ai) | `opencode run "prompt"` |
+| **OpenCode** | `opencode run "prompt"` |
 | Gemini CLI | `gemini -p "prompt"` |
 | Copilot CLI | `copilot -p "prompt"` |
 | Codex | `codex exec "prompt"` |

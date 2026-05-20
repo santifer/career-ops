@@ -2,6 +2,7 @@
   - changed-files:
       - any-glob-to-any-file:
           - CLAUDE.md
+          - OPENCODE.md
           - DATA_CONTRACT.md
           - modes/_shared.md
 
