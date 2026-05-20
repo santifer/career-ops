@@ -1,0 +1,101 @@
+{
+  "captured_at": "2026-05-19T17:34Z",
+  "url": "https://staging-dashboard.careers-ops.com/",
+  "branch": "bravo/builder-evolution-drawer-2026-05-19",
+  "note": "Inline screenshots embedded in the Claude transcript (browser_batch output) are the primary visual proof. This JSON captures DOM-level computed-style + bounding-rect evidence per the AGENTS.md UI-Change Verification rule.",
+
+  "wide_viewport": {
+    "viewport": { "w": 1440, "h": 664 },
+    "chips": [
+      { "key": "apis",   "w": 279, "h": 87.32 },
+      { "key": "skills", "w": 279, "h": 87.32 },
+      { "key": "bugs",   "w": 279, "h": 87.32 },
+      { "key": "pm",     "w": 279, "h": 87.32 }
+    ],
+    "modal_pm": { "w": 680, "h": 533.98, "zIndex": "2001" }
+  },
+
+  "narrow_viewport": {
+    "viewport": { "w": 880, "h": 664 },
+    "chips": [
+      { "key": "apis",   "w": 175, "h": 104.37 },
+      { "key": "skills", "w": 175, "h": 104.37 },
+      { "key": "bugs",   "w": 175, "h": 104.37 },
+      { "key": "pm",     "w": 175, "h": 104.37 }
+    ],
+    "modal_apis": { "w": 680, "h": 557.76, "maxHeight": "557.76px", "zIndex": "2001", "backdrop_zIndex": "2000" }
+  },
+
+  "chip_a11y": {
+    "tag": "BUTTON",
+    "role": "BUTTON (native)",
+    "aria-haspopup": "dialog",
+    "aria-controls": "be-stat-modal",
+    "aria-label": "Open <category> detail drawer (per chip)",
+    "cursor": "pointer",
+    "focusable": "native (button)"
+  },
+
+  "drawer_a11y": {
+    "id": "be-stat-backdrop",
+    "role": "dialog",
+    "aria-modal": "true",
+    "aria-labelledby": "be-stat-modal-title",
+    "aria-hidden_initial": "true",
+    "aria-hidden_on_open": "false",
+    "z-index_backdrop": "2000",
+    "z-index_modal": "2001",
+    "backdrop_filter": "blur(2px)"
+  },
+
+  "dismiss_mechanisms_verified": {
+    "ESC_key": "PASS — keydown Escape closes via global keydown handler",
+    "backdrop_click": "PASS — onclick=\"closeBeStatModal()\" on backdrop element",
+    "inner_modal_click_no_close": "PASS — event.stopPropagation() on #be-stat-modal",
+    "close_X_button": "PASS — explicit ✕ button calls closeBeStatModal()"
+  },
+
+  "z_index_hierarchy": {
+    "be-stat-backdrop": 2000,
+    "be-stat-modal": 2001,
+    "pipeline-toast": 3000,
+    "note": "Builder-evolution drawer sits at the same tier as #tier-legend-backdrop and #equity-legend-backdrop (2000/2001) — below the running-batch toast at 3000, so the toast remains visible when the drawer is open."
+  },
+
+  "drawer_contents_verified": {
+    "apis": {
+      "label": "APIs / tools ·",
+      "headline": "3 / 8 Tier-A",
+      "sections": ["TIER-A DEMONSTRATED (3)", "TIER-A GAPS (5) — 30-DAY REACHABLE", "30-DAY CLOSURE PLAN"],
+      "items_count": 12,
+      "sources_in_footer": ["data/builder-target-apis.json", "data/council-target-apis-2026-05-19-adjudicated.md"]
+    },
+    "skills": {
+      "label": "Skills demonstrated ·",
+      "headline": "5 top · 15 all",
+      "sections": ["ALL SKILLS (15 RANKED BY COMMIT COUNT)"],
+      "items_count": 15,
+      "sources_in_footer": ["data/builder-log-rolling-30d.md"]
+    },
+    "bugs": {
+      "label": "Bug classes ·",
+      "headline": "5 top · 5 all",
+      "sections": ["ALL BUG CLASSES (5 RANKED BY COMMIT COUNT)"],
+      "items_count": 5,
+      "sources_in_footer": ["data/builder-log-rolling-30d.md"]
+    },
+    "pm": {
+      "label": "PM signals ·",
+      "headline": "8 signals",
+      "sections": ["ALL PM SIGNALS (8 RANKED BY COMMIT COUNT)"],
+      "items_count": 8,
+      "sources_in_footer": ["data/builder-log-rolling-30d.md"]
+    }
+  },
+
+  "build_lint": {
+    "build_command": "node scripts/build-dashboard.mjs",
+    "lint_status": "PASS — 5 inline <script> block(s) parsed cleanly across 1 file(s).",
+    "bypass_flag_used": false
+  }
+}
