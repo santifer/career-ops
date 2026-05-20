@@ -57,14 +57,16 @@ const LOG_PATH = `/tmp/process-all-${JOB_ID}.log`;
 // Independent of tier: post-eval auto-escalation. Every row scoring ≥4.0
 // gets apply-pack pregen + polish — the system invests more in proven
 // winners regardless of which tier the user picked.
-const { resolveTier, AUTO_ESCALATE_FLOOR } = await import('../lib/process-all-tiers.mjs');
+const { resolveTier, PREGEN_FLOOR, POLISH_FLOOR } = await import('../lib/process-all-tiers.mjs');
 const TIER_OBJ = resolveTier(ARGS.tier);
 const TIER = String(TIER_OBJ.id);
 const IS_TIER5 = TIER_OBJ.id >= 2;  // legacy alias — anything 2+ used to be "Tier-5"
-// HIGH_CONFIDENCE_PREGEN_FLOOR retained for envar override; now defaults to
-// the AUTO_ESCALATE_FLOOR (4.0) instead of 4.5 — the user wants pregen to
-// fire on every ≥4.0 row, not just the top 4.5+ cream.
-const HIGH_CONFIDENCE_PREGEN_FLOOR = parseFloat(process.env.HIGH_CONFIDENCE_PREGEN_FLOOR || String(AUTO_ESCALATE_FLOOR));
+// 2026-05-20 — Two-floor auto-escalation. Pregen is cheap ($2.50/row) so it
+// fires on every ≥4.0 row. Polish is expensive ($60/pack) so it only fires
+// on ≥4.5 — invest the big spend in proven-winner cream, not the borderline
+// 4.0-4.4 band.
+const HIGH_CONFIDENCE_PREGEN_FLOOR = parseFloat(process.env.HIGH_CONFIDENCE_PREGEN_FLOOR || String(PREGEN_FLOOR));
+const POLISH_FLOOR_SCORE = parseFloat(process.env.POLISH_FLOOR_SCORE || String(POLISH_FLOOR));
 
 // Optional company scope from the Process All Phase A modal. When present,
 // passed through to triage.mjs and batch-runner-batches.mjs so both filter
@@ -382,8 +384,18 @@ async function phasePolish() {
   // Polish applies to Evaluated (pre-application materials), Applied (waiting-for-recruiter
   // tightening), and Interview (closing-stage materials). All three states ship downstream
   // artifacts that benefit from the loop.
+  // 2026-05-20 — Polish only fires on ≥POLISH_FLOOR_SCORE (default 4.5) rows.
+  // The original Tier-5 rule polished every Apply-Now-statused row; that was
+  // expensive ($60/pack × 17 rows = $1,000+ per run) and disproportionate to
+  // the marginal-quality lift. Now: only invest in cream-of-the-crop.
   const polishStatuses = new Set(['Evaluated', 'Applied', 'Interview']);
-  const ranked = (apq.ranked || []).filter(r => r && r.num && polishStatuses.has(r.status)).slice(0, topN);
+  const ranked = (apq.ranked || [])
+    .filter(r => r && r.num && polishStatuses.has(r.status))
+    .filter(r => {
+      const s = parseFloat(r.eval_score ?? r.score ?? 0);
+      return Number.isFinite(s) && s >= POLISH_FLOOR_SCORE;
+    })
+    .slice(0, topN);
 
   let polished = 0;
   let failed = 0;

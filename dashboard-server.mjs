@@ -1275,11 +1275,15 @@ function buildPipelinePreview() {
               applyNowSize = (apq.ranked || []).filter(r => !r._dropped && (r.eval_score || r.score || 0) >= 4.0).length;
             }
           } catch (_) { /* fall through */ }
+          // 2026-05-20 — Use the tier estimator's own defaults (advance 12%,
+          // pregen-eligible 5%, polish-eligible 1.5%) rather than passing
+          // dashboard-server.mjs's ADVANCE_RATE_ESTIMATE=0.50 which was set
+          // for the legacy non-tier breakdown and produces wildly-inflated
+          // tier totals (~$1800 vs the realistic ~$250). Tier estimator is
+          // the source of truth.
           return _tierCostEstimates({
             pipelineSize:  pending,
             applyNowSize,
-            advanceRate:   ADVANCE_RATE_ESTIMATE,
-            highScoreRate: 0.15,
           });
         } catch (_) { return null; }
       })(),

@@ -21235,7 +21235,7 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   const tierPickerLine = (tEst && tEst[1] && tEst[2] && tEst[3])
     ? '<div id="pcp-tier-picker" style="margin-top:8px;padding:10px 12px;border:1px dashed rgba(255,255,255,0.18);border-radius:6px;font-size:12px">'
       + '<div style="font-weight:600;margin-bottom:6px">Quality tier '
-      +   '<span style="font-weight:400;opacity:0.65">(applies to triage + eval model; ≥4.0 rows auto-escalate to apply-pack pregen + polish in every tier)</span>'
+      +   '<span style="font-weight:400;opacity:0.65">(applies to triage + eval model; ≥4.0 rows auto-escalate to apply-pack pregen, ≥4.5 polish in every tier)</span>'
       + '</div>'
       + '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer">'
       +   '<input type="radio" name="pcp-tier" value="1" checked onchange="_pcpUpdateTier(this.value)">'
