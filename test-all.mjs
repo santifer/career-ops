@@ -299,9 +299,90 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 10. VERSION FILE ─────────────────────────────────────────────
+// ── 10. PARSE-LATEX (optional fixture) ───────────────────────────
 
-console.log('\n10. Version file');
+console.log('\n10. parse-latex.mjs');
+
+if (fileExists('resume.tex') && fileExists('output')) {
+  const parseOut = run('node', ['parse-latex.mjs', 'resume.tex', 'output']);
+  if (parseOut) {
+    try {
+      const summary = JSON.parse(parseOut);
+      const parsed = JSON.parse(readFile(join('output', summary.parse_file.split('/').pop())));
+      const skillKeys = Object.keys(parsed.skills || {});
+      const hasMalformedKey = skillKeys.some(k => /tabularx|textwidth|\\\\/.test(k));
+      if (skillKeys.length >= 6 && !hasMalformedKey && parsed.skills['AI / ML']?.length >= 5) {
+        pass(`parse-latex skills: ${skillKeys.length} categories, AI / ML OK`);
+      } else {
+        fail(`parse-latex skills malformed: keys=${skillKeys.join(', ')}`);
+      }
+      if (parsed.experience?.length >= 2 && parsed.projects?.length >= 1) {
+        pass(`parse-latex sections: ${parsed.experience.length} jobs, ${parsed.projects.length} projects`);
+      } else {
+        fail('parse-latex missing experience/projects');
+      }
+    } catch (e) {
+      fail(`parse-latex output invalid: ${e.message}`);
+    }
+  } else {
+    fail('parse-latex.mjs crashed on resume.tex');
+  }
+} else {
+  warn('resume.tex or output/ not present — skipping parse-latex integration test');
+}
+
+// ── 11. LATEX PIPELINE (write + optional compile) ───────────────
+
+console.log('\n11. LaTeX pipeline (write-latex / compile-latex)');
+
+if (fileExists('resume.tex') && fileExists('output')) {
+  const parseOut = run('node', ['parse-latex.mjs', 'resume.tex', 'output']);
+  if (parseOut) {
+    try {
+      const summary = JSON.parse(parseOut);
+      const parseFile = join('output', summary.parse_file.split('/').pop());
+      const outTex = join('output', 'cv-test-roundtrip.tex');
+      const writeOut = run('node', ['write-latex.mjs', 'resume.tex', parseFile, outTex]);
+      if (writeOut) {
+        const written = JSON.parse(writeOut);
+        const texContent = readFile(outTex);
+        if (texContent.includes('\\item') && texContent.includes('\\section*{Professional Experience}')) {
+          pass('write-latex produces valid experience itemize');
+        } else {
+          fail('write-latex output missing expected structure');
+        }
+      } else {
+        fail('write-latex.mjs crashed');
+      }
+
+      const compileOut = run('node', ['compile-latex.mjs', outTex, join('output', 'cv-test-roundtrip.pdf')]);
+      if (compileOut) {
+        const compiled = JSON.parse(compileOut);
+        if (compiled.compiled && compiled.pdf?.path) {
+          pass(`compile-latex PDF OK (${compiled.engine}, ${compiled.pdf.sizeKB} KB)`);
+        } else {
+          warn(`compile-latex failed: ${compiled.compileError || 'unknown'}`);
+        }
+      } else {
+        warn('compile-latex skipped (no tectonic/pdflatex or compile error)');
+      }
+
+      if (fileExists('modes/latex-tex.md')) {
+        pass('modes/latex-tex.md exists');
+      } else {
+        fail('modes/latex-tex.md missing');
+      }
+    } catch (e) {
+      fail(`LaTeX pipeline test error: ${e.message}`);
+    }
+  }
+} else {
+  warn('resume.tex or output/ missing — skipping LaTeX pipeline tests');
+}
+
+// ── 12. VERSION FILE ─────────────────────────────────────────────
+
+console.log('\n12. Version file');
 
 if (fileExists('VERSION')) {
   const version = readFile('VERSION').trim();

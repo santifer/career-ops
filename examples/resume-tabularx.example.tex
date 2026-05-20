@@ -1,0 +1,164 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[left=0.6in, right=0.6in, top=0.55in, bottom=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{fontenc}
+\usepackage{lmodern}
+
+\pagenumbering{gobble}
+
+% Color for section rules and accents
+\definecolor{darkblue}{RGB}{0, 51, 102}
+
+% Section formatting — small caps label, full-width rule
+\titleformat{\section}
+  {\large\bfseries\color{darkblue}}{}{0em}{}
+  [\color{darkblue}\titlerule]
+\titlespacing{\section}{0pt}{10pt}{5pt}
+
+% Compact list settings
+\setlist[itemize]{
+  noitemsep,
+  topsep=2pt,
+  partopsep=0pt,
+  parsep=0pt,
+  leftmargin=1.2em,
+  label=\textbullet
+}
+
+% Hyperlink style
+\hypersetup{
+  colorlinks=false,
+  urlbordercolor=darkblue
+}
+
+\begin{document}
+
+% ─────────────────────────── HEADER ───────────────────────────
+\begin{center}
+  {\LARGE \textbf{Alex Example}} \\[4pt]
+  {\small
+    Example City, State, Country \quad\textbar\quad
+    \href{mailto:alex@example.com}{alex@example.com} \quad\textbar\quad
+    +1-555-010-1234 \\[2pt]
+    \href{https://www.linkedin.com/in/alex-example}{linkedin.com/in/alex-example} \quad\textbar\quad
+    \href{https://github.com/alex-example}{github.com/alex-example}
+  }
+\end{center}
+
+
+
+
+% ─────────────────────────── EXPERIENCE ───────────────────────────
+\section*{Professional Experience}
+
+% --- Job 1 ---
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{Senslyze} & \textit{Aug 2025 – Present}
+\end{tabularx}
+\textit{Software Development Engineer}
+
+\begin{itemize}
+  \item Designed and deployed production-grade WhatsApp-native AI systems with secure webhooks, encrypted Flow endpoints (RSA/AES), and scalable backend services.
+  \item Built end-to-end RAG pipelines (PDF → chunking → embeddings → Qdrant retrieval) enabling grounded, context-aware responses with optimized latency.
+  \item Engineered hybrid conversational systems combining deterministic state machines with LLM-based structured NLU.
+  \item Orchestrated multimodal AI workflows (STT → NLU → reasoning → TTS) enabling voice-first interactions.
+  \item Implemented vision-based validation using multimodal LLMs for strict JSON outputs (accept/reject + scoring).
+  \item Developed LLM routing pipelines using OpenAI-compatible APIs, OpenRouter, and Gemini fallback strategies.
+  \item Built a Flow Builder platform for visualizing and managing conversational workflows.
+  \item Applied schema validation (Zod) and structured prompting to improve reliability and reduce hallucination.
+\end{itemize}
+
+\vspace{4pt}
+
+% --- Job 2 ---
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{Dinosys Infotech Pvt Ltd} & \textit{Jul 2024 – Mar 2025}
+\end{tabularx}
+\textit{Software Developer}
+
+\begin{itemize}
+  \item Developed OSINT automation tools for law enforcement using Python and Selenium.
+  \item Built backend pipelines for data extraction, normalization, and analysis.
+  \item Optimized scraping workflows using parallel execution to improve efficiency.
+\end{itemize}
+
+% ─────────────────────────── PROJECTS ───────────────────────────
+\section*{Projects}
+
+
+
+% --- Project 1 ---
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{Refaktr AI} &
+\end{tabularx}
+\textit{VS Code Extension, TypeScript/Node.js, Express, ts-morph, Graph-based Analysis, LLM Planning}
+\begin{itemize}
+  \item Designed an AI-assisted refactoring system that converts codebases into dependency graphs and generates structured refactor plans from user intent.
+  \item Executed safe code transformations using AST-based edits, avoiding regex-based risks and ensuring maintainability.
+  \item Built step-wise execution pipeline with validation hooks (type-check, build, tests) to ensure reliable and reviewable refactors.
+\end{itemize}
+
+\vspace{4pt}
+
+% --- Project 2 ---
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{AI Document Analyzer} &
+  \href{https://example.com/demo}{\small Live} \;|\;
+  \href{https://example.com/demo-video}{\small Demo} \;|\;
+  \href{https://github.com/alex-example/sample-project}{\small GitHub}
+\end{tabularx}
+\textit{React, TypeScript, FastAPI, Python, PostgreSQL, LangChain, Gemini, Docker}
+\begin{itemize}
+  \item Built an AI-powered platform for document analysis, summarization, and RAG-based Q\&A with a containerized stack.
+\end{itemize}
+
+\vspace{4pt}
+
+% --- Project 3 ---
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{DevPilotAI} &
+  \href{https://github.com/alex-example/devpilot-ai}{\small GitHub}
+\end{tabularx}
+\textit{Next.js, TypeScript, Express, Gemini, LangChain, Qdrant}
+\begin{itemize}
+  \item Built an AI development assistant with RAG-based code querying, architecture generation, and real-time streaming outputs.
+\end{itemize}
+
+% ─────────────────────────── SKILLS ───────────────────────────
+\section*{Technical Skills}
+
+\newsavebox{\skillsbox}
+\begin{lrbox}{\skillsbox}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}p{2.8cm} X@{}}
+  AI / ML          & RAG, NLP, Prompt Engineering, Multimodal AI (Vision + Voice), Embeddings, Vector DB (Qdrant, FAISS) \\
+  LLM Systems      & OpenAI APIs, OpenRouter, Gemini, LangChain, LLM Routing, Tool Calling, AI Orchestration \\
+  Backend          & Node.js, Express, FastAPI, Flask, Bun, Hono, REST APIs, Webhooks \\
+  Frontend         & React.js, Next.js, TypeScript \\
+  Databases        & PostgreSQL, Prisma, SQLite \\
+  DevOps           & Docker, Git, Postman, Linux, AWS \\
+  Core CS          & DSA, OS, DBMS, CN, OOP \\
+\end{tabularx}
+\end{lrbox}
+\usebox{\skillsbox}
+
+% ─────────────────────────── EDUCATION ───────────────────────────
+\section*{Education}
+
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{B.E. in Computer Science and Engineering} & \textbf{June 2025} \\
+  Government College of Engineering, Chandrapur & CGPA: \textbf{8.94 / 10.00}
+\end{tabularx}
+
+\end{document}

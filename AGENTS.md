@@ -57,7 +57,11 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `templates/cv-template.html` | HTML template for CVs |
 | `templates/cv-template.tex` | LaTeX/Overleaf template for CVs |
 | `generate-pdf.mjs` | Playwright: HTML to PDF |
-| `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler |
+| `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler (career-ops template) |
+| `parse-latex.mjs` | Universal `.tex` → structured JSON + template metadata |
+| `write-latex.mjs` | Tailored JSON + original `.tex` → tailored `.tex` |
+| `compile-latex.mjs` | Generic `.tex` → PDF (any format) |
+| `latex-pipeline.mjs` | Orchestrates parse → write → compile |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
@@ -73,7 +77,7 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 
 **Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
 
-1. Does `cv.md` exist?
+1. Does `cv.md` exist OR `resume.tex` / `cv.tex` exist?
 2. Does `config/profile.yml` exist (not just profile.example.yml)?
 3. Does `modes/_profile.md` exist (not just _profile.template.md)?
 4. Does `portals.yml` exist (not just templates/portals.example.yml)?
@@ -83,15 +87,16 @@ If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silent
 **If ANY of these is missing, enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
 
 #### Step 1: CV (required)
-If `cv.md` is missing, ask:
+If `cv.md` and `resume.tex` / `cv.tex` are all missing, ask:
 > "I don't have your CV yet. You can either:
 > 1. Paste your CV here and I'll convert it to markdown
-> 2. Paste your LinkedIn URL and I'll extract the key info
-> 3. Tell me about your experience and I'll draft a CV for you
+> 2. Provide your LaTeX CV (`resume.tex` or `cv.tex`) for tailoring in your own format
+> 3. Paste your LinkedIn URL and I'll extract the key info
+> 4. Tell me about your experience and I'll draft a CV for you
 >
 > Which do you prefer?"
 
-Create `cv.md` from whatever they provide. Make it clean markdown with standard sections (Summary, Experience, Projects, Education, Skills).
+Create `cv.md` from markdown/LinkedIn/draft input. If the user provides LaTeX, save as `resume.tex` (or `cv.tex`) and use `modes/latex-tex.md` for PDF generation — no need to duplicate into `cv.md` unless they also want markdown workflows.
 
 #### Step 2: Profile (required)
 If `config/profile.yml` is missing, copy from `config/profile.example.yml` and then ask:
@@ -206,7 +211,8 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Wants LinkedIn outreach | `contacto` |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
-| Wants to generate CV/PDF | `pdf` |
+| Wants to generate CV/PDF | `pdf` (from `cv.md`) or `latex-tex` (from `resume.tex` / `cv.tex`) |
+| Has LaTeX CV + JD, wants tailored PDF in same format | `latex-tex` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
 | Asks about application status | `tracker` |
@@ -219,9 +225,24 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ### CV Source of Truth
 
-- `cv.md` in project root is the canonical CV
+**Priority (highest first):**
+
+1. `resume.tex` or `cv.tex` in project root — LaTeX CV in the user's template (`modes/latex-tex.md`)
+2. `cv.md` in project root — canonical markdown CV (`modes/pdf.md`, `modes/latex.md`)
+
+If both LaTeX and markdown exist, use LaTeX for PDF/CV generation unless the user asks for markdown/HTML output.
+
 - `article-digest.md` has detailed proof points (optional)
 - **NEVER hardcode metrics** -- read them from these files at evaluation time
+
+**LaTeX pipeline commands:**
+
+```bash
+node parse-latex.mjs resume.tex output/
+node write-latex.mjs resume.tex output/cv-tailored-{company}-{date}.json output/cv-{company}-{date}.tex
+node compile-latex.mjs output/cv-{company}-{date}.tex output/cv-{company}-{date}.pdf
+# Or: node latex-pipeline.mjs resume.tex --json output/cv-tailored-....json --company acme
+```
 
 ---
 
