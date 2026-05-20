@@ -39,7 +39,7 @@ Scanning 11 RSS/JSON feeds
 scan-rss.mjs exit code: 0
 --- scan-email.mjs ---
 STDERR: node:internal/modules/package_json_reader:301
-STDERR: Cannot find package 'imapflow' imported from /Users/x/scan-email.mjs
+STDERR: Cannot find package 'imapflow' imported from <repo>/scan-email.mjs
 scan-email.mjs exit code: 1
 === scan-unattended completed ===
 `;
