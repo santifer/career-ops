@@ -80,7 +80,8 @@ const authUrl = oauth2Client.generateAuthUrl({
 
 console.log('');
 console.log('━'.repeat(60));
-console.log('Step 1: Authorize career-ops to manage Gmail filters');
+console.log('Step 1: Authorize career-ops to access Gmail');
+console.log('         (filters + labels + read message bodies)');
 console.log('━'.repeat(60));
 console.log('');
 console.log('Open this URL in your browser:');
@@ -130,5 +131,9 @@ console.log('');
 console.log('✓ Saved OAuth credentials to ' + SECRETS_PATH);
 console.log('  Permissions set to 0600 (user read/write only).');
 console.log('');
-console.log('Next step:');
-console.log('  node scripts/gmail-create-filters.mjs');
+console.log('Next steps:');
+console.log('  First-time setup (no Gmail filters yet):');
+console.log('    node scripts/gmail-create-filters.mjs');
+console.log('  Re-running for the new gmail.readonly scope:');
+console.log('    node scripts/scan-email-poll.mjs --dry-run');
+console.log('    launchctl kickstart -k gui/$(id -u)/com.mitchell.career-ops.scan-email-poll');
