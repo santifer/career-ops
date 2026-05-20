@@ -6625,6 +6625,26 @@ async function build() {
   .be-stat-modal-close:focus-visible {
     background: var(--surface-2); color: var(--text); outline: none;
   }
+  /* 2026-05-20 — Back button for the new popout-stack navigation. Sits
+     before the title; hidden when nav-stack depth ≤ 1. Subtle ghost
+     button styling so it doesn't compete with the close (✕). */
+  .be-stat-modal-back {
+    background: none; border: 1px solid var(--border); cursor: pointer;
+    font-size: 12px; line-height: 1; color: var(--text-2);
+    padding: 6px 10px; border-radius: 4px; margin-right: 10px;
+    transition: background .12s, color .12s, border-color .12s;
+    align-self: flex-start;
+  }
+  .be-stat-modal-back:hover,
+  .be-stat-modal-back:focus-visible {
+    background: var(--surface-2); color: var(--text); border-color: var(--text-3); outline: none;
+  }
+  /* Clickable detail items inside the modal body (drill-into chip behavior).
+     Same affordance pattern as the alignment-bar rows: subtle hover, ▸
+     indicator already rendered inline in the count slot. */
+  .be-stat-modal-item-clickable { transition: background .12s; }
+  .be-stat-modal-item-clickable:hover { background: var(--surface-hover, rgba(255,255,255,.04)); }
+  .be-stat-modal-item-clickable:focus-visible { outline: 2px solid var(--blue-fg,#2563eb); outline-offset: -2px; }
   @media (max-width: 720px) {
     #be-stat-modal { width: 96vw; max-height: 88vh; }
     .be-stat-modal-header { padding: 12px 16px; }
@@ -11528,6 +11548,7 @@ async function build() {
   <div id="be-stat-backdrop" onclick="closeBeStatModal()" role="dialog" aria-modal="true" aria-labelledby="be-stat-modal-title" aria-hidden="true">
     <div id="be-stat-modal" onclick="event.stopPropagation()">
       <div class="be-stat-modal-header">
+        <button type="button" id="be-stat-modal-back" class="be-stat-modal-back" onclick="window._beNavBack && window._beNavBack()" aria-label="Back" hidden>&larr; Back</button>
         <div class="be-stat-modal-title-wrap">
           <h3 class="be-stat-modal-title" id="be-stat-modal-title">
             <span id="be-stat-modal-label"></span>
@@ -12001,11 +12022,14 @@ async function build() {
       const tierAEntries = Object.entries(entries).filter(([_, v]) => v.tier === 'A');
       const tierADemo = tierAEntries.filter(([_, v]) => v.demonstrated === 'yes').map(([k, v]) => ({ name: k, evidence: v.evidence || '', citation: (v.citations || [])[0] || '' }));
       const tierAGap  = tierAEntries.filter(([_, v]) => v.demonstrated !== 'yes').map(([k, v]) => ({ name: k, action: v.action_priority || '', evidence: v.evidence || '' }));
-      // Pull first 3 gap_closure_30day phases that unlock Tier-A items
-      const closurePlan = (tApi.gap_closure_30day || [])
-        .filter(p => Array.isArray(p.tier_a_unlocked) && p.tier_a_unlocked.length > 0)
-        .slice(0, 4)
-        .map(p => ({ phase: p.phase, action: p.action, unlocks: p.tier_a_unlocked, hours: p.cost_hours }));
+      // Pull first 3 gap_closure_30day phases that unlock Tier-A items.
+      // _idx preserves the original array position so the week-drill can
+      // look up the full phase object from data.phases[_idx].
+      const allPhases = tApi.gap_closure_30day || [];
+      const closurePlan = allPhases
+        .map((p, i) => ({ phase: p.phase, action: p.action, unlocks: p.tier_a_unlocked || [], hours: p.cost_hours, _idx: i }))
+        .filter(p => Array.isArray(p.unlocks) && p.unlocks.length > 0)
+        .slice(0, 4);
       apisPayload = {
         label: 'APIs / tools',
         headline: `${tA_demo} / ${tA_total} Tier-A`,
@@ -12078,6 +12102,38 @@ async function build() {
       },
     };
     return JSON.stringify(payload);
+  })()};
+  // 2026-05-20 — Drill-in data for chip-level navigation (Mitchell ask).
+  // Inlined here so commit/demo/gap/week drill-ins don't need extra fetches.
+  window.__BE_DRILL_DATA__ = ${(() => {
+    // Demo + gap entries — keyed by skill slug
+    const entries = (tApi && tApi.entries) || {};
+    const tierAEntries = {};
+    for (const [k, v] of Object.entries(entries)) {
+      if (v.tier !== 'A') continue;
+      tierAEntries[k] = {
+        name: k,
+        category: v.category || '',
+        demonstrated: v.demonstrated === 'yes',
+        evidence: v.evidence || '',
+        action: v.action_priority || '',
+        citations: v.citations || [],
+      };
+    }
+    // 30-day plan phases
+    const phases = (tApi && tApi.gap_closure_30day) || [];
+    // Recent commits with SHA + message + age for the commit drill-in.
+    // Read /tmp/be-recent-commits.txt at build time (lines of SHA|msg|age|author).
+    let recentCommits = [];
+    try {
+      const txt = readFileSync('/tmp/be-recent-commits.txt', 'utf-8');
+      recentCommits = txt.split('\n').filter(Boolean).map(line => {
+        const [sha, message, age, author] = line.split('|');
+        return { sha, message, age, author };
+      });
+    } catch { /* file optional */ }
+    const repoUrl = 'https://github.com/mitwilli-create/career-ops';
+    return JSON.stringify({ entries: tierAEntries, phases, commits: recentCommits, repoUrl });
   })()};
   </script>`;
   })() : ''}
@@ -23145,48 +23201,48 @@ function _renderBeStatBody(p) {
         '</div>';
     }
     const items = sec.items.map(function(it) {
+      // 2026-05-20 — Every item is now clickable to drill into a detail
+      // popout. data-be-drill="<type>:<key>" routes to the right render.
       if (sec.kind === 'demo') {
-        // Tier-A demonstrated: show evidence
-        return '<li class="be-stat-modal-item be-stat-modal-item-tier-a">' +
+        return '<li class="be-stat-modal-item be-stat-modal-item-tier-a be-stat-modal-item-clickable" data-be-drill="demo:' + esc(it.name) + '" role="button" tabindex="0" style="cursor:pointer" title="Click for what was achieved + story moments">' +
           '<div><span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
           (it.evidence ? '<div class="be-stat-modal-item-evidence">' + esc(it.evidence) + '</div>' : '') +
           '</div>' +
-          '<div class="be-stat-modal-item-count">demonstrated</div>' +
+          '<div class="be-stat-modal-item-count">demonstrated &rsaquo;</div>' +
           '</li>';
       }
       if (sec.kind === 'gap') {
-        // Tier-A gap: show next action
-        return '<li class="be-stat-modal-item be-stat-modal-item-gap">' +
+        return '<li class="be-stat-modal-item be-stat-modal-item-gap be-stat-modal-item-clickable" data-be-drill="gap:' + esc(it.name) + '" role="button" tabindex="0" style="cursor:pointer" title="Click for strategy + project opportunities (career-ops + xGE)">' +
           '<div><span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
           (it.action ? '<div class="be-stat-modal-item-evidence">' + esc(it.action) + '</div>' : '') +
           '</div>' +
-          '<div class="be-stat-modal-item-count">gap</div>' +
+          '<div class="be-stat-modal-item-count">gap &rsaquo;</div>' +
           '</li>';
       }
       if (sec.kind === 'plan') {
-        // 30-day closure plan phase
+        // 30-day closure plan phase — clickable to drill to day-by-day view
         const unlocks = Array.isArray(it.unlocks) ? it.unlocks.join(', ') : '';
-        return '<li class="be-stat-modal-item">' +
+        const idx = it._idx != null ? it._idx : 0;
+        return '<li class="be-stat-modal-item be-stat-modal-item-clickable" data-be-drill="week:' + esc(idx) + '" role="button" tabindex="0" style="cursor:pointer" title="Click for the day-by-day breakdown of this phase">' +
           '<div><span class="be-stat-modal-item-name">' + esc(it.phase) + '</span>' +
           (it.action ? '<div class="be-stat-modal-item-evidence">' + esc(it.action) + '</div>' : '') +
           (unlocks ? '<div class="be-stat-modal-item-evidence">Unlocks: <strong>' + esc(unlocks) + '</strong></div>' : '') +
           '</div>' +
-          '<div class="be-stat-modal-item-count">' + (it.hours != null ? (it.hours + 'h') : '—') + '</div>' +
+          '<div class="be-stat-modal-item-count">' + (it.hours != null ? (it.hours + 'h &rsaquo;') : '&rsaquo;') + '</div>' +
           '</li>';
       }
       if (sec.kind === 'commit') {
-        // 2026-05-19 BRAVO polish A2 (item #6): commit row in the header-pill drawer.
-        // Shows short SHA, message, relative age, author. SHA rendered in <code>.
         return '<li class="be-stat-modal-item">' +
           '<div><span class="be-stat-modal-item-name"><code style="background:var(--surface-2);padding:1px 6px;border-radius:3px;font-size:11px;margin-right:8px">' + esc(it.sha || '') + '</code>' + esc(it.message || '') + '</span>' +
           '<div class="be-stat-modal-item-evidence">' + esc(it.age || '') + (it.author ? ' · ' + esc(it.author) : '') + '</div>' +
           '</div>' +
           '</li>';
       }
-      // kind === 'count' default
-      return '<li class="be-stat-modal-item">' +
+      // kind === 'count' default — clickable to drill to the commit list
+      // for this skill/bug/PM-signal.
+      return '<li class="be-stat-modal-item be-stat-modal-item-clickable" data-be-drill="commit:' + esc(it.name) + '" data-be-chip-name="' + esc(it.name) + '" role="button" tabindex="0" style="cursor:pointer" title="Click for the commits that demonstrate this">' +
         '<span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
-        '<span class="be-stat-modal-item-count">' + esc(String(it.n || 0)) + ' commits</span>' +
+        '<span class="be-stat-modal-item-count">' + esc(String(it.n || 0)) + ' commits &rsaquo;</span>' +
         '</li>';
     }).join('');
     return '<div class="be-stat-modal-section">' +
@@ -23196,28 +23252,254 @@ function _renderBeStatBody(p) {
   }).join('');
   return sections;
 }
-function openBeStatModal(key) {
-  const payload = (window.__BE_STAT_PAYLOAD__ || {})[key];
-  if (!payload) return;
-  _beStatLastFocus = document.activeElement;
-  document.getElementById('be-stat-modal-label').textContent = payload.label + ' ·';
-  document.getElementById('be-stat-modal-headline').textContent = payload.headline || '';
-  document.getElementById('be-stat-modal-subhead').textContent = payload.subhead || '';
-  document.getElementById('be-stat-modal-body').innerHTML = _renderBeStatBody(payload);
+// 2026-05-20 — Popout navigation stack. Drilling into a chip pushes the
+// current view; back button pops. Replaces (does not overlay) the current
+// content. Stack stored on window so handlers can read/mutate it.
+window._beNavStack = [];
+
+function _beRenderView(view) {
+  document.getElementById('be-stat-modal-label').textContent = (view.label || '') + ' ·';
+  document.getElementById('be-stat-modal-headline').textContent = view.headline || '';
+  document.getElementById('be-stat-modal-subhead').textContent = view.subhead || '';
+  document.getElementById('be-stat-modal-body').innerHTML = view.bodyHtml || '<div style="opacity:.6">No detail yet.</div>';
   const footer = document.getElementById('be-stat-modal-footer');
-  if (payload.sources && payload.sources.length) {
-    footer.innerHTML = payload.sources.map(function(s) {
+  if (view.sources && view.sources.length) {
+    footer.innerHTML = view.sources.map(function(s) {
       return '<span>&rarr; Source: <code>' + esc(s) + '</code></span>';
     }).join('');
   } else {
     footer.innerHTML = '';
   }
+  // Back button visibility — only when stack depth > 1
+  const backBtn = document.getElementById('be-stat-modal-back');
+  if (backBtn) {
+    backBtn.hidden = window._beNavStack.length <= 1;
+    backBtn.setAttribute('aria-label', window._beNavStack.length > 1
+      ? ('Back to ' + (window._beNavStack[window._beNavStack.length - 2].label || 'previous'))
+      : 'Back');
+  }
+}
+
+function _beNavPush(view) {
+  window._beNavStack.push(view);
+  _beRenderView(view);
+}
+function _beNavPop() {
+  if (window._beNavStack.length <= 1) return;
+  window._beNavStack.pop();
+  _beRenderView(window._beNavStack[window._beNavStack.length - 1]);
+}
+window._beNavBack = _beNavPop;
+
+function openBeStatModal(key) {
+  const payload = (window.__BE_STAT_PAYLOAD__ || {})[key];
+  if (!payload) return;
+  _beStatLastFocus = document.activeElement;
+  // Fresh stack — drilling from a tile resets the breadcrumb
+  window._beNavStack = [{
+    label: payload.label,
+    headline: payload.headline || '',
+    subhead: payload.subhead || '',
+    bodyHtml: _renderBeStatBody(payload),
+    sources: payload.sources || [],
+    payloadKey: key,
+  }];
+  _beRenderView(window._beNavStack[0]);
   const backdrop = document.getElementById('be-stat-backdrop');
   backdrop.classList.add('visible');
   backdrop.setAttribute('aria-hidden', 'false');
   const close = backdrop.querySelector('.be-stat-modal-close');
   if (close) close.focus();
 }
+
+// ── Drill-in render functions ──────────────────────────────────────
+// Each returns a view {label, headline, subhead, bodyHtml, sources}.
+
+function _beRenderCommits(chipKey, chipName) {
+  const data = window.__BE_DRILL_DATA__ || {};
+  const repo = data.repoUrl || '';
+  // Filter recent commits whose message mentions the chip name (case-insensitive
+  // substring). Falls back to all commits if no matches (so the user always
+  // sees something).
+  const all = data.commits || [];
+  const needle = String(chipName || '').toLowerCase();
+  const matched = needle ? all.filter(c => (c.message || '').toLowerCase().includes(needle)) : all;
+  const rows = matched.length ? matched : all.slice(0, 20);
+  const items = rows.map(c => {
+    const href = repo ? (repo + '/commit/' + c.sha) : '#';
+    return '<li class="be-stat-modal-item">' +
+      '<div style="flex:1;min-width:0">' +
+        '<a href="' + esc(href) + '" target="_blank" rel="noopener" style="color:var(--text-1);text-decoration:none">' +
+          '<code style="background:var(--surface-2);padding:1px 6px;border-radius:3px;font-size:11px;margin-right:8px">' + esc(c.sha || '') + '</code>' +
+          '<span class="be-stat-modal-item-name">' + esc(c.message || '') + '</span>' +
+        '</a>' +
+        '<div class="be-stat-modal-item-evidence">' + esc(c.age || '') + (c.author ? ' · ' + esc(c.author) : '') + '</div>' +
+      '</div>' +
+      '<a href="' + esc(href) + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue-fg,#2563eb);text-decoration:underline">GitHub' + String.fromCharCode(0x2197) + '</a>' +
+      '</li>';
+  }).join('');
+  return {
+    label: chipName ? (chipName + ' commits') : 'Commits',
+    headline: matched.length + (matched.length === 1 ? ' commit' : ' commits'),
+    subhead: needle
+      ? 'Commits in the rolling 30-day window whose message mentions "' + chipName + '". Click any row to open in GitHub.'
+      : 'All commits in the rolling 30-day window. Click any row to open in GitHub.',
+    bodyHtml: '<div class="be-stat-modal-section"><ul class="be-stat-modal-list">' + items + '</ul></div>',
+    sources: ['data/builder-log-rolling-30d.md', 'git log (since 30 days)'],
+  };
+}
+
+function _beRenderDemo(skillKey) {
+  const data = window.__BE_DRILL_DATA__ || {};
+  const e = (data.entries || {})[skillKey];
+  if (!e) return _beRenderFallback('Demo detail unavailable for ' + skillKey);
+  // Pull commits that mention this skill — these are the "story moments"
+  const commits = (data.commits || []).filter(c => (c.message || '').toLowerCase().includes(skillKey.toLowerCase())).slice(0, 6);
+  const commitItems = commits.map(c => {
+    const href = (data.repoUrl || '') + '/commit/' + c.sha;
+    return '<li style="padding:6px 10px;background:var(--surface-2);border-radius:4px;margin-bottom:4px;font-size:12px">' +
+      '<a href="' + esc(href) + '" target="_blank" rel="noopener" style="color:var(--text-1);text-decoration:none">' +
+        '<code style="font-size:10.5px;margin-right:6px">' + esc(c.sha) + '</code>' +
+        esc(c.message) +
+      '</a>' +
+      '<div style="opacity:.55;font-size:10.5px;margin-top:2px">' + esc(c.age || '') + '</div>' +
+    '</li>';
+  }).join('') || '<div style="opacity:.55;font-size:12px">No commits mention this skill by name in the rolling window. Evidence is in the broader codebase.</div>';
+  // NB: outer-template-unescape bug class — a regex literal /^https?:\\/\\//
+  // gets its backslashes eaten by the surrounding backtick template, leaving
+  // /^https?:/// in the output (SyntaxError). Build via RegExp constructor
+  // so the pattern survives the template.
+  const _hostStripRe = new RegExp('^https?://');
+  const citations = (e.citations || []).map(u => '<a href="' + esc(u) + '" target="_blank" rel="noopener" style="display:inline-block;margin-right:8px;font-size:11.5px;color:var(--blue-fg);text-decoration:underline">' + esc(u.replace(_hostStripRe, '').slice(0, 60)) + '</a>').join('');
+  return {
+    label: 'Tier-A demonstrated · ' + skillKey,
+    headline: skillKey,
+    subhead: e.category ? ('Category: ' + e.category + ' · demonstrated in career-ops fork') : 'Demonstrated in career-ops fork',
+    bodyHtml:
+      '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">What was achieved</div>' +
+        '<div style="padding:8px 12px;background:var(--surface-2);border-radius:4px;font-size:13px;line-height:1.55">' + esc(e.evidence) + '</div>' +
+      '</div>' +
+      '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">Story moments (commits mentioning ' + esc(skillKey) + ')</div>' +
+        '<ul style="padding:0;margin:0;list-style:none">' + commitItems + '</ul>' +
+      '</div>' +
+      (citations ? '<div class="be-stat-modal-section"><div class="be-stat-modal-section-label">External references</div><div>' + citations + '</div></div>' : ''),
+    sources: ['data/builder-target-apis.json'],
+  };
+}
+
+function _beRenderGap(skillKey) {
+  const data = window.__BE_DRILL_DATA__ || {};
+  const e = (data.entries || {})[skillKey];
+  if (!e) return _beRenderFallback('Gap detail unavailable for ' + skillKey);
+  // Heuristic project opportunities (career-ops vs xGE) — derived from the
+  // skill category. Encoded inline; can be replaced by an LLM-generated map
+  // later. Each entry: { personal: string, work: string }.
+  const opportunityMap = {
+    'agent-framework':  { personal: 'Wrap an existing career-ops agent (cv-tailor, council, or apply-pack-polish) as a stateful LangGraph workflow — public trace URL counts as proof.', work: 'xGE: rebuild the comms-triage agent as a multi-node LangGraph state machine; documented trace replaces the hand-wired 3-prompt pipeline.' },
+    'observability':    { personal: 'Pair LangSmith with the LangGraph rewrite — every council call ships a public trace.', work: 'xGE: pipe internal agents through LangSmith for trace replay during postmortems.' },
+    'vector-db':        { personal: 'Build a Pinecone/pgvector index over cv.md + article-digest.md; replace career-ops grep with semantic retrieval. ~2h.', work: 'xGE: index the curated comms corpus; A/B retrieval-augmented drafts vs the existing kill-list pipeline.' },
+    'web-framework':    { personal: 'Spin a Next.js subdomain (e.g., agents.careers-ops.com) hosting a Vercel-AI-SDK chat UI over the career-ops council.', work: 'xGE: ship the Voice DNA RAG as a Next.js internal tool with a chat-with-tools front-end.' },
+    'workflow-engine':  { personal: 'Deploy cv-tailor-batch as a Temporal workflow — uses the multi-step retry semantics for real.', work: 'xGE: convert the apply-pack-polish flow to Temporal so each artifact stage is a durable activity.' },
+    'eval-platform':    { personal: 'Wire Braintrust into the council; every multi-LLM run logs to a public eval dataset.', work: 'xGE: track drafting-quality regressions across model upgrades with Braintrust scoreboards.' },
+  };
+  const opp = opportunityMap[e.category] || { personal: 'Pick an existing career-ops surface (dashboard, heartbeat email, or apply-pack pipeline) and wire this dependency in. Public surface counts as proof.', work: 'xGE: identify an internal-comms surface that would benefit from this technology and ship a small POC.' };
+  return {
+    label: 'Tier-A gap · ' + skillKey,
+    headline: skillKey,
+    subhead: e.category ? ('Category: ' + e.category + ' · gap (30-day reachable)') : 'Gap (30-day reachable)',
+    bodyHtml:
+      '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">Strategy to close the gap</div>' +
+        '<div style="padding:8px 12px;background:rgba(217,119,6,.08);border-left:3px solid var(--amber-fg,#d97706);border-radius:4px;font-size:13px;line-height:1.55">' + esc(e.action || ('Build a public artifact demonstrating ' + skillKey + '.')) + '</div>' +
+      '</div>' +
+      '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">Personal-project route (career-ops)</div>' +
+        '<div style="padding:8px 12px;background:rgba(59,130,246,.08);border-left:3px solid var(--blue-fg,#2563eb);border-radius:4px;font-size:13px;line-height:1.55">' + esc(opp.personal) + '</div>' +
+      '</div>' +
+      '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">Work-project route (xGE)</div>' +
+        '<div style="padding:8px 12px;background:rgba(124,58,237,.08);border-left:3px solid #7c3aed;border-radius:4px;font-size:13px;line-height:1.55">' + esc(opp.work) + '</div>' +
+      '</div>',
+    sources: ['data/builder-target-apis.json'],
+  };
+}
+
+function _beRenderWeek(phaseIdx) {
+  const data = window.__BE_DRILL_DATA__ || {};
+  const phase = (data.phases || [])[Number(phaseIdx)];
+  if (!phase) return _beRenderFallback('Plan detail unavailable for phase ' + phaseIdx);
+  const hours = phase.cost_hours || 0;
+  // Split the phase hours into daily blocks. Heuristic: 7-day week with the
+  // hours distributed in 2-hour blocks until exhausted (e.g., 8h = 4 days
+  // of 2h; 6h = 3 days; 10h = 5 days). Future enhancement: have an LLM
+  // produce per-day deliverables.
+  const blockSize = 2;
+  const dayCount = Math.max(1, Math.min(7, Math.ceil(hours / blockSize)));
+  const days = [];
+  let remaining = hours;
+  for (let i = 1; i <= dayCount; i++) {
+    const todayHours = Math.min(blockSize, remaining);
+    remaining -= todayHours;
+    days.push({ day: i, hours: todayHours, suggestion: '~' + todayHours + 'h on ' + (phase.action || 'plan work').slice(0, 80) });
+  }
+  const dayRows = days.map(d => '<li class="be-stat-modal-item"><div><span class="be-stat-modal-item-name">Day ' + d.day + '</span><div class="be-stat-modal-item-evidence">' + esc(d.suggestion) + '</div></div><div class="be-stat-modal-item-count">' + d.hours + 'h</div></li>').join('');
+  const unlocksLine = (Array.isArray(phase.tier_a_unlocked) && phase.tier_a_unlocked.length)
+    ? '<div style="padding:8px 12px;background:rgba(22,163,74,.08);border-left:3px solid var(--green-fg,#16a34a);border-radius:4px;font-size:13px;margin-bottom:10px">Unlocks: <strong>' + phase.tier_a_unlocked.map(esc).join(', ') + '</strong></div>'
+    : '';
+  return {
+    label: phase.phase || ('Phase ' + (Number(phaseIdx) + 1)),
+    headline: hours + 'h budget',
+    subhead: phase.note || phase.action || '',
+    bodyHtml:
+      unlocksLine +
+      '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">Phase action</div>' +
+        '<div style="padding:8px 12px;background:var(--surface-2);border-radius:4px;font-size:13px;line-height:1.55">' + esc(phase.action || '') + '</div>' +
+      '</div>' +
+      '<div class="be-stat-modal-section">' +
+        '<div class="be-stat-modal-section-label">Day-by-day breakdown (' + dayCount + ' day' + (dayCount === 1 ? '' : 's') + ', ' + blockSize + 'h blocks)</div>' +
+        '<ul class="be-stat-modal-list">' + dayRows + '</ul>' +
+        '<div style="opacity:.55;font-size:11px;margin-top:6px">Auto-split heuristic. For richer per-day deliverables, run /researcher with the phase action as the brief.</div>' +
+      '</div>',
+    sources: ['data/builder-target-apis.json (gap_closure_30day)'],
+  };
+}
+
+function _beRenderFallback(msg) {
+  return {
+    label: 'Detail unavailable',
+    headline: '',
+    subhead: '',
+    bodyHtml: '<div style="padding:20px;text-align:center;color:var(--text-3)">' + esc(msg) + '</div>',
+    sources: [],
+  };
+}
+
+// Drill dispatch — capture-phase handler so the modal's
+// onclick="event.stopPropagation()" (which exists to keep backdrop-clicks
+// from closing the modal when clicking inside) doesn't suppress us.
+// Capture-phase fires BEFORE the modal's bubble-phase stopPropagation.
+document.addEventListener('click', function(e) {
+  const drill = e.target.closest && e.target.closest('[data-be-drill]');
+  if (!drill) return;
+  if (!drill.closest('#be-stat-modal')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const raw = drill.getAttribute('data-be-drill') || '';
+  // Note: keys may contain ':' (e.g., commit message keys). Split on FIRST
+  // colon only to preserve any nested colons in the key.
+  const colonIdx = raw.indexOf(':');
+  const type = colonIdx >= 0 ? raw.slice(0, colonIdx) : raw;
+  const key  = colonIdx >= 0 ? raw.slice(colonIdx + 1) : '';
+  let view = null;
+  if (type === 'commit')   view = _beRenderCommits(key, drill.getAttribute('data-be-chip-name') || key);
+  if (type === 'demo')     view = _beRenderDemo(key);
+  if (type === 'gap')      view = _beRenderGap(key);
+  if (type === 'week')     view = _beRenderWeek(key);
+  if (view) _beNavPush(view);
+}, true);
 function closeBeStatModal() {
   const backdrop = document.getElementById('be-stat-backdrop');
   if (!backdrop) return;
