@@ -1,5 +1,5 @@
 ---
-description: Run the JD-extract → V3.0-resume pipeline for Shivani Anghan (one URL at a time).
+description: Run the JD-extract → V3.1-resume pipeline for Shivani Anghan (one URL at a time).
 argument-hint: ""
 ---
 

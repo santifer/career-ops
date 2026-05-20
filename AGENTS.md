@@ -258,11 +258,11 @@ truncate Read responses and inject observation timelines. See
 
 ### Shivani Resume Pipeline (shivani-resume-pipeline)
 
-A dedicated resume + cover-letter pipeline for Shivani Anghan targeting Azure Data Engineer roles. Mirrors the Yash pipeline structure but uses Shivani's CV, locked V3.0 prompt, and separate output directories. Drop URLs into `data/shivani-pipeline.md`, then run `/shivani-resume-pipeline` — it processes one URL at a time, pauses for feedback after each, and stops on `quit`, empty queue, or 3 consecutive failures.
+A dedicated resume + cover-letter pipeline for Shivani Anghan targeting Full Stack Java / Software Developer roles in Banking & Financial Services. Mirrors the Yash pipeline structure but uses Shivani's CV, locked V3.1 prompt, and separate output directories. Drop URLs into `data/shivani-pipeline.md`, then run `/shivani-resume-pipeline` — it processes one URL at a time, pauses for feedback after each, and stops on `quit`, empty queue, or 3 consecutive failures.
 
 Inputs:
 - URLs in `data/shivani-pipeline.md` `## Pendientes` section as `- [ ] <url>`.
-- The locked V3.0 resume prompt at `V2-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md`.
+- The locked V3.1 resume prompt at `V3-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md`.
 - The cover letter prompt at `shivani-cover-letter-system.md`.
 - CV source: `cv-shivani.md`.
 
@@ -278,10 +278,10 @@ State machine subcommands (same as Yash pipeline):
 - `node shivani-resume-pipeline.mjs next-pending` — pop the next unchecked URL from the queue
 - `node shivani-resume-pipeline.mjs slugify --company "<c>" --role "<r>"` — generate the canonical slug for output filenames
 
-Contact: `shivanianghan98@gmail.com`
+Contact: `shivanianghan11@gmail.com`
 
 Two files that are NEVER modified by the pipeline (locked prompts):
-- `V2-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md`
+- `V3-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md`
 - `shivani-cover-letter-system.md`
 
 See `modes/shivani-resume-pipeline.md` for the full per-URL loop.
