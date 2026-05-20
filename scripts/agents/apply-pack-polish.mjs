@@ -320,6 +320,11 @@ export async function runPolishPack(opts = {}) {
           onCostRecord,                 // Mitchell decision α.2 — pass cost trace callback
           phase: 'phase-2',
           artifactSlug: conf.kind,
+          // Early-abandonment knobs (added 2026-05-19, conservative defaults)
+          earlyAbandonDisabled: opts.earlyAbandonDisabled === true,
+          earlyAbandonAfterRound: opts.earlyAbandonAfterRound,
+          earlyAbandonMaxConfidence: opts.earlyAbandonMaxConfidence,
+          earlyAbandonMinDelta: opts.earlyAbandonMinDelta,
           onSignalsRefresh: async () => {
             const refreshed = await harvestPolishSignals({
               slug: packInfo.slug,
@@ -358,6 +363,8 @@ export async function runPolishPack(opts = {}) {
       cost_usd: polish.cost_usd || 0,
       duration_ms: polish.duration_ms || 0,
       converged: polish.converged === true,
+      early_abandoned: polish.early_abandoned === true,
+      confidence_history: polish.confidence_history || [],
       error: polish.error || null,
       trace_path: tracePath.replace(ROOT + '/', ''),
     };
@@ -365,6 +372,7 @@ export async function runPolishPack(opts = {}) {
       phase: 'phase-2', artifact: conf.kind, step: 'polish-loop-done',
       confidence: polish.confidence,
       converged: polish.converged === true,
+      early_abandoned: polish.early_abandoned === true,
       rounds: polish.rounds_used,
       adversarial: (polish.adversarial_findings || []).length,
       cost_usd: polish.cost_usd || 0,
@@ -425,7 +433,7 @@ async function cliMain() {
   function flag(f) { return args.includes(f); }
 
   if (flag('--help') || flag('-h')) {
-    process.stdout.write(`Usage: node scripts/agents/apply-pack-polish.mjs --row <N> [--artifacts cv,cover,form,impact,refs,referrals] [--target-confidence 0.99] [--cost-cap 500] [--no-cache]\n`);
+    process.stdout.write(`Usage: node scripts/agents/apply-pack-polish.mjs --row <N> [--artifacts cv,cover,form,impact,refs,referrals] [--target-confidence 0.99] [--cost-cap 500] [--no-cache] [--no-early-abandon] [--early-abandon-after 3] [--early-abandon-max-confidence 0.50] [--early-abandon-min-delta 0.05]\n`);
     process.exit(0);
   }
 
@@ -436,6 +444,11 @@ async function cliMain() {
   const costCap = Number(arg('--cost-cap', '500'));
   const noCache = flag('--no-cache');
   const artifacts = artifactsArg ? artifactsArg.split(',').map(s => s.trim()).filter(Boolean) : DEFAULT_ARTIFACTS;
+  // Early-abandonment knobs (default on; --no-early-abandon disables)
+  const earlyAbandonDisabled = flag('--no-early-abandon');
+  const earlyAbandonAfterRound = Number(arg('--early-abandon-after', '3'));
+  const earlyAbandonMaxConfidence = Number(arg('--early-abandon-max-confidence', '0.50'));
+  const earlyAbandonMinDelta = Number(arg('--early-abandon-min-delta', '0.05'));
 
   const out = await runPolishPack({
     row,
@@ -444,6 +457,10 @@ async function cliMain() {
     targetConfidence,
     costCap,
     noCache,
+    earlyAbandonDisabled,
+    earlyAbandonAfterRound,
+    earlyAbandonMaxConfidence,
+    earlyAbandonMinDelta,
   });
 
   process.stdout.write(JSON.stringify(out) + '\n');
