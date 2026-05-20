@@ -12,6 +12,7 @@ import { execSync as _execSync, spawn as _spawn, spawnSync as _spawnSync } from 
 import { homedir } from 'os';
 import yaml from 'js-yaml';
 import { marked } from 'marked';
+import { tierCostEstimates as _tierCostEstimates } from './lib/process-all-tiers.mjs';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
 import { statusKey, statusBadgeClass } from './lib/status-key.mjs';
 import { getCachedUrl } from './lib/resolve-ats-url.mjs';
@@ -1258,6 +1259,30 @@ function buildPipelinePreview() {
         assumed_cache_hit_rate:     COMPANY_CACHE_HIT_RATE,
         exceeds_per_run_cap:        tier5ProcessAllCost > PER_RUN_CAP_PROCESS_ALL,
       },
+      // 2026-05-20 — Three-tier picker (lib/process-all-tiers.mjs). New
+      // canonical field; tier5_estimate above is kept for backwards-compat
+      // with the legacy dashboard Tier-5 button.
+      tier_estimates: (() => {
+        try {
+          // Read current apply-now-queue size for the auto-escalate cost
+          // estimate. Falls back to estimating from batchEvalCount × 0.15
+          // if the queue file isn't readable.
+          let applyNowSize = Math.round(batchEvalCount * 0.15);
+          try {
+            const apqPath = join(ROOT, 'data/apply-now-queue.json');
+            if (existsSync(apqPath)) {
+              const apq = JSON.parse(readFileSync(apqPath, 'utf-8'));
+              applyNowSize = (apq.ranked || []).filter(r => !r._dropped && (r.eval_score || r.score || 0) >= 4.0).length;
+            }
+          } catch (_) { /* fall through */ }
+          return _tierCostEstimates({
+            pipelineSize:  pending,
+            applyNowSize,
+            advanceRate:   ADVANCE_RATE_ESTIMATE,
+            highScoreRate: 0.15,
+          });
+        } catch (_) { return null; }
+      })(),
     },
     run_batch: {
       // ── Decomposed stages (no triage for run_batch) ───────────────────────

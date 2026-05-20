@@ -21097,11 +21097,25 @@ async function confirmPipelineAction() {
     // isFullDrain || nothing selected → leave companies=null → script runs
     // full drain (or refuses if nothing selected via the disabled confirm btn).
   }
+  // 2026-05-20 — Pick up the selected tier from the radio picker (Process
+  // All only; Run Batch doesn't have a tier picker). Defaults to '1'
+  // (Standard). Legacy '5' (the prior Tier-5 button) is still routed via
+  // confirmTier5Run() — this path is for the new 3-tier modal.
+  let tier = null;
+  if (_pipelineAction === 'process-all') {
+    tier = (typeof window._pcpGetSelectedTier === 'function')
+      ? window._pcpGetSelectedTier()
+      : '1';
+  }
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirm: true, sendEmail, force, ...(companies?.length ? { companies } : {}) }),
+      body: JSON.stringify({
+        confirm: true, sendEmail, force,
+        ...(companies?.length ? { companies } : {}),
+        ...(tier ? { tier } : {}),
+      }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) {
@@ -21169,17 +21183,34 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
   const detectionLine = scopedDetection > 0.005
     ? '<div id="pcp-headline-detection" style="font-size:11px;opacity:0.55;margin-top:2px">+ $' + scopedDetection.toFixed(2) + ' potential AI-detection (post-publish, if ' + optInPct + '% opt in to Build pack)</div>'
     : '<div id="pcp-headline-detection" style="display:none;font-size:11px;opacity:0.55;margin-top:2px"></div>';
-  // 2026-05-19 (Mitchell feedback): Tier-5 line is now a real CTA that POSTs
-  // tier:5 to /api/pipeline/process-all. Opens a confirm dialog with cost +
-  // scope before any LLM spend. Inline-styled to look like a button (subtle).
-  const tier5Line = (tier5.total_cost_usd != null)
-    ? '<button type="button" id="pcp-tier5-cta" onclick="confirmTier5Run()" '
-      + 'style="background:transparent;border:1px dashed rgba(255,255,255,0.18);border-radius:4px;padding:2px 8px;'
-      + 'font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;font-family:inherit" '
-      + 'title="Run Tier-5 (Sonnet JD enrichment + apply-pack pregen on high-confidence rows). Opens a confirm dialog before spending.">'
-      + '⚡ Run Tier-5 on all ' + totalPipelineItems + ' items '
-      + '<span style="opacity:0.6">· ' + (tier5.unique_companies || 0) + ' companies · $' + tier5.total_cost_usd.toFixed(2) + '</span>'
-      + '</button>'
+  // 2026-05-20 — Three-tier picker (replaces the binary Tier-5 button).
+  // Reads pAgg.process_all.tier_estimates (lib/process-all-tiers.mjs).
+  // Tier 1 = Haiku triage + Sonnet eval; Tier 2 = Sonnet+Sonnet; Tier 3 =
+  // Sonnet+Opus. Auto-escalation (apply-pack pregen + polish on ≥4.0 rows)
+  // is included in every tier's total — it's "the system invests in proven
+  // winners regardless of tier."
+  const tEst = pAgg.process_all.tier_estimates;
+  const tierPickerLine = (tEst && tEst[1] && tEst[2] && tEst[3])
+    ? '<div id="pcp-tier-picker" style="margin-top:8px;padding:10px 12px;border:1px dashed rgba(255,255,255,0.18);border-radius:6px;font-size:12px">'
+      + '<div style="font-weight:600;margin-bottom:6px">Quality tier '
+      +   '<span style="font-weight:400;opacity:0.65">(applies to triage + eval model; ≥4.0 rows auto-escalate to apply-pack pregen + polish in every tier)</span>'
+      + '</div>'
+      + '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer">'
+      +   '<input type="radio" name="pcp-tier" value="1" checked onchange="_pcpUpdateTier(this.value)">'
+      +   '<span><strong>1 · Standard</strong> · Haiku triage + Sonnet eval · <strong>$' + tEst[1].total_cost_usd.toFixed(2) + '</strong>'
+      +     '<span style="opacity:0.6;font-size:11px"> · triage $' + tEst[1].breakdown.triage_cost_usd.toFixed(2) + ' + eval $' + tEst[1].breakdown.eval_cost_usd.toFixed(2) + ' + auto-escalate $' + (tEst[1].breakdown.pregen_cost_usd + tEst[1].breakdown.polish_cost_usd).toFixed(2) + '</span></span>'
+      + '</label>'
+      + '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer">'
+      +   '<input type="radio" name="pcp-tier" value="2" onchange="_pcpUpdateTier(this.value)">'
+      +   '<span><strong>2 · Premium Triage</strong> · Sonnet triage + Sonnet eval · <strong>$' + tEst[2].total_cost_usd.toFixed(2) + '</strong>'
+      +     '<span style="opacity:0.6;font-size:11px"> · fewer false-skips at the gate</span></span>'
+      + '</label>'
+      + '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer">'
+      +   '<input type="radio" name="pcp-tier" value="3" onchange="_pcpUpdateTier(this.value)">'
+      +   '<span><strong>3 · Premium Eval</strong> · Sonnet triage + <strong>Opus</strong> eval · <strong>$' + tEst[3].total_cost_usd.toFixed(2) + '</strong>'
+      +     '<span style="opacity:0.6;font-size:11px"> · highest-quality A–G reports, esp. for borderline 3.8–4.4</span></span>'
+      + '</label>'
+      + '</div>'
     : '';
   // Drain assurance: green check on full drain (default state), recomputed
   // by _pcpUpdateScopedCost when user toggles checkboxes.
@@ -21207,8 +21238,8 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
     +   drainAssurance
     +   '<div style="font-size:11px;opacity:0.55;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:6px;align-items:center">'
     +     '<span>Per-company drilldown (council + apply-pack pregen): $' + allCompaniesCost.toFixed(2) + ' · uncheck rows below to reduce scope</span>'
-    +     tier5Line
     +   '</div>'
+    +   tierPickerLine
     + '</div>';
   return headline + _renderPerCompanyPreview(pCmp);
 }
@@ -21925,6 +21956,25 @@ async function confirmTier5Run() {
   }
 }
 window.confirmTier5Run = confirmTier5Run;
+
+// 2026-05-20 — Tier-picker integration. The picker radios live in the
+// preview headline (rendered by _renderPipelinePreviewHeadline). When the
+// user changes selection, this updates the headline cost AND swaps the
+// "Continue" button so it submits the selected tier rather than 'normal'.
+let _pcpSelectedTier = '1';
+window._pcpUpdateTier = function (tier) {
+  _pcpSelectedTier = String(tier);
+  if (!_pipelinePreview) return;
+  const tEst = _pipelinePreview.process_all && _pipelinePreview.process_all.tier_estimates;
+  if (!tEst || !tEst[tier]) return;
+  // Update the headline cost to reflect the selected tier
+  const costEl = document.getElementById('pcp-headline-cost');
+  if (costEl) costEl.textContent = '$' + tEst[tier].total_cost_usd.toFixed(2);
+};
+// Wrapper around the existing Continue handler that injects the selected
+// tier. confirmPipelineAction() reads the radio value via this getter.
+window._pcpGetSelectedTier = function () { return _pcpSelectedTier; };
+
 window.openPipelineModal = openPipelineModal;
 window.closePipelineModal = closePipelineModal;
 window.confirmPipelineAction = confirmPipelineAction;
