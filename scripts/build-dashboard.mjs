@@ -2518,7 +2518,12 @@ function companyCareersUrl(company) {
   for (const [k, v] of Object.entries(CAREERS_URLS)) {
     if (key.startsWith(k + ' ') || key === k) return v;
   }
-  return `https://www.google.com/search?q=${encodeURIComponent(company + ' careers jobs')}`;
+  // 2026-05-20 — DO NOT fall back to a Google search. Mitchell reported
+  // clicking an Ema row took him to "Ema careers jobs" on google.com,
+  // which is the kind of dead-end UX we want to avoid on the apply
+  // surface. Return null and let the caller decide what to render
+  // (typically: a non-clickable company name).
+  return null;
 }
 
 // ── Tracker note formatter ──────────────────────────────────────────
@@ -3099,7 +3104,9 @@ function renderRow(r, idx) {
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span>${polishBadge}</td>
   <td class="base-cell">${baseCell}</td>
-  <td class="company-cell" title="${htmlEscape(r.company)}"><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
+  <td class="company-cell" title="${htmlEscape(r.company)}">${(() => { const careersHref = companyCareersUrl(r.company); return careersHref
+    ? `<a href="${htmlEscape(careersHref)}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>`
+    : `<strong class="company-link company-link-static" data-drill="company:${htmlEscape(companySlug)}" title="${htmlEscape(r.company)} careers URL not mapped — use the apply link in the action cell to view the role JD">${htmlEscape(r.company)}</strong>`; })()}${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
   <td class="role-cell" title="${htmlEscape(r.role)}">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="${htmlEscape(r.role)} — open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
   <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)} drill-trigger" data-status="${statusKey(r.status)}" data-num="${r.num}" data-drill="status:${htmlEscape(statusKey(r.status))}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${htmlEscape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
@@ -8223,6 +8230,10 @@ async function build() {
   .sidebar-runway-alert.healthy   { background: rgba(22,163,74,.10);  color: #166534; border-left-color: #16a34a; }
   .sidebar-runway-alert.stretched { background: rgba(245,158,11,.10); color: #92400e; border-left-color: #d97706; }
   .sidebar-runway-alert.critical  { background: rgba(220,38,38,.12);  color: #b91c1c; border-left-color: #dc2626; }
+  /* 2026-05-20 — Mitchell can hide the Runway widget via Settings.
+     The hide is driven by a body.runway-widget-hidden class set on
+     page-load after reading /api/settings (data/dashboard-settings.json). */
+  body.runway-widget-hidden .sidebar-runway { display: none; }
   @media (prefers-color-scheme: dark) {
     .sidebar-runway-alert.healthy   { color: #4ade80; background: rgba(22,163,74,.15); }
     .sidebar-runway-alert.stretched { color: #fbbf24; background: rgba(245,158,11,.18); }
@@ -13605,6 +13616,61 @@ function toggleDemoMode() {
   window.location.href = url.toString();
 }
 window.toggleDemoMode = toggleDemoMode;
+
+// 2026-05-20 — Dashboard settings runtime (data/dashboard-settings.json
+// is the file-of-record; localStorage 'careerOps.settings' is the
+// per-browser fast cache; /api/settings is read/write).
+// Path-style keys ('outreach.global_intensity') supported.
+const _SETTINGS_LS_KEY = 'careerOps.settings';
+function _applySettingsToDOM(s) {
+  if (!s) return;
+  document.body.classList.toggle('runway-widget-hidden', s.show_runway_widget === false);
+}
+async function _loadSettingsAndApply() {
+  let settings = null;
+  try {
+    const lsRaw = localStorage.getItem(_SETTINGS_LS_KEY);
+    if (lsRaw) settings = JSON.parse(lsRaw);
+  } catch (_) {}
+  try {
+    const res = await fetch('/api/settings', { cache: 'no-store' });
+    if (res.ok) {
+      const j = await res.json();
+      if (j && j.settings) {
+        settings = j.settings;
+        try { localStorage.setItem(_SETTINGS_LS_KEY, JSON.stringify(settings)); } catch (_) {}
+      }
+    }
+  } catch (_) { /* offline-tolerant — keep ls settings if present */ }
+  _applySettingsToDOM(settings || {});
+}
+window._setSetting = async function (path, value) {
+  // Build a partial-update object from a dotted path
+  const parts = path.split('.');
+  const partial = {};
+  let cur = partial;
+  for (let i = 0; i < parts.length - 1; i++) { cur[parts[i]] = {}; cur = cur[parts[i]]; }
+  cur[parts.at(-1)] = value;
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partial),
+    });
+    const j = await res.json();
+    if (j && j.settings) {
+      try { localStorage.setItem(_SETTINGS_LS_KEY, JSON.stringify(j.settings)); } catch (_) {}
+      _applySettingsToDOM(j.settings);
+    }
+  } catch (err) {
+    console.warn('_setSetting failed', err);
+  }
+};
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _loadSettingsAndApply);
+} else {
+  _loadSettingsAndApply();
+}
 
 // ── Row expand ──────────────────────────────────────────────────
 const MOBILE_BREAKPOINT_MQ = window.matchMedia('(max-width: 720px)');
@@ -26023,9 +26089,46 @@ function openMobileSettingsSheet(btn) {
       '<button type="button" class="toolbar-btn" style="min-height:48px;width:100%;text-align:left;padding:12px 14px" onclick="toggleDemoMode()">' +
         (demoOn ? '🎭  Disable demo mode' : '🎭  Enable demo mode') +
       '</button>' +
+      // 2026-05-20 — Behavior section. Hides the sidebar Runway widget +
+      // dials outreach intensity. Reads via /api/settings on open, writes
+      // via /api/settings POST + mirrors localStorage for instant feedback.
+      '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">' +
+        '<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px">Behavior</div>' +
+        '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" for="settings-runway-toggle">' +
+          '<span>Show Runway widget' +
+            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">The pulsing red \\'RUNWAY · CRITICAL\\' card in the left sidebar. Off = sidebar one less card.</div>' +
+          '</span>' +
+          '<input type="checkbox" id="settings-runway-toggle" onchange="window._setSetting(\\'show_runway_widget\\', this.checked)">' +
+        '</label>' +
+        '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-top:8px" for="settings-outreach-intensity">' +
+          '<span>Outreach intensity' +
+            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">Gentle = only HIGH-confidence prompts to warm connections. Aggressive = surface every actionable nudge.</div>' +
+          '</span>' +
+          '<select id="settings-outreach-intensity" onchange="window._setSetting(\\'outreach.global_intensity\\', this.value)" style="padding:6px 10px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;min-width:120px">' +
+            '<option value="gentle">Gentle</option>' +
+            '<option value="normal" selected>Normal</option>' +
+            '<option value="aggressive">Aggressive</option>' +
+          '</select>' +
+        '</label>' +
+        '<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding:0 2px">Per-connection (warm/cold) intensities and the suppression list are managed in <code>data/dashboard-settings.json</code>.</div>' +
+      '</div>' +
       '<p class="muted-text" style="margin:6px 2px 0;line-height:1.45">Pull-to-refresh: drag down from the top of the page. Long-press a row to enter multi-select mode.</p>' +
     '</div>'
   );
+  // Async-load current settings + reflect in the toggles
+  (async function _hydrateSettingsSheet() {
+    try {
+      const res = await fetch('/api/settings', { cache: 'no-store' });
+      if (!res.ok) return;
+      const { settings } = await res.json();
+      const rw = document.getElementById('settings-runway-toggle');
+      if (rw) rw.checked = settings.show_runway_widget !== false;
+      const oi = document.getElementById('settings-outreach-intensity');
+      if (oi && settings.outreach && settings.outreach.global_intensity) {
+        oi.value = settings.outreach.global_intensity;
+      }
+    } catch (_) { /* offline-tolerant */ }
+  })();
   bodyEl.scrollTop = 0;
   bd.classList.add('visible');
   bd.removeAttribute('aria-hidden');

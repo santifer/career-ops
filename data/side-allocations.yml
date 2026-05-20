@@ -20,16 +20,11 @@
 #
 # Agents may append new entries; never overwrite an existing entry directly —
 # commit via: node scripts/agent-commit.mjs --agent side-allocations --files data/side-allocations.yml
+#
+# 2026-05-20 — Mitchell flagged the prior placeholder ("Google Workspace AI /
+# Jane Doe / Prompt-eval framework for generative scribing") as confusing
+# hallucinated-looking content surfacing on the dashboard. Cleared. The 20% /
+# Side widget on the sidebar will now show "No allocations defined" until a
+# real entry is added.
 
-- team: "Google Workspace AI"
-  charter: "Prompt-eval framework for generative scribing"
-  start_date: "2026-04-15"
-  end_date: "2026-06-30"
-  status: "active"
-  deliverables:
-    - artifact: "v1 Eval Pipeline"
-      url: "go/workspace-eval-v1"
-  outcomes:
-    - "Reduced LLM run cost by 10%"
-  sponsor: "Jane Doe"
-  skills_gained: ["Python", "Agent-orchestration"]
+[]

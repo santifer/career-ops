@@ -4759,6 +4759,44 @@ const server = createServer((req, res) => {
     return json({ ok: true, active: true, job, log_tail: tail });
   }
 
+  // 2026-05-20 — user-editable dashboard preferences. Backed by
+  // data/dashboard-settings.json (file-of-record, cross-device) and
+  // shadowed by localStorage 'careerOps.settings' (per-browser overrides).
+  // Schema: { show_runway_widget: bool, outreach: { global_intensity,
+  // warm_intensity, cold_intensity, suppression[] } }.
+  if (url === '/api/settings' && req.method === 'GET') {
+    const fp = join(ROOT, 'data', 'dashboard-settings.json');
+    if (!existsSync(fp)) return json({ ok: true, settings: {} });
+    try { return json({ ok: true, settings: JSON.parse(readFileSync(fp, 'utf-8')) }); }
+    catch (err) { return json({ ok: false, error: err.message }, 500); }
+  }
+  if (url === '/api/settings' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; if (body.length > 50_000) req.connection.destroy(); });
+    req.on('end', () => {
+      try {
+        const incoming = JSON.parse(body || '{}');
+        const fp = join(ROOT, 'data', 'dashboard-settings.json');
+        const current = existsSync(fp) ? JSON.parse(readFileSync(fp, 'utf-8')) : {};
+        // Shallow merge top-level; deep-merge `outreach` so partial updates work.
+        const merged = { ...current, ...incoming };
+        if (incoming.outreach || current.outreach) {
+          merged.outreach = { ...(current.outreach || {}), ...(incoming.outreach || {}) };
+        }
+        merged.schema_version = merged.schema_version || 1;
+        writeFileSync(fp, JSON.stringify(merged, null, 2));
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ ok: true, settings: merged }));
+      } catch (err) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // 2026-05-19 Mitchell instrumentation — pipeline health endpoint reads
   // the most-recent pipeline-health.json (written every 5 min by
   // scripts/agents/pipeline-health-check.mjs). Dashboard's "System healthy"

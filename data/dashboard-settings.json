@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "_comment_": "User-editable dashboard preferences. Edit via the Settings sheet (sidebar gear icon → 'Behavior') or by writing here directly + restarting dashboard-server. NOTE: localStorage 'careerOps.settings' shadows these at runtime per-browser; the file is the durable baseline + cross-device fallback.",
+  "show_runway_widget": true,
+  "outreach": {
+    "global_intensity": "normal",
+    "warm_intensity": "normal",
+    "cold_intensity": "gentle",
+    "suppression": [],
+    "_help_": "intensity ∈ {gentle, normal, aggressive}. gentle = only HIGH-confidence prompts (warm connections, overdue >14d). normal = today's default. aggressive = surface every actionable nudge including lukewarm leads. suppression = list of {name, reason} or LinkedIn profile-id strings; the outreach tracker skips these from due/breakup lists."
+  }
+}
