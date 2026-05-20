@@ -88,14 +88,442 @@
     .actions-cell { text-align: right; }
     .small { font-size: 11px; color: var(--text-4); }
   </style>
+
+<!-- BRAVO 2026-05-19: shared dashboard shell injection -->
+<style>
+/* Wrap the page in a sidebar grid so the table content sits beside the sidebar */
+:root {
+  --sidebar-w: 200px;
+  --sidebar-w-collapsed: 56px;
+  --radius-sm: 6px;
+  --radius-full: 9999px;
+  --focus-ring: 0 0 0 3px var(--blue-bg);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
+  /* The shell sidebar's :focus-visible token */
+  --green-fg: var(--green-fg);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --border-strong: #353a52;
+  }
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --border-strong: #cbd5e1;
+  }
+}
+body { display: block; }
+.netdb-page-wrap {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+}
+.netdb-page-wrap > main.netdb-content {
+  min-width: 0;
+  padding: 0;
+}
+@media (max-width: 1279px) and (min-width: 721px) {
+  .netdb-page-wrap { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
+}
+@media (max-width: 720px) {
+  .netdb-page-wrap { grid-template-columns: 1fr; }
+  .netdb-content { padding-top: 60px; }
+}
+/* Override header background so it sits flush against the sidebar */
+header { background: var(--surface); }
+
+/* ── Dashboard shell — shared across all pages ──────────────────────── */
+
+/* Skip-link */
+.skip-link {
+  position: absolute; top: -40px; left: 8px;
+  background: var(--blue-fg);
+  color: var(--bg);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm, 6px);
+  font-weight: 600;
+  font-size: 13px;
+  z-index: 10000;
+  text-decoration: none;
+}
+.skip-link:focus { top: 8px; outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* SR-only visually-hidden helper */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Global focus-visible */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--blue-fg);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Sidebar shell */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w, 200px) 1fr;
+  min-height: 100vh;
+}
+.app-main {
+  padding: 24px 28px;
+  min-width: 0;
+}
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  transition: transform .25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.sidebar-brand:hover { text-decoration: none; }
+.sidebar-favicon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--green-fg), var(--blue-fg));
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sidebar-brand-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px;
+  flex: 1 1 auto;
+  gap: 8px;
+}
+.sidebar-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-nav-group-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-4);
+  padding: 8px 12px 4px;
+  display: block;
+}
+.sidebar-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm, 6px);
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  margin-left: -3px;
+  transition: background .12s, color .12s, border-color .12s;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+  position: relative;
+}
+.sidebar-link:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+}
+.sidebar-link[aria-current="page"],
+.sidebar-link-active {
+  background: var(--surface-2);
+  color: var(--text);
+  border-left-color: var(--green-fg);
+  font-weight: 600;
+}
+.sidebar-link[aria-current="page"] .sidebar-icon {
+  /* Visual reinforcement beyond color — WCAG 1.4.1 */
+  filter: drop-shadow(0 0 4px rgba(134, 239, 172, 0.4));
+}
+.sidebar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.sidebar-label {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.sidebar-sublabel {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-4);
+  margin-top: 1px;
+}
+
+/* Hamburger toggle (mobile only) */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 12px;
+  z-index: 9001;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+.sidebar-toggle:hover { background: var(--surface-2); }
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+  z-index: 8999;
+}
+.sidebar-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Responsive: collapse to icons-only between 720-1279 px */
+@media (max-width: 1279px) and (min-width: 721px) {
+  .app-shell { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
+  .sidebar-brand { justify-content: center; padding: 18px 8px 14px; }
+  .sidebar-brand-name { display: none; }
+  .sidebar-nav { padding: 10px 6px; }
+  .sidebar-nav-group-label { display: none; }
+  .sidebar-link { justify-content: center; padding: 9px 6px; gap: 0; }
+  .sidebar-link .sidebar-label { display: none; }
+}
+
+/* Responsive: mobile (<=720 px) — sidebar becomes overlay */
+@media (max-width: 720px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: var(--sidebar-w, 200px);
+    height: 100vh;
+    transform: translateX(-100%);
+    box-shadow: 2px 0 24px rgba(0, 0, 0, 0.25);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-toggle { display: inline-flex; }
+  .app-main { padding: 60px 16px 24px; }  /* leave room for hamburger */
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-backdrop,
+  .sidebar-link {
+    transition: none !important;
+  }
+}
+
+/* Keyboard shortcuts modal */
+.shortcuts-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.shortcuts-modal-backdrop.visible {
+  display: flex;
+}
+.shortcuts-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 8px);
+  padding: 24px 28px;
+  max-width: 480px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: var(--text);
+}
+.shortcuts-modal h2 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+.shortcuts-modal table { width: 100%; border-collapse: collapse; }
+.shortcuts-modal td { padding: 8px 4px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.shortcuts-modal td:first-child { white-space: nowrap; }
+.shortcuts-modal kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid var(--border-strong, var(--border));
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  line-height: 1;
+}
+.shortcuts-modal-close {
+  margin-top: 16px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+}
+.shortcuts-modal-close:hover { background: var(--border); }
+
+</style>
+
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<button type="button" class="sidebar-toggle" id="sidebar-toggle-btn"
+  onclick="toggleSidebar()" aria-label="Open navigation menu" aria-expanded="false"
+  aria-controls="sidebar">☰</button>
+<div class="sidebar-backdrop" id="sidebar-backdrop"
+  onclick="closeSidebar()" aria-hidden="true"></div>
+
+<div id="_shortcut-announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+<div class="netdb-page-wrap">
+  <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+    <a class="sidebar-brand" href="/" aria-label="Career-Ops home">
+      <span class="sidebar-favicon" aria-hidden="true">⚡</span>
+      <span class="sidebar-brand-name">Career-Ops</span>
+    </a>
+    <nav class="sidebar-nav" aria-label="Site sections">
+
+      <div class="sidebar-nav-group" role="group" aria-labelledby="navgrp-pages-label">
+        <span id="navgrp-pages-label" class="sidebar-nav-group-label">Pages</span>
+        <a href="/" class="sidebar-link" title="Dashboard">
+        <span class="sidebar-icon" aria-hidden="true">⚡</span>
+        <span class="sidebar-label">Dashboard</span>
+      </a>
+      <a href="/contacts.html" class="sidebar-link" title="Network">
+        <span class="sidebar-icon" aria-hidden="true">👥</span>
+        <span class="sidebar-label">Network</span>
+      </a>
+      <a href="/network-database.html" class="sidebar-link sidebar-link-active" title="Network DB" aria-current="page">
+        <span class="sidebar-icon" aria-hidden="true">🗄</span>
+        <span class="sidebar-label">Network DB<span class="sidebar-sublabel" aria-hidden="true">table view</span></span>
+      </a>
+      </div>
+
+      <div class="sidebar-nav-group" role="group" aria-labelledby="navgrp-dashboard-label">
+        <span id="navgrp-dashboard-label" class="sidebar-nav-group-label">Dashboard sections</span>
+        <a href="/#overview-section" class="sidebar-link" title="Overview">
+        <span class="sidebar-icon" aria-hidden="true">📊</span>
+        <span class="sidebar-label">Overview</span>
+      </a>
+      <a href="/#apply-now-section" class="sidebar-link" title="Apply-Now">
+        <span class="sidebar-icon" aria-hidden="true">🎯</span>
+        <span class="sidebar-label">Apply-Now</span>
+      </a>
+      <a href="/#all-evaluations-section" class="sidebar-link" title="All Evaluations">
+        <span class="sidebar-icon" aria-hidden="true">📋</span>
+        <span class="sidebar-label">All Evaluations</span>
+      </a>
+      <a href="/#trends-panel" class="sidebar-link" title="Trends">
+        <span class="sidebar-icon" aria-hidden="true">📈</span>
+        <span class="sidebar-label">Trends</span>
+      </a>
+      <a href="/#companies-panel" class="sidebar-link" title="Companies">
+        <span class="sidebar-icon" aria-hidden="true">🏢</span>
+        <span class="sidebar-label">Companies</span>
+      </a>
+      </div>
+
+      <div class="sidebar-nav-group" role="group" aria-labelledby="navgrp-actions-label">
+        <span id="navgrp-actions-label" class="sidebar-nav-group-label">Actions</span>
+        <a href="/?open=pending" class="sidebar-link" title="Pipeline — opens on Dashboard">
+      <span class="sidebar-icon" aria-hidden="true">⏳</span>
+      <span class="sidebar-label">Pipeline</span>
+    </a>
+      <a href="/?open=batch-runs" class="sidebar-link" title="Batch Runs — opens on Dashboard">
+      <span class="sidebar-icon" aria-hidden="true">📦</span>
+      <span class="sidebar-label">Batch Runs</span>
+    </a>
+      <a href="/?open=industries" class="sidebar-link" title="Industries — opens on Dashboard">
+      <span class="sidebar-icon" aria-hidden="true">🎯</span>
+      <span class="sidebar-label">Industries</span>
+    </a>
+      <a href="/?open=settings" class="sidebar-link" title="Settings — opens on Dashboard">
+      <span class="sidebar-icon" aria-hidden="true">⚙️</span>
+      <span class="sidebar-label">Settings</span>
+    </a>
+      </div>
+
+    </nav>
+  </aside>
+  <main id="main" class="netdb-content" tabindex="-1">
 
 <header>
   <h1>Network database</h1>
   <span class="head-meta" id="head-meta">loading…</span>
   <span style="flex:1"></span>
-  <a href="/" style="font-size: 12px; color: var(--text-3); text-decoration: underline;">← dashboard</a>
+  <!-- ← dashboard link removed; sidebar now provides cross-page nav -->
 </header>
 
 <div class="toolbar">
@@ -143,5 +571,175 @@
 
 <script src="/network-database.js"></script>
 
+  </main>
+</div>
+
+<script>
+
+/* ── Sidebar toggle (mobile) ───────────────────────────────────────── */
+function toggleSidebar() {
+  var sb = document.getElementById('sidebar');
+  var bd = document.getElementById('sidebar-backdrop');
+  var bt = document.getElementById('sidebar-toggle-btn');
+  if (!sb || !bd || !bt) return;
+  var open = sb.classList.toggle('open');
+  bd.classList.toggle('visible', open);
+  bt.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function closeSidebar() {
+  var sb = document.getElementById('sidebar');
+  var bd = document.getElementById('sidebar-backdrop');
+  var bt = document.getElementById('sidebar-toggle-btn');
+  if (!sb || !bd || !bt) return;
+  sb.classList.remove('open');
+  bd.classList.remove('visible');
+  bt.setAttribute('aria-expanded', 'false');
+}
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+
+/* ── Modal from query param (on home page) ─────────────────────────── */
+(function _handleOpenParam() {
+  if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') return;
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var open = params.get('open');
+    if (!open) return;
+    // Defer until DOM + handlers are loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(function () {
+        try {
+          if (open === 'pending' && typeof toggleStatPanel === 'function') toggleStatPanel('pending');
+          else if (open === 'batch-runs' && typeof openBatchStatusModal === 'function') openBatchStatusModal();
+          else if (open === 'settings' && typeof openMobileSettingsSheet === 'function') openMobileSettingsSheet();
+          else if (open === 'industries' && typeof window.drillIn === 'function') window.drillIn('industry-gap', '', null);
+        } catch (e) { /* missing handler — ignore */ }
+      }, 60);
+    });
+  } catch (e) { /* URLSearchParams unsupported in ancient browsers — ignore */ }
+})();
+
+/* ── Global keyboard shortcuts (g h / g c / g n / / / ?) ──────────── */
+(function _shortcuts() {
+  var lastKey = '';
+  var lastKeyTs = 0;
+  var CHORD_WINDOW = 1500;
+
+  function inFormField(target) {
+    if (!target) return false;
+    var tag = (target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+    if (target.isContentEditable) return true;
+    return false;
+  }
+
+  function announce(msg) {
+    var el = document.getElementById('_shortcut-announcer');
+    if (!el) return;
+    el.textContent = msg;
+  }
+
+  function navigateTo(path, label) {
+    announce('Navigating to ' + label);
+    setTimeout(function () { window.location.href = path; }, 120);
+  }
+
+  function focusSearch() {
+    // Try the canonical search input on the current page
+    var sel = '#contacts-search, #search, [type="search"], input[placeholder*="Search"]';
+    var el = document.querySelector(sel);
+    if (el) { el.focus(); el.select && el.select(); announce('Search focused'); }
+  }
+
+  function openShortcutsModal() {
+    var bd = document.getElementById('shortcuts-modal-bd');
+    if (!bd) return;
+    bd.classList.add('visible');
+    bd.setAttribute('aria-hidden', 'false');
+    var first = bd.querySelector('.shortcuts-modal-close');
+    if (first) first.focus();
+  }
+  function closeShortcutsModal() {
+    var bd = document.getElementById('shortcuts-modal-bd');
+    if (!bd) return;
+    bd.classList.remove('visible');
+    bd.setAttribute('aria-hidden', 'true');
+  }
+  window.openShortcutsModal = openShortcutsModal;
+  window.closeShortcutsModal = closeShortcutsModal;
+
+  document.addEventListener('keydown', function (e) {
+    if (inFormField(e.target)) return;
+    // ignore modifier keys
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var key = e.key;
+
+    if (key === '?') {
+      e.preventDefault();
+      openShortcutsModal();
+      return;
+    }
+    if (key === '/') {
+      e.preventDefault();
+      focusSearch();
+      return;
+    }
+    if (key === 'Escape') {
+      closeShortcutsModal();
+      return;
+    }
+
+    // Chord: g + (h|c|n)
+    var now = Date.now();
+    if (lastKey === 'g' && (now - lastKeyTs) < CHORD_WINDOW) {
+      if (key === 'h') { e.preventDefault(); navigateTo('/', 'Dashboard'); lastKey = ''; return; }
+      if (key === 'c') { e.preventDefault(); navigateTo('/contacts.html', 'Network contacts'); lastKey = ''; return; }
+      if (key === 'n') { e.preventDefault(); navigateTo('/network-database.html', 'Network database'); lastKey = ''; return; }
+      lastKey = '';
+      return;
+    }
+    if (key === 'g') {
+      lastKey = 'g';
+      lastKeyTs = now;
+      return;
+    }
+    lastKey = '';
+  });
+
+  // Inject shortcuts modal HTML once
+  function injectShortcutsModal() {
+    if (document.getElementById('shortcuts-modal-bd')) return;
+    var bd = document.createElement('div');
+    bd.id = 'shortcuts-modal-bd';
+    bd.className = 'shortcuts-modal-backdrop';
+    bd.setAttribute('aria-hidden', 'true');
+    bd.setAttribute('role', 'dialog');
+    bd.setAttribute('aria-modal', 'true');
+    bd.setAttribute('aria-labelledby', 'shortcuts-modal-title');
+    bd.innerHTML = [
+      '<div class="shortcuts-modal" role="document">',
+      '<h2 id="shortcuts-modal-title">Keyboard shortcuts</h2>',
+      '<table><tbody>',
+      '<tr><td><kbd>g</kbd> <kbd>h</kbd></td><td>Go to Dashboard</td></tr>',
+      '<tr><td><kbd>g</kbd> <kbd>c</kbd></td><td>Go to Network (contacts)</td></tr>',
+      '<tr><td><kbd>g</kbd> <kbd>n</kbd></td><td>Go to Network DB (table)</td></tr>',
+      '<tr><td><kbd>/</kbd></td><td>Focus search</td></tr>',
+      '<tr><td><kbd>?</kbd></td><td>Show this help</td></tr>',
+      '<tr><td><kbd>Esc</kbd></td><td>Close modal</td></tr>',
+      '</tbody></table>',
+      '<button type="button" class="shortcuts-modal-close" onclick="closeShortcutsModal()">Close</button>',
+      '</div>'
+    ].join('');
+    bd.addEventListener('click', function (e) { if (e.target === bd) closeShortcutsModal(); });
+    document.body.appendChild(bd);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectShortcutsModal);
+  } else {
+    injectShortcutsModal();
+  }
+})();
+
+</script>
 </body>
 </html>
