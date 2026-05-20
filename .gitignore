@@ -138,6 +138,9 @@ data/linkedin/
 # Outreach state — per-contact message history + intel cache, personal
 data/outreach-state.json
 
+# VC portfolio scanner state — last_seen_created_at per firm; per-run trace
+data/vc-portfolios-state.json
+
 # Outreach drafts — recipient-facing content not yet sent; personal
 data/outreach-drafts/
 
