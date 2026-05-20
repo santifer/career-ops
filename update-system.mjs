@@ -66,6 +66,7 @@ const SYSTEM_PATHS = [
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
+  'liveness-browser.mjs',
   'analyze-patterns.mjs',
   'followup-cadence.mjs',
   'gemini-eval.mjs',
