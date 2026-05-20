@@ -21343,6 +21343,10 @@ function _renderProcessAllPhaseA(pAgg, pCmp) {
 }
 
 function _renderPerCompanyPreview(pCmp) {
+  // 2026-05-20 — Pull tier_estimates from the cached preview so the
+  // footer's "what you pay" note can reference the three concrete tier
+  // totals. Same data the picker reads.
+  const tEst = (_pipelinePreview && _pipelinePreview.process_all && _pipelinePreview.process_all.tier_estimates) || null;
   if (!pCmp || !Array.isArray(pCmp.companies) || pCmp.companies.length === 0) {
     return ''
       + '<div class="pipeline-modal-section">'
@@ -21383,22 +21387,24 @@ function _renderPerCompanyPreview(pCmp) {
     +       '<tbody>' + rows + '</tbody>'
     +     '</table>'
     +   '</div>'
-    // 2026-05-19 (Mitchell feedback — cohesion fix #2): the footer summary
-    // used to show only the per-company drilldown subtotal ($15 = apply-pack
-    // pregen on 10 companies), labeled "Scoped cost (selected rows)". That
-    // hid the $63.68 full-drain cost the user was actually committing to. Now
-    // we surface BOTH: items processed (187 = 15 + 172), companies in drilldown
-    // (10), full drain cost ($63.68), with the $15 subtotal labeled as the
-    // per-company sub-line so the relationship is explicit.
+    // 2026-05-20 — Footer reduced to counts only. The dollar lines that
+    // used to live here ("Full drain cost $X / per-company drilldown
+    // subtotal $Y") were two DIFFERENT cost models pretending to have a
+    // subset relationship — $Y was actually higher than $X in practice
+    // because they were computed off different rate tables (legacy
+    // bundled vs per-company council). Mitchell rightly flagged this as
+    // a "hidden fee" pattern. The only price the user pays = the
+    // selected-tier total in the picker below, so that's now the single
+    // source of truth and the footer no longer shows competing $$.
     +   '<div class="pcp-summary-grid">'
     +     '<span class="pcp-summary-label">Pipeline items processed</span>'
     +     '<span class="pcp-summary-val" id="pcp-scoped-items">' + _scopedItemsLabel(pCmp) + '</span>'
     +     '<span class="pcp-summary-label">Companies in per-company drilldown</span>'
     +     '<span class="pcp-summary-val" id="pcp-scoped-count">' + pCmp.actionable_count + '</span>'
-    +     '<span class="pcp-summary-label">Full drain cost (this is what you pay)</span>'
-    +     '<span class="pcp-summary-val" id="pcp-scoped-cost">$' + _scopedFullDrainCost(pCmp) + '</span>'
-    +     '<span class="pcp-summary-label" style="opacity:0.55;font-size:11px">↳ per-company drilldown subtotal (subset of full drain)</span>'
-    +     '<span class="pcp-summary-val" id="pcp-scoped-percompany" style="opacity:0.55;font-size:11px">$' + (pCmp.total_cost_estimate_usd || 0).toFixed(2) + '</span>'
+    +   '</div>'
+    +   '<div style="margin-top:8px;padding:8px 10px;background:rgba(59,130,246,.08);border-left:3px solid var(--blue-fg,#2563eb);border-radius:4px;font-size:11.5px;line-height:1.5;color:var(--text-2)">'
+    +     '<strong>What you pay:</strong> the tier you select below ($' + _esc((tEst && tEst[1] && tEst[1].total_cost_usd.toFixed(2)) || '?') + ' Standard / $' + _esc((tEst && tEst[2] && tEst[2].total_cost_usd.toFixed(2)) || '?') + ' Premium Triage / $' + _esc((tEst && tEst[3] && tEst[3].total_cost_usd.toFixed(2)) || '?') + ' Premium Eval). '
+    +     'The per-company drilldown above is the company-level breakdown of what those tiers process — it is not a separate charge.'
     +   '</div>'
     + '</div>';
 }
