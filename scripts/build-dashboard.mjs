@@ -11201,7 +11201,7 @@ async function build() {
          "System healthy" chip reads /api/pipeline/health-status. -->
     <div id="sidebar-pipeline-status" class="sidebar-pipeline-status" aria-label="Pipeline status freshness">
       <span id="pipeline-freshness-chip" class="pipeline-freshness-chip" title="Time since last badge refresh">badges loading…</span>
-      <span id="pipeline-health-chip" class="pipeline-health-chip" title="Health check (every 5 min) — click to view full status" onclick="window.open('/api/pipeline/health-status','_blank')">health: —</span>
+      <span id="pipeline-health-chip" class="pipeline-health-chip" title="Health check (every 5 min) — click to view full status" onclick="openPipelineHealthModal()">health: —</span>
     </div>
     <!-- Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16)
          Chevron toggles inline detail. Label click opens full runway modal
@@ -21937,6 +21937,97 @@ setInterval(() => {
   if (document.visibilityState === 'visible') refreshHealthChip();
 }, 60000);
 
+// Pipeline-health modal — opened by the chip click. Renders /api/pipeline/health-status
+// as a small overlay (not a raw JSON tab). Esc to close, click outside to close.
+async function openPipelineHealthModal() {
+  const existing = document.getElementById('ph-modal-backdrop');
+  if (existing) existing.remove();
+
+  const bd = document.createElement('div');
+  bd.id = 'ph-modal-backdrop';
+  bd.setAttribute('role', 'dialog');
+  bd.setAttribute('aria-modal', 'true');
+  bd.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  bd.onclick = function (e) { if (e.target === bd) bd.remove(); };
+
+  const md = document.createElement('div');
+  md.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:8px;max-width:560px;width:100%;max-height:80vh;overflow:auto;color:var(--fg);box-shadow:0 12px 48px rgba(0,0,0,.4);font-size:13px;line-height:1.5';
+  md.innerHTML = '<div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">' +
+    '<strong style="font-size:14px">Pipeline health</strong>' +
+    '<button type="button" aria-label="Close" onclick="document.getElementById(\\'ph-modal-backdrop\\').remove()" style="background:none;border:none;color:var(--text-3);font-size:18px;cursor:pointer;padding:0 4px">' + String.fromCharCode(0x2715) + '</button>' +
+    '</div>' +
+    '<div id="ph-modal-body" style="padding:16px 18px"><div style="color:var(--text-3);text-align:center;padding:24px 0">Loading' + String.fromCharCode(0x2026) + '</div></div>';
+  bd.appendChild(md);
+  document.body.appendChild(bd);
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function fmtAgo(iso) {
+    if (!iso) return 'never';
+    const ms = Date.now() - new Date(iso).getTime();
+    const m = Math.round(ms / 60000);
+    if (m < 60) return m + 'm ago';
+    const h = Math.round(ms / 3600000);
+    return h + 'h ago';
+  }
+
+  try {
+    const res = await fetch('/api/pipeline/health-status', { cache: 'no-store' });
+    const data = await res.json();
+    const body = document.getElementById('ph-modal-body');
+    if (!body) return;
+    if (!data || !data.present) {
+      body.innerHTML = '<div style="color:var(--text-3)">Health check has not produced output yet. Run <code>scripts/agents/pipeline-health-check.mjs</code> manually or wait 5 min for the launchd job.</div>';
+      return;
+    }
+    const c = data.checks || {};
+    const fc = c.file_counts || {};
+    const tq = c.triage_queue || {};
+    const dr = c.drift || {};
+    const statusBadge = data.healthy
+      ? '<span style="color:var(--green-fg,#16a34a);font-weight:600">' + String.fromCharCode(0x2713) + ' Healthy</span>'
+      : '<span style="color:#dc2626;font-weight:600">' + String.fromCharCode(0x2717) + ' Issues</span>';
+    const stuckBlock = tq.stuck
+      ? '<div style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);border-radius:6px;padding:10px 12px;margin:10px 0">' +
+          '<div style="font-weight:600;color:#dc2626;margin-bottom:4px">Triage queue stuck</div>' +
+          '<div style="color:var(--text-2);font-size:12.5px">' +
+            esc(fc.queued_for_batch || 0) + ' URL(s) in <code>batch/triage-advance.tsv</code>, file last modified ' +
+            esc(fmtAgo(tq.mtime)) + ' (threshold ' + esc(tq.threshold_hours) + 'h).' +
+          '</div>' +
+          '<div style="color:var(--text-3);font-size:11.5px;margin-top:8px">' +
+            'Fix: run <strong>Process All</strong> from the sidebar (drains the queue via batch eval) — or scroll to the Pipeline section to act on the rows directly.' +
+          '</div>' +
+        '</div>'
+      : '';
+    const driftBlock = dr.drift_detected
+      ? '<div style="color:#d97706;font-size:12.5px;margin:6px 0">' + String.fromCharCode(0x26a0) + ' Badge ' + String.fromCharCode(0x2194) + ' file drift: pending=' + esc(JSON.stringify(dr.pending_pipeline)) + ', queued=' + esc(JSON.stringify(dr.queued_for_batch)) + '</div>'
+      : '';
+    body.innerHTML =
+      '<div style="margin-bottom:8px">' + statusBadge + ' ' +
+        '<span style="color:var(--text-3);font-size:11.5px;margin-left:6px">checked ' + esc(fmtAgo(data.checked_at)) + '</span>' +
+      '</div>' +
+      (data.summary ? '<div style="color:var(--text-2);margin-bottom:10px">' + esc(data.summary) + '</div>' : '') +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0;font-size:12.5px">' +
+        '<div><span style="color:var(--text-3)">Pending pipeline:</span> <strong>' + esc(fc.pending_pipeline ?? 0) + '</strong></div>' +
+        '<div><span style="color:var(--text-3)">Queued for batch:</span> <strong>' + esc(fc.queued_for_batch ?? 0) + '</strong></div>' +
+        '<div><span style="color:var(--text-3)">Orchestrators alive:</span> <strong>' + esc((c.orchestrator_pids || []).length) + '</strong></div>' +
+        '<div><span style="color:var(--text-3)">API reachable:</span> <strong>' + (c.api && c.api.ok ? String.fromCharCode(0x2713) : String.fromCharCode(0x2717)) + '</strong></div>' +
+      '</div>' +
+      stuckBlock + driftBlock +
+      '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-3)">' +
+        'Source: <code>scripts/agents/pipeline-health-check.mjs</code> via launchd (every 5 min). Raw JSON: <a href="/api/pipeline/health-status" target="_blank" rel="noopener" style="color:var(--text-2)">/api/pipeline/health-status</a>' +
+      '</div>';
+  } catch (err) {
+    const body = document.getElementById('ph-modal-body');
+    if (body) body.innerHTML = '<div style="color:#dc2626">Could not load health: ' + (err && err.message ? err.message : 'unknown') + '</div>';
+  }
+}
+window.openPipelineHealthModal = openPipelineHealthModal;
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const bd = document.getElementById('ph-modal-backdrop');
+  if (bd) { e.stopPropagation(); bd.remove(); }
+}, true);
+
 // ── Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16) ─
 // Fetches /api/recruiter-pipeline-density every 5 minutes (and on load), renders
 // the runway-health verdict + key metrics into the sidebar widget. Click toggles
@@ -29918,6 +30009,22 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       console.error('✗ build-dashboard: post-build JS lint failed (see above).');
       console.error('  Set DASHBOARD_SKIP_LINT=1 to bypass (emergency only).');
       process.exit(res.status || 1);
+    }
+  }
+
+  // 2026-05-20 — also rebuild dashboard/contacts.html (the standalone
+  // relationship-intelligence directory). Previously this had no scheduled
+  // hook so the file went stale and 404'd. Chaining here keeps it in sync
+  // with every dashboard rebuild. Skip with DASHBOARD_SKIP_CONTACTS=1.
+  if (process.env.DASHBOARD_SKIP_CONTACTS !== '1') {
+    const { spawnSync } = await import('node:child_process');
+    const res = spawnSync('node', [join(ROOT, 'scripts/build-contacts-page.mjs')], {
+      cwd: ROOT,
+      stdio: 'inherit',
+    });
+    if (res.status !== 0) {
+      // Don't fail the whole build on a contacts-page glitch — log + continue.
+      console.warn('⚠ build-dashboard: contacts.html rebuild failed (see above). Dashboard itself is OK.');
     }
   }
 }
