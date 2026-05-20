@@ -346,7 +346,7 @@ async function main() {
   const seenCompanyRoles = loadSeenCompanyRoles();
 
   // 5. Fetch from each target
-  const date = new Date().toISOString().slice(0, 10);
+  const date = new Date().toISOString();
   let totalFound = 0;
   let totalFilteredTitle = 0;
   let totalFilteredLocation = 0;

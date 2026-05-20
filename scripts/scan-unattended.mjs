@@ -6,6 +6,8 @@
 import { spawnSync } from 'child_process';
 import { existsSync, mkdirSync, openSync, writeSync, closeSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { hc } from '../lib/healthchecks-ping.mjs';
+import { startRun, finishRun } from '../lib/job-runs-ledger.mjs';
 
 const PROJECT_DIR = '/Users/mitchellwilliams/Documents/career-ops';
 const NODE_BIN = '/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node';
@@ -17,7 +19,11 @@ if (!existsSync(LOG_DIR)) mkdirSync(LOG_DIR, { recursive: true });
 const logFd = openSync(LOG_PATH, 'a');
 const log = (msg) => writeSync(logFd, msg + '\n');
 
-log(`=== scan-unattended starting ${new Date().toISOString()} ===`);
+const ping = hc('PORTAL_SCAN');
+const runId = startRun('portal-scan');
+await ping.start();
+
+log(`=== scan-unattended starting ${new Date().toISOString()} (hc=${ping.enabled ? 'on' : 'off'} ledger=${runId ? 'on' : 'off'}) ===`);
 process.chdir(PROJECT_DIR);
 
 function run(label, args) {
@@ -49,6 +55,7 @@ run('triage-pipeline.mjs', ['scripts/triage-pipeline.mjs', '--limit=30']);
 const TRIAGE_TSV = join(PROJECT_DIR, 'data/triage-batch.tsv');
 const BATCH_INPUT = join(PROJECT_DIR, 'batch/batch-input.tsv');
 log('--- bridge: triage-batch.tsv → batch-input.tsv ---');
+let bridgeCount = 0;
 if (existsSync(TRIAGE_TSV)) {
   const lines = readFileSync(TRIAGE_TSV, 'utf-8').split('\n').filter(Boolean);
   const dataRows = lines.slice(1); // skip header
@@ -62,7 +69,8 @@ if (existsSync(TRIAGE_TSV)) {
     out.push(`${id}\t${url}\ttriage\t${noteParts.join(' ')}`);
   }
   writeFileSync(BATCH_INPUT, out.join('\n') + '\n');
-  log(`Wrote ${out.length - 1} rows to batch/batch-input.tsv`);
+  bridgeCount = out.length - 1;
+  log(`Wrote ${bridgeCount} rows to batch/batch-input.tsv`);
 } else {
   log('No triage-batch.tsv found — skipping bridge');
 }
@@ -70,4 +78,6 @@ if (existsSync(TRIAGE_TSV)) {
 log(`=== scan-unattended completed ${new Date().toISOString()} ===`);
 log('');
 closeSync(logFd);
+finishRun(runId, { status: 'ok', urls_found: bridgeCount });
+await ping.success(`bridged ${bridgeCount} rows`);
 process.exit(0);

@@ -162,7 +162,7 @@ async function main() {
   if (dryRun) console.log('(dry run — no files will be written, no messages marked read)\n');
 
   const seenUrls = loadSeenUrls();
-  const date = new Date().toISOString().slice(0, 10);
+  const date = new Date().toISOString();
   let totalUrls = 0;
   let totalFiltered = 0;
   let totalDupes = 0;

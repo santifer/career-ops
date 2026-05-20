@@ -305,7 +305,7 @@ async function main() {
   }
 
   const startedAt = new Date();
-  const date = startedAt.toISOString().slice(0, 10);
+  const date = startedAt.toISOString();
 
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const titleFilter = buildTitleFilter(config.title_filter);
