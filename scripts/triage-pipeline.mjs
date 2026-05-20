@@ -124,11 +124,20 @@ function parsePipelineMd(content) {
     const parts = body.split(' | ').map(p => p.trim());
     if (parts.length < 3) continue;
     const [url, company, ...titleParts] = parts;
-    const title = titleParts.join(' | ');
-    // Try to extract location from trailing parenthetical or after a dash
+    const rawTitle = titleParts.join(' | ');
+    // Extract location from trailing parenthetical AND strip it from the
+    // title so downstream consumers (cluster-matching in zombie-scorer, the
+    // scan-unattended bridge note builder, future dedup logic) see a clean
+    // role label. Without the strip, the bridge double-prints the region
+    // ("Co — Title (Seattle) (Seattle)") and any title-equality dedup
+    // misses cross-region duplicates. 2026-05-19.
     let location = '';
-    const locMatch = title.match(/\(([^)]+)\)\s*$/);
-    if (locMatch) location = locMatch[1];
+    let title = rawTitle;
+    const locMatch = rawTitle.match(/\s*\(([^)]+)\)\s*$/);
+    if (locMatch) {
+      location = locMatch[1].trim();
+      title = rawTitle.slice(0, locMatch.index).trim();
+    }
     id += 1;
     entries.push({
       id: String(id),

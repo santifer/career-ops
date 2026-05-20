@@ -36,7 +36,7 @@
  *  - Never claims a fix shipped that didn't.
  */
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -103,6 +103,23 @@ async function runHealth() {
   return snap;
 }
 
+/**
+ * Load and return the launchd-wrapper state JSON, or null on any error.
+ * Never throws — health snapshot must be resilient to missing / corrupt state.
+ */
+function loadWrapperStats(root) {
+  const statePath = join(root, 'data', 'launchd-wrapper-state.json');
+  if (!existsSync(statePath)) return null;
+  try {
+    const raw = readFileSync(statePath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.labels) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 function renderHealthMarkdown(snap) {
   const lines = [];
   lines.push(`# System Health Snapshot — ${dateStamp}`);
@@ -129,6 +146,36 @@ function renderHealthMarkdown(snap) {
     lines.push(`| ${e.label} | ${e.loaded ? 'yes' : 'NO'} | ${e.exitCode ?? 'n/a'} |`);
   }
   lines.push('');
+
+  // ── Wrapper-state stats (from data/launchd-wrapper-state.json) ──────────────
+  lines.push('## Wrapper job health (launchd-wrapper-state.json)');
+  lines.push('');
+  const wrapperStats = loadWrapperStats(ROOT);
+  if (!wrapperStats) {
+    lines.push('_No wrapper state file yet — run jobs through launchd-wrapper.mjs to populate._');
+  } else {
+    const labelKeys = Object.keys(wrapperStats.labels ?? {}).sort();
+    if (labelKeys.length === 0) {
+      lines.push('_Wrapper state file exists but has no label entries yet._');
+    } else {
+      lines.push('| Label | Runs (last 20) | Success rate | Last exit | Last run |');
+      lines.push('|---|---|---|---|---|');
+      for (const label of labelKeys) {
+        const history = wrapperStats.labels[label] ?? [];
+        const total = history.length;
+        const successes = history.filter(e => e.exit_code === 0).length;
+        const pct = total > 0 ? Math.round((successes / total) * 100) : 0;
+        const last = history[history.length - 1] ?? null;
+        const lastExit = last ? last.exit_code : 'n/a';
+        const lastRun = last ? last.finished_at.slice(0, 16).replace('T', ' ') : 'n/a';
+        const successRateStr = total > 0 ? `${pct}% (${successes}/${total})` : 'no data';
+        const rowFlag = (last && last.exit_code !== 0) ? ' ⚠' : '';
+        lines.push(`| ${label}${rowFlag} | ${total} | ${successRateStr} | ${lastExit} | ${lastRun} |`);
+      }
+    }
+  }
+  lines.push('');
+
   lines.push('## Tracker (data/applications.md)');
   lines.push('');
   lines.push(`- Rows: **${snap.tracker.totalRows ?? 0}**`);

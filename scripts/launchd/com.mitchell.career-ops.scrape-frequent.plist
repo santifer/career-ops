@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.scrape-frequent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/scrape-only.mjs</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Every 4 hours. Council/dealbreaker 2026-05-19 verdict on Impasse 1:
+         every-4h captures the 24-48h first-mover window; hourly only buys <5%
+         incremental at 2x cost. Greenhouse boards-api is unrate-limited;
+         Ashby is ~100/min — neither is a constraint at our scale. -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>0</integer></dict>
+    </array>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/scrape-frequent-launchd.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/scrape-frequent-launchd.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

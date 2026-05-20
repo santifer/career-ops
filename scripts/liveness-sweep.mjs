@@ -37,15 +37,14 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
-import { installRunRecord } from '../lib/job-runs-ledger.mjs';
-
-const __jobRun = installRunRecord('liveness-sweep');
 import { fileURLToPath } from 'url';
 
 import { parseApplicationsFile } from '../lib/parse-applications.mjs';
 import { poolMap } from '../lib/fetch-utils.mjs';
 import { verifyApplyNowLink, markRowAsExpired } from '../lib/liveness.mjs';
 import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
+import { hc } from '../lib/healthchecks-ping.mjs';
+import { startRun, finishRun } from '../lib/job-runs-ledger.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const ROOT = dirname(dirname(__filename));
@@ -191,11 +190,23 @@ async function main() {
   log(`Summary: active=${summary.active} expired_discarded=${summary.expired_discarded} expired_needs_review=${summary.expired_needs_review} uncertain=${summary.uncertain} no_url=${summary.no_url}`);
   log(`Wrote state to ${STATE_PATH}`);
   log('--- liveness-sweep done ---');
-  process.exit(0);
+  return summary;
 }
 
-main().catch(err => {
-  log(`FATAL: ${err.message}`);
-  console.error(err.stack);
-  process.exit(1);
-});
+const ping = hc('LIVENESS_SWEEP');
+const runId = startRun('liveness-sweep');
+await ping.start();
+
+main()
+  .then((summary) => {
+    finishRun(runId, { status: 'ok', urls_found: summary?.active ?? 0 });
+    return ping.success(`active=${summary?.active ?? 0} discarded=${summary?.expired_discarded ?? 0} uncertain=${summary?.uncertain ?? 0}`);
+  })
+  .then(() => process.exit(0))
+  .catch(async (err) => {
+    log(`FATAL: ${err.message}`);
+    console.error(err.stack);
+    finishRun(runId, { status: 'fail', error: err.message });
+    await ping.fail(err);
+    process.exit(1);
+  });

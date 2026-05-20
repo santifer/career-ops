@@ -11,6 +11,11 @@
  * Required scopes:
  *   gmail.settings.basic   — manage filters (create/list/delete)
  *   gmail.labels           — manage labels (create/list/delete)
+ *   gmail.readonly         — read message bodies for the 15-min poll
+ *                            (scripts/scan-email-poll.mjs)
+ *
+ * If you ran this script before the gmail.readonly scope was added,
+ * re-run it — Google requires re-consent when scope set changes.
  *
  * Setup before running:
  *   1. https://console.cloud.google.com/ → create project "career-ops-gmail"
@@ -35,6 +40,7 @@ const SECRETS_PATH = join(homedir(), '.career-ops-secrets');
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.settings.basic',
   'https://www.googleapis.com/auth/gmail.labels',
+  'https://www.googleapis.com/auth/gmail.readonly',
 ];
 
 if (!existsSync(OAUTH_PATH)) {
@@ -74,7 +80,8 @@ const authUrl = oauth2Client.generateAuthUrl({
 
 console.log('');
 console.log('━'.repeat(60));
-console.log('Step 1: Authorize career-ops to manage Gmail filters');
+console.log('Step 1: Authorize career-ops to access Gmail');
+console.log('         (filters + labels + read message bodies)');
 console.log('━'.repeat(60));
 console.log('');
 console.log('Open this URL in your browser:');
@@ -124,5 +131,9 @@ console.log('');
 console.log('✓ Saved OAuth credentials to ' + SECRETS_PATH);
 console.log('  Permissions set to 0600 (user read/write only).');
 console.log('');
-console.log('Next step:');
-console.log('  node scripts/gmail-create-filters.mjs');
+console.log('Next steps:');
+console.log('  First-time setup (no Gmail filters yet):');
+console.log('    node scripts/gmail-create-filters.mjs');
+console.log('  Re-running for the new gmail.readonly scope:');
+console.log('    node scripts/scan-email-poll.mjs --dry-run');
+console.log('    launchctl kickstart -k gui/$(id -u)/com.mitchell.career-ops.scan-email-poll');

@@ -37,7 +37,7 @@ try {
       // No row was opened (e.g., wrapper start step failed) — silently no-op.
       process.exit(0);
     }
-    finishRun(id, status, urlsFound, errMsg);
+    finishRun(id, { status, urls_found: urlsFound, error: errMsg });
     process.exit(0);
   }
 

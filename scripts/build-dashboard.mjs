@@ -36,6 +36,8 @@ import { getIndustryGapRanking, renderIndustryGapTable }           from '../lib/
 import { assessTravelTradeoff, renderTravelChip }                  from '../lib/travel-cap.mjs';
 import { computeStrategyCeiling, renderStrategyCard }              from '../lib/strategy-ceiling.mjs';
 import { renderEquitySlidersHtml }                                 from '../lib/equity-calculator.mjs';
+import { loadAllPolishStatus }                                     from '../lib/polish-status-loader.mjs';
+import { renderPolishBadge, renderPolishDcard, polishCardStyles }  from '../lib/polish-card-renderer.mjs';
 import { computeNextMoves }                                        from '../lib/next-moves.mjs';
 import { loadNextMovesInputs }                                     from '../lib/next-moves-inputs.mjs';
 import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/negotiation-playbook.mjs';
@@ -697,7 +699,7 @@ function equityBadge(company) {
       confidence: '', updated: updated || '', empty: true, hint: tip,
       populateCmd: 'node scripts/overpay-signals.mjs',
     });
-    return `<span class="equity-badge equity-badge-empty pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="equity-badge equity-badge-empty pill-popover-trigger" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const meta = EQUITY_STAGE_META[data.stage] || EQUITY_STAGE_META.unknown;
   const tipParts = [data.posture];
@@ -867,7 +869,7 @@ function renderBaseCell(reportPath, floors, locationRaw, company, role) {
     const detail = JSON.stringify({
       kind: 'base', empty: true, raw: compRaw || '', hint: tip,
     });
-    return `<span class="base-chip base-chip-empty pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="base-chip base-chip-empty pill-popover-trigger" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const { min, max, currency, isTotalComp } = parsed;
   let cls = 'base-chip-unknown';
@@ -899,7 +901,7 @@ function renderBaseCell(reportPath, floors, locationRaw, company, role) {
   const researchedBadge = researchedTag
     ? `<sup class="base-researched-badge" title="Researched band (${researchedTag} confidence) — not posted in JD">R</sup>`
     : '';
-  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${htmlEscape(tipWithSource)}" aria-label="${htmlEscape(tipWithSource)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}${researchedBadge}</span>`;
+  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" aria-label="${htmlEscape(tipWithSource)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}${researchedBadge}</span>`;
   const badge = serverColBadge(parsed, locationRaw || '');
   return badge ? `<span class="base-fx-wrap">${chip}${badge}</span>` : chip;
 }
@@ -998,7 +1000,7 @@ function renderLocationCell(reportPath, company, role) {
     // BRAVO 2026-05-19 (content sweep): friendlier empty-state copy.
     const emptyTip = 'I couldn\'t find a location in the role report\'s Block A — open the full report for the source line.';
     const detail = JSON.stringify({ kind: 'location', empty: true, raw: '', hint: emptyTip, relocation: reloc });
-    return `<span class="location-chip location-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="location-chip location-chip-empty pill-popover-trigger" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const cls = classifyLocation(rawField, '');
   let icon = '';
@@ -1046,7 +1048,7 @@ function renderBenefitsCell(company, role) {
       hint: emptyTip,
       populateCmd: 'node scripts/enrich-roles.mjs --top=5',
     });
-    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const tox = parseInt(enrich.sentiment?.team_toxicity_grade, 10);
   const toxValid = Number.isFinite(tox) && tox >= 1 && tox <= 5;
@@ -1074,7 +1076,7 @@ function renderBenefitsCell(company, role) {
     biweekly_math: enrich.biweekly_math || null,
     confidence: enrich.confidence || '',
   });
-  return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}</span>`;
+  return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}</span>`;
 }
 
 // People cell: shows recruiter + hiring-manager LinkedIn links. Compact chip
@@ -1101,7 +1103,7 @@ function renderPeopleCell(company, role) {
       hint: emptyTip,
       populateCmd: 'node scripts/enrich-roles.mjs --top=5',
     });
-    return `<span class="people-chip people-chip-empty pill-popover-trigger" title="${htmlEscape(emptyTip)}" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="people-chip people-chip-empty pill-popover-trigger" aria-label="${htmlEscape(emptyTip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const rec = people?.likely_recruiter?.name && people.likely_recruiter.name !== 'unknown' ? '👤' : '';
   const hm  = people?.likely_hiring_manager?.name && people.likely_hiring_manager.name !== 'unknown' ? '👔' : '';
@@ -1124,7 +1126,7 @@ function renderPeopleCell(company, role) {
     network: network || null,
     confidence: enrich?.confidence || '',
   });
-  return `<span class="people-chip pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(labelMark)}</span>`;
+  return `<span class="people-chip pill-popover-trigger" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(labelMark)}</span>`;
 }
 
 // Safe wrapper — returns null if the CSV is absent so the dashboard
@@ -2705,11 +2707,18 @@ function formatTrackerNote(text) {
   return html;
 }
 
+// Module-level polish-status map, set by build() before renderRow is invoked.
+// Pre-loaded from data/apply-packs/<slug>/polish-orchestrator-summary.json files.
+let _polishStatusMap = { byRowId: new Map(), bySlug: new Map(), all: [] };
+
 function renderRow(r, idx) {
   const archetype = getReportArchetype(r.reportPath);
   const url = getReportUrl(r.reportPath);
   const finalRec = getReportFinalRecommendation(r.reportPath);
   const edge = getCompetitiveEdge(r.reportPath);
+  // Polish badge — small icon next to the score. Looks up by row.num.
+  const polishStat = _polishStatusMap.byRowId.get(Number(r.num)) || null;
+  const polishBadge = renderPolishBadge(polishStat);
   // Action cell: Apply (JD URL) + Report (formatted .html) + Email (compose draft) + Verify.
   // Phase G — Mitchell flagged that "no apply or verify options" were visible.
   // Apply button was previously implicit (clicking the role title opens the JD),
@@ -3088,7 +3097,7 @@ function renderRow(r, idx) {
   return `
 <tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${htmlEscape(idx)}" data-score="${r.score}" data-archetype="${htmlEscape(archetype)}" data-company="${htmlEscape(r.company.toLowerCase())}" data-status="${htmlEscape(r.status.toLowerCase())}" data-role="${htmlEscape(r.role.toLowerCase())}" data-equity="${htmlEscape(equityStage)}" data-search="${htmlEscape(searchIndex)}" onclick="toggleDetail('${idx}')">
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
-  <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span></td>
+  <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span>${polishBadge}</td>
   <td class="base-cell">${baseCell}</td>
   <td class="company-cell" title="${htmlEscape(r.company)}"><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
   <td class="role-cell" title="${htmlEscape(r.role)}">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="${htmlEscape(r.role)} — open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
@@ -3126,6 +3135,7 @@ function renderRow(r, idx) {
       ) : ''}
       ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Open the full Why-this-score popout — score band, council consensus, what is backing this score, and what might block it" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ see more</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
+      ${renderPolishDcard(polishStat, { rowId: String(r.num || idx), packSlug: polishStat?.pack_slug || '' })}
       ${tldrCard}
       ${matchCard}
       ${posCard}
@@ -3271,6 +3281,26 @@ function loadBuilderLog() {
     const latest = (data.history && data.history.length) ? data.history[data.history.length - 1] : null;
     return { ...data, latest };
   } catch { return null; }
+}
+
+// 2026-05-19 BRAVO polish A2 (item #6): commit history for the header-pill drawer.
+// Pulls the last N commits via `git log` at build time. Cached as a build-local
+// constant — the dashboard server only re-runs build-dashboard.mjs on data
+// changes, so this is one shell-out per build, not per request.
+function loadBuilderCommits(limit = 15) {
+  try {
+    // Pipe-separated to survive commit messages containing tabs/colons.
+    // Tilde delimiter chosen because it is rare in commit messages.
+    const out = execSync(`git log --oneline -${limit} --pretty=format:'%h~|~%s~|~%ar~|~%an'`, {
+      cwd: ROOT, encoding: 'utf-8', timeout: 5000,
+    });
+    return out.split('\n').filter(Boolean).map(line => {
+      const [sha, message, age, author] = line.split('~|~');
+      return { sha, message, age, author };
+    });
+  } catch {
+    return [];
+  }
 }
 
 // 2026-05-19 — adjudicated target API/tool stack (council-of-models → dealbreaker).
@@ -3451,6 +3481,12 @@ async function build() {
   // Reset the per-build report cache so successive invocations (e.g. tests
   // that import build()) don't carry stale parsed reports across builds.
   _resetReportCache();
+
+  // Polish-status map (added 2026-05-19) — pre-loaded once per build so the
+  // apply-now row renderer + drawer can do fast O(1) lookups by row_id.
+  // Reads every data/apply-packs/<slug>/polish-orchestrator-summary.json.
+  // Stored at module scope so renderRow can access it without param threading.
+  _polishStatusMap = loadAllPolishStatus();
 
   if (!existsSync(dirname(OUT_PATH))) mkdirSync(dirname(OUT_PATH), { recursive: true });
   const reportsHtmlDir = join(dirname(OUT_PATH), 'reports');
@@ -3664,6 +3700,9 @@ async function build() {
   // nightly by scripts/agents/builder-log.mjs). Surfaces skills/APIs/bug-classes
   // for the PM-trajectory narrative.
   const builderLog = loadBuilderLog();
+  // 2026-05-19 BRAVO polish A2 (item #6): last 15 commits for the header-pill
+  // commit-history drawer. Build-time fetch via `git log`; one shell-out per build.
+  const builderCommits = loadBuilderCommits(15);
   const targetApis = loadTargetApis();
   const scanTotal = countScanHistory();
   const batchRuns = countBatchRuns();
@@ -5928,80 +5967,6 @@ async function build() {
   .mc-strip .live-ticker:hover { background: transparent; border: none; color: var(--fg); }
   .mc-strip .live-text { font-family: inherit; }
 
-  /* P1-5 (2026-05-19): job_runs ledger chip strip — sits at top of <main>.
-     Each chip = one scheduled job, color-coded by state. Click → modal with
-     last 10 runs. Polls /api/job-runs-status every 60s. */
-  .jrs-strip {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
-    padding: 7px 18px 9px; margin: 0 -28px 12px;
-    background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
-  }
-  .jrs-strip-label {
-    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--text-4); padding-right: 6px;
-  }
-  .jrs-chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 9px; border-radius: 999px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-2); font-weight: 600; font-size: 11px;
-    cursor: pointer; font-family: inherit;
-    transition: transform .12s, background .12s, border-color .12s;
-    white-space: nowrap;
-  }
-  .jrs-chip:hover { transform: translateY(-1px); }
-  .jrs-chip-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: currentColor; flex-shrink: 0;
-  }
-  .jrs-chip-green { color: #059669; border-color: color-mix(in srgb, #059669 30%, transparent); background: color-mix(in srgb, #059669 8%, var(--surface)); }
-  .jrs-chip-yellow { color: #d97706; border-color: color-mix(in srgb, #d97706 32%, transparent); background: color-mix(in srgb, #d97706 11%, var(--surface)); }
-  .jrs-chip-red { color: #dc2626; border-color: color-mix(in srgb, #dc2626 32%, transparent); background: color-mix(in srgb, #dc2626 11%, var(--surface)); }
-  .jrs-chip-purple { color: #7c3aed; border-color: color-mix(in srgb, #7c3aed 32%, transparent); background: color-mix(in srgb, #7c3aed 11%, var(--surface)); }
-  .jrs-chip-skipped { color: var(--text-3); border-color: var(--border); background: var(--surface); opacity: .72; }
-  .jrs-chip-unknown { color: var(--text-4); border-color: var(--border); background: var(--surface-2); opacity: .55; font-weight: 500; }
-  .jrs-summary {
-    margin-left: auto; font-size: 10.5px; color: var(--text-3);
-    font-variant-numeric: tabular-nums; white-space: nowrap;
-  }
-  .jrs-summary span { margin-left: 8px; }
-  .jrs-summary-count-red { color: #dc2626; font-weight: 700; }
-  .jrs-summary-count-yellow { color: #d97706; font-weight: 700; }
-  .jrs-summary-count-purple { color: #7c3aed; font-weight: 700; }
-  .jrs-summary-count-green { color: #059669; }
-  #jrs-modal-backdrop {
-    display: none; position: fixed; inset: 0; z-index: 250;
-    background: rgba(0, 0, 0, .55);
-    align-items: center; justify-content: center;
-  }
-  #jrs-modal-backdrop.open { display: flex; }
-  #jrs-modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 22px;
-    width: min(720px, 92vw);
-    max-height: 80vh; overflow-y: auto;
-    box-shadow: 0 24px 56px rgba(0, 0, 0, .45);
-  }
-  .jrs-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .jrs-modal-title { font-weight: 700; font-size: 15px; }
-  .jrs-modal-close { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 20px; padding: 4px 8px; }
-  .jrs-modal-meta { font-size: 11.5px; color: var(--text-3); margin-bottom: 10px; line-height: 1.6; }
-  .jrs-runs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .jrs-runs-table th, .jrs-runs-table td { padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border); }
-  .jrs-runs-table th { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-4); }
-  .jrs-runs-status-ok { color: #059669; font-weight: 600; }
-  .jrs-runs-status-fail { color: #dc2626; font-weight: 600; }
-  .jrs-runs-status-skipped { color: var(--text-3); }
-  .jrs-runs-status-running { color: #d97706; font-weight: 600; }
-  .jrs-empty { padding: 16px; text-align: center; color: var(--text-3); font-size: 12.5px; }
-
   .mc-batch {
     display: inline-flex; align-items: center; gap: 8px;
     color: var(--text-2); white-space: nowrap;
@@ -6129,6 +6094,57 @@ async function build() {
   /* Fix 2: career tile accent classes */
   .stat-burndown-urgent::before { background: var(--red-fg, #dc2626); }
   .stat-burndown-warn::before   { background: var(--amber-fg, #d97706); }
+
+  /* ── P1-5 Scraper-health job-runs widget strip ───────────────── */
+  .job-runs-strip {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 5px 18px 5px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -28px 10px;
+    font-size: 11.5px;
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  }
+  .job-runs-strip-label {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--text-4); padding-right: 6px; white-space: nowrap;
+  }
+  .jrs-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border);
+    font-size: 11.5px; font-weight: 500;
+    background: var(--surface); color: var(--text-2);
+    cursor: pointer; white-space: nowrap;
+    transition: border-color .12s, background .12s, color .12s;
+    font-family: inherit;
+    position: relative;
+  }
+  .jrs-chip:hover { border-color: var(--border-strong); color: var(--fg); }
+  .jrs-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    background: var(--text-4);
+  }
+  .jrs-chip[data-state="green"] .jrs-dot  { background: var(--green-fg, #16a34a); }
+  .jrs-chip[data-state="green"]  { border-color: color-mix(in srgb, var(--green-fg,#16a34a) 35%, var(--border)); }
+  .jrs-chip[data-state="yellow"] .jrs-dot { background: #d97706; }
+  .jrs-chip[data-state="yellow"] { border-color: color-mix(in srgb, #d97706 35%, var(--border)); color: #d97706; }
+  .jrs-chip[data-state="red"] .jrs-dot    { background: #dc2626; }
+  .jrs-chip[data-state="red"]    { border-color: color-mix(in srgb, #dc2626 40%, var(--border)); color: #dc2626; }
+  .jrs-chip[data-state="purple"] .jrs-dot { background: #7c3aed; }
+  .jrs-chip[data-state="purple"] { border-color: color-mix(in srgb, #7c3aed 35%, var(--border)); color: #7c3aed; }
+  .jrs-chip[data-state="skipped"] .jrs-dot{ background: var(--text-3); }
+  .jrs-chip[data-state="unknown"] .jrs-dot { background: var(--text-4); }
+  body.dark .jrs-chip[data-state="green"] .jrs-dot { background: #4ade80; }
+  body.dark .jrs-chip[data-state="red"] .jrs-dot   { background: #f87171; }
+  body.dark .jrs-chip[data-state="yellow"] .jrs-dot { background: #fbbf24; }
+  .jrs-chip-name { font-variant-numeric: tabular-nums; }
+  /* Tooltip: use title attr; native tooltip is sufficient for this widget */
+  @media (max-width: 720px) {
+    .job-runs-strip { gap: 4px; padding: 4px 12px 4px; margin: 0 -12px 8px; }
+    .job-runs-strip-label { display: none; }
+    .jrs-chip { padding: 2px 7px; font-size: 10.5px; }
+  }
+  /* Job-runs history modal — uses the existing item-list-modal shell */
 
   /* ── Cmd-K command palette ─────────────────────────────────── */
   #cmdk-backdrop {
@@ -6469,6 +6485,12 @@ async function build() {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     margin: 8px 0 14px 0;
   }
+  /* 2026-05-19 BRAVO polish A1 (item #8): explicit 2×2 layout below 640px.
+     Auto-fit minmax(160px) yields 3 columns at ~600px (last chip orphaned).
+     Force a balanced 2×2 grid for narrow viewports. */
+  @media (max-width: 640px) {
+    .builder-evo-grid { grid-template-columns: repeat(2, 1fr); }
+  }
   .be-stat-tile {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -6494,7 +6516,8 @@ async function build() {
   button.be-stat-tile-clickable:active { transform: translateY(1px); }
   .be-stat-label { font-size: 11px; opacity: 0.7; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
   .be-stat-value { font-size: 22px; font-weight: 700; line-height: 1; display: flex; align-items: baseline; gap: 6px; }
-  .be-stat-cumulative { font-size: 11px; opacity: 0.55; font-weight: 400; margin-left: 6px; }
+  /* 2026-05-19 BRAVO polish A1 (item #1): removed dead .be-stat-cumulative rule
+     (last reference was in the pre-collapse tile markup; chips now use .be-stat-hint). */
   .be-stat-chevron {
     font-size: 14px; font-weight: 500; opacity: 0; color: var(--text-3);
     margin-left: auto; transition: opacity .15s ease, transform .15s ease;
@@ -6505,7 +6528,9 @@ async function build() {
     opacity: 0.85; transform: translateX(0);
   }
   .be-stat-hint {
-    font-size: 10.5px; opacity: 0.55; margin-top: 6px;
+    /* 2026-05-19 BRAVO polish A1 (item #7): bumped opacity 0.55 → 0.75 for WCAG AA
+       contrast on dark surface. Font-size held at 10.5px to avoid layout shift. */
+    font-size: 10.5px; opacity: 0.75; margin-top: 6px;
     letter-spacing: 0.02em; font-weight: 400;
   }
   .be-subtitle-hint { opacity: 0.7; font-style: italic; }
@@ -6635,6 +6660,29 @@ async function build() {
     font-size: 11px; opacity: 0.7;
   }
   .be-footer code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+  /* 2026-05-19 BRAVO polish A2 (item #4): copy-to-clipboard button for CLI hints.
+     Renders inline with the surrounding be-footer-cta text. Aria-live region for
+     transient "Copied!" feedback (in addition to window.toast). */
+  .be-copy-btn {
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: inherit; font: inherit; font-size: 10px;
+    padding: 1px 7px 2px 7px; border-radius: 4px;
+    cursor: pointer; margin-left: 4px;
+    transition: border-color .15s ease, background .15s ease, color .15s ease;
+    line-height: 1.4;
+  }
+  .be-copy-btn:hover {
+    border-color: var(--green-fg); background: var(--surface);
+  }
+  .be-copy-btn:focus-visible {
+    outline: none; border-color: var(--green-fg);
+    box-shadow: 0 0 0 2px rgba(22,163,74,.25);
+  }
+  .be-copy-btn.copied {
+    color: var(--green-fg); border-color: var(--green-fg);
+    background: rgba(22,163,74,.08);
+  }
+  .be-copy-btn .be-copy-icon { font-size: 11px; opacity: 0.85; margin-right: 3px; }
 
   /* 2026-05-19 Mitchell trust-fix — sidebar freshness + health chips. */
   .sidebar-pipeline-status {
@@ -6689,6 +6737,22 @@ async function build() {
     padding: 1px 9px; border-radius: var(--radius-full);
     letter-spacing: 0;
   }
+  /* 2026-05-19 BRAVO polish A2 (item #6): Builder-Evolution header pill is
+     now a real <button> that opens the commit-history drawer. Inherit the
+     .pill cosmetics but reset button-default chrome and add affordance. */
+  button.pill.be-commits-pill {
+    border: none; font: inherit; line-height: 1.4;
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease, box-shadow .15s ease;
+  }
+  button.pill.be-commits-pill:hover {
+    background: var(--green-fg); transform: translateY(-1px);
+  }
+  button.pill.be-commits-pill:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--green-fg);
+  }
+  button.pill.be-commits-pill:active { transform: translateY(0); }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
 
   /* ── Tonight's pick callout (enriched 2026-05-17) ──────────────── */
@@ -7732,6 +7796,7 @@ async function build() {
   @media (max-width: 640px) { .detail-grid { grid-template-columns: 1fr; } }
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
+  ${polishCardStyles()}
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
   /* 2026-05-18 Wave B: static (non-drill) cards never show a pointer or
      hover affordance — they're display-only. Kept separate from .dcard-drill
@@ -11308,7 +11373,7 @@ async function build() {
   <div class="container">
 
   <header class="toolbar" role="banner">
-    <button class="toolbar-btn sidebar-hamburger" onclick="toggleSidebar()" id="sidebar-hamburger-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false" title="Open navigation">☰</button>
+    <button class="toolbar-btn sidebar-hamburger" onclick="toggleSidebar()" id="sidebar-hamburger-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
     <h1 class="sr-only">Career-Ops Dashboard</h1>
     <div class="toolbar-brand" aria-hidden="true">
       <span class="brand-name">Career-Ops</span>
@@ -11324,7 +11389,7 @@ async function build() {
          so a power user can still flip density via DevTools or a future
          settings-menu toggle without re-doing the styling. -->
 
-    <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options" title="More options">···</button>
+    <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options">···</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
   </header>
 
@@ -11369,25 +11434,18 @@ async function build() {
     </div>
   </div>
 
-  <main id="main">
-
-  <!-- P1-5 (2026-05-19): job_runs ledger chip strip. One chip per scheduled
-       job, color-coded by state (green/yellow/red/purple/skipped/unknown).
-       Polled from /api/job-runs-status every 60s. Click → modal with last 10 runs. -->
-  <div class="jrs-strip" id="jrs-strip" aria-label="Scheduled job health">
-    <span class="jrs-strip-label">Jobs</span>
-    <div class="jrs-empty" id="jrs-strip-empty">Loading job-runs ledger…</div>
-  </div>
-  <div id="jrs-modal-backdrop" onclick="closeJobRunsModal()" role="dialog" aria-modal="true" aria-labelledby="jrs-modal-title">
-    <div id="jrs-modal" onclick="event.stopPropagation()">
-      <div class="jrs-modal-header">
-        <span class="jrs-modal-title" id="jrs-modal-title"></span>
-        <button class="jrs-modal-close" type="button" onclick="closeJobRunsModal()" aria-label="Close job-runs detail">✕</button>
-      </div>
-      <div class="jrs-modal-meta" id="jrs-modal-meta"></div>
-      <div id="jrs-modal-body"></div>
+  <!-- P1-5 Scraper-health widget strip — one chip per tracked job.
+       Chips are rendered as 'unknown' at build time; the inline script
+       below fetches /api/job-runs-status on load and updates them live.
+       Click opens a modal with the last 10 runs for that job. -->
+  <div class="job-runs-strip" id="job-runs-strip" role="status" aria-label="Scraper job health">
+    <span class="job-runs-strip-label">Jobs</span>
+    <div id="job-runs-chips" style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text-3)">Loading&#x2026;</span>
     </div>
   </div>
+
+  <main id="main">
 
   <!-- Cmd-K command palette -->
   <div id="cmdk-backdrop" role="dialog" aria-modal="true" aria-label="Command palette" onclick="closeCmdK()">
@@ -11831,9 +11889,13 @@ async function build() {
 
   ${builderLog && builderLog.latest ? (() => {
     const L = builderLog.latest;
-    const topSkills    = (L.top_skills      || []).map(s => `<span class="be-tag be-tag-skill" title="${s.n} commits this window">${htmlEscape(s.skill)} <span class="be-tag-n">${s.n}</span></span>`).join('');
-    const topApis      = (L.top_apis        || []).map(a => `<span class="be-tag be-tag-api" title="${a.n} commits this window">${htmlEscape(a.api)} <span class="be-tag-n">${a.n}</span></span>`).join('');
-    const topBugs      = (L.top_bug_classes || []).map(b => `<span class="be-tag be-tag-bug" title="${b.n} commits this window">${htmlEscape(b.bug_class)} <span class="be-tag-n">${b.n}</span></span>`).join('');
+    // 2026-05-19 BRAVO polish A2 (item #2): drop redundant native `title=` tooltip.
+    // The "N commits this window" text duplicates the visible `.be-tag-n` badge
+    // (the small "N" inside each tag). Keep the semantic via aria-label so
+    // screen readers still announce the count, but stop the tooltip flicker.
+    const topSkills    = (L.top_skills      || []).map(s => `<span class="be-tag be-tag-skill" aria-label="${htmlEscape(s.skill)} — ${s.n} commits this window">${htmlEscape(s.skill)} <span class="be-tag-n" aria-hidden="true">${s.n}</span></span>`).join('');
+    const topApis      = (L.top_apis        || []).map(a => `<span class="be-tag be-tag-api" aria-label="${htmlEscape(a.api)} — ${a.n} commits this window">${htmlEscape(a.api)} <span class="be-tag-n" aria-hidden="true">${a.n}</span></span>`).join('');
+    const topBugs      = (L.top_bug_classes || []).map(b => `<span class="be-tag be-tag-bug" aria-label="${htmlEscape(b.bug_class)} — ${b.n} commits this window">${htmlEscape(b.bug_class)} <span class="be-tag-n" aria-hidden="true">${b.n}</span></span>`).join('');
     const apiCount     = Object.keys(builderLog.apis        || {}).length;
     const skillCount   = Object.keys(builderLog.skills      || {}).length;
     const bugCount     = Object.keys(builderLog.bug_classes || {}).length;
@@ -11874,7 +11936,10 @@ async function build() {
   <div class="panel panel-strong" id="builder-evolution-section">
     <h2 class="panel-title collapsible" onclick="togglePanel('builder-evolution-section',event)">
       🛠 Builder Evolution
-      <span class="pill" title="${L.commits} commits · ${L.streak}d streak">${L.commits} · ${L.streak}d</span>
+      <button type="button" class="pill be-commits-pill" data-be-stat="commits"
+        onclick="event.stopPropagation();openBeStatModal('commits')"
+        aria-label="Open commit history drawer: last ${builderCommits.length} commits in the rolling window"
+        aria-haspopup="dialog" aria-controls="be-stat-modal">${L.commits} · ${L.streak}d</button>
       <span class="panel-chevron">▾</span>
     </h2>
     <p class="panel-subtitle">Skills, APIs, bug classes, PM signals — extracted from git history, last ${htmlEscape(sinceLabel)}. Updated nightly at 03:30 PT by <code>scripts/agents/builder-log.mjs</code>. <span class="be-subtitle-hint">Click any tile for detail.</span></p>
@@ -11908,9 +11973,13 @@ async function build() {
 
     <div class="be-footer">
       <span class="be-footer-meta">Last generated: ${generatedAt}</span>
-      <span class="be-footer-cta">→ See full digest: <code>data/builder-log-rolling-30d.md</code></span>
-      <span class="be-footer-cta">→ Resume bullets: <code>node scripts/agents/builder-log.mjs --export-resume-bullets</code></span>
-      ${tApi ? `<span class="be-footer-cta">→ Target stack audit: <code>data/council-target-apis-2026-05-19-adjudicated.md</code></span>` : ''}
+      <span class="be-footer-cta">&rarr; See full digest: <code>data/builder-log-rolling-30d.md</code></span>
+      <span class="be-footer-cta">&rarr; Resume bullets:
+        <button type="button" class="be-copy-btn" data-copy-text="node scripts/agents/builder-log.mjs --export-resume-bullets"
+          aria-label="Copy resume-bullets command to clipboard"
+          onclick="copyBeCommand(this)"><span class="be-copy-icon" aria-hidden="true">⧉</span>Copy command</button>
+      </span>
+      ${tApi ? `<span class="be-footer-cta">&rarr; Target stack audit: <code>data/council-target-apis-2026-05-19-adjudicated.md</code></span>` : ''}
     </div>
   </div>
   <script>
@@ -12000,6 +12069,18 @@ async function build() {
           { label: `All PM signals (${pmAllSorted.length} ranked by commit count)`, items: pmAllSorted, kind: 'count' },
         ],
         sources: ['data/builder-log-rolling-30d.md'],
+      },
+      // 2026-05-19 BRAVO polish A2 (item #6): commit-history drawer fired by the
+      // Builder-Evolution header pill. Last 15 commits from `git log` at build
+      // time. Each entry: short SHA, message, relative age, author.
+      commits: {
+        label: 'Recent commits',
+        headline: `${L.commits} · ${L.streak}d`,
+        subhead: `Last ${builderCommits.length} commits in the rolling window. Total this window: ${L.commits} commits across a ${L.streak}-day active-day streak.`,
+        sections: [
+          { label: `Last ${builderCommits.length} commits`, items: builderCommits, kind: 'commit' },
+        ],
+        sources: ['git log --oneline (live, last 15)'],
       },
     };
     return JSON.stringify(payload);
@@ -13027,129 +13108,6 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initMissionControlStrip);
 } else {
   initMissionControlStrip();
-}
-
-// ── P1-5 (2026-05-19): job_runs ledger chip strip + history modal ──
-// Polls /api/job-runs-status every 60s; one chip per scheduled job, color
-// per state. Click → modal with last 10 runs from /api/job-runs/<name>.
-//
-// outer-template-unescape guard (CLAUDE.md): all newlines inside emitted
-// JS strings use String.fromCharCode(10) so the outer template literal
-// in scripts/build-dashboard.mjs can't unescape them away.
-async function _jrsFetch(path) {
-  try {
-    const r = await fetch(path);
-    if (!r.ok) return null;
-    return await r.json();
-  } catch (_e) { return null; }
-}
-function _jrsStateColor(state) {
-  const m = { green: 'green', yellow: 'yellow', red: 'red', purple: 'purple', skipped: 'skipped', unknown: 'unknown' };
-  return m[state] || 'unknown';
-}
-function _jrsEsc(s) {
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-function _jrsRender(payload) {
-  const strip = document.getElementById('jrs-strip');
-  if (!strip) return;
-  const empty = strip.querySelector('#jrs-strip-empty');
-  if (!payload || !Array.isArray(payload.jobs)) {
-    if (empty) empty.textContent = 'No job-runs data';
-    return;
-  }
-  if (empty) empty.remove();
-  Array.from(strip.querySelectorAll('.jrs-chip, .jrs-summary')).forEach(n => n.remove());
-  const NL = String.fromCharCode(10);
-  const frag = document.createDocumentFragment();
-  for (const j of payload.jobs) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'jrs-chip jrs-chip-' + _jrsStateColor(j.state);
-    const lateSuffix = j.minutes_late ? ' · ' + j.minutes_late + 'm late' : '';
-    const lastTs = (j.last_run && j.last_run.finished_at)
-      ? new Date(j.last_run.finished_at).toLocaleString()
-      : (j.last_run && j.last_run.started_at ? new Date(j.last_run.started_at).toLocaleString() + ' (running)' : 'never');
-    btn.title = j.label + ' — ' + j.state + lateSuffix + NL + 'Cadence: ' + j.cadence_summary + NL + 'Last run: ' + lastTs;
-    btn.setAttribute('aria-label', j.label + ': ' + j.state + lateSuffix);
-    btn.innerHTML = '<span class="jrs-chip-dot"></span>' + _jrsEsc(j.label);
-    btn.addEventListener('click', () => window.openJobRunsModal(j.label, j));
-    frag.appendChild(btn);
-  }
-  const summary = document.createElement('span');
-  summary.className = 'jrs-summary';
-  const s = payload.summary || {};
-  const parts = [];
-  if (s.red) parts.push('<span class="jrs-summary-count-red">' + s.red + ' red</span>');
-  if (s.yellow) parts.push('<span class="jrs-summary-count-yellow">' + s.yellow + ' yellow</span>');
-  if (s.purple) parts.push('<span class="jrs-summary-count-purple">' + s.purple + ' purple</span>');
-  if (s.green) parts.push('<span class="jrs-summary-count-green">' + s.green + ' green</span>');
-  if (s.skipped) parts.push('<span>' + s.skipped + ' skipped</span>');
-  if (s.unknown) parts.push('<span>' + s.unknown + ' unknown</span>');
-  summary.innerHTML = parts.join(' · ');
-  frag.appendChild(summary);
-  strip.appendChild(frag);
-}
-async function _jrsRefresh() {
-  const data = await _jrsFetch('/api/job-runs-status');
-  _jrsRender(data);
-}
-window.openJobRunsModal = async function (jobName, chipMeta) {
-  const backdrop = document.getElementById('jrs-modal-backdrop');
-  const title = document.getElementById('jrs-modal-title');
-  const meta = document.getElementById('jrs-modal-meta');
-  const body = document.getElementById('jrs-modal-body');
-  if (!backdrop || !title || !body) return;
-  title.textContent = jobName;
-  if (chipMeta) {
-    const stateLabel = '<strong class="jrs-chip jrs-chip-' + _jrsStateColor(chipMeta.state) + '" style="cursor:default;font-size:11px;padding:2px 8px"><span class="jrs-chip-dot"></span>' + _jrsEsc(chipMeta.state) + '</strong>';
-    const nextExp = chipMeta.next_expected_at ? ' · Next: ' + new Date(chipMeta.next_expected_at).toLocaleString() : '';
-    const lateInfo = chipMeta.minutes_late ? ' · ' + chipMeta.minutes_late + 'm late' : '';
-    meta.innerHTML = 'State: ' + stateLabel + ' · Cadence: ' + _jrsEsc(chipMeta.cadence_summary) + nextExp + lateInfo;
-  } else {
-    meta.innerHTML = '';
-  }
-  body.innerHTML = '<div class="jrs-empty">Loading run history…</div>';
-  backdrop.classList.add('open');
-  const data = await _jrsFetch('/api/job-runs/' + encodeURIComponent(jobName) + '?limit=10');
-  if (!data || !Array.isArray(data.runs) || data.runs.length === 0) {
-    body.innerHTML = '<div class="jrs-empty">No run history yet — job has not fired since the ledger was wired up.</div>';
-    return;
-  }
-  const rows = data.runs.map(r => {
-    const started = new Date(r.started_at).toLocaleString();
-    const dur = (r.finished_at && r.started_at)
-      ? Math.max(0, Math.round((new Date(r.finished_at) - new Date(r.started_at)) / 1000)) + 's'
-      : (r.status === 'running' ? '…' : '?');
-    const urls = (r.urls_found == null) ? '—' : r.urls_found;
-    const err = r.error ? ' <span title="' + _jrsEsc(r.error) + '" style="cursor:help">⚠</span>' : '';
-    return '<tr>' +
-      '<td>' + _jrsEsc(started) + '</td>' +
-      '<td><span class="jrs-runs-status-' + _jrsEsc(r.status) + '">' + _jrsEsc(r.status) + '</span>' + err + '</td>' +
-      '<td>' + _jrsEsc(dur) + '</td>' +
-      '<td>' + _jrsEsc(urls) + '</td>' +
-      '</tr>';
-  }).join('');
-  body.innerHTML = '<table class="jrs-runs-table"><thead><tr><th>Started</th><th>Status</th><th>Duration</th><th>URLs</th></tr></thead><tbody>' + rows + '</tbody></table>';
-};
-window.closeJobRunsModal = function () {
-  const backdrop = document.getElementById('jrs-modal-backdrop');
-  if (backdrop) backdrop.classList.remove('open');
-};
-function initJobRunsStrip() {
-  _jrsRefresh();
-  setInterval(_jrsRefresh, 60000);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      const backdrop = document.getElementById('jrs-modal-backdrop');
-      if (backdrop && backdrop.classList.contains('open')) window.closeJobRunsModal();
-    }
-  });
-}
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initJobRunsStrip);
-} else {
-  initJobRunsStrip();
 }
 
 // ── Persistent left sidebar (Phase 7 Item 4) ────────────────────
@@ -17195,6 +17153,73 @@ function drillIn(type, id, evt) {
 }
 window.drillIn = drillIn;
 window.drillInRegistry = drillInRegistry;
+
+// ── Polish-status action handlers (2026-05-19) ──────────────────────────
+// Wired by the dcard--polish action buttons rendered via
+// lib/polish-card-renderer.mjs#renderPolishDcard.
+window.runPolishNow = async function(rowId, packSlug) {
+  if (!confirm('Run polish now on row #' + rowId + '? Cost: up to $50 over ~30 min.')) return;
+  try {
+    const r = await fetch('/api/apply-pack-polish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row: rowId, slug: packSlug, force_full_burn: false }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      alert('Polish started for row #' + rowId + '. Job ID: ' + (j.jobId || 'unknown') + '. Check back in ~20 min — refresh dashboard for status.');
+    } else {
+      alert('Polish failed to start: ' + (j.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Polish API call failed: ' + e.message);
+  }
+};
+window.repolishRow = async function(rowId, packSlug, forceFullBurn) {
+  const msg = forceFullBurn
+    ? 'Re-polish row #' + rowId + ' with --no-early-abandon? Forces full burn (up to $50, ~40 min). Use when you suspect early-abandon was wrong.'
+    : 'Re-polish row #' + rowId + '?';
+  if (!confirm(msg)) return;
+  try {
+    const r = await fetch('/api/apply-pack-polish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row: rowId, slug: packSlug, force_full_burn: !!forceFullBurn }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      alert('Re-polish started for row #' + rowId + '. Job ID: ' + (j.jobId || 'unknown'));
+    } else {
+      alert('Re-polish failed to start: ' + (j.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Re-polish API call failed: ' + e.message);
+  }
+};
+window.openBulletLedger = function(packSlug) {
+  const path = 'apply-pack/' + packSlug + '/cv-tailored.md';
+  const NL = String.fromCharCode(10);
+  alert('Edit this file to rewrite the polish source:' + NL + NL + path + NL + NL + 'Open in your editor (Cursor/VS Code).');
+};
+window.skipRowFromPolish = async function(rowId, packSlug) {
+  if (!confirm('Mark row #' + rowId + ' as Discarded? Polish could not save it and JD-fit is not there.')) return;
+  try {
+    const r = await fetch('/api/dismiss-row', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row: rowId, reason: 'polish-rejected', tag: 'polish_couldnt_save' }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      alert('Row #' + rowId + ' marked Discarded. Reload dashboard to see updated table.');
+      location.reload();
+    } else {
+      alert('Failed to dismiss row: ' + (j.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Dismiss API call failed: ' + e.message);
+  }
+};
 
 // ── Wave C-A Item 2: company names in banners + drawer headers ───────────
 // Scan banner live-ticker gets data-drill on update via MutationObserver.
@@ -22919,6 +22944,15 @@ function _renderBeStatBody(p) {
           '<div class="be-stat-modal-item-count">' + (it.hours != null ? (it.hours + 'h') : '—') + '</div>' +
           '</li>';
       }
+      if (sec.kind === 'commit') {
+        // 2026-05-19 BRAVO polish A2 (item #6): commit row in the header-pill drawer.
+        // Shows short SHA, message, relative age, author. SHA rendered in <code>.
+        return '<li class="be-stat-modal-item">' +
+          '<div><span class="be-stat-modal-item-name"><code style="background:var(--surface-2);padding:1px 6px;border-radius:3px;font-size:11px;margin-right:8px">' + esc(it.sha || '') + '</code>' + esc(it.message || '') + '</span>' +
+          '<div class="be-stat-modal-item-evidence">' + esc(it.age || '') + (it.author ? ' · ' + esc(it.author) : '') + '</div>' +
+          '</div>' +
+          '</li>';
+      }
       // kind === 'count' default
       return '<li class="be-stat-modal-item">' +
         '<span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
@@ -22966,12 +23000,46 @@ function closeBeStatModal() {
 }
 // Event delegation — chips render before this script runs; native button click
 // + Enter/Space work via native semantics, we just route to openBeStatModal.
+// 2026-05-19 BRAVO polish A2 (item #6): broadened selector from
+// .be-stat-tile-clickable to [data-be-stat] so the new header-pill commits
+// drawer participates without duplicating the wiring. The header pill's
+// onclick already stopPropagation()s on the parent h2 to keep the panel
+// from collapsing.
 document.addEventListener('click', function(e) {
-  const tile = e.target.closest && e.target.closest('.be-stat-tile-clickable');
-  if (!tile) return;
-  const key = tile.getAttribute('data-be-stat');
+  const trigger = e.target.closest && e.target.closest('[data-be-stat]');
+  if (!trigger) return;
+  const key = trigger.getAttribute('data-be-stat');
   if (key) openBeStatModal(key);
 });
+
+// 2026-05-19 BRAVO polish A2 (item #4): copy-to-clipboard for the Builder-Evolution
+// resume-bullets CLI hint. Uses navigator.clipboard.writeText with a transient
+// in-button "Copied!" state plus the shared window.toast for screen-reader
+// confirmation. Best-effort: falls back to a manual selection prompt if
+// clipboard API is unavailable.
+function copyBeCommand(btn) {
+  if (!btn) return;
+  const text = btn.getAttribute('data-copy-text') || '';
+  if (!text) return;
+  const showCopied = function() {
+    btn.classList.add('copied');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<span class="be-copy-icon" aria-hidden="true">✓</span>Copied!';
+    setTimeout(function() {
+      btn.classList.remove('copied');
+      btn.innerHTML = original;
+    }, 1800);
+    if (window.toast) window.toast('Command copied to clipboard', 'success');
+  };
+  if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(function(err) {
+      if (window.toast) window.toast('Copy failed: ' + (err && err.message ? err.message : err), 'error');
+    });
+  } else {
+    // Pre-clipboard-API fallback: select the text for manual Cmd+C.
+    if (window.toast) window.toast('Clipboard API unavailable — copy from the drawer', 'error');
+  }
+}
 
 // ── Live stats refresh ──────────────────────────────────────────
 async function refreshLiveStats() {
@@ -28132,8 +28200,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     // would have to be triple-escaped to survive the outer template literal).
     var toolbarHtml = ''
       + '<div class="op-toolbar" data-op-toolbar="1">'
-      +   '<button type="button" class="op-tb-btn op-tb-btn-snooze" data-op-action="snooze" title="Snooze this card" aria-label="Snooze this card">↪ snooze</button>'
-      +   '<button type="button" class="op-tb-btn op-tb-btn-cancel" data-op-action="cancel-strategy" title="Cancel this strategy recommendation" aria-label="Cancel this strategy recommendation">✕</button>'
+      +   '<button type="button" class="op-tb-btn op-tb-btn-snooze" data-op-action="snooze" aria-label="Snooze this card">↪ snooze</button>'
+      +   '<button type="button" class="op-tb-btn op-tb-btn-cancel" data-op-action="cancel-strategy" aria-label="Cancel this strategy recommendation">✕</button>'
       + '</div>'
       + '<div class="op-snooze-pop" data-op-snooze-pop="1" role="dialog" aria-label="Snooze options" hidden>'
       +   '<div class="op-snooze-pop-head">Snooze until</div>'
@@ -29820,6 +29888,144 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       closeItemListModal();
     }
   }, true);
+})();
+</script>
+
+<script>
+// ── P1-5 Scraper-health widget strip ─────────────────────────────
+// Fetches /api/job-runs-status on load and updates the chip strip.
+// Click on any chip opens the item-list-modal with that job's last 10 runs.
+(function () {
+  function _escH(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function _fmtAge(iso) {
+    if (!iso) return 'never';
+    var ms = Date.now() - new Date(iso).getTime();
+    var mins = Math.round(ms / 60000);
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.round(ms / 3600000);
+    if (hrs < 48) return hrs + 'h ago';
+    return Math.round(hrs / 24) + 'd ago';
+  }
+
+  function _stateLabel(state) {
+    if (state === 'green')   return 'OK';
+    if (state === 'yellow')  return 'Late';
+    if (state === 'red')     return 'OVERDUE';
+    if (state === 'purple')  return '0 found';
+    if (state === 'skipped') return 'Skipped';
+    return '?';
+  }
+
+  function _chipTitle(j) {
+    var parts = [
+      'Job: ' + j.name,
+      'State: ' + (j.state || 'unknown'),
+      'Last finished: ' + (j.last_finished_at ? _fmtAge(j.last_finished_at) : 'never'),
+      'URLs found: ' + (j.last_urls_found != null ? j.last_urls_found : 'n/a'),
+      'Status: ' + (j.last_status || 'n/a'),
+      'Cadence: every ' + j.expected_cadence_minutes + 'm',
+    ];
+    return parts.join('\\n');
+  }
+
+  function _renderChips(jobs) {
+    var wrap = document.getElementById('job-runs-chips');
+    if (!wrap) return;
+    if (!jobs || !jobs.length) {
+      wrap.innerHTML = '<span style="font-size:11px;color:var(--text-3)">No data</span>';
+      return;
+    }
+    wrap.innerHTML = jobs.map(function (j) {
+      var state = j.state || 'unknown';
+      var label = j.name.replace('portal-scan', 'scan').replace('scrape-frequent', 'scrape-4h')
+                        .replace('liveness-sweep', 'liveness').replace('scan-hn-hiring', 'HN')
+                        .replace('heartbeat-evening', 'hb-eve').replace('heartbeat', 'hb');
+      var stateLabel = _stateLabel(state);
+      var title = _chipTitle(j);
+      return '<button type="button" class="jrs-chip" data-state="' + _escH(state) + '"' +
+        ' title="' + _escH(title) + '"' +
+        ' aria-label="' + _escH(j.name + ': ' + stateLabel) + '"' +
+        ' onclick="window._openJobRunsModal(' + JSON.stringify(j.name) + ')">' +
+        '<span class="jrs-dot" aria-hidden="true"></span>' +
+        '<span class="jrs-chip-name">' + _escH(label) + '</span>' +
+        '<span style="font-size:10px;opacity:.7;margin-left:2px">' + _escH(stateLabel) + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  async function _loadJobRunsStatus() {
+    try {
+      var res = await fetch('/api/job-runs-status', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      _renderChips(data.jobs || []);
+    } catch (err) {
+      var wrap = document.getElementById('job-runs-chips');
+      if (wrap) wrap.innerHTML = '<span style="font-size:11px;color:var(--red-fg,#dc2626)">Scraper status unavailable</span>';
+    }
+  }
+
+  window._openJobRunsModal = async function (jobName) {
+    if (typeof window._showModal !== 'function') {
+      var bd = document.getElementById('item-list-backdrop');
+      var md = document.getElementById('item-list-modal');
+      if (!bd || !md) return;
+    }
+    var titleEl = document.getElementById('item-list-modal-title');
+    var metaEl  = document.getElementById('item-list-modal-meta');
+    var scroll  = document.getElementById('item-list-modal-scroll');
+    var bd      = document.getElementById('item-list-backdrop');
+    var md      = document.getElementById('item-list-modal');
+    if (!scroll || !bd || !md) return;
+    if (titleEl) titleEl.textContent = jobName + ' — recent runs';
+    if (metaEl)  metaEl.textContent  = '';
+    scroll.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px">Loading\\u2026</div>';
+    bd.classList.add('visible');
+    md.classList.add('visible');
+    bd.setAttribute('aria-hidden', 'false');
+    md.setAttribute('aria-hidden', 'false');
+    var close = md.querySelector('.item-list-modal-close');
+    if (close) try { close.focus(); } catch (_) {}
+    try {
+      var res = await fetch('/api/job-runs-history?job=' + encodeURIComponent(jobName) + '&limit=10', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      var rows = Array.isArray(data.rows) ? data.rows : [];
+      if (metaEl) metaEl.textContent = rows.length + ' run' + (rows.length === 1 ? '' : 's');
+      if (!rows.length) {
+        scroll.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No runs recorded yet for <code>' + _escH(jobName) + '</code>.<br><span style="color:var(--text-2)">Wire <code>startRun()</code>/<code>finishRun()</code> in the script to populate this ledger.</span></div>';
+        return;
+      }
+      var thead = '<thead><tr><th>ID</th><th>Started</th><th>Finished</th><th>Status</th><th>URLs</th><th>Error</th></tr></thead>';
+      var tbodyRows = rows.map(function (r) {
+        var stClr = r.status === 'ok' ? 'var(--green-fg,#16a34a)' : r.status === 'fail' ? '#dc2626' : r.status === 'skipped' ? 'var(--text-3)' : 'var(--text-2)';
+        return '<tr>' +
+          '<td style="font-variant-numeric:tabular-nums">' + _escH(r.id) + '</td>' +
+          '<td style="white-space:nowrap;font-size:11.5px">' + _escH(r.started_at ? r.started_at.replace('T',' ').replace(/\\.\\d+Z$/,'Z') : '—') + '</td>' +
+          '<td style="white-space:nowrap;font-size:11.5px">' + _escH(r.finished_at ? r.finished_at.replace('T',' ').replace(/\\.\\d+Z$/,'Z') : '—') + '</td>' +
+          '<td style="font-weight:600;color:' + stClr + '">' + _escH(r.status || '—') + '</td>' +
+          '<td style="text-align:right">' + _escH(r.urls_found != null ? r.urls_found : '—') + '</td>' +
+          '<td style="font-size:11px;color:var(--text-3);max-width:200px;overflow:hidden;text-overflow:ellipsis" title="' + _escH(r.error || '') + '">' + _escH(r.error ? r.error.slice(0,80) : '—') + '</td>' +
+          '</tr>';
+      }).join('');
+      scroll.innerHTML = '<div class="stale-item-list" style="padding:8px 0"><table style="width:100%;border-collapse:collapse;font-size:12px">' + thead + '<tbody>' + tbodyRows + '</tbody></table></div>';
+    } catch (err) {
+      scroll.innerHTML = '<div style="padding:24px;color:var(--red-fg,#dc2626);font-size:13px">Could not load history: ' + _escH(err.message) + '</div>';
+    }
+  };
+
+  // Load on page ready and refresh every 5 minutes (non-blocking).
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _loadJobRunsStatus);
+  } else {
+    _loadJobRunsStatus();
+  }
+  setInterval(_loadJobRunsStatus, 5 * 60 * 1000);
 })();
 </script>
 
