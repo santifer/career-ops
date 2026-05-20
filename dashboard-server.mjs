@@ -2525,7 +2525,26 @@ function batchLive() {
 // Reuses batchLive() for the current run summary, detailBatches() for the
 // recent-runs grouping (15-min gap heuristic), data/cost-log.tsv for per-batch
 // cost rows, and data/errors.log for batch-related failures.
+// 2026-05-20 — Mitchell flagged dashboard load lag. /api/batch/status-detailed
+// was the bottleneck (798ms vs <20ms for every other endpoint) because it
+// re-parses 4,400-row cost-log.tsv + batch-state.tsv + errors.log + pipeline-
+// process-state.json on every request. Cache for 5 seconds — well within
+// the dashboard's 10s poll window, so the first poll-tick after a change
+// still sees fresh data, but rapid-fire calls (first paint + 1s timestamp
+// updates) reuse the cached payload.
+let _batchStatusCache = null;
+let _batchStatusCacheTs = 0;
+const BATCH_STATUS_CACHE_MS = 5000;
 function buildBatchStatusDetailed() {
+  if (_batchStatusCache && (Date.now() - _batchStatusCacheTs) < BATCH_STATUS_CACHE_MS) {
+    return _batchStatusCache;
+  }
+  const result = _buildBatchStatusDetailedUncached();
+  _batchStatusCache = result;
+  _batchStatusCacheTs = Date.now();
+  return result;
+}
+function _buildBatchStatusDetailedUncached() {
   const live = batchLive();
 
   // ── Recent runs: enrich detailBatches() output with per-run cost ──

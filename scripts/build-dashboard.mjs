@@ -3738,6 +3738,32 @@ async function build() {
   }
   const applied = apps.filter(r => /applied|interview|offer/i.test(r.status));
   const pipelinePending = countPipelinePending();
+  // 2026-05-20 — Bake sidebar widget initial values into HTML so the user
+  // doesn't see "—" / "Loading…" placeholders flash in on first paint.
+  // The dashboard's polls (5min / 30s / 1s) still refresh these in-place,
+  // but the first render now shows the actual values immediately.
+  let triageAdvanceCount = 0;
+  try {
+    const tap = join(ROOT, 'batch/triage-advance.tsv');
+    if (existsSync(tap)) {
+      const lines = readFileSync(tap, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('url'));
+      triageAdvanceCount = lines.length;
+    }
+  } catch { /* default 0 */ }
+  let initialHealthChip = { label: 'health: ?', cls: 'pipeline-health-chip', title: 'Health check not run yet' };
+  try {
+    const hp = join(ROOT, 'data/pipeline-health.json');
+    if (existsSync(hp)) {
+      const h = JSON.parse(readFileSync(hp, 'utf-8'));
+      const ageMin = Math.floor((Date.now() - Date.parse(h.checked_at)) / 60000);
+      const ageLabel = ageMin < 1 ? 'just now' : ageMin + 'm ago';
+      if (h.healthy) {
+        initialHealthChip = { label: 'health: ✓ ' + ageLabel, cls: 'pipeline-health-chip healthy', title: 'All checks passing · last checked ' + ageLabel };
+      } else {
+        initialHealthChip = { label: 'health: ✗ ' + (h.summary || 'check failed'), cls: 'pipeline-health-chip critical', title: (h.summary || 'health check failed') + ' · click for details' };
+      }
+    }
+  } catch { /* default to ? */ }
   // Builder Evolution log — loaded from data/builder-log.json (regenerated
   // nightly by scripts/agents/builder-log.mjs). Surfaces skills/APIs/bug-classes
   // for the PM-trajectory narrative.
@@ -11261,20 +11287,22 @@ async function build() {
       <button type="button" class="pipeline-btn pipeline-btn-batch" onclick="openPipelineModal('batch')" title="Run Anthropic batch eval on currently-queued items">
         <span class="pipeline-btn-icon" aria-hidden="true">⚡</span>
         <span class="pipeline-btn-label">Run Batch</span>
-        <span class="pipeline-btn-count" id="pipeline-btn-batch-count">—</span>
+        <span class="pipeline-btn-count" id="pipeline-btn-batch-count">${triageAdvanceCount}</span>
       </button>
       <button type="button" class="pipeline-btn pipeline-btn-nuclear" onclick="openPipelineModal('process-all')" title="Triage + batch + reconcile + (optional) email — full pipeline drain">
         <span class="pipeline-btn-icon" aria-hidden="true">🚀</span>
         <span class="pipeline-btn-label">Process All</span>
-        <span class="pipeline-btn-count" id="pipeline-btn-all-count">—</span>
+        <span class="pipeline-btn-count" id="pipeline-btn-all-count">${pipelinePending + triageAdvanceCount}</span>
       </button>
     </div>
     <!-- 2026-05-19 Mitchell trust-fix — freshness chip + health chip.
          Chip shows "updated Ns ago" with live ticking. Color-codes on staleness.
-         "System healthy" chip reads /api/pipeline/health-status. -->
+         "System healthy" chip reads /api/pipeline/health-status.
+         2026-05-20 — initial values baked at build time so first paint shows
+         data instead of "badges loading…" / "health: —" flashing in. -->
     <div id="sidebar-pipeline-status" class="sidebar-pipeline-status" aria-label="Pipeline status freshness">
-      <span id="pipeline-freshness-chip" class="pipeline-freshness-chip" title="Time since last badge refresh">badges loading…</span>
-      <span id="pipeline-health-chip" class="pipeline-health-chip" title="Health check (every 5 min) — click to view full status" onclick="openPipelineHealthModal()">health: —</span>
+      <span id="pipeline-freshness-chip" class="pipeline-freshness-chip fresh" title="Time since last badge refresh">badges · just now</span>
+      <span id="pipeline-health-chip" class="${initialHealthChip.cls}" title="${htmlEscape(initialHealthChip.title)} — click to view full status" onclick="openPipelineHealthModal()">${htmlEscape(initialHealthChip.label)}</span>
     </div>
     <!-- Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16)
          Chevron toggles inline detail. Label click opens full runway modal
