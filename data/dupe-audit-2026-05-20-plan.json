@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-20T03:21:32.967Z",
+  "generated_at": "2026-05-20T05:25:44.750Z",
   "strict_clusters": [
     {
       "key": "anthropic|applied ai architect industries",
@@ -21,19 +21,100 @@
         },
         {
           "num": "2058",
-          "date": "2026-05-19",
-          "score": "4.3/5",
+          "date": "2026-05-20",
+          "score": "4.4/5",
           "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4322199961",
-          "reportFile": "reports/1051-anthropic-2026-05-19.md"
+          "reportFile": "reports/1051-anthropic-2026-05-20.md"
         },
         {
           "num": "2059",
           "date": "2026-05-19",
           "score": "4.3/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4354790731",
           "reportFile": "reports/1047-anthropic-2026-05-19.md"
+        }
+      ]
+    },
+    {
+      "key": "decagon|customer engineer agent builder",
+      "company": "Decagon",
+      "role": "Customer Engineer, Agent Builder",
+      "winner_num": "1513",
+      "loser_nums": [
+        "2235"
+      ],
+      "rows": [
+        {
+          "num": "2235",
+          "date": "2026-05-20",
+          "score": "3.6/5",
+          "status": "Discarded",
+          "url": "https://jobs.ashbyhq.com/decagon/8c40fb7a-5f25-4112-a1df-f1c22b81042c",
+          "reportFile": "reports/1000-decagon-2026-05-20.md"
+        },
+        {
+          "num": "1513",
+          "date": "2026-05-13",
+          "score": "3.85/5",
+          "status": "Evaluated",
+          "url": "https://jobs.ashbyhq.com/decagon/230ad153-85be-4f7b-a368-5bad59e513e2",
+          "reportFile": "reports/2090-decagon-customer-engineer-agent-builder-2026-05-13.md"
+        }
+      ]
+    },
+    {
+      "key": "amazon|sr applied ai solutions architect public sector amazon connect",
+      "company": "Amazon",
+      "role": "Sr. Applied AI Solutions Architect - Public Sector, Amazon Connect",
+      "winner_num": "2062",
+      "loser_nums": [
+        "2236"
+      ],
+      "rows": [
+        {
+          "num": "2236",
+          "date": "2026-05-20",
+          "score": "3.2/5",
+          "status": "Discarded",
+          "url": "https://www.amazon.jobs/en/jobs/10392783/sr-applied-ai-solutions-architect-public-sector-amazon-connect",
+          "reportFile": "reports/1003-amazon-2026-05-20.md"
+        },
+        {
+          "num": "2062",
+          "date": "2026-05-19",
+          "score": "3.6/5",
+          "status": "Evaluated",
+          "url": "https://www.amazon.jobs/en/jobs/10392784/sr-applied-ai-solutions-architect-public-sector-amazon-connect",
+          "reportFile": "reports/1004-amazon-2026-05-19.md"
+        }
+      ]
+    },
+    {
+      "key": "amazon aws|senior ai specialist solutions architect",
+      "company": "Amazon (AWS)",
+      "role": "Senior AI Specialist Solutions Architect",
+      "winner_num": "2237",
+      "loser_nums": [
+        "2031"
+      ],
+      "rows": [
+        {
+          "num": "2237",
+          "date": "2026-05-20",
+          "score": "3.2/5",
+          "status": "Evaluated",
+          "url": "https://www.amazon.jobs/en/jobs/10384575/senior-ai-specialist-solutions-architect-aws",
+          "reportFile": "reports/1005-amazon-aws-2026-05-20.md"
+        },
+        {
+          "num": "2031",
+          "date": "2026-05-08",
+          "score": "3.8/5",
+          "status": "Discarded",
+          "url": "https://www.amazon.jobs/en/jobs/10384575/senior-ai-specialist-solutions-architect-aws",
+          "reportFile": "reports/999-amazon-aws-2026-05-08.md"
         }
       ]
     },
@@ -50,7 +131,7 @@
           "num": "2228",
           "date": "2026-05-19",
           "score": "3.2/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4373800961",
           "reportFile": "reports/1054-fxi-2026-05-19.md"
         },
@@ -85,7 +166,7 @@
           "num": "2071",
           "date": "2026-05-18",
           "score": "3.6/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4374659378",
           "reportFile": "reports/1036-valon-2026-05-18.md"
         }
@@ -158,17 +239,17 @@
           "num": "2189",
           "date": "2026-05-18",
           "score": "3.8/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4374636120",
           "reportFile": "reports/1026-airtable-2026-05-18.md"
         },
         {
           "num": "2037",
-          "date": "2026-05-19",
-          "score": "3.8/5",
+          "date": "2026-05-20",
+          "score": "3.9/5",
           "status": "Evaluated",
           "url": "https://www.linkedin.com/jobs/view/4374636120",
-          "reportFile": "reports/1025-airtable-2026-05-19.md"
+          "reportFile": "reports/1025-airtable-2026-05-20.md"
         }
       ]
     },
@@ -185,7 +266,7 @@
           "num": "2190",
           "date": "2026-05-18",
           "score": "3.8/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4375076349",
           "reportFile": "reports/1038-kana-2026-05-18.md"
         },
@@ -212,7 +293,7 @@
           "num": "2191",
           "date": "2026-05-19",
           "score": "3.8/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4405553458",
           "reportFile": "reports/1040-openai-2026-05-19.md"
         },
@@ -220,7 +301,7 @@
           "num": "2192",
           "date": "2026-05-18",
           "score": "3.8/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4405584108",
           "reportFile": "reports/1043-openai-2026-05-18.md"
         }
@@ -247,7 +328,7 @@
           "num": "2061",
           "date": "2026-05-19",
           "score": "4.1/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4387086760",
           "reportFile": "reports/1056-openai-2026-05-19.md"
         }
@@ -274,7 +355,7 @@
           "num": "2212",
           "date": "2026-05-19",
           "score": "3.8/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4365345164",
           "reportFile": "reports/1084-actively-ai-2026-05-19.md"
         }
@@ -291,11 +372,11 @@
       "rows": [
         {
           "num": "2065",
-          "date": "2026-05-19",
-          "score": "3.1/5",
-          "status": "Evaluated",
+          "date": "2026-05-20",
+          "score": "3.2/5",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4374622644",
-          "reportFile": "reports/1027-anthropic-2026-05-19.md"
+          "reportFile": "reports/1027-anthropic-2026-05-20.md"
         },
         {
           "num": "2066",
@@ -311,16 +392,16 @@
       "key": "elevenlabs|gtm agentic enablement lead",
       "company": "ElevenLabs",
       "role": "GTM Agentic Enablement Lead",
-      "winner_num": "2067",
+      "winner_num": "58",
       "loser_nums": [
-        "58"
+        "2067"
       ],
       "rows": [
         {
           "num": "2067",
           "date": "2026-05-18",
           "score": "4.2/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4397400143",
           "reportFile": "reports/1030-elevenlabs-2026-05-18.md"
         },
@@ -355,42 +436,69 @@
           "num": "2046",
           "date": "2026-05-19",
           "score": "3.8/5",
-          "status": "Evaluated",
+          "status": "Discarded",
           "url": "https://www.linkedin.com/jobs/view/4384640261",
           "reportFile": "reports/1033-langchain-2026-05-19.md"
         }
       ]
     }
   ],
-  "loose_only_clusters": [],
+  "loose_only_clusters": [
+    {
+      "key": "amazon|applied ai solutions architect amazon connect",
+      "company": "Amazon",
+      "winner_num": "2244",
+      "loser_nums": [
+        "2240"
+      ],
+      "rows": [
+        {
+          "num": "2240",
+          "role": "Senior Applied AI Solutions Architect, Amazon Connect",
+          "date": "2026-05-20",
+          "score": "3.2/5",
+          "status": "Evaluated",
+          "url": "https://www.amazon.jobs/en/jobs/10387521/senior-applied-ai-solutions-architect-amazon-connect"
+        },
+        {
+          "num": "2244",
+          "role": "Principal Applied AI Solutions Architect, Amazon Connect",
+          "date": "2026-05-20",
+          "score": "3.3/5",
+          "status": "Evaluated",
+          "url": "https://www.amazon.jobs/en/jobs/10409992/principal-applied-ai-solutions-architect-amazon-connect"
+        }
+      ]
+    }
+  ],
   "queue_dupes": [],
   "linkedin_active": [
     {
-      "num": "2235",
-      "url": "https://www.linkedin.com/jobs/view/4411183783",
-      "company": "NetApp",
-      "role": "Executive Communications Lead",
+      "num": "2251",
+      "url": "https://www.linkedin.com/jobs/view/4394212184",
+      "company": "BCG X",
+      "role": "(Senior) AI Factory Product Builder",
       "status": "Evaluated"
     },
     {
-      "num": "2236",
-      "url": "https://www.linkedin.com/jobs/view/4383447500",
-      "company": "Rimini Street",
-      "role": "Director, Content",
+      "num": "2252",
+      "url": "https://www.linkedin.com/jobs/view/4358089859",
+      "company": "OpenAI",
+      "role": "AI Success Engineer, Government",
       "status": "Evaluated"
     },
     {
-      "num": "2237",
-      "url": "https://www.linkedin.com/jobs/view/4403991170",
-      "company": "Binance",
-      "role": "Pioneer Talent Program - AI Agent Engineer",
+      "num": "2253",
+      "url": "https://www.linkedin.com/jobs/view/4409830555",
+      "company": "Ema",
+      "role": "Solutions Architect",
       "status": "Evaluated"
     },
     {
-      "num": "2238",
-      "url": "https://www.linkedin.com/jobs/view/4403603934",
-      "company": "Red Hat",
-      "role": "Senior AI Architect, APAC",
+      "num": "2258",
+      "url": "https://www.linkedin.com/jobs/view/4412532846",
+      "company": "NVIDIA",
+      "role": "Senior Solutions Architect, Generative AI",
       "status": "Evaluated"
     },
     {
@@ -398,13 +506,6 @@
       "url": "https://www.linkedin.com/jobs/view/4381437336",
       "company": "Amazon Web Services (AWS)",
       "role": "Senior AI Solution Architect",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2240",
-      "url": "https://www.linkedin.com/jobs/view/4413483605",
-      "company": "Stripe",
-      "role": "Design Program Manager, AI",
       "status": "Evaluated"
     },
     {
@@ -422,20 +523,6 @@
       "status": "Evaluated"
     },
     {
-      "num": "2243",
-      "url": "https://www.linkedin.com/jobs/view/4403202230",
-      "company": "Amazon Web Services (AWS)",
-      "role": "Senior AI Innovation & GTM Programs Lead, Applied AI Solutions",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2244",
-      "url": "https://www.linkedin.com/jobs/view/4411857945",
-      "company": "Google",
-      "role": "Product Strategy and Operations Lead, AI and Infrastructure",
-      "status": "Evaluated"
-    },
-    {
       "num": "2245",
       "url": "https://www.linkedin.com/jobs/view/4406603037",
       "company": "Microsoft",
@@ -443,38 +530,10 @@
       "status": "Evaluated"
     },
     {
-      "num": "2246",
-      "url": "https://www.linkedin.com/jobs/view/4414934839",
-      "company": "General Motors",
-      "role": "Sr. Manager Communications, Product and Technology",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2247",
-      "url": "https://www.linkedin.com/jobs/view/4414980925",
-      "company": "Solventum",
-      "role": "Manager, External Communications and Editorial Channels",
-      "status": "Evaluated"
-    },
-    {
       "num": "2248",
       "url": "https://www.linkedin.com/jobs/view/4414988668",
       "company": "Loot Labs, Inc",
       "role": "Senior Editorial Lead",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2249",
-      "url": "https://www.linkedin.com/jobs/view/4414939835",
-      "company": "Intersect",
-      "role": "AI Solutions",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2228",
-      "url": "https://www.linkedin.com/jobs/view/4373800961",
-      "company": "FXI",
-      "role": "Head of AI Enablement",
       "status": "Evaluated"
     },
     {
@@ -520,13 +579,6 @@
       "status": "Evaluated"
     },
     {
-      "num": "2219",
-      "url": "https://www.linkedin.com/jobs/view/4412308778",
-      "company": "Unknown",
-      "role": "Corporate Communications Specialist (expired posting)",
-      "status": "Evaluated"
-    },
-    {
       "num": "2220",
       "url": "https://www.linkedin.com/jobs/view/4410405276",
       "company": "NVIDIA",
@@ -569,34 +621,6 @@
       "status": "Evaluated"
     },
     {
-      "num": "2189",
-      "url": "https://www.linkedin.com/jobs/view/4374636120",
-      "company": "Airtable",
-      "role": "AI Agent Architect, Customer Experience",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2190",
-      "url": "https://www.linkedin.com/jobs/view/4375076349",
-      "company": "Kana",
-      "role": "AI Solutions Lead",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2191",
-      "url": "https://www.linkedin.com/jobs/view/4405553458",
-      "company": "OpenAI",
-      "role": "Visual Storytelling & Innovation Lead, Office of the CRO",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2192",
-      "url": "https://www.linkedin.com/jobs/view/4405584108",
-      "company": "OpenAI",
-      "role": "Visual Storytelling & Innovation Lead, Office of the CRO",
-      "status": "Evaluated"
-    },
-    {
       "num": "2193",
       "url": "https://www.linkedin.com/jobs/view/4313852223",
       "company": "OpenAI",
@@ -622,13 +646,6 @@
       "url": "https://www.linkedin.com/jobs/view/4322410073",
       "company": "Anthropic",
       "role": "Manager of Solutions Architecture, Applied AI (Industries)",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2197",
-      "url": "https://www.linkedin.com/jobs/view/4397758572",
-      "company": "Mark43",
-      "role": "Enterprise AI Enablement Lead",
       "status": "Evaluated"
     },
     {
@@ -660,13 +677,6 @@
       "status": "Evaluated"
     },
     {
-      "num": "2212",
-      "url": "https://www.linkedin.com/jobs/view/4365345164",
-      "company": "Actively AI",
-      "role": "AI Solutions Architect",
-      "status": "Evaluated"
-    },
-    {
       "num": "2213",
       "url": "https://www.linkedin.com/jobs/view/4400626999",
       "company": "DigitalOcean",
@@ -688,13 +698,6 @@
       "status": "Evaluated"
     },
     {
-      "num": "2065",
-      "url": "https://www.linkedin.com/jobs/view/4374622644",
-      "company": "Anthropic",
-      "role": "Solutions Architect, National Security",
-      "status": "Evaluated"
-    },
-    {
       "num": "2066",
       "url": "https://www.linkedin.com/jobs/view/4374622644",
       "company": "Anthropic",
@@ -702,24 +705,10 @@
       "status": "Evaluated"
     },
     {
-      "num": "2067",
-      "url": "https://www.linkedin.com/jobs/view/4397400143",
-      "company": "ElevenLabs",
-      "role": "GTM Agentic Enablement Lead",
-      "status": "Evaluated"
-    },
-    {
       "num": "2069",
       "url": "https://www.linkedin.com/jobs/view/4384640261",
       "company": "LangChain",
       "role": "Deployed Engineer (San Diego)",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2071",
-      "url": "https://www.linkedin.com/jobs/view/4374659378",
-      "company": "Valon",
-      "role": "Applied AI Strategist, New Ventures",
       "status": "Evaluated"
     },
     {
@@ -737,24 +726,10 @@
       "status": "Evaluated"
     },
     {
-      "num": "2059",
-      "url": "https://www.linkedin.com/jobs/view/4354790731",
-      "company": "Anthropic",
-      "role": "Applied AI Architect, Industries",
-      "status": "Evaluated"
-    },
-    {
       "num": "2060",
       "url": "https://www.linkedin.com/jobs/view/4373800961",
       "company": "FXI",
       "role": "Head of AI Enablement",
-      "status": "Evaluated"
-    },
-    {
-      "num": "2061",
-      "url": "https://www.linkedin.com/jobs/view/4387086760",
-      "company": "OpenAI",
-      "role": "AI Deployment Manager - Pilots",
       "status": "Evaluated"
     },
     {
@@ -763,784 +738,35 @@
       "company": "Airtable",
       "role": "AI Agent Architect, Customer Experience",
       "status": "Evaluated"
-    },
-    {
-      "num": "2046",
-      "url": "https://www.linkedin.com/jobs/view/4384640261",
-      "company": "LangChain",
-      "role": "Deployed Engineer (San Diego)",
-      "status": "Evaluated"
     }
   ],
   "pipeline_canon_dupes": [
     {
-      "canon": "https://databricks.com/company/careers/open-positions/job",
-      "count": 279,
-      "raws": [
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8298792002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8501390002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8521090002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8425303002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8486738002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8396801002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8439047002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8465963002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8457249002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8442976002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476399002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540465002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476401002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8295622002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8287373002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8285493002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8397558002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8337361002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8409447002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8294402002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476506002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8151567002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8493142002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8223325002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8480642002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8480815002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8403943002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437076002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8538884002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8545248002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8176503002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8349447002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8438779002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8491126002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8517065002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8397556002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8541319002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8449360002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8374096002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8446027002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8458032002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8509687002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8505897002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8405831002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8397501002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8347880002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8439182002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8506061002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8532728002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8487145002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8449838002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8514430002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461239002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8488399002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8456969002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494146002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8341313002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8367942002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494107002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8495067002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8374717002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8091041002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8490282002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8297797002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540516002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6954585002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8509230002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8509096002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8233899002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7897431002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8509683002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8453652002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8455054002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8516237002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8480817002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8506063002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540267002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8482699002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8202670002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8438777002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6356702002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8392406002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8346277002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8353757002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6117719002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8434467002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6328361002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6328388002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8502987002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8520024002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8481717002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8499584002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8531019002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8231231002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8243219002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437010002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8432348002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8438763002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6545547002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8530861002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6679262002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8455752002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437026002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437016002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437028002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437024002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6841734002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8320126002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8522044002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6049142002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8452396002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6649865002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8487768002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8499585002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8529348002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8382743002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8002207002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8525037002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8337429002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8501023002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7330831002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8342273002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8469076002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540445002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7930603002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8428818002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8407921002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8220814002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8439172002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8503070002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8491947002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8362888002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8250195002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8496009002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476423002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8369497002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8431931002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8506516002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8535812002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8511498002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8073294002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8428820002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8136071002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8493729002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8210937002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7958676002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8417656002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8136954002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8480646002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8353049002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476403002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8449356002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8200376002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8407197002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8198484002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8417705002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8397493002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=6456675002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8221491002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8458028002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8434465002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7507778002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8407190002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8493787002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8183320002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8220902002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8524420002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8445423002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8185059002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8542188002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8367022002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7872746002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7932024002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8220836002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7642856002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8427940002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8509536002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8509534002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8532682002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8202698002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8202700002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8521198002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7994379002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8441884002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8458710002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8168293002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8535421002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8423289002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8431924002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8099751002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8462016002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476496002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540464002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8287372002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8541998002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8517059002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8534469002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8449860002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461220002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461326002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494142002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494156002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8456973002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8493140002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437032002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8085877002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540444002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8534472002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540569002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8429978002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8136204002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8501125002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8194862002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8524422002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8445428002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8367023002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8420609002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8532681002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8441888002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8450551002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8549046002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8535384002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8397564002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8438767002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8439178002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8081658002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461245002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8456948002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494143002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494155002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8423296002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8516236002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=5898477002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540446002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8512037002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8367019002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8552484002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8441894002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540466002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8304674002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8360067002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476500002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461168002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461327002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494148002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494154002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494108002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8516235002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=7896350002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8530859002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8537033002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8367021002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8285292002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540463002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8527663002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8362737002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461163002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461328002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8371312002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494128002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8516238002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8196833002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437034002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8368003002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8540462002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461193002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8456966002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494145002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494130002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437074002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8194864002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8137000002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8550331002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461218002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461330002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8494144002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8461321002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8437008002",
-        "https://databricks.com/company/careers/open-positions/job?gh_jid=8476064002"
-      ]
-    },
-    {
-      "canon": "https://stripe.com/jobs/search",
-      "count": 77,
-      "raws": [
-        "https://stripe.com/jobs/search?gh_jid=7249744",
-        "https://stripe.com/jobs/search?gh_jid=7115730",
-        "https://stripe.com/jobs/search?gh_jid=7779497",
-        "https://stripe.com/jobs/search?gh_jid=7747640",
-        "https://stripe.com/jobs/search?gh_jid=7230452",
-        "https://stripe.com/jobs/search?gh_jid=7671038",
-        "https://stripe.com/jobs/search?gh_jid=7523947",
-        "https://stripe.com/jobs/search?gh_jid=7607761",
-        "https://stripe.com/jobs/search?gh_jid=7411434",
-        "https://stripe.com/jobs/search?gh_jid=7614951",
-        "https://stripe.com/jobs/search?gh_jid=7366524",
-        "https://stripe.com/jobs/search?gh_jid=7574860",
-        "https://stripe.com/jobs/search?gh_jid=7601663",
-        "https://stripe.com/jobs/search?gh_jid=7619227",
-        "https://stripe.com/jobs/search?gh_jid=7574857",
-        "https://stripe.com/jobs/search?gh_jid=7784353",
-        "https://stripe.com/jobs/search?gh_jid=7396509",
-        "https://stripe.com/jobs/search?gh_jid=7601673",
-        "https://stripe.com/jobs/search?gh_jid=7361440",
-        "https://stripe.com/jobs/search?gh_jid=7703909",
-        "https://stripe.com/jobs/search?gh_jid=7442995",
-        "https://stripe.com/jobs/search?gh_jid=7380371",
-        "https://stripe.com/jobs/search?gh_jid=7377591",
-        "https://stripe.com/jobs/search?gh_jid=7365914",
-        "https://stripe.com/jobs/search?gh_jid=7747638",
-        "https://stripe.com/jobs/search?gh_jid=7377593",
-        "https://stripe.com/jobs/search?gh_jid=7748114",
-        "https://stripe.com/jobs/search?gh_jid=7462261",
-        "https://stripe.com/jobs/search?gh_jid=7386950",
-        "https://stripe.com/jobs/search?gh_jid=7532733",
-        "https://stripe.com/jobs/search?gh_jid=7746909",
-        "https://stripe.com/jobs/search?gh_jid=7451366",
-        "https://stripe.com/jobs/search?gh_jid=7286376",
-        "https://stripe.com/jobs/search?gh_jid=7695357",
-        "https://stripe.com/jobs/search?gh_jid=7826765",
-        "https://stripe.com/jobs/search?gh_jid=7524334",
-        "https://stripe.com/jobs/search?gh_jid=7584016",
-        "https://stripe.com/jobs/search?gh_jid=7334661",
-        "https://stripe.com/jobs/search?gh_jid=7736943",
-        "https://stripe.com/jobs/search?gh_jid=7583815",
-        "https://stripe.com/jobs/search?gh_jid=7584018",
-        "https://stripe.com/jobs/search?gh_jid=7587812",
-        "https://stripe.com/jobs/search?gh_jid=7617049",
-        "https://stripe.com/jobs/search?gh_jid=7655023",
-        "https://stripe.com/jobs/search?gh_jid=7359215",
-        "https://stripe.com/jobs/search?gh_jid=7688069",
-        "https://stripe.com/jobs/search?gh_jid=7529428",
-        "https://stripe.com/jobs/search?gh_jid=6967304",
-        "https://stripe.com/jobs/search?gh_jid=7430826",
-        "https://stripe.com/jobs/search?gh_jid=7594376",
-        "https://stripe.com/jobs/search?gh_jid=7812348",
-        "https://stripe.com/jobs/search?gh_jid=7653021",
-        "https://stripe.com/jobs/search?gh_jid=7778643",
-        "https://stripe.com/jobs/search?gh_jid=7749540",
-        "https://stripe.com/jobs/search?gh_jid=7417090",
-        "https://stripe.com/jobs/search?gh_jid=6932491",
-        "https://stripe.com/jobs/search?gh_jid=7678655",
-        "https://stripe.com/jobs/search?gh_jid=7793069",
-        "https://stripe.com/jobs/search?gh_jid=7685855",
-        "https://stripe.com/jobs/search?gh_jid=7868564",
-        "https://stripe.com/jobs/search?gh_jid=7819587",
-        "https://stripe.com/jobs/search?gh_jid=7882047",
-        "https://stripe.com/jobs/search?gh_jid=7601668",
-        "https://stripe.com/jobs/search?gh_jid=7827184",
-        "https://stripe.com/jobs/search?gh_jid=7913698",
-        "https://stripe.com/jobs/search?gh_jid=7546284",
-        "https://stripe.com/jobs/search?gh_jid=7882492",
-        "https://stripe.com/jobs/search?gh_jid=7919325",
-        "https://stripe.com/jobs/search?gh_jid=7903814",
-        "https://stripe.com/jobs/search?gh_jid=7927324",
-        "https://stripe.com/jobs/search?gh_jid=7927330",
-        "https://stripe.com/jobs/search?gh_jid=7893203",
-        "https://stripe.com/jobs/search?gh_jid=7521020",
-        "https://stripe.com/jobs/search?gh_jid=7913464",
-        "https://stripe.com/jobs/search?gh_jid=7925073",
-        "https://stripe.com/jobs/search?gh_jid=7743714",
-        "https://stripe.com/jobs/search?gh_jid=7834218"
-      ]
-    },
-    {
-      "canon": "https://careers.withwaymo.com/jobs",
-      "count": 40,
-      "raws": [
-        "https://careers.withwaymo.com/jobs?gh_jid=7435887",
-        "https://careers.withwaymo.com/jobs?gh_jid=7435924",
-        "https://careers.withwaymo.com/jobs?gh_jid=7435297",
-        "https://careers.withwaymo.com/jobs?gh_jid=7839104",
-        "https://careers.withwaymo.com/jobs?gh_jid=7473464",
-        "https://careers.withwaymo.com/jobs?gh_jid=7724345",
-        "https://careers.withwaymo.com/jobs?gh_jid=7851886",
-        "https://careers.withwaymo.com/jobs?gh_jid=7679520",
-        "https://careers.withwaymo.com/jobs?gh_jid=6989523",
-        "https://careers.withwaymo.com/jobs?gh_jid=7766491",
-        "https://careers.withwaymo.com/jobs?gh_jid=7435071",
-        "https://careers.withwaymo.com/jobs?gh_jid=7834285",
-        "https://careers.withwaymo.com/jobs?gh_jid=7851972",
-        "https://careers.withwaymo.com/jobs?gh_jid=7826677",
-        "https://careers.withwaymo.com/jobs?gh_jid=7767649",
-        "https://careers.withwaymo.com/jobs?gh_jid=7488596",
-        "https://careers.withwaymo.com/jobs?gh_jid=7644924",
-        "https://careers.withwaymo.com/jobs?gh_jid=7858937",
-        "https://careers.withwaymo.com/jobs?gh_jid=7676116",
-        "https://careers.withwaymo.com/jobs?gh_jid=7762871",
-        "https://careers.withwaymo.com/jobs?gh_jid=7572081",
-        "https://careers.withwaymo.com/jobs?gh_jid=7863159",
-        "https://careers.withwaymo.com/jobs?gh_jid=7334481",
-        "https://careers.withwaymo.com/jobs?gh_jid=7121224",
-        "https://careers.withwaymo.com/jobs?gh_jid=7863238",
-        "https://careers.withwaymo.com/jobs?gh_jid=7580705",
-        "https://careers.withwaymo.com/jobs?gh_jid=7863262",
-        "https://careers.withwaymo.com/jobs?gh_jid=7442190",
-        "https://careers.withwaymo.com/jobs?gh_jid=7421839",
-        "https://careers.withwaymo.com/jobs?gh_jid=7595124",
-        "https://careers.withwaymo.com/jobs?gh_jid=7863214",
-        "https://careers.withwaymo.com/jobs?gh_jid=7600766",
-        "https://careers.withwaymo.com/jobs?gh_jid=7782792",
-        "https://careers.withwaymo.com/jobs?gh_jid=7671186",
-        "https://careers.withwaymo.com/jobs?gh_jid=7403855",
-        "https://careers.withwaymo.com/jobs?gh_jid=7733791",
-        "https://careers.withwaymo.com/jobs?gh_jid=7899420",
-        "https://careers.withwaymo.com/jobs?gh_jid=7851856",
-        "https://careers.withwaymo.com/jobs?gh_jid=7913555",
-        "https://careers.withwaymo.com/jobs?gh_jid=7926984"
-      ]
-    },
-    {
       "canon": "https://boomi.com/boomi-jobs",
-      "count": 18,
+      "count": 4,
       "raws": [
         "https://boomi.com/boomi-jobs/?gh_jid=5973008004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5990423004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5971692004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5840596004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5823463004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5812487004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5786933004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5982508004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5779584004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5646719004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5803965004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5786913004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5974117004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5979804004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5974115004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5979802004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5789831004",
-        "https://boomi.com/boomi-jobs/?gh_jid=5990025004"
-      ]
-    },
-    {
-      "canon": "https://www.redventures.com/careers/positions/open",
-      "count": 17,
-      "raws": [
-        "https://www.redventures.com/careers/positions/open?gh_jid=7721581",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7721601",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7721576",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7705038",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7563266",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7646082",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7596614",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7268763",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7782337",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7517242",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7524554",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7409394",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7777950",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7563212",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7654699",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7559266",
-        "https://www.redventures.com/careers/positions/open?gh_jid=7891624"
-      ]
-    },
-    {
-      "canon": "https://tether.io",
-      "count": 16,
-      "raws": [
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/",
-        "https://tether.io/"
-      ]
-    },
-    {
-      "canon": "https://www.fullstory.com",
-      "count": 15,
-      "raws": [
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/",
-        "https://www.fullstory.com/"
-      ]
-    },
-    {
-      "canon": "https://www.nylas.com",
-      "count": 12,
-      "raws": [
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com",
-        "https://www.nylas.com"
+        "https://boomi.com/boomi-jobs/?gh_jid=5979806004",
+        "https://boomi.com/boomi-jobs/?gh_jid=5843564004",
+        "https://boomi.com/boomi-jobs/?gh_jid=5803982004"
       ]
     },
     {
       "canon": "https://wayve.firststage.co/jobs",
-      "count": 11,
+      "count": 3,
       "raws": [
         "https://wayve.firststage.co/jobs?gh_jid=8501381002",
-        "https://wayve.firststage.co/jobs?gh_jid=8542420002",
-        "https://wayve.firststage.co/jobs?gh_jid=8458272002",
-        "https://wayve.firststage.co/jobs?gh_jid=8422175002",
-        "https://wayve.firststage.co/jobs?gh_jid=8554444002",
-        "https://wayve.firststage.co/jobs?gh_jid=8537458002",
-        "https://wayve.firststage.co/jobs?gh_jid=8545371002",
-        "https://wayve.firststage.co/jobs?gh_jid=8425279002",
-        "https://wayve.firststage.co/jobs?gh_jid=8545642002",
-        "https://wayve.firststage.co/jobs?gh_jid=8519535002",
-        "https://wayve.firststage.co/jobs?gh_jid=8325451002"
-      ]
-    },
-    {
-      "canon": "https://wetheflywheel.com",
-      "count": 9,
-      "raws": [
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com",
-        "https://wetheflywheel.com"
-      ]
-    },
-    {
-      "canon": "https://futo.tech",
-      "count": 9,
-      "raws": [
-        "https://futo.tech",
-        "https://futo.tech",
-        "https://futo.tech",
-        "https://futo.tech",
-        "https://futo.tech",
-        "https://futo.tech",
-        "https://futo.tech",
-        "https://futo.tech",
-        "https://futo.tech"
+        "https://wayve.firststage.co/jobs?gh_jid=8545690002",
+        "https://wayve.firststage.co/jobs?gh_jid=8422027002"
       ]
     },
     {
       "canon": "http://livekit.io",
-      "count": 8,
+      "count": 3,
       "raws": [
-        "http://livekit.io/",
-        "http://livekit.io/",
-        "http://livekit.io/",
-        "http://livekit.io/",
-        "http://livekit.io/",
         "http://livekit.io/",
         "http://livekit.io/",
         "http://livekit.io/"
-      ]
-    },
-    {
-      "canon": "https://railway.com/careers",
-      "count": 8,
-      "raws": [
-        "https://railway.com/careers",
-        "https://railway.com/careers",
-        "https://railway.com/careers",
-        "https://railway.com/careers",
-        "https://railway.com/careers",
-        "https://railway.com/careers",
-        "https://railway.com/careers",
-        "https://railway.com/careers"
-      ]
-    },
-    {
-      "canon": "https://jobs.ashbyhq.com/lago",
-      "count": 8,
-      "raws": [
-        "https://jobs.ashbyhq.com/lago",
-        "https://jobs.ashbyhq.com/lago",
-        "https://jobs.ashbyhq.com/lago",
-        "https://jobs.ashbyhq.com/lago",
-        "https://jobs.ashbyhq.com/lago",
-        "https://jobs.ashbyhq.com/lago",
-        "https://jobs.ashbyhq.com/lago",
-        "https://jobs.ashbyhq.com/lago"
-      ]
-    },
-    {
-      "canon": "https://www.smarkets.com",
-      "count": 7,
-      "raws": [
-        "https://www.smarkets.com",
-        "https://www.smarkets.com",
-        "https://www.smarkets.com",
-        "https://www.smarkets.com",
-        "https://www.smarkets.com",
-        "https://www.smarkets.com",
-        "https://www.smarkets.com"
-      ]
-    },
-    {
-      "canon": "https://about.crazygames.com",
-      "count": 7,
-      "raws": [
-        "https://about.crazygames.com/",
-        "https://about.crazygames.com/",
-        "https://about.crazygames.com/",
-        "https://about.crazygames.com/",
-        "https://about.crazygames.com/",
-        "https://about.crazygames.com/",
-        "https://about.crazygames.com/"
-      ]
-    },
-    {
-      "canon": "https://higharc.com",
-      "count": 7,
-      "raws": [
-        "https://higharc.com",
-        "https://higharc.com",
-        "https://higharc.com",
-        "https://higharc.com",
-        "https://higharc.com",
-        "https://higharc.com",
-        "https://higharc.com"
-      ]
-    },
-    {
-      "canon": "https://www.sheerhealth.com",
-      "count": 6,
-      "raws": [
-        "https://www.sheerhealth.com",
-        "https://www.sheerhealth.com",
-        "https://www.sheerhealth.com",
-        "https://www.sheerhealth.com",
-        "https://www.sheerhealth.com",
-        "https://www.sheerhealth.com"
-      ]
-    },
-    {
-      "canon": "https://matcha.fm",
-      "count": 6,
-      "raws": [
-        "https://matcha.fm",
-        "https://matcha.fm",
-        "https://matcha.fm",
-        "https://matcha.fm",
-        "https://matcha.fm",
-        "https://matcha.fm"
-      ]
-    },
-    {
-      "canon": "https://careers.hootsuite.com/job",
-      "count": 4,
-      "raws": [
-        "https://careers.hootsuite.com/job/?gh_jid=7943876",
-        "https://careers.hootsuite.com/job/?gh_jid=7800234",
-        "https://careers.hootsuite.com/job/?gh_jid=7784300",
-        "https://careers.hootsuite.com/job/?gh_jid=7761293"
-      ]
-    },
-    {
-      "canon": "https://seeq.com",
-      "count": 4,
-      "raws": [
-        "https://seeq.com",
-        "https://seeq.com",
-        "https://seeq.com",
-        "https://seeq.com"
-      ]
-    },
-    {
-      "canon": "https://ipinfo.io",
-      "count": 4,
-      "raws": [
-        "https://ipinfo.io",
-        "https://ipinfo.io",
-        "https://ipinfo.io",
-        "https://ipinfo.io"
-      ]
-    },
-    {
-      "canon": "https://promptwatch.com",
-      "count": 4,
-      "raws": [
-        "https://promptwatch.com",
-        "https://promptwatch.com",
-        "https://promptwatch.com",
-        "https://promptwatch.com"
-      ]
-    },
-    {
-      "canon": "https://zeromotorcycles.com",
-      "count": 4,
-      "raws": [
-        "https://zeromotorcycles.com/",
-        "https://zeromotorcycles.com/",
-        "https://zeromotorcycles.com/",
-        "https://zeromotorcycles.com/"
-      ]
-    },
-    {
-      "canon": "https://www.category.xyz",
-      "count": 4,
-      "raws": [
-        "https://www.category.xyz/",
-        "https://www.category.xyz/",
-        "https://www.category.xyz/",
-        "https://www.category.xyz/"
-      ]
-    },
-    {
-      "canon": "http://stability.ai/careers",
-      "count": 3,
-      "raws": [
-        "http://stability.ai/careers?gh_jid=4712826101",
-        "http://stability.ai/careers?gh_jid=4770256101",
-        "http://stability.ai/careers?gh_jid=4840171101"
-      ]
-    },
-    {
-      "canon": "https://www.level12.io/careers",
-      "count": 3,
-      "raws": [
-        "https://www.level12.io/careers/",
-        "https://www.level12.io/careers/",
-        "https://www.level12.io/careers/"
-      ]
-    },
-    {
-      "canon": "https://cloudflare.com",
-      "count": 3,
-      "raws": [
-        "https://cloudflare.com",
-        "https://cloudflare.com",
-        "https://cloudflare.com"
-      ]
-    },
-    {
-      "canon": "https://www.caribou.care",
-      "count": 3,
-      "raws": [
-        "https://www.caribou.care/",
-        "https://www.caribou.care/",
-        "https://www.caribou.care/"
       ]
     },
     {
@@ -1553,70 +779,11 @@
       ]
     },
     {
-      "canon": "https://enveritas.org/jobs",
-      "count": 3,
-      "raws": [
-        "https://enveritas.org/jobs/",
-        "https://enveritas.org/jobs/",
-        "https://enveritas.org/jobs/"
-      ]
-    },
-    {
-      "canon": "https://betterstack.com",
-      "count": 3,
-      "raws": [
-        "https://betterstack.com/",
-        "https://betterstack.com/",
-        "https://betterstack.com/"
-      ]
-    },
-    {
-      "canon": "https://instinct.vet",
-      "count": 3,
-      "raws": [
-        "https://instinct.vet",
-        "https://instinct.vet",
-        "https://instinct.vet"
-      ]
-    },
-    {
-      "canon": "https://job-boards.greenhouse.io/cloudflare/jobs/7764827",
-      "count": 2,
-      "raws": [
-        "https://job-boards.greenhouse.io/cloudflare/jobs/7764827?gh_jid=7764827",
-        "https://job-boards.greenhouse.io/cloudflare/jobs/7764827?gh_"
-      ]
-    },
-    {
-      "canon": "https://jobs.ashbyhq.com/river",
-      "count": 2,
-      "raws": [
-        "https://jobs.ashbyhq.com/river",
-        "https://jobs.ashbyhq.com/river?utm_source=Zp9nJyqvd4"
-      ]
-    },
-    {
-      "canon": "https://www.scandit.com/careers/job-description",
-      "count": 2,
-      "raws": [
-        "https://www.scandit.com/careers/job-description/?gh_jid=7938301",
-        "https://www.scandit.com/careers/job-description/?gh_jid=7820556"
-      ]
-    },
-    {
       "canon": "https://www.codeweavers.com/about/jobs",
       "count": 2,
       "raws": [
         "https://www.codeweavers.com/about/jobs",
         "https://www.codeweavers.com/about/jobs"
-      ]
-    },
-    {
-      "canon": "https://job-boards.greenhouse.io/twosixtechnologies/jobs/589...",
-      "count": 2,
-      "raws": [
-        "https://job-boards.greenhouse.io/twosixtechnologies/jobs/589...",
-        "https://job-boards.greenhouse.io/twosixtechnologies/jobs/589..."
       ]
     },
     {
@@ -1628,27 +795,11 @@
       ]
     },
     {
-      "canon": "https://www.researchaffiliates.com/about-us/careers/software...",
+      "canon": "https://www.level12.io/careers",
       "count": 2,
       "raws": [
-        "https://www.researchaffiliates.com/about-us/careers/software...",
-        "https://www.researchaffiliates.com/about-us/careers/software..."
-      ]
-    },
-    {
-      "canon": "https://github.com/agentspan-ai/agentspan",
-      "count": 2,
-      "raws": [
-        "https://github.com/agentspan-ai/agentspan",
-        "https://github.com/agentspan-ai/agentspan"
-      ]
-    },
-    {
-      "canon": "https://job-boards.greenhouse.io/orkes/jobs/499",
-      "count": 2,
-      "raws": [
-        "https://job-boards.greenhouse.io/orkes/jobs/499",
-        "https://job-boards.greenhouse.io/orkes/jobs/499"
+        "https://www.level12.io/careers/",
+        "https://www.level12.io/careers/"
       ]
     },
     {
@@ -1660,67 +811,11 @@
       ]
     },
     {
-      "canon": "https://markercollective.com",
-      "count": 2,
-      "raws": [
-        "https://markercollective.com",
-        "https://markercollective.com"
-      ]
-    },
-    {
       "canon": "https://railtown.ai/careers/head-of-developer-relations",
       "count": 2,
       "raws": [
         "https://railtown.ai/careers/head-of-developer-relations",
         "https://railtown.ai/careers/head-of-developer-relations"
-      ]
-    },
-    {
-      "canon": "https://www.opendate.io/careers/senior-full-stack-software-e...",
-      "count": 2,
-      "raws": [
-        "https://www.opendate.io/careers/senior-full-stack-software-e...",
-        "https://www.opendate.io/careers/senior-full-stack-software-e..."
-      ]
-    },
-    {
-      "canon": "https://www.justworks.com",
-      "count": 2,
-      "raws": [
-        "https://www.justworks.com",
-        "https://www.justworks.com"
-      ]
-    },
-    {
-      "canon": "https://job-boards.greenhouse.io/justworks/jobs/7721539",
-      "count": 2,
-      "raws": [
-        "https://job-boards.greenhouse.io/justworks/jobs/7721539?gh_jid=7721539&gh_src=klqrho0j1us",
-        "https://job-boards.greenhouse.io/justworks/jobs/7721539?gh_j"
-      ]
-    },
-    {
-      "canon": "https://zenskar.notion.site/careers-zenskar",
-      "count": 2,
-      "raws": [
-        "https://zenskar.notion.site/careers-zenskar#29c40c1b83f180e9b019c72752843ad5",
-        "https://zenskar.notion.site/careers-zenskar#29c40c1b83f180e9"
-      ]
-    },
-    {
-      "canon": "https://careers.tether.io/o/backend-engineer-wallets-100-rem...",
-      "count": 2,
-      "raws": [
-        "https://careers.tether.io/o/backend-engineer-wallets-100-rem...",
-        "https://careers.tether.io/o/backend-engineer-wallets-100-rem..."
-      ]
-    },
-    {
-      "canon": "https://job-boards.greenhouse.io/cloudflare/jobs/6297179",
-      "count": 2,
-      "raws": [
-        "https://job-boards.greenhouse.io/cloudflare/jobs/6297179?gh_jid=6297179",
-        "https://job-boards.greenhouse.io/cloudflare/jobs/6297179?gh_"
       ]
     },
     {
@@ -1748,11 +843,11 @@
       ]
     },
     {
-      "canon": "https://www.airspace-intelligence.com",
+      "canon": "https://railway.com/careers",
       "count": 2,
       "raws": [
-        "https://www.airspace-intelligence.com",
-        "https://www.airspace-intelligence.com"
+        "https://railway.com/careers",
+        "https://railway.com/careers"
       ]
     },
     {
@@ -1764,11 +859,19 @@
       ]
     },
     {
-      "canon": "https://kepler.ai",
+      "canon": "https://enveritas.org/jobs",
       "count": 2,
       "raws": [
-        "https://kepler.ai",
-        "https://kepler.ai"
+        "https://enveritas.org/jobs/",
+        "https://enveritas.org/jobs/"
+      ]
+    },
+    {
+      "canon": "https://promptwatch.com",
+      "count": 2,
+      "raws": [
+        "https://promptwatch.com",
+        "https://promptwatch.com"
       ]
     },
     {
@@ -1780,67 +883,11 @@
       ]
     },
     {
-      "canon": "https://www.eagleeng.com",
+      "canon": "https://jobs.ashbyhq.com/lago",
       "count": 2,
       "raws": [
-        "https://www.eagleeng.com",
-        "https://www.eagleeng.com"
-      ]
-    },
-    {
-      "canon": "https://www.franklincovey.com",
-      "count": 2,
-      "raws": [
-        "https://www.franklincovey.com/",
-        "https://www.franklincovey.com/"
-      ]
-    },
-    {
-      "canon": "https://permitflow.com",
-      "count": 2,
-      "raws": [
-        "https://permitflow.com",
-        "https://permitflow.com"
-      ]
-    },
-    {
-      "canon": "https://wildkind.co.uk/careers/performance-marketing-manager",
-      "count": 2,
-      "raws": [
-        "https://wildkind.co.uk/careers/performance-marketing-manager/",
-        "https://wildkind.co.uk/careers/performance-marketing-manager"
-      ]
-    },
-    {
-      "canon": "https://holepunch.recruitee.com/o/p2p-nodejs-engineer",
-      "count": 2,
-      "raws": [
-        "https://holepunch.recruitee.com/o/p2p-nodejs-engineer?source=HN",
-        "https://holepunch.recruitee.com/o/p2p-nodejs-engineer?source"
-      ]
-    },
-    {
-      "canon": "https://chainsecurity.com",
-      "count": 2,
-      "raws": [
-        "https://chainsecurity.com/",
-        "https://chainsecurity.com/"
-      ]
-    },
-    {
-      "canon": "https://elucid.applytojob.com/apply/BHpChxSggM/Principal-Pla...",
-      "count": 2,
-      "raws": [
-        "https://elucid.applytojob.com/apply/BHpChxSggM/Principal-Pla...",
-        "https://elucid.applytojob.com/apply/BHpChxSggM/Principal-Pla..."
-      ]
-    },
-    {
-      "canon": "https://wetheflywheel.com/en/careers/agentic-engineer-saigon",
-      "count": 2,
-      "raws": [
-        "https://wetheflywheel.com/en/careers/agentic-engineer-saigon/",
-        "https://wetheflywheel.com/en/careers/agentic-engineer-saigon"
+        "https://jobs.ashbyhq.com/lago",
+        "https://jobs.ashbyhq.com/lago"
       ]
     }
   ]

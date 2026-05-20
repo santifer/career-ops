@@ -1,19 +1,35 @@
 [
   {
-    "num": "2237",
-    "reportFile": "reports/1005-binance-2026-05-20.md",
+    "num": "2251",
+    "reportFile": "reports/1039-bcg-x-2026-05-20.md",
     "status": "Evaluated",
-    "company": "Binance",
-    "role": "Pioneer Talent Program - AI Agent Engineer",
-    "url": "https://www.linkedin.com/jobs/view/4403991170"
+    "company": "BCG X",
+    "role": "(Senior) AI Factory Product Builder",
+    "url": "https://www.linkedin.com/jobs/view/4394212184"
   },
   {
-    "num": "2238",
-    "reportFile": "reports/1007-red-hat-2026-05-20.md",
+    "num": "2252",
+    "reportFile": "reports/1045-openai-2026-05-20.md",
     "status": "Evaluated",
-    "company": "Red Hat",
-    "role": "Senior AI Architect, APAC",
-    "url": "https://www.linkedin.com/jobs/view/4403603934"
+    "company": "OpenAI",
+    "role": "AI Success Engineer, Government",
+    "url": "https://www.linkedin.com/jobs/view/4358089859"
+  },
+  {
+    "num": "2253",
+    "reportFile": "reports/1050-ema-2026-05-20.md",
+    "status": "Evaluated",
+    "company": "Ema",
+    "role": "Solutions Architect",
+    "url": "https://www.linkedin.com/jobs/view/4409830555"
+  },
+  {
+    "num": "2258",
+    "reportFile": "reports/1082-nvidia-2026-05-20.md",
+    "status": "Evaluated",
+    "company": "NVIDIA",
+    "role": "Senior Solutions Architect, Generative AI",
+    "url": "https://www.linkedin.com/jobs/view/4412532846"
   },
   {
     "num": "2239",
@@ -22,14 +38,6 @@
     "company": "Amazon Web Services (AWS)",
     "role": "Senior AI Solution Architect",
     "url": "https://www.linkedin.com/jobs/view/4381437336"
-  },
-  {
-    "num": "2240",
-    "reportFile": "reports/1009-stripe-2026-05-20.md",
-    "status": "Evaluated",
-    "company": "Stripe",
-    "role": "Design Program Manager, AI",
-    "url": "https://www.linkedin.com/jobs/view/4413483605"
   },
   {
     "num": "2241",
@@ -48,28 +56,12 @@
     "url": "https://www.linkedin.com/jobs/view/4414272332"
   },
   {
-    "num": "2244",
-    "reportFile": "reports/1014-google-2026-05-20.md",
-    "status": "Evaluated",
-    "company": "Google",
-    "role": "Product Strategy and Operations Lead, AI and Infrastructure",
-    "url": "https://www.linkedin.com/jobs/view/4411857945"
-  },
-  {
     "num": "2245",
     "reportFile": "reports/1015-microsoft-2026-05-20.md",
     "status": "Evaluated",
     "company": "Microsoft",
     "role": "Senior Communications Manager",
     "url": "https://www.linkedin.com/jobs/view/4406603037"
-  },
-  {
-    "num": "2246",
-    "reportFile": "reports/1016-general-motors-2026-05-20.md",
-    "status": "Evaluated",
-    "company": "General Motors",
-    "role": "Sr. Manager Communications, Product and Technology",
-    "url": "https://www.linkedin.com/jobs/view/4414934839"
   },
   {
     "num": "2248",
@@ -80,16 +72,8 @@
     "url": "https://www.linkedin.com/jobs/view/4414988668"
   },
   {
-    "num": "2249",
-    "reportFile": "reports/1021-intersect-2026-05-20.md",
-    "status": "Evaluated",
-    "company": "Intersect",
-    "role": "AI Solutions",
-    "url": "https://www.linkedin.com/jobs/view/4414939835"
-  },
-  {
     "num": "2230",
-    "reportFile": "reports/1086-genesys-2026-05-19.md",
+    "reportFile": "reports/1086-genesys-2026-05-20.md",
     "status": "Evaluated",
     "company": "Genesys",
     "role": "Senior AI Architect (Presales)",
@@ -297,7 +281,7 @@
   },
   {
     "num": "2074",
-    "reportFile": "reports/1032-microsoft-2026-05-18.md",
+    "reportFile": "reports/1031-microsoft-2026-05-20.md",
     "status": "Evaluated",
     "company": "Microsoft",
     "role": "Senior Technical Program Manager, Core AI Platform",
@@ -313,7 +297,7 @@
   },
   {
     "num": "2037",
-    "reportFile": "reports/1025-airtable-2026-05-19.md",
+    "reportFile": "reports/1025-airtable-2026-05-20.md",
     "status": "Evaluated",
     "company": "Airtable",
     "role": "AI Agent Architect, Customer Experience",

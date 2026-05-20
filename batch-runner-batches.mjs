@@ -32,6 +32,7 @@ import { SONNET } from './lib/models.mjs';
 import { readCached } from './lib/fetch-utils.mjs';
 import { guessCompany, buildCompanyMatcher } from './lib/ats-utils.mjs';
 import { checkUrl } from './lib/http-liveness.mjs';
+import { isCdpAvailable, connectToChromeCDP } from './lib/cdp-browser.mjs';
 import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -195,7 +196,7 @@ Triage score: ${item.score}/5 (archetype: ${item.archetype})
 Report number: ${reportNum.toString().padStart(3, '0')}
 Date: ${date}
 
-### JD Content (first 5,500 chars)
+### JD Content (first 12,000 chars; LinkedIn URLs fetched via authenticated CDP)
 ${jdText || '(JD unavailable — evaluate from URL and company context only)'}
 
 ## Scan History (prior appearances of this company)
@@ -313,11 +314,67 @@ function lastTrackerNum() {
 // JD Fetcher — wraps the shared liveness check.
 // Treats uncertain pages (live=null) as ok:true to preserve the prior lenient
 // behavior (the old EXPIRED_PATTERNS list didn't require an apply control).
-// 5,500 chars ≈ 1,375 tokens — covers role/requirements; trims benefits boilerplate.
+// 12,000 chars ≈ 3,000 tokens — covers full JD body for LinkedIn / Ashby /
+// Greenhouse; trims benefits-boilerplate tails. Raised from 5,500 on
+// 2026-05-20 after the Ema incident — see [[feedback_cost_confirmation_contract]]
+// and `data/data-truth-audit-2026-05-20.md`. The eval prompt's "first N chars"
+// header below uses this constant.
+const JD_TEXT_LIMIT = 12_000;
+
+// 2026-05-20 — LinkedIn-aware JD fetcher. The shared HTTP-liveness path uses
+// bare fetch() which LinkedIn serves an abbreviated auth-walled excerpt
+// (~5500 chars of metadata, NO actual JD body). That's what produced the
+// Ema #2253 misleading 4.1/5 score — the eval saw the requirements section
+// truncated to its first sentence and dutifully wrote "JD content was
+// truncated" in the disclaimer.
+//
+// Fix: detect linkedin.com URLs, load via CDP-attached Chrome on :9222
+// (already authenticated for daily LinkedIn enrichment — see
+// [[project_cdp_attached_chrome_enrichment]]) so we read the full DOM
+// instead of the public excerpt. Falls back to bare fetch when CDP is
+// unavailable so the runner stays portable.
 async function fetchJD(url) {
+  const isLinkedIn = /(^|\.)linkedin\.com\//i.test(url);
+  if (isLinkedIn) {
+    try {
+      if (await isCdpAvailable()) {
+        const cdp = await connectToChromeCDP();
+        const page = await cdp.newPageInDefaultContext();
+        try {
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25_000 });
+          await page.waitForTimeout(1500);
+          const bodyText = await page.evaluate(() => document.body?.innerText || '');
+          const finalUrl = page.url();
+          // Detect dead-posting signals on the rendered DOM
+          const dead = /(no longer accepting|position has been filled|posting (?:has expired|is closed)|this role is no longer available)/i.test(bodyText);
+          // Detect login-wall (CDP session dropped) and fall back to bare fetch
+          const wall = /(sign in to LinkedIn|join now to see who's hiring)/i.test(bodyText) && !/Apply on company website|Easy Apply/i.test(bodyText);
+          if (!wall) {
+            // Collapse whitespace for token efficiency
+            const text = bodyText.replace(/\s+/g, ' ').trim();
+            return {
+              ok: !dead,
+              reason: dead ? 'dead-posting phrase via CDP DOM' : 'CDP DOM read',
+              text: text.slice(0, JD_TEXT_LIMIT),
+              source: 'cdp',
+              final_url: finalUrl,
+            };
+          }
+        } finally {
+          try { await page.close(); } catch {}
+          try { await cdp.disconnect(); } catch {}
+        }
+      }
+    } catch (err) {
+      // Fall through to bare-fetch path; record the failure reason for visibility
+      // (CDP timeout, browser crashed, etc.). The eval will still proceed with
+      // the bare-fetch body — just with a known-degraded body for LinkedIn.
+    }
+  }
+  // Bare HTTP path (non-LinkedIn URLs, or LinkedIn fallback if CDP failed)
   const { live, reason, body } = await checkUrl(url, { timeoutMs: LIVENESS_TIMEOUT_MS });
   if (live === false) return { ok: false, reason, text: '' };
-  return { ok: true, reason: reason || 'live', text: (body || '').slice(0, 5_500) };
+  return { ok: true, reason: reason || 'live', text: (body || '').slice(0, JD_TEXT_LIMIT), source: 'http' };
 }
 
 // ── Triage-advance reader ─────────────────────────────────────────
@@ -371,7 +428,7 @@ Triage score: ${item.score}/5 (archetype: ${item.archetype})
 Report number: ${reportNum.toString().padStart(3, '0')}
 Date: ${date}
 
-### JD Content (first 5,500 chars)
+### JD Content (first 12,000 chars; LinkedIn URLs fetched via authenticated CDP)
 ${jdText || '(JD unavailable — evaluate from URL and company context only)'}
 
 ## Scan History (prior appearances of this company)

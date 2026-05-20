@@ -26144,8 +26144,8 @@ function openMobileSettingsSheet(btn) {
           '<input type="checkbox" id="settings-runway-toggle" onchange="window._setSetting(\\'show_runway_widget\\', this.checked)">' +
         '</label>' +
         '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-top:8px" for="settings-outreach-intensity">' +
-          '<span>Outreach intensity' +
-            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">Gentle = only HIGH-confidence prompts to warm connections. Aggressive = surface every actionable nudge.</div>' +
+          '<span>Outreach intensity — global' +
+            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">If set to Gentle/Aggressive, overrides warm/cold below. Normal = let the per-degree knobs decide.</div>' +
           '</span>' +
           '<select id="settings-outreach-intensity" onchange="window._setSetting(\\'outreach.global_intensity\\', this.value)" style="padding:6px 10px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;min-width:120px">' +
             '<option value="gentle">Gentle</option>' +
@@ -26153,12 +26153,45 @@ function openMobileSettingsSheet(btn) {
             '<option value="aggressive">Aggressive</option>' +
           '</select>' +
         '</label>' +
-        '<div style="font-size:11px;color:var(--text-3);margin-top:8px;padding:0 2px">Per-connection (warm/cold) intensities and the suppression list are managed in <code>data/dashboard-settings.json</code>.</div>' +
+        '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-top:8px" for="settings-warm-intensity">' +
+          '<span>Outreach — warm (1st-degree)' +
+            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">How aggressively to prompt outreach to people you already know directly.</div>' +
+          '</span>' +
+          '<select id="settings-warm-intensity" onchange="window._setSetting(\\'outreach.warm_intensity\\', this.value)" style="padding:6px 10px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;min-width:120px">' +
+            '<option value="gentle">Gentle</option>' +
+            '<option value="normal" selected>Normal</option>' +
+            '<option value="aggressive">Aggressive</option>' +
+          '</select>' +
+        '</label>' +
+        '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-top:8px" for="settings-cold-intensity">' +
+          '<span>Outreach — cold (2nd-degree)' +
+            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">How aggressively to prompt warm-intro outreach to 2nd-degree contacts. Default Gentle to avoid harassing strangers.</div>' +
+          '</span>' +
+          '<select id="settings-cold-intensity" onchange="window._setSetting(\\'outreach.cold_intensity\\', this.value)" style="padding:6px 10px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;min-width:120px">' +
+            '<option value="gentle" selected>Gentle</option>' +
+            '<option value="normal">Normal</option>' +
+            '<option value="aggressive">Aggressive</option>' +
+          '</select>' +
+        '</label>' +
+        '<div style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-top:8px">' +
+          '<div style="font-size:13px;margin-bottom:6px">Outreach suppression list' +
+            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">One entry per line. Each line is matched against contact_id OR name (substring, case-insensitive). Suppressed contacts are dropped from every outreach surface.</div>' +
+          '</div>' +
+          '<textarea id="settings-outreach-suppression" rows="4" placeholder="(empty)" style="width:100%;padding:8px 10px;font-family:ui-monospace,Menlo,monospace;font-size:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;resize:vertical;min-height:60px"></textarea>' +
+          '<button type="button" onclick="window._saveSuppression()" style="margin-top:6px;padding:6px 14px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;cursor:pointer;font-size:12px">Save suppression list</button>' +
+          '<span id="settings-suppression-status" style="margin-left:10px;font-size:11px;color:var(--text-3)"></span>' +
+        '</div>' +
+        '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-top:8px" for="settings-triage-cap">' +
+          '<span>Triage daily-limit cap' +
+            '<div class="muted-text" style="font-size:11.5px;line-height:1.4;margin-top:2px">Used by the scheduled triage path. Process All ignores this — it drains whatever you confirm via the cost modal. Leave 0 for no cap.</div>' +
+          '</span>' +
+          '<input type="number" id="settings-triage-cap" min="0" step="50" placeholder="0 (none)" onchange="window._setSetting(\\'triage_daily_limit\\', parseInt(this.value,10)||0)" style="width:120px;padding:6px 10px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;font-family:ui-monospace,monospace;text-align:right">' +
+        '</label>' +
       '</div>' +
       '<p class="muted-text" style="margin:6px 2px 0;line-height:1.45">Pull-to-refresh: drag down from the top of the page. Long-press a row to enter multi-select mode.</p>' +
     '</div>'
   );
-  // Async-load current settings + reflect in the toggles
+  // Async-load current settings + reflect in the toggles/selects
   (async function _hydrateSettingsSheet() {
     try {
       const res = await fetch('/api/settings', { cache: 'no-store' });
@@ -26166,12 +26199,33 @@ function openMobileSettingsSheet(btn) {
       const { settings } = await res.json();
       const rw = document.getElementById('settings-runway-toggle');
       if (rw) rw.checked = settings.show_runway_widget !== false;
-      const oi = document.getElementById('settings-outreach-intensity');
-      if (oi && settings.outreach && settings.outreach.global_intensity) {
-        oi.value = settings.outreach.global_intensity;
+      const o = settings.outreach || {};
+      const setSelect = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+      setSelect('settings-outreach-intensity', o.global_intensity);
+      setSelect('settings-warm-intensity', o.warm_intensity);
+      setSelect('settings-cold-intensity', o.cold_intensity);
+      const sup = document.getElementById('settings-outreach-suppression');
+      if (sup) {
+        const lines = (o.suppression || []).map(x => typeof x === 'string' ? x : (x.name || x.id || ''));
+        sup.value = lines.join('\\n');
       }
+      const tc = document.getElementById('settings-triage-cap');
+      if (tc) tc.value = settings.triage_daily_limit || 0;
     } catch (_) { /* offline-tolerant */ }
   })();
+  // 2026-05-20 — save suppression list as an array (one entry per non-blank line)
+  window._saveSuppression = async function () {
+    const sup = document.getElementById('settings-outreach-suppression');
+    const status = document.getElementById('settings-suppression-status');
+    if (!sup) return;
+    const list = sup.value.split(/\\n+/).map(s => s.trim()).filter(Boolean);
+    if (status) status.textContent = 'saving' + String.fromCharCode(0x2026);
+    await window._setSetting('outreach.suppression', list);
+    if (status) {
+      status.textContent = String.fromCharCode(0x2713) + ' saved ' + list.length + ' entr' + (list.length === 1 ? 'y' : 'ies');
+      setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+    }
+  };
   bodyEl.scrollTop = 0;
   bd.classList.add('visible');
   bd.removeAttribute('aria-hidden');

@@ -1,40 +1,30 @@
 # LinkedIn Liveness Sweep — 2026-05-20
 
-Probed 48 LinkedIn-hosted URLs via CDP-authenticated Chrome at 127.0.0.1:9222.
-Mode: live (tracker writes applied via markRowAsExpired).
+Probed 38 LinkedIn-hosted URLs via CDP-authenticated Chrome at 127.0.0.1:9222.
 
 ## Summary
 
-- **active:** 40
-- **expired → auto-discarded:** 8 (all status=Evaluated)
-- **uncertain:** 0
+- **active:** 37
+- **expired → auto-discarded:** 1
+- **expired → needs review (Applied/Interview/Responded):** 0
+- **uncertain (login wall / no clear signal):** 0
 - **errors:** 0
 
-Runtime: ~4 min 20s sequential w/ 1.5s inter-request delay.
+Mode: `live`
 
-## Per-row results (expired first)
+## Per-row results
 
 | # | Status (was) | Result | Company | Role | Reason |
 |---|--------------|--------|---------|------|--------|
-| 2235 | Evaluated | expired | NetApp | Executive Communications Lead | phrase: "No longer accepting applications" |
-| 2236 | Evaluated | expired | Rimini Street | Director, Content | phrase: "No longer accepting applications" |
-| 2243 | Evaluated | expired | Amazon Web Services (AWS) | Senior AI Innovation & GTM Programs Lead, Applied  | phrase: "No longer accepting applications" |
-| 2247 | Evaluated | expired | Solventum | Manager, External Communications and Editorial Cha | phrase: "No longer accepting applications" |
-| 2219 | Evaluated | expired | Unknown | Corporate Communications Specialist (expired posti | phrase: "No longer accepting applications" |
-| 2191 | Evaluated | expired | OpenAI | Visual Storytelling & Innovation Lead, Office of t | phrase: "No longer accepting applications" |
-| 2197 | Evaluated | expired | Mark43 | Enterprise AI Enablement Lead | phrase: "No longer accepting applications" |
-| 2067 | Evaluated | expired | ElevenLabs | GTM Agentic Enablement Lead | phrase: "No longer accepting applications" |
-| 2237 | Evaluated | active | Binance | Pioneer Talent Program - AI Agent Engineer | strong+weak signals present |
-| 2238 | Evaluated | active | Red Hat | Senior AI Architect, APAC | strong+weak signals present |
+| 2258 | Evaluated | expired | NVIDIA | Senior Solutions Architect, Generative AI | phrase: "No longer accepting applications" |
+| 2251 | Evaluated | active | BCG X | (Senior) AI Factory Product Builder | strong+weak signals present |
+| 2252 | Evaluated | active | OpenAI | AI Success Engineer, Government | strong+weak signals present |
+| 2253 | Evaluated | active | Ema | Solutions Architect | strong+weak signals present |
 | 2239 | Evaluated | active | Amazon Web Services (AWS) | Senior AI Solution Architect | strong+weak signals present |
-| 2240 | Evaluated | active | Stripe | Design Program Manager, AI | strong+weak signals present |
 | 2241 | Evaluated | active | SentiLink | AI Strategy and Process Lead | strong+weak signals present |
 | 2242 | Evaluated | active | Sia | AI Delivery Lead | strong+weak signals present |
-| 2244 | Evaluated | active | Google | Product Strategy and Operations Lead, AI and Infra | strong+weak signals present |
 | 2245 | Evaluated | active | Microsoft | Senior Communications Manager | strong+weak signals present |
-| 2246 | Evaluated | active | General Motors | Sr. Manager Communications, Product and Technology | strong+weak signals present |
 | 2248 | Evaluated | active | Loot Labs, Inc | Senior Editorial Lead | strong+weak signals present |
-| 2249 | Evaluated | active | Intersect | AI Solutions | strong+weak signals present |
 | 2230 | Evaluated | active | Genesys | Senior AI Architect (Presales) | strong+weak signals present |
 | 2231 | Evaluated | active | Dandy | Head of Storytelling | strong+weak signals present |
 | 2232 | Evaluated | active | GEICO | Distinguished Engineer, AI Applications | strong+weak signals present |
@@ -65,7 +55,4 @@ Runtime: ~4 min 20s sequential w/ 1.5s inter-request delay.
 | 2060 | Evaluated | active | FXI | Head of AI Enablement | strong+weak signals present |
 | 2037 | Evaluated | active | Airtable | AI Agent Architect, Customer Experience | strong+weak signals present |
 
-Companion files:
-- Log: `data/logs/linkedin-liveness-2026-05-20.log`
-- Targets (still-active after sweep): `data/linkedin-liveness-targets-2026-05-20.json`
-- State: `data/liveness-state.json`
+Log: `data/logs/linkedin-liveness-2026-05-20.log`

@@ -11,6 +11,19 @@
         "no_url": 0
       },
       "dry_run": false
+    },
+    {
+      "timestamp": "2026-05-20T05:28:39.914Z",
+      "tool": "linkedin-liveness",
+      "rows_checked": 38,
+      "summary": {
+        "active": 37,
+        "expired_discarded": 1,
+        "expired_needs_review": 0,
+        "uncertain": 0,
+        "errors": 0
+      },
+      "dry_run": false
     }
   ],
   "rows": {
@@ -100,9 +113,9 @@
     },
     "2037": {
       "status": "active",
-      "url": "https://jobs.ashbyhq.com/ramp/deca582c-a1d0-4705-9975-60aed81ba89f",
-      "lastChecked": "2026-05-18T06:04:47.003Z",
-      "reason": "HTTP 200"
+      "url": "https://www.linkedin.com/jobs/view/4374636120",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
     },
     "2046": {
       "status": "active",
@@ -125,8 +138,8 @@
     "2060": {
       "status": "active",
       "url": "https://www.linkedin.com/jobs/view/4373800961",
-      "lastChecked": "2026-05-18T06:04:47.003Z",
-      "reason": "HTTP 200"
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
     },
     "2061": {
       "status": "active",
@@ -148,9 +161,9 @@
     },
     "2066": {
       "status": "active",
-      "url": "https://www.linkedin.com/jobs/view/4407541336",
-      "lastChecked": "2026-05-18T06:04:47.003Z",
-      "reason": "HTTP 200"
+      "url": "https://www.linkedin.com/jobs/view/4374622644",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
     },
     "2067": {
       "status": "active",
@@ -166,9 +179,9 @@
     },
     "2069": {
       "status": "active",
-      "url": "https://jobs.ashbyhq.com/norm-ai?utm_source=7ow8wN5o3g",
-      "lastChecked": "2026-05-18T06:04:47.003Z",
-      "reason": "HTTP 200"
+      "url": "https://www.linkedin.com/jobs/view/4384640261",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
     },
     "2070": {
       "status": "expired_discarded",
@@ -184,9 +197,9 @@
     },
     "2072": {
       "status": "active",
-      "url": "https://jobs.ashbyhq.com/notion/3336e944-0970-48ef-9a97-4ebd6656d0c2",
-      "lastChecked": "2026-05-18T06:04:47.003Z",
-      "reason": "HTTP 200"
+      "url": "https://www.linkedin.com/jobs/view/4375076349",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
     },
     "2073": {
       "status": "active",
@@ -196,9 +209,9 @@
     },
     "2074": {
       "status": "active",
-      "url": "https://jobs.ashbyhq.com/akur8",
-      "lastChecked": "2026-05-18T06:04:47.003Z",
-      "reason": "HTTP 200"
+      "url": "https://www.linkedin.com/jobs/view/4397445924",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
     },
     "2076": {
       "status": "expired_discarded",
@@ -209,8 +222,8 @@
     "2093": {
       "status": "active",
       "url": "https://www.linkedin.com/jobs/view/4407464750",
-      "lastChecked": "2026-05-18T06:04:47.003Z",
-      "reason": "HTTP 200"
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
     },
     "2104": {
       "status": "active",
@@ -253,6 +266,192 @@
       "url": "https://jobs.ashbyhq.com/llamaindex/36a0249e-a672-44df-a08e-b5a5523dec26",
       "lastChecked": "2026-05-18T06:04:47.003Z",
       "reason": "Ashby API: role still listed"
+    },
+    "2186": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4411573083",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2188": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4403698664",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2193": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4313852223",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2194": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4354790731",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2195": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4393226694",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2196": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4322410073",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2198": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4387086760",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2199": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4409713972",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2210": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4365345164",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2211": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4402785364",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2213": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4400626999",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2215": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4412445316",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2216": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4374659378",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2220": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4410405276",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2221": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4415868802",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2223": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4292458694",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2226": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4377040627",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2230": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4407948784",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2231": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4405365921",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2232": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4405911963",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2233": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4373760299",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2234": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4415492922",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2239": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4381437336",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2241": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4388173086",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2242": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4414272332",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2245": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4406603037",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2248": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4414988668",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2251": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4394212184",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2252": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4358089859",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2253": {
+      "status": "active",
+      "url": "https://www.linkedin.com/jobs/view/4409830555",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "strong+weak signals present"
+    },
+    "2258": {
+      "status": "expired_discarded",
+      "url": "https://www.linkedin.com/jobs/view/4412532846",
+      "lastChecked": "2026-05-20T05:28:39.914Z",
+      "reason": "phrase: \"No longer accepting applications\""
     }
   }
 }

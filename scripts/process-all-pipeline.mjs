@@ -155,7 +155,27 @@ async function phaseTriage() {
   updateJob({ phase: 'triage', phase_started_at: new Date().toISOString(), tier: TIER });
   log(`━━━ Phase 1/4: TRIAGE ${IS_TIER5 ? '(TIER-5: Sonnet JD)' : '(Haiku)'} ━━━`);
   if (DRY_RUN) { log('(dry-run) skipping triage'); return { ok: true, advanced: 0 }; }
-  const triageArgs = ['--daily-limit=300', ...SCOPED_ARGS];
+  // 2026-05-20 — Process All is gated by an explicit cost-confirmation
+  // modal (Run Batch $25 / Process All $250 / Monthly $500). That user
+  // consent IS the throughput governor; a hidden `--daily-limit=300`
+  // floor under it broke the contract — the cost preview promised "drain
+  // the pipeline" but the cap silently truncated to 300/run. Removed.
+  //
+  // Mitchell can still cap via:
+  //   - PROCESS_ALL_TRIAGE_LIMIT env var (e.g., 500), OR
+  //   - triage_daily_limit in data/dashboard-settings.json (default: none),
+  //     intended for the scheduled-launchd path, not Process All.
+  //
+  // Standalone `node scripts/triage.mjs --daily-limit=N` still works for
+  // ad-hoc capped runs outside Process All.
+  const triageArgs = [...SCOPED_ARGS];
+  const envCap = process.env.PROCESS_ALL_TRIAGE_LIMIT;
+  if (envCap && /^\d+$/.test(envCap)) {
+    triageArgs.push(`--daily-limit=${envCap}`);
+    log(`  cap: --daily-limit=${envCap} (from PROCESS_ALL_TRIAGE_LIMIT env)`);
+  } else {
+    log('  cap: NONE — draining the full pipeline (per cost-confirmation contract)');
+  }
   if (IS_TIER5) triageArgs.push('--use-sonnet-jd');
   const code = await runScript('triage.mjs', triageArgs);
   // Parse triage's output for advanced count (best-effort)
