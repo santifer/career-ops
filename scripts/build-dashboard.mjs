@@ -6395,6 +6395,12 @@ async function build() {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     margin: 8px 0 14px 0;
   }
+  /* 2026-05-19 BRAVO polish A1 (item #8): explicit 2×2 layout below 640px.
+     Auto-fit minmax(160px) yields 3 columns at ~600px (last chip orphaned).
+     Force a balanced 2×2 grid for narrow viewports. */
+  @media (max-width: 640px) {
+    .builder-evo-grid { grid-template-columns: repeat(2, 1fr); }
+  }
   .be-stat-tile {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -6420,7 +6426,8 @@ async function build() {
   button.be-stat-tile-clickable:active { transform: translateY(1px); }
   .be-stat-label { font-size: 11px; opacity: 0.7; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
   .be-stat-value { font-size: 22px; font-weight: 700; line-height: 1; display: flex; align-items: baseline; gap: 6px; }
-  .be-stat-cumulative { font-size: 11px; opacity: 0.55; font-weight: 400; margin-left: 6px; }
+  /* 2026-05-19 BRAVO polish A1 (item #1): removed dead .be-stat-cumulative rule
+     (last reference was in the pre-collapse tile markup; chips now use .be-stat-hint). */
   .be-stat-chevron {
     font-size: 14px; font-weight: 500; opacity: 0; color: var(--text-3);
     margin-left: auto; transition: opacity .15s ease, transform .15s ease;
@@ -6431,7 +6438,9 @@ async function build() {
     opacity: 0.85; transform: translateX(0);
   }
   .be-stat-hint {
-    font-size: 10.5px; opacity: 0.55; margin-top: 6px;
+    /* 2026-05-19 BRAVO polish A1 (item #7): bumped opacity 0.55 → 0.75 for WCAG AA
+       contrast on dark surface. Font-size held at 10.5px to avoid layout shift. */
+    font-size: 10.5px; opacity: 0.75; margin-top: 6px;
     letter-spacing: 0.02em; font-weight: 400;
   }
   .be-subtitle-hint { opacity: 0.7; font-style: italic; }
