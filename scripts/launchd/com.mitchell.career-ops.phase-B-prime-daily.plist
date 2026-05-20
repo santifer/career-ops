@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mitchell.career-ops.phase-B-prime-daily</string>
+
+    <!-- Daily scrape-based contact enrichment.
+         Pulls top-50 unenriched contacts, scrapes via CDP-attached
+         Chrome (no auth-wall problem), synthesizes via Sonnet 4.6
+         (~$0.05/contact, $2.50/day max).
+
+         Resumable: --top 50 + cost-cap halts cleanly, next day picks
+         up where it left off (idempotent skip-on-existing).
+
+         Auth: depends on com.mitchell.career-ops.chrome-debugging
+         being up.  If CDP is down, this script halts cleanly and
+         logs to data/logs/phase-B-prime-YYYY-MM-DD.log. -->
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/maintenance/phase-B-prime-mechanical-enrich.mjs</string>
+        <string>--top</string>
+        <string>50</string>
+        <string>--cost-cap</string>
+        <string>5</string>
+        <string>--rate-per-min</string>
+        <string>15</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops</string>
+
+    <!-- Daily at 03:30 PT (off-peak, after most network refreshes) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key><integer>3</integer>
+        <key>Minute</key><integer>30</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/phase-B-prime-daily.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mitchellwilliams/Documents/career-ops/data/logs/phase-B-prime-daily.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/mitchellwilliams</string>
+    </dict>
+</dict>
+</plist>

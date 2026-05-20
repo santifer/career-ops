@@ -45,6 +45,7 @@ try {
 
 import { loadAndRank } from '../../lib/contact-priority-scorer.mjs';
 import { callAnthropicCached } from '../../lib/anthropic-cache-helper.mjs';
+import { isCdpAvailable, connectToChromeCDP } from '../../lib/cdp-browser.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
@@ -88,16 +89,19 @@ function saveState(state) {
 
 /**
  * Playwright scrape — authenticated LinkedIn profile.
+ *
+ * Takes a session handle (built once per run by main()) that abstracts
+ * over the two auth modes:
+ *   - CDP-attached: page is created in the running Chrome's default
+ *     context; auth comes from the live LinkedIn login.
+ *   - storage-state: page is created in a fresh context loaded from
+ *     data/linkedin-storage-state.json.
+ *
  * Returns a structured JSON of what's visible, OR { ok: false, reason }.
  */
-async function scrapeLinkedinAuthenticated(contact, browser) {
+async function scrapeLinkedinAuthenticated(contact, session) {
   if (!contact.linkedin_url) return { ok: false, reason: 'no_linkedin_url' };
-  const ctx = await browser.newContext({
-    viewport: { width: 1280, height: 900 },
-    storageState: STORAGE_STATE_PATH,
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
-  });
-  const page = await ctx.newPage();
+  const { page, cleanup } = await session.newPage();
   let scraped = null;
   try {
     // ── Pass 1: profile page (name, headline, location, mutual count) ──────
@@ -248,7 +252,7 @@ async function scrapeLinkedinAuthenticated(contact, browser) {
     if (VERBOSE) log(`scrape error for ${contact.id}: ${e.message.slice(0, 160)}`);
     scraped = { ok: false, reason: `scrape_error: ${e.message.slice(0, 200)}` };
   } finally {
-    await ctx.close();
+    await cleanup();
   }
   return scraped;
 }
@@ -355,12 +359,12 @@ function parseSynthesisJson(content) {
   try { return JSON.parse(m[0]); } catch { return null; }
 }
 
-async function enrichOneContact(contact, browser) {
+async function enrichOneContact(contact, session) {
   const t0 = Date.now();
   log(`enriching ${contact.name} (${contact.id})…`);
 
   // 1. Scrape LinkedIn (authenticated)
-  const scraped = await scrapeLinkedinAuthenticated(contact, browser);
+  const scraped = await scrapeLinkedinAuthenticated(contact, session);
   if (!scraped.ok) {
     log(`  scrape FAIL (${scraped.reason}) — writing no-data envelope`);
     const envelope = {
@@ -442,21 +446,58 @@ function _countPopulated(p) {
   return n;
 }
 
-async function main() {
-  log(`═══ phase-B-prime start (TOP_N=${TOP_N}, COST_CAP=$${COST_CAP}, DRY_RUN=${DRY_RUN}, SINGLE=${SINGLE_CONTACT || 'none'}) ═══`);
-
-  // Gate 1: LinkedIn auth must exist
-  if (!existsSync(STORAGE_STATE_PATH)) {
-    log(`HALT: ${STORAGE_STATE_PATH} not found.`);
-    log(`  → Mitchell: run "node scripts/scrape-contact-photo.mjs --setup-auth" once, log into LinkedIn, then re-run this script.`);
-    log(`  → This is the Mitchell-aligned pivot to Phase B: real scrape data > fabricated LLM citations.`);
-    process.exit(2);
+/**
+ * Build the scrape session — prefers CDP-attached Chrome if available
+ * (lets refresh-master fire autonomously without storage-state going
+ * stale), falls back to storage-state mode if not.
+ *
+ * Returns { mode, session, dispose } where:
+ *   - mode is 'cdp' or 'storage-state'
+ *   - session.newPage() → { page, cleanup() } that scrapeLinkedinAuthenticated uses
+ *   - dispose() tears down the browser/CDP connection at end of run
+ */
+async function buildScrapeSession() {
+  const cdpUp = await isCdpAvailable();
+  if (cdpUp) {
+    log(`CDP detected at http://127.0.0.1:9222 — attaching to live Chrome (auth-fresh mode).`);
+    const cdp = await connectToChromeCDP();
+    const session = {
+      mode: 'cdp',
+      async newPage() {
+        const page = await cdp.defaultContext.newPage();
+        await page.setViewportSize({ width: 1280, height: 900 });
+        return { page, cleanup: async () => { try { await page.close(); } catch { /* */ } } };
+      },
+    };
+    return { mode: 'cdp', session, dispose: async () => { await cdp.disconnect(); } };
   }
 
-  // Gate 2: Playwright must be installed
+  // Fallback: launch our own headless Chromium with storage-state.
+  log(`CDP not detected — falling back to storage-state mode.`);
+  if (!existsSync(STORAGE_STATE_PATH)) {
+    throw new Error(`No CDP listener AND no storage-state at ${STORAGE_STATE_PATH}. Run \`node scripts/launch-debug-chrome.mjs\` first (recommended), or \`node scripts/scrape-contact-photo.mjs --setup-auth\` (legacy).`);
+  }
   let chromium;
   try { chromium = (await import('playwright')).chromium; }
-  catch { log('HALT: playwright not installed. Run `npm install playwright` first.'); process.exit(3); }
+  catch { throw new Error('playwright not installed. Run `npm install playwright` first.'); }
+  const browser = await chromium.launch({ headless: true });
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    storageState: STORAGE_STATE_PATH,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
+  });
+  const session = {
+    mode: 'storage-state',
+    async newPage() {
+      const page = await ctx.newPage();
+      return { page, cleanup: async () => { try { await page.close(); } catch { /* */ } } };
+    },
+  };
+  return { mode: 'storage-state', session, dispose: async () => { await ctx.close(); await browser.close(); } };
+}
+
+async function main() {
+  log(`═══ phase-B-prime start (TOP_N=${TOP_N}, COST_CAP=$${COST_CAP}, DRY_RUN=${DRY_RUN}, SINGLE=${SINGLE_CONTACT || 'none'}) ═══`);
 
   // Build candidate list
   let candidates;
@@ -490,7 +531,17 @@ async function main() {
   state.refresh_history = state.refresh_history || {};
   state.refresh_history.contact_enrichment = state.refresh_history.contact_enrichment || {};
 
-  const browser = await chromium.launch({ headless: true });
+  // Build scrape session (CDP-attached if available, storage-state otherwise)
+  let scrapeHandle;
+  try {
+    scrapeHandle = await buildScrapeSession();
+  } catch (e) {
+    log(`HALT: ${e.message}`);
+    process.exit(2);
+  }
+  const { mode, session, dispose } = scrapeHandle;
+  log(`scrape-session mode: ${mode}`);
+
   const minMsBetween = Math.max(50, Math.floor(60_000 / RATE_PER_MIN));
   let spent = 0;
   let ok = 0;
@@ -503,7 +554,7 @@ async function main() {
       break;
     }
     const t0 = Date.now();
-    const result = await enrichOneContact(r.contact, browser);
+    const result = await enrichOneContact(r.contact, session);
     const took = Date.now() - t0;
     if (result.ok) {
       ok++;
@@ -537,13 +588,14 @@ async function main() {
     if (wait > 0 && i < candidates.length) await new Promise(r2 => setTimeout(r2, wait));
   }
   saveState(state);
-  await browser.close();
+  await dispose();
 
   log(`═══ phase-B-prime complete ═══`);
-  log(`  enriched: ${ok}/${candidates.length}`);
-  log(`  failed:   ${fail}`);
-  log(`  spent:    $${spent.toFixed(2)} / cap $${COST_CAP}`);
-  log(`  cache:    ${ENRICHMENT_CACHE_DIR}`);
+  log(`  scrape mode: ${mode}`);
+  log(`  enriched:    ${ok}/${candidates.length}`);
+  log(`  failed:      ${fail}`);
+  log(`  spent:       $${spent.toFixed(2)} / cap $${COST_CAP}`);
+  log(`  cache:       ${ENRICHMENT_CACHE_DIR}`);
 }
 
 main().catch(e => {
