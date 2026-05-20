@@ -2620,6 +2620,50 @@ function buildBatchStatusDetailed() {
     }
   }
 
+  // ── 2026-05-20 — surface the currently-running Process All job so the
+  // Batch Status modal stops looking frozen during the triage/rebuild/email
+  // phases (when the batch sub-phase data legitimately doesn't change).
+  let process_all_active = null;
+  try {
+    const stateFp = join(ROOT, 'data/pipeline-process-state.json');
+    if (existsSync(stateFp)) {
+      const state = JSON.parse(readFileSync(stateFp, 'utf-8'));
+      // Pick the most recently-updated running process-all job (ignore batch-only).
+      const candidates = Object.values(state.jobs || {})
+        .filter(j => j.type === 'process-all' && j.status === 'running');
+      candidates.sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')));
+      const j = candidates[0];
+      if (j) {
+        const PHASES = [
+          { key: 'triage',  label: 'Phase 1/4 — Triage',         pct: 20 },
+          { key: 'batch',   label: 'Phase 2/4 — Batch eval',     pct: 50 },
+          { key: 'rebuild', label: 'Phase 3/4 — Dashboard rebuild', pct: 85 },
+          { key: 'email',   label: 'Phase 4/4 — Heartbeat email', pct: 95 },
+        ];
+        const currentIdx = Math.max(0, PHASES.findIndex(p => p.key === j.phase));
+        const phasesOut = PHASES.map((p, i) => ({
+          key: p.key,
+          label: p.label,
+          status: i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'pending',
+          ok: !!(j.phases && j.phases[p.key] && j.phases[p.key].ok),
+        }));
+        process_all_active = {
+          job_id:           j.jobId,
+          phase:            j.phase || 'queued',
+          phase_label:      (PHASES.find(p => p.key === j.phase) || {}).label || 'Queued',
+          phase_pct:        (PHASES.find(p => p.key === j.phase) || {}).pct || 5,
+          started_at:       j.started_at,
+          updated_at:       j.updated_at,
+          phase_started_at: j.phase_started_at,
+          pending_before:   j.pending_before,
+          send_email:       j.send_email,
+          phases:           phasesOut,
+          log_path:         j.log_path,
+        };
+      }
+    }
+  } catch (_) { /* state file unreadable — fall through with process_all_active=null */ }
+
   return {
     ok: true,
     current_summary: {
@@ -2633,6 +2677,7 @@ function buildBatchStatusDetailed() {
       model:     'claude-sonnet-4-6',  // current batch-runner-batches.mjs default
       temperature: 0,
     },
+    process_all_active,
     recent_runs,
     queue_depth,
     cost_today_usd: Math.round(cost_today_usd * 100) / 100,

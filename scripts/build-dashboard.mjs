@@ -11916,9 +11916,12 @@ async function build() {
       </button>
     </div>
 
-    ${topApis ? `<div class="be-section"><div class="be-section-label">Top APIs / services this window</div><div class="be-tags">${topApis}</div></div>` : ''}
-    ${topSkills ? `<div class="be-section"><div class="be-section-label">Top skills this window</div><div class="be-tags">${topSkills}</div></div>` : ''}
-    ${topBugs ? `<div class="be-section"><div class="be-section-label">Top bug classes this window</div><div class="be-tags">${topBugs}</div></div>` : ''}
+    <!-- 2026-05-20 — Mitchell flagged the three "Top APIs / services /
+         Skills / Bug classes this window" sections as redundant: the
+         openBeStatModal drawer triggered from each tile (APIs, Skills,
+         Bug classes, PM signals) already shows the same data with full
+         commit counts. The headline tiles + click-to-modal flow is the
+         canonical path. -->
 
     <div class="be-footer">
       <span class="be-footer-meta">Last generated: ${generatedAt}</span>
@@ -20419,7 +20422,47 @@ function _bsRenderBody(data, changed) {
       '</div>';
   }
 
-  body.innerHTML = sectionA + sectionB + sectionC + sectionD;
+  // 2026-05-20 — Section P (Process All multi-phase progress). Rendered
+  // at the top when a process-all job is active so the modal isn't
+  // misleadingly frozen during the triage/rebuild/email phases (when
+  // batch sub-counts legitimately don't change). Builds from
+  // data.process_all_active populated by buildBatchStatusDetailed.
+  const pa = data.process_all_active;
+  let sectionP = '';
+  if (pa) {
+    const phaseBars = (pa.phases || []).map(p => {
+      const stateClr = p.status === 'done'   ? 'var(--green-fg, #16a34a)'
+                     : p.status === 'active' ? 'var(--blue-fg, #2563eb)'
+                     : 'var(--text-4, #9ca3af)';
+      const icon = p.status === 'done' ? String.fromCharCode(0x2713) :
+                   p.status === 'active' ? String.fromCharCode(0x25CF) :
+                   String.fromCharCode(0x25CB);
+      return '<div class="bs-pa-phase-row" style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border,#e5e7eb)">' +
+        '<span style="color:' + stateClr + ';font-size:14px;width:14px;text-align:center" aria-hidden="true">' + icon + '</span>' +
+        '<span style="font-size:12.5px;color:var(--text-1,#1f2937);font-weight:' + (p.status === 'active' ? '600' : '500') + ';flex:1">' + _bsEsc(p.label) + '</span>' +
+        '<span style="font-size:11px;color:var(--text-3,#6b7280);text-transform:uppercase;letter-spacing:.04em">' + _bsEsc(p.status) + '</span>' +
+        '</div>';
+    }).join('');
+    const startedAgo = pa.started_at ? Math.round((Date.now() - Date.parse(pa.started_at)) / 60000) + 'm ago' : 'just now';
+    const phaseAgo = pa.phase_started_at ? Math.round((Date.now() - Date.parse(pa.phase_started_at)) / 1000) + 's ago' : '—';
+    sectionP =
+      '<div class="batch-status-section" style="border-left:3px solid var(--blue-fg,#2563eb);padding-left:12px">' +
+        '<h4 class="batch-status-section-title" style="display:flex;align-items:center;gap:8px">' +
+          '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue-fg,#2563eb);box-shadow:0 0 6px rgba(37,99,235,.55);animation:bs-pa-pulse 1.6s ease-in-out infinite"></span>' +
+          'Process All running' +
+          '<span style="font-size:11px;font-weight:400;color:var(--text-3,#6b7280);margin-left:auto">started ' + _bsEsc(startedAgo) + '</span>' +
+        '</h4>' +
+        '<div style="font-size:12px;color:var(--text-2,#4b5563);margin:4px 0 10px">' +
+          'Current: <strong>' + _bsEsc(pa.phase_label) + '</strong> · entered ' + _bsEsc(phaseAgo) +
+          (pa.send_email ? ' · email will send on Phase 4' : '') +
+        '</div>' +
+        '<div class="bs-pa-phases">' + phaseBars + '</div>' +
+        '<div style="font-size:10.5px;color:var(--text-4,#9ca3af);margin-top:8px">Job: <code>' + _bsEsc(pa.job_id || '?') + '</code></div>' +
+      '</div>' +
+      '<style>@keyframes bs-pa-pulse { 0%,100% { opacity: 1 } 50% { opacity: .4 } }</style>';
+  }
+
+  body.innerHTML = sectionP + sectionA + sectionB + sectionC + sectionD;
   // Invariant #8 — apply the universal table baseline (dbl-click expand,
   // [title] tooltips, column-resize handles) to every freshly rendered
   // table inside the batch-status modal body.
