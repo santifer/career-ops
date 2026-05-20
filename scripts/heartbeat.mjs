@@ -606,19 +606,17 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   }
 
   let actionSectionsHtml = '';
-  // §0 NEXT MOVES — synthesis layer (top 3 + see-all link)
-  // Shows ONLY when data/next-moves.json exists with ranked moves; otherwise
-  // section is omitted (the function returns ''). Sits above Tonight's Apply
-  // because it's the ranked overview — Tonight's Apply is the one-thing-to-
-  // do-tonight pick that follows from the same data.
-  const nextMovesHtml = renderNextMovesSection();
-  if (nextMovesHtml) {
-    actionSectionsHtml += sectionLabel('Next Moves', true);
-    actionSectionsHtml += nextMovesHtml;
-  }
-  // §1 TONIGHT'S APPLY — accent label (loudest)
+  // §1 TONIGHT'S APPLY — accent label (leads the email)
+  // Reordered 2026-05-19 (Phase A · A1 · CRITICAL-1) — single primary action
+  // card now sits ABOVE NEXT MOVES so it's the first thing visible at 09:01 PT.
   actionSectionsHtml += sectionLabel("Tonight's Apply", true);
   actionSectionsHtml += tonightsApplyHtml;
+  // §1b NEXT MOVES — ranked queue underneath the primary card
+  const nextMovesHtml = renderNextMovesSection();
+  if (nextMovesHtml) {
+    actionSectionsHtml += sectionLabel('Next 3 actions queued', false);
+    actionSectionsHtml += nextMovesHtml;
+  }
   // §2 DUE TODAY — show label even when empty (shows "Outreach — clear")
   if (dueTodayHtml) {
     const dueTodayLabelText = dueTodayCount > 0
@@ -1936,30 +1934,32 @@ async function generateHeartbeat() {
   lines.push(`| Quota schedule | ✅ 08:05 PT | batch fires after Claude Max reset |`);
   lines.push('');
 
-  lines.push('## Errors / Warnings');
-  lines.push('');
-
+  // Phase A · A2 · CRITICAL-3 (2026-05-19) — collapse the two empty-state H2
+  // sections (Errors / Warnings + Action Required) into one quiet footer line
+  // on no-error days. Both sections still render as H2s when something needs
+  // attention so the signal isn't buried.
   const errorLog = join(ROOT, 'data/errors.log');
+  let todaysErrors = [];
   if (existsSync(errorLog)) {
-    const errors = readFileSync(errorLog, 'utf-8')
+    todaysErrors = readFileSync(errorLog, 'utf-8')
       .split('\n')
       .filter(l => l.includes(TARGET_DATE));
-    if (errors.length > 0) {
-      lines.push('```');
-      errors.slice(-20).forEach(e => lines.push(e));
-      lines.push('```');
-    } else {
-      lines.push('- No errors logged today.');
-    }
-  } else {
-    lines.push('- No error log present.');
   }
-
-  lines.push('');
-  lines.push('## Action Required');
-  lines.push('');
-  lines.push('- [ ] None — system running unattended');
-  lines.push('');
+  if (todaysErrors.length === 0) {
+    lines.push('<small style="color:#9ca3af">No errors · no action required · system running unattended.</small>');
+    lines.push('');
+  } else {
+    lines.push('## Errors / Warnings');
+    lines.push('');
+    lines.push('```');
+    todaysErrors.slice(-20).forEach(e => lines.push(e));
+    lines.push('```');
+    lines.push('');
+    lines.push('## Action Required');
+    lines.push('');
+    lines.push('- [ ] Review the errors above before acting on the queue.');
+    lines.push('');
+  }
   lines.push('---');
   lines.push('');
 
