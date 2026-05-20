@@ -349,12 +349,23 @@ function loadCumulative() {
   catch { return { skills: {}, apis: {}, bug_classes: {}, pm_signals: {}, history: [] }; }
 }
 
+// mergeCumulative: newTags is the per-category agg object { tagName: commitCount }
+// produced by the current window run. We store the most-recent window's commit count
+// (not a run-frequency counter) so that the JSON stays in sync with what the
+// rolling-digest says ("N commits this window"). The value is SET on each run
+// (not incremented) to avoid double-counting when the same window is re-run.
+// first_seen is never overwritten once written.
 function mergeCumulative(cum, newTags, firstDate) {
   for (const cat of ['skills', 'apis', 'bug_classes', 'pm_signals']) {
-    for (const tag of (newTags[cat] || [])) {
-      if (!cum[cat][tag]) cum[cat][tag] = { first_seen: firstDate, count: 0 };
-      cum[cat][tag].count += 1;
-      // Don't overwrite first_seen if already present.
+    for (const [tag, windowCount] of Object.entries(newTags[cat] || {})) {
+      if (!cum[cat][tag]) {
+        cum[cat][tag] = { first_seen: firstDate, count: 0 };
+      } else if (!cum[cat][tag].first_seen) {
+        cum[cat][tag].first_seen = firstDate;
+      }
+      // Replace count with the rolling-window commit count from this run.
+      // This keeps the JSON in sync with the human-readable digest.
+      cum[cat][tag].count = windowCount;
     }
   }
 }
@@ -546,11 +557,13 @@ async function main() {
   const streak = computeStreak(commits);
   const cum = loadCumulative();
   const firstDate = commits[commits.length - 1]?.date || TODAY;
+  // Pass the full agg maps (tag → commit count) so mergeCumulative can store
+  // the actual rolling-window counts, not just presence (the old Object.keys bug).
   mergeCumulative(cum, {
-    apis: Object.keys(agg.apis),
-    skills: Object.keys(agg.skills),
-    bug_classes: Object.keys(agg.bug_classes),
-    pm_signals: Object.keys(agg.pm_signals),
+    apis: agg.apis,
+    skills: agg.skills,
+    bug_classes: agg.bug_classes,
+    pm_signals: agg.pm_signals,
   }, firstDate);
   cum.history = cum.history || [];
   cum.history.push({
