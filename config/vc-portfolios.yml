@@ -1,0 +1,113 @@
+# VC Portfolio Job Boards — declarative firm list for scripts/scan-vc-portfolios.mjs.
+#
+# P1-2 from the input-quality roadmap. VC boards are an EARLY-SIGNAL discovery
+# channel: ~25% of portfolio companies post here before their own ATS goes live.
+#
+# Three platforms found during 2026-05-19 endpoint verification:
+#
+#   getro    — POST api.getro.com/api/v2/collections/{collection_id}/search/jobs
+#              Returns {results: {jobs: [...], count: N}}. per_page caps at 20.
+#              Supports sort: "-created_at" for incremental scraping. No auth
+#              header required.
+#
+#   consider — POST {board_host}/api-boards/search-jobs
+#              Works in a real browser but Cloudflare tarpits plain curl/fetch.
+#              Needs Playwright (CDP-attached) to bypass bot detection. Marked
+#              `enabled: false` below until Phase 2 wires that in.
+#
+#   indexvc  — Custom Vue + Elasticsearch backend at www.indexventures.com/
+#              startup-jobs. API not yet mapped. Marked `enabled: false`.
+#
+# When adding a new firm: probe the board with curl + Chrome MCP Network panel
+# first; capture the collection_id from the page's __NEXT_DATA__ (Getro) or
+# verify the api-boards path is hit (Consider). Don't guess.
+
+# Per-firm defaults applied when a firm doesn't override.
+defaults:
+  per_page: 20            # Getro hard cap is 20; smaller values still work
+  max_pages: 50           # Safety cap — 50 * 20 = 1000 jobs per firm per scrape
+  fetch_timeout_ms: 15000
+  page_delay_ms: 200      # Politeness pause between pages within a firm
+  retry_on_429: 3         # Max exp-backoff retries for HTTP 429
+  retry_base_ms: 1000     # First backoff is 1s, then 2s, then 4s
+  freshness_window_days: 14   # First-run lookback; subsequent runs use state file
+
+firms:
+  # ── Getro platform (3 firms, working) ─────────────────────────────────────
+
+  - id: accel
+    name: Accel
+    platform: getro
+    collection_id: 8672           # verified 2026-05-19 from jobs.accel.com __NEXT_DATA__
+    board_url: https://jobs.accel.com/
+    enabled: true
+
+  - id: insight
+    name: Insight Partners
+    platform: getro
+    collection_id: 246            # verified 2026-05-19
+    board_url: https://jobs.insightpartners.com/
+    enabled: true
+
+  - id: khosla
+    name: Khosla Ventures
+    platform: getro
+    collection_id: 257            # verified 2026-05-19 — Khosla migrated off Pallet to Getro
+    board_url: https://jobs.khoslaventures.com/
+    enabled: true
+
+  # ── Consider.com platform (6 firms, blocked by Cloudflare) ────────────────
+  # Endpoint shape: POST {board_url}api-boards/search-jobs
+  # Direct curl/fetch is tarpitted; needs Playwright/CDP to bypass bot
+  # detection. Re-enable in Phase 2 once consider-playwright provider lands.
+
+  - id: a16z
+    name: Andreessen Horowitz
+    platform: consider
+    board_url: https://jobs.a16z.com/
+    enabled: false
+    skip_reason: needs_playwright
+
+  - id: sequoia
+    name: Sequoia Capital
+    platform: consider
+    board_url: https://jobs.sequoiacap.com/
+    enabled: false
+    skip_reason: needs_playwright
+
+  - id: greylock
+    name: Greylock Partners
+    platform: consider
+    board_url: https://jobs.greylock.com/
+    enabled: false
+    skip_reason: needs_playwright
+
+  - id: lightspeed
+    name: Lightspeed Venture Partners
+    platform: consider
+    board_url: https://jobs.lsvp.com/
+    enabled: false
+    skip_reason: needs_playwright
+
+  - id: bessemer
+    name: Bessemer Venture Partners
+    platform: consider
+    board_url: https://jobs.bvp.com/
+    enabled: false
+    skip_reason: needs_playwright
+
+  - id: nea
+    name: New Enterprise Associates
+    platform: consider
+    board_url: https://careers.nea.com/
+    enabled: false
+    skip_reason: needs_playwright
+
+  # ── Index Ventures (custom Vue + Elasticsearch) ───────────────────────────
+
+  - id: index
+    name: Index Ventures
+    platform: indexvc
+    board_url: https://www.indexventures.com/startup-jobs
+    enabled: false
+    skip_reason: needs_api_discovery
