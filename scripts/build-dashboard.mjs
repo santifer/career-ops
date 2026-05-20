@@ -417,7 +417,32 @@ function _findRichSiblingReport(reportPath) {
 function _parseUrl(text) {
   const head = text.slice(0, 3000);
   const m = head.match(/\*\*URL:\*\*\s*(\S+)/);
-  return m ? m[1] : '';
+  if (!m) return '';
+  // 2026-05-20 — Strip tracking params before surfacing to UI. The eval
+  // pipeline writes whatever URL it ingested (often with utm_source=…,
+  // gh_jid=…, lever_source=…, ref=…, trk=…). The dashboard shouldn't
+  // propagate those — they pollute the visible Apply link, leak source
+  // info in click-tracking systems, and (per Mitchell 2026-05-20) make
+  // the queue feel "noisy with tracker garbage."
+  return _stripTrackingParams(m[1]);
+}
+
+function _stripTrackingParams(rawUrl) {
+  if (!rawUrl) return '';
+  try {
+    const u = new URL(rawUrl);
+    for (const k of [...u.searchParams.keys()]) {
+      if (/^utm_/i.test(k) || /^gh_/i.test(k) || /^lever_/i.test(k)
+          || k === 'ref' || k === 'source' || k === 'src'
+          || k === 'mkt_tok' || k === '_hsenc' || k === '_hsmi'
+          || k === 'trk' || k === 'trkCampaign' || k === 'refId'
+          || k === 'fbclid' || k === 'gclid') {
+        u.searchParams.delete(k);
+      }
+    }
+    u.hash = '';
+    return u.toString().replace(/\?$/, '');
+  } catch { return rawUrl; }
 }
 
 function _parseArchetype(text) {
@@ -2862,10 +2887,17 @@ function renderRow(r, idx) {
               <span class="alignbar-pct" style="color:var(--text-4);font-style:italic;font-size:11px">bar suppressed</span>
             </div>`;
           }
-          return `<div class="alignbar-row" title="${htmlEscape(hint)}">
-            <span class="alignbar-label">${htmlEscape(label)}</span>
+          // 2026-05-20 — Mitchell asked: "I should be able to click into
+          // each of these areas of this cell or hover over it to reveal
+          // additional information or summarization of what led the system
+          // to reach those conclusions." Previously only the percentage
+          // cell was clickable; the label + bar were inert. Now the entire
+          // row (label, bar, pct) opens the drill-in modal, and the row
+          // has a hover affordance.
+          return `<div class="alignbar-row alignbar-row-clickable drill-trigger" data-drill="percentage:${dk}" role="button" tabindex="0" title="${htmlEscape(hint)} — click for the full source breakdown" style="cursor:pointer" onclick="event.stopPropagation();window.drillIn('percentage','${dk}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('percentage','${dk}',event)}">
+            <span class="alignbar-label">${htmlEscape(label)} <span class="alignbar-explore-hint" aria-hidden="true">▸</span></span>
             <div class="alignbar-track"><div class="alignbar-fill ${colorClass}" style="width:${pctClamped}%"></div></div>
-            <span class="alignbar-pct drill-trigger" data-drill="percentage:${dk}" role="button" tabindex="0" title="Click for strategy ceiling — how to improve this metric" onclick="event.stopPropagation();window.drillIn('percentage','${dk}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('percentage','${dk}',event)}">${pctClamped}%</span>
+            <span class="alignbar-pct">${pctClamped}%</span>
           </div>`;
         };
         const alignTooltip = 'How well my CV + portfolio match this JD (Block B requirements + competitive edges + overall score).';
@@ -2912,9 +2944,12 @@ function renderRow(r, idx) {
     if (Number.isFinite(_tox) && _tox >= 1 && _tox <= 5) {
       const _toxIcon = _tox <= 1 ? '🟢' : _tox <= 2 ? '🟢' : _tox <= 3 ? '🟡' : _tox <= 4 ? '🟠' : '🔴';
       const _toxWord = _tox <= 1 ? 'healthy' : _tox <= 2 ? 'good' : _tox <= 3 ? 'neutral' : _tox <= 4 ? 'concerning' : 'avoid';
-      toxLine = `<div class="dcard-resp-line">
+      // 2026-05-20 — make the toxicity row clickable. Drills into the
+      // role-enrichment sentiment payload (Glassdoor / Blind / leadership
+      // exits / churn signals — the inputs that produced the X/5 grade).
+      toxLine = `<div class="dcard-resp-line drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:team_toxicity" role="button" tabindex="0" style="cursor:pointer;border-radius:4px;padding:2px 4px;margin:0 -4px;transition:background .12s" title="Click for the toxicity-grade source breakdown — Glassdoor signals, Blind threads, leadership exits, churn patterns" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:team_toxicity',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:team_toxicity',event)}" onmouseover="this.style.background='var(--surface-hover,rgba(255,255,255,.04))'" onmouseout="this.style.background=''">
         <span class="dcard-resp-label">Team toxicity:</span>
-        <span class="dcard-resp-value">${_toxIcon} ${_tox}/5 (${htmlEscape(_toxWord)}, 1=healthy · 5=avoid)</span>
+        <span class="dcard-resp-value">${_toxIcon} ${_tox}/5 (${htmlEscape(_toxWord)}, 1=healthy · 5=avoid) <span style="font-size:10px;color:var(--text-4);opacity:.6">▸</span></span>
       </div>`;
     }
   } catch (_) { /* never break drawer */ }
@@ -7794,6 +7829,13 @@ async function build() {
   .alignbar-fill.alignbar-mid    { background: var(--amber-fg); }
   .alignbar-fill.alignbar-weak   { background: var(--red-fg); }
   .alignbar-pct { font-weight: 600; color: var(--text-1); text-align: right; font-variant-numeric: tabular-nums; }
+  /* 2026-05-20 — Mitchell ask: entire alignment-bar row should be clickable
+     with a hover affordance. The ▸ indicator hints that detail is one click
+     away; on hover the whole row lights up. */
+  .alignbar-row-clickable { cursor: pointer; border-radius: 4px; padding: 2px 4px; margin: 0 -4px; transition: background .12s; }
+  .alignbar-row-clickable:hover { background: var(--surface-hover, rgba(255,255,255,.04)); }
+  .alignbar-row-clickable:hover .alignbar-explore-hint { opacity: 1; }
+  .alignbar-explore-hint { font-size: 10px; color: var(--text-4); opacity: .4; transition: opacity .12s; margin-left: 4px; }
   /* How-to-position markdown rendering — real table, not pipe-separated prose. */
   .htp-md table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 12px; }
   .htp-md th, .htp-md td { padding: 6px 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
