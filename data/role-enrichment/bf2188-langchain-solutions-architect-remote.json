@@ -1,0 +1,110 @@
+{
+  "company": "LangChain",
+  "role": "Solutions Architect (Remote)",
+  "relocation": {
+    "package_summary": "LangChain is primarily remote-first with limited formal relocation data available for this role; most positions do not require relocation. Typical packages at similar early-stage AI startups are lump-sum based rather than full broker-managed.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "No public LangChain relocation policy found on careers/job-board materials; verify with recruiter whether remote roles receive any relo, sign-on, lease-break, or tax gross-up. Sources checked: LangChain careers/job board and company profile.",
+    "sources": [
+      "https://www.langchain.com/careers",
+      "https://jobs.ashbyhq.com/langchain",
+      "https://www.linkedin.com/company/langchain/"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown; no public match percentage verified.",
+    "healthcare": "unknown; public postings generally emphasize competitive benefits/equity but do not expose insurer, plan tier, or employer premium share.",
+    "dental_vision": "unknown",
+    "estimated_copay": "unknown; cannot estimate employee premium/copay without plan documents. For offer diligence, request benefits guide before accepting.",
+    "meals_provided": "unknown; likely office-dependent if any, but not verified for remote employees.",
+    "mental_health": "unknown; no verified Lyra/Spring/Modern Health/EAP details found in public materials.",
+    "other_perks": "Public materials indicate startup-style compensation with equity and remote roles, but specifics such as learning stipend, fitness, commuter, parental leave, sabbatical, and PTO policy are not publicly verified.",
+    "sources": [
+      "https://www.langchain.com/careers",
+      "https://jobs.ashbyhq.com/langchain",
+      "https://www.linkedin.com/company/langchain/"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown; no confidently verified TeamBlind company score/thread corpus for LangChain found from public indexed sources.",
+    "glassdoor_score": "unknown; Glassdoor may have a LangChain profile, but public review volume appears limited and I cannot verify a stable rating without live access. Treat any score as low-sample until checked directly.",
+    "reddit_pulse": "Mostly product/dev-tool discussion rather than workplace signal; Reddit conversations commonly focus on LangChain/LangGraph reliability, observability, and agent-framework tradeoffs, not employee culture. No reliable last-90-days workplace toxicity pattern verified.",
+    "x_pulse": "LangChain official/founder channels are active on product launches, LangGraph/LangSmith, and hiring/GTM momentum; no verified public attrition or culture-risk signal found from indexed sources.",
+    "sources": [
+      "https://www.reddit.com/r/LangChain/",
+      "https://www.reddit.com/r/MachineLearning/search/?q=LangChain",
+      "https://x.com/LangChainAI",
+      "https://x.com/hwchase17",
+      "https://www.glassdoor.com/Overview/Working-at-LangChain-EI_IE9125155.11,20.htm"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Not confidently identified from a cited public search hit; run LinkedIn search: `LangChain recruiter talent acquisition solutions architect` and filter current employees."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Not confidently identified from a cited public search hit; run LinkedIn search: `LangChain Solutions Architect GTM Sales Engineering` and review current Solutions/Field/Enterprise leadership."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/langchain/",
+      "https://www.langchain.com/careers",
+      "https://jobs.ashbyhq.com/langchain"
+    ]
+  },
+  "confidence": "L",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.meals_provided",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-20T04:41:19.131Z",
+    "rank": "bf2188",
+    "pipeline_num": 2188,
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "modelUsed": "grok-4.20-0309-non-reasoning",
+        "tokens": 1969,
+        "ms": 5762,
+        "costUsd": 0.0098
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "gpt-5.5",
+        "tokens": 2527,
+        "ms": 26367,
+        "costUsd": 0.0505
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0603,
+    "duration_ms": 39521,
+    "raw_responses_count": 2
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-05-19T22:48:04.890Z",
+  "generated_at": "2026-05-20T04:50:02.373Z",
   "generated_label": "2026-05-10 morning re-run",
-  "reference_date": "2026-05-19",
+  "reference_date": "2026-05-20",
   "methodology": "Composite Priority Score (0-100) = Base Fit (40) + Equity/IPO Upside (25) + Freshness (20) + Tier Match (15)",
   "delta_from_prior_run": {
     "prior_run": "2026-05-10 (data/apply-now-recalibration-2026-05-10.md)",
@@ -28,7 +28,7 @@
     "rank_changes": "none — both new evals below 4.0 floor; 24-row ranked array unchanged",
     "delta_doc": "data/apply-now-recalibration-2026-05-10-morning.md"
   },
-  "total_rows": 28,
+  "total_rows": 32,
   "ranked": [
     {
       "rank": 1,
@@ -162,7 +162,7 @@
       "role": "Communications Lead, Claude Code",
       "eval_score": 4.6,
       "eval_date": "2026-04-27",
-      "status": "Evaluated",
+      "status": "Discarded",
       "report": "[044](reports/044-anthropic-comms-lead-claude-code-2026-04-27.md)",
       "factors": {
         "base_fit": 24,
@@ -175,7 +175,10 @@
       },
       "too_late_flag": false,
       "tactical_lead": "DEFER under Anthropic 1-active-app rule. Apply only if #48 (higher composite) is closed/rejected first.",
-      "notes_summary": "APPLY HIGH CONFIDENCE — Tier B primary archetype + heavy Claude Code user gate uniquely satisfied via public OSS career-ops fork (cv.md:148-155) + 4 Anthropic certs March 2026 (cv.md:190-193) + 17 yrs comms vs JD 8-12 ask. All 6 must-haves clear; only soft gap is external dev-media network (mitigabl"
+      "notes_summary": "APPLY HIGH CONFIDENCE — Tier B primary archetype + heavy Claude Code user gate uniquely satisfied via public OSS career-ops fork (cv.md:148-155) + 4 Anthropic certs March 2026 (cv.md:190-193) + 17 yrs comms vs JD 8-12 ask. All 6 must-haves clear; only soft gap is external dev-media network (mitigabl",
+      "_dropped": true,
+      "_dropped_at": "2026-05-20",
+      "_dropped_reason": "status=Discarded, score=4.6"
     },
     {
       "rank": 7,
@@ -263,7 +266,7 @@
       "role": "Senior/Staff AI Developer Advocate",
       "eval_score": 4.45,
       "eval_date": "2026-05-08",
-      "status": "Evaluated",
+      "status": "Discarded",
       "report": "[1140](reports/1140-mistral-2026-05-08.md)",
       "factors": {
         "base_fit": 18,
@@ -276,7 +279,10 @@
       },
       "too_late_flag": false,
       "tactical_lead": "FRESH 2-day-old Sr/Staff Dev Advocate — Tier B AI-native. No formal Mistral throttle. Apply early in week.",
-      "notes_summary": "Re-eval 2026-05-08 (3.9→4.45). APPLY HIGH — B+A2-AB hybrid sweet spot at top-3 European frontier lab; enterprise DevRel role with explicit visa sponsorship; comp likely $200K-$320K TC range; soft gaps on formal DevRel title + OSS history are coverable via Google xGE production AI work + career-ops p"
+      "notes_summary": "Re-eval 2026-05-08 (3.9→4.45). APPLY HIGH — B+A2-AB hybrid sweet spot at top-3 European frontier lab; enterprise DevRel role with explicit visa sponsorship; comp likely $200K-$320K TC range; soft gaps on formal DevRel title + OSS history are coverable via Google xGE production AI work + career-ops p",
+      "_dropped": true,
+      "_dropped_at": "2026-05-20",
+      "_dropped_reason": "status=Discarded, score=4.2"
     },
     {
       "rank": 11,
@@ -679,7 +685,7 @@
       "role": "Applied AI Architect, Industries",
       "eval_score": 4.3,
       "eval_date": "2026-05-19",
-      "status": "Evaluated",
+      "status": "Discarded",
       "report": "[2059](reports/1047-anthropic-2026-05-19.md)",
       "factors": {
         "base_fit": 15,
@@ -694,7 +700,10 @@
       "tactical_lead": "AUTO-ADDED by rebuild-apply-now-queue.mjs — manual curation pending (factors{} are defaults).",
       "notes_summary": "Re-eval 2026-05-19 (4.2→4.3). Batches API eval",
       "_auto_added": true,
-      "_auto_added_at": "2026-05-19"
+      "_auto_added_at": "2026-05-19",
+      "_dropped": true,
+      "_dropped_at": "2026-05-20",
+      "_dropped_reason": "status=Discarded, score=4.3"
     },
     {
       "rank": 28,
@@ -720,6 +729,106 @@
       "notes_summary": "RE-EVAL 2026-05-16 (Phase E): 4.1/5→4.1/5 (Δ0) · GATES: none fired · Decision: APPLY. Previous notes: Re-eval 2026-05-12 (3.4→4.1). Batches API eval",
       "_auto_added": true,
       "_auto_added_at": "2026-05-19"
+    },
+    {
+      "rank": 29,
+      "composite": 71,
+      "num": "2188",
+      "company": "LangChain",
+      "role": "Solutions Architect (Remote)",
+      "eval_score": 4.2,
+      "eval_date": "2026-05-19",
+      "status": "Evaluated",
+      "report": "[2188](reports/1023-langchain-2026-05-19.md)",
+      "factors": {
+        "base_fit": 15,
+        "equity_upside": 0,
+        "equity_stage": "unknown — set after manual review",
+        "freshness": 20,
+        "eval_age_days": 1,
+        "tier_match": 10,
+        "tier": "B"
+      },
+      "too_late_flag": false,
+      "tactical_lead": "AUTO-ADDED by rebuild-apply-now-queue.mjs — manual curation pending (factors{} are defaults).",
+      "notes_summary": "Re-eval 2026-05-19 (2.8→4.2). Batches API eval",
+      "_auto_added": true,
+      "_auto_added_at": "2026-05-20"
+    },
+    {
+      "rank": 30,
+      "composite": 73,
+      "num": "2194",
+      "company": "Anthropic",
+      "role": "Applied AI Architect, Industries",
+      "eval_score": 4.3,
+      "eval_date": "2026-05-19",
+      "status": "Evaluated",
+      "report": "[2194](reports/1046-anthropic-2026-05-19.md)",
+      "factors": {
+        "base_fit": 15,
+        "equity_upside": 0,
+        "equity_stage": "unknown — set after manual review",
+        "freshness": 20,
+        "eval_age_days": 1,
+        "tier_match": 10,
+        "tier": "B"
+      },
+      "too_late_flag": false,
+      "tactical_lead": "AUTO-ADDED by rebuild-apply-now-queue.mjs — manual curation pending (factors{} are defaults).",
+      "notes_summary": "Re-eval 2026-05-19 (3.6→4.3). Batches API eval",
+      "_auto_added": true,
+      "_auto_added_at": "2026-05-20"
+    },
+    {
+      "rank": 31,
+      "composite": 73,
+      "num": "2211",
+      "company": "Anthropic",
+      "role": "Applied AI Architect, Commercial",
+      "eval_score": 4.3,
+      "eval_date": "2026-05-19",
+      "status": "Evaluated",
+      "report": "[2211](reports/1085-anthropic-2026-05-19.md)",
+      "factors": {
+        "base_fit": 15,
+        "equity_upside": 0,
+        "equity_stage": "unknown — set after manual review",
+        "freshness": 20,
+        "eval_age_days": 1,
+        "tier_match": 10,
+        "tier": "B"
+      },
+      "too_late_flag": false,
+      "tactical_lead": "AUTO-ADDED by rebuild-apply-now-queue.mjs — manual curation pending (factors{} are defaults).",
+      "notes_summary": "Re-eval 2026-05-19 (3.4→4.3). Batches API eval",
+      "_auto_added": true,
+      "_auto_added_at": "2026-05-20"
+    },
+    {
+      "rank": 32,
+      "composite": 70,
+      "num": "2253",
+      "company": "Ema",
+      "role": "Solutions Architect",
+      "eval_score": 4.1,
+      "eval_date": "2026-05-20",
+      "status": "Evaluated",
+      "report": "[2253](reports/1050-ema-2026-05-20.md)",
+      "factors": {
+        "base_fit": 15,
+        "equity_upside": 0,
+        "equity_stage": "unknown — set after manual review",
+        "freshness": 20,
+        "eval_age_days": 0,
+        "tier_match": 10,
+        "tier": "C"
+      },
+      "too_late_flag": false,
+      "tactical_lead": "AUTO-ADDED by rebuild-apply-now-queue.mjs — manual curation pending (factors{} are defaults).",
+      "notes_summary": "Batches API eval",
+      "_auto_added": true,
+      "_auto_added_at": "2026-05-20"
     }
   ],
   "qa_cleanup": {
@@ -733,10 +842,10 @@
   },
   "last_rebuilt_by": "scripts/rebuild-apply-now-queue.mjs",
   "last_rebuilt_stats": {
-    "queueRowsBefore": 28,
-    "addedFromApps": 0,
-    "statusUpdates": 0,
-    "droppedFromApplyNow": 0,
-    "inSyncRows": 17
+    "queueRowsBefore": 31,
+    "addedFromApps": 1,
+    "statusUpdates": 1,
+    "droppedFromApplyNow": 1,
+    "inSyncRows": 16
   }
 }

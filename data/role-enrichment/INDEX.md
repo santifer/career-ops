@@ -43,3 +43,11 @@ Generated: 2026-05-10T20:50:32.228Z
 
 - **bf2110. Deepgram — Senior Developer Advocate** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L
 - **bf2181. Mistral AI — Senior/Staff DevRel** | toxicity 3/5 | recruiter unknown | relocation unknown | confidence L
+
+## Backfill rows 2188 (generated 2026-05-20T04:40:39.610Z)
+
+- **bf2188. LangChain — Solutions Architect (Remote)** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L
+
+## Backfill rows 2253 (generated 2026-05-20T04:50:18.140Z)
+
+- **bf2253. Ema — Solutions Architect** | toxicity 2/5 | recruiter unknown | relocation unknown | confidence L

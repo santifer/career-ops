@@ -1,0 +1,19 @@
+{
+  "report": {
+    "generated_at": "2026-05-20T04:55:26.444Z",
+    "apply_now_rows": 17,
+    "equity": {
+      "covered": 17,
+      "missing": 0,
+      "missing_rows": []
+    },
+    "health": {
+      "covered": 17,
+      "missing": 0,
+      "missing_rows": []
+    },
+    "overpay_companies_in_file": 16,
+    "enrichment_files": 33
+  },
+  "fix_commands": []
+}
