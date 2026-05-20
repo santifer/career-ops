@@ -651,7 +651,7 @@
       "role": "GTM Agentic Enablement Lead",
       "eval_score": 4.2,
       "eval_date": "2026-05-18",
-      "status": "Evaluated",
+      "status": "Discarded",
       "report": "[2067](reports/1030-elevenlabs-2026-05-18.md)",
       "factors": {
         "base_fit": 15,
@@ -666,7 +666,10 @@
       "tactical_lead": "AUTO-ADDED by rebuild-apply-now-queue.mjs — manual curation pending (factors{} are defaults).",
       "notes_summary": "Re-eval 2026-05-18 (0→4.2). Batches API eval",
       "_auto_added": true,
-      "_auto_added_at": "2026-05-19"
+      "_auto_added_at": "2026-05-19",
+      "_dropped": true,
+      "_dropped_at": "2026-05-20",
+      "_dropped_reason": "LinkedIn link expired (No longer accepting applications)"
     },
     {
       "rank": 27,
