@@ -9,6 +9,7 @@ import {
   extractTitleNear,
   platformOf,
   buildTitleFilter,
+  extractGlassdoorSubjectSignal,
 } from '../../lib/gmail-alert-parser.mjs';
 
 test('canonicalize strips LinkedIn comm prefix + tracking params', () => {
@@ -139,4 +140,44 @@ test('buildTitleFilter rejects negative keywords', () => {
   assert.equal(f('Software Engineering Intern'), false);
   assert.equal(f('Junior Backend Developer'), false);
   assert.equal(f(''), true);  // no title → no negative match → accept
+});
+
+test('extractGlassdoorSubjectSignal — company + role', () => {
+  assert.deepEqual(
+    extractGlassdoorSubjectSignal('InfluxData is hiring for Communications Manager. Apply Now.'),
+    { company: 'InfluxData', role: 'Communications Manager' }
+  );
+});
+
+test('extractGlassdoorSubjectSignal — company-only (no role)', () => {
+  assert.deepEqual(
+    extractGlassdoorSubjectSignal('G-P is hiring. Apply Now.'),
+    { company: 'G-P', role: '' }
+  );
+});
+
+test('extractGlassdoorSubjectSignal — multi-word company + role with comma', () => {
+  assert.deepEqual(
+    extractGlassdoorSubjectSignal('GE Vernova is hiring for Communications Manager, Public Affairs. Apply Now.'),
+    { company: 'GE Vernova', role: 'Communications Manager, Public Affairs' }
+  );
+});
+
+test('extractGlassdoorSubjectSignal — handles trailing whitespace', () => {
+  assert.deepEqual(
+    extractGlassdoorSubjectSignal('  Cisco is hiring.   Apply Now.   '),
+    { company: 'Cisco', role: '' }
+  );
+});
+
+test('extractGlassdoorSubjectSignal — non-Glassdoor subject returns null', () => {
+  assert.equal(extractGlassdoorSubjectSignal('Microsoft Senior Communications Manager'), null);
+  assert.equal(extractGlassdoorSubjectSignal('Mitchell: 18 new jobs'), null);
+  assert.equal(extractGlassdoorSubjectSignal(''), null);
+  assert.equal(extractGlassdoorSubjectSignal(null), null);
+  assert.equal(extractGlassdoorSubjectSignal(undefined), null);
+});
+
+test('extractGlassdoorSubjectSignal — degenerate single-char company rejected', () => {
+  assert.equal(extractGlassdoorSubjectSignal('X is hiring. Apply Now.'), null);
 });
