@@ -1,3 +1,5 @@
+> **⚠️ Superseded by [docs/superpowers/specs/2026-05-20-shivani-v3-pipeline-design.md](2026-05-20-shivani-v3-pipeline-design.md) (2026-05-20). This document describes the V2-era Shivani pipeline targeting Azure Data Engineer roles. The Shivani pipeline has since been re-canonicalized on the V3.1 prompt (Full Stack Java Developer @ CIBC/HCLTech/Accenture, Banking & Financial Services). Body retained for historical context only.**
+
 # Design: /shivani-resume-pipeline — Parallel Pipeline for Shivani Anghan
 
 **Date:** 2026-05-10
