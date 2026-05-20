@@ -20,6 +20,10 @@ data/logs/
 data/pending-diffs/*.md
 !data/pending-diffs/.gitkeep
 data/research-state.json
+# Gmail-poll history state (P0-3) — persists lastHistoryId + rolling
+# message-id cache for scripts/scan-email-poll.mjs. Regenerated on each
+# poll; safe to delete (triggers a bootstrap on next run).
+data/gmail-history-state.json
 # Health column coverage report (derived from applications.md — personal pipeline state)
 data/health-column-coverage.json
 # Role-enrichment validator telemetry (per-write JSONL log, soft-fail observation

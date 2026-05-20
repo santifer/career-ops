@@ -11,6 +11,11 @@
  * Required scopes:
  *   gmail.settings.basic   — manage filters (create/list/delete)
  *   gmail.labels           — manage labels (create/list/delete)
+ *   gmail.readonly         — read message bodies for the 15-min poll
+ *                            (scripts/scan-email-poll.mjs)
+ *
+ * If you ran this script before the gmail.readonly scope was added,
+ * re-run it — Google requires re-consent when scope set changes.
  *
  * Setup before running:
  *   1. https://console.cloud.google.com/ → create project "career-ops-gmail"
@@ -35,6 +40,7 @@ const SECRETS_PATH = join(homedir(), '.career-ops-secrets');
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.settings.basic',
   'https://www.googleapis.com/auth/gmail.labels',
+  'https://www.googleapis.com/auth/gmail.readonly',
 ];
 
 if (!existsSync(OAUTH_PATH)) {
