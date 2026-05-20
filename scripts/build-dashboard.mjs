@@ -36,6 +36,8 @@ import { getIndustryGapRanking, renderIndustryGapTable }           from '../lib/
 import { assessTravelTradeoff, renderTravelChip }                  from '../lib/travel-cap.mjs';
 import { computeStrategyCeiling, renderStrategyCard }              from '../lib/strategy-ceiling.mjs';
 import { renderEquitySlidersHtml }                                 from '../lib/equity-calculator.mjs';
+import { loadAllPolishStatus }                                     from '../lib/polish-status-loader.mjs';
+import { renderPolishBadge, renderPolishDcard, polishCardStyles }  from '../lib/polish-card-renderer.mjs';
 import { computeNextMoves }                                        from '../lib/next-moves.mjs';
 import { loadNextMovesInputs }                                     from '../lib/next-moves-inputs.mjs';
 import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/negotiation-playbook.mjs';
@@ -2705,11 +2707,18 @@ function formatTrackerNote(text) {
   return html;
 }
 
+// Module-level polish-status map, set by build() before renderRow is invoked.
+// Pre-loaded from data/apply-packs/<slug>/polish-orchestrator-summary.json files.
+let _polishStatusMap = { byRowId: new Map(), bySlug: new Map(), all: [] };
+
 function renderRow(r, idx) {
   const archetype = getReportArchetype(r.reportPath);
   const url = getReportUrl(r.reportPath);
   const finalRec = getReportFinalRecommendation(r.reportPath);
   const edge = getCompetitiveEdge(r.reportPath);
+  // Polish badge — small icon next to the score. Looks up by row.num.
+  const polishStat = _polishStatusMap.byRowId.get(Number(r.num)) || null;
+  const polishBadge = renderPolishBadge(polishStat);
   // Action cell: Apply (JD URL) + Report (formatted .html) + Email (compose draft) + Verify.
   // Phase G — Mitchell flagged that "no apply or verify options" were visible.
   // Apply button was previously implicit (clicking the role title opens the JD),
@@ -3088,7 +3097,7 @@ function renderRow(r, idx) {
   return `
 <tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${htmlEscape(idx)}" data-score="${r.score}" data-archetype="${htmlEscape(archetype)}" data-company="${htmlEscape(r.company.toLowerCase())}" data-status="${htmlEscape(r.status.toLowerCase())}" data-role="${htmlEscape(r.role.toLowerCase())}" data-equity="${htmlEscape(equityStage)}" data-search="${htmlEscape(searchIndex)}" onclick="toggleDetail('${idx}')">
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
-  <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span></td>
+  <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)} drill-trigger" data-drill="score:${htmlEscape(scoreRange)}" title="Click to see all roles in this score range — or open row for detail" tabindex="0" role="button" onclick="event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('score','${htmlEscape(scoreRange)}',event)}">${r.score.toFixed(1)}</span>${polishBadge}</td>
   <td class="base-cell">${baseCell}</td>
   <td class="company-cell" title="${htmlEscape(r.company)}"><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page" data-drill="company:${htmlEscape(companySlug)}"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
   <td class="role-cell" title="${htmlEscape(r.role)}">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="${htmlEscape(r.role)} — open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
@@ -3126,6 +3135,7 @@ function renderRow(r, idx) {
       ) : ''}
       ${r.notes ? `<div class="dcard dcard--tracker-note dcard-drill drill-trigger" data-drill="metric:${htmlEscape(String(r.num||''))}:tracker_note" role="button" tabindex="0" style="margin-bottom:8px;cursor:pointer" title="Open the full Why-this-score popout — score band, council consensus, what is backing this score, and what might block it" onclick="event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();window.drillIn('metric','${htmlEscape(String(r.num||''))}:tracker_note',event)}"><div class="dcard-label">Why this score <span class="dcard-explore-hint">▸ see more</span></div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
+      ${renderPolishDcard(polishStat, { rowId: String(r.num || idx), packSlug: polishStat?.pack_slug || '' })}
       ${tldrCard}
       ${matchCard}
       ${posCard}
@@ -3471,6 +3481,12 @@ async function build() {
   // Reset the per-build report cache so successive invocations (e.g. tests
   // that import build()) don't carry stale parsed reports across builds.
   _resetReportCache();
+
+  // Polish-status map (added 2026-05-19) — pre-loaded once per build so the
+  // apply-now row renderer + drawer can do fast O(1) lookups by row_id.
+  // Reads every data/apply-packs/<slug>/polish-orchestrator-summary.json.
+  // Stored at module scope so renderRow can access it without param threading.
+  _polishStatusMap = loadAllPolishStatus();
 
   if (!existsSync(dirname(OUT_PATH))) mkdirSync(dirname(OUT_PATH), { recursive: true });
   const reportsHtmlDir = join(dirname(OUT_PATH), 'reports');
@@ -7729,6 +7745,7 @@ async function build() {
   @media (max-width: 640px) { .detail-grid { grid-template-columns: 1fr; } }
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
+  ${polishCardStyles()}
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
   /* 2026-05-18 Wave B: static (non-drill) cards never show a pointer or
      hover affordance — they're display-only. Kept separate from .dcard-drill
@@ -17075,6 +17092,73 @@ function drillIn(type, id, evt) {
 }
 window.drillIn = drillIn;
 window.drillInRegistry = drillInRegistry;
+
+// ── Polish-status action handlers (2026-05-19) ──────────────────────────
+// Wired by the dcard--polish action buttons rendered via
+// lib/polish-card-renderer.mjs#renderPolishDcard.
+window.runPolishNow = async function(rowId, packSlug) {
+  if (!confirm('Run polish now on row #' + rowId + '? Cost: up to $50 over ~30 min.')) return;
+  try {
+    const r = await fetch('/api/apply-pack-polish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row: rowId, slug: packSlug, force_full_burn: false }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      alert('Polish started for row #' + rowId + '. Job ID: ' + (j.jobId || 'unknown') + '. Check back in ~20 min — refresh dashboard for status.');
+    } else {
+      alert('Polish failed to start: ' + (j.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Polish API call failed: ' + e.message);
+  }
+};
+window.repolishRow = async function(rowId, packSlug, forceFullBurn) {
+  const msg = forceFullBurn
+    ? 'Re-polish row #' + rowId + ' with --no-early-abandon? Forces full burn (up to $50, ~40 min). Use when you suspect early-abandon was wrong.'
+    : 'Re-polish row #' + rowId + '?';
+  if (!confirm(msg)) return;
+  try {
+    const r = await fetch('/api/apply-pack-polish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row: rowId, slug: packSlug, force_full_burn: !!forceFullBurn }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      alert('Re-polish started for row #' + rowId + '. Job ID: ' + (j.jobId || 'unknown'));
+    } else {
+      alert('Re-polish failed to start: ' + (j.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Re-polish API call failed: ' + e.message);
+  }
+};
+window.openBulletLedger = function(packSlug) {
+  const path = 'apply-pack/' + packSlug + '/cv-tailored.md';
+  const NL = String.fromCharCode(10);
+  alert('Edit this file to rewrite the polish source:' + NL + NL + path + NL + NL + 'Open in your editor (Cursor/VS Code).');
+};
+window.skipRowFromPolish = async function(rowId, packSlug) {
+  if (!confirm('Mark row #' + rowId + ' as Discarded? Polish could not save it and JD-fit is not there.')) return;
+  try {
+    const r = await fetch('/api/dismiss-row', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row: rowId, reason: 'polish-rejected', tag: 'polish_couldnt_save' }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      alert('Row #' + rowId + ' marked Discarded. Reload dashboard to see updated table.');
+      location.reload();
+    } else {
+      alert('Failed to dismiss row: ' + (j.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Dismiss API call failed: ' + e.message);
+  }
+};
 
 // ── Wave C-A Item 2: company names in banners + drawer headers ───────────
 // Scan banner live-ticker gets data-drill on update via MutationObserver.

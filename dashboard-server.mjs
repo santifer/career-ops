@@ -6526,6 +6526,12 @@ async function generatePack(){
       if (Number.isFinite(Number(parsed.targetConfidence))) args.push('--target-confidence', String(Number(parsed.targetConfidence)));
       if (Number.isFinite(Number(parsed.costCap))) args.push('--cost-cap', String(Number(parsed.costCap)));
       if (parsed.noCache === true) args.push('--no-cache');
+      // 2026-05-19 — extension: dashboard polish drawer's "Re-polish (force full)"
+      // action passes force_full_burn=true to disable the cost-saving early-abandon
+      // policy. Also accepts the more explicit no_early_abandon flag.
+      if (parsed.force_full_burn === true || parsed.no_early_abandon === true) {
+        args.push('--no-early-abandon');
+      }
       const { jobId, logPath } = _alphaSpawn({ kind: 'polish', args });
       return json({ ok: true, jobId, log_path: logPath, stream_url: `/api/apply-pack-polish-stream/${jobId}` });
     });

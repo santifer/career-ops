@@ -33,7 +33,7 @@ import { buildOutreachMailto } from '../lib/mailto-helpers.mjs';
 // 2026-05-17 — inline compute below (mirrors dashboard-server.mjs's
 // computeRecruiterPipelineDensity so heartbeat doesn't depend on the
 // dashboard server being running).
-import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert, renderCdpAuthHealthSection } from '../lib/heartbeat-system-banner.mjs';
+import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert, renderCdpAuthHealthSection, renderPolishSummarySection } from '../lib/heartbeat-system-banner.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -657,6 +657,12 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   let cdpAuthBannerHtml = '';
   try { cdpAuthBannerHtml = renderCdpAuthHealthSection({ format: 'html' }) || ''; } catch {}
 
+  // Polish summary — last 24h of apply-pack-polish runs (added 2026-05-19).
+  // Self-suppresses on zero runs; counts by verdict bucket (approved /
+  // needs-review / rejected / abandoned) with deep-link row IDs.
+  let polishSummaryHtml = '';
+  try { polishSummaryHtml = (await renderPolishSummarySection({ format: 'html', sinceHours: 24 })) || ''; } catch {}
+
   // Master CV freshness banner (audit Item L 2026-05-18) — surfaces today's
   // master PDF path or a re-render reminder. Renders inline so it stacks with
   // the other system-status signals already in contextSectionsHtml.
@@ -717,10 +723,12 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
 
   // Combine §6b context signals into one contextSectionsHtml blob
   // (cdp-auth banner FIRST — if it renders, it's an alarm that demands action
-  // ahead of normal context; runway alert + system banner + discard pattern follow)
+  // ahead of normal context; runway alert + polish summary + system banner +
+  // discard pattern follow)
   let contextSectionsHtml = '';
   if (cdpAuthBannerHtml) contextSectionsHtml += cdpAuthBannerHtml;
   if (runwayAlertHtml) contextSectionsHtml += runwayAlertHtml;
+  if (polishSummaryHtml) contextSectionsHtml += polishSummaryHtml;
   if (systemBannerHtml) contextSectionsHtml += systemBannerHtml;
   if (cvFreshnessHtml) contextSectionsHtml += cvFreshnessHtml;
   if (discardSectionHtml) contextSectionsHtml += discardSectionHtml;
