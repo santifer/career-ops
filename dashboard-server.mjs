@@ -50,16 +50,137 @@ import { guessCompany as _guessCompanyFromUrl } from './lib/ats-utils.mjs';
 // P1-6 / P1-5 — SQLite job-run ledger + scraper health widget
 import { initSchema as _ledgerInitSchema, lastFinishedRun, recentRuns } from './lib/job-runs-ledger.mjs';
 
-// Registry of tracked scraper/scheduler jobs with expected cadence.
-// Add new jobs here; the /api/job-runs-status endpoint reads this list.
-const TRACKED_JOBS = [
-  { name: 'portal-scan',       expected_cadence_minutes: 1440 },
-  { name: 'scrape-frequent',   expected_cadence_minutes: 240  },
-  { name: 'liveness-sweep',    expected_cadence_minutes: 1440 },
-  { name: 'scan-hn-hiring',    expected_cadence_minutes: 1440 },
-  { name: 'heartbeat',         expected_cadence_minutes: 1440 },
+// Registry of tracked scheduler jobs with expected cadence.
+//
+// Originally a hardcoded 6-entry list of scrapers; expanded 2026-05-19 to
+// auto-discover ALL scheduled jobs from scripts/launchd/com.mitchell.career-ops.*.plist
+// so the chip strip reflects the full pipeline (33 jobs). Hardcoded entries
+// in HARDCODED_TRACKED_JOBS still apply for jobs that don't have a plist
+// (e.g., heartbeat-evening — fired by a wrapper, not directly by launchd).
+const HARDCODED_TRACKED_JOBS = [
+  // Jobs without a dedicated plist (fired by wrappers / other jobs).
   { name: 'heartbeat-evening', expected_cadence_minutes: 1440 },
 ];
+
+// Plist labels that don't represent "scheduled jobs" (long-lived daemons,
+// debug sessions, or pure delivery wrappers). Excluded from auto-discovery.
+const _JRS_DAEMON_LABELS = new Set([
+  'dashboard-server',
+  'cloudflared',
+  'cloudflared-staging',
+  'cloudflared-staging-nohup-wrapper',
+  'telegram-bot',
+  'chrome-debugging',
+  'dashboard-phase3',
+]);
+
+// Map plist label → in-script startRun() job_name when they differ. The
+// chip strip uses the IN-SCRIPT name so it matches the ledger rows actually
+// being written. Without this, the auto-discovered plist label would render
+// a chip that nothing ever writes to (stuck on 'unknown' forever).
+const _JRS_LABEL_ALIASES = {
+  // scan plist invokes scripts/scan-unattended.mjs which calls
+  // startRun('portal-scan') — main's reliability-foundation naming.
+  'scan': 'portal-scan',
+};
+
+/**
+ * Discover scheduled jobs from scripts/launchd/com.mitchell.career-ops.*.plist.
+ * Returns [{ name, expected_cadence_minutes }, ...] merged with the hardcoded
+ * fallback list (auto-discovery wins on name collision).
+ *
+ * Parse rules:
+ *   StartInterval=N seconds       → N/60 minutes
+ *   StartCalendarInterval daily   → 1440 (daily)
+ *   StartCalendarInterval weekly  → 10080 (weekly)
+ *   StartCalendarInterval array N → 1440/N (e.g., 4 entries → every 6h = 360 min)
+ *   StartCalendarInterval Day+Mo  → 525600 (yearly, sparse)
+ *
+ * Cached for 5 min to avoid re-reading 40 plists on every endpoint hit.
+ */
+let _jrsTrackedJobsCache = null;
+function _jrsDiscoverTrackedJobs() {
+  if (_jrsTrackedJobsCache && Date.now() - _jrsTrackedJobsCache.ts < 5 * 60 * 1000) {
+    return _jrsTrackedJobsCache.jobs;
+  }
+  const plistDir = join(ROOT, 'scripts', 'launchd');
+  const merged = new Map();
+  try {
+    if (existsSync(plistDir)) {
+      for (const file of readdirSync(plistDir)) {
+        if (!file.endsWith('.plist')) continue;
+        if (!file.startsWith('com.mitchell.career-ops.')) continue;
+        const rawLabel = file.replace(/^com\.mitchell\.career-ops\./, '').replace(/\.plist$/, '');
+        if (_JRS_DAEMON_LABELS.has(rawLabel)) continue;
+        const label = _JRS_LABEL_ALIASES[rawLabel] || rawLabel;
+        try {
+          const xml = readFileSync(join(plistDir, file), 'utf-8');
+          let cadenceMinutes = null;
+
+          const intervalMatch = xml.match(/<key>StartInterval<\/key>\s*<integer>(\d+)<\/integer>/);
+          if (intervalMatch) {
+            cadenceMinutes = Math.max(1, Math.round(Number(intervalMatch[1]) / 60));
+          } else {
+            const calMatch = xml.match(/<key>StartCalendarInterval<\/key>\s*((?:<array>[\s\S]*?<\/array>)|(?:<dict>[\s\S]*?<\/dict>))/);
+            if (calMatch) {
+              const firstDict = calMatch[1].match(/<dict>([\s\S]*?)<\/dict>/);
+              const inner = firstDict ? firstDict[1] : '';
+              const hasWeekday = /<key>Weekday<\/key>/.test(inner);
+              const hasMonth = /<key>Month<\/key>/.test(inner);
+
+              if (hasMonth) {
+                cadenceMinutes = 525600;       // yearly
+              } else if (hasWeekday) {
+                cadenceMinutes = 10080;        // weekly
+              } else {
+                // Daily — possibly multiple fires per day. Compute the
+                // minimum gap between sorted Hour values (with wraparound)
+                // rather than 1440/N — handles uneven schedules like
+                // scrape-frequent (06/10/14/18/22 → 4h cadence, not 4.8h).
+                const hours = [];
+                const dictRe = /<dict>([\s\S]*?)<\/dict>/g;
+                let dm;
+                while ((dm = dictRe.exec(calMatch[1])) !== null) {
+                  const hm = dm[1].match(/<key>Hour<\/key>\s*<integer>(\d+)<\/integer>/);
+                  if (hm) hours.push(Number(hm[1]));
+                }
+                if (hours.length >= 2) {
+                  hours.sort((a, b) => a - b);
+                  let minGap = 24;
+                  for (let i = 1; i < hours.length; i++) {
+                    minGap = Math.min(minGap, hours[i] - hours[i - 1]);
+                  }
+                  // wraparound: last → first across midnight
+                  minGap = Math.min(minGap, 24 - hours[hours.length - 1] + hours[0]);
+                  cadenceMinutes = Math.max(1, Math.round(minGap * 60));
+                } else {
+                  cadenceMinutes = 1440; // single daily fire
+                }
+              }
+            }
+          }
+
+          if (cadenceMinutes != null) {
+            merged.set(label, { name: label, expected_cadence_minutes: cadenceMinutes });
+          }
+        } catch { /* skip unparseable plists */ }
+      }
+    }
+  } catch { /* plist dir missing — fall back to hardcoded list */ }
+
+  // Hardcoded fallback wins for jobs not represented by a plist (e.g.
+  // heartbeat-evening fired by a wrapper, not directly by launchd).
+  for (const j of HARDCODED_TRACKED_JOBS) {
+    if (!merged.has(j.name)) merged.set(j.name, j);
+  }
+
+  const jobs = Array.from(merged.values()).sort((a, b) => a.name.localeCompare(b.name));
+  _jrsTrackedJobsCache = { jobs, ts: Date.now() };
+  return jobs;
+}
+// Expose as a function — call _trackedJobs() wherever the endpoint needs
+// the live list. 5-min cache inside _jrsDiscoverTrackedJobs() keeps this cheap.
+function _trackedJobs() { return _jrsDiscoverTrackedJobs(); }
 
 // Initialise the SQLite schema eagerly so the DB exists even before any job
 // has run (the dashboard widget renders 'unknown' for all jobs initially).
@@ -5345,7 +5466,7 @@ const server = createServer((req, res) => {
   if (url === '/api/job-runs-status') {
     try {
       const nowMs = Date.now();
-      const jobs = TRACKED_JOBS.map(({ name, expected_cadence_minutes }) => {
+      const jobs = _trackedJobs().map(({ name, expected_cadence_minutes }) => {
         const last = lastFinishedRun(name);
         if (!last) {
           return { name, expected_cadence_minutes, last_finished_at: null, last_status: null, last_urls_found: null, state: 'unknown' };

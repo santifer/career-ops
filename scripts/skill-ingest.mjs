@@ -40,6 +40,9 @@ import { spawnSync } from 'child_process';
 import 'dotenv/config';
 
 import { WeeklyIngestSchema, getJsonSchema } from '../lib/skill-ingest-schema.mjs';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('skill-ingest');
 
 const __filename = fileURLToPath(import.meta.url);
 const ROOT = resolve(__filename, '../..');

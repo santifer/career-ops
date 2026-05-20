@@ -11439,14 +11439,13 @@ async function build() {
        below fetches /api/job-runs-status on load and updates them live.
        Click opens a modal with the last 10 runs for that job. -->
   <div class="job-runs-strip" id="job-runs-strip" role="status" aria-label="Scraper job health">
-    <span class="job-runs-strip-label">Scrapers</span>
+    <span class="job-runs-strip-label">Jobs</span>
     <div id="job-runs-chips" style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--text-3)">Loading&#x2026;</span>
     </div>
   </div>
 
   <main id="main">
-
 
   <!-- Cmd-K command palette -->
   <div id="cmdk-backdrop" role="dialog" aria-modal="true" aria-label="Command palette" onclick="closeCmdK()">

@@ -50,6 +50,9 @@ import {
   archiveReverseOrphanHtmls, archiveOrphanApplyPacks,
   archiveStaleHmIntel, sweepTmpLeaks,
 } from '../../lib/system-health-cleanup.mjs';
+import { installRunRecord } from '../../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('system-maintainer');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = findRepoRoot(__dirname);

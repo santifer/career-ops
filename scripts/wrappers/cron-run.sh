@@ -31,6 +31,25 @@ mkdir -p "$LOG_DIR"
 
 ts() { date -u +%FT%TZ; }
 
+# ── Job-runs ledger (P1-6) ─────────────────────────────────────────────────
+# Open a 'running' row up front; close it at every exit path below. Errors
+# silenced so a ledger glitch never breaks the underlying job.
+LEDGER_NODE="${LEDGER_NODE:-/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node}"
+LEDGER_CLI="$REPO/scripts/ledger-cli.mjs"
+RUN_ID=""
+if [[ -x "$LEDGER_NODE" && -f "$LEDGER_CLI" ]]; then
+    RUN_ID="$("$LEDGER_NODE" "$LEDGER_CLI" start "$LABEL" 2>/dev/null || true)"
+fi
+
+ledger_finish() {
+    local status="$1"
+    local urls="${2:-}"
+    local err="${3:-}"
+    if [[ -n "$RUN_ID" && -x "$LEDGER_NODE" && -f "$LEDGER_CLI" ]]; then
+        "$LEDGER_NODE" "$LEDGER_CLI" finish "$RUN_ID" "$status" "$urls" "$err" >/dev/null 2>&1 || true
+    fi
+}
+
 # ── Cadence guard ──────────────────────────────────────────────────────────
 case "$GUARD" in
     always) ;;
@@ -39,6 +58,7 @@ case "$GUARD" in
         # Force base-10 interpretation to avoid octal parsing of leading-zero weeks
         if (( 10#$WEEK % 2 != 0 )); then
             echo "$(ts) [SKIP] biweekly-even: ISO week $WEEK is odd" >> "$LOG"
+            ledger_finish skipped "" "biweekly-even cadence guard"
             exit 0
         fi
         ;;
@@ -46,6 +66,7 @@ case "$GUARD" in
         WEEK=$(date +%V)
         if (( 10#$WEEK % 2 == 0 )); then
             echo "$(ts) [SKIP] biweekly-odd: ISO week $WEEK is even" >> "$LOG"
+            ledger_finish skipped "" "biweekly-odd cadence guard"
             exit 0
         fi
         ;;
@@ -53,11 +74,13 @@ case "$GUARD" in
         DAY=$(date +%d)
         if (( 10#$DAY > 7 )); then
             echo "$(ts) [SKIP] monthly-first: day-of-month $DAY > 7" >> "$LOG"
+            ledger_finish skipped "" "monthly-first cadence guard"
             exit 0
         fi
         ;;
     *)
         echo "$(ts) [ERROR] unknown cadence-guard: $GUARD" >> "$LOG"
+        ledger_finish fail "" "unknown cadence guard: $GUARD"
         exit 2
         ;;
 esac
@@ -73,14 +96,24 @@ if [[ "${1:-}" == "node" && -n "${2:-}" ]]; then
     fi
     if [[ ! -f "$SCRIPT" ]]; then
         echo "$(ts) [SKIP] target script not found: $SCRIPT (likely awaiting overnight haul deploy)" >> "$LOG"
+        ledger_finish skipped "" "target script not found"
         exit 0
     fi
 fi
 
 # ── Execute ────────────────────────────────────────────────────────────────
-cd "$REPO" || { echo "$(ts) [ERROR] cd $REPO failed" >> "$LOG"; exit 3; }
+cd "$REPO" || {
+    echo "$(ts) [ERROR] cd $REPO failed" >> "$LOG"
+    ledger_finish fail "" "cd $REPO failed"
+    exit 3
+}
 echo "$(ts) [START] $LABEL: $*" >> "$LOG"
 "$@" >> "$LOG" 2>&1
 RC=$?
 echo "$(ts) [END] $LABEL rc=$RC" >> "$LOG"
+if [[ $RC -eq 0 ]]; then
+    ledger_finish ok "" ""
+else
+    ledger_finish fail "" "exit code $RC"
+fi
 exit $RC

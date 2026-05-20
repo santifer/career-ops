@@ -18,6 +18,9 @@
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { installRunRecord } from './lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('community-scan');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;

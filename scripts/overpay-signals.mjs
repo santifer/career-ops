@@ -24,6 +24,9 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { spawnSync } from 'child_process';
 import { OPUS } from '../lib/models.mjs';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('overpay-signals');
 
 const ROOT = process.cwd();
 const SIGNALS_DIR = join(ROOT, 'data/overpay-signals');

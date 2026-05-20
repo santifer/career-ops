@@ -9,6 +9,9 @@
 import { execSync } from 'child_process';
 import { writeFileSync, appendFileSync } from 'fs';
 import path from 'path';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('weekly-light');
 
 const root = '/Users/mitchellwilliams/Documents/career-ops';
 const logPath = path.join(root, 'data/logs/weekly-light.out');

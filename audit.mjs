@@ -15,6 +15,9 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from '
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { installRunRecord } from './lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('audit');
 
 // Load .env for Telegram credentials (non-critical — fails silently)
 try {
