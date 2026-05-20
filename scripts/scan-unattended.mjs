@@ -9,8 +9,11 @@ import { join } from 'path';
 import { hc } from '../lib/healthchecks-ping.mjs';
 import { startRun, finishRun } from '../lib/job-runs-ledger.mjs';
 
-const PROJECT_DIR = '/Users/mitchellwilliams/Documents/career-ops';
-const NODE_BIN = '/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node';
+// P1-12 portability: env overrides let GH Actions Linux runners reuse this
+// script without forking it. Local launchd plists leave the env unset →
+// macOS defaults below apply (status quo).
+const PROJECT_DIR = process.env.CAREER_OPS_DIR || '/Users/mitchellwilliams/Documents/career-ops';
+const NODE_BIN = process.env.CAREER_OPS_NODE || '/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node';
 const LOG_DIR = join(PROJECT_DIR, 'data/logs');
 const DATE = new Date().toISOString().slice(0, 10);
 const LOG_PATH = join(LOG_DIR, `scan-${DATE}.log`);
@@ -31,7 +34,7 @@ function run(label, args) {
   const result = spawnSync(NODE_BIN, args, {
     cwd: PROJECT_DIR,
     encoding: 'utf-8',
-    env: { ...process.env, PATH: `/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:${process.env.PATH || ''}` },
+    env: { ...process.env, PATH: `${process.env.CAREER_OPS_NODE_BIN_DIR || '/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin'}:${process.env.PATH || ''}` },
   });
   if (result.stdout) log(result.stdout.trimEnd());
   if (result.stderr) log('STDERR: ' + result.stderr.trimEnd());

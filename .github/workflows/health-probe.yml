@@ -1,0 +1,130 @@
+# P1-12 — external dead-man's switch for dashboard-server + telegram-bot.
+#
+# Both are persistent KeepAlive processes — exactly the failure mode the
+# Tahoe bug bites (per memory/project_launchd_keepalive_tahoe_bug.md). They
+# cannot be hosted on GitHub Actions because Actions only runs time-bounded
+# jobs. So this workflow does NOT replace launchd; it monitors what launchd
+# is supposed to be running and alerts the moment the surface goes dark.
+#
+# Compared to lib/healthchecks-ping.mjs (which the local dashboard-server +
+# telegram-bot could be modified to call on a setInterval): this workflow
+# probes from OUTSIDE the Mac, so it catches the "whole machine is asleep /
+# crashed / quarantined" class that an in-process ping can't.
+#
+# REQUIRED SECRETS:
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — alerting
+#   HEALTHCHECKS_DASHBOARD_SERVER_PING — (optional) hc-ping for dashboard
+#   HEALTHCHECKS_TELEGRAM_BOT_PING     — (optional) hc-ping for bot
+
+name: health-probe
+
+on:
+  schedule:
+    # Every 15 min. Combined with portal-scan, total is ~9k min/month — over
+    # the 2k free tier. See data/p1-12-migration-runbook.md § Budget for the
+    # recommended fix (Healthchecks's own uptime monitor at zero GH cost).
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: health-probe
+  cancel-in-progress: true
+
+jobs:
+  probe-dashboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Probe staging-dashboard.careers-ops.com
+        id: probe
+        # Staging origin bypasses CF Access (no service token burn). Same
+        # dashboard-server backend, same launchd job — if staging is up, prod
+        # is up. If prod is down via CF specifically, that's a CF Access /
+        # tunnel issue, not the launchd job.
+        run: |
+          URL="https://staging-dashboard.careers-ops.com/"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$URL" || echo "000")
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          if [ "$CODE" = "200" ]; then
+            echo "✓ dashboard responded 200"
+          else
+            echo "::error::dashboard returned HTTP $CODE (expected 200)"
+            exit 1
+          fi
+
+      - name: Ping Healthchecks (success)
+        if: success() && env.HC != ''
+        env:
+          HC: ${{ secrets.HEALTHCHECKS_DASHBOARD_SERVER_PING }}
+        run: curl -fsS --max-time 10 -X POST "$HC" || true
+
+      - name: Ping Healthchecks (failure)
+        if: failure() && env.HC != ''
+        env:
+          HC: ${{ secrets.HEALTHCHECKS_DASHBOARD_SERVER_PING }}
+        run: curl -fsS --max-time 10 -X POST "$HC/fail" || true
+
+      - name: Telegram alert on failure
+        if: failure()
+        env:
+          BOT: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CODE: ${{ steps.probe.outputs.code }}
+        run: |
+          if [ -n "$BOT" ] && [ -n "$CHAT" ]; then
+            MSG="🔴 dashboard-server down — HTTP ${CODE} from staging-dashboard. Likely Tahoe KeepAlive miss. Fix: launchctl start com.mitchell.career-ops.dashboard-server"
+            curl -fsS --max-time 10 -X POST "https://api.telegram.org/bot${BOT}/sendMessage" \
+              -d "chat_id=${CHAT}" \
+              -d "text=${MSG}" || true
+          fi
+
+  probe-telegram-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Verify Telegram bot token is responsive
+        # getMe only verifies Telegram's API accepts the token — it cannot
+        # detect that the LOCAL bot binary has died (Telegram doesn't know).
+        # For true local-process liveness, telegram-bot.mjs should call
+        # lib/healthchecks-ping.mjs's hc('TELEGRAM_BOT_LOCAL').success() on
+        # a setInterval; see data/p1-12-migration-runbook.md for the snippet.
+        env:
+          BOT: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          if [ -z "$BOT" ]; then
+            echo "::warning::TELEGRAM_BOT_TOKEN secret not set; skipping probe"
+            exit 0
+          fi
+          RESP=$(curl -s --max-time 10 "https://api.telegram.org/bot${BOT}/getMe")
+          if echo "$RESP" | grep -q '"ok":true'; then
+            echo "✓ Telegram bot token valid"
+          else
+            echo "::error::Telegram bot getMe failed: $RESP"
+            exit 1
+          fi
+
+      - name: Ping Healthchecks
+        if: always() && env.HC != ''
+        env:
+          HC: ${{ secrets.HEALTHCHECKS_TELEGRAM_BOT_PING }}
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            curl -fsS --max-time 10 -X POST "$HC" || true
+          else
+            curl -fsS --max-time 10 -X POST "$HC/fail" || true
+          fi
+
+      - name: Telegram alert on failure
+        if: failure()
+        env:
+          BOT: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -n "$BOT" ] && [ -n "$CHAT" ]; then
+            curl -fsS --max-time 10 -X POST "https://api.telegram.org/bot${BOT}/sendMessage" \
+              -d "chat_id=${CHAT}" \
+              -d "text=⚠️ Telegram bot token check failed: ${URL}" || true
+          fi

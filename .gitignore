@@ -213,3 +213,8 @@ data/contact-enrichment-paused.md
 data/contact-enrichment-month-1-audit.md
 data/contact-enrichment-weights.diff
 data/builder-evolution-popovers/
+
+# launchd-wrapper (P1-8) runtime state — per-host rolling history, regenerated
+# on every run; would be a constant-diff committable mess.
+data/launchd-wrapper-state.json
+data/launchd-wrapper-state.json.tmp
