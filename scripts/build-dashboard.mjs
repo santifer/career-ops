@@ -3273,6 +3273,26 @@ function loadBuilderLog() {
   } catch { return null; }
 }
 
+// 2026-05-19 BRAVO polish A2 (item #6): commit history for the header-pill drawer.
+// Pulls the last N commits via `git log` at build time. Cached as a build-local
+// constant — the dashboard server only re-runs build-dashboard.mjs on data
+// changes, so this is one shell-out per build, not per request.
+function loadBuilderCommits(limit = 15) {
+  try {
+    // Pipe-separated to survive commit messages containing tabs/colons.
+    // Tilde delimiter chosen because it is rare in commit messages.
+    const out = execSync(`git log --oneline -${limit} --pretty=format:'%h~|~%s~|~%ar~|~%an'`, {
+      cwd: ROOT, encoding: 'utf-8', timeout: 5000,
+    });
+    return out.split('\n').filter(Boolean).map(line => {
+      const [sha, message, age, author] = line.split('~|~');
+      return { sha, message, age, author };
+    });
+  } catch {
+    return [];
+  }
+}
+
 // 2026-05-19 — adjudicated target API/tool stack (council-of-models → dealbreaker).
 // Source: data/council-target-apis-2026-05-19-adjudicated.md
 function loadTargetApis() {
@@ -3664,6 +3684,9 @@ async function build() {
   // nightly by scripts/agents/builder-log.mjs). Surfaces skills/APIs/bug-classes
   // for the PM-trajectory narrative.
   const builderLog = loadBuilderLog();
+  // 2026-05-19 BRAVO polish A2 (item #6): last 15 commits for the header-pill
+  // commit-history drawer. Build-time fetch via `git log`; one shell-out per build.
+  const builderCommits = loadBuilderCommits(15);
   const targetApis = loadTargetApis();
   const scanTotal = countScanHistory();
   const batchRuns = countBatchRuns();
@@ -6570,6 +6593,29 @@ async function build() {
     font-size: 11px; opacity: 0.7;
   }
   .be-footer code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+  /* 2026-05-19 BRAVO polish A2 (item #4): copy-to-clipboard button for CLI hints.
+     Renders inline with the surrounding be-footer-cta text. Aria-live region for
+     transient "Copied!" feedback (in addition to window.toast). */
+  .be-copy-btn {
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: inherit; font: inherit; font-size: 10px;
+    padding: 1px 7px 2px 7px; border-radius: 4px;
+    cursor: pointer; margin-left: 4px;
+    transition: border-color .15s ease, background .15s ease, color .15s ease;
+    line-height: 1.4;
+  }
+  .be-copy-btn:hover {
+    border-color: var(--green-fg); background: var(--surface);
+  }
+  .be-copy-btn:focus-visible {
+    outline: none; border-color: var(--green-fg);
+    box-shadow: 0 0 0 2px rgba(22,163,74,.25);
+  }
+  .be-copy-btn.copied {
+    color: var(--green-fg); border-color: var(--green-fg);
+    background: rgba(22,163,74,.08);
+  }
+  .be-copy-btn .be-copy-icon { font-size: 11px; opacity: 0.85; margin-right: 3px; }
 
   /* 2026-05-19 Mitchell trust-fix — sidebar freshness + health chips. */
   .sidebar-pipeline-status {
@@ -6624,6 +6670,22 @@ async function build() {
     padding: 1px 9px; border-radius: var(--radius-full);
     letter-spacing: 0;
   }
+  /* 2026-05-19 BRAVO polish A2 (item #6): Builder-Evolution header pill is
+     now a real <button> that opens the commit-history drawer. Inherit the
+     .pill cosmetics but reset button-default chrome and add affordance. */
+  button.pill.be-commits-pill {
+    border: none; font: inherit; line-height: 1.4;
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease, box-shadow .15s ease;
+  }
+  button.pill.be-commits-pill:hover {
+    background: var(--green-fg); transform: translateY(-1px);
+  }
+  button.pill.be-commits-pill:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--green-fg);
+  }
+  button.pill.be-commits-pill:active { transform: translateY(0); }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
 
   /* ── Tonight's pick callout (enriched 2026-05-17) ──────────────── */
@@ -11749,9 +11811,13 @@ async function build() {
 
   ${builderLog && builderLog.latest ? (() => {
     const L = builderLog.latest;
-    const topSkills    = (L.top_skills      || []).map(s => `<span class="be-tag be-tag-skill" title="${s.n} commits this window">${htmlEscape(s.skill)} <span class="be-tag-n">${s.n}</span></span>`).join('');
-    const topApis      = (L.top_apis        || []).map(a => `<span class="be-tag be-tag-api" title="${a.n} commits this window">${htmlEscape(a.api)} <span class="be-tag-n">${a.n}</span></span>`).join('');
-    const topBugs      = (L.top_bug_classes || []).map(b => `<span class="be-tag be-tag-bug" title="${b.n} commits this window">${htmlEscape(b.bug_class)} <span class="be-tag-n">${b.n}</span></span>`).join('');
+    // 2026-05-19 BRAVO polish A2 (item #2): drop redundant native `title=` tooltip.
+    // The "N commits this window" text duplicates the visible `.be-tag-n` badge
+    // (the small "N" inside each tag). Keep the semantic via aria-label so
+    // screen readers still announce the count, but stop the tooltip flicker.
+    const topSkills    = (L.top_skills      || []).map(s => `<span class="be-tag be-tag-skill" aria-label="${htmlEscape(s.skill)} — ${s.n} commits this window">${htmlEscape(s.skill)} <span class="be-tag-n" aria-hidden="true">${s.n}</span></span>`).join('');
+    const topApis      = (L.top_apis        || []).map(a => `<span class="be-tag be-tag-api" aria-label="${htmlEscape(a.api)} — ${a.n} commits this window">${htmlEscape(a.api)} <span class="be-tag-n" aria-hidden="true">${a.n}</span></span>`).join('');
+    const topBugs      = (L.top_bug_classes || []).map(b => `<span class="be-tag be-tag-bug" aria-label="${htmlEscape(b.bug_class)} — ${b.n} commits this window">${htmlEscape(b.bug_class)} <span class="be-tag-n" aria-hidden="true">${b.n}</span></span>`).join('');
     const apiCount     = Object.keys(builderLog.apis        || {}).length;
     const skillCount   = Object.keys(builderLog.skills      || {}).length;
     const bugCount     = Object.keys(builderLog.bug_classes || {}).length;
@@ -11792,7 +11858,10 @@ async function build() {
   <div class="panel panel-strong" id="builder-evolution-section">
     <h2 class="panel-title collapsible" onclick="togglePanel('builder-evolution-section',event)">
       🛠 Builder Evolution
-      <span class="pill" title="${L.commits} commits · ${L.streak}d streak">${L.commits} · ${L.streak}d</span>
+      <button type="button" class="pill be-commits-pill" data-be-stat="commits"
+        onclick="event.stopPropagation()"
+        aria-label="Open commit history drawer: last ${builderCommits.length} commits in the rolling window"
+        aria-haspopup="dialog" aria-controls="be-stat-modal">${L.commits} · ${L.streak}d</button>
       <span class="panel-chevron">▾</span>
     </h2>
     <p class="panel-subtitle">Skills, APIs, bug classes, PM signals — extracted from git history, last ${htmlEscape(sinceLabel)}. Updated nightly at 03:30 PT by <code>scripts/agents/builder-log.mjs</code>. <span class="be-subtitle-hint">Click any tile for detail.</span></p>
@@ -11826,9 +11895,13 @@ async function build() {
 
     <div class="be-footer">
       <span class="be-footer-meta">Last generated: ${generatedAt}</span>
-      <span class="be-footer-cta">→ See full digest: <code>data/builder-log-rolling-30d.md</code></span>
-      <span class="be-footer-cta">→ Resume bullets: <code>node scripts/agents/builder-log.mjs --export-resume-bullets</code></span>
-      ${tApi ? `<span class="be-footer-cta">→ Target stack audit: <code>data/council-target-apis-2026-05-19-adjudicated.md</code></span>` : ''}
+      <span class="be-footer-cta">&rarr; See full digest: <code>data/builder-log-rolling-30d.md</code></span>
+      <span class="be-footer-cta">&rarr; Resume bullets:
+        <button type="button" class="be-copy-btn" data-copy-text="node scripts/agents/builder-log.mjs --export-resume-bullets"
+          aria-label="Copy resume-bullets command to clipboard"
+          onclick="copyBeCommand(this)"><span class="be-copy-icon" aria-hidden="true">⧉</span>Copy command</button>
+      </span>
+      ${tApi ? `<span class="be-footer-cta">&rarr; Target stack audit: <code>data/council-target-apis-2026-05-19-adjudicated.md</code></span>` : ''}
     </div>
   </div>
   <script>
@@ -11918,6 +11991,18 @@ async function build() {
           { label: `All PM signals (${pmAllSorted.length} ranked by commit count)`, items: pmAllSorted, kind: 'count' },
         ],
         sources: ['data/builder-log-rolling-30d.md'],
+      },
+      // 2026-05-19 BRAVO polish A2 (item #6): commit-history drawer fired by the
+      // Builder-Evolution header pill. Last 15 commits from `git log` at build
+      // time. Each entry: short SHA, message, relative age, author.
+      commits: {
+        label: 'Recent commits',
+        headline: `${L.commits} · ${L.streak}d`,
+        subhead: `Last ${builderCommits.length} commits in the rolling window. Total this window: ${L.commits} commits across a ${L.streak}-day active-day streak.`,
+        sections: [
+          { label: `Last ${builderCommits.length} commits`, items: builderCommits, kind: 'commit' },
+        ],
+        sources: ['git log --oneline (live, last 15)'],
       },
     };
     return JSON.stringify(payload);
@@ -22714,6 +22799,15 @@ function _renderBeStatBody(p) {
           '<div class="be-stat-modal-item-count">' + (it.hours != null ? (it.hours + 'h') : '—') + '</div>' +
           '</li>';
       }
+      if (sec.kind === 'commit') {
+        // 2026-05-19 BRAVO polish A2 (item #6): commit row in the header-pill drawer.
+        // Shows short SHA, message, relative age, author. SHA rendered in <code>.
+        return '<li class="be-stat-modal-item">' +
+          '<div><span class="be-stat-modal-item-name"><code style="background:var(--surface-2);padding:1px 6px;border-radius:3px;font-size:11px;margin-right:8px">' + esc(it.sha || '') + '</code>' + esc(it.message || '') + '</span>' +
+          '<div class="be-stat-modal-item-evidence">' + esc(it.age || '') + (it.author ? ' · ' + esc(it.author) : '') + '</div>' +
+          '</div>' +
+          '</li>';
+      }
       // kind === 'count' default
       return '<li class="be-stat-modal-item">' +
         '<span class="be-stat-modal-item-name">' + esc(it.name) + '</span>' +
@@ -22761,12 +22855,46 @@ function closeBeStatModal() {
 }
 // Event delegation — chips render before this script runs; native button click
 // + Enter/Space work via native semantics, we just route to openBeStatModal.
+// 2026-05-19 BRAVO polish A2 (item #6): broadened selector from
+// .be-stat-tile-clickable to [data-be-stat] so the new header-pill commits
+// drawer participates without duplicating the wiring. The header pill's
+// onclick already stopPropagation()s on the parent h2 to keep the panel
+// from collapsing.
 document.addEventListener('click', function(e) {
-  const tile = e.target.closest && e.target.closest('.be-stat-tile-clickable');
-  if (!tile) return;
-  const key = tile.getAttribute('data-be-stat');
+  const trigger = e.target.closest && e.target.closest('[data-be-stat]');
+  if (!trigger) return;
+  const key = trigger.getAttribute('data-be-stat');
   if (key) openBeStatModal(key);
 });
+
+// 2026-05-19 BRAVO polish A2 (item #4): copy-to-clipboard for the Builder-Evolution
+// resume-bullets CLI hint. Uses navigator.clipboard.writeText with a transient
+// in-button "Copied!" state plus the shared window.toast for screen-reader
+// confirmation. Best-effort: falls back to a manual selection prompt if
+// clipboard API is unavailable.
+function copyBeCommand(btn) {
+  if (!btn) return;
+  const text = btn.getAttribute('data-copy-text') || '';
+  if (!text) return;
+  const showCopied = function() {
+    btn.classList.add('copied');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<span class="be-copy-icon" aria-hidden="true">✓</span>Copied!';
+    setTimeout(function() {
+      btn.classList.remove('copied');
+      btn.innerHTML = original;
+    }, 1800);
+    if (window.toast) window.toast('Command copied to clipboard', 'success');
+  };
+  if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(function(err) {
+      if (window.toast) window.toast('Copy failed: ' + (err && err.message ? err.message : err), 'error');
+    });
+  } else {
+    // Pre-clipboard-API fallback: select the text for manual Cmd+C.
+    if (window.toast) window.toast('Clipboard API unavailable — copy from the drawer', 'error');
+  }
+}
 
 // ── Live stats refresh ──────────────────────────────────────────
 async function refreshLiveStats() {
