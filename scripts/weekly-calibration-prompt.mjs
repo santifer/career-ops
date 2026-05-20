@@ -56,6 +56,9 @@
 import { readFileSync, writeFileSync, existsSync, statSync, readdirSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('weekly-calibration');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);

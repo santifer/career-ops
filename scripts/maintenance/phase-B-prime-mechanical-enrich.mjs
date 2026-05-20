@@ -46,6 +46,9 @@ try {
 import { loadAndRank } from '../../lib/contact-priority-scorer.mjs';
 import { callAnthropicCached } from '../../lib/anthropic-cache-helper.mjs';
 import { isCdpAvailable, connectToChromeCDP } from '../../lib/cdp-browser.mjs';
+import { installRunRecord } from '../../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('phase-B-prime-daily');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');

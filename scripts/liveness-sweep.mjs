@@ -37,6 +37,9 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('liveness-sweep');
 import { fileURLToPath } from 'url';
 
 import { parseApplicationsFile } from '../lib/parse-applications.mjs';

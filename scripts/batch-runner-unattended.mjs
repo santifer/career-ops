@@ -8,6 +8,9 @@ import { spawn, spawnSync } from 'child_process';
 import { existsSync, mkdirSync, openSync, writeSync, closeSync, readFileSync, renameSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('batch');
 
 const PROJECT_DIR = '/Users/mitchellwilliams/Documents/career-ops';
 const SECRETS_FILE = join(homedir(), '.career-ops-secrets');

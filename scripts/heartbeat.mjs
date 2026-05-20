@@ -18,6 +18,10 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import { homedir } from 'os';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('heartbeat');
+
 import nodemailer from 'nodemailer';
 import { marked } from 'marked';
 import mjml2html from 'mjml';

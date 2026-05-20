@@ -3477,6 +3477,31 @@ const server = createServer((req, res) => {
 
   if (url === '/api/stats') return json(computeStats());
 
+  // ── P1-5 (2026-05-19): /api/job-runs-status — chip strip + click-through modal
+  // computeJobRunsStatus() reads lib/job-runs-ledger.mjs (SQLite) + parses
+  // scripts/launchd/*.plist for expected cadences. State is computed
+  // per job (green/yellow/red/purple/skipped/unknown).
+  if (url === '/api/job-runs-status') {
+    import('./lib/job-runs-status.mjs').then(mod => {
+      json(mod.computeJobRunsStatus());
+    }).catch(e => {
+      json({ ok: false, error: e.message, jobs: [], summary: {} }, 500);
+    });
+    return;
+  }
+
+  // GET /api/job-runs/:job_name → last N runs (for the chip click-through modal)
+  const jobRunsMatch = url.match(/^\/api\/job-runs\/([a-zA-Z0-9_-]+)$/);
+  if (jobRunsMatch) {
+    const limit = Math.max(1, Math.min(100, Number(query.limit) || 10));
+    import('./lib/job-runs-status.mjs').then(mod => {
+      json({ job_name: jobRunsMatch[1], runs: mod.jobRunHistory(jobRunsMatch[1], limit) });
+    }).catch(e => {
+      json({ ok: false, error: e.message, runs: [] }, 500);
+    });
+    return;
+  }
+
   // ── α ALPHA 2026-05-19: /api/contacts/stats — cheap live count for sidebar-contacts polling
   if (url === '/api/contacts/stats') {
     try {

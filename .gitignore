@@ -11,6 +11,11 @@ data/triage-batch.tsv
 data/curator-mentions.md
 data/rejection-history.*
 data/grok-spend.log
+# P1-6 ledger: SQLite job_runs history is per-host runtime telemetry,
+# not data to share across machines. WAL + SHM are sqlite write-ahead files.
+data/job-runs.sqlite
+data/job-runs.sqlite-shm
+data/job-runs.sqlite-wal
 data/ingestion-report-*.md
 data/dry-run-state.md
 data/apply-workflow.md

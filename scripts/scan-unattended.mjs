@@ -6,6 +6,9 @@
 import { spawnSync } from 'child_process';
 import { existsSync, mkdirSync, openSync, writeSync, closeSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('scan');
 
 const PROJECT_DIR = '/Users/mitchellwilliams/Documents/career-ops';
 const NODE_BIN = '/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node';

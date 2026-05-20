@@ -39,6 +39,9 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { join } from 'path';
 import { spawnSync } from 'child_process';
 import { OPUS } from '../lib/models.mjs';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('career-library');
 
 const ROOT = process.cwd();
 const LIB_DIR = join(ROOT, 'corpus/career-library');

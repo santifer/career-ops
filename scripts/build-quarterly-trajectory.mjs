@@ -34,6 +34,9 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('quarterly-trajectory');
 
 const __filename = fileURLToPath(import.meta.url);
 const ROOT = resolve(__filename, '../..');

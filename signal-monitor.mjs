@@ -21,6 +21,9 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import { decodeHtmlEntities } from './lib/html-decode.mjs';
+import { installRunRecord } from './lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('signal-monitor');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;

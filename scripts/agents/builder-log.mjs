@@ -34,6 +34,9 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { installRunRecord } from '../../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('builder-log');
 
 try {
   const { config } = await import('dotenv');

@@ -26,6 +26,9 @@ import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { installRunRecord } from '../../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('pipeline-health');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..');

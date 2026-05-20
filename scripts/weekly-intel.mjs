@@ -23,6 +23,9 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { join } from 'path';
 import { spawnSync } from 'child_process';
 import { homedir } from 'os';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('weekly-intel');
 
 const ROOT = process.cwd();
 const INTEL_DIR   = join(ROOT, 'data/weekly-intel');

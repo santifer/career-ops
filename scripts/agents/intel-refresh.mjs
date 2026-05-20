@@ -34,6 +34,9 @@ try {
 } catch { /* dotenv optional */ }
 
 import { callCouncil } from '../../lib/council.mjs';
+import { installRunRecord } from '../../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('intel-refresh');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..', '..');

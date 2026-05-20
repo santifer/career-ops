@@ -29,6 +29,9 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } fr
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { installRunRecord } from '../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('refresh-master');
 
 // Load .env BEFORE any adapter imports. Mitchell's shell sometimes pre-sets
 // ANTHROPIC_API_KEY to empty, so override: true is required to let .env win.

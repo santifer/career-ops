@@ -5928,6 +5928,80 @@ async function build() {
   .mc-strip .live-ticker:hover { background: transparent; border: none; color: var(--fg); }
   .mc-strip .live-text { font-family: inherit; }
 
+  /* P1-5 (2026-05-19): job_runs ledger chip strip — sits at top of <main>.
+     Each chip = one scheduled job, color-coded by state. Click → modal with
+     last 10 runs. Polls /api/job-runs-status every 60s. */
+  .jrs-strip {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 7px 18px 9px; margin: 0 -28px 12px;
+    background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+  }
+  .jrs-strip-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--text-4); padding-right: 6px;
+  }
+  .jrs-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-2); font-weight: 600; font-size: 11px;
+    cursor: pointer; font-family: inherit;
+    transition: transform .12s, background .12s, border-color .12s;
+    white-space: nowrap;
+  }
+  .jrs-chip:hover { transform: translateY(-1px); }
+  .jrs-chip-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; flex-shrink: 0;
+  }
+  .jrs-chip-green { color: #059669; border-color: color-mix(in srgb, #059669 30%, transparent); background: color-mix(in srgb, #059669 8%, var(--surface)); }
+  .jrs-chip-yellow { color: #d97706; border-color: color-mix(in srgb, #d97706 32%, transparent); background: color-mix(in srgb, #d97706 11%, var(--surface)); }
+  .jrs-chip-red { color: #dc2626; border-color: color-mix(in srgb, #dc2626 32%, transparent); background: color-mix(in srgb, #dc2626 11%, var(--surface)); }
+  .jrs-chip-purple { color: #7c3aed; border-color: color-mix(in srgb, #7c3aed 32%, transparent); background: color-mix(in srgb, #7c3aed 11%, var(--surface)); }
+  .jrs-chip-skipped { color: var(--text-3); border-color: var(--border); background: var(--surface); opacity: .72; }
+  .jrs-chip-unknown { color: var(--text-4); border-color: var(--border); background: var(--surface-2); opacity: .55; font-weight: 500; }
+  .jrs-summary {
+    margin-left: auto; font-size: 10.5px; color: var(--text-3);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .jrs-summary span { margin-left: 8px; }
+  .jrs-summary-count-red { color: #dc2626; font-weight: 700; }
+  .jrs-summary-count-yellow { color: #d97706; font-weight: 700; }
+  .jrs-summary-count-purple { color: #7c3aed; font-weight: 700; }
+  .jrs-summary-count-green { color: #059669; }
+  #jrs-modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 250;
+    background: rgba(0, 0, 0, .55);
+    align-items: center; justify-content: center;
+  }
+  #jrs-modal-backdrop.open { display: flex; }
+  #jrs-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    width: min(720px, 92vw);
+    max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 24px 56px rgba(0, 0, 0, .45);
+  }
+  .jrs-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .jrs-modal-title { font-weight: 700; font-size: 15px; }
+  .jrs-modal-close { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 20px; padding: 4px 8px; }
+  .jrs-modal-meta { font-size: 11.5px; color: var(--text-3); margin-bottom: 10px; line-height: 1.6; }
+  .jrs-runs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .jrs-runs-table th, .jrs-runs-table td { padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+  .jrs-runs-table th { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-4); }
+  .jrs-runs-status-ok { color: #059669; font-weight: 600; }
+  .jrs-runs-status-fail { color: #dc2626; font-weight: 600; }
+  .jrs-runs-status-skipped { color: var(--text-3); }
+  .jrs-runs-status-running { color: #d97706; font-weight: 600; }
+  .jrs-empty { padding: 16px; text-align: center; color: var(--text-3); font-size: 12.5px; }
+
   .mc-batch {
     display: inline-flex; align-items: center; gap: 8px;
     color: var(--text-2); white-space: nowrap;
@@ -11297,6 +11371,23 @@ async function build() {
 
   <main id="main">
 
+  <!-- P1-5 (2026-05-19): job_runs ledger chip strip. One chip per scheduled
+       job, color-coded by state (green/yellow/red/purple/skipped/unknown).
+       Polled from /api/job-runs-status every 60s. Click → modal with last 10 runs. -->
+  <div class="jrs-strip" id="jrs-strip" aria-label="Scheduled job health">
+    <span class="jrs-strip-label">Jobs</span>
+    <div class="jrs-empty" id="jrs-strip-empty">Loading job-runs ledger…</div>
+  </div>
+  <div id="jrs-modal-backdrop" onclick="closeJobRunsModal()" role="dialog" aria-modal="true" aria-labelledby="jrs-modal-title">
+    <div id="jrs-modal" onclick="event.stopPropagation()">
+      <div class="jrs-modal-header">
+        <span class="jrs-modal-title" id="jrs-modal-title"></span>
+        <button class="jrs-modal-close" type="button" onclick="closeJobRunsModal()" aria-label="Close job-runs detail">✕</button>
+      </div>
+      <div class="jrs-modal-meta" id="jrs-modal-meta"></div>
+      <div id="jrs-modal-body"></div>
+    </div>
+  </div>
 
   <!-- Cmd-K command palette -->
   <div id="cmdk-backdrop" role="dialog" aria-modal="true" aria-label="Command palette" onclick="closeCmdK()">
@@ -12936,6 +13027,129 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initMissionControlStrip);
 } else {
   initMissionControlStrip();
+}
+
+// ── P1-5 (2026-05-19): job_runs ledger chip strip + history modal ──
+// Polls /api/job-runs-status every 60s; one chip per scheduled job, color
+// per state. Click → modal with last 10 runs from /api/job-runs/<name>.
+//
+// outer-template-unescape guard (CLAUDE.md): all newlines inside emitted
+// JS strings use String.fromCharCode(10) so the outer template literal
+// in scripts/build-dashboard.mjs can't unescape them away.
+async function _jrsFetch(path) {
+  try {
+    const r = await fetch(path);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (_e) { return null; }
+}
+function _jrsStateColor(state) {
+  const m = { green: 'green', yellow: 'yellow', red: 'red', purple: 'purple', skipped: 'skipped', unknown: 'unknown' };
+  return m[state] || 'unknown';
+}
+function _jrsEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function _jrsRender(payload) {
+  const strip = document.getElementById('jrs-strip');
+  if (!strip) return;
+  const empty = strip.querySelector('#jrs-strip-empty');
+  if (!payload || !Array.isArray(payload.jobs)) {
+    if (empty) empty.textContent = 'No job-runs data';
+    return;
+  }
+  if (empty) empty.remove();
+  Array.from(strip.querySelectorAll('.jrs-chip, .jrs-summary')).forEach(n => n.remove());
+  const NL = String.fromCharCode(10);
+  const frag = document.createDocumentFragment();
+  for (const j of payload.jobs) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'jrs-chip jrs-chip-' + _jrsStateColor(j.state);
+    const lateSuffix = j.minutes_late ? ' · ' + j.minutes_late + 'm late' : '';
+    const lastTs = (j.last_run && j.last_run.finished_at)
+      ? new Date(j.last_run.finished_at).toLocaleString()
+      : (j.last_run && j.last_run.started_at ? new Date(j.last_run.started_at).toLocaleString() + ' (running)' : 'never');
+    btn.title = j.label + ' — ' + j.state + lateSuffix + NL + 'Cadence: ' + j.cadence_summary + NL + 'Last run: ' + lastTs;
+    btn.setAttribute('aria-label', j.label + ': ' + j.state + lateSuffix);
+    btn.innerHTML = '<span class="jrs-chip-dot"></span>' + _jrsEsc(j.label);
+    btn.addEventListener('click', () => window.openJobRunsModal(j.label, j));
+    frag.appendChild(btn);
+  }
+  const summary = document.createElement('span');
+  summary.className = 'jrs-summary';
+  const s = payload.summary || {};
+  const parts = [];
+  if (s.red) parts.push('<span class="jrs-summary-count-red">' + s.red + ' red</span>');
+  if (s.yellow) parts.push('<span class="jrs-summary-count-yellow">' + s.yellow + ' yellow</span>');
+  if (s.purple) parts.push('<span class="jrs-summary-count-purple">' + s.purple + ' purple</span>');
+  if (s.green) parts.push('<span class="jrs-summary-count-green">' + s.green + ' green</span>');
+  if (s.skipped) parts.push('<span>' + s.skipped + ' skipped</span>');
+  if (s.unknown) parts.push('<span>' + s.unknown + ' unknown</span>');
+  summary.innerHTML = parts.join(' · ');
+  frag.appendChild(summary);
+  strip.appendChild(frag);
+}
+async function _jrsRefresh() {
+  const data = await _jrsFetch('/api/job-runs-status');
+  _jrsRender(data);
+}
+window.openJobRunsModal = async function (jobName, chipMeta) {
+  const backdrop = document.getElementById('jrs-modal-backdrop');
+  const title = document.getElementById('jrs-modal-title');
+  const meta = document.getElementById('jrs-modal-meta');
+  const body = document.getElementById('jrs-modal-body');
+  if (!backdrop || !title || !body) return;
+  title.textContent = jobName;
+  if (chipMeta) {
+    const stateLabel = '<strong class="jrs-chip jrs-chip-' + _jrsStateColor(chipMeta.state) + '" style="cursor:default;font-size:11px;padding:2px 8px"><span class="jrs-chip-dot"></span>' + _jrsEsc(chipMeta.state) + '</strong>';
+    const nextExp = chipMeta.next_expected_at ? ' · Next: ' + new Date(chipMeta.next_expected_at).toLocaleString() : '';
+    const lateInfo = chipMeta.minutes_late ? ' · ' + chipMeta.minutes_late + 'm late' : '';
+    meta.innerHTML = 'State: ' + stateLabel + ' · Cadence: ' + _jrsEsc(chipMeta.cadence_summary) + nextExp + lateInfo;
+  } else {
+    meta.innerHTML = '';
+  }
+  body.innerHTML = '<div class="jrs-empty">Loading run history…</div>';
+  backdrop.classList.add('open');
+  const data = await _jrsFetch('/api/job-runs/' + encodeURIComponent(jobName) + '?limit=10');
+  if (!data || !Array.isArray(data.runs) || data.runs.length === 0) {
+    body.innerHTML = '<div class="jrs-empty">No run history yet — job has not fired since the ledger was wired up.</div>';
+    return;
+  }
+  const rows = data.runs.map(r => {
+    const started = new Date(r.started_at).toLocaleString();
+    const dur = (r.finished_at && r.started_at)
+      ? Math.max(0, Math.round((new Date(r.finished_at) - new Date(r.started_at)) / 1000)) + 's'
+      : (r.status === 'running' ? '…' : '?');
+    const urls = (r.urls_found == null) ? '—' : r.urls_found;
+    const err = r.error ? ' <span title="' + _jrsEsc(r.error) + '" style="cursor:help">⚠</span>' : '';
+    return '<tr>' +
+      '<td>' + _jrsEsc(started) + '</td>' +
+      '<td><span class="jrs-runs-status-' + _jrsEsc(r.status) + '">' + _jrsEsc(r.status) + '</span>' + err + '</td>' +
+      '<td>' + _jrsEsc(dur) + '</td>' +
+      '<td>' + _jrsEsc(urls) + '</td>' +
+      '</tr>';
+  }).join('');
+  body.innerHTML = '<table class="jrs-runs-table"><thead><tr><th>Started</th><th>Status</th><th>Duration</th><th>URLs</th></tr></thead><tbody>' + rows + '</tbody></table>';
+};
+window.closeJobRunsModal = function () {
+  const backdrop = document.getElementById('jrs-modal-backdrop');
+  if (backdrop) backdrop.classList.remove('open');
+};
+function initJobRunsStrip() {
+  _jrsRefresh();
+  setInterval(_jrsRefresh, 60000);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const backdrop = document.getElementById('jrs-modal-backdrop');
+      if (backdrop && backdrop.classList.contains('open')) window.closeJobRunsModal();
+    }
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initJobRunsStrip);
+} else {
+  initJobRunsStrip();
 }
 
 // ── Persistent left sidebar (Phase 7 Item 4) ────────────────────

@@ -24,6 +24,9 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { installRunRecord } from '../../lib/job-runs-ledger.mjs';
+
+const __jobRun = installRunRecord('detector-health');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '../..');
