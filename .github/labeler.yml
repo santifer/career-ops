@@ -1,6 +1,7 @@
 "🔴 core-architecture":
   - changed-files:
       - any-glob-to-any-file:
+          - AGENTS.md
           - CLAUDE.md
           - OPENCODE.md
           - DATA_CONTRACT.md
