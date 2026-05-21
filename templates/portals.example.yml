@@ -133,6 +133,25 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- Indeed Ireland queries (optional) --
+# Used by scan-indeed.py (Python, requires: pip install scrapling pyyaml).
+# Searches ie.indeed.com with Scrapling to bypass Cloudflare.
+# If this section is absent, scan-indeed.py auto-generates queries from title_filter.positive.
+
+indeed_queries:
+  - query: "Technical Account Manager"
+    location: "Dublin"
+    enabled: true
+  - query: "Customer Success Engineer"
+    location: "Dublin"
+    enabled: true
+  - query: "Solutions Architect"
+    location: "Dublin"
+    enabled: true
+  - query: "AI Engineer"
+    location: "Ireland"
+    enabled: true
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.

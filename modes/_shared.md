@@ -122,11 +122,28 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
 | Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
+| Scrapling Fetcher | Bypass Cloudflare/bot protection for Indeed and protected career pages. Python: `from scrapling import Fetcher` |
+| Scrapling StealthyFetcher | Full real-browser rendering for heavy bot detection. Python: `from scrapling import StealthyFetcher` |
+| Jina Reader | Clean markdown extraction from public pages: `https://r.jina.ai/{url}`. Free tier. Blocked by Cloudflare sites. |
+| Agent Reach | Social aggregation: GitHub, YouTube, RSS, X/Twitter, Bilibili. Python: `from agent_reach import AgentReach` |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
 | Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `cv.canva_resume_design_id` in profile.yml. |
 | Bash | `node generate-pdf.mjs` |
+
+#### Web Scraping Escalation Ladder
+
+Use the minimal viable tool for each target:
+
+| Level | Tool | When to use |
+|-------|------|-------------|
+| 1 | `web_fetch` | Static/public pages, API endpoints, no bot protection |
+| 2 | Jina Reader (`r.jina.ai`) | Clean reader extraction from public pages. Blocked by Cloudflare-protected sites |
+| 3 | Scrapling `Fetcher` | JS-rendered pages, medium bot protection (Indeed, most career sites) |
+| 4 | Scrapling `StealthyFetcher` | Heavy bot detection, Cloudflare challenges, real browser needed |
+| 5 | CloakBrowser (`from cloakbrowser import launch`) | Nuclear option: 58 C++ source-level patches, passes Cloudflare Turnstile + reCAPTCHA 0.9, `humanize=True` for behavioral detection. Drop-in Playwright replacement (`pip install cloakbrowser`) |
+| 6 | Agent Reach | Social platforms (YouTube, GitHub, X, Reddit, RSS) |
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection

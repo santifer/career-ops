@@ -18,6 +18,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `python3 scan-indeed.py` | `scan-indeed.py` | Indeed Ireland scanner (Scrapling) |
 
 ---
 
@@ -187,3 +188,21 @@ npm run scan
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.
+
+---
+
+## scan-indeed
+
+Indeed Ireland scanner using Scrapling to bypass Cloudflare bot protection. Searches Indeed for configured queries, applies `title_filter` from `portals.yml`, deduplicates against existing history, and appends new offers to `data/pipeline.md` + `data/scan-history.tsv`.
+
+```bash
+python3 scan-indeed.py              # scan all queries, 2 pages each
+python3 scan-indeed.py --dry-run    # preview without writing files
+python3 scan-indeed.py --pages 3    # scan up to 3 pages per query
+```
+
+**Query source:** Reads `indeed_queries` from `portals.yml`. If absent, auto-generates queries from `title_filter.positive` keywords.
+
+**Dependencies:** `scrapling`, `pyyaml` (Python).
+
+**Exit codes:** `0` scan completed, `1` no queries configured.
