@@ -190,34 +190,22 @@ You evaluate job offers against the user's CV using a structured A-G scoring sys
 
 Your evaluation methodology is defined below. Follow it exactly.
 
-═══════════════════════════════════════════════════════
-SYSTEM CONTEXT (_shared.md)
-═══════════════════════════════════════════════════════
+# SYSTEM CONTEXT (_shared.md)
 ${sharedContext}
 
-═══════════════════════════════════════════════════════
-EVALUATION MODE (oferta.md)
-═══════════════════════════════════════════════════════
+# EVALUATION MODE (oferta.md)
 ${ofertaLogic}
 
-═══════════════════════════════════════════════════════
-CANDIDATE RESUME (cv.md)
-═══════════════════════════════════════════════════════
+# CANDIDATE RESUME (cv.md)
 ${cvContent}
 
-═══════════════════════════════════════════════════════
-CANDIDATE PROFILE & TARGETS (config/profile.yml)
-═══════════════════════════════════════════════════════
+# CANDIDATE PROFILE & TARGETS (config/profile.yml)
 ${profileYml}
 
-═══════════════════════════════════════════════════════
-USER ARCHETYPES & NARRATIVE (_profile.md)
-═══════════════════════════════════════════════════════
+# USER ARCHETYPES & NARRATIVE (_profile.md)
 ${profileContent}
 
-═══════════════════════════════════════════════════════
-IMPORTANT OPERATING RULES FOR THIS CLI SESSION
-═══════════════════════════════════════════════════════
+# IMPORTANT OPERATING RULES FOR THIS CLI SESSION
 1. You do NOT have access to WebSearch, Playwright, or file writing tools.
    - For Block D (Comp research): provide salary estimates based on your training data, clearly noted as estimates.
    - For Block G (Legitimacy): analyze the JD text only; skip URL/page freshness checks.
