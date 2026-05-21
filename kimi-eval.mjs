@@ -150,6 +150,16 @@ function nextReportNumber() {
   return String(Math.max(...files) + 1).padStart(3, "0");
 }
 
+function sanitizeField(val) {
+  if (typeof val !== "string") return "";
+  let clean = val.trim().replace(/[\r\n\t]+/g, " ");
+  // Neutralize formula injection characters
+  if (/^[=+\-@]/.test(clean)) {
+    clean = "'" + clean;
+  }
+  return clean;
+}
+
 // ---------------------------------------------------------------------------
 // Load context files
 // ---------------------------------------------------------------------------
@@ -213,6 +223,10 @@ const openai = new OpenAI({
   baseURL: "https://api.moonshot.cn/v1",
 });
 
+const controller = new AbortController();
+// Set a 90-second timeout for the Kimi API call
+const timeoutId = setTimeout(() => controller.abort(), 90000);
+
 let evaluationText;
 try {
   const response = await openai.chat.completions.create({
@@ -226,20 +240,28 @@ try {
     ],
     temperature: 0.4, // deterministic enough for structured evaluation
     max_tokens: 8192,
-  });
+  }, { signal: controller.signal });
+  
+  clearTimeout(timeoutId);
+
   if (!response?.choices?.length) {
     console.error("❌  Empty response from Kimi API. No choices returned.");
     process.exit(1);
   }
   evaluationText = response.choices[0].message.content;
 } catch (err) {
-  console.error("❌  Kimi API error:", err.message || err);
-  if (err.status === 401 || err.status === 403) {
-    console.error("    Authentication failed. Check your KIMI_API_KEY or MOONSHOT_API_KEY in .env");
-  } else if (err.status === 429) {
-    console.error(
-      "    Rate limit hit. Wait 60s and retry.",
-    );
+  clearTimeout(timeoutId);
+  if (err.name === "AbortError") {
+    console.error("❌  Kimi API error: Request timed out after 90 seconds.");
+  } else {
+    console.error("❌  Kimi API error:", err.message || err);
+    if (err.status === 401 || err.status === 403) {
+      console.error("    Authentication failed. Check your KIMI_API_KEY or MOONSHOT_API_KEY in .env");
+    } else if (err.status === 429) {
+      console.error(
+        "    Rate limit hit. Wait 60s and retry.",
+      );
+    }
   }
   process.exit(1);
 }
@@ -290,14 +312,23 @@ if (saveReport) {
     const num = nextReportNumber();
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    const companySlug = company
+    
+    // Sanitize company and role fields from LLM outputs
+    const cleanCompany = sanitizeField(company) || "unknown";
+    const cleanRole = sanitizeField(role) || "unknown";
+    
+    let companySlug = cleanCompany
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
+    if (!companySlug) {
+      companySlug = "unknown";
+    }
+    
     const filename = `${num}-${companySlug}-${today}.md`;
     const reportPath = join(PATHS.reports, filename);
 
-    const reportContent = `# Evaluation: ${company} — ${role}
+    const reportContent = `# Evaluation: ${cleanCompany} — ${cleanRole}
 
 **Date:** ${today}
 **Archetype:** ${archetype}
@@ -324,8 +355,8 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, "").tri
     const tsvRow = [
       num,
       today,
-      company,
-      role,
+      cleanCompany,
+      cleanRole,
       "Evaluated",
       score,
       "❌",
