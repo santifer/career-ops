@@ -48,6 +48,16 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 2. Extract the number from the prefix (e.g., `142-medispend...` → 142)
 3. New number = maximum found + 1
 
+#### Paso 4 — Generar PDF
+
+If `offer.score >= config.auto_pdf_score_threshold`:
+    Generate tailored CV PDF
+    Insert PDF path in report header (**PDF:**)
+Else:
+    Skip PDF generation
+    Insert in report header: **PDF:** not generated — run /career-ops pdf {company-slug} to create on demand
+    Mark PDF as ❌ / null in tracker/output JSON
+    
 ## Source synchronization
 
 Before processing any URL, verify sync:
