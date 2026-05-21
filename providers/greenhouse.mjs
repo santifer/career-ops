@@ -40,8 +40,12 @@ export default {
   id: 'greenhouse',
 
   detect(entry) {
-    const apiUrl = resolveApiUrl(entry);
-    return apiUrl ? { url: apiUrl } : null;
+    try {
+      const apiUrl = resolveApiUrl(entry);
+      return apiUrl ? { url: apiUrl } : null;
+    } catch {
+      return null;
+    }
   },
 
   async fetch(entry, ctx) {
