@@ -46,3 +46,7 @@ bun.lock
 .claude/memory/
 career-dashboard
 package-lock.json
+
+# Personal interview prep and memory (user-private)
+interview-prep/
+memory/
