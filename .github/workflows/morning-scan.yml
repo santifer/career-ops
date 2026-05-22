@@ -2,9 +2,8 @@ name: Daily Morning Job Scan
 
 on:
   schedule:
-    # 07:30 UTC corresponds to 08:30 AM CET / 09:30 AM CEST
-    # This runs every day at 08:30 AM CET so the new jobs are ready for you by 09:00 AM CET.
-    - cron: '30 7 * * *'
+    # 09:00 UTC = 11:00 AM CEST / 10:00 AM CET
+    - cron: '0 9 * * *'
   workflow_dispatch: # Allows you to trigger the scan manually from the GitHub UI anytime
 
 jobs:
@@ -25,11 +24,14 @@ jobs:
           npm install
           npx playwright install chromium --with-deps
 
-      - name: Run Scraper
+      - name: Run LinkedIn Scraper
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: node morning-berlin-scan.mjs
+
+      - name: Run Direct ATS + BMW Scraper
+        run: node morning-berlin-direct-scan.mjs
 
       - name: Commit & Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
