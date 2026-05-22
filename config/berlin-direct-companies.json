@@ -394,5 +394,23 @@
     "provider": "ashby",
     "url": "https://jobs.ashbyhq.com/zapier",
     "api": "https://api.ashbyhq.com/posting-api/job-board/zapier?includeCompensation=true"
+  },
+  {
+    "name": "Infineon",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/infineon",
+    "api": "https://boards-api.greenhouse.io/v1/boards/infineon/jobs"
+  },
+  {
+    "name": "Olympus",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/olympus",
+    "api": "https://boards-api.greenhouse.io/v1/boards/olympus/jobs"
+  },
+  {
+    "name": "Mynaric",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/mynaric",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/mynaric?includeCompensation=true"
   }
 ]

@@ -40,6 +40,19 @@ function isStudentTechJob(title) {
   return studentKeywords.some(kw => lowerTitle.includes(kw));
 }
 
+// Validate if a job is ML, Data Science, or Full Stack
+function isTargetTechRole(title) {
+  const lowerTitle = title.toLowerCase();
+  
+  const targetRoles = [
+    'machine learning', 'ml engineer', 'mlops', 'ai engineer', 'ai/ml',
+    'data science', 'data scientist',
+    'full stack', 'fullstack', 'full-stack'
+  ];
+  
+  return targetRoles.some(role => lowerTitle.includes(role));
+}
+
 // Filter locations to match Berlin or Remote/Germany, excluding other specific German cities.
 function isBerlinOrRemote(location) {
   if (!location) return false;
@@ -211,7 +224,7 @@ async function scrapeBmwJobs() {
 
     // Apply filtering
     for (const rj of rawJobs) {
-      if (isStudentTechJob(rj.title) && isBerlinOrRemote(rj.location)) {
+      if (isStudentTechJob(rj.title) && isBerlinOrRemote(rj.location) && isTargetTechRole(rj.title)) {
         bmwJobs.push({
           title: rj.title,
           company: 'BMW Group',
@@ -259,7 +272,7 @@ async function run() {
       
       const filtered = [];
       for (const rj of rawJobs) {
-        if (rj.url && isStudentTechJob(rj.title) && isBerlinOrRemote(rj.location)) {
+        if (rj.url && isStudentTechJob(rj.title) && isBerlinOrRemote(rj.location) && isTargetTechRole(rj.title)) {
           filtered.push({
             title: rj.title,
             company: rj.company,
