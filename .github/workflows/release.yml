@@ -1,8 +1,8 @@
 name: Release Please
 on:
-  push:
-    branches: [main]
-  workflow_dispatch: # Manual trigger for testing
+  # Disabled: branch protection rules prevent automated PR creation
+  # Re-enable by adding: push: { branches: [main] }
+  workflow_dispatch: # Manual trigger only
 
 permissions:
   contents: write
