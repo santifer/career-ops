@@ -36,5 +36,5 @@ jobs:
       - name: Commit & Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "🤖 auto: daily morning job scan results (CSV & Markdown)"
-          file_pattern: "data/pipeline.md data/scan-history.tsv scratch/morning-berlin-jobs.md output/morning-berlin-jobs.csv output/berlin-jobs-daily/*.csv"
+          commit_message: "🤖 auto: daily morning job scan results"
+          file_pattern: "data/pipeline.md data/scan-history.tsv scratch/morning-berlin-jobs.md"
