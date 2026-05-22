@@ -43,6 +43,29 @@ function isTargetTechRole(title) {
   return targetRoles.some(role => lowerTitle.includes(role));
 }
 
+// Filter for Germany locations only
+function isGermanyLocation(location) {
+  if (!location) return false;
+  const lowerLoc = location.toLowerCase();
+  
+  // Germany cities and regions
+  const germanyKeywords = [
+    'berlin', 'munich', 'münchen', 'cologne', 'köln', 'frankfurt', 'hamburg',
+    'düsseldorf', 'dusseldorf', 'leverkusen', 'bonn', 'mannheim', 'heidelberg',
+    'nuremberg', 'nürnberg', 'germany', 'deutschland', 'de', 'german', 'hesse', 'hessen'
+  ];
+  
+  // Exclude these countries that sometimes appear with Germany keywords
+  const excludeCountries = [
+    'usa', 'united states', 'uk', 'united kingdom', 'canada', 'france', 'paris',
+    'london', 'poland', 'belgrade', 'zurich', 'stockholm', 'switzerland'
+  ];
+  
+  if (excludeCountries.some(exc => lowerLoc.includes(exc))) return false;
+  
+  return germanyKeywords.some(kw => lowerLoc.includes(kw));
+}
+
 // Load companies
 async function loadCompanies() {
   try {
@@ -100,7 +123,7 @@ async function scanAllCompanies(companies) {
       // Filter jobs
       const filtered = [];
       for (const job of jobs) {
-        if (job.url && isStudentTechJob(job.title) && isTargetTechRole(job.title)) {
+        if (job.url && isStudentTechJob(job.title) && isTargetTechRole(job.title) && isGermanyLocation(job.location)) {
           // Check if already scanned
           const historyKey = `${company.name}|${job.url}`;
           if (!history[historyKey]) {
