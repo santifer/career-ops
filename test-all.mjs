@@ -69,6 +69,7 @@ const scripts = [
   { name: 'dedup-tracker.mjs', expectExit: 0 },
   { name: 'merge-tracker.mjs', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
+  { name: 'generate-typst-pdf.mjs --help', allowFail: true }, // fails without cv.md + typst binary
 ];
 
 for (const { name, allowFail } of scripts) {
@@ -160,7 +161,9 @@ const systemFiles = [
   'CLAUDE.md', 'VERSION', 'DATA_CONTRACT.md',
   'modes/_shared.md', 'modes/_profile.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
+  'modes/typst.md',
   'templates/states.yml', 'templates/cv-template.html',
+  'templates/template.typ',
   '.claude/skills/career-ops/SKILL.md',
 ];
 
@@ -262,6 +265,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
+  'typst.md', 'latex.md',
 ];
 
 for (const mode of expectedModes) {
@@ -312,6 +316,53 @@ if (fileExists('VERSION')) {
   }
 } else {
   fail('VERSION file missing');
+}
+
+// ── 11. TYPST GENERATOR ─────────────────────────────────────────
+
+console.log('\n11. Typst CV generator');
+
+// Template must import no absolute paths
+if (fileExists('templates/template.typ')) {
+  const typ = readFile('templates/template.typ');
+  if (typ.includes('sys.inputs')) {
+    pass('template.typ uses sys.inputs for dynamic format');
+  } else {
+    fail('template.typ missing sys.inputs — format cannot be overridden');
+  }
+  if (!typ.includes('/Users/') && !typ.includes('/home/')) {
+    pass('template.typ has no absolute paths');
+  } else {
+    fail('template.typ contains absolute paths');
+  }
+} else {
+  fail('templates/template.typ missing');
+}
+
+// Generator must not contain hardcoded personal names
+if (fileExists('generate-typst-pdf.mjs')) {
+  const src = readFile('generate-typst-pdf.mjs');
+  const hardcodedName = src.match(/cv-[a-z]+-[a-z]+\.pdf/i);
+  if (!hardcodedName) {
+    pass('generate-typst-pdf.mjs: output filename is dynamic (no hardcoded name)');
+  } else {
+    fail(`generate-typst-pdf.mjs: hardcoded filename detected: ${hardcodedName[0]}`);
+  }
+  if (src.includes('--input') && src.includes('format=')) {
+    pass('generate-typst-pdf.mjs passes format to typst compile');
+  } else {
+    fail('generate-typst-pdf.mjs does not pass format to typst compile');
+  }
+} else {
+  fail('generate-typst-pdf.mjs missing');
+}
+
+// typst binary availability (warn only — CI may not have it)
+const typstVersion = run('typst', ['--version']);
+if (typstVersion) {
+  pass(`typst binary available: ${typstVersion}`);
+} else {
+  warn('typst binary not found — install with: brew install typst');
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
