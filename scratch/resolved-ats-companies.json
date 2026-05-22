@@ -1,0 +1,22 @@
+[
+  {
+    "company": {
+      "name": "Air Apps",
+      "url": "https://www.linkedin.com/company/airapps"
+    },
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/airapps",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/airapps",
+    "slug": "airapps"
+  },
+  {
+    "company": {
+      "name": "Mercor",
+      "url": "https://www.linkedin.com/company/mercor-ai"
+    },
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/mercor",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/mercor",
+    "slug": "mercor"
+  }
+]

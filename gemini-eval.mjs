@@ -211,7 +211,8 @@ ${profileContent}
    - For Block G (Legitimacy): analyze the JD text only; skip URL/page freshness checks.
    - Post-evaluation file saving is handled by the script, not by you.
 2. Generate Blocks A through G in full, in English, unless the JD is in another language.
-3. At the very end, output a machine-readable summary block in this exact format:
+3. CRITICAL: Avoid infinite loops. When creating markdown tables, keep column separator lines short (e.g., use \|---\| or \|:---\| with at most 3-5 dashes). Never output long lines of repeated dashes or spaces.
+4. At the very end, output a machine-readable summary block in this exact format:
 
 ---SCORE_SUMMARY---
 COMPANY: <company name or "Unknown">

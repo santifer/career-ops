@@ -1,0 +1,398 @@
+[
+  {
+    "name": "Air Apps",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/airapps",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/airapps"
+  },
+  {
+    "name": "Airtable",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/airtable",
+    "api": "https://boards-api.greenhouse.io/v1/boards/airtable/jobs"
+  },
+  {
+    "name": "Aleph Alpha",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/AlephAlpha",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/AlephAlpha?includeCompensation=true"
+  },
+  {
+    "name": "Anthropic",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/anthropic",
+    "api": "https://boards-api.greenhouse.io/v1/boards/anthropic/jobs"
+  },
+  {
+    "name": "Arize AI",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/arizeai",
+    "api": "https://boards-api.greenhouse.io/v1/boards/arizeai/jobs"
+  },
+  {
+    "name": "Attio",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/attio",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/attio?includeCompensation=true"
+  },
+  {
+    "name": "Black Forest Labs",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/blackforestlabs",
+    "api": "https://boards-api.greenhouse.io/v1/boards/blackforestlabs/jobs"
+  },
+  {
+    "name": "Bland AI",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/bland",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/bland?includeCompensation=true"
+  },
+  {
+    "name": "Boomi",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/boomilp",
+    "api": "https://boards-api.greenhouse.io/v1/boards/boomilp/jobs"
+  },
+  {
+    "name": "Causaly",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/causaly",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/causaly?includeCompensation=true"
+  },
+  {
+    "name": "Clay Labs",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/claylabs",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/claylabs?includeCompensation=true"
+  },
+  {
+    "name": "Cohere",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/cohere",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/cohere?includeCompensation=true"
+  },
+  {
+    "name": "Contentful",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/contentful",
+    "api": "https://boards-api.greenhouse.io/v1/boards/contentful/jobs"
+  },
+  {
+    "name": "Decagon",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/decagon",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/decagon?includeCompensation=true"
+  },
+  {
+    "name": "Deepgram",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/deepgram",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/deepgram?includeCompensation=true"
+  },
+  {
+    "name": "DeepL",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/DeepL",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/DeepL?includeCompensation=true"
+  },
+  {
+    "name": "ElevenLabs",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/elevenlabs",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/elevenlabs?includeCompensation=true"
+  },
+  {
+    "name": "Faculty",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/faculty",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/faculty?includeCompensation=true"
+  },
+  {
+    "name": "GetYourGuide",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/getyourguide",
+    "api": "https://boards-api.greenhouse.io/v1/boards/getyourguide/jobs"
+  },
+  {
+    "name": "Glacis AI",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/glacis-ai",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/glacis-ai?includeCompensation=true"
+  },
+  {
+    "name": "Glean",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/gleanwork",
+    "api": "https://boards-api.greenhouse.io/v1/boards/gleanwork/jobs"
+  },
+  {
+    "name": "HelloFresh",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/hellofresh",
+    "api": "https://boards-api.greenhouse.io/v1/boards/hellofresh/jobs"
+  },
+  {
+    "name": "Helsing",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/helsing",
+    "api": "https://boards-api.greenhouse.io/v1/boards/helsing/jobs"
+  },
+  {
+    "name": "Hightouch",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/hightouch",
+    "api": "https://boards-api.greenhouse.io/v1/boards/hightouch/jobs"
+  },
+  {
+    "name": "Hootsuite",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/hootsuite",
+    "api": "https://boards-api.greenhouse.io/v1/boards/hootsuite/jobs"
+  },
+  {
+    "name": "Hume AI",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/humeai",
+    "api": "https://boards-api.greenhouse.io/v1/boards/humeai/jobs"
+  },
+  {
+    "name": "Intercom",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/intercom",
+    "api": "https://boards-api.greenhouse.io/v1/boards/intercom/jobs"
+  },
+  {
+    "name": "Isomorphic Labs",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/isomorphiclabs",
+    "api": "https://boards-api.greenhouse.io/v1/boards/isomorphiclabs/jobs"
+  },
+  {
+    "name": "Klue",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/klue",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/klue?includeCompensation=true"
+  },
+  {
+    "name": "Lakera",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/lakera.ai",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/lakera.ai?includeCompensation=true"
+  },
+  {
+    "name": "LangChain",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/langchain",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/langchain?includeCompensation=true"
+  },
+  {
+    "name": "Later",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/later",
+    "api": "https://boards-api.greenhouse.io/v1/boards/later/jobs"
+  },
+  {
+    "name": "Legora",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/legora",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/legora?includeCompensation=true"
+  },
+  {
+    "name": "Lindy",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/lindy",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/lindy?includeCompensation=true"
+  },
+  {
+    "name": "Lovable",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/lovable",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/lovable?includeCompensation=true"
+  },
+  {
+    "name": "Mercor",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/mercor",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/mercor"
+  },
+  {
+    "name": "Mistral AI",
+    "provider": "lever",
+    "url": "https://jobs.lever.co/mistral",
+    "api": "https://api.lever.co/v0/postings/mistral"
+  },
+  {
+    "name": "N26",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/n26",
+    "api": "https://boards-api.greenhouse.io/v1/boards/n26/jobs"
+  },
+  {
+    "name": "n8n",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/n8n",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/n8n?includeCompensation=true"
+  },
+  {
+    "name": "Palantir",
+    "provider": "lever",
+    "url": "https://jobs.lever.co/palantir",
+    "api": "https://api.lever.co/v0/postings/palantir"
+  },
+  {
+    "name": "Parloa",
+    "provider": "greenhouse",
+    "url": "https://job-boards.eu.greenhouse.io/parloa",
+    "api": "https://boards-api.greenhouse.io/v1/boards/parloa/jobs"
+  },
+  {
+    "name": "Perplexity",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/perplexity",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/perplexity?includeCompensation=true"
+  },
+  {
+    "name": "PhysicsX",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/physicsx",
+    "api": "https://boards-api.greenhouse.io/v1/boards/physicsx/jobs"
+  },
+  {
+    "name": "Pigment",
+    "provider": "lever",
+    "url": "https://jobs.lever.co/pigment",
+    "api": "https://api.lever.co/v0/postings/pigment"
+  },
+  {
+    "name": "Pinecone",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/pinecone",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/pinecone?includeCompensation=true"
+  },
+  {
+    "name": "PlanetScale",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/planetscale",
+    "api": "https://boards-api.greenhouse.io/v1/boards/planetscale/jobs"
+  },
+  {
+    "name": "PolyAI",
+    "provider": "greenhouse",
+    "url": "https://job-boards.eu.greenhouse.io/polyai",
+    "api": "https://boards-api.greenhouse.io/v1/boards/polyai/jobs"
+  },
+  {
+    "name": "Prada",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/ada",
+    "api": "https://boards-api.greenhouse.io/v1/boards/ada/jobs"
+  },
+  {
+    "name": "Qonto",
+    "provider": "lever",
+    "url": "https://jobs.lever.co/qonto",
+    "api": "https://api.lever.co/v0/postings/qonto"
+  },
+  {
+    "name": "RunPod",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/runpod",
+    "api": "https://boards-api.greenhouse.io/v1/boards/runpod/jobs"
+  },
+  {
+    "name": "Safari AI",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/safariai",
+    "api": "https://boards-api.greenhouse.io/v1/boards/safariai/jobs"
+  },
+  {
+    "name": "Scandit",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/scandit",
+    "api": "https://boards-api.greenhouse.io/v1/boards/scandit/jobs"
+  },
+  {
+    "name": "Sierra",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/sierra",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/sierra?includeCompensation=true"
+  },
+  {
+    "name": "Speechmatics",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/speechmatics",
+    "api": "https://boards-api.greenhouse.io/v1/boards/speechmatics/jobs"
+  },
+  {
+    "name": "Spotify",
+    "provider": "lever",
+    "url": "https://jobs.lever.co/spotify",
+    "api": "https://api.lever.co/v0/postings/spotify"
+  },
+  {
+    "name": "Stability AI",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/stabilityai",
+    "api": "https://boards-api.greenhouse.io/v1/boards/stabilityai/jobs"
+  },
+  {
+    "name": "SumUp",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/sumup",
+    "api": "https://boards-api.greenhouse.io/v1/boards/sumup/jobs"
+  },
+  {
+    "name": "Supabase",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/supabase",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/supabase?includeCompensation=true"
+  },
+  {
+    "name": "Synthesia",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/synthesia",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/synthesia?includeCompensation=true"
+  },
+  {
+    "name": "Trade Republic",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/traderepublicbank",
+    "api": "https://boards-api.greenhouse.io/v1/boards/traderepublicbank/jobs"
+  },
+  {
+    "name": "Vapi",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/vapi",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/vapi?includeCompensation=true"
+  },
+  {
+    "name": "Vercel",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/vercel",
+    "api": "https://boards-api.greenhouse.io/v1/boards/vercel/jobs"
+  },
+  {
+    "name": "Wayve",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/wayve",
+    "api": "https://boards-api.greenhouse.io/v1/boards/wayve/jobs"
+  },
+  {
+    "name": "Weights & Biases (CoreWeave)",
+    "provider": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/coreweave",
+    "api": "https://boards-api.greenhouse.io/v1/boards/coreweave/jobs"
+  },
+  {
+    "name": "WorkOS",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/workos",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/workos?includeCompensation=true"
+  },
+  {
+    "name": "Zapier",
+    "provider": "ashby",
+    "url": "https://jobs.ashbyhq.com/zapier",
+    "api": "https://api.ashbyhq.com/posting-api/job-board/zapier?includeCompensation=true"
+  }
+]
