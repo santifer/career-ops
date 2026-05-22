@@ -1,0 +1,602 @@
+[
+  {
+    "name": "0x1337 Partners",
+    "url": "https://www.linkedin.com/company/0x1337-partners"
+  },
+  {
+    "name": "1KOMMA5°",
+    "url": "https://www.linkedin.com/company/1komma5-"
+  },
+  {
+    "name": "aconium GmbH",
+    "url": "https://www.linkedin.com/company/aconium-gmbh"
+  },
+  {
+    "name": "adesso SE",
+    "url": "https://www.linkedin.com/company/adesso-se"
+  },
+  {
+    "name": "Air Apps",
+    "url": "https://www.linkedin.com/company/airapps"
+  },
+  {
+    "name": "Airtable",
+    "url": "https://www.linkedin.com/company/airtable"
+  },
+  {
+    "name": "Aleph Alpha",
+    "url": "https://www.linkedin.com/company/aleph-alpha"
+  },
+  {
+    "name": "Andres Industries AG",
+    "url": "https://www.linkedin.com/company/andres-industries-ag"
+  },
+  {
+    "name": "Anthropic",
+    "url": "https://www.linkedin.com/company/anthropic"
+  },
+  {
+    "name": "AnyTax",
+    "url": "https://de.linkedin.com/company/anytax-api"
+  },
+  {
+    "name": "Arize AI",
+    "url": "https://www.linkedin.com/company/arize-ai"
+  },
+  {
+    "name": "Attio",
+    "url": "https://www.linkedin.com/company/attio"
+  },
+  {
+    "name": "Axel Springer",
+    "url": "https://www.linkedin.com/company/axel-springer"
+  },
+  {
+    "name": "Bauhaus Earth",
+    "url": "https://de.linkedin.com/company/bauhaus-earth"
+  },
+  {
+    "name": "Berlin Hospitality Group",
+    "url": "https://de.linkedin.com/company/berlin-hospitality-group"
+  },
+  {
+    "name": "Black Forest Labs",
+    "url": "https://www.linkedin.com/company/black-forest-labs"
+  },
+  {
+    "name": "Bland AI",
+    "url": "https://www.linkedin.com/company/bland-ai"
+  },
+  {
+    "name": "Bling",
+    "url": "https://de.linkedin.com/company/bling-official"
+  },
+  {
+    "name": "Boomi",
+    "url": "https://www.linkedin.com/company/boomi"
+  },
+  {
+    "name": "Bundesdruckerei-Gruppe",
+    "url": "https://www.linkedin.com/company/bundesdruckerei-gruppe"
+  },
+  {
+    "name": "BWI GmbH",
+    "url": "https://www.linkedin.com/company/bwi-gmbh"
+  },
+  {
+    "name": "Canva",
+    "url": "https://au.linkedin.com/company/canva"
+  },
+  {
+    "name": "Causaly",
+    "url": "https://www.linkedin.com/company/causaly"
+  },
+  {
+    "name": "Celonis",
+    "url": "https://www.linkedin.com/company/celonis"
+  },
+  {
+    "name": "Clay Labs",
+    "url": "https://www.linkedin.com/company/clay-labs"
+  },
+  {
+    "name": "coac GmbH",
+    "url": "https://www.linkedin.com/company/coac-gmbh"
+  },
+  {
+    "name": "Cohere",
+    "url": "https://www.linkedin.com/company/cohere"
+  },
+  {
+    "name": "Consultport",
+    "url": "https://de.linkedin.com/company/consultport"
+  },
+  {
+    "name": "Contentful",
+    "url": "https://www.linkedin.com/company/contentful"
+  },
+  {
+    "name": "Crypto.com",
+    "url": "https://sg.linkedin.com/company/cryptocom"
+  },
+  {
+    "name": "Dach für Dach",
+    "url": "https://www.linkedin.com/company/dach-f-r-dach"
+  },
+  {
+    "name": "Decagon",
+    "url": "https://www.linkedin.com/company/decagon"
+  },
+  {
+    "name": "Deepgram",
+    "url": "https://www.linkedin.com/company/deepgram"
+  },
+  {
+    "name": "DeepL",
+    "url": "https://www.linkedin.com/company/deepl"
+  },
+  {
+    "name": "Design Hotels",
+    "url": "https://de.linkedin.com/company/design-hotels"
+  },
+  {
+    "name": "Deutsche Bahn",
+    "url": "https://www.linkedin.com/company/deutsche-bahn"
+  },
+  {
+    "name": "Deutsche Diabetes Gesellschaft (DDG)",
+    "url": "https://de.linkedin.com/company/deutsche-diabetes-gesellschaft"
+  },
+  {
+    "name": "Diebold Nixdorf",
+    "url": "https://www.linkedin.com/company/diebold-nixdorf"
+  },
+  {
+    "name": "DKB | Deutsche Kreditbank AG",
+    "url": "https://www.linkedin.com/company/dkb-deutsche-kreditbank-ag"
+  },
+  {
+    "name": "Doc Cirrus",
+    "url": "https://www.linkedin.com/company/doc-cirrus"
+  },
+  {
+    "name": "Don Bosco",
+    "url": "https://be.linkedin.com/company/donbosco"
+  },
+  {
+    "name": "EG Hire Global",
+    "url": "https://eg.linkedin.com/company/eagle-s"
+  },
+  {
+    "name": "ElevenLabs",
+    "url": "https://www.linkedin.com/company/elevenlabs"
+  },
+  {
+    "name": "Empresa",
+    "url": "https://www.linkedin.com/company/empresa"
+  },
+  {
+    "name": "Faculty",
+    "url": "https://www.linkedin.com/company/faculty"
+  },
+  {
+    "name": "FOY",
+    "url": "https://www.linkedin.com/company/foy-fountainofyouth"
+  },
+  {
+    "name": "Fraunhofer Heinrich Hertz Institute HHI",
+    "url": "https://www.linkedin.com/company/fraunhofer-heinrich-hertz-institute-hhi"
+  },
+  {
+    "name": "Fuenfwerken Design AG",
+    "url": "https://de.linkedin.com/company/5w-design"
+  },
+  {
+    "name": "gematik GmbH",
+    "url": "https://www.linkedin.com/company/gematik-gmbh"
+  },
+  {
+    "name": "GetYourGuide",
+    "url": "https://www.linkedin.com/company/getyourguide"
+  },
+  {
+    "name": "Glacis AI",
+    "url": "https://www.linkedin.com/company/glacis-ai"
+  },
+  {
+    "name": "Glean",
+    "url": "https://www.linkedin.com/company/glean"
+  },
+  {
+    "name": "GOOD BANK",
+    "url": "https://de.linkedin.com/company/good-bank"
+  },
+  {
+    "name": "Grimm's Hotels",
+    "url": "https://de.linkedin.com/company/grimms-hotels"
+  },
+  {
+    "name": "GUD.berlin",
+    "url": "https://de.linkedin.com/company/gudberlin"
+  },
+  {
+    "name": "HAGIUS",
+    "url": "https://de.linkedin.com/company/hagius"
+  },
+  {
+    "name": "Happy Mammoth",
+    "url": "https://www.linkedin.com/company/happy-mammoth"
+  },
+  {
+    "name": "Hashtag You",
+    "url": "https://de.linkedin.com/company/hashtag-you"
+  },
+  {
+    "name": "HelloFresh",
+    "url": "https://www.linkedin.com/company/hellofresh"
+  },
+  {
+    "name": "Helsing",
+    "url": "https://www.linkedin.com/company/helsing"
+  },
+  {
+    "name": "Hightouch",
+    "url": "https://www.linkedin.com/company/hightouch"
+  },
+  {
+    "name": "HOLZRICHTER Berlin",
+    "url": "https://www.linkedin.com/company/holzrichter-berlin"
+  },
+  {
+    "name": "Hootsuite",
+    "url": "https://www.linkedin.com/company/hootsuite"
+  },
+  {
+    "name": "Hotel Palace Berlin",
+    "url": "https://de.linkedin.com/company/hotelpalaceberlin"
+  },
+  {
+    "name": "Hume AI",
+    "url": "https://www.linkedin.com/company/hume-ai"
+  },
+  {
+    "name": "hyrise",
+    "url": "https://www.linkedin.com/company/hyrise"
+  },
+  {
+    "name": "IKEA",
+    "url": "https://nl.linkedin.com/company/ikea"
+  },
+  {
+    "name": "Intercom",
+    "url": "https://www.linkedin.com/company/intercom"
+  },
+  {
+    "name": "Isomorphic Labs",
+    "url": "https://www.linkedin.com/company/isomorphic-labs"
+  },
+  {
+    "name": "KLIEMT.Arbeitsrecht",
+    "url": "https://de.linkedin.com/company/kliemt-vollst-dt-fachanw-lte-f-r-arbeitsrecht"
+  },
+  {
+    "name": "Klue",
+    "url": "https://www.linkedin.com/company/klue"
+  },
+  {
+    "name": "KPMG IT Service GmbH",
+    "url": "https://www.linkedin.com/company/kpmg-it-service-gmbh"
+  },
+  {
+    "name": "KULT FARM",
+    "url": "https://de.linkedin.com/company/kult-farm"
+  },
+  {
+    "name": "Lakera",
+    "url": "https://www.linkedin.com/company/lakera"
+  },
+  {
+    "name": "LangChain",
+    "url": "https://www.linkedin.com/company/langchain"
+  },
+  {
+    "name": "Later",
+    "url": "https://www.linkedin.com/company/later"
+  },
+  {
+    "name": "Legora",
+    "url": "https://www.linkedin.com/company/legora"
+  },
+  {
+    "name": "LILT AI",
+    "url": "https://www.linkedin.com/company/lilt-ai"
+  },
+  {
+    "name": "Lindy",
+    "url": "https://www.linkedin.com/company/lindy"
+  },
+  {
+    "name": "Live Nation GSA (Germany - Austria - Switzerland)",
+    "url": "https://de.linkedin.com/company/live-nation-gsa"
+  },
+  {
+    "name": "Lovable",
+    "url": "https://www.linkedin.com/company/lovable"
+  },
+  {
+    "name": "Lovehoney Group",
+    "url": "https://de.linkedin.com/company/lovehoneygroup"
+  },
+  {
+    "name": "M+C Saatchi UK",
+    "url": "https://uk.linkedin.com/company/m&c-saatchi"
+  },
+  {
+    "name": "Mercanis",
+    "url": "https://de.linkedin.com/company/mercanis"
+  },
+  {
+    "name": "Mercor",
+    "url": "https://www.linkedin.com/company/mercor-ai"
+  },
+  {
+    "name": "Mistral AI",
+    "url": "https://www.linkedin.com/company/mistral-ai"
+  },
+  {
+    "name": "Mondu",
+    "url": "https://nl.linkedin.com/company/mondu-ai"
+  },
+  {
+    "name": "msg",
+    "url": "https://www.linkedin.com/company/msg"
+  },
+  {
+    "name": "N26",
+    "url": "https://www.linkedin.com/company/n26"
+  },
+  {
+    "name": "n8n",
+    "url": "https://www.linkedin.com/company/n8n"
+  },
+  {
+    "name": "nerou GmbH",
+    "url": "https://www.linkedin.com/company/nerou-gmbh"
+  },
+  {
+    "name": "netgo",
+    "url": "https://www.linkedin.com/company/netgo"
+  },
+  {
+    "name": "O'Donnell Moonshine",
+    "url": "https://de.linkedin.com/company/o'donnell-moonshine"
+  },
+  {
+    "name": "Palantir",
+    "url": "https://www.linkedin.com/company/palantir"
+  },
+  {
+    "name": "Parloa",
+    "url": "https://www.linkedin.com/company/parloa"
+  },
+  {
+    "name": "PayPal",
+    "url": "https://www.linkedin.com/company/paypal"
+  },
+  {
+    "name": "Peaks & Pies GmbH",
+    "url": "https://www.linkedin.com/company/peaks-pies-gmbh"
+  },
+  {
+    "name": "Perplexity",
+    "url": "https://www.linkedin.com/company/perplexity"
+  },
+  {
+    "name": "Personalfix",
+    "url": "https://de.linkedin.com/company/personalfix"
+  },
+  {
+    "name": "PhysicsX",
+    "url": "https://www.linkedin.com/company/physicsx"
+  },
+  {
+    "name": "Pigment",
+    "url": "https://www.linkedin.com/company/pigment"
+  },
+  {
+    "name": "Pinecone",
+    "url": "https://www.linkedin.com/company/pinecone"
+  },
+  {
+    "name": "PLAION PICTURES",
+    "url": "https://www.linkedin.com/company/plaion-pictures"
+  },
+  {
+    "name": "PlanetScale",
+    "url": "https://www.linkedin.com/company/planetscale"
+  },
+  {
+    "name": "PolyAI",
+    "url": "https://www.linkedin.com/company/polyai"
+  },
+  {
+    "name": "Prada",
+    "url": "https://it.linkedin.com/company/prada"
+  },
+  {
+    "name": "PROMOS consult",
+    "url": "https://www.linkedin.com/company/promos-consult"
+  },
+  {
+    "name": "PULL&BEAR",
+    "url": "https://es.linkedin.com/company/pull-bear"
+  },
+  {
+    "name": "PwC Deutschland",
+    "url": "https://www.linkedin.com/company/pwc-deutschland"
+  },
+  {
+    "name": "Qonto",
+    "url": "https://www.linkedin.com/company/qonto"
+  },
+  {
+    "name": "Rally",
+    "url": "https://de.linkedin.com/company/rally-europe"
+  },
+  {
+    "name": "roadsurfer",
+    "url": "https://de.linkedin.com/company/roadsurfer-gmbh"
+  },
+  {
+    "name": "RunPod",
+    "url": "https://www.linkedin.com/company/runpod"
+  },
+  {
+    "name": "Safari AI",
+    "url": "https://www.linkedin.com/company/safari-ai"
+  },
+  {
+    "name": "Sanchez Bau- und Grundstücksgesellschaft mbH",
+    "url": "https://de.linkedin.com/company/sanchez-bau"
+  },
+  {
+    "name": "SAP",
+    "url": "https://www.linkedin.com/company/sap"
+  },
+  {
+    "name": "Scale Invest",
+    "url": "https://de.linkedin.com/company/scaleinvest"
+  },
+  {
+    "name": "Scandit",
+    "url": "https://www.linkedin.com/company/scandit"
+  },
+  {
+    "name": "shyftplan",
+    "url": "https://www.linkedin.com/company/shyftplan"
+  },
+  {
+    "name": "Siemens",
+    "url": "https://www.linkedin.com/company/siemens"
+  },
+  {
+    "name": "Siemens Energy",
+    "url": "https://www.linkedin.com/company/siemens-energy"
+  },
+  {
+    "name": "Sierra",
+    "url": "https://www.linkedin.com/company/sierra"
+  },
+  {
+    "name": "Smart Energy Pay (SEP)",
+    "url": "https://www.linkedin.com/company/smart-energy-pay-sep-"
+  },
+  {
+    "name": "Speechmatics",
+    "url": "https://www.linkedin.com/company/speechmatics"
+  },
+  {
+    "name": "Spotify",
+    "url": "https://www.linkedin.com/company/spotify"
+  },
+  {
+    "name": "Stability AI",
+    "url": "https://www.linkedin.com/company/stability-ai"
+  },
+  {
+    "name": "STAYERY.",
+    "url": "https://de.linkedin.com/company/stayery"
+  },
+  {
+    "name": "STRABAG Rail GmbH",
+    "url": "https://www.linkedin.com/company/strabag-rail-gmbh"
+  },
+  {
+    "name": "Stradivarius",
+    "url": "https://es.linkedin.com/company/stradivarius"
+  },
+  {
+    "name": "Studio Natura",
+    "url": "https://de.linkedin.com/company/studionatura"
+  },
+  {
+    "name": "SumUp",
+    "url": "https://www.linkedin.com/company/sumup"
+  },
+  {
+    "name": "Supabase",
+    "url": "https://www.linkedin.com/company/supabase"
+  },
+  {
+    "name": "Synthesia",
+    "url": "https://www.linkedin.com/company/synthesia"
+  },
+  {
+    "name": "Tekkr",
+    "url": "https://de.linkedin.com/company/tekkr-io"
+  },
+  {
+    "name": "Telefónica Germany",
+    "url": "https://www.linkedin.com/company/telef-nica-germany"
+  },
+  {
+    "name": "Tesla",
+    "url": "https://www.linkedin.com/company/tesla-motors"
+  },
+  {
+    "name": "Toll Collect GmbH",
+    "url": "https://www.linkedin.com/company/toll-collect-gmbh"
+  },
+  {
+    "name": "Trade Republic",
+    "url": "https://www.linkedin.com/company/trade-republic"
+  },
+  {
+    "name": "tristar Hotels",
+    "url": "https://de.linkedin.com/company/tristarhotels"
+  },
+  {
+    "name": "Unfrämed Berlin ° Beauty Space",
+    "url": "https://de.linkedin.com/company/unfr%C3%A4med-berlin"
+  },
+  {
+    "name": "Vapi",
+    "url": "https://www.linkedin.com/company/vapi"
+  },
+  {
+    "name": "Vercel",
+    "url": "https://www.linkedin.com/company/vercel"
+  },
+  {
+    "name": "VGL Publishing AG",
+    "url": "https://www.linkedin.com/company/vgl-publishing-ag"
+  },
+  {
+    "name": "Wayve",
+    "url": "https://www.linkedin.com/company/wayve"
+  },
+  {
+    "name": "Weights & Biases (CoreWeave)",
+    "url": "https://www.linkedin.com/company/weights-biases-coreweave-"
+  },
+  {
+    "name": "WorkOS",
+    "url": "https://www.linkedin.com/company/workos"
+  },
+  {
+    "name": "YouLend",
+    "url": "https://uk.linkedin.com/company/youlend"
+  },
+  {
+    "name": "Zapier",
+    "url": "https://www.linkedin.com/company/zapier"
+  },
+  {
+    "name": "ZARA",
+    "url": "https://es.linkedin.com/company/zara"
+  },
+  {
+    "name": "ZARA HOME",
+    "url": "https://es.linkedin.com/company/zara-home"
+  }
+]

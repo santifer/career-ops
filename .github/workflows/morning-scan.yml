@@ -1,0 +1,38 @@
+name: Daily Morning Job Scan
+
+on:
+  schedule:
+    # 07:30 UTC corresponds to 08:30 AM CET / 09:30 AM CEST
+    # This runs every day at 08:30 AM CET so the new jobs are ready for you by 09:00 AM CET.
+    - cron: '30 7 * * *'
+  workflow_dispatch: # Allows you to trigger the scan manually from the GitHub UI anytime
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npx playwright install chromium --with-deps
+
+      - name: Run Scraper
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node morning-berlin-scan.mjs
+
+      - name: Commit & Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 auto: daily morning job scan results (CSV & Markdown)"
+          file_pattern: "data/pipeline.md data/scan-history.tsv scratch/morning-berlin-jobs.md output/morning-berlin-jobs.csv output/berlin-jobs-daily/*.csv"
