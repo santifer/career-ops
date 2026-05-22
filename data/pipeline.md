@@ -2,6 +2,12 @@
 |---|---|---|---|---|---|---|---|
 
 ## Pendientes
+- [ ] https://job-boards.greenhouse.io/arizeai/jobs/5995824004 | Arize AI | International Strategic Partnerships Lead
+- [ ] https://sumup.com/careers/positions/8520827002?gh_jid=8520827002 | SumUp | Senior Internal Auditor
+- [ ] https://www.bmwgroup.jobs/de/de/jobfinder/job-description.183118.html | BMW Group | Werkstudent Medien- und Kommunikationsmanagement BMW Motorrad Welt Berlin (w/m/x)
+
+- [ ] https://de.linkedin.com/jobs/view/werkstudent-m-w-d-%E2%80%93-entwicklung-von-ki-anwendungen-at-ethypharm-gmbh-4414095023 | Ethypharm GmbH | Werkstudent (m/w/d) – Entwicklung von KI-Anwendungen
+
 - [ ] https://job-boards.eu.greenhouse.io/parloa/jobs/4843389101 | Parloa | Senior Data Engineer - Internal Platform
 
 - [ ] https://de.linkedin.com/jobs/view/software-developer-working-student-at-acemate-ai-4414006162 | acemate.ai | Software Developer (Working Student)
