@@ -77,6 +77,7 @@ const SYSTEM_PATHS = [
   'fonts/',
   '.agents/',
   '.claude/skills/',
+  '.antigravitycli/skills/',
   '.gemini/commands/',
   'docs/',
   'writing-samples/README.md',

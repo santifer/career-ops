@@ -58,7 +58,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `dashboard/*` | Go TUI dashboard |
 | `templates/*` | Base templates |
 | `fonts/*` | Self-hosted fonts |
-| `.claude/skills/*` | Skill definitions |
+| `.claude/skills/*`, `.qwen/skills/*`, `.antigravitycli/skills/*` | Skill definitions |
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
 | `DATA_CONTRACT.md` | This file |
