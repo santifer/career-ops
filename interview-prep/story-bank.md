@@ -132,3 +132,25 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 **R:** TribeHR successfully integrated; redundant functions rationalized; clear data ownership established across the merged platform.
 **Reflection:** Software rationalization requires political will and clear governance just as much as technical analysis — the "shadow IT" problem is usually an organizational problem wearing a technical costume.
 **Best for questions about:** Reducing software sprawl | Shadow IT governance | System-of-record decisions | Post-acquisition integration | ERP/enterprise systems rationalization
+
+---
+
+### [HealthTech + AI] Embedding AI-Native Practices — Arctic Wolf R&D
+**Source:** Report #123 — Maple — VP, Engineering
+**S:** Arctic Wolf R&D had traditional engineering workflows. AI tooling was fragmented and inconsistently adopted across four teams.
+**T:** Transition the entire R&D division to AI-driven development practices to lift developer productivity and delivery velocity.
+**A:** Defined an AI-native workflow strategy, evaluated tooling options, drove consistent adoption across teams, established standards for AI-assisted code review, testing, and delivery.
+**R:** Lifted developer productivity and delivery velocity measurably; positioned R&D as an early AI adopter within a 1,200+ person cybersecurity company.
+**Reflection:** AI adoption in an engineering org is a culture change, not a tools deployment. The teams that resisted had process anxiety, not tool gaps — coaching mattered more than the tools themselves.
+**Best for questions about:** AI adoption | Developer productivity | Engineering culture change | Leading innovation within a larger org | AI-native development
+
+---
+
+### [Release Safety] Arctic Wolf — Platform Reliability Under Production Pressure
+**Source:** Report #128 — Mercury — Senior Engineering Manager, Release Engineering
+**S:** Arctic Wolf's customer platform supported active security operations for enterprise customers. A deployment failure during business hours had direct customer impact — no graceful degradation.
+**T:** Ensure engineering teams shipped frequently without sacrificing reliability. Build a culture where speed and safety were not in opposition.
+**A:** Drove adoption of deployment gates, feature flagging practices, and phased rollouts across four teams. Partnered with platform team to improve observability so teams could confidently ship and quickly detect regressions.
+**R:** Teams shipped more frequently with fewer incidents. Release cadence improved as teams developed confidence in the pipeline.
+**Reflection:** Release safety culture is built before the incident, not during it. The teams that shipped confidently had done the upfront work on observability and rollback mechanisms.
+**Best for questions about:** Release engineering | Deployment safety | Engineering culture | CI/CD leadership | Regulated environment delivery | Developer velocity
