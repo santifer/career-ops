@@ -45,9 +45,14 @@ function isTargetTechRole(title) {
   const lowerTitle = title.toLowerCase();
   
   const targetRoles = [
-    'machine learning', 'ml engineer', 'mlops', 'ai engineer', 'ai/ml',
-    'data science', 'data scientist',
-    'full stack', 'fullstack', 'full-stack'
+    // Machine Learning / AI
+    'machine learning', 'ml engineer', 'mlops', 'ai engineer', 'ai/ml', 'ai ', 'artificial intelligence',
+    // Data roles
+    'data science', 'data scientist', 'data analyst', 'bi analyst', 'analytics', 'analytics engineer',
+    // Development roles
+    'full stack', 'fullstack', 'full-stack', 'software developer', 'developer', 'engineer',
+    // Backend / Frontend
+    'backend', 'frontend', 'front-end', 'backend engineer', 'frontend engineer'
   ];
   
   return targetRoles.some(role => lowerTitle.includes(role));
