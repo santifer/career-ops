@@ -2,6 +2,7 @@ name: Release Please
 on:
   push:
     branches: [main]
+  workflow_dispatch: # Manual trigger for testing
 
 permissions:
   contents: write
@@ -16,3 +17,4 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           token: ${{ secrets.GITHUB_TOKEN }}
+          default-branch: main
