@@ -70,6 +70,18 @@ function normalizeTextForATS(html) {
     t = t.replace(/\u2026/g, () => { bump('ellipsis', 1); return '...'; });
     t = t.replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, () => { bump('zero-width', 1); return ''; });
     t = t.replace(/\u00A0/g, () => { bump('nbsp', 1); return ' '; });
+    // Arrows often stripped by PDF text extractors \u2014 replace with ASCII for ATS safety.
+    // Consume surrounding whitespace to avoid double-spacing in output.
+    t = t.replace(/\s*\u2192\s*/g, () => { bump('right-arrow', 1); return ' to '; });
+    t = t.replace(/\s*\u2190\s*/g, () => { bump('left-arrow', 1); return ' from '; });
+    t = t.replace(/\s*[\u2191\u2193]\s*/g, () => { bump('vert-arrow', 1); return ' '; });
+    // Middle dot and bullet glyphs garble in some extractors \u2014 replace with pipe.
+    t = t.replace(/\s*\u00B7\s*/g, () => { bump('middot', 1); return ' | '; });
+    t = t.replace(/\s*\u2022\s*/g, () => { bump('bullet', 1); return ' | '; });
+    // Currency symbols sometimes stripped by font-subsetted PDFs \u2014 spell them out.
+    t = t.replace(/\u20AC/g, () => { bump('euro', 1); return 'EUR '; });
+    t = t.replace(/\u00A3/g, () => { bump('pound', 1); return 'GBP '; });
+    t = t.replace(/\u00A5/g, () => { bump('yen', 1); return 'JPY '; });
     return t;
   }
 }
