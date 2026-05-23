@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — CLI-agnostic orchestrator for headless agent workers
+# Reads batch-input.tsv, delegates each offer to a worker process,
 # tracks state in batch-state.tsv for resumability.
 #
-# NOTE: This script is Claude Code-specific. It uses claude -p with
-# --dangerously-skip-permissions and --append-system-prompt-file flags
-# that are not available in other CLIs. Multi-CLI support is out of scope
-# for now — contributions welcome.
+# Supported CLIs (--cli flag):
+#   claude    — claude -p with --dangerously-skip-permissions (default)
+#   opencode  — ollama launch opencode --model <model>
+#   gemini    — gemini -p
+#   qwen      — qwen -p
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -34,22 +35,24 @@ START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
 SKIP_PDF=false
-MODEL=""  # empty = let claude -p use the Claude Max default
+CLI=claude
+MODEL=""
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via headless agent workers
 
 Usage: batch-runner.sh [OPTIONS]
 
 Options:
-  --parallel N         Number of parallel workers (default: 1)
+  --cli NAME           Agent CLI to use: claude (default), opencode, gemini, qwen
+  --model NAME         Model name for the CLI (e.g. qwen2.5:32b for opencode)
+  --parallel N         Number of parallel workers (default: 1; claude only)
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
-  --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
+  --min-score N        Skip tracker for offers scoring below N (default: 0 = off)
   --skip-pdf           Workers skip PDF generation (report + tracker only); generate PDFs later with /career-ops pdf
   --model NAME         Claude model passed to `claude -p --model` (default:
                        unset = Claude Max default). Use a cheaper model for
@@ -64,16 +67,19 @@ Files:
   tracker-additions/   Tracker lines for post-batch merge
 
 Examples:
-  # Dry run to see pending offers
-  ./batch-runner.sh --dry-run
-
-  # Process all pending
+  # Claude (default) — uses Claude Max subscription
   ./batch-runner.sh
+
+  # Local LLM via OpenCode + Ollama (free)
+  ./batch-runner.sh --cli opencode --model qwen2.5:32b
+
+  # Triage pass: skip PDFs, skip anything scoring below 3.5
+  ./batch-runner.sh --cli opencode --model qwen2.5:32b --skip-pdf --min-score 3.5
 
   # Retry only failed offers
   ./batch-runner.sh --retry-failed
 
-  # Process 2 at a time starting from ID 10
+  # Process 2 at a time (claude only)
   ./batch-runner.sh --parallel 2 --start-from 10
 USAGE
 }
@@ -81,6 +87,8 @@ USAGE
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --cli) CLI="$2"; shift 2 ;;
+    --model) MODEL="$2"; shift 2 ;;
     --parallel) PARALLEL="$2"; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --retry-failed) RETRY_FAILED=true; shift ;;
@@ -132,9 +140,23 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  local cli_cmd
+  case "$CLI" in
+    claude)   cli_cmd="claude" ;;
+    opencode) cli_cmd="ollama" ;;
+    gemini)   cli_cmd="gemini" ;;
+    qwen)     cli_cmd="qwen" ;;
+    *) echo "ERROR: Unknown --cli '$CLI'. Supported: claude, opencode, gemini, qwen"; exit 1 ;;
+  esac
+
+  if ! command -v "$cli_cmd" &>/dev/null; then
+    echo "ERROR: '$cli_cmd' not found in PATH (required for --cli $CLI)."
     exit 1
+  fi
+
+  if [[ "$CLI" != "claude" && "$PARALLEL" -gt 1 ]]; then
+    echo "WARN: --parallel >1 is not supported for --cli $CLI (local models run sequentially). Resetting to 1."
+    PARALLEL=1
   fi
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
@@ -368,17 +390,36 @@ process_offer() {
     printf '\n\n**OVERRIDE: Skip Step 4 (PDF generation). Do NOT generate a PDF or read cv-template.html. Use `❌` for the PDF column in the tracker line.**\n' >> "$resolved_prompt"
   fi
 
-  # Launch claude -p worker.
-  # Model defaults to the Claude Max subscription default unless --model was
-  # passed. Building the command in an array keeps quoting safe regardless.
-  local -a claude_args=(-p --dangerously-skip-permissions)
-  if [[ -n "$MODEL" ]]; then
-    claude_args+=(--model "$MODEL")
-  fi
-  claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
-
+  # Dispatch to configured CLI
   local exit_code=0
-  claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+  case "$CLI" in
+    claude)
+      local -a claude_args=(-p --dangerously-skip-permissions)
+      if [[ -n "$MODEL" ]]; then
+        claude_args+=(--model "$MODEL")
+      fi
+      claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+      claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    opencode)
+      local full_prompt
+      full_prompt="$(cat "$resolved_prompt")"$'\n\n'"$prompt"
+      local model_args=()
+      [[ -n "$MODEL" ]] && model_args=(--model "$MODEL")
+      ollama launch opencode "${model_args[@]}" -y -- run "$full_prompt" \
+        > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    gemini)
+      local full_prompt
+      full_prompt="$(cat "$resolved_prompt")"$'\n\n'"$prompt"
+      gemini -p "$full_prompt" > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    qwen)
+      local full_prompt
+      full_prompt="$(cat "$resolved_prompt")"$'\n\n'"$prompt"
+      qwen -p "$full_prompt" > "$log_file" 2>&1 || exit_code=$?
+      ;;
+  esac
 
   # Cleanup resolved prompt
   rm -f "$resolved_prompt"
@@ -483,7 +524,9 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
-  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  local cli_display="$CLI"
+  [[ -n "$MODEL" ]] && cli_display="$CLI ($MODEL)"
+  echo "CLI: $cli_display | Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
   echo "Input: $total_input offers"
   echo ""
 
