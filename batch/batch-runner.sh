@@ -46,7 +46,8 @@ Usage: batch-runner.sh [OPTIONS]
 
 Options:
   --cli NAME           Agent CLI to use: claude (default), opencode, gemini, qwen
-  --model NAME         Model name for the CLI (e.g. qwen2.5:32b for opencode)
+  --model NAME         Model for the CLI (e.g. qwen2.5:32b for opencode/ollama,
+                       or claude-sonnet-4-6 for claude). Default: CLI's own default.
   --parallel N         Number of parallel workers (default: 1; claude only)
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
@@ -54,9 +55,6 @@ Options:
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip tracker for offers scoring below N (default: 0 = off)
   --skip-pdf           Workers skip PDF generation (report + tracker only); generate PDFs later with /career-ops pdf
-  --model NAME         Claude model passed to `claude -p --model` (default:
-                       unset = Claude Max default). Use a cheaper model for
-                       large batches, e.g. `--model claude-sonnet-4-6`.
   -h, --help           Show this help
 
 Files:
@@ -96,7 +94,6 @@ while [[ $# -gt 0 ]]; do
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
     --skip-pdf) SKIP_PDF=true; shift ;;
-    --model) MODEL="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -143,7 +140,13 @@ check_prerequisites() {
   local cli_cmd
   case "$CLI" in
     claude)   cli_cmd="claude" ;;
-    opencode) cli_cmd="ollama" ;;
+    opencode)
+      if command -v opencode &>/dev/null; then
+        cli_cmd="opencode"
+      else
+        cli_cmd="ollama"
+      fi
+      ;;
     gemini)   cli_cmd="gemini" ;;
     qwen)     cli_cmd="qwen" ;;
     *) echo "ERROR: Unknown --cli '$CLI'. Supported: claude, opencode, gemini, qwen"; exit 1 ;;
@@ -151,6 +154,9 @@ check_prerequisites() {
 
   if ! command -v "$cli_cmd" &>/dev/null; then
     echo "ERROR: '$cli_cmd' not found in PATH (required for --cli $CLI)."
+    if [[ "$CLI" == "opencode" ]]; then
+      echo "       Install opencode (https://opencode.ai) or Ollama (https://ollama.ai) with an opencode model."
+    fi
     exit 1
   fi
 
@@ -404,10 +410,15 @@ process_offer() {
     opencode)
       local full_prompt
       full_prompt="$(cat "$resolved_prompt")"$'\n\n'"$prompt"
-      local model_args=()
-      [[ -n "$MODEL" ]] && model_args=(--model "$MODEL")
-      ollama launch opencode "${model_args[@]}" -y -- run "$full_prompt" \
-        > "$log_file" 2>&1 || exit_code=$?
+      if command -v opencode &>/dev/null; then
+        opencode run "$full_prompt" \
+          > "$log_file" 2>&1 || exit_code=$?
+      else
+        local model_args=()
+        [[ -n "$MODEL" ]] && model_args=(--model "$MODEL")
+        ollama launch opencode "${model_args[@]}" -y -- run "$full_prompt" \
+          > "$log_file" 2>&1 || exit_code=$?
+      fi
       ;;
     gemini)
       local full_prompt

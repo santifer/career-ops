@@ -273,7 +273,7 @@ When spawning headless workers for batch processing, use the appropriate command
 | Gemini CLI | `gemini -p "prompt"` |
 | Copilot CLI | `copilot -p "prompt"` |
 | Codex | `codex exec "prompt"` |
-| OpenCode | `opencode run "prompt"` |
+| OpenCode | `opencode run "prompt"` (falls back to `ollama launch opencode -y -- run "prompt"` if `opencode` binary is not in PATH) |
 | Qwen | `qwen -p "prompt"` |
 
 ## Stack and Conventions
