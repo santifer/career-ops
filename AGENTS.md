@@ -211,28 +211,81 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks about rejection patterns or wants to improve targeting | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
 | Wants the strict V2.0 resume pipeline (JD extract + tailored PDF only) | `yash-resume-pipeline` |
+| Wants to run Shivani's resume pipeline | `shivani-resume-pipeline` |
+| Wants the 24/7 Telegram-triggered wrapper for yash-resume-pipeline | yash-pipeline-autonomous-agent (see `.claude/skills/yash-pipeline-autonomous-agent/SKILL.md` + `OPERATIONS.md`) |
 
 ### Yash Resume Pipeline (yash-resume-pipeline)
 
 A streamlined sibling of `auto-pipeline`. Instead of running the full evaluation
 (A–G blocks + scoring + tracker), it produces only two artifacts per URL: a
-structured JD `.md` in `jds/` and a tailored LaTeX-compiled PDF resume in
-`resumes/`. Drop URLs into `data/pipeline.md` (same inbox as `pipeline`),
-then run `/yash-resume-pipeline` — it processes one URL at a time, asks
-before each, and stops on `quit`, empty queue, or 3 consecutive failures.
+structured JD `.md` in `jds/yash/` and a tailored LaTeX-compiled PDF resume in
+`resumes/yash/`. Drop URLs into `data/yash-pipeline.md`,
+then run `/yash-resume-pipeline` — it processes one URL at a time, pauses for
+feedback after each, and stops on `quit`, empty queue, or 3 consecutive failures.
 
 Inputs:
-- URLs in `data/pipeline.md` `## Pendientes` section as `- [ ] <url>`.
+- URLs in `data/yash-pipeline.md` `## Pendientes` section as `- [ ] <url>`.
 - The locked V2.0 prompt at `resume-optimization-system-based-on-job-description.md`.
 
 Outputs:
-- `jds/JD_<CompanySlug>_<RoleSlug>_Yash_Anghan_<YYYY-MM-DD>.md`
-- `resumes/<CompanySlug>_<RoleSlug>_Yash_Anghan_Resume_<YYYY-MM-DD>.{tex,pdf,log}`
+- `jds/yash/JD_<CompanySlug>_<RoleSlug>_Yash_Anghan_<YYYY-MM-DD>.md`
+- `resumes/yash/<CompanySlug>_<RoleSlug>_Yash_Anghan_Resume_<YYYY-MM-DD>.pdf`
+- `resume-logs/yash/<CompanySlug>_<RoleSlug>_Yash_Anghan_Resume_<YYYY-MM-DD>.log`
+- `cover-letters/yash/<CompanySlug>_<RoleSlug>_Yash_Anghan_Cover_Letter_<YYYY-MM-DD>.pdf`
+- `cover-letter-logs/yash/<CompanySlug>_<RoleSlug>_Yash_Anghan_Cover_Letter_<YYYY-MM-DD>.log`
 - One JSONL line per run in `data/yash-resume-runs.log`.
 
 See `modes/yash-resume-pipeline.md` for the full per-URL loop and
 `docs/superpowers/specs/2026-05-07-yash-resume-pipeline-design.md` for the
 locked design.
+
+**Performance:** Per-URL cycle targets under 5 min. Step 7a (plan-bullets) runs
+`tools/validate_bullets.py` and `tools/validate_skills.py` against the 15 bullets
+and 6 skill categories before any `.tex` is written; the retry budget is
+hard-capped at 2 passes. Step 9 (resume compile) runs in the background in
+parallel with step 9b (cover-letter generation). All phase timings flow through
+`node yash-resume-pipeline.mjs init-timer / mark-phase / log --from-timer`. Run
+`npm run smoke` (or `node tests/e2e-smoke.mjs`) for a ~6s end-to-end sanity
+check that exercises the deterministic Node + Python subcommands against
+committed Scribd fixtures — no LLM, no network. See
+`docs/superpowers/specs/2026-05-13-yash-resume-pipeline-sub5min-design.md` for
+the sub-5min design.
+
+**Memory isolation:** Locked prompts (V2.0 resume, cover-letter, `cv.md`) are
+`cat`'d via Bash, never loaded via the Read tool. This bypasses the global
+`PreToolUse:Read` hook installed by `claude-mem@thedotmack`, which can silently
+truncate Read responses and inject observation timelines. See
+`docs/superpowers/specs/2026-05-11-yash-resume-pipeline-mem-isolation-design.md`.
+
+### Shivani Resume Pipeline (shivani-resume-pipeline)
+
+A dedicated resume + cover-letter pipeline for Shivani Anghan targeting Full Stack Java / Software Developer roles in Banking & Financial Services. Mirrors the Yash pipeline structure but uses Shivani's CV, locked V3.1 prompt, and separate output directories. Drop URLs into `data/shivani-pipeline.md`, then run `/shivani-resume-pipeline` — it processes one URL at a time, pauses for feedback after each, and stops on `quit`, empty queue, or 3 consecutive failures.
+
+Inputs:
+- URLs in `data/shivani-pipeline.md` `## Pendientes` section as `- [ ] <url>`.
+- The locked V3.1 resume prompt at `V3-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md`.
+- The cover letter prompt at `shivani-cover-letter-system.md`.
+- CV source: `cv-shivani.md`.
+
+Outputs:
+- `jds/shivani/JD_<CompanySlug>_<RoleSlug>_Shivani_Anghan_<YYYY-MM-DD>.md`
+- `resumes/shivani/<CompanySlug>_<RoleSlug>_Shivani_Anghan_Resume_<YYYY-MM-DD>.pdf`
+- `resume-logs/shivani/<CompanySlug>_<RoleSlug>_Shivani_Anghan_Resume_<YYYY-MM-DD>.log`
+- `cover-letters/shivani/<CompanySlug>_<RoleSlug>_Shivani_Anghan_Cover_Letter_<YYYY-MM-DD>.pdf`
+- `cover-letter-logs/shivani/<CompanySlug>_<RoleSlug>_Shivani_Anghan_Cover_Letter_<YYYY-MM-DD>.log`
+- One JSONL line per run in `data/shivani-resume-runs.log`.
+
+State machine subcommands (same as Yash pipeline):
+- `node shivani-resume-pipeline.mjs next-pending` — pop the next unchecked URL from the queue
+- `node shivani-resume-pipeline.mjs slugify --company "<c>" --role "<r>"` — generate the canonical slug for output filenames
+
+Contact: `shivanianghan11@gmail.com`
+
+Two files that are NEVER modified by the pipeline (locked prompts):
+- `V3-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md`
+- `shivani-cover-letter-system.md`
+
+See `modes/shivani-resume-pipeline.md` for the full per-URL loop.
 
 ### CV Source of Truth
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * test-yash-pipeline-smoke.mjs — end-to-end smoke test for the deterministic
- * portion of the yash-resume-pipeline.
+ * test-shivani-pipeline-smoke.mjs — end-to-end smoke test for the deterministic
+ * portion of the shivani-resume-pipeline.
  *
  * Validates: Playwright can extract title+text from local fixture HTML, slugify
  * round-trip, .tex compile via tectonic produces a real PDF.
  *
  * Does NOT cover: the V2.0 prompt application (LLM-bound, exercised manually).
  *
- * Usage: node tests/test-yash-pipeline-smoke.mjs
+ * Usage: node tests/test-shivani-pipeline-smoke.mjs
  */
 
 import { execFile } from 'node:child_process';
@@ -22,11 +22,11 @@ import { readFileSync } from 'node:fs';
 const execFileP = promisify(execFile);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURES = resolve(ROOT, 'tests/fixtures/jds');
-const SCRIPT = resolve(ROOT, 'yash-resume-pipeline.mjs');
+const SCRIPT = resolve(ROOT, 'shivani-resume-pipeline.mjs');
 
 // Use a per-run writable session directory so playwright-cli can write its
 // .playwright-cli/ session files without hitting the root-owned /tmp dir.
-const PW_CWD = resolve('/tmp', `pw-smoke-${process.pid}`);
+const PW_CWD = resolve('/tmp', `pw-shivani-smoke-${process.pid}`);
 
 let pass = 0, fail = 0;
 function ok(msg) { console.log('  ✅', msg); pass++; }

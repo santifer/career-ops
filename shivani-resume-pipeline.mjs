@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * yash-resume-pipeline.mjs — deterministic orchestrator for /yash-resume-pipeline mode.
+ * shivani-resume-pipeline.mjs — deterministic orchestrator for /shivani-resume-pipeline mode.
  *
  * Subcommands print one JSON object to stdout, exit 0 on ok, non-zero on fail.
  * Importable: pure functions (slugify, parsers) are exported for unit tests.
@@ -18,10 +18,10 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)));
 
 // === cwd-anchored path helpers (tests run in temp dirs) ===
 function projectRoot() { return process.cwd(); }
-function pipelinePath() { return resolve(projectRoot(), 'data/yash-pipeline.md'); }
-function runsLogPath() { return resolve(projectRoot(), 'data/yash-resume-runs.log'); }
-function jdsDir() { return resolve(projectRoot(), 'jds/yash'); }
-function resumesDir() { return resolve(projectRoot(), 'resumes/yash'); }
+function pipelinePath() { return resolve(projectRoot(), 'data/shivani-pipeline.md'); }
+function runsLogPath() { return resolve(projectRoot(), 'data/shivani-resume-runs.log'); }
+function jdsDir() { return resolve(projectRoot(), 'jds/shivani'); }
+function resumesDir() { return resolve(projectRoot(), 'resumes/shivani'); }
 function pdfGeneratorPath() { return resolve(ROOT, 'generate-pdf-latex.mjs'); }
 
 // === Output helpers ===
@@ -36,25 +36,25 @@ async function fileExists(p) {
 }
 
 export function buildJdPath(company_slug, role_slug, date) {
-  return `jds/yash/JD_${company_slug}_${role_slug}_Yash_Anghan_${date}.md`;
+  return `jds/shivani/JD_${company_slug}_${role_slug}_Shivani_Anghan_${date}.md`;
 }
 export function buildPdfPath(company_slug, role_slug, date) {
-  return `resumes/yash/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.pdf`;
+  return `resumes/shivani/${company_slug}_${role_slug}_Shivani_Anghan_Resume_${date}.pdf`;
 }
 export function buildTexPath(company_slug, role_slug, date) {
-  return `resumes/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.tex`;
+  return `resumes/${company_slug}_${role_slug}_Shivani_Anghan_Resume_${date}.tex`;
 }
 export function buildSidecarLogPath(company_slug, role_slug, date) {
-  return `resume-logs/yash/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.log`;
+  return `resume-logs/shivani/${company_slug}_${role_slug}_Shivani_Anghan_Resume_${date}.log`;
 }
 export function buildCoverLetterTexPath(company_slug, role_slug, date) {
-  return `/tmp/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.tex`;
+  return `/tmp/${company_slug}_${role_slug}_Shivani_Anghan_Cover_Letter_${date}.tex`;
 }
 export function buildCoverLetterPdfPath(company_slug, role_slug, date) {
-  return `cover-letters/yash/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.pdf`;
+  return `cover-letters/shivani/${company_slug}_${role_slug}_Shivani_Anghan_Cover_Letter_${date}.pdf`;
 }
 export function buildCoverLetterLogPath(company_slug, role_slug, date) {
-  return `cover-letter-logs/yash/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.log`;
+  return `cover-letter-logs/shivani/${company_slug}_${role_slug}_Shivani_Anghan_Cover_Letter_${date}.log`;
 }
 
 export function ok(payload = {}) {
@@ -296,33 +296,6 @@ SUBCOMMANDS['mark-skipped'] = async (args) => {
   ok({});
 };
 
-// === Timer state helpers ===
-function timerStatePath(pid = process.pid) {
-  return `/tmp/yash-pipeline-timer-${pid}.json`;
-}
-
-async function readTimerState(pid = process.pid) {
-  const p = timerStatePath(pid);
-  try {
-    return JSON.parse(await readFile(p, 'utf-8'));
-  } catch (e) {
-    if (e.code === 'ENOENT') return null;
-    if (e instanceof SyntaxError) return null; // partial write from crashed session — treat as missing
-    throw e;
-  }
-}
-
-async function writeTimerState(state, pid = process.pid) {
-  await writeFile(timerStatePath(pid), JSON.stringify(state, null, 2));
-}
-
-function nowEpochFloat() {
-  // Wall-clock epoch in fractional seconds (ms precision from Date.now). The
-  // hrtime term adds <1ms of process-uptime noise; negligible for phase deltas
-  // but does NOT produce true wall-clock nanoseconds like `date +%s.%N` would.
-  return Date.now() / 1000 + Number(process.hrtime.bigint() % 1_000_000_000n) / 1e12;
-}
-
 // === log subcommand ===
 const ALLOWED_LOG_STATUSES = new Set(['ok', 'fail', 'skip']);
 
@@ -348,101 +321,10 @@ SUBCOMMANDS['log'] = async (args) => {
     payload.cover_letter_status = args['cover-letter-status'];
   }
 
-  // Phase timing fields (integer milliseconds; additive — existing fields are never removed)
-  const timingFields = ['jd-fetch-ms', 'resume-gen-ms', 'resume-compile-ms', 'cover-letter-gen-ms', 'cover-letter-compile-ms', 'total-ms'];
-
-  if (args['from-timer']) {
-    // Pull phase ms from timer state file (written by mark-phase calls).
-    const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
-    const state = await readTimerState(pid);
-    if (!state) fail('log --from-timer requires init-timer to have run first');
-    const fromTimer = {
-      jd_fetch_ms: phaseMs(state, 't_jd_fetch_start', 't_jd_fetch_end'),
-      resume_gen_ms: phaseMs(state, 't_resume_gen_start', 't_resume_gen_end'),
-      resume_compile_ms: phaseMs(state, 't_resume_compile_start', 't_resume_compile_end'),
-      cover_letter_gen_ms: phaseMs(state, 't_cl_gen_start', 't_cl_gen_end'),
-      cover_letter_compile_ms: phaseMs(state, 't_cl_compile_start', 't_cl_compile_end'),
-      total_ms: phaseMs(state, 't_url_start', 't_url_end'),
-    };
-    for (const [k, v] of Object.entries(fromTimer)) {
-      if (v !== null) payload[k] = v;
-    }
-  }
-
-  // Explicit --*-ms flags still work (and override --from-timer values).
-  for (const f of timingFields) {
-    if (args[f] !== undefined) {
-      const v = parseInt(args[f], 10);
-      if (!Number.isNaN(v)) payload[f.replace(/-/g, '_')] = v;
-    }
-  }
-
   const logPath = runsLogPath();
   await mkdir(dirname(logPath), { recursive: true });
   await appendFile(logPath, JSON.stringify(payload) + '\n');
   ok({});
-};
-
-SUBCOMMANDS['init-timer'] = async (args) => {
-  const url = args.url;
-  if (!url) fail('init-timer requires --url');
-  // --pid is optional; used by tests to pin the timer file to a known PID so
-  // sibling child processes can share the same state file. Production flow
-  // omits it; each URL cycle runs in a single process.
-  const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
-  const state = {
-    url,
-    pid,
-    t_url_start: nowEpochFloat(),
-  };
-  await writeTimerState(state, pid);
-  ok({ timer_path: timerStatePath(pid) });
-};
-
-// === mark-phase subcommand ===
-const ALLOWED_PHASES = new Set([
-  'jd_fetch_start', 'jd_fetch_end',
-  'resume_gen_start', 'resume_gen_end',
-  'resume_compile_start', 'resume_compile_end',
-  'cl_gen_start', 'cl_gen_end',
-  'cl_compile_start', 'cl_compile_end',
-  'url_end',
-]);
-
-SUBCOMMANDS['mark-phase'] = async (args) => {
-  const phase = args.phase;
-  if (!phase) fail('mark-phase requires --phase');
-  if (!ALLOWED_PHASES.has(phase)) fail(`unknown phase: ${phase}`);
-  // --pid is optional; see init-timer for rationale
-  const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
-  const state = await readTimerState(pid);
-  if (!state) fail('timer state not found; call init-timer first');
-  state[`t_${phase}`] = nowEpochFloat();
-  await writeTimerState(state, pid);
-  ok({});
-};
-
-function phaseMs(state, startKey, endKey) {
-  const s = state[startKey];
-  const e = state[endKey];
-  if (typeof s !== 'number' || typeof e !== 'number') return null;
-  return Math.round((e - s) * 1000);
-}
-
-SUBCOMMANDS['read-timer'] = async (args) => {
-  const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
-  const state = await readTimerState(pid);
-  if (!state) fail('timer state not found; call init-timer first');
-  ok({
-    url: state.url,
-    pid: state.pid,
-    jd_fetch_ms: phaseMs(state, 't_jd_fetch_start', 't_jd_fetch_end'),
-    resume_gen_ms: phaseMs(state, 't_resume_gen_start', 't_resume_gen_end'),
-    resume_compile_ms: phaseMs(state, 't_resume_compile_start', 't_resume_compile_end'),
-    cover_letter_gen_ms: phaseMs(state, 't_cl_gen_start', 't_cl_gen_end'),
-    cover_letter_compile_ms: phaseMs(state, 't_cl_compile_start', 't_cl_compile_end'),
-    total_ms: phaseMs(state, 't_url_start', 't_url_end'),
-  });
 };
 
 SUBCOMMANDS['compile-resume'] = async (args) => {
@@ -495,69 +377,11 @@ SUBCOMMANDS['compile-cover-letter'] = async (args) => {
   }
 };
 
-// === checkpoint subcommand ===
-// Valid phases for the _end checkpoints produced by the per-URL loop.
-const CHECKPOINT_PHASES = new Set([
-  'jd_fetch_end',
-  'resume_gen_end',
-  'resume_compile_end',
-  'cl_gen_end',
-  'cl_compile_end',
-  'url_end',
-]);
-
-SUBCOMMANDS['checkpoint'] = async (args) => {
-  const runId = args['run-id'];
-  const phase = args['phase'];
-  const urlHash = args['url-hash'];
-  const inputsRaw = args['inputs'];
-
-  if (!runId) fail('checkpoint requires --run-id');
-  if (!phase) fail('checkpoint requires --phase');
-  if (!CHECKPOINT_PHASES.has(phase)) {
-    fail(`invalid phase: "${phase}". must be one of: ${[...CHECKPOINT_PHASES].join(', ')}`);
-  }
-  if (!urlHash) fail('checkpoint requires --url-hash');
-  if (!inputsRaw) fail('checkpoint requires --inputs');
-
-  let inputs;
-  try {
-    inputs = JSON.parse(inputsRaw);
-  } catch (e) {
-    fail(`invalid --inputs: not valid JSON — ${e.message}`);
-  }
-
-  const checkpointDir = process.env.CHECKPOINT_DIR;
-  const dbPath = process.env.WORK_QUEUE_DB;
-  if (!checkpointDir) fail('CHECKPOINT_DIR env var is not set');
-  if (!dbPath) fail('WORK_QUEUE_DB env var is not set');
-
-  // Write checkpoint JSON atomically via tmp → rename
-  const { mkdir: mkdirAsync, writeFile: writeFileAsync, rename: renameAsync } = await import('node:fs/promises');
-  await mkdirAsync(checkpointDir, { recursive: true });
-  const tmpPath = resolve(checkpointDir, `${urlHash}.json.tmp`);
-  const finalPath = resolve(checkpointDir, `${urlHash}.json`);
-  await writeFileAsync(tmpPath, JSON.stringify(inputs, null, 2), 'utf8');
-  await renameAsync(tmpPath, finalPath);
-
-  // Persist to SQLite using lazy dynamic import (keeps cold-start cost low for other subcommands)
-  const { initDb, closeDb } = await import('./services/db.mjs');
-  const { upsertCheckpoint } = await import('./services/queue.mjs');
-  const db = initDb(dbPath);
-  try {
-    upsertCheckpoint(db, { runId: Number(runId), lastPhase: phase, inputsPath: finalPath });
-  } finally {
-    closeDb(db);
-  }
-
-  ok({ phase, inputs_path: finalPath });
-};
-
 // === Dispatcher (CLI mode only) ===
 async function main() {
   const subcommand = process.argv[2];
   if (!subcommand) {
-    fail('unknown subcommand: <none>. usage: node yash-resume-pipeline.mjs <subcommand> [--flags]');
+    fail('unknown subcommand: <none>. usage: node shivani-resume-pipeline.mjs <subcommand> [--flags]');
   }
   const handler = SUBCOMMANDS[subcommand];
   if (!handler) {

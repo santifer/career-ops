@@ -21,6 +21,10 @@ jobs:
           sudo mv tectonic /usr/local/bin/tectonic
           tectonic --version
       - run: npm install
+      - name: Install playwright-cli + Chromium for smoke tests
+        run: |
+          npm install -g @playwright/cli
+          playwright-cli install-browser chromium
       - name: yash-resume-pipeline unit tests (verbose)
         run: node --test tests/yash-resume-pipeline.test.mjs
       - run: node test-all.mjs --quick
