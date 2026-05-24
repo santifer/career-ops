@@ -7,7 +7,7 @@ set -euo pipefail
 #
 # Supported CLIs (--cli flag):
 #   claude    — claude -p with --dangerously-skip-permissions (default)
-#   opencode  — ollama launch opencode --model <model>
+#   opencode  — opencode run (falls back to ollama launch opencode if not in PATH)
 #   gemini    — gemini -p
 #   qwen      — qwen -p
 
@@ -410,12 +410,12 @@ process_offer() {
     opencode)
       local full_prompt
       full_prompt="$(cat "$resolved_prompt")"$'\n\n'"$prompt"
+      local model_args=()
+      [[ -n "$MODEL" ]] && model_args=(--model "$MODEL")
       if command -v opencode &>/dev/null; then
-        opencode run "$full_prompt" \
+        opencode run "${model_args[@]}" "$full_prompt" \
           > "$log_file" 2>&1 || exit_code=$?
       else
-        local model_args=()
-        [[ -n "$MODEL" ]] && model_args=(--model "$MODEL")
         ollama launch opencode "${model_args[@]}" -y -- run "$full_prompt" \
           > "$log_file" 2>&1 || exit_code=$?
       fi
@@ -487,7 +487,7 @@ print_summary() {
     return
   fi
 
-  local total=0 completed=0 failed=0 pending=0
+  local total=0 completed=0 failed=0 skipped=0 pending=0
   local score_sum=0 score_count=0
 
   while IFS=$'\t' read -r sid _ sstatus _ _ _ sscore _ _; do
@@ -500,12 +500,13 @@ print_summary() {
           score_count=$((score_count + 1))
         fi
         ;;
-      failed) failed=$((failed + 1)) ;;
-      *) pending=$((pending + 1)) ;;
+      failed)  failed=$((failed + 1)) ;;
+      skipped) skipped=$((skipped + 1)) ;;
+      *)       pending=$((pending + 1)) ;;
     esac
   done < "$STATE_FILE"
 
-  echo "Total: $total | Completed: $completed | Failed: $failed | Pending: $pending"
+  echo "Total: $total | Completed: $completed | Skipped: $skipped | Failed: $failed | Pending: $pending"
 
   if (( score_count > 0 )); then
     local avg
