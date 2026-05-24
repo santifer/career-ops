@@ -74,3 +74,39 @@ JD text/URL ──► archetype detect ──► A–F evaluation (reads cv.md +
 - **Offer verification uses Playwright, not WebFetch.** AGENTS.md mandates `browser_navigate` + `browser_snapshot` for liveness; only the headless batch worker may fall back to WebFetch and must mark the report `**Verification:** unconfirmed (batch mode)`.
 - **Update prompt on first message:** AGENTS.md instructs running `node update-system.mjs check` silently each session and only surfacing the `update-available` case. Don't surface `up-to-date`, `dismissed`, `offline`, or `no-remote-version`.
 - **Onboarding gate:** if `cv.md`, `config/profile.yml`, `modes/_profile.md`, or `portals.yml` are missing, AGENTS.md requires entering onboarding mode before any evaluation/scan. `modes/_profile.md` should be silently copied from `modes/_profile.template.md` if absent.
+
+## Session continuity — read this first when picking up Patrick's fork
+
+This fork has user-specific customizations that change defaults from the upstream career-ops project. **Read these before running any evaluation.**
+
+### Hard rules that override the system
+
+1. **Location is a HARD constraint** (added 2026-05-17, hardened EOD same day). Patrick is Denver-based with family; **not relocating**. The rule covers more than "no relocation" — it also covers **no required travel to non-Denver offices**, even if a role is tagged "Remote-Friendly (Travel-Required)." If a JD requires *any* cadence of office time at a non-Denver hub, it's a SKIP, score 1.0/5, regardless of comp or company tier. Even Anthropic ($405K+ base) was disqualified. See `feedback_location_policy.md` in memory + `modes/_profile.md` "Your Location Policy" section.
+
+2. **Comp floor is $160K base USD.** If the JD lists a comp range and `max < $160K`, output a 1-sentence SKIP verdict — do NOT generate a full A-G evaluation. Token-wasteful otherwise. See `modes/_profile.md` "Your Comp Targets" section.
+
+3. **Reports are in English.** The system-layer `modes/*.md` files were translated to English on 2026-05-17 (originally Spanish from upstream author). If `node update-system.mjs apply` is run, modes/ will revert to Spanish — re-apply translations from `project_careerops_english_modes.md` in memory, or override at write-time using the translation table in `modes/_profile.md` "Report Output Language" section.
+
+### Patrick-specific workflow
+
+- **MacBook destination for review artifacts**: `~/Documents/career-ops-2026-05-17/` (or roll forward by date). Push via `scp` to `patrick@10.1.1.134`. Mirror structure: `reports/`, `output/`, `cover-letters/`, `interview-prep/`, plus the tracker at the root.
+- **Dual CV output**: produce BOTH the ATS-PDF (existing HTML/Playwright flow) AND a polished `.docx` via `anthropic-skills:docx` (skill is loaded, no install). Per `feedback_cv_output_format.md` in memory.
+- **Telegram alerts**: career-ops scanner sends daily fits via `@career_ops_bot_bot` (token in `/opt/career-ops/.env` on LXC CT 203). Infra alerts via the openclaw bot. Don't confuse the two.
+- **OpenRouter for LLM calls outside this session**: key at `~/.secrets/openrouter.txt` (mode 600). Default model `anthropic/claude-haiku-4.5` for cheap one-shot stuff (refresh-now, cybersec digest). See `reference_openrouter_key.md` in memory. **Patrick does NOT have an Anthropic API key** — Claude Max ≠ API access.
+
+### Known bugs to work around
+
+- **`merge-tracker.mjs` dedup is too aggressive.** When a new TSV's `company + significant-title-substring` overlaps an existing tracker row, it treats it as UPDATE not ADD. Workaround: verify `data/applications.md` diff after every merge; hand-edit if a row was unexpectedly overwritten. Hit on 2026-05-17 when adding Anthropic Application Security Engineer (#7) which got merged onto existing Staff+ Software Security Engineer (#5). See `feedback_merge_tracker_dedup_bug.md` in memory.
+- **`scan.mjs` still writes Spanish section headers** (`## Pendientes` / `## Procesadas`) into `data/pipeline.md` even though `modes/*.md` is in English. System-layer script, not patched. Cosmetic only; doesn't break workflow.
+
+### Where the scanner lives + how to refresh it
+
+- Always-on scanner on LXC CT 203 at `10.1.30.50`, daily cron 07:00 MDT via `systemctl start career-scan.service`.
+- Sync changes via: `scp $FILE root@10.1.30.11:/tmp/ && ssh root@10.1.30.11 "pct push 203 /tmp/$FILE /opt/career-ops/$RELATIVE_PATH"`
+- Trigger a test scan: `ssh root@10.1.30.50 "systemctl start career-scan.service"` — completes in ~10s.
+
+### Default workflow for picking up
+
+1. Read `MEMORY.md` first (auto-loaded — has the index of all memory files).
+2. Read `TODO.md` in repo root for the active session checklist.
+3. Status of viable applications + open SKIPs is in `data/applications.md`.
