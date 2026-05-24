@@ -17,7 +17,7 @@
     "scan": "node scan.mjs",
     "gemini:eval": "node gemini-eval.mjs",
     "prepare": "husky",
-    "test:services": "node --test tests/services/",
+    "test:services": "node --test tests/services/*.test.mjs",
     "secrets:check": "bash tools/check-secrets.sh"
   },
   "keywords": [
