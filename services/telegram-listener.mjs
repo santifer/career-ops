@@ -16,6 +16,7 @@ import crypto from 'node:crypto';
 import { validateUrl } from './url-validate.mjs';
 import { checkDuplicate } from './dedup.mjs';
 import { insertQueueRow, requestCancel, selectQueueLen, upsertTelegramOffset, selectTelegramOffset } from './queue.mjs';
+import { notifyReady, notifyStopping, startWatchdogPinger } from './sd-notify.mjs';
 
 // ── Public sentinel ─────────────────────────────────────────────────────────
 
@@ -213,21 +214,39 @@ export async function main() {
 
   console.log(`[telegram-listener] Started. Allowlist: ${[...allowlist].join(',')}. Notify chat: ${notifyChatId}`);
 
+  // Mark service READY for systemd Type=notify, then start the WatchdogSec= pinger.
+  // Unit file declares WatchdogSec=90 → ping every 30s (≈1/3 of the timeout).
+  await notifyReady('listening');
+  const stopWatchdog = startWatchdogPinger(30_000);
+
+  let running = true;
+  const onSignal = (sig) => {
+    if (!running) return;
+    running = false;
+    console.log(`[telegram-listener] Received ${sig}; draining for clean exit.`);
+  };
+  process.on('SIGTERM', () => onSignal('SIGTERM'));
+  process.on('SIGINT', () => onSignal('SIGINT'));
+
   let offset = selectTelegramOffset(db, notifyChatId);
   let backoffMs = 0;
 
-  // Long-poll loop.
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  // Long-poll loop. `running` is flipped to false by SIGTERM/SIGINT; the loop
+  // exits at the next iteration boundary (≤ 30s of getUpdates() + post-handling).
+  while (running) {
     if (backoffMs > 0) {
-      await new Promise(r => setTimeout(r, backoffMs));
+      // Sleep is interrupted by signal via the running flag check on each tick.
+      const sleptMs = await sleepUntilSignal(backoffMs, () => !running);
+      if (!running) break;
+      if (sleptMs < backoffMs) backoffMs = 0;
     }
 
     let updates;
     try {
-      updates = await getUpdates({ offset, timeout: 30 });
+      updates = await getUpdates({ offset, timeout: 25 });
       backoffMs = 0;   // reset on success
     } catch (err) {
+      if (!running) break;
       const nextBackoff = Math.min((backoffMs || 5_000) * 3, 15 * 60_000);
       console.error(`[telegram-listener] getUpdates error: ${err.message}. Backing off ${nextBackoff}ms.`);
       backoffMs = nextBackoff;
@@ -241,11 +260,32 @@ export async function main() {
         console.error(`[telegram-listener] handleUpdate error for update_id=${update.update_id}: ${err.message}`);
       }
 
-      // Advance offset (Telegram: offset = last update_id + 1).
       offset = update.update_id + 1;
       upsertTelegramOffset(db, notifyChatId, update.update_id);
     }
   }
+
+  // Drain: tell systemd we're stopping, stop watchdog, close DB.
+  await notifyStopping('shutting down');
+  stopWatchdog();
+  try {
+    const { closeDb } = await import('./db.mjs');
+    closeDb(db);
+  } catch (e) {
+    console.error(`[telegram-listener] closeDb error: ${e.message}`);
+  }
+  console.log('[telegram-listener] Exited cleanly.');
+}
+
+// Interruptible sleep: resolves when `ms` elapse or `signal()` returns true.
+async function sleepUntilSignal(ms, signal) {
+  const start = Date.now();
+  const stepMs = 250;
+  while (Date.now() - start < ms) {
+    if (signal()) return Date.now() - start;
+    await new Promise(r => setTimeout(r, Math.min(stepMs, ms - (Date.now() - start))));
+  }
+  return ms;
 }
 
 // ── Entry point ──────────────────────────────────────────────────────────────

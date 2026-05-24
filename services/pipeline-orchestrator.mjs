@@ -21,6 +21,7 @@ import {
 import { checkCap } from './cap.mjs';
 import { analyzeRebootState, computeNextPhase, PHASE_ORDER } from './reboot-resume.mjs';
 import { formatStart, formatSuccess, formatFailure, formatCapReached, formatPhaseEnd, formatCancelled } from './notifier.mjs';
+import { notifyReady, notifyStopping, startWatchdogPinger } from './sd-notify.mjs';
 // NOTE: telegram-client.mjs is NOT statically imported here — it doesn't exist until Task 3.1.
 // All calls use lazy dynamic import() with try/catch fallback inside main() and tickOnce().
 
@@ -121,7 +122,7 @@ export async function tickOnce({ db, projectRoot, capLimits, gitSha, claudeModel
 // --- real spawn(): one `claude -p` per URL, with checkpoint-polling for phase pings ---
 //
 // This is the production glue. The signature matches what tickOnce passes in.
-export async function realSpawn({ runId, queueId, url, urlHash, projectRoot, dbPath, claudeModel }, { onPhaseEnd, db }) {
+export async function realSpawn({ runId, queueId, url, urlHash, projectRoot, dbPath, claudeModel }, { onPhaseEnd, onSpawn, db }) {
   const preamblePath = resolve(projectRoot, 'ops/preambles/fresh-run.md');
   const preamble = readFileSync(preamblePath, 'utf-8')
     .replaceAll('$URL', url)
@@ -156,6 +157,12 @@ export async function realSpawn({ runId, queueId, url, urlHash, projectRoot, dbP
   });
   child.stdout.pipe(logStream);
   child.stderr.pipe(logStream);
+
+  // Surface the child to the orchestrator so the main loop's SIGTERM handler can
+  // signal it directly during shutdown (faster than the 2s cancel poll).
+  if (typeof onSpawn === 'function') {
+    try { onSpawn(child); } catch (e) { console.error(`onSpawn hook error: ${e.message}`); }
+  }
 
   // checkpoint poll: every 2s, read checkpoints.last_phase; if changed, fire onPhaseEnd
   let lastSeenPhase = null;
@@ -266,23 +273,91 @@ async function main() {
     } catch (e) { console.error(`notify error: ${e.message}`); }
   };
 
-  // Poll loop
-  while (true) {
+  // ── systemd Type=notify lifecycle ────────────────────────────────────────
+  // READY=1 lets systemd consider the service "started"; WATCHDOG=1 pings keep
+  // it alive under WatchdogSec=300 (ping cadence = 120s ≈ 1/2.5 of the limit).
+  await notifyReady('orchestrator');
+  const stopWatchdog = startWatchdogPinger(120_000);
+
+  // ── boot notification (one-shot) ────────────────────────────────────────
+  const queuedAtBoot = selectQueueLen(db, 'queued');
+  const shortSha = gitSha.slice(0, 7);
+  await notify(`✅ Bot online · queue: ${queuedAtBoot} waiting · git ${shortSha}`);
+
+  // ── graceful-shutdown state ──────────────────────────────────────────────
+  // liveRun tracks the in-flight URL so the signal handler can SIGTERM the
+  // child + so the post-tick re-queue logic knows which row to reset.
+  const state = { shuttingDown: false, exitCode: 0 };
+  const liveRun = { queueId: null, runId: null, child: null };
+
+  const requestShutdown = (sig) => {
+    if (state.shuttingDown) return;
+    state.shuttingDown = true;
+    console.log(`[pipeline-orchestrator] Received ${sig}; SIGTERM child + re-queueing.`);
+    // Fire-and-forget the user-facing notification — don't block the handler.
+    if (liveRun.runId) {
+      notify(`🔄 Bot restarting; run #${liveRun.runId} will be re-queued and retried on next boot.`).catch(() => {});
+    } else {
+      notify(`🔄 Bot restarting; queue preserved on disk.`).catch(() => {});
+    }
+    // Fast-kill any in-flight child so systemd's TimeoutStopSec budget is generous.
+    if (liveRun.child) {
+      try { liveRun.child.kill('SIGTERM'); } catch {}
+      setTimeout(() => { try { liveRun.child && liveRun.child.kill('SIGKILL'); } catch {} }, SIGKILL_GRACE_MS);
+    }
+  };
+  process.on('SIGTERM', () => requestShutdown('SIGTERM'));
+  process.on('SIGINT', () => requestShutdown('SIGINT'));
+
+  // ── poll loop ────────────────────────────────────────────────────────────
+  while (!state.shuttingDown) {
+    let tickResult = null;
     try {
-      await tickOnce({
+      tickResult = await tickOnce({
         db, projectRoot,
         capLimits: { dailyMax: 20, weeklyMax: 100 },
         gitSha, claudeModel,
         // dbPath is in closure scope; pass it explicitly so realSpawn gets it without
         // mutating the db object (node:sqlite DatabaseSync has no .location property).
-        spawn: (ctx) => realSpawn({ ...ctx, dbPath }, { db, onPhaseEnd: ({ phase, elapsedMs }) => notify(formatPhaseEnd({ runId: ctx.runId, phase, elapsedMs })) }),
+        spawn: (ctx) => realSpawn({ ...ctx, dbPath }, {
+          db,
+          onSpawn: (child) => { liveRun.queueId = ctx.queueId; liveRun.runId = ctx.runId; liveRun.child = child; },
+          onPhaseEnd: ({ phase, elapsedMs }) => notify(formatPhaseEnd({ runId: ctx.runId, phase, elapsedMs })),
+        }),
         notify,
       });
     } catch (e) {
       console.error(`orchestrator tick error: ${e.message}`);
     }
+
+    // If shutdown landed during this tick and the run wasn't a success, undo
+    // the mark-failed bookkeeping and put the row back to 'queued' so the next
+    // boot retries it instead of dropping it.
+    if (state.shuttingDown
+        && liveRun.queueId
+        && tickResult
+        && tickResult.action !== 'completed_ok'
+        && tickResult.action !== 'idle'
+        && tickResult.action !== 'capped') {
+      try {
+        repairOrphanedRunning(db, liveRun.queueId);
+        await notify(`↩️ Run #${liveRun.runId} requeued; will retry from the start on next boot.`);
+      } catch (e) {
+        console.error(`re-queue on shutdown failed: ${e.message}`);
+      }
+    }
+
+    liveRun.queueId = null; liveRun.runId = null; liveRun.child = null;
+    if (state.shuttingDown) break;
     await new Promise(r => setTimeout(r, POLL_MS));
   }
+
+  // ── drain + exit ─────────────────────────────────────────────────────────
+  await notifyStopping('orchestrator shutdown');
+  stopWatchdog();
+  try { closeDb(db); } catch (e) { console.error(`closeDb error: ${e.message}`); }
+  console.log('[pipeline-orchestrator] Exited cleanly.');
+  process.exit(state.exitCode);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

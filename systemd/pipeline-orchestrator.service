@@ -4,13 +4,18 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+Type=notify
+NotifyAccess=all
 WorkingDirectory=/yash-superClaudeHuman/projects/yash-ai-automation-career
 EnvironmentFile=/etc/yash-pipeline/agent.env
 ExecStart=/usr/bin/env node services/pipeline-orchestrator.mjs
 Restart=on-failure
 RestartSec=5
 WatchdogSec=300
+TimeoutStartSec=30
+TimeoutStopSec=30
+KillMode=mixed
+KillSignal=SIGTERM
 MemoryMax=512M
 StandardOutput=journal
 StandardError=journal
