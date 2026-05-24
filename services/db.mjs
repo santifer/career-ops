@@ -71,7 +71,8 @@ export function initDb(path) {
 
 export function integrityCheck(db) {
   const row = db.prepare('PRAGMA integrity_check').get();
-  return row?.integrity_check || 'unknown';
+  if (!row) throw new Error('integrity_check PRAGMA returned no rows — DB may be unreadable');
+  return row.integrity_check;
 }
 
 export function closeDb(db) {

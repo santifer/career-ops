@@ -68,3 +68,22 @@ test('integrityCheck returns "ok" on healthy DB', () => {
     closeDb(db);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('PRAGMA journal_mode is WAL after initDb', () => {
+  const { dir, path } = tempDbPath();
+  try {
+    const db = initDb(path);
+    const row = db.prepare('PRAGMA journal_mode').get();
+    assert.equal(row.journal_mode, 'wal');
+    closeDb(db);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('closeDb closes the connection (prepare after close throws)', () => {
+  const { dir, path } = tempDbPath();
+  try {
+    const db = initDb(path);
+    closeDb(db);
+    assert.throws(() => db.prepare('SELECT 1').get(), /closed|not open|connection/i);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
