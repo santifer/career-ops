@@ -16,10 +16,13 @@
  *   2. node batch-kimi.mjs           # batch evaluate + stage tracker additions
  *   3. node merge-tracker.mjs        # merge additions into data/applications.md
  */
-
 import { readFileSync, existsSync, writeFileSync, mkdirSync, rmSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import dns from "dns";
+import { promisify } from "util";
+
+const dnsLookup = promisify(dns.lookup);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -32,18 +35,41 @@ const TRACKER_ADDITIONS_DIR = join(ROOT, "batch", "tracker-additions");
 // Parse CLI
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
-const withPdf = args.includes("--with-pdf");
+
+// Explicitly reject --with-pdf flag as batch PDF generation requires tailored HTML CV generation
+if (args.includes("--with-pdf")) {
+  console.error("❌ Error: --with-pdf is not supported yet in the batch evaluator. Run the career-ops-pdf skill manually for high-scoring roles.");
+  process.exit(1);
+}
+
+// Parse and validate --min-score
 const minScoreFlag = args.findIndex((a) => a === "--min-score");
-const minScore =
-  minScoreFlag >= 0 ? parseFloat(args[minScoreFlag + 1]) || 0 : 0;
+let minScore = 0;
+if (minScoreFlag >= 0) {
+  const rawVal = args[minScoreFlag + 1];
+  if (rawVal === undefined) {
+    console.error("❌ Error: Missing value for --min-score.");
+    process.exit(1);
+  }
+  const val = parseFloat(rawVal);
+  if (isNaN(val) || !isFinite(val)) {
+    console.error(`❌ Error: Invalid --min-score: expected a numeric value (got "${rawVal}").`);
+    process.exit(1);
+  }
+  minScore = val;
+}
 
 // Ensure dirs exist
 mkdirSync(JDS_DIR, { recursive: true });
 mkdirSync(TRACKER_ADDITIONS_DIR, { recursive: true });
 
 function parsePendingUrls() {
+  if (!existsSync(join(ROOT, "data"))) {
+    console.error("❌ Error: The 'data/' directory is missing.");
+    return [];
+  }
   if (!existsSync(PIPELINE_PATH)) {
-    console.log("❌ No data/pipeline.md found. Run 'node scan.mjs' first.");
+    console.error("❌ Error: pipeline.md is missing. Run 'node scan.mjs' first.");
     return [];
   }
 
@@ -63,13 +89,79 @@ function parsePendingUrls() {
   return urls;
 }
 
-async function fetchJd(url) {
-  try {
-    const resp = await fetch(url, { redirect: "follow" });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const html = await resp.text();
+// SSRF Protection Helper Functions
+function isPrivateIp(ip) {
+  // Check IPv4
+  const ipv4Pattern = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/;
+  const match = ip.match(ipv4Pattern);
+  if (match) {
+    const [, o1, o2, o3, o4] = match.map(Number);
+    // Loopback
+    if (o1 === 127) return true;
+    // Private ranges (RFC1918)
+    if (o1 === 10) return true;
+    if (o1 === 172 && o2 >= 16 && o2 <= 31) return true;
+    if (o1 === 192 && o2 === 168) return true;
+    // Link-local
+    if (o1 === 169 && o2 === 254) return true;
+    // Multicast
+    if (o1 >= 224 && o1 <= 239) return true;
+    // Broadcast
+    if (o1 === 255) return true;
+    // Zero autoconfiguration
+    if (o1 === 0) return true;
+    return false;
+  }
+  // Check IPv6
+  if (ip.includes(":")) {
+    const cleanIp = ip.toLowerCase().trim();
+    if (cleanIp === "::1" || cleanIp === "::") return true;
+    if (cleanIp.startsWith("fe8") || cleanIp.startsWith("fe9") || cleanIp.startsWith("fea") || cleanIp.startsWith("feb")) return true; // fe80::/10
+    if (cleanIp.startsWith("fc") || cleanIp.startsWith("fd")) return true; // unique local addresses
+    if (cleanIp.startsWith("ff")) return true; // multicast
+  }
+  return false;
+}
 
-    // Very naive HTML→text extraction for job boards
+async function validateUrl(urlStr) {
+  const parsed = new URL(urlStr);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("Only http: and https: protocols are allowed.");
+  }
+  const host = parsed.hostname;
+  const { address } = await dnsLookup(host);
+  if (isPrivateIp(address)) {
+    throw new Error(`SSRF Prevention: Resolved IP ${address} is private/reserved.`);
+  }
+  return parsed;
+}
+
+async function fetchJd(url) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  try {
+    let currentUrl = url;
+    let html = "";
+    const maxRedirects = 5;
+    for (let i = 0; i < maxRedirects; i++) {
+      await validateUrl(currentUrl);
+      const resp = await fetch(currentUrl, { redirect: "manual", signal: controller.signal });
+      if (resp.status >= 300 && resp.status < 400) {
+        const location = resp.headers.get("location");
+        if (!location) {
+          throw new Error(`Redirect with no location header at ${currentUrl}`);
+        }
+        currentUrl = new URL(location, currentUrl).toString();
+        continue;
+      }
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      html = await resp.text();
+      break;
+    }
+
+    clearTimeout(timeoutId);
+
+    // Naive HTML→text extraction for job boards
     // Remove script/style tags
     let text = html
       .replace(/<script[\s\S]*?<\/script>/gi, "")
@@ -96,7 +188,12 @@ async function fetchJd(url) {
 
     return text;
   } catch (err) {
-    console.error(`    ❌ Failed to fetch ${url}: ${err.message}`);
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      console.error(`    ❌ Fetch timeout for ${url}`);
+    } else {
+      console.error(`    ❌ Failed to fetch ${url}: ${err.message}`);
+    }
     return null;
   }
 }
@@ -104,7 +201,7 @@ async function fetchJd(url) {
 import { spawn } from "child_process";
 
 function runKimiEval(jdFile) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const child = spawn(
       "node",
       [join(ROOT, "kimi-eval.mjs"), "--no-save", "--file", jdFile],
@@ -117,22 +214,43 @@ function runKimiEval(jdFile) {
     let stdout = "";
     let stderr = "";
 
-    child.stdout.on("data", (d) => {
-      stdout += d;
-    });
-    child.stderr.on("data", (d) => {
-      stderr += d;
-    });
+    const timeoutId = setTimeout(() => {
+      child.kill();
+      reject(new Error("Evaluation process timed out after 90 seconds."));
+    }, 90000);
 
-    child.on("close", (code) => {
+    const onStdout = (d) => { stdout += d; };
+    const onStderr = (d) => { stderr += d; };
+    const onError = (err) => {
+      clearTimeout(timeoutId);
+      cleanup();
+      reject(err);
+    };
+    const onClose = (code) => {
+      clearTimeout(timeoutId);
+      cleanup();
       resolve({ code, stdout, stderr });
-    });
+    };
+
+    function cleanup() {
+      child.stdout.off("data", onStdout);
+      child.stderr.off("data", onStderr);
+      child.off("error", onError);
+      child.off("close", onClose);
+      child.off("exit", onClose);
+    }
+
+    child.stdout.on("data", onStdout);
+    child.stderr.on("data", onStderr);
+    child.on("error", onError);
+    child.on("close", onClose);
+    child.on("exit", onClose);
   });
 }
 
 function extractScore(stdout) {
   const m = stdout.match(/Score:\s*([\d.]+)\/5/);
-  return m ? parseFloat(m[1]) : 0;
+  return m ? parseFloat(m[1]) : null;
 }
 
 async function main() {
@@ -146,7 +264,6 @@ async function main() {
   console.log(`Pending URLs: ${pending.length}`);
   console.log(`Dry run: ${dryRun}`);
   console.log(`Min score gate: ${minScore > 0 ? minScore : "off"}`);
-  console.log(`With PDF: ${withPdf}`);
   console.log("");
 
   if (dryRun) {
@@ -182,8 +299,16 @@ async function main() {
 
     // Run evaluation
     console.log("    🤖 Evaluating with Kimi...");
-    const { code, stdout, stderr } = await runKimiEval(jdFile);
+    let runResult;
+    try {
+      runResult = await runKimiEval(jdFile);
+    } catch (err) {
+      console.error(`    ❌ Evaluation error: ${err.message}`);
+      failed++;
+      continue;
+    }
 
+    const { code, stdout, stderr } = runResult;
     if (code !== 0) {
       console.error(`    ❌ Evaluation failed (exit ${code})`);
       console.error(stderr.slice(0, 300));
@@ -192,12 +317,17 @@ async function main() {
     }
 
     const score = extractScore(stdout);
+    if (score === null) {
+      console.error("    ❌ Score not found in evaluation output.");
+      failed++;
+      continue;
+    }
     console.log(`    ✅ Score: ${score}/5`);
 
     // Min-score gate
     if (minScore > 0 && score < minScore) {
       console.log(
-        `    ⏭️  Below min-score (${minScore}), skipping tracker/PDF`,
+        `    ⏭️  Below min-score (${minScore}), skipping tracker`,
       );
       skipped++;
       continue;
@@ -205,17 +335,49 @@ async function main() {
 
     // Re-run WITH save to generate report + tracker TSV
     console.log("    💾 Saving report + tracker addition...");
-    const { code: saveCode } = await new Promise((resolve) => {
-      const child = spawn(
-        "node",
-        [join(ROOT, "kimi-eval.mjs"), "--file", jdFile],
-        {
-          stdio: "inherit",
-          cwd: ROOT,
-        },
-      );
-      child.on("close", (code) => resolve({ code }));
-    });
+    let saveCode = -1;
+    try {
+      const saveResult = await new Promise((resolve, reject) => {
+        const child = spawn(
+          "node",
+          [join(ROOT, "kimi-eval.mjs"), "--file", jdFile],
+          {
+            stdio: "inherit",
+            cwd: ROOT,
+          },
+        );
+        const timeoutId = setTimeout(() => {
+          child.kill();
+          reject(new Error("Save process timed out after 90 seconds."));
+        }, 90000);
+
+        const onError = (err) => {
+          clearTimeout(timeoutId);
+          cleanup();
+          reject(err);
+        };
+        const onClose = (code) => {
+          clearTimeout(timeoutId);
+          cleanup();
+          resolve({ code });
+        };
+
+        function cleanup() {
+          child.off("error", onError);
+          child.off("close", onClose);
+          child.off("exit", onClose);
+        }
+
+        child.on("error", onError);
+        child.on("close", onClose);
+        child.on("exit", onClose);
+      });
+      saveCode = saveResult.code;
+    } catch (err) {
+      console.error(`    ❌ Save execution error: ${err.message}`);
+      failed++;
+      continue;
+    }
 
     if (saveCode !== 0) {
       console.error(`    ❌ Save failed (exit ${saveCode})`);
@@ -225,16 +387,6 @@ async function main() {
 
     completed++;
     results.push({ url, score, meta });
-
-    // Optional: generate PDF
-    if (withPdf && score >= 4.0) {
-      console.log(
-        "    📄 PDF generation skipped in this version (requires tailored HTML generation).",
-      );
-      console.log(
-        "       Run career-ops-pdf skill manually for high-scoring roles.",
-      );
-    }
 
     // Small delay to avoid rate limits
     if (i < pending.length - 1) {
@@ -261,19 +413,47 @@ async function main() {
 
   // Merge tracker
   console.log("\n=== Merging tracker additions ===");
-  const merge = spawn("node", [join(ROOT, "merge-tracker.mjs")], {
-    stdio: "inherit",
-    cwd: ROOT,
-  });
-  merge.on("close", (code) => {
-    if (code === 0) {
-      console.log(
-        "\n✅ Batch complete. Review data/applications.md for results.",
-      );
-    } else {
-      console.log("\n⚠️  Merge completed with warnings. Check output above.");
-    }
-  });
+  try {
+    await new Promise((resolve, reject) => {
+      const merge = spawn("node", [join(ROOT, "merge-tracker.mjs")], {
+        stdio: "inherit",
+        cwd: ROOT,
+      });
+      const timeoutId = setTimeout(() => {
+        merge.kill();
+        reject(new Error("merge-tracker.mjs timed out after 60 seconds."));
+      }, 60000);
+
+      const onError = (err) => {
+        clearTimeout(timeoutId);
+        cleanup();
+        reject(err);
+      };
+      const onClose = (code) => {
+        clearTimeout(timeoutId);
+        cleanup();
+        if (code === 0) {
+          resolve(code);
+        } else {
+          reject(new Error(`merge-tracker.mjs failed with exit code ${code}`));
+        }
+      };
+
+      function cleanup() {
+        merge.off("error", onError);
+        merge.off("close", onClose);
+        merge.off("exit", onClose);
+      }
+
+      merge.on("error", onError);
+      merge.on("close", onClose);
+      merge.on("exit", onClose);
+    });
+    console.log("\n✅ Batch complete. Review data/applications.md for results.");
+  } catch (err) {
+    console.error(`\n❌ Tracker merge failed: ${err.message}`);
+    throw err;
+  }
 }
 
 main().catch((err) => {
