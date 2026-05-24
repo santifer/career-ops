@@ -400,7 +400,7 @@ process_offer() {
       if awk "BEGIN{exit !($score < $MIN_SCORE)}"; then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        return
       fi
     fi
 
