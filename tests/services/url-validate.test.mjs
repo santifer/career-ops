@@ -20,6 +20,11 @@ test('rejects non-http scheme', () => {
   }
 });
 
+test('accepts URL with @ in query string (no credential injection)', () => {
+  const r = validateUrl('https://boards.greenhouse.io/acme/jobs/123?ref=user@domain.com');
+  assert.equal(r.ok, true);
+});
+
 test('rejects credential injection via @', () => {
   const r = validateUrl('https://user:pass@evil.com');
   assert.equal(r.ok, false);
@@ -51,4 +56,19 @@ test('rejects localhost / RFC1918 / link-local', () => {
 test('rejects malformed URL', () => {
   const r = validateUrl('not a url');
   assert.equal(r.ok, false);
+  assert.match(r.error, /malformed/i);
+});
+
+test('rejects IPv6 hosts (v1 limitation)', () => {
+  for (const u of ['http://[::1]/x', 'https://[2001:db8::1]/x']) {
+    const r = validateUrl(u);
+    assert.equal(r.ok, false, `should reject ${u}`);
+    assert.match(r.error, /ipv6/i);
+  }
+});
+
+test('rejects 0.0.0.0 (SSRF bypass)', () => {
+  const r = validateUrl('http://0.0.0.0/x');
+  assert.equal(r.ok, false);
+  assert.match(r.error, /private|loopback|link/i);
 });
