@@ -13,18 +13,18 @@ import {
   buildCoverLetterTexPath,
   buildCoverLetterPdfPath,
   buildCoverLetterLogPath,
-} from '../yash-resume-pipeline.mjs';
+} from '../shivani-resume-pipeline.mjs';
 
 async function makeTempPipelineFile(content) {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), content);
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), content);
   return dir;
 }
 
 const execFileP = promisify(execFile);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SCRIPT = resolve(ROOT, 'yash-resume-pipeline.mjs');
+const SCRIPT = resolve(ROOT, 'shivani-resume-pipeline.mjs');
 
 async function runScript(args) {
   try {
@@ -187,7 +187,7 @@ test('next-pending: empty queue returns status=empty', async () => {
 });
 
 test('next-pending: missing pipeline.md returns fail', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   try {
     let code = 0, stdout = '';
     try {
@@ -200,7 +200,7 @@ test('next-pending: missing pipeline.md returns fail', async () => {
     assert.equal(code, 1);
     const obj = JSON.parse(stdout);
     assert.equal(obj.status, 'fail');
-    assert.match(obj.error, /yash-pipeline\.md/);
+    assert.match(obj.error, /shivani-pipeline\.md/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -220,9 +220,9 @@ test('next-pending: handles Windows \\r\\n line endings', async () => {
 });
 
 test('check-duplicate: neither file exists → exists=false', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
-  await mkdirTest(join(dir, 'jds/yash'), { recursive: true });
-  await mkdirTest(join(dir, 'resumes/yash'), { recursive: true });
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
+  await mkdirTest(join(dir, 'jds/shivani'), { recursive: true });
+  await mkdirTest(join(dir, 'resumes/shivani'), { recursive: true });
   try {
     const { stdout } = await execFileP('node', [SCRIPT,
       'check-duplicate',
@@ -233,18 +233,18 @@ test('check-duplicate: neither file exists → exists=false', async () => {
     const obj = JSON.parse(stdout.trim());
     assert.equal(obj.status, 'ok');
     assert.equal(obj.exists, false);
-    assert.equal(obj.jd_path, 'jds/yash/JD_AcmeInc_Engineer_Yash_Anghan_2026-05-07.md');
-    assert.equal(obj.pdf_path, 'resumes/yash/AcmeInc_Engineer_Yash_Anghan_Resume_2026-05-07.pdf');
+    assert.equal(obj.jd_path, 'jds/shivani/JD_AcmeInc_Engineer_Shivani_Anghan_2026-05-07.md');
+    assert.equal(obj.pdf_path, 'resumes/shivani/AcmeInc_Engineer_Shivani_Anghan_Resume_2026-05-07.pdf');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
 });
 
 test('check-duplicate: only JD exists → exists=true, which=[jd]', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
-  await mkdirTest(join(dir, 'jds/yash'), { recursive: true });
-  await mkdirTest(join(dir, 'resumes/yash'), { recursive: true });
-  await writeFileTest(join(dir, 'jds/yash/JD_AcmeInc_Engineer_Yash_Anghan_2026-05-07.md'), 'x');
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
+  await mkdirTest(join(dir, 'jds/shivani'), { recursive: true });
+  await mkdirTest(join(dir, 'resumes/shivani'), { recursive: true });
+  await writeFileTest(join(dir, 'jds/shivani/JD_AcmeInc_Engineer_Shivani_Anghan_2026-05-07.md'), 'x');
   try {
     const { stdout } = await execFileP('node', [SCRIPT,
       'check-duplicate',
@@ -261,11 +261,11 @@ test('check-duplicate: only JD exists → exists=true, which=[jd]', async () => 
 });
 
 test('check-duplicate: both exist → exists=true, which=[jd,pdf]', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
-  await mkdirTest(join(dir, 'jds/yash'), { recursive: true });
-  await mkdirTest(join(dir, 'resumes/yash'), { recursive: true });
-  await writeFileTest(join(dir, 'jds/yash/JD_AcmeInc_Engineer_Yash_Anghan_2026-05-07.md'), 'x');
-  await writeFileTest(join(dir, 'resumes/yash/AcmeInc_Engineer_Yash_Anghan_Resume_2026-05-07.pdf'), 'x');
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
+  await mkdirTest(join(dir, 'jds/shivani'), { recursive: true });
+  await mkdirTest(join(dir, 'resumes/shivani'), { recursive: true });
+  await writeFileTest(join(dir, 'jds/shivani/JD_AcmeInc_Engineer_Shivani_Anghan_2026-05-07.md'), 'x');
+  await writeFileTest(join(dir, 'resumes/shivani/AcmeInc_Engineer_Shivani_Anghan_Resume_2026-05-07.pdf'), 'x');
   try {
     const { stdout } = await execFileP('node', [SCRIPT,
       'check-duplicate',
@@ -282,10 +282,10 @@ test('check-duplicate: both exist → exists=true, which=[jd,pdf]', async () => 
 });
 
 test('check-duplicate: PDF-only exists → exists=true, which=[pdf]', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
-  await mkdirTest(join(dir, 'jds/yash'), { recursive: true });
-  await mkdirTest(join(dir, 'resumes/yash'), { recursive: true });
-  await writeFileTest(join(dir, 'resumes/yash/AcmeInc_Engineer_Yash_Anghan_Resume_2026-05-07.pdf'), 'x');
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
+  await mkdirTest(join(dir, 'jds/shivani'), { recursive: true });
+  await mkdirTest(join(dir, 'resumes/shivani'), { recursive: true });
+  await writeFileTest(join(dir, 'resumes/shivani/AcmeInc_Engineer_Shivani_Anghan_Resume_2026-05-07.pdf'), 'x');
   try {
     const { stdout } = await execFileP('node', [SCRIPT,
       'check-duplicate',
@@ -302,11 +302,11 @@ test('check-duplicate: PDF-only exists → exists=true, which=[pdf]', async () =
 });
 
 test('check-duplicate: directory at JD path is NOT treated as JD existing', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
-  await mkdirTest(join(dir, 'jds/yash'), { recursive: true });
-  await mkdirTest(join(dir, 'resumes/yash'), { recursive: true });
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
+  await mkdirTest(join(dir, 'jds/shivani'), { recursive: true });
+  await mkdirTest(join(dir, 'resumes/shivani'), { recursive: true });
   // Create a directory (not a file) at the expected JD path
-  await mkdirTest(join(dir, 'jds/yash/JD_AcmeInc_Engineer_Yash_Anghan_2026-05-07.md'), { recursive: true });
+  await mkdirTest(join(dir, 'jds/shivani/JD_AcmeInc_Engineer_Shivani_Anghan_2026-05-07.md'), { recursive: true });
   try {
     const { stdout } = await execFileP('node', [SCRIPT,
       'check-duplicate',
@@ -323,9 +323,9 @@ test('check-duplicate: directory at JD path is NOT treated as JD existing', asyn
 });
 
 test('mark-processed: moves URL from Pendientes to Procesadas with metadata', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `# Job Pipeline
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `# Job Pipeline
 
 ## Pendientes
 
@@ -340,11 +340,11 @@ test('mark-processed: moves URL from Pendientes to Procesadas with metadata', as
       '--url', 'https://jobs.lever.co/openai/abc-123',
       '--company', 'OpenAI',
       '--role', 'AI Engineer',
-      '--jd', 'jds/yash/JD_Openai_AiEngineer_Yash_Anghan_2026-05-07.md',
-      '--pdf', 'resumes/yash/Openai_AiEngineer_Yash_Anghan_Resume_2026-05-07.pdf',
+      '--jd', 'jds/shivani/JD_Openai_AiEngineer_Shivani_Anghan_2026-05-07.md',
+      '--pdf', 'resumes/shivani/Openai_AiEngineer_Shivani_Anghan_Resume_2026-05-07.pdf',
       '--score', '92',
     ], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     assert.doesNotMatch(result, /- \[ \] https:\/\/jobs\.lever\.co\/openai\/abc-123/);
     assert.match(result, /- \[x\] https:\/\/jobs\.lever\.co\/openai\/abc-123 \| OpenAI \| AI Engineer \| JD ✅ \| Resume ✅ \| Score 92\/100/);
   } finally {
@@ -353,9 +353,9 @@ test('mark-processed: moves URL from Pendientes to Procesadas with metadata', as
 });
 
 test('mark-processed: idempotent — running twice does not duplicate', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `## Pendientes
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `## Pendientes
 
 - [ ] https://x.com/job
 
@@ -366,7 +366,7 @@ test('mark-processed: idempotent — running twice does not duplicate', async ()
   try {
     await execFileP('node', [SCRIPT, ...args], { cwd: dir });
     await execFileP('node', [SCRIPT, ...args], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     const occurrences = (result.match(/https:\/\/x\.com\/job/g) || []).length;
     assert.equal(occurrences, 1, 'URL should appear exactly once after two mark-processed calls');
     const sections = result.split(/^## /m);
@@ -380,9 +380,9 @@ test('mark-processed: idempotent — running twice does not duplicate', async ()
 });
 
 test('mark-processed: rejects non-integer score', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `## Pendientes\n\n- [ ] https://x.com/job\n\n## Procesadas\n\n`);
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `## Pendientes\n\n- [ ] https://x.com/job\n\n## Procesadas\n\n`);
   try {
     let code = 0, stdout = '';
     try {
@@ -404,16 +404,16 @@ test('mark-processed: rejects non-integer score', async () => {
 });
 
 test('mark-failed: changes [ ] to [!] with reason in Pendientes', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `## Pendientes\n\n- [ ] https://dead.example.com\n\n## Procesadas\n\n`);
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `## Pendientes\n\n- [ ] https://dead.example.com\n\n## Procesadas\n\n`);
   try {
     await execFileP('node', [SCRIPT,
       'mark-failed',
       '--url', 'https://dead.example.com',
       '--reason', '404 Not Found',
     ], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     assert.match(result, /- \[!\] https:\/\/dead\.example\.com — reason: 404 Not Found/);
     assert.doesNotMatch(result, /- \[ \] https:\/\/dead\.example\.com/);
     // verify it's in Pendientes, not Procesadas
@@ -428,16 +428,16 @@ test('mark-failed: changes [ ] to [!] with reason in Pendientes', async () => {
 });
 
 test('mark-skipped: moves URL to Procesadas with [~] and skipped reason', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `## Pendientes\n\n- [ ] https://dup.example.com\n\n## Procesadas\n\n`);
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `## Pendientes\n\n- [ ] https://dup.example.com\n\n## Procesadas\n\n`);
   try {
     await execFileP('node', [SCRIPT,
       'mark-skipped',
       '--url', 'https://dup.example.com',
       '--reason', 'duplicate (jd+pdf already exist)',
     ], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     assert.match(result, /- \[~\] https:\/\/dup\.example\.com — skipped: duplicate \(jd\+pdf already exist\)/);
     assert.doesNotMatch(result, /- \[ \] https:\/\/dup\.example\.com/);
     // verify it's in Procesadas, not Pendientes
@@ -452,14 +452,14 @@ test('mark-skipped: moves URL to Procesadas with [~] and skipped reason', async 
 });
 
 test('mark-failed: replaces existing [!] reason in place (idempotent on URL)', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `## Pendientes\n\n- [!] https://x.com/job — reason: old reason\n\n## Procesadas\n\n`);
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `## Pendientes\n\n- [!] https://x.com/job — reason: old reason\n\n## Procesadas\n\n`);
   try {
     await execFileP('node', [SCRIPT,
       'mark-failed', '--url', 'https://x.com/job', '--reason', 'new reason',
     ], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     const occurrences = (result.match(/https:\/\/x\.com\/job/g) || []).length;
     assert.equal(occurrences, 1);
     assert.match(result, /reason: new reason/);
@@ -470,7 +470,7 @@ test('mark-failed: replaces existing [!] reason in place (idempotent on URL)', a
 });
 
 test('log: appends one JSON line per call, creates file if missing', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
   try {
     await execFileP('node', [SCRIPT,
@@ -480,7 +480,7 @@ test('log: appends one JSON line per call, creates file if missing', async () =>
     await execFileP('node', [SCRIPT,
       'log', '--status', 'fail', '--url', 'https://x.com/2', '--reason', 'oops',
     ], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-resume-runs.log'), 'utf-8');
     const lines = result.trim().split('\n');
     assert.equal(lines.length, 2);
     const e1 = JSON.parse(lines[0]);
@@ -497,7 +497,7 @@ test('log: appends one JSON line per call, creates file if missing', async () =>
 });
 
 test('log: rejects unknown status', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
   try {
     let code = 0, stdout = '';
@@ -521,13 +521,13 @@ test('log: rejects unknown status', async () => {
 
 test('log: creates data directory if missing', async () => {
   // Test that mkdir -p the data/ dir if it doesn't already exist
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   // intentionally NOT creating data/
   try {
     await execFileP('node', [SCRIPT,
       'log', '--status', 'skip', '--url', 'https://x.com/3', '--reason', 'dup',
     ], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-resume-runs.log'), 'utf-8');
     const entry = JSON.parse(result.trim());
     assert.equal(entry.status, 'skip');
     assert.equal(entry.url, 'https://x.com/3');
@@ -538,7 +538,7 @@ test('log: creates data directory if missing', async () => {
 });
 
 test('compile-resume: good .tex produces a real PDF', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'resumes'), { recursive: true });
   await copyFile(resolve(ROOT, 'tests/fixtures/sample-good.tex'), join(dir, 'resumes/test.tex'));
   await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
@@ -557,7 +557,7 @@ test('compile-resume: good .tex produces a real PDF', async () => {
 });
 
 test('compile-resume: bad .tex returns fail with tectonic_log_tail', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'resumes'), { recursive: true });
   await copyFile(resolve(ROOT, 'tests/fixtures/sample-bad.tex'), join(dir, 'resumes/bad.tex'));
   await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
@@ -582,7 +582,7 @@ test('compile-resume: bad .tex returns fail with tectonic_log_tail', async () =>
 });
 
 test('compile-resume: missing tex file returns fail', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'resumes'), { recursive: true });
   await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
   try {
@@ -606,14 +606,14 @@ test('compile-resume: missing tex file returns fail', async () => {
 });
 
 test('mark-failed: sanitizes multiline reason to single line', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `## Pendientes\n\n- [ ] https://x.com/job\n\n## Procesadas\n\n`);
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `## Pendientes\n\n- [ ] https://x.com/job\n\n## Procesadas\n\n`);
   try {
     await execFileP('node', [SCRIPT,
       'mark-failed', '--url', 'https://x.com/job', '--reason', 'line one\nline two\r\nline three',
     ], { cwd: dir });
-    const result = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const result = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     assert.match(result, /- \[!\] https:\/\/x\.com\/job — reason: line one line two line three/);
     assert.doesNotMatch(result, /- \[!\] https:\/\/x\.com\/job — reason: line one\n/);
   } finally {
@@ -622,9 +622,9 @@ test('mark-failed: sanitizes multiline reason to single line', async () => {
 });
 
 test('mark-processed: rejects pipe character in company name', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'data'), { recursive: true });
-  await writeFileTest(join(dir, 'data/yash-pipeline.md'), `## Pendientes\n\n- [ ] https://x.com/job\n\n## Procesadas\n\n`);
+  await writeFileTest(join(dir, 'data/shivani-pipeline.md'), `## Pendientes\n\n- [ ] https://x.com/job\n\n## Procesadas\n\n`);
   try {
     let code = 0, stdout = '';
     try {
@@ -664,7 +664,7 @@ test('compile-resume: works when invoked from non-project-root cwd', async () =>
 });
 
 test('compile-cover-letter: good .tex produces a real PDF', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
   await copyFile(resolve(ROOT, 'tests/fixtures/cover-letter-good.tex'), join(dir, 'cover-letters/test.tex'));
   await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
@@ -690,7 +690,7 @@ test('compile-cover-letter: good .tex produces a real PDF', async () => {
 });
 
 test('compile-cover-letter: bad .tex returns fail and still cleans up stray .log', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
   await copyFile(resolve(ROOT, 'tests/fixtures/cover-letter-bad.tex'), join(dir, 'cover-letters/bad.tex'));
   await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
@@ -722,7 +722,7 @@ test('compile-cover-letter: bad .tex returns fail and still cleans up stray .log
 });
 
 test('compile-cover-letter: missing tex file returns fail', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
   await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
   await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
   try {
@@ -747,17 +747,17 @@ test('compile-cover-letter: missing tex file returns fail', async () => {
 
 test('buildCoverLetterTexPath: returns /tmp/<slug>_Cover_Letter_<date>.tex', () => {
   const result = buildCoverLetterTexPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
-  assert.equal(result, '/tmp/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.tex');
+  assert.equal(result, '/tmp/LeagueInc_SeniorAiEngineer_Shivani_Anghan_Cover_Letter_2026-05-08.tex');
 });
 
-test('buildCoverLetterPdfPath: returns cover-letters/yash/<slug>_Cover_Letter_<date>.pdf', () => {
+test('buildCoverLetterPdfPath: returns cover-letters/shivani/<slug>_Cover_Letter_<date>.pdf', () => {
   const result = buildCoverLetterPdfPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
-  assert.equal(result, 'cover-letters/yash/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+  assert.equal(result, 'cover-letters/shivani/LeagueInc_SeniorAiEngineer_Shivani_Anghan_Cover_Letter_2026-05-08.pdf');
 });
 
-test('buildCoverLetterLogPath: returns cover-letter-logs/yash/<slug>_Cover_Letter_<date>.log', () => {
+test('buildCoverLetterLogPath: returns cover-letter-logs/shivani/<slug>_Cover_Letter_<date>.log', () => {
   const result = buildCoverLetterLogPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
-  assert.equal(result, 'cover-letter-logs/yash/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.log');
+  assert.equal(result, 'cover-letter-logs/shivani/LeagueInc_SeniorAiEngineer_Shivani_Anghan_Cover_Letter_2026-05-08.log');
 });
 
 test('mark-processed: with --cover-letter and --cover-letter-status appends cl: and cl-status: fields', async () => {
@@ -772,16 +772,16 @@ test('mark-processed: with --cover-letter and --cover-letter-status appends cl: 
       '--url', 'https://example.com/job',
       '--company', 'Acme',
       '--role', 'AI Engineer',
-      '--jd', 'jds/yash/JD_Acme_AiEngineer_Yash_Anghan_2026-05-08.md',
-      '--pdf', 'resumes/yash/Acme_AiEngineer_Yash_Anghan_Resume_2026-05-08.pdf',
+      '--jd', 'jds/shivani/JD_Acme_AiEngineer_Shivani_Anghan_2026-05-08.md',
+      '--pdf', 'resumes/shivani/Acme_AiEngineer_Shivani_Anghan_Resume_2026-05-08.pdf',
       '--score', '95',
-      '--cover-letter', 'cover-letters/yash/Acme_AiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.pdf',
+      '--cover-letter', 'cover-letters/shivani/Acme_AiEngineer_Shivani_Anghan_Cover_Letter_2026-05-08.pdf',
       '--cover-letter-status', 'ok',
     ], { cwd: dir });
-    const content = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const content = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     assert.match(content, /- \[x\] https:\/\/example\.com\/job/);
     assert.match(content, /CL ✅/);
-    assert.match(content, /cover-letters\/yash\/Acme_AiEngineer_Yash_Anghan_Cover_Letter_2026-05-08\.pdf/);
+    assert.match(content, /cover-letters\/shivani\/Acme_AiEngineer_Shivani_Anghan_Cover_Letter_2026-05-08\.pdf/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -803,7 +803,7 @@ test('mark-processed: without --cover-letter omits cl: fields (backward compat)'
       '--pdf', 'b',
       '--score', '90',
     ], { cwd: dir });
-    const content = await readFileTest(join(dir, 'data/yash-pipeline.md'), 'utf-8');
+    const content = await readFileTest(join(dir, 'data/shivani-pipeline.md'), 'utf-8');
     assert.match(content, /- \[x\] https:\/\/example\.com\/job/);
     assert.doesNotMatch(content, /CL ✅|CL ❌|cl-status/);
   } finally {
@@ -818,14 +818,14 @@ test('log: with --cover-letter and --cover-letter-score and --cover-letter-statu
       'log',
       '--status', 'ok',
       '--url', 'https://example.com/job',
-      '--cover-letter', 'cover-letters/yash/x_y_Yash_Anghan_Cover_Letter_2026-05-08.pdf',
+      '--cover-letter', 'cover-letters/shivani/x_y_Shivani_Anghan_Cover_Letter_2026-05-08.pdf',
       '--cover-letter-score', '95',
       '--cover-letter-status', 'ok',
     ], { cwd: dir });
-    const content = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const content = await readFileTest(join(dir, 'data/shivani-resume-runs.log'), 'utf-8');
     const obj = JSON.parse(content.trim().split('\n').pop());
     assert.equal(obj.status, 'ok');
-    assert.equal(obj.cover_letter_pdf, 'cover-letters/yash/x_y_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+    assert.equal(obj.cover_letter_pdf, 'cover-letters/shivani/x_y_Shivani_Anghan_Cover_Letter_2026-05-08.pdf');
     assert.equal(obj.cover_letter_score, '95');
     assert.equal(obj.cover_letter_status, 'ok');
   } finally {
@@ -841,7 +841,7 @@ test('log: without cover-letter args omits the three new fields (backward compat
       '--status', 'ok',
       '--url', 'https://example.com/job',
     ], { cwd: dir });
-    const content = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const content = await readFileTest(join(dir, 'data/shivani-resume-runs.log'), 'utf-8');
     const obj = JSON.parse(content.trim().split('\n').pop());
     assert.ok(!('cover_letter_pdf' in obj), 'cover_letter_pdf should be absent');
     assert.ok(!('cover_letter_score' in obj), 'cover_letter_score should be absent');
@@ -852,9 +852,9 @@ test('log: without cover-letter args omits the three new fields (backward compat
 });
 
 test('check-duplicate: reports cover_letter_exists field', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
-  await mkdirTest(join(dir, 'cover-letters/yash'), { recursive: true });
-  await writeFileTest(join(dir, 'cover-letters/yash/X_Y_Yash_Anghan_Cover_Letter_2026-05-08.pdf'), '%PDF-1.4 fake');
+  const dir = await mkdtemp(join(tmpdir(), 'srp-test-'));
+  await mkdirTest(join(dir, 'cover-letters/shivani'), { recursive: true });
+  await writeFileTest(join(dir, 'cover-letters/shivani/X_Y_Shivani_Anghan_Cover_Letter_2026-05-08.pdf'), '%PDF-1.4 fake');
   try {
     const { stdout } = await execFileP('node', [SCRIPT,
       'check-duplicate',
@@ -865,141 +865,11 @@ test('check-duplicate: reports cover_letter_exists field', async () => {
     const obj = JSON.parse(stdout.trim());
     assert.equal(obj.status, 'ok');
     assert.equal(obj.cover_letter_exists, true);
-    assert.equal(obj.cover_letter_path, 'cover-letters/yash/X_Y_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+    assert.equal(obj.cover_letter_path, 'cover-letters/shivani/X_Y_Shivani_Anghan_Cover_Letter_2026-05-08.pdf');
     // The dedup gate (exists/which) is unaffected by cover-letter alone:
     assert.equal(obj.exists, false, 'JD/resume duplicate gate not triggered by cover-letter alone');
     assert.deepEqual(obj.which, []);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
-});
-
-test('init-timer: writes timer state file with url and t_url_start', async () => {
-  const { code, stdout } = await runScript(['init-timer', '--url', 'https://example.com/job/123']);
-  assert.equal(code, 0);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.status, 'ok');
-  assert.match(obj.timer_path, /\/tmp\/yash-pipeline-timer-\d+\.json/);
-  const state = JSON.parse(await readFileTest(obj.timer_path, 'utf-8'));
-  assert.equal(state.url, 'https://example.com/job/123');
-  assert.ok(typeof state.t_url_start === 'number');
-  assert.ok(state.t_url_start > 1.7e9); // sanity: post-2023 epoch
-  assert.ok(state.pid > 0);
-  // cleanup
-  await rm(obj.timer_path).catch(() => {});
-});
-
-test('init-timer: requires --url flag', async () => {
-  const { code, stdout } = await runScript(['init-timer']);
-  assert.equal(code, 1);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.status, 'fail');
-  assert.match(obj.error, /init-timer requires --url/);
-});
-
-// === mark-phase tests ===
-// Design note (Option A/D): init-timer and mark-phase each accept an optional
-// --pid <n> flag. Tests pass the same explicit PID so both child processes write
-// and read the same /tmp/yash-pipeline-timer-<pid>.json file. Production flow
-// never passes --pid; each URL cycle runs in a single process.
-
-test('mark-phase: stamps t_<phase> on existing timer state', async () => {
-  const pid = String(process.pid);
-  // init-timer with explicit --pid so mark-phase can find the same file
-  const init = await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', pid]);
-  const initObj = JSON.parse(init.stdout);
-  assert.equal(init.code, 0);
-  // mark a phase — pass the same --pid
-  const { code, stdout } = await runScript(['mark-phase', '--phase', 'jd_fetch_start', '--pid', pid]);
-  assert.equal(code, 0);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.status, 'ok');
-  const state = JSON.parse(await readFileTest(initObj.timer_path, 'utf-8'));
-  assert.ok(typeof state.t_jd_fetch_start === 'number');
-  assert.ok(state.t_jd_fetch_start >= state.t_url_start);
-  await rm(initObj.timer_path).catch(() => {});
-});
-
-test('mark-phase: rejects unknown phase names', async () => {
-  const pid = String(process.pid);
-  await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', pid]);
-  const { code, stdout } = await runScript(['mark-phase', '--phase', 'bogus_phase', '--pid', pid]);
-  assert.equal(code, 1);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.status, 'fail');
-  assert.match(obj.error, /unknown phase: bogus_phase/);
-  await rm(`/tmp/yash-pipeline-timer-${pid}.json`).catch(() => {});
-});
-
-test('mark-phase: fails when timer state file missing', async () => {
-  const pid = String(process.pid);
-  await rm(`/tmp/yash-pipeline-timer-${pid}.json`).catch(() => {});
-  const { code, stdout } = await runScript(['mark-phase', '--phase', 'jd_fetch_start', '--pid', pid]);
-  assert.equal(code, 1);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.status, 'fail');
-  assert.match(obj.error, /timer state not found.*init-timer/);
-});
-
-// === read-timer tests ===
-
-test('read-timer: returns phase ms deltas for all stamped phases', async () => {
-  const PID = String(process.pid);
-  await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', PID]);
-  await runScript(['mark-phase', '--phase', 'jd_fetch_start', '--pid', PID]);
-  await new Promise(r => setTimeout(r, 50));
-  await runScript(['mark-phase', '--phase', 'jd_fetch_end', '--pid', PID]);
-  const { code, stdout } = await runScript(['read-timer', '--pid', PID]);
-  assert.equal(code, 0);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.status, 'ok');
-  assert.ok(obj.jd_fetch_ms >= 40 && obj.jd_fetch_ms < 5000, `jd_fetch_ms=${obj.jd_fetch_ms} out of range`);
-  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
-});
-
-test('read-timer: returns null for unstamped phases', async () => {
-  const PID = String(process.pid);
-  await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', PID]);
-  const { code, stdout } = await runScript(['read-timer', '--pid', PID]);
-  assert.equal(code, 0);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.jd_fetch_ms, null);
-  assert.equal(obj.resume_gen_ms, null);
-  assert.equal(obj.total_ms, null);
-  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
-});
-
-test('read-timer: fails when timer state missing', async () => {
-  const PID = String(process.pid);
-  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
-  const { code, stdout } = await runScript(['read-timer', '--pid', PID]);
-  assert.equal(code, 1);
-  const obj = JSON.parse(stdout);
-  assert.match(obj.error, /timer state not found.*init-timer/);
-});
-
-test('log --from-timer: pulls phase ms from timer state', async () => {
-  const PID = String(process.pid);
-  const dir = await mkdtemp(join(tmpdir(), 'yrp-logtimer-'));
-  await mkdirTest(join(dir, 'data'), { recursive: true });
-  // Init + populate timer (use --pid for cross-process state sharing)
-  await execFileP('node', [SCRIPT, 'init-timer', '--url', 'https://example.com/x', '--pid', PID], { cwd: dir });
-  await execFileP('node', [SCRIPT, 'mark-phase', '--phase', 'jd_fetch_start', '--pid', PID], { cwd: dir });
-  await new Promise(r => setTimeout(r, 30));
-  await execFileP('node', [SCRIPT, 'mark-phase', '--phase', 'jd_fetch_end', '--pid', PID], { cwd: dir });
-  await execFileP('node', [SCRIPT, 'mark-phase', '--phase', 'url_end', '--pid', PID], { cwd: dir });
-  // Now log --from-timer
-  const { stdout } = await execFileP('node', [SCRIPT, 'log',
-    '--status', 'ok',
-    '--url', 'https://example.com/x',
-    '--from-timer',
-    '--pid', PID,
-  ], { cwd: dir });
-  assert.equal(JSON.parse(stdout).status, 'ok');
-  const logContent = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
-  const line = JSON.parse(logContent.trim().split('\n').pop());
-  assert.ok(line.jd_fetch_ms >= 20 && line.jd_fetch_ms < 5000, `jd_fetch_ms=${line.jd_fetch_ms} out of range`);
-  assert.ok(line.total_ms >= line.jd_fetch_ms);
-  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
-  await rm(dir, { recursive: true, force: true });
 });

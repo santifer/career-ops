@@ -1,0 +1,137 @@
+\documentclass[letterpaper,11pt]{article}
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\usepackage{multicol}
+\setlength{\multicolsep}{-3.0pt}
+\setlength{\columnsep}{-1pt}
+\ifdefined\pdfgentounicode
+\input{glyphtounicode}
+\fi
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\addtolength{\oddsidemargin}{-0.7in}
+\addtolength{\evensidemargin}{-0.7in}
+\addtolength{\textwidth}{1.4in}
+\addtolength{\topmargin}{-0.8in}
+\addtolength{\textheight}{1.6in}
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+\titleformat{\section}{\vspace{-8pt}\scshape\raggedright\large\bfseries}{}{0em}{}[\color{black}\titlerule \vspace{-4pt}]
+\ifdefined\pdfgentounicode
+\pdfgentounicode=1
+\fi
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+\newcommand{\resumeSubheading}[4]{
+\vspace{-1pt}\item
+\begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
+\textbf{#1} & \textbf{\small #2} \\
+\textit{\small#3} & \textit{\small #4} \\
+\end{tabular*}\vspace{-5pt}}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}, itemsep=-3pt]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[itemsep=1pt, topsep=-1pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{3pt}}
+\begin{document}
+%----------HEADING----------
+\begin{center}
+{\Huge \scshape Yash Anghan} \\ \vspace{2pt}
+\small \raisebox{-0.1\height}\faEnvelope\ \href{mailto:yashanghan97@gmail.com}{yashanghan97@gmail.com} ~
+\raisebox{-0.1\height}\faPhone\ +1 (437) 290-2005 ~
+\href{https://www.linkedin.com/in/yash-aiautomation/}{\raisebox{-0.2\height}\faLinkedin\ \underline{Linkedin}} ~
+\href{https://github.com/yash-ai-automation}{\raisebox{-0.2\height}\faGithub\ \underline{GitHub}}
+\vspace{-8pt}
+\end{center}
+%-----------WORK EXPERIENCE-----------
+\section{Work Experience}
+\resumeSubHeadingListStart
+\resumeSubheading
+{Morningstar}{Jan 2023 -- Aug 2025}
+{Software Engineer}{Toronto, ON}
+\resumeItemListStart
+\resumeItem{Engineered \textbf{Python} \textbf{data pipelines} for AI-powered \textbf{metadata extraction} and enrichment from investment research reports, reducing manual analyst review time by 65\% across global enterprise research and content discovery teams}
+\resumeItem{Developed \textbf{machine learning models} on \textbf{Databricks} for financial data classification with embeddings, improving categorization accuracy to 94\% across 12K monthly fund documents and accelerating downstream research analyst workflows}
+\resumeItem{Built \textbf{LLM}-based \textbf{generative AI} retrieval-augmented generation systems enabling natural language queries against proprietary financial databases, accelerating equity research workflows by 50\% for senior investment analyst teams}
+\resumeItem{Implemented \textbf{automated validation} and monitoring workflows for SEC filing data with anomaly detection, surfacing 340+ discrepancies each month and ensuring regulatory compliance across global fund reporting and audit operations}
+\resumeItem{Created \textbf{LLM}-driven summarization and classification tooling for quarterly earnings reports leveraging \textbf{Airflow} orchestration, delivering analyst-ready research briefs in under 30 seconds per document for global equity desks}
+\resumeItem{Deployed scalable inference infrastructure on \textbf{AWS} \textbf{Sagemaker} provisioned with \textbf{Terraform} as code, supporting 25K+ daily prediction requests at sub-200ms latency across analyst-facing financial product and reporting surfaces}
+\resumeItemListEnd
+\resumeSubheading
+{Bell}{Jan 2022 -- Dec 2022}
+{Full Stack Java Developer}{Toronto, ON}
+\resumeItemListStart
+\resumeItem{Developed \textbf{microservices} architecture for real-time billing calculations and \textbf{distributed systems}, handling 45K daily transactions with 99.9\% uptime for subscriber account management across enterprise-grade telecom operations}
+\resumeItem{Implemented \textbf{REST APIs} and \textbf{HTTP APIs} powering customer self-service portals with backend service integrations, serving 850K active subscribers with sub-100ms response times across mobile and web telecom self-service platforms}
+\resumeItem{Architected event-driven order management system using \textbf{message queues} for asynchronous \textbf{data pipelines}, reducing service provisioning time by 55\% across enterprise telecom operations and field activation engineering workflows}
+\resumeItem{Built automated \textbf{CI/CD} pipelines and \textbf{automated monitoring} for microservice deployments using Docker and Jenkins, increasing release frequency from monthly to weekly cycles and accelerating subscriber-facing telecom feature rollouts}
+\resumeItem{Optimized \textbf{SQL} queries and indexes for subscriber usage analytics dashboards, achieving 60\% improvement in report generation performance and accelerating downstream telecom operations analytics across all regional markets}
+\resumeItemListEnd
+\resumeSubheading
+{Virtusa}{Jun 2019 -- Aug 2020}
+{Full Stack Java Developer}{Hyderabad, India}
+\resumeItemListStart
+\resumeItem{Built transaction processing modules for core banking platform with high-throughput \textbf{backend} services, handling 120K daily payment transactions with 99.7\% accuracy for enterprise banking and consumer settlement operations}
+\resumeItem{Engineered \textbf{REST APIs} for payment gateway integrations with secure backend communication, reducing transaction settlement time by 40\% for enterprise banking clients and accelerating cross-border payment reconciliation workflows}
+\resumeItem{Developed batch processing systems for end-of-day settlements and reconciliation, processing 85K records nightly with automated error reconciliation and \textbf{validation} checkpoints across compliance and audit-ready banking ledgers}
+\resumeItem{Optimized \textbf{SQL} queries for high-volume transaction tables with indexing strategies, achieving 52\% reduction in report generation time for compliance audits and end-of-quarter regulatory filings across banking client portfolios}
+\resumeItemListEnd
+\resumeSubHeadingListEnd
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+\begin{itemize}[leftmargin=0.0in, label={}]
+\small{\item{
+\textbf{AI \& Automation}{: LLMs, Generative AI, Machine Learning, RAG, Sagemaker, Vector Databases, n8n, Make.com} \\
+\textbf{Languages}{: Python, Scala, Ruby, Java, JavaScript, TypeScript, SQL} \\
+\textbf{Frameworks \& Web}{: Ruby on Rails, Spring Boot, React, Node.js, Express, Angular} \\
+\textbf{Data \& Databases}{: Spark, Databricks, Airflow, PostgreSQL, MongoDB, Redis, Elasticsearch} \\
+\textbf{Cloud \& DevOps}{: AWS (Lambda, ECS, EKS, SQS, ElastiCache, Sagemaker), Terraform, Docker} \\
+\textbf{Tools \& Platforms}{: Datadog, Cloudwatch, Playwright, PyTest, JUnit, Git, GitHub Actions} \\
+}}
+\end{itemize}
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+\item\small{
+\textbf{{University of Windsor}\hfill {Sep 2020 -- Dec 2021}}
+}
+\item\small{
+{Master of Science in Computer Science}\hfill{Windsor, ON}
+}
+\item\small{
+\textbf{{Dharmsinh Desai University}\hfill {Sep 2014 -- May 2018}}
+}
+\item\small{
+{Bachelor of Technology in Information Technology}\hfill{Gujarat, India}
+}
+\resumeSubHeadingListEnd
+%-----------CERTIFICATIONS-----------
+\section{Certifications}
+\resumeSubHeadingListStart
+\item\small{
+\textbf{Microsoft Certified: Azure AI Engineer Associate} \hfill Jan 2026
+}
+\item\small{
+\textbf{Microsoft Certified: Azure AI Fundamentals} \hfill Jan 2026
+}
+\item\small{
+\textbf{n8n Course Completion} \hfill Aug 2024
+}
+\item\small{
+\textbf{Make.com "Level 5" Expert Certification} \hfill Jan 2024
+}
+\resumeSubHeadingListEnd
+\end{document}

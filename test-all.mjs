@@ -325,6 +325,39 @@ if (ypResult !== null) {
   fail('yash-resume-pipeline.test.mjs failed');
 }
 
+// ── 12. YASH RESUME PIPELINE SMOKE TEST ──────────────────────────
+
+console.log('\n12. yash-resume-pipeline smoke test');
+
+const ypSmokeResult = run('node', ['tests/test-yash-pipeline-smoke.mjs'], { timeout: 120000 });
+if (ypSmokeResult !== null) {
+  pass('yash-resume-pipeline smoke test passed');
+} else {
+  fail('test-yash-pipeline-smoke.mjs failed');
+}
+
+// ── 13. SHIVANI RESUME PIPELINE UNIT TESTS ───────────────────────
+
+console.log('\n13. shivani-resume-pipeline unit tests');
+
+const spResult = run('node', ['--test', 'tests/shivani-resume-pipeline.test.mjs'], { timeout: 60000 });
+if (spResult !== null) {
+  pass('shivani-resume-pipeline tests passed');
+} else {
+  fail('shivani-resume-pipeline.test.mjs failed');
+}
+
+// ── 14. SHIVANI RESUME PIPELINE SMOKE TEST ───────────────────────
+
+console.log('\n14. shivani-resume-pipeline smoke test');
+
+const spSmokeResult = run('node', ['tests/test-shivani-pipeline-smoke.mjs'], { timeout: 120000 });
+if (spSmokeResult !== null) {
+  pass('shivani-resume-pipeline smoke test passed');
+} else {
+  fail('test-shivani-pipeline-smoke.mjs failed');
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
