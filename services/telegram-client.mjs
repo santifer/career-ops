@@ -12,11 +12,13 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const BASE = process.env.TELEGRAM_API_BASE ?? 'https://api.telegram.org/bot';
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-
-if (!TOKEN) {
-  throw new Error('TELEGRAM_BOT_TOKEN env var is required');
+// Env vars are READ on every call (not at module-load) so importing this
+// module is safe in any environment. The check fires only when an API is invoked.
+function envBase() { return process.env.TELEGRAM_API_BASE ?? 'https://api.telegram.org/bot'; }
+function envToken() {
+  const t = process.env.TELEGRAM_BOT_TOKEN;
+  if (!t) throw new Error('TELEGRAM_BOT_TOKEN env var is required');
+  return t;
 }
 
 /** Choose http or https module based on URL scheme. */
@@ -26,7 +28,7 @@ function chooseClient(urlStr) {
 
 /** POST a JSON body to a Bot API method. Returns the parsed `result` field. */
 function postJSON(method, payload) {
-  const urlStr = `${BASE}${TOKEN}/${method}`;
+  const urlStr = `${envBase()}${envToken()}/${method}`;
   const body = JSON.stringify(payload);
   const url = new URL(urlStr);
   const options = {
@@ -92,7 +94,7 @@ export async function sendMessage(text, { chatId, parseMode } = {}) {
  * @returns {Promise<object>} The sent message object.
  */
 export async function sendDocument(filePath, { chatId, caption } = {}) {
-  const urlStr = `${BASE}${TOKEN}/sendDocument`;
+  const urlStr = `${envBase()}${envToken()}/sendDocument`;
   const url = new URL(urlStr);
   const boundary = `----TelegramBoundary${Date.now()}`;
   const filename = path.basename(filePath);
