@@ -110,14 +110,19 @@ async function main() {
         ['https://mogo.applytojob.com/apply/x/y',                    'other'],
       ];
       const PY = resolve(ROOT, '.venv/bin/python3');
-      for (const [url, expected] of cases) {
-        try {
-          const out = await execFileP(PY, [HELPER, '--detect-source', url], { cwd: ROOT, timeout: 10000 });
-          const obj = JSON.parse(out.stdout.trim());
-          if (obj.source_hint === expected) ok(`source_hint(${url}) → ${expected}`);
-          else ng(`source_hint(${url}) expected ${expected}, got ${obj.source_hint}`);
-        } catch (e) {
-          ng(`source_hint(${url}) crashed: ${e.message?.split('\n')[0] ?? String(e)}`);
+      const { existsSync } = await import('node:fs');
+      if (!existsSync(PY)) {
+        console.log(`  ⏭️  skipping source_hint cases — ${PY} absent (CI / fresh checkout without venv)`);
+      } else {
+        for (const [url, expected] of cases) {
+          try {
+            const out = await execFileP(PY, [HELPER, '--detect-source', url], { cwd: ROOT, timeout: 10000 });
+            const obj = JSON.parse(out.stdout.trim());
+            if (obj.source_hint === expected) ok(`source_hint(${url}) → ${expected}`);
+            else ng(`source_hint(${url}) expected ${expected}, got ${obj.source_hint}`);
+          } catch (e) {
+            ng(`source_hint(${url}) crashed: ${e.message?.split('\n')[0] ?? String(e)}`);
+          }
         }
       }
     }
