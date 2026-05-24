@@ -15,7 +15,10 @@
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "prepare": "husky",
+    "test:services": "node --test tests/services/",
+    "check-secrets": "bash tools/check-secrets.sh"
   },
   "keywords": [
     "ai",
@@ -36,5 +39,8 @@
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
     "playwright": "^1.58.1"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
