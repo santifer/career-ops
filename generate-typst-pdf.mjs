@@ -283,6 +283,7 @@ async function main() {
       outputPath = arg;
     }
   }
+  format = formatMap[format] || format;
 
   const cvPath = resolve(__dirname, 'cv.md');
   if (!existsSync(cvPath)) {
