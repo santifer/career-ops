@@ -55,3 +55,11 @@ package-lock.json
 __pycache__/
 *.pyc
 .venv/
+
+# Autonomous agent runtime artifacts (2026-05-24)
+ops/work-queue.db
+ops/work-queue.db-wal
+ops/work-queue.db-shm
+ops/checkpoints/
+ops/runs/
+ops/telegram.env
