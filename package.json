@@ -18,7 +18,7 @@
     "gemini:eval": "node gemini-eval.mjs",
     "prepare": "husky",
     "test:services": "node --test tests/services/",
-    "check-secrets": "bash tools/check-secrets.sh"
+    "secrets:check": "bash tools/check-secrets.sh"
   },
   "keywords": [
     "ai",
