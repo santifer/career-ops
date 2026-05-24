@@ -85,7 +85,7 @@ test('selectRecentSuccess hits runs.status=ok within window', () => {
     const hit = selectRecentSuccess(db, 'http://x', 24);
     assert.ok(hit && hit.id === rid);
     // outside window
-    const olderRun = db.prepare(`UPDATE runs SET started_at = datetime('now','-2 days'), ended_at=datetime('now','-2 days') WHERE id=?`).run(rid);
+    db.prepare(`UPDATE runs SET started_at = datetime('now','-2 days'), ended_at=datetime('now','-2 days') WHERE id=?`).run(rid);
     const miss = selectRecentSuccess(db, 'http://x', 24);
     assert.equal(miss, undefined);
   } finally { cleanup(); }
@@ -100,6 +100,20 @@ test('findOrphanedRunning returns queue rows with no matching runs', () => {
     const orphans = findOrphanedRunning(db);
     assert.equal(orphans.length, 1);
     assert.equal(orphans[0].id, id);
+  } finally { cleanup(); }
+});
+
+test('findOrphanedRunning does NOT re-queue a successfully-completed run (Critical: crash between updateRunEnd and markQueueDone)', () => {
+  const { db, cleanup } = fresh();
+  try {
+    const qid = insertQueueRow(db, { url: 'http://x', urlHash: 'h', addedBy: 1 });
+    markQueueRunning(db, qid);
+    const rid = insertRun(db, { queueId: qid, url: 'http://x', startedAt: new Date().toISOString() });
+    // Simulate the crash window: updateRunEnd(status=ok) ran, markQueueDone did not.
+    updateRunEnd(db, rid, { status: 'ok', score: 90 });
+    // queue.status is still 'running' even though run.status='ok' ended_at is set.
+    const orphans = findOrphanedRunning(db);
+    assert.equal(orphans.length, 0, 'successful run must NOT be re-queued as orphan');
   } finally { cleanup(); }
 });
 

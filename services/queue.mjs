@@ -60,6 +60,7 @@ export function findOrphanedRunning(db) {
     SELECT q.* FROM queue q
     WHERE q.status='running'
       AND NOT EXISTS (SELECT 1 FROM runs r WHERE r.queue_id=q.id AND r.ended_at IS NULL)
+      AND NOT EXISTS (SELECT 1 FROM runs r WHERE r.queue_id=q.id AND r.status IN ('ok','done'))
   `).all();
 }
 
@@ -101,6 +102,8 @@ export function selectRunInFlight(db, queueId) {
 }
 
 export function selectRecentSuccess(db, url, hours = 24) {
+  // hours is an integer modifier used inside the SQLite datetime() string.
+  // Never pass user-supplied data here — always a hardcoded constant from dedup.mjs.
   return db.prepare(`
     SELECT * FROM runs
     WHERE url=? AND status='ok'
@@ -114,7 +117,7 @@ export function countByStatus(db, statuses, window) {
   const placeholders = statuses.map(() => '?').join(',');
   const dateClause = window === 'day'
     ? `date(started_at)=date('now')`
-    : `strftime('%Y%W', started_at)=strftime('%Y%W','now')`;
+    : `strftime('%Y%V', started_at)=strftime('%Y%V','now')`;
   const r = db.prepare(`SELECT COUNT(*) AS n FROM runs WHERE status IN (${placeholders}) AND ${dateClause}`).get(...statuses);
   return r.n;
 }
