@@ -105,6 +105,11 @@ If `config/profile.yml` is missing, copy from `config/profile.example.yml` and t
 
 Fill in `config/profile.yml` with their answers. For archetypes and targeting narrative, store the user-specific mapping in `modes/_profile.md` or `config/profile.yml` rather than editing `modes/_shared.md`.
 
+**If the user is uncertain about target roles** (signals: "I don't know", "not sure", "still figuring it out", "exploring", "at a crossroads", or no clear answer to what roles they're targeting) → respond:
+> "No problem — run `/career-ops compass` and I'll help you figure it out. It takes about 5–10 minutes and ends with your profile fully set up."
+
+Do not attempt to run compass inline during onboarding. Route to it as a standalone follow-up.
+
 #### Step 3: Portals (recommended)
 If `portals.yml` is missing:
 > "I'll set up the job scanner with 45+ pre-configured companies. Want me to customize the search keywords for your target roles?"
@@ -200,6 +205,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 | If the user... | Mode |
 |----------------|------|
+| Doesn't know target roles or wants career direction help | `compass` |
 | Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
 | Asks to evaluate offer | `oferta` |
 | Asks to compare offers | `ofertas` |
