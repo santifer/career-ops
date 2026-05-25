@@ -286,7 +286,7 @@ async function apply() {
     // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
     // checked out while `.claude/skills/` was updated to symlink into it.
     // See: https://github.com/santifer/career-ops/issues/649
-    const BOOTSTRAP_PATHS = ['.agents/', 'providers/'];
+    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs'];
     for (const path of BOOTSTRAP_PATHS) {
       if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
       try {
