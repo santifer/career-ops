@@ -457,7 +457,7 @@ print_summary() {
 
   if (( score_count > 0 )); then
     local avg
-    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{if (count <= 0) { print "N/A"; exit } raw=sprintf("%.12f", sum / count); split(raw, parts, "."); printf "%s.%s", parts[1], substr(parts[2] "0", 1, 1)}')
+    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{printf "%.1f", sum / count}')
     echo "Average score: $avg/5 ($score_count scored)"
   fi
 }
