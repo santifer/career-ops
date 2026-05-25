@@ -449,7 +449,22 @@ print_summary() {
 
   if (( score_count > 0 )); then
     local avg
-    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{printf "%.1f", sum / count}')
+    # Preserve bc scale=1 display semantics: truncate, and omit the leading zero for fractions.
+    avg=$(
+      awk -v sum="$score_sum" -v count="$score_count" '
+        BEGIN {
+          split(sprintf("%.12f", sum / count), parts, ".")
+          frac = substr(parts[2] "0", 1, 1)
+          if (parts[1] == "0" && frac == "0") {
+            print "0"
+          } else if (parts[1] == "0") {
+            printf ".%s", frac
+          } else {
+            printf "%s.%s", parts[1], frac
+          }
+        }
+      '
+    )
     echo "Average score: $avg/5 ($score_count scored)"
   fi
 }
