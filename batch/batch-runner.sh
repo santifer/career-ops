@@ -388,11 +388,11 @@ process_offer() {
     fi
 
     # Check min-score gate
-    if [[ "$score" != "-" && -n "$score" ]] && (( $(echo "$MIN_SCORE > 0" | bc -l) )); then
-      if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
+    if [[ "$score" != "-" && -n "$score" ]] && awk "BEGIN{exit !($MIN_SCORE > 0)}"; then
+      if awk "BEGIN{exit !($score < $MIN_SCORE)}"; then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        return
       fi
     fi
 
@@ -436,7 +436,7 @@ print_summary() {
     case "$sstatus" in
       completed) completed=$((completed + 1))
         if [[ "$sscore" != "-" && -n "$sscore" ]]; then
-          score_sum=$(echo "$score_sum + $sscore" | bc 2>/dev/null || echo "$score_sum")
+          score_sum=$(awk -v sum="$score_sum" -v score="$sscore" 'BEGIN{print sum + score}')
           score_count=$((score_count + 1))
         fi
         ;;
@@ -449,7 +449,7 @@ print_summary() {
 
   if (( score_count > 0 )); then
     local avg
-    avg=$(echo "scale=1; $score_sum / $score_count" | bc 2>/dev/null || echo "N/A")
+    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{if (count <= 0) { print "N/A"; exit } raw=sprintf("%.12f", sum / count); split(raw, parts, "."); frac=substr(parts[2] "0", 1, 1); if (parts[1] == "0" && frac == "0") print "0"; else if (parts[1] == "0") printf ".%s", frac; else printf "%s.%s", parts[1], frac}')
     echo "Average score: $avg/5 ($score_count scored)"
   fi
 }
