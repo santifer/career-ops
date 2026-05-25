@@ -15,6 +15,10 @@
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
+    "auto": "node auto-pipeline.mjs",
+    "auto:prepare": "node auto-pipeline.mjs --prepare-only",
+    "auto:cl": "node auto-pipeline.mjs --cover-letters",
+    "auto:notify": "node auto-pipeline.mjs --notify",
     "gemini:eval": "node gemini-eval.mjs"
   },
   "keywords": [

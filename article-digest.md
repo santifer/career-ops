@@ -31,6 +31,33 @@
 
 ---
 
+## /viecure — Ambient AI Transcription System (current build, 2026)
+
+**One-liner:** Built an Azure-native GPU training system for an ambient AI model that transcribes and records oncology clinical visits, integrating directly into the EMR.
+
+**What it is:** A purpose-built system to train an ambient AI listening model for oncology doctors. Transcribes clinical visits — diagnosis, note-taking, patient interactions — and feeds structured output directly into the Viecure EMR. This is a separate workstream from the Claude agent fleet; it's a custom ML training pipeline, not a prompt-engineering exercise.
+
+**Architecture (Patrick built and operates all of this):**
+- **Compute:** Azure VMSS with A100 GPUs running Ubuntu VMs (H100s also in scope)
+- **Queue:** 3 RabbitMQ servers for job queuing and training orchestration
+- **Services:** 3 Docker containers running on the VMSS GPU VM, operating in concert with the GPU for model training
+- **Scale:** **80+ Azure resources** in a dedicated resource group Patrick created
+- **Platform:** Fully Azure-hosted, designed within Viecure's HIPAA/HITRUST compliance boundary
+- **Current state:** Attempting to break the 3 services out of the GPU VM into separate infrastructure (hit Envoy networking bugs in Azure — active debugging as of late May 2026)
+
+**Why this matters for job applications:**
+- Proves Patrick operates at the ML-infra / AI-platform level, not just the prompt-engineering / agent-orchestration level
+- A100/H100 GPU fleet management is a differentiator for senior AI infrastructure roles
+- Healthcare-specific ambient AI (clinical transcription) is a hot market — direct overlap with Abridge, Suki, Ambience Healthcare, Augmedix
+- The 80+ resource count demonstrates real IaC/cloud-architecture complexity, not a weekend project
+- RabbitMQ + Docker + VMSS shows distributed systems thinking
+
+**Lead framing for AI Platform / ML Infra roles:** "I built the GPU training infrastructure for an ambient clinical AI model — A100 VMSS, RabbitMQ job queuing, 80+ Azure resources in a resource group I designed from scratch. It trains a transcription model that feeds directly into our oncology EMR."
+
+**Lead framing for Healthcare AI roles:** "We're building an ambient AI model for oncology doctors — transcribes clinical visits and integrates directly into the EMR. I built the full training infrastructure in Azure: GPU VMSS, RabbitMQ orchestration, Docker services, all under HIPAA/HITRUST controls."
+
+---
+
 ## /viecure — Claude agent fleet (recent: last several weeks of 2026)
 
 **Three agents in production**, plus the MCP servers, proxy infra, and governance underneath. **This is the most recent work** at Viecure, not the steady-state job — frame it as "shipped this in the last several weeks" rather than "this is what I do."
