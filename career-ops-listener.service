@@ -1,0 +1,18 @@
+[Unit]
+Description=career-ops Telegram reply listener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/career-ops
+ExecStart=/usr/bin/node telegram-listener.mjs
+Restart=always
+RestartSec=10
+EnvironmentFile=/opt/career-ops/.env
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=career-ops-listener
+
+[Install]
+WantedBy=multi-user.target

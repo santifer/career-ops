@@ -125,6 +125,51 @@ ssh -L 9222:localhost:9222 root@10.1.30.50
 
 Saved state is loaded by `apply-auto.mjs --auth=auth/linkedin-state.json` for authenticated sessions (e.g. LinkedIn Easy Apply).
 
+### Auto-apply pipeline
+
+Two-tier automation — configured in `config/profile.yml` under `search:`:
+
+| Tier | Trigger | Threshold | Config key |
+|------|---------|-----------|------------|
+| 1 — Auto-apply | Daily scan pipeline | score ≥ 4.5 | `auto_apply_threshold` |
+| 2 — Telegram reply | Patrick replies "apply #N" to digest | score ≥ 4.0 | `apply_threshold` |
+
+**Components:**
+
+| File | Purpose |
+|------|---------|
+| `lib/telegram.mjs` | Shared Telegram Bot API helper (sendMessage, getUpdates, loadEnv) |
+| `apply-orchestrator.mjs` | Shared apply pipeline: eval → CV → CL → apply-auto.mjs → tracker |
+| `telegram-listener.mjs` | Long-polling listener for Telegram reply commands |
+| `career-ops-listener.service` | systemd unit for the listener on CT 203 |
+
+**Telegram commands** (reply to any bot message):
+- `apply` — apply to highest-scoring unapplied job from latest digest
+- `apply #3` — apply to job #3 from the digest
+- `skip #3` — mark job #3 as skipped
+- `status` — pipeline status summary
+- `help` — list commands
+
+**Data files** (gitignored, CT 203 only):
+- `data/last-digest.json` — structured job list from latest notify-telegram.mjs send (maps "#N" → URL)
+- `data/telegram-offset.txt` — last processed update_id for crash recovery
+
+**Flow (daily cron):**
+```
+scan.mjs → auto-pipeline.mjs:
+  ├─ evaluate via claude -p
+  ├─ generate CV + CL for ≥ 4.0
+  ├─ auto-apply via apply-orchestrator.mjs for ≥ 4.5
+  ├─ merge tracker
+  └─ send numbered Telegram digest (writes last-digest.json)
+
+telegram-listener.mjs (always-on):
+  ├─ "apply #N" → look up URL from last-digest.json → apply-orchestrator.mjs
+  └─ "status" → pipeline summary
+```
+
+**Master switch:** `auto_apply_enabled: true` in profile.yml. Set to `false` to disable auto-apply but keep Telegram reply trigger. CLI overrides: `--auto-apply` / `--no-auto-apply` on auto-pipeline.mjs.
+
 ## Session continuity — read this first when picking up Patrick's fork
 
 This fork has user-specific customizations that change defaults from the upstream career-ops project. **Read these before running any evaluation.**

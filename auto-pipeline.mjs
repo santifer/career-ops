@@ -32,6 +32,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'fs';
 import { execSync, spawn } from 'child_process';
 import { join, resolve } from 'path';
+import { runApplyPipeline } from './apply-orchestrator.mjs';
 
 const PROJECT_DIR = resolve(import.meta.dirname || '.');
 const PIPELINE_PATH = join(PROJECT_DIR, 'data/pipeline.md');
@@ -54,7 +55,23 @@ function readEnv(path = join(PROJECT_DIR, '.env')) {
   return env;
 }
 
-// ── Location gate ─────────���──────────────────────────────────────────────
+// ── Auto-apply config ────────────────────────────────────────────────────
+
+function readAutoApplyConfig() {
+  const profilePath = join(PROJECT_DIR, 'config/profile.yml');
+  if (!existsSync(profilePath)) return { enabled: false, threshold: 4.5 };
+  const raw = readFileSync(profilePath, 'utf-8');
+  const get = (key) => {
+    const m = raw.match(new RegExp(`^\\s*${key}:\\s*["']?(.+?)["']?\\s*$`, 'm'));
+    return m ? m[1] : '';
+  };
+  return {
+    enabled: get('auto_apply_enabled') !== 'false',
+    threshold: parseFloat(get('auto_apply_threshold')) || 4.5,
+  };
+}
+
+// ── Location gate ────────────────────────────────────────────────────────
 
 // Non-Denver cities — if the title explicitly names one of these (in parens
 // or after a pipe/dash), it's a non-Denver on-site role. Denver/Remote pass.
@@ -576,6 +593,59 @@ async function main() {
 
   if (highReports.length === 0) {
     console.log('  No roles scored ≥4.0 — no cover letters generated.');
+  }
+
+  // Step 5b: Auto-apply for high scorers (≥ threshold)
+  const autoApplyOverride = args.includes('--auto-apply') ? true :
+                            args.includes('--no-auto-apply') ? false : null;
+  const autoConfig = readAutoApplyConfig();
+  const doAutoApply = autoApplyOverride !== null ? autoApplyOverride : autoConfig.enabled;
+  const autoThreshold = autoConfig.threshold;
+
+  if (doAutoApply) {
+    const autoApplyCandidates = highReports.filter(r => r.score >= autoThreshold);
+    if (autoApplyCandidates.length > 0) {
+      console.log(`\n── Step 5b: Auto-applying (≥${autoThreshold}) ──\n`);
+      console.log(`  ${autoApplyCandidates.length} candidate(s) for auto-apply\n`);
+
+      for (const r of autoApplyCandidates) {
+        if (dryRun) {
+          console.log(`  [DRY RUN] Would auto-apply: ${r.company} — ${r.role} (${r.score}/5)`);
+          continue;
+        }
+
+        try {
+          const result = await runApplyPipeline({
+            url: r.url,
+            company: r.company,
+            role: r.role,
+            score: r.score,
+            reportPath: r.reportPath,
+            reportNum: r.file.match(/^(\d+)/)?.[1],
+            submit: true,
+          });
+
+          if (result.success) {
+            console.log(`  ✅ Auto-applied: ${r.company} — ${r.role}`);
+            clResults.push({ ...r, autoApplied: true });
+          } else {
+            console.log(`  ❌ Auto-apply failed: ${r.company} — ${result.error}`);
+          }
+        } catch (err) {
+          console.error(`  ❌ Auto-apply error: ${r.company} — ${err.message?.slice(0, 100)}`);
+        }
+
+        // 30s cooldown between applications to avoid ATS rate limits
+        if (autoApplyCandidates.indexOf(r) < autoApplyCandidates.length - 1) {
+          console.log('  ⏳ 30s cooldown...');
+          await new Promise(resolve => setTimeout(resolve, 30000));
+        }
+      }
+    } else {
+      console.log(`\n── Step 5b: No roles scored ≥${autoThreshold} for auto-apply ──\n`);
+    }
+  } else {
+    console.log('\n── Step 5b: Auto-apply disabled ──\n');
   }
 
   // Step 7: Merge tracker

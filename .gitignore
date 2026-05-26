@@ -3,6 +3,8 @@ cv.md
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
+data/last-digest.json
+data/telegram-offset.txt
 reports/*.md
 !reports/.gitkeep
 output/*
@@ -29,6 +31,7 @@ modes/_profile.md
 
 # Secrets (never commit — use .env.example as template)
 .env
+auth/
 
 # Generated
 .resolved-prompt-*

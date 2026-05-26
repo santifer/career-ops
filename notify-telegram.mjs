@@ -22,7 +22,8 @@
  *   node notify-telegram.mjs --dry-run    # print message, don't send
  */
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
 // ── Config ────────────────────────────────────────────────────────────
 
@@ -95,10 +96,11 @@ async function sendTelegram(token, chatId, text) {
       disable_web_page_preview: true,
     }),
   });
+  const data = await resp.json().catch(() => ({}));
   if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(`Telegram error ${resp.status}: ${JSON.stringify(err)}`);
+    throw new Error(`Telegram error ${resp.status}: ${JSON.stringify(data)}`);
   }
+  return data.result; // includes message_id for reply tracking
 }
 
 // ── Main ──────────────────────────────────────────────────────────────
@@ -157,17 +159,21 @@ const MAX_JOBS = 20;
 const shown = classified.slice(0, MAX_JOBS);
 const overflow = classified.length - shown.length;
 
-const dreamJobs = shown.filter(j => j.dream);
-const otherJobs = shown.filter(j => !j.dream);
+// Number all jobs sequentially for "apply #N" replies
+let jobIndex = 0;
 
 let msg = `<b>career-ops scan · ${targetDate}</b>\n`;
 msg += `${classified.length} new match${classified.length !== 1 ? 'es' : ''}\n`;
 msg += '━━━━━━━━━━━━━━━━━━━━━━\n';
 
+const dreamJobs = shown.filter(j => j.dream);
+const otherJobs = shown.filter(j => !j.dream);
+
 if (dreamJobs.length > 0) {
   msg += '\n⭐ <b>DREAM TIER</b>\n';
   for (const j of dreamJobs) {
-    msg += `• <b>${j.company}</b> — ${j.title}\n`;
+    jobIndex++;
+    msg += `<b>#${jobIndex}</b> <b>${j.company}</b> — ${j.title}\n`;
     msg += `  [${j.arch}] <a href="${j.url}">${shortUrl(j.url)}</a>\n`;
   }
 }
@@ -179,7 +185,8 @@ if (otherJobs.length > 0) {
       msg += `\n<b>${j.arch}</b>\n`;
       lastArch = j.arch;
     }
-    msg += `• <b>${j.company}</b> — ${j.title}\n`;
+    jobIndex++;
+    msg += `<b>#${jobIndex}</b> <b>${j.company}</b> — ${j.title}\n`;
     msg += `  <a href="${j.url}">${shortUrl(j.url)}</a>\n`;
   }
 }
@@ -188,13 +195,35 @@ if (overflow > 0) {
   msg += `\n<i>+${overflow} more — check pipeline.md</i>\n`;
 }
 
-msg += `\n<i>→ /career-ops pipeline to evaluate</i>`;
+msg += `\n<i>Reply "apply #N" to apply · "status" for pipeline info</i>`;
+
+// Build structured digest for telegram-listener.mjs
+const digestData = {
+  date: targetDate,
+  message_id: null, // populated after send
+  jobs: shown.map((j, i) => ({
+    index: i + 1,
+    url: j.url,
+    company: j.company,
+    title: j.title,
+    archetype: j.arch,
+    dream: j.dream,
+    score: null, // populated after evaluation
+  })),
+};
 
 if (dryRun) {
   console.log('\n── DRY RUN — message that would be sent ──\n');
   console.log(msg);
   console.log('\n──────────────────────────────────────────');
+  console.log(`\nWould save ${digestData.jobs.length} jobs to data/last-digest.json`);
 } else {
-  await sendTelegram(TOKEN, CHAT_ID, msg);
+  const result = await sendTelegram(TOKEN, CHAT_ID, msg);
   console.log(`✓ Sent digest to Telegram: ${classified.length} matches for ${targetDate}`);
+
+  // Save digest for telegram-listener.mjs "apply #N" lookups
+  digestData.message_id = result?.message_id || null;
+  mkdirSync('data', { recursive: true });
+  writeFileSync(join('data', 'last-digest.json'), JSON.stringify(digestData, null, 2));
+  console.log(`✓ Saved last-digest.json: ${digestData.jobs.length} jobs`);
 }
