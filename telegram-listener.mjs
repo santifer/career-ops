@@ -376,11 +376,11 @@ async function handlePrep(chatId, messageId, index) {
 
 async function handleHelp(chatId, messageId) {
   const msg = `<b>career-ops bot commands</b>
-━━━━━━━━━━━━━━━━━━━━��━
+━━━━━━━━━━━━━━━━━━━━━━
 
 <b>apply</b> — Apply to top unapplied job
 <b>apply #N</b> — Apply to job #N from digest
-<b>skip #N</b> ��� Mark job #N as skipped
+<b>skip #N</b> — Mark job #N as skipped
 <b>follow up #N</b> — Send follow-up for application #N
 <b>wait #N</b> — Snooze follow-up reminder
 <b>responded #N</b> — Mark as responded
