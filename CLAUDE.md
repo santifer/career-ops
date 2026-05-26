@@ -33,6 +33,8 @@ All scripts are Node `.mjs` modules exposed via `npm run`. Run from `career-ops/
 | `npm run sync-check` | Validate cv.md / profile.yml consistency, no hardcoded metrics. |
 | `npm run liveness -- <url>...` / `... --file urls.txt` | Check whether job URLs are still active. |
 | `npm run update:check` / `npm run update` / `npm run rollback` | Self-update against upstream (system-layer files only). |
+| `node apply-auto.mjs <url> <pdf> [opts]` | Server-side ATS form filler (Ashby/Greenhouse/Lever). Runs on CT 203. |
+| `node browser-login.mjs [--profile=name]` | Interactive auth session with remote debugging for CT 203 headless browser. |
 
 Test suite (run before any PR — CI runs `--quick`):
 
@@ -74,6 +76,54 @@ JD text/URL ──► archetype detect ──► A–F evaluation (reads cv.md +
 - **Offer verification uses Playwright, not WebFetch.** AGENTS.md mandates `browser_navigate` + `browser_snapshot` for liveness; only the headless batch worker may fall back to WebFetch and must mark the report `**Verification:** unconfirmed (batch mode)`.
 - **Update prompt on first message:** AGENTS.md instructs running `node update-system.mjs check` silently each session and only surfacing the `update-available` case. Don't surface `up-to-date`, `dismissed`, `offline`, or `no-remote-version`.
 - **Onboarding gate:** if `cv.md`, `config/profile.yml`, `modes/_profile.md`, or `portals.yml` are missing, AGENTS.md requires entering onboarding mode before any evaluation/scan. `modes/_profile.md` should be silently copied from `modes/_profile.template.md` if absent.
+
+## Server-side application automation (CT 203)
+
+Two scripts enable fully server-side job applications from Proxmox CT 203 — no MacBook involvement:
+
+### `apply-auto.mjs` — ATS form filler
+
+Fills ATS application forms, uploads resume/cover letter, and optionally submits. Reads candidate data from `config/profile.yml`.
+
+```bash
+node apply-auto.mjs <url> <pdf-path> [options]
+
+Options:
+  --cover-letter=path   Upload cover letter (PDF/DOCX/MD)
+  --submit              Click submit after filling (default: pause for review)
+  --screenshot=path     Save screenshot of filled form
+  --auth=path           Load saved browser state (cookies) for authenticated sessions
+```
+
+**Supported platforms:**
+| Platform | Detection | Strategy |
+|----------|-----------|----------|
+| Ashby | `jobs.ashbyhq.com` | Upload resume first (triggers parser autofill), wait for parser, then overwrite fields. Handles React comboboxes, Yes/No button pairs. |
+| Greenhouse | `boards.greenhouse.io` or `grnhse_iframe` | Detects iframe embedding (e.g. Stripe). React-Select dropdowns via keyboard (ArrowDown → type → Enter). Scoped option search to avoid phone country selector pollution. |
+| Stripe | `stripe.com/jobs` | Greenhouse-in-iframe variant. 20+ fields including custom dropdowns, checkboxes, file uploads. |
+| Lever | `jobs.lever.co` | Standard form fill by field ID/name. |
+| Generic | fallback | Best-effort label/placeholder/name matching. |
+
+**Key implementation details:**
+- React-Select dropdowns use keyboard interaction (not mouse events) because raw DOM events don't trigger React's synthetic event system
+- `document.execCommand('insertText')` used for React input fields instead of `.value =` assignment
+- Phone intl-tel-input country selectors (244 options) are excluded from option searches by scoping to `[id^="react-select-{inputId}-option"]`
+- Ashby resume parser creates a race condition — script uploads first, waits for "Parsing" banner to disappear, then fills fields
+
+### `browser-login.mjs` — Interactive auth session
+
+Launches headless Chromium with remote debugging so you can log into sites (LinkedIn, etc.) from your MacBook via SSH tunnel. Saves cookies for `apply-auto.mjs --auth`.
+
+```bash
+node browser-login.mjs [--profile=name] [--port=9222] [--url=https://linkedin.com/login]
+
+# Then from MacBook:
+ssh -L 9222:localhost:9222 root@10.1.30.50
+# Open http://localhost:9222 in Chrome → interact with remote browser
+# Press Enter in terminal when done → saves to auth/{profile}-state.json
+```
+
+Saved state is loaded by `apply-auto.mjs --auth=auth/linkedin-state.json` for authenticated sessions (e.g. LinkedIn Easy Apply).
 
 ## Session continuity — read this first when picking up Patrick's fork
 

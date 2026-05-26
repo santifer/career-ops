@@ -10,29 +10,18 @@ Generate a cover letter for the given role using Patrick's calibrated voice. The
 4. **modes/_profile.md** — read the "Writing Style" section for voice rules
 5. **Report** (if exists) — use the evaluation's archetype detection and match analysis
 
-## Structure: 3 Short Paragraphs
+## Structure: 5-6 sentences. That's it.
 
-### Paragraph 1 — Hook (2-3 sentences)
-Identity + time-in-grade + what's specific about THIS company/role.
+Three beats: **why I'm writing → proof → let's talk.** No paragraphs. No filler. A cold pitch, not an essay.
 
-Pattern: "I've been [doing X] for [time]. The last chapter is [current work]. [Company]'s [specific thing from JD] is why I'm writing."
+| Beat | Sentences | What it does |
+|------|-----------|--------------|
+| Hook | 1-2 | Identity + what's specific about THIS role |
+| Proof | 2-3 | Concrete numbers/outcomes mapped to their JD |
+| Close | 1 | Let's talk + portfolio link |
 
 DO NOT start with "Dear Hiring Manager" — start with the hook directly.
-DO NOT use "I am writing to express my interest in..." 
-
-### Paragraph 2 — Proof (3-5 sentences)
-Map 2-3 concrete proof points from cv.md/article-digest.md directly to specific JD requirements. Use the archetype framing from _profile.md to pick which proof points to lead with.
-
-Rules:
-- Name technologies, numbers, outcomes
-- "I built X" not "I leveraged X"
-- Connect each proof point to what THEY need, not just what you did
-- One analogy or "signature line" from _profile.md if it fits naturally
-
-### Paragraph 3 — Close (1-2 sentences)
-Direct. No corporate valediction. Signal availability and enthusiasm without groveling.
-
-Pattern: "I'd like to talk about [specific thing you'd do for them]. [One-sentence availability or link to portfolio]."
+DO NOT use "I am writing to express my interest in..."
 
 NEVER end with:
 - "I look forward to discussing how my skills can contribute..."
@@ -65,7 +54,7 @@ Patrick Moore
 
 ## Length Target
 
-**200-300 words total.** Not a page. Not a memo. A recruiter reads 50 cover letters a day — respect their time. Hit hard, hit fast, get out.
+**75-120 words. 5-6 sentences.** A recruiter reads 50 cover letters a day — this one takes 15 seconds. Hit hard, get out.
 
 ## Archetype-specific hooks
 
@@ -80,22 +69,16 @@ Patrick Moore
 ## Example (calibrated to Patrick's voice)
 
 ```
-I've been building and securing production systems for 28 years. The last chapter
-is AI agents and GPU training infra in a regulated healthcare environment — three
-Claude agents in production, with MCP infra and governance I built underneath.
-{Company}'s {specific thing from JD} is why I'm writing.
-
-At Viecure I shipped a PR review agent doing ~100 reviews/day, a combined design
-review system across Figma and Jira via an Azure-hosted MCP proxy I built to clear
-429 rate limits, and an App Insights operational loop that posts daily analysis to
-Slack and lets engineers spawn Jira tickets directly from the report. The proxy
-doubles as a HIPAA/HITRUST audit boundary. I also built the GPU training
-infrastructure for an ambient AI transcription model — A100 VMSS, 3 RabbitMQ
-servers, 80+ Azure resources, fully compliant. {Connect to what they need.}
-
-I'd like to talk about how {specific value for them}. My portfolio is at
-moorelab.cloud and I'm available anytime this week.
+I've been building and securing production systems for 28 years — the last chapter
+is three Claude agents in production at a regulated healthcare company, with the
+MCP infra and governance underneath. {Company}'s {specific thing} is why I'm writing.
+At Viecure I run a PR review agent at ~100 PRs/day, an Azure-hosted MCP proxy that
+doubles as a HIPAA audit boundary, and the GPU training infra for an ambient AI
+transcription model (A100s, 80+ Azure resources). Happy to talk — moorelab.cloud
+has the details.
 ```
+
+That's 6 sentences. 95 words. Done.
 
 ## File output
 
