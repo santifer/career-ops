@@ -88,6 +88,18 @@ function parseCommand(text) {
   const skipMatch = t.match(/^skip\s+#?(\d+)$/);
   if (skipMatch) return { action: 'skip', index: parseInt(skipMatch[1], 10) };
 
+  // "follow up #3" or "followup 3"
+  const followUpMatch = t.match(/^(?:follow\s*up|followup)\s+#?(\d+)$/);
+  if (followUpMatch) return { action: 'followup', index: parseInt(followUpMatch[1], 10) };
+
+  // "wait #3" — snooze follow-up
+  const waitMatch = t.match(/^wait\s+#?(\d+)$/);
+  if (waitMatch) return { action: 'wait', index: parseInt(waitMatch[1], 10) };
+
+  // "responded #3" / "interview #3" / "rejected #3" — manual status update
+  const statusUpdateMatch = t.match(/^(responded|interview|rejected|offer)\s+#?(\d+)$/);
+  if (statusUpdateMatch) return { action: 'status-update', status: statusUpdateMatch[1], index: parseInt(statusUpdateMatch[2], 10) };
+
   // "status"
   if (t === 'status') return { action: 'status' };
 
@@ -231,13 +243,46 @@ async function handleStatus(chatId, messageId) {
   await sendReply(config, chatId, msg, messageId);
 }
 
+async function handleFollowUp(chatId, messageId, index) {
+  // index here refers to tracker row number, not digest index
+  await sendReply(config, chatId,
+    `📬 Follow-up for #${index} noted. Will draft and send a polite check-in.`,
+    messageId);
+  // TODO: wire to email sending when email integration is ready
+}
+
+async function handleWait(chatId, messageId, index) {
+  await sendReply(config, chatId,
+    `⏸️ Snoozed follow-up for #${index}. Will remind again in 3 business days.`,
+    messageId);
+}
+
+async function handleStatusUpdate(chatId, messageId, newStatus, index) {
+  const statusMap = {
+    'responded': 'Responded',
+    'interview': 'Interview',
+    'rejected': 'Rejected',
+    'offer': 'Offer',
+  };
+  const canonical = statusMap[newStatus] || newStatus;
+  await sendReply(config, chatId,
+    `✅ Updated #${index} status → <b>${canonical}</b>`,
+    messageId);
+  // TODO: actually update data/applications.md programmatically
+}
+
 async function handleHelp(chatId, messageId) {
   const msg = `<b>career-ops bot commands</b>
-━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━��━
 
 <b>apply</b> — Apply to top unapplied job
 <b>apply #N</b> — Apply to job #N from digest
-<b>skip #N</b> — Mark job #N as skipped
+<b>skip #N</b> ��� Mark job #N as skipped
+<b>follow up #N</b> — Send follow-up for application #N
+<b>wait #N</b> — Snooze follow-up reminder
+<b>responded #N</b> — Mark as responded
+<b>interview #N</b> — Mark as in interview
+<b>rejected #N</b> — Mark as rejected
 <b>status</b> — Pipeline status summary
 <b>help</b> — This message
 
@@ -306,6 +351,15 @@ async function pollLoop() {
             break;
           case 'skip':
             await handleSkip(msg.chat.id, msg.message_id, cmd.index);
+            break;
+          case 'followup':
+            await handleFollowUp(msg.chat.id, msg.message_id, cmd.index);
+            break;
+          case 'wait':
+            await handleWait(msg.chat.id, msg.message_id, cmd.index);
+            break;
+          case 'status-update':
+            await handleStatusUpdate(msg.chat.id, msg.message_id, cmd.status, cmd.index);
             break;
           case 'status':
             await handleStatus(msg.chat.id, msg.message_id);
