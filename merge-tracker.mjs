@@ -107,17 +107,24 @@ function roleFuzzyMatch(a, b) {
   const wordsB = roleTokens(b);
   if (wordsA.length === 0 || wordsB.length === 0) return false;
 
+  const setA = new Set(wordsA);
   const setB = new Set(wordsB);
   const overlap = wordsA.filter(w => setB.has(w)).length;
   if (overlap === 0) return false;
 
-  // Jaccard-style ratio on content tokens. Two roles are "the same" only
-  // when the overlap dominates the smaller side — not when they just share
-  // a location + "engineer".
-  const minLen = Math.min(wordsA.length, wordsB.length);
-  const ratio = overlap / minLen;
+  // True Jaccard similarity: overlap / union.
+  // Previous min-based ratio (overlap/minLen) caused false positives when
+  // two roles shared generic words ("security", "engineer") but differed in
+  // the domain word ("application" vs "infrastructure"). Jaccard penalizes
+  // the non-overlapping terms properly.
+  // Example that previously false-matched:
+  //   "Application Security Engineer" vs "Infrastructure Security Engineer"
+  //   tokens: [application, security, engineer] vs [infrastructure, security, engineer]
+  //   overlap=2, union=4, Jaccard=0.5 → correctly rejected (< 0.75)
+  const union = new Set([...wordsA, ...wordsB]).size;
+  const jaccard = overlap / union;
 
-  return overlap >= 2 && ratio >= 0.6;
+  return overlap >= 2 && jaccard >= 0.75;
 }
 
 function extractReportNum(reportStr) {

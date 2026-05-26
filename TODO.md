@@ -7,34 +7,37 @@
 ## 🔴 IMMEDIATE — Apply to open roles
 
 ### Abridge (2 roles, both 4.7/4.6, remote, founding security team)
-- [ ] Submit Abridge AppSec (#2, score 4.7) via apply-auto.mjs on CT 203
-- [ ] Submit Abridge InfraSec (#3, score 4.6) via apply-auto.mjs on CT 203
-- [ ] Verify both Ashby forms still active (liveness check)
+- [x] Submit Abridge AppSec (#2, score 4.7) via apply-auto.mjs on CT 203 ✅ 2026-05-25
+- [x] Submit Abridge InfraSec (#3, score 4.6) via apply-auto.mjs on CT 203 ✅ 2026-05-25
+- [x] Verify both Ashby forms still active (liveness check) ✅
 - [ ] Tailor custom Ashby question answers using evaluation Block H + voice profile
 
 ### Stale candidates from last session
-- [ ] Evaluate: Turo — Staff Security Engineer, Infrastructure (Denver) — `https://wellfound.com/jobs/3104118-staff-security-engineer-infrastructure`
-- [ ] Evaluate: Diligente Technologies — Sr. Cloud Security Engineer/Architect (Remote) — `https://www.dice.com/job-detail/0f3c58fc-7fc0-4879-b38c-91a2fdd22cb2`
+- [x] ~~Turo — Staff Security Engineer, Infrastructure (Denver)~~ — DEAD (HTTP 410) ✅
+- [x] ~~Diligente Technologies — Sr. Cloud Security Engineer/Architect~~ — DEAD (page nav-only, no JD) ✅
 
 ---
 
 ## 🟡 PIPELINE IMPROVEMENTS — Make the automation smarter
 
-### Follow-up automation (wire existing followup-cadence.mjs into Telegram)
-- [ ] Create `followup-tracker.mjs` — monitors `data/applications.md` for "Applied" rows older than 5 business days with no status change
-- [ ] Telegram notification: "Stripe hasn't responded in 5 days. Reply 'follow up' to send email, or 'wait' to extend."
-- [ ] Draft follow-up email templates (short, Patrick's voice, not desperate)
-- [ ] Wire into `telegram-listener.mjs` — add "follow up #N" command
-- [ ] Track follow-up history in `data/follow-ups.md`
+### Follow-up automation ~~(wire existing followup-cadence.mjs into Telegram)~~
+- [x] Create `followup-check.mjs` — monitors Applied rows >5 biz days, Telegram reminders ✅ 2026-05-25
+- [x] Telegram notification with "follow up #N" / "wait #N" instructions ✅
+- [x] Draft follow-up email templates in `templates/follow-up-emails.md` ✅ 2026-05-25
+- [x] Wire into `telegram-listener.mjs` — "follow up #N", "wait #N", status commands ✅
+- [x] Track follow-up history in `data/follow-ups.md` ✅
+- [x] Daily cron: scan → notify → followup-check chain ✅
 
 ### Interview prep auto-generation
-- [ ] Trigger on status change: "Responded" or "Interview" → auto-generate company-specific prep doc
-- [ ] STAR stories mapped to their specific JD requirements (pull from story-bank.md)
-- [ ] Likely interview panel (scrape company LinkedIn for hiring manager + team)
-- [ ] Company culture signals (Glassdoor, recent news, tech blog)
-- [ ] Salary negotiation anchors (comp range from JD + market data)
-- [ ] Save to `interview-prep/{company}-{role}.md`
-- [ ] Telegram: "Interview prep ready for [Company]. Key: [3 bullet summary]"
+- [x] `generate-interview-prep.mjs` — auto-generates prep docs from eval reports ✅ 2026-05-25
+- [x] Trigger: `--check` mode detects Interview/Responded without existing prep ✅
+- [x] Trigger: Telegram "interview #N" auto-fires prep generation ✅
+- [x] telegram-listener.mjs now updates tracker status AND triggers prep ✅
+- [x] Daily pipeline chain includes `--check` step ✅
+- [x] npm scripts: `npm run prep`, `npm run prep:check`, `npm run followup` ✅
+- [ ] Story bank population (currently empty — needs first interview cycle)
+- [ ] LinkedIn scrape for hiring manager (blocked on LinkedIn auth)
+- [ ] Company culture signals (Glassdoor, tech blog) — inferred from JD for now
 
 ### LinkedIn Easy Apply automation
 - [ ] Extend `apply-auto.mjs` with LinkedIn Easy Apply platform detection (`linkedin.com/jobs/view/`)
@@ -86,25 +89,27 @@
 ## 🔧 SYSTEM FIXES — Known bugs and tech debt
 
 ### merge-tracker.mjs dedup bug
-- [ ] Fix: same-company different-title treated as UPDATE not ADD
-- [ ] Root cause: company-name matching is too fuzzy (substring match)
-- [ ] Fix approach: require company + role title match (not just company)
-- [ ] Add test case: two Anthropic roles should both exist in tracker
-- [ ] Verify with existing data (Anthropic has 3 rows that previously collided)
+- [x] Fix: switched roleFuzzyMatch from min-ratio to Jaccard similarity (0.75 threshold) ✅ 2026-05-25
+- [x] Root cause: overlap/minLen gave false positives for shared generic words ✅
+- [x] Test cases pass: Abridge AppSec vs InfraSec correctly treated as different ✅
+- [x] test-all.mjs passes (72/72) ✅
+- [ ] Add regression test to test-all.mjs (roleFuzzyMatch unit tests)
 
 ### scan.mjs Spanish headers
-- [ ] `## Pendientes` / `## Procesadas` in pipeline.md — should be English
-- [ ] Cosmetic fix in scan.mjs output section
-- [ ] Won't survive upstream update, but keeps local consistent
+- [x] `## Pendientes` → `## Pending` in pipeline.md ✅ 2026-05-25
+- [x] scan.mjs updated to write English headers (backward compat with legacy Spanish) ✅
+- [ ] Won't survive upstream update — re-apply after `update-system.mjs apply`
 
 ### Playwright version sync
 - [ ] CT 203 and local now both on 1.60.0 ✅
 - [ ] Add to `npm run doctor` check: warn if CT 203 version differs from local
 
 ### Built In Colorado scanner
-- [ ] Agent-mode scan with Playwright on Built In Colorado category pages
-- [ ] Extract individual job URLs (WebSearch only returned BIC category landing pages last session)
-- [ ] Add to portals.yml as a new source
+- [x] `scan-builtin.mjs` — Playwright scraper for Built In Colorado search pages ✅ 2026-05-25
+- [x] 7 search categories: Security, Cloud Security, AI, DevSecOps/SRE, Platform, InfraSec, Cybersec ✅
+- [x] Reuses portals.yml title filters and scan-history.tsv dedup ✅
+- [x] Added to daily-pipeline.sh (step 2/5) ✅
+- [ ] Test on CT 203 (needs Playwright chromium on the container)
 
 ---
 
@@ -129,8 +134,8 @@ These items are blocked on info only Patrick has:
 | Metric | Value |
 |--------|-------|
 | Total evaluated | 10 |
-| Applied | 2 (Stripe, WorkOS) |
-| Ready to apply | 2 (Abridge ×2) |
+| Applied | 4 (Stripe, WorkOS, Abridge ×2) |
+| Ready to apply | 0 |
 | Auto-apply live | ✅ threshold ≥ 4.5 |
 | Telegram listener | ✅ running on CT 203 |
 | Platforms automated | 4 (Ashby, Greenhouse, Stripe, Lever) |

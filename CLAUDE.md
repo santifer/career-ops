@@ -35,6 +35,9 @@ All scripts are Node `.mjs` modules exposed via `npm run`. Run from `career-ops/
 | `npm run update:check` / `npm run update` / `npm run rollback` | Self-update against upstream (system-layer files only). |
 | `node apply-auto.mjs <url> <pdf> [opts]` | Server-side ATS form filler (Ashby/Greenhouse/Lever). Runs on CT 203. |
 | `node browser-login.mjs [--profile=name]` | Interactive auth session with remote debugging for CT 203 headless browser. |
+| `npm run prep -- --num N` / `--company NAME` / `--check` | Generate interview prep docs from evaluation reports. `--check` finds Interview/Responded without prep. |
+| `npm run followup` / `... -- --days 7 --dry-run` | Check for applications needing follow-up (default: 5 business days). |
+| `bash daily-pipeline.sh` | Full daily chain: scan → notify → followup → prep-check. Runs on CT 203 via cron. |
 
 Test suite (run before any PR — CI runs `--quick`):
 

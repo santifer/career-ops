@@ -190,20 +190,25 @@ function appendToPipeline(offers) {
 
   let text = readFileSync(PIPELINE_PATH, 'utf-8');
 
-  // Find "## Pendientes" section and append after it
-  const marker = '## Pendientes';
-  const idx = text.indexOf(marker);
+  // Find "## Pending" section (or legacy Spanish "## Pendientes") and append after it
+  const marker = '## Pending';
+  const legacyMarker = '## Pendientes';
+  let idx = text.indexOf(marker);
+  if (idx === -1) idx = text.indexOf(legacyMarker); // backward compat with old pipeline.md
+
   if (idx === -1) {
-    // No Pendientes section — append at end before Procesadas
-    const procIdx = text.indexOf('## Procesadas');
+    // No Pending section — append at end before Processed/Procesadas
+    let procIdx = text.indexOf('## Processed');
+    if (procIdx === -1) procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
     const block = `\n${marker}\n\n` + offers.map(o =>
       `- [ ] ${o.url} | ${o.company} | ${o.title}`
     ).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
-    // Find the end of existing Pendientes content (next ## or end)
-    const afterMarker = idx + marker.length;
+    // Find the end of existing Pending content (next ## or end)
+    const usedMarker = text.includes(marker) ? marker : legacyMarker;
+    const afterMarker = idx + usedMarker.length;
     const nextSection = text.indexOf('\n## ', afterMarker);
     const insertAt = nextSection === -1 ? text.length : nextSection;
 

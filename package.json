@@ -19,7 +19,10 @@
     "auto:prepare": "node auto-pipeline.mjs --prepare-only",
     "auto:cl": "node auto-pipeline.mjs --cover-letters",
     "auto:notify": "node auto-pipeline.mjs --notify",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "prep": "node generate-interview-prep.mjs",
+    "prep:check": "node generate-interview-prep.mjs --check",
+    "followup": "node followup-check.mjs"
   },
   "keywords": [
     "ai",

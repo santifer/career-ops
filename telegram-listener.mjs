@@ -26,6 +26,7 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
+import { execFileSync } from 'child_process';
 import { loadTelegramConfig, sendReply, getUpdates } from './lib/telegram.mjs';
 import { runApplyPipeline, evaluateAndMaybeApply } from './apply-orchestrator.mjs';
 
@@ -265,10 +266,55 @@ async function handleStatusUpdate(chatId, messageId, newStatus, index) {
     'offer': 'Offer',
   };
   const canonical = statusMap[newStatus] || newStatus;
+
+  // Update tracker status in data/applications.md
+  if (existsSync(TRACKER_FILE)) {
+    let content = readFileSync(TRACKER_FILE, 'utf-8');
+    const lines = content.split('\n');
+    let updated = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].startsWith('|') || lines[i].includes('---') || lines[i].includes('Date')) continue;
+      const cells = lines[i].split('|').map(c => c.trim()).filter(Boolean);
+      if (cells.length >= 6 && parseInt(cells[0]) === index) {
+        // Replace status (column 6, index 5)
+        cells[5] = canonical;
+        lines[i] = '| ' + cells.join(' | ') + ' |';
+        updated = true;
+        break;
+      }
+    }
+
+    if (updated) {
+      writeFileSync(TRACKER_FILE, lines.join('\n'));
+    }
+  }
+
   await sendReply(config, chatId,
     `✅ Updated #${index} status → <b>${canonical}</b>`,
     messageId);
-  // TODO: actually update data/applications.md programmatically
+
+  // Auto-trigger interview prep generation for Interview/Responded
+  if ((newStatus === 'interview' || newStatus === 'responded') && !DRY_RUN) {
+    await sendReply(config, chatId,
+      `📋 Generating interview prep for #${index}...`,
+      messageId);
+
+    try {
+      execFileSync('node', [join(PROJECT_DIR, 'generate-interview-prep.mjs'), '--num', String(index)], {
+        cwd: PROJECT_DIR,
+        timeout: 150_000,
+        encoding: 'utf-8',
+      });
+      await sendReply(config, chatId,
+        `✅ Interview prep generated for #${index}. Check interview-prep/ folder.`,
+        messageId);
+    } catch (err) {
+      await sendReply(config, chatId,
+        `⚠️ Prep generation failed: ${err.message?.slice(0, 150)}`,
+        messageId);
+    }
+  }
 }
 
 async function handleHelp(chatId, messageId) {
