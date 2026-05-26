@@ -194,8 +194,8 @@ This fork has user-specific customizations that change defaults from the upstrea
 
 ### Known bugs to work around
 
-- **`merge-tracker.mjs` dedup is too aggressive.** When a new TSV's `company + significant-title-substring` overlaps an existing tracker row, it treats it as UPDATE not ADD. Workaround: verify `data/applications.md` diff after every merge; hand-edit if a row was unexpectedly overwritten. Hit on 2026-05-17 when adding Anthropic Application Security Engineer (#7) which got merged onto existing Staff+ Software Security Engineer (#5). See `feedback_merge_tracker_dedup_bug.md` in memory.
-- **`scan.mjs` still writes Spanish section headers** (`## Pendientes` / `## Procesadas`) into `data/pipeline.md` even though `modes/*.md` is in English. System-layer script, not patched. Cosmetic only; doesn't break workflow.
+- **`merge-tracker.mjs` dedup was too aggressive (FIXED 2026-05-25).** Switched `roleFuzzyMatch()` from min-ratio to Jaccard similarity (0.75 threshold). Same-company different-roles are now correctly treated as separate entries. Regression tests added to `test-all.mjs`. Still worth verifying `data/applications.md` diff after merges — see `feedback_merge_tracker_dedup_bug.md` in memory.
+- **`scan.mjs` Spanish headers (FIXED 2026-05-25).** Now writes `## Pending` / `## Processed` with backward-compat fallback for legacy `## Pendientes` / `## Procesadas`.
 
 ### Where the scanner lives + how to refresh it
 
