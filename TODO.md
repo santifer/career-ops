@@ -65,11 +65,12 @@
 ## 🟢 DIFFERENTIATION — Stand out from other candidates
 
 ### Portfolio writeup (moorelab.cloud)
-- [ ] Write a case study for moorelab.cloud: "I built a system that auto-evaluates jobs, generates tailored resumes, and submits applications via headless Playwright — all from a Proxmox container, triggered by Telegram"
-- [ ] Include architecture diagram (scan → evaluate → apply flow)
-- [ ] Metrics: X evaluations, Y auto-applies, Z platforms supported
-- [ ] Frame as: "This is what I do at work — build AI agents that automate complex workflows in regulated environments. Here's one I built for myself."
-- [ ] Link from cover letters: "moorelab.cloud has the details"
+- [x] Case study drafted: `output/portfolio-case-study-career-ops.md` ✅ 2026-05-25
+- [x] Architecture diagram (ASCII, scan → evaluate → apply → followup → prep) ✅
+- [x] Metrics table (10 evals, 4 applied, 4 platforms, 99 companies, 77 tests) ✅
+- [x] Framing: "same pattern I apply at work — regulated-env AI automation with HITL" ✅
+- [x] Cover letters already link moorelab.cloud ✅
+- [ ] **PATRICK:** Review tone, publish to moorelab.cloud, add screenshots of auto-apply
 
 ### Competitive intelligence layer
 - [ ] For each applied company, auto-pull: recent funding, headcount growth, Glassdoor trends
@@ -134,24 +135,30 @@ These items are blocked on info only Patrick has:
 | Metric | Value |
 |--------|-------|
 | Total evaluated | 10 |
-| Applied | 4 (Stripe, WorkOS, Abridge ×2) |
-| Ready to apply | 0 |
+| Applied | 4 (Stripe, WorkOS, Abridge AppSec, Abridge InfraSec) |
+| Ready to apply | 0 (all viable candidates applied) |
 | Auto-apply live | ✅ threshold ≥ 4.5 |
 | Telegram listener | ✅ running on CT 203 |
 | Platforms automated | 4 (Ashby, Greenhouse, Stripe, Lever) |
 | Daily scanner | ✅ 07:00 MDT cron |
 | Voice profile | ✅ calibrated |
 | Cover letters generated | 4 (Abridge ×2, Stripe, WorkOS) |
+| Story bank stories | 7 (STAR+R format) |
+| Interview prep docs | 1 (Abridge) |
+| Telegram commands | 12 |
+| Test suite | 77 checks |
+| Portfolio case study | ✅ drafted |
 
 ---
 
 ## 🗓️ PRIORITY ORDER
 
-1. **Now:** Submit Abridge applications (2 roles, highest scores in pipeline)
-2. **Today:** Evaluate Turo + Diligente candidates
-3. **This week:** Follow-up automation, interview prep auto-gen, portfolio writeup
-4. **Next week:** LinkedIn Easy Apply, recruiter outreach, response tracking
-5. **Ongoing:** Score recalibration, competitive intel, system fixes
+1. ~~**Now:** Submit Abridge applications~~ ✅ Done (both applied 2026-05-25)
+2. ~~**Today:** Evaluate Turo + Diligente~~ ✅ Both expired
+3. ~~**This week:** Follow-up automation, interview prep, portfolio~~ ✅ All built
+4. **Next:** LinkedIn Easy Apply automation, recruiter outreach engine
+5. **Waiting on Patrick:** Portfolio review/publish, references, cv.md date verify, EEO prefs
+6. **Ongoing:** Score recalibration (needs 20+ applications), competitive intel
 
 ---
 
