@@ -104,6 +104,13 @@ function parseCommand(text) {
   // "status"
   if (t === 'status') return { action: 'status' };
 
+  // "patterns" / "analytics"
+  if (t === 'patterns' || t === 'analytics') return { action: 'patterns' };
+
+  // "prep #3" — generate interview prep for a specific application
+  const prepMatch = t.match(/^prep\s+#?(\d+)$/);
+  if (prepMatch) return { action: 'prep', index: parseInt(prepMatch[1], 10) };
+
   // "help"
   if (t === 'help' || t === '/help' || t === '/start') return { action: 'help' };
 
@@ -317,6 +324,56 @@ async function handleStatusUpdate(chatId, messageId, newStatus, index) {
   }
 }
 
+async function handlePatterns(chatId, messageId) {
+  try {
+    const output = execFileSync('node', [join(PROJECT_DIR, 'analyze-patterns.mjs'), '--summary'], {
+      cwd: PROJECT_DIR,
+      encoding: 'utf-8',
+      timeout: 30_000,
+    });
+
+    // Truncate for Telegram (4096 char limit)
+    const lines = output.split('\n');
+    let msg = '<b>📊 Pattern Analysis</b>\n<pre>';
+    let charCount = 30;
+    for (const line of lines) {
+      if (charCount + line.length + 1 > 3800) {
+        msg += '\n... (truncated)';
+        break;
+      }
+      msg += line + '\n';
+      charCount += line.length + 1;
+    }
+    msg += '</pre>';
+    await sendReply(config, chatId, msg, messageId);
+  } catch (err) {
+    await sendReply(config, chatId,
+      `❌ Pattern analysis failed: ${err.message?.slice(0, 150)}`,
+      messageId);
+  }
+}
+
+async function handlePrep(chatId, messageId, index) {
+  await sendReply(config, chatId,
+    `📋 Generating interview prep for #${index}...`,
+    messageId);
+
+  try {
+    execFileSync('node', [join(PROJECT_DIR, 'generate-interview-prep.mjs'), '--num', String(index)], {
+      cwd: PROJECT_DIR,
+      timeout: 150_000,
+      encoding: 'utf-8',
+    });
+    await sendReply(config, chatId,
+      `✅ Interview prep generated for #${index}. Check interview-prep/ folder.`,
+      messageId);
+  } catch (err) {
+    await sendReply(config, chatId,
+      `❌ Prep generation failed: ${err.message?.slice(0, 150)}`,
+      messageId);
+  }
+}
+
 async function handleHelp(chatId, messageId) {
   const msg = `<b>career-ops bot commands</b>
 ━━━━━━━━━━━━━━━━━━━━��━
@@ -329,6 +386,8 @@ async function handleHelp(chatId, messageId) {
 <b>responded #N</b> — Mark as responded
 <b>interview #N</b> — Mark as in interview
 <b>rejected #N</b> — Mark as rejected
+<b>prep #N</b> — Generate interview prep doc
+<b>patterns</b> — Conversion funnel + targeting analysis
 <b>status</b> — Pipeline status summary
 <b>help</b> — This message
 
@@ -409,6 +468,12 @@ async function pollLoop() {
             break;
           case 'status':
             await handleStatus(msg.chat.id, msg.message_id);
+            break;
+          case 'patterns':
+            await handlePatterns(msg.chat.id, msg.message_id);
+            break;
+          case 'prep':
+            await handlePrep(msg.chat.id, msg.message_id, cmd.index);
             break;
           case 'help':
             await handleHelp(msg.chat.id, msg.message_id);
