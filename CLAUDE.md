@@ -355,3 +355,11 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 - No extra text (use the notes column)
 @AGENTS.md
 <!-- Add anything Claude Code specific that other agents don't need -->
+
+## Claude Code Specific
+
+- **Skill path:** `.claude/skills/career-ops/SKILL.md`
+- **Slash command:** `/career-ops` (arguments passed via `arguments: mode` frontmatter)
+- **Subagent dispatch:** `Agent(subagent_type="general-purpose", ...)`
+- **Batch mode:** `claude -p "prompt"`
+- **Plugin distribution:** `.claude-plugin/`
