@@ -362,9 +362,9 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 10. CLI WRAPPER FILE INTEGRITY ──────────────────────────
+// ── 11. CLI WRAPPER FILE INTEGRITY ──────────────────────────
 
-console.log('\n10. CLI wrapper file integrity');
+console.log('\n11. CLI wrapper file integrity');
 
 const cliWrappers = ['CLAUDE.md', 'OPENCODE.md', 'GEMINI.md'];
 for (const f of cliWrappers) {
@@ -380,9 +380,9 @@ for (const f of cliWrappers) {
   }
 }
 
-// ── 11. SKILL SYMLINK INTEGRITY ─────────────────────────────
+// ── 12. SKILL SYMLINK INTEGRITY ─────────────────────────────
 
-console.log('\n11. Skill symlink integrity');
+console.log('\n12. Skill symlink integrity');
 
 const canonicalSkill = '.agents/skills/career-ops/SKILL.md';
 const symlinks = [
@@ -422,9 +422,9 @@ for (const link of symlinks) {
   }
 }
 
-// ── 12. BATCH RUNNER CLI SUPPORT ────────────────────────────
+// ── 13. BATCH RUNNER CLI SUPPORT ────────────────────────────
 
-console.log('\n12. Batch runner CLI support');
+console.log('\n13. Batch runner CLI support');
 
 if (fileExists('batch/batch-runner.sh')) {
   const runner = readFile('batch/batch-runner.sh');
@@ -440,25 +440,6 @@ if (fileExists('batch/batch-runner.sh')) {
   }
 } else {
   fail('batch/batch-runner.sh not found');
-}
-
-// ── 13. AGENTS.md INTEGRITY ─────────────────────────────────────
-
-console.log('\n13. AGENTS.md integrity');
-
-const agents = readFile('AGENTS.md');
-const requiredSections = [
-  'Data Contract', 'Update Check', 'Ethical Use',
-  'Offer Verification', 'Canonical States', 'TSV Format',
-  'First Run', 'Onboarding',
-];
-
-for (const section of requiredSections) {
-  if (agents.includes(section)) {
-    pass(`AGENTS.md has section: ${section}`);
-  } else {
-    fail(`AGENTS.md missing section: ${section}`);
-  }
 }
 
 // ── 14. VERSION FILE ─────────────────────────────────────────────
