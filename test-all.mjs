@@ -541,10 +541,11 @@ try {
     fail(`root layout normalization wrong: ${atRoot}`);
   }
 
-  // Non-report links are left untouched
-  const other = normalizeReportLink('[site](https://example.com)', dataDir, repo);
-  if (other === '[site](https://example.com)') {
-    pass('non-report links are left untouched');
+  // Non-report links are left untouched — including external URLs that happen
+  // to contain an embedded "/reports/" segment (must not be rewritten).
+  const other = normalizeReportLink('[site](https://example.com/reports/foo.md)', dataDir, repo);
+  if (other === '[site](https://example.com/reports/foo.md)') {
+    pass('non-report links (incl. URLs with embedded /reports/) are left untouched');
   } else {
     fail(`non-report link altered: ${other}`);
   }
