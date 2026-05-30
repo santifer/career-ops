@@ -1,0 +1,51 @@
+spec_version: "0.1.0"
+name: career-ops
+version: 1.0.0
+description: >
+  AI-powered job search pipeline built on Claude Code. Evaluates job offers
+  using a structured A-G scoring framework, generates ATS-optimised CVs in
+  HTML/PDF/LaTeX formats, tracks applications, scans 45+ company portals for
+  new openings, and guides users through the full hiring process — from
+  outreach and deep company research to live application assist and interview
+  preparation. Supports 14 skill modes (evaluate, compare, pipeline, PDF, scan,
+  batch, contact, deep, training, project, tracker, apply, patterns, followup)
+  and multi-language operation (EN/DE/FR/JA). Designed for quality over
+  quantity: the agent will not submit applications without explicit user
+  approval.
+author: santifer
+license: MIT
+
+model:
+  preferred: anthropic:claude-sonnet-4-6
+  constraints:
+    temperature: 0.3
+    max_tokens: 8192
+
+skills:
+  - oferta
+  - ofertas
+  - pipeline
+  - pdf
+  - scan
+  - batch
+  - contacto
+  - deep
+  - interview-prep
+  - training
+  - project
+  - tracker
+  - apply
+  - patterns
+  - followup
+
+runtime:
+  max_turns: 50
+  timeout: 600
+
+compliance:
+  risk_tier: standard
+  supervision:
+    human_in_the_loop: always
+    kill_switch: true
+  data_governance:
+    pii_handling: redact
