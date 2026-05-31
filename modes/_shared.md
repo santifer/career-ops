@@ -32,6 +32,7 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 |-----------|-----------------|
 | Match con CV | Skills, experience, proof points alignment |
 | North Star alignment | How well the role fits the user's target archetypes (from _profile.md) |
+| Company size / visa window | Headcount category and any active visa-window penalty from profile.yml/_profile.md |
 | Comp | Salary vs market (5=top quartile, 1=well below) |
 | Cultural signals | Company culture, growth, stability, remote policy |
 | Red flags | Blockers, warnings (negative adjustments) |
@@ -42,6 +43,27 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 - 4.0-4.4 → Good match, worth applying
 - 3.5-3.9 → Decent but not ideal, apply only if specific reason
 - Below 3.5 → Recommend against applying (see Ethical Use in AGENTS.md)
+
+**Weighting:** If `modes/_profile.md` defines a `## Scoring Weighting Overlay` section, use those weights. Otherwise apply equal weighting across the active dimensions. Apply score caps after the weighted score; if multiple caps apply, use the strictest cap and explain every cap in the report.
+
+## Company Size and Work-Rights Checks
+
+Every evaluation must research and display approximate company headcount before
+final scoring. Use WebSearch or the best available company source. If sources
+conflict, give a range and choose the conservative bucket.
+
+**Headcount buckets:**
+- **Startup:** under 500 employees
+- **Mid-size:** 500 to 3000 employees
+- **Large:** 3000+ employees
+- **Unknown:** insufficient evidence; do not invent a category
+
+Read `config/profile.yml` for work-rights facts and `modes/_profile.md` for
+user-specific visa-window scoring overlays. If `location.visa_window_cutoff` is
+present, treat it as the single editable cutoff date for any date-based visa
+window rules. Compare against the current date of the session.
+
+**Eligibility cap:** If the JD or application instructions state eligibility requirements the candidate does not meet, flag this prominently. The cap value, exact flag text, and qualifying conditions are defined in `modes/_profile.md`. Do not cap for generic "must have work rights" language. The candidate has work rights and does not require employer sponsorship unless `config/profile.yml` changes.
 
 ## Posting Legitimacy (Block G)
 
@@ -105,6 +127,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
 1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
 2. Detect the role archetype and adapt framing per _profile.md
+2b. Research company headcount, classify company size, and run the work-rights/eligibility checks before final scoring
 3. Cite exact lines from CV when matching
 4. Use WebSearch for comp and company data
 5. Register in tracker after evaluating
@@ -114,6 +137,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
 9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
 10. **Include `**URL:**` in every report header.**
+11. **Sponsorship answer:** For forms and application drafts, answer sponsorship questions from `config/profile.yml`. If unchanged, the answer is "No sponsorship required"; never imply citizenship, PR, or clearance.
 
 ### Tools
 

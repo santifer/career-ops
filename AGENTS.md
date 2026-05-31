@@ -337,3 +337,20 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 - No markdown bold (`**`) in status field
 - No dates in status field (use the date column)
 - No extra text (use the notes column)
+
+## Session Handover
+
+At the **end of every session**, update `handover.md` in the project root so the next
+agent or session (Claude Code, Codex, OpenCode, Gemini, or any other CLI) picks up
+exactly where this one left off:
+
+1. **What was done** — files changed, evaluations run, scan results, config updated
+2. **In progress** — pipeline URLs pending, reports not yet generated, decisions deferred
+3. **Next steps** — concrete next actions for the next agent/session
+4. **Open questions** — anything that needs Neil's decision before continuing
+
+Keep it under one page. Any agent starting a new session should read `handover.md` first
+to avoid duplicating work or missing context.
+
+**`handover.md` is a user-layer file** — never overwrite it, only update the relevant
+sections. Do not put user data (CV metrics, compensation targets, personal details) in it.

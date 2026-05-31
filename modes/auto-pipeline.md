@@ -47,6 +47,7 @@ If the final score is >= 4.5, generate a draft of responses for the application 
 - Tell us about a relevant project or achievement
 - What makes you a good fit for this position?
 - How did you hear about this role?
+- Work authorization / sponsorship, if asked
 
 ### Tone for Form Answers
 
@@ -65,6 +66,7 @@ If the final score is >= 4.5, generate a draft of responses for the application 
 - **Relevant experience?** → A quantified proof point. "Built [X] that [metric]. Sold the company in 2025."
 - **Good fit?** → "I sit at the intersection of [A] and [B], which is exactly where this role lives."
 - **How did you hear?** → Honest: "Found through [portal/scan], evaluated against my criteria, and it scored highest."
+- **Sponsorship / work authorization?** → Read `config/profile.yml`. If unchanged, answer "No sponsorship required" and describe work rights using the profile's exact timing. Never claim citizenship, PR, or clearance.
 
 **Language**: Always in the language of the JD (EN default). Apply `/tech-translate`.
 

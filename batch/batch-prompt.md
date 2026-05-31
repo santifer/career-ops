@@ -103,9 +103,29 @@ Clasifica la oferta en uno de los 6 arquetipos. Si es híbrido, indica los 2 má
 
 Convertir "builder" en señal profesional, no en "hobby maker". El framing cambia, la verdad es la misma.
 
+#### Paso 0.5 — Company Size and Visa Eligibility
+
+Before scoring, read `config/profile.yml` and `modes/_profile.md`, then:
+
+1. Research approximate company headcount and classify size:
+   - startup: under 500 employees
+   - mid-size: 500 to 3000 employees
+   - large: 3000+ employees
+   - unknown: insufficient evidence
+2. Apply the visa-window rule from `_profile.md`, using
+   `location.visa_window_cutoff` as the single editable cutoff date.
+3. Detect whether the role is explicitly a graduate role/program. Graduate
+   roles turn the size penalty off.
+4. Scan the JD/program text for eligibility requirements the candidate may not
+   meet (citizenship, residency, clearance, etc.). If found, flag this
+   prominently and cap the final score using the exact values and note strings
+   defined in `modes/_profile.md`.
+
 #### Bloque A — Resumen del Rol
 
-Tabla con: Arquetipo detectado, Domain, Function, Seniority, Remote, Team size, TL;DR.
+Tabla con: Arquetipo detectado, company headcount estimate, company size bucket,
+visa-window status, visa eligibility status, Domain, Function, Seniority,
+Remote, Team size, TL;DR.
 
 #### Bloque B — Match con CV
 
@@ -176,10 +196,15 @@ Analyze posting signals to assess whether this is a real, active opening.
 |-----------|-------|
 | Match con CV | X/5 |
 | Alineación North Star | X/5 |
+| Company size / visa window | X/5 |
 | Comp | X/5 |
 | Señales culturales | X/5 |
-| Red flags | -X (si hay) |
-| **Global** | **X/5** |
+| Red flags / eligibility | X/5 |
+| **Global before caps** | **X/5** |
+| **Final global** | **X/5** |
+
+Apply score caps after calculating the weighted score. If multiple caps apply,
+use the strictest cap and explain every cap in the report.
 
 #### Machine Summary
 

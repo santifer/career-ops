@@ -58,6 +58,25 @@ Classify each question:
 - **Already answered in Section G** → adapt the existing response
 - **New question** → generate response from the report + cv.md
 
+## Work authorization and sponsorship
+
+Read `config/profile.yml` before answering any visa, work-rights, or sponsorship
+question. Specific phrasings and work-rights framing are in `modes/_profile.md`
+under the "Negotiation / Application Framing" section.
+
+Default answers while the profile is unchanged:
+
+- Sponsorship required? **No** / **No sponsorship required**.
+- Require employer sponsorship now or in the future? **No**.
+- Authorized to work in the role's jurisdiction? **Yes**, with the exact timing
+  and conditions from `config/profile.yml`.
+- Citizenship, residency, or security clearance? Do not claim any status not
+  explicitly present in `config/profile.yml`.
+
+If a form only allows an option that does not accurately describe the candidate's
+work rights, stop and flag it to the candidate. Never submit or recommend
+submitting an inaccurate answer.
+
 ## Step 5 — Generate responses
 
 For each question, generate the response following:

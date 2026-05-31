@@ -9,10 +9,34 @@ Classify the job into one of the 6 archetypes (see `_shared.md`). If it is a hyb
 - How to rewrite the summary in block E
 - Which STAR stories to prepare in block F
 
+## Step 0.5 — Company Size and Visa Eligibility
+
+Before scoring, research:
+
+1. **Approximate company headcount** and classify company size:
+   - Startup: under 500 employees
+   - Mid-size: 500 to 3000 employees
+   - Large: 3000+ employees
+   - Unknown: insufficient evidence
+2. **Graduate-role exception:** Determine whether the role is explicitly a
+   graduate program/graduate role. Do not treat generic junior or associate
+   roles as graduate roles unless the JD says so.
+3. **Visa-window rule:** Read `config/profile.yml` for
+   `location.visa_window_cutoff`, then apply the user-specific scoring overlay
+   from `modes/_profile.md`.
+4. **Eligibility check:** Scan the JD and program page for eligibility requirements the candidate may not meet (citizenship, residency, clearance, etc.). If found, flag prominently and apply the cap and exact note defined in `modes/_profile.md`.
+
+If the company-size source is weak or conflicting, state confidence rather than
+inventing precision.
+
 ## Block A — Role Summary
 
 Table with:
 - Archetype detected
+- Company headcount estimate
+- Company size bucket
+- Visa-window status / penalty reason, if any
+- Visa eligibility status
 - Domain (platform/agentic/LLMOps/ML/enterprise)
 - Function (build/consult/manage/deploy)
 - Seniority
@@ -84,6 +108,26 @@ The **Reflection** column captures what was learned or what would be done differ
 Also include:
 - 1 recommended case study (which of their projects to present and how)
 - Red-flag questions and how to answer them (e.g., "why did you sell your company?", "do you have a team of reports?")
+
+## Global Scoring
+
+After Blocks A-F, output a scoring table before Block G:
+
+| Dimension | Score | Notes |
+|-----------|-------|-------|
+| Match con CV | X/5 | ... |
+| North Star alignment | X/5 | ... |
+| Company size / visa window | X/5 | startup/mid/large + penalty or neutral |
+| Comp | X/5 | ... |
+| Cultural signals | X/5 | ... |
+| Red flags / eligibility | X/5 | caps and blockers |
+| **Global before caps** | **X/5** | weighted score |
+| **Final global** | **X/5** | after caps |
+
+Rules:
+- Use the weighting overlay from `_profile.md` (or equal weights if no overlay is defined).
+- Apply the company-size / visa-window overlay from `_profile.md`.
+- Apply eligibility caps and use the exact reason strings defined in `_profile.md`.
 
 ## Block G — Posting Legitimacy
 
@@ -162,6 +206,8 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Date:** {YYYY-MM-DD}
 **URL:**
 **Archetype:** {detected}
+**Company size:** {startup | mid-size | large | unknown} ({headcount estimate + source confidence})
+**Visa eligibility:** {eligible | unclear | not eligible — use exact note from _profile.md}
 **Score:** {X/5}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **PDF:** {path or pending}
