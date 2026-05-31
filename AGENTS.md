@@ -69,6 +69,21 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy). Header includes `**Legitimacy:** {tier}`. |
 
+### Repo Navigation — Graphify First
+
+For broad questions about this repo's architecture, relationships, feature flow,
+or "where does X live?", use the local Graphify output before doing wide
+grep/rg sweeps. This saves context and token usage.
+
+Read:
+- `graphify-out/GRAPH_REPORT.md` for community hubs, core abstractions, and
+  high-level relationships.
+- `graphify-out/graph.json` only when deeper edge/node detail is needed.
+
+Use `rg` after Graphify narrows the likely files, or when the task is an exact
+string/symbol lookup. If `graphify-out/` is missing or stale, fall back to `rg`
+and note that Graphify should be regenerated.
+
 ### First Run — Onboarding (IMPORTANT)
 
 **Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
