@@ -1,0 +1,129 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - link "Torq Logo" [ref=e5] [cursor=pointer]:
+        - /url: https://torq.io
+        - img "Torq Logo" [ref=e6]
+      - generic [ref=e7]:
+        - link "Back to jobs" [ref=e8] [cursor=pointer]:
+          - /url: https://job-boards.greenhouse.io/torq
+          - img [ref=e9]
+          - text: Back to jobs
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - heading "Product Manager - Agentic AI" [level=1] [ref=e14]
+            - generic [ref=e15]:
+              - img [ref=e16]
+              - generic [ref=e18]: Tel Aviv
+          - button "Apply" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - paragraph [ref=e22]: Skeletons, lasers, tattoo buses — the Torq brand grabs attention like nothing else in cybersecurity. And we're growing like crazy, backed by Series D funding, 200% employee growth, and 300% revenue growth. Fueling Torq's momentum is our game-changing AI SOC platform, backed by a team and culture that makes Torq one of Forbes' Best Startup Employers in America, and a Business Insider 'startup to bet your career on'.
+            - paragraph [ref=e23]: Life at Torq is all gas, no brakes. We're a team of relentless, collaborative go-getters pushing the boundaries of what's possible for security automation. Every role is an essential driver of Torq's success as the AI-native autonomous SecOps platform of choice for security teams across the Fortune 500.
+          - generic [ref=e28]:
+            - heading "About the Role" [level=3] [ref=e29]:
+              - strong [ref=e30]: About the Role
+            - paragraph [ref=e31]: "We are looking for an AI-savvy Product Manager to join Torq as we continue expanding and exploring the hottest intersection in the security market: agentic AI and SecOps. The ideal candidate will have both experience in at least one SOC-adjacent domain (threat intelligence, SecOps, hunting, incident response…) and strong understanding of agentic AI."
+            - paragraph [ref=e32]: "You’ll own parts of Torq’s agentic platform: where agents are managed, how they interact with users, and how they can help SOCs to reduce system-critical metrics and overall threat exposure."
+            - paragraph [ref=e33]:
+              - strong [ref=e34]: What You’ll Be Doing
+            - list [ref=e35]:
+              - listitem [ref=e36]: Lead critical parts of Torq’s agentic platform to help drive forward adoption and innovation across the full lifecycle - from UX to prompt engineering
+              - listitem [ref=e37]: Become an expert in Torq’s AI SOC offering and in Torq’s Platform as a whole
+              - listitem [ref=e38]: Represent the customer’s voice inside Torq to ensure we’re staying on the critical path
+              - listitem [ref=e39]: Work closely with Torq’s top-notch engineering teams to deliver product capabilities and stay on top of state-of-the-art AI trends
+              - listitem [ref=e40]: Analyze product data - from classic product analytics to AI evaluations of usage patterns - to proactively bubble up user needs or issues
+            - heading "The Ideal Candidate" [level=3] [ref=e41]:
+              - strong [ref=e42]: The Ideal Candidate
+            - list [ref=e43]:
+              - listitem [ref=e44]: Has 3-5 years of product management experience
+              - listitem [ref=e45]: Possesses a strong understanding of agentic / LLM products - from UX to the technical LLM engineering stack
+              - listitem [ref=e46]: Spent at least 2 years working in the cybersecurity market, ideally in a SOC-adjacent space (SecOps, incident response, threat intelligence, threat hunting)
+              - listitem [ref=e47]: Extensively worked with automation products and APIs - can look under the hood and understand systems and architecture
+              - listitem [ref=e48]: Data-driven, with the ability to ask the right questions
+              - listitem [ref=e49]: Superb English speaking and writing skills
+            - paragraph [ref=e50]: As an equal-opportunity employer, we are committed to a team defined and empowered by diversity. We consider qualified applicants without regard to race, religion, color, national origin, gender, sexual orientation, age, marital status, veteran status, or disability status.
+            - paragraph [ref=e51]: We are waiting for you!
+          - generic [ref=e57]:
+            - paragraph [ref=e58]:
+              - emphasis [ref=e60]: We build AI for a living, and we encourage candidates to use it to prep, research, and sharpen their best work. But we're hiring humans, not chatbots. We want the real you. Use AI to tighten your resume, prep for interviews, research Torq, and outline ideas for written responses. Show up as yourself for live interviews, final assessments (the voice, logic, and reasoning need to be yours), and anywhere we're evaluating how you think — not how you prompt.
+            - paragraph [ref=e61]:
+              - emphasis [ref=e63]: Excited about our vision and ready to make an impact as we grow? We'd love to see what you can bring to the team.
+        - generic [ref=e64]:
+          - img [ref=e65]
+          - generic [ref=e67]:
+            - paragraph [ref=e68]: Create a Job Alert
+            - paragraph [ref=e69]: Interested in building your career at Torq? Get future opportunities sent straight to your email.
+            - button "Create alert" [ref=e70] [cursor=pointer]
+      - separator [ref=e71]
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - heading "Apply for this job" [level=2] [ref=e76]
+            - generic [ref=e77]:
+              - paragraph [ref=e79]: "*"
+              - paragraph [ref=e80]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e83] [cursor=pointer]
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - generic [ref=e88]:
+              - generic [ref=e89]: First Name*
+              - textbox "First Name" [ref=e90]
+            - generic [ref=e93]:
+              - generic [ref=e94]: Last Name*
+              - textbox "Last Name" [ref=e95]
+            - generic [ref=e98]:
+              - generic [ref=e99]: Email*
+              - textbox "Email" [ref=e100]
+            - group "Phone" [ref=e102]:
+              - generic [ref=e103]: Phone
+              - generic [ref=e106]:
+                - generic [ref=e107]: Country*
+                - generic [ref=e108]:
+                  - log [ref=e110]
+                  - generic [ref=e112]:
+                    - combobox "Country" [ref=e115]
+                    - button "Toggle flyout" [ref=e117] [cursor=pointer]:
+                      - img [ref=e118]
+                  - textbox
+              - generic [ref=e122]:
+                - generic [ref=e123]: Phone*
+                - textbox "Phone" [ref=e124]
+            - group "Resume/CV*" [ref=e126]:
+              - generic [ref=e127]: Resume/CV*
+              - generic [ref=e129]:
+                - generic [ref=e131]:
+                  - button "Attach" [ref=e132] [cursor=pointer]
+                  - generic [ref=e133]: Attach
+                  - button "Attach" [ref=e134]
+                - button "Dropbox" [ref=e136] [cursor=pointer]
+                - button "Google Drive" [ref=e138] [cursor=pointer]
+                - generic [ref=e140]:
+                  - button "Enter manually" [ref=e141] [cursor=pointer]
+                  - generic [ref=e142]: Enter manually
+                - paragraph [ref=e143]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e145]:
+              - generic [ref=e146]: Cover Letter
+              - generic [ref=e148]:
+                - generic [ref=e150]:
+                  - button "Attach" [ref=e151] [cursor=pointer]
+                  - generic [ref=e152]: Attach
+                  - button "Attach" [ref=e153]
+                - button "Dropbox" [ref=e155] [cursor=pointer]
+                - button "Google Drive" [ref=e157] [cursor=pointer]
+                - generic [ref=e159]:
+                  - button "Enter manually" [ref=e160] [cursor=pointer]
+                  - generic [ref=e161]: Enter manually
+                - paragraph [ref=e162]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e163]:
+            - separator [ref=e164]
+            - generic [ref=e167]:
+              - generic [ref=e168]: LinkedIn Profile*
+              - textbox "LinkedIn Profile" [ref=e169]
+          - button "Submit application" [ref=e171] [cursor=pointer]
+  - contentinfo [ref=e172]:
+    - generic [ref=e173]:
+      - paragraph [ref=e174]: Powered by
+      - link "Greenhouse logo" [ref=e175] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e176]

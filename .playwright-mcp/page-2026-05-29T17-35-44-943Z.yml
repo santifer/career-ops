@@ -1,0 +1,260 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e4]:
+      - link "JFrog logo" [ref=e5] [cursor=pointer]:
+        - /url: https://jfrog.com
+        - img "JFrog logo" [ref=e6]
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Press" [ref=e11] [cursor=pointer]:
+            - /url: https://jfrog.com/about/press
+        - listitem [ref=e12]:
+          - link "Products" [ref=e13] [cursor=pointer]:
+            - /url: https://jfrog.com/platform/
+        - listitem [ref=e14]:
+          - link "Customers" [ref=e15] [cursor=pointer]:
+            - /url: https://jfrog.com/about/customers/
+        - listitem [ref=e16]:
+          - link "Our Codex" [ref=e17] [cursor=pointer]:
+            - /url: https://join.jfrog.com/codex/
+        - listitem [ref=e18]:
+          - link "Join Us" [ref=e19] [cursor=pointer]:
+            - /url: https://join.jfrog.com/#open-positions
+  - document [ref=e20]:
+    - main [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e25]:
+          - link "< Back" [ref=e27] [cursor=pointer]:
+            - /url: https://join.jfrog.com/positions?gh_src=&gh_department=&gh_office=&mrk_id=&search_str=
+          - heading "Principal Product Manager" [level=1] [ref=e28]
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - img [ref=e31]
+              - generic [ref=e33]: Netanya/Tel Aviv, Israel | Product
+            - generic [ref=e34]:
+              - generic [ref=e35]: Share position
+              - list [ref=e36]:
+                - listitem [ref=e37]:
+                  - link "" [ref=e38] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e39]: 
+                - listitem [ref=e40]:
+                  - link [ref=e41] [cursor=pointer]:
+                    - /url: "#"
+                    - img [ref=e42]
+                - listitem [ref=e44]:
+                  - link "" [ref=e45] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e46]: 
+                - listitem [ref=e47]:
+                  - link "" [ref=e48] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e49]: 
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - paragraph [ref=e54]: At JFrog, we’re reinventing DevOps to help the world’s greatest companies innovate — and we want you along for the ride. This is a special place with a unique combination of brilliance, spirit, and just all-around great people. Here, if you’re willing to do more, your career can take off. And since software plays a central role in everyone’s lives, you’ll be part of an important mission. Thousands of customers, including the majority of the Fortune 100, trust JFrog to manage, accelerate, and secure their software delivery from code to production — a concept we call “liquid software.”
+            - paragraph [ref=e55]: This role offers high visibility, strong strategic influence, and direct collaboration with executives, Fortune 100 customers, engineering, finance, information systems, GTM, and business stakeholders.
+            - heading "As a Principal Product Manager at JFrog you will…" [level=5] [ref=e56]
+            - list [ref=e57]:
+              - listitem [ref=e58]: "Drive Product Strategy: Identify market opportunities, define product vision, and gather customer requirements."
+              - listitem [ref=e59]: "Own the Lifecycle: Lead your product from ideation to launch, ensuring alignment with customer needs and high-quality execution."
+              - listitem [ref=e60]: "Leverage Data: Design, experiment, and iterate based on customer feedback, market research, and usage metrics."
+              - listitem [ref=e61]: "Collaborate Cross-Functionally: Partner with Information Systems, Finance, Sales, Support, Marketing, and Engineering to deliver scalable and efficient platform solutions."
+              - listitem [ref=e62]: "Build Relationships: Foster trust and alignment across internal and external stakeholders to bring your vision to life."
+            - heading "To be a Principal Product Manager you need…" [level=5] [ref=e63]
+            - list [ref=e64]:
+              - listitem [ref=e65]: 7+ years of product management experience, with significant ownership over complex, business-critical systems
+              - listitem [ref=e66]: Strong technical background – experience in engineering, R&D, or deep technical product leadership
+              - listitem [ref=e67]: Experience building and scaling internal-facing platform or financial products
+              - listitem [ref=e68]: Understanding of monetization services, billing systems, financial workflows, entitlements, provisioning, and cross-system integrations
+              - listitem [ref=e69]: Proven experience delivering cross-functional, multi-system solutions involving platforms such as Salesforce, Zuora, NetSuite, or equivalent ERP/CRM/financial systems
+              - listitem [ref=e70]: Ability to work with numerous stakeholders, manage dependencies, and drive execution under pressure
+              - listitem [ref=e71]: Strong interpersonal and communication skills, with the ability to influence across engineering, business, and executive levels
+              - listitem [ref=e72]: Hands-on experience with project management for large, cross-functional initiatives
+              - listitem [ref=e73]: Experience working in high-growth, global SaaS companies
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - img [ref=e77]
+              - heading "Apply Here" [level=2] [ref=e91]
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e94]:
+                  - generic [ref=e95]: First Name*
+                  - textbox "Enter your first name" [ref=e96]
+                  - paragraph [ref=e97]
+                - generic [ref=e98]:
+                  - generic [ref=e99]: Last Name*
+                  - textbox "Enter your last name" [ref=e100]
+                  - paragraph [ref=e101]
+              - generic [ref=e102]:
+                - generic [ref=e103]:
+                  - generic [ref=e104]: Email*
+                  - textbox "Enter your email" [ref=e105]
+                  - paragraph [ref=e106]
+                - generic [ref=e107]:
+                  - generic [ref=e108]: Phone*
+                  - spinbutton [ref=e109]
+                  - paragraph [ref=e110]
+              - generic [ref=e113]:
+                - button "Upload your CV" [ref=e114]
+                - generic [ref=e115] [cursor=pointer]:
+                  - img
+                  - generic: Upload your CV
+                - paragraph
+              - generic [ref=e117]:
+                - generic [ref=e118]: Cover Letter
+                - textbox "Cover Letter" [ref=e119]
+                - paragraph [ref=e120]
+              - generic [ref=e122]:
+                - generic [ref=e123]: Linkedin Profile
+                - textbox "Linkedin Profile" [ref=e124]:
+                  - /placeholder: Your LinkedIn Profile
+                - paragraph [ref=e125]
+              - generic [ref=e127]:
+                - generic [ref=e128]: How did you hear about this job?
+                - textbox "How did you hear about this job?" [ref=e129]:
+                  - /placeholder: Tell us...
+              - generic [ref=e131]:
+                - generic [ref=e132]:
+                  - text: By applying I acknowledge the
+                  - link "Join JFrog Privacy Notice" [ref=e133] [cursor=pointer]:
+                    - /url: https://jfrog.com/join-privacy-notice/
+                  - text: .
+                - paragraph [ref=e134]
+              - generic [ref=e136]:
+                - iframe [ref=e139]:
+                  - generic [ref=f42e6]:
+                    - text: protected by
+                    - strong [ref=f42e7]: reCAPTCHA
+                - button "Apply Now" [ref=e140] [cursor=pointer]
+  - contentinfo [ref=e141]:
+    - generic [ref=e143]:
+      - generic [ref=e145]:
+        - heading "Products" [level=3] [ref=e146]
+        - list [ref=e148]:
+          - listitem [ref=e149]:
+            - link "Artifactory" [ref=e150] [cursor=pointer]:
+              - /url: https://jfrog.com/artifactory/
+          - listitem [ref=e151]:
+            - link "Xray" [ref=e152] [cursor=pointer]:
+              - /url: https://jfrog.com/xray/
+          - listitem [ref=e153]:
+            - link "Curation" [ref=e154] [cursor=pointer]:
+              - /url: https://jfrog.com/curation/
+          - listitem [ref=e155]:
+            - link "Distribution" [ref=e156] [cursor=pointer]:
+              - /url: https://jfrog.com/distribution/
+          - listitem [ref=e157]:
+            - link "Container Registry" [ref=e158] [cursor=pointer]:
+              - /url: https://jfrog.com/container-registry/
+          - listitem [ref=e159]:
+            - link "Connect" [ref=e160] [cursor=pointer]:
+              - /url: https://jfrog.com/connect/
+          - listitem [ref=e161]:
+            - link "JFrog ML" [ref=e162] [cursor=pointer]:
+              - /url: https://jfrog.com/jfrog-ml/
+          - listitem [ref=e163]:
+            - link "JFrog Platform" [ref=e164] [cursor=pointer]:
+              - /url: https://jfrog.com/platform/
+          - listitem [ref=e165]:
+            - link "Start Free" [ref=e166] [cursor=pointer]:
+              - /url: https://jfrog.com/start-free/
+      - generic [ref=e168]:
+        - heading "Resources" [level=3] [ref=e169]
+        - list [ref=e171]:
+          - listitem [ref=e172]:
+            - link "Blog" [ref=e173] [cursor=pointer]:
+              - /url: https://jfrog.com/blog/
+          - listitem [ref=e174]:
+            - link "Events" [ref=e175] [cursor=pointer]:
+              - /url: https://jfrog.com/about/events/
+          - listitem [ref=e176]:
+            - link "User Guide" [ref=e177] [cursor=pointer]:
+              - /url: https://www.jfrog.com/confluence/pages/viewpage.action?pageId=46107472
+          - listitem [ref=e178]:
+            - link "DevOps Tools" [ref=e179] [cursor=pointer]:
+              - /url: https://jfrog.com/devops-tools/
+          - listitem [ref=e180]:
+            - link "Open Source" [ref=e181] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e182]:
+            - link "Featured" [ref=e183] [cursor=pointer]:
+              - /url: https://jfrog.com/featured/
+          - listitem [ref=e184]:
+            - link "JFrog Trust" [ref=e185] [cursor=pointer]:
+              - /url: https://jfrog.com/trust/
+      - generic [ref=e187]:
+        - heading "Company" [level=3] [ref=e188]
+        - list [ref=e190]:
+          - listitem [ref=e191]:
+            - link "About" [ref=e192] [cursor=pointer]:
+              - /url: https://jfrog.com/about/
+          - listitem [ref=e193]:
+            - link "Management" [ref=e194] [cursor=pointer]:
+              - /url: https://jfrog.com/about/management/
+          - listitem [ref=e195]:
+            - link "Investor Relations" [ref=e196] [cursor=pointer]:
+              - /url: https://investors.jfrog.com/
+          - listitem [ref=e197]:
+            - link "Partners" [ref=e198] [cursor=pointer]:
+              - /url: https://jfrog.com/partner/
+          - listitem [ref=e199]:
+            - link "Customers" [ref=e200] [cursor=pointer]:
+              - /url: https://jfrog.com/about/customers/
+          - listitem [ref=e201]:
+            - link "Press" [ref=e202] [cursor=pointer]:
+              - /url: https://jfrog.com/press/
+          - listitem [ref=e203]:
+            - link "Contact Us" [ref=e204] [cursor=pointer]:
+              - /url: https://jfrog.com/contact-us/
+          - listitem [ref=e205]:
+            - link "Brand Guidelines" [ref=e206] [cursor=pointer]:
+              - /url: https://jfrog.com/brand-guidelines/
+      - generic [ref=e208]:
+        - heading "Developer" [level=3] [ref=e209]
+        - list [ref=e211]:
+          - listitem [ref=e212]:
+            - link "Community" [ref=e213] [cursor=pointer]:
+              - /url: https://jfrog.com/community/
+          - listitem [ref=e214]:
+            - link "Downloads" [ref=e215] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e216]:
+            - link "Community Events" [ref=e217] [cursor=pointer]:
+              - /url: https://jfrog.com/community/events/
+          - listitem [ref=e218]:
+            - link "Community Forum" [ref=e219] [cursor=pointer]:
+              - /url: https://stackoverflow.com/questions/tagged/artifactory
+          - listitem [ref=e220]:
+            - link "Applications" [ref=e221] [cursor=pointer]:
+              - /url: https://jfrog.com/help/r/jfrog-applications-and-cli-documentation/jfrog-cli
+      - generic [ref=e222]:
+        - generic [ref=e226]:
+          - generic [ref=e227]: Follow Us
+          - link "JFrog Facebook" [ref=e229] [cursor=pointer]:
+            - /url: https://www.facebook.com/artifrog
+            - generic [ref=e230]: 
+          - link "JFrog LinkedIn" [ref=e232] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/jfrog-ltd
+            - generic [ref=e233]: 
+          - link "JFrog Twitter" [ref=e235] [cursor=pointer]:
+            - /url: https://twitter.com/jfrog
+            - img [ref=e236]
+          - link "JFrog Youtube" [ref=e239] [cursor=pointer]:
+            - /url: https://www.youtube.com/c/JFrogInc
+            - img [ref=e240]
+        - generic [ref=e242]: © 2026 JFrog Ltd All Rights Reserved
+    - generic [ref=e245]:
+      - link "JFrog logo" [ref=e247] [cursor=pointer]:
+        - /url: https://join.jfrog.com
+        - img "JFrog logo" [ref=e248]
+      - generic [ref=e249]:
+        - generic [ref=e250]:
+          - link "Privacy Notice" [ref=e251] [cursor=pointer]:
+            - /url: https://jfrog.com/privacy-notice/
+          - link "Cookies Policy" [ref=e252] [cursor=pointer]:
+            - /url: https://jfrog.com/jfrog-cookies-policy/
+          - link "Cookie Settings" [ref=e253] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e254]: Accessibility Mode
+  - text: "> >"

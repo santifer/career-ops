@@ -1,0 +1,239 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - link "Similarweb Logo" [ref=e5] [cursor=pointer]:
+        - /url: https://www.similarweb.com/
+        - img "Similarweb Logo" [ref=e6]
+      - generic [ref=e7]:
+        - link "Back to jobs" [ref=e8] [cursor=pointer]:
+          - /url: https://job-boards.greenhouse.io/similarweb
+          - img [ref=e9]
+          - text: Back to jobs
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - heading "Senior AI Product Manager - Sales Intelligence" [level=1] [ref=e14]
+            - generic [ref=e15]:
+              - img [ref=e16]
+              - generic [ref=e18]: Tel Aviv, Israel
+          - button "Apply" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - paragraph [ref=e22]: At Similarweb, we are revolutionizing the way businesses interact with the digital world by revealing to them everything that happens online.
+            - paragraph [ref=e23]: Our unique data and solutions empower over 4,300 customers globally, including industry giants like Google, eBay, and Adidas, to make game-changing decisions that drive their digital strategies.
+            - paragraph [ref=e24]: In 2021, we went public on the New York Stock Exchange, and we continue to reach new heights! Come work alongside Similarwebbers across the globe who are bright, curious, practical and good people.
+            - heading "The Most Interesting Corner of Similarweb" [level=3] [ref=e25]:
+              - strong [ref=e26]: The Most Interesting Corner of Similarweb
+            - paragraph [ref=e27]:
+              - text: At Similarweb, we reveal everything that happens online. But in the
+              - strong [ref=e28]: Sales Intelligence (SI)
+              - text: department, we don’t just show data—we make it
+              - emphasis [ref=e29]: act
+              - text: .
+            - paragraph [ref=e30]:
+              - text: Think of SI as a
+              - strong [ref=e31]: high-growth startup embedded within a data giant
+              - text: . We sit on top of one of the world's most sophisticated datasets, but we operate with the speed, agility, and "build-it-ourselves" mentality of a day-one venture. We aren't just building another B2B dashboard; we are redefining the "B2C-style" experience for the modern seller.
+            - heading "Why this role is a game-changer" [level=3] [ref=e32]:
+              - strong [ref=e33]: Why this role is a game-changer
+            - paragraph [ref=e34]:
+              - text: Most sales tools are built for managers and "Ops" (the backbone).
+              - strong [ref=e35]: This role is for the Salesperson.
+              - text: Your mission is to build the "Superpower Suite" for Sales Persons, SDRs, Account Executives, and CSMs. We are on a crusade to
+              - strong [ref=e36]: delete the admin work
+              - text: "that every salesperson hates. If a task is \"boring,\" \"manual,\" or \"admin-heavy,\" your job is to build an AI product that does it for them—so they can get back to what they love: winning deals."
+            - heading "How we build with AI" [level=3] [ref=e37]:
+              - strong [ref=e38]: How we build with AI
+            - paragraph [ref=e39]: We don't just talk about AI; we live in it. The SI department is a playground for builders.
+            - list [ref=e40]:
+              - listitem [ref=e41]:
+                - strong [ref=e42]: "The Stack:"
+                - text: We are deeply embedded with tools like
+                - strong [ref=e43]: Claude, Cursor, and AI-driven code/design workflows
+                - text: .
+              - listitem [ref=e44]:
+                - strong [ref=e45]: "Rapid Prototyping:"
+                - text: We build our own prototypes and products in-house, collaborating tightly with a world-class R&D team that moves at lightning speed.
+              - listitem [ref=e46]:
+                - strong [ref=e47]: "Agentic Future:"
+                - text: We are moving beyond simple automation. You will define the strategy for
+                - strong [ref=e48]: AI Agents
+                - text: and
+                - strong [ref=e49]: AI Skills
+                - text: —autonomous systems that can research prospects, handle "boring" outreach, and deliver real-time "what to say next" cues during live calls.
+            - heading "A day in the life..." [level=3] [ref=e50]:
+              - strong [ref=e51]: A day in the life...
+            - list [ref=e52]:
+              - listitem [ref=e53]:
+                - strong [ref=e54]: "Hustle Research:"
+                - text: Deep-dive with Sales and CSM teams to find the friction. If they’re spending 2 hours a day on "manual research," you’re there to turn that 2 hours into 2 seconds.
+              - listitem [ref=e55]:
+                - strong [ref=e56]: "B2C Mindset in B2B:"
+                - text: Design tools that are as addictive and intuitive as your favorite consumer apps. If it’s not a joy to use, it’s not finished.
+              - listitem [ref=e57]:
+                - strong [ref=e58]: "AI Orchestration:"
+                - text: Lead the charge on
+                - strong [ref=e59]: Agentic Workflows
+                - text: . You’ll define how AI "skills" (like predictive lead scoring or automated prospect discovery) fit into a seamless seller journey.
+              - listitem [ref=e60]:
+                - strong [ref=e61]: "Cross-functional \"Startup\" Mode:"
+                - text: Partner with data scientists to turn complex signals into simple "buying cues" while acting as the bridge between "what's possible" and "what's usable."
+            - heading "What you’ll bring" [level=3] [ref=e62]:
+              - strong [ref=e63]: What you’ll bring
+            - list [ref=e64]:
+              - listitem [ref=e65]:
+                - strong [ref=e66]: "3+ Years of PM Experience:"
+                - text: You’ve shipped B2B web products, but you have a
+                - strong [ref=e67]: "\"UX Edge\""
+                - text: —you care more about adoption and user delight than just "checking boxes."
+              - listitem [ref=e68]:
+                - strong [ref=e69]: "Technical Foundation:"
+                - text: BSc in CS, Engineering, or equivalent. You’re comfortable talking "Agentic AI" and "Vector DBs" but obsessed with simplifying them for the end-user.
+              - listitem [ref=e70]:
+                - strong [ref=e71]: "The \"Get-it-done\" Mindset:"
+                - text: You aren't afraid to get your hands dirty. You might use Cursor to wireframe a flow or Claude to brainstorm a PRD.
+              - listitem [ref=e72]:
+                - strong [ref=e73]: "Analytical Depth:"
+                - text: You can navigate Similarweb’s massive datasets to find the "signals" that matter.
+            - heading "Why Join the SI Rocket Ship?" [level=3] [ref=e74]:
+              - strong [ref=e75]: Why Join the SI Rocket Ship?
+            - list [ref=e76]:
+              - listitem [ref=e77]:
+                - strong [ref=e78]: "Startup Culture, Enterprise Impact:"
+                - text: Use a massive, public company's data to build a nimble, AI-first product line.
+              - listitem [ref=e79]:
+                - strong [ref=e80]: "AI Innovation:"
+                - text: Be at the forefront of the
+                - strong [ref=e81]: AI Agent
+                - text: revolution. We aren't just adding a "chatbot"—we are building autonomous sales assistants.
+              - listitem [ref=e82]:
+                - strong [ref=e83]: "High Visibility:"
+                - text: Your tools are the primary interface for thousands of sellers at companies like Google, eBay, and Adidas.
+            - paragraph [ref=e84]:
+              - strong [ref=e85]: Ready to build the future of Sales Intelligence? Let’s talk.
+            - paragraph [ref=e86]
+            - paragraph [ref=e87]:
+              - strong [ref=e88]: "Why you’ll love being a Similarwebber:"
+            - paragraph [ref=e89]:
+              - strong [ref=e90]: "You’ll actually love the product you work with:"
+              - text: Our customers aren’t our only raving fans. When we asked our employees why they chose to come work at Similarweb, 99% of them said “the product.” Imagine how exciting your job is when you get to work with the most powerful digital intelligence platform in the world.
+            - paragraph [ref=e91]:
+              - strong [ref=e92]: "You’ll find a home for your big ideas:"
+              - text: We encourage an open dialogue and empower employees to bring their ideas to the table. You’ll find the resources you need to take initiative and create meaningful change within the organization.
+            - paragraph [ref=e93]:
+              - strong [ref=e94]: "We offer competitive perks & benefits:"
+              - text: We take your well-being seriously, and offer competitive compensation packages to all employees. We also put a strong emphasis on community, with regular team outings and happy hours.
+            - paragraph [ref=e95]:
+              - strong [ref=e96]: "You can grow your career in any direction you choose:"
+              - text: Interested in becoming a VP or want to transition into a different department? Whether it’s Career Week, personalized coaching, or our ongoing learning solutions, you’ll find all the tools and opportunities you need to develop your career right here.
+            - paragraph [ref=e97]:
+              - strong [ref=e98]: "Diversity isn’t just a buzzword:"
+              - text: People want to work in a place where they can be themselves. We strive to create a workplace that is reflective of the communities we serve, where everyone is empowered to bring their full, authentic selves to work. We are committed to inclusivity across race, gender, ethnicity, culture, sexual orientation, age, religion, spirituality, identity and experience. Our culture of equality and mutual respect also helps us better understand and serve our customers in a world that is becoming more global, more diverse, and more digital every day.
+            - paragraph [ref=e99]:
+              - text: We will handle your application and information related to your application in accordance with the Applicant Privacy Policy available
+              - link "HERE" [ref=e100] [cursor=pointer]:
+                - /url: https://www.similarweb.com/corp/legal/applicant-privacy-policies/
+              - text: .
+          - paragraph [ref=e104]:
+            - text: We will handle your application and information related to your application in accordance with the Applicant Privacy Policy available
+            - link "here" [ref=e105] [cursor=pointer]:
+              - /url: https://www.similarweb.com/corp/legal/applicant-privacy-policies/
+            - text: .
+        - generic [ref=e106]:
+          - img [ref=e107]
+          - generic [ref=e109]:
+            - paragraph [ref=e110]: Create a Job Alert
+            - paragraph [ref=e111]: Interested in building your career at Similarweb? Get future opportunities sent straight to your email.
+            - button "Create alert" [ref=e112] [cursor=pointer]
+      - separator [ref=e113]
+      - generic [ref=e114]:
+        - generic [ref=e115]:
+          - generic [ref=e116]:
+            - heading "Apply for this job" [level=2] [ref=e118]
+            - generic [ref=e119]:
+              - paragraph [ref=e121]: "*"
+              - paragraph [ref=e122]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e125] [cursor=pointer]
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - generic [ref=e130]:
+              - generic [ref=e131]: First Name*
+              - textbox "First Name" [ref=e132]
+            - generic [ref=e135]:
+              - generic [ref=e136]: Last Name*
+              - textbox "Last Name" [ref=e137]
+            - generic [ref=e140]:
+              - generic [ref=e141]: Email*
+              - textbox "Email" [ref=e142]
+            - group "Phone" [ref=e144]:
+              - generic [ref=e145]: Phone
+              - generic [ref=e148]:
+                - generic [ref=e149]: Country*
+                - generic [ref=e150]:
+                  - log [ref=e152]
+                  - generic [ref=e154]:
+                    - combobox "Country" [ref=e157]
+                    - button "Toggle flyout" [ref=e159] [cursor=pointer]:
+                      - img [ref=e160]
+                  - textbox
+              - generic [ref=e164]:
+                - generic [ref=e165]: Phone*
+                - textbox "Phone" [ref=e166]
+            - generic [ref=e167]:
+              - generic [ref=e169]:
+                - generic [ref=e170]: Location (City)*
+                - generic [ref=e171]:
+                  - log [ref=e173]
+                  - combobox "Location (City)" [ref=e178]
+                  - textbox
+              - button "Locate me" [ref=e179] [cursor=pointer]
+            - group "Resume/CV*" [ref=e181]:
+              - generic [ref=e182]: Resume/CV*
+              - generic [ref=e184]:
+                - generic [ref=e186]:
+                  - button "Attach" [ref=e187] [cursor=pointer]
+                  - generic [ref=e188]: Attach
+                  - button "Attach" [ref=e189]
+                - button "Dropbox" [ref=e191] [cursor=pointer]
+                - button "Google Drive" [ref=e193] [cursor=pointer]
+                - generic [ref=e195]:
+                  - button "Enter manually" [ref=e196] [cursor=pointer]
+                  - generic [ref=e197]: Enter manually
+                - paragraph [ref=e198]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e200]:
+              - generic [ref=e201]: Cover Letter
+              - generic [ref=e203]:
+                - generic [ref=e205]:
+                  - button "Attach" [ref=e206] [cursor=pointer]
+                  - generic [ref=e207]: Attach
+                  - button "Attach" [ref=e208]
+                - button "Dropbox" [ref=e210] [cursor=pointer]
+                - button "Google Drive" [ref=e212] [cursor=pointer]
+                - generic [ref=e214]:
+                  - button "Enter manually" [ref=e215] [cursor=pointer]
+                  - generic [ref=e216]: Enter manually
+                - paragraph [ref=e217]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e218]:
+            - separator [ref=e219]
+            - generic [ref=e222]:
+              - generic [ref=e223]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e224]
+            - generic [ref=e227]:
+              - generic [ref=e228]: Website
+              - textbox "Website" [ref=e229]
+            - generic [ref=e232]:
+              - generic [ref=e233]: How did you hear about this job?
+              - generic [ref=e234]:
+                - log [ref=e236]
+                - generic [ref=e238]:
+                  - generic [ref=e239]:
+                    - generic [ref=e240]: Select...
+                    - combobox "How did you hear about this job?" [ref=e242]
+                  - button "Toggle flyout" [ref=e244] [cursor=pointer]:
+                    - img [ref=e245]
+          - button "Submit application" [ref=e248] [cursor=pointer]
+  - contentinfo [ref=e249]:
+    - generic [ref=e250]:
+      - paragraph [ref=e251]: Powered by
+      - link "Greenhouse logo" [ref=e252] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e253]

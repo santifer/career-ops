@@ -1,0 +1,26 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - heading "404 This Frog is in the dark" [level=1] [ref=e4]:
+        - generic [ref=e5]: "404"
+        - text: This Frog is in the dark
+      - link "Contact Us" [ref=e6] [cursor=pointer]:
+        - /url: https://jfrog.com/contact-us
+    - img "jfrog hand" [ref=e7]
+  - contentinfo [ref=e8]:
+    - generic [ref=e9]:
+      - link "JFrog logo" [ref=e10] [cursor=pointer]:
+        - /url: https://jfrog.com
+        - img "JFrog logo" [ref=e11]
+      - generic [ref=e12]:
+        - paragraph [ref=e13]: © 2026 JFrog Ltd All Rights Reserved
+        - paragraph [ref=e14]:
+          - link "Terms of Use" [ref=e15] [cursor=pointer]:
+            - /url: https://jfrog.com/terms-of-use/
+        - paragraph [ref=e16]:
+          - link "Privacy Notice" [ref=e17] [cursor=pointer]:
+            - /url: https://jfrog.com/privacy-notice/
+        - paragraph [ref=e18]:
+          - link "Cookies Policy" [ref=e19] [cursor=pointer]:
+            - /url: https://jfrog.com/jfrog-cookies-policy/
+        - paragraph [ref=e20]: Cookie Settings

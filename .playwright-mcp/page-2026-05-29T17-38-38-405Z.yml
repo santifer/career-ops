@@ -1,0 +1,618 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link [ref=e4] [cursor=pointer]:
+        - /url: https://www.appsflyer.com
+      - generic [ref=e5]:
+        - menu [ref=e6]:
+          - menuitem "Platform " [ref=e7]:
+            - link "Platform " [ref=e8] [cursor=pointer]:
+              - /url: "#"
+            - navigation:
+              - generic [ref=e10]:
+                - generic [ref=e11]:
+                  - generic [ref=e12]:
+                    - generic [ref=e13]: Measure
+                    - menu [ref=e14]:
+                      - menuitem "Measurement Measure every action with confidence" [ref=e15]:
+                        - link "Measurement Measure every action with confidence" [ref=e16] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/measurement/
+                          - generic [ref=e17]: Measurement
+                          - generic [ref=e18]: Measure every action with confidence
+                      - menuitem "Cost aggregation Understand your true mobile marketing ROI" [ref=e19]:
+                        - link "Cost aggregation Understand your true mobile marketing ROI" [ref=e20] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/cost-aggregation/
+                          - generic [ref=e21]: Cost aggregation
+                          - generic [ref=e22]: Understand your true mobile marketing ROI
+                  - generic [ref=e23]:
+                    - generic [ref=e24]: Analyze
+                    - menu [ref=e25]:
+                      - menuitem "Marketing analytics Turn insights on campaign performance into action" [ref=e26]:
+                        - link "Marketing analytics Turn insights on campaign performance into action" [ref=e27] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/marketing-analytics/
+                          - generic [ref=e28]: Marketing analytics
+                          - generic [ref=e29]: Turn insights on campaign performance into action
+                      - menuitem "Incrementality Prove the real value of your marketing campaigns" [ref=e30]:
+                        - link "Incrementality Prove the real value of your marketing campaigns" [ref=e31] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/incrementality/
+                          - generic [ref=e32]: Incrementality
+                          - generic [ref=e33]: Prove the real value of your marketing campaigns
+                  - generic [ref=e34]:
+                    - generic [ref=e35]: Engage
+                    - menu [ref=e36]:
+                      - menuitem "CX & deep linking Boost revenue with exceptional customer experiences" [ref=e37]:
+                        - link "CX & deep linking Boost revenue with exceptional customer experiences" [ref=e38] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/customer-experience-deep-linking/
+                          - generic [ref=e39]: CX & deep linking
+                          - generic [ref=e40]: Boost revenue with exceptional customer experiences
+                      - menuitem "Audience segmentation Create meaningful conversations with your customers" [ref=e41]:
+                        - link "Audience segmentation Create meaningful conversations with your customers" [ref=e42] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/audiences/
+                          - generic [ref=e43]: Audience segmentation
+                          - generic [ref=e44]: Create meaningful conversations with your customers
+                  - generic [ref=e45]:
+                    - generic [ref=e46]: Protect
+                    - menu [ref=e47]:
+                      - menuitem "Fraud protection Protect your marketing budget from mobile ad fraud" [ref=e48]:
+                        - link "Fraud protection Protect your marketing budget from mobile ad fraud" [ref=e49] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/fraud-protection/
+                          - generic [ref=e50]: Fraud protection
+                          - generic [ref=e51]: Protect your marketing budget from mobile ad fraud
+                  - generic [ref=e52]:
+                    - generic [ref=e53]: Connect
+                    - menu [ref=e54]:
+                      - menuitem "Raw data & APIs Connect all of your data with ease, in real time" [ref=e55]:
+                        - link "Raw data & APIs Connect all of your data with ease, in real time" [ref=e56] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/products/apis/
+                          - generic [ref=e57]: Raw data & APIs
+                          - generic [ref=e58]: Connect all of your data with ease, in real time
+                - list [ref=e60]:
+                  - listitem [ref=e61]:
+                    - link "View pricing " [ref=e62] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/pricing/
+                  - listitem [ref=e63]:
+                    - link "iOS 14 & privacy " [ref=e64] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/solutions/ios/
+                  - listitem [ref=e65]:
+                    - link "Partner marketplace " [ref=e66] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/products/integrations/
+          - menuitem "Solutions " [ref=e67]:
+            - link "Solutions " [ref=e68] [cursor=pointer]:
+              - /url: "#"
+            - navigation:
+              - generic [ref=e69]:
+                - generic [ref=e70]:
+                  - generic [ref=e71]:
+                    - generic [ref=e72]: How we help
+                    - paragraph [ref=e73]: Explore our solutions for teams and companies of all sizes, across every industry
+                  - generic [ref=e74]:
+                    - menu [ref=e76]:
+                      - menuitem "Gaming" [ref=e77]:
+                        - link "Gaming" [ref=e78] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/gaming/
+                          - generic [ref=e79]: Gaming
+                      - menuitem "Shopping" [ref=e80]:
+                        - link "Shopping" [ref=e81] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/shopping/
+                          - generic [ref=e82]: Shopping
+                      - menuitem "Food & drink" [ref=e83]:
+                        - link "Food & drink" [ref=e84] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/food-drink/
+                          - generic [ref=e85]: Food & drink
+                      - menuitem "Entertainment" [ref=e86]:
+                        - link "Entertainment" [ref=e87] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/entertainment-music/
+                          - generic [ref=e88]: Entertainment
+                    - menu [ref=e90]:
+                      - menuitem "Finance" [ref=e91]:
+                        - link "Finance" [ref=e92] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/finance/
+                          - generic [ref=e93]: Finance
+                      - menuitem "Health & fitness" [ref=e94]:
+                        - link "Health & fitness" [ref=e95] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/health-fitness/
+                          - generic [ref=e96]: Health & fitness
+                      - menuitem "Travel" [ref=e97]:
+                        - link "Travel" [ref=e98] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/travel/
+                          - generic [ref=e99]: Travel
+                  - generic [ref=e100]:
+                    - strong [ref=e101]: For partners
+                    - generic [ref=e102]:
+                      - listitem [ref=e103]:
+                        - link "Integrated partners" [ref=e104] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/partners/
+                      - listitem [ref=e105]:
+                        - link "Agencies" [ref=e106] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/solutions/agencies/
+                - list [ref=e108]:
+                  - listitem [ref=e109]:
+                    - link "Zero budget marketing " [ref=e110] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/solutions/zero-budget-marketing/
+                  - listitem [ref=e111]:
+                    - link "AppsFlyer for iOS " [ref=e112] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/solutions/ios/
+          - menuitem "Why AppsFlyer " [ref=e113]:
+            - link "Why AppsFlyer " [ref=e114] [cursor=pointer]:
+              - /url: "#"
+            - navigation:
+              - generic [ref=e116]:
+                - generic [ref=e117]:
+                  - generic [ref=e118]: Our approach
+                  - paragraph [ref=e119]: Discover how we help brands around the world make better marketing decisions
+                - generic [ref=e120]:
+                  - menu [ref=e122]:
+                    - menuitem "Customer success stories" [ref=e123]:
+                      - link "Customer success stories" [ref=e124] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/customers/
+                        - generic [ref=e125]: Customer success stories
+                    - menuitem "The AppsFlyer difference" [ref=e126]:
+                      - link "The AppsFlyer difference" [ref=e127] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/appsflyer-advantage/
+                        - generic [ref=e128]: The AppsFlyer difference
+                    - menuitem "Trust hub" [ref=e129]:
+                      - link "Trust hub" [ref=e130] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/trust/
+                        - generic [ref=e131]: Trust hub
+                  - menu [ref=e133]:
+                    - menuitem "Security" [ref=e134]:
+                      - link "Security" [ref=e135] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/trust/security/
+                        - generic [ref=e136]: Security
+                    - menuitem "Compliance" [ref=e137]:
+                      - link "Compliance" [ref=e138] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/trust/compliance/
+                        - generic [ref=e139]: Compliance
+                - generic [ref=e140]:
+                  - strong [ref=e141]: Featured stories
+                  - generic [ref=e142]:
+                    - listitem [ref=e143]:
+                      - link "How Huuuge 10X’ed US installs" [ref=e144] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/customers/huuuge/
+                    - listitem [ref=e145]:
+                      - link "How Stash leverages web-to-app" [ref=e146] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/customers/stash/
+          - menuitem "Learn " [ref=e147]:
+            - link "Learn " [ref=e148] [cursor=pointer]:
+              - /url: "#"
+            - navigation:
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - generic [ref=e152]: Resources
+                  - paragraph [ref=e153]: Stay informed with industry deep dives, the latest trends, original content, and all things AppsFlyer
+                - generic [ref=e154]:
+                  - menu [ref=e156]:
+                    - menuitem "Blog" [ref=e157]:
+                      - link "Blog" [ref=e158] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/blog/
+                        - generic [ref=e159]: Blog
+                    - menuitem "Videos" [ref=e160]:
+                      - link "Videos" [ref=e161] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/blog/videos/
+                        - generic [ref=e162]: Videos
+                    - menuitem "Podcast" [ref=e163]:
+                      - link "Podcast" [ref=e164] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/blog/podcasts/
+                        - generic [ref=e165]: Podcast
+                    - menuitem "Reports & guides" [ref=e166]:
+                      - link "Reports & guides" [ref=e167] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/resources/
+                        - generic [ref=e168]: Reports & guides
+                    - menuitem "Glossary" [ref=e169]:
+                      - link "Glossary" [ref=e170] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/glossary/
+                        - generic [ref=e171]: Glossary
+                  - generic [ref=e172]:
+                    - generic [ref=e173]: Customers
+                    - menu [ref=e174]:
+                      - menuitem "Product news" [ref=e175]:
+                        - link "Product news" [ref=e176] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/product-news/
+                          - generic [ref=e177]: Product news
+                      - menuitem "Use cases" [ref=e178]:
+                        - link "Use cases" [ref=e179] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/use-cases/
+                          - generic [ref=e180]: Use cases
+                      - menuitem "AppsFlyer masterclass" [ref=e181]:
+                        - link "AppsFlyer masterclass" [ref=e182] [cursor=pointer]:
+                          - /url: https://www.appsflyer.com/appsflyer-masterclass/
+                          - generic [ref=e183]: AppsFlyer masterclass
+                      - menuitem "Help center" [ref=e184]:
+                        - link "Help center" [ref=e185] [cursor=pointer]:
+                          - /url: https://support.appsflyer.com/hc/en-us
+                          - generic [ref=e186]: Help center
+                - generic [ref=e188]:
+                  - listitem [ref=e189]:
+                    - link "Monetization strategies for iOS 14+" [ref=e190] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/resources/guides/ios-14-app-monetization-strategies/
+                  - listitem [ref=e191]:
+                    - link "Mobile attribution in the age of privacy" [ref=e192] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/resources/guides/mobile-attribution-privacy-age/
+                  - listitem [ref=e193]:
+                    - link "Predictive modeling for app marketers" [ref=e194] [cursor=pointer]:
+                      - /url: https://www.appsflyer.com/resources/guides/predictive-modeling-for-mobile-marketers/
+          - menuitem "Company " [ref=e195]:
+            - link "Company " [ref=e196] [cursor=pointer]:
+              - /url: "#"
+            - navigation:
+              - generic [ref=e198]:
+                - generic [ref=e199]:
+                  - generic [ref=e200]: Who we are
+                  - paragraph [ref=e201]: Find out more about our history, our team, what we stand for, and why we do what we do
+                - generic [ref=e202]:
+                  - menu [ref=e204]:
+                    - menuitem "About us" [ref=e205]:
+                      - link "About us" [ref=e206] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/company/about/
+                        - generic [ref=e207]: About us
+                    - menuitem "Newsroom" [ref=e208]:
+                      - link "Newsroom" [ref=e209] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/company/newsroom/
+                        - generic [ref=e210]: Newsroom
+                    - menuitem "Press releases" [ref=e211]:
+                      - link "Press releases" [ref=e212] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/company/newsroom/pr/
+                        - generic [ref=e213]: Press releases
+                    - menuitem "CEO blog spot" [ref=e214]:
+                      - link "CEO blog spot" [ref=e215] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/blog/ceo/
+                        - generic [ref=e216]: CEO blog spot
+                  - menu [ref=e218]:
+                    - menuitem "Careers" [ref=e219]:
+                      - link "Careers" [ref=e220] [cursor=pointer]:
+                        - /url: https://careers.appsflyer.com/
+                        - generic [ref=e221]: Careers
+                    - menuitem "Social impact" [ref=e222]:
+                      - link "Social impact" [ref=e223] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/company/social-impact/
+                        - generic [ref=e224]: Social impact
+                    - menuitem "Contact" [ref=e225]:
+                      - link "Contact" [ref=e226] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/company/contact/
+                        - generic [ref=e227]: Contact
+                - generic [ref=e228]:
+                  - strong [ref=e229]: From our CEO
+                  - generic [ref=e230]:
+                    - listitem [ref=e231]:
+                      - link "The future of our ecosystem and web" [ref=e232] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/blog/ceo/unbiased-independent-ecosystem-future/
+                    - listitem [ref=e233]:
+                      - link "On privacy and user experience" [ref=e234] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/blog/ceo/user-privacy-ios-14-idfa/
+                    - listitem [ref=e235]:
+                      - link "Aggregated advanced privacy" [ref=e236] [cursor=pointer]:
+                        - /url: https://www.appsflyer.com/blog/ceo/aggregated-advanced-privacy/
+        - menu [ref=e238]:
+          - menuitem " Login" [ref=e239]:
+            - link " Login" [ref=e240] [cursor=pointer]:
+              - /url: https://hq1.appsflyer.com/auth/login
+              - generic [ref=e241]: 
+              - text: Login
+          - menuitem "Book a demo" [ref=e242]:
+            - link "Book a demo" [ref=e243] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/start/demo/
+  - navigation [ref=e244]:
+    - generic [ref=e245]:
+      - link "Careers" [ref=e247] [cursor=pointer]:
+        - /url: /
+      - menu [ref=e250]:
+        - menuitem "Herzliya" [ref=e251]:
+          - link "Herzliya" [ref=e252] [cursor=pointer]:
+            - /url: https://careers.appsflyer.com/herzliya/
+        - menuitem "Limassol" [ref=e253]:
+          - link "Limassol" [ref=e254] [cursor=pointer]:
+            - /url: https://careers.appsflyer.com/limassol/
+        - menuitem "San Francisco" [ref=e255]:
+          - link "San Francisco" [ref=e256] [cursor=pointer]:
+            - /url: https://careers.appsflyer.com/san-francisco/
+        - menuitem "New York" [ref=e257]:
+          - link "New York" [ref=e258] [cursor=pointer]:
+            - /url: https://careers.appsflyer.com/new-york/
+        - menuitem "Beijing" [ref=e259]:
+          - link "Beijing" [ref=e260] [cursor=pointer]:
+            - /url: https://careers.appsflyer.com/beijing/
+        - menuitem "Sao Paulo" [ref=e261]:
+          - link "Sao Paulo" [ref=e262] [cursor=pointer]:
+            - /url: https://careers.appsflyer.com/sao-paulo/
+        - listitem [ref=e263]:
+          - button "Other offices" [ref=e264] [cursor=pointer]
+      - menu [ref=e266]:
+        - menuitem "All open positions" [ref=e267]:
+          - link "All open positions" [ref=e268] [cursor=pointer]:
+            - /url: "#"
+      - text: 
+  - main [ref=e269]:
+    - generic [ref=e271]:
+      - img "Beijing_new" [ref=e274]
+      - generic [ref=e275]:
+        - generic [ref=e276]:
+          - text: Herzliya
+          - heading "Senior Product Manager - Analytics - Herzliya" [level=2] [ref=e277]
+          - paragraph [ref=e278]: AppsFlyer is the global leader in mobile attribution and marketing analytics, empowering thousands of the world’s leading apps and brands to make smarter growth decisions. Our Analytics products sit at the core of our Measurement offering - transforming complex attribution, revenue, and performance data into trusted, actionable insights that drive marketing strategy at scale.
+          - paragraph [ref=e279]: We are looking for a Senior Product Manager to join our Analytics team within the Measurement group. In this role, you will own a core analytics domain used daily by global advertisers to measure, interpret, and optimize their marketing performance. You will work at the intersection of large-scale data, attribution complexity, privacy-driven measurement changes, and AI-powered capabilities - shaping how customers understand and rely on their marketing data.
+          - paragraph [ref=e280]: This is a high-impact, highly visible role with direct influence on customer trust, product strategy, and the evolution of AppsFlyer’s analytics platform.
+          - heading "What you’ll do" [level=2] [ref=e281]:
+            - strong [ref=e282]: What you’ll do
+          - list [ref=e283]:
+            - listitem [ref=e284]: · Own a core Analytics domain end-to-end - from discovery and strategy definition to execution, launch, and continuous improvement.
+            - listitem [ref=e285]: · Define and drive the roadmap for dashboards, metrics, and data experiences serving enterprise marketing teams.
+            - listitem [ref=e286]: · Balance stability, scalability, and innovation in a complex, data-intensive environment.
+            - listitem [ref=e287]: · Lead initiatives that modernize and consolidate analytics capabilities across multiple attribution sources.
+            - listitem [ref=e288]: · Shape the integration of AI-powered capabilities into analytics experiences, enhancing how customers interpret performance data.
+            - listitem [ref=e289]: · Work closely with R&D (Backend, Frontend, Data Engineering) to build scalable, high-performance analytics products.
+            - listitem [ref=e290]: · Partner with Sales and Customer Success to understand customer needs, support adoption, and strengthen trust in our measurement solutions.
+            - listitem [ref=e291]: · Engage directly with customers to validate product direction and identify opportunities to improve clarity, usability, and performance insights.
+            - listitem [ref=e292]: · Drive prioritization in a high-demand environment with multiple stakeholders and competing initiatives.
+          - heading "What you have" [level=2] [ref=e293]:
+            - strong [ref=e294]: What you have
+          - list [ref=e295]:
+            - listitem [ref=e296]: · 5+ years of product management experience, ideally in data-heavy B2B SaaS environments.
+            - listitem [ref=e297]: · Proven experience building and scaling analytics, BI, or data-driven products.
+            - listitem [ref=e298]: · Strong analytical mindset with the ability to define KPIs, interpret data, and use data to guide product decisions.
+            - listitem [ref=e299]: · Experience working closely with engineering and data teams on complex, scalable systems.
+            - listitem [ref=e300]: · Ability to operate in ambiguity and structure complex problem spaces.
+            - listitem [ref=e301]: · Strong stakeholder management skills and experience working cross-functionally in large organizations.
+            - listitem [ref=e302]: · Excellent communication skills, with the ability to explain complex analytical concepts clearly to technical and non-technical audiences.
+            - listitem [ref=e303]: · Experience in AdTech, marketing analytics, attribution, or mobile measurement - strong advantage.
+          - heading "Bonus points" [level=2] [ref=e304]:
+            - strong [ref=e305]: Bonus points
+          - list [ref=e306]:
+            - listitem [ref=e307]: · Familiarity with attribution models, SKAN, privacy-related measurement challenges.
+            - listitem [ref=e308]: · Experience consolidating legacy systems or leading platform modernization efforts.
+            - listitem [ref=e309]: · Experience integrating AI or automation into analytics workflows.
+            - listitem [ref=e310]: · Technical background in analytics, data science, or engineering.
+          - heading "Why join us?" [level=2] [ref=e311]:
+            - strong [ref=e312]: Why join us?
+          - list [ref=e313]:
+            - listitem [ref=e314]: · Shape how leading global brands measure and optimize their marketing performance.
+            - listitem [ref=e315]: · Own a core measurement product that directly impacts customer trust and retention.
+            - listitem [ref=e316]: · Work with massive-scale datasets in one of the most complex ecosystems in digital marketing.
+            - listitem [ref=e317]: · Play a central role in modernizing AppsFlyer’s analytics platform for a privacy-first world.
+            - listitem [ref=e318]: · Collaborate across R&D, data, and customer-facing teams in a highly visible, strategic position.
+          - paragraph [ref=e319]: As a global company operating from 25 offices across 19 countries, we reflect the human mosaic of the diverse and multicultural world in which we live. We ensure equal opportunities for all of our employees and promote the recruitment of diverse talents to our global teams without consideration of race, gender, culture, or sexual orientation. We value and encourage curiosity, diversity, and innovation from all our employees, customers, and partners.
+          - paragraph [ref=e320]:
+            - link "“As a Customer Obsessed company, we must first be Employee Obsessed. We need to make sure that we provide the team with the tools and resources they need to go All-In.”" [ref=e321] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/blog/how-all-in-shaped-our-story-and-could-define-your-career/
+            - text: Oren Kaniel, CEO
+          - paragraph [ref=e322]
+        - generic [ref=e325]:
+          - heading "Apply for this job" [level=3] [ref=e327]
+          - generic [ref=e329]:
+            - textbox [ref=e330]:
+              - /placeholder: " "
+            - generic [ref=e331]: First Name*
+          - generic [ref=e333]:
+            - textbox [ref=e334]:
+              - /placeholder: " "
+            - generic [ref=e335]: Last Name*
+          - generic [ref=e337]:
+            - textbox [ref=e338]:
+              - /placeholder: " "
+            - generic [ref=e339]: Email*
+          - generic [ref=e341]:
+            - textbox [ref=e342]:
+              - /placeholder: " "
+            - generic [ref=e343]: Phone*
+          - generic [ref=e345]:
+            - button "" [ref=e346] [cursor=pointer]:
+              - generic: 
+            - textbox [ref=e347]:
+              - /placeholder: " "
+            - generic [ref=e348]: Resume/CV*
+            - generic [ref=e349]: Resume/CV must be a .docx/.txt/.rtf/.pdf/.doc
+          - generic [ref=e351]:
+            - button "" [ref=e352] [cursor=pointer]:
+              - generic: 
+            - textbox [ref=e353]:
+              - /placeholder: " "
+            - generic [ref=e354]: Cover Letter
+            - generic [ref=e355]: Cover Letter must be a .docx/.txt/.rtf/.pdf/.doc
+          - generic [ref=e357]:
+            - textbox [ref=e358]:
+              - /placeholder: " "
+            - generic [ref=e359]: LinkedIn Profile
+          - button "Submit" [ref=e360] [cursor=pointer]
+          - link "AppsFlyer Job Candidates Privacy Notice " [ref=e362] [cursor=pointer]:
+            - /url: https://www.appsflyer.com/job-candidates-privacy-notice/
+    - generic [ref=e363]:
+      - paragraph [ref=e364]:
+        - text: "We sent an email to {email}"
+        - text: Head over to your inbox and click on the link to confirm your account.
+      - link "Go to appsflyer.com " [ref=e366] [cursor=pointer]:
+        - /url: https://www.appsflyer.com
+  - complementary [ref=e367]:
+    - generic [ref=e368]:
+      - generic [ref=e369]:
+        - heading "Platform" [level=3] [ref=e370]
+        - list [ref=e371]:
+          - menuitem "Measurement suite" [ref=e372]:
+            - link "Measurement suite" [ref=e373] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/measurement/
+          - menuitem "Cost aggregation" [ref=e374]:
+            - link "Cost aggregation" [ref=e375] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/cost-aggregation/
+          - menuitem "Marketing analytics" [ref=e376]:
+            - link "Marketing analytics" [ref=e377] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/marketing-analytics/
+          - menuitem "Incrementality" [ref=e378]:
+            - link "Incrementality" [ref=e379] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/incrementality/
+          - menuitem "CX & deep linking" [ref=e380]:
+            - link "CX & deep linking" [ref=e381] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/customer-experience-deep-linking/
+          - menuitem "Audience segmentation" [ref=e382]:
+            - link "Audience segmentation" [ref=e383] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/audiences/
+          - menuitem "Fraud protection" [ref=e384]:
+            - link "Fraud protection" [ref=e385] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/fraud-protection/
+          - menuitem "Raw data & APIs" [ref=e386]:
+            - link "Raw data & APIs" [ref=e387] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/apis/
+          - menuitem "Partner marketplace" [ref=e388]:
+            - link "Partner marketplace" [ref=e389] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/products/integrations/
+          - menuitem "AppsFlyer for iOS" [ref=e390]:
+            - link "AppsFlyer for iOS" [ref=e391] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/ios/
+          - menuitem "Pricing" [ref=e392]:
+            - link "Pricing" [ref=e393] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/pricing/
+      - generic [ref=e394]:
+        - heading "Solutions" [level=3] [ref=e395]
+        - list [ref=e396]:
+          - menuitem "Gaming" [ref=e397]:
+            - link "Gaming" [ref=e398] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/gaming/
+          - menuitem "Shopping" [ref=e399]:
+            - link "Shopping" [ref=e400] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/shopping/
+          - menuitem "Food & drink" [ref=e401]:
+            - link "Food & drink" [ref=e402] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/food-drink/
+          - menuitem "Entertainment & music" [ref=e403]:
+            - link "Entertainment & music" [ref=e404] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/entertainment-music/
+          - menuitem "Finance" [ref=e405]:
+            - link "Finance" [ref=e406] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/finance/
+          - menuitem "Health & fitness" [ref=e407]:
+            - link "Health & fitness" [ref=e408] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/health-fitness/
+          - menuitem "Travel" [ref=e409]:
+            - link "Travel" [ref=e410] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/travel/
+          - menuitem "Integrated partners" [ref=e411]:
+            - link "Integrated partners" [ref=e412] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/partners/
+          - menuitem "Agencies" [ref=e413]:
+            - link "Agencies" [ref=e414] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/agencies/
+          - menuitem "Zero budget marketing" [ref=e415]:
+            - link "Zero budget marketing" [ref=e416] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/zero-budget-marketing/
+          - menuitem "AWS" [ref=e417]:
+            - link "AWS" [ref=e418] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/solutions/aws/
+      - generic [ref=e419]:
+        - heading "Why AppsFlyer" [level=3] [ref=e420]
+        - list [ref=e421]:
+          - menuitem "Customer success stories" [ref=e422]:
+            - link "Customer success stories" [ref=e423] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/customers/
+          - menuitem "The AppsFlyer difference" [ref=e424]:
+            - link "The AppsFlyer difference" [ref=e425] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/appsflyer-advantage/
+          - menuitem "Trust hub" [ref=e426]:
+            - link "Trust hub" [ref=e427] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/trust/
+          - menuitem "Security" [ref=e428]:
+            - link "Security" [ref=e429] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/trust/security/
+          - menuitem "Compliance" [ref=e430]:
+            - link "Compliance" [ref=e431] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/trust/compliance/
+      - generic [ref=e432]:
+        - heading "Learn" [level=3] [ref=e433]
+        - list [ref=e434]:
+          - menuitem "Blog" [ref=e435]:
+            - link "Blog" [ref=e436] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/blog/
+          - menuitem "Videos" [ref=e437]:
+            - link "Videos" [ref=e438] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/blog/videos/
+          - menuitem "Podcast" [ref=e439]:
+            - link "Podcast" [ref=e440] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/blog/podcasts/
+          - menuitem "Reports & guides" [ref=e441]:
+            - link "Reports & guides" [ref=e442] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/resources/
+          - menuitem "Glossary" [ref=e443]:
+            - link "Glossary" [ref=e444] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/glossary/
+          - menuitem "Product news" [ref=e445]:
+            - link "Product news" [ref=e446] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/product-news/
+          - menuitem "Use cases" [ref=e447]:
+            - link "Use cases" [ref=e448] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/use-cases/
+          - menuitem "AppsFlyer masterclass" [ref=e449]:
+            - link "AppsFlyer masterclass" [ref=e450] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/appsflyer-masterclass/
+          - menuitem "Help center NEW!" [ref=e451]:
+            - link "Help center" [ref=e452] [cursor=pointer]:
+              - /url: https://support.appsflyer.com/hc/en-us
+            - generic [ref=e453]: NEW!
+      - generic [ref=e454]:
+        - heading "Company" [level=3] [ref=e455]
+        - list [ref=e456]:
+          - menuitem "About" [ref=e457]:
+            - link "About" [ref=e458] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/company/about/
+          - menuitem "Newsroom" [ref=e459]:
+            - link "Newsroom" [ref=e460] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/company/newsroom/
+          - menuitem "Press releases" [ref=e461]:
+            - link "Press releases" [ref=e462] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/company/newsroom/pr/
+          - menuitem "Media coverage" [ref=e463]:
+            - link "Media coverage" [ref=e464] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/company/newsroom/coverage/
+          - menuitem "CEO blog spot" [ref=e465]:
+            - link "CEO blog spot" [ref=e466] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/blog/ceo/
+          - menuitem "Careers" [ref=e467]:
+            - link "Careers" [ref=e468] [cursor=pointer]:
+              - /url: https://careers.appsflyer.com
+          - menuitem "Social impact" [ref=e469]:
+            - link "Social impact" [ref=e470] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/company/social-impact/
+          - menuitem "Contact" [ref=e471]:
+            - link "Contact" [ref=e472] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/company/contact/
+    - navigation [ref=e475]:
+      - list [ref=e476]:
+        - listitem [ref=e477]:
+          - link "" [ref=e478] [cursor=pointer]:
+            - /url: https://www.facebook.com/AppsFlyer/
+            - generic [ref=e479]: 
+        - listitem [ref=e480]:
+          - link "" [ref=e481] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/appsflyer/
+            - generic [ref=e482]: 
+        - listitem [ref=e483]:
+          - link "" [ref=e484] [cursor=pointer]:
+            - /url: https://twitter.com/AppsFlyer
+            - generic [ref=e485]: 
+        - listitem [ref=e486]:
+          - link "" [ref=e487] [cursor=pointer]:
+            - /url: https://www.instagram.com/lifeatappsflyer/
+            - generic [ref=e488]: 
+        - listitem [ref=e489]:
+          - link "" [ref=e490] [cursor=pointer]:
+            - /url: https://www.youtube.com/c/Appsflyer
+            - generic [ref=e491]: 
+        - listitem [ref=e492]:
+          - link "" [ref=e493] [cursor=pointer]:
+            - /url: https://medium.com/appsflyer
+            - generic [ref=e494]: 
+    - generic [ref=e496]:
+      - navigation [ref=e497]:
+        - list [ref=e498]:
+          - listitem [ref=e499]:
+            - link "Terms" [ref=e500] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/legal/terms-of-use/
+          - listitem [ref=e501]:
+            - link "Privacy" [ref=e502] [cursor=pointer]:
+              - /url: https://www.appsflyer.com/legal/privacy-policy/
+      - generic [ref=e503]: ©2024 AppsFlyer Ltd. All rights reserved.
+  - generic:
+    - region "Cookie banner" [active] [ref=e504]:
+      - alertdialog "Privacy" [ref=e505]:
+        - paragraph [ref=e510]:
+          - text: AppsFlyer respects your privacy and values the relationship we have with you as our website user. We use cookies to improve your user experience, website functionality and remarketing purposes. Some of this data may be shared with our selected partners. For more information, please see our
+          - link "More information about your privacy" [ref=e511] [cursor=pointer]:
+            - /url: https://www.appsflyer.com/legal/cookie-policy/
+            - text: Cookie Policy.
+        - button "Close" [ref=e513] [cursor=pointer]
+    - text: Cookies Settings

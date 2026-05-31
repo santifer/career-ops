@@ -1,0 +1,130 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - link "Apiiro Logo" [ref=e5] [cursor=pointer]:
+        - /url: https://apiiro.com/careers/
+        - img "Apiiro Logo" [ref=e6]
+      - generic [ref=e7]:
+        - link "Back to jobs" [ref=e8] [cursor=pointer]:
+          - /url: https://job-boards.greenhouse.io/apiiro
+          - img [ref=e9]
+          - text: Back to jobs
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - heading "Product Marketing Manager" [level=1] [ref=e14]
+            - generic [ref=e15]:
+              - img [ref=e16]
+              - generic [ref=e18]: Tel Aviv-Yafo, Tel Aviv District, Israel
+          - button "Apply" [ref=e19] [cursor=pointer]
+        - generic [ref=e21]:
+          - heading "Join Apiiro — Design, develop, and deliver secure software faster" [level=3] [ref=e22]:
+            - strong [ref=e23]: Join Apiiro — Design, develop, and deliver secure software faster
+          - paragraph [ref=e24]: Apiiro is a fast-growing startup at the forefront of the application security field. Our cutting-edge platform is designed to help development teams build secure software quickly, enabling them to move faster while managing risks. As pioneers in the app-sec space, we’re shaping the future of secure software development. If you're looking for an exciting opportunity to make a significant impact and grow with a passionate team, Apiiro is the place to be.
+          - paragraph [ref=e25]
+          - paragraph [ref=e26]:
+            - strong [ref=e27]: The opportunity
+          - paragraph [ref=e28]: "We are creating an entirely new market - Application Risk Management - by reinventing the Secure Development Lifecycle for agile and cloud-native development. Our message is resonating: we won the RSA Conference Innovation Sandbox Contest for the “Most Innovative Startup” and were also named a Gartner Cool Vendor in DevSecOps."
+          - paragraph [ref=e29]: Reporting directly into the VP of Marketing, you will play a pivotal role in Apiiro’s marketing plans, from positioning and messaging to sales and partner enablement. The ideal candidate thrives at the cutting edge of creating customer-facing solutions, has a deep understanding of software development, security, and DevSecOps, is an articulate presenter, a strong writer, and is ready to be a key face of the company. This is a completely new role with the ability to create, manage, and execute the Product Marketing function.
+          - paragraph [ref=e30]:
+            - strong [ref=e31]: What You Will Do
+          - list [ref=e32]:
+            - listitem [ref=e33]: Develop and maintain positioning and messaging frameworks
+            - listitem [ref=e34]: Research industry trends to proactively recommend messaging and content that will resonate with target audiences
+            - listitem [ref=e35]: Create compelling assets to educate the market on risk-based application security and why it is essential for organizations of all types and sizes
+            - listitem [ref=e36]: Analyze competitors and develop battle cards
+            - listitem [ref=e37]: Understand the analyst landscape and helping to craft briefing materials and follow-up for them
+            - listitem [ref=e38]: Lead product launches, from building the message to overseeing the development and rollout of new collateral
+            - listitem [ref=e39]: Conduct regular conversations with our customers, prospects, and closed-lost deals to keep our pulse on the market
+            - listitem [ref=e40]: Lead sales and partner enablement
+            - listitem [ref=e41]: Work with cross-functional teams to develop persona-driven, high-performing content and content strategies to maximize conversion throughout the buyer journey
+          - paragraph [ref=e42]:
+            - strong [ref=e43]: What You’re About
+          - list [ref=e44]:
+            - listitem [ref=e45]: Enthusiastic about helping to build a game-changing company!
+            - listitem [ref=e46]: Ability to develop compelling messaging and razor-sharp positioning
+            - listitem [ref=e47]: Demonstrated ability to translate technical concepts into value-based messaging that resonates with both business and technical audiences
+            - listitem [ref=e48]: Flexible, well-rounded, and with the ability to adapt to changing priorities
+            - listitem [ref=e49]: 5+ years of experience in B2B security, preferably SaaS-based
+            - listitem [ref=e50]: Excellent verbal and written communicator and creative thinker
+          - paragraph [ref=e51]
+        - generic [ref=e52]:
+          - img [ref=e53]
+          - generic [ref=e55]:
+            - paragraph [ref=e56]: Create a Job Alert
+            - paragraph [ref=e57]: Interested in building your career at Apiiro? Get future opportunities sent straight to your email.
+            - link "Create alert" [ref=e58] [cursor=pointer]:
+              - /url: https://my.greenhouse.io/users/sign_in?job_board=apiiro&source=job_alert_post
+      - separator [ref=e59]
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - heading "Apply for this job" [level=2] [ref=e64]
+            - generic [ref=e65]:
+              - paragraph [ref=e67]: "*"
+              - paragraph [ref=e68]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e71] [cursor=pointer]
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e76]:
+              - generic [ref=e77]: First Name*
+              - textbox "First Name" [ref=e78]
+            - generic [ref=e81]:
+              - generic [ref=e82]: Last Name*
+              - textbox "Last Name" [ref=e83]
+            - generic [ref=e86]:
+              - generic [ref=e87]: Email*
+              - textbox "Email" [ref=e88]
+            - group "Phone" [ref=e90]:
+              - generic [ref=e91]: Phone
+              - generic [ref=e94]:
+                - generic [ref=e95]: Country
+                - generic [ref=e96]:
+                  - log [ref=e98]
+                  - generic [ref=e100]:
+                    - combobox "Country" [ref=e103]
+                    - button "Toggle flyout" [ref=e105] [cursor=pointer]:
+                      - img [ref=e106]
+              - generic [ref=e110]:
+                - generic [ref=e111]: Phone
+                - textbox "Phone" [ref=e113]
+            - group "Resume/CV*" [ref=e115]:
+              - generic [ref=e116]: Resume/CV*
+              - generic [ref=e118]:
+                - generic [ref=e120]:
+                  - button "Attach" [ref=e121] [cursor=pointer]
+                  - generic [ref=e122]: Attach
+                  - button "Attach" [ref=e123]
+                - generic [ref=e125]:
+                  - button "Enter manually" [ref=e126] [cursor=pointer]
+                  - generic [ref=e127]: Enter manually
+                - paragraph [ref=e128]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e130]:
+              - generic [ref=e131]: Cover Letter
+              - generic [ref=e133]:
+                - generic [ref=e135]:
+                  - button "Attach" [ref=e136] [cursor=pointer]
+                  - generic [ref=e137]: Attach
+                  - button "Attach" [ref=e138]
+                - generic [ref=e140]:
+                  - button "Enter manually" [ref=e141] [cursor=pointer]
+                  - generic [ref=e142]: Enter manually
+                - paragraph [ref=e143]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e144]:
+            - separator [ref=e145]
+            - generic [ref=e148]:
+              - generic [ref=e149]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e150]
+            - generic [ref=e153]:
+              - generic [ref=e154]: Website
+              - textbox "Website" [ref=e155]
+          - button "Submit application" [ref=e157] [cursor=pointer]
+  - contentinfo [ref=e158]:
+    - generic [ref=e159]:
+      - paragraph [ref=e160]: Powered by
+      - link "Greenhouse logo" [ref=e161] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e162]
+  - iframe [ref=e176]:
+    - generic [ref=f167e6]:
+      - text: protected by
+      - strong [ref=f167e7]: reCAPTCHA

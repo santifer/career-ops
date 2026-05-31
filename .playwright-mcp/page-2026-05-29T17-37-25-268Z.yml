@@ -1,0 +1,267 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - img "Tenable, Inc. Logo" [ref=e5]
+      - generic [ref=e6]:
+        - generic [ref=e8]:
+          - generic [ref=e9]:
+            - heading "Product Manager - AI Exposure" [level=1] [ref=e10]
+            - generic [ref=e11]:
+              - img [ref=e12]
+              - generic [ref=e14]: Israel - Office - Tel Aviv
+          - button "Apply" [ref=e15] [cursor=pointer]
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - paragraph [ref=e18]:
+              - strong [ref=e19]: Who is Tenable?
+            - paragraph [ref=e20]: Tenable® is the Exposure Management company. 44,000 organizations around the globe rely on Tenable to understand and reduce cyber risk. Our global employees support 65 percent of the Fortune 500, 45 percent of the Global 2000, and large government agencies. Come be part of our journey!
+            - paragraph [ref=e21]:
+              - strong [ref=e22]: What makes Tenable such a great place to work?
+            - paragraph [ref=e23]: "Ask a member of our team and they’ll answer, “Our people!” We work together to build and innovate best-in-class cybersecurity solutions for our customers; all while creating a culture of belonging, respect, and excellence where we can be our best selves. When you’re part of our #OneTenable team, you can expect to partner with some of the most talented and passionate people in the industry, and have the support and resources you need to do work that truly matters. We deliver results that exceed expectations and we win together!"
+          - generic [ref=e24]:
+            - paragraph [ref=e25]: Tenable AI was formed following the acquisition of Apex, a pioneering AI security company. Founded in 2023, Apex quickly garnered significant attention from CISOs and prominent investors, including Sam Altman (OpenAI), Clem Delangue (Hugging Face), and venture capital firms Sequoia Capital and Index Ventures. The company swiftly established itself as an innovator in securing AI usage for both developers and everyday employees, addressing the increasing demand for securing AI usage, enforcing policies, and ensuring compliance at scale.
+            - paragraph [ref=e26]:
+              - generic [ref=e27]: "Your Opportunity:"
+            - paragraph [ref=e28]:
+              - generic [ref=e29]: Tenable AI is seeking a leading product manager to drive the future of AI security. This strategic role is at the core of Tenable’s fast-growing AI security business. The Product Manager plays a key role in the product life cycle, emphasizing customer requirements and generating and defining the product vision. As a product manager will work closely with multiple departments, including product management, engineering,
+              - text: UI/X, sales, customer support, finance, and marketing, to ensure customer requirements are met.
+            - paragraph [ref=e30]: If you have an entrepreneurial, creative, and technical mindset, we encourage you to apply.
+            - paragraph [ref=e31]:
+              - generic [ref=e32]: "Your Role:"
+            - list [ref=e33]:
+              - listitem [ref=e34]:
+                - paragraph [ref=e35]: Closely with engineering and AI teams to define and build the AI security product
+              - listitem [ref=e36]:
+                - paragraph [ref=e37]: Research and determine the product roadmap
+              - listitem [ref=e38]:
+                - paragraph [ref=e39]: Work with all G2M teams (marketing, sales, sales engineering, customer support, and more) on positioning and selling our product and continuously delivering the best experience for our customers
+            - paragraph [ref=e40]:
+              - generic [ref=e41]: "What You'll Need:"
+            - list [ref=e42]:
+              - listitem [ref=e43]:
+                - paragraph [ref=e44]: Track record of excellence, creativity, and audacity
+              - listitem [ref=e45]:
+                - paragraph [ref=e46]: 3+ years of experience in product management.
+              - listitem [ref=e47]:
+                - paragraph [ref=e48]: Proven experience in cybersecurity
+              - listitem [ref=e49]:
+                - paragraph [ref=e50]: Foundational understanding of leading AI platforms and capabilities
+              - listitem [ref=e51]:
+                - paragraph [ref=e52]: Excellent English, both written and verbal, including great presentation skills
+            - paragraph
+            - paragraph
+          - generic [ref=e53]:
+            - paragraph [ref=e54]:
+              - emphasis [ref=e55]: We’re committed to promoting Equal Employment Opportunity (EEO) at Tenable - through all equal employment opportunity laws and regulations at the international, federal, state and local levels. If you need a reasonable accommodation due to a disability during the application or recruiting process, please contact
+              - emphasis [ref=e56]:
+                - link "Recruiting@Tenable.com" [ref=e57] [cursor=pointer]:
+                  - /url: mailto:Recruiting@Tenable.com
+              - emphasis [ref=e58]: for further assistance.
+            - separator [ref=e59]
+            - paragraph [ref=e60]:
+              - strong [ref=e61]: Tenable Data Consent Statement
+            - paragraph [ref=e62]:
+              - text: Tenable is committed to protecting the privacy and security of your personal data. This Notice describes how we collect and use your personal data during and after your working relationship with us, in accordance with the General Data Protection Regulation (“GDPR”). Please click
+              - link "here" [ref=e63] [cursor=pointer]:
+                - /url: https://static.tenable.com/content/General_Data_Protection_Regulation-GDPR.pdf
+              - text: to review.
+            - paragraph [ref=e64]:
+              - text: "For California Residents: The California Consumer Privacy Act (CCPA) requires that Tenable advise you of certain rights related to the collection of your private information. Please click"
+              - link "here" [ref=e65] [cursor=pointer]:
+                - /url: https://static.tenable.com/content/California_Consumer_Privacy_Act.pdf
+              - text: to review.
+        - generic [ref=e66]:
+          - img [ref=e67]
+          - generic [ref=e69]:
+            - paragraph [ref=e70]: Create a Job Alert
+            - paragraph [ref=e71]: Interested in building your career at Tenable, Inc.? Get future opportunities sent straight to your email.
+            - link "Create alert" [ref=e72] [cursor=pointer]:
+              - /url: https://my.greenhouse.io/users/sign_in?job_board=tenableinc&source=job_alert_post
+      - separator [ref=e73]
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - heading "Apply for this job" [level=2] [ref=e78]
+            - generic [ref=e79]:
+              - paragraph [ref=e81]: "*"
+              - paragraph [ref=e82]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e85] [cursor=pointer]
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e90]:
+              - generic [ref=e91]: First Name*
+              - textbox "First Name" [ref=e92]
+            - generic [ref=e95]:
+              - generic [ref=e96]: Last Name*
+              - textbox "Last Name" [ref=e97]
+            - generic [ref=e100]:
+              - generic [ref=e101]: Email*
+              - textbox "Email" [ref=e102]
+            - group "Phone" [ref=e104]:
+              - generic [ref=e105]: Phone
+              - generic [ref=e108]:
+                - generic [ref=e109]: Country*
+                - generic [ref=e110]:
+                  - log [ref=e112]
+                  - generic [ref=e114]:
+                    - combobox "Country" [ref=e117]
+                    - button "Toggle flyout" [ref=e119] [cursor=pointer]:
+                      - img [ref=e120]
+                  - textbox
+              - generic [ref=e124]:
+                - generic [ref=e125]: Phone*
+                - textbox "Phone" [ref=e127]
+            - generic [ref=e128]:
+              - generic [ref=e130]:
+                - generic [ref=e131]: Location (City)*
+                - generic [ref=e132]:
+                  - log [ref=e134]
+                  - combobox "Location (City)" [ref=e139]
+                  - textbox
+              - button "Locate me" [ref=e140] [cursor=pointer]
+            - group "Resume/CV*" [ref=e142]:
+              - generic [ref=e143]: Resume/CV*
+              - generic [ref=e145]:
+                - generic [ref=e147]:
+                  - button "Attach" [ref=e148] [cursor=pointer]
+                  - generic [ref=e149]: Attach
+                  - button "Attach" [ref=e150]
+                - generic [ref=e152]:
+                  - button "Enter manually" [ref=e153] [cursor=pointer]
+                  - generic [ref=e154]: Enter manually
+                - paragraph [ref=e155]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e157]:
+              - generic [ref=e158]: Cover Letter
+              - generic [ref=e160]:
+                - generic [ref=e162]:
+                  - button "Attach" [ref=e163] [cursor=pointer]
+                  - generic [ref=e164]: Attach
+                  - button "Attach" [ref=e165]
+                - generic [ref=e167]:
+                  - button "Enter manually" [ref=e168] [cursor=pointer]
+                  - generic [ref=e169]: Enter manually
+                - paragraph [ref=e170]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e171]:
+            - separator [ref=e172]
+            - generic [ref=e175]:
+              - generic [ref=e176]: Address Line 1*
+              - textbox "Address Line 1" [ref=e177]
+            - generic [ref=e180]:
+              - generic [ref=e181]: Address Line 2
+              - textbox "Address Line 2" [ref=e182]
+            - generic [ref=e185]:
+              - generic [ref=e186]: Address Line 3
+              - textbox "Address Line 3" [ref=e187]
+            - generic [ref=e190]:
+              - generic [ref=e191]: City*
+              - textbox "City" [ref=e192]
+            - generic [ref=e193]:
+              - generic [ref=e195]:
+                - generic [ref=e196]: Region (State/County/Province)*
+                - textbox "Region (State/County/Province)" [ref=e197]
+              - paragraph [ref=e200]: (Please enter N/A if not applicable)
+            - generic [ref=e201]:
+              - generic [ref=e203]:
+                - generic [ref=e204]: Postal Code/Zip Code*
+                - textbox "Postal Code/Zip Code" [ref=e205]
+              - paragraph [ref=e208]: (Please enter N/A if not applicable)
+            - generic [ref=e211]:
+              - generic [ref=e212]: Country*
+              - generic [ref=e213]:
+                - log [ref=e215]
+                - generic [ref=e217]:
+                  - generic [ref=e218]:
+                    - generic [ref=e219]: Select...
+                    - combobox "Country" [ref=e221]
+                  - button "Toggle flyout" [ref=e223] [cursor=pointer]:
+                    - img [ref=e224]
+                - textbox
+            - generic [ref=e228]:
+              - generic [ref=e229]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e230]
+            - generic [ref=e233]:
+              - generic [ref=e234]: Website
+              - textbox "Website" [ref=e235]
+            - generic [ref=e238]:
+              - generic [ref=e239]: Have you ever previously worked for Tenable?*
+              - generic [ref=e240]:
+                - log [ref=e242]
+                - generic [ref=e244]:
+                  - generic [ref=e245]:
+                    - generic [ref=e246]: Select...
+                    - combobox "Have you ever previously worked for Tenable?" [ref=e248]
+                  - button "Toggle flyout" [ref=e250] [cursor=pointer]:
+                    - img [ref=e251]
+                - textbox
+            - generic [ref=e253]:
+              - generic [ref=e255]:
+                - generic [ref=e256]: Do you agree to Tenable's Background and Reference Check Disclosure, which will be carried out only when necessary and as permitted by law? Background checks will not be performed immediately upon your application submission.*
+                - generic [ref=e257]:
+                  - log [ref=e259]
+                  - generic [ref=e261]:
+                    - generic [ref=e262]:
+                      - generic [ref=e263]: Select...
+                      - combobox "Do you agree to Tenable's Background and Reference Check Disclosure, which will be carried out only when necessary and as permitted by law? Background checks will not be performed immediately upon your application submission." [ref=e265]
+                    - button "Toggle flyout" [ref=e267] [cursor=pointer]:
+                      - img [ref=e268]
+                  - textbox
+              - paragraph [ref=e272]:
+                - text: "For more details about the process:"
+                - text: US applicants, click
+                - link "here" [ref=e273] [cursor=pointer]:
+                  - /url: https://static.tenable.com/content/Tenable_Background_Check_Notice-US.pdf
+                - text: All other applicants, click
+                - link "here" [ref=e274] [cursor=pointer]:
+                  - /url: https://static.tenable.com/content/Tenable_Background_Check_Notice.pdf
+            - generic [ref=e277]:
+              - generic [ref=e278]: Do you have the legal right to work in the country within which you are applying?*
+              - generic [ref=e279]:
+                - log [ref=e281]
+                - generic [ref=e283]:
+                  - generic [ref=e284]:
+                    - generic [ref=e285]: Select...
+                    - combobox "Do you have the legal right to work in the country within which you are applying?" [ref=e287]
+                  - button "Toggle flyout" [ref=e289] [cursor=pointer]:
+                    - img [ref=e290]
+                - textbox
+            - generic [ref=e294]:
+              - generic [ref=e295]: Do you now, or will you in the future, require sponsorship?*
+              - generic [ref=e296]:
+                - log [ref=e298]
+                - generic [ref=e300]:
+                  - generic [ref=e301]:
+                    - generic [ref=e302]: Select...
+                    - combobox "Do you now, or will you in the future, require sponsorship?" [ref=e304]
+                  - button "Toggle flyout" [ref=e306] [cursor=pointer]:
+                    - img [ref=e307]
+                - textbox
+            - generic [ref=e311]:
+              - generic [ref=e312]: Do you have a non-compete, non-disclosure or non-solicitation agreement, or any other post-employment restrictive covenants?*
+              - generic [ref=e313]:
+                - log [ref=e315]
+                - generic [ref=e317]:
+                  - generic [ref=e318]:
+                    - generic [ref=e319]: Select...
+                    - combobox "Do you have a non-compete, non-disclosure or non-solicitation agreement, or any other post-employment restrictive covenants?" [ref=e321]
+                  - button "Toggle flyout" [ref=e323] [cursor=pointer]:
+                    - img [ref=e324]
+                - textbox
+            - generic [ref=e328]:
+              - generic [ref=e329]: If yes, please provide additional details or upload supporting documents when given the opportunity to add attachments.
+              - textbox "If yes, please provide additional details or upload supporting documents when given the opportunity to add attachments." [ref=e330]
+          - separator [ref=e331]
+          - generic [ref=e333]:
+            - paragraph [ref=e335]: We use Greenhouse's AI-powered Talent Matching tool to compare your application against our job requirements.
+            - link "Learn more" [ref=e336] [cursor=pointer]:
+              - /url: http://app8.greenhouse.io/ai_opt_out_request/job_post/5171076008/ai_opt_out
+          - button "Submit application" [ref=e338] [cursor=pointer]
+  - contentinfo [ref=e339]:
+    - generic [ref=e340]:
+      - paragraph [ref=e341]: Powered by
+      - link "Greenhouse logo" [ref=e342] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e343]
+  - iframe [ref=e357]:
+    - generic [ref=f138e6]:
+      - text: protected by
+      - strong [ref=f138e7]: reCAPTCHA

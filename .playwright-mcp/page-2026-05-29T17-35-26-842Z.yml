@@ -1,0 +1,671 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e4]:
+      - link "JFrog logo" [ref=e5] [cursor=pointer]:
+        - /url: https://jfrog.com
+        - img "JFrog logo" [ref=e6]
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Press" [ref=e11] [cursor=pointer]:
+            - /url: https://jfrog.com/about/press
+        - listitem [ref=e12]:
+          - link "Products" [ref=e13] [cursor=pointer]:
+            - /url: https://jfrog.com/platform/
+        - listitem [ref=e14]:
+          - link "Customers" [ref=e15] [cursor=pointer]:
+            - /url: https://jfrog.com/about/customers/
+        - listitem [ref=e16]:
+          - link "Our Codex" [ref=e17] [cursor=pointer]:
+            - /url: https://join.jfrog.com/codex/
+        - listitem [ref=e18]:
+          - link "Join Us" [ref=e19] [cursor=pointer]:
+            - /url: https://join.jfrog.com/#open-positions
+  - document [ref=e20]:
+    - main [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e25]:
+          - link "< Back" [ref=e27] [cursor=pointer]:
+            - /url: https://join.jfrog.com#we-are-hiring
+          - heading "Check Out Open Positions" [level=1] [ref=e28]:
+            - generic: Check Out Open Positions
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - heading "POSITION" [level=2] [ref=e33]
+            - textbox "Search position" [ref=e34]
+            - generic [ref=e35]:
+              - heading "LOCATION" [level=2] [ref=e36]
+              - combobox [ref=e37]
+              - combobox "All" [ref=e40] [cursor=pointer]:
+                - textbox "All" [ref=e41]
+            - generic [ref=e42]:
+              - heading "DEPARTMENT" [level=2] [ref=e43]
+              - combobox [ref=e44]
+              - combobox "All" [ref=e47] [cursor=pointer]:
+                - textbox "All" [ref=e48]
+          - generic [ref=e49]:
+            - link "Senior Commission Analyst, FP&A Read More" [ref=e50] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7961306-senior-commission-analyst-fpa/
+              - generic [ref=e52]:
+                - heading "Senior Commission Analyst, FP&A" [level=3] [ref=e53]
+                - generic [ref=e54]: Read More
+            - link "Regional VP, Strategic New Logo Read More" [ref=e55] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7918966-regional-vp-strategic-new-logo/
+              - generic [ref=e57]:
+                - heading "Regional VP, Strategic New Logo" [level=3] [ref=e58]
+                - generic [ref=e59]: Read More
+            - link "Director, Global Deal Desk Read More" [ref=e60] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7918654-director-global-deal-desk/
+              - generic [ref=e62]:
+                - heading "Director, Global Deal Desk" [level=3] [ref=e63]
+                - generic [ref=e64]: Read More
+            - link "Solutions Engineer Read More" [ref=e65] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7920636-solutions-engineer/
+              - generic [ref=e67]:
+                - heading "Solutions Engineer" [level=3] [ref=e68]
+                - generic [ref=e69]: Read More
+            - link "Senior Solutions Engineer Read More" [ref=e70] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7946125-senior-solutions-engineer/
+              - generic [ref=e72]:
+                - heading "Senior Solutions Engineer" [level=3] [ref=e73]
+                - generic [ref=e74]: Read More
+            - link "Customer Executive & Community Marketing Manager Read More" [ref=e75] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7955212-customer-executive-community-marketing-manager/
+              - generic [ref=e77]:
+                - heading "Customer Executive & Community Marketing Manager" [level=3] [ref=e78]
+                - generic [ref=e79]: Read More
+            - link "Professional Services DevOps Engineer Read More" [ref=e80] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7597649-professional-services-devops-engineer/
+              - generic [ref=e82]:
+                - heading "Professional Services DevOps Engineer" [level=3] [ref=e83]
+                - generic [ref=e84]: Read More
+            - link "Sales Development Operations Manager Read More" [ref=e85] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7955258-sales-development-operations-manager/
+              - generic [ref=e87]:
+                - heading "Sales Development Operations Manager" [level=3] [ref=e88]
+                - generic [ref=e89]: Read More
+            - link "Developer Support Engineer Read More" [ref=e90] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7563041-developer-support-engineer/
+              - generic [ref=e92]:
+                - heading "Developer Support Engineer" [level=3] [ref=e93]
+                - generic [ref=e94]: Read More
+            - link "GenAI & Competitive Intelligence Engineer Read More" [ref=e95] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7939091-genai-automation-engineer/
+              - generic [ref=e97]:
+                - heading "GenAI & Competitive Intelligence Engineer" [level=3] [ref=e98]
+                - generic [ref=e99]: Read More
+            - link "Content Strategist Read More" [ref=e100] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7906050-content-strategist/
+              - generic [ref=e102]:
+                - heading "Content Strategist" [level=3] [ref=e103]
+                - generic [ref=e104]: Read More
+            - link "Community Deployed AI Architect Read More" [ref=e105] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7714363-community-deployed-ai-architect/
+              - generic [ref=e107]:
+                - heading "Community Deployed AI Architect" [level=3] [ref=e108]
+                - generic [ref=e109]: Read More
+            - link "Technical Success Manager (EMEA Region) Read More" [ref=e110] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7814375-technical-success-manager-emea-region/
+              - generic [ref=e112]:
+                - heading "Technical Success Manager (EMEA Region)" [level=3] [ref=e113]
+                - generic [ref=e114]: Read More
+            - link "CTO AI Lab Architect Read More" [ref=e115] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7935939-cto-lab-architect/
+              - generic [ref=e117]:
+                - heading "CTO AI Lab Architect" [level=3] [ref=e118]
+                - generic [ref=e119]: Read More
+            - link "Technical Writer Read More" [ref=e120] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7920678-technical-writer/
+              - generic [ref=e122]:
+                - heading "Technical Writer" [level=3] [ref=e123]
+                - generic [ref=e124]: Read More
+            - link "Developer Support Engineer Read More" [ref=e125] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7922954-developer-support-engineer/
+              - generic [ref=e127]:
+                - heading "Developer Support Engineer" [level=3] [ref=e128]
+                - generic [ref=e129]: Read More
+            - link "Business Development Representative - London, UK Read More" [ref=e130] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7925988-business-development-representative-london-uk/
+              - generic [ref=e132]:
+                - heading "Business Development Representative - London, UK" [level=3] [ref=e133]
+                - generic [ref=e134]: Read More
+            - link "Senior Product Manager - JFrog Security Read More" [ref=e135] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7657193-senior-product-manager-jfrog-security/
+              - generic [ref=e137]:
+                - heading "Senior Product Manager - JFrog Security" [level=3] [ref=e138]
+                - generic [ref=e139]: Read More
+            - link "Security Solution Architect Read More" [ref=e140] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7895917-security-solution-architect/
+              - generic [ref=e142]:
+                - heading "Security Solution Architect" [level=3] [ref=e143]
+                - generic [ref=e144]: Read More
+            - link "Solution Architect, Strategic Technology Partnerships Read More" [ref=e145] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7904893-solution-architect-strategic-technology-partnerships/
+              - generic [ref=e147]:
+                - heading "Solution Architect, Strategic Technology Partnerships" [level=3] [ref=e148]
+                - generic [ref=e149]: Read More
+            - link "Developer Support Engineer Read More" [ref=e150] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7160107-developer-support-engineer/
+              - generic [ref=e152]:
+                - heading "Developer Support Engineer" [level=3] [ref=e153]
+                - generic [ref=e154]: Read More
+            - link "Senior Business Development Representative Read More" [ref=e155] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7861557-senior-business-development-representative/
+              - generic [ref=e157]:
+                - heading "Senior Business Development Representative" [level=3] [ref=e158]
+                - generic [ref=e159]: Read More
+            - link "Pricing Manager Read More" [ref=e160] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7857988-pricing-manager/
+              - generic [ref=e162]:
+                - heading "Pricing Manager" [level=3] [ref=e163]
+                - generic [ref=e164]: Read More
+            - link "Senior Product Designer Read More" [ref=e165] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7869812-senior-product-designer/
+              - generic [ref=e167]:
+                - heading "Senior Product Designer" [level=3] [ref=e168]
+                - generic [ref=e169]: Read More
+            - link "Technical Success Manager Read More" [ref=e170] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7793906-technical-success-manager/
+              - generic [ref=e172]:
+                - heading "Technical Success Manager" [level=3] [ref=e173]
+                - generic [ref=e174]: Read More
+            - link "Code Analysis Algorithm Developer Read More" [ref=e175] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7860627-code-analysis-algorithm-developer/
+              - generic [ref=e177]:
+                - heading "Code Analysis Algorithm Developer" [level=3] [ref=e178]
+                - generic [ref=e179]: Read More
+            - link "Total Rewards Partner Read More" [ref=e180] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7831517-total-rewards-partner/
+              - generic [ref=e182]:
+                - heading "Total Rewards Partner" [level=3] [ref=e183]
+                - generic [ref=e184]: Read More
+            - link "Full Stack Engineering Manager Read More" [ref=e185] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7667811-full-stack-engineering-manager/
+              - generic [ref=e187]:
+                - heading "Full Stack Engineering Manager" [level=3] [ref=e188]
+                - generic [ref=e189]: Read More
+            - link "AI Cloud Architect Read More" [ref=e190] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7818160-devops-architect/
+              - generic [ref=e192]:
+                - heading "AI Cloud Architect" [level=3] [ref=e193]
+                - generic [ref=e194]: Read More
+            - link "Senior Solution Engineer, Public Sector Read More" [ref=e195] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7852261-senior-solution-engineer-public-sector/
+              - generic [ref=e197]:
+                - heading "Senior Solution Engineer, Public Sector" [level=3] [ref=e198]
+                - generic [ref=e199]: Read More
+            - link "Senior Solution Engineer (Majors) Read More" [ref=e200] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7817068-senior-solution-engineer-majors/
+              - generic [ref=e202]:
+                - heading "Senior Solution Engineer (Majors)" [level=3] [ref=e203]
+                - generic [ref=e204]: Read More
+            - link "Security Solution Architect Read More" [ref=e205] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7822314-security-solution-architect/
+              - generic [ref=e207]:
+                - heading "Security Solution Architect" [level=3] [ref=e208]
+                - generic [ref=e209]: Read More
+            - link "Marketing Event Manager Read More" [ref=e210] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7838595-marketing-event-manager/
+              - generic [ref=e212]:
+                - heading "Marketing Event Manager" [level=3] [ref=e213]
+                - generic [ref=e214]: Read More
+            - link "Associate Technical Product Marketing Manager – AI & Security Read More" [ref=e215] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7813281-associate-technical-product-marketing-manager-ai-security/
+              - generic [ref=e217]:
+                - heading "Associate Technical Product Marketing Manager – AI & Security" [level=3] [ref=e218]
+                - generic [ref=e219]: Read More
+            - link "Security Solution Architect Read More" [ref=e220] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7809710-security-solution-architect/
+              - generic [ref=e222]:
+                - heading "Security Solution Architect" [level=3] [ref=e223]
+                - generic [ref=e224]: Read More
+            - link "Marketing Operations & Data Specialist (XDR) Read More" [ref=e225] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7813261-marketing-operations-data-specialist-xdr-sales-enablement/
+              - generic [ref=e227]:
+                - heading "Marketing Operations & Data Specialist (XDR)" [level=3] [ref=e228]
+                - generic [ref=e229]: Read More
+            - link "Senior Full Stack Developer Read More" [ref=e230] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7716000-senior-front-end-developer/
+              - generic [ref=e232]:
+                - heading "Senior Full Stack Developer" [level=3] [ref=e233]
+                - generic [ref=e234]: Read More
+            - link "Developer Support Engineer (EMEA Region - EU Shift) Read More" [ref=e235] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7777461-developer-support-engineer-emea-region-eu-shift/
+              - generic [ref=e237]:
+                - heading "Developer Support Engineer (EMEA Region - EU Shift)" [level=3] [ref=e238]
+                - generic [ref=e239]: Read More
+            - link "Technical Success Manager (North America Region - EST Shift) Read More" [ref=e240] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7777456-technical-success-manager-north-america-region-est-shift/
+              - generic [ref=e242]:
+                - heading "Technical Success Manager (North America Region - EST Shift)" [level=3] [ref=e243]
+                - generic [ref=e244]: Read More
+            - link "Business Development Representative - Italian Speaker Read More" [ref=e245] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7810126-business-development-representative/
+              - generic [ref=e247]:
+                - heading "Business Development Representative - Italian Speaker" [level=3] [ref=e248]
+                - generic [ref=e249]: Read More
+            - link "Technical Success Manager Read More" [ref=e250] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7793920-technical-success-manager/
+              - generic [ref=e252]:
+                - heading "Technical Success Manager" [level=3] [ref=e253]
+                - generic [ref=e254]: Read More
+            - link "Support Manager - Developer Support Team Read More" [ref=e255] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7790054-support-manager-developer-support-team/
+              - generic [ref=e257]:
+                - heading "Support Manager - Developer Support Team" [level=3] [ref=e258]
+                - generic [ref=e259]: Read More
+            - link "Senior Software Engineer - Infrastructure Reliability Read More" [ref=e260] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7790059-senior-software-engineer-infrastructure-reliability/
+              - generic [ref=e262]:
+                - heading "Senior Software Engineer - Infrastructure Reliability" [level=3] [ref=e263]
+                - generic [ref=e264]: Read More
+            - link "New Business Enterprise Account Executive Read More" [ref=e265] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7768086-new-business-account-executive/
+              - generic [ref=e267]:
+                - heading "New Business Enterprise Account Executive" [level=3] [ref=e268]
+                - generic [ref=e269]: Read More
+            - link "Senior Solution Engineer, New Logo (Presales) Read More" [ref=e270] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7662549-senior-solution-engineer-new-logo-presales/
+              - generic [ref=e272]:
+                - heading "Senior Solution Engineer, New Logo (Presales)" [level=3] [ref=e273]
+                - generic [ref=e274]: Read More
+            - link "SDR Senior Manager - APAC (Singapore) Read More" [ref=e275] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7552999-sdr-senior-manager-apac/
+              - generic [ref=e277]:
+                - heading "SDR Senior Manager - APAC (Singapore)" [level=3] [ref=e278]
+                - generic [ref=e279]: Read More
+            - link "Associate Account Manager, Revenue Retention Read More" [ref=e280] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7778688-associate-account-manager-revenue-retention/
+              - generic [ref=e282]:
+                - heading "Associate Account Manager, Revenue Retention" [level=3] [ref=e283]
+                - generic [ref=e284]: Read More
+            - link "Data Operations Analyst Read More" [ref=e285] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7756930-data-operations-analyst/
+              - generic [ref=e287]:
+                - heading "Data Operations Analyst" [level=3] [ref=e288]
+                - generic [ref=e289]: Read More
+            - link "Security Solution Architect Read More" [ref=e290] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7685865-security-solution-architect/
+              - generic [ref=e292]:
+                - heading "Security Solution Architect" [level=3] [ref=e293]
+                - generic [ref=e294]: Read More
+            - link "PlatformOps Engineer Read More" [ref=e295] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7721491-platformops-engineer/
+              - generic [ref=e297]:
+                - heading "PlatformOps Engineer" [level=3] [ref=e298]
+                - generic [ref=e299]: Read More
+            - link "Business Development Representative, ANZ (Sydney/Melbourne) Read More" [ref=e300] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7715994-business-development-representative/
+              - generic [ref=e302]:
+                - heading "Business Development Representative, ANZ (Sydney/Melbourne)" [level=3] [ref=e303]
+                - generic [ref=e304]: Read More
+            - link "Senior Technical Product Manager Read More" [ref=e305] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7480148-senior-technical-product-manager/
+              - generic [ref=e307]:
+                - heading "Senior Technical Product Manager" [level=3] [ref=e308]
+                - generic [ref=e309]: Read More
+            - link "Channel Business Development Representative Read More" [ref=e310] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7704643-channel-business-development-representative/
+              - generic [ref=e312]:
+                - heading "Channel Business Development Representative" [level=3] [ref=e313]
+                - generic [ref=e314]: Read More
+            - link "SDR Senior Manager - APAC (Sydney/Melbourne) Read More" [ref=e315] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7705621-sdr-senior-manager-apac/
+              - generic [ref=e317]:
+                - heading "SDR Senior Manager - APAC (Sydney/Melbourne)" [level=3] [ref=e318]
+                - generic [ref=e319]: Read More
+            - link "Business Development Representative - German Speaker Read More" [ref=e320] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7694707-business-development-manager-german-speaker/
+              - generic [ref=e322]:
+                - heading "Business Development Representative - German Speaker" [level=3] [ref=e323]
+                - generic [ref=e324]: Read More
+            - link "Senior Director, Business Development (GSI) Read More" [ref=e325] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7681201-senior-director-business-development-gsi/
+              - generic [ref=e327]:
+                - heading "Senior Director, Business Development (GSI)" [level=3] [ref=e328]
+                - generic [ref=e329]: Read More
+            - link "Technical Instructional Designer Read More" [ref=e330] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7667822-technical-learning-designer-instructor/
+              - generic [ref=e332]:
+                - heading "Technical Instructional Designer" [level=3] [ref=e333]
+                - generic [ref=e334]: Read More
+            - link "Senior Web Developer Read More" [ref=e335] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7655216-senior-web-developer/
+              - generic [ref=e337]:
+                - heading "Senior Web Developer" [level=3] [ref=e338]
+                - generic [ref=e339]: Read More
+            - link "Business Development Representative Read More" [ref=e340] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7633349-business-development-representative/
+              - generic [ref=e342]:
+                - heading "Business Development Representative" [level=3] [ref=e343]
+                - generic [ref=e344]: Read More
+            - link "Senior Professional Services DevOps Engineer Read More" [ref=e345] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7648828-senior-professional-services-devops-engineer/
+              - generic [ref=e347]:
+                - heading "Senior Professional Services DevOps Engineer" [level=3] [ref=e348]
+                - generic [ref=e349]: Read More
+            - link "Senior Professional Services DevOps Engineer Read More" [ref=e350] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7630848-senior-professional-services-devops-engineer/
+              - generic [ref=e352]:
+                - heading "Senior Professional Services DevOps Engineer" [level=3] [ref=e353]
+                - generic [ref=e354]: Read More
+            - link "Zuora Developer Read More" [ref=e355] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7653013-zuora-developer/
+              - generic [ref=e357]:
+                - heading "Zuora Developer" [level=3] [ref=e358]
+                - generic [ref=e359]: Read More
+            - link "Operation Coordinator - Netanya Site Read More" [ref=e360] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7645941-operation-coordinator-netanya-site/
+              - generic [ref=e362]:
+                - heading "Operation Coordinator - Netanya Site" [level=3] [ref=e363]
+                - generic [ref=e364]: Read More
+            - link "Full-Stack Engineer Read More" [ref=e365] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7645599-full-stack-engineer/
+              - generic [ref=e367]:
+                - heading "Full-Stack Engineer" [level=3] [ref=e368]
+                - generic [ref=e369]: Read More
+            - link "Senior AI Engineer Read More" [ref=e370] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7635836-senior-ai-engineer/
+              - generic [ref=e372]:
+                - heading "Senior AI Engineer" [level=3] [ref=e373]
+                - generic [ref=e374]: Read More
+            - link "Director of AI Engineering Read More" [ref=e375] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7625966-director-of-ai-engineering/
+              - generic [ref=e377]:
+                - heading "Director of AI Engineering" [level=3] [ref=e378]
+                - generic [ref=e379]: Read More
+            - link "Business Development Representative Read More" [ref=e380] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7625895-business-development-representative/
+              - generic [ref=e382]:
+                - heading "Business Development Representative" [level=3] [ref=e383]
+                - generic [ref=e384]: Read More
+            - link "Developer Advocate Read More" [ref=e385] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7618800-developer-advocate/
+              - generic [ref=e387]:
+                - heading "Developer Advocate" [level=3] [ref=e388]
+                - generic [ref=e389]: Read More
+            - link "Senior DevOps Engineer Read More" [ref=e390] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7598823-senior-devops-engineer/
+              - generic [ref=e392]:
+                - heading "Senior DevOps Engineer" [level=3] [ref=e393]
+                - generic [ref=e394]: Read More
+            - link "Technical Success Manager Read More" [ref=e395] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/6994996-technical-success-manager/
+              - generic [ref=e397]:
+                - heading "Technical Success Manager" [level=3] [ref=e398]
+                - generic [ref=e399]: Read More
+            - link "Senior Integration Engineer (Information Systems) Read More" [ref=e400] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7584994-senior-integration-engineer-information-systems/
+              - generic [ref=e402]:
+                - heading "Senior Integration Engineer (Information Systems)" [level=3] [ref=e403]
+                - generic [ref=e404]: Read More
+            - link "Program Manager - NPI Read More" [ref=e405] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7418297-program-manager-npi/
+              - generic [ref=e407]:
+                - heading "Program Manager - NPI" [level=3] [ref=e408]
+                - generic [ref=e409]: Read More
+            - link "Senior Solution Engineer (Presales) Read More" [ref=e410] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7565443-senior-solution-engineer-presales/
+              - generic [ref=e412]:
+                - heading "Senior Solution Engineer (Presales)" [level=3] [ref=e413]
+                - generic [ref=e414]: Read More
+            - link "SecOps Team Lead Read More" [ref=e415] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7541181-secops-team-lead/
+              - generic [ref=e417]:
+                - heading "SecOps Team Lead" [level=3] [ref=e418]
+                - generic [ref=e419]: Read More
+            - link "Offensive Security Team Lead Read More" [ref=e420] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7541161-offensive-security-team-lead/
+              - generic [ref=e422]:
+                - heading "Offensive Security Team Lead" [level=3] [ref=e423]
+                - generic [ref=e424]: Read More
+            - link "Director of Product, AI Read More" [ref=e425] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7547485-director-of-product-ai/
+              - generic [ref=e427]:
+                - heading "Director of Product, AI" [level=3] [ref=e428]
+                - generic [ref=e429]: Read More
+            - link "Senior Backend Engineer (Java / Golang) Read More" [ref=e430] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7533348-senior-backend-engineer-java-golang/
+              - generic [ref=e432]:
+                - heading "Senior Backend Engineer (Java / Golang)" [level=3] [ref=e433]
+                - generic [ref=e434]: Read More
+            - link "Field CISO Read More" [ref=e435] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7337069-field-ciso/
+              - generic [ref=e437]:
+                - heading "Field CISO" [level=3] [ref=e438]
+                - generic [ref=e439]: Read More
+            - link "Business Development Representative Read More" [ref=e440] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7527546-business-development-representative/
+              - generic [ref=e442]:
+                - heading "Business Development Representative" [level=3] [ref=e443]
+                - generic [ref=e444]: Read More
+            - link "Senior Software Engineer Read More" [ref=e445] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7510102-senior-software-engineer/
+              - generic [ref=e447]:
+                - heading "Senior Software Engineer" [level=3] [ref=e448]
+                - generic [ref=e449]: Read More
+            - link "Technical Success Manager Read More" [ref=e450] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7483387-technical-success-manager/
+              - generic [ref=e452]:
+                - heading "Technical Success Manager" [level=3] [ref=e453]
+                - generic [ref=e454]: Read More
+            - link "Automation Engineer (SDET) Read More" [ref=e455] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7464318-automation-engineer-sdet/
+              - generic [ref=e457]:
+                - heading "Automation Engineer (SDET)" [level=3] [ref=e458]
+                - generic [ref=e459]: Read More
+            - link "Senior Account Manager, ANZ (Sydney/Melbourne) Read More" [ref=e460] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7493178-account-executive/
+              - generic [ref=e462]:
+                - heading "Senior Account Manager, ANZ (Sydney/Melbourne)" [level=3] [ref=e463]
+                - generic [ref=e464]: Read More
+            - link "Account Executive Read More" [ref=e465] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7493171-account-executive/
+              - generic [ref=e467]:
+                - heading "Account Executive" [level=3] [ref=e468]
+                - generic [ref=e469]: Read More
+            - link "Account Executive Read More" [ref=e470] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7480202-account-executive/
+              - generic [ref=e472]:
+                - heading "Account Executive" [level=3] [ref=e473]
+                - generic [ref=e474]: Read More
+            - link "Principal Product Manager Read More" [ref=e475] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7461910-principal-product-manager-monetization-services/
+              - generic [ref=e477]:
+                - heading "Principal Product Manager" [level=3] [ref=e478]
+                - generic [ref=e479]: Read More
+            - link "Senior Director of Engineering - Developer Experience Read More" [ref=e480] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7451337-senior-director-of-engineering-developer-experience/
+              - generic [ref=e482]:
+                - heading "Senior Director of Engineering - Developer Experience" [level=3] [ref=e483]
+                - generic [ref=e484]: Read More
+            - link "Developer Advocate Read More" [ref=e485] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7434101-developer-advocate/
+              - generic [ref=e487]:
+                - heading "Developer Advocate" [level=3] [ref=e488]
+                - generic [ref=e489]: Read More
+            - link "Senior R&D Engineer (Java/Multithreading/Microservices) Read More" [ref=e490] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7436518-senior-rd-engineer-java-multithreading-microservices/
+              - generic [ref=e492]:
+                - heading "Senior R&D Engineer (Java/Multithreading/Microservices)" [level=3] [ref=e493]
+                - generic [ref=e494]: Read More
+            - link "R&D Team Lead - JFrog Security Read More" [ref=e495] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7419121-full-stack-team-leader-jfrog-security/
+              - generic [ref=e497]:
+                - heading "R&D Team Lead - JFrog Security" [level=3] [ref=e498]
+                - generic [ref=e499]: Read More
+            - link "Senior Product Manager Read More" [ref=e500] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7050083-senior-product-manager/
+              - generic [ref=e502]:
+                - heading "Senior Product Manager" [level=3] [ref=e503]
+                - generic [ref=e504]: Read More
+            - link "Senior Manager, Product Management Read More" [ref=e505] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7385202-lead-product-manager/
+              - generic [ref=e507]:
+                - heading "Senior Manager, Product Management" [level=3] [ref=e508]
+                - generic [ref=e509]: Read More
+            - link "R&D Team Leader, AI-Native - JFrog Fly Read More" [ref=e510] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7388234-rd-team-leader-jfrog-fly/
+              - generic [ref=e512]:
+                - heading "R&D Team Leader, AI-Native - JFrog Fly" [level=3] [ref=e513]
+                - generic [ref=e514]: Read More
+            - link "Business Development Representative - Tokyo, Japan Read More" [ref=e515] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/6870647-business-development-representative-tokyo-japan/
+              - generic [ref=e517]:
+                - heading "Business Development Representative - Tokyo, Japan" [level=3] [ref=e518]
+                - generic [ref=e519]: Read More
+            - link "Software Engineer Read More" [ref=e520] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7275887-back-end-engineer/
+              - generic [ref=e522]:
+                - heading "Software Engineer" [level=3] [ref=e523]
+                - generic [ref=e524]: Read More
+            - link "Director of Product Management Read More" [ref=e525] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/7001974-director-of-product-management/
+              - generic [ref=e527]:
+                - heading "Director of Product Management" [level=3] [ref=e528]
+                - generic [ref=e529]: Read More
+            - link "Application Security Team Lead Read More" [ref=e530] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/6954305-appsec-team-lead/
+              - generic [ref=e532]:
+                - heading "Application Security Team Lead" [level=3] [ref=e533]
+                - generic [ref=e534]: Read More
+            - link "Senior Technical Product Manager (Platform Infra) Read More" [ref=e535] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/6638800-senior-technical-product-manager/
+              - generic [ref=e537]:
+                - heading "Senior Technical Product Manager (Platform Infra)" [level=3] [ref=e538]
+                - generic [ref=e539]: Read More
+            - link "Strategic Account Executive Read More" [ref=e540] [cursor=pointer]:
+              - /url: https://join.jfrog.com/job/6359477-strategic-account-executive/
+              - generic [ref=e542]:
+                - heading "Strategic Account Executive" [level=3] [ref=e543]
+                - generic [ref=e544]: Read More
+  - contentinfo [ref=e545]:
+    - generic [ref=e547]:
+      - generic [ref=e549]:
+        - heading "Products" [level=3] [ref=e550]
+        - list [ref=e552]:
+          - listitem [ref=e553]:
+            - link "Artifactory" [ref=e554] [cursor=pointer]:
+              - /url: https://jfrog.com/artifactory/
+          - listitem [ref=e555]:
+            - link "Xray" [ref=e556] [cursor=pointer]:
+              - /url: https://jfrog.com/xray/
+          - listitem [ref=e557]:
+            - link "Curation" [ref=e558] [cursor=pointer]:
+              - /url: https://jfrog.com/curation/
+          - listitem [ref=e559]:
+            - link "Distribution" [ref=e560] [cursor=pointer]:
+              - /url: https://jfrog.com/distribution/
+          - listitem [ref=e561]:
+            - link "Container Registry" [ref=e562] [cursor=pointer]:
+              - /url: https://jfrog.com/container-registry/
+          - listitem [ref=e563]:
+            - link "Connect" [ref=e564] [cursor=pointer]:
+              - /url: https://jfrog.com/connect/
+          - listitem [ref=e565]:
+            - link "JFrog ML" [ref=e566] [cursor=pointer]:
+              - /url: https://jfrog.com/jfrog-ml/
+          - listitem [ref=e567]:
+            - link "JFrog Platform" [ref=e568] [cursor=pointer]:
+              - /url: https://jfrog.com/platform/
+          - listitem [ref=e569]:
+            - link "Start Free" [ref=e570] [cursor=pointer]:
+              - /url: https://jfrog.com/start-free/
+      - generic [ref=e572]:
+        - heading "Resources" [level=3] [ref=e573]
+        - list [ref=e575]:
+          - listitem [ref=e576]:
+            - link "Blog" [ref=e577] [cursor=pointer]:
+              - /url: https://jfrog.com/blog/
+          - listitem [ref=e578]:
+            - link "Events" [ref=e579] [cursor=pointer]:
+              - /url: https://jfrog.com/about/events/
+          - listitem [ref=e580]:
+            - link "User Guide" [ref=e581] [cursor=pointer]:
+              - /url: https://www.jfrog.com/confluence/pages/viewpage.action?pageId=46107472
+          - listitem [ref=e582]:
+            - link "DevOps Tools" [ref=e583] [cursor=pointer]:
+              - /url: https://jfrog.com/devops-tools/
+          - listitem [ref=e584]:
+            - link "Open Source" [ref=e585] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e586]:
+            - link "Featured" [ref=e587] [cursor=pointer]:
+              - /url: https://jfrog.com/featured/
+          - listitem [ref=e588]:
+            - link "JFrog Trust" [ref=e589] [cursor=pointer]:
+              - /url: https://jfrog.com/trust/
+      - generic [ref=e591]:
+        - heading "Company" [level=3] [ref=e592]
+        - list [ref=e594]:
+          - listitem [ref=e595]:
+            - link "About" [ref=e596] [cursor=pointer]:
+              - /url: https://jfrog.com/about/
+          - listitem [ref=e597]:
+            - link "Management" [ref=e598] [cursor=pointer]:
+              - /url: https://jfrog.com/about/management/
+          - listitem [ref=e599]:
+            - link "Investor Relations" [ref=e600] [cursor=pointer]:
+              - /url: https://investors.jfrog.com/
+          - listitem [ref=e601]:
+            - link "Partners" [ref=e602] [cursor=pointer]:
+              - /url: https://jfrog.com/partner/
+          - listitem [ref=e603]:
+            - link "Customers" [ref=e604] [cursor=pointer]:
+              - /url: https://jfrog.com/about/customers/
+          - listitem [ref=e605]:
+            - link "Press" [ref=e606] [cursor=pointer]:
+              - /url: https://jfrog.com/press/
+          - listitem [ref=e607]:
+            - link "Contact Us" [ref=e608] [cursor=pointer]:
+              - /url: https://jfrog.com/contact-us/
+          - listitem [ref=e609]:
+            - link "Brand Guidelines" [ref=e610] [cursor=pointer]:
+              - /url: https://jfrog.com/brand-guidelines/
+      - generic [ref=e612]:
+        - heading "Developer" [level=3] [ref=e613]
+        - list [ref=e615]:
+          - listitem [ref=e616]:
+            - link "Community" [ref=e617] [cursor=pointer]:
+              - /url: https://jfrog.com/community/
+          - listitem [ref=e618]:
+            - link "Downloads" [ref=e619] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e620]:
+            - link "Community Events" [ref=e621] [cursor=pointer]:
+              - /url: https://jfrog.com/community/events/
+          - listitem [ref=e622]:
+            - link "Community Forum" [ref=e623] [cursor=pointer]:
+              - /url: https://stackoverflow.com/questions/tagged/artifactory
+          - listitem [ref=e624]:
+            - link "Applications" [ref=e625] [cursor=pointer]:
+              - /url: https://jfrog.com/help/r/jfrog-applications-and-cli-documentation/jfrog-cli
+      - generic [ref=e626]:
+        - generic [ref=e630]:
+          - generic [ref=e631]: Follow Us
+          - link "JFrog Facebook" [ref=e633] [cursor=pointer]:
+            - /url: https://www.facebook.com/artifrog
+            - generic [ref=e634]: 
+          - link "JFrog LinkedIn" [ref=e636] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/jfrog-ltd
+            - generic [ref=e637]: 
+          - link "JFrog Twitter" [ref=e639] [cursor=pointer]:
+            - /url: https://twitter.com/jfrog
+            - img [ref=e640]
+          - link "JFrog Youtube" [ref=e643] [cursor=pointer]:
+            - /url: https://www.youtube.com/c/JFrogInc
+            - img [ref=e644]
+        - generic [ref=e646]: © 2026 JFrog Ltd All Rights Reserved
+    - generic [ref=e649]:
+      - link "JFrog logo" [ref=e651] [cursor=pointer]:
+        - /url: https://join.jfrog.com
+        - img "JFrog logo" [ref=e652]
+      - generic [ref=e653]:
+        - generic [ref=e654]:
+          - link "Privacy Notice" [ref=e655] [cursor=pointer]:
+            - /url: https://jfrog.com/privacy-notice/
+          - link "Cookies Policy" [ref=e656] [cursor=pointer]:
+            - /url: https://jfrog.com/jfrog-cookies-policy/
+          - link "Cookie Settings" [ref=e657] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e658]: Accessibility Mode
+  - text: "> >"

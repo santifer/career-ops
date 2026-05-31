@@ -1,0 +1,147 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - img "Armis Security Logo" [ref=e5]
+      - generic [ref=e6]:
+        - link "Back to jobs" [ref=e7] [cursor=pointer]:
+          - /url: https://job-boards.greenhouse.io/armissecurity
+          - img [ref=e8]
+          - text: Back to jobs
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - heading "Senior Product Manager" [level=1] [ref=e13]
+            - generic [ref=e14]:
+              - img [ref=e15]
+              - generic [ref=e17]: Tel Aviv-Yafo, Tel Aviv District, Israel
+          - button "Apply" [ref=e18] [cursor=pointer]
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - paragraph [ref=e21]:
+              - text: Armis,
+              - strong [ref=e22]: the cyber exposure management & security company
+              - text: ", protects the entire attack surface and manages an organization’s cyber risk exposure in real time. In a rapidly evolving, perimeter-less world, Armis ensures that organizations continuously"
+              - strong [ref=e23]: see
+              - text: ","
+              - strong [ref=e24]: protect
+              - text: and
+              - strong [ref=e25]: manage
+              - text: all critical assets - from the
+              - strong [ref=e26]: ground to the cloud
+              - text: . Armis secures Fortune 100, 200 and 500 companies as well as national governments, state and local entities to help keep critical infrastructure, economies and society stay safe and secure 24/7.
+            - paragraph [ref=e27]: Armis is a privately held company headquartered in California.
+          - generic [ref=e28]:
+            - paragraph [ref=e29]: Armis cyber exposure management cloud-based platform helps our clients to map their entire attack surface, proactively mitigate cyber risks, remediate vulnerabilities, and block threats.
+            - paragraph [ref=e30]: Our hundreds of clients span across all verticals and industries, including Manufacturing, Health and Medical, Information Technology, Energy and Utilities, Financial Services, Transportation, Telecommunications and Media, Public Sector and many more.
+            - paragraph [ref=e31]: Armis is looking for an experienced, creative, and highly motivated Product Manager with experience in complex cybersecurity products to join us and lead some of our portfolio's most innovative parts.
+            - paragraph [ref=e32]:
+              - strong [ref=e33]: What you'll do
+            - list [ref=e34]:
+              - listitem [ref=e35]: Collaborate with executives, peers, clients, and analysts to define the vision and strategy of the domain under your responsibility.
+              - listitem [ref=e36]: Translate strategy to product roadmaps based on market requirements, competitive position, and operational constraints.
+              - listitem [ref=e37]: Communicate plans and establish shared understanding across the company by building consensus on priorities.
+              - listitem [ref=e38]: Oversee product development by our top-notch RnD organization
+              - listitem [ref=e39]: Work closely with Pre and post-sales teams to ensure product market fit and customer satisfaction. Define and analyze metrics that inform the success of products.
+              - listitem [ref=e40]: Maximize efficiency and improve product management methodologies
+            - heading "What we expect" [level=4] [ref=e41]:
+              - strong [ref=e42]: What we expect
+            - list [ref=e43]:
+              - listitem [ref=e44]: 6+ years of experience in Product Management roles
+              - listitem [ref=e45]: Experience building security products and a strong technical background
+              - listitem [ref=e46]: Strong analytical and problem-solving skills with a data-driven approach to decision-making
+              - listitem [ref=e47]: Outstanding communication and presentation skills, capable of conveying complex concepts clearly and persuasively.
+              - listitem [ref=e48]: ‘Get SXXX done’ approach and great interpersonal skills
+          - generic [ref=e49]:
+            - paragraph [ref=e50]:
+              - generic [ref=e51]:
+                - text: The choices you make in your career journey matter. You want to do interesting work in an important field while also having time to live your life, which is why we place so much value in your life-work balance. Armis sets you up for success with comprehensive health benefits, discretionary time off, paid holidays including monthly
+                - emphasis [ref=e52]: me
+                - text: days, and a highly inclusive and diverse workplace. Put your unique experiences and perspective to work in an environment where they will enable you to thrive, grow, and live your life with integrity.
+            - paragraph [ref=e53]: Armis is proud to be an equal opportunity employer. We never discriminate based on race, ethnicity, color, ancestry, national origin, religion, sex, sexual orientation, gender identity, age, disability, veteran status, genetic information, marital status or any other legally protected (or not) status. In compliance with federal law, all persons hired will be required to submit satisfactory proof of identity and legal authorization.
+            - paragraph [ref=e54]:
+              - link "Please click here to review our privacy practices." [ref=e55] [cursor=pointer]:
+                - /url: https://www.armis.com/privacy-policy/
+        - generic [ref=e56]:
+          - img [ref=e57]
+          - generic [ref=e59]:
+            - paragraph [ref=e60]: Create a Job Alert
+            - paragraph [ref=e61]: Interested in building your career at Armis Security? Get future opportunities sent straight to your email.
+            - link "Create alert" [ref=e62] [cursor=pointer]:
+              - /url: https://my.greenhouse.io/users/sign_in?job_board=armissecurity&source=job_alert_post
+      - separator [ref=e63]
+      - generic [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - heading "Apply for this job" [level=2] [ref=e68]
+            - generic [ref=e69]:
+              - paragraph [ref=e71]: "*"
+              - paragraph [ref=e72]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e75] [cursor=pointer]
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - generic [ref=e80]:
+              - generic [ref=e81]: First Name*
+              - textbox "First Name" [ref=e82]
+            - generic [ref=e85]:
+              - generic [ref=e86]: Last Name*
+              - textbox "Last Name" [ref=e87]
+            - generic [ref=e90]:
+              - generic [ref=e91]: Email*
+              - textbox "Email" [ref=e92]
+            - group "Phone" [ref=e94]:
+              - generic [ref=e95]: Phone
+              - generic [ref=e98]:
+                - generic [ref=e99]: Country
+                - generic [ref=e100]:
+                  - log [ref=e102]
+                  - generic [ref=e104]:
+                    - combobox "Country" [ref=e107]
+                    - button "Toggle flyout" [ref=e109] [cursor=pointer]:
+                      - img [ref=e110]
+              - generic [ref=e114]:
+                - generic [ref=e115]: Phone
+                - textbox "Phone" [ref=e117]
+            - group "Resume/CV" [ref=e119]:
+              - generic [ref=e120]: Resume/CV
+              - generic [ref=e122]:
+                - generic [ref=e124]:
+                  - button "Attach" [ref=e125] [cursor=pointer]
+                  - generic [ref=e126]: Attach
+                  - button "Attach" [ref=e127]
+                - button "Dropbox" [ref=e129] [cursor=pointer]
+                - button "Google Drive" [ref=e131] [cursor=pointer]
+                - generic [ref=e133]:
+                  - button "Enter manually" [ref=e134] [cursor=pointer]
+                  - generic [ref=e135]: Enter manually
+                - paragraph [ref=e136]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e138]:
+              - generic [ref=e139]: Cover Letter
+              - generic [ref=e141]:
+                - generic [ref=e143]:
+                  - button "Attach" [ref=e144] [cursor=pointer]
+                  - generic [ref=e145]: Attach
+                  - button "Attach" [ref=e146]
+                - button "Dropbox" [ref=e148] [cursor=pointer]
+                - button "Google Drive" [ref=e150] [cursor=pointer]
+                - generic [ref=e152]:
+                  - button "Enter manually" [ref=e153] [cursor=pointer]
+                  - generic [ref=e154]: Enter manually
+                - paragraph [ref=e155]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e156]:
+            - separator [ref=e157]
+            - generic [ref=e160]:
+              - generic [ref=e161]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e162]
+            - generic [ref=e165]:
+              - generic [ref=e166]: Website
+              - textbox "Website" [ref=e167]
+          - button "Submit application" [ref=e169] [cursor=pointer]
+  - contentinfo [ref=e170]:
+    - generic [ref=e171]:
+      - paragraph [ref=e172]: Powered by
+      - link "Greenhouse logo" [ref=e173] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e174]
+  - iframe [ref=e188]:
+    - generic [ref=f142e6]:
+      - text: protected by
+      - strong [ref=f142e7]: reCAPTCHA

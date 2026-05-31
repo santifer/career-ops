@@ -1,0 +1,171 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - list:
+        - listitem:
+          - button "Press enter for Accessibility for blind people who use screen readers" [ref=e2] [cursor=pointer]:
+            - text: Press enter for Accessibility for blind people
+            - generic [ref=e3]: who use screen readers
+        - listitem:
+          - button "Press enter for Keyboard Navigation" [ref=e4] [cursor=pointer]
+        - listitem:
+          - button "Press enter for Accessibility menu" [ref=e5] [cursor=pointer]
+  - link "Skip to Main Content" [ref=e6] [cursor=pointer]:
+    - /url: https://www.taboola.com/careers/job/senior-product-manager-attribution-incrementality?gh_jid=7704034#site-content
+  - link "Skip to Footer" [ref=e7] [cursor=pointer]:
+    - /url: https://www.taboola.com/careers/job/senior-product-manager-attribution-incrementality?gh_jid=7704034#site-footer
+  - banner:
+    - navigation [ref=e8]:
+      - generic [ref=e9]:
+        - link "Taboola Careers Logo" [ref=e10] [cursor=pointer]:
+          - /url: https://www.taboola.com/careers
+          - img "Taboola Careers Logo" [ref=e11]
+        - generic [ref=e13]:
+          - list [ref=e14]:
+            - listitem [ref=e15]:
+              - link "Teams" [ref=e16] [cursor=pointer]:
+                - /url: https://www.taboola.com/careers/teams
+            - listitem [ref=e17]:
+              - link "Our Locations" [ref=e18] [cursor=pointer]:
+                - /url: https://www.taboola.com/careers/our-locations
+            - listitem [ref=e19]:
+              - link "Our Moments" [ref=e20] [cursor=pointer]:
+                - /url: https://www.taboola.com/careers/discover
+            - listitem [ref=e21]:
+              - link "Our Story" [ref=e22] [cursor=pointer]:
+                - /url: https://www.taboola.com/about/our-story
+            - listitem [ref=e23]:
+              - link "Our Commitment" [ref=e24] [cursor=pointer]:
+                - /url: https://www.taboola.com/about/social-responsibility
+            - listitem [ref=e25]:
+              - link "Taboola Life" [ref=e26] [cursor=pointer]:
+                - /url: https://www.taboola.com/taboola-life/
+          - list [ref=e27]:
+            - listitem [ref=e28]:
+              - generic [ref=e29]: "|"
+            - listitem [ref=e30]:
+              - link [ref=e31] [cursor=pointer]:
+                - /url: https://twitter.com/taboola
+                - img [ref=e32]
+            - listitem [ref=e35]:
+              - link [ref=e36] [cursor=pointer]:
+                - /url: https://www.instagram.com/taboola/
+                - img [ref=e37]
+            - listitem [ref=e42]:
+              - link [ref=e43] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/taboola
+                - img [ref=e44]
+            - listitem [ref=e47]:
+              - link [ref=e48] [cursor=pointer]:
+                - /url: https://www.facebook.com/taboola/
+                - img [ref=e49]
+  - main [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e55]: Tel Aviv, Israel
+      - generic [ref=e57]:
+        - heading "Senior Product Manager- Attribution & Incrementality" [level=1] [ref=e58]
+        - generic [ref=e59] [cursor=pointer]: Apply
+      - separator [ref=e60]
+      - generic [ref=e61]:
+        - generic [ref=e63]:
+          - generic [ref=e75]:
+            - paragraph [ref=e76]:
+              - strong [ref=e77]: Realize your potential by joining the leading performance-driven advertising company!
+              - strong
+            - paragraph [ref=e78]: As a Senior Product Manager for Attribution & Incrementality on the Product team in our Tel Aviv office, you’ll play a vital role as the industry moves beyond last-click attribution, building the measurement frameworks that prove Taboola isn’t just capturing demand, but creating it. From Geo-Holdout testing to Source of Truth integrations to Marketing Mix Modeling partnerships, you’ll create tools, form partnerships, and craft best practices that make our impact visible, credible, and compounding, giving advertisers the confidence to scale their investment. Working closely with the Client Measurement Director and global enterprise teams in the US, EMEA, and APAC, you’ll meet clients face-to-face to build trust, validate strategy, and turn measurement into a strategic growth driver.
+          - paragraph [ref=e79]:
+            - strong [ref=e80]: "To thrive in this role, you’ll need:"
+          - list [ref=e81]:
+            - listitem [ref=e82]: "• Attribution Mastery: 5+ years in PM with deep expertise in the tension between MTA, MMM, and Incrementality. You know why “Last-Click” is a lie and how to sell the alternative."
+            - listitem [ref=e83]: "• Strategic Domain Ownership: Ability to own a domain end-to-end – define the vision, align stakeholders across R&D, Sales, and Marketing, and drive commercial outcomes."
+            - listitem [ref=e84]: "• Commercial Storytelling: A proven track record of translating technical measurement outcomes into “reasons to buy” for C-level marketing executives.ֿ"
+            - listitem [ref=e85]: "• Enterprise Discovery & Client-Facing: Experience presenting directly to enterprise advertisers and conducting measurement-focused discovery. You’ll work closely with the Client Measurement Director and enterprise business teams (Sales, Account Management) to drive adoption. Willingness to travel globally."
+            - listitem [ref=e86]: "• Data Fluency & Technical Partnership: A systems-thinking mindset with the ability to partner deeply with Data Science and Engineering. Comfortable navigating technical trade-offs (e.g., precision vs. latency) and leveraging AI tools to accelerate discovery and analysis."
+          - paragraph [ref=e87]:
+            - strong [ref=e88]: "Bonus points if you have:"
+          - list [ref=e89]:
+            - listitem [ref=e90]: • Background in Measurement Consulting or a lead role at a major Attribution/MMM vendor
+            - listitem [ref=e91]: • Experience building self-service SaaS tools that automate complex data workflows
+            - listitem [ref=e92]: • A track record of influencing $50M+ in annual ad spend through measurement-led insights
+          - paragraph [ref=e93]:
+            - strong [ref=e94]: "How you’ll make an impact:"
+          - list [ref=e95]:
+            - listitem [ref=e96]: "• Define the “Truth” Framework: Own the product vision for how we prove causality (Lift, MMM, and Incrementality) across the advertiser journey – unlocking advertiser trust and convincing them to scale budgets"
+            - listitem [ref=e97]: "• Strategic Commercial Influence: Act as the “Measurement Consultant” for our biggest clients. Translate complex data science into compelling narratives that help Sales teams unlock enterprise budgets"
+            - listitem [ref=e98]: "• Scale Through Ecosystem Integration: Define our position in the measurement stack. Decide when we build proprietary tools (in-house geo-holdout testing, advanced attribution), when we partner (GA4, CM360, Measured, Rockerbox), and when we disrupt"
+            - listitem [ref=e99]: "• Source of Truth Strategy: Build integrations with leading measurement platforms so advertisers can validate Realize performance in their preferred system – meeting them where they are"
+            - listitem [ref=e100]: "• Co-prioritize with Customer Measurement: Balance enterprise demand with product scalability, working alongside the Measurement Director to align on roadmap priorities"
+          - heading "Why Taboola?" [level=3] [ref=e101]
+          - paragraph [ref=e102]: "If you ask Taboolars what they love about working here, they’ll tell you that they’ve been empowered to realize their full potential while growing and learning from and with smart and talented people. They’ll also share more about:"
+          - list [ref=e103]:
+            - listitem [ref=e104]: "• Adam Singolda, Taboola Founder and CEO says: “You can copy anything from another business but you can’t copy a company’s culture.”"
+            - listitem [ref=e105]: "• Well-being: Enjoy comprehensive benefits (health, etc.), a fully stocked kitchen, and location-specific perks (gym partnerships, parking)"
+            - listitem [ref=e106]: "• Flexibility: We offer a hybrid work schedule with 3 days in-office with an option to come in more often if desired."
+            - listitem [ref=e107]: "• Work with some of the biggest names: Our advertiser clients include Wells Fargo, Honda, Pinterest, and Expedia. Our publisher partners include Yahoo, Conde Nast, Fox Sports, NBCU, ESPN, CBS, and E! Online."
+          - heading "Ready to realize your potential?" [level=3] [ref=e108]
+          - paragraph [ref=e109]: Taboola is an equal opportunity employer and we value diversity in all forms. We are committed to creating an inclusive environment for all employees and believe such an environment is critical for success. Employment is decided on the basis of qualifications, merit, and business need.
+          - paragraph [ref=e110]: "Learn more about #TaboolaLife on LinkedIn, Facebook, Instagram, X, YouTube, & the Taboola Life Blog."
+          - heading "About Taboola" [level=3] [ref=e111]
+          - paragraph [ref=e112]: Taboola empowers businesses to grow through performance advertising technology that goes beyond search and social and delivers measurable outcomes at scale.
+          - paragraph [ref=e113]: Taboola works with thousands of businesses who advertise directly on Realize, Taboola’s powerful ad platform, reaching approximately 600M daily active users across some of the best publishers in the world. Publishers like NBC News, Yahoo, and OEMs such as Samsung, Xiaomi and others use Taboola’s technology to grow audience and revenue, enabling Realize to offer unique data, specialized algorithms, and unmatched scale.
+          - paragraph [ref=e114]: "#LI-DN1 #LI-Hybrid"
+          - paragraph [ref=e115]
+        - generic [ref=e117] [cursor=pointer]: Apply
+  - contentinfo [ref=e118]:
+    - generic [ref=e120]:
+      - list [ref=e123]:
+        - listitem [ref=e124]:
+          - link "Teams" [ref=e125] [cursor=pointer]:
+            - /url: https://www.taboola.com/careers/teams
+        - listitem [ref=e126]:
+          - link "Our Locations" [ref=e127] [cursor=pointer]:
+            - /url: https://www.taboola.com/careers/our-locations
+        - listitem [ref=e128]:
+          - link "Our Moments" [ref=e129] [cursor=pointer]:
+            - /url: https://www.taboola.com/careers/discover
+        - listitem [ref=e130]:
+          - link "Our Story" [ref=e131] [cursor=pointer]:
+            - /url: https://www.taboola.com/about/our-story
+        - listitem [ref=e132]:
+          - link "Our Commitment" [ref=e133] [cursor=pointer]:
+            - /url: https://www.taboola.com/about/social-responsibility
+        - listitem [ref=e134]:
+          - link "Taboola Life" [ref=e135] [cursor=pointer]:
+            - /url: https://www.taboola.com/taboola-life/
+      - list [ref=e138]:
+        - listitem [ref=e139]:
+          - link "Taboola.com" [ref=e140] [cursor=pointer]:
+            - /url: https://www.taboola.com/
+        - listitem [ref=e141]:
+          - link "Taboola Blog" [ref=e142] [cursor=pointer]:
+            - /url: https://www.taboola.com/marketing-hub/
+        - listitem [ref=e143]:
+          - link "Engineering Blog" [ref=e144] [cursor=pointer]:
+            - /url: https://www.taboola.com/engineering/
+        - listitem [ref=e145]:
+          - link "Taboola Engineering on YouTube" [ref=e146] [cursor=pointer]:
+            - /url: https://www.youtube.com/channel/UC6W0hdStO0jRVYhg4ABzjRw
+        - listitem [ref=e147]:
+          - link "Ad Maker" [ref=e148] [cursor=pointer]:
+            - /url: https://www.taboola.com/taboola-updates/create-ads-effortlessly/
+        - listitem [ref=e149]:
+          - link "Taboola Trends" [ref=e150] [cursor=pointer]:
+            - /url: https://realizetrends.taboola.com/
+      - list [ref=e153]:
+        - listitem [ref=e154]:
+          - link "twitter Link" [ref=e155] [cursor=pointer]:
+            - /url: https://twitter.com/taboola
+            - img [ref=e156]
+        - listitem [ref=e159]:
+          - link "linkedin Link" [ref=e160] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/taboola
+            - img [ref=e161]
+        - listitem [ref=e164]:
+          - link "instagram Link" [ref=e165] [cursor=pointer]:
+            - /url: https://www.instagram.com/taboola/
+            - img [ref=e166]
+        - listitem [ref=e171]:
+          - link "facebook Link" [ref=e172] [cursor=pointer]:
+            - /url: https://www.facebook.com/taboola/
+            - img [ref=e173]
+      - paragraph [ref=e177]: Taboola is an equal opportunity employer and we value diversity in all forms. We are committed to creating an inclusive environment for all employees and believe such an environment is critical for success. Employment is decided on the basis of qualifications, merit, and business need.

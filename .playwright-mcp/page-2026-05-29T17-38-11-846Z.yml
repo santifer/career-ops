@@ -1,0 +1,154 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e6]:
+          - generic [ref=e7]:
+            - heading "Senior Product Manager" [level=1] [ref=e8]
+            - generic [ref=e9]:
+              - img [ref=e10]
+              - generic [ref=e12]: Tel Aviv, Israel
+          - button "Apply" [ref=e13] [cursor=pointer]
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - heading "About Pagaya" [level=2] [ref=e16]:
+              - strong [ref=e17]: About Pagaya
+            - paragraph [ref=e18]:
+              - text: Pagaya is a global technology company making life-changing financial products and services available to more people nationwide, as it reshapes the financial services ecosystem. By using machine learning, a vast data network and a sophisticated AI-driven approach, Pagaya provides comprehensive consumer credit and residential real estate solutions for its partners, their customers, and investors. Its proprietary API and capital solutions integrate into its network of partners to deliver seamless user experiences and greater access to the mainstream economy. Pagaya has offices in New York and Tel Aviv. For more information, visit
+              - link "pagaya.com" [ref=e19] [cursor=pointer]:
+                - /url: http://pagaya.com/
+              - text: .
+            - paragraph [ref=e20]:
+              - strong [ref=e21]: "About the Role:"
+            - paragraph [ref=e22]: As a Senior Product Manager, your role would involve end to end product management ownership, a combination of product discovery, PRD & tickets creation, communication, execution, working closely with engineering, research, analysts & partners teams. You would be responsible for driving the execution of the relevant engineering group and delivery of platform solutions that support the organization’s initiatives.
+            - paragraph [ref=e23]:
+              - strong [ref=e24]: Responsibilities
+            - list [ref=e25]:
+              - listitem [ref=e26]: Collaborate with stakeholders to define requirements, product requirements and roadmap for Pagaya platform, aligning it with the company’s overall goals and objectives.
+              - listitem [ref=e27]: Lead the development and delivery of Pagaya underwriting infrastructure solutions, working closely with engineering teams, ensuring the timely execution of projects and adherence to quality standards.
+              - listitem [ref=e28]: Define and track key performance indicators (KPIs) to measure the effectiveness and impact of infrastructure solutions, making data-driven decisions for continuous improvement.
+              - listitem [ref=e29]: Communicate regularly with internal and external stakeholders, providing updates on the progress of projects, addressing their concerns, and managing expectations.
+            - paragraph [ref=e30]:
+              - strong [ref=e31]: Requirements
+            - list [ref=e32]:
+              - listitem [ref=e33]: At least 3 years experience as a product management.
+              - listitem [ref=e34]: Software Engineering background.
+              - listitem [ref=e35]: Experience with API, cloud services, CI/CD technologies and infrastructure.
+              - listitem [ref=e36]: Excellent written and verbal communication skills, with the ability to effectively communicate complex technical concepts to both technical and non-technical stakeholders.
+              - listitem [ref=e37]: Ability to communicate effectively and create alignment with external stakeholders
+              - listitem [ref=e38]: Proven ability to lead cross- functional teams, collaborate effectively, and drive consensus among diverse groups of stakeholders.
+              - listitem [ref=e39]: Ability to thrive in a fast-paced, dynamic environment and adapt to changing priorities and requirements.
+            - paragraph [ref=e40]:
+              - strong [ref=e41]: Our Team
+            - paragraph [ref=e42]: Pagaya was founded in 2016 by seasoned research, finance, and technology entrepreneurs, and we are now 500+ strong in New York, Los Angeles, and Tel Aviv.
+            - paragraph [ref=e43]: We move fast and smart, identifying new opportunities and building end-to-end solutions from AI models and unique data sources. Every Pagaya team member is solving new and exciting challenges every day in a culture based on partnership, collaboration, and community.
+            - paragraph [ref=e44]:
+              - strong [ref=e45]: Join a team of builders who are working every day to enable better outcomes for our partners and their customers.
+            - paragraph [ref=e46]:
+              - strong [ref=e47]: Our Values
+            - paragraph [ref=e48]: Our values are at the heart of everything we do. We believe great solutions are built through a great community.
+            - list [ref=e49]:
+              - listitem [ref=e50]: Advance Inclusion- We create a world where everyone can win, designing systems that better represent people and generate sustainable value for our employees, partners and investors.
+              - listitem [ref=e51]: Be Accountable Together- We proudly own our actions and our results, taking initiative to ensure our work gets over the finish line as a team.
+              - listitem [ref=e52]: Continuously Learn- We challenge ourselves for the sake of getting better as individuals, as teams, and as an organization to deliver for our partners.
+              - listitem [ref=e53]: Debate and Commit- We respectfully and openly debate to strengthen our ideas and build shared conviction - once we decide, we go all in, together.
+              - listitem [ref=e54]: Dream Big and Act- We boldly tackle complex problems, pressure-test solutions in real-time, and adapt with speed and energy.
+            - paragraph [ref=e55]:
+              - strong [ref=e56]: More than just a job
+            - paragraph [ref=e57]: We believe health, happiness, and productivity go hand-in-hand. That's why we're continually looking to enhance the ways we support you with benefits programs and perks that allow every Pagayan to do the best work of their life.
+            - paragraph [ref=e58]:
+              - emphasis [ref=e59]: Pagaya is an equal opportunity employer. Pagaya is encouraging diversity and actively seeking applicants from all backgrounds, as are committed to creating a diverse workforce together with an inclusive environment for all. Employment is decided on the basis of qualifications, skills, and business needs.
+          - paragraph [ref=e61]:
+            - link "https://pagaya.com/privacy-policy" [ref=e62] [cursor=pointer]:
+              - /url: https://pagaya.com/privacy-policy
+        - generic [ref=e63]:
+          - img [ref=e64]
+          - generic [ref=e66]:
+            - paragraph [ref=e67]: Create a Job Alert
+            - paragraph [ref=e68]: Interested in building your career at Pagaya Israel? Get future opportunities sent straight to your email.
+            - button "Create alert" [ref=e69] [cursor=pointer]
+      - separator [ref=e70]
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - heading "Apply for this job" [level=2] [ref=e75]
+            - generic [ref=e76]:
+              - paragraph [ref=e78]: "*"
+              - paragraph [ref=e79]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e82] [cursor=pointer]
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - generic [ref=e87]:
+              - generic [ref=e88]: First Name*
+              - textbox "First Name" [ref=e89]
+            - generic [ref=e92]:
+              - generic [ref=e93]: Last Name*
+              - textbox "Last Name" [ref=e94]
+            - generic [ref=e97]:
+              - generic [ref=e98]: Email*
+              - textbox "Email" [ref=e99]
+            - group "Phone" [ref=e101]:
+              - generic [ref=e102]: Phone
+              - generic [ref=e105]:
+                - generic [ref=e106]: Country
+                - generic [ref=e107]:
+                  - log [ref=e109]
+                  - generic [ref=e111]:
+                    - combobox "Country" [ref=e114]
+                    - button "Toggle flyout" [ref=e116] [cursor=pointer]:
+                      - img [ref=e117]
+              - generic [ref=e121]:
+                - generic [ref=e122]: Phone
+                - textbox "Phone" [ref=e123]
+            - group "Resume/CV" [ref=e125]:
+              - generic [ref=e126]: Resume/CV
+              - generic [ref=e128]:
+                - generic [ref=e130]:
+                  - button "Attach" [ref=e131] [cursor=pointer]
+                  - generic [ref=e132]: Attach
+                  - button "Attach" [ref=e133]
+                - button "Dropbox" [ref=e135] [cursor=pointer]
+                - button "Google Drive" [ref=e137] [cursor=pointer]
+                - generic [ref=e139]:
+                  - button "Enter manually" [ref=e140] [cursor=pointer]
+                  - generic [ref=e141]: Enter manually
+                - paragraph [ref=e142]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e144]:
+              - generic [ref=e145]: Cover Letter
+              - generic [ref=e147]:
+                - generic [ref=e149]:
+                  - button "Attach" [ref=e150] [cursor=pointer]
+                  - generic [ref=e151]: Attach
+                  - button "Attach" [ref=e152]
+                - button "Dropbox" [ref=e154] [cursor=pointer]
+                - button "Google Drive" [ref=e156] [cursor=pointer]
+                - generic [ref=e158]:
+                  - button "Enter manually" [ref=e159] [cursor=pointer]
+                  - generic [ref=e160]: Enter manually
+                - paragraph [ref=e161]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e162]:
+            - separator [ref=e163]
+            - generic [ref=e166]:
+              - generic [ref=e167]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e168]
+            - generic [ref=e171]:
+              - generic [ref=e172]: Website
+              - textbox "Website" [ref=e173]
+            - generic [ref=e176]:
+              - generic [ref=e177]: Do you currently work for Ernst & Young (EY) or have you been employed by them in the past?*
+              - generic [ref=e178]:
+                - log [ref=e180]
+                - generic [ref=e182]:
+                  - generic [ref=e183]:
+                    - generic [ref=e184]: Select...
+                    - combobox "Do you currently work for Ernst & Young (EY) or have you been employed by them in the past?" [ref=e186]
+                  - button "Toggle flyout" [ref=e188] [cursor=pointer]:
+                    - img [ref=e189]
+                - textbox
+          - button "Submit application" [ref=e192] [cursor=pointer]
+  - contentinfo [ref=e193]:
+    - generic [ref=e194]:
+      - paragraph [ref=e195]: Powered by
+      - link "Greenhouse logo" [ref=e196] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e197]

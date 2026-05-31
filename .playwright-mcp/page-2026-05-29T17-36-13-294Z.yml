@@ -1,0 +1,530 @@
+- generic [active] [ref=e1]:
+  - link [ref=e2] [cursor=pointer]:
+    - /url: "#"
+    - text: ___
+  - region "Announcement" [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - paragraph [ref=e7]: 2026 State of AppSec Report is live. See the data behind modern application risk.
+        - link "Get the Report" [ref=e8] [cursor=pointer]:
+          - /url: https://orca.security/lp/2026-state-of-application-security-report/
+      - button "Close Announcement" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+  - banner [ref=e12]:
+    - generic [ref=e14]:
+      - link "Orca Security" [ref=e15] [cursor=pointer]:
+        - /url: https://orca.security/
+        - img "Orca Security Logo" [ref=e16]
+        - img "Orca Security Logo" [ref=e17]
+      - navigation "Main Navigation" [ref=e18]:
+        - generic [ref=e19]:
+          - list [ref=e21]:
+            - listitem [ref=e22]:
+              - button "Platform" [ref=e23] [cursor=pointer]
+            - listitem [ref=e24]:
+              - button "Resources" [ref=e25] [cursor=pointer]
+            - listitem [ref=e26]:
+              - button "Customers" [ref=e27] [cursor=pointer]
+            - listitem [ref=e28]:
+              - button "Partners" [ref=e29] [cursor=pointer]
+            - listitem [ref=e30]:
+              - button "Company" [ref=e31] [cursor=pointer]
+          - generic [ref=e33]:
+            - button "Toggle Search" [ref=e35] [cursor=pointer]:
+              - img [ref=e36]
+            - button "Toggle Login Menu" [ref=e40] [cursor=pointer]:
+              - img [ref=e41]
+            - link "Get Demo" [ref=e45] [cursor=pointer]:
+              - /url: https://orca.security/demo/
+  - main [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - link "Back to all jobs" [ref=e50] [cursor=pointer]:
+          - /url: https://orca.security/about/careers/#open-positions
+        - heading "Senior Product Manager – Scan Infrastructure & Orchestration" [level=1] [ref=e51]
+        - generic [ref=e53]: Tel Aviv
+        - link "Apply for this position" [ref=e54] [cursor=pointer]:
+          - /url: "#apply-form"
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - heading "Big Ideas. Real People." [level=3] [ref=e59]:
+            - strong [ref=e60]: Big Ideas. Real People.
+          - paragraph [ref=e61]: At Orca, in the right environment and with the right team, talent has no boundaries. This team spirit, together with our drive to always aim high, has quickly earned us unicorn status and turned us into a global cloud security innovation leader. So, if you’re ready to join an amazing team of people who inspire each other every day, now is the time to find your place in our pod.
+          - heading "Highlights" [level=3] [ref=e62]:
+            - strong [ref=e63]: Highlights
+          - list [ref=e64]:
+            - listitem [ref=e65]:
+              - strong [ref=e66]: "High growth:"
+              - text: In just seven years, we’ve reached milestones that take other companies a decade or more. We’ve doubled our employee count, tripled our customer count, and rapidly expanded our product capabilities.
+            - listitem [ref=e67]:
+              - strong [ref=e68]: "Disruptive innovation:"
+              - text: Our founders saw that traditional security didn’t work for the cloud so they set out to carve a new path. We’re relentless pioneers who invented agentless technology and continue to be the most comprehensive and innovative cloud security company.
+            - listitem [ref=e69]:
+              - strong [ref=e70]: "Well-capitalized:"
+              - text: With a valuation of $1.8 billion, Orca is a cybersecurity unicorn dominating the cloud security space. We’re backed by an impressive team of investors such as Capital G, ICONIQ, GGV, and SVCI, a syndicate of CISOs who invest their own money after conducting their due diligence.
+            - listitem [ref=e71]:
+              - strong [ref=e72]: "Respectful and transparent culture:"
+              - text: Our executives pride themselves on being accessible to everyone and believe in sharing knowledge with the employees. Each employee has a place in shaping the future of our industry.
+          - heading "About the role" [level=3] [ref=e73]:
+            - strong [ref=e74]: About the role
+          - paragraph [ref=e75]:
+            - text: We are looking for a
+            - strong [ref=e76]: Senior Product Manager
+            - text: to lead our
+            - strong [ref=e77]: Scan Infrastructure & Orchestration (SIO) domain
+            - text: . This is one of the most centralized domains at Orca, responsible for the base technology that scans the underlying cloud environments of our entire global customer base.
+            - text: As the owner of SIO, you will architect complex data processes and collaborate across the entire organization to ensure Orca leads the industry in scan scale, efficiency, and multi-cloud coverage.
+          - heading "On a typical day you’ll" [level=3] [ref=e78]:
+            - strong [ref=e79]: On a typical day you’ll
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - strong [ref=e82]: "Define the Foundation:"
+              - text: Lead the strategy for cloud vendor integrations (AWS, GCP, Azure, etc.), defining the data requirements and ingestion logic that power the entire Orca platform.
+            - listitem [ref=e83]:
+              - strong [ref=e84]: "Own the Scan User Experience:"
+              - text: Architect all user touchpoints within the scan process—from initial configurations and visualization to real-time monitoring and reporting.
+            - listitem [ref=e85]:
+              - strong [ref=e86]: "Scale & Efficiency:"
+              - text: Define the performance requirements and orchestration logic needed to meet the scale of the world’s largest cloud estates, ensuring high efficiency and cost-effectiveness.
+            - listitem [ref=e87]:
+              - strong [ref=e88]: "Cross-Domain Orchestration:"
+              - text: Act as the central hub for Orca’s R&D, collaborating with neighboring domains to integrate new services and ensure seamless scan coverage for all new features.
+            - listitem [ref=e89]:
+              - strong [ref=e90]: "Forward-Looking Strategic Mindset:"
+              - text: Build the vision for our scan products. Stay ahead of the market by identifying new services and opportunities across all cloud vendors worldwide.
+          - heading "About you" [level=3] [ref=e91]:
+            - strong [ref=e92]: About you
+          - list [ref=e93]:
+            - listitem [ref=e94]:
+              - text: You have
+              - strong [ref=e95]: 5+ years
+              - text: of Product Management experience in B2B SaaS — a must.
+            - listitem [ref=e96]: You bring a background in Software Development or Engineering — a must.
+            - listitem [ref=e97]: Proven experience in building complex data products or high-scale backend systems — a must.
+            - listitem [ref=e98]: Background in cloud products development — a big plus.
+        - generic [ref=e101]:
+          - heading "Share this opportunity" [level=4] [ref=e102]
+          - list [ref=e103]:
+            - listitem [ref=e104]:
+              - link "Share on Twitter" [ref=e105] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e107]: 
+                - text: Share on Twitter
+            - listitem [ref=e108]:
+              - link "Share on LinkedIn" [ref=e109] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e111]: 
+                - text: Share on LinkedIn
+            - listitem [ref=e112]:
+              - link "Share on Facebook" [ref=e113] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e115]: 
+                - text: Share on Facebook
+            - listitem [ref=e116]:
+              - link "Share by email" [ref=e117] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e119]: 
+                - text: Share by email
+      - generic:
+        - generic:
+          - generic:
+            - heading "Apply for this position" [level=2]
+            - iframe [ref=e120]:
+              - generic [active] [ref=f64e1]:
+                - main [ref=f64e2]:
+                  - generic [ref=f64e3]:
+                    - separator [ref=f64e4]
+                    - generic [ref=f64e5]:
+                      - generic [ref=f64e7]:
+                        - heading "Apply for this job" [level=2] [ref=f64e9]
+                        - generic [ref=f64e10]:
+                          - paragraph [ref=f64e12]: "*"
+                          - paragraph [ref=f64e13]: indicates a required field
+                      - generic [ref=f64e14]:
+                        - generic [ref=f64e15]:
+                          - generic [ref=f64e18]:
+                            - generic [ref=f64e19]: First Name*
+                            - textbox "First Name" [ref=f64e20]
+                          - generic [ref=f64e23]:
+                            - generic [ref=f64e24]: Last Name*
+                            - textbox "Last Name" [ref=f64e25]
+                          - generic [ref=f64e28]:
+                            - generic [ref=f64e29]: Preferred First Name
+                            - textbox "Preferred First Name" [ref=f64e30]
+                          - generic [ref=f64e33]:
+                            - generic [ref=f64e34]: Email*
+                            - textbox "Email" [ref=f64e35]
+                          - group "Phone" [ref=f64e37]:
+                            - generic [ref=f64e38]: Phone
+                            - generic [ref=f64e41]:
+                              - generic [ref=f64e42]: Country*
+                              - generic [ref=f64e43]:
+                                - log [ref=f64e45]
+                                - generic [ref=f64e47]:
+                                  - combobox "Country" [ref=f64e50]
+                                  - button "Toggle flyout" [ref=f64e52] [cursor=pointer]:
+                                    - img [ref=f64e53]
+                                - textbox
+                            - generic [ref=f64e57]:
+                              - generic [ref=f64e58]: Phone*
+                              - textbox "Phone" [ref=f64e60]
+                          - group "Resume/CV*" [ref=f64e62]:
+                            - generic [ref=f64e63]: Resume/CV*
+                            - generic [ref=f64e65]:
+                              - generic [ref=f64e67]:
+                                - button "Attach" [ref=f64e68] [cursor=pointer]
+                                - generic [ref=f64e69]: Attach
+                                - button "Attach" [ref=f64e70]
+                              - generic [ref=f64e72]:
+                                - button "Enter manually" [ref=f64e73] [cursor=pointer]
+                                - generic [ref=f64e74]: Enter manually
+                              - paragraph [ref=f64e75]: "Accepted file types: pdf, doc, docx, txt, rtf"
+                          - group "Cover Letter" [ref=f64e77]:
+                            - generic [ref=f64e78]: Cover Letter
+                            - generic [ref=f64e80]:
+                              - generic [ref=f64e82]:
+                                - button "Attach" [ref=f64e83] [cursor=pointer]
+                                - generic [ref=f64e84]: Attach
+                                - button "Attach" [ref=f64e85]
+                              - generic [ref=f64e87]:
+                                - button "Enter manually" [ref=f64e88] [cursor=pointer]
+                                - generic [ref=f64e89]: Enter manually
+                              - paragraph [ref=f64e90]: "Accepted file types: pdf, doc, docx, txt, rtf"
+                        - generic [ref=f64e91]:
+                          - separator [ref=f64e92]
+                          - generic [ref=f64e95]:
+                            - generic [ref=f64e96]: LinkedIn Profile
+                            - textbox "LinkedIn Profile" [ref=f64e97]
+                          - generic [ref=f64e100]:
+                            - generic [ref=f64e101]: Website
+                            - textbox "Website" [ref=f64e102]
+                          - generic [ref=f64e103]:
+                            - generic [ref=f64e105]:
+                              - generic [ref=f64e106]: I agree to allow Orca Security to store and process my data for the purpose of considering my eligibility regarding my current application for employment.*
+                              - generic [ref=f64e107]:
+                                - log [ref=f64e109]
+                                - generic [ref=f64e111]:
+                                  - generic [ref=f64e112]:
+                                    - generic [ref=f64e113]: Select...
+                                    - combobox "I agree to allow Orca Security to store and process my data for the purpose of considering my eligibility regarding my current application for employment." [ref=f64e115]
+                                  - button "Toggle flyout" [ref=f64e117] [cursor=pointer]:
+                                    - img [ref=f64e118]
+                                - textbox
+                            - paragraph [ref=f64e122]:
+                              - link "Privacy Policy" [ref=f64e123] [cursor=pointer]:
+                                - /url: https://orca.security/privacy-policy/
+                        - button "Submit application" [ref=f64e125] [cursor=pointer]
+                - iframe [ref=f64e128]:
+                  
+  - contentinfo [ref=e121]:
+    - list [ref=e124]:
+      - listitem [ref=e125]:
+        - heading "Platform" [level=2] [ref=e126]
+        - list [ref=e127]:
+          - listitem [ref=e128]:
+            - heading "Cloud Security Platform" [level=3] [ref=e129]
+            - list [ref=e130]:
+              - listitem [ref=e131]:
+                - link "Cloud Native Application Protection" [ref=e132] [cursor=pointer]:
+                  - /url: https://orca.security/platform/cnapp-cloud-security-platform/
+              - listitem [ref=e133]:
+                - link "Vulnerability Management" [ref=e134] [cursor=pointer]:
+                  - /url: https://orca.security/platform/vulnerability-management/
+              - listitem [ref=e135]:
+                - link "SideScanning™ Technology" [ref=e136] [cursor=pointer]:
+                  - /url: https://orca.security/platform/agentless-sidescanning/
+              - listitem [ref=e137]:
+                - link "Container and Kubernetes Security" [ref=e138] [cursor=pointer]:
+                  - /url: https://orca.security/platform/container-and-kubernetes-security/
+              - listitem [ref=e139]:
+                - link "Cloud Security Posture Management (CSPM)" [ref=e140] [cursor=pointer]:
+                  - /url: https://orca.security/platform/cloud-security-posture-management-cspm/
+              - listitem [ref=e141]:
+                - link "Cloud Infrastructure Entitlement Management (CIEM)" [ref=e142] [cursor=pointer]:
+                  - /url: https://orca.security/platform/cloud-infrastructure-entitlement-management-ciem/
+              - listitem [ref=e143]:
+                - link "Cloud Workload Protection Platform (CWPP)" [ref=e144] [cursor=pointer]:
+                  - /url: https://orca.security/platform/cloud-workload-protection-platform-cwpp/
+              - listitem [ref=e145]:
+                - link "AI Security" [ref=e146] [cursor=pointer]:
+                  - /url: https://orca.security/platform/ai-security/
+              - listitem [ref=e147]:
+                - link "Orca AI" [ref=e148] [cursor=pointer]:
+                  - /url: https://orca.security/platform/orca-ai/
+              - listitem [ref=e149]:
+                - link "Multi-Cloud Compliance and Security" [ref=e150] [cursor=pointer]:
+                  - /url: https://orca.security/platform/multi-cloud-compliance/
+              - listitem [ref=e151]:
+                - link "Cloud Detection and Response (CDR)" [ref=e152] [cursor=pointer]:
+                  - /url: https://orca.security/platform/cloud-detection-and-response-cdr/
+              - listitem [ref=e153]:
+                - link "Application Security" [ref=e154] [cursor=pointer]:
+                  - /url: https://orca.security/platform/application-security/
+              - listitem [ref=e155]:
+                - link "API Security" [ref=e156] [cursor=pointer]:
+                  - /url: https://orca.security/platform/api-security/
+              - listitem [ref=e157]:
+                - link "Data Security Posture Management (DSPM)" [ref=e158] [cursor=pointer]:
+                  - /url: https://orca.security/platform/data-security-posture-management-dspm/
+              - listitem [ref=e159]:
+                - link "Orca Sensor" [ref=e160] [cursor=pointer]:
+                  - /url: https://orca.security/platform/runtime-sensor/
+          - listitem [ref=e161]:
+            - heading "Technology Ecosystem" [level=3] [ref=e162]
+            - list [ref=e163]:
+              - listitem [ref=e164]:
+                - link "Integrations" [ref=e165] [cursor=pointer]:
+                  - /url: https://orca.security/integrations/
+              - listitem [ref=e166]:
+                - link "Amazon Web Services" [ref=e167] [cursor=pointer]:
+                  - /url: https://orca.security/partners/technology/amazon-web-services-aws/
+              - listitem [ref=e168]:
+                - link "Microsoft Azure" [ref=e169] [cursor=pointer]:
+                  - /url: https://orca.security/partners/technology/microsoft-azure/
+              - listitem [ref=e170]:
+                - link "Google Cloud Platform" [ref=e171] [cursor=pointer]:
+                  - /url: https://orca.security/partners/technology/google-cloud-gcp/
+              - listitem [ref=e172]:
+                - link "Oracle Cloud" [ref=e173] [cursor=pointer]:
+                  - /url: https://orca.security/partners/technology/oracle-cloud-infrastructure/
+              - listitem [ref=e174]:
+                - link "Alibaba Cloud" [ref=e175] [cursor=pointer]:
+                  - /url: https://orca.security/partners/technology/alibaba-cloud/
+              - listitem [ref=e176]:
+                - link "Tencent Cloud" [ref=e177] [cursor=pointer]:
+                  - /url: https://orca.security/partners/technology/tencent-cloud/
+      - listitem [ref=e178]:
+        - heading "Solutions" [level=2] [ref=e179]
+        - list [ref=e180]:
+          - listitem [ref=e181]:
+            - heading "By Solution" [level=3] [ref=e182]
+            - list [ref=e183]:
+              - listitem [ref=e184]:
+                - link "Malware Detection" [ref=e185] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/malware-detection/
+              - listitem [ref=e186]:
+                - link "Sensitive Data Detection" [ref=e187] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/sensitive-data-detection/
+              - listitem [ref=e188]:
+                - link "IAM Risk" [ref=e189] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/iam-risk/
+              - listitem [ref=e190]:
+                - link "Lateral Movement Risk" [ref=e191] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/lateral-movement/
+          - listitem [ref=e192]:
+            - heading "By Industry" [level=3] [ref=e193]
+            - list [ref=e194]:
+              - listitem [ref=e195]:
+                - link "Financial Services" [ref=e196] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/industries/financial-services/
+              - listitem [ref=e197]:
+                - link "Technology" [ref=e198] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/industries/technology-services/
+              - listitem [ref=e199]:
+                - link "Government" [ref=e200] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/industries/multi-cloud-security-and-compliance-for-government/
+              - listitem [ref=e201]:
+                - link "Media & Entertainment" [ref=e202] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/industries/media-entertainment/
+              - listitem [ref=e203]:
+                - link "Healthcare" [ref=e204] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/industries/industry-healthcare/
+              - listitem [ref=e205]:
+                - link "Retail" [ref=e206] [cursor=pointer]:
+                  - /url: https://orca.security/solutions/industries/industry-retail/
+      - listitem [ref=e207]:
+        - heading "Resources" [level=2] [ref=e208]
+        - list [ref=e209]:
+          - listitem [ref=e210]:
+            - list [ref=e211]:
+              - listitem [ref=e212]:
+                - link "Library" [ref=e213] [cursor=pointer]:
+                  - /url: https://orca.security/resources/
+              - listitem [ref=e214]:
+                - link "Blog" [ref=e215] [cursor=pointer]:
+                  - /url: https://orca.security/resources/blog/
+              - listitem [ref=e216]:
+                - link "Cloud Security Learning" [ref=e217] [cursor=pointer]:
+                  - /url: https://orca.security/cloud-security-learning/
+              - listitem [ref=e218]:
+                - link "Glossary" [ref=e219] [cursor=pointer]:
+                  - /url: https://orca.security/glossary/
+              - listitem [ref=e220]:
+                - link "Product Info" [ref=e221] [cursor=pointer]:
+                  - /url: https://orca.security/resources/category/product-info/
+              - listitem [ref=e222]:
+                - link "Case Studies" [ref=e223] [cursor=pointer]:
+                  - /url: https://orca.security/resources/case-studies/
+              - listitem [ref=e224]:
+                - link "Events" [ref=e225] [cursor=pointer]:
+                  - /url: https://orca.security/resources/events/
+          - listitem [ref=e226]:
+            - heading "Comparisons" [level=3] [ref=e227]
+            - list [ref=e228]:
+              - listitem [ref=e229]:
+                - link "CrowdStrike" [ref=e230] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/crowdstrike/
+              - listitem [ref=e231]:
+                - link "Wiz" [ref=e232] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/wiz/
+              - listitem [ref=e233]:
+                - link "Check Point CloudGuard" [ref=e234] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/orca-security-check-point-cloudguard/
+              - listitem [ref=e235]:
+                - link "Lacework FortiCNAPP" [ref=e236] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/orca-security-vs-lacework/
+              - listitem [ref=e237]:
+                - link "Rapid7" [ref=e238] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/orca-security-vs-rapid7/
+              - listitem [ref=e239]:
+                - link "Tenable" [ref=e240] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/orca-security-vs-tenable/
+              - listitem [ref=e241]:
+                - link "Qualys TotalCloud" [ref=e242] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/orca-security-vs-qualys-totalcloud/
+              - listitem [ref=e243]:
+                - link "Prisma Cloud" [ref=e244] [cursor=pointer]:
+                  - /url: https://orca.security/resources/comparisons/orca-security-vs-palo-alto-prisma-cloud/
+      - listitem [ref=e245]:
+        - heading "Company" [level=2] [ref=e246]
+        - list [ref=e247]:
+          - listitem [ref=e248]:
+            - list [ref=e249]:
+              - listitem [ref=e250]:
+                - link "About" [ref=e251] [cursor=pointer]:
+                  - /url: https://orca.security/about/
+              - listitem [ref=e252]:
+                - link "Partners" [ref=e253] [cursor=pointer]:
+                  - /url: https://orca.security/partners/overview/
+              - listitem [ref=e254]:
+                - link "Research Pod" [ref=e255] [cursor=pointer]:
+                  - /url: https://orca.security/research/
+              - listitem [ref=e256]:
+                - link "Reviews" [ref=e257] [cursor=pointer]:
+                  - /url: https://orca.security/resources/reviews/
+              - listitem [ref=e258]:
+                - link "Careers" [ref=e259] [cursor=pointer]:
+                  - /url: https://orca.security/about/careers/
+              - listitem [ref=e260]:
+                - link "Newsroom" [ref=e261] [cursor=pointer]:
+                  - /url: https://orca.security/resources/news/
+              - listitem [ref=e262]:
+                - link "Media Kit" [ref=e263] [cursor=pointer]:
+                  - /url: https://orca.security/resources/media-kit/
+          - listitem [ref=e264]:
+            - link "Contact" [ref=e265] [cursor=pointer]:
+              - /url: https://orca.security/about/contact/
+            - list [ref=e266]:
+              - listitem [ref=e267]:
+                - link "Security Portal" [ref=e268] [cursor=pointer]:
+                  - /url: https://trustcenter.orca.security/
+              - listitem [ref=e269]:
+                - link "User Center" [ref=e270] [cursor=pointer]:
+                  - /url: https://uc.orca.security/user
+              - listitem [ref=e271]:
+                - link "Login" [ref=e272] [cursor=pointer]:
+                  - /url: https://app.orcasecurity.io/login
+              - listitem [ref=e273]:
+                - link "Partner Portal" [ref=e274] [cursor=pointer]:
+                  - /url: https://partners.orca.security/
+              - listitem [ref=e275]:
+                - link "Try Free with AWS" [ref=e276] [cursor=pointer]:
+                  - /url: https://aws.amazon.com/marketplace/pp/prodview-rogbt2k4b63xc?trk=622e3017-f790-4cac-8a2e-4ebb3339f6b4&sc_channel=el&source=orca%20security
+      - listitem [ref=e277]:
+        - generic [ref=e278]:
+          - heading "Stay in touch" [level=2] [ref=e279]
+          - paragraph [ref=e280]:
+            - text: Get cloud security insights
+            - text: and the latest Orca news
+          - generic [ref=e281]:
+            - generic [ref=e285]:
+              - generic:
+                - generic: "*"
+                - text: Email Address
+              - textbox "* Email Address" [ref=e286]
+            - button "Submit" [ref=e289] [cursor=pointer]
+        - heading "Awards & Certifications" [level=2] [ref=e290]
+        - list [ref=e291]:
+          - listitem [ref=e292]:
+            - paragraph [ref=e293]: AWS Advanced Technology Partner Security Competency
+          - listitem [ref=e294]:
+            - paragraph [ref=e295]: FedRAMP Moderate Authorized
+          - listitem [ref=e296]:
+            - paragraph [ref=e297]: ISO/EC 27001 Information
+          - listitem [ref=e298]:
+            - paragraph [ref=e299]: ISO/EC 27017 Information
+          - listitem [ref=e300]:
+            - paragraph [ref=e301]: ISO/EC 27018 Information
+          - listitem [ref=e302]:
+            - paragraph [ref=e303]: ISO/EC 27701 Privacy
+          - listitem [ref=e304]:
+            - paragraph [ref=e305]: PCI SAQ-D
+          - listitem [ref=e306]:
+            - paragraph [ref=e307]: SOC 2 TYPE II Certified
+          - listitem [ref=e308]:
+            - paragraph [ref=e309]: 2022 AWS Global Security Partner of the Year
+          - listitem [ref=e310]:
+            - paragraph [ref=e311]: "Star Level One: Self-Assessment Cloud Security Alliance"
+          - listitem [ref=e312]:
+            - paragraph [ref=e313]: CSA Trusted Cloud Provider Cloud Security Alliance
+          - listitem [ref=e314]:
+            - paragraph [ref=e315]: IRAP Certification
+    - generic [ref=e318]:
+      - separator [ref=e320]
+      - generic [ref=e322]:
+        - link "Orca Security" [ref=e323] [cursor=pointer]:
+          - /url: https://orca.security
+          - img "Orca Security" [ref=e324]
+        - generic [ref=e325]:
+          - paragraph [ref=e326]: ©2026 Orca Security. All rights reserved.
+          - list [ref=e327]:
+            - listitem [ref=e328]:
+              - link "Privacy Policy" [ref=e329] [cursor=pointer]:
+                - /url: https://orca.security/privacy-policy/
+              - text: "|"
+            - listitem [ref=e330]:
+              - link "Terms of Use" [ref=e331] [cursor=pointer]:
+                - /url: https://orca.security/terms-of-use/
+              - text: "|"
+            - listitem [ref=e332] [cursor=pointer]: Cookies Settings|
+            - listitem [ref=e333]:
+              - link "Virtual Patent Marking" [ref=e334] [cursor=pointer]:
+                - /url: https://orca.security/virtual-patent-marking/
+      - list [ref=e338]:
+        - listitem [ref=e339]:
+          - link "Orca Security on Twitter" [ref=e340] [cursor=pointer]:
+            - /url: https://twitter.com/OrcaSec
+            - generic [ref=e341]: 
+        - listitem [ref=e342]:
+          - link "Orca Security on LinkedIn" [ref=e343] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/orca-security/
+            - generic [ref=e344]: 
+        - listitem [ref=e345]:
+          - link "Orca Security on YouTube" [ref=e346] [cursor=pointer]:
+            - /url: https://www.youtube.com/orcasecurity
+            - generic [ref=e347]: 
+        - listitem [ref=e348]:
+          - link "Orca Security on G2" [ref=e349] [cursor=pointer]:
+            - /url: https://www.g2.com/products/orca-security/reviews
+            - generic [ref=e350]: 
+        - listitem [ref=e351]:
+          - link "Orca Security RSS Feed" [ref=e352] [cursor=pointer]:
+            - /url: https://orca.security/resources/blog/feed/
+            - generic [ref=e353]: 
+  - generic:
+    - dialog "Privacy" [ref=e355]:
+      - generic [ref=e356]:
+        - generic [ref=e358]:
+          - img "Orca Security" [ref=e360]
+          - generic [ref=e361]:
+            - text: By clicking “Accept All Cookies”, you agree to the storing of cookies on your device to enhance site navigation, analyze site usage, and assist in our marketing efforts.
+            - link "More information about your privacy, opens in a new tab" [ref=e362] [cursor=pointer]:
+              - /url: https://orca.security/cookie-policy/
+              - text: Cookie Policy
+        - generic [ref=e364]:
+          - generic [ref=e365]:
+            - button "Accept All Cookies" [ref=e366] [cursor=pointer]
+            - button "Reject All" [ref=e367] [cursor=pointer]
+          - button "Cookies Settings, Opens the preference center dialog" [ref=e368] [cursor=pointer]: Cookies Settings
+        - button "Close" [ref=e370] [cursor=pointer]
+    - text: Cookies Settings

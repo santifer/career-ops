@@ -1,0 +1,447 @@
+- generic [active] [ref=e1]:
+  - link [ref=e2] [cursor=pointer]:
+    - /url: "#"
+    - text: ___
+  - link "Skip to content" [ref=e4] [cursor=pointer]:
+    - /url: "#wp--skip-link--target"
+  - generic [ref=e5]:
+    - banner:
+      - generic [ref=e7]:
+        - link "Tipalti home page" [ref=e9] [cursor=pointer]:
+          - /url: https://tipalti.com/
+          - img "Tipalti logo" [ref=e10]
+        - navigation:
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Products" [ref=e21] [cursor=pointer]:
+                - /url: /accounts-payable-software/
+            - listitem [ref=e22]:
+              - link "Solutions" [ref=e23] [cursor=pointer]:
+                - /url: /industries/
+            - listitem [ref=e24]:
+              - link "Resources" [ref=e25] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=e26]:
+              - link "Pricing" [ref=e27] [cursor=pointer]:
+                - /url: /pricing/
+            - listitem [ref=e28]:
+              - link "Company" [ref=e29] [cursor=pointer]:
+                - /url: /company/
+            - listitem [ref=e30]:
+              - button "Search" [ref=e31] [cursor=pointer]:
+                - generic: Search
+              - search [ref=e34]:
+                - textbox "Search" [ref=e35] [cursor=pointer]
+            - listitem [ref=e36]:
+              - link "opens new tab" [ref=e37] [cursor=pointer]:
+                - /url: https://hub.tipalti.com
+                - img [ref=e40]
+                - text: Log In
+        - generic [ref=e42]:
+          - button "Get Started - Opens popup form" [ref=e43] [cursor=pointer]: Get Started
+          - button "Toggle mobile menu" [ref=e44] [cursor=pointer]
+    - main [ref=e47]:
+      - generic [ref=e48]:
+        - heading "Join Team Tipalti" [level=1] [ref=e53]
+        - iframe [ref=e57]:
+          - main [ref=f156e2]:
+            - generic [ref=f156e3]:
+              - generic [ref=f156e4]:
+                - link "Back to jobs" [ref=f156e5] [cursor=pointer]:
+                  - /url: https://tipalti.com/jobs/
+                  - img [ref=f156e6]
+                  - text: Back to jobs
+                - generic [ref=f156e8]:
+                  - generic [ref=f156e9]:
+                    - heading "Senior Product Manager" [level=1] [ref=f156e10]
+                    - generic [ref=f156e11]:
+                      - img [ref=f156e12]
+                      - generic [ref=f156e14]: Tel Aviv District, Israel
+                  - button "Apply" [ref=f156e15]
+                - generic [ref=f156e16]:
+                  - generic [ref=f156e17]:
+                    - heading "Senior Product Manager - Mass Payments" [level=2] [ref=f156e18]:
+                      - strong [ref=f156e19]: Senior Product Manager - Mass Payments
+                    - paragraph [ref=f156e20]: If you’re looking for a fast-paced, dynamic, get-stuff-done environment and want to lead a strategic product domain with real impact on millions of users, this is the role for you.
+                    - paragraph [ref=f156e21]:
+                      - text: We are looking for a
+                      - strong [ref=f156e22]: Senior Product Manager to lead our Mass Payments domain
+                      - text: ", owning key flows that help global businesses"
+                      - strong [ref=f156e23]: pay at scale
+                      - text: .
+                    - heading "In this role, you will be responsible for:" [level=3] [ref=f156e24]:
+                      - strong [ref=f156e25]: "In this role, you will be responsible for:"
+                    - list [ref=f156e26]:
+                      - listitem [ref=f156e27]: Leading the product strategy and roadmap for the Mass Payments domain.
+                      - listitem [ref=f156e28]: Owning and evolving our supplier onboarding platform, which is used by millions of users every year.
+                      - listitem [ref=f156e29]: Working directly with customers, Sales, CSMs, and Support teams to deeply understand needs, pain points, and business opportunities.
+                      - listitem [ref=f156e30]: Translating complex customer and business requirements into clear product requirements, user flows, and execution plans.
+                      - listitem [ref=f156e31]: Partnering closely with Engineering, Data, UX and other stakeholders to deliver high-quality solutions.
+                      - listitem [ref=f156e32]: Leading major cross-functional initiatives from discovery through launch, adoption, and ongoing optimization.
+                      - listitem [ref=f156e33]: Using data, customer feedback, and business insights to prioritize work and measure product success.
+                    - heading "About you" [level=3] [ref=f156e34]:
+                      - strong [ref=f156e35]: About you
+                    - list [ref=f156e36]:
+                      - listitem [ref=f156e37]: 5+ years of hands-on Product Management experience in B2B SaaS.
+                      - listitem [ref=f156e38]: Proven track record of leading major product initiatives from concept to launch and measurable business impact.
+                      - listitem [ref=f156e39]: Strong ability to work with customers, Sales, CSMs, Support, and other stakeholders to identify problems and drive alignment.
+                      - listitem [ref=f156e40]: Experience working closely with Engineering with multiple dependencies and moving parts.
+                      - listitem [ref=f156e41]: Strong product thinking, with the ability to simplify complex workflows and create intuitive, scalable user experiences.
+                      - listitem [ref=f156e42]: Excellent communication, presentation, and stakeholder management skills.
+                      - listitem [ref=f156e43]: High ownership, independence, and ability to execute under tight deadlines.
+                      - listitem [ref=f156e44]: Fluent English, both written and verbal.
+                    - paragraph [ref=f156e45]
+                    - paragraph [ref=f156e46]:
+                      - strong [ref=f156e47]: Why join Tipalti?
+                    - paragraph [ref=f156e48]: Tipalti is the AI-powered platform for finance automation, elevating how finance teams operate in the global economy. We empower our customers to scale faster and smarter by removing the complexities of doing global business and accelerating their finance operations efficiency. Our platform provides a comprehensive suite of finance automation solutions designed for mid-market businesses across accounts payable, global payouts, procurement, employee expenses, corporate cards, supplier management, tax compliance, and treasury. Tipalti partners with leading financial institutions such as Citi, Wells Fargo, J.P. Morgan, and Visa, enabling over 5,000 global companies to efficiently and securely pay millions of suppliers and payees across 200+ countries and territories, in 120 currencies.
+                    - paragraph [ref=f156e49]: At Tipalti, we pride ourselves on our collaborative culture, the quality of our product and the capabilities of our people. Tipaltians are passionate about the work they do, and keen to get the job done. Tipalti oﬀers competitive benefits, a flexible workplace, career coaching, and an environment where diverse individuals can thrive and make an impact. Our culture ensures everyone checks their egos at the door and stands ready to reach for success together.
+                    - paragraph [ref=f156e50]: Founded in Israel in 2010, Tipalti is a global business headquartered in the San Francisco Bay Area (Foster City) with offices in Tel Aviv, Plano, Toronto, Vancouver, London, Amsterdam, Tbilisi and Medellin.
+                    - paragraph [ref=f156e51]:
+                      - strong [ref=f156e52]: "About Our Tel Aviv Offices:"
+                    - paragraph [ref=f156e53]:
+                      - strong [ref=f156e54]: Hybrid Work Model
+                      - text: "- Tipalti offers a hybrid work model, with two days per week working from home and three days per week from our beautiful offices in North Tel Aviv."
+                    - paragraph [ref=f156e55]:
+                      - strong [ref=f156e56]: Shuttle Services
+                      - text: "- Shuttle services are available from the nearest train station and across Tel Aviv to the office."
+                    - paragraph [ref=f156e57]:
+                      - strong [ref=f156e58]: Parking
+                      - text: "- Parking is available for all employees."
+                    - paragraph [ref=f156e59]:
+                      - strong [ref=f156e60]: Snacks & Treats
+                      - text: "- Enjoy a selection of snacks and treats available on every floor."
+                    - paragraph [ref=f156e61]
+                    - paragraph [ref=f156e62]: "#IL-hybrid"
+                    - paragraph [ref=f156e63]
+                  - generic [ref=f156e64]:
+                    - paragraph [ref=f156e65]:
+                      - strong [ref=f156e66]: Our Mission
+                    - paragraph [ref=f156e67]: Our mission is to elevate how finance teams operate in the global economy. We empower our customers to scale faster and smarter by removing the complexities of doing global business and accelerating their finance operations efficiency. We are the AI-powered platform that automates finance.
+                    - paragraph [ref=f156e68]: Tipalti is fueled by a commitment to our customers and a desire to build lasting connections. Our client portfolio includes high-velocity businesses such as Amazon Twitch, GoDaddy, Roku, WordPress.com, and ZipRecruiter. We work hard for our 99% customer retention rate which is built on trust, reliability and innovation. Tipalti means we handled it" - a mission to which we are constantly committed.
+                    - paragraph [ref=f156e69]:
+                      - strong [ref=f156e70]: Accommodations
+                      - text: Tipalti champions inclusive teams, in which every voice counts. We are committed to recruiting diverse candidates with varied personal experiences and abilities. We welcome applications from candidates belonging to historically underrepresented or disadvantaged groups, and maintain an equitable Talent Acquisition process that is free from discrimination.
+                    - paragraph [ref=f156e71]:
+                      - text: As an equal opportunities employer, Tipalti complies with employment and human rights laws across the various jurisdictions in which we operate. Should you require reasonable adjustments or accommodations during the recruitment process, including access to alternate formats of materials, meeting spaces, or other accommodations that could better enable your full participation, please reach out to
+                      - link "hr@tipalti.com" [ref=f156e72] [cursor=pointer]:
+                        - /url: mailto:hr@tipalti.com
+                      - text: for assistance.
+                    - paragraph [ref=f156e73]:
+                      - strong [ref=f156e74]: AI Use
+                      - text: We may use artificial intelligence and automated systems (collectively "AI") to screen, assess, and select candidates during our recruitment process. This includes resume screening, skills assessment, and candidate matching. You have the right to request human review of any automated decision. For more information about how we collect and use personal data and information during recruitment, please refer to our
+                      - link "Job Candidate Privacy Notice" [ref=f156e75] [cursor=pointer]:
+                        - /url: https://tipalti.com/privacy/job-candidate-privacy-notice
+                      - text: . For additional questions about our use of AI during our recruitment process, you can contact
+                      - link "hr@tipalti.com" [ref=f156e76] [cursor=pointer]:
+                        - /url: mailto:hr@tipalti.com
+                      - text: .
+                    - paragraph [ref=f156e77]:
+                      - strong [ref=f156e78]: Privacy
+                      - text: "We are committed to protecting the privacy interests of job applicants and candidates. For more information about our privacy practices during our Talent Acquisition process, please refer to our Job Candidate Privacy Notice below:"
+                      - strong
+                    - paragraph [ref=f156e79]:
+                      - generic [ref=f156e80]:
+                        - img "Tipalti"
+                        - link "Job Candidate Privacy Notice | Tipalti" [ref=f156e81] [cursor=pointer]:
+                          - /url: https://tipalti.com/privacy/job-candidate-privacy-notice/
+                    - paragraph [ref=f156e82]:
+                      - strong [ref=f156e83]: www.tipalti.com/privacy/job-candidate-privacy-notice/
+                    - paragraph [ref=f156e84]
+                    - paragraph [ref=f156e85]
+                - generic [ref=f156e86]:
+                  - img [ref=f156e87]
+                  - generic [ref=f156e89]:
+                    - paragraph [ref=f156e90]: Create a Job Alert
+                    - paragraph [ref=f156e91]: Interested in building your career at Tipalti? Get future opportunities sent straight to your email.
+                    - button "Create alert" [ref=f156e92]
+              - separator
+              - generic [ref=f156e93]:
+                - generic [ref=f156e94]:
+                  - generic [ref=f156e95]:
+                    - heading "Apply for this job" [level=2] [ref=f156e97]
+                    - generic [ref=f156e98]:
+                      - paragraph [ref=f156e100]: "*"
+                      - paragraph [ref=f156e101]: indicates a required field
+                  - button "Quick Apply with MyGreenhouse" [ref=f156e104]
+                - generic [ref=f156e105]:
+                  - generic [ref=f156e106]:
+                    - generic [ref=f156e109]:
+                      - generic [ref=f156e110]: First Name*
+                      - textbox "First Name" [ref=f156e111]
+                    - generic [ref=f156e114]:
+                      - generic [ref=f156e115]: Last Name*
+                      - textbox "Last Name" [ref=f156e116]
+                    - generic [ref=f156e119]:
+                      - generic [ref=f156e120]: Email*
+                      - textbox "Email" [ref=f156e121]
+                    - group "Phone" [ref=f156e123]:
+                      - generic [ref=f156e124]: Phone
+                      - generic [ref=f156e127]:
+                        - generic [ref=f156e128]: Country*
+                        - generic [ref=f156e129]:
+                          - log [ref=f156e131]
+                          - generic [ref=f156e133]:
+                            - combobox "Country" [ref=f156e136]
+                            - button "Toggle flyout" [ref=f156e138]:
+                              - img [ref=f156e139]
+                          - textbox
+                      - generic [ref=f156e143]:
+                        - generic [ref=f156e144]: Phone*
+                        - textbox "Phone" [ref=f156e145]
+                    - group "Resume/CV*" [ref=f156e147]:
+                      - generic [ref=f156e148]: Resume/CV*
+                      - generic [ref=f156e150]:
+                        - generic [ref=f156e152]:
+                          - button "Attach" [ref=f156e153]
+                          - text: Attach
+                          - button "Attach" [ref=f156e154]
+                        - button "Dropbox" [ref=f156e156]
+                        - generic [ref=f156e158]:
+                          - button "Enter manually" [ref=f156e159]
+                          - text: Enter manually
+                        - paragraph [ref=f156e160]: "Accepted file types: pdf, doc, docx, txt, rtf"
+                    - group "Cover Letter" [ref=f156e162]:
+                      - generic [ref=f156e163]: Cover Letter
+                      - generic [ref=f156e165]:
+                        - generic [ref=f156e167]:
+                          - button "Attach" [ref=f156e168]
+                          - text: Attach
+                          - button "Attach" [ref=f156e169]
+                        - button "Dropbox" [ref=f156e171]
+                        - generic [ref=f156e173]:
+                          - button "Enter manually" [ref=f156e174]
+                          - text: Enter manually
+                        - paragraph [ref=f156e175]: "Accepted file types: pdf, doc, docx, txt, rtf"
+                  - generic [ref=f156e176]:
+                    - separator [ref=f156e177]
+                    - generic [ref=f156e180]:
+                      - text: LinkedIn Profile
+                      - textbox "LinkedIn Profile" [ref=f156e181]
+                  - separator [ref=f156e182]
+                  - button "Submit application" [ref=f156e184]
+    - contentinfo [ref=e58]:
+      - generic [ref=e59]:
+        - figure [ref=e61]:
+          - link "go to homepage" [ref=e62] [cursor=pointer]:
+            - /url: /
+            - img "tipalti logo" [ref=e63]
+        - heading "Finance automation that puts you in charge" [level=2] [ref=e65]
+        - generic [ref=e67]:
+          - button "Get Started" [ref=e69] [cursor=pointer]
+          - button "Log In (opens in a new tab)" [ref=e71] [cursor=pointer]:
+            - mark [ref=e72]: Log
+            - mark [ref=e73]: In
+        - generic [ref=e75]:
+          - paragraph [ref=e76]:
+            - strong [ref=e77]: Contact us
+          - paragraph [ref=e79]:
+            - strong [ref=e80]: General Inquiries
+          - paragraph [ref=e81]:
+            - link "contact@tipalti.com (opens in a new tab)" [ref=e82] [cursor=pointer]:
+              - /url: mailto:contact@tipalti.com
+              - text: contact@tipalti.com
+          - paragraph [ref=e83]:
+            - text: "US:"
+            - link "+1 800-305-3550 (opens in a new tab)" [ref=e84] [cursor=pointer]:
+              - /url: tel:+1 800-305-3550
+              - text: +1 800-305-3550
+          - paragraph [ref=e85]:
+            - text: "UK:"
+            - link "+44 (0)20 7846 8777 (opens in a new tab)" [ref=e86] [cursor=pointer]:
+              - /url: tel:+44-(0)20-7846-8777
+              - text: +44 (0)20 7846 8777
+          - paragraph [ref=e88]:
+            - strong [ref=e89]: Support
+          - paragraph [ref=e90]:
+            - link "+1 800-305-3550 (opens in a new tab)" [ref=e91] [cursor=pointer]:
+              - /url: tel:+1 800-305-3550
+              - text: +1 800-305-3550
+          - button "Raise a support request (opens in a new tab)" [ref=e94] [cursor=pointer]: Raise a support request
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - heading "Products" [level=3] [ref=e98]:
+            - text: Products
+            - img [ref=e100]
+          - list [ref=e103]:
+            - listitem [ref=e104]:
+              - link "AP Automation" [ref=e105] [cursor=pointer]:
+                - /url: /ap-automation/
+            - listitem [ref=e106]:
+              - link "Mass Payments" [ref=e107] [cursor=pointer]:
+                - /url: /mass-payments/
+            - listitem [ref=e108]:
+              - link "Procurement" [ref=e109] [cursor=pointer]:
+                - /url: /procurement/
+            - listitem [ref=e110]:
+              - link "Expense Management" [ref=e111] [cursor=pointer]:
+                - /url: /expense-management/
+            - listitem [ref=e112]:
+              - link "Connected Suite" [ref=e113] [cursor=pointer]:
+                - /url: /accounts-payable-software/
+        - generic [ref=e114]:
+          - heading "Capabilities" [level=3] [ref=e115]:
+            - text: Capabilities
+            - img [ref=e117]
+          - list [ref=e120]:
+            - listitem [ref=e121]:
+              - link "Overview" [ref=e122] [cursor=pointer]:
+                - /url: /accounts-payable-software/
+            - listitem [ref=e123]:
+              - link "Supplier Management" [ref=e124] [cursor=pointer]:
+                - /url: /ap-automation/supplier-management/
+            - listitem [ref=e125]:
+              - link "Invoice Management" [ref=e126] [cursor=pointer]:
+                - /url: /ap-automation/invoice-management/
+            - listitem [ref=e127]:
+              - link "PO Matching" [ref=e128] [cursor=pointer]:
+                - /url: /ap-automation/po-matching/
+            - listitem [ref=e129]:
+              - link "Self-Billing Invoices" [ref=e130] [cursor=pointer]:
+                - /url: /mass-payments/self-billing-invoice/
+            - listitem [ref=e131]:
+              - link "Payment Reconciliation" [ref=e132] [cursor=pointer]:
+                - /url: /ap-automation/automated-payment-reconciliation/
+            - listitem [ref=e133]:
+              - link "Global Payments" [ref=e134] [cursor=pointer]:
+                - /url: /ap-automation/global-payments/
+            - listitem [ref=e135]:
+              - link "Integrations" [ref=e136] [cursor=pointer]:
+                - /url: /integrations/
+        - generic [ref=e137]:
+          - heading "Why Tipalti" [level=3] [ref=e138]:
+            - text: Why Tipalti
+            - img [ref=e140]
+          - list [ref=e143]:
+            - listitem [ref=e144]:
+              - link "Overview" [ref=e145] [cursor=pointer]:
+                - /url: /why/
+            - listitem [ref=e146]:
+              - link "Benefits by Industry" [ref=e147] [cursor=pointer]:
+                - /url: /industries/
+            - listitem [ref=e148]:
+              - link "Benefits by Role" [ref=e149] [cursor=pointer]:
+                - /url: /why/#benefitsbyrole
+            - listitem [ref=e150]:
+              - link "Awards and Reviews" [ref=e151] [cursor=pointer]:
+                - /url: /company/reviews/
+            - listitem [ref=e152]:
+              - link "Customer Stories" [ref=e153] [cursor=pointer]:
+                - /url: /resources/customer-stories/
+        - generic [ref=e154]:
+          - heading "Platform" [level=3] [ref=e155]:
+            - text: Platform
+            - img [ref=e157]
+          - list [ref=e160]:
+            - listitem [ref=e161]:
+              - link "Finance AI" [ref=e162] [cursor=pointer]:
+                - /url: /accounts-payable-software/finance-ai/
+            - listitem [ref=e163]:
+              - link "Global" [ref=e164] [cursor=pointer]:
+                - /url: /accounts-payable-software/global/
+            - listitem [ref=e165]:
+              - link "Payment Fraud Detection" [ref=e166] [cursor=pointer]:
+                - /url: https://tipalti.com/accounts-payable-software/payment-fraud-detection/
+            - listitem [ref=e167]:
+              - link "Controls and Compliance" [ref=e168] [cursor=pointer]:
+                - /url: /accounts-payable-software/financial-compliance/
+            - listitem [ref=e169]:
+              - link "Money Services Business" [ref=e170] [cursor=pointer]:
+                - /url: /accounts-payable-software/money-services-business-msb/
+            - listitem [ref=e171]:
+              - link "Secure Cloud Infrastructure" [ref=e172] [cursor=pointer]:
+                - /url: /accounts-payable-software/cloud/
+        - generic [ref=e173]:
+          - heading "Resources" [level=3] [ref=e174]:
+            - text: Resources
+            - img [ref=e176]
+          - list [ref=e179]:
+            - listitem [ref=e180]:
+              - link "Learning Center" [ref=e181] [cursor=pointer]:
+                - /url: /resources/learn/
+            - listitem [ref=e182]:
+              - link "Blog" [ref=e183] [cursor=pointer]:
+                - /url: /blog/
+            - listitem [ref=e184]:
+              - link "For Partners" [ref=e185] [cursor=pointer]:
+                - /url: /resources/partners/
+            - listitem [ref=e186]:
+              - link "Support" [ref=e187] [cursor=pointer]:
+                - /url: /resources/support/
+            - listitem [ref=e188]:
+              - link "Pricing" [ref=e189] [cursor=pointer]:
+                - /url: /pricing/
+        - generic [ref=e190]:
+          - heading "Company" [level=3] [ref=e191]:
+            - text: Company
+            - img [ref=e193]
+          - list [ref=e196]:
+            - listitem [ref=e197]:
+              - link "Overview" [ref=e198] [cursor=pointer]:
+                - /url: /company/
+            - listitem [ref=e199]:
+              - link "Careers" [ref=e200] [cursor=pointer]:
+                - /url: /company/careers/
+            - listitem [ref=e201]:
+              - link "Newsroom" [ref=e202] [cursor=pointer]:
+                - /url: /company/press/
+      - button "US flag US" [ref=e205]:
+        - img "US flag" [ref=e206]
+        - text: US
+        - img [ref=e207]
+      - list [ref=e211]:
+        - listitem [ref=e212]: © 2010–2026 Tipalti Inc.
+        - listitem [ref=e213]:
+          - link "Legal Agreements" [ref=e214] [cursor=pointer]:
+            - /url: /legal/
+        - listitem [ref=e215]:
+          - link "Privacy" [ref=e216] [cursor=pointer]:
+            - /url: /privacy/
+        - listitem [ref=e217]:
+          - link "Cookies Declaration" [ref=e218] [cursor=pointer]:
+            - /url: /privacy/cookies-declaration/
+        - listitem [ref=e219]:
+          - link "California Consumer Privacy Act (CCPA) Opt-Out Icon Your Privacy Choices" [ref=e220] [cursor=pointer]:
+            - /url: /privacy/privacy-center/
+            - img "California Consumer Privacy Act (CCPA) Opt-Out Icon" [ref=e222]
+            - text: Your Privacy Choices
+        - listitem [ref=e223]:
+          - link "Payer / Sender Rights" [ref=e224] [cursor=pointer]:
+            - /url: /privacy/payer-sender-rights/
+        - listitem [ref=e225]:
+          - link "Customer Assistance Policy" [ref=e226] [cursor=pointer]:
+            - /url: /legal/customer-assistance-policy/
+    - option "*Industry" [selected]
+    - option "Advertising/Marketing"
+    - option "Ad Tech/Affiliate/Influencer Network"
+    - option "Business/Consumer Services"
+    - option "eCommerce/Retail"
+    - option "Financial Services"
+    - option "Gaming"
+    - option "Healthcare, Pharmaceuticals, & Biotech"
+    - option "Manufacturing & Distribution"
+    - option "Media/Entertainment/Creator"
+    - option "Non-Profit"
+    - option "Online Marketplace"
+    - option "Online Services"
+    - option "Real Estate & Construction"
+    - option "Software/Technology"
+    - option "Other"
+    - option "*Company size" [selected]
+    - option "Under 10"
+    - option "10 to 49"
+    - option "50 to 499"
+    - option "500+"
+    - option "*Current ERP / Accounting System" [selected]
+    - option "NetSuite"
+    - option "Sage Intacct"
+    - option "QuickBooks"
+    - option "Xero"
+    - option "SAP Business One"
+    - option "Microsoft Dynamics BC"
+    - option "Microsoft Dynamics GP"
+    - option "Other SAP Versions"
+    - option "Other Microsoft Versions"
+    - option "Other Sage Versions"
+    - option "Other ERP"
+    - option "*Country" [selected]
+    - option "*State / Province" [selected]

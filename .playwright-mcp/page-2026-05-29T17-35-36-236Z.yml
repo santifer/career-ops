@@ -1,0 +1,281 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e4]:
+      - link "JFrog logo" [ref=e5] [cursor=pointer]:
+        - /url: https://jfrog.com
+        - img "JFrog logo" [ref=e6]
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Press" [ref=e11] [cursor=pointer]:
+            - /url: https://jfrog.com/about/press
+        - listitem [ref=e12]:
+          - link "Products" [ref=e13] [cursor=pointer]:
+            - /url: https://jfrog.com/platform/
+        - listitem [ref=e14]:
+          - link "Customers" [ref=e15] [cursor=pointer]:
+            - /url: https://jfrog.com/about/customers/
+        - listitem [ref=e16]:
+          - link "Our Codex" [ref=e17] [cursor=pointer]:
+            - /url: https://join.jfrog.com/codex/
+        - listitem [ref=e18]:
+          - link "Join Us" [ref=e19] [cursor=pointer]:
+            - /url: https://join.jfrog.com/#open-positions
+  - document [ref=e20]:
+    - main [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e25]:
+          - link "< Back" [ref=e27] [cursor=pointer]:
+            - /url: https://join.jfrog.com/positions?gh_src=&gh_department=&gh_office=&mrk_id=&search_str=
+          - heading "Senior Product Manager - JFrog Security" [level=1] [ref=e28]
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - img [ref=e31]
+              - generic [ref=e33]: Netanya/Tel Aviv, Israel | Product
+            - generic [ref=e34]:
+              - generic [ref=e35]: Share position
+              - list [ref=e36]:
+                - listitem [ref=e37]:
+                  - link "" [ref=e38] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e39]: 
+                - listitem [ref=e40]:
+                  - link [ref=e41] [cursor=pointer]:
+                    - /url: "#"
+                    - img [ref=e42]
+                - listitem [ref=e44]:
+                  - link "" [ref=e45] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e46]: 
+                - listitem [ref=e47]:
+                  - link "" [ref=e48] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e49]: 
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - paragraph [ref=e54]: At JFrog, we’re reinventing DevSecOps to help the world’s greatest companies innovate. Our team of industry-leading software security experts are true pioneers, constantly pushing the boundaries with original research and technological innovation. JFrog is a special place with a unique combination of brilliance, spirit and just all-around great people. Thousands of customers, including the majority of the Fortune 100, trust JFrog to manage, accelerate, and secure their software delivery from code to production – a concept we call “liquid software”. Wouldn't it be amazing if you could join us on our journey?
+            - paragraph [ref=e55]: JFrog Security is a cornerstone of our current product offering and long-term strategy. We are pushing the boundaries of Software Supply Chain Security by introducing new and exciting features to developers, DevOps, and application security professionals. As we navigate the new era of AI-driven threats and opportunities, we are integrating advanced AI/ML capabilities to stay ahead of the curve and ensure our customers' software remains secure and compliant. We’re looking for a tech-savvy Senior Product Manager to own the product throughout the product lifecycle, gathering and prioritizing product and customer requirements, defining the product strategy, and working closely with Engineering to deliver winning products with great user experience that customers love. The position also includes working with customers, Sales, Marketing, and Support to ensure revenue and customer satisfaction goals are met.
+            - heading "As a Senior Product Manager at JFrog you will…" [level=5] [ref=e56]:
+              - strong [ref=e57]: As a Senior Product Manager at JFrog you will…
+            - list [ref=e58]:
+              - listitem [ref=e59]: Own the full cycle of product development, including ideation, competitive analysis, client validation, discovery with R&D, spec writing, launching, and monitoring
+              - listitem [ref=e60]: "Lead Enterprise Customer Relationships: Build strong relationships with our largest Enterprise customers, understand their complex security requirements and translate them into scalable product solutions"
+              - listitem [ref=e61]: "Drive AI Transformation: Lead internal AI initiatives to optimize product workflows and leverage data-driven insights to enhance the JFrog Security offering"
+              - listitem [ref=e62]: "Collaborate Cross-Functionally: Work alongside Product Analysts, UX/UI, Product Marketing and other functions to drive successful feature rollouts"
+              - listitem [ref=e63]: "Build Strategic Trust: Get buy-in for the product vision across internal and external stakeholders through strong cross-team interactions"
+              - listitem [ref=e64]: "Evidence-Based Innovation: Identify, design, and iterate on product decisions by leveraging data from customer usage, market research, and adoption metrics."
+            - heading "To be a Senior Product Manager at JFrog you need…" [level=5] [ref=e65]:
+              - strong [ref=e66]: To be a Senior Product Manager at JFrog you need…
+            - list [ref=e67]:
+              - listitem [ref=e68]:
+                - strong [ref=e69]: 5+ years of experience
+                - text: in E2E Product Management, preferably in B2B SaaS platforms.
+              - listitem [ref=e70]:
+                - strong [ref=e71]: "Strong Technical Background (Must):"
+                - text: Proven ability to engage deeply with engineering teams on complex technical architectures and developer-centric products.
+              - listitem [ref=e72]:
+                - strong [ref=e73]: "Execution Excellence:"
+                - text: Strong project management skills and experience writing detailed PRDs/User stories for engineering and QA teams
+              - listitem [ref=e74]:
+                - strong [ref=e75]: "Customer-Facing Experience:"
+                - text: Experience working with users, buyers, and decision-makers in a global market
+              - listitem [ref=e76]:
+                - strong [ref=e77]: Communication
+                - text: ": Excellent English and the ability to influence cross-functional teams without formal authority"
+              - listitem [ref=e78]:
+                - strong [ref=e79]: Engineering or Application Security background
+                - text: – an advantage
+            - heading "Advantages (Nice to have)" [level=3] [ref=e80]:
+              - strong [ref=e81]: Advantages (Nice to have)
+            - list [ref=e82]:
+              - listitem [ref=e83]:
+                - strong [ref=e84]: "AI & Data Proficiency:"
+                - text: A solid understanding of AI/ML workflows and how to leverage data/AI to drive product value or internal efficiency
+              - listitem [ref=e85]:
+                - strong [ref=e86]: "Application Security (AppSec) Background:"
+                - text: Prior experience in Security, Vulnerability Management, or DevSecOps
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - img [ref=e90]
+              - heading "Apply Here" [level=2] [ref=e104]
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - generic [ref=e107]:
+                  - generic [ref=e108]: First Name*
+                  - textbox "Enter your first name" [ref=e109]
+                  - paragraph [ref=e110]
+                - generic [ref=e111]:
+                  - generic [ref=e112]: Last Name*
+                  - textbox "Enter your last name" [ref=e113]
+                  - paragraph [ref=e114]
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - generic [ref=e117]: Email*
+                  - textbox "Enter your email" [ref=e118]
+                  - paragraph [ref=e119]
+                - generic [ref=e120]:
+                  - generic [ref=e121]: Phone*
+                  - spinbutton [ref=e122]
+                  - paragraph [ref=e123]
+              - generic [ref=e126]:
+                - button "Upload your CV" [ref=e127]
+                - generic [ref=e128] [cursor=pointer]:
+                  - img
+                  - generic: Upload your CV
+                - paragraph
+              - generic [ref=e130]:
+                - generic [ref=e131]: Cover Letter
+                - textbox "Cover Letter" [ref=e132]
+                - paragraph [ref=e133]
+              - generic [ref=e135]:
+                - generic [ref=e136]: Linkedin Profile
+                - textbox "Linkedin Profile" [ref=e137]:
+                  - /placeholder: Your LinkedIn Profile
+                - paragraph [ref=e138]
+              - generic [ref=e140]:
+                - generic [ref=e141]: How did you hear about this job?
+                - textbox "How did you hear about this job?" [ref=e142]:
+                  - /placeholder: Tell us...
+              - generic [ref=e144]:
+                - generic [ref=e145]:
+                  - text: By applying I acknowledge the
+                  - link "Join JFrog Privacy Notice" [ref=e146] [cursor=pointer]:
+                    - /url: https://jfrog.com/join-privacy-notice/
+                  - text: .
+                - paragraph [ref=e147]
+              - generic [ref=e149]:
+                - iframe [ref=e152]:
+                  - generic [ref=f35e6]:
+                    - text: protected by
+                    - strong [ref=f35e7]: reCAPTCHA
+                - button "Apply Now" [ref=e153] [cursor=pointer]
+  - contentinfo [ref=e154]:
+    - generic [ref=e156]:
+      - generic [ref=e158]:
+        - heading "Products" [level=3] [ref=e159]
+        - list [ref=e161]:
+          - listitem [ref=e162]:
+            - link "Artifactory" [ref=e163] [cursor=pointer]:
+              - /url: https://jfrog.com/artifactory/
+          - listitem [ref=e164]:
+            - link "Xray" [ref=e165] [cursor=pointer]:
+              - /url: https://jfrog.com/xray/
+          - listitem [ref=e166]:
+            - link "Curation" [ref=e167] [cursor=pointer]:
+              - /url: https://jfrog.com/curation/
+          - listitem [ref=e168]:
+            - link "Distribution" [ref=e169] [cursor=pointer]:
+              - /url: https://jfrog.com/distribution/
+          - listitem [ref=e170]:
+            - link "Container Registry" [ref=e171] [cursor=pointer]:
+              - /url: https://jfrog.com/container-registry/
+          - listitem [ref=e172]:
+            - link "Connect" [ref=e173] [cursor=pointer]:
+              - /url: https://jfrog.com/connect/
+          - listitem [ref=e174]:
+            - link "JFrog ML" [ref=e175] [cursor=pointer]:
+              - /url: https://jfrog.com/jfrog-ml/
+          - listitem [ref=e176]:
+            - link "JFrog Platform" [ref=e177] [cursor=pointer]:
+              - /url: https://jfrog.com/platform/
+          - listitem [ref=e178]:
+            - link "Start Free" [ref=e179] [cursor=pointer]:
+              - /url: https://jfrog.com/start-free/
+      - generic [ref=e181]:
+        - heading "Resources" [level=3] [ref=e182]
+        - list [ref=e184]:
+          - listitem [ref=e185]:
+            - link "Blog" [ref=e186] [cursor=pointer]:
+              - /url: https://jfrog.com/blog/
+          - listitem [ref=e187]:
+            - link "Events" [ref=e188] [cursor=pointer]:
+              - /url: https://jfrog.com/about/events/
+          - listitem [ref=e189]:
+            - link "User Guide" [ref=e190] [cursor=pointer]:
+              - /url: https://www.jfrog.com/confluence/pages/viewpage.action?pageId=46107472
+          - listitem [ref=e191]:
+            - link "DevOps Tools" [ref=e192] [cursor=pointer]:
+              - /url: https://jfrog.com/devops-tools/
+          - listitem [ref=e193]:
+            - link "Open Source" [ref=e194] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e195]:
+            - link "Featured" [ref=e196] [cursor=pointer]:
+              - /url: https://jfrog.com/featured/
+          - listitem [ref=e197]:
+            - link "JFrog Trust" [ref=e198] [cursor=pointer]:
+              - /url: https://jfrog.com/trust/
+      - generic [ref=e200]:
+        - heading "Company" [level=3] [ref=e201]
+        - list [ref=e203]:
+          - listitem [ref=e204]:
+            - link "About" [ref=e205] [cursor=pointer]:
+              - /url: https://jfrog.com/about/
+          - listitem [ref=e206]:
+            - link "Management" [ref=e207] [cursor=pointer]:
+              - /url: https://jfrog.com/about/management/
+          - listitem [ref=e208]:
+            - link "Investor Relations" [ref=e209] [cursor=pointer]:
+              - /url: https://investors.jfrog.com/
+          - listitem [ref=e210]:
+            - link "Partners" [ref=e211] [cursor=pointer]:
+              - /url: https://jfrog.com/partner/
+          - listitem [ref=e212]:
+            - link "Customers" [ref=e213] [cursor=pointer]:
+              - /url: https://jfrog.com/about/customers/
+          - listitem [ref=e214]:
+            - link "Press" [ref=e215] [cursor=pointer]:
+              - /url: https://jfrog.com/press/
+          - listitem [ref=e216]:
+            - link "Contact Us" [ref=e217] [cursor=pointer]:
+              - /url: https://jfrog.com/contact-us/
+          - listitem [ref=e218]:
+            - link "Brand Guidelines" [ref=e219] [cursor=pointer]:
+              - /url: https://jfrog.com/brand-guidelines/
+      - generic [ref=e221]:
+        - heading "Developer" [level=3] [ref=e222]
+        - list [ref=e224]:
+          - listitem [ref=e225]:
+            - link "Community" [ref=e226] [cursor=pointer]:
+              - /url: https://jfrog.com/community/
+          - listitem [ref=e227]:
+            - link "Downloads" [ref=e228] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e229]:
+            - link "Community Events" [ref=e230] [cursor=pointer]:
+              - /url: https://jfrog.com/community/events/
+          - listitem [ref=e231]:
+            - link "Community Forum" [ref=e232] [cursor=pointer]:
+              - /url: https://stackoverflow.com/questions/tagged/artifactory
+          - listitem [ref=e233]:
+            - link "Applications" [ref=e234] [cursor=pointer]:
+              - /url: https://jfrog.com/help/r/jfrog-applications-and-cli-documentation/jfrog-cli
+      - generic [ref=e235]:
+        - generic [ref=e239]:
+          - generic [ref=e240]: Follow Us
+          - link "JFrog Facebook" [ref=e242] [cursor=pointer]:
+            - /url: https://www.facebook.com/artifrog
+            - generic [ref=e243]: 
+          - link "JFrog LinkedIn" [ref=e245] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/jfrog-ltd
+            - generic [ref=e246]: 
+          - link "JFrog Twitter" [ref=e248] [cursor=pointer]:
+            - /url: https://twitter.com/jfrog
+            - img [ref=e249]
+          - link "JFrog Youtube" [ref=e252] [cursor=pointer]:
+            - /url: https://www.youtube.com/c/JFrogInc
+            - img [ref=e253]
+        - generic [ref=e255]: © 2026 JFrog Ltd All Rights Reserved
+    - generic [ref=e258]:
+      - link "JFrog logo" [ref=e260] [cursor=pointer]:
+        - /url: https://join.jfrog.com
+        - img "JFrog logo" [ref=e261]
+      - generic [ref=e262]:
+        - generic [ref=e263]:
+          - link "Privacy Notice" [ref=e264] [cursor=pointer]:
+            - /url: https://jfrog.com/privacy-notice/
+          - link "Cookies Policy" [ref=e265] [cursor=pointer]:
+            - /url: https://jfrog.com/jfrog-cookies-policy/
+          - link "Cookie Settings" [ref=e266] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e267]: Accessibility Mode
+  - text: "> >"

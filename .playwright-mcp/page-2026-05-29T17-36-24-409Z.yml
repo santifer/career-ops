@@ -1,0 +1,186 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - list:
+        - listitem:
+          - button "Press enter for Accessibility for blind people who use screen readers" [ref=e2] [cursor=pointer]:
+            - text: Press enter for Accessibility for blind people
+            - generic [ref=e3]: who use screen readers
+        - listitem:
+          - button "Press enter for Keyboard Navigation" [ref=e4] [cursor=pointer]
+        - listitem:
+          - button "Press enter for Accessibility menu" [ref=e5] [cursor=pointer]
+  - link "Skip to Main Content" [ref=e6] [cursor=pointer]:
+    - /url: https://www.taboola.com/careers/job/head-of-product?gh_jid=7695161#site-content
+  - link "Skip to Footer" [ref=e7] [cursor=pointer]:
+    - /url: https://www.taboola.com/careers/job/head-of-product?gh_jid=7695161#site-footer
+  - banner:
+    - navigation [ref=e8]:
+      - generic [ref=e9]:
+        - link "Taboola Careers Logo" [ref=e10] [cursor=pointer]:
+          - /url: https://www.taboola.com/careers
+          - img "Taboola Careers Logo" [ref=e11]
+        - generic [ref=e13]:
+          - list [ref=e14]:
+            - listitem [ref=e15]:
+              - link "Teams" [ref=e16] [cursor=pointer]:
+                - /url: https://www.taboola.com/careers/teams
+            - listitem [ref=e17]:
+              - link "Our Locations" [ref=e18] [cursor=pointer]:
+                - /url: https://www.taboola.com/careers/our-locations
+            - listitem [ref=e19]:
+              - link "Our Moments" [ref=e20] [cursor=pointer]:
+                - /url: https://www.taboola.com/careers/discover
+            - listitem [ref=e21]:
+              - link "Our Story" [ref=e22] [cursor=pointer]:
+                - /url: https://www.taboola.com/about/our-story
+            - listitem [ref=e23]:
+              - link "Our Commitment" [ref=e24] [cursor=pointer]:
+                - /url: https://www.taboola.com/about/social-responsibility
+            - listitem [ref=e25]:
+              - link "Taboola Life" [ref=e26] [cursor=pointer]:
+                - /url: https://www.taboola.com/taboola-life/
+          - list [ref=e27]:
+            - listitem [ref=e28]:
+              - generic [ref=e29]: "|"
+            - listitem [ref=e30]:
+              - link [ref=e31] [cursor=pointer]:
+                - /url: https://twitter.com/taboola
+                - img [ref=e32]
+            - listitem [ref=e35]:
+              - link [ref=e36] [cursor=pointer]:
+                - /url: https://www.instagram.com/taboola/
+                - img [ref=e37]
+            - listitem [ref=e42]:
+              - link [ref=e43] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/taboola
+                - img [ref=e44]
+            - listitem [ref=e47]:
+              - link [ref=e48] [cursor=pointer]:
+                - /url: https://www.facebook.com/taboola/
+                - img [ref=e49]
+  - main [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e55]: Tel Aviv, Israel
+      - generic [ref=e57]:
+        - heading "Head of Product" [level=1] [ref=e58]
+        - generic [ref=e59] [cursor=pointer]: Apply
+      - separator [ref=e60]
+      - generic [ref=e61]:
+        - generic [ref=e63]:
+          - heading "Realize your potential by joining the leading performance-driven advertising company!" [level=4] [ref=e64]:
+            - strong [ref=e65]: Realize your potential by joining the leading performance-driven advertising company!
+          - paragraph [ref=e66]: We’re looking for a Head of Product for Taboola News to join our Tel Aviv office and take ownership of one of the most impactful products in mobile content discovery. You’ll shape the strategy and roadmap for a platform that reaches hundreds of millions of monthly users worldwide – driving the balance between a great user experience, meaningful publisher traffic, and sustainable monetization.
+          - heading "To thrive in this role, you’ll need:" [level=4] [ref=e67]:
+            - strong [ref=e68]: "To thrive in this role, you’ll need:"
+          - list [ref=e69]:
+            - listitem [ref=e70]: "• 10+ Years of Product Leadership: Proven track record of scaling PM teams and launching high-impact products within digital publishing, ad tech, or media."
+            - listitem [ref=e71]: "• Strategic Monetization Expertise: Deep experience in app/on-device revenue optimization (native ads, content engines, eCPM) for platforms serving 100M+ users."
+            - listitem [ref=e72]: "• User-Centric Growth: Demonstrated ability to balance aggressive revenue goals with high-quality user experiences, leveraging A/B testing and personalization to drive session value. B2C experience is a big advantage."
+            - listitem [ref=e73]: "• AI-Driven Innovation: Visionary approach to integrating AI/GenAI and advanced recommendation systems to create differentiated content and advertising solutions."
+            - listitem [ref=e74]: "• Cross-Functional Influence: Exceptional ability to work with engineering, data science, and sales teams to deliver complex products in a fast-paced, multi-sided marketplace (OEMs, publishers, and advertisers)."
+          - heading "How you’ll make an impact:" [level=4] [ref=e75]:
+            - strong [ref=e76]: "How you’ll make an impact:"
+          - list [ref=e77]:
+            - listitem [ref=e78]: "• Define the Global Roadmap: Own the end-to-end product strategy for Taboola News, translating long-term business goals into a high-growth execution plan."
+            - listitem [ref=e79]: "• Drive Executive Alignment: Serve as a strategic partner to the Senior Executive Team, providing data-driven insights that shape Taboola News market vision."
+            - listitem [ref=e80]: "• Lead High-Performing Teams: Mentor and scale a world-class team of PMs and analysts, fostering a culture of critical thinking, innovation, and continuous delivery."
+            - listitem [ref=e81]: "• Enable Cross-Functional Success: Bridge the gap between Engineering, Sales, and Marketing to launch products that solve our partners needs and exceed revenue targets."
+          - heading "Why Taboola?" [level=4] [ref=e82]:
+            - strong [ref=e83]: Why Taboola?
+          - paragraph [ref=e84]: "If you ask Taboolars what they love about working here, they’ll tell you that they’ve been empowered to realize their full potential while growing and learning from and with smart and talented people. They’ll also share more about:"
+          - list [ref=e85]:
+            - listitem [ref=e86]: • Adam Singolda, Taboola Founder and CEO says; “You can copy anything from another business but you can’t copy a company’s culture”.
+            - listitem [ref=e87]: "• Well-being: Competitive benefits and well-being programs tailored to the region."
+            - listitem [ref=e88]: "• Flexibility: We offer a hybrid work schedule with 3 days in-office with an option to come in more often if desired."
+            - listitem [ref=e89]: "• Work with some of the biggest names: We work with some of the biggest names in the business. Our publisher partners include Microsoft, Apple, Yahoo, Fox Sports, NBCU, ESPN, CBS, and E! Online. Our advertiser clients include Wells Fargo, Honda, Pinterest, Expedia and Honda. Our OEM partners include Xiaomi, Motorola and Samsung."
+          - heading "Ready to realize your potential?" [level=4] [ref=e90]:
+            - strong [ref=e91]: Ready to realize your potential?
+          - paragraph [ref=e92]: Taboola is an equal opportunity employer and we value diversity in all forms. We are committed to creating an inclusive environment for all employees and believe such an environment is critical for success. Employment is decided on the basis of qualifications, merit, and business need.
+          - paragraph [ref=e93]:
+            - text: "Learn more about #TaboolaLife on"
+            - link "LinkedIn" [ref=e94] [cursor=pointer]:
+              - /url: https://www.linkedin.com/search/results/all/?fetchDeterministicClustersOnly=true&heroEntityKey=urn%3Ali%3Aorganization%3A128707&keywords=taboola&origin=RICH_QUERY_SUGGESTION&position=2&searchId=dcc8bfbb-b05c-458e-a7f1-726d30e7dd80&sid=9(y&spellCorrectionEnabled=false
+            - text: ","
+            - link "Facebook" [ref=e95] [cursor=pointer]:
+              - /url: https://www.facebook.com/taboola/
+            - text: ","
+            - link "Instagram" [ref=e96] [cursor=pointer]:
+              - /url: https://www.instagram.com/taboola.israel/?hl=en
+            - text: ","
+            - link "X" [ref=e97] [cursor=pointer]:
+              - /url: https://docs.google.com/document/d/1BctKkw2Vj_EOjvy24kjRKq_ZxZzmZxweIqNLQgsLtcs/edit?tab=t.0
+            - text: ","
+            - link "YouTube" [ref=e98] [cursor=pointer]:
+              - /url: https://www.youtube.com/channel/UC6W0hdStO0jRVYhg4ABzjRw
+            - text: ", & the"
+            - link "Taboola Life Blog" [ref=e99] [cursor=pointer]:
+              - /url: https://blog.taboola.com/category/taboola-life/?_gl=1*1c2v1ec*_ga*MTI4NTM3OTcyNy4xNjkxNTA0MjA0*_ga_ERHENNM7DM*MTcxMDM1MDIwMi4yMjMuMS4xNzEwMzUwMjI5LjMzLjAuMA..
+            - text: .
+          - heading "About Taboola" [level=4] [ref=e100]:
+            - strong [ref=e101]: About Taboola
+          - paragraph [ref=e102]: Taboola empowers businesses to grow through performance advertising technology that goes beyond search and social and delivers measurable outcomes at scale.
+          - paragraph [ref=e103]: Taboola works with thousands of businesses who advertise directly on Realize, Taboola’s powerful ad platform, reaching approximately 600M daily active users across some of the best publishers in the world. Publishers like NBC News, Yahoo, and OEMs such as Samsung, Xiaomi and others use Taboola’s technology to grow audience and revenue, enabling Realize to offer unique data, specialized algorithms, and unmatched scale.
+          - paragraph [ref=e104]:
+            - text: "#LI-Hybrid"
+            - text: "#LI-LES1"
+          - paragraph [ref=e105]
+        - generic [ref=e107] [cursor=pointer]: Apply
+  - contentinfo [ref=e108]:
+    - generic [ref=e110]:
+      - list [ref=e113]:
+        - listitem [ref=e114]:
+          - link "Teams" [ref=e115] [cursor=pointer]:
+            - /url: https://www.taboola.com/careers/teams
+        - listitem [ref=e116]:
+          - link "Our Locations" [ref=e117] [cursor=pointer]:
+            - /url: https://www.taboola.com/careers/our-locations
+        - listitem [ref=e118]:
+          - link "Our Moments" [ref=e119] [cursor=pointer]:
+            - /url: https://www.taboola.com/careers/discover
+        - listitem [ref=e120]:
+          - link "Our Story" [ref=e121] [cursor=pointer]:
+            - /url: https://www.taboola.com/about/our-story
+        - listitem [ref=e122]:
+          - link "Our Commitment" [ref=e123] [cursor=pointer]:
+            - /url: https://www.taboola.com/about/social-responsibility
+        - listitem [ref=e124]:
+          - link "Taboola Life" [ref=e125] [cursor=pointer]:
+            - /url: https://www.taboola.com/taboola-life/
+      - list [ref=e128]:
+        - listitem [ref=e129]:
+          - link "Taboola.com" [ref=e130] [cursor=pointer]:
+            - /url: https://www.taboola.com/
+        - listitem [ref=e131]:
+          - link "Taboola Blog" [ref=e132] [cursor=pointer]:
+            - /url: https://www.taboola.com/marketing-hub/
+        - listitem [ref=e133]:
+          - link "Engineering Blog" [ref=e134] [cursor=pointer]:
+            - /url: https://www.taboola.com/engineering/
+        - listitem [ref=e135]:
+          - link "Taboola Engineering on YouTube" [ref=e136] [cursor=pointer]:
+            - /url: https://www.youtube.com/channel/UC6W0hdStO0jRVYhg4ABzjRw
+        - listitem [ref=e137]:
+          - link "Ad Maker" [ref=e138] [cursor=pointer]:
+            - /url: https://www.taboola.com/taboola-updates/create-ads-effortlessly/
+        - listitem [ref=e139]:
+          - link "Taboola Trends" [ref=e140] [cursor=pointer]:
+            - /url: https://realizetrends.taboola.com/
+      - list [ref=e143]:
+        - listitem [ref=e144]:
+          - link "twitter Link" [ref=e145] [cursor=pointer]:
+            - /url: https://twitter.com/taboola
+            - img [ref=e146]
+        - listitem [ref=e149]:
+          - link "linkedin Link" [ref=e150] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/taboola
+            - img [ref=e151]
+        - listitem [ref=e154]:
+          - link "instagram Link" [ref=e155] [cursor=pointer]:
+            - /url: https://www.instagram.com/taboola/
+            - img [ref=e156]
+        - listitem [ref=e161]:
+          - link "facebook Link" [ref=e162] [cursor=pointer]:
+            - /url: https://www.facebook.com/taboola/
+            - img [ref=e163]
+      - paragraph [ref=e167]: Taboola is an equal opportunity employer and we value diversity in all forms. We are committed to creating an inclusive environment for all employees and believe such an environment is critical for success. Employment is decided on the basis of qualifications, merit, and business need.

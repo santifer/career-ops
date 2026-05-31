@@ -1,0 +1,27 @@
+[    1793ms] [LOG] JQMIGRATE: Migrate is installed, version 3.4.1 @ https://www.taboola.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1:1
+[    1794ms] [LOG] initializing! @ https://www.taboola.com/temp/js/careers.js:78
+[    1794ms] [LOG] Method: cookie @ https://www.taboola.com/temp/js/careers.js:78
+[    1794ms] [LOG] {} @ https://www.taboola.com/temp/js/careers.js:78
+[    1794ms] [LOG] Running integrations @ https://www.taboola.com/temp/js/careers.js:78
+[    1860ms] [LOG] Faild to post mesage to Iframe https://boards.greenhouse.io/embed/job_app?for=taboola&token=7609918&b=https://careers.taboola.com/job/7609918?t=1780076191&gh_jid=7609918&gh_src= @ https://js.nagich.co.il/core/4.4.0/accessibility.js:0
+[    1862ms] [LOG] %c[IND]%c You are running %c MacOS %c Operating system, %c Chrome %c browser, version: %c 148 color: White; background: #17384c; font-weight: bold; padding: 3px; border-radius:3px 0 0 3px; color: Black; background: #50e590; font-weight: bold; padding: 3px color: White; background: #17384c; font-weight: bold; padding: 3px; color: Black; background: #50e590; font-weight: bold; padding: 3px color: White; background: #17384c; font-weight: bold; padding: 3px; color: Black; background: #50e590; font-weight: bold; padding: 3px color: White; background: #17384c; font-weight: bold; padding: 3px; border-radius:0 3px 3px 0 @ https://js.nagich.co.il/core/4.4.0/accessibility.js:0
+[    1862ms] [LOG] %c[IND]%c Version %c4.4.0%c color: White; background: #17384c; font-weight: bold; padding: 3px; border-radius:3px 0 0 3px; color: Black; background: #50e590; font-weight: bold; padding: 3px color: White; background: #17384c; font-weight: bold; padding: 3px; border-radius:0 3px 3px 0  @ https://js.nagich.co.il/core/4.4.0/accessibility.js:0
+[    1931ms] TypeError: Cannot read properties of null (reading 'addEventListener')
+    at https://www.taboola.com//wp-content/themes/taboola/dist/js/main.min.js:1:87495
+[    2051ms] [LOG] Cookie 'tbp-consent' set successfully. @ :0
+[    2100ms] [LOG] checking for utms @ https://www.taboola.com/temp/js/careers.js:78
+[    2100ms] [LOG] checkForUTMs no utms found @ https://www.taboola.com/temp/js/careers.js:78
+[    2114ms] [LOG] Cookie 'tbp-consent' set successfully. @ :0
+[    2119ms] [LOG] Cookie 'tbp-consent' set successfully. @ :0
+[    2296ms] [LOG] Starting integrations @ https://www.taboola.com/temp/js/careers.js:78
+[    2296ms] [LOG] fixing links @ https://www.taboola.com/temp/js/careers.js:109
+[    2399ms] [ERROR] Attestation check for Attribution Reporting on https://trc.taboola.com failed. @ https://www.taboola.com/careers/job/senior-product-manager?gh_jid=7609918:0
+[    2664ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://my.greenhouse.io/users/self?job_post_id=7609918:0
+[    2664ms] UnauthorizedError: Unauthorized: User is not logged in.
+    at Gs.fetchProfile (https://job-boards.cdn.greenhouse.io/assets/entry.client-DJvenSzz.js:61:71218)
+[    2718ms] Uncaught TypeError: Cannot set properties of null (setting 'innerHTML')
+    at Grnhse.Iframe.render (https://boards.greenhouse.io/embed/job_board/js?for=taboola:149:22)
+    at Grnhse.Iframe (https://boards.greenhouse.io/embed/job_board/js?for=taboola:91:28)
+    at Grnhse.Iframe.load (https://boards.greenhouse.io/embed/job_board/js?for=taboola:284:9)
+    at Grnhse.Iframe.autoLoad (https://boards.greenhouse.io/embed/job_board/js?for=taboola:288:16)
+[    2871ms] [ERROR] Attestation check for Attribution Reporting on https://trc.taboola.com failed. @ https://www.taboola.com/careers/job/senior-product-manager?gh_jid=7609918:0

@@ -1,0 +1,204 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - link "Similarweb Logo" [ref=e5] [cursor=pointer]:
+        - /url: https://www.similarweb.com/
+        - img "Similarweb Logo" [ref=e6]
+      - generic [ref=e7]:
+        - link "Back to jobs" [ref=e8] [cursor=pointer]:
+          - /url: https://job-boards.greenhouse.io/similarweb
+          - img [ref=e9]
+          - text: Back to jobs
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - heading "Product Marketing Manager" [level=1] [ref=e14]
+            - generic [ref=e15]:
+              - img [ref=e16]
+              - generic [ref=e18]: tel aviv
+          - button "Apply" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - heading "About Similarweb" [level=1] [ref=e22]:
+              - strong [ref=e23]: About Similarweb
+            - paragraph [ref=e24]: Similarweb is the leading digital intelligence platform, trusted by thousands of businesses worldwide to understand the digital world. Our data powers critical decisions for enterprise brands, agencies, and financial institutions. With unmatched coverage of web traffic, app performance, search trends, and consumer behavior, Similarweb turns digital signals into strategic advantage.
+            - heading "About the Role" [level=1] [ref=e25]:
+              - strong [ref=e26]: About the Role
+            - paragraph [ref=e27]: Every major AI platform needs structured, high-quality data. That’s exactly what we sell. Similarweb’s AI & Data business is the fastest-growing part of our company, and this role puts you right at the center of it.
+            - paragraph [ref=e28]:
+              - text: "We’re looking for a Product Marketing Manager to own the go-to-market strategy for our data and AI product portfolio:"
+              - strong [ref=e29]: APIs, MCP, data feeds, integrations
+              - text: ", and our own"
+              - strong [ref=e30]: AI-powered products, including AI Studio
+              - text: ", Similarweb’s natural language analytics tool. Our data already feeds into platforms like ChatGPT, Claude, and Cursor, and demand is accelerating as more enterprises build AI-powered workflows that depend on real-world digital intelligence."
+            - paragraph [ref=e31]: "Similarweb’s data is our biggest competitive advantage. No other company offers the same breadth, depth, and granularity of digital intelligence, covering web traffic, app usage, search behavior, and consumer trends across virtually every market and geography. The opportunity here is massive: you’ll be marketing a product that the market is actively looking for, at the exact moment when AI is reshaping how businesses consume and act on data."
+            - paragraph [ref=e32]: "Your audience is data-savvy: buyers and users who evaluate products based on data quality, methodology, coverage, and integration fit. They care about substance over packaging. You’ll need to match that mindset, balancing creative storytelling with real technical fluency to earn their trust and drive adoption."
+            - paragraph [ref=e33]: You’ll work closely with Product Management, Sales, Customer Success, and the broader GTM organization. This role sits within the Data Pod marketing team, reporting to the Pod Lead based in the UK, and is based in Israel on a hybrid model.
+            - heading "What You’ll Do" [level=1] [ref=e34]:
+              - strong [ref=e35]: What You’ll Do
+            - heading "Own the Go-to-Market for Data & AI Products" [level=2] [ref=e36]:
+              - strong [ref=e37]: Own the Go-to-Market for Data & AI Products
+            - list [ref=e38]:
+              - listitem [ref=e39]: Define and execute go-to-market strategies for Similarweb’s Data and AI product portfolio, including our API, data feeds, MCP integrations and our innovative AI solutions.
+              - listitem [ref=e40]: "Lead product launches end-to-end: positioning, messaging, launch execution, enablement, and post-launch adoption. You ship, you don’t hand off."
+              - listitem [ref=e41]: Partner with Product Management to translate roadmap priorities into market-facing narratives and launch plans that drive awareness, adoption, and revenue growth in a consumption-based model.
+            - heading "Build the Narrative That Earns Trust" [level=2] [ref=e42]:
+              - strong [ref=e43]: Build the Narrative That Earns Trust
+            - list [ref=e44]:
+              - listitem [ref=e45]: "Develop positioning and messaging for data and AI products that resonates with data-savvy audiences: analysts, data teams, and technical buyers across various categories."
+              - listitem [ref=e46]: "Create compelling customer-facing content: landing pages, product pages, one-pagers, pitch decks, case studies, email campaigns, and product guides."
+              - listitem [ref=e47]: Translate complex technical concepts (API architecture, data methodology, AI capabilities) into clear, benefit-led narratives.
+              - listitem [ref=e48]: Bring creative thinking to how we tell our story. Find the angles that make Similarweb’s data impossible to ignore in a crowded market.
+            - heading "Enable Sales to Win" [level=2] [ref=e49]:
+              - strong [ref=e50]: Enable Sales to Win
+            - list [ref=e51]:
+              - listitem [ref=e52]: "Build and maintain the enablement toolkit for GTM teams: messaging frameworks, competitive battle cards, objection-handling guides, demo scripts, and talk tracks."
+              - listitem [ref=e53]: Run enablement sessions and training for Sales, Pre-Sales, and Customer Success teams to sharpen how they position and sell data products.
+              - listitem [ref=e54]: Partner with Sales on strategic deal cycles by developing tailored content, competitive positioning, and value narratives for key accounts.
+            - heading "Know the Market" [level=2] [ref=e55]:
+              - strong [ref=e56]: Know the Market
+            - list [ref=e57]:
+              - listitem [ref=e58]: Conduct ongoing market research on latest data trends, AI product adoption, and the competitive landscape for data and intelligence platforms.
+              - listitem [ref=e59]: Gather and synthesize feedback from customers, prospects, and internal teams to inform product roadmap decisions and marketing strategy.
+              - listitem [ref=e60]: Track adoption and consumption metrics for Data and AI products to identify growth opportunities and inform GTM priorities.
+            - heading "Connect the Dots Across Teams" [level=2] [ref=e61]:
+              - strong [ref=e62]: Connect the Dots Across Teams
+            - list [ref=e63]:
+              - listitem [ref=e64]: Be the connective tissue between Product, Sales, CS, and Marketing for Data and AI products, ensuring consistent messaging and coordinated execution.
+              - listitem [ref=e65]: Collaborate closely with the broader Data Pod marketing team and other marketing pods to share learnings, align on campaigns, and maintain brand consistency.
+              - listitem [ref=e66]: Represent Similarweb at industry events, webinars, and conferences relevant to the data and AI space.
+            - heading "What You Bring" [level=1] [ref=e67]:
+              - strong [ref=e68]: What You Bring
+            - heading "Must-Haves" [level=2] [ref=e69]:
+              - strong [ref=e70]: Must-Haves
+            - list [ref=e71]:
+              - listitem [ref=e72]: 3+ years of product marketing experience in B2B SaaS, data products, developer tools, or technology platforms.
+              - listitem [ref=e73]: "Experience marketing to data-savvy and technical audiences: You understand how they evaluate products and what earns their trust."
+              - listitem [ref=e74]: "Strong technical fluency: you need to be comfortable with APIs, data feeds, integrations, and analytics tools. You can talk about our data methodology and data offerings without reading from a script."
+              - listitem [ref=e75]: "You use the products you market: You’ll spend time in our API docs, test integrations, run queries in AI Studio, and build your own understanding of our data before you write a single word of positioning."
+              - listitem [ref=e76]: "A balance of storytelling and substance: You can craft a narrative that makes someone care and back it up with the technical depth that makes them interested."
+              - listitem [ref=e77]: "Analytical mindset: You’re comfortable working with data, tracking performance metrics, and using insights to inform your decisions and prioritize what matters most."
+              - listitem [ref=e78]: Proven track record of leading product launches and building go-to-market strategies that drive measurable results.
+              - listitem [ref=e79]: Excellent written and verbal communication skills in English.
+              - listitem [ref=e80]: "Self-starter mindset: You take ownership, manage your priorities, and don’t wait for direction. You’ll report to a manager in the UK and work across time zones daily."
+              - listitem [ref=e81]: Experience working cross-functionally with Product Management, Sales, and GTM teams.
+            - heading "Strong Advantages" [level=2] [ref=e82]:
+              - strong [ref=e83]: Strong Advantages
+            - list [ref=e84]:
+              - listitem [ref=e85]: "Strong proficiency with AI tools and workflows: You actively use AI for content creation, automation, research, and productivity, and you’re experimenting with agents and advanced use cases. ."
+              - listitem [ref=e86]: Experience with alternative data, web intelligence, digital analytics, or adjacent data products.
+              - listitem [ref=e87]: Familiarity with the AI/LLM ecosystem and how enterprises are integrating external data into AI-powered workflows (MCP, APIs, agent frameworks).
+              - listitem [ref=e88]: Background in developer marketing or marketing to technical audiences.
+              - listitem [ref=e89]: Proficiency with Salesforce.
+            - heading "Who You Are" [level=1] [ref=e90]:
+              - strong [ref=e91]: Who You Are
+            - list [ref=e92]:
+              - listitem [ref=e93]: "Curious about how things actually work: You dig into the product, the data, the methodology, not because someone asked you to, but because you can’t market what you don’t understand."
+              - listitem [ref=e94]: "Creative and opinionated: You have a point of view on what good marketing looks like and you’re not afraid to push for it, even when the safe option is easier."
+              - listitem [ref=e95]: "Comfortable with complexity: You don’t oversimplify to avoid doing the hard thinking. You find the clear story inside a complicated product and make it land."
+              - listitem [ref=e96]: "Low ego, high ownership: You care more about the outcome than who gets the credit. You’ll pick up what needs doing, whether it’s a launch strategy or a one-pager that’s due tomorrow."
+            - heading "Why Similarweb" [level=1] [ref=e97]:
+              - strong [ref=e98]: Why Similarweb
+            - list [ref=e99]:
+              - listitem [ref=e100]: Own the marketing strategy for the fastest-growing business line at Similarweb, at a time when the market for data products and AI tools is accelerating.
+              - listitem [ref=e101]: Work with the world’s most comprehensive digital intelligence dataset, powering decisions for Fortune 500 companies, leading agencies, and top-tier investors globally.
+              - listitem [ref=e102]: Join a team that treats AI as a core working tool, not a buzzword. We use AI daily across content, research, automation, and product development.
+              - listitem [ref=e103]: Join a high-impact, global marketing team that values autonomy, creativity, and data-driven thinking.
+              - listitem [ref=e104]: "Competitive compensation, benefits, and the opportunity to grow within a publicly traded company (NYSE: SMWB) that’s still building and innovating."
+          - paragraph [ref=e106]:
+            - text: We will handle your application and information related to your application in accordance with the Applicant Privacy Policy available
+            - link "here" [ref=e107] [cursor=pointer]:
+              - /url: https://www.similarweb.com/corp/legal/applicant-privacy-policies/
+            - text: .
+        - generic [ref=e108]:
+          - img [ref=e109]
+          - generic [ref=e111]:
+            - paragraph [ref=e112]: Create a Job Alert
+            - paragraph [ref=e113]: Interested in building your career at Similarweb? Get future opportunities sent straight to your email.
+            - link "Create alert" [ref=e114] [cursor=pointer]:
+              - /url: https://my.greenhouse.io/users/sign_in?job_board=similarweb&source=job_alert_post
+      - separator [ref=e115]
+      - generic [ref=e116]:
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - heading "Apply for this job" [level=2] [ref=e120]
+            - generic [ref=e121]:
+              - paragraph [ref=e123]: "*"
+              - paragraph [ref=e124]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e127] [cursor=pointer]
+        - generic [ref=e128]:
+          - generic [ref=e129]:
+            - generic [ref=e132]:
+              - generic [ref=e133]: First Name*
+              - textbox "First Name" [ref=e134]
+            - generic [ref=e137]:
+              - generic [ref=e138]: Last Name*
+              - textbox "Last Name" [ref=e139]
+            - generic [ref=e142]:
+              - generic [ref=e143]: Preferred First Name
+              - textbox "Preferred First Name" [ref=e144]
+            - generic [ref=e147]:
+              - generic [ref=e148]: Email*
+              - textbox "Email" [ref=e149]
+            - group "Phone" [ref=e151]:
+              - generic [ref=e152]: Phone
+              - generic [ref=e155]:
+                - generic [ref=e156]: Country*
+                - generic [ref=e157]:
+                  - log [ref=e159]
+                  - generic [ref=e161]:
+                    - combobox "Country" [ref=e164]
+                    - button "Toggle flyout" [ref=e166] [cursor=pointer]:
+                      - img [ref=e167]
+                  - textbox
+              - generic [ref=e171]:
+                - generic [ref=e172]: Phone*
+                - textbox "Phone" [ref=e174]
+            - generic [ref=e175]:
+              - generic [ref=e177]:
+                - generic [ref=e178]: Location (City)*
+                - generic [ref=e179]:
+                  - log [ref=e181]
+                  - combobox "Location (City)" [ref=e186]
+                  - textbox
+              - button "Locate me" [ref=e187] [cursor=pointer]
+            - group "Resume/CV" [ref=e189]:
+              - generic [ref=e190]: Resume/CV
+              - generic [ref=e192]:
+                - generic [ref=e194]:
+                  - button "Attach" [ref=e195] [cursor=pointer]
+                  - generic [ref=e196]: Attach
+                  - button "Attach" [ref=e197]
+                - button "Dropbox" [ref=e199] [cursor=pointer]
+                - button "Google Drive" [ref=e201] [cursor=pointer]
+                - generic [ref=e203]:
+                  - button "Enter manually" [ref=e204] [cursor=pointer]
+                  - generic [ref=e205]: Enter manually
+                - paragraph [ref=e206]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e208]:
+              - generic [ref=e209]: Cover Letter
+              - generic [ref=e211]:
+                - generic [ref=e213]:
+                  - button "Attach" [ref=e214] [cursor=pointer]
+                  - generic [ref=e215]: Attach
+                  - button "Attach" [ref=e216]
+                - button "Dropbox" [ref=e218] [cursor=pointer]
+                - button "Google Drive" [ref=e220] [cursor=pointer]
+                - generic [ref=e222]:
+                  - button "Enter manually" [ref=e223] [cursor=pointer]
+                  - generic [ref=e224]: Enter manually
+                - paragraph [ref=e225]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e226]:
+            - separator [ref=e227]
+            - generic [ref=e230]:
+              - generic [ref=e231]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e232]
+            - generic [ref=e235]:
+              - generic [ref=e236]: Website
+              - textbox "Website" [ref=e237]
+          - button "Submit application" [ref=e239] [cursor=pointer]
+  - contentinfo [ref=e240]:
+    - generic [ref=e241]:
+      - paragraph [ref=e242]: Powered by
+      - link "Greenhouse logo" [ref=e243] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e244]

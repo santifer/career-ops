@@ -1,0 +1,355 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e4]:
+      - link "JFrog logo" [ref=e5] [cursor=pointer]:
+        - /url: https://jfrog.com
+        - img "JFrog logo" [ref=e6]
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Press" [ref=e11] [cursor=pointer]:
+            - /url: https://jfrog.com/about/press
+        - listitem [ref=e12]:
+          - link "Products" [ref=e13] [cursor=pointer]:
+            - /url: https://jfrog.com/platform/
+        - listitem [ref=e14]:
+          - link "Customers" [ref=e15] [cursor=pointer]:
+            - /url: https://jfrog.com/about/customers/
+        - listitem [ref=e16]:
+          - link "Our Codex" [ref=e17] [cursor=pointer]:
+            - /url: https://join.jfrog.com/codex/
+        - listitem [ref=e18]:
+          - link "Join Us" [ref=e19] [cursor=pointer]:
+            - /url: https://join.jfrog.com/#open-positions
+  - document [ref=e20]:
+    - main [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - heading "Fast Frogward your Career" [level=1] [ref=e29]
+            - paragraph [ref=e30]: Discover your opportunity for career development with the people who drive the industry forward
+            - link "See Open Positions" [ref=e31] [cursor=pointer]:
+              - /url: "#open-positions"
+          - generic [ref=e33]: Your browser does not support the video tag.
+        - generic [ref=e34]:
+          - generic [ref=e37]:
+            - heading "Frogward Thinkers Welcome" [level=2] [ref=e38]:
+              - generic: Frogward Thinkers Welcome
+            - paragraph [ref=e39]:
+              - text: Being an innovative company starts with the JFrog employees.
+              - text: Leading an industry and standing at the forefront of new technologies.
+              - text: Constantly moving forward and challenging our comfort zone.
+              - text: You’re invited to push the boundaries frogward and be part of a winning culture.
+            - link "Read our Codex" [ref=e40] [cursor=pointer]:
+              - /url: https://join.jfrog.com/codex/
+          - list [ref=e43]
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e47]:
+            - generic [ref=e49]:
+              - generic [ref=e50]:
+                - heading "Open Positions" [level=2] [ref=e51]
+                - paragraph [ref=e52]: We’re looking for all-stars whose ingenuity, empathy and enthusiasm make them indispensable. If you embrace challenges and take pride in doing your best work, explore our job opportunities!
+              - img "heading-We-Are-Hiring" [ref=e54]
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - button "Locations" [ref=e59] [cursor=pointer]
+                - button "Departments" [ref=e60] [cursor=pointer]
+              - textbox "Search position" [ref=e62]
+          - generic [ref=e66]:
+            - link "US Atlanta 7 Open Positions" [ref=e67] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=63597
+              - generic [ref=e69]:
+                - heading "US" [level=3] [ref=e71]
+                - heading "Atlanta" [level=4] [ref=e72]
+                - paragraph [ref=e73]: 7 Open Positions
+            - link "US Remote 9 Open Positions" [ref=e74] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=84288
+              - generic [ref=e76]:
+                - heading "US" [level=3] [ref=e78]
+                - heading "Remote" [level=4] [ref=e79]
+                - paragraph [ref=e80]: 9 Open Positions
+            - link "US Sunnyvale 13 Open Positions" [ref=e81] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=25866
+              - generic [ref=e83]:
+                - heading "US" [level=3] [ref=e85]
+                - heading "Sunnyvale" [level=4] [ref=e86]
+                - paragraph [ref=e87]: 13 Open Positions
+            - link "UK London 4 Open Positions" [ref=e88] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=67938
+              - generic [ref=e90]:
+                - heading "UK" [level=3] [ref=e92]
+                - heading "London" [level=4] [ref=e93]
+                - paragraph [ref=e94]: 4 Open Positions
+            - link "Taiwan Remote 1 Open Position" [ref=e95] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=208190
+              - generic [ref=e97]:
+                - heading "Taiwan" [level=3] [ref=e99]
+                - heading "Remote" [level=4] [ref=e100]
+                - paragraph [ref=e101]: 1 Open Position
+            - link "Singapore Remote 2 Open Positions" [ref=e102] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=215711
+              - generic [ref=e104]:
+                - heading "Singapore" [level=3] [ref=e106]
+                - heading "Remote" [level=4] [ref=e107]
+                - paragraph [ref=e108]: 2 Open Positions
+            - link "Japan Tokyo 2 Open Positions" [ref=e109] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=207231
+              - generic [ref=e111]:
+                - heading "Japan" [level=3] [ref=e113]
+                - heading "Tokyo" [level=4] [ref=e114]
+                - paragraph [ref=e115]: 2 Open Positions
+            - link "Israel Netanya/Tel Aviv 36 Open Positions" [ref=e116] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=25868
+              - generic [ref=e118]:
+                - heading "Israel" [level=3] [ref=e120]
+                - heading "Netanya/Tel Aviv" [level=4] [ref=e121]
+                - paragraph [ref=e122]: 36 Open Positions
+            - link "India Bangalore 20 Open Positions" [ref=e123] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=44918
+              - generic [ref=e125]:
+                - heading "India" [level=3] [ref=e127]
+                - heading "Bangalore" [level=4] [ref=e128]
+                - paragraph [ref=e129]: 20 Open Positions
+            - link "Germany Remote 2 Open Positions" [ref=e130] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=81050
+              - generic [ref=e132]:
+                - heading "Germany" [level=3] [ref=e134]
+                - heading "Remote" [level=4] [ref=e135]
+                - paragraph [ref=e136]: 2 Open Positions
+            - link "France Remote 1 Open Position" [ref=e137] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=89217
+              - generic [ref=e139]:
+                - heading "France" [level=3] [ref=e141]
+                - heading "Remote" [level=4] [ref=e142]
+                - paragraph [ref=e143]: 1 Open Position
+            - link "Australia Remote 3 Open Positions" [ref=e144] [cursor=pointer]:
+              - /url: https://join.jfrog.com/positions?gh_office=82550
+              - generic [ref=e146]:
+                - heading "Australia" [level=3] [ref=e148]
+                - heading "Remote" [level=4] [ref=e149]
+                - paragraph [ref=e150]: 3 Open Positions
+        - generic [ref=e154]:
+          - heading "Meet the Frogs" [level=2] [ref=e155]:
+            - generic: Meet the Frogs
+          - generic [ref=e157]:
+            - list [ref=e159]:
+              - link:
+                - /url: https://www.youtube.com/watch?v=zLIpHmVn5T4
+              - link:
+                - /url: https://www.youtube.com/watch?v=5KOG-zaOp9o
+              - link:
+                - /url: https://www.youtube.com/watch?v=eyXShNxx_2s
+              - link:
+                - /url: https://www.youtube.com/watch?v=_AS0exvYKLQ
+              - link:
+                - /url: https://www.youtube.com/watch?v=NxEWWT3EJuM
+              - link:
+                - /url: https://www.youtube.com/watch?v=PiEMznfX81Q
+              - link [ref=e160] [cursor=pointer]:
+                - /url: https://www.youtube.com/watch?v=m5fpZdARwtc
+              - link:
+                - /url: https://www.youtube.com/watch?v=_esAqiIQzYw
+              - link:
+                - /url: https://www.youtube.com/watch?v=zLIpHmVn5T4
+              - link:
+                - /url: https://www.youtube.com/watch?v=5KOG-zaOp9o
+              - link:
+                - /url: https://www.youtube.com/watch?v=eyXShNxx_2s
+              - link:
+                - /url: https://www.youtube.com/watch?v=_AS0exvYKLQ
+              - link:
+                - /url: https://www.youtube.com/watch?v=NxEWWT3EJuM
+              - link:
+                - /url: https://www.youtube.com/watch?v=PiEMznfX81Q
+              - link:
+                - /url: https://www.youtube.com/watch?v=m5fpZdARwtc
+              - link:
+                - /url: https://www.youtube.com/watch?v=_esAqiIQzYw
+              - link:
+                - /url: https://www.youtube.com/watch?v=zLIpHmVn5T4
+              - link:
+                - /url: https://www.youtube.com/watch?v=5KOG-zaOp9o
+              - link:
+                - /url: https://www.youtube.com/watch?v=eyXShNxx_2s
+              - link:
+                - /url: https://www.youtube.com/watch?v=_AS0exvYKLQ
+            - generic [ref=e161]:
+              - button [ref=e162] [cursor=pointer]
+              - button [ref=e163] [cursor=pointer]
+              - button [ref=e164] [cursor=pointer]
+              - button [ref=e165] [cursor=pointer]
+              - button [ref=e166] [cursor=pointer]
+              - button [ref=e167] [cursor=pointer]
+              - button [ref=e168] [cursor=pointer]
+              - button [ref=e169] [cursor=pointer]
+      - heading "Become a Frogward Thinker" [level=2] [ref=e171]:
+        - generic: Become a Frogward Thinker
+      - generic [ref=e173]:
+        - generic [ref=e175]:
+          - heading "Be a part of a winning company" [level=2] [ref=e178]:
+            - generic: Be a part of a winning company
+          - generic [ref=e182]:
+            - generic [ref=e183]:
+              - generic [ref=e184]:
+                - paragraph [ref=e185]:
+                  - text: America’s
+                  - text: Greatest Companies
+                - paragraph [ref=e186]: Newsweek 2025
+              - link "Read More >" [ref=e187] [cursor=pointer]:
+                - /url: https://rankings.newsweek.com/americas-greatest-companies-2025
+            - generic [ref=e188]:
+              - generic [ref=e189]:
+                - paragraph [ref=e190]:
+                  - text: Most Successful
+                  - text: Mid-Cap Companies
+                - paragraph [ref=e191]: Forbes 2025
+              - link "Read More >" [ref=e192] [cursor=pointer]:
+                - /url: https://www.forbes.com/lists/best-mid-cap-companies/
+            - generic [ref=e193]:
+              - generic [ref=e194]:
+                - paragraph [ref=e195]:
+                  - text: Technology
+                  - text: of the Year
+                - paragraph [ref=e196]: InfoWorld 2025
+              - link "Read More >" [ref=e197] [cursor=pointer]:
+                - /url: https://www.infoworld.com/article/4104098/infoworlds-2025-technology-of-the-year-award-winners.html
+            - generic [ref=e198]:
+              - generic [ref=e199]:
+                - paragraph [ref=e200]:
+                  - text: Best Supply Chain
+                  - text: Security
+                - paragraph [ref=e201]: DevOps Dozen 2025
+              - link "Read More >" [ref=e202] [cursor=pointer]:
+                - /url: https://devopsdozen.com/devops-dozen-2026-tools-and-services-award-winners/?utm_source=GaggleAMP-JFrog&utm_medium=LinkedIn%20%28GaggleAMP%29&utm_campaign=none%20%28GaggleAMP%29&utm_content=im-excited-to-share-that-jfrog-was-named-the-winner-of-the-be-5047722&activity_id=5047722
+        - list [ref=e209]
+  - contentinfo [ref=e210]:
+    - generic [ref=e212]:
+      - generic [ref=e214]:
+        - heading "Products" [level=3] [ref=e215]
+        - list [ref=e217]:
+          - listitem [ref=e218]:
+            - link "Artifactory" [ref=e219] [cursor=pointer]:
+              - /url: https://jfrog.com/artifactory/
+          - listitem [ref=e220]:
+            - link "Xray" [ref=e221] [cursor=pointer]:
+              - /url: https://jfrog.com/xray/
+          - listitem [ref=e222]:
+            - link "Curation" [ref=e223] [cursor=pointer]:
+              - /url: https://jfrog.com/curation/
+          - listitem [ref=e224]:
+            - link "Distribution" [ref=e225] [cursor=pointer]:
+              - /url: https://jfrog.com/distribution/
+          - listitem [ref=e226]:
+            - link "Container Registry" [ref=e227] [cursor=pointer]:
+              - /url: https://jfrog.com/container-registry/
+          - listitem [ref=e228]:
+            - link "Connect" [ref=e229] [cursor=pointer]:
+              - /url: https://jfrog.com/connect/
+          - listitem [ref=e230]:
+            - link "JFrog ML" [ref=e231] [cursor=pointer]:
+              - /url: https://jfrog.com/jfrog-ml/
+          - listitem [ref=e232]:
+            - link "JFrog Platform" [ref=e233] [cursor=pointer]:
+              - /url: https://jfrog.com/platform/
+          - listitem [ref=e234]:
+            - link "Start Free" [ref=e235] [cursor=pointer]:
+              - /url: https://jfrog.com/start-free/
+      - generic [ref=e237]:
+        - heading "Resources" [level=3] [ref=e238]
+        - list [ref=e240]:
+          - listitem [ref=e241]:
+            - link "Blog" [ref=e242] [cursor=pointer]:
+              - /url: https://jfrog.com/blog/
+          - listitem [ref=e243]:
+            - link "Events" [ref=e244] [cursor=pointer]:
+              - /url: https://jfrog.com/about/events/
+          - listitem [ref=e245]:
+            - link "User Guide" [ref=e246] [cursor=pointer]:
+              - /url: https://www.jfrog.com/confluence/pages/viewpage.action?pageId=46107472
+          - listitem [ref=e247]:
+            - link "DevOps Tools" [ref=e248] [cursor=pointer]:
+              - /url: https://jfrog.com/devops-tools/
+          - listitem [ref=e249]:
+            - link "Open Source" [ref=e250] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e251]:
+            - link "Featured" [ref=e252] [cursor=pointer]:
+              - /url: https://jfrog.com/featured/
+          - listitem [ref=e253]:
+            - link "JFrog Trust" [ref=e254] [cursor=pointer]:
+              - /url: https://jfrog.com/trust/
+      - generic [ref=e256]:
+        - heading "Company" [level=3] [ref=e257]
+        - list [ref=e259]:
+          - listitem [ref=e260]:
+            - link "About" [ref=e261] [cursor=pointer]:
+              - /url: https://jfrog.com/about/
+          - listitem [ref=e262]:
+            - link "Management" [ref=e263] [cursor=pointer]:
+              - /url: https://jfrog.com/about/management/
+          - listitem [ref=e264]:
+            - link "Investor Relations" [ref=e265] [cursor=pointer]:
+              - /url: https://investors.jfrog.com/
+          - listitem [ref=e266]:
+            - link "Partners" [ref=e267] [cursor=pointer]:
+              - /url: https://jfrog.com/partner/
+          - listitem [ref=e268]:
+            - link "Customers" [ref=e269] [cursor=pointer]:
+              - /url: https://jfrog.com/about/customers/
+          - listitem [ref=e270]:
+            - link "Press" [ref=e271] [cursor=pointer]:
+              - /url: https://jfrog.com/press/
+          - listitem [ref=e272]:
+            - link "Contact Us" [ref=e273] [cursor=pointer]:
+              - /url: https://jfrog.com/contact-us/
+          - listitem [ref=e274]:
+            - link "Brand Guidelines" [ref=e275] [cursor=pointer]:
+              - /url: https://jfrog.com/brand-guidelines/
+      - generic [ref=e277]:
+        - heading "Developer" [level=3] [ref=e278]
+        - list [ref=e280]:
+          - listitem [ref=e281]:
+            - link "Community" [ref=e282] [cursor=pointer]:
+              - /url: https://jfrog.com/community/
+          - listitem [ref=e283]:
+            - link "Downloads" [ref=e284] [cursor=pointer]:
+              - /url: https://jfrog.com/community/open-source/
+          - listitem [ref=e285]:
+            - link "Community Events" [ref=e286] [cursor=pointer]:
+              - /url: https://jfrog.com/community/events/
+          - listitem [ref=e287]:
+            - link "Community Forum" [ref=e288] [cursor=pointer]:
+              - /url: https://stackoverflow.com/questions/tagged/artifactory
+          - listitem [ref=e289]:
+            - link "Applications" [ref=e290] [cursor=pointer]:
+              - /url: https://jfrog.com/help/r/jfrog-applications-and-cli-documentation/jfrog-cli
+      - generic [ref=e291]:
+        - generic [ref=e295]:
+          - generic [ref=e296]: Follow Us
+          - link "JFrog Facebook" [ref=e298] [cursor=pointer]:
+            - /url: https://www.facebook.com/artifrog
+            - generic [ref=e299]: 
+          - link "JFrog LinkedIn" [ref=e301] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/jfrog-ltd
+            - generic [ref=e302]: 
+          - link "JFrog Twitter" [ref=e304] [cursor=pointer]:
+            - /url: https://twitter.com/jfrog
+            - img [ref=e305]
+          - link "JFrog Youtube" [ref=e308] [cursor=pointer]:
+            - /url: https://www.youtube.com/c/JFrogInc
+            - img [ref=e309]
+        - generic [ref=e311]: © 2026 JFrog Ltd All Rights Reserved
+    - generic [ref=e314]:
+      - link "JFrog logo" [ref=e316] [cursor=pointer]:
+        - /url: https://join.jfrog.com
+        - img "JFrog logo" [ref=e317]
+      - generic [ref=e318]:
+        - generic [ref=e319]:
+          - link "Privacy Notice" [ref=e320] [cursor=pointer]:
+            - /url: https://jfrog.com/privacy-notice/
+          - link "Cookies Policy" [ref=e321] [cursor=pointer]:
+            - /url: https://jfrog.com/jfrog-cookies-policy/
+          - link "Cookie Settings" [ref=e322] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e323]: Accessibility Mode
+  - text: "> >"
