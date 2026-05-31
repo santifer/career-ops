@@ -340,17 +340,23 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 
 ## Session Handover
 
-At the **end of every session**, update `handover.md` in the project root so the next
-agent or session (Claude Code, Codex, OpenCode, Gemini, or any other CLI) picks up
-exactly where this one left off:
+At the **start** of every session, read `handover.md`. At the **end**, update it.
+It is a **living snapshot, not an append-only log** — keep the whole file under one page.
+Any agent (Claude Code, Codex, OpenCode, Gemini, or any other CLI) follows this convention.
 
-1. **What was done** — files changed, evaluations run, scan results, config updated
-2. **In progress** — pipeline URLs pending, reports not yet generated, decisions deferred
-3. **Next steps** — concrete next actions for the next agent/session
-4. **Open questions** — anything that needs Neil's decision before continuing
+### Two types of sections
 
-Keep it under one page. Any agent starting a new session should read `handover.md` first
-to avoid duplicating work or missing context.
+**OVERWRITE every session** (always reflects *now* — delete stale lines):
+- **Current State** — what is set up, what is working, key config facts
+- **In Progress** — active work, pending evaluations, unfinished tasks
+- **Next Steps** — concrete next actions (ordered by priority)
+- **Open Questions** — decisions Neil needs to make before work continues
+- **Architecture Decisions** — durable choices, but edit *in place* when a decision changes; do not stack contradictions
 
-**`handover.md` is a user-layer file** — never overwrite it, only update the relevant
-sections. Do not put user data (CV metrics, compensation targets, personal details) in it.
+**APPEND only** (add a line/entry, never rewrite existing ones):
+- **Session Log** — one terse dated line per session: `YYYY-MM-DD (Agent) — 1-line summary [commit hash if any]`
+- **Lessons & Mistakes** — pitfalls found + mitigations; institutional memory
+
+**Anti-pattern to avoid:** Do NOT add a new dated `## Session Update — date` block each session. Fold all status changes into the living snapshot sections above and add one Session Log line.
+
+**`handover.md` is a user-layer file** — gitignored via `.git/info/exclude`. Do not put user data (CV metrics, compensation targets, personal details) in it.
