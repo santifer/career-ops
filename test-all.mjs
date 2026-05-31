@@ -506,6 +506,65 @@ try {
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }
+// ── 12. FOLLOW-UP CADENCE LOGIC ─────────────────────────────────
+
+console.log('\n12. Follow-up cadence logic');
+
+try {
+  const cadence = await import(pathToFileURL(join(ROOT, 'followup-cadence.mjs')).href);
+
+  // Date helpers
+  if (cadence.addDays(cadence.parseDate('2026-05-01'), 7) === '2026-05-08') {
+    pass('addDays advances a parsed date by N days (UTC)');
+  } else {
+    fail(`addDays produced ${cadence.addDays(cadence.parseDate('2026-05-01'), 7)}`);
+  }
+  if (cadence.daysBetween(cadence.parseDate('2026-05-01'), cadence.parseDate('2026-05-08')) === 7) {
+    pass('daysBetween counts whole days between two dates');
+  } else {
+    fail('daysBetween miscounted');
+  }
+  if (cadence.parseDate('not-a-date') === null && cadence.parseDate('2026-05-01') instanceof Date) {
+    pass('parseDate rejects malformed input and accepts ISO dates');
+  } else {
+    fail('parseDate validation wrong');
+  }
+
+  // Status normalization (strips bold + trailing date, lowercases, maps aliases)
+  if (cadence.normalizeStatus('**Applied** 2026-05-01') === 'applied') {
+    pass('normalizeStatus strips bold + trailing date and lowercases');
+  } else {
+    fail(`normalizeStatus produced ${cadence.normalizeStatus('**Applied** 2026-05-01')}`);
+  }
+
+  // Urgency decision tree (CADENCE defaults: applied_first=7, max_followups=2, responded_initial=1, interview_thankyou=1)
+  const urgencyCases = [
+    [['applied', 7, null, 0], 'overdue', 'applied past applied_first → overdue'],
+    [['applied', 3, null, 0], 'waiting', 'applied within window → waiting'],
+    [['applied', 30, null, 2], 'cold', 'applied at max follow-ups → cold'],
+    [['responded', 0, null, 0], 'urgent', 'responded before responded_initial → urgent'],
+    [['interview', 1, null, 0], 'overdue', 'interview past thank-you window → overdue'],
+  ];
+  for (const [args, expected, label] of urgencyCases) {
+    const got = cadence.computeUrgency(...args);
+    if (got === expected) pass(`computeUrgency: ${label}`);
+    else fail(`computeUrgency ${label}: expected ${expected}, got ${got}`);
+  }
+
+  // Next follow-up date scheduling
+  const nextCases = [
+    [['applied', '2026-05-01', null, 0], '2026-05-08', 'first applied follow-up = appDate + applied_first'],
+    [['applied', '2026-05-01', null, 2], null, 'cold (max follow-ups) → null'],
+    [['interview', '2026-05-01', null, 0], '2026-05-02', 'interview = appDate + interview_thankyou'],
+  ];
+  for (const [args, expected, label] of nextCases) {
+    const got = cadence.computeNextFollowupDate(...args);
+    if (got === expected) pass(`computeNextFollowupDate: ${label}`);
+    else fail(`computeNextFollowupDate ${label}: expected ${expected}, got ${got}`);
+  }
+} catch (e) {
+  fail(`follow-up cadence module crashed: ${e.message}`);
+}
 
 // ── SUMMARY ─────────────────────────────────────────────────────
 
