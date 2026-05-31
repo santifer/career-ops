@@ -1,179 +1,115 @@
 # Mode: pdf — ATS-Optimized PDF Generation
 
+## Source files (read both before generating)
+
+| File | Role |
+|------|------|
+| `cv.md` | **Content** source of truth — experience, metrics, education (never invent) |
+| `BW_CV_FORMATTING_SPEC.md` | **Layout** source of truth — fonts, colors, spacing, tables, 1-page rule |
+| `templates/cv-template.html` | HTML implementation of the formatting spec |
+| `config/profile.yml` | Contact fields, `cv.formatting_spec`, `cv.default_format` |
+
+**No formatting decisions from memory.** If `BW_CV_FORMATTING_SPEC.md` and this file disagree, the spec wins.
+
 ## Full pipeline
 
-1. Read `cv.md` as the source of truth
-2. Ask the user for the JD if it is not in context (text or URL)
+1. Read `cv.md` and `BW_CV_FORMATTING_SPEC.md`
+2. Ask the user for the JD if it is not in context (text, URL, or evaluation report)
 3. Extract 15-20 keywords from the JD
 4. Detect JD language → CV language (EN default)
-5. Detect company location → paper format:
-   - US/Canada → `letter`
-   - Rest of the world → `a4`
+5. Paper format: use `config/profile.yml` → `cv.default_format` if set; otherwise US/Canada → `letter`, rest → `a4`. Brian's default is **letter** (per formatting spec).
 6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-8. Select top 3-4 most relevant projects for the job
-9. Reorder experience bullets by JD relevance
-10. Build competency grid from JD requirements (6-8 keyword phrases)
+7. Rewrite Summary by injecting JD keywords (truth-based only)
+8. Reorder experience bullets by JD relevance; keep **bold label + body** bullet pattern
+9. Tailor competency columns (PRODUCT & STRATEGY | TECHNICAL & RESEARCH) from JD — do not use tag chips
+10. Trim job descriptor lines to **8–10 words** (italic, one clause)
 11. Inject keywords naturally into existing achievements (NEVER invent)
-12. Generate full HTML from template + personalized content
-13. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
+12. Generate HTML from `templates/cv-template.html` + personalized content
+13. Read `candidate.full_name` from `config/profile.yml` → kebab-case → `{candidate}`
 14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
 15. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-16. Report: PDF path, number of pages, keyword coverage %
+16. Report: PDF path, page count (**target: 1 page** per spec), keyword coverage %
 
-## ATS Rules (clean parsing)
+## Layout rules (from BW_CV_FORMATTING_SPEC.md)
 
-- Single-column layout (no sidebars, no parallel columns)
-- Standard headers: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
-- No text in images/SVGs
-- No critical info in PDF headers/footers (ATS ignores them)
-- UTF-8, selectable text (not rasterized)
-- No nested tables
-- Distributed JD keywords: Summary (top 5), first bullet of each role, Skills section
+- **Font:** Arial only — never Space Grotesk, DM Sans, Calibri, or Times
+- **Colors:** `#1a1a1a` labels/titles, `#2b5c8a` section headings & subtitle, `#444444` body, `#1155cc` / `#0563c1` links
+- **Header:** name, subtitle, contact — all **center-aligned**
+- **Section headings:** bold blue, left-aligned, bottom rule `#2b5c8a`
+- **Job header:** `[bold role]` + ` | ` + `[gray company, location]` + `[bold gray date right-aligned]`
+- **Job descriptor:** italic gray, 8–10 words max, under job header
+- **Bullets:** `<strong>Label:</strong>` + body; body not bold; 8.5pt
+- **Core competencies:** 2-column table, no visible borders, fixed column labels
+- **Technical background:** label | value table rows from `cv.md`
+- **One page only:** if overflow, shorten bullets/descriptor spacing before reducing font sizes
 
-## PDF Design
+## Section order (Brian master CV)
 
-- **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- **Fonts self-hosted**: `fonts/`
-- **Header**: name in Space Grotesk 24px bold + gradient line `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + contact row
-- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, color cyan primary
-- **Body**: DM Sans 11px, line-height 1.5
-- **Company names**: accent purple color `hsl(270,70%,45%)`
-- **Margins**: 0.6in
-- **Background**: pure white
+1. Header (name, subtitle line, contact)
+2. Summary
+3. Core Competencies (2-column table)
+4. Professional Experience (reverse chronological)
+5. Education
+6. Technical Background
 
-## Section order (optimized "6-second recruiter scan")
+Do **not** add a separate Projects section unless the user explicitly requests it.
 
-1. Header (large name, gradient, contact, portfolio link)
-2. Professional Summary (3-4 lines, keyword-dense)
-3. Core Competencies (6-8 keyword phrases in flex-grid)
-4. Work Experience (reverse chronological)
-5. Projects (top 3-4 most relevant)
-6. Education & Certifications
-7. Skills (languages + technical)
+## ATS rules
 
-## Keyword injection strategy (ethical, truth-based)
+- Single-column layout
+- Standard section titles: Summary, Core Competencies, Professional Experience, Education, Technical Background
+- No text in images; UTF-8 selectable text
+- Keywords in Summary, first bullet per relevant role, competency columns, Technical Background
 
-Examples of legitimate reformulation:
-- JD says "RAG pipelines" and CV says "LLM workflows with retrieval" → change to "RAG pipeline design and LLM orchestration workflows"
-- JD says "MLOps" and CV says "observability, evals, error handling" → change to "MLOps and observability: evals, error handling, cost monitoring"
-- JD says "stakeholder management" and CV says "collaborated with team" → change to "stakeholder management across engineering, operations, and business"
+## Keyword injection (ethical)
 
-**NEVER add skills that the candidate does not have. Only reword real experience using the exact JD vocabulary.**
+Rephrase real experience using JD vocabulary. Never add skills or metrics not in `cv.md` / `article-digest.md`.
 
-## Template HTML
-
-Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
+## Template placeholders (`templates/cv-template.html`)
 
 | Placeholder | Content |
-|-------------|-----------|
+|-------------|---------|
 | `{{LANG}}` | `en` or `es` |
-| `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
-| `{{NAME}}` | (from profile.yml) |
-| `{{PHONE}}` | (from profile.yml — include with its separator only when `profile.yml` has a non-empty `phone` value; omit both `<span>` and `<span class="separator">` otherwise) |
-| `{{EMAIL}}` | (from profile.yml) |
-| `{{LINKEDIN_URL}}` | [from profile.yml] |
-| `{{LINKEDIN_DISPLAY}}` | [from profile.yml] |
-| `{{PORTFOLIO_URL}}` | [from profile.yml] (or /es depending on language) |
-| `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (or /es depending on language) |
-| `{{LOCATION}}` | [from profile.yml] |
-| `{{SECTION_SUMMARY}}` | Professional Summary |
-| `{{SUMMARY_TEXT}}` | Personalized summary with keywords |
-| `{{SECTION_COMPETENCIES}}` | Core Competencies |
-| `{{COMPETENCIES}}` | `<span class="competency-tag">keyword</span>` × 6-8 |
-| `{{SECTION_EXPERIENCE}}` | Work Experience |
-| `{{EXPERIENCE}}` | HTML for each job with reordered bullets |
-| `{{SECTION_PROJECTS}}` | Projects |
-| `{{PROJECTS}}` | HTML for top 3-4 projects |
-| `{{SECTION_EDUCATION}}` | Education |
-| `{{EDUCATION}}` | Education HTML |
-| `{{SECTION_CERTIFICATIONS}}` | Certifications |
-| `{{CERTIFICATIONS}}` | Certifications HTML |
-| `{{SECTION_SKILLS}}` | Skills |
-| `{{SKILLS}}` | Skills HTML |
+| `{{PAGE_SIZE}}` | `letter` or `A4` |
+| `{{NAME}}` | Full name (profile.yml or cv.md header) |
+| `{{SUBTITLE}}` | Title line under name |
+| `{{CONTACT_ROW}}` | Phone, email, portfolio, LinkedIn, GitHub, location — HTML with `sep` spans |
+| `{{SECTION_SUMMARY}}` | `SUMMARY` |
+| `{{SUMMARY_TEXT}}` | Tailored summary paragraph |
+| `{{SECTION_COMPETENCIES}}` | `CORE COMPETENCIES` |
+| `{{COMPETENCY_COL1}}` | PRODUCT & STRATEGY bullet list (middle dot separated) |
+| `{{COMPETENCY_COL2}}` | TECHNICAL & RESEARCH bullet list |
+| `{{SECTION_EXPERIENCE}}` | `PROFESSIONAL EXPERIENCE` |
+| `{{EXPERIENCE}}` | Job blocks (see structure below) |
+| `{{SECTION_EDUCATION}}` | `EDUCATION` |
+| `{{EDUCATION}}` | Education lines + italic notes |
+| `{{SECTION_TECH}}` | `TECHNICAL BACKGROUND` |
+| `{{TECH_BACKGROUND}}` | `<tr>` rows for tech table |
+
+### Job block HTML pattern
+
+```html
+<div class="job">
+  <div class="job-header">
+    <div class="job-header-left">
+      <span class="job-role">Role Title</span>
+      <span class="job-meta">  |  Company, Location</span>
+    </div>
+    <span class="job-date">2023 – 2025</span>
+  </div>
+  <div class="job-desc">Eight to ten word italic context line here.</div>
+  <ul>
+    <li><strong>Label:</strong> Achievement text with metrics from cv.md.</li>
+  </ul>
+</div>
+```
 
 ## Canva CV Generation (optional)
 
-If `config/profile.yml` has `cv.canva_resume_design_id` set, offer the user a choice before generating:
-- **"HTML/PDF (fast, ATS-optimized)"** — existing flow above
-- **"Canva CV (visual, design-preserving)"** — new flow below
+If `config/profile.yml` has `cv.canva_resume_design_id` set, offer HTML/PDF vs Canva before generating. If unset, use HTML/PDF only.
 
-If the user has no `cv.canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
-
-### Canva workflow
-
-#### Step 1 — Duplicate the base design
-
-a. `export-design` the base design (using `cv.canva_resume_design_id`) as PDF → get download URL
-b. `import-design-from-url` using that download URL → creates a new editable design (the duplicate)
-c. Note the new `design_id` for the duplicate
-
-#### Step 2 — Read the design structure
-
-a. `get-design-content` on the new design → returns all text elements (richtexts) with their content
-b. Map text elements to CV sections by content matching:
-   - Look for the candidate's name → header section
-   - Look for "Summary" or "Professional Summary" → summary section
-   - Look for company names from cv.md → experience sections
-   - Look for degree/school names → education section
-   - Look for skill keywords → skills section
-c. If mapping fails, show the user what was found and ask for guidance
-
-#### Step 3 — Generate tailored content
-
-Same content generation as the HTML flow (Steps 1-11 above):
-- Rewrite Professional Summary with JD keywords + exit narrative
-- Reorder experience bullets by JD relevance
-- Select top competencies from JD requirements
-- Inject keywords naturally (NEVER invent)
-
-**IMPORTANT — Character budget rule:** Each replacement text MUST be approximately the same length as the original text it replaces (within ±15% character count). If tailored content is longer, condense it. The Canva design has fixed-size text boxes — longer text causes overlapping with adjacent elements. Count the characters in each original element from Step 2 and enforce this budget when generating replacements.
-
-#### Step 4 — Apply edits
-
-a. `start-editing-transaction` on the duplicate design
-b. `perform-editing-operations` with `find_and_replace_text` for each section:
-   - Replace summary text with tailored summary
-   - Replace each experience bullet with reordered/rewritten bullets
-   - Replace competency/skills text with JD-matched terms
-   - Replace project descriptions with top relevant projects
-c. **Reflow layout after text replacement:**
-   After applying all text replacements, the text boxes auto-resize but neighboring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
-   1. Read the updated element positions and dimensions from the `perform-editing-operations` response
-   2. For each work experience section (top to bottom), calculate where the bullets text box ends: `end_y = top + height`
-   3. The next section's header should start at `end_y + consistent_gap` (use the original gap from the template, typically ~30px)
-   4. Use `position_element` to move the next section's date, company name, role title, and bullets elements to maintain even spacing
-   5. Repeat for all work experience sections
-d. **Verify layout before commit:**
-   - `get-design-thumbnail` with the transaction_id and page_index=1
-   - Visually inspect the thumbnail for: text overlapping, uneven spacing, text cut off, text too small
-   - If issues remain, adjust with `position_element`, `resize_element`, or `format_text`
-   - Repeat until layout is clean
-e. Show the user the final preview and ask for approval
-f. `commit-editing-transaction` to save (ONLY after user approval)
-
-#### Step 5 — Export and download PDF
-
-a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
-b. **IMMEDIATELY** download the PDF using Bash:
-   ```bash
-   curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
-   ```
-   The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
-c. Verify the download:
-   ```bash
-   file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
-   ```
-   Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
-d. Report: PDF path, file size, Canva design URL (for manual tweaking)
-
-#### Error handling
-
-- If `import-design-from-url` fails → fall back to HTML/PDF pipeline with message
-- If text elements can't be mapped → warn user, show what was found, ask for manual mapping
-- If `find_and_replace_text` finds no matches → try broader substring matching
-- Always provide the Canva design URL so the user can edit manually if auto-edit fails
+(Canva workflow unchanged — see previous version for steps; apply same content rules and BW spec character discipline.)
 
 ## Post-generation
 
-Update tracker if the job is already registered: change PDF from ❌ to ✅.
+Update tracker/report if registered: PDF ❌ → ✅. Warn if page count &gt; 1.

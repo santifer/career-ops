@@ -282,7 +282,7 @@ next_action: "{one concrete next step}"
 
 ### Paso 4 — Generar PDF
 
-1. Lee `cv.md` + `i18n.ts`
+1. Lee `cv.md`, `BW_CV_FORMATTING_SPEC.md` (si existe), y `i18n.ts`
 2. Extrae 15-20 keywords del JD
 3. Detecta idioma del JD → idioma del CV (EN default)
 4. Detecta ubicación empresa → formato papel: US/Canada → `letter`, resto → `a4`
@@ -311,15 +311,7 @@ node generate-pdf.mjs \
 - UTF-8, texto seleccionable
 - Keywords distribuidas: Summary (top 5), primer bullet de cada rol, Skills section
 
-**Diseño:**
-- Fonts: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- Fonts self-hosted: `fonts/`
-- Header: Space Grotesk 24px bold + gradiente cyan→purple 2px + contacto
-- Section headers: Space Grotesk 13px uppercase, color cyan `hsl(187,74%,32%)`
-- Body: DM Sans 11px, line-height 1.5
-- Company names: purple `hsl(270,70%,45%)`
-- Márgenes: 0.6in
-- Background: blanco
+**Diseño:** Si existe `BW_CV_FORMATTING_SPEC.md`, seguir ese archivo y `modes/pdf.md` (Arial, letter, 1 página, tablas 2 columnas). Si no, usar `templates/cv-template.html` tal cual.
 
 **Estrategia keyword injection (ético):**
 - Reformular experiencia real con vocabulario exacto del JD

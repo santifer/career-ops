@@ -150,11 +150,12 @@ async function generatePDF() {
     const pdfBuffer = await page.pdf({
       format: format,
       printBackground: true,
+      // Margins from BW_CV_FORMATTING_SPEC.md (500/450/620 DXA @ 1440 per inch)
       margin: {
-        top: '0.6in',
-        right: '0.6in',
-        bottom: '0.6in',
-        left: '0.6in',
+        top: '0.35in',
+        right: '0.43in',
+        bottom: '0.31in',
+        left: '0.43in',
       },
       preferCSSPageSize: false,
     });

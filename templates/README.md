@@ -13,11 +13,11 @@ System-layer template files used by career-ops scripts and modes. These files ar
 
 ### cv-template.html
 
-The HTML template rendered by Playwright into PDF. Uses placeholder tokens (`{{NAME}}`, `{{SUMMARY_TEXT}}`, `{{EXPERIENCE}}`, etc.) that the PDF pipeline fills at generation time.
+The HTML template rendered by Playwright into PDF. Implements the user-owned layout in `BW_CV_FORMATTING_SPEC.md` (Arial, US Letter, 2-column competency table, 1-page target).
 
-**Design:** Space Grotesk headings + DM Sans body, single-column ATS-safe layout, self-hosted fonts from `fonts/`.
+Placeholder tokens are documented in `modes/pdf.md`.
 
-**Customization:** Edit this file to change colors, spacing, or section order. The placeholder tokens are documented in `batch/batch-prompt.md` under "Template placeholders."
+**Customization:** Prefer editing `BW_CV_FORMATTING_SPEC.md` (user layer) for layout rules; edit this file only when changing HTML structure to match the spec.
 
 ### cv-template.tex
 

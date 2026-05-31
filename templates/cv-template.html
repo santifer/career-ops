@@ -2,50 +2,12 @@
 <html lang="{{LANG}}">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{NAME}} — CV</title>
 <style>
-  @font-face {
-    font-family: 'Space Grotesk';
-    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
-    font-weight: 300 700;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  }
+  /* Brian Washington CV — layout per BW_CV_FORMATTING_SPEC.md (Arial, US Letter, 1 page) */
+  @page { size: {{PAGE_SIZE}}; margin: 0.35in 0.43in 0.31in 0.43in; }
 
-  @font-face {
-    font-family: 'Space Grotesk';
-    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
-    font-weight: 300 700;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-  }
-
-  @font-face {
-    font-family: 'DM Sans';
-    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
-    font-weight: 100 1000;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  }
-
-  @font-face {
-    font-family: 'DM Sans';
-    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
-    font-weight: 100 1000;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html {
     -webkit-print-color-adjust: exact;
@@ -53,367 +15,251 @@
   }
 
   body {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    line-height: 1.5;
-    color: #1a1a2e;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.35;
+    color: #1a1a1a;
     background: #ffffff;
-    padding: 0;
-    margin: 0;
   }
 
   .page {
     width: 100%;
-    max-width: {{PAGE_WIDTH}};
+    max-width: 7.64in;
     margin: 0 auto;
-    padding: 2px 0;
   }
 
-  /* === HEADER === */
-  .header {
-    margin-bottom: 20px;
-  }
+  /* === HEADER (centered) === */
+  .header { text-align: center; margin-bottom: 8px; }
 
   .header h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 28px;
-    font-weight: 700;
-    color: #1a1a2e;
-    letter-spacing: -0.02em;
+    font-size: 13pt;
+    font-weight: bold;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+    line-height: 1.15;
+  }
+
+  .header .subtitle {
+    font-size: 9pt;
+    color: #2b5c8a;
     margin-bottom: 6px;
-    line-height: 1.1;
+    line-height: 1.3;
   }
 
-  .header-gradient {
-    height: 2px;
-    background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
-    border-radius: 1px;
-    margin-bottom: 10px;
-  }
-
-  .contact-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10.5px;
+  .header .contact-row {
+    font-size: 8pt;
+    color: #444444;
     line-height: 1.4;
-    color: #555;
   }
 
-  .contact-row a {
-    color: #555;
-    text-decoration: none;
+  .header .contact-row a {
+    color: #0563c1;
+    text-decoration: underline;
   }
 
-  .contact-row .separator {
-    color: #ccc;
-  }
+  .header .contact-row .sep { color: #999; margin: 0 4px; }
 
   /* === SECTIONS === */
-  .section {
-    margin-bottom: 18px;
-  }
+  .section { margin-bottom: 10px; }
 
   .section-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: hsl(187, 74%, 32%);
-    border-bottom: 1.5px solid #e2e2e2;
-    padding-bottom: 4px;
-    margin-bottom: 10px;
-    line-height: 1.2;
+    font-size: 9.5pt;
+    font-weight: bold;
+    color: #2b5c8a;
+    text-align: left;
+    border-bottom: 0.5pt solid #2b5c8a;
+    padding-bottom: 2px;
+    margin-bottom: 6px;
+    margin-top: 10px;
   }
 
-  /* === PROFESSIONAL SUMMARY === */
+  .section:first-of-type .section-title { margin-top: 0; }
+
   .summary-text {
-    font-size: 11px;
-    line-height: 1.7;
-    color: #2f2f2f;
+    font-size: 8.5pt;
+    color: #444444;
+    line-height: 1.4;
+    margin-top: 4px;
   }
 
-  /* Links must never break across lines */
-  a {
-    white-space: nowrap;
+  /* === COMPETENCY TABLE (2 col, no borders) === */
+  .competency-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: none;
+    margin-top: 4px;
   }
 
-  /* === CORE COMPETENCIES === */
-  .competencies-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  .competency-table td {
+    width: 50%;
+    vertical-align: top;
+    border: none;
+    padding: 3px 8px 3px 0;
+    font-size: 8pt;
+    color: #444444;
+    line-height: 1.35;
   }
 
-  .competency-tag {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    color: hsl(187, 74%, 28%);
-    background: hsl(187, 40%, 95%);
-    padding: 4px 10px;
-    border-radius: 3px;
-    border: 1px solid hsl(187, 40%, 88%);
+  .competency-table td + td { padding-left: 8px; padding-right: 0; }
+
+  .comp-label {
+    font-weight: bold;
+    color: #2b5c8a;
+    font-size: 8pt;
+    margin-bottom: 3px;
   }
 
   /* === WORK EXPERIENCE === */
-  .job {
-    margin-bottom: 14px;
-  }
+  .job { margin-bottom: 8px; break-inside: avoid; page-break-inside: avoid; }
 
   .job-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 12px;
-    margin-bottom: 4px;
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 3px;
   }
 
-  .job-company {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: hsl(270, 70%, 45%);
+  .job-header-left {
+    flex: 1;
+    min-width: 0;
+    font-size: 8.5pt;
+    line-height: 1.3;
   }
 
-  .job-period {
-    font-size: 10.5px;
-    color: #777;
+  .job-role { font-weight: bold; color: #1a1a1a; }
+
+  .job-meta { font-weight: normal; color: #444444; }
+
+  .job-date {
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #444444;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
-  .job-role {
-    font-size: 11px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 6px;
-  }
-
-  .job-location {
-    font-size: 10px;
-    color: #888;
+  .job-desc {
+    font-size: 8pt;
+    font-style: italic;
+    color: #444444;
+    margin-bottom: 4px;
+    line-height: 1.3;
   }
 
   .job ul {
-    padding-left: 18px;
-    margin-top: 6px;
+    padding-left: 14px;
+    margin: 0;
   }
 
   .job li {
-    font-size: 10.5px;
-    line-height: 1.6;
-    color: #333;
-    margin-bottom: 4px;
+    font-size: 8.5pt;
+    color: #1a1a1a;
+    line-height: 1.35;
+    margin-bottom: 2px;
   }
 
-  .job li strong {
-    font-weight: 600;
-  }
-
-  /* === PROJECTS === */
-  .project {
-    margin-bottom: 12px;
-  }
-
-  .project-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: hsl(270, 70%, 45%);
-  }
-
-  .project-badge {
-    font-size: 9px;
-    font-weight: 500;
-    color: hsl(187, 74%, 32%);
-    background: hsl(187, 40%, 95%);
-    padding: 1px 6px;
-    border-radius: 2px;
-    margin-left: 6px;
-  }
-
-  .project-desc {
-    font-size: 10.5px;
-    color: #444;
-    margin-top: 3px;
-    line-height: 1.55;
-  }
-
-  .project-tech {
-    font-size: 9.5px;
-    color: #888;
-    margin-top: 3px;
-  }
+  .job li strong { font-weight: bold; color: #1a1a1a; }
 
   /* === EDUCATION === */
-  .edu-item {
-    margin-bottom: 8px;
+  .edu-item { margin-bottom: 4px; break-inside: avoid; }
+
+  .edu-line {
+    font-size: 8pt;
+    color: #1a1a1a;
+    line-height: 1.35;
   }
 
-  .edu-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
+  .edu-line strong { font-weight: bold; }
+
+  .edu-line .edu-gray { color: #444444; font-weight: normal; }
+
+  .edu-note {
+    font-size: 8pt;
+    font-style: italic;
+    color: #444444;
+    margin-top: 1px;
   }
 
-  .edu-title {
-    font-weight: 600;
-    font-size: 11px;
-    color: #333;
+  /* === TECHNICAL BACKGROUND TABLE === */
+  .tech-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: none;
+    margin-top: 4px;
   }
 
-  .edu-org {
-    color: hsl(270, 70%, 45%);
-    font-weight: 500;
+  .tech-table tr { break-inside: avoid; }
+
+  .tech-table td {
+    border: none;
+    padding: 2px 0;
+    font-size: 8pt;
+    vertical-align: top;
   }
 
-  .edu-year {
-    font-size: 10px;
-    color: #777;
+  .tech-table td:first-child {
+    width: 22%;
+    font-weight: bold;
+    color: #1a1a1a;
+    padding-right: 8px;
     white-space: nowrap;
   }
 
-  .edu-desc {
-    font-size: 10px;
-    color: #666;
-    margin-top: 2px;
-    line-height: 1.5;
+  .tech-table td:last-child {
+    color: #444444;
   }
 
-  /* === CERTIFICATIONS === */
-  .cert-item {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(90px, max-content) 44px;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 6px;
-  }
-
-  .cert-title {
-    font-size: 10.5px;
-    font-weight: 500;
-    color: #333;
-    min-width: 0;
-  }
-
-  .cert-org {
-    color: hsl(270, 70%, 45%);
-    white-space: nowrap;
-  }
-
-  .cert-year {
-    font-size: 10px;
-    color: #777;
-    white-space: nowrap;
-    text-align: right;
-  }
-
-  /* === SKILLS === */
-  .skills-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 14px;
-  }
-
-  .skill-item {
-    font-size: 10.5px;
-    color: #444;
-  }
-
-  .skill-category {
-    font-weight: 600;
-    color: #333;
-    font-size: 10.5px;
-  }
-
-  /* === PRINT === */
   @media print {
-    body {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    .page {
-      padding: 0;
-    }
-  }
-
-  /* === PAGE BREAK CONTROL === */
-  .avoid-break,
-  .job,
-  .project,
-  .edu-item,
-  .cert-item {
-    break-inside: avoid;
-    page-break-inside: avoid;
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .job, .edu-item, .section { break-inside: avoid; page-break-inside: avoid; }
   }
 </style>
 </head>
 <body>
 <div class="page">
 
-  <!-- HEADER -->
-  <div class="header avoid-break">
+  <div class="header">
     <h1>{{NAME}}</h1>
-    <div class="header-gradient"></div>
-    <div class="contact-row">
-      <span>{{PHONE}}</span>
-      <span class="separator">|</span>
-      <span>{{EMAIL}}</span>
-      <span class="separator">|</span>
-      <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
-      <span class="separator">|</span>
-      <a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>
-      <span class="separator">|</span>
-      <span>{{LOCATION}}</span>
-    </div>
+    <div class="subtitle">{{SUBTITLE}}</div>
+    <div class="contact-row">{{CONTACT_ROW}}</div>
   </div>
 
-  <!-- PROFESSIONAL SUMMARY -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_SUMMARY}}</div>
     <div class="summary-text">{{SUMMARY_TEXT}}</div>
   </div>
 
-  <!-- CORE COMPETENCIES -->
   <div class="section">
     <div class="section-title">{{SECTION_COMPETENCIES}}</div>
-    <div class="competencies-grid">
-      {{COMPETENCIES}}
-    </div>
+    <table class="competency-table">
+      <tr>
+        <td>
+          <div class="comp-label">PRODUCT &amp; STRATEGY</div>
+          {{COMPETENCY_COL1}}
+        </td>
+        <td>
+          <div class="comp-label">TECHNICAL &amp; RESEARCH</div>
+          {{COMPETENCY_COL2}}
+        </td>
+      </tr>
+    </table>
   </div>
 
-  <!-- WORK EXPERIENCE -->
   <div class="section">
     <div class="section-title">{{SECTION_EXPERIENCE}}</div>
     {{EXPERIENCE}}
   </div>
 
-  <!-- PROJECTS -->
-  <div class="section avoid-break">
-    <div class="section-title">{{SECTION_PROJECTS}}</div>
-    {{PROJECTS}}
-  </div>
-
-  <!-- EDUCATION -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_EDUCATION}}</div>
     {{EDUCATION}}
   </div>
 
-  <!-- CERTIFICATIONS -->
-  <div class="section avoid-break">
-    <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
-    {{CERTIFICATIONS}}
-  </div>
-
-  <!-- SKILLS -->
-  <div class="section avoid-break">
-    <div class="section-title">{{SECTION_SKILLS}}</div>
-    {{SKILLS}}
+  <div class="section">
+    <div class="section-title">{{SECTION_TECH}}</div>
+    {{TECH_BACKGROUND}}
   </div>
 
 </div>
