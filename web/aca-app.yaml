@@ -1,0 +1,67 @@
+identity:
+  type: UserAssigned
+  userAssignedIdentities:
+    /subscriptions/fd918039-a89e-49a7-8e32-af614b3765f9/resourceGroups/finance-app-ng/providers/Microsoft.ManagedIdentity/userAssignedIdentities/career-ops-mi: {}
+properties:
+  managedEnvironmentId: /subscriptions/fd918039-a89e-49a7-8e32-af614b3765f9/resourceGroups/finance-app-ng/providers/Microsoft.App/managedEnvironments/phia-ca-env
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 3000
+      transport: auto
+      allowInsecure: false
+    secrets:
+      - name: web-app-password
+        value: pXDg7eSdFCf5Am3okaE4
+    registries:
+      - server: regngasdf.azurecr.io
+        identity: /subscriptions/fd918039-a89e-49a7-8e32-af614b3765f9/resourceGroups/finance-app-ng/providers/Microsoft.ManagedIdentity/userAssignedIdentities/career-ops-mi
+  template:
+    containers:
+      - name: career-ops
+        image: regngasdf.azurecr.io/career-ops:v1
+        resources:
+          cpu: 1.0
+          memory: 2.0Gi
+        env:
+          - name: AZURE_OPENAI_ENDPOINT
+            value: https://finance-app-resource.openai.azure.com/
+          - name: AZURE_OPENAI_DEPLOYMENT
+            value: gpt-5.4
+          - name: AZURE_OPENAI_API_VERSION
+            value: "2024-10-21"
+          - name: CAREER_OPS_DATA_DIR
+            value: /data
+          - name: NODE_ENV
+            value: production
+          - name: PORT
+            value: "3000"
+          - name: AZURE_CLIENT_ID
+            value: e6b03861-6605-4964-86ad-e1ad04821661
+          - name: WEB_APP_PASSWORD
+            secretRef: web-app-password
+        volumeMounts:
+          - volumeName: data
+            mountPath: /data
+        probes:
+          - type: Readiness
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
+          - type: Liveness
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+    scale:
+      minReplicas: 1
+      maxReplicas: 1
+    volumes:
+      - name: data
+        storageType: AzureFile
+        storageName: datafiles

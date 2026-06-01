@@ -1,22 +1,30 @@
 import { mkdir, readFile, readdir, writeFile, appendFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 
 // All user data lives in the existing career-ops local file layout. For a
 // one-person app this is the source of truth — no database, no blob storage.
 // Uploading a new resume overwrites cv.md.
+//
+// CAREER_OPS_DATA_DIR lets the writable data live outside the code directory
+// (e.g. an Azure Files volume at /data in a container) so it survives restarts.
+// Defaults to the repo root for local development.
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const DATA_DIR = process.env.CAREER_OPS_DATA_DIR
+  ? resolve(process.env.CAREER_OPS_DATA_DIR)
+  : ROOT;
 
 export const paths = {
   root: ROOT,
-  cv: join(ROOT, 'cv.md'),
-  profile: join(ROOT, 'config', 'profile.yml'),
-  applications: join(ROOT, 'data', 'applications.md'),
-  portals: join(ROOT, 'portals.yml'),
-  reportsDir: join(ROOT, 'reports'),
-  outputDir: join(ROOT, 'output'),
+  dataDir: DATA_DIR,
+  cv: join(DATA_DIR, 'cv.md'),
+  profile: join(DATA_DIR, 'config', 'profile.yml'),
+  applications: join(DATA_DIR, 'data', 'applications.md'),
+  portals: join(DATA_DIR, 'portals.yml'),
+  reportsDir: join(DATA_DIR, 'reports'),
+  outputDir: join(DATA_DIR, 'output'),
 };
 
 const APPLICATIONS_HEADER = `# Applications Tracker
@@ -26,8 +34,8 @@ const APPLICATIONS_HEADER = `# Applications Tracker
 `;
 
 export async function ensureDirs() {
-  await mkdir(join(ROOT, 'config'), { recursive: true });
-  await mkdir(join(ROOT, 'data'), { recursive: true });
+  await mkdir(join(DATA_DIR, 'config'), { recursive: true });
+  await mkdir(join(DATA_DIR, 'data'), { recursive: true });
   await mkdir(paths.reportsDir, { recursive: true });
   await mkdir(paths.outputDir, { recursive: true });
 }

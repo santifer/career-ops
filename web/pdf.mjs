@@ -4,16 +4,17 @@ import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
+import { paths } from './storage.mjs';
 
 const execFileAsync = promisify(execFile);
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
-// Generates a personalized resume PDF into output/ using the existing
-// generate-pdf.mjs Playwright pipeline. Returns the output filename.
+// Generates a personalized resume PDF into the data output/ dir using the
+// existing generate-pdf.mjs Playwright pipeline. Returns the output filename.
 export async function generateResumePdf({ resumeMarkdown, jobTitle, company, outputName }) {
   const dir = await mkdtemp(join(tmpdir(), 'career-ops-web-'));
   const htmlPath = join(dir, 'resume.html');
-  const pdfPath = join(ROOT, 'output', outputName);
+  const pdfPath = join(paths.outputDir, outputName);
 
   try {
     await writeFile(htmlPath, renderResumeHtml({ resumeMarkdown, jobTitle, company }), 'utf-8');
