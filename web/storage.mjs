@@ -55,13 +55,17 @@ export async function readProfile() {
   }
 }
 
-export async function writeProfile({ fullName, email, location, timezone, targetRoles = [] }) {
+export async function writeProfile({ fullName, email, locations = [], targetRoles = [] }) {
+  const cleanLocations = (Array.isArray(locations) ? locations : [locations])
+    .map(v => String(v || '').trim())
+    .filter(Boolean);
   const profile = {
     candidate: {
       full_name: fullName || '',
       email: email || '',
-      location: location || '',
-      timezone: timezone || '',
+      locations: cleanLocations,
+      // Joined form kept for compatibility with career-ops modes that read a single location.
+      location: cleanLocations.join(', '),
     },
     target_roles: {
       primary: targetRoles,

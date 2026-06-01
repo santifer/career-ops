@@ -106,8 +106,10 @@ app.get('/api/profile', async (_req, res, next) => {
 
 app.put('/api/profile', async (req, res, next) => {
   try {
-    const { fullName, email, location, timezone, targetRoles = [] } = req.body;
-    const profile = await writeProfile({ fullName, email, location, timezone, targetRoles });
+    const { fullName, email, locations, location, targetRoles = [] } = req.body;
+    // Accept an array of locations, or fall back to a single legacy location field.
+    const locs = Array.isArray(locations) ? locations : (location ? [location] : []);
+    const profile = await writeProfile({ fullName, email, locations: locs, targetRoles });
     res.json(profile);
   } catch (err) {
     next(err);
@@ -207,10 +209,21 @@ app.get('/api/evaluations', async (_req, res, next) => {
   }
 });
 
+// Derive scan filters from the saved profile so discovered jobs match the
+// candidate's target roles and locations instead of generic portal keywords.
+async function scanFiltersFromProfile() {
+  const profile = await readProfile();
+  const roleKeywords = profile?.target_roles?.primary || [];
+  const locations = profile?.candidate?.locations
+    || (profile?.candidate?.location ? [profile.candidate.location] : []);
+  return { roleKeywords, locations };
+}
+
 app.get('/api/scan', async (req, res, next) => {
   try {
     const company = typeof req.query.company === 'string' ? req.query.company : undefined;
-    res.json(await scanPortals({ company }));
+    const { roleKeywords, locations } = await scanFiltersFromProfile();
+    res.json(await scanPortals({ company, roleKeywords, locations }));
   } catch (err) {
     if (err.code === 'NO_PORTALS') {
       res.status(400).json({ error: err.message });
@@ -230,7 +243,8 @@ app.get('/api/scan/stream', async (req, res) => {
   const company = typeof req.query.company === 'string' ? req.query.company : undefined;
 
   try {
-    const result = await scanPortals({ company, onProgress: send });
+    const { roleKeywords, locations } = await scanFiltersFromProfile();
+    const result = await scanPortals({ company, onProgress: send, roleKeywords, locations });
     send({ type: 'done', ...result });
   } catch (err) {
     send({ type: 'error', error: err.message });
@@ -318,12 +332,10 @@ pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap;
     <div><label>Full name</label><input id="fullName"></div>
     <div><label>Email</label><input id="email"></div>
   </div>
-  <div class="row">
-    <div><label>Location</label><input id="location"></div>
-    <div><label>Timezone</label><input id="timezone"></div>
-  </div>
-  <label>Target roles (one per line)</label>
-  <textarea id="targetRoles" placeholder="Senior AI Engineer&#10;Solutions Architect"></textarea>
+  <label>Locations (one per line — used to filter scanned jobs; add "Remote" to include remote roles)</label>
+  <textarea id="locations" placeholder="New York City&#10;Remote"></textarea>
+  <label>Target roles (one per line — these drive what the job scanner looks for)</label>
+  <textarea id="targetRoles" placeholder="Product Manager&#10;Solutions Architect"></textarea>
   <button onclick="saveProfile()">Save profile</button>
 </section>
 
@@ -349,7 +361,7 @@ pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap;
 
 <section>
   <h2>4. Find jobs (scan portals)</h2>
-  <p class="muted">Discovers live postings from the companies in portals.yml (Greenhouse, Ashby, Lever) filtered by your title keywords. Click Generate to evaluate a job and produce a tailored CV/PDF + report + tracker entry.</p>
+  <p class="muted">Discovers live postings from the companies in portals.yml (Greenhouse, Ashby, Lever), filtered by your <strong>target roles</strong> and <strong>locations</strong> from your profile above. Click Generate to evaluate a job and produce a tailored CV/PDF + report + tracker entry.</p>
   <label>Filter by company (optional)</label><input id="scanCompany" placeholder="e.g. Anthropic">
   <button id="scanButton" onclick="scanPortals()">Scan portals</button>
   <div id="scanStatus" class="muted"></div>
@@ -383,8 +395,8 @@ async function loadProfile() {
     if (profile && profile.candidate) {
       document.getElementById('fullName').value = profile.candidate.full_name || '';
       document.getElementById('email').value = profile.candidate.email || '';
-      document.getElementById('location').value = profile.candidate.location || '';
-      document.getElementById('timezone').value = profile.candidate.timezone || '';
+      const locs = profile.candidate.locations || (profile.candidate.location ? [profile.candidate.location] : []);
+      document.getElementById('locations').value = locs.join('\\n');
       document.getElementById('targetRoles').value = (profile.target_roles && profile.target_roles.primary || []).join('\\n');
     }
     show(profile);
@@ -396,14 +408,14 @@ async function loadProfile() {
 async function saveProfile() {
   try {
     const targetRoles = document.getElementById('targetRoles').value.split('\\n').map(v => v.trim()).filter(Boolean);
+    const locations = document.getElementById('locations').value.split('\\n').map(v => v.trim()).filter(Boolean);
     const profile = await request('/api/profile', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         fullName: document.getElementById('fullName').value,
         email: document.getElementById('email').value,
-        location: document.getElementById('location').value,
-        timezone: document.getElementById('timezone').value,
+        locations,
         targetRoles,
       }),
     });

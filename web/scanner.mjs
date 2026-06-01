@@ -123,22 +123,51 @@ function htmlToText(html) {
     .trim();
 }
 
-// ── Title filter ─────────────────────────────────────────────────────────────
+// ── Title + location filtering ───────────────────────────────────────────────
 
-function buildTitleFilter(titleFilter = {}) {
-  const positive = (titleFilter.positive || []).map(s => String(s).toLowerCase().trim()).filter(Boolean);
-  const negative = (titleFilter.negative || []).map(s => String(s).toLowerCase().trim()).filter(Boolean);
+// Compile a keyword into a matcher. Short alphanumeric tokens like "AI" use word
+// boundaries so they don't match inside unrelated words ("maintenance", "email").
+function compileKeyword(kw) {
+  const k = String(kw || '').toLowerCase().trim();
+  if (!k) return null;
+  const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const wordBounded = /^[a-z0-9]$/.test(k) || /^[a-z0-9].*[a-z0-9]$/.test(k);
+  const pattern = wordBounded ? `\\b${esc}\\b` : esc;
+  try {
+    return new RegExp(pattern, 'i');
+  } catch {
+    return null;
+  }
+}
+
+function buildTitleFilter({ positive = [], negative = [] } = {}) {
+  const pos = positive.map(compileKeyword).filter(Boolean);
+  const neg = negative.map(compileKeyword).filter(Boolean);
   return (title) => {
-    const t = String(title || '').toLowerCase();
-    if (negative.some(k => t.includes(k))) return false;
-    if (positive.length === 0) return true;
-    return positive.some(k => t.includes(k));
+    const t = String(title || '');
+    if (neg.some(re => re.test(t))) return false;
+    if (pos.length === 0) return true;
+    return pos.some(re => re.test(t));
+  };
+}
+
+function buildLocationFilter(locations = []) {
+  const needles = (Array.isArray(locations) ? locations : [locations])
+    .map(s => String(s || '').toLowerCase().trim())
+    .filter(Boolean);
+  if (needles.length === 0) return () => true;
+  const wantsRemote = needles.some(n => n.includes('remote'));
+  return (location) => {
+    const loc = String(location || '').toLowerCase();
+    if (!loc) return false;
+    if (wantsRemote && loc.includes('remote')) return true;
+    return needles.some(n => loc.includes(n));
   };
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function scanPortals({ company, onProgress } = {}) {
+export async function scanPortals({ company, onProgress, roleKeywords, locations } = {}) {
   const emit = typeof onProgress === 'function' ? onProgress : () => {};
 
   if (!existsSync(PORTALS_PATH)) {
@@ -148,7 +177,15 @@ export async function scanPortals({ company, onProgress } = {}) {
   }
 
   const portals = yaml.load(await readFile(PORTALS_PATH, 'utf-8')) || {};
-  const matchesTitle = buildTitleFilter(portals.title_filter);
+  const portalFilter = portals.title_filter || {};
+  // Prefer the candidate's own target roles so results match their resume. Fall
+  // back to portals.yml keywords only when the candidate has no target roles set.
+  const roles = (Array.isArray(roleKeywords) ? roleKeywords : [])
+    .map(s => String(s || '').trim())
+    .filter(Boolean);
+  const positive = roles.length ? roles : (portalFilter.positive || []);
+  const matchesTitle = buildTitleFilter({ positive, negative: portalFilter.negative || [] });
+  const matchesLocation = buildLocationFilter(locations);
 
   let companies = Array.isArray(portals.tracked_companies) ? portals.tracked_companies : [];
   companies = companies.filter(c => c && c.name && c.enabled !== false && detectAts(c));
@@ -184,6 +221,7 @@ export async function scanPortals({ company, onProgress } = {}) {
   for (const job of jobs) {
     if (!job.url || !job.title) continue;
     if (!matchesTitle(job.title)) continue;
+    if (!matchesLocation(job.location)) continue;
     if (seen.has(job.url)) continue;
     seen.add(job.url);
     filtered.push(job);
