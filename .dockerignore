@@ -1,0 +1,10 @@
+.git
+.env
+node_modules
+output
+reports
+data
+batch/logs
+batch/tracker-additions
+jds
+writing-samples
