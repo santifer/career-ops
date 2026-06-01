@@ -16,12 +16,16 @@ import {
   writeCv,
   readProfile,
   writeProfile,
+  readPortals,
+  writePortals,
   nextReportNumber,
   slugify,
   writeReport,
   appendApplication,
   listApplications,
 } from './storage.mjs';
+import { detectAts } from './scanner.mjs';
+import { suggestCompanies, validateUrls } from './company-finder.mjs';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 const app = express();
@@ -209,6 +213,81 @@ app.get('/api/evaluations', async (_req, res, next) => {
   }
 });
 
+// ── Tracked companies (portals.yml management) ───────────────────────────────
+
+function companyView(entry) {
+  return {
+    name: entry.name,
+    careers_url: entry.careers_url,
+    ats: detectAts(entry)?.ats || null,
+    enabled: entry.enabled !== false,
+  };
+}
+
+app.get('/api/companies', async (_req, res, next) => {
+  try {
+    const portals = await readPortals();
+    res.json(portals.tracked_companies.map(companyView));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Add companies from pasted careers URLs (validated against the live ATS board).
+app.post('/api/companies', async (req, res, next) => {
+  try {
+    const urls = req.body?.urls || (req.body?.url ? [req.body.url] : []);
+    if (!Array.isArray(urls) || urls.length === 0) {
+      res.status(400).json({ error: 'Provide one or more careers URLs' });
+      return;
+    }
+    const { added, failed } = await validateUrls(urls);
+    const portals = await readPortals();
+    const existing = new Set(portals.tracked_companies.map(c => c.careers_url));
+    const newlyAdded = [];
+    for (const entry of added) {
+      if (existing.has(entry.careers_url)) continue;
+      existing.add(entry.careers_url);
+      const { ats, openings, ...stored } = entry;
+      portals.tracked_companies.push(stored);
+      newlyAdded.push(entry);
+    }
+    await writePortals(portals);
+    res.json({ added: newlyAdded.map(companyView), openings: newlyAdded.map(e => e.openings), failed });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/companies/remove', async (req, res, next) => {
+  try {
+    const { careers_url, name } = req.body || {};
+    const portals = await readPortals();
+    portals.tracked_companies = portals.tracked_companies.filter(c =>
+      careers_url ? c.careers_url !== careers_url : c.name !== name);
+    await writePortals(portals);
+    res.json({ ok: true, remaining: portals.tracked_companies.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Suggest companies for the candidate's resume + target roles, validated live.
+app.post('/api/companies/suggest', async (_req, res, next) => {
+  try {
+    const [cv, profile] = await Promise.all([readCv(), readProfile()]);
+    const targetRoles = profile?.target_roles?.primary || [];
+    if (!cv && targetRoles.length === 0) {
+      res.status(400).json({ error: 'Save a resume or target roles first so suggestions can match your field' });
+      return;
+    }
+    const result = await suggestCompanies({ cv, targetRoles });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Derive scan filters from the saved profile so discovered jobs match the
 // candidate's target roles and locations instead of generic portal keywords.
 async function scanFiltersFromProfile() {
@@ -334,8 +413,8 @@ pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap;
   </div>
   <label>Locations (one per line — used to filter scanned jobs; add "Remote" to include remote roles)</label>
   <textarea id="locations" placeholder="New York City&#10;Remote"></textarea>
-  <label>Target roles (one per line — these drive what the job scanner looks for)</label>
-  <textarea id="targetRoles" placeholder="Product Manager&#10;Solutions Architect"></textarea>
+  <label>Target roles (one per line — matched against job <strong>titles</strong>; use words that appear in titles like "Teacher", "Attorney", "Finance Analyst")</label>
+  <textarea id="targetRoles" placeholder="Teacher&#10;Immigration Attorney&#10;Finance Analyst"></textarea>
   <button onclick="saveProfile()">Save profile</button>
 </section>
 
@@ -348,7 +427,8 @@ pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap;
 </section>
 
 <section>
-  <h2>3. Evaluate a job</h2>
+  <h2>3. Evaluate a job (works with any posting, any site)</h2>
+  <p class="muted">Paste any job description or URL — Workday, LinkedIn, a company page, anywhere. This is the universal tool and does not depend on the scanner below. Produces a tailored CV/PDF + report + tracker entry.</p>
   <div class="row">
     <div><label>Company</label><input id="company"></div>
     <div><label>Title</label><input id="title"></div>
@@ -360,8 +440,21 @@ pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap;
 </section>
 
 <section>
-  <h2>4. Find jobs (scan portals)</h2>
-  <p class="muted">Discovers live postings from the companies in portals.yml (Greenhouse, Ashby, Lever), filtered by your <strong>target roles</strong> and <strong>locations</strong> from your profile above. Click Generate to evaluate a job and produce a tailored CV/PDF + report + tracker entry.</p>
+  <h2>4. Companies to track</h2>
+  <p class="muted">The scanner only reads <strong>Greenhouse, Ashby, and Lever</strong> job boards. Build a list that matches your field: paste careers-page URLs, or let the assistant suggest employers from your resume + target roles (every suggestion is checked against the live board before it appears).</p>
+  <label>Add by careers URL (one per line — e.g. https://jobs.lever.co/acme)</label>
+  <textarea id="companyUrls" placeholder="https://job-boards.greenhouse.io/acme&#10;https://jobs.ashbyhq.com/acme"></textarea>
+  <button onclick="addCompanies()">Add companies</button>
+  <button id="suggestButton" onclick="suggestCompanies()">Suggest from my resume</button>
+  <div id="companyStatus" class="muted"></div>
+  <div id="suggestResults"></div>
+  <h3>Tracked companies</h3>
+  <div id="companyList" class="muted">None yet.</div>
+</section>
+
+<section>
+  <h2>5. Find jobs (scan portals)</h2>
+  <p class="muted">Scans your tracked companies (above) and shows postings that match your <strong>target roles</strong> and <strong>locations</strong> from your profile. Click Generate to evaluate a job and produce a tailored CV/PDF + report + tracker entry.</p>
   <label>Filter by company (optional)</label><input id="scanCompany" placeholder="e.g. Anthropic">
   <button id="scanButton" onclick="scanPortals()">Scan portals</button>
   <div id="scanStatus" class="muted"></div>
@@ -469,10 +562,103 @@ async function loadCurrentResume() {
 async function init() {
   await loadProfile();
   await loadCurrentResume();
-  show('Loaded saved profile and resume (if any).');
+  await loadCompanies();
+  show('Loaded saved profile, resume and tracked companies (if any).');
 }
 
 window.addEventListener('DOMContentLoaded', init);
+
+let trackedCompanies = [];
+let companySuggestions = [];
+
+function renderCompanies() {
+  const el = document.getElementById('companyList');
+  if (trackedCompanies.length === 0) { el.innerHTML = 'None yet.'; return; }
+  el.innerHTML = trackedCompanies.map((c, i) =>
+    '<div class="job"><strong>' + escapeHtml(c.name) + '</strong> ' +
+    '<span class="muted">' + escapeHtml(c.ats || '?') + '</span> ' +
+    '<button onclick="removeCompany(' + i + ')">remove</button></div>'
+  ).join('');
+}
+
+async function loadCompanies() {
+  try { trackedCompanies = await request('/api/companies'); renderCompanies(); } catch (err) { /* none yet */ }
+}
+
+async function removeCompany(i) {
+  const c = trackedCompanies[i];
+  if (!c) return;
+  try {
+    await request('/api/companies/remove', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ careers_url: c.careers_url }),
+    });
+    await loadCompanies();
+  } catch (err) { document.getElementById('companyStatus').textContent = err.message; }
+}
+
+async function addCompanies() {
+  const status = document.getElementById('companyStatus');
+  const urls = document.getElementById('companyUrls').value.split('\\n').map(s => s.trim()).filter(Boolean);
+  if (urls.length === 0) { status.textContent = 'Paste at least one careers URL.'; return; }
+  status.textContent = 'Validating against live boards...';
+  try {
+    const res = await request('/api/companies', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ urls }),
+    });
+    status.textContent = 'Added ' + res.added.length + '.' +
+      (res.failed.length ? ' Skipped ' + res.failed.length + ': ' + res.failed.map(f => f.error).join('; ') : '');
+    document.getElementById('companyUrls').value = '';
+    await loadCompanies();
+  } catch (err) { status.textContent = err.message; }
+}
+
+async function suggestCompanies() {
+  const status = document.getElementById('companyStatus');
+  const btn = document.getElementById('suggestButton');
+  const out = document.getElementById('suggestResults');
+  btn.disabled = true;
+  out.innerHTML = '';
+  status.textContent = 'Asking the assistant and checking live boards (can take ~30s)...';
+  try {
+    const res = await request('/api/companies/suggest', { method: 'POST' });
+    companySuggestions = res.validated || [];
+    if (companySuggestions.length === 0) {
+      status.textContent = 'No live Greenhouse/Ashby/Lever boards matched your field. Add companies by URL, or use "Evaluate a job" for any posting.';
+    } else {
+      status.textContent = 'Found ' + companySuggestions.length + ' live employers (from ' + res.suggested + ' suggestions). Review and add:';
+      renderSuggestions();
+    }
+  } catch (err) { status.textContent = err.message; }
+  finally { btn.disabled = false; }
+}
+
+function renderSuggestions() {
+  const out = document.getElementById('suggestResults');
+  out.innerHTML = '<button onclick="addSuggested()">Add all ' + companySuggestions.length + '</button>' +
+    companySuggestions.map(s =>
+      '<div class="job"><strong>' + escapeHtml(s.name) + '</strong> ' +
+      '<span class="muted">' + escapeHtml(s.ats) + ' · ' + s.openings + ' open</span></div>'
+    ).join('');
+}
+
+async function addSuggested() {
+  const status = document.getElementById('companyStatus');
+  const urls = companySuggestions.map(s => s.careers_url);
+  if (urls.length === 0) return;
+  status.textContent = 'Adding ' + urls.length + ' companies...';
+  try {
+    const res = await request('/api/companies', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ urls }),
+    });
+    status.textContent = 'Added ' + res.added.length + ' companies.';
+    document.getElementById('suggestResults').innerHTML = '';
+    companySuggestions = [];
+    await loadCompanies();
+  } catch (err) { status.textContent = err.message; }
+}
 
 async function loadEvaluations() {
   try {
@@ -541,9 +727,12 @@ async function scanPortals() {
       finish();
       scannedJobs = data.jobs || [];
       const elapsed = ((Date.now() - started) / 1000).toFixed(0);
+      const diag = 'Saw ' + (data.totalSeen || 0) + ' postings · ' + (data.matchedRole || 0) +
+        ' matched your roles · ' + data.found + ' also matched your locations.';
       status.innerHTML = '<strong>Done.</strong> Scanned ' + data.scanned + ' companies in ' + elapsed +
-        's, found ' + data.found + ' matching jobs.' +
-        (data.errors && data.errors.length ? ' (' + data.errors.length + ' had errors)' : '');
+        's. ' + diag +
+        (data.errors && data.errors.length ? ' (' + data.errors.length + ' had errors)' : '') +
+        (data.found === 0 ? '<div class="muted">No matches. Broaden your target roles or locations, add more companies, or use "Evaluate a job" for a specific posting.</div>' : '');
       renderScanResults();
     } else if (data.type === 'error') {
       finish();

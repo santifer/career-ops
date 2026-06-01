@@ -75,8 +75,25 @@ export async function writeProfile({ fullName, email, locations = [], targetRole
   return profile;
 }
 
-// ── Reports + tracker ───────────────────────────────────────────────
+// ── Portals / tracked companies (portals.yml) ───────────────────────
 
+export async function readPortals() {
+  if (!existsSync(paths.portals)) return { tracked_companies: [], title_filter: {} };
+  try {
+    const data = yaml.load(await readFile(paths.portals, 'utf-8')) || {};
+    if (!Array.isArray(data.tracked_companies)) data.tracked_companies = [];
+    return data;
+  } catch {
+    return { tracked_companies: [], title_filter: {} };
+  }
+}
+
+export async function writePortals(portals) {
+  await writeFile(paths.portals, yaml.dump(portals), 'utf-8');
+  return portals;
+}
+
+// ── Reports + tracker ───────────────────────────────────────────────
 export async function nextReportNumber() {
   if (!existsSync(paths.reportsDir)) return 1;
   const files = await readdir(paths.reportsDir);

@@ -16,7 +16,7 @@ const ALLOWED_HOSTS = new Set([
 
 // ── ATS detection + list-API URL derivation ─────────────────────────────────
 
-function detectAts(entry) {
+export function detectAts(entry) {
   const careers = entry.careers_url || '';
   const api = entry.api || '';
 
@@ -125,30 +125,55 @@ function htmlToText(html) {
 
 // ── Title + location filtering ───────────────────────────────────────────────
 
-// Compile a keyword into a matcher. Short alphanumeric tokens like "AI" use word
-// boundaries so they don't match inside unrelated words ("maintenance", "email").
-function compileKeyword(kw) {
-  const k = String(kw || '').toLowerCase().trim();
-  if (!k) return null;
-  const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const wordBounded = /^[a-z0-9]$/.test(k) || /^[a-z0-9].*[a-z0-9]$/.test(k);
-  const pattern = wordBounded ? `\\b${esc}\\b` : esc;
+// Words too generic to carry meaning in a role phrase.
+const STOPWORDS = new Set(['of', 'the', 'and', 'a', 'an', 'in', 'for', 'to', 'at', 'on', 'with', 'or']);
+
+function tokenizePhrase(phrase) {
+  return String(phrase || '')
+    .toLowerCase()
+    .split(/[^a-z0-9+#.]+/)
+    .filter(t => t && !STOPWORDS.has(t));
+}
+
+// Compile a single token into a matcher. Short alphanumeric tokens like "ai" use
+// word boundaries so they don't match inside unrelated words ("maintenance").
+function compileToken(tok) {
+  const esc = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const wordBounded = /^[a-z0-9]$/.test(tok) || /^[a-z0-9].*[a-z0-9]$/.test(tok);
   try {
-    return new RegExp(pattern, 'i');
+    return new RegExp(wordBounded ? `\\b${esc}\\b` : esc, 'i');
   } catch {
     return null;
   }
 }
 
-function buildTitleFilter({ positive = [], negative = [] } = {}) {
-  const pos = positive.map(compileKeyword).filter(Boolean);
-  const neg = negative.map(compileKeyword).filter(Boolean);
-  return (title) => {
-    const t = String(title || '');
-    if (neg.some(re => re.test(t))) return false;
-    if (pos.length === 0) return true;
-    return pos.some(re => re.test(t));
-  };
+// A role/keyword phrase matches a title when ALL of its significant tokens are
+// present (order-independent). So "Spanish Teacher" matches "World Language
+// Teacher (Spanish)" or "Teacher - Spanish", not just the exact phrase.
+function compilePhrase(phrase) {
+  const tokens = tokenizePhrase(phrase).map(compileToken).filter(Boolean);
+  return tokens.length ? tokens : null;
+}
+
+// Common abbreviations so "New York City" also matches "New York, NY" / "NYC".
+const LOCATION_ALIASES = {
+  'new york city': ['new york', 'nyc'],
+  'new york': ['nyc'],
+  'san francisco': ['sf', 'bay area'],
+  'los angeles': ['la'],
+  'washington dc': ['washington', 'dc'],
+  'united states': ['usa', 'u.s.'],
+};
+
+// Expand one location needle into the set of strings any of which counts as a hit.
+function locationVariants(needle) {
+  const variants = new Set([needle]);
+  const noCity = needle.replace(/\s+city$/, '').trim();
+  if (noCity && noCity !== needle) variants.add(noCity);
+  for (const v of [needle, noCity]) {
+    for (const alias of LOCATION_ALIASES[v] || []) variants.add(alias);
+  }
+  return [...variants].filter(Boolean);
 }
 
 function buildLocationFilter(locations = []) {
@@ -157,12 +182,27 @@ function buildLocationFilter(locations = []) {
     .filter(Boolean);
   if (needles.length === 0) return () => true;
   const wantsRemote = needles.some(n => n.includes('remote'));
+  const variants = needles.flatMap(locationVariants);
   return (location) => {
     const loc = String(location || '').toLowerCase();
-    if (!loc) return false;
+    if (!loc) return true; // unknown location — don't exclude, let evaluation decide
     if (wantsRemote && loc.includes('remote')) return true;
-    return needles.some(n => loc.includes(n));
+    return variants.some(n => loc.includes(n));
   };
+}
+
+// True when every token matches within a sliding window of the text, so a
+// multi-word phrase like "Sustainable Finance" must appear close together in the
+// description rather than in unrelated paragraphs.
+function tokensWithinWindow(text, tokenRes, windowSize = 220) {
+  const s = String(text || '');
+  if (!s) return false;
+  if (s.length <= windowSize) return tokenRes.every(re => re.test(s));
+  for (let start = 0; start < s.length; start += Math.floor(windowSize / 2)) {
+    const win = s.slice(start, start + windowSize);
+    if (tokenRes.every(re => re.test(win))) return true;
+  }
+  return false;
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -184,8 +224,17 @@ export async function scanPortals({ company, onProgress, roleKeywords, locations
     .map(s => String(s || '').trim())
     .filter(Boolean);
   const positive = roles.length ? roles : (portalFilter.positive || []);
-  const matchesTitle = buildTitleFilter({ positive, negative: portalFilter.negative || [] });
+  const posMatchers = positive.map(compilePhrase).filter(Boolean);
+  const negMatchers = (portalFilter.negative || []).map(compilePhrase).filter(Boolean);
   const matchesLocation = buildLocationFilter(locations);
+
+  const titleRejected = (title) => negMatchers.some(tokens => tokens.every(re => re.test(String(title || ''))));
+  const matchesRole = (text) => posMatchers.some(tokens => tokens.every(re => re.test(String(text || ''))));
+  // Only multi-word role phrases fall back to the description — requiring all of
+  // their tokens keeps it selective. Single words like "Teacher" stay title-only
+  // so they don't match every posting that merely mentions the word.
+  const posMatchersMulti = posMatchers.filter(tokens => tokens.length >= 2);
+  const matchesRoleDesc = (text) => posMatchersMulti.some(tokens => tokensWithinWindow(text, tokens));
 
   let companies = Array.isArray(portals.tracked_companies) ? portals.tracked_companies : [];
   companies = companies.filter(c => c && c.name && c.enabled !== false && detectAts(c));
@@ -218,9 +267,17 @@ export async function scanPortals({ company, onProgress, roleKeywords, locations
 
   const seen = new Set();
   const filtered = [];
+  let totalSeen = 0;
+  let matchedRole = 0;
   for (const job of jobs) {
     if (!job.url || !job.title) continue;
-    if (!matchesTitle(job.title)) continue;
+    totalSeen += 1;
+    if (titleRejected(job.title)) continue;
+    // Match the role on the title, falling back to the description for niche
+    // fields whose titles use different words (e.g. "Attorney" for migration law).
+    const roleOk = posMatchers.length === 0 || matchesRole(job.title) || matchesRoleDesc(job.description);
+    if (!roleOk) continue;
+    matchedRole += 1;
     if (!matchesLocation(job.location)) continue;
     if (seen.has(job.url)) continue;
     seen.add(job.url);
@@ -228,5 +285,52 @@ export async function scanPortals({ company, onProgress, roleKeywords, locations
     if (filtered.length >= MAX_RESULTS) break;
   }
 
-  return { scanned: companies.length, found: filtered.length, jobs: filtered, errors };
+  return { scanned: companies.length, totalSeen, matchedRole, found: filtered.length, jobs: filtered, errors };
+}
+
+// ── Company validation helpers (used by the company finder + manual add) ──────
+
+// Build a portals.yml-style entry from an ATS provider + board slug.
+export function entryFromAtsSlug(ats, slug, name) {
+  const s = String(slug || '').trim().replace(/^\/+|\/+$/g, '');
+  if (!s) return null;
+  if (ats === 'greenhouse') {
+    return {
+      name: name || s,
+      careers_url: `https://job-boards.greenhouse.io/${s}`,
+      api: `https://boards-api.greenhouse.io/v1/boards/${s}/jobs`,
+      enabled: true,
+    };
+  }
+  if (ats === 'ashby') {
+    return { name: name || s, careers_url: `https://jobs.ashbyhq.com/${s}`, enabled: true };
+  }
+  if (ats === 'lever') {
+    return { name: name || s, careers_url: `https://jobs.lever.co/${s}`, enabled: true };
+  }
+  return null;
+}
+
+// Build an entry from a pasted careers URL, deriving the ATS + slug.
+export function entryFromUrl(url, name) {
+  const raw = String(url || '').trim();
+  const entry = { name: name || '', careers_url: raw, enabled: true };
+  if (!detectAts(entry)) return null;
+  if (!entry.name) {
+    let slug = '';
+    try { slug = new URL(raw).pathname.split('/').filter(Boolean).pop() || ''; } catch { slug = ''; }
+    entry.name = slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || slug;
+  }
+  return entry;
+}
+
+// Probe a company's ATS board and return how many openings it currently lists.
+// Used to validate suggested/added companies so we never persist a dead board.
+export async function countOpenings(entry) {
+  try {
+    const jobs = await fetchCompany(entry);
+    return { ok: true, count: jobs.length };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
 }

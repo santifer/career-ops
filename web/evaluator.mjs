@@ -12,7 +12,7 @@ async function readModeFile(name) {
   return readFile(join(ROOT, 'modes', name), 'utf-8');
 }
 
-function getAzureOpenAiClient() {
+export function getAzureOpenAiClient() {
   const endpoint = requireConfig(config.azure.openAiEndpoint, 'AZURE_OPENAI_ENDPOINT');
   const deployment = requireConfig(config.azure.openAiDeployment, 'AZURE_OPENAI_DEPLOYMENT');
   const apiVersion = config.azure.openAiApiVersion;
