@@ -74,6 +74,7 @@ function copilotArgs(prompt) {
   return [
     '-p', prompt,
     '--no-custom-instructions',
+    '--no-auto-update',
     '--effort', 'low',
     '--available-tools', 'web_search', 'web_fetch',
     '--allow-all-tools',
