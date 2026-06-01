@@ -403,23 +403,143 @@ function renderHomePage() {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>career-ops web</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Me</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-body { font-family: Arial, sans-serif; margin: 32px auto; max-width: 960px; color: #1a1a2e; }
-section { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-label { display: block; font-weight: 700; margin: 12px 0 4px; }
-input, textarea { box-sizing: border-box; width: 100%; padding: 8px; }
-textarea { min-height: 140px; }
-button { margin-top: 12px; padding: 8px 14px; cursor: pointer; }
-pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap; }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.muted { color: #666; }
-.job { border: 1px solid #eee; border-radius: 6px; padding: 10px 12px; margin: 8px 0; }
-.job h3 { margin: 0 0 4px; font-size: 15px; }
-.job .meta { color: #666; font-size: 13px; margin-bottom: 6px; }
-.job .result { font-size: 13px; margin-top: 6px; }
-.job button { margin-top: 0; }
-.scanlog { margin-top: 8px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: #444; background: #f6f8fa; padding: 8px; border-radius: 6px; max-height: 160px; overflow: auto; }
+:root {
+  --bg: #eef2ff;
+  --bg2: #faf5ff;
+  --card: #ffffff;
+  --ink: #1e1b3a;
+  --muted: #6b7280;
+  --line: #e5e7f0;
+  --brand: #6d28d9;
+  --brand2: #4f46e5;
+  --accent: #ec4899;
+  --ring: rgba(109, 40, 217, 0.25);
+  --shadow: 0 10px 30px -12px rgba(31, 27, 58, 0.25);
+  --radius: 18px;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 100% -10%, #ddd6fe 0%, transparent 55%),
+    radial-gradient(1000px 500px at -10% 0%, #fbcfe8 0%, transparent 50%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 28px 20px 80px; }
+
+/* Header */
+.hero { text-align: center; padding: 28px 0 18px; }
+.brand {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 800; letter-spacing: -0.02em;
+}
+.brand .logo {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+  color: #fff; font-size: 24px; box-shadow: var(--shadow);
+}
+.brand .name {
+  font-size: 34px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.tagline { color: var(--muted); margin: 10px 0 0; font-size: 15px; }
+
+/* Cards */
+section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px 26px 24px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow);
+}
+section > h2 {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 20px; font-weight: 800; letter-spacing: -0.01em;
+  margin: 0 0 6px;
+}
+.badge {
+  width: 32px; height: 32px; flex: none; border-radius: 10px;
+  display: grid; place-items: center; font-size: 17px;
+  background: linear-gradient(135deg, #ede9fe, #fce7f3);
+}
+.sub { color: var(--muted); font-size: 13.5px; margin: 2px 0 16px; }
+.block { padding-top: 18px; margin-top: 18px; border-top: 1px dashed var(--line); }
+.block:first-of-type { padding-top: 0; margin-top: 0; border-top: none; }
+.block-title { font-weight: 700; font-size: 14px; margin: 0 0 4px; color: var(--ink); }
+
+label { display: block; font-weight: 600; font-size: 13px; margin: 14px 0 6px; color: #41396b; }
+input, textarea {
+  width: 100%; padding: 11px 13px; font: inherit; color: var(--ink);
+  background: #fbfbfe; border: 1px solid var(--line); border-radius: 11px;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+input::placeholder, textarea::placeholder { color: #aab0c0; }
+input:focus, textarea:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 4px var(--ring); background: #fff;
+}
+textarea { min-height: 130px; resize: vertical; }
+
+button {
+  margin-top: 14px; padding: 11px 18px; cursor: pointer; font: inherit; font-weight: 600;
+  color: #fff; border: none; border-radius: 11px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+  box-shadow: 0 8px 18px -8px var(--ring);
+  transition: transform .08s ease, box-shadow .15s, filter .15s;
+}
+button:hover { filter: brightness(1.06); box-shadow: 0 10px 22px -8px var(--ring); }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+button.ghost {
+  background: #fff; color: var(--brand); border: 1px solid var(--line);
+  box-shadow: none;
+}
+button.ghost:hover { background: #f7f5ff; border-color: var(--brand); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+pre {
+  background: #1e1b3a; color: #e9e6ff; padding: 16px; border-radius: 12px;
+  overflow: auto; white-space: pre-wrap; font-size: 12.5px;
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; margin-top: 14px;
+}
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+.muted { color: var(--muted); font-size: 13px; }
+#companyStatus, #scanStatus, #discoverStatus { margin-top: 10px; }
+
+.job {
+  border: 1px solid var(--line); border-radius: 13px; padding: 14px 16px; margin: 10px 0;
+  background: #fcfbff; transition: border-color .15s, box-shadow .15s;
+}
+.job:hover { border-color: #d6cdf5; box-shadow: 0 6px 16px -10px var(--ring); }
+.job h3 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+.job .meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+.job .result { font-size: 13px; margin-top: 8px; }
+.job button { margin-top: 8px; padding: 8px 14px; font-size: 13px; }
+.job a { color: var(--brand2); font-weight: 600; text-decoration: none; }
+.job a:hover { text-decoration: underline; }
+.scanlog {
+  margin-top: 10px; font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+  color: #d7d2ff; background: #2a2550; padding: 10px 12px; border-radius: 10px;
+  max-height: 170px; overflow: auto;
+}
+.foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
 </style>
 </head>
 <body>

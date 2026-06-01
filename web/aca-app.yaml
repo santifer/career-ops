@@ -41,9 +41,6 @@ properties:
             value: e6b03861-6605-4964-86ad-e1ad04821661
           - name: WEB_APP_PASSWORD
             secretRef: web-app-password
-        volumeMounts:
-          - volumeName: data
-            mountPath: /data
         probes:
           - type: Readiness
             httpGet:
@@ -61,7 +58,3 @@ properties:
     scale:
       minReplicas: 1
       maxReplicas: 1
-    volumes:
-      - name: data
-        storageType: AzureFile
-        storageName: datafiles
