@@ -49,11 +49,58 @@ app.get('/healthz', (_req, res) => {
 app.get('/login', (_req, res) => {
   res.type('html').send(`<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>career-ops login</title></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Me — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  margin: 0; min-height: 100vh; display: grid; place-items: center; color: #1e1b3a;
+  background:
+    radial-gradient(1000px 500px at 100% -10%, #ddd6fe 0%, transparent 55%),
+    radial-gradient(900px 450px at -10% 0%, #fbcfe8 0%, transparent 50%),
+    linear-gradient(180deg, #eef2ff 0%, #faf5ff 100%);
+}
+.card {
+  background: #fff; border: 1px solid #e5e7f0; border-radius: 18px;
+  padding: 34px 32px; width: 340px; text-align: center;
+  box-shadow: 0 10px 30px -12px rgba(31,27,58,.25);
+}
+.logo {
+  width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 14px;
+  display: grid; place-items: center; font-size: 27px; color: #fff;
+  background: linear-gradient(135deg, #6d28d9 0%, #ec4899 100%);
+}
+.name {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 26px; margin: 0 0 4px;
+  background: linear-gradient(135deg, #6d28d9 0%, #ec4899 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.tag { color: #6b7280; font-size: 13px; margin: 0 0 20px; }
+input {
+  width: 100%; padding: 11px 13px; font: inherit; border: 1px solid #e5e7f0;
+  border-radius: 11px; background: #fbfbfe; margin-bottom: 12px;
+}
+input:focus { outline: none; border-color: #6d28d9; box-shadow: 0 0 0 4px rgba(109,40,217,.25); background:#fff; }
+button {
+  width: 100%; padding: 11px 18px; font: inherit; font-weight: 600; color: #fff; cursor: pointer;
+  border: none; border-radius: 11px;
+  background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
+}
+button:hover { filter: brightness(1.06); }
+</style>
+</head>
 <body>
-<h1>career-ops login</h1>
-<form method="post" action="/login">
-  <label>Password <input name="password" type="password" autofocus></label>
+<form class="card" method="post" action="/login">
+  <div class="logo">💼</div>
+  <p class="name">Job Me</p>
+  <p class="tag">Sign in to your job-search co-pilot</p>
+  <input name="password" type="password" placeholder="Password" autofocus>
   <button type="submit">Sign in</button>
 </form>
 </body>
@@ -543,79 +590,109 @@ pre {
 </style>
 </head>
 <body>
-<h1>career-ops web</h1>
-<p class="muted">Single-user app. Data is stored in local career-ops files (cv.md, config/profile.yml, reports/, data/applications.md, output/).</p>
-
-<section>
-  <h2>1. Profile</h2>
-  <div class="row">
-    <div><label>Full name</label><input id="fullName"></div>
-    <div><label>Email</label><input id="email"></div>
+<div class="wrap">
+<header class="hero">
+  <div class="brand">
+    <span class="logo">💼</span>
+    <span class="name">Job Me</span>
   </div>
-  <label>Locations (one per line — used to filter scanned jobs; add "Remote" to include remote roles)</label>
-  <textarea id="locations" placeholder="New York City&#10;Remote"></textarea>
-  <label>Target roles (one per line — matched against job <strong>titles</strong>; use words that appear in titles like "Teacher", "Attorney", "Finance Analyst")</label>
-  <textarea id="targetRoles" placeholder="Teacher&#10;Immigration Attorney&#10;Finance Analyst"></textarea>
-  <button onclick="saveProfile()">Save profile</button>
-</section>
+  <p class="tagline">Your personal job-search co-pilot — profile, discovery, and AI evaluations in one place.</p>
+</header>
 
 <section>
-  <h2>2. Resume</h2>
-  <p class="muted">Paste canonical markdown. Uploading a new resume overwrites cv.md.</p>
-  <label>Resume markdown</label>
-  <textarea id="resumeMarkdown" placeholder="# Your Name&#10;&#10;## Experience"></textarea>
-  <button onclick="saveResume()">Save resume</button>
-</section>
+  <h2><span class="badge">👤</span> Profile &amp; Resume</h2>
+  <p class="sub">Everything about you. Edit the boxes below and save — your details are stored locally in <code>cv.md</code> and <code>config/profile.yml</code>.</p>
 
-<section>
-  <h2>3. Evaluate a job (works with any posting, any site)</h2>
-  <p class="muted">Paste any job description or URL — Workday, LinkedIn, a company page, anywhere. This is the universal tool and does not depend on the scanner below. Produces a tailored CV/PDF + report + tracker entry.</p>
-  <div class="row">
-    <div><label>Company</label><input id="company"></div>
-    <div><label>Title</label><input id="title"></div>
+  <div class="block">
+    <p class="block-title">Basics</p>
+    <div class="row">
+      <div><label>Full name</label><input id="fullName"></div>
+      <div><label>Email</label><input id="email"></div>
+    </div>
+    <label>Locations <span class="muted">(one per line — filters scanned jobs; add "Remote" to include remote roles)</span></label>
+    <textarea id="locations" placeholder="New York City&#10;Remote"></textarea>
+    <label>Target roles <span class="muted">(one per line — matched against job <strong>titles</strong>, e.g. "Teacher", "Attorney", "Finance Analyst")</span></label>
+    <textarea id="targetRoles" placeholder="Teacher&#10;Immigration Attorney&#10;Finance Analyst"></textarea>
+    <button onclick="saveProfile()">Save profile</button>
   </div>
-  <label>URL</label><input id="url">
-  <label>Job description</label>
-  <textarea id="description" placeholder="Paste the job description here"></textarea>
-  <button onclick="evaluateJob()">Evaluate and generate PDF</button>
+
+  <div class="block">
+    <p class="block-title">Resume</p>
+    <p class="sub">Paste your canonical resume as markdown. Saving overwrites <code>cv.md</code>.</p>
+    <label>Resume markdown</label>
+    <textarea id="resumeMarkdown" placeholder="# Your Name&#10;&#10;## Experience"></textarea>
+    <button onclick="saveResume()">Save resume</button>
+  </div>
 </section>
 
 <section>
-  <h2>4. Companies to track</h2>
-  <p class="muted">The scanner only reads <strong>Greenhouse, Ashby, and Lever</strong> job boards. Build a list that matches your field: paste careers-page URLs, or let the assistant suggest employers from your resume + target roles (every suggestion is checked against the live board before it appears).</p>
-  <label>Add by careers URL (one per line — e.g. https://jobs.lever.co/acme)</label>
-  <textarea id="companyUrls" placeholder="https://job-boards.greenhouse.io/acme&#10;https://jobs.ashbyhq.com/acme"></textarea>
-  <button onclick="addCompanies()">Add companies</button>
-  <button id="suggestButton" onclick="suggestCompanies()">Suggest from my resume</button>
-  <div id="companyStatus" class="muted"></div>
-  <div id="suggestResults"></div>
-  <h3>Tracked companies</h3>
-  <div id="companyList" class="muted">None yet.</div>
+  <h2><span class="badge">🔎</span> Find Jobs</h2>
+  <p class="sub">Track employers, scan their boards, and search the open web — all in one place. The scanner reads <strong>Greenhouse, Ashby &amp; Lever</strong> boards.</p>
+
+  <div class="block">
+    <p class="block-title">Companies to track</p>
+    <p class="sub">Paste careers-page URLs, or let the assistant suggest employers from your resume (each is checked against the live board before it appears).</p>
+    <label>Add by careers URL <span class="muted">(one per line — e.g. https://jobs.lever.co/acme)</span></label>
+    <textarea id="companyUrls" placeholder="https://job-boards.greenhouse.io/acme&#10;https://jobs.ashbyhq.com/acme"></textarea>
+    <div class="btn-row">
+      <button onclick="addCompanies()">Add companies</button>
+      <button id="suggestButton" class="ghost" onclick="suggestCompanies()">Suggest from my resume</button>
+    </div>
+    <div id="companyStatus" class="muted"></div>
+    <div id="suggestResults"></div>
+  </div>
+
+  <div class="block">
+    <p class="block-title">Tracked companies</p>
+    <div id="companyList" class="muted">None yet.</div>
+  </div>
+
+  <div class="block">
+    <p class="block-title">Scan tracked portals</p>
+    <p class="sub">Scans your tracked companies for postings matching your target roles and locations.</p>
+    <label>Filter by company <span class="muted">(optional)</span></label><input id="scanCompany" placeholder="e.g. Anthropic">
+    <div class="btn-row"><button id="scanButton" onclick="scanPortals()">Scan portals</button></div>
+    <div id="scanStatus" class="muted"></div>
+    <div id="scanResults"></div>
+  </div>
+
+  <div class="block">
+    <p class="block-title">Search the web</p>
+    <p class="sub">Goes beyond tracked companies and searches the open web for live postings. Slower (~2-4 min) but finds employers the portal scan can't reach.</p>
+    <div class="btn-row"><button id="discoverButton" onclick="discoverWeb()">Search the web</button></div>
+    <div id="discoverStatus" class="muted"></div>
+    <div id="discoverResults"></div>
+  </div>
 </section>
 
 <section>
-  <h2>5. Find jobs (scan portals)</h2>
-  <p class="muted">Scans your tracked companies (above) and shows postings that match your <strong>target roles</strong> and <strong>locations</strong> from your profile. Click Generate to evaluate a job and produce a tailored CV/PDF + report + tracker entry.</p>
-  <label>Filter by company (optional)</label><input id="scanCompany" placeholder="e.g. Anthropic">
-  <button id="scanButton" onclick="scanPortals()">Scan portals</button>
-  <div id="scanStatus" class="muted"></div>
-  <div id="scanResults"></div>
+  <h2><span class="badge">🎯</span> Evaluate &amp; Results</h2>
+  <p class="sub">Paste any posting — Workday, LinkedIn, a company page, anywhere — to get a tailored CV/PDF, an AI report, and a tracker entry. Past evaluations show below.</p>
+
+  <div class="block">
+    <p class="block-title">Evaluate a job</p>
+    <div class="row">
+      <div><label>Company</label><input id="company"></div>
+      <div><label>Title</label><input id="title"></div>
+    </div>
+    <label>URL</label><input id="url">
+    <label>Job description</label>
+    <textarea id="description" placeholder="Paste the job description here"></textarea>
+    <div class="btn-row"><button onclick="evaluateJob()">Evaluate &amp; generate PDF</button></div>
+  </div>
+
+  <div class="block">
+    <p class="block-title">Results</p>
+    <div class="btn-row">
+      <button class="ghost" onclick="loadEvaluations()">Refresh evaluations</button>
+      <button class="ghost" onclick="loadProfile()">Load saved profile</button>
+    </div>
+    <pre id="output">Ready.</pre>
+  </div>
 </section>
 
-<section>
-  <h2>6. Search the web (internet-wide discovery)</h2>
-  <p class="muted">Goes beyond your tracked companies: searches the open web (career pages and job boards) for live postings matching your <strong>target roles</strong> and <strong>locations</strong>. Slower (~2-4 min) and uses your GitHub Copilot CLI, but finds employers the portal scan can't reach. Click Generate on any result to produce a tailored CV/PDF + report + tracker entry.</p>
-  <button id="discoverButton" onclick="discoverWeb()">Search the web</button>
-  <div id="discoverStatus" class="muted"></div>
-  <div id="discoverResults"></div>
-</section>
-
-<section>
-  <h2>Results</h2>
-  <button onclick="loadEvaluations()">Refresh evaluations</button>
-  <button onclick="loadProfile()">Load saved profile</button>
-  <pre id="output">Ready.</pre>
-</section>
+<p class="foot">Single-user app · data stored locally in career-ops files (cv.md, config/profile.yml, reports/, data/applications.md, output/).</p>
+</div>
 
 <script>
 async function request(path, options = {}) {
