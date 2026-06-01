@@ -375,3 +375,27 @@ Any agent (Claude Code, Codex, OpenCode, Gemini, or any other CLI) follows this 
 **Anti-pattern to avoid:** Do NOT add a new dated `## Session Update — date` block each session. Fold all status changes into the living snapshot sections above and add one Session Log line.
 
 **`handover.md` is a user-layer file** — gitignored via `.git/info/exclude`. Do not put user data (CV metrics, compensation targets, personal details) in it.
+
+## Cross-Agent QC
+
+Agents (Claude Code, Codex, Gemini, OpenCode, and others) should QC each other's work on a **need-basis only** — not every session.
+
+**When to QC the previous agent's change:**
+- System-layer files were modified: `modes/_shared.md`, any file in `modes/`, `.mjs` scripts, `batch/batch-prompt.md`, `CLAUDE.md`, `AGENTS.md`, scoring weights, or the data contract.
+- The Session Log line flags it explicitly (e.g., "needs QC" or "untested").
+- You spot a suspicious diff while reading `handover.md` — e.g., user-specific literals appearing in system files (see Lessons & Mistakes #7).
+
+**When to skip QC:**
+- Changes are user-layer only: `cv.md`, reports, tracker rows, `data/applications.md`, `data/pipeline.md`, `portals.yml`, `config/profile.yml`, `modes/_profile.md`.
+- Trivial docs, typo fixes, or routine scans/evaluations with no code changes.
+
+**How to QC:**
+1. Read the diff (`git log -1 --stat` + `git diff HEAD~1`) or the named files.
+2. Check against the Data Contract (`DATA_CONTRACT.md`) and `modes/_profile.md` policy.
+3. Watch for known failure modes in `handover.md → Lessons & Mistakes` (especially user literals leaking into system files).
+
+**Record the outcome:**
+- Clean: add one Session Log line — `QC'd [files] — clean`.
+- Issues found: flag in `handover.md → Open Questions` or `Lessons & Mistakes`; fix only if safe and in scope, otherwise leave for the implementing agent or Neil.
+
+**Bidirectional:** any agent both performs QC and is subject to it.
