@@ -12,8 +12,8 @@ properties:
       transport: auto
       allowInsecure: false
     secrets:
-      - name: web-app-password
-        value: __SET_VIA_CLI__   # real value set with: az containerapp secret set -n career-ops-web --secrets web-app-password=<password>
+      - name: copilot-github-token
+        value: __SET_VIA_CLI__   # fine-grained PAT (Copilot Requests: Read) for in-container web discovery; set with: az containerapp secret set -n career-ops-web --secrets copilot-github-token=<github_pat>
     registries:
       - server: regngasdf.azurecr.io
         identity: /subscriptions/fd918039-a89e-49a7-8e32-af614b3765f9/resourceGroups/finance-app-ng/providers/Microsoft.ManagedIdentity/userAssignedIdentities/career-ops-mi
@@ -39,8 +39,8 @@ properties:
             value: "3000"
           - name: AZURE_CLIENT_ID
             value: e6b03861-6605-4964-86ad-e1ad04821661
-          - name: WEB_APP_PASSWORD
-            secretRef: web-app-password
+          - name: COPILOT_GITHUB_TOKEN
+            secretRef: copilot-github-token
         probes:
           - type: Readiness
             httpGet:
