@@ -7,6 +7,7 @@ import express from 'express';
 import multer from 'multer';
 import { config } from './config.mjs';
 import { evaluateJob } from './evaluator.mjs';
+import { scanPortals } from './scanner.mjs';
 import { generateResumePdf } from './pdf.mjs';
 import {
   paths,
@@ -24,6 +25,14 @@ import {
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 const app = express();
+app.set('etag', false);
+
+// Single-user local app: never let the browser cache the page or API responses,
+// so code and data are always fresh after a restart.
+app.use((_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  next();
+});
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false }));
@@ -65,11 +74,13 @@ app.use((req, res, next) => {
   if (req.path === '/login') return next();
   const provided = req.header('x-career-ops-password');
   if (provided === config.sessionPassword || cookieValue(req, 'career_ops_session') === sessionToken()) return next();
-  if (req.accepts('html')) {
-    res.redirect('/login');
+  // API calls must get a clean 401 (a browser fetch sends Accept: */*, which
+  // would otherwise be treated as an HTML navigation and redirected to /login).
+  if (req.path.startsWith('/api/')) {
+    res.status(401).json({ error: 'Unauthorized' });
     return;
   }
-  res.status(401).json({ error: 'Unauthorized' });
+  res.redirect('/login');
 });
 
 app.get('/', (_req, res) => {
@@ -196,6 +207,38 @@ app.get('/api/evaluations', async (_req, res, next) => {
   }
 });
 
+app.get('/api/scan', async (req, res, next) => {
+  try {
+    const company = typeof req.query.company === 'string' ? req.query.company : undefined;
+    res.json(await scanPortals({ company }));
+  } catch (err) {
+    if (err.code === 'NO_PORTALS') {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    next(err);
+  }
+});
+
+app.get('/api/scan/stream', async (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  const send = (event) => res.write(`data: ${JSON.stringify(event)}\n\n`);
+  const company = typeof req.query.company === 'string' ? req.query.company : undefined;
+
+  try {
+    const result = await scanPortals({ company, onProgress: send });
+    send({ type: 'done', ...result });
+  } catch (err) {
+    send({ type: 'error', error: err.message });
+  } finally {
+    res.end();
+  }
+});
+
 app.get('/api/files/report/:name', (req, res) => {
   serveFile(res, paths.reportsDir, req.params.name, 'text/markdown; charset=utf-8');
 });
@@ -257,6 +300,12 @@ button { margin-top: 12px; padding: 8px 14px; cursor: pointer; }
 pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .muted { color: #666; }
+.job { border: 1px solid #eee; border-radius: 6px; padding: 10px 12px; margin: 8px 0; }
+.job h3 { margin: 0 0 4px; font-size: 15px; }
+.job .meta { color: #666; font-size: 13px; margin-bottom: 6px; }
+.job .result { font-size: 13px; margin-top: 6px; }
+.job button { margin-top: 0; }
+.scanlog { margin-top: 8px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: #444; background: #f6f8fa; padding: 8px; border-radius: 6px; max-height: 160px; overflow: auto; }
 </style>
 </head>
 <body>
@@ -296,6 +345,15 @@ pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap;
   <label>Job description</label>
   <textarea id="description" placeholder="Paste the job description here"></textarea>
   <button onclick="evaluateJob()">Evaluate and generate PDF</button>
+</section>
+
+<section>
+  <h2>4. Find jobs (scan portals)</h2>
+  <p class="muted">Discovers live postings from the companies in portals.yml (Greenhouse, Ashby, Lever) filtered by your title keywords. Click Generate to evaluate a job and produce a tailored CV/PDF + report + tracker entry.</p>
+  <label>Filter by company (optional)</label><input id="scanCompany" placeholder="e.g. Anthropic">
+  <button id="scanButton" onclick="scanPortals()">Scan portals</button>
+  <div id="scanStatus" class="muted"></div>
+  <div id="scanResults"></div>
 </section>
 
 <section>
@@ -385,6 +443,25 @@ async function evaluateJob() {
   }
 }
 
+async function loadCurrentResume() {
+  try {
+    const current = await request('/api/resumes/current');
+    if (current && current.canonicalMarkdown) {
+      document.getElementById('resumeMarkdown').value = current.canonicalMarkdown;
+    }
+  } catch (err) {
+    /* no saved resume yet — leave the field empty */
+  }
+}
+
+async function init() {
+  await loadProfile();
+  await loadCurrentResume();
+  show('Loaded saved profile and resume (if any).');
+}
+
+window.addEventListener('DOMContentLoaded', init);
+
 async function loadEvaluations() {
   try {
     const rows = await request('/api/evaluations');
@@ -394,6 +471,125 @@ async function loadEvaluations() {
     })));
   } catch (err) {
     show(err.message);
+  }
+}
+
+let scannedJobs = [];
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function scanPortals() {
+  const status = document.getElementById('scanStatus');
+  const results = document.getElementById('scanResults');
+  const button = document.getElementById('scanButton');
+  results.innerHTML = '';
+  scannedJobs = [];
+  button.disabled = true;
+
+  const company = document.getElementById('scanCompany').value.trim();
+  const query = company ? ('?company=' + encodeURIComponent(company)) : '';
+  const started = Date.now();
+  const log = [];
+  let total = 0;
+
+  status.innerHTML = '<strong>Connecting...</strong>';
+  const source = new EventSource('/api/scan/stream' + query);
+
+  const tick = setInterval(() => {
+    if (total > 0) {
+      const elapsed = ((Date.now() - started) / 1000).toFixed(0);
+      const done = log.length;
+      status.innerHTML = '<strong>Scanning ' + done + '/' + total + ' companies</strong> · ' + elapsed + 's elapsed' +
+        '<div class="scanlog">' + log.slice(-8).map(escapeHtml).join('<br>') + '</div>';
+    }
+  }, 200);
+
+  function finish() {
+    clearInterval(tick);
+    source.close();
+    button.disabled = false;
+  }
+
+  source.onmessage = (e) => {
+    let data;
+    try { data = JSON.parse(e.data); } catch { return; }
+
+    if (data.type === 'start') {
+      total = data.total;
+      status.innerHTML = '<strong>Scanning ' + total + ' companies...</strong>';
+    } else if (data.type === 'company') {
+      log.push(data.error
+        ? '✗ ' + data.name + ' — ' + data.error
+        : '✓ ' + data.name + ' (' + data.found + ' postings)');
+    } else if (data.type === 'done') {
+      finish();
+      scannedJobs = data.jobs || [];
+      const elapsed = ((Date.now() - started) / 1000).toFixed(0);
+      status.innerHTML = '<strong>Done.</strong> Scanned ' + data.scanned + ' companies in ' + elapsed +
+        's, found ' + data.found + ' matching jobs.' +
+        (data.errors && data.errors.length ? ' (' + data.errors.length + ' had errors)' : '');
+      renderScanResults();
+    } else if (data.type === 'error') {
+      finish();
+      status.textContent = '';
+      results.innerHTML = '<p class="muted">' + escapeHtml(data.error) + '</p>';
+    }
+  };
+
+  source.onerror = () => {
+    finish();
+    if (scannedJobs.length === 0) {
+      status.innerHTML = '<span class="muted">Scan connection lost. Try again.</span>';
+    }
+  };
+}
+
+function renderScanResults() {
+  const results = document.getElementById('scanResults');
+  if (scannedJobs.length === 0) {
+    results.innerHTML = '<p class="muted">No matching jobs. Adjust title_filter keywords in portals.yml.</p>';
+    return;
+  }
+  results.innerHTML = scannedJobs.map((job, i) =>
+    '<div class="job">' +
+      '<h3>' + escapeHtml(job.title) + '</h3>' +
+      '<div class="meta">' + escapeHtml(job.company) + (job.location ? ' — ' + escapeHtml(job.location) : '') +
+        ' · <a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener">posting</a></div>' +
+      '<button onclick="generateForJob(' + i + ', this)">Generate CV + evaluation</button>' +
+      '<div class="result" id="job-result-' + i + '"></div>' +
+    '</div>'
+  ).join('');
+}
+
+async function generateForJob(index, button) {
+  const job = scannedJobs[index];
+  const out = document.getElementById('job-result-' + index);
+  if (!job) return;
+  button.disabled = true;
+  out.textContent = 'Generating (AI evaluation + tailored PDF)...';
+  try {
+    const result = await request('/api/evaluations', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        company: job.company,
+        title: job.title,
+        url: job.url,
+        description: job.description || '',
+      }),
+    });
+    out.innerHTML = 'Score <strong>' + escapeHtml(result.score) + '/5</strong> · ' +
+      '<a href="/api/files/report/' + encodeURIComponent(result.reportName) + '" target="_blank" rel="noopener">report</a> · ' +
+      '<a href="/api/files/pdf/' + encodeURIComponent(result.pdfName) + '" target="_blank" rel="noopener">CV PDF</a>';
+    loadEvaluations();
+  } catch (err) {
+    out.textContent = 'Error: ' + err.message;
+  } finally {
+    button.disabled = false;
   }
 }
 </script>

@@ -14,6 +14,7 @@ export const paths = {
   cv: join(ROOT, 'cv.md'),
   profile: join(ROOT, 'config', 'profile.yml'),
   applications: join(ROOT, 'data', 'applications.md'),
+  portals: join(ROOT, 'portals.yml'),
   reportsDir: join(ROOT, 'reports'),
   outputDir: join(ROOT, 'output'),
 };
