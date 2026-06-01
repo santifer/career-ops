@@ -26,6 +26,7 @@ import {
 } from './storage.mjs';
 import { detectAts } from './scanner.mjs';
 import { suggestCompanies, validateUrls } from './company-finder.mjs';
+import { discoverJobs } from './web-discovery.mjs';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 const app = express();
@@ -332,6 +333,26 @@ app.get('/api/scan/stream', async (req, res) => {
   }
 });
 
+app.get('/api/discover/stream', async (_req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  const send = (event) => res.write(`data: ${JSON.stringify(event)}\n\n`);
+  let closed = false;
+  res.on('close', () => { closed = true; });
+
+  try {
+    const result = await discoverJobs({ onProgress: (e) => { if (!closed) send(e); } });
+    send({ type: 'done', ...result });
+  } catch (err) {
+    send({ type: 'error', error: err.message });
+  } finally {
+    res.end();
+  }
+});
+
 app.get('/api/files/report/:name', (req, res) => {
   serveFile(res, paths.reportsDir, req.params.name, 'text/markdown; charset=utf-8');
 });
@@ -459,6 +480,14 @@ pre { background: #f6f8fa; padding: 12px; overflow: auto; white-space: pre-wrap;
   <button id="scanButton" onclick="scanPortals()">Scan portals</button>
   <div id="scanStatus" class="muted"></div>
   <div id="scanResults"></div>
+</section>
+
+<section>
+  <h2>6. Search the web (internet-wide discovery)</h2>
+  <p class="muted">Goes beyond your tracked companies: searches the open web (career pages and job boards) for live postings matching your <strong>target roles</strong> and <strong>locations</strong>. Slower (~2-4 min) and uses your GitHub Copilot CLI, but finds employers the portal scan can't reach. Click Generate on any result to produce a tailored CV/PDF + report + tracker entry.</p>
+  <button id="discoverButton" onclick="discoverWeb()">Search the web</button>
+  <div id="discoverStatus" class="muted"></div>
+  <div id="discoverResults"></div>
 </section>
 
 <section>
@@ -673,6 +702,7 @@ async function loadEvaluations() {
 }
 
 let scannedJobs = [];
+let discoveredJobs = [];
 
 function escapeHtml(value) {
   return String(value == null ? '' : value)
@@ -770,6 +800,10 @@ async function generateForJob(index, button) {
   const job = scannedJobs[index];
   const out = document.getElementById('job-result-' + index);
   if (!job) return;
+  await runGenerate(job, out, button);
+}
+
+async function runGenerate(job, out, button) {
   button.disabled = true;
   out.textContent = 'Generating (AI evaluation + tailored PDF)...';
   try {
@@ -792,6 +826,87 @@ async function generateForJob(index, button) {
   } finally {
     button.disabled = false;
   }
+}
+
+function renderWebResults() {
+  const results = document.getElementById('discoverResults');
+  if (discoveredJobs.length === 0) {
+    results.innerHTML = '<p class="muted">No postings found. Try broader target roles or add "Remote" to your locations.</p>';
+    return;
+  }
+  results.innerHTML = discoveredJobs.map((job, i) =>
+    '<div class="job">' +
+      '<h3>' + escapeHtml(job.title) + '</h3>' +
+      '<div class="meta">' + escapeHtml(job.company) + (job.location ? ' — ' + escapeHtml(job.location) : '') +
+        ' · <a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener">posting</a></div>' +
+      '<button onclick="generateForWeb(' + i + ', this)">Generate CV + evaluation</button>' +
+      '<div class="result" id="web-result-' + i + '"></div>' +
+    '</div>'
+  ).join('');
+}
+
+async function generateForWeb(index, button) {
+  const job = discoveredJobs[index];
+  const out = document.getElementById('web-result-' + index);
+  if (!job) return;
+  await runGenerate(job, out, button);
+}
+
+function discoverWeb() {
+  const status = document.getElementById('discoverStatus');
+  const results = document.getElementById('discoverResults');
+  const button = document.getElementById('discoverButton');
+  results.innerHTML = '';
+  discoveredJobs = [];
+  button.disabled = true;
+
+  const started = Date.now();
+  const log = [];
+  status.innerHTML = '<strong>Starting web search...</strong> (this takes 2-4 minutes)';
+  const source = new EventSource('/api/discover/stream');
+
+  const tick = setInterval(() => {
+    const elapsed = ((Date.now() - started) / 1000).toFixed(0);
+    status.innerHTML = '<strong>Searching the web...</strong> · ' + elapsed + 's elapsed' +
+      (log.length ? '<div class="scanlog">' + log.slice(-8).map(escapeHtml).join('<br>') + '</div>' : '');
+  }, 500);
+
+  function finish() {
+    clearInterval(tick);
+    source.close();
+    button.disabled = false;
+  }
+
+  source.onmessage = (e) => {
+    let data;
+    try { data = JSON.parse(e.data); } catch { return; }
+
+    if (data.type === 'start') {
+      log.push('Looking for: ' + (data.roles || []).join(', '));
+    } else if (data.type === 'tool') {
+      const verb = data.tool === 'web_fetch' ? 'Reading' : 'Searching';
+      log.push(verb + ': ' + (data.detail || '').slice(0, 70));
+    } else if (data.type === 'thinking') {
+      if (data.text) log.push('• ' + data.text.slice(0, 70));
+    } else if (data.type === 'done') {
+      finish();
+      discoveredJobs = data.jobs || [];
+      const elapsed = ((Date.now() - started) / 1000).toFixed(0);
+      status.innerHTML = '<strong>Done.</strong> Found ' + data.found + ' postings across the web in ' + elapsed + 's.' +
+        (data.found === 0 ? '<div class="muted">Try broader roles, or use "Evaluate a job" for a specific posting.</div>' : '');
+      renderWebResults();
+    } else if (data.type === 'error') {
+      finish();
+      status.innerHTML = '<span class="muted">' + escapeHtml(data.error) + '</span>';
+    }
+  };
+
+  source.onerror = () => {
+    finish();
+    if (discoveredJobs.length === 0) {
+      status.innerHTML = '<span class="muted">Web search connection lost. Try again.</span>';
+    }
+  };
 }
 </script>
 </body>
