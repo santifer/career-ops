@@ -66,60 +66,50 @@ async function checkPlaywright() {
   }
 }
 
-function checkCv() {
-  if (existsSync(join(projectRoot, 'cv.md'))) {
-    return { pass: true, label: 'cv.md found' };
-  }
-  return {
-    pass: false,
-    label: 'cv.md not found',
+// Single source of truth for the four user-layer prerequisites (the list
+// AGENTS.md "First Run" documents). BOTH the human checklist (`checkPrereq`)
+// and the machine-readable cold-start state (`onboardingState`) derive from
+// THIS array, so they cannot drift. Paths use "/" and are split for join().
+const USER_LAYER_PREREQS = [
+  {
+    path: 'cv.md',
     fix: [
       'Create cv.md in the project root with your CV in markdown',
       'See examples/ for reference CVs',
     ],
-  };
-}
-
-function checkProfile() {
-  if (existsSync(join(projectRoot, 'config', 'profile.yml'))) {
-    return { pass: true, label: 'config/profile.yml found' };
-  }
-  return {
-    pass: false,
-    label: 'config/profile.yml not found',
+  },
+  {
+    path: 'config/profile.yml',
     fix: [
       'Run: cp config/profile.example.yml config/profile.yml',
       'Then edit it with your details',
     ],
-  };
-}
-
-function checkProfileMode() {
-  if (existsSync(join(projectRoot, 'modes', '_profile.md'))) {
-    return { pass: true, label: 'modes/_profile.md found' };
-  }
-  return {
-    pass: false,
-    label: 'modes/_profile.md not found',
+  },
+  {
+    path: 'modes/_profile.md',
     fix: [
       'Run: cp modes/_profile.template.md modes/_profile.md',
       'Then customize your archetypes / targeting narrative',
     ],
-  };
-}
-
-function checkPortals() {
-  if (existsSync(join(projectRoot, 'portals.yml'))) {
-    return { pass: true, label: 'portals.yml found' };
-  }
-  return {
-    pass: false,
-    label: 'portals.yml not found',
+  },
+  {
+    path: 'portals.yml',
     fix: [
       'Run: cp templates/portals.example.yml portals.yml',
       'Then customize with your target companies',
     ],
-  };
+  },
+];
+
+function prereqPresent(root, path) {
+  return existsSync(join(root, ...path.split('/')));
+}
+
+function checkPrereq({ path, fix }) {
+  if (prereqPresent(projectRoot, path)) {
+    return { pass: true, label: `${path} found` };
+  }
+  return { pass: false, label: `${path} not found`, fix };
 }
 
 function checkFonts() {
@@ -175,10 +165,7 @@ async function main() {
     checkNodeVersion(),
     checkDependencies(),
     await checkPlaywright(),
-    checkCv(),
-    checkProfile(),
-    checkProfileMode(),
-    checkPortals(),
+    ...USER_LAYER_PREREQS.map(checkPrereq),
     checkFonts(),
     checkAutoDir('data'),
     checkAutoDir('output'),
@@ -217,13 +204,9 @@ async function main() {
 // a deterministic mechanism the agent runs (instead of re-deriving it from prose),
 // and `--target <dir>` lets the test suite point it at a simulated virgin env.
 function onboardingState(root) {
-  const need = {
-    'cv.md': existsSync(join(root, 'cv.md')),
-    'config/profile.yml': existsSync(join(root, 'config', 'profile.yml')),
-    'modes/_profile.md': existsSync(join(root, 'modes', '_profile.md')),
-    'portals.yml': existsSync(join(root, 'portals.yml')),
-  };
-  const missing = Object.keys(need).filter((k) => !need[k]);
+  const missing = USER_LAYER_PREREQS
+    .filter(({ path }) => !prereqPresent(root, path))
+    .map(({ path }) => path);
   return { onboardingNeeded: missing.length > 0, missing };
 }
 
