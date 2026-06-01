@@ -10,7 +10,11 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = __dirname;
+const argv = process.argv.slice(2);
+const targetIdx = argv.indexOf('--target');
+const projectRoot =
+  targetIdx !== -1 && argv[targetIdx + 1] ? argv[targetIdx + 1] : __dirname;
+const JSON_OUT = argv.includes('--json');
 
 // ANSI colors (only on TTY)
 const isTTY = process.stdout.isTTY;
@@ -90,6 +94,20 @@ function checkProfile() {
   };
 }
 
+function checkProfileMode() {
+  if (existsSync(join(projectRoot, 'modes', '_profile.md'))) {
+    return { pass: true, label: 'modes/_profile.md found' };
+  }
+  return {
+    pass: false,
+    label: 'modes/_profile.md not found',
+    fix: [
+      'Run: cp modes/_profile.template.md modes/_profile.md',
+      'Then customize your archetypes / targeting narrative',
+    ],
+  };
+}
+
 function checkPortals() {
   if (existsSync(join(projectRoot, 'portals.yml'))) {
     return { pass: true, label: 'portals.yml found' };
@@ -159,6 +177,7 @@ async function main() {
     await checkPlaywright(),
     checkCv(),
     checkProfile(),
+    checkProfileMode(),
     checkPortals(),
     checkFonts(),
     checkAutoDir('data'),
@@ -193,7 +212,27 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('doctor.mjs failed:', err.message);
-  process.exit(1);
-});
+// Single source of truth for the cold-start state: the same four user-layer
+// prerequisites that AGENTS.md "First Run" lists. `--json` turns the trigger into
+// a deterministic mechanism the agent runs (instead of re-deriving it from prose),
+// and `--target <dir>` lets the test suite point it at a simulated virgin env.
+function onboardingState(root) {
+  const need = {
+    'cv.md': existsSync(join(root, 'cv.md')),
+    'config/profile.yml': existsSync(join(root, 'config', 'profile.yml')),
+    'modes/_profile.md': existsSync(join(root, 'modes', '_profile.md')),
+    'portals.yml': existsSync(join(root, 'portals.yml')),
+  };
+  const missing = Object.keys(need).filter((k) => !need[k]);
+  return { onboardingNeeded: missing.length > 0, missing };
+}
+
+if (JSON_OUT) {
+  console.log(JSON.stringify(onboardingState(projectRoot)));
+  process.exit(0);
+} else {
+  main().catch((err) => {
+    console.error('doctor.mjs failed:', err.message);
+    process.exit(1);
+  });
+}
