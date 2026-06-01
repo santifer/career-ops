@@ -68,6 +68,7 @@ function checkCv() {
   }
   return {
     pass: false,
+    severity: 'setup',
     label: 'cv.md not found',
     fix: [
       'Create cv.md in the project root with your CV in markdown',
@@ -82,6 +83,7 @@ function checkProfile() {
   }
   return {
     pass: false,
+    severity: 'setup',
     label: 'config/profile.yml not found',
     fix: [
       'Run: cp config/profile.example.yml config/profile.yml',
@@ -96,6 +98,7 @@ function checkPortals() {
   }
   return {
     pass: false,
+    severity: 'setup',
     label: 'portals.yml not found',
     fix: [
       'Run: cp templates/portals.example.yml portals.yml',
@@ -167,10 +170,18 @@ async function main() {
   ];
 
   let failures = 0;
+  let setupWarnings = 0;
 
   for (const result of checks) {
     if (result.pass) {
       console.log(`${green('✓')} ${result.label}`);
+    } else if (result.severity === 'setup') {
+      setupWarnings++;
+      console.log(`! ${result.label}`);
+      const fixes = Array.isArray(result.fix) ? result.fix : [result.fix];
+      for (const hint of fixes) {
+        console.log(`  ${dim('→ ' + hint)}`);
+      }
     } else {
       failures++;
       console.log(`${red('✗')} ${result.label}`);
@@ -183,8 +194,11 @@ async function main() {
 
   console.log('');
   if (failures > 0) {
-    console.log(`Result: ${failures} issue${failures === 1 ? '' : 's'} found. Fix them and run \`npm run doctor\` again.`);
+    console.log(`Result: ${failures} prerequisite issue${failures === 1 ? '' : 's'} found. Fix them and run \`npm run doctor\` again.`);
     process.exit(1);
+  } else if (setupWarnings > 0) {
+    console.log(`Result: Required checks passed with ${setupWarnings} setup warning${setupWarnings === 1 ? '' : 's'}. Add your local profile/CV files before evaluating jobs.`);
+    process.exit(0);
   } else {
     console.log('Result: All checks passed. You\'re ready to go! Run `claude` to start.');
     console.log('');
