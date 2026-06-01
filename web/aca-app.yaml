@@ -13,7 +13,7 @@ properties:
       allowInsecure: false
     secrets:
       - name: web-app-password
-        value: pXDg7eSdFCf5Am3okaE4
+        value: __SET_VIA_CLI__   # real value set with: az containerapp secret set -n career-ops-web --secrets web-app-password=<password>
     registries:
       - server: regngasdf.azurecr.io
         identity: /subscriptions/fd918039-a89e-49a7-8e32-af614b3765f9/resourceGroups/finance-app-ng/providers/Microsoft.ManagedIdentity/userAssignedIdentities/career-ops-mi
