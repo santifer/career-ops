@@ -1028,7 +1028,7 @@ try {
   copyFileSync(join(ROOT, 'doctor.mjs'), join(tmp, 'doctor.mjs'));
   let out = '';
   try {
-    out = execFileSync('node', [join(tmp, 'doctor.mjs')], { encoding: 'utf-8', timeout: 30000 });
+    out = execFileSync(NODE, [join(tmp, 'doctor.mjs')], { encoding: 'utf-8', timeout: 30000 });
   } catch (err) {
     // Non-zero exit is expected here: the bare dir is missing real prerequisites
     // (deps/playwright). We only assert the setup-file routing + wording.
