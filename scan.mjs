@@ -82,6 +82,16 @@ function detectApi(company) {
     };
   }
 
+  // Ministère de l'Europe et des Affaires étrangères — emplois.diplomatie.gouv.fr
+  // SPA with a public JSON API (no auth). Paginated: GET /api/v1/offres?page=N&limit=20
+  const diplomatieMatch = url.match(/emplois\.diplomatie\.gouv\.fr/);
+  if (diplomatieMatch) {
+    return {
+      type: 'diplomatie',
+      url: 'https://emplois.diplomatie.gouv.fr/api/v1/offres',
+    };
+  }
+
   return null;
 }
 
@@ -156,7 +166,39 @@ function parseWorkable(json, companyName) {
   });
 }
 
-const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever, workable: parseWorkable };
+// emplois.diplomatie.gouv.fr — paginated JSON API (max 20 per page).
+// Async parser: it fetches every page itself, so the caller passes the BASE url
+// and the first-page json it already fetched is ignored (we re-fetch page 1 for
+// uniformity). Returns the full flattened list.
+async function parseDiplomatie(_firstJson, companyName, baseUrl) {
+  const LIMIT = 20;
+  const all = [];
+  let page = 1;
+  let total = Infinity;
+  // Hard cap at 20 pages (400 offers) to avoid any runaway loop.
+  while (all.length < total && page <= 20) {
+    const json = await fetchJson(`${baseUrl}?page=${page}&limit=${LIMIT}`);
+    const offres = json.offres || [];
+    total = typeof json.total === 'number' ? json.total : offres.length;
+    if (offres.length === 0) break;
+    for (const o of offres) {
+      const country = o.codePays && o.codePays !== 'FRA' ? `, ${o.codePays}` : '';
+      all.push({
+        title: o.intitule || '',
+        url: `https://emplois.diplomatie.gouv.fr/offre/${o.id}`,
+        company: companyName,
+        location: [o.ville, country].filter(Boolean).join('').replace(/^, /, ''),
+        posted_at: o.datePriseFonction || '',
+        // No remote concept in diplomatic postings — leave empty.
+        workplace_type: '',
+      });
+    }
+    page++;
+  }
+  return all;
+}
+
+const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever, workable: parseWorkable, diplomatie: parseDiplomatie };
 
 // ── Fetch with timeout ──────────────────────────────────────────────
 
@@ -448,8 +490,12 @@ async function main() {
   const tasks = targets.map(company => async () => {
     const { type, url } = company._api;
     try {
-      const json = await fetchJson(url);
-      const jobs = PARSERS[type](json, company.name);
+      // Self-paginating parsers (diplomatie) fetch every page themselves from the
+      // base url. Others get a single pre-fetched json blob, as before.
+      const SELF_PAGING = new Set(['diplomatie']);
+      const jobs = SELF_PAGING.has(type)
+        ? await PARSERS[type](null, company.name, url)
+        : PARSERS[type](await fetchJson(url), company.name);
       totalFound += jobs.length;
 
       for (const job of jobs) {
