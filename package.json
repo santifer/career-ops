@@ -16,7 +16,10 @@
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
     "patterns": "node analyze-patterns.mjs",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "queue": "node queue-ingest.mjs",
+    "dashboard": "node dashboard-server.mjs",
+    "fill": "node form-fill.mjs"
   },
   "keywords": [
     "ai",

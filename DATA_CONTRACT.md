@@ -18,6 +18,7 @@ These files contain your personal data, customizations, and work product. Update
 | `data/pipeline.md` | Your URL inbox |
 | `data/scan-history.tsv` | Your scan history |
 | `data/follow-ups.md` | Your follow-up history |
+| `data/apply-queue.json` | Your apply queue — scored roles, drafts, decisions |
 | `writing-samples/*` | Your personal writing samples for style calibration (except `writing-samples/README.md`, which is system-owned documentation delivered by updates) |
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
@@ -45,6 +46,12 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/training.md` | Training evaluation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
+| `modes/queue.md` | Queue score + prepare mode instructions |
+| `queue-store.mjs` | Queue read/write/lane-logic utility |
+| `queue-ingest.mjs` | Zero-token incremental queue ingest |
+| `dashboard-server.mjs` | Localhost apply-queue dashboard server |
+| `dashboard/web/*` | Dashboard SPA (HTML/CSS/JS) |
+| `form-fill.mjs` | Deterministic Playwright form fill |
 | `modes/de/*` | German language modes |
 | `modes/fr/*` | French language modes |
 | `modes/ja/*` | Japanese language modes |

@@ -2,6 +2,36 @@
 
 Interactive mode for when the candidate is filling out an application form in Chrome. It reads what is on the screen, loads the previous context of the job, and generates personalized responses for each form question.
 
+## Queue integration
+
+Before starting the interactive apply flow, check whether a `data/apply-queue.json`
+record exists for this role (match by URL or company+title):
+
+- **If a queue record exists:** load its `employment_type`, `visa_answer`, `drafts`,
+  `cv_pdf`, and `free_text_fields`. Use these instead of re-deriving them from scratch.
+  This ensures the visa answer selected during scoring is used consistently.
+- **If no queue record exists:** proceed normally, deriving answers from
+  `config/profile.yml` and `modes/_profile.md`.
+
+**On open:** re-verify liveness (Playwright `browser_navigate` + `browser_snapshot`).
+If the posting is closed, mark the queue record `status: "closed"` and inform Neil.
+
+**Conservative fill:** only populate fields that can be mapped with high confidence
+from `config/profile.yml` and the queue record. Any field that cannot be confidently
+identified must be left blank and added to the role's `flags` as `manual-field`.
+Never guess or approximate a value. A blank field is acceptable; a wrong value is not.
+
+**Part-time hours guardrail:** for part-time roles, any hours/week or availability
+field must use `application_answers.availability_parttime` (text) or
+`application_answers.max_hours_per_week_parttime` (number). Never enter a value
+above 24 hours/week for a part-time role on a student visa.
+
+**Stop before submit:** this mode fills and presents answers; Neil submits manually.
+After Neil confirms submission, call `POST /api/role/:id/decision {decision:"submitted"}`
+on the local dashboard server (if running) to write the status back and sync the tracker.
+
+---
+
 ## Requirements
 
 - **Best with Playwright in visible mode**: In visible mode, the candidate sees the browser and Claude can interact with the page.

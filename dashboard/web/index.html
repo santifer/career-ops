@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>career-ops · apply queue</title>
+  <link rel="stylesheet" href="/dashboard/web/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <span class="brand">career-ops · apply queue</span>
+
+  <div class="stats-strip" id="stats-strip">
+    <div class="stat">
+      <span class="stat-label">ready</span>
+      <span class="stat-value stat-ready" id="stat-ready">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">needs input</span>
+      <span class="stat-value stat-needs" id="stat-needs">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">review</span>
+      <span class="stat-value stat-review" id="stat-review">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">pending score</span>
+      <span class="stat-value stat-pending" id="stat-new">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">avg</span>
+      <span class="stat-value" id="stat-avg">—</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">&#9906;</span>
+      <input id="search" type="text" placeholder="/ search…" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="threshold-wrap">
+      <label for="threshold-input">Threshold ≥</label>
+      <input id="threshold-input" type="number" min="0" max="5" step="0.1" placeholder="4.0">
+      <button class="btn-threshold" id="btn-set-threshold">Set →</button>
+    </div>
+
+    <button class="btn-refresh" id="btn-refresh" title="Refresh (r)">↺</button>
+  </div>
+</header>
+
+<div class="main-area">
+  <div class="lanes" id="lanes">
+    <div class="lane" data-lane="ready">
+      <div class="lane-header">
+        Ready
+        <span class="lane-count" id="count-ready">0</span>
+      </div>
+      <div class="lane-cards" id="cards-ready"></div>
+    </div>
+
+    <div class="lane" data-lane="needs">
+      <div class="lane-header">
+        Needs Input
+        <span class="lane-count" id="count-needs">0</span>
+      </div>
+      <div class="lane-cards" id="cards-needs"></div>
+    </div>
+
+    <div class="lane" data-lane="review">
+      <div class="lane-header">
+        Review Carefully
+        <span class="lane-count" id="count-review">0</span>
+      </div>
+      <div class="lane-cards" id="cards-review"></div>
+    </div>
+  </div>
+
+  <!-- Inbox panel — shown when a card is selected -->
+  <aside class="inbox" id="inbox" hidden>
+    <div class="inbox-header">
+      <span class="inbox-title" id="inbox-title"></span>
+      <button class="btn-close-inbox" id="btn-close-inbox" title="Close (Esc)">✕</button>
+    </div>
+
+    <div class="inbox-body" id="inbox-body">
+      <!-- Populated by app.js -->
+    </div>
+
+    <div class="inbox-footer">
+      <div class="inbox-actions" id="inbox-actions">
+        <button class="btn btn-fill"   id="btn-fill">Fill Form</button>
+        <button class="btn btn-submit" id="btn-submit">✓ Mark Submitted</button>
+        <button class="btn btn-skip"   id="btn-skip">— Skip</button>
+        <button class="btn btn-review" id="btn-reviewed">Reviewed</button>
+      </div>
+      <p class="inbox-note" id="inbox-note"></p>
+    </div>
+  </aside>
+</div>
+
+<footer class="app-footer">
+  <span><span class="footer-key">j/k</span> nav</span>
+  <span><span class="footer-key">←/→</span> lanes</span>
+  <span><span class="footer-key">Enter</span> open</span>
+  <span><span class="footer-key">f</span> fill</span>
+  <span><span class="footer-key">s</span> submit</span>
+  <span><span class="footer-key">x</span> skip</span>
+  <span><span class="footer-key">o</span> open URL</span>
+  <span><span class="footer-key">r</span> refresh</span>
+  <span><span class="footer-key">/</span> search</span>
+  <span><span class="footer-key">Esc</span> close</span>
+</footer>
+
+<div id="toast"></div>
+
+<script src="/dashboard/web/app.js"></script>
+</body>
+</html>
