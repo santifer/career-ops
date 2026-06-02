@@ -12,7 +12,8 @@
  */
 
 import { execSync, execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, copyFileSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -1013,6 +1014,46 @@ try {
 
 } catch (e) {
   fail(`recruitee provider tests crashed: ${e.message}`);
+}
+
+// ── 15. DOCTOR SETUP SEVERITY ───────────────────────────────────
+
+console.log('\n15. Doctor setup severity');
+
+try {
+  // Run doctor.mjs from an isolated temp dir. projectRoot is the script's own
+  // directory, so a standalone copy sees cv.md / config/profile.yml / portals.yml
+  // as absent — they must surface as setup *warnings* (!), not hard failures (✗).
+  const tmp = mkdtempSync(join(tmpdir(), 'careerops-doctor-'));
+  copyFileSync(join(ROOT, 'doctor.mjs'), join(tmp, 'doctor.mjs'));
+  let out = '';
+  try {
+    out = execFileSync(NODE, [join(tmp, 'doctor.mjs')], { encoding: 'utf-8', timeout: 30000 });
+  } catch (err) {
+    // Non-zero exit is expected here: the bare dir is missing real prerequisites
+    // (deps/playwright). We only assert the setup-file routing + wording.
+    out = `${err.stdout || ''}${err.stderr || ''}`;
+  }
+  rmSync(tmp, { recursive: true, force: true });
+
+  const setupLabels = [
+    'cv.md not found',
+    'config/profile.yml not found',
+    'portals.yml not found',
+  ];
+  for (const label of setupLabels) {
+    if (out.includes(`! ${label}`)) pass(`missing ${label} is a setup warning (!)`);
+    else fail(`missing ${label} should be a setup warning (!)`);
+    if (!out.includes(`✗ ${label}`)) pass(`missing ${label} is not counted as a hard failure (✗)`);
+    else fail(`missing ${label} should not be a hard failure (✗)`);
+  }
+  // Real prerequisites (deps/playwright) still count as failures with the new wording.
+  if (/✗ /.test(out)) pass('real prerequisites still reported as failures (✗)');
+  else fail('expected at least one real prerequisite failure in a bare dir');
+  if (out.includes('prerequisite issue')) pass('result distinguishes prerequisite issues from setup warnings');
+  else fail('result wording should mention "prerequisite issue"');
+} catch (e) {
+  fail(`doctor setup-severity test crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
