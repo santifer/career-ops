@@ -39,6 +39,10 @@ function detectApi(company) {
   if (company.api && company.api.includes('greenhouse')) {
     return { type: 'greenhouse', url: company.api };
   }
+  // Workable: explicit api field
+  if (company.api && company.api.includes('workable.com')) {
+    return { type: 'workable', url: company.api };
+  }
 
   const url = company.careers_url || '';
 
@@ -69,19 +73,42 @@ function detectApi(company) {
     };
   }
 
+  // Workable (inferred from careers_url like apply.workable.com/{slug})
+  const workableMatch = url.match(/apply\.workable\.com\/([^/?#]+)/);
+  if (workableMatch) {
+    return {
+      type: 'workable',
+      url: `https://apply.workable.com/api/v1/widget/accounts/${workableMatch[1]}`,
+    };
+  }
+
   return null;
 }
 
 // ── API parsers ─────────────────────────────────────────────────────
 
+// Detect workplace_type from a location string (Greenhouse fallback — no explicit field)
+function inferWorkplaceFromLocation(loc) {
+  if (!loc) return '';
+  const l = loc.toLowerCase();
+  if (/\bremote\b|\bremotely\b|\banywhere\b/.test(l)) return 'remote';
+  if (/\bhybrid\b/.test(l)) return 'hybrid';
+  return '';
+}
+
 function parseGreenhouse(json, companyName) {
   const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.absolute_url || '',
-    company: companyName,
-    location: j.location?.name || '',
-  }));
+  return jobs.map(j => {
+    const location = j.location?.name || '';
+    return {
+      title: j.title || '',
+      url: j.absolute_url || '',
+      company: companyName,
+      location,
+      posted_at: j.first_published || j.updated_at || '',
+      workplace_type: inferWorkplaceFromLocation(location),
+    };
+  });
 }
 
 function parseAshby(json, companyName) {
@@ -91,6 +118,9 @@ function parseAshby(json, companyName) {
     url: j.jobUrl || '',
     company: companyName,
     location: j.location || '',
+    posted_at: j.publishedAt || '',
+    // Ashby workplaceType values: "Remote", "Hybrid", "On-Site", "Unspecified"
+    workplace_type: j.isRemote ? 'remote' : (j.workplaceType || '').toLowerCase().replace('-', ''),
   }));
 }
 
@@ -101,10 +131,32 @@ function parseLever(json, companyName) {
     url: j.hostedUrl || '',
     company: companyName,
     location: j.categories?.location || '',
+    posted_at: j.createdAt ? new Date(j.createdAt).toISOString() : '',
+    // Lever workplaceType values: "remote", "hybrid", "on-site", "unspecified"
+    workplace_type: (j.workplaceType || '').toLowerCase(),
   }));
 }
 
-const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever };
+function parseWorkable(json, companyName) {
+  const jobs = json.jobs || [];
+  return jobs.map(j => {
+    const loc = j.locations?.[0];
+    const location = loc
+      ? [loc.city, loc.region, loc.country].filter(Boolean).join(', ')
+      : [j.city, j.state, j.country].filter(Boolean).join(', ');
+    return {
+      title: j.title || '',
+      url: j.url || j.shortlink || '',
+      company: companyName,
+      location,
+      posted_at: j.published_on || j.created_at || '',
+      // Workable: telecommuting:true means remote
+      workplace_type: j.telecommuting ? 'remote' : inferWorkplaceFromLocation(location),
+    };
+  });
+}
+
+const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever, workable: parseWorkable };
 
 // ── Fetch with timeout ──────────────────────────────────────────────
 
@@ -157,37 +209,81 @@ function buildLocationFilter(locationFilter) {
   };
 }
 
+// ── Freshness filter ─────────────────────────────────────────────────
+// Optional. Drop offers older than max_age_days based on posted_at.
+// Empty posted_at → pass (don't penalize missing data).
+
+function buildFreshnessFilter(freshnessFilter) {
+  if (!freshnessFilter?.max_age_days) return () => true;
+  const cutoffMs = Date.now() - freshnessFilter.max_age_days * 86_400_000;
+
+  return (postedAt) => {
+    if (!postedAt) return true;
+    const t = Date.parse(postedAt);
+    if (isNaN(t)) return true;
+    return t >= cutoffMs;
+  };
+}
+
+// ── Remote filter ────────────────────────────────────────────────────
+// Optional. Keep only remote or hybrid roles based on workplace_type or
+// location keywords. If `remote_filter` is absent, all offers pass.
+// Empty workplace_type AND empty location → pass (don't penalize missing).
+
+function buildRemoteFilter(remoteFilter) {
+  if (!remoteFilter) return () => true;
+  const types = (remoteFilter.workplace_types || []).map(k => k.toLowerCase());
+  const keywords = (remoteFilter.location_keywords || []).map(k => k.toLowerCase());
+
+  return (workplaceType, location) => {
+    const wt = (workplaceType || '').toLowerCase();
+    const loc = (location || '').toLowerCase();
+    if (!wt && !loc) return true;
+    if (types.length > 0 && types.some(t => wt.includes(t))) return true;
+    if (keywords.length > 0 && keywords.some(k => loc.includes(k))) return true;
+    return false;
+  };
+}
+
 // ── Dedup ───────────────────────────────────────────────────────────
 
-function loadSeenUrls() {
-  const seen = new Set();
+// Returns two sets:
+//   addedUrls — URLs we've previously added to pipeline/applications (dedup target).
+//   anyUrls   — every URL ever logged in scan-history, used to avoid re-logging
+//               the same skip_* event on every scan.
+function loadHistoryIndex() {
+  const addedUrls = new Set();
+  const anyUrls = new Set();
 
-  // scan-history.tsv
   if (existsSync(SCAN_HISTORY_PATH)) {
     const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n');
-    for (const line of lines.slice(1)) { // skip header
-      const url = line.split('\t')[0];
-      if (url) seen.add(url);
+    for (const line of lines.slice(1)) {
+      const parts = line.split('\t');
+      const url = parts[0];
+      const status = parts[5] || '';
+      if (!url) continue;
+      anyUrls.add(url);
+      if (status === 'added') addedUrls.add(url);
     }
   }
 
-  // pipeline.md — extract URLs from checkbox lines
   if (existsSync(PIPELINE_PATH)) {
     const text = readFileSync(PIPELINE_PATH, 'utf-8');
     for (const match of text.matchAll(/- \[[ x]\] (https?:\/\/\S+)/g)) {
-      seen.add(match[1]);
+      addedUrls.add(match[1]);
+      anyUrls.add(match[1]);
     }
   }
 
-  // applications.md — extract URLs from report links and any inline URLs
   if (existsSync(APPLICATIONS_PATH)) {
     const text = readFileSync(APPLICATIONS_PATH, 'utf-8');
     for (const match of text.matchAll(/https?:\/\/[^\s|)]+/g)) {
-      seen.add(match[0]);
+      addedUrls.add(match[0]);
+      anyUrls.add(match[0]);
     }
   }
 
-  return seen;
+  return { addedUrls, anyUrls };
 }
 
 function loadSeenCompanyRoles() {
@@ -239,16 +335,17 @@ function appendToPipeline(offers) {
   writeFileSync(PIPELINE_PATH, text, 'utf-8');
 }
 
-function appendToScanHistory(offers, date) {
-  // Ensure file + header exist. Location appended as 7th column for non-breaking
-  // backward compat — older scan-history.tsv files with 6 columns still parse fine
-  // since loadSeenUrls only reads column 0.
+function appendToScanHistory(entries, date) {
   if (!existsSync(SCAN_HISTORY_PATH)) {
-    writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\n', 'utf-8');
+    writeFileSync(
+      SCAN_HISTORY_PATH,
+      'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\tposted_at\tworkplace_type\n',
+      'utf-8'
+    );
   }
 
-  const lines = offers.map(o =>
-    `${o.url}\t${date}\t${o.source}\t${o.title}\t${o.company}\tadded\t${o.location || ''}`
+  const lines = entries.map(o =>
+    `${o.url}\t${date}\t${o.source}\t${o.title}\t${o.company}\t${o.status}\t${o.location || ''}\t${o.posted_at || ''}\t${o.workplace_type || ''}`
   ).join('\n') + '\n';
 
   appendFileSync(SCAN_HISTORY_PATH, lines, 'utf-8');
@@ -277,8 +374,12 @@ async function parallelFetch(tasks, limit) {
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const companyFlag = args.indexOf('--company');
-  const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
+  const filterCompanies = args
+    .flatMap((a, i) => (a === '--company' ? [args[i + 1]] : []))
+    .filter(Boolean)
+    .flatMap(s => String(s).split(','))
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean);
 
   // 1. Read portals.yml
   if (!existsSync(PORTALS_PATH)) {
@@ -290,21 +391,38 @@ async function main() {
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
+  const freshnessFilter = buildFreshnessFilter(config.freshness_filter);
+  const remoteFilter = buildRemoteFilter(config.remote_filter);
 
   // 2. Filter to enabled companies with detectable APIs
-  const targets = companies
+  const matchesSelection = c =>
+    !filterCompanies.length || filterCompanies.some(fc => c.name.toLowerCase().includes(fc));
+
+  const selected = companies
     .filter(c => c.enabled !== false)
-    .filter(c => !filterCompany || c.name.toLowerCase().includes(filterCompany))
-    .map(c => ({ ...c, _api: detectApi(c) }))
-    .filter(c => c._api !== null);
+    .filter(matchesSelection)
+    .map(c => ({ ...c, _api: detectApi(c) }));
+
+  const targets = selected.filter(c => c._api !== null);
 
   const skippedCount = companies.filter(c => c.enabled !== false).length - targets.length;
 
   console.log(`Scanning ${targets.length} companies via API (${skippedCount} skipped — no API detected)`);
+
+  // When the user explicitly picked sources (selective scan from the UI), name the
+  // ones that were skipped for lacking a supported ATS API — otherwise they'd silently
+  // appear "selected" but never scanned.
+  if (filterCompanies.length) {
+    const skippedNamed = selected.filter(c => c._api === null).map(c => c.name);
+    if (skippedNamed.length) {
+      console.log(`⚠ Ignorées (pas d'API supportée) : ${skippedNamed.join(', ')}`);
+    }
+  }
+
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   // 3. Load dedup sets
-  const seenUrls = loadSeenUrls();
+  const { addedUrls, anyUrls } = loadHistoryIndex();
   const seenCompanyRoles = loadSeenCompanyRoles();
 
   // 4. Fetch all APIs
@@ -312,9 +430,20 @@ async function main() {
   let totalFound = 0;
   let totalFilteredTitle = 0;
   let totalFilteredLocation = 0;
+  let totalFilteredAge = 0;
+  let totalFilteredRemote = 0;
   let totalDupes = 0;
   const newOffers = [];
+  const skippedOffers = [];
   const errors = [];
+
+  // Helper: log a skip event only the first time we ever see this URL,
+  // so the TSV grows linearly with new offers — not with every re-scan.
+  const logSkip = (job, type, status) => {
+    if (anyUrls.has(job.url)) return;
+    anyUrls.add(job.url);
+    skippedOffers.push({ ...job, source: `${type}-api`, status });
+  };
 
   const tasks = targets.map(company => async () => {
     const { type, url } = company._api;
@@ -326,25 +455,39 @@ async function main() {
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
           totalFilteredTitle++;
+          logSkip(job, type, 'skipped_title');
           continue;
         }
         if (!locationFilter(job.location)) {
           totalFilteredLocation++;
+          logSkip(job, type, 'skipped_location');
           continue;
         }
-        if (seenUrls.has(job.url)) {
+        if (!freshnessFilter(job.posted_at)) {
+          totalFilteredAge++;
+          logSkip(job, type, 'skipped_age');
+          continue;
+        }
+        if (!remoteFilter(job.workplace_type, job.location)) {
+          totalFilteredRemote++;
+          logSkip(job, type, 'skipped_remote');
+          continue;
+        }
+        if (addedUrls.has(job.url)) {
           totalDupes++;
+          // Already added before — already in history as 'added', do not re-log.
           continue;
         }
         const key = `${job.company.toLowerCase()}::${job.title.toLowerCase()}`;
         if (seenCompanyRoles.has(key)) {
           totalDupes++;
+          logSkip(job, type, 'skipped_dup');
           continue;
         }
-        // Mark as seen to avoid intra-scan dupes
-        seenUrls.add(job.url);
+        addedUrls.add(job.url);
+        anyUrls.add(job.url);
         seenCompanyRoles.add(key);
-        newOffers.push({ ...job, source: `${type}-api` });
+        newOffers.push({ ...job, source: `${type}-api`, status: 'added' });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
@@ -354,9 +497,10 @@ async function main() {
   await parallelFetch(tasks, CONCURRENCY);
 
   // 5. Write results
-  if (!dryRun && newOffers.length > 0) {
-    appendToPipeline(newOffers);
-    appendToScanHistory(newOffers, date);
+  if (!dryRun) {
+    if (newOffers.length > 0) appendToPipeline(newOffers);
+    const allEntries = [...newOffers, ...skippedOffers];
+    if (allEntries.length > 0) appendToScanHistory(allEntries, date);
   }
 
   // 6. Print summary
@@ -367,8 +511,11 @@ async function main() {
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
+  console.log(`Filtered by age:       ${totalFilteredAge} removed (older than max_age_days)`);
+  console.log(`Filtered by remote:    ${totalFilteredRemote} removed (not remote/hybrid)`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
+  console.log(`Skip events logged:    ${skippedOffers.length} (first-time skips, for dashboard analytics)`);
 
   if (errors.length > 0) {
     console.log(`\nErrors (${errors.length}):`);

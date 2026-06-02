@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>career-ops — dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>career-ops <span class="muted">dashboard</span></h1>
+    <nav id="tabs">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="picks">⭐ Picks</button>
+      <button data-tab="pipeline">Pipeline</button>
+      <button data-tab="applications">Applications</button>
+      <button data-tab="scans">Scans</button>
+      <button data-tab="sources">Sources</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-overview" class="tab active">
+      <div class="toolbar">
+        <button id="run-scan-btn" class="primary">▶ Lancer un scan</button>
+        <span id="scan-state" class="muted small"></span>
+      </div>
+      <div class="cards" id="overview-cards"></div>
+      <h2>Top companies (scan history)</h2>
+      <div id="top-companies"></div>
+    </section>
+
+    <section id="tab-picks" class="tab">
+      <div class="toolbar">
+        <label>Score min
+          <select id="picks-min-score">
+            <option value="3.4" selected>≥ 3.4 (APPLY)</option>
+            <option value="3.0">≥ 3.0 (incl. conditional)</option>
+            <option value="2.5">≥ 2.5 (incl. borderline)</option>
+          </select>
+        </label>
+        <input id="picks-search" type="search" placeholder="Filtrer (entreprise, rôle)" />
+        <span id="picks-count" class="muted small"></span>
+      </div>
+      <div id="picks-grid"></div>
+    </section>
+
+    <section id="tab-pipeline" class="tab">
+      <div class="toolbar">
+        <input id="pipeline-search" type="search" placeholder="Filtrer (titre, entreprise, URL)" />
+      </div>
+      <h2>Pending <span id="pending-count" class="badge"></span></h2>
+      <div id="pending-table"></div>
+      <h2>Processed <span id="done-count" class="badge"></span></h2>
+      <div id="done-table"></div>
+    </section>
+
+    <section id="tab-applications" class="tab">
+      <div class="toolbar">
+        <input id="app-search" type="search" placeholder="Filtrer (entreprise, rôle, statut)" />
+        <select id="app-status-filter"><option value="">tous statuts</option></select>
+        <select id="app-min-score"><option value="">score min</option>
+          <option value="1">≥ 1</option><option value="2">≥ 2</option><option value="3">≥ 3</option>
+          <option value="3.5">≥ 3.5</option><option value="4">≥ 4</option>
+        </select>
+      </div>
+      <div id="app-table"></div>
+    </section>
+
+    <section id="tab-scans" class="tab">
+      <div class="toolbar">
+        <input id="scan-search" type="search" placeholder="Filtrer (titre, entreprise, location)" />
+        <select id="scan-status-filter"><option value="">tous statuts</option></select>
+        <select id="scan-portal-filter"><option value="">tous portails</option></select>
+      </div>
+      <div class="muted small" id="scan-summary"></div>
+      <div id="scan-table"></div>
+    </section>
+
+    <section id="tab-sources" class="tab">
+      <div class="toolbar">
+        <input id="src-search" type="search" placeholder="Filtrer entreprise" />
+        <select id="src-state-filter">
+          <option value="">tous</option>
+          <option value="enabled">enabled</option>
+          <option value="disabled">disabled</option>
+        </select>
+        <button id="src-scan-selected" class="primary" disabled>▶ Scan sélection (0)</button>
+        <button id="src-clear-selection">Effacer sélection</button>
+        <button id="src-add-btn">+ Ajouter</button>
+      </div>
+      <div id="src-table"></div>
+
+      <h2>Filtres (lecture seule)</h2>
+      <div class="filters-grid" id="filters-readonly"></div>
+    </section>
+  </main>
+
+  <!-- Modal: add/edit company -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modal-title">Ajouter une source</h3>
+      <form id="src-form">
+        <input type="hidden" id="f-original-name" />
+        <label>Nom <input id="f-name" required /></label>
+        <label>careers_url <input id="f-careers_url" placeholder="https://..." /></label>
+        <label>api <input id="f-api" placeholder="https://boards-api.greenhouse.io/..." /></label>
+        <label>api_provider
+          <select id="f-api_provider">
+            <option value="">(auto)</option>
+            <option>greenhouse</option><option>ashby</option><option>lever</option>
+            <option>bamboohr</option><option>teamtailor</option><option>workday</option>
+          </select>
+        </label>
+        <label>scan_method
+          <select id="f-scan_method">
+            <option value="">(api/playwright)</option>
+            <option>websearch</option>
+            <option>playwright</option>
+          </select>
+        </label>
+        <label>scan_query <input id="f-scan_query" /></label>
+        <label>notes <input id="f-notes" /></label>
+        <label class="checkbox"><input type="checkbox" id="f-enabled" checked /> enabled</label>
+        <div class="modal-actions">
+          <button type="button" id="modal-cancel">Annuler</button>
+          <button type="submit" class="primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: scan console -->
+  <div id="scan-modal" class="modal hidden">
+    <div class="modal-content scan-modal-content">
+      <div class="scan-modal-header">
+        <h3 id="scan-modal-title">Scan en cours…</h3>
+        <button type="button" id="scan-modal-close" class="ghost">Fermer</button>
+      </div>
+      <pre id="scan-log" class="scan-log"></pre>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
