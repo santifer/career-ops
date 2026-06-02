@@ -4,6 +4,7 @@
 
 import { createServer } from 'node:http';
 import { readFile, writeFile, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { extname, join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -17,6 +18,7 @@ const PORTALS_PATH = join(ROOT, 'portals.yml');
 const PIPELINE_PATH = join(ROOT, 'data', 'pipeline.md');
 const SCAN_HISTORY_PATH = join(ROOT, 'data', 'scan-history.tsv');
 const APPLICATIONS_PATH = join(ROOT, 'data', 'applications.md');
+const APP_CONTENT_DIR = join(ROOT, 'data', 'applications-content');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -346,10 +348,87 @@ async function runScanStreamed(req, res) {
   });
 }
 
+// ------------------------------------------------------- Application content
+// List the written applications (one JSON per candidate in data/applications-content/).
+async function getApplicationsContent() {
+  const { readdir } = await import('node:fs/promises');
+  let files = [];
+  try { files = (await readdir(APP_CONTENT_DIR)).filter(f => f.endsWith('.json')); }
+  catch { return { items: [] }; }
+  const items = [];
+  for (const f of files.sort()) {
+    try {
+      const raw = await readFile(join(APP_CONTENT_DIR, f), 'utf8');
+      const c = JSON.parse(raw);
+      const num = (c.report || '').match(/^(\d{3})/)?.[1] || null;
+      items.push({ id: c.id || f.replace(/\.json$/, ''), company: c.company || '', role: c.role || '', lang: c.lang || 'en', paper: c.paper || 'letter', report: c.report || null, num });
+    } catch { /* skip malformed */ }
+  }
+  return { items };
+}
+
+// Generate PDFs for one application via batch/gen-applications.mjs.
+// Body: { id, pages: 0|1|2, cover: bool }. pages 0 = cover only.
+let genRunning = false;
+async function generatePdf(req, res) {
+  if (genRunning) return sendErr(res, 409, 'Génération déjà en cours');
+  let body;
+  try { body = await readBody(req); } catch { return sendErr(res, 400, 'Body JSON invalide'); }
+  const id = typeof body?.id === 'string' ? body.id.trim() : '';
+  if (!id || !/^[a-z0-9_-]+$/i.test(id)) return sendErr(res, 400, 'id invalide');
+  const pages = [0, 1, 2].includes(body?.pages) ? body.pages : 2;
+  const cover = !!body?.cover;
+  if (pages === 0 && !cover) return sendErr(res, 400, 'Rien à générer (ni CV ni cover)');
+
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10);
+  const time = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+  const args = ['batch/gen-applications.mjs', '--id', id, '--date', date, '--time', time];
+  if (pages === 0) args.push('--cover-only');
+  else { args.push('--pages', String(pages)); if (cover) args.push('--cover'); }
+
+  genRunning = true;
+  const child = spawn(process.execPath, args, {
+    cwd: ROOT,
+    env: { ...process.env, NODE_OPTIONS: process.env.NODE_OPTIONS || '--use-system-ca' },
+  });
+  let stdout = '', stderr = '';
+  child.stdout.on('data', d => { stdout += d.toString('utf8'); });
+  child.stderr.on('data', d => { stderr += d.toString('utf8'); });
+  child.on('error', (err) => { genRunning = false; sendErr(res, 500, err.message); });
+  child.on('close', (code) => {
+    genRunning = false;
+    const m = stdout.match(/__RESULT__ (.+)$/m);
+    let results = [];
+    try { if (m) results = JSON.parse(m[1]); } catch {}
+    const locked = results.some(r => r.locked);
+    if (code !== 0 && !results.length) {
+      return sendErr(res, 500, (stderr || stdout || `exit ${code}`).slice(-400));
+    }
+    sendJson(res, 200, { ok: results.every(r => r.ok), locked, results, log: stdout });
+  });
+}
+
+// Open a generated file in the OS default app (Windows: start). Body: { file }.
+async function openFile(req, res) {
+  let body;
+  try { body = await readBody(req); } catch { return sendErr(res, 400, 'Body JSON invalide'); }
+  const file = typeof body?.file === 'string' ? body.file : '';
+  // Only allow opening files inside output/, no traversal.
+  if (!/^[a-z0-9._-]+\.pdf$/i.test(file)) return sendErr(res, 400, 'Nom de fichier invalide');
+  const full = join(ROOT, 'output', file);
+  if (!full.startsWith(join(ROOT, 'output'))) return sendErr(res, 403, 'Forbidden');
+  if (!existsSync(full)) return sendErr(res, 404, 'Fichier introuvable');
+  // Windows: `start` is a cmd builtin; use cmd /c start "" "<path>".
+  const child = spawn('cmd', ['/c', 'start', '', full], { detached: true, stdio: 'ignore' });
+  child.unref();
+  sendJson(res, 200, { ok: true, opened: file, path: full });
+}
+
 // ----------------------------------------------------------------- Static
 async function serveStatic(req, res, urlPath) {
-  // Serve /reports/* and /jds/* from project ROOT (read-only) with path safety
-  for (const sub of ['/reports/', '/jds/']) {
+  // Serve /reports/*, /jds/* and /output/* from project ROOT (read-only) with path safety
+  for (const sub of ['/reports/', '/jds/', '/output/']) {
     if (urlPath.startsWith(sub)) {
       const safe = urlPath.slice(sub.length);
       if (!/^[a-z0-9._\-]+$/i.test(safe)) return send(res, 400, 'Bad name', 'text/plain');
@@ -390,6 +469,9 @@ const server = createServer(async (req, res) => {
     if (req.method === 'GET' && path === '/api/applications') return sendJson(res, 200, await getApplications());
     if (req.method === 'GET' && path === '/api/portals') return sendJson(res, 200, await getPortals());
     if (req.method === 'GET' && path === '/api/reports') return sendJson(res, 200, await getReportsIndex());
+    if (req.method === 'GET' && path === '/api/applications-content') return sendJson(res, 200, await getApplicationsContent());
+    if (req.method === 'POST' && path === '/api/generate-pdf') return generatePdf(req, res);
+    if (req.method === 'POST' && path === '/api/open-file') return openFile(req, res);
 
     if (req.method === 'POST' && path === '/api/portals/companies') {
       const body = await readBody(req);

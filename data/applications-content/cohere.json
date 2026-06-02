@@ -1,0 +1,105 @@
+{
+  "id": "cohere",
+  "company": "Cohere",
+  "role": "Technical Program Manager, Product Engineering",
+  "lang": "en",
+  "paper": "letter",
+  "report": "052-cohere-2026-05-28.md",
+  "summary": "Senior program manager with 16 years of tier-1 project management at Crédit Agricole, built around multi-workstream program architecture: Basel II/III, BCBS 239, Pillar 3, IFRS 7, and Group ESG reporting run in parallel. Built program infrastructure from scratch (GreenWay, a Group-wide platform with 1,000+ users), set the executive operating cadence, and mapped dependencies across IT, Risk, Finance, and Audit. Alyra-certified in AI project management (2025). Now bringing that discipline to a nascent AI product portfolio.",
+  "competencies": [
+    "Program architecture",
+    "Multi-workstream delivery",
+    "Cross-functional dependency mapping",
+    "Executive operating cadence",
+    "Roadmapping & milestone tracking",
+    "Influence without authority",
+    "Risk & escalation management",
+    "AI project management (Alyra)"
+  ],
+  "jobs": [
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2021 – 09/2024",
+      "role": "Head of Extra-Financial (ESG) Reporting — Group CSR Department",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Built GreenWay, the Group-wide reporting platform, from scratch: the program infrastructure (indicator frameworks, reporting protocol, planning, status cadence) behind 1,000+ users across every entity.",
+        "Set and ran the executive operating cadence (ComEx, steering and operating committees, entity workshops, roadshows), turning messy status into decision-ready updates.",
+        "Mapped dependencies and coordinated IT, business, and audit teams to ship recurring reporting cycles without slip."
+      ],
+      "compact": "<strong>Head of Extra-Financial (ESG) Reporting</strong>, Montrouge — Built GreenWay (1,000+ users) from scratch: program infrastructure, executive cadence, dependency mapping."
+    },
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2018 – 04/2021",
+      "role": "Project Manager — Group Risk Division",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Ran multiple regulatory workstreams in parallel: Prudent Valuation, Institution to Aggregate, Pillar 3, and BCBS 239, each with cascading dependencies and quarterly deadlines.",
+        "Owned the consolidated plan, arbitrated priorities across workstreams, and escalated rather than absorbed blockers.",
+        "Delivered quarterly regulatory closings on cadence: configuration, deployment, business support, incident tracking."
+      ],
+      "compact": "<strong>Project Manager, Group Risk Division</strong>, Montrouge — Ran Pillar 3, BCBS 239, and Prudent Valuation in parallel; owned the consolidated plan and escalation."
+    },
+    {
+      "company": "Crédit Agricole CIB",
+      "period": "09/2013 – 03/2018",
+      "role": "Project Manager",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Managed the application producing the bank's prudential ratios, driving changes tied to regulatory reforms, architecture, and user needs.",
+        "Coordinated holding-company teams for the annual IFRS 7 reporting publication.",
+        "Held credible technical conversations with IT: challenged proposed solutions, owned test strategies and qualification."
+      ],
+      "compact": "<strong>Project Manager</strong>, Montrouge — Managed the prudential-ratio application; coordinated the annual IFRS 7 publication and challenged IT solutions."
+    },
+    {
+      "company": "Iorga",
+      "period": "02/2012 – 08/2013",
+      "role": "Senior Consultant",
+      "location": "Paris, France",
+      "bullets": [
+        "Supported the design and rollout of prudential-ratio production applications for banking clients."
+      ],
+      "compact": "<strong>Senior Consultant</strong>, Paris — Designed and rolled out prudential-ratio production applications for banking clients."
+    },
+    {
+      "company": "Ineum Consulting",
+      "period": "02/2007 – 11/2009",
+      "role": "Senior Consultant",
+      "location": "New York & Paris",
+      "bullets": [
+        "Served as PMO on the Basel II rollout for Société Générale Equipment Finance (Paris) and Americas Securities (New York); mapped and standardized cross-org data flows."
+      ],
+      "compact": "<strong>Senior Consultant</strong>, New York & Paris — PMO on the Basel II rollout for Société Générale Equipment Finance and Americas Securities."
+    }
+  ],
+  "projects": [
+    ["GreenWay — program built from scratch", "Stood up a Group-wide reporting platform (1,000+ users): indicator frameworks, protocol, planning, and executive cadence, all built where nothing existed before."],
+    ["Multi-workstream regulatory portfolio — CASA Risk", "Ran Pillar 3, BCBS 239, Prudent Valuation, and Yoshikuni in parallel, with consolidated planning and cross-team dependency management."],
+    ["Basel II rollout — Société Générale Equipment Finance", "PMO across a cross-org regulatory program spanning Paris and New York."]
+  ],
+  "education": [
+    ["AI Project Management & Consulting Certification", "Alyra", "2025", "Project management for AI projects using agile methods and AI consulting."],
+    ["Master in International Finance (taught in English)", "ISC Paris", "2005", ""],
+    ["Professional Title, Small-Business Entrepreneurship (RNCP III)", "CNE Paris", "2011", ""]
+  ],
+  "skills": [
+    ["Program & Project", "program architecture, multi-workstream delivery, dependency mapping, executive operating cadence, roadmapping, milestone tracking, PMO, governance"],
+    ["Cross-functional", "influence without authority, IT/Risk/Finance/Audit coordination, risk & escalation management, vendor and stakeholder management"],
+    ["Regulated data", "BCBS 239, Pillar 3, Basel III, IFRS, prudential ratios, ESG/CSRD reporting"],
+    ["AI & Automation", "AI project management (Alyra-certified), AI consulting, automation"],
+    ["Languages", "French (native), English (fluent)"]
+  ],
+  "cover": {
+    "meta": "<strong>Cohere</strong> &middot; Technical Program Manager, Product Engineering",
+    "salutation": "Dear Cohere team,",
+    "paras": [
+      "Your posting says this is a program architecture role, not delivery coordination. That is exactly the work I have done for 16 years. At Crédit Agricole I built GreenWay, a Group-wide reporting platform, from scratch: the frameworks, the cadence, the dependency maps, the status that executives could act on. There was no operating backbone before me. I built it.",
+      "Running multiple workstreams at once is the job I know best. For three years I carried Pillar 3, BCBS 239, Prudent Valuation, and Yoshikuni in parallel, each with cascading risks and quarterly deadlines, and shipped the closes without slip. The skill that makes that work, translating a messy picture into a decision-ready signal and escalating early, is the skill your nascent product portfolio needs.",
+      "I will be straight about the gap: my AI/ML product fluency is new. I am Alyra-certified (2025), I read the papers, and I run my own automations with Claude, n8n, and Make. My edge is the program architecture, not the modeling, and that is what this role is built around. Cohere's enterprise focus, builder culture, and Paris office are exactly where I want to bring it.",
+      "I would welcome an early conversation about how this discipline maps to your product engineering programs."
+    ],
+    "signoff": "Thank you for your time,"
+  }
+}

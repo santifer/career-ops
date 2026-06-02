@@ -1,0 +1,110 @@
+{
+  "id": "watershed",
+  "company": "Watershed",
+  "role": "Customer Success Manager, Strategic",
+  "lang": "en",
+  "paper": "letter",
+  "report": "068-watershed-2026-05-28.md",
+  "summary": "Reporting and program leader with 16 years of tier-1 project management at Crédit Agricole, including 3.5 years owning the Group's extra-financial (ESG) reporting platform. Built audit-ready CSRD and DPEF disclosures, ran the data governance behind them, and presented sustainability data to ComEx-level executives as input to strategic decisions. Coordinated business, IT, and audit teams across a 1,000+ user organization. Alyra-certified in AI project management (2025). Now partnering with sustainability leaders to turn climate and ESG data into executive decisions.",
+  "competencies": [
+    "CSRD & ESG reporting",
+    "Audit-ready disclosures",
+    "Sustainability data strategy",
+    "Executive relationships (ComEx)",
+    "Change management at scale",
+    "Regulatory & voluntary reporting",
+    "Multi-stakeholder coordination",
+    "Data governance"
+  ],
+  "jobs": [
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2021 – 09/2024",
+      "role": "Head of Extra-Financial (ESG) Reporting — Group CSR Department",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Owned GreenWay, the Group-wide sustainability reporting platform, and the relationships with the entities reporting into it across the organization.",
+        "Produced audit-ready disclosures for both regulatory and voluntary reporting: the Extra-Financial Performance Statement (DPEF) and CSRD-readiness deliverables.",
+        "Presented sustainability data to executive bodies (ComEx, steering and operating committees, entity workshops, roadshows), linking ESG metrics to strategic decisions.",
+        "Built the reporting protocol, indicator frameworks, controls, and ESG data-collection forms that made every disclosure auditable.",
+        "Ran change management across entities to drive adoption of the platform: onboarding, training, executive sponsorship, and recurring reporting cycles."
+      ],
+      "compact": "<strong>Head of Extra-Financial (ESG) Reporting</strong>, Montrouge — Owned GreenWay, the Group-wide sustainability reporting platform, and the audit-ready CSRD/DPEF disclosures behind it."
+    },
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2018 – 04/2021",
+      "role": "Project Manager — Group Risk Division",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Led regulated data-governance projects for the Group Risk Division: Prudent Valuation, Institution to Aggregate, Pillar 3, and BCBS 239.",
+        "Defined requirements, ran project governance, and coordinated IT and business stakeholders across teams.",
+        "Delivered quarterly regulatory closings: configuration, deployment, business support, and incident tracking."
+      ],
+      "compact": "<strong>Project Manager, Group Risk Division</strong>, Montrouge — Led BCBS 239, Pillar 3, and Prudent Valuation; coordinated IT and business stakeholders."
+    },
+    {
+      "company": "Crédit Agricole CIB",
+      "period": "09/2013 – 03/2018",
+      "role": "Project Manager",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Managed the application producing the bank's prudential ratios, driving changes tied to regulatory reforms, architecture, and user needs.",
+        "Coordinated holding-company teams for the annual IFRS 7 reporting publication.",
+        "Delivered scoping notes, requirements, committee materials, test strategies, and consolidated project reporting."
+      ],
+      "compact": "<strong>Project Manager</strong>, Montrouge — Managed the application producing the bank's prudential ratios; coordinated the annual IFRS 7 reporting publication."
+    },
+    {
+      "company": "Iorga",
+      "period": "02/2012 – 08/2013",
+      "role": "Senior Consultant",
+      "location": "Paris, France",
+      "bullets": [
+        "Supported the design and rollout of prudential-ratio production applications for banking clients.",
+        "Delivered scoping and steering artifacts: requirements, committee materials, test strategies."
+      ],
+      "compact": "<strong>Senior Consultant</strong>, Paris — Designed and rolled out prudential-ratio production applications for banking clients."
+    },
+    {
+      "company": "Ineum Consulting",
+      "period": "02/2007 – 11/2009",
+      "role": "Senior Consultant",
+      "location": "New York & Paris",
+      "bullets": [
+        "Served as PMO on the Basel II rollout for Société Générale Equipment Finance (Paris) and Société Générale Americas Securities (New York).",
+        "Mapped and standardized current and target data flows; contributed to organizational change."
+      ],
+      "compact": "<strong>Senior Consultant</strong>, New York & Paris — PMO on the Basel II rollout for Société Générale Equipment Finance and Americas Securities."
+    }
+  ],
+  "projects": [
+    ["GreenWay — Group-wide sustainability reporting platform", "Owned and ran the Crédit Agricole Group platform turning ESG data from every entity into audit-ready CSRD and DPEF disclosures. The customer-side equivalent of what sustainability software vendors sell."],
+    ["CSRD / DPEF readiness — Crédit Agricole Group", "Structured the indicator frameworks, controls, and reporting protocol behind the Group's regulatory and voluntary sustainability disclosures."],
+    ["Executive ESG governance — ComEx reporting", "Presented sustainability data to executive committees and entity leadership, translating ESG metrics into decisions across a 1,000+ user organization."]
+  ],
+  "education": [
+    ["AI Project Management & Consulting Certification", "Alyra", "2025", "Project management for AI projects using agile methods and AI consulting."],
+    ["Master in International Finance (taught in English)", "ISC Paris", "2005", ""],
+    ["Professional Title, Small-Business Entrepreneurship (RNCP III)", "CNE Paris", "2011", ""]
+  ],
+  "skills": [
+    ["Sustainability & ESG", "CSRD, ESG reporting, extra-financial reporting, audit-ready disclosures, DPEF, indicator frameworks, sustainability data governance"],
+    ["Customer & Executive", "executive relationships, ComEx-level communication, change management at scale, multi-stakeholder coordination, voice of the customer"],
+    ["Program & Project", "program management, PMO, governance, planning, budget, requirements, business/IT coordination"],
+    ["AI & Automation", "AI project management, AI consulting (Alyra-certified), automation"],
+    ["Regulated data", "BCBS 239, Pillar 3, Basel III, IFRS, prudential ratios, regulatory reporting"],
+    ["Languages", "French (native), English (fluent)"]
+  ],
+  "cover": {
+    "meta": "<strong>Watershed</strong> &middot; Customer Success Manager, Strategic",
+    "salutation": "Dear Watershed team,",
+    "paras": [
+      "I have spent the last three and a half years building exactly what you sell. As Head of Extra-Financial Reporting for the Crédit Agricole Group, I owned GreenWay, a Group-wide platform that turns sustainability data from every entity into audit-ready CSRD and DPEF disclosures. The work your customers are starting, I have already run from the inside.",
+      "Your strategic customers need someone who can sit with a CFO or a sustainability lead and connect climate data to a real decision. That was my job. I presented ESG metrics to executive committees, structured the indicator frameworks and controls that made every figure auditable, and drove adoption across a 1,000+ user organization. CSRD is not a keyword to me, it is the regulation I prepared the Group to meet.",
+      "I am candid about the shift: my strategic-account work has been internal, not as a vendor-side CSM. But the muscle is the same. Every reporting cycle was a renewal of trust with the entities I served, won by delivering on time and explaining hard data clearly. Before the bank, I spent six years in client-facing consulting (Ineum, Iorga), including a posting in New York. I want to bring that craft to Fortune 500 customers from the outside in.",
+      "Sixteen years of tier-1 program discipline, three and a half years owning Group sustainability reporting, and an Alyra AI project-management certification: that is the toolkit I would bring to your strategic portfolio. I would welcome an early conversation, including whether the role can be based out of your Paris office."
+    ],
+    "signoff": "Thank you for your time,"
+  }
+}

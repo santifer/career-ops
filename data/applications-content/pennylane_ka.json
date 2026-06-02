@@ -1,0 +1,104 @@
+{
+  "id": "pennylane_ka",
+  "company": "Pennylane",
+  "role": "Project Manager Key Accounts",
+  "lang": "fr",
+  "paper": "a4",
+  "report": "056-pennylane-2026-05-28.md",
+  "summary": "Chef de projet senior, 16 ans d'expérience en environnement finance et comptabilité tier-1 (Crédit Agricole). Pilotage de programmes Groupe multi-entités de bout en bout : cadrage, déploiement, adoption d'une plateforme auprès de 1 000+ utilisateurs, animation de comités de décideurs (ComEx, CoPil) et amélioration continue des process. Socle IFRS et comptabilité bancaire directement mobilisable. Certifié Alyra en gestion de projet IA (2025). Aujourd'hui tourné vers l'accompagnement des grands comptes dans leur transformation digitale.",
+  "competencies": [
+    "Gestion de projet de bout en bout",
+    "Déploiement & adoption",
+    "Relation décideurs exigeants",
+    "Conduite du changement",
+    "Comptabilité & IFRS",
+    "Amélioration continue des process",
+    "Coordination multi-interlocuteurs",
+    "Conseil"
+  ],
+  "jobs": [
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2021 – 09/2024",
+      "role": "Responsable Reporting Extra-financier — Direction RSE Groupe",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Piloté GreenWay, la plateforme de reporting du Groupe, de bout en bout : cadrage, déploiement multi-entités, montée en adoption auprès de 1 000+ utilisateurs.",
+        "Construit la relation de confiance avec des décideurs exigeants (ComEx, CoPil, directions d'entités) et porté les campagnes de reporting comme des cycles de renouvellement de confiance.",
+        "Structuré les référentiels, protocoles et livrables, et contribué à l'amélioration continue des process de reporting."
+      ],
+      "compact": "<strong>Responsable Reporting Extra-financier</strong>, Montrouge — Piloté GreenWay (1 000+ utilisateurs) de bout en bout : déploiement multi-entités, adoption, amélioration continue."
+    },
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2018 – 04/2021",
+      "role": "Chef de Projets — Direction des Risques Groupe",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Piloté des projets multi-interlocuteurs à forte dimension stratégique : Prudent Valuation, Institution to Aggregate, Pilier 3, BCBS 239.",
+        "Défini les besoins, animé les instances projet, coordonné IT et métiers, géré planning et budget.",
+        "Produit les arrêtés trimestriels : paramétrage, déploiement, support métier, suivi des incidents."
+      ],
+      "compact": "<strong>Chef de Projets, Direction des Risques Groupe</strong>, Montrouge — Piloté Pilier 3, BCBS 239 et Prudent Valuation; coordonné IT et métiers."
+    },
+    {
+      "company": "Crédit Agricole CIB",
+      "period": "09/2013 – 03/2018",
+      "role": "Chef de Projets",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Piloté l'application produisant les ratios prudentiels et coordonné les équipes de la holding pour la publication annuelle du reporting IFRS 7.",
+        "Maîtrise concrète des concepts comptables et financiers (IFRS, ratios prudentiels) en environnement bancaire tier-1."
+      ],
+      "compact": "<strong>Chef de Projets</strong>, Montrouge — Piloté l'application des ratios prudentiels; coordonné la publication annuelle IFRS 7."
+    },
+    {
+      "company": "Iorga",
+      "period": "02/2012 – 08/2013",
+      "role": "Consultant Senior",
+      "location": "Paris, France",
+      "bullets": [
+        "Accompagné des clients bancaires dans la création et le déploiement d'applications réglementaires, avec un fort sens du conseil."
+      ],
+      "compact": "<strong>Consultant Senior</strong>, Paris — Accompagnement de clients bancaires sur des applications réglementaires, fort sens du conseil."
+    },
+    {
+      "company": "Ineum Consulting",
+      "period": "02/2007 – 11/2009",
+      "role": "Consultant Senior",
+      "location": "New York & Paris",
+      "bullets": [
+        "Mission PMO sur le déploiement de Bâle II pour Société Générale Equipement Finance (Paris) et Americas Securities (New York)."
+      ],
+      "compact": "<strong>Consultant Senior</strong>, New York & Paris — PMO sur le déploiement de Bâle II pour Société Générale."
+    }
+  ],
+  "projects": [
+    ["GreenWay — déploiement plateforme Groupe", "Pilotage du déploiement multi-entités et de l'adoption d'une plateforme de reporting auprès de 1 000+ utilisateurs : l'équivalent interne d'un déploiement SaaS chez un grand compte."],
+    ["Reporting IFRS 7 — Crédit Agricole CIB", "Coordination des équipes de la holding pour la publication annuelle, en environnement comptable et réglementaire."],
+    ["BCBS 239 — Direction des Risques Groupe", "Projet multi-stakeholder à forte dimension stratégique, animation des instances et coordination IT/métiers."]
+  ],
+  "education": [
+    ["Certification Gestion de Projet IA & Conseil", "Alyra", "2025", "Gestion de projet pour les projets IA, méthodes agiles et conseil en intelligence artificielle."],
+    ["Master de Finance Internationale (enseigné en anglais)", "ISC Paris", "2005", ""],
+    ["Titre professionnel d'Entrepreneur de petite entreprise (RNCP III)", "CNE Paris", "2011", ""]
+  ],
+  "skills": [
+    ["Gestion de projet", "pilotage de bout en bout, déploiement, adoption, conduite du changement, planning, budget, animation d'instances, amélioration continue"],
+    ["Relation & conseil", "relation décideurs exigeants, animation ComEx/CoPil, sens du conseil, coordination multi-interlocuteurs"],
+    ["Comptabilité & finance", "IFRS, comptabilité bancaire, ratios prudentiels, BCBS 239, Pilier 3, reporting ESG/CSRD"],
+    ["IA & automatisation", "gestion de projet IA (certifié Alyra), conseil IA, automatisation"],
+    ["Langues", "Français (natif), Anglais (courant)"]
+  ],
+  "cover": {
+    "meta": "<strong>Pennylane</strong> &middot; Project Manager Key Accounts",
+    "salutation": "Bonjour,",
+    "paras": [
+      "Pendant 16 ans, j'ai piloté des projets de transformation en environnement finance et comptabilité au Crédit Agricole. Le vocabulaire de vos clients, les cabinets d'expertise comptable, est le mien : IFRS, comptabilité bancaire, ratios prudentiels, reporting réglementaire. Je n'ai pas à apprendre le métier de la donnée comptable, je l'ai pratiqué tous les jours.",
+      "Le cœur du poste, piloter un déploiement de bout en bout chez un grand compte exigeant, est exactement ce que j'ai fait avec GreenWay : une plateforme déployée auprès de 1 000+ utilisateurs à travers tout le Groupe, de la phase pilote à l'adoption, en passant par la relation avec des décideurs et l'amélioration continue des process. La différence avec un cabinet, c'est le cadre, pas la discipline.",
+      "Je suis transparent sur l'écart : je n'ai pas géré de compte client externe en SaaS B2B. Mais chaque cycle de reporting a été un renouvellement de confiance avec les entités que j'accompagnais, gagné en livrant à l'heure et en expliquant clairement des sujets complexes. Mes six ans de conseil client (Ineum, Iorga) m'ont donné ce réflexe de la relation externe.",
+      "Je serais ravi d'échanger sur la façon dont cette expérience peut servir vos plus grands comptes."
+    ],
+    "signoff": "Merci de votre attention,"
+  }
+}

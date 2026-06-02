@@ -1,0 +1,104 @@
+{
+  "id": "pennylane_it",
+  "company": "Pennylane",
+  "role": "IT Project Manager",
+  "lang": "en",
+  "paper": "a4",
+  "report": "060-pennylane-2026-05-28.md",
+  "summary": "Senior project manager with 16 years in tier-1 regulated banking (Crédit Agricole): BCBS 239, Pillar 3, and Group ESG/CSRD reporting, a regulatory-compliance discipline that maps directly onto DORA and ISO 27001. Built governance frameworks and referentials, ran the executive committees behind them, and coordinated IT, Risk, and Audit across a 1,000+ user organization. Alyra-certified in AI project management (2025), hands-on daily with Claude, n8n, and Make. Now leading IT governance and AI adoption in a fast-growing FinTech.",
+  "competencies": [
+    "IT governance",
+    "Regulatory compliance (DORA, ISO 27001)",
+    "AI governance standards",
+    "Shadow AI mitigation",
+    "Change management for AI adoption",
+    "Vendor management",
+    "Cross-functional coordination",
+    "AI project management (Alyra)"
+  ],
+  "jobs": [
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2021 – 09/2024",
+      "role": "Head of Extra-Financial (ESG) Reporting — Group CSR Department",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Owned GreenWay, a Group-wide platform, and built the governance standards behind it: referentials, reporting protocol, controls, and data-collection forms.",
+        "Ran change management across entities to drive adoption: onboarding, training, executive sponsorship.",
+        "Presented to executive committees, translating compliance and data requirements into decisions."
+      ],
+      "compact": "<strong>Head of Extra-Financial (ESG) Reporting</strong>, Montrouge — Owned GreenWay and built the governance standards, referentials, and controls behind it."
+    },
+    {
+      "company": "Crédit Agricole SA",
+      "period": "04/2018 – 04/2021",
+      "role": "Project Manager — Group Risk Division",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Led BCBS 239 and Pillar 3, the banking-sector ancestors of DORA: regulated operational and data-resilience compliance with strict controls and audit trails.",
+        "Defined requirements, ran governance committees, and coordinated IT, Risk, and business stakeholders.",
+        "Managed budget and vendors across regulatory programs; delivered quarterly closings on cadence."
+      ],
+      "compact": "<strong>Project Manager, Group Risk Division</strong>, Montrouge — Led BCBS 239 and Pillar 3 (DORA-class compliance): operational resilience, data governance, audit-ready controls."
+    },
+    {
+      "company": "Crédit Agricole CIB",
+      "period": "09/2013 – 03/2018",
+      "role": "Project Manager",
+      "location": "Montrouge, France",
+      "bullets": [
+        "Managed the application producing the bank's prudential ratios; coordinated holding-company teams for the annual IFRS 7 publication.",
+        "Owned test strategies, qualification, and incident management across regulatory releases."
+      ],
+      "compact": "<strong>Project Manager</strong>, Montrouge — Managed the prudential-ratio application; owned test strategies, qualification, and incident management."
+    },
+    {
+      "company": "Iorga",
+      "period": "02/2012 – 08/2013",
+      "role": "Senior Consultant",
+      "location": "Paris, France",
+      "bullets": [
+        "Supported the design and rollout of regulatory production applications for banking clients."
+      ],
+      "compact": "<strong>Senior Consultant</strong>, Paris — Designed and rolled out regulatory production applications for banking clients."
+    },
+    {
+      "company": "Ineum Consulting",
+      "period": "02/2007 – 11/2009",
+      "role": "Senior Consultant",
+      "location": "New York & Paris",
+      "bullets": [
+        "Served as PMO on the Basel II rollout for Société Générale Equipment Finance and Americas Securities."
+      ],
+      "compact": "<strong>Senior Consultant</strong>, New York & Paris — PMO on the Basel II rollout for Société Générale."
+    }
+  ],
+  "projects": [
+    ["GreenWay — Group-wide governance platform", "Built the governance standards, referentials, and controls behind a Group-wide platform with 1,000+ users."],
+    ["BCBS 239 — regulated compliance (DORA-class)", "Led tier-1 banking compliance with the same shape as DORA: operational resilience, data governance, audit-ready controls."],
+    ["Personal AI automations — Claude / n8n / Make", "Hands-on AI literacy: built personal workflows automating real tasks, the practical grounding for AI governance and Shadow AI policy."]
+  ],
+  "education": [
+    ["AI Project Management & Consulting Certification", "Alyra", "2025", "Project management for AI projects using agile methods and AI consulting."],
+    ["Master in International Finance (taught in English)", "ISC Paris", "2005", ""],
+    ["Professional Title, Small-Business Entrepreneurship (RNCP III)", "CNE Paris", "2011", ""]
+  ],
+  "skills": [
+    ["Governance & Compliance", "IT governance, regulatory compliance (DORA, ISO 27001), BCBS 239, Pillar 3, audit-ready controls, governance standards"],
+    ["AI Governance", "AI governance standards, AI committee, Shadow AI mitigation, change management for AI adoption, AI literacy"],
+    ["Project & Vendor", "program management, PMO, cross-functional coordination, vendor management, budget, planning"],
+    ["Hands-on AI", "Alyra-certified; daily use of Claude, n8n, Make; automation"],
+    ["Languages", "French (native), English (fluent)"]
+  ],
+  "cover": {
+    "meta": "<strong>Pennylane</strong> &middot; IT Project Manager",
+    "salutation": "Dear Pennylane team,",
+    "paras": [
+      "DORA is, for Pennylane today, what BCBS 239 was for Crédit Agricole a decade ago, and I led that effort. For 16 years I ran regulated compliance programs in tier-1 banking: BCBS 239, Pillar 3, and Group ESG/CSRD reporting. The shape of the work, operational resilience, data governance, audit-ready controls, is exactly what ISO 27001 and DORA ask of a fast-growing FinTech.",
+      "What makes this role rare is the second half: AI governance and Shadow AI. I am Alyra-certified (2025) and I use Claude, n8n, and Make every day to automate real work. That combination, regulated-compliance discipline plus hands-on AI literacy, is what lets someone design sound AI usage standards and an AI committee rather than just write a policy nobody follows.",
+      "I will name the gap directly: I have not administered Okta, Jamf, or Google Workspace in production. Those are tools I can ramp on in weeks, backed by 16 years of vendor management, governance standards, and change management. The mindset the role needs, compliance plus AI governance, is the hard part, and it is the part I already have.",
+      "I would welcome a conversation, and I can walk you through a DORA readiness roadmap and a first-draft AI usage policy."
+    ],
+    "signoff": "Thank you for your time,"
+  }
+}

@@ -20,6 +20,7 @@ function saveSelectedSources(set) {
 const state = {
   scan: null, pipeline: null, applications: null, portals: null, reports: null,
   selectedSources: loadSelectedSources(),
+  appsContent: null,
 };
 
 function toast(msg, kind = 'ok') {
@@ -67,6 +68,7 @@ function switchTab(tab) {
   if (tab === 'picks') renderPicks();
   if (tab === 'pipeline') renderPipeline();
   if (tab === 'applications') renderApplications();
+  if (tab === 'generate') renderGenerate();
   if (tab === 'scans') renderScans();
   if (tab === 'sources') renderSources();
 }
@@ -406,6 +408,75 @@ async function onSourceAction(e) {
   } catch (err) {
     toast(err.message, 'err');
   }
+}
+
+// --------------------------------------------------------------- Generate CV
+const FLAG = { en: '🇬🇧', fr: '🇫🇷' };
+async function renderGenerate() {
+  const host = $('#gen-list');
+  if (!state.appsContent) {
+    host.innerHTML = `<div class="muted" style="padding:24px">Chargement…</div>`;
+    try { state.appsContent = await api('/api/applications-content'); }
+    catch (e) { host.innerHTML = `<div class="muted" style="padding:24px">Erreur: ${esc(e.message)}</div>`; return; }
+  }
+  const items = state.appsContent.items || [];
+  if (!items.length) {
+    host.innerHTML = `<div class="muted" style="padding:24px">— aucune candidature rédigée (data/applications-content/*.json) —</div>`;
+    return;
+  }
+  host.innerHTML = items.map(it => {
+    const reportLink = it.report ? `<a href="/reports/${esc(it.report)}" target="_blank">rapport</a>` : '';
+    return `<div class="card gen-card" data-id="${esc(it.id)}">
+      <div class="gen-head">
+        <div>
+          <strong>${esc(it.company)}</strong> — ${esc(it.role)}
+          <div class="muted small">${FLAG[it.lang] || ''} ${esc(it.lang.toUpperCase())} · ${esc(it.paper.toUpperCase())} ${reportLink ? '· ' + reportLink : ''}</div>
+        </div>
+      </div>
+      <div class="gen-opts">
+        <label class="radio"><input type="radio" name="pages-${esc(it.id)}" value="1" /> CV 1 page</label>
+        <label class="radio"><input type="radio" name="pages-${esc(it.id)}" value="2" checked /> CV 2 pages</label>
+        <label class="radio"><input type="radio" name="pages-${esc(it.id)}" value="0" /> sans CV</label>
+        <label class="checkbox-inline"><input type="checkbox" class="gen-cover" checked /> + cover letter</label>
+        <button class="primary gen-btn" data-id="${esc(it.id)}">Générer PDF</button>
+      </div>
+      <div class="gen-result muted small" data-id="${esc(it.id)}"></div>
+    </div>`;
+  }).join('');
+  $$('.gen-btn').forEach(b => b.addEventListener('click', onGenerate));
+}
+
+async function onGenerate(e) {
+  const id = e.currentTarget.dataset.id;
+  const card = e.currentTarget.closest('.gen-card');
+  const pages = Number(card.querySelector(`input[name="pages-${id}"]:checked`)?.value ?? 2);
+  const cover = card.querySelector('.gen-cover').checked;
+  const resultEl = card.querySelector('.gen-result');
+  if (pages === 0 && !cover) { resultEl.innerHTML = `<span class="badge red">coche au moins CV ou cover</span>`; return; }
+  e.currentTarget.disabled = true;
+  resultEl.innerHTML = 'génération…';
+  try {
+    const r = await api('/api/generate-pdf', { method: 'POST', body: { id, pages, cover } });
+    if (r.locked) {
+      resultEl.innerHTML = `<span class="badge red">⚠ PDF ouvert dans un lecteur — ferme-le et réessaie</span>`;
+    } else {
+      const links = (r.results || []).filter(x => x.pdf).map(x =>
+        `<a href="/output/${esc(x.pdf)}" target="_blank">${esc(x.kind)}${x.pages ? ` (${x.pages}p)` : ''}</a>
+         <button class="link-btn gen-open" data-file="${esc(x.pdf)}">ouvrir</button>`).join(' &nbsp;·&nbsp; ');
+      resultEl.innerHTML = `<span class="badge green">✓ généré</span> ${links}`;
+      card.querySelectorAll('.gen-open').forEach(btn => btn.addEventListener('click', onOpenFile));
+    }
+  } catch (err) {
+    resultEl.innerHTML = `<span class="badge red">${esc(err.message)}</span>`;
+  } finally {
+    e.currentTarget.disabled = false;
+  }
+}
+
+async function onOpenFile(e) {
+  const file = e.currentTarget.dataset.file;
+  try { await api('/api/open-file', { method: 'POST', body: { file } }); toast(`Ouverture de ${file}`); }
+  catch (err) { toast(err.message, 'err'); }
 }
 
 // ------------------------------------------------------------------ Modal

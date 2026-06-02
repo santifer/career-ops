@@ -86,6 +86,17 @@ a:hover { text-decoration: underline; }
 .scan-log .new { color: var(--accent-2); }
 .scan-log .warn { color: #e3b341; }
 
+/* Generate CV tab */
+.gen-card { margin-bottom: 14px; padding: 16px; }
+.gen-head { margin-bottom: 12px; }
+.gen-opts { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.gen-opts label.radio, .gen-opts label.checkbox-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg); cursor: pointer; }
+.gen-opts input[type=radio] { width: 15px; height: 15px; min-width: 0; padding: 0; cursor: pointer; accent-color: var(--accent); }
+.gen-result { margin-top: 10px; min-height: 18px; }
+.gen-result a { color: var(--accent-2); }
+.link-btn { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0 2px; font-size: 12px; text-decoration: underline; }
+.link-btn:hover { color: var(--accent-2); }
+
 /* Toast */
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel-2); color: var(--fg); border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; z-index: 20; max-width: 320px; }
 .toast.hidden { display: none; }
