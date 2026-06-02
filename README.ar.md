@@ -1,4 +1,4 @@
-# Career-Ops | نظام إدارة وتخطيط البحث عن وظائف باستخدام الذكاء الاصطناعي (ميكانيكي ووكيل)
+# Career-Ops | نظام إدارة وتخطيط البحث عن وظائف باستخدام الذكاء الاصطناعي (وكيل ماتمت)
 
 [English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [繁體中文](README.zh-TW.md) | [العربية](README.ar.md)
 
