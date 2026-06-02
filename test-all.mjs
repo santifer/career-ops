@@ -174,16 +174,28 @@ for (const f of systemFiles) {
   }
 }
 
-const careerOpsSkill = readFile('.agents/skills/career-ops/SKILL.md');
-if (
-  careerOpsSkill.includes('user_invocable: true') &&
-  !careerOpsSkill.includes('user-invocable: true') &&
-  !careerOpsSkill.includes('arguments: mode') &&
-  !careerOpsSkill.includes('license: MIT')
-) {
-  pass('career-ops skill frontmatter matches Claude Code schema');
+const careerOpsSkillPath = '.agents/skills/career-ops/SKILL.md';
+if (!fileExists(careerOpsSkillPath)) {
+  fail(`Missing system file: ${careerOpsSkillPath}`);
 } else {
-  fail('career-ops skill frontmatter still contains non-Claude keys');
+  const careerOpsSkill = readFile(careerOpsSkillPath);
+  const frontmatterMatch = careerOpsSkill.match(/^---\n([\s\S]*?)\n---\n?/);
+
+  if (!frontmatterMatch) {
+    fail('career-ops skill is missing YAML frontmatter');
+  } else {
+    const frontmatter = frontmatterMatch[1];
+    if (
+      frontmatter.includes('user_invocable: true') &&
+      !frontmatter.includes('user-invocable: true') &&
+      !frontmatter.includes('arguments: mode') &&
+      !frontmatter.includes('license: MIT')
+    ) {
+      pass('career-ops skill frontmatter uses Claude-compatible keys');
+    } else {
+      fail('career-ops skill frontmatter still contains non-Claude keys');
+    }
+  }
 }
 
 // Check user files are NOT tracked (gitignored)
