@@ -139,36 +139,48 @@ const coverCss = (pageWidth) => `${FONTS}
   .signoff { font-size: 11px; margin-top: 18px; line-height: 1.5; }
   .signoff .name { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: hsl(270,70%,45%); margin-top: 4px; }`;
 
-// ---- identity (read from config/profile.yml, fallback to placeholders) -------
+// ---- identity (read from config/profile.yml) --------------------------------
 function readIdentity() {
-  // Minimal YAML read to avoid a dependency: pull candidate.{full_name,email,linkedin,location}.
+  // Minimal YAML read to avoid a dependency. An empty value ("") is meaningful
+  // (field intentionally omitted) and is NOT replaced by a default.
   const p = join(ROOT, 'config', 'profile.yml');
-  const id = { name: 'Fabe', email: 'Fabe@gmail.com', linkedin: 'linkedin.com/in/fabe', location: 'Paris, France' };
+  const id = { name: '', email: '', phone: '', linkedin: '', location: '' };
   if (!existsSync(p)) return id;
   const raw = readFileSync(p, 'utf8');
+  // Returns the trimmed string (possibly ''), or null if the key is absent.
   const grab = (key) => {
-    const m = raw.match(new RegExp(`^\\s*${key}:\\s*["']?([^"'\\n#]+?)["']?\\s*(#.*)?$`, 'm'));
-    return m ? m[1].trim() : null;
+    const m = raw.match(new RegExp(`^\\s*${key}:\\s*(.*)$`, 'm'));
+    if (!m) return null;
+    return m[1].replace(/\s+#.*$/, '').trim().replace(/^["']|["']$/g, '');
   };
-  id.name = grab('full_name') || id.name;
-  id.email = grab('email') || id.email;
-  id.linkedin = grab('linkedin') || id.linkedin;
-  id.location = grab('location') || id.location;
+  const set = (k, key) => { const v = grab(key); if (v !== null) id[k] = v; };
+  set('name', 'full_name');
+  set('email', 'email');
+  set('phone', 'phone');
+  set('linkedin', 'linkedin');
+  set('location', 'location');
   return id;
 }
 
 const esc = (s) => String(s ?? '');
+
+// Build the contact row from non-empty fields only, joined by separators.
+// opts.phone controls whether the phone is included (CV: yes, cover letter: no —
+// the career-ops rule forbids phone numbers in candidate-facing messages).
+function contactRow(id, opts = {}) {
+  const parts = [];
+  if (opts.phone && id.phone) parts.push(`<span>${esc(id.phone)}</span>`);
+  if (id.email) parts.push(`<span>${esc(id.email)}</span>`);
+  if (id.linkedin) parts.push(`<a href="https://${esc(id.linkedin)}">${esc(id.linkedin)}</a>`);
+  if (id.location) parts.push(`<span>${esc(id.location)}</span>`);
+  return `<div class="contact-row">${parts.join('<span class="separator">|</span>')}</div>`;
+}
+
 const header = (id) => `
   <div class="header avoid-break">
     <h1>${esc(id.name)}</h1>
     <div class="header-gradient"></div>
-    <div class="contact-row">
-      <span>${esc(id.email)}</span>
-      <span class="separator">|</span>
-      <a href="https://${esc(id.linkedin)}">${esc(id.linkedin)}</a>
-      <span class="separator">|</span>
-      <span>${esc(id.location)}</span>
-    </div>
+    ${contactRow(id, { phone: true })}
   </div>`;
 
 const L = {
@@ -229,9 +241,8 @@ function renderCV(c, id, pages) {
 function renderCover(c, id) {
   const pw = c.paper === 'a4' ? '210mm' : '8.5in';
   const inner = [
-    `<div class="header"><h1>${esc(id.name)}</h1><div class="header-gradient"></div>` +
-      `<div class="contact-row"><span>${esc(id.email)}</span><span class="separator">|</span>` +
-      `<a href="https://${esc(id.linkedin)}">${esc(id.linkedin)}</a><span class="separator">|</span><span>${esc(id.location)}</span></div></div>`,
+    // No phone on the cover letter (career-ops rule: never share phone in messages).
+    `<div class="header"><h1>${esc(id.name)}</h1><div class="header-gradient"></div>${contactRow(id, { phone: false })}</div>`,
     `<div class="meta">${c.cover.meta}</div>`,
     `<div class="salutation">${esc(c.cover.salutation)}</div>`,
     c.cover.paras.map(p => `<p class="body-para">${esc(p)}</p>`).join('\n  '),
