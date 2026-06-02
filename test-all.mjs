@@ -174,6 +174,18 @@ for (const f of systemFiles) {
   }
 }
 
+const careerOpsSkill = readFile('.agents/skills/career-ops/SKILL.md');
+if (
+  careerOpsSkill.includes('user_invocable: true') &&
+  !careerOpsSkill.includes('user-invocable: true') &&
+  !careerOpsSkill.includes('arguments: mode') &&
+  !careerOpsSkill.includes('license: MIT')
+) {
+  pass('career-ops skill frontmatter matches Claude Code schema');
+} else {
+  fail('career-ops skill frontmatter still contains non-Claude keys');
+}
+
 // Check user files are NOT tracked (gitignored)
 const userFiles = [
   'config/profile.yml', 'modes/_profile.md', 'portals.yml',
