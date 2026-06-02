@@ -513,6 +513,24 @@ console.log('\n12. Follow-up cadence logic');
 try {
   const cadence = await import(pathToFileURL(join(ROOT, 'followup-cadence.mjs')).href);
 
+  // CLI regression: the import.meta.url guard must still let the module run as a CLI.
+  // Data-independent — default mode emits the result as JSON: a `metadata` object when
+  // the tracker has applications, or an `{error}` object (exit 1) when it is empty.
+  // Empty output would mean the guard wrongly suppressed main().
+  let cliOut = '';
+  try {
+    cliOut = execFileSync(NODE, [join(ROOT, 'followup-cadence.mjs')], { cwd: ROOT, encoding: 'utf-8', timeout: 30000 });
+  } catch (cliErr) {
+    cliOut = `${cliErr.stdout || ''}`; // exit 1 on an empty tracker is expected; keep stdout
+  }
+  let cliJson = null;
+  try { cliJson = JSON.parse(cliOut.trim()); } catch { /* leave null → fail below */ }
+  if (cliJson && typeof cliJson === 'object' && ('metadata' in cliJson || 'error' in cliJson)) {
+    pass('CLI still executes under the import.meta.url guard (emits result JSON)');
+  } else {
+    fail('CLI produced no structured JSON when run directly — import.meta.url guard may be broken');
+  }
+
   // Date helpers
   if (cadence.addDays(cadence.parseDate('2026-05-01'), 7) === '2026-05-08') {
     pass('addDays advances a parsed date by N days (UTC)');
