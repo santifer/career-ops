@@ -38,6 +38,9 @@ modes/_profile.md
 node_modules/
 bun.lock
 
+# Backup files written by normalize-statuses.mjs / dedup-tracker.mjs
+*.bak
+
 # OS
 .DS_Store
 *.mov
