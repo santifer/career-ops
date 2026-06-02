@@ -1,0 +1,119 @@
+<svg width="100%" viewBox="0 0 680 720" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>career-ops system architecture</title>
+  <desc>End-to-end pipeline: job portals → scan.mjs → dedup → pipeline.md → Claude scoring → cover letter / skip. Config layer: cv.md, profile.yml, _profile.md, oferta.md.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #1a1a1a; }
+      .th  { font-size: 14px; font-weight: 600; }
+      .ts  { font-size: 12px; fill: #555; }
+      .arr { stroke: #888; stroke-width: 1.2; fill: none; }
+      .box-gray   { fill: #f4f4f2; stroke: #c8c6be; }
+      .box-purple { fill: #eeedfe; stroke: #9b94e0; }
+      .box-teal   { fill: #e1f5ee; stroke: #1d9e75; }
+      .box-amber  { fill: #faeeda; stroke: #ba7517; }
+      .box-coral  { fill: #faece7; stroke: #d85a30; }
+    </style>
+  </defs>
+
+  <!-- Layer labels -->
+  <text class="ts" x="30" y="70" text-anchor="middle" transform="rotate(-90,30,70)" fill="#aaa">Sources</text>
+  <text class="ts" x="30" y="210" text-anchor="middle" transform="rotate(-90,30,210)" fill="#aaa">Ingest</text>
+  <text class="ts" x="30" y="355" text-anchor="middle" transform="rotate(-90,30,355)" fill="#aaa">Evaluate</text>
+  <text class="ts" x="30" y="500" text-anchor="middle" transform="rotate(-90,30,500)" fill="#aaa">Track</text>
+  <text class="ts" x="30" y="640" text-anchor="middle" transform="rotate(-90,30,640)" fill="#aaa">Config</text>
+
+  <!-- ROW 1: Source portals -->
+  <rect class="box-gray" x="60" y="40" width="130" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="125" y="59" text-anchor="middle">Greenhouse</text>
+  <text class="ts" x="125" y="75" text-anchor="middle">API</text>
+
+  <rect class="box-gray" x="210" y="40" width="130" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="275" y="59" text-anchor="middle">Ashby</text>
+  <text class="ts" x="275" y="75" text-anchor="middle">API</text>
+
+  <rect class="box-gray" x="360" y="40" width="130" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="425" y="59" text-anchor="middle">Lever</text>
+  <text class="ts" x="425" y="75" text-anchor="middle">API</text>
+
+  <rect class="box-teal" x="510" y="40" width="130" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="575" y="59" text-anchor="middle" fill="#085041">portals.yml</text>
+  <text class="ts" x="575" y="75" text-anchor="middle" fill="#0f6e56">Company registry</text>
+
+  <!-- Arrows: portals → scan.mjs -->
+  <line x1="125" y1="84" x2="125" y2="140" class="arr" marker-end="url(#arrow)"/>
+  <line x1="275" y1="84" x2="275" y2="140" class="arr" marker-end="url(#arrow)"/>
+  <line x1="425" y1="84" x2="425" y2="140" class="arr" marker-end="url(#arrow)"/>
+  <line x1="510" y1="62" x2="460" y2="152" class="arr" stroke-dasharray="5 3" marker-end="url(#arrow)"/>
+
+  <!-- ROW 2: scan.mjs -->
+  <rect class="box-purple" x="170" y="140" width="320" height="56" rx="8" stroke-width="0.8"/>
+  <text class="th" x="330" y="162" text-anchor="middle" fill="#3c3489">scan.mjs</text>
+  <text class="ts" x="330" y="179" text-anchor="middle" fill="#534ab7">Fetches JDs · deduplicates · keyword filters · zero Claude tokens</text>
+
+  <line x1="330" y1="196" x2="330" y2="245" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ROW 3: dedup stores -->
+  <rect class="box-gray" x="110" y="245" width="175" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="197" y="264" text-anchor="middle">scan-history.tsv</text>
+  <text class="ts" x="197" y="280" text-anchor="middle">Seen-jobs dedupe</text>
+
+  <rect class="box-gray" x="385" y="245" width="175" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="472" y="264" text-anchor="middle">applications.md</text>
+  <text class="ts" x="472" y="280" text-anchor="middle">Applied-jobs dedupe</text>
+
+  <line x1="235" y1="289" x2="283" y2="330" class="arr" marker-end="url(#arrow)"/>
+  <line x1="425" y1="289" x2="377" y2="330" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ROW 4: pipeline.md -->
+  <rect class="box-teal" x="195" y="330" width="270" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="330" y="349" text-anchor="middle" fill="#085041">data/pipeline.md</text>
+  <text class="ts" x="330" y="365" text-anchor="middle" fill="#0f6e56">New unchecked JDs queue</text>
+
+  <line x1="330" y1="374" x2="330" y2="420" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ROW 5: Claude scoring -->
+  <rect class="box-amber" x="110" y="420" width="440" height="56" rx="8" stroke-width="0.8"/>
+  <text class="th" x="330" y="442" text-anchor="middle" fill="#633806">Claude evaluation · /career-ops pipeline</text>
+  <text class="ts" x="330" y="459" text-anchor="middle" fill="#854f0b">Scores JD 0–5 · reads cv.md + profile.yml + _profile.md · ≥4.0 → apply</text>
+
+  <line x1="245" y1="476" x2="185" y2="524" class="arr" marker-end="url(#arrow)"/>
+  <line x1="415" y1="476" x2="475" y2="524" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ROW 6: outputs -->
+  <rect class="box-teal" x="60" y="524" width="230" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="175" y="543" text-anchor="middle" fill="#085041">Cover letter draft</text>
+  <text class="ts" x="175" y="559" text-anchor="middle" fill="#0f6e56">JD-tailored from cv.md</text>
+
+  <rect class="box-gray" x="380" y="524" width="230" height="44" rx="8" stroke-width="0.8"/>
+  <text class="th" x="495" y="543" text-anchor="middle">Skip / archive</text>
+  <text class="ts" x="495" y="559" text-anchor="middle">Score &lt;4.0 → no action</text>
+
+  <!-- cover letter loops back to applications.md -->
+  <path d="M175 568 L175 614 L472 614 L472 568" fill="none" stroke="#aaa" stroke-width="1" stroke-dasharray="5 3" marker-end="url(#arrow)"/>
+
+  <!-- ROW 7: config layer -->
+  <rect class="box-coral" x="50" y="624" width="130" height="56" rx="8" stroke-width="0.8"/>
+  <text class="th" x="115" y="643" text-anchor="middle" fill="#4a1b0c">cv.md</text>
+  <text class="ts" x="115" y="661" text-anchor="middle" fill="#711b0c">Master resume</text>
+
+  <rect class="box-coral" x="200" y="624" width="130" height="56" rx="8" stroke-width="0.8"/>
+  <text class="th" x="265" y="643" text-anchor="middle" fill="#4a1b0c">profile.yml</text>
+  <text class="ts" x="265" y="661" text-anchor="middle" fill="#711b0c">Role targets · comp</text>
+
+  <rect class="box-coral" x="350" y="624" width="130" height="56" rx="8" stroke-width="0.8"/>
+  <text class="th" x="415" y="643" text-anchor="middle" fill="#4a1b0c">_profile.md</text>
+  <text class="ts" x="415" y="661" text-anchor="middle" fill="#711b0c">Scoring archetypes</text>
+
+  <rect class="box-coral" x="500" y="624" width="130" height="56" rx="8" stroke-width="0.8"/>
+  <text class="th" x="565" y="643" text-anchor="middle" fill="#4a1b0c">oferta.md</text>
+  <text class="ts" x="565" y="661" text-anchor="middle" fill="#711b0c">Evaluation mode</text>
+
+  <!-- Config → Claude scoring (dashed) -->
+  <line x1="115" y1="624" x2="170" y2="476" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="4 3" fill="none" marker-end="url(#arrow)"/>
+  <line x1="265" y1="624" x2="260" y2="476" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="4 3" fill="none" marker-end="url(#arrow)"/>
+  <line x1="415" y1="624" x2="400" y2="476" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="4 3" fill="none" marker-end="url(#arrow)"/>
+  <line x1="565" y1="624" x2="530" y2="476" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="4 3" fill="none" marker-end="url(#arrow)"/>
+</svg>
