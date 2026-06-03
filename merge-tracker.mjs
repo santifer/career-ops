@@ -71,6 +71,21 @@ function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Sanitize a value before it goes into a markdown table cell.
+// A raw `|` (common in JD/reason text and queue write-backs) injects extra
+// columns and corrupts the table. We replace it with `/` rather than escaping
+// as `\|`, because parseAppLine re-parses the tracker with a naive
+// `line.split('|')` that does NOT honour escapes — an escaped pipe would still
+// shift columns on the next merge. Newlines/tabs would split a single row
+// across lines, so collapse them too.
+function sanitizeCell(value) {
+  return String(value ?? '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\|/g, '/')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Tokens that almost every role shares — must NOT count as signal.
 // Includes seniority, work-mode, contract, and common locations.
 const ROLE_STOPWORDS = new Set([
@@ -346,7 +361,7 @@ for (const file of tsvFiles) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+        const updatedLine = `| ${duplicate.num} | ${sanitizeCell(addition.date)} | ${sanitizeCell(addition.company)} | ${sanitizeCell(addition.role)} | ${sanitizeCell(addition.score)} | ${sanitizeCell(duplicate.status)} | ${sanitizeCell(duplicate.pdf)} | ${sanitizeCell(addition.report)} | ${sanitizeCell(`Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`)} |`;
         appLines[lineIdx] = updatedLine;
         updated++;
       }
@@ -359,7 +374,7 @@ for (const file of tsvFiles) {
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
     if (addition.num > maxNum) maxNum = addition.num;
 
-    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
+    const newLine = `| ${entryNum} | ${sanitizeCell(addition.date)} | ${sanitizeCell(addition.company)} | ${sanitizeCell(addition.role)} | ${sanitizeCell(addition.score)} | ${sanitizeCell(addition.status)} | ${sanitizeCell(addition.pdf)} | ${sanitizeCell(addition.report)} | ${sanitizeCell(addition.notes)} |`;
     newLines.push(newLine);
     added++;
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);

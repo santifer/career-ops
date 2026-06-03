@@ -129,9 +129,14 @@ let brokenReports = 0;
 for (const e of entries) {
   const match = e.report.match(/\]\(([^)]+)\)/);
   if (!match) continue;
-  const reportPath = join(CAREER_OPS, match[1]);
+  const target = match[1];
+  // External links (e.g. queue write-backs use [job](https://…) for roles
+  // applied to straight from the review queue without a full eval report) are
+  // valid as-is — they are not local report files, so don't existsSync them.
+  if (/^https?:\/\//i.test(target)) continue;
+  const reportPath = join(CAREER_OPS, target);
   if (!existsSync(reportPath)) {
-    error(`#${e.num}: Report not found: ${match[1]}`);
+    error(`#${e.num}: Report not found: ${target}`);
     brokenReports++;
   }
 }

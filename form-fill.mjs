@@ -153,78 +153,13 @@ function pickVisaOption(options, visaAnswer) {
 // ── Greenhouse form fill ──────────────────────────────────────────────────────
 
 async function fillGreenhouse(page, profile, role) {
-  const manualFields = [];
-
-  // Greenhouse application forms render as regular HTML inputs/textareas/selects.
-  // We identify each question block by its label text.
-  const questions = await page.$$('[data-field]');
-
-  for (const qEl of questions) {
-    const label = await qEl.$eval('label, [class*="label"]', el => el.innerText).catch(() => '');
-    if (!label) continue;
-
-    const input    = await qEl.$('input:not([type=hidden]):not([type=submit]), textarea, select').catch(() => null);
-    const fileInput = await qEl.$('input[type=file]').catch(() => null);
-
-    // Resume upload
-    if (fileInput && /resume|cv|curriculum/i.test(label)) {
-      if (role.cv_pdf && existsSync(join(ROOT, role.cv_pdf))) {
-        await fileInput.setInputFiles(join(ROOT, role.cv_pdf));
-        console.log(`  ✅ Resume uploaded: ${role.cv_pdf}`);
-      } else {
-        manualFields.push({ label: label.trim(), reason: 'cv_pdf not generated — run /career-ops queue prepare' });
-      }
-      continue;
-    }
-
-    if (!input) continue;
-    const tagName = await input.evaluate(el => el.tagName.toLowerCase());
-    const type    = await input.getAttribute('type') || 'text';
-
-    // Visa/work auth dropdown — requires special option matching
-    if (tagName === 'select' && /visa|work.?auth|right.?to.?work/i.test(label)) {
-      const optionTexts = await input.$$eval('option', els => els.map(e => e.textContent.trim()));
-      const pick = pickVisaOption(optionTexts, role.visa_answer);
-      if (pick) {
-        await input.selectOption({ label: pick });
-        console.log(`  ✅ Visa dropdown: "${pick}"`);
-      } else {
-        console.log(`  ⚠️  Visa dropdown: no matching option for "${role.visa_answer}" — left for manual`);
-        manualFields.push({ label: label.trim(), reason: `no ATS option matches "${role.visa_answer}"` });
-      }
-      continue;
-    }
-
-    // Standard select (non-visa)
-    if (tagName === 'select') {
-      const match = matchField(label, 'select', profile, role);
-      if (match) {
-        const optionTexts = await input.$$eval('option', els => els.map(e => e.textContent.trim()));
-        const pick = optionTexts.find(o => o.toLowerCase().includes(match.value.toLowerCase()));
-        if (pick) {
-          await input.selectOption({ label: pick });
-          console.log(`  ✅ ${label.trim()}: "${pick}"`);
-        } else {
-          manualFields.push({ label: label.trim(), reason: 'no matching option' });
-        }
-      } else {
-        manualFields.push({ label: label.trim(), reason: 'custom field — not auto-filled' });
-      }
-      continue;
-    }
-
-    // Text / textarea
-    const match = matchField(label, type, profile, role);
-    if (match) {
-      await input.fill(match.value);
-      console.log(`  ✅ ${label.trim()}: "${match.value.slice(0, 60)}${match.value.length > 60 ? '…' : ''}"`);
-    } else {
-      manualFields.push({ label: label.trim(), reason: 'custom or unrecognised field' });
-      // Leave blank — do not guess
-    }
-  }
-
-  return manualFields;
+  // Greenhouse application forms render as standard <label for="…"> + input
+  // pairs. The previous implementation keyed off a `[data-field]` wrapper
+  // selector, which finds 0 elements on the live job-boards.greenhouse.io DOM
+  // (every field was silently skipped, then "All recognisable fields filled"
+  // was printed — a false success). The generic label-based resolver works on
+  // the real DOM and is already proven for Ashby, so delegate to it.
+  return fillByLabels(page, profile, role);
 }
 
 // ── Lever form fill ───────────────────────────────────────────────────────────
