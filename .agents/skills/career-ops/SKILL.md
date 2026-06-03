@@ -32,6 +32,7 @@ Determine the mode from `$mode`:
 | `batch` | `batch` |
 | `patterns` | `patterns` |
 | `followup` | `followup` |
+| `update` | `update` |
 
 **Auto-pipeline detection:** If `$mode` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
 
@@ -63,6 +64,7 @@ Available commands:
   /career-ops batch     → Batch processing with parallel workers
   /career-ops patterns  → Analyze rejection patterns and improve targeting
   /career-ops followup  → Follow-up cadence tracker: flag overdue, generate drafts
+  /career-ops update    → Update career-ops system files with diff preview + compat check
 
 Inbox: add URLs to data/pipeline.md → /career-ops pipeline
 Or paste a JD directly to run the full pipeline.

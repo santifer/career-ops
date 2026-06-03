@@ -1,9 +1,10 @@
 # Portal Scanner Configuration
 # Used by /career-ops scan to discover new offers automatically.
 #
-# Strategy (3 levels):
+# Strategy (4 levels):
+#   0. Local parser → per-company `parser:` script for SSR/static career pages (zero-token)
 #   1. Playwright → careers_url of each company (real-time, reliable)
-#   2. Greenhouse API → structured JSON (fast, Greenhouse-only)
+#   2. HTTP JSON (WebFetch) → per-company `api:` on tracked_companies (see board_api_catalog below)
 #   3. WebSearch with site: filters (broad discovery, may be stale)
 #
 # IMPORTANT: Each company in tracked_companies MUST have careers_url.
@@ -24,17 +25,26 @@
 # Filter scanned jobs by location. Applied AFTER title filter, BEFORE dedup.
 # If this entire block is absent, all locations pass (current default behavior).
 #
-# Semantics:
+# Semantics (case-insensitive substring, in this order):
 #   - Empty location string on a job → pass (don't penalize missing data)
-#   - Any `block` keyword present → reject (takes precedence over allow)
+#   - Any `always_allow` keyword present → pass (takes precedence over `block`)
+#   - Any `block` keyword present → reject
 #   - `allow` empty → pass (already cleared block)
 #   - `allow` non-empty → must match at least one keyword
-# All matches are case-insensitive substring.
+#
+# `always_allow` is optional. It rescues multi-location postings that name your
+# home region: with always_allow ["New York"] and block ["India"], a job listed
+# "Remote, New York or India" passes (New York wins), while "Remote, India" is
+# still rejected. Omit always_allow entirely and the filter behaves as before.
 #
 # Example below targets US-based remote + a couple of US metros, blocking
 # common foreign hubs. Customize to your geography.
 
 # location_filter:
+#   # always_allow is checked BEFORE block — keep this list to your home region only
+#   always_allow:
+#     - "United States"   # (replace with your home region)
+#     - "New York"
 #   allow:
 #     - "Remote"
 #     - "United States"
@@ -341,20 +351,60 @@ search_queries:
 
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
-# scan_method: playwright (default), websearch, greenhouse_api
+# scan_method: playwright (default), websearch, local_parser
 # For Greenhouse companies, add api: field for faster structured JSON access.
 #
 # Provider routing (scan.mjs):
 #   By default each entry is auto-detected from `careers_url` against the
-#   loaded providers in providers/*.mjs (ashby, greenhouse, lever — the
-#   first one whose detect() matches wins, alphabetical order).
+#   loaded providers in providers/*.mjs (local-parser, ashby, greenhouse, lever).
+#   local-parser runs first when parser.command + parser.script are set.
 #
 #   Optional fields on a tracked_companies entry:
 #     provider: <id>     — force a specific provider, skipping detect().
-#                          Useful when careers_url is ambiguous or you want
-#                          to pin behavior. Value must match a loaded
-#                          provider's `id`.
 #     transport: http    — reserved for future transports. Defaults to http.
+#
+# For SSR/static career pages, add parser.command + parser.script. The command
+# can be python3, node, or another local executable. The script must print JSON
+# jobs to stdout: [{ "title": "...", "url": "...", "location": "..." }]
+#
+# Generic local parser examples. Most parser scripts are company-specific and
+# already know their target careers URL. `args` are optional and can help the
+# parser author (reuse across companies, debug flags, JSON snapshots, etc.).
+#
+# JavaScript parser:
+# - name: Example JS Company
+#   careers_url: https://example.com/careers
+#   scan_method: local_parser
+#   parser:
+#     command: node
+#     script: scripts/parsers/example-js-company-jobs.js
+#     format: jobs-json-v1
+#   enabled: true
+#
+# Python parser:
+# - name: Example Python Company
+#   careers_url: https://example.org/jobs
+#   scan_method: local_parser
+#   parser:
+#     command: python3
+#     script: scripts/parsers/example_python_company_jobs.py
+#     format: jobs-json-v1
+#   enabled: true
+
+# ── Provider auto-detection ───────────────────────────────────────
+# scan.mjs auto-loads everything in providers/*.mjs and tries each
+# provider's detect() in order. URL patterns recognized:
+#
+#   greenhouse      job-boards(.eu)?.greenhouse.io/<slug>  (or api: field)
+#   ashby           jobs.ashbyhq.com/<slug>
+#   lever           jobs.lever.co/<slug>
+#   workable        apply.workable.com/<slug>
+#   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
+#   recruitee       <slug>.recruitee.com
+#
+# When the public careers URL is a branded custom domain (e.g.
+# careers.adyen.com), set `provider: smartrecruiters` explicitly to
+# bypass detect(). The `provider:` field wins over auto-detection.
 
 tracked_companies:
 
