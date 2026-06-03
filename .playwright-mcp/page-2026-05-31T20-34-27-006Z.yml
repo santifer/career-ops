@@ -1,0 +1,436 @@
+- generic [active] [ref=e1]:
+  - img "Banner" [ref=e3]
+  - generic [ref=e6]:
+    - img [ref=e8]
+    - paragraph [ref=e10]: The job you are looking for is no longer open.
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - heading "Current Openings at Mixpanel" [level=1] [ref=e13]
+      - generic [ref=e17]:
+        - paragraph [ref=e18]:
+          - strong [ref=e19]: About Mixpanel
+        - paragraph [ref=e20]:
+          - text: Mixpanel turns data clarity into innovation. Trusted by more than 29,000 companies, including Workday, Pinterest, LG, and Rakuten Viber, Mixpanel’s AI-first digital analytics help teams accelerate adoption, improve retention, and ship with confidence. Powering this is an industry-leading platform that combines product and web analytics, session replay, experimentation, feature flags, and metric trees. Mixpanel delivers insights that customers trust. Visit
+          - link "mixpanel.com" [ref=e21] [cursor=pointer]:
+            - /url: mixpanel.com
+          - text: to learn more
+      - generic [ref=e22]:
+        - generic [ref=e24]:
+          - generic [ref=e26]:
+            - generic [ref=e27]: Search
+            - textbox "Search" [ref=e28]
+          - generic [ref=e30]:
+            - generic [ref=e31]: Department
+            - generic [ref=e32]:
+              - log [ref=e34]
+              - generic [ref=e36]:
+                - generic [ref=e37]:
+                  - generic [ref=e38]: Select...
+                  - combobox "Department" [ref=e40]
+                - button "Toggle flyout" [ref=e42] [cursor=pointer]:
+                  - img [ref=e43]
+          - generic [ref=e46]:
+            - generic [ref=e47]: Office
+            - generic [ref=e48]:
+              - log [ref=e50]
+              - generic [ref=e52]:
+                - generic [ref=e53]:
+                  - generic [ref=e54]: Select...
+                  - combobox "Office" [ref=e56]
+                - button "Toggle flyout" [ref=e58] [cursor=pointer]:
+                  - img [ref=e59]
+        - generic [ref=e61]:
+          - heading "45 jobs" [level=2] [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - paragraph [ref=e66]: EPD
+              - heading "Design" [level=3] [ref=e67]
+              - table [ref=e69]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e70]:
+                      - paragraph [ref=e71]: Job
+                - rowgroup [ref=e72]:
+                  - row "Senior Product Designer San Francisco, US (Remote)" [ref=e73]:
+                    - cell "Senior Product Designer San Francisco, US (Remote)" [ref=e74]:
+                      - link "Senior Product Designer San Francisco, US (Remote)" [ref=e75] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7767652
+                        - paragraph [ref=e76]: Senior Product Designer
+                        - paragraph [ref=e77]: San Francisco, US (Remote)
+            - generic [ref=e78]:
+              - paragraph [ref=e80]: EPD
+              - heading "Engineering" [level=3] [ref=e81]
+              - table [ref=e83]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e84]:
+                      - paragraph [ref=e85]: Job
+                - rowgroup [ref=e86]:
+                  - row "Senior Director of Engineering San Francisco, US (Hybrid)" [ref=e87]:
+                    - cell "Senior Director of Engineering San Francisco, US (Hybrid)" [ref=e88]:
+                      - link "Senior Director of Engineering San Francisco, US (Hybrid)" [ref=e89] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7850982
+                        - paragraph [ref=e90]: Senior Director of Engineering
+                        - paragraph [ref=e91]: San Francisco, US (Hybrid)
+                  - row "Senior Engineering Manager, Data San Francisco, US (Hybrid)" [ref=e92]:
+                    - cell "Senior Engineering Manager, Data San Francisco, US (Hybrid)" [ref=e93]:
+                      - link "Senior Engineering Manager, Data San Francisco, US (Hybrid)" [ref=e94] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7776048
+                        - paragraph [ref=e95]: Senior Engineering Manager, Data
+                        - paragraph [ref=e96]: San Francisco, US (Hybrid)
+                  - row "Senior Engineering Manager, Product Platform San Francisco, US (Hybrid)" [ref=e97]:
+                    - cell "Senior Engineering Manager, Product Platform San Francisco, US (Hybrid)" [ref=e98]:
+                      - link "Senior Engineering Manager, Product Platform San Francisco, US (Hybrid)" [ref=e99] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7776072
+                        - paragraph [ref=e100]: Senior Engineering Manager, Product Platform
+                        - paragraph [ref=e101]: San Francisco, US (Hybrid)
+                  - row "Senior Software Engineer, AI Platform San Francisco, US (Hybrid)" [ref=e102]:
+                    - cell "Senior Software Engineer, AI Platform San Francisco, US (Hybrid)" [ref=e103]:
+                      - link "Senior Software Engineer, AI Platform San Francisco, US (Hybrid)" [ref=e104] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7941944
+                        - paragraph [ref=e105]: Senior Software Engineer, AI Platform
+                        - paragraph [ref=e106]: San Francisco, US (Hybrid)
+                  - row "Senior Software Engineer, AI Product Insights San Francisco, US (Hybrid)" [ref=e107]:
+                    - cell "Senior Software Engineer, AI Product Insights San Francisco, US (Hybrid)" [ref=e108]:
+                      - link "Senior Software Engineer, AI Product Insights San Francisco, US (Hybrid)" [ref=e109] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7850960
+                        - paragraph [ref=e110]: Senior Software Engineer, AI Product Insights
+                        - paragraph [ref=e111]: San Francisco, US (Hybrid)
+                  - row "Software Engineer, AI Product Insights San Francisco, US (Hybrid)" [ref=e112]:
+                    - cell "Software Engineer, AI Product Insights San Francisco, US (Hybrid)" [ref=e113]:
+                      - link "Software Engineer, AI Product Insights San Francisco, US (Hybrid)" [ref=e114] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7850958
+                        - paragraph [ref=e115]: Software Engineer, AI Product Insights
+                        - paragraph [ref=e116]: San Francisco, US (Hybrid)
+                  - row "Software Engineer, DevInfra San Francisco, US (Remote)" [ref=e117]:
+                    - cell "Software Engineer, DevInfra San Francisco, US (Remote)" [ref=e118]:
+                      - link "Software Engineer, DevInfra San Francisco, US (Remote)" [ref=e119] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7850913
+                        - paragraph [ref=e120]: Software Engineer, DevInfra
+                        - paragraph [ref=e121]: San Francisco, US (Remote)
+            - generic [ref=e122]:
+              - paragraph [ref=e124]: EPD
+              - heading "Product" [level=3] [ref=e125]
+              - table [ref=e127]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e128]:
+                      - paragraph [ref=e129]: Job
+                - rowgroup [ref=e130]:
+                  - row "Senior Product Manager, Platform San Francisco, US (Hybrid)" [ref=e131]:
+                    - cell "Senior Product Manager, Platform San Francisco, US (Hybrid)" [ref=e132]:
+                      - link "Senior Product Manager, Platform San Francisco, US (Hybrid)" [ref=e133] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7779504
+                        - paragraph [ref=e134]: Senior Product Manager, Platform
+                        - paragraph [ref=e135]: San Francisco, US (Hybrid)
+            - generic [ref=e136]:
+              - paragraph [ref=e138]: G&A
+              - heading "Finance" [level=3] [ref=e139]
+              - table [ref=e141]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e142]:
+                      - paragraph [ref=e143]: Job
+                - rowgroup [ref=e144]:
+                  - row "AP & Employee Expense Specialist New York City, US (Remote)" [ref=e145]:
+                    - cell "AP & Employee Expense Specialist New York City, US (Remote)" [ref=e146]:
+                      - link "AP & Employee Expense Specialist New York City, US (Remote)" [ref=e147] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7848887
+                        - paragraph [ref=e148]: AP & Employee Expense Specialist
+                        - paragraph [ref=e149]: New York City, US (Remote)
+                  - row "AP & Employee Expense Specialist Austin, US (Remote)" [ref=e150]:
+                    - cell "AP & Employee Expense Specialist Austin, US (Remote)" [ref=e151]:
+                      - link "AP & Employee Expense Specialist Austin, US (Remote)" [ref=e152] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7848896
+                        - paragraph [ref=e153]: AP & Employee Expense Specialist
+                        - paragraph [ref=e154]: Austin, US (Remote)
+                  - row "AP & Employee Expense Specialist Chicago, US (Remote)" [ref=e155]:
+                    - cell "AP & Employee Expense Specialist Chicago, US (Remote)" [ref=e156]:
+                      - link "AP & Employee Expense Specialist Chicago, US (Remote)" [ref=e157] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7848903
+                        - paragraph [ref=e158]: AP & Employee Expense Specialist
+                        - paragraph [ref=e159]: Chicago, US (Remote)
+                  - row "Senior Strategic Finanace Associate New San Francisco, US (Remote)" [ref=e160]:
+                    - cell "Senior Strategic Finanace Associate New San Francisco, US (Remote)" [ref=e161]:
+                      - link "Senior Strategic Finanace Associate New San Francisco, US (Remote)" [ref=e162] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7963797
+                        - paragraph [ref=e163]:
+                          - text: Senior Strategic Finanace Associate
+                          - generic [ref=e165]: New
+                        - paragraph [ref=e166]: San Francisco, US (Remote)
+            - generic [ref=e167]:
+              - paragraph [ref=e169]: G&A
+              - heading "IT & Security" [level=3] [ref=e170]
+              - table [ref=e172]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e173]:
+                      - paragraph [ref=e174]: Job
+                - rowgroup [ref=e175]:
+                  - row "Senior Security Engineer London, UK (Hybrid)" [ref=e176]:
+                    - cell "Senior Security Engineer London, UK (Hybrid)" [ref=e177]:
+                      - link "Senior Security Engineer London, UK (Hybrid)" [ref=e178] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7943584
+                        - paragraph [ref=e179]: Senior Security Engineer
+                        - paragraph [ref=e180]: London, UK (Hybrid)
+            - generic [ref=e181]:
+              - paragraph [ref=e183]: G&A
+              - heading "Legal" [level=3] [ref=e184]
+              - table [ref=e186]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e187]:
+                      - paragraph [ref=e188]: Job
+                - rowgroup [ref=e189]:
+                  - row "Procurement Counsel Mexico City, Mexico (Remote)" [ref=e190]:
+                    - cell "Procurement Counsel Mexico City, Mexico (Remote)" [ref=e191]:
+                      - link "Procurement Counsel Mexico City, Mexico (Remote)" [ref=e192] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7511828
+                        - paragraph [ref=e193]: Procurement Counsel
+                        - paragraph [ref=e194]: Mexico City, Mexico (Remote)
+            - generic [ref=e195]:
+              - paragraph [ref=e197]: G&A / People
+              - heading "People & Culture" [level=3] [ref=e198]
+              - table [ref=e200]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e201]:
+                      - paragraph [ref=e202]: Job
+                - rowgroup [ref=e203]:
+                  - row "People Business Partner London, UK (Hybrid)" [ref=e204]:
+                    - cell "People Business Partner London, UK (Hybrid)" [ref=e205]:
+                      - link "People Business Partner London, UK (Hybrid)" [ref=e206] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7776659
+                        - paragraph [ref=e207]: People Business Partner
+                        - paragraph [ref=e208]: London, UK (Hybrid)
+            - generic [ref=e209]:
+              - paragraph [ref=e211]: G&A
+              - heading "Product Marketing" [level=3] [ref=e212]
+              - table [ref=e214]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e215]:
+                      - paragraph [ref=e216]: Job
+                - rowgroup [ref=e217]:
+                  - row "Senior Product Marketing Manager, EMEA & Platform London, UK (Hybrid)" [ref=e218]:
+                    - cell "Senior Product Marketing Manager, EMEA & Platform London, UK (Hybrid)" [ref=e219]:
+                      - link "Senior Product Marketing Manager, EMEA & Platform London, UK (Hybrid)" [ref=e220] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7812422
+                        - paragraph [ref=e221]: Senior Product Marketing Manager, EMEA & Platform
+                        - paragraph [ref=e222]: London, UK (Hybrid)
+            - generic [ref=e223]:
+              - paragraph [ref=e225]: GTM
+              - heading "Revenue Operations" [level=3] [ref=e226]
+              - table [ref=e228]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e229]:
+                      - paragraph [ref=e230]: Job
+                - rowgroup [ref=e231]:
+                  - row "EMEA Revenue Strategy & Operations Manager London, UK (Hybrid)" [ref=e232]:
+                    - cell "EMEA Revenue Strategy & Operations Manager London, UK (Hybrid)" [ref=e233]:
+                      - link "EMEA Revenue Strategy & Operations Manager London, UK (Hybrid)" [ref=e234] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7951498
+                        - paragraph [ref=e235]: EMEA Revenue Strategy & Operations Manager
+                        - paragraph [ref=e236]: London, UK (Hybrid)
+                  - row "Manager, Revenue Strategy & Operations London, UK (Hybrid)" [ref=e237]:
+                    - cell "Manager, Revenue Strategy & Operations London, UK (Hybrid)" [ref=e238]:
+                      - link "Manager, Revenue Strategy & Operations London, UK (Hybrid)" [ref=e239] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7857806
+                        - paragraph [ref=e240]: Manager, Revenue Strategy & Operations
+                        - paragraph [ref=e241]: London, UK (Hybrid)
+                  - row "Revenue Strategy & Operations Manager San Francisco, US (Remote)" [ref=e242]:
+                    - cell "Revenue Strategy & Operations Manager San Francisco, US (Remote)" [ref=e243]:
+                      - link "Revenue Strategy & Operations Manager San Francisco, US (Remote)" [ref=e244] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7950662
+                        - paragraph [ref=e245]: Revenue Strategy & Operations Manager
+                        - paragraph [ref=e246]: San Francisco, US (Remote)
+                  - row "Revenue Strategy & Operations Manager New York City, US (Remote)" [ref=e247]:
+                    - cell "Revenue Strategy & Operations Manager New York City, US (Remote)" [ref=e248]:
+                      - link "Revenue Strategy & Operations Manager New York City, US (Remote)" [ref=e249] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7950721
+                        - paragraph [ref=e250]: Revenue Strategy & Operations Manager
+                        - paragraph [ref=e251]: New York City, US (Remote)
+                  - row "Salesforce Administrator New London, UK (Hybrid)" [ref=e252]:
+                    - cell "Salesforce Administrator New London, UK (Hybrid)" [ref=e253]:
+                      - link "Salesforce Administrator New London, UK (Hybrid)" [ref=e254] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7963681
+                        - paragraph [ref=e255]:
+                          - text: Salesforce Administrator
+                          - generic [ref=e257]: New
+                        - paragraph [ref=e258]: London, UK (Hybrid)
+                  - row "Sales System Engineer London, UK (Hybrid)" [ref=e259]:
+                    - cell "Sales System Engineer London, UK (Hybrid)" [ref=e260]:
+                      - link "Sales System Engineer London, UK (Hybrid)" [ref=e261] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7874053
+                        - paragraph [ref=e262]: Sales System Engineer
+                        - paragraph [ref=e263]: London, UK (Hybrid)
+                  - row "Senior Customer Strategy & Operations Manager San Francisco, US (Hybrid)" [ref=e264]:
+                    - cell "Senior Customer Strategy & Operations Manager San Francisco, US (Hybrid)" [ref=e265]:
+                      - link "Senior Customer Strategy & Operations Manager San Francisco, US (Hybrid)" [ref=e266] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7008408
+                        - paragraph [ref=e267]: Senior Customer Strategy & Operations Manager
+                        - paragraph [ref=e268]: San Francisco, US (Hybrid)
+                  - row "Senior Customer Strategy & Operations Manager New New York, US (Hybrid)" [ref=e269]:
+                    - cell "Senior Customer Strategy & Operations Manager New New York, US (Hybrid)" [ref=e270]:
+                      - link "Senior Customer Strategy & Operations Manager New New York, US (Hybrid)" [ref=e271] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7962972
+                        - paragraph [ref=e272]:
+                          - text: Senior Customer Strategy & Operations Manager
+                          - generic [ref=e274]: New
+                        - paragraph [ref=e275]: New York, US (Hybrid)
+            - generic [ref=e276]:
+              - paragraph [ref=e278]: GTM
+              - heading "Sales" [level=3] [ref=e279]
+              - table [ref=e281]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e282]:
+                      - paragraph [ref=e283]: Job
+                - rowgroup [ref=e284]:
+                  - row "Account Executive London, UK (Hybrid)" [ref=e285]:
+                    - cell "Account Executive London, UK (Hybrid)" [ref=e286]:
+                      - link "Account Executive London, UK (Hybrid)" [ref=e287] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7478741
+                        - paragraph [ref=e288]: Account Executive
+                        - paragraph [ref=e289]: London, UK (Hybrid)
+                  - row "Account Executive, Mid Market San Francisco, US (Hybrid)" [ref=e290]:
+                    - cell "Account Executive, Mid Market San Francisco, US (Hybrid)" [ref=e291]:
+                      - link "Account Executive, Mid Market San Francisco, US (Hybrid)" [ref=e292] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7665501
+                        - paragraph [ref=e293]: Account Executive, Mid Market
+                        - paragraph [ref=e294]: San Francisco, US (Hybrid)
+                  - row "Account Executive, Mid Market New York City, US (Hybrid)" [ref=e295]:
+                    - cell "Account Executive, Mid Market New York City, US (Hybrid)" [ref=e296]:
+                      - link "Account Executive, Mid Market New York City, US (Hybrid)" [ref=e297] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7665696
+                        - paragraph [ref=e298]: Account Executive, Mid Market
+                        - paragraph [ref=e299]: New York City, US (Hybrid)
+                  - row "Account Manager Bengaluru, India (Hybrid)" [ref=e300]:
+                    - cell "Account Manager Bengaluru, India (Hybrid)" [ref=e301]:
+                      - link "Account Manager Bengaluru, India (Hybrid)" [ref=e302] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7513934
+                        - paragraph [ref=e303]: Account Manager
+                        - paragraph [ref=e304]: Bengaluru, India (Hybrid)
+                  - row "Account Manager London, UK (Hybrid)" [ref=e305]:
+                    - cell "Account Manager London, UK (Hybrid)" [ref=e306]:
+                      - link "Account Manager London, UK (Hybrid)" [ref=e307] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7246274
+                        - paragraph [ref=e308]: Account Manager
+                        - paragraph [ref=e309]: London, UK (Hybrid)
+                  - row "Account Manager - India Mumbai, India (Hybrid)" [ref=e310]:
+                    - cell "Account Manager - India Mumbai, India (Hybrid)" [ref=e311]:
+                      - link "Account Manager - India Mumbai, India (Hybrid)" [ref=e312] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7806010
+                        - paragraph [ref=e313]: Account Manager - India
+                        - paragraph [ref=e314]: Mumbai, India (Hybrid)
+                  - row "Senior Account Executive, Enterprise San Francisco, US (Remote)" [ref=e315]:
+                    - cell "Senior Account Executive, Enterprise San Francisco, US (Remote)" [ref=e316]:
+                      - link "Senior Account Executive, Enterprise San Francisco, US (Remote)" [ref=e317] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7722940
+                        - paragraph [ref=e318]: Senior Account Executive, Enterprise
+                        - paragraph [ref=e319]: San Francisco, US (Remote)
+                  - row "Senior Account Executive, Enterprise New York City, US (Remote)" [ref=e320]:
+                    - cell "Senior Account Executive, Enterprise New York City, US (Remote)" [ref=e321]:
+                      - link "Senior Account Executive, Enterprise New York City, US (Remote)" [ref=e322] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7722941
+                        - paragraph [ref=e323]: Senior Account Executive, Enterprise
+                        - paragraph [ref=e324]: New York City, US (Remote)
+                  - row "Senior Account Executive, Enterprise Boston, US (Remote)" [ref=e325]:
+                    - cell "Senior Account Executive, Enterprise Boston, US (Remote)" [ref=e326]:
+                      - link "Senior Account Executive, Enterprise Boston, US (Remote)" [ref=e327] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7728248
+                        - paragraph [ref=e328]: Senior Account Executive, Enterprise
+                        - paragraph [ref=e329]: Boston, US (Remote)
+                  - row "Senior Account Executive, Enterprise Atlanta, US (Remote)" [ref=e330]:
+                    - cell "Senior Account Executive, Enterprise Atlanta, US (Remote)" [ref=e331]:
+                      - link "Senior Account Executive, Enterprise Atlanta, US (Remote)" [ref=e332] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7728249
+                        - paragraph [ref=e333]: Senior Account Executive, Enterprise
+                        - paragraph [ref=e334]: Atlanta, US (Remote)
+                  - row "Senior Account Executive, Enterprise Denver, US (Remote)" [ref=e335]:
+                    - cell "Senior Account Executive, Enterprise Denver, US (Remote)" [ref=e336]:
+                      - link "Senior Account Executive, Enterprise Denver, US (Remote)" [ref=e337] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7728251
+                        - paragraph [ref=e338]: Senior Account Executive, Enterprise
+                        - paragraph [ref=e339]: Denver, US (Remote)
+                  - row "Senior Account Executive, Enterprise Austin, US (Remote)" [ref=e340]:
+                    - cell "Senior Account Executive, Enterprise Austin, US (Remote)" [ref=e341]:
+                      - link "Senior Account Executive, Enterprise Austin, US (Remote)" [ref=e342] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7728253
+                        - paragraph [ref=e343]: Senior Account Executive, Enterprise
+                        - paragraph [ref=e344]: Austin, US (Remote)
+                  - row "Senior Account Executive, Enterprise Seattle, US (Remote)" [ref=e345]:
+                    - cell "Senior Account Executive, Enterprise Seattle, US (Remote)" [ref=e346]:
+                      - link "Senior Account Executive, Enterprise Seattle, US (Remote)" [ref=e347] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7728255
+                        - paragraph [ref=e348]: Senior Account Executive, Enterprise
+                        - paragraph [ref=e349]: Seattle, US (Remote)
+            - generic [ref=e350]:
+              - paragraph [ref=e352]: Support & Success
+              - heading "Customer Success" [level=3] [ref=e353]
+              - table [ref=e355]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e356]:
+                      - paragraph [ref=e357]: Job
+                - rowgroup [ref=e358]:
+                  - row "Customer Success Architect London, UK (Hybrid)" [ref=e359]:
+                    - cell "Customer Success Architect London, UK (Hybrid)" [ref=e360]:
+                      - link "Customer Success Architect London, UK (Hybrid)" [ref=e361] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7512001
+                        - paragraph [ref=e362]: Customer Success Architect
+                        - paragraph [ref=e363]: London, UK (Hybrid)
+                  - row "Customer Success Architect New San Francisco, US (Remote)" [ref=e364]:
+                    - cell "Customer Success Architect New San Francisco, US (Remote)" [ref=e365]:
+                      - link "Customer Success Architect New San Francisco, US (Remote)" [ref=e366] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7943893
+                        - paragraph [ref=e367]:
+                          - text: Customer Success Architect
+                          - generic [ref=e369]: New
+                        - paragraph [ref=e370]: San Francisco, US (Remote)
+                  - row "Customer Success Architect Bengaluru, India (Hybrid)" [ref=e371]:
+                    - cell "Customer Success Architect Bengaluru, India (Hybrid)" [ref=e372]:
+                      - link "Customer Success Architect Bengaluru, India (Hybrid)" [ref=e373] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7506821
+                        - paragraph [ref=e374]: Customer Success Architect
+                        - paragraph [ref=e375]: Bengaluru, India (Hybrid)
+            - generic [ref=e376]:
+              - paragraph [ref=e378]: Support & Success
+              - heading "Solutions Engineering" [level=3] [ref=e379]
+              - table [ref=e381]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e382]:
+                      - paragraph [ref=e383]: Job
+                - rowgroup [ref=e384]:
+                  - row "Manager, Solutions Engineering London, UK (Hybrid)" [ref=e385]:
+                    - cell "Manager, Solutions Engineering London, UK (Hybrid)" [ref=e386]:
+                      - link "Manager, Solutions Engineering London, UK (Hybrid)" [ref=e387] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7052292
+                        - paragraph [ref=e388]: Manager, Solutions Engineering
+                        - paragraph [ref=e389]: London, UK (Hybrid)
+                  - row "Manager, Solutions Engineering San Francisco, US (Hybrid)" [ref=e390]:
+                    - cell "Manager, Solutions Engineering San Francisco, US (Hybrid)" [ref=e391]:
+                      - link "Manager, Solutions Engineering San Francisco, US (Hybrid)" [ref=e392] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7513876
+                        - paragraph [ref=e393]: Manager, Solutions Engineering
+                        - paragraph [ref=e394]: San Francisco, US (Hybrid)
+                  - row "Manager, Solutions Engineering New York City, US (Hybrid)" [ref=e395]:
+                    - cell "Manager, Solutions Engineering New York City, US (Hybrid)" [ref=e396]:
+                      - link "Manager, Solutions Engineering New York City, US (Hybrid)" [ref=e397] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7746430
+                        - paragraph [ref=e398]: Manager, Solutions Engineering
+                        - paragraph [ref=e399]: New York City, US (Hybrid)
+                  - row "Senior Solutions Engineer London, UK (Hybrid)" [ref=e400]:
+                    - cell "Senior Solutions Engineer London, UK (Hybrid)" [ref=e401]:
+                      - link "Senior Solutions Engineer London, UK (Hybrid)" [ref=e402] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/mixpanel/jobs/7407407
+                        - paragraph [ref=e403]: Senior Solutions Engineer
+                        - paragraph [ref=e404]: London, UK (Hybrid)
+  - contentinfo [ref=e405]:
+    - generic [ref=e406]:
+      - paragraph [ref=e407]: Powered by
+      - link "Greenhouse logo" [ref=e408] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e409]

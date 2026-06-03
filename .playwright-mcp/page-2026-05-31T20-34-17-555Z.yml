@@ -1,0 +1,132 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - img [ref=e6]
+    - paragraph [ref=e8]: The job you are looking for is no longer open.
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - img "Akuity Logo" [ref=e12]
+      - heading "Current openings at Akuity" [level=1] [ref=e13]
+      - generic [ref=e15]:
+        - img [ref=e16]
+        - generic [ref=e18]:
+          - paragraph [ref=e19]: Create a Job Alert
+          - paragraph [ref=e20]: Level-up your career by having opportunities at Akuity sent directly to your inbox.
+          - link "Create alert" [ref=e21] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=akuity&source=job_alert_board
+      - generic [ref=e22]:
+        - generic [ref=e25]:
+          - generic [ref=e26]: Search
+          - textbox "Search" [ref=e27]
+        - generic [ref=e28]:
+          - heading "10 jobs" [level=2] [ref=e29]
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - heading "Customer Success" [level=3] [ref=e32]
+              - table [ref=e34]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e35]:
+                      - paragraph [ref=e36]: Job
+                - rowgroup [ref=e37]:
+                  - row "Technical Support Engineer, EMEA New Remote - EMEA" [ref=e38]:
+                    - cell "Technical Support Engineer, EMEA New Remote - EMEA" [ref=e39]:
+                      - link "Technical Support Engineer, EMEA New Remote - EMEA" [ref=e40] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4264563009
+                        - paragraph [ref=e41]:
+                          - text: Technical Support Engineer, EMEA
+                          - generic [ref=e43]: New
+                        - paragraph [ref=e44]: Remote - EMEA
+                  - row "Technical Support Engineer, EMEA New Remote - EMEA" [ref=e45]:
+                    - cell "Technical Support Engineer, EMEA New Remote - EMEA" [ref=e46]:
+                      - link "Technical Support Engineer, EMEA New Remote - EMEA" [ref=e47] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4264562009
+                        - paragraph [ref=e48]:
+                          - text: Technical Support Engineer, EMEA
+                          - generic [ref=e50]: New
+                        - paragraph [ref=e51]: Remote - EMEA
+                  - row "Technical Support Engineer, NA West Remote - North America" [ref=e52]:
+                    - cell "Technical Support Engineer, NA West Remote - North America" [ref=e53]:
+                      - link "Technical Support Engineer, NA West Remote - North America" [ref=e54] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4192282009
+                        - paragraph [ref=e55]: Technical Support Engineer, NA West
+                        - paragraph [ref=e56]: Remote - North America
+            - generic [ref=e57]:
+              - heading "Engineering" [level=3] [ref=e58]
+              - table [ref=e60]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e61]:
+                      - paragraph [ref=e62]: Job
+                - rowgroup [ref=e63]:
+                  - row "Senior Backend Engineer Remote - US Timezones" [ref=e64]:
+                    - cell "Senior Backend Engineer Remote - US Timezones" [ref=e65]:
+                      - link "Senior Backend Engineer Remote - US Timezones" [ref=e66] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4240492009
+                        - paragraph [ref=e67]: Senior Backend Engineer
+                        - paragraph [ref=e68]: Remote - US Timezones
+            - generic [ref=e69]:
+              - heading "G&A" [level=3] [ref=e70]
+              - table [ref=e72]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e73]:
+                      - paragraph [ref=e74]: Job
+                - rowgroup [ref=e75]:
+                  - row "Founding Recruiter Remote" [ref=e76]:
+                    - cell "Founding Recruiter Remote" [ref=e77]:
+                      - link "Founding Recruiter Remote" [ref=e78] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4209395009
+                        - paragraph [ref=e79]: Founding Recruiter
+                        - paragraph [ref=e80]: Remote
+            - generic [ref=e81]:
+              - heading "Marketing" [level=3] [ref=e82]
+              - table [ref=e84]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e85]:
+                      - paragraph [ref=e86]: Job
+                - rowgroup [ref=e87]:
+                  - row "Community Manager - Open Source Remote - United States" [ref=e88]:
+                    - cell "Community Manager - Open Source Remote - United States" [ref=e89]:
+                      - link "Community Manager - Open Source Remote - United States" [ref=e90] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4181022009
+                        - paragraph [ref=e91]: Community Manager - Open Source
+                        - paragraph [ref=e92]: Remote - United States
+                  - row "Director of Demand Generation Remote" [ref=e93]:
+                    - cell "Director of Demand Generation Remote" [ref=e94]:
+                      - link "Director of Demand Generation Remote" [ref=e95] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4243537009
+                        - paragraph [ref=e96]: Director of Demand Generation
+                        - paragraph [ref=e97]: Remote
+            - generic [ref=e98]:
+              - heading "Sales" [level=3] [ref=e99]
+              - table [ref=e101]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e102]:
+                      - paragraph [ref=e103]: Job
+                - rowgroup [ref=e104]:
+                  - row "Enterprise Account Executive, NA West Remote" [ref=e105]:
+                    - cell "Enterprise Account Executive, NA West Remote" [ref=e106]:
+                      - link "Enterprise Account Executive, NA West Remote" [ref=e107] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4238366009
+                        - paragraph [ref=e108]: Enterprise Account Executive, NA West
+                        - paragraph [ref=e109]: Remote
+                  - row "Mid Market Account Executive, EMEA Remote - EMEA" [ref=e110]:
+                    - cell "Mid Market Account Executive, EMEA Remote - EMEA" [ref=e111]:
+                      - link "Mid Market Account Executive, EMEA Remote - EMEA" [ref=e112] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4222277009
+                        - paragraph [ref=e113]: Mid Market Account Executive, EMEA
+                        - paragraph [ref=e114]: Remote - EMEA
+                  - row "Sales Engineer, NA West Remote" [ref=e115]:
+                    - cell "Sales Engineer, NA West Remote" [ref=e116]:
+                      - link "Sales Engineer, NA West Remote" [ref=e117] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/akuity/jobs/4155823009
+                        - paragraph [ref=e118]: Sales Engineer, NA West
+                        - paragraph [ref=e119]: Remote
+  - contentinfo [ref=e120]:
+    - generic [ref=e121]:
+      - paragraph [ref=e122]: Powered by
+      - link "Greenhouse logo" [ref=e123] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e124]

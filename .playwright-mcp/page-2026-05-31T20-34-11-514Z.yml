@@ -1,0 +1,471 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - img [ref=e6]
+    - paragraph [ref=e8]: The job you are looking for is no longer open.
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - img "Chainguard Logo" [ref=e12]
+      - heading "Current openings at Chainguard" [level=1] [ref=e13]
+      - generic [ref=e15]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Search
+          - textbox "Search" [ref=e20]
+        - generic [ref=e21]:
+          - heading "57 jobs" [level=2] [ref=e22]
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - heading "Business Development" [level=3] [ref=e25]
+              - table [ref=e27]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e28]:
+                      - paragraph [ref=e29]: Job
+                - rowgroup [ref=e30]:
+                  - row "Enterprise Business Development Representative - Central New United States - Remote" [ref=e31]:
+                    - cell "Enterprise Business Development Representative - Central New United States - Remote" [ref=e32]:
+                      - link "Enterprise Business Development Representative - Central New United States - Remote" [ref=e33] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4677342006
+                        - paragraph [ref=e34]:
+                          - text: Enterprise Business Development Representative - Central
+                          - generic [ref=e36]: New
+                        - paragraph [ref=e37]: United States - Remote
+                  - row "Enterprise Business Development Representative - West United States - Remote" [ref=e38]:
+                    - cell "Enterprise Business Development Representative - West United States - Remote" [ref=e39]:
+                      - link "Enterprise Business Development Representative - West United States - Remote" [ref=e40] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4663455006
+                        - paragraph [ref=e41]: Enterprise Business Development Representative - West
+                        - paragraph [ref=e42]: United States - Remote
+                  - row "Manager, Enterprise Business Development - West United States - Remote" [ref=e43]:
+                    - cell "Manager, Enterprise Business Development - West United States - Remote" [ref=e44]:
+                      - link "Manager, Enterprise Business Development - West United States - Remote" [ref=e45] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4671557006
+                        - paragraph [ref=e46]: Manager, Enterprise Business Development - West
+                        - paragraph [ref=e47]: United States - Remote
+            - generic [ref=e48]:
+              - heading "Customer Success Management" [level=3] [ref=e49]
+              - table [ref=e51]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e52]:
+                      - paragraph [ref=e53]: Job
+                - rowgroup [ref=e54]:
+                  - row "Senior Customer Success Manager, Enterprise - West United States - Remote" [ref=e55]:
+                    - cell "Senior Customer Success Manager, Enterprise - West United States - Remote" [ref=e56]:
+                      - link "Senior Customer Success Manager, Enterprise - West United States - Remote" [ref=e57] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4676419006
+                        - paragraph [ref=e58]: Senior Customer Success Manager, Enterprise - West
+                        - paragraph [ref=e59]: United States - Remote
+                  - row "Senior Customer Success Manager - Federal United States - Remote" [ref=e60]:
+                    - cell "Senior Customer Success Manager - Federal United States - Remote" [ref=e61]:
+                      - link "Senior Customer Success Manager - Federal United States - Remote" [ref=e62] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4672666006
+                        - paragraph [ref=e63]: Senior Customer Success Manager - Federal
+                        - paragraph [ref=e64]: United States - Remote
+                  - row "Senior Manager, Customer Success Management - Enterprise US East/EMEA United States - Remote" [ref=e65]:
+                    - cell "Senior Manager, Customer Success Management - Enterprise US East/EMEA United States - Remote" [ref=e66]:
+                      - link "Senior Manager, Customer Success Management - Enterprise US East/EMEA United States - Remote" [ref=e67] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4679713006
+                        - paragraph [ref=e68]: Senior Manager, Customer Success Management - Enterprise US East/EMEA
+                        - paragraph [ref=e69]: United States - Remote
+                  - row "Staff Customer Success Manager, Majors (Financial Services) United States - Remote" [ref=e70]:
+                    - cell "Staff Customer Success Manager, Majors (Financial Services) United States - Remote" [ref=e71]:
+                      - link "Staff Customer Success Manager, Majors (Financial Services) United States - Remote" [ref=e72] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4682909006
+                        - paragraph [ref=e73]: Staff Customer Success Manager, Majors (Financial Services)
+                        - paragraph [ref=e74]: United States - Remote
+            - generic [ref=e75]:
+              - heading "Customer Support" [level=3] [ref=e76]
+              - table [ref=e78]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e79]:
+                      - paragraph [ref=e80]: Job
+                - rowgroup [ref=e81]:
+                  - row "Senior Technical Support Engineer - AMER West Region United States - Remote" [ref=e82]:
+                    - cell "Senior Technical Support Engineer - AMER West Region United States - Remote" [ref=e83]:
+                      - link "Senior Technical Support Engineer - AMER West Region United States - Remote" [ref=e84] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4675038006
+                        - paragraph [ref=e85]: Senior Technical Support Engineer - AMER West Region
+                        - paragraph [ref=e86]: United States - Remote
+            - generic [ref=e87]:
+              - heading "Demand Generation" [level=3] [ref=e88]
+              - table [ref=e90]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e91]:
+                      - paragraph [ref=e92]: Job
+                - rowgroup [ref=e93]:
+                  - row "Field Marketing Manager - Northeast Canada - Remote" [ref=e94]:
+                    - cell "Field Marketing Manager - Northeast Canada - Remote" [ref=e95]:
+                      - link "Field Marketing Manager - Northeast Canada - Remote" [ref=e96] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4672576006
+                        - paragraph [ref=e97]: Field Marketing Manager - Northeast
+                        - paragraph [ref=e98]: Canada - Remote
+                  - row "Marketing Operations and AI Specialist United States - Remote" [ref=e99]:
+                    - cell "Marketing Operations and AI Specialist United States - Remote" [ref=e100]:
+                      - link "Marketing Operations and AI Specialist United States - Remote" [ref=e101] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4651285006
+                        - paragraph [ref=e102]: Marketing Operations and AI Specialist
+                        - paragraph [ref=e103]: United States - Remote
+                  - row "Partner Marketing Specialist United States - Remote" [ref=e104]:
+                    - cell "Partner Marketing Specialist United States - Remote" [ref=e105]:
+                      - link "Partner Marketing Specialist United States - Remote" [ref=e106] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4674661006
+                        - paragraph [ref=e107]: Partner Marketing Specialist
+                        - paragraph [ref=e108]: United States - Remote
+            - generic [ref=e109]:
+              - heading "Developer Enablement" [level=3] [ref=e110]
+              - table [ref=e112]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e113]:
+                      - paragraph [ref=e114]: Job
+                - rowgroup [ref=e115]:
+                  - row "Head of Developer Relations United States - Remote" [ref=e116]:
+                    - cell "Head of Developer Relations United States - Remote" [ref=e117]:
+                      - link "Head of Developer Relations United States - Remote" [ref=e118] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4676268006
+                        - paragraph [ref=e119]: Head of Developer Relations
+                        - paragraph [ref=e120]: United States - Remote
+            - generic [ref=e121]:
+              - heading "International Business Development" [level=3] [ref=e122]
+              - table [ref=e124]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e125]:
+                      - paragraph [ref=e126]: Job
+                - rowgroup [ref=e127]:
+                  - row "Business Development Representative - DACH Germany - Remote; United Kingdom - Remote" [ref=e128]:
+                    - cell "Business Development Representative - DACH Germany - Remote; United Kingdom - Remote" [ref=e129]:
+                      - link "Business Development Representative - DACH Germany - Remote; United Kingdom - Remote" [ref=e130] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4672059006
+                        - paragraph [ref=e131]: Business Development Representative - DACH
+                        - paragraph [ref=e132]: Germany - Remote; United Kingdom - Remote
+            - generic [ref=e133]:
+              - heading "International Marketing" [level=3] [ref=e134]
+              - table [ref=e136]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e137]:
+                      - paragraph [ref=e138]: Job
+                - rowgroup [ref=e139]:
+                  - row "Field Marketing Manager - Nordics & Benelux New Denmark - Remote; Netherlands - Remote; Sweden - Remote" [ref=e140]:
+                    - cell "Field Marketing Manager - Nordics & Benelux New Denmark - Remote; Netherlands - Remote; Sweden - Remote" [ref=e141]:
+                      - link "Field Marketing Manager - Nordics & Benelux New Denmark - Remote; Netherlands - Remote; Sweden - Remote" [ref=e142] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4681893006
+                        - paragraph [ref=e143]:
+                          - text: Field Marketing Manager - Nordics & Benelux
+                          - generic [ref=e145]: New
+                        - paragraph [ref=e146]: Denmark - Remote; Netherlands - Remote; Sweden - Remote
+            - generic [ref=e147]:
+              - heading "International Sales" [level=3] [ref=e148]
+              - table [ref=e150]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e151]:
+                      - paragraph [ref=e152]: Job
+                - rowgroup [ref=e153]:
+                  - row "Commercial Account Executive - Benelux Netherlands - Remote" [ref=e154]:
+                    - cell "Commercial Account Executive - Benelux Netherlands - Remote" [ref=e155]:
+                      - link "Commercial Account Executive - Benelux Netherlands - Remote" [ref=e156] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4676998006
+                        - paragraph [ref=e157]: Commercial Account Executive - Benelux
+                        - paragraph [ref=e158]: Netherlands - Remote
+                  - row "Enterprise Account Executive Singapore - Remote" [ref=e159]:
+                    - cell "Enterprise Account Executive Singapore - Remote" [ref=e160]:
+                      - link "Enterprise Account Executive Singapore - Remote" [ref=e161] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4673977006
+                        - paragraph [ref=e162]: Enterprise Account Executive
+                        - paragraph [ref=e163]: Singapore - Remote
+                  - row "Enterprise Account Executive - Benelux Netherlands - Remote" [ref=e164]:
+                    - cell "Enterprise Account Executive - Benelux Netherlands - Remote" [ref=e165]:
+                      - link "Enterprise Account Executive - Benelux Netherlands - Remote" [ref=e166] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4658503006
+                        - paragraph [ref=e167]: Enterprise Account Executive - Benelux
+                        - paragraph [ref=e168]: Netherlands - Remote
+                  - row "Enterprise Account Executive - DACH Germany - Remote" [ref=e169]:
+                    - cell "Enterprise Account Executive - DACH Germany - Remote" [ref=e170]:
+                      - link "Enterprise Account Executive - DACH Germany - Remote" [ref=e171] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4663168006
+                        - paragraph [ref=e172]: Enterprise Account Executive - DACH
+                        - paragraph [ref=e173]: Germany - Remote
+                  - row "Enterprise Account Executive - France France - Remote" [ref=e174]:
+                    - cell "Enterprise Account Executive - France France - Remote" [ref=e175]:
+                      - link "Enterprise Account Executive - France France - Remote" [ref=e176] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4680162006
+                        - paragraph [ref=e177]: Enterprise Account Executive - France
+                        - paragraph [ref=e178]: France - Remote
+                  - row "Enterprise Account Executive - Nordics Denmark - Remote" [ref=e179]:
+                    - cell "Enterprise Account Executive - Nordics Denmark - Remote" [ref=e180]:
+                      - link "Enterprise Account Executive - Nordics Denmark - Remote" [ref=e181] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4658498006
+                        - paragraph [ref=e182]: Enterprise Account Executive - Nordics
+                        - paragraph [ref=e183]: Denmark - Remote
+                  - row "Enterprise Account Executive - UK United Kingdom - Remote" [ref=e184]:
+                    - cell "Enterprise Account Executive - UK United Kingdom - Remote" [ref=e185]:
+                      - link "Enterprise Account Executive - UK United Kingdom - Remote" [ref=e186] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4675783006
+                        - paragraph [ref=e187]: Enterprise Account Executive - UK
+                        - paragraph [ref=e188]: United Kingdom - Remote
+                  - row "Regional Director, Enterprise Sales - Nordics Denmark - Remote; Sweden - Remote" [ref=e189]:
+                    - cell "Regional Director, Enterprise Sales - Nordics Denmark - Remote; Sweden - Remote" [ref=e190]:
+                      - link "Regional Director, Enterprise Sales - Nordics Denmark - Remote; Sweden - Remote" [ref=e191] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4658507006
+                        - paragraph [ref=e192]: Regional Director, Enterprise Sales - Nordics
+                        - paragraph [ref=e193]: Denmark - Remote; Sweden - Remote
+                  - row "Regional Director Sales - CEUR Germany - Remote" [ref=e194]:
+                    - cell "Regional Director Sales - CEUR Germany - Remote" [ref=e195]:
+                      - link "Regional Director Sales - CEUR Germany - Remote" [ref=e196] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4628469006
+                        - paragraph [ref=e197]: Regional Director Sales - CEUR
+                        - paragraph [ref=e198]: Germany - Remote
+                  - row "Regional Director, Sales - UKISA United Kingdom - Remote" [ref=e199]:
+                    - cell "Regional Director, Sales - UKISA United Kingdom - Remote" [ref=e200]:
+                      - link "Regional Director, Sales - UKISA United Kingdom - Remote" [ref=e201] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4659875006
+                        - paragraph [ref=e202]: Regional Director, Sales - UKISA
+                        - paragraph [ref=e203]: United Kingdom - Remote
+                  - row "RVP, CEUR + SEUR Europe - Remote" [ref=e204]:
+                    - cell "RVP, CEUR + SEUR Europe - Remote" [ref=e205]:
+                      - link "RVP, CEUR + SEUR Europe - Remote" [ref=e206] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4667233006
+                        - paragraph [ref=e207]: RVP, CEUR + SEUR
+                        - paragraph [ref=e208]: Europe - Remote
+                  - row "RVP, UKI + NEUR Europe - Remote" [ref=e209]:
+                    - cell "RVP, UKI + NEUR Europe - Remote" [ref=e210]:
+                      - link "RVP, UKI + NEUR Europe - Remote" [ref=e211] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4628461006
+                        - paragraph [ref=e212]: RVP, UKI + NEUR
+                        - paragraph [ref=e213]: Europe - Remote
+                  - row "Strategic Account Executive - UK United Kingdom - Remote" [ref=e214]:
+                    - cell "Strategic Account Executive - UK United Kingdom - Remote" [ref=e215]:
+                      - link "Strategic Account Executive - UK United Kingdom - Remote" [ref=e216] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4682715006
+                        - paragraph [ref=e217]: Strategic Account Executive - UK
+                        - paragraph [ref=e218]: United Kingdom - Remote
+            - generic [ref=e219]:
+              - heading "International Sales Engineering" [level=3] [ref=e220]
+              - table [ref=e222]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e223]:
+                      - paragraph [ref=e224]: Job
+                - rowgroup [ref=e225]:
+                  - row "Enterprise Sales Engineer - Singapore Singapore - Remote" [ref=e226]:
+                    - cell "Enterprise Sales Engineer - Singapore Singapore - Remote" [ref=e227]:
+                      - link "Enterprise Sales Engineer - Singapore Singapore - Remote" [ref=e228] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4674013006
+                        - paragraph [ref=e229]: Enterprise Sales Engineer - Singapore
+                        - paragraph [ref=e230]: Singapore - Remote
+                  - row "Senior Partner Sales Engineer - Brazil Brazil - Remote" [ref=e231]:
+                    - cell "Senior Partner Sales Engineer - Brazil Brazil - Remote" [ref=e232]:
+                      - link "Senior Partner Sales Engineer - Brazil Brazil - Remote" [ref=e233] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4671409006
+                        - paragraph [ref=e234]: Senior Partner Sales Engineer - Brazil
+                        - paragraph [ref=e235]: Brazil - Remote
+            - generic [ref=e236]:
+              - heading "IT & Biz Ops" [level=3] [ref=e237]
+              - table [ref=e239]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e240]:
+                      - paragraph [ref=e241]: Job
+                - rowgroup [ref=e242]:
+                  - row "Senior Manager, Corporate Technology Canada - Remote; United States - Remote" [ref=e243]:
+                    - cell "Senior Manager, Corporate Technology Canada - Remote; United States - Remote" [ref=e244]:
+                      - link "Senior Manager, Corporate Technology Canada - Remote; United States - Remote" [ref=e245] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4682837006
+                        - paragraph [ref=e246]: Senior Manager, Corporate Technology
+                        - paragraph [ref=e247]: Canada - Remote; United States - Remote
+            - generic [ref=e248]:
+              - heading "Other Opportunities" [level=3] [ref=e249]
+              - table [ref=e251]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e252]:
+                      - paragraph [ref=e253]: Job
+                - rowgroup [ref=e254]:
+                  - row "Submitting for a General Application United States - Remote" [ref=e255]:
+                    - cell "Submitting for a General Application United States - Remote" [ref=e256]:
+                      - link "Submitting for a General Application United States - Remote" [ref=e257] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4037494006
+                        - paragraph [ref=e258]: Submitting for a General Application
+                        - paragraph [ref=e259]: United States - Remote
+                  - row "Submitting for a General Internship Application United States - Remote" [ref=e260]:
+                    - cell "Submitting for a General Internship Application United States - Remote" [ref=e261]:
+                      - link "Submitting for a General Internship Application United States - Remote" [ref=e262] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4410540006
+                        - paragraph [ref=e263]: Submitting for a General Internship Application
+                        - paragraph [ref=e264]: United States - Remote
+            - generic [ref=e265]:
+              - heading "Partnerships" [level=3] [ref=e266]
+              - table [ref=e268]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e269]:
+                      - paragraph [ref=e270]: Job
+                - rowgroup [ref=e271]:
+                  - row "Partner Manager United States - Remote" [ref=e272]:
+                    - cell "Partner Manager United States - Remote" [ref=e273]:
+                      - link "Partner Manager United States - Remote" [ref=e274] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4663944006
+                        - paragraph [ref=e275]: Partner Manager
+                        - paragraph [ref=e276]: United States - Remote
+                  - row "Partner Manager - France (VARs) France - Remote" [ref=e277]:
+                    - cell "Partner Manager - France (VARs) France - Remote" [ref=e278]:
+                      - link "Partner Manager - France (VARs) France - Remote" [ref=e279] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4665466006
+                        - paragraph [ref=e280]: Partner Manager - France (VARs)
+                        - paragraph [ref=e281]: France - Remote
+            - generic [ref=e282]:
+              - heading "People Ops" [level=3] [ref=e283]
+              - table [ref=e285]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e286]:
+                      - paragraph [ref=e287]: Job
+                - rowgroup [ref=e288]:
+                  - row "Compensation Manager United States - Remote" [ref=e289]:
+                    - cell "Compensation Manager United States - Remote" [ref=e290]:
+                      - link "Compensation Manager United States - Remote" [ref=e291] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4678835006
+                        - paragraph [ref=e292]: Compensation Manager
+                        - paragraph [ref=e293]: United States - Remote
+            - generic [ref=e294]:
+              - heading "Product Management" [level=3] [ref=e295]
+              - table [ref=e297]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e298]:
+                      - paragraph [ref=e299]: Job
+                - rowgroup [ref=e300]:
+                  - row "Director, Product Management (Self-Serve & Platform) United States - Remote" [ref=e301]:
+                    - cell "Director, Product Management (Self-Serve & Platform) United States - Remote" [ref=e302]:
+                      - link "Director, Product Management (Self-Serve & Platform) United States - Remote" [ref=e303] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4673236006
+                        - paragraph [ref=e304]: Director, Product Management (Self-Serve & Platform)
+                        - paragraph [ref=e305]: United States - Remote
+                  - row "Senior Product Manager (Repository) United States - Remote" [ref=e306]:
+                    - cell "Senior Product Manager (Repository) United States - Remote" [ref=e307]:
+                      - link "Senior Product Manager (Repository) United States - Remote" [ref=e308] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4680285006
+                        - paragraph [ref=e309]: Senior Product Manager (Repository)
+                        - paragraph [ref=e310]: United States - Remote
+            - generic [ref=e311]:
+              - heading "Product Security" [level=3] [ref=e312]
+              - table [ref=e314]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e315]:
+                      - paragraph [ref=e316]: Job
+                - rowgroup [ref=e317]:
+                  - row "Staff Product Security Engineer United States - Remote" [ref=e318]:
+                    - cell "Staff Product Security Engineer United States - Remote" [ref=e319]:
+                      - link "Staff Product Security Engineer United States - Remote" [ref=e320] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4678715006
+                        - paragraph [ref=e321]: Staff Product Security Engineer
+                        - paragraph [ref=e322]: United States - Remote
+                  - row "Staff Product Security Engineer Canada - Remote" [ref=e323]:
+                    - cell "Staff Product Security Engineer Canada - Remote" [ref=e324]:
+                      - link "Staff Product Security Engineer Canada - Remote" [ref=e325] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4679708006
+                        - paragraph [ref=e326]: Staff Product Security Engineer
+                        - paragraph [ref=e327]: Canada - Remote
+                  - row "Staff Product Security Engineer United Kingdom - Remote" [ref=e328]:
+                    - cell "Staff Product Security Engineer United Kingdom - Remote" [ref=e329]:
+                      - link "Staff Product Security Engineer United Kingdom - Remote" [ref=e330] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4679709006
+                        - paragraph [ref=e331]: Staff Product Security Engineer
+                        - paragraph [ref=e332]: United Kingdom - Remote
+            - generic [ref=e333]:
+              - heading "Professional Services" [level=3] [ref=e334]
+              - table [ref=e336]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e337]:
+                      - paragraph [ref=e338]: Job
+                - rowgroup [ref=e339]:
+                  - row "Senior Solutions Architect - Central (Professional Services) United States - Remote" [ref=e340]:
+                    - cell "Senior Solutions Architect - Central (Professional Services) United States - Remote" [ref=e341]:
+                      - link "Senior Solutions Architect - Central (Professional Services) United States - Remote" [ref=e342] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4673651006
+                        - paragraph [ref=e343]: Senior Solutions Architect - Central (Professional Services)
+                        - paragraph [ref=e344]: United States - Remote
+                  - row "Senior Solutions Architect - East (Professional Services) United States - Remote" [ref=e345]:
+                    - cell "Senior Solutions Architect - East (Professional Services) United States - Remote" [ref=e346]:
+                      - link "Senior Solutions Architect - East (Professional Services) United States - Remote" [ref=e347] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4678090006
+                        - paragraph [ref=e348]: Senior Solutions Architect - East (Professional Services)
+                        - paragraph [ref=e349]: United States - Remote
+            - generic [ref=e350]:
+              - heading "R&D Engineering" [level=3] [ref=e351]
+              - table [ref=e353]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e354]:
+                      - paragraph [ref=e355]: Job
+                - rowgroup [ref=e356]:
+                  - row "Principal Software Engineer (Containers) United States - Remote" [ref=e357]:
+                    - cell "Principal Software Engineer (Containers) United States - Remote" [ref=e358]:
+                      - link "Principal Software Engineer (Containers) United States - Remote" [ref=e359] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4677727006
+                        - paragraph [ref=e360]: Principal Software Engineer (Containers)
+                        - paragraph [ref=e361]: United States - Remote
+                  - row "Senior Software Engineer (Containers) United States - Remote" [ref=e362]:
+                    - cell "Senior Software Engineer (Containers) United States - Remote" [ref=e363]:
+                      - link "Senior Software Engineer (Containers) United States - Remote" [ref=e364] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4675043006
+                        - paragraph [ref=e365]: Senior Software Engineer (Containers)
+                        - paragraph [ref=e366]: United States - Remote
+                  - row "Senior Software Engineer (Guarded OS) United States - Remote" [ref=e367]:
+                    - cell "Senior Software Engineer (Guarded OS) United States - Remote" [ref=e368]:
+                      - link "Senior Software Engineer (Guarded OS) United States - Remote" [ref=e369] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4679658006
+                        - paragraph [ref=e370]: Senior Software Engineer (Guarded OS)
+                        - paragraph [ref=e371]: United States - Remote
+                  - row "Senior Software Engineer (Libraries Platform) United States - Remote" [ref=e372]:
+                    - cell "Senior Software Engineer (Libraries Platform) United States - Remote" [ref=e373]:
+                      - link "Senior Software Engineer (Libraries Platform) United States - Remote" [ref=e374] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4673043006
+                        - paragraph [ref=e375]: Senior Software Engineer (Libraries Platform)
+                        - paragraph [ref=e376]: United States - Remote
+                  - row "Senior Software Engineer (Libraries Platform) Canada - Remote" [ref=e377]:
+                    - cell "Senior Software Engineer (Libraries Platform) Canada - Remote" [ref=e378]:
+                      - link "Senior Software Engineer (Libraries Platform) Canada - Remote" [ref=e379] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4673045006
+                        - paragraph [ref=e380]: Senior Software Engineer (Libraries Platform)
+                        - paragraph [ref=e381]: Canada - Remote
+                  - row "Senior Software Engineer (Libraries Platform) United Kingdom - Remote" [ref=e382]:
+                    - cell "Senior Software Engineer (Libraries Platform) United Kingdom - Remote" [ref=e383]:
+                      - link "Senior Software Engineer (Libraries Platform) United Kingdom - Remote" [ref=e384] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4673046006
+                        - paragraph [ref=e385]: Senior Software Engineer (Libraries Platform)
+                        - paragraph [ref=e386]: United Kingdom - Remote
+                  - row "Staff Software Engineer (Customer Platform) Canada - Remote; United Kingdom - Remote; United States - Remote" [ref=e387]:
+                    - cell "Staff Software Engineer (Customer Platform) Canada - Remote; United Kingdom - Remote; United States - Remote" [ref=e388]:
+                      - link "Staff Software Engineer (Customer Platform) Canada - Remote; United Kingdom - Remote; United States - Remote" [ref=e389] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4676390006
+                        - paragraph [ref=e390]: Staff Software Engineer (Customer Platform)
+                        - paragraph [ref=e391]: Canada - Remote; United Kingdom - Remote; United States - Remote
+                  - row "Staff Software Engineer (.NET) United States - Remote" [ref=e392]:
+                    - cell "Staff Software Engineer (.NET) United States - Remote" [ref=e393]:
+                      - link "Staff Software Engineer (.NET) United States - Remote" [ref=e394] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/chainguard/jobs/4672901006
+                        - paragraph [ref=e395]: Staff Software Engineer (.NET)
+                        - paragraph [ref=e396]: United States - Remote
+          - navigation "Pagination" [ref=e398]:
+            - button "Previous page" [disabled] [ref=e399]:
+              - img [ref=e400]
+            - list [ref=e402]:
+              - listitem [ref=e403]:
+                - button "Go to page 1": "1"
+              - listitem [ref=e404]:
+                - button "Go to page 2" [ref=e405] [cursor=pointer]: "2"
+            - button "Next page" [ref=e406] [cursor=pointer]:
+              - img [ref=e407]
+  - contentinfo [ref=e409]:
+    - generic [ref=e410]:
+      - paragraph [ref=e411]: Powered by
+      - link "Greenhouse logo" [ref=e412] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e413]

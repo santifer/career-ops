@@ -1,0 +1,35 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - heading "BRIAN L. E. WASHINGTON" [level=1] [ref=e4]
+    - generic [ref=e5]: Technical Product Manager • Platform & Integration • AI Workflow Enablement
+    - generic [ref=e6]:
+      - text: Tel Aviv, Israel | +972-53-863-1936 |
+      - link "brianlewashington@gmail.com" [ref=e7] [cursor=pointer]:
+        - /url: mailto:brianlewashington@gmail.com
+      - text: "|"
+      - link "brian-washington.vercel.app" [ref=e8] [cursor=pointer]:
+        - /url: https://brian-washington.vercel.app
+      - text: "|"
+      - link "linkedin.com/in/b-washington" [ref=e9] [cursor=pointer]:
+        - /url: https://linkedin.com/in/b-washington
+  - generic [ref=e10]:
+    - generic [ref=e11]: June 2, 2026
+    - generic [ref=e12]:
+      - strong [ref=e13]: Tomorrow.io Hiring Team
+      - text: AI First — Senior Product Manager
+  - generic [ref=e14]:
+    - paragraph [ref=e15]: Most product managers describe themselves as AI-native. I built a system to prove it.
+    - paragraph [ref=e16]: "The AI Workflow Engine is an end-to-end orchestration system I designed from scratch, with prompt chains, human-in-the-loop checkpoints, output governance, and tooling that replaced entire categories of cognitive work rather than assisting with individual tasks. I built it because I was tired of AI features bolted onto existing product flows. What interested me was not the feature question. It was the architecture question: what does the product look like when AI is the foundation, not an addition? That is the exact question Tomorrow.io is built to answer."
+    - paragraph [ref=e17]: "At SSV Labs, I owned a modular integration platform across 8+ partners and four engineering squads, reducing partner escalations by 50% and delivering three major releases with zero breaking changes. I achieved that not through oversight but through design: clear defaults, extensible contracts, and an onboarding experience people actually wanted to follow. At Touchcast, I shipped API-driven integrations for Fortune 500 clients that cut partner onboarding time by 60%. Same pattern, different scale. Embed complexity into the product so users experience power, not friction."
+    - paragraph [ref=e18]: "I do not have weather domain expertise, and I want to name that directly. But the challenge here is not meteorology. It is a product architecture problem: how do you build AI-native capabilities that change how users interact with high-stakes, data-intensive decisions at scale? My HCI research background gives me a rigorous framework for that question. My track record proves I can execute the answer. My first 30 days would be deep immersion in your customers' world, because that is how I have entered every new domain."
+    - paragraph [ref=e19]: Tomorrow.io is solving a problem with real consequences. Six of the top ten Fortune 500 companies depend on your forecasting to make decisions that affect operations, safety, and people. I am not drawn to that in spite of the weight. I am drawn to it because of it.
+    - paragraph [ref=e20]: I would love to talk.
+  - generic [ref=e21]:
+    - generic [ref=e22]: Sincerely,
+    - generic [ref=e23]: Brian L. E. Washington
+    - generic [ref=e24]:
+      - link "brianlewashington@gmail.com" [ref=e25] [cursor=pointer]:
+        - /url: mailto:brianlewashington@gmail.com
+      - text: "| +972-53-863-1936 |"
+      - link "brian-washington.vercel.app" [ref=e26] [cursor=pointer]:
+        - /url: https://brian-washington.vercel.app

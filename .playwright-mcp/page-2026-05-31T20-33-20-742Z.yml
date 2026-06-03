@@ -1,0 +1,467 @@
+- generic [active] [ref=e1]:
+  - img "Banner" [ref=e3]
+  - generic [ref=e6]:
+    - img [ref=e8]
+    - paragraph [ref=e10]: The job you are looking for is no longer open.
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - link "DoiT Logo" [ref=e14] [cursor=pointer]:
+        - /url: https://www.doit.com
+        - img "DoiT Logo" [ref=e15]
+      - heading "Accelerate Your Career with DoiT" [level=1] [ref=e16]
+      - generic [ref=e20]:
+        - paragraph [ref=e21]:
+          - text: AWS re:Invent 2024 was an unforgettable experience! ☁️ We’re still buzzing with excitement and can’t wait for next year. As a Platinum Sponsor, DoiT showcased the latest cloud technology and intelligence.
+          - text: Check out our recap video to relive the magic and see how we’re helping organizations streamline and scale their cloud infrastructure. The journey continues, and we’re thrilled to keep the conversation going. 🌟
+        - paragraph [ref=e22]:
+          - iframe [ref=e23]:
+            - generic [active] [ref=f38e1]:
+              - generic "YouTube Video Player" [ref=f38e3]
+              - generic [ref=f38e5]:
+                - generic:
+                  - generic:
+                    - button "Play video" [ref=f38e10] [cursor=pointer]:
+                      - generic [ref=f38e13]:
+                        - img
+                    - button "Hide player controls" [ref=f38e14] [cursor=pointer]
+                    - generic [ref=f38e16]:
+                      - generic [ref=f38e21]:
+                        - generic [ref=f38e22]:
+                          - link "DoiT at AWS re:Invent 2024" [ref=f38e23] [cursor=pointer]:
+                            - /url: https://www.youtube.com/watch?v=ucjTCRO8Hns
+                          - link "DoiT" [ref=f38e24] [cursor=pointer]:
+                            - /url: /channel/UCK6-Ti9ZjGsDwEwTFcL8zUA
+                            - generic [ref=f38e25]: DoiT
+                        - generic [ref=f38e26]:
+                          - button "thumbnail-image" [ref=f38e27] [cursor=pointer]:
+                            - img "thumbnail-image" [ref=f38e28]
+                          - generic [ref=f38e30]:
+                            - generic: DoiT
+                            - generic: 1.89K subscribers
+                      - generic [ref=f38e31]:
+                        - button "Share" [ref=f38e34] [cursor=pointer]:
+                          - generic [ref=f38e38]:
+                            - img
+                        - link "Watch on YouTube" [ref=f38e45] [cursor=pointer]:
+                          - /url: https://www.youtube.com/watch?v=ucjTCRO8Hns
+                          - generic [ref=f38e48]:
+                            - text: Watch on
+                            - img [ref=f38e50]:
+                              - generic [ref=f38e52]:
+                                - img
+      - generic [ref=e24]:
+        - img [ref=e25]
+        - generic [ref=e27]:
+          - paragraph [ref=e28]: Create a Job Alert
+          - paragraph [ref=e29]: Level-up your career by having opportunities at DoiT sent directly to your inbox.
+          - link "Create alert" [ref=e30] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=doitintl&source=job_alert_board
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e34]:
+            - generic [ref=e35]: Search
+            - textbox "Search" [ref=e36]
+          - generic [ref=e38]:
+            - generic [ref=e39]: Department
+            - generic [ref=e40]:
+              - log [ref=e42]
+              - generic [ref=e44]:
+                - generic [ref=e45]:
+                  - generic [ref=e46]: Select...
+                  - combobox "Department" [ref=e48]
+                - button "Toggle flyout" [ref=e50] [cursor=pointer]:
+                  - img [ref=e51]
+          - generic [ref=e54]:
+            - generic [ref=e55]: Office
+            - generic [ref=e56]:
+              - log [ref=e58]
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - generic [ref=e62]: Select...
+                  - combobox "Office" [ref=e64]
+                - button "Toggle flyout" [ref=e66] [cursor=pointer]:
+                  - img [ref=e67]
+        - generic [ref=e69]:
+          - heading "115 jobs" [level=2] [ref=e70]
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - heading "Customer Experience" [level=3] [ref=e73]
+              - table [ref=e75]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e76]:
+                      - paragraph [ref=e77]: Job
+                - rowgroup [ref=e78]:
+                  - row "Manager, Solution Engineering Remote US" [ref=e79]:
+                    - cell "Manager, Solution Engineering Remote US" [ref=e80]:
+                      - link "Manager, Solution Engineering Remote US" [ref=e81] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7726330003
+                        - paragraph [ref=e82]: Manager, Solution Engineering
+                        - paragraph [ref=e83]: Remote US
+                  - row "Senior Customer Success Manager, SELECT by DoiT Remote US East" [ref=e84]:
+                    - cell "Senior Customer Success Manager, SELECT by DoiT Remote US East" [ref=e85]:
+                      - link "Senior Customer Success Manager, SELECT by DoiT Remote US East" [ref=e86] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7616698003
+                        - paragraph [ref=e87]: Senior Customer Success Manager, SELECT by DoiT
+                        - paragraph [ref=e88]: Remote US East
+                  - row "Solutions Engineer, DoiT Cloud Intelligence Remote US" [ref=e89]:
+                    - cell "Solutions Engineer, DoiT Cloud Intelligence Remote US" [ref=e90]:
+                      - link "Solutions Engineer, DoiT Cloud Intelligence Remote US" [ref=e91] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7726483003
+                        - paragraph [ref=e92]: Solutions Engineer, DoiT Cloud Intelligence
+                        - paragraph [ref=e93]: Remote US
+                  - row "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote UK" [ref=e94]:
+                    - cell "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote UK" [ref=e95]:
+                      - link "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote UK" [ref=e96] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7724789003
+                        - paragraph [ref=e97]: Solutions Engineer, DoiT Cloud Intelligence - EMEA
+                        - paragraph [ref=e98]: Remote UK
+                  - row "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Ireland" [ref=e99]:
+                    - cell "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Ireland" [ref=e100]:
+                      - link "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Ireland" [ref=e101] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7724883003
+                        - paragraph [ref=e102]: Solutions Engineer, DoiT Cloud Intelligence - EMEA
+                        - paragraph [ref=e103]: Remote Ireland
+                  - row "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Estonia" [ref=e104]:
+                    - cell "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Estonia" [ref=e105]:
+                      - link "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Estonia" [ref=e106] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7724884003
+                        - paragraph [ref=e107]: Solutions Engineer, DoiT Cloud Intelligence - EMEA
+                        - paragraph [ref=e108]: Remote Estonia
+                  - row "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Netherlands" [ref=e109]:
+                    - cell "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Netherlands" [ref=e110]:
+                      - link "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Netherlands" [ref=e111] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7724885003
+                        - paragraph [ref=e112]: Solutions Engineer, DoiT Cloud Intelligence - EMEA
+                        - paragraph [ref=e113]: Remote Netherlands
+                  - row "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Sweden" [ref=e114]:
+                    - cell "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Sweden" [ref=e115]:
+                      - link "Solutions Engineer, DoiT Cloud Intelligence - EMEA Remote Sweden" [ref=e116] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7724886003
+                        - paragraph [ref=e117]: Solutions Engineer, DoiT Cloud Intelligence - EMEA
+                        - paragraph [ref=e118]: Remote Sweden
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT New Remote Estonia" [ref=e119]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT New Remote Estonia" [ref=e120]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT New Remote Estonia" [ref=e121] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747766003
+                        - paragraph [ref=e122]:
+                          - text: Solutions Engineer, EMEA - SELECT by DoiT
+                          - generic [ref=e124]: New
+                        - paragraph [ref=e125]: Remote Estonia
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT Remote Ireland" [ref=e126]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT Remote Ireland" [ref=e127]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT Remote Ireland" [ref=e128] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7714572003
+                        - paragraph [ref=e129]: Solutions Engineer, EMEA - SELECT by DoiT
+                        - paragraph [ref=e130]: Remote Ireland
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT Remote UK" [ref=e131]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT Remote UK" [ref=e132]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT Remote UK" [ref=e133] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7673810003
+                        - paragraph [ref=e134]: Solutions Engineer, EMEA - SELECT by DoiT
+                        - paragraph [ref=e135]: Remote UK
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT Remote Netherlands" [ref=e136]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT Remote Netherlands" [ref=e137]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT Remote Netherlands" [ref=e138] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7703919003
+                        - paragraph [ref=e139]: Solutions Engineer, EMEA - SELECT by DoiT
+                        - paragraph [ref=e140]: Remote Netherlands
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT Remote Sweden" [ref=e141]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT Remote Sweden" [ref=e142]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT Remote Sweden" [ref=e143] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7703920003
+                        - paragraph [ref=e144]: Solutions Engineer, EMEA - SELECT by DoiT
+                        - paragraph [ref=e145]: Remote Sweden
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Poland) New Remote EMEA" [ref=e146]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Poland) New Remote EMEA" [ref=e147]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Poland) New Remote EMEA" [ref=e148] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747762003
+                        - paragraph [ref=e149]:
+                          - text: Solutions Engineer, EMEA - SELECT by DoiT, Remote (Poland)
+                          - generic [ref=e151]: New
+                        - paragraph [ref=e152]: Remote EMEA
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Portugal) New Remote EMEA" [ref=e153]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Portugal) New Remote EMEA" [ref=e154]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Portugal) New Remote EMEA" [ref=e155] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747765003
+                        - paragraph [ref=e156]:
+                          - text: Solutions Engineer, EMEA - SELECT by DoiT, Remote (Portugal)
+                          - generic [ref=e158]: New
+                        - paragraph [ref=e159]: Remote EMEA
+                  - row "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Romania) New Remote EMEA" [ref=e160]:
+                    - cell "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Romania) New Remote EMEA" [ref=e161]:
+                      - link "Solutions Engineer, EMEA - SELECT by DoiT, Remote (Romania) New Remote EMEA" [ref=e162] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747763003
+                        - paragraph [ref=e163]:
+                          - text: Solutions Engineer, EMEA - SELECT by DoiT, Remote (Romania)
+                          - generic [ref=e165]: New
+                        - paragraph [ref=e166]: Remote EMEA
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote UK" [ref=e167]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote UK" [ref=e168]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote UK" [ref=e169] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7632704003
+                        - paragraph [ref=e170]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e171]: Remote UK
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote Ireland" [ref=e172]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote Ireland" [ref=e173]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote Ireland" [ref=e174] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7632705003
+                        - paragraph [ref=e175]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e176]: Remote Ireland
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote US East" [ref=e177]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote US East" [ref=e178]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote US East" [ref=e179] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7643898003
+                        - paragraph [ref=e180]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e181]: Remote US East
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote Colombia" [ref=e182]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote Colombia" [ref=e183]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote Colombia" [ref=e184] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7665391003
+                        - paragraph [ref=e185]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e186]: Remote Colombia
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote Mexico" [ref=e187]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote Mexico" [ref=e188]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote Mexico" [ref=e189] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7665401003
+                        - paragraph [ref=e190]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e191]: Remote Mexico
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote LATAM" [ref=e192]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote LATAM" [ref=e193]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote LATAM" [ref=e194] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7665406003
+                        - paragraph [ref=e195]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e196]: Remote LATAM
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote LATAM" [ref=e197]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote LATAM" [ref=e198]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote LATAM" [ref=e199] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7665410003
+                        - paragraph [ref=e200]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e201]: Remote LATAM
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote Netherlands" [ref=e202]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote Netherlands" [ref=e203]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote Netherlands" [ref=e204] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7702719003
+                        - paragraph [ref=e205]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e206]: Remote Netherlands
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote Sweden" [ref=e207]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote Sweden" [ref=e208]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote Sweden" [ref=e209] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7702720003
+                        - paragraph [ref=e210]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e211]: Remote Sweden
+                  - row "Solutions Engineer, PerfectScale by DoiT Remote Estonia" [ref=e212]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT Remote Estonia" [ref=e213]:
+                      - link "Solutions Engineer, PerfectScale by DoiT Remote Estonia" [ref=e214] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7702721003
+                        - paragraph [ref=e215]: Solutions Engineer, PerfectScale by DoiT
+                        - paragraph [ref=e216]: Remote Estonia
+                  - row "Solutions Engineer, PerfectScale by DoiT, Poland (Remote) Remote EMEA" [ref=e217]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT, Poland (Remote) Remote EMEA" [ref=e218]:
+                      - link "Solutions Engineer, PerfectScale by DoiT, Poland (Remote) Remote EMEA" [ref=e219] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7728458003
+                        - paragraph [ref=e220]: Solutions Engineer, PerfectScale by DoiT, Poland (Remote)
+                        - paragraph [ref=e221]: Remote EMEA
+                  - row "Solutions Engineer, PerfectScale by DoiT, Portugal (Remote) New Remote EMEA" [ref=e222]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT, Portugal (Remote) New Remote EMEA" [ref=e223]:
+                      - link "Solutions Engineer, PerfectScale by DoiT, Portugal (Remote) New Remote EMEA" [ref=e224] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747768003
+                        - paragraph [ref=e225]:
+                          - text: Solutions Engineer, PerfectScale by DoiT, Portugal (Remote)
+                          - generic [ref=e227]: New
+                        - paragraph [ref=e228]: Remote EMEA
+                  - row "Solutions Engineer, PerfectScale by DoiT, Romania (Remote) New Remote EMEA" [ref=e229]:
+                    - cell "Solutions Engineer, PerfectScale by DoiT, Romania (Remote) New Remote EMEA" [ref=e230]:
+                      - link "Solutions Engineer, PerfectScale by DoiT, Romania (Remote) New Remote EMEA" [ref=e231] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747767003
+                        - paragraph [ref=e232]:
+                          - text: Solutions Engineer, PerfectScale by DoiT, Romania (Remote)
+                          - generic [ref=e234]: New
+                        - paragraph [ref=e235]: Remote EMEA
+                  - row "Solutions Engineer, SELECT by DoiT Remote US East" [ref=e236]:
+                    - cell "Solutions Engineer, SELECT by DoiT Remote US East" [ref=e237]:
+                      - link "Solutions Engineer, SELECT by DoiT Remote US East" [ref=e238] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7673533003
+                        - paragraph [ref=e239]: Solutions Engineer, SELECT by DoiT
+                        - paragraph [ref=e240]: Remote US East
+            - generic [ref=e241]:
+              - paragraph [ref=e243]: Customer Experience
+              - heading "Business Systems" [level=3] [ref=e244]
+              - table [ref=e246]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e247]:
+                      - paragraph [ref=e248]: Job
+                - rowgroup [ref=e249]:
+                  - row "GTM Systems Administrator (Sales/Marketing) Remote US East" [ref=e250]:
+                    - cell "GTM Systems Administrator (Sales/Marketing) Remote US East" [ref=e251]:
+                      - link "GTM Systems Administrator (Sales/Marketing) Remote US East" [ref=e252] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7721770003
+                        - paragraph [ref=e253]: GTM Systems Administrator (Sales/Marketing)
+                        - paragraph [ref=e254]: Remote US East
+                  - row "GTM Systems Administrator (Sales/Marketing) Remote US Central" [ref=e255]:
+                    - cell "GTM Systems Administrator (Sales/Marketing) Remote US Central" [ref=e256]:
+                      - link "GTM Systems Administrator (Sales/Marketing) Remote US Central" [ref=e257] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7721771003
+                        - paragraph [ref=e258]: GTM Systems Administrator (Sales/Marketing)
+                        - paragraph [ref=e259]: Remote US Central
+            - generic [ref=e260]:
+              - paragraph [ref=e262]: Customer Experience
+              - heading "Forward Deployed Engineering" [level=3] [ref=e263]
+              - table [ref=e265]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e266]:
+                      - paragraph [ref=e267]: Job
+                - rowgroup [ref=e268]:
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote UK" [ref=e269]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote UK" [ref=e270]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote UK" [ref=e271] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7693780003
+                        - paragraph [ref=e272]: Senior Cloud Architect, Field Engineering (GenAI Focus)
+                        - paragraph [ref=e273]: Remote UK
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Ireland" [ref=e274]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Ireland" [ref=e275]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Ireland" [ref=e276] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747502003
+                        - paragraph [ref=e277]: Senior Cloud Architect, Field Engineering (GenAI Focus)
+                        - paragraph [ref=e278]: Remote Ireland
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Sweden" [ref=e279]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Sweden" [ref=e280]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Sweden" [ref=e281] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747504003
+                        - paragraph [ref=e282]: Senior Cloud Architect, Field Engineering (GenAI Focus)
+                        - paragraph [ref=e283]: Remote Sweden
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Estonia" [ref=e284]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Estonia" [ref=e285]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Estonia" [ref=e286] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747503003
+                        - paragraph [ref=e287]: Senior Cloud Architect, Field Engineering (GenAI Focus)
+                        - paragraph [ref=e288]: Remote Estonia
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Netherlands" [ref=e289]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Netherlands" [ref=e290]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Netherlands" [ref=e291] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747505003
+                        - paragraph [ref=e292]: Senior Cloud Architect, Field Engineering (GenAI Focus)
+                        - paragraph [ref=e293]: Remote Netherlands
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Israel" [ref=e294]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Israel" [ref=e295]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) Remote Israel" [ref=e296] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747506003
+                        - paragraph [ref=e297]: Senior Cloud Architect, Field Engineering (GenAI Focus)
+                        - paragraph [ref=e298]: Remote Israel
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) - Armenia Remote EMEA" [ref=e299]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) - Armenia Remote EMEA" [ref=e300]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) - Armenia Remote EMEA" [ref=e301] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747508003
+                        - paragraph [ref=e302]: Senior Cloud Architect, Field Engineering (GenAI Focus) - Armenia
+                        - paragraph [ref=e303]: Remote EMEA
+                  - row "Senior Cloud Architect, Field Engineering (GenAI Focus) - Portugal Remote EMEA" [ref=e304]:
+                    - cell "Senior Cloud Architect, Field Engineering (GenAI Focus) - Portugal Remote EMEA" [ref=e305]:
+                      - link "Senior Cloud Architect, Field Engineering (GenAI Focus) - Portugal Remote EMEA" [ref=e306] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7747507003
+                        - paragraph [ref=e307]: Senior Cloud Architect, Field Engineering (GenAI Focus) - Portugal
+                        - paragraph [ref=e308]: Remote EMEA
+            - generic [ref=e309]:
+              - heading "Finance & Legal" [level=3] [ref=e310]
+              - table [ref=e312]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e313]:
+                      - paragraph [ref=e314]: Job
+                - rowgroup [ref=e315]:
+                  - row "Global Payroll Operations Manager Remote Sweden" [ref=e316]:
+                    - cell "Global Payroll Operations Manager Remote Sweden" [ref=e317]:
+                      - link "Global Payroll Operations Manager Remote Sweden" [ref=e318] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7728452003
+                        - paragraph [ref=e319]: Global Payroll Operations Manager
+                        - paragraph [ref=e320]: Remote Sweden
+                  - row "Global Payroll Operations Manager Remote UK" [ref=e321]:
+                    - cell "Global Payroll Operations Manager Remote UK" [ref=e322]:
+                      - link "Global Payroll Operations Manager Remote UK" [ref=e323] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7727280003
+                        - paragraph [ref=e324]: Global Payroll Operations Manager
+                        - paragraph [ref=e325]: Remote UK
+                  - row "Global Payroll Operations Manager Remote Ireland" [ref=e326]:
+                    - cell "Global Payroll Operations Manager Remote Ireland" [ref=e327]:
+                      - link "Global Payroll Operations Manager Remote Ireland" [ref=e328] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7728450003
+                        - paragraph [ref=e329]: Global Payroll Operations Manager
+                        - paragraph [ref=e330]: Remote Ireland
+                  - row "Global Payroll Operations Manager Remote Netherlands" [ref=e331]:
+                    - cell "Global Payroll Operations Manager Remote Netherlands" [ref=e332]:
+                      - link "Global Payroll Operations Manager Remote Netherlands" [ref=e333] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7728451003
+                        - paragraph [ref=e334]: Global Payroll Operations Manager
+                        - paragraph [ref=e335]: Remote Netherlands
+                  - row "Global Payroll Operations Manager Remote Estonia" [ref=e336]:
+                    - cell "Global Payroll Operations Manager Remote Estonia" [ref=e337]:
+                      - link "Global Payroll Operations Manager Remote Estonia" [ref=e338] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7728457003
+                        - paragraph [ref=e339]: Global Payroll Operations Manager
+                        - paragraph [ref=e340]: Remote Estonia
+            - generic [ref=e341]:
+              - paragraph [ref=e343]: Finance & Legal
+              - heading "Legal" [level=3] [ref=e344]
+              - table [ref=e346]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e347]:
+                      - paragraph [ref=e348]: Job
+                - rowgroup [ref=e349]:
+                  - row "Senior Commercial Counsel (CST/EST) Remote US Central" [ref=e350]:
+                    - cell "Senior Commercial Counsel (CST/EST) Remote US Central" [ref=e351]:
+                      - link "Senior Commercial Counsel (CST/EST) Remote US Central" [ref=e352] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7645095003
+                        - paragraph [ref=e353]: Senior Commercial Counsel (CST/EST)
+                        - paragraph [ref=e354]: Remote US Central
+                  - row "Senior Commercial Counsel (CST/EST) Remote US East" [ref=e355]:
+                    - cell "Senior Commercial Counsel (CST/EST) Remote US East" [ref=e356]:
+                      - link "Senior Commercial Counsel (CST/EST) Remote US East" [ref=e357] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7645105003
+                        - paragraph [ref=e358]: Senior Commercial Counsel (CST/EST)
+                        - paragraph [ref=e359]: Remote US East
+            - generic [ref=e360]:
+              - heading "Marketing" [level=3] [ref=e361]
+              - table [ref=e363]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e364]:
+                      - paragraph [ref=e365]: Job
+                - rowgroup [ref=e366]:
+                  - row "Container Optimization Marketing Manager - PerfectScale by DoiT Remote US East" [ref=e367]:
+                    - cell "Container Optimization Marketing Manager - PerfectScale by DoiT Remote US East" [ref=e368]:
+                      - link "Container Optimization Marketing Manager - PerfectScale by DoiT Remote US East" [ref=e369] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7648547003
+                        - paragraph [ref=e370]: Container Optimization Marketing Manager - PerfectScale by DoiT
+                        - paragraph [ref=e371]: Remote US East
+                  - row "Container Optimization Marketing Manager - PerfectScale by DoiT Remote US Central" [ref=e372]:
+                    - cell "Container Optimization Marketing Manager - PerfectScale by DoiT Remote US Central" [ref=e373]:
+                      - link "Container Optimization Marketing Manager - PerfectScale by DoiT Remote US Central" [ref=e374] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7648550003
+                        - paragraph [ref=e375]: Container Optimization Marketing Manager - PerfectScale by DoiT
+                        - paragraph [ref=e376]: Remote US Central
+                  - row "Container Optimization Marketing Manager - PerfectScale by DoiT Remote Canada" [ref=e377]:
+                    - cell "Container Optimization Marketing Manager - PerfectScale by DoiT Remote Canada" [ref=e378]:
+                      - link "Container Optimization Marketing Manager - PerfectScale by DoiT Remote Canada" [ref=e379] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/doitintl/jobs/7648551003
+                        - paragraph [ref=e380]: Container Optimization Marketing Manager - PerfectScale by DoiT
+                        - paragraph [ref=e381]: Remote Canada
+          - navigation "Pagination" [ref=e383]:
+            - button "Previous page" [disabled] [ref=e384]:
+              - img [ref=e385]
+            - list [ref=e387]:
+              - listitem [ref=e388]:
+                - button "Go to page 1": "1"
+              - listitem [ref=e389]:
+                - button "Go to page 2" [ref=e390] [cursor=pointer]: "2"
+              - listitem [ref=e391]:
+                - button "Go to page 3" [ref=e392] [cursor=pointer]: "3"
+            - button "Next page" [ref=e393] [cursor=pointer]:
+              - img [ref=e394]
+  - contentinfo [ref=e396]:
+    - generic [ref=e397]:
+      - paragraph [ref=e398]: Powered by
+      - link "Greenhouse logo" [ref=e399] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e400]

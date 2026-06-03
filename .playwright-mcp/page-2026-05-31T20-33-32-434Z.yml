@@ -1,0 +1,403 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - img [ref=e6]
+    - paragraph [ref=e8]: The job you are looking for is no longer open.
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - link "Similarweb Logo" [ref=e12] [cursor=pointer]:
+        - /url: https://www.similarweb.com/
+        - img "Similarweb Logo" [ref=e13]
+      - heading "Current openings at Similarweb" [level=1] [ref=e14]
+      - generic [ref=e16]:
+        - img [ref=e17]
+        - generic [ref=e19]:
+          - paragraph [ref=e20]: Create a Job Alert
+          - paragraph [ref=e21]: Level-up your career by having opportunities at Similarweb sent directly to your inbox.
+          - link "Create alert" [ref=e22] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=similarweb&source=job_alert_board
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - generic [ref=e26]:
+            - generic [ref=e27]: Search
+            - textbox "Search" [ref=e28]
+          - generic [ref=e30]:
+            - generic [ref=e31]: Department
+            - generic [ref=e32]:
+              - log [ref=e34]
+              - generic [ref=e36]:
+                - generic [ref=e37]:
+                  - generic [ref=e38]: Select...
+                  - combobox "Department" [ref=e40]
+                - button "Toggle flyout" [ref=e42] [cursor=pointer]:
+                  - img [ref=e43]
+          - generic [ref=e46]:
+            - generic [ref=e47]: Office
+            - generic [ref=e48]:
+              - log [ref=e50]
+              - generic [ref=e52]:
+                - generic [ref=e53]:
+                  - generic [ref=e54]: Select...
+                  - combobox "Office" [ref=e56]
+                - button "Toggle flyout" [ref=e58] [cursor=pointer]:
+                  - img [ref=e59]
+        - generic [ref=e61]:
+          - heading "88 jobs" [level=2] [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - heading "Corporate Development & Strategy" [level=3] [ref=e65]
+              - table [ref=e67]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e68]:
+                      - paragraph [ref=e69]: Job
+                - rowgroup [ref=e70]:
+                  - row "Sales Enablement Manager Burlington, MA" [ref=e71]:
+                    - cell "Sales Enablement Manager Burlington, MA" [ref=e72]:
+                      - link "Sales Enablement Manager Burlington, MA" [ref=e73] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/6391102
+                        - paragraph [ref=e74]: Sales Enablement Manager
+                        - paragraph [ref=e75]: Burlington, MA
+                  - row "Senior Post-Merger Integration Manager Tel Aviv, Israel" [ref=e76]:
+                    - cell "Senior Post-Merger Integration Manager Tel Aviv, Israel" [ref=e77]:
+                      - link "Senior Post-Merger Integration Manager Tel Aviv, Israel" [ref=e78] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7764779
+                        - paragraph [ref=e79]: Senior Post-Merger Integration Manager
+                        - paragraph [ref=e80]: Tel Aviv, Israel
+            - generic [ref=e81]:
+              - heading "Finance" [level=3] [ref=e82]
+              - table [ref=e84]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e85]:
+                      - paragraph [ref=e86]: Job
+                - rowgroup [ref=e87]:
+                  - row "Assistant Controller Tel Aviv" [ref=e88]:
+                    - cell "Assistant Controller Tel Aviv" [ref=e89]:
+                      - link "Assistant Controller Tel Aviv" [ref=e90] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7591252
+                        - paragraph [ref=e91]: Assistant Controller
+                        - paragraph [ref=e92]: Tel Aviv
+                  - row "Assistant Controller Burlington, MA" [ref=e93]:
+                    - cell "Assistant Controller Burlington, MA" [ref=e94]:
+                      - link "Assistant Controller Burlington, MA" [ref=e95] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/5592053
+                        - paragraph [ref=e96]: Assistant Controller
+                        - paragraph [ref=e97]: Burlington, MA
+                  - row "Business Systems Lead - Planning & ERP Tel Aviv-Yafo, Israel" [ref=e98]:
+                    - cell "Business Systems Lead - Planning & ERP Tel Aviv-Yafo, Israel" [ref=e99]:
+                      - link "Business Systems Lead - Planning & ERP Tel Aviv-Yafo, Israel" [ref=e100] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7911973
+                        - paragraph [ref=e101]: Business Systems Lead - Planning & ERP
+                        - paragraph [ref=e102]: Tel Aviv-Yafo, Israel
+            - generic [ref=e103]:
+              - heading "GTM" [level=3] [ref=e104]
+              - table [ref=e106]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e107]:
+                      - paragraph [ref=e108]: Job
+                - rowgroup [ref=e109]:
+                  - row "Account Executive, Enterprise London" [ref=e110]:
+                    - cell "Account Executive, Enterprise London" [ref=e111]:
+                      - link "Account Executive, Enterprise London" [ref=e112] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7161021
+                        - paragraph [ref=e113]: Account Executive, Enterprise
+                        - paragraph [ref=e114]: London
+                  - row "Account Executive, Enterprise (French Speaking) London" [ref=e115]:
+                    - cell "Account Executive, Enterprise (French Speaking) London" [ref=e116]:
+                      - link "Account Executive, Enterprise (French Speaking) London" [ref=e117] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7609985
+                        - paragraph [ref=e118]: Account Executive, Enterprise (French Speaking)
+                        - paragraph [ref=e119]: London
+                  - row "Account Executive, Enterprise (French Speaking) Tel Aviv" [ref=e120]:
+                    - cell "Account Executive, Enterprise (French Speaking) Tel Aviv" [ref=e121]:
+                      - link "Account Executive, Enterprise (French Speaking) Tel Aviv" [ref=e122] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7682363
+                        - paragraph [ref=e123]: Account Executive, Enterprise (French Speaking)
+                        - paragraph [ref=e124]: Tel Aviv
+                  - row "Account Executive, SMB London, England, United Kingdom" [ref=e125]:
+                    - cell "Account Executive, SMB London, England, United Kingdom" [ref=e126]:
+                      - link "Account Executive, SMB London, England, United Kingdom" [ref=e127] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7865837
+                        - paragraph [ref=e128]: Account Executive, SMB
+                        - paragraph [ref=e129]: London, England, United Kingdom
+                  - row "Customer Success Manager, Enterprise Burlington, MA" [ref=e130]:
+                    - cell "Customer Success Manager, Enterprise Burlington, MA" [ref=e131]:
+                      - link "Customer Success Manager, Enterprise Burlington, MA" [ref=e132] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/6104424
+                        - paragraph [ref=e133]: Customer Success Manager, Enterprise
+                        - paragraph [ref=e134]: Burlington, MA
+                  - row "Customer Success Manager, Enterprise New York, NY" [ref=e135]:
+                    - cell "Customer Success Manager, Enterprise New York, NY" [ref=e136]:
+                      - link "Customer Success Manager, Enterprise New York, NY" [ref=e137] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7360580
+                        - paragraph [ref=e138]: Customer Success Manager, Enterprise
+                        - paragraph [ref=e139]: New York, NY
+                  - row "Customer Success Manager, Enterprise (Greater China) New Singapore" [ref=e140]:
+                    - cell "Customer Success Manager, Enterprise (Greater China) New Singapore" [ref=e141]:
+                      - link "Customer Success Manager, Enterprise (Greater China) New Singapore" [ref=e142] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7948547
+                        - paragraph [ref=e143]:
+                          - text: Customer Success Manager, Enterprise (Greater China)
+                          - generic [ref=e145]: New
+                        - paragraph [ref=e146]: Singapore
+                  - row "Customer Success Manager, Enterprise (India) Singapore" [ref=e147]:
+                    - cell "Customer Success Manager, Enterprise (India) Singapore" [ref=e148]:
+                      - link "Customer Success Manager, Enterprise (India) Singapore" [ref=e149] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7893347
+                        - paragraph [ref=e150]: Customer Success Manager, Enterprise (India)
+                        - paragraph [ref=e151]: Singapore
+                  - row "Customer Success Manager, Mid-Market Sydney" [ref=e152]:
+                    - cell "Customer Success Manager, Mid-Market Sydney" [ref=e153]:
+                      - link "Customer Success Manager, Mid-Market Sydney" [ref=e154] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7865197
+                        - paragraph [ref=e155]: Customer Success Manager, Mid-Market
+                        - paragraph [ref=e156]: Sydney
+                  - row "Customer Success Manager - SMB Prague" [ref=e157]:
+                    - cell "Customer Success Manager - SMB Prague" [ref=e158]:
+                      - link "Customer Success Manager - SMB Prague" [ref=e159] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7953633
+                        - paragraph [ref=e160]: Customer Success Manager - SMB
+                        - paragraph [ref=e161]: Prague
+                  - row "Customer Success Manager, SMB / Enterprise Tokyo" [ref=e162]:
+                    - cell "Customer Success Manager, SMB / Enterprise Tokyo" [ref=e163]:
+                      - link "Customer Success Manager, SMB / Enterprise Tokyo" [ref=e164] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7741468
+                        - paragraph [ref=e165]: Customer Success Manager, SMB / Enterprise
+                        - paragraph [ref=e166]: Tokyo
+                  - row "Customer Success Manager, SMB/ Enterprise Singapore" [ref=e167]:
+                    - cell "Customer Success Manager, SMB/ Enterprise Singapore" [ref=e168]:
+                      - link "Customer Success Manager, SMB/ Enterprise Singapore" [ref=e169] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7823852
+                        - paragraph [ref=e170]: Customer Success Manager, SMB/ Enterprise
+                        - paragraph [ref=e171]: Singapore
+                  - row "Customer Success Manager, SMB - Mandarin Speaker Singapore" [ref=e172]:
+                    - cell "Customer Success Manager, SMB - Mandarin Speaker Singapore" [ref=e173]:
+                      - link "Customer Success Manager, SMB - Mandarin Speaker Singapore" [ref=e174] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7851051
+                        - paragraph [ref=e175]: Customer Success Manager, SMB - Mandarin Speaker
+                        - paragraph [ref=e176]: Singapore
+                  - row "Data AS Consultant Tokyo, Japan" [ref=e177]:
+                    - cell "Data AS Consultant Tokyo, Japan" [ref=e178]:
+                      - link "Data AS Consultant Tokyo, Japan" [ref=e179] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7475943
+                        - paragraph [ref=e180]: Data AS Consultant
+                        - paragraph [ref=e181]: Tokyo, Japan
+                  - row "Data Strategist - Data Strategy & Integration New York, NY" [ref=e182]:
+                    - cell "Data Strategist - Data Strategy & Integration New York, NY" [ref=e183]:
+                      - link "Data Strategist - Data Strategy & Integration New York, NY" [ref=e184] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7761571
+                        - paragraph [ref=e185]: Data Strategist - Data Strategy & Integration
+                        - paragraph [ref=e186]: New York, NY
+                  - row "Digital Insights Consultant London" [ref=e187]:
+                    - cell "Digital Insights Consultant London" [ref=e188]:
+                      - link "Digital Insights Consultant London" [ref=e189] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7756981
+                        - paragraph [ref=e190]: Digital Insights Consultant
+                        - paragraph [ref=e191]: London
+                  - row "Enterprise Account Executive - Data Partnerships New York, NY" [ref=e192]:
+                    - cell "Enterprise Account Executive - Data Partnerships New York, NY" [ref=e193]:
+                      - link "Enterprise Account Executive - Data Partnerships New York, NY" [ref=e194] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7003907
+                        - paragraph [ref=e195]: Enterprise Account Executive - Data Partnerships
+                        - paragraph [ref=e196]: New York, NY
+                  - row "Enterprise Account Executive - Data Partnerships Burlington, MA" [ref=e197]:
+                    - cell "Enterprise Account Executive - Data Partnerships Burlington, MA" [ref=e198]:
+                      - link "Enterprise Account Executive - Data Partnerships Burlington, MA" [ref=e199] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7890937
+                        - paragraph [ref=e200]: Enterprise Account Executive - Data Partnerships
+                        - paragraph [ref=e201]: Burlington, MA
+                  - row "Enterprise Account Manager Tokyo, Japan" [ref=e202]:
+                    - cell "Enterprise Account Manager Tokyo, Japan" [ref=e203]:
+                      - link "Enterprise Account Manager Tokyo, Japan" [ref=e204] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7865101
+                        - paragraph [ref=e205]: Enterprise Account Manager
+                        - paragraph [ref=e206]: Tokyo, Japan
+                  - row "Enterprise Sales Engineer New York, NY" [ref=e207]:
+                    - cell "Enterprise Sales Engineer New York, NY" [ref=e208]:
+                      - link "Enterprise Sales Engineer New York, NY" [ref=e209] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7657889
+                        - paragraph [ref=e210]: Enterprise Sales Engineer
+                        - paragraph [ref=e211]: New York, NY
+                  - row "Product Support Specialist Prague" [ref=e212]:
+                    - cell "Product Support Specialist Prague" [ref=e213]:
+                      - link "Product Support Specialist Prague" [ref=e214] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7317143
+                        - paragraph [ref=e215]: Product Support Specialist
+                        - paragraph [ref=e216]: Prague
+                  - row "Sales Manager Tel Aviv-Yafo, Israel" [ref=e217]:
+                    - cell "Sales Manager Tel Aviv-Yafo, Israel" [ref=e218]:
+                      - link "Sales Manager Tel Aviv-Yafo, Israel" [ref=e219] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7894254
+                        - paragraph [ref=e220]: Sales Manager
+                        - paragraph [ref=e221]: Tel Aviv-Yafo, Israel
+                  - row "Sales Manager, LATAM Santiago, Chile" [ref=e222]:
+                    - cell "Sales Manager, LATAM Santiago, Chile" [ref=e223]:
+                      - link "Sales Manager, LATAM Santiago, Chile" [ref=e224] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/6596261
+                        - paragraph [ref=e225]: Sales Manager, LATAM
+                        - paragraph [ref=e226]: Santiago, Chile
+                  - row "Sales Manager, LATAM Santiago, Chile" [ref=e227]:
+                    - cell "Sales Manager, LATAM Santiago, Chile" [ref=e228]:
+                      - link "Sales Manager, LATAM Santiago, Chile" [ref=e229] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7832213
+                        - paragraph [ref=e230]: Sales Manager, LATAM
+                        - paragraph [ref=e231]: Santiago, Chile
+                  - row "Sales Manager, SMB (Greater China) Singapore" [ref=e232]:
+                    - cell "Sales Manager, SMB (Greater China) Singapore" [ref=e233]:
+                      - link "Sales Manager, SMB (Greater China) Singapore" [ref=e234] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7859851
+                        - paragraph [ref=e235]: Sales Manager, SMB (Greater China)
+                        - paragraph [ref=e236]: Singapore
+                  - row "Senior Customer Success Manager, Enterprise Burlington, MA" [ref=e237]:
+                    - cell "Senior Customer Success Manager, Enterprise Burlington, MA" [ref=e238]:
+                      - link "Senior Customer Success Manager, Enterprise Burlington, MA" [ref=e239] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7861645
+                        - paragraph [ref=e240]: Senior Customer Success Manager, Enterprise
+                        - paragraph [ref=e241]: Burlington, MA
+                  - row "Senior Customer Success Manager, Enterprise New York, NY" [ref=e242]:
+                    - cell "Senior Customer Success Manager, Enterprise New York, NY" [ref=e243]:
+                      - link "Senior Customer Success Manager, Enterprise New York, NY" [ref=e244] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7861667
+                        - paragraph [ref=e245]: Senior Customer Success Manager, Enterprise
+                        - paragraph [ref=e246]: New York, NY
+                  - row "SMB Sales Manager Prague" [ref=e247]:
+                    - cell "SMB Sales Manager Prague" [ref=e248]:
+                      - link "SMB Sales Manager Prague" [ref=e249] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7454681
+                        - paragraph [ref=e250]: SMB Sales Manager
+                        - paragraph [ref=e251]: Prague
+                  - row "SMB Sales Manager - Relocation to Prague Warsaw" [ref=e252]:
+                    - cell "SMB Sales Manager - Relocation to Prague Warsaw" [ref=e253]:
+                      - link "SMB Sales Manager - Relocation to Prague Warsaw" [ref=e254] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7949758
+                        - paragraph [ref=e255]: SMB Sales Manager - Relocation to Prague
+                        - paragraph [ref=e256]: Warsaw
+                  - row "Solution Architect Boston, MA" [ref=e257]:
+                    - cell "Solution Architect Boston, MA" [ref=e258]:
+                      - link "Solution Architect Boston, MA" [ref=e259] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7657835
+                        - paragraph [ref=e260]: Solution Architect
+                        - paragraph [ref=e261]: Boston, MA
+                  - row "Strategic Account Director San Francisco, CA" [ref=e262]:
+                    - cell "Strategic Account Director San Francisco, CA" [ref=e263]:
+                      - link "Strategic Account Director San Francisco, CA" [ref=e264] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7408938
+                        - paragraph [ref=e265]: Strategic Account Director
+                        - paragraph [ref=e266]: San Francisco, CA
+                  - row "Strategic Sales Manager - AI & LLM San Francisco, CA" [ref=e267]:
+                    - cell "Strategic Sales Manager - AI & LLM San Francisco, CA" [ref=e268]:
+                      - link "Strategic Sales Manager - AI & LLM San Francisco, CA" [ref=e269] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7474102
+                        - paragraph [ref=e270]: Strategic Sales Manager - AI & LLM
+                        - paragraph [ref=e271]: San Francisco, CA
+                  - row "Strategic Sales Manager - AI & LLM Seattle, WA" [ref=e272]:
+                    - cell "Strategic Sales Manager - AI & LLM Seattle, WA" [ref=e273]:
+                      - link "Strategic Sales Manager - AI & LLM Seattle, WA" [ref=e274] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7663736
+                        - paragraph [ref=e275]: Strategic Sales Manager - AI & LLM
+                        - paragraph [ref=e276]: Seattle, WA
+                  - row "Strategic Sales Manager, AI & LLM Shanghai" [ref=e277]:
+                    - cell "Strategic Sales Manager, AI & LLM Shanghai" [ref=e278]:
+                      - link "Strategic Sales Manager, AI & LLM Shanghai" [ref=e279] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7390719
+                        - paragraph [ref=e280]: Strategic Sales Manager, AI & LLM
+                        - paragraph [ref=e281]: Shanghai
+                  - row "Team Manager, Sales Development (Onsite) Tokyo" [ref=e282]:
+                    - cell "Team Manager, Sales Development (Onsite) Tokyo" [ref=e283]:
+                      - link "Team Manager, Sales Development (Onsite) Tokyo" [ref=e284] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7920734
+                        - paragraph [ref=e285]: Team Manager, Sales Development (Onsite)
+                        - paragraph [ref=e286]: Tokyo
+                  - row "Technical Support Engineer Prague" [ref=e287]:
+                    - cell "Technical Support Engineer Prague" [ref=e288]:
+                      - link "Technical Support Engineer Prague" [ref=e289] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7806358
+                        - paragraph [ref=e290]: Technical Support Engineer
+                        - paragraph [ref=e291]: Prague
+            - generic [ref=e292]:
+              - heading "Human Resources" [level=3] [ref=e293]
+              - table [ref=e295]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e296]:
+                      - paragraph [ref=e297]: Job
+                - rowgroup [ref=e298]:
+                  - row "Global Talent Acquisition Specialist- Maternity leave replacement Tel Aviv, Israel" [ref=e299]:
+                    - cell "Global Talent Acquisition Specialist- Maternity leave replacement Tel Aviv, Israel" [ref=e300]:
+                      - link "Global Talent Acquisition Specialist- Maternity leave replacement Tel Aviv, Israel" [ref=e301] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7899131
+                        - paragraph [ref=e302]: Global Talent Acquisition Specialist- Maternity leave replacement
+                        - paragraph [ref=e303]: Tel Aviv, Israel
+                  - row "HR Generalist Tel Aviv, Israel" [ref=e304]:
+                    - cell "HR Generalist Tel Aviv, Israel" [ref=e305]:
+                      - link "HR Generalist Tel Aviv, Israel" [ref=e306] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7924821
+                        - paragraph [ref=e307]: HR Generalist
+                        - paragraph [ref=e308]: Tel Aviv, Israel
+                  - row "Regional Talent Acquisition Intern (12 weeks) Singapore" [ref=e309]:
+                    - cell "Regional Talent Acquisition Intern (12 weeks) Singapore" [ref=e310]:
+                      - link "Regional Talent Acquisition Intern (12 weeks) Singapore" [ref=e311] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7929680
+                        - paragraph [ref=e312]: Regional Talent Acquisition Intern (12 weeks)
+                        - paragraph [ref=e313]: Singapore
+                  - row "Talent Acquisition Manager Burlington, MA" [ref=e314]:
+                    - cell "Talent Acquisition Manager Burlington, MA" [ref=e315]:
+                      - link "Talent Acquisition Manager Burlington, MA" [ref=e316] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/5403509
+                        - paragraph [ref=e317]: Talent Acquisition Manager
+                        - paragraph [ref=e318]: Burlington, MA
+            - generic [ref=e319]:
+              - heading "Marketing" [level=3] [ref=e320]
+              - table [ref=e322]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e323]:
+                      - paragraph [ref=e324]: Job
+                - rowgroup [ref=e325]:
+                  - row "Business Development Representative Burlington, MA" [ref=e326]:
+                    - cell "Business Development Representative Burlington, MA" [ref=e327]:
+                      - link "Business Development Representative Burlington, MA" [ref=e328] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7658589
+                        - paragraph [ref=e329]: Business Development Representative
+                        - paragraph [ref=e330]: Burlington, MA
+                  - row "Field Marketing Manager (EMEA) London, England, United Kingdom" [ref=e331]:
+                    - cell "Field Marketing Manager (EMEA) London, England, United Kingdom" [ref=e332]:
+                      - link "Field Marketing Manager (EMEA) London, England, United Kingdom" [ref=e333] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7672741
+                        - paragraph [ref=e334]: Field Marketing Manager (EMEA)
+                        - paragraph [ref=e335]: London, England, United Kingdom
+                  - row "Global Marketing Manager (Maternity Leave Replacement) Tel Aviv" [ref=e336]:
+                    - cell "Global Marketing Manager (Maternity Leave Replacement) Tel Aviv" [ref=e337]:
+                      - link "Global Marketing Manager (Maternity Leave Replacement) Tel Aviv" [ref=e338] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7767993
+                        - paragraph [ref=e339]: Global Marketing Manager (Maternity Leave Replacement)
+                        - paragraph [ref=e340]: Tel Aviv
+                  - row "Inbound Sales Development Representative Burlington, MA" [ref=e341]:
+                    - cell "Inbound Sales Development Representative Burlington, MA" [ref=e342]:
+                      - link "Inbound Sales Development Representative Burlington, MA" [ref=e343] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/4880149
+                        - paragraph [ref=e344]: Inbound Sales Development Representative
+                        - paragraph [ref=e345]: Burlington, MA
+                  - row "Inbound Sales Development Representative, APAC Singapore" [ref=e346]:
+                    - cell "Inbound Sales Development Representative, APAC Singapore" [ref=e347]:
+                      - link "Inbound Sales Development Representative, APAC Singapore" [ref=e348] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/similarweb/jobs/7915628
+                        - paragraph [ref=e349]: Inbound Sales Development Representative, APAC
+                        - paragraph [ref=e350]: Singapore
+          - navigation "Pagination" [ref=e352]:
+            - button "Previous page" [disabled] [ref=e353]:
+              - img [ref=e354]
+            - list [ref=e356]:
+              - listitem [ref=e357]:
+                - button "Go to page 1": "1"
+              - listitem [ref=e358]:
+                - button "Go to page 2" [ref=e359] [cursor=pointer]: "2"
+            - button "Next page" [ref=e360] [cursor=pointer]:
+              - img [ref=e361]
+  - contentinfo [ref=e363]:
+    - generic [ref=e364]:
+      - paragraph [ref=e365]: Powered by
+      - link "Greenhouse logo" [ref=e366] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e367]

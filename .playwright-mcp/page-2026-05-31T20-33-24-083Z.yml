@@ -1,0 +1,426 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - img [ref=e6]
+    - paragraph [ref=e8]: The job you are looking for is no longer open.
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - heading "Current openings at Oasis Security" [level=1] [ref=e11]
+      - generic [ref=e13]:
+        - img [ref=e14]
+        - generic [ref=e16]:
+          - paragraph [ref=e17]: Create a Job Alert
+          - paragraph [ref=e18]: Level-up your career by having opportunities at Oasis Security sent directly to your inbox.
+          - link "Create alert" [ref=e19] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=oasissecurity&source=job_alert_board
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: Search
+            - textbox "Search" [ref=e25]
+          - generic [ref=e27]:
+            - generic [ref=e28]: Office
+            - generic [ref=e29]:
+              - log [ref=e31]
+              - generic [ref=e33]:
+                - generic [ref=e34]:
+                  - generic [ref=e35]: Select...
+                  - combobox "Office" [ref=e37]
+                - button "Toggle flyout" [ref=e39] [cursor=pointer]:
+                  - img [ref=e40]
+        - generic [ref=e42]:
+          - heading "68 jobs" [level=2] [ref=e43]
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - heading "BDR" [level=3] [ref=e46]
+              - table [ref=e48]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e49]:
+                      - paragraph [ref=e50]: Job
+                - rowgroup [ref=e51]:
+                  - row "Business Development Representative (BDR) New York" [ref=e52]:
+                    - cell "Business Development Representative (BDR) New York" [ref=e53]:
+                      - link "Business Development Representative (BDR) New York" [ref=e54] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5209957008
+                        - paragraph [ref=e55]: Business Development Representative (BDR)
+                        - paragraph [ref=e56]: New York
+                  - row "Business Development Representative (BDR) - UK Remote - UK" [ref=e57]:
+                    - cell "Business Development Representative (BDR) - UK Remote - UK" [ref=e58]:
+                      - link "Business Development Representative (BDR) - UK Remote - UK" [ref=e59] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5228961008
+                        - paragraph [ref=e60]: Business Development Representative (BDR) - UK
+                        - paragraph [ref=e61]: Remote - UK
+            - generic [ref=e62]:
+              - heading "Customer Success" [level=3] [ref=e63]
+              - table [ref=e65]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e66]:
+                      - paragraph [ref=e67]: Job
+                - rowgroup [ref=e68]:
+                  - row "Senior Support Engineer Remote - US" [ref=e69]:
+                    - cell "Senior Support Engineer Remote - US" [ref=e70]:
+                      - link "Senior Support Engineer Remote - US" [ref=e71] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5227325008
+                        - paragraph [ref=e72]: Senior Support Engineer
+                        - paragraph [ref=e73]: Remote - US
+                  - row "Senior Technical Account Manager - Central-Midwest New Remote - Midwest" [ref=e74]:
+                    - cell "Senior Technical Account Manager - Central-Midwest New Remote - Midwest" [ref=e75]:
+                      - link "Senior Technical Account Manager - Central-Midwest New Remote - Midwest" [ref=e76] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230471008
+                        - paragraph [ref=e77]:
+                          - text: Senior Technical Account Manager - Central-Midwest
+                          - generic [ref=e79]: New
+                        - paragraph [ref=e80]: Remote - Midwest
+                  - row "Senior Technical Account Manager - Remote - EST / NY New York City, New York, United States" [ref=e81]:
+                    - cell "Senior Technical Account Manager - Remote - EST / NY New York City, New York, United States" [ref=e82]:
+                      - link "Senior Technical Account Manager - Remote - EST / NY New York City, New York, United States" [ref=e83] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/4800019008
+                        - paragraph [ref=e84]: Senior Technical Account Manager - Remote - EST / NY
+                        - paragraph [ref=e85]: New York City, New York, United States
+                  - row "Senior Technical Account Manager - South-Central US New Remote - South-Central US" [ref=e86]:
+                    - cell "Senior Technical Account Manager - South-Central US New Remote - South-Central US" [ref=e87]:
+                      - link "Senior Technical Account Manager - South-Central US New Remote - South-Central US" [ref=e88] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230472008
+                        - paragraph [ref=e89]:
+                          - text: Senior Technical Account Manager - South-Central US
+                          - generic [ref=e91]: New
+                        - paragraph [ref=e92]: Remote - South-Central US
+                  - row "Senior Technical Account Manager - Southeast New Remote - Southeast" [ref=e93]:
+                    - cell "Senior Technical Account Manager - Southeast New Remote - Southeast" [ref=e94]:
+                      - link "Senior Technical Account Manager - Southeast New Remote - Southeast" [ref=e95] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230469008
+                        - paragraph [ref=e96]:
+                          - text: Senior Technical Account Manager - Southeast
+                          - generic [ref=e98]: New
+                        - paragraph [ref=e99]: Remote - Southeast
+                  - row "Senior Technical Account Manager - West / PNW (Bay Area) New Remote – Bay Area, CA" [ref=e100]:
+                    - cell "Senior Technical Account Manager - West / PNW (Bay Area) New Remote – Bay Area, CA" [ref=e101]:
+                      - link "Senior Technical Account Manager - West / PNW (Bay Area) New Remote – Bay Area, CA" [ref=e102] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230464008
+                        - paragraph [ref=e103]:
+                          - text: Senior Technical Account Manager - West / PNW (Bay Area)
+                          - generic [ref=e105]: New
+                        - paragraph [ref=e106]: Remote – Bay Area, CA
+                  - row "Senior Technical Account Manager - West / PNW (WA) New Remote - Seattle, WA" [ref=e107]:
+                    - cell "Senior Technical Account Manager - West / PNW (WA) New Remote - Seattle, WA" [ref=e108]:
+                      - link "Senior Technical Account Manager - West / PNW (WA) New Remote - Seattle, WA" [ref=e109] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230468008
+                        - paragraph [ref=e110]:
+                          - text: Senior Technical Account Manager - West / PNW (WA)
+                          - generic [ref=e112]: New
+                        - paragraph [ref=e113]: Remote - Seattle, WA
+            - generic [ref=e114]:
+              - heading "G&A" [level=3] [ref=e115]
+              - table [ref=e117]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e118]:
+                      - paragraph [ref=e119]: Job
+                - rowgroup [ref=e120]:
+                  - row "Controller New York - Hybrid" [ref=e121]:
+                    - cell "Controller New York - Hybrid" [ref=e122]:
+                      - link "Controller New York - Hybrid" [ref=e123] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5218045008
+                        - paragraph [ref=e124]: Controller
+                        - paragraph [ref=e125]: New York - Hybrid
+                  - row "GTM Talent Acquisition Lead New York - Hybrid" [ref=e126]:
+                    - cell "GTM Talent Acquisition Lead New York - Hybrid" [ref=e127]:
+                      - link "GTM Talent Acquisition Lead New York - Hybrid" [ref=e128] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5210101008
+                        - paragraph [ref=e129]: GTM Talent Acquisition Lead
+                        - paragraph [ref=e130]: New York - Hybrid
+                  - row "Talent Acquisition Partner - GTM (East Coast / NYC Preferred) Remote - US" [ref=e131]:
+                    - cell "Talent Acquisition Partner - GTM (East Coast / NYC Preferred) Remote - US" [ref=e132]:
+                      - link "Talent Acquisition Partner - GTM (East Coast / NYC Preferred) Remote - US" [ref=e133] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5210113008
+                        - paragraph [ref=e134]: Talent Acquisition Partner - GTM (East Coast / NYC Preferred)
+                        - paragraph [ref=e135]: Remote - US
+                  - row "Technical Talent Acquisition Partner (East Coast / NYC Preferred) Remote - US" [ref=e136]:
+                    - cell "Technical Talent Acquisition Partner (East Coast / NYC Preferred) Remote - US" [ref=e137]:
+                      - link "Technical Talent Acquisition Partner (East Coast / NYC Preferred) Remote - US" [ref=e138] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5210118008
+                        - paragraph [ref=e139]: Technical Talent Acquisition Partner (East Coast / NYC Preferred)
+                        - paragraph [ref=e140]: Remote - US
+            - generic [ref=e141]:
+              - heading "Marketing" [level=3] [ref=e142]
+              - table [ref=e144]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e145]:
+                      - paragraph [ref=e146]: Job
+                - rowgroup [ref=e147]:
+                  - row "Brand Designer Tel Aviv" [ref=e148]:
+                    - cell "Brand Designer Tel Aviv" [ref=e149]:
+                      - link "Brand Designer Tel Aviv" [ref=e150] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5197724008
+                        - paragraph [ref=e151]: Brand Designer
+                        - paragraph [ref=e152]: Tel Aviv
+                  - row "Campaign & Pipeline Marketing Manager New New York, United States, US - Remote" [ref=e153]:
+                    - cell "Campaign & Pipeline Marketing Manager New New York, United States, US - Remote" [ref=e154]:
+                      - link "Campaign & Pipeline Marketing Manager New New York, United States, US - Remote" [ref=e155] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5225209008
+                        - paragraph [ref=e156]:
+                          - text: Campaign & Pipeline Marketing Manager
+                          - generic [ref=e158]: New
+                        - paragraph [ref=e159]: New York, United States, US - Remote
+                  - row "Field Marketing & Events Manager - Central Remote - US" [ref=e160]:
+                    - cell "Field Marketing & Events Manager - Central Remote - US" [ref=e161]:
+                      - link "Field Marketing & Events Manager - Central Remote - US" [ref=e162] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5211026008
+                        - paragraph [ref=e163]: Field Marketing & Events Manager - Central
+                        - paragraph [ref=e164]: Remote - US
+                  - row "Field Marketing & Events Manager - Northeast New New York City, New York, United States" [ref=e165]:
+                    - cell "Field Marketing & Events Manager - Northeast New New York City, New York, United States" [ref=e166]:
+                      - link "Field Marketing & Events Manager - Northeast New New York City, New York, United States" [ref=e167] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5231709008
+                        - paragraph [ref=e168]:
+                          - text: Field Marketing & Events Manager - Northeast
+                          - generic [ref=e170]: New
+                        - paragraph [ref=e171]: New York City, New York, United States
+                  - row "Field Marketing & Events Manager - South Central New Remote- South Central" [ref=e172]:
+                    - cell "Field Marketing & Events Manager - South Central New Remote- South Central" [ref=e173]:
+                      - link "Field Marketing & Events Manager - South Central New Remote- South Central" [ref=e174] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230473008
+                        - paragraph [ref=e175]:
+                          - text: Field Marketing & Events Manager - South Central
+                          - generic [ref=e177]: New
+                        - paragraph [ref=e178]: Remote- South Central
+                  - row "Field Marketing & Events Manager -Southeast & Mid-Atlantic New New York City, New York, United States" [ref=e179]:
+                    - cell "Field Marketing & Events Manager -Southeast & Mid-Atlantic New New York City, New York, United States" [ref=e180]:
+                      - link "Field Marketing & Events Manager -Southeast & Mid-Atlantic New New York City, New York, United States" [ref=e181] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5231716008
+                        - paragraph [ref=e182]:
+                          - text: Field Marketing & Events Manager -Southeast & Mid-Atlantic
+                          - generic [ref=e184]: New
+                        - paragraph [ref=e185]: New York City, New York, United States
+                  - row "Field Marketing & Events Manager - West New Remote - Western US" [ref=e186]:
+                    - cell "Field Marketing & Events Manager - West New Remote - Western US" [ref=e187]:
+                      - link "Field Marketing & Events Manager - West New Remote - Western US" [ref=e188] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230470008
+                        - paragraph [ref=e189]:
+                          - text: Field Marketing & Events Manager - West
+                          - generic [ref=e191]: New
+                        - paragraph [ref=e192]: Remote - Western US
+                  - row "Field Marketing & Events - UK Remote - UK" [ref=e193]:
+                    - cell "Field Marketing & Events - UK Remote - UK" [ref=e194]:
+                      - link "Field Marketing & Events - UK Remote - UK" [ref=e195] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5228939008
+                        - paragraph [ref=e196]: Field Marketing & Events - UK
+                        - paragraph [ref=e197]: Remote - UK
+                  - row "Product Marketing Manager Remote - US" [ref=e198]:
+                    - cell "Product Marketing Manager Remote - US" [ref=e199]:
+                      - link "Product Marketing Manager Remote - US" [ref=e200] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5209375008
+                        - paragraph [ref=e201]: Product Marketing Manager
+                        - paragraph [ref=e202]: Remote - US
+            - generic [ref=e203]:
+              - heading "R&D" [level=3] [ref=e204]
+              - table [ref=e206]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e207]:
+                      - paragraph [ref=e208]: Job
+                - rowgroup [ref=e209]:
+                  - row "AI Engineer - AAM Tel Aviv" [ref=e210]:
+                    - cell "AI Engineer - AAM Tel Aviv" [ref=e211]:
+                      - link "AI Engineer - AAM Tel Aviv" [ref=e212] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5158810008
+                        - paragraph [ref=e213]: AI Engineer - AAM
+                        - paragraph [ref=e214]: Tel Aviv
+                  - row "Engineering Team Lead - AAM Tel Aviv" [ref=e215]:
+                    - cell "Engineering Team Lead - AAM Tel Aviv" [ref=e216]:
+                      - link "Engineering Team Lead - AAM Tel Aviv" [ref=e217] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5158837008
+                        - paragraph [ref=e218]: Engineering Team Lead - AAM
+                        - paragraph [ref=e219]: Tel Aviv
+                  - row "Senior Software Engineer Tel Aviv" [ref=e220]:
+                    - cell "Senior Software Engineer Tel Aviv" [ref=e221]:
+                      - link "Senior Software Engineer Tel Aviv" [ref=e222] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5158795008
+                        - paragraph [ref=e223]: Senior Software Engineer
+                        - paragraph [ref=e224]: Tel Aviv
+            - generic [ref=e225]:
+              - heading "Sales" [level=3] [ref=e226]
+              - table [ref=e228]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e229]:
+                      - paragraph [ref=e230]: Job
+                - rowgroup [ref=e231]:
+                  - row "Area VP of International Sales - London London" [ref=e232]:
+                    - cell "Area VP of International Sales - London London" [ref=e233]:
+                      - link "Area VP of International Sales - London London" [ref=e234] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5208298008
+                        - paragraph [ref=e235]: Area VP of International Sales - London
+                        - paragraph [ref=e236]: London
+                  - row "Area VP of Sales - East New York - Hybrid" [ref=e237]:
+                    - cell "Area VP of Sales - East New York - Hybrid" [ref=e238]:
+                      - link "Area VP of Sales - East New York - Hybrid" [ref=e239] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5207275008
+                        - paragraph [ref=e240]: Area VP of Sales - East
+                        - paragraph [ref=e241]: New York - Hybrid
+                  - row "Enterprise Account Executive - Australia New Sydney, Australia" [ref=e242]:
+                    - cell "Enterprise Account Executive - Australia New Sydney, Australia" [ref=e243]:
+                      - link "Enterprise Account Executive - Australia New Sydney, Australia" [ref=e244] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5231724008
+                        - paragraph [ref=e245]:
+                          - text: Enterprise Account Executive - Australia
+                          - generic [ref=e247]: New
+                        - paragraph [ref=e248]: Sydney, Australia
+                  - row "Enterprise Account Executive - Central / South (TN) Remote – Nashville, TN" [ref=e249]:
+                    - cell "Enterprise Account Executive - Central / South (TN) Remote – Nashville, TN" [ref=e250]:
+                      - link "Enterprise Account Executive - Central / South (TN) Remote – Nashville, TN" [ref=e251] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213952008
+                        - paragraph [ref=e252]: Enterprise Account Executive - Central / South (TN)
+                        - paragraph [ref=e253]: Remote – Nashville, TN
+                  - row "Enterprise Account Executive - Central (TX) Remote – Dallas, TX | Houston, TX | Austin, TX" [ref=e254]:
+                    - cell "Enterprise Account Executive - Central (TX) Remote – Dallas, TX | Houston, TX | Austin, TX" [ref=e255]:
+                      - link "Enterprise Account Executive - Central (TX) Remote – Dallas, TX | Houston, TX | Austin, TX" [ref=e256] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213950008
+                        - paragraph [ref=e257]: Enterprise Account Executive - Central (TX)
+                        - paragraph [ref=e258]: Remote – Dallas, TX | Houston, TX | Austin, TX
+                  - row "Enterprise Account Executive - Mid Atlantic (DC/VA/MD) Remote – Washington, DC | Northern VA | MD" [ref=e259]:
+                    - cell "Enterprise Account Executive - Mid Atlantic (DC/VA/MD) Remote – Washington, DC | Northern VA | MD" [ref=e260]:
+                      - link "Enterprise Account Executive - Mid Atlantic (DC/VA/MD) Remote – Washington, DC | Northern VA | MD" [ref=e261] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213956008
+                        - paragraph [ref=e262]: Enterprise Account Executive - Mid Atlantic (DC/VA/MD)
+                        - paragraph [ref=e263]: Remote – Washington, DC | Northern VA | MD
+                  - row "Enterprise Account Executive - New England (MA/NH) Remote - Boston Metro" [ref=e264]:
+                    - cell "Enterprise Account Executive - New England (MA/NH) Remote - Boston Metro" [ref=e265]:
+                      - link "Enterprise Account Executive - New England (MA/NH) Remote - Boston Metro" [ref=e266] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213944008
+                        - paragraph [ref=e267]: Enterprise Account Executive - New England (MA/NH)
+                        - paragraph [ref=e268]: Remote - Boston Metro
+                  - row "Enterprise Account Executive - Northeast (NY) New York - Hybrid" [ref=e269]:
+                    - cell "Enterprise Account Executive - Northeast (NY) New York - Hybrid" [ref=e270]:
+                      - link "Enterprise Account Executive - Northeast (NY) New York - Hybrid" [ref=e271] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213942008
+                        - paragraph [ref=e272]: Enterprise Account Executive - Northeast (NY)
+                        - paragraph [ref=e273]: New York - Hybrid
+                  - row "Enterprise Account Executive - Southwest (AZ/CA) Remote – Phoenix, AZ | San Diego, CA" [ref=e274]:
+                    - cell "Enterprise Account Executive - Southwest (AZ/CA) Remote – Phoenix, AZ | San Diego, CA" [ref=e275]:
+                      - link "Enterprise Account Executive - Southwest (AZ/CA) Remote – Phoenix, AZ | San Diego, CA" [ref=e276] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213954008
+                        - paragraph [ref=e277]: Enterprise Account Executive - Southwest (AZ/CA)
+                        - paragraph [ref=e278]: Remote – Phoenix, AZ | San Diego, CA
+                  - row "Enterprise Account Executive - UK New London, UK" [ref=e279]:
+                    - cell "Enterprise Account Executive - UK New London, UK" [ref=e280]:
+                      - link "Enterprise Account Executive - UK New London, UK" [ref=e281] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5231714008
+                        - paragraph [ref=e282]:
+                          - text: Enterprise Account Executive - UK
+                          - generic [ref=e284]: New
+                        - paragraph [ref=e285]: London, UK
+                  - row "Enterprise Account Executive - West / Central (CO) Remote - Denver, CO" [ref=e286]:
+                    - cell "Enterprise Account Executive - West / Central (CO) Remote - Denver, CO" [ref=e287]:
+                      - link "Enterprise Account Executive - West / Central (CO) Remote - Denver, CO" [ref=e288] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213948008
+                        - paragraph [ref=e289]: Enterprise Account Executive - West / Central (CO)
+                        - paragraph [ref=e290]: Remote - Denver, CO
+                  - row "Enterprise Account Executive - West / PNW (Bay Area) Remote - Bay Area" [ref=e291]:
+                    - cell "Enterprise Account Executive - West / PNW (Bay Area) Remote - Bay Area" [ref=e292]:
+                      - link "Enterprise Account Executive - West / PNW (Bay Area) Remote - Bay Area" [ref=e293] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213937008
+                        - paragraph [ref=e294]: Enterprise Account Executive - West / PNW (Bay Area)
+                        - paragraph [ref=e295]: Remote - Bay Area
+                  - row "Enterprise Account Executive - West / PNW (WA) Remote - Seattle, WA | Vancouver, WA" [ref=e296]:
+                    - cell "Enterprise Account Executive - West / PNW (WA) Remote - Seattle, WA | Vancouver, WA" [ref=e297]:
+                      - link "Enterprise Account Executive - West / PNW (WA) Remote - Seattle, WA | Vancouver, WA" [ref=e298] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213946008
+                        - paragraph [ref=e299]: Enterprise Account Executive - West / PNW (WA)
+                        - paragraph [ref=e300]: Remote - Seattle, WA | Vancouver, WA
+                  - row "Regional Channel Account Manager - Central New US Remote" [ref=e301]:
+                    - cell "Regional Channel Account Manager - Central New US Remote" [ref=e302]:
+                      - link "Regional Channel Account Manager - Central New US Remote" [ref=e303] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230459008
+                        - paragraph [ref=e304]:
+                          - text: Regional Channel Account Manager - Central
+                          - generic [ref=e306]: New
+                        - paragraph [ref=e307]: US Remote
+                  - row "Regional Channel Account Manager - UK New London, UK" [ref=e308]:
+                    - cell "Regional Channel Account Manager - UK New London, UK" [ref=e309]:
+                      - link "Regional Channel Account Manager - UK New London, UK" [ref=e310] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230461008
+                        - paragraph [ref=e311]:
+                          - text: Regional Channel Account Manager - UK
+                          - generic [ref=e313]: New
+                        - paragraph [ref=e314]: London, UK
+                  - row "Regional Channel Account Manager - West New US Remote" [ref=e315]:
+                    - cell "Regional Channel Account Manager - West New US Remote" [ref=e316]:
+                      - link "Regional Channel Account Manager - West New US Remote" [ref=e317] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5230457008
+                        - paragraph [ref=e318]:
+                          - text: Regional Channel Account Manager - West
+                          - generic [ref=e320]: New
+                        - paragraph [ref=e321]: US Remote
+                  - row "Regional Director - Central (TX) Remote – Dallas, TX | Houston, TX | Austin, TX" [ref=e322]:
+                    - cell "Regional Director - Central (TX) Remote – Dallas, TX | Houston, TX | Austin, TX" [ref=e323]:
+                      - link "Regional Director - Central (TX) Remote – Dallas, TX | Houston, TX | Austin, TX" [ref=e324] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212581008
+                        - paragraph [ref=e325]: Regional Director - Central (TX)
+                        - paragraph [ref=e326]: Remote – Dallas, TX | Houston, TX | Austin, TX
+                  - row "Regional Director - Mid-Atlantic (DC/VA/MD) Remote – Washington, DC | Northern VA | MD" [ref=e327]:
+                    - cell "Regional Director - Mid-Atlantic (DC/VA/MD) Remote – Washington, DC | Northern VA | MD" [ref=e328]:
+                      - link "Regional Director - Mid-Atlantic (DC/VA/MD) Remote – Washington, DC | Northern VA | MD" [ref=e329] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212570008
+                        - paragraph [ref=e330]: Regional Director - Mid-Atlantic (DC/VA/MD)
+                        - paragraph [ref=e331]: Remote – Washington, DC | Northern VA | MD
+                  - row "Regional Director - New England (MA/NH) Remote - Boston Metro" [ref=e332]:
+                    - cell "Regional Director - New England (MA/NH) Remote - Boston Metro" [ref=e333]:
+                      - link "Regional Director - New England (MA/NH) Remote - Boston Metro" [ref=e334] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212568008
+                        - paragraph [ref=e335]: Regional Director - New England (MA/NH)
+                        - paragraph [ref=e336]: Remote - Boston Metro
+                  - row "Regional Director - North Central (IL) Remote - Chicago Metro" [ref=e337]:
+                    - cell "Regional Director - North Central (IL) Remote - Chicago Metro" [ref=e338]:
+                      - link "Regional Director - North Central (IL) Remote - Chicago Metro" [ref=e339] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212584008
+                        - paragraph [ref=e340]: Regional Director - North Central (IL)
+                        - paragraph [ref=e341]: Remote - Chicago Metro
+                  - row "Regional Director - Northeast (NY) New York - Hybrid" [ref=e342]:
+                    - cell "Regional Director - Northeast (NY) New York - Hybrid" [ref=e343]:
+                      - link "Regional Director - Northeast (NY) New York - Hybrid" [ref=e344] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212564008
+                        - paragraph [ref=e345]: Regional Director - Northeast (NY)
+                        - paragraph [ref=e346]: New York - Hybrid
+                  - row "Regional Director - Southeast (GA/FL) Remote – Atlanta, GA | Miami, FL" [ref=e347]:
+                    - cell "Regional Director - Southeast (GA/FL) Remote – Atlanta, GA | Miami, FL" [ref=e348]:
+                      - link "Regional Director - Southeast (GA/FL) Remote – Atlanta, GA | Miami, FL" [ref=e349] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212573008
+                        - paragraph [ref=e350]: Regional Director - Southeast (GA/FL)
+                        - paragraph [ref=e351]: Remote – Atlanta, GA | Miami, FL
+                  - row "Regional Director - Southwest (AZ/CA) Remote - Phoenix, AZ | San Diego, CA" [ref=e352]:
+                    - cell "Regional Director - Southwest (AZ/CA) Remote - Phoenix, AZ | San Diego, CA" [ref=e353]:
+                      - link "Regional Director - Southwest (AZ/CA) Remote - Phoenix, AZ | San Diego, CA" [ref=e354] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212575008
+                        - paragraph [ref=e355]: Regional Director - Southwest (AZ/CA)
+                        - paragraph [ref=e356]: Remote - Phoenix, AZ | San Diego, CA
+                  - row "Regional Director - West / PNW (CA/WA) Remote - San Francisco, CA | Seattle, WA" [ref=e357]:
+                    - cell "Regional Director - West / PNW (CA/WA) Remote - San Francisco, CA | Seattle, WA" [ref=e358]:
+                      - link "Regional Director - West / PNW (CA/WA) Remote - San Francisco, CA | Seattle, WA" [ref=e359] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5212586008
+                        - paragraph [ref=e360]: Regional Director - West / PNW (CA/WA)
+                        - paragraph [ref=e361]: Remote - San Francisco, CA | Seattle, WA
+                  - row "Strategic ֿAccount Executive - New England (MA/NH) Remote - Boston Metro" [ref=e362]:
+                    - cell "Strategic ֿAccount Executive - New England (MA/NH) Remote - Boston Metro" [ref=e363]:
+                      - link "Strategic ֿAccount Executive - New England (MA/NH) Remote - Boston Metro" [ref=e364] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/oasissecurity/jobs/5213932008
+                        - paragraph [ref=e365]: Strategic ֿAccount Executive - New England (MA/NH)
+                        - paragraph [ref=e366]: Remote - Boston Metro
+          - navigation "Pagination" [ref=e368]:
+            - button "Previous page" [disabled] [ref=e369]:
+              - img [ref=e370]
+            - list [ref=e372]:
+              - listitem [ref=e373]:
+                - button "Go to page 1": "1"
+              - listitem [ref=e374]:
+                - button "Go to page 2" [ref=e375] [cursor=pointer]: "2"
+            - button "Next page" [ref=e376] [cursor=pointer]:
+              - img [ref=e377]
+  - contentinfo [ref=e379]:
+    - generic [ref=e380]:
+      - paragraph [ref=e381]: Powered by
+      - link "Greenhouse logo" [ref=e382] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e383]

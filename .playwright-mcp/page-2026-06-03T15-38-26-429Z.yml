@@ -1,0 +1,129 @@
+- generic [active] [ref=e1]:
+  - dialog "cookieconsent" [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: 🍪
+      - generic [ref=e6]:
+        - button "Deny" [ref=e7] [cursor=pointer]
+        - button "Accept" [ref=e8] [cursor=pointer]
+      - heading "Privacy Notice" [level=4] [ref=e9]
+      - paragraph [ref=e10]:
+        - text: This website uses cookies to improve your web experience. By clicking Accept, you agree to the use of cookies.
+        - link "Cookie Policy" [ref=e11] [cursor=pointer]:
+          - /url: https://www.houzz.com/cookiePolicy
+  - link "Houzz logo" [ref=e14] [cursor=pointer]:
+    - /url: https://jobs.lever.co/houzz
+    - img "Houzz logo" [ref=e15]
+  - generic [ref=e17]:
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - heading "Product Manager" [level=2] [ref=e21]
+        - generic [ref=e22]:
+          - generic [ref=e23]: Israel
+          - generic [ref=e24]: Product – Product /
+          - generic [ref=e25]: Full Time /
+          - generic [ref=e26]: Remote
+      - link "apply for this job" [ref=e28] [cursor=pointer]:
+        - /url: https://jobs.lever.co/houzz/c9eaf854-dd7f-4b91-99b8-f7c936c0b03a/apply
+    - generic [ref=e29]:
+      - generic [ref=e31]:
+        - heading "About the Role" [level=3] [ref=e32]:
+          - strong [ref=e33]: About the Role
+        - paragraph [ref=e34]: "We are seeking a high-caliber Product Manager to lead the Documents Track, the financial engine of the Houzz Pro platform. This role is responsible for the mission-critical lifecycle of project financials: from Bid Management and Estimates to Purchase Orders, Change Orders, and Invoicing."
+        - paragraph [ref=e35]: The ideal candidate is not just a product builder, but someone with a deep functional understanding of the US accounting and financial system. You will ensure that our Pros can manage their cash flow, job costing, and profitability with precision. This role is highly collaborative, requiring tight alignment with the Accounting, Reports & Payments teams, and synchronization with PMs across the organization to ensure a unified financial data model.
+      - generic [ref=e37]:
+        - heading "What You’ll Do" [level=3] [ref=e38]
+        - list [ref=e41]:
+          - listitem [ref=e42]:
+            - emphasis [ref=e43]: Financial Product Strategy
+            - text: ": Own the \"big picture\" for the document journey, defining the logic of how we move from lead to paid invoice. You will ensure the roadmap is a direct response to the high-stakes workflow needs of our professionals, translating their business challenges into a seamless, growth-oriented product strategy."
+            - text: "Job Costing & Profitability: Build features that allow Pros to see the real-time impact of Change Orders and Purchase Orders on their project’s bottom-line profitability."
+          - listitem [ref=e44]:
+            - emphasis [ref=e45]: Accounting Accuracy
+            - text: ": Ensure all financial documents (Invoices, Credits, etc.) maintain a strict audit trail, meet US accounting standards, and reconcile perfectly with the Pro’s general ledger."
+          - listitem [ref=e46]:
+            - emphasis [ref=e47]: Cross-Functional Leadership
+            - text: ": Partner with the Accounting and Reports team to define how document data powers financial insights. Collaborate with PMs across Houzz Pro to automate document generation across the project lifecycle."
+          - listitem [ref=e48]:
+            - emphasis [ref=e49]: Tax & Compliance
+            - text: ": Navigate the complexities of US Sales Tax application within invoicing and ensure digital payment workflows comply with financial regulations."
+          - listitem [ref=e50]:
+            - emphasis [ref=e51]: Execution Excellence
+            - text: ": Write crisp PRDs, manage the backlog, and lead sprint planning to deliver high-visibility features that directly impact Houzz Pro’s revenue and Pro retention."
+          - listitem [ref=e52]:
+            - emphasis [ref=e53]: Data-Driven Growth
+            - text: ": Define and track \"North Star\" KPIs such as payment adoption, time-to-invoice, and financial data accuracy."
+          - listitem [ref=e54]:
+            - emphasis [ref=e55]: Customer & Market Insight
+            - text: ": Engage directly with Pros and collaborate with the Product Marketing team to deeply understand their needs. You will synthesize these insights to define the best fit solutions that drive value and long term success for our pros."
+          - listitem [ref=e56]:
+            - emphasis [ref=e57]: Design & UX
+            - text: ": Partner with Design to transform complex financial workflows into intuitive experiences. You’ll co-create solutions that balance rigorous accounting logic with a frictionless interface Pros love to use."
+      - generic [ref=e59]:
+        - heading "At a Minimum, We'd Like You To Have" [level=3] [ref=e60]
+        - list [ref=e63]:
+          - listitem [ref=e64]:
+            - emphasis [ref=e65]: "Financial Domain Expertise:"
+            - text: Strong competency in the requirements of the US accounting system is required. Previous experience in Fintech, Construction Finance, or B2B Financial SaaS (e.g., Invoicing, AP/AR, Payroll) is strongly desired.
+          - listitem [ref=e66]:
+            - emphasis [ref=e67]: Experience
+            - text: ": 3 - 5 years of Product Management experience with significant ownership of complex B2B SaaS workflows."
+          - listitem [ref=e68]:
+            - emphasis [ref=e69]: Technical Literacy
+            - text: ": Deep understanding of data modeling, identity resolution, and conflict handling to ensure financial data remains the \"single source of truth.\""
+          - listitem [ref=e70]:
+            - emphasis [ref=e71]: Collaborative Power
+            - text: ": Proven track record of influencing heavily matrixed teams (Engineering, Design, Data, Sales, and Support) to align on complex product strategies."
+          - listitem [ref=e72]:
+            - emphasis [ref=e73]: Global Collaboration
+            - text: ": Willingness to work flexible evening hours to collaborate effectively with global teams and meet directly with US and international customers."
+          - listitem [ref=e74]:
+            - emphasis [ref=e75]: Analytical Mindset
+            - text: ": Proficiency in product analytics to optimize financial workflows and conversion funnels."
+      - generic [ref=e77]:
+        - heading "Ideally, You'll Also Have" [level=3] [ref=e78]
+        - list [ref=e81]:
+          - listitem [ref=e82]:
+            - emphasis [ref=e83]: Desirable
+            - text: ": Experience with ERP integrations (QuickBooks, Xero) or domain knowledge within the Construction and Design professions.ֿ"
+      - generic [ref=e84]:
+        - generic [ref=e85]: Houzz is an Equal Employment Opportunity employer. When applying for a role at Houzz, we guarantee your application will be considered regardless of your sex; race; color; gender; national origin; height or weight; ancestry; physical or mental disability; medical condition; genetic information; marital status; registered domestic partner status; age; sexual orientation; military and veteran status; or any other basis protected by federal, state or local law or ordinance or regulation.
+        - generic [ref=e87]: We embrace and celebrate the value that diversity brings to an organization. Diverse backgrounds and different points of view help Houzz provide the best experience for our community. Houzz is committed to fostering an inclusive environment through projects and initiatives, such as employee resource groups, that support Houzzers’ efforts to be themselves and share their lives at work.
+        - generic [ref=e89]: If you would like assistance or an accommodation due to a disability, please email us at accommodations@houzz.com. This information will be treated as confidential and used only for determining an appropriate accommodation for the interview process.
+        - generic [ref=e92]: Houzz is an Equal Opportunity Employer. M/F/Disability/Veterans
+        - generic [ref=e93]: __________________
+        - generic [ref=e95]: Be Who You Are and Do What You Love at Houzz
+        - generic [ref=e97]: About Houzz
+        - generic [ref=e98]: When founders Adi and Alon remodeled their home, they were frustrated by the lack of resources and inspiration to help them articulate a vision and select the right pro to make it a reality.
+        - generic [ref=e100]: So they built Houzz.
+        - generic [ref=e102]:
+          - text: Houzz is now the leading platform for home remodeling and design, providing an all-in-one software solution for industry professionals and tools for homeowners to update their homes from start to finish. Using Houzz, people can find ideas and inspiration, hire professionals, and shop for products. Houzz Pro (
+          - link "houzz.com/pro" [ref=e103] [cursor=pointer]:
+            - /url: http://houzz.com/pro
+          - text: ) provides home industry professionals with a business management and marketing SaaS solution that helps them to win projects, collaborate with clients and teams, and run their business efficiently and profitably.
+        - generic [ref=e105]: Our Mission and Core Values
+        - generic [ref=e106]: "We're proud to say there's no one quite like us. Houzz is a community-centric, innovative tech company that continues to disrupt the home renovation and design industry. Our mission-driven culture is rooted in our core values, and we’re all here for one purpose: make the home remodeling and design process more fun and productive for everyone."
+        - generic [ref=e108]: Our Mission
+        - generic [ref=e109]: To create the best experience for home renovation and design.
+        - generic [ref=e111]: Our Core Values
+        - generic [ref=e113]: We’re a Community
+        - generic [ref=e114]: We put our community of Houzzers, industry professionals and homeowners first. We approach our work with care, humility and respect. We deliver value to our community through our products and services.
+        - generic [ref=e117]: We Build the Future
+        - generic [ref=e118]: We are visionaries who challenge the status quo. We are creative, innovative and curious. We embrace change and different ideas to drive our industry forward.
+        - generic [ref=e121]: We Make Things Happen
+        - generic [ref=e122]: We are solution-seekers and self-starters. We listen, move fast and empower our teams to deliver extraordinary results and products. We play to win.
+        - generic [ref=e125]:
+          - text: By applying for a job with us, you acknowledge and agree to the terms of our
+          - link "Job Applicant Privacy Notice" [ref=e127] [cursor=pointer]:
+            - /url: https://help.houzz.com/s/article/Houzz-Privacy-Notice-Job-Applicants?language=en_US
+          - text: .
+        - generic [ref=e129]: "#LI-Remote"
+      - link "apply for this job" [ref=e131] [cursor=pointer]:
+        - /url: https://jobs.lever.co/houzz/c9eaf854-dd7f-4b91-99b8-f7c936c0b03a/apply
+  - generic [ref=e133]:
+    - paragraph [ref=e134]:
+      - link "Houzz Home Page" [ref=e135] [cursor=pointer]:
+        - /url: https://www.houzz.com/
+    - link "Jobs powered by Lever logo" [ref=e136] [cursor=pointer]:
+      - /url: https://www.lever.co/job-seeker-support/
+      - generic [ref=e137]: Jobs powered by
+      - img "Lever logo" [ref=e138]

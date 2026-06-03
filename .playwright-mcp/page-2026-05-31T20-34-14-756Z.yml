@@ -1,0 +1,207 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - img [ref=e6]
+    - paragraph [ref=e8]: The job you are looking for is no longer open.
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - link "Webflow Logo" [ref=e12] [cursor=pointer]:
+        - /url: https://webflow.com/careers/roles
+        - img "Webflow Logo" [ref=e13]
+      - heading "Current openings at Webflow" [level=1] [ref=e14]
+      - generic [ref=e16]:
+        - img [ref=e17]
+        - generic [ref=e19]:
+          - paragraph [ref=e20]: Create a Job Alert
+          - paragraph [ref=e21]: Level-up your career by having opportunities at Webflow sent directly to your inbox.
+          - link "Create alert" [ref=e22] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=webflow&source=job_alert_board
+      - generic [ref=e23]:
+        - generic [ref=e25]:
+          - generic [ref=e27]:
+            - generic [ref=e28]: Search
+            - textbox "Search" [ref=e29]
+          - generic [ref=e31]:
+            - generic [ref=e32]: Department
+            - generic [ref=e33]:
+              - log [ref=e35]
+              - generic [ref=e37]:
+                - generic [ref=e38]:
+                  - generic [ref=e39]: Select...
+                  - combobox "Department" [ref=e41]
+                - button "Toggle flyout" [ref=e43] [cursor=pointer]:
+                  - img [ref=e44]
+          - generic [ref=e47]:
+            - generic [ref=e48]: Office
+            - generic [ref=e49]:
+              - log [ref=e51]
+              - generic [ref=e53]:
+                - generic [ref=e54]:
+                  - generic [ref=e55]: Select...
+                  - combobox "Office" [ref=e57]
+                - button "Toggle flyout" [ref=e59] [cursor=pointer]:
+                  - img [ref=e60]
+        - generic [ref=e62]:
+          - heading "18 jobs" [level=2] [ref=e63]
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - heading "Engineering" [level=3] [ref=e66]
+              - table [ref=e68]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e69]:
+                      - paragraph [ref=e70]: Job
+                - rowgroup [ref=e71]:
+                  - row "Engineering Manager, Convert ROI Argentina Remote" [ref=e72]:
+                    - cell "Engineering Manager, Convert ROI Argentina Remote" [ref=e73]:
+                      - link "Engineering Manager, Convert ROI Argentina Remote" [ref=e74] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7918857
+                        - paragraph [ref=e75]: Engineering Manager, Convert ROI
+                        - paragraph [ref=e76]: Argentina Remote
+                  - row "Engineering Manager, Developer Productivity CA Remote (BC & ON only); U.S. Remote" [ref=e77]:
+                    - cell "Engineering Manager, Developer Productivity CA Remote (BC & ON only); U.S. Remote" [ref=e78]:
+                      - link "Engineering Manager, Developer Productivity CA Remote (BC & ON only); U.S. Remote" [ref=e79] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7832069
+                        - paragraph [ref=e80]: Engineering Manager, Developer Productivity
+                        - paragraph [ref=e81]: CA Remote (BC & ON only); U.S. Remote
+                  - row "Senior Agentic Engineer Argentina Remote" [ref=e82]:
+                    - cell "Senior Agentic Engineer Argentina Remote" [ref=e83]:
+                      - link "Senior Agentic Engineer Argentina Remote" [ref=e84] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7914493
+                        - paragraph [ref=e85]: Senior Agentic Engineer
+                        - paragraph [ref=e86]: Argentina Remote
+                  - row "Senior DevOps Engineer, Delivery Loop Argentina Remote" [ref=e87]:
+                    - cell "Senior DevOps Engineer, Delivery Loop Argentina Remote" [ref=e88]:
+                      - link "Senior DevOps Engineer, Delivery Loop Argentina Remote" [ref=e89] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7866296
+                        - paragraph [ref=e90]: Senior DevOps Engineer, Delivery Loop
+                        - paragraph [ref=e91]: Argentina Remote
+                  - row "Senior Infrastructure Engineer, Cloud Argentina Remote" [ref=e92]:
+                    - cell "Senior Infrastructure Engineer, Cloud Argentina Remote" [ref=e93]:
+                      - link "Senior Infrastructure Engineer, Cloud Argentina Remote" [ref=e94] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7904982
+                        - paragraph [ref=e95]: Senior Infrastructure Engineer, Cloud
+                        - paragraph [ref=e96]: Argentina Remote
+                  - row "Senior Site Reliability Engineer, Observability Argentina Remote" [ref=e97]:
+                    - cell "Senior Site Reliability Engineer, Observability Argentina Remote" [ref=e98]:
+                      - link "Senior Site Reliability Engineer, Observability Argentina Remote" [ref=e99] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7909588
+                        - paragraph [ref=e100]: Senior Site Reliability Engineer, Observability
+                        - paragraph [ref=e101]: Argentina Remote
+                  - row "Senior Software Engineer, Fullstack Argentina Remote" [ref=e102]:
+                    - cell "Senior Software Engineer, Fullstack Argentina Remote" [ref=e103]:
+                      - link "Senior Software Engineer, Fullstack Argentina Remote" [ref=e104] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7293969
+                        - paragraph [ref=e105]: Senior Software Engineer, Fullstack
+                        - paragraph [ref=e106]: Argentina Remote
+                  - row "Senior Staff Machine Learning Scientist, Assets U.S. Remote" [ref=e107]:
+                    - cell "Senior Staff Machine Learning Scientist, Assets U.S. Remote" [ref=e108]:
+                      - link "Senior Staff Machine Learning Scientist, Assets U.S. Remote" [ref=e109] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7813157
+                        - paragraph [ref=e110]: Senior Staff Machine Learning Scientist, Assets
+                        - paragraph [ref=e111]: U.S. Remote
+                  - row "Senior Staff Software Engineer, Distributed Systems CA Remote (BC & ON only); U.S. Remote" [ref=e112]:
+                    - cell "Senior Staff Software Engineer, Distributed Systems CA Remote (BC & ON only); U.S. Remote" [ref=e113]:
+                      - link "Senior Staff Software Engineer, Distributed Systems CA Remote (BC & ON only); U.S. Remote" [ref=e114] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7867282
+                        - paragraph [ref=e115]: Senior Staff Software Engineer, Distributed Systems
+                        - paragraph [ref=e116]: CA Remote (BC & ON only); U.S. Remote
+                  - row "Staff DevOps Engineer, Delivery Loop Argentina Remote" [ref=e117]:
+                    - cell "Staff DevOps Engineer, Delivery Loop Argentina Remote" [ref=e118]:
+                      - link "Staff DevOps Engineer, Delivery Loop Argentina Remote" [ref=e119] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7942745
+                        - paragraph [ref=e120]: Staff DevOps Engineer, Delivery Loop
+                        - paragraph [ref=e121]: Argentina Remote
+                  - row "Staff Software Engineer, Assets U.S. Remote" [ref=e122]:
+                    - cell "Staff Software Engineer, Assets U.S. Remote" [ref=e123]:
+                      - link "Staff Software Engineer, Assets U.S. Remote" [ref=e124] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7788111
+                        - paragraph [ref=e125]: Staff Software Engineer, Assets
+                        - paragraph [ref=e126]: U.S. Remote
+            - generic [ref=e127]:
+              - heading "IT" [level=3] [ref=e128]
+              - table [ref=e130]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e131]:
+                      - paragraph [ref=e132]: Job
+                - rowgroup [ref=e133]:
+                  - row "Senior Business Systems Analyst, Enterprise AI Operations U.S. Remote" [ref=e134]:
+                    - cell "Senior Business Systems Analyst, Enterprise AI Operations U.S. Remote" [ref=e135]:
+                      - link "Senior Business Systems Analyst, Enterprise AI Operations U.S. Remote" [ref=e136] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7921664
+                        - paragraph [ref=e137]: Senior Business Systems Analyst, Enterprise AI Operations
+                        - paragraph [ref=e138]: U.S. Remote
+            - generic [ref=e139]:
+              - heading "Legal" [level=3] [ref=e140]
+              - table [ref=e142]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e143]:
+                      - paragraph [ref=e144]: Job
+                - rowgroup [ref=e145]:
+                  - row "Associate General Counsel, Privacy & Product U.K. Remote; U.S. Remote" [ref=e146]:
+                    - cell "Associate General Counsel, Privacy & Product U.K. Remote; U.S. Remote" [ref=e147]:
+                      - link "Associate General Counsel, Privacy & Product U.K. Remote; U.S. Remote" [ref=e148] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7905976
+                        - paragraph [ref=e149]: Associate General Counsel, Privacy & Product
+                        - paragraph [ref=e150]: U.K. Remote; U.S. Remote
+            - generic [ref=e151]:
+              - heading "Product" [level=3] [ref=e152]
+              - table [ref=e154]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e155]:
+                      - paragraph [ref=e156]: Job
+                - rowgroup [ref=e157]:
+                  - row "Senior Product Manager, Developer Productivity CA Remote (BC & ON only); U.S. Remote" [ref=e158]:
+                    - cell "Senior Product Manager, Developer Productivity CA Remote (BC & ON only); U.S. Remote" [ref=e159]:
+                      - link "Senior Product Manager, Developer Productivity CA Remote (BC & ON only); U.S. Remote" [ref=e160] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7815489
+                        - paragraph [ref=e161]: Senior Product Manager, Developer Productivity
+                        - paragraph [ref=e162]: CA Remote (BC & ON only); U.S. Remote
+            - generic [ref=e163]:
+              - heading "Professional Services" [level=3] [ref=e164]
+              - table [ref=e166]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e167]:
+                      - paragraph [ref=e168]: Job
+                - rowgroup [ref=e169]:
+                  - row "Senior Manager, Solutions Architect - East U.S. Remote" [ref=e170]:
+                    - cell "Senior Manager, Solutions Architect - East U.S. Remote" [ref=e171]:
+                      - link "Senior Manager, Solutions Architect - East U.S. Remote" [ref=e172] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7838402
+                        - paragraph [ref=e173]: Senior Manager, Solutions Architect - East
+                        - paragraph [ref=e174]: U.S. Remote
+            - generic [ref=e175]:
+              - heading "Sales" [level=3] [ref=e176]
+              - table [ref=e178]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e179]:
+                      - paragraph [ref=e180]: Job
+                - rowgroup [ref=e181]:
+                  - row "Account Executive, EMEA London, U.K. (Hybrid)" [ref=e182]:
+                    - cell "Account Executive, EMEA London, U.K. (Hybrid)" [ref=e183]:
+                      - link "Account Executive, EMEA London, U.K. (Hybrid)" [ref=e184] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7951428
+                        - paragraph [ref=e185]: Account Executive, EMEA
+                        - paragraph [ref=e186]: London, U.K. (Hybrid)
+                  - row "Business Development Representative, Chicago Chicago, U.S. (Hybrid)" [ref=e187]:
+                    - cell "Business Development Representative, Chicago Chicago, U.S. (Hybrid)" [ref=e188]:
+                      - link "Business Development Representative, Chicago Chicago, U.S. (Hybrid)" [ref=e189] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7826080
+                        - paragraph [ref=e190]: Business Development Representative, Chicago
+                        - paragraph [ref=e191]: Chicago, U.S. (Hybrid)
+                  - row "Senior Forward Deployed Engineer U.S. Remote" [ref=e192]:
+                    - cell "Senior Forward Deployed Engineer U.S. Remote" [ref=e193]:
+                      - link "Senior Forward Deployed Engineer U.S. Remote" [ref=e194] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/webflow/jobs/7728896
+                        - paragraph [ref=e195]: Senior Forward Deployed Engineer
+                        - paragraph [ref=e196]: U.S. Remote
+  - contentinfo [ref=e197]:
+    - generic [ref=e198]:
+      - paragraph [ref=e199]: Powered by
+      - link "Greenhouse logo" [ref=e200] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e201]

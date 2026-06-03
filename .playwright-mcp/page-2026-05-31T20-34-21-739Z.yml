@@ -1,0 +1,552 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - img
+  - generic:
+    - banner:
+      - generic:
+        - link "Cloudflare logo" [ref=e2] [cursor=pointer]:
+          - /url: /
+          - img [ref=e3]
+          - img "Cloudflare wordmark" [ref=e11]
+        - navigation "Main navigation" [ref=e24]:
+          - generic [ref=e26]:
+            - link "Products" [ref=e28] [cursor=pointer]:
+              - /url: /products/
+              - text: Products
+              - img [ref=e29]
+            - link "Solutions" [ref=e31] [cursor=pointer]:
+              - /url: /solutions/
+              - text: Solutions
+              - img [ref=e32]
+            - link "Resources" [ref=e34] [cursor=pointer]:
+              - /url: /resource-hub/
+              - text: Resources
+              - img [ref=e35]
+            - link "Pricing" [ref=e37] [cursor=pointer]:
+              - /url: /plans/
+        - generic:
+          - generic:
+            - generic:
+              - link "Login" [ref=e38] [cursor=pointer]:
+                - /url: https://dash.cloudflare.com/login
+              - link "Contact sales" [ref=e39] [cursor=pointer]:
+                - /url: /resource/contact-enterprise-sales/
+          - generic:
+            - link:
+              - /url: https://dash.cloudflare.com/sign-up
+              - text: Start building
+  - main [ref=e40]:
+    - generic [ref=e41]:
+      - generic [ref=e44]:
+        - img [ref=e45]
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - img
+          - generic [ref=e48]:
+            - heading "Cloudflare Careers" [level=2] [ref=e49]
+            - heading "We believe that with our talented team, smart technology and engaged users we can join in helping build a better Internet" [level=5] [ref=e50]
+            - link "See Open Positions" [ref=e52] [cursor=pointer]:
+              - /url: "#open-roles"
+              - generic [ref=e53]: See Open Positions
+          - generic [ref=e56]:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - generic:
+                    - heading "3,800+" [level=6]
+                    - paragraph: Team members across 30+ countries — and growing every quarter.
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - generic:
+                    - paragraph: Our fastest-growing hub. In-hub, hybrid, and distributed roles all available.
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic:
+                  - img
+        - generic [ref=e61]:
+          - generic [ref=e63]:
+            - heading "Principled" [level=6] [ref=e64]
+            - paragraph [ref=e65]: Our mission to help build a better Internet is bold, and we take it seriously. We build with a global mindset and democratize sophisticated technology so everyone can benefit.
+          - generic [ref=e67]:
+            - heading "Curious" [level=6] [ref=e68]
+            - paragraph [ref=e69]: We're pioneering innovators who tackle the Internet's toughest challenges with a desire to learn. We stay curious and empathetic to deliver exceptional experiences.
+          - generic [ref=e71]:
+            - heading "Transparent" [level=6] [ref=e72]
+            - paragraph [ref=e73]: We prioritize clear, open communication and never withhold vital information. We hold ourselves accountable for our actions, whether internal or public-facing.
+      - generic [ref=e80]:
+        - paragraph [ref=e81]: Open roles
+        - paragraph [ref=e82]: Help us build a better Internet.
+      - generic [ref=e135]:
+        - heading "Cloudflare Capabilities" [level=3] [ref=e136]:
+          - text: Cloudflare Capabilities
+          - button [ref=e138] [cursor=pointer]:
+            - img [ref=e139]
+        - paragraph [ref=e141]: The behaviors we value and reference when measuring success, giving feedback, and rewarding performance. They serve as the building blocks of an inclusive company culture.
+      - generic [ref=e144]:
+        - generic [ref=e146]:
+          - img [ref=e148]
+          - paragraph [ref=e150]:
+            - strong [ref=e151]: Be curious to learn and grow
+          - paragraph [ref=e152]:
+            - generic [ref=e153]: Approach every challenge with a desire to learn. Stay curious, ask questions, and seek out new ways to improve.
+        - generic [ref=e155]:
+          - img [ref=e157]
+          - paragraph [ref=e159]:
+            - strong [ref=e160]: Communicate clearly and transparently
+          - paragraph [ref=e161]:
+            - generic [ref=e162]: Share information openly, give direct feedback, and keep your team in the loop.
+        - generic [ref=e164]:
+          - img [ref=e166]
+          - paragraph [ref=e168]:
+            - strong [ref=e169]: Do the right thing
+          - paragraph [ref=e170]:
+            - generic [ref=e171]: Act with integrity, make principled decisions, and hold yourself accountable.
+        - generic [ref=e173]:
+          - img [ref=e175]
+          - paragraph [ref=e180]:
+            - strong [ref=e181]: Embrace diversity
+          - paragraph [ref=e182]:
+            - generic [ref=e183]: Value different perspectives and experiences to make Cloudflare and our products better.
+        - generic [ref=e185]:
+          - img [ref=e187]
+          - paragraph [ref=e191]:
+            - strong [ref=e192]: Get your work across the finish line
+          - paragraph [ref=e193]:
+            - generic [ref=e194]: Take ownership, follow through on commitments, and deliver results that matter.
+        - generic [ref=e196]:
+          - img [ref=e198]
+          - paragraph [ref=e200]:
+            - strong [ref=e201]: Lead with empathy
+          - paragraph [ref=e202]:
+            - generic [ref=e203]: Assume good intentions, support your teammates, and create a welcoming environment.
+      - generic [ref=e204]:
+        - heading "Our Hiring Process" [level=3] [ref=e205]:
+          - text: Our Hiring Process
+          - button [ref=e207] [cursor=pointer]:
+            - img [ref=e208]
+        - generic [ref=e211]:
+          - generic [ref=e213]:
+            - img "Background Pattern" [ref=e214]
+            - generic [ref=e215]:
+              - img
+            - generic [ref=e217]: "1"
+          - generic [ref=e219]:
+            - heading "Initial Conversations" [level=3] [ref=e220]
+            - paragraph [ref=e221]: Connect with a recruiter to discuss your background, interests, and the role. We want to understand what excites you and make sure there's a strong mutual fit.
+        - generic [ref=e223]:
+          - generic [ref=e225]:
+            - img "Background Pattern" [ref=e226]
+            - generic [ref=e227]:
+              - img
+            - generic [ref=e229]: "2"
+          - generic [ref=e231]:
+            - heading "Team Panel Interviews" [level=3] [ref=e232]
+            - paragraph [ref=e233]: Meet with your prospective manager and peers. These conversations focus on how you think, your problem-solving approach, and the skills you bring to the table.
+        - generic [ref=e235]:
+          - generic [ref=e237]:
+            - img "Background Pattern" [ref=e238]
+            - generic [ref=e239]:
+              - img
+            - generic [ref=e241]: "3"
+          - generic [ref=e243]:
+            - heading "Executive Calls" [level=3] [ref=e244]
+            - paragraph [ref=e245]: A conversation with senior leadership to align on vision, values, and long-term goals. This includes our Orange Cloud Interview focused on the behaviors we value.
+        - generic [ref=e247]:
+          - generic [ref=e249]:
+            - img "Background Pattern" [ref=e250]
+            - generic [ref=e251]:
+              - img
+            - generic [ref=e253]: "4"
+          - generic [ref=e255]:
+            - heading "Offer" [level=3] [ref=e256]
+            - paragraph [ref=e257]: We move quickly once we've found the right person. You'll receive a competitive offer that reflects your experience and the impact we expect you to make.
+        - generic [ref=e259]:
+          - generic [ref=e261]:
+            - img "Background Pattern" [ref=e262]
+            - generic [ref=e263]:
+              - img
+            - generic [ref=e265]: "5"
+          - generic [ref=e266]:
+            - heading "Orientation" [level=3] [ref=e267]
+            - paragraph [ref=e268]: Your first weeks are designed to set you up for success — meet your team, learn our systems, and start contributing to helping build a better Internet.
+      - generic [ref=e271]:
+        - heading "How & Where We Work" [level=3] [ref=e272]:
+          - text: How & Where We Work
+          - button [ref=e274] [cursor=pointer]:
+            - img [ref=e275]
+        - paragraph [ref=e277]: We empower our employees to do their best work, wherever they are. Our flexible approach ensures equitable and inclusive working arrangements across the globe.
+      - generic [ref=e281]:
+        - generic [ref=e283]:
+          - generic [ref=e284]:
+            - img [ref=e286]
+            - paragraph [ref=e288]:
+              - strong [ref=e289]: In-Hub
+          - paragraph [ref=e290]: Split your time between home and your local Cloudflare office. Each team determines the cadence that works best.
+        - generic [ref=e292]:
+          - generic [ref=e293]:
+            - img [ref=e295]
+            - paragraph [ref=e297]:
+              - strong [ref=e298]: Hybrid
+          - paragraph [ref=e299]: Work from a Cloudflare Hub a few days per week with the flexibility to work remotely the rest of the time.
+        - generic [ref=e301]:
+          - generic [ref=e302]:
+            - img [ref=e304]
+            - paragraph [ref=e306]:
+              - strong [ref=e307]: Distributed
+          - paragraph [ref=e308]: Work from anywhere in your country of employment. No Hub location required — some roles are fully remote.
+      - generic [ref=e311]:
+        - img "Collage of Cloudflare employees" [ref=e313]
+        - generic [ref=e314]:
+          - heading "Life at Cloudflare" [level=4] [ref=e315]
+          - generic [ref=e317]:
+            - text: Cloudflare employees come from all walks of life. Our team is energized by a
+            - strong [ref=e318]: collaborative
+            - text: ","
+            - strong [ref=e319]: creative
+            - text: environment that celebrates our differences and fosters new ways to
+            - strong [ref=e320]: grow together.
+          - link "Explore Life at Cloudflare" [ref=e322] [cursor=pointer]:
+            - /url: /careers/life-at-cloudflare/
+            - generic [ref=e323]: Explore Life at Cloudflare
+      - generic [ref=e326]:
+        - heading "Benefits & Perks" [level=3] [ref=e327]:
+          - text: Benefits & Perks
+          - button [ref=e329] [cursor=pointer]:
+            - img [ref=e330]
+        - paragraph [ref=e332]: We want to empower and inspire our team members to do their best work every day - making sure they feel happy, healthy and fulfilled both inside and outside of the workplace.
+      - generic [ref=e335]:
+        - generic [ref=e337]:
+          - img [ref=e339]
+          - paragraph [ref=e341]:
+            - strong [ref=e342]: Competitive pay & AI stipend
+          - paragraph [ref=e343]:
+            - generic [ref=e344]: We offer a competitive total rewards package, where every employee is an owner of our stock. You'll also receive a generous AI credits stipend to keep your toolkit sharp and your workflow modern.
+        - generic [ref=e346]:
+          - img [ref=e348]
+          - paragraph [ref=e350]:
+            - strong [ref=e351]: Take-what-you-need vacation
+          - paragraph [ref=e352]:
+            - generic [ref=e353]: We encourage employees to find a comfortable work-life balance by taking as many days off as they need while still being able to perform their jobs satisfactorily. (We really mean it!)
+        - generic [ref=e355]:
+          - img [ref=e357]
+          - paragraph [ref=e360]:
+            - strong [ref=e361]: Paid maternity & paternity leave
+          - paragraph [ref=e362]:
+            - generic [ref=e363]: Our global parental leave policy allows up to sixteen paid weeks of bonding leave time for all qualifying new parents.
+        - generic [ref=e365]:
+          - img [ref=e367]
+          - paragraph [ref=e369]:
+            - strong [ref=e370]: Employee benefits
+          - paragraph [ref=e371]:
+            - generic [ref=e372]: We offer a comprehensive benefits package including healthcare, life insurance, short- and long-term disability, pension plans in accordance with the market practice in our locations.
+        - generic [ref=e374]:
+          - img [ref=e376]
+          - paragraph [ref=e378]:
+            - strong [ref=e379]: Commuter program
+          - paragraph [ref=e380]:
+            - generic [ref=e381]: We are flexible about where we work and value connecting at the office. Our commuter benefits program is in place to support team members' commute to work via public transportation without the extra cost.
+        - generic [ref=e383]:
+          - img [ref=e385]
+          - paragraph [ref=e387]:
+            - strong [ref=e388]: Wellbeing
+          - paragraph [ref=e389]:
+            - generic [ref=e390]: Global offerings that provide mental health, childcare and family forming support to our employees across our offices.
+      - generic [ref=e391]:
+        - img [ref=e392]
+        - img [ref=e393]
+        - generic [ref=e395]:
+          - generic [ref=e404]:
+            - heading "Build without boundaries" [level=1] [ref=e405]
+            - paragraph [ref=e406]: Join thousands of developers who've eliminated infrastructure complexity and deployed globally with Cloudflare. Start building for free — no credit card required.
+            - generic [ref=e407]:
+              - link "Start building for free" [ref=e409] [cursor=pointer]:
+                - /url: https://dash.cloudflare.com/sign-up
+                - generic [ref=e411]: Start building for free
+              - link "View docs" [ref=e413] [cursor=pointer]:
+                - /url: https://developers.cloudflare.com/
+                - generic [ref=e415]: View docs
+          - generic [ref=e419]:
+            - generic [ref=e421]:
+              - generic [ref=e422]:
+                - img [ref=e423]
+                - generic [ref=e425]: No cold starts or region complexity
+              - generic [ref=e426]:
+                - img [ref=e427]
+                - generic [ref=e430]: SASE and Zero Trust without the complexity
+              - generic [ref=e431]:
+                - img [ref=e432]
+                - generic [ref=e434]: Deploy to 330+ cities instantly
+              - generic [ref=e435]:
+                - img [ref=e436]
+                - generic [ref=e439]: Defend against the Internet's biggest DDoS attacks
+              - generic [ref=e440]:
+                - img [ref=e441]
+                - generic [ref=e445]: Predictable pricing without surprises
+              - generic [ref=e446]:
+                - img [ref=e447]
+                - generic [ref=e450]: Identity-aware Zero Trust access that retires your VPN
+              - generic [ref=e451]:
+                - img [ref=e452]
+                - generic [ref=e455]: Battle-tested infrastructure powering millions
+              - generic [ref=e456]:
+                - img [ref=e457]
+                - generic [ref=e462]: CDN, WAF, and DNS faster than the public Internet
+              - generic [ref=e463]:
+                - img [ref=e464]
+                - generic [ref=e466]: No cold starts or region complexity
+              - generic [ref=e467]:
+                - img [ref=e468]
+                - generic [ref=e471]: SASE and Zero Trust without the complexity
+              - generic [ref=e472]:
+                - img [ref=e473]
+                - generic [ref=e475]: Deploy to 330+ cities instantly
+              - generic [ref=e476]:
+                - img [ref=e477]
+                - generic [ref=e480]: Defend against the Internet's biggest DDoS attacks
+              - generic [ref=e481]:
+                - img [ref=e482]
+                - generic [ref=e486]: Predictable pricing without surprises
+              - generic [ref=e487]:
+                - img [ref=e488]
+                - generic [ref=e491]: Identity-aware Zero Trust access that retires your VPN
+              - generic [ref=e492]:
+                - img [ref=e493]
+                - generic [ref=e496]: Battle-tested infrastructure powering millions
+              - generic [ref=e497]:
+                - img [ref=e498]
+                - generic [ref=e503]: CDN, WAF, and DNS faster than the public Internet
+            - generic [ref=e505]:
+              - generic [ref=e506]:
+                - img [ref=e507]
+                - generic [ref=e509]: No cold starts or region complexity
+              - generic [ref=e510]:
+                - img [ref=e511]
+                - generic [ref=e514]: SASE and Zero Trust without the complexity
+              - generic [ref=e515]:
+                - img [ref=e516]
+                - generic [ref=e518]: Deploy to 330+ cities instantly
+              - generic [ref=e519]:
+                - img [ref=e520]
+                - generic [ref=e523]: Defend against the Internet's biggest DDoS attacks
+              - generic [ref=e524]:
+                - img [ref=e525]
+                - generic [ref=e529]: Predictable pricing without surprises
+              - generic [ref=e530]:
+                - img [ref=e531]
+                - generic [ref=e534]: Identity-aware Zero Trust access that retires your VPN
+              - generic [ref=e535]:
+                - img [ref=e536]
+                - generic [ref=e539]: Battle-tested infrastructure powering millions
+              - generic [ref=e540]:
+                - img [ref=e541]
+                - generic [ref=e546]: CDN, WAF, and DNS faster than the public Internet
+              - generic [ref=e547]:
+                - img [ref=e548]
+                - generic [ref=e550]: No cold starts or region complexity
+              - generic [ref=e551]:
+                - img [ref=e552]
+                - generic [ref=e555]: SASE and Zero Trust without the complexity
+              - generic [ref=e556]:
+                - img [ref=e557]
+                - generic [ref=e559]: Deploy to 330+ cities instantly
+              - generic [ref=e560]:
+                - img [ref=e561]
+                - generic [ref=e564]: Defend against the Internet's biggest DDoS attacks
+              - generic [ref=e565]:
+                - img [ref=e566]
+                - generic [ref=e570]: Predictable pricing without surprises
+              - generic [ref=e571]:
+                - img [ref=e572]
+                - generic [ref=e575]: Identity-aware Zero Trust access that retires your VPN
+              - generic [ref=e576]:
+                - img [ref=e577]
+                - generic [ref=e580]: Battle-tested infrastructure powering millions
+              - generic [ref=e581]:
+                - img [ref=e582]
+                - generic [ref=e587]: CDN, WAF, and DNS faster than the public Internet
+  - contentinfo [ref=e589]:
+    - generic [ref=e590]:
+      - generic:
+        - generic:
+          - generic:
+            - img "Cloudflare wordmark"
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic: Getting started
+              - link "Plans" [ref=e591] [cursor=pointer]:
+                - /url: /plans/
+              - link "Contact sales" [ref=e592] [cursor=pointer]:
+                - /url: /resource/contact-enterprise-sales/
+              - link "Partners" [ref=e593] [cursor=pointer]:
+                - /url: /partners/
+              - link "Find a partner" [ref=e594] [cursor=pointer]:
+                - /url: https://partnerlocator.cloudflare.com/dashboard
+              - link "Startups" [ref=e595] [cursor=pointer]:
+                - /url: /startups/
+              - link "Under attack?" [ref=e596] [cursor=pointer]:
+                - /url: /under-attack-hotline/
+              - link "Domain name search" [ref=e597] [cursor=pointer]:
+                - /url: https://domains.cloudflare.com/
+            - generic:
+              - generic:
+                - generic: Company
+              - link "About" [ref=e598] [cursor=pointer]:
+                - /url: /about/
+              - link "Careers" [ref=e599] [cursor=pointer]:
+                - /url: /careers/
+              - link "Investors" [ref=e600] [cursor=pointer]:
+                - /url: https://cloudflare.net/
+              - link "Press" [ref=e601] [cursor=pointer]:
+                - /url: /press/
+              - link "Press kit" [ref=e602] [cursor=pointer]:
+                - /url: /press/press-kit/
+              - link "Global network" [ref=e603] [cursor=pointer]:
+                - /url: /network/
+          - generic:
+            - generic:
+              - generic:
+                - generic: Public interest
+              - link "Project Galileo" [ref=e604] [cursor=pointer]:
+                - /url: /galileo/
+              - link "Athenian Project" [ref=e605] [cursor=pointer]:
+                - /url: /athenian/
+              - link "Cloudflare for Campaigns" [ref=e606] [cursor=pointer]:
+                - /url: /campaigns/
+              - link "Project Fairshot" [ref=e607] [cursor=pointer]:
+                - /url: /fair-shot/
+              - link "Impact/ESG" [ref=e608] [cursor=pointer]:
+                - /url: /impact/
+            - generic:
+              - generic:
+                - generic: Compliance
+              - link "Compliance resources" [ref=e609] [cursor=pointer]:
+                - /url: /trust-hub/compliance-resources/
+              - link "Trust" [ref=e610] [cursor=pointer]:
+                - /url: /trust-hub/
+              - link "GDPR" [ref=e611] [cursor=pointer]:
+                - /url: /trust-hub/gdpr/
+              - link "Responsible AI" [ref=e612] [cursor=pointer]:
+                - /url: /trust-hub/responsible-ai/
+              - link "Transparency report" [ref=e613] [cursor=pointer]:
+                - /url: /transparency/
+              - link "Report abuse" [ref=e614] [cursor=pointer]:
+                - /url: /trust-hub/abuse-approach/
+          - generic:
+            - generic:
+              - generic:
+                - generic: Resources
+              - link "App innovation report" [ref=e615] [cursor=pointer]:
+                - /url: /resource/app-innovation-report/
+              - link "Cloudflare Radar" [ref=e616] [cursor=pointer]:
+                - /url: https://radar.cloudflare.com/
+              - link "Case studies" [ref=e617] [cursor=pointer]:
+                - /url: /case-studies/
+              - link "Status" [ref=e618] [cursor=pointer]:
+                - /url: https://www.cloudflarestatus.com/
+              - link "Support" [ref=e619] [cursor=pointer]:
+                - /url: https://support.cloudflare.com/
+              - link "Events" [ref=e620] [cursor=pointer]:
+                - /url: /events/
+              - link "Blog" [ref=e621] [cursor=pointer]:
+                - /url: https://blog.cloudflare.com/
+            - generic:
+              - generic:
+                - generic: Developers
+              - link "Documentation" [ref=e622] [cursor=pointer]:
+                - /url: https://developers.cloudflare.com/
+              - link "Learning center" [ref=e623] [cursor=pointer]:
+                - /url: /learning/
+              - link "Community" [ref=e624] [cursor=pointer]:
+                - /url: https://community.cloudflare.com/
+          - generic:
+            - generic:
+              - generic:
+                - generic: Solutions
+              - link "SSE and SASE platform" [ref=e625] [cursor=pointer]:
+                - /url: /sase/
+      - generic [ref=e626]:
+        - img [ref=e627]
+        - generic [ref=e628]:
+          - generic [ref=e629]: © 2026 Cloudflare, Inc.
+          - generic [ref=e630]:
+            - button "Your privacy choices" [ref=e632] [cursor=pointer]:
+              - img [ref=e633]
+              - generic [ref=e638]: Your privacy choices
+            - generic [ref=e639]: "|"
+            - generic [ref=e640]:
+              - link "Report security issues" [ref=e641] [cursor=pointer]:
+                - /url: https://www.cloudflare.com/disclosure/
+              - text: "|"
+              - link "Privacy policy" [ref=e642] [cursor=pointer]:
+                - /url: /policies/privacy/
+              - text: "|"
+              - link "Terms of use" [ref=e643] [cursor=pointer]:
+                - /url: /policies/terms/
+              - text: "|"
+              - link "GDPR" [ref=e644] [cursor=pointer]:
+                - /url: /trust-hub/gdpr/
+              - text: "|"
+              - link "Trademark" [ref=e645] [cursor=pointer]:
+                - /url: https://www.cloudflare.com/trademark/
+  - dialog [ref=e647]:
+    - generic [ref=e648]:
+      - generic [ref=e649]:
+        - generic [ref=e650]:
+          - paragraph [ref=e651]: All open roles
+          - paragraph [ref=e652]: Help us build a better Internet.
+        - button "Close" [ref=e653] [cursor=pointer]
+      - generic [ref=e655]:
+        - textbox "Search jobs" [ref=e656]:
+          - /placeholder: Search title, location, or department
+        - generic [ref=e657]:
+          - combobox [ref=e658] [cursor=pointer]:
+            - generic: All departments
+            - img
+          - combobox [ref=e659] [cursor=pointer]:
+            - generic: All locations
+            - img
+          - combobox [ref=e660] [cursor=pointer]:
+            - generic: Newest posted
+            - img

@@ -1,0 +1,15 @@
+[    2820ms] [ERROR] Connecting to 'https://geolocation.onetrust.com/cookieconsentpub/v1/geo/location' violates the following Content Security Policy directive: "connect-src 'self' https://www.google-analytics.com https://b.6sc.co https://c.6sc.co https://ipv6.6sc.co https://analytics.google.com https://www.google.com https://cdn.cookielaw.org https://forms.hsforms.com https://api.hubapi.com https://cta-service-cms2.hubspot.com https://px.ads.linkedin.com https://tracking-api.g2.com https://stats.g.doubleclick.net https://fast.wistia.com https://fast.wistia.net https://embed-cloudfront.wistia.com https://distillery.wistia.com https://pipedream.wistia.com https://cdn.jsdelivr.net https://api-ingest.pocustrack.com https://js.knock-ai.com https://ca.knock-ai.com https://api.cr-relay.com https://api.vector.co https://secure.adnxs.com https://t.co https://analytics.twitter.com https://idx.liadm.com https://rp.liadm.com https://region1.analytics.google.com https://region1.google-analytics.com https://epsilon.6sense.com https://pagead2.googlesyndication.com wss:". The action has been blocked. @ https://cdn.cookielaw.org/scripttemplates/otSDKStub.js:0
+[    3210ms] [LOG] Concierge version 1.54.0 @ https://fireblocks.chilipiper.com/concierge-js/cjs/concierge.js:18
+[    3354ms] [LOG] {data: Object, link: https://fireblocks.chilipiper.com/concierge-router…rceUrl=https%3A%2F%2Fwww.fireblocks.com%2Fcareers} @ https://fireblocks.chilipiper.com/concierge-js/cjs/concierge.js:18
+[    3376ms] [LOG] Setting up hideSectionsWithNoPosts timeouts... @ https://www.fireblocks.com/wp-content/cache/min/1/ee08e4a3c54405c60e513c7cb02ebd73.js:122
+[    3887ms] [LOG] hideSectionsWithNoPosts function called @ https://www.fireblocks.com/wp-content/cache/min/1/ee08e4a3c54405c60e513c7cb02ebd73.js:119
+[    3887ms] [LOG] Carousel not found: .tag-archive-blog @ https://www.fireblocks.com/wp-content/cache/min/1/ee08e4a3c54405c60e513c7cb02ebd73.js:119
+[    3887ms] [LOG] Carousel not found: .tag-archive-reports-guides @ https://www.fireblocks.com/wp-content/cache/min/1/ee08e4a3c54405c60e513c7cb02ebd73.js:119
+[    3887ms] [LOG] Carousel not found: .tag-archive-customer-stories @ https://www.fireblocks.com/wp-content/cache/min/1/ee08e4a3c54405c60e513c7cb02ebd73.js:119
+[    3887ms] [LOG] Carousel not found: .tag-archive-webinars @ https://www.fireblocks.com/wp-content/cache/min/1/ee08e4a3c54405c60e513c7cb02ebd73.js:119
+[    4512ms] [LOG] Schedule app version: 3.112.0 @ https://fireblocks.chilipiper.com/static/canary/booking-app/assets/root-O56YGxJ9.js:4
+[    4525ms] Uncaught TypeError: Cannot set properties of null (setting 'innerHTML')
+    at Grnhse.Iframe.render (https://boards.greenhouse.io/embed/job_board/js?for=fireblocks:149:22)
+    at Grnhse.Iframe (https://boards.greenhouse.io/embed/job_board/js?for=fireblocks:91:28)
+    at Grnhse.Iframe.load (https://boards.greenhouse.io/embed/job_board/js?for=fireblocks:284:9)
+    at Grnhse.Iframe.autoLoad (https://boards.greenhouse.io/embed/job_board/js?for=fireblocks:288:16)

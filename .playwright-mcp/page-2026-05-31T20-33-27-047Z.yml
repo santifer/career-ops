@@ -1,0 +1,479 @@
+- generic [active] [ref=e1]:
+  - img "Banner" [ref=e3]
+  - generic [ref=e6]:
+    - img [ref=e8]
+    - paragraph [ref=e10]: The job you are looking for is no longer open.
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - link "Forter Logo" [ref=e14] [cursor=pointer]:
+        - /url: https://www.forter.com/
+        - img "Forter Logo" [ref=e15]
+      - heading "Current openings at Forter" [level=1] [ref=e16]
+      - generic [ref=e20]:
+        - heading "Ready to make an IMPACT?" [level=1] [ref=e21]
+        - paragraph [ref=e22]: Find your next career opportunity at Forter
+        - paragraph [ref=e23]
+        - paragraph [ref=e24]
+        - paragraph [ref=e25]
+      - generic [ref=e26]:
+        - img [ref=e27]
+        - generic [ref=e29]:
+          - paragraph [ref=e30]: Create a Job Alert
+          - paragraph [ref=e31]: Level-up your career by having opportunities at Forter sent directly to your inbox.
+          - link "Create alert" [ref=e32] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=forter&source=job_alert_board
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: Search
+            - textbox "Search" [ref=e38]
+          - generic [ref=e40]:
+            - generic [ref=e41]: Department
+            - generic [ref=e42]:
+              - log [ref=e44]
+              - generic [ref=e46]:
+                - generic [ref=e47]:
+                  - generic [ref=e48]: Select...
+                  - combobox "Department" [ref=e50]
+                - button "Toggle flyout" [ref=e52] [cursor=pointer]:
+                  - img [ref=e53]
+          - generic [ref=e56]:
+            - generic [ref=e57]: Office
+            - generic [ref=e58]:
+              - log [ref=e60]
+              - generic [ref=e62]:
+                - generic [ref=e63]:
+                  - generic [ref=e64]: Select...
+                  - combobox "Office" [ref=e66]
+                - button "Toggle flyout" [ref=e68] [cursor=pointer]:
+                  - img [ref=e69]
+        - generic [ref=e71]:
+          - heading "46 jobs" [level=2] [ref=e72]
+          - generic [ref=e73]:
+            - generic [ref=e74]:
+              - heading "Analytics" [level=3] [ref=e75]
+              - table [ref=e77]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e78]:
+                      - paragraph [ref=e79]: Job
+                - rowgroup [ref=e80]:
+                  - row "Fraud Analyst Israel - Tel Aviv" [ref=e81]:
+                    - cell "Fraud Analyst Israel - Tel Aviv" [ref=e82]:
+                      - link "Fraud Analyst Israel - Tel Aviv" [ref=e83] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8440396002
+                        - paragraph [ref=e84]: Fraud Analyst
+                        - paragraph [ref=e85]: Israel - Tel Aviv
+            - generic [ref=e86]:
+              - heading "Business Development" [level=3] [ref=e87]
+              - table [ref=e89]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e90]:
+                      - paragraph [ref=e91]: Job
+                - rowgroup [ref=e92]:
+                  - row "Senior Strategic Partnerships Manager, AI and Agentic Commerce United States - Remote" [ref=e93]:
+                    - cell "Senior Strategic Partnerships Manager, AI and Agentic Commerce United States - Remote" [ref=e94]:
+                      - link "Senior Strategic Partnerships Manager, AI and Agentic Commerce United States - Remote" [ref=e95] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8509550002
+                        - paragraph [ref=e96]: Senior Strategic Partnerships Manager, AI and Agentic Commerce
+                        - paragraph [ref=e97]: United States - Remote
+                  - row "Sr. Corporate Development Manager United States - New York" [ref=e98]:
+                    - cell "Sr. Corporate Development Manager United States - New York" [ref=e99]:
+                      - link "Sr. Corporate Development Manager United States - New York" [ref=e100] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8438082002
+                        - paragraph [ref=e101]: Sr. Corporate Development Manager
+                        - paragraph [ref=e102]: United States - New York
+            - generic [ref=e103]:
+              - heading "Customer Success" [level=3] [ref=e104]
+              - table [ref=e106]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e107]:
+                      - paragraph [ref=e108]: Job
+                - rowgroup [ref=e109]:
+                  - row "Account Manager United States - New York" [ref=e110]:
+                    - cell "Account Manager United States - New York" [ref=e111]:
+                      - link "Account Manager United States - New York" [ref=e112] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8540379002
+                        - paragraph [ref=e113]: Account Manager
+                        - paragraph [ref=e114]: United States - New York
+                  - row "Customer Success Manager, Tokyo Japan - Tokyo" [ref=e115]:
+                    - cell "Customer Success Manager, Tokyo Japan - Tokyo" [ref=e116]:
+                      - link "Customer Success Manager, Tokyo Japan - Tokyo" [ref=e117] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8016274002
+                        - paragraph [ref=e118]: Customer Success Manager, Tokyo
+                        - paragraph [ref=e119]: Japan - Tokyo
+                  - row "Japanese Speaking Customer Success Manager (Japan Market) Singapore - Singapore" [ref=e120]:
+                    - cell "Japanese Speaking Customer Success Manager (Japan Market) Singapore - Singapore" [ref=e121]:
+                      - link "Japanese Speaking Customer Success Manager (Japan Market) Singapore - Singapore" [ref=e122] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8493888002
+                        - paragraph [ref=e123]: Japanese Speaking Customer Success Manager (Japan Market)
+                        - paragraph [ref=e124]: Singapore - Singapore
+                  - row "Senior Customer Success Manager United Kingdom - London" [ref=e125]:
+                    - cell "Senior Customer Success Manager United Kingdom - London" [ref=e126]:
+                      - link "Senior Customer Success Manager United Kingdom - London" [ref=e127] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8372621002
+                        - paragraph [ref=e128]: Senior Customer Success Manager
+                        - paragraph [ref=e129]: United Kingdom - London
+                  - row "Senior Customer Success Manager United States - Denver; United States - New York" [ref=e130]:
+                    - cell "Senior Customer Success Manager United States - Denver; United States - New York" [ref=e131]:
+                      - link "Senior Customer Success Manager United States - Denver; United States - New York" [ref=e132] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8451925002
+                        - paragraph [ref=e133]: Senior Customer Success Manager
+                        - paragraph [ref=e134]: United States - Denver; United States - New York
+            - generic [ref=e135]:
+              - heading "Customer Support" [level=3] [ref=e136]
+              - table [ref=e138]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e139]:
+                      - paragraph [ref=e140]: Job
+                - rowgroup [ref=e141]:
+                  - row "Japanese Speaking Technical Support Engineer Singapore - Singapore" [ref=e142]:
+                    - cell "Japanese Speaking Technical Support Engineer Singapore - Singapore" [ref=e143]:
+                      - link "Japanese Speaking Technical Support Engineer Singapore - Singapore" [ref=e144] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8119107002
+                        - paragraph [ref=e145]: Japanese Speaking Technical Support Engineer
+                        - paragraph [ref=e146]: Singapore - Singapore
+                  - row "Technical Support Engineer Japan - Tokyo" [ref=e147]:
+                    - cell "Technical Support Engineer Japan - Tokyo" [ref=e148]:
+                      - link "Technical Support Engineer Japan - Tokyo" [ref=e149] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8119108002
+                        - paragraph [ref=e150]: Technical Support Engineer
+                        - paragraph [ref=e151]: Japan - Tokyo
+            - generic [ref=e152]:
+              - heading "Engineering" [level=3] [ref=e153]
+              - table [ref=e155]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e156]:
+                      - paragraph [ref=e157]: Job
+                - rowgroup [ref=e158]:
+                  - row "Senior AI Engineer Israel - Tel Aviv" [ref=e159]:
+                    - cell "Senior AI Engineer Israel - Tel Aviv" [ref=e160]:
+                      - link "Senior AI Engineer Israel - Tel Aviv" [ref=e161] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8401424002
+                        - paragraph [ref=e162]: Senior AI Engineer
+                        - paragraph [ref=e163]: Israel - Tel Aviv
+                  - row "Senior Applied AI Engineer Israel - Tel Aviv" [ref=e164]:
+                    - cell "Senior Applied AI Engineer Israel - Tel Aviv" [ref=e165]:
+                      - link "Senior Applied AI Engineer Israel - Tel Aviv" [ref=e166] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8486825002
+                        - paragraph [ref=e167]: Senior Applied AI Engineer
+                        - paragraph [ref=e168]: Israel - Tel Aviv
+                  - row "Senior Applied AI Engineer United Kingdom - London" [ref=e169]:
+                    - cell "Senior Applied AI Engineer United Kingdom - London" [ref=e170]:
+                      - link "Senior Applied AI Engineer United Kingdom - London" [ref=e171] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8486828002
+                        - paragraph [ref=e172]: Senior Applied AI Engineer
+                        - paragraph [ref=e173]: United Kingdom - London
+                  - row "Senior Full Stack Engineer Israel - Tel Aviv" [ref=e174]:
+                    - cell "Senior Full Stack Engineer Israel - Tel Aviv" [ref=e175]:
+                      - link "Senior Full Stack Engineer Israel - Tel Aviv" [ref=e176] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8534195002
+                        - paragraph [ref=e177]: Senior Full Stack Engineer
+                        - paragraph [ref=e178]: Israel - Tel Aviv
+                  - row "Senior Software AI Engineer United Kingdom - London" [ref=e179]:
+                    - cell "Senior Software AI Engineer United Kingdom - London" [ref=e180]:
+                      - link "Senior Software AI Engineer United Kingdom - London" [ref=e181] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8415897002
+                        - paragraph [ref=e182]: Senior Software AI Engineer
+                        - paragraph [ref=e183]: United Kingdom - London
+                  - row "Senior Software Engineer , AI Israel - Tel Aviv" [ref=e184]:
+                    - cell "Senior Software Engineer , AI Israel - Tel Aviv" [ref=e185]:
+                      - link "Senior Software Engineer , AI Israel - Tel Aviv" [ref=e186] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8299310002
+                        - paragraph [ref=e187]: Senior Software Engineer , AI
+                        - paragraph [ref=e188]: Israel - Tel Aviv
+                  - row "Senior Software Engineer, Billing Israel - Tel Aviv" [ref=e189]:
+                    - cell "Senior Software Engineer, Billing Israel - Tel Aviv" [ref=e190]:
+                      - link "Senior Software Engineer, Billing Israel - Tel Aviv" [ref=e191] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8547143002
+                        - paragraph [ref=e192]: Senior Software Engineer, Billing
+                        - paragraph [ref=e193]: Israel - Tel Aviv
+                  - row "Senior Software Engineer – CX Platform Team Israel - Tel Aviv" [ref=e194]:
+                    - cell "Senior Software Engineer – CX Platform Team Israel - Tel Aviv" [ref=e195]:
+                      - link "Senior Software Engineer – CX Platform Team Israel - Tel Aviv" [ref=e196] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8553634002
+                        - paragraph [ref=e197]: Senior Software Engineer – CX Platform Team
+                        - paragraph [ref=e198]: Israel - Tel Aviv
+                  - row "Senior Software Engineer II – Engine Dynamics New Israel - Tel Aviv" [ref=e199]:
+                    - cell "Senior Software Engineer II – Engine Dynamics New Israel - Tel Aviv" [ref=e200]:
+                      - link "Senior Software Engineer II – Engine Dynamics New Israel - Tel Aviv" [ref=e201] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8568220002
+                        - paragraph [ref=e202]:
+                          - text: Senior Software Engineer II – Engine Dynamics
+                          - generic [ref=e204]: New
+                        - paragraph [ref=e205]: Israel - Tel Aviv
+                  - row "Senior Software Engineer ll – Platform & AI, Customer Experience Israel - Tel Aviv" [ref=e206]:
+                    - cell "Senior Software Engineer ll – Platform & AI, Customer Experience Israel - Tel Aviv" [ref=e207]:
+                      - link "Senior Software Engineer ll – Platform & AI, Customer Experience Israel - Tel Aviv" [ref=e208] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8289641002
+                        - paragraph [ref=e209]: Senior Software Engineer ll – Platform & AI, Customer Experience
+                        - paragraph [ref=e210]: Israel - Tel Aviv
+                  - row "Senior Software Engineer, Payments Israel - Tel Aviv" [ref=e211]:
+                    - cell "Senior Software Engineer, Payments Israel - Tel Aviv" [ref=e212]:
+                      - link "Senior Software Engineer, Payments Israel - Tel Aviv" [ref=e213] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8314818002
+                        - paragraph [ref=e214]: Senior Software Engineer, Payments
+                        - paragraph [ref=e215]: Israel - Tel Aviv
+                  - row "Senior Software Engineer, Product Offering Israel - Tel Aviv" [ref=e216]:
+                    - cell "Senior Software Engineer, Product Offering Israel - Tel Aviv" [ref=e217]:
+                      - link "Senior Software Engineer, Product Offering Israel - Tel Aviv" [ref=e218] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8400151002
+                        - paragraph [ref=e219]: Senior Software Engineer, Product Offering
+                        - paragraph [ref=e220]: Israel - Tel Aviv
+                  - row "Staff Engineer, Payments Israel - Tel Aviv" [ref=e221]:
+                    - cell "Staff Engineer, Payments Israel - Tel Aviv" [ref=e222]:
+                      - link "Staff Engineer, Payments Israel - Tel Aviv" [ref=e223] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8457044002
+                        - paragraph [ref=e224]: Staff Engineer, Payments
+                        - paragraph [ref=e225]: Israel - Tel Aviv
+            - generic [ref=e226]:
+              - heading "Executive" [level=3] [ref=e227]
+              - table [ref=e229]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e230]:
+                      - paragraph [ref=e231]: Job
+                - rowgroup [ref=e232]:
+                  - row "Executive Assistant United States - New York" [ref=e233]:
+                    - cell "Executive Assistant United States - New York" [ref=e234]:
+                      - link "Executive Assistant United States - New York" [ref=e235] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8520804002
+                        - paragraph [ref=e236]: Executive Assistant
+                        - paragraph [ref=e237]: United States - New York
+                  - row "Strategy & Operations Lead United States - New York" [ref=e238]:
+                    - cell "Strategy & Operations Lead United States - New York" [ref=e239]:
+                      - link "Strategy & Operations Lead United States - New York" [ref=e240] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8480473002
+                        - paragraph [ref=e241]: Strategy & Operations Lead
+                        - paragraph [ref=e242]: United States - New York
+            - generic [ref=e243]:
+              - heading "Finance" [level=3] [ref=e244]
+              - table [ref=e246]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e247]:
+                      - paragraph [ref=e248]: Job
+                - rowgroup [ref=e249]:
+                  - row "Senior Manager, Accounting United States - New York" [ref=e250]:
+                    - cell "Senior Manager, Accounting United States - New York" [ref=e251]:
+                      - link "Senior Manager, Accounting United States - New York" [ref=e252] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8510616002
+                        - paragraph [ref=e253]: Senior Manager, Accounting
+                        - paragraph [ref=e254]: United States - New York
+            - generic [ref=e255]:
+              - heading "HR" [level=3] [ref=e256]
+              - table [ref=e258]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e259]:
+                      - paragraph [ref=e260]: Job
+                - rowgroup [ref=e261]:
+                  - row "Senior Analyst, Compensation New United States - New York" [ref=e262]:
+                    - cell "Senior Analyst, Compensation New United States - New York" [ref=e263]:
+                      - link "Senior Analyst, Compensation New United States - New York" [ref=e264] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8558661002
+                        - paragraph [ref=e265]:
+                          - text: Senior Analyst, Compensation
+                          - generic [ref=e267]: New
+                        - paragraph [ref=e268]: United States - New York
+                  - row "Senior People Partner United States - New York" [ref=e269]:
+                    - cell "Senior People Partner United States - New York" [ref=e270]:
+                      - link "Senior People Partner United States - New York" [ref=e271] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8493577002
+                        - paragraph [ref=e272]: Senior People Partner
+                        - paragraph [ref=e273]: United States - New York
+            - generic [ref=e274]:
+              - heading "Marketing" [level=3] [ref=e275]
+              - table [ref=e277]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e278]:
+                      - paragraph [ref=e279]: Job
+                - rowgroup [ref=e280]:
+                  - row "Partner Marketing Manager United States - Remote" [ref=e281]:
+                    - cell "Partner Marketing Manager United States - Remote" [ref=e282]:
+                      - link "Partner Marketing Manager United States - Remote" [ref=e283] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8538633002
+                        - paragraph [ref=e284]: Partner Marketing Manager
+                        - paragraph [ref=e285]: United States - Remote
+                  - row "Senior Product Marketing Manager United States - New York" [ref=e286]:
+                    - cell "Senior Product Marketing Manager United States - New York" [ref=e287]:
+                      - link "Senior Product Marketing Manager United States - New York" [ref=e288] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8405133002
+                        - paragraph [ref=e289]: Senior Product Marketing Manager
+                        - paragraph [ref=e290]: United States - New York
+            - generic [ref=e291]:
+              - heading "Product" [level=3] [ref=e292]
+              - table [ref=e294]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e295]:
+                      - paragraph [ref=e296]: Job
+                - rowgroup [ref=e297]:
+                  - row "Senior Product Manager - Fraud and Abuse United States - New York" [ref=e298]:
+                    - cell "Senior Product Manager - Fraud and Abuse United States - New York" [ref=e299]:
+                      - link "Senior Product Manager - Fraud and Abuse United States - New York" [ref=e300] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8394298002
+                        - paragraph [ref=e301]: Senior Product Manager - Fraud and Abuse
+                        - paragraph [ref=e302]: United States - New York
+            - generic [ref=e303]:
+              - heading "Risk" [level=3] [ref=e304]
+              - table [ref=e306]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e307]:
+                      - paragraph [ref=e308]: Job
+                - rowgroup [ref=e309]:
+                  - row "Senior Risk Analyst United States - New York" [ref=e310]:
+                    - cell "Senior Risk Analyst United States - New York" [ref=e311]:
+                      - link "Senior Risk Analyst United States - New York" [ref=e312] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8500026002
+                        - paragraph [ref=e313]: Senior Risk Analyst
+                        - paragraph [ref=e314]: United States - New York
+            - generic [ref=e315]:
+              - paragraph [ref=e317]: Sales
+              - heading "Enterprise Sales" [level=3] [ref=e318]
+              - table [ref=e320]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e321]:
+                      - paragraph [ref=e322]: Job
+                - rowgroup [ref=e323]:
+                  - row "Enterprise Account Executive United Kingdom - London" [ref=e324]:
+                    - cell "Enterprise Account Executive United Kingdom - London" [ref=e325]:
+                      - link "Enterprise Account Executive United Kingdom - London" [ref=e326] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/7883478002
+                        - paragraph [ref=e327]: Enterprise Account Executive
+                        - paragraph [ref=e328]: United Kingdom - London
+                  - row "Enterprise Account Executive Germany - Berlin" [ref=e329]:
+                    - cell "Enterprise Account Executive Germany - Berlin" [ref=e330]:
+                      - link "Enterprise Account Executive Germany - Berlin" [ref=e331] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8458278002
+                        - paragraph [ref=e332]: Enterprise Account Executive
+                        - paragraph [ref=e333]: Germany - Berlin
+                  - row "Enterprise Account Executive Germany - Remote" [ref=e334]:
+                    - cell "Enterprise Account Executive Germany - Remote" [ref=e335]:
+                      - link "Enterprise Account Executive Germany - Remote" [ref=e336] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8446836002
+                        - paragraph [ref=e337]: Enterprise Account Executive
+                        - paragraph [ref=e338]: Germany - Remote
+                  - row "Enterprise Account Executive Germany - Remote" [ref=e339]:
+                    - cell "Enterprise Account Executive Germany - Remote" [ref=e340]:
+                      - link "Enterprise Account Executive Germany - Remote" [ref=e341] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8542730002
+                        - paragraph [ref=e342]: Enterprise Account Executive
+                        - paragraph [ref=e343]: Germany - Remote
+            - generic [ref=e344]:
+              - paragraph [ref=e346]: Sales
+              - heading "GTM Ops & Enablement" [level=3] [ref=e347]
+              - table [ref=e349]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e350]:
+                      - paragraph [ref=e351]: Job
+                - rowgroup [ref=e352]:
+                  - row "VP, Global Revenue Operations and Enablement United States - New York" [ref=e353]:
+                    - cell "VP, Global Revenue Operations and Enablement United States - New York" [ref=e354]:
+                      - link "VP, Global Revenue Operations and Enablement United States - New York" [ref=e355] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8455570002
+                        - paragraph [ref=e356]: VP, Global Revenue Operations and Enablement
+                        - paragraph [ref=e357]: United States - New York
+            - generic [ref=e358]:
+              - paragraph [ref=e360]: Sales
+              - heading "SDR" [level=3] [ref=e361]
+              - table [ref=e363]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e364]:
+                      - paragraph [ref=e365]: Job
+                - rowgroup [ref=e366]:
+                  - row "Enterprise Sales Development Representative United States - New York" [ref=e367]:
+                    - cell "Enterprise Sales Development Representative United States - New York" [ref=e368]:
+                      - link "Enterprise Sales Development Representative United States - New York" [ref=e369] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8458833002
+                        - paragraph [ref=e370]: Enterprise Sales Development Representative
+                        - paragraph [ref=e371]: United States - New York
+                  - row "Sales Development Representative - GCR China - Shanghai" [ref=e372]:
+                    - cell "Sales Development Representative - GCR China - Shanghai" [ref=e373]:
+                      - link "Sales Development Representative - GCR China - Shanghai" [ref=e374] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8175381002
+                        - paragraph [ref=e375]: Sales Development Representative - GCR
+                        - paragraph [ref=e376]: China - Shanghai
+            - generic [ref=e377]:
+              - paragraph [ref=e379]: Sales
+              - heading "Solutions Consulting" [level=3] [ref=e380]
+              - table [ref=e382]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e383]:
+                      - paragraph [ref=e384]: Job
+                - rowgroup [ref=e385]:
+                  - row "Principal Payments Consultant China - Shanghai" [ref=e386]:
+                    - cell "Principal Payments Consultant China - Shanghai" [ref=e387]:
+                      - link "Principal Payments Consultant China - Shanghai" [ref=e388] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/7938369002
+                        - paragraph [ref=e389]: Principal Payments Consultant
+                        - paragraph [ref=e390]: China - Shanghai
+                  - row "Principal Solutions Consultant (Payments) China - Shanghai" [ref=e391]:
+                    - cell "Principal Solutions Consultant (Payments) China - Shanghai" [ref=e392]:
+                      - link "Principal Solutions Consultant (Payments) China - Shanghai" [ref=e393] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8467314002
+                        - paragraph [ref=e394]: Principal Solutions Consultant (Payments)
+                        - paragraph [ref=e395]: China - Shanghai
+            - generic [ref=e396]:
+              - paragraph [ref=e398]: Sales
+              - heading "Strategic Sales" [level=3] [ref=e399]
+              - table [ref=e401]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e402]:
+                      - paragraph [ref=e403]: Job
+                - rowgroup [ref=e404]:
+                  - row "Strategic Account Executive United States - New York" [ref=e405]:
+                    - cell "Strategic Account Executive United States - New York" [ref=e406]:
+                      - link "Strategic Account Executive United States - New York" [ref=e407] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/8503139002
+                        - paragraph [ref=e408]: Strategic Account Executive
+                        - paragraph [ref=e409]: United States - New York
+            - generic [ref=e410]:
+              - heading "General Applications" [level=3] [ref=e411]
+              - table [ref=e413]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e414]:
+                      - paragraph [ref=e415]: Job
+                - rowgroup [ref=e416]:
+                  - row "General Application (Israel) Israel - Tel Aviv" [ref=e417]:
+                    - cell "General Application (Israel) Israel - Tel Aviv" [ref=e418]:
+                      - link "General Application (Israel) Israel - Tel Aviv" [ref=e419] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/6349983002
+                        - paragraph [ref=e420]: General Application (Israel)
+                        - paragraph [ref=e421]: Israel - Tel Aviv
+                  - row "General Application (Singapore) Singapore - Singapore" [ref=e422]:
+                    - cell "General Application (Singapore) Singapore - Singapore" [ref=e423]:
+                      - link "General Application (Singapore) Singapore - Singapore" [ref=e424] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/6350021002
+                        - paragraph [ref=e425]: General Application (Singapore)
+                        - paragraph [ref=e426]: Singapore - Singapore
+                  - row "General Application (United Kingdom) United Kingdom - Remote" [ref=e427]:
+                    - cell "General Application (United Kingdom) United Kingdom - Remote" [ref=e428]:
+                      - link "General Application (United Kingdom) United Kingdom - Remote" [ref=e429] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/6349963002
+                        - paragraph [ref=e430]: General Application (United Kingdom)
+                        - paragraph [ref=e431]: United Kingdom - Remote
+                  - row "General Application (United States) United States - Remote" [ref=e432]:
+                    - cell "General Application (United States) United States - Remote" [ref=e433]:
+                      - link "General Application (United States) United States - Remote" [ref=e434] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/forter/jobs/6347082002
+                        - paragraph [ref=e435]: General Application (United States)
+                        - paragraph [ref=e436]: United States - Remote
+  - contentinfo [ref=e437]:
+    - generic [ref=e438]:
+      - paragraph [ref=e439]: Powered by
+      - link "Greenhouse logo" [ref=e440] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e441]

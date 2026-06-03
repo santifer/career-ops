@@ -1,0 +1,164 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - link "Tomorrow.io Logo" [ref=e5] [cursor=pointer]:
+        - /url: https://www.tomorrow.io/careers/
+        - img "Tomorrow.io Logo" [ref=e6]
+      - generic [ref=e7]:
+        - link "Back to jobs" [ref=e8] [cursor=pointer]:
+          - /url: https://www.tomorrow.io/careers
+          - img [ref=e9]
+          - text: Back to jobs
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - heading "AI First - Senior Product Manager" [level=1] [ref=e14]
+            - generic [ref=e15]:
+              - img [ref=e16]
+              - generic [ref=e18]: 21 Ha'Arba'a St., 20th floor, Tel Aviv
+          - button "Apply" [ref=e19] [cursor=pointer]: APPLY NOW!
+        - generic [ref=e21]:
+          - paragraph [ref=e22]: Products & Engineering at Tomorrow.io is focused on building software and products at scale—from infrastructure that handles massive amounts of data to outstanding, customer-centric experiences in B2B, B2C, and B2D products that change billions of lives worldwide.
+          - paragraph [ref=e23]:
+            - strong [ref=e24]: We are looking for an
+            - strong [ref=e25]: AI-First Senior Product Manager
+            - text: to help us redefine how users interact with weather intelligence. You’ll lead the development of AI-native capabilities that drive insight, action, and scale - across some of the most complex industries in the world.
+          - paragraph [ref=e26]:
+            - strong [ref=e27]: "As a Senior Product Manager at Tomorrow.io, you’ll:"
+          - list [ref=e28]:
+            - listitem [ref=e29]: Lead end-to-end strategy and execution for platform capabilities that embed AI deeply into product workflows, decision-making, and user value.
+            - listitem [ref=e30]: Collaborate closely with engineering to design modular, intelligent systems that scale across markets and use cases.
+            - listitem [ref=e31]: Create structure, focus, and momentum within fast-moving environments - driving impact while learning deeply.
+          - heading "What you bring:" [level=3] [ref=e32]:
+            - strong [ref=e33]: "What you bring:"
+          - list [ref=e34]:
+            - listitem [ref=e35]: Impeccable product sense – you turn ambiguity or strategic goals into focused, compelling product plans and deliverables.
+            - listitem [ref=e36]: Expert learning ability – you build subject matter expertise quickly and independently, asking sharp questions and digging deep.
+            - listitem [ref=e37]: Thrives in fast-paced environments – you handle context-switching with grace and help teams stay focused amid change.
+            - listitem [ref=e38]: Clear communicator & storyteller – you bring others along through clarity, structured thinking, and a strong sense of purpose.
+            - listitem [ref=e39]: High bar for quality and results – you drive accountability and push for excellence in yourself and others.
+            - listitem [ref=e40]: 5+ years of experience as a Product Manager building B2B software
+            - listitem [ref=e41]: Proven track record of building or scaling platform products
+            - listitem [ref=e42]: Familiarity with AI tools, workflows, and opportunities
+          - paragraph [ref=e43]:
+            - strong [ref=e44]: So if you're excited about using AI to change how great products are built—and want to work with a team that operates with urgency, curiosity, and craft—this is your opportunity to do the best work of your career.
+          - paragraph [ref=e45]:
+            - strong [ref=e46]: If your experience is close but doesn’t fulfill all requirements, please apply. Tomorrow.io is on a mission to build a special company. To achieve our goal, we are focused on hiring people with different backgrounds, perspectives, and experiences.
+          - paragraph [ref=e47]
+          - paragraph [ref=e48]: ___________________________________________________________________________________________
+          - paragraph [ref=e49]:
+            - strong [ref=e50]: "About Tomorrow.io:"
+          - paragraph [ref=e51]:
+            - text: Selected by
+            - emphasis [ref=e52]: TIME
+            - text: Magazine as one of the Top 100 Most Influential Companies in the World, Tomorrow.io is the world's leading Resilience Platform™. Combining next-generation space technology, advanced generative AI, and proprietary weather modeling, Tomorrow.io delivers unmatched forecasting and decision-making capabilities. Trusted by six of the top ten Fortune 500 companies, Tomorrow.io empowers organizations to proactively manage weather-related risks, opportunities, and enhance operational efficiency. From cutting-edge weather intelligence to real-time early warning systems, Tomorrow.io enables predictive, impact-based action for a safer, more resilient future. Learn more at Tomorrow.io.
+          - paragraph [ref=e53]:
+            - strong [ref=e54]: "Ethos:"
+            - text: Our ethos guides us in everything we do - The people of Tomorrow are here to make an impact, they show true grit, and always put people first.
+          - paragraph [ref=e55]:
+            - strong [ref=e56]: "How we roll:"
+            - text: We believe that magic happens when people work together. The People of Tomorrow take ownership with a bias for action. We believe in transparency and directness, putting work before ego, and empathy. The People of Tomorrow have a can-do attitude, are resilient, and curious. They are growth oriented, value people striving to be experts, and love to have fun. Here, your success is achieved by your impact and deliveries and not by the hours you put in. We have flexible hours and unlimited vacation days policy. The People of Tomorrow show empathy, mutual respect and work as one diverse team. We grow fast and move faster but we always see people first. Each person has their own career growth path for we believe that the only way for the company to grow is if you grow.
+        - generic [ref=e57]:
+          - img [ref=e58]
+          - generic [ref=e60]:
+            - paragraph [ref=e61]: Create a Job Alert
+            - paragraph [ref=e62]: Interested in building your career at Tomorrow.io? Get future opportunities sent straight to your email.
+            - button "Create alert" [ref=e63] [cursor=pointer]
+      - separator [ref=e64]
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - heading "Apply for this job" [level=2] [ref=e69]
+            - generic [ref=e70]:
+              - paragraph [ref=e72]: "*"
+              - paragraph [ref=e73]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e76] [cursor=pointer]
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - generic [ref=e81]:
+              - generic [ref=e82]: First Name*
+              - textbox "First Name" [ref=e83]
+            - generic [ref=e86]:
+              - generic [ref=e87]: Last Name*
+              - textbox "Last Name" [ref=e88]
+            - generic [ref=e91]:
+              - generic [ref=e92]: Preferred First Name
+              - textbox "Preferred First Name" [ref=e93]
+            - generic [ref=e96]:
+              - generic [ref=e97]: Email*
+              - textbox "Email" [ref=e98]
+            - group "Phone" [ref=e100]:
+              - generic [ref=e101]: Phone
+              - generic [ref=e104]:
+                - generic [ref=e105]: Country*
+                - generic [ref=e106]:
+                  - log [ref=e108]
+                  - generic [ref=e110]:
+                    - combobox "Country" [ref=e113]
+                    - button "Toggle flyout" [ref=e115] [cursor=pointer]:
+                      - img [ref=e116]
+                  - textbox
+              - generic [ref=e120]:
+                - generic [ref=e121]: Phone*
+                - textbox "Phone" [ref=e122]
+            - generic [ref=e123]:
+              - generic [ref=e125]:
+                - generic [ref=e126]: Location (City)*
+                - generic [ref=e127]:
+                  - log [ref=e129]
+                  - combobox "Location (City)" [ref=e134]
+                  - textbox
+              - button "Locate me" [ref=e135] [cursor=pointer]
+            - group "Resume/CV" [ref=e137]:
+              - generic [ref=e138]: Resume/CV
+              - generic [ref=e140]:
+                - generic [ref=e142]:
+                  - button "Attach" [ref=e143] [cursor=pointer]
+                  - generic [ref=e144]: Attach
+                  - button "Attach" [ref=e145]
+                - generic [ref=e147]:
+                  - button "Enter manually" [ref=e148] [cursor=pointer]
+                  - generic [ref=e149]: Enter manually
+                - paragraph [ref=e150]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e152]:
+              - generic [ref=e153]: Cover Letter
+              - generic [ref=e155]:
+                - generic [ref=e157]:
+                  - button "Attach" [ref=e158] [cursor=pointer]
+                  - generic [ref=e159]: Attach
+                  - button "Attach" [ref=e160]
+                - generic [ref=e162]:
+                  - button "Enter manually" [ref=e163] [cursor=pointer]
+                  - generic [ref=e164]: Enter manually
+                - paragraph [ref=e165]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e166]:
+            - separator [ref=e167]
+            - generic [ref=e170]:
+              - generic [ref=e171]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e172]
+            - generic [ref=e175]:
+              - generic [ref=e176]: Do you have 5+ years of experience managing complex B2B SaaS platforms or data-heavy products?*
+              - generic [ref=e177]:
+                - log [ref=e179]
+                - generic [ref=e181]:
+                  - generic [ref=e182]:
+                    - generic [ref=e183]: Select...
+                    - combobox "Do you have 5+ years of experience managing complex B2B SaaS platforms or data-heavy products?" [ref=e185]
+                  - button "Toggle flyout" [ref=e187] [cursor=pointer]:
+                    - img [ref=e188]
+                - textbox
+            - generic [ref=e192]:
+              - generic [ref=e193]: Have you led products where AI/ML was a core, foundational component of the system rather than just an add-on feature?*
+              - textbox "Have you led products where AI/ML was a core, foundational component of the system rather than just an add-on feature?" [ref=e194]
+            - generic [ref=e197]:
+              - generic [ref=e198]: Do you have a proven track record of using deep data analytics (e.g., SQL, BI tools) to drive strategic product decisions and KPIs?
+              - textbox "Do you have a proven track record of using deep data analytics (e.g., SQL, BI tools) to drive strategic product decisions and KPIs?" [ref=e199]
+            - generic [ref=e202]:
+              - generic [ref=e203]: Do you have experience thriving in high-growth, fast-paced environments that require rapid learning and frequent context-switching?
+              - textbox "Do you have experience thriving in high-growth, fast-paced environments that require rapid learning and frequent context-switching?" [ref=e204]
+          - button "Submit application" [ref=e206] [cursor=pointer]
+  - contentinfo [ref=e207]:
+    - generic [ref=e208]:
+      - paragraph [ref=e209]: Powered by
+      - link "Greenhouse logo" [ref=e210] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e211]

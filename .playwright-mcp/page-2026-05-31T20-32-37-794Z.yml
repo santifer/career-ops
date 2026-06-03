@@ -1,0 +1,69 @@
+- generic [active] [ref=e1]:
+  - img "Banner" [ref=e3]
+  - generic [ref=e6]:
+    - img [ref=e8]
+    - paragraph [ref=e10]: The job you are looking for is no longer open.
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - img "mavens Logo" [ref=e14]
+      - heading "Current openings at mavens" [level=1] [ref=e15]
+      - generic [ref=e19]:
+        - heading "Take your first step as a maven" [level=1] [ref=e20]:
+          - text: Take your first st
+          - generic [ref=e21]: e
+          - text: p as a maven
+        - paragraph [ref=e23]: At mavens we put in the extra effort for you to know who you are going to work with and make sure you are set for success with them from day one
+      - generic [ref=e24]:
+        - img [ref=e25]
+        - generic [ref=e27]:
+          - paragraph [ref=e28]: Create a Job Alert
+          - paragraph [ref=e29]: Level-up your career by having opportunities at mavens sent directly to your inbox.
+          - link "Create alert" [ref=e30] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=mavenscareers&source=job_alert_board
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e34]:
+            - generic [ref=e35]: Search
+            - textbox "Search" [ref=e36]
+          - generic [ref=e38]:
+            - generic [ref=e39]: Office
+            - generic [ref=e40]:
+              - log [ref=e42]
+              - generic [ref=e44]:
+                - generic [ref=e45]:
+                  - generic [ref=e46]: Select...
+                  - combobox "Office" [ref=e48]
+                - button "Toggle flyout" [ref=e50] [cursor=pointer]:
+                  - img [ref=e51]
+          - generic [ref=e54]:
+            - generic [ref=e55]: Disciplines
+            - generic [ref=e56]:
+              - log [ref=e58]
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - generic [ref=e62]: Select...
+                  - combobox "Disciplines" [ref=e64]
+                - button "Toggle flyout" [ref=e66] [cursor=pointer]:
+                  - img [ref=e67]
+        - generic [ref=e69]:
+          - heading "1 job" [level=2] [ref=e70]
+          - generic [ref=e72]:
+            - heading "Publishing Platform" [level=3] [ref=e73]
+            - table [ref=e75]:
+              - rowgroup:
+                - row "Job":
+                  - columnheader "Job" [ref=e76]:
+                    - paragraph [ref=e77]: Job
+              - rowgroup [ref=e78]:
+                - row "Data Science Manager Tel Aviv, Israel" [ref=e79]:
+                  - cell "Data Science Manager Tel Aviv, Israel" [ref=e80]:
+                    - link "Data Science Manager Tel Aviv, Israel" [ref=e81] [cursor=pointer]:
+                      - /url: https://job-boards.greenhouse.io/mavenscareers/jobs/5834178004
+                      - paragraph [ref=e82]: Data Science Manager
+                      - paragraph [ref=e83]: Tel Aviv, Israel
+  - contentinfo [ref=e84]:
+    - generic [ref=e85]:
+      - paragraph [ref=e86]: Powered by
+      - link "Greenhouse logo" [ref=e87] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e88]

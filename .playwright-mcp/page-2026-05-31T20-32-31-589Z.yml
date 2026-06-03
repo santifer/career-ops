@@ -1,0 +1,126 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - link "Back to jobs" [ref=e5] [cursor=pointer]:
+          - /url: https://job-boards.greenhouse.io/phasev
+          - img [ref=e6]
+          - text: Back to jobs
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - heading "Senior Product Manager" [level=1] [ref=e11]
+            - generic [ref=e12]:
+              - img [ref=e13]
+              - generic [ref=e15]: Dereck Ha'SHalom St 4
+          - button "Apply" [ref=e16] [cursor=pointer]
+        - generic [ref=e18]:
+          - heading "The Position" [level=2] [ref=e19]
+          - paragraph [ref=e20]:
+            - text: We're seeking a talented, experienced
+            - strong [ref=e21]: Product Manager
+            - text: to join our Tel Aviv team. In this role, you'll tackle the thrilling challenge of building an intuitive, efficient platform that redefines how clinical trials are designed and conducted, leveraging AI and innovation to transform drug development. You'll collaborate closely with our engineering, data science, algorithm research, and clinical teams to create and refine a state‑of‑the‑art trials platform. This is a rare opportunity to make a tangible impact on how new therapies reach patients and to revolutionize healthcare delivery.
+          - heading "Key Responsibilities" [level=2] [ref=e22]
+          - list [ref=e23]:
+            - listitem [ref=e24]: Bridge end‑user needs and AI‑powered capabilities to design and deliver transformative products
+            - listitem [ref=e25]: Play a critical role in defining the product vision and roadmap
+            - listitem [ref=e26]: Work closely with engineering and algorithm developers to fulfill product goals
+            - listitem [ref=e27]: Turn strategic goals into focused, compelling product plans
+            - listitem [ref=e28]: Create structure, focus, and momentum within fast-moving environments
+            - listitem [ref=e29]: Actively engage with customers and internal stakeholders throughout the product development lifecycle
+          - heading "Required Qualifications" [level=2] [ref=e30]
+          - list [ref=e31]:
+            - listitem [ref=e32]: 4+ years of product management experience (Preferably on a B2B product)
+            - listitem [ref=e33]: Proactive learner who rapidly builds deep domain expertise
+            - listitem [ref=e34]: Thrive in fast‑paced settings, seamlessly switching contexts across multiple initiatives
+            - listitem [ref=e35]: Ownership mindset that drives accountability and empowers cross‑functional teams
+            - listitem [ref=e36]: Hands-on experience collaborating with engineering and data-science teams on product development
+            - listitem [ref=e37]: Familiarity with AI tools, workflows, and opportunities
+            - listitem [ref=e38]: Comfortable with statistics, able to engage meaningfully with data‑science counterparts (advantage)
+          - heading "About Us" [level=2] [ref=e39]
+          - paragraph [ref=e40]: PhaseV (HQ in Boston, R&D in Tel Aviv) is a fast-moving startup redefining clinical trial design with a cloud-native, AI-first platform. Founded in 2023, we combine causal machine learning, adaptive trial design, and real-world data to deliver smarter, faster, and more efficient drug development.
+          - paragraph [ref=e41]: Backed by a $50 million Series A, we’re enabling sponsors, biotechs, and CROs to uncover hidden insights, optimize trial scenarios in real time, and accelerate the path from molecule to medicine.
+          - paragraph [ref=e42]: "At PhaseV, every innovation has one destination: speeding critical treatments from lab to patient."
+        - generic [ref=e43]:
+          - img [ref=e44]
+          - generic [ref=e46]:
+            - paragraph [ref=e47]: Create a Job Alert
+            - paragraph [ref=e48]: Interested in building your career at PhaseV? Get future opportunities sent straight to your email.
+            - button "Create alert" [ref=e49] [cursor=pointer]
+      - separator [ref=e50]
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - heading "Apply for this job" [level=2] [ref=e55]
+            - generic [ref=e56]:
+              - paragraph [ref=e58]: "*"
+              - paragraph [ref=e59]: indicates a required field
+          - button "Quick Apply with MyGreenhouse" [ref=e62] [cursor=pointer]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e67]:
+              - generic [ref=e68]: First Name*
+              - textbox "First Name" [ref=e69]
+            - generic [ref=e72]:
+              - generic [ref=e73]: Last Name*
+              - textbox "Last Name" [ref=e74]
+            - generic [ref=e77]:
+              - generic [ref=e78]: Preferred First Name
+              - textbox "Preferred First Name" [ref=e79]
+            - generic [ref=e82]:
+              - generic [ref=e83]: Email*
+              - textbox "Email" [ref=e84]
+            - group "Phone" [ref=e86]:
+              - generic [ref=e87]: Phone
+              - generic [ref=e90]:
+                - generic [ref=e91]: Country*
+                - generic [ref=e92]:
+                  - log [ref=e94]
+                  - generic [ref=e96]:
+                    - combobox "Country" [ref=e99]
+                    - button "Toggle flyout" [ref=e101] [cursor=pointer]:
+                      - img [ref=e102]
+                  - textbox
+              - generic [ref=e106]:
+                - generic [ref=e107]: Phone*
+                - textbox "Phone" [ref=e108]
+            - group "Resume/CV*" [ref=e110]:
+              - generic [ref=e111]: Resume/CV*
+              - generic [ref=e113]:
+                - generic [ref=e115]:
+                  - button "Attach" [ref=e116] [cursor=pointer]
+                  - generic [ref=e117]: Attach
+                  - button "Attach" [ref=e118]
+                - button "Dropbox" [ref=e120] [cursor=pointer]
+                - button "Google Drive" [ref=e122] [cursor=pointer]
+                - generic [ref=e124]:
+                  - button "Enter manually" [ref=e125] [cursor=pointer]
+                  - generic [ref=e126]: Enter manually
+                - paragraph [ref=e127]: "Accepted file types: pdf, doc, docx, txt, rtf"
+            - group "Cover Letter" [ref=e129]:
+              - generic [ref=e130]: Cover Letter
+              - generic [ref=e132]:
+                - generic [ref=e134]:
+                  - button "Attach" [ref=e135] [cursor=pointer]
+                  - generic [ref=e136]: Attach
+                  - button "Attach" [ref=e137]
+                - button "Dropbox" [ref=e139] [cursor=pointer]
+                - button "Google Drive" [ref=e141] [cursor=pointer]
+                - generic [ref=e143]:
+                  - button "Enter manually" [ref=e144] [cursor=pointer]
+                  - generic [ref=e145]: Enter manually
+                - paragraph [ref=e146]: "Accepted file types: pdf, doc, docx, txt, rtf"
+          - generic [ref=e147]:
+            - separator [ref=e148]
+            - generic [ref=e151]:
+              - generic [ref=e152]: LinkedIn Profile
+              - textbox "LinkedIn Profile" [ref=e153]
+            - generic [ref=e156]:
+              - generic [ref=e157]: Website
+              - textbox "Website" [ref=e158]
+          - button "Submit application" [ref=e160] [cursor=pointer]
+  - contentinfo [ref=e161]:
+    - generic [ref=e162]:
+      - paragraph [ref=e163]: Powered by
+      - link "Greenhouse logo" [ref=e164] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e165]

@@ -1,0 +1,445 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - img [ref=e6]
+    - paragraph [ref=e8]: The job you are looking for is no longer open.
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - link "Remote Logo" [ref=e12] [cursor=pointer]:
+        - /url: https://www.remote.com
+        - img "Remote Logo" [ref=e13]
+      - heading "Current openings at Remote" [level=1] [ref=e14]
+      - generic [ref=e18]:
+        - paragraph [ref=e19]: Remote is a true global company. We do not have an office anywhere in the world. What we offer is the flexibility to work when and where you want, which means you can plan your schedule around your life (and not around meetings).
+        - paragraph [ref=e20]: Most of our jobs are globally remote! Job boards often require us to select a location though, so the location you see under the job titles are for advertising purposes only. To check if a role has location or timezone restrictions, please check the Practicals section at the bottom of each advert.
+      - generic [ref=e21]:
+        - img [ref=e22]
+        - generic [ref=e24]:
+          - paragraph [ref=e25]: Create a Job Alert
+          - paragraph [ref=e26]: Level-up your career by having opportunities at Remote sent directly to your inbox.
+          - link "Create alert" [ref=e27] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=remotecom&source=job_alert_board
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e31]:
+            - generic [ref=e32]: Search
+            - textbox "Search" [ref=e33]
+          - generic [ref=e35]:
+            - generic [ref=e36]: Department
+            - generic [ref=e37]:
+              - log [ref=e39]
+              - generic [ref=e41]:
+                - generic [ref=e42]:
+                  - generic [ref=e43]: Select...
+                  - combobox "Department" [ref=e45]
+                - button "Toggle flyout" [ref=e47] [cursor=pointer]:
+                  - img [ref=e48]
+        - generic [ref=e50]:
+          - heading "266 jobs" [level=2] [ref=e51]
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - heading "Customer Experience" [level=3] [ref=e54]
+              - table [ref=e56]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e57]:
+                      - paragraph [ref=e58]: Job
+                - rowgroup [ref=e59]:
+                  - row "CX AI & Automation Lead New Remote-UK&I" [ref=e60]:
+                    - cell "CX AI & Automation Lead New Remote-UK&I" [ref=e61]:
+                      - link "CX AI & Automation Lead New Remote-UK&I" [ref=e62] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7747671003
+                        - paragraph [ref=e63]:
+                          - text: CX AI & Automation Lead
+                          - generic [ref=e65]: New
+                        - paragraph [ref=e66]: Remote-UK&I
+            - generic [ref=e67]:
+              - paragraph [ref=e69]: Customer Experience
+              - heading "Customer Care" [level=3] [ref=e70]
+              - table [ref=e72]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e73]:
+                      - paragraph [ref=e74]: Job
+                - rowgroup [ref=e75]:
+                  - row "Customer Care Associate New Remote-Northern & Southern Europe" [ref=e76]:
+                    - cell "Customer Care Associate New Remote-Northern & Southern Europe" [ref=e77]:
+                      - link "Customer Care Associate New Remote-Northern & Southern Europe" [ref=e78] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7748172003
+                        - paragraph [ref=e79]:
+                          - text: Customer Care Associate
+                          - generic [ref=e81]: New
+                        - paragraph [ref=e82]: Remote-Northern & Southern Europe
+            - generic [ref=e83]:
+              - paragraph [ref=e85]: Customer Experience / Customer Success Management
+              - heading "Pay & HCM Customer Success" [level=3] [ref=e86]
+              - table [ref=e88]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e89]:
+                      - paragraph [ref=e90]: Job
+                - rowgroup [ref=e91]:
+                  - row "Pay Customer Success Manager, MM/Ent New Remote-Southern Europe" [ref=e92]:
+                    - cell "Pay Customer Success Manager, MM/Ent New Remote-Southern Europe" [ref=e93]:
+                      - link "Pay Customer Success Manager, MM/Ent New Remote-Southern Europe" [ref=e94] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7753146003
+                        - paragraph [ref=e95]:
+                          - text: Pay Customer Success Manager, MM/Ent
+                          - generic [ref=e97]: New
+                        - paragraph [ref=e98]: Remote-Southern Europe
+            - generic [ref=e99]:
+              - paragraph [ref=e101]: Customer Experience
+              - heading "Payroll Client Services" [level=3] [ref=e102]
+              - table [ref=e104]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e105]:
+                      - paragraph [ref=e106]: Job
+                - rowgroup [ref=e107]:
+                  - row "Payroll Client Services Specialist Lead (DACH Region) Remote-DACH" [ref=e108]:
+                    - cell "Payroll Client Services Specialist Lead (DACH Region) Remote-DACH" [ref=e109]:
+                      - link "Payroll Client Services Specialist Lead (DACH Region) Remote-DACH" [ref=e110] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7586693003
+                        - paragraph [ref=e111]: Payroll Client Services Specialist Lead (DACH Region)
+                        - paragraph [ref=e112]: Remote-DACH
+            - generic [ref=e113]:
+              - heading "Design" [level=3] [ref=e114]
+              - table [ref=e116]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e117]:
+                      - paragraph [ref=e118]: Job
+                - rowgroup [ref=e119]:
+                  - row "Senior Staff Product Designer Remote-AMER" [ref=e120]:
+                    - cell "Senior Staff Product Designer Remote-AMER" [ref=e121]:
+                      - link "Senior Staff Product Designer Remote-AMER" [ref=e122] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7660139003
+                        - paragraph [ref=e123]: Senior Staff Product Designer
+                        - paragraph [ref=e124]: Remote-AMER
+            - generic [ref=e125]:
+              - paragraph [ref=e127]: Design
+              - heading "Brand Design" [level=3] [ref=e128]
+              - table [ref=e130]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e131]:
+                      - paragraph [ref=e132]: Job
+                - rowgroup [ref=e133]:
+                  - row "Senior Brand Designer EMEA" [ref=e134]:
+                    - cell "Senior Brand Designer EMEA" [ref=e135]:
+                      - link "Senior Brand Designer EMEA" [ref=e136] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7729943003
+                        - paragraph [ref=e137]: Senior Brand Designer
+                        - paragraph [ref=e138]: EMEA
+                  - row "Staff Performance Video Content Producer Worldwide" [ref=e139]:
+                    - cell "Staff Performance Video Content Producer Worldwide" [ref=e140]:
+                      - link "Staff Performance Video Content Producer Worldwide" [ref=e141] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7734361003
+                        - paragraph [ref=e142]: Staff Performance Video Content Producer
+                        - paragraph [ref=e143]: Worldwide
+            - generic [ref=e144]:
+              - paragraph [ref=e146]: Design
+              - heading "Product Design" [level=3] [ref=e147]
+              - table [ref=e149]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e150]:
+                      - paragraph [ref=e151]: Job
+                - rowgroup [ref=e152]:
+                  - row "Staff Product Designer, Pay Ecosystem Remote-EMEA" [ref=e153]:
+                    - cell "Staff Product Designer, Pay Ecosystem Remote-EMEA" [ref=e154]:
+                      - link "Staff Product Designer, Pay Ecosystem Remote-EMEA" [ref=e155] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7500346003
+                        - paragraph [ref=e156]: Staff Product Designer, Pay Ecosystem
+                        - paragraph [ref=e157]: Remote-EMEA
+                  - row "Staff Product Designer, Pay Ecosystem Remote-UK&I" [ref=e158]:
+                    - cell "Staff Product Designer, Pay Ecosystem Remote-UK&I" [ref=e159]:
+                      - link "Staff Product Designer, Pay Ecosystem Remote-UK&I" [ref=e160] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7564657003
+                        - paragraph [ref=e161]: Staff Product Designer, Pay Ecosystem
+                        - paragraph [ref=e162]: Remote-UK&I
+                  - row "Staff Product Designer, Pay Ecosystem Remote-Nordics" [ref=e163]:
+                    - cell "Staff Product Designer, Pay Ecosystem Remote-Nordics" [ref=e164]:
+                      - link "Staff Product Designer, Pay Ecosystem Remote-Nordics" [ref=e165] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7564665003
+                        - paragraph [ref=e166]: Staff Product Designer, Pay Ecosystem
+                        - paragraph [ref=e167]: Remote-Nordics
+            - generic [ref=e168]:
+              - heading "Engineering" [level=3] [ref=e169]
+              - table [ref=e171]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e172]:
+                      - paragraph [ref=e173]: Job
+                - rowgroup [ref=e174]:
+                  - row "Staff Site Reliability Engineer I EMEA" [ref=e175]:
+                    - cell "Staff Site Reliability Engineer I EMEA" [ref=e176]:
+                      - link "Staff Site Reliability Engineer I EMEA" [ref=e177] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7724699003
+                        - paragraph [ref=e178]: Staff Site Reliability Engineer I
+                        - paragraph [ref=e179]: EMEA
+            - generic [ref=e180]:
+              - paragraph [ref=e182]: Engineering / Product Engineering
+              - heading "Product Engineering Backend" [level=3] [ref=e183]
+              - table [ref=e185]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e186]:
+                      - paragraph [ref=e187]: Job
+                - rowgroup [ref=e188]:
+                  - row "Engineering Team Leader Remote-Nordics" [ref=e189]:
+                    - cell "Engineering Team Leader Remote-Nordics" [ref=e190]:
+                      - link "Engineering Team Leader Remote-Nordics" [ref=e191] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7703245003
+                        - paragraph [ref=e192]: Engineering Team Leader
+                        - paragraph [ref=e193]: Remote-Nordics
+                  - row "Engineering Team Leader Remote-EMEA" [ref=e194]:
+                    - cell "Engineering Team Leader Remote-EMEA" [ref=e195]:
+                      - link "Engineering Team Leader Remote-EMEA" [ref=e196] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741371003
+                        - paragraph [ref=e197]: Engineering Team Leader
+                        - paragraph [ref=e198]: Remote-EMEA
+                  - row "Engineering Team Leader Remote-APAC" [ref=e199]:
+                    - cell "Engineering Team Leader Remote-APAC" [ref=e200]:
+                      - link "Engineering Team Leader Remote-APAC" [ref=e201] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741373003
+                        - paragraph [ref=e202]: Engineering Team Leader
+                        - paragraph [ref=e203]: Remote-APAC
+                  - row "Engineering Team Leader Remote-LATAM" [ref=e204]:
+                    - cell "Engineering Team Leader Remote-LATAM" [ref=e205]:
+                      - link "Engineering Team Leader Remote-LATAM" [ref=e206] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741374003
+                        - paragraph [ref=e207]: Engineering Team Leader
+                        - paragraph [ref=e208]: Remote-LATAM
+                  - row "Engineering Team Leader Remote-Northern Europe" [ref=e209]:
+                    - cell "Engineering Team Leader Remote-Northern Europe" [ref=e210]:
+                      - link "Engineering Team Leader Remote-Northern Europe" [ref=e211] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741375003
+                        - paragraph [ref=e212]: Engineering Team Leader
+                        - paragraph [ref=e213]: Remote-Northern Europe
+                  - row "Engineering Team Leader Remote-Australia" [ref=e214]:
+                    - cell "Engineering Team Leader Remote-Australia" [ref=e215]:
+                      - link "Engineering Team Leader Remote-Australia" [ref=e216] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741376003
+                        - paragraph [ref=e217]: Engineering Team Leader
+                        - paragraph [ref=e218]: Remote-Australia
+                  - row "Engineering Team Leader Remote-UK&I" [ref=e219]:
+                    - cell "Engineering Team Leader Remote-UK&I" [ref=e220]:
+                      - link "Engineering Team Leader Remote-UK&I" [ref=e221] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741377003
+                        - paragraph [ref=e222]: Engineering Team Leader
+                        - paragraph [ref=e223]: Remote-UK&I
+                  - row "Engineering Team Leader Remote-Iberia" [ref=e224]:
+                    - cell "Engineering Team Leader Remote-Iberia" [ref=e225]:
+                      - link "Engineering Team Leader Remote-Iberia" [ref=e226] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741378003
+                        - paragraph [ref=e227]: Engineering Team Leader
+                        - paragraph [ref=e228]: Remote-Iberia
+                  - row "Engineering Team Leader Remote-Western Europe" [ref=e229]:
+                    - cell "Engineering Team Leader Remote-Western Europe" [ref=e230]:
+                      - link "Engineering Team Leader Remote-Western Europe" [ref=e231] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741379003
+                        - paragraph [ref=e232]: Engineering Team Leader
+                        - paragraph [ref=e233]: Remote-Western Europe
+                  - row "Engineering Team Leader Remote-Brazil" [ref=e234]:
+                    - cell "Engineering Team Leader Remote-Brazil" [ref=e235]:
+                      - link "Engineering Team Leader Remote-Brazil" [ref=e236] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741381003
+                        - paragraph [ref=e237]: Engineering Team Leader
+                        - paragraph [ref=e238]: Remote-Brazil
+                  - row "Engineering Team Leader Remote-Canada" [ref=e239]:
+                    - cell "Engineering Team Leader Remote-Canada" [ref=e240]:
+                      - link "Engineering Team Leader Remote-Canada" [ref=e241] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741382003
+                        - paragraph [ref=e242]: Engineering Team Leader
+                        - paragraph [ref=e243]: Remote-Canada
+                  - row "Engineering Team Leader Remote-Austria" [ref=e244]:
+                    - cell "Engineering Team Leader Remote-Austria" [ref=e245]:
+                      - link "Engineering Team Leader Remote-Austria" [ref=e246] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741385003
+                        - paragraph [ref=e247]: Engineering Team Leader
+                        - paragraph [ref=e248]: Remote-Austria
+                  - row "Engineering Team Leader Remote-Germany" [ref=e249]:
+                    - cell "Engineering Team Leader Remote-Germany" [ref=e250]:
+                      - link "Engineering Team Leader Remote-Germany" [ref=e251] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741383003
+                        - paragraph [ref=e252]: Engineering Team Leader
+                        - paragraph [ref=e253]: Remote-Germany
+                  - row "Engineering Team Leader Remote-Eastern Europe" [ref=e254]:
+                    - cell "Engineering Team Leader Remote-Eastern Europe" [ref=e255]:
+                      - link "Engineering Team Leader Remote-Eastern Europe" [ref=e256] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741386003
+                        - paragraph [ref=e257]: Engineering Team Leader
+                        - paragraph [ref=e258]: Remote-Eastern Europe
+                  - row "Engineering Team Leader Remote-Southern Europe" [ref=e259]:
+                    - cell "Engineering Team Leader Remote-Southern Europe" [ref=e260]:
+                      - link "Engineering Team Leader Remote-Southern Europe" [ref=e261] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741387003
+                        - paragraph [ref=e262]: Engineering Team Leader
+                        - paragraph [ref=e263]: Remote-Southern Europe
+                  - row "Engineering Team Leader Remote-Northeast Asia" [ref=e264]:
+                    - cell "Engineering Team Leader Remote-Northeast Asia" [ref=e265]:
+                      - link "Engineering Team Leader Remote-Northeast Asia" [ref=e266] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741389003
+                        - paragraph [ref=e267]: Engineering Team Leader
+                        - paragraph [ref=e268]: Remote-Northeast Asia
+                  - row "Engineering Team Leader Remote-Southeast Asia" [ref=e269]:
+                    - cell "Engineering Team Leader Remote-Southeast Asia" [ref=e270]:
+                      - link "Engineering Team Leader Remote-Southeast Asia" [ref=e271] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741391003
+                        - paragraph [ref=e272]: Engineering Team Leader
+                        - paragraph [ref=e273]: Remote-Southeast Asia
+                  - row "Engineering Team Leader Remote-Africa" [ref=e274]:
+                    - cell "Engineering Team Leader Remote-Africa" [ref=e275]:
+                      - link "Engineering Team Leader Remote-Africa" [ref=e276] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741392003
+                        - paragraph [ref=e277]: Engineering Team Leader
+                        - paragraph [ref=e278]: Remote-Africa
+                  - row "Senior Backend Engineer Global" [ref=e279]:
+                    - cell "Senior Backend Engineer Global" [ref=e280]:
+                      - link "Senior Backend Engineer Global" [ref=e281] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7713216003
+                        - paragraph [ref=e282]: Senior Backend Engineer
+                        - paragraph [ref=e283]: Global
+                  - row "Senior Backend Engineer Remote-LATAM" [ref=e284]:
+                    - cell "Senior Backend Engineer Remote-LATAM" [ref=e285]:
+                      - link "Senior Backend Engineer Remote-LATAM" [ref=e286] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720620003
+                        - paragraph [ref=e287]: Senior Backend Engineer
+                        - paragraph [ref=e288]: Remote-LATAM
+                  - row "Senior Backend Engineer Remote-Iberia" [ref=e289]:
+                    - cell "Senior Backend Engineer Remote-Iberia" [ref=e290]:
+                      - link "Senior Backend Engineer Remote-Iberia" [ref=e291] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720622003
+                        - paragraph [ref=e292]: Senior Backend Engineer
+                        - paragraph [ref=e293]: Remote-Iberia
+                  - row "Senior Backend Engineer Remote-EMEA" [ref=e294]:
+                    - cell "Senior Backend Engineer Remote-EMEA" [ref=e295]:
+                      - link "Senior Backend Engineer Remote-EMEA" [ref=e296] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720624003
+                        - paragraph [ref=e297]: Senior Backend Engineer
+                        - paragraph [ref=e298]: Remote-EMEA
+                  - row "Senior Backend Engineer Remote-Canada" [ref=e299]:
+                    - cell "Senior Backend Engineer Remote-Canada" [ref=e300]:
+                      - link "Senior Backend Engineer Remote-Canada" [ref=e301] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720623003
+                        - paragraph [ref=e302]: Senior Backend Engineer
+                        - paragraph [ref=e303]: Remote-Canada
+                  - row "Senior Backend Engineer Remote-Eastern Europe" [ref=e304]:
+                    - cell "Senior Backend Engineer Remote-Eastern Europe" [ref=e305]:
+                      - link "Senior Backend Engineer Remote-Eastern Europe" [ref=e306] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720625003
+                        - paragraph [ref=e307]: Senior Backend Engineer
+                        - paragraph [ref=e308]: Remote-Eastern Europe
+                  - row "Senior Backend Engineer Remote-Northern Europe" [ref=e309]:
+                    - cell "Senior Backend Engineer Remote-Northern Europe" [ref=e310]:
+                      - link "Senior Backend Engineer Remote-Northern Europe" [ref=e311] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720626003
+                        - paragraph [ref=e312]: Senior Backend Engineer
+                        - paragraph [ref=e313]: Remote-Northern Europe
+                  - row "Senior Backend Engineer Remote-Western Europe" [ref=e314]:
+                    - cell "Senior Backend Engineer Remote-Western Europe" [ref=e315]:
+                      - link "Senior Backend Engineer Remote-Western Europe" [ref=e316] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720627003
+                        - paragraph [ref=e317]: Senior Backend Engineer
+                        - paragraph [ref=e318]: Remote-Western Europe
+                  - row "Senior Backend Engineer Remote-APAC" [ref=e319]:
+                    - cell "Senior Backend Engineer Remote-APAC" [ref=e320]:
+                      - link "Senior Backend Engineer Remote-APAC" [ref=e321] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720629003
+                        - paragraph [ref=e322]: Senior Backend Engineer
+                        - paragraph [ref=e323]: Remote-APAC
+                  - row "Senior Backend Engineer Remote-Southern Europe" [ref=e324]:
+                    - cell "Senior Backend Engineer Remote-Southern Europe" [ref=e325]:
+                      - link "Senior Backend Engineer Remote-Southern Europe" [ref=e326] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720628003
+                        - paragraph [ref=e327]: Senior Backend Engineer
+                        - paragraph [ref=e328]: Remote-Southern Europe
+                  - row "Senior Backend Engineer Remote-Southeast Asia" [ref=e329]:
+                    - cell "Senior Backend Engineer Remote-Southeast Asia" [ref=e330]:
+                      - link "Senior Backend Engineer Remote-Southeast Asia" [ref=e331] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720632003
+                        - paragraph [ref=e332]: Senior Backend Engineer
+                        - paragraph [ref=e333]: Remote-Southeast Asia
+                  - row "Senior Backend Engineer Remote-Northeast Asia" [ref=e334]:
+                    - cell "Senior Backend Engineer Remote-Northeast Asia" [ref=e335]:
+                      - link "Senior Backend Engineer Remote-Northeast Asia" [ref=e336] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720630003
+                        - paragraph [ref=e337]: Senior Backend Engineer
+                        - paragraph [ref=e338]: Remote-Northeast Asia
+                  - row "Senior Backend Engineer Remote-UK&I" [ref=e339]:
+                    - cell "Senior Backend Engineer Remote-UK&I" [ref=e340]:
+                      - link "Senior Backend Engineer Remote-UK&I" [ref=e341] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7720636003
+                        - paragraph [ref=e342]: Senior Backend Engineer
+                        - paragraph [ref=e343]: Remote-UK&I
+                  - row "Senior Backend Engineer (Elixir) Remote" [ref=e344]:
+                    - cell "Senior Backend Engineer (Elixir) Remote" [ref=e345]:
+                      - link "Senior Backend Engineer (Elixir) Remote" [ref=e346] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7711033003
+                        - paragraph [ref=e347]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e348]: Remote
+                  - row "Senior Backend Engineer (Elixir) Remote-Southeast Asia" [ref=e349]:
+                    - cell "Senior Backend Engineer (Elixir) Remote-Southeast Asia" [ref=e350]:
+                      - link "Senior Backend Engineer (Elixir) Remote-Southeast Asia" [ref=e351] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741429003
+                        - paragraph [ref=e352]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e353]: Remote-Southeast Asia
+                  - row "Senior Backend Engineer (Elixir) Remote-Northeast Asia" [ref=e354]:
+                    - cell "Senior Backend Engineer (Elixir) Remote-Northeast Asia" [ref=e355]:
+                      - link "Senior Backend Engineer (Elixir) Remote-Northeast Asia" [ref=e356] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741437003
+                        - paragraph [ref=e357]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e358]: Remote-Northeast Asia
+                  - row "Senior Backend Engineer (Elixir) Remote-EMEA" [ref=e359]:
+                    - cell "Senior Backend Engineer (Elixir) Remote-EMEA" [ref=e360]:
+                      - link "Senior Backend Engineer (Elixir) Remote-EMEA" [ref=e361] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741439003
+                        - paragraph [ref=e362]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e363]: Remote-EMEA
+                  - row "Senior Backend Engineer (Elixir) Remote-Southern Europe" [ref=e364]:
+                    - cell "Senior Backend Engineer (Elixir) Remote-Southern Europe" [ref=e365]:
+                      - link "Senior Backend Engineer (Elixir) Remote-Southern Europe" [ref=e366] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741440003
+                        - paragraph [ref=e367]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e368]: Remote-Southern Europe
+                  - row "Senior Backend Engineer (Elixir) Remote-Northern Europe" [ref=e369]:
+                    - cell "Senior Backend Engineer (Elixir) Remote-Northern Europe" [ref=e370]:
+                      - link "Senior Backend Engineer (Elixir) Remote-Northern Europe" [ref=e371] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741443003
+                        - paragraph [ref=e372]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e373]: Remote-Northern Europe
+                  - row "Senior Backend Engineer (Elixir) Remote-Nordics" [ref=e374]:
+                    - cell "Senior Backend Engineer (Elixir) Remote-Nordics" [ref=e375]:
+                      - link "Senior Backend Engineer (Elixir) Remote-Nordics" [ref=e376] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741444003
+                        - paragraph [ref=e377]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e378]: Remote-Nordics
+                  - row "Senior Backend Engineer (Elixir) Remote-France" [ref=e379]:
+                    - cell "Senior Backend Engineer (Elixir) Remote-France" [ref=e380]:
+                      - link "Senior Backend Engineer (Elixir) Remote-France" [ref=e381] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/remotecom/jobs/7741447003
+                        - paragraph [ref=e382]: Senior Backend Engineer (Elixir)
+                        - paragraph [ref=e383]: Remote-France
+          - navigation "Pagination" [ref=e385]:
+            - button "Previous page" [disabled] [ref=e386]:
+              - img [ref=e387]
+            - list [ref=e389]:
+              - listitem [ref=e390]:
+                - button "Go to page 1": "1"
+              - listitem [ref=e391]:
+                - button "Go to page 2" [ref=e392] [cursor=pointer]: "2"
+              - listitem [ref=e393]:
+                - button "Go to page 3" [ref=e394] [cursor=pointer]: "3"
+              - listitem [ref=e395]:
+                - button "Go to page 4" [ref=e396] [cursor=pointer]: "4"
+              - listitem [ref=e397]: ...
+              - listitem [ref=e398]:
+                - button "Go to page 6" [ref=e399] [cursor=pointer]: "6"
+            - button "Next page" [ref=e400] [cursor=pointer]:
+              - img [ref=e401]
+  - contentinfo [ref=e403]:
+    - generic [ref=e404]:
+      - paragraph [ref=e405]: Powered by
+      - link "Greenhouse logo" [ref=e406] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e407]

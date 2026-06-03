@@ -1,0 +1,18 @@
+- generic [ref=e2]:
+  - heading "GitHub & BitBucket HTML Preview" [level=1] [ref=e3]
+  - paragraph [ref=e4]:
+    - text: "Enter URL of the HTML file to preview:"
+    - textbox "e.g. https://github.com/user/repo/blob/master/index.html" [ref=e5]
+    - button "Preview" [ref=e6]
+  - paragraph [ref=e7]:
+    - text: "or prepend to the URL:"
+    - code [ref=e8]:
+      - strong [ref=e9]: http://htmlpreview.github.io/?
+      - text: https://github.com/twbs/bootstrap/blob/gh-pages/2.3.2/index.html
+  - paragraph [ref=e10]:
+    - text: Developed by
+    - link "niu tech" [ref=e11] [cursor=pointer]:
+      - /url: https://github.com/niutech
+    - text: "| Contribute on"
+    - link "GitHub" [ref=e12] [cursor=pointer]:
+      - /url: https://github.com/htmlpreview/htmlpreview.github.com

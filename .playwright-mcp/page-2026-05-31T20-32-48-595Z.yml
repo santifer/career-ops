@@ -1,0 +1,142 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - img [ref=e6]
+    - paragraph [ref=e8]: The job you are looking for is no longer open.
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - img "Perion Network Ltd Logo" [ref=e12]
+      - heading "Current openings at Perion Network Ltd" [level=1] [ref=e13]
+      - generic [ref=e15]:
+        - img [ref=e16]
+        - generic [ref=e18]:
+          - paragraph [ref=e19]: Create a Job Alert
+          - paragraph [ref=e20]: Level-up your career by having opportunities at Perion Network Ltd sent directly to your inbox.
+          - link "Create alert" [ref=e21] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=perionnetworkltd&source=job_alert_board
+      - generic [ref=e22]:
+        - generic [ref=e25]:
+          - generic [ref=e26]: Search
+          - textbox "Search" [ref=e27]
+        - generic [ref=e28]:
+          - heading "11 jobs" [level=2] [ref=e29]
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - heading "HR" [level=3] [ref=e32]
+              - table [ref=e34]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e35]:
+                      - paragraph [ref=e36]: Job
+                - rowgroup [ref=e37]:
+                  - row "Compensation & Benefits and People Analytics Specialist Tel Aviv, Israel" [ref=e38]:
+                    - cell "Compensation & Benefits and People Analytics Specialist Tel Aviv, Israel" [ref=e39]:
+                      - link "Compensation & Benefits and People Analytics Specialist Tel Aviv, Israel" [ref=e40] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4648988006
+                        - paragraph [ref=e41]: Compensation & Benefits and People Analytics Specialist
+                        - paragraph [ref=e42]: Tel Aviv, Israel
+                  - row "HR Generalist & Office Administrator- French Speaking London, England, United Kingdom" [ref=e43]:
+                    - cell "HR Generalist & Office Administrator- French Speaking London, England, United Kingdom" [ref=e44]:
+                      - link "HR Generalist & Office Administrator- French Speaking London, England, United Kingdom" [ref=e45] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4652903006
+                        - paragraph [ref=e46]: HR Generalist & Office Administrator- French Speaking
+                        - paragraph [ref=e47]: London, England, United Kingdom
+            - generic [ref=e48]:
+              - heading "Marketing" [level=3] [ref=e49]
+              - table [ref=e51]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e52]:
+                      - paragraph [ref=e53]: Job
+                - rowgroup [ref=e54]:
+                  - row "Sr. Director, Growth Marketing & Experiential (NYC or Chicago) New Chicago, Illinois, United States; New York, New York, United States" [ref=e55]:
+                    - cell "Sr. Director, Growth Marketing & Experiential (NYC or Chicago) New Chicago, Illinois, United States; New York, New York, United States" [ref=e56]:
+                      - link "Sr. Director, Growth Marketing & Experiential (NYC or Chicago) New Chicago, Illinois, United States; New York, New York, United States" [ref=e57] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4684508006
+                        - paragraph [ref=e58]:
+                          - text: Sr. Director, Growth Marketing & Experiential (NYC or Chicago)
+                          - generic [ref=e60]: New
+                        - paragraph [ref=e61]: Chicago, Illinois, United States; New York, New York, United States
+            - generic [ref=e62]:
+              - heading "Operations" [level=3] [ref=e63]
+              - table [ref=e65]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e66]:
+                      - paragraph [ref=e67]: Job
+                - rowgroup [ref=e68]:
+                  - row "Information Systems Project Manager New Tel Aviv, Israel" [ref=e69]:
+                    - cell "Information Systems Project Manager New Tel Aviv, Israel" [ref=e70]:
+                      - link "Information Systems Project Manager New Tel Aviv, Israel" [ref=e71] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4684625006
+                        - paragraph [ref=e72]:
+                          - text: Information Systems Project Manager
+                          - generic [ref=e74]: New
+                        - paragraph [ref=e75]: Tel Aviv, Israel
+                  - row "IT Team Lead Tel Aviv, Israel" [ref=e76]:
+                    - cell "IT Team Lead Tel Aviv, Israel" [ref=e77]:
+                      - link "IT Team Lead Tel Aviv, Israel" [ref=e78] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4653849006
+                        - paragraph [ref=e79]: IT Team Lead
+                        - paragraph [ref=e80]: Tel Aviv, Israel
+                  - row "Salesforce Project Manager Tel Aviv, Israel" [ref=e81]:
+                    - cell "Salesforce Project Manager Tel Aviv, Israel" [ref=e82]:
+                      - link "Salesforce Project Manager Tel Aviv, Israel" [ref=e83] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4654536006
+                        - paragraph [ref=e84]: Salesforce Project Manager
+                        - paragraph [ref=e85]: Tel Aviv, Israel
+            - generic [ref=e86]:
+              - heading "R&D" [level=3] [ref=e87]
+              - table [ref=e89]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e90]:
+                      - paragraph [ref=e91]: Job
+                - rowgroup [ref=e92]:
+                  - row "DevOps Engineer Tel Aviv, Israel" [ref=e93]:
+                    - cell "DevOps Engineer Tel Aviv, Israel" [ref=e94]:
+                      - link "DevOps Engineer Tel Aviv, Israel" [ref=e95] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4639654006
+                        - paragraph [ref=e96]: DevOps Engineer
+                        - paragraph [ref=e97]: Tel Aviv, Israel
+            - generic [ref=e98]:
+              - heading "Sales" [level=3] [ref=e99]
+              - table [ref=e101]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e102]:
+                      - paragraph [ref=e103]: Job
+                - rowgroup [ref=e104]:
+                  - row "Account Executive - Outmax New New York, New York, United States" [ref=e105]:
+                    - cell "Account Executive - Outmax New New York, New York, United States" [ref=e106]:
+                      - link "Account Executive - Outmax New New York, New York, United States" [ref=e107] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4684743006
+                        - paragraph [ref=e108]:
+                          - text: Account Executive - Outmax
+                          - generic [ref=e110]: New
+                        - paragraph [ref=e111]: New York, New York, United States
+                  - row "Director, Global Sales Strategy & Operations Brazil - Off-Site" [ref=e112]:
+                    - cell "Director, Global Sales Strategy & Operations Brazil - Off-Site" [ref=e113]:
+                      - link "Director, Global Sales Strategy & Operations Brazil - Off-Site" [ref=e114] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4678692006
+                        - paragraph [ref=e115]: Director, Global Sales Strategy & Operations
+                        - paragraph [ref=e116]: Brazil - Off-Site
+                  - row "Sales Engineer- Outmax New US - Off-Site" [ref=e117]:
+                    - cell "Sales Engineer- Outmax New US - Off-Site" [ref=e118]:
+                      - link "Sales Engineer- Outmax New US - Off-Site" [ref=e119] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4685359006
+                        - paragraph [ref=e120]:
+                          - text: Sales Engineer- Outmax
+                          - generic [ref=e122]: New
+                        - paragraph [ref=e123]: US - Off-Site
+                  - row "Sales Manager, Singapore Singapore - Off-Site" [ref=e124]:
+                    - cell "Sales Manager, Singapore Singapore - Off-Site" [ref=e125]:
+                      - link "Sales Manager, Singapore Singapore - Off-Site" [ref=e126] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/perionnetworkltd/jobs/4670789006
+                        - paragraph [ref=e127]: Sales Manager, Singapore
+                        - paragraph [ref=e128]: Singapore - Off-Site
+  - contentinfo [ref=e129]:
+    - generic [ref=e130]:
+      - paragraph [ref=e131]: Powered by
+      - link "Greenhouse logo" [ref=e132] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e133]

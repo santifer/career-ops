@@ -1,0 +1,255 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Current openings at Pagaya Israel" [level=1] [ref=e4]
+      - generic [ref=e6]:
+        - img [ref=e7]
+        - generic [ref=e9]:
+          - paragraph [ref=e10]: Create a Job Alert
+          - paragraph [ref=e11]: Level-up your career by having opportunities at Pagaya Israel sent directly to your inbox.
+          - link "Create alert" [ref=e12] [cursor=pointer]:
+            - /url: https://my.greenhouse.io/users/sign_in?job_board=pagayais&source=job_alert_board
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e16]:
+            - generic [ref=e17]: Search
+            - textbox "Search" [ref=e18]
+          - generic [ref=e20]:
+            - generic [ref=e21]: Department
+            - generic [ref=e22]:
+              - log [ref=e24]
+              - generic [ref=e26]:
+                - generic [ref=e27]:
+                  - generic [ref=e28]: Select...
+                  - combobox "Department" [ref=e30]
+                - button "Toggle flyout" [ref=e32] [cursor=pointer]:
+                  - img [ref=e33]
+          - generic [ref=e36]:
+            - generic [ref=e37]: Office
+            - generic [ref=e38]:
+              - log [ref=e40]
+              - generic [ref=e42]:
+                - generic [ref=e43]:
+                  - generic [ref=e44]: Select...
+                  - combobox "Office" [ref=e46]
+                - button "Toggle flyout" [ref=e48] [cursor=pointer]:
+                  - img [ref=e49]
+        - generic [ref=e51]:
+          - heading "21 jobs" [level=2] [ref=e52]
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - paragraph [ref=e56]: Credit Research
+              - heading "Portfolio Management" [level=3] [ref=e57]
+              - table [ref=e59]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e60]:
+                      - paragraph [ref=e61]: Job
+                - rowgroup [ref=e62]:
+                  - row "Data Science Group Lead Tel Aviv, Israel" [ref=e63]:
+                    - cell "Data Science Group Lead Tel Aviv, Israel" [ref=e64]:
+                      - link "Data Science Group Lead Tel Aviv, Israel" [ref=e65] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7667230003
+                        - paragraph [ref=e66]: Data Science Group Lead
+                        - paragraph [ref=e67]: Tel Aviv, Israel
+            - generic [ref=e68]:
+              - heading "Engineering" [level=3] [ref=e69]
+              - table [ref=e71]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e72]:
+                      - paragraph [ref=e73]: Job
+                - rowgroup [ref=e74]:
+                  - row "Senior DevOps Engineer Tel Aviv, Israel" [ref=e75]:
+                    - cell "Senior DevOps Engineer Tel Aviv, Israel" [ref=e76]:
+                      - link "Senior DevOps Engineer Tel Aviv, Israel" [ref=e77] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7501813003
+                        - paragraph [ref=e78]: Senior DevOps Engineer
+                        - paragraph [ref=e79]: Tel Aviv, Israel
+                  - row "Senior Software Engineer Tel Aviv, Israel" [ref=e80]:
+                    - cell "Senior Software Engineer Tel Aviv, Israel" [ref=e81]:
+                      - link "Senior Software Engineer Tel Aviv, Israel" [ref=e82] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/6087076003
+                        - paragraph [ref=e83]: Senior Software Engineer
+                        - paragraph [ref=e84]: Tel Aviv, Israel
+                  - row "Software Engineer- Data Platform Tel Aviv, Israel" [ref=e85]:
+                    - cell "Software Engineer- Data Platform Tel Aviv, Israel" [ref=e86]:
+                      - link "Software Engineer- Data Platform Tel Aviv, Israel" [ref=e87] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7712850003
+                        - paragraph [ref=e88]: Software Engineer- Data Platform
+                        - paragraph [ref=e89]: Tel Aviv, Israel
+                  - row "Software Tech Lead Tel Aviv, Israel" [ref=e90]:
+                    - cell "Software Tech Lead Tel Aviv, Israel" [ref=e91]:
+                      - link "Software Tech Lead Tel Aviv, Israel" [ref=e92] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/6647520003
+                        - paragraph [ref=e93]: Software Tech Lead
+                        - paragraph [ref=e94]: Tel Aviv, Israel
+            - generic [ref=e95]:
+              - heading "Finance" [level=3] [ref=e96]
+              - table [ref=e98]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e99]:
+                      - paragraph [ref=e100]: Job
+                - rowgroup [ref=e101]:
+                  - row "Assistant Controller Tel Aviv, Israel" [ref=e102]:
+                    - cell "Assistant Controller Tel Aviv, Israel" [ref=e103]:
+                      - link "Assistant Controller Tel Aviv, Israel" [ref=e104] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7737508003
+                        - paragraph [ref=e105]: Assistant Controller
+                        - paragraph [ref=e106]: Tel Aviv, Israel
+                  - row "Junior SOX Compliance Specialist Tel Aviv, Israel" [ref=e107]:
+                    - cell "Junior SOX Compliance Specialist Tel Aviv, Israel" [ref=e108]:
+                      - link "Junior SOX Compliance Specialist Tel Aviv, Israel" [ref=e109] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7683559003
+                        - paragraph [ref=e110]: Junior SOX Compliance Specialist
+                        - paragraph [ref=e111]: Tel Aviv, Israel
+            - generic [ref=e112]:
+              - paragraph [ref=e114]: Growth
+              - heading "Partnerships" [level=3] [ref=e115]
+              - table [ref=e117]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e118]:
+                      - paragraph [ref=e119]: Job
+                - rowgroup [ref=e120]:
+                  - row "Partnerships Success Manager Tel Aviv, Israel" [ref=e121]:
+                    - cell "Partnerships Success Manager Tel Aviv, Israel" [ref=e122]:
+                      - link "Partnerships Success Manager Tel Aviv, Israel" [ref=e123] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7694744003
+                        - paragraph [ref=e124]: Partnerships Success Manager
+                        - paragraph [ref=e125]: Tel Aviv, Israel
+            - generic [ref=e126]:
+              - heading "Information Technology & Cyber" [level=3] [ref=e127]
+              - table [ref=e129]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e130]:
+                      - paragraph [ref=e131]: Job
+                - rowgroup [ref=e132]:
+                  - row "AI Implementation Specialist Tel Aviv, Israel" [ref=e133]:
+                    - cell "AI Implementation Specialist Tel Aviv, Israel" [ref=e134]:
+                      - link "AI Implementation Specialist Tel Aviv, Israel" [ref=e135] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7736824003
+                        - paragraph [ref=e136]: AI Implementation Specialist
+                        - paragraph [ref=e137]: Tel Aviv, Israel
+                  - row "AI Lead Tel Aviv, Israel" [ref=e138]:
+                    - cell "AI Lead Tel Aviv, Israel" [ref=e139]:
+                      - link "AI Lead Tel Aviv, Israel" [ref=e140] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7734302003
+                        - paragraph [ref=e141]: AI Lead
+                        - paragraph [ref=e142]: Tel Aviv, Israel
+                  - row "Help Desk- Parental Leave Replacement Tel Aviv, Israel" [ref=e143]:
+                    - cell "Help Desk- Parental Leave Replacement Tel Aviv, Israel" [ref=e144]:
+                      - link "Help Desk- Parental Leave Replacement Tel Aviv, Israel" [ref=e145] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7747498003
+                        - paragraph [ref=e146]: Help Desk- Parental Leave Replacement
+                        - paragraph [ref=e147]: Tel Aviv, Israel
+                  - row "IT Director Tel Aviv, Israel" [ref=e148]:
+                    - cell "IT Director Tel Aviv, Israel" [ref=e149]:
+                      - link "IT Director Tel Aviv, Israel" [ref=e150] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7675144003
+                        - paragraph [ref=e151]: IT Director
+                        - paragraph [ref=e152]: Tel Aviv, Israel
+                  - row "IT Group Manager Tel Aviv, Israel" [ref=e153]:
+                    - cell "IT Group Manager Tel Aviv, Israel" [ref=e154]:
+                      - link "IT Group Manager Tel Aviv, Israel" [ref=e155] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7724319003
+                        - paragraph [ref=e156]: IT Group Manager
+                        - paragraph [ref=e157]: Tel Aviv, Israel
+            - generic [ref=e158]:
+              - heading "Legal" [level=3] [ref=e159]
+              - table [ref=e161]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e162]:
+                      - paragraph [ref=e163]: Job
+                - rowgroup [ref=e164]:
+                  - row "Legal Counsel Tel Aviv, Israel" [ref=e165]:
+                    - cell "Legal Counsel Tel Aviv, Israel" [ref=e166]:
+                      - link "Legal Counsel Tel Aviv, Israel" [ref=e167] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7724324003
+                        - paragraph [ref=e168]: Legal Counsel
+                        - paragraph [ref=e169]: Tel Aviv, Israel
+            - generic [ref=e170]:
+              - heading "Office of the CEO" [level=3] [ref=e171]
+              - table [ref=e173]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e174]:
+                      - paragraph [ref=e175]: Job
+                - rowgroup [ref=e176]:
+                  - row "Senior Executive Assistant New Tel Aviv, Israel" [ref=e177]:
+                    - cell "Senior Executive Assistant New Tel Aviv, Israel" [ref=e178]:
+                      - link "Senior Executive Assistant New Tel Aviv, Israel" [ref=e179] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7751116003
+                        - paragraph [ref=e180]:
+                          - text: Senior Executive Assistant
+                          - generic [ref=e182]: New
+                        - paragraph [ref=e183]: Tel Aviv, Israel
+            - generic [ref=e184]:
+              - heading "Product" [level=3] [ref=e185]
+              - table [ref=e187]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e188]:
+                      - paragraph [ref=e189]: Job
+                - rowgroup [ref=e190]:
+                  - row "Senior Product Manager Tel Aviv, Israel" [ref=e191]:
+                    - cell "Senior Product Manager Tel Aviv, Israel" [ref=e192]:
+                      - link "Senior Product Manager Tel Aviv, Israel" [ref=e193] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7731816003
+                        - paragraph [ref=e194]: Senior Product Manager
+                        - paragraph [ref=e195]: Tel Aviv, Israel
+            - generic [ref=e196]:
+              - heading "Research & Modeling" [level=3] [ref=e197]
+              - table [ref=e199]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e200]:
+                      - paragraph [ref=e201]: Job
+                - rowgroup [ref=e202]:
+                  - row "Lead Data Scientist Tel Aviv, Israel" [ref=e203]:
+                    - cell "Lead Data Scientist Tel Aviv, Israel" [ref=e204]:
+                      - link "Lead Data Scientist Tel Aviv, Israel" [ref=e205] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7720946003
+                        - paragraph [ref=e206]: Lead Data Scientist
+                        - paragraph [ref=e207]: Tel Aviv, Israel
+                  - row "Principal Data Scientist Tel Aviv, Israel" [ref=e208]:
+                    - cell "Principal Data Scientist Tel Aviv, Israel" [ref=e209]:
+                      - link "Principal Data Scientist Tel Aviv, Israel" [ref=e210] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7733045003
+                        - paragraph [ref=e211]: Principal Data Scientist
+                        - paragraph [ref=e212]: Tel Aviv, Israel
+                  - row "Research Director Tel Aviv, Israel" [ref=e213]:
+                    - cell "Research Director Tel Aviv, Israel" [ref=e214]:
+                      - link "Research Director Tel Aviv, Israel" [ref=e215] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7714776003
+                        - paragraph [ref=e216]: Research Director
+                        - paragraph [ref=e217]: Tel Aviv, Israel
+                  - row "Team Lead Data Scientist Tel Aviv, Israel" [ref=e218]:
+                    - cell "Team Lead Data Scientist Tel Aviv, Israel" [ref=e219]:
+                      - link "Team Lead Data Scientist Tel Aviv, Israel" [ref=e220] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7589574003
+                        - paragraph [ref=e221]: Team Lead Data Scientist
+                        - paragraph [ref=e222]: Tel Aviv, Israel
+            - generic [ref=e223]:
+              - heading "Risk" [level=3] [ref=e224]
+              - table [ref=e226]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e227]:
+                      - paragraph [ref=e228]: Job
+                - rowgroup [ref=e229]:
+                  - row "Validation Data Scientist Tel Aviv, Israel" [ref=e230]:
+                    - cell "Validation Data Scientist Tel Aviv, Israel" [ref=e231]:
+                      - link "Validation Data Scientist Tel Aviv, Israel" [ref=e232] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/pagayais/jobs/7533527003
+                        - paragraph [ref=e233]: Validation Data Scientist
+                        - paragraph [ref=e234]: Tel Aviv, Israel
+  - contentinfo [ref=e235]:
+    - generic [ref=e236]:
+      - paragraph [ref=e237]: Powered by
+      - link "Greenhouse logo" [ref=e238] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e239]

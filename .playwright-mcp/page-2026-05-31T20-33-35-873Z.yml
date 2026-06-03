@@ -1,0 +1,386 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Current openings at SecurityScorecard" [level=1] [ref=e4]
+      - generic [ref=e6]:
+        - img [ref=e7]
+        - generic [ref=e9]:
+          - paragraph [ref=e10]: Create a Job Alert
+          - paragraph [ref=e11]: Level-up your career by having opportunities at SecurityScorecard sent directly to your inbox.
+          - button "Create alert" [ref=e12] [cursor=pointer]
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e16]:
+            - generic [ref=e17]: Search
+            - textbox "Search" [ref=e18]
+          - generic [ref=e20]:
+            - generic [ref=e21]: Department
+            - generic [ref=e22]:
+              - log [ref=e24]
+              - generic [ref=e26]:
+                - generic [ref=e27]:
+                  - generic [ref=e28]: Select...
+                  - combobox "Department" [ref=e30]
+                - button "Toggle flyout" [ref=e32] [cursor=pointer]:
+                  - img [ref=e33]
+        - generic [ref=e35]:
+          - heading "43 jobs" [level=2] [ref=e36]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - paragraph [ref=e40]: Finance
+              - heading "RevOps" [level=3] [ref=e41]
+              - table [ref=e43]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e44]:
+                      - paragraph [ref=e45]: Job
+                - rowgroup [ref=e46]:
+                  - row "VP, Revenue Operations & GTM Engineering Remote (United States)" [ref=e47]:
+                    - cell "VP, Revenue Operations & GTM Engineering Remote (United States)" [ref=e48]:
+                      - link "VP, Revenue Operations & GTM Engineering Remote (United States)" [ref=e49] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7938979
+                        - paragraph [ref=e50]: VP, Revenue Operations & GTM Engineering
+                        - paragraph [ref=e51]: Remote (United States)
+                  - row "VP, Revenue Operations & GTM Engineering Remote (Los Angeles, CA)" [ref=e52]:
+                    - cell "VP, Revenue Operations & GTM Engineering Remote (Los Angeles, CA)" [ref=e53]:
+                      - link "VP, Revenue Operations & GTM Engineering Remote (Los Angeles, CA)" [ref=e54] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7939126
+                        - paragraph [ref=e55]: VP, Revenue Operations & GTM Engineering
+                        - paragraph [ref=e56]: Remote (Los Angeles, CA)
+                  - row "VP, Revenue Operations & GTM Engineering Remote (Houston, TX)" [ref=e57]:
+                    - cell "VP, Revenue Operations & GTM Engineering Remote (Houston, TX)" [ref=e58]:
+                      - link "VP, Revenue Operations & GTM Engineering Remote (Houston, TX)" [ref=e59] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7939130
+                        - paragraph [ref=e60]: VP, Revenue Operations & GTM Engineering
+                        - paragraph [ref=e61]: Remote (Houston, TX)
+                  - row "VP, Revenue Operations & GTM Engineering Remote (Miami, FL)" [ref=e62]:
+                    - cell "VP, Revenue Operations & GTM Engineering Remote (Miami, FL)" [ref=e63]:
+                      - link "VP, Revenue Operations & GTM Engineering Remote (Miami, FL)" [ref=e64] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7939133
+                        - paragraph [ref=e65]: VP, Revenue Operations & GTM Engineering
+                        - paragraph [ref=e66]: Remote (Miami, FL)
+                  - row "VP, Revenue Operations & GTM Engineering Remote (Chicago, IL)" [ref=e67]:
+                    - cell "VP, Revenue Operations & GTM Engineering Remote (Chicago, IL)" [ref=e68]:
+                      - link "VP, Revenue Operations & GTM Engineering Remote (Chicago, IL)" [ref=e69] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7939139
+                        - paragraph [ref=e70]: VP, Revenue Operations & GTM Engineering
+                        - paragraph [ref=e71]: Remote (Chicago, IL)
+            - generic [ref=e72]:
+              - paragraph [ref=e74]: Marketing
+              - heading "Business Development" [level=3] [ref=e75]
+              - table [ref=e77]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e78]:
+                      - paragraph [ref=e79]: Job
+                - rowgroup [ref=e80]:
+                  - row "Business Development Associate Remote (Atlanta, GA)" [ref=e81]:
+                    - cell "Business Development Associate Remote (Atlanta, GA)" [ref=e82]:
+                      - link "Business Development Associate Remote (Atlanta, GA)" [ref=e83] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7950609
+                        - paragraph [ref=e84]: Business Development Associate
+                        - paragraph [ref=e85]: Remote (Atlanta, GA)
+                  - row "Business Development Associate Remote (Charlotte, NC)" [ref=e86]:
+                    - cell "Business Development Associate Remote (Charlotte, NC)" [ref=e87]:
+                      - link "Business Development Associate Remote (Charlotte, NC)" [ref=e88] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7950620
+                        - paragraph [ref=e89]: Business Development Associate
+                        - paragraph [ref=e90]: Remote (Charlotte, NC)
+                  - row "Business Development Associate Remote (Nashville, TN)" [ref=e91]:
+                    - cell "Business Development Associate Remote (Nashville, TN)" [ref=e92]:
+                      - link "Business Development Associate Remote (Nashville, TN)" [ref=e93] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7950622
+                        - paragraph [ref=e94]: Business Development Associate
+                        - paragraph [ref=e95]: Remote (Nashville, TN)
+                  - row "Business Development Associate Remote (Dallas, TX)" [ref=e96]:
+                    - cell "Business Development Associate Remote (Dallas, TX)" [ref=e97]:
+                      - link "Business Development Associate Remote (Dallas, TX)" [ref=e98] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7950623
+                        - paragraph [ref=e99]: Business Development Associate
+                        - paragraph [ref=e100]: Remote (Dallas, TX)
+                  - row "Business Development Associate Remote (Salt Lake City, UT)" [ref=e101]:
+                    - cell "Business Development Associate Remote (Salt Lake City, UT)" [ref=e102]:
+                      - link "Business Development Associate Remote (Salt Lake City, UT)" [ref=e103] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7950634
+                        - paragraph [ref=e104]: Business Development Associate
+                        - paragraph [ref=e105]: Remote (Salt Lake City, UT)
+            - generic [ref=e106]:
+              - paragraph [ref=e108]: People
+              - heading "Legal" [level=3] [ref=e109]
+              - table [ref=e111]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e112]:
+                      - paragraph [ref=e113]: Job
+                - rowgroup [ref=e114]:
+                  - row "Commercial Counsel Hybrid (New York City)" [ref=e115]:
+                    - cell "Commercial Counsel Hybrid (New York City)" [ref=e116]:
+                      - link "Commercial Counsel Hybrid (New York City)" [ref=e117] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7951961
+                        - paragraph [ref=e118]: Commercial Counsel
+                        - paragraph [ref=e119]: Hybrid (New York City)
+            - generic [ref=e120]:
+              - heading "Revenue" [level=3] [ref=e121]
+              - table [ref=e123]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e124]:
+                      - paragraph [ref=e125]: Job
+                - rowgroup [ref=e126]:
+                  - row "Business Development Representative (BDR), EMEA Remote" [ref=e127]:
+                    - cell "Business Development Representative (BDR), EMEA Remote" [ref=e128]:
+                      - link "Business Development Representative (BDR), EMEA Remote" [ref=e129] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/6803006
+                        - paragraph [ref=e130]: Business Development Representative (BDR), EMEA
+                        - paragraph [ref=e131]: Remote
+            - generic [ref=e132]:
+              - paragraph [ref=e134]: Revenue
+              - heading "Field Sales" [level=3] [ref=e135]
+              - table [ref=e137]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e138]:
+                      - paragraph [ref=e139]: Job
+                - rowgroup [ref=e140]:
+                  - row "Field Sales Director - FSI Remote (Washington, D.C.)" [ref=e141]:
+                    - cell "Field Sales Director - FSI Remote (Washington, D.C.)" [ref=e142]:
+                      - link "Field Sales Director - FSI Remote (Washington, D.C.)" [ref=e143] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7587852
+                        - paragraph [ref=e144]: Field Sales Director - FSI
+                        - paragraph [ref=e145]: Remote (Washington, D.C.)
+            - generic [ref=e146]:
+              - heading "Technology" [level=3] [ref=e147]
+              - table [ref=e149]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e150]:
+                      - paragraph [ref=e151]: Job
+                - rowgroup [ref=e152]:
+                  - row "Chief Architect Remote" [ref=e153]:
+                    - cell "Chief Architect Remote" [ref=e154]:
+                      - link "Chief Architect Remote" [ref=e155] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7909890
+                        - paragraph [ref=e156]: Chief Architect
+                        - paragraph [ref=e157]: Remote
+            - generic [ref=e158]:
+              - paragraph [ref=e160]: Technology
+              - heading "Engineering" [level=3] [ref=e161]
+              - table [ref=e163]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e164]:
+                      - paragraph [ref=e165]: Job
+                - rowgroup [ref=e166]:
+                  - row "Head of Engineering Hybrid (NYC)" [ref=e167]:
+                    - cell "Head of Engineering Hybrid (NYC)" [ref=e168]:
+                      - link "Head of Engineering Hybrid (NYC)" [ref=e169] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7951969
+                        - paragraph [ref=e170]: Head of Engineering
+                        - paragraph [ref=e171]: Hybrid (NYC)
+                  - row "Head of Engineering Hybrid (Manhattan, NY)" [ref=e172]:
+                    - cell "Head of Engineering Hybrid (Manhattan, NY)" [ref=e173]:
+                      - link "Head of Engineering Hybrid (Manhattan, NY)" [ref=e174] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7952074
+                        - paragraph [ref=e175]: Head of Engineering
+                        - paragraph [ref=e176]: Hybrid (Manhattan, NY)
+                  - row "Head of Engineering Hybrid (Brooklyn, NY)" [ref=e177]:
+                    - cell "Head of Engineering Hybrid (Brooklyn, NY)" [ref=e178]:
+                      - link "Head of Engineering Hybrid (Brooklyn, NY)" [ref=e179] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7952075
+                        - paragraph [ref=e180]: Head of Engineering
+                        - paragraph [ref=e181]: Hybrid (Brooklyn, NY)
+                  - row "Head of Engineering Hybrid (Queens, NY)" [ref=e182]:
+                    - cell "Head of Engineering Hybrid (Queens, NY)" [ref=e183]:
+                      - link "Head of Engineering Hybrid (Queens, NY)" [ref=e184] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7952077
+                        - paragraph [ref=e185]: Head of Engineering
+                        - paragraph [ref=e186]: Hybrid (Queens, NY)
+                  - row "Head of Engineering Hybrid (Jersey City, NJ)" [ref=e187]:
+                    - cell "Head of Engineering Hybrid (Jersey City, NJ)" [ref=e188]:
+                      - link "Head of Engineering Hybrid (Jersey City, NJ)" [ref=e189] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7952078
+                        - paragraph [ref=e190]: Head of Engineering
+                        - paragraph [ref=e191]: Hybrid (Jersey City, NJ)
+                  - row "Head of Engineering New Hybrid (Austin,TX)" [ref=e192]:
+                    - cell "Head of Engineering New Hybrid (Austin,TX)" [ref=e193]:
+                      - link "Head of Engineering New Hybrid (Austin,TX)" [ref=e194] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7967783
+                        - paragraph [ref=e195]:
+                          - text: Head of Engineering
+                          - generic [ref=e197]: New
+                        - paragraph [ref=e198]: Hybrid (Austin,TX)
+                  - row "Head of Engineering New Hybrid (Stamford, CT)" [ref=e199]:
+                    - cell "Head of Engineering New Hybrid (Stamford, CT)" [ref=e200]:
+                      - link "Head of Engineering New Hybrid (Stamford, CT)" [ref=e201] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7967900
+                        - paragraph [ref=e202]:
+                          - text: Head of Engineering
+                          - generic [ref=e204]: New
+                        - paragraph [ref=e205]: Hybrid (Stamford, CT)
+                  - row "Senior AI Engineer Remote (US)" [ref=e206]:
+                    - cell "Senior AI Engineer Remote (US)" [ref=e207]:
+                      - link "Senior AI Engineer Remote (US)" [ref=e208] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7776439
+                        - paragraph [ref=e209]: Senior AI Engineer
+                        - paragraph [ref=e210]: Remote (US)
+                  - row "Senior AI Engineer Hybrid (NYC Metro)" [ref=e211]:
+                    - cell "Senior AI Engineer Hybrid (NYC Metro)" [ref=e212]:
+                      - link "Senior AI Engineer Hybrid (NYC Metro)" [ref=e213] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7779100
+                        - paragraph [ref=e214]: Senior AI Engineer
+                        - paragraph [ref=e215]: Hybrid (NYC Metro)
+                  - row "Senior AI Engineer Remote (CAN)" [ref=e216]:
+                    - cell "Senior AI Engineer Remote (CAN)" [ref=e217]:
+                      - link "Senior AI Engineer Remote (CAN)" [ref=e218] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7779109
+                        - paragraph [ref=e219]: Senior AI Engineer
+                        - paragraph [ref=e220]: Remote (CAN)
+                  - row "Senior AI Engineer Hybrid (Austin, TX)" [ref=e221]:
+                    - cell "Senior AI Engineer Hybrid (Austin, TX)" [ref=e222]:
+                      - link "Senior AI Engineer Hybrid (Austin, TX)" [ref=e223] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7815968
+                        - paragraph [ref=e224]: Senior AI Engineer
+                        - paragraph [ref=e225]: Hybrid (Austin, TX)
+                  - row "Senior Software Engineer San Francisco, CA (Remote)" [ref=e226]:
+                    - cell "Senior Software Engineer San Francisco, CA (Remote)" [ref=e227]:
+                      - link "Senior Software Engineer San Francisco, CA (Remote)" [ref=e228] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7345062
+                        - paragraph [ref=e229]: Senior Software Engineer
+                        - paragraph [ref=e230]: San Francisco, CA (Remote)
+                  - row "Senior Software Engineer New York, US (Remote)" [ref=e231]:
+                    - cell "Senior Software Engineer New York, US (Remote)" [ref=e232]:
+                      - link "Senior Software Engineer New York, US (Remote)" [ref=e233] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7943677
+                        - paragraph [ref=e234]: Senior Software Engineer
+                        - paragraph [ref=e235]: New York, US (Remote)
+                  - row "Senior Software Engineer New Austin, TX (Remote)" [ref=e236]:
+                    - cell "Senior Software Engineer New Austin, TX (Remote)" [ref=e237]:
+                      - link "Senior Software Engineer New Austin, TX (Remote)" [ref=e238] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960830
+                        - paragraph [ref=e239]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e241]: New
+                        - paragraph [ref=e242]: Austin, TX (Remote)
+                  - row "Senior Software Engineer New United States (Remote)" [ref=e243]:
+                    - cell "Senior Software Engineer New United States (Remote)" [ref=e244]:
+                      - link "Senior Software Engineer New United States (Remote)" [ref=e245] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960831
+                        - paragraph [ref=e246]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e248]: New
+                        - paragraph [ref=e249]: United States (Remote)
+                  - row "Senior Software Engineer New Seattle, WA (Remote)" [ref=e250]:
+                    - cell "Senior Software Engineer New Seattle, WA (Remote)" [ref=e251]:
+                      - link "Senior Software Engineer New Seattle, WA (Remote)" [ref=e252] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960879
+                        - paragraph [ref=e253]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e255]: New
+                        - paragraph [ref=e256]: Seattle, WA (Remote)
+                  - row "Senior Software Engineer New Boston, MA (Remote)" [ref=e257]:
+                    - cell "Senior Software Engineer New Boston, MA (Remote)" [ref=e258]:
+                      - link "Senior Software Engineer New Boston, MA (Remote)" [ref=e259] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960881
+                        - paragraph [ref=e260]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e262]: New
+                        - paragraph [ref=e263]: Boston, MA (Remote)
+                  - row "Senior Software Engineer New Dallas, TX (Remote)" [ref=e264]:
+                    - cell "Senior Software Engineer New Dallas, TX (Remote)" [ref=e265]:
+                      - link "Senior Software Engineer New Dallas, TX (Remote)" [ref=e266] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960882
+                        - paragraph [ref=e267]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e269]: New
+                        - paragraph [ref=e270]: Dallas, TX (Remote)
+                  - row "Senior Software Engineer New Salt Lake City, UT (Remote)" [ref=e271]:
+                    - cell "Senior Software Engineer New Salt Lake City, UT (Remote)" [ref=e272]:
+                      - link "Senior Software Engineer New Salt Lake City, UT (Remote)" [ref=e273] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960884
+                        - paragraph [ref=e274]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e276]: New
+                        - paragraph [ref=e277]: Salt Lake City, UT (Remote)
+                  - row "Senior Software Engineer New Halifax, NS (Remote)" [ref=e278]:
+                    - cell "Senior Software Engineer New Halifax, NS (Remote)" [ref=e279]:
+                      - link "Senior Software Engineer New Halifax, NS (Remote)" [ref=e280] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960892
+                        - paragraph [ref=e281]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e283]: New
+                        - paragraph [ref=e284]: Halifax, NS (Remote)
+                  - row "Senior Software Engineer New Montreal, QC (Remote)" [ref=e285]:
+                    - cell "Senior Software Engineer New Montreal, QC (Remote)" [ref=e286]:
+                      - link "Senior Software Engineer New Montreal, QC (Remote)" [ref=e287] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960903
+                        - paragraph [ref=e288]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e290]: New
+                        - paragraph [ref=e291]: Montreal, QC (Remote)
+                  - row "Senior Software Engineer New Quebec, QC (Remote)" [ref=e292]:
+                    - cell "Senior Software Engineer New Quebec, QC (Remote)" [ref=e293]:
+                      - link "Senior Software Engineer New Quebec, QC (Remote)" [ref=e294] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7960915
+                        - paragraph [ref=e295]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e297]: New
+                        - paragraph [ref=e298]: Quebec, QC (Remote)
+                  - row "Senior Software Engineer New Canada (Remote)" [ref=e299]:
+                    - cell "Senior Software Engineer New Canada (Remote)" [ref=e300]:
+                      - link "Senior Software Engineer New Canada (Remote)" [ref=e301] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7961001
+                        - paragraph [ref=e302]:
+                          - text: Senior Software Engineer
+                          - generic [ref=e304]: New
+                        - paragraph [ref=e305]: Canada (Remote)
+                  - row "Staff AI Engineer Remote (US)" [ref=e306]:
+                    - cell "Staff AI Engineer Remote (US)" [ref=e307]:
+                      - link "Staff AI Engineer Remote (US)" [ref=e308] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7779112
+                        - paragraph [ref=e309]: Staff AI Engineer
+                        - paragraph [ref=e310]: Remote (US)
+                  - row "Staff AI Engineer Remote (CAN)" [ref=e311]:
+                    - cell "Staff AI Engineer Remote (CAN)" [ref=e312]:
+                      - link "Staff AI Engineer Remote (CAN)" [ref=e313] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7779124
+                        - paragraph [ref=e314]: Staff AI Engineer
+                        - paragraph [ref=e315]: Remote (CAN)
+                  - row "Staff AI Engineer Hybrid (NYC Metro)" [ref=e316]:
+                    - cell "Staff AI Engineer Hybrid (NYC Metro)" [ref=e317]:
+                      - link "Staff AI Engineer Hybrid (NYC Metro)" [ref=e318] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7779125
+                        - paragraph [ref=e319]: Staff AI Engineer
+                        - paragraph [ref=e320]: Hybrid (NYC Metro)
+                  - row "Staff AI Engineer Hybrid (Austin, TX)" [ref=e321]:
+                    - cell "Staff AI Engineer Hybrid (Austin, TX)" [ref=e322]:
+                      - link "Staff AI Engineer Hybrid (Austin, TX)" [ref=e323] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7815975
+                        - paragraph [ref=e324]: Staff AI Engineer
+                        - paragraph [ref=e325]: Hybrid (Austin, TX)
+            - generic [ref=e326]:
+              - paragraph [ref=e328]: Technology
+              - heading "Threat Intelligence" [level=3] [ref=e329]
+              - table [ref=e331]:
+                - rowgroup:
+                  - row "Job":
+                    - columnheader "Job" [ref=e332]:
+                      - paragraph [ref=e333]: Job
+                - rowgroup [ref=e334]:
+                  - row "Threat Intelligence Researcher Remote (US)" [ref=e335]:
+                    - cell "Threat Intelligence Researcher Remote (US)" [ref=e336]:
+                      - link "Threat Intelligence Researcher Remote (US)" [ref=e337] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7859484
+                        - paragraph [ref=e338]: Threat Intelligence Researcher
+                        - paragraph [ref=e339]: Remote (US)
+                  - row "Threat Researcher Remote (EMEA)" [ref=e340]:
+                    - cell "Threat Researcher Remote (EMEA)" [ref=e341]:
+                      - link "Threat Researcher Remote (EMEA)" [ref=e342] [cursor=pointer]:
+                        - /url: https://job-boards.greenhouse.io/securityscorecard/jobs/7840984
+                        - paragraph [ref=e343]: Threat Researcher
+                        - paragraph [ref=e344]: Remote (EMEA)
+  - contentinfo [ref=e345]:
+    - generic [ref=e346]:
+      - paragraph [ref=e347]: Powered by
+      - link "Greenhouse logo" [ref=e348] [cursor=pointer]:
+        - /url: https://www.greenhouse.com
+        - img "Greenhouse logo" [ref=e349]

@@ -1,0 +1,5 @@
+- main [ref=e2]:
+  - img [ref=e3]
+  - generic [ref=e15]:
+    - heading "Page not found" [level=3] [ref=e16]
+    - paragraph [ref=e18]: The job board you were viewing is no longer active.
