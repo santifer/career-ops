@@ -10,7 +10,7 @@
  * Interpreter resolution order (first that exists wins):
  *   1. $CAREER_OPS_EMBED_PYTHON
  *   2. config/profile.yml → embedding.python
- *   3. the candidates in DEFAULT_PYTHONS below (the EMOTE venv ships the libs)
+ *   3. the candidates in DEFAULT_PYTHONS below (e.g. a local .venv)
  *
  * We only READ the shared HF cache and EXECUTE the interpreter; we never modify
  * any other project.
@@ -32,11 +32,10 @@ const SCRIPT = join(ROOT, 'tools', 'embed_gemma.py');
 
 export const EMBED_MODEL = 'google/embeddinggemma-300m';
 
-// Known interpreters that already carry sentence-transformers + torch.
-// The EMOTE venv is the user's existing setup; we execute it read-only.
+// Known interpreters that already carry sentence-transformers + torch
+// (e.g. a local .venv); executed read-only.
 const DEFAULT_PYTHONS = [
   join(ROOT, '.venv', 'bin', 'python'),
-  '/Users/neil/Desktop/EMOTE/experience-sampling-database/venv/bin/python',
 ];
 
 function profileEmbeddingPython() {
