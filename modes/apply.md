@@ -32,6 +32,32 @@ on the local dashboard server (if running) to write the status back and sync the
 
 ---
 
+## Login-gated portals (standing procedure)
+
+Some custom ATSes (Vic Gov careers, ELMO Talent, Workday, PageUp, Taleo,
+SmartRecruiters, SAP SuccessFactors, iCIMS) gate the application form behind a
+candidate account login. These roles carry the `login-required` flag in the queue and
+show a 🔐 badge in the dashboard.
+
+**Procedure (always followed — never bypassed):**
+
+1. Navigate to the posting URL and take a snapshot.
+2. If a sign-in / register wall is present (no application form visible):
+   - **Pause immediately.** Tell Neil: "This portal requires login. Please sign in or
+     create an account in the open browser, then confirm here and I'll continue."
+   - Wait for Neil's confirmation. Do not proceed, fill, or navigate away.
+3. After Neil confirms authentication: re-snapshot, then continue with the normal
+   layered fill (deterministic → cache → model-reasoned).
+4. Leave the browser/tab open at the filled form. **Never locate or click Submit.**
+5. This procedure applies regardless of whether a queue record exists for the role.
+
+**Why:** account creation on these portals involves verifiable identity steps (email
+confirmation, password, optional 2FA) that the agent must not perform or automate on
+the candidate's behalf. The agent's role is to fill the form once the candidate has
+authenticated; submitting remains the candidate's action.
+
+---
+
 ## Requirements
 
 - **Best with Playwright in visible mode**: In visible mode, the candidate sees the browser and Claude can interact with the page.

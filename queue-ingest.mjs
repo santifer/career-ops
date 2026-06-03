@@ -42,6 +42,36 @@ const GH_HOSTS = new Set([
   'job-boards.eu.greenhouse.io',
 ]);
 
+// ── Login-gated ATS hosts ─────────────────────────────────────────────────────
+// Portals that require a candidate account before the application form is
+// accessible. Roles from these hosts get the `login-required` flag at ingest
+// so the inbox session can show a 🔐 badge and the agent knows to pause for
+// authentication before filling.
+const LOGIN_GATED_HOSTS = new Set([
+  'jobs.careers.vic.gov.au',   // Vic Gov / Victoria Legal Aid
+  'careers.vic.gov.au',
+  'elmotalent.com.au',         // ELMO Talent (Cater Care, etc.)
+  'myworkdayjobs.com',         // Workday
+  'pageuppeople.com',          // PageUp
+  'taleo.net',                 // Oracle Taleo
+  'smartrecruiters.com',       // SmartRecruiters
+  'successfactors.com',        // SAP SuccessFactors
+  'icims.com',                 // iCIMS
+]);
+
+function isLoginGated(url) {
+  try {
+    const { hostname } = new URL(url);
+    if (LOGIN_GATED_HOSTS.has(hostname)) return true;
+    for (const h of LOGIN_GATED_HOSTS) {
+      if (hostname.endsWith('.' + h)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function detectAts(url) {
   try {
     const { hostname, pathname } = new URL(url);
@@ -347,7 +377,7 @@ async function main() {
       employment_type:  null,
       visa_answer:      null,
       confidence:       null,
-      flags:            [],
+      flags:            isLoginGated(url) ? ['login-required'] : [],
       free_text_fields: jdData.formFields,
       drafts:           {},
       cv_pdf:           null,

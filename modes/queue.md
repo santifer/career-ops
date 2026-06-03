@@ -211,6 +211,16 @@ EasyGo – Senior Data Analyst – Kick
 
 ---
 
+## Login-gated portals
+
+Roles with `flags` containing `login-required` use portals that gate the form behind
+a candidate account. Follow the standing procedure in `modes/apply.md →
+## Login-gated portals` before attempting any fill: navigate → snapshot → if a sign-in
+wall is present, pause and ask Neil to authenticate, then continue. Never proceed past
+a login wall or automate account creation.
+
+---
+
 ## Hard rules (both phases)
 
 - **Never auto-submit.** This mode writes to apply-queue.json only.

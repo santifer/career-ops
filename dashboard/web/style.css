@@ -315,6 +315,7 @@ body {
 .badge-cap     { background: #fab38722; color: var(--peach); }
 .badge-blocked { background: #f38ba822; color: var(--red); }
 .badge-prepared { background: #a6e3a122; color: var(--green); }
+.badge-login    { background: #f9e2af22; color: var(--yellow); } /* login-required flag */
 
 /* ── Inbox panel ─────────────────────────────────────────────────────────── */
 

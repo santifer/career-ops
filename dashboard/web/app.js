@@ -145,9 +145,15 @@ function buildCard(role, laneKey, idx) {
                   : role.eligibility === 'blocked'  ? '<span class="badge badge-blocked">Blocked</span>'
                   : '';
 
-  // Flag badges (show first 2 extra flags)
+  // Login-gated badge (🔐 — shown when the portal requires authentication)
+  const loginBadge = (role.flags || []).includes('login-required')
+    ? '<span class="badge badge-login" title="Portal requires login before form is accessible">🔐 login</span>'
+    : '';
+
+  // Flag badges (show first 2 extra flags, excluding well-known ones rendered separately)
+  const HANDLED_FLAGS = new Set(['ambiguous-employment', 'large-co-visa-cap', 'pr-citizenship-required', 'login-required']);
   const extraFlags = (role.flags || [])
-    .filter(f => f !== 'ambiguous-employment' && f !== 'large-co-visa-cap' && f !== 'pr-citizenship-required')
+    .filter(f => !HANDLED_FLAGS.has(f))
     .slice(0, 2)
     .map(f => `<span class="badge badge-flag">${esc(f)}</span>`)
     .join('');
@@ -158,7 +164,7 @@ function buildCard(role, laneKey, idx) {
       <div class="card-title">${esc(role.title)}</div>
       <div class="card-company">${esc(role.company)}${role.location ? ' · ' + esc(role.location) : ''}</div>
       <div class="card-badges">
-        ${typeBadge}${visaBadge}${eligBadge}${prepBadge}${extraFlags}
+        ${typeBadge}${visaBadge}${eligBadge}${prepBadge}${loginBadge}${extraFlags}
       </div>
     </div>`;
 
@@ -256,6 +262,8 @@ function renderInbox(role) {
     note.textContent = '⚠ Employment type is ambiguous — confirm before filling.';
   } else if (role.eligibility === 'blocked') {
     note.textContent = '⛔ Eligibility blocker — confirm manually before applying.';
+  } else if ((role.flags || []).includes('login-required')) {
+    note.textContent = '🔐 Portal requires login — authenticate in the browser first, then continue filling.';
   } else if (!role.cv_pdf) {
     note.textContent = 'Run /career-ops queue prepare to generate a tailored CV.';
   } else {
