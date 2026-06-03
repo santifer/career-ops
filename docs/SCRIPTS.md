@@ -1,6 +1,6 @@
 # Scripts Reference
 
-All scripts live in the project root as `.mjs` modules and are exposed via `npm run <name>`.
+Most runtime scripts live in the project root as `.mjs` modules and are exposed via `npm run <name>`. Support and simulation scripts live under `scripts/`.
 
 ## Quick Reference
 
@@ -11,6 +11,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run normalize` | `normalize-statuses.mjs` | Fix non-canonical statuses |
 | `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
+| `npm run reserve-id` | `reserve-eval-id.mjs` | Reserve the next evaluation number safely |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
 | `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
@@ -19,6 +20,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run test:concurrency` | `scripts/test-concurrency-locks.mjs` | Simulate parallel reservations and tracker merges |
 
 ---
 
@@ -78,7 +80,7 @@ Creates a `.bak` backup before writing.
 
 ## merge
 
-Merges batch tracker additions (`batch/tracker-additions/*.tsv`) into `applications.md`. Handles 9-column TSV, 8-column TSV, and pipe-delimited markdown formats. Detects duplicates by report number, entry number, and company+role fuzzy match. Higher-scored re-evaluations update existing entries in place.
+Merges batch tracker additions (`batch/tracker-additions/*.tsv`) into `applications.md`. Handles 9-column TSV, 8-column TSV, and pipe-delimited markdown formats. Detects duplicates by report number, entry number, and company+role fuzzy match. Higher-scored re-evaluations update existing entries in place. The script takes a filesystem lock before rewriting the tracker, writes through a temp file, then atomically renames it into place.
 
 ```bash
 npm run merge                 # apply merge
@@ -89,6 +91,33 @@ npm run merge -- --verify     # merge then run verify-pipeline
 Processed TSVs are moved to `batch/tracker-additions/merged/`.
 
 **Exit codes:** `0` success, `1` verification errors (with `--verify`).
+
+---
+
+## reserve-id
+
+Reserves the next sequential evaluation number for reports, PDFs, tracker TSVs, and processed pipeline markers. Use this instead of calculating `max + 1` from `reports/` or `data/applications.md`.
+
+```bash
+npm run reserve-id -- --owner pipeline
+node reserve-eval-id.mjs --owner auto-pipeline
+```
+
+The command prints JSON with `num`, `report_num`, and `reservation_id`. It uses `data/eval-sequence.json` plus a filesystem lock so parallel agents receive unique numbers even before their tracker rows are merged.
+
+**Exit codes:** `0` reservation written, non-zero when the lock cannot be acquired or the sequence file cannot be parsed.
+
+---
+
+## concurrency test
+
+Runs a temp-directory simulation that spawns multiple reservation processes and multiple merge processes at the same time. It does not touch real user data.
+
+```bash
+npm run test:concurrency
+```
+
+**Exit codes:** `0` all simulated IDs and tracker rows are correct, `1` simulation failed.
 
 ---
 

@@ -302,11 +302,18 @@ update_state() {
 reserve_report_num_unlocked() {
   local id="$1" url="$2" started="$3" retries="$4"
 
-  local report_num=""
-  if report_num=$(next_report_num_unlocked); then
-    update_state_unlocked "$id" "$url" "processing" "$started" "-" "$report_num" "-" "-" "$retries"
+  local reserve_output report_num
+  if ! reserve_output=$(node "$PROJECT_DIR/reserve-eval-id.mjs" --owner "batch-runner:$id"); then
+    echo "ERROR: Failed to reserve report number for offer #$id" >&2
+    return 1
   fi
 
+  if ! report_num=$(printf '%s' "$reserve_output" | node -e 'const fs = require("fs"); const input = fs.readFileSync(0, "utf8"); const data = JSON.parse(input); if (!data.report_num) process.exit(1); console.log(data.report_num);'); then
+    echo "ERROR: Could not parse reservation output for offer #$id: $reserve_output" >&2
+    return 1
+  fi
+
+  update_state_unlocked "$id" "$url" "processing" "$started" "-" "$report_num" "-" "-" "$retries"
   printf '%s\n' "$report_num"
 }
 

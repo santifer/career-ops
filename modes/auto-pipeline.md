@@ -22,6 +22,8 @@ Execute the same as the `oferta` mode (read `modes/oferta.md` for all A-F blocks
 
 ## Step 2 — Save Report .md
 
+Before writing artifacts, reserve the evaluation number with `node reserve-eval-id.mjs --owner auto-pipeline`. Use the returned `report_num` consistently for the report filename, PDF header path, tracker TSV row number, and any processed pipeline marker. Never calculate `max + 1` manually.
+
 Save the full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (see format in `modes/oferta.md`).
 Include Block G in the saved report. Add **URL:** {url} and **Legitimacy:** {tier} to the report header.
 
@@ -70,6 +72,6 @@ If the final score is >= 4.5, generate a draft of responses for the application 
 
 ## Step 5 — Update Tracker
 
-Record it in `data/applications.md` with all columns including Report and PDF as ✅.
+Write a TSV to `batch/tracker-additions/` with all columns including Report and PDF as ✅, then run `node merge-tracker.mjs`. Do not edit `data/applications.md` directly for a new row.
 
 **If any step fails**, continue with the next ones and mark the failed step as pending in the tracker.

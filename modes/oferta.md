@@ -150,7 +150,7 @@ Analyze the job posting for signals that indicate whether this is a real, active
 
 Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
-- `{###}` = next sequential number (3 digits, zero-padded)
+- `{###}` = reserved sequential number from `node reserve-eval-id.mjs --owner oferta` (3 digits, zero-padded). Never calculate `max + 1` manually.
 - `{company-slug}` = company name in lowercase, without spaces (use hyphens)
 - `{YYYY-MM-DD}` = current date
 
@@ -201,7 +201,7 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 ### 2. Record in tracker
 
 **ALWAYS** record in `data/applications.md`:
-- Next sequential number
+- Reserved sequential number from `node reserve-eval-id.mjs`
 - Current date
 - Company
 - Role

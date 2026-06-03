@@ -19,6 +19,7 @@ import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
+import { acquireFileLock } from './scripts/file-lock.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -29,8 +30,12 @@ const APPS_FILE = process.env.CAREER_OPS_TRACKER
     ? join(CAREER_OPS, 'data/applications.md')
     : join(CAREER_OPS, 'applications.md');
 const TRACKER_DIR = dirname(APPS_FILE);
-const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
+const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS_DIR
+  ? process.env.CAREER_OPS_ADDITIONS_DIR
+  : join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
+const LOCK_ROOT = process.env.CAREER_OPS_LOCK_DIR || join(CAREER_OPS, 'data/.locks');
+const MERGE_LOCK_DIR = join(LOCK_ROOT, 'tracker-merge.lock');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 const MIGRATE = process.argv.includes('--migrate');
@@ -45,6 +50,21 @@ const normalizeReportLink = (reportField) => normalizeLink(reportField, TRACKER_
 // Ensure required directories exist (fresh setup)
 mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
 mkdirSync(ADDITIONS_DIR, { recursive: true });
+
+const mergeLock = await acquireFileLock(MERGE_LOCK_DIR, {
+  owner: 'merge-tracker',
+  timeoutMs: Number(process.env.CAREER_OPS_LOCK_TIMEOUT_MS) || 60_000,
+  retryDelayMs: Number(process.env.CAREER_OPS_LOCK_RETRY_MS) || 75,
+  staleMs: Number(process.env.CAREER_OPS_LOCK_STALE_MS) || 10 * 60_000,
+});
+process.once('exit', () => mergeLock.release());
+if (mergeLock.waitMs > 0 || mergeLock.staleRecovered) {
+  console.log(`🔒 Tracker merge lock acquired (wait_ms=${mergeLock.waitMs} | attempts=${mergeLock.attempts} | stale_recovered=${mergeLock.staleRecovered})`);
+}
+const MERGE_HOLD_MS = Number(process.env.CAREER_OPS_MERGE_HOLD_MS) || 0;
+if (MERGE_HOLD_MS > 0) {
+  await new Promise(resolve => setTimeout(resolve, MERGE_HOLD_MS));
+}
 
 // Canonical states and aliases
 const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
@@ -185,6 +205,28 @@ function parseAppLine(line) {
   };
 }
 
+function writeFileAtomic(path, content) {
+  const tmpPath = `${path}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tmpPath, content);
+  renameSync(tmpPath, path);
+}
+
+function mergedDestination(file) {
+  const initial = join(MERGED_DIR, file);
+  if (!existsSync(initial)) return initial;
+
+  const dot = file.lastIndexOf('.');
+  const stem = dot === -1 ? file : file.slice(0, dot);
+  const ext = dot === -1 ? '' : file.slice(dot);
+
+  for (let i = 1; i < 1000; i++) {
+    const candidate = join(MERGED_DIR, `${stem}-${Date.now()}-${i}${ext}`);
+    if (!existsSync(candidate)) return candidate;
+  }
+
+  throw new Error(`Could not find available merged filename for ${file}`);
+}
+
 /**
  * Parse a TSV file content into a structured addition object.
  * Handles: 9-col TSV, 8-col TSV, pipe-delimited markdown.
@@ -289,7 +331,7 @@ if (MIGRATE) {
   if (DRY_RUN) {
     console.log(`🔎 Migration (dry-run): ${changed} row(s) would be rewritten in ${basename(APPS_FILE)}`);
   } else {
-    writeFileSync(APPS_FILE, migrated.join('\n'));
+    writeFileAtomic(APPS_FILE, migrated.join('\n'));
     console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === CAREER_OPS ? 'repo root' : 'data/'}`);
   }
   process.exit(0);
@@ -398,6 +440,18 @@ for (const file of tsvFiles) {
 
     const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
     newLines.push(newLine);
+    existingApps.push({
+      num: entryNum,
+      date: addition.date,
+      company: addition.company,
+      role: addition.role,
+      score: addition.score,
+      status: addition.status,
+      pdf: addition.pdf,
+      report: addition.report,
+      notes: addition.notes,
+      raw: newLine,
+    });
     added++;
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
   }
@@ -420,18 +474,20 @@ if (newLines.length > 0) {
 
 // Write back
 if (!DRY_RUN) {
-  writeFileSync(APPS_FILE, appLines.join('\n'));
+  writeFileAtomic(APPS_FILE, appLines.join('\n'));
 
   // Move processed files to merged/
   if (!existsSync(MERGED_DIR)) mkdirSync(MERGED_DIR, { recursive: true });
   for (const file of tsvFiles) {
-    renameSync(join(ADDITIONS_DIR, file), join(MERGED_DIR, file));
+    renameSync(join(ADDITIONS_DIR, file), mergedDestination(file));
   }
   console.log(`\n✅ Moved ${tsvFiles.length} TSVs to merged/`);
 }
 
 console.log(`\n📊 Summary: +${added} added, 🔄${updated} updated, ⏭️${skipped} skipped`);
 if (DRY_RUN) console.log('(dry-run — no changes written)');
+
+mergeLock.release();
 
 // Optional verify
 if (VERIFY && !DRY_RUN) {

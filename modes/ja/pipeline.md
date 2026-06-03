@@ -6,7 +6,7 @@
 
 1. **読み取り** `data/pipeline.md` → 「未処理」セクションの `- [ ]` アイテムを検索
 2. **各未処理 URL に対して**：
-   a. 次の `REPORT_NUM` を連番で計算（`reports/` を読み、最大番号 + 1）
+   a. `node reserve-eval-id.mjs --owner pipeline` で次の `REPORT_NUM` を予約する。`max + 1` を手動計算しない。
    b. **JD を抽出** Playwright（browser_navigate + browser_snapshot）→ WebFetch → WebSearch の順で
    c. URL にアクセスできない場合 → `- [!]` にマークし注記、次へ進む
    d. **完全な auto-pipeline を実行**：評価 A-F → Report .md → PDF（スコア >= 3.0 の場合）→ Tracker

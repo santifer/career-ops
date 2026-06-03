@@ -6,7 +6,7 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 
 1. **Read** `data/pipeline.md` → search for `- [ ]` items in the "Pending" section
 2. **For each pending URL**:
-   a. Calculate the next sequential `REPORT_NUM` (read `reports/`, take the highest number + 1)
+   a. Reserve the next sequential `REPORT_NUM` with `node reserve-eval-id.mjs --owner pipeline`. Use the returned `report_num` for the report filename, PDF back-reference, tracker TSV row number, and processed pipeline marker. Never calculate `max + 1` manually.
    b. **Extract JD** using Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    c. If the URL is not accessible → mark as `- [!]` with a note and continue
    d. **Execute full auto-pipeline**: Evaluation A-F → Report .md → PDF (if score >= `auto_pdf_score_threshold`) → Tracker
@@ -48,9 +48,9 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 
 ## Automatic numbering
 
-1. List all files in `reports/`
-2. Extract the number from the prefix (e.g., `142-medispend...` → 142)
-3. New number = maximum found + 1
+1. Run `node reserve-eval-id.mjs --owner pipeline`.
+2. Read the JSON response and use `report_num` as the single evaluation ID.
+3. Do not infer the next number from `reports/` or `data/applications.md`; the reservation script tracks numbers claimed by parallel agents before they are merged.
 
 ## Source synchronization
 

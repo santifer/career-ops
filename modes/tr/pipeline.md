@@ -6,7 +6,7 @@
 
 1. **Oku** `data/pipeline.md` → "Bekleyenler" bölümündeki `- [ ]` satırlarını bul
 2. **Her bekleyen URL için:**
-   a. Sıradaki rapor numarasını hesapla (`reports/` klasörüne bak, en büyük numara + 1)
+   a. Sıradaki `REPORT_NUM` değerini `node reserve-eval-id.mjs --owner pipeline` ile rezerve et. `max + 1` değerini manuel hesaplama.
    b. **İlan içeriğini çek:** Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch. **Playwright kullanılmadıysa** (toplu/headless mod veya yedek yola düşüldüyse) rapor başlığına `**Doğrulama:** doğrulanmamış (toplu mod)` etiketini ekle.
    c. URL erişilemiyorsa → `- [!]` olarak işaretle, not ekle ve bir sonrakine geç
    d. **Tam pipeline'ı çalıştır:** A-G değerlendirmesi → Rapor (.md) → PDF (puan ≥ 3,0 ise) → Takipçi
@@ -48,9 +48,9 @@
 
 ## Rapor Numaralandırma
 
-1. `reports/` klasöründeki tüm dosyaları listele
-2. Dosya adı önekinden numarayı çıkar (örn. `142-trendyol-backend...` → 142)
-3. Yeni numara = bulunan en büyük numara + 1
+1. `node reserve-eval-id.mjs --owner pipeline` çalıştır.
+2. JSON yanıttaki `report_num` değerini rapor, PDF referansı, TSV ve pipeline işareti için kullan.
+3. `reports/` veya `data/applications.md` üzerinden manuel numara hesaplama; rezervasyon script'i paralel ajanların aldığı numaraları da takip eder.
 
 ## Başlamadan Önce
 

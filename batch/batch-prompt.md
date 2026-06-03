@@ -378,14 +378,14 @@ batch/tracker-additions/{{ID}}.tsv
 
 Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 ```
-{next_num}\t{{DATE}}\t{empresa}\t{rol}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{nota_1_frase}
+{{REPORT_NUM}}\t{{DATE}}\t{empresa}\t{rol}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{nota_1_frase}
 ```
 
 **Columnas TSV (orden exacto):**
 
 | # | Campo | Tipo | Ejemplo | Validación |
 |---|-------|------|---------|------------|
-| 1 | num | int | `647` | Secuencial, max existente + 1 |
+| 1 | num | int | `647` | Reserved by the orchestrator through `reserve-eval-id.mjs`; use `{{REPORT_NUM}}` |
 | 2 | date | YYYY-MM-DD | `2026-03-14` | Fecha de evaluación |
 | 3 | company | string | `Datadog` | Nombre corto de empresa |
 | 4 | role | string | `Staff AI Engineer` | Título del rol |
@@ -399,7 +399,7 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 
 **Estados canónicos válidos:** `Evaluada`, `Aplicado`, `Respondido`, `Entrevista`, `Oferta`, `Rechazado`, `Descartado`, `NO APLICAR`
 
-Donde `{next_num}` se calcula leyendo la última línea de `data/applications.md`.
+`{{REPORT_NUM}}` is already reserved before the worker starts. Do not read `data/applications.md` to calculate another number.
 
 ### Paso 6 — Output final
 

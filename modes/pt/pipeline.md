@@ -6,7 +6,7 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 
 1. **Ler** `data/pipeline.md` → buscar itens `- [ ]` na seção "Pendentes"
 2. **Para cada URL pendente**:
-   a. Calcular próximo `REPORT_NUM` sequencial (ler `reports/`, pegar o número mais alto + 1)
+   a. Reservar o próximo `REPORT_NUM` com `node reserve-eval-id.mjs --owner pipeline`. Nunca calcular `max + 1` manualmente.
    b. **Extrair JD** usando Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    c. Se a URL não for acessível → marcar como `- [!]` com nota e continuar
    d. **Executar auto-pipeline completa**: Avaliação A-F → Report .md → PDF (se score >= 3.0) → Tracker

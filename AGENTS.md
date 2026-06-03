@@ -61,6 +61,7 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
+| `reserve-eval-id.mjs` | Concurrency-safe evaluation/report/tracker number reservation |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `data/follow-ups.md` | Follow-up history tracker |
@@ -283,9 +284,16 @@ When spawning headless workers for batch processing, use the appropriate command
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
 - Batch in `batch/` (gitignored except scripts and prompt)
-- Report numbering: sequential 3-digit zero-padded, max existing + 1
+- Report numbering: sequential 3-digit zero-padded, reserved with `node reserve-eval-id.mjs`; never calculate `max + 1` manually
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
+
+### Evaluation Number Reservation
+
+- Before writing a new report, PDF, tracker TSV, or processed pipeline marker, run `node reserve-eval-id.mjs --owner {mode-or-agent}` and use the returned `report_num` everywhere for that evaluation.
+- `reserve-eval-id.mjs` uses a local filesystem lock plus `data/eval-sequence.json` to remember numbers already claimed by parallel agents but not yet merged.
+- `data/eval-sequence.json` and `data/.locks/` are local runtime files and must stay gitignored.
+- `merge-tracker.mjs` also takes a tracker-merge lock before rewriting `data/applications.md`; agents may call it concurrently, but the script serializes the write.
 
 ### TSV Format for Tracker Additions
 
@@ -296,7 +304,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 ```
 
 **Column order (IMPORTANT -- status BEFORE score):**
-1. `num` -- sequential number (integer)
+1. `num` -- reserved sequential number from `node reserve-eval-id.mjs` (integer)
 2. `date` -- YYYY-MM-DD
 3. `company` -- short company name
 4. `role` -- job title

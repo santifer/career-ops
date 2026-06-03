@@ -69,6 +69,7 @@ Each worker is a headless AI CLI instance — the bundled `batch-runner.sh` invo
 - Tracker TSV line
 
 The orchestrator manages parallelism, state, retries, and resume.
+Evaluation numbers are reserved through `reserve-eval-id.mjs`, which serializes only the short ID-allocation step while workers continue to run in parallel.
 
 ## Data Flow
 
@@ -86,6 +87,7 @@ templates/cv-template.html → PDF generation template
 - Reports: `{###}-{company-slug}-{YYYY-MM-DD}.md` (3-digit zero-padded)
 - PDFs: `cv-candidate-{company-slug}-{YYYY-MM-DD}.pdf`
 - Tracker TSVs: `batch/tracker-additions/{id}.tsv`
+- Evaluation IDs: call `node reserve-eval-id.mjs` and reuse the returned `report_num` across report, PDF, TSV, and pipeline markers
 
 ## Pipeline Integrity
 
@@ -93,6 +95,7 @@ Scripts maintain data consistency:
 
 | Script | Purpose |
 |--------|---------|
+| `reserve-eval-id.mjs` | Reserves unique evaluation numbers across parallel agents |
 | `merge-tracker.mjs` | Merges batch TSV additions into applications.md |
 | `verify-pipeline.mjs` | Health check: statuses, duplicates, links |
 | `dedup-tracker.mjs` | Removes duplicate entries by company+role |
