@@ -8,9 +8,8 @@ These files contain your personal data, customizations, and work product. Update
 
 | File | Purpose |
 |------|---------|
-| `cv.md` | Your CV in markdown (canonical content; sourced from your master CV) |
+| `cv.md` | Your CV in markdown (single source of truth for content) |
 | `BW_CV_FORMATTING_SPEC.md` | Your CV layout/formatting rules (fonts, colors, spacing, 1-page constraint) |
-| `MASTER_*_CV*.md` | Optional master CV archive copies (not read by scripts; `cv.md` is what agents use) |
 | `config/profile.yml` | Your identity, targets, comp range |
 | `modes/_profile.md` | Your archetypes, narrative, negotiation scripts |
 | `article-digest.md` | Your proof points from portfolio |

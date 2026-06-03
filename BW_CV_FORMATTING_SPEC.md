@@ -174,7 +174,7 @@ The tab character must be in a separate run from the date text. Date run: bold, 
 
 When generating a tailored CV PDF:
 
-1. Read **content** from `cv.md` (synced from `MASTER_Brian_Washington_CV_30.5.md`)
+1. Read **content** from `cv.md`
 2. Read **layout** from this file (`BW_CV_FORMATTING_SPEC.md`)
 3. Follow `modes/pdf.md` for JD tailoring (keywords, bullet reorder, truth-based only)
 4. Fill `templates/cv-template.html` placeholders — Arial, letter, 1-page target
