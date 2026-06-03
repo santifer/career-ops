@@ -126,21 +126,54 @@ EasyGo            | Senior Data Analyst – Kick   | full-time | 4.4   | ready
 
 Find every role with `"status": "prepare-queued"`. For each:
 
-### Step 1 — Draft free text (only if the form needs it)
+### Step 1 — Resolve form fields with the layered resolver (minimum tokens)
 
-Look at `free_text_fields`. For each field where `kind == "standard"` and the
-key matches a cover-letter or motivation-type question (cover_letter,
-why_company, why_role, about_yourself, motivation, etc.):
+Field answers are produced by three layers, cheapest first. The first two run
+deterministically with **zero model tokens**; you (the agent) only answer the
+few fields that survive to Layer 3.
 
-- Draft a response using the tone framework from `modes/auto-pipeline.md`
-  → "I'm choosing you" tone, 2–4 sentences, specific to this role and company.
-- Use proof points from cv.md + article-digest.md (if present). Never invent.
-- Store in `drafts[field.key]`.
+1. **Run Layer 1 + Layer 2 (a script, no tokens):**
 
-Do NOT draft responses for custom fields (`kind: "custom"`) — those require
-the candidate's input and are flagged `needs-input`.
+   ```
+   node queue-resolve.mjs --pre <role-id>
+   ```
 
-Do NOT draft anything if the role has no standard free-text fields.
+   - **Layer 1 — profile rules** (`field-rules.mjs`): exact/keyword matches for
+     the fixed fields (name, email, phone, salary, notice/availability, visa
+     dropdown, hours, resume attach) **and** employer-independent custom fields
+     (country, residence, relocation, office-days, work-rights free-text,
+     website, verification consent). Values come from `config/profile.yml`.
+     Select fields are mapped to an exact option.
+   - **Layer 2 — semantic answer cache** (`answer-cache.mjs` + local
+     embeddinggemma via `embed.mjs`): any field not caught by Layer 1 is
+     embedded and matched against previously answered questions. A cached answer
+     is reused only if cosine ≥ threshold AND it is marked `reusable` AND its
+     entities match. **Never** reused when the answer depends on a differing
+     location, number, date, or dollar amount.
+   - Resolved answers are written into `role.drafts` with provenance. The
+     command prints a JSON `novel` list — the only fields needing Layer 3.
+
+   You do **not** read the form DOM. You only act on the printed `novel` list.
+
+2. **Layer 3 — answer the novel fields, then teach the cache.** For each item in
+   the `novel` list, write an answer grounded in `config/profile.yml`, `cv.md`,
+   and the JD at `jd_path` (use `article-digest.md` if present; never invent).
+   For each, decide whether the answer is **employer-independent** (safe to
+   reuse → `reusable: true`) or company/role-specific (`reusable: false`), and
+   note any key `entities` it is tied to. Then store + teach in one call:
+
+   ```
+   node queue-resolve.mjs --teach <role-id> '@/path/to/answers.json'
+   ```
+
+   where each item is `{ "label", "type", "answer", "reusable", "entities", "confidence" }`.
+   This writes the answers into `role.drafts` (provenance `model`) and stores
+   each question + its embedding in the cache so future paraphrases hit Layer 2
+   for free.
+
+Motivational / "why this company/role" questions are employer-specific →
+`reusable: false`. Behavioural or skills questions ("describe your SQL
+experience") are usually employer-independent → `reusable: true`.
 
 ### Step 2 — Generate tailored CV PDF
 
@@ -167,9 +200,13 @@ Prepared N role(s):
 
 EasyGo – Senior Data Analyst – Kick
   CV: output/cv-{candidate}-{company-slug}-{date}.pdf
-  Drafts: cover_letter, why_company
+  Fields: 13 resolved (11 deterministic, 0 cache, 0 model) · 0 novel
+  Tokens: 0 (all Layer 1)
 
 → Open the dashboard to review and fill: node dashboard-server.mjs
+   (form-fill applies the resolved drafts deterministically and attaches the CV;
+    it labels each field deterministic / reused-from-cache / model-reasoned and
+    never clicks submit.)
 ```
 
 ---
@@ -182,3 +219,8 @@ EasyGo – Senior Data Analyst – Kick
   Always delegate: "as per `modes/_profile.md`" — not "cap at 3.4".
 - **Part-time = same score weight** as full-time. Score on fit, not on type.
 - **Ambiguous employment → never guess.** Flag it and route to review-carefully.
+- **Minimum tokens.** Always run `queue-resolve.mjs --pre` first; only answer the
+  printed `novel` fields. Never read the form DOM to answer fields.
+- **Cache safety.** Mark an answer `reusable: true` only when it is genuinely
+  employer-independent and not tied to a specific location/number/date/amount.
+  The resolver enforces this on lookup, but set the flag honestly.

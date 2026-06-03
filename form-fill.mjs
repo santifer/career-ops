@@ -2,21 +2,30 @@
 /**
  * form-fill.mjs — Zero-model-token deterministic Playwright form fill.
  *
- * Maps config/profile.yml + the queue role record onto form fields with
- * high-confidence matching only. Any field that cannot be confidently
- * identified is left blank and added to the role's flags as 'manual-field'.
- * Never guesses or approximates a value. Never clicks submit.
+ * Applies the results of the three-layer resolver (queue-resolve.mjs) to a live
+ * application form: per field it prefers a prepared draft (Layer 1 deterministic,
+ * Layer 2 cache-reused, or Layer 3 model-reasoned), and falls back to a live
+ * Layer-1 profile rule for any field prepare did not see (e.g. a field the ATS
+ * API did not expose). The tailored CV is attached at the resume/CV/attach file
+ * input. Anything with no answer — or a sensitive consent field with no standing
+ * profile answer — is left blank and flagged for manual completion.
  *
- * Leaves the browser open (headed mode) for the user to review and submit manually.
+ * Every filled field is labelled in the review summary as deterministic,
+ * reused-from-cache, or model-reasoned. A cache answer reused for the FIRST time
+ * is surfaced so the user confirms it once.
  *
- * Usage:
- *   node form-fill.mjs <role-id>
+ * HARD CONSTRAINTS (never relaxed):
+ *   - Never locates or clicks a submit button. Submit is the user's action.
+ *   - Re-verifies posting liveness on open.
+ *   - Leaves the browser open (headed) for manual review + submit.
+ *   - Local only: drives a local headed browser; no posting to any ATS.
  *
- * ATS support: Greenhouse, Lever, Ashby (deterministic)
- *              Custom/Workday → prints instructions and exits.
+ * Usage:  node form-fill.mjs <role-id>
+ * ATS:    Greenhouse / Lever / Ashby (deterministic). Custom/Workday → prints
+ *         instructions to use the agent apply path (same layered principle).
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
@@ -24,15 +33,17 @@ import { chromium } from 'playwright';
 
 import { loadQueue, saveQueue, updateById } from './queue-store.mjs';
 import { checkUrlLiveness } from './liveness-browser.mjs';
+import {
+  matchProfileRule, normLabel, looksLikeVisaSelect, pickVisaOption,
+  chooseOptionDeterministic,
+} from './field-rules.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
-// CSS.escape is browser-only; provide a minimal Node-safe equivalent for ID selectors.
+// CSS.escape is browser-only; minimal Node-safe equivalent for #id selectors.
 function cssEscape(value) {
   return String(value).replace(/([^\w-])/g, '\\$1');
 }
-
-// ── Load profile ──────────────────────────────────────────────────────────────
 
 function loadProfile() {
   const path = join(ROOT, 'config', 'profile.yml');
@@ -40,245 +51,114 @@ function loadProfile() {
   return yaml.load(readFileSync(path, 'utf-8'));
 }
 
-// ── Parse name ────────────────────────────────────────────────────────────────
+const RESUME_RE = /resume|cv\b|curriculum|attach/i;
 
-function splitName(fullName = '') {
-  const parts = fullName.trim().split(/\s+/);
-  const last  = parts.length > 1 ? parts[parts.length - 1] : '';
-  const first = parts.slice(0, parts.length > 1 ? -1 : undefined).join(' ');
-  return { first, last };
-}
+// ── Per-field resolution ──────────────────────────────────────────────────────
 
-// ── Field confidence scoring ──────────────────────────────────────────────────
+/**
+ * Decide the value for a labelled field. Prefers a prepared draft; otherwise a
+ * live Layer-1 profile rule. Returns null when nothing deterministic applies.
+ * @returns {{ value, widget:'text'|'select', provenance, source, cacheId?, firstUse? } | null}
+ */
+function resolveField(label, tagName, inputType, liveOptions, profile, role) {
+  const key = normLabel(label);
+  const draft = role.drafts?.[key];
+  if (draft && draft.answer != null && draft.answer !== '') {
+    const widget = draft.widget || (tagName === 'select' ? 'select' : 'text');
+    return {
+      value: draft.answer,
+      widget,
+      source: draft.source || 'deterministic',
+      provenance: provenanceLabel(draft.source, draft.rule, draft.score),
+      cacheId: draft.cacheId,
+      firstUse: draft.source === 'cache' ? !!draft.firstUse : false,
+    };
+  }
 
-// Maps a normalised field label to a { key, confidence } result.
-// Returns null when no high-confidence match is found.
-// 'high' = fill it; anything else = leave blank + flag.
-function matchField(label, type, profile, role) {
-  const l = label.toLowerCase().trim();
-
-  // Strict label matchers — only fill when we're confident
-  const { first, last } = splitName(profile.candidate?.full_name);
-
-  const matchers = [
-    // Name fields
-    { test: /\bfirst.?name\b|given.?name\b/,          value: () => first },
-    { test: /\blast.?name\b|family.?name\b|surname\b/, value: () => last },
-    { test: /^(full.?)?name$/,                          value: () => profile.candidate?.full_name },
-    // Contact
-    { test: /\bemail\b/,                               value: () => profile.candidate?.email },
-    { test: /\bphone\b|\bmobile\b|\btelephone\b/,      value: () => profile.candidate?.phone },
-    // Social / portfolio
-    { test: /linkedin/,                                value: () => profile.candidate?.linkedin },
-    { test: /github/,                                  value: () => profile.candidate?.github },
-    // Location
-    { test: /\blocation\b|\bcity\b|\bcurrent.?location\b|\bwhere.+based\b/,
-                                                       value: () => profile.candidate?.location },
-    // Work rights / sponsorship
-    { test: /sponsorship|require.*sponsor|do.+you.+require/,
-                                                       value: () => profile.location?.sponsorship_answer || 'No' },
-    // Salary
-    { test: /salary|compensation|pay.+expect|remunerat|package/,
-                                                       value: () => profile.application_answers?.salary_range },
-    // Notice period / availability
-    { test: /notice.?period|when.+available|start.?date|earliest.?start/,
-                                                       value: () => profile.application_answers?.notice_period },
-    // Hours per week — part-time guardrail
-    { test: /hours?.?(per|a|\/)\s*week|weekly.?hours|hours?.?expected/,
-                                                       value: () => hoursAnswer(role, profile) },
-    // Cover letter / motivation (use draft if prepared)
-    { test: /cover.?letter|motivation|why.+(company|us|role|position)|tell.+us.+about.+yourself|about.+yourself/,
-                                                       value: () => coverLetterAnswer(role) },
-  ];
-
-  for (const { test, value } of matchers) {
-    if (test.test(l)) {
-      const v = value();
-      if (v == null || v === '') return null; // have the slot but no value → blank + flag
-      return { value: v, confidence: 'high' };
+  // Live Layer-1 fallback (field prepare never saw). When liveOptions is empty
+  // (a react-select whose options we don't pre-read), return the raw rule value
+  // and let selectReactOption match it by typing to filter.
+  if (tagName === 'select') {
+    if (looksLikeVisaSelect(label, liveOptions)) {
+      const pick = liveOptions.length ? pickVisaOption(liveOptions, role.visa_answer) : role.visa_answer;
+      if (pick) return { value: pick, widget: 'select', source: 'deterministic', provenance: 'deterministic:visa', firstUse: false };
+      return null;
     }
+    const rule = matchProfileRule(label, inputType, profile, role);
+    if (rule) {
+      const opt = liveOptions.length ? chooseOptionDeterministic(rule.value, liveOptions) : rule.value;
+      if (opt) return { value: opt, widget: 'select', source: 'deterministic', provenance: `deterministic:${rule.rule}`, firstUse: false };
+    }
+    return null;
   }
 
-  return null; // no high-confidence match
-}
-
-function hoursAnswer(role, profile) {
-  if (role.employment_type === 'part-time') {
-    const max = profile.application_answers?.max_hours_per_week_parttime ?? 24;
-    return String(max); // 24 h/week = 48 h/fortnight cap
-  }
-  // For full-time roles an hours-per-week field is unusual — don't guess
+  const rule = matchProfileRule(label, inputType, profile, role);
+  if (rule) return { value: rule.value, widget: 'text', source: 'deterministic', provenance: `deterministic:${rule.rule}`, firstUse: false };
   return null;
 }
 
-function coverLetterAnswer(role) {
-  if (!role.drafts) return null;
-  // Try common keys in order
-  for (const key of ['cover_letter', 'why_company', 'why_role', 'motivation', 'about_yourself']) {
-    if (role.drafts[key]) return role.drafts[key];
-  }
-  return null;
+function provenanceLabel(source, rule, score) {
+  if (source === 'cache') return `reused-from-cache${score ? ` (${score})` : ''}`;
+  if (source === 'model') return 'model-reasoned';
+  return `deterministic${rule ? `:${rule}` : ''}`;
 }
 
-// ── Visa dropdown matching ────────────────────────────────────────────────────
+// ── react-select widget (Greenhouse multi_value_single_select renders these) ──
 
-// Select the best option from a dropdown for the visa status field.
-// Returns the option value/label to select, or null if none match closely.
-function pickVisaOption(options, visaAnswer) {
-  if (!visaAnswer) return null;
-  const target = visaAnswer.toLowerCase();
+// Greenhouse "single select" questions are react-select comboboxes, not native
+// <select>. Open the control, then click the option whose text matches. Returns
+// true on success. Menu options render in a portal, so we query document-wide.
+async function selectReactOption(page, containerHandle, value) {
+  const control = await containerHandle.$('.select__control').catch(() => null);
+  if (!control) return false;
+  await control.click().catch(() => {});
+  await page.waitForTimeout(300);
 
-  // Exact match first
-  for (const opt of options) {
-    if (opt.toLowerCase() === target) return opt;
+  const target = String(value).toLowerCase().trim();
+  let opts = await page.$$('.select__option');
+
+  // exact, then substring-either-way
+  for (const o of opts) {
+    const t = (await o.innerText().catch(() => '')).trim().toLowerCase();
+    if (t === target) { await o.click().catch(() => {}); return true; }
+  }
+  for (const o of opts) {
+    const t = (await o.innerText().catch(() => '')).trim().toLowerCase();
+    if (t && (t.includes(target) || target.includes(t))) { await o.click().catch(() => {}); return true; }
   }
 
-  // Substring match — e.g. "485" or "Temporary Graduate" inside an option
-  const keywords = target.split(/\s+/);
-  for (const opt of options) {
-    const ol = opt.toLowerCase();
-    if (keywords.every(kw => ol.includes(kw))) return opt;
+  // fallback: type to filter, then take the first option
+  const input = await containerHandle.$('input.select__input, input[role=combobox]').catch(() => null);
+  if (input) {
+    await input.type(String(value).slice(0, 40), { delay: 10 }).catch(() => {});
+    await page.waitForTimeout(400);
+    opts = await page.$$('.select__option');
+    if (opts.length) { await opts[0].click().catch(() => {}); return true; }
   }
-
-  // Partial word overlap ≥ 2 significant words
-  for (const opt of options) {
-    const ol = opt.toLowerCase();
-    const matches = keywords.filter(kw => kw.length > 3 && ol.includes(kw));
-    if (matches.length >= 2) return opt;
-  }
-
-  return null; // no close match — leave for manual selection
+  await page.keyboard.press('Escape').catch(() => {});
+  return false;
 }
 
-// ── Greenhouse form fill ──────────────────────────────────────────────────────
-
-async function fillGreenhouse(page, profile, role) {
-  // Greenhouse application forms render as standard <label for="…"> + input
-  // pairs. The previous implementation keyed off a `[data-field]` wrapper
-  // selector, which finds 0 elements on the live job-boards.greenhouse.io DOM
-  // (every field was silently skipped, then "All recognisable fields filled"
-  // was printed — a false success). The generic label-based resolver works on
-  // the real DOM and is already proven for Ashby, so delegate to it.
-  return fillByLabels(page, profile, role);
-}
-
-// ── Lever form fill ───────────────────────────────────────────────────────────
-
-async function fillLever(page, profile, role) {
-  const manualFields = [];
-
-  // Lever renders a standard application form with input[name] attributes
-  const fieldDefs = [
-    { names: ['first_name', 'firstname'],         key: 'first' },
-    { names: ['last_name', 'lastname'],           key: 'last' },
-    { names: ['name', 'full_name'],               key: 'full' },
-    { names: ['email'],                           key: 'email' },
-    { names: ['phone'],                           key: 'phone' },
-    { names: ['org', 'company', 'employer'],      key: null }, // don't fill — N/A for candidate
-    { names: ['location', 'city'],                key: 'location' },
-    { names: ['linkedin', 'linkedin_profile'],    key: 'linkedin' },
-    { names: ['github', 'github_profile'],        key: 'github' },
-    { names: ['portfolio', 'website'],            key: 'portfolio' },
-    { names: ['salary', 'compensation'],          key: 'salary' },
-    { names: ['comments', 'additional'],          key: null }, // skip — ambiguous
-  ];
-
-  const { first, last } = splitName(profile.candidate?.full_name);
-  const valueMap = {
-    first:    first,
-    last:     last,
-    full:     profile.candidate?.full_name,
-    email:    profile.candidate?.email,
-    phone:    profile.candidate?.phone,
-    location: profile.candidate?.location,
-    linkedin: profile.candidate?.linkedin,
-    github:   profile.candidate?.github,
-    portfolio: profile.candidate?.github, // use GitHub if no portfolio URL
-    salary:   profile.application_answers?.salary_range,
-  };
-
-  for (const { names, key } of fieldDefs) {
-    if (!key) continue;
-    const value = valueMap[key];
-    if (!value) continue;
-
-    for (const name of names) {
-      const input = await page.$(`input[name="${name}"], textarea[name="${name}"]`).catch(() => null);
-      if (input) {
-        await input.fill(value);
-        console.log(`  ✅ ${name}: "${value.slice(0, 60)}"`);
-        break;
-      }
-    }
-  }
-
-  // Resume upload
-  const resumeInput = await page.$('input[type=file]').catch(() => null);
-  if (resumeInput && role.cv_pdf && existsSync(join(ROOT, role.cv_pdf))) {
-    await resumeInput.setInputFiles(join(ROOT, role.cv_pdf));
-    console.log(`  ✅ Resume: ${role.cv_pdf}`);
-  } else if (resumeInput) {
-    manualFields.push({ label: 'Resume/CV', reason: 'cv_pdf not ready' });
-  }
-
-  // Cover letter textarea (Lever uses a generic textarea for this)
-  const coverDraft = coverLetterAnswer(role);
-  if (coverDraft) {
-    const ta = await page.$('textarea[name="comments"], textarea[name="cover_letter"]').catch(() => null);
-    if (ta) {
-      await ta.fill(coverDraft);
-      console.log(`  ✅ Cover letter/comments: draft applied`);
-    }
-  }
-
-  // Work auth — Lever typically uses a checkbox or select; don't guess
-  const visaInput = await page.$('select[name*="visa"], select[name*="auth"], select[name*="work"]').catch(() => null);
-  if (visaInput) {
-    const opts = await visaInput.$$eval('option', els => els.map(e => e.textContent.trim()));
-    const pick = pickVisaOption(opts, role.visa_answer);
-    if (pick) {
-      await visaInput.selectOption({ label: pick });
-      console.log(`  ✅ Visa: "${pick}"`);
-    } else {
-      manualFields.push({ label: 'Work authorization', reason: `no matching option for "${role.visa_answer}"` });
-    }
-  }
-
-  return manualFields;
-}
-
-// ── Ashby form fill ───────────────────────────────────────────────────────────
-
-async function fillAshby(page, profile, role) {
-  // Ashby renders form questions with visible labels inside div wrappers.
-  // We use label text matching (same strategy as Greenhouse).
-  return fillByLabels(page, profile, role);
-}
-
-// ── Generic label-based fill (Ashby + fallback) ───────────────────────────────
+// ── Label-based fill (Greenhouse + Ashby + generic fallback) ───────────────────
 
 async function fillByLabels(page, profile, role) {
-  const manualFields = [];
+  const filled = [];        // { label, value, provenance }
+  const manual = [];        // { label, reason }
+  const cacheConfirms = []; // { label, value } — first-time cache reuse
 
-  // Get all visible label elements and find their associated input
   const labels = await page.$$('label');
 
   for (const labelEl of labels) {
-    const labelText = await labelEl.evaluate(el => el.innerText).catch(() => '');
-    if (!labelText.trim()) continue;
+    const labelText = (await labelEl.evaluate((el) => el.innerText).catch(() => '')).trim();
+    if (!labelText) continue;
 
+    // Resolve the associated input.
     const forAttr = await labelEl.getAttribute('for').catch(() => null);
     let input = null;
-
-    if (forAttr) {
-      input = await page.$(`#${cssEscape(forAttr)}`).catch(() => null);
-    }
+    if (forAttr) input = await page.$(`#${cssEscape(forAttr)}`).catch(() => null);
+    if (!input) input = await labelEl.$('~ input, ~ textarea, ~ select').catch(() => null);
     if (!input) {
-      input = await labelEl.$('~ input, ~ textarea, ~ select').catch(() => null);
-    }
-    if (!input) {
-      // Try sibling/parent
-      input = await labelEl.evaluateHandle(el => {
+      input = await labelEl.evaluateHandle((el) => {
         const next = el.nextElementSibling;
         if (next && ['INPUT', 'TEXTAREA', 'SELECT'].includes(next.tagName)) return next;
         const parent = el.parentElement;
@@ -286,74 +166,145 @@ async function fillByLabels(page, profile, role) {
       }).catch(() => null);
       if (input?.asElement() == null) input = null;
     }
-
     if (!input) continue;
 
-    const tagName = await input.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
-    const inputType = await input.getAttribute('type').catch(() => 'text');
+    const tagName = await input.evaluate((el) => el.tagName.toLowerCase()).catch(() => '');
+    const inputType = (await input.getAttribute('type').catch(() => 'text')) || 'text';
+    const inputRole = await input.getAttribute('role').catch(() => null);
+    const inputClass = (await input.getAttribute('class').catch(() => '')) || '';
+    const isReactSelect = tagName !== 'select' && (inputRole === 'combobox' || /select__input/.test(inputClass));
 
-    // File inputs — resume only
+    // File input → resume/CV attach only.
     if (inputType === 'file') {
-      if (/resume|cv|curriculum/i.test(labelText)) {
+      if (RESUME_RE.test(labelText)) {
         if (role.cv_pdf && existsSync(join(ROOT, role.cv_pdf))) {
           await input.setInputFiles(join(ROOT, role.cv_pdf)).catch(() => {});
-          console.log(`  ✅ Resume: ${role.cv_pdf}`);
+          filled.push({ label: labelText, value: role.cv_pdf, provenance: 'deterministic:cv-attach' });
         } else {
-          manualFields.push({ label: labelText.trim(), reason: 'cv_pdf not ready' });
+          manual.push({ label: labelText, reason: 'cv_pdf not generated — run /career-ops queue prepare' });
         }
       } else {
-        manualFields.push({ label: labelText.trim(), reason: 'unrecognised file upload' });
+        manual.push({ label: labelText, reason: 'file upload (not a resume) — attach manually' });
       }
       continue;
     }
 
-    // Visa dropdown
-    if (tagName === 'select' && /visa|work.?auth|right.?to.?work|authoris/i.test(labelText)) {
-      const opts = await input.$$eval('option', els => els.map(e => e.textContent.trim())).catch(() => []);
-      const pick = pickVisaOption(opts, role.visa_answer);
-      if (pick) {
-        await input.selectOption({ label: pick }).catch(() => {});
-        console.log(`  ✅ Visa: "${pick}"`);
-      } else {
-        manualFields.push({ label: labelText.trim(), reason: `no option matches "${role.visa_answer}"` });
-      }
-      continue;
-    }
-
-    // Standard select
-    if (tagName === 'select') {
-      const match = matchField(labelText, 'select', profile, role);
-      if (match) {
-        const opts = await input.$$eval('option', els => els.map(e => e.textContent.trim())).catch(() => []);
-        const pick = opts.find(o => o.toLowerCase().includes(match.value.toLowerCase()));
-        if (pick) await input.selectOption({ label: pick }).catch(() => {});
-        else manualFields.push({ label: labelText.trim(), reason: 'no matching option' });
-      } else {
-        manualFields.push({ label: labelText.trim(), reason: 'custom field' });
-      }
-      continue;
-    }
-
-    // Checkbox — only handle sponsorship
+    // Sponsorship checkbox → we do NOT require sponsorship → leave unchecked.
     if (inputType === 'checkbox' && /sponsor/i.test(labelText)) {
-      // "Do you require sponsorship?" → we do NOT require sponsorship → leave unchecked
       const checked = await input.isChecked().catch(() => false);
       if (checked) await input.uncheck().catch(() => {});
-      console.log(`  ✅ Sponsorship checkbox: unchecked (no sponsorship required)`);
+      filled.push({ label: labelText, value: 'unchecked', provenance: 'deterministic:sponsorship' });
       continue;
     }
 
-    // Text / textarea / email / tel
-    const match = matchField(labelText, inputType, profile, role);
-    if (match) {
-      await input.fill(match.value).catch(() => {});
-      console.log(`  ✅ ${labelText.trim()}: "${match.value.slice(0, 60)}${match.value.length > 60 ? '…' : ''}"`);
+    const liveOptions = tagName === 'select'
+      ? await input.$$eval('option', (els) => els.map((e) => e.textContent.trim())).catch(() => [])
+      : [];
+
+    // react-select fields: pass no options — selectReactOption matches the value
+    // by typing to filter (drafts already carry the exact option text).
+    const r = resolveField(labelText, isReactSelect ? 'select' : tagName, inputType,
+      liveOptions, profile, role);
+    if (!r) {
+      manual.push({ label: labelText, reason: 'custom or unrecognised field — no standing answer' });
+      continue;
+    }
+
+    let applied = false;
+    if (isReactSelect) {
+      const container = await labelEl.evaluateHandle(
+        (el) => el.closest('.select__container') || el.parentElement
+      );
+      applied = await selectReactOption(page, container.asElement(), r.value);
+      if (!applied) { manual.push({ label: labelText, reason: `no option matches "${r.value}"` }); continue; }
+    } else if (r.widget === 'select' || tagName === 'select') {
+      const ok = await input.selectOption({ label: r.value }).then(() => true).catch(() => false);
+      applied = ok || await input.selectOption(r.value).then(() => true).catch(() => false);
+      if (!applied) { manual.push({ label: labelText, reason: `no option matches "${r.value}"` }); continue; }
     } else {
-      manualFields.push({ label: labelText.trim(), reason: 'custom or unrecognised field' });
+      await input.fill(String(r.value)).catch(() => {});
+      applied = true;
+    }
+
+    if (applied) {
+      filled.push({ label: labelText, value: r.value, provenance: r.provenance });
+      if (r.firstUse) cacheConfirms.push({ label: labelText, value: r.value });
     }
   }
 
-  return manualFields;
+  return { filled, manual, cacheConfirms };
+}
+
+// ── Lever fill (name-attribute form) — draft/rule aware ────────────────────────
+
+async function fillLever(page, profile, role) {
+  // Lever uses input[name=...] without robust <label for>. We still honour any
+  // prepared drafts by label, then fall back to the known Lever field names.
+  const filled = [];
+  const manual = [];
+  const cacheConfirms = [];
+
+  // 1) Apply any prepared drafts whose normalised label matches a Lever field
+  //    we can locate by its visible card label.
+  const labelCards = await page.$$('.application-label, label, .application-question .text').catch(() => []);
+  for (const el of labelCards) {
+    const labelText = (await el.evaluate((n) => n.innerText).catch(() => '')).trim();
+    if (!labelText) continue;
+    const key = normLabel(labelText);
+    const draft = role.drafts?.[key];
+    if (!draft) continue;
+    const input = await el.evaluateHandle((n) => {
+      const root = n.closest('.application-question, li, .form-field') || n.parentElement;
+      return root?.querySelector('input:not([type=hidden]), textarea, select') || null;
+    }).catch(() => null);
+    if (input?.asElement() == null) continue;
+    const tag = await input.evaluate((n) => n.tagName.toLowerCase()).catch(() => '');
+    if (tag === 'select') {
+      const ok = await input.selectOption({ label: draft.answer }).then(() => true).catch(() => false);
+      if (!ok) { manual.push({ label: labelText, reason: `no option matches "${draft.answer}"` }); continue; }
+    } else {
+      await input.fill(String(draft.answer)).catch(() => {});
+    }
+    filled.push({ label: labelText, value: draft.answer, provenance: provenanceLabel(draft.source, draft.rule, draft.score) });
+    if (draft.source === 'cache' && draft.firstUse) cacheConfirms.push({ label: labelText, value: draft.answer });
+  }
+
+  // 2) Known fixed Lever fields by name (deterministic from profile).
+  const { candidate = {}, application_answers = {} } = profile;
+  const nameMap = [
+    { names: ['name', 'full_name'], value: candidate.full_name },
+    { names: ['email'], value: candidate.email },
+    { names: ['phone'], value: candidate.phone },
+    { names: ['urls[LinkedIn]', 'urls[Linkedin]', 'linkedin'], value: candidate.linkedin },
+    { names: ['urls[GitHub]', 'github'], value: candidate.github },
+    { names: ['urls[Portfolio]', 'portfolio', 'website'], value: application_answers.website || candidate.github },
+    { names: ['location', 'city'], value: candidate.location },
+  ];
+  for (const { names, value } of nameMap) {
+    if (!value) continue;
+    for (const name of names) {
+      const input = await page.$(`input[name="${name}"], textarea[name="${name}"]`).catch(() => null);
+      if (input) {
+        const already = await input.inputValue().catch(() => '');
+        if (!already) {
+          await input.fill(String(value)).catch(() => {});
+          filled.push({ label: name, value, provenance: 'deterministic' });
+        }
+        break;
+      }
+    }
+  }
+
+  // 3) Resume upload.
+  const resumeInput = await page.$('input[type=file]').catch(() => null);
+  if (resumeInput && role.cv_pdf && existsSync(join(ROOT, role.cv_pdf))) {
+    await resumeInput.setInputFiles(join(ROOT, role.cv_pdf)).catch(() => {});
+    filled.push({ label: 'Resume/CV', value: role.cv_pdf, provenance: 'deterministic:cv-attach' });
+  } else if (resumeInput) {
+    manual.push({ label: 'Resume/CV', reason: 'cv_pdf not ready' });
+  }
+
+  return { filled, manual, cacheConfirms };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -366,17 +317,13 @@ async function main() {
   }
 
   const profile = loadProfile();
-  const queue   = loadQueue();
-  const role    = queue.roles.find(r => r.id === roleId);
-
-  if (!role) {
-    console.error(`Role not found in queue: ${roleId}`);
-    process.exit(1);
-  }
+  const queue = loadQueue();
+  const role = queue.roles.find((r) => r.id === roleId);
+  if (!role) { console.error(`Role not found in queue: ${roleId}`); process.exit(1); }
 
   if (role.ats === 'custom') {
     console.log(`\n${role.company} – ${role.title}`);
-    console.log(`ATS: custom — use /career-ops apply instead.`);
+    console.log('ATS: custom — use /career-ops apply (the agent apply path applies the same layered principle).');
     console.log(`URL: ${role.url}`);
     process.exit(0);
   }
@@ -390,97 +337,86 @@ async function main() {
   }
   console.log('');
 
-  // Launch headed browser — leave open for the user to review and submit
-  const browser = await chromium.launch({
-    headless: false,
-    // Use bundled Chromium
-  });
-
+  const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
   page.setDefaultTimeout(15_000);
 
-  // Re-verify liveness before filling
   console.log('Verifying posting is still live…');
   const { result, reason } = await checkUrlLiveness(page, role.url);
-
   if (result === 'expired') {
     console.log(`❌ Posting appears closed: ${reason}`);
-    console.log('Marking as closed in queue.');
-    // Update queue status
     const q2 = loadQueue();
     updateById(q2, roleId, { status: 'closed', decided_at: new Date().toISOString() });
     saveQueue(q2);
     await browser.close();
     return;
   }
-
   if (result === 'uncertain') {
-    console.log(`⚠️  Liveness uncertain: ${reason}`);
-    console.log('Proceeding, but verify manually that the form is open.');
+    console.log(`⚠️  Liveness uncertain: ${reason}. Proceeding — verify the form is open.`);
   } else {
     console.log('✅ Posting is live.\n');
   }
 
-  // Navigate to the application form
-  // For Greenhouse/Lever/Ashby the JD page usually has an Apply button
   await page.goto(role.url, { waitUntil: 'domcontentloaded', timeout: 20_000 });
-  await page.waitForTimeout(2_000); // let SPA hydrate
+  await page.waitForTimeout(2_000);
 
-  // Try to click an Apply button if we're on the JD page rather than the form
   const applyBtn = await page.$('a:text("Apply"), button:text("Apply"), a:text("Apply now"), button:text("Apply now")').catch(() => null);
-  if (applyBtn) {
-    await applyBtn.click().catch(() => {});
-    await page.waitForTimeout(2_000);
-  }
+  if (applyBtn) { await applyBtn.click().catch(() => {}); await page.waitForTimeout(2_000); }
 
-  console.log('Filling form fields (high-confidence only):');
+  console.log('Applying resolved fields (layer-labelled):');
 
-  let manualFields = [];
+  let result2 = { filled: [], manual: [], cacheConfirms: [] };
   try {
-    if (role.ats === 'greenhouse') {
-      manualFields = await fillGreenhouse(page, profile, role);
-    } else if (role.ats === 'lever') {
-      manualFields = await fillLever(page, profile, role);
-    } else if (role.ats === 'ashby') {
-      manualFields = await fillAshby(page, profile, role);
-    } else {
-      manualFields = await fillByLabels(page, profile, role);
-    }
+    if (role.ats === 'lever') result2 = await fillLever(page, profile, role);
+    else result2 = await fillByLabels(page, profile, role); // greenhouse, ashby, fallback
   } catch (err) {
     console.error(`Fill error: ${err.message}`);
   }
 
-  // Report manual fields
-  if (manualFields.length > 0) {
-    console.log(`\n⚠️  ${manualFields.length} field(s) left blank for manual completion:`);
-    for (const f of manualFields) {
-      console.log(`   · ${f.label}: ${f.reason}`);
-    }
+  const { filled, manual, cacheConfirms } = result2;
 
-    // Update queue record with manual-field flag
+  // Provenance-labelled review view.
+  const tally = { deterministic: 0, 'reused-from-cache': 0, 'model-reasoned': 0 };
+  for (const f of filled) {
+    const cls = f.provenance.startsWith('reused-from-cache') ? 'reused-from-cache'
+      : f.provenance.startsWith('model-reasoned') ? 'model-reasoned' : 'deterministic';
+    tally[cls]++;
+    const v = String(f.value).replace(/\s+/g, ' ');
+    console.log(`  ✅ [${f.provenance}] ${f.label.replace(/\s+/g, ' ').slice(0, 60)}: "${v.slice(0, 50)}${v.length > 50 ? '…' : ''}"`);
+  }
+
+  if (cacheConfirms.length > 0) {
+    console.log(`\n🟡 First-time cache reuse — confirm these once before submit:`);
+    for (const c of cacheConfirms) {
+      console.log(`   · ${c.label.replace(/\s+/g, ' ').slice(0, 60)} → "${String(c.value).replace(/\s+/g, ' ').slice(0, 60)}"`);
+    }
+  }
+
+  if (manual.length > 0) {
+    console.log(`\n⚠️  ${manual.length} field(s) left blank for manual completion:`);
+    for (const f of manual) console.log(`   · ${f.label.replace(/\s+/g, ' ').slice(0, 60)}: ${f.reason}`);
     const q2 = loadQueue();
-    const existing = q2.roles.find(r => r.id === roleId);
+    const existing = q2.roles.find((r) => r.id === roleId);
     if (existing) {
       const flags = Array.from(new Set([...(existing.flags || []), 'manual-field']));
       updateById(q2, roleId, { flags });
       saveQueue(q2);
     }
-  } else {
-    console.log('\n✅ All recognisable fields filled.');
   }
 
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('\n────────────────────────────────────────────────────────');
+  console.log(`Filled ${filled.length}: ${tally.deterministic} deterministic · ${tally['reused-from-cache']} reused-from-cache · ${tally['model-reasoned']} model-reasoned`);
+  console.log(`Manual: ${manual.length}`);
+  console.log('────────────────────────────────────────────────────────');
   console.log('FORM FILL COMPLETE — BROWSER REMAINS OPEN');
-  console.log('Review every field before submitting.');
-  console.log('Submit is YOUR action — this script never clicks submit.');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-  console.log('Close this terminal (or press Ctrl+C) after you are done.');
+  console.log('Review every field before submitting. Submit is YOUR action —');
+  console.log('this script never locates or clicks submit.');
+  console.log('────────────────────────────────────────────────────────\n');
 
-  // Keep process alive so the browser stays open
-  await new Promise(() => {}); // never resolves — browser window stays visible
+  await new Promise(() => {}); // keep the browser visible until the user closes it
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Fatal:', err.message);
   process.exit(1);
 });

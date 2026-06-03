@@ -2,6 +2,8 @@
 cv.md
 data/applications.md
 data/apply-queue.json
+data/answer-cache.json
+data/.answer-cache-*.tmp
 data/pipeline.md
 data/scan-history.tsv
 data/parser-output/**/*.json

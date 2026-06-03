@@ -88,12 +88,18 @@ async function fetchGreenhouseJob(slug, id) {
     const type    = q.fields[0]?.type || 'input_text';
     const name    = q.fields[0]?.name || q.label;
     const kind    = classifyGreenhouseField(q.label, type);
+    // Capture select options so the resolver can map an answer to an exact
+    // option (Greenhouse exposes them as fields[0].values[].label).
+    const options = (q.fields[0]?.values || [])
+      .map((v) => (v && v.label != null ? String(v.label) : null))
+      .filter(Boolean);
     formFields.push({
       key:      name,
       label:    q.label,
       type,
       required: !!q.required,
       kind,
+      ...(options.length ? { options } : {}),
     });
   }
 

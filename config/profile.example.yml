@@ -65,6 +65,38 @@ location:
   visa_status: "No sponsorship needed"
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
+  # Discrete answers for visa-status dropdowns on application forms:
+  # visa_form_answer_fulltime: "..."
+  # visa_form_answer_parttime: "..."
+  sponsorship_answer: "No sponsorship required"
+
+# ── Application form answers (Layer 1 of the form-fill resolver) ──────────────
+# Static answers the resolver fills deterministically (zero model tokens) via
+# field-rules.mjs. The classic fixed fields plus the employer-independent custom
+# fields the old fill used to leave blank. Reviewed by you before submit.
+application_answers:
+  salary_range: "$150,000 – 200,000"
+  notice_period: "2 weeks"
+  # Employer-independent custom fields:
+  current_residence: "San Francisco, CA, USA"
+  open_to_relocation: "Open to relocation for the right role."
+  office_days_commitment: "Yes — I can commit to the required days in office."
+  work_rights_freetext: "I have full working rights and require no sponsorship."
+  work_rights_consent: "Yes, I consent."
+  website: "https://your-portfolio.example.com"
+  # Part-time guardrail (only used for roles classified part-time):
+  # availability_parttime: "..."
+  # max_hours_per_week_parttime: 24
+
+# ── Local embedding endpoint (Layer 2 semantic answer cache) ──────────────────
+# Optional. Enables zero-token reuse of previously answered form questions via a
+# local embedding model. Point `python` at an interpreter that has
+# sentence-transformers + torch and can load the model below. Override with
+# $CAREER_OPS_EMBED_PYTHON. If unset/unavailable, Layer 2 is skipped gracefully.
+# embedding:
+#   python: "/abs/path/to/venv/bin/python"
+#   model: "google/embeddinggemma-300m"
+#   threshold: 0.85   # cosine cutoff for reusing a cached answer
 
 cv:
   output_format: "html" # "html" (default) or "latex"
