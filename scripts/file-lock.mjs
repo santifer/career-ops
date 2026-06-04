@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { hostname } from 'os';
+import { randomUUID } from 'crypto';
 
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_RETRY_DELAY_MS = 75;
@@ -29,6 +30,10 @@ function processIsAlive(pid) {
   }
 }
 
+function hasUsablePid(metadata) {
+  return Number.isInteger(metadata?.pid) && metadata.pid > 0;
+}
+
 function lockAgeMs(lockDir, metadata) {
   if (metadata?.created_at) {
     const createdAt = Date.parse(metadata.created_at);
@@ -42,19 +47,68 @@ function lockAgeMs(lockDir, metadata) {
   }
 }
 
-function staleLockReason(lockDir, staleMs) {
-  const metadata = readJsonIfPresent(join(lockDir, 'owner.json'));
+function lockSnapshot(lockDir) {
+  try {
+    const stat = statSync(lockDir);
+    return {
+      dev: stat.dev,
+      ino: stat.ino,
+      metadata: readJsonIfPresent(join(lockDir, 'owner.json')),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function sameOwnerMetadata(left, right) {
+  if (left?.token || right?.token) {
+    return Boolean(left?.token && right?.token && left.token === right.token);
+  }
+
+  return (left?.owner ?? null) === (right?.owner ?? null)
+    && (left?.pid ?? null) === (right?.pid ?? null)
+    && (left?.hostname ?? null) === (right?.hostname ?? null)
+    && (left?.created_at ?? null) === (right?.created_at ?? null);
+}
+
+function sameLockSnapshot(left, right) {
+  return Boolean(left && right
+    && left.dev === right.dev
+    && left.ino === right.ino
+    && sameOwnerMetadata(left.metadata, right.metadata));
+}
+
+function staleLockStatus(lockDir, staleMs) {
+  const snapshot = lockSnapshot(lockDir);
+  if (!snapshot) return null;
+
+  const metadata = snapshot.metadata;
   const ageMs = lockAgeMs(lockDir, metadata);
 
-  if (metadata?.pid && !processIsAlive(metadata.pid)) {
-    return `owner pid ${metadata.pid} is not running`;
+  if (hasUsablePid(metadata)) {
+    if (processIsAlive(metadata.pid)) return null;
+    return { reason: `owner pid ${metadata.pid} is not running`, snapshot };
   }
 
   if (ageMs > staleMs) {
-    return `lock age ${Math.round(ageMs)}ms exceeded stale limit ${staleMs}ms`;
+    return {
+      reason: `lock has no usable owner pid and age ${Math.round(ageMs)}ms exceeded stale limit ${staleMs}ms`,
+      snapshot,
+    };
   }
 
   return null;
+}
+
+function removeLockIfUnchanged(lockDir, expectedSnapshot) {
+  if (!sameLockSnapshot(expectedSnapshot, lockSnapshot(lockDir))) return false;
+  rmSync(lockDir, { recursive: true, force: true });
+  return true;
+}
+
+function ownerMatchesCurrentLock(lockDir, expectedToken) {
+  const metadata = readJsonIfPresent(join(lockDir, 'owner.json'));
+  return metadata?.token && metadata.token === expectedToken;
 }
 
 /**
@@ -83,13 +137,20 @@ export async function acquireFileLock(lockDir, options = {}) {
       mkdirSync(lockDir);
       const waitMs = Date.now() - startedAt;
       let released = false;
+      const token = randomUUID();
 
-      writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
-        owner,
-        pid: process.pid,
-        hostname: hostname(),
-        created_at: new Date().toISOString(),
-      }, null, 2));
+      try {
+        writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
+          owner,
+          pid: process.pid,
+          hostname: hostname(),
+          token,
+          created_at: new Date().toISOString(),
+        }, null, 2));
+      } catch (err) {
+        rmSync(lockDir, { recursive: true, force: true });
+        throw err;
+      }
 
       return {
         lockDir,
@@ -99,18 +160,21 @@ export async function acquireFileLock(lockDir, options = {}) {
         release() {
           if (released) return;
           released = true;
-          rmSync(lockDir, { recursive: true, force: true });
+          if (ownerMatchesCurrentLock(lockDir, token)) {
+            rmSync(lockDir, { recursive: true, force: true });
+          }
         },
       };
     } catch (err) {
       if (err?.code !== 'EEXIST') throw err;
 
-      const reason = existsSync(lockDir) ? staleLockReason(lockDir, staleMs) : null;
-      if (reason) {
+      const stale = existsSync(lockDir) ? staleLockStatus(lockDir, staleMs) : null;
+      if (stale?.reason) {
         try {
-          rmSync(lockDir, { recursive: true, force: true });
-          staleRecovered = true;
-          continue;
+          if (removeLockIfUnchanged(lockDir, stale.snapshot)) {
+            staleRecovered = true;
+            continue;
+          }
         } catch {
           // Another process may have removed or recreated the lock first.
         }

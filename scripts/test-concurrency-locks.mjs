@@ -9,10 +9,11 @@
  */
 
 import { spawn } from 'child_process';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { acquireFileLock } from './file-lock.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const NODE = process.execPath;
@@ -115,6 +116,64 @@ function expectedRange(start, count) {
   return Array.from({ length: count }, (_, idx) => start + idx);
 }
 
+async function verifyLiveOwnerLockIsNotReaped() {
+  const root = mkdtempSync(join(tmpdir(), 'career-ops-live-lock-'));
+  const lockDir = join(root, 'live-owner.lock');
+  mkdirSync(lockDir, { recursive: true });
+  writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
+    owner: 'live-owner-test',
+    pid: process.pid,
+    hostname: 'test-host',
+    created_at: new Date(Date.now() - 60_000).toISOString(),
+  }, null, 2));
+
+  try {
+    let timedOut = false;
+    try {
+      const lock = await acquireFileLock(lockDir, {
+        owner: 'live-owner-contender',
+        timeoutMs: 120,
+        retryDelayMs: 20,
+        staleMs: 1,
+      });
+      lock.release();
+    } catch (err) {
+      timedOut = err.message.includes('Timed out waiting for lock');
+    }
+
+    assert(timedOut, 'expected an old lock with a live owner pid to block until timeout');
+    assert(existsSync(lockDir), 'old lock with a live owner pid should not be deleted');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+async function verifyDeadOwnerLockIsReaped() {
+  const root = mkdtempSync(join(tmpdir(), 'career-ops-dead-lock-'));
+  const lockDir = join(root, 'dead-owner.lock');
+  mkdirSync(lockDir, { recursive: true });
+  writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
+    owner: 'dead-owner-test',
+    pid: Number.MAX_SAFE_INTEGER,
+    hostname: 'test-host',
+    created_at: new Date(Date.now() - 60_000).toISOString(),
+  }, null, 2));
+
+  try {
+    const lock = await acquireFileLock(lockDir, {
+      owner: 'dead-owner-contender',
+      timeoutMs: 500,
+      retryDelayMs: 20,
+      staleMs: 1,
+    });
+    assert(lock.staleRecovered, 'expected a stale lock with a dead owner pid to be recovered');
+    lock.release();
+    assert(!existsSync(lockDir), 'recovered lock should be released by the new owner');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 async function main() {
   const fixture = createFixture();
   const env = envFor(fixture);
@@ -127,6 +186,12 @@ async function main() {
   console.log('');
 
   try {
+    console.log('0) Checking stale-lock safety...');
+    await verifyLiveOwnerLockIsNotReaped();
+    await verifyDeadOwnerLockIsReaped();
+    console.log('  result=PASS live owner locks are preserved and dead owner locks recover');
+    console.log('');
+
     console.log('1) Reserving IDs in parallel...');
     const reservationResults = await Promise.all(
       Array.from({ length: WORKER_COUNT }, (_, idx) => runNode(
