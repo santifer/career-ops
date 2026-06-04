@@ -14,7 +14,7 @@ record exists for this role (match by URL or company+title):
   `config/profile.yml` and `modes/_profile.md`.
 
 **On open:** re-verify liveness (Playwright `browser_navigate` + `browser_snapshot`).
-If the posting is closed, mark the queue record `status: "closed"` and inform Neil.
+If the posting is closed, mark the queue record `status: "closed"` and inform the candidate.
 
 **Conservative fill:** only populate fields that can be mapped with high confidence
 from `config/profile.yml` and the queue record. Any field that cannot be confidently
@@ -24,43 +24,43 @@ Never guess or approximate a value. A blank field is acceptable; a wrong value i
 **Part-time hours guardrail:** for part-time roles, any hours/week or availability
 field must use `application_answers.availability_parttime` (text) or
 `application_answers.max_hours_per_week_parttime` (number). Never enter a value
-above 24 hours/week for a part-time role on a student visa.
+above the configured work-rights or availability limit in `config/profile.yml`.
 
-**Stop before submit:** this mode fills and presents answers; Neil submits manually.
-After Neil confirms submission, call `POST /api/role/:id/decision {decision:"submitted"}`
-on the local dashboard server (if running) to write the status back and sync the tracker.
+**Stop before submit:** this mode fills and presents answers; the candidate submits manually.
+After the candidate confirms submission, call
+`POST /api/role/:id/decision {decision:"submitted"}` on the local dashboard server
+(if running) to write the status back and sync the tracker.
 
 ---
 
 ## Login-gated portals (standing procedure)
 
-Some custom ATSes (Vic Gov careers, ELMO Talent, Workday, PageUp, Taleo,
-SmartRecruiters, SAP SuccessFactors, iCIMS) gate the application form behind a
-candidate account login. These roles carry the `login-required` flag in the queue and
-show a 🔐 badge in the dashboard.
+Some ATSes gate the application form behind a candidate account login.
+These roles carry the `login-required` flag in the queue and show a 🔐 badge
+in the dashboard.
 
-**For Greenhouse / Lever / Ashby roles (`form-fill.mjs` path):** the script handles
-login/registration fully automatically — see `form-fill.mjs` and `login-core.mjs`. The
-script fills the registration form with real PII from `config/profile.yml`, generates
-and stores a unique password per portal in `data/portal-credentials.json` (gitignored),
-clicks Register, then polls every 3 s until the application form appears or the
-configurable timeout (`automation.login_timeout_min`) is reached. Neil resolves email
-verification, CAPTCHA, and OTP during the wait.
+**For deterministic-fill roles (`form-fill.mjs` path — Greenhouse / Lever / Ashby):**
+`form-fill.mjs` handles login-wall detection and polling automatically. It reads
+credentials from `data/portal-credentials.json` (gitignored) and follows the
+login/registration capabilities configured in the user's `config/profile.yml`
+(`automation.login_timeout_min`). Refer to `form-fill.mjs` and `login-core.mjs`
+for the exact behavior.
 
 **For custom ATS roles (agent apply path — this mode):**
 
 1. Navigate to the posting URL and take a snapshot.
 2. If a sign-in / register wall is present (no application form visible):
    - Detect whether it is a **login wall** or a **registration form**.
-   - **Registration form**: fill real PII from `config/profile.yml`; call
+   - **Registration form**: fill PII from `config/profile.yml`; call
      `getOrCreateCredentials(host)` from `credentials-store.mjs` to get or generate a
-     unique password; fill the password fields; click **Register / Sign up / Create
+     password; fill the password fields; click **Register / Sign up / Create
      account**. Then enter the polling loop (step 3).
-   - **Login wall** (account already exists): tell Neil which credential is stored for
-     this portal, then poll (step 3).
+   - **Login wall** (account already exists): tell the candidate which credential is
+     stored for this portal, then poll (step 3).
 3. Poll every ~3 s for the post-login signal (application form fields visible) for up
-   to `automation.login_timeout_min` minutes. Neil resolves email verification / CAPTCHA
-   / OTP during this window — the polling loop waits without conversational interruption.
+   to `automation.login_timeout_min` minutes. The candidate resolves email verification /
+   CAPTCHA / OTP during this window — the polling loop waits without conversational
+   interruption.
 4. Once the form is visible, continue with the normal layered fill
    (deterministic → cache → model-reasoned).
 5. **Multi-page wizards**: click **Continue / Next / Save and continue / Review** to
@@ -72,14 +72,14 @@ verification, CAPTCHA, and OTP during the wait.
    `config/profile.yml`.
 7. Leave the browser/tab open at the filled form. **Never locate or click the final
    submit button** — the denylist is: "Submit", "Submit application", "Send application",
-   "Confirm and submit". Neil makes the final call.
-8. After Neil confirms submission: capture confirmation number if visible, screenshot to
-   `output/`, call `POST /api/role/:id/decision {decision:"submitted"}` to sync the
-   tracker.
+   "Confirm and submit". The candidate makes the final call.
+8. After the candidate confirms submission: capture confirmation number if visible,
+   screenshot to `output/`, call `POST /api/role/:id/decision {decision:"submitted"}`
+   to sync the tracker.
 
 **Note on passwords:** all auto-generated portal passwords are stored in
 `data/portal-credentials.json` (gitignored). If you need to look up a password for
-a portal Neil already has an account on, read that file.
+a portal the candidate already has an account on, read that file.
 
 ---
 

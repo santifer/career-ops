@@ -138,14 +138,12 @@ function buildCard(role, laneKey, idx) {
                   : '';
 
   // Visa badge
-  const visaText = role.visa_answer
-    ? role.visa_answer.replace('485 Temporary Graduate Visa', '485 TGV')
-                      .replace('Student Visa', 'Student')
-    : '';
+  const visaText = role.visa_answer || '';
   const visaBadge = visaText ? `<span class="badge badge-visa">${esc(visaText)}</span>` : '';
 
-  // Status badge (filled or prepared)
+  // Status badge (filled, prefilled, or prepared)
   const statusBadge = role.status === 'filled'   ? '<span class="badge badge-filled">Filled</span>'
+                    : role.status === 'prefilled' ? '<span class="badge badge-prefilled">Prefilled</span>'
                     : role.status === 'prepared'  ? '<span class="badge badge-prepared">PDF ready</span>'
                     : '';
 
@@ -305,6 +303,7 @@ function renderInbox(role) {
       <span class="badge badge-flag">${esc(role.size_bucket || 'unknown')}</span>
       ${role.eligibility !== 'ok' ? `<span class="badge badge-${role.eligibility === 'blocked' ? 'blocked' : 'cap'}">${esc(role.eligibility)}</span>` : ''}
       ${role.status === 'filled' ? '<span class="badge badge-filled">Filled ✓</span>' : ''}
+      ${role.status === 'prefilled' ? '<span class="badge badge-prefilled">Prefilled</span>' : ''}
     </div>
 
     ${role.reason ? `<div class="inbox-reason">${esc(role.reason)}</div>` : ''}
@@ -329,12 +328,21 @@ function renderInbox(role) {
   `;
 
   const note = document.getElementById('inbox-note');
+  const submitBtn = document.getElementById('btn-submit');
+  const isPrefilled = role.status === 'prefilled';
+  submitBtn.disabled = isPrefilled;
+  submitBtn.title = isPrefilled
+    ? 'Re-open with headed Fill Form and review before marking submitted'
+    : 'Mark submitted after manual submission';
+
   if (role.employment_type === 'ambiguous') {
     note.textContent = '⚠ Employment type is ambiguous — confirm before filling.';
   } else if (role.eligibility === 'blocked') {
     note.textContent = '⛔ Eligibility blocker — confirm manually before applying.';
   } else if ((role.flags || []).includes('knockout-flag')) {
     note.textContent = '⛔ Screener/knockout question detected — answer truthfully in the browser.';
+  } else if (isPrefilled) {
+    note.textContent = 'Headless pre-fill completed. Click Fill Form to re-open headed, review the live form, then submit manually.';
   } else if ((role.flags || []).includes('login-required')) {
     note.textContent = '🔐 Portal requires login — form-fill will handle registration/login automatically.';
   } else if (!role.cv_pdf) {
@@ -530,6 +538,11 @@ async function doFill() {
 
 async function doDecision(decision) {
   if (!activeId) return;
+  const role = allRoles.find(r => r.id === activeId);
+  if (decision === 'submitted' && role?.status === 'prefilled') {
+    toast('Re-open with headed Fill Form and review before marking submitted.', 4000);
+    return;
+  }
   const label = { submitted: 'Submitted', skipped: 'Skipped', reviewed: 'Reviewed' }[decision];
   try {
     const res = await fetch(`/api/role/${encodeURIComponent(activeId)}/decision`, {

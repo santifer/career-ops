@@ -396,6 +396,11 @@ function apiRoleDecision(req, res, id) {
     const queue = loadQueue();
     const role = queue.roles.find(r => r.id === id);
     if (!role) return respond(res, 404, { error: 'role not found' });
+    if (decision === 'submitted' && role.status === 'prefilled') {
+      return respond(res, 409, {
+        error: 'prefilled roles must be reopened with headed Fill Form before marking submitted',
+      });
+    }
 
     setStatus(queue, id, decision);
     saveQueue(queue);

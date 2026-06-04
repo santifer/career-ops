@@ -21,10 +21,16 @@ states:
     description: CV + documents generated, form fields resolved (maps to Evaluated on decide)
     dashboard_group: evaluated
 
+  - id: prefilled
+    label: Prefilled
+    aliases: [headless-filled, pre-filled]
+    description: Headless fill complete — needs headed re-open for user review before submit
+    dashboard_group: evaluated
+
   - id: filled
     label: Filled
     aliases: [form-filled, auto-filled]
-    description: Form fill complete, awaiting user review + manual submit
+    description: Headed fill complete, awaiting user review + manual submit
     dashboard_group: evaluated
 
   # Post-application tracker states

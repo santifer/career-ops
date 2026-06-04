@@ -340,6 +340,77 @@ async function verifyUpload(page, inputEl, filePath) {
   }
 }
 
+function pickUploadDocument(role, labelText, accepted = '') {
+  const wantsDocx = accepted.includes('.docx') || accepted.includes('officedocument');
+  let docPath = null;
+  let docKey  = 'cv_pdf';
+
+  if (COVER_RE.test(labelText) && role.cover_letter_path) {
+    docPath = role.cover_letter_path;
+    docKey  = 'cover_letter_path';
+  } else if (KSC_RE.test(labelText) && role.ksc_path) {
+    docPath = role.ksc_path;
+    docKey  = 'ksc_path';
+  } else if (wantsDocx && role.cv_docx && existsSync(join(ROOT, role.cv_docx))) {
+    docPath = role.cv_docx;
+    docKey  = 'cv_docx';
+  } else if (role.cv_pdf) {
+    docPath = role.cv_pdf;
+  }
+
+  return { docPath, docKey, wantsDocx };
+}
+
+async function attachDocumentInput(page, input, role, labelText, accepted, filled, manual) {
+  if (!(RESUME_RE.test(labelText) || COVER_RE.test(labelText) || KSC_RE.test(labelText))) {
+    manual.push({ label: labelText, reason: 'file upload (non-CV) — attach manually' });
+    return;
+  }
+
+  const { docPath, docKey, wantsDocx } = pickUploadDocument(role, labelText, accepted);
+  if (!docPath || !existsSync(join(ROOT, docPath))) {
+    manual.push({ label: labelText, reason: 'document not generated — run /career-ops queue prepare' });
+    return;
+  }
+
+  await input.setInputFiles(join(ROOT, docPath)).catch(() => {});
+  const verify = await verifyUpload(page, input, join(ROOT, docPath));
+  if (!verify.ok) {
+    manual.push({ label: labelText, reason: `upload failed: ${verify.reason}` });
+    return;
+  }
+
+  filled.push({ label: labelText, value: docPath, provenance: 'deterministic:file-attach' });
+  if (wantsDocx && docKey === 'cv_pdf') {
+    manual.push({ label: labelText, reason: 'field prefers DOCX but only PDF available — verify accepted; run generate-docx.mjs if needed' });
+  }
+}
+
+async function applyCheckbox(input, labelText, value, provenance, filled, manual) {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  let shouldCheck = null;
+  if (/^(yes|true|1|checked|check|on)$/i.test(normalized)) shouldCheck = true;
+  if (/^(no|false|0|unchecked|uncheck|off)$/i.test(normalized)) shouldCheck = false;
+
+  if (shouldCheck == null) {
+    manual.push({ label: labelText, reason: `checkbox answer "${value}" is not safely mappable` });
+    return;
+  }
+
+  const isChecked = await input.isChecked().catch(() => false);
+  if (shouldCheck && !isChecked) {
+    const ok = await input.check().then(() => true).catch(() => false);
+    if (ok) filled.push({ label: labelText, value: 'checked', provenance });
+    else manual.push({ label: labelText, reason: 'checkbox check failed' });
+  } else if (!shouldCheck && isChecked) {
+    const ok = await input.uncheck().then(() => true).catch(() => false);
+    if (ok) filled.push({ label: labelText, value: 'unchecked', provenance });
+    else manual.push({ label: labelText, reason: 'checkbox uncheck failed' });
+  } else {
+    filled.push({ label: labelText, value: isChecked ? 'checked' : 'unchecked', provenance });
+  }
+}
+
 // ── Confirmation capture ───────────────────────────────────────────────────────
 
 /**
@@ -534,45 +605,26 @@ async function fillByLabels(page, profile, role) {
     // ── File inputs ───────────────────────────────────────────────────────────
     if (inputType === 'file') {
       const accepted = (await input.getAttribute('accept').catch(() => '') || '').toLowerCase();
-      const wantsDocx = accepted.includes('.docx') || accepted.includes('officedocument');
-
-      if (RESUME_RE.test(labelText) || COVER_RE.test(labelText) || KSC_RE.test(labelText)) {
-        // Determine which document to attach
-        let docPath = null;
-        let docKey  = 'cv_pdf';
-
-        if (COVER_RE.test(labelText) && role.cover_letter_path) {
-          docPath = role.cover_letter_path;
-          docKey  = 'cover_letter_path';
-        } else if (KSC_RE.test(labelText) && role.ksc_path) {
-          docPath = role.ksc_path;
-          docKey  = 'ksc_path';
-        } else if (role.cv_pdf) {
-          docPath = role.cv_pdf;
-        }
-
-        if (docPath && existsSync(join(ROOT, docPath))) {
-          await input.setInputFiles(join(ROOT, docPath)).catch(() => {});
-          const verify = await verifyUpload(page, input, join(ROOT, docPath));
-          if (!verify.ok) {
-            manual.push({ label: labelText, reason: `upload failed: ${verify.reason}` });
-          } else {
-            filled.push({ label: labelText, value: docPath, provenance: 'deterministic:file-attach' });
-          }
-        } else {
-          manual.push({ label: labelText, reason: `document not generated — run /career-ops queue prepare` });
-        }
-      } else {
-        manual.push({ label: labelText, reason: 'file upload (non-CV) — attach manually' });
-      }
+      await attachDocumentInput(page, input, role, labelText, accepted, filled, manual);
       continue;
     }
 
-    // ── Sponsorship checkbox ─────────────────────────────────────────────────
-    if (inputType === 'checkbox' && /sponsor/i.test(labelText)) {
-      const checked = await input.isChecked().catch(() => false);
-      if (checked) await input.uncheck().catch(() => {});
-      filled.push({ label: labelText, value: 'unchecked', provenance: 'deterministic:sponsorship' });
+    // ── Checkbox handling ─────────────────────────────────────────────────────
+    if (inputType === 'checkbox') {
+      // Sponsorship checkbox: always uncheck (no sponsorship required)
+      if (/sponsor/i.test(labelText)) {
+        const checked = await input.isChecked().catch(() => false);
+        if (checked) await input.uncheck().catch(() => {});
+        filled.push({ label: labelText, value: 'unchecked', provenance: 'deterministic:sponsorship' });
+        continue;
+      }
+      // Other checkboxes: resolve via rules, then use proper check/uncheck
+      const r = resolveField(labelText, tagName, inputType, [], profile, role);
+      if (r) {
+        await applyCheckbox(input, labelText, r.value, r.provenance, filled, manual);
+      } else {
+        manual.push({ label: labelText, reason: 'checkbox — no standing answer' });
+      }
       continue;
     }
 
@@ -642,11 +694,22 @@ async function fillLever(page, profile, role) {
     }).catch(() => null);
     if (input?.asElement() == null) continue;
     const tag = await input.evaluate((n) => n.tagName.toLowerCase()).catch(() => '');
+    const inputType = (await input.getAttribute('type').catch(() => 'text')) || 'text';
+    if (inputType === 'file') {
+      const accepted = (await input.getAttribute('accept').catch(() => '') || '').toLowerCase();
+      await attachDocumentInput(page, input, role, labelText, accepted, filled, manual);
+      continue;
+    }
+    if (inputType === 'checkbox') {
+      await applyCheckbox(input, labelText, draft.answer, provenanceLabel(draft.source, draft.rule, draft.score), filled, manual);
+      continue;
+    }
     if (tag === 'select') {
       const ok = await input.selectOption({ label: draft.answer }).then(() => true).catch(() => false);
       if (!ok) { manual.push({ label: labelText, reason: `no option matches "${draft.answer}"` }); continue; }
     } else {
-      await input.fill(String(draft.answer)).catch(() => {});
+      const ok = await input.fill(String(draft.answer)).then(() => true).catch(() => false);
+      if (!ok) { manual.push({ label: labelText, reason: 'text fill failed' }); continue; }
     }
     filled.push({ label: labelText, value: draft.answer, provenance: provenanceLabel(draft.source, draft.rule, draft.score) });
     if (draft.source === 'cache' && draft.firstUse) cacheConfirms.push({ label: labelText, value: draft.answer });
@@ -679,16 +742,9 @@ async function fillLever(page, profile, role) {
   }
 
   const resumeInput = await page.$('input[type=file]').catch(() => null);
-  if (resumeInput && role.cv_pdf && existsSync(join(ROOT, role.cv_pdf))) {
-    await resumeInput.setInputFiles(join(ROOT, role.cv_pdf)).catch(() => {});
-    const verify = await verifyUpload(page, resumeInput, join(ROOT, role.cv_pdf));
-    if (verify.ok) {
-      filled.push({ label: 'Resume/CV', value: role.cv_pdf, provenance: 'deterministic:cv-attach' });
-    } else {
-      manual.push({ label: 'Resume/CV', reason: `upload may have failed: ${verify.reason}` });
-    }
-  } else if (resumeInput) {
-    manual.push({ label: 'Resume/CV', reason: 'cv_pdf not ready' });
+  if (resumeInput) {
+    const accepted = (await resumeInput.getAttribute('accept').catch(() => '') || '').toLowerCase();
+    await attachDocumentInput(page, resumeInput, role, 'Resume/CV', accepted, filled, manual);
   }
 
   return { filled, manual, cacheConfirms, knockouts };
@@ -820,7 +876,13 @@ async function main() {
   if (loginCheck.result === 'login-wall' || loginCheck.result === 'registration-form') {
     const formAppeared = await waitForForm(page, profile, host, loginTimeout);
     if (!formAppeared) {
-      // Leave browser open for manual completion
+      if (HEADLESS) {
+        // Headless: exit cleanly so the dashboard parallel pool advances
+        console.log('⏱️  Login timeout in headless mode — marking failure and exiting.');
+        await context.close();
+        process.exit(1);
+      }
+      // Headed: leave browser open for manual completion
       await new Promise(() => {});
     }
   }
@@ -876,9 +938,11 @@ async function main() {
     }
   }
 
-  // Mark as filled in the queue (between prepared and submitted)
+  // Mark status: headed fills are 'filled' (user has live browser), headless are
+  // 'prefilled' (DOM state lost on close — user must re-open headed to review).
+  const fillStatus = HEADLESS ? 'prefilled' : 'filled';
   const q3 = loadQueue();
-  setStatus(q3, ROLE_ID, 'filled');
+  setStatus(q3, ROLE_ID, fillStatus);
   saveQueue(q3);
 
   console.log('\n────────────────────────────────────────────────────────');
@@ -890,7 +954,8 @@ async function main() {
   // ── Headless exit: close cleanly so the dashboard parallel pool advances ──
   // Confirmation capture and review are the headed path only.
   if (HEADLESS) {
-    console.log('Headless fill done — status set to "filled". Review in the dashboard inbox.');
+    console.log('Headless pre-fill done — status set to "prefilled".');
+    console.log('Re-open with headed Fill in the dashboard to review before submitting.');
     await context.close();
     process.exit(0);
   }

@@ -552,6 +552,7 @@ body {
 /* ── New badges ──────────────────────────────────────────────────────────── */
 
 .badge-filled  { background: #89dceb22; color: var(--sky); }
+.badge-prefilled { background: #f9e2af22; color: var(--yellow); }
 .badge-doc     { background: #cba6f722; color: var(--mauve); }
 .badge-ko      { background: #f38ba822; color: var(--red); }
 .badge-prov    { background: transparent; color: var(--overlay0); font-size: 9px;
@@ -685,6 +686,11 @@ body {
   color: var(--base);
   font-weight: 700;
   padding: 6px 16px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* ── Activity panel ──────────────────────────────────────────────────────── */

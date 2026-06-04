@@ -215,9 +215,9 @@ EasyGo – Senior Data Analyst – Kick
 
 Roles with `flags` containing `login-required` use portals that gate the form behind
 a candidate account. Follow the standing procedure in `modes/apply.md →
-## Login-gated portals` before attempting any fill: navigate → snapshot → if a sign-in
-wall is present, pause and ask Neil to authenticate, then continue. Never proceed past
-a login wall or automate account creation.
+## Login-gated portals` for the login/registration flow. `form-fill.mjs` handles
+login-wall detection and polling automatically for deterministic-fill ATSes; for
+custom ATSes, the agent apply path handles it interactively.
 
 ---
 

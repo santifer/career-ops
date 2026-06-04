@@ -18,11 +18,12 @@ export const QUEUE_PATH = join(ROOT, 'data', 'apply-queue.json');
 const TMP_DIR = join(ROOT, 'data');
 
 // --- Status lifecycle ---
-// new → scored → prepare-queued → prepared → filled → submitted | skipped | reviewed | closed
-// 'filled' = form fill complete, user review + submit pending
-export const ACTIVE_STATUSES  = new Set(['new', 'scored', 'prepare-queued', 'prepared', 'filled']);
+// new → scored → prepare-queued → prepared → prefilled → filled → submitted | skipped | reviewed | closed
+// 'prefilled' = headless fill complete, needs user review in headed browser
+// 'filled'    = headed fill complete, user review + submit pending
+export const ACTIVE_STATUSES  = new Set(['new', 'scored', 'prepare-queued', 'prepared', 'prefilled', 'filled']);
 export const DONE_STATUSES    = new Set(['submitted', 'skipped', 'reviewed', 'closed']);
-export const LANE_STATUSES    = new Set(['scored', 'prepare-queued', 'prepared', 'filled']); // visible in lanes
+export const LANE_STATUSES    = new Set(['scored', 'prepare-queued', 'prepared', 'prefilled', 'filled']); // visible in lanes
 
 const EMPTY_QUEUE = () => ({
   version: 1,
@@ -96,6 +97,7 @@ export function updateById(queue, id, patches) {
 const STATUS_TIMESTAMP = {
   scored:           'scored_at',
   prepared:         'prepared_at',
+  prefilled:        'prefilled_at',
   filled:           'filled_at',
   submitted:        'decided_at',
   skipped:          'decided_at',

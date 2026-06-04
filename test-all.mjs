@@ -361,9 +361,59 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 11. VERSION FILE ─────────────────────────────────────────────
+// ── 11. APPLY PREFILL CONTRACT ───────────────────────────────────
 
-console.log('\n11. Version file');
+console.log('\n11. Apply prefill contract');
+
+try {
+  const { ACTIVE_STATUSES, LANE_STATUSES } = await import(pathToFileURL(join(ROOT, 'queue-store.mjs')).href);
+  const states = readFile('templates/states.yml');
+  const formFill = readFile('form-fill.mjs');
+  const dashboardServer = readFile('dashboard-server.mjs');
+  const dashboardApp = readFile('dashboard/web/app.js');
+
+  if (ACTIVE_STATUSES.has('prefilled') && LANE_STATUSES.has('prefilled')) {
+    pass('prefilled remains an active visible queue status');
+  } else {
+    fail('prefilled missing from active or lane queue statuses');
+  }
+
+  if (/id:\s+prefilled/.test(states)) {
+    pass('states.yml declares prefilled');
+  } else {
+    fail('states.yml missing prefilled');
+  }
+
+  if (/const fillStatus = HEADLESS \? 'prefilled' : 'filled'/.test(formFill)) {
+    pass('headless form-fill records prefilled, not filled');
+  } else {
+    fail('headless form-fill no longer records prefilled');
+  }
+
+  if (/if \(HEADLESS\)[\s\S]{0,400}process\.exit\(1\)/.test(formFill)) {
+    pass('headless login timeout exits so parallel runs do not hang');
+  } else {
+    fail('headless login timeout exit guard missing');
+  }
+
+  if (/decision === 'submitted' && role\.status === 'prefilled'/.test(dashboardServer)) {
+    pass('dashboard API blocks submitted decisions for prefilled roles');
+  } else {
+    fail('dashboard API prefilled submit gate missing');
+  }
+
+  if (/submitBtn\.disabled = isPrefilled/.test(dashboardApp)) {
+    pass('dashboard UI disables submit for prefilled roles');
+  } else {
+    fail('dashboard UI prefilled submit disable missing');
+  }
+} catch (e) {
+  fail(`Apply prefill contract checks crashed: ${e.message}`);
+}
+
+// ── 12. VERSION FILE ─────────────────────────────────────────────
+
+console.log('\n12. Version file');
 
 if (fileExists('VERSION')) {
   const version = readFile('VERSION').trim();
@@ -376,9 +426,9 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
-// ── 11. LOCATION FILTER — always_allow tier ───────────────────────
+// ── 13. LOCATION FILTER — always_allow tier ───────────────────────
 
-console.log('\n11. Location filter — always_allow tier');
+console.log('\n13. Location filter — always_allow tier');
 
 try {
   const { buildLocationFilter } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);

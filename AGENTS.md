@@ -369,11 +369,11 @@ Any agent (Claude Code, Codex, OpenCode, Gemini, or any other CLI) follows this 
 - **Open Questions** — decisions Neil needs to make before work continues
 - **Architecture Decisions** — durable choices, but edit *in place* when a decision changes; do not stack contradictions
 
-**APPEND only** (add a line/entry, never rewrite existing ones):
-- **Session Log** — one terse dated line per session: `YYYY-MM-DD (Agent) — 1-line summary [commit hash if any]`
-- **Lessons & Mistakes** — pitfalls found + mitigations; institutional memory
+**ORDERED add-only sections** (do not rewrite existing entries except to correct an obvious ordering mistake):
+- **Session Log** — newest first. Prepend one terse dated line at the top of the section: `YYYY-MM-DD (Agent) — 1-line summary [commit hash if any]`
+- **Lessons & Mistakes** — append pitfalls found + mitigations at the bottom; institutional memory
 
-**Anti-pattern to avoid:** Do NOT add a new dated `## Session Update — date` block each session. Fold all status changes into the living snapshot sections above and add one Session Log line.
+**Anti-pattern to avoid:** Do NOT add a new dated `## Session Update — date` block each session. Fold all status changes into the living snapshot sections above and prepend one newest-first Session Log line.
 
 **`handover.md` is a user-layer file** — gitignored via `.git/info/exclude`. Do not put user data (CV metrics, compensation targets, personal details) in it.
 
