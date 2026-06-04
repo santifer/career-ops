@@ -39,22 +39,47 @@ SmartRecruiters, SAP SuccessFactors, iCIMS) gate the application form behind a
 candidate account login. These roles carry the `login-required` flag in the queue and
 show a 🔐 badge in the dashboard.
 
-**Procedure (always followed — never bypassed):**
+**For Greenhouse / Lever / Ashby roles (`form-fill.mjs` path):** the script handles
+login/registration fully automatically — see `form-fill.mjs` and `login-core.mjs`. The
+script fills the registration form with real PII from `config/profile.yml`, generates
+and stores a unique password per portal in `data/portal-credentials.json` (gitignored),
+clicks Register, then polls every 3 s until the application form appears or the
+configurable timeout (`automation.login_timeout_min`) is reached. Neil resolves email
+verification, CAPTCHA, and OTP during the wait.
+
+**For custom ATS roles (agent apply path — this mode):**
 
 1. Navigate to the posting URL and take a snapshot.
 2. If a sign-in / register wall is present (no application form visible):
-   - **Pause immediately.** Tell Neil: "This portal requires login. Please sign in or
-     create an account in the open browser, then confirm here and I'll continue."
-   - Wait for Neil's confirmation. Do not proceed, fill, or navigate away.
-3. After Neil confirms authentication: re-snapshot, then continue with the normal
-   layered fill (deterministic → cache → model-reasoned).
-4. Leave the browser/tab open at the filled form. **Never locate or click Submit.**
-5. This procedure applies regardless of whether a queue record exists for the role.
+   - Detect whether it is a **login wall** or a **registration form**.
+   - **Registration form**: fill real PII from `config/profile.yml`; call
+     `getOrCreateCredentials(host)` from `credentials-store.mjs` to get or generate a
+     unique password; fill the password fields; click **Register / Sign up / Create
+     account**. Then enter the polling loop (step 3).
+   - **Login wall** (account already exists): tell Neil which credential is stored for
+     this portal, then poll (step 3).
+3. Poll every ~3 s for the post-login signal (application form fields visible) for up
+   to `automation.login_timeout_min` minutes. Neil resolves email verification / CAPTCHA
+   / OTP during this window — the polling loop waits without conversational interruption.
+4. Once the form is visible, continue with the normal layered fill
+   (deterministic → cache → model-reasoned).
+5. **Multi-page wizards**: click **Continue / Next / Save and continue / Review** to
+   advance pages. Stop when the page shows a review/summary (entered data echoed, no
+   further editable input fields). The exact button label at that stop point is
+   irrelevant — the stop signal is the page state.
+6. For **Workday / PageUp** pre-filled fields: verify and correct CV-parsed values —
+   do not only fill blank fields. Cross-check every pre-filled field against
+   `config/profile.yml`.
+7. Leave the browser/tab open at the filled form. **Never locate or click the final
+   submit button** — the denylist is: "Submit", "Submit application", "Send application",
+   "Confirm and submit". Neil makes the final call.
+8. After Neil confirms submission: capture confirmation number if visible, screenshot to
+   `output/`, call `POST /api/role/:id/decision {decision:"submitted"}` to sync the
+   tracker.
 
-**Why:** account creation on these portals involves verifiable identity steps (email
-confirmation, password, optional 2FA) that the agent must not perform or automate on
-the candidate's behalf. The agent's role is to fill the form once the candidate has
-authenticated; submitting remains the candidate's action.
+**Note on passwords:** all auto-generated portal passwords are stored in
+`data/portal-credentials.json` (gitignored). If you need to look up a password for
+a portal Neil already has an account on, read that file.
 
 ---
 

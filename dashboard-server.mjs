@@ -13,14 +13,15 @@
  */
 
 import http from 'http';
-import { readFileSync, existsSync, mkdirSync, writeFileSync, appendFileSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn, execFileSync } from 'child_process';
+import yaml from 'js-yaml';
 
 import {
   loadQueue, saveQueue, computeLane, computeStats,
-  setStatus, updateById, ACTIVE_STATUSES,
+  setStatus, updateById, ACTIVE_STATUSES, DONE_STATUSES,
 } from './queue-store.mjs';
 
 const ROOT     = dirname(fileURLToPath(import.meta.url));
@@ -95,6 +96,219 @@ function writeTrackerTsv(role, decision) {
   }
 }
 
+// ── Profile loader ────────────────────────────────────────────────────────────
+
+function loadProfile() {
+  const path = join(ROOT, 'config', 'profile.yml');
+  if (!existsSync(path)) return {};
+  try {
+    // js-yaml v4: yaml.load() uses DEFAULT_SAFE_SCHEMA — no arbitrary constructors.
+    return yaml.load(readFileSync(path, 'utf-8')) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+// ── Activity feed (SSE) ───────────────────────────────────────────────────────
+
+const activityClients = new Set();
+const activityLog     = []; // in-memory ring buffer (last 200 events)
+const MAX_ACTIVITY    = 200;
+
+function emitActivity(runId, roleId, event, role, extra = {}) {
+  const entry = {
+    runId,
+    roleId,
+    event,  // started | success | login-wall | knockout-flag | failure | agent-path
+    company: role?.company ?? '',
+    title:   role?.title   ?? '',
+    ts:      new Date().toISOString(),
+    ...extra,
+  };
+  activityLog.push(entry);
+  if (activityLog.length > MAX_ACTIVITY) activityLog.shift();
+
+  const data = `data: ${JSON.stringify(entry)}\n\n`;
+  for (const client of activityClients) {
+    try { client.write(data); } catch { activityClients.delete(client); }
+  }
+}
+
+function apiActivity(req, res) {
+  res.writeHead(200, {
+    'Content-Type':  'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    'Connection':    'keep-alive',
+    'X-Accel-Buffering': 'no',
+    'Access-Control-Allow-Origin': `http://${HOST}:${PORT}`,
+  });
+  res.write('retry: 3000\n\n');
+  // Send recent history to the new subscriber
+  for (const entry of activityLog.slice(-50)) {
+    res.write(`data: ${JSON.stringify(entry)}\n\n`);
+  }
+  activityClients.add(res);
+  req.on('close', () => activityClients.delete(res));
+}
+
+// ── Parallel run ──────────────────────────────────────────────────────────────
+
+function spawnFillDetached(roleId, headless) {
+  const args = ['form-fill.mjs', roleId, ...(headless ? ['--headless'] : [])];
+  const child = spawn(process.execPath, args, {
+    cwd:      ROOT,
+    detached: true,
+    stdio:    ['ignore', 'ignore', 'ignore'],
+  });
+  child.unref();
+  return child.pid;
+}
+
+async function spawnFillAndWait(roleId, headless, role, runId) {
+  return new Promise((resolve) => {
+    const args  = ['form-fill.mjs', roleId, ...(headless ? ['--headless'] : [])];
+    const child = spawn(process.execPath, args, {
+      cwd:   ROOT,
+      stdio: 'pipe',
+    });
+
+    let stdout = '';
+    child.stdout?.on('data', (d) => { stdout += d; });
+    child.stderr?.on('data', (d) => { stdout += d; });
+
+    child.on('close', (code) => {
+      const knockoutFlag = stdout.includes('KNOCKOUT');
+      const loginWall    = stdout.includes('Login required') || stdout.includes('🔐 Login');
+      const event = code === 0
+        ? (knockoutFlag ? 'knockout-flag' : loginWall ? 'login-wall' : 'success')
+        : 'failure';
+      emitActivity(runId, roleId, event, role, { exitCode: code });
+      resolve({ event, exitCode: code });
+    });
+  });
+}
+
+function apiRun(req, res) {
+  readBody(req, async (body) => {
+    const { ids } = safeJson(body) || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return respond(res, 400, { error: 'ids must be a non-empty array' });
+    }
+
+    const queue   = loadQueue();
+    const profile = loadProfile();
+    const concurrency = profile.automation?.fill_concurrency ?? 1;
+
+    const roles = ids
+      .map((id) => queue.roles.find((r) => r.id === id))
+      .filter(Boolean);
+
+    if (roles.length === 0) {
+      return respond(res, 404, { error: 'none of the requested role IDs found' });
+    }
+
+    // Partition: deterministic (headless parallel) vs login-gated / agent-path (serial headed)
+    const deterministic = roles.filter((r) =>
+      r.ats !== 'custom' && !(r.flags || []).includes('login-required')
+    );
+    const loginGated = roles.filter((r) =>
+      (r.flags || []).includes('login-required') && r.ats !== 'custom'
+    );
+    const agentPath = roles.filter((r) => r.ats === 'custom');
+
+    const runId = `run-${Date.now()}`;
+
+    // Respond immediately — fill runs asynchronously
+    respond(res, 200, {
+      runId,
+      total:       roles.length,
+      deterministic: deterministic.length,
+      loginGated:  loginGated.length,
+      agentPath:   agentPath.length,
+      concurrency,
+    });
+
+    // ── Agent-path roles — emit notice only (user must run /career-ops apply) ──
+    for (const role of agentPath) {
+      emitActivity(runId, role.id, 'agent-path', role, {
+        message: `Custom ATS — run: /career-ops apply and open ${role.url}`,
+      });
+    }
+
+    // ── Deterministic fills — bounded parallel, headless ─────────────────────
+    if (deterministic.length > 0) {
+      const queue2 = [...deterministic];
+      const inFlight = new Set();
+
+      const runNext = async () => {
+        if (queue2.length === 0) return;
+        const role = queue2.shift();
+        inFlight.add(role.id);
+        emitActivity(runId, role.id, 'started', role);
+        await spawnFillAndWait(role.id, true, role, runId);
+        inFlight.delete(role.id);
+        await runNext();
+      };
+
+      const workers = Array.from(
+        { length: Math.min(concurrency, deterministic.length) },
+        () => runNext()
+      );
+      // Fire-and-forget — don't await (already responded)
+      Promise.all(workers).catch(() => {});
+    }
+
+    // ── Login-gated fills — serial, headed, poll-based ───────────────────────
+    // Headed fills are designed to stay open (block) for user review, so we
+    // cannot await process exit.  Instead: spawn detached, then poll the queue
+    // until the role's status advances to 'filled' (or a DONE status), then
+    // launch the next one.  The per-role timeout matches login_timeout_min.
+    const loginTimeoutMs = (loadProfile().automation?.login_timeout_min ?? 10) * 60 * 1000
+      + 5 * 60 * 1000; // add 5 min buffer for fill time after login
+
+    const waitForFilled = async (roleId) => {
+      const deadline = Date.now() + loginTimeoutMs;
+      while (Date.now() < deadline) {
+        const q = loadQueue();
+        const r = q.roles.find((x) => x.id === roleId);
+        if (r && (r.status === 'filled' || DONE_STATUSES.has(r.status))) return true;
+        await new Promise((res) => setTimeout(res, 5_000));
+      }
+      return false;
+    };
+
+    const runSerial = async () => {
+      for (const role of loginGated) {
+        emitActivity(runId, role.id, 'login-wall', role, {
+          message: 'Login required — headed browser opening (serial). Authenticate, then continue.',
+        });
+        spawnFillDetached(role.id, false); // headed, stays open for user review
+        const ok = await waitForFilled(role.id);
+        const freshRole = loadQueue().roles.find((r) => r.id === role.id) ?? role;
+        emitActivity(runId, role.id, ok ? 'success' : 'failure', freshRole, {
+          detail: ok ? 'status reached filled' : 'timeout waiting for login',
+        });
+      }
+    };
+    runSerial().catch(() => {});
+  });
+}
+
+// ── Provenance summary helper ─────────────────────────────────────────────────
+
+function provenanceSummary(drafts = {}) {
+  let deterministic = 0;
+  let modelReasoned = 0;
+  for (const v of Object.values(drafts)) {
+    if (v.source === 'model') modelReasoned++;
+    else deterministic++;
+  }
+  const total = deterministic + modelReasoned;
+  return total > 0
+    ? `${deterministic}/${total} deterministic, ${modelReasoned} model-reasoned`
+    : null;
+}
+
 // ── API handlers ─────────────────────────────────────────────────────────────
 
 function apiGetQueue(res) {
@@ -103,7 +317,11 @@ function apiGetQueue(res) {
 
   const enriched = queue.roles
     .filter(r => ACTIVE_STATUSES.has(r.status))
-    .map(r => ({ ...r, lane: computeLane(r) }));
+    .map(r => ({
+      ...r,
+      lane:               computeLane(r),
+      provenance_summary: provenanceSummary(r.drafts),
+    }));
 
   respond(res, 200, { settings: queue.settings, stats, roles: enriched });
 }
@@ -242,8 +460,10 @@ const server = http.createServer((req, res) => {
   const method = req.method;
 
   // API routes
-  if (path === '/api/queue' && method === 'GET')  return apiGetQueue(res);
+  if (path === '/api/queue'    && method === 'GET')  return apiGetQueue(res);
   if (path === '/api/threshold' && method === 'POST') return apiSetThreshold(req, res);
+  if (path === '/api/run'      && method === 'POST')  return apiRun(req, res);
+  if (path === '/api/activity' && method === 'GET')   return apiActivity(req, res);
 
   const fillMatch = path.match(/^\/api\/role\/([^/]+)\/fill$/);
   if (fillMatch && method === 'POST') return apiRoleFill(req, res, decodeURIComponent(fillMatch[1]));

@@ -104,3 +104,33 @@ cv:
   # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
+
+# ── EEO / Diversity fields ────────────────────────────────────────────────────
+# Default is "prefer not to say" for all diversity questions.
+# Only used when a field is mandatory AND unskippable. Leave blank to use default.
+eeo:
+  default: "prefer not to say"
+  ethnicity: ""   # e.g. "White", "Asian", "Black or African American"
+  gender: ""      # e.g. "Male", "Female", "Non-binary", "Prefer not to say"
+
+# ── Salary (single-number fields) ────────────────────────────────────────────
+# Used when a form has a single numeric salary field rather than a free-text range.
+salary:
+  annual: ""          # e.g. 75000 — annual total compensation
+  thousands: ""       # e.g. 75    — for fields labelled in "$K" or "thousands"
+  hourly_parttime: "" # e.g. 30    — part-time hourly rate
+  hourly_fulltime: "" # e.g. 38    — full-time hourly (annual / 52 / 38)
+
+# ── References ────────────────────────────────────────────────────────────────
+references: "Available on request"
+
+# ── Formatting ────────────────────────────────────────────────────────────────
+formatting:
+  date_format: ""       # e.g. "DD/MM/YYYY" (AU), "MM/DD/YYYY" (US), "YYYY-MM-DD"
+  phone_country: ""     # e.g. "+61" (AU), "+1" (US/CA), "+44" (UK)
+
+# ── Automation ────────────────────────────────────────────────────────────────
+automation:
+  fill_concurrency: 1   # parallel headless fills — keep at 1 for public release
+  login_timeout_min: 10 # minutes to wait for post-login form signal
+  credentials_path: "data/portal-credentials.json"   # gitignored

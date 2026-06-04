@@ -7,6 +7,27 @@
 # no dates, no extra text. Dates go in the date column.
 
 states:
+  # Pre-application queue states (managed via data/apply-queue.json)
+  # These map to tracker states when a decision is made.
+  - id: saved
+    label: Saved
+    aliases: [new, queued]
+    description: Role saved to queue, pending scoring (maps to Evaluated on decide)
+    dashboard_group: evaluated
+
+  - id: prepared
+    label: Prepared
+    aliases: [prepare-queued, ready]
+    description: CV + documents generated, form fields resolved (maps to Evaluated on decide)
+    dashboard_group: evaluated
+
+  - id: filled
+    label: Filled
+    aliases: [form-filled, auto-filled]
+    description: Form fill complete, awaiting user review + manual submit
+    dashboard_group: evaluated
+
+  # Post-application tracker states
   - id: evaluated
     label: Evaluated
     aliases: [evaluada]

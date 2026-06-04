@@ -87,6 +87,46 @@ export function matchProfileRule(label, type, profile, role = {}) {
       value: () => isPartTime ? nonEmpty(a.availability_parttime) : nonEmpty(a.notice_period) },
     { id: 'hours', test: /hours?.?(per|a|\/)\s*week|weekly.?hours|hours?.?(expected|available)/,
       value: () => isPartTime ? nonEmpty(String(a.max_hours_per_week_parttime ?? '')) : null },
+
+    // ── Salary single-number fields ──────────────────────────────────────────
+    // Used when a form expects a numeric value rather than a range string.
+    // Unit is inferred from the label; config provides all magnitudes.
+    { id: 'salary_thousands',
+      test: /salary.*\$k|salary.*thousand|comp.*\$k|k\s*(?:p\.?a\.?|per\s+annum|per\s+year)/,
+      value: () => nonEmpty(String(profile?.salary?.thousands ?? '')) },
+    { id: 'salary_hourly_pt',
+      test: /hourly.+rate|rate.+per.+hour|per\s+hour/,
+      value: () => isPartTime
+        ? nonEmpty(String(profile?.salary?.hourly_parttime ?? ''))
+        : nonEmpty(String(profile?.salary?.hourly_fulltime ?? '')) },
+    { id: 'salary_annual',
+      test: /^(annual\s+)?salary(\s+expectation)?[*\s]*$|expected.+annual.+salary|total.+compensation/,
+      value: () => nonEmpty(String(profile?.salary?.annual ?? '')) },
+
+    // ── References ───────────────────────────────────────────────────────────
+    { id: 'references',
+      test: /\breferences?\b|\breferees?\b/,
+      value: () => nonEmpty(a.references) || nonEmpty(profile?.references) },
+
+    // ── EEO / Diversity (free-text) — default "prefer not to say" ────────────
+    // Note: these are free-text fallbacks. Select-based EEO fields are handled
+    // by matchEeoOption() below (which picks the closest option).
+    { id: 'eeo_gender',
+      test: /\bgender\b|\bsex\b/,
+      value: () => nonEmpty(profile?.eeo?.default) || 'prefer not to say',
+      guard: () => type !== 'select' },  // select variant handled by matchEeoOption
+    { id: 'eeo_ethnicity',
+      test: /ethnicit|race\b|racial|heritage.*origin|national.*origin|cultural.*background/,
+      value: () => nonEmpty(profile?.eeo?.default) || 'prefer not to say',
+      guard: () => type !== 'select' },
+    { id: 'eeo_disability',
+      test: /disabilit|disabled|differently.?abled/,
+      value: () => nonEmpty(profile?.eeo?.default) || 'prefer not to say',
+      guard: () => type !== 'select' },
+    { id: 'eeo_veteran',
+      test: /\bveteran\b|\bmilitary\b|\barmed.?service/,
+      value: () => nonEmpty(profile?.eeo?.default) || 'prefer not to say',
+      guard: () => type !== 'select' },
   ];
 
   for (const r of rules) {
@@ -150,6 +190,133 @@ export function chooseOptionDeterministic(answer, options = []) {
   }
   return null;
 }
+
+// ── EEO select-option picker ──────────────────────────────────────────────────
+
+const EEO_GENDER_RE     = /\bgender\b|\bsex\b/i;
+const EEO_ETHNICITY_RE  = /ethnicit|race\b|racial|heritage.*origin|national.*origin|cultural.*background/i;
+const EEO_DISABILITY_RE = /disabilit|disabled|differently.?abled/i;
+const EEO_VETERAN_RE    = /\bveteran\b|\bmilitary\b|\barmed.?service/i;
+
+// "Prefer not to say" tokens across common wordings
+const DECLINE_TOKENS    = ['prefer not', 'not to say', 'decline', 'not disclose', 'not specify',
+                           'i prefer', 'choose not', 'do not wish', 'rather not', 'no answer'];
+
+/**
+ * Pick the best EEO select option.
+ *
+ * Logic:
+ *  1. Try to match the profile's specific value (e.g. ethnicity: "Indian").
+ *     Only used when the field is MANDATORY (caller passes mandatory=true) AND
+ *     the profile has a non-empty specific value. Otherwise always prefer "prefer not to say".
+ *  2. Prefer the "prefer not to say" / decline option from the dropdown.
+ *  3. If no decline option exists → return null (field falls to Layer 2/3 / manual).
+ *
+ * @param {string}   label     — field label
+ * @param {string[]} options   — visible dropdown options
+ * @param {object}   profile   — loaded config/profile.yml
+ * @param {boolean}  mandatory — whether the field is marked required
+ * @returns {string | null}
+ */
+export function matchEeoOption(label, options, profile, mandatory = false) {
+  if (!Array.isArray(options) || options.length === 0) return null;
+  const l = String(label).toLowerCase();
+
+  let specificValue = null;
+  if (EEO_GENDER_RE.test(l))    specificValue = profile?.eeo?.gender    || null;
+  if (EEO_ETHNICITY_RE.test(l)) specificValue = profile?.eeo?.ethnicity || null;
+
+  // Try specific value only when mandatory AND non-empty in profile
+  if (mandatory && specificValue) {
+    const matched = chooseOptionDeterministic(specificValue, options);
+    if (matched) return matched;
+  }
+
+  // Always prefer "prefer not to say"
+  const declineOpt = options.find((opt) =>
+    DECLINE_TOKENS.some((tok) => opt.toLowerCase().includes(tok))
+  );
+  if (declineOpt) return declineOpt;
+
+  // No decline option → can't fill safely without guessing
+  return null;
+}
+
+// ── Salary unit resolver ───────────────────────────────────────────────────────
+
+/**
+ * Resolve a single-number salary value from profile, detecting the unit
+ * from the field label and whether the role is part-time.
+ *
+ * @param {string} label     — field label
+ * @param {object} profile   — loaded config/profile.yml
+ * @param {object} role      — queue role stub (for employment_type)
+ * @returns {string | null}
+ */
+export function resolveSalaryNumber(label, profile, role = {}) {
+  const s  = profile?.salary ?? {};
+  const l  = String(label).toLowerCase();
+  const pt = role.employment_type === 'part-time';
+
+  // Hourly variants
+  if (/per\s+hour|hourly|\/hr|\/hour/.test(l)) {
+    const v = pt ? s.hourly_parttime : s.hourly_fulltime;
+    return v != null && v !== '' ? String(v) : null;
+  }
+  // $K / thousands variants
+  if (/\$k|\bk\s*(p\.?a\.?|per\s+(annum|year))|thousand/.test(l)) {
+    return s.thousands != null && s.thousands !== '' ? String(s.thousands) : null;
+  }
+  // Annual (default for generic "salary" label)
+  if (/salary|compensation|pay|remunerat|package/.test(l)) {
+    return s.annual != null && s.annual !== '' ? String(s.annual) : null;
+  }
+  return null;
+}
+
+// ── Knockout / screener detector ───────────────────────────────────────────────
+
+const KNOCKOUT_PATTERNS = [
+  // Citizenship / clearance hard requirements
+  /must\s+(be|hold|have)\s+(a\s+)?(citizen|permanent resident|security clearance|working rights)/i,
+  /only.+citizens?|citizen(ship)?.+required/i,
+  /require.+(citizen|clearance|australian\s+resident)/i,
+  // Experience hard minimums
+  /minimum\s+\d+\s+years?\s+experience|at\s+least\s+\d+\s+years?/i,
+  // Degree hard requirements
+  /must\s+have\s+(a\s+)?(bachelor|master|phd|degree)/i,
+  /degree\s+required|tertiary\s+(qualification|degree)\s+required/i,
+];
+
+/**
+ * Detect whether a label/question text represents a knockout/screener question.
+ * These are binary questions where a wrong answer eliminates the candidate.
+ *
+ * @param {string}   label   — question label
+ * @param {string[]} options — dropdown options (if select field)
+ * @returns {{ isKnockout: boolean, reason?: string }}
+ */
+export function detectKnockout(label, options = []) {
+  const l = String(label).toLowerCase();
+
+  // Binary Yes/No questions about hard requirements
+  const isBinary = options.length > 0 &&
+    options.every((o) => /^(yes|no|true|false|i (do|do not)|i (am|am not))$/i.test(o.trim()));
+
+  if (isBinary && KNOCKOUT_PATTERNS.some((p) => p.test(l))) {
+    return { isKnockout: true, reason: `binary screener: "${label.slice(0, 80)}"` };
+  }
+
+  // Look for explicit minimum-requirement language
+  const hasMinReq = KNOCKOUT_PATTERNS.some((p) => p.test(l));
+  if (hasMinReq) {
+    return { isKnockout: true, reason: `hard requirement detected: "${label.slice(0, 80)}"` };
+  }
+
+  return { isKnockout: false };
+}
+
+// ── Normalised label key used to bridge prepared drafts ↔ live form labels ────
 
 // Normalised label key used to bridge prepared drafts ↔ live form labels.
 export function normLabel(label = '') {

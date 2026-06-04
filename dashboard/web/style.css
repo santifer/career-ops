@@ -548,3 +548,248 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface1); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--overlay0); }
+
+/* ── New badges ──────────────────────────────────────────────────────────── */
+
+.badge-filled  { background: #89dceb22; color: var(--sky); }
+.badge-doc     { background: #cba6f722; color: var(--mauve); }
+.badge-ko      { background: #f38ba822; color: var(--red); }
+.badge-prov    { background: transparent; color: var(--overlay0); font-size: 9px;
+                 text-transform: none; letter-spacing: 0; font-weight: 400; padding: 0; }
+
+/* ── Card enhancements ───────────────────────────────────────────────────── */
+
+.card {
+  /* extend to flex-column when we have snippet/prov lines */
+  flex-wrap: wrap;
+}
+
+.card-check {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.card-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--surface1);
+  border-radius: 3px;
+  background: var(--mantle);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+}
+.card-checkbox:checked {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+.card-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  color: var(--base);
+  font-size: 9px;
+  font-weight: 700;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.card.checked {
+  border-color: var(--blue);
+  background: #89b4fa0a;
+}
+
+.card-url {
+  margin-top: 3px;
+}
+.card-url-link {
+  color: var(--overlay0);
+  font-size: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+}
+.card-url-link:hover { color: var(--blue); }
+
+.card-snippet {
+  font-size: 10px;
+  color: var(--overlay0);
+  margin-top: 4px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-prov {
+  margin-top: 2px;
+}
+
+/* ── Batch action bar ────────────────────────────────────────────────────── */
+
+.batch-bar {
+  background: var(--surface0);
+  border-bottom: 1px solid var(--surface1);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  animation: slideDown 0.15s ease;
+}
+
+.batch-bar[hidden] { display: none; }
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.batch-bar-left  { display: flex; align-items: center; gap: 8px; }
+.batch-bar-right { margin-left: auto; }
+
+.batch-count {
+  font-size: 12px;
+  color: var(--subtext);
+}
+
+.btn-sm {
+  background: var(--surface1);
+  color: var(--text);
+  border: none;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-sm:hover { opacity: 0.8; }
+
+.btn-sm-outline {
+  background: transparent;
+  border: 1px solid var(--surface1);
+  color: var(--subtext);
+}
+
+.btn-run {
+  background: var(--green);
+  color: var(--base);
+  font-weight: 700;
+  padding: 6px 16px;
+}
+
+/* ── Activity panel ──────────────────────────────────────────────────────── */
+
+.activity-panel {
+  width: 360px;
+  min-width: 280px;
+  background: var(--mantle);
+  border-left: 1px solid var(--surface0);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.activity-panel[hidden] { display: none; }
+
+.activity-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--surface0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.activity-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.btn-close-activity {
+  background: none;
+  border: none;
+  color: var(--overlay0);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px;
+  transition: color 0.12s;
+}
+.btn-close-activity:hover { color: var(--text); }
+
+.activity-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activity-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto auto;
+  gap: 4px;
+  align-items: baseline;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--base);
+  border: 1px solid var(--surface0);
+}
+
+.activity-success  { border-color: #a6e3a133; }
+.activity-failure  { border-color: #f38ba833; }
+.activity-login-wall { border-color: #f9e2af33; }
+.activity-knockout-flag { border-color: #f38ba833; }
+.activity-started  { border-color: var(--surface0); }
+.activity-agent-path { border-color: #cba6f733; }
+
+.activity-icon    { font-size: 12px; }
+.activity-company { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-event   { color: var(--overlay0); font-size: 10px; white-space: nowrap; }
+.activity-msg     { color: var(--subtext); font-size: 10px; grid-column: 2 / -1; }
+.activity-ts      { color: var(--overlay0); font-size: 9px; white-space: nowrap; }
+
+/* flash animation when a card gets an activity event */
+@keyframes activityFlash {
+  0%   { background: #89b4fa22; }
+  100% { background: inherit; }
+}
+.card.activity-flash { animation: activityFlash 2s ease-out; }
+
+/* ── Inbox additions ─────────────────────────────────────────────────────── */
+
+.inbox-url {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.inbox-url-text {
+  font-size: 9px;
+  color: var(--overlay0);
+  word-break: break-all;
+}
+
+.ksc-list {
+  list-style: disc;
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--subtext);
+  line-height: 1.5;
+}
+
+/* activity-flash on card.selected should not override selection highlight */
+.card.selected.activity-flash { animation: none; }

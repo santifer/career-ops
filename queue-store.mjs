@@ -18,10 +18,11 @@ export const QUEUE_PATH = join(ROOT, 'data', 'apply-queue.json');
 const TMP_DIR = join(ROOT, 'data');
 
 // --- Status lifecycle ---
-// new → scored → prepare-queued → prepared → submitted | skipped | reviewed | closed
-export const ACTIVE_STATUSES  = new Set(['new', 'scored', 'prepare-queued', 'prepared']);
+// new → scored → prepare-queued → prepared → filled → submitted | skipped | reviewed | closed
+// 'filled' = form fill complete, user review + submit pending
+export const ACTIVE_STATUSES  = new Set(['new', 'scored', 'prepare-queued', 'prepared', 'filled']);
 export const DONE_STATUSES    = new Set(['submitted', 'skipped', 'reviewed', 'closed']);
-export const LANE_STATUSES    = new Set(['scored', 'prepare-queued', 'prepared']); // visible in lanes
+export const LANE_STATUSES    = new Set(['scored', 'prepare-queued', 'prepared', 'filled']); // visible in lanes
 
 const EMPTY_QUEUE = () => ({
   version: 1,
@@ -67,8 +68,8 @@ export function computeLane(role) {
     return 'review-carefully';
   }
 
-  // needs-input: has unresolved custom free-text fields, or a manual-field flag
-  if (Array.isArray(role.flags) && role.flags.includes('manual-field')) {
+  // needs-input: has unresolved custom free-text fields, manual-field, or knockout flag
+  if (Array.isArray(role.flags) && (role.flags.includes('manual-field') || role.flags.includes('knockout-flag'))) {
     return 'needs-input';
   }
   if (Array.isArray(role.free_text_fields) && role.free_text_fields.some(f => f.kind === 'custom')) {
@@ -95,6 +96,7 @@ export function updateById(queue, id, patches) {
 const STATUS_TIMESTAMP = {
   scored:           'scored_at',
   prepared:         'prepared_at',
+  filled:           'filled_at',
   submitted:        'decided_at',
   skipped:          'decided_at',
   reviewed:         'decided_at',

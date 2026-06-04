@@ -50,6 +50,18 @@
   </div>
 </header>
 
+<!-- Batch action bar (visible when roles are checked) -->
+<div class="batch-bar" id="batch-bar" hidden>
+  <div class="batch-bar-left">
+    <button class="btn-sm" id="btn-select-all">Select all</button>
+    <button class="btn-sm btn-sm-outline" id="btn-clear-all">Clear</button>
+    <span class="batch-count" id="batch-count">0 selected</span>
+  </div>
+  <div class="batch-bar-right">
+    <button class="btn btn-run" id="btn-start-run">▶ Start run</button>
+  </div>
+</div>
+
 <div class="main-area">
   <div class="lanes" id="lanes">
     <div class="lane" data-lane="ready">
@@ -98,12 +110,24 @@
       <p class="inbox-note" id="inbox-note"></p>
     </div>
   </aside>
+
+  <!-- Activity feed panel -->
+  <aside class="activity-panel" id="activity-panel" hidden>
+    <div class="activity-header">
+      <span class="activity-title">Run log</span>
+      <button class="btn-close-activity" id="btn-close-activity" title="Close">✕</button>
+    </div>
+    <div class="activity-body" id="activity-body">
+      <!-- Populated by app.js via SSE -->
+    </div>
+  </aside>
 </div>
 
 <footer class="app-footer">
   <span><span class="footer-key">j/k</span> nav</span>
   <span><span class="footer-key">←/→</span> lanes</span>
   <span><span class="footer-key">Enter</span> open</span>
+  <span><span class="footer-key">Space</span> check</span>
   <span><span class="footer-key">f</span> fill</span>
   <span><span class="footer-key">s</span> submit</span>
   <span><span class="footer-key">x</span> skip</span>

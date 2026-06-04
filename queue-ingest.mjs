@@ -214,6 +214,112 @@ function classifyGreenhouseField(label, type) {
   return 'custom';
 }
 
+// ── KSC / cover-letter / document detection ───────────────────────────────────
+
+const KSC_PATTERNS = [
+  /key\s+selection\s+criteria/i,
+  /selection\s+criteria/i,
+  /address\s+the\s+(following\s+)?criteria/i,
+  /\bksc\b/i,
+  /respond\s+to\s+the\s+(following\s+)?criteria/i,
+  /criterion\s+\d|criteria\s+\d/i,
+  /demonstrate\s+how\s+you\s+meet/i,
+];
+
+const COVER_LETTER_PATTERNS = [
+  /cover\s+letter/i,
+  /covering\s+letter/i,
+  /letter\s+of\s+application/i,
+  /letter\s+of\s+motivation/i,
+];
+
+// Extract the individual KSC criterion headings from JD text
+function extractKscCriteria(text) {
+  const criteria = [];
+
+  // Common patterns: "1. <criterion>", "• <criterion>", numbered lists
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Numbered "1. " or "1) " style
+    const numMatch = trimmed.match(/^\d+[.)]\s+(.{10,200})$/);
+    if (numMatch && criteria.length > 0) {
+      // Only capture if we're in a KSC section context
+      criteria.push(numMatch[1].trim());
+      continue;
+    }
+    // Bullet point lines within a KSC section
+    if (criteria.length > 0 && /^[•\-–*]\s+(.{10,200})$/.test(trimmed)) {
+      criteria.push(trimmed.replace(/^[•\-–*]\s+/, ''));
+    }
+  }
+
+  return criteria.slice(0, 10); // cap at 10 criteria
+}
+
+/**
+ * Detect whether a JD requires Key Selection Criteria, a cover letter,
+ * and extract requirements snippet (free — no model call).
+ *
+ * @param {string} description — plain-text JD content
+ * @param {Array}  formFields  — Greenhouse/Lever form fields
+ * @returns {{ kscRequired: boolean, criteria: string[], coverLetterRequired: boolean, requirementsSnippet: string }}
+ */
+function detectDocRequirements(description, formFields = []) {
+  const kscInText = KSC_PATTERNS.some((p) => p.test(description));
+  const kscInForm = formFields.some((f) => KSC_PATTERNS.some((p) => p.test(f.label)));
+
+  const coverInText = COVER_LETTER_PATTERNS.some((p) => p.test(description));
+  const coverInForm = formFields.some((f) =>
+    COVER_LETTER_PATTERNS.some((p) => p.test(f.label)) && f.type === 'input_file'
+  );
+
+  const kscRequired = kscInText || kscInForm;
+  const coverLetterRequired = coverInText || coverInForm;
+
+  // Criteria extraction: find the block after a KSC heading
+  const criteria = [];
+  if (kscRequired) {
+    const lines = description.split('\n');
+    let inKsc = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (KSC_PATTERNS.some((p) => p.test(trimmed))) {
+        inKsc = true;
+        continue;
+      }
+      if (inKsc && criteria.length < 8) {
+        // Accept lines that look like criteria items
+        if (trimmed.length >= 15 && /[a-z]/i.test(trimmed)) {
+          criteria.push(trimmed.replace(/^[\d.)•\-–*\s]+/, '').trim());
+        } else if (trimmed.length === 0 && criteria.length > 0) {
+          // Two blank lines = end of criteria block
+          break;
+        }
+      }
+    }
+  }
+
+  // Requirements snippet: first 300 chars of the Requirements/Qualifications section
+  let requirementsSnippet = '';
+  const reqMatch = description.match(/(?:requirement|qualification|what\s+we.+looking\s+for|you\s+(will|must|should)\s+have)[:\n]([^]{1,400})/i);
+  if (reqMatch) {
+    requirementsSnippet = reqMatch[2].replace(/\n{2,}/g, '\n').trim().slice(0, 300);
+  }
+
+  // Capture accept types for known file fields
+  const uploadFields = formFields
+    .filter((f) => f.type === 'input_file')
+    .map((f) => ({
+      label: f.label,
+      kind:  COVER_LETTER_PATTERNS.some((p) => p.test(f.label)) ? 'cover_letter'
+           : KSC_PATTERNS.some((p) => p.test(f.label))          ? 'ksc'
+           : 'resume',
+    }));
+
+  return { kscRequired, criteria, coverLetterRequired, requirementsSnippet, uploadFields };
+}
+
 // ── HTML strip ───────────────────────────────────────────────────────────────
 
 function stripHtml(html = '') {
@@ -360,6 +466,13 @@ async function main() {
 
     if (!DRY_RUN) writeFileSync(jdPath, jdContent, 'utf-8');
 
+    // Detect document requirements and requirements snippet (zero model cost)
+    const docReqs = detectDocRequirements(jdData.description, jdData.formFields);
+
+    const flags = isLoginGated(url) ? ['login-required'] : [];
+    if (docReqs.kscRequired)         flags.push('ksc-required');
+    if (docReqs.coverLetterRequired) flags.push('cover-letter-required');
+
     // Build stub
     const stub = {
       id:               roleId,
@@ -377,10 +490,16 @@ async function main() {
       employment_type:  null,
       visa_answer:      null,
       confidence:       null,
-      flags:            isLoginGated(url) ? ['login-required'] : [],
+      flags,
+      ksc_criteria:         docReqs.kscRequired ? docReqs.criteria : null,
+      cover_letter_required: docReqs.coverLetterRequired,
+      requirements_snippet:  docReqs.requirementsSnippet || null,
+      upload_fields:         docReqs.uploadFields.length ? docReqs.uploadFields : null,
       free_text_fields: jdData.formFields,
       drafts:           {},
       cv_pdf:           null,
+      cover_letter_path: null,
+      ksc_path:          null,
       status:           'new',
     };
 
@@ -393,10 +512,14 @@ async function main() {
     }
 
     ingested++;
-    const fieldsNote = jdData.formFields.length > 0
-      ? ` (${jdData.formFields.length} form fields detected)`
-      : ' (form fields TBD — confirmed at fill time)';
-    console.log(`    ✅ ${roleId}${fieldsNote}`);
+    const fieldsNote  = jdData.formFields.length > 0
+      ? ` (${jdData.formFields.length} fields)`
+      : ' (fields TBD)';
+    const docNote = [
+      docReqs.kscRequired         ? '📋 KSC'          : '',
+      docReqs.coverLetterRequired ? '📄 cover letter' : '',
+    ].filter(Boolean).join(', ');
+    console.log(`    ✅ ${roleId}${fieldsNote}${docNote ? '  ' + docNote : ''}`);
   }
 
   if (!DRY_RUN && ingested > 0) {

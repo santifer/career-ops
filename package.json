@@ -19,7 +19,9 @@
     "gemini:eval": "node gemini-eval.mjs",
     "queue": "node queue-ingest.mjs",
     "dashboard": "node dashboard-server.mjs",
-    "fill": "node form-fill.mjs"
+    "launch": "node dashboard-launch.mjs",
+    "fill": "node form-fill.mjs",
+    "docx": "node generate-docx.mjs"
   },
   "keywords": [
     "ai",

@@ -36,6 +36,12 @@ modes/_profile.md
 # Secrets (never commit — use .env.example as template)
 .env
 
+# Portal credentials (auto-generated passwords, never commit)
+data/portal-credentials.json
+
+# Persistent browser profiles (cookies, sessions per portal host)
+.browser-profiles/
+
 # Generated
 .resolved-prompt-*
 .playwright-mcp/
