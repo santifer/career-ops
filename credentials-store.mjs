@@ -20,7 +20,10 @@
  *   listPortals()                       → string[]
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from 'fs';
+import {
+  readFileSync, existsSync, mkdirSync, renameSync,
+  openSync, writeSync, closeSync, chmodSync, constants,
+} from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID, randomBytes } from 'crypto';
@@ -36,6 +39,8 @@ const PROFILE_PATH = join(ROOT, 'config', 'profile.yml');
 function loadStore() {
   if (!existsSync(CREDS_PATH)) return {};
   try {
+    // Fix permissions on any historically permissive copy
+    try { chmodSync(CREDS_PATH, 0o600); } catch { /* ignore — may not own the file */ }
     return JSON.parse(readFileSync(CREDS_PATH, 'utf-8'));
   } catch {
     return {};
@@ -43,9 +48,20 @@ function loadStore() {
 }
 
 function saveStore(store) {
-  mkdirSync(DATA_DIR, { recursive: true });
-  const tmp = join(DATA_DIR, `.portal-credentials-${randomUUID()}.tmp`);
-  writeFileSync(tmp, JSON.stringify(store, null, 2) + '\n', 'utf-8');
+  // Directory: owner-only so other users can't even list it
+  mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
+
+  const tmp  = join(DATA_DIR, `.portal-credentials-${randomUUID()}.tmp`);
+  const data = JSON.stringify(store, null, 2) + '\n';
+
+  // Open temp file with O_CREAT|O_WRONLY|O_TRUNC and mode 0o600 so it is never
+  // world- or group-readable, even briefly while the write is in progress.
+  const fd = openSync(tmp, constants.O_CREAT | constants.O_WRONLY | constants.O_TRUNC, 0o600);
+  try {
+    writeSync(fd, data);
+  } finally {
+    closeSync(fd);
+  }
   renameSync(tmp, CREDS_PATH); // atomic on same filesystem
 }
 
