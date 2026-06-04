@@ -377,6 +377,13 @@ async function apply() {
       console.log('npm install skipped (may need manual run)');
     }
 
+    // 5b. Ensure Playwright browser binary is up to date after npm install
+    try {
+      execSync('npx playwright install chromium', { cwd: ROOT, timeout: 120000, stdio: 'ignore' });
+    } catch {
+      console.log('playwright install skipped (run manually: npx playwright install chromium)');
+    }
+
     // 6. Commit the update
     const remote = localVersion(); // Re-read after checkout updated VERSION
     try {
