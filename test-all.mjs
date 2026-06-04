@@ -136,6 +136,128 @@ try {
   } else {
     fail(`Closed mycareersfuture posting misclassified as ${closedMycareersfuture.result}`);
   }
+
+  const cloudflareChallenge = classifyLiveness({
+    status: 403,
+    finalUrl: 'https://www.pracuj.pl/praca/sap-consultant,oferta,1004870954',
+    bodyText: 'www.pracuj.pl\nJust a moment...\nPerforming security verification\nThis website uses a security service to protect against malicious bots.\nRay ID: a06489bab8bc4cd7\nPerformance and Security by Cloudflare',
+    applyControls: [],
+  });
+  if (cloudflareChallenge.result === 'uncertain' && cloudflareChallenge.code === 'bot_challenge') {
+    pass('Cloudflare anti-bot challenge pages are uncertain, not expired');
+  } else {
+    fail(`Cloudflare challenge misclassified as ${cloudflareChallenge.result} (${cloudflareChallenge.code})`);
+  }
+
+  const blocked403 = classifyLiveness({
+    status: 403,
+    finalUrl: 'https://www.pracuj.pl/praca/sap-consultant,oferta,1004870954',
+    bodyText: 'Access denied',
+    applyControls: [],
+  });
+  if (blocked403.result === 'uncertain' && blocked403.code === 'access_blocked') {
+    pass('HTTP 403 is treated as access-blocked (uncertain), not expired');
+  } else {
+    fail(`HTTP 403 misclassified as ${blocked403.result} (${blocked403.code})`);
+  }
+
+  const activePolishPosting = classifyLiveness({
+    status: 200,
+    finalUrl: 'https://www.pracuj.pl/praca/administrator-sap-utilities-warszawa,oferta,1004870954',
+    bodyText: 'Administrator SAP Utilities. Connectis_. Siedziba firmy: Chmielna 71, Warszawa. '.repeat(6),
+    applyControls: ['Aplikuj Aplikuj na ogłoszenie'],
+  });
+  if (activePolishPosting.result === 'active') {
+    pass('Polish "Aplikuj" apply control marks a loaded posting active');
+  } else {
+    fail(`Polish apply control not recognized: ${activePolishPosting.result} (${activePolishPosting.code})`);
+  }
+
+  // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
+  // pages script the goto/evaluate calls so we can exercise the wrapper without
+  // launching a browser. checkUrlLiveness reads body text first, apply controls
+  // second — the fake returns them in that order.
+  const { checkUrlLivenessWithFallback, isChallengeResult, jitteredDelayMs } =
+    await import(pathToFileURL(join(ROOT, 'liveness-browser.mjs')).href);
+
+  const disabled = jitteredDelayMs(0) === 0 && jitteredDelayMs(-1) === 0;
+  let inRange = true;
+  for (let i = 0; i < 200; i += 1) {
+    const d = jitteredDelayMs(5000);
+    if (d < 5000 || d >= 10000) { inRange = false; break; }
+  }
+  if (disabled && inRange) {
+    pass('jitteredDelayMs returns 0 when disabled and stays in [base, 2*base)');
+  } else {
+    fail(`jitteredDelayMs out of spec (disabled=${disabled}, inRange=${inRange})`);
+  }
+
+  const fakePage = ({ status, finalUrl, bodyText, applyControls }) => {
+    let evalCall = 0;
+    return {
+      async goto() { return { status: () => status }; },
+      async waitForTimeout() {},
+      url() { return finalUrl; },
+      async evaluate() { evalCall += 1; return evalCall === 1 ? bodyText : applyControls; },
+    };
+  };
+  const URL = 'https://www.pracuj.pl/praca/sap-consultant,oferta,1004870954';
+  const challengePage = () => fakePage({
+    status: 403,
+    finalUrl: URL,
+    bodyText: 'Just a moment... Performing security verification. Ray ID: abc123. Cloudflare.',
+    applyControls: [],
+  });
+  const livePage = () => fakePage({
+    status: 200,
+    finalUrl: URL,
+    bodyText: 'Administrator SAP Utilities. '.repeat(20),
+    applyControls: ['Apply for this job'],
+  });
+
+  if (isChallengeResult({ result: 'uncertain', code: 'bot_challenge' }) &&
+      isChallengeResult({ result: 'uncertain', code: 'access_blocked' }) &&
+      !isChallengeResult({ result: 'expired', code: 'http_gone' }) &&
+      !isChallengeResult({ result: 'active', code: 'apply_control_visible' })) {
+    pass('isChallengeResult flags only bot_challenge/access_blocked uncertains');
+  } else {
+    fail('isChallengeResult misclassified a result');
+  }
+
+  const fellBackToActive = await checkUrlLivenessWithFallback(challengePage(), URL, {
+    getHeadedPage: async () => livePage(),
+  });
+  if (fellBackToActive.result === 'active') {
+    pass('Headed fallback recovers a challenge-blocked page as active');
+  } else {
+    fail(`Headed fallback did not recover page: ${fellBackToActive.result} (${fellBackToActive.code})`);
+  }
+
+  const noProvider = await checkUrlLivenessWithFallback(challengePage(), URL, {});
+  if (noProvider.result === 'uncertain' && noProvider.code === 'bot_challenge') {
+    pass('No fallback provider keeps the original challenge result');
+  } else {
+    fail(`Missing provider changed result to ${noProvider.result} (${noProvider.code})`);
+  }
+
+  const stillBlocked = await checkUrlLivenessWithFallback(challengePage(), URL, {
+    getHeadedPage: async () => challengePage(),
+  });
+  if (stillBlocked.result === 'uncertain' && stillBlocked.code === 'bot_challenge'
+      && /headed retry also blocked/.test(stillBlocked.reason)) {
+    pass('Persistent challenge stays uncertain after headed retry (never upgraded to expired)');
+  } else {
+    fail(`Persistent challenge mishandled: ${stillBlocked.result} (${stillBlocked.code})`);
+  }
+
+  const noHeadedAvailable = await checkUrlLivenessWithFallback(challengePage(), URL, {
+    getHeadedPage: async () => null, // headed launch failed (no display)
+  });
+  if (noHeadedAvailable.result === 'uncertain' && noHeadedAvailable.code === 'bot_challenge') {
+    pass('Headless-only environment degrades to original challenge result');
+  } else {
+    fail(`No-display degrade path wrong: ${noHeadedAvailable.result} (${noHeadedAvailable.code})`);
+  }
 } catch (e) {
   fail(`Liveness classification tests crashed: ${e.message}`);
 }
