@@ -58,6 +58,18 @@ for (const f of mjsFiles) {
   }
 }
 
+if (existsSync(join(ROOT, 'lib'))) {
+  const libMjsFiles = readdirSync(join(ROOT, 'lib')).filter(f => f.endsWith('.mjs'));
+  for (const f of libMjsFiles) {
+    const result = run('node', ['--check', join('lib', f)]);
+    if (result !== null) {
+      pass(`lib/${f} syntax OK`);
+    } else {
+      fail(`lib/${f} has syntax errors`);
+    }
+  }
+}
+
 // ── 2. SCRIPT EXECUTION ─────────────────────────────────────────
 
 console.log('\n2. Script execution (graceful on empty data)');
