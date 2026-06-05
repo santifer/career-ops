@@ -16,7 +16,7 @@
  */
 
 import { execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -44,23 +44,43 @@ const SYSTEM_PATHS = [
   'modes/project.md',
   'modes/tracker.md',
   'modes/training.md',
+  'modes/latex.md',
   'modes/de/',
+  'modes/fr/',
+  'modes/ja/',
+  'modes/pt/',
+  'modes/ru/',
   'CLAUDE.md',
   'AGENTS.md',
+  'GEMINI.md',
   'generate-pdf.mjs',
+  'generate-latex.mjs',
   'merge-tracker.mjs',
   'verify-pipeline.mjs',
   'dedup-tracker.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
+  'scan.mjs',
+  'providers/',
+  'doctor.mjs',
+  'check-liveness.mjs',
+  'liveness-core.mjs',
+  'liveness-browser.mjs',
+  'analyze-patterns.mjs',
+  'followup-cadence.mjs',
+  'gemini-eval.mjs',
+  'test-all.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'dashboard/',
   'templates/',
   'fonts/',
+  '.agents/',
   '.claude/skills/',
+  '.gemini/commands/',
   'docs/',
+  'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
@@ -83,11 +103,18 @@ const USER_PATHS = [
   'reports/',
   'output/',
   'jds/',
+  'writing-samples/',
 ];
+
+function parseVersionFile(raw) {
+  // VERSION may carry a release-please marker, e.g. "1.6.0 # x-release-please-version".
+  // Take the first whitespace-delimited token so the marker doesn't break semver parsing.
+  return raw.trim().split(/\s+/)[0] || '';
+}
 
 function localVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return existsSync(vPath) ? parseVersionFile(readFileSync(vPath, 'utf-8')) : '0.0.0';
 }
 
 function compareVersions(a, b) {
@@ -136,34 +163,78 @@ async function check() {
   }
 
   const local = localVersion();
-  let remote;
+  let remote = '';
+  let releaseVersion = '';
+  let changelog = '';
 
+  // Fetch both sources in parallel — only fail offline if BOTH are unreachable.
+  // Use AbortSignal so a hung TCP connection can't stall the session-start check.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  let versionResult, releaseResult;
   try {
-    const res = await fetch(RAW_VERSION_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    remote = (await res.text()).trim();
-  } catch {
-    console.log(JSON.stringify({ status: 'offline', local }));
+    [versionResult, releaseResult] = await Promise.allSettled([
+      fetch(RAW_VERSION_URL, { signal: controller.signal }),
+      fetch(RELEASES_API, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'career-ops-update-checker',
+        },
+        signal: controller.signal,
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
+
+  if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
+    try {
+      const raw = parseVersionFile(await versionResult.value.text());
+      const match = raw.match(SEMVER_RE);
+      remote = match ? match[1] : '';
+    } catch {
+      // Body read failed; treat as no VERSION source
+    }
+  }
+
+  if (releaseResult.status === 'fulfilled' && releaseResult.value.ok) {
+    try {
+      const release = await releaseResult.value.json();
+      changelog = release.body || '';
+      const rawTag = String(release.tag_name || '').trim();
+      const match = rawTag.match(SEMVER_RE);
+      releaseVersion = match ? match[1] : '';
+    } catch {
+      // Body parse failed; treat as no release source
+    }
+  }
+
+  if (!remote && !releaseVersion) {
+    // Distinguish true network failures from "fetched OK but response was
+    // unparseable" — the latter shouldn't be silenced as offline since the
+    // network is actually fine.
+    const bothNetworkFailed =
+      versionResult.status !== 'fulfilled' &&
+      releaseResult.status !== 'fulfilled';
+    const status = bothNetworkFailed ? 'offline' : 'no-remote-version';
+    console.log(JSON.stringify({ status, local }));
     return;
+  }
+
+  // Use the higher version between VERSION file and GitHub Release
+  // (handles cases where VERSION file is not bumped after a release,
+  // or the raw host is unreachable but the API is).
+  if (!remote) {
+    remote = releaseVersion;
+  } else if (releaseVersion && compareVersions(releaseVersion, remote) > 0) {
+    remote = releaseVersion;
   }
 
   if (compareVersions(local, remote) >= 0) {
     console.log(JSON.stringify({ status: 'up-to-date', local, remote }));
     return;
-  }
-
-  // Fetch changelog from GitHub releases
-  let changelog = '';
-  try {
-    const res = await fetch(RELEASES_API, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (res.ok) {
-      const release = await res.json();
-      changelog = release.body || '';
-    }
-  } catch {
-    // No changelog available, that's OK
   }
 
   console.log(JSON.stringify({
@@ -207,6 +278,25 @@ async function apply() {
     // 3. Checkout system files only
     console.log('Updating system files...');
     const updated = [];
+
+    // 3a. Bootstrap newly-introduced paths that the local update-system.mjs
+    // doesn't yet know about. Without this, cross-version migrations where
+    // a path is added to SYSTEM_PATHS by the new version can leave dangling
+    // symlinks — e.g. v1.6.x → v1.7.x where .agents/ was introduced but the
+    // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
+    // checked out while `.claude/skills/` was updated to symlink into it.
+    // See: https://github.com/santifer/career-ops/issues/649
+    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs'];
+    for (const path of BOOTSTRAP_PATHS) {
+      if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
+      try {
+        git('checkout', 'FETCH_HEAD', '--', path);
+        updated.push(path);
+      } catch {
+        // Path may not exist in FETCH_HEAD yet
+      }
+    }
+
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', 'FETCH_HEAD', '--', path);
@@ -216,27 +306,67 @@ async function apply() {
       }
     }
 
-    // 4. Validate: check NO user files were touched
-    let userFileTouched = false;
+    // 4. Validate: check NO user files were touched.
+    //
+    // Track which user paths the update unexpectedly touched so we
+    // can revert them too — reverting only `updated` would leave the
+    // repo in a half-applied state with the user-layer changes still
+    // staged.
+    const violatedUserPaths = new Set();
     try {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
         if (initialStatusPaths.has(file)) continue;
+        // Explicit SYSTEM_PATHS entries override USER_PATHS prefix matches.
+        // (e.g. writing-samples/README.md is system-owned doc inside a user dir.)
+        if (SYSTEM_PATHS.includes(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
-            userFileTouched = true;
+            violatedUserPaths.add(file);
           }
         }
       }
-    } catch {
-      // git status failed, skip validation
+    } catch (err) {
+      // Fail closed: if we can't validate the safety invariant we must
+      // not silently proceed — that would let a real violation slip
+      // through. Revert what we already applied and abort.
+      console.error(`Aborting: could not validate user-layer safety (${err.message}).`);
+      try {
+        revertPaths(updated);
+      } catch (revertErr) {
+        // If the revert itself fails (likely whatever broke `git
+        // status` also broke `git checkout --`), don't lose the
+        // original validation error — chain it via `cause`.
+        throw new Error(
+          `Validation failed (${err.message}) and revert also failed (${revertErr.message})`,
+          { cause: err },
+        );
+      }
+      throw err;
     }
 
-    if (userFileTouched) {
+    if (violatedUserPaths.size > 0) {
       console.error('Aborting: user files were touched. Rolling back...');
-      revertPaths(updated);
-      process.exit(1);
+      // Revert BOTH the system-layer updates and the user-layer paths
+      // the update unexpectedly modified — otherwise the repo is left
+      // in a half-applied state.
+      const violation = new Error('Update aborted: user files were touched.');
+      try {
+        revertPaths([...updated, ...violatedUserPaths]);
+      } catch (revertErr) {
+        // If the revert itself fails, don't lose the safety-violation
+        // diagnostic — chain it via `cause` so the user sees both.
+        throw new Error(
+          `Safety violation (${violation.message}) and revert also failed (${revertErr.message})`,
+          { cause: violation },
+        );
+      }
+      // `throw` (not `process.exit`) so the outer `finally` runs and
+      // .update-lock is removed. Exiting here would leak the lock and
+      // permanently block subsequent updates until the user deletes
+      // it manually.
+      throw violation;
     }
 
     // 5. Install any new dependencies
@@ -287,19 +417,67 @@ function rollback() {
     const latest = branchList[0];
     console.log(`Rolling back to: ${latest}`);
 
-    // Checkout system files from backup branch
+    // Checkout system files from backup branch.
+    //
+    // Two failure modes for `git checkout` here:
+    //   (a) the path didn't exist in the backup branch — the apply()
+    //       that produced this backup was on an older version that
+    //       didn't track this path yet. Rollback must DELETE the path
+    //       so the working tree mirrors the backup state.
+    //   (b) anything else — propagate so we don't silently leave the
+    //       working tree in a partially-restored state.
+    //
+    // Limitation: `git checkout <ref> -- <dir>` restores blobs from
+    // the backup tree but doesn't remove files that were added INSIDE
+    // an already-tracked directory between backup and rollback. Rolling
+    // back per-file via `git diff --name-status <backup>` would catch
+    // that but is a larger change; tracked separately if it ever bites.
+    const restored = [];
+    const removed = [];
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', latest, '--', path);
-      } catch {
-        // File may not have existed in backup
+        restored.push(path);
+      } catch (err) {
+        const pathspec = path.endsWith('/') ? path.slice(0, -1) : path;
+        let existedInBackup = true;
+        try {
+          git('cat-file', '-e', `${latest}:${pathspec}`);
+        } catch {
+          existedInBackup = false;
+        }
+        if (existedInBackup) {
+          throw err;
+        }
+        // Path was introduced by a later apply() — remove it so the
+        // tree truly matches the backup. `git rm` stages the deletion
+        // for tracked files; `rmSync` cleans up the untracked-but-
+        // on-disk case (e.g. an apply() that crashed between checkout
+        // and commit, leaving the path untracked locally).
+        git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec);
+        try {
+          rmSync(join(ROOT, pathspec), { recursive: true, force: true });
+        } catch {
+          // Already gone, or not present on disk — fine.
+        }
+        removed.push(pathspec);
       }
     }
 
-    addPaths(SYSTEM_PATHS);
-    git('commit', '-m', `chore: rollback system files from ${latest}`);
+    if (restored.length > 0) addPaths(restored);
+    try {
+      git('commit', '-m', `chore: rollback system files from ${latest}`);
+    } catch {
+      // Tolerate any commit failure here — the common case is the
+      // "nothing to commit" no-op when the working tree already
+      // matched the backup (e.g. user ran rollback twice). This
+      // mirrors apply()'s broad-catch in the commit step; narrowing
+      // to a specific git-error string is fragile and would diverge
+      // from that pattern. Genuine setup problems (hooks, signing,
+      // disk full) will resurface on the next normal git operation.
+    }
 
-    console.log(`Rollback complete. System files restored from ${latest}.`);
+    console.log(`Rollback complete. Restored ${restored.length} path(s) from ${latest}, removed ${removed.length} path(s) added after the backup.`);
     console.log('Your data (CV, profile, tracker, reports) was not affected.');
   } catch (err) {
     console.error('Rollback failed:', err.message);
@@ -318,12 +496,20 @@ function dismiss() {
 
 const cmd = process.argv[2] || 'check';
 
-switch (cmd) {
-  case 'check': await check(); break;
-  case 'apply': await apply(); break;
-  case 'rollback': rollback(); break;
-  case 'dismiss': dismiss(); break;
-  default:
-    console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
-    process.exit(1);
+try {
+  switch (cmd) {
+    case 'check': await check(); break;
+    case 'apply': await apply(); break;
+    case 'rollback': rollback(); break;
+    case 'dismiss': dismiss(); break;
+    default:
+      console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+      process.exit(1);
+  }
+} catch (err) {
+  // Subcommands now `throw` on aborts so their outer `finally` blocks
+  // run (e.g. apply() must release `.update-lock`). Print a clean
+  // message here instead of letting Node spit out a stack trace.
+  console.error(err.message || err);
+  process.exit(1);
 }

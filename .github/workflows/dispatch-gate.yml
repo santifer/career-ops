@@ -1,0 +1,48 @@
+# Dispatch Gate — CI mirror of dispatch-relay.mjs
+# Same validation gate that runs locally before deploy, enforced on the server.
+# With this in place, `git push` is the deploy path and CI is the final guard:
+# nothing untested reaches production main.
+name: Dispatch Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: dashboard/go.mod
+
+      - name: Install deps
+        run: npm install
+
+      - name: Gate 0 — codegen (states.yml → gen/)
+        run: |
+          npm run codegen
+          git diff --exit-code gen/
+
+      - name: Gate 1 — script syntax (all .mjs files)
+        run: |
+          node check-syntax.mjs
+          find . -name '*.mjs' -not -path './node_modules/*' | xargs -I{} node --check {}
+
+      - name: Gate 2 — pipeline health (verify-pipeline.mjs)
+        run: node verify-pipeline.mjs
+
+      - name: Gate 3 — dashboard build (go build)
+        working-directory: dashboard
+        run: go build ./...
