@@ -389,8 +389,8 @@ async function attachDocumentInput(page, input, role, labelText, accepted, fille
 async function applyCheckbox(input, labelText, value, provenance, filled, manual) {
   const normalized = String(value ?? '').trim().toLowerCase();
   let shouldCheck = null;
-  if (/^(yes|true|1|checked|check|on)$/i.test(normalized)) shouldCheck = true;
-  if (/^(no|false|0|unchecked|uncheck|off)$/i.test(normalized)) shouldCheck = false;
+  if (/^(yes|true|1|checked|check|on)\b/i.test(normalized)) shouldCheck = true;
+  if (/^(no|false|0|unchecked|uncheck|off)\b/i.test(normalized)) shouldCheck = false;
 
   if (shouldCheck == null) {
     manual.push({ label: labelText, reason: `checkbox answer "${value}" is not safely mappable` });

@@ -407,6 +407,15 @@ try {
   } else {
     fail('dashboard UI prefilled submit disable missing');
   }
+
+  if (
+    formFill.includes('^(yes|true|1|checked|check|on)\\b') &&
+    formFill.includes('^(no|false|0|unchecked|uncheck|off)\\b')
+  ) {
+    pass('checkbox mapper accepts leading yes/no consent phrases');
+  } else {
+    fail('checkbox mapper no longer accepts leading yes/no consent phrases');
+  }
 } catch (e) {
   fail(`Apply prefill contract checks crashed: ${e.message}`);
 }
