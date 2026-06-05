@@ -391,6 +391,21 @@ search_queries:
 #     format: jobs-json-v1
 #   enabled: true
 
+# ── Provider auto-detection ───────────────────────────────────────
+# scan.mjs auto-loads everything in providers/*.mjs and tries each
+# provider's detect() in order. URL patterns recognized:
+#
+#   greenhouse      job-boards(.eu)?.greenhouse.io/<slug>  (or api: field)
+#   ashby           jobs.ashbyhq.com/<slug>
+#   lever           jobs.lever.co/<slug>
+#   workable        apply.workable.com/<slug>
+#   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
+#   recruitee       <slug>.recruitee.com
+#
+# When the public careers URL is a branded custom domain (e.g.
+# careers.adyen.com), set `provider: smartrecruiters` explicitly to
+# bypass detect(). The `provider:` field wins over auto-detection.
+
 tracked_companies:
 
   # -- AI Labs & LLM providers --

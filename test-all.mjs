@@ -12,8 +12,9 @@
  */
 
 import { execSync, execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync, realpathSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
+import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -203,15 +204,17 @@ const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
   'README.md', 'README.es.md', 'README.ja.md', 'README.ko-KR.md',
-  'README.pt-BR.md', 'README.ru.md',
+  'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.zh-TW.md',
   // Standard project files
-  'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
+  'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
   'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'AGENTS.md', 'go.mod', 'test-all.mjs',
+  '.claude-plugin/marketplace.json', '.claude-plugin/plugin.json',
   // Community / governance files (added in v1.3.0, all legitimately reference the maintainer)
   'CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'SECURITY.md', 'SUPPORT.md',
   '.github/SECURITY.md',
   // Dashboard credit string
   'dashboard/internal/ui/screens/pipeline.go',
+  'dashboard/internal/ui/screens/progress.go',
 ];
 
 // Build pathspec for git grep — only scan tracked files matching these
@@ -586,6 +589,582 @@ try {
 
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
+}
+// ── 12. FOLLOW-UP CADENCE LOGIC ─────────────────────────────────
+
+console.log('\n12. Follow-up cadence logic');
+
+try {
+  const cadence = await import(pathToFileURL(join(ROOT, 'followup-cadence.mjs')).href);
+
+  // CLI regression: the import.meta.url guard must still let the module run as a CLI.
+  // Data-independent — default mode emits the result as JSON: a `metadata` object when
+  // the tracker has applications, or an `{error}` object (exit 1) when it is empty.
+  // Empty output would mean the guard wrongly suppressed main().
+  let cliOut = '';
+  try {
+    cliOut = execFileSync(NODE, [join(ROOT, 'followup-cadence.mjs')], { cwd: ROOT, encoding: 'utf-8', timeout: 30000 });
+  } catch (cliErr) {
+    cliOut = `${cliErr.stdout || ''}`; // exit 1 on an empty tracker is expected; keep stdout
+  }
+  let cliJson = null;
+  try { cliJson = JSON.parse(cliOut.trim()); } catch { /* leave null → fail below */ }
+  if (cliJson && typeof cliJson === 'object' && ('metadata' in cliJson || 'error' in cliJson)) {
+    pass('CLI still executes under the import.meta.url guard (emits result JSON)');
+  } else {
+    fail('CLI produced no structured JSON when run directly — import.meta.url guard may be broken');
+  }
+
+  // Date helpers
+  if (cadence.addDays(cadence.parseDate('2026-05-01'), 7) === '2026-05-08') {
+    pass('addDays advances a parsed date by N days (UTC)');
+  } else {
+    fail(`addDays produced ${cadence.addDays(cadence.parseDate('2026-05-01'), 7)}`);
+  }
+  if (cadence.daysBetween(cadence.parseDate('2026-05-01'), cadence.parseDate('2026-05-08')) === 7) {
+    pass('daysBetween counts whole days between two dates');
+  } else {
+    fail('daysBetween miscounted');
+  }
+  if (cadence.parseDate('not-a-date') === null && cadence.parseDate('2026-05-01') instanceof Date) {
+    pass('parseDate rejects malformed input and accepts ISO dates');
+  } else {
+    fail('parseDate validation wrong');
+  }
+
+  // Status normalization (strips bold + trailing date, lowercases, maps aliases)
+  if (cadence.normalizeStatus('**Applied** 2026-05-01') === 'applied') {
+    pass('normalizeStatus strips bold + trailing date and lowercases');
+  } else {
+    fail(`normalizeStatus produced ${cadence.normalizeStatus('**Applied** 2026-05-01')}`);
+  }
+
+  // Urgency decision tree (CADENCE defaults: applied_first=7, max_followups=2, responded_initial=1, interview_thankyou=1)
+  const urgencyCases = [
+    [['applied', 7, null, 0], 'overdue', 'applied past applied_first → overdue'],
+    [['applied', 3, null, 0], 'waiting', 'applied within window → waiting'],
+    [['applied', 30, null, 2], 'cold', 'applied at max follow-ups → cold'],
+    [['responded', 0, null, 0], 'urgent', 'responded before responded_initial → urgent'],
+    [['interview', 1, null, 0], 'overdue', 'interview past thank-you window → overdue'],
+  ];
+  for (const [args, expected, label] of urgencyCases) {
+    const got = cadence.computeUrgency(...args);
+    if (got === expected) pass(`computeUrgency: ${label}`);
+    else fail(`computeUrgency ${label}: expected ${expected}, got ${got}`);
+  }
+
+  // Next follow-up date scheduling
+  const nextCases = [
+    [['applied', '2026-05-01', null, 0], '2026-05-08', 'first applied follow-up = appDate + applied_first'],
+    [['applied', '2026-05-01', null, 2], null, 'cold (max follow-ups) → null'],
+    [['interview', '2026-05-01', null, 0], '2026-05-02', 'interview = appDate + interview_thankyou'],
+  ];
+  for (const [args, expected, label] of nextCases) {
+    const got = cadence.computeNextFollowupDate(...args);
+    if (got === expected) pass(`computeNextFollowupDate: ${label}`);
+    else fail(`computeNextFollowupDate ${label}: expected ${expected}, got ${got}`);
+  }
+} catch (e) {
+  fail(`follow-up cadence module crashed: ${e.message}`);
+}
+
+// ── 12. PROVIDERS — Workable ────────────────────────────────────────
+
+console.log('\n12. Provider — workable');
+
+try {
+  const workable = (await import(pathToFileURL(join(ROOT, 'providers/workable.mjs')).href)).default;
+  const { parseWorkableMarkdown } = await import(pathToFileURL(join(ROOT, 'providers/workable.mjs')).href);
+
+  // detect() — auto-detection from careers_url
+  if (workable.id === 'workable') pass('workable.id is "workable"');
+  else fail(`workable.id is ${JSON.stringify(workable.id)}`);
+
+  const hit = workable.detect({ name: 'TestCo', careers_url: 'https://apply.workable.com/optimile' });
+  if (hit && hit.url === 'https://apply.workable.com/optimile/jobs.md') {
+    pass('workable.detect() resolves apply.workable.com/<slug> → /jobs.md feed');
+  } else {
+    fail(`workable.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  const miss = workable.detect({ name: 'TestCo', careers_url: 'https://example.com/careers' });
+  if (miss === null) pass('workable.detect() returns null for non-workable URLs');
+  else fail(`workable.detect() should return null, got ${JSON.stringify(miss)}`);
+
+  // parse() — markdown table
+  const sampleMd = [
+    '# Optimile — All Open Positions',
+    '',
+    '| Title | Department | Location | Type | Salary | Posted | Details |',
+    '|---|---|---|---|---|---|---|',
+    '| Senior AI PM | Product | Ghent, Belgium | Full-time | — | 2026-04-01 | [View](https://apply.workable.com/optimile/jobs/view/ABC123.md) |',
+    '| Tech Lead | Engineering | Remote | Full-time | — | 2026-03-25 | [View](https://apply.workable.com/optimile/jobs/view/DEF456.md) |',
+  ].join('\n');
+
+  const jobs = parseWorkableMarkdown(sampleMd, 'Optimile');
+  if (jobs.length === 2) pass('parseWorkableMarkdown extracts 2 jobs from 2-row table');
+  else fail(`parseWorkableMarkdown returned ${jobs.length} jobs, expected 2`);
+
+  if (jobs[0]?.title === 'Senior AI PM' && jobs[0]?.location === 'Ghent, Belgium' && jobs[0]?.company === 'Optimile') {
+    pass('parseWorkableMarkdown extracts title, location, company correctly');
+  } else {
+    fail(`parseWorkableMarkdown row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.url === 'https://apply.workable.com/optimile/jobs/view/ABC123') {
+    pass('parseWorkableMarkdown strips .md suffix from job URL');
+  } else {
+    fail(`parseWorkableMarkdown should strip .md; got url=${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  // Robustness
+  if (parseWorkableMarkdown('', 'X').length === 0) pass('empty input → empty result');
+  else fail('empty input should yield empty result');
+
+  if (parseWorkableMarkdown(null, 'X').length === 0) pass('null input → empty result (no crash)');
+  else fail('null input should yield empty result without crashing');
+
+  // fetch() reaches the http context on the happy path (allowed hostname).
+  await workable.fetch(
+    { name: 'Smoke', careers_url: 'https://apply.workable.com/optimile' },
+    {
+      transport: 'http',
+      fetchText: async (url) => {
+        if (!url.startsWith('https://apply.workable.com/')) {
+          throw new Error('fetchText called with unexpected URL');
+        }
+        return '| Title | Department | Location | Type | Salary | Posted | Details |\n|---|---|---|---|---|---|---|\n';
+      },
+      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+    },
+  );
+  pass('workable.fetch() reaches fetchText on the happy path (allowed hostname)');
+
+  // fetch() rejects an unresolvable careers_url (no apply.workable.com match in URL).
+  let rejected = false;
+  try {
+    await workable.fetch(
+      { name: 'BadUrl', careers_url: 'https://evil.com/totally-not-workable' },
+      {
+        transport: 'http',
+        fetchText: async () => { throw new Error('SSRF! should not reach here'); },
+        fetchJson: async () => { throw new Error('SSRF! should not reach here'); },
+      },
+    );
+  } catch (e) {
+    if (e.message.includes('cannot derive feed URL')) {
+      rejected = true;
+    } else {
+      fail(`workable.fetch() rejected with wrong error: ${e.message}`);
+    }
+  }
+  if (rejected) pass('workable.fetch() rejects unresolvable careers_url before fetch');
+  else fail('workable.fetch() should throw cannot-derive-feed-URL for non-Workable URLs');
+
+  // SSRF: malicious URL with apply.workable.com in the PATH (not hostname) must not be detected as Workable.
+  // With strict URL parsing, the hostname `evil.example` fails the check and detect() returns null.
+  if (workable.detect({ name: 'Spoof', careers_url: 'https://evil.example/apply.workable.com/slug' }) === null) {
+    pass('workable.detect() rejects path-spoofed URLs (apply.workable.com in path, not hostname)');
+  } else {
+    fail('workable.detect() must NOT misdetect URLs that contain apply.workable.com in the path');
+  }
+
+  // careers_url with non-string value (e.g. YAML mistake passing a number) → detect() returns null without crashing
+  if (workable.detect({ name: 'X', careers_url: 42 }) === null) {
+    pass('workable.detect() returns null for non-string careers_url (42)');
+  } else {
+    fail('workable.detect() should treat non-string careers_url as missing');
+  }
+
+  // Workable parser tolerates a title with a stray pipe — URL is extracted from the line, not cols[7]
+  const strayPipeMd = [
+    '| Title | Department | Location | Type | Salary | Posted | Details |',
+    '|---|---|---|---|---|---|---|',
+    '| Senior PM (full | part-time) | Product | Remote | Full-time | — | 2026-04-01 | [View](https://apply.workable.com/x/jobs/view/PIPE.md) |',
+  ].join('\n');
+  const strayJobs = parseWorkableMarkdown(strayPipeMd, 'X');
+  if (strayJobs.length === 1 && strayJobs[0].url === 'https://apply.workable.com/x/jobs/view/PIPE') {
+    pass('parseWorkableMarkdown extracts URL from line-level regex (survives stray pipes in title)');
+  } else {
+    fail(`stray-pipe row not handled correctly: ${JSON.stringify(strayJobs)}`);
+  }
+
+  // Off-domain [View] link is dropped (URL validation)
+  const offDomainMd = [
+    '| Title | Department | Location | Type | Salary | Posted | Details |',
+    '|---|---|---|---|---|---|---|',
+    '| Good Role | Product | Remote | Full-time | — | 2026-04-01 | [View](https://apply.workable.com/x/jobs/view/ABC.md) |',
+    '| Evil Role | Product | Remote | Full-time | — | 2026-04-01 | [View](https://evil.example/jobs/view/X) |',
+    '| Insecure Role | Product | Remote | Full-time | — | 2026-04-01 | [View](http://apply.workable.com/x/jobs/view/Y.md) |',
+  ].join('\n');
+  const filteredJobs = parseWorkableMarkdown(offDomainMd, 'X');
+  if (filteredJobs.length === 1 && filteredJobs[0].title === 'Good Role') {
+    pass('parseWorkableMarkdown drops off-domain and non-https [View] links');
+  } else {
+    fail(`expected only "Good Role" through, got ${JSON.stringify(filteredJobs.map(j => j.title))}`);
+  }
+
+} catch (e) {
+  fail(`workable provider tests crashed: ${e.message}`);
+}
+
+// ── 13. PROVIDERS — SmartRecruiters ─────────────────────────────────
+
+console.log('\n13. Provider — smartrecruiters');
+
+try {
+  const sr = (await import(pathToFileURL(join(ROOT, 'providers/smartrecruiters.mjs')).href)).default;
+  const { parseSmartRecruitersResponse } = await import(pathToFileURL(join(ROOT, 'providers/smartrecruiters.mjs')).href);
+
+  if (sr.id === 'smartrecruiters') pass('smartrecruiters.id is "smartrecruiters"');
+  else fail(`smartrecruiters.id is ${JSON.stringify(sr.id)}`);
+
+  const hitCareers = sr.detect({ name: 'Adyen', careers_url: 'https://careers.smartrecruiters.com/adyen' });
+  if (hitCareers && hitCareers.url.startsWith('https://api.smartrecruiters.com/v1/companies/adyen/postings')) {
+    pass('smartrecruiters.detect() resolves careers.smartrecruiters.com/<slug> → api URL');
+  } else {
+    fail(`smartrecruiters.detect(careers) returned ${JSON.stringify(hitCareers)}`);
+  }
+
+  const hitJobs = sr.detect({ name: 'X', careers_url: 'https://jobs.smartrecruiters.com/x' });
+  if (hitJobs && hitJobs.url.startsWith('https://api.smartrecruiters.com/v1/companies/x/postings')) {
+    pass('smartrecruiters.detect() also handles jobs.smartrecruiters.com');
+  } else {
+    fail(`smartrecruiters.detect(jobs) returned ${JSON.stringify(hitJobs)}`);
+  }
+
+  if (sr.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('smartrecruiters.detect() returns null for non-SR URLs');
+  } else {
+    fail('smartrecruiters.detect() should return null for non-SR URLs');
+  }
+
+  // parseSmartRecruitersResponse
+  const sample = {
+    content: [
+      {
+        id: 'abc-123',
+        name: 'Senior PM',
+        ref: 'https://api.smartrecruiters.com/v1/companies/sgs/postings/abc-123',
+        location: { fullLocation: 'Geneva, Switzerland', remote: false },
+      },
+      {
+        id: 'def-456',
+        name: 'Remote AI Engineer',
+        ref: 'https://api.smartrecruiters.com/v1/companies/sgs/postings/def-456',
+        location: { city: 'Paris', country: 'France', remote: true },
+      },
+      {
+        id: 'ghi-789',
+        name: 'No-ref Role',
+        location: { fullLocation: 'Berlin, Germany' },
+      },
+    ],
+  };
+  const jobs = parseSmartRecruitersResponse(sample, 'SGS');
+  if (jobs.length === 3) pass('parseSmartRecruitersResponse extracts 3 jobs');
+  else fail(`parseSmartRecruitersResponse returned ${jobs.length} jobs`);
+
+  if (jobs[0]?.location === 'Geneva, Switzerland' && jobs[0]?.title === 'Senior PM') {
+    pass('parseSmartRecruitersResponse uses fullLocation when present');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[1]?.location === 'Paris, France, Remote') {
+    pass('parseSmartRecruitersResponse builds location from city/country/remote when no fullLocation');
+  } else {
+    fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Paris, France, Remote"`);
+  }
+
+  if (jobs[0]?.url === 'https://jobs.smartrecruiters.com/sgs/postings/abc-123') {
+    pass('parseSmartRecruitersResponse rewrites api.smartrecruiters.com → jobs.smartrecruiters.com');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (jobs[2]?.url && jobs[2].url.startsWith('https://jobs.smartrecruiters.com/sgs/ghi-789')) {
+    pass('parseSmartRecruitersResponse falls back to synthetic URL when ref is missing');
+  } else {
+    fail(`row 2 url = ${JSON.stringify(jobs[2]?.url)}`);
+  }
+
+  // Empty input safety
+  if (parseSmartRecruitersResponse({}, 'X').length === 0) pass('empty {} input → empty result');
+  else fail('empty {} input should yield empty result');
+
+  if (parseSmartRecruitersResponse({ content: 'not an array' }, 'X').length === 0) {
+    pass('non-array content → empty result (no crash)');
+  } else {
+    fail('non-array content should yield empty result');
+  }
+
+  // careers_url with non-string value → detect() returns null without crashing
+  if (sr.detect({ name: 'X', careers_url: { foo: 'bar' } }) === null) {
+    pass('smartrecruiters.detect() returns null for non-string careers_url (object)');
+  } else {
+    fail('smartrecruiters.detect() should treat non-string careers_url as missing');
+  }
+
+  // Fallback URL when both ref AND id are missing → empty string (not "undefined" in URL)
+  const noRefNoId = parseSmartRecruitersResponse(
+    { content: [{ name: 'Stranded Role' }] },
+    'X',
+  );
+  if (noRefNoId.length === 1 && noRefNoId[0].url === '') {
+    pass('parseSmartRecruitersResponse returns url="" when both ref and id are missing');
+  } else {
+    fail(`expected url='' when ref+id both missing, got ${JSON.stringify(noRefNoId[0])}`);
+  }
+
+  // SSRF: malicious URL with smartrecruiters hostname in the PATH (not host) must not be detected.
+  if (sr.detect({ name: 'Spoof', careers_url: 'https://evil.example/careers.smartrecruiters.com/slug' }) === null) {
+    pass('smartrecruiters.detect() rejects path-spoofed URLs');
+  } else {
+    fail('smartrecruiters.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // SmartRecruiters: untrusted j.ref host falls through to fallback rather than rewriting
+  const bogusRef = parseSmartRecruitersResponse(
+    { content: [{ id: 'X1', name: 'Strange Role', ref: 'https://evil.example/v1/companies/x/postings/X1' }] },
+    'TestCo',
+  );
+  if (bogusRef[0]?.url && !bogusRef[0].url.includes('evil.example')) {
+    pass('parseSmartRecruitersResponse rejects untrusted j.ref host (falls through to fallback)');
+  } else {
+    fail(`untrusted j.ref leaked into url: ${JSON.stringify(bogusRef[0]?.url)}`);
+  }
+
+  // SmartRecruiters: companyName with spaces/symbols is slugified for the fallback URL
+  const slugifiedCompany = parseSmartRecruitersResponse(
+    { content: [{ id: 'X2', name: 'Strange Role' }] },
+    'My Acme & Co.',
+  );
+  if (slugifiedCompany[0]?.url === 'https://jobs.smartrecruiters.com/my-acme-co/X2-strange-role') {
+    pass('parseSmartRecruitersResponse slugifies the companyName for the fallback URL');
+  } else {
+    fail(`fallback URL not properly slugified: ${JSON.stringify(slugifiedCompany[0]?.url)}`);
+  }
+
+  // Pagination: fetch() loops until an empty page (or short page) is returned
+  let pageRequests = 0;
+  const pagedJobs = await sr.fetch(
+    { name: 'PagedCo', careers_url: 'https://careers.smartrecruiters.com/paged' },
+    {
+      transport: 'http',
+      fetchText: async () => { throw new Error('fetchText should not be called'); },
+      fetchJson: async (url) => {
+        pageRequests++;
+        const offset = parseInt(new URL(url).searchParams.get('offset') || '0', 10);
+        if (offset === 0) {
+          // Page 1: full page (100 items)
+          return { content: Array.from({ length: 100 }, (_, i) => ({ id: `P1-${i}`, name: `Role 1-${i}` })) };
+        }
+        if (offset === 100) {
+          // Page 2: short page (50 items) → loop stops after this
+          return { content: Array.from({ length: 50 }, (_, i) => ({ id: `P2-${i}`, name: `Role 2-${i}` })) };
+        }
+        // Should not be reached because page 2 was short
+        return { content: [] };
+      },
+    },
+  );
+  if (pageRequests === 2 && pagedJobs.length === 150) {
+    pass('smartrecruiters.fetch() paginates and aggregates results (2 pages → 150 total)');
+  } else {
+    fail(`pagination: pageRequests=${pageRequests}, total=${pagedJobs.length} (expected 2 requests / 150 results)`);
+  }
+
+  // Pagination stop condition: empty content terminates the loop
+  let emptyPageRequests = 0;
+  const emptyJobs = await sr.fetch(
+    { name: 'EmptyCo', careers_url: 'https://careers.smartrecruiters.com/empty' },
+    {
+      transport: 'http',
+      fetchText: async () => { throw new Error('fetchText should not be called'); },
+      fetchJson: async () => {
+        emptyPageRequests++;
+        return { content: [] };
+      },
+    },
+  );
+  if (emptyPageRequests === 1 && emptyJobs.length === 0) {
+    pass('smartrecruiters.fetch() stops on the first empty page');
+  } else {
+    fail(`empty pagination: requests=${emptyPageRequests}, total=${emptyJobs.length}`);
+  }
+
+} catch (e) {
+  fail(`smartrecruiters provider tests crashed: ${e.message}`);
+}
+
+// ── 14. PROVIDERS — Recruitee ───────────────────────────────────────
+
+console.log('\n14. Provider — recruitee');
+
+try {
+  const recruitee = (await import(pathToFileURL(join(ROOT, 'providers/recruitee.mjs')).href)).default;
+  const { parseRecruiteeResponse } = await import(pathToFileURL(join(ROOT, 'providers/recruitee.mjs')).href);
+
+  if (recruitee.id === 'recruitee') pass('recruitee.id is "recruitee"');
+  else fail(`recruitee.id is ${JSON.stringify(recruitee.id)}`);
+
+  const hit = recruitee.detect({ name: 'Channable', careers_url: 'https://channable.recruitee.com' });
+  if (hit && hit.url === 'https://channable.recruitee.com/api/offers/') {
+    pass('recruitee.detect() resolves <slug>.recruitee.com → api offers');
+  } else {
+    fail(`recruitee.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  if (recruitee.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('recruitee.detect() returns null for non-recruitee URLs');
+  } else {
+    fail('recruitee.detect() should return null for non-recruitee URLs');
+  }
+
+  // parseRecruiteeResponse
+  const sample = {
+    offers: [
+      { title: 'Senior PM', careers_url: 'https://channable.recruitee.com/o/senior-pm', city: 'Utrecht', country: 'Netherlands', remote: false },
+      { title: 'Backend Eng', url: 'https://channable.recruitee.com/o/backend', city: 'Amsterdam', country: 'Netherlands', remote: true },
+      { title: 'AI Lead', location: 'Remote, EMEA' },
+    ],
+  };
+  const jobs = parseRecruiteeResponse(sample, 'Channable');
+  if (jobs.length === 3) pass('parseRecruiteeResponse extracts 3 offers');
+  else fail(`parseRecruiteeResponse returned ${jobs.length} offers`);
+
+  if (jobs[0]?.title === 'Senior PM' && jobs[0]?.company === 'Channable' && jobs[0]?.url === 'https://channable.recruitee.com/o/senior-pm') {
+    pass('parseRecruiteeResponse prefers careers_url field over url');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[1]?.location === 'Amsterdam, Netherlands, Remote') {
+    pass('parseRecruiteeResponse assembles city/country/remote when no location field');
+  } else {
+    fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Amsterdam, Netherlands, Remote"`);
+  }
+
+  if (jobs[2]?.location === 'Remote, EMEA') {
+    pass('parseRecruiteeResponse uses explicit location field when present');
+  } else {
+    fail(`row 2 location = ${JSON.stringify(jobs[2]?.location)}`);
+  }
+
+  if (parseRecruiteeResponse({}, 'X').length === 0) pass('empty {} → empty result');
+  else fail('empty {} should yield empty result');
+
+  if (parseRecruiteeResponse({ offers: null }, 'X').length === 0) {
+    pass('null offers → empty result (no crash)');
+  } else {
+    fail('null offers should yield empty result');
+  }
+
+  // careers_url with non-string value → detect() returns null without crashing
+  if (recruitee.detect({ name: 'X', careers_url: null }) === null && recruitee.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('recruitee.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('recruitee.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: malicious URL with recruitee.com in the PATH (not host) must not be detected.
+  if (recruitee.detect({ name: 'Spoof', careers_url: 'https://evil.example/channable.recruitee.com/foo' }) === null) {
+    pass('recruitee.detect() rejects path-spoofed URLs');
+  } else {
+    fail('recruitee.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // Off-domain offer URL is dropped (URL validation)
+  const offDomainOffers = parseRecruiteeResponse(
+    {
+      offers: [
+        { title: 'Good', careers_url: 'https://channable.recruitee.com/o/good' },
+        { title: 'Evil', careers_url: 'https://evil.example/o/evil' },
+        { title: 'Insecure', careers_url: 'http://channable.recruitee.com/o/insecure' },
+        { title: 'No URL field' },
+      ],
+    },
+    'Channable',
+  );
+  if (offDomainOffers[0]?.url === 'https://channable.recruitee.com/o/good' && offDomainOffers[1]?.url === '' && offDomainOffers[2]?.url === '' && offDomainOffers[3]?.url === '') {
+    pass('parseRecruiteeResponse drops off-domain, non-https, and missing offer URLs');
+  } else {
+    fail(`URL validation: row0=${JSON.stringify(offDomainOffers[0]?.url)}, row1=${JSON.stringify(offDomainOffers[1]?.url)}, row2=${JSON.stringify(offDomainOffers[2]?.url)}, row3=${JSON.stringify(offDomainOffers[3]?.url)}`);
+  }
+
+} catch (e) {
+  fail(`recruitee provider tests crashed: ${e.message}`);
+}
+
+// ── 12. TRACKER REPORT LINK NORMALIZATION (#760) ────────────────
+
+console.log('\n12. Tracker report-link normalization');
+
+try {
+  const { normalizeReportLink } = await import(pathToFileURL(join(ROOT, 'tracker-links.mjs')).href);
+  const repo = '/repo';
+  const dataDir = join(repo, 'data');
+
+  // data/ layout: root-relative TSV link → ../reports/...
+  const fromTsv = normalizeReportLink('[12](reports/012-acme-2026-01-04.md)', dataDir, repo);
+  if (fromTsv === '[12](../reports/012-acme-2026-01-04.md)') {
+    pass('data/ layout: root-relative link rewritten to ../reports/...');
+  } else {
+    fail(`data/ layout normalization wrong: ${fromTsv}`);
+  }
+
+  // Idempotent: re-running on an already-normalized link must not double-prefix
+  const twice = normalizeReportLink(fromTsv, dataDir, repo);
+  if (twice === fromTsv) {
+    pass('normalization is idempotent (no double-prefix on re-run)');
+  } else {
+    fail(`normalization not idempotent: ${twice}`);
+  }
+
+  // Root layout: tracker at repo root → link stays reports/...
+  const atRoot = normalizeReportLink('[12](reports/012-acme-2026-01-04.md)', repo, repo);
+  if (atRoot === '[12](reports/012-acme-2026-01-04.md)') {
+    pass('root layout: link stays root-relative reports/...');
+  } else {
+    fail(`root layout normalization wrong: ${atRoot}`);
+  }
+
+  // Non-report links are left untouched — including external URLs that happen
+  // to contain an embedded "/reports/" segment (must not be rewritten).
+  const other = normalizeReportLink('[site](https://example.com/reports/foo.md)', dataDir, repo);
+  if (other === '[site](https://example.com/reports/foo.md)') {
+    pass('non-report links (incl. URLs with embedded /reports/) are left untouched');
+  } else {
+    fail(`non-report link altered: ${other}`);
+  }
+
+  // End-to-end migration against a fictional fixture tracker (no personal data)
+  const tmpDir = mkdtempSync(join(tmpdir(), 'career-ops-migrate-'));
+  try {
+    mkdirSync(join(tmpDir, 'data'));
+    mkdirSync(join(tmpDir, 'reports'));
+    writeFileSync(join(tmpDir, 'reports', '012-acme-2026-01-04.md'), '# fixture\n');
+    const tracker = join(tmpDir, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 12 | 2026-01-04 | Acme | Engineer | 4.2/5 | Evaluated | ✅ | [12](reports/012-acme-2026-01-04.md) | ok |\n');
+
+    // Migrate by pointing the script at the fixture tracker via env override.
+    run(NODE, ['merge-tracker.mjs', '--migrate'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    const after = readFileSync(tracker, 'utf-8');
+    if (after.includes('[12](../reports/012-acme-2026-01-04.md)')) {
+      pass('migration rewrites fixture tracker links to ../reports/...');
+    } else {
+      fail('migration did not rewrite fixture tracker link');
+    }
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
