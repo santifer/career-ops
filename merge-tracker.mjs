@@ -29,7 +29,10 @@ const APPS_FILE = process.env.CAREER_OPS_TRACKER
     ? join(CAREER_OPS, 'data/applications.md')
     : join(CAREER_OPS, 'applications.md');
 const TRACKER_DIR = dirname(APPS_FILE);
-const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
+// CAREER_OPS_ADDITIONS overrides the additions dir (used by tests, mirrors CAREER_OPS_TRACKER).
+const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS
+  ? process.env.CAREER_OPS_ADDITIONS
+  : join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
@@ -155,11 +158,14 @@ function roleFuzzyMatch(a, b) {
   const discriminating = overlap.filter(w => !BASELINE_TOKENS.has(w));
   if (discriminating.length === 0) return false;
 
-  // Jaccard-style ratio on content tokens. Two roles are "the same" only
-  // when the overlap dominates the smaller side — not when they just share
-  // a location + "engineer".
-  const minLen = Math.min(wordsA.length, wordsB.length);
-  const ratio = overlap.length / minLen;
+  // True Jaccard ratio on content tokens (overlap / union). Dividing by the
+  // smaller side conflated distinct roles that share a long prefix — e.g.
+  // "Full-Stack Engineer 5, AI Insights & Visualizations" vs "Full Stack
+  // Engineer 5, Ads Reporting" (overlap full/stack/engineer = 3, min side 4
+  // → 0.75 "match"). Union punishes the non-shared specialty tokens, while
+  // genuine reposts (identical token sets) still score 1.0.
+  const union = new Set([...wordsA, ...wordsB]).size;
+  const ratio = overlap.length / union;
   return ratio >= 0.6;
 }
 

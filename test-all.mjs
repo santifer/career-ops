@@ -1086,6 +1086,72 @@ try {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
+// roleFuzzyMatch over-matched whenever the token overlap dominated the
+// SMALLER side: two distinct roles sharing a long prefix ("Full-Stack
+// Engineer 5, AI Insights & Visualizations" vs "Full Stack Engineer 5, Ads
+// Reporting") or a brand token (#751: "UberEats Feed" vs "Consumer
+// Fulfillment (UberEats)") collapsed onto one tracker row — silently
+// dropping evaluations. The ratio now divides by the token UNION (true
+// Jaccard): genuine reposts (identical token sets) still score 1.0, while
+// distinct specialties fall below the 0.6 threshold.
+console.log('\n🧪 Testing merge-tracker fuzzy dedup (distinct roles vs reposts)...');
+try {
+  const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-'));
+  try {
+    mkdirSync(join(mergeTmp, 'data'));
+    mkdirSync(join(mergeTmp, 'reports'));
+    const additionsDir = join(mergeTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(mergeTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | StreamCo | Full Stack Engineer 5, Ads Reporting | 4.4/5 | Evaluated | ❌ | [1](../reports/001-streamco-2026-01-04.md) | existing |\n' +
+      '| 2 | 2026-01-04 | Uber | Senior Software Engineer, Consumer Fulfillment (UberEats) | 4.2/5 | Evaluated | ❌ | [2](../reports/002-uber-2026-01-04.md) | existing |\n');
+    for (const n of ['001-streamco-2026-01-04', '002-uber-2026-01-04', '003-streamco-2026-01-05', '004-uber-2026-01-05', '005-streamco-2026-01-06']) {
+      writeFileSync(join(mergeTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+    // Two DISTINCT roles (long shared prefix / shared brand token) + one true repost (score bump).
+    writeFileSync(join(additionsDir, '003-streamco.tsv'),
+      '3\t2026-01-05\tStreamCo\tFull-Stack Engineer 5, AI Insights & Visualizations\tEvaluated\t4.6/5\t❌\t[3](reports/003-streamco-2026-01-05.md)\tdistinct role\n');
+    writeFileSync(join(additionsDir, '004-uber.tsv'),
+      '4\t2026-01-05\tUber\tSenior Software Engineer, UberEats Feed\tEvaluated\t4.1/5\t❌\t[4](reports/004-uber-2026-01-05.md)\tdistinct team (#751)\n');
+    writeFileSync(join(additionsDir, '005-streamco.tsv'),
+      '5\t2026-01-06\tStreamCo\tFull Stack Engineer 5, Ads Reporting\tEvaluated\t4.5/5\t❌\t[5](reports/005-streamco-2026-01-06.md)\trepost\n');
+
+    run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    const merged = readFileSync(tracker, 'utf-8');
+
+    // Distinct role sharing a long prefix must be ADDED, not folded into the existing row.
+    if (merged.includes('AI Insights & Visualizations') && merged.includes('Ads Reporting')) {
+      pass('distinct roles with shared prefix kept as separate rows');
+    } else {
+      fail('distinct role with shared prefix was merged away (silent data loss)');
+    }
+
+    // #751 repro: different teams under one brand token must both survive.
+    if (merged.includes('UberEats Feed') && merged.includes('Consumer Fulfillment')) {
+      pass('brand-token roles (#751: UberEats Feed vs Consumer Fulfillment) kept separate');
+    } else {
+      fail('brand-token roles were deduped (#751 regression)');
+    }
+
+    // True repost (identical role tokens) must still UPDATE in place — exactly one row, score bumped.
+    const adsRows = merged.split('\n').filter(l => l.includes('Ads Reporting'));
+    if (adsRows.length === 1 && adsRows[0].includes('4.5/5')) {
+      pass('true repost still updates the existing row in place (4.4 → 4.5, no duplicate)');
+    } else {
+      fail(`repost handling broken: ${adsRows.length} 'Ads Reporting' rows, expected 1 updated to 4.5/5`);
+    }
+  } finally {
+    rmSync(mergeTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
