@@ -23,6 +23,9 @@ var (
 	reCityState = regexp.MustCompile(`\b([A-Z][A-Za-z.'-]+(?: [A-Z][A-Za-z.'-]+){0,2}),? (A[KLRZ]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b`)
 	// Individual amounts inside an already-matched span: "140", "210K", "209,983"
 	reMoneyPart = regexp.MustCompile(`(\d[\d,]*(?:\.\d+)?)\s*([KkMm]?)`)
+	// Estimate markers: "(est)", "(est;", "market est)" or "market" as its own
+	// word — but not "(EST/CST" timezones, "interest)" or "marketing".
+	reEstHint = regexp.MustCompile(`\(est[),;. ]|\best\)|\bmarket\b`)
 )
 
 // payCeiling converts a matched pay span to its top dollar amount for sorting:
@@ -52,8 +55,11 @@ func payCeiling(span string) float64 {
 func deriveNoteFields(app *model.CareerApplication) {
 	lower := strings.ToLower(app.Role + " " + app.Notes)
 
-	// Location: first "City, ST" in the notes.
+	// Location: first "City, ST" in the notes, falling back to the role title
+	// (some tracker rows carry the city there, e.g. "... — Charlotte, NC").
 	if m := reCityState.FindStringSubmatch(app.Notes); m != nil {
+		app.Location = m[1] + ", " + m[2]
+	} else if m := reCityState.FindStringSubmatch(app.Role); m != nil {
 		app.Location = m[1] + ", " + m[2]
 	}
 
@@ -87,7 +93,7 @@ func deriveNoteFields(app *model.CareerApplication) {
 		switch {
 		case strings.Contains(lower, "(posted"):
 			app.PaySource = "POSTED"
-		case strings.Contains(lower, "(est") || strings.Contains(lower, "est)") || strings.Contains(lower, "market"):
+		case reEstHint.MatchString(lower):
 			app.PaySource = "est"
 		}
 	}

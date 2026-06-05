@@ -71,6 +71,30 @@ func TestDeriveNoteFields(t *testing.T) {
 			last:     "2026-06-03",
 		},
 		{
+			name: "city falls back to role title, timezone parens are not an estimate",
+			app: model.CareerApplication{
+				Date:  "2026-05-31",
+				Role:  "Sr Software Engineer, Enterprise Systems — Charlotte, NC",
+				Notes: "Referral via friend. Remote US (EST/CST). Comp $100-175K base (recruiter-confirmed)",
+			},
+			location: "Charlotte, NC",
+			workMode: "Remote",
+			payRange: "$100-175K",
+			paySrc:   "",
+			last:     "2026-05-31",
+		},
+		{
+			name: "marketing role and interest prose are not estimate markers",
+			app: model.CareerApplication{
+				Date:  "2026-06-01",
+				Role:  "Product Marketing Manager",
+				Notes: "Strong fit (AI-augmented interest). Salary $140-180K. Via Lever",
+			},
+			payRange: "$140-180K",
+			paySrc:   "",
+			last:     "2026-06-01",
+		},
+		{
 			name: "no false-positive city from prose",
 			app: model.CareerApplication{
 				Date:  "2026-06-01",
