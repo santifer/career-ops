@@ -19,7 +19,9 @@
     "gemini:eval": "node gemini-eval.mjs",
     "safe-edit": "node scripts/safe-edit.mjs",
     "codegen": "node scripts/codegen-states.mjs",
-    "precommit": "bash scripts/pre-commit.sh"
+    "precommit": "bash scripts/pre-commit.sh",
+    "ingest": "node scripts/ingest-runner.mjs",
+    "test:phase2": "node --test test/adapter-indeed.test.mjs test/adapter-dice.test.mjs test/dedup.test.mjs"
   },
   "keywords": [
     "ai",
