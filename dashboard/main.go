@@ -106,22 +106,10 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case screens.PipelineOpenURLMsg:
-		url := msg.URL
-		return m, func() tea.Msg {
-			var cmd *exec.Cmd
-			switch runtime.GOOS {
-			case "darwin":
-				cmd = exec.Command("open", url)
-			case "linux":
-				cmd = exec.Command("xdg-open", url)
-			case "windows":
-				cmd = exec.Command("cmd", "/c", "start", "", url)
-			default:
-				cmd = exec.Command("xdg-open", url)
-			}
-			_ = cmd.Run()
-			return nil
-		}
+		return m, openWithDefaultApp(msg.URL)
+
+	case screens.PipelineOpenPDFMsg:
+		return m, openWithDefaultApp(msg.Path)
 
 	default:
 		if m.state == viewReport {
@@ -137,6 +125,26 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		pm, cmd := m.pipeline.Update(msg)
 		m.pipeline = pm
 		return m, cmd
+	}
+}
+
+// openWithDefaultApp hands a URL or file path to the OS default handler.
+// Shared by the job-URL (`o`) and CV-PDF (`d`) actions.
+func openWithDefaultApp(target string) tea.Cmd {
+	return func() tea.Msg {
+		var cmd *exec.Cmd
+		switch runtime.GOOS {
+		case "darwin":
+			cmd = exec.Command("open", target)
+		case "linux":
+			cmd = exec.Command("xdg-open", target)
+		case "windows":
+			cmd = exec.Command("cmd", "/c", "start", "", target)
+		default:
+			cmd = exec.Command("xdg-open", target)
+		}
+		_ = cmd.Run()
+		return nil
 	}
 }
 
