@@ -312,7 +312,8 @@ next_action: "{one concrete next step}"
 node generate-pdf.mjs \
   /tmp/cv-candidate-{company-slug}.html \
   output/cv-candidate-{company-slug}-{{DATE}}.pdf \
-  --format={letter|a4}
+  --format={letter|a4} \
+  --report={num}
 ```
 14. Reporta: ruta PDF, nº páginas, % cobertura keywords
 

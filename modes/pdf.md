@@ -18,7 +18,7 @@
 12. Generate full HTML from template + personalized content
 13. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
 14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
-15. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+15. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={tracker number}` — pass `--report` whenever the application is (or will be) in the tracker; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open the exact PDF. Omit it only for one-off CVs with no tracker entry.
 16. Report: PDF path, number of pages, keyword coverage %
 
 ## ATS Rules (clean parsing)
