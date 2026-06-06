@@ -31,10 +31,20 @@ function runNode(script, args, env) {
     });
     let stdout = '';
     let stderr = '';
+    let settled = false;
 
     child.stdout.on('data', chunk => { stdout += chunk; });
     child.stderr.on('data', chunk => { stderr += chunk; });
-    child.on('close', code => resolve({ code, stdout, stderr }));
+    child.on('error', err => {
+      if (settled) return;
+      settled = true;
+      resolve({ code: 1, stdout, stderr: `${stderr}${err.message}` });
+    });
+    child.on('close', code => {
+      if (settled) return;
+      settled = true;
+      resolve({ code, stdout, stderr });
+    });
   });
 }
 
