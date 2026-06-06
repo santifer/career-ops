@@ -3,10 +3,10 @@
  * queue-ingest.mjs — Zero-token incremental queue ingest.
  *
  * Reads pending URLs from data/pipeline.md, diffs them against
- * data/apply-queue.json and data/applications.md, fetches the JD
+ * the queue store and data/applications.md, fetches the JD
  * (and form questions where the ATS API exposes them) for genuinely
  * new postings, saves JDs to jds/, and appends status:new stub
- * records to data/apply-queue.json.
+ * records to the queue store.
  *
  * Zero model tokens — pure HTTP + JSON + file I/O.
  *
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
 
 import {
-  loadQueue, saveQueue, appendRole, buildQueueSeenSets,
+  loadQueue, saveQueue, appendRole, loadQueueSeenSets,
 } from './queue-store.mjs';
 import { fetchJson, fetchText } from './providers/_http.mjs';
 
@@ -100,6 +100,13 @@ function stableId(url, { ats, slug, id }) {
   if (ats === 'ashby')      return `ashby:${slug}:${id}`;
   const hash = createHash('sha256').update(url).digest('hex').slice(0, 16);
   return `custom:${hash}`;
+}
+
+function discoverySourceFor(ats) {
+  if (ats === 'greenhouse') return 'greenhouse-api';
+  if (ats === 'lever') return 'lever-api';
+  if (ats === 'ashby') return 'ashby-api';
+  return 'websearch';
 }
 
 // ── JD fetch ──────────────────────────────────────────────────────────────────
@@ -382,7 +389,7 @@ async function main() {
   mkdirSync(JDS_DIR, { recursive: true });
 
   const queue    = loadQueue();
-  const queueSeen = buildQueueSeenSets(queue);
+  const queueSeen = loadQueueSeenSets(queue);
   const appSeen   = loadApplicationsSeenSets();
 
   const pending = parsePipeline();
@@ -480,6 +487,7 @@ async function main() {
       title:            resolvedTitle,
       url,
       ats:              atsInfo.ats,
+      source:           discoverySourceFor(atsInfo.ats),
       location:         resolvedLocation,
       jd_path:          jdRelPath,
       size_bucket:      null,
@@ -524,7 +532,7 @@ async function main() {
 
   if (!DRY_RUN && ingested > 0) {
     saveQueue(queue);
-    console.log(`\nSaved ${ingested} new stub(s) to data/apply-queue.json`);
+    console.log(`\nSaved ${ingested} new stub(s) to the queue store`);
   }
 
   console.log(`\n${'━'.repeat(45)}`);

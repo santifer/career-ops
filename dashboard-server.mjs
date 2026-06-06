@@ -3,7 +3,8 @@
  * dashboard-server.mjs — Zero-model-token localhost apply-queue dashboard.
  *
  * Binds to 127.0.0.1 only. Serves the SPA + a JSON REST API over
- * data/apply-queue.json. Never posts to any ATS. No outbound network calls.
+ * the queue store. Never posts to any ATS. No outbound network calls except
+ * queue-store Supabase reads/writes.
  *
  * Usage:
  *   node dashboard-server.mjs              # port 7777
@@ -195,7 +196,12 @@ function apiRun(req, res) {
       return respond(res, 400, { error: 'ids must be a non-empty array' });
     }
 
-    const queue   = loadQueue();
+    let queue;
+    try {
+      queue = loadQueue();
+    } catch (err) {
+      return respond(res, 503, { error: `queue store unavailable: ${err.message}` });
+    }
     const profile = loadProfile();
     const concurrency = profile.automation?.fill_concurrency ?? 1;
 
@@ -312,7 +318,12 @@ function provenanceSummary(drafts = {}) {
 // ── API handlers ─────────────────────────────────────────────────────────────
 
 function apiGetQueue(res) {
-  const queue = loadQueue();
+  let queue;
+  try {
+    queue = loadQueue();
+  } catch (err) {
+    return respond(res, 503, { error: `queue store unavailable: ${err.message}` });
+  }
   const stats = computeStats(queue);
 
   const enriched = queue.roles
@@ -348,13 +359,22 @@ function apiSetThreshold(req, res) {
       }
     }
 
-    saveQueue(queue);
+    try {
+      saveQueue(queue);
+    } catch (err) {
+      return respond(res, 503, { error: `queue store write failed: ${err.message}` });
+    }
     respond(res, 200, { threshold, flipped });
   });
 }
 
 function apiRoleFill(req, res, id) {
-  const queue = loadQueue();
+  let queue;
+  try {
+    queue = loadQueue();
+  } catch (err) {
+    return respond(res, 503, { error: `queue store unavailable: ${err.message}` });
+  }
   const role = queue.roles.find(r => r.id === id);
   if (!role) return respond(res, 404, { error: 'role not found' });
 
@@ -403,7 +423,11 @@ function apiRoleDecision(req, res, id) {
     }
 
     setStatus(queue, id, decision);
-    saveQueue(queue);
+    try {
+      saveQueue(queue);
+    } catch (err) {
+      return respond(res, 503, { error: `queue store write failed: ${err.message}` });
+    }
 
     // Write tracker TSV + merge into applications.md
     try {
@@ -491,7 +515,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, HOST, () => {
   console.log(`career-ops apply queue dashboard`);
   console.log(`→  http://${HOST}:${PORT}`);
-  console.log(`Serving data/apply-queue.json  (localhost only)`);
+  console.log(`Serving Supabase active_roles via queue-store  (localhost only)`);
   console.log(`Press Ctrl+C to stop.\n`);
 });
 
