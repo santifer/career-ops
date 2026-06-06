@@ -50,9 +50,9 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 
 ## Numeração automática
 
-1. Listar todos os arquivos em `reports/`
-2. Extrair o número do prefixo (ex: `142-medispend...` → 142)
-3. Novo número = máximo encontrado + 1
+1. Executar `node reserve-eval-id.mjs --owner pipeline` antes de cada avaliação
+2. Reutilizar o `report_num` retornado para report, PDF, TSV e marcação no pipeline
+3. Nunca calcular `max + 1` manualmente
 
 ## Sincronização de fontes
 

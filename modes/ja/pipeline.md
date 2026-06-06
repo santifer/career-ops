@@ -50,9 +50,9 @@
 
 ## 自動採番
 
-1. `reports/` 内のすべてのファイルをリスト
-2. プレフィックスから番号を抽出（例：`142-medispend...` → 142）
-3. 新番号 = 見つかった最大値 + 1
+1. 各評価の前に `node reserve-eval-id.mjs --owner pipeline` を実行する
+2. 返された `report_num` を Report、PDF、TSV、pipeline マークに再利用する
+3. `max + 1` を手動で計算しない
 
 ## ソース同期
 

@@ -48,9 +48,9 @@ Traite les URLs d'offres accumulees dans `data/pipeline.md`. Le candidat ajoute 
 
 ## Numerotation automatique
 
-1. Lister tous les fichiers dans `reports/`
-2. Extraire le numero du prefixe (ex : `142-medispend...` -> 142)
-3. Nouveau numero = maximum trouve + 1
+1. Executer `node reserve-eval-id.mjs --owner pipeline` avant chaque evaluation
+2. Reutiliser le `report_num` retourne pour le report, le PDF, le TSV et le marquage pipeline
+3. Ne jamais calculer `max + 1` manuellement
 
 ## Synchronisation des sources
 

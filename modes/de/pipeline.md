@@ -48,9 +48,9 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 
 ## Automatische Nummerierung
 
-1. Alle Dateien in `reports/` listen
-2. Aus dem Präfix die Nummer extrahieren (z. B. `142-medispend...` → 142)
-3. Neue Nummer = höchste gefundene + 1
+1. Vor jeder Auswertung `node reserve-eval-id.mjs --owner pipeline` ausführen
+2. Die zurückgegebene `report_num` für Report, PDF, TSV und Pipeline-Markierung wiederverwenden
+3. Niemals `max + 1` manuell berechnen
 
 ## Synchronisierung der Quellen
 
