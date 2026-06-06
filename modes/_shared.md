@@ -226,12 +226,14 @@ These rules apply to ALL generated text that ends up in candidate-facing documen
 - "demonstrated ability to" / "best practices" (name the practice)
 
 ### Unicode normalization for ATS
-`generate-pdf.mjs` automatically normalizes em-dashes, smart quotes, and zero-width characters to ASCII equivalents for maximum ATS compatibility. But avoid generating them in the first place.
+`generate-pdf.mjs` automatically normalizes em-dashes, smart quotes, and zero-width characters to ASCII equivalents for maximum ATS compatibility. But avoid generating them in the first place. Note: normalizing the em-dash GLYPH to a hyphen does NOT remove the tell — the appositive RHYTHM (clause — dash — elaboration) is what a human reader notices. Fix the construction at generation time; never rely on the normalizer to launder it.
 
-### Vary sentence structure
+### Vary sentence SHAPE, not just length
 - Don't start every bullet with the same verb
 - Mix sentence lengths (short. Then longer with context. Short again.)
 - Don't always use "X, Y, and Z" — sometimes two items, sometimes four
+- Mixing lengths is NOT enough — vary SHAPE. Don't run three "clause — dash — appositive" sentences in a row; include at least one plain subject-verb-object paragraph with no dash, colon, or list.
+- **Canonical structural rules live in `modes/_profile.md` "Structural & Rhythmic Tells"**: the banned constructions (negation-elevation, "same X" bridge, meta-labels), the counted per-artifact + per-bundle budgets, and the MANDATORY pre-send self-audit. Apply them to ALL candidate-facing text, in every mode.
 
 ### Prefer specifics over abstractions
 - "Cut p95 latency from 2.1s to 380ms" beats "improved performance"

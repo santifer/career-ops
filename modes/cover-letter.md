@@ -32,7 +32,9 @@ NEVER end with:
 
 **DO:** Short punchy sentences, direct verbs (built/shipped/run/operate), concrete specifics (A100 GPUs, 80+ resources), casual confidence, vary sentence structure, show personality.
 
-**NEVER:** Leveraging, spearheading, pioneering, orchestrating, passionate about driving innovation, cross-functional collaboration, proven track record, state-of-the-art, perfect parallel structure, corporate valedictions.
+**NEVER (lexical):** Leveraging, spearheading, pioneering, orchestrating, passionate about driving innovation, cross-functional collaboration, proven track record, state-of-the-art, perfect parallel structure, corporate valedictions.
+
+**NEVER (structural — the bigger tells):** negation-elevation ("X isn't A — it's B"), the "same X / same instinct / same muscle" transfer-bridge, meta-labels ("Straight answer:", "Two honest notes.", "Reliability:"), stacked "X, not Y" contrasts, abstract clause-tricolons, and the same "clause — dash — appositive" sentence shape on repeat. **Apply the full "Structural & Rhythmic Tells" rules and run the MANDATORY pre-send self-audit in `modes/_profile.md` before returning the letter.**
 
 ## Output Format
 
@@ -56,6 +58,8 @@ Patrick Moore
 
 **75-120 words. 5-6 sentences.** A recruiter reads 50 cover letters a day — this one takes 15 seconds. Hit hard, get out.
 
+**This cap applies to EVERY path that emits a cover letter.** `apply` and `auto-pipeline` must route through these rules — never generate a 5-paragraph essay. For a senior role with a dedicated cover-letter upload you may stretch to ~180 words / 3 short paragraphs max, but the structural budgets in `_profile.md` apply at any length.
+
 ## Archetype-specific hooks
 
 | Archetype | Lead with... |
@@ -69,16 +73,16 @@ Patrick Moore
 ## Example (calibrated to Patrick's voice)
 
 ```
-I've been building and securing production systems for 28 years — the last chapter
-is three Claude agents in production at a regulated healthcare company, with the
-MCP infra and governance underneath. {Company}'s {specific thing} is why I'm writing.
-At Viecure I run a PR review agent at ~100 PRs/day, an Azure-hosted MCP proxy that
-doubles as a HIPAA audit boundary, and the GPU training infra for an ambient AI
-transcription model (A100s, 80+ Azure resources). Happy to talk — moorelab.cloud
-has the details.
+{Company}'s {specific thing} is the customer-facing version of something I already run.
+At Viecure I built two proxy MCP servers and three Claude agents that ship into a
+HIPAA/HITRUST production stack: a PR-review agent on ~100 PRs a day, plus a Figma proxy
+I stood up to clear Anthropic-side 429s that ended up doubling as an audit boundary.
+I've done security in regulated healthcare for 25 years. The new thing here is doing it
+in {their context} instead of my own, and that's the part I'd be learning fast.
+moorelab.cloud has the rest.
 ```
 
-That's 6 sentences. 95 words. Done.
+That's ~7 sentences, ~100 words. Note the shapes vary (a plain opener, a colon list, a short declarative) — no negation-elevation, no "same X", no signpost label, no tricolon-as-beat. Open a DIFFERENT way each time (see `_profile.md` "Cover letter openers — ROTATE").
 
 ## File output
 
