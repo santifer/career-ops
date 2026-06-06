@@ -86,7 +86,7 @@ templates/cv-template.html → PDF generation template
 
 - Reports: `{###}-{company-slug}-{YYYY-MM-DD}.md` (3-digit zero-padded)
 - PDFs: `cv-candidate-{company-slug}-{YYYY-MM-DD}.pdf`
-- Tracker TSVs: `batch/tracker-additions/{id}.tsv`
+- Tracker TSVs: `batch/tracker-additions/{report_num}-{company-slug}.tsv`
 - Evaluation IDs: call `node reserve-eval-id.mjs` and reuse the returned `report_num` across report, PDF, TSV, and pipeline markers
 
 ## Pipeline Integrity

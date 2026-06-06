@@ -373,7 +373,7 @@ On success, in Paso 5 use `pdf_emoji` = `✅` and in Paso 6 set `"pdf"` to the o
 
 Escribir una línea TSV a:
 ```
-batch/tracker-additions/{{ID}}.tsv
+batch/tracker-additions/{{REPORT_NUM}}-{company-slug}.tsv
 ```
 
 Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
