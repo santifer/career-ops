@@ -37,6 +37,8 @@ modes/_profile.md
 .resolved-prompt-*
 node_modules/
 bun.lock
+# Report-number reservation sentinels (ephemeral, created by reserve-report-num.mjs)
+reports/*-RESERVED.md
 
 # OS
 .DS_Store
