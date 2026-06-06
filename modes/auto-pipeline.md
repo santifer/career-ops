@@ -72,6 +72,15 @@ If the final score is >= 4.5, generate a draft of responses for the application 
 
 ## Step 5 — Update Tracker
 
-Write a TSV to `batch/tracker-additions/` with all columns including Report and PDF as ✅, then run `node merge-tracker.mjs`. Do not edit `data/applications.md` directly for a new row.
+Write one TSV per evaluation to `batch/tracker-additions/{REPORT_NUM}-{company-slug}.tsv`, then run `node merge-tracker.mjs`. Do not edit `data/applications.md` directly for a new row.
+
+Use exactly 9 tab-separated columns in this order:
+
+```text
+num	date	company	role	status	score	pdf	report	notes
+```
+
+- `pdf` is `✅` only when the PDF exists; otherwise use `❌`.
+- `report` is the root-relative markdown link, for example `[229](reports/229-company-2026-06-06.md)`.
 
 **If any step fails**, continue with the next ones and mark the failed step as pending in the tracker.
