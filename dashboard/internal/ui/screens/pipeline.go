@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -33,6 +34,24 @@ type PipelineOpenURLMsg struct {
 // PipelineOpenPDFMsg is emitted when a generated CV PDF should be opened
 // with the OS default handler. Path is absolute.
 type PipelineOpenPDFMsg struct {
+	Path string
+}
+
+// PipelineGeneratePDFMsg requests a PDF regeneration via generate-pdf.mjs
+// from the application's recorded source HTML. Paths are relative to
+// CareerOpsPath (as recorded in the manifest).
+type PipelineGeneratePDFMsg struct {
+	CareerOpsPath string
+	ReportNumber  string
+	HTMLPath      string
+	PDFPath       string
+	Format        string
+}
+
+// PipelinePDFGeneratedMsg reports the outcome of a regeneration. On success
+// Err is empty and Path holds the absolute path of the (already opened) PDF.
+type PipelinePDFGeneratedMsg struct {
+	Err  string
 	Path string
 }
 
@@ -268,6 +287,13 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		return m, nil
+	case PipelinePDFGeneratedMsg:
+		if msg.Err != "" {
+			m.flash = "PDF regeneration failed: " + msg.Err
+		} else {
+			m.flash = "PDF regenerated and opened: " + filepath.Base(msg.Path)
+		}
+		return m, nil
 	}
 	return m, nil
 }
@@ -382,6 +408,32 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 				m.pdfPicker = true
 				m.pdfCursor = 0
 				m.pdfChoices = candidates
+			}
+		}
+
+	case "D":
+		if app, ok := m.CurrentApp(); ok {
+			manifest := data.LoadPDFManifest(m.careerOpsPath)
+			entry, found := manifest[app.ReportNumber]
+			if !found || entry.HTMLPath == "" {
+				m.flash = "No recorded source HTML for this application — run /career-ops pdf once; later runs are regenerable with D"
+				return m, nil
+			}
+			if _, err := os.Stat(filepath.Join(m.careerOpsPath, filepath.FromSlash(entry.HTMLPath))); err != nil {
+				m.flash = "Source HTML missing: " + entry.HTMLPath
+				return m, nil
+			}
+			m.flash = "Regenerating PDF via generate-pdf.mjs — this takes a few seconds..."
+			path, report := m.careerOpsPath, app.ReportNumber
+			html, pdf, format := entry.HTMLPath, entry.PDFPath, entry.Format
+			return m, func() tea.Msg {
+				return PipelineGeneratePDFMsg{
+					CareerOpsPath: path,
+					ReportNumber:  report,
+					HTMLPath:      html,
+					PDFPath:       pdf,
+					Format:        format,
+				}
 			}
 		}
 
@@ -1298,7 +1350,7 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Enter") + descStyle.Render(" report  ") +
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
-		keyStyle.Render("d") + descStyle.Render(" PDF  ") +
+		keyStyle.Render("d/D") + descStyle.Render(" PDF/regen  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
 		keyStyle.Render("p") + descStyle.Render(" progress  ") +

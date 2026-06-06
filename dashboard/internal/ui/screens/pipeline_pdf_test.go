@@ -121,6 +121,63 @@ func TestPDFKeyOpensPickerForAmbiguousMatches(t *testing.T) {
 	}
 }
 
+func TestRegenerateKeyFlashesWithoutManifestEntry(t *testing.T) {
+	root := t.TempDir()
+	apps := []model.CareerApplication{
+		{Company: "Globex", Role: "Engineer", Status: "Evaluated", Score: 4.0, ReportNumber: "001"},
+	}
+
+	pm := newPDFTestModel(t, root, apps)
+	updated, cmd := pm.Update(keyMsg("D"))
+
+	if cmd != nil {
+		t.Fatal("expected no command without a manifest entry")
+	}
+	if updated.flash == "" {
+		t.Fatal("expected a flash notice without a manifest entry")
+	}
+}
+
+func TestRegenerateKeyEmitsGenerateMsgFromManifest(t *testing.T) {
+	root := t.TempDir()
+	writePDFFixture(t, root, "output/cv-jane-doe-globex.html")
+	writePDFFixture(t, root, "data/pdf-index.tsv") // placeholder, overwritten below
+	manifest := "001\toutput/cv-jane-doe-globex-2026-06-05.pdf\toutput/cv-jane-doe-globex.html\tletter\t2026-06-05\n"
+	if err := os.WriteFile(filepath.Join(root, "data", "pdf-index.tsv"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+	apps := []model.CareerApplication{
+		{Company: "Globex", Role: "Engineer", Status: "Evaluated", Score: 4.0, ReportNumber: "001"},
+	}
+
+	pm := newPDFTestModel(t, root, apps)
+	updated, cmd := pm.Update(keyMsg("D"))
+
+	if cmd == nil {
+		t.Fatal("expected a generate command")
+	}
+	if updated.flash == "" {
+		t.Fatal("expected an in-progress flash while regenerating")
+	}
+	msg, ok := cmd().(PipelineGeneratePDFMsg)
+	if !ok {
+		t.Fatalf("expected PipelineGeneratePDFMsg, got %T", cmd())
+	}
+	if msg.ReportNumber != "001" || msg.HTMLPath != "output/cv-jane-doe-globex.html" || msg.Format != "letter" {
+		t.Fatalf("unexpected generate request: %+v", msg)
+	}
+
+	// Outcome message updates the flash.
+	done, _ := updated.Update(PipelinePDFGeneratedMsg{Path: "/abs/cv.pdf"})
+	if !strings.Contains(done.flash, "cv.pdf") {
+		t.Fatalf("expected success flash to name the PDF, got %q", done.flash)
+	}
+	failed, _ := updated.Update(PipelinePDFGeneratedMsg{Err: "node not found"})
+	if !strings.Contains(failed.flash, "node not found") {
+		t.Fatalf("expected failure flash to carry the error, got %q", failed.flash)
+	}
+}
+
 func TestPDFPickerEscCancels(t *testing.T) {
 	root := t.TempDir()
 	writePDFFixture(t, root, "output/cv-jane-doe-acme-a-2026-06-05.pdf")
