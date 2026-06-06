@@ -1,6 +1,5 @@
 import type { Comment } from '../types/comments';
-import type { CandidateProfile } from '../types/profile';
-import type { ProposedUpdate } from '../types/agent';
+import type { ProfileUpdateOperation, ProfileUpdatePath, ProposedUpdate } from '../types/agent';
 
 interface ProcessResult {
   updates: ProposedUpdate[];
@@ -9,7 +8,6 @@ interface ProcessResult {
 
 export function processComments(
   comments: Comment[],
-  _profile: CandidateProfile,
 ): ProcessResult {
   const updates: ProposedUpdate[] = [];
   const reasoningParts: string[] = [];
@@ -20,7 +18,7 @@ export function processComments(
     if (update) {
       updates.push(update);
       reasoningParts.push(
-        `I understand that "${comment.selectedText.slice(0, 50)}${comment.selectedText.length > 50 ? '...' : ''}" should be ${intent}d.`
+        `I understand that "${comment.selectedText.slice(0, 50)}${comment.selectedText.length > 50 ? '...' : ''}" needs to be ${intentLabel(intent)}.`
       );
     }
   }
@@ -35,11 +33,21 @@ export function processComments(
 
 type Intent = 'reframe' | 'add' | 'remove' | 'emphasize';
 
+function intentLabel(intent: Intent): string {
+  if (intent === 'add') return 'added';
+  if (intent === 'remove') return 'removed';
+  if (intent === 'emphasize') return 'emphasized';
+  return 'reframed';
+}
+
 function classifyIntent(commentText: string): Intent {
   const lower = commentText.toLowerCase();
 
   if (lower.includes('reframe') || lower.includes('frame') || lower.includes('position') || lower.includes('rephrase') || lower.includes('reword')) {
     return 'reframe';
+  }
+  if (lower.includes('emphasize') || lower.includes('emphasise') || lower.includes('stronger') || lower.includes('more important') || lower.includes('lead with') || lower.includes('highlight')) {
+    return 'emphasize';
   }
   if (lower.includes('add') || lower.includes('include') || lower.includes('mention') || lower.includes('highlight')) {
     return 'add';
@@ -47,25 +55,13 @@ function classifyIntent(commentText: string): Intent {
   if (lower.includes('remove') || lower.includes('delete') || lower.includes('drop') || lower.includes('hide')) {
     return 'remove';
   }
-  if (lower.includes('emphasize') || lower.includes('emphasise') || lower.includes('stronger') || lower.includes('more important') || lower.includes('lead with')) {
-    return 'emphasize';
-  }
 
   return 'reframe';
 }
 
 function generateUpdate(comment: Comment, intent: Intent): ProposedUpdate | null {
-  const sectionMap: Record<string, string> = {
-    'identity': 'identity',
-    'targeting': 'targeting',
-    'narrative': 'narrative',
-    'strengths': 'strengths',
-    'dealBreakers': 'dealBreakers',
-    'cv': 'cv',
-    'searchSources': 'searchSources',
-  };
-
-  const section = sectionMap[comment.sectionId] || comment.sectionId;
+  const target = getUpdateTarget(comment.sectionId, intent);
+  if (!target) return null;
 
   let proposedValue = comment.selectedText;
   let reason = comment.commentText;
@@ -85,20 +81,58 @@ function generateUpdate(comment: Comment, intent: Intent): ProposedUpdate | null
       reason = `You asked to remove this: "${comment.commentText}"`;
       break;
     case 'emphasize':
-      proposedValue = `[Key strength] ${comment.selectedText}`;
+      proposedValue = extractReframing(comment.commentText, comment.selectedText);
       reason = `You want to emphasize this more prominently: "${comment.commentText}"`;
       break;
   }
 
   return {
     id: crypto.randomUUID(),
-    section,
-    field: intent === 'add' ? 'keyStrengths' : 'summary',
+    section: comment.sectionId,
+    field: target.field,
+    path: target.path,
+    operation: intent === 'remove' ? 'remove' : target.operation,
     currentValue: comment.selectedText,
     proposedValue,
     reason,
     status: 'pending',
   };
+}
+
+interface UpdateTarget {
+  field: string;
+  path: ProfileUpdatePath;
+  operation: ProfileUpdateOperation;
+}
+
+function getUpdateTarget(sectionId: string, intent: Intent): UpdateTarget | null {
+  if (sectionId === 'searchSources' || sectionId === 'identity') return null;
+
+  if (sectionId === 'cv') {
+    return intent === 'reframe' || intent === 'remove'
+      ? { field: 'summary', path: 'cv.summary', operation: 'replace' }
+      : { field: 'keyStrengths', path: 'strengths.keyStrengths', operation: 'append' };
+  }
+
+  if (sectionId === 'narrative') {
+    return intent === 'reframe' || intent === 'remove'
+      ? { field: 'exitStory', path: 'narrative.exitStory', operation: 'replace' }
+      : { field: 'superpowers', path: 'narrative.superpowers', operation: 'append' };
+  }
+
+  if (sectionId === 'strengths') {
+    return { field: 'keyStrengths', path: 'strengths.keyStrengths', operation: 'append' };
+  }
+
+  if (sectionId === 'dealBreakers') {
+    return { field: 'dealBreakers', path: 'dealBreakers', operation: 'append' };
+  }
+
+  if (sectionId === 'targeting') {
+    return { field: 'primaryRoles', path: 'targeting.primaryRoles', operation: 'append' };
+  }
+
+  return null;
 }
 
 function extractReframing(comment: string, original: string): string {

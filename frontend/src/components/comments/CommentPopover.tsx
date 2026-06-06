@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAppDispatch } from '../../state/AppContext';
+import { useAppDispatch } from '../../state/useAppContext';
 import type { Comment } from '../../types/comments';
 
 type Props = {
@@ -11,16 +11,22 @@ type Props = {
 };
 
 export function CommentPopover({ comments, anchorEl, onMouseEnter, onMouseLeave }: Props) {
-  const dispatch = useAppDispatch();
   const rect = anchorEl.getBoundingClientRect();
-
-  const top = rect.bottom + window.scrollY + 4;
-  const left = rect.left + rect.width / 2;
+  const popoverWidth = 256;
+  const margin = 12;
+  const placeAbove = rect.bottom > window.innerHeight - 180;
+  const top = placeAbove
+    ? Math.max(rect.top - 6, margin)
+    : Math.min(rect.bottom + 6, window.innerHeight - margin);
+  const left = Math.min(
+    Math.max(rect.left + rect.width / 2, margin + popoverWidth / 2),
+    window.innerWidth - margin - popoverWidth / 2,
+  );
 
   return createPortal(
     <div
       data-popover
-      className="z-popover fixed -translate-x-1/2"
+      className={`z-popover fixed -translate-x-1/2 ${placeAbove ? '-translate-y-full' : ''}`}
       style={{ top: `${top}px`, left: `${left}px` }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -62,16 +68,18 @@ function CommentEntry({ comment }: { comment: Comment }) {
             onChange={e => setText(e.target.value)}
             rows={2}
             autoFocus
-            className="w-full resize-none rounded-md border border-border bg-surface px-2 py-1.5 text-sm outline-none focus:border-primary"
+            className="w-full resize-none rounded-md border border-border bg-surface px-2 py-1.5 text-sm outline-none placeholder:text-muted focus:border-primary"
           />
           <div className="mt-1.5 flex justify-end gap-1.5">
             <button
+              type="button"
               onClick={() => { setEditing(false); setText(comment.commentText); }}
               className="rounded px-2 py-1 text-xs font-medium text-muted hover:bg-surface"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
               className="rounded bg-primary px-2 py-1 text-xs font-medium text-white hover:bg-primary-hover"
             >
@@ -85,12 +93,14 @@ function CommentEntry({ comment }: { comment: Comment }) {
           {comment.status === 'pending' && (
             <div className="mt-1.5 flex gap-1.5">
               <button
+                type="button"
                 onClick={() => setEditing(true)}
                 className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-primary-subtle"
               >
                 Edit
               </button>
               <button
+                type="button"
                 onClick={handleDelete}
                 className="rounded px-2 py-1 text-xs font-medium text-muted hover:text-error"
               >

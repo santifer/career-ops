@@ -1,13 +1,31 @@
-import { createContext, useContext, useReducer, type ReactNode, type Dispatch } from 'react';
-import { appReducer, createInitialState, type AppState } from './appReducer';
-import type { AppAction } from './actions';
+import { useEffect, useReducer, type ReactNode } from 'react';
+import { appReducer, createInitialState } from './appReducer';
+import { AppDispatchContext, AppStateContext } from './appContexts';
 import { seedProfile } from '../data/seed';
-
-const AppStateContext = createContext<AppState | null>(null);
-const AppDispatchContext = createContext<Dispatch<AppAction> | null>(null);
+import type { CandidateProfile } from '../types/profile';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, seedProfile, createInitialState);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadProfile() {
+      try {
+        const response = await fetch('/api/profile', { signal: controller.signal });
+        if (!response.ok) return;
+        const profile = await response.json() as CandidateProfile;
+        dispatch({ type: 'SET_PROFILE', profile });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.warn('Using bundled profile seed because /api/profile is unavailable.');
+      }
+    }
+
+    void loadProfile();
+
+    return () => controller.abort();
+  }, []);
 
   return (
     <AppStateContext.Provider value={state}>
@@ -16,16 +34,4 @@ export function AppProvider({ children }: { children: ReactNode }) {
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   );
-}
-
-export function useAppState(): AppState {
-  const ctx = useContext(AppStateContext);
-  if (!ctx) throw new Error('useAppState must be used within AppProvider');
-  return ctx;
-}
-
-export function useAppDispatch(): Dispatch<AppAction> {
-  const ctx = useContext(AppDispatchContext);
-  if (!ctx) throw new Error('useAppDispatch must be used within AppProvider');
-  return ctx;
 }

@@ -4,10 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node prebuild.mjs",
     "dev": "vite",
+    "prebuild": "node prebuild.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test profile-data.test.mjs profile-api.test.mjs"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

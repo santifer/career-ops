@@ -20,9 +20,16 @@ export function SelectionPopover({ selection, onSave, onCancel }: Props) {
     }
   }, [expanded]);
 
-  // Position the popover above the selection
-  const top = selection.rect.top + window.scrollY - 8;
-  const left = selection.rect.left + selection.rect.width / 2;
+  const popoverWidth = expanded ? 288 : 150;
+  const margin = 12;
+  const placeBelow = selection.rect.top < (expanded ? 170 : 60);
+  const top = placeBelow
+    ? Math.min(selection.rect.bottom + 8, window.innerHeight - margin)
+    : Math.max(selection.rect.top - 8, margin);
+  const left = Math.min(
+    Math.max(selection.rect.left + selection.rect.width / 2, margin + popoverWidth / 2),
+    window.innerWidth - margin - popoverWidth / 2,
+  );
 
   function handleSave() {
     const trimmed = text.trim();
@@ -46,12 +53,13 @@ export function SelectionPopover({ selection, onSave, onCancel }: Props) {
     <div
       ref={popoverRef}
       data-popover
-      className="z-popover fixed -translate-x-1/2 -translate-y-full"
+      className={`z-popover fixed -translate-x-1/2 ${placeBelow ? '' : '-translate-y-full'}`}
       style={{ top: `${top}px`, left: `${left}px` }}
     >
       <div className="rounded-lg border border-border bg-bg shadow-md">
         {!expanded ? (
           <button
+            type="button"
             onClick={() => setExpanded(true)}
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-primary transition-colors duration-150 hover:bg-primary-subtle"
           >
@@ -69,19 +77,21 @@ export function SelectionPopover({ selection, onSave, onCancel }: Props) {
               onKeyDown={handleKeyDown}
               placeholder="How should the agent use this?"
               rows={3}
-              className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none transition-colors duration-150 placeholder:text-muted/60 focus:border-primary"
+              className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary"
             />
             <div className="mt-2 flex justify-end gap-2">
               <button
+                type="button"
                 onClick={onCancel}
                 className="rounded-md px-3 py-1.5 text-sm font-medium text-muted transition-colors duration-150 hover:bg-surface"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={!text.trim()}
-                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-primary-hover disabled:opacity-40"
+                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-border disabled:text-muted"
               >
                 Save
               </button>

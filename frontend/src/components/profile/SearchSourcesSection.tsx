@@ -1,10 +1,20 @@
+import { useState } from 'react';
 import type { SearchSources } from '../../types/profile';
+import type { Comment } from '../../types/comments';
+import { highlightText } from '../comments/highlightText';
 
 type Props = {
   sources: SearchSources;
+  comments: Comment[];
 };
 
-export function SearchSourcesSection({ sources }: Props) {
+export function SearchSourcesSection({ sources, comments }: Props) {
+  const [showAllKeywords, setShowAllKeywords] = useState(false);
+  const visibleKeywords = showAllKeywords
+    ? sources.positiveKeywords
+    : sources.positiveKeywords.slice(0, 15);
+  const hiddenKeywordCount = sources.positiveKeywords.length - visibleKeywords.length;
+
   return (
     <div className="space-y-3">
       <div className="flex gap-6">
@@ -24,7 +34,7 @@ export function SearchSourcesSection({ sources }: Props) {
           <div className="flex flex-wrap gap-1.5">
             {sources.companyNames.map(name => (
               <span key={name} className="rounded-md border border-border px-2 py-0.5 text-sm">
-                {name}
+                {highlightText(name, comments)}
               </span>
             ))}
           </div>
@@ -34,16 +44,33 @@ export function SearchSourcesSection({ sources }: Props) {
       {sources.positiveKeywords.length > 0 && (
         <div>
           <h3 className="mb-1.5 text-sm font-semibold text-muted">Search keywords</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {sources.positiveKeywords.slice(0, 15).map(kw => (
+          <div className="flex flex-wrap gap-1.5" id="search-keywords-list">
+            {visibleKeywords.map(kw => (
               <span key={kw} className="rounded-md bg-primary/5 px-2 py-0.5 text-sm text-primary">
-                {kw}
+                {highlightText(kw, comments)}
               </span>
             ))}
-            {sources.positiveKeywords.length > 15 && (
-              <span className="px-2 py-0.5 text-sm text-muted">
-                +{sources.positiveKeywords.length - 15} more
-              </span>
+            {hiddenKeywordCount > 0 && (
+              <button
+                type="button"
+                aria-expanded={showAllKeywords}
+                aria-controls="search-keywords-list"
+                onClick={() => setShowAllKeywords(true)}
+                className="rounded px-2 py-0.5 text-sm text-primary transition-colors duration-150 hover:text-primary-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                +{hiddenKeywordCount} more
+              </button>
+            )}
+            {showAllKeywords && sources.positiveKeywords.length > 15 && (
+              <button
+                type="button"
+                aria-expanded={showAllKeywords}
+                aria-controls="search-keywords-list"
+                onClick={() => setShowAllKeywords(false)}
+                className="rounded px-2 py-0.5 text-sm text-muted transition-colors duration-150 hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                Show less
+              </button>
             )}
           </div>
         </div>

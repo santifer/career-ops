@@ -3,12 +3,12 @@
 
 @theme {
   /* Brand */
-  --color-primary: oklch(0.50 0.18 270);
-  --color-primary-hover: oklch(0.45 0.20 270);
+  --color-primary: oklch(0.44 0.18 270);
+  --color-primary-hover: oklch(0.39 0.20 270);
   --color-primary-subtle: oklch(0.95 0.02 270);
 
   /* Accent */
-  --color-accent: oklch(0.62 0.16 55);
+  --color-accent: oklch(0.46 0.14 55);
   --color-accent-subtle: oklch(0.96 0.04 55);
 
   /* Neutrals */
@@ -16,12 +16,12 @@
   --color-surface: oklch(0.965 0.005 270);
   --color-border: oklch(0.90 0.010 270);
   --color-ink: oklch(0.18 0.02 270);
-  --color-muted: oklch(0.55 0.015 270);
+  --color-muted: oklch(0.42 0.018 270);
 
   /* Semantic */
-  --color-success: oklch(0.55 0.15 145);
+  --color-success: oklch(0.43 0.14 145);
   --color-success-subtle: oklch(0.95 0.03 145);
-  --color-error: oklch(0.55 0.18 25);
+  --color-error: oklch(0.47 0.17 25);
   --color-error-subtle: oklch(0.95 0.03 25);
 
   /* Typography */
@@ -51,11 +51,24 @@
 
   body {
     margin: 0;
+    min-width: 320px;
   }
 
   #root {
     min-height: 100svh;
+    width: 100%;
     display: flex;
+  }
+
+  button,
+  textarea,
+  input {
+    font: inherit;
+  }
+
+  ::selection {
+    background: var(--color-accent-subtle);
+    color: var(--color-ink);
   }
 
   p, li, dd, blockquote {

@@ -10,9 +10,10 @@ export function highlightText(
   text: string,
   comments: Comment[],
 ): ReactNode {
-  // Filter to only active (non-resolved) comments with valid offsets
   const active = comments
-    .filter(c => c.status !== 'resolved' && c.startOffset >= 0 && c.endOffset <= text.length)
+    .filter(c => c.status !== 'resolved')
+    .map(c => toLocalComment(c, text))
+    .filter(c => c !== null)
     .sort((a, b) => a.startOffset - b.startOffset);
 
   if (active.length === 0) {
@@ -52,6 +53,26 @@ export function highlightText(
   return <>{parts}</>;
 }
 
+function toLocalComment(comment: Comment, text: string): Comment | null {
+  const selectedText = comment.selectedText.trim();
+  if (!selectedText) return null;
+
+  const selectedIndex = text.indexOf(selectedText);
+  if (selectedIndex >= 0) {
+    return {
+      ...comment,
+      startOffset: selectedIndex,
+      endOffset: selectedIndex + selectedText.length,
+    };
+  }
+
+  if (comment.startOffset >= 0 && comment.endOffset <= text.length && comment.startOffset < comment.endOffset) {
+    return comment;
+  }
+
+  return null;
+}
+
 interface MergedRange {
   start: number;
   end: number;
@@ -72,7 +93,7 @@ function mergeRanges(comments: Comment[]): MergedRange[] {
     const last = ranges[ranges.length - 1];
 
     if (c.startOffset <= last.end) {
-      // Overlapping — merge
+      // Merge overlapping ranges.
       last.end = Math.max(last.end, c.endOffset);
       last.comments.push(c);
     } else {

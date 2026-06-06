@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppDispatch } from '../../state/AppContext';
+import { useAppDispatch } from '../../state/useAppContext';
 import type { ProposedUpdate } from '../../types/agent';
 
 type Props = {
@@ -13,6 +13,21 @@ export function UpdateCard({ update, messageId }: Props) {
   const [editValue, setEditValue] = useState(update.proposedValue);
 
   const isResolved = update.status !== 'pending';
+  const displayValue = update.status === 'edited' ? editValue : update.proposedValue;
+  const statusLabel = update.status === 'accepted'
+    ? 'Applied'
+    : update.status === 'ignored'
+      ? 'Ignored'
+      : update.status === 'edited'
+        ? 'Edited'
+        : 'Needs review';
+  const statusClass = update.status === 'accepted'
+    ? 'bg-success-subtle text-success'
+    : update.status === 'ignored'
+      ? 'bg-surface text-muted'
+      : 'bg-primary-subtle text-primary';
+  const shouldShowCurrentValue = Boolean(update.currentValue)
+    && (Boolean(update.sourceBatchId) || update.operation !== 'append');
 
   function handleAccept() {
     dispatch({ type: 'ACCEPT_UPDATE', messageId, updateId: update.id });
@@ -40,55 +55,67 @@ export function UpdateCard({ update, messageId }: Props) {
 
   return (
     <div
-      className={`rounded-lg border p-4 transition-opacity duration-200 ${
+      className={`rounded-lg border p-4 transition-colors duration-200 ${
         update.status === 'ignored'
-          ? 'border-border bg-surface opacity-50'
+          ? 'border-border bg-surface'
           : update.status === 'accepted'
             ? 'border-success/30 bg-success-subtle'
             : 'border-border bg-bg'
       }`}
     >
-      <div className="mb-1 text-xs font-medium text-muted">
-        {update.status === 'accepted' ? 'Applied' : update.status === 'ignored' ? 'Dismissed' : 'Proposed update'}
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-ink">Proposed profile update</div>
+          <div className="mt-0.5 text-sm text-muted">
+            {formatSection(update.section)} · {formatOperation(update.operation)} {update.field}
+          </div>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${statusClass}`}>
+          {statusLabel}
+        </span>
       </div>
 
-      <div className="mb-1 text-sm">
-        <span className="font-medium">Section:</span>{' '}
-        <span className="capitalize">{update.section}</span>
-      </div>
+      {shouldShowCurrentValue && (
+        <div className="mb-3 rounded-md bg-surface px-3 py-2">
+          <div className="mb-1 text-xs font-semibold text-muted">
+            {update.sourceBatchId ? 'Selected text' : 'Current value'}
+          </div>
+          <p className="text-sm leading-relaxed text-ink">"{update.currentValue}"</p>
+        </div>
+      )}
 
-      <div className="mb-1 text-sm">
-        <span className="font-medium">Change:</span>{' '}
+      <div className="mb-3">
+        <div className="mb-1 text-xs font-semibold text-muted">Agent wants to store</div>
         {editing ? (
           <textarea
             value={editValue}
             onChange={e => setEditValue(e.target.value)}
-            className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-primary"
-            rows={2}
+            className="w-full resize-none rounded-md border border-border bg-bg px-3 py-2 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
+            rows={3}
             autoFocus
           />
         ) : (
-          <span>{update.status === 'edited' ? editValue : update.proposedValue}</span>
+          <p className="text-sm leading-relaxed">{displayValue || 'Remove this from the profile.'}</p>
         )}
       </div>
 
       {update.reason && (
-        <div className="mb-3 text-sm text-muted">
-          <span className="font-medium text-ink">Reason:</span> {update.reason}
-        </div>
+        <p className="mb-3 text-sm leading-relaxed text-muted">{update.reason}</p>
       )}
 
       {!isResolved && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {editing ? (
             <>
               <button
+                type="button"
                 onClick={handleAcceptEdited}
                 className="rounded-md bg-success px-3 py-1.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-success/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success"
               >
                 Accept edit
               </button>
               <button
+                type="button"
                 onClick={() => { setEditing(false); setEditValue(update.proposedValue); }}
                 className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted transition-colors duration-150 hover:bg-surface"
               >
@@ -98,18 +125,21 @@ export function UpdateCard({ update, messageId }: Props) {
           ) : (
             <>
               <button
+                type="button"
                 onClick={handleAccept}
-                className="rounded-md border border-success px-3 py-1.5 text-sm font-medium text-success transition-colors duration-150 hover:bg-success hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success"
+                className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                Accept
+                Accept update
               </button>
               <button
+                type="button"
                 onClick={handleEdit}
                 className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-primary transition-colors duration-150 hover:bg-primary-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Edit
               </button>
               <button
+                type="button"
                 onClick={handleIgnore}
                 className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted transition-colors duration-150 hover:border-error hover:text-error focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
               >
@@ -121,4 +151,16 @@ export function UpdateCard({ update, messageId }: Props) {
       )}
     </div>
   );
+}
+
+function formatSection(section: string): string {
+  return section
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/^./, letter => letter.toUpperCase());
+}
+
+function formatOperation(operation: string): string {
+  if (operation === 'replace') return 'replace';
+  if (operation === 'remove') return 'remove from';
+  return 'add to';
 }

@@ -1,13 +1,15 @@
-import { useEffect, useRef } from 'react';
-import { useAppState, useAppDispatch } from '../../state/AppContext';
+import { useEffect, useRef, useState } from 'react';
+import { useAppState, useAppDispatch } from '../../state/useAppContext';
 import { AgentInput } from './AgentInput';
 import { MessageList } from './MessageList';
 import { processAgentResponse } from '../../agent/mockAgent';
 
 export function AgentWorkspace() {
-  const { messages, profile, comments, readiness } = useAppState();
+  const { messages, profile, readiness } = useAppState();
   const dispatch = useAppDispatch();
+  const [isThinking, setIsThinking] = useState(false);
   const initializedRef = useRef(false);
+  const processedBatchIdsRef = useRef(new Set<string>());
 
   // Send initial onboarding message
   useEffect(() => {
@@ -21,14 +23,17 @@ export function AgentWorkspace() {
     for (const msg of greeting) {
       dispatch({ type: 'ADD_MESSAGE', message: msg });
     }
-  }, []);
+  }, [dispatch, profile, readiness]);
 
   // Process comment batches
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
     if (!lastMsg || lastMsg.type !== 'comment-batch') return;
+    const batchId = lastMsg.comments?.[0]?.batchId || lastMsg.id;
+    if (processedBatchIdsRef.current.has(batchId)) return;
+    processedBatchIdsRef.current.add(batchId);
 
-    // Simulate agent thinking delay
+    setIsThinking(true);
     const timer = setTimeout(() => {
       const responses = processAgentResponse(
         { type: 'comments', comments: lastMsg.comments || [] },
@@ -37,13 +42,16 @@ export function AgentWorkspace() {
       for (const msg of responses) {
         dispatch({ type: 'ADD_MESSAGE', message: msg });
       }
+      setIsThinking(false);
     }, 1000);
 
-    return () => clearTimeout(timer);
-  }, [messages.length]);
+    return () => {
+      clearTimeout(timer);
+      setIsThinking(false);
+    };
+  }, [dispatch, messages, profile, readiness]);
 
   function handleUserMessage(text: string) {
-    // Add user message
     dispatch({
       type: 'ADD_MESSAGE',
       message: {
@@ -54,7 +62,7 @@ export function AgentWorkspace() {
       },
     });
 
-    // Simulate agent response
+    setIsThinking(true);
     setTimeout(() => {
       const responses = processAgentResponse(
         { type: 'freeform', text },
@@ -63,12 +71,13 @@ export function AgentWorkspace() {
       for (const msg of responses) {
         dispatch({ type: 'ADD_MESSAGE', message: msg });
       }
+      setIsThinking(false);
     }, 800 + Math.random() * 700);
   }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <MessageList messages={messages} />
+      <MessageList messages={messages} isThinking={isThinking} />
       <AgentInput onSend={handleUserMessage} />
     </div>
   );

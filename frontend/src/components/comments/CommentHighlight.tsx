@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Comment } from '../../types/comments';
 import { CommentPopover } from './CommentPopover';
 
@@ -9,16 +9,24 @@ type Props = {
 
 export function CommentHighlight({ text, comments }: Props) {
   const [showPopover, setShowPopover] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLSpanElement | null>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   function handleMouseEnter() {
-    clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setAnchorEl(spanRef.current);
     timeoutRef.current = setTimeout(() => setShowPopover(true), 200);
   }
 
   function handleMouseLeave() {
-    clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => setShowPopover(false), 300);
   }
 
@@ -31,17 +39,14 @@ export function CommentHighlight({ text, comments }: Props) {
         className="cursor-pointer bg-accent-subtle underline decoration-accent decoration-1 underline-offset-2 transition-colors duration-150 hover:bg-accent-subtle/80"
       >
         {text}
-        <span className="ml-0.5 inline-block translate-y-[-2px] text-xs text-accent">
-          &#x1F4DD;
-        </span>
       </span>
 
-      {showPopover && spanRef.current && (
+      {showPopover && anchorEl && (
         <CommentPopover
           comments={comments}
-          anchorEl={spanRef.current}
+          anchorEl={anchorEl}
           onMouseEnter={() => {
-            clearTimeout(timeoutRef.current);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
             setShowPopover(true);
           }}
           onMouseLeave={handleMouseLeave}

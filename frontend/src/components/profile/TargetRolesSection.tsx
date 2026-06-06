@@ -1,8 +1,11 @@
 import type { CandidateProfile } from '../../types/profile';
+import type { Comment } from '../../types/comments';
+import { highlightText } from '../comments/highlightText';
 
 type Props = {
   targeting: CandidateProfile['targeting'];
   profileMd: CandidateProfile['profileMd'];
+  comments: Comment[];
 };
 
 const fitColors: Record<string, string> = {
@@ -10,14 +13,14 @@ const fitColors: Record<string, string> = {
   secondary: 'bg-accent/10 text-accent',
 };
 
-export function TargetRolesSection({ targeting, profileMd }: Props) {
+export function TargetRolesSection({ targeting, profileMd, comments }: Props) {
   return (
     <div className="space-y-4">
       {/* Primary roles */}
       <div className="flex flex-wrap gap-2">
         {targeting.primaryRoles.map(role => (
           <span key={role} className="rounded-md bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary">
-            {role}
+            {highlightText(role, comments)}
           </span>
         ))}
       </div>
@@ -36,11 +39,11 @@ export function TargetRolesSection({ targeting, profileMd }: Props) {
             <tbody>
               {targeting.archetypes.map(a => (
                 <tr key={a.name} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2 font-medium">{a.name}</td>
-                  <td className="px-3 py-2 text-muted">{a.level}</td>
+                  <td className="px-3 py-2 font-medium">{highlightText(a.name, comments)}</td>
+                  <td className="px-3 py-2 text-muted">{highlightText(a.level, comments)}</td>
                   <td className="px-3 py-2">
                     <span className={`rounded px-2 py-0.5 text-xs font-medium ${fitColors[a.fit] || 'bg-border text-muted'}`}>
-                      {a.fit}
+                      {highlightText(a.fit, comments)}
                     </span>
                   </td>
                 </tr>
@@ -55,8 +58,8 @@ export function TargetRolesSection({ targeting, profileMd }: Props) {
         <div className="space-y-2">
           {profileMd.archetypes.map(a => (
             <div key={a.name} className="rounded-lg border border-border p-3">
-              <div className="font-medium">{a.name}</div>
-              <div className="mt-1 text-sm text-muted">{a.whatTheyBuy}</div>
+              <div className="font-medium">{highlightText(a.name, comments)}</div>
+              <div className="mt-1 text-sm text-muted">{highlightText(a.whatTheyBuy, comments)}</div>
             </div>
           ))}
         </div>

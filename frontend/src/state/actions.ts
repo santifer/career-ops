@@ -1,8 +1,9 @@
 import type { Comment } from '../types/comments';
-import type { AgentMessage, ProposedUpdate } from '../types/agent';
+import type { AgentMessage } from '../types/agent';
 import type { CandidateProfile } from '../types/profile';
 
 export type AppAction =
+  | { type: 'SET_PROFILE'; profile: CandidateProfile }
   | { type: 'ADD_COMMENT'; comment: Comment }
   | { type: 'UPDATE_COMMENT'; id: string; commentText: string }
   | { type: 'DELETE_COMMENT'; id: string }

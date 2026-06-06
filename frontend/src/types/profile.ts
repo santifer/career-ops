@@ -8,12 +8,15 @@ export interface CandidateProfile {
     languages: string[];
     linkedin: string;
     portfolio: string;
+    substack: string;
     github: string;
   };
   targeting: {
     primaryRoles: string[];
+    secondaryRoles: string[];
     archetypes: Archetype[];
     industries: string[];
+    notRelevantRoles: string[];
   };
   narrative: {
     headline: string;
@@ -26,6 +29,11 @@ export interface CandidateProfile {
     currency: string;
     minimum: string;
     locationFlexibility: string;
+    floors: {
+      australia: string;
+      taiwan: string;
+    };
+    exceptionsAllowed: string;
   };
   location: {
     country: string;
@@ -33,6 +41,9 @@ export interface CandidateProfile {
     timezone: string;
     visaStatus: string;
     onsiteAvailability: string;
+    remotePreference: string;
+    relocationPreference: string;
+    hybridTolerance: string;
   };
   strengths: {
     skills: Record<string, string[]>;
@@ -52,6 +63,7 @@ export interface CandidateProfile {
     framingRules: string[];
     compTargets: CompTarget[];
   };
+  setup: SetupStatus;
 }
 
 export interface Archetype {
@@ -77,6 +89,12 @@ export interface SearchSources {
   enabledCompanies: number;
   positiveKeywords: string[];
   negativeKeywords: string[];
+  seniorityBoost: string[];
+  allowedRegions: string[];
+  alwaysAllowedRegions: string[];
+  blockedRegions: string[];
+  searchQueries: string[];
+  enabledSearchQueries: number;
   companyNames: string[];
 }
 
@@ -95,4 +113,25 @@ export interface CompTarget {
   roleType: string;
   market: string;
   range: string;
+}
+
+export interface SetupStatus {
+  files: {
+    cvExists: boolean;
+    cvHasContent: boolean;
+    articleDigestExists: boolean;
+    articleDigestHasContent: boolean;
+    articleDigestHasLinks: boolean;
+    pipelineExists: boolean;
+    applicationsExists: boolean;
+  };
+  pdf: {
+    outputFormat: string;
+    autoPdfScoreThreshold: string;
+  };
+  systemHealth: {
+    doctorScriptExists: boolean;
+    verifyScriptExists: boolean;
+    scanScriptExists: boolean;
+  };
 }

@@ -18,7 +18,9 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **System Layer (auto-updatable, DON'T put user data here):**
 - `modes/_shared.md`, `modes/oferta.md`, all other modes
-- `AGENTS.md`, `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
+- `AGENTS.md`, `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `frontend/*`, `templates/*`, `batch/*`, `PRODUCT.md`, `DESIGN.md`
+
+**Frontend generated cache:** `frontend/src/data/seed.ts` is generated from the User Layer by `frontend/prebuild.mjs` / `frontend/profile-data.mjs`. It may contain user-derived data, but it is NOT source of truth and must not be hand-edited for personalization. Change the real source files (`cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`) or parser code, then regenerate.
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
 
@@ -68,6 +70,48 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `check-liveness.mjs` | Job posting liveness checker |
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy). Header includes `**Legitimacy:** {tier}`. |
+| `frontend/` | React/Vite onboarding UI: two-pane candidate profile + agent chat |
+| `frontend/profile-data.mjs` | Read-only parser that normalizes career-ops files into `CandidateProfile` JSON |
+| `frontend/profile-api.mjs` | Vite dev middleware for `GET /api/profile` |
+| `frontend/prebuild.mjs` | Generates `frontend/src/data/seed.ts` fallback snapshot from real files |
+| `PRODUCT.md` | Product strategy for the frontend experience |
+| `DESIGN.md` | Frontend visual/design-system direction |
+
+### Frontend UI -- Current State and Plan
+
+The frontend is a React + Vite app in `frontend/`. It is a hackathon-oriented onboarding experience for career-ops:
+
+- Left pane: "What the agent knows about me" as a structured candidate profile.
+- Right pane: onboarding agent chat.
+- Users can select text in the profile, add comments, send comments to the mock agent, review proposed updates, and accept/edit/ignore them.
+- Profile readiness is based on the real career-ops setup checklist: identity, target roles, salary floors, location policy, deal-breakers, CV source, proof points, title/location filters, focus companies, search queries, pipeline/tracker files, PDF settings, and system health.
+- The Part 1 job URL flow is mocked: pasted job URLs produce a mock recommendation card, not a real evaluation.
+
+Run the frontend from the project root with:
+
+```bash
+npm --prefix frontend run dev
+```
+
+Or from `frontend/`:
+
+```bash
+npm run dev
+npm run build
+npm run lint
+```
+
+`npm run dev` and `npm run build` inside `frontend/` run `prebuild.mjs` first. The app also uses Vite middleware (`frontend/profile-api.mjs`) to serve `GET /api/profile` from the real local files at runtime. If `/api/profile` is unavailable, React falls back to the generated `seed.ts` snapshot.
+
+**Part 2 integration plan:** keep backend integration incremental and approval-gated.
+
+1. Read-only profile loading from real files via `GET /api/profile` (current direction).
+2. Agent-generated proposed updates in the UI.
+3. Explicit approval gates before any file write.
+4. Write approved changes back to the correct User Layer file only.
+5. Real job evaluation, report/PDF generation, and tracker updates.
+
+**Frontend write rule:** Never silently mutate `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`, or tracker files from the frontend. All writes must be proposed, shown to the user, and explicitly approved. Preserve the Data Contract: user-specific content belongs in the User Layer, not system prompts or shared modes.
 
 ### First Run — Onboarding (IMPORTANT)
 
@@ -247,8 +291,10 @@ When spawning headless workers for batch processing, use the appropriate command
 
 ## Stack and Conventions
 
-- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
+- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), React + Vite + Tailwind (frontend), Canva MCP (optional visual CV)
 - Scripts in `.mjs`, configuration in YAML
+- Frontend lives in `frontend/`; run with `npm --prefix frontend run dev` from root or `npm run dev` from `frontend/`
+- Do not manually edit `frontend/src/data/seed.ts`; regenerate it through `frontend/prebuild.mjs` or let frontend scripts do it
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
 - Batch in `batch/` (gitignored except scripts and prompt)

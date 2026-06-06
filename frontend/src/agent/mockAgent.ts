@@ -1,4 +1,4 @@
-import type { AgentMessage, ProposedUpdate } from '../types/agent';
+import type { AgentMessage } from '../types/agent';
 import type { Comment } from '../types/comments';
 import type { CandidateProfile } from '../types/profile';
 import type { ReadinessResult } from '../lib/readiness';
@@ -24,7 +24,7 @@ export function processAgentResponse(
     case 'init':
       return handleInit(context);
     case 'comments':
-      return handleCommentBatch(input.comments, context);
+      return handleCommentBatch(input.comments);
     case 'freeform':
       return handleFreeformInput(input.text, context);
     default:
@@ -36,7 +36,7 @@ function handleInit(context: AgentContext): AgentMessage[] {
   const messages: AgentMessage[] = [];
 
   messages.push(msg('agent-text',
-    `Hi ${context.profile.identity.name || 'there'}! I'm your job search agent. I've loaded your profile and I can see you have a strong background in growth and product.`
+    `Hi ${context.profile.identity.name || 'there'}! I've loaded your profile into the panel on the left. You can chat with me, or highlight any sentence and tell me how to understand it.`
   ));
 
   const question = getNextOnboardingQuestion(context.profile);
@@ -44,15 +44,15 @@ function handleInit(context: AgentContext): AgentMessage[] {
     messages.push(msg('agent-text', question));
   } else {
     messages.push(msg('agent-text',
-      'Your profile looks quite complete. You can highlight any text on the left and add comments to refine how I understand your experience.'
+      'Your profile looks quite complete. The fastest way to improve it now is to highlight a phrase on the left, add a comment, and approve the update I propose.'
     ));
   }
 
   return messages;
 }
 
-function handleCommentBatch(comments: Comment[], context: AgentContext): AgentMessage[] {
-  const { updates, reasoning } = processComments(comments, context.profile);
+function handleCommentBatch(comments: Comment[]): AgentMessage[] {
+  const { updates, reasoning } = processComments(comments);
 
   const messages: AgentMessage[] = [];
 
@@ -90,6 +90,16 @@ function handleFreeformInput(text: string, context: AgentContext): AgentMessage[
       content: '',
       timestamp: Date.now(),
       updates: result.updates,
+    });
+  }
+
+  if (result.jobRecommendation) {
+    messages.push({
+      id: crypto.randomUUID(),
+      type: 'job-recommendation',
+      content: 'Demo job recommendation',
+      timestamp: Date.now(),
+      jobRecommendation: result.jobRecommendation,
     });
   }
 

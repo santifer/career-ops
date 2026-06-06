@@ -1,6 +1,6 @@
 import type { CandidateProfile } from '../types/profile';
 import type { Comment } from '../types/comments';
-import type { AgentMessage } from '../types/agent';
+import type { AgentMessage, ProposedUpdate } from '../types/agent';
 import type { AppAction } from './actions';
 import { computeReadiness, type ReadinessResult } from '../lib/readiness';
 
@@ -22,6 +22,9 @@ export function createInitialState(profile: CandidateProfile): AppState {
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
+    case 'SET_PROFILE':
+      return { ...state, profile: action.profile, readiness: computeReadiness(action.profile) };
+
     case 'ADD_COMMENT':
       return { ...state, comments: [...state.comments, action.comment] };
 
@@ -87,7 +90,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
       let newProfile = state.profile;
       if (update) {
-        newProfile = applyUpdate(state.profile, update.section, update.field, update.proposedValue);
+        newProfile = applyProposedUpdate(state.profile, update);
       }
 
       // Check if all updates in the batch are resolved
@@ -164,44 +167,117 @@ export function appReducer(state: AppState, action: AppAction): AppState {
   }
 }
 
-function applyUpdate(
+function applyProposedUpdate(
   profile: CandidateProfile,
-  section: string,
-  field: string,
-  value: string,
+  update: ProposedUpdate,
 ): CandidateProfile {
-  const p = { ...profile };
+  switch (update.path) {
+    case 'cv.summary':
+      return { ...profile, cv: { ...profile.cv, summary: applyStringUpdate(profile.cv.summary, update) } };
+    case 'narrative.exitStory':
+      return {
+        ...profile,
+        narrative: {
+          ...profile.narrative,
+          exitStory: applyStringUpdate(profile.narrative.exitStory, update),
+        },
+      };
+    case 'compensation.targetRange':
+      return {
+        ...profile,
+        compensation: {
+          ...profile.compensation,
+          targetRange: applyStringUpdate(profile.compensation.targetRange, update),
+        },
+      };
+    case 'identity.phone':
+      return { ...profile, identity: { ...profile.identity, phone: applyStringUpdate(profile.identity.phone, update) } };
+    case 'identity.linkedin':
+      return { ...profile, identity: { ...profile.identity, linkedin: applyStringUpdate(profile.identity.linkedin, update) } };
+    case 'identity.portfolio':
+      return { ...profile, identity: { ...profile.identity, portfolio: applyStringUpdate(profile.identity.portfolio, update) } };
+    case 'identity.github':
+      return { ...profile, identity: { ...profile.identity, github: applyStringUpdate(profile.identity.github, update) } };
+    case 'narrative.superpowers':
+      return {
+        ...profile,
+        narrative: {
+          ...profile.narrative,
+          superpowers: applyArrayUpdate(profile.narrative.superpowers, update),
+        },
+      };
+    case 'strengths.keyStrengths':
+      return {
+        ...profile,
+        strengths: {
+          ...profile.strengths,
+          keyStrengths: applyArrayUpdate(profile.strengths.keyStrengths, update),
+        },
+      };
+    case 'dealBreakers':
+      return { ...profile, dealBreakers: applyArrayUpdate(profile.dealBreakers, update) };
+    case 'targeting.primaryRoles':
+      return {
+        ...profile,
+        targeting: {
+          ...profile.targeting,
+          primaryRoles: applyArrayUpdate(profile.targeting.primaryRoles, update),
+        },
+      };
+    default:
+      return profile;
+  }
+}
 
-  // Handle common update patterns
-  if (section === 'identity') {
-    p.identity = { ...p.identity, [field]: value };
-  } else if (section === 'targeting') {
-    if (field === 'primaryRoles') {
-      p.targeting = { ...p.targeting, primaryRoles: [...p.targeting.primaryRoles, value] };
-    } else {
-      p.targeting = { ...p.targeting, [field]: value };
-    }
-  } else if (section === 'narrative') {
-    if (field === 'superpowers') {
-      p.narrative = { ...p.narrative, superpowers: [...p.narrative.superpowers, value] };
-    } else {
-      p.narrative = { ...p.narrative, [field]: value };
-    }
-  } else if (section === 'compensation') {
-    p.compensation = { ...p.compensation, [field]: value };
-  } else if (section === 'dealBreakers') {
-    p.dealBreakers = [...p.dealBreakers, value];
-  } else if (section === 'strengths') {
-    if (field === 'keyStrengths') {
-      p.strengths = { ...p.strengths, keyStrengths: [...p.strengths.keyStrengths, value] };
-    }
-  } else if (section === 'cv') {
-    if (field === 'summary') {
-      p.cv = { ...p.cv, summary: value };
-    }
+function applyStringUpdate(currentValue: string, update: ProposedUpdate): string {
+  const proposedValue = update.proposedValue.trim();
+
+  if (update.operation === 'remove') {
+    return currentValue.replace(update.currentValue, '').replace(/\s+/g, ' ').trim();
   }
 
-  return p;
+  if (update.operation === 'append') {
+    if (!proposedValue) return currentValue;
+    return currentValue ? `${currentValue} ${proposedValue}` : proposedValue;
+  }
+
+  if (update.currentValue.trim() && currentValue.includes(update.currentValue)) {
+    return currentValue
+      .replace(update.currentValue, proposedValue)
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  return proposedValue;
+}
+
+function applyArrayUpdate(currentValues: string[], update: ProposedUpdate): string[] {
+  const proposedValue = update.proposedValue.trim();
+
+  if (update.operation === 'remove') {
+    const removalTargets = [update.currentValue, update.proposedValue].filter(Boolean);
+    return currentValues.filter(item =>
+      !removalTargets.some(target => item === target || item.includes(target)),
+    );
+  }
+
+  if (update.operation === 'replace') {
+    const replaced = currentValues.map(item =>
+      item === update.currentValue || item.includes(update.currentValue) ? proposedValue : item,
+    );
+    return replaced.some(item => item === proposedValue)
+      ? replaced
+      : appendUnique(replaced, proposedValue);
+  }
+
+  return appendUnique(currentValues, proposedValue);
+}
+
+function appendUnique(values: string[], value: string): string[] {
+  if (!value) return values;
+  const normalizedValue = value.toLowerCase();
+  if (values.some(item => item.toLowerCase() === normalizedValue)) return values;
+  return [...values, value];
 }
 
 function setNestedField(obj: CandidateProfile, path: string, value: unknown): CandidateProfile {
