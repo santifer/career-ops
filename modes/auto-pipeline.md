@@ -65,6 +65,8 @@ If the final score is >= 4.5, generate a draft of answers for the application fo
 
 **Language**: Always in the language of the JD (EN default). Apply `/tech-translate`.
 
+**Voice (MANDATORY):** form answers are candidate-facing. Apply the "Structural & Rhythmic Tells" rules and run the pre-send self-audit in `modes/_profile.md`. Do NOT reuse a phrasing or punchline across the CV summary, cover letter, and these answers — run the cross-artifact dedup so the bundle doesn't read as one generator.
+
 ## Step 5 — Update Tracker
 Register in `data/applications.md` with all columns including Report and PDF as ✅.
 

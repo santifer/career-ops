@@ -10,7 +10,7 @@
    - US/Canada → `letter`
    - Rest of world → `a4`
 6. Detect role archetype → adapt framing
-7. Rewrite the Professional Summary injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
+7. Rewrite the Professional Summary injecting JD keywords + Patrick's REAL exit-narrative bridge (security-engineer-first → AI agents in regulated production; see `modes/_profile.md` "Your Exit Narrative" — do NOT use a canned bridge, and the "Built and sold a business" line is not Patrick). The summary is the single most-read line on the CV: keep it plain, and apply the "Structural & Rhythmic Tells" rules + pre-send self-audit from `modes/_profile.md` (no negation-elevation, no slogan, no recycled cover-letter line).
 8. Select the top 3-4 most relevant projects for the offer
 9. Reorder experience bullets by relevance to the JD
 10. Build a competency grid from the JD requirements (6-8 keyword phrases)

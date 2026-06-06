@@ -185,6 +185,16 @@ This fork has user-specific customizations that change defaults from the upstrea
 
 3. **Reports are in English.** The system-layer `modes/*.md` files were translated to English on 2026-05-17 (originally Spanish from upstream author). If `node update-system.mjs apply` is run, modes/ will revert to Spanish — re-apply translations from `project_careerops_english_modes.md` in memory, or override at write-time using the translation table in `modes/_profile.md` "Report Output Language" section.
 
+### Voice engine — anti-AI-tell rules (added 2026-06-06)
+
+Companies reject AI-written cover letters and smart readers recognize Claude/ChatGPT cadence. A 3-pass adversarial audit this session hardened the voice engine. **Before returning ANY candidate-facing text (CV summary/bullets, cover letters, application answers, outreach):**
+
+- **Apply `modes/_profile.md` → "Structural & Rhythmic Tells" and run its MANDATORY pre-send self-audit.** It targets *structure*, not just words — banned constructions with counted budgets: negation-elevation ("X isn't A — it's B"), "same X / instinct / muscle" transfer-bridges, meta-signposting ("Two honest notes.", "Reliability:" labels), the uniform clause—dash—appositive sentence shape, tricolon-as-beat.
+- **Bundle dedup is the loudest single-generator signal.** A CV + cover letter + essays generated in one run must not recycle a phrase, a narrative arc, *or the skeleton* (concede→reframe→wry-kicker) across docs. Make each doc handle its gap, contrast, and closing differently.
+- **Ceiling rule (learned the hard way over 3 passes: HIGH→MEDIUM→MEDIUM, 5.75→6.0).** An AI scrubbing its own draft tops out at "competent-generic," not "unmistakably Patrick" — each pass trades a loud tell for a subtler one. After **≤2 structural passes, STOP and hand to Patrick** for ONE real voice beat (genuine enthusiasm / a car-engine-whiteboard analogy, in his words). Do NOT manufacture it — performed folksiness ("those reps would be new for me") becomes the next tell. **Never claim "LOW / undetectable" from automation alone.**
+- **Upstream fix (open TODO):** populate `writing-samples/` with real Patrick writing (an old cover letter, a Slack post, a lab note) so the engine imitates his actual voice instead of an inferred profile — the only thing that raises the ceiling.
+- System-layer wiring (`modes/_shared.md`, `cover-letter.md`, `apply.md`, `auto-pipeline.md`, `pdf.md`, and this CLAUDE.md subsection) reverts on `update-system.mjs apply` — re-apply per `memory/project_voice_engine_upgrade.md`. The `modes/_profile.md` rules persist (user layer).
+
 ### Patrick-specific workflow
 
 - **MacBook destination for review artifacts**: `~/Documents/career-ops-2026-05-17/` (or roll forward by date). Push via `scp` to `patrick@10.1.1.134`. Mirror structure: `reports/`, `output/`, `cover-letters/`, `interview-prep/`, plus the tracker at the root.
