@@ -200,18 +200,22 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### 2. Record in tracker
 
-**ALWAYS** record in `data/applications.md`:
-- Reserved sequential number from `node reserve-eval-id.mjs`
-- Current date
-- Company
-- Role
-- Score: match average (1-5)
-- Status: `Evaluated`
-- PDF: ❌ (or ✅ if auto-pipeline generated PDF)
-- Report: root-relative link `[001](reports/001-company-2026-01-01.md)` (when merged via `merge-tracker.mjs` it is normalized to be relative to the tracker's own dir, e.g. `../reports/...`; see #760)
+**Never add a new row directly to `data/applications.md`.** For new evaluations, write one TSV to `batch/tracker-additions/{REPORT_NUM}-{company-slug}.tsv`, then run `node merge-tracker.mjs`.
 
-**Tracker format:**
+The TSV must contain exactly 9 tab-separated columns:
 
-```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report |
+```text
+num	date	company	role	status	score	pdf	report	notes
 ```
+
+- `num`: reserved sequential number from `node reserve-eval-id.mjs`
+- `date`: current date
+- `company`: company name
+- `role`: role title
+- `status`: `Evaluated`
+- `score`: match average as `X.X/5`
+- `pdf`: `❌` (or `✅` if auto-pipeline generated PDF)
+- `report`: root-relative link `[001](reports/001-company-2026-01-01.md)`; `merge-tracker.mjs` normalizes it relative to the tracker file (see #760)
+- `notes`: one-line evaluation summary
+
+You may still edit `data/applications.md` directly to update status or notes for an existing row.
