@@ -193,6 +193,9 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
   const relPDF = toRel(pdfPath);
   const relHTML = toRel(htmlPath);
   const date = new Date().toISOString().slice(0, 10);
+  // "008" and "8" are the same report — zero-padded report-link form vs
+  // unpadded tracker-# form. Normalize so replacement rows match.
+  const normKey = (s) => (s || '').trim().replace(/^0+(?=\d)/, '');
 
   let lines = [];
   if (existsSync(manifestPath)) {
@@ -200,7 +203,7 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
       if (!line.trim() || line.startsWith('#')) return false;
       const fields = line.split('\t');
       if (fields[1] === relPDF) return false;
-      if (reportNum && fields[0] === reportNum) return false;
+      if (reportNum && normKey(fields[0]) === normKey(reportNum)) return false;
       return true;
     });
   }

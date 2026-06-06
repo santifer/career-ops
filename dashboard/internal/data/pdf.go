@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/santifer/career-ops/dashboard/internal/model"
@@ -22,9 +23,39 @@ type PDFManifestEntry struct {
 	Date         string // YYYY-MM-DD generation date
 }
 
-// PDFManifest indexes manifest entries by report number. Rows without a
+// PDFManifest indexes manifest entries by normalized report number (leading
+// zeros stripped, so "008" and "8" collide deliberately). Rows without a
 // report number are not indexed (the glob path covers them).
 type PDFManifest map[string]PDFManifestEntry
+
+// normalizeReportKey strips leading zeros so the zero-padded report-link
+// form ("008") and the unpadded tracker-# form ("8") key identically.
+func normalizeReportKey(s string) string {
+	s = strings.TrimSpace(s)
+	trimmed := strings.TrimLeft(s, "0")
+	if trimmed == "" && s != "" {
+		return "0"
+	}
+	return trimmed
+}
+
+// Lookup finds the manifest entry for an application, trying the report-link
+// number first (the NNN in reports/NNN-….md) and falling back to the tracker
+// # column. The two usually agree but are scrambled in real trackers, and
+// callers passing --report may have used either — tolerate both.
+func (m PDFManifest) Lookup(app model.CareerApplication) (PDFManifestEntry, bool) {
+	if key := normalizeReportKey(app.ReportNumber); key != "" {
+		if entry, ok := m[key]; ok {
+			return entry, true
+		}
+	}
+	if app.Number > 0 {
+		if entry, ok := m[strconv.Itoa(app.Number)]; ok {
+			return entry, true
+		}
+	}
+	return PDFManifestEntry{}, false
+}
 
 // LoadPDFManifest reads data/pdf-index.tsv under careerOpsPath. A missing
 // file is not an error — the manifest is optional and absent until the
@@ -63,7 +94,7 @@ func LoadPDFManifest(careerOpsPath string) PDFManifest {
 		if entry.ReportNumber == "" || entry.PDFPath == "" {
 			continue
 		}
-		manifest[entry.ReportNumber] = entry
+		manifest[normalizeReportKey(entry.ReportNumber)] = entry
 	}
 	return manifest
 }
@@ -84,7 +115,7 @@ var rePDFDate = regexp.MustCompile(`(\d{4}-\d{2}-\d{2})\.pdf$`)
 //     offer a picker instead of guessing — one company can have several
 //     role-variant CVs from the same day.
 func ResolvePDFs(careerOpsPath string, app model.CareerApplication, manifest PDFManifest) []string {
-	if entry, ok := manifest[app.ReportNumber]; ok && app.ReportNumber != "" {
+	if entry, ok := manifest.Lookup(app); ok {
 		if _, err := os.Stat(filepath.Join(careerOpsPath, filepath.FromSlash(entry.PDFPath))); err == nil {
 			return []string{entry.PDFPath}
 		}

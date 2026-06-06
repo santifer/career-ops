@@ -414,7 +414,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	case "D":
 		if app, ok := m.CurrentApp(); ok {
 			manifest := data.LoadPDFManifest(m.careerOpsPath)
-			entry, found := manifest[app.ReportNumber]
+			entry, found := manifest.Lookup(app)
 			if !found || entry.HTMLPath == "" {
 				m.flash = "No recorded source HTML for this application — run /career-ops pdf once; later runs are regenerable with D"
 				return m, nil
