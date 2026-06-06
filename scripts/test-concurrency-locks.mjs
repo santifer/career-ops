@@ -46,9 +46,11 @@ function trackerRows(trackerPath) {
     .filter(parts => Number.isInteger(parseInt(parts[1], 10)))
     .map(parts => ({
       num: parseInt(parts[1], 10),
+      score: parts[5],
       company: parts[3],
       role: parts[4],
       report: parts[8],
+      notes: parts[9],
     }));
 }
 
@@ -108,6 +110,29 @@ function writeFakeArtifacts(fixture, reservations) {
       'no',
       `[${num}](reports/${reportName})`,
       `Simulated tracker addition ${num}`,
+    ].join('\t'));
+  }
+}
+
+function writeDuplicateReevaluationArtifacts(fixture) {
+  const updates = [
+    { suffix: '1', score: '4.2/5', note: 'First duplicate update should raise the score' },
+    { suffix: '2', score: '4.4/5', note: 'Second duplicate update should win after in-memory refresh' },
+  ];
+
+  for (const update of updates) {
+    const reportName = `228-existingco-reeval-${update.suffix}-2026-06-03.md`;
+    writeFileSync(join(fixture.reportsDir, reportName), `# ExistingCo re-evaluation ${update.suffix}\n`);
+    writeFileSync(join(fixture.additionsDir, `228-existingco-reeval-${update.suffix}.tsv`), [
+      228,
+      '2026-06-03',
+      'ExistingCo',
+      'Existing Engineer',
+      'Evaluated',
+      update.score,
+      'no',
+      `[228](reports/${reportName})`,
+      update.note,
     ].join('\t'));
   }
 }
@@ -222,6 +247,7 @@ async function main() {
 
     console.log('2) Writing fake reports and tracker TSVs...');
     writeFakeArtifacts(fixture, reservations);
+    writeDuplicateReevaluationArtifacts(fixture);
     console.log(`  pending_tsv_count=${readdirSync(fixture.additionsDir).filter(file => file.endsWith('.tsv')).length}`);
     console.log('');
 
@@ -239,7 +265,7 @@ async function main() {
       console.log(`  merge_process=${idx + 1} exit_code=${result.code}`);
       const importantLines = result.stdout
         .split('\n')
-        .filter(line => line.includes('Existing:') || line.includes('Found') || line.includes('Add #') || line.includes('No pending') || line.includes('Summary') || line.includes('lock acquired'));
+        .filter(line => line.includes('Existing:') || line.includes('Found') || line.includes('Add #') || line.includes('Update:') || line.includes('No pending') || line.includes('Summary') || line.includes('lock acquired'));
       for (const line of importantLines) console.log(`    ${line}`);
       if (result.stderr.trim()) console.log(`    stderr=${result.stderr.trim()}`);
       assert(result.code === 0, `merge process ${idx + 1} failed`);
@@ -253,8 +279,13 @@ async function main() {
     assert(JSON.stringify(finalNums) === JSON.stringify(expectedFinal),
       `expected final tracker numbers ${expectedFinal.join(', ')}, got ${finalNums.join(', ')}`);
 
+    const existingRow = rows.find(row => row.num === 228);
+    assert(existingRow?.score === '4.4/5', `expected duplicate re-evaluation to keep score 4.4/5, got ${existingRow?.score ?? 'missing'}`);
+    assert(existingRow?.notes.includes('Second duplicate update'),
+      `expected duplicate re-evaluation notes to reflect the second update, got ${existingRow?.notes ?? 'missing'}`);
+
     const mergedFiles = readdirSync(join(fixture.additionsDir, 'merged')).filter(file => file.endsWith('.tsv')).length;
-    assert(mergedFiles === WORKER_COUNT, `expected ${WORKER_COUNT} merged TSVs, got ${mergedFiles}`);
+    assert(mergedFiles === WORKER_COUNT + 2, `expected ${WORKER_COUNT + 2} merged TSVs, got ${mergedFiles}`);
 
     console.log(`  final_tracker_numbers=${finalNums.join(', ')}`);
     console.log(`  merged_tsv_count=${mergedFiles}`);
