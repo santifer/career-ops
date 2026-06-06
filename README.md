@@ -230,9 +230,8 @@ The verification is sequential and only runs against new offers (after dedup), s
 The built-in terminal dashboard lets you browse your pipeline visually:
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..
+npm run serve:dashboard   # launch the TUI
+npm run build:dashboard   # optional: build the standalone binary
 ```
 
 Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.

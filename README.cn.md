@@ -220,9 +220,8 @@ career-ops 是一个单一斜杠命令，带有多种模式：
 内置终端仪表盘可以让你更直观地浏览整个求职管道：
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..
+npm run serve:dashboard   # launch the TUI
+npm run build:dashboard   # optional: build the standalone binary
 ```
 
 功能包括：6 个筛选标签、4 种排序模式、分组/平铺视图、懒加载预览、行内状态修改。
