@@ -330,7 +330,24 @@ process_offer() {
   local retries
   retries=$(get_retries "$id")
   local report_num
-  report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
+  local reservation_log="$LOGS_DIR/reservation-${id}.log"
+  rm -f "$reservation_log"
+  if ! report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries" 2>"$reservation_log"); then
+    local completed_at
+    completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    local error_msg
+    error_msg=$(tail -5 "$reservation_log" 2>/dev/null | tr '\n' ' ' | cut -c1-200 || true)
+    if [[ -z "$error_msg" ]]; then
+      error_msg="report-number-reservation-failed"
+      printf '%s\n' "$error_msg" > "$reservation_log"
+    fi
+    retries=$((retries + 1))
+    update_state "$id" "$url" "failed" "$started_at" "$completed_at" "-" "-" "$error_msg" "$retries"
+    echo "    ❌ Failed to reserve report number for offer #$id (attempt $retries)"
+    echo "       See $reservation_log"
+    return 0
+  fi
+  [[ -s "$reservation_log" ]] || rm -f "$reservation_log"
   local date
   date=$(date +%Y-%m-%d)
   local jd_file="/tmp/batch-jd-${id}.txt"
