@@ -88,11 +88,16 @@ function roleMatch(a, b) {
 
   if (wordsA.length === 0 || wordsB.length === 0) return false;
 
-  const overlap = wordsA.filter(w => wordsB.some(wb => wb === w));
-  const smaller = Math.min(wordsA.length, wordsB.length);
-  const ratio = overlap.length / smaller;
-
-  return overlap.length >= 2 && ratio >= 0.6;
+  const setB = new Set(wordsB);
+  const overlap = wordsA.filter(w => setB.has(w)).length;
+  if (overlap === 0) return false;
+  // Jaccard similarity (overlap/union), matching merge-tracker.mjs roleFuzzyMatch. The old
+  // min-based ratio (overlap/smaller >= 0.6) false-matched same-company, different-domain
+  // roles — e.g. Abridge "Application Security Engineer" vs "Infrastructure Security Engineer"
+  // (overlap=2, smaller=3 → 0.67 >= 0.6) and silently dropped one on every `npm run dedup` /
+  // test-all run. Jaccard: overlap=2, union=4 → 0.5 < 0.75 → correctly kept distinct.
+  const union = new Set([...wordsA, ...wordsB]).size;
+  return overlap >= 2 && overlap / union >= 0.75;
 }
 
 function parseScore(s) {
