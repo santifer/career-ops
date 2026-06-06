@@ -425,8 +425,16 @@ for (const file of tsvFiles) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+        const updatedNotes = `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`;
+        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | ${updatedNotes} |`;
         appLines[lineIdx] = updatedLine;
+        duplicate.date = addition.date;
+        duplicate.company = addition.company;
+        duplicate.role = addition.role;
+        duplicate.score = addition.score;
+        duplicate.report = addition.report;
+        duplicate.notes = updatedNotes;
+        duplicate.raw = updatedLine;
         updated++;
       }
     } else {
