@@ -42,7 +42,7 @@ Use WebSearch + Playwright (single Playwright agent only — see `_shared.md`):
 
 Produce a ranked table:
 
-| # | Invented title | Evidenced company gap (cite source) | Archetype leveraged (`_profile.md`) | Stage-calibrated level | Conviction |
+| # | Invented title | Evidenced company gap (cite source) | Archetype leveraged (`_profile.md`) | Stage-calibrated level | Conviction (1–5) |
 |---|---|---|---|---|---|
 
 - **Invented title** — what you would call the role.
@@ -50,8 +50,11 @@ Produce a ranked table:
 - **Archetype** — which of the candidate's archetypes makes them the credible
   person to fill it.
 - **Level** — apply the `_profile.md` company-stage × title calibration.
-- **Conviction** — High / Medium / Low: strength of (need-evidence × fit ×
-  decision-maker reachability).
+- **Conviction (1–5)** — a single numeric score (one decimal allowed) for the
+  strength of the bet = evidenced need × CV-to-role fit × decision-maker
+  reachability. This is the score that flows to the report header, the Machine
+  Summary `score`, and the tracker. (5 = slam-dunk; below ~4.0 → likely HOLD,
+  see Step 8.)
 
 Recommend one.
 
@@ -117,7 +120,9 @@ Produce three artifacts:
 
 Before presenting, evaluate the three legs:
 - **(a) Evidenced need** — is the gap real and cited, or invented to flatter?
-- **(b) Strong fit** — is the match ≥ ~4.0?
+- **(b) Strong fit** — is the CV-to-role match (Block B) strong (≥ ~4.0/5)?
+  This is the CV-match component specifically, distinct from the composite
+  Conviction score.
 - **(c) Reachable decision-maker** — did you find a specific exec who could
   create the role?
 
@@ -163,8 +168,11 @@ max existing + 1). Use this gambit-variant structure.
 - `## E) Conviction & Go/No-Go` — the Step 8 gate: the three legs + the send /
   hold recommendation.
 - `## F) Interview Plan` — STAR+R stories for the conversation the pitch opens.
-- `## Documents` — CV path, cover-letter path, and the pitch (email + DM + memo,
-  inline or linked).
+- `## Documents` — links to the saved CV (in `output/`), the cover letter, and
+  the pitch artifacts. Save the cold email, the LinkedIn DM, and the memo to
+  `output/` and link them here; inline them only if short.
+- `## Keywords extracted` — the 15–20 ATS keywords pulled from the synthetic JD
+  in Step 5 (mirrors the standard report format for ATS optimization).
 
 **Then a `## Machine Summary` section containing exactly this YAML fenced block**
 (keep all keys — `legitimacy` carries a sentinel so downstream parsers stay
@@ -174,7 +182,7 @@ happy; `mode` and `decision_maker` are additive):
 num: {NNN}
 company: {Company}
 role: "{invented title} (gambit)"
-score: {conviction X.X}
+score: {X.X}
 archetype: {selected}
 legitimacy: "N/A (speculative)"
 recommend: {send | hold | skip}
@@ -192,8 +200,15 @@ tab-separated columns (per `_shared.md` / AGENTS.md TSV Format). Column order is
 `num`, `date`, `company`, `role`, `status`, `score`, `pdf`, `report`, `notes`:
 
 ```
-{num}	{date}	{company}	{invented title} (gambit)	Speculative	{conviction}/5	{✅ or ❌}	[{num}](reports/{num}-{slug}-{date}.md)	{one-line: gap + decision-maker}
+{num}	{date}	{company}	{invented title} (gambit)	Speculative	{X.X}/5	{✅ or ❌}	[{num}](reports/{num}-{slug}-{date}.md)	{one-line: gap + decision-maker}
 ```
+
+The `score` column is the numeric Conviction value (`{X.X}/5`, e.g. `4.3/5`) —
+never write `High/5` or a word.
+
+`Speculative` is a canonical status (defined in `templates/states.yml`, aliases
+`spec` / `gambit`). Use it as-is — do NOT substitute `Evaluated` even though the
+shorter states tables in `CLAUDE.md` / `AGENTS.md` may not list it.
 
 Then run `node merge-tracker.mjs`. NEVER edit `applications.md` directly to add a
 row.
