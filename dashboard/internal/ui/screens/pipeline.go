@@ -69,11 +69,11 @@ const (
 	filterEvaluated   = "evaluated"
 	filterSpeculative = "speculative"
 	filterApplied     = "applied"
-	filterInterview = "interview"
-	filterSkip      = "skip"
-	filterRejected  = "rejected"
-	filterDiscarded = "discarded"
-	filterTop       = "top"
+	filterInterview   = "interview"
+	filterSkip        = "skip"
+	filterRejected    = "rejected"
+	filterDiscarded   = "discarded"
+	filterTop         = "top"
 )
 
 type pipelineTab struct {
@@ -1095,15 +1095,15 @@ func (m PipelineModel) scoreStyle(score float64) lipgloss.Style {
 
 func (m PipelineModel) statusColorMap() map[string]lipgloss.Color {
 	return map[string]lipgloss.Color{
-		"interview": m.theme.Green,
-		"offer":     m.theme.Green,
-		"applied":   m.theme.Sky,
-		"responded": m.theme.Blue,
+		"interview":   m.theme.Green,
+		"offer":       m.theme.Green,
+		"applied":     m.theme.Sky,
+		"responded":   m.theme.Blue,
 		"evaluated":   m.theme.Text,
 		"speculative": m.theme.Mauve,
 		"skip":        m.theme.Red,
-		"rejected":  m.theme.Subtext,
-		"discarded": m.theme.Subtext,
+		"rejected":    m.theme.Subtext,
+		"discarded":   m.theme.Subtext,
 	}
 }
 

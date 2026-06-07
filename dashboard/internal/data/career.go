@@ -604,6 +604,7 @@ func StatusPriority(status string) int {
 		return 3
 	case "evaluated":
 		return 4
+	// tie with "evaluated": speculative rows sort in the same band
 	case "speculative":
 		return 4
 	case "skip":
