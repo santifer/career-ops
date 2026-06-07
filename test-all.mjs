@@ -1086,6 +1086,38 @@ try {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
+// ── 15. SPECULATIVE STATE (gambit) ──────────────────────────────
+
+console.log('\n15. Speculative state (gambit)');
+
+const statesSpec = readFile('templates/states.yml');
+if (statesSpec.includes('label: Speculative')) {
+  pass('states.yml defines the Speculative state');
+} else {
+  fail('states.yml is missing the Speculative state');
+}
+
+const verifySpec = readFile('verify-pipeline.mjs');
+if (verifySpec.includes("'speculative'")) {
+  pass('verify-pipeline.mjs accepts speculative as canonical');
+} else {
+  fail('verify-pipeline.mjs CANONICAL_STATUSES missing speculative');
+}
+
+const normSpec = readFile('normalize-statuses.mjs');
+if (/canonical\s*=\s*\[[^\]]*'Speculative'/s.test(normSpec)) {
+  pass('normalize-statuses.mjs treats Speculative as canonical');
+} else {
+  fail('normalize-statuses.mjs canonical array missing Speculative');
+}
+
+const dedupSpec = readFile('dedup-tracker.mjs');
+if (dedupSpec.includes("'speculative'")) {
+  pass('dedup-tracker.mjs ranks speculative');
+} else {
+  fail('dedup-tracker.mjs STATUS_RANK missing speculative');
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
