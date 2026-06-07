@@ -1119,6 +1119,13 @@ if (dedupSpec.includes("'speculative'")) {
   fail('dedup-tracker.mjs STATUS_RANK missing speculative');
 }
 
+const mergeSpec = readFile('merge-tracker.mjs');
+if (mergeSpec.includes("'Speculative'")) {
+  pass('merge-tracker.mjs accepts Speculative as canonical');
+} else {
+  fail('merge-tracker.mjs CANONICAL_STATES missing Speculative');
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
