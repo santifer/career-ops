@@ -10,9 +10,10 @@
  * If --out is provided it overrides payload.output_path.
  */
 
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { dirname, resolve } from "path";
+import { dirname, resolve, basename, join } from "path";
+import { fileURLToPath } from "url";
 import { parseArgs } from "util";
 
 const { values: args } = parseArgs({
@@ -47,19 +48,28 @@ if (args.out) {
   payload.output_path = args.out;
 }
 
-if (!payload.output_path) {
-  const company = (payload.letter?.company || "company").toLowerCase().replace(/\s+/g, "-");
-  const role    = (payload.letter?.role_title || "role").toLowerCase().replace(/\s+/g, "-").slice(0, 30);
-  payload.output_path = `output/${company}-${role}-cover.pdf`;
+const OUTPUT_ROOT = resolve("output");
+
+function safeOutputPath(raw) {
+  // Derive a sanitized filename from raw string (strip path separators and dots)
+  const filename = basename(raw).replace(/[^a-zA-Z0-9._-]/g, "-").replace(/\.{2,}/g, "-");
+  return join(OUTPUT_ROOT, filename);
 }
 
-// Write back any override so cover-letter.py sees the correct path
+if (!payload.output_path) {
+  const company = (payload.letter?.company || "company").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const role    = (payload.letter?.role_title || "role").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
+  payload.output_path = join(OUTPUT_ROOT, `${company}-${role}-cover.pdf`);
+} else {
+  payload.output_path = safeOutputPath(payload.output_path);
+}
+
+// Write back so cover-letter.py sees the resolved path
 writeFileSync(payloadPath, JSON.stringify(payload, null, 2));
 
-const outDir = dirname(resolve(payload.output_path));
-if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+if (!existsSync(OUTPUT_ROOT)) mkdirSync(OUTPUT_ROOT, { recursive: true });
 
-const scriptDir = dirname(new URL(import.meta.url).pathname);
+const scriptDir = dirname(fileURLToPath(import.meta.url));
 const pyScript  = resolve(scriptDir, "cover-letter.py");
 
 if (!existsSync(pyScript)) {
@@ -68,7 +78,7 @@ if (!existsSync(pyScript)) {
 }
 
 try {
-  const result = execSync(`python3 "${pyScript}" "${payloadPath}"`, {
+  const result = execFileSync("python3", [pyScript, payloadPath], {
     encoding: "utf-8",
     stdio: ["pipe", "pipe", "pipe"],
   });
