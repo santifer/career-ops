@@ -82,6 +82,7 @@ career-ops 具备代理式工作能力：Claude Code 会用 Playwright 浏览招
 | **面试故事库** | 跨多次评估积累 STAR+Reflection 故事，沉淀出 5-10 个可回答任意行为面试题的主线故事 |
 | **谈薪脚本** | 薪资谈判框架、地域折扣反驳话术、竞品 offer 杠杆策略 |
 | **ATS PDF 生成** | 注入关键词的简历，采用 Space Grotesk + DM Sans 设计 |
+| **求职信生成器** | 包含公司研究、关键词映射、四个互动提示（原因/问题/方法/语气）、聊天内审批与 A4 PDF 生成的个性化求职信。每次评估自动生成草稿，通过 `/career-ops cover` 完成并生成 |
 | **平台扫描器** | 预配置 45+ 家公司（Anthropic、OpenAI、ElevenLabs、Retool、n8n...），支持跨 Ashby、Greenhouse、Lever、Wellfound 的自定义查询 |
 | **批量处理** | 使用 `claude -p` worker 并行评估 |
 | **Dashboard TUI** | 在终端 UI 中浏览、筛选和排序你的求职管道 |
@@ -181,6 +182,7 @@ career-ops 是一个单一斜杠命令，带有多种模式：
 /career-ops {粘贴职位描述}  → 完整自动管道（评估 + PDF + 追踪）
 /career-ops scan           → 扫描平台上的新职位
 /career-ops pdf            → 生成 ATS 优化简历
+/career-ops cover      → 求职信生成器（粘贴 JD 或 /career-ops cover {slug}）
 /career-ops batch          → 批量评估多个职位
 /career-ops tracker        → 查看申请状态
 /career-ops apply          → 用 AI 协助填写申请表
@@ -250,10 +252,11 @@ career-ops/
 ├── article-digest.md            # 你的成果证明（可选）
 ├── config/
 │   └── profile.example.yml      # 个人档案模板
-├── modes/                       # 14 个技能模式
+├── modes/                       # 15 个技能模式
 │   ├── _shared.md               # 共享上下文（在这里自定义）
 │   ├── oferta.md                # 单个职位评估
 │   ├── pdf.md                   # PDF 生成
+│   ├── cover.md                 # 求职信生成
 │   ├── scan.md                  # 平台扫描器
 │   ├── batch.md                 # 批量处理
 │   └── ...
@@ -283,6 +286,7 @@ career-ops/
 
 - **代理**：Claude Code，配合自定义技能与 modes
 - **PDF**：Playwright/Puppeteer + HTML 模板
+- **求职信**：Python + ReportLab（A4 PDF，系统字体，无外部依赖）
 - **扫描器**：Playwright + Greenhouse API + WebSearch
 - **Dashboard**：Go + Bubble Tea + Lipgloss（Catppuccin Mocha 主题）
 - **数据**：Markdown 表格 + YAML 配置 + TSV 批处理文件

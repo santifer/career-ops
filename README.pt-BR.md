@@ -82,6 +82,7 @@ Construído por alguém que usou isso para avaliar 740+ vagas, gerar 100+ CVs pe
 | **Banco de histórias de entrevista** | Acumula histórias STAR+Reflection ao longo das avaliações -- 5-10 histórias principais que respondem qualquer pergunta comportamental          |
 | **Scripts de negociação**            | Frameworks para negociação salarial, resposta a desconto geográfico e alavanca com ofertas concorrentes                                        |
 | **Geração de PDF ATS**               | CVs com injeção de palavras-chave usando design com Space Grotesk + DM Sans                                                                    |
+| **Gerador de carta de apresentação** | Cartas personalizadas com pesquisa de empresa, espelhamento de palavras-chave, quatro prompts interativos (por quê/problemas/abordagem/tom), aprovação do rascunho no chat e PDF A4. Rascunho automático em cada avaliação; completar e gerar com `/career-ops cover` |
 | **Scanner de portais**               | 45+ empresas pré-configuradas (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + consultas customizadas em Ashby, Greenhouse, Lever e Wellfound |
 | **Processamento em lote**            | Avaliação paralela com workers `claude -p`                                                                                                     |
 | **Dashboard TUI**                    | Interface no terminal para navegar, filtrar e ordenar seu pipeline                                                                             |
@@ -134,6 +135,7 @@ Career-ops é um único comando slash com múltiplos modos:
 /career-ops {cole um JD}   → Auto-pipeline completo (avaliar + PDF + tracker)
 /career-ops scan           → Escanear portais por novas vagas
 /career-ops pdf            → Gerar CV otimizado para ATS
+/career-ops cover      → Carta de apresentação (cole JD ou /career-ops cover {slug})
 /career-ops batch          → Avaliar múltiplas vagas em lote
 /career-ops tracker        → Ver status das candidaturas
 /career-ops apply          → Preencher formulários de candidatura com IA
@@ -204,10 +206,11 @@ career-ops/
 ├── article-digest.md            # Seus proof points (opcional)
 ├── config/
 │   └── profile.example.yml      # Template para seu perfil
-├── modes/                       # 14 modos de skill
+├── modes/                       # 15 modos de skill
 │   ├── _shared.md               # Contexto compartilhado (personalize)
 │   ├── oferta.md                # Avaliação individual
 │   ├── pdf.md                   # Geração de PDF
+│   ├── cover.md                 # Geração de carta de apresentação
 │   ├── scan.md                  # Scanner de portais
 │   ├── batch.md                 # Processamento em lote
 │   └── ...
@@ -237,6 +240,7 @@ career-ops/
 
 - **Agente**: Claude Code com skills e modos customizados
 - **PDF**: Playwright/Puppeteer + template HTML
+- **Cartas de apresentação**: Python + ReportLab (PDF A4, fontes do sistema, sem dependências externas)
 - **Scanner**: Playwright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (tema Catppuccin Mocha)
 - **Dados**: Tabelas em Markdown + configuração YAML + arquivos TSV de lote

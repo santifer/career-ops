@@ -54,3 +54,6 @@ package-lock.json
 
 # Playwright MCP server run artifacts (ephemeral, machine-local — never commit)
 .playwright-mcp/
+
+# Planning (local scratchpad)
+plan/

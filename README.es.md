@@ -82,6 +82,7 @@ Construido por alguien que lo uso para evaluar 740+ ofertas, generar 100+ CVs pe
 | **Banco de historias**     | Acumula historias STAR+Reflexion entre evaluaciones -- 5-10 historias maestras que responden cualquier pregunta behavioral     |
 | **Scripts de negociacion** | Frameworks de negociacion salarial, pushback de descuentos geograficos, leverage de ofertas competidoras                       |
 | **PDFs ATS**               | CVs con keywords inyectados, diseño Space Grotesk + DM Sans                                                                    |
+| **Generador de carta de presentación** | Cartas personalizadas con investigación de empresa, mirror de keywords, cuatro prompts interactivos (por qué/problemas/enfoque/tono), aprobación del borrador en chat y PDF A4. Borrador automático en cada evaluación; completar y generar con `/career-ops cover` |
 | **Scanner de portales**    | 45+ empresas pre-configuradas (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + queries en Ashby, Greenhouse, Lever, Wellfound |
 | **Batch**                  | Evaluacion en paralelo con workers `claude -p`                                                                                 |
 | **Dashboard TUI**          | Terminal UI para navegar, filtrar y ordenar tu pipeline                                                                        |
@@ -132,6 +133,7 @@ Career-ops es un unico slash command con multiples modos:
 /career-ops {pega un JD}   → Pipeline completo (evaluar + PDF + tracker)
 /career-ops scan           → Escanear portales
 /career-ops pdf            → Generar CV ATS-optimizado
+/career-ops cover      → Carta de presentación (pega JD o /career-ops cover {slug})
 /career-ops batch          → Evaluar ofertas en batch
 /career-ops tracker        → Ver estado de aplicaciones
 /career-ops apply          → Rellenar formularios con IA
@@ -201,10 +203,11 @@ career-ops/
 ├── article-digest.md            # Tus proof points (opcional)
 ├── config/
 │   └── profile.example.yml      # Template para tu perfil
-├── modes/                       # 14 modos
+├── modes/                       # 15 modos
 │   ├── _shared.md               # Contexto compartido (personalizable)
 │   ├── oferta.md                # Evaluacion individual
 │   ├── pdf.md                   # Generacion de PDF
+│   ├── cover.md                 # Generación de carta de presentación
 │   ├── scan.md                  # Scanner de portales
 │   ├── batch.md                 # Procesamiento batch
 │   └── ...
@@ -234,6 +237,7 @@ career-ops/
 
 - **Agente**: Claude Code con skills y modos personalizados
 - **PDF**: Playwright/Puppeteer + template HTML
+- **Cartas de presentación**: Python + ReportLab (PDF A4, fuentes del sistema, sin dependencias externas)
 - **Scanner**: Playwright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (tema Catppuccin Mocha)
 - **Datos**: Tablas Markdown + config YAML + ficheros TSV batch

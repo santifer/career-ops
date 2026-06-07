@@ -84,6 +84,7 @@ career-ops 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面
 | **面試故事庫**   | 跨評估累積 STAR+Reflection 故事 — 能回答任何行為面試問題的 5-10 個核心故事                                             |
 | **薪資談判腳本** | 薪資談判框架、地區薪資折扣反駁話術、競爭 Offer 運用策略                                                                |
 | **ATS PDF 生成** | 注入關鍵字的履歷，採用 Space Grotesk + DM Sans 設計                                                                    |
+| **求職信生成器** | 包含公司研究、關鍵字映射、四個互動提示（原因/問題/方法/語調）、聊天內核准與 A4 PDF 生成的客製化求職信。每次評估自動產生草稿，透過 `/career-ops cover` 完成並生成 |
 | **平台掃描器**   | 預設超過 45 家企業（Anthropic、OpenAI、ElevenLabs、Retool、n8n...）+ 跨 Ashby、Greenhouse、Lever、Wellfound 的自訂查詢 |
 | **批次處理**     | 使用 `claude -p` 工作器並行評估                                                                                        |
 | **儀表板 TUI**   | 在終端機 UI 中瀏覽、篩選及排序你的求職管道                                                                             |
@@ -136,6 +137,7 @@ career-ops 是一個具有多種模式的單一斜線指令：
 /career-ops {貼上職缺描述}  → 完整自動管道（評估 + PDF + 追蹤）
 /career-ops scan           → 掃描平台尋找新職缺
 /career-ops pdf            → 生成 ATS 最佳化履歷
+/career-ops cover      → 求職信生成器（貼上 JD 或 /career-ops cover {slug}）
 /career-ops batch          → 批次評估多份職缺
 /career-ops tracker        → 查看應徵狀態
 /career-ops apply          → AI 協助填寫應徵表單
@@ -206,10 +208,11 @@ career-ops/
 ├── article-digest.md            # 你的成就佐證（選填）
 ├── config/
 │   └── profile.example.yml      # 個人檔案範本
-├── modes/                       # 14 個技能模式
+├── modes/                       # 15 個技能模式
 │   ├── _shared.md               # 共用情境（在此自訂）
 │   ├── oferta.md                # 單一職缺評估
 │   ├── pdf.md                   # PDF 生成
+│   ├── cover.md                 # 求職信生成
 │   ├── scan.md                  # 平台掃描器
 │   ├── batch.md                 # 批次處理
 │   └── ...
@@ -239,6 +242,7 @@ career-ops/
 
 - **代理**：Claude Code，附自訂技能與模式
 - **PDF**：Playwright/Puppeteer + HTML 範本
+- **求職信**：Python + ReportLab（A4 PDF，系統字型，無外部依賴）
 - **掃描器**：Playwright + Greenhouse API + WebSearch
 - **儀表板**：Go + Bubble Tea + Lipgloss（Catppuccin Mocha 主題）
 - **資料**：Markdown 表格 + YAML 設定 + TSV 批次檔案
