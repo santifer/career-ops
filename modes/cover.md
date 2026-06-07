@@ -55,10 +55,10 @@ Extract:
 
 ## Step 3 — Company research (baked in, not optional)
 
-Run three WebSearch queries:
-1. `"{company}" product strategy OR roadmap 2025`
-2. `"{company}" challenges OR problems OR priorities 2025`
-3. `"{company}" news OR announcement OR funding 2025`
+Run three WebSearch queries (substitute the actual current year for {year}):
+1. `"{company}" product strategy OR roadmap {year}`
+2. `"{company}" challenges OR problems OR priorities {year}`
+3. `"{company}" news OR announcement OR funding {year}`
 
 Synthesize findings into 2-3 sentences: what the company is working on, what challenges they face, what goals they've stated publicly.
 
