@@ -178,7 +178,7 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 
 After generating the CV PDF, offer to generate a cover letter:
 
-```
+```text
 CV PDF generated: output/{path}
 
 Want a cover letter for this role too?
