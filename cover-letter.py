@@ -130,9 +130,18 @@ def contact_line(candidate, link_blue):
     return " &nbsp;|&nbsp; ".join(parts)
 
 
+def _require(obj, *keys, context="payload"):
+    for key in keys:
+        if not isinstance(obj, dict) or key not in obj:
+            raise ValueError(f"Missing required field: {context}.{key}")
+
+
 def build_story(payload, styles, divider_grey, link_blue):
+    _require(payload, "candidate", "letter")
     candidate = payload["candidate"]
     letter = payload["letter"]
+    _require(candidate, "name", context="candidate")
+    _require(letter, "role_title", "opening", "profile_intro", context="letter")
     story = []
 
     # ── Header ────────────────────────────────────────────────────────────────
