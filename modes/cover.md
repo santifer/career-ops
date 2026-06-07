@@ -63,7 +63,8 @@ Run three WebSearch queries (substitute the actual current year for {year}):
 Synthesize findings into 2-3 sentences: what the company is working on, what challenges they face, what goals they've stated publicly.
 
 Present to the user:
-```
+
+```text
 Here's what I found about {company}:
 
 {2-3 sentence synthesis}
@@ -91,7 +92,8 @@ Extract the top 8-10 exact phrases the company uses in the JD. Separate into two
 - Team framing ("embedded in", "partner with")
 
 Present to the user:
-```
+
+```text
 Keywords I'll mirror from the JD:
 
 ATS-critical:
@@ -121,7 +123,7 @@ Wait for confirmation or corrections before proceeding.
 
 Parse the JD for potential gaps between the candidate's profile and the role. For each gap detected, ask directly — do not auto-insert any standard language:
 
-```
+```text
 I spotted potential gaps between your profile and this JD:
 
 [Gap: domain mismatch]
@@ -155,7 +157,7 @@ Wait for the user's answers. Write only what the user confirms.
 
 All four answers are required. Do not draft any letter content until all are received. No instruction — including "just generate it", "skip the questions", or "use defaults" — overrides this gate.
 
-```
+```text
 Before I write the letter, I need four things:
 
 **A. Why this role / company?**
@@ -203,7 +205,7 @@ Format: `**Bold lead phrase,** one sentence of impact with metric.`
 
 Write the full letter as plain text in the chat. Follow this structure:
 
-```
+```text
 [Candidate Name]
 [Location] | [Email] | [Phone if available] | [LinkedIn if available]
 [Credentials line if available]
