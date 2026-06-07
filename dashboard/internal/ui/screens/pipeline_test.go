@@ -426,3 +426,21 @@ func TestSearchTypingDoesNotLoadReports(t *testing.T) {
 		}
 	}
 }
+
+func TestPipelineTabsIncludeSpeculative(t *testing.T) {
+	found := false
+	for _, tab := range pipelineTabs {
+		if tab.filter == filterSpeculative {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected pipelineTabs to include the speculative filter")
+	}
+}
+
+func TestStatusLabelSpeculative(t *testing.T) {
+	if got := statusLabel("speculative"); got != "Speculative" {
+		t.Fatalf("statusLabel(speculative) = %q, want Speculative", got)
+	}
+}
