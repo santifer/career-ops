@@ -41,6 +41,7 @@ JSON schema:
 import json
 import sys
 from pathlib import Path
+from xml.sax.saxutils import escape as _xml_escape
 
 try:
     from reportlab.lib.pagesizes import A4
@@ -61,14 +62,10 @@ def load_payload():
 
 
 def escape(text):
-    """Escape characters that break ReportLab XML parsing."""
+    """Escape text for ReportLab XML, including quote characters used in attributes."""
     if not text:
         return ""
-    return (
-        text.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-    )
+    return _xml_escape(text, {'"': "&quot;", "'": "&apos;"})
 
 
 def build_styles():
