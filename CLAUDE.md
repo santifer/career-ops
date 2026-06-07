@@ -247,6 +247,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks to evaluate offer | `oferta` |
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` |
+| Wants to create/pitch a role that doesn't exist yet at a target company | `gambit` |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |
@@ -356,6 +357,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 | State | When to use |
 |-------|-------------|
 | `Evaluated` | Report completed, pending decision |
+| `Speculative` | Create-a-role gambit pitch in flight (no posting yet) |
 | `Applied` | Application sent |
 | `Responded` | Company responded |
 | `Interview` | In interview process |
