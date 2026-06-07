@@ -3,7 +3,7 @@ name: career-ops
 description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
+argument-hint: "[scan | deep | pdf | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | patterns | followup | update]"
 license: MIT
 ---
 
