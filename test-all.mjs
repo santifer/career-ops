@@ -1086,6 +1086,56 @@ try {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
+console.log('\n13. merge-tracker: parallel num-collision must not overwrite (regression)');
+
+try {
+  // Reproduces the bug where parallel batch workers self-assign the same
+  // tracker `num`, and merge-tracker matched on that num — overwriting an
+  // unrelated existing row. A colliding num for a DIFFERENT company/role/report
+  // must be added as a NEW entry, never an update of the existing row.
+  const tmpDir = mkdtempSync(join(tmpdir(), 'career-ops-merge-'));
+  try {
+    mkdirSync(join(tmpDir, 'data'));
+    mkdirSync(join(tmpDir, 'reports'));
+    const additionsDir = join(tmpDir, 'additions');
+    mkdirSync(additionsDir);
+    writeFileSync(join(tmpDir, 'reports', '010-langchain-2026-06-07.md'), '# fixture\n');
+    writeFileSync(join(tmpDir, 'reports', '014-elevenlabs-2026-06-07.md'), '# fixture\n');
+
+    const tracker = join(tmpDir, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 10 | 2026-06-07 | LangChain | Solutions Architect (APAC) | 3.4/5 | Evaluated | ✅ | [010](../reports/010-langchain-2026-06-07.md) | keep me |\n');
+
+    // Incoming TSV: DIFFERENT company/role/report but COLLIDING num=10.
+    writeFileSync(join(additionsDir, '5.tsv'),
+      ['10', '2026-06-07', 'ElevenLabs', 'Forward Deployed Engineer', 'Evaluated', '3.9/5', '✅',
+       '[014](reports/014-elevenlabs-2026-06-07.md)', 'new role'].join('\t') + '\n');
+
+    run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS_DIR: additionsDir },
+    });
+    const after = readFileSync(tracker, 'utf-8');
+
+    const langchainKept = after.includes('LangChain') && after.includes('[010](../reports/010-langchain-2026-06-07.md)');
+    const elevenAdded = after.includes('ElevenLabs') && after.includes('[014](../reports/014-elevenlabs-2026-06-07.md)');
+
+    if (langchainKept && elevenAdded) {
+      pass('colliding num adds a new entry without overwriting the existing row');
+    } else if (!langchainKept) {
+      fail('colliding num OVERWROTE the existing LangChain row (the bug)');
+    } else {
+      fail('colliding num did not add the new ElevenLabs entry');
+    }
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker num-collision test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

@@ -29,7 +29,11 @@ const APPS_FILE = process.env.CAREER_OPS_TRACKER
     ? join(CAREER_OPS, 'data/applications.md')
     : join(CAREER_OPS, 'applications.md');
 const TRACKER_DIR = dirname(APPS_FILE);
-const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
+// CAREER_OPS_ADDITIONS_DIR overrides the additions dir (used by tests for
+// isolated end-to-end runs against a fixture tracker).
+const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS_DIR
+  ? process.env.CAREER_OPS_ADDITIONS_DIR
+  : join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
@@ -361,10 +365,12 @@ for (const file of tsvFiles) {
     });
   }
 
-  if (!duplicate) {
-    // Exact entry number match
-    duplicate = existingApps.find(app => app.num === addition.num);
-  }
+  // NOTE: we deliberately do NOT match on the TSV's entry `num`. Parallel batch
+  // workers self-assign that number by reading applications.md concurrently, so
+  // two unrelated offers can carry the same num. Matching on it caused an
+  // unrelated row to be silently overwritten. Identity is established only by
+  // report number (above) and company+role (below) — both unique. The num is
+  // used solely to seed sequential numbering for genuinely new entries.
 
   if (!duplicate) {
     // Company + role fuzzy match
