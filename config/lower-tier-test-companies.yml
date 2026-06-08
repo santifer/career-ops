@@ -1,0 +1,31 @@
+# lower-tier-test-companies.yml
+#
+# Safety config for --live submission mode.
+# ALL THREE locks must be active before auto-submit will click Submit:
+#   (a) --allow-tier lower          CLI flag on every invocation
+#   (b) enabled: true               this file, set by you
+#   (c) company slug in this list   per-card whitelist
+#
+# How to identify a "lower-tier" company:
+#   - Fortune 1000 but NOT Fortune 100 (lower stakes if a submission goes wrong)
+#   - You'd be fine if a recruiter sees an automated application there
+#   - You have a genuine interest in the role (still quality > speed)
+#
+# How to add a company:
+#   1. Find its kanban card's `company` field value (e.g. "Acme Corp")
+#   2. Compute slug: lowercase, non-alphanumeric → hyphens (e.g. "acme-corp")
+#   3. Add an entry below with slug + reason
+#   4. Set enabled: true
+#
+# Hard cap: 5 live submissions per day (tracked in data/live-daily-count-{date}.json)
+# --limit flag cannot override the daily cap.
+
+enabled: false  # flip to true when you're ready for live submissions
+
+companies: []
+  # Add entries like:
+  # - slug: example-corp
+  #   reason: Fortune 500 mid-tier, low recruiter volume, OK to risk one bad submission
+  #
+  # - slug: acme-industries
+  #   reason: low-priority target approved 2026-06-10

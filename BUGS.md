@@ -18,7 +18,7 @@ this file tracks **open** work.
 | r8 | P2 | In-progress | 2026-06-04 | State model triplication: `states.yml`, `normalize-statuses.mjs`, `dashboard/internal/data/career.go` diverge — codegen scaffold live, migration pending |
 | B2 | P3 | New | 2026-06-04 | `scan-linkedin.mjs` HTTP-999 / authwall rate-limit not adaptive — no backoff, always skips entire query on first 999 |
 | B6 | P2 | In-progress | 2026-06-05 | Pulse Engine MVP runs in browser; MCPs only callable from Claude sessions — ingestion must happen scheduled-task-side and write to a fetchable store |
-| B7 | P2 | New | 2026-06-05 | AutoSubmit launches browser on expired/redirect listings — `no-submit-button`×469 + `dead-listing-redirect`×57 dominate blocks; needs submit-time ATS liveness re-check |
+| B7 | P2 | In-progress | 2026-06-05 | AutoSubmit launches browser on expired/redirect listings — `no-submit-button`×469 + `dead-listing-redirect`×57 dominate blocks; needs submit-time ATS liveness re-check |
 | B8 | P1 | New | 2026-06-08 | Kanban HTML missing 7 functions lost to r7 truncation (`getGoldBadge`, `calcGoldScore`, `isHappyPath`, `isReferralPath`, `cardSortTier`, `buildReferralMessage`, `autoApplyCard`) — reconstructed in K2 PR but need audit |
 | B3 | P3 | New | 2026-06-04 | `dedup-tracker.mjs` role-match overlap floor (`Math.min(2, smaller)`) still misses single-word roles with different suffixes (e.g. "Engineer" vs "Engineering") |
 | r10 | P4 | New | 2026-06-04 | `batch/tracker-additions/*.tsv` files accumulate without cleanup — no archival or max-age policy |
@@ -115,7 +115,8 @@ this file tracks **open** work.
 
 ### B7 — AutoSubmit launches browser on expired/redirect listings
 **Repro:** `auto-submit.mjs` blocks on `no-submit-button` (×469) and `dead-listing-redirect` (×57) — job pages that have expired and redirect to a marketing page or careers home. The submit-time ATS API verification gate fires at Kanban injection time, but pages can expire AFTER being injected. AutoSubmit wastes a full Playwright launch per dead URL.
-**Next action:** Add a lightweight submit-time liveness check in `auto-submit.mjs` before launching Playwright: re-verify Greenhouse/Lever via their APIs (`boards-api.greenhouse.io` / `api.lever.co`). If 404 → exit 3 with `dead-listing` flag, skip browser launch entirely.
+**Status 2026-06-08:** Liveness check landed in `scripts/check-job-liveness.mjs` (HEAD request, 5s timeout). Both `--semi-auto` and `--live` modes now call `checkLiveness(url)` before launching any browser. Dead listings are logged to `data/dead-listings-{date}.json` and skipped. 4 test scenarios covered (404, 410, redirect-to-non-careers, 200-ok).
+**Next action:** Monitor `data/dead-listings-{date}.json` for the first few live runs to calibrate the CAREERS_RE pattern if legitimate canonical redirects are being flagged as dead.
 **Owner:** Rahil
 
 ---
@@ -156,3 +157,24 @@ this file tracks **open** work.
 **What happened:** The auto-submit script was built with `--live` flag as an explicit opt-in. The actual click-to-submit is intentionally left as a stub (see `auto-submit.mjs` live mode). This enforces a review gate: Rahil sees the dry-run JSON before any real application is sent.
 **Rule:** Any automation that creates irreversible external state (job applications, emails, Slack messages, Jira tickets) must have: (1) a dry-run mode that logs intent without executing, (2) an explicit flag to enable live mode, (3) a hard per-run cap. Never ship state-changing automation where the first real run IS the live run.
 **Applies to:** auto-submit, linkedin-dm, any future outreach or apply automation.
+
+---
+
+### K-2026-06-08-4 — Semi-auto bridge mode: human stays in the loop on the submit click
+**What happened:** A gap existed between dry-run (no browser, pure analysis) and full-live (autonomous click). The `--semi-auto` mode fills this gap: Playwright fills the form and highlights the submit button with a red CSS overlay, but navigation doesn't happen until the human clicks. The agent logs whether the user submitted or aborted.
+**Rule:** For any state-changing automation with an irreversible final action, implement a visible-browser "human completes the last step" mode before the fully autonomous mode. This proves form-fill correctness without risking the irreversible action, and builds confidence for the eventual live mode.
+**Applies to:** auto-submit (`--semi-auto`), any future apply-automation that touches an external form.
+
+---
+
+### K-2026-06-08-5 — Lower-tier YAML guard for state-changing automation: opt-in by config file, not CLI flag alone
+**What happened:** `--live` mode in auto-submit.mjs requires ALL THREE of: (a) `--allow-tier` CLI flag, (b) `config/lower-tier-test-companies.yml` with `enabled: true`, (c) company slug in the YAML list. Removing any one of the three locks causes an actionable error with instructions to fix it.
+**Rule:** Defense in depth for irreversible automation: never let a single CLI flag unlock a live run. Require at least one out-of-band config change (a file you deliberately edit) so there's no "fat-finger enables live mode" path. The YAML file is a forcing function for intentional human review.
+**Applies to:** Any automation with a hard cap and a whitelist (auto-submit live, linkedin-dm, bulk-apply, email-outreach).
+
+---
+
+### K-2026-06-08-6 — Long-running code sessions accrue context cost; spin fresh sessions per logical chunk
+**What happened:** The K1 implementation session hit a 1M context credit wall, requiring a manual restart. The session had accumulated context from multiple PRs, investigations, and dead ends that weren't relevant to the current task.
+**Rule:** When a task is multi-PR (K1-dry-run, K1-semi-auto+live, K2-kanban, K5-slug-audit are all independent), spawn a fresh session per PR rather than continuing the same session across unrelated work. Cowork context should be scoped to the active PR, not the entire sprint.
+**Applies to:** Any implementation session that spans more than 2-3 logically independent changes.

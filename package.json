@@ -18,8 +18,13 @@
     "gemini:eval": "node gemini-eval.mjs",
     "kanban": "npx http-server dashboard -p 5174 --cors -c-1 -o /job-pulse-kanban.html",
     "auto-submit": "node scripts/auto-submit.mjs --kanban dashboard/job-pulse-kanban.html",
+    "auto-submit:report": "node scripts/auto-submit.mjs --kanban dashboard/job-pulse-kanban.html --dry-run --report",
+    "auto-submit:semi": "node scripts/auto-submit.mjs --kanban dashboard/job-pulse-kanban.html --semi-auto",
+    "check-liveness": "node scripts/check-job-liveness.mjs",
     "slug-audit": "node scripts/slug-audit.mjs",
-    "test:k1": "node --test test/auto-submit.test.mjs"
+    "test:k1": "node --test test/auto-submit.test.mjs",
+    "test:k1-live": "node --test test/auto-submit-live.test.mjs",
+    "test:k1-all": "node --test test/auto-submit.test.mjs test/auto-submit-live.test.mjs"
   },
   "keywords": [
     "ai",
