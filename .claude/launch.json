@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kanban-v2",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "dashboard", "-p", "5174", "--cors", "-c-1"],
+      "port": 5174
+    }
+  ]
+}
