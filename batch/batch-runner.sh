@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for AI CLI workers
+# Reads batch-input.tsv, delegates each offer to a headless worker,
 # tracks state in batch-state.tsv for resumability.
 #
-# NOTE: This script is Claude Code-specific. It uses claude -p with
-# --dangerously-skip-permissions and --append-system-prompt-file flags
-# that are not available in other CLIs. Multi-CLI support is out of scope
-# for now — contributions welcome.
+# Built-in adapters:
+#   - claude: existing claude -p flow, including --dangerously-skip-permissions
+#   - codex: codex exec with a combined stdin prompt
+# Codex dangerous bypass is opt-in via CAREER_OPS_UNSAFE_AGENT_EXEC=1 or true.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -35,16 +35,24 @@ RESUME_PAUSED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
-MODEL=""  # empty = let claude -p use the Claude Max default
+AGENT="${CAREER_OPS_AGENT:-claude}"
+MODEL=""  # empty = let the selected CLI use its default model
 RATE_LIMIT_SLEEP=300
 BATCH_PAUSED=false
 STATUS_ONLY=false
 WATCH_MODE=false
+UNSAFE_AGENT_EXEC="${CAREER_OPS_UNSAFE_AGENT_EXEC:-false}"
+AGENT_BIN=""
+AGENT_COMMAND_BUILDER=""
+AGENT_RATE_LIMIT_PATTERN=""
+
+# name<TAB>binary<TAB>command-builder<TAB>rate-limit-pattern
+AGENT_ADAPTERS=$'claude\tclaude\tbuild_claude_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)\ncodex\tcodex\tbuild_codex_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)'
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via headless workers
+Uses Claude Code by default. Set CAREER_OPS_AGENT=codex for Codex CLI.
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -52,15 +60,14 @@ Options:
   --parallel N         Number of parallel workers (default: 1)
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
-  --resume-paused      Resume offers paused by a Claude session/rate limit
+  --resume-paused      Resume offers paused by a worker session/rate limit
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
   --rate-limit-sleep N Seconds to wait before retrying a rate-limited worker
                        (default: 300)
-  --model NAME         Claude model passed to `claude -p --model` (default:
-                       unset = Claude Max default). Use a cheaper model for
-                       large batches, e.g. `--model claude-sonnet-4-6`.
+  --agent NAME         Worker CLI: claude or codex (default: CAREER_OPS_AGENT or claude)
+  --model NAME         Model passed to the selected CLI (default: CLI default)
   --status             Show batch progress and a per-job table, then exit
   --watch              Live-refresh progress until the run completes
   -h, --help           Show this help
@@ -84,6 +91,9 @@ Examples:
 
   # Process 2 at a time starting from ID 10
   ./batch-runner.sh --parallel 2 --start-from 10
+
+  # Use Codex CLI workers without enabling the dangerous bypass flag
+  CAREER_OPS_AGENT=codex ./batch-runner.sh
 USAGE
 }
 
@@ -100,6 +110,11 @@ while [[ $# -gt 0 ]]; do
     --rate-limit-sleep)
       [[ $# -ge 2 ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
       RATE_LIMIT_SLEEP="$2"
+      shift 2
+      ;;
+    --agent)
+      [[ $# -ge 2 && "$2" != -* ]] || { echo "ERROR: --agent requires claude or codex"; exit 1; }
+      AGENT="$2"
       shift 2
       ;;
     --model) MODEL="$2"; shift 2 ;;
@@ -141,6 +156,25 @@ release_lock() {
 
 trap release_lock EXIT
 
+resolve_agent_adapter() {
+  AGENT_BIN=""
+  AGENT_COMMAND_BUILDER=""
+  AGENT_RATE_LIMIT_PATTERN=""
+
+  local name binary builder rate_limit_pattern
+  while IFS=$'\t' read -r name binary builder rate_limit_pattern; do
+    if [[ "$name" == "$AGENT" ]]; then
+      AGENT_BIN="$binary"
+      AGENT_COMMAND_BUILDER="$builder"
+      AGENT_RATE_LIMIT_PATTERN="$rate_limit_pattern"
+      return 0
+    fi
+  done <<< "$AGENT_ADAPTERS"
+
+  echo "ERROR: unsupported agent '$AGENT' (expected: claude or codex)."
+  return 1
+}
+
 # Validate prerequisites
 check_prerequisites() {
   if [[ ! -f "$INPUT_FILE" ]]; then
@@ -153,8 +187,10 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  resolve_agent_adapter || exit 1
+
+  if ! command -v "$AGENT_BIN" &>/dev/null; then
+    echo "ERROR: '$AGENT_BIN' CLI not found in PATH."
     exit 1
   fi
 
@@ -325,7 +361,7 @@ update_state() {
 
 is_rate_limit_log() {
   local log_file="$1"
-  grep -Eiq '(rate limit|rate_limit|too many requests|429|quota exceeded|try again later|temporarily unavailable)' "$log_file"
+  grep -Eiq "$AGENT_RATE_LIMIT_PATTERN" "$log_file"
 }
 
 is_session_limit_log() {
@@ -342,6 +378,59 @@ mark_paused_rate_limit() {
   update_state "$id" "$url" "paused_rate_limit" "$started_at" "$completed_at" "$report_num" "-" "$error_msg" "$retries"
   printf '%s\t%s\t%s\n' "$id" "$report_num" "$error_msg" > "$PAUSE_FILE"
   BATCH_PAUSED=true
+}
+
+build_claude_worker_command() {
+  local resolved_prompt="$1" prompt="$2" _id="$3"
+
+  # Preserve the existing Claude batch default for headless users.
+  # --strict-mcp-config prevents parallel workers from inheriting shared MCP
+  # servers and fighting over a single browser connection.
+  worker_command=("$AGENT_BIN" -p --dangerously-skip-permissions --strict-mcp-config)
+  if [[ -n "$MODEL" ]]; then
+    worker_command+=(--model "$MODEL")
+  fi
+  worker_command+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+}
+
+build_codex_worker_command() {
+  local resolved_prompt="$1" prompt="$2" id="$3"
+
+  worker_stdin_file="$BATCH_DIR/.resolved-codex-${id}.md"
+  {
+    printf '%s\n\n' 'Career-ops batch worker instructions:'
+    cat "$resolved_prompt"
+    printf '\n\nTask:\n%s\n' "$prompt"
+  } > "$worker_stdin_file"
+
+  worker_command=("$AGENT_BIN" exec -C "$PROJECT_DIR")
+  if [[ "$UNSAFE_AGENT_EXEC" == "1" || "$UNSAFE_AGENT_EXEC" == "true" ]]; then
+    worker_command+=(--dangerously-bypass-approvals-and-sandbox)
+  else
+    worker_command+=(--full-auto)
+  fi
+  if [[ -n "$MODEL" ]]; then
+    worker_command+=(--model "$MODEL")
+  fi
+  worker_command+=(-)
+}
+
+run_worker() {
+  local resolved_prompt="$1" prompt="$2" log_file="$3" id="$4"
+  local -a worker_command=()
+  local worker_stdin_file=""
+  local worker_exit=0
+
+  "$AGENT_COMMAND_BUILDER" "$resolved_prompt" "$prompt" "$id"
+
+  if [[ -n "$worker_stdin_file" ]]; then
+    "${worker_command[@]}" < "$worker_stdin_file" > "$log_file" 2>&1 || worker_exit=$?
+    rm -f "$worker_stdin_file"
+  else
+    "${worker_command[@]}" > "$log_file" 2>&1 || worker_exit=$?
+  fi
+
+  return "$worker_exit"
 }
 
 reserve_report_num_unlocked() {
@@ -419,24 +508,11 @@ process_offer() {
     fi
   done
 
-  # Launch claude -p worker.
-  # Model defaults to the Claude Max subscription default unless --model was
-  # passed. Building the command in an array keeps quoting safe regardless.
-  # --strict-mcp-config (with no --mcp-config) starts workers with no MCP
-  # servers: they only evaluate offers and need none. Without it each parallel
-  # worker inherits the parent session's MCP (e.g. Playwright) and they deadlock
-  # fighting over the single shared browser when --parallel > 1 (issue #506).
-  local -a claude_args=(-p --dangerously-skip-permissions --strict-mcp-config)
-  if [[ -n "$MODEL" ]]; then
-    claude_args+=(--model "$MODEL")
-  fi
-  claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
-
   local exit_code=0
   local terminal_failure_recorded=false
   while true; do
     exit_code=0
-    claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+    run_worker "$resolved_prompt" "$prompt" "$log_file" "$id" || exit_code=$?
 
     if [[ $exit_code -eq 0 ]]; then
       break
