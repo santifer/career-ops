@@ -17,15 +17,34 @@ const DEFAULT_SOURCES = ['cv.md', 'article-digest.md'];
 const DEFAULT_CONFIG = join(ROOT, 'config', 'cv-facts.json');
 
 const args = process.argv.slice(2);
-const targetArg = args.find(arg => !arg.startsWith('--'));
 const sourceArgs = [];
+let targetArg = '';
 let configPath = DEFAULT_CONFIG;
 
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--source' && args[i + 1]) {
+  const arg = args[i];
+  if (arg === '--source') {
+    if (!args[i + 1]) {
+      console.error('ERROR: --source requires a path');
+      process.exit(1);
+    }
     sourceArgs.push(args[++i]);
-  } else if (args[i] === '--config' && args[i + 1]) {
+  } else if (arg === '--config') {
+    if (!args[i + 1]) {
+      console.error('ERROR: --config requires a path');
+      process.exit(1);
+    }
     configPath = args[++i];
+  } else if (arg === '--help' || arg === '-h') {
+    // handled by usage block below
+  } else if (arg.startsWith('--')) {
+    console.error(`ERROR: unknown option: ${arg}`);
+    process.exit(1);
+  } else if (!targetArg) {
+    targetArg = arg;
+  } else {
+    console.error(`ERROR: unexpected extra positional argument: ${arg}`);
+    process.exit(1);
   }
 }
 
@@ -77,7 +96,15 @@ function metricClaims(text) {
 
 function loadConfig(path) {
   if (!existsSync(path)) return { allow_metrics: [], forbidden_phrases: [] };
-  return JSON.parse(readFileSync(path, 'utf-8'));
+  const config = JSON.parse(readFileSync(path, 'utf-8'));
+  for (const key of ['allow_metrics', 'forbidden_phrases']) {
+    if (config[key] == null) {
+      config[key] = [];
+    } else if (!Array.isArray(config[key])) {
+      throw new Error(`${key} must be an array in ${path}`);
+    }
+  }
+  return config;
 }
 
 function resolveInputPath(path) {
@@ -93,7 +120,13 @@ if (!existsSync(targetPath)) {
 const sources = sourceArgs.length > 0 ? sourceArgs : DEFAULT_SOURCES;
 const sourceText = sources.map(path => readIfExists(resolveInputPath(path))).join('\n');
 const targetText = readFileSync(targetPath, 'utf-8');
-const config = loadConfig(resolveInputPath(configPath));
+let config;
+try {
+  config = loadConfig(resolveInputPath(configPath));
+} catch (err) {
+  console.error(`ERROR: invalid config: ${err.message}`);
+  process.exit(1);
+}
 
 const allowed = new Set([
   ...metricClaims(sourceText),
