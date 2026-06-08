@@ -70,6 +70,7 @@ const scripts = [
   { name: 'normalize-statuses.mjs', expectExit: 0 },
   { name: 'dedup-tracker.mjs', expectExit: 0 },
   { name: 'merge-tracker.mjs', expectExit: 0 },
+  { name: 'scan-quality.mjs --self-test', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
