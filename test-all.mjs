@@ -4699,7 +4699,6 @@ if (mergeSpec.includes("'Speculative'")) {
   fail('merge-tracker.mjs CANONICAL_STATES missing Speculative');
 }
 
-<<<<<<< HEAD
 // ── RESERVE-REPORT-NUM RANGE RESERVATION (#1426) ────────────────
 // Manual multi-agent fan-outs need N report numbers up front. --count N
 // reserves a contiguous range (per-slot atomic sentinels); tests run against
