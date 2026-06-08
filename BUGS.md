@@ -198,6 +198,22 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-08-10 — K2 kanban shipped with onclick handlers referencing undefined functions
+
+**What happened:** All six toolbar button handlers (`fetchJobs`, `runDryRun`, `exportState`, `importState`, `clearBoard`, `closeModal`) were defined inside `<script type="module">`. Module scope is NOT global scope: `onclick="fetchJobs()"` resolves against `window.fetchJobs`, which was undefined. DevTools confirmed: `Uncaught ReferenceError: fetchJobs is not defined` on every button click. Root cause: pivot under time pressure; the rebuild focused on logic correctness and skipped the window-exposure step.
+**Rule:** Any HTML with `onclick="fn()"` that lives inside `<script type="module">` requires explicit `window.fn = fn` assignments. Future smoke test: launch the kanban, click every button, verify zero console errors. This should be a CI step (or a Playwright smoke test run pre-merge).
+**How to apply:** After all function declarations, add a `window.xxx = xxx` block for each onclick-referenced function. Add `test/kanban-smoke.test.mjs` to the CI matrix.
+
+---
+
+### K-2026-06-08-11 — config/sources.yml not served by Go static server; v1 uses inline hardcoded list
+
+**What happened:** `config/sources.yml` is the canonical list of ATS slugs, but it lives in the repo root and is not served by the kanban's static server (which serves `dashboard/` only). The kanban cannot fetch `/config/sources.yml` at runtime. For v1, the slug list is hardcoded inline inside `dashboard/job-pulse-kanban.html` as `const SOURCES = { greenhouse: [...], lever: [...] }`, which mirrors sources.yml manually.
+**Rule:** Any data that must stay in sync between a file and an in-browser runtime constant is a divergence risk. Options: (a) serve `config/` as a static route from the kanban server, (b) inline the source list into the kanban and codegen it from sources.yml, (c) expose it as a `/api/sources` endpoint. Until one is chosen, the inline list in the kanban HTML must be kept in sync with `config/sources.yml` manually.
+**How to apply:** When adding or removing slugs from `config/sources.yml`, also update `const SOURCES` in `dashboard/job-pulse-kanban.html`. Tracked for proper codegen or server-side serving in a future K2 iteration.
+
+---
+
 ### K-2026-06-08-6 — Long-running code sessions accrue context cost; spin fresh sessions per logical chunk
 **What happened:** The K1 implementation session hit a 1M context credit wall, requiring a manual restart. The session had accumulated context from multiple PRs, investigations, and dead ends that weren't relevant to the current task.
 **Rule:** When a task is multi-PR (K1-dry-run, K1-semi-auto+live, K2-kanban, K5-slug-audit are all independent), spawn a fresh session per PR rather than continuing the same session across unrelated work. Cowork context should be scoped to the active PR, not the entire sprint.

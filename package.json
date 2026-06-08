@@ -25,7 +25,9 @@
     "slug-audit": "node scripts/slug-audit.mjs",
     "test:k1": "node --test test/auto-submit.test.mjs",
     "test:k1-live": "node --test test/auto-submit-live.test.mjs",
-    "test:k1-all": "node --test test/auto-submit.test.mjs test/auto-submit-live.test.mjs"
+    "test:k1-all": "node --test test/auto-submit.test.mjs test/auto-submit-live.test.mjs",
+    "test:kanban": "node --test test/kanban.test.mjs",
+    "test:kanban-smoke": "node --test test/kanban-smoke.test.mjs"
   },
   "keywords": [
     "ai",
