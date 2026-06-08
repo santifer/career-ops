@@ -60,6 +60,7 @@ const PATHS = {
   profileYml:  join(ROOT, 'config', 'profile.yml'),
   reports:     join(ROOT, 'reports'),
   tracker:     join(ROOT, 'data', 'applications.md'),
+  trackerAdditions: join(ROOT, 'batch', 'tracker-additions'),
 };
 
 // ---------------------------------------------------------------------------
@@ -321,6 +322,7 @@ if (saveReport) {
     const companySlug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const filename    = `${num}-${companySlug}-${today}.md`;
     const reportPath  = join(PATHS.reports, filename);
+    const trackerPath = join(PATHS.trackerAdditions, `${num}-${companySlug}.tsv`);
 
     const reportContent = `# Evaluation: ${company} — ${role}
 
@@ -337,11 +339,15 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
 `;
 
     writeFileSync(reportPath, reportContent, 'utf-8');
+    mkdirSync(PATHS.trackerAdditions, { recursive: true });
+    writeFileSync(
+      trackerPath,
+      `${parseInt(num, 10)}\t${today}\t${company}\t${role}\tEvaluated\t${score}/5\t❌\t[${num}](reports/${filename})\tGemini evaluation; run npm run merge\n`,
+      'utf-8',
+    );
     console.log(`\n✅  Report saved: reports/${filename}`);
-
-    // Append tracker entry reminder
-    console.log(`\n📊  Tracker entry (add to data/applications.md):`);
-    console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score} | Evaluada | ❌ | [${num}](reports/${filename}) |`);
+    console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
+    console.log('    Run `npm run merge` to update data/applications.md.');
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
   }
