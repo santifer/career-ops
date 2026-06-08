@@ -12,8 +12,9 @@
  */
 
 import { execSync, execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
+import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -1013,6 +1014,76 @@ try {
 
 } catch (e) {
   fail(`recruitee provider tests crashed: ${e.message}`);
+}
+
+// ── 12. TRACKER REPORT LINK NORMALIZATION (#760) ────────────────
+
+console.log('\n12. Tracker report-link normalization');
+
+try {
+  const { normalizeReportLink } = await import(pathToFileURL(join(ROOT, 'tracker-links.mjs')).href);
+  const repo = '/repo';
+  const dataDir = join(repo, 'data');
+
+  // data/ layout: root-relative TSV link → ../reports/...
+  const fromTsv = normalizeReportLink('[12](reports/012-acme-2026-01-04.md)', dataDir, repo);
+  if (fromTsv === '[12](../reports/012-acme-2026-01-04.md)') {
+    pass('data/ layout: root-relative link rewritten to ../reports/...');
+  } else {
+    fail(`data/ layout normalization wrong: ${fromTsv}`);
+  }
+
+  // Idempotent: re-running on an already-normalized link must not double-prefix
+  const twice = normalizeReportLink(fromTsv, dataDir, repo);
+  if (twice === fromTsv) {
+    pass('normalization is idempotent (no double-prefix on re-run)');
+  } else {
+    fail(`normalization not idempotent: ${twice}`);
+  }
+
+  // Root layout: tracker at repo root → link stays reports/...
+  const atRoot = normalizeReportLink('[12](reports/012-acme-2026-01-04.md)', repo, repo);
+  if (atRoot === '[12](reports/012-acme-2026-01-04.md)') {
+    pass('root layout: link stays root-relative reports/...');
+  } else {
+    fail(`root layout normalization wrong: ${atRoot}`);
+  }
+
+  // Non-report links are left untouched — including external URLs that happen
+  // to contain an embedded "/reports/" segment (must not be rewritten).
+  const other = normalizeReportLink('[site](https://example.com/reports/foo.md)', dataDir, repo);
+  if (other === '[site](https://example.com/reports/foo.md)') {
+    pass('non-report links (incl. URLs with embedded /reports/) are left untouched');
+  } else {
+    fail(`non-report link altered: ${other}`);
+  }
+
+  // End-to-end migration against a fictional fixture tracker (no personal data)
+  const tmpDir = mkdtempSync(join(tmpdir(), 'career-ops-migrate-'));
+  try {
+    mkdirSync(join(tmpDir, 'data'));
+    mkdirSync(join(tmpDir, 'reports'));
+    writeFileSync(join(tmpDir, 'reports', '012-acme-2026-01-04.md'), '# fixture\n');
+    const tracker = join(tmpDir, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 12 | 2026-01-04 | Acme | Engineer | 4.2/5 | Evaluated | ✅ | [12](reports/012-acme-2026-01-04.md) | ok |\n');
+
+    // Migrate by pointing the script at the fixture tracker via env override.
+    run(NODE, ['merge-tracker.mjs', '--migrate'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    const after = readFileSync(tracker, 'utf-8');
+    if (after.includes('[12](../reports/012-acme-2026-01-04.md)')) {
+      pass('migration rewrites fixture tracker links to ../reports/...');
+    } else {
+      fail('migration did not rewrite fixture tracker link');
+    }
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

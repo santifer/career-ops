@@ -18,16 +18,29 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, exists
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
+// Support both layouts: data/applications.md (boilerplate) and applications.md (original).
+// CAREER_OPS_TRACKER overrides the path (used by tests and non-standard layouts).
+const APPS_FILE = process.env.CAREER_OPS_TRACKER
+  ? process.env.CAREER_OPS_TRACKER
+  : existsSync(join(CAREER_OPS, 'data/applications.md'))
+    ? join(CAREER_OPS, 'data/applications.md')
+    : join(CAREER_OPS, 'applications.md');
+const TRACKER_DIR = dirname(APPS_FILE);
 const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
+const MIGRATE = process.argv.includes('--migrate');
+
+// The reports/ dir sits at the repo root, which is the tracker's parent in the
+// data/ layout (data/applications.md) and the tracker's own dir at root layout.
+const REPORTS_ROOT = basename(TRACKER_DIR) === 'data' ? dirname(TRACKER_DIR) : TRACKER_DIR;
+
+// Normalize a report link relative to the tracker file's own directory (#760).
+const normalizeReportLink = (reportField) => normalizeLink(reportField, TRACKER_DIR, REPORTS_ROOT);
 
 // Ensure required directories exist (fresh setup)
 mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
@@ -263,6 +276,25 @@ if (!existsSync(APPS_FILE)) {
   process.exit(0);
 }
 const appContent = readFileSync(APPS_FILE, 'utf-8');
+
+// One-time migration: rewrite existing report links so they resolve relative
+// to the tracker file's directory (see #760). Run with: node merge-tracker.mjs --migrate
+if (MIGRATE) {
+  const migrated = appContent
+    .split('\n')
+    .map(line => (line.startsWith('|') ? normalizeReportLink(line) : line));
+  const before = appContent.split('\n');
+  const changed = migrated.filter((l, i) => l !== before[i]).length;
+
+  if (DRY_RUN) {
+    console.log(`🔎 Migration (dry-run): ${changed} row(s) would be rewritten in ${basename(APPS_FILE)}`);
+  } else {
+    writeFileSync(APPS_FILE, migrated.join('\n'));
+    console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === CAREER_OPS ? 'repo root' : 'data/'}`);
+  }
+  process.exit(0);
+}
+
 const appLines = appContent.split('\n');
 const existingApps = [];
 let maxNum = 0;
@@ -309,6 +341,11 @@ for (const file of tsvFiles) {
   const content = readFileSync(join(ADDITIONS_DIR, file), 'utf-8').trim();
   const addition = parseTsvContent(content, file);
   if (!addition) { skipped++; continue; }
+
+  // Normalize the report link to be relative to the tracker file's directory.
+  // The TSV convention carries a root-relative `reports/...` link; rewrite it
+  // so it resolves correctly when clicked from applications.md (see #760).
+  addition.report = normalizeReportLink(addition.report);
 
   // Check for duplicate by:
   // 1. Exact report number match
