@@ -381,7 +381,11 @@ process_offer() {
   # Launch claude -p worker.
   # Model defaults to the Claude Max subscription default unless --model was
   # passed. Building the command in an array keeps quoting safe regardless.
-  local -a claude_args=(-p --dangerously-skip-permissions)
+  # --strict-mcp-config (with no --mcp-config) starts workers with no MCP
+  # servers: they only evaluate offers and need none. Without it each parallel
+  # worker inherits the parent session's MCP (e.g. Playwright) and they deadlock
+  # fighting over the single shared browser when --parallel > 1 (issue #506).
+  local -a claude_args=(-p --dangerously-skip-permissions --strict-mcp-config)
   if [[ -n "$MODEL" ]]; then
     claude_args+=(--model "$MODEL")
   fi

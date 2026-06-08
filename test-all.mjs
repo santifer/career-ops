@@ -1309,6 +1309,27 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
+// ── 15. BATCH RUNNER MCP ISOLATION (#506) ───────────────────────
+
+console.log('\n15. Batch runner MCP isolation');
+
+try {
+  const batchRunner = readFileSync(join(ROOT, 'batch', 'batch-runner.sh'), 'utf-8');
+  // Workers must be spawned with --strict-mcp-config so they don't inherit the
+  // parent session's MCP servers (e.g. Playwright) and deadlock fighting over a
+  // single browser when --parallel > 1 (issue #506).
+  const claudeArgsLine = batchRunner
+    .split('\n')
+    .find(l => l.includes('claude_args=('));
+  if (claudeArgsLine && claudeArgsLine.includes('--strict-mcp-config')) {
+    pass('batch workers spawn with --strict-mcp-config (no inherited MCP)');
+  } else {
+    fail('batch-runner.sh worker spawn missing --strict-mcp-config (issue #506 regression)');
+  }
+} catch (e) {
+  fail(`Batch runner MCP isolation test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
