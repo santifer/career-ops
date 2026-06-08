@@ -100,6 +100,10 @@ def build_styles():
             "language_closing", fontName="Helvetica-Oblique", fontSize=10,
             spaceAfter=8, spaceBefore=4
         ),
+        "footnote": ParagraphStyle(
+            "footnote", fontName="Helvetica", fontSize=8,
+            textColor=colors.HexColor("#888888"), leading=11, spaceAfter=3
+        ),
     }
     return styles, grey, divider_grey, link_blue
 
@@ -195,6 +199,28 @@ def build_story(payload, styles, divider_grey, link_blue):
     # ── Language-specific closing (optional) ──────────────────────────────────
     if letter.get("language_closing"):
         story.append(Paragraph(escape(letter["language_closing"]), styles["language_closing"]))
+
+    # ── Footnotes (optional) ──────────────────────────────────────────────────
+    # Each footnote is either a plain string or a dict:
+    #   {"marker": "[1]", "text": "Citation text.", "url": "https://..."}
+    footnotes = letter.get("footnotes")
+    if footnotes:
+        story.append(Spacer(1, 10))
+        story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC")))
+        story.append(Spacer(1, 4))
+        for fn in footnotes:
+            if isinstance(fn, dict):
+                marker = escape(fn.get("marker", ""))
+                text = escape(fn.get("text", ""))
+                url = fn.get("url", "")
+                if url:
+                    display = escape(url)
+                    line = f'{marker} {text} <a href="{escape(url)}" color="#1a56a0">{display}</a>'
+                else:
+                    line = f"{marker} {text}"
+            else:
+                line = escape(fn)
+            story.append(Paragraph(line, styles["footnote"]))
 
     return story
 
