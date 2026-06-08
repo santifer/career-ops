@@ -399,6 +399,7 @@ process_offer() {
 
     if is_rate_limit_log "$log_file" && (( retries < MAX_RETRIES )); then
       if (( RATE_LIMIT_SLEEP <= 0 )); then
+        retries=$((retries + 1))
         update_state "$id" "$url" "failed" "$started_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$report_num" "-" "rate-limit; no wait configured" "$retries"
         echo "    ❌ Rate limited and --rate-limit-sleep is 0; not retrying."
         terminal_failure_recorded=true
