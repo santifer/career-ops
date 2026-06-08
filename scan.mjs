@@ -403,6 +403,7 @@ async function main() {
   const targets = [];
   let skippedCount = 0;
   const resolveErrors = [];
+  const agentHandoff = [];
   for (const company of companies) {
     if (!company || typeof company !== 'object') continue;
     if (company.enabled === false) continue;
@@ -412,7 +413,17 @@ async function main() {
     }
     if (filterCompany && !company.name.toLowerCase().includes(filterCompany)) continue;
     const resolved = resolveProvider(company, providers);
-    if (!resolved) { skippedCount++; continue; }
+    if (!resolved) {
+      skippedCount++;
+      if (company.scan_method === 'websearch') {
+        agentHandoff.push({
+          company: company.name,
+          method: 'websearch',
+          query: company.scan_query || company.search_query || company.careers_url || '',
+        });
+      }
+      continue;
+    }
     if (resolved.error) { resolveErrors.push({ company: company.name, error: resolved.error }); continue; }
     targets.push({ ...company, _provider: resolved.provider });
   }
@@ -547,6 +558,17 @@ async function main() {
     console.log(`Invalid (guarded):     ${invalidOffers.length} dropped`);
   }
   console.log(`New offers added:      ${verifiedOffers.length}`);
+
+  if (agentHandoff.length > 0) {
+    console.log(`Agent/WebSearch handoff: ${agentHandoff.length} compan${agentHandoff.length === 1 ? 'y' : 'ies'} not handled by zero-token providers`);
+    for (const item of agentHandoff.slice(0, 25)) {
+      const hint = item.query ? ` — ${item.query}` : '';
+      console.log(`  • ${item.company} (${item.method})${hint}`);
+    }
+    if (agentHandoff.length > 25) {
+      console.log(`  … ${agentHandoff.length - 25} more omitted; narrow with --company or inspect portals.yml`);
+    }
+  }
 
   if (errors.length > 0) {
     console.log(`\nErrors (${errors.length}):`);
