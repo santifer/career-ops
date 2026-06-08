@@ -4,6 +4,8 @@
 // Lever provider — hits the public postings endpoint.
 // Auto-detects from careers_url pattern `https://jobs.lever.co/<slug>`.
 
+import { toEpochMs } from './_http.mjs';
+
 function resolveApiUrl(entry) {
   const url = entry.careers_url || '';
   const match = url.match(/jobs\.lever\.co\/([^/?#]+)/);
@@ -30,6 +32,7 @@ export default {
       url: j.hostedUrl || '',
       company: entry.name,
       location: j.categories?.location || '',
+      posted_at: toEpochMs(j.createdAt),
     }));
   },
 };

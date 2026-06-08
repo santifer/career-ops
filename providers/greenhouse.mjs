@@ -4,6 +4,8 @@
 // Greenhouse provider — hits the public boards-api JSON endpoint.
 // Handles both explicit `api:` URLs and auto-detection from `careers_url`.
 
+import { toEpochMs } from './_http.mjs';
+
 const ALLOWED_GREENHOUSE_HOSTS = new Set([
   'boards-api.greenhouse.io',
   'boards.greenhouse.io',
@@ -30,7 +32,8 @@ function resolveApiUrl(entry) {
     return entry.api;
   }
   const url = entry.careers_url || '';
-  const match = url.match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
+  // Accept both job-boards[.eu].greenhouse.io/<slug> and boards.greenhouse.io/<slug>.
+  const match = url.match(/(?:job-boards(?:\.eu)?|boards)\.greenhouse\.io\/([^/?#]+)/);
   if (match) return `https://boards-api.greenhouse.io/v1/boards/${match[1]}/jobs`;
   return null;
 }
@@ -61,6 +64,7 @@ export default {
       url: j.absolute_url,
       company: entry.name,
       location: j.location?.name || '',
+      posted_at: toEpochMs(j.updated_at || j.first_published),
     }));
   },
 };

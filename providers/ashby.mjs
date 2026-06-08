@@ -14,6 +14,8 @@
 const ASHBY_TIMEOUT_MS = 30_000;
 const ASHBY_RETRIES = 2;
 
+import { toEpochMs } from './_http.mjs';
+
 function resolveApiUrl(entry) {
   const url = entry.careers_url || '';
   const match = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
@@ -51,6 +53,7 @@ export default {
           url: j.jobUrl || '',
           company: entry.name,
           location: j.location || '',
+          posted_at: toEpochMs(j.publishedAt || j.updatedAt),
         }));
       } catch (e) {
         lastErr = e;

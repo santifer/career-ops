@@ -118,14 +118,27 @@ function resolveProvider(entry, providers, { skipIds = [] } = {}) {
 
 // ── Title filter ────────────────────────────────────────────────────
 
-function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+// Compile a lowercased keyword into a matcher. Short all-letter acronyms
+// (2-3 chars: cfo, coo, sdr, bdr, gsi…) match on WORD BOUNDARIES so "COO" no
+// longer matches "Coordinator", "SDR" no longer matches anything mid-word, etc.
+// Multi-word phrases and keywords containing non-letters (".NET", "SAP ",
+// "L&D") keep fast, permissive substring matching.
+export function compileKeyword(kw) {
+  if (/^[a-z]{2,3}$/.test(kw)) {
+    const re = new RegExp(`\\b${kw}\\b`);
+    return (lower) => re.test(lower);
+  }
+  return (lower) => lower.includes(kw);
+}
+
+export function buildTitleFilter(titleFilter) {
+  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase()).map(compileKeyword);
+  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase()).map(compileKeyword);
 
   return (title) => {
-    const lower = title.toLowerCase();
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
-    const hasNegative = negative.some(k => lower.includes(k));
+    const lower = (title || '').toLowerCase();
+    const hasPositive = positive.length === 0 || positive.some(m => m(lower));
+    const hasNegative = negative.some(m => m(lower));
     return hasPositive && !hasNegative;
   };
 }
@@ -170,6 +183,24 @@ export function buildLocationFilter(locationFilter) {
     if (block.length > 0 && block.some(k => lower.includes(k))) return false;
     if (allow.length === 0) return true;
     return allow.some(k => lower.includes(k));
+  };
+}
+
+// ── Freshness filter ────────────────────────────────────────────────
+// Optional. Drops postings older than `freshness_filter.max_age_days`, based on
+// each job's provider-supplied `posted_at` (epoch ms via providers/_http.mjs
+// toEpochMs). Jobs with no `posted_at` are kept (missing = pass, same rule as
+// the location filter). `max_age_days` <= 0 / absent / non-numeric disables it.
+// Providers without an authoritative date (personio, workday, bamboohr) return
+// no posted_at, so their jobs always pass — the filter only acts where the date
+// is trustworthy (greenhouse, ashby, lever, workable, recruitee, getro, teamtailor).
+export function buildFreshnessFilter(freshnessFilter) {
+  const maxAgeDays = Number(freshnessFilter?.max_age_days);
+  if (!Number.isFinite(maxAgeDays) || maxAgeDays <= 0) return () => true;
+  const cutoff = Date.now() - maxAgeDays * 86_400_000;
+  return (postedAt) => {
+    if (postedAt == null || !Number.isFinite(postedAt)) return true;
+    return postedAt >= cutoff;
   };
 }
 
@@ -398,6 +429,9 @@ async function main() {
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
+  const freshnessFilter = buildFreshnessFilter(config.freshness_filter);
+  const maxAgeDays = Number(config.freshness_filter?.max_age_days);
+  const freshnessActive = Number.isFinite(maxAgeDays) && maxAgeDays > 0;
 
   // 3. Resolve a provider for each enabled company
   const targets = [];
@@ -430,6 +464,7 @@ async function main() {
   let totalFound = 0;
   let totalFilteredTitle = 0;
   let totalFilteredLocation = 0;
+  let totalFilteredStale = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
@@ -466,6 +501,10 @@ async function main() {
         }
         if (!locationFilter(job.location)) {
           totalFilteredLocation++;
+          continue;
+        }
+        if (!freshnessFilter(job.posted_at)) {
+          totalFilteredStale++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -540,6 +579,9 @@ async function main() {
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
+  if (freshnessActive) {
+    console.log(`Filtered by age:       ${totalFilteredStale} removed (>${maxAgeDays}d old)`);
+  }
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (verify) {
     console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
