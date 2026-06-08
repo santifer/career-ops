@@ -443,7 +443,10 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
           const newUrl = await searchForNewUrl(page, offer);
           if (newUrl) {
             const recheck = await checkUrlLiveness(page, newUrl);
-            if (recheck.result !== 'expired') {
+            // Require a *confirmed* live page before migrating. A transient
+            // 'uncertain' (timeout/DNS/5xx) must not commit an unverified URL —
+            // fall through to expired (the original 404/410 is a real closure).
+            if (recheck.result === 'active') {
               migrated.push({ ...offer, url: newUrl, previousUrl: offer.url });
               console.log(`  🔄 migrated  ${offer.company} | ${offer.title} → ${newUrl}`);
               continue;
