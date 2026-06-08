@@ -359,9 +359,9 @@ describe('checkLiveness', () => {
 // ── 9. extractEligibleCards from fixture ──────────────────────────────────────
 
 describe('extractEligibleCards', () => {
-  test('returns 2 eligible cards (A/B grade, evaluated column, not warm-referral)', () => {
+  test('returns 3 eligible cards (A/B grade, new/evaluated column, not warm-referral)', () => {
     const cards = extractEligibleCards(FIXTURE_PATH);
-    assert.equal(cards.length, 2, 'Stripe (A, evaluated) + Figma (B, evaluated) should be eligible');
+    assert.equal(cards.length, 3, 'Stripe (A, evaluated) + Figma (B, evaluated) + Linear (A, new) should be eligible');
   });
 
   test('excludes grade C card', () => {
@@ -374,9 +374,9 @@ describe('extractEligibleCards', () => {
     assert.ok(!cards.some((c) => c.company === 'Anthropic'), 'Anthropic (warm referral) should be excluded');
   });
 
-  test('excludes cold-backlog column card', () => {
+  test('includes new/A card — Linear (new column, grade A) is eligible', () => {
     const cards = extractEligibleCards(FIXTURE_PATH);
-    assert.ok(!cards.some((c) => c.company === 'Linear'), 'Linear (cold-backlog) should be excluded');
+    assert.ok(cards.some((c) => c.company === 'Linear'), 'Linear (new, A) should be eligible');
   });
 
   test('throws when kanban file not found', () => {

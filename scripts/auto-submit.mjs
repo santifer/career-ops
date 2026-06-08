@@ -92,7 +92,7 @@ const LIVE_DAILY_CAP    = 5;
  * @returns {Set<string>}
  */
 export function parseReadyStates(arg) {
-  if (!arg) return new Set(['evaluated']);
+  if (!arg) return new Set(['new', 'evaluated']);
   const parsed = arg.split(',')
     .map((s) => s.trim().toLowerCase())
     .filter((s) => s.length > 0);
@@ -107,10 +107,24 @@ export function parseReadyStates(arg) {
 
 /**
  * Canonical set of states whose cards are eligible for auto-submission.
- * Default: ['evaluated'] — cards scored by the user, pending decision.
+ * Default: ['new', 'evaluated'] — freshly fetched or user-scored, not yet actioned.
  * Override: --ready-states evaluated,responded
  */
 export const SUBMIT_READY_STATES = parseReadyStates(READY_STATES_ARG);
+
+/**
+ * Single source of truth for card eligibility.
+ * Used by both extractEligibleCards (HTML path) and extractEligibleCardsFromJson (JSON path).
+ * @param {{ columnId: string, grade: string|null, isWarmReferral: boolean }} card
+ * @returns {boolean}
+ */
+export function isEligible(card) {
+  return (
+    SUBMIT_READY_STATES.has(card.columnId) &&
+    (card.grade === 'A' || card.grade === 'B') &&
+    !card.isWarmReferral
+  );
+}
 
 // ── ATS detection ─────────────────────────────────────────────────────────────
 
@@ -228,11 +242,7 @@ export function extractEligibleCards(kanbanPath) {
     } catch { /* skip malformed */ }
   }
 
-  return cards.filter((c) =>
-    SUBMIT_READY_STATES.has(c.columnId) &&
-    (c.grade === 'A' || c.grade === 'B') &&
-    !c.isWarmReferral,
-  );
+  return cards.filter(isEligible);
 }
 
 // ── Kanban JSON ingestion ─────────────────────────────────────────────────────
@@ -296,13 +306,7 @@ export function extractEligibleCardsFromJson(jsonPath) {
 
   const jobs = Object.values(parsed.cards);
 
-  return jobs
-    .map(pulseJobToCard)
-    .filter((c) =>
-      SUBMIT_READY_STATES.has(c.columnId) &&
-      (c.grade === 'A' || c.grade === 'B') &&
-      !c.isWarmReferral,
-    );
+  return jobs.map(pulseJobToCard).filter(isEligible);
 }
 
 // ── Cover letter lookup ───────────────────────────────────────────────────────

@@ -23,6 +23,7 @@ import {
   pulseJobToCard,
   SUBMIT_READY_STATES,
   parseReadyStates,
+  isEligible,
 } from '../scripts/auto-submit.mjs';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -66,13 +67,9 @@ function makeState(cards) {
 
 describe('SUBMIT_READY_STATES default', () => {
 
-  test('default includes only "evaluated"', () => {
-    // Module imported without --ready-states → default set
+  test('default includes "new" and "evaluated"', () => {
     assert.ok(SUBMIT_READY_STATES.has('evaluated'), 'evaluated must be in default set');
-  });
-
-  test('default does NOT include "new" (not evaluated yet)', () => {
-    assert.ok(!SUBMIT_READY_STATES.has('new'), 'new should not be eligible by default');
+    assert.ok(SUBMIT_READY_STATES.has('new'), 'new must be in default set (freshly fetched from K2 kanban)');
   });
 
   test('default excludes all terminal states', () => {
@@ -85,10 +82,11 @@ describe('SUBMIT_READY_STATES default', () => {
 
 describe('parseReadyStates', () => {
 
-  test('null/empty → defaults to ["evaluated"]', () => {
+  test('null/empty → defaults to ["new", "evaluated"]', () => {
     const s = parseReadyStates(null);
     assert.ok(s.has('evaluated'));
-    assert.equal(s.size, 1);
+    assert.ok(s.has('new'));
+    assert.equal(s.size, 2);
   });
 
   test('parses comma-separated lowercase', () => {
@@ -190,11 +188,11 @@ describe('extractEligibleCardsFromJson — happy path', () => {
 
 describe('extractEligibleCardsFromJson — filtering', () => {
 
-  test('card in "new" state → NOT eligible by default (not evaluated yet)', () => {
+  test('card in "new" state + grade A → eligible (freshly fetched, grade A/B is included)', () => {
     const job = makeJob({ grade: 'A', state: 'new' });
     const p   = writeTmpJson('new-state.json', makeState([job]));
-    assert.equal(extractEligibleCardsFromJson(p).length, 0,
-      '"new" is not in SUBMIT_READY_STATES by default');
+    assert.equal(extractEligibleCardsFromJson(p).length, 1,
+      '"new" is in SUBMIT_READY_STATES by default');
   });
 
   test('grade C card → not eligible', () => {
@@ -228,17 +226,17 @@ describe('extractEligibleCardsFromJson — filtering', () => {
     assert.equal(extractEligibleCardsFromJson(p).length, 0);
   });
 
-  test('mixed bag: 2 eligible (evaluated A/B), 4 filtered out', () => {
+  test('mixed bag: 3 eligible (evaluated A/B + new A), 3 filtered out', () => {
     const jobs = [
-      makeJob({ id: '1', grade: 'A', state: 'evaluated' }),                   // ✓
-      makeJob({ id: '2', grade: 'B', state: 'evaluated' }),                   // ✓
-      makeJob({ id: '3', grade: 'A', state: 'new' }),                         // ✗ not evaluated
-      makeJob({ id: '4', grade: 'C', state: 'evaluated' }),                   // ✗ grade C
-      makeJob({ id: '5', grade: 'A', state: 'applied' }),                     // ✗ already applied
-      makeJob({ id: '6', grade: 'A', state: 'evaluated', is_warm_referral: true }), // ✗ referral
+      makeJob({ id: '1', grade: 'A', state: 'evaluated' }),                        // ✓ evaluated A
+      makeJob({ id: '2', grade: 'B', state: 'evaluated' }),                        // ✓ evaluated B
+      makeJob({ id: '3', grade: 'A', state: 'new' }),                             // ✓ new A
+      makeJob({ id: '4', grade: 'C', state: 'evaluated' }),                        // ✗ grade C
+      makeJob({ id: '5', grade: 'A', state: 'applied' }),                          // ✗ already applied
+      makeJob({ id: '6', grade: 'A', state: 'evaluated', is_warm_referral: true }), // ✗ warm referral
     ];
     const p = writeTmpJson('mixed.json', makeState(jobs));
-    assert.equal(extractEligibleCardsFromJson(p).length, 2);
+    assert.equal(extractEligibleCardsFromJson(p).length, 3);
   });
 
 });
@@ -272,6 +270,51 @@ describe('extractEligibleCardsFromJson — error cases', () => {
   test('.cards as array → throws (wrong shape)', () => {
     const p = writeTmpJson('array-cards.json', { cards: [], version: 1 });
     assert.throws(() => extractEligibleCardsFromJson(p), /cards/i);
+  });
+
+});
+
+// ── isEligible — explicit defect-regression cases ────────────────────────────
+// Verifies the shared predicate used by both HTML and JSON paths.
+// These are the exact cases from K-2026-06-08-12: when the JSON path had no
+// state filter, applied/rejected/etc. grade-A cards would incorrectly pass.
+
+describe('isEligible — shared eligibility predicate', () => {
+
+  function card(state, grade, warmReferral = false) {
+    return { columnId: state, grade, isWarmReferral: warmReferral };
+  }
+
+  test('state="applied" grade="A" → NOT eligible (already submitted)', () => {
+    assert.equal(isEligible(card('applied', 'A')), false);
+  });
+
+  test('state="rejected" grade="A" → NOT eligible (terminal state)', () => {
+    assert.equal(isEligible(card('rejected', 'A')), false);
+  });
+
+  test('state="new" grade="A" → eligible (freshly fetched from K2 kanban)', () => {
+    assert.equal(isEligible(card('new', 'A')), true);
+  });
+
+  test('state="evaluated" grade="A" → eligible (user-scored)', () => {
+    assert.equal(isEligible(card('evaluated', 'A')), true);
+  });
+
+  test('state="evaluated" grade="C" → NOT eligible (below threshold)', () => {
+    assert.equal(isEligible(card('evaluated', 'C')), false);
+  });
+
+  test('state="evaluated" grade="A" + isWarmReferral=true → NOT eligible', () => {
+    assert.equal(isEligible(card('evaluated', 'A', true)), false);
+  });
+
+  test('state="discarded" grade="A" → NOT eligible', () => {
+    assert.equal(isEligible(card('discarded', 'A')), false);
+  });
+
+  test('state="offer" grade="A" → NOT eligible (already at offer stage)', () => {
+    assert.equal(isEligible(card('offer', 'A')), false);
   });
 
 });

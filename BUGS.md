@@ -198,6 +198,14 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-08-12 — JSON path missed the state filter that the HTML path enforces
+
+**What happened:** The original `extractEligibleCardsFromJson` (JSON path) filtered only on grade A/B and `!isWarmReferral`, omitting the `SUBMIT_READY_STATES.has(columnId)` check that `extractEligibleCards` (HTML path) enforced. A card with `state='applied'` or `state='rejected'` and grade A/B would pass the JSON filter and be scheduled for re-submission — a re-submission risk. Defect found by manual integration test after the `--kanban-json` flag shipped; the 23 unit tests for the JSON path at the time did not include a case with a terminal state.
+**Rule:** When adding a parallel data source (HTML vs JSON), copy the FILTER not just the SHAPE. Defense: derive the filter from a single function `isEligible(card)` used by both paths. Any change to eligibility criteria automatically propagates everywhere.
+**How to apply:** `isEligible(card)` is now exported from `scripts/auto-submit.mjs` and called by both `extractEligibleCards` and `extractEligibleCardsFromJson`. Any future extraction path must call `isEligible` rather than re-implementing the predicate inline.
+
+---
+
 ### K-2026-06-08-10 — K2 kanban shipped with onclick handlers referencing undefined functions
 
 **What happened:** All six toolbar button handlers (`fetchJobs`, `runDryRun`, `exportState`, `importState`, `clearBoard`, `closeModal`) were defined inside `<script type="module">`. Module scope is NOT global scope: `onclick="fetchJobs()"` resolves against `window.fetchJobs`, which was undefined. DevTools confirmed: `Uncaught ReferenceError: fetchJobs is not defined` on every button click. Root cause: pivot under time pressure; the rebuild focused on logic correctness and skipped the window-exposure step.
