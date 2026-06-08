@@ -190,7 +190,7 @@ Wait for all four answers before proceeding to Step 7.
 
 ## Step 7 — Achievement selection (from cv.md only)
 
-Select 4-5 achievement bullets from `cv.md` (and `article-digest.md` if available):
+Select 4-5 achievement bullets from `cv.md` only (`article-digest.md` may be read for context but is not a source of achievement bullets):
 1. Read all bullet points across all roles in cv.md
 2. Score each against the JD's top 3-4 required competencies
 3. Pick the 4-5 highest-scoring, with at least one metric per bullet
