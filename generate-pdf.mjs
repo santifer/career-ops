@@ -88,6 +88,46 @@ function normalizeTextForATS(html) {
   }
 }
 
+function validateCvSectionOrder(html) {
+  const canonical = [
+    ['summary', 'professional summary'],
+    ['competencies', 'core competencies'],
+    ['experience', 'work experience', 'professional experience'],
+    ['projects', 'selected projects', 'personal projects'],
+    ['education', 'education & certifications'],
+    ['certifications'],
+    ['skills', 'technical skills'],
+  ];
+  const titleMatches = [...html.matchAll(/class=["'][^"']*\bsection-title\b[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/gi)];
+  const seen = [];
+
+  for (const match of titleMatches) {
+    const text = match[1]
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\{\{[^}]+\}\}/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    if (!text) continue;
+
+    const index = canonical.findIndex(names => names.includes(text));
+    if (index !== -1) seen.push({ index, title: text });
+  }
+
+  // Only enforce when the generated HTML contains enough recognizable
+  // standard headers. This keeps localized or custom templates from failing
+  // solely because their section labels are different.
+  if (seen.length < 2) return;
+
+  for (let i = 1; i < seen.length; i++) {
+    if (seen[i].index < seen[i - 1].index) {
+      const order = seen.map(s => s.title).join(' -> ');
+      throw new Error(`CV section order is not ATS-safe: ${order}`);
+    }
+  }
+}
+
 async function generatePDF() {
   const args = process.argv.slice(2);
 
@@ -125,6 +165,7 @@ async function generatePDF() {
 
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
+  validateCvSectionOrder(html);
 
   // Resolve font paths relative to career-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');
