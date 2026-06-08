@@ -128,6 +128,36 @@ function compareVersions(a, b) {
   return 0;
 }
 
+function updateBackupBranchName(version, date = new Date()) {
+  const stamp = date.toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z');
+  return `backup-pre-update-${version}-${stamp}`;
+}
+
+function backupTimestamp(branchName) {
+  const match = branchName.match(/-(\d{8}T\d{6}Z)$/);
+  if (!match) return 0;
+  const [date, time] = match[1].split('T');
+  return Date.parse(
+    `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}Z`,
+  ) || 0;
+}
+
+function newestBackupBranch(branches) {
+  const branchList = branches.split('\n').map(b => b.trim()).filter(Boolean);
+  if (branchList.length === 0) return null;
+
+  // Prefer timestamped backup branches created by current versions. Older
+  // backups are still accepted below for rollback compatibility.
+  const timestamped = branchList
+    .map(branch => ({ branch, timestamp: backupTimestamp(branch) }))
+    .filter(entry => entry.timestamp > 0)
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  return timestamped[0]?.branch || branchList[0];
+}
+
 function git(...args) {
   return execFileSync('git', args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
 }
@@ -264,13 +294,9 @@ async function apply() {
 
   try {
     // 1. Backup: create branch
-    const backupBranch = `backup-pre-update-${local}`;
-    try {
-      git('branch', backupBranch);
-      console.log(`Backup branch created: ${backupBranch}`);
-    } catch {
-      console.log(`Backup branch already exists (${backupBranch}), continuing...`);
-    }
+    const backupBranch = updateBackupBranchName(local);
+    git('branch', backupBranch);
+    console.log(`Backup branch created: ${backupBranch}`);
 
     // 2. Fetch from canonical repo
     console.log('Fetching latest from upstream...');
@@ -408,14 +434,13 @@ function rollback() {
   // Find most recent backup branch
   try {
     const branches = git('for-each-ref', '--sort=-committerdate', '--format=%(refname:short)', 'refs/heads/backup-pre-update-*');
-    const branchList = branches.split('\n').map(b => b.trim()).filter(Boolean);
+    const latest = newestBackupBranch(branches);
 
-    if (branchList.length === 0) {
+    if (!latest) {
       console.error('No backup branches found. Nothing to rollback.');
       process.exit(1);
     }
 
-    const latest = branchList[0];
     console.log(`Rolling back to: ${latest}`);
 
     // Checkout system files from backup branch.
