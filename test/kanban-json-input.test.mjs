@@ -21,7 +21,8 @@ const ROOT      = path.resolve(__dirname, '..');
 import {
   extractEligibleCardsFromJson,
   pulseJobToCard,
-  ELIGIBLE_JSON_STATES,
+  SUBMIT_READY_STATES,
+  parseReadyStates,
 } from '../scripts/auto-submit.mjs';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -61,22 +62,57 @@ function makeState(cards) {
   return { cards: map, version: 1 };
 }
 
-// ── ELIGIBLE_JSON_STATES contract ─────────────────────────────────────────────
+// ── SUBMIT_READY_STATES / parseReadyStates ────────────────────────────────────
 
-describe('ELIGIBLE_JSON_STATES', () => {
+describe('SUBMIT_READY_STATES default', () => {
 
-  test('includes "new" (freshly fetched)', () => {
-    assert.ok(ELIGIBLE_JSON_STATES.has('new'));
+  test('default includes only "evaluated"', () => {
+    // Module imported without --ready-states → default set
+    assert.ok(SUBMIT_READY_STATES.has('evaluated'), 'evaluated must be in default set');
   });
 
-  test('includes "evaluated" (user-scored, ready to apply)', () => {
-    assert.ok(ELIGIBLE_JSON_STATES.has('evaluated'));
+  test('default does NOT include "new" (not evaluated yet)', () => {
+    assert.ok(!SUBMIT_READY_STATES.has('new'), 'new should not be eligible by default');
   });
 
-  test('excludes terminal states', () => {
+  test('default excludes all terminal states', () => {
     for (const s of ['applied', 'rejected', 'discarded', 'skip', 'offer', 'interview']) {
-      assert.ok(!ELIGIBLE_JSON_STATES.has(s), `state "${s}" should not be eligible`);
+      assert.ok(!SUBMIT_READY_STATES.has(s), `state "${s}" should not be eligible by default`);
     }
+  });
+
+});
+
+describe('parseReadyStates', () => {
+
+  test('null/empty → defaults to ["evaluated"]', () => {
+    const s = parseReadyStates(null);
+    assert.ok(s.has('evaluated'));
+    assert.equal(s.size, 1);
+  });
+
+  test('parses comma-separated lowercase', () => {
+    const s = parseReadyStates('evaluated,responded');
+    assert.ok(s.has('evaluated'));
+    assert.ok(s.has('responded'));
+    assert.equal(s.size, 2);
+  });
+
+  test('normalizes to lowercase', () => {
+    const s = parseReadyStates('Evaluated');
+    assert.ok(s.has('evaluated'));
+  });
+
+  test('trims whitespace around commas', () => {
+    const s = parseReadyStates(' evaluated , responded ');
+    assert.ok(s.has('evaluated'));
+    assert.ok(s.has('responded'));
+  });
+
+  test('allows "new" (K2 kanban state, not in gen/states.js)', () => {
+    const s = parseReadyStates('new,evaluated');
+    assert.ok(s.has('new'));
+    assert.ok(s.has('evaluated'));
   });
 
 });
@@ -121,16 +157,16 @@ describe('pulseJobToCard', () => {
 describe('extractEligibleCardsFromJson — happy path', () => {
 
   test('parses valid export and returns eligible cards', () => {
-    const stripe = makeJob({ id: 'gh-stripe-1', company: 'Stripe', grade: 'A', state: 'new' });
+    const stripe = makeJob({ id: 'gh-stripe-1', company: 'Stripe', grade: 'A', state: 'evaluated' });
     const figma  = makeJob({ id: 'lv-figma-2',  company: 'Figma',  grade: 'B', state: 'evaluated', title: 'Technical PM', url: 'https://jobs.lever.co/figma/2' });
     const p = writeTmpJson('valid.json', makeState([stripe, figma]));
     const cards = extractEligibleCardsFromJson(p);
     assert.equal(cards.length, 2);
   });
 
-  test('grade A card in "new" state → eligible', () => {
-    const job = makeJob({ grade: 'A', state: 'new' });
-    const p   = writeTmpJson('grade-a.json', makeState([job]));
+  test('grade A card in "evaluated" state → eligible', () => {
+    const job = makeJob({ grade: 'A', state: 'evaluated' });
+    const p   = writeTmpJson('grade-a-eval.json', makeState([job]));
     const cards = extractEligibleCardsFromJson(p);
     assert.equal(cards.length, 1);
     assert.equal(cards[0].grade, 'A');
@@ -144,7 +180,7 @@ describe('extractEligibleCardsFromJson — happy path', () => {
   });
 
   test('result cards have role mapped from title', () => {
-    const job = makeJob({ title: 'Staff TPM', grade: 'A', state: 'new' });
+    const job = makeJob({ title: 'Staff TPM', grade: 'A', state: 'evaluated' });
     const p   = writeTmpJson('title-map.json', makeState([job]));
     const cards = extractEligibleCardsFromJson(p);
     assert.equal(cards[0].role, 'Staff TPM');
@@ -154,18 +190,23 @@ describe('extractEligibleCardsFromJson — happy path', () => {
 
 describe('extractEligibleCardsFromJson — filtering', () => {
 
-  test('grade C card → not eligible', () => {
-    const job = makeJob({ grade: 'C', state: 'new' });
-    const p   = writeTmpJson('grade-c.json', makeState([job]));
-    const cards = extractEligibleCardsFromJson(p);
-    assert.equal(cards.length, 0);
+  test('card in "new" state → NOT eligible by default (not evaluated yet)', () => {
+    const job = makeJob({ grade: 'A', state: 'new' });
+    const p   = writeTmpJson('new-state.json', makeState([job]));
+    assert.equal(extractEligibleCardsFromJson(p).length, 0,
+      '"new" is not in SUBMIT_READY_STATES by default');
   });
 
-  test('card in "applied" state → not eligible', () => {
+  test('grade C card → not eligible', () => {
+    const job = makeJob({ grade: 'C', state: 'evaluated' });
+    const p   = writeTmpJson('grade-c.json', makeState([job]));
+    assert.equal(extractEligibleCardsFromJson(p).length, 0);
+  });
+
+  test('card in "applied" state → not eligible (already submitted)', () => {
     const job = makeJob({ grade: 'A', state: 'applied' });
     const p   = writeTmpJson('applied-state.json', makeState([job]));
-    const cards = extractEligibleCardsFromJson(p);
-    assert.equal(cards.length, 0);
+    assert.equal(extractEligibleCardsFromJson(p).length, 0);
   });
 
   test('card in "rejected" state → not eligible', () => {
@@ -175,29 +216,29 @@ describe('extractEligibleCardsFromJson — filtering', () => {
   });
 
   test('is_warm_referral card → not eligible', () => {
-    const job = makeJob({ grade: 'A', state: 'new', is_warm_referral: true });
+    const job = makeJob({ grade: 'A', state: 'evaluated', is_warm_referral: true });
     const p   = writeTmpJson('warm-ref.json', makeState([job]));
     assert.equal(extractEligibleCardsFromJson(p).length, 0);
   });
 
   test('card with no grade → not eligible (null grade)', () => {
-    const job = makeJob({ state: 'new' });
+    const job = makeJob({ state: 'evaluated' });
     delete job.grade;
     const p = writeTmpJson('no-grade.json', makeState([job]));
     assert.equal(extractEligibleCardsFromJson(p).length, 0);
   });
 
-  test('mixed bag: 2 eligible, 3 filtered out', () => {
+  test('mixed bag: 2 eligible (evaluated A/B), 4 filtered out', () => {
     const jobs = [
-      makeJob({ id: '1', grade: 'A', state: 'new' }),            // ✓
-      makeJob({ id: '2', grade: 'B', state: 'evaluated' }),      // ✓
-      makeJob({ id: '3', grade: 'C', state: 'new' }),            // ✗ grade C
-      makeJob({ id: '4', grade: 'A', state: 'applied' }),        // ✗ wrong state
-      makeJob({ id: '5', grade: 'A', state: 'new', is_warm_referral: true }), // ✗ referral
+      makeJob({ id: '1', grade: 'A', state: 'evaluated' }),                   // ✓
+      makeJob({ id: '2', grade: 'B', state: 'evaluated' }),                   // ✓
+      makeJob({ id: '3', grade: 'A', state: 'new' }),                         // ✗ not evaluated
+      makeJob({ id: '4', grade: 'C', state: 'evaluated' }),                   // ✗ grade C
+      makeJob({ id: '5', grade: 'A', state: 'applied' }),                     // ✗ already applied
+      makeJob({ id: '6', grade: 'A', state: 'evaluated', is_warm_referral: true }), // ✗ referral
     ];
     const p = writeTmpJson('mixed.json', makeState(jobs));
-    const cards = extractEligibleCardsFromJson(p);
-    assert.equal(cards.length, 2);
+    assert.equal(extractEligibleCardsFromJson(p).length, 2);
   });
 
 });

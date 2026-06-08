@@ -190,6 +190,14 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-08-9 — Auto-submit state filter was hardcoded to legacy state names
+
+**What happened:** `extractEligibleCards` (HTML path) filtered for `columnId` values `'new-hot'` and `'autosubmit-ready'` — K1 ghost column IDs from a pre-K2 naming scheme. The live K2 kanban uses canonical gen/states.js IDs (`new`, `evaluated`, etc.), so every real card was silently dropped and the dry-run always returned 0 eligible cards.
+**Rule:** Any state-aware logic must consume the canonical states.yml / gen/states.js — single source of truth pattern. Never hardcode state names inline; always import from the generated module. If the canonical list changes, the automation updates automatically.
+**How to apply:** Import `VALID_IDS` from `gen/states.js`; define `SUBMIT_READY_STATES` as a module-level Set derived from that import (overridable via `--ready-states` CLI flag). Both extract paths (`extractEligibleCards` HTML and `extractEligibleCardsFromJson` JSON) use the shared Set.
+
+---
+
 ### K-2026-06-08-6 — Long-running code sessions accrue context cost; spin fresh sessions per logical chunk
 **What happened:** The K1 implementation session hit a 1M context credit wall, requiring a manual restart. The session had accumulated context from multiple PRs, investigations, and dead ends that weren't relevant to the current task.
 **Rule:** When a task is multi-PR (K1-dry-run, K1-semi-auto+live, K2-kanban, K5-slug-audit are all independent), spawn a fresh session per PR rather than continuing the same session across unrelated work. Cowork context should be scoped to the active PR, not the entire sprint.

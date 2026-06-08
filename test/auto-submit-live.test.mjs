@@ -60,19 +60,19 @@ function writeTmpYaml(name, content) {
 const KANBAN_FIXTURE_CONTENT = `<!DOCTYPE html><html><body><script>
 var cards = [
   {id:'live-10',company:'Stripe',role:'Senior PM',platform:'greenhouse',
-   columnId:'new-hot',url:'https://job-boards.greenhouse.io/stripe/jobs/100',grade:'A',
+   columnId:'evaluated',url:'https://job-boards.greenhouse.io/stripe/jobs/100',grade:'A',
    hasConnection:false,isWarmReferral:false},
   {id:'live-11',company:'Figma',role:'Technical PM',platform:'lever',
-   columnId:'autosubmit-ready',url:'https://jobs.lever.co/figma/abc',grade:'B',
+   columnId:'evaluated',url:'https://jobs.lever.co/figma/abc',grade:'B',
    hasConnection:true,isWarmReferral:false},
   {id:'live-12',company:'Notion',role:'Agile Coach',platform:'greenhouse',
-   columnId:'new-hot',url:'https://job-boards.greenhouse.io/notion/jobs/102',grade:'C',
+   columnId:'new',url:'https://job-boards.greenhouse.io/notion/jobs/102',grade:'C',
    hasConnection:false,isWarmReferral:false},
   {id:'live-13',company:'Anthropic',role:'Program Manager',platform:'workday',
-   columnId:'new-hot',url:'https://anthropic.wd5.myworkdayjobs.com/au/job/789',grade:'A',
+   columnId:'new',url:'https://anthropic.wd5.myworkdayjobs.com/au/job/789',grade:'A',
    hasConnection:true,isWarmReferral:true},
   {id:'live-14',company:'Linear',role:'RTE',platform:'ashby',
-   columnId:'cold-backlog',url:'https://jobs.ashbyhq.com/linear/xyz',grade:'A',
+   columnId:'new',url:'https://jobs.ashbyhq.com/linear/xyz',grade:'A',
    hasConnection:false,isWarmReferral:false},
 ]
 </script></body></html>`;
@@ -359,9 +359,9 @@ describe('checkLiveness', () => {
 // ── 9. extractEligibleCards from fixture ──────────────────────────────────────
 
 describe('extractEligibleCards', () => {
-  test('returns 2 eligible cards (A/B grade, new-hot/autosubmit-ready, not warm-referral)', () => {
+  test('returns 2 eligible cards (A/B grade, evaluated column, not warm-referral)', () => {
     const cards = extractEligibleCards(FIXTURE_PATH);
-    assert.equal(cards.length, 2, 'Stripe (A, new-hot) + Figma (B, autosubmit-ready) should be eligible');
+    assert.equal(cards.length, 2, 'Stripe (A, evaluated) + Figma (B, evaluated) should be eligible');
   });
 
   test('excludes grade C card', () => {
@@ -388,7 +388,7 @@ describe('extractEligibleCards', () => {
 
 describe('dryRunCard', () => {
   const ghCard = { id: 'live-10', company: 'Stripe', role: 'Senior PM',
-    url: 'https://job-boards.greenhouse.io/stripe/jobs/100', grade: 'A', columnId: 'new-hot',
+    url: 'https://job-boards.greenhouse.io/stripe/jobs/100', grade: 'A', columnId: 'evaluated',
     hasConnection: false, isWarmReferral: false };
 
   test('greenhouse card: fillable=true, would_submit=true', () => {

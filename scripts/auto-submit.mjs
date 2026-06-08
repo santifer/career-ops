@@ -16,14 +16,19 @@
  *   node scripts/auto-submit.mjs [--kanban <path>] [--limit N] [options]
  *
  * Flags:
- *   --kanban <path>     Kanban HTML path (default: dashboard/job-pulse-kanban.html)
- *   --limit N           Max cards per run (default: 5; live hard cap 5/day overrides)
- *   --card <id>         Single-card mode for targeted testing
- *   --dry-run           Explicit dry-run (default if no mode flag)
- *   --report            With --dry-run: pretty-print results as markdown table to stdout
- *   --semi-auto         Visible Chromium, form prepped, human clicks submit
- *   --live              Full automation (requires --allow-tier + YAML config)
- *   --allow-tier <tier> Required with --live (e.g. --allow-tier lower)
+ *   --kanban <path>          Kanban HTML path (default: dashboard/job-pulse-kanban.html)
+ *   --kanban-json <path>     K2 exportState() JSON path (mutually exclusive with --kanban)
+ *   --limit N                Max cards per run (default: 5; live hard cap 5/day overrides)
+ *   --card <id>              Single-card mode for targeted testing
+ *   --dry-run                Explicit dry-run (default if no mode flag)
+ *   --report                 With --dry-run: pretty-print results as markdown table to stdout
+ *   --semi-auto              Visible Chromium, form prepped, human clicks submit
+ *   --live                   Full automation (requires --allow-tier + YAML config)
+ *   --allow-tier <tier>      Required with --live (e.g. --allow-tier lower)
+ *   --ready-states <states>  Comma-separated canonical state IDs eligible for submission
+ *                            (default: evaluated). Example: --ready-states evaluated,responded
+ *                            Valid IDs come from gen/states.js (VALID_IDS). 'new' is allowed
+ *                            but not in gen/states.js — use only for testing fresh ingest.
  *
  * Output:
  *   data/auto-submit-dry-run-{date}.json
@@ -44,6 +49,7 @@ import fs   from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkLiveness } from './check-job-liveness.mjs';
+import { VALID_IDS as CANONICAL_STATE_IDS } from '../gen/states.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -61,20 +67,50 @@ function argVal(flag) {
   return i !== -1 ? (process.argv[i + 1] ?? null) : null;
 }
 
-const KANBAN_PATH  = argVal('--kanban') || path.join(ROOT, 'dashboard', 'job-pulse-kanban.html');
-const KANBAN_JSON  = argVal('--kanban-json') || null;
-const CL_DIR_ARG   = argVal('--cl-dir')   || path.join(ROOT, 'cover-letters');
-const CL_INDEX_ARG = argVal('--cl-index') || path.join(CL_DIR_ARG, 'index.yml');
-const CARD_ID      = argVal('--card');
-const SEMI_AUTO    = process.argv.includes('--semi-auto');
-const LIVE         = process.argv.includes('--live') && !SEMI_AUTO;
-const DRY_RUN      = !LIVE && !SEMI_AUTO;
-const REPORT       = process.argv.includes('--report');
-const ALLOW_TIER   = argVal('--allow-tier');
-const RAW_LIMIT    = parseInt(argVal('--limit') ?? '5', 10);
-const LIMIT        = isNaN(RAW_LIMIT) ? 5 : RAW_LIMIT;
-const DATE_STAMP   = new Date().toISOString().slice(0, 10);
-const LIVE_DAILY_CAP = 5;
+const KANBAN_PATH       = argVal('--kanban') || path.join(ROOT, 'dashboard', 'job-pulse-kanban.html');
+const KANBAN_JSON       = argVal('--kanban-json') || null;
+const CL_DIR_ARG        = argVal('--cl-dir')   || path.join(ROOT, 'cover-letters');
+const CL_INDEX_ARG      = argVal('--cl-index') || path.join(CL_DIR_ARG, 'index.yml');
+const READY_STATES_ARG  = argVal('--ready-states') || null;
+const CARD_ID           = argVal('--card');
+const SEMI_AUTO         = process.argv.includes('--semi-auto');
+const LIVE              = process.argv.includes('--live') && !SEMI_AUTO;
+const DRY_RUN           = !LIVE && !SEMI_AUTO;
+const REPORT            = process.argv.includes('--report');
+const ALLOW_TIER        = argVal('--allow-tier');
+const RAW_LIMIT         = parseInt(argVal('--limit') ?? '5', 10);
+const LIMIT             = isNaN(RAW_LIMIT) ? 5 : RAW_LIMIT;
+const DATE_STAMP        = new Date().toISOString().slice(0, 10);
+const LIVE_DAILY_CAP    = 5;
+
+// ── Submit-ready state resolution (reads gen/states.js) ───────────────────────
+
+/**
+ * Parse a comma-separated ready-states string into a validated Set.
+ * Unknown states emit a warning but are still accepted (allows 'new' for testing).
+ * @param {string|null} arg  e.g. "evaluated,responded" or null (→ default)
+ * @returns {Set<string>}
+ */
+export function parseReadyStates(arg) {
+  if (!arg) return new Set(['evaluated']);
+  const parsed = arg.split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.length > 0);
+  for (const s of parsed) {
+    if (!CANONICAL_STATE_IDS.includes(s) && s !== 'new') {
+      // 'new' is a valid K2 kanban state not in gen/states.js — exempt from warning
+      console.warn(`[auto-submit] warn: "${s}" is not a recognized state in gen/states.js`);
+    }
+  }
+  return new Set(parsed);
+}
+
+/**
+ * Canonical set of states whose cards are eligible for auto-submission.
+ * Default: ['evaluated'] — cards scored by the user, pending decision.
+ * Override: --ready-states evaluated,responded
+ */
+export const SUBMIT_READY_STATES = parseReadyStates(READY_STATES_ARG);
 
 // ── ATS detection ─────────────────────────────────────────────────────────────
 
@@ -154,8 +190,9 @@ async function findSubmitOnPage(page, ats) {
 // ── Kanban card extraction ────────────────────────────────────────────────────
 
 /**
- * Reads kanban HTML, extracts cards eligible for submission.
- * Eligible = columnId in ['new-hot','autosubmit-ready'] + grade A/B + not warm referral.
+ * Reads a static kanban HTML file, extracts cards eligible for submission.
+ * Eligible = columnId in SUBMIT_READY_STATES + grade A/B + not warm referral.
+ * SUBMIT_READY_STATES defaults to ['evaluated']; override via --ready-states flag.
  */
 export function extractEligibleCards(kanbanPath) {
   if (!fs.existsSync(kanbanPath)) {
@@ -191,9 +228,8 @@ export function extractEligibleCards(kanbanPath) {
     } catch { /* skip malformed */ }
   }
 
-  const ELIGIBLE_COLS = new Set(['new-hot', 'autosubmit-ready']);
   return cards.filter((c) =>
-    ELIGIBLE_COLS.has(c.columnId) &&
+    SUBMIT_READY_STATES.has(c.columnId) &&
     (c.grade === 'A' || c.grade === 'B') &&
     !c.isWarmReferral,
   );
@@ -202,18 +238,15 @@ export function extractEligibleCards(kanbanPath) {
 // ── Kanban JSON ingestion ─────────────────────────────────────────────────────
 
 /**
- * States from the K2 kanban (gen/states.json + 'new') that are eligible for
- * auto-submit. A card must be in one of these states AND have grade A or B.
- *
  * Contract with dashboard/job-pulse-kanban.html exportState():
  *   Shape: { cards: { [id: string]: PulseJob }, version: number }
  *   PulseJob: { id, state, title, company, url, grade, has_connection,
  *               source, external_id, location, remote, verified, posted_at, ... }
  *
- * 'new'      = freshly ingested, not yet evaluated (K2 runDryRun uses this)
- * 'evaluated'= user has scored the card and wants to proceed to application
+ * Eligible states are controlled by SUBMIT_READY_STATES (default: evaluated).
+ * 'new' (freshly ingested, not evaluated) is NOT eligible by default — use
+ * --ready-states new,evaluated to include it.
  */
-export const ELIGIBLE_JSON_STATES = new Set(['new', 'evaluated']);
 
 /**
  * Maps a PulseJob (K2 kanban card) to the internal card shape used by auto-submit.
@@ -266,7 +299,7 @@ export function extractEligibleCardsFromJson(jsonPath) {
   return jobs
     .map(pulseJobToCard)
     .filter((c) =>
-      ELIGIBLE_JSON_STATES.has(c.columnId) &&
+      SUBMIT_READY_STATES.has(c.columnId) &&
       (c.grade === 'A' || c.grade === 'B') &&
       !c.isWarmReferral,
     );

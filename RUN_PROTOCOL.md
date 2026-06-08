@@ -35,7 +35,7 @@ npm run kanban         # opens http://localhost:7777
 
 # 2. In the browser:
 #    a. Click "⬇ Fetch Jobs" to populate from the Cloudflare Worker
-#    b. Drag cards you want to submit into the "New" or "Evaluated" column
+#    b. Drag cards you want to submit from "New" → "Evaluated" to mark them for submission
 #    c. Click "⬆ Export JSON" — browser downloads pulse-jobs-{date}.json
 #    d. Move the downloaded file to the data/ directory:
 Move-Item "$env:USERPROFILE\Downloads\pulse-jobs-*.json" "data\kanban-snapshot-$(Get-Date -Format yyyy-MM-dd).json"
@@ -49,8 +49,7 @@ node scripts/auto-submit.mjs `
 **Eligible states** (cards in any other state are filtered out):
 | State | Why eligible |
 |-------|-------------|
-| `new` | Freshly fetched from Worker, grade A/B, not yet actioned |
-| `evaluated` | User scored the card and wants to proceed to application |
+| `evaluated` | User reviewed/scored the card and wants to proceed to application |
 
 **JSON shape contract** (`exportState()` in dashboard/job-pulse-kanban.html):
 ```json
