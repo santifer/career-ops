@@ -1,0 +1,187 @@
+{
+  "version": "1.0",
+  "description": "Roles and companies pending Rahil validation before auto-apply",
+  "roles": [],
+  "companies": [
+    {
+      "company": "industrialelectricmanufacturing",
+      "url": "https://job-boards.greenhouse.io/industrialelectricmanufacturing/jobs/4238661009",
+      "grade": "A",
+      "flagged_at": "2026-05-07T11:13:51.332Z",
+      "last_updated": "2026-05-07T11:13:51.332Z",
+      "triage_note": "A-grade in sus-db but no live Kanban card found (2026-05-24 triage) â likely stale; left parked pending re-scan. Unusual company name â confirm legitimacy before whitelisting."
+    },
+    {
+      "company": "roboyo",
+      "url": "https://job-boards.greenhouse.io/roboyo/jobs/4857869101",
+      "grade": "A",
+      "flagged_at": "2026-05-13T05:35:58.583Z",
+      "last_updated": "2026-05-13T05:35:58.583Z",
+      "triage_note": "A-grade in sus-db but no live Kanban card found (2026-05-24 triage) â likely stale; left parked pending re-scan."
+    },
+    {
+      "company": "lendingtree",
+      "url": "https://job-boards.greenhouse.io/lendingtree/jobs/7961146",
+      "grade": "B",
+      "flagged_at": "2026-05-28T11:19:29.040Z",
+      "last_updated": "2026-05-28T11:19:29.040Z"
+    },
+    {
+      "company": "pagerduty",
+      "url": "https://job-boards.greenhouse.io/pagerduty/jobs/6006378004",
+      "grade": "B",
+      "flagged_at": "2026-05-28T11:19:29.103Z",
+      "last_updated": "2026-05-28T11:19:29.103Z"
+    },
+    {
+      "company": "PAR Technology",
+      "url": "https://jobs.ashbyhq.com/PAR%20Technology/9fef1ae5-d4dc-4c13-84dc-3afe77d962b1",
+      "grade": "C",
+      "flagged_at": "2026-05-28T11:19:29.171Z",
+      "last_updated": "2026-05-28T11:19:29.171Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Colorado-Colorado-Springs/Sr-Principal-Information-Systems-Project-Manager---NK-Release-Mgr--26-254-_R10234095",
+      "grade": "A",
+      "flagged_at": "2026-05-28T11:49:35.904Z",
+      "last_updated": "2026-05-28T11:49:35.904Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Utah-Roy/Program-Manger-2---18584_R10233748",
+      "grade": "A",
+      "flagged_at": "2026-05-28T11:49:35.962Z",
+      "last_updated": "2026-05-28T11:49:35.962Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Colorado-Aurora/Scrum-Master-Level-3-or-4_R10233781",
+      "grade": "A",
+      "flagged_at": "2026-05-28T11:49:36.024Z",
+      "last_updated": "2026-05-28T11:49:36.024Z"
+    },
+    {
+      "company": "twilio",
+      "url": "https://job-boards.greenhouse.io/twilio/jobs/7963689",
+      "grade": "B",
+      "flagged_at": "2026-05-29T11:16:16.946Z",
+      "last_updated": "2026-05-29T11:16:16.946Z"
+    },
+    {
+      "company": "intercom",
+      "url": "https://job-boards.greenhouse.io/intercom/jobs/5916272",
+      "grade": "B",
+      "flagged_at": "2026-05-29T11:17:00.231Z",
+      "last_updated": "2026-05-29T11:17:00.231Z"
+    },
+    {
+      "company": "toasttab",
+      "url": "https://job-boards.greenhouse.io/toasttab/jobs/7960456",
+      "grade": "A",
+      "flagged_at": "2026-05-29T11:17:00.291Z",
+      "last_updated": "2026-05-29T11:17:00.291Z"
+    },
+    {
+      "company": "toasttab",
+      "url": "https://job-boards.greenhouse.io/toasttab/jobs/7423665",
+      "grade": "B",
+      "flagged_at": "2026-05-29T11:17:00.351Z",
+      "last_updated": "2026-05-29T11:17:00.351Z"
+    },
+    {
+      "company": "toasttab",
+      "url": "https://job-boards.greenhouse.io/toasttab/jobs/7735834",
+      "grade": "B",
+      "flagged_at": "2026-05-29T11:17:00.411Z",
+      "last_updated": "2026-05-29T11:17:00.411Z"
+    },
+    {
+      "company": "gofundme",
+      "url": "https://job-boards.greenhouse.io/gofundme/jobs/7922541",
+      "grade": "B",
+      "flagged_at": "2026-05-29T11:17:06.123Z",
+      "last_updated": "2026-05-29T11:17:06.123Z"
+    },
+    {
+      "company": "jj",
+      "url": "https://jj.wd5.myworkdayjobs.com/JJ/job/Limerick-Ireland/TPM---Plan-Analytics---AI_R-079584-1",
+      "grade": "B",
+      "flagged_at": "2026-05-29T11:17:07.641Z",
+      "last_updated": "2026-05-29T11:17:07.641Z"
+    },
+    {
+      "company": "jj",
+      "url": "https://jj.wd5.myworkdayjobs.com/JJ/job/Titusville-New-Jersey-United-States-of-America/TPM--IMT-Supply-Chain-Plan-Analytics---AI_R-077432-1",
+      "grade": "A",
+      "flagged_at": "2026-05-29T11:17:07.699Z",
+      "last_updated": "2026-05-29T11:17:07.699Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Maryland-Baltimore/Manufacturing-Professional-Training-Lead---Staff-Project-Manager_R10234415",
+      "grade": "B",
+      "flagged_at": "2026-05-29T11:17:13.599Z",
+      "last_updated": "2026-05-29T11:17:13.599Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Utah-Roy/Principal-Sr-Principal-Agile-Coach--18856_R10234364",
+      "grade": "A",
+      "flagged_at": "2026-05-29T11:17:13.658Z",
+      "last_updated": "2026-05-29T11:17:13.658Z"
+    },
+    {
+      "company": "anaplan",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8559312002",
+      "grade": "A",
+      "flagged_at": "2026-05-29T22:53:03.099Z",
+      "last_updated": "2026-05-29T22:53:03.099Z"
+    },
+    {
+      "company": "gofundme",
+      "url": "https://job-boards.greenhouse.io/gofundme/jobs/7624610",
+      "grade": "A",
+      "flagged_at": "2026-05-29T22:53:47.102Z",
+      "last_updated": "2026-05-29T22:53:47.102Z"
+    },
+    {
+      "company": "pinterestcareers",
+      "url": "https://job-boards.greenhouse.io/pinterestcareers/jobs/7957799",
+      "grade": "A",
+      "flagged_at": "2026-05-29T22:55:33.785Z",
+      "last_updated": "2026-05-29T22:55:33.785Z"
+    },
+    {
+      "company": "careers",
+      "url": "https://job-boards.greenhouse.io/careers/jobs/7958756",
+      "grade": "B",
+      "flagged_at": "2026-05-29T22:56:32.443Z",
+      "last_updated": "2026-05-29T22:56:32.443Z"
+    },
+    {
+      "company": "elevancehealth",
+      "url": "https://elevancehealth.wd1.myworkdayjobs.com/ANT/job/TN-NASHVILLE-22-CENTURY-BLVD-STE-310/Program-Manager---HealthStarts-SDOH_JR193757",
+      "grade": "B",
+      "flagged_at": "2026-05-29T22:56:40.691Z",
+      "last_updated": "2026-05-29T22:56:40.691Z"
+    },
+    {
+      "company": "careers",
+      "url": "https://job-boards.greenhouse.io/careers/jobs/7950121",
+      "grade": "B",
+      "flagged_at": "2026-05-29T22:57:23.816Z",
+      "last_updated": "2026-05-29T22:57:23.816Z"
+    },
+    {
+      "company": "pinterestcareers",
+      "url": "https://job-boards.greenhouse.io/pinterestcareers/jobs/7494634",
+      "grade": "A",
+      "flagged_at": "2026-05-30T11:54:48.421Z",
+      "last_updated": "2026-05-30T11:54:48.421Z"
+    },
+    {
+      "company": "ghr",
+      "url": "https://ghr.wd1.myworkdayjobs.com/Lateral-US/job/New-York/Treasury-Product-Manager-I_26016621-2",
+      "grade": "B",
+   

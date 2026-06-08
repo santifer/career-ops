@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pulse-job.schema.json",
+  "title": "PulseJob",
+  "description": "Canonical job record for the Pulse Engine ingestion pipeline.",
+  "type": "object",
+  "required": [
+    "source",
+    "external_id",
+    "title",
+    "company",
+    "location",
+    "url",
+    "posted_at",
+    "ingested_at",
+    "state"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "type": "string",
+      "enum": ["indeed", "dice", "greenhouse", "lever", "ashby", "workday", "linkedin", "icims"],
+      "description": "Origin ATS/board"
+    },
+    "external_id": {
+      "type": "string",
+      "description": "Source-assigned job ID"
+    },
+    "title": {
+      "type": "string",
+      "description": "Job title as listed"
+    },
+    "company": {
+      "type": "string",
+      "description": "Hiring company name"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location string (e.g. 'Dallas, TX' or 'Remote')"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Canonical apply URL"
+    },
+    "posted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 posting date"
+    },
+    "ingested_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 ingestion timestamp (set by adapter)"
+    },
+    "state": {
+      "type": "string",
+      "enum": ["new", "graded", "injected", "discarded"],
+      "default": "new",
+      "description": "Pipeline state; should stay 'new' until grading"
+    },
+    "salary_min": {
+      "type": ["number", "null"],
+      "description": "Parsed annual salary minimum in USD"
+    },
+    "salary_max": {
+      "type": ["number", "null"],
+      "description": "Parsed annual salary maximum in USD"
+    },
+    "employment_type": {
+      "type": ["string", "null"],
+      "description": "e.g. FULLTIME, PARTTIME, CONTRACT, THIRD_PARTY"
+    },
+    "remote": {
+      "type": ["boolean", "null"],
+      "description": "True if explicitly remote"
+    },
+    "summary": {
+      "type": ["string", "null"],
+      "maxLength": 500,
+      "description": "Short job description, max 500 chars"
+    },
+    "company_logo_url": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "description": "Company logo image URL"
+    },
+    "easy_apply": {
+      "type": ["boolean", "null"],
+      "description": "Platform easy-apply flag"
+    },
+    "score": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Relevance score 0-1 from source (not the career-ops A/B/C grade)"
+    },
+    "has_connection": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether Rahil has a LinkedIn connection at this company (populated downstream)"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "True once ATS-API liveness check passes (required before Kanban injection)"
+    }
+  }
+}

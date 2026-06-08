@@ -1,0 +1,48 @@
+{
+  "cookies": [
+    {
+      "name": "wday_vps_cookie",
+      "value": "2800524298.53810.0000",
+      "domain": "medtronic.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "QdLkf_lmV0PnadkvCW7L6CnD22moGJPCKcsHao1zbLE-1780375670.218649-1.0.1.1-TYWx1OAQ1oKMSADM6LeTYpJ0pQs7UG9uuL19oWQUV0GH.jYjybet4njBJzjYwcYs22KywSeMj1YKImhH_YEWmlIJDgmfrKJytjE9_eq74S2IE77ohjdFdz2YShG2nUgS",
+      "domain": ".medtronic.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780377469.191028,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cflb",
+      "value": "02DiuHJZe28xXz6hQKNFTtNTjdFAZDpBKSKEhPAAupZ5e",
+      "domain": "medtronic.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780458469.191067,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_cfuvid",
+      "value": "3f_d.CFAusLo.MjC9ROk7eRBfsw8BguxzTgbZ8dwPhw-1780375670.218649-1.0.1.1-B7Sl1O0KW.Wvf00RKpk9DFGDvAMKqsuoQuGxjTcThIw",
+      "domain": ".medtronic.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [],
+  "_saved_at": "2026-06-02T04:48:08.769Z",
+  "_tenant": "medtronic",
+  "_url": "https://medtronic.wd5.myworkdayjobs.com"
+}

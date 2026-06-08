@@ -1,0 +1,263 @@
+{
+  "version": "1.0",
+  "description": "Roles and companies pending Rahil validation before auto-apply",
+  "roles": [],
+  "companies": [
+    {
+      "company": "capitalrx",
+      "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5200456008",
+      "grade": "A",
+      "flagged_at": "2026-05-07T04:43:59.465Z",
+      "last_updated": "2026-05-07T04:43:59.465Z"
+    },
+    {
+      "company": "springhealth66",
+      "url": "https://job-boards.greenhouse.io/springhealth66/jobs/4681418005",
+      "grade": "A",
+      "flagged_at": "2026-05-07T04:44:11.679Z",
+      "last_updated": "2026-05-07T04:44:11.679Z"
+    },
+    {
+      "company": "mercury",
+      "url": "https://job-boards.greenhouse.io/mercury/jobs/5856800004",
+      "grade": "B",
+      "flagged_at": "2026-05-07T04:44:11.770Z",
+      "last_updated": "2026-05-07T04:44:11.770Z"
+    },
+    {
+      "company": "gleanwork",
+      "url": "https://job-boards.greenhouse.io/gleanwork/jobs/4628879005",
+      "grade": "B",
+      "flagged_at": "2026-05-07T04:44:11.862Z",
+      "last_updated": "2026-05-07T04:44:11.862Z"
+    },
+    {
+      "company": "gofundme",
+      "url": "https://job-boards.greenhouse.io/gofundme/jobs/7735983",
+      "grade": "B",
+      "flagged_at": "2026-05-07T04:44:11.956Z",
+      "last_updated": "2026-05-07T04:44:11.956Z"
+    },
+    {
+      "company": "humaninterest",
+      "url": "https://job-boards.greenhouse.io/humaninterest/jobs/7523351",
+      "grade": "B",
+      "flagged_at": "2026-05-07T04:44:12.045Z",
+      "last_updated": "2026-05-07T04:44:12.045Z"
+    },
+    {
+      "company": "mitratech",
+      "url": "https://job-boards.greenhouse.io/mitratech/jobs/7806778",
+      "grade": "B",
+      "flagged_at": "2026-05-07T04:44:12.138Z",
+      "last_updated": "2026-05-07T04:44:12.138Z"
+    },
+    {
+      "company": "twilio",
+      "url": "https://job-boards.greenhouse.io/twilio/jobs/7707977",
+      "grade": "A",
+      "flagged_at": "2026-05-07T11:13:51.227Z",
+      "last_updated": "2026-05-07T11:13:51.227Z"
+    },
+    {
+      "company": "industrialelectricmanufacturing",
+      "url": "https://job-boards.greenhouse.io/industrialelectricmanufacturing/jobs/4238661009",
+      "grade": "A",
+      "flagged_at": "2026-05-07T11:13:51.332Z",
+      "last_updated": "2026-05-07T11:13:51.332Z"
+    },
+    {
+      "company": "datatonic",
+      "url": "https://jobs.ashbyhq.com/datatonic/21754f3d-013a-45cd-9e99-35b967d01e91",
+      "grade": "B",
+      "flagged_at": "2026-05-07T11:13:51.435Z",
+      "last_updated": "2026-05-07T11:13:51.435Z"
+    },
+    {
+      "company": "anaplan",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8503207002",
+      "grade": "A",
+      "flagged_at": "2026-05-11T11:10:07.752Z",
+      "last_updated": "2026-05-11T11:10:07.752Z"
+    },
+    {
+      "company": "anaplan",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8503202002",
+      "grade": "A",
+      "flagged_at": "2026-05-11T11:10:34.273Z",
+      "last_updated": "2026-05-11T11:10:34.273Z"
+    },
+    {
+      "company": "anaplan",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8434512002",
+      "grade": "A",
+      "flagged_at": "2026-05-11T11:10:34.331Z",
+      "last_updated": "2026-05-11T11:10:34.331Z"
+    },
+    {
+      "company": "pinterestcareers",
+      "url": "https://www.pinterestcareers.com/jobs/?gh_jid=7770927",
+      "grade": "B",
+      "flagged_at": "2026-05-11T11:10:34.390Z",
+      "last_updated": "2026-05-11T11:10:34.390Z"
+    },
+    {
+      "company": "figma",
+      "url": "https://boards.greenhouse.io/figma/jobs/5982942004",
+      "grade": "B",
+      "flagged_at": "2026-05-11T11:10:34.450Z",
+      "last_updated": "2026-05-11T11:10:34.450Z"
+    },
+    {
+      "company": "okta",
+      "url": "https://www.okta.com/company/careers/opportunity/7893951",
+      "grade": "B",
+      "flagged_at": "2026-05-11T11:10:34.511Z",
+      "last_updated": "2026-05-11T11:10:34.511Z"
+    },
+    {
+      "company": "brex",
+      "url": "https://www.brex.com/careers/8443296002?gh_jid=8443296002",
+      "grade": "B",
+      "flagged_at": "2026-05-11T11:10:34.569Z",
+      "last_updated": "2026-05-11T11:10:34.569Z"
+    },
+    {
+      "company": "capco",
+      "url": "https://job-boards.greenhouse.io/capco/jobs/7848272",
+      "grade": "B",
+      "flagged_at": "2026-05-11T11:10:34.627Z",
+      "last_updated": "2026-05-11T11:10:34.627Z"
+    },
+    {
+      "company": "roboyo",
+      "url": "https://job-boards.greenhouse.io/roboyo/jobs/4857869101",
+      "grade": "A",
+      "flagged_at": "2026-05-13T05:35:58.583Z",
+      "last_updated": "2026-05-13T05:35:58.583Z"
+    },
+    {
+      "company": "ludiaconsulting",
+      "url": "https://job-boards.greenhouse.io/ludiaconsulting/jobs/5978157004",
+      "grade": "B",
+      "flagged_at": "2026-05-13T05:35:58.630Z",
+      "last_updated": "2026-05-13T05:35:58.630Z"
+    },
+    {
+      "company": "forgeglobal",
+      "url": "https://job-boards.greenhouse.io/forgeglobal/jobs/5921598004",
+      "grade": "B",
+      "flagged_at": "2026-05-13T05:35:58.677Z",
+      "last_updated": "2026-05-13T05:35:58.677Z"
+    },
+    {
+      "company": "scoutspace",
+      "url": "https://job-boards.greenhouse.io/scoutspace/jobs/5195212008",
+      "grade": "B",
+      "flagged_at": "2026-05-14T11:17:23.142Z",
+      "last_updated": "2026-05-14T11:17:23.142Z"
+    },
+    {
+      "company": "coupa",
+      "url": "https://jobs.lever.co/coupa/6c62c60a-9fa7-4f92-a3a0-6b7314876e26",
+      "grade": "B",
+      "flagged_at": "2026-05-16T11:11:06.381Z",
+      "last_updated": "2026-05-16T11:11:06.381Z"
+    },
+    {
+      "company": "edmentum",
+      "url": "https://job-boards.greenhouse.io/edmentum/jobs/5991862004",
+      "grade": "B",
+      "flagged_at": "2026-05-16T11:11:14.133Z",
+      "last_updated": "2026-05-16T11:11:14.133Z"
+    },
+    {
+      "company": "acorns",
+      "url": "https://jobs.ashbyhq.com/acorns/8cc539a8-8b2e-41f2-9ca5-599aedbae14c",
+      "grade": "B",
+      "flagged_at": "2026-05-17T22:59:14.281Z",
+      "last_updated": "2026-05-17T22:59:14.281Z"
+    },
+    {
+      "company": "deepgram",
+      "url": "https://jobs.ashbyhq.com/deepgram/69d7f329-968a-4c9d-a0b4-972f83f1206c",
+      "grade": "B",
+      "flagged_at": "2026-05-17T22:59:14.379Z",
+      "last_updated": "2026-05-17T22:59:14.379Z"
+    },
+    {
+      "company": "spruceid",
+      "url": "https://jobs.ashbyhq.com/spruceid/130c2bb1-35f4-4c19-b252-f64614b4bcb0",
+      "grade": "B",
+      "flagged_at": "2026-05-17T22:59:14.473Z",
+      "last_updated": "2026-05-17T22:59:14.473Z"
+    },
+    {
+      "company": "toasttab",
+      "url": "https://careers.toasttab.com/jobs?gh_jid=7733118",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:13:17.437Z",
+      "last_updated": "2026-05-21T11:13:17.437Z"
+    },
+    {
+      "company": "toasttab",
+      "url": "https://careers.toasttab.com/jobs?gh_jid=7786312",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:13:17.489Z",
+      "last_updated": "2026-05-21T11:13:17.489Z"
+    },
+    {
+      "company": "toasttab",
+      "url": "https://careers.toasttab.com/jobs?gh_jid=7851279",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:14:46.694Z",
+      "last_updated": "2026-05-21T11:14:46.694Z"
+    },
+    {
+      "company": "geaerospace",
+      "url": "https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Remote-US/XMLNAME---Sr-Staff-Technical-Product-Manager--Inbound-Logistics_R3790677",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:14:46.800Z",
+      "last_updated": "2026-05-21T11:14:46.800Z"
+    },
+    {
+      "company": "geaerospace",
+      "url": "https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Remote-US/Sr-Staff-TPM--Outbound-Logistics_R3790678",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:14:46.850Z",
+      "last_updated": "2026-05-21T11:14:46.850Z"
+    },
+    {
+      "company": "geaerospace",
+      "url": "https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Remote-US/Sr-Staff-TPM--Fulfillment-Logistics_R3790679",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:14:46.900Z",
+      "last_updated": "2026-05-21T11:14:46.900Z"
+    },
+    {
+      "company": "humana",
+      "url": "https://humana.wd5.myworkdayjobs.com/Humana_External_Career_Site/job/Remote/Senior-Product-Manager_R-000123456",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:14:47.000Z",
+      "last_updated": "2026-05-21T11:14:47.000Z"
+    },
+    {
+      "company": "medtronic",
+      "url": "https://medtronic.wd1.myworkdayjobs.com/MedtronicCareers/job/Remote/Commercial-Strategy-Program-Manager_R00123456",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:14:47.100Z",
+      "last_updated": "2026-05-21T11:14:47.100Z"
+    },
+    {
+      "company": "philips",
+      "url": "https://philips.wd3.myworkdayjobs.com/jobs-and-careers/job/Remote-US/Business-Technical-Program-Manager_R000012345",
+      "grade": "B",
+      "flagged_at": "2026-05-21T11:14:47.200Z",
+      "last_updated": "2026-05-21T11:14:47.200Z"
+    },
+    {
+      "company": "capitalrx",
+      "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5166646008",
+      "grade": "B",
+      "flagged_at": "2026-05-22T11:10:25.905Z",
+      "last_updated": "2026-05-22T11:10

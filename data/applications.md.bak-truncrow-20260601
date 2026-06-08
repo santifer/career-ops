@@ -1,0 +1,114 @@
+# Application Tracker
+
+| Date | Company | Role | Grade | Lane | Status | Referral | CL Sent | Notes |
+|------|---------|------|-------|------|--------|----------|---------|-------|
+
+| 001 | 2026-05-07 | capitalrx | Senior Scrum Master | 5.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 003 | 2026-05-07 | springhealth66 | Senior Program Manager, Dedicated Workplace Teams | 5.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 004 | 2026-05-07 | mercury | Senior Technical Program Manager | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 005 | 2026-05-07 | gleanwork | Senior Technical Program Manager, Product | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 006 | 2026-05-07 | gofundme | Staff Technical Program Manager, Security | 4.0/5 | Evaluated | ❌ | — | auto-submit re-run 2026-05-19 |
+| 007 | 2026-05-07 | humaninterest | Senior Technical Program Manager | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 008 | 2026-05-07 | mitratech | Technical Project Manager III | 4.0/5 | Evaluated | ❌ | — | auto-submit |
+| 017 | 2026-05-13 | twilio | Senior Principal, Technical Program Management (Research & Development) | 5.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 018 | 2026-05-13 | datatonic | Delivery Manager | 4.0/5 | Submitted | ❌ | — | auto-submit re-run 2026-05-21 |
+| 029 | 2026-05-14 | ludiaconsulting | Current openings at Ludia Consulting | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 030 | 2026-05-14 | forgeglobal | Agile Program Manager | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 031 | 2026-05-14 | anaplan | Senior Scrum Master | 5.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 033 | 2026-05-14 | anaplan | Program Manager | 5.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 035 | 2026-05-14 | figma | Technical Program Manager, Security | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 036 | 2026-05-14 | okta | Staff Technical Program Manager | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 037 | 2026-05-14 | brex | Unknown Role | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 038 | 2026-05-14 | capco | Project Manager/Scrum Master (She/He/They) | 4.0/5 | Evaluated | ❌ | — | auto-submit re-run 2026-05-19 |
+| 039 | 2026-05-14 | capitalrx | Product Manager - Apps | 4.0/5 | Evaluated | ❌ | — | auto-submit re-run 2026-05-18 |
+| 040 | 2026-05-14 | mercury | Senior Product Manager - Banking Foundations | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 041 | 2026-05-14 | anaplan | Principal Product Manager, Applications FP&A Domain | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-28 |
+| 042 | 2026-05-14 | careers | Principal Product Manager, Configuration Platform - Remote | 4.0/5 | Evaluated | ❌ | — | auto-submit re-run 2026-05-19 |
+| 044 | 2026-05-14 | databricks | Sr. Staff Technical Program Manager - Reliability | 5.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 046 | 2026-05-19 | mitratech | Unknown Role (TD-12) | 4.0/5 | Evaluated | ❌ | — | auto-submit re-run 2026-05-19 |
+| 048 | 2026-05-19 | capitalrx | Current openings at Judi Health | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 051 | 2026-05-19 | databricks | Sr. Program Manager Data for Good | 5.0/5 | Blocked | ❌ | — | confirmed-blocked — no confirmation email received 2026-05-26 |
+| 053 | 2026-05-19 | stripe | Unknown Role (TD-12) | 5.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-24 |
+| 054 | 2026-05-19 | scoutspace | Technical Program Manager | 4.0/5 | Blocked | ❌ | — | auto-submit re-run 2026-05-21 |
+| 055 | 2026-05-19 | coupa | Not found 404 error | 4.0/5 | Evaluated | ❌ | — | auto-submit re-run 2026-05-19 |
+| 056 | 2026-05-19 | edmentum | Current openings at Edmentum | 4.0/5 | Evaluated | ❌ | — | auto-submit re-run 2026-05-19 |
+| 057 | 2026-05-19 | acorns | Technical Program Manager | 4.0/5 | Submitted | ❌ | — | auto-submit re-run 2026-05-21 |
+| 058 | 2026-05-19 | deepgram | Technical Program Manager Research | 4.0/5 | Applied | ❌ | — | auto-submit re-run 2026-05-19 |
+| 059 | 2026-05-19 | spruceid | Technical Program Manager TPM | 4.0/5 | Applied | ❌ | — | auto-submit re-run 2026-05-19 |
+| 065 | 2026-05-19 | careers | IT Delivery Manager | 4.0/5 | Evaluated | ❌ | — | auto-submit |
+
+| 066 | 2026-05-21 | gofundme | Program Manager | — | Blocked | ❌ | — | no-submit-button (board redirect) |
+| 067 | 2026-05-21 | mitratech | Program Manager | — | Blocked | ❌ | — | no-submit-button (board redirect) |
+| 068 | 2026-05-21 | ludiaconsulting | Program Manager | — | Blocked | ❌ | — | no-submit-button (board redirect) |
+| 069 | 2026-05-21 | capitalrx | Program Manager | — | Blocked | ❌ | — | no-submit-button (board redirect) |
+| 070 | 2026-05-21 | coupa | Program Manager | — | Blocked | ❌ | — | 404 dead posting |
+| 071 | 2026-05-21 | stripe | Technical Program Manager Risk | — | Blocked | ❌ | — | TD-19: search URL not listing URL |
+| 072 | 2026-05-21 | stripe | Commercial Solutions PM | — | Blocked | ❌ | — | TD-19: search URL not listing URL |
+| 073 | 2026-05-21 | stripe | Staff PM Dashboard | — | Blocked | ❌ | — | TD-19: search URL not listing URL |
+| 074 | 2026-05-21 | stripe | Program Manager Go To Market | — | Blocked | ❌ | — | TD-19: search URL not listing URL |
+| 075 | 2026-05-21 | stripe | PM GTM Strategic Programs | — | Blocked | ❌ | — | TD-19: search URL not listing URL |
+| 076 | 2026-05-21 | okta | Staff TPM | — | Blocked | ❌ | — | legal/consent fields unresolved |
+| 077 | 2026-05-21 | datatonic | Delivery Manager | 4.0/5 | Submitted | ❌ | — | bat 6:10am — unverified (no confirm signal check pre-fix) |
+| 078 | 2026-05-21 | databricks | Sr Staff TPM Reliability | 4.5/5 | Submitted | ❌ | — | bat 6:10am — unverified (no confirm signal check pre-fix) |
+| 079 | 2026-05-21 | acorns | Technical Program Manager | 4.0/5 | Submitted | ❌ | — | bat 6:10am — unverified (no confirm signal check pre-fix) |
+| 080 | 2026-05-21 | databricks | Sr TPM Professional Services | 4.5/5 | Submitted | ❌ | — | bat 6:10am — unverified (no confirm signal check pre-fix) |
+| 081 | 2026-05-21 | databricks | Sr Program Manager Data for Good | 4.5/5 | Submitted | ❌ | — | bat 6:10am — unverified (no confirm signal check pre-fix) |
+| 082 | 2026-05-21 | deepgram | Technical Program Manager Research | 4.0/5 | Submitted | ❌ | — | bat 6:10am — unverified (no confirm signal check pre-fix) |
+| 083 | 2026-05-21 | spruceid | Technical Program Manager | 4.0/5 | Submitted | ❌ | — | bat 6:10am — unverified (no confirm signal check pre-fix) |
+
+| 084 | 2026-05-23 | stripe | Technical Program Manager, Risk | B | Blocked | ❌ | — | auto-submit |
+| 085 | 2026-05-23 | databricks | Current job openings at Databricks | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 086 | 2026-05-23 | databricks | Sr. Program Manager, Data for Good | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 087 | 2026-05-23 | stripe | Commercial Solutions Program Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-05-24 |
+| 088 | 2026-05-23 | stripe | Staff Product Manager, Dashboard | A | Blocked | ❌ | — | auto-submit re-run 2026-05-24 |
+| 089 | 2026-05-23 | stripe | Program Manager, Go To Market | B | Blocked | ❌ | — | auto-submit re-run 2026-05-24 |
+| 090 | 2026-05-23 | stripe | Program Manager, GTM Strategic Programs | B | Blocked | ❌ | — | auto-submit re-run 2026-05-24 |
+| 091 | 2026-05-23 | humana | Senior Product Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-05-26 |
+| 092 | 2026-05-23 | medtronic | Commercial Strategy Program Manager, Global Commercial Office - Remote (USA) | B | Blocked | ❌ | — | auto-submit re-run 2026-05-25 |
+| 093 | 2026-05-23 | philips | Careers | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 094 | 2026-05-23 | tmobile | T-MOBILE CAREERS | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 095 | 2026-05-23 | motorolasolutions | Technical Program Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 
+| 096 | 2026-05-26 | stripe | Who we are | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 
+| 097 | 2026-05-28 | pinterestcareers | Page not found | A | Blocked | ❌ | — | auto-submit re-run 2026-05-28 |
+| 098 | 2026-05-28 | raytheon | Technical Product Manager, Service Management Platform, Service Catalog & Request | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 099 | 2026-05-28 | cvshealth | Manager - Scrum Master | A | Blocked | ❌ | — | auto-submit re-run 2026-05-28 |
+| 100 | 2026-05-28 | stripe | About Stripe | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 101 | 2026-05-28 | humana | Senior Product Manager R 416093 | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 102 | 2026-05-28 | medtronic | Commercial Strategy Program Manager  Global Commercial Office   Remote  USA  R63944 2 | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 103 | 2026-05-28 | cvshealth | Manager   Scrum Master R0916455 1 | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 104 | 2026-05-28 | motorolasolutions | Senior Project Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 105 | 2026-05-28 | stripe | Product Manager, Terminal Device Expansion | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 106 | 2026-05-28 | raytheon | Excal Ib Engineering Services Program Manager | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 107 | 2026-05-28 | raytheon | Sustainment Program Manager | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 108 | 2026-05-28 | raytheon | Senior Systems Engineer, Scrum Master - AN/TPY-2 Team Maverick | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 109 | 2026-05-28 | raytheon | Systems Engineer II, Scrum Master - AN/TPY-2 Team Maverick | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 110 | 2026-05-28 | gofundme | Staff Product Manager, Identity & Access Management | A | Blocked | ❌ | — | auto-submit |
+| 111 | 2026-05-28 | cvshealth | Senior Manager - Digital Product Manager | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 112 | 2026-05-28 | gevernova | Lead Project Manager | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 113 | 2026-05-28 | gevernova | Senior Project Manager - Supply Chain | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 114 | 2026-05-28 | medtronic | Sr. Program Manager- Integrated Business Planning (IBP) COE – Supply | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 115 | 2026-05-28 | accenture | ^Technical Program Manager and Quality Analyst - 6314910 | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 116 | 2026-05-28 | humana | Senior Project Manager, Delivery Coordinator | A | Blocked | ❌ | — | auto-submit |
+| 117 | 2026-05-28 | humana | Lead Product Manager, Enabling Platforms | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 118 | 2026-05-28 | workday | Careers at Workday | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 119 | 2026-05-28 | raytheon | Senior Principal Systems Engineer - Technical Program Manager (ONSITE) | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 120 | 2026-05-28 | pwc | Senior Associate, Technical Delivery Project Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 121 | 2026-05-28 | medtronic | Senior Supply Chain Program Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 122 | 2026-05-29 | northrop grumman | Sr Principal Information Systems Project Manager – NK Release Mgr (26-254) | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 123 | 2026-05-29 | northrop grumman | Program Manager 2 - 18584 | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 124 | 2026-05-29 | northrop grumman | Scrum Master Level 3 or 4 | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 125 | 2026-05-29 | cvshealth | Manager   Scrum Master R0922627 1 | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 126 | 2026-05-29 | humana | Senior Project Manager  Delivery Coordinator R 417099 1 | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 127 | 2026-05-29 | johnson & johnson | We care about your privacy | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 128 | 2026-05-29 | northrop grumman | System Integration Lab Manager - Program Manager 3 | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 129 | 2026-05-29 | raytheon | Material Program Manager - AMRAAM | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 130 | 2026-05-29 | raytheon | Global Trade (GT) Program Management Office (PMO) Learning & Site Lead Program Lead (Remote) | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 131 | 2026-05-29 | raytheon | Senior Manager, Cyber Program Manager (Remote) | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 132 | 2026-05-29 | humana | AD  Program Mgmt  Medicaid Ops PMO R 417835 | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 133 | 2026-05-29 | geaerospace | Staff Technical Product Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 134 | 2026-05-29 | gevernova | Process Industrialization   Technical Project Manager R5035233 2 | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 135 | 2026-05-29 | gevernova | Senior Project Manager - Combine Cycle Gas Power | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 136 | 2026-05-29 | gevernova | Senior Technical Product Manager | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 137 | 2026-05-29 | northrop grumman | Manufacturing Professional Training Lead   Staff Project Manager R10234415 | B | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 138 | 2026-05-29 | northrop grumman | Principal/Sr Principal Agile Coach- 18856 | A | Blocked | ❌ | — | auto-submit re-run 2026-06-01 |
+| 139 | 2026-05-29 | motorolasolutions | Command Cent

@@ -1,0 +1,40 @@
+{
+  "_doc": "Per-company whitelist for AutoSubmit. A company lands here when Rahil moves a card from sus-blocked → autosubmit-ready in the Kanban. Once whitelisted, future jobs at the SAME company on the SAME ATS board may be auto-submitted without further human-in-loop, per CLAUDE.md ethical-use rule (revision 2026-05-02). Fortune 500 companies are pre-approved via the FORTUNE_500 set in dashboard/job-pulse-kanban.html and do NOT need an entry here.",
+  "_recovery_note": "2026-05-25: file was found truncated at 1166 bytes (non-atomic-write corruption); the pre-update-2026-05-24 backup was identically truncated. Reconstructed by the daily refresh agent. Only the capitalrx entry was partially visible before truncation; any other prior whitelist entries could not be recovered. The SuS gate itself remains intact via data/sus-db.json confirmed[] (29 companies). Re-add granular per-ATS-board entries as needed.",
+  "_schema": {
+    "company_name_lower": {
+      "ats_boards": [
+        "greenhouse:board-token",
+        "lever:company",
+        "ashby:company",
+        "workday:host"
+      ],
+      "validated_at": "ISO-8601 timestamp when user moved first card to autosubmit-ready",
+      "validated_via_card_id": "live-N or seed card id that anchored the validation",
+      "validated_role": "title of the role that anchored validation (sanity reference)",
+      "submission_history": [
+        {
+          "date": "ISO-8601",
+          "url": "...",
+          "outcome": "submitted|sus|blocked|error",
+          "notes": "..."
+        }
+      ],
+      "comp_floor_override": null,
+      "notes": "free-text"
+    }
+  },
+  "whitelist": {
+    "capitalrx": {
+      "ats_boards": [
+        "greenhouse:capitalrx"
+      ],
+      "validated_at": null,
+      "validated_via_card_id": null,
+      "validated_role": "Senior Scrum Master",
+      "submission_history": [],
+      "comp_floor_override": null,
+      "notes": "Recovered 2026-05-25 from truncated file — only ats_boards survived. capitalrx is also in sus-db confirmed[] (Pass-1 triage 2026-05-24), so the gate is intact."
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "cookies": [
+    {
+      "name": "wd-browser-id",
+      "value": "397372ce-143e-432e-885b-7429937aa69e",
+      "domain": "gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "CALYPSO_CSRF_TOKEN",
+      "value": "37ae5935-8303-48be-aa36-3355ba0933c5",
+      "domain": "gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "wday_vps_cookie",
+      "value": "1911200778.53810.0000",
+      "domain": "gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cflb",
+      "value": "02DiuHJZe28xXz6hQKNFTtNTjdFAZDpBK1ws7TZ9dvSNx",
+      "domain": "gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780458181.236459,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_cfuvid",
+      "value": "CaiDTH1asF8qAGOZ4JMesN5roSBZzw7u2nx0S51vTVk-1780375381.8555686-1.0.1.1-I7TDUQXkBFeDwT0kUYYcbSa6..ItgSxh9CP.F4xPJFU",
+      "domain": ".gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "timezoneOffset",
+      "value": "300",
+      "domain": "gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "PLAY_SESSION",
+      "value": "21f7eff8b5c0edba652703e9474be19a08671d40-gevernova_pSessionId=uudf4vjo5vue583s4a9a8kopb6&instance=vps-prod-bex7e7j0.prod-vps.pr501.cust.pdx.wd",
+      "domain": "gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "CALYPSO_SESSION",
+      "value": "b6320eb7-2978-48b2-8d54-b15269321696.Z2V2ZXJub3Zh.V0RDQzEuMIQAJQAAII+RJJ7y8SKTnRZHE2xXLjPqvMMIfpbTlFxAlK5r50YMAACMABYBMQAQXrvt4oqfIscAaYZwXvNYIQAAAGI2MzIwZWI3LTI5NzgtNDhiMi04ZDU0LWIxNTI2OTMyMTY5Ng==",
+      "domain": "gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "FM3FxHVwRsM3l9SS7iQvx9MY59B9AJK.SPyNuGYD_ck-1780375478.8117385-1.0.1.1-Av4oQ6cnxDY7A2IkAx6RiwAuR3q_1XcNAVvHSBKXVIGnI.Xj9ZgKmBIbo34K2CgTW7rpxPQFiFWicV.kxbrPwvIrryMOffuJqCq2v7dNL3QhnmDjYgVW6CPAUp9iFqdP",
+      "domain": ".gevernova.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780377278.174044,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [],
+  "_saved_at": "2026-06-02T04:44:45.012Z",
+  "_tenant": "gevernova",
+  "_url": "https://gevernova.wd5.myworkdayjobs.com/Vernova_ExternalSite/job/Cambridge/Senior-Product-Manager---AI_R5035947-2"
+}

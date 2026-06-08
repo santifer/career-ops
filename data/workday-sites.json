@@ -1,0 +1,146 @@
+[
+  {
+    "company": "Toyota",
+    "workday_url": "https://toyota.wd5.myworkdayjobs.com/TMUS",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach", "Technical Program Manager"]
+  },
+  {
+    "company": "McKesson",
+    "workday_url": "https://mckesson.wd3.myworkdayjobs.com/Opportunity",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Agile Coach"]
+  },
+  {
+    "company": "AT&T",
+    "workday_url": "https://att.wd1.myworkdayjobs.com/att_jobs",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach", "Delivery Manager"]
+  },
+  {
+    "company": "Boeing",
+    "workday_url": "https://boeing.wd1.myworkdayjobs.com/external",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Technical Program Manager"]
+  },
+  {
+    "company": "Microsoft",
+    "workday_url": "https://microsoft.wd5.myworkdayjobs.com/external",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Agile Coach"]
+  },
+  {
+    "company": "Accenture",
+    "workday_url": "https://accenture.wd3.myworkdayjobs.com/AccentureCareer",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Agile Coach", "Program Manager", "Delivery Manager"]
+  },
+  {
+    "company": "IBM",
+    "workday_url": "https://ibm.wd12.myworkdayjobs.com/External",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach", "Technical Program Manager"]
+  },
+  {
+    "company": "Deloitte",
+    "workday_url": "https://deloitte.wd1.myworkdayjobs.com/DTTCareers",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach"]
+  },
+  {
+    "company": "KPMG",
+    "workday_url": "https://kpmg.wd1.myworkdayjobs.com/External",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Agile Coach"]
+  },
+  {
+    "company": "Oracle",
+    "workday_url": "https://oracle.wd1.myworkdayjobs.com/External",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Technical Program Manager"]
+  },
+  {
+    "company": "Cisco",
+    "workday_url": "https://cisco.wd5.myworkdayjobs.com/External",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach", "Technical Program Manager"]
+  },
+  {
+    "company": "Salesforce",
+    "workday_url": "https://salesforce.wd12.myworkdayjobs.com/External",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Agile Coach"]
+  },
+  {
+    "company": "Dell",
+    "workday_url": "https://dell.wd1.myworkdayjobs.com/External",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Agile Coach", "Technical Program Manager"]
+  },
+  {
+    "company": "USAA",
+    "workday_url": "https://usaa.wd1.myworkdayjobs.com/usaa_jobs",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach"]
+  },
+  {
+    "company": "UT Southwestern",
+    "workday_url": "https://utswmed.wd1.myworkdayjobs.com/external",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Project Manager"]
+  },
+  {
+    "company": "Capital One",
+    "workday_url": "https://capitalone.wd1.myworkdayjobs.com/Capital_One",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach", "Technical Program Manager"]
+  },
+  {
+    "company": "American Airlines",
+    "workday_url": "https://aa.wd1.myworkdayjobs.com/American_Airlines_Careers",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Program Manager", "Scrum Master", "Agile Coach"]
+  },
+  {
+    "company": "Southwest Airlines",
+    "workday_url": "https://southwestairlines.wd1.myworkdayjobs.com/Southwest_Careers",
+    "username": "FILL_IN",
+    "password": "FILL_IN",
+    "enabled": true,
+    "search_terms": ["Scrum Master", "Program Manager", "Agile Coach", "Technical Program Manager"]
+  }
+]

@@ -1,0 +1,258 @@
+[
+  {
+    "ts": "2026-05-23T11:45:26.577Z",
+    "ats": "unknown",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=8445423002"
+  },
+  {
+    "ts": "2026-05-23T11:45:52.263Z",
+    "ats": "unknown",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=8389535002"
+  },
+  {
+    "ts": "2026-05-25T11:45:33.326Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-05-25T11:46:00.119Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-05-26T11:45:37.822Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-05-26T11:46:06.503Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-05-28T11:45:32.408Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-05-28T11:45:59.616Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-05-29T22:50:46.187Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-05-29T22:51:16.561Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-05-30T11:45:35.338Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-05-30T11:46:13.364Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-05-31T11:45:35.598Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-05-31T11:46:02.010Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-01T11:45:34.852Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-01T11:46:01.984Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-02T11:45:29.500Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-02T11:45:55.546Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-02T13:36:04.427Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-02T13:36:30.420Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-03T02:17:22.371Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-03T02:18:30.970Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-03T11:45:46.864Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-03T11:46:53.240Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-04T11:45:31.067Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-04T11:46:00.954Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-05T11:45:40.418Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-05T11:46:11.507Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-06T11:45:30.445Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-06T11:45:56.944Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  },
+  {
+    "ts": "2026-06-07T11:45:27.343Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8445423002"
+  },
+  {
+    "ts": "2026-06-07T11:45:53.506Z",
+    "ats": "greenhouse",
+    "outcome": "no-signal",
+    "patternType": "none",
+    "pattern": null,
+    "url": "https://job-boards.greenhouse.io/databricks/jobs/8389535002"
+  }
+]

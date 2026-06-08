@@ -1,0 +1,600 @@
+{
+  "version": "1.0",
+  "description": "Rahil Nathani \u2014 pre-filled answers for ATS auto-submit fields",
+  "last_updated": "2026-04-29",
+  "profile": {
+    "name": "Rahil Nathani",
+    "first_name": "Rahil",
+    "last_name": "Nathani",
+    "email": "rahilpmp@gmail.com",
+    "phone": "(214) 662-0758",
+    "phone_formatted": "(214) 662-0758",
+    "location": "Dallas, TX",
+    "city": "Lewisville",
+    "state": "TX",
+    "state_full": "Texas",
+    "zip": "75067",
+    "country": "United States",
+    "linkedin": "https://linkedin.com/in/rahil-nathani-pmp",
+    "website": "",
+    "portfolio": "",
+    "address": "2717 Club Ridge Drive"
+  },
+  "work_authorization": {
+    "authorized_to_work": "Yes",
+    "requires_sponsorship": "No",
+    "visa_status": "US Citizen or Permanent Resident",
+    "sponsorship_needed": "No"
+  },
+  "compensation": {
+    "salary_hourly": "$75-$89 USD an hour and negotiable based on hiring company benefits.",
+    "salary_annual": "$177k-$189k negotiable based on hiring company benefits.",
+    "salary_min_number": 177000,
+    "salary_max_number": 189000,
+    "salary_min_string": "177000",
+    "salary_max_string": "189000",
+    "salary_midpoint": 183000,
+    "currency": "USD"
+  },
+  "experience": {
+    "years_experience": "13",
+    "years_experience_number": 13
+  },
+  "education": {
+    "education_level": "Bachelor's Degree",
+    "degree": "Bachelor of Science, Institutional Management",
+    "degree_short": "B.S.",
+    "major": "Institutional Management",
+    "school": "Texas Tech University",
+    "graduation_year": "2014",
+    "gpa": ""
+  },
+  "certifications": [
+    "PMP",
+    "A-CSM",
+    "CSM",
+    "SAFe SSM 5.0",
+    "LeSS Basics"
+  ],
+  "certifications_string": "PMP, A-CSM, CSM, SAFe SSM 5.0, LeSS Basics",
+  "non_compete": "N/A \u2014 I am not subject to any non-compete, non-solicitation, or restrictive covenant agreements.",
+  "ai_tools_answer": "I use Claude (Anthropic) and GPT-4 daily for drafting, analysis, and program documentation. I've built AI-assisted job search automation pipelines and use AI tools to accelerate sprint planning, retrospective synthesis, and stakeholder reporting.",
+  "work_from_answer": "Remote \u2014 Dallas, TX (United States)",
+  "preferences": {
+    "willing_to_relocate": "No",
+    "remote_preference": "Remote or Hybrid",
+    "start_availability": "2 weeks",
+    "notice_period": "2 weeks",
+    "employment_type": "Full-time",
+    "preferred_work_type": "Remote"
+  },
+  "eeo": {
+    "gender": "",
+    "race": "",
+    "ethnicity": "",
+    "veteran_status": "",
+    "disability_status": "",
+    "note": "All EEO fields intentionally blank \u2014 auto-submit will select Prefer not to say / Decline to self-identify"
+  },
+  "cover_letter": {
+    "default_directory": "C:\\Users\\rahil\\career-ops\\output\\",
+    "filename_pattern": "cover-letter"
+  },
+  "ats_field_map": {
+    "first name": {
+      "key": "profile.first_name"
+    },
+    "first": {
+      "key": "profile.first_name"
+    },
+    "given name": {
+      "key": "profile.first_name"
+    },
+    "last name": {
+      "key": "profile.last_name"
+    },
+    "last": {
+      "key": "profile.last_name"
+    },
+    "surname": {
+      "key": "profile.last_name"
+    },
+    "family name": {
+      "key": "profile.last_name"
+    },
+    "middle name": {
+      "key": null,
+      "type": "skip"
+    },
+    "middle initial": {
+      "key": null,
+      "type": "skip"
+    },
+    "full name": {
+      "key": "profile.name"
+    },
+    "name": {
+      "key": "profile.name"
+    },
+    "your name": {
+      "key": "profile.name"
+    },
+    "applicant name": {
+      "key": "profile.name"
+    },
+    "email": {
+      "key": "profile.email"
+    },
+    "email address": {
+      "key": "profile.email"
+    },
+    "your email": {
+      "key": "profile.email"
+    },
+    "work email": {
+      "key": "profile.email"
+    },
+    "phone": {
+      "key": "profile.phone_formatted"
+    },
+    "phone number": {
+      "key": "profile.phone_formatted"
+    },
+    "mobile": {
+      "key": "profile.phone_formatted"
+    },
+    "mobile number": {
+      "key": "profile.phone_formatted"
+    },
+    "cell": {
+      "key": "profile.phone_formatted"
+    },
+    "cell phone": {
+      "key": "profile.phone_formatted"
+    },
+    "telephone": {
+      "key": "profile.phone_formatted"
+    },
+    "contact number": {
+      "key": "profile.phone_formatted"
+    },
+    "linkedin": {
+      "key": "profile.linkedin"
+    },
+    "linkedin url": {
+      "key": "profile.linkedin"
+    },
+    "linkedin profile": {
+      "key": "profile.linkedin"
+    },
+    "linkedin profile url": {
+      "key": "profile.linkedin"
+    },
+    "linkedin page": {
+      "key": "profile.linkedin"
+    },
+    "website": {
+      "key": "profile.website"
+    },
+    "personal website": {
+      "key": "profile.website"
+    },
+    "portfolio": {
+      "key": "profile.portfolio"
+    },
+    "portfolio url": {
+      "key": "profile.portfolio"
+    },
+    "location": {
+      "key": "profile.location"
+    },
+    "city": {
+      "key": "profile.city"
+    },
+    "city, state": {
+      "key": "profile.location"
+    },
+    "current location": {
+      "key": "profile.location"
+    },
+    "where are you located": {
+      "key": "profile.location"
+    },
+    "state": {
+      "key": "profile.state"
+    },
+    "country": {
+      "key": "profile.country"
+    },
+    "zip": {
+      "key": "profile.zip"
+    },
+    "zip code": {
+      "key": "profile.zip"
+    },
+    "postal code": {
+      "key": "profile.zip"
+    },
+    "authorized to work": {
+      "key": "work_authorization.authorized_to_work"
+    },
+    "work authorization": {
+      "key": "work_authorization.authorized_to_work"
+    },
+    "eligible to work": {
+      "key": "work_authorization.authorized_to_work"
+    },
+    "authorized to work in the us": {
+      "key": "work_authorization.authorized_to_work"
+    },
+    "legally authorized": {
+      "key": "work_authorization.authorized_to_work"
+    },
+    "us work authorization": {
+      "key": "work_authorization.authorized_to_work"
+    },
+    "require sponsorship": {
+      "key": "work_authorization.requires_sponsorship"
+    },
+    "requires sponsorship": {
+      "key": "work_authorization.requires_sponsorship"
+    },
+    "visa sponsorship": {
+      "key": "work_authorization.requires_sponsorship"
+    },
+    "sponsorship required": {
+      "key": "work_authorization.requires_sponsorship"
+    },
+    "need sponsorship": {
+      "key": "work_authorization.requires_sponsorship"
+    },
+    "do you require sponsorship": {
+      "key": "work_authorization.requires_sponsorship"
+    },
+    "salary": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "expected salary": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "desired salary": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "salary expectation": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "compensation": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "compensation expectation": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "annual salary": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "salary range": {
+      "key": "compensation.salary_annual",
+      "type": "salary_range"
+    },
+    "desired compensation": {
+      "key": "compensation.salary_annual",
+      "type": "salary"
+    },
+    "minimum salary": {
+      "key": "compensation.salary_min_string",
+      "type": "number"
+    },
+    "salary minimum": {
+      "key": "compensation.salary_min_string",
+      "type": "number"
+    },
+    "hourly rate": {
+      "key": "compensation.salary_hourly",
+      "type": "hourly"
+    },
+    "hourly wage": {
+      "key": "compensation.salary_hourly",
+      "type": "hourly"
+    },
+    "desired hourly rate": {
+      "key": "compensation.salary_hourly",
+      "type": "hourly"
+    },
+    "years of experience": {
+      "key": "experience.years_experience"
+    },
+    "total experience": {
+      "key": "experience.years_experience"
+    },
+    "years experience": {
+      "key": "experience.years_experience"
+    },
+    "how many years": {
+      "key": "experience.years_experience"
+    },
+    "years of relevant experience": {
+      "key": "experience.years_experience"
+    },
+    "education": {
+      "key": "education.education_level"
+    },
+    "education level": {
+      "key": "education.education_level"
+    },
+    "highest education": {
+      "key": "education.education_level"
+    },
+    "highest level of education": {
+      "key": "education.education_level"
+    },
+    "degree": {
+      "key": "education.degree"
+    },
+    "degree level": {
+      "key": "education.education_level"
+    },
+    "degree type": {
+      "key": "education.education_level"
+    },
+    "major": {
+      "key": "education.major"
+    },
+    "field of study": {
+      "key": "education.major"
+    },
+    "school": {
+      "key": "education.school"
+    },
+    "university": {
+      "key": "education.school"
+    },
+    "college": {
+      "key": "education.school"
+    },
+    "institution": {
+      "key": "education.school"
+    },
+    "graduation year": {
+      "key": "education.graduation_year"
+    },
+    "year of graduation": {
+      "key": "education.graduation_year"
+    },
+    "willing to relocate": {
+      "key": "preferences.willing_to_relocate"
+    },
+    "relocation": {
+      "key": "preferences.willing_to_relocate"
+    },
+    "open to relocation": {
+      "key": "preferences.willing_to_relocate"
+    },
+    "can you relocate": {
+      "key": "preferences.willing_to_relocate"
+    },
+    "remote": {
+      "key": "preferences.remote_preference"
+    },
+    "work preference": {
+      "key": "preferences.remote_preference"
+    },
+    "work type": {
+      "key": "preferences.remote_preference"
+    },
+    "remote preference": {
+      "key": "preferences.remote_preference"
+    },
+    "work arrangement": {
+      "key": "preferences.remote_preference"
+    },
+    "work location preference": {
+      "key": "preferences.remote_preference"
+    },
+    "start date": {
+      "key": "preferences.start_availability"
+    },
+    "available start date": {
+      "key": "preferences.start_availability"
+    },
+    "when can you start": {
+      "key": "preferences.start_availability"
+    },
+    "availability": {
+      "key": "preferences.start_availability"
+    },
+    "notice period": {
+      "key": "preferences.notice_period"
+    },
+    "how soon can you start": {
+      "key": "preferences.start_availability"
+    },
+    "gender": {
+      "key": "eeo.gender",
+      "type": "eeo"
+    },
+    "race": {
+      "key": "eeo.race",
+      "type": "eeo"
+    },
+    "ethnicity": {
+      "key": "eeo.ethnicity",
+      "type": "eeo"
+    },
+    "race/ethnicity": {
+      "key": "eeo.race",
+      "type": "eeo"
+    },
+    "veteran": {
+      "key": "eeo.veteran_status",
+      "type": "eeo"
+    },
+    "veteran status": {
+      "key": "eeo.veteran_status",
+      "type": "eeo"
+    },
+    "disability": {
+      "key": "eeo.disability_status",
+      "type": "eeo"
+    },
+    "disability status": {
+      "key": "eeo.disability_status",
+      "type": "eeo"
+    },
+    "protected veteran": {
+      "key": "eeo.veteran_status",
+      "type": "eeo"
+    },
+    "certifications": {
+      "key": "certifications_string"
+    },
+    "certifications and licenses": {
+      "key": "certifications_string"
+    },
+    "what certifications": {
+      "key": "certifications_string"
+    },
+    "licenses": {
+      "key": "certifications_string"
+    },
+    "professional certifications": {
+      "key": "certifications_string"
+    },
+    "non-compete": {
+      "key": "non_compete"
+    },
+    "non compete": {
+      "key": "non_compete"
+    },
+    "restrictive covenant": {
+      "key": "non_compete"
+    },
+    "non-solicitation": {
+      "key": "non_compete"
+    },
+    "ai tools": {
+      "key": "ai_tools_answer"
+    },
+    "how are you using ai": {
+      "key": "ai_tools_answer"
+    },
+    "what ai tools": {
+      "key": "ai_tools_answer"
+    },
+    "using ai tools": {
+      "key": "ai_tools_answer"
+    },
+    "describe how you are using ai": {
+      "key": "ai_tools_answer"
+    },
+    "ai tools in your day to day": {
+      "key": "ai_tools_answer"
+    },
+    "why are you interested in working": {
+      "key": "ai_tools_answer"
+    },
+    "from where do you intend to work": {
+      "key": "work_from_answer"
+    },
+    "work location": {
+      "key": "work_from_answer"
+    },
+    "where will you work from": {
+      "key": "work_from_answer"
+    },
+    "work from": {
+      "key": "work_from_answer"
+    },
+    "how did you hear about this job": {
+      "key": "referral.source"
+    },
+    "how did you hear about us": {
+      "key": "referral.source"
+    },
+    "how did you learn about this position": {
+      "key": "referral.source"
+    },
+    "how did you hear about this role": {
+      "key": "referral.source"
+    },
+    "how did you find this job": {
+      "key": "referral.source"
+    },
+    "how did you find out about this role": {
+      "key": "referral.source"
+    },
+    "where did you hear about us": {
+      "key": "referral.source"
+    },
+    "where did you find this position": {
+      "key": "referral.source"
+    },
+    "where did you learn about this job": {
+      "key": "referral.source"
+    },
+    "referral source": {
+      "key": "referral.source"
+    },
+    "how did you hear": {
+      "key": "referral.source"
+    },
+    "source of hire": {
+      "key": "referral.source"
+    },
+    "how were you referred": {
+      "key": "referral.source"
+    },
+    "address line 1": {
+      "key": "profile.address",
+      "type": "text"
+    },
+    "address": {
+      "key": "profile.address",
+      "type": "text"
+    },
+    "street address": {
+      "key": "profile.address",
+      "type": "text"
+    },
+    "street": {
+      "key": "profile.address",
+      "type": "text"
+    },
+    "address line 2": {
+      "key": null,
+      "type": "skip"
+    }
+  },
+  "referral_sources": {
+    "_note": "Display names used to fill 'How did you hear about this job?' fields on ATS forms. Source is auto-detected from the discovery URL (linkedin.com, indeed.com, etc.) or passed via --source flag. 'default' is the fallback when the source cannot be determined.",
+    "linkedin": "LinkedIn",
+    "indeed": "Indeed",
+    "theladders": "TheLadders",
+    "hiringcafe": "HiringCafe",
+    "default": "LinkedIn"
+  },
+  "platform_logins": {
+    "_note": "Credentials used ONLY for direct-platform apply flows (LinkedIn Easy Apply, Indeed Quick Apply, TheLadders). For most jobs these platforms are DISCOVERY sources only \u2014 the actual application goes to the company ATS (Greenhouse/Lever/Ashby/Workday). Expand this section when ready to enable richer per-platform answering (LinkedIn screening Qs, Indeed assessments, etc.).",
+    "linkedin": {
+      "email": "FILL_IN",
+      "password": "FILL_IN",
+      "notes": "Used for LinkedIn Easy Apply. Fill in manually \u2014 never share in chat."
+    },
+    "indeed": {
+      "email": "FILL_IN",
+      "password": "FILL_IN",
+      "notes": "Used for Indeed Quick Apply. Fill in manually \u2014 never share in chat."
+    },
+    "theladders": {
+      "email": "FILL_IN",
+      "password": "FILL_IN",
+      "notes": "Used for TheLadders applications. Fill in manually \u2014 never share in chat."
+    }
+  }
+}

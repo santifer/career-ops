@@ -1,0 +1,48 @@
+{
+  "cookies": [
+    {
+      "name": "wday_vps_cookie",
+      "value": "1743428618.53810.0000",
+      "domain": "globalhr.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "ORjmMLmqoQf0ifB8T9w9S9j0oC4FAlUBUJwhXqWCkYI-1780451096.5247817-1.0.1.1-5OcP4hjRZW3MDM1yFHrV7_hFCK.ItDh0BzBd3koKlxWZ0rCuijUx7rChp.3y63DcpQGVgp0beBCm5teiBbn5GuzJK5lIqDc4Zf16VpavJKXOOoTS3Mt9EdsBRzJF_vrD",
+      "domain": ".globalhr.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780452894.934425,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cflb",
+      "value": "02DiuHJZe28xXz6hQKNFTtNTjdFAZDpBJEmn2fwfMEYKE",
+      "domain": "globalhr.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780533894.934466,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_cfuvid",
+      "value": "5inid_rjk2t8.FNvXB3fl0aBSeEyPgD0hpcCeNHrZus-1780451096.5247817-1.0.1.1-kKC6Aiueed0TX3Mr1sHsj1q60rn7ns.a.c6IlkSoOgQ",
+      "domain": ".globalhr.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [],
+  "_saved_at": "2026-06-03T01:45:53.406Z",
+  "_tenant": "globalhr",
+  "_url": "https://globalhr.wd5.myworkdayjobs.com"
+}

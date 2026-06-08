@@ -1,0 +1,7 @@
+name = "pulse-jobs-proxy"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+account_id = "a824f98645a8048bcdf6a510bd70fdce"
+
+[vars]
+WORKER_VERSION = "1.0.0"

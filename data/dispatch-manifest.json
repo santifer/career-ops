@@ -1,0 +1,24 @@
+{
+  "dispatches": [
+    {
+      "dispatched_at": "2026-05-30T01:16:23.426Z",
+      "item": "fix: add blocked/submitted canonical states + accept letter grades (retro 2026-05-29)",
+      "files": [
+        "templates/states.yml",
+        "verify-pipeline.mjs",
+        "dashboard/internal/data/career.go"
+      ],
+      "evidence": [
+        {
+          "check": "syntax (check-syntax.mjs)",
+          "result": "pass"
+        },
+        {
+          "check": "pipeline health (verify-pipeline.mjs)",
+          "result": "pass"
+        }
+      ],
+      "status": "validated-ready-to-deploy"
+    }
+  ]
+}

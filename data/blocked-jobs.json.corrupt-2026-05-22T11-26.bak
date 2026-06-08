@@ -1,0 +1,859 @@
+[
+  {
+    "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5200456008",
+    "company": "capitalrx",
+    "role": "Senior Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-input>",
+      "<unknown-div>",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "<unknown-input>",
+      "What certifications and licenses do you have? If none, please type 'N/A'.",
+      "Will you now or in the future require Visa sponsorship? *",
+      "<unknown-input>",
+      "Are you legally authorized to work in the U.S.? *",
+      "<unknown-input>"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_capitalrx_senior-scrum-master_2026-05-06.txt",
+    "timestamp": "2026-05-07T11:11:48.986Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/springhealth66/jobs/4681418005",
+    "company": "springhealth66",
+    "role": "Senior Program Manager, Dedicated Workplace Teams",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-input>",
+      "Location (City)*",
+      "<unknown-input>",
+      "<unknown-div>",
+      "Will you require visa sponsorship now or in the future?*",
+      "<unknown-input>",
+      "Are you eligible to work in the U.S.?*",
+      "<unknown-input>",
+      "<unknown-fieldset>"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_springhealth_senior-program-manager_2026-05-06.txt",
+    "timestamp": "2026-05-07T11:12:30.945Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/mercury/jobs/5856800004",
+    "company": "mercury",
+    "role": "Senior Technical Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-input>",
+      "<unknown-div>",
+      "<unknown-input>",
+      "From where do you intend to work?"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_mercury_senior-technical-program-manager_2026-05-06.txt",
+    "timestamp": "2026-05-07T11:12:37.463Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/gleanwork/jobs/4628879005",
+    "company": "gleanwork",
+    "role": "Senior Technical Program Manager, Product",
+    "grade": "B",
+    "blocked_fields": [
+      "Are you able to work 4 days a week in office from our PA or SF office?",
+      "Why are you interested in working at Glean?",
+      "What AI tools are you currently using today and how are you using them?"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_glean_senior-tpm-product_2026-05-06.txt",
+    "timestamp": "2026-05-07T11:12:44.015Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/gofundme/jobs/7735983",
+    "company": "gofundme",
+    "role": "Staff Technical Program Manager, Security",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-input>",
+      "<unknown-div>",
+      "Do you require any employment authorization sponsorship now or in the future?*",
+      "<unknown-input>"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_gofundme_staff-tpm-security_2026-05-06.txt",
+    "timestamp": "2026-05-07T11:12:51.241Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/humaninterest/jobs/7523351",
+    "company": "humaninterest",
+    "role": "Senior Technical Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-input>",
+      "Location (City)*",
+      "<unknown-input>",
+      "<unknown-div>",
+      "Are you legally authorized to work in the United States?*",
+      "<unknown-input>",
+      "Will you now or at any time in the future require sponsorship for employment visa status (e.g., H-1B visa status, etc)*",
+      "<unknown-input>"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_humaninterest_senior-tpm_2026-05-06.txt",
+    "timestamp": "2026-05-07T11:12:58.595Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/mitratech/jobs/7806778",
+    "company": "mitratech",
+    "role": "Technical Project Manager III",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-input>",
+      "Location (City)*",
+      "<unknown-input>",
+      "<unknown-div>",
+      "How did you hear about this job?",
+      "Are you legally authorized to work for any employer in the United States?*",
+      "<unknown-input>",
+      "Do you currently, or will you in the future, require employer sponsorship to work in the United States? Examples include H-1B, TN, O-1, employment-based green card sponsorship, or continued employment after F-1 OPT.*",
+      "<unknown-input>",
+      "When would you be available to start work?*",
+      "<unknown-input>",
+      "Can you walk me through a challenge you faced on a project and how you resolved it?",
+      "Can you describe how you are using AI tools in your day to day operations? And how that has helped your team?",
+      "Mitratech uses text messaging to help move you through the interview process quickly. We text to share application updates, schedule interviews, and be more available to support you during the process. Select YES, if we can text you.\nYou can opt-out at any time by replying STOP.*",
+      "<unknown-input>"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_mitratech_technical-project-manager-iii_2026-05-06.txt",
+    "timestamp": "2026-05-07T11:13:51.073Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5200456008",
+    "company": "capitalrx",
+    "role": "Senior Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "What certifications and licenses do you have? If none, please type 'N/A'.",
+      "Will you now or in the future require Visa sponsorship? *",
+      "Are you legally authorized to work in the U.S.? *"
+    ],
+    "cl_path": "/sessions/bold-blissful-fermi/mnt/career-ops/output/cl_capitalrx_senior-scrum-master_2026-05-06.txt",
+    "timestamp": "2026-05-08T03:42:57.902Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5200456008",
+    "company": "capitalrx",
+    "role": "Senior Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "Will you now or in the future require Visa sponsorship? *",
+      "Are you legally authorized to work in the U.S.? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T05:33:58.663Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/springhealth66/jobs/4681418005",
+    "company": "springhealth66",
+    "role": "Senior Program Manager, Dedicated Workplace Teams",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Will you require visa sponsorship now or in the future?*",
+      "Are you eligible to work in the U.S.?*",
+      "How did you hear about us? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T05:34:20.987Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/mercury/jobs/5856800004",
+    "company": "mercury",
+    "role": "Senior Technical Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Will you now or at any time in the future require visa sponsorship?*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_mercury_senior-technical-program-manager_2026-05-06.txt",
+    "timestamp": "2026-05-13T05:34:31.338Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/gleanwork/jobs/4628879005",
+    "company": "gleanwork",
+    "role": "Senior Technical Program Manager, Product",
+    "grade": "B",
+    "blocked_fields": [
+      "Are you able to work 4 days a week in office from our PA or SF office?"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_glean_senior-tpm-product_2026-05-06.txt",
+    "timestamp": "2026-05-13T05:34:39.594Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/gofundme/jobs/7735983",
+    "company": "gofundme",
+    "role": "Staff Technical Program Manager, Security",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Do you require any employment authorization sponsorship now or in the future?*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_gofundme_staff-tpm-security_2026-05-06.txt",
+    "timestamp": "2026-05-13T05:34:52.905Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/humaninterest/jobs/7523351",
+    "company": "humaninterest",
+    "role": "Senior Technical Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the United States?*",
+      "Will you now or at any time in the future require sponsorship for employment visa status (e.g., H-1B visa status, etc)*",
+      "Will you now or at any time in the future require sponsorship for employment visa status (e.g., H-1B visa status, etc)*"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T05:35:09.677Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/mitratech/jobs/7806778",
+    "company": "mitratech",
+    "role": "Technical Project Manager III",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work for any employer in the United States?*",
+      "Do you currently, or will you in the future, require employer sponsorship to work in the United States? Examples include H-1B, TN, O-1, employment-based green card sponsorship, or continued employment after F-1 OPT.*",
+      "When would you be available to start work?*",
+      "When would you be available to start work?*",
+      "Can you walk me through a challenge you faced on a project and how you resolved it?",
+      "Mitratech uses text messaging to help move you through the interview process quickly. We text to share application updates, schedule interviews, and be more available to support you during the process. Select YES, if we can text you.\nYou can opt-out at any time by replying STOP.*",
+      "Mitratech uses text messaging to help move you through the interview process quickly. We text to share application updates, schedule interviews, and be more available to support you during the process. Select YES, if we can text you.\nYou can opt-out at any time by replying STOP.*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_mitratech_technical-project-manager-iii_2026-05-06.txt",
+    "timestamp": "2026-05-13T05:35:29.691Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/twilio/jobs/7707977",
+    "company": "twilio",
+    "role": "Senior Principal, Technical Program Management (Research & Development)",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "How did you hear about Twilio? *",
+      "Are you legally authorized to work in the United States?*",
+      "Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?*",
+      "Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?*",
+      "Please indicate whether you are either a citizen or resident of any of the following countries: Cuba, Iran, North Korea, Syria or Crimea Region of Ukraine.\n*",
+      "Please indicate whether you are either a citizen or resident of any of the following countries: Cuba, Iran, North Korea, Syria or Crimea Region of Ukraine.\n*",
+      "By clicking the \"Acknowledge\" button, you acknowledge that Twilio processes data in accordance with the Twilio Applicant Privacy Policy. *",
+      "By checking this box, I confirm I have read, reviewed and understood the guidelines outlined in the Candidate AI Responsible Use Policy. I affirm that all the information and materials I submit throughout my application and candidacy will reflect my own work and experience. *",
+      "Disability Status*",
+      "Disability Status*",
+      "Voluntary Self-Identification of Gender*",
+      "Voluntary Self-Identification of Gender*",
+      "Voluntary Self-Identification of Race/Ethnicity *",
+      "Voluntary Self-Identification of Race/Ethnicity *",
+      "Protected Veteran Status*",
+      "Protected Veteran Status*",
+      "Voluntary Self-Identification of Sexual Orientation*",
+      "Voluntary Self-Identification of Sexual Orientation*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_twilio_senior-principal-technical-program-management_2026-04-30.txt",
+    "timestamp": "2026-05-13T05:35:50.221Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/ludiaconsulting/jobs/5978157004",
+    "company": "ludiaconsulting",
+    "role": "Microsoft Dynamics 365 Project Coordinator/ Scrum Master",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you located in the US?*",
+      "Are you located in the US?*",
+      "Are you legally authorized to work in the United States?*",
+      "Will you now or in the future require employment visa sponsorship to work in the United States?*",
+      "Do you have experience maintaining Azure DevOps backlog and dashboards?*",
+      "Do you have experience maintaining Azure DevOps backlog and dashboards?*",
+      "Do you have experience with large-scale Microsoft Dynamics 365 (D365) implementation projects?\n*",
+      "Do you have experience with large-scale Microsoft Dynamics 365 (D365) implementation projects?\n*"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T11:12:45.051Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/forgeglobal/jobs/5921598004",
+    "company": "forgeglobal",
+    "role": "Agile Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Please let us know the soonest date you can start.",
+      "Location: This position is remote in Denver, CO. We intend to open an office in Denver and once we do, we will require hybrid attendance onsite at least 9 days each month. Does this work for you? *",
+      "Location: This position is remote in Denver, CO. We intend to open an office in Denver and once we do, we will require hybrid attendance onsite at least 9 days each month. Does this work for you? *",
+      "Are you legally authorized to work in the United States?*",
+      "Will you now or in the future require sponsorship for employment visa status? (H-1B. F-1B, CPT, OPT, etc.)*",
+      "Will you now or in the future require sponsorship for employment visa status? (H-1B. F-1B, CPT, OPT, etc.)*",
+      "Are you currently a resident and located in the state of Colorado?*",
+      "Are you currently a resident and located in the state of Colorado?*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_forge-global_agile-program-manager_2026-05-02.txt",
+    "timestamp": "2026-05-13T11:13:05.385Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/anaplan/jobs/8503207002",
+    "company": "anaplan",
+    "role": "Senior Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Address Line 1",
+      "Zip/Postal Code",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "How do you get to know about Anaplan?",
+      "You see as scrum master you team, your team meets sprint goals, but customer impact is poor what  you change first? *",
+      "Do you have any close connections—family, friends, or former colleagues—currently working at Anaplan?",
+      "Could you please confirm that the resume you’re submitting for this role at \"Anaplan\" is fully up to date?"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T11:13:20.992Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/anaplan/jobs/8503202002",
+    "company": "anaplan",
+    "role": "Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Address Line 1",
+      "Zip/Postal Code",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "How do you get to know about Anaplan?",
+      "You see as scrum master you team, your team meets sprint goals, but customer impact is poor what  you change first? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T11:13:36.659Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/anaplan/jobs/8434512002",
+    "company": "anaplan",
+    "role": "Program Manager",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Address Line 1",
+      "Zip/Postal Code"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T11:13:49.608Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://boards.greenhouse.io/figma/jobs/5982942004",
+    "company": "figma",
+    "role": "Technical Program Manager, Security",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Why do you want to join Figma?",
+      "Are you authorized to work in the country for which you applied? *",
+      "Have you ever worked for Figma before, as an employee or a contractor/consultant? *",
+      "Have you ever worked for Figma before, as an employee or a contractor/consultant? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T11:14:44.767Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/capco/jobs/7848272",
+    "company": "capco",
+    "role": "Project Manager/Scrum Master (She/ He/ They)",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Do you have experience working on banking/ insurance projects?*",
+      "Do you have experience working on banking/ insurance projects?*",
+      "What's the level of your Polish language fluency?*",
+      "What's the level of your Polish language fluency?*",
+      "What is Your preferred type of contract?  *",
+      "What is your current location?*",
+      "What is your current location?*",
+      "Were you referred to this role by a current Capco Poland Employee?",
+      "Reasonable Adjustments*",
+      "Reasonable Adjustments*",
+      "If you answered yes to the Reasonable Adjustments question, please provide additional details. If not, enter N/A.",
+      "Capco Job Candidate Privacy Notice Acknowledgement*",
+      "Capco Job Candidate Privacy Notice Acknowledgement*",
+      "Capco Job Candidate Privacy Notice Acknowledgement*",
+      "Capco Job Candidate Privacy Notice Acknowledgement*"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-13T11:15:58.285Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5200456008",
+    "company": "capitalrx",
+    "role": "Senior Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "Will you now or in the future require Visa sponsorship? *",
+      "Will you now or in the future require Visa sponsorship? *",
+      "Are you legally authorized to work in the U.S.? *",
+      "Are you legally authorized to work in the U.S.? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-14T11:10:22.145Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/springhealth66/jobs/4681418005",
+    "company": "springhealth66",
+    "role": "Senior Program Manager, Dedicated Workplace Teams",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Will you require visa sponsorship now or in the future?*",
+      "Will you require visa sponsorship now or in the future?*",
+      "Are you eligible to work in the U.S.?*",
+      "Are you eligible to work in the U.S.?*",
+      "How did you hear about us? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-14T11:10:47.384Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/mercury/jobs/5856800004",
+    "company": "mercury",
+    "role": "Senior Technical Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Country*",
+      "<unknown-div:group>",
+      "Will you now or at any time in the future require visa sponsorship?*",
+      "Will you now or at any time in the future require visa sponsorship?*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_mercury_senior-technical-program-manager_2026-05-06.txt",
+    "timestamp": "2026-05-14T11:10:59.683Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/gleanwork/jobs/4628879005",
+    "company": "gleanwork",
+    "role": "Senior Technical Program Manager, Product",
+    "grade": "B",
+    "blocked_fields": [
+      "Are you able to work 4 days a week in office from our PA or SF office?"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_glean_senior-tpm-product_2026-05-06.txt",
+    "timestamp": "2026-05-14T11:11:07.470Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/gofundme/jobs/7735983",
+    "company": "gofundme",
+    "role": "Staff Technical Program Manager, Security",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Do you require any employment authorization sponsorship now or in the future?*",
+      "Do you require any employment authorization sponsorship now or in the future?*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_gofundme_staff-tpm-security_2026-05-06.txt",
+    "timestamp": "2026-05-14T11:11:22.260Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/humaninterest/jobs/7523351",
+    "company": "humaninterest",
+    "role": "Senior Technical Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Country*",
+      "Location (City)*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the United States?*",
+      "Are you legally authorized to work in the United States?*",
+      "Will you now or at any time in the future require sponsorship for employment visa status (e.g., H-1B visa status, etc)*",
+      "Will you now or at any time in the future require sponsorship for employment visa status (e.g., H-1B visa status, etc)*"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-14T11:11:41.653Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/mitratech/jobs/7806778",
+    "company": "mitratech",
+    "role": "Technical Project Manager III",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work for any employer in the United States?*",
+      "Are you legally authorized to work for any employer in the United States?*",
+      "Do you currently, or will you in the future, require employer sponsorship to work in the United States? Examples include H-1B, TN, O-1, employment-based green card sponsorship, or continued employment after F-1 OPT.*",
+      "Do you currently, or will you in the future, require employer sponsorship to work in the United States? Examples include H-1B, TN, O-1, employment-based green card sponsorship, or continued employment after F-1 OPT.*",
+      "When would you be available to start work?*",
+      "When would you be available to start work?*",
+      "Can you walk me through a challenge you faced on a project and how you resolved it?",
+      "Mitratech uses text messaging to help move you through the interview process quickly. We text to share application updates, schedule interviews, and be more available to support you during the process. Select YES, if we can text you.\nYou can opt-out at any time by replying STOP.*",
+      "Mitratech uses text messaging to help move you through the interview process quickly. We text to share application updates, schedule interviews, and be more available to support you during the process. Select YES, if we can text you.\nYou can opt-out at any time by replying STOP.*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_mitratech_technical-project-manager-iii_2026-05-06.txt",
+    "timestamp": "2026-05-14T11:12:03.391Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/twilio/jobs/7707977",
+    "company": "twilio",
+    "role": "Senior Principal, Technical Program Management (Research & Development)",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "Country*",
+      "Location (City)*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "How did you hear about Twilio? *",
+      "Are you legally authorized to work in the United States?*",
+      "Are you legally authorized to work in the United States?*",
+      "Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?*",
+      "Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?*",
+      "Please indicate whether you are either a citizen or resident of any of the following countries: Cuba, Iran, North Korea, Syria or Crimea Region of Ukraine.\n*",
+      "Please indicate whether you are either a citizen or resident of any of the following countries: Cuba, Iran, North Korea, Syria or Crimea Region of Ukraine.\n*",
+      "By clicking the \"Acknowledge\" button, you acknowledge that Twilio processes data in accordance with the Twilio Applicant Privacy Policy. *",
+      "By checking this box, I confirm I have read, reviewed and understood the guidelines outlined in the Candidate AI Responsible Use Policy. I affirm that all the information and materials I submit throughout my application and candidacy will reflect my own work and experience. *",
+      "Disability Status*",
+      "Disability Status*",
+      "Voluntary Self-Identification of Gender*",
+      "Voluntary Self-Identification of Gender*",
+      "Voluntary Self-Identification of Race/Ethnicity *",
+      "Voluntary Self-Identification of Race/Ethnicity *",
+      "Protected Veteran Status*",
+      "Protected Veteran Status*",
+      "Voluntary Self-Identification of Sexual Orientation*",
+      "Voluntary Self-Identification of Sexual Orientation*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_twilio_senior-principal-technical-program-management_2026-04-30.txt",
+    "timestamp": "2026-05-14T11:12:25.833Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/forgeglobal/jobs/5921598004",
+    "company": "forgeglobal",
+    "role": "Agile Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Please let us know the soonest date you can start.",
+      "Location: This position is remote in Denver, CO. We intend to open an office in Denver and once we do, we will require hybrid attendance onsite at least 9 days each month. Does this work for you? *",
+      "Location: This position is remote in Denver, CO. We intend to open an office in Denver and once we do, we will require hybrid attendance onsite at least 9 days each month. Does this work for you? *",
+      "Are you legally authorized to work in the United States?*",
+      "Are you legally authorized to work in the United States?*",
+      "Will you now or in the future require sponsorship for employment visa status? (H-1B. F-1B, CPT, OPT, etc.)*",
+      "Will you now or in the future require sponsorship for employment visa status? (H-1B. F-1B, CPT, OPT, etc.)*",
+      "Are you currently a resident and located in the state of Colorado?*",
+      "Are you currently a resident and located in the state of Colorado?*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_forge-global_agile-program-manager_2026-05-02.txt",
+    "timestamp": "2026-05-14T11:12:58.226Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/anaplan/jobs/8503207002",
+    "company": "anaplan",
+    "role": "Senior Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Address Line 1",
+      "Zip/Postal Code",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "How do you get to know about Anaplan?",
+      "You see as scrum master you team, your team meets sprint goals, but customer impact is poor what  you change first? *",
+      "Do you have any close connections—family, friends, or former colleagues—currently working at Anaplan?",
+      "Could you please confirm that the resume you’re submitting for this role at \"Anaplan\" is fully up to date?"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_anaplan_principal-product-manager-applications-fpa-domain_2026-05-13.txt",
+    "timestamp": "2026-05-14T11:13:16.630Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/anaplan/jobs/8503202002",
+    "company": "anaplan",
+    "role": "Scrum Master",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Address Line 1",
+      "Zip/Postal Code",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Fist two rounds will be virtual and last round will be in our Gurugram office are comfortable to come for in-person interview?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "Anaplan has hybrid model-two days per week office. Are you comfortable coming office two days?*",
+      "How do you get to know about Anaplan?",
+      "You see as scrum master you team, your team meets sprint goals, but customer impact is poor what  you change first? *"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_anaplan_principal-product-manager-applications-fpa-domain_2026-05-13.txt",
+    "timestamp": "2026-05-14T11:13:34.993Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/anaplan/jobs/8434512002",
+    "company": "anaplan",
+    "role": "Program Manager",
+    "grade": "A",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Address Line 1",
+      "Zip/Postal Code"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_anaplan_principal-product-manager-applications-fpa-domain_2026-05-13.txt",
+    "timestamp": "2026-05-14T11:13:49.840Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://boards.greenhouse.io/figma/jobs/5982942004",
+    "company": "figma",
+    "role": "Technical Program Manager, Security",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Location (City)*",
+      "Location (City)*",
+      "<unknown-div:group>",
+      "Why do you want to join Figma?",
+      "Are you authorized to work in the country for which you applied? *",
+      "Are you authorized to work in the country for which you applied? *",
+      "Have you ever worked for Figma before, as an employee or a contractor/consultant? *",
+      "Have you ever worked for Figma before, as an employee or a contractor/consultant? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-14T11:14:09.905Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://www.okta.com/company/careers/opportunity/7893951",
+    "company": "okta",
+    "role": "Staff Technical Program Manager",
+    "grade": "B",
+    "blocked_fields": [
+      "Are you legally authorized to work in the country you reside?",
+      "To the best of your knowledge, do you have any family members / relatives or personal relationships at Okta or at any suppliers, partners, or vendors that have a business relationship with Okta?\n\n(For purposes of this question, a “family member / relative or personal relationship” is defined as close personal friends (including sexual and/or romantic relationships), close relatives (spouse, partner, children, cousins, aunts, uncles, nieces, nephews, grandparents or grandchildren), someone who lives in your household, or anyone else with whom you have a close enough personal relationship or connection that it could improperly bias your conduct or decision making or be perceived to be capable of impacting your conduct or decision making.",
+      "Do you have any outside business activity(ies) (advisory, consulting, or board roles, or side businesses) that you would continue engaging in or plan to engage in if you joined Okta in this role?",
+      "Have you worked for Okta in the past?",
+      "I acknowledge and agree to the processing of my personal data in accordance with Okta's Privacy Policy (see below)."
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-14T11:14:47.900Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/capco/jobs/7848272",
+    "company": "capco",
+    "role": "Project Manager/Scrum Master (She/ He/ They)",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "Country*",
+      "<unknown-div:group>",
+      "Do you have experience working on banking/ insurance projects?*",
+      "Do you have experience working on banking/ insurance projects?*",
+      "What's the level of your Polish language fluency?*",
+      "What's the level of your Polish language fluency?*",
+      "What is Your preferred type of contract?  *",
+      "What is your current location?*",
+      "What is your current location?*",
+      "Were you referred to this role by a current Capco Poland Employee?",
+      "Reasonable Adjustments*",
+      "Reasonable Adjustments*",
+      "If you answered yes to the Reasonable Adjustments question, please provide additional details. If not, enter N/A.",
+      "Capco Job Candidate Privacy Notice Acknowledgement*",
+      "Capco Job Candidate Privacy Notice Acknowledgement*",
+      "Capco Job Candidate Privacy Notice Acknowledgement*",
+      "Capco Job Candidate Privacy Notice Acknowledgement*"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-14T11:15:31.956Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5166646008",
+    "company": "capitalrx",
+    "role": "Product Manager - Apps",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "Are you currently subject to any non‑compete, non‑solicitation, or restrictive covenant that could limit your ability to work for us if hired?*",
+      "Will you now or in the future require Visa sponsorship? *",
+      "Will you now or in the future require Visa sponsorship? *",
+      "Are you legally authorized to work in the U.S.? *",
+      "Are you legally authorized to work in the U.S.? *",
+      "Are you currently located in the Denver, CO area and willing to be hybrid? *",
+      "Are you currently located in the Denver, CO area and willing to be hybrid? *"
+    ],
+    "cl_path": null,
+    "timestamp": "2026-05-14T11:15:56.901Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/mercury/jobs/5993466004",
+    "company": "mercury",
+    "role": "Senior Product Manager - Banking Foundations",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Will you now or at any time in the future require visa sponsorship?*",
+      "Will you now or at any time in the future require visa sponsorship?*"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_mercury_senior-technical-program-manager_2026-05-06.txt",
+    "timestamp": "2026-05-14T11:16:07.578Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/anaplan/jobs/8509031002",
+    "company": "anaplan",
+    "role": "Principal Product Manager, Applications (FP&A Domain)",
+    "grade": "B",
+    "blocked_fields": [
+      "Country*",
+      "<unknown-div:group>",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Are you legally authorized to work in the country in which the job you are applying for is located for any employer?*",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Will you now or in the future require visa sponsorship for employment at Anaplan?**",
+      "Address Line 1",
+      "Zip/Postal Code"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_anaplan_principal-product-manager-applications-fpa-domain_2026-05-13.txt",
+    "timestamp": "2026-05-14T11:16:22.479Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://careers.toasttab.com/jobs?gh_jid=7733118",
+    "company": "careers",
+    "role": "Principal Product Manager, Configuration Platform - Remote, United States",
+    "grade": "B",
+    "blocked_fields": [
+      "(201) 555-0123",
+      "What is your postal code?\n    (required)\n  \n  1df324f9",
+      "Resume/CV\n    (required)\n  \n  6240ac92",
+      "Are you legally authorized to work in the country where this job is located?\n    (required)\n  \n  62623369",
+      "Do you now, or will you ever, require employment sponsorship to work in the country where this job is located?\n    (required)\n  \n  6fd7df20",
+      "By selecting \"I agree\", I understand that the information I have provided as part of this job application will be processed in accordance with Toast's Applicant Privacy Statement.\n    (required)\n  \n  d3449a77"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_toast_senior-product-manager_2026-05-13.txt",
+    "timestamp": "2026-05-14T11:16:29.620Z",
+    "status": "blocked"
+  },
+  {
+    "url": "https://careers.toasttab.com/jobs?gh_jid=7786312",
+    "company": "careers",
+    "role": "Senior Product Manager - Remote, United States",
+    "grade": "B",
+    "blocked_fields": [
+      "(201) 555-0123",
+      "What's your postal code? \n    (required)\n  \n  bbcc297a",
+      "Resume/CV\n    (required)\n  \n  977639b0",
+      "Are you legally authorized to work in the country where this job is located?\n    (required)\n  \n  cff3eb94",
+      "Do you now, or will you ever, require employment sponsorship to work in the country where this job is located?\n    (required)\n  \n  6c56513d",
+      "By selecting \"I agree\", I understand that the information I have provided as part of this job application will be processed in accordance with Toast's Applicant Privacy Statement.\n    (required)\n  \n  0fc553aa"
+    ],
+    "cl_path": "C:\\Users\\rahil\\career-ops\\output\\cl_toast_senior-product-manager_2026-05-13.txt",
+    "timestamp": "2026-05-14T11:16:37.485Z",
+    "status": "blocked"
+  },

@@ -1,0 +1,10 @@
+{
+  "ran_at": "2026-06-07T13:02:18.412Z",
+  "bat_attempted": 81,
+  "submitted": 0,
+  "blocked": 53,
+  "sus_new": 0,
+  "errors": 28,
+  "deferred": 0,
+  "detail": "live-18:blocked, live-29:blocked, live-30:blocked, live-31:blocked, live-32:blocked, live-33:blocked, live-50:blocked, live-51:blocked, live-69:error, live-71:blocked, live-76:error, live-94:blocked, live-95:blocked, live-96:error, live-104:error, live-131:error, live-158:blocked, live-159:blocked, live-160:error, live-167:error, live-169:error, live-182:error, live-192:error, live-199:error, live-217:blocked, live-218:blocked, live-219:blocked, live-220:blocked, live-221:blocked, live-222:blocked, live-223:blocked, live-224:blocked, live-225:blocked, live-226:blocked, live-227:blocked, live-228:blocked, live-229:blocked, live-230:blocked, live-231:blocked, live-232:error, live-233:blocked, live-234:error, live-249:blocked, live-250:blocked, live-251:blocked, live-253:error, live-254:blocked, live-255:error, live-256:error, live-257:error, live-258:error, live-259:error, live-260:error, live-261:blocked, live-263:error, live-264:blocked, live-265:error, live-266:blocked, live-267:error, live-268:error, live-269:error, live-270:error, live-271:blocked, live-272:blocked, live-274:error, live-276:blocked, live-277:blocked, live-280:blocked, live-282:blocked, live-283:blocked, live-284:blocked, live-285:blocked, live-287:blocked, live-290:blocked, live-293:blocked, live-294:blocked, live-298:blocked, live-299:blocked, live-302:blocked, live-303:blocked, live-306:error"
+}

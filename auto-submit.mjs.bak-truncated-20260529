@@ -1,0 +1,2321 @@
+/**
+ * auto-submit.mjs
+ * AutoSubmit MVP — Playwright/Chromium script for Rahil Nathani's career-ops pipeline.
+ * Runs POST-SpeedyApply to fill remaining ATS fields and submit job applications.
+ *
+ * TD-22 (2026-05-24): canonicalizeApplyUrl() rewrites marketing-wrapper URLs
+ *   (stripe.com/jobs/listing/..., *?gh_jid=...) to direct Greenhouse board URLs.
+ * TD-23 (2026-05-24): tryWorkdayLogin() re-checks the Workday sign-in wall AFTER
+ *   the Apply click, not only before it.
+ *
+ * Usage:
+ *   node auto-submit.mjs --url <job-url> --grade <A|B|C> [--cl <path-to-cover-letter.pdf>]
+ *
+ * Exit codes:
+ *   0 = submitted successfully
+ *   1 = unhandled error
+ *   2 = SuS (company/role not confirmed — needs validation)
+ *   3 = blocked (required fields could not be filled)
+ */
+
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, readdirSync, appendFileSync } from 'fs';
+import { join, dirname, basename, extname } from 'path';
+import { fileURLToPath } from 'url';
+
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const INCLUSION_DB_PATH  = join(__dirname, 'data', 'inclusion-db.json');
+const SUS_DB_PATH        = join(__dirname, 'data', 'sus-db.json');
+const BLOCKED_JOBS_PATH  = join(__dirname, 'data', 'blocked-jobs.json');
+const SCREENSHOTS_DIR    = join(__dirname, 'data', 'screenshots');
+const PIPELINE_LOG       = join(__dirname, 'data', 'pipeline.log');
+const APPLICATIONS_PATH  = join(__dirname, 'data', 'applications.md');
+const KANBAN_PATH        = join(__dirname, 'dashboard', 'job-pulse-kanban.html');
+const ATS_PATTERNS_PATH  = join(__dirname, 'data', 'ats-confirmation-patterns.json');
+const PATTERN_HITS_PATH  = join(__dirname, 'data', 'ats-pattern-hits.json');
+
+// ── Bootstrap required directories at startup ─────────────────────────────
+// Runs immediately so log(), screenshot writes, and blocked-jobs writes never
+// fail because a parent directory is missing.
+mkdirSync(join(__dirname, 'data'), { recursive: true });
+mkdirSync(SCREENSHOTS_DIR, { recursive: true });
+
+// ── Load profile.yml autosubmit section (Kaizen 2026-05-14) ───────────────
+// Provides configurable constant-field answers (country, city, work-auth, etc.)
+// without a full YAML parser — we parse only the autosubmit: block via regex.
+// Falls back to hardcoded defaults if the file or key is missing.
+const PROFILE_PATH = join(__dirname, 'config', 'profile.yml');
+function loadProfileAutosubmit() {
+  const defaults = {
+    country: 'United States', city: 'Lewisville', zip: '75067', state: 'Texas',
+    work_authorized: 'Yes', requires_sponsorship: 'No',
+    visa_status: 'US Citizen or Permanent Resident',
+  };
+  try {
+    const raw = readFileSync(PROFILE_PATH, 'utf8');
+    // Extract the autosubmit: block (everything indented under it)
+    const blockMatch = raw.match(/^autosubmit:\s*\n((?:[ \t]+[^\n]+\n?)*)/m);
+    if (!blockMatch) return defaults;
+    const block = blockMatch[1];
+    const get = (key) => {
+      const m = block.match(new RegExp(`^[ \\t]+${key}:\\s*"?([^"\\n]+)"?`, 'm'));
+      return m ? m[1].trim() : null;
+    };
+    return {
+      country:               get('country')              || defaults.country,
+      city:                  get('city')                 || defaults.city,
+      zip:                   get('zip')                  || defaults.zip,
+      state:                 get('state')                || defaults.state,
+      work_authorized:       get('work_authorized')      || defaults.work_authorized,
+      requires_sponsorship:  get('requires_sponsorship') || defaults.requires_sponsorship,
+      visa_status:           get('visa_status')          || defaults.visa_status,
+    };
+  } catch { return defaults; }
+}
+const PROFILE_AS = loadProfileAutosubmit();
+
+/**
+ * Fortune 500 + major tech/consulting companies — always bypass SuS gate.
+ * Mirrors the FORTUNE_500 set in dashboard/job-pulse-kanban.html.
+ * Updated 2026-05-21 (F500 gate bypass fix).
+ */
+const FORTUNE_500 = new Set([
+  'walmart','amazon','apple','unitedhealth group','berkshire hathaway','cvs health','exxon mobil','alphabet','google','mckesson',
+  'cencora','costco','jpmorgan chase','jp morgan','jpmorgan','microsoft','cardinal health','chevron','cigna','ford motor',
+  'bank of america','general motors','elevance health','citigroup','centene','home depot','marathon petroleum','kroger','fannie mae','meta',
+  'meta platforms','phillips 66','valero energy','verizon','at&t','comcast','wells fargo','goldman sachs','target','humana',
+  'state farm','tesla','morgan stanley','johnson & johnson','archer daniels midland','freddie mac','pepsico','dell technologies','dell','prudential',
+  'lowe\'s','procter & gamble','energy transfer','boeing','albertsons','general electric','ge aerospace','ge vernova','intel','ibm','fedex','disney',
+  'walt disney','ups','united parcel service','lockheed martin','pfizer','american express','metlife','charter communications','hca healthcare','aig',
+  'merck','tjx','northrop grumman','raytheon','rtx','caterpillar','best buy','bristol myers squibb','sysco','plains gp holdings',
+  'tyson foods','american airlines','liberty mutual','nationwide','salesforce','delta air lines','3m','progressive','publix','allstate',
+  'aflac','world fuel services','starbucks','qualcomm','dow','american electric power','enterprise products','duke energy','allianz','northwestern mutual',
+  'oracle','exelon','united airlines','arrow electronics','southern company','aecom','molina healthcare','paypal','manpowergroup','automatic data processing',
+  'general dynamics','adp','massmutual','tiaa','liberty media','cisco','hewlett packard enterprise','hpe','mondelez','prologis',
+  'capital one','nike','american family insurance','danaher','emerson electric','colgate-palmolive','schwab','charles schwab','j&j','blackrock',
+  'henry schein','aramark','fidelity national information services','fis','autozone','c.h. robinson','occidental petroleum',
+  'progressive','baxter international','penske automotive','reinsurance group of america','marriott','arconic','hp','hewlett packard','lear','altria',
+  'baker hughes','snap-on','kkr','cdw','first american financial','dish network','las vegas sands','autonation','goodyear','gilead sciences',
+  'hca','marsh mclennan','mgm resorts','mondelez international','zoom','servicenow','adobe','vmware','intuit','square',
+  'block','snowflake','databricks','stripe','airbnb','doordash','uber','lyft','spotify','netflix',
+  'palantir','crowdstrike','zscaler','workday','splunk','datadog','nvidia','amd','broadcom','texas instruments',
+  'micron','applied materials','lam research','marvell','arista networks','atlassian',
+  'paypal holdings','robinhood','sofi','coinbase','toyota','toyota motor north america','toyota motor sales','southwest airlines','delta',
+  'usaa','ut southwestern','ut southwestern medical center','accenture','deloitte','kpmg','ey','ernst & young','pwc','pricewaterhousecoopers',
+  'mckinsey','bcg','bain','medtronic','philips','abbott','j&j','johnson and johnson',
+  't-mobile','tmobile','motorola solutions','motorola',
+  // Workday slug forms (no spaces — as returned by extractCompanyFromUrl)
+  'geaerospace','gevernova','jpmorgan','bankofamerica','cvshealth','unitedhealth',
+  'wellsfargo','goldmansachs','morganstanley','northropgrumman','generalelectric',
+  'johnsononjohnson','pricewaterhousecoopers','ernstandyoung','americanexpress',
+  // Added 2026-05-22 (Kaizen 1)
+  'motorolasolutions','medtronic','philips','tmobile'
+]);
+
+/** Companies always considered safe — skip SuS check */
+const KNOWN_CONNECTIONS = new Set([
+  'jpmorgan chase', 'jpmorgan', 'jp morgan', 'google', 'capital one',
+  'southwest airlines', 'toyota', 'meta', 'databricks', 'snowflake',
+  'microsoft', 'amazon', 'apple', 'stripe', 'salesforce', 'boeing',
+  'accenture', 'ibm', 'deloitte', 'kpmg', 'oracle', 'cisco',
+  'at&t', 'american airlines', 'dell', 'ut southwestern', 'mckesson', 'usaa'
+]);
+
+/** Prefer-not-to-say option text patterns for EEO dropdowns */
+const DECLINE_OPTIONS = [
+  /prefer not to (say|answer|disclose|identify)/i,
+  /decline to (self-identify|identify|disclose|answer)/i,
+  /i do not wish/i,
+  /choose not to/i,
+  /not specified/i,
+  /rather not say/i,
+  /no answer/i
+];
+
+/**
+ * Q→A patterns for required Yes/No radio groups and binary comboboxes.
+ * Matched against the question (legend / aria-label / nearby label) text.
+ * First match wins; longer/more specific patterns appear first.
+ * Added 2026-05-07 (Kaizen #1) to unblock Greenhouse visa/work-eligibility fieldsets.
+ * Updated 2026-05-09 (TD-04 fix):
+ *   - Non-compete → No (confirmed: Rahil has no non-compete or restrictive covenant)
+ *   - Work-from location → Remote / Dallas TX
+ */
+const RADIO_QA_PATTERNS = [
+  // Visa / sponsorship → No (Rahil is a US Citizen, no sponsorship needed now or ever)
+  { match: /(require|need).*?(visa|employer)?\s*sponsorship|h[-\s]?1b|sponsorship.*?(now or in the future|future|hire|employment)|will you.*?require.*?visa|employment authorization sponsorship/i, answer: 'No' },
+  // Work authorization → Yes (US Citizen)
+  { match: /(legally\s+)?(authorized|eligible|able)\s+to\s+work\s+(in\s+(the\s+)?(u\.?s\.?|united states)|for\s+any\s+employer)|right to work|work authorization|authorized to work in the united states/i, answer: 'Yes' },
+  // Non-compete / restrictive covenant → No (confirmed 2026-05-09: no non-competes, no restrictions)
+  { match: /non[-\s]?compete|non[-\s]?solicit|restrictive covenant|covenant.*limit|subject.*non/i, answer: 'No' },
+  // 4-day in-office / hybrid → No (Rahil is Remote-only)
+  { match: /able\s+to\s+work\s+4\s+days|4\s+days?\s+(a|per)\s+week\s+in\s+(office|person)|in[\s-]office\s+requirement/i, answer: 'No' },
+  // SMS / text-message opt-in → Yes (Rahil is open to it)
+  { match: /text\s+messag|sms|can we text you|via text|text\s+you/i, answer: 'Yes' },
+  // Background check / drug screen consent → Yes (per profile defaults)
+  { match: /background check|drug screen|drug test/i, answer: 'Yes' },
+  // 18+ confirmation → Yes
+  { match: /at\s+least\s+18|18\s+years?\s+(or\s+older|of age)/i, answer: 'Yes' },
+];
+
+/**
+ * ARIA combobox value patterns — common Country / Location-City answers.
+ * Updated 2026-05-13 (TD-05): added visa/work-auth entries to cover Greenhouse
+ *   forms that render these as ARIA combos instead of radio fieldsets.
+ * Updated 2026-05-14 (Kaizen): values now sourced from config/profile.yml
+ *   autosubmit: section so they're configurable without touching code.
+ */
+const COMBOBOX_VALUE_HINTS = [
+  { match: /^country(\s*[*])?|country\s+of\s+(residence|origin|citizenship)/i, value: PROFILE_AS.country },
+  { match: /location\s*\(?\s*city\s*\)?|^city\b/i,                       value: PROFILE_AS.city },
+  { match: /location\s*\(?\s*state\s*\)?|^state\b/i,                     value: PROFILE_AS.state },
+  // Zip / postal code combobox (some ATS render as ARIA combobox)
+  { match: /zip(\s*code)?|postal(\s*code)?/i,                             value: PROFILE_AS.zip },
+  // Visa / citizenship status combos (some Greenhouse forms use a combobox, not radios)
+  { match: /visa\s+status|citizenship\s+status|immigration\s+status/i,   value: PROFILE_AS.visa_status },
+  // Work-authorization combobox (Yes/No select rendered as ARIA combobox)
+  { match: /(legally\s+)?(authorized|eligible)\s+to\s+work|(work\s+)?authorization\s+status/i, value: PROFILE_AS.work_authorized },
+  // Sponsorship combobox (No)
+  { match: /require.*?sponsorship|need.*?sponsorship|visa\s+sponsor/i,   value: PROFILE_AS.requires_sponsorship },
+];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function log(msg) {
+  const line = `[${new Date().toISOString()}] ${msg}`;
+  console.log(line);
+  appendFileSync(PIPELINE_LOG, line + '\n');
+}
+
+function loadJson(path) {
+  return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+function saveJson(path, data) {
+  // Atomic write: write to .tmp then rename — prevents truncation/corruption
+  // if two processes write simultaneously (Kaizen 2026-05-22).
+  const tmp = path + '.tmp';
+  writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  renameSync(tmp, path);
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ── Per-ATS confirmation gate helpers ────────────────────────────────────────
+
+/**
+ * Load ATS confirmation patterns from data/ats-confirmation-patterns.json.
+ * Returns the platform-specific block, or the fallback if ATS is unknown.
+ */
+function loadAtsPatterns(ats) {
+  try {
+    const raw = JSON.parse(readFileSync(ATS_PATTERNS_PATH, 'utf8'));
+    return raw.platforms?.[ats] ?? raw.fallback;
+  } catch {
+    // Hardcoded fallback if file is missing — keeps the gate functional
+    return {
+      fresh_submission: {
+        url_patterns: ['/confirmation', '/success', '/thank-you', '/submitted', '/applied', '/thanks'],
+        text_patterns: ['application submitted', 'thank you.*appl', 'we.*received.*application', 'successfully submitted'],
+      },
+      already_applied: {
+        url_patterns: [],
+        text_patterns: ['already applied', "you've already applied", 'previously submitted', 'you applied on'],
+      },
+    };
+  }
+}
+
+/**
+ * Test a list of regex pattern strings against a target string.
+ * Returns { matched: bool, pattern: string|null } — the first pattern that matched.
+ */
+function matchPatterns(patterns, target) {
+  for (const p of (patterns ?? [])) {
+    try {
+      if (new RegExp(p, 'i').test(target)) return { matched: true, pattern: p };
+    } catch { /* skip malformed regex */ }
+  }
+  return { matched: false, pattern: null };
+}
+
+/**
+ * Append a hit record to data/ats-pattern-hits.json so we can see
+ * which patterns fired over time and tune them without guessing.
+ */
+function recordPatternHit(ats, outcome, patternType, pattern, url) {
+  try {
+    let hits = [];
+    if (existsSync(PATTERN_HITS_PATH)) {
+      hits = JSON.parse(readFileSync(PATTERN_HITS_PATH, 'utf8'));
+    }
+    hits.push({ ts: new Date().toISOString(), ats, outcome, patternType, pattern, url });
+    // Keep last 500 hits — enough history without bloat
+    if (hits.length > 500) hits = hits.slice(-500);
+    const tmp = PATTERN_HITS_PATH + '.tmp';
+    writeFileSync(tmp, JSON.stringify(hits, null, 2));
+    renameSync(tmp, PATTERN_HITS_PATH);
+  } catch { /* non-fatal */ }
+}
+
+/** Resolve a dotted key like "profile.first_name" from a nested object */
+function resolvePath(obj, dotPath) {
+  return dotPath.split('.').reduce((cur, k) => (cur != null ? cur[k] : undefined), obj);
+}
+
+/** Fuzzy-match a field label against ats_field_map keys */
+function matchLabel(label, fieldMap) {
+  if (!label) return null;
+  const normalized = label.trim().toLowerCase().replace(/[*:]+$/, '').trim();
+  if (fieldMap[normalized]) return fieldMap[normalized];
+  // partial match
+  for (const [key, val] of Object.entries(fieldMap)) {
+    if (normalized.includes(key) || key.includes(normalized)) return val;
+  }
+  return null;
+}
+
+/** Detect ATS from URL */
+function detectATS(url) {
+  if (/greenhouse\.io/i.test(url))                          return 'greenhouse';
+  if (/[?&]gh_jid=/i.test(url))                             return 'greenhouse'; // TD-22: marketing wrapper carrying a Greenhouse job id
+  if (/stripe\.com\/jobs\/listing\//i.test(url))            return 'greenhouse'; // TD-22: Stripe listing page wraps a Greenhouse board
+  if (/lever\.co/i.test(url))                               return 'lever';
+  if (/ashbyhq\.com/i.test(url))                            return 'ashby';
+  if (/myworkdayjobs\.com/i.test(url))                      return 'workday';
+  if (/linkedin\.com\/jobs/i.test(url))                     return 'linkedin';
+  if (/indeed\.com|smartapply\.indeed\.com/i.test(url))     return 'indeed';
+  if (/theladders\.com/i.test(url))                         return 'theladders';
+  if (/hiringcafe\.com/i.test(url))                         return 'hiringcafe';
+  if (/icims\.com/i.test(url))                              return 'icims';
+  return 'unknown';
+}
+
+/**
+ * Generic subdomain prefixes that don't identify a company.
+ * When the first hostname segment is one of these, fall back to the second segment.
+ * e.g. careers.toasttab.com → "toasttab" not "careers"
+ * TD-13 2026-05-19
+ */
+const GENERIC_HOST_PREFIXES = new Set([
+  'careers', 'jobs', 'apply', 'work', 'hire', 'hiring',
+  'talent', 'recruit', 'recruiting', 'boards',
+]);
+
+/**
+ * Hostname slug → Greenhouse board token, for the cases where they differ.
+ * Most of the time the board token IS the hostname SLD (databricks.com → "databricks").
+ * Add an entry here only when the URL-verification gate logs a 404 for a guessed token.
+ * TD-22 2026-05-24.
+ */
+const GREENHOUSE_BOARD_ALIASES = {
+  // 'examplehost': 'actual-greenhouse-board-token',
+};
+
+/** Derive the Greenhouse board token from a marketing-wrapper URL's hostname. */
+function greenhouseBoardFromUrl(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    const parts = host.split('.');
+    const slug = GENERIC_HOST_PREFIXES.has(parts[0]) ? (parts[1] ?? parts[0]) : parts[0];
+    return GREENHOUSE_BOARD_ALIASES[slug] || slug;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * TD-22 (2026-05-24): Greenhouse jobs were being injected as company marketing-site
+ * URLs (stripe.com/jobs/listing/..., databricks.com/...?gh_jid=...) that carry the
+ * job id but render a marketing page with NO application form. detectATS saw
+ * 'unknown', no platform handler ran, and AutoSubmit stalled at 'no-submit-button'
+ * (8 of 15 blocked cards in the 2026-05-23 bat run). This rewrites such wrappers to
+ * the canonical Greenhouse board form URL. Pure function — unit-tested without a browser.
+ */
+function canonicalizeApplyUrl(url) {
+  try {
+    // Already a canonical board URL — leave it untouched
+    if (/job-boards\.greenhouse\.io\/[^/]+\/jobs\/\d+/i.test(url)) return url;
+    // Legacy host: boards.greenhouse.io/{board}/jobs/{id} → job-boards.greenhouse.io
+    const legacy = url.match(/boards\.greenhouse\.io\/([^/?#]+)\/jobs\/(\d+)/i);
+    if (legacy) return `https://job-boards.greenhouse.io/${legacy[1]}/jobs/${legacy[2]}`;
+    // Stripe: stripe.com/jobs/listing/{slug}/{id} → Greenhouse board "stripe"
+    const stripeM = url.match(/stripe\.com\/jobs\/listing\/[^/]+\/(\d+)/i);
+    if (stripeM) return `https://job-boards.greenhouse.io/stripe/jobs/${stripeM[1]}`;
+    // Generic marketing wrapper carrying ?gh_jid={id}
+    const ghJid = url.match(/[?&]gh_jid=(\d+)/i);
+    if (ghJid) {
+      const board = greenhouseBoardFromUrl(url);
+      if (board) return `https://job-boards.greenhouse.io/${board}/jobs/${ghJid[1]}`;
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Workday tenant slug → canonical company name.
+ * When Workday hosts a company on a shared tenant (e.g. globalhr → Raytheon/RTX),
+ * the hostname prefix is the tenant slug, not the company name.
+ * Add entries here whenever a tenant slug fails the F500 gate.
+ * TD-20 2026-05-23.
+ */
+const WORKDAY_TENANT_ALIASES = {
+  globalhr:        'raytheon',
+  rtxcareers:      'raytheon',
+  raytheonjobs:    'raytheon',
+  unitedhealthjobs:'unitedhealth group',
+  uhgjobs:         'unitedhealth group',
+  walmartcareers:  'walmart',
+  boeingcareers:   'boeing',
+  fordcareers:     'ford motor',
+  gmcareers:       'general motors',
+  chevron:         'chevron',
+  exxonmobil:      'exxon mobil',
+  upsers:          'ups',
+  fedexcareers:    'fedex',
+  jpmorganchasejobs:'jpmorgan chase',
+  attjobs:         'at&t',
+};
+
+/** Extract company name from URL hostname */
+function extractCompanyFromUrl(url) {
+  // TD-34: decode URL-encoded segments so sus-db entries are clean slugs, not %XX garbage
+  const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '');
+    // greenhouse: boards.greenhouse.io/company  OR  careers.toasttab.com?gh_jid=
+    const ghMatch = url.match(/greenhouse\.io\/([^/?]+)/);
+    if (ghMatch) return safeDecode(ghMatch[1]).replace(/-/g, ' ');
+    // lever: jobs.lever.co/company
+    const lvMatch = url.match(/lever\.co\/([^/?]+)/);
+    if (lvMatch) return safeDecode(lvMatch[1]).replace(/-/g, ' ');
+    // ashby: jobs.ashbyhq.com/company
+    const asMatch = url.match(/ashbyhq\.com\/([^/?]+)/);
+    if (asMatch) return safeDecode(asMatch[1]).replace(/-/g, ' ');
+    // fallback: first non-generic segment of hostname
+    const parts = hostname.split('.');
+    const slug = GENERIC_HOST_PREFIXES.has(parts[0]) ? (parts[1] ?? parts[0]) : parts[0];
+    // TD-20: Workday tenant alias — resolve shared tenant slugs to company names
+    const tenantKey = slug.toLowerCase().replace(/-/g, '');
+    if (/myworkdayjobs/i.test(hostname) && WORKDAY_TENANT_ALIASES[tenantKey]) {
+      return WORKDAY_TENANT_ALIASES[tenantKey];
+    }
+    return safeDecode(slug).replace(/-/g, ' ');
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
+ * Find latest cover letter file matching a company slug.
+ * Searches data/output/ then output/, prefers PDF over TXT.
+ * The `directory` param is accepted but ignored — we always search both
+ * canonical output directories so callers don't need to pass a path.
+ */
+function findLatestCoverLetter(_directory, company) {
+  const dirs = [
+    join(__dirname, 'data', 'output'),
+    join(__dirname, 'output'),
+  ];
+  const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  let pool = [];
+  for (const dir of dirs) {
+    if (!existsSync(dir)) continue;
+    readdirSync(dir)
+      .filter(f => /cl[-_]/i.test(f) && /\.(pdf|txt)$/i.test(f))
+      .forEach(f => pool.push({ path: join(dir, f), name: f }));
+  }
+
+  if (pool.length === 0) return null;
+
+  // Narrow to files that mention the company slug; fall back to all if none match
+  const matching = pool.filter(f =>
+    f.name.toLowerCase().replace(/[^a-z0-9]/g, '').includes(slug)
+  );
+  const candidates = matching.length > 0 ? matching : pool;
+
+  // Sort descending by filename (date-prefixed names sort correctly this way)
+  candidates.sort((a, b) => b.name.localeCompare(a.name));
+
+  // Prefer PDF over TXT
+  const pdf = candidates.find(f => extname(f.name).toLowerCase() === '.pdf');
+  const txt = candidates.find(f => extname(f.name).toLowerCase() === '.txt');
+  const best = pdf ?? txt;
+  return best ? best.path : null;
+}
+
+/** Load cover letter text (for pasting into textarea) */
+function loadCoverLetterText(filePath) {
+  if (!filePath || !existsSync(filePath)) return null;
+  if (extname(filePath).toLowerCase() === '.pdf') return null; // can't read PDF text here
+  try { return readFileSync(filePath, 'utf8'); } catch { return null; }
+}
+
+/**
+ * Append a row to applications.md — creates file + header if absent.
+ * TD-08 fix 2026-05-14: pre-insert lookup — if company+role already exists in any
+ * row, update status/notes in-place instead of appending a duplicate.
+ */
+function appendToTracker(company, role, grade, status, url) {
+  const HEADER    = '| Date | Company | Role | Grade | Lane | Status | Referral | CL Sent | Notes |';
+  const SEPARATOR = '|------|---------|------|-------|------|--------|----------|---------|-------|';
+
+  // Read existing content (default to empty string if file is missing)
+  let existing = '';
+  try { existing = readFileSync(APPLICATIONS_PATH, 'utf8'); } catch { existing = ''; }
+
+  // ── TD-08: duplicate guard — update in-place if company+role already present ──
+  const compNorm = company.toLowerCase().trim();
+  const roleNorm = role.toLowerCase().trim();
+  const lines    = existing.split('\n');
+  const dataRows = lines
+    .map((l, i) => ({ line: l, idx: i }))
+    .filter(({ line }) => /^\|\s*\d/.test(line));   // numbered data rows only
+
+  const hit = dataRows.find(({ line }) => {
+    const lower = line.toLowerCase();
+    // Both company and role must appear in the same row (substring match)
+    return lower.includes(compNorm) && lower.includes(roleNorm);
+  });
+
+  if (hit) {
+    // Update the status column (position 6 in pipe-split) and notes column (9)
+    const cols = lines[hit.idx].split('|');
+    if (cols.length >= 8) {
+      cols[6] = ` ${status} `;
+      cols[9] = ` auto-submit re-run ${today()} `;
+      lines[hit.idx] = cols.join('|');
+      writeFileSync(APPLICATIONS_PATH, lines.join('\n'), 'utf8');
+      log(`  ✓ tracker update in-place (TD-08): "${company}" / "${role}" → ${status}`);
+      return;
+    }
+  }
+
+  // ── No existing match — derive next row number and append ──────────────────
+  const nums = lines
+    .filter(r => /^\|\s*\d+/.test(r))
+    .map(r => parseInt(r.split('|')[1]?.trim(), 10))
+    .filter(n => !isNaN(n));
+  const num    = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  const padded = String(num).padStart(3, '0');
+  const line   = `| ${padded} | ${today()} | ${company} | ${role} | ${grade} | ${status} | ❌ | — | auto-submit |`;
+
+  if (!existing.includes('| Date | Company |')) {
+    // File is empty or missing the header — write header + separator + first row
+    writeFileSync(APPLICATIONS_PATH, `${HEADER}\n${SEPARATOR}\n${line}\n`, 'utf8');
+  } else {
+    appendFileSync(APPLICATIONS_PATH, '\n' + line);
+  }
+}
+
+/** Write/update blocked-jobs.json — safe even when file is missing or corrupt */
+function writeBlocked(entry) {
+  let arr = [];
+  try { arr = loadJson(BLOCKED_JOBS_PATH); } catch { arr = []; }
+  arr.push(entry);
+  saveJson(BLOCKED_JOBS_PATH, arr);
+}
+
+/**
+ * KAIZEN-11 (2026-05-26): Auto-archive cards blocked 3+ times with only structural
+ * form fields (address, work-auth) that a bot cannot fill. Moves to cold-backlog so
+ * a human can complete manually.
+ */
+const STRUCTURAL_BLOCK_PATTERNS = [
+  'country', 'address', 'zip', 'postal', 'state', 'work-auth', 'visa',
+  'legally authorized', 'non-compete', 'city', 'location',
+];
+function isStructuralBlock(fields) {
+  return Array.isArray(fields) && fields.length > 0 && fields.every(f =>
+    STRUCTURAL_BLOCK_PATTERNS.some(p => f.toLowerCase().includes(p))
+  );
+}
+
+function checkChronicallyBlocked(url, blockedFields) {
+  try {
+    if (!existsSync(BLOCKED_JOBS_PATH)) return;
+    const arr = loadJson(BLOCKED_JOBS_PATH);
+    if (!isStructuralBlock(blockedFields)) return;
+    const structuralCount = arr.filter(e =>
+      e.url === url && isStructuralBlock(e.blocked_fields)
+    ).length;
+    if (structuralCount >= 3) {
+      const company = (arr.find(e => e.url === url) || {}).company || url;
+      log(`→ ${company} auto-archived to cold-backlog after ${structuralCount} structural blocks (KAIZEN-11)`);
+      moveKanbanCard(url, 'cold-backlog');
+    }
+  } catch (e) {
+    log(`WARN checkChronicallyBlocked: ${e.message}`);
+  }
+}
+
+/**
+ * Move a Kanban card to the given column by updating its columnId in the HTML.
+ * Finds the card by exact URL match, scans for its enclosing { } block, and
+ * does a targeted replacement of columnId:'...' within that block only.
+ * Safe no-op if the Kanban file doesn't exist or the URL isn't found.
+ */
+function moveKanbanCard(cardUrl, targetColumnId) {
+  if (!existsSync(KANBAN_PATH)) {
+    log(`⚠ moveKanbanCard: Kanban not found at ${KANBAN_PATH} — skipping`);
+    return;
+  }
+  let html = readFileSync(KANBAN_PATH, 'utf8');
+
+  // Try to find the URL in the HTML (both spacing variants)
+  let urlIdx = html.indexOf(`url:'${cardUrl}'`);
+  if (urlIdx === -1) urlIdx = html.indexOf(`url: '${cardUrl}'`);
+  if (urlIdx === -1) {
+    log(`⚠ moveKanbanCard: URL not found in Kanban — skipping (${cardUrl})`);
+    return;
+  }
+
+  // Scan backward from the URL occurrence to find the opening { of this card object
+  let blockStart = urlIdx;
+  while (blockStart > 0 && html[blockStart] !== '{') blockStart--;
+
+  // Scan forward to find the matching closing }
+  let blockEnd = urlIdx;
+  let depth = 0;
+  for (let i = blockStart; i < html.length; i++) {
+    if (html[i] === '{') depth++;
+    else if (html[i] === '}') {
+      depth--;
+      if (depth === 0) { blockEnd = i; break; }
+    }
+  }
+
+  // Replace columnId within this card block only
+  const cardBlock = html.slice(blockStart, blockEnd + 1);
+  const newCardBlock = cardBlock.replace(/columnId\s*:\s*'[^']*'/, `columnId:'${targetColumnId}'`);
+
+  if (newCardBlock === cardBlock) {
+    log(`⚠ moveKanbanCard: columnId field not found in card block — Kanban not updated`);
+    return;
+  }
+
+  html = html.slice(0, blockStart) + newCardBlock + html.slice(blockEnd + 1);
+  writeFileSync(KANBAN_PATH, html, 'utf8');
+  log(`✓ Kanban card moved to '${targetColumnId}' for: ${cardUrl}`);
+}
+
+// ── CLI parsing ───────────────────────────────────────────────────────────────
+
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const result = {
+    url: null,
+    grade: 'B',
+    cl: null,
+    source: null,               // discovery platform: linkedin|indeed|theladders|hiringcafe
+    autoConfirmIfInTracker: false, // Kaizen #2 (2026-05-07)
+  };
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--url')    result.url    = args[++i];
+    if (args[i] === '--grade')  result.grade  = args[++i]?.toUpperCase();
+    if (args[i] === '--cl')     result.cl     = args[++i];
+    if (args[i] === '--source') result.source = args[++i]?.toLowerCase();
+    if (args[i] === '--auto-confirm-if-in-tracker') result.autoConfirmIfInTracker = true;
+  }
+  return result;
+}
+
+/**
+ * Check whether a company appears anywhere in applications.md (case-insensitive
+ * substring match against every cell of every data row). Used by Kaizen #2 to
+ * auto-promote first-time URLs from previously-tracked companies past the SuS gate.
+ * Added 2026-05-07.
+ */
+function companyExistsInTracker(companyNorm) {
+  try {
+    if (!existsSync(APPLICATIONS_PATH)) return false;
+    const txt   = readFileSync(APPLICATIONS_PATH, 'utf8').toLowerCase();
+    const slug  = companyNorm.toLowerCase().trim();
+    if (!slug) return false;
+    // Word-boundary-ish match: avoid matching "twilio" inside "twiliosubsidiary" by
+    // requiring a non-letter char on either side or start/end of line.
+    const re = new RegExp(`(^|[^a-z0-9])${slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'm');
+    return re.test(txt);
+  } catch {
+    return false;
+  }
+}
+
+// ── ATS fill helpers (page-level) ────────────────────────────────────────────
+
+/**
+ * Get the label text associated with a form element.
+ * Tries: aria-label, placeholder, nearby <label>, parent text.
+ */
+async function getFieldLabel(page, element) {
+  try {
+    const ariaLabel  = await element.getAttribute('aria-label').catch(() => null);
+    if (ariaLabel?.trim()) return ariaLabel.trim();
+
+    const placeholder = await element.getAttribute('placeholder').catch(() => null);
+    if (placeholder?.trim()) return placeholder.trim();
+
+    const id = await element.getAttribute('id').catch(() => null);
+    if (id) {
+      const labelText = await page.$eval(
+        `label[for="${id}"]`,
+        el => el.textContent
+      ).catch(() => null);
+      if (labelText?.trim()) return labelText.trim();
+    }
+
+    // name attribute as last resort
+    const name = await element.getAttribute('name').catch(() => null);
+    if (name?.trim()) return name.trim();
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Select the best "decline" option in a dropdown */
+async function selectDeclineOption(page, select) {
+  const options = await select.$$('option');
+  for (const opt of options) {
+    const text = await opt.textContent();
+    if (DECLINE_OPTIONS.some(re => re.test(text))) {
+      const val = await opt.getAttribute('value');
+      await select.selectOption(val ?? text.trim());
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Get the question text for a fieldset / radiogroup / combobox container.
+ * Tries: legend, aria-labelledby chain, aria-label, parent label, leading text node.
+ * Added 2026-05-07 (Kaizen #1).
+ */
+async function getContainerLabel(page, container) {
+  try {
+    // Direct aria-label
+    const aria = await container.getAttribute('aria-label').catch(() => null);
+    if (aria?.trim()) return aria.trim();
+
+    // aria-labelledby — concatenate all referenced element text
+    const labelledBy = await container.getAttribute('aria-labelledby').catch(() => null);
+    if (labelledBy) {
+      const ids = labelledBy.split(/\s+/).filter(Boolean);
+      const parts = [];
+      for (const id of ids) {
+        const t = await page.$eval(`#${CSS.escape(id)}`, el => el.textContent).catch(() => null);
+        if (t?.trim()) parts.push(t.trim());
+      }
+      if (parts.length) return parts.join(' ').trim();
+    }
+
+    // <legend> child
+    const legend = await container.$('legend').catch(() => null);
+    if (legend) {
+      const t = await legend.textContent().catch(() => null);
+      if (t?.trim()) return t.trim();
+    }
+
+    // Parent <label> wrapping the container
+    const parentLabelText = await container.evaluate(el => {
+      let cur = el.parentElement;
+      while (cur && cur.tagName !== 'FORM' && cur.tagName !== 'BODY') {
+        if (cur.tagName === 'LABEL') return cur.textContent;
+        // Look for a label sibling
+        const sib = cur.querySelector(':scope > label');
+        if (sib && !sib.contains(el)) return sib.textContent;
+        cur = cur.parentElement;
+      }
+      return null;
+    }).catch(() => null);
+    if (parentLabelText?.trim()) return parentLabelText.trim();
+
+    // KAIZEN-04 2026-05-17: Greenhouse work-auth <div role="group"> sections often have
+    // the question text in a preceding sibling element (not <legend>, not aria-labelledby).
+    // Walk backwards through previous siblings to find meaningful text content.
+    const prevSibText = await container.evaluate(el => {
+      let sib = el.previousElementSibling;
+      while (sib) {
+        // Skip containers that themselves hold inputs (not the label we want)
+        if (!sib.querySelector('input, select, textarea, button')) {
+          const txt = (sib.textContent || '').trim();
+          if (txt.length > 5) return txt;
+        }
+        sib = sib.previousElementSibling;
+      }
+      return null;
+    }).catch(() => null);
+    if (prevSibText?.trim()) return prevSibText.trim();
+
+    // KAIZEN-04 2026-05-17: Last resort — look at the first non-interactive child
+    // element of the container itself (some Greenhouse variants wrap the question
+    // in a <p> or <div> that is the first child of <div role="group">).
+    const firstChildText = await container.evaluate(el => {
+      for (const child of Array.from(el.children)) {
+        const tag = child.tagName;
+        if (['INPUT','SELECT','TEXTAREA','BUTTON','LABEL'].includes(tag)) continue;
+        if (child.querySelector('input, select, textarea, button')) continue;
+        const txt = (child.textContent || '').trim();
+        if (txt.length > 5) return txt;
+      }
+      return null;
+    }).catch(() => null);
+    if (firstChildText?.trim()) return firstChildText.trim();
+
+    // KAIZEN-08 2026-05-24: Additional fallbacks for <unknown-*> fields.
+
+    // Placeholder on a child input — labels the container via the input's hint text.
+    // Catches fields where the question is rendered as a placeholder instead of a label.
+    const childPlaceholder = await container.evaluate(el => {
+      const inp = el.querySelector('input[placeholder]:not([type="hidden"]), textarea[placeholder]');
+      return inp ? (inp.placeholder || null) : null;
+    }).catch(() => null);
+    if (childPlaceholder?.trim()) return childPlaceholder.trim();
+
+    // <th> ancestor — if the container lives in a table, the column header is the label.
+    const tableHeader = await container.evaluate(el => {
+      const cell = el.closest('td, th');
+      if (!cell) return null;
+      const row = cell.closest('tr');
+      if (!row) return null;
+      const th = row.querySelector('th');
+      if (th && th !== cell) return (th.textContent || '').trim();
+      const idx = Array.from(row.cells).indexOf(cell);
+      if (idx < 0) return null;
+      const table = row.closest('table');
+      const firstRow = table?.rows?.[0];
+      if (firstRow && firstRow !== row) {
+        const headerCell = firstRow.cells?.[idx];
+        if (headerCell) return (headerCell.textContent || '').trim();
+      }
+      return null;
+    }).catch(() => null);
+    if (tableHeader?.trim()) return tableHeader.trim();
+
+    // data-automation-id as last resort (Workday pattern + some custom ATS boards).
+    // Convert camelCase/kebab-case to a human-readable label so it shows up
+    // meaningfully in blocked_fields logs rather than raw automation IDs.
+    const automationId = await container.getAttribute('data-automation-id').catch(() => null);
+    if (automationId?.trim()) {
+      const readable = automationId
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .trim();
+      if (readable.length > 3) return readable;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fill required radio-group / fieldset Yes-No questions using RADIO_QA_PATTERNS.
+ * Targets: <fieldset>, [role="radiogroup"], [role="group"], or any container with
+ *   input[type="radio"][required].
+ * Added 2026-05-07 (Kaizen #1).
+ * 2026-05-14: added [role="group"] — Greenhouse uses this for some work-auth fieldsets,
+ *   causing <unknown-fieldset> blocks even when RADIO_QA_PATTERNS had the right answer.
+ * Returns count of groups successfully filled.
+ */
+async function fillRequiredRadioGroups(page) {
+  const containers = await page.$$('fieldset, [role="radiogroup"], [role="group"]');
+  let filled = 0;
+  for (const c of containers) {
+    const visible = await c.isVisible().catch(() => false);
+    if (!visible) continue;
+
+    const radios = await c.$$('input[type="radio"]');
+    if (radios.length === 0) continue;
+
+    // Skip if already answered
+    let alreadyChecked = false;
+    for (const r of radios) {
+      if (await r.isChecked().catch(() => false)) { alreadyChecked = true; break; }
+    }
+    if (alreadyChecked) continue;
+
+    const label = await getContainerLabel(page, c);
+    if (!label) continue;
+
+    const qa = RADIO_QA_PATTERNS.find(p => p.match.test(label));
+    if (!qa) continue;
+
+    // Find the radio whose visible label text matches the desired answer
+    let matched = false;
+    for (const r of radios) {
+      // Get the visible text near this radio
+      const txt = await r.evaluate(el => {
+        const id = el.id;
+        if (id) {
+          const lab = document.querySelector(`label[for="${CSS.escape(id)}"]`);
+          if (lab) return lab.textContent;
+        }
+        const wrapping = el.closest('label');
+        if (wrapping) return wrapping.textContent;
+        return (el.value || '');
+      }).catch(() => '');
+      const norm = (txt || '').trim().toLowerCase();
+      if (!norm) continue;
+      const ans = qa.answer.toLowerCase();
+      // Match exact "yes"/"no" — be careful about "yes, ..." vs "no, ..."
+      if (norm === ans || norm.startsWith(ans + ' ') || norm.startsWith(ans + ',') ||
+          norm.startsWith(ans + '.') || norm === ans + '.') {
+        await r.click({ force: true }).catch(() => {});
+        log(`  ✓ radio "${label.slice(0, 70)}" → ${qa.answer}`);
+        matched = true;
+        filled++;
+        break;
+      }
+    }
+    if (!matched) log(`  ⚠ could not match radio answer "${qa.answer}" for "${label.slice(0, 70)}"`);
+  }
+  return filled;
+}
+
+/**
+ * Fill ARIA combobox dropdowns (Greenhouse's newer Country / Location pickers).
+ * Pattern: <button role="combobox" aria-haspopup="listbox"> + popover <ul role="listbox">.
+ * Added 2026-05-07 (Kaizen #1).
+ * Returns count of comboboxes successfully filled.
+ */
+async function fillAriaComboboxes(page, db) {
+  const combos = await page.$$('[role="combobox"], button[aria-haspopup="listbox"]');
+  let filled = 0;
+  for (const c of combos) {
+    const visible = await c.isVisible().catch(() => false);
+    if (!visible) continue;
+
+    // TD-05 fix 2026-05-13: replaced looksEmpty heuristic with an inverted
+    // "definitelyFilled" check. Old regex (/^(select.*|choose.*|--.*|$)/) missed
+    // "Please select a country", "Please choose…", and other Greenhouse placeholder
+    // variants, causing comboboxes to be silently skipped (9/9 submission failures).
+    //
+    // New rule: skip ONLY when we have a definitive signal the combobox is already filled:
+    //   • aria-activedescendant is set AND the combobox is not currently open
+    //     (framework explicitly tracks the selected option)
+    //   • button text exactly matches one of our known answer values
+    //     (we already filled it this session)
+    // Everything else — blank, "Please select…", "Type to search", unknown text — attempt to fill.
+    const ariaExp    = await c.getAttribute('aria-expanded').catch(() => null);
+    const ariaActive = await c.getAttribute('aria-activedescendant').catch(() => null);
+    const buttonText = (await c.textContent().catch(() => '')) || '';
+    const knownValues = new Set(COMBOBOX_VALUE_HINTS.map(h => h.value.toLowerCase()));
+    const btnNorm = buttonText.trim().toLowerCase();
+    const definitelyFilled = (ariaActive && !ariaExp) || knownValues.has(btnNorm);
+    if (definitelyFilled) continue;
+
+    // Determine the question/label
+    let label = await getFieldLabel(page, c);
+    if (!label) label = await getContainerLabel(page, c);
+    if (!label) continue;
+
+    // Decide target value: combobox hint map first, then field map
+    let value = null;
+    const hint = COMBOBOX_VALUE_HINTS.find(h => h.match.test(label));
+    if (hint) value = hint.value;
+    if (!value) {
+      const mapping = matchLabel(label, db.ats_field_map || {});
+      if (mapping) {
+        value = resolvePath(db, mapping.key);
+        if (mapping.type === 'salary' || mapping.type === 'salary_range') value = db.compensation?.salary_annual;
+      }
+    }
+    if (!value) continue;
+
+    // TD-27 2026-05-26 fix: hoist `target` declaration here. Previously declared at line ~975
+    // but referenced at ~961 inside the KAIZEN-08 ISO-code block, causing a TDZ ReferenceError
+    // ("Cannot access 'target' before initialization") that aborted fillAriaComboboxes on every
+    // page with a country combobox.
+    const target = String(value).toLowerCase();
+
+    // Open the combobox — 400ms for React re-renders (was 250ms, insufficient for slow GH pages)
+    await c.click({ force: true }).catch(() => {});
+    await page.waitForTimeout(400);
+
+    // Greenhouse type-to-filter fix (2026-05-13):
+    // After clicking the combobox button, Greenhouse renders a search <input> inside
+    // the listbox portal. Without typing into it, the virtual option list shows zero items.
+    // Detect the search input and type the value to trigger filtering.
+    const searchInput = await page.$(
+      '[role="listbox"] input, input[aria-autocomplete="list"], input[aria-owns]'
+    ).catch(() => null);
+    const searchVisible = searchInput
+      ? await searchInput.isVisible().catch(() => false)
+      : false;
+
+    if (searchVisible) {
+      // TD-11 fix (2026-05-18): Country*/City* virtual lists require keyboard events to
+      // trigger React's internal filtering. `fill()` bypasses the input event chain and the
+      // virtual list stays empty. Use `type()` with a per-key delay instead, then wait up to
+      // 3000ms for options. If still no options after first pass, clear and retry with
+      // shorter value (first word only) to handle "United States" vs "US" variants.
+      await searchInput.click({ clickCount: 3 }).catch(() => {}); // select all pre-filled text (TD-18: tripleClick() only exists on Locator, not ElementHandle)
+      await searchInput.type(String(value), { delay: 80 }).catch(() => {});
+      await page.waitForTimeout(600);
+    } else {
+      // Fallback: if the combobox element itself is a textbox, type into it
+      const tag = await c.evaluate(e => e.tagName.toLowerCase()).catch(() => '');
+      if (tag === 'input') {
+        await c.fill('').catch(() => {});
+        await c.type(String(value), { delay: 50 }).catch(() => {});
+        await page.waitForTimeout(300);
+      } else {
+        await page.waitForTimeout(200);
+      }
+    }
+
+    // TD-11: wait up to 3000ms for options (was 1500ms — insufficient for slow GH pages)
+    await page.waitForSelector('[role="option"]', { state: 'visible', timeout: 3000 }).catch(() => {});
+
+    // TD-11 retry: if no options visible yet, clear and re-type first word only.
+    // Handles "United States" needing just "United" to seed the virtual list on slow pages.
+    if (searchVisible) {
+      const hasOpts = await page.$('[role="option"]:visible').catch(() => null);
+      if (!hasOpts) {
+        const firstWord = String(value).split(/\s+/)[0];
+        if (firstWord && firstWord !== String(value)) {
+          await searchInput.click({ clickCount: 3 }).catch(() => {}); // TD-18 fix
+          await searchInput.type(firstWord, { delay: 80 }).catch(() => {});
+          await page.waitForSelector('[role="option"]', { state: 'visible', timeout: 2000 }).catch(() => {});
+        }
+      }
+    }
+
+    // KAIZEN-08 2026-05-24: Third fallback — ISO-code shorthand for country/state comboboxes.
+    // Some Greenhouse virtual lists don't surface the full country name but respond to 2-letter
+    // ISO codes (e.g. "US" triggers the "United States" option on Workday-style pickers).
+    if (searchVisible) {
+      const hasOptsIso = await page.$('[role="option"]:visible').catch(() => null);
+      if (!hasOptsIso) {
+        const ISO_COUNTRY_MAP = {
+          'united states': 'US', 'united kingdom': 'GB', 'canada': 'CA',
+          'australia': 'AU', 'germany': 'DE', 'france': 'FR', 'india': 'IN',
+          'mexico': 'MX', 'netherlands': 'NL', 'singapore': 'SG',
+        };
+        const isoCode = ISO_COUNTRY_MAP[target];
+        if (isoCode) {
+          await searchInput.click({ clickCount: 3 }).catch(() => {});
+          await searchInput.type(isoCode, { delay: 80 }).catch(() => {});
+          await page.waitForSelector('[role="option"]', { state: 'visible', timeout: 2000 }).catch(() => {});
+          log(`  → combobox: ISO-code retry "${isoCode}" for "${label.slice(0, 40)}"`);
+        }
+      }
+    }
+
+    // Locate listbox and find an option whose text matches value.
+    // TD-05 fix 2026-05-13: two-pass matching — exact first, then prefix/contains fallback.
+    // Prevents "United States Minor Outlying Islands" from winning over "United States"
+    // when both share the same startsWith prefix.
+    // NOTE: `target` is declared earlier (TD-27 hoist) — reuse here.
+    const opts = await page.$$('[role="option"], [role="listbox"] li, [role="listbox"] [data-value]');
+    let exactOpt   = null;
+    let partialOpt = null;
+    for (const opt of opts) {
+      const v = await opt.isVisible().catch(() => false);
+      if (!v) continue;
+      const txt = ((await opt.textContent().catch(() => '')) || '').trim().toLowerCase();
+      if (!txt) continue;
+      if (txt === target) { exactOpt = opt; break; }                           // prefer exact match
+      if (!partialOpt && (
+        txt.startsWith(target + ' ') || txt.startsWith(target + ',') ||
+        txt.startsWith(target + '.') || txt.includes(target)
+      )) {
+        partialOpt = opt;
+      }
+    }
+    const chosenOpt = exactOpt || partialOpt;
+    let chose = false;
+    if (chosenOpt) {
+      await chosenOpt.click({ force: true }).catch(() => {});
+      log(`  ✓ combobox "${label.slice(0, 60)}" → "${value}"`);
+      chose = true;
+      filled++;
+    }
+    if (chose) {
+      // 2026-05-09 TD-04 fix: dispatch native 'change' and 'input' events after selection
+      // so that Greenhouse's React/Angular listeners fire and populate the hidden
+      // <input> that stores the backend value. Without this, the ARIA button shows
+      // the correct text but the hidden input stays blank, and the server rejects.
+      await page.evaluate(() => {
+        ['change', 'input', 'blur'].forEach(evtName => {
+          document.querySelectorAll('[role="combobox"], button[aria-haspopup]').forEach(btn => {
+            btn.dispatchEvent(new Event(evtName, { bubbles: true }));
+          });
+          // Also fire on the hidden inputs that Greenhouse injects
+          document.querySelectorAll('input[type="hidden"]').forEach(inp => {
+            inp.dispatchEvent(new Event(evtName, { bubbles: true }));
+          });
+        });
+      }).catch(() => {});
+      await page.waitForTimeout(200); // let framework settle after events
+    } else {
+      // Press Escape to close so we don't leave the listbox open and confuse the audit
+      await page.keyboard.press('Escape').catch(() => {});
+      log(`  ⚠ combobox "${label.slice(0, 60)}" — no listbox option matched "${value}"`);
+    }
+    await page.waitForTimeout(150);
+  }
+  return filled;
+}
+
+/**
+ * Fill address-related text inputs (city, zip, state) by label-regex matching.
+ * Silently skips street address line 1 (bot cannot fill reliably).
+ * Called from fillPage() to complement COMBOBOX_VALUE_HINTS (ARIA combos).
+ * Fix 1 / 2026-05-26.
+ */
+async function fillAddressTextInputs(page) {
+  const inputs = await page.$$('input[type="text"], input[type="number"], input:not([type])');
+  for (const input of inputs) {
+    const visible  = await input.isVisible().catch(() => false);
+    const disabled = await input.isDisabled().catch(() => true);
+    if (!visible || disabled) continue;
+
+    const current = await input.inputValue().catch(() => '');
+    if (current.trim()) continue;
+
+    const label = (await getFieldLabel(page, input)) || '';
+
+    if (/address.*line.*1|street.*address/i.test(label)) {
+      log(`  ↷ skipped-optional: "${label.slice(0, 60)}" (street address — manual-required)`);
+      continue;
+    }
+
+    let value = null;
+    if (/city|location.*city/i.test(label)) {
+      value = PROFILE_AS.city;
+    } else if (/zip(\s*code)?|postal(\s*code)?/i.test(label)) {
+      value = PROFILE_AS.zip;
+    } else if (/\bstate\b/i.test(label)) {
+      // Use abbreviation for short fields (maxlength ≤ 2), full name otherwise
+      const maxLen = await input.getAttribute('maxlength').catch(() => null);
+      value = (maxLen && parseInt(maxLen, 10) <= 2) ? 'TX' : PROFILE_AS.state;
+    }
+
+    if (!value) continue;
+    await input.fill(String(value)).catch(e => log(`WARN fillAddressTextInputs [${label}]: ${e.message}`));
+    log(`  ✓ address field "${label.slice(0, 60)}" → "${value}"`);
+  }
+}
+
+/**
+ * Fill all visible text inputs, selects, and textareas on the current page
+ * using inclusion-db + ats_field_map.
+ * Returns array of field labels that were required but left unfilled.
+ */
+async function fillPage(page, db) {
+  const { ats_field_map } = db;
+  const unfilled = [];
+
+  // ── Text inputs and number inputs ────────────────────────────────────────
+  const inputs = await page.$$('input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="url"], input:not([type])');
+  for (const input of inputs) {
+    const visible  = await input.isVisible().catch(() => false);
+    const disabled = await input.isDisabled().catch(() => true);
+    if (!visible || disabled) continue;
+
+    const label   = await getFieldLabel(page, input);
+    const mapping = matchLabel(label, ats_field_map);
+    if (!mapping) continue;
+
+    let value = resolvePath(db, mapping.key);
+    if (value == null || value === '') continue;
+
+    // Salary: if the field only wants a number, use the numeric value
+    if (mapping.type === 'number') {
+      value = String(value);
+    } else if (mapping.type === 'salary' || mapping.type === 'salary_range') {
+      value = db.compensation.salary_annual;
+    } else if (mapping.type === 'hourly') {
+      value = db.compensation.salary_hourly;
+    }
+
+    const current = await input.inputValue().catch(() => '');
+    if (current.trim() !== '') continue; // already filled (e.g. by SpeedyApply)
+
+    await input.fill(String(value)).catch(e => log(`WARN fill input [${label}]: ${e.message}`));
+    log(`  ✓ filled "${label}" → "${String(value).slice(0, 60)}"`);
+  }
+
+  // ── Select / dropdown ────────────────────────────────────────────────────
+  const selects = await page.$$('select');
+  for (const select of selects) {
+    const visible  = await select.isVisible().catch(() => false);
+    const disabled = await select.isDisabled().catch(() => true);
+    if (!visible || disabled) continue;
+
+    const label   = await getFieldLabel(page, select);
+    const mapping = matchLabel(label, ats_field_map);
+
+    if (mapping?.type === 'eeo') {
+      // Always pick "prefer not to say"
+      const selected = await selectDeclineOption(page, select);
+      if (!selected) log(`  ⚠ EEO field "${label}" — no decline option found, leaving as-is`);
+      else log(`  ✓ EEO "${label}" → Decline/Prefer not to say`);
+      continue;
+    }
+
+    if (!mapping) continue;
+    let value = resolvePath(db, mapping.key);
+    if (value == null || value === '') continue;
+
+    // Try to select matching option by text or value
+    const options = await select.$$('option');
+    let matched = false;
+    for (const opt of options) {
+      const text = (await opt.textContent()).trim().toLowerCase();
+      const val  = (await opt.getAttribute('value') ?? '').toLowerCase();
+      const target = String(value).toLowerCase();
+      if (text.includes(target) || target.includes(text) || val === target || val.includes(target)) {
+        await select.selectOption(await opt.getAttribute('value') ?? text).catch(() => {});
+        log(`  ✓ select "${label}" → "${await opt.textContent()}"`);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) log(`  ⚠ could not match select "${label}" to value "${value}"`);
+  }
+
+  // ── Textareas (e.g. cover letter text box) ───────────────────────────────
+  const textareas = await page.$$('textarea');
+  for (const ta of textareas) {
+    const visible  = await ta.isVisible().catch(() => false);
+    const disabled = await ta.isDisabled().catch(() => true);
+    if (!visible || disabled) continue;
+
+    const label = await getFieldLabel(page, ta);
+    if (!label) continue;
+
+    // If it's a cover letter textarea, handled separately — skip here
+    if (/cover.?letter/i.test(label)) continue;
+
+    const mapping = matchLabel(label, ats_field_map);
+    if (!mapping) continue;
+
+    const value = resolvePath(db, mapping.key);
+    if (!value) continue;
+
+    const current = await ta.inputValue().catch(() => '');
+    if (current.trim() !== '') continue;
+
+    await ta.fill(String(value)).catch(e => log(`WARN fill textarea [${label}]: ${e.message}`));
+    log(`  ✓ filled textarea "${label}"`);
+  }
+
+  // ── ARIA comboboxes (Greenhouse Country / Location pickers, etc.) ─────────
+  // Added 2026-05-07 (Kaizen #1) — runs after standard <select> so plain selects
+  // get filled first; fallback comboboxes pick up what's left.
+  await fillAriaComboboxes(page, db);
+
+  // ── Address text inputs (city, zip, state) — Fix 1 2026-05-26 ────────────
+  await fillAddressTextInputs(page);
+
+  // ── Required-radio Yes/No fieldsets (visa / work-eligibility / SMS) ───────
+  // Added 2026-05-07 (Kaizen #1).
+  await fillRequiredRadioGroups(page);
+
+  // ── Required-field audit ─────────────────────────────────────────────────
+  // v3 (2026-05-09 TD-04 fix):
+  //   • Skips input[type="hidden"] entirely — Greenhouse injects these as
+  //     framework-internal value holders behind every ARIA combobox. They are
+  //     populated by the page's own JS when the combobox option is clicked;
+  //     they are never user-fillable and should never block submission.
+  //   • Skips non-visible elements (hidden inputs, off-screen containers).
+  //   • For div/span containers with aria-required, checks if a child combobox
+  //     or radio is filled before flagging as unfilled.
+  const allInputs = await page.$$('[required], [aria-required="true"]');
+  for (const el of allInputs) {
+    const tag  = await el.evaluate(e => e.tagName.toLowerCase());
+    const type = await el.getAttribute('type').catch(() => null);
+
+    // ── Skip framework-internal hidden inputs completely ──────────────────
+    // Greenhouse uses hidden inputs to store backend values for ARIA widgets.
+    // These are populated by the page's JS after combobox/radio interaction.
+    // Flagging them as "unfilled" is a false positive — they're invisible to
+    // the user and cannot be directly interacted with.
+    if (tag === 'input' && type === 'hidden') continue;
+
+    const visible = await el.isVisible().catch(() => false);
+    if (!visible) continue;
+    const role = await el.getAttribute('role').catch(() => null);
+
+    let val = '';
+    let satisfied = false;
+
+    if (tag === 'select') {
+      val = await el.evaluate(e => e.value);
+      satisfied = !!(val && val.trim() && val !== '0');
+    } else if (role === 'combobox' || tag === 'button') {
+      // Combobox: satisfied if aria-activedescendant exists OR button text != placeholder
+      const active   = await el.getAttribute('aria-activedescendant').catch(() => null);
+      const valAttr  = await el.getAttribute('aria-valuetext').catch(() => null);
+      const btnText  = ((await el.textContent().catch(() => '')) || '').trim();
+      const isPh     = /^(select|choose|--|please)/i.test(btnText) || btnText === '';
+      satisfied = !!active || !!valAttr || !isPh;
+      val = satisfied ? (active || valAttr || btnText) : '';
+    } else if (role === 'radiogroup' || tag === 'fieldset') {
+      // Radiogroup: satisfied if any radio inside is checked
+      const checkedCount = await el.$$eval('input[type="radio"]', rs => rs.filter(r => r.checked).length).catch(() => 0);
+      satisfied = checkedCount > 0;
+      val = satisfied ? 'checked' : '';
+    } else if (tag === 'div' || tag === 'span') {
+      // Div/span containers (e.g. Greenhouse ARIA combobox wrappers) with aria-required.
+      // Check for a filled combobox button child first, then a checked radio child.
+      // If satisfied by either, skip — the container is the widget's outer shell.
+      const childComboFilled = await el.evaluate(container => {
+        const btn = container.querySelector('[role="combobox"], button[aria-haspopup]');
+        if (!btn) return false;
+        const txt = (btn.textContent || '').trim();
+        const isPh = /^(select|choose|--|please|\s*)$/i.test(txt);
+        return !isPh && txt.length > 0;
+      }).catch(() => false);
+      if (childComboFilled) { satisfied = true; val = 'combobox-filled'; }
+
+      if (!satisfied) {
+        const checkedCount = await el.$$eval('input[type="radio"]', rs => rs.filter(r => r.checked).length).catch(() => 0);
+        if (checkedCount > 0) { satisfied = true; val = 'radio-checked'; }
+      }
+
+      if (!satisfied) {
+        // Last resort: any non-empty child input
+        val = await el.evaluate(c => {
+          const inp = c.querySelector('input:not([type="hidden"]), textarea');
+          return inp ? (inp.value || '').trim() : '';
+        }).catch(() => '');
+        satisfied = !!(val && val.trim());
+      }
+    } else {
+      val = await el.inputValue().catch(() => '');
+      satisfied = !!(val && val.trim());
+    }
+
+    if (!satisfied && (!val || val.trim() === '')) {
+      const label = (await getFieldLabel(page, el))
+        ?? (await getContainerLabel(page, el))
+        ?? `<unknown-${tag}${role ? `:${role}` : ''}>`;
+      unfilled.push(label);
+    }
+  }
+
+  return unfilled;
+}
+
+// ── Cover letter handling ────────────────────────────────────────────────────
+
+async function handleCoverLetter(page, clPath, db, company) {
+  // ── Resolve CL path ────────────────────────────────────────────────────────
+  let resolvedPath = clPath;
+  if (!resolvedPath || !existsSync(resolvedPath)) {
+    // No explicit --cl flag (or path doesn't exist): auto-discover in output dirs
+    resolvedPath = findLatestCoverLetter(db?.cover_letter?.default_directory, company);
+  }
+
+  if (!resolvedPath) {
+    log('  ⚠ No cover letter found — skipping CL upload/paste');
+    return;
+  }
+  log(`  ℹ Using CL: ${resolvedPath}`);
+
+  const clExt = extname(resolvedPath).toLowerCase();
+
+  // ── Step 1: File input upload (PDF only — ATS inputs reject plain text) ───
+  // .txt files skip directly to textarea paste; .pdf tries upload first.
+  if (clExt !== '.txt') {
+    const fileInputs = await page.$$('input[type="file"]');
+    for (const fi of fileInputs) {
+      const nearbyText = await fi.evaluate(el => {
+        const parent = el.closest('div, section, fieldset') ?? el.parentElement;
+        return parent?.textContent ?? '';
+      });
+      if (/cover.?letter/i.test(nearbyText)) {
+        try {
+          await fi.setInputFiles(resolvedPath);
+          log(`  ✓ Uploaded CL via file input`);
+          return;
+        } catch (e) {
+          log(`  ⚠ File upload failed (${clExt}): ${e.message} — trying textarea fallback`);
+        }
+      }
+    }
+  } else {
+    log(`  ℹ CL is .txt — skipping file upload, going straight to textarea paste`);
+  }
+
+  // ── Step 2: Textarea paste (primary for .txt; fallback for .pdf) ──────────
+  const textareas = await page.$$('textarea');
+  for (const ta of textareas) {
+    const label = await getFieldLabel(page, ta);
+    if (/cover.?letter/i.test(label ?? '')) {
+      const text = loadCoverLetterText(resolvedPath);
+      if (text) {
+        await ta.fill(text).catch(e => log(`  ⚠ CL textarea fill failed: ${e.message}`));
+        log(`  ✓ Pasted CL text into textarea`);
+        return;
+      } else {
+        log(`  ⚠ CL is a PDF — cannot paste text. File upload was also unavailable.`);
+        return;
+      }
+    }
+  }
+
+  log('  ⚠ No CL upload input or textarea found on page — continuing without CL');
+}
+
+// ── Submit button finder ──────────────────────────────────────────────────────
+
+async function clickSubmit(page) {
+  const candidates = [
+    'button[type="submit"]',
+    'input[type="submit"]',
+    'button:has-text("Submit Application")',
+    'button:has-text("Submit")',
+    'button:has-text("Apply")',
+    'button:has-text("Apply Now")',
+    'button:has-text("Send Application")',
+    'button:has-text("Complete Application")',
+    'a:has-text("Submit Application")',
+  ];
+  for (const sel of candidates) {
+    const btn = await page.$(sel).catch(() => null);
+    if (btn) {
+      const visible = await btn.isVisible().catch(() => false);
+      if (visible) {
+        await btn.click();
+        log(`  ✓ Clicked submit button matching: ${sel}`);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ── ATS-specific strategies ───────────────────────────────────────────────────
+
+/**
+ * TD-23 (2026-05-24): Workday's apply flow hits a Sign In / Create Account wall.
+ * The wall can appear on first load OR after the "Apply" button navigates away from
+ * the job-description page — so this must be callable at multiple points, not once.
+ * Returns 'no-wall' | 'ok' (sign-in attempted) | 'login-required' (cannot proceed).
+ */
+async function tryWorkdayLogin(page, db) {
+  const loginIndicator = await page.$('[data-automation-id="password"], input[type="password"]').catch(() => null);
+  if (!loginIndicator) return 'no-wall';
+  // Kaizen 4 (2026-05-22): env vars take precedence over profile.yml for credentials.
+  // Set WORKDAY_EMAIL and WORKDAY_PASSWORD via setx (see set-credentials.bat).
+  const profileCreds = db?.autosubmit?.platform_logins?.workday;
+  const creds = {
+    email:    process.env.WORKDAY_EMAIL    || profileCreds?.email    || '',
+    password: process.env.WORKDAY_PASSWORD || profileCreds?.password || '',
+  };
+  if (!creds.email || !creds.password) {
+    log('  ⚠ Workday login wall — no credentials (set WORKDAY_EMAIL / WORKDAY_PASSWORD or fill profile.yml)');
+    return 'login-required';
+  }
+  log('  → Workday login wall detected — attempting sign-in with stored credentials');
+  const emailInput = await page.$('[data-automation-id="email"], input[type="email"]').catch(() => null);
+  if (emailInput) await emailInput.fill(creds.email).catch(() => {});
+  await loginIndicator.fill(creds.password).catch(() => {});
+  const signInBtn = await page.$('[data-automation-id="signInSubmitButton"], button[data-automation-id*="signIn"], button:has-text("Sign In"), input[type="submit"]').catch(() => null);
+  if (!signInBtn) {
+    log('  ⚠ Workday: could not find Sign In button');
+    return 'login-required';
+  }
+  await signInBtn.click().catch(() => {});
+  await page.waitForNavigation({ waitUntil: 'networkidle', timeout: 10000 }).catch(() => {});
+  log('  ✓ Workday sign-in submitted');
+  return 'ok';
+}
+
+async function handleWorkday(page, db, originalUrl = null) {
+  // ── Login wall (pre-Apply) ────────────────────────────────────────────────
+  if (await tryWorkdayLogin(page, db) === 'login-required') return 'login-required';
+
+  // ── Detect redirect to Workday careers home page (TD-24 2026-05-24) ───────
+  // When unauthenticated, Workday redirects the job URL to the tenant's home page.
+  // Job-description pages have applyButton / jobTitle automation IDs; home pages
+  // don't. Detect early before running the wizard loop against a home page.
+  // Root cause of "Careers" / "T-MOBILE CAREERS" roleTitle and 100% no-submit-button
+  // rate for T-Mobile, Philips, CVS Health, and any other tenant-auth-required card.
+  const jobPageEl = await page.$(
+    '[data-automation-id="applyButton"], [data-automation-id="jobTitle"], ' +
+    '[data-automation-id="jobPostingDescription"], [data-automation-id="Job_Description"]'
+  ).catch(() => null);
+  if (!jobPageEl) {
+    log('  → Workday: no job-description elements — likely redirected to careers home page');
+    const signInLink = await page.$(
+      '[data-automation-id="signIn"], a:has-text("Sign In"), button:has-text("Sign In"), a[href*="login"], a[href*="signin"]'
+    ).catch(() => null);
+    if (signInLink && originalUrl) {
+      log('  → Workday: clicking Sign In from home page');
+      await signInLink.click().catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+      const loginResult = await tryWorkdayLogin(page, db);
+      if (loginResult === 'login-required') return 'auth-redirect';
+      if (loginResult === 'ok') {
+        log(`  → Workday: signed in — navigating back to job URL`);
+        await page.goto(originalUrl, { waitUntil: 'networkidle', timeout: 20000 }).catch(() => {});
+        await page.waitForTimeout(2000);
+        const jobCheck = await page.$('[data-automation-id="applyButton"], [data-automation-id="jobTitle"]').catch(() => null);
+        if (!jobCheck) {
+          log('  → Workday: still not on job page after sign-in — auth-redirect');
+          return 'auth-redirect';
+        }
+        log('  ✓ Workday: reached job page after home-page sign-in');
+      }
+    } else {
+      log('  → Workday: auth-redirect — no Sign In link found or no originalUrl');
+      return 'auth-redirect';
+    }
+  }
+
+  // ── Guest apply fallback ──────────────────────────────────────────────────
+  // Some Workday boards still show "Apply Manually" / "Continue as Guest"
+  const guestBtn = await page.$('button:has-text("Apply Manually"), button:has-text("Continue as Guest"), a:has-text("Apply Manually")').catch(() => null);
+  if (guestBtn) {
+    log('  → Workday guest apply available — clicking');
+    await guestBtn.click();
+    await page.waitForTimeout(1500);
+  }
+
+  // ── Apply button ──────────────────────────────────────────────────────────
+  const applyBtn = await page.$('[data-automation-id="applyButton"], button:has-text("Apply"), a:has-text("Apply Now")').catch(() => null);
+  if (applyBtn) {
+    await applyBtn.click();
+    await page.waitForTimeout(2500);
+    log('  → Workday: clicked Apply button');
+  }
+
+  // ── SSO redirect detection (TD-24 2026-05-24) ────────────────────────────
+  // Some Workday tenants redirect Apply to an external SSO (Microsoft, Okta,
+  // Google). We cannot automate third-party SSO — bail early with auth-redirect.
+  if (!/myworkdayjobs\.com/i.test(page.url())) {
+    log(`  → Workday: Apply redirected to external auth: ${page.url().split('/').slice(0, 3).join('/')}`);
+    return 'auth-redirect';
+  }
+
+  // ── Login wall (post-Apply) ───────────────────────────────────────────────
+  // TD-23: "Apply" on a Workday job-description page routes to a Sign In /
+  // Create Account wall. The pre-Apply check ran before this navigation, so the
+  // wall was invisible then — re-check here, otherwise the wizard loop runs on
+  // the auth page, finds no fields, and we bail out at 'no-submit-button'.
+  const postApplyLogin = await tryWorkdayLogin(page, db);
+  if (postApplyLogin === 'login-required') return 'login-required';
+  if (postApplyLogin === 'ok') {
+    await page.waitForTimeout(1500);
+    // After sign-in Workday may re-show the Apply button — click it through once more.
+    const applyAgain = await page.$('[data-automation-id="applyButton"], button:has-text("Apply")').catch(() => null);
+    if (applyAgain) {
+      await applyAgain.click().catch(() => {});
+      await page.waitForTimeout(2000);
+      log('  → Workday: re-clicked Apply after sign-in');
+      if (!/myworkdayjobs\.com/i.test(page.url())) {
+        log('  → Workday: post-sign-in Apply hit external SSO — auth-redirect');
+        return 'auth-redirect';
+      }
+    }
+  }
+
+  // TD-29: mid-flow login wall — password field still visible after Apply+sign-in sequence.
+  // Catches cases where the post-Apply login attempt completed but Workday re-rendered
+  // auth fields before the wizard started (e.g. session token not propagated).
+  const pwField = await page.$('input[type="password"], [data-automation-id="password"]').catch(() => null);
+  if (pwField) {
+    log('  → Workday: login wall mid-flow (TD-29) — attempting login');
+    const loginResult = await tryWorkdayLogin(page, db);
+    if (loginResult !== 'ok') return loginResult;
+    if (originalUrl) {
+      await page.goto(originalUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.waitForTimeout(2000);
+      log('  → Workday: re-navigated to job URL after TD-29 login');
+    }
+  }
+
+  // ── Multi-step wizard: fill via data-automation-id ────────────────────────
+  const profile = db?.autosubmit || {};
+  const personalInfo = db?.personal || {};
+
+  let stepCount = 0;
+  while (stepCount < 15) {
+    // Fill known fields by automation ID
+    const fieldMap = {
+      'legalNameSection_firstName':  personalInfo.first_name  || '',
+      'legalNameSection_lastName':   personalInfo.last_name   || '',
+      'email':                       db?.contact?.email       || '',
+      'phone-number':                db?.contact?.phone       || '',
+      'addressSection_city':         profile.city             || '',
+      'addressSection_countryRegion':profile.country          || '',
+      'addressSection_state':        profile.state            || '',
+    };
+    for (const [automationId, value] of Object.entries(fieldMap)) {
+      if (!value) continue;
+      const el = await page.$(`[data-automation-id="${automationId}"]`).catch(() => null);
+      if (el) {
+        const tag = await el.evaluate(e => e.tagName.toLowerCase()).catch(() => '');
+        if (tag === 'input' || tag === 'textarea') {
+          await el.click({ clickCount: 3 }).catch(() => {}); // TD-18 fix: tripleClick() is Locator-only
+          await el.fill(value).catch(() => {});
+        }
+      }
+    }
+
+    // Advance to next step
+    const nextBtn = await page.$('[data-automation-id="bottom-navigation-next-btn"], button:has-text("Save and Continue"), button:has-text("Next")').catch(() => null);
+    if (!nextBtn) break;
+    const visible = await nextBtn.isVisible().catch(() => false);
+    if (!visible) break;
+
+    // TD-24 2026-05-24: `bottom-navigation-next-btn` is reused for ALL wizard buttons
+    // including the final Submit. If we click it here the wizard submits the form and
+    // main() finds no submit button → 'no-submit-button'. Break; main() clicks Submit.
+    const btnLabel = (await nextBtn.getAttribute('aria-label').catch(() => '')) || '';
+    const btnText  = (await nextBtn.textContent().catch(() => ''))              || '';
+    if (/submit/i.test(btnLabel) || /\bsubmit\b/i.test(btnText.trim())) {
+      log('  → Workday: reached Submit step — stopping wizard (main() handles final submit)');
+      break;
+    }
+
+    await nextBtn.click();
+    await page.waitForTimeout(1200);
+    stepCount++;
+    log(`  → Workday: step ${stepCount} advanced`);
+  }
+
+  // TD-21 2026-05-23: scroll to bottom + extended settle wait before returning.
+  // Workday lazy-renders the Submit button; without a scroll trigger + settle window
+  // the button query fires before the button exists in DOM → 100% block rate.
+  try {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(2000);
+    // Second scroll pass — some Workday steps have 2-pass lazy loading
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    log('  → Workday: scroll-settle complete (TD-21)');
+  } catch { /* non-fatal */ }
+
+  return 'ok';
+}
+
+// KAIZEN-07 2026-05-24: job-boards.greenhouse.io renders the job description first.
+// The application form is revealed only after clicking "Apply for this Job".
+// Without this handler, fillPage() finds no form and the submit selector fails.
+// Stripe (and other companies using Greenhouse's hosted board) hit this code path.
+async function handleGreenhouse(page) {
+  const applyBtn = await page.$(
+    'a:has-text("Apply for this Job"), a:has-text("Apply for this job"), ' +
+    'button:has-text("Apply for this Job"), button:has-text("Apply for this job"), ' +
+    'a:has-text("Apply Now"), a[href*="/applications/new"]'
+  ).catch(() => null);
+  if (applyBtn) {
+    log('  → Greenhouse: clicking "Apply for this Job" to open application form');
+    await applyBtn.click().catch(() => {});
+    await page.waitForLoadState('networkidle', { timeout: 12000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    log(`  → Greenhouse: form URL: ${page.url()}`);
+  } else {
+    // May already be on the /applications/new form — check for form inputs
+    const formEl = await page.$('form input[type="text"], form input[type="email"], #submit_app').catch(() => null);
+    if (!formEl) {
+      log('  → Greenhouse: no apply button or form found — page may need manual check');
+    }
+  }
+  return 'ok';
+}
+
+async function handleAshby(page) {
+  // Ashby multi-step: click through Next buttons
+  let stepCount = 0;
+  while (stepCount < 10) {
+    const nextBtn = await page.$('button:has-text("Next"), button:has-text("Continue")').catch(() => null);
+    if (!nextBtn) break;
+    const visible = await nextBtn.isVisible().catch(() => false);
+    if (!visible) break;
+    await nextBtn.click();
+    await page.waitForTimeout(800);
+    stepCount++;
+    log(`  → Ashby: advanced to step ${stepCount}`);
+  }
+  return 'ok';
+}
+
+// ── New platform handlers ─────────────────────────────────────────────────────
+
+async function handleLinkedIn(page, db) {
+  // Check if Easy Apply button exists
+  const easyApplyBtn = await page.$('button[aria-label*="Easy Apply"], .jobs-apply-button').catch(() => null);
+  if (!easyApplyBtn) {
+    log('LinkedIn: no Easy Apply button — external ATS, re-detecting platform from apply URL');
+    // Click the regular Apply button and get redirected URL, then re-run with new URL
+    const applyBtn = await page.$('.jobs-apply-button, [data-control-name="jobdetails_topcard_inapply"]').catch(() => null);
+    if (applyBtn) {
+      const [newPage] = await Promise.all([
+        page.context().waitForEvent('page'),
+        applyBtn.click()
+      ]);
+      await newPage.waitForLoadState('networkidle');
+      return { redirected: true, newUrl: newPage.url(), newPage };
+    }
+    return { error: 'no_apply_button' };
+  }
+
+  // Check if logged in — if not, attempt login
+  const isLoggedIn = await page.$('.global-nav__me-photo, .feed-identity-module').catch(() => null);
+  if (!isLoggedIn) {
+    await page.goto('https://www.linkedin.com/login');
+    await page.fill('#username', db.platform_logins?.linkedin?.email || '');
+    await page.fill('#password', db.platform_logins?.linkedin?.password || '');
+    await page.click('[type="submit"]');
+    await page.waitForNavigation({ waitUntil: 'networkidle' });
+    await page.goBack();
+  }
+
+  await easyApplyBtn.click();
+  await page.waitForTimeout(1500);
+
+  // Easy Apply modal — fill each step, click Next/Review/Submit
+  let attempts = 0;
+  while (attempts < 10) {
+    attempts++;
+    await fillPage(page, db);
+
+    // Handle phone specifically — LinkedIn always asks
+    const phoneField = await page.$('input[id*="phoneNumber"], input[name*="phone"]').catch(() => null);
+    if (phoneField) {
+      await phoneField.fill('');
+      await phoneField.type(db.profile?.phone || '');
+    }
+
+    // Check for file upload (resume) — skip; SpeedyApply handles resume upload
+    const nextBtn = await page.$(
+      'button[aria-label="Continue to next step"], button[aria-label="Review your application"], button[aria-label="Submit application"]'
+    ).catch(() => null);
+    if (!nextBtn) break;
+    const label = await nextBtn.getAttribute('aria-label').catch(() => null);
+    await nextBtn.click();
+    await page.waitForTimeout(1000);
+    if (label && label.includes('Submit')) break;
+  }
+  return { success: true };
+}
+
+async function handleIndeed(page, db) {
+  // Check if logged in
+  const isLoggedIn = await page.$('#indeed-ia-header .gnav-LoggedIn, .icl-Account').catch(() => null);
+  if (!isLoggedIn && db.platform_logins?.indeed?.email) {
+    await page.goto('https://secure.indeed.com/account/login');
+    await page.fill('[name="__email"]', db.platform_logins.indeed.email);
+    await page.click('[type="submit"]');
+    await page.waitForTimeout(800);
+    await page.fill('[name="__password"]', db.platform_logins.indeed.password || '');
+    await page.click('[type="submit"]');
+    await page.waitForNavigation({ waitUntil: 'networkidle' });
+    await page.goBack();
+  }
+
+  // Click Apply / Quick Apply
+  const applyBtn = await page.$(
+    '[id*="apply-button"], .ia-IndeedApplyButton, [data-tn-element="applyButton"]'
+  ).catch(() => null);
+  if (!applyBtn) return { error: 'no_apply_button' };
+  await applyBtn.click();
+  await page.waitForTimeout(1500);
+
+  // Fill multi-step Indeed form
+  let step = 0;
+  while (step < 10) {
+    step++;
+    await fillPage(page, db);
+
+    const continueBtn = await page.$(
+      '.ia-continueButton, [data-tn-element="continueButton"], button[type="submit"]'
+    ).catch(() => null);
+    if (!continueBtn) break;
+    const btnText = await continueBtn.textContent().catch(() => '');
+    await continueBtn.click();
+    await page.waitForTimeout(1000);
+    if (btnText && (btnText.includes('Submit') || btnText.includes('Apply'))) break;
+  }
+  return { success: true };
+}
+
+async function handleTheLadders(page, db) {
+  // Login if needed
+  const isLoggedIn = await page.$('.user-nav, .logged-in-nav').catch(() => null);
+  if (!isLoggedIn && db.platform_logins?.theladders?.email) {
+    await page.goto('https://www.theladders.com/login');
+    await page.fill('[name="email"], #email', db.platform_logins.theladders.email);
+    await page.fill('[name="password"], #password', db.platform_logins.theladders.password || '');
+    await page.click('[type="submit"]');
+    await page.waitForNavigation({ waitUntil: 'networkidle' });
+    await page.goBack();
+  }
+
+  // Click Apply
+  const applyBtn = await page.$(
+    '.apply-button, [data-automation="apply-button"], button:has-text("Apply")'
+  ).catch(() => null);
+  if (!applyBtn) return { error: 'no_apply_button' };
+  await applyBtn.click();
+  await page.waitForTimeout(1500);
+
+  await fillPage(page, db);
+  const submitBtn = await page.$('[type="submit"], button:has-text("Submit")').catch(() => null);
+  if (submitBtn) await submitBtn.click();
+  return { success: true };
+}
+
+async function handleHiringCafe(page, db) {
+  // HiringCafe aggregates to company ATS — detect redirect target
+  const applyBtn = await page.$('a[href*="apply"], button:has-text("Apply"), .apply-btn').catch(() => null);
+  if (!applyBtn) return { error: 'no_apply_button' };
+
+  const href = await applyBtn.getAttribute('href').catch(() => null);
+  if (href && (
+    href.includes('greenhouse') ||
+    href.includes('lever') ||
+    href.includes('ashby') ||
+    href.includes('workday')
+  )) {
+    // Redirect to known ATS — return the URL for re-processing
+    const newUrl = href.startsWith('http') ? href : 'https://hiringcafe.com' + href;
+    return { redirected: true, newUrl };
+  }
+
+  // Otherwise try to fill directly
+  await applyBtn.click();
+  await page.waitForTimeout(1500);
+  await fillPage(page, db);
+  const submitBtn = await page.$('[type="submit"]').catch(() => null);
+  if (submitBtn) await submitBtn.click();
+  return { success: true };
+}
+
+// ── iCIMS handler ─────────────────────────────────────────────────────────────
+
+async function handleICIMS(page, db) {
+  // Locate the Apply button — iCIMS uses several selector patterns across versions
+  const applyBtn = await page.$(
+    '#applyButton, ' +
+    '.iCIMS_JobTitle ~ * button, ' +
+    'a:has-text("Apply Now"), ' +
+    'button:has-text("Apply Now"), ' +
+    '[id*="apply"]:not([id*="eeo"])'
+  ).catch(() => null);
+
+  if (!applyBtn) {
+    // Try the job details page alternative apply path
+    const detailApply = await page.$(
+      '.iCIMS_Header_Job .iCIMS_JobTitle + * a, .iCIMS_Anchor'
+    ).catch(() => null);
+    if (!detailApply) return { error: 'no_apply_button' };
+    await detailApply.click().catch(() => {});
+  } else {
+    await applyBtn.click().catch(() => {});
+  }
+
+  await page.waitForTimeout(2000);
+
+  // iCIMS may open a modal iframe or navigate inline — check for a child frame
+  const frame = page.frames().find(
+    f => f.url().includes('icims.com') && f !== page.mainFrame()
+  );
+  const target = frame ?? page;
+
+  // Fill visible fields on the current step
+  await fillPage(target, db).catch(e => log(`  iCIMS fillPage error: ${e.message}`));
+
+  // Advance through multi-step form (Next buttons)
+  let step = 0;
+  while (step < 8) {
+    step++;
+    const nextBtn = await target.$(
+      'input[value="Next"], button:has-text("Next"), a:has-text("Next ›")'
+    ).catch(() => null);
+    if (!nextBtn) break;
+    const visible = await nextBtn.isVisible().catch(() => false);
+    if (!visible) break;
+    await nextBtn.click().catch(() => {});
+    await page.waitForTimeout(1500);
+    await fillPage(target, db).catch(e => log(`  iCIMS fillPage step ${step} error: ${e.message}`));
+    log(`  → iCIMS: advanced to step ${step}`);
+  }
+
+  // Submit
+  const submitBtn = await target.$(
+    'input[value="Submit"], button:has-text("Submit Application"), button[type="submit"]'
+  ).catch(() => null);
+  if (submitBtn) {
+    const vis = await submitBtn.isVisible().catch(() => false);
+    if (vis) {
+      await submitBtn.click().catch(() => {});
+      log('  ✓ iCIMS: submit clicked');
+    }
+  }
+  return { success: true };
+}
+
+// ── Platform dispatch ─────────────────────────────────────────────────────────
+
+const NEW_PLATFORM_ATSES = new Set(['linkedin', 'indeed', 'theladders', 'hiringcafe', 'icims']);
+
+async function dispatchNewPlatform(ats, page, db) {
+  switch (ats) {
+    case 'linkedin':   return handleLinkedIn(page, db);
+    case 'indeed':     return handleIndeed(page, db);
+    case 'theladders': return handleTheLadders(page, db);
+    case 'hiringcafe': return handleHiringCafe(page, db);
+    case 'icims':      return handleICIMS(page, db);
+    default:           return { error: 'unsupported_platform' };
+  }
+}
+
+// ── Handle --confirm subcommand ───────────────────────────────────────────────
+// node auto-submit.mjs --confirm "Company Name"
+if (process.argv[2] === '--confirm') {
+  const company = process.argv[3];
+  if (!company) {
+    console.error('Usage: node auto-submit.mjs --confirm "Company Name"');
+    process.exit(1);
+  }
+  const db = loadJson(SUS_DB_PATH);
+  if (!db.confirmed.includes(company)) {
+    db.confirmed.push(company);
+    db.last_updated = new Date().toISOString();
+    saveJson(SUS_DB_PATH, db);
+    console.log(`✓ "${company}" added to sus-db confirmed list.`);
+  } else {
+    console.log(`"${company}" was already in the confirmed list.`);
+  }
+  process.exit(0);
+}
+
+// ── Handle --confirm-f500 subcommand ─────────────────────────────────────────
+// node auto-submit.mjs --confirm-f500
+// Auto-confirms all F500 companies currently in sus-db that haven't been confirmed yet.
+if (process.argv[2] === '--confirm-f500') {
+  const db = loadJson(SUS_DB_PATH);
+  const toConfirm = [];
+  for (const entry of (db.companies || [])) {
+    const norm = (entry.company || '').toLowerCase().trim();
+    const alreadyConfirmed = (db.confirmed || []).some(c => c.toLowerCase().includes(norm));
+    if (!alreadyConfirmed) {
+      const matchesF500 = FORTUNE_500.has(norm) ||
+        [...FORTUNE_500].some(k => norm.includes(k) || k.includes(norm));
+      if (matchesF500) toConfirm.push(entry.company);
+    }
+  }
+  if (toConfirm.length === 0) {
+    console.log('No unconfirmed F500 companies found in sus-db.');
+  } else {
+    for (const co of toConfirm) {
+      if (!db.confirmed.includes(co)) db.confirmed.push(co);
+    }
+    db.last_updated = new Date().toISOString();
+    saveJson(SUS_DB_PATH, db);
+    console.log(`✓ Confirmed ${toConfirm.length} F500 companies: ${toConfirm.join(', ')}`);
+  }
+  process.exit(0);
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+async function main() {
+  let { url, grade, cl, source, autoConfirmIfInTracker } = parseArgs(); // let: url reassigned by TD-22 canonicalizer
+
+  if (!url) {
+    console.error('Usage: node auto-submit.mjs --url <job-url> --grade <A|B|C> [--cl <path>] [--source <platform>] [--auto-confirm-if-in-tracker]');
+    process.exit(1);
+  }
+
+  log(`\n${'='.repeat(70)}`);
+  log(`AutoSubmit starting | url=${url} | grade=${grade} | cl=${cl ?? 'auto'}${source ? ` | source=${source}` : ''}${autoConfirmIfInTracker ? ' | auto-confirm-if-in-tracker' : ''}`);
+
+  let db, susDb;
+  try {
+    db    = loadJson(INCLUSION_DB_PATH);
+    susDb = loadJson(SUS_DB_PATH);
+  } catch (e) {
+    log(`ERROR loading databases: ${e.message}`);
+    process.exit(1);
+  }
+
+  // TD-22: canonicalize marketing-wrapper URLs to the direct ATS form URL before detection
+  const canonicalUrl = canonicalizeApplyUrl(url);
+  if (canonicalUrl !== url) {
+    log(`URL canonicalized (TD-22): ${url} → ${canonicalUrl}`);
+    url = canonicalUrl;
+  }
+
+  const ats     = detectATS(url);
+  const company = extractCompanyFromUrl(url);
+  log(`ATS detected: ${ats} | Company (from URL): ${company}`);
+
+  // ── Referral source — how we heard about this job ─────────────────────────
+  // Priority: explicit --source flag > auto-detected from discovery URL > default.
+  // Injected into db.referral so fillPage can fill "How did you hear?" fields.
+  const DISCOVERY_PLATFORMS = new Set(['linkedin', 'indeed', 'theladders', 'hiringcafe']);
+  const sourceMap = db.referral_sources ?? {};
+  const resolvedSource = (
+    sourceMap[source] ??                          // explicit --source flag
+    (DISCOVERY_PLATFORMS.has(ats) ? sourceMap[ats] : null) ?? // auto-detect from URL
+    sourceMap['default'] ??                        // configured fallback
+    'LinkedIn'                                     // hard fallback
+  );
+  db.referral = { source: resolvedSource };
+  log(`Referral source: "${resolvedSource}" (raw: ${source ?? ats})`);
+
+  const companyNorm = company.toLowerCase().trim();
+
+  // F500 gate bypass (2026-05-21): if company is in Fortune 500 set, skip SuS entirely.
+  const isF500 = FORTUNE_500.has(companyNorm) ||
+    [...FORTUNE_500].some(k => companyNorm.includes(k) || k.includes(companyNorm));
+  if (isF500) {
+    log(`✓ F500 company — SuS gate bypassed: "${company}"`);
+  }
+
+  const isKnown     = isF500 || KNOWN_CONNECTIONS.has(companyNorm) ||
+    [...KNOWN_CONNECTIONS].some(k => companyNorm.includes(k) || k.includes(companyNorm));
+  let isConfirmed = isF500 || susDb.confirmed.some(c => c.toLowerCase().includes(companyNorm));
+
+  // Kaizen #2 (2026-05-07)
+  if (!isKnown && !isConfirmed && autoConfirmIfInTracker) {
+    if (companyExistsInTracker(companyNorm)) {
+      log(`✓ Auto-confirm: "${company}" found in applications.md tracker — promoting to confirmed[].`);
+      susDb.confirmed.push(company);
+      susDb.last_updated = new Date().toISOString();
+      saveJson(SUS_DB_PATH, susDb);
+      isConfirmed = true;
+    }
+  }
+
+  if (!isKnown && !isConfirmed) {
+    log(`⚠ SuS: "${company}" is not in known connections or confirmed list`);
+    const alreadyLogged = susDb.companies.some(c => c.url === url);
+    if (!alreadyLogged) {
+      const now = new Date().toISOString();
+      susDb.companies.push({ company, url, grade, flagged_at: now, last_updated: now });
+      susDb.last_updated = new Date().toISOString();
+      saveJson(SUS_DB_PATH, susDb);
+      log(`  Logged to sus-db.json. Run: node auto-submit.mjs --confirm "${company}" to whitelist.`);
+    } else {
+      log(`  Already logged in sus-db.json (no duplicate written).`);
+    }
+    process.exit(2);
+  }
+
+  // ── Pre-submission URL dedup check ───────────────────────────────────────
+  // If this exact URL already appears in applications.md with Applied/Submitted status,
+  // skip entirely — prevents wasted browser launches and false-positive confirmations
+  // (KAIZEN-ALREADY-APPLIED 2026-05-22).
+  try {
+    if (existsSync(APPLICATIONS_PATH)) {
+      const trackerText = readFileSync(APPLICATIONS_PATH, 'utf8');
+      const urlSlug = url.split('?')[0].toLowerCase();
+      // Find any row containing this URL and check its status column (col 6)
+      for (const line of trackerText.split('\n')) {
+        if (!line.startsWith('|') || !line.toLowerCase().includes(urlSlug.split('/').pop())) continue;
+        const cols = line.split('|').map(s => s.trim());
+        if (cols.length < 8) continue;
+        const rowStatus = cols[6]?.toLowerCase() ?? '';
+        if (/applied|submitted/.test(rowStatus)) {
+          log(`ℹ Pre-submission dedup: URL already in tracker as "${cols[6]}" — skipping (no browser launch).`);
+          process.exit(3); // exit 3 = blocked/skipped, not counted as submitted
+        }
+      }
+    }
+  } catch (dedupErr) {
+    log(`WARN: pre-submission dedup check failed (non-fatal): ${dedupErr.message}`);
+  }
+
+  let playwright;
+  try {
+    playwright = await import('playwright');
+  } catch {
+    log('ERROR: playwright not installed. Run: npm install playwright');
+    process.exit(1);
+  }
+
+  // Verify Chromium binary exists before launching — avoids cryptic crash in sandboxed envs.
+  try {
+    const { chromium: _cr } = playwright;
+    const execPath = _cr.executablePath();
+    const { existsSync } = await import('fs');
+    if (!existsSync(execPath)) {
+      log('DEFERRED: Chromium binary not found at ' + execPath);
+      log('Run on Windows: node auto-submit.mjs (Playwright uses local Chrome)');
+      log('Or install: npx playwright install chromium');
+      process.exit(4); // exit 4 = deferred / environment not ready
+    }
+  } catch (e) {
+    log('DEFERRED: Chromium check failed: ' + e.message);
+    process.exit(4);
+  }
+
+  // Headless mode: explicit env override, or auto-headless when no DISPLAY (Linux CI / scheduled-task sandbox).
+  const headlessMode = process.env.AUTOSUBMIT_HEADLESS === '1' ? true
+                     : process.env.AUTOSUBMIT_HEADLESS === '0' ? false
+                     : (process.platform === 'linux' && !process.env.DISPLAY);
+  // TD-21 2026-05-23: randomize UA pool to reduce bot-detection false-positives on Workday.
+  // Workday's Cloudflare layer tracks UA string across sessions — cycling breaks the pattern.
+  const UA_POOL = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.122 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.129 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.122 Safari/537.36',
+  ];
+  const chosenUA = UA_POOL[Math.floor(Math.random() * UA_POOL.length)];
+  log(`User-Agent: ${chosenUA.match(/Chrome\/[\d.]+/)?.[0] ?? 'Chrome'} (randomized)`);
+  const browser = await playwright.chromium.launch({ headless: headlessMode, slowMo: headlessMode ? 0 : 100 });
+  const context = await browser.newContext({ userAgent: chosenUA });
+  const page = await context.newPage();
+
+  let exitCode = 0;
+  let roleTitle = 'Unknown Role';
+
+  try {
+    log(`Navigating to: ${url}`);
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(1500);
+
+    const pageTitle = await page.title().catch(() => '');
+    // TD-12 / TD-25 2026-05-24: prefer content-area heading selectors to avoid nav/logo elements.
+    // TD-25 expands the selector list and adds a multi-fallback extraction chain so that
+    // "Unknown Role" is only written when all strategies fail, and never with a debug tag.
+    const h1Text = await page.evaluate(() => {
+      const JUNK_RE = /logo|masthead/i;
+      const selectors = [
+        '[data-automation-id="jobTitle"]',               // Workday
+        '#content h1', 'main h1', '[id*="job"] h1',
+        '[class*="job-title"]', '[class*="jobtitle"]', '[class*="role-title"]',
+        'h1[data-testid]', '[class*="posting-headline"]', '[class*="app-title"]',
+        'h2[class*="job-title"]', 'h2[class*="role"]',  // TD-25: h2 fallback
+        'h1', 'h2',                                      // TD-25: generic heading fallback
+      ];
+      for (const sel of selectors) {
+        const el = document.querySelector(sel);
+        if (!el) continue;
+        const text = el.textContent?.trim() || '';
+        const flat = text.replace(/\s+/g, ' ').trim();
+        if (JUNK_RE.test(el.className || '') || JUNK_RE.test(el.id || '')) continue;
+        if (flat.length >= 5 && flat.length <= 200) return flat;
+      }
+      return '';
+    }).catch(() => '');
+
+    const cleanH1 = h1Text
+      .replace(/\s*(logo|Logo)\s*/g, ' ')
+      .replace(/\bJobs\s*$/i, '')
+      .replace(/\s*\|\s*(greenhouse|lever|ashby|workday)\s*$/i, '')
+      .trim();
+
+    // TD-25 2026-05-24: multi-fallback chain so role never silently defaults to "Unknown Role".
+    // 1. Clean h1 (above), 2. Page title split on separators, 3. Lever URL slug, 4. URL path segment.
+    let derivedTitle = cleanH1;
+
+    if (!derivedTitle) {
+      const titleParts = pageTitle
+        .split(/\s*[|\-–—]\s*/)
+        .map(s => s.trim())
+        .filter(s => s.length >= 4 && !/^\s*(greenhouse|lever|ashby|workday|jobs?|careers?)\s*$/i.test(s));
+      if (titleParts.length > 0) derivedTitle = titleParts[0];
+    }
+
+    if (!derivedTitle) {
+      // Lever URLs encode the job title in the path: .../company/uuid-job-title-slug
+      const leverM = url.match(/lever\.co\/[^/]+\/(?:[0-9a-f-]{36}-)?(.+)/i);
+      if (leverM?.[1]) {
+        derivedTitle = leverM[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+    }
+
+    if (!derivedTitle) {
+      // Last resort: use the last non-numeric URL path segment
+      const pathSegment = url
+        .split('/')
+        .filter(s => s && !/^\d+$/.test(s) && !['jobs', 'apply', 'applications', 'new'].includes(s.toLowerCase()))
+        .pop();
+      if (pathSegment && pathSegment.length >= 4) derivedTitle = pathSegment.replace(/[-_]/g, ' ');
+    }
+
+    roleTitle = derivedTitle || 'Unknown Role';
+    log(`Role title: "${roleTitle}"`);
+
+    if (ats === 'workday') {
+      // Pass canonical url so handleWorkday can navigate back after home-page sign-in (TD-24)
+      const wdStatus = await handleWorkday(page, db, url);
+      if (wdStatus === 'login-required' || wdStatus === 'auth-redirect') {
+        const blockField = wdStatus === 'auth-redirect' ? 'workday-auth-redirect' : 'workday-login-required';
+        writeBlocked({
+          url, company, role: roleTitle, grade,
+          blocked_fields: [blockField],
+          cl_path: cl ?? null,
+          timestamp: new Date().toISOString(),
+          status: 'blocked'
+        });
+        appendToTracker(company, roleTitle, grade, 'Blocked', url);
+        await browser.close();
+        process.exit(3);
+      }
+    } else if (ats === 'greenhouse') {
+      await handleGreenhouse(page).catch(e => log(`  Greenhouse pre-process error: ${e.message}`));
+    } else if (ats === 'ashby') {
+      await handleAshby(page).catch(e => log(`  Ashby pre-process error: ${e.message}`));
+    } else if (NEW_PLATFORM_ATSES.has(ats)) {
+      const result = await dispatchNewPlatform(ats, page, db);
+      if (result?.error) {
+        log(`  ${ats} dispatch error: ${result.error}`);
+        writeBlocked({
+          url, company, role: roleTitle, grade,
+          blocked_fields: [`${ats}-${result.error}`],
+          cl_path: cl ?? null,
+          timestamp: new Date().toISOString(),
+          status: 'blocked'
+        });
+        appendToTracker(company, roleTitle, grade, 'Blocked', url);
+        log('Browser left open for manual completion. Close when done.');
+        log('AutoSubmit exiting with code 3');
+        process.exit(3);
+      }
+    }
+
+    log('Filling form fields...');
+    const unfilled = await fillPage(page, db);
+
+    log('Handling cover letter...');
+    await handleCoverLetter(page, cl, db, company);
+
+    if (unfilled.length > 0) {
+      log(`⚠ Blocked: ${unfilled.length} required field(s) remain unfilled: ${unfilled.join(', ')}`);
+      writeBlocked({
+        url, company, role: roleTitle, grade,
+        blocked_fields: unfilled,
+        cl_path: cl ?? null,
+        timestamp: new Date().toISOString(),
+        status: 'blocked'
+      });
+      checkChronicallyBlocked(url, unfilled); // KAIZEN-11
+      appendToTracker(company, roleTitle, grade, 'Blocked', url);
+      log('Browser left open for manual completion. Close when done.');
+      log('AutoSubmit exiting with code 3');
+      await browser.close();
+      process.exit(3);
+    }
+
+    // ── Submit ────────────────────────────────────────────────────────────────
+    log('Submitting application...');
+    const submitBtn = await page.$(
+      '[data-automation-id="bottom-navigation-next-btn"][aria-label*="ubmit"], ' +
+      'button[type="submit"]:visible, input[type="submit"]:visible, ' +
+      'button:has-text("Submit Application"):visible, button:has-text("Submit"):visible, ' +
+      'button:has-text("Apply Now"):visible, button:has-text("Apply"):visible'
+    ).catch(() => null);
+
+    if (submitBtn) {
+      const preSubmitUrl = page.url();
+      await submitBtn.click();
+      log('✓ Submit button clicked — waiting for confirmation signal (up to 8s)...');
+      await page.waitForTimeout(8000);
+
+      // ── Per-ATS Confirmation signal gate ────────────────────────────────────
+      // Uses platform-specific URL + text patterns from data/ats-confirmation-patterns.json.
+      // Checks "already applied" FIRST (overlapping phrases would otherwise false-positive).
+      // On each run, logs which pattern fired to data/ats-pattern-hits.json for tuning.
+      const postSubmitUrl = page.url();
+      const pageText      = await page.evaluate(() => document.body?.innerText || '').catch(() => '');
+      const atsPatterns   = loadAtsPatterns(ats);
+
+      // 1. Already-applied check (must precede success — overlapping phrases)
+      const alreadyUrlHit  = matchPatterns(atsPatterns.already_applied?.url_patterns,  postSubmitUrl);
+      const alreadyTextHit = matchPatterns(atsPatterns.already_applied?.text_patterns, pageText);
+      if (alreadyUrlHit.matched || alreadyTextHit.matched) {
+        const hitPattern = alreadyUrlHit.pattern ?? alreadyTextHit.pattern;
+        const hitType    = alreadyUrlHit.matched ? 'url' : 'text';
+        log(`ℹ Already-applied detected [${ats}/${hitType}]: "${hitPattern}" — duplicate, no new application sent.`);
+        recordPatternHit(ats, 'already-applied', hitType, hitPattern, url);
+        writeBlocked({
+          url, company, role: roleTitle, grade,
+          blocked_fields: ['already-applied'],
+          cl_path: cl ?? null,
+          timestamp: new Date().toISOString(),
+          status: 'blocked'
+        });
+        await browser.close();
+        process.exit(3);
+      }
+
+      // 2. Fresh-submission confirmation check
+      const successUrlHit  = matchPatterns(atsPatterns.fresh_submission?.url_patterns,  postSubmitUrl);
+      const successTextHit = matchPatterns(atsPatterns.fresh_submission?.text_patterns, pageText);
+      const urlChanged     = postSubmitUrl !== preSubmitUrl;
+
+      // URL change alone is weak — only count it if no already-applied pattern fired
+      // and the URL actually moved to a different path (not just a query-string change)
+      const preUrl    = preSubmitUrl.split('?')[0];
+      const postUrl   = postSubmitUrl.split('?')[0];
+      const pathMoved = preUrl !== postUrl;
+
+      const confirmed    = successUrlHit.matched || successTextHit.matched || pathMoved;
+      const hitPattern   = successUrlHit.pattern ?? successTextHit.pattern ?? (pathMoved ? `url-path-change:${postUrl}` : null);
+      const hitType      = successUrlHit.matched ? 'url' : successTextHit.matched ? 'text' : 'path-moved';
+
+      if (!confirmed) {
+        log(`⚠ No confirmation signal [${ats}] after submit — marking blocked (no-confirmation-signal)`);
+        log(`  Post-submit URL: ${postSubmitUrl}`);
+        log(`  Page text sample: ${pageText.slice(0, 200).replace(/\n/g, ' ')}`);
+        recordPatternHit(ats, 'no-signal', 'none', null, url);
+        writeBlocked({
+          url, company, role: roleTitle, grade,
+          blocked_fields: ['no-confirmation-signal'],
+          cl_path: cl ?? null,
+          timestamp: new Date().toISOString(),
+          status: 'blocked'
+        });
+        appendToTracker(company, roleTitle, grade, 'Blocked', url);
+        await browser.close();
+        process.exit(3);
+      }
+
+      log(`✓ Confirmation signal [${ats}/${hitType}]: "${hitPattern}"`);
+      recordPatternHit(ats, 'confirmed', hitType, hitPattern, url);
+    } else {
+      log('⚠ No submit button found — marking blocked');
+      writeBlocked({
+        url, company, role: roleTitle, grade,
+        blocked_fields: ['no-submit-button'],
+        cl_path: cl ?? null,
+        timestamp: new Date().toISOString(),
+        status: 'blocked'
+      });
+      checkChronicallyBlocked(url, ['no-submit-button']); // KAIZEN-11
+      appendToTracker(company, roleTitle, grade, 'Blocked', url);
+      await browser.close();
+      process.exit(3);
+    }
+
+    log(`✓ Application confirmed submitted: ${company} — ${roleTitle}`);
+    appendToTracker(company, roleTitle, grade, 'Applied', url);
+    moveKanbanCard(url, 'submitted');
+    exitCode = 0;
+
+  } catch (err) {
+    log(`ERROR: ${err.message}`);
+    log(err.stack ?? '');
+    exitCode = 1;
+    writeBlocked({
+      url, company: company ?? 'unknown', role: roleTitle, grade: grade ?? '?',
+      blocked_fields: [`error: ${err.message.slice(0, 120)}`],
+      cl_path: cl ?? null,
+      timestamp: new Date().toISOString(),
+      status: 'error'
+    });
+    appendToTracker(company ?? 'unknown', roleTitle, grade ?? '?

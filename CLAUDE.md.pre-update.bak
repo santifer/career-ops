@@ -1,0 +1,487 @@
+# Career-Ops -- AI Job Search Pipeline
+
+## Knowledge Graph (Graphify) — READ THIS FIRST
+
+**Before answering any architecture question about the Job Pulse / Career-Ops / AutoSubmit stack, always check for the knowledge graph first.**
+
+If `graphify-out/GRAPH_REPORT.md` exists in this directory:
+1. Read it immediately — it gives you god nodes, community structure, and surprising connections across the entire stack
+2. Use `graphify-out/graph.json` for targeted queries (node lookup, shortest path between components, dependency tracing)
+3. Do NOT grep through raw files for architecture questions — the graph has already done that work at 71x fewer tokens
+
+If the file does NOT exist yet: the user needs to run `graphify .` in this directory (see setup below).
+
+Key graph commands once built:
+- `/graphify query "how does auto-submit connect to the Kanban?"` — trace component relationships
+- `/graphify path "scan.mjs" "kanban"` — exact dependency path
+- `/graphify explain "SuS gate"` — expand any node with full context
+
+**Setup (run once on Windows, in your career-ops folder):**
+```
+pip install graphifyy
+graphify install
+graphify .
+```
+After the graph is built, run `graphify claude install` inside career-ops to wire the PreToolUse hook permanently.
+
+---
+
+## Origin
+
+This system was built and used by [santifer](https://santifer.io) to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. The archetypes, scoring logic, negotiation scripts, and proof point structure all reflect his specific career search in AI/automation roles.
+
+The portfolio that goes with this system is also open source: [cv-santiago](https://github.com/santifer/cv-santiago).
+
+**It will work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (AI Agent) can edit the user's files. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
+
+## Data Contract (CRITICAL)
+
+There are two layers. Read `DATA_CONTRACT.md` for the full list.
+
+**User Layer (NEVER auto-updated, personalization goes HERE):**
+- `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
+- `data/*`, `reports/*`, `output/*`, `interview-prep/*`
+
+**System Layer (auto-updatable, DON'T put user data here):**
+- `modes/_shared.md`, `modes/oferta.md`, all other modes
+- `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
+
+**THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
+
+## Update Check
+
+On the first message of each session, run the update checker silently:
+
+```bash
+node update-system.mjs check
+```
+
+Parse the JSON output:
+- `{"status": "update-available", "local": "1.0.0", "remote": "1.1.0", "changelog": "..."}` → tell the user:
+  > "career-ops update available (v{local} → v{remote}). Your data (CV, profile, tracker, reports) will NOT be touched. Want me to update?"
+  If yes → run `node update-system.mjs apply`. If no → run `node update-system.mjs dismiss`.
+- `{"status": "up-to-date"}` → say nothing
+- `{"status": "dismissed"}` → say nothing
+- `{"status": "offline"}` → say nothing
+
+The user can also say "check for updates" or "update career-ops" at any time to force a check.
+To rollback: `node update-system.mjs rollback`
+
+## What is career-ops
+
+AI-powered job search automation built on Claude Code: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
+
+### Main Files
+
+| File | Function |
+|------|----------|
+| `data/applications.md` | Application tracker |
+| `data/pipeline.md` | Inbox of pending URLs |
+| `data/scan-history.tsv` | Scanner dedup history |
+| `portals.yml` | Query and company config |
+| `templates/cv-template.html` | HTML template for CVs |
+| `templates/cv-template.tex` | LaTeX/Overleaf template for CVs |
+| `generate-pdf.mjs` | Playwright: HTML to PDF |
+| `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler |
+| `article-digest.md` | Compact proof points from portfolio (optional) |
+| `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
+| `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
+| `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
+| `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
+| `data/follow-ups.md` | Follow-up history tracker |
+| `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
+| `check-liveness.mjs` | Job posting liveness checker |
+| `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
+| `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy). Header includes `**Legitimacy:** {tier}`. |
+
+### OpenCode Commands
+
+When using [OpenCode](https://opencode.ai), the following slash commands are available (defined in `.opencode/commands/`):
+
+| Command | Claude Code Equivalent | Description |
+|---------|------------------------|-------------|
+| `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
+| `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
+| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job offer (A-F scoring) |
+| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
+| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
+| `/career-ops-deep` | `/career-ops deep` | Deep company research |
+| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-latex` | `/career-ops latex` | Export CV as LaTeX/Overleaf .tex |
+| `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
+| `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
+| `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
+| `/career-ops-apply` | `/career-ops apply` | Live application assistant |
+| `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
+| `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
+| `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
+| `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
+
+**Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
+
+### Gemini CLI Commands
+
+When using the [Gemini CLI](https://github.com/google-gemini/gemini-cli), the following slash commands are available (defined in `.gemini/commands/`):
+
+| Command | Claude Code Equivalent | Description |
+|---------|------------------------|-------------|
+| `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
+| `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
+| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job offer (A-G scoring) |
+| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
+| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
+| `/career-ops-deep` | `/career-ops deep` | Deep company research |
+| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
+| `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
+| `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
+| `/career-ops-apply` | `/career-ops apply` | Live application assistant |
+| `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
+| `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
+| `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
+| `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
+
+**Note:** Gemini CLI commands are defined in `.gemini/commands/*.toml`. The project context is auto-loaded from `GEMINI.md`. All `modes/*` files are shared across Claude Code, OpenCode, and Gemini CLI.
+
+### First Run — Onboarding (IMPORTANT)
+
+**Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
+
+1. Does `cv.md` exist?
+2. Does `config/profile.yml` exist (not just profile.example.yml)?
+3. Does `modes/_profile.md` exist (not just _profile.template.md)?
+4. Does `portals.yml` exist (not just templates/portals.example.yml)?
+
+If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently. This is the user's customization file — it will never be overwritten by updates.
+
+**If ANY of these is missing, enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
+
+#### Step 1: CV (required)
+If `cv.md` is missing, ask:
+> "I don't have your CV yet. You can either:
+> 1. Paste your CV here and I'll convert it to markdown
+> 2. Paste your LinkedIn URL and I'll extract the key info
+> 3. Tell me about your experience and I'll draft a CV for you
+>
+> Which do you prefer?"
+
+Create `cv.md` from whatever they provide. Make it clean markdown with standard sections (Summary, Experience, Projects, Education, Skills).
+
+#### Step 2: Profile (required)
+If `config/profile.yml` is missing, copy from `config/profile.example.yml` and then ask:
+> "I need a few details to personalize the system:
+> - Your full name and email
+> - Your location and timezone
+> - What roles are you targeting? (e.g., 'Senior Backend Engineer', 'AI Product Manager')
+> - Your salary target range
+>
+> I'll set everything up for you."
+
+Fill in `config/profile.yml` with their answers. For archetypes and targeting narrative, store the user-specific mapping in `modes/_profile.md` or `config/profile.yml` rather than editing `modes/_shared.md`.
+
+#### Step 3: Portals (recommended)
+If `portals.yml` is missing:
+> "I'll set up the job scanner with 45+ pre-configured companies. Want me to customize the search keywords for your target roles?"
+
+Copy `templates/portals.example.yml` → `portals.yml`. If they gave target roles in Step 2, update `title_filter.positive` to match.
+
+#### Step 4: Tracker
+If `data/applications.md` doesn't exist, create it:
+```markdown
+# Applications Tracker
+
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|-------|--------|-----|--------|-------|
+```
+
+#### Step 5: Get to know the user (important for quality)
+
+After the basics are set up, proactively ask for more context. The more you know, the better your evaluations will be:
+
+> "The basics are ready. But the system works much better when it knows you well. Can you tell me more about:
+> - What makes you unique? What's your 'superpower' that other candidates don't have?
+> - What kind of work excites you? What drains you?
+> - Any deal-breakers? (e.g., no on-site, no startups under 20 people, no Java shops)
+> - Your best professional achievement — the one you'd lead with in an interview
+> - Any projects, articles, or case studies you've published?
+>
+> The more context you give me, the better I filter. Think of it as onboarding a recruiter — the first week I need to learn about you, then I become invaluable."
+
+Store any insights the user shares in `config/profile.yml` (under narrative), `modes/_profile.md`, or in `article-digest.md` if they share proof points. Do not put user-specific archetypes or framing into `modes/_shared.md`.
+
+**After every evaluation, learn.** If the user says "this score is too high, I wouldn't apply here" or "you missed that I have experience in X", update your understanding in `modes/_profile.md`, `config/profile.yml`, or `article-digest.md`. The system should get smarter with every interaction without putting personalization into system-layer files.
+
+#### Step 6: Ready
+Once all files exist, confirm:
+> "You're all set! You can now:
+> - Paste a job URL to evaluate it
+> - Run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) to search portals
+> - Run `/career-ops` to see all commands
+>
+> Everything is customizable — just ask me to change anything.
+>
+> Tip: Having a personal portfolio dramatically improves your job search. If you don't have one yet, the author's portfolio is also open source: github.com/santifer/cv-santiago — feel free to fork it and make it yours."
+
+Then suggest automation:
+> "Want me to scan for new offers automatically? I can set up a recurring scan every few days so you don't miss anything. Just say 'scan every 3 days' and I'll configure it."
+
+If the user accepts, use the `/loop` or `/schedule` skill (if available) to set up a recurring `/career-ops scan` (or `/career-ops-scan` if using OpenCode). If those aren't available, suggest adding a cron job or remind them to run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) periodically.
+
+### Personalization
+
+This system is designed to be customized by YOU (AI Agent). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
+
+**Common customization requests:**
+- "Change the archetypes to [backend/frontend/data/devops] roles" → edit `modes/_profile.md` or `config/profile.yml`
+- "Translate the modes to English" → edit all files in `modes/`
+- "Add these companies to my portals" → edit `portals.yml`
+- "Update my profile" → edit `config/profile.yml`
+- "Change the CV template design" → edit `templates/cv-template.html`
+- "Adjust the scoring weights" → edit `modes/_profile.md` for user-specific weighting, or edit `modes/_shared.md` and `batch/batch-prompt.md` only when changing the shared system defaults for everyone
+
+### Language Modes
+
+Default modes are in `modes/` (English). Additional language-specific modes are available:
+
+- **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
+- **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
+- **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
+
+**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
+1. User says "use German modes" → read from `modes/de/` instead of `modes/`
+2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
+3. You detect a German JD → suggest switching to German modes
+
+**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
+1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
+2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
+3. You detect a French JD → suggest switching to French modes
+
+**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
+1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
+2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
+3. You detect a Japanese JD → suggest switching to Japanese modes
+
+**When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
+
+### Skill Modes
+
+| If the user... | Mode |
+|----------------|------|
+| Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
+| Asks to evaluate offer | `oferta` |
+| Asks to compare offers | `ofertas` |
+| Wants LinkedIn outreach | `contacto` |
+| Asks for company research | `deep` |
+| Preps for interview at specific company | `interview-prep` |
+| Wants to generate CV/PDF | `pdf` |
+| Evaluates a course/cert | `training` |
+| Evaluates portfolio project | `project` |
+| Asks about application status | `tracker` |
+| Fills out application form | `apply` |
+| Searches for new offers | `scan` |
+| Processes pending URLs | `pipeline` |
+| Batch processes offers | `batch` |
+| Asks about rejection patterns or wants to improve targeting | `patterns` |
+| Asks about follow-ups or application cadence | `followup` |
+
+### CV Source of Truth
+
+- `cv.md` in project root is the canonical CV
+- `article-digest.md` has detailed proof points (optional)
+- **NEVER hardcode metrics** -- read them from these files at evaluation time
+
+---
+
+## Ethical Use -- CRITICAL (revised 2026-05-02)
+
+**This system is designed for quality, not quantity.** The goal is to help the user find and apply to roles where there is a genuine match -- not to spam companies with mass applications.
+
+### AutoSubmit Gate -- the SuS / Whitelist model
+
+The user (Rahil) revised the human-in-loop rule on 2026-05-02. AutoSubmit is now governed by a **3-tier gate**:
+
+1. **Fortune 500 jobs → AUTO-SUBMIT, no human-in-the-loop required.** Match the company name (case-insensitive) against the `FORTUNE_500` set in `dashboard/job-pulse-kanban.html`. If matched, AutoSubmit runs immediately on grade A/B cards once URL passes the verification gate (see below). The user is removed from the loop on F500 by standing approval.
+
+2. **Whitelisted companies (non-F500) → AUTO-SUBMIT.** A company lands in the whitelist when the user manually moves a card from `sus-blocked` → `autosubmit-ready` in the Kanban. That move is treated as **formal approval AND a per-company whitelist entry**. The whitelist lives in `data/autosubmit-whitelist.json`. Once a company is whitelisted, all future jobs at that company on the same ATS board may be auto-submitted without further user review.
+
+3. **Everything else (unknown / uncertain) → SuS / BLOCKED column.** Any job that is not F500 and not whitelisted lands in the `sus-blocked` column. **Do NOTHING with it until the user moves it to `autosubmit-ready`.** That move is the gate. No surprise submissions.
+
+The "do nothing until moved" rule is hard. Don't infer approval, don't pattern-match, don't ask. The user is the gate; the column move is the signal.
+
+### URL Verification Gate -- &lt;2% failure margin (HARD RULE)
+
+WebSearch returns indexed URLs that are often dead. The 2026-05-02 audit found a 62.5% dead-link rate when injecting search-attested URLs without API verification. **No card may be injected into the Kanban unless its URL has been verified live by an authoritative API call within the last 30 minutes.** The verification map:
+
+- **Greenhouse** (`job-boards.greenhouse.io/{board}/jobs/{id}`): hit `https://boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}`. HTTP 200 = live. HTTP 404 = dead, drop.
+- **Lever** (`jobs.lever.co/{company}/{id}`): hit `https://api.lever.co/v0/postings/{company}/{id}?mode=json`. 200 = live. 404 = dead.
+- **Ashby** (`jobs.ashbyhq.com/{company}/{id}`): hit `https://api.ashbyhq.com/posting-api/job-board/{company}` and confirm the id is in the returned posting list.
+- **Workday**: API verification is harder; fetch the URL, look for `<script>` blocks containing job data and absence of "no longer accepting applications" / "Job not found". If unsure, send to `sus-blocked`.
+
+Search-engine-only attestation (e.g., a WebSearch snippet describing the role) is **not sufficient** under the new rule. Every URL gets a real ATS-API check.
+
+Every dead URL the gate rejects is logged in `data/dead-url-history.json` for audit. The aggregate dead rate must stay under 2%. If a daily refresh exceeds 2% over a 7-day rolling window, the scanner needs investigation -- treat it as a defect and remediate (it's likely a stale source feed or expanded query that's pulling in cached results).
+
+### Quality discipline
+
+- **Strongly discourage low-fit applications.** If a score is below 4.0/5, explicitly recommend against applying. The user's time and the recruiter's time are both valuable. Only proceed if the user has a specific reason to override the score.
+- **Quality over speed.** A well-targeted application to 5 companies beats a generic blast to 50. Guide the user toward fewer, better applications.
+- **Respect recruiters' time.** Every application a human reads costs someone's attention. Only send what's worth reading.
+
+---
+
+## Offer Verification -- MANDATORY
+
+**NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Playwright:
+1. `browser_navigate` to the URL
+2. `browser_snapshot` to read content
+3. Only footer/navbar without JD = closed. Title + description + Apply = active.
+
+**Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
+
+---
+
+## CI/CD and Quality
+
+- **GitHub Actions** run on every PR: `test-all.mjs` (63+ checks), auto-labeler (risk-based: 🔴 core-architecture, ⚠️ agent-behavior, 📄 docs), welcome bot for first-time contributors
+- **Branch protection** on `main`: status checks must pass before merge. No direct pushes to main (except admin bypass).
+- **Dependabot** monitors npm, Go modules, and GitHub Actions for security updates
+- **Contributing process**: issue first → discussion → PR with linked issue → CI passes → maintainer review → merge
+
+## Community and Governance
+
+- **Code of Conduct**: Contributor Covenant 2.1 with enforcement actions (see `CODE_OF_CONDUCT.md`)
+- **Governance**: BDFL model with contributor ladder — Participant → Contributor → Triager → Reviewer → Maintainer (see `GOVERNANCE.md`)
+- **Security**: private vulnerability reporting via email (see `SECURITY.md`)
+- **Support**: help questions go to Discord/Discussions, not issues (see `SUPPORT.md`)
+- **Discord**: https://discord.gg/8pRpHETxa4
+
+## Stack and Conventions
+
+- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
+- Scripts in `.mjs`, configuration in YAML
+- Output in `output/` (gitignored), Reports in `reports/`
+- JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
+- Batch in `batch/` (gitignored except scripts and prompt)
+- Report numbering: sequential 3-digit zero-padded, max existing + 1
+- **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
+- **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
+
+### Daily Refresh Status File (`data/last-refresh.json`) — REQUIRED
+
+Every run of the daily 6am Job Pulse refresh MUST end by writing a one-file run summary to `data/last-refresh.json` via the helper:
+
+```bash
+node write-refresh-status.mjs \
+  --attempted [N] --submitted [N] --blocked [N] --sus-new [N] --errors [N] \
+  --deferred [N] --seed-version "vNN-live-jobs" --notes "..."
+```
+
+The file shape is `{ran_at, attempted, submitted, blocked, sus_new, errors, deferred, seed_version, notes}` — `ran_at` is set automatically. The 8am report and any monitoring read this single file instead of parsing logs or diffing the Kanban — one-file reads are faster, less brittle, and tell us instantly whether the 6am job ran.
+
+**Counting rules:**
+- `attempted` — A/B non-referral cards AutoSubmit was invoked on (does NOT include deferred)
+- `submitted` — exit-code-0 count
+- `blocked` — exit-code-3 count
+- `sus_new` — exit-code-2 count (first-sighting companies that hit sus-db this run)
+- `errors` — exit-code-1 count
+- `deferred` — cards skipped for environmental reasons (no display, missing dep, runtime ceiling)
+
+If the helper fails to write, that itself is P1 — fix and retry; downstream depends on this file.
+
+The current scheduled-task SKILL prompt that produces this file is checked in at `docs/scheduled-tasks/job-pulse-6am-refresh.SKILL.md` — when the SKILL changes, update both the scheduled task in the Cowork sidebar AND that file so they stay in sync.
+
+### TSV Format for Tracker Additions
+
+Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
+
+```
+{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+```
+
+**Column order (IMPORTANT -- status BEFORE score):**
+1. `num` -- sequential number (integer)
+2. `date` -- YYYY-MM-DD
+3. `company` -- short company name
+4. `role` -- job title
+5. `status` -- canonical status (e.g., `Evaluated`)
+6. `score` -- format `X.X/5` (e.g., `4.2/5`)
+7. `pdf` -- `✅` or `❌`
+8. `report` -- markdown link `[num](reports/...)`
+9. `notes` -- one-line summary
+
+**Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
+
+### Pipeline Integrity
+
+1. **NEVER edit applications.md to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
+2. **YES you can edit applications.md to UPDATE status/notes of existing entries.**
+3. All reports MUST include `**URL:**` in the header (between Score and PDF). Include `**Legitimacy:** {tier}` (see Block G in `modes/oferta.md`).
+4. All statuses MUST be canonical (see `templates/states.yml`).
+5. Health check: `node verify-pipeline.mjs`
+6. Normalize statuses: `node normalize-statuses.mjs`
+7. Dedup: `node dedup-tracker.mjs`
+
+### Canonical States (applications.md)
+
+**Source of truth:** `templates/states.yml`
+
+| State | When to use |
+|-------|-------------|
+| `Evaluated` | Report completed, pending decision |
+| `Applied` | Application sent |
+| `Responded` | Company responded |
+| `Interview` | In interview process |
+| `Offer` | Offer received |
+| `Rejected` | Rejected by company |
+| `Discarded` | Discarded by candidate or offer closed |
+| `SKIP` | Doesn't fit, don't apply |
+
+**RULES:**
+- No markdown bold (`**`) in status field
+- No dates in status field (use the date column)
+- No extra text (use the notes column)
+
+---
+
+## Tech Debt Log
+
+Reference format: `TD-NN — [status] — description`. The 8am report's 🔧 TECH DEBT section reads this table.
+
+| ID | Status | Date | Description |
+|----|--------|------|-------------|
+| TD-01 | ✅ RESOLVED 2026-05-07 | 2026-05-07 | `write-refresh-status.mjs` attempted count incorrectly included deferred cards; auto-correct guard added |
+| TD-02 | ✅ RESOLVED 2026-05-07 | 2026-05-07 | Windows bat (run-autosubmit.bat) was blind to 8am report — bat now calls `--bat-merge` to write bat_* fields into last-refresh.json |
+| TD-03 | ✅ RESOLVED 2026-05-07 | 2026-05-07 | Chromium not available in Cowork VM — exit code 4 (deferred) added; Windows bat handles actual submission |
+| TD-04 | ✅ RESOLVED 2026-05-09 | 2026-05-09 | Greenhouse hidden inputs not populated after ARIA combobox click — native change/input/blur events dispatched post-selection |
+| TD-05 | ✅ RESOLVED 2026-05-13 | 2026-05-13 | `fillAriaComboboxes` looksEmpty regex missed "Please select…" Greenhouse placeholder variants, silently skipping Country/Visa comboboxes (9/9 failure rate). Fixed: inverted to definitelyFilled logic + exact-first two-pass option matching + expanded COMBOBOX_VALUE_HINTS (visa/work-auth entries). Root cause (type-to-filter virtual list) fully resolved same session: detect `[role="listbox"] input` after combobox open, type value to trigger filtering, `waitForSelector('[role="option"]')` before querying |
+| TD-06 | ✅ RESOLVED 2026-05-13 | 2026-05-13 | Kanban `createdAt` used dynamic `new Date(now - X*h).toISOString()` expressions — reset to "just added" on every page load, stale detection (>18h gate) never fired. Fixed: replaced all live-N card createdAt with hardcoded ISO strings based on actual injection dates |
+| TD-07 | ✅ RESOLVED 2026-05-13 | 2026-05-13 | applications.md accumulated duplicate entries (bat ran multiple times without dedup guard). Fixed: `node dedup-tracker.mjs` — removed 9 duplicates, kept first occurrence per company+role |
+| TD-08 | ✅ RESOLVED 2026-05-14 | 2026-05-14 | `auto-submit.mjs` inserted duplicate tracker rows on every re-run; `appendToTracker` lacked pre-insert lookup. Fixed: check for existing company+role row before appending — updates status/notes in-place instead of creating a duplicate |
+| KAIZEN-01 | ⏸ SUSPENDED 2026-05-14 | 2026-05-14 | WebSearch secondary scan suspended — 89% dead-URL rate (8/9 failed ATS-API verification). All 13 queries (ATS Direct + LinkedIn + Indeed + TheLadders + HiringCafe) halted. Primary scan.mjs carries the load. Resume gate: `node validate-websearch-seeds.mjs --input urls.txt --min-urls 20` must PASS (<2% dead rate) before re-enabling Step 1 in the 6am SKILL. |
+| KAIZEN-02 | ✅ RESOLVED 2026-05-14 | 2026-05-14 | Work-auth constant fields wired from `config/profile.yml` `autosubmit:` section into COMBOBOX_VALUE_HINTS at runtime. `fillRequiredRadioGroups` extended to cover `[role="group"]` containers (Greenhouse work-auth fieldsets). Should unblock Country, City, work-auth radio, visa-sponsorship radio across ~20 stuck applications. |
+| TD-10 | ✅ RESOLVED 2026-05-17 | 2026-05-17 | `bat_notes` in last-refresh.json truncated when card-ID list exceeded CLI arg buffer. Fixed: `merge-bat-results.mjs` now writes full per-card detail to `data/bat-run-log.json` and passes a short ≤200-char summary to last-refresh.json. No more data loss on long bat runs. |
+| KAIZEN-03 | ✅ RESOLVED 2026-05-17 | 2026-05-17 | Grade C cards accumulating in new-hot drove Freshness score to 0/100. Added `autoArchiveGradeC()` to Kanban: moves Grade C non-seed cards older than 24h from new-hot to cold-backlog column on page load. New `cold-backlog` column added to COLUMNS array. |
+| KAIZEN-04 | ✅ RESOLVED 2026-05-17 | 2026-05-17 | `getContainerLabel` couldn't find labels on Greenhouse `<div role="group">` work-auth sections (no `<legend>`, no `aria-labelledby`), causing `fillRequiredRadioGroups` to skip them entirely — root cause of 83% block rate. Fixed: added two new fallback strategies (preceding sibling text scan + first non-interactive child text) so these containers now resolve their labels and get radio-filled. |
+| TD-11 | ✅ RESOLVED 2026-05-18 | 2026-05-18 | Country*/City* ARIA combobox fill failing — `fill()` bypasses React event chain, virtual list stays empty. Fixed: replaced `searchInput.fill()` + 400ms with `searchInput.tripleClick()` + `type(value, {delay:80})` + 600ms settle. waitForSelector timeout increased 1500→3000ms. Added retry pass: if no options visible after first attempt, clear and re-type first word only (handles "United States" → "United" seed). Root cause of ~85% block rate. |
+| TD-16 | ✅ RESOLVED 2026-05-20 | 2026-05-20 | `auto-submit.mjs` truncated at line 1549 — unterminated template literal; file did not parse. AutoSubmit fully broken for both VM and Windows bat. Reconstructed tail: blocked-fields log + submit button handler + try/catch/finally + `main()` export. `node --check` clean. |
+| KAIZEN-GE | ✅ RESOLVED 2026-05-20 | 2026-05-20 | FORTUNE_500 set in Kanban used pre-2024 name "general electric"; GE Aerospace and GE Vernova not recognized → B-grade cards incorrectly routed to SuS gate. Added `'ge aerospace'` and `'ge vernova'` to FORTUNE_500 set. |
+| KAIZEN-BAT | ✅ RESOLVED 2026-05-20 | 2026-05-20 | Windows bat (JobPulse-AutoSubmit) not firing — `bat_ran_at: null`. Root cause: Task Scheduler registration stale/missing after session gap. Created `register-all-tasks.bat` — registers both `CoworkLaunch-555am` and `JobPulse-AutoSubmit`, and programmatically enables WakeToRun on both via PowerShell COM. Run once as Administrator to fix. |
+| TD-17 | ✅ RESOLVED 2026-05-20 | 2026-05-20 | `dedup-tracker.mjs` truncated at git HEAD (line 229, missing `writeFileSync` tail). Also: `roleMatch()` had `overlap.length >= 2` hard gate — after ROLE_STOPWORDS strips "manager", single-word titles never matched → dupes not caught. Fixed: `Math.min(2, smaller)` floor, restored writeFileSync tail. |
+| TD-18 | ✅ RESOLVED 2026-05-21 | 2026-05-21 | `searchInput.tripleClick()` called on `ElementHandle` (from `page.$()`) — method only exists on `Locator`. Crashed 17/44 bat cards (38.6%) with `TypeError: searchInput.tripleClick is not a function`. Fixed: replaced all `.tripleClick()` calls with `.click({clickCount: 3})` which works on both ElementHandle and Locator. |
+| KAIZEN-F500-GATE | ✅ RESOLVED 2026-05-21 | 2026-05-21 | `auto-submit.mjs` SuS gate ignored FORTUNE_500 set — only checked `sus-db.confirmed[]`. GE Aerospace and Humana landed in SuS instead of auto-submitting. Fixed: added `FORTUNE_500` set to `auto-submit.mjs` (mirrors Kanban), added pre-SuS `isF500` check — F500 companies bypass SuS gate entirely. Slug forms added (`geaerospace`, `gevernova`, etc.) to handle Workday URL normalization. |
+| KAIZEN-05 | ✅ RESOLVED 2026-05-21 | 2026-05-21 | Added `--confirm-f500` batch CLI command. Reads sus-db, auto-confirms all entries whose company name matches FORTUNE_500 set. Run: `node auto-submit.mjs --confirm-f500`. Ran successfully: confirmed geaerospace ×3, humana, medtronic, philips. |
+| TD-19 | ✅ RESOLVED 2026-05-22 | 2026-05-21 | Stripe `no-submit-button` — 4 cards stuck (live-32/33/50/51). `absolute_url` from Greenhouse API returned `stripe.com/jobs/search?gh_jid=X` (search page, no submit button). Fixed: `normalizeStripeUrl()` added to `scan.mjs` `parseGreenhouse()` — converts to `stripe.com/jobs/listing/{title-slug}/{id}` at scan time. 4 existing Kanban cards patched with correct listing URLs. |
+| KAIZEN-CONFIRM | ✅ RESOLVED 2026-05-21 | 2026-05-21 | `auto-submit.mjs` exited 0 after button click alone — no ATS confirmation verified. "Submitted" count was meaningless (7 unconfirmed bat-run cards). Fixed: replaced 2500ms wait + exit-0 with 8s confirmation signal gate: checks URL change, `/confirmation\|/success\|/thank-you` path, and success-text regex. No signal after 8s → exit 3 with `blocked_fields:['no-confirmation-signal']`. Company confirmation email = real submission; this is the closest in-process proxy. |
+| KAIZEN-KANBAN-SOT | ✅ RESOLVED 2026-05-21 | 2026-05-21 | 8am report derived submitted count from `last-refresh.json` alone (no ground truth). Fixed: added `submitted` Kanban column (id:`submitted`, "Auto-Confirmed ✅") — cards moved there by `auto-submit.mjs` only after ATS confirmation signal. Added `moveKanbanCard(url,'submitted')` call on exit-0 path. 8am SKILL Step 6 + Step 10 updated: Kanban `submitted` column count is authoritative; `last-refresh.json` is cross-checked and discrepancies flagged. `new-fresh` column relabeled "Applied (Manual/Pipeline)" to clarify the two lanes. |
+| KAIZEN-F500-MISSING | ✅ RESOLVED 2026-05-22 | 2026-05-22 | Motorola Solutions, Medtronic, Philips, T-Mobile were in `sus-db.confirmed[]` but absent from the `FORTUNE_500` set in both `auto-submit.mjs` and `kanban.html`. These are real Fortune 500 companies — missing from the set caused them to route to SuS instead of auto-submitting. Fixed: added display names + slug forms (`motorolasolutions`, `tmobile`, `medtronic`, `philips`) to both sets. |
+| KAIZEN-ATOMIC-WRITE | ✅ RESOLVED 2026-05-22 | 2026-05-22 | Non-atomic JSON writes across `auto-submit.mjs` (`saveJson`), `write-refresh-status.mjs`, and `linkedin-dm.mjs` (`saveLog`) caused truncation/NUL-byte corruption when two writers collided (root cause of the 2026-05-22 P1 incident). Fixed: all three now use write-to-`.tmp`-then-`renameSync` — atomic on all POSIX/NTFS filesystems. |
+| KAIZEN-BAT-RESCHEDULE | ✅ RESOLVED 2026-05-22 | 2026-05-22 | JobPulse-AutoSubmit bat fired at 6:10am, colliding with the 6am cloud refresh still running (both writing to the same JSON DBs in the same ~3-minute window). Moved bat to 6:45am in `register-all-tasks.bat`. Run `register-all-tasks.bat` as Administrator to apply. |
+| KAIZEN-CREDS-ENV | ✅ RESOLVED 2026-05-22 | 2026-05-22 | LinkedIn and Workday credentials stored as plaintext in `config/profile.yml`. Added env var support to `auto-submit.mjs` (`WORKDAY_EMAIL`, `WORKDAY_PASSWORD`) and `linkedin-dm.mjs` (`LINKEDIN_EMAIL`, `LINKEDIN_PASSWORD`). Env vars take precedence; profile.yml is fallback. Created `set-credentials.bat` for one-time Windows env var setup (no admin required). |
+| KAIZEN-GE-LOGISTICS | ✅ RESOLVED 2026-05-22 | 2026-05-22 | GE Aerospace logistics cards live-54/55/56 graded B, sitting in AutoSubmit lane. JD analysis confirmed they require Oracle WMS specialist expertise (8+ years) — outside Rahil's background. Re-graded B→C and moved to `cold-backlog` in Kanban. Removed from AutoSubmit queue. |
+| KAIZEN-ALREADY-APPLIED | ✅ RESOLVED 2026-05-22 | 2026-05-22 | AutoSubmit re-visited Ashby cards for Datatonic, Acorns, Deepgram, SpruceID (already applied in prior runs). Ashby showed "already applied" status pages containing phrases like "Your application was submitted on [date]" — the confirmation-signal regex false-positived, counting them as new submissions. No emails received because no new applications were sent. Fixed: (1) "already applied" exclusion check fires BEFORE success regex in confirmation gate — exit 3 with `already-applied` flag; (2) pre-submission URL dedup check reads applications.md and skips cards already marked Applied/Submitted before launching browser. 4 Kanban cards moved back from `submitted` → `new-fresh`. |
+| KAIZEN-06 | ✅ RESOLVED 2026-05-23 | 2026-05-23 | `build-autosubmit-queue.mjs` only picked up `new-hot` cards (tier-1 F500). `autosubmit-ready` whitelist column (tier-2, user-moved) was silently ignored — whitelist flow was fully broken. Fixed: unioned both columns with dedup; output now reports tier-1/tier-2 counts. |
+| TD-20 | ✅ RESOLVED 2026-05-23 | 2026-05-23 | Raytheon/RTX uses shared Workday tenant `globalhr` — hostname prefix extracted by `extractCompanyFromUrl` was `globalhr`, not recognized by FORTUNE_500 gate → routed to SuS. Fixed: `WORKDAY_TENANT_ALIASES` map added to `auto-submit.mjs`; `extractCompanyFromUrl` resolves known tenant slugs to canonical company names before returning. |
+| TD-21 | ✅ RESOLVED 2026-05-23 | 2026-05-23 | Workday no-submit-button blocked 100% of F500 Workday bat cards. Root causes: (1) static UA string triggering bot-detection on Cloudflare layer; (2) submit button lazy-renders after scroll — query fired before DOM element existed. Fixed: randomized UA pool (5 Chrome/Win+Mac variants) in browser context; double scroll-to-bottom + 3s settle added to `handleWorkday()` before returning. NOTE: the scroll-settle portion was a misdiagnosis — see TD-23. UA-pool change retained. |
+| TD-22 | ✅ FIXED 2026-05-24 (pending 6:45am bat verify) | 2026-05-24 | F500 AutoSubmit lane 15/15 blocked in the 2026-05-23 bat. Root cause for 8/15 cards: Greenhouse jobs injected as company marketing-wrapper URLs (`stripe.com/jobs/listing/...`, `databricks.com/...?gh_jid=...`) that carry the job id but render a marketing page with no application form — `detectATS` returned `'unknown'`, no platform handler ran, stalled at `no-submit-button`. Confirmed via `data/ats-pattern-hits.json` (`"ats":"unknown"`). Fixed in `auto-submit.mjs`: new `canonicalizeApplyUrl()` rewrites wrappers to `job-boards.greenhouse.io/{board}/jobs/{id}` before detection; `detectATS` now recognizes `gh_jid` + Stripe listing URLs. URL-transform logic unit-tested (Stripe/Databricks/Duolingo → correct board URLs). |
+| TD-23 | ✅ FIXED 2026-05-24 (pending 6:45am bat verify) | 2026-05-24 | Workday F500 cards (7/15: humana, medtronic, philips, tmobile, motorola×2, cvshealth) blocked `no-submit-button`. Root cause: `handleWorkday` checked the Sign In wall only BEFORE the Apply click; Workday routes Apply → an auth page, so the wall was never handled and the wizard loop ran on the login page (TD-21's scroll-settle was the wrong fix — no button to lazy-render, the script was stranded on an auth page). Fixed: extracted `tryWorkdayLogin()` helper, now called pre- AND post-Apply. CAVEAT: each Workday tenant is a separate account — cross-tenant hands-off still needs a pre-created account per F500 Workday tenant. See escalation. |

@@ -1,0 +1,48 @@
+{
+  "cookies": [
+    {
+      "name": "wday_vps_cookie",
+      "value": "1726651402.53810.0000",
+      "domain": "ngc.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "00DqtlbsbFbAEvd6uV9VQtokp1J0LxxA4VzDyiCLwTQ-1780451349.9524202-1.0.1.1-bj0r5Ashywp0M1C99_1SAc8PwJOCGL13jl4VOWz.RAHpcnOX4KxAu.IMPGWFV6SZZFDZTSm4vv5SKCWYGedWU.CbpUlovh08C2oZMf7ZtJM0jlgbslXkrm5jzO6YCTdY",
+      "domain": ".ngc.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780453148.465854,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cflb",
+      "value": "02DiuHJZe28xXz6hQKNFTtNTjdFAZDpBJCZesRHL7QmP2",
+      "domain": "ngc.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": 1780534148.46592,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_cfuvid",
+      "value": "ZL4IH0nSihChZVS7T79UsUg8wx81BhGuCFftIwtKCFk-1780451349.9524202-1.0.1.1-R3mVUoUrifCEubAfWCTVWaHRtd2JpQl.wkwmpfUdzHI",
+      "domain": ".ngc.wd5.myworkdayjobs.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [],
+  "_saved_at": "2026-06-03T01:49:47.182Z",
+  "_tenant": "ngc",
+  "_url": "https://ngc.wd5.myworkdayjobs.com"
+}

@@ -1,0 +1,6 @@
+2026/06/07-10:00:03.663 57d0 Reusing MANIFEST C:\Users\rahil\career-ops\data\linkedin-session\Default\Local Storage\leveldb/MANIFEST-000001
+2026/06/07-10:00:03.682 57d0 Recovering log #4
+2026/06/07-10:00:03.684 57d0 Reusing old log C:\Users\rahil\career-ops\data\linkedin-session\Default\Local Storage\leveldb/000004.log 
+2026/06/07-10:00:42.870 9a54 Level-0 table #7: started
+2026/06/07-10:00:42.898 9a54 Level-0 table #7: 47877 bytes OK
+2026/06/07-10:00:42.918 9a54 Delete type=0 #4

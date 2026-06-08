@@ -1,0 +1,254 @@
+{
+  "version": "1.1",
+  "description": "Per-ATS confirmation and already-applied detection patterns. Tune these as new edge cases are discovered — no code changes needed. Add patterns to the arrays; all are treated as case-insensitive regex fragments. URL patterns are tested against the post-submit page URL; text patterns are tested against the full visible page text.",
+  "platforms": {
+    "ashby": {
+      "notes": "After first submission Ashby redirects to /application/{uuid}/complete. Already-applied shows a status card with the prior submission date.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/application/.+/complete",
+          "/apply/complete",
+          "/applied$"
+        ],
+        "text_patterns": [
+          "your application is on its way",
+          "application is submitted",
+          "we.ll review your application",
+          "you.re in the running",
+          "application received"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "you.ve already submitted an application",
+          "you already applied",
+          "previously submitted an application",
+          "you have an existing application",
+          "already have your application"
+        ]
+      }
+    },
+    "greenhouse": {
+      "notes": "Greenhouse success page URL ends in /jobs/thanks or /confirmation. Already-applied shows a banner above the form.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/jobs/thanks",
+          "/confirmation",
+          "/apply/complete",
+          "/applied"
+        ],
+        "text_patterns": [
+          "thank you for applying to",
+          "your application has been received",
+          "application received",
+          "we have received your application",
+          "thanks for applying"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "you.ve already applied for this",
+          "already submitted an application for this",
+          "you already have an application on file",
+          "already applied to this position",
+          "you applied to this role"
+        ]
+      }
+    },
+    "lever": {
+      "notes": "Lever success URL contains /apply/thanks or /thanks at the end. Already-applied shows the prior application status.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/apply/thanks",
+          "/thanks$",
+          "/apply/complete"
+        ],
+        "text_patterns": [
+          "thanks for applying",
+          "your application is in",
+          "application submitted",
+          "we.ll be in touch",
+          "we received your application"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "you.ve already applied",
+          "already applied to this position",
+          "application is currently under review",
+          "you previously submitted"
+        ]
+      }
+    },
+    "workday": {
+      "notes": "Workday shows a confirmation screen with a reference number. The URL path changes to reflect the submitted state. Already-applied shows 'You applied on [date]' in the job action area.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/apply/complete",
+          "/jobApplication/",
+          "/confirmapply",
+          "/apply/success"
+        ],
+        "text_patterns": [
+          "you.re now in the running",
+          "your application has been submitted",
+          "application submitted successfully",
+          "application complete",
+          "we received your application",
+          "thanks for applying",
+          "your information has been submitted"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "you applied on",
+          "you have a pending application",
+          "you.ve already applied",
+          "application is currently being reviewed",
+          "you have already submitted an application",
+          "resume on file"
+        ]
+      }
+    },
+    "linkedin": {
+      "notes": "LinkedIn Easy Apply shows a confirmation modal/page. Already-applied shows 'Applied X days ago' on the job listing.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/jobs/apply/success",
+          "/apply/success",
+          "/apply/review/success"
+        ],
+        "text_patterns": [
+          "your application was sent",
+          "application submitted",
+          "you applied to",
+          "your application is submitted"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "already applied",
+          "you applied on",
+          "applied \\d+ days? ago",
+          "you.ve sent your application"
+        ]
+      }
+    },
+    "indeed": {
+      "notes": "Indeed redirects to /applied or shows an in-page confirmation. Already-applied shows a notice on the job page.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/applied",
+          "/resume/apply/complete",
+          "/apply/complete"
+        ],
+        "text_patterns": [
+          "your application has been submitted",
+          "application submitted",
+          "thank you for applying",
+          "your resume has been sent"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "you.ve already applied",
+          "already applied to this job",
+          "you applied to this job",
+          "application is under review"
+        ]
+      }
+    },
+    "icims": {
+      "notes": "iCIMS shows a branded success page after submission.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/applied",
+          "/success",
+          "/confirmation"
+        ],
+        "text_patterns": [
+          "application successfully submitted",
+          "thank you for applying",
+          "your application has been received",
+          "we have received your application"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "already applied",
+          "application on file",
+          "you have previously applied"
+        ]
+      }
+    },
+    "smartrecruiters": {
+      "notes": "SmartRecruiters redirects to /congratulations after submission.",
+      "fresh_submission": {
+        "url_patterns": [
+          "/congratulations",
+          "/apply/confirmation",
+          "/applied"
+        ],
+        "text_patterns": [
+          "congratulations",
+          "application submitted",
+          "your application has been received",
+          "thank you for your interest"
+        ]
+      },
+      "already_applied": {
+        "url_patterns": [],
+        "text_patterns": [
+          "already applied",
+          "you.ve applied to this job",
+          "previously submitted"
+        ]
+      }
+    }
+  },
+  "fallback": {
+    "notes": "Used when the ATS is unknown or not listed above.",
+    "fresh_submission": {
+      "url_patterns": [
+        "/confirmation",
+        "/success",
+        "/thank[-_]?you",
+        "/submitted",
+        "/apply/complete",
+        "/applied",
+        "/thanks"
+      ],
+      "text_patterns": [
+        "application submitted",
+        "thank you.*appl",
+        "we.*received.*application",
+        "successfully submitted",
+        "your application.*been",
+        "we.ll be in touch",
+        "application is complete",
+        "you.re in the running"
+      ]
+    },
+    "already_applied": {
+      "url_patterns": [],
+      "text_patterns": [
+        "already applied",
+        "you.ve already applied",
+        "previously submitted",
+        "you have already submitted",
+        "we already have your application",
+        "you applied on",
+        "check back on your application",
+        "you have an existing application",
+        "application.*already.*received"
+      ]
+    }
+  }
+}

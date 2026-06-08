@@ -1,0 +1,176 @@
+[
+  {
+    "url": "https://job-boards.greenhouse.io/selffinancial/jobs/5396863004",
+    "detected_at": "2026-06-01T11:07:05.078376Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q1"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5200456008",
+    "detected_at": "2026-06-01T11:07:05.078376Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q1"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/6648242",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-Hudl"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/7687372",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-Hudl"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/thumbtack/jobs/7838976",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-Thumbtack"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/recharge/jobs/8490399002",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-Recharge"
+  },
+  {
+    "url": "https://jobs.lever.co/achievers/beeca704-544f-46e4-bcb1-7c2d912025e0",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-Achievers"
+  },
+  {
+    "url": "https://jobs.lever.co/protective/dd8d07e3-98a5-4cd7-a3b6-c19a985e1e0e",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-Protective"
+  },
+  {
+    "url": "https://jobs.lever.co/redaptiveinc/0e3614b9-c4fc-47a6-930e-d14e098ed7ed",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-Redaptive"
+  },
+  {
+    "url": "https://jobs.lever.co/blablacar/e5cd4133-ec25-4222-bd0a-49d6293328c5",
+    "detected_at": "2026-06-02T11:35:00Z",
+    "reason": "404 on ATS API",
+    "source": "webSearch-BlaBlaCar"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/6648242",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q1"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/7066370",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q1"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/7687372",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q1"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/selffinancial/jobs/5396863004",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q1"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/modernizingmedicineinc/jobs/7981218002",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q2"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/modernizingmedicineinc/jobs/8175721002",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q2"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/vonage/jobs/8076590002",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q2"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/accela/jobs/7706706",
+    "detected_at": "2026-06-03T11:07:46.047Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-q3"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/7687372",
+    "detected_at": "2026-06-06T11:09:28.903Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-2026-06-06"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/6648242",
+    "detected_at": "2026-06-06T11:09:28.903Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-2026-06-06"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/industrialelectricmanufacturing/jobs/4238661009",
+    "detected_at": "2026-06-06T11:09:28.903Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-2026-06-06"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/arlosolutionsllc/jobs/5031911007",
+    "detected_at": "2026-06-06T11:09:28.903Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-2026-06-06"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/3cloud/jobs/8516682002",
+    "detected_at": "2026-06-06T11:09:28.903Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-2026-06-06"
+  },
+  {
+    "url": "https://job-boards.greenhouse.io/i360technologiesinc/jobs/4236603009",
+    "detected_at": "2026-06-06T11:09:28.903Z",
+    "reason": "404 on greenhouse boards-api",
+    "source": "webSearch-2026-06-06"
+  },
+  {
+    "url": "https://jobs.lever.co/jobgether/92f8fd44-ed9d-43e8-b1ef-b27e73f40463",
+    "detected_at": "2026-06-06T11:09:28.903Z",
+    "reason": "404 on lever boards-api",
+    "source": "webSearch-2026-06-06"
+  },
+  {
+    "date": "2026-06-07",
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/7687372",
+    "reason": "404 ATS API",
+    "source": "websearch-secondary"
+  },
+  {
+    "date": "2026-06-07",
+    "url": "https://job-boards.greenhouse.io/hudl/jobs/6648242",
+    "reason": "404 ATS API",
+    "source": "websearch-secondary"
+  },
+  {
+    "date": "2026-06-07",
+    "url": "https://job-boards.greenhouse.io/capitalrx/jobs/5200456008",
+    "reason": "404 ATS API",
+    "source": "websearch-secondary"
+  },
+  {
+    "date": "2026-06-07",
+    "url": "https://job-boards.greenhouse.io/thumbtack/jobs/7838976",
+    "reason": "404 ATS API",
+    "source": "websearch-secondary"
+  }
+]

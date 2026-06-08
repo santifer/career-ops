@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+// Pre-run syntax guard — prevents wasted bat runs when a critical file is truncated.
+// Exit 0 = all clean. Exit 1 = one or more failures.
+import { spawnSync } from 'child_process';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const CRITICAL_FILES = [
+  'auto-submit.mjs',
+  'build-autosubmit-queue.mjs',
+  'process-autosubmit-queue.mjs',
+  'merge-bat-results.mjs',
+  'write-refresh-status.mjs',
+  'scan.mjs',
+  'scan-linkedin.mjs',
+  'linkedin-dm.mjs',
+  'dedup-tracker.mjs',
+  'merge-tracker.mjs',
+  'liveness-core.mjs',
+  'check-liveness.mjs',
+];
+
+console.log(`[syntax-guard] Checking ${CRITICAL_FILES.length} critical files...`);
+
+let failures = 0;
+
+for (const file of CRITICAL_FILES) {
+  const fullPath = path.join(__dirname, file);
+  const result = spawnSync('node', ['--check', fullPath], { encoding: 'utf8' });
+
+  if (result.status === 0) {
+    console.log(`  OK ${file}`);
+  } else {
+    failures++;
+    const errLine = (result.stderr || result.stdout || 'unknown error')
+      .split('\n')
+      .find(l => l.includes('SyntaxError') || l.includes('Error') || l.trim())
+      ?.trim() ?? 'unknown error';
+    console.log(`  FAIL ${file} -- ${errLine}`);
+  }
+}
+
+if (failures > 0) {
+  console.log(`\n[syntax-guard] ${failures} file(s) FAILED. Bat should not run until fixed.`);
+  process.exit(1);
+} else {
+  console.log(`\n[syntax-guard] All files clean.`);
+  process.exit(0);
+}

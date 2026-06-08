@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "description": "Pre-seeded LinkedIn connections at target companies. Used by linkedin-dm.mjs to proactively reach out when a matching job card appears in the Kanban.",
+  "_template_note": "Add real connections here. 'company' must match the company display name used in the Kanban (e.g. 'Databricks', 'Stripe'). 'relationship' is '1st' or '2nd'.",
+  "connections": [
+    {
+      "_example": true,
+      "name": "Jane Smith",
+      "profileUrl": "https://www.linkedin.com/in/janesmith/",
+      "company": "Databricks",
+      "title": "Senior Engineering Manager",
+      "relationship": "2nd",
+      "notes": "Met at AI summit 2024",
+      "added": "2026-05-25"
+    }
+  ]
+}

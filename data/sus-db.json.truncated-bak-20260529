@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "description": "Roles and companies pending Rahil validation before auto-apply",
+  "roles": [],
+  "companies": [
+    {
+      "company": "industrialelectricmanufacturing",
+      "url": "https://job-boards.greenhouse.io/industrialelectricmanufacturing/jobs/4238661009",
+      "grade": "A",
+      "flagged_at": "2026-05-07T11:13:51.332Z",
+      "last_updated": "2026-05-07T11:13:51.332Z",
+      "triage_note": "A-grade in sus-db but no live Kanban card found (2026-05-24 triage) â likely stale; left parked pending re-scan. Unusual company name â confirm legitimacy before whitelisting."
+    },
+    {
+      "company": "roboyo",
+      "url": "https://job-boards.greenhouse.io/roboyo/jobs/4857869101",
+      "grade": "A",
+      "flagged_at": "2026-05-13T05:35:58.583Z",
+      "last_updated": "2026-05-13T05:35:58.583Z",
+      "triage_note": "A-grade in sus-db but no live Kanban card found (2026-05-24 triage) â likely stale; left parked pending re-scan."
+    },
+    {
+      "company": "lendingtree",
+      "url": "https://job-boards.greenhouse.io/lendingtree/jobs/7961146",
+      "grade": "B",
+      "flagged_at": "2026-05-28T11:19:29.040Z",
+      "last_updated": "2026-05-28T11:19:29.040Z"
+    },
+    {
+      "company": "pagerduty",
+      "url": "https://job-boards.greenhouse.io/pagerduty/jobs/6006378004",
+      "grade": "B",
+      "flagged_at": "2026-05-28T11:19:29.103Z",
+      "last_updated": "2026-05-28T11:19:29.103Z"
+    },
+    {
+      "company": "PAR%20Technology",
+      "url": "https://jobs.ashbyhq.com/PAR%20Technology/9fef1ae5-d4dc-4c13-84dc-3afe77d962b1",
+      "grade": "C",
+      "flagged_at": "2026-05-28T11:19:29.171Z",
+      "last_updated": "2026-05-28T11:19:29.171Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Colorado-Colorado-Springs/Sr-Principal-Information-Systems-Project-Manager---NK-Release-Mgr--26-254-_R10234095",
+      "grade": "A",
+      "flagged_at": "2026-05-28T11:49:35.904Z",
+      "last_updated": "2026-05-28T11:49:35.904Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Utah-Roy/Program-Manger-2---18584_R10233748",
+      "grade": "A",
+      "flagged_at": "2026-05-28T11:49:35.962Z",
+      "last_updated": "2026-05-28T11:49:35.962Z"
+    },
+    {
+      "company": "ngc",
+      "url": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Colorado-Aurora/Scrum-Master-Level-3-or-4_R10233781",
+      "grade": "A",
+      "flagged_at": "2026-05-28T11:49:36.024Z",
+      "last_updated": "2026-05-28T11:49:36.024Z"
+    },
+    {
+      "company": "elevancehealth",
+      "url": "https://elevancehealth.wd1.myworkdayjobs.com/ANT/job/TN-NASHVILLE-22-CENTURY-BLVD-STE-310/Program-Manager---HealthStarts-SDOH_JR193757",
+ 
