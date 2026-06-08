@@ -1,0 +1,590 @@
+# Portal Scanner Configuration
+# Used by /career-ops scan to discover new offers automatically.
+#
+# Strategy (4 levels):
+#   0. Local parser → per-company `parser:` script for SSR/static career pages (zero-token)
+#   1. Playwright → careers_url of each company (real-time, reliable)
+#   2. HTTP JSON (WebFetch) → per-company `api:` on tracked_companies (see board_api_catalog below)
+#   3. WebSearch with site: filters (broad discovery, may be stale)
+#
+# IMPORTANT: Each company in tracked_companies MUST have careers_url.
+#   Prefer the BRANDED company careers URL whenever available; use ATS-hosted URL only as fallback.
+#   ✅ https://careers.mastercard.com   ⚠️ https://mastercard.wd1.myworkdayjobs.com (fallback only)
+#   ✅ https://openai.com/careers       ⚠️ https://job-boards.greenhouse.io/openai (fallback only)
+#   Exception: ATS-hosted careers_url is acceptable when no branded careers page exists.
+#   Using raw ATS URLs when a branded page exists can cause false 410 errors (job ID mismatch).
+#
+# HOW TO CUSTOMIZE:
+#   1. Copy this file to portals.yml in the project root
+#   2. Edit title_filter.positive with YOUR target role keywords
+#   3. Add/remove companies in tracked_companies
+#   4. Adjust search_queries for your preferred job boards
+#   5. Set enabled: false on companies you don't care about
+
+# -- Location filter (optional) --
+# Filter scanned jobs by location. Applied AFTER title filter, BEFORE dedup.
+# If this entire block is absent, all locations pass (current default behavior).
+#
+# Semantics (case-insensitive substring, in this order):
+#   - Empty location string on a job → pass (don't penalize missing data)
+#   - Any `always_allow` keyword present → pass (takes precedence over `block`)
+#   - Any `block` keyword present → reject
+#   - `allow` empty → pass (already cleared block)
+#   - `allow` non-empty → must match at least one keyword
+#
+# `always_allow` is optional. It rescues multi-location postings that name your
+# home region: with always_allow ["New York"] and block ["India"], a job listed
+# "Remote, New York or India" passes (New York wins), while "Remote, India" is
+# still rejected. Omit always_allow entirely and the filter behaves as before.
+#
+# Example below targets US-based remote + a couple of US metros, blocking
+# common foreign hubs. Customize to your geography.
+
+location_filter:
+  always_allow:
+    - "Melbourne"
+    - "Taipei"
+  allow:
+    - "Melbourne"
+    - "Taipei"
+  block:
+    - "India"
+    - "Bengaluru"
+    - "United States"
+    - "US"
+    - "USA"
+    - "Canada"
+    - "United Kingdom"
+    - "London"
+    - "Germany"
+    - "France"
+    - "Europe"
+    - "EMEA"
+
+
+# -- Title filter --
+# The scanner uses these keywords to decide if a title is relevant.
+# At least 1 positive must match AND 0 negatives must match (case-insensitive).
+
+title_filter:
+  positive:
+    # -- Growth roles --
+    - "Growth"
+    - "Growth Marketing"
+    - "Growth Manager"
+    - "Demand Gen"
+    - "Lifecycle Marketing"
+    - "Performance Marketing"
+    - "Digital Marketing"
+    - "Marketing Manager"
+    - "Content Marketing"
+    - "SEO"
+    # -- Product roles --
+    - "Product Manager"
+    - "Product Marketing"
+    - "Product Ops"
+    - "Product Strategy"
+    - "Technical PM"
+    # -- Sales/BDR roles --
+    - "BDR"
+    - "Business Development"
+    - "Account Executive"
+    - "Partnerships"
+    - "Sales Development"
+    - "Customer Success"
+    - "Customer Success Manager"
+    # -- Fintech-adjacent --
+    - "Fintech"
+    # -- General matches --
+    - "GTM"
+    - "RevOps"
+    - "Community Manager"
+    - "Acquisition"
+  negative:
+    - "Intern"
+    - ".NET"
+    - "Java "
+    - "iOS"
+    - "Android"
+    - "PHP"
+    - "Ruby"
+    - "Embedded"
+    - "Firmware"
+    - "FPGA"
+    - "ASIC"
+    - "Blockchain"
+    - "Web3"
+    - "Crypto"
+    - "AI Engineer"
+    - "Machine Learning Engineer"
+    - "ML Engineer"
+    - "Software Engineer"
+    - "Backend"
+    - "Frontend"
+    - "Full Stack"
+    - "Solutions Architect"
+    - "Solution Architect"
+    - "Solutions Engineer"
+    - "Developer Advocate"
+    - "DevRel"
+    - "Forward Deployed"
+    - "FDE"
+    - "Salesforce Admin"
+    - "SAP "
+    - "Oracle EBS"
+    - "Mainframe"
+    - "COBOL"
+    - "Director"
+    - "VP "
+    - "Principal"
+    - "Staff"
+  seniority_boost:
+    - "Senior"
+    - "Lead"
+    - "Head"
+
+# -- Search queries --
+# Each query triggers a WebSearch. Use site: to filter by portal.
+# The scanner extracts title, URL, and company from results.
+
+search_queries:
+  # -- Australia startup roles --
+  - name: Australia startups — Growth
+    query: '"startup" "Growth Manager" OR "Growth Marketing Manager" Australia OR Melbourne OR Sydney'
+    enabled: true
+
+  - name: Australia startups — Product
+    query: '"startup" "Product Manager" OR "Growth Product Manager" Australia OR Melbourne OR Sydney'
+    enabled: true
+
+  - name: Australia startups — GTM and partnerships
+    query: '"startup" "GTM" OR "Product Marketing" OR "Partnerships Manager" Australia OR Melbourne OR Sydney'
+    enabled: true
+
+  - name: Australia fintech startups
+    query: '"fintech startup" "Growth Manager" OR "Product Manager" Australia OR Melbourne OR Sydney'
+    enabled: true
+
+  # -- Taiwan startup roles --
+  - name: Taiwan startups — Growth
+    query: '"startup" "Growth Manager" OR "Growth Marketing Manager" Taiwan OR Taipei'
+    enabled: true
+
+  - name: Taiwan startups — Product
+    query: '"startup" "Product Manager" OR "Growth Product Manager" Taiwan OR Taipei'
+    enabled: true
+
+  - name: Taiwan startups — GTM and partnerships
+    query: '"startup" "GTM" OR "Product Marketing" OR "Partnerships Manager" Taiwan OR Taipei'
+    enabled: true
+
+  - name: Taiwan fintech startups
+    query: '"fintech startup" "Growth Manager" OR "Product Manager" Taiwan OR Taipei'
+    enabled: true
+
+  # -- Startup job boards / ATS with geography constraints --
+  - name: Ashby — AU/TW startup growth product
+    query: 'site:jobs.ashbyhq.com "Growth Manager" OR "Product Manager" Australia OR Taiwan OR Taipei OR Melbourne OR Sydney'
+    enabled: true
+
+  - name: Greenhouse — AU/TW startup growth product
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Growth Manager" OR "Product Manager" Australia OR Taiwan OR Taipei OR Melbourne OR Sydney'
+    enabled: true
+
+  - name: Lever — AU/TW startup growth product
+    query: 'site:jobs.lever.co "Growth Manager" OR "Product Manager" Australia OR Taiwan OR Taipei OR Melbourne OR Sydney'
+    enabled: true
+
+  - name: Workable — AU/TW startup growth product
+    query: 'site:apply.workable.com "Growth Manager" OR "Product Manager" Australia OR Taiwan OR Taipei OR Melbourne OR Sydney'
+    enabled: true
+
+# -- Tracked companies --
+# Companies whose career pages are checked directly.
+# scan_method: playwright (default), websearch, local_parser
+# For Greenhouse companies, add api: field for faster structured JSON access.
+#
+# Provider routing (scan.mjs):
+#   By default each entry is auto-detected from `careers_url` against the
+#   loaded providers in providers/*.mjs (local-parser, ashby, greenhouse, lever).
+#   local-parser runs first when parser.command + parser.script are set.
+#
+#   Optional fields on a tracked_companies entry:
+#     provider: <id>     — force a specific provider, skipping detect().
+#     transport: http    — reserved for future transports. Defaults to http.
+#
+# For SSR/static career pages, add parser.command + parser.script. The command
+# can be python3, node, or another local executable. The script must print JSON
+# jobs to stdout: [{ "title": "...", "url": "...", "location": "..." }]
+#
+# Generic local parser examples. Most parser scripts are company-specific and
+# already know their target careers URL. `args` are optional and can help the
+# parser author (reuse across companies, debug flags, JSON snapshots, etc.).
+#
+# JavaScript parser:
+# - name: Example JS Company
+#   careers_url: https://example.com/careers
+#   scan_method: local_parser
+#   parser:
+#     command: node
+#     script: scripts/parsers/example-js-company-jobs.js
+#     format: jobs-json-v1
+#   enabled: true
+#
+# Python parser:
+# - name: Example Python Company
+#   careers_url: https://example.org/jobs
+#   scan_method: local_parser
+#   parser:
+#     command: python3
+#     script: scripts/parsers/example_python_company_jobs.py
+#     format: jobs-json-v1
+#   enabled: true
+
+# ── Provider auto-detection ───────────────────────────────────────
+# scan.mjs auto-loads everything in providers/*.mjs and tries each
+# provider's detect() in order. URL patterns recognized:
+#
+#   greenhouse      job-boards(.eu)?.greenhouse.io/<slug>  (or api: field)
+#   ashby           jobs.ashbyhq.com/<slug>
+#   lever           jobs.lever.co/<slug>
+#   workable        apply.workable.com/<slug>
+#   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
+#   recruitee       <slug>.recruitee.com
+#
+# When the public careers URL is a branded custom domain (e.g.
+# careers.adyen.com), set `provider: smartrecruiters` explicitly to
+# bypass detect(). The `provider:` field wins over auto-detection.
+
+tracked_companies:
+
+  # -- Australian startup focus --
+
+  - name: MYOB
+    careers_url: https://jobs.lever.co/myob-2
+    notes: "Australia. Business management platform; relevant growth/product roles, including product-led growth."
+    enabled: true
+
+  - name: Nitra
+    careers_url: https://jobs.lever.co/nitra
+    notes: "Taipei fintech startup. Relevant product roles for bilingual finance/product positioning."
+    enabled: true
+
+  - name: Canva
+    careers_url: https://careers.smartrecruiters.com/Canva
+    notes: "Australia-founded design platform. Official jobs via SmartRecruiters."
+    enabled: true
+
+  - name: Heidi Health
+    careers_url: https://jobs.ashbyhq.com/heidihealth.com.au/
+    scan_method: websearch
+    scan_query: 'site:heidihealth.com/careers "Product Manager" OR "Product Marketing" OR "Growth" OR "Customer Success" Melbourne OR Sydney OR Australia'
+    notes: "Australia healthtech startup. Custom careers page; direct scan may skip, use websearch or paste specific job URLs."
+    enabled: true
+
+  - name: Airwallex
+    careers_url: https://jobs.ashbyhq.com/airwallex
+    notes: "Melbourne-founded fintech/payments. Strong fit for product, GTM, product sales, growth."
+    enabled: true
+
+  - name: Netwealth
+    careers_url: https://jobs.ashbyhq.com/netwealth
+    notes: "Melbourne wealthtech/fintech. Product, platform, product marketing, customer roles."
+    enabled: true
+
+  - name: Objective
+    careers_url: https://jobs.lever.co/objective
+    notes: "Australian GovTech/SaaS. Melbourne customer success, BD, product-adjacent roles."
+    enabled: true
+
+  - name: Culture Amp
+    careers_url: https://job-boards.greenhouse.io/cultureamp
+    api: https://boards-api.greenhouse.io/v1/boards/cultureamp/jobs
+    notes: "Melbourne-founded people analytics SaaS. Product, customer, sales, GTM."
+    enabled: true
+
+  - name: Zeller
+    careers_url: https://jobs.lever.co/Zeller
+    notes: "Melbourne fintech/payments scale-up. Strong for BD, GTM, growth, partnerships."
+    enabled: true
+
+  - name: Blinq
+    careers_url: https://jobs.lever.co/blinq
+    notes: "Australian AI/contact app scale-up. Melbourne product and growth roles."
+    enabled: true
+
+  - name: Envato
+    careers_url: https://jobs.lever.co/envato-2
+    notes: "Melbourne creative marketplace/SaaS. Product marketing, growth, product."
+    enabled: true
+
+  - name: SafetyCulture
+    careers_url: https://jobs.lever.co/safetyculture-2
+    notes: "Australian workplace/safety SaaS. Product, growth, GTM; more Sydney but worth tracking."
+    enabled: true
+
+  - name: Culture Amp
+    careers_url: https://job-boards.greenhouse.io/cultureamp
+    api: https://boards-api.greenhouse.io/v1/boards/cultureamp/jobs
+    notes: "Melbourne-founded people analytics SaaS."
+    enabled: true
+
+  - name: Zip
+    careers_url: https://job-boards.greenhouse.io/zipcolimited
+    api: https://boards-api.greenhouse.io/v1/boards/zipcolimited/jobs
+    notes: "Australian fintech. Melbourne product and consumer portfolio roles."
+    enabled: true
+
+  - name: ROLLER
+    careers_url: https://job-boards.greenhouse.io/roller
+    api: https://boards-api.greenhouse.io/v1/boards/roller/jobs
+    notes: "Melbourne SaaS for leisure/venues. Product and growth roles."
+    enabled: true
+
+  - name: RecordPoint
+    careers_url: https://jobs.lever.co/recordpoint
+    notes: "Australian information governance SaaS. Product marketing, GTM, enterprise."
+    enabled: true
+
+  - name: Relevance AI
+    careers_url: https://jobs.ashbyhq.com/relevanceai
+    notes: "Australian AI agents platform. Product, enterprise, GTM."
+    enabled: true
+
+  - name: Lorikeet
+    careers_url: https://jobs.ashbyhq.com/lorikeet
+    notes: "Australian AI customer support startup. Product, GTM, ops."
+    enabled: true
+
+  - name: Dovetail
+    careers_url: https://jobs.ashbyhq.com/dovetail
+    notes: "Australian customer intelligence SaaS. Product marketing, customer, AI."
+    enabled: true
+
+  - name: Neara
+    careers_url: https://jobs.ashbyhq.com/neara
+    notes: "Australian infra/digital twin SaaS. Product and enterprise roles."
+    enabled: true
+
+  - name: Karbon
+    careers_url: https://job-boards.greenhouse.io/karbon
+    api: https://boards-api.greenhouse.io/v1/boards/karbon/jobs
+    notes: "Australian-founded accounting SaaS. Product and customer roles."
+    enabled: true
+  # -- Taiwan startup focus --
+
+  - name: Appier
+    careers_url: https://job-boards.greenhouse.io/appier
+    notes: "Taipei. AI-native SaaS (Software-as-a-Service) company that specializes in artificial intelligence for digital marketing, advertising technology (AdTech), and marketing automation (MarTech)."
+    enabled: true
+
+  - name: Jobscan
+    careers_url: https://jobs.lever.co/jobscan-2
+    notes: "AI job-search SaaS with Taipei roles. Strong fit for growth/product."
+    enabled: true
+
+  - name: Gogolook
+    careers_url: https://jobs.lever.co/Gogolook
+    notes: "Taipei consumer/anti-scam tech. Product, growth, marketing roles."
+    enabled: true
+
+  - name: Pinkoi
+    careers_url: https://jobs.lever.co/pinkoi
+    notes: "Taipei marketplace/SaaS. Product, product marketing, BD roles."
+    enabled: true
+
+  - name: Coupang
+    careers_url: https://www.coupang.jobs/tw/jobs/
+    api: https://boards-api.greenhouse.io/v1/boards/coupang/jobs
+    notes: "Large e-commerce operator scaling Taiwan. Growth, marketplace, product, marketing."
+    enabled: true
+
+  - name: Placements.io
+    careers_url: https://job-boards.greenhouse.io/placementsio
+    api: https://boards-api.greenhouse.io/v1/boards/placementsio/jobs
+    notes: "B2B SaaS/adtech with Taipei product roles."
+    enabled: true
+
+  # -- AI Labs & LLM providers --
+
+  - name: Anthropic
+    careers_url: https://job-boards.greenhouse.io/anthropic
+    api: https://boards-api.greenhouse.io/v1/boards/anthropic/jobs
+    enabled: false
+
+  - name: OpenAI
+    careers_url: https://openai.com/careers
+    scan_method: websearch
+    scan_query: 'site:openai.com/careers "Growth" OR "Product Manager" OR "Marketing"'
+    enabled: false
+
+  # -- Voice AI & Conversational AI --
+
+  - name: PolyAI
+    careers_url: https://job-boards.eu.greenhouse.io/polyai
+    api: https://boards-api.greenhouse.io/v1/boards/polyai/jobs
+    notes: "UK. Voice AI for enterprise contact centers."
+    enabled: false
+
+  - name: Parloa
+    careers_url: https://job-boards.eu.greenhouse.io/parloa
+    api: https://boards-api.greenhouse.io/v1/boards/parloa/jobs
+    notes: "Berlin. Voice AI enterprise."
+    enabled: false
+
+  - name: Intercom
+    careers_url: https://job-boards.greenhouse.io/intercom
+    api: https://boards-api.greenhouse.io/v1/boards/intercom/jobs
+    notes: "Dublin. Fin AI agent."
+    enabled: false
+
+  - name: Hume AI
+    careers_url: https://job-boards.greenhouse.io/humeai
+    api: https://boards-api.greenhouse.io/v1/boards/humeai/jobs
+    notes: "NYC. Empathic voice AI."
+    enabled: false
+
+  - name: ElevenLabs
+    careers_url: https://jobs.ashbyhq.com/elevenlabs
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/elevenlabs'
+    notes: "Voice AI TTS leader."
+    enabled: false
+
+  - name: Deepgram
+    careers_url: https://jobs.ashbyhq.com/deepgram
+    scan_method: websearch
+    scan_query: 'site:deepgram.com/careers OR site:jobs.ashbyhq.com/deepgram "Growth" OR "Product Manager" OR "Marketing"'
+    notes: "STT/TTS APIs."
+    enabled: false
+
+  - name: Vapi
+    careers_url: https://jobs.ashbyhq.com/vapi
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/vapi'
+    notes: "Voice AI infrastructure."
+    enabled: false
+
+  - name: Bland AI
+    careers_url: https://jobs.ashbyhq.com/bland
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/bland'
+    notes: "Voice phone agents. $65M Series B."
+    enabled: false
+
+  # -- AI-native platforms --
+
+  - name: Airtable
+    careers_url: https://job-boards.greenhouse.io/airtable
+    api: https://boards-api.greenhouse.io/v1/boards/airtable/jobs
+    notes: "No-code + AI platform."
+    enabled: false
+
+  - name: Vercel
+    careers_url: https://job-boards.greenhouse.io/vercel
+    api: https://boards-api.greenhouse.io/v1/boards/vercel/jobs
+    notes: "AI SDK, v0.dev. Frontend AI tooling."
+    enabled: false
+
+  - name: Temporal
+    careers_url: https://job-boards.greenhouse.io/temporal
+    api: https://boards-api.greenhouse.io/v1/boards/temporal/jobs
+    notes: "Workflow orchestration."
+    enabled: false
+
+  - name: RunPod
+    careers_url: https://job-boards.greenhouse.io/runpod
+    api: https://boards-api.greenhouse.io/v1/boards/runpod/jobs
+    notes: "GPU cloud for AI."
+    enabled: false
+
+
+  # -- No-Code/Low-Code & Automation --
+
+  - name: n8n
+    careers_url: https://jobs.ashbyhq.com/n8n
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/n8n'
+    notes: "Berlin + remote EU/US. Workflow automation."
+    enabled: false
+
+  - name: Zapier
+    careers_url: https://jobs.ashbyhq.com/zapier
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/zapier'
+    notes: "Remote-first. Automation platform leader."
+    enabled: false
+
+  - name: Make.com (Celonis)
+    careers_url: https://www.make.com/en/careers
+    scan_method: websearch
+    scan_query: 'site:make.com/en/careers OR "make.com" "engineer" OR "solutions" site:jobs.ashbyhq.com'
+    notes: "Celonis parent company. Automation platform."
+    enabled: false
+
+  - name: Boomi
+    careers_url: https://job-boards.greenhouse.io/boomilp
+    api: https://boards-api.greenhouse.io/v1/boards/boomilp/jobs
+    notes: "Integration and automation platform."
+    enabled: false
+
+  # -- Ashby-based (Playwright direct) --
+
+
+  # -- Lever-based (Playwright direct) --
+
+
+  # -- Canada / Vancouver tech & AI --
+
+
+  # -- Selected global tech --
+
+
+  # -- Selected AI and SaaS ecosystem --
+  # All entries below have been verified against the Greenhouse / Ashby /
+  # Lever / Workable APIs or live job boards. Greenhouse boards expose a
+  # JSON API at https://boards-api.greenhouse.io/v1/boards/{slug}/jobs which
+  # the scanner can hit directly via the api: field.
+
+  # -- DACH AI labs & frontier model providers --
+
+
+  # -- DACH enterprise & SaaS (AI-heavy) --
+
+  - name: Celonis
+    careers_url: https://job-boards.greenhouse.io/celonis
+    api: https://boards-api.greenhouse.io/v1/boards/celonis/jobs
+    notes: "Process intelligence SaaS."
+    enabled: false
+
+  - name: Contentful
+    careers_url: https://job-boards.greenhouse.io/contentful
+    api: https://boards-api.greenhouse.io/v1/boards/contentful/jobs
+    notes: "Berlin / Denver. Headless CMS, AI content workflows."
+    enabled: false
+
+  - name: GetYourGuide
+    careers_url: https://job-boards.greenhouse.io/getyourguide
+    api: https://boards-api.greenhouse.io/v1/boards/getyourguide/jobs
+    notes: "Berlin. Travel marketplace, ML & data platform roles."
+    enabled: false
+
+  - name: HelloFresh
+    careers_url: https://job-boards.greenhouse.io/hellofresh
+    api: https://boards-api.greenhouse.io/v1/boards/hellofresh/jobs
+    notes: "Berlin. Meal kit unicorn, large data/ML org."
+    enabled: false
+
+  # -- DACH fintech --
+
+
+
+  # -- DACH logistics / mobility --
+
+
+  # -- Switzerland / Austria AI --
+
+  # -- France AI ecosystem --
+
+
+  # -- UK & Ireland AI (EU-friendly hiring) --
