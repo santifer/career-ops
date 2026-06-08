@@ -25,6 +25,54 @@ If the `cover-letters/` directory only has the bulk export file, the dry-run wil
 
 ---
 
+## Step 0b — Export kanban snapshot (when using K2 dashboard)
+
+If you are running the K2 browser kanban instead of a static HTML file, use the Export JSON workflow to feed cards to auto-submit:
+
+```powershell
+# 1. Start the kanban server (separate shell)
+npm run kanban         # opens http://localhost:7777
+
+# 2. In the browser:
+#    a. Click "⬇ Fetch Jobs" to populate from the Cloudflare Worker
+#    b. Drag cards you want to submit into the "New" or "Evaluated" column
+#    c. Click "⬆ Export JSON" — browser downloads pulse-jobs-{date}.json
+#    d. Move the downloaded file to the data/ directory:
+Move-Item "$env:USERPROFILE\Downloads\pulse-jobs-*.json" "data\kanban-snapshot-$(Get-Date -Format yyyy-MM-dd).json"
+
+# 3. Run dry-run from the snapshot
+node scripts/auto-submit.mjs `
+  --kanban-json data/kanban-snapshot-$(Get-Date -Format yyyy-MM-dd).json `
+  --dry-run --report --limit 10
+```
+
+**Eligible states** (cards in any other state are filtered out):
+| State | Why eligible |
+|-------|-------------|
+| `new` | Freshly fetched from Worker, grade A/B, not yet actioned |
+| `evaluated` | User scored the card and wants to proceed to application |
+
+**JSON shape contract** (`exportState()` in dashboard/job-pulse-kanban.html):
+```json
+{
+  "cards": {
+    "<id>": {
+      "id": "greenhouse-stripe-001",
+      "state": "new",
+      "title": "Senior Scrum Master",
+      "company": "Stripe",
+      "url": "https://job-boards.greenhouse.io/stripe/jobs/...",
+      "grade": "A",
+      "has_connection": false,
+      "source": "greenhouse"
+    }
+  },
+  "version": 1
+}
+```
+
+---
+
 ## Step 1 — Dry-run + report (10 cards)
 
 ```bash

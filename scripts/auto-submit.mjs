@@ -62,6 +62,7 @@ function argVal(flag) {
 }
 
 const KANBAN_PATH  = argVal('--kanban') || path.join(ROOT, 'dashboard', 'job-pulse-kanban.html');
+const KANBAN_JSON  = argVal('--kanban-json') || null;
 const CL_DIR_ARG   = argVal('--cl-dir')   || path.join(ROOT, 'cover-letters');
 const CL_INDEX_ARG = argVal('--cl-index') || path.join(CL_DIR_ARG, 'index.yml');
 const CARD_ID      = argVal('--card');
@@ -196,6 +197,79 @@ export function extractEligibleCards(kanbanPath) {
     (c.grade === 'A' || c.grade === 'B') &&
     !c.isWarmReferral,
   );
+}
+
+// ── Kanban JSON ingestion ─────────────────────────────────────────────────────
+
+/**
+ * States from the K2 kanban (gen/states.json + 'new') that are eligible for
+ * auto-submit. A card must be in one of these states AND have grade A or B.
+ *
+ * Contract with dashboard/job-pulse-kanban.html exportState():
+ *   Shape: { cards: { [id: string]: PulseJob }, version: number }
+ *   PulseJob: { id, state, title, company, url, grade, has_connection,
+ *               source, external_id, location, remote, verified, posted_at, ... }
+ *
+ * 'new'      = freshly ingested, not yet evaluated (K2 runDryRun uses this)
+ * 'evaluated'= user has scored the card and wants to proceed to application
+ */
+export const ELIGIBLE_JSON_STATES = new Set(['new', 'evaluated']);
+
+/**
+ * Maps a PulseJob (K2 kanban card) to the internal card shape used by auto-submit.
+ * Preserves extra fields so downstream code (liveness, CL lookup) can use them.
+ */
+export function pulseJobToCard(job) {
+  return {
+    id:             job.id,
+    company:        job.company   || '',
+    role:           job.title     || '',
+    url:            job.url       || '',
+    grade:          job.grade     || null,
+    columnId:       job.state     || 'new',
+    hasConnection:  job.has_connection   || false,
+    isWarmReferral: job.is_warm_referral || false,
+    // Extra K2 fields — not used by existing filters but useful for logging
+    source:         job.source    || null,
+    location:       job.location  || null,
+    verified:       job.verified  || false,
+    posted_at:      job.posted_at || null,
+  };
+}
+
+/**
+ * Reads a K2 kanban JSON export and returns eligible cards in the same shape
+ * as extractEligibleCards(). Safe: throws only on missing file or malformed JSON.
+ *
+ * @param {string} jsonPath  Path to the exported JSON file
+ * @returns {object[]}  Array of mapped card objects
+ * @throws {Error}  If file is missing or top-level .cards is absent
+ */
+export function extractEligibleCardsFromJson(jsonPath) {
+  if (!fs.existsSync(jsonPath)) {
+    throw new Error(`Kanban JSON not found: ${jsonPath}`);
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+  } catch (e) {
+    throw new Error(`Kanban JSON parse error: ${e.message}`);
+  }
+
+  if (!parsed || typeof parsed.cards !== 'object' || Array.isArray(parsed.cards)) {
+    throw new Error('Kanban JSON must have shape { cards: { [id]: PulseJob }, ... }');
+  }
+
+  const jobs = Object.values(parsed.cards);
+
+  return jobs
+    .map(pulseJobToCard)
+    .filter((c) =>
+      ELIGIBLE_JSON_STATES.has(c.columnId) &&
+      (c.grade === 'A' || c.grade === 'B') &&
+      !c.isWarmReferral,
+    );
 }
 
 // ── Cover letter lookup ───────────────────────────────────────────────────────
@@ -751,10 +825,16 @@ async function main() {
   const modeLabel = LIVE ? 'LIVE' : SEMI_AUTO ? 'SEMI-AUTO' : 'DRY-RUN';
   console.log(`[auto-submit] mode=${modeLabel} limit=${LIMIT}`);
 
-  // Load eligible cards
+  // Load eligible cards — JSON path takes priority over HTML kanban
   let eligible;
   try {
-    eligible = extractEligibleCards(KANBAN_PATH);
+    if (KANBAN_JSON) {
+      console.log(`[auto-submit] source=kanban-json path=${KANBAN_JSON}`);
+      eligible = extractEligibleCardsFromJson(KANBAN_JSON);
+    } else {
+      console.log(`[auto-submit] source=kanban-html path=${path.relative(ROOT, KANBAN_PATH)}`);
+      eligible = extractEligibleCards(KANBAN_PATH);
+    }
   } catch (e) {
     console.error(`[auto-submit] FATAL: ${e.message}`);
     process.exit(1);
