@@ -1,0 +1,40 @@
+# config/sources.yml — Canonical list of ATS company slugs for the Pulse Jobs Worker
+# Source of truth: replaces hardcoded lists in SKILL_UPDATE_PHASE1.md
+# Worker: https://pulse-jobs-proxy.rahilnathanipulse.workers.dev
+#
+# Verify slugs: node scripts/slug-audit.mjs
+# Status key: ok (has jobs) | empty (live but no current openings) | unverified | not_found
+
+greenhouse:
+  # Verified via wrangler dev (2026-06-08)
+  - slug: stripe
+    status: ok
+    notes: returns real jobs; URL normalizer in scan.mjs handles stripe.com wrappers
+  # Unverified — run slug-audit.mjs to confirm
+  - slug: anthropic
+    status: unverified
+  - slug: databricks
+    status: unverified
+  - slug: openai
+    status: unverified
+  - slug: notion
+    status: unverified
+  - slug: figma
+    status: unverified
+  - slug: linear
+    status: unverified
+
+lever:
+  # Unverified — 404 seen in wrangler dev test; try figma-team or other variants
+  - slug: figma
+    status: unverified
+    notes: got 404 in dev test; check figma-team, figmainc
+  - slug: linear
+    status: unverified
+  - slug: notion-hq
+    status: unverified
+    notes: notion/notion-hq both common; try both
+  - slug: hex
+    status: unverified
+  - slug: retool
+    status: unverified
