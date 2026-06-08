@@ -85,12 +85,12 @@ describe('kanban browser smoke', () => {
     const page = await browser.newPage();
     await page.goto(KANBAN, { waitUntil: 'networkidle' });
     const types = await page.evaluate(() => ({
-      fetchJobs:   typeof window.fetchJobs,
-      runDryRun:   typeof window.runDryRun,
-      exportState: typeof window.exportState,
-      importState: typeof window.importState,
-      clearBoard:  typeof window.clearBoard,
-      closeModal:  typeof window.closeModal,
+      fetchJobs:    typeof window.fetchJobs,
+      dryRunSubmit: typeof window.dryRunSubmit,
+      exportJson:   typeof window.exportJson,
+      importJson:   typeof window.importJson,
+      clearAll:     typeof window.clearAll,
+      closeModal:   typeof window.closeModal,
     }));
     await page.close();
     for (const [name, type] of Object.entries(types)) {
@@ -141,9 +141,9 @@ describe('kanban browser smoke', () => {
       `Got ReferenceErrors: ${refErrors.join('; ')}`);
   });
 
-  // ── clearBoard smoke ────────────────────────────────────────────────────────
+  // ── clearAll smoke ──────────────────────────────────────────────────────────
 
-  test('clearBoard is callable without crash (confirm dialog auto-dismissed)', async () => {
+  test('clearAll is callable without crash (confirm dialog auto-dismissed)', async () => {
     const page = await browser.newPage();
     const errors = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
@@ -157,28 +157,26 @@ describe('kanban browser smoke', () => {
     const refErrors = errors.filter(e => e.includes('is not defined'));
     await page.close();
     assert.equal(refErrors.length, 0,
-      `clearBoard threw ReferenceError: ${refErrors.join('; ')}`);
+      `clearAll threw ReferenceError: ${refErrors.join('; ')}`);
   });
 
-  // ── exportState smoke ───────────────────────────────────────────────────────
+  // ── exportJson smoke ────────────────────────────────────────────────────────
 
-  test('exportState is callable without crash', async () => {
+  test('exportJson is callable without crash', async () => {
     const page = await browser.newPage();
     const errors = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
 
-    // Intercept the download so it doesn't open a file dialog
-    await page.evaluate(() => { URL.createObjectURL = () => 'blob:mock'; });
-
     await page.goto(KANBAN, { waitUntil: 'networkidle' });
 
-    // exportState triggers a download anchor click — just ensure no crash
-    await page.evaluate(() => window.exportState());
+    // exportJson triggers a Blob download — intercept createObjectURL so no dialog opens
+    await page.evaluate(() => { URL.createObjectURL = () => 'blob:mock'; });
+    await page.evaluate(() => window.exportJson());
 
     const refErrors = errors.filter(e => e.includes('is not defined'));
     await page.close();
     assert.equal(refErrors.length, 0,
-      `exportState threw ReferenceError: ${refErrors.join('; ')}`);
+      `exportJson threw ReferenceError: ${refErrors.join('; ')}`);
   });
 
 });

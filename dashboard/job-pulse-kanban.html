@@ -60,6 +60,12 @@
   .modal pre{font-size:.72rem;color:var(--muted);background:var(--bg);padding:10px;
              border-radius:4px;overflow-x:auto;white-space:pre-wrap}
   .modal-close{float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+         background:var(--surface2);color:var(--text);border:1px solid var(--accent);
+         border-radius:6px;padding:9px 18px;font-size:.8rem;z-index:200;
+         pointer-events:none;max-width:min(600px,90vw);word-break:break-word;
+         animation:fadeout .4s ease 3.6s forwards}
+  @keyframes fadeout{to{opacity:0}}
 </style>
 </head>
 <body>
@@ -68,11 +74,11 @@
   <span id="status">—</span>
   <div class="toolbar">
     <button class="primary" onclick="fetchJobs()">⬇ Fetch Jobs</button>
-    <button onclick="runDryRun()">🔍 Dry-Run Submit</button>
-    <button onclick="exportState()">⬆ Export JSON</button>
+    <button onclick="dryRunSubmit()">🔍 Dry-Run Submit</button>
+    <button onclick="exportJson()">⬆ Export JSON</button>
     <label style="cursor:pointer"><button as="span" onclick="document.getElementById('import-file').click()">⬇ Import JSON</button>
-      <input id="import-file" type="file" accept=".json" style="display:none" onchange="importState(event)"></label>
-    <button onclick="clearBoard()" style="color:var(--red)">✕ Clear</button>
+      <input id="import-file" type="file" accept=".json" style="display:none" onchange="importJson(event)"></label>
+    <button onclick="clearAll()" style="color:var(--red)">✕ Clear</button>
   </div>
 </header>
 
@@ -211,61 +217,71 @@ async function fetchJobs() {
   setStatus(`Fetched ${all.length} jobs → ${added} new, ${skipped} dupes${errs.length ? ` · ${errs.length} errors` : ''}`);
 }
 
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, ms = 4000) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
 // ── Dry-run submit ─────────────────────────────────────────────────────────────
-async function runDryRun() {
-  // POST to local auto-submit server (K1 wires this; placeholder for now)
-  const eligible = Object.values(state.cards).filter(c => c.state === 'new' && (c.grade==='A'||c.grade==='B'));
-  if (eligible.length === 0) { setStatus('No eligible cards (grade A/B in New column)'); return; }
-  try {
-    const r = await fetch('http://localhost:7778/dry-run', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ cards: eligible.slice(0,5) }),
-    });
-    if (r.ok) {
-      const d = await r.json();
-      showModal('Dry-Run Results', JSON.stringify(d, null, 2), null);
-    } else {
-      setStatus(`Dry-run server error: ${r.status} (is K1 running?)`);
-    }
-  } catch {
-    setStatus('Dry-run: K1 server not running — see SKILL_UPDATE_AUTO_SUBMIT.md');
+function dryRunSubmit() {
+  const eligible = Object.values(state.cards).filter(c =>
+    (c.state === 'new' || c.state === 'evaluated') && (c.grade === 'A' || c.grade === 'B')
+  );
+  if (eligible.length === 0) {
+    toast('No eligible cards — grade A/B in New or Evaluated column required');
+    return;
   }
+  const out = { cards: {}, version: state.version };
+  for (const c of eligible) out.cards[c.id] = c;
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'submit-queue.json';
+  a.click();
+  toast(`Downloaded ${eligible.length} cards as submit-queue.json — move to data/ then run: node scripts/auto-submit.mjs --kanban-json data/submit-queue.json --dry-run --report`);
 }
 
 // ── Export / Import ───────────────────────────────────────────────────────────
-function exportState() {
+function exportJson() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `pulse-jobs-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `job-pulse-kanban-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
+  toast(`Exported ${Object.keys(state.cards).length} cards`);
 }
 
-function importState(e) {
+function importJson(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     try {
       const imported = JSON.parse(ev.target.result);
-      if (!imported.cards) throw new Error('missing .cards');
+      if (!imported.cards || typeof imported.cards !== 'object' || Array.isArray(imported.cards))
+        throw new Error('missing or invalid .cards (expected object)');
+      if (!imported.version) throw new Error('missing .version');
       state = imported;
       saveState();
       render();
-      setStatus(`Imported ${Object.keys(state.cards).length} cards`);
-    } catch(err) { setStatus(`Import failed: ${err.message}`); }
+      toast(`Imported ${Object.keys(state.cards).length} cards`);
+    } catch(err) { toast(`Import failed: ${err.message}`); }
   };
   reader.readAsText(file);
   e.target.value = '';
 }
 
-function clearBoard() {
-  if (!confirm('Clear all cards? This cannot be undone.')) return;
+function clearAll() {
+  if (!confirm('Clear all cards from the board? This cannot be undone.')) return;
   state.cards = {};
   saveState();
   render();
-  setStatus('Board cleared');
+  setStatus('0 cards loaded');
+  toast('Board cleared');
 }
 
 // ── Drag and drop ─────────────────────────────────────────────────────────────
@@ -391,12 +407,12 @@ window._kanban = { state, saveState, loadState, mergeJobs, dedupKey, COLUMNS, SO
 
 // onclick="..." attributes resolve against window scope; <script type="module"> is module-scoped,
 // so functions defined here are NOT globally visible without explicit window assignment.
-window.fetchJobs   = fetchJobs;
-window.runDryRun   = runDryRun;
-window.exportState = exportState;
-window.importState = importState;
-window.clearBoard  = clearBoard;
-window.closeModal  = closeModal;
+window.fetchJobs    = fetchJobs;
+window.dryRunSubmit = dryRunSubmit;
+window.exportJson   = exportJson;
+window.importJson   = importJson;
+window.clearAll     = clearAll;
+window.closeModal   = closeModal;
 </script>
 </body>
 </html>

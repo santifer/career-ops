@@ -247,7 +247,7 @@ describe('kanban HTML', () => {
     // <script type="module"> is module-scoped; onclick="fn()" resolves against window.
     // Each button handler must be explicitly assigned to window.xxx.
     const content = fs.readFileSync(path.join(ROOT, 'dashboard', 'job-pulse-kanban.html'), 'utf8');
-    for (const fn of ['fetchJobs', 'runDryRun', 'exportState', 'importState', 'clearBoard', 'closeModal']) {
+    for (const fn of ['fetchJobs', 'dryRunSubmit', 'exportJson', 'importJson', 'clearAll', 'closeModal']) {
       assert.ok(content.includes(`window.${fn}`), `window.${fn} must be assigned — onclick needs global scope`);
     }
   });
