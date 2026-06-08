@@ -88,12 +88,21 @@ while [[ $# -gt 0 ]]; do
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
-    --rate-limit-sleep) RATE_LIMIT_SLEEP="$2"; shift 2 ;;
+    --rate-limit-sleep)
+      [[ $# -ge 2 ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
+      RATE_LIMIT_SLEEP="$2"
+      shift 2
+      ;;
     --model) MODEL="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
 done
+
+if ! [[ "$RATE_LIMIT_SLEEP" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: --rate-limit-sleep must be a non-negative integer (seconds)."
+  exit 1
+fi
 
 # Lock file to prevent double execution
 acquire_lock() {
@@ -379,6 +388,7 @@ process_offer() {
   claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
 
   local exit_code=0
+  local terminal_failure_recorded=false
   while true; do
     exit_code=0
     claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
@@ -388,6 +398,12 @@ process_offer() {
     fi
 
     if is_rate_limit_log "$log_file" && (( retries < MAX_RETRIES )); then
+      if (( RATE_LIMIT_SLEEP <= 0 )); then
+        update_state "$id" "$url" "failed" "$started_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$report_num" "-" "rate-limit; no wait configured" "$retries"
+        echo "    ❌ Rate limited and --rate-limit-sleep is 0; not retrying."
+        terminal_failure_recorded=true
+        break
+      fi
       retries=$((retries + 1))
       local retry_completed_at
       retry_completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -426,7 +442,7 @@ process_offer() {
 
     update_state "$id" "$url" "completed" "$started_at" "$completed_at" "$report_num" "$score" "-" "$retries"
     echo "    ✅ Completed (score: $score, report: $report_num)"
-  else
+  elif [[ "$terminal_failure_recorded" == "false" ]]; then
     if (( retries < MAX_RETRIES )); then
       retries=$((retries + 1))
     fi
