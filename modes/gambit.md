@@ -24,6 +24,26 @@ candidate, not the company. Same rule as "never invent metrics."
 - `cv.md` (source of truth) + `article-digest.md` (proof points, if present) +
   `config/profile.yml`.
 
+## Step 0.5 — Disambiguate the company (if the name isn't unique)
+
+Before any research, make sure you are aimed at the right entity. Company names
+collide — a recipe app, a blockchain firm, and an HR-tech startup can all be
+"Crouton."
+
+- If the user gave a **URL or otherwise unambiguous identifier**, use it directly
+  and skip to Step 1.
+- If the user gave only a **name**, run ONE quick WebSearch to check whether it
+  maps to more than one company.
+  - **Unique** → proceed to Step 1.
+  - **Ambiguous** → STOP. Present the 2–4 candidate companies, each with a
+    one-line fit read against the candidate's archetypes (`_profile.md`), and ask
+    which one. Do NOT research or generate anything until the user confirms the
+    entity.
+
+A gambit's most expensive wrong turn is researching the wrong company under a
+shared name — resolve the entity before spending the research/generation budget.
+(This is the CHECKPOINT instinct applied one level earlier than the role thesis.)
+
 ## Step 1 — Research the company
 
 Use WebSearch + Playwright (single Playwright agent only — see `_shared.md`):
