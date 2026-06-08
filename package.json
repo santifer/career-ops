@@ -17,6 +17,7 @@
     "reconcile": "node reconcile-pipeline.mjs",
     "pdf": "node generate-pdf.mjs",
     "cover-letter": "node generate-cover-letter.mjs --payload",
+    "cv:verify-facts": "node verify-cv-facts.mjs",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
     "update:test": "node updater-migration-tests.mjs",
