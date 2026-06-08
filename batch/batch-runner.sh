@@ -33,6 +33,7 @@ RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
+SKIP_PDF=false
 MODEL=""  # empty = let claude -p use the Claude Max default
 
 usage() {
@@ -49,6 +50,7 @@ Options:
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
+  --skip-pdf           Workers skip PDF generation (report + tracker only); generate PDFs later with /career-ops pdf
   --model NAME         Claude model passed to `claude -p --model` (default:
                        unset = Claude Max default). Use a cheaper model for
                        large batches, e.g. `--model claude-sonnet-4-6`.
@@ -85,6 +87,7 @@ while [[ $# -gt 0 ]]; do
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
+    --skip-pdf) SKIP_PDF=true; shift ;;
     --model) MODEL="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
@@ -360,6 +363,11 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
+  # Inject skip-pdf override if flag is set
+  if [[ "$SKIP_PDF" == "true" ]]; then
+    printf '\n\n**OVERRIDE: Skip Step 4 (PDF generation). Do NOT generate a PDF or read cv-template.html. Use `❌` for the PDF column in the tracker line.**\n' >> "$resolved_prompt"
+  fi
+
   # Launch claude -p worker.
   # Model defaults to the Claude Max subscription default unless --model was
   # passed. Building the command in an array keeps quoting safe regardless.
@@ -388,11 +396,11 @@ process_offer() {
     fi
 
     # Check min-score gate
-    if [[ "$score" != "-" && -n "$score" ]] && (( $(echo "$MIN_SCORE > 0" | bc -l) )); then
-      if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
+    if [[ "$score" != "-" && -n "$score" ]] && awk "BEGIN{exit !($MIN_SCORE > 0)}"; then
+      if awk "BEGIN{exit !($score < $MIN_SCORE)}"; then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        return
       fi
     fi
 
@@ -513,8 +521,8 @@ main() {
         continue
       fi
     else
-      # Skip completed offers
-      if [[ "$status" == "completed" ]]; then
+      # Skip completed or explicitly skipped offers
+      if [[ "$status" == "completed" || "$status" == "skipped" ]]; then
         continue
       fi
       # Skip failed offers that hit retry limit (unless --retry-failed)
