@@ -368,9 +368,8 @@ process_offer() {
       {
         printf '\n\n---\n\n'
         printf '## Runtime personalization: %s\n\n' "${context_file#$PROJECT_DIR/}"
-        printf '```text\n'
-        sed 's/```/` ` `/g' "$context_file"
-        printf '\n```\n'
+        sed 's/^/    /' "$context_file"
+        printf '\n'
       } >> "$resolved_prompt"
     fi
   done
