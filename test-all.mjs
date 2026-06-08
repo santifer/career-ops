@@ -1309,6 +1309,74 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
+// ── 15. URL REDISCOVERY FALLBACK (--rediscover-404) ─────────────
+
+console.log('\n15. URL rediscovery fallback');
+
+try {
+  const { extractCareersUrlDomain, pickRediscoveredUrl } = await import(
+    pathToFileURL(join(ROOT, 'scan.mjs')).href
+  );
+
+  // extractCareersUrlDomain — pure hostname extraction, null on missing/invalid
+  if (extractCareersUrlDomain('https://job-boards.greenhouse.io/anthropic') === 'job-boards.greenhouse.io') {
+    pass('extractCareersUrlDomain pulls hostname from a careers URL');
+  } else {
+    fail('extractCareersUrlDomain failed on a valid URL');
+  }
+  if (extractCareersUrlDomain(null) === null) {
+    pass('extractCareersUrlDomain returns null for missing careers_url');
+  } else {
+    fail('extractCareersUrlDomain did not return null for null input');
+  }
+  if (extractCareersUrlDomain('not-a-url') === null) {
+    pass('extractCareersUrlDomain returns null for an unparseable URL');
+  } else {
+    fail('extractCareersUrlDomain did not return null for a bad URL');
+  }
+
+  // pickRediscoveredUrl — first search hit whose hostname exactly matches domain
+  const domain = 'job-boards.greenhouse.io';
+  const hrefs = [
+    'https://duckduckgo.com/l/?uddg=ad',          // search-engine chrome / noise
+    'https://other-board.lever.co/acme/123',      // wrong domain
+    'https://job-boards.greenhouse.io/acme/456',  // first real match
+    'https://job-boards.greenhouse.io/acme/789',  // later match
+  ];
+  if (pickRediscoveredUrl(hrefs, domain) === 'https://job-boards.greenhouse.io/acme/456') {
+    pass('pickRediscoveredUrl returns the first same-domain result');
+  } else {
+    fail(`pickRediscoveredUrl picked the wrong URL: ${pickRediscoveredUrl(hrefs, domain)}`);
+  }
+  if (pickRediscoveredUrl(['https://elsewhere.com/x'], domain) === null) {
+    pass('pickRediscoveredUrl returns null when no result matches the domain');
+  } else {
+    fail('pickRediscoveredUrl did not return null for no domain match');
+  }
+  if (pickRediscoveredUrl([], domain) === null) {
+    pass('pickRediscoveredUrl returns null for an empty result set');
+  } else {
+    fail('pickRediscoveredUrl did not return null for empty input');
+  }
+  // DuckDuckGo HTML wraps each result in a /l/?uddg= redirect — must be
+  // unwrapped, otherwise every hostname looks like duckduckgo.com and nothing
+  // ever matches the careers domain (the fallback would silently never fire).
+  const ddg = ['//duckduckgo.com/l/?uddg=' + encodeURIComponent('https://job-boards.greenhouse.io/acme/999')];
+  if (pickRediscoveredUrl(ddg, domain) === 'https://job-boards.greenhouse.io/acme/999') {
+    pass('pickRediscoveredUrl unwraps DuckDuckGo redirect links');
+  } else {
+    fail(`pickRediscoveredUrl did not unwrap DDG redirect: ${pickRediscoveredUrl(ddg, domain)}`);
+  }
+  // A look-alike host that merely contains the domain as a substring must not match.
+  if (pickRediscoveredUrl(['https://job-boards.greenhouse.io.attacker.com/x'], domain) === null) {
+    pass('pickRediscoveredUrl rejects look-alike hostnames');
+  } else {
+    fail('pickRediscoveredUrl accepted a look-alike hostname');
+  }
+} catch (e) {
+  fail(`URL rediscovery tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

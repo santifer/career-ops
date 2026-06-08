@@ -176,6 +176,92 @@ export function buildLocationFilter(locationFilter) {
   };
 }
 
+// ── URL rediscovery (--rediscover-404) ──────────────────────────────
+// When a tracked company's job URL returns 404/410, the role may have just
+// moved to a new URL (Workday/Greenhouse rotate URLs without closing roles).
+// These helpers back an opt-in search-and-reverify fallback before giving up.
+
+// extractCareersUrlDomain returns the hostname of a company's careers_url, or
+// null when it's missing/unparseable. The presence of a domain is what gates
+// the fallback — broad-discovery offers without a careers_url stay ineligible.
+export function extractCareersUrlDomain(careersUrl) {
+  if (!careersUrl) return null;
+  try {
+    return new URL(careersUrl).hostname;
+  } catch {
+    return null;
+  }
+}
+
+// resolveSearchHref unwraps a DuckDuckGo HTML redirect (`/l/?uddg=<encoded>`)
+// to its real destination, so domain matching sees the actual host instead of
+// duckduckgo.com. Non-redirect hrefs pass through unchanged.
+function resolveSearchHref(href) {
+  try {
+    const u = new URL(href, 'https://duckduckgo.com');
+    if (u.hostname.endsWith('duckduckgo.com') && u.pathname === '/l/') {
+      const target = u.searchParams.get('uddg');
+      if (target) return target;
+    }
+  } catch {
+    /* fall through to the raw href */
+  }
+  return href;
+}
+
+// pickRediscoveredUrl chooses the first result whose hostname *exactly* equals
+// the careers domain (no substring/look-alike matches), unwrapping search-engine
+// redirects first. Pure + exported so result-matching is unit-testable without
+// driving a real browser. Returns null when nothing matches.
+export function pickRediscoveredUrl(hrefs, domain) {
+  if (!domain || !Array.isArray(hrefs)) return null;
+  for (const raw of hrefs) {
+    const href = resolveSearchHref(raw);
+    let host;
+    try {
+      host = new URL(href).hostname;
+    } catch {
+      continue;
+    }
+    if (host === domain) return href;
+  }
+  return null;
+}
+
+// REDISCOVER_TIMEOUT_MS bounds the single fallback search so a slow or blocked
+// search engine can't stall the sequential verify loop.
+const REDISCOVER_TIMEOUT_MS = 10_000;
+
+// searchForNewUrl runs one site-scoped search for a moved tracked role and
+// returns a same-domain URL if found, else null. Every failure path returns
+// null — the fallback must never throw into the verify loop. Leaves the page on
+// a blank document so the next checkUrlLiveness call starts clean.
+async function searchForNewUrl(page, offer) {
+  const domain = offer.careersUrlDomain;
+  if (!domain) return null;
+  const query = `"${offer.title}" "${offer.company}" site:${domain}`;
+  try {
+    await page.goto(
+      `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+      { waitUntil: 'domcontentloaded', timeout: REDISCOVER_TIMEOUT_MS },
+    );
+    const hrefs = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('a.result__a'))
+        .map((a) => a.getAttribute('href'))
+        .filter(Boolean),
+    );
+    return pickRediscoveredUrl(hrefs, domain);
+  } catch {
+    return null;
+  } finally {
+    try {
+      await page.goto('about:blank');
+    } catch {
+      /* ignore — best-effort cleanup */
+    }
+  }
+}
+
 // ── Dedup ───────────────────────────────────────────────────────────
 
 function loadSeenUrls() {
@@ -295,7 +381,7 @@ async function parallelFetch(tasks, limit) {
 
 // ── Main ────────────────────────────────────────────────────────────
 
-async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0 } = {}) {
+async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0, rediscover = false } = {}) {
   // Dynamic imports keep the default zero-token path free of Playwright startup
   let chromium;
   let checkUrlLiveness;
@@ -335,6 +421,7 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
   const expired = [];
   const dropped = [];
   const invalid = [];
+  const migrated = [];
 
   const headed = headedFallback ? createHeadedPageProvider(chromium) : null;
   const getHeadedPage = headed ? () => headed.get() : undefined;
@@ -348,6 +435,21 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
         ? await checkUrlLivenessWithFallback(page, offer.url, { getHeadedPage })
         : await checkUrlLiveness(page, offer.url);
       if (result === 'expired') {
+        // 404/410 on a tracked company may just be a moved role — run one
+        // search + re-verify before giving up (opt-in via --rediscover-404).
+        // Only http_gone (HTTP 404/410) qualifies; soft-expiry signals
+        // (redirect/body/listing) are real closures, not URL moves.
+        if (rediscover && code === 'http_gone' && offer.tracked && offer.careersUrlDomain) {
+          const newUrl = await searchForNewUrl(page, offer);
+          if (newUrl) {
+            const recheck = await checkUrlLiveness(page, newUrl);
+            if (recheck.result !== 'expired') {
+              migrated.push({ ...offer, url: newUrl, previousUrl: offer.url });
+              console.log(`  🔄 migrated  ${offer.company} | ${offer.title} → ${newUrl}`);
+              continue;
+            }
+          }
+        }
         expired.push({ ...offer, reason });
         console.log(`  ❌ expired   ${offer.company} | ${offer.title} (${reason})`);
       } else if (result === 'uncertain' && GUARD_CODES.has(code)) {
@@ -377,7 +479,7 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
     await browser.close();
   }
 
-  return { verified, expired, dropped, invalid };
+  return { verified, expired, dropped, invalid, migrated };
 }
 
 // Stable codes from liveness-browser's up-front URL guard. Routing dispatches
@@ -405,6 +507,9 @@ async function main() {
   // hits). Default base 5000ms. Off by default — most ATS feeds don't need it.
   const throttleArg = args.find((a) => a === '--throttle' || a.startsWith('--throttle='));
   const throttleBaseMs = throttleArg ? (Number(throttleArg.split('=')[1]) || 5000) : 0;
+  // --rediscover-404: when a tracked company's URL 404/410s, search for the
+  // moved role and re-verify before marking it expired. Opt-in; rides on --verify.
+  const rediscover = args.includes('--rediscover-404');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
 
@@ -518,7 +623,16 @@ async function main() {
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
-        newOffers.push({ ...job, source: sourceName });
+        // Tag with the company's careers domain so verify can offer a 404/410
+        // rediscovery fallback. A null domain (no careers_url) marks the offer
+        // as broad-discovery — ineligible for the fallback, per the issue scope.
+        const careersUrlDomain = extractCareersUrlDomain(company.careers_url);
+        newOffers.push({
+          ...job,
+          source: sourceName,
+          tracked: Boolean(careersUrlDomain),
+          careersUrlDomain,
+        });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
@@ -532,13 +646,19 @@ async function main() {
   let expiredOffers = [];
   let droppedOffers = [];
   let invalidOffers = [];
+  let migratedOffers = [];
   if (verify && newOffers.length > 0) {
     console.log(`\nVerifying liveness of ${newOffers.length} new offer(s) with Playwright (sequential)...`);
-    const result = await verifyOffers(newOffers, { headedFallback, throttleBaseMs });
+    const result = await verifyOffers(newOffers, { headedFallback, throttleBaseMs, rediscover });
     verifiedOffers = result.verified;
     expiredOffers = result.expired;
     droppedOffers = result.dropped;
     invalidOffers = result.invalid;
+    migratedOffers = result.migrated;
+    // Migrated offers re-enter the pipeline at their newly discovered URL.
+    if (migratedOffers.length > 0) {
+      verifiedOffers = [...verifiedOffers, ...migratedOffers];
+    }
   }
 
   // 6. Write results
@@ -546,8 +666,14 @@ async function main() {
     appendToPipeline(verifiedOffers);
     appendToScanHistory(verifiedOffers, date);
   }
-  if (!dryRun && expiredOffers.length > 0) {
-    appendToScanHistory(expiredOffers, date, 'skipped_expired');
+  // Expired postings — plus the old URLs of migrated offers — are recorded as
+  // skipped_expired so subsequent scans dedup-skip the dead URLs.
+  const expiredForHistory = [
+    ...expiredOffers,
+    ...migratedOffers.map(o => ({ ...o, url: o.previousUrl })),
+  ];
+  if (!dryRun && expiredForHistory.length > 0) {
+    appendToScanHistory(expiredForHistory, date, 'skipped_expired');
   }
   // Pages that loaded but had no Apply control: record so we don't re-verify
   // them next scan, but never let them reach pipeline.md.
@@ -581,6 +707,7 @@ async function main() {
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (verify) {
     console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
+    console.log(`Rediscovered (moved):  ${migratedOffers.length} migrated`);
     console.log(`No apply control:      ${droppedOffers.length} dropped`);
     console.log(`Invalid (guarded):     ${invalidOffers.length} dropped`);
   }
