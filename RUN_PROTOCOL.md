@@ -4,6 +4,27 @@ Escalate through the modes in order. Do not skip a step.
 
 ---
 
+## Step 0 — Verify CL stockpile health
+
+Before any submission run, confirm the CL index is populated and files are on disk:
+
+```powershell
+# Count individual CL files on disk
+(Get-ChildItem "cover-letters\" -File | Where-Object { $_.Name -ne "bulk-export-2026-04-29.md" } | Measure-Object).Count
+
+# Count entries in the index
+node -e "import('js-yaml').then(m => { const f = require('fs'); const idx = m.default.load(f.readFileSync('cover-letters/index.yml','utf8')); console.log('index entries:', idx.templates.length); })"
+```
+
+Both counts should be non-zero and roughly equal. If the index is missing or has 0 entries:
+```bash
+node scripts/extract-cls.mjs   # re-extract from bulk-export
+```
+
+If the `cover-letters/` directory only has the bulk export file, the dry-run will show `CL: ❌` for every card. Rebuild the stockpile first.
+
+---
+
 ## Step 1 — Dry-run + report (10 cards)
 
 ```bash

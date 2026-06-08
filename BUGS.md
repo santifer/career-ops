@@ -174,6 +174,22 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-08-7 — Verify bot-reported metrics against disk truth before acting
+
+**What happened:** An 8 AM daily report claimed "256 CLs ready". Disk truth: 1 bulk .md export + 3 OneDrive cloud-only .docx files (OneDrive sync not running). The real count was effectively 0 individual CL files until the stockpile was built. The bot fabricated a count from context, not from `ls`.
+**Rule:** Any metric that drives a decision (CL count, application count, template count) must be verified with a disk command before being quoted. `ls cover-letters/ | measure` beats any generated number. If a metric conflicts with what `ls` shows, the filesystem wins.
+**Applies to:** Any automated report that summarizes asset counts (CLs, reports, PDFs, templates).
+
+---
+
+### K-2026-06-08-8 — Critical assets must live outside OneDrive; cloud-only stubs break automation
+
+**What happened:** 3 hand-crafted CL templates (Accela, LaunchDarkly, Twilio) lived in `C:\Users\rahil\OneDrive\Documents\`. When OneDrive sync was not running, `Copy-Item` raised "The cloud file provider is not running." The files were inaccessible to the automation pipeline.
+**Rule:** Any asset that automation needs at runtime (CL templates, scripts, configs) must be committed to the career-ops repo or otherwise local. OneDrive is not a reliable runtime dependency. When `extract-cls.mjs` can't copy a template, it logs and skips — it never crashes. But the better fix is to ensure the templates are in `cover-letters/` in the first place.
+**How to apply:** When setting up CL templates, copy them to `cover-letters/` and commit. Do not rely on OneDrive paths in any automation script.
+
+---
+
 ### K-2026-06-08-6 — Long-running code sessions accrue context cost; spin fresh sessions per logical chunk
 **What happened:** The K1 implementation session hit a 1M context credit wall, requiring a manual restart. The session had accumulated context from multiple PRs, investigations, and dead ends that weren't relevant to the current task.
 **Rule:** When a task is multi-PR (K1-dry-run, K1-semi-auto+live, K2-kanban, K5-slug-audit are all independent), spawn a fresh session per PR rather than continuing the same session across unrelated work. Cowork context should be scoped to the active PR, not the entire sprint.

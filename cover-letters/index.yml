@@ -1,0 +1,82 @@
+# Auto-generated CL index — edit by hand to refine roles/tier/notes
+# Each entry maps a CL file to one or more match keys
+# Matching priority: exact company → role family → tier fallback → null
+templates:
+  - file: defcon.md
+    company: defcon
+    roles: ["scrum master", "senior scrum master", "agile coach"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: hudl.md
+    company: hudl
+    roles: ["scrum master", "senior scrum master", "agile coach"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: raft.md
+    company: raft
+    roles: ["scrum master", "senior scrum master", "agile coach"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: apriori-technologies.md
+    company: apriori-technologies
+    roles: ["scrum master", "senior scrum master", "agile coach"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: equal-experts.md
+    company: equal-experts
+    roles: ["scrum master", "senior scrum master", "agile coach"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: samsara.md
+    company: samsara
+    roles: ["program manager", "technical pm", "senior pm"]
+    tier: f500
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: twilio.md
+    company: twilio
+    roles: ["agile coach", "program manager", "scrum master"]
+    tier: f500
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: pinterest.md
+    company: pinterest
+    roles: ["technical program manager", "tpm", "program manager"]
+    tier: f500
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: tala.md
+    company: tala
+    roles: ["technical program manager", "tpm", "program manager"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: bjss.md
+    company: bjss
+    roles: ["agile coach", "delivery manager", "scrum master"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: opentable.md
+    company: opentable
+    roles: ["agile coach", "delivery manager", "scrum master"]
+    tier: f500
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: 84-51.md
+    company: 84-51
+    roles: ["agile coach", "delivery manager", "scrum master"]
+    tier: unknown
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export
+  - file: smartsheet.md
+    company: smartsheet
+    roles: ["program manager", "technical pm", "senior pm"]
+    tier: f500
+    source: bulk-export-2026-04-29
+    notes: Extracted from April bulk export

@@ -62,6 +62,8 @@ function argVal(flag) {
 }
 
 const KANBAN_PATH  = argVal('--kanban') || path.join(ROOT, 'dashboard', 'job-pulse-kanban.html');
+const CL_DIR_ARG   = argVal('--cl-dir')   || path.join(ROOT, 'cover-letters');
+const CL_INDEX_ARG = argVal('--cl-index') || path.join(CL_DIR_ARG, 'index.yml');
 const CARD_ID      = argVal('--card');
 const SEMI_AUTO    = process.argv.includes('--semi-auto');
 const LIVE         = process.argv.includes('--live') && !SEMI_AUTO;
@@ -206,11 +208,79 @@ export function findCoverLetter(card) {
   return files.length > 0 ? path.join('cover-letters', files[0]) : null;
 }
 
+// ── Index-based CL matching ───────────────────────────────────────────────────
+
+export function slugifyCompany(name) {
+  return (name || '').toLowerCase()
+    .replace(/[()°™®]+/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+export function extractRoleFamily(roleTitle) {
+  const text = (roleTitle || '').toLowerCase();
+  const families = [];
+  if (/scrum master/.test(text))                                families.push('scrum master');
+  if (/agile delivery|delivery manager/.test(text))             families.push('agile coach');
+  if (/technical program manager|staff tpm|sr\. technical/.test(text)) families.push('technical program manager');
+  if (/program manager/.test(text))                             families.push('program manager');
+  if (/product manager/.test(text))                             families.push('product manager');
+  if (/agile coach/.test(text))                                 families.push('agile coach');
+  return families;
+}
+
+export function loadClIndex(indexPath) {
+  if (!yaml) return null;
+  if (!indexPath || !fs.existsSync(indexPath)) return null;
+  try {
+    return yaml.load(fs.readFileSync(indexPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Find the best matching cover letter for a kanban card using the index.
+ * Priority: exact company slug → role family → tier fallback → null.
+ * @param {object} card   Kanban card with at minimum { company, role }
+ * @param {object} index  Parsed index.yml (yaml.load output)
+ * @returns {string|null} Relative file path or null
+ */
+export function findCoverLetterForCard(card, index) {
+  if (!index || !Array.isArray(index.templates)) return null;
+
+  const companySlug = slugifyCompany(card.company || '');
+
+  // 1. Exact company match
+  const exact = index.templates.find((t) => t.company === companySlug);
+  if (exact) return path.join('cover-letters', exact.file);
+
+  // 2. Role family match
+  const roleFamilies = extractRoleFamily(card.role || '');
+  if (roleFamilies.length > 0) {
+    const roleMatch = index.templates.find((t) =>
+      Array.isArray(t.roles) &&
+      t.roles.some((r) => roleFamilies.some((f) => r.toLowerCase().includes(f))),
+    );
+    if (roleMatch) return path.join('cover-letters', roleMatch.file);
+  }
+
+  // 3. Tier fallback (card.tier must be set — kanban can inject it when available)
+  const cardTier = card.tier || null;
+  if (cardTier) {
+    const tierMatch = index.templates.find((t) => t.tier === cardTier);
+    if (tierMatch) return path.join('cover-letters', tierMatch.file);
+  }
+
+  return null;
+}
+
 // ── Dry-run analysis ──────────────────────────────────────────────────────────
 
-export function dryRunCard(card) {
+export function dryRunCard(card, clIndex = null) {
   const ats = detectATS(card.url);
-  const cl  = findCoverLetter(card);
+  const cl  = clIndex ? findCoverLetterForCard(card, clIndex) : findCoverLetter(card);
 
   let fillable;
   let notes;
@@ -390,12 +460,12 @@ function logDeadListing(card, liveness) {
 
 // ── Semi-auto mode ────────────────────────────────────────────────────────────
 
-async function runSemiAuto(cards, chromium) {
+async function runSemiAuto(cards, chromium, clIndex = null) {
   const results = [];
 
   for (const card of cards) {
     const ats = detectATS(card.url);
-    const cl  = findCoverLetter(card);
+    const cl  = clIndex ? findCoverLetterForCard(card, clIndex) : findCoverLetter(card);
 
     console.log(`\n[semi-auto] [${card.grade}] ${card.company} — ${card.role?.slice(0, 50)}`);
     console.log(`  ATS: ${ats} | CL: ${cl ?? 'none'}`);
@@ -536,7 +606,7 @@ function writeTSVEntry(card, ats) {
   fs.writeFileSync(outPath, columns.join('\t') + '\n', 'utf8');
 }
 
-async function runLive(cards, chromium, allowTier) {
+async function runLive(cards, chromium, allowTier, clIndex = null) {
   let captchaBlocked = 0;
   let formBlocked    = 0;
   let confirmed      = 0;
@@ -560,7 +630,7 @@ async function runLive(cards, chromium, allowTier) {
     }
 
     const ats = detectATS(card.url);
-    const cl  = findCoverLetter(card);
+    const cl  = clIndex ? findCoverLetterForCard(card, clIndex) : findCoverLetter(card);
 
     console.log(`\n[live] [${card.grade}] ${card.company} — ${card.role?.slice(0, 50)}`);
     console.log(`  ATS: ${ats} | CL: ${cl ?? 'none'}`);
@@ -723,9 +793,17 @@ async function main() {
 
   const toProcess = eligible.slice(0, LIMIT);
 
+  // Load CL index once (warnings only — missing index is not fatal)
+  const clIdx = loadClIndex(CL_INDEX_ARG);
+  if (!clIdx) {
+    console.log('[auto-submit] CL index not found — falling back to filename matching');
+  } else {
+    console.log(`[auto-submit] CL index loaded: ${clIdx.templates?.length ?? 0} templates`);
+  }
+
   // ── Dry-run ─────────────────────────────────────────────────────────────────
   if (DRY_RUN) {
-    const results     = toProcess.map(dryRunCard);
+    const results     = toProcess.map((card) => dryRunCard(card, clIdx));
     const wouldSubmit = results.filter((r) => r.would_submit).length;
     const partial     = results.filter((r) => r.fillable === 'partial').length;
     const blocked     = results.filter((r) => r.fillable === false).length;
@@ -772,12 +850,12 @@ async function main() {
   }
 
   if (SEMI_AUTO) {
-    await runSemiAuto(toProcess, chromium);
+    await runSemiAuto(toProcess, chromium, clIdx);
     return;
   }
 
   // LIVE
-  const { captchaBlocked, formBlocked } = await runLive(toProcess, chromium, ALLOW_TIER);
+  const { captchaBlocked, formBlocked } = await runLive(toProcess, chromium, ALLOW_TIER, clIdx);
   if (captchaBlocked > 0) process.exit(2);
   if (formBlocked > 0)    process.exit(3);
   process.exit(0);
