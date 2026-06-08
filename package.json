@@ -17,7 +17,7 @@
     "scan": "node scan.mjs",
     "patterns": "node analyze-patterns.mjs",
     "gemini:eval": "node gemini-eval.mjs",
-    "postinstall": "playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium"
+    "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps"
   },
   "keywords": [
     "ai",
