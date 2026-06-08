@@ -58,6 +58,15 @@ Classify each question:
 - **Already answered in Section G** → adapt the existing response
 - **New question** → generate response from the report + cv.md
 
+For each field, preserve the application form contract:
+- `field_type`: `text`, `textarea`, `select`, `radio`, `checkbox`, `number`, `file`, or `unknown`
+- `required`: `yes`, `no`, or `unknown`
+- `limit`: exact character/word limit if visible; otherwise `unknown`
+- `options`: visible options for select/radio/checkbox fields
+- `needs_candidate_confirmation`: `yes` for legal, demographic, work authorization, visa, relocation, salary, disability, veteran, sponsorship, background-check, or self-identification questions unless the answer is explicitly present in `config/profile.yml`
+
+Never invent answers for legal/work-authorization/self-identification fields. If the answer is not present in `config/profile.yml` or visible context, mark it as needing candidate confirmation and provide the safest question to ask the candidate.
+
 ## Step 5 — Generate responses
 
 For each question, generate the response following:
@@ -78,9 +87,19 @@ Based on: Report #NNN | Score: X.X/5 | Archetype: [type]
 ---
 
 ### 1. [Exact form question]
-> [Response ready for copy-paste]
+Field: [field_type] | Required: [yes/no/unknown] | Limit: [limit/unknown]
+Options: [for select/radio/checkbox; otherwise N/A]
+Needs candidate confirmation: [yes/no]
+
+Recommended answer:
+> [Response ready for copy-paste, or "Ask candidate: ..."]
+
+Why this answer:
+[1-2 sentences grounded in the report/CV/JD, or explain why confirmation is required]
 
 ### 2. [Next question]
+Field: ...
+Recommended answer:
 > [Response]
 
 ...
