@@ -360,6 +360,21 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
+  # Inject user-layer personalization into the temporary worker prompt.
+  # The resolved prompt is gitignored runtime state, so user profile data stays
+  # out of the system layer while batch scoring matches interactive scoring.
+  for context_file in "$PROJECT_DIR/modes/_profile.md" "$PROJECT_DIR/config/profile.yml"; do
+    if [[ -f "$context_file" ]]; then
+      {
+        printf '\n\n---\n\n'
+        printf '## Runtime personalization: %s\n\n' "${context_file#$PROJECT_DIR/}"
+        printf '```text\n'
+        sed 's/```/` ` `/g' "$context_file"
+        printf '\n```\n'
+      } >> "$resolved_prompt"
+    fi
+  done
+
   # Launch claude -p worker.
   # Model defaults to the Claude Max subscription default unless --model was
   # passed. Building the command in an array keeps quoting safe regardless.
