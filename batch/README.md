@@ -24,6 +24,12 @@ Process multiple job offers in parallel via headless workers. Each worker runs t
    ./batch/batch-runner.sh
    ```
 
+   To use Codex instead of Claude Code:
+
+   ```bash
+   CAREER_OPS_AGENT=codex ./batch/batch-runner.sh
+   ```
+
 4. **Results** are automatically merged into `data/applications.md` and verified with `verify-pipeline.mjs` at the end of the run.
 
 ## Options
@@ -37,6 +43,18 @@ Process multiple job offers in parallel via headless workers. Each worker runs t
 | `--start-from N` | `0` | Skip offers with ID below N |
 | `--max-retries N` | `2` | Max retry attempts per offer before giving up |
 | `--rate-limit-sleep N` | `300` | Seconds to wait before retrying a transient rate-limited worker; use `0` to pause the batch immediately |
+| `--agent NAME` | `CAREER_OPS_AGENT`, otherwise `claude` | Worker CLI: `claude` or `codex` |
+| `--model NAME` | unset | Model passed to the selected CLI |
+
+## Codex Safety
+
+Claude keeps the existing batch default, including `--dangerously-skip-permissions`
+and `--strict-mcp-config`, to avoid breaking current headless users. Codex does
+not pass its dangerous bypass flag unless explicitly requested:
+
+```bash
+CAREER_OPS_AGENT=codex CAREER_OPS_UNSAFE_AGENT_EXEC=1 ./batch/batch-runner.sh
+```
 
 ## Directory Layout
 

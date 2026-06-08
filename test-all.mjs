@@ -464,6 +464,42 @@ if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSou
   fail('Batch summary can misreport skipped offers as pending');
 }
 
+// Check batch runner agent-adapter invariants.
+if (/AGENT="\$\{CAREER_OPS_AGENT:-claude\}"/.test(batchRunnerSource) &&
+    /--agent\)/.test(batchRunnerSource) &&
+    /AGENT_ADAPTERS=\$'[^']*claude\\tclaude\\tbuild_claude_worker_command[^']*codex\\tcodex\\tbuild_codex_worker_command/s.test(batchRunnerSource)) {
+  pass('Batch runner selects workers through an extensible agent adapter table');
+} else {
+  fail('Batch runner missing CAREER_OPS_AGENT/agent adapter table support');
+}
+
+if (batchRunnerSource.includes('worker_command=("$AGENT_BIN" -p --dangerously-skip-permissions --strict-mcp-config)')) {
+  pass('Batch runner preserves existing Claude headless defaults and strict MCP isolation');
+} else {
+  fail('Batch runner changed Claude headless defaults or lost strict MCP isolation');
+}
+
+if (/if \[\[ "\$UNSAFE_AGENT_EXEC" == "1" \|\| "\$UNSAFE_AGENT_EXEC" == "true" \]\][\s\S]{0,180}worker_command\+=\(--dangerously-bypass-approvals-and-sandbox\)/.test(batchRunnerSource)) {
+  pass('Batch runner gates Codex dangerous bypass behind explicit opt-in');
+} else {
+  fail('Batch runner does not gate Codex dangerous bypass correctly');
+}
+
+const retryLoopMatch = batchRunnerSource.match(/while true; do[\s\S]*?run_worker "\$resolved_prompt" "\$prompt" "\$log_file" "\$id"[\s\S]*?is_rate_limit_log "\$log_file"[\s\S]*?continue[\s\S]*?done/);
+if (retryLoopMatch) {
+  pass('Batch rate-limit retry wraps the selected worker agent');
+} else {
+  fail('Batch rate-limit retry does not wrap the selected worker agent');
+}
+
+const profileInjectionIndex = batchRunnerSource.indexOf('## Runtime personalization: %s');
+const runWorkerIndex = batchRunnerSource.indexOf('run_worker "$resolved_prompt" "$prompt" "$log_file" "$id"');
+if (profileInjectionIndex !== -1 && runWorkerIndex !== -1 && profileInjectionIndex < runWorkerIndex) {
+  pass('Batch worker prompts keep user profile context before agent dispatch');
+} else {
+  fail('Batch worker prompts can lose user profile context');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
@@ -2475,10 +2511,10 @@ try {
   // Workers must be spawned with --strict-mcp-config so they don't inherit the
   // parent session's MCP servers (e.g. Playwright) and deadlock fighting over a
   // single browser when --parallel > 1 (issue #506).
-  const claudeArgsLine = batchRunner
+  const claudeWorkerLine = batchRunner
     .split('\n')
-    .find(l => l.includes('claude_args=('));
-  if (claudeArgsLine && claudeArgsLine.includes('--strict-mcp-config')) {
+    .find(l => l.includes('worker_command=') && l.includes('-p'));
+  if (claudeWorkerLine && claudeWorkerLine.includes('--strict-mcp-config')) {
     pass('batch workers spawn with --strict-mcp-config (no inherited MCP)');
   } else {
     fail('batch-runner.sh worker spawn missing --strict-mcp-config (issue #506 regression)');
