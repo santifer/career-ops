@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sus-db.schema.json",
+  "title": "SusDB",
+  "description": "SuS (Suspicious/Unconfirmed) company gate database",
+  "type": "object",
+  "required": ["version", "companies"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "integer", "description": "Schema version" },
+    "companies": {
+      "type": "object",
+      "description": "Map of company slug → SuS entry",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status", "first_seen"],
+        "properties": {
+          "status":     { "type": "string", "enum": ["confirmed", "skipped", "pending"] },
+          "first_seen": { "type": "string", "format": "date-time" },
+          "confirmed_at": { "type": ["string", "null"], "format": "date-time" },
+          "notes":      { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

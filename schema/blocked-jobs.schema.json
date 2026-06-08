@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "blocked-jobs.schema.json",
+  "title": "BlockedJobs",
+  "description": "Log of auto-submit attempts that were blocked",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["url", "blocked_at", "blocked_fields"],
+    "properties": {
+      "url":            { "type": "string", "format": "uri" },
+      "card_id":        { "type": ["string", "null"] },
+      "company":        { "type": ["string", "null"] },
+      "blocked_at":     { "type": "string", "format": "date-time" },
+      "blocked_fields": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Field labels that could not be filled"
+      },
+      "ats":            { "type": ["string", "null"] },
+      "structural_block_count": { "type": ["integer", "null"] }
+    }
+  }
+}
