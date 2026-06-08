@@ -181,7 +181,15 @@ function validateEvaluationShape(text) {
   if (!summary) {
     issues.push('missing SCORE_SUMMARY block');
   } else {
-    const score = summary[1].match(/^\s*SCORE:\s*([0-9]+(?:\.[0-9]+)?)/mi);
+    const summaryBlock = summary[1];
+    for (const key of ['COMPANY', 'ROLE', 'ARCHETYPE', 'LEGITIMACY']) {
+      const field = summaryBlock.match(new RegExp(`^\\s*${key}:\\s*(.+)$`, 'mi'));
+      if (!field || !field[1].trim() || field[1].trim().toLowerCase() === 'unknown') {
+        issues.push(`SCORE_SUMMARY ${key} is required`);
+      }
+    }
+
+    const score = summaryBlock.match(/^\s*SCORE:\s*([0-9]+(?:\.[0-9]+)?)/mi);
     const scoreValue = score ? Number(score[1]) : NaN;
     if (!Number.isFinite(scoreValue) || scoreValue < 0 || scoreValue > 5) {
       issues.push('SCORE_SUMMARY score must be a number between 0 and 5');
