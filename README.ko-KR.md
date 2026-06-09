@@ -34,7 +34,9 @@
 
 <p align="center"><strong>740개 이상의 채용 공고 평가 · 100개 이상의 맞춤형 이력서 생성 · 꿈의 직장 1곳 합격</strong></p>
 
-<p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/커뮤니티_참여하기-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a></p>
+<p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/커뮤니티_참여하기-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  &nbsp;
+  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a></p>
 
 <p align="center">
   <sub>다음 도구로 제작</sub><br>
@@ -76,7 +78,7 @@ Career-ops는 에이전트 기반으로 작동합니다: Claude Code가 Playwrig
 | 기능                   | 설명                                                                                                                                |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | **자동 파이프라인**    | URL 입력만으로 [평가 → PDF 생성 → 트래커 등록] 전 과정 자동화                                                                       |
-| **6단계 정밀 평가**    | 직무 요약, 이력서 매치, 레벨링 전략, 연봉 리서치, 개인화, 면접 준비 (STAR+R)                                                        |
+| **6단계 정밀 평가**    | 직무 요약, 이력서 매치, 레벨링 전략, 연봉 리서치, 개인화, 면접 준비 (STAR+R) -- 여기에 사기성 공고와 유령 채용을 표시하는 Block G 공고 진위 검증이 더해집니다 |
 | **면접 스토리 뱅크**   | 평가 데이터 기반 STAR+Reflection 스토리 축적 -- 어떤 행동 면접 질문도 커버하는 5~10개의 마스터 답변 생성                            |
 | **협상 전략 스크립트** | 연봉 협상 프레임워크, 거주지 기반 연봉 차등(Geographic Discount) 대응 논리, 경쟁 오퍼 활용 전략                                     |
 | **ATS PDF 생성**       | Space Grotesk + DM Sans 디자인, 키워드가 주입된 이력서                                                                              |
@@ -88,34 +90,36 @@ Career-ops는 에이전트 기반으로 작동합니다: Claude Code가 Playwrig
 
 ## 빠른 시작
 
+**가장 빠른 방법 — 명령어 하나:**
+
 ```bash
-# 1. 클론 및 설치
+npx @santifer/career-ops init
+```
+
+> 💡 `npx`는 [Node.js](https://nodejs.org)에 함께 제공됩니다 — 전역으로 아무것도
+> 설치하지 않고 인스톨러를 한 번만 실행합니다. 아직 Node가 없다면 먼저 설치하세요.
+> (이미 Claude Code / Gemini / Codex CLI를 사용 중이라면 이미 가지고 있습니다.)
+
+이 명령어는 최신 릴리스를 `./career-ops`에 클론하고 의존성을 설치합니다. 그다음:
+
+```bash
+cd career-ops
+claude   # or gemini / codex / qwen / opencode — open your AI CLI here
+```
+
+**처음 실행하면 career-ops가 대화만으로 설정 과정을 안내합니다 — 이력서, 프로필, 목표 직무까지. 손으로 편집할 것이 없습니다.**
+
+<details>
+<summary><b>수동으로 설정하고 싶으신가요? (git clone)</b></summary>
+
+```bash
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
-npx playwright install chromium   # PDF 렌더링을 위한 브라우저 엔진 설치
-
-# 2. 설정 확인
-npm run doctor                     # 모든 사전 요구사항 및 환경 변수 검증
-
-# 3. 설정
-cp config/profile.example.yml config/profile.yml  # 사용자 정보로 수정
-cp templates/portals.example.yml portals.yml       # 기업 목록 커스터마이즈
-
-# 4. 이력서 추가
-# 프로젝트 루트에 'cv.md' 파일을 생성하고 마크다운으로 이력서를 작성하세요.
-
-# 5. Claude로 개인화
-claude   # 이 디렉토리에서 Claude Code 실행
-
-# Claude에게 시스템을 맞춤 설정해달라고 요청:
-# "Change the archetypes to backend engineering roles"
-# "Translate the modes to English"
-# "Add these 5 companies to portals.yml"
-# "Update my profile with this CV I'm pasting"
-
-# 6. 사용 시작
-# 채용 공고 URL을 붙여넣거나 /career-ops 실행
+npx playwright install chromium   # only needed for PDF generation
+claude   # open your AI CLI — it onboards you on first launch
 ```
+
+</details>
 
 > **이 시스템은 Claude가 직접 커스터마이즈하도록 설계되었습니다.** 모드, 아키타입, 스코어링 가중치, 협상 스크립트 -- 그냥 요청하세요. Claude가 사용하는 파일을 직접 읽기 때문에, 무엇을 수정해야 하는지 정확히 알고 있습니다.
 

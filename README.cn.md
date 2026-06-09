@@ -34,7 +34,9 @@
 
 <p align="center"><strong>评估超过 740 个职位 · 生成超过 100 份个性化简历 · 成功拿下理想职位</strong></p>
 
-<p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社区-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a></p>
+<p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社区-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  &nbsp;
+  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a></p>
 
 <p align="center">
   <sub>技术栈</sub><br>
@@ -76,7 +78,7 @@ career-ops 具备代理式工作能力：Claude Code 会用 Playwright 浏览招
 | 功能 | 说明 |
 |------|------|
 | **自动管道** | 粘贴一个 URL，即可获得完整评估 + PDF + 追踪记录 |
-| **6 个评估模块** | 职位总结、简历匹配、职级策略、薪酬调研、个性化建议、面试准备（STAR+R） |
+| **6 个评估模块** | 职位总结、简历匹配、职级策略、薪酬调研、个性化建议、面试准备（STAR+R）—— 外加一个用于核查职位真实性的 Block G 模块，可标记诈骗职位和幽灵职位 |
 | **面试故事库** | 跨多次评估积累 STAR+Reflection 故事，沉淀出 5-10 个可回答任意行为面试题的主线故事 |
 | **谈薪脚本** | 薪资谈判框架、地域折扣反驳话术、竞品 offer 杠杆策略 |
 | **ATS PDF 生成** | 注入关键词的简历，采用 Space Grotesk + DM Sans 设计 |
@@ -88,34 +90,36 @@ career-ops 具备代理式工作能力：Claude Code 会用 Playwright 浏览招
 
 ## 快速开始
 
+**最快的方式 —— 一条命令：**
+
 ```bash
-# 1. 克隆并安装
+npx @santifer/career-ops init
+```
+
+> 💡 `npx` 随 [Node.js](https://nodejs.org) 一起提供 —— 它只运行一次安装程序，
+> 不会全局安装任何东西。还没有 Node？请先安装它。
+> （已经在用 Claude Code / Gemini / Codex CLI？那你已经有它了。）
+
+这会把最新版本克隆到 `./career-ops` 并安装依赖。然后：
+
+```bash
+cd career-ops
+claude   # 或 gemini / codex / qwen / opencode —— 在这里打开你的 AI CLI
+```
+
+**首次启动时，career-ops 会通过对话带你完成设置 —— 你的简历、个人档案和目标职位 —— 完全无需手动编辑任何文件。**
+
+<details>
+<summary><b>更喜欢手动设置？（git clone）</b></summary>
+
+```bash
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
-npx playwright install chromium   # 生成 PDF 所需
-
-# 2. 检查环境
-npm run doctor                     # 验证所有前置条件
-
-# 3. 配置
-cp config/profile.example.yml config/profile.yml  # 填入你的信息
-cp templates/portals.example.yml portals.yml       # 自定义目标公司
-
-# 4. 添加你的简历
-# 在项目根目录创建 cv.md，并用 Markdown 写入你的简历
-
-# 5. 用 Claude 做个性化配置
-claude   # 在当前目录打开 Claude Code
-
-# 然后让 Claude 帮你把系统调成适合你的版本：
-# "把职业原型改成后端工程岗位"
-# "把 modes 翻译成简体中文"
-# "把这 5 家公司加入 portals.yml"
-# "用我贴过来的这份简历更新个人档案"
-
-# 6. 开始使用
-# 粘贴一个职位 URL，或运行 /career-ops
+npx playwright install chromium   # 仅生成 PDF 时需要
+claude   # 打开你的 AI CLI —— 它会在首次启动时引导你完成设置
 ```
+
+</details>
 
 > **这个系统本来就是设计给 Claude 直接定制的。** modes、职业原型、评分权重、谈判脚本，直接告诉 Claude 要改什么就行。Claude 读取的正是它自己会使用的那些文件，所以它知道该改哪里。
 

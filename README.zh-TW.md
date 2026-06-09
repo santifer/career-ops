@@ -34,7 +34,11 @@
 
 <p align="center"><strong>評估超過 740 份職缺 · 生成超過 100 份個人化履歷 · 成功獲得理想職位</strong></p>
 
-<p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社群-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a></p>
+<p align="center">
+  <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社群-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  &nbsp;
+  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
+</p>
 
 <p align="center">
   <sub>技術棧</sub><br>
@@ -76,7 +80,7 @@ career-ops 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面
 | 功能             | 說明                                                                                                                   |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | **自動管道**     | 貼上 URL，自動完成評估 + PDF + 追蹤紀錄                                                                                |
-| **6 區塊評估**   | 職位摘要、履歷匹配、職級策略、薪酬調查、個人化、面試準備（STAR+R）                                                     |
+| **6 區塊評估**   | 職位摘要、履歷匹配、職級策略、薪酬調查、個人化、面試準備（STAR+R）— 另有 Block G 職缺正當性檢查，標記詐騙與幽靈職缺          |
 | **面試故事庫**   | 跨評估累積 STAR+Reflection 故事 — 能回答任何行為面試問題的 5-10 個核心故事                                             |
 | **薪資談判腳本** | 薪資談判框架、地區薪資折扣反駁話術、競爭 Offer 運用策略                                                                |
 | **ATS PDF 生成** | 注入關鍵字的履歷，採用 Space Grotesk + DM Sans 設計                                                                    |
@@ -88,34 +92,36 @@ career-ops 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面
 
 ## 快速開始
 
+**最快的方式 — 一行指令：**
+
 ```bash
-# 1. 複製並安裝
+npx @santifer/career-ops init
+```
+
+> 💡 `npx` 隨 [Node.js](https://nodejs.org) 一起提供 — 它會執行安裝程式一次，
+> 而不會在全域安裝任何東西。還沒有 Node？請先安裝它。
+> （已經在使用 Claude Code / Gemini / Codex CLI？那你已經有了。）
+
+這會把最新版本複製到 `./career-ops` 並安裝相依套件。接著：
+
+```bash
+cd career-ops
+claude   # 或 gemini / codex / qwen / opencode — 在此開啟你的 AI CLI
+```
+
+**首次啟動時，career-ops 會透過對話帶你完成設定 — 你的履歷、個人檔案與目標職位 — 完全不需要手動編輯。**
+
+<details>
+<summary><b>偏好手動設定？（git clone）</b></summary>
+
+```bash
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
-npx playwright install chromium   # PDF 生成所需
-
-# 2. 檢查設定
-npm run doctor                     # 驗證所有必要條件
-
-# 3. 設定檔
-cp config/profile.example.yml config/profile.yml  # 填入你的個人資訊
-cp templates/portals.example.yml portals.yml       # 自訂目標企業
-
-# 4. 加入你的履歷
-# 在專案根目錄建立 cv.md，以 Markdown 格式撰寫你的履歷
-
-# 5. 透過 Claude 個人化設定
-claude   # 在此目錄開啟 Claude Code
-
-# 然後請 Claude 幫你調整系統：
-# 「把職位類型改成後端工程師相關職缺」
-# 「把模式翻譯成繁體中文」
-# 「把這 5 家公司加入 portals.yml」
-# 「用我貼的這份履歷更新我的個人檔案」
-
-# 6. 開始使用
-# 貼上職缺 URL 或執行 /career-ops
+npx playwright install chromium   # 僅 PDF 生成所需
+claude   # 開啟你的 AI CLI — 首次啟動時會帶你完成設定
 ```
+
+</details>
 
 > **這個系統設計上就是讓 Claude 來客製化的。** 模式、職位類型、評分權重、談判腳本 — 直接告訴 Claude 要修改什麼，它就會動手。Claude 讀取的是它自己使用的相同檔案，所以它確切知道要編輯哪裡。
 
