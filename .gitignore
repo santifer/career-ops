@@ -1,4 +1,4 @@
-# Personal data (user fills these)
+# ── Personal data (user fills these — never auto-tracked) ────────────────
 cv.md
 data/applications.md
 data/pipeline.md
@@ -19,32 +19,142 @@ batch/tracker-additions/**/*.tsv
 jds/*
 !jds/.gitkeep
 
-# Writing samples (user's personal files — never committed)
+# ── Writing samples (user's personal files — never committed) ───────────
 writing-samples/*
 !writing-samples/README.md
 
-# User config and customization (never auto-updated)
+# ── User config and customization (never auto-updated) ───────────────────
 config/profile.yml
 portals.yml
 modes/_profile.md
 .update-dismissed
 .update-lock
 
-# Secrets (never commit — use .env.example as template)
+# ── Secrets (never commit — use .env.example as template) ───────────────
 .env
+.env.*
+!.env.example
 
-# Generated
+# ── Local environment shims (may contain machine-specific paths) ────────
+.envrc
+.envrc.local
+
+# ── Generated / build artifacts ──────────────────────────────────────────
 .resolved-prompt-*
 node_modules/
 bun.lock
+package-lock.json
+dist/
+build/
+out/
+*.tsbuildinfo
+career-dashboard
+career-dashboard.exe
+dashboard/career-dashboard
+dashboard/career-dashboard.exe
 
-# OS
+# ── OS junk ──────────────────────────────────────────────────────────────
 .DS_Store
+Thumbs.db
 *.mov
 *.mp4
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
 
-# Claude Code local
+# ── Editor / IDE local state (often contains workspace paths + snippets) ─
+.vscode/
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.factorypath
+.cursor/
+.aider*
+.aider.chat.history*
+.continue/
+.cody/
+.windsurf/
+.zed/
+*.sublime-project
+*.sublime-workspace
+
+# ── AI assistant local state (may contain conversation history) ─────────
 .claude/settings.local.json
 .claude/memory/
-career-dashboard
-package-lock.json
+.claude/worktrees/
+.claude/projects/
+.claude/statsig/
+.claude/todos/
+.claude/file-history/
+.claude/paste-cache/
+.claude/ide/
+.claude/.mcp.json
+.opencode/.cache/
+.opencode/agent/
+.opencode/node_modules/
+.gemini/tmp/
+.gemini/agent.md
+
+# ── Logs and runtime traces (may contain file paths + user inputs) ──────
+*.log
+*.log.*
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Personal filenames defense (catches common mistakes) ─────────────────
+# Cover letters, transcripts, references — typically never belong in a repo
+*cover-letter*
+*cover_letter*
+*transcript*
+*reference*
+*recommendation*
+*diploma*
+*certificate*
+*passport*
+*id-card*
+*id_card*
+
+# ── Privacy guard: refuse any file with Chinese characters in the name ───
+# Catches accidental "乔瑞雪-*.pdf" / "简历-v3.md" style leaks.
+# git doesn't honor regex in .gitignore natively, so we list common patterns.
+*简历*
+*学位*
+*成绩单*
+*毕业*
+*录取*
+*报到*
+*实习证明*
+*推荐信*
+*奖学金*
+*四六级*
+*cet-*
+
+# ── Misc safety nets ─────────────────────────────────────────────────────
+# Tars/zips that often contain entire local clones
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.rar
+# Crash dumps
+core
+core.*
+*.dmp
+# Test/coverage output (may embed code snippets)
+coverage/
+.nyc_output/
+*.lcov

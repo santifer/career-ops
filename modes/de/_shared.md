@@ -86,10 +86,11 @@ Profil framen als **"Technischer Builder mit nachweisbarer Praxis"**, der das Fr
 ### Portfolio als Proof Point (bei wertvollen Bewerbungen einsetzen)
 
 <!-- [ANPASSEN] Wenn du eine Live-Demo, ein Dashboard oder ein öffentliches Projekt hast, hier konfigurieren.
+     SICHERHEIT: Niemals echte Passwörter hier eintragen — in .env als DASHBOARD_PASSWORD speichern.
      Beispiel:
      dashboard:
        url: "https://deinedomain.dev/demo"
-       password: "demo-2026"
+       password: ${DASHBOARD_PASSWORD}    # liest aus .env, wird nie committed
        when_to_share: "LLMOps, AI-Platform, Observability-Rollen"
      Wird gelesen aus config/profile.yml → narrative.proof_points und narrative.dashboard -->
 

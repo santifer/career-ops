@@ -48,9 +48,10 @@ narrative:
       url: "https://github.com/janesmith/tool"
       hero_metric: "2K+ GitHub stars"
   # Optional: dashboard/demo URL with credentials
+  # SECURITY: never put real passwords here — store in .env as DASHBOARD_PASSWORD
   # dashboard:
   #   url: "https://janesmith.dev/demo"
-  #   password: "demo-2026"
+  #   password: ${DASHBOARD_PASSWORD}    # reads from .env, never committed
 
 compensation:
   target_range: "$150K-200K"     # Your target total comp

@@ -84,9 +84,10 @@ narrative:
       hero_metric: "610 stars, used in 3 lab exercises"
       track: "hybrid"
   # Optional dashboard / live demo
+  # SECURITY: never put real passwords here — store in .env as DASHBOARD_PASSWORD
   # dashboard:
   #   url: "https://sam-rivera.example.dev/demo"
-  #   password: "demo-2026"
+  #   password: ${DASHBOARD_PASSWORD}    # reads from .env, never committed
 
 compensation:
   # Default range = engineering range (typically higher).

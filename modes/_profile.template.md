@@ -61,8 +61,9 @@ Frame profile as **"Technical builder with real-world proof"** that adapts frami
 ## Your Portfolio / Demo
 
 <!-- If you have a live demo, dashboard, or public project:
+     SECURITY: never put real passwords here — store in .env as DASHBOARD_PASSWORD
      url: https://yoursite.dev/demo
-     password: demo-2026
+     password: ${DASHBOARD_PASSWORD}    # reads from .env, never committed
      when_to_share: "LLMOps, AI Platform roles" -->
 
 If you have a live demo/dashboard (check profile.yml), offer access in applications for relevant roles.
