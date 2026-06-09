@@ -29,6 +29,9 @@ this file tracks **open** work.
 
 | ID | Sev | Closed | Title | Resolution |
 |----|-----|--------|-------|------------|
+| K-16 | P4 | 2026-06-08 | Screenshot filename `undefined` when card.id absent | `screenshotSlug(card)` derives slug from `card.company + card.id`; `before-undefined` eliminated |
+| K-15 | P2 | 2026-06-08 | Listing-page URLs block auto-submit — no "Apply" button click | `navigateToApplicationForm()` added; clicks Apply-for-this-job before giving up on submit detection |
+| B-ff | P2 | 2026-06-08 | Form-fill data layer missing — selectors existed but no PII source | `config/personal-info.yml` + `scripts/load-personal-info.mjs` + `scripts/form-fill.mjs` added; wired into semi-auto + live |
 | B0 | P2 | 2026-06-05 | `check-syntax.mjs` critical-file list not exhaustive | Rewritten to glob 39 root `.mjs` + validate 7 critical JSON + NUL scan; caught live `last-refresh.json` corruption |
 | GoVerify | P2 | 2026-06-08 | `career.go` state list hand-coded, no compile-time check vs `states.yml` | `go build ./...` verified clean on Rahil's Windows host (go1.26.4). `gen/states.go` committed. Dashboard builds. |
 | B1 | P2 | 2026-06-08 | exit-code contract not enforced at call-site | Ingestion pipeline (Phase 1+2) supersedes the single-script exit-code contract. Bat-level handling tracked separately. |
@@ -219,6 +222,22 @@ this file tracks **open** work.
 **What happened:** `config/sources.yml` is the canonical list of ATS slugs, but it lives in the repo root and is not served by the kanban's static server (which serves `dashboard/` only). The kanban cannot fetch `/config/sources.yml` at runtime. For v1, the slug list is hardcoded inline inside `dashboard/job-pulse-kanban.html` as `const SOURCES = { greenhouse: [...], lever: [...] }`, which mirrors sources.yml manually.
 **Rule:** Any data that must stay in sync between a file and an in-browser runtime constant is a divergence risk. Options: (a) serve `config/` as a static route from the kanban server, (b) inline the source list into the kanban and codegen it from sources.yml, (c) expose it as a `/api/sources` endpoint. Until one is chosen, the inline list in the kanban HTML must be kept in sync with `config/sources.yml` manually.
 **How to apply:** When adding or removing slugs from `config/sources.yml`, also update `const SOURCES` in `dashboard/job-pulse-kanban.html`. Tracked for proper codegen or server-side serving in a future K2 iteration.
+
+---
+
+### K-2026-06-08-18 — Form-fill data layer missing — selectors existed but no data source
+
+**What happened:** `scripts/auto-submit.mjs` had ATS form-fill selectors defined but no personal-info source. Semi-auto launched a real Anthropic Greenhouse page: ATS detected ✅, submit button highlighted ✅, form fields empty ❌. The fix adds `config/personal-info.yml` (gitignored, template committed) loaded by `scripts/load-personal-info.mjs`. The loader validates required fields and errors clearly on missing/invalid config before any browser launches.
+**Rule:** Code that acts on personal data (PII) needs a config-first design from day 1. The config file must be gitignored, the template committed, and the loader must fail fast with actionable instructions — not silently fill nothing.
+**How to apply:** `loadPersonalInfo()` is called once before the Playwright modes launch. A `PersonalInfoError` exits cleanly with the setup steps. For dry-run mode, personal-info is not required (dry-run has no browser).
+
+---
+
+### K-2026-06-08-19 — Listing-page vs application-form URL distinction
+
+**What happened:** Many job sites (LinkedIn, company career pages) host a listing page with an "Apply for this job" button that navigates to the ATS form. Auto-submit navigated to the listing URL and found no submit button, blocking every such card. Fix: `navigateToApplicationForm()` scans for "Apply for this job" / "Apply Now" / `aria-label*="apply"` buttons before giving up, clicks, waits for navigation, then re-detects the ATS from the new URL.
+**Rule:** Job application URLs come in two forms: (1) listing page → needs Apply button click first; (2) ATS form page → has submit directly. Never assume the URL given is already the form. Try clicking Apply before reporting `no-submit-button`.
+**How to apply:** `navigateToApplicationForm(page, ats)` is called in both semi-auto and live modes when `findSubmitOnPage` returns null. It returns `{ ats }` with the re-detected ATS or null if no apply button found.
 
 ---
 

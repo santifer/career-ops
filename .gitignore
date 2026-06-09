@@ -23,6 +23,14 @@ modes/_profile.md
 .update-dismissed
 .update-lock
 
+# Personal info (PII — never commit)
+config/personal-info.yml
+
+# Auto-submit output data
+data/screenshots/
+data/auto-submit-dry-run-*.json
+data/semi-auto-*.json
+
 # Secrets (never commit — use .env.example as template)
 .env
 

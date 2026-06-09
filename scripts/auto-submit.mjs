@@ -49,6 +49,8 @@ import fs   from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkLiveness } from './check-job-liveness.mjs';
+import { loadPersonalInfo, PersonalInfoError } from './load-personal-info.mjs';
+import { fillForm } from './form-fill.mjs';
 import { VALID_IDS as CANONICAL_STATE_IDS } from '../gen/states.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -541,9 +543,16 @@ function writeJSON(filePath, data) {
 
 // ── Screenshot helper ─────────────────────────────────────────────────────────
 
-async function screenshot(page, cardId, prefix) {
+function screenshotSlug(card) {
+  const company = (card.company || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
+  const id      = card.id || 'noid';
+  return `${company}-${id}`;
+}
+
+async function screenshot(page, card, prefix) {
+  const slug   = typeof card === 'string' ? card : screenshotSlug(card);
   const ssDir  = path.join(ROOT, 'data', 'screenshots', DATE_STAMP);
-  const ssPath = path.join(ssDir, `${prefix}-${cardId}.png`);
+  const ssPath = path.join(ssDir, `${prefix}-${slug}.png`);
   fs.mkdirSync(ssDir, { recursive: true });
   await page.screenshot({ path: ssPath, fullPage: false });
   return path.relative(ROOT, ssPath);
@@ -569,13 +578,67 @@ function logDeadListing(card, liveness) {
   writeJSON(logPath, existing);
 }
 
+// ── K-15: Listing-page → application form navigation ─────────────────────────
+
+const APPLY_BUTTON_SELECTORS = [
+  'button:has-text("Apply for this job")',
+  'button:has-text("Apply Now")',
+  'button:has-text("Apply now")',
+  'a:has-text("Apply for this job")',
+  'a:has-text("Apply Now")',
+  'a:has-text("Apply now")',
+  'button[aria-label*="apply" i]',
+  'a[aria-label*="apply" i]',
+];
+
+/**
+ * K-15: If the page looks like a job listing (no submit button), look for an
+ * "Apply for this job" / "Apply Now" button and click it. Waits for navigation,
+ * then returns the new ATS from the resulting URL.
+ * Returns null if no apply button found.
+ * @returns {{ ats: string } | null}
+ */
+export async function navigateToApplicationForm(page, currentAts) {
+  for (const sel of APPLY_BUTTON_SELECTORS) {
+    try {
+      const el = await page.$(sel);
+      if (el) {
+        await Promise.all([
+          page.waitForNavigation({ timeout: 15000, waitUntil: 'domcontentloaded' }).catch(() => {}),
+          el.click(),
+        ]);
+        const newUrl = page.url();
+        const { detectATS: _detect } = await import('./auto-submit.mjs').catch(() => ({ detectATS: () => currentAts }));
+        // Re-detect ATS from the new URL
+        const newAts = _detectATS(newUrl);
+        return { ats: newAts !== 'unknown' ? newAts : currentAts };
+      }
+    } catch { /* selector not found or click failed — try next */ }
+  }
+  return null;
+}
+
+function _detectATS(url) {
+  if (!url) return 'unknown';
+  const ATS_PATTERNS_LOCAL = [
+    { name: 'greenhouse', re: /greenhouse\.io|boards\.greenhouse\.io/i },
+    { name: 'lever',      re: /lever\.co/i },
+    { name: 'ashby',      re: /ashbyhq\.com/i },
+    { name: 'workday',    re: /myworkdayjobs\.com|wd\d+\.myworkdayjobs/i },
+  ];
+  for (const { name, re } of ATS_PATTERNS_LOCAL) {
+    if (re.test(url)) return name;
+  }
+  return 'unknown';
+}
+
 // ── Semi-auto mode ────────────────────────────────────────────────────────────
 
-async function runSemiAuto(cards, chromium, clIndex = null) {
+async function runSemiAuto(cards, chromium, personal, clIndex = null) {
   const results = [];
 
   for (const card of cards) {
-    const ats = detectATS(card.url);
+    let ats = detectATS(card.url);
     const cl  = clIndex ? findCoverLetterForCard(card, clIndex) : findCoverLetter(card);
 
     console.log(`\n[semi-auto] [${card.grade}] ${card.company} — ${card.role?.slice(0, 50)}`);
@@ -595,6 +658,7 @@ async function runSemiAuto(cards, chromium, clIndex = null) {
     let browser;
     let aborted = false;
     let clicked = false;
+    let fillReport = null;
 
     const sigintHandler = () => { aborted = true; };
     process.on('SIGINT', sigintHandler);
@@ -608,8 +672,33 @@ async function runSemiAuto(cards, chromium, clIndex = null) {
       await page.goto(card.url, { timeout: 30000, waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(1500);
 
+      // K-15: If no submit button on listing page, look for "Apply for this job" button
+      let submitBtn = await findSubmitOnPage(page, ats);
+      if (!submitBtn) {
+        process.stdout.write('  No submit on landing page — checking for Apply button (K-15)... ');
+        const applyNav = await navigateToApplicationForm(page, ats);
+        if (applyNav) {
+          ats = applyNav.ats;
+          await page.waitForTimeout(1500);
+          submitBtn = await findSubmitOnPage(page, ats);
+          console.log(submitBtn ? `navigated to form (ATS: ${ats})` : 'navigated but still no submit button');
+        } else {
+          console.log('no Apply button found');
+        }
+      }
+
+      // Form fill (personal info data layer)
+      if (personal) {
+        process.stdout.write('  Filling form fields... ');
+        try {
+          fillReport = await fillForm(ats, page, personal, cl);
+          console.log(`${fillReport.filled}/${fillReport.total} fields filled. Missing: [${fillReport.missing_fields.join(', ') || 'none'}]`);
+        } catch (e) {
+          console.log(`fill error: ${e.message}`);
+        }
+      }
+
       // Highlight submit button with red overlay
-      const submitBtn = await findSubmitOnPage(page, ats);
       if (submitBtn) {
         await page.addStyleTag({
           content: `
@@ -629,7 +718,7 @@ async function runSemiAuto(cards, chromium, clIndex = null) {
         console.log('  ⚠  No submit button detected — check the page manually.');
       }
 
-      const ssPath = await screenshot(page, card.id, 'semi-auto-before');
+      const ssPath = await screenshot(page, card, 'semi-auto-before');
       console.log(`  Screenshot: ${ssPath}`);
 
       console.log('\n  ═══════════════════════════════════════════════════════════════');
@@ -647,7 +736,7 @@ async function runSemiAuto(cards, chromium, clIndex = null) {
           }),
         ]);
         clicked = true;
-        const ssAfter = await screenshot(page, card.id, 'semi-auto-after').catch(() => null);
+        const ssAfter = await screenshot(page, card, 'semi-auto-after').catch(() => null);
         console.log(`  Navigation detected — submission likely completed. Screenshot: ${ssAfter ?? 'error'}`);
       } catch (e) {
         if (e.message === 'user-aborted') {
@@ -672,7 +761,7 @@ async function runSemiAuto(cards, chromium, clIndex = null) {
       url:         card.url,
       ats,
       cl_path:     cl ?? null,
-      form_fields: [],
+      fill_report: fillReport,
       outcome,
       timestamp:   new Date().toISOString(),
     });
@@ -717,7 +806,7 @@ function writeTSVEntry(card, ats) {
   fs.writeFileSync(outPath, columns.join('\t') + '\n', 'utf8');
 }
 
-async function runLive(cards, chromium, allowTier, clIndex = null) {
+async function runLive(cards, chromium, allowTier, personal, clIndex = null) {
   let captchaBlocked = 0;
   let formBlocked    = 0;
   let confirmed      = 0;
@@ -740,7 +829,7 @@ async function runLive(cards, chromium, allowTier, clIndex = null) {
       continue;
     }
 
-    const ats = detectATS(card.url);
+    let ats = detectATS(card.url);
     const cl  = clIndex ? findCoverLetterForCard(card, clIndex) : findCoverLetter(card);
 
     console.log(`\n[live] [${card.grade}] ${card.company} — ${card.role?.slice(0, 50)}`);
@@ -759,6 +848,7 @@ async function runLive(cards, chromium, allowTier, clIndex = null) {
 
     let browser;
     let ssPath = null;
+    let fillReport = null;
 
     try {
       browser = await chromium.launch({ headless: true });
@@ -771,7 +861,7 @@ async function runLive(cards, chromium, allowTier, clIndex = null) {
       // CAPTCHA check — mark and skip this card
       if (await detectCaptchaOnPage(page)) {
         console.log('  → CAPTCHA detected — marking requires-human, skipping card');
-        ssPath = await screenshot(page, card.id, 'captcha').catch(() => null);
+        ssPath = await screenshot(page, card, 'captcha').catch(() => null);
         results.push({ id: card.id, status: 'requires-human', reason: 'captcha-detected', url: card.url, screenshot: ssPath });
         captchaBlocked++;
         continue;
@@ -779,7 +869,7 @@ async function runLive(cards, chromium, allowTier, clIndex = null) {
 
       // Intermediate step — CRITICAL: STOP entire run, do NOT move on
       if (await detectIntermediateStepOnPage(page)) {
-        ssPath = await screenshot(page, card.id, 'intermediate').catch(() => null);
+        ssPath = await screenshot(page, card, 'intermediate').catch(() => null);
         results.push({ id: card.id, status: 'intermediate-step', reason: 'intermediate-step-detected', url: card.url, screenshot: ssPath });
         await browser.close().catch(() => {});
         browser = null;
@@ -787,18 +877,37 @@ async function runLive(cards, chromium, allowTier, clIndex = null) {
         break;
       }
 
-      // Find submit button
-      const submitBtn = await findSubmitOnPage(page, ats);
+      // K-15: listing page → look for "Apply for this job" button before giving up
+      let submitBtn = await findSubmitOnPage(page, ats);
+      if (!submitBtn) {
+        const applyNav = await navigateToApplicationForm(page, ats);
+        if (applyNav) {
+          ats = applyNav.ats;
+          await page.waitForTimeout(1500);
+          submitBtn = await findSubmitOnPage(page, ats);
+        }
+      }
+
       if (!submitBtn) {
         console.log('  → BLOCKED: no submit button found');
-        ssPath = await screenshot(page, card.id, 'no-submit').catch(() => null);
+        ssPath = await screenshot(page, card, 'no-submit').catch(() => null);
         results.push({ id: card.id, status: 'blocked', reason: 'no-submit-button', url: card.url, screenshot: ssPath });
         formBlocked++;
         continue;
       }
 
+      // Form fill (personal info data layer)
+      if (personal) {
+        try {
+          fillReport = await fillForm(ats, page, personal, cl);
+          console.log(`  Filled ${fillReport.filled}/${fillReport.total} fields. Missing: [${fillReport.missing_fields.join(', ') || 'none'}]`);
+        } catch (e) {
+          console.log(`  Form fill error: ${e.message} — continuing`);
+        }
+      }
+
       // Pre-submit screenshot
-      ssPath = await screenshot(page, card.id, 'pre-submit');
+      ssPath = await screenshot(page, card, 'pre-submit');
       console.log(`  Pre-submit screenshot: ${ssPath}`);
 
       // Click submit
@@ -816,7 +925,7 @@ async function runLive(cards, chromium, allowTier, clIndex = null) {
         confirmed_flag = true;
       } catch { /* 60s timeout — no confirmation */ }
 
-      const ssAfter = await screenshot(page, card.id, confirmed_flag ? 'confirmed' : 'unconfirmed').catch(() => null);
+      const ssAfter = await screenshot(page, card,confirmed_flag ? 'confirmed' : 'unconfirmed').catch(() => null);
 
       if (confirmed_flag) {
         console.log('  → CONFIRMED: application submitted');
@@ -825,11 +934,11 @@ async function runLive(cards, chromium, allowTier, clIndex = null) {
         dailyCount++;
         appendSubmitQueue(card, ats, ssAfter);
         writeTSVEntry(card, ats);
-        results.push({ id: card.id, status: 'applied', url: card.url, ats, screenshot: ssAfter, note: 'confirmed' });
+        results.push({ id: card.id, status: 'applied', url: card.url, ats, screenshot: ssAfter, fill_report: fillReport, note: 'confirmed' });
       } else {
         console.log('  → UNCONFIRMED: no confirmation within 60s — NOT marking as applied');
         unconfirmed++;
-        results.push({ id: card.id, status: 'unconfirmed', url: card.url, ats, screenshot: ssAfter, note: 'no-confirmation-60s' });
+        results.push({ id: card.id, status: 'unconfirmed', url: card.url, ats, screenshot: ssAfter, fill_report: fillReport, note: 'no-confirmation-60s' });
       }
 
     } catch (e) {
@@ -956,6 +1065,19 @@ async function main() {
     return;
   }
 
+  // ── Personal info (required for semi-auto + live, warns in dry-run path already exited) ─
+  let personal = null;
+  try {
+    personal = await loadPersonalInfo();
+    console.log(`[auto-submit] Personal info loaded: ${personal.name.full} <${personal.contact.email}>`);
+  } catch (e) {
+    if (e instanceof PersonalInfoError) {
+      console.error(`[auto-submit] FATAL: ${e.message}`);
+      process.exit(1);
+    }
+    throw e;
+  }
+
   // ── Playwright modes ─────────────────────────────────────────────────────────
   let chromium;
   try {
@@ -967,12 +1089,12 @@ async function main() {
   }
 
   if (SEMI_AUTO) {
-    await runSemiAuto(toProcess, chromium, clIdx);
+    await runSemiAuto(toProcess, chromium, personal, clIdx);
     return;
   }
 
   // LIVE
-  const { captchaBlocked, formBlocked } = await runLive(toProcess, chromium, ALLOW_TIER, clIdx);
+  const { captchaBlocked, formBlocked } = await runLive(toProcess, chromium, ALLOW_TIER, personal, clIdx);
   if (captchaBlocked > 0) process.exit(2);
   if (formBlocked > 0)    process.exit(3);
   process.exit(0);

@@ -4,6 +4,28 @@ Escalate through the modes in order. Do not skip a step.
 
 ---
 
+## Step 0a — Personal Info Setup (one time, ~5 minutes)
+
+```powershell
+# 1. Copy the template
+copy config\personal-info.yml.template config\personal-info.yml
+
+# 2. Fill in your info
+notepad config\personal-info.yml
+
+# Required fields:  name.first, name.last, contact.email, resume.path
+# resume.path must be an absolute Windows path, e.g. C:\Users\rahil\Documents\Resume.pdf
+# The .yml is gitignored — your real info will never be committed.
+
+# 3. Verify it loads cleanly
+node -e "import('./scripts/load-personal-info.mjs').then(m=>m.loadPersonalInfo()).then(p=>console.log('OK', p.name.full, '<'+p.contact.email+'>'))"
+```
+
+Expected output: `OK Jane Doe <you@example.com>`
+If you see a `PersonalInfoError`, fix the field it names.
+
+---
+
 ## Step 0 — Verify CL stockpile health
 
 Before any submission run, confirm the CL index is populated and files are on disk:

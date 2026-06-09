@@ -1,0 +1,57 @@
+# Auto-submit personal info. Copy to personal-info.yml and fill in.
+# personal-info.yml is gitignored — never commit your real info.
+#
+# One-time setup (5 minutes):
+#   cp config/personal-info.yml.template config/personal-info.yml
+#   notepad config/personal-info.yml
+#   Fill in all fields. Save.
+#   Verify: node -e "import('./scripts/load-personal-info.mjs').then(m=>m.loadPersonalInfo()).then(p=>console.log('OK', p.name.full))"
+
+name:
+  first: ""
+  last: ""
+  full: ""  # auto-derived if empty: "{first} {last}"
+
+contact:
+  email: ""
+  phone: ""           # E.164 format preferred: "+15551234567"
+
+location:
+  city: ""
+  state: ""
+  country: "US"
+  zip: ""
+
+links:
+  linkedin: ""        # https://linkedin.com/in/...
+  github: ""          # optional
+  portfolio: ""       # optional
+
+work_auth:
+  status: ""          # "US Citizen" / "Permanent Resident" / "Visa - H1B" / "Other"
+  requires_sponsorship: false
+
+experience:
+  years_total: 0
+  current_title: ""
+  current_company: ""
+
+resume:
+  path: ""            # absolute Windows path: C:\Users\YourName\Documents\Resume.pdf
+
+cover_letter:
+  default_path: ""    # fallback if no CL match found in stockpile
+
+salary:
+  min: 0              # optional, leave 0 to skip
+  max: 0
+  currency: "USD"
+
+custom:
+  # For ATS-specific questions
+  how_heard: "LinkedIn"
+  authorized_to_work: true
+  veteran_status: "decline"   # "yes" / "no" / "decline"
+  disability_status: "decline"
+  race_ethnicity: "decline"
+  gender: "decline"
