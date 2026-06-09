@@ -12,7 +12,7 @@ This scaffolds a ready-to-use workspace:
 2. Installs dependencies
 3. Creates your config files (`config/profile.yml`, `portals.yml`, `cv.md`) — **without overwriting anything you've already set up**
 
-Then open Claude Code in the folder and paste a job offer.
+Then open your AI coding tool in the folder and paste a job offer. career-ops is AI-agnostic — Claude Code, Gemini, Codex, Qwen, OpenCode and GitHub Copilot CLI all work.
 
 ## Usage
 

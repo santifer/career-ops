@@ -4,18 +4,30 @@
 // user config without ever touching files that already exist.
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, copyFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, delimiter } from "node:path";
 
 const REPO = "https://github.com/santifer/career-ops.git";
 const LATEST_RELEASE = "https://api.github.com/repos/santifer/career-ops/releases/latest";
 const NPM = process.platform === "win32" ? "npm.cmd" : "npm";
+
+// career-ops is AI-agnostic: every one of these CLIs reads AGENTS.md and works
+// out of the box. We only detect them to tailor the final message — we never
+// install, configure, or remove anything per-CLI.
+const SUPPORTED_CLIS = [
+  { name: "Claude Code", cmd: "claude" },
+  { name: "Gemini CLI", cmd: "gemini" },
+  { name: "Codex", cmd: "codex" },
+  { name: "Qwen Code", cmd: "qwen" },
+  { name: "OpenCode", cmd: "opencode" },
+  { name: "GitHub Copilot CLI", cmd: "copilot" },
+];
 
 const USAGE = `career-ops — set up an AI job search workspace.
 
 Usage:
   npx career-ops init [folder]    Create a new workspace (default: ./career-ops)
 
-After setup, open Claude Code inside the folder and paste a job offer.
+After setup, open your AI coding tool inside the folder and paste a job offer.
 Docs: https://github.com/santifer/career-ops`;
 
 function die(msg) {
@@ -30,6 +42,25 @@ function has(cmd, arg = "--version") {
   } catch {
     return false;
   }
+}
+
+// Is `cmd` resolvable on PATH? Manual lookup so it works cross-platform
+// without spawning which/where (and without any dependency).
+function onPath(cmd) {
+  const exts = process.platform === "win32" ? (process.env.PATHEXT || ".EXE;.CMD;.BAT").split(";") : [""];
+  for (const dir of (process.env.PATH || "").split(delimiter)) {
+    if (!dir) continue;
+    for (const ext of exts) {
+      try {
+        if (existsSync(join(dir, cmd + ext))) return true;
+      } catch {}
+    }
+  }
+  return false;
+}
+
+function detectClis() {
+  return SUPPORTED_CLIS.filter((c) => onPath(c.cmd));
 }
 
 async function latestTag() {
@@ -114,7 +145,19 @@ async function main() {
   console.log(`  1. cd ${target}`);
   console.log("  2. Edit config/profile.yml (your details) and cv.md (your CV)");
   console.log("  3. Edit portals.yml with your target roles and companies");
-  console.log("  4. Open Claude Code here:  claude");
+
+  // 5. Tailor the "open your AI tool" line to whatever CLI is installed.
+  // career-ops works with all of them; this is guidance only.
+  const detected = detectClis();
+  if (detected.length === 1) {
+    console.log(`  4. Open your workspace:  ${detected[0].cmd}   (${detected[0].name} detected)`);
+  } else if (detected.length > 1) {
+    console.log(`  4. Open your workspace with any of:  ${detected.map((c) => c.cmd).join(", ")}   (detected)`);
+  } else {
+    console.log(`  4. Open your AI coding tool here, e.g.:  ${SUPPORTED_CLIS.map((c) => c.cmd).join(", ")}`);
+  }
+
+  console.log("\ncareer-ops is AI-agnostic — Claude Code, Gemini, Codex, Qwen, OpenCode and Copilot all work.");
   console.log("\nOptional (for PDF generation):");
   console.log("  npx playwright install chromium\n");
 }
