@@ -304,7 +304,7 @@ Szczegóły: [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md). Oprogramowanie jest udo
 ## Współtwórcy
 
 <a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" alt="Współtwórcy" />
 </a>
 
 Znalazłeś pracę dzięki career-ops? [Podziel się swoją historią!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
