@@ -10,7 +10,7 @@
    - US/Canada → `letter`
    - Rest of the world → `a4`
 6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
+7. Rewrite Professional Summary by injecting JD keywords + the candidate's actual exit narrative from profile/context
 8. Select top 3-4 most relevant projects for the job
 9. Reorder experience bullets by JD relevance
 10. Build competency grid from JD requirements (6-8 keyword phrases)

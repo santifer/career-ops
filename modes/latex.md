@@ -89,7 +89,7 @@ Each project becomes:
 ### Skills
 
 ```latex
-    \textbf{Languages}{: C, C++, Java, ...} \\
+    \textbf{Languages}{: Python, TypeScript, SQL, C, C++, ...} \\
     \textbf{Frameworks \& ML}{: PyTorch, LangChain, ...} \\
     \textbf{Tools \& Cloud}{: Docker, Kubernetes, ...}
 ```

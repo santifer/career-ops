@@ -214,7 +214,15 @@
 
   /* === PROJECTS === */
   .project {
-    margin-bottom: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .project:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
   }
 
   .project-title {
@@ -222,6 +230,7 @@
     font-size: 11.5px;
     font-weight: 600;
     color: hsl(270, 70%, 45%);
+    line-height: 1.35;
   }
 
   .project-badge {
@@ -237,14 +246,16 @@
   .project-desc {
     font-size: 10.5px;
     color: #444;
-    margin-top: 3px;
+    margin-top: 5px;
     line-height: 1.55;
   }
 
   .project-tech {
     font-size: 9.5px;
     color: #888;
-    margin-top: 3px;
+    margin-top: 5px;
+    line-height: 1.45;
+    display: block;
   }
 
   /* === EDUCATION === */

@@ -141,6 +141,11 @@ function buildTitleFilter(titleFilter) {
 //   - `block` matches → reject
 //   - `allow` empty → pass (already cleared block)
 //   - `allow` non-empty → must match at least one keyword
+//
+// Backward compatibility:
+//   - Older configs used `positive:` instead of `allow:`
+//   - Older configs could set `accept_empty: false` to reject postings whose
+//     provider returned a blank location string
 
 // Normalize a keyword list from portals.yml: tolerates a bare string
 // (wrapped to a 1-item array), null/undefined (→ []), and non-string
@@ -160,11 +165,14 @@ function normalizeKeywordList(value) {
 export function buildLocationFilter(locationFilter) {
   if (!locationFilter) return () => true;
   const alwaysAllow = normalizeKeywordList(locationFilter.always_allow);
-  const allow = normalizeKeywordList(locationFilter.allow);
+  const allow = normalizeKeywordList(
+    locationFilter.allow ?? locationFilter.positive
+  );
   const block = normalizeKeywordList(locationFilter.block);
+  const acceptEmpty = locationFilter.accept_empty !== false;
 
   return (location) => {
-    if (typeof location !== 'string' || location.trim() === '') return true;
+    if (typeof location !== 'string' || location.trim() === '') return acceptEmpty;
     const lower = location.toLowerCase();
     if (alwaysAllow.length > 0 && alwaysAllow.some(k => lower.includes(k))) return true;
     if (block.length > 0 && block.some(k => lower.includes(k))) return false;

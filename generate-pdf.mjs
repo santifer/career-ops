@@ -150,10 +150,13 @@ async function generatePDF() {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
+    page.setDefaultTimeout(15_000);
 
-    // Set content with file base URL for any relative resources
+    // Use "load" instead of "networkidle": self-contained CV HTML can keep
+    // background requests or font bookkeeping alive longer than necessary,
+    // which makes PDF generation look hung even though the document is ready.
     await page.setContent(html, {
-      waitUntil: 'networkidle',
+      waitUntil: 'load',
       baseURL: `file://${dirname(inputPath)}/`,
     });
 
