@@ -362,8 +362,16 @@ for (const file of tsvFiles) {
   }
 
   if (!duplicate) {
-    // Exact entry number match
-    duplicate = existingApps.find(app => app.num === addition.num);
+    // Exact entry number match — but only when the company also matches.
+    // The TSV `num` doubles as the tracker row id, yet report-file numbering
+    // and tracker-row numbering can drift out of sync (e.g. reports maxed at
+    // 067 while the tracker was already at #69). A bare num collision across
+    // *different* companies is that drift, not a duplicate — matching on num
+    // alone silently merges a brand-new role into an unrelated existing row.
+    const normCompany = normalizeCompany(addition.company);
+    duplicate = existingApps.find(app =>
+      app.num === addition.num && normalizeCompany(app.company) === normCompany
+    );
   }
 
   if (!duplicate) {
