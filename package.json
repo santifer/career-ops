@@ -16,6 +16,12 @@
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
+    "dump:scan": "node scan-company-dumps.mjs --write",
+    "review:queue": "node build-company-review-queue.mjs",
+    "review:enrich": "node enrich-company-review-queue.mjs",
+    "tracker:candidates": "node build-tracker-candidate-queue.mjs",
+    "source:fetch": "node fetch-company-source.mjs",
+    "source:refresh": "node source-refresh.mjs",
     "patterns": "node analyze-patterns.mjs",
     "gemini:eval": "node gemini-eval.mjs"
   },
