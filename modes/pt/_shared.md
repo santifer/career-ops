@@ -104,10 +104,11 @@ Posicionar "Builder" como sinal profissional — não como "hobbyista". Proof po
 ### Portfolio como Proof Point (usar em candidaturas de alto valor)
 
 <!-- [PERSONALIZAR] Se você tem uma demo ao vivo, dashboard ou projeto público, configure aqui.
+     SEGURANÇA: nunca coloque senhas reais aqui — armazene no .env como DASHBOARD_PASSWORD.
      Exemplo:
      dashboard:
        url: "https://seudominio.dev/demo"
-       password: "demo-2026"
+       password: ${DASHBOARD_PASSWORD}    # lido do .env, nunca commitado
        when_to_share: "LLMOps, AI-Platform, vagas de Observability"
      Lido de config/profile.yml -> narrative.proof_points e narrative.dashboard -->
 
