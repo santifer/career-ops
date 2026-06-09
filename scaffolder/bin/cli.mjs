@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 // career-ops scaffolder — one-command install.
-// Clones the repo at the latest release tag, installs deps, and scaffolds
-// user config without ever touching files that already exist.
+// Clones the repo at the latest release tag and installs dependencies.
+// It deliberately does NOT create cv.md / config/profile.yml / portals.yml:
+// the agent runs a conversational onboarding on first launch (see AGENTS.md
+// "First Run — Onboarding"), which is triggered precisely by those files
+// being absent. Pre-creating them from the examples would suppress that
+// onboarding and leave the user with placeholder data.
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, copyFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join, delimiter } from "node:path";
 
 const REPO = "https://github.com/santifer/career-ops.git";
@@ -76,15 +80,6 @@ async function latestTag() {
   }
 }
 
-// Copy `from` -> `to` only if `to` doesn't already exist. Returns true if created.
-function copyIfMissing(dir, from, to) {
-  const dest = join(dir, to);
-  const src = join(dir, from);
-  if (existsSync(dest) || !existsSync(src)) return false;
-  copyFileSync(src, dest);
-  return true;
-}
-
 async function main() {
   const [cmd, dirArg] = process.argv.slice(2);
 
@@ -124,39 +119,25 @@ async function main() {
     console.warn('\n! npm install failed — you can re-run it manually later with "npm install".');
   }
 
-  // 3. Scaffold user config — idempotent, never overwrites the user layer.
-  if (!existsSync(join(target, "config"))) mkdirSync(join(target, "config"), { recursive: true });
-  const created = [];
-  if (copyIfMissing(target, "config/profile.example.yml", "config/profile.yml")) created.push("config/profile.yml");
-  if (copyIfMissing(target, "templates/portals.example.yml", "portals.yml")) created.push("portals.yml");
-  const cv = join(target, "cv.md");
-  if (!existsSync(cv)) {
-    writeFileSync(
-      cv,
-      "# Your Name\n\n> Replace this file with your full CV in markdown.\n> It's the source of truth for all evaluations and generated PDFs.\n> See docs/SETUP.md for details.\n"
-    );
-    created.push("cv.md");
-  }
-
-  // 4. Next steps.
+  // 3. Next steps. We do NOT scaffold cv.md / profile.yml / portals.yml here:
+  // their absence is what triggers the agent's conversational onboarding on
+  // first launch, which sets them up far better than copying placeholders.
   console.log(`\n✓ career-ops is ready in ${display}\n`);
-  if (created.length) console.log(`  Created: ${created.join(", ")}\n`);
   console.log("Next steps:");
   console.log(`  1. cd ${target}`);
-  console.log("  2. Edit config/profile.yml (your details) and cv.md (your CV)");
-  console.log("  3. Edit portals.yml with your target roles and companies");
 
-  // 5. Tailor the "open your AI tool" line to whatever CLI is installed.
-  // career-ops works with all of them; this is guidance only.
+  // Tailor the "open your AI tool" line to whatever CLI is installed.
   const detected = detectClis();
   if (detected.length === 1) {
-    console.log(`  4. Open your workspace:  ${detected[0].cmd}   (${detected[0].name} detected)`);
+    console.log(`  2. Open your workspace:  ${detected[0].cmd}   (${detected[0].name} detected)`);
   } else if (detected.length > 1) {
-    console.log(`  4. Open your workspace with any of:  ${detected.map((c) => c.cmd).join(", ")}   (detected)`);
+    console.log(`  2. Open your workspace with any of:  ${detected.map((c) => c.cmd).join(", ")}   (detected)`);
   } else {
-    console.log(`  4. Open your AI coding tool here, e.g.:  ${SUPPORTED_CLIS.map((c) => c.cmd).join(", ")}`);
+    console.log(`  2. Open your AI coding tool here, e.g.:  ${SUPPORTED_CLIS.map((c) => c.cmd).join(", ")}`);
   }
 
+  console.log("\nOn first launch it walks you through setup — your CV, profile and target");
+  console.log("roles — just by chatting. Nothing to configure by hand.");
   console.log("\ncareer-ops is AI-agnostic — Claude Code, Gemini, Codex, Qwen, OpenCode and Copilot all work.");
   console.log("\nOptional (for PDF generation):");
   console.log("  npx playwright install chromium\n");
