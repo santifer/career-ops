@@ -1508,6 +1508,17 @@ try {
   if (capturedOpts && capturedOpts.redirect === 'error') pass('solidjobs.fetch() passes redirect:"error" to fetchJson');
   else fail(`solidjobs.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
 
+  // fetch() tolerates malformed array members without crashing
+  const malformedMembers = { jobs: [null, 7, { title: 'OK', url: 'https://solid.jobs/o/3/career-ops', company: 'Z' }] };
+  const safeParsed = await sj.fetch(
+    { name: 'SolidJobs IT', careers_url: 'https://solid.jobs/public-api/offers/it?campaign=career-ops' },
+    { transport: 'http', fetchJson: async () => malformedMembers, fetchText: async () => '' },
+  );
+  if (safeParsed.length === 1 && safeParsed[0].url === 'https://solid.jobs/o/3/career-ops') {
+    pass('solidjobs.fetch() skips malformed jobs members without crashing');
+  } else {
+    fail(`solidjobs.fetch() malformed members handling failed: ${JSON.stringify(safeParsed)}`);
+  }
 } catch (e) {
   fail(`solidjobs provider tests crashed: ${e.message}`);
 }

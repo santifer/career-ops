@@ -19,6 +19,8 @@ function assertUrl(url) {
   if (parsed.protocol !== 'https:') throw new Error(`solidjobs: URL must use HTTPS: ${url}`);
   if (!ALLOWED_HOSTS.has(parsed.hostname))
     throw new Error(`solidjobs: untrusted hostname "${parsed.hostname}" — must be solid.jobs`);
+  if (!parsed.pathname.startsWith('/public-api/offers/'))
+    throw new Error(`solidjobs: URL path must start with /public-api/offers/: ${url}`);
   return url;
 }
 
@@ -46,7 +48,7 @@ export default {
       throw new Error(`solidjobs: unexpected API response — expected { jobs: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`);
     }
     return json.jobs
-      .filter(j => j.url)
+      .filter(j => j && typeof j === 'object' && typeof j.url === 'string' && j.url.trim() !== '')
       .map(j => ({
         title: j.title || '',
         url: j.url,

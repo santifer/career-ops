@@ -422,8 +422,8 @@ async function main() {
   }
 
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
-  const companies = config.tracked_companies || [];
-  const boards = config.job_boards || [];
+  const companies = Array.isArray(config?.tracked_companies) ? config.tracked_companies : [];
+  const boards = Array.isArray(config?.job_boards) ? config.job_boards : [];
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
 
