@@ -215,6 +215,23 @@ function addPaths(paths) {
 
 // ── CHECK ───────────────────────────────────────────────────────
 
+// curl helper used by check() — curl works inside the Claude Code sandbox
+// where Node's built-in fetch() fails (ENOTFOUND) because the sandbox
+// routes network traffic through an HTTP/HTTPS proxy that fetch() does
+// not respect but curl handles transparently.  The --silent / --fail flags
+// match the failure-handling already used throughout apply().
+function curlGet(url, extraArgs = []) {
+  try {
+    return execFileSync(
+      'curl',
+      ['--silent', '--fail', '--max-time', '10', ...extraArgs, url],
+      { encoding: 'utf-8', timeout: 12000 },
+    ).trim();
+  } catch {
+    return null; // network unreachable, 404, timeout, etc.
+  }
+}
+
 async function check() {
   // Respect dismiss flag
   if (existsSync(join(ROOT, '.update-dismissed'))) {
@@ -227,57 +244,44 @@ async function check() {
   let releaseVersion = '';
   let changelog = '';
 
-  // Fetch both sources in parallel — only fail offline if BOTH are unreachable.
-  // Use AbortSignal so a hung TCP connection can't stall the session-start check.
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-  let versionResult, releaseResult;
-  try {
-    [versionResult, releaseResult] = await Promise.allSettled([
-      fetch(RAW_VERSION_URL, { signal: controller.signal }),
-      fetch(RELEASES_API, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'career-ops-update-checker',
-        },
-        signal: controller.signal,
-      }),
-    ]);
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
+  // Use curl instead of fetch() so the check works inside the Claude Code
+  // sandbox (see curlGet() above for rationale).  Two sources are tried;
+  // both failing is the only true-offline signal.
   const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
 
-  if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
+  const rawVersion = curlGet(RAW_VERSION_URL);
+  if (rawVersion !== null) {
     try {
-      const raw = parseVersionFile(await versionResult.value.text());
+      const raw = parseVersionFile(rawVersion);
       const match = raw.match(SEMVER_RE);
       remote = match ? match[1] : '';
     } catch {
-      // Body read failed; treat as no VERSION source
+      // Unparseable body; treat as no VERSION source
     }
   }
 
-  if (releaseResult.status === 'fulfilled' && releaseResult.value.ok) {
+  const releaseRaw = curlGet(RELEASES_API, [
+    '--header', 'Accept: application/vnd.github.v3+json',
+    '--header', 'User-Agent: career-ops-update-checker',
+  ]);
+  if (releaseRaw !== null) {
     try {
-      const release = await releaseResult.value.json();
+      const release = JSON.parse(releaseRaw);
       changelog = release.body || '';
       const rawTag = String(release.tag_name || '').trim();
       const match = rawTag.match(SEMVER_RE);
       releaseVersion = match ? match[1] : '';
     } catch {
-      // Body parse failed; treat as no release source
+      // Unparseable body; treat as no release source
     }
   }
 
   if (!remote && !releaseVersion) {
-    // Distinguish true network failures from "fetched OK but response was
-    // unparseable" — the latter shouldn't be silenced as offline since the
-    // network is actually fine.
-    const bothNetworkFailed =
-      versionResult.status !== 'fulfilled' &&
-      releaseResult.status !== 'fulfilled';
+    // Both curl calls returned null → genuine network failure.
+    // If one returned non-null but unparseable, remote/releaseVersion are
+    // empty strings, which still reaches the offline branch — that's the
+    // right conservative behaviour (no version = can't determine status).
+    const bothNetworkFailed = rawVersion === null && releaseRaw === null;
     const status = bothNetworkFailed ? 'offline' : 'no-remote-version';
     console.log(JSON.stringify({ status, local }));
     return;
