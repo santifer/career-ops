@@ -120,6 +120,7 @@ claude   # or gemini / codex / qwen / opencode — open your AI CLI here
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
 npx playwright install chromium   # only needed for PDF generation
+brew install pandoc                # optional -- only needed for editable .docx export (generate-docx.mjs)
 claude   # open your AI CLI — it onboards you on first launch
 ```
 

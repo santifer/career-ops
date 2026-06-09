@@ -19,6 +19,7 @@
 13. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
 14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
 15. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+15b. (Optional) Export an editable Word copy via pandoc: `node generate-docx.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.docx`. Requires pandoc; the script exits with a hint if pandoc is not installed, so this step is safe to skip when it is absent. The PDF stays the submission artifact; the .docx is for hand-editing.
 16. Report: PDF path, number of pages, keyword coverage %
 
 ## ATS Rules (clean parsing)
