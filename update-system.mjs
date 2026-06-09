@@ -90,6 +90,7 @@ const SYSTEM_PATHS = [
   'CITATION.cff',
   '.github/',
   'package.json',
+  'scaffolder/',
 ];
 
 // User layer paths — NEVER touch these (safety check)
