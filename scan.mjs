@@ -423,40 +423,67 @@ async function main() {
 
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
+  const boards = config.job_boards || [];
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
 
-  // 3. Resolve a provider for each enabled company
+  // 3. Resolve a provider for each enabled company / board
   const targets = [];
   let skippedCount = 0;
+  let boardCount = 0;
   const resolveErrors = [];
   const agentHandoff = [];
-  for (const company of companies) {
-    if (!company || typeof company !== 'object') continue;
-    if (company.enabled === false) continue;
-    if (typeof company.name !== 'string' || !company.name.trim()) {
-      console.error(`⚠️  Skipping entry — missing or non-string 'name' field: ${JSON.stringify(company)}`);
-      continue;
-    }
-    if (filterCompany && !company.name.toLowerCase().includes(filterCompany)) continue;
-    const resolved = resolveProvider(company, providers);
-    if (!resolved) {
-      skippedCount++;
-      if (company.scan_method === 'websearch') {
-        agentHandoff.push({
-          company: company.name,
-          method: 'websearch',
-          query: company.scan_query || company.search_query || company.careers_url || '',
-        });
+
+  /**
+   * Processes a list of configuration entries, resolves their appropriate data providers,
+   * and appends valid entries to the global scanning targets list.
+   * @param {Array<{ name?: string, enabled?: boolean, [key: string]: unknown }>} entries - List of entries.
+   * @param {{ isBoard?: boolean }} [options={}] - Configuration options.
+   */
+  function resolveEntries(entries, { isBoard = false } = {}) {
+    for (const entry of entries) {
+      if (!entry || typeof entry !== 'object') continue;
+      if (entry.enabled === false) continue;
+      if (typeof entry.name !== 'string' || !entry.name.trim()) {
+        console.error(`⚠️  Skipping entry — missing or non-string 'name' field: ${JSON.stringify(entry)}`);
+        continue;
       }
-      continue;
+      if (filterCompany && !entry.name.toLowerCase().includes(filterCompany)) continue;
+      
+      const resolved = resolveProvider(entry, providers);
+      if (!resolved) {
+        skippedCount++;
+        // Logika z brancha main przeniesiona tutaj
+        if (entry.scan_method === 'websearch') {
+          agentHandoff.push({
+            company: entry.name,
+            method: 'websearch',
+            query: entry.scan_query || entry.search_query || entry.careers_url || '',
+          });
+        }
+        continue;
+      }
+      
+      if (resolved.error) { 
+        resolveErrors.push({ company: entry.name, error: resolved.error }); 
+        continue; 
+      }
+      
+      targets.push({ ...entry, _provider: resolved.provider, _isBoard: isBoard });
+      if (isBoard) boardCount++;
     }
-    if (resolved.error) { resolveErrors.push({ company: company.name, error: resolved.error }); continue; }
-    targets.push({ ...company, _provider: resolved.provider });
   }
 
+  resolveEntries(companies);
+  resolveEntries(boards, { isBoard: true });
+
   const localParserCount = targets.filter(t => t._provider.id === 'local-parser').length;
-  console.log(`Scanning ${targets.length} companies via providers (${localParserCount} local parser; ${skippedCount} skipped — no provider matched)`);
+  const companyCount = targets.length - boardCount;
+  const parts = [`${companyCount} companies`];
+  if (boardCount > 0) parts.push(`${boardCount} job boards`);
+  parts.push(`${localParserCount} local parser`);
+  parts.push(`${skippedCount} skipped — no provider matched`);
+  console.log(`Scanning ${parts.join('; ')} via providers`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   // 4. Load dedup sets
@@ -574,7 +601,10 @@ async function main() {
   console.log(`\n${'━'.repeat(45)}`);
   console.log(`Portal Scan — ${date}`);
   console.log(`${'━'.repeat(45)}`);
-  console.log(`Companies scanned:     ${targets.length}`);
+  const summaryCompanies = targets.filter(t => !t._isBoard).length;
+  const summaryBoards = targets.filter(t => t._isBoard).length;
+  console.log(`Companies scanned:     ${summaryCompanies}`);
+  if (summaryBoards > 0) console.log(`Job boards scanned:    ${summaryBoards}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
