@@ -312,6 +312,13 @@ for (const f of userFiles) {
   }
 }
 
+const batchRunnerSource = readFile('batch/batch-runner.sh');
+if (/below-min-score" "\$retries"[\s\S]{0,220}return 0/.test(batchRunnerSource)) {
+  pass('Batch min-score gate returns before completed state update');
+} else {
+  fail('Batch min-score gate can fall through to completed state update');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
