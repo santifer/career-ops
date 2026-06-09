@@ -124,7 +124,7 @@ Pełny przewodnik po konfiguracji: [docs/SETUP.md](docs/SETUP.md).
 
 Career-ops to jedna komenda slash z wieloma trybami:
 
-```
+```text
 /career-ops                    → Pokaż wszystkie dostępne komendy
 /career-ops {wklej ofertę}     → Pełny auto-pipeline (ocena + PDF + tracker)
 /career-ops scan               → Skanuj portale w poszukiwaniu nowych ofert
@@ -143,7 +143,7 @@ Możesz też po prostu wkleić URL oferty lub jej treść — career-ops automat
 
 ## Jak to działa
 
-```
+```diagram
 Wklejasz URL oferty lub jej opis
         │
         ▼
@@ -225,7 +225,7 @@ Funkcje: 6 zakładek filtrowania, 4 tryby sortowania, widok grupowany/płaski, l
 
 ## Struktura projektu
 
-```
+```text
 career-ops/
 ├── AGENTS.md                    # Kanoniczne instrukcje dla agenta (wszystkie CLI)
 ├── CLAUDE.md                    # Wrapper Claude Code (importuje AGENTS.md)
