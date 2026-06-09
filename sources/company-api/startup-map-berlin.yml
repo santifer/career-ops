@@ -1,0 +1,134 @@
+id: startup-map-berlin
+label: Startup Map Berlin / Dealroom
+transport: browser
+boot_url: https://startup-map.berlin/companies.startups
+api:
+  url: https://api.dealroom.co/api/v2/companies
+  method: POST
+headers:
+  accept: application/json, text/plain, */*
+  content-type: application/json
+  x-dealroom-app-id: "110618058"
+  x-requested-with: XMLHttpRequest
+  x-unsafe-url-referrer: https://startup-map.berlin/companies.startups
+browser:
+  user_agent: Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Mobile Safari/537.36
+defaults:
+  limit: 25
+  region: Berlin/Brandenburg Metropolitan Region
+  sort: -employee_12_months_growth_relative
+  prefix: startup-map-berlin
+fields:
+  - job_roles
+  - create_date
+  - uuid
+  - appstore_app_id
+  - client_focus
+  - company_status
+  - employees_chart
+  - employees_latest
+  - employees
+  - entity_sub_types
+  - employee_12_months_growth_percentile
+  - employee_12_months_growth_unique
+  - similarweb_12_months_growth_percentile
+  - similarweb_12_months_growth_unique
+  - similarweb_12_months_growth_delta
+  - similarweb_12_months_growth_relative
+  - similarweb_3_months_growth_delta
+  - similarweb_3_months_growth_percentile
+  - similarweb_3_months_growth_relative
+  - similarweb_3_months_growth_unique
+  - similarweb_6_months_growth_delta
+  - similarweb_6_months_growth_percentile
+  - similarweb_6_months_growth_relative
+  - similarweb_6_months_growth_unique
+  - facebook_url
+  - founders
+  - growth_stage
+  - growth_stage_manual
+  - hq_locations
+  - income_streams
+  - industries
+  - innovations_count
+  - investments
+  - investors
+  - is_editorial
+  - kpi_summary
+  - latest_valuation_enhanced
+  - launch_month
+  - launch_year
+  - linkedin_url
+  - lists_ids
+  - lists
+  - name
+  - patents_count
+  - path
+  - playmarket_app_id
+  - revenues
+  - sdgs
+  - service_industries
+  - similarweb_chart
+  - sub_industries
+  - tags
+  - tagline
+  - technologies
+  - total_funding_enhanced
+  - type
+  - tech_stack
+  - twitter_url
+  - employee_12_months_growth_delta
+  - employee_12_months_growth_relative
+  - employee_3_months_growth_delta
+  - employee_3_months_growth_percentile
+  - employee_3_months_growth_relative
+  - employee_3_months_growth_unique
+  - employee_6_months_growth_delta
+  - employee_6_months_growth_percentile
+  - employee_6_months_growth_relative
+  - employee_6_months_growth_unique
+  - founders_score_cumulated
+  - founders_top_university
+  - founders_top_past_companies
+  - fundings
+  - has_strong_founder
+  - has_super_founder
+  - images
+  - innovations
+  - innovation_corporate_rank
+  - is_ai_data
+  - ipo_round
+  - latest_revenue_enhanced
+  - matching_score
+  - past_founders_raised_10m
+  - past_founders
+  - startup_ranking_rating
+  - total_jobs_available
+  - year_became_unicorn
+  - year_became_future_unicorn
+payload:
+  fields: "{fields_csv}"
+  limit: "{limit_num}"
+  offset: "{offset_num}"
+  form_data:
+    must:
+      filters:
+        all_regions:
+          execution: or
+          values:
+            - "{region}"
+      execution: and
+    should:
+      filters: {}
+    must_not:
+      growth_stages:
+        - mature
+      company_type:
+        - service provider
+        - government nonprofit
+      tags:
+        - outside tech
+      company_status:
+        - closed
+  multi_match: false
+  sort: "{sort}"
