@@ -65,14 +65,15 @@ const (
 
 // Filter modes
 const (
-	filterAll       = "all"
-	filterEvaluated = "evaluated"
-	filterApplied   = "applied"
-	filterInterview = "interview"
-	filterSkip      = "skip"
-	filterRejected  = "rejected"
-	filterDiscarded = "discarded"
-	filterTop       = "top"
+	filterAll         = "all"
+	filterEvaluated   = "evaluated"
+	filterSpeculative = "speculative"
+	filterApplied     = "applied"
+	filterInterview   = "interview"
+	filterSkip        = "skip"
+	filterRejected    = "rejected"
+	filterDiscarded   = "discarded"
+	filterTop         = "top"
 )
 
 type pipelineTab struct {
@@ -83,6 +84,7 @@ type pipelineTab struct {
 var pipelineTabs = []pipelineTab{
 	{filterAll, "ALL"},
 	{filterEvaluated, "EVALUATED"},
+	{filterSpeculative, "SPEC"},
 	{filterApplied, "APPLIED"},
 	{filterInterview, "INTERVIEW"},
 	{filterTop, "TOP ≥4"},
@@ -93,10 +95,10 @@ var pipelineTabs = []pipelineTab{
 
 var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus}
 
-var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "SKIP"}
+var statusOptions = []string{"Evaluated", "Speculative", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "SKIP"}
 
 // statusGroupOrder defines display order for grouped view.
-var statusGroupOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
+var statusGroupOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "speculative", "skip", "rejected", "discarded"}
 
 // PipelineModel implements the career pipeline dashboard screen.
 type PipelineModel struct {
@@ -1093,14 +1095,15 @@ func (m PipelineModel) scoreStyle(score float64) lipgloss.Style {
 
 func (m PipelineModel) statusColorMap() map[string]lipgloss.Color {
 	return map[string]lipgloss.Color{
-		"interview": m.theme.Green,
-		"offer":     m.theme.Green,
-		"applied":   m.theme.Sky,
-		"responded": m.theme.Blue,
-		"evaluated": m.theme.Text,
-		"skip":      m.theme.Red,
-		"rejected":  m.theme.Subtext,
-		"discarded": m.theme.Subtext,
+		"interview":   m.theme.Green,
+		"offer":       m.theme.Green,
+		"applied":     m.theme.Sky,
+		"responded":   m.theme.Blue,
+		"evaluated":   m.theme.Text,
+		"speculative": m.theme.Mauve,
+		"skip":        m.theme.Red,
+		"rejected":    m.theme.Subtext,
+		"discarded":   m.theme.Subtext,
 	}
 }
 
@@ -1138,6 +1141,8 @@ func statusLabel(norm string) string {
 		return "Applied"
 	case "evaluated":
 		return "Evaluated"
+	case "speculative":
+		return "Speculative"
 	case "skip":
 		return "Skip"
 	case "rejected":

@@ -267,6 +267,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
+  'gambit.md',
 ];
 
 for (const mode of expectedModes) {
@@ -1084,6 +1085,45 @@ try {
   }
 } catch (e) {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
+}
+
+// ── 15. SPECULATIVE STATE (gambit) ──────────────────────────────
+
+console.log('\n15. Speculative state (gambit)');
+
+const statesSpec = readFile('templates/states.yml');
+if (statesSpec.includes('label: Speculative')) {
+  pass('states.yml defines the Speculative state');
+} else {
+  fail('states.yml is missing the Speculative state');
+}
+
+const verifySpec = readFile('verify-pipeline.mjs');
+if (verifySpec.includes("'speculative'")) {
+  pass('verify-pipeline.mjs accepts speculative as canonical');
+} else {
+  fail('verify-pipeline.mjs CANONICAL_STATUSES missing speculative');
+}
+
+const normSpec = readFile('normalize-statuses.mjs');
+if (/canonical\s*=\s*\[[^\]]*'Speculative'/s.test(normSpec)) {
+  pass('normalize-statuses.mjs treats Speculative as canonical');
+} else {
+  fail('normalize-statuses.mjs canonical array missing Speculative');
+}
+
+const dedupSpec = readFile('dedup-tracker.mjs');
+if (dedupSpec.includes("'speculative'")) {
+  pass('dedup-tracker.mjs ranks speculative');
+} else {
+  fail('dedup-tracker.mjs STATUS_RANK missing speculative');
+}
+
+const mergeSpec = readFile('merge-tracker.mjs');
+if (mergeSpec.includes("'Speculative'")) {
+  pass('merge-tracker.mjs accepts Speculative as canonical');
+} else {
+  fail('merge-tracker.mjs CANONICAL_STATES missing Speculative');
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
