@@ -1417,6 +1417,97 @@ try {
   if (missingUrl) pass('solidjobs.fetch() throws on missing careers_url');
   else fail('solidjobs.fetch() should throw when careers_url is missing');
 
+  // fetch() rejects HTTP (non-HTTPS) URL
+  let httpRejected = false;
+  try {
+    await sj.fetch(
+      { name: 'HTTP', careers_url: 'http://solid.jobs/public-api/offers/it' },
+      { transport: 'http', fetchJson: async () => { throw new Error('should not reach here'); }, fetchText: async () => '' },
+    );
+  } catch (e) {
+    if (e.message.includes('HTTPS')) httpRejected = true;
+    else fail(`solidjobs.fetch() HTTP rejection wrong error: ${e.message}`);
+  }
+  if (httpRejected) pass('solidjobs.fetch() rejects HTTP URLs (HTTPS enforcement)');
+  else fail('solidjobs.fetch() should reject non-HTTPS URLs');
+
+  // fetch() rejects malformed/unparseable URL
+  let malformedRejected = false;
+  try {
+    await sj.fetch(
+      { name: 'Bad', careers_url: 'not-a-url' },
+      { transport: 'http', fetchJson: async () => { throw new Error('should not reach here'); }, fetchText: async () => '' },
+    );
+  } catch (e) {
+    if (e.message.includes('invalid URL')) malformedRejected = true;
+    else fail(`solidjobs.fetch() malformed URL wrong error: ${e.message}`);
+  }
+  if (malformedRejected) pass('solidjobs.fetch() rejects malformed URLs');
+  else fail('solidjobs.fetch() should reject unparseable URLs');
+
+  // fetch() throws on unexpected API response (no jobs array)
+  const badResponses = [
+    [{}, 'empty object'],
+    [{ jobs: null }, 'jobs: null'],
+    [{ jobs: 'not-array' }, 'jobs: string'],
+    [{ offers: [] }, 'wrong key name'],
+    [null, 'null response'],
+  ];
+  for (const [resp, label] of badResponses) {
+    let threw = false;
+    try {
+      await sj.fetch(
+        { name: 'SolidJobs IT', careers_url: 'https://solid.jobs/public-api/offers/it?campaign=career-ops' },
+        { transport: 'http', fetchJson: async () => resp, fetchText: async () => '' },
+      );
+    } catch (e) {
+      if (e.message.includes('unexpected API response')) threw = true;
+      else fail(`solidjobs.fetch() bad response (${label}) wrong error: ${e.message}`);
+    }
+    if (threw) pass(`solidjobs.fetch() throws on bad API response (${label})`);
+    else fail(`solidjobs.fetch() should throw on bad API response (${label})`);
+  }
+
+  // fetch() filters out jobs with empty/missing url
+  const mixedJobs = {
+    jobs: [
+      { title: 'Has URL', url: 'https://solid.jobs/o/1/career-ops', company: 'A', locations: [] },
+      { title: 'No URL', url: '', company: 'B', locations: [] },
+      { title: 'Missing URL', company: 'C', locations: [] },
+    ],
+  };
+  const filtered = await sj.fetch(
+    { name: 'SolidJobs IT', careers_url: 'https://solid.jobs/public-api/offers/it?campaign=career-ops' },
+    { transport: 'http', fetchJson: async () => mixedJobs, fetchText: async () => '' },
+  );
+  if (filtered.length === 1 && filtered[0].title === 'Has URL') pass('solidjobs.fetch() filters out jobs with empty/missing url');
+  else fail(`solidjobs.fetch() should filter empty URLs, got ${filtered.length} jobs: ${JSON.stringify(filtered)}`);
+
+  // fetch() handles string locations (non-array)
+  const stringLocJobs = { jobs: [{ title: 'Dev', url: 'https://solid.jobs/o/2/career-ops', company: 'X', locations: 'Warsaw' }] };
+  const strLoc = await sj.fetch(
+    { name: 'SolidJobs IT', careers_url: 'https://solid.jobs/public-api/offers/it?campaign=career-ops' },
+    { transport: 'http', fetchJson: async () => stringLocJobs, fetchText: async () => '' },
+  );
+  if (strLoc[0].location === 'Warsaw') pass('solidjobs.fetch() handles string locations');
+  else fail(`solidjobs.fetch() string location is ${JSON.stringify(strLoc[0].location)}, expected "Warsaw"`);
+
+  // detect() returns null for valid hostname but wrong path
+  if (sj.detect({ name: 'X', careers_url: 'https://solid.jobs/careers' }) === null) {
+    pass('solidjobs.detect() rejects solid.jobs URL with wrong path');
+  } else {
+    fail('solidjobs.detect() should reject solid.jobs URLs not under /public-api/offers/');
+  }
+
+  // fetch() passes redirect:'error' to fetchJson
+  let capturedOpts = null;
+  await sj.fetch(
+    { name: 'SolidJobs IT', careers_url: 'https://solid.jobs/public-api/offers/it?campaign=career-ops' },
+    { transport: 'http', fetchJson: async (_url, opts) => { capturedOpts = opts; return { jobs: [] }; }, fetchText: async () => '' },
+  );
+  if (capturedOpts && capturedOpts.redirect === 'error') pass('solidjobs.fetch() passes redirect:"error" to fetchJson');
+  else fail(`solidjobs.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+
 } catch (e) {
   fail(`solidjobs provider tests crashed: ${e.message}`);
 }

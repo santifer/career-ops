@@ -42,12 +42,16 @@ export default {
     assertUrl(url);
     // redirect:'error' prevents SSRF via server-side redirects
     const json = await ctx.fetchJson(url, { redirect: 'error' });
-    const jobs = Array.isArray(json?.jobs) ? json.jobs : [];
-    return jobs.map(j => ({
-      title: j.title || '',
-      url: j.url || '',
-      company: j.company || entry.name,
-      location: Array.isArray(j.locations) ? j.locations.join(', ') : '',
-    }));
+    if (!json || !Array.isArray(json.jobs)) {
+      throw new Error(`solidjobs: unexpected API response — expected { jobs: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`);
+    }
+    return json.jobs
+      .filter(j => j.url)
+      .map(j => ({
+        title: j.title || '',
+        url: j.url,
+        company: j.company || entry.name,
+        location: Array.isArray(j.locations) ? j.locations.join(', ') : (typeof j.locations === 'string' ? j.locations : ''),
+      }));
   },
 };
