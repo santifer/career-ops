@@ -38,6 +38,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/auto-pipeline.md` | Auto-pipeline instructions |
 | `modes/contacto.md` | LinkedIn outreach instructions |
 | `modes/deep.md` | Research prompt instructions |
+| `modes/eu-swe.md` | European SWE application calibration instructions |
 | `modes/ofertas.md` | Comparison instructions |
 | `modes/pipeline.md` | Pipeline processing instructions |
 | `modes/project.md` | Project evaluation instructions |
