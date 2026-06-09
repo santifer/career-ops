@@ -3,18 +3,18 @@
  * form-fill.mjs — Playwright form-fill helpers for Greenhouse, Lever, Workday, and generic ATS.
  *
  * Each fill function returns a FillReport:
- *   { filled: number, total: number, missing_fields: string[], ats: string }
+ *   { filled, total, missing_fields, upload_details, ats }
  *
- * "filled" = field was present on the page AND we successfully set a value.
- * "missing_fields" = fields we tried but couldn't locate (not present on this particular form).
+ * "filled" = field was present AND we successfully set a value.
+ * "missing_fields" = fields we tried but couldn't locate or fill.
+ * "upload_details" = { resume?: UploadResult, cl?: UploadResult } — per-upload diagnostics.
  */
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+import fs from 'node:fs';
+import path from 'node:path';
 
-/**
- * Try filling a field by locator. Returns true if found and filled, false if not present.
- * Never throws — a field being absent from the form is expected.
- */
+// ── Text-field helpers ────────────────────────────────────────────────────────
+
 async function tryFill(locator, value) {
   if (!value) return false;
   try {
@@ -27,10 +27,6 @@ async function tryFill(locator, value) {
   }
 }
 
-/**
- * Try selecting an option in a <select>. Returns true on success.
- * Attempts match by label (visible text), then value attribute.
- */
 async function trySelect(locator, label) {
   if (!label) return false;
   try {
@@ -47,19 +43,121 @@ async function trySelect(locator, label) {
   }
 }
 
+// ── Layered file-upload helpers ───────────────────────────────────────────────
+//
+// Each helper tries a prioritised list of selectors. Returns an UploadResult
+// so the caller can log exactly what matched (or why it failed).
+//
+// Industry term: "resilient selectors" — try 8-10 strategies per field so that
+// minor DOM changes in a particular ATS instance don't silently block the upload.
+
+export const RESUME_SELECTORS = [
+  'input[type="file"][aria-label*="resume" i]',
+  'input[type="file"][aria-label*="cv" i]',
+  'input[type="file"][id*="resume" i]',
+  'input[type="file"][name*="resume" i]',
+  'input[type="file"][id*="cv" i]',
+  'input[type="file"][name*="cv" i]',
+  'input[type="file"][data-source="resume"]',
+  'label:has-text("Resume") + input[type="file"]',
+  'label:has-text("Resume") ~ input[type="file"]',
+  'label:has-text("CV") + input[type="file"]',
+];
+
+export const CL_SELECTORS = [
+  'input[type="file"][aria-label*="cover letter" i]',
+  'input[type="file"][aria-label*="cover" i]',
+  'input[type="file"][id*="cover_letter" i]',
+  'input[type="file"][id*="cover-letter" i]',
+  'input[type="file"][name*="cover_letter" i]',
+  'input[type="file"][name*="cover-letter" i]',
+  'input[type="file"][data-source="cover_letter"]',
+  'label:has-text("Cover Letter") + input[type="file"]',
+  'label:has-text("Cover Letter") ~ input[type="file"]',
+];
+
 /**
- * Try uploading a file via input[type="file"]. Returns true on success.
+ * @typedef {Object} UploadResult
+ * @property {boolean} uploaded
+ * @property {string}  [reason]   'no_path' | 'file_missing' | 'no_matching_input'
+ * @property {string}  [selector] Matched selector (when uploaded=true)
+ * @property {string}  [path]     File path used
+ * @property {number}  [tried]    Selector count tried (when no_matching_input)
  */
-async function tryUpload(locator, filePath) {
-  if (!filePath) return false;
-  try {
-    const count = await locator.count();
-    if (count === 0) return false;
-    await locator.first().setInputFiles(filePath);
-    return true;
-  } catch {
-    return false;
+
+/**
+ * Upload the candidate's resume using a layered selector strategy.
+ */
+export async function uploadResume(page, personal) {
+  const filePath = personal.resume?.path;
+  if (!filePath) return { uploaded: false, reason: 'no_path' };
+  if (!fs.existsSync(filePath)) return { uploaded: false, reason: 'file_missing', path: filePath };
+
+  for (const sel of RESUME_SELECTORS) {
+    try {
+      const el = page.locator(sel).first();
+      if (await el.count()) {
+        await el.setInputFiles(filePath);
+        return { uploaded: true, selector: sel, path: filePath };
+      }
+    } catch { /* try next */ }
   }
+  return { uploaded: false, reason: 'no_matching_input', tried: RESUME_SELECTORS.length };
+}
+
+/**
+ * Upload a cover letter using a layered selector strategy.
+ * Prefers matchedClPath, falls back to personal.cover_letter.default_path.
+ */
+export async function uploadCoverLetter(page, personal, matchedClPath = null) {
+  const filePath = matchedClPath || personal.cover_letter?.default_path;
+  if (!filePath) return { uploaded: false, reason: 'no_path' };
+  if (!fs.existsSync(filePath)) return { uploaded: false, reason: 'file_missing', path: filePath };
+
+  for (const sel of CL_SELECTORS) {
+    try {
+      const el = page.locator(sel).first();
+      if (await el.count()) {
+        await el.setInputFiles(filePath);
+        return { uploaded: true, selector: sel, path: filePath };
+      }
+    } catch { /* try next */ }
+  }
+  return { uploaded: false, reason: 'no_matching_input', tried: CL_SELECTORS.length };
+}
+
+/**
+ * Format upload details for console output.
+ * @param {{ resume?: UploadResult, cl?: UploadResult }} details
+ * @returns {string[]} Lines to print
+ */
+export function formatUploadDetails(details) {
+  const lines = [];
+  if (details.resume) {
+    const r = details.resume;
+    if (r.uploaded) {
+      lines.push(`  Resume: uploaded ${path.basename(r.path)} (via ${r.selector})`);
+    } else if (r.reason === 'no_path') {
+      lines.push('  Resume: skipped (resume.path not set in personal-info.yml)');
+    } else if (r.reason === 'file_missing') {
+      lines.push(`  Resume: NOT uploaded — file not found: ${r.path}`);
+    } else {
+      lines.push(`  Resume: NOT uploaded — no_matching_input (tried ${r.tried} selectors)`);
+    }
+  }
+  if (details.cl) {
+    const c = details.cl;
+    if (c.uploaded) {
+      lines.push(`  CL:     uploaded ${path.basename(c.path)} (via ${c.selector})`);
+    } else if (c.reason === 'no_path') {
+      lines.push('  CL:     skipped (no matched CL and no default_path set)');
+    } else if (c.reason === 'file_missing') {
+      lines.push(`  CL:     NOT uploaded — file not found: ${c.path}`);
+    } else {
+      lines.push(`  CL:     NOT uploaded — no_matching_input (tried ${c.tried} selectors)`);
+    }
+  }
+  return lines;
 }
 
 // ── Greenhouse ────────────────────────────────────────────────────────────────
@@ -73,27 +171,16 @@ async function tryUpload(locator, filePath) {
  */
 export async function fillGreenhouseForm(page, personal, clPath = null) {
   const fields = [
-    { name: 'first_name',    fn: () => tryFill(page.locator('input[autocomplete="given-name"], input[name="first_name"], input[id*="first"]').first(), personal.name?.first) },
-    { name: 'last_name',     fn: () => tryFill(page.locator('input[autocomplete="family-name"], input[name="last_name"], input[id*="last"]').first(), personal.name?.last) },
-    { name: 'email',         fn: () => tryFill(page.locator('input[autocomplete="email"], input[type="email"], input[name="email"]').first(), personal.contact?.email) },
-    { name: 'phone',         fn: () => tryFill(page.locator('input[autocomplete="tel"], input[type="tel"], input[name="phone"]').first(), personal.contact?.phone) },
-    { name: 'city',          fn: () => tryFill(page.locator('input[autocomplete="address-level2"], input[name="city"]').first(), personal.location?.city) },
-    { name: 'linkedin',      fn: () => tryFill(
+    { name: 'first_name', fn: () => tryFill(page.locator('input[autocomplete="given-name"], input[name="first_name"], input[id*="first"]').first(), personal.name?.first) },
+    { name: 'last_name',  fn: () => tryFill(page.locator('input[autocomplete="family-name"], input[name="last_name"], input[id*="last"]').first(), personal.name?.last) },
+    { name: 'email',      fn: () => tryFill(page.locator('input[autocomplete="email"], input[type="email"], input[name="email"]').first(), personal.contact?.email) },
+    { name: 'phone',      fn: () => tryFill(page.locator('input[autocomplete="tel"], input[type="tel"], input[name="phone"]').first(), personal.contact?.phone) },
+    { name: 'city',       fn: () => tryFill(page.locator('input[autocomplete="address-level2"], input[name="city"]').first(), personal.location?.city) },
+    { name: 'linkedin',   fn: () => tryFill(
       page.locator('label:has-text("LinkedIn"), label:has-text("linkedin")').locator('xpath=following::input[1]').first(),
       personal.links?.linkedin
     ) },
-    { name: 'resume_upload', fn: () => tryUpload(
-      page.locator('input[type="file"][aria-label*="resume" i], input[type="file"][name*="resume" i]').first(),
-      personal.resume?.path
-    ) },
-    { name: 'cl_upload', fn: () => {
-      const cl = clPath || personal.cover_letter?.default_path;
-      return tryUpload(
-        page.locator('input[type="file"][aria-label*="cover" i], input[type="file"][name*="cover" i]').first(),
-        cl
-      );
-    } },
-    { name: 'work_auth', fn: () => trySelect(
+    { name: 'work_auth',  fn: () => trySelect(
       page.locator('label:has-text("authorized to work"), label:has-text("authorized to legally work")').locator('xpath=following::select[1]').first(),
       personal.custom?.authorized_to_work ? 'Yes' : 'No'
     ) },
@@ -101,6 +188,8 @@ export async function fillGreenhouseForm(page, personal, clPath = null) {
       page.locator('label:has-text("require sponsorship"), label:has-text("require visa sponsorship")').locator('xpath=following::select[1]').first(),
       personal.work_auth?.requires_sponsorship ? 'Yes' : 'No'
     ) },
+    { name: 'resume_upload', type: 'upload', key: 'resume', fn: () => uploadResume(page, personal) },
+    { name: 'cl_upload',     type: 'upload', key: 'cl',     fn: () => uploadCoverLetter(page, personal, clPath) },
   ];
 
   return _runFields(fields, 'greenhouse');
@@ -108,27 +197,15 @@ export async function fillGreenhouseForm(page, personal, clPath = null) {
 
 // ── Lever ─────────────────────────────────────────────────────────────────────
 
-/**
- * Fill a standard Lever application form.
- */
 export async function fillLeverForm(page, personal, clPath = null) {
   const fields = [
-    { name: 'name',          fn: () => tryFill(page.locator('input[name="name"], input[autocomplete="name"]').first(), personal.name?.full) },
-    { name: 'email',         fn: () => tryFill(page.locator('input[name="email"], input[type="email"]').first(), personal.contact?.email) },
-    { name: 'phone',         fn: () => tryFill(page.locator('input[name="phone"], input[type="tel"]').first(), personal.contact?.phone) },
-    { name: 'org',           fn: () => tryFill(page.locator('input[name="org"], input[placeholder*="company" i], input[placeholder*="current employer" i]').first(), personal.experience?.current_company) },
-    { name: 'linkedin',      fn: () => tryFill(page.locator('input[name="urls[LinkedIn]"], input[placeholder*="linkedin" i]').first(), personal.links?.linkedin) },
-    { name: 'resume_upload', fn: () => tryUpload(
-      page.locator('input[type="file"][name="resume"], input[type="file"][aria-label*="resume" i]').first(),
-      personal.resume?.path
-    ) },
-    { name: 'cl_upload', fn: () => {
-      const cl = clPath || personal.cover_letter?.default_path;
-      return tryUpload(
-        page.locator('input[type="file"][name="cover_letter"], input[type="file"][aria-label*="cover" i]').first(),
-        cl
-      );
-    } },
+    { name: 'name',   fn: () => tryFill(page.locator('input[name="name"], input[autocomplete="name"]').first(), personal.name?.full) },
+    { name: 'email',  fn: () => tryFill(page.locator('input[name="email"], input[type="email"]').first(), personal.contact?.email) },
+    { name: 'phone',  fn: () => tryFill(page.locator('input[name="phone"], input[type="tel"]').first(), personal.contact?.phone) },
+    { name: 'org',    fn: () => tryFill(page.locator('input[name="org"], input[placeholder*="company" i], input[placeholder*="current employer" i]').first(), personal.experience?.current_company) },
+    { name: 'linkedin', fn: () => tryFill(page.locator('input[name="urls[LinkedIn]"], input[placeholder*="linkedin" i]').first(), personal.links?.linkedin) },
+    { name: 'resume_upload', type: 'upload', key: 'resume', fn: () => uploadResume(page, personal) },
+    { name: 'cl_upload',     type: 'upload', key: 'cl',     fn: () => uploadCoverLetter(page, personal, clPath) },
   ];
 
   return _runFields(fields, 'lever');
@@ -136,20 +213,14 @@ export async function fillLeverForm(page, personal, clPath = null) {
 
 // ── Workday ───────────────────────────────────────────────────────────────────
 
-/**
- * Fill a Workday application form (best-effort — Workday is multi-step with auth walls).
- * v1: fills the first visible fields only.
- */
 export async function fillWorkdayForm(page, personal, clPath = null) {
   const fields = [
     { name: 'first_name', fn: () => tryFill(page.locator('[data-automation-id="legalNameSection_firstName"], input[aria-label*="First Name" i]').first(), personal.name?.first) },
     { name: 'last_name',  fn: () => tryFill(page.locator('[data-automation-id="legalNameSection_lastName"], input[aria-label*="Last Name" i]').first(), personal.name?.last) },
     { name: 'email',      fn: () => tryFill(page.locator('[data-automation-id="email"], input[aria-label*="Email" i]').first(), personal.contact?.email) },
     { name: 'phone',      fn: () => tryFill(page.locator('[data-automation-id="phone"], input[aria-label*="Phone" i]').first(), personal.contact?.phone) },
-    { name: 'resume_upload', fn: () => tryUpload(
-      page.locator('input[type="file"][aria-label*="resume" i], [data-automation-id*="resume" i] input[type="file"]').first(),
-      personal.resume?.path
-    ) },
+    { name: 'resume_upload', type: 'upload', key: 'resume', fn: () => uploadResume(page, personal) },
+    { name: 'cl_upload',     type: 'upload', key: 'cl',     fn: () => uploadCoverLetter(page, personal, clPath) },
   ];
 
   return _runFields(fields, 'workday');
@@ -157,20 +228,13 @@ export async function fillWorkdayForm(page, personal, clPath = null) {
 
 // ── Generic fallback ──────────────────────────────────────────────────────────
 
-/**
- * Generic fill using common autocomplete attributes.
- * Works as a fallback for any ATS not explicitly handled.
- */
 export async function fillGenericForm(page, personal, clPath = null) {
   const fields = [
     { name: 'given_name',  fn: () => tryFill(page.locator('input[autocomplete="given-name"]').first(),  personal.name?.first) },
     { name: 'family_name', fn: () => tryFill(page.locator('input[autocomplete="family-name"]').first(), personal.name?.last) },
     { name: 'email',       fn: () => tryFill(page.locator('input[autocomplete="email"], input[type="email"]').first(), personal.contact?.email) },
     { name: 'tel',         fn: () => tryFill(page.locator('input[autocomplete="tel"], input[type="tel"]').first(), personal.contact?.phone) },
-    { name: 'resume_upload', fn: () => tryUpload(
-      page.locator('input[type="file"][aria-label*="resume" i]').first(),
-      personal.resume?.path
-    ) },
+    { name: 'resume_upload', type: 'upload', key: 'resume', fn: () => uploadResume(page, personal) },
   ];
 
   return _runFields(fields, 'generic');
@@ -178,15 +242,6 @@ export async function fillGenericForm(page, personal, clPath = null) {
 
 // ── ATS dispatcher ────────────────────────────────────────────────────────────
 
-/**
- * Dispatch to the correct fill function based on detected ATS.
- * Falls back to fillGenericForm for unknown ATS.
- * @param {string} ats  'greenhouse' | 'lever' | 'workday' | 'ashby' | any
- * @param {import('playwright').Page} page
- * @param {object} personal
- * @param {string|null} clPath
- * @returns {FillReport}
- */
 export async function fillForm(ats, page, personal, clPath = null) {
   switch (ats) {
     case 'greenhouse': return fillGreenhouseForm(page, personal, clPath);
@@ -200,16 +255,26 @@ export async function fillForm(ats, page, personal, clPath = null) {
 
 async function _runFields(fields, ats) {
   const missing_fields = [];
+  const upload_details = {};
   let filled = 0;
 
-  for (const { name, fn } of fields) {
-    const ok = await fn();
-    if (ok) {
-      filled++;
+  for (const { name, fn, type, key } of fields) {
+    const result = await fn();
+    if (type === 'upload') {
+      upload_details[key] = result;
+      if (result.uploaded) {
+        filled++;
+      } else {
+        missing_fields.push(name);
+      }
     } else {
-      missing_fields.push(name);
+      if (result) {
+        filled++;
+      } else {
+        missing_fields.push(name);
+      }
     }
   }
 
-  return { filled, total: fields.length, missing_fields, ats };
+  return { filled, total: fields.length, missing_fields, upload_details, ats };
 }

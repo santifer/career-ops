@@ -50,7 +50,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkLiveness } from './check-job-liveness.mjs';
 import { loadPersonalInfo, PersonalInfoError } from './load-personal-info.mjs';
-import { fillForm } from './form-fill.mjs';
+import { fillForm, formatUploadDetails } from './form-fill.mjs';
 import { VALID_IDS as CANONICAL_STATE_IDS } from '../gen/states.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -693,6 +693,7 @@ async function runSemiAuto(cards, chromium, personal, clIndex = null) {
         try {
           fillReport = await fillForm(ats, page, personal, cl);
           console.log(`${fillReport.filled}/${fillReport.total} fields filled. Missing: [${fillReport.missing_fields.join(', ') || 'none'}]`);
+          for (const line of formatUploadDetails(fillReport.upload_details || {})) console.log(line);
         } catch (e) {
           console.log(`fill error: ${e.message}`);
         }
@@ -901,6 +902,7 @@ async function runLive(cards, chromium, allowTier, personal, clIndex = null) {
         try {
           fillReport = await fillForm(ats, page, personal, cl);
           console.log(`  Filled ${fillReport.filled}/${fillReport.total} fields. Missing: [${fillReport.missing_fields.join(', ') || 'none'}]`);
+          for (const line of formatUploadDetails(fillReport.upload_details || {})) console.log(line);
         } catch (e) {
           console.log(`  Form fill error: ${e.message} — continuing`);
         }

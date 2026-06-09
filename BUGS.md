@@ -225,6 +225,14 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-09-21 — Form selectors need layered fallback — single hardcoded selector fails too often
+
+**What happened:** Semi-auto test on a real Greenhouse URL confirmed: name, email, phone, LinkedIn populated ✅, resume_upload and cl_upload appeared in `Missing` list ❌. Root cause: both upload selectors were single-pattern (`[aria-label*="resume" i]`) — the specific Greenhouse instance used `id="resume"` instead. Fix: layered selector chain with 10 strategies per upload field (aria-label, id, name, data-source, label-adjacent). Industry term: "resilient selectors."
+**Rule:** Any file-upload field needs 8-10 selector strategies in priority order: aria-label → id → name → data-source → label-based. Single-selector uploads will fail across ATS instances even on the same platform (Greenhouse has multiple frontend versions).
+**How to apply:** `uploadResume()` and `uploadCoverLetter()` in `scripts/form-fill.mjs` try `RESUME_SELECTORS` (10) and `CL_SELECTORS` (9) in order. Returns `{ uploaded, selector, path }` on success or `{ uploaded: false, reason, tried }` on failure. The reason field makes debugging instantaneous.
+
+---
+
 ### K-2026-06-08-18 — Form-fill data layer missing — selectors existed but no data source
 
 **What happened:** `scripts/auto-submit.mjs` had ATS form-fill selectors defined but no personal-info source. Semi-auto launched a real Anthropic Greenhouse page: ATS detected ✅, submit button highlighted ✅, form fields empty ❌. The fix adds `config/personal-info.yml` (gitignored, template committed) loaded by `scripts/load-personal-info.mjs`. The loader validates required fields and errors clearly on missing/invalid config before any browser launches.
