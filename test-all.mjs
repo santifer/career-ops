@@ -506,6 +506,22 @@ try {
   if (filter(42) === true) pass('non-string locations are passed through to downstream evaluation, not silently dropped');
   else fail('non-string locations should pass through');
 
+  // Case 16: legacy `positive` key aliases the current `allow` key
+  const legacyPositiveFilter = buildLocationFilter({ positive: ['berlin', 'germany'] });
+  if (legacyPositiveFilter('Berlin, Germany') === true && legacyPositiveFilter('Paris, France') === false) {
+    pass('legacy location_filter.positive aliases allow');
+  } else {
+    fail('legacy location_filter.positive should behave like allow');
+  }
+
+  // Case 17: legacy accept_empty=false rejects missing provider locations
+  const rejectEmptyFilter = buildLocationFilter({ allow: ['germany'], accept_empty: false });
+  if (rejectEmptyFilter('') === false && rejectEmptyFilter('   ') === false && rejectEmptyFilter(null) === false) {
+    pass('legacy accept_empty=false rejects missing locations');
+  } else {
+    fail('legacy accept_empty=false should reject blank and non-string locations');
+  }
+
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }
