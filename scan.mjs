@@ -421,7 +421,13 @@ async function main() {
     process.exit(1);
   }
 
-  const rawConfig = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
+  let rawConfig;
+  try {
+    rawConfig = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
+  } catch (err) {
+    console.error(`Error: failed to parse ${PORTALS_PATH}: ${err.message}`);
+    process.exit(1);
+  }
   const config = rawConfig && typeof rawConfig === 'object' ? rawConfig : {};
   const companies = Array.isArray(config.tracked_companies) ? config.tracked_companies : [];
   const boards = Array.isArray(config.job_boards) ? config.job_boards : [];
