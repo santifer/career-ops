@@ -86,34 +86,35 @@ Zbudowany przez kogoś, kto użył go do oceny 740+ ofert pracy, wygenerowania 1
 
 ## Szybki start
 
+**Najszybszy sposób — jedno polecenie:**
+
 ```bash
-# 1. Sklonuj i zainstaluj
+npx @santifer/career-ops init
+```
+
+> 💡 `npx` jest dołączone do [Node.js](https://nodejs.org) — uruchamia instalator jednorazowo, bez instalowania czegokolwiek globalnie. Nie masz jeszcze Node.js? Najpierw go zainstaluj.
+> (Używasz już Claude Code / Gemini / Codex CLI? To już go masz.)
+
+To sklonuje najnowszą wersję do `./career-ops` i zainstaluje zależności. Następnie:
+
+```bash
+cd career-ops
+claude   # lub gemini / codex / qwen / opencode — otwórz tutaj swój AI CLI
+```
+
+**Przy pierwszym uruchomieniu career-ops przeprowadza Cię przez konfigurację — CV, profil i docelowe stanowiska — wyłącznie przez rozmowę. Nic nie trzeba edytować ręcznie.**
+
+<details>
+<summary><b>Wolisz skonfigurować ręcznie? (git clone)</b></summary>
+
+```bash
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
-npx playwright install chromium   # Wymagane do generowania PDF
-
-# 2. Sprawdź konfigurację
-npm run doctor                     # Weryfikacja wszystkich wymagań
-
-# 3. Skonfiguruj
-cp config/profile.example.yml config/profile.yml  # Uzupełnij swoje dane
-cp templates/portals.example.yml portals.yml       # Dostosuj firmy
-
-# 4. Dodaj swoje CV
-# Utwórz cv.md w katalogu głównym projektu z CV w formacie Markdown
-
-# 5. Spersonalizuj z Claude
-claude   # Otwórz Claude Code w tym katalogu
-
-# Następnie poproś Claude o dostosowanie systemu:
-# "Zmień archetypy na role frontend/Angular"
-# "Przetłumacz tryby na język polski"
-# "Dodaj te 5 firm do portals.yml"
-# "Zaktualizuj mój profil na podstawie tego CV"
-
-# 6. Zacznij używać
-# Wklej URL oferty lub uruchom /career-ops
+npx playwright install chromium   # wymagane tylko do generowania PDF
+claude   # otwórz swój AI CLI — przy pierwszym uruchomieniu przeprowadzi Cię przez onboarding
 ```
+
+</details>
 
 > **System jest zaprojektowany tak, żeby Claude go dostosowywał.** Tryby, archetypy, wagi oceniania, skrypty negocjacyjne — po prostu poproś Claude o zmiany. Czyta te same pliki, których używa, więc wie dokładnie, co edytować.
 
@@ -263,7 +264,7 @@ career-ops/
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
-- **Agent**: Claude Code z niestandardowymi skillaami i trybami
+- **Agent**: Claude Code z niestandardowymi skillami i trybami
 - **PDF**: Playwright/Puppeteer + szablon HTML
 - **Skaner**: Playwright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (motyw Catppuccin Mocha)

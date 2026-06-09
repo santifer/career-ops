@@ -103,6 +103,7 @@ const SYSTEM_PATHS = [
   'README.ja.md',
   'README.ko-KR.md',
   'README.pt-BR.md',
+  'README.pl.md',
   'README.ru.md',
   'README.ua.md',
   'README.zh-TW.md',
