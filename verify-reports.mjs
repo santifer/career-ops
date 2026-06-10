@@ -12,7 +12,7 @@ import yaml from 'js-yaml';
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const REPORTS_DIR = process.env.CAREER_OPS_REPORTS || join(ROOT, 'reports');
 const VALID_LEGITIMACY = new Set(['high', 'medium', 'low', 'uncertain', 'unverified']);
-const MACHINE_SUMMARY_FIELDS = ['company', 'role', 'score', 'recommendation'];
+const MACHINE_SUMMARY_FIELDS = ['company', 'role', 'score', 'final_decision'];
 
 function reportFiles(dir) {
   if (!existsSync(dir)) return [];
@@ -25,6 +25,10 @@ function parseMachineSummary(content) {
   const match = content.match(/##\s*Machine Summary\s*\n+```(?:yaml|yml|json)?\s*\n([\s\S]*?)\n```/i);
   if (!match) return null;
   return yaml.load(match[1]);
+}
+
+function requiresPdfStatus(content) {
+  return /(?:\*\*Source:\*\*|source_path:|source:)\s*(auto-pipeline|pipeline)/i.test(content);
 }
 
 export function validateReport(content) {
@@ -42,11 +46,20 @@ export function validateReport(content) {
   const score = content.match(/\*\*Score:\*\*\s*(\d(?:\.\d)?\/5|N\/A|SKIP|DUP)/i)?.[1];
   if (!score) errors.push('missing or invalid **Score:** header');
 
-  if (!/\*\*PDF:\*\*\s*(✅|❌|not generated|pending|N\/A)/i.test(content)) {
+  const hasPdfStatus = /\*\*PDF:\*\*\s*(✅|❌|not generated|pending|N\/A)/i.test(content);
+  if (requiresPdfStatus(content) && !hasPdfStatus) {
     errors.push('missing **PDF:** status header');
+  } else if (!hasPdfStatus) {
+    warnings.push('missing **PDF:** status header');
   }
 
-  const machineSummary = parseMachineSummary(content);
+  let machineSummary;
+  try {
+    machineSummary = parseMachineSummary(content);
+  } catch (err) {
+    errors.push(`Machine Summary failed to parse: ${err.message}`);
+    machineSummary = null;
+  }
   if (!machineSummary) {
     warnings.push('missing ## Machine Summary');
   } else if (typeof machineSummary !== 'object' || Array.isArray(machineSummary)) {
@@ -88,7 +101,7 @@ function selfTest() {
       'company: Acme',
       'role: AI Engineer',
       'score: 4.2',
-      'recommendation: apply',
+      'final_decision: apply',
       '```',
       '',
     ].join('\n'));
@@ -97,13 +110,28 @@ function selfTest() {
       '',
       '**Score:** banana',
       '**PDF:** maybe',
+      '**Source:** pipeline',
+      '',
+    ].join('\n'));
+    writeFileSync(join(dir, '003-bad-summary-2026-06-10.md'), [
+      '# Bad Summary',
+      '',
+      '**Score:** 4.1/5',
+      '**URL:** https://jobs.example/bad',
+      '**Legitimacy:** medium',
+      '',
+      '## Machine Summary',
+      '```yaml',
+      'company: [',
+      '```',
       '',
     ].join('\n'));
 
     const results = verifyReports({ reportsDir: dir });
     const valid = results.find((result) => result.file.startsWith('001-'));
     const invalid = results.find((result) => result.file.startsWith('002-'));
-    if (valid?.status !== 'ok' || invalid?.status !== 'error' || invalid.errors.length < 3) {
+    const badSummary = results.find((result) => result.file.startsWith('003-'));
+    if (valid?.status !== 'ok' || invalid?.status !== 'error' || invalid.errors.length < 3 || badSummary?.status !== 'error') {
       throw new Error(`unexpected self-test result: ${JSON.stringify(results)}`);
     }
     console.log('verify-reports self-test passed');

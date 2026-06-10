@@ -59,10 +59,10 @@ Checks:
 - `**URL:**` header is present
 - `**Legitimacy:**` is present and uses an accepted tier (`high`, `medium`, `low`, `uncertain`, `unverified`)
 - `**Score:**` is parseable as `X.X/5`, `N/A`, `SKIP`, or `DUP`
-- `**PDF:**` status is present
-- `## Machine Summary` parses as YAML/JSON when present
+- `**PDF:**` status is present for reports marked as `pipeline` / `auto-pipeline`; missing PDF status on other legacy reports is warning-only
+- `## Machine Summary` parses as YAML/JSON when present and includes analyzer-aligned core fields (`company`, `role`, `score`, `final_decision`)
 
-Missing `## Machine Summary` is warning-only for legacy reports. Header contract failures are errors.
+Missing `## Machine Summary` is warning-only for legacy reports. Malformed Machine Summary YAML/JSON and header contract failures are errors.
 
 ```bash
 npm run verify:reports
