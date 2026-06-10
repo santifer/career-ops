@@ -474,7 +474,7 @@ print_summary() {
     return
   fi
 
-  local total=0 completed=0 failed=0 pending=0
+  local total=0 completed=0 skipped=0 failed=0 pending=0
   local score_sum=0 score_count=0
 
   while IFS=$'\t' read -r sid _ sstatus _ _ _ sscore _ _; do
@@ -487,12 +487,13 @@ print_summary() {
           score_count=$((score_count + 1))
         fi
         ;;
+      skipped) skipped=$((skipped + 1)) ;;
       failed) failed=$((failed + 1)) ;;
       *) pending=$((pending + 1)) ;;
     esac
   done < "$STATE_FILE"
 
-  echo "Total: $total | Completed: $completed | Failed: $failed | Pending: $pending"
+  echo "Total: $total | Completed: $completed | Skipped: $skipped | Failed: $failed | Pending: $pending"
 
   if (( score_count > 0 )); then
     local avg
@@ -560,8 +561,8 @@ main() {
         continue
       fi
     else
-      # Skip completed offers
-      if [[ "$status" == "completed" ]]; then
+      # Skip terminal offers
+      if [[ "$status" == "completed" || "$status" == "skipped" ]]; then
         continue
       fi
       # Skip failed offers that hit retry limit (unless --retry-failed)

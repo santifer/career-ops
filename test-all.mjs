@@ -328,6 +328,20 @@ if (
   fail('Batch min-score gate can fall through to completed state update');
 }
 
+if (/if \[\[ "\$status" == "completed" \|\| "\$status" == "skipped" \]\]/.test(batchRunnerSource)) {
+  pass('Batch resume treats min-score skipped offers as terminal');
+} else {
+  fail('Batch resume can reprocess min-score skipped offers');
+}
+
+if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSource) &&
+    /skipped\) skipped=\$\(\(skipped \+ 1\)\)/.test(batchRunnerSource) &&
+    /Completed: \$completed \| Skipped: \$skipped \| Failed: \$failed \| Pending: \$pending/.test(batchRunnerSource)) {
+  pass('Batch summary reports skipped offers separately from pending');
+} else {
+  fail('Batch summary can misreport skipped offers as pending');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
