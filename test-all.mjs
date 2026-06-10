@@ -407,6 +407,18 @@ if (shared.includes('_profile.md')) {
   fail('_shared.md does NOT reference _profile.md');
 }
 
+const applyMode = readFile('modes/apply.md');
+if (
+  applyMode.includes('## Step 0 — Preflight gate') &&
+  applyMode.includes('verify liveness with Playwright') &&
+  applyMode.includes('Do not continue to Step 4 until this preflight is resolved') &&
+  applyMode.includes('refuse to generate final copy')
+) {
+  pass('apply mode includes liveness and role-match preflight gate');
+} else {
+  fail('apply mode missing liveness/role-match preflight gate');
+}
+
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
 console.log('\n9. Local parser contract');

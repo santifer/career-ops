@@ -10,15 +10,32 @@ Interactive mode for when the candidate is filling out an application form in Ch
 ## Workflow
 
 ```text
+0. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
 1. DETECT      → Read active Chrome tab (screenshot/URL/title)
 2. IDENTIFY    → Extract company + role from the page
 3. SEARCH      → Match against existing reports in reports/
 4. LOAD        → Read full report + Section G (if it exists)
-5. COMPARE     → Does the role on screen match the one evaluated? If it changed → notify
+5. COMPARE     → Does the role on screen match the one evaluated? If it changed → stop for user decision
 6. ANALYZE     → Identify ALL visible form questions
 7. GENERATE    → For each question, generate a personalized response
 8. PRESENT     → Show formatted responses for copy-paste
 ```
+
+## Step 0 — Preflight gate
+
+Before generating any application answers, verify that the form still points to the intended active job.
+
+1. Read the visible URL, page title, company, role, and any closed/expired signals.
+2. If a URL is available, verify liveness with Playwright:
+   - active posting evidence: title/role + job description or form fields + submit/apply path
+   - closed posting evidence: expired/closed/no longer accepting applications, missing JD with only nav/footer, hard redirect to generic careers/search, or 404/410
+3. Compare the visible company and role against the matched report.
+4. If company or title changed materially, stop before drafting and ask:
+   "The form appears to be for [visible company] — [visible role], but the matched report is [report company] — [report role]. Do you want me to re-evaluate, adapt with this mismatch, or stop?"
+5. If the posting appears closed, refuse to generate final copy unless the candidate explicitly overrides with a known reason.
+6. If liveness cannot be verified because the candidate only pasted questions or a screenshot, state that limitation and ask the candidate to confirm the company, role, and active posting before drafting.
+
+Do not continue to Step 4 until this preflight is resolved.
 
 ## Step 1 — Detect the job
 
@@ -41,7 +58,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 If the role on screen differs from the one evaluated:
 - **Notify the candidate**: "The role has changed from [X] to [Y]. Do you want me to re-evaluate or adapt the responses to the new title?"
-- **If adapt**: Adjust responses to the new role without re-evaluating
+- **If adapt**: Adjust responses to the new role without re-evaluating, only after the candidate explicitly accepts the mismatch
 - **If re-evaluate**: Execute full A-F evaluation, update report, regenerate Section G
 - **Update tracker**: Change role title in applications.md if applicable
 
