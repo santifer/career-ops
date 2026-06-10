@@ -52,23 +52,6 @@ mkdirSync('data', { recursive: true });
 
 const CONCURRENCY = 10;
 
-// ── Annualization multipliers ──────────────────────────────────────────
-// Used to normalize different compensation intervals to annual salary.
-// This constant is also used by providers (e.g., ashby.mjs) for salary parsing.
-
-const INTERVAL_MULTIPLIERS = {
-  '1 HOUR': 2080,
-  '1 DAY': 260,
-  '1 WEEK': 52,
-  '2 WEEK': 26,
-  '0.5 MONTH': 24,
-  '1 MONTH': 12,
-  '2 MONTH': 6,
-  '3 MONTH': 4,
-  '6 MONTH': 2,
-  '1 YEAR': 1,
-};
-
 // ── Provider loading ────────────────────────────────────────────────
 
 async function loadProviders(dir) {
@@ -203,7 +186,7 @@ export function buildLocationFilter(locationFilter) {
 //   - Partial ranges (min only or max only) work correctly via overlap logic
 // Uses null-safe checks (!= null, ??) to preserve 0 values correctly.
 
-function buildSalaryFilter(salaryFilter) {
+export function buildSalaryFilter(salaryFilter) {
   if (!salaryFilter) return () => true;
 
   // Coerce and validate bounds — malformed YAML must not silently mis-filter

@@ -35,7 +35,7 @@ const INTERVAL_MULTIPLIERS = {
  * @param {any} job - Ashby job object
  * @returns {{min: number, max: number, currency: string}|null}
  */
-function parseCompensation(job) {
+export function parseCompensation(job) {
   const comp = job?.compensation;
   if (!comp) return null;
 
