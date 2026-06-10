@@ -8,6 +8,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 |---------|--------|---------|
 | `npm run doctor` | `doctor.mjs` | Validate setup prerequisites |
 | `npm run verify` | `verify-pipeline.mjs` | Check pipeline data integrity |
+| `npm run verify:reports` | `verify-reports.mjs` | Validate evaluation report contracts |
 | `npm run normalize` | `normalize-statuses.mjs` | Fix non-canonical statuses |
 | `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
@@ -43,6 +44,29 @@ npm run verify
 ```
 
 **Exit codes:** `0` pipeline clean (zero errors), `1` errors found. Warnings (e.g. possible duplicates) do not cause a non-zero exit.
+
+---
+
+## verify:reports
+
+Validates evaluation report markdown files in `reports/` before downstream tooling consumes them.
+
+Checks:
+
+- `**URL:**` header is present
+- `**Legitimacy:**` is present and uses an accepted tier (`high`, `medium`, `low`, `uncertain`, `unverified`)
+- `**Score:**` is parseable as `X.X/5`, `N/A`, `SKIP`, or `DUP`
+- `**PDF:**` status is present
+- `## Machine Summary` parses as YAML/JSON when present
+
+Missing `## Machine Summary` is warning-only for legacy reports. Header contract failures are errors.
+
+```bash
+npm run verify:reports
+node verify-reports.mjs --self-test
+```
+
+**Exit codes:** `0` no report contract errors, `1` one or more report contract errors.
 
 ---
 
