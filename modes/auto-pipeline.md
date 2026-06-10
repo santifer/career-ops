@@ -25,6 +25,12 @@ Execute the same as the `oferta` mode (read `modes/oferta.md` for all A-F blocks
 Save the full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (see format in `modes/oferta.md`).
 Include Block G in the saved report. Add **URL:** {url} and **Legitimacy:** {tier} to the report header.
 
+Also save a lightweight evidence manifest beside the report:
+
+`reports/{###}-{company-slug}-{YYYY-MM-DD}.evidence.json`
+
+Include report number, company, role, original URL or `local:jds/...`, fetched timestamp, extraction source path (`Playwright`, `WebFetch`, `WebSearch`, `local`, or `pasted`), liveness result, JD text hash, report path, and PDF path if generated. For legacy or manual text inputs where liveness was not checked, use `liveness_result: "unverified"` or `not_applicable` for local files.
+
 ## Step 3 — Generate PDF
 
 Read `config/profile.yml`. Check `cv.output_format`:

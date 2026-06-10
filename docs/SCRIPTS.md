@@ -18,7 +18,36 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run update` | `update-system.mjs apply` | Apply upstream update |
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
+| `npm run evidence` | `evidence-manifest.mjs` | Validate evaluation evidence manifests |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+
+---
+
+## evidence
+
+Validates lightweight evidence manifests beside evaluation reports. A report manifest lives at `reports/{num}-{slug}-{date}.evidence.json`.
+
+Required fields:
+
+- `report_number`
+- `company`
+- `role`
+- `source` (`https://...`, `local:jds/...`, or pasted/source label)
+- `fetched_at` ISO timestamp
+- `source_path` (`Playwright`, `WebFetch`, `WebSearch`, `local`, `pasted`)
+- `liveness_result` (`active`, `expired`, `uncertain`, `unverified`, `not_applicable`)
+- `jd_text_hash`
+- `report_path`
+- `pdf_path` string or null
+
+Missing manifests for legacy reports are warning-only. Invalid manifests fail the command.
+
+```bash
+npm run evidence
+node evidence-manifest.mjs --self-test
+```
+
+**Exit codes:** `0` no invalid manifests, `1` one or more manifest files are invalid.
 
 ---
 
