@@ -18,6 +18,7 @@
  * @property {string} company  May be empty when the source can't expose it
  *                             at the list-page level; populated downstream.
  * @property {string} location May be empty.
+ * @property {string} [description] Optional, full text of the job description or body.
  */
 
 /**

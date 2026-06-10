@@ -633,6 +633,71 @@ try {
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }
+
+// ── 11.5. CONTENT FILTER ──────────────────────────────────────────
+
+console.log('\n11.5. Content filter');
+
+try {
+  const { buildContentFilter } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  const filter = buildContentFilter({
+    negative: ['junior', 'intern', 'java developer'],
+  });
+
+  // Case 1: normal matching of negative keywords
+  if (filter('Looking for a Senior Software Engineer') === true) pass('matching senior description passes');
+  else fail('matching senior description should pass');
+
+  if (filter('Looking for a Junior Software Engineer') === false) pass('matching junior description is rejected');
+  else fail('matching junior description should be rejected');
+
+  // Case 2: case-insensitivity
+  if (filter('Looking for a JUNIOR Developer') === false) pass('case-insensitive match is rejected');
+  else fail('case-insensitive match should be rejected');
+
+  // Case 3: null/missing contentFilter → pass-all filter
+  const nullFilter = buildContentFilter(null);
+  if (nullFilter('Any description') === true) {
+    pass('null contentFilter returns a pass-all filter');
+  } else {
+    fail('null contentFilter should return a pass-all filter');
+  }
+
+  // Case 4: non-string description passes
+  if (filter(42) === true && filter(null) === true) {
+    pass('non-string description values pass without throwing');
+  } else {
+    fail('non-string description values should pass');
+  }
+
+  // Case 5: bare string instead of array for negative is wrapped and works
+  const stringFilter = buildContentFilter({ negative: 'junior' });
+  if (stringFilter('Looking for a junior developer') === false && stringFilter('Senior developer') === true) {
+    pass('negative as a bare string works');
+  } else {
+    fail('negative as a bare string failed');
+  }
+
+  // Case 6: empty/whitespace keywords are dropped
+  const whitespaceFilter = buildContentFilter({ negative: ['', '  ', 'junior'] });
+  if (whitespaceFilter('Some role') === true && whitespaceFilter('junior role') === false) {
+    pass('empty/whitespace negative entries are dropped without blocking everything');
+  } else {
+    fail('empty negative entries should be dropped');
+  }
+
+  // Case 7: surrounding whitespace is trimmed
+  const trimFilter = buildContentFilter({ negative: ['  junior  '] });
+  if (trimFilter('Looking for junior developer') === false) {
+    pass('whitespace-padded negative keywords still match after trim');
+  } else {
+    fail('whitespace-padded negative keywords failed to match after trim');
+  }
+} catch (e) {
+  fail(`content filter tests crashed: ${e.message}`);
+}
+
 // ── 12. FOLLOW-UP CADENCE LOGIC ─────────────────────────────────
 
 console.log('\n12. Follow-up cadence logic');

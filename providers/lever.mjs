@@ -30,6 +30,7 @@ export default {
       url: j.hostedUrl || '',
       company: entry.name,
       location: j.categories?.location || '',
+      description: j.description || j.descriptionPlain || '',
     }));
   },
 };
