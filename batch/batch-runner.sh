@@ -361,7 +361,7 @@ update_state() {
 
 is_rate_limit_log() {
   local log_file="$1"
-  grep -Eiq "$AGENT_RATE_LIMIT_PATTERN" "$log_file"
+  tail -40 "$log_file" 2>/dev/null | grep -Eiq "$AGENT_RATE_LIMIT_PATTERN"
 }
 
 is_session_limit_log() {
