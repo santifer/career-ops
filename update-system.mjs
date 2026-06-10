@@ -61,6 +61,7 @@ const SYSTEM_PATHS = [
   'GEMINI.md',
   'generate-pdf.mjs',
   'generate-latex.mjs',
+  'archive-posting.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
   'verify-pipeline.mjs',
