@@ -207,7 +207,7 @@ function onboardingState(root) {
   const missing = USER_LAYER_PREREQS
     .filter(({ path }) => !prereqPresent(root, path))
     .map(({ path }) => path);
-  return { onboardingNeeded: missing.length > 0, missing };
+  return { onboardingNeeded: missing.length > 0, missing, warnings: [] };
 }
 
 if (JSON_OUT) {

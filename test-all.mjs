@@ -1284,7 +1284,12 @@ try {
   // Virgin env: none of the 4 user-layer prerequisites present → must onboard.
   const virgin = mkdtempSync(join(tmpdir(), 'co-cold-'));
   const v = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', virgin]) || '{}');
-  if (v.onboardingNeeded === true && Array.isArray(v.missing) && v.missing.length === 4) {
+  if (
+    v.onboardingNeeded === true &&
+    Array.isArray(v.missing) &&
+    v.missing.length === 4 &&
+    Array.isArray(v.warnings)
+  ) {
     pass('Virgin env → onboarding triggered (4 prerequisites missing)');
   } else {
     fail(`Virgin env not flagged for onboarding: ${JSON.stringify(v)}`);
@@ -1299,12 +1304,23 @@ try {
     writeFileSync(join(ready, f), 'x');
   }
   const r = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', ready]) || '{}');
-  if (r.onboardingNeeded === false) {
+  if (r.onboardingNeeded === false && Array.isArray(r.warnings)) {
     pass('Provisioned env → no onboarding');
   } else {
     fail(`Provisioned env falsely flagged for onboarding: ${JSON.stringify(r)}`);
   }
   rmSync(ready, { recursive: true, force: true });
+
+  const claudeDoc = readFile('CLAUDE.md');
+  if (
+    claudeDoc.includes('node doctor.mjs --json') &&
+    claudeDoc.includes('"warnings": [...]') &&
+    !claudeDoc.includes('Does `cv.md` exist?')
+  ) {
+    pass('CLAUDE.md delegates onboarding state to doctor --json');
+  } else {
+    fail('CLAUDE.md still duplicates onboarding prerequisite checks');
+  }
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
