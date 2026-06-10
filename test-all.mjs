@@ -1313,9 +1313,9 @@ try {
 
   const claudeDoc = readFile('CLAUDE.md');
   if (
-    claudeDoc.includes('node doctor.mjs --json') &&
-    claudeDoc.includes('"warnings": [...]') &&
-    !claudeDoc.includes('Does `cv.md` exist?')
+    /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&
+    /"warnings"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    !/Does\s+`cv\.md`\s+exist\?/i.test(claudeDoc)
   ) {
     pass('CLAUDE.md delegates onboarding state to doctor --json');
   } else {
