@@ -150,7 +150,7 @@ Analyze the job posting for signals that indicate whether this is a real, active
 
 Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
-- `{###}` = next sequential number (3 digits, zero-padded)
+- `{###}` = next sequential number (3 digits, zero-padded). To allocate it atomically and prevent race conditions, you MUST run `node reserve-report-num.mjs` to claim the number (stdout returns `{###}`), write the report, and then run `node reserve-report-num.mjs --release {###}` to release the sentinel.
 - `{company-slug}` = company name in lowercase, without spaces (use hyphens)
 - `{YYYY-MM-DD}` = current date
 
