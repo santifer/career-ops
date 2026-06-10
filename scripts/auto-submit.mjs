@@ -29,6 +29,8 @@
  *                            (default: evaluated). Example: --ready-states evaluated,responded
  *                            Valid IDs come from gen/states.js (VALID_IDS). 'new' is allowed
  *                            but not in gen/states.js — use only for testing fresh ingest.
+ *   --use-extension-autofill Force browser-extension autofill (skip built-in form fill)
+ *   --no-extension-autofill  Disable extension autofill (use built-in Greenhouse/Lever/Workday fill)
  *
  * Output:
  *   data/auto-submit-dry-run-{date}.json
@@ -50,6 +52,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkLiveness } from './check-job-liveness.mjs';
 import { loadPersonalInfo, PersonalInfoError } from './load-personal-info.mjs';
+import { loadBrowserConfig, BrowserConfigError } from './load-browser-config.mjs';
 import { fillForm, formatUploadDetails } from './form-fill.mjs';
 import { VALID_IDS as CANONICAL_STATE_IDS } from '../gen/states.js';
 
@@ -78,6 +81,10 @@ const CARD_ID           = argVal('--card');
 const SEMI_AUTO         = process.argv.includes('--semi-auto');
 const LIVE              = process.argv.includes('--live') && !SEMI_AUTO;
 const DRY_RUN           = !LIVE && !SEMI_AUTO;
+// null = auto-determine from browser config (firefox → true, chromium → false)
+const USE_EXTENSION_ARG = process.argv.includes('--no-extension-autofill') ? false
+  : process.argv.includes('--use-extension-autofill') ? true
+  : null;
 const REPORT            = process.argv.includes('--report');
 const ALLOW_TIER        = argVal('--allow-tier');
 const RAW_LIMIT         = parseInt(argVal('--limit') ?? '5', 10);
@@ -632,9 +639,53 @@ function _detectATS(url) {
   return 'unknown';
 }
 
+// ── Browser launch ────────────────────────────────────────────────────────────
+
+/**
+ * Launch a browser context appropriate for the configured browser mode.
+ *
+ * Returns { context, browser } where:
+ *   - Firefox persistent context: browser = null — close context to clean up
+ *   - Chromium regular launch:    browser = Browser — close browser to clean up
+ *
+ * @param {object} pw          Full playwright module (await import('playwright'))
+ * @param {object} browserCfg  Result of loadBrowserConfig()
+ * @param {{ headless?: boolean }} [opts]
+ */
+async function launchBrowserForMode(pw, browserCfg, { headless = false } = {}) {
+  const preferred = browserCfg?.preferred || 'chromium';
+
+  if (preferred === 'firefox') {
+    const context = await pw.firefox.launchPersistentContext(
+      browserCfg.firefox.profile_path,
+      {
+        executablePath: browserCfg.firefox.executable_path,
+        headless: false, // extensions only work in headed mode
+        viewport: { width: 1280, height: 900 },
+      },
+    );
+    return { context, browser: null };
+  }
+
+  // Chromium with persistent profile (optional)
+  const chromiumProfile = browserCfg?.chromium?.profile_path;
+  if (chromiumProfile && fs.existsSync(chromiumProfile)) {
+    const context = await pw.chromium.launchPersistentContext(chromiumProfile, {
+      headless,
+      viewport: { width: 1280, height: 900 },
+    });
+    return { context, browser: null };
+  }
+
+  // Default: fresh Chromium context
+  const browser  = await pw.chromium.launch({ headless });
+  const context  = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  return { context, browser };
+}
+
 // ── Semi-auto mode ────────────────────────────────────────────────────────────
 
-async function runSemiAuto(cards, chromium, personal, clIndex = null) {
+async function runSemiAuto(cards, pw, personal, browserCfg, useExtension, clIndex = null) {
   const results = [];
 
   for (const card of cards) {
@@ -655,18 +706,18 @@ async function runSemiAuto(cards, chromium, personal, clIndex = null) {
     }
     console.log('OK');
 
-    let browser;
-    let aborted = false;
-    let clicked = false;
+    let browser  = null;
+    let context  = null;
+    let aborted  = false;
+    let clicked  = false;
     let fillReport = null;
 
     const sigintHandler = () => { aborted = true; };
     process.on('SIGINT', sigintHandler);
 
     try {
-      browser = await chromium.launch({ headless: false });
-      const ctx  = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-      const page = await ctx.newPage();
+      ({ context, browser } = await launchBrowserForMode(pw, browserCfg, { headless: false }));
+      const page = await context.newPage();
 
       console.log(`  Opening browser → ${card.url}`);
       await page.goto(card.url, { timeout: 30000, waitUntil: 'domcontentloaded' });
@@ -687,8 +738,13 @@ async function runSemiAuto(cards, chromium, personal, clIndex = null) {
         }
       }
 
-      // Form fill (personal info data layer)
-      if (personal) {
+      // Form fill — extension autofill or built-in selectors
+      if (useExtension) {
+        process.stdout.write('  Waiting 5s for SpeedyApply to autofill...');
+        await page.waitForTimeout(5000);
+        console.log(' done.');
+        fillReport = { extension: true, note: 'deferred to SpeedyApply extension (waited 5s)' };
+      } else if (personal) {
         process.stdout.write('  Filling form fields... ');
         try {
           fillReport = await fillForm(ats, page, personal, cl);
@@ -751,6 +807,7 @@ async function runSemiAuto(cards, chromium, personal, clIndex = null) {
       console.error(`  ERROR: ${e.message}`);
     } finally {
       if (browser) await browser.close().catch(() => {});
+      else if (context) await context.close().catch(() => {});
       process.removeListener('SIGINT', sigintHandler);
     }
 
@@ -807,7 +864,7 @@ function writeTSVEntry(card, ats) {
   fs.writeFileSync(outPath, columns.join('\t') + '\n', 'utf8');
 }
 
-async function runLive(cards, chromium, allowTier, personal, clIndex = null) {
+async function runLive(cards, pw, allowTier, personal, browserCfg, useExtension, clIndex = null) {
   let captchaBlocked = 0;
   let formBlocked    = 0;
   let confirmed      = 0;
@@ -847,14 +904,14 @@ async function runLive(cards, chromium, allowTier, personal, clIndex = null) {
     }
     console.log('OK');
 
-    let browser;
-    let ssPath = null;
+    let browser  = null;
+    let context  = null;
+    let ssPath   = null;
     let fillReport = null;
 
     try {
-      browser = await chromium.launch({ headless: true });
-      const ctx  = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-      const page = await ctx.newPage();
+      ({ context, browser } = await launchBrowserForMode(pw, browserCfg, { headless: !useExtension }));
+      const page = await context.newPage();
 
       await page.goto(card.url, { timeout: 30000, waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(2000);
@@ -872,8 +929,9 @@ async function runLive(cards, chromium, allowTier, personal, clIndex = null) {
       if (await detectIntermediateStepOnPage(page)) {
         ssPath = await screenshot(page, card, 'intermediate').catch(() => null);
         results.push({ id: card.id, status: 'intermediate-step', reason: 'intermediate-step-detected', url: card.url, screenshot: ssPath });
-        await browser.close().catch(() => {});
-        browser = null;
+        if (browser) await browser.close().catch(() => {});
+        else if (context) await context.close().catch(() => {});
+        browser = null; context = null;
         console.log('  → INTERMEDIATE STEP detected — application flow has changed. Stopping run for manual review.');
         break;
       }
@@ -897,8 +955,13 @@ async function runLive(cards, chromium, allowTier, personal, clIndex = null) {
         continue;
       }
 
-      // Form fill (personal info data layer)
-      if (personal) {
+      // Form fill — extension autofill or built-in selectors
+      if (useExtension) {
+        process.stdout.write('  Waiting 5s for SpeedyApply to autofill...');
+        await page.waitForTimeout(5000);
+        console.log(' done.');
+        fillReport = { extension: true, note: 'deferred to SpeedyApply (5s wait)' };
+      } else if (personal) {
         try {
           fillReport = await fillForm(ats, page, personal, cl);
           console.log(`  Filled ${fillReport.filled}/${fillReport.total} fields. Missing: [${fillReport.missing_fields.join(', ') || 'none'}]`);
@@ -948,6 +1011,7 @@ async function runLive(cards, chromium, allowTier, personal, clIndex = null) {
       results.push({ id: card.id, status: 'error', error: e.message, url: card.url });
     } finally {
       if (browser) await browser.close().catch(() => {});
+      else if (context) await context.close().catch(() => {});
     }
   }
 
@@ -1067,36 +1131,65 @@ async function main() {
     return;
   }
 
-  // ── Personal info (required for semi-auto + live, warns in dry-run path already exited) ─
-  let personal = null;
+  // ── Browser config ───────────────────────────────────────────────────────────
+  let browserCfg;
   try {
-    personal = await loadPersonalInfo();
-    console.log(`[auto-submit] Personal info loaded: ${personal.name.full} <${personal.contact.email}>`);
+    browserCfg = await loadBrowserConfig();
+    if (browserCfg.preferred !== 'chromium') {
+      console.log(`[auto-submit] Browser: ${browserCfg.preferred} | extension_autofill: ${browserCfg.extension_autofill}`);
+    }
   } catch (e) {
-    if (e instanceof PersonalInfoError) {
+    if (e instanceof BrowserConfigError) {
       console.error(`[auto-submit] FATAL: ${e.message}`);
       process.exit(1);
     }
     throw e;
   }
 
-  // ── Playwright modes ─────────────────────────────────────────────────────────
-  let chromium;
+  const useExtension = USE_EXTENSION_ARG !== null
+    ? USE_EXTENSION_ARG
+    : browserCfg.extension_autofill === true;
+
+  if (useExtension) {
+    console.log('[auto-submit] Extension autofill: ON — SpeedyApply fills form (5s wait after navigation)');
+  }
+
+  // ── Personal info (required unless extension autofill handles form fill) ──────
+  let personal = null;
   try {
-    const pw = await import('playwright');
-    chromium = pw.chromium;
+    personal = await loadPersonalInfo();
+    console.log(`[auto-submit] Personal info loaded: ${personal.name.full} <${personal.contact.email}>`);
+  } catch (e) {
+    if (e instanceof PersonalInfoError) {
+      if (!useExtension) {
+        console.error(`[auto-submit] FATAL: ${e.message}`);
+        process.exit(1);
+      }
+      console.log('[auto-submit] personal-info.yml not found — SpeedyApply will handle form fill');
+    } else {
+      throw e;
+    }
+  }
+
+  // ── Playwright ───────────────────────────────────────────────────────────────
+  let pw;
+  try {
+    pw = await import('playwright');
   } catch {
-    console.error('[auto-submit] FATAL: Playwright not available. Run: npx playwright install chromium');
+    const hint = browserCfg.preferred === 'firefox'
+      ? 'npx playwright install firefox'
+      : 'npx playwright install chromium';
+    console.error(`[auto-submit] FATAL: Playwright not available. Run: ${hint}`);
     process.exit(1);
   }
 
   if (SEMI_AUTO) {
-    await runSemiAuto(toProcess, chromium, personal, clIdx);
+    await runSemiAuto(toProcess, pw, personal, browserCfg, useExtension, clIdx);
     return;
   }
 
   // LIVE
-  const { captchaBlocked, formBlocked } = await runLive(toProcess, chromium, ALLOW_TIER, personal, clIdx);
+  const { captchaBlocked, formBlocked } = await runLive(toProcess, pw, ALLOW_TIER, personal, browserCfg, useExtension, clIdx);
   if (captchaBlocked > 0) process.exit(2);
   if (formBlocked > 0)    process.exit(3);
   process.exit(0);

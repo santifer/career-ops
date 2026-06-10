@@ -47,7 +47,43 @@ If the `cover-letters/` directory only has the bulk export file, the dry-run wil
 
 ---
 
-## Step 0b — Export kanban snapshot (when using K2 dashboard)
+## Step 0b — Firefox + SpeedyApply setup (one time, ~5 minutes)
+
+Skip this if you want to use Playwright's built-in Chromium with our selector-based form fill.
+Do this if SpeedyApply is already installed in your Firefox profile.
+
+```powershell
+# 1. Auto-detect your Firefox install and profile
+node scripts/detect-firefox.mjs
+
+# 2. Copy the template and fill in the paths printed above
+copy config\browser.yml.template config\browser.yml
+notepad config\browser.yml
+
+# Required fields (when preferred: firefox):
+#   firefox.executable_path  — full path to firefox.exe
+#   firefox.profile_path     — full path to the profile with SpeedyApply installed
+# The .yml is gitignored — your real paths will never be committed.
+
+# 3. Verify it loads cleanly
+node -e "import('./scripts/load-browser-config.mjs').then(m=>m.loadBrowserConfig()).then(c=>console.log('OK', c.preferred, '| extension_autofill:', c.extension_autofill))"
+```
+
+Expected output: `OK firefox | extension_autofill: true`
+If you see a `BrowserConfigError`, fix the field it names.
+
+**How it works:** With `extension_autofill: true`, auto-submit launches Firefox using your real
+profile, navigates to the job URL, then waits 5 seconds for SpeedyApply to detect the form and
+autofill it. Our built-in field selectors (Greenhouse/Lever/Workday) are skipped entirely.
+
+To opt out of extension autofill on a single run:
+```powershell
+node scripts/auto-submit.mjs --semi-auto --no-extension-autofill --limit 1
+```
+
+---
+
+## Step 0c — Export kanban snapshot (when using K2 dashboard)
 
 If you are running the K2 browser kanban instead of a static HTML file, use the Export JSON workflow to feed cards to auto-submit:
 

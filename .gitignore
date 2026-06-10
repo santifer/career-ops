@@ -23,8 +23,9 @@ modes/_profile.md
 .update-dismissed
 .update-lock
 
-# Personal info (PII — never commit)
+# Personal info and browser config (PII / local paths — never commit)
 config/personal-info.yml
+config/browser.yml
 
 # Auto-submit output data
 data/screenshots/

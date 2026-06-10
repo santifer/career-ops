@@ -249,6 +249,14 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-09-22 — Built-in form fill superseded by browser extension for users with SpeedyApply
+
+**What happened:** `scripts/form-fill.mjs` ships v1 selector-based fill logic (`fillGreenhouseForm`, `fillLeverForm`, `fillWorkdayForm`). For users who already have SpeedyApply installed in Firefox, this is redundant — SpeedyApply handles the form more reliably than our selectors because it has first-party knowledge of each ATS's DOM. The selector-based fill remains useful for users without SpeedyApply or for Chromium runs.
+**Rule:** When an existing tool (browser extension, OS keychain, password manager) already solves the problem, prefer to invoke that tool over reimplementing the logic from scratch. "Delegate, don't duplicate." The selector-based fill is still shipping (it's the fallback path and useful for debugging), but the primary path for Firefox+SpeedyApply users is now: launch persistent context, navigate, wait 5s.
+**How to apply:** `config/browser.yml` with `preferred: firefox` + `extension_autofill: true` (the default). `auto-submit.mjs` skips `fillForm()` and instead waits 5 seconds after navigation. Toggle off with `--no-extension-autofill` to compare selector-based vs extension fill on the same form.
+
+---
+
 ### K-2026-06-08-6 — Long-running code sessions accrue context cost; spin fresh sessions per logical chunk
 **What happened:** The K1 implementation session hit a 1M context credit wall, requiring a manual restart. The session had accumulated context from multiple PRs, investigations, and dead ends that weren't relevant to the current task.
 **Rule:** When a task is multi-PR (K1-dry-run, K1-semi-auto+live, K2-kanban, K5-slug-audit are all independent), spawn a fresh session per PR rather than continuing the same session across unrelated work. Cowork context should be scoped to the active PR, not the entire sprint.

@@ -1,0 +1,33 @@
+# browser.yml — Browser launch configuration for auto-submit.mjs
+# Copy this file to config/browser.yml and fill in your paths.
+# browser.yml is gitignored — your real paths will never be committed.
+#
+# This file is OPTIONAL. If absent, auto-submit uses Playwright's bundled Chromium.
+#
+# Run:  node scripts/detect-firefox.mjs
+# to auto-detect your Firefox install and get a ready-to-paste config block.
+
+# Which browser to launch: chromium | firefox
+preferred: firefox
+
+firefox:
+  # Full path to firefox.exe on your machine
+  executable_path: ""   # e.g. C:\Program Files\Mozilla Firefox\firefox.exe
+
+  # Full path to your Firefox profile directory (the one with SpeedyApply installed)
+  # Default profile: %APPDATA%\Mozilla\Firefox\Profiles\{random}.default-release
+  profile_path: ""      # e.g. C:\Users\rahil\AppData\Roaming\Mozilla\Firefox\Profiles\abc123.default-release
+
+chromium:
+  # Optional: use a persistent Chromium profile (e.g. stored session cookies)
+  # Leave empty to use a fresh context each run (default)
+  profile_path: ""
+
+# Extension autofill behaviour (applies when preferred: firefox)
+# true  = skip built-in form fill; wait 5s for SpeedyApply to detect and populate the form
+# false = use built-in field fill (Greenhouse / Lever / Workday selectors)
+#
+# Override at runtime without editing this file:
+#   --use-extension-autofill    force extension autofill on
+#   --no-extension-autofill     force extension autofill off (use built-in fill)
+extension_autofill: true
