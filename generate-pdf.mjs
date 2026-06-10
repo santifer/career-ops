@@ -88,42 +88,86 @@ function normalizeTextForATS(html) {
   }
 }
 
-function validateCvSectionOrder(html) {
-  const canonical = [
-    ['summary', 'professional summary'],
-    ['competencies', 'core competencies'],
-    ['experience', 'work experience', 'professional experience'],
-    ['projects', 'selected projects', 'personal projects'],
-    ['education', 'education & certifications'],
-    ['certifications'],
-    ['skills', 'technical skills'],
-  ];
+const SECTION_ALIASES = new Map([
+  ['summary', 'summary'],
+  ['professional summary', 'summary'],
+  ['competencies', 'competencies'],
+  ['core competencies', 'competencies'],
+  ['experience', 'experience'],
+  ['work experience', 'experience'],
+  ['professional experience', 'experience'],
+  ['projects', 'projects'],
+  ['selected projects', 'projects'],
+  ['personal projects', 'projects'],
+  ['education', 'education'],
+  ['education & certifications', 'education'],
+  ['certifications', 'certifications'],
+  ['skills', 'skills'],
+  ['technical skills', 'skills'],
+]);
+
+function normalizeSectionTitle(text) {
+  return text
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\{\{[^}]+\}\}/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/[*_`~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function sectionKey(text) {
+  const normalized = normalizeSectionTitle(text);
+  return SECTION_ALIASES.get(normalized) ?? normalized;
+}
+
+function extractRenderedSectionOrder(html) {
   const titleMatches = [...html.matchAll(/class=["'][^"']*\bsection-title\b[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/gi)];
-  const seen = [];
+  const sections = [];
 
   for (const match of titleMatches) {
-    const text = match[1]
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\{\{[^}]+\}\}/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .toLowerCase();
+    const text = normalizeSectionTitle(match[1]);
     if (!text) continue;
-
-    const index = canonical.findIndex(names => names.includes(text));
-    if (index !== -1) seen.push({ index, title: text });
+    sections.push({ key: sectionKey(text), title: text });
   }
 
-  // Only enforce when the generated HTML contains enough recognizable
-  // standard headers. This keeps localized or custom templates from failing
-  // solely because their section labels are different.
-  if (seen.length < 2) return;
+  return sections;
+}
 
-  for (let i = 1; i < seen.length; i++) {
-    if (seen[i].index < seen[i - 1].index) {
-      const order = seen.map(s => s.title).join(' -> ');
-      throw new Error(`CV section order is not ATS-safe: ${order}`);
+function extractSourceSectionOrder(markdown) {
+  const sections = [];
+
+  for (const line of markdown.split(/\r?\n/)) {
+    const heading = line.match(/^\s{0,3}(#{2,6})\s+(.+?)\s*#*\s*$/);
+    if (!heading) continue;
+    const text = normalizeSectionTitle(heading[2]);
+    if (!text) continue;
+    sections.push({ key: sectionKey(text), title: text });
+  }
+
+  return sections;
+}
+
+function validateCvSectionOrder(html, cvMarkdown) {
+  const rendered = extractRenderedSectionOrder(html);
+  const source = extractSourceSectionOrder(cvMarkdown);
+  if (rendered.length < 2 || source.length < 2) return;
+
+  const sourcePositions = new Map(source.map((section, index) => [section.key, index]));
+  const renderedComparable = rendered.filter(section => sourcePositions.has(section.key));
+  if (renderedComparable.length < 2) return;
+
+  for (let i = 1; i < renderedComparable.length; i++) {
+    const previous = renderedComparable[i - 1];
+    const current = renderedComparable[i];
+    if (sourcePositions.get(current.key) < sourcePositions.get(previous.key)) {
+      const renderedOrder = renderedComparable.map(section => section.title).join(' -> ');
+      const sourceOrder = source
+        .filter(section => renderedComparable.some(renderedSection => renderedSection.key === section.key))
+        .map(section => section.title)
+        .join(' -> ');
+      throw new Error(`CV section order diverges from cv.md: rendered ${renderedOrder}; cv.md ${sourceOrder}`);
     }
   }
 }
@@ -165,7 +209,8 @@ async function generatePDF() {
 
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
-  validateCvSectionOrder(html);
+  const cvMarkdown = await readFile(resolve(__dirname, 'cv.md'), 'utf-8').catch(() => '');
+  validateCvSectionOrder(html, cvMarkdown);
 
   // Resolve font paths relative to career-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');
