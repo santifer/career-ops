@@ -139,7 +139,7 @@ function extractSourceSectionOrder(markdown) {
   const sections = [];
 
   for (const line of markdown.split(/\r?\n/)) {
-    const heading = line.match(/^\s{0,3}(#{2,6})\s+(.+?)\s*#*\s*$/);
+    const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
     if (!heading) continue;
     const text = normalizeSectionTitle(heading[2]);
     if (!text) continue;
@@ -209,7 +209,12 @@ async function generatePDF() {
 
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
-  const cvMarkdown = await readFile(resolve(__dirname, 'cv.md'), 'utf-8').catch(() => '');
+  let cvMarkdown = '';
+  try {
+    cvMarkdown = await readFile(resolve(__dirname, 'cv.md'), 'utf-8');
+  } catch (err) {
+    if (err?.code !== 'ENOENT') throw err;
+  }
   validateCvSectionOrder(html, cvMarkdown);
 
   // Resolve font paths relative to career-ops/fonts/
