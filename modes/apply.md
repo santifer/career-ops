@@ -61,7 +61,7 @@ If the role on screen differs from the one evaluated:
 - **If re-evaluate**: Execute full A-F evaluation, update report, regenerate Section G
 - **Update tracker**: Change role title in applications.md if applicable
 
-## Step 4 — Analyze form questions
+## Step 6 — Analyze form questions
 
 Identify ALL visible questions:
 - Free text fields (cover letter, why this role, etc.)
@@ -74,7 +74,7 @@ Classify each question:
 - **Already answered in Section G** → adapt the existing response
 - **New question** → generate response from the report + cv.md
 
-## Step 5 — Generate responses
+## Step 7 — Generate responses
 
 For each question, generate the response following:
 
