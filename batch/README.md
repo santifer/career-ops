@@ -35,6 +35,7 @@ Process multiple job offers in parallel via headless workers. Each worker runs t
 | `--retry-failed` | off | Only retry offers marked as `failed` in state |
 | `--start-from N` | `0` | Skip offers with ID below N |
 | `--max-retries N` | `2` | Max retry attempts per offer before giving up |
+| `--rate-limit-sleep N` | `300` | Seconds to wait before retrying a rate-limited worker; use `0` to fail immediately |
 
 ## Directory Layout
 
@@ -69,7 +70,7 @@ Run `npm run merge` manually if you need to merge outside of a batch run.
 
 ## Resumability
 
-`batch-state.tsv` tracks the status of every offer (`pending`, `processing`, `completed`, `failed`). If the batch is interrupted, re-running `batch-runner.sh` picks up where it left off -- completed offers are skipped automatically.
+`batch-state.tsv` tracks the status of every offer (`pending`, `processing`, `completed`, `failed`, `skipped`, `rate_limited`). If the batch is interrupted, re-running `batch-runner.sh` picks up where it left off -- completed offers are skipped automatically. `rate_limited` is a non-completed state used while the runner waits before retrying, so interrupted rate-limited jobs are eligible on the next normal run.
 
 A PID-based lock file (`batch-runner.pid`) prevents concurrent batch runs. If a previous run crashed, the stale lock is detected and removed automatically.
 
