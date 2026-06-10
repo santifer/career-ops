@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{NAME}} - Cover letter for {{ROLE}}</title>
+<link rel="icon" href="data:,">
+
+<style>
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --ink: #25394f;
+    --body: #334353;
+    --muted: #64758a;
+    --line: #cad5df;
+    --paper: #ffffff;
+    --wash: #ffffff;
+    --accent: #526982;
+    --proof-line: #aebdc9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: 'DM Sans', Avenir Next, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: var(--body);
+    background: var(--wash);
+    margin: 0;
+    padding: 0;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+  }
+
+  .page {
+    max-width: 100%;
+    min-height: calc(297mm - 1.2in);
+    margin: 0 auto;
+    padding: 0 8mm;
+    position: relative;
+    background: var(--paper);
+  }
+
+  .header {
+    padding-bottom: 0;
+    margin-bottom: 6mm;
+  }
+
+  .name {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 27pt;
+    line-height: 1;
+    letter-spacing: 0.035em;
+    color: var(--ink);
+    text-transform: uppercase;
+    margin: 0 0 5px;
+  }
+
+  .headline {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0;
+  }
+
+  .rule {
+    border-top: 0.8pt solid var(--line);
+    margin: 12px 0 10px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 18px;
+    font-size: 9pt;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .contact-row a { color: var(--muted); text-decoration: none; }
+
+  .meta {
+    font-size: 10pt;
+    line-height: 1.6;
+    color: var(--body);
+    margin-bottom: 5mm;
+  }
+  .date {
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .addressee .recipient {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .addressee .org {
+    color: var(--accent);
+  }
+
+  .letter-title {
+    margin: 0 0 11px;
+    padding-bottom: 8px;
+    border-bottom: 0.8pt solid var(--line);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 20pt;
+    font-weight: 700;
+    line-height: 1.16;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+  .subject {
+    display: block;
+    margin-top: 7px;
+    font-family: 'DM Sans', Avenir Next, Arial, sans-serif;
+    font-size: 8.5pt;
+    letter-spacing: 0;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .body {
+    max-width: 163mm;
+  }
+  .salutation {
+    font-size: 10pt;
+    margin-bottom: 10px;
+    color: var(--ink);
+  }
+  .body p {
+    font-size: 10.5pt;
+    line-height: 1.52;
+    color: var(--body);
+    margin: 0 0 9px;
+  }
+
+  .proof {
+    margin: 13px 0 13px;
+    padding: 1px 0 1px 16px;
+    border-left: 2px solid var(--proof-line);
+    color: #43566b;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .proof-label {
+    font-size: 8pt;
+    letter-spacing: 0;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 7px;
+  }
+  .proof p {
+    margin: 0;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: #43566b;
+  }
+
+  .signoff {
+    margin-top: 10px;
+    font-size: 10pt;
+    color: var(--ink);
+  }
+  .signoff .closing {
+    margin-bottom: 12px;
+  }
+  .signoff .signature-name {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16pt;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .footer {
+    position: absolute;
+    left: 8mm;
+    right: 8mm;
+    bottom: 0;
+    border-top: 0.8pt solid var(--line);
+    padding-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8pt;
+    letter-spacing: 0;
+    color: #8190a0;
+    text-transform: uppercase;
+  }
+
+  @media print {
+    body { background: var(--paper); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <h1 class="name">{{NAME}}</h1>
+    <div class="headline">{{HEADLINE}}</div>
+    <div class="rule"></div>
+    <div class="contact-row">
+      <span>{{LOCATION}}</span>
+      <span>{{PHONE}}</span>
+      <span><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></span>
+      {{LINKEDIN_ITEM}}
+    </div>
+  </header>
+
+  <div class="meta">
+    <div class="date">{{LETTER_DATE}}</div>
+    <div class="addressee">{{ADDRESSEE_HTML}}</div>
+  </div>
+
+  <main class="body">
+    <h2 class="letter-title">
+      {{ROLE}}
+      <span class="subject">Application for advertised position{{REF_NUMBER_SUFFIX}}</span>
+    </h2>
+
+    <div class="salutation">{{SALUTATION}}</div>
+
+    {{BODY_HTML}}
+
+    {{PROOF_HTML}}
+
+    <div class="signoff">
+      <div class="closing">{{CLOSING}},</div>
+      <div class="signature-name">{{NAME_TITLE_CASE}}</div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span>{{NAME_TITLE_CASE}}</span>
+    <span>Cover Letter</span>
+  </footer>
+
+</div>
+</body>
+</html>

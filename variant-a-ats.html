@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Variant A - ATS Upload Resume</title>
+<style>
+  :root {
+    --ink: #23364b;
+    --muted: #657589;
+    --line: #d2dbe3;
+    --wash: #edf2f7;
+    --accent: #536b86;
+  }
+  * { box-sizing: border-box; }
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; background: #ffffff; color: var(--ink); }
+  body { font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif; }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 18mm 18mm 15mm;
+    background: #ffffff;
+    position: relative;
+  }
+  .purpose {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .24em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 11mm;
+  }
+  header { margin-bottom: 8mm; }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    margin: 0;
+    font-size: 31px;
+    line-height: 1;
+    letter-spacing: .025em;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .role {
+    font-size: 12px;
+    margin-top: 5px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .rule { border-top: 1px solid var(--line); margin: 12px 0 10px; }
+  .contact {
+    font-size: 9.5px;
+    color: var(--muted);
+    letter-spacing: .015em;
+    display: flex;
+    gap: 20px;
+  }
+  section { margin: 0 0 7mm; }
+  .title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 4px;
+    margin-bottom: 9px;
+  }
+  .title h2 {
+    margin: 0;
+    font-size: 8px;
+    letter-spacing: .27em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .note {
+    font-size: 8px;
+    color: #8c98a5;
+  }
+  p {
+    font-size: 10.4px;
+    line-height: 1.54;
+    margin: 0;
+    color: #2f3c49;
+  }
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+  }
+  .skill {
+    background: var(--wash);
+    border: 1px solid #e0e7ed;
+    padding: 4px 9px;
+    color: #3d5167;
+    font-size: 8.8px;
+    font-weight: 500;
+  }
+  .job { margin: 0 0 13px; }
+  .jobhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .job h3 { margin: 0; font-size: 11px; font-weight: 700; color: var(--ink); }
+  .date { color: var(--muted); font-size: 9px; }
+  .org { color: var(--accent); font-size: 9.2px; margin-bottom: 5px; font-weight: 600; }
+  ul { margin: 0; padding-left: 14px; }
+  li {
+    font-size: 8.9px;
+    line-height: 1.48;
+    color: #374554;
+    padding-left: 3px;
+    margin-bottom: 2px;
+  }
+  footer {
+    position: absolute;
+    left: 18mm; right: 18mm; bottom: 12mm;
+    border-top: 1px solid var(--line);
+    padding-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7px;
+    color: #8a96a3;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<article class="page">
+  <div class="purpose">ATS Upload Resume / Single Reading Order</div>
+  <header>
+    <h1>DANIELLE EVANS</h1>
+    <div class="role">Senior Administration Professional</div>
+    <div class="rule"></div>
+    <div class="contact">
+      <span>Moreton Bay QLD</span><span>0400 000 000</span>
+      <span>danielle.evans@email.com</span><span>linkedin.com/in/danielleevans</span>
+    </div>
+  </header>
+  <section>
+    <div class="title"><h2>Professional Summary</h2><span class="note">15+ years / regulated environments</span></div>
+    <p>Senior administration professional overseeing operational systems, coordinating workflows for large teams, and translating policy into accurate day-to-day processes. Known for dependable records, calm communication, and process improvements that strengthen accountability.</p>
+  </section>
+  <section>
+    <div class="title"><h2>Core Capabilities</h2><span class="note">ATS-readable keywords</span></div>
+    <div class="skills">
+      <span class="skill">Administration &amp; Project Support</span>
+      <span class="skill">Records &amp; Data Management</span>
+      <span class="skill">Policy &amp; Procedure Interpretation</span>
+      <span class="skill">Stakeholder Coordination</span>
+      <span class="skill">Audit Readiness</span>
+      <span class="skill">Workplace Health &amp; Safety</span>
+    </div>
+  </section>
+  <section>
+    <div class="title"><h2>Work Experience</h2><span class="note">Most recent first</span></div>
+    <div class="job">
+      <div class="jobhead"><h3>Business Operations Manager</h3><span class="date">2016 - 2025</span></div>
+      <div class="org">The Sundae Creative / Moreton Bay, QLD</div>
+      <ul>
+        <li>Designed operational workflows across scheduling, procurement, invoicing and customer service, reducing turnaround delays.</li>
+        <li>Maintained source-of-truth documentation and records with consistent version control and confidentiality processes.</li>
+        <li>Coordinated projects, supplier negotiations and budget administration across changing priorities.</li>
+      </ul>
+    </div>
+    <div class="job">
+      <div class="jobhead"><h3>Health &amp; Safety Administrator</h3><span class="date">2014 - 2016</span></div>
+      <div class="org">4cRisk Pty Ltd / Brisbane, QLD</div>
+      <ul>
+        <li>Coordinated confidential records, appointments and stakeholder logistics within regulated environments.</li>
+        <li>Supported compliance audits through document control, filing systems and accurate reporting.</li>
+      </ul>
+    </div>
+    <div class="job">
+      <div class="jobhead"><h3>Office Manager &amp; Safety Administrator</h3><span class="date">2011 - 2013</span></div>
+      <div class="org">TrackStar Alliance / Thiess Pty Ltd / Brisbane, QLD</div>
+      <ul>
+        <li>Supported senior leadership and a workforce of 150+ with operational coordination, compliance records and correspondence.</li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <div class="title"><h2>Education &amp; Credentials</h2></div>
+    <p>Certificate IV in Training and Assessment &nbsp; | &nbsp; Blue Card &nbsp; | &nbsp; First Aid &amp; CPR &nbsp; | &nbsp; Queensland Driver's Licence</p>
+  </section>
+  <footer><span>Portal-safe export</span><span>01 / Danielle Evans</span></footer>
+</article>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# {{NAME}}
+
+{{HEADLINE}}
+
+{{LOCATION}} | {{PHONE}} | {{EMAIL}}{{LINKEDIN_MD_INLINE}}
+
+---
+
+{{LETTER_DATE}}
+
+{{ADDRESSEE_MD}}
+
+**Re: {{ROLE}}{{REF_NUMBER_SUFFIX}}**
+
+{{SALUTATION}}
+
+{{BODY_MD}}
+{{PROOF_MD}}
+
+{{CLOSING}},
+
+{{NAME_TITLE_CASE}}
+{{PHONE}} | {{EMAIL}}

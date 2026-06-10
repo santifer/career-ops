@@ -1,0 +1,44 @@
+{
+  "approved_variant": "A",
+  "artifact": "refined-resume-A",
+  "approved_on": "2026-05-28",
+  "scope": "ATS-safe single-column resume visual reference",
+  "source_html": "variant-a-refined-resume.html",
+  "visual_render": "refined-resume-A.png",
+  "pipeline_pdf": "refined-resume-A-current-pipeline.pdf",
+  "status": "approved_for_implementation_planning",
+  "evidence": {
+    "page_count": 1,
+    "paper_format": "A4",
+    "prototype_labels_removed": true,
+    "canonical_headings_extract_exactly": [
+      "PROFESSIONAL SUMMARY",
+      "SKILLS",
+      "WORK EXPERIENCE",
+      "EDUCATION",
+      "CERTIFICATIONS"
+    ],
+    "text_order_verified": [
+      "name",
+      "role",
+      "contact",
+      "professional summary",
+      "skills",
+      "work experience",
+      "education",
+      "certifications",
+      "footer"
+    ]
+  },
+  "implementation_notes": [
+    "Use the refined visual direction as the resume family anchor.",
+    "Keep section headings canonical for ATS extraction.",
+    "Avoid wide letter spacing on text that must extract as normal words.",
+    "Do not treat fixture copy as approved candidate content."
+  ],
+  "open_items": [
+    "Matching cover letter approval remains separate unless explicitly confirmed.",
+    "Letter and resume need short/typical/long content fixtures before implementation is complete.",
+    "Both A4 and Letter behavior should be verified during implementation."
+  ]
+}

@@ -4,20 +4,56 @@ System-layer template files used by career-ops scripts and modes. These files ar
 
 ## Files
 
-| File | Used By | Purpose |
-|------|---------|---------|
-| `cv-template.html` | `generate-pdf.mjs` | HTML/CSS template for ATS-optimized CV PDFs |
-| `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
-| `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
-| `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
+| File                         | Used By                                                              | Purpose                                                                  |
+| ---------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `cv-template.html`           | `generate-pdf.mjs`, legacy `/career-ops pdf` flow                    | Refined ATS-safe CV PDF template                                         |
+| `resume-template.html`       | `generate-resume.mjs`                                                | Refined ATS-safe resume PDF template                                     |
+| `resume-template.md`         | `generate-resume.mjs`                                                | Portal-ready plain Markdown resume template                              |
+| `cover-letter-template.html` | `generate-resume.mjs`                                                | Matching single-column cover-letter PDF template                         |
+| `cover-letter-template.md`   | `generate-resume.mjs`                                                | Portal-ready plain Markdown cover-letter template                        |
+| `cv-template.tex`            | `generate-latex.mjs`                                                 | LaTeX/Overleaf template for ATS-optimized CV PDFs                        |
+| `portals.example.yml`        | Onboarding                                                           | Example portal scanner configuration (copy to `portals.yml` to activate) |
+| `states.yml`                 | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases                           |
 
 ### cv-template.html
 
 The HTML template rendered by Playwright into PDF. Uses placeholder tokens (`{{NAME}}`, `{{SUMMARY_TEXT}}`, `{{EXPERIENCE}}`, etc.) that the PDF pipeline fills at generation time.
 
-**Design:** Space Grotesk headings + DM Sans body, single-column ATS-safe layout, self-hosted fonts from `fonts/`.
+**Design:** Refined ATS-safe single-column layout from the verified gstack
+design-review artifacts under
+`~/.gstack/projects/santifer-career-ops/designs/resume-builder-20260528/`.
+Use `variant-a-refined-resume.html` as the resume anchor, with
+`variant-a-ats.html`, `design-board.html`, and `document-family-board.html` as
+context artifacts.
+
+The production style uses a white paper background, navy ink,
+muted blue-grey rules, a Georgia display name, and self-hosted DM Sans body
+text. Headings use conservative letter spacing so `pdftotext` and ATS parsers
+extract complete words.
 
 **Customization:** Edit this file to change colors, spacing, or section order. The placeholder tokens are documented in `batch/batch-prompt.md` under "Template placeholders."
+
+### resume-template.html / cover-letter-template.html
+
+The resume-builder templates share the same refined visual language as
+`cv-template.html`. They are driven by JSON specs and rendered through
+`generate-resume.mjs`, which writes HTML, Markdown, and PDF into
+`output/{company-slug}-{role-slug}/`.
+
+`generate-resume.mjs` also copies the required DM Sans files into
+`output/{company-slug}-{role-slug}/fonts/` so the generated HTML previews load
+cleanly in a browser as well as through the PDF renderer.
+
+Use canonical resume headings for parser safety: `Professional Summary`,
+`Skills`, `Work Experience`, `Education`, and `Certifications` when the spec
+contains certifications.
+
+The matching cover letter follows
+`resume-builder-20260528/variant-a-cover-letter.html`: serif candidate header,
+large serif role heading, small uppercase subject label, linear body copy,
+optional `proof` block, signature, and footer. Keep the cover letter
+single-column and avoid decorative sidebars because these files are intended
+for portal uploads as well as human review.
 
 ### cv-template.tex
 

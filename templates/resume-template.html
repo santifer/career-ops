@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{NAME}} - Resume</title>
+<link rel="icon" href="data:,">
+
+<style>
+  /* Self-hosted DM Sans for body - reuses the existing project fonts dir. */
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --ink: #25394f;
+    --body: #334353;
+    --muted: #64758a;
+    --line: #cad5df;
+    --paper: #ffffff;
+    --wash: #ffffff;
+    --accent: #526982;
+    --callout: #e8edf2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: 'DM Sans', Avenir Next, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.5;
+    color: var(--body);
+    background: var(--wash);
+    margin: 0;
+    padding: 0;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'ss01' 1;
+  }
+
+  /* ===========================================================
+     Page-level -- relies on Playwright margins set in generate-pdf.mjs.
+     =========================================================== */
+  .page {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  /* ===========================================================
+     HEADER -- mirrors the approved refined ATS-safe direction.
+     =========================================================== */
+  .header {
+    padding-bottom: 0;
+    margin-bottom: 6.5mm;
+  }
+
+  .name {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 29pt;
+    line-height: 1;
+    letter-spacing: 0.035em;
+    color: var(--ink);
+    text-transform: uppercase;
+    margin: 0 0 5px;
+  }
+
+  .headline {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0;
+  }
+
+  .rule {
+    border-top: 0.8pt solid var(--line);
+    margin: 12px 0 10px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 18px;
+    font-size: 9pt;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .contact-row a { color: var(--muted); text-decoration: none; }
+  .contact-row .item { display: inline-flex; align-items: baseline; }
+
+  .status-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    margin-top: 8px;
+  }
+  .chip {
+    font-size: 8.5pt;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ===========================================================
+     SECTION HEADER -- small caps with conservative letter spacing for ATS.
+     =========================================================== */
+  .section {
+    margin-bottom: 4.5mm;
+  }
+  .section-head {
+    margin-bottom: 7px;
+    padding-bottom: 4px;
+    border-bottom: 0.8pt solid var(--line);
+  }
+  .section-head .title {
+    font-size: 9pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .section-head .meta {
+    display: none;
+  }
+
+  .summary {
+    font-size: 10pt;
+    line-height: 1.5;
+    color: var(--body);
+  }
+
+  /* ===========================================================
+     CAPABILITIES - grouped sub-lists
+     =========================================================== */
+  .capabilities {
+    display: block;
+  }
+  .cap-group .cap-head {
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 2px;
+  }
+  .cap-group ul {
+    list-style: none;
+    padding: 0;
+  }
+  .cap-group li {
+    display: inline;
+    font-size: 9.5pt;
+    color: var(--body);
+    padding: 1px 0;
+    line-height: 1.65;
+  }
+  .cap-group li::before {
+    content: "";
+    margin: 0;
+  }
+  .cap-group li::after {
+    content: " | ";
+    color: var(--muted);
+  }
+  .cap-group li:last-child::after {
+    content: "";
+  }
+
+  /* ===========================================================
+     EXPERIENCE - role blocks
+     =========================================================== */
+  /* Roles flow across page breaks; only the heading is kept with its first
+     lines (see @media print) so a role never starts orphaned at a page foot. */
+  .role { margin-bottom: 10px; }
+  .role:last-child { margin-bottom: 0; }
+
+  .role-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+    gap: 12px;
+  }
+  .role-title {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .role-title .contract-pill {
+    display: inline-block;
+    font-family: 'DM Sans', Avenir Next, Arial, sans-serif;
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 2px;
+    vertical-align: 2px;
+    margin-left: 6px;
+  }
+  .role-dates {
+    font-size: 9pt;
+    color: var(--muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .role-company {
+    font-size: 9pt;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .role-company .sep { color: var(--muted); margin: 0 6px; }
+  .role-context {
+    font-size: 9.5pt;
+    color: var(--body);
+    margin-bottom: 6px;
+    line-height: 1.55;
+  }
+  .role ul.bullets {
+    list-style: none;
+    padding-left: 0;
+    margin: 4px 0 0 0;
+  }
+  .role ul.bullets li {
+    position: relative;
+    padding-left: 14px;
+    margin-bottom: 3px;
+    font-size: 9.5pt;
+    color: var(--body);
+    line-height: 1.42;
+  }
+  .role ul.bullets li::before {
+    content: "-";
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+  }
+
+  /* ===========================================================
+     KEY CALLOUT - highlighted achievement block
+     =========================================================== */
+  .key-callout {
+    background: var(--callout);
+    border-left: 2px solid var(--ink);
+    padding: 8px 12px;
+    margin: 6px 0;
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 10px;
+    align-items: start;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    border-radius: 2px;
+  }
+  .key-callout .key-tag {
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .key-callout .key-tag::before {
+    content: "";
+    color: var(--ink);
+    margin-right: 2px;
+  }
+  .key-callout .key-body { color: var(--ink); }
+
+  /* ===========================================================
+     EDUCATION & CERTIFICATIONS
+     =========================================================== */
+  .ed-list {
+    list-style: none;
+    padding: 0;
+  }
+  .ed-list li {
+    font-size: 9.5pt;
+    color: var(--body);
+    padding: 2px 0 2px 14px;
+    position: relative;
+    break-inside: avoid;
+    line-height: 1.5;
+  }
+  .ed-list li::before {
+    content: "-";
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+  }
+
+  /* ===========================================================
+     COMMUNITY / REFEREES - soft accent panel
+     =========================================================== */
+  .community {
+    background: var(--callout);
+    border-radius: 2px;
+    padding: 14px 16px;
+    font-size: 9.5pt;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .community .panel-title {
+    font-size: 9pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .referees {
+    font-size: 9.5pt;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ===========================================================
+     PRINT TUNING
+     =========================================================== */
+  @media print {
+    body { background: var(--paper); }
+    /* NOTE: do NOT set page-break-inside: avoid on .section -- the Work
+       Experience section holds every role, so avoiding a break there forces
+       the whole block onto the next page and leaves a large white gap.
+       Let sections flow; protect only individual roles + callouts from
+       splitting mid-block. */
+    .section-head { break-after: avoid; page-break-after: avoid; }
+    /* Keep a role's heading + company + context glued to what follows so a
+       role never starts at the very bottom of a page with its body overleaf.
+       The role itself is allowed to break, which lets content fill the page. */
+    .role-head, .role-company, .role-context { break-after: avoid; page-break-after: avoid; }
+    .role ul.bullets li { break-inside: avoid; }
+    .key-callout { page-break-inside: avoid; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <h1 class="name">{{NAME}}</h1>
+    <div class="headline">{{HEADLINE}}</div>
+    <div class="rule"></div>
+    <div class="contact-row">
+      <span class="item">{{LOCATION}}</span>
+      <span class="item">{{PHONE}}</span>
+      <span class="item"><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></span>
+      {{LINKEDIN_ITEM}}
+    </div>
+    {{STATUS_CHIPS_HTML}}
+  </header>
+
+  <section class="section">
+    <div class="section-head">
+      <span class="title">Professional Summary</span>
+      <span class="meta">{{SUMMARY_META}}</span>
+    </div>
+    <p class="summary">{{SUMMARY}}</p>
+  </section>
+
+  {{CAPABILITIES_SECTION}}
+
+  <section class="section">
+    <div class="section-head">
+      <span class="title">Work Experience</span>
+      <span class="meta"></span>
+    </div>
+    {{EXPERIENCE_HTML}}
+  </section>
+
+  {{EDUCATION_SECTION}}
+
+  {{CERTIFICATIONS_SECTION}}
+
+  {{COMMUNITY_SECTION}}
+
+  {{REFEREES_SECTION}}
+
+</div>
+</body>
+</html>

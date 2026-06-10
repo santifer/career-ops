@@ -1,0 +1,139 @@
+{
+  "kind": "resume",
+  "applicant": {
+    "name": "Danielle Evans",
+    "headline": "Compliance & Quality Administration Professional",
+    "location": "Ningi, Moreton Bay QLD 4511",
+    "phone": "0430 205 402",
+    "email": "danielleevans@outlook.com.au",
+    "linkedin": "linkedin.com/in/danielleqld",
+    "status_chips": [
+      "Australian Citizen",
+      "Full Work Rights",
+      "Certificate IV TAE",
+      "Available Immediately"
+    ],
+    "lang": "en-AU"
+  },
+  "job": {
+    "company": "Australian Trade Training College",
+    "role": "RTO Quality & Compliance Officer",
+    "ref_number": "9MHGJ"
+  },
+  "summary": {
+    "meta": "15+ years | regulated environments",
+    "text": "Administration and compliance professional with 15+ years across occupational health, infrastructure and business operations. Experienced in audit preparation, document control, confidential records, training and certification tracking, data integrity and process improvement. Holds a Certificate IV in Training and Assessment and is seeking to bring established controls discipline into RTO quality and compliance while building current ASQA and Standards for RTOs knowledge."
+  },
+  "capabilities": [
+    {
+      "group": "Quality & Compliance",
+        "items": [
+          "Audit preparation & gap analysis",
+          "Document & version control",
+          "Compliance registers & monitoring",
+          "Confidential records"
+      ]
+    },
+    {
+      "group": "Training Administration",
+        "items": [
+          "Training & certification tracking",
+          "Induction coordination",
+          "Certificate IV in Training and Assessment",
+          "Stakeholder liaison"
+      ]
+    },
+    {
+      "group": "Systems & Improvement",
+        "items": [
+          "Microsoft Excel, Word, Outlook & Teams",
+          "SharePoint & cloud document systems",
+          "Data integrity & structured records",
+          "Templates & workflow improvement"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "title": "Creative Design and Business Operations",
+      "contract": false,
+      "dates": "2016 - 2025",
+      "company": "Self-Employed",
+      "location": "Moreton Bay, QLD",
+      "context": "Operated a local business while owning all client administration, records, finance, supplier coordination and workflow controls.",
+      "key": "Implemented scheduling, templates and structured communication workflows reported to reduce turnaround times by approximately 30%.",
+      "bullets": [
+        "Maintained organised client databases and project documentation using secure cloud tools, with version control, data integrity, structured file naming and privacy-conscious handling.",
+        "Managed enquiries, schedules, project delivery, quotes, invoices, payments and records across concurrent client commitments.",
+        "Created standard templates, automated reminders and documented workflows to improve consistency, monitoring and follow-through."
+      ]
+    },
+    {
+      "title": "Health and Safety Administrator",
+      "contract": false,
+      "dates": "2014 - 2016",
+      "company": "4cRisk Pty Ltd",
+      "location": "Brisbane, QLD",
+      "context": "Supported occupational health, workers compensation and compliance administration across mining, construction and corporate clients.",
+      "key": "Improved training and certification tracking, reducing audit preparation time by 15%.",
+      "bullets": [
+        "Supported compliance audits through scheduling, evidence collation, document control, reporting and follow-up.",
+        "Maintained confidential health and workers compensation records under strict privacy, compliance and ethical handling requirements.",
+        "Coordinated accurate documentation across employees, clients, insurers, medical providers and rehabilitation professionals."
+      ]
+    },
+    {
+      "title": "Safety Systems Administrator",
+      "contract": true,
+      "dates": "2014",
+      "company": "Virgin Australia",
+      "location": "Brisbane, QLD",
+      "bullets": [
+        "Maintained safety incident classification, reporting, alerts and document control within an operational compliance environment.",
+        "Supported workers compensation and return-to-work administration while protecting sensitive case information."
+      ]
+    },
+    {
+      "title": "Administrative Officer, HSE Support",
+      "contract": true,
+      "dates": "2013 - 2014",
+      "company": "Origin Energy",
+      "location": "Brisbane, QLD",
+      "bullets": [
+        "Maintained HSE registers, training records, monthly reports, safety alerts and version-controlled procedures across Queensland sites.",
+        "Standardised reporting and documentation processes to improve management visibility and consistent compliance practices.",
+        "Supported onboarding, induction coordination, procurement and operational documentation across multiple teams."
+      ]
+    },
+    {
+      "title": "Safety Administrator and Office Manager",
+      "contract": false,
+      "dates": "2011 - 2013",
+      "company": "TrackStar Alliance / Thiess Pty Ltd",
+      "location": "Brisbane, QLD",
+      "context": "Ran safety and office administration for a workforce of 150+ across multiple rail infrastructure project sites.",
+      "key": "Achieved zero non-compliance findings across three major safety audits through systematic pre-audit gap analysis and document control.",
+      "bullets": [
+        "Maintained compliance training, certification, induction and workforce records for 150+ workers across multiple sites.",
+        "Managed safety reporting systems, SharePoint records, inspection schedules, registers and audit evidence.",
+        "Designed an SMS incident reporting process that reduced average notification time from 45 minutes to under 10 minutes and was adopted across multiple sites."
+      ]
+    }
+  ],
+  "education": [
+    "Graduate Certificate in Occupational Health and Safety - Australian Catholic University",
+    "Certificate IV in Training and Assessment",
+    "Rehabilitation and Return to Work Coordinator training"
+  ],
+  "certifications": [
+    "Working with Children Check (Blue Card), current",
+    "First Aid Certificate, current",
+    "Queensland C Class Driver's Licence, current"
+  ],
+  "tools": [
+    "Microsoft Word, Excel, Outlook, PowerPoint and Teams",
+    "SharePoint, OneDrive, Google Drive and Dropbox",
+    "Oracle, MySQL, Salesforce, HubSpot, Zoho Desk, Zendesk and Jira",
+    "Asana, ClickUp, Microsoft Project, Slack, Zoom and Confluence"
+  ]
+}

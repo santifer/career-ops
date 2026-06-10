@@ -1,0 +1,38 @@
+{
+  "kind": "cover-letter",
+  "applicant": {
+    "name": "Danielle Evans",
+    "headline": "Compliance & Quality Administration Professional",
+    "location": "Ningi, Moreton Bay QLD 4511",
+    "phone": "0430 205 402",
+    "email": "danielleevans@outlook.com.au",
+    "linkedin": "linkedin.com/in/danielleqld",
+    "lang": "en-AU"
+  },
+  "job": {
+    "company": "Australian Trade Training College",
+    "role": "RTO Quality & Compliance Officer",
+    "role_short": "RTO Quality & Compliance Officer",
+    "ref_number": "9MHGJ"
+  },
+  "letter_date": "10 June 2026",
+  "addressee": {
+    "recipient": "Hiring Manager",
+    "org": "Australian Trade Training College",
+    "lines": [
+      "Brendale, Queensland"
+    ]
+  },
+  "salutation": "Dear Hiring Manager,",
+  "body_paragraphs": [
+    "I am applying for the RTO Quality & Compliance Officer position at Australian Trade Training College. The role's focus on audit support, document control, training records and practical process improvement closely matches the work I have completed across occupational health, infrastructure and business administration.",
+    "At Thiess, I maintained compliance training, certification records, registers and audit documentation for a workforce of more than 150 across multiple project sites. Systematic pre-audit gap analysis and document control contributed to zero non-compliance findings across three major safety audits. At 4cRisk, I improved training and certification tracking, reducing audit preparation time by 15%, while managing confidential health and workers compensation records.",
+    "My compliance experience has been in WHS and occupational health rather than directly within an RTO, so I would bring strong transferable controls while building current knowledge of ASQA processes, the 2025 Standards for RTOs, validation and Training and Assessment Strategies. I also hold a Certificate IV in Training and Assessment and have extensive experience learning new systems, maintaining accurate records and coordinating stakeholders under firm deadlines.",
+    "After operating my own creative design and business administration practice for nearly ten years, I am deliberately returning to a team-based role where careful systems and reliable administration support a clear community purpose. ATTC's work developing trade skills in the region, together with the opportunity to learn from the Self Assurance & Quality Lead, makes this a strong next step."
+  ],
+  "proof": {
+    "label": "Relevant Fit",
+    "text": "15+ years in regulated administration | zero findings across three major audits | Certificate IV in Training and Assessment | Moreton Bay based"
+  },
+  "closing": "Kind regards"
+}

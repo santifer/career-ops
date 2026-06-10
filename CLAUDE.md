@@ -56,7 +56,12 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `portals.yml` | Query and company config |
 | `templates/cv-template.html` | HTML template for CVs |
 | `templates/cv-template.tex` | LaTeX/Overleaf template for CVs |
+| `templates/resume-template.html` | **Resume builder:** designer single-column HTML resume (white + blue-grey palette, serif name, KEY callouts, CONTRACT pills) |
+| `templates/resume-template.md` | **Resume builder:** ATS-perfect markdown resume for Smart Jobs / Workday / PageUp paste-in |
+| `templates/cover-letter-template.html` | **Resume builder:** cover letter HTML matching the resume design (single page) |
+| `templates/cover-letter-template.md` | **Resume builder:** cover letter markdown for paste-in portals |
 | `generate-pdf.mjs` | Playwright: HTML to PDF |
+| `generate-resume.mjs` | **Resume builder:** reads a resume / cover-letter JSON spec → expands templates → calls `generate-pdf.mjs`. Output lands in `output/{company-slug}-{role-slug}/`. |
 | `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
@@ -82,6 +87,7 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
 | `/career-ops-deep` | `/career-ops deep` | Deep company research |
 | `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-resume` | `/career-ops resume` | Generate tailored resume + cover letter pack (designer PDF + ATS-safe .md) |
 | `/career-ops-latex` | `/career-ops latex` | Export CV as LaTeX/Overleaf .tex |
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
 | `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
@@ -107,6 +113,7 @@ When using the [Gemini CLI](https://github.com/google-gemini/gemini-cli), the fo
 | `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
 | `/career-ops-deep` | `/career-ops deep` | Deep company research |
 | `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-resume` | `/career-ops resume` | Generate tailored resume + cover letter pack (designer PDF + ATS-safe .md) |
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
 | `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
 | `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
@@ -250,6 +257,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |
+| Wants a tailored resume + cover letter pack (designer PDF + ATS-safe .md) | `resume` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
 | Asks about application status | `tracker` |
@@ -332,12 +340,10 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 5. `status` -- canonical status (e.g., `Evaluated`)
 6. `score` -- format `X.X/5` (e.g., `4.2/5`)
 7. `pdf` -- `✅` or `❌`
-8. `report` -- markdown link, always written **root-relative**: `[num](reports/...)`
+8. `report` -- markdown link `[num](reports/...)`
 9. `notes` -- one-line summary
 
 **Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
-
-**Report link normalization:** The TSV always carries a **root-relative** `[num](reports/...)` link. `merge-tracker.mjs` rewrites it so the link is relative to the tracker file's own directory before writing it into the tracker — `../reports/...` when the tracker is at `data/applications.md`, or `reports/...` at the root layout. This keeps links clickable from the tracker (markdown links resolve relative to the file that contains them). Normalization is idempotent. To fix links in an existing tracker, run `node merge-tracker.mjs --migrate` (see #760).
 
 ### Pipeline Integrity
 

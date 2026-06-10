@@ -1,0 +1,56 @@
+{
+  "approved_variant": "A",
+  "artifact": "cover-letter-A",
+  "approved_on": "2026-05-28",
+  "scope": "ATS-safe single-column cover letter visual reference matching the approved refined resume",
+  "source_html": "variant-a-cover-letter.html",
+  "visual_render": "cover-letter-A.png",
+  "pipeline_pdf": "cover-letter-A-current-pipeline.pdf",
+  "status": "approved_for_implementation_planning",
+  "evidence": {
+    "page_count": 1,
+    "paper_format": "A4",
+    "pdf_file_size_bytes": 72855,
+    "visual_dimensions_px": "794 x 1123",
+    "prototype_labels_removed": true,
+    "split_token_scan": "pass",
+    "required_text_extracts_exactly": [
+      "DANIELLE EVANS",
+      "Senior Administration Professional",
+      "27 May 2026",
+      "Hiring Manager",
+      "Administration Coordinator",
+      "APPLICATION FOR ADVERTISED POSITION",
+      "Dear Hiring Manager,",
+      "RELEVANT FIT",
+      "Kind regards,",
+      "COVER LETTER"
+    ],
+    "text_order_verified": [
+      "name",
+      "role",
+      "contact",
+      "date",
+      "recipient",
+      "role heading",
+      "application subject",
+      "greeting",
+      "body",
+      "fit callout",
+      "close",
+      "signature",
+      "footer"
+    ]
+  },
+  "implementation_notes": [
+    "Use this cover letter as the matching document-family reference for the refined ATS-safe resume.",
+    "Keep the cover letter single-column and avoid decorative sidebars for portal uploads.",
+    "Avoid wide letter spacing on labels or footer text because PDF extraction can split words into characters.",
+    "Do not treat fixture copy, contact details, or the sample employer as approved candidate content."
+  ],
+  "open_items": [
+    "Implementation still needs real resume and cover-letter content fixtures for short, typical, and long applications.",
+    "Both A4 and Letter paper behavior should be verified in the implemented builder.",
+    "The production generator should include a text-extraction gate before approving generated PDFs."
+  ]
+}

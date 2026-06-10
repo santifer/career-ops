@@ -1,0 +1,7 @@
+{
+  "plugins": {
+    "ruflo/ruflo-core": {
+      "enabled": true
+    }
+  }
+}
