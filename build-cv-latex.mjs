@@ -33,7 +33,11 @@ function sanitizeUrl(url) {
   const allowedSchemes = ['mailto:', 'http:', 'https:'];
   const hasScheme = allowedSchemes.some(s => url.toLowerCase().startsWith(s));
   if (!hasScheme) {
-    url = 'https://' + url;
+    if (url.includes('@') && !url.includes('/')) {
+      url = 'mailto:' + url;
+    } else {
+      url = 'https://' + url;
+    }
   }
   url = url.replace(/[{}%$#\\~^]/g, '');
   return url;

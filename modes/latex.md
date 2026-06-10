@@ -17,6 +17,7 @@ Export a tailored, ATS-optimized CV as a `.tex` file and compile it to PDF via `
 11. Build a JSON payload (see schema below) and write to `/tmp/cv-{candidate}-{company}.json`
 12. Run: `node build-cv-latex.mjs /tmp/cv-{candidate}-{company}.json output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex`
 13. Run: `node generate-latex.mjs output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf`
+    *(Replace `{candidate}`, `{company}`, `{YYYY-MM-DD}` with actual values.)*
 14. Report: .tex path, .pdf path, file sizes, section count, keyword coverage %
 
 **Requires:** `tectonic` (preferred — `brew install tectonic`, auto-downloads packages) or `pdflatex` (MiKTeX / TeX Live) on PATH.
@@ -118,7 +119,7 @@ Write a JSON file with this structure. `build-cv-latex.mjs` handles template mer
 | `±` | `$\pm$` |
 | `→` | `$\rightarrow$` |
 
-**Exception:** URLs inside `\href{}` are NOT escaped — the script skips the URL argument.
+**Exception:** URLs inside `\href{}` are NOT escaped by the LaTeX escaper, but `sanitizeUrl()` still validates the scheme (mailto/http/https) and removes dangerous characters to prevent injection.
 
 ## ATS Rules (same as pdf mode)
 
