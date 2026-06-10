@@ -1067,6 +1067,34 @@ tracked_companies:
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
 
+# -- Apify-backed sources --
+  # Generic provider — works with any Apify actor. Each entry declares which
+  # actor to run, what input to send, and how to map the actor's output items
+  # to {title, url, company, location}. Requires APIFY_TOKEN in .env.
+  # Each run consumes Apify credits/usage; start small until happy with results.
+
+  - name: "Indeed — VP Engineering (Chicago + Remote)"
+    provider: apify
+    actor: misceres/indeed-scraper
+    input:
+      position: "VP of Engineering"
+      location: "Chicago, IL"
+      country: "US"
+      maxItems: 25
+    field_map:
+      title:    [positionName, title]
+      url:      url
+      company:  [company, companyName]
+      location: [location, formattedLocation]
+      # Description map writes each item's JD body to jds/{slug}-{hash}.md
+      # (where {hash} is sha1[:10] of the URL, so two distinct postings
+      # sharing the same company+title can't collide on one file) and
+      # rewrites the pipeline URL to local:jds/... so batch evaluation
+      # doesn't have to refetch (handy when the source bot-blocks plain
+      # HTTP). Omit this line to keep the remote URL and skip the cache.
+      description: [description, descriptionText, descriptionHTML, jobDescription]
+    enabled: true
+
   # ============================================================
   # -- Türkiye / Turkey market
   # ============================================================
