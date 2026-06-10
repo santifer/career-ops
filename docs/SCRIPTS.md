@@ -8,6 +8,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 |---------|--------|---------|
 | `npm run doctor` | `doctor.mjs` | Validate setup prerequisites |
 | `npm run verify` | `verify-pipeline.mjs` | Check pipeline data integrity |
+| `npm run verify:modes` | `verify-mode-parity.mjs` | Check localized mode semantic anchors |
 | `npm run normalize` | `normalize-statuses.mjs` | Fix non-canonical statuses |
 | `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
@@ -43,6 +44,29 @@ npm run verify
 ```
 
 **Exit codes:** `0` pipeline clean (zero errors), `1` errors found. Warnings (e.g. possible duplicates) do not cause a non-zero exit.
+
+---
+
+## verify:modes
+
+Checks localized mode files for semantic anchors that should stay aligned with canonical modes, without requiring literal translations.
+
+Examples of anchors:
+
+- `_shared.md` references user profile sources and the no-hardcoded-metrics rule
+- offer/evaluation modes mention posting legitimacy and the `**URL:**` report header
+- apply modes keep a human-review/submit safety anchor
+- pipeline modes retain PDF and tracker-output behavior
+
+By default, missing semantic anchors are warnings so existing translations can be audited without breaking every PR. Missing expected locale files are errors. Use `--strict` to fail on warnings as well.
+
+```bash
+npm run verify:modes
+npm run verify:modes -- --strict
+node verify-mode-parity.mjs --self-test
+```
+
+**Exit codes:** `0` no missing files and, unless `--strict`, warnings only; `1` missing files or strict-mode warnings.
 
 ---
 
