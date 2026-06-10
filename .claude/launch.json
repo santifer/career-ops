@@ -4,9 +4,16 @@
     {
       "name": "dashboard",
       "runtimeExecutable": "go",
-      "runtimeArgs": ["run", "./dashboard/main.go", "--path", "."],
+      "runtimeArgs": ["-C", "/Users/danielleevans/Library/Mobile Documents/iCloud~md~obsidian/Documents/career-ops/.claude/worktrees/busy-haslett-91d059/dashboard", "run", ".", "--path", "/Users/danielleevans/Library/Mobile Documents/iCloud~md~obsidian/Documents/career-ops"],
       "port": 0,
-      "_note": "Bubbletea TUI — terminal app, no HTTP port. Run in a terminal session."
+      "_note": "Bubbletea TUI — requires a real TTY (/dev/tty). Cannot be launched via preview_start. Run manually: cd dashboard && go run . --path /path/to/project"
+    },
+    {
+      "name": "dashboard-web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["dashboard-web.mjs", "--path", "/Users/danielleevans/Library/Mobile Documents/iCloud~md~obsidian/Documents/career-ops"],
+      "port": 3141,
+      "_note": "HTTP web preview of applications.md — works in browser, no TTY needed."
     },
     {
       "name": "scan",
