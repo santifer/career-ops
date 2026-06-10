@@ -1309,6 +1309,88 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
+// ── 15. REDIRECTION FALLBACK (ISSUE 266) ─────────────────────────
+
+console.log('\n15. Redirection Fallback on 404/410 (Issue 266)');
+
+try {
+  const { extractCareersUrlDomain, searchForNewUrl } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // Test extractCareersUrlDomain
+  if (extractCareersUrlDomain('https://apply.workable.com/optimile') === 'apply.workable.com') {
+    pass('extractCareersUrlDomain extracts workable domain');
+  } else {
+    fail('extractCareersUrlDomain failed on workable');
+  }
+
+  if (extractCareersUrlDomain('https://company.recruitee.com/path?query=1') === 'company.recruitee.com') {
+    pass('extractCareersUrlDomain extracts recruitee domain');
+  } else {
+    fail('extractCareersUrlDomain failed on recruitee');
+  }
+
+  if (extractCareersUrlDomain('not-a-url') === null) {
+    pass('extractCareersUrlDomain returns null for invalid url');
+  } else {
+    fail('extractCareersUrlDomain should return null for invalid url');
+  }
+
+  if (extractCareersUrlDomain(null) === null) {
+    pass('extractCareersUrlDomain returns null for non-string input');
+  } else {
+    fail('extractCareersUrlDomain should return null for non-string input');
+  }
+
+  // Test searchForNewUrl using mock page
+  let gotoCalls = [];
+  const fakePage = {
+    async goto(url) {
+      gotoCalls.push(url);
+      return { status: () => 200 };
+    },
+    async evaluate(fn) {
+      return ['/l/?uddg=https%3A%2F%2Fapply.workable.com%2Foptimile%2Fj%2Fnew-active-job'];
+    }
+  };
+
+  const offer = {
+    title: 'Senior PM',
+    company: 'Optimile',
+    careersUrlDomain: 'apply.workable.com'
+  };
+
+  const newUrl = await searchForNewUrl(fakePage, offer);
+  if (newUrl === 'https://apply.workable.com/optimile/j/new-active-job') {
+    pass('searchForNewUrl extracts and decodes the new active URL from DuckDuckGo');
+  } else {
+    fail(`searchForNewUrl failed, returned: ${newUrl}`);
+  }
+
+  // Test negative case: malicious off-domain result
+  const fakePageEvil = {
+    async goto() { return { status: () => 200 }; },
+    async evaluate() {
+      return ['/l/?uddg=https%3A%2F%2Fapply.workable.com.evil.example%2Foptimile%2Fj%2Fnew-active-job'];
+    }
+  };
+  const evilUrl = await searchForNewUrl(fakePageEvil, offer);
+  if (evilUrl === null) {
+    pass('searchForNewUrl rejects malicious off-domain suffixes');
+  } else {
+    fail(`searchForNewUrl accepted an off-domain suffix: ${evilUrl}`);
+  }
+
+  const parsedGotoUrl = new URL(gotoCalls[0]);
+  if (gotoCalls.length === 1 && (parsedGotoUrl.hostname === 'html.duckduckgo.com' || parsedGotoUrl.hostname === 'duckduckgo.com')) {
+    pass('searchForNewUrl queried DuckDuckGo search page');
+  } else {
+    fail(`searchForNewUrl made incorrect navigation: ${JSON.stringify(gotoCalls)}`);
+  }
+} catch (e) {
+  fail(`Redirection fallback tests crashed: ${e.message}`);
+}
+
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

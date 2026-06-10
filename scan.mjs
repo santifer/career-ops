@@ -176,6 +176,16 @@ export function buildLocationFilter(locationFilter) {
   };
 }
 
+export function extractCareersUrlDomain(careersUrl) {
+  if (typeof careersUrl !== 'string') return null;
+  try {
+    const parsed = new URL(careersUrl);
+    return parsed.hostname.toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Dedup ───────────────────────────────────────────────────────────
 
 function loadSeenUrls() {
@@ -295,7 +305,43 @@ async function parallelFetch(tasks, limit) {
 
 // ── Main ────────────────────────────────────────────────────────────
 
-async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0 } = {}) {
+export async function searchForNewUrl(page, offer) {
+  if (!offer.careersUrlDomain) return null;
+  const query = `"${offer.title}" "${offer.company}" site:${offer.careersUrlDomain}`;
+  const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  try {
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    const hrefs = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('.result__a'))
+        .map(a => a.getAttribute('href'))
+        .filter(Boolean);
+    });
+    for (const href of hrefs) {
+      let resolvedUrl = href;
+      try {
+        const parsed = new URL(href, 'https://duckduckgo.com');
+        const uddg = parsed.searchParams.get('uddg');
+        if (uddg) {
+          resolvedUrl = uddg;
+        }
+      } catch {}
+      try {
+        const parsedUrl = new URL(resolvedUrl);
+        const hostname = parsedUrl.hostname.toLowerCase();
+        const targetDomain = offer.careersUrlDomain.toLowerCase();
+        if (hostname === targetDomain || hostname.endsWith('.' + targetDomain)) {
+          return resolvedUrl;
+        }
+      } catch {}
+    }
+  } catch (err) {
+    console.log(`  ⚠️ DDG search failed for ${offer.company} | ${offer.title}: ${err.message}`);
+  }
+  return null;
+}
+
+export async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0 } = {}) {
+  const seenUrls = loadSeenUrls();
   // Dynamic imports keep the default zero-token path free of Playwright startup
   let chromium;
   let checkUrlLiveness;
@@ -324,17 +370,19 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
     );
   }
 
-  // Three permanent buckets + one transient passthrough:
+  // Four permanent buckets + one transient passthrough:
   //   verified  → active pages and transient nav errors (retry next scan)
   //   expired   → classifier-confirmed dead postings (HTTP 4xx, redirect markers,
   //               body patterns, listing pages, insufficient content)
   //   dropped   → page loaded but classifier saw no Apply control. --verify is an
   //               opt-in stricter filter; keeping these defeats the purpose.
   //   invalid   → up-front URL guard rejections (malformed / non-http / private)
+  //   migrated  → expired tracked offers where a new active URL was found on DuckDuckGo
   const verified = [];
   const expired = [];
   const dropped = [];
   const invalid = [];
+  const migrated = [];
 
   const headed = headedFallback ? createHeadedPageProvider(chromium) : null;
   const getHeadedPage = headed ? () => headed.get() : undefined;
@@ -348,6 +396,33 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
         ? await checkUrlLivenessWithFallback(page, offer.url, { getHeadedPage })
         : await checkUrlLiveness(page, offer.url);
       if (result === 'expired') {
+        if (offer.tracked && offer.careersUrlDomain && code === 'http_gone') {
+          console.log(`  🔍 Offer ${offer.company} | ${offer.title} is gone. Searching for a new URL...`);
+          const newUrl = await searchForNewUrl(page, offer);
+          if (newUrl) {
+            console.log(`  ✨ Found potential new URL: ${newUrl}. Verifying liveness...`);
+            const verifyNew = headed
+              ? await checkUrlLivenessWithFallback(page, newUrl, { getHeadedPage })
+              : await checkUrlLiveness(page, newUrl);
+            if (verifyNew.result === 'active') {
+              if (seenUrls.has(newUrl)) {
+                console.log(`  ⏭️  New URL is active but already in history: ${newUrl}. Skipping.`);
+                expired.push({ ...offer, reason: 'migrated_duplicate' });
+                const wait = i < offers.length - 1 ? jitteredDelayMs(throttleBaseMs) : 0;
+                if (wait) await sleep(wait);
+                continue;
+              }
+              console.log(`  ✅ New URL is active! Migrating offer.`);
+              migrated.push({ ...offer, url: newUrl, oldUrl: offer.url });
+              seenUrls.add(newUrl);
+              const wait = i < offers.length - 1 ? jitteredDelayMs(throttleBaseMs) : 0;
+              if (wait) await sleep(wait);
+              continue;
+            } else {
+              console.log(`  ❌ New URL is not active: ${verifyNew.result} (${verifyNew.reason})`);
+            }
+          }
+        }
         expired.push({ ...offer, reason });
         console.log(`  ❌ expired   ${offer.company} | ${offer.title} (${reason})`);
       } else if (result === 'uncertain' && GUARD_CODES.has(code)) {
@@ -377,7 +452,7 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
     await browser.close();
   }
 
-  return { verified, expired, dropped, invalid };
+  return { verified, expired, dropped, invalid, migrated };
 }
 
 // Stable codes from liveness-browser's up-front URL guard. Routing dispatches
@@ -476,6 +551,7 @@ async function main() {
     let provider = company._provider;
     const ctx = makeHttpCtx();
     let sourceName = provider.id === 'local-parser' ? 'local-parser' : `${provider.id}-api`;
+    const careersUrlDomain = extractCareersUrlDomain(company.careers_url);
     try {
       let jobs;
       try {
@@ -518,7 +594,12 @@ async function main() {
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
-        newOffers.push({ ...job, source: sourceName });
+        newOffers.push({
+          ...job,
+          source: sourceName,
+          tracked: Boolean(careersUrlDomain),
+          careersUrlDomain
+        });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
@@ -532,6 +613,7 @@ async function main() {
   let expiredOffers = [];
   let droppedOffers = [];
   let invalidOffers = [];
+  let migratedOffers = [];
   if (verify && newOffers.length > 0) {
     console.log(`\nVerifying liveness of ${newOffers.length} new offer(s) with Playwright (sequential)...`);
     const result = await verifyOffers(newOffers, { headedFallback, throttleBaseMs });
@@ -539,15 +621,26 @@ async function main() {
     expiredOffers = result.expired;
     droppedOffers = result.dropped;
     invalidOffers = result.invalid;
+    migratedOffers = result.migrated || [];
   }
 
   // 6. Write results
-  if (!dryRun && verifiedOffers.length > 0) {
-    appendToPipeline(verifiedOffers);
+  if (!dryRun && (verifiedOffers.length > 0 || migratedOffers.length > 0)) {
+    const toPipeline = [...verifiedOffers, ...migratedOffers];
+    appendToPipeline(toPipeline);
     appendToScanHistory(verifiedOffers, date);
+    if (migratedOffers.length > 0) {
+      appendToScanHistory(migratedOffers, date);
+    }
   }
-  if (!dryRun && expiredOffers.length > 0) {
-    appendToScanHistory(expiredOffers, date, 'skipped_expired');
+  if (!dryRun && (expiredOffers.length > 0 || migratedOffers.length > 0)) {
+    const toHistoryExpired = [...expiredOffers];
+    if (migratedOffers.length > 0) {
+      toHistoryExpired.push(...migratedOffers.map(o => ({ ...o, url: o.oldUrl })));
+    }
+    if (toHistoryExpired.length > 0) {
+      appendToScanHistory(toHistoryExpired, date, 'skipped_expired');
+    }
   }
   // Pages that loaded but had no Apply control: record so we don't re-verify
   // them next scan, but never let them reach pipeline.md.
@@ -581,10 +674,11 @@ async function main() {
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (verify) {
     console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
+    console.log(`Migrated (re-routed):  ${migratedOffers.length} updated`);
     console.log(`No apply control:      ${droppedOffers.length} dropped`);
     console.log(`Invalid (guarded):     ${invalidOffers.length} dropped`);
   }
-  console.log(`New offers added:      ${verifiedOffers.length}`);
+  console.log(`New offers added:      ${verifiedOffers.length + migratedOffers.length}`);
 
   if (agentHandoff.length > 0) {
     console.log(`Agent/WebSearch handoff: ${agentHandoff.length} compan${agentHandoff.length === 1 ? 'y' : 'ies'} not handled by zero-token providers`);
@@ -604,10 +698,13 @@ async function main() {
     }
   }
 
-  if (verifiedOffers.length > 0) {
+  if (verifiedOffers.length > 0 || migratedOffers.length > 0) {
     console.log('\nNew offers:');
     for (const o of verifiedOffers) {
       console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}`);
+    }
+    for (const o of migratedOffers) {
+      console.log(`  ⚡ ${o.company} | ${o.title} (migrated to: ${o.url})`);
     }
     if (dryRun) {
       console.log('\n(dry run — run without --dry-run to save results)');
