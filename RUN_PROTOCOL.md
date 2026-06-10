@@ -77,15 +77,39 @@ node -e "import('./scripts/load-browser-config.mjs').then(m=>m.loadBrowserConfig
 Expected output: `OK chromium | extension_autofill: true`
 If you see a `BrowserConfigError`, fix the field it names.
 
-**How it works:** With `extension_autofill: true`, auto-submit launches Edge/Chrome using your real
-profile, navigates to the job URL, then waits 5 seconds for SpeedyApply to detect the form and
-autofill it. Our built-in field selectors (Greenhouse/Lever/Workday) are skipped entirely.
+**How it works (two-terminal CDP attach):**
 
-**IMPORTANT — close the browser before running auto-submit.**
-Chromium locks the profile directory while it is open. Playwright cannot attach to an already-open
-profile and will fail. Fully close Edge/Chrome before every auto-submit run.
+Playwright's persistent-context launch runs the browser in automation mode, which strips installed
+extensions — SpeedyApply won't appear. The fix is to keep your normal browser open and let
+Playwright attach to it via the Chrome DevTools Protocol (CDP), preserving all extensions.
 
-To opt out of extension autofill on a single run:
+**Every submission run requires two terminals:**
+
+```
+Terminal A — keep running throughout the session:
+  node scripts/launch-debug-browser.mjs
+
+Terminal B — run auto-submit as usual:
+  node scripts/auto-submit.mjs --kanban-json data\snapshot.json --semi-auto --limit 1
+```
+
+Terminal A launches Edge/Chrome with `--remote-debugging-port=9222` using your real profile
+(SpeedyApply and all extensions active). Terminal B connects to it via CDP, opens a new tab for
+each card, waits 5 seconds for SpeedyApply to fill the form, then hands control to you. When
+done, Terminal B closes only its tab — your browser session stays open.
+
+**You do NOT need to close the browser between runs.** Keep Terminal A running; restart Terminal B
+for each batch.
+
+To use a different port:
+```powershell
+# Terminal A
+node scripts/launch-debug-browser.mjs --port 9333
+# Terminal B
+node scripts/auto-submit.mjs --kanban-json data\snapshot.json --semi-auto --debug-port 9333
+```
+
+To opt out of extension autofill on a single run (uses built-in Playwright selectors, no Terminal A needed):
 ```powershell
 node scripts/auto-submit.mjs --semi-auto --no-extension-autofill --limit 1
 ```
@@ -94,6 +118,8 @@ node scripts/auto-submit.mjs --semi-auto --no-extension-autofill --limit 1
 ```powershell
 node scripts/detect-firefox.mjs
 # Change preferred: firefox in browser.yml, fill in the printed paths
+# Firefox uses launchPersistentContext — no two-terminal setup needed, but extensions
+# must be in the Firefox profile and the browser must be closed before running.
 ```
 
 ---

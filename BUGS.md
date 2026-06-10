@@ -249,6 +249,30 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-10-27 — Validate extension availability BEFORE choosing launch strategy
+
+**What happened:** We spent ~3 hours discovering that `launchPersistentContext` strips extensions (K-2026-06-10-25), then implementing it, testing it, and pivoting to CDP attach. If we had validated SpeedyApply's presence in the Playwright-launched browser first (e.g., check `chrome://extensions` in the persistent context), we would have caught this in 10 minutes.
+**Rule:** Before building extension-dependent automation, always verify the extension is actually present in the browser context you plan to use. Open a test page in the Playwright-launched browser and navigate to `chrome://extensions` or check for extension-injected DOM elements. Don't assume persistent context = extensions active.
+**How to apply:** When adding any new browser-extension dependency to auto-submit, add a verification step: open the browser, check for the extension's presence, fail fast with a clear message if absent. The 5-second wait we use for SpeedyApply is an implicit verification — if the form is empty after 5s, the extension probably isn't there.
+
+---
+
+### K-2026-06-10-26 — For extension automation: CDP attach beats launchPersistentContext
+
+**What happened:** `launchPersistentContext` runs Chrome/Edge in "automation mode" (`--disable-extensions` is implied or certain extension APIs are blocked). SpeedyApply showed up in the extensions list in a normal browser session but was invisible in the Playwright-launched persistent context. Fix: `connectOverCDP` against a browser started outside Playwright. Two-terminal workflow, but extensions stay live and the user's session (cookies, saved passwords, SpeedyApply profile) all work.
+**Rule:** When you need installed browser extensions to be active during Playwright automation, use the CDP attach pattern: (1) user launches the browser normally (or via `launch-debug-browser.mjs`) with `--remote-debugging-port`, (2) Playwright calls `connectOverCDP`. Never use `launchPersistentContext` for extension-dependent flows.
+**How to apply:** `launchBrowserForMode` in `auto-submit.mjs` defaults to 'connect' when a profile is configured. Run `node scripts/launch-debug-browser.mjs` in Terminal A, then run `auto-submit.mjs` in Terminal B. Cleanup: Playwright closes the tab/page but NOT the browser (browser is user-owned).
+
+---
+
+### K-2026-06-10-25 — Playwright `launchPersistentContext` disables extensions even with a user profile
+
+**What happened:** Playwright `chromium.launchPersistentContext(profilePath)` launches the browser with automation mode flags that prevent extension loading. SpeedyApply appeared in the normal Edge session (`edge://extensions`) but was absent after Playwright launched the same profile. Extensions are disabled by `--disable-extensions-except` and `--disable-component-extensions-with-background-pages` flags that Playwright injects automatically.
+**Rule:** `launchPersistentContext` is appropriate for session reuse (cookies, localStorage) but NOT for extension-dependent flows. The profile path tells Playwright which user data to use, but it cannot opt out of the automation-mode extension restrictions.
+**How to apply:** Use `connectOverCDP` when extensions must be active. This is now the default for chromium when a profile is configured in `browser.yml`.
+
+---
+
 ### K-2026-06-10-23 — Stock Firefox 151 + Playwright `launchPersistentContext` fails on Windows 11
 
 **What happened:** Rahil's Stock Firefox 151 on Windows 11 exits with `shell_windows::limited_access_features` errors and `exitCode: 0` before Playwright can attach. The persistent-context launch completes without error from Node's perspective, but Firefox never opens the profile. Root cause: Windows 11 Shell feature-token restrictions on Firefox's sandboxed process model; the errors appear in Firefox's crash reporter and the process exits before Playwright's attach handshake. Firefox ESR and older versions are not affected.

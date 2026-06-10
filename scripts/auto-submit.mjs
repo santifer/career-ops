@@ -31,6 +31,9 @@
  *                            but not in gen/states.js — use only for testing fresh ingest.
  *   --use-extension-autofill Force browser-extension autofill (skip built-in form fill)
  *   --no-extension-autofill  Disable extension autofill (use built-in Greenhouse/Lever/Workday fill)
+ *   --browser-mode <mode>    connect = CDP attach to a running debug browser (default when profile set)
+ *                            launch  = persistent context or fresh Chromium launch
+ *   --debug-port <n>         Remote debugging port for CDP attach (default 9222)
  *
  * Output:
  *   data/auto-submit-dry-run-{date}.json
@@ -85,6 +88,8 @@ const DRY_RUN           = !LIVE && !SEMI_AUTO;
 const USE_EXTENSION_ARG = process.argv.includes('--no-extension-autofill') ? false
   : process.argv.includes('--use-extension-autofill') ? true
   : null;
+const BROWSER_MODE_ARG  = argVal('--browser-mode');   // 'connect' | 'launch' | null
+const DEBUG_PORT_ARG    = argVal('--debug-port');
 const REPORT            = process.argv.includes('--report');
 const ALLOW_TIER        = argVal('--allow-tier');
 const RAW_LIMIT         = parseInt(argVal('--limit') ?? '5', 10);
@@ -112,6 +117,35 @@ export function parseReadyStates(arg) {
     }
   }
   return new Set(parsed);
+}
+
+/**
+ * Determine effective browser launch mode.
+ * - 'connect' → CDP attach to a separately-launched debug browser (extensions active)
+ * - 'launch'  → persistent context or fresh Chromium via Playwright
+ *
+ * Default: 'connect' when a chromium profile is configured; 'launch' otherwise.
+ *
+ * @param {string|null} arg          Value of --browser-mode flag (or null)
+ * @param {object}      browserCfg   Result of loadBrowserConfig()
+ * @returns {'connect'|'launch'}
+ */
+export function parseBrowserMode(arg, browserCfg) {
+  if (arg === 'connect') return 'connect';
+  if (arg === 'launch')  return 'launch';
+  if (browserCfg?.preferred === 'firefox') return 'launch';
+  // Chromium: connect when a profile is configured (implies SpeedyApply use case)
+  return browserCfg?.chromium?.profile_path ? 'connect' : 'launch';
+}
+
+/**
+ * Parse --debug-port argument. Returns 9222 for invalid/absent values.
+ * @param {string|null} arg
+ * @returns {number}
+ */
+export function parseDebugPort(arg) {
+  const n = parseInt(arg ?? '9222', 10);
+  return (!isNaN(n) && n >= 1 && n <= 65535) ? n : 9222;
 }
 
 /**
@@ -642,19 +676,42 @@ function _detectATS(url) {
 // ── Browser launch ────────────────────────────────────────────────────────────
 
 /**
- * Launch a browser context appropriate for the configured browser mode.
+ * Launch or attach to a browser context appropriate for the configured mode.
  *
- * Returns { context, browser } where:
- *   - Firefox persistent context: browser = null — close context to clean up
- *   - Chromium regular launch:    browser = Browser — close browser to clean up
+ * Returns { context, browser, isAttached, contextWasCreatedByUs } where:
+ *   isAttached=true  → CDP attach: do NOT close browser on cleanup (user owns it)
+ *   isAttached=false → Playwright launch: close browser (or context) on cleanup
+ *   contextWasCreatedByUs → only relevant when isAttached=true; close context if true
  *
  * @param {object} pw          Full playwright module (await import('playwright'))
  * @param {object} browserCfg  Result of loadBrowserConfig()
- * @param {{ headless?: boolean }} [opts]
+ * @param {{ headless?: boolean, browserMode?: string, debugPort?: number }} [opts]
  */
-async function launchBrowserForMode(pw, browserCfg, { headless = false } = {}) {
-  const preferred = browserCfg?.preferred || 'chromium';
+export async function launchBrowserForMode(pw, browserCfg, { headless = false, browserMode = null, debugPort = 9222 } = {}) {
+  const preferred      = browserCfg?.preferred || 'chromium';
+  const effectiveMode  = parseBrowserMode(browserMode, browserCfg);
 
+  // ── CDP attach — extensions stay live (SpeedyApply use case) ─────────────────
+  if (preferred === 'chromium' && effectiveMode === 'connect') {
+    let browser;
+    try {
+      browser = await pw.chromium.connectOverCDP(`http://localhost:${debugPort}`);
+    } catch (e) {
+      throw new Error(
+        `Could not connect to debug browser on port ${debugPort}.\n` +
+        `  Run in Terminal A: node scripts/launch-debug-browser.mjs\n` +
+        `  Then re-run auto-submit in Terminal B.`,
+      );
+    }
+    const contexts             = browser.contexts();
+    const contextWasCreatedByUs = contexts.length === 0;
+    const context = contextWasCreatedByUs
+      ? await browser.newContext({ viewport: { width: 1280, height: 900 } })
+      : contexts[0];
+    return { context, browser, isAttached: true, contextWasCreatedByUs };
+  }
+
+  // ── Firefox persistent context ────────────────────────────────────────────────
   if (preferred === 'firefox') {
     const context = await pw.firefox.launchPersistentContext(
       browserCfg.firefox.profile_path,
@@ -664,10 +721,10 @@ async function launchBrowserForMode(pw, browserCfg, { headless = false } = {}) {
         viewport: { width: 1280, height: 900 },
       },
     );
-    return { context, browser: null };
+    return { context, browser: null, isAttached: false, contextWasCreatedByUs: false };
   }
 
-  // Chromium with persistent profile (optional — enables extensions like SpeedyApply)
+  // ── Chromium persistent profile (--browser-mode launch explicit) ──────────────
   const chromiumProfile = browserCfg?.chromium?.profile_path;
   const chromiumExe     = browserCfg?.chromium?.executable_path || undefined;
   if (chromiumProfile && fs.existsSync(chromiumProfile)) {
@@ -676,18 +733,18 @@ async function launchBrowserForMode(pw, browserCfg, { headless = false } = {}) {
       headless,
       viewport: { width: 1280, height: 900 },
     });
-    return { context, browser: null };
+    return { context, browser: null, isAttached: false, contextWasCreatedByUs: false };
   }
 
-  // Default: fresh Chromium context
+  // ── Default: fresh bundled Chromium context ───────────────────────────────────
   const browser  = await pw.chromium.launch({ headless });
   const context  = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  return { context, browser };
+  return { context, browser, isAttached: false, contextWasCreatedByUs: true };
 }
 
 // ── Semi-auto mode ────────────────────────────────────────────────────────────
 
-async function runSemiAuto(cards, pw, personal, browserCfg, useExtension, clIndex = null) {
+async function runSemiAuto(cards, pw, personal, browserCfg, useExtension, browserMode, debugPort, clIndex = null) {
   const results = [];
 
   for (const card of cards) {
@@ -708,18 +765,22 @@ async function runSemiAuto(cards, pw, personal, browserCfg, useExtension, clInde
     }
     console.log('OK');
 
-    let browser  = null;
-    let context  = null;
-    let aborted  = false;
-    let clicked  = false;
-    let fillReport = null;
+    let browser              = null;
+    let context              = null;
+    let page                 = null;
+    let isAttached           = false;
+    let contextWasCreatedByUs = false;
+    let aborted              = false;
+    let clicked              = false;
+    let fillReport           = null;
 
     const sigintHandler = () => { aborted = true; };
     process.on('SIGINT', sigintHandler);
 
     try {
-      ({ context, browser } = await launchBrowserForMode(pw, browserCfg, { headless: false }));
-      const page = await context.newPage();
+      ({ context, browser, isAttached, contextWasCreatedByUs } =
+        await launchBrowserForMode(pw, browserCfg, { headless: false, browserMode, debugPort }));
+      page = await context.newPage();
 
       console.log(`  Opening browser → ${card.url}`);
       await page.goto(card.url, { timeout: 30000, waitUntil: 'domcontentloaded' });
@@ -742,10 +803,11 @@ async function runSemiAuto(cards, pw, personal, browserCfg, useExtension, clInde
 
       // Form fill — extension autofill or built-in selectors
       if (useExtension) {
-        process.stdout.write('  Waiting 5s for SpeedyApply to autofill...');
+        const attachLabel = isAttached ? 'attached CDP' : 'persistent context';
+        process.stdout.write(`  Waiting 5s for SpeedyApply to autofill (${attachLabel})...`);
         await page.waitForTimeout(5000);
         console.log(' done.');
-        fillReport = { extension: true, note: 'deferred to SpeedyApply extension (waited 5s)' };
+        fillReport = { extension: true, note: `deferred to SpeedyApply extension (${attachLabel}, waited 5s)` };
       } else if (personal) {
         process.stdout.write('  Filling form fields... ');
         try {
@@ -808,8 +870,15 @@ async function runSemiAuto(cards, pw, personal, browserCfg, useExtension, clInde
     } catch (e) {
       console.error(`  ERROR: ${e.message}`);
     } finally {
-      if (browser) await browser.close().catch(() => {});
-      else if (context) await context.close().catch(() => {});
+      if (isAttached) {
+        // Don't close the browser — the user owns it in Terminal A
+        if (page) await page.close().catch(() => {});
+        if (contextWasCreatedByUs && context) await context.close().catch(() => {});
+      } else if (browser) {
+        await browser.close().catch(() => {});
+      } else if (context) {
+        await context.close().catch(() => {});
+      }
       process.removeListener('SIGINT', sigintHandler);
     }
 
@@ -866,7 +935,7 @@ function writeTSVEntry(card, ats) {
   fs.writeFileSync(outPath, columns.join('\t') + '\n', 'utf8');
 }
 
-async function runLive(cards, pw, allowTier, personal, browserCfg, useExtension, clIndex = null) {
+async function runLive(cards, pw, allowTier, personal, browserCfg, useExtension, browserMode, debugPort, clIndex = null) {
   let captchaBlocked = 0;
   let formBlocked    = 0;
   let confirmed      = 0;
@@ -906,14 +975,18 @@ async function runLive(cards, pw, allowTier, personal, browserCfg, useExtension,
     }
     console.log('OK');
 
-    let browser  = null;
-    let context  = null;
-    let ssPath   = null;
-    let fillReport = null;
+    let browser              = null;
+    let context              = null;
+    let page                 = null;
+    let isAttached           = false;
+    let contextWasCreatedByUs = false;
+    let ssPath               = null;
+    let fillReport           = null;
 
     try {
-      ({ context, browser } = await launchBrowserForMode(pw, browserCfg, { headless: !useExtension }));
-      const page = await context.newPage();
+      ({ context, browser, isAttached, contextWasCreatedByUs } =
+        await launchBrowserForMode(pw, browserCfg, { headless: !useExtension, browserMode, debugPort }));
+      page = await context.newPage();
 
       await page.goto(card.url, { timeout: 30000, waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(2000);
@@ -931,9 +1004,14 @@ async function runLive(cards, pw, allowTier, personal, browserCfg, useExtension,
       if (await detectIntermediateStepOnPage(page)) {
         ssPath = await screenshot(page, card, 'intermediate').catch(() => null);
         results.push({ id: card.id, status: 'intermediate-step', reason: 'intermediate-step-detected', url: card.url, screenshot: ssPath });
-        if (browser) await browser.close().catch(() => {});
-        else if (context) await context.close().catch(() => {});
-        browser = null; context = null;
+        if (isAttached) {
+          if (page) await page.close().catch(() => {});
+          page = null;
+        } else {
+          if (browser) await browser.close().catch(() => {});
+          else if (context) await context.close().catch(() => {});
+          browser = null; context = null;
+        }
         console.log('  → INTERMEDIATE STEP detected — application flow has changed. Stopping run for manual review.');
         break;
       }
@@ -959,10 +1037,11 @@ async function runLive(cards, pw, allowTier, personal, browserCfg, useExtension,
 
       // Form fill — extension autofill or built-in selectors
       if (useExtension) {
-        process.stdout.write('  Waiting 5s for SpeedyApply to autofill...');
+        const attachLabel = isAttached ? 'attached CDP' : 'persistent context';
+        process.stdout.write(`  Waiting 5s for SpeedyApply to autofill (${attachLabel})...`);
         await page.waitForTimeout(5000);
         console.log(' done.');
-        fillReport = { extension: true, note: 'deferred to SpeedyApply (5s wait)' };
+        fillReport = { extension: true, note: `deferred to SpeedyApply (${attachLabel}, 5s wait)` };
       } else if (personal) {
         try {
           fillReport = await fillForm(ats, page, personal, cl);
@@ -1012,8 +1091,14 @@ async function runLive(cards, pw, allowTier, personal, browserCfg, useExtension,
       console.error(`  ERROR: ${e.message}`);
       results.push({ id: card.id, status: 'error', error: e.message, url: card.url });
     } finally {
-      if (browser) await browser.close().catch(() => {});
-      else if (context) await context.close().catch(() => {});
+      if (isAttached) {
+        if (page) await page.close().catch(() => {});
+        if (contextWasCreatedByUs && context) await context.close().catch(() => {});
+      } else if (browser) {
+        await browser.close().catch(() => {});
+      } else if (context) {
+        await context.close().catch(() => {});
+      }
     }
   }
 
@@ -1152,8 +1237,14 @@ async function main() {
     ? USE_EXTENSION_ARG
     : browserCfg.extension_autofill === true;
 
+  const browserMode = parseBrowserMode(BROWSER_MODE_ARG, browserCfg);
+  const debugPort   = parseDebugPort(DEBUG_PORT_ARG);
+
   if (useExtension) {
     console.log('[auto-submit] Extension autofill: ON — SpeedyApply fills form (5s wait after navigation)');
+  }
+  if (browserMode === 'connect') {
+    console.log(`[auto-submit] Browser mode: CDP attach (port ${debugPort}) — run launch-debug-browser.mjs first`);
   }
 
   // ── Personal info (required unless extension autofill handles form fill) ──────
@@ -1186,12 +1277,12 @@ async function main() {
   }
 
   if (SEMI_AUTO) {
-    await runSemiAuto(toProcess, pw, personal, browserCfg, useExtension, clIdx);
+    await runSemiAuto(toProcess, pw, personal, browserCfg, useExtension, browserMode, debugPort, clIdx);
     return;
   }
 
   // LIVE
-  const { captchaBlocked, formBlocked } = await runLive(toProcess, pw, ALLOW_TIER, personal, browserCfg, useExtension, clIdx);
+  const { captchaBlocked, formBlocked } = await runLive(toProcess, pw, ALLOW_TIER, personal, browserCfg, useExtension, browserMode, debugPort, clIdx);
   if (captchaBlocked > 0) process.exit(2);
   if (formBlocked > 0)    process.exit(3);
   process.exit(0);
