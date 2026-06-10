@@ -13,6 +13,7 @@ const DEFAULT_QUEUE = join(ROOT, 'data/learning-queue.md');
 const QUEUE_PATH = process.env.CAREER_OPS_LEARNING_QUEUE || DEFAULT_QUEUE;
 const VALID_STATUSES = new Set(['pending', 'applied', 'rejected']);
 const VALID_TARGETS = new Set(['modes/_profile.md', 'config/profile.yml', 'article-digest.md']);
+const ENTRY_ID_PATTERN = /^LQ-\d{8}-\d{3}$/;
 
 function today() {
   return new Date().toISOString().split('T')[0];
@@ -21,6 +22,10 @@ function today() {
 function argValue(args, name) {
   const idx = args.indexOf(name);
   return idx !== -1 ? args[idx + 1] : null;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function queueHeader() {
@@ -118,9 +123,12 @@ export function setStatus({ id, status, queuePath = QUEUE_PATH }) {
   if (!id || !VALID_STATUSES.has(status)) {
     throw new Error('set-status requires --id and --status pending|applied|rejected');
   }
+  if (!ENTRY_ID_PATTERN.test(id)) {
+    throw new Error('id must match LQ-YYYYMMDD-NNN');
+  }
   const content = readFileSync(queuePath, 'utf-8');
   const next = content.replace(
-    new RegExp(`(## ${id}[\\s\\S]*?- \\*\\*Status:\\*\\* )(${Array.from(VALID_STATUSES).join('|')})`),
+    new RegExp(`(## ${escapeRegExp(id)}[\\s\\S]*?- \\*\\*Status:\\*\\* )(${Array.from(VALID_STATUSES).join('|')})`),
     `$1${status}`,
   );
   if (next === content) throw new Error(`entry not found: ${id}`);
