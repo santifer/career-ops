@@ -12,18 +12,24 @@ const PLACEHOLDER_RE = /\{\{[A-Z_]+\}\}/g;
 function escapeLatex(text, mode = 'text') {
   if (typeof text !== 'string') return '';
   if (mode === 'url') return text;
-  return text
-    .replace(/([{}])/g, '\\$1')           // braces first so inserted \\textbackslash etc are not mutated
-    .replace(/\^/g, '\\textasciicircum{}')
-    .replace(/~/g, '\\textasciitilde{}')
-    .replace(/_/g, '\\_')
-    .replace(/&/g, '\\&')
-    .replace(/%/g, '\\%')
-    .replace(/\$/g, '\\$')
-    .replace(/#/g, '\\#')
-    .replace(/\\/g, '\\textbackslash{}')  // backslash last — safe after braces are escaped
-    .replace(/±/g, '$\\pm$')
-    .replace(/→/g, '$\\rightarrow$');
+  const out = [];
+  for (const ch of text) {
+    switch (ch) {
+      case '\\': out.push('\\textbackslash{}'); break;
+      case '{': case '}': out.push('\\' + ch); break;
+      case '^': out.push('\\textasciicircum{}'); break;
+      case '~': out.push('\\textasciitilde{}'); break;
+      case '_': out.push('\\_'); break;
+      case '&': out.push('\\&'); break;
+      case '%': out.push('\\%'); break;
+      case '$': out.push('\\$'); break;
+      case '#': out.push('\\#'); break;
+      case '\u00B1': out.push('$\\pm$'); break;
+      case '\u2192': out.push('$\\rightarrow$'); break;
+      default: out.push(ch);
+    }
+  }
+  return out.join('');
 }
 
 function sanitizeUrl(url) {
