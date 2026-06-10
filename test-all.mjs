@@ -413,9 +413,9 @@ console.log('\n9. Local parser contract');
 
 const scanScript = readFile('scan.mjs');
 if (
-  scanScript.includes('typeof company.name !== \'string\'') &&
-  scanScript.includes('company.name.trim()') &&
-  scanScript.includes('company.name.toLowerCase()')
+  scanScript.includes('typeof entry.name !== \'string\'') &&
+  scanScript.includes('entry.name.trim()') &&
+  scanScript.includes('entry.name.toLowerCase()')
 ) {
   pass('scan.mjs guards company names before filtering');
 } else {
@@ -1307,6 +1307,7 @@ try {
   rmSync(ready, { recursive: true, force: true });
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
+}
 // ── 15. PROVIDERS — SolidJobs ─────────────────────────────────────
 
 console.log('\n15. Provider — solidjobs');
