@@ -63,7 +63,6 @@ const SYSTEM_PATHS = [
   'generate-pdf.mjs',
   'generate-latex.mjs',
   'generate-cover-letter.mjs',
-  'cover-letter.py',
   'merge-tracker.mjs',
   'tracker-links.mjs',
   'verify-pipeline.mjs',

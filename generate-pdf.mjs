@@ -147,6 +147,23 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
+  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+}
+
+/**
+ * Render an HTML string to a PDF file via headless Chromium.
+ *
+ * @param {string} html - Full HTML document to render.
+ * @param {string} outputPath - Absolute path to write the PDF to.
+ * @param {{format?: 'a4'|'letter', baseDir?: string}} [opts]
+ * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
+ */
+export async function renderHtmlToPdf(html, outputPath, opts = {}) {
+  const format = opts.format || 'a4';
+  const baseDir = opts.baseDir || process.cwd();
+
+  mkdirSync(dirname(outputPath), { recursive: true });
+
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
@@ -154,7 +171,7 @@ async function generatePDF() {
     // Set content with file base URL for any relative resources
     await page.setContent(html, {
       waitUntil: 'networkidle',
-      baseURL: `file://${dirname(inputPath)}/`,
+      baseURL: `file://${baseDir}/`,
     });
 
     // Wait for fonts to load
@@ -191,7 +208,12 @@ async function generatePDF() {
   }
 }
 
-generatePDF().catch((err) => {
-  console.error('❌ PDF generation failed:', err.message);
-  process.exit(1);
-});
+const isMain = process.argv[1] && import.meta.url === `file://${resolve(process.argv[1])}`;
+if (isMain) {
+  generatePDF().catch((err) => {
+    console.error('❌ PDF generation failed:', err.message);
+    process.exit(1);
+  });
+}
+
+export { normalizeTextForATS };
