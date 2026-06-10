@@ -15,7 +15,7 @@
  * See DATA_CONTRACT.md for the full system/user layer definitions.
  */
 
-import { execFileSync, execSync } from 'child_process';
+import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -221,15 +221,20 @@ function addPaths(paths) {
 // not respect but curl handles transparently.  The --silent / --fail flags
 // match the failure-handling already used throughout apply().
 function curlGet(url, extraArgs = []) {
-  try {
-    return execFileSync(
+  return new Promise((resolve) => {
+    execFile(
       'curl',
       ['--silent', '--fail', '--max-time', '10', ...extraArgs, url],
       { encoding: 'utf-8', timeout: 12000 },
-    ).trim();
-  } catch {
-    return null; // network unreachable, 404, timeout, etc.
-  }
+      (error, stdout) => {
+        if (error) {
+          resolve(null);
+        } else {
+          resolve(stdout.trim());
+        }
+      }
+    );
+  });
 }
 
 async function check() {
@@ -249,7 +254,14 @@ async function check() {
   // both failing is the only true-offline signal.
   const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
 
-  const rawVersion = curlGet(RAW_VERSION_URL);
+  const [rawVersion, releaseRaw] = await Promise.all([
+    curlGet(RAW_VERSION_URL),
+    curlGet(RELEASES_API, [
+      '--header', 'Accept: application/vnd.github.v3+json',
+      '--header', 'User-Agent: career-ops-update-checker',
+    ]),
+  ]);
+
   if (rawVersion !== null) {
     try {
       const raw = parseVersionFile(rawVersion);
@@ -260,10 +272,6 @@ async function check() {
     }
   }
 
-  const releaseRaw = curlGet(RELEASES_API, [
-    '--header', 'Accept: application/vnd.github.v3+json',
-    '--header', 'User-Agent: career-ops-update-checker',
-  ]);
   if (releaseRaw !== null) {
     try {
       const release = JSON.parse(releaseRaw);
