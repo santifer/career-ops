@@ -29,7 +29,7 @@ Also save a lightweight evidence manifest beside the report:
 
 `reports/{###}-{company-slug}-{YYYY-MM-DD}.evidence.json`
 
-Include report number, company, role, original URL or `local:jds/...`, fetched timestamp, extraction source path (`Playwright`, `WebFetch`, `WebSearch`, `local`, or `pasted`), liveness result, JD text hash, report path, and PDF path if generated. For legacy or manual text inputs where liveness was not checked, use `liveness_result: "unverified"` or `not_applicable` for local files.
+Include report number, company, role, original URL or `local:jds/...`, fetched timestamp, extraction source path (`Playwright`, `WebFetch`, `WebSearch`, `local`, or `pasted`), liveness result, JD text hash, report path, and PDF path if generated. For cases where liveness was not checked: use `liveness_result: "not_applicable"` for local file sources (`local:jds/...`), or `"unverified"` for pasted/manual text or URL inputs where liveness checking was skipped.
 
 ## Step 3 — Generate PDF
 
