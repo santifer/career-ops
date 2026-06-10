@@ -28,12 +28,15 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 ## Pending
 - [ ] https://jobs.example.com/posting/123
 - [ ] https://boards.greenhouse.io/company/jobs/456 | Company Inc | Senior PM
+- [ ] https://jobs.example.com/posting/789 | Acme Corp | AI PM | source=scan-api | provider=greenhouse | verified_at=2026-06-10
 - [!] https://private.url/job — Error: login required
 
 ## Processed
 - [x] #143 | https://jobs.example.com/posting/789 | Acme Corp | AI PM | 4.2/5 | PDF ✅
 - [x] #144 | https://boards.greenhouse.io/xyz/jobs/012 | BigCo | SA | 2.1/5 | PDF ❌
 ```
+
+Trailing metadata such as `source=...`, `provider=...`, and `verified_at=...` is optional and backward-compatible. Existing readers should use the leading URL and ignore unknown trailing fields.
 
 ## Intelligent JD detection from URL
 

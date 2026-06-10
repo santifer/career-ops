@@ -198,6 +198,8 @@ Each URL gets a verdict: `active`, `expired`, or `uncertain` with a reason.
 
 Zero-token portal scanner. Runs configured local parsers for SSR/static career pages and hits ATS APIs (Greenhouse, Ashby, Lever) directly — no LLM tokens consumed. Reads `portals.yml` for target companies, outputs matching listings to stdout, and optionally appends to `data/pipeline.md`.
 
+New pipeline rows include provenance metadata, for example `source=scan-api | provider=greenhouse | verified_at=2026-06-10`. Runs without `--verify` use `verified_at=unverified`.
+
 For custom SSR pages, configure a tracked company with `scan_method: local_parser` and a `parser` block. The parser can be written in JavaScript, Python, or any language available as a local executable. Company-specific parsers usually already know their source URL and only need to print JSON jobs to stdout:
 
 ```yaml

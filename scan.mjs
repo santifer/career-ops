@@ -227,7 +227,20 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
-function appendToPipeline(offers) {
+export function pipelineSourceFor(source) {
+  if (source === 'local-parser') return 'local';
+  if (source === 'websearch' || source === 'agent-websearch') return 'websearch';
+  if (source) return 'scan-api';
+  return 'unknown';
+}
+
+export function formatPipelineEntry(offer, { verifiedAt = 'unverified' } = {}) {
+  const source = pipelineSourceFor(offer.source);
+  const verified = verifiedAt || 'unverified';
+  return `- [ ] ${offer.url} | ${offer.company} | ${offer.title} | source=${source} | provider=${offer.source || 'unknown'} | verified_at=${verified}`;
+}
+
+function appendToPipeline(offers, options = {}) {
   if (offers.length === 0) return;
 
   let text = readFileSync(PIPELINE_PATH, 'utf-8');
@@ -239,9 +252,7 @@ function appendToPipeline(offers) {
     // No Pendientes section — append at end before Procesadas
     const procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
-    const block = `\n${marker}\n\n` + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n\n';
+    const block = `\n${marker}\n\n` + offers.map(o => formatPipelineEntry(o, options)).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
     // Find the end of existing Pendientes content (next ## or end)
@@ -249,9 +260,7 @@ function appendToPipeline(offers) {
     const nextSection = text.indexOf('\n## ', afterMarker);
     const insertAt = nextSection === -1 ? text.length : nextSection;
 
-    const block = '\n' + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n';
+    const block = '\n' + offers.map(o => formatPipelineEntry(o, options)).join('\n') + '\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   }
 
@@ -543,7 +552,7 @@ async function main() {
 
   // 6. Write results
   if (!dryRun && verifiedOffers.length > 0) {
-    appendToPipeline(verifiedOffers);
+    appendToPipeline(verifiedOffers, { verifiedAt: verify ? date : 'unverified' });
     appendToScanHistory(verifiedOffers, date);
   }
   if (!dryRun && expiredOffers.length > 0) {

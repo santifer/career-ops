@@ -422,6 +422,28 @@ if (
   fail('scan.mjs does not guard company names before filtering');
 }
 
+try {
+  const { formatPipelineEntry } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const entry = formatPipelineEntry({
+    url: 'https://boards.greenhouse.io/acme/jobs/123',
+    company: 'Acme',
+    title: 'AI Engineer',
+    source: 'greenhouse',
+  }, { verifiedAt: '2026-06-10' });
+  if (
+    entry.includes('source=scan-api') &&
+    entry.includes('provider=greenhouse') &&
+    entry.includes('verified_at=2026-06-10') &&
+    /- \[[ x]\] (https?:\/\/\S+)/.test(entry)
+  ) {
+    pass('scan.mjs writes backward-compatible pipeline provenance metadata');
+  } else {
+    fail(`pipeline provenance entry malformed: ${entry}`);
+  }
+} catch (e) {
+  fail(`pipeline provenance metadata test crashed: ${e.message}`);
+}
+
 if (
   scanScript.includes("skipIds: ['local-parser']") &&
   scanScript.includes('local parser failed, used API fallback') &&
