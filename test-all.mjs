@@ -441,8 +441,8 @@ if (fileExists('providers/local-parser.mjs')) {
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
 if (
   scanMode.includes('local_parser_ok') &&
-  scanMode.includes('no repetir scraping caro') &&
-  scanMode.includes('nombre no listado en `local_parser_ok`')
+  (scanMode.includes('No Expensive Scraping Repetition') || scanMode.includes('no repetir scraping caro')) &&
+  (scanMode.includes('name not listed in `local_parser_ok`') || scanMode.includes('nombre no listado en `local_parser_ok`'))
 ) {
   pass('scan.md skips expensive levels after successful local parser');
 } else {
