@@ -13,7 +13,9 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
+  &nbsp;&nbsp;
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Career-Ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>媒體報導</sub></p>
@@ -32,7 +34,11 @@
 
 <p align="center"><strong>評估超過 740 份職缺 · 生成超過 100 份個人化履歷 · 成功獲得理想職位</strong></p>
 
-<p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社群-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a></p>
+<p align="center">
+  <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社群-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  &nbsp;
+  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
+</p>
 
 <p align="center">
   <sub>技術棧</sub><br>
@@ -74,11 +80,10 @@ career-ops 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面
 | 功能             | 說明                                                                                                                   |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | **自動管道**     | 貼上 URL，自動完成評估 + PDF + 追蹤紀錄                                                                                |
-| **6 區塊評估**   | 職位摘要、履歷匹配、職級策略、薪酬調查、個人化、面試準備（STAR+R）                                                     |
+| **6 區塊評估**   | 職位摘要、履歷匹配、職級策略、薪酬調查、個人化、面試準備（STAR+R）— 另有 Block G 職缺正當性檢查，標記詐騙與幽靈職缺          |
 | **面試故事庫**   | 跨評估累積 STAR+Reflection 故事 — 能回答任何行為面試問題的 5-10 個核心故事                                             |
 | **薪資談判腳本** | 薪資談判框架、地區薪資折扣反駁話術、競爭 Offer 運用策略                                                                |
 | **ATS PDF 生成** | 注入關鍵字的履歷，採用 Space Grotesk + DM Sans 設計                                                                    |
-| **求職信生成器** | 包含公司研究、關鍵字映射、四個互動提示（原因/問題/方法/語調）、聊天內核准與 A4 PDF 生成的客製化求職信。每次評估自動產生草稿，透過 `/career-ops cover` 完成並生成 |
 | **平台掃描器**   | 預設超過 45 家企業（Anthropic、OpenAI、ElevenLabs、Retool、n8n...）+ 跨 Ashby、Greenhouse、Lever、Wellfound 的自訂查詢 |
 | **批次處理**     | 使用 `claude -p` 工作器並行評估                                                                                        |
 | **儀表板 TUI**   | 在終端機 UI 中瀏覽、篩選及排序你的求職管道                                                                             |
@@ -87,34 +92,36 @@ career-ops 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面
 
 ## 快速開始
 
+**最快的方式 — 一行指令：**
+
 ```bash
-# 1. 複製並安裝
+npx @santifer/career-ops init
+```
+
+> 💡 `npx` 隨 [Node.js](https://nodejs.org) 一起提供 — 它會執行安裝程式一次，
+> 而不會在全域安裝任何東西。還沒有 Node？請先安裝它。
+> （已經在使用 Claude Code / Gemini / Codex CLI？那你已經有了。）
+
+這會把最新版本複製到 `./career-ops` 並安裝相依套件。接著：
+
+```bash
+cd career-ops
+claude   # 或 gemini / codex / qwen / opencode — 在此開啟你的 AI CLI
+```
+
+**首次啟動時，career-ops 會透過對話帶你完成設定 — 你的履歷、個人檔案與目標職位 — 完全不需要手動編輯。**
+
+<details>
+<summary><b>偏好手動設定？（git clone）</b></summary>
+
+```bash
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
-npx playwright install chromium   # PDF 生成所需
-
-# 2. 檢查設定
-npm run doctor                     # 驗證所有必要條件
-
-# 3. 設定檔
-cp config/profile.example.yml config/profile.yml  # 填入你的個人資訊
-cp templates/portals.example.yml portals.yml       # 自訂目標企業
-
-# 4. 加入你的履歷
-# 在專案根目錄建立 cv.md，以 Markdown 格式撰寫你的履歷
-
-# 5. 透過 Claude 個人化設定
-claude   # 在此目錄開啟 Claude Code
-
-# 然後請 Claude 幫你調整系統：
-# 「把職位類型改成後端工程師相關職缺」
-# 「把模式翻譯成繁體中文」
-# 「把這 5 家公司加入 portals.yml」
-# 「用我貼的這份履歷更新我的個人檔案」
-
-# 6. 開始使用
-# 貼上職缺 URL 或執行 /career-ops
+npx playwright install chromium   # 僅 PDF 生成所需
+claude   # 開啟你的 AI CLI — 首次啟動時會帶你完成設定
 ```
+
+</details>
 
 > **這個系統設計上就是讓 Claude 來客製化的。** 模式、職位類型、評分權重、談判腳本 — 直接告訴 Claude 要修改什麼，它就會動手。Claude 讀取的是它自己使用的相同檔案，所以它確切知道要編輯哪裡。
 
@@ -129,7 +136,6 @@ career-ops 是一個具有多種模式的單一斜線指令：
 /career-ops {貼上職缺描述}  → 完整自動管道（評估 + PDF + 追蹤）
 /career-ops scan           → 掃描平台尋找新職缺
 /career-ops pdf            → 生成 ATS 最佳化履歷
-/career-ops cover      → 求職信生成器（貼上 JD 或 /career-ops cover {slug}）
 /career-ops batch          → 批次評估多份職缺
 /career-ops tracker        → 查看應徵狀態
 /career-ops apply          → AI 協助填寫應徵表單
@@ -200,11 +206,10 @@ career-ops/
 ├── article-digest.md            # 你的成就佐證（選填）
 ├── config/
 │   └── profile.example.yml      # 個人檔案範本
-├── modes/                       # 15 個技能模式
+├── modes/                       # 14 個技能模式
 │   ├── _shared.md               # 共用情境（在此自訂）
 │   ├── oferta.md                # 單一職缺評估
 │   ├── pdf.md                   # PDF 生成
-│   ├── cover.md                 # 求職信生成
 │   ├── scan.md                  # 平台掃描器
 │   ├── batch.md                 # 批次處理
 │   └── ...
@@ -234,7 +239,6 @@ career-ops/
 
 - **代理**：Claude Code，附自訂技能與模式
 - **PDF**：Playwright/Puppeteer + HTML 範本
-- **求職信**：Python + ReportLab（A4 PDF，系統字型，無外部依賴）
 - **掃描器**：Playwright + Greenhouse API + WebSearch
 - **儀表板**：Go + Bubble Tea + Lipgloss（Catppuccin Mocha 主題）
 - **資料**：Markdown 表格 + YAML 設定 + TSV 批次檔案
