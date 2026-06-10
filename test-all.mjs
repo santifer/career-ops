@@ -1358,6 +1358,15 @@ try {
   } else {
     fail('pickRediscoveredUrl did not return null for empty input');
   }
+  // Redirect unwrapping is restricted to real DuckDuckGo hosts: a look-alike
+  // host must not get its uddg target unwrapped (and its own hostname does not
+  // match the careers domain, so the result is null).
+  const lookAlike = `https://evil-duckduckgo.com/l/?uddg=${encodeURIComponent('https://job-boards.greenhouse.io/acme/456')}`;
+  if (pickRediscoveredUrl([lookAlike], domain) === null) {
+    pass('pickRediscoveredUrl ignores uddg redirects from look-alike hosts');
+  } else {
+    fail('pickRediscoveredUrl unwrapped a redirect from a look-alike host');
+  }
   // DuckDuckGo HTML wraps each result in a /l/?uddg= redirect — must be
   // unwrapped, otherwise every hostname looks like duckduckgo.com and nothing
   // ever matches the careers domain (the fallback would silently never fire).

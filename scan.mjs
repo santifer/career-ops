@@ -199,7 +199,8 @@ export function extractCareersUrlDomain(careersUrl) {
 function resolveSearchHref(href) {
   try {
     const u = new URL(href, 'https://duckduckgo.com');
-    if (u.hostname.endsWith('duckduckgo.com') && u.pathname === '/l/') {
+    const isDdgHost = u.hostname === 'duckduckgo.com' || u.hostname.endsWith('.duckduckgo.com');
+    if (isDdgHost && u.pathname === '/l/') {
       const target = u.searchParams.get('uddg');
       if (target) return target;
     }
