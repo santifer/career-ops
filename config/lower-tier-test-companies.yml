@@ -20,7 +20,7 @@
 # Hard cap: 5 live submissions per day (tracked in data/live-daily-count-{date}.json)
 # --limit flag cannot override the daily cap.
 
-# Note: "lower-tier" is a misnomer here — these are the FIRST live targets
+# Note: "lower-tier" is a misnomer here. These are the FIRST live targets
 # Rahil approved for validation. Both are Greenhouse ATS. Hand-crafted CLs
 # committed 2026-06-10. Update this list before any subsequent live runs.
 

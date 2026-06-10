@@ -261,7 +261,7 @@ this file tracks **open** work.
 
 **What happened:** We spent ~3 hours discovering that `launchPersistentContext` strips extensions (K-2026-06-10-25), then implementing it, testing it, and pivoting to CDP attach. If we had validated SpeedyApply's presence in the Playwright-launched browser first (e.g., check `chrome://extensions` in the persistent context), we would have caught this in 10 minutes.
 **Rule:** Before building extension-dependent automation, always verify the extension is actually present in the browser context you plan to use. Open a test page in the Playwright-launched browser and navigate to `chrome://extensions` or check for extension-injected DOM elements. Don't assume persistent context = extensions active.
-**How to apply:** When adding any new browser-extension dependency to auto-submit, add a verification step: open the browser, check for the extension's presence, fail fast with a clear message if absent. The 5-second wait we use for SpeedyApply is an implicit verification — if the form is empty after 5s, the extension probably isn't there.
+**How to apply:** When adding any new browser-extension dependency to auto-submit, add a verification step: open the browser, check for the extension's presence, fail fast with a clear message if absent. The 5-second wait we use for SpeedyApply is an implicit verification: if the form is empty after 5s, the extension probably isn't there.
 
 ---
 
