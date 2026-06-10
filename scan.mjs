@@ -236,8 +236,7 @@ export function pipelineSourceFor(source) {
 
 export function formatPipelineEntry(offer, { verifiedAt = 'unverified' } = {}) {
   const source = pipelineSourceFor(offer.source);
-  const verified = verifiedAt || 'unverified';
-  return `- [ ] ${offer.url} | ${offer.company} | ${offer.title} | source=${source} | provider=${offer.source || 'unknown'} | verified_at=${verified}`;
+  return `- [ ] ${offer.url} | ${offer.company} | ${offer.title} | source=${source} | provider=${offer.source || 'unknown'} | verified_at=${verifiedAt}`;
 }
 
 function appendToPipeline(offers, options = {}) {
