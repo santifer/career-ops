@@ -87,19 +87,9 @@ Based on: Report #NNN | Score: X.X/5 | Archetype: [type]
 ---
 
 ### 1. [Exact form question]
-Field: [field_type] | Required: [yes/no/unknown] | Limit: [limit/unknown]
-Options: [for select/radio/checkbox; otherwise N/A]
-Needs candidate confirmation: [yes/no]
-
-Recommended answer:
-> [Response ready for copy-paste, or "Ask candidate: ..."]
-
-Why this answer:
-[1-2 sentences grounded in the report/CV/JD, or explain why confirmation is required]
+> [Response ready for copy-paste, or "Ask candidate: ..." if the field needs confirmation]
 
 ### 2. [Next question]
-Field: ...
-Recommended answer:
 > [Response]
 
 ...
