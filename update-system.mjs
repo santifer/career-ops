@@ -205,7 +205,12 @@ function gitStatusEntries() {
 
 function revertPaths(paths) {
   if (paths.length === 0) return;
-  git('checkout', '--', ...paths);
+  // Restore from HEAD, not the index. `git checkout -- <paths>` restores the
+  // working tree from the INDEX, which is a no-op after a staged checkout (the
+  // index already holds the new content), so an aborted update left system files
+  // staged at the new version instead of reverting them. `git checkout HEAD --`
+  // resets both index and working tree to the committed state.
+  git('checkout', 'HEAD', '--', ...paths);
 }
 
 function addPaths(paths) {
@@ -326,10 +331,22 @@ async function apply() {
   writeFileSync(lockFile, new Date().toISOString());
 
   try {
-    // 1. Backup: create branch
+    // 1. Backup: branch from HEAD AND snapshot the working tree. The branch only
+    // captures committed state; uncommitted user work would be lost if the update
+    // or its rollback discarded it. `git stash create` records the dirty tree as a
+    // commit object WITHOUT touching the working tree, saved to a recoverable ref.
     const backupBranch = updateBackupBranchName(local);
     git('branch', backupBranch);
     console.log(`Backup branch created: ${backupBranch}`);
+    try {
+      const wipSha = git('stash', 'create');
+      if (wipSha) {
+        git('update-ref', `refs/backup-pre-update-wip/${local}`, wipSha);
+        console.log(`Working-tree snapshot: refs/backup-pre-update-wip/${local} (${wipSha.slice(0, 12)})`);
+      }
+    } catch {
+      // No dirty tree, or stash unavailable — the branch backup still applies.
+    }
 
     // 2. Fetch from canonical repo
     console.log('Fetching latest from upstream...');
@@ -446,7 +463,10 @@ async function apply() {
         pathsToStage.push('.update-dismissed');
       }
       addPaths(pathsToStage);
-      git('commit', '-m', `chore: auto-update system files to v${remote}`);
+      // Commit ONLY the update's own paths. A bare `git commit` commits the whole
+      // index, sweeping any unrelated file a concurrent process pre-staged into the
+      // update commit. Explicit pathspecs scope the commit to exactly what we staged.
+      git('commit', '-m', `chore: auto-update system files to v${remote}`, '--', ...pathsToStage);
     } catch {
       // Nothing to commit (already up to date)
     }
@@ -525,7 +545,11 @@ function rollback() {
 
     if (restored.length > 0) addPaths(restored);
     try {
-      git('commit', '-m', `chore: rollback system files from ${latest}`);
+      // Explicit pathspecs: scope the rollback commit to the paths we touched
+      // (restored + removed) so an unrelated pre-staged file isn't swept in.
+      const rbPaths = [...restored, ...removed];
+      git('commit', '-m', `chore: rollback system files from ${latest}`,
+          ...(rbPaths.length > 0 ? ['--', ...rbPaths] : []));
     } catch {
       // Tolerate any commit failure here — the common case is the
       // "nothing to commit" no-op when the working tree already

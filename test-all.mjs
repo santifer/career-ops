@@ -1309,6 +1309,60 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
+// ── update-system.mjs revert + commit safety (regression: aborted-update data loss) ──
+console.log('\nupdate-system.mjs revert + commit safety');
+try {
+  const src = readFile('update-system.mjs');
+
+  // (a) rollback must restore from HEAD — `git checkout -- <paths>` restores from
+  //     the index (no-op on staged files), leaving an aborted update half-applied.
+  if (/git\('checkout',\s*'HEAD',\s*'--'/.test(src)) {
+    pass('revertPaths restores from HEAD (git checkout HEAD --), not the index');
+  } else {
+    fail("revertPaths uses 'git checkout -- <paths>' — a no-op on staged files");
+  }
+
+  // (b) commits must use explicit pathspecs so a pre-staged unrelated file is not
+  //     swept into the update/rollback commit.
+  if (/'--',\s*\.\.\.pathsToStage/.test(src) && /\.\.\.rbPaths|'--',\s*\.\.\.restored/.test(src)) {
+    pass('apply()/rollback() commit with explicit pathspecs (no index sweep)');
+  } else {
+    fail('a bare git commit remains — would sweep pre-staged files into the commit');
+  }
+
+  // (c) backup must snapshot the working tree, not just branch from HEAD.
+  if (/stash',\s*'create'/.test(src)) {
+    pass('pre-update backup snapshots the working tree (git stash create)');
+  } else {
+    fail('backup does not capture uncommitted work (no git stash create)');
+  }
+
+  // (d) behavioral: the git primitives the fix relies on actually behave as claimed.
+  const t = mkdtempSync(join(tmpdir(), 'co-revert-'));
+  const gx = (...a) => execFileSync('git', a, { cwd: t, encoding: 'utf-8' });  // no shell
+  gx('init', '-q'); gx('config', 'user.email', 't@t'); gx('config', 'user.name', 't');
+  writeFileSync(join(t, 'f.txt'), 'v1\n'); gx('add', 'f.txt'); gx('commit', '-qm', 'init');
+  writeFileSync(join(t, 'f.txt'), 'v2\n'); gx('add', 'f.txt');           // stage a change
+  gx('checkout', 'HEAD', '--', 'f.txt');                                 // the fix
+  if (readFileSync(join(t, 'f.txt'), 'utf-8') === 'v1\n') {
+    pass('git checkout HEAD -- reverts a staged change (rollback actually works)');
+  } else {
+    fail('git checkout HEAD -- did not revert the staged change');
+  }
+  writeFileSync(join(t, 'sys.txt'), 's\n'); writeFileSync(join(t, 'user.txt'), 'u\n');
+  gx('add', 'sys.txt', 'user.txt');
+  gx('commit', '-qm', 'sys only', '--', 'sys.txt');                      // explicit pathspec
+  const leftStaged = gx('diff', '--cached', '--name-only').trim();
+  if (leftStaged === 'user.txt') {
+    pass('explicit-pathspec commit does not sweep an unrelated staged file');
+  } else {
+    fail(`pathspec commit swept extra files (still staged: '${leftStaged}')`);
+  }
+  rmSync(t, { recursive: true, force: true });
+} catch (e) {
+  fail(`update-system revert/commit safety test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
