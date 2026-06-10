@@ -28,6 +28,14 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function assertSingleLine(value, flag) {
+  if (/[\r\n]/.test(value)) throw new Error(`${flag} must be a single line`);
+}
+
+function assertProposalSafe(value) {
+  if (value.includes('```')) throw new Error('--proposal cannot contain markdown fence markers');
+}
+
 function queueHeader() {
   return [
     '# Learning Queue',
@@ -101,6 +109,9 @@ export function addEntry({ source, target, feedback, proposal, queuePath = QUEUE
   if (!source || !target || !feedback || !proposal) {
     throw new Error('add requires --source, --target, --feedback, and --proposal');
   }
+  assertSingleLine(source, '--source');
+  assertSingleLine(feedback, '--feedback');
+  assertProposalSafe(proposal);
   if (!VALID_TARGETS.has(target)) {
     throw new Error(`target must be one of: ${Array.from(VALID_TARGETS).join(', ')}`);
   }
@@ -125,6 +136,9 @@ export function setStatus({ id, status, queuePath = QUEUE_PATH }) {
   }
   if (!ENTRY_ID_PATTERN.test(id)) {
     throw new Error('id must match LQ-YYYYMMDD-NNN');
+  }
+  if (!existsSync(queuePath)) {
+    throw new Error(`learning queue not found: ${queuePath}`);
   }
   const content = readFileSync(queuePath, 'utf-8');
   const next = content.replace(
@@ -157,6 +171,36 @@ function selfTest() {
     const parsed = listEntries({ queuePath: path });
     if (parsed.length !== 1 || parsed[0].status !== 'applied' || parsed[0].id !== entry.id) {
       throw new Error('self-test failed');
+    }
+    try {
+      addEntry({
+        source: 'bad\nsource',
+        target: 'modes/_profile.md',
+        feedback: 'feedback',
+        proposal: 'proposal',
+        queuePath: path,
+      });
+      throw new Error('newline source accepted');
+    } catch (err) {
+      if (!err.message.includes('single line')) throw err;
+    }
+    try {
+      addEntry({
+        source: 'source',
+        target: 'modes/_profile.md',
+        feedback: 'feedback',
+        proposal: '```',
+        queuePath: path,
+      });
+      throw new Error('fence proposal accepted');
+    } catch (err) {
+      if (!err.message.includes('fence')) throw err;
+    }
+    try {
+      setStatus({ id: 'LQ-20260610-999', status: 'applied', queuePath: join(dir, 'missing.md') });
+      throw new Error('missing queue accepted');
+    } catch (err) {
+      if (!err.message.includes('learning queue not found')) throw err;
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });
