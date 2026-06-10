@@ -682,6 +682,41 @@ try {
     fail(`normalizeStatus produced ${cadence.normalizeStatus('**Applied** 2026-05-01')}`);
   }
 
+  const cadenceTmp = mkdtempSync(join(tmpdir(), 'co-cadence-'));
+  const profilePath = join(cadenceTmp, 'profile.yml');
+  writeFileSync(profilePath, [
+    'followup_cadence:',
+    '  applied_first_days: 11',
+    '  applied_subsequent_days: 5',
+    '  applied_max_followups: 4',
+    '  responded_initial_days: 2',
+    '  responded_subsequent_days: 6',
+    '  interview_thankyou_days: 3',
+  ].join('\n'));
+
+  const profileCadence = cadence.resolveCadenceConfig({ profilePath });
+  if (
+    profileCadence.applied_first === 11 &&
+    profileCadence.applied_subsequent === 5 &&
+    profileCadence.applied_max_followups === 4 &&
+    profileCadence.responded_initial === 2 &&
+    profileCadence.responded_subsequent === 6 &&
+    profileCadence.interview_thankyou === 3
+  ) {
+    pass('follow-up cadence reads profile.yml overrides');
+  } else {
+    fail(`profile cadence override failed: ${JSON.stringify(profileCadence)}`);
+  }
+
+  const cliCadence = cadence.resolveCadenceConfig({ profilePath, appliedDays: 9 });
+  if (cliCadence.applied_first === 9 && cliCadence.applied_subsequent === 5) {
+    pass('follow-up cadence CLI override wins over profile applied_first');
+  } else {
+    fail(`CLI cadence override failed: ${JSON.stringify(cliCadence)}`);
+  }
+
+  rmSync(cadenceTmp, { recursive: true, force: true });
+
   // Urgency decision tree (CADENCE defaults: applied_first=7, max_followups=2, responded_initial=1, interview_thankyou=1)
   const urgencyCases = [
     [['applied', 7, null, 0], 'overdue', 'applied past applied_first → overdue'],
