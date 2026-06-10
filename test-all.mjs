@@ -285,7 +285,7 @@ const systemFiles = [
   'CLAUDE.md', 'VERSION', 'DATA_CONTRACT.md',
   'modes/_shared.md', 'modes/_profile.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/cover-letter.md', 'modes/scan.md',
-  'templates/states.yml', 'templates/cv-template.html',
+  'templates/states.yml', 'templates/cv-template.html', 'templates/cover-letter-template.html',
   '.claude/skills/career-ops/SKILL.md',
 ];
 
@@ -389,6 +389,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'cover-letter.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
+  'interview.md',
 ];
 
 for (const mode of expectedModes) {
