@@ -120,6 +120,12 @@ export function parseSmartRecruitersResponse(json, companyName) {
         url = `https://jobs.smartrecruiters.com/${companySlug}/${j.id}-${slugified}`;
       }
     }
-    return { title: j.name || '', url, location, company: companyName };
+    return {
+      title: j.name || '',
+      url,
+      location,
+      company: companyName,
+      description: j.description || j.content || '',
+    };
   });
 }

@@ -99,6 +99,7 @@ export function parseRecruiteeResponse(json, companyName) {
       url,
       location,
       company: companyName,
+      description: j.description || j.requirements || '',
     };
   });
 }
