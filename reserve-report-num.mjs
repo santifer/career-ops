@@ -71,6 +71,13 @@ function maxSlot() {
 
 /** Attempt to atomically claim slot `n`. Returns true on success. */
 function claimSlot(n) {
+  // Check if any file (real report or sentinel) already occupies this slot
+  if (existsSync(REPORTS_DIR)) {
+    const prefix = `${pad(n)}-`;
+    const alreadyExists = readdirSync(REPORTS_DIR).some(name => name.startsWith(prefix));
+    if (alreadyExists) return false;
+  }
+
   const sentinel = join(REPORTS_DIR, `${pad(n)}-RESERVED.md`);
   try {
     // 'wx' = O_CREAT | O_EXCL — fails if file already exists.
