@@ -409,9 +409,10 @@ if (shared.includes('_profile.md')) {
 
 const applyMode = readFile('modes/apply.md');
 if (
-  applyMode.includes('## Step 0 — Preflight gate') &&
+  applyMode.includes('## Step 5 — Preflight gate') &&
   applyMode.includes('verify liveness with Playwright') &&
-  applyMode.includes('Do not continue to Step 4 until this preflight is resolved') &&
+  applyMode.includes('matching report has been loaded') &&
+  applyMode.includes('Do not continue to Step 6 until this preflight is resolved') &&
   applyMode.includes('refuse to generate final copy')
 ) {
   pass('apply mode includes liveness and role-match preflight gate');

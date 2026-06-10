@@ -10,20 +10,19 @@ Interactive mode for when the candidate is filling out an application form in Ch
 ## Workflow
 
 ```text
-0. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
 1. DETECT      → Read active Chrome tab (screenshot/URL/title)
 2. IDENTIFY    → Extract company + role from the page
 3. SEARCH      → Match against existing reports in reports/
 4. LOAD        → Read full report + Section G (if it exists)
-5. COMPARE     → Does the role on screen match the one evaluated? If it changed → stop for user decision
+5. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
 6. ANALYZE     → Identify ALL visible form questions
 7. GENERATE    → For each question, generate a personalized response
 8. PRESENT     → Show formatted responses for copy-paste
 ```
 
-## Step 0 — Preflight gate
+## Step 5 — Preflight gate
 
-Before generating any application answers, verify that the form still points to the intended active job.
+Before generating any application answers, verify that the form still points to the intended active job. This gate runs after the page has been detected, the company/role has been identified, and the matching report has been loaded.
 
 1. Read the visible URL, page title, company, role, and any closed/expired signals.
 2. If a URL is available, verify liveness with Playwright:
@@ -35,7 +34,7 @@ Before generating any application answers, verify that the form still points to 
 5. If the posting appears closed, refuse to generate final copy unless the candidate explicitly overrides with a known reason.
 6. If liveness cannot be verified because the candidate only pasted questions or a screenshot, state that limitation and ask the candidate to confirm the company, role, and active posting before drafting.
 
-Do not continue to Step 4 until this preflight is resolved.
+Do not continue to Step 6 until this preflight is resolved.
 
 ## Step 1 — Detect the job
 
