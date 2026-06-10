@@ -184,7 +184,8 @@ function validateEvaluationShape(text) {
     const summaryBlock = summary[1];
     for (const key of ['COMPANY', 'ROLE', 'ARCHETYPE', 'LEGITIMACY']) {
       const field = summaryBlock.match(new RegExp(`^\\s*${key}:\\s*(.+)$`, 'mi'));
-      if (!field || !field[1].trim() || field[1].trim().toLowerCase() === 'unknown') {
+      const value = field?.[1]?.trim() ?? '';
+      if (!value || (key !== 'COMPANY' && value.toLowerCase() === 'unknown')) {
         issues.push(`SCORE_SUMMARY ${key} is required`);
       }
     }
