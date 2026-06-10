@@ -715,6 +715,15 @@ try {
     fail(`CLI cadence override failed: ${JSON.stringify(cliCadence)}`);
   }
 
+  const malformedProfile = join(cadenceTmp, 'malformed.yml');
+  writeFileSync(malformedProfile, 'followup_cadence: [');
+  const fallbackCadence = cadence.resolveCadenceConfig({ profilePath: malformedProfile });
+  if (fallbackCadence.applied_first === cadence.DEFAULT_CADENCE.applied_first) {
+    pass('follow-up cadence ignores malformed optional profile config');
+  } else {
+    fail(`malformed profile did not fall back to defaults: ${JSON.stringify(fallbackCadence)}`);
+  }
+
   rmSync(cadenceTmp, { recursive: true, force: true });
 
   // Urgency decision tree (CADENCE defaults: applied_first=7, max_followups=2, responded_initial=1, interview_thankyou=1)

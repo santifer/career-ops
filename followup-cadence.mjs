@@ -57,7 +57,12 @@ function positiveInteger(value) {
 
 export function loadProfileCadence(profilePath = PROFILE_FILE) {
   if (!profilePath || !existsSync(profilePath)) return {};
-  const raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+  let raw;
+  try {
+    raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+  } catch {
+    return {};
+  }
   const source = raw.followup_cadence || {};
   const cadence = {};
   for (const [profileKey, cadenceKey] of Object.entries(PROFILE_CADENCE_KEYS)) {
