@@ -258,6 +258,60 @@ try {
   } else {
     fail(`No-display degrade path wrong: ${noHeadedAvailable.result} (${noHeadedAvailable.code})`);
   }
+
+  // SSRF guard — `rejectPrivateOrInvalid` has to refuse every URL whose host
+  // resolves to loopback / private / link-local space. The earlier guard only
+  // matched literal IPv4 patterns and bracketless IPv6, so several Chromium-
+  // routable bypasses (0.0.0.0, [::], [::1] (bracketed), [::ffff:127.0.0.1],
+  // localhost.) slipped through. These cases keep that regression covered.
+  const { rejectPrivateOrInvalid } = await import(
+    pathToFileURL(join(ROOT, 'liveness-browser.mjs')).href
+  );
+  const blockCases = [
+    ['http://0.0.0.0/admin', 'IPv4 all-zeros (Linux routes to loopback)'],
+    ['http://[::]/', 'IPv6 all-zeros (Linux routes to loopback)'],
+    ['http://[::1]/', 'IPv6 loopback (brackets included in url.hostname)'],
+    ['http://[::ffff:127.0.0.1]/', 'IPv4-mapped IPv6 loopback (dotted form)'],
+    ['http://[::ffff:7f00:1]/', 'IPv4-mapped IPv6 loopback (hex form)'],
+    ['http://[::ffff:169.254.169.254]/', 'IPv4-mapped IPv6 link-local (cloud metadata)'],
+    ['http://[fc00::1]/', 'IPv6 ULA (private)'],
+    ['http://[fe80::1]/', 'IPv6 link-local'],
+    ['http://localhost./', 'FQDN-trailing-dot localhost'],
+    ['http://localhost.localdomain/', 'localhost.localdomain alias'],
+    ['http://169.254.169.254/latest/meta-data/', 'cloud metadata IPv4 link-local'],
+    ['http://10.0.0.5/', 'IPv4 RFC1918'],
+  ];
+  let blockMissed = 0;
+  for (const [url, label] of blockCases) {
+    const verdict = rejectPrivateOrInvalid(url);
+    if (verdict?.code !== 'blocked_host') {
+      fail(`SSRF guard missed ${label}: ${url} → ${verdict ? verdict.code : 'allowed'}`);
+      blockMissed += 1;
+    }
+  }
+  if (blockMissed === 0) pass(`SSRF guard blocks ${blockCases.length} known bypass vectors`);
+
+  const allowCases = [
+    'https://boards.greenhouse.io/example/jobs/123',
+    'https://jobs.lever.co/example/abc-def',
+    'https://example.com/careers/role',
+    'https://www.pracuj.pl/praca/role,oferta,1234567',
+  ];
+  let allowDenied = 0;
+  for (const url of allowCases) {
+    if (rejectPrivateOrInvalid(url) !== null) {
+      fail(`SSRF guard false-positive on legitimate ATS URL: ${url}`);
+      allowDenied += 1;
+    }
+  }
+  if (allowDenied === 0) pass('SSRF guard lets legitimate ATS URLs through');
+
+  const protoCase = rejectPrivateOrInvalid('file:///etc/passwd');
+  if (protoCase?.code === 'unsupported_protocol') {
+    pass('SSRF guard rejects unsupported protocol');
+  } else {
+    fail(`SSRF guard let unsupported protocol through: ${protoCase?.code ?? 'allowed'}`);
+  }
 } catch (e) {
   fail(`Liveness classification tests crashed: ${e.message}`);
 }
