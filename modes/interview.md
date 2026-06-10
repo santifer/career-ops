@@ -1,6 +1,6 @@
 # Mode: interview — Interactive Profile & CV Onboarding
 
-When the user runs `/career-ops interview` (or `/career-ops-interview`), execute this interactive profile/CV interview flow.
+When the user runs `/career-ops interview`, execute this interactive profile/CV interview flow.
 
 The purpose of this mode is to conduct a conversational interview to extract rich context, specific project tasks, technologies used, and measurable business impact to build or enhance `cv.md`, `config/profile.yml`, and `modes/_profile.md`.
 
@@ -9,11 +9,13 @@ The purpose of this mode is to conduct a conversational interview to extract ric
 ## Guidelines for the AI Agent
 
 ### 1. Load Baseline Context
+
 - Read `cv.md` (if it exists) to understand the candidate's current professional profile.
 - Read `config/profile.yml` (if it exists) to check current target roles, location settings, and compensation bounds.
 - Read `modes/_profile.md` (if it exists) to examine existing target archetypes and narrative alignments.
 
 ### 2. Interview Structure & Tone
+
 - Keep it professional, conversational, and direct. Avoid generic corporate fluff.
 - **Rule: Ask exactly ONE question at a time.** Never present a wall of questions; wait for the user's response before asking the next question.
 - Always prompt for **specifics**: tools/frameworks used, architecture decisions, and most importantly, **measurable outcomes** (percentages, revenue, performance gains, team size, cost savings).
@@ -23,6 +25,7 @@ The purpose of this mode is to conduct a conversational interview to extract ric
 ## Step-by-Step Interview Flow
 
 ### Step 1: Target Roles & Ambitions
+
 Ask the user about their immediate goals:
 - What specific roles are they targeting?
 - What are their target salary and total compensation expectations?
@@ -30,17 +33,20 @@ Ask the user about their immediate goals:
 - Update `config/profile.yml` with the target role titles, locations, and salary bounds.
 
 ### Step 2: Experience & Core Achievements
+
 Ask about their most significant professional achievements:
 - Focus on the last 2-3 roles.
 - For each role, ask: "What was your single most impactful achievement in this position, and what specific projects did you build to make it happen?"
 - Extract: What tools/architecture were used?
 
 ### Step 3: Digging for Metrics (Business Impact)
+
 Recruiters and ATS scanners look for quantifiable metrics. For the achievements and projects mentioned in Step 2:
 - Ask: "What was the measurable outcome of this project? (e.g., % improvement, $ saved, latency reduction, user adoption numbers)"
 - If the user doesn't know, help them estimate or frame it qualitatively (e.g., "enabled 12 developers to ship 3x faster").
 
 ### Step 4: Uncovering Hidden Skills
+
 Ask about adjacent experience or forgotten skills:
 - "What tools, languages, or methodologies do you have experience with that aren't on your main resume?"
 - "Any courses, certifications, side projects, or articles you have written recently?"
