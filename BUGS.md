@@ -249,6 +249,14 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-10-23 — Stock Firefox 151 + Playwright `launchPersistentContext` fails on Windows 11
+
+**What happened:** Rahil's Stock Firefox 151 on Windows 11 exits with `shell_windows::limited_access_features` errors and `exitCode: 0` before Playwright can attach. The persistent-context launch completes without error from Node's perspective, but Firefox never opens the profile. Root cause: Windows 11 Shell feature-token restrictions on Firefox's sandboxed process model; the errors appear in Firefox's crash reporter and the process exits before Playwright's attach handshake. Firefox ESR and older versions are not affected.
+**Rule:** When a browser automation failure manifests as a clean exit (exitCode=0) rather than a thrown error, look at the browser's stderr/crash logs — not just Node exceptions. A clean exit before attach often means OS-level process restrictions, not a code bug.
+**How to apply:** Pivoted default `preferred` in `browser.yml.template` from `firefox` to `chromium`. Edge and Chrome work reliably with Playwright persistent context on Windows 11. Firefox path kept for users with ESR / older builds — `detect-firefox.mjs` now prints the note about this failure mode. If Firefox is needed: use Firefox ESR, not the release channel.
+
+---
+
 ### K-2026-06-09-22 — Built-in form fill superseded by browser extension for users with SpeedyApply
 
 **What happened:** `scripts/form-fill.mjs` ships v1 selector-based fill logic (`fillGreenhouseForm`, `fillLeverForm`, `fillWorkdayForm`). For users who already have SpeedyApply installed in Firefox, this is redundant — SpeedyApply handles the form more reliably than our selectors because it has first-party knowledge of each ATS's DOM. The selector-based fill remains useful for users without SpeedyApply or for Chromium runs.

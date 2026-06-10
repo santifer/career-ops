@@ -108,3 +108,7 @@ extension_autofill: true
 } else {
   console.log('Resolve the MISS items above, then run this script again.\n');
 }
+
+console.log('Note: if launching fails with shell_windows::limited_access_features errors,');
+console.log('switch to Chromium (Edge or Chrome) — it is the recommended path.');
+console.log('See config/browser.yml.template, or run: node scripts/detect-chromium.mjs\n');

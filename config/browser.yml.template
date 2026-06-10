@@ -2,32 +2,39 @@
 # Copy this file to config/browser.yml and fill in your paths.
 # browser.yml is gitignored — your real paths will never be committed.
 #
-# This file is OPTIONAL. If absent, auto-submit uses Playwright's bundled Chromium.
+# This file is OPTIONAL. If absent, auto-submit uses Playwright's bundled Chromium
+# (no extensions, but always works on any machine).
 #
-# Run:  node scripts/detect-firefox.mjs
-# to auto-detect your Firefox install and get a ready-to-paste config block.
+# Run:  node scripts/detect-chromium.mjs   to find Edge or Chrome automatically.
+# Run:  node scripts/detect-firefox.mjs    if you prefer Firefox ESR.
 
-# Which browser to launch: chromium | firefox
-preferred: firefox
-
-firefox:
-  # Full path to firefox.exe on your machine
-  executable_path: ""   # e.g. C:\Program Files\Mozilla Firefox\firefox.exe
-
-  # Full path to your Firefox profile directory (the one with SpeedyApply installed)
-  # Default profile: %APPDATA%\Mozilla\Firefox\Profiles\{random}.default-release
-  profile_path: ""      # e.g. C:\Users\rahil\AppData\Roaming\Mozilla\Firefox\Profiles\abc123.default-release
+# Recommended: chromium (Edge or Chrome).
+# Firefox is supported but Stock Firefox 151+ on Windows 11 has shell-integration
+# friction with Playwright persistent-context launch (NS_ERROR_FAILURE on feature
+# tokens). If you have Firefox ESR or an older version, firefox may still work.
+preferred: chromium
 
 chromium:
-  # Optional: use a persistent Chromium profile (e.g. stored session cookies)
-  # Leave empty to use a fresh context each run (default)
-  profile_path: ""
+  # Optional: path to Edge or Chrome executable.
+  # Leave empty to use Playwright's bundled Chromium (no extensions installed).
+  # Run:  node scripts/detect-chromium.mjs   to auto-detect.
+  executable_path: ""   # e.g. C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
 
-# Extension autofill behaviour (applies when preferred: firefox)
+  # Optional: path to the user profile directory that has SpeedyApply installed.
+  # Leave empty to launch a fresh context each run (no extensions).
+  # Run:  node scripts/detect-chromium.mjs   to find your profile path.
+  profile_path: ""      # e.g. C:\Users\rahil\AppData\Local\Microsoft\Edge\User Data\Default
+
+firefox:
+  # Only needed when preferred: firefox.
+  # Run:  node scripts/detect-firefox.mjs   to auto-detect.
+  executable_path: ""   # e.g. C:\Program Files\Mozilla Firefox\firefox.exe
+  profile_path: ""      # e.g. C:\Users\rahil\AppData\Roaming\Mozilla\Firefox\Profiles\abc123.default-release
+
+# Extension autofill behaviour
 # true  = skip built-in form fill; wait 5s for SpeedyApply to detect and populate the form
 # false = use built-in field fill (Greenhouse / Lever / Workday selectors)
 #
-# Override at runtime without editing this file:
-#   --use-extension-autofill    force extension autofill on
-#   --no-extension-autofill     force extension autofill off (use built-in fill)
-extension_autofill: true
+# Set to true only when profile_path points to a profile with SpeedyApply installed.
+# Override per-run: --use-extension-autofill | --no-extension-autofill
+extension_autofill: false

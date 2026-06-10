@@ -47,38 +47,53 @@ If the `cover-letters/` directory only has the bulk export file, the dry-run wil
 
 ---
 
-## Step 0b — Firefox + SpeedyApply setup (one time, ~5 minutes)
+## Step 0b — Edge/Chrome + SpeedyApply setup (one time, ~5 minutes)
 
-Skip this if you want to use Playwright's built-in Chromium with our selector-based form fill.
-Do this if SpeedyApply is already installed in your Firefox profile.
+Skip this if you want to use Playwright's bundled Chromium with our selector-based form fill.
+Do this if SpeedyApply is installed in your Edge or Chrome profile.
+
+> **Recommended browser: Edge or Chrome.** Stock Firefox 151+ on Windows 11 has shell-integration
+> friction with Playwright persistent-context launch (`NS_ERROR_FAILURE` on feature tokens).
+> Firefox ESR or older versions may still work — see `detect-firefox.mjs`.
 
 ```powershell
-# 1. Auto-detect your Firefox install and profile
-node scripts/detect-firefox.mjs
+# 1. Auto-detect Edge or Chrome
+node scripts/detect-chromium.mjs
 
-# 2. Copy the template and fill in the paths printed above
+# 2. Copy the template and paste the block printed above
 copy config\browser.yml.template config\browser.yml
 notepad config\browser.yml
 
-# Required fields (when preferred: firefox):
-#   firefox.executable_path  — full path to firefox.exe
-#   firefox.profile_path     — full path to the profile with SpeedyApply installed
+# Required fields (when using a profile):
+#   chromium.executable_path  — full path to msedge.exe or chrome.exe
+#   chromium.profile_path     — full path to the profile with SpeedyApply installed
+#   extension_autofill: true  — tells auto-submit to wait 5s instead of using built-in selectors
 # The .yml is gitignored — your real paths will never be committed.
 
 # 3. Verify it loads cleanly
 node -e "import('./scripts/load-browser-config.mjs').then(m=>m.loadBrowserConfig()).then(c=>console.log('OK', c.preferred, '| extension_autofill:', c.extension_autofill))"
 ```
 
-Expected output: `OK firefox | extension_autofill: true`
+Expected output: `OK chromium | extension_autofill: true`
 If you see a `BrowserConfigError`, fix the field it names.
 
-**How it works:** With `extension_autofill: true`, auto-submit launches Firefox using your real
+**How it works:** With `extension_autofill: true`, auto-submit launches Edge/Chrome using your real
 profile, navigates to the job URL, then waits 5 seconds for SpeedyApply to detect the form and
 autofill it. Our built-in field selectors (Greenhouse/Lever/Workday) are skipped entirely.
+
+**IMPORTANT — close the browser before running auto-submit.**
+Chromium locks the profile directory while it is open. Playwright cannot attach to an already-open
+profile and will fail. Fully close Edge/Chrome before every auto-submit run.
 
 To opt out of extension autofill on a single run:
 ```powershell
 node scripts/auto-submit.mjs --semi-auto --no-extension-autofill --limit 1
+```
+
+**Using Firefox instead:** If you have Firefox ESR or an older version with SpeedyApply:
+```powershell
+node scripts/detect-firefox.mjs
+# Change preferred: firefox in browser.yml, fill in the printed paths
 ```
 
 ---

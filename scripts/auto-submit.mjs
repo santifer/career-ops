@@ -667,10 +667,12 @@ async function launchBrowserForMode(pw, browserCfg, { headless = false } = {}) {
     return { context, browser: null };
   }
 
-  // Chromium with persistent profile (optional)
+  // Chromium with persistent profile (optional — enables extensions like SpeedyApply)
   const chromiumProfile = browserCfg?.chromium?.profile_path;
+  const chromiumExe     = browserCfg?.chromium?.executable_path || undefined;
   if (chromiumProfile && fs.existsSync(chromiumProfile)) {
     const context = await pw.chromium.launchPersistentContext(chromiumProfile, {
+      executablePath: chromiumExe,
       headless,
       viewport: { width: 1280, height: 900 },
     });

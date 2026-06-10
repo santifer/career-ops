@@ -183,3 +183,56 @@ describe('firefox config — valid paths', () => {
   });
 
 });
+
+// ── Chromium config — path validation ────────────────────────────────────────
+
+describe('chromium config — path validation', () => {
+
+  test('throws BrowserConfigError when chromium executable_path does not exist on disk', async () => {
+    const p = writeTmp('ch-bad-exe.yml', [
+      'preferred: chromium',
+      'chromium:',
+      "  executable_path: 'C:\\nonexistent\\msedge.exe'",
+    ].join('\n') + '\n');
+    await assert.rejects(
+      () => loadBrowserConfig(p),
+      (e) => e instanceof BrowserConfigError && /executable_path/.test(e.message),
+    );
+  });
+
+  test('throws BrowserConfigError when chromium profile_path does not exist on disk', async () => {
+    const p = writeTmp('ch-bad-profile.yml', [
+      'preferred: chromium',
+      'chromium:',
+      "  profile_path: 'C:\\nonexistent\\Edge\\Default'",
+    ].join('\n') + '\n');
+    await assert.rejects(
+      () => loadBrowserConfig(p),
+      (e) => e instanceof BrowserConfigError && /profile_path/.test(e.message),
+    );
+  });
+
+  test('succeeds with valid chromium executable_path and profile_path', async () => {
+    const p = writeTmp('ch-valid.yml', [
+      'preferred: chromium',
+      'chromium:',
+      `  executable_path: '${exeYaml}'`,
+      `  profile_path: '${profileYaml}'`,
+    ].join('\n') + '\n');
+    const cfg = await loadBrowserConfig(p);
+    assert.equal(cfg.preferred, 'chromium');
+    assert.equal(cfg.chromium.executable_path, REAL_EXE);
+    assert.equal(cfg.chromium.profile_path, REAL_PROFILE);
+  });
+
+  test('succeeds with empty chromium paths (template default — fresh context)', async () => {
+    const p = writeTmp('ch-empty-paths.yml', [
+      'preferred: chromium',
+      'chromium:',
+      "  executable_path: ''",
+      "  profile_path: ''",
+    ].join('\n') + '\n');
+    await assert.doesNotReject(() => loadBrowserConfig(p));
+  });
+
+});

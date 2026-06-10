@@ -74,6 +74,23 @@ export async function loadBrowserConfig(configPath = DEFAULT_CONFIG_PATH) {
     extension_autofill,
   };
 
+  if (cfg.preferred === 'chromium') {
+    const exePath = cfg.chromium?.executable_path;
+    if (exePath && !fs.existsSync(exePath)) {
+      throw new BrowserConfigError(
+        `browser.yml: chromium.executable_path not found on disk: ${exePath}\n` +
+        '  Run: node scripts/detect-chromium.mjs   to auto-detect the correct path',
+      );
+    }
+    const profilePath = cfg.chromium?.profile_path;
+    if (profilePath && !fs.existsSync(profilePath)) {
+      throw new BrowserConfigError(
+        `browser.yml: chromium.profile_path not found on disk: ${profilePath}\n` +
+        '  Run: node scripts/detect-chromium.mjs   to find your profile directory',
+      );
+    }
+  }
+
   if (cfg.preferred === 'firefox') {
     const exePath = cfg.firefox.executable_path;
     if (!exePath) {
