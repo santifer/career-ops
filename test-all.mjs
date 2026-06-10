@@ -527,6 +527,34 @@ if (profileInjectionIndex !== -1 && runWorkerIndex !== -1 && profileInjectionInd
   fail('Batch worker prompts can lose user profile context');
 }
 
+const adapterTableMatch = batchRunnerSource.match(/AGENT_ADAPTERS=\$'([^']+)'/s);
+const adapterRateLimitPatterns = adapterTableMatch
+  ? adapterTableMatch[1]
+    .split('\\n')
+    .map(row => row.split('\\t')[3])
+    .filter(Boolean)
+    .map(pattern => new RegExp(pattern, 'i'))
+  : [];
+const rateLimitSamples = [
+  '429 Too Many Requests',
+  'Error: request was throttled by the service',
+  'Codex is temporarily at capacity, try again later',
+  'model overloaded, please retry',
+  'service unavailable',
+  'monthly requests exceeded',
+];
+const nonRateLimitSamples = [
+  'Candidate has capacity to start immediately',
+  'Application completed successfully',
+];
+if (adapterRateLimitPatterns.length >= 2 &&
+    adapterRateLimitPatterns.every(pattern => rateLimitSamples.every(sample => pattern.test(sample))) &&
+    adapterRateLimitPatterns.every(pattern => nonRateLimitSamples.every(sample => !pattern.test(sample)))) {
+  pass('Batch rate-limit detection covers Codex/Claude transient capacity logs');
+} else {
+  fail('Batch rate-limit detection misses expected agent capacity logs or is too broad');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
