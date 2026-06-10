@@ -45,7 +45,7 @@ AGENT_COMMAND_BUILDER=""
 AGENT_RATE_LIMIT_PATTERN=""
 
 # name<TAB>binary<TAB>command-builder<TAB>rate-limit-pattern
-AGENT_ADAPTERS=$'claude\tclaude\tbuild_claude_worker_command\t(rate limit|rate_limit|too many requests|429|quota exceeded|try again later|temporarily unavailable)\ncodex\tcodex\tbuild_codex_worker_command\t(rate limit|rate_limit|too many requests|429|quota exceeded|try again later|temporarily unavailable|usage limit)'
+AGENT_ADAPTERS=$'claude\tclaude\tbuild_claude_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|at capacity|over capacity|overloaded|service unavailable|requests? exceeded)\ncodex\tcodex\tbuild_codex_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|at capacity|over capacity|overloaded|service unavailable|requests? exceeded|usage limit)'
 
 usage() {
   cat <<'USAGE'
