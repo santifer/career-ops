@@ -73,7 +73,7 @@ function linkedInUrl(raw) {
   if (!raw) return '';
   const r = String(raw).trim();
   if (/^https?:\/\//i.test(r)) return r;
-  if (r.startsWith('linkedin.com')) return `https://${r}`;
+  if (/^(?:www\.)?linkedin\.com(\/|$)/i.test(r)) return `https://${r}`;
   if (r.startsWith('/in/') || r.startsWith('in/')) return `https://www.linkedin.com${r.startsWith('/') ? '' : '/'}${r}`;
   return `https://www.linkedin.com/in/${r.replace(/^\/+|\/+$/g, '')}`;
 }
