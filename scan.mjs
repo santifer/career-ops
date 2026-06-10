@@ -443,7 +443,12 @@ async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0
         if (rediscover && code === 'http_gone' && offer.tracked && offer.careersUrlDomain) {
           const newUrl = await searchForNewUrl(page, offer);
           if (newUrl) {
-            const recheck = await checkUrlLiveness(page, newUrl);
+            // Mirror the primary check: without the headed fallback, a
+            // challenge-prone domain would flag the rediscovered URL as
+            // expired just because the recheck hit the same anti-bot wall.
+            const recheck = headed
+              ? await checkUrlLivenessWithFallback(page, newUrl, { getHeadedPage })
+              : await checkUrlLiveness(page, newUrl);
             // Require a *confirmed* live page before migrating. A transient
             // 'uncertain' (timeout/DNS/5xx) must not commit an unverified URL —
             // fall through to expired (the original 404/410 is a real closure).
