@@ -55,7 +55,7 @@ Checks:
 
 - `**URL:**` header is present
 - `**Legitimacy:**` is present and uses an accepted tier (`high`, `medium`, `low`, `uncertain`, `unverified`)
-- `**Score:**` is parseable as `X.X/5`, `N/A`, `SKIP`, or `DUP`
+- `**Score:**` is parseable as `X/5`, `X.X/5`, `N/A`, `SKIP`, or `DUP`
 - `**PDF:**` status is present for reports marked as `pipeline` / `auto-pipeline`; missing PDF status on other legacy reports is warning-only
 - `## Machine Summary` parses as YAML/JSON when present and includes analyzer-aligned core fields (`company`, `role`, `score`, `final_decision`)
 

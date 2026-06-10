@@ -28,7 +28,8 @@ function parseMachineSummary(content) {
 }
 
 function requiresPdfStatus(content) {
-  return /(?:\*\*Source:\*\*|source_path:|source:)\s*(auto-pipeline|pipeline)/i.test(content);
+  const sourceLines = content.match(/^(?:\*\*Source:\*\*|source_path:|source:).*$/gim) ?? [];
+  return sourceLines.some((line) => /\b(?:auto-pipeline|pipeline)\b/i.test(line));
 }
 
 export function validateReport(content) {
@@ -54,14 +55,16 @@ export function validateReport(content) {
   }
 
   let machineSummary;
+  let machineSummaryParseFailed = false;
   try {
     machineSummary = parseMachineSummary(content);
   } catch (err) {
     errors.push(`Machine Summary failed to parse: ${err.message}`);
+    machineSummaryParseFailed = true;
     machineSummary = null;
   }
   if (!machineSummary) {
-    warnings.push('missing ## Machine Summary');
+    if (!machineSummaryParseFailed) warnings.push('missing ## Machine Summary');
   } else if (typeof machineSummary !== 'object' || Array.isArray(machineSummary)) {
     errors.push('Machine Summary must parse to an object');
   } else {
@@ -110,7 +113,7 @@ function selfTest() {
       '',
       '**Score:** banana',
       '**PDF:** maybe',
-      '**Source:** pipeline',
+      'source_path: batch/auto-pipeline/acme.md',
       '',
     ].join('\n'));
     writeFileSync(join(dir, '003-bad-summary-2026-06-10.md'), [
@@ -131,7 +134,13 @@ function selfTest() {
     const valid = results.find((result) => result.file.startsWith('001-'));
     const invalid = results.find((result) => result.file.startsWith('002-'));
     const badSummary = results.find((result) => result.file.startsWith('003-'));
-    if (valid?.status !== 'ok' || invalid?.status !== 'error' || invalid.errors.length < 3 || badSummary?.status !== 'error') {
+    if (
+      valid?.status !== 'ok' ||
+      invalid?.status !== 'error' ||
+      invalid.errors.length < 3 ||
+      badSummary?.status !== 'error' ||
+      badSummary.warnings.includes('missing ## Machine Summary')
+    ) {
       throw new Error(`unexpected self-test result: ${JSON.stringify(results)}`);
     }
     console.log('verify-reports self-test passed');
