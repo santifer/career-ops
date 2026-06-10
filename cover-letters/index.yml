@@ -80,3 +80,17 @@ templates:
     tier: f500
     source: bulk-export-2026-04-29
     notes: Extracted from April bulk export
+  - file: palantir.md
+    company: palantir
+    roles: ["scrum master", "senior scrum master", "project manager", "program manager"]
+    tier: f500
+    source: hand-crafted-2026-06-10
+    notes: Hand-crafted for live submission validation
+    priority: high
+  - file: zoox.md
+    company: zoox
+    roles: ["scrum master", "senior scrum master", "project manager", "program manager", "technical pm"]
+    tier: f500
+    source: hand-crafted-2026-06-10
+    notes: Hand-crafted for live submission validation
+    priority: high

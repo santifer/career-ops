@@ -4,7 +4,7 @@
 # ALL THREE locks must be active before auto-submit will click Submit:
 #   (a) --allow-tier lower          CLI flag on every invocation
 #   (b) enabled: true               this file, set by you
-#   (c) company slug in this list   per-card whitelist
+#   (c) Company slug in this list   per-card whitelist
 #
 # How to identify a "lower-tier" company:
 #   - Fortune 1000 but NOT Fortune 100 (lower stakes if a submission goes wrong)
@@ -20,12 +20,16 @@
 # Hard cap: 5 live submissions per day (tracked in data/live-daily-count-{date}.json)
 # --limit flag cannot override the daily cap.
 
-enabled: false  # flip to true when you're ready for live submissions
+# Note: "lower-tier" is a misnomer here — these are the FIRST live targets
+# Rahil approved for validation. Both are Greenhouse ATS. Hand-crafted CLs
+# committed 2026-06-10. Update this list before any subsequent live runs.
 
-companies: []
-  # Add entries like:
-  # - slug: example-corp
-  #   reason: Fortune 500 mid-tier, low recruiter volume, OK to risk one bad submission
-  #
-  # - slug: acme-industries
-  #   reason: low-priority target approved 2026-06-10
+enabled: true  # Approved 2026-06-10 for Palantir + Zoox first-run validation
+
+companies:
+  - slug: palantir
+    reason: First live submission target, CL hand-crafted 2026-06-10
+    max_per_day: 1
+  - slug: zoox
+    reason: First live submission target, CL hand-crafted 2026-06-10
+    max_per_day: 1

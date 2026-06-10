@@ -249,6 +249,14 @@ this file tracks **open** work.
 
 ---
 
+### K-2026-06-10-28 — Live submission cutover: first real-money click (Palantir + Zoox)
+
+**What happened:** First live submission run approved 2026-06-10. Palantir and Zoox selected as initial targets (both Greenhouse ATS). Three options were considered: (A) stockpile CL fallback only — rejected because no existing CL matched these companies by slug or role family; (B) premium CL from AIP with no hand-crafted backup — rejected because it skips human review; (C) hybrid — hand-crafted CLs committed to repo, lower-tier YAML enabled, two-terminal CDP workflow running. Option C chosen.
+**Rule:** Before enabling any new company slug in `lower-tier-test-companies.yml`, commit a hand-crafted CL for that company in the same PR. A stockpile fallback is acceptable for volume runs but not for first-live-click validation where you want to see exactly what the recruiter reads.
+**How to apply:** New live target → new CL → same commit. Keep the YAML `max_per_day: 1` on new slugs until at least one confirmed submission comes back clean.
+
+---
+
 ### K-2026-06-10-27 — Validate extension availability BEFORE choosing launch strategy
 
 **What happened:** We spent ~3 hours discovering that `launchPersistentContext` strips extensions (K-2026-06-10-25), then implementing it, testing it, and pivoting to CDP attach. If we had validated SpeedyApply's presence in the Playwright-launched browser first (e.g., check `chrome://extensions` in the persistent context), we would have caught this in 10 minutes.
