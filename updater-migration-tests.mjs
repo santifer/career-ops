@@ -9,7 +9,6 @@
 
 import { readFileSync } from 'fs';
 
-const source = readFileSync('update-system.mjs', 'utf-8');
 let passed = 0;
 let failed = 0;
 
@@ -21,6 +20,15 @@ function pass(message) {
 function fail(message) {
   console.error(`FAIL ${message}`);
   failed++;
+}
+
+let source = '';
+try {
+  source = readFileSync('update-system.mjs', 'utf-8');
+  pass('update-system.mjs is readable');
+} catch (error) {
+  fail(`update-system.mjs is readable: ${error.message}`);
+  process.exit(1);
 }
 
 function extractArray(name) {
@@ -83,14 +91,20 @@ for (const userPath of ['cv.md', 'config/profile.yml', 'modes/_profile.md', 'por
 }
 
 const allowedSystemUserOverlap = new Set(['writing-samples/README.md']);
+let hasSystemUserCollision = false;
 for (const systemPath of systemPaths) {
   const overlapsUserPath = userPaths.some((userPath) => {
     if (allowedSystemUserOverlap.has(systemPath)) return false;
     return systemPath === userPath || systemPath.startsWith(userPath);
   });
-  if (overlapsUserPath) fail(`SYSTEM_PATHS must not update user path ${systemPath}`);
+  if (overlapsUserPath) {
+    hasSystemUserCollision = true;
+    fail(`SYSTEM_PATHS must not update user path ${systemPath}`);
+  }
 }
-pass('SYSTEM_PATHS does not collide with USER_PATHS');
+if (!hasSystemUserCollision) {
+  pass('SYSTEM_PATHS does not collide with USER_PATHS');
+}
 
 if (failed > 0) {
   console.error(`\n${passed} passed, ${failed} failed`);
