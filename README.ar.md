@@ -1,6 +1,6 @@
 # Career-Ops | نظام إدارة وتخطيط البحث عن وظائف باستخدام الذكاء الاصطناعي (وكيل مأتمت)
 
-[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [繁體中文](README.zh-TW.md) | [العربية](README.ar.md)
+[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [العربية](README.ar.md)
 
 <p align="right" dir="rtl">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — نظام البحث عن وظائف القائم على عدة وكلاء ذكاء اصطناعي" width="800"></a>
@@ -162,7 +162,7 @@ npm run gemini:eval -- "نص تفاصيل الوظيفة هنا"
 
 يتيح لك النظام تفعيل عدة أوضاع ومهام مختلفة باستخدام أوامر مباشرة:
 
-```
+```text
 /career-ops                ← لعرض كافة الأوامر المتاحة وتفاصيلها
 /career-ops {رابط الوظيفة} ← تشغيل المسار التلقائي بالكامل (تقييم + PDF + تسجيل)
 /career-ops scan           ← مسح بوابات التوظيف بحثاً عن فرص جديدة
@@ -183,7 +183,7 @@ npm run gemini:eval -- "نص تفاصيل الوظيفة هنا"
 
 ## كيف يعمل النظام؟ (How It Works)
 
-```
+```text
 تلصق رابط الوظيفة أو تفاصيلها
          │
          ▼
@@ -233,7 +233,7 @@ go build -o career-dashboard .
 
 ## هيكلية المشروع (Project Structure)
 
-```
+```text
 career-ops/
 ├── AGENTS.md                    # تعليمات وقواعد الوكلاء البرمجية الموحدة
 ├── CLAUDE.md                    # واجهة Claude Code والتعليمات المرفقة
@@ -278,7 +278,7 @@ career-ops/
 نرحب بكافة المساهمات والمقترحات لتطوير هذا النظام ودعمه! انضم إلى مجتمعنا على Discord وشارك تجربتك وقصتك معنا.
 
 <a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" alt="Contributors" />
 </a>
 
 هل نجحت في الحصول على وظيفة أحلامك باستخدام هذا النظام؟ [شارك قصتك معنا لتلهم الآخرين!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
