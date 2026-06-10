@@ -19,6 +19,28 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run learning` | `learning-queue.mjs` | Manage pending profile-learning items |
+
+---
+
+## learning
+
+Records proposed personalization changes from evaluation feedback in `data/learning-queue.md` before editing User Layer files.
+
+```bash
+npm run learning -- add \
+  --source "evaluation #42 feedback" \
+  --target modes/_profile.md \
+  --feedback "score too high for Java-only roles" \
+  --proposal "Lower Java-only backend fit unless AI automation is present."
+
+npm run learning -- list --status pending
+npm run learning -- set-status --id LQ-20260610-001 --status applied
+```
+
+Allowed targets are `modes/_profile.md`, `config/profile.yml`, and `article-digest.md`. Statuses are `pending`, `applied`, and `rejected`.
+
+**Exit codes:** `0` command succeeded, `1` invalid target/status, missing arguments, or missing entry.
 
 ---
 

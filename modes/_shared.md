@@ -21,6 +21,20 @@
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+**RULE: When evaluation feedback implies a lasting profile change, record a pending item with `node learning-queue.mjs add` before editing `modes/_profile.md`, `config/profile.yml`, or `article-digest.md`, unless the user explicitly asks for the edit immediately.**
+
+---
+
+## Learning From Feedback
+
+If the user says an evaluation score was too high/low, a blocker was missed, or a proof point/targeting preference should affect future evaluations:
+
+1. Summarize the feedback as a proposed learning item.
+2. Add it to `data/learning-queue.md` with `node learning-queue.mjs add`.
+3. Ask the user to confirm before applying the change to the target User Layer file.
+4. After applying or rejecting it, update the queue item status with `node learning-queue.mjs set-status`.
+
+This preserves an audit trail and prevents accidental personalization drift.
 
 ---
 
