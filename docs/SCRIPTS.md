@@ -19,6 +19,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run validate:portals` | `validate-portals.mjs` | Validate portals.yml shape before scanning |
 
 ---
 
@@ -89,6 +90,22 @@ npm run merge -- --verify     # merge then run verify-pipeline
 Processed TSVs are moved to `batch/tracker-additions/merged/`.
 
 **Exit codes:** `0` success, `1` verification errors (with `--verify`).
+
+---
+
+## validate:portals
+
+Validates `portals.yml` before running the scanner. The validator is offline: it reads YAML, loads local provider IDs from `providers/*.mjs`, and checks common configuration mistakes without fetching any job boards.
+
+It reports errors for invalid YAML shape, unknown explicit providers, malformed URLs, empty filter keywords, and invalid local parser blocks. Duplicate enabled company names are warnings because they may be intentional during migrations, but they are worth reviewing.
+
+```bash
+npm run validate:portals
+npm run validate:portals -- --file templates/portals.example.yml
+node validate-portals.mjs --self-test
+```
+
+**Exit codes:** `0` no errors (warnings allowed), `1` one or more errors found.
 
 ---
 

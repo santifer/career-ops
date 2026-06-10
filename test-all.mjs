@@ -71,6 +71,7 @@ const scripts = [
   { name: 'dedup-tracker.mjs', expectExit: 0 },
   { name: 'merge-tracker.mjs', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
+  { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
@@ -467,9 +468,96 @@ if (
   fail('portals example still points at a bundled Cohere parser');
 }
 
-// ── 10. AGENTS.md INTEGRITY ─────────────────────────────────────
+// ── 10. PORTALS CONFIG VALIDATOR ────────────────────────────────
 
-console.log('\n10. AGENTS.md integrity');
+console.log('\n10. Portals config validator');
+
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'career-ops-portals-validator-'));
+  const validPath = join(tmp, 'valid.yml');
+  const invalidProviderPath = join(tmp, 'invalid-provider.yml');
+  const emptyKeywordPath = join(tmp, 'empty-keyword.yml');
+  const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
+
+  writeFileSync(validPath, `
+title_filter:
+  positive: ["AI"]
+  negative: ["Intern"]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
+  writeFileSync(invalidProviderPath, `
+title_filter:
+  positive: ["AI"]
+tracked_companies:
+  - name: "Acme"
+    provider: "missing-provider"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
+  writeFileSync(emptyKeywordPath, `
+title_filter:
+  positive: ["AI", "   "]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
+  writeFileSync(duplicateCompanyPath, `
+title_filter:
+  positive: ["AI"]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+  - name: " acme "
+    careers_url: "https://jobs.lever.co/acme2"
+`, 'utf-8');
+
+  const validResult = run(NODE, ['validate-portals.mjs', '--file', validPath]);
+  if (validResult !== null && validResult.includes('0 errors')) {
+    pass('validate-portals accepts a minimal valid portals file');
+  } else {
+    fail('validate-portals should accept a minimal valid portals file');
+  }
+
+  const exampleResult = run(NODE, ['validate-portals.mjs', '--file', 'templates/portals.example.yml']);
+  if (exampleResult !== null && exampleResult.includes('0 errors')) {
+    pass('validate-portals accepts templates/portals.example.yml');
+  } else {
+    fail('validate-portals should accept templates/portals.example.yml');
+  }
+
+  const invalidProviderResult = run(NODE, ['validate-portals.mjs', '--file', invalidProviderPath]);
+  if (invalidProviderResult === null) {
+    pass('validate-portals rejects unknown explicit providers');
+  } else {
+    fail('validate-portals should reject unknown explicit providers');
+  }
+
+  const emptyKeywordResult = run(NODE, ['validate-portals.mjs', '--file', emptyKeywordPath]);
+  if (emptyKeywordResult === null) {
+    pass('validate-portals rejects empty title/location keywords');
+  } else {
+    fail('validate-portals should reject empty title/location keywords');
+  }
+
+  const duplicateCompanyResult = run(NODE, ['validate-portals.mjs', '--file', duplicateCompanyPath]);
+  if (duplicateCompanyResult !== null && duplicateCompanyResult.includes('1 warning')) {
+    pass('validate-portals warns on duplicate enabled company names');
+  } else {
+    fail('validate-portals should warn on duplicate enabled company names');
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`portals validator tests crashed: ${e.message}`);
+}
+
+// ── 11. AGENTS.md INTEGRITY ─────────────────────────────────────
+
+console.log('\n11. AGENTS.md integrity');
 
 const agents = readFile('AGENTS.md');
 const requiredSections = [
