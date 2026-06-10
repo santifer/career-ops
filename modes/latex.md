@@ -77,11 +77,11 @@ Write a JSON file with this structure. `build-cv-latex.mjs` handles template mer
 |-------|------|--------|
 | `name` | string | `profile.yml → candidate.full_name` |
 | `contact_line` | string | Phone / City, State / Visa — built from profile.yml |
-| `email.url` | string | Raw email for `\href{mailto:...}` (NOT escaped) |
+| `email.url` | string | Email for `\href{mailto:...}` (sanitized via sanitizeUrl, not LaTeX-escaped) |
 | `email.display` | string | Display text for the email link |
-| `linkedin.url` | string | Full URL with scheme for `\href{}` |
+| `linkedin.url` | string | Full URL with scheme for `\href{}` (sanitized via sanitizeUrl, not LaTeX-escaped) |
 | `linkedin.display` | string | Display text only (no scheme) |
-| `github.url` | string | Full URL with scheme for `\href{}` |
+| `github.url` | string | Full URL with scheme for `\href{}` (sanitized via sanitizeUrl, not LaTeX-escaped) |
 | `github.display` | string | Display text only (no scheme) |
 | `education[].institution` | string | From cv.md Education |
 | `education[].location` | string | Institution location |
