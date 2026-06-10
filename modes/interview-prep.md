@@ -1,248 +1,248 @@
-# Mode: interview-prep — Company-Specific Interview Intelligence
+# Tryb: interview-prep — Wywiad rekrutacyjny pod konkretną firmę
 
-When the user asks to prep for an interview at a specific company+role, or when an evaluation scores 4.0+ and the user updates status to `Interview`, run this mode.
+Gdy użytkownik prosi o przygotowanie do rozmowy w konkretnej firmie+roli, lub gdy ocena daje 4.0+ i użytkownik zmienia status na `Interview`, uruchom ten tryb.
 
-## Inputs
+## Wejścia
 
-1. **Company name** and **role title** (required)
-2. **Evaluation report** in `reports/` (if exists) — read for archetype, gaps, matched proof points
-3. **Story bank** at `interview-prep/story-bank.md` — read for existing prepared stories
-4. **CV** at `cv.md` + `article-digest.md` — read for proof points
-5. **Profile** at `config/profile.yml` + `modes/_profile.md` — read for candidate context
+1. **Nazwa firmy** i **tytuł roli** (wymagane)
+2. **Raport oceny** w `reports/` (jeśli istnieje) — przeczytaj dla archetypu, luk, dopasowanych proof pointów
+3. **Bank historii** w `interview-prep/story-bank.md` — przeczytaj dla istniejących przygotowanych historii
+4. **CV** w `cv.md` + `article-digest.md` — przeczytaj dla proof pointów
+5. **Profil** w `config/profile.yml` + `modes/_profile.md` — przeczytaj dla kontekstu kandydata
 
-## Step 1 — Research
+## Krok 1 — Research
 
-Run these WebSearch queries. Extract structured data, not summaries. Cite sources for every claim.
+Uruchom te zapytania WebSearch. Wyciągaj dane ustrukturyzowane, nie streszczenia. Cytuj źródła dla każdego twierdzenia.
 
-The first round of most processes is a recruiter / HR screen, not a technical panel — so research has to cover both. Group queries by the audience they inform:
+Pierwsza runda większości procesów to screening rekrutera / HR, nie panel techniczny — więc research musi pokryć oba. Grupuj zapytania wg odbiorcy, którego informują:
 
-**Recruiter / HR screen** (early-round fit, comp, logistics):
+**Screening rekrutera / HR** (dopasowanie wczesnej rundy, wynagrodzenie, logistyka):
 
-| Query | What to extract |
-|-------|-----------------|
-| `"{company} {role} salary" site:levels.fyi` and `"{company} {role} salary" site:glassdoor.com/Salary` (run both — `OR` inside a quoted phrase is taken literally by most engines) | Comp ranges (base / equity / bonus) by level |
-| `"{company} interview process site:glassdoor.com"` then manually filter retrieved reviews to those describing the recruiter / HR screen | Process timeline, screening criteria, common screening questions, recruiter behavior |
-| `"{company} site:teamblind.com" comp negotiation OR offer` | Candid comp/leverage details, what recruiters push back on |
-| `"{company} careers"` + `"{company} benefits"` | Official comp/benefits framing, work-auth/visa policy, location policy |
+| Zapytanie | Co wyciągnąć |
+|-----------|--------------|
+| `"{firma} {rola} zarobki"` na zarobki.pracuj.pl, No Fluff Jobs, justjoin.it; dla międzynarodowych `"{company} {role} salary" site:levels.fyi` i site:glassdoor.com | Widełki (B2B/UoP, baza/equity/bonus) wg poziomu |
+| `"{firma} proces rekrutacji"` na GoWork/Glassdoor, potem ręcznie odfiltruj opinie opisujące screening rekrutera/HR | Harmonogram procesu, kryteria screeningu, częste pytania, zachowanie rekrutera |
+| `"{firma} site:teamblind.com" comp negotiation OR offer` (dla firm międzynarodowych) | Szczere szczegóły o wynagrodzeniu/dźwigni negocjacyjnej |
+| `"{firma} kariera"` + `"{firma} benefity"` | Oficjalne ramowanie wynagrodzeń/benefitów, polityka wiz/lokalizacji |
 
-**Hiring manager / leadership** (motivation, scope alignment, team fit):
+**Hiring manager / kierownictwo** (motywacja, dopasowanie zakresu, dopasowanie do zespołu):
 
-| Query | What to extract |
-|-------|-----------------|
-| `"{company} engineering blog"` and `"{company} {team} blog"` | Team's recent work, technical priorities, named challenges |
-| `"{company}" news OR launch OR roadmap` (last 12 months) | Recent milestones, public bets, hiring drivers |
-| `"{company} {role} interview process"` (general) | Hiring-manager round structure, what they evaluate, candidate write-ups |
+| Zapytanie | Co wyciągnąć |
+|-----------|--------------|
+| `"{firma} engineering blog"` i `"{firma} {zespół} blog"` | Niedawna praca zespołu, priorytety techniczne, nazwane wyzwania |
+| `"{firma}" news OR launch OR roadmap` (ostatnie 12 mies.) | Niedawne kamienie milowe, publiczne zakłady, motory rekrutacji |
+| `"{firma} {rola} proces rekrutacji"` (ogólnie) | Struktura rundy hiring managera, co oceniają |
 
-**Peer / technical panel** (depth, collaboration, on-the-job realism):
+**Osoby z zespołu / panel techniczny** (głębia, współpraca, realizm pracy):
 
-| Query | What to extract |
-|-------|-----------------|
-| `"{company} {role} interview questions site:glassdoor.com"` | Actual questions asked, difficulty rating, experience rating, number of rounds, offer/reject ratio |
-| `"{company} {role} interview site:leetcode.com/discuss"` | Specific coding/technical problems, system design topics, round structure |
-| `"{company} interview process site:teamblind.com"` then manually filter retrieved threads to those describing technical rounds | Hiring bar, recent technical interview data points |
+| Zapytanie | Co wyciągnąć |
+|-----------|--------------|
+| `"{firma} {rola} pytania rekrutacyjne"` na GoWork/Glassdoor | Faktyczne pytania, ocena trudności, liczba rund, stosunek oferta/odrzucenie |
+| `"{firma} {rola} interview site:leetcode.com/discuss"` | Konkretne problemy coding/system design, struktura rund |
+| `"{firma} proces rekrutacji site:teamblind.com"`, potem ręcznie odfiltruj wątki opisujące rundy techniczne | Poprzeczka, niedawne dane z rozmów technicznych |
 
-If the company is small or obscure and yields few results, broaden: search for the role archetype at similar-stage companies, and note that intel is sparse. Do the recruiter-screen queries even when intel is sparse — comp/logistics data exists for almost every company.
+Jeśli firma jest mała lub mało znana i daje niewiele wyników, poszerz: szukaj archetypu roli w firmach o podobnym etapie i odnotuj, że danych jest mało. Zapytania o screening rekrutera rób nawet przy skąpych danych — dane o wynagrodzeniu/logistyce istnieją niemal dla każdej firmy.
 
-**Do NOT fabricate questions.** If a source says "they asked about distributed systems," report that. Do not invent a specific distributed systems question. When generating likely questions from JD analysis, label them clearly as `[inferred from JD]` not sourced from candidates.
+**NIE zmyślaj pytań.** Jeśli źródło mówi "pytali o systemy rozproszone", zaraportuj to. Nie wymyślaj konkretnego pytania o systemy rozproszone. Generując prawdopodobne pytania z analizy ogłoszenia, oznaczaj je jasno jako `[inferred from JD]`, a nie jako pochodzące od kandydatów.
 
-**Tag conventions** (don't mix them):
+**Konwencje tagów** (nie mieszaj ich):
 
-- `[inferred from JD]` — questions derived from the job description rather than a candidate report.
-- `[inferred]` — audience classifications (Step 2.5) made from round duration / position when `Conducted by` is unknown.
+- `[inferred from JD]` — pytania wyprowadzone z ogłoszenia, nie z raportu kandydata.
+- `[inferred]` — klasyfikacje odbiorców (Krok 2.5) z czasu/pozycji rundy, gdy `Prowadzone przez` jest nieznane.
 
-## Step 2 — Process Overview
+## Krok 2 — Przegląd procesu
 
 ```markdown
-## Process Overview
-- **Rounds:** {N} rounds, ~{X} days end-to-end
-- **Format:** {e.g., recruiter screen → technical phone → take-home → onsite (4 rounds) → hiring manager}
-- **Difficulty:** {X}/5 (Glassdoor avg, N reviews)
-- **Positive experience rate:** {X}%
-- **Known quirks:** {e.g., "pair programming instead of whiteboard", "no LeetCode, all practical", "take-home is 4 hours"}
-- **Sources:** {links}
+## Przegląd procesu
+- **Rundy:** {N} rund, ~{X} dni od początku do końca
+- **Format:** {np. screening rekrutera → telefon techniczny → zadanie domowe → onsite (4 rundy) → hiring manager}
+- **Trudność:** {X}/5 (śr. Glassdoor/GoWork, N opinii)
+- **Odsetek pozytywnych doświadczeń:** {X}%
+- **Znane osobliwości:** {np. "pair programming zamiast tablicy", "bez LeetCode, same praktyczne", "zadanie domowe na 4h"}
+- **Źródła:** {linki}
 ```
 
-If data is insufficient for any field, write "unknown — not enough data" rather than guessing.
+Jeśli danych do pola brakuje, napisz "nieznane — za mało danych" zamiast zgadywać.
 
-## Step 2.5 — Audience Map
+## Krok 2.5 — Mapa odbiorców
 
-Classify each round from Step 2 into exactly one audience. The audience drives what gets prioritized in Steps 4 and 7.
+Sklasyfikuj każdą rundę z Kroku 2 do dokładnie jednego odbiorcy. Odbiorca decyduje, co priorytetyzować w Krokach 4 i 7.
 
-| Audience            | Typical round                                | Primary evaluation                                              |
-|---------------------|----------------------------------------------|-----------------------------------------------------------------|
-| `recruiter-screen`  | First call (15–30 min, recruiter / HR / TA)  | Fit gate: motivation, comp, location/visa, timeline             |
-| `hiring-manager`    | Manager / skip-level (30–45 min)             | Why this role, scope alignment, leadership signals              |
-| `peer-tech`         | IC technical (live coding, system design, take-home review) | Depth + collaboration on the actual stack                       |
-| `panel-mixed`       | Onsite / loop with multiple interviewer types in one block  | Cross-cuts the above                                            |
+| Odbiorca | Typowa runda | Główna ocena |
+|----------|--------------|--------------|
+| `recruiter-screen` | Pierwsza rozmowa (15–30 min, rekruter / HR / TA) | Bramka dopasowania: motywacja, wynagrodzenie, lokalizacja/wiza, harmonogram |
+| `hiring-manager` | Menedżer / skip-level (30–45 min) | Dlaczego ta rola, dopasowanie zakresu, sygnały przywódcze |
+| `peer-tech` | Techniczna IC (live coding, system design, przegląd zadania) | Głębia + współpraca na realnym stacku |
+| `panel-mixed` | Onsite / loop z wieloma typami rozmówców w jednym bloku | Przecina powyższe |
 
-If `Conducted by` is unknown for a round, infer cautiously from duration, position, and any signals from the JD or job posting. Common patterns:
+Jeśli `Prowadzone przez` jest nieznane dla rundy, wnioskuj ostrożnie z czasu, pozycji i sygnałów z ogłoszenia. Typowe wzorce:
 
-- Round 1, short (15–30 min) → almost always `recruiter-screen`.
-- Round 2 — **do not default**. Many companies put a peer-led technical phone screen here, others put the hiring manager. Prefer `peer-tech` if the round is described as "technical screen" or has a coding/system-design component; prefer `hiring-manager` if it's described as a manager / skip-level / leadership conversation; otherwise mark as `panel-mixed [inferred]` and prep both packs.
-- Deep technical block (live coding, system design, take-home review) → `peer-tech`.
-- Onsite / loop with multiple back-to-back rounds → `panel-mixed`.
+- Runda 1, krótka (15–30 min) → niemal zawsze `recruiter-screen`.
+- Runda 2 — **nie zakładaj domyślnie**. Wiele firm wstawia tu techniczny screening prowadzony przez osobę z zespołu, inne hiring managera. Wybierz `peer-tech`, jeśli rundę opisano jako "screening techniczny" lub ma komponent coding/system-design; wybierz `hiring-manager`, jeśli opisano ją jako rozmowę menedżerską/skip-level; w innym razie oznacz jako `panel-mixed [inferred]` i przygotuj oba pakiety.
+- Głęboki blok techniczny (live coding, system design, przegląd zadania) → `peer-tech`.
+- Onsite / loop z wieloma rundami pod rząd → `panel-mixed`.
 
-Mark inferred audiences with `[inferred]` and keep going — sparse intel is normal early in research.
+Oznacz wywnioskowanych odbiorców `[inferred]` i kontynuuj — skąpe dane na wczesnym etapie są normalne.
 
 ```markdown
-## Audience Map
-- **Round 1** (recruiter screen, 30 min) → `recruiter-screen`
-- **Round 2** (technical phone screen, 60 min) → `peer-tech`
-- **Round 3** (hiring manager call, 45 min) → `hiring-manager`
-- **Round 4** (onsite loop, 4× 45 min) → `panel-mixed`
+## Mapa odbiorców
+- **Runda 1** (screening rekrutera, 30 min) → `recruiter-screen`
+- **Runda 2** (techniczny telefon, 60 min) → `peer-tech`
+- **Runda 3** (rozmowa z hiring managerem, 45 min) → `hiring-manager`
+- **Runda 4** (onsite loop, 4× 45 min) → `panel-mixed`
 - ...
 ```
 
-The example above shows a typical pattern but is not a default. Classify each round from the actual research above — round 2 in particular is often `peer-tech`, not `hiring-manager`.
+Powyższy przykład pokazuje typowy wzorzec, ale nie jest domyślny. Sklasyfikuj każdą rundę z faktycznego researchu — szczególnie runda 2 to często `peer-tech`, nie `hiring-manager`.
 
-## Step 3 — Round-by-Round Breakdown
+## Krok 3 — Rozbicie runda po rundzie
 
-For each round discovered in research:
-
-```markdown
-### Round {N}: {Type} — audience: `{audience}`
-- **Duration:** {X} min
-- **Conducted by:** {peer / manager / skip-level / recruiter — if known}
-- **What they evaluate:** {specific skills or traits}
-- **Reported questions:**
-  - {question} — [source: Glassdoor (URL/date)]
-  - {question} — [source: Blind (URL/date)]
-- **How to prepare:** {1-2 concrete actions, audience-appropriate — see Step 4 for the full per-audience pack}
-```
-
-If round structure is unknown, state that and provide the best available intel on what types of rounds to expect based on company size, stage, and role level.
-
-## Step 4 — Likely Questions (per audience)
-
-Group all discovered and inferred questions by the audience that asks them, not by question type. Within each audience, draft candidate-specific answers using `cv.md`, `article-digest.md`, `config/profile.yml`, and `modes/_profile.md`. **Never fabricate questions** — sourced questions must cite, inferred questions must be tagged `[inferred from JD]`.
-
-If any of those profile files are missing, incomplete, or out-of-date, note the gap inline (e.g. "comp target unknown — defer to recruiter band") and proceed with what's available rather than blocking the prep. The mode's value is partial-but-honest output, not perfect-or-nothing.
-
-### Audience: `recruiter-screen`
-
-The recruiter is screening for fit, not testing skill. Wrong-foot answers (vague comp, fuzzy motivation, missing logistics) end the process before any technical signal is collected. Cover at minimum:
-
-- **"Walk me through your CV / why are you looking?"** — 60–90s narrative anchored to `modes/_profile.md` narrative + the role's archetype.
-- **Comp expectation** — concrete range pulled from Step 1 Levels.fyi/Glassdoor data, anchored to `config/profile.yml` `compensation.target`. Note the leverage hand: if comp data is thin or the candidate has no competing offer, recommend deferring with a clean script ("I'm calibrating to market for {level}, can you share the band for this role?").
-- **Why this company** — 2–3 sentences referencing public signals from Step 1 (recent launch, named values, team work). Avoid generic praise.
-- **Location / remote / visa** — answer derived from `config/profile.yml` location policy and the role's posted policy. Flag deal-breakers from `modes/_profile.md` so the recruiter can route correctly.
-- **Timeline / availability / notice period** — numbers, not vibes.
-- **Other processes in flight** — recommended framing only; never push the candidate to lie.
-- **Background red flags** — gaps, transitions, unusual elements from `cv.md` + `_profile.md`. Honest, specific, forward-looking framing — never defensive.
-
-### Audience: `hiring-manager`
-
-The HM is screening for motivation + scope fit. They've already trusted the recruiter's logistics gate; they care whether you'd own the work. Cover at minimum:
-
-- **"Why this role, why now?"** — connect candidate's last 1–2 roles + `_profile.md` narrative to the team's named challenge from Step 1.
-- **"What would your first 90 days look like here?"** — derived from JD scope + the team's recent work (engineering blog, public roadmap).
-- **Leadership / collaboration questions** — map to `interview-prep/story-bank.md`.
-- **Sharp questions to ask back** — 2–3 tied to a specific recent thing the team shipped or wrote about, not generic "what's the team like".
-
-### Audience: `peer-tech`
-
-This is where the original Technical / Role-Specific buckets live. Peers are evaluating depth and collaboration on the actual stack.
-
-- **Technical questions** (system design, coding, architecture, domain) — for each: the question, source, and what a strong answer looks like for this candidate specifically (reference CV proof points).
-- **Role-specific questions** tied to the JD archetype — for each: the question, why they're likely asking it (which JD requirement it maps to), and the candidate's best angle.
-- **Reverse questions** — about on-call, code review culture, deployment cadence, what surprised them when they joined.
-
-### Audience: `panel-mixed`
-
-Onsite loops and mixed panels rarely give the candidate time to context-switch — preparation has to be pre-routed. For each panel slot:
-
-- **If the interviewer is named in the schedule**, do a quick LinkedIn/blog look-up and tag them to one of the three audiences (recruiter / HM / peer-tech). Then pull from that audience's pack.
-- **If the slot is unlabeled**, prep all three packs but cap each to 3–5 highest-priority items so the candidate isn't drowning in notes.
-- **Hand-off discipline**: tell the candidate explicitly what NOT to repeat verbatim across slots (e.g. the same proof point told identically twice signals scripted answers; vary the angle).
-- **Energy management**: 4-hour onsites burn out less-experienced candidates first. Flag the slot most likely to test depth (usually peer-tech) and reserve the candidate's freshest material for it.
-
-## Step 5 — Story Bank Mapping
-
-Run this mapping **per audience pack** from Step 4 — same story can map differently to a recruiter prompt vs a peer-tech behavioral question, and a single un-segmented table risks cross-audience drift.
-
-| # | Audience | Likely question/topic | Best story from story-bank.md | Fit | Gap? |
-|---|----------|----------------------|-------------------------------|-----|------|
-| 1 | recruiter-screen | ... | [Story Title] | strong/partial/none | |
-| 2 | hiring-manager | ... | [Story Title] | strong/partial/none | |
-| 3 | peer-tech | ... | [Story Title] | strong/partial/none | |
-
-- **strong**: story directly answers the question
-- **partial**: story is adjacent, needs reframing
-- **none**: no existing story — flag for the user
-
-For each gap, suggest: "You need a story about {topic}. Consider: {specific experience from cv.md that could become a STAR+R story}."
-
-If the user wants to draft missing stories, help them build STAR+R format and append to `interview-prep/story-bank.md`.
-
-## Step 6 — Technical Prep Checklist
-
-Based on what the company actually tests, not generic advice:
+Dla każdej rundy odkrytej w researchu:
 
 ```markdown
-- [ ] {topic} — why: "{evidence from research}"
-- [ ] {topic} — why: "{their blog/product suggests this matters}"
-- [ ] {topic} — why: "{asked in N/M recent Glassdoor reviews}"
+### Runda {N}: {Typ} — odbiorca: `{audience}`
+- **Czas:** {X} min
+- **Prowadzone przez:** {osoba z zespołu / menedżer / skip-level / rekruter — jeśli znane}
+- **Co oceniają:** {konkretne umiejętności lub cechy}
+- **Zgłaszane pytania:**
+  - {pytanie} — [źródło: Glassdoor/GoWork (URL/data)]
+  - {pytanie} — [źródło: Blind (URL/data)]
+- **Jak się przygotować:** {1-2 konkretne działania, dopasowane do odbiorcy — pełny pakiet w Kroku 4}
 ```
 
-Prioritize by frequency and relevance to the role. Max 10 items.
+Jeśli struktura rundy jest nieznana, powiedz to i podaj najlepsze dostępne dane o typach rund spodziewanych na podstawie wielkości firmy, etapu i poziomu roli.
 
-## Step 7 — Company Signals (per audience)
+## Krok 4 — Prawdopodobne pytania (per odbiorca)
 
-Things to say, do, and avoid — segmented by who's listening. The same fact can be a strength to a peer engineer and a yellow flag to a recruiter; framing matters.
+Pogrupuj wszystkie odkryte i wywnioskowane pytania wg odbiorcy, który je zadaje, nie wg typu pytania. W każdym odbiorcy przygotuj odpowiedzi specyficzne dla kandydata z `cv.md`, `article-digest.md`, `config/profile.yml` i `modes/_profile.md`. **Nigdy nie zmyślaj pytań** — pytania ze źródeł muszą mieć cytat, wywnioskowane muszą mieć tag `[inferred from JD]`.
 
-### To the recruiter / HR screen
+Jeśli któryś z plików profilu brakuje, jest niekompletny lub nieaktualny, odnotuj lukę w treści (np. "cel wynagrodzeniowy nieznany — odwołaj do widełek rekrutera") i kontynuuj z tym, co dostępne, zamiast blokować przygotowanie. Wartością trybu jest output częściowy-ale-uczciwy, nie perfekcyjny-albo-nic.
 
-- **What to volunteer**: motivation, location/visa fit, timeline, why this company.
-- **What NOT to volunteer**: hard comp number when leverage is uncertain (defer to band); ongoing process details; opinions on the company's recent layoffs / press.
-- **Vocabulary**: official company language for benefits and policies (from careers page).
-- **Red flags they screen for**: visa surprises, comp mismatch, "looking everywhere" energy.
+### Odbiorca: `recruiter-screen`
 
-### To the hiring manager
+Rekruter sprawdza dopasowanie, nie testuje umiejętności. Złe odpowiedzi (ogólnikowe widełki, mglista motywacja, brakująca logistyka) kończą proces, zanim zbierze się sygnał techniczny. Pokryj minimum:
 
-- **What to lead with**: connection between candidate narrative (`_profile.md`) and a named team challenge from Step 1.
-- **Vocabulary to use**: terms the company uses internally — shows homework (e.g., Stripe says "increase the GDP of the internet", Anthropic says "safety" not "alignment").
-- **Sharp questions to ask back**: 2–3 tied to recent news / blog posts from Step 1.
+- **"Opowiedz mi o swoim CV / czemu szukasz?"** — narracja 60–90 s zakotwiczona w narracji `modes/_profile.md` + archetyp roli.
+- **Oczekiwania płacowe** — konkretne widełki z danych Kroku 1 (zarobki.pracuj.pl/No Fluff Jobs/Levels.fyi), zakotwiczone w `config/profile.yml` `compensation.target`. Rozróżnij B2B vs UoP. Odnotuj dźwignię: jeśli danych jest mało lub kandydat nie ma konkurencyjnej oferty, zarekomenduj odroczenie czystym skryptem ("Kalibruję do rynku dla {poziom}, możesz podać widełki tej roli?").
+- **Dlaczego ta firma** — 2–3 zdania odwołujące się do publicznych sygnałów z Kroku 1 (niedawna premiera, nazwane wartości, praca zespołu). Unikaj ogólnych pochwał.
+- **Lokalizacja / remote / wiza** — odpowiedź z polityki lokalizacji `config/profile.yml` i polityki z ogłoszenia. Oznacz deal-breakery z `modes/_profile.md`, by rekruter dobrze poprowadził.
+- **Harmonogram / dostępność / okres wypowiedzenia** — liczby, nie ogólniki.
+- **Inne procesy w toku** — tylko rekomendowane ramowanie; nigdy nie namawiaj kandydata do kłamstwa.
+- **Czerwone flagi w tle** — przerwy, zmiany, nietypowe elementy z `cv.md` + `_profile.md`. Uczciwe, konkretne, zorientowane na przyszłość — nigdy defensywne.
 
-### To the peer / technical panel
+### Odbiorca: `hiring-manager`
 
-- **What to lead with**: stack-relevant proof points from `cv.md` / `article-digest.md`.
-- **Things to avoid**: anti-patterns flagged in Glassdoor / Blind reviews specific to this company.
-- **Reverse questions**: on-call rotation, code review norms, deployment cadence, what surprised them when they joined.
+HM sprawdza motywację + dopasowanie zakresu. Już zaufał bramce logistycznej rekrutera; obchodzi go, czy weźmiesz odpowiedzialność za pracę. Pokryj minimum:
 
-### To a mixed panel
+- **"Czemu ta rola, czemu teraz?"** — połącz 1–2 ostatnie role kandydata + narrację `_profile.md` z nazwanym wyzwaniem zespołu z Kroku 1.
+- **"Jak wyglądałyby Twoje pierwsze 90 dni tutaj?"** — z zakresu ogłoszenia + niedawnej pracy zespołu (blog inżynierski, publiczny roadmap).
+- **Pytania o przywództwo / współpracę** — mapuj na `interview-prep/story-bank.md`.
+- **Ostre pytania zwrotne** — 2–3 powiązane z konkretną niedawną rzeczą, którą zespół wdrożył lub o niej pisał, nie ogólne "jak jest w zespole".
 
-- **What to lead with**: a single 2-sentence framing that lands for all three audiences — usually narrative + named team challenge — then let each interviewer steer.
-- **What NOT to repeat**: same proof point told identically across slots; instead, vary the angle (recruiter hears the headline number, HM hears the team-impact framing, peer-tech hears the technical detail).
-- **Vocabulary**: keep recruiter-friendly language (impact, scope) when leadership is in the room; switch to peer-language (architecture, trade-offs, on-call) when only ICs are.
-- **What to avoid**: contradicting yourself across slots about comp, timeline, or what excites you. Interviewers compare notes.
+### Odbiorca: `peer-tech`
 
-## Output
+Tu żyją pierwotne koszyki Techniczny / Specyficzny dla roli. Osoby z zespołu oceniają głębię i współpracę na realnym stacku.
 
-Save the full report to `interview-prep/{company-slug}-{role-slug}.md` with this header:
+- **Pytania techniczne** (system design, coding, architektura, domena) — dla każdego: pytanie, źródło i jak wygląda mocna odpowiedź dla TEGO kandydata (odwołaj się do proof pointów z CV).
+- **Pytania specyficzne dla roli** powiązane z archetypem ogłoszenia — dla każdego: pytanie, czemu pewnie pytają (które wymaganie mapuje) i najlepszy kąt kandydata.
+- **Pytania zwrotne** — o on-call, kulturę code review, kadencję deploymentu, co ich zaskoczyło po dołączeniu.
+
+### Odbiorca: `panel-mixed`
+
+Onsite loopy i panele mieszane rzadko dają czas na przełączanie kontekstu — przygotowanie musi być wstępnie ułożone. Dla każdego slotu panelu:
+
+- **Jeśli rozmówca jest nazwany w harmonogramie**, zrób szybki research LinkedIn/blog i przypisz go do jednego z trzech odbiorców (rekruter / HM / peer-tech). Potem czerp z pakietu tego odbiorcy.
+- **Jeśli slot jest nieoznaczony**, przygotuj wszystkie trzy pakiety, ale ogranicz każdy do 3–5 najważniejszych pozycji, by kandydat się nie pogubił.
+- **Dyscyplina przekazania**: powiedz kandydatowi wprost, czego NIE powtarzać słowo w słowo między slotami (ten sam proof point opowiedziany identycznie dwa razy sygnalizuje wyuczone odpowiedzi; zmieniaj kąt).
+- **Zarządzanie energią**: 4-godzinne onsite najpierw wykańczają mniej doświadczonych. Oznacz slot najpewniej testujący głębię (zwykle peer-tech) i zachowaj na niego najświeższy materiał.
+
+## Krok 5 — Mapowanie banku historii
+
+Uruchom to mapowanie **per pakiet odbiorcy** z Kroku 4 — ta sama historia może mapować się inaczej do pytania rekrutera niż do pytania behawioralnego peer-tech, a jedna niesegmentowana tabela grozi dryfem między odbiorcami.
+
+| # | Odbiorca | Prawdopodobne pytanie/temat | Najlepsza historia z story-bank.md | Dopasowanie | Luka? |
+|---|----------|-----------------------------|------------------------------------|-------------|-------|
+| 1 | recruiter-screen | ... | [Tytuł historii] | mocne/częściowe/brak | |
+| 2 | hiring-manager | ... | [Tytuł historii] | mocne/częściowe/brak | |
+| 3 | peer-tech | ... | [Tytuł historii] | mocne/częściowe/brak | |
+
+- **mocne**: historia wprost odpowiada na pytanie
+- **częściowe**: historia jest sąsiadująca, wymaga przeformułowania
+- **brak**: brak istniejącej historii — oznacz dla użytkownika
+
+Dla każdej luki zasugeruj: "Potrzebujesz historii o {temat}. Rozważ: {konkretne doświadczenie z cv.md, które może stać się historią STAR+R}."
+
+Jeśli użytkownik chce naszkicować brakujące historie, pomóż zbudować format STAR+R i dopisz do `interview-prep/story-bank.md`.
+
+## Krok 6 — Checklista przygotowania technicznego
+
+Na podstawie tego, co firma faktycznie testuje, nie ogólnych porad:
 
 ```markdown
-# Interview Intel: {Company} — {Role}
-
-**URL:** {job posting URL or company careers URL, or "N/A" if recruiter-sourced}
-**Legitimacy:** {tier copied from the evaluation report's Block G, or "unknown" if no report exists}
-**Report:** {link to evaluation report if exists, or "N/A"}
-**Researched:** {YYYY-MM-DD}
-**Sources:** {N} Glassdoor reviews, {N} Blind posts, {N} other
-**Audiences covered:** {recruiter-screen, hiring-manager, peer-tech, panel-mixed}
+- [ ] {temat} — czemu: "{dowód z researchu}"
+- [ ] {temat} — czemu: "{ich blog/produkt sugeruje, że to ważne}"
+- [ ] {temat} — czemu: "{pytane w N/M niedawnych opiniach Glassdoor/GoWork}"
 ```
 
-## Post-Research
+Priorytetyzuj wg częstotliwości i istotności dla roli. Maks. 10 pozycji.
 
-After delivering the report:
+## Krok 7 — Sygnały firmy (per odbiorca)
 
-1. Ask the user if they want to draft stories for any gaps found in Step 5
-2. If they have a scheduled interview date, note it: "Your interview is in {X} days. Want me to set a reminder to review this prep?"
-3. Suggest running `deep` mode if the company research in Step 1 was thin — deep mode covers strategy, culture, and competitive landscape in more depth
+Co mówić, robić i czego unikać — z podziałem wg tego, kto słucha. Ten sam fakt może być siłą dla inżyniera z zespołu i żółtą flagą dla rekrutera; ramowanie ma znaczenie.
 
-## Rules
+### Do rekrutera / screeningu HR
 
-- **NEVER invent interview questions and attribute them to sources.** Inferred questions must be labeled `[inferred from JD]`.
-- **NEVER fabricate Glassdoor ratings or statistics.** If the data isn't there, say so.
-- **Cite everything.** Every question, every stat, every claim gets a source or an `[inferred]` tag.
-- Generate in the language of the JD (EN default).
-- Be direct. This is a working prep document, not a pep talk.
+- **Co ujawnić**: motywacja, dopasowanie lokalizacji/wizy, harmonogram, czemu ta firma.
+- **Czego NIE ujawniać**: twardej kwoty wynagrodzenia, gdy dźwignia niepewna (odwołaj do widełek); szczegółów innych procesów; opinii o niedawnych zwolnieniach / prasie firmy.
+- **Słownictwo**: oficjalny język firmy o benefitach i politykach (ze strony kariery).
+- **Czerwone flagi, których szukają**: niespodzianki wizowe, niedopasowanie wynagrodzenia, energia "szukam wszędzie".
+
+### Do hiring managera
+
+- **Od czego zacząć**: połączenie narracji kandydata (`_profile.md`) z nazwanym wyzwaniem zespołu z Kroku 1.
+- **Słownictwo do użycia**: terminy używane wewnętrznie przez firmę — pokazuje przygotowanie.
+- **Ostre pytania zwrotne**: 2–3 powiązane z niedawnymi newsami / wpisami z Kroku 1.
+
+### Do osób z zespołu / panelu technicznego
+
+- **Od czego zacząć**: proof pointy istotne dla stacku z `cv.md` / `article-digest.md`.
+- **Czego unikać**: antywzorce oznaczone w opiniach Glassdoor / GoWork / Blind specyficznych dla tej firmy.
+- **Pytania zwrotne**: rotacja on-call, normy code review, kadencja deploymentu, co ich zaskoczyło po dołączeniu.
+
+### Do panelu mieszanego
+
+- **Od czego zacząć**: pojedyncze 2-zdaniowe ramowanie trafiające do wszystkich trzech odbiorców — zwykle narracja + nazwane wyzwanie zespołu — potem pozwól każdemu rozmówcy sterować.
+- **Czego nie powtarzać**: tego samego proof pointu opowiedzianego identycznie między slotami; zmieniaj kąt (rekruter słyszy liczbę-nagłówek, HM słyszy ramowanie wpływu na zespół, peer-tech słyszy szczegół techniczny).
+- **Słownictwo**: trzymaj język przyjazny rekruterowi (wpływ, zakres), gdy w pokoju jest kierownictwo; przełącz na język peer (architektura, kompromisy, on-call), gdy są tylko IC.
+- **Czego unikać**: zaprzeczania sobie między slotami co do wynagrodzenia, harmonogramu lub tego, co Cię ekscytuje. Rozmówcy porównują notatki.
+
+## Wyjście
+
+Zapisz pełny raport do `interview-prep/{company-slug}-{role-slug}.md` z tym nagłówkiem:
+
+```markdown
+# Wywiad rekrutacyjny: {Firma} — {Rola}
+
+**URL:** {URL ogłoszenia lub strony kariery firmy, lub "N/A" jeśli z polecenia rekrutera}
+**Wiarygodność:** {poziom skopiowany z Bloku G raportu oceny, lub "nieznana" jeśli brak raportu}
+**Raport:** {link do raportu oceny jeśli istnieje, lub "N/A"}
+**Research z dnia:** {YYYY-MM-DD}
+**Źródła:** {N} opinii Glassdoor/GoWork, {N} postów Blind, {N} innych
+**Pokryci odbiorcy:** {recruiter-screen, hiring-manager, peer-tech, panel-mixed}
+```
+
+## Po researchu
+
+Po dostarczeniu raportu:
+
+1. Zapytaj użytkownika, czy chce naszkicować historie do luk znalezionych w Kroku 5
+2. Jeśli ma umówioną datę rozmowy, odnotuj ją: "Twoja rozmowa jest za {X} dni. Mam ustawić przypomnienie o powtórce tego przygotowania?"
+3. Zasugeruj uruchomienie trybu `deep`, jeśli research firmy w Kroku 1 był skąpy — tryb deep pokrywa strategię, kulturę i krajobraz konkurencyjny głębiej
+
+## Reguły
+
+- **NIGDY nie wymyślaj pytań rekrutacyjnych i nie przypisuj ich do źródeł.** Wywnioskowane pytania muszą być oznaczone `[inferred from JD]`.
+- **NIGDY nie zmyślaj ocen ani statystyk Glassdoor/GoWork.** Jeśli danych nie ma, powiedz to.
+- **Cytuj wszystko.** Każde pytanie, każda statystyka, każde twierdzenie dostaje źródło lub tag `[inferred]`.
+- Generuj po polsku (lub w języku procesu, jeśli rekrutacja po angielsku).
+- Bądź konkretny. To roboczy dokument przygotowawczy, nie mowa motywacyjna.

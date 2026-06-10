@@ -1,19 +1,19 @@
-# Mode: update — Interactive System Update
+# Tryb: update — Interaktywna aktualizacja systemu
 
-When the user runs `/career-ops update`, execute this interactive update flow.
+Gdy użytkownik uruchomi `/career-ops update`, wykonaj ten interaktywny przepływ aktualizacji.
 
-## Step 1 — Check for Updates
+## Krok 1 — Sprawdź aktualizacje
 
-Run `node update-system.mjs check` and parse the JSON output.
+Uruchom `node update-system.mjs check` i sparsuj wyjście JSON.
 
-- If `up-to-date`: Tell the user "career-ops is up to date (v{version})." and stop.
-- If `offline`: Tell the user "Cannot reach GitHub to check for updates. Try again later." and stop.
-- If `dismissed`: Tell the user "Update check was previously dismissed. Clearing the dismissal and re-checking now." Remove `.update-dismissed`, then re-run `node update-system.mjs check` and branch on the new status.
-- If `update-available`: Continue to Step 2.
+- Jeśli `up-to-date`: powiedz użytkownikowi „career-ops jest aktualny (v{version})." i zakończ.
+- Jeśli `offline`: powiedz „Nie mogę połączyć się z GitHub, by sprawdzić aktualizacje. Spróbuj później." i zakończ.
+- Jeśli `dismissed`: powiedz „Sprawdzanie aktualizacji zostało wcześniej odrzucone. Czyszczę odrzucenie i sprawdzam ponownie." Usuń `.update-dismissed`, następnie ponownie uruchom `node update-system.mjs check` i rozgałęź według nowego statusu.
+- Jeśli `update-available`: przejdź do Kroku 2.
 
-## Step 2 — Show What Changed
+## Krok 2 — Pokaż, co się zmieniło
 
-Show the user what will change. Run:
+Pokaż użytkownikowi, co się zmieni. Uruchom:
 
 ```bash
 git fetch https://github.com/santifer/career-ops.git main || {
@@ -22,91 +22,91 @@ git fetch https://github.com/santifer/career-ops.git main || {
 }
 ```
 
-If the fetch fails, stop Step 2 and tell the user you couldn't preview the changes — don't proceed with a stale `FETCH_HEAD`.
+Jeśli fetch się nie powiedzie, przerwij Krok 2 i powiedz użytkownikowi, że nie udało się podejrzeć zmian — nie kontynuuj ze starym `FETCH_HEAD`.
 
-Then, only if the fetch succeeded, for each System Layer file category show a summary:
+Następnie, tylko jeśli fetch się powiódł, dla każdej kategorii plików Warstwy Systemowej pokaż podsumowanie:
 
 ```bash
 git diff HEAD..FETCH_HEAD --stat -- modes/ CLAUDE.md AGENTS.md *.mjs batch/ dashboard/ templates/ docs/ VERSION DATA_CONTRACT.md
 ```
 
-Present to the user as a clear summary:
+Przedstaw użytkownikowi jako czytelne podsumowanie:
 
-> **Update available: v{local} → v{remote}**
+> **Dostępna aktualizacja: v{local} → v{remote}**
 >
-> **Changes summary:**
-> - Modes: {N} files changed (list which ones)
-> - Scripts: {N} files changed
-> - Dashboard: {N} files changed
-> - Templates: {N} files changed
-> - Other: {N} files changed
+> **Podsumowanie zmian:**
+> - Tryby: zmieniono {N} plików (wymień które)
+> - Skrypty: zmieniono {N} plików
+> - Dashboard: zmieniono {N} plików
+> - Szablony: zmieniono {N} plików
+> - Inne: zmieniono {N} plików
 >
 > **Changelog:**
-> {changelog from update-system.mjs check output}
+> {changelog z wyjścia update-system.mjs check}
 >
-> Your personal files (CV, profile, tracker, reports) will NOT be touched.
+> Twoje pliki osobiste (CV, profil, tracker, raporty) NIE zostaną naruszone.
 
-If the user wants details on specific files, show the actual diff for those files using `git diff HEAD..FETCH_HEAD -- {path}`.
+Jeśli użytkownik chce szczegółów o konkretnych plikach, pokaż faktyczny diff tych plików przez `git diff HEAD..FETCH_HEAD -- {path}`.
 
-## Step 3 — Compatibility Check
+## Krok 3 — Sprawdzenie kompatybilności
 
-Before applying, check if the update might affect the user's customizations:
+Przed zastosowaniem sprawdź, czy aktualizacja może wpłynąć na personalizacje użytkownika:
 
-1. **Read `modes/_profile.md`** (if it exists)
-2. **Diff `modes/_shared.md`**: Run `git diff HEAD..FETCH_HEAD -- modes/_shared.md`
-3. **Check for archetype changes**: If `_shared.md` has changes in the "Archetype Detection" section, and `_profile.md` references archetype names, warn the user:
-   > "⚠️ The scoring system or archetypes were updated. Your customizations in `_profile.md` may reference outdated archetype names. I'll review them after the update."
-4. **Check for scoring changes**: If the "Scoring System" section changed, note it:
-   > "ℹ️ The scoring system was updated. Scores in future evaluations may differ slightly from previous ones."
-5. **Check for new mode files**: If new modes were added (files in `modes/` that don't exist locally), mention them:
-   > "✨ New modes available: {list}. Run `/career-ops` to see all commands."
+1. **Przeczytaj `modes/_profile.md`** (jeśli istnieje)
+2. **Zrób diff `modes/_shared.md`**: uruchom `git diff HEAD..FETCH_HEAD -- modes/_shared.md`
+3. **Sprawdź zmiany archetypów**: jeśli `_shared.md` ma zmiany w sekcji „Wykrywanie archetypów", a `_profile.md` odwołuje się do nazw archetypów, ostrzeż użytkownika:
+   > „⚠️ Zaktualizowano system oceny lub archetypy. Twoje personalizacje w `_profile.md` mogą odwoływać się do nieaktualnych nazw archetypów. Przejrzę je po aktualizacji."
+4. **Sprawdź zmiany w ocenianiu**: jeśli zmieniła się sekcja „System oceny", odnotuj:
+   > „ℹ️ Zaktualizowano system oceny. Wyniki w przyszłych ocenach mogą się nieznacznie różnić od poprzednich."
+5. **Sprawdź nowe pliki trybów**: jeśli dodano nowe tryby (pliki w `modes/`, których nie ma lokalnie), wspomnij o nich:
+   > „✨ Dostępne nowe tryby: {lista}. Uruchom `/career-ops`, by zobaczyć wszystkie komendy."
 
-## Step 4 — Confirm and Apply
+## Krok 4 — Potwierdź i zastosuj
 
-Ask the user for confirmation:
-> "Ready to update. Apply changes? (This can be rolled back with `/career-ops update rollback`)"
+Poproś użytkownika o potwierdzenie:
+> „Gotowe do aktualizacji. Zastosować zmiany? (Można je cofnąć przez `/career-ops update rollback`)"
 
-If yes:
-1. Capture the current commit as a run-specific pre-update baseline before apply runs, e.g. `PRE_UPDATE_REF=$(git rev-parse HEAD)`. Don't rely on `backup-pre-update-{local}` alone — `update-system.mjs apply` reuses that branch if it already exists, so it may point at an older snapshot.
-2. Run `node update-system.mjs apply`
-   - If the command exits with a non-zero code, treat apply as failed. Show the captured output and offer:
-     > "⚠️ Update apply failed. Want me to show the full error, or try `/career-ops update rollback`?"
-   - Stop the flow here if apply failed — do not run doctor or reconciliation on a partially-applied update.
-3. Run `node doctor.mjs` to validate the installation
-   - If the command exits with a non-zero code, treat validation as failed. Show the captured output and offer:
-     > "⚠️ Validation failed after update. Want me to show the full error, or roll back with `/career-ops update rollback`?"
-   - Stop the flow here if validation failed — do not run reconciliation or show the success message.
-4. If Step 3 flagged archetype/scoring changes, reconcile `modes/_profile.md` against the new `modes/_shared.md`:
-   - Read both the pre-update version (`git show $PRE_UPDATE_REF:modes/_shared.md`) and the post-update version of `modes/_shared.md`.
-   - Extract the canonical archetype identifiers from each version (archetype headings/definitions, plus any slug/alias fields).
-   - Read `modes/_profile.md` and look for tokens that match archetype names (inline text, Markdown links, YAML keys, code spans).
-   - Classify each reference:
-     - **Unchanged**: exact match in the new `_shared.md` → no action.
-     - **Renamed**: no exact match, but a single strong fuzzy match in the new `_shared.md` (e.g. Levenshtein similarity ≥ 0.7) → offer to rename.
-     - **Removed**: no match at all → offer to delete or replace.
-   - When a rename or removal is detected, ask before editing:
-     - For renames:
-       > "Your _profile.md references archetype '{old_name}' which was renamed to '{new_name}'. Want me to update it?"
-     - For removals:
-       > "Your _profile.md references archetype '{old_name}' which was removed in the new _shared.md. Want me to delete the reference or replace it with another archetype?"
-5. Show final status:
-   > "✅ Updated to v{version}. Run `node doctor.mjs` anytime to verify setup."
+Jeśli tak:
+1. Zarejestruj bieżący commit jako bazę sprzed aktualizacji specyficzną dla tego uruchomienia, zanim ruszy apply, np. `PRE_UPDATE_REF=$(git rev-parse HEAD)`. Nie polegaj wyłącznie na `backup-pre-update-{local}` — `update-system.mjs apply` ponownie używa tej gałęzi, jeśli już istnieje, więc może wskazywać starszy snapshot.
+2. Uruchom `node update-system.mjs apply`
+   - Jeśli komenda zakończy się kodem niezerowym, potraktuj apply jako nieudane. Pokaż zarejestrowane wyjście i zaproponuj:
+     > „⚠️ Zastosowanie aktualizacji nie powiodło się. Pokazać pełny błąd, czy spróbować `/career-ops update rollback`?"
+   - Zatrzymaj przepływ tutaj, jeśli apply zawiodło — nie uruchamiaj doctora ani uzgadniania na częściowo zastosowanej aktualizacji.
+3. Uruchom `node doctor.mjs`, by zweryfikować instalację
+   - Jeśli komenda zakończy się kodem niezerowym, potraktuj walidację jako nieudaną. Pokaż zarejestrowane wyjście i zaproponuj:
+     > „⚠️ Walidacja po aktualizacji nie powiodła się. Pokazać pełny błąd, czy cofnąć przez `/career-ops update rollback`?"
+   - Zatrzymaj przepływ tutaj, jeśli walidacja zawiodła — nie uruchamiaj uzgadniania ani nie pokazuj komunikatu o sukcesie.
+4. Jeśli Krok 3 oznaczył zmiany archetypów/oceniania, uzgodnij `modes/_profile.md` z nowym `modes/_shared.md`:
+   - Przeczytaj zarówno wersję sprzed aktualizacji (`git show $PRE_UPDATE_REF:modes/_shared.md`), jak i wersję po aktualizacji `modes/_shared.md`.
+   - Wyciągnij kanoniczne identyfikatory archetypów z każdej wersji (nagłówki/definicje archetypów oraz wszelkie pola slug/alias).
+   - Przeczytaj `modes/_profile.md` i poszukaj tokenów pasujących do nazw archetypów (tekst inline, linki Markdown, klucze YAML, fragmenty kodu).
+   - Sklasyfikuj każde odwołanie:
+     - **Bez zmian**: dokładne dopasowanie w nowym `_shared.md` → brak działania.
+     - **Zmiana nazwy**: brak dokładnego dopasowania, ale jedno silne dopasowanie rozmyte w nowym `_shared.md` (np. podobieństwo Levenshteina ≥ 0,7) → zaproponuj zmianę nazwy.
+     - **Usunięto**: brak dopasowania → zaproponuj usunięcie lub zastąpienie.
+   - Gdy wykryto zmianę nazwy lub usunięcie, zapytaj przed edycją:
+     - Dla zmian nazwy:
+       > „Twój _profile.md odwołuje się do archetypu '{old_name}', którego nazwę zmieniono na '{new_name}'. Zaktualizować?"
+     - Dla usunięć:
+       > „Twój _profile.md odwołuje się do archetypu '{old_name}', który usunięto w nowym _shared.md. Usunąć odwołanie czy zastąpić je innym archetypem?"
+5. Pokaż finalny status:
+   > „✅ Zaktualizowano do v{version}. Uruchom `node doctor.mjs` w dowolnej chwili, by zweryfikować konfigurację."
 
-If no:
-1. Run `node update-system.mjs dismiss`
-2. Tell the user they can run `/career-ops update` anytime to check again.
+Jeśli nie:
+1. Uruchom `node update-system.mjs dismiss`
+2. Powiedz użytkownikowi, że może uruchomić `/career-ops update` w dowolnej chwili, by sprawdzić ponownie.
 
-## Step 5 — Rollback (if requested)
+## Krok 5 — Rollback (na żądanie)
 
-If the user says "rollback" or runs `/career-ops update rollback`:
-1. Run `node update-system.mjs rollback`
-2. Show what was restored.
+Jeśli użytkownik powie „rollback" lub uruchomi `/career-ops update rollback`:
+1. Uruchom `node update-system.mjs rollback`
+2. Pokaż, co zostało przywrócone.
 
-## Rules
+## Reguły
 
-- NEVER auto-modify User Layer files during update (cv.md, config/profile.yml, data/, reports/, output/, interview-prep/, jds/, article-digest.md, portals.yml)
-- `modes/_profile.md` is User Layer too: the compatibility check in Step 3 reads it strictly read-only
-- Exception: `modes/_profile.md` may be edited **only** in Step 4.3, and **only** after the user explicitly confirms each individual rename/removal. Never batch-edit without per-change consent.
-- User-specific customizations (archetypes, scoring weights, narrative) belong in `modes/_profile.md` or `config/profile.yml`, never in `modes/_shared.md`
-- If anything goes wrong, tell the user to run `node update-system.mjs rollback`
-- Keep the output concise — users don't want walls of text during an update
+- NIGDY nie modyfikuj automatycznie plików Warstwy Użytkownika podczas aktualizacji (cv.md, config/profile.yml, data/, reports/, output/, interview-prep/, jds/, article-digest.md, portals.yml)
+- `modes/_profile.md` to także Warstwa Użytkownika: sprawdzenie kompatybilności w Kroku 3 czyta go ściśle tylko do odczytu
+- Wyjątek: `modes/_profile.md` może być edytowany **wyłącznie** w Kroku 4.3 i **tylko** po tym, jak użytkownik wyraźnie potwierdzi każdą pojedynczą zmianę nazwy/usunięcie. Nigdy nie edytuj zbiorczo bez zgody na każdą zmianę.
+- Personalizacje specyficzne dla użytkownika (archetypy, wagi oceny, narracja) należą do `modes/_profile.md` lub `config/profile.yml`, nigdy do `modes/_shared.md`
+- Jeśli coś pójdzie nie tak, powiedz użytkownikowi, by uruchomił `node update-system.mjs rollback`
+- Trzymaj wyjście zwięzłe — użytkownicy nie chcą ścian tekstu podczas aktualizacji

@@ -1,38 +1,38 @@
-# Modo: scan — Portal Scanner (Descubrimiento de Ofertas)
+# Tryb: scan — Skaner portali (odkrywanie ofert)
 
-Escanea portales de empleo configurados, filtra por relevancia de título, y añade nuevas ofertas al pipeline para evaluación posterior.
+Skanuje skonfigurowane portale pracy, filtruje według trafności tytułu i dodaje nowe oferty do pipeline'u do późniejszej oceny.
 
-> **Nota (v1.6+):** El escáner por defecto (`scan.mjs` / `npm run scan`) es **zero-token** y usa fuentes estructuradas: parsers locales configurados por empresa y APIs públicas de Greenhouse, Ashby y Lever. Los niveles con Playwright/WebSearch descritos abajo son el flujo **agente** (ejecutado por Claude/Codex), no lo que hace `scan.mjs`. Si una empresa no tiene parser local ni API Greenhouse/Ashby/Lever, `scan.mjs` la ignorará; para esos casos, el agente debe completar manualmente el Nivel 1 (Playwright) o Nivel 3 (WebSearch).
+> **Uwaga (v1.6+):** Domyślny skaner (`scan.mjs` / `npm run scan`) jest **zero-token** i korzysta ze źródeł strukturalnych: lokalnych parserów konfigurowanych per firma oraz publicznych API Greenhouse, Ashby i Lever. Poziomy z Playwright/WebSearch opisane niżej to przepływ **agentowy** (wykonywany przez Claude/Codex), a nie to, co robi `scan.mjs`. Jeśli firma nie ma ani lokalnego parsera, ani API Greenhouse/Ashby/Lever, `scan.mjs` ją pominie; w takich przypadkach agent musi ręcznie uzupełnić Poziom 1 (Playwright) lub Poziom 3 (WebSearch).
 >
-> **Regla (v1.8+):** Si el parser local de una empresa termina con éxito en Nivel 0, el agente **no** debe repetir esa empresa en Playwright (Nivel 1) ni en API (Nivel 2). En Nivel 3, las queries generales siguen activas, pero se descartan resultados de empresas ya cubiertas por parser. Ver [Regla: local parser exitoso](#regla-local-parser-exitoso--no-repetir-scraping-caro).
+> **Reguła (v1.8+):** Jeśli lokalny parser firmy zakończy się sukcesem na Poziomie 0, agent **nie** powinien powtarzać tej firmy w Playwright (Poziom 1) ani w API (Poziom 2). Na Poziomie 3 ogólne zapytania pozostają aktywne, ale wyniki firm już objętych parserem są odrzucane. Zobacz [Reguła: udany lokalny parser](#reguła-udany-lokalny-parser--nie-powtarzaj-drogiego-scrapingu).
 
-## Ejecución recomendada
+## Zalecane uruchomienie
 
-Ejecutar como subagente para no consumir contexto del main:
+Uruchom jako subagent, by nie zużywać kontekstu głównego:
 
 ```
 Agent(
     subagent_type="general-purpose",
-    prompt="[contenido de este archivo + datos específicos]",
+    prompt="[treść tego pliku + dane specyficzne]",
     run_in_background=True
 )
 ```
 
-## Configuración
+## Konfiguracja
 
-Leer `portals.yml` que contiene:
-- `search_queries`: Lista de queries WebSearch con `site:` filters por portal (descubrimiento amplio)
-- `tracked_companies`: Empresas específicas con `careers_url` para navegación directa
-- `tracked_companies[].parser`: Parser local opcional para páginas SSR o HTML estable
-- `title_filter`: Keywords positive/negative/seniority_boost para filtrado de títulos
+Przeczytaj `portals.yml`, który zawiera:
+- `search_queries`: lista zapytań WebSearch z filtrami `site:` per portal (szerokie odkrywanie)
+- `tracked_companies`: konkretne firmy z `careers_url` do bezpośredniej nawigacji
+- `tracked_companies[].parser`: opcjonalny lokalny parser dla stron SSR lub stabilnego HTML
+- `title_filter`: słowa kluczowe positive/negative/seniority_boost do filtrowania tytułów
 
-## Estrategia de descubrimiento (4 niveles)
+## Strategia odkrywania (4 poziomy)
 
-### Nivel 0 — Local parser (MÁS BARATO)
+### Poziom 0 — Lokalny parser (NAJTAŃSZY)
 
-**Para cada empresa en `tracked_companies` con `parser:` configurado:** ejecutar el parser local definido en `portals.yml`. Este nivel es ideal cuando la página de careers usa SSR o HTML estable y ya existe un script JavaScript, Python, o de otro runtime local que extrae los jobs sin ayuda del agente.
+**Dla każdej firmy w `tracked_companies` ze skonfigurowanym `parser:`:** uruchom lokalny parser zdefiniowany w `portals.yml`. Ten poziom jest idealny, gdy strona kariery używa SSR lub stabilnego HTML i istnieje już skrypt JavaScript, Python lub innego lokalnego runtime'u, który wyciąga oferty bez pomocy agenta.
 
-Contrato recomendado:
+Zalecany kontrakt:
 
 ```yaml
 - name: Example Company
@@ -45,11 +45,11 @@ Contrato recomendado:
   enabled: true
 ```
 
-Normalmente el parser es específico para una empresa y ya conoce la URL, selectores y paginación. `args` es opcional: usarlo como ayude a quien construyó el script, por ejemplo para reutilizarlo entre empresas, pasar `{careers_url}` o `{company}`, activar un flag de depuración, guardar un snapshot JSON, o controlar cualquier comportamiento propio del parser.
+Zwykle parser jest specyficzny dla firmy i zna już URL, selektory i paginację. `args` jest opcjonalne: użyj go, jak pomaga autorowi skryptu — np. by reużyć go między firmami, przekazać `{careers_url}` lub `{company}`, włączyć flagę debugowania, zapisać snapshot JSON lub kontrolować dowolne własne zachowanie parsera.
 
-El parser debe imprimir JSON a stdout:
+Parser musi wypisać JSON na stdout:
 
-Formato array:
+Format tablicowy:
 
 ```json
 [
@@ -57,7 +57,7 @@ Formato array:
 ]
 ```
 
-Formato objeto con `jobs`:
+Format obiektu z `jobs`:
 
 ```json
 {
@@ -67,7 +67,7 @@ Formato objeto con `jobs`:
 }
 ```
 
-Formato objeto con `results`:
+Format obiektu z `results`:
 
 ```json
 {
@@ -77,192 +77,192 @@ Formato objeto con `results`:
 }
 ```
 
-`company` es opcional; si no viene, `scan.mjs` usa el nombre de `tracked_companies`.
+`company` jest opcjonalne; jeśli nie przyjdzie, `scan.mjs` używa nazwy z `tracked_companies`.
 
-El escáner no necesita conservar el JSON completo después de leer stdout. Si un parser también genera un artefacto para auditoría o depuración, guardarlo en `data/parser-output/{company}/` y mantenerlo fuera de git (los JSON en `.gitignore`; los `.gitkeep` se mantienen en git para conservar la estructura).
+Skaner nie musi zachowywać pełnego JSON-a po odczytaniu stdout. Jeśli parser generuje także artefakt do audytu lub debugowania, zapisz go w `data/parser-output/{company}/` i trzymaj poza gitem (pliki JSON w `.gitignore`; pliki `.gitkeep` zostają w gicie, by zachować strukturę).
 
-### Regla: local parser exitoso — no repetir scraping caro
+### Reguła: udany lokalny parser — nie powtarzaj drogiego scrapingu
 
-El objetivo de `scan_method: local_parser` es **reducir tokens**: evitar que el LLM vuelva a scrapear la misma empresa con Playwright o APIs redundantes.
+Celem `scan_method: local_parser` jest **redukcja tokenów**: uniknięcie ponownego scrapowania tej samej firmy przez LLM za pomocą Playwright lub redundantnych API.
 
-Durante el scan del agente, mantener en memoria el conjunto **`local_parser_ok`**: nombres de empresas (`tracked_companies[].name`) donde Nivel 0 terminó con éxito:
+Podczas skanu agenta utrzymuj w pamięci zbiór **`local_parser_ok`**: nazwy firm (`tracked_companies[].name`), gdzie Poziom 0 zakończył się sukcesem:
 
-- `parser.command` + `parser.script` existen y el script se ejecutó sin error fatal
-- stdout fue JSON válido (`[]`, `{ jobs: [] }`, o `{ results: [] }`)
-- No hubo timeout ni crash del proceso
+- `parser.command` + `parser.script` istnieją, a skrypt wykonał się bez błędu krytycznego
+- stdout był poprawnym JSON-em (`[]`, `{ jobs: [] }` lub `{ results: [] }`)
+- nie było timeoutu ani crashu procesu
 
-| Nivel | Si la empresa está en `local_parser_ok` |
+| Poziom | Jeśli firma jest w `local_parser_ok` |
 |-------|----------------------------------------|
-| **1 — Playwright** | **Omitir** — no `browser_navigate` a su `careers_url` (método más caro en tokens) |
-| **2 — API** | **Omitir** — no WebFetch de su `api:` (ya cubierta por parser; `scan.mjs` tampoco usa API tras parser exitoso) |
-| **3 — WebSearch** | Ejecutar queries **generales** (`site:`, títulos de rol); **descartar** cada hit cuya empresa normalizada coincida con `local_parser_ok` |
+| **1 — Playwright** | **Pomiń** — żadnego `browser_navigate` do jej `careers_url` (najdroższa metoda w tokenach) |
+| **2 — API** | **Pomiń** — żadnego WebFetch jej `api:` (już objęta parserem; `scan.mjs` też nie używa API po udanym parserze) |
+| **3 — WebSearch** | Wykonaj **ogólne** zapytania (`site:`, tytuły ról); **odrzuć** każdy hit, którego znormalizowana firma pokrywa się z `local_parser_ok` |
 
-**Excepciones:**
+**Wyjątki:**
 
-- Parser **falló** → la empresa **no** entra en `local_parser_ok`; Niveles 1 y 2 aplican con normalidad (mismo criterio que el fallback de `scan.mjs` cuando el parser falla y existe API ATS).
-- Nivel 3: no desactivar queries transversales (`site:jobs.ashbyhq.com`, `site:boards.greenhouse.io`, etc.) — sirven para descubrir empresas **nuevas**. Solo filtrar resultados de empresas ya en `tracked_companies` con parser exitoso.
-- No crear queries `search_queries` dedicadas a una empresa con parser local activo (p. ej. `site:jobs.ashbyhq.com/cohere "AI Engineer"`); usar el parser o, si falla, Playwright/API.
+- Parser **zawiódł** → firma **nie** wchodzi do `local_parser_ok`; Poziomy 1 i 2 obowiązują normalnie (to samo kryterium co fallback `scan.mjs`, gdy parser zawiedzie i istnieje API ATS).
+- Poziom 3: nie wyłączaj zapytań przekrojowych (`site:jobs.ashbyhq.com`, `site:boards.greenhouse.io` itp.) — służą do odkrywania **nowych** firm. Filtruj tylko wyniki firm już w `tracked_companies` z udanym parserem.
+- Nie twórz dedykowanych zapytań `search_queries` dla firmy z aktywnym lokalnym parserem (np. `site:jobs.ashbyhq.com/cohere "AI Engineer"`); użyj parsera lub, jeśli zawiedzie, Playwright/API.
 
-**Nivel 0 recomendado:** ejecutar `node scan.mjs` (o `npm run scan`) al inicio del workflow del agente. Eso cubre parsers locales + APIs en un solo paso zero-token y devuelve qué empresas usaron `local-parser` con éxito.
+**Zalecany Poziom 0:** uruchom `node scan.mjs` (lub `npm run scan`) na początku workflow agenta. Pokrywa to lokalne parsery + API w jednym kroku zero-token i zwraca, które firmy użyły `local-parser` z sukcesem.
 
-### Nivel 1 — Playwright directo (PRINCIPAL)
+### Poziom 1 — Playwright bezpośrednio (GŁÓWNY)
 
-**Para cada empresa en `tracked_companies` que no esté en `local_parser_ok`:** Navegar a su `careers_url` con Playwright (`browser_navigate` + `browser_snapshot`), leer TODOS los job listings visibles, y extraer título + URL de cada uno. Este es el método más fiable porque:
-- Ve la página en tiempo real (no resultados cacheados de Google)
-- Funciona con SPAs (Ashby, Lever, Workday)
-- Detecta ofertas nuevas al instante
-- No depende de la indexación de Google
+**Dla każdej firmy w `tracked_companies`, która nie jest w `local_parser_ok`:** nawiguj do jej `careers_url` za pomocą Playwright (`browser_navigate` + `browser_snapshot`), przeczytaj WSZYSTKIE widoczne oferty i wyciągnij tytuł + URL każdej. To najbardziej niezawodna metoda, bo:
+- Widzi stronę w czasie rzeczywistym (nie zcache'owane wyniki Google)
+- Działa z SPA (Ashby, Lever, Workday)
+- Wykrywa nowe oferty natychmiast
+- Nie zależy od indeksowania Google
 
-**Cada empresa DEBE tener `careers_url` en portals.yml.** Si no la tiene, buscarla una vez, guardarla, y usar en futuros scans.
+**Każda firma MUSI mieć `careers_url` w portals.yml.** Jeśli go nie ma, wyszukaj raz, zapisz i używaj w kolejnych skanach.
 
-### Nivel 2 — ATS APIs / Feeds (COMPLEMENTARIO)
+### Poziom 2 — API/feedy ATS (UZUPEŁNIAJĄCY)
 
-Para empresas con API pública o feed estructurado **que no estén en `local_parser_ok`**, usar la respuesta JSON/XML como complemento rápido de Nivel 1. Es más rápido que Playwright y reduce errores de scraping visual.
+Dla firm z publicznym API lub strukturalnym feedem **niebędących w `local_parser_ok`** użyj odpowiedzi JSON/XML jako szybkiego uzupełnienia Poziomu 1. Jest szybszy niż Playwright i redukuje błędy scrapingu wizualnego.
 
-**Soporte actual (variables entre `{}`):**
+**Aktualne wsparcie (zmienne w `{}`):**
 - **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
 - **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
-- **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; detalle de una oferta `https://{company}.bamboohr.com/careers/{id}/detail`
+- **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; szczegół oferty `https://{company}.bamboohr.com/careers/{id}/detail`
 - **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
 - **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
-**Convención de parsing por provider:**
+**Konwencja parsowania per provider:**
 - `greenhouse`: `jobs[]` → `title`, `absolute_url`
-- `ashby`: GraphQL `ApiJobBoardWithTeams` con `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; construir URL pública si no viene en payload)
-- `bamboohr`: lista `result[]` → `jobOpeningName`, `id`; construir URL de detalle `https://{company}.bamboohr.com/careers/{id}/detail`; para leer el JD completo, hacer GET del detalle y usar `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
-- `lever`: array raíz `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
-- `teamtailor`: RSS items → `title`, `link`
-- `workday`: `jobPostings[]`/`jobPostings` (según tenant) → `title`, `externalPath` o URL construida desde el host
+- `ashby`: GraphQL `ApiJobBoardWithTeams` z `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; zbuduj publiczny URL, jeśli nie ma go w payload)
+- `bamboohr`: lista `result[]` → `jobOpeningName`, `id`; zbuduj URL szczegółu `https://{company}.bamboohr.com/careers/{id}/detail`; by przeczytać pełne ogłoszenie, wykonaj GET szczegółu i użyj `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
+- `lever`: tablica główna `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
+- `teamtailor`: pozycje RSS → `title`, `link`
+- `workday`: `jobPostings[]`/`jobPostings` (zależnie od tenanta) → `title`, `externalPath` lub URL zbudowany z hosta
 
-### Nivel 3 — WebSearch queries (DESCUBRIMIENTO AMPLIO)
+### Poziom 3 — Zapytania WebSearch (SZEROKIE ODKRYWANIE)
 
-Los `search_queries` con `site:` filters cubren portales de forma transversal (todos los Ashby, todos los Greenhouse, etc.). Útil para descubrir empresas NUEVAS que aún no están en `tracked_companies`, pero los resultados pueden estar desfasados. Tras filtrar hits de empresas en `local_parser_ok`, los resultados restantes se deduplican con Niveles 0–2.
+Zapytania `search_queries` z filtrami `site:` pokrywają portale przekrojowo (wszystkie Ashby, wszystkie Greenhouse itd.). Przydatne do odkrywania NOWYCH firm, których nie ma jeszcze w `tracked_companies`, ale wyniki mogą być nieaktualne. Po odfiltrowaniu hitów firm z `local_parser_ok` pozostałe wyniki deduplikuje się z Poziomami 0-2.
 
-**Prioridad de ejecución:**
-1. Nivel 0: Local parser → empresas con `parser:` configurado y script existente; construir `local_parser_ok`
-2. Nivel 1: Playwright → `tracked_companies` con `careers_url`, **excepto** `local_parser_ok`
-3. Nivel 2: API → `tracked_companies` con `api:`, **excepto** `local_parser_ok`
-4. Nivel 3: WebSearch → todos los `search_queries` con `enabled: true`; descartar hits de empresas en `local_parser_ok`
+**Priorytet wykonania:**
+1. Poziom 0: lokalny parser → firmy ze skonfigurowanym `parser:` i istniejącym skryptem; zbuduj `local_parser_ok`
+2. Poziom 1: Playwright → `tracked_companies` z `careers_url`, **z wyjątkiem** `local_parser_ok`
+3. Poziom 2: API → `tracked_companies` z `api:`, **z wyjątkiem** `local_parser_ok`
+4. Poziom 3: WebSearch → wszystkie `search_queries` z `enabled: true`; odrzuć hity firm z `local_parser_ok`
 
-Los niveles son aditivos — se ejecutan en orden, los resultados se mezclan y deduplican. Las empresas en `local_parser_ok` **no** pasan por Niveles 1 ni 2; en Nivel 3 solo aportan descubrimiento transversal (otras empresas en el mismo portal).
+Poziomy są addytywne — wykonują się po kolei, wyniki łączą się i deduplikują. Firmy z `local_parser_ok` **nie** przechodzą przez Poziomy 1 ani 2; na Poziomie 3 wnoszą tylko odkrywanie przekrojowe (inne firmy na tym samym portalu).
 
 ## Workflow
 
-1. **Leer configuración**: `portals.yml`
-2. **Leer historial**: `data/scan-history.tsv` → URLs ya vistas
-3. **Leer dedup sources**: `data/applications.md` + `data/pipeline.md`
+1. **Przeczytaj konfigurację**: `portals.yml`
+2. **Przeczytaj historię**: `data/scan-history.tsv` → URL-e już widziane
+3. **Przeczytaj źródła dedup**: `data/applications.md` + `data/pipeline.md`
 
-3.5. **Nivel 0 — Local parser** (`scan.mjs`, zero-token):
-   Inicializar `local_parser_ok = []`.
-   Preferir ejecutar `node scan.mjs` una vez para cubrir todos los parsers + APIs zero-token; si se hace manualmente, repetir la lógica siguiente.
-   Para cada empresa en `tracked_companies` con `enabled: true`, `parser.command` y script existente:
-   a. Ejecutar `parser.command` con `parser.script` + `parser.args` usando ejecución local sin shell
-   b. Expandir placeholders `{careers_url}` y `{company}` en argumentos
-   c. Leer JSON de stdout (`[]`, `{ jobs: [] }`, o `{ results: [] }`)
-   d. Normalizar cada job a `{title, url, company, location}`
-   e. Resolver URLs relativas contra `careers_url`
-   f. Si el parser falla, registrar error, intentar fallback por API ATS si existe, y continuar con las demás empresas (**no** añadir a `local_parser_ok`)
-   g. Si el parser termina con éxito (pasos c–e sin error fatal), añadir `entry.name` a `local_parser_ok` y acumular jobs en candidatos
+3.5. **Poziom 0 — Lokalny parser** (`scan.mjs`, zero-token):
+   Zainicjuj `local_parser_ok = []`.
+   Preferuj jednorazowe uruchomienie `node scan.mjs`, by pokryć wszystkie parsery + API zero-token; jeśli robisz to ręcznie, powtórz poniższą logikę.
+   Dla każdej firmy w `tracked_companies` z `enabled: true`, `parser.command` i istniejącym skryptem:
+   a. Uruchom `parser.command` ze `parser.script` + `parser.args`, używając lokalnego wykonania bez powłoki
+   b. Rozwiń placeholdery `{careers_url}` i `{company}` w argumentach
+   c. Przeczytaj JSON ze stdout (`[]`, `{ jobs: [] }` lub `{ results: [] }`)
+   d. Znormalizuj każdą ofertę do `{title, url, company, location}`
+   e. Rozwiąż względne URL-e względem `careers_url`
+   f. Jeśli parser zawiedzie, zaloguj błąd, spróbuj fallbacku przez API ATS, jeśli istnieje, i kontynuuj z pozostałymi firmami (**nie** dodawaj do `local_parser_ok`)
+   g. Jeśli parser zakończy się sukcesem (kroki c-e bez błędu krytycznego), dodaj `entry.name` do `local_parser_ok` i akumuluj oferty w kandydatach
 
-4. **Nivel 1 — Playwright scan** (paralelo en batches de 3-5):
-   Para cada empresa en `tracked_companies` con `enabled: true`, `careers_url` definida, y **nombre no listado en `local_parser_ok`**:
-   a. `browser_navigate` a la `careers_url`
-   b. `browser_snapshot` para leer todos los job listings
-   c. Si la página tiene filtros/departamentos, navegar las secciones relevantes
-   d. Para cada job listing extraer: `{title, url, company}`
-   e. Si la página pagina resultados, navegar páginas adicionales
-   f. Acumular en lista de candidatos
-   g. Si `careers_url` falla (404, redirect), intentar `scan_query` como fallback y anotar para actualizar la URL
+4. **Poziom 1 — Skan Playwright** (równolegle w paczkach po 3-5):
+   Dla każdej firmy w `tracked_companies` z `enabled: true`, zdefiniowanym `careers_url` i **nazwą niewymienioną w `local_parser_ok`**:
+   a. `browser_navigate` do `careers_url`
+   b. `browser_snapshot`, by przeczytać wszystkie oferty
+   c. Jeśli strona ma filtry/działy, nawiguj odpowiednie sekcje
+   d. Dla każdej oferty wyciągnij: `{title, url, company}`
+   e. Jeśli strona stronicuje wyniki, nawiguj dodatkowe strony
+   f. Akumuluj na liście kandydatów
+   g. Jeśli `careers_url` zawiedzie (404, redirect), spróbuj `scan_query` jako fallbacku i odnotuj do aktualizacji URL-a
 
-5. **Nivel 2 — ATS APIs / feeds** (paralelo):
-   Para cada empresa en `tracked_companies` con `api:` definida, `enabled: true`, y **nombre no listado en `local_parser_ok`**:
-   a. WebFetch de la URL de API/feed
-   b. Si `api_provider` está definido, usar su parser; si no está definido, inferir por dominio (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`)
-   c. Para **Ashby**, enviar POST con:
+5. **Poziom 2 — API/feedy ATS** (równolegle):
+   Dla każdej firmy w `tracked_companies` ze zdefiniowanym `api:`, `enabled: true` i **nazwą niewymienioną w `local_parser_ok`**:
+   a. WebFetch URL-a API/feedu
+   b. Jeśli `api_provider` jest zdefiniowany, użyj jego parsera; jeśli nie, wywnioskuj z domeny (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`)
+   c. Dla **Ashby** wyślij POST z:
       - `operationName: ApiJobBoardWithTeams`
       - `variables.organizationHostedJobsPageName: {company}`
-      - query GraphQL de `jobBoardWithTeams` + `jobPostings { id title locationName employmentType compensationTierSummary }`
-   d. Para **BambooHR**, la lista solo trae metadatos básicos. Para cada item relevante, leer `id`, hacer GET a `https://{company}.bamboohr.com/careers/{id}/detail`, y extraer el JD completo desde `result.jobOpening`. Usar `jobOpeningShareUrl` como URL pública si viene; si no, usar la URL de detalle.
-   e. Para **Workday**, enviar POST JSON con al menos `{"appliedFacets":{},"limit":20,"offset":0,"searchText":""}` y paginar por `offset` hasta agotar resultados
-   f. Para cada job extraer y normalizar: `{title, url, company}`
-   g. Acumular en lista de candidatos (dedup con Nivel 1)
+      - zapytanie GraphQL `jobBoardWithTeams` + `jobPostings { id title locationName employmentType compensationTierSummary }`
+   d. Dla **BambooHR** lista zwraca tylko podstawowe metadane. Dla każdej istotnej pozycji przeczytaj `id`, wykonaj GET do `https://{company}.bamboohr.com/careers/{id}/detail` i wyciągnij pełne ogłoszenie z `result.jobOpening`. Użyj `jobOpeningShareUrl` jako publicznego URL-a, jeśli przyjdzie; jeśli nie, użyj URL-a szczegółu.
+   e. Dla **Workday** wyślij POST JSON z co najmniej `{"appliedFacets":{},"limit":20,"offset":0,"searchText":""}` i stronicuj po `offset`, aż wyczerpiesz wyniki
+   f. Dla każdej oferty wyciągnij i znormalizuj: `{title, url, company}`
+   g. Akumuluj na liście kandydatów (dedup z Poziomem 1)
 
-6. **Nivel 3 — WebSearch queries** (paralelo si posible):
-   Para cada query en `search_queries` con `enabled: true` (queries generales por portal/rol — no queries dedicadas a una empresa con parser local activo):
-   a. Ejecutar WebSearch con el `query` definido
-   b. De cada resultado extraer: `{title, url, company}`
-      - **title**: del título del resultado (antes del " @ " o " | ")
-      - **url**: URL del resultado
-      - **company**: después del " @ " en el título, o extraer del dominio/path
-   c. **Omitir** el resultado si `company` (normalizado) coincide con algún nombre en `local_parser_ok`
-   d. Acumular el resto en lista de candidatos (dedup con Nivel 0+1+2)
+6. **Poziom 3 — Zapytania WebSearch** (równolegle, jeśli możliwe):
+   Dla każdego zapytania w `search_queries` z `enabled: true` (ogólne zapytania per portal/rola — nie zapytania dedykowane firmie z aktywnym lokalnym parserem):
+   a. Wykonaj WebSearch ze zdefiniowanym `query`
+   b. Z każdego wyniku wyciągnij: `{title, url, company}`
+      - **title**: z tytułu wyniku (przed „ @ " lub „ | ")
+      - **url**: URL wyniku
+      - **company**: po „ @ " w tytule lub wyciągnij z domeny/ścieżki
+   c. **Pomiń** wynik, jeśli `company` (znormalizowane) pokrywa się z jakąś nazwą w `local_parser_ok`
+   d. Resztę akumuluj na liście kandydatów (dedup z Poziomem 0+1+2)
 
-6. **Filtrar por título** usando `title_filter` de `portals.yml`:
-   - Al menos 1 keyword de `positive` debe aparecer en el título (case-insensitive)
-   - 0 keywords de `negative` deben aparecer
-   - `seniority_boost` keywords dan prioridad pero no son obligatorios
+6. **Filtruj według tytułu** używając `title_filter` z `portals.yml`:
+   - Co najmniej 1 słowo kluczowe z `positive` musi pojawić się w tytule (bez rozróżniania wielkości liter)
+   - 0 słów kluczowych z `negative` może się pojawić
+   - Słowa `seniority_boost` dają priorytet, ale nie są obowiązkowe
 
-6b. **Filtrar por ubicación (opcional)** usando `location_filter` de `portals.yml`:
-   - Si el bloque `location_filter` está ausente, todas las ubicaciones pasan (comportamiento por defecto)
-   - Ubicación vacía en una oferta → pasa (no penalizar datos faltantes)
-   - Cualquier keyword de `block` presente → rechazar (precedencia sobre allow)
-   - `allow` vacío → pasa (ya superó block)
-   - `allow` no vacío → debe coincidir al menos una keyword
-   - Todas las coincidencias son case-insensitive substring
-   - La ubicación se persiste como 7ª columna en `scan-history.tsv` para auditoría posterior
+6b. **Filtruj według lokalizacji (opcjonalnie)** używając `location_filter` z `portals.yml`:
+   - Jeśli bloku `location_filter` brak, wszystkie lokalizacje przechodzą (zachowanie domyślne)
+   - Pusta lokalizacja w ofercie → przechodzi (nie karz brakujących danych)
+   - Obecne jakiekolwiek słowo z `block` → odrzuć (priorytet nad allow)
+   - `allow` puste → przechodzi (już minęło block)
+   - `allow` niepuste → musi pasować co najmniej jedno słowo
+   - Wszystkie dopasowania to substring bez rozróżniania wielkości liter
+   - Lokalizacja jest zapisywana jako 7. kolumna w `scan-history.tsv` do późniejszego audytu
 
-7. **Deduplicar** contra 3 fuentes:
-   - `scan-history.tsv` → URL exacta ya vista
-   - `applications.md` → empresa + rol normalizado ya evaluado
-   - `pipeline.md` → URL exacta ya en pendientes o procesadas
+7. **Deduplikuj** względem 3 źródeł:
+   - `scan-history.tsv` → dokładny URL już widziany
+   - `applications.md` → firma + znormalizowana rola już oceniona
+   - `pipeline.md` → dokładny URL już w oczekujących lub przetworzonych
 
-7.5. **Verificar liveness de resultados de WebSearch (Nivel 3)** — ANTES de añadir a pipeline:
+7.5. **Zweryfikuj liveness wyników WebSearch (Poziom 3)** — PRZED dodaniem do pipeline'u:
 
-   Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas, verificar con Playwright cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
+   Wyniki WebSearch mogą być nieaktualne (Google cache'uje wyniki przez tygodnie lub miesiące). By uniknąć oceny wygasłych ofert, zweryfikuj przez Playwright każdy nowy URL pochodzący z Poziomu 3. Poziomy 1 i 2 są z natury w czasie rzeczywistym i nie wymagają tej weryfikacji.
 
-   Para cada URL nueva de Nivel 3 (secuencial — NUNCA Playwright en paralelo):
-   a. `browser_navigate` a la URL
-   b. `browser_snapshot` para leer el contenido
-   c. Clasificar:
-      - **Activa**: título del puesto visible + descripción del rol + control visible de Apply/Submit/Solicitar dentro del contenido principal. No contar texto genérico de header/navbar/footer.
-      - **Expirada** (cualquiera de estas señales):
-        - URL final contiene `?error=true` (Greenhouse redirige así cuando la oferta está cerrada)
-        - Página contiene: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
-        - Solo navbar y footer visibles, sin contenido JD (contenido < ~300 chars)
-   d. Si expirada: registrar en `scan-history.tsv` con status `skipped_expired` y descartar
-   e. Si activa: continuar al paso 8
+   Dla każdego nowego URL-a z Poziomu 3 (sekwencyjnie — NIGDY Playwright równolegle):
+   a. `browser_navigate` do URL-a
+   b. `browser_snapshot`, by przeczytać treść
+   c. Sklasyfikuj:
+      - **Aktywna**: widoczny tytuł stanowiska + opis roli + widoczny element Apply/Submit/Aplikuj w głównej treści. Nie licz generycznego tekstu z headera/navbara/stopki.
+      - **Wygasła** (którykolwiek z tych sygnałów):
+        - Końcowy URL zawiera `?error=true` (Greenhouse tak przekierowuje, gdy oferta jest zamknięta)
+        - Strona zawiera: „job no longer available" / „no longer open" / „position has been filled" / „this job has expired" / „page not found"
+        - Widoczne tylko navbar i stopka, bez treści ogłoszenia (treść < ~300 znaków)
+   d. Jeśli wygasła: zarejestruj w `scan-history.tsv` ze statusem `skipped_expired` i odrzuć
+   e. Jeśli aktywna: przejdź do kroku 8
 
-   **No interrumpir el scan entero si una URL falla.** Si `browser_navigate` da error (timeout, 403, etc.), marcar como `skipped_expired` y continuar con la siguiente.
+   **Nie przerywaj całego skanu, jeśli jeden URL zawiedzie.** Jeśli `browser_navigate` da błąd (timeout, 403 itp.), oznacz jako `skipped_expired` i kontynuuj z następnym.
 
-8. **Para cada oferta nueva verificada que pase filtros**:
-   a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
-   b. Registrar en `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
+8. **Dla każdej nowej zweryfikowanej oferty, która przejdzie filtry**:
+   a. Dodaj do `pipeline.md` sekcja „Oczekujące": `- [ ] {url} | {company} | {title}`
+   b. Zarejestruj w `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
-9. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
-10. **Ofertas duplicadas**: registrar con status `skipped_dup`
-11. **Ofertas expiradas (Nivel 3)**: registrar con status `skipped_expired`
+9. **Oferty odfiltrowane po tytule**: zarejestruj w `scan-history.tsv` ze statusem `skipped_title`
+10. **Oferty zduplikowane**: zarejestruj ze statusem `skipped_dup`
+11. **Oferty wygasłe (Poziom 3)**: zarejestruj ze statusem `skipped_expired`
 
-## Extracción de título y empresa de WebSearch results
+## Wyciąganie tytułu i firmy z wyników WebSearch
 
-Los resultados de WebSearch vienen en formato: `"Job Title @ Company"` o `"Job Title | Company"` o `"Job Title — Company"`.
+Wyniki WebSearch przychodzą w formacie: `"Job Title @ Company"` lub `"Job Title | Company"` lub `"Job Title — Company"`.
 
-Patrones de extracción por portal:
+Wzorce wyciągania per portal:
 - **Ashby**: `"Senior AI PM (Remote) @ EverAI"` → title: `Senior AI PM`, company: `EverAI`
 - **Greenhouse**: `"AI Engineer at Anthropic"` → title: `AI Engineer`, company: `Anthropic`
 - **Lever**: `"Product Manager - AI @ Temporal"` → title: `Product Manager - AI`, company: `Temporal`
 
-Regex genérico: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
+Generyczny regex: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
 
-## URLs privadas
+## Prywatne URL-e
 
-Si se encuentra una URL no accesible públicamente:
-1. Guardar el JD en `jds/{company}-{role-slug}.md`
-2. Añadir a pipeline.md como: `- [ ] local:jds/{company}-{role-slug}.md | {company} | {title}`
+Jeśli znajdziesz URL niedostępny publicznie:
+1. Zapisz ogłoszenie w `jds/{company}-{role-slug}.md`
+2. Dodaj do pipeline.md jako: `- [ ] local:jds/{company}-{role-slug}.md | {company} | {title}`
 
-## Scan History
+## Historia skanów
 
-`data/scan-history.tsv` trackea TODAS las URLs vistas:
+`data/scan-history.tsv` śledzi WSZYSTKIE widziane URL-e:
 
 ```
 url	first_seen	portal	title	company	status
@@ -272,72 +272,72 @@ https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
 https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 ```
 
-## Resumen de salida
+## Podsumowanie wyjścia
 
 ```
-Portal Scan — {YYYY-MM-DD}
+Skan portali — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-Queries ejecutados: N
-Ofertas encontradas: N total
-Filtradas por título: N relevantes
-Duplicadas: N (ya evaluadas o en pipeline)
-Expiradas descartadas: N (links muertos, Nivel 3)
-Nuevas añadidas a pipeline.md: N
+Wykonane zapytania: N
+Znalezione oferty: N łącznie
+Odfiltrowane po tytule: N trafnych
+Zduplikowane: N (już ocenione lub w pipeline)
+Wygasłe odrzucone: N (martwe linki, Poziom 3)
+Nowe dodane do pipeline.md: N
 
   + {company} | {title} | {query_name}
   ...
 
-→ Ejecuta /career-ops pipeline para evaluar las nuevas ofertas.
+→ Uruchom /career-ops pipeline, by ocenić nowe oferty.
 ```
 
-## Gestión de careers_url
+## Zarządzanie careers_url
 
-Cada empresa en `tracked_companies` debe tener `careers_url` — la URL directa a su página de ofertas. Esto evita buscarlo cada vez.
+Każda firma w `tracked_companies` musi mieć `careers_url` — bezpośredni URL do jej strony z ofertami. To unika wyszukiwania za każdym razem.
 
-**REGLA: Usa siempre la URL corporativa de la empresa; recurre al endpoint ATS solo si no existe página corporativa propia.**
+**REGUŁA: Zawsze używaj korporacyjnego URL-a firmy; sięgaj po endpoint ATS tylko, gdy firma nie ma własnej strony korporacyjnej.**
 
-El `careers_url` debe apuntar a la página de empleo propia de la empresa siempre que esté disponible. Muchas empresas usan Workday, Greenhouse o Lever por debajo, pero exponen los IDs de las vacantes solo a través de su dominio corporativo. Usar la URL ATS directa cuando existe una página corporativa puede causar falsos errores 410 porque los IDs de los puestos no coinciden.
+`careers_url` powinien wskazywać własną stronę kariery firmy zawsze, gdy jest dostępna. Wiele firm używa pod spodem Workday, Greenhouse lub Lever, ale wystawia ID ofert tylko przez swoją domenę korporacyjną. Użycie bezpośredniego URL-a ATS, gdy istnieje strona korporacyjna, może powodować fałszywe błędy 410, bo ID stanowisk się nie zgadzają.
 
-| ✅ Correcto (corporativa) | ❌ Incorrecto como primera opción (ATS directo) |
+| ✅ Poprawne (korporacyjny) | ❌ Niepoprawne jako pierwszy wybór (bezpośredni ATS) |
 |---|---|
 | `https://careers.mastercard.com` | `https://mastercard.wd1.myworkdayjobs.com` |
 | `https://openai.com/careers` | `https://job-boards.greenhouse.io/openai` |
 | `https://stripe.com/jobs` | `https://jobs.lever.co/stripe` |
 
-Fallback: si solo tienes la URL ATS directa, navega primero al sitio web de la empresa y localiza su página corporativa de empleo. Usa la URL ATS directa únicamente si la empresa no tiene página corporativa propia.
+Fallback: jeśli masz tylko bezpośredni URL ATS, nawiguj najpierw do strony firmy i zlokalizuj jej korporacyjną stronę kariery. Użyj bezpośredniego URL-a ATS tylko, jeśli firma nie ma własnej strony korporacyjnej.
 
-**Patrones conocidos por plataforma:**
+**Znane wzorce per platforma:**
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`
-- **Greenhouse:** `https://job-boards.greenhouse.io/{slug}` o `https://job-boards.eu.greenhouse.io/{slug}`
+- **Greenhouse:** `https://job-boards.greenhouse.io/{slug}` lub `https://job-boards.eu.greenhouse.io/{slug}`
 - **Lever:** `https://jobs.lever.co/{slug}`
-- **BambooHR:** lista `https://{company}.bamboohr.com/careers/list`; detalle `https://{company}.bamboohr.com/careers/{id}/detail`
+- **BambooHR:** lista `https://{company}.bamboohr.com/careers/list`; szczegół `https://{company}.bamboohr.com/careers/{id}/detail`
 - **Teamtailor:** `https://{company}.teamtailor.com/jobs`
 - **Workday:** `https://{company}.{shard}.myworkdayjobs.com/{site}`
-- **Custom:** La URL propia de la empresa (ej: `https://openai.com/careers`)
+- **Custom:** własny URL firmy (np. `https://openai.com/careers`)
 
-**Patrones de API/feed por plataforma:**
+**Wzorce API/feedów per platforma:**
 - **Ashby API:** `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
-- **BambooHR API:** lista `https://{company}.bamboohr.com/careers/list`; detalle `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
+- **BambooHR API:** lista `https://{company}.bamboohr.com/careers/list`; szczegół `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
 - **Lever API:** `https://api.lever.co/v0/postings/{company}?mode=json`
 - **Teamtailor RSS:** `https://{company}.teamtailor.com/jobs.rss`
 - **Workday API:** `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
-**Si `careers_url` no existe** para una empresa:
-1. Intentar el patrón de su plataforma conocida
-2. Si falla, hacer un WebSearch rápido: `"{company}" careers jobs`
-3. Navegar con Playwright para confirmar que funciona
-4. **Guardar la URL encontrada en portals.yml** para futuros scans
+**Jeśli `careers_url` nie istnieje** dla firmy:
+1. Spróbuj wzorca jej znanej platformy
+2. Jeśli zawiedzie, zrób szybki WebSearch: `"{company}" careers jobs`
+3. Nawiguj przez Playwright, by potwierdzić, że działa
+4. **Zapisz znaleziony URL w portals.yml** do przyszłych skanów
 
-**Si `careers_url` devuelve 404 o redirect:**
-1. Anotar en el resumen de salida
-2. Intentar scan_query como fallback
-3. Marcar para actualización manual
+**Jeśli `careers_url` zwraca 404 lub redirect:**
+1. Odnotuj w podsumowaniu wyjścia
+2. Spróbuj scan_query jako fallbacku
+3. Oznacz do ręcznej aktualizacji
 
-## Mantenimiento del portals.yml
+## Utrzymanie portals.yml
 
-- **SIEMPRE guardar `careers_url`** cuando se añade una empresa nueva
-- Añadir nuevos queries según se descubran portales o roles interesantes
-- Desactivar queries con `enabled: false` si generan demasiado ruido
-- Ajustar keywords de filtrado según evolucionen los roles target
-- Añadir empresas a `tracked_companies` cuando interese seguirlas de cerca
-- Verificar `careers_url` periódicamente — las empresas cambian de plataforma ATS
+- **ZAWSZE zapisuj `careers_url`** przy dodawaniu nowej firmy
+- Dodawaj nowe zapytania w miarę odkrywania ciekawych portali lub ról
+- Wyłączaj zapytania przez `enabled: false`, jeśli generują za dużo szumu
+- Dostosowuj słowa kluczowe filtrowania w miarę ewolucji ról docelowych
+- Dodawaj firmy do `tracked_companies`, gdy chcesz je śledzić z bliska
+- Weryfikuj `careers_url` okresowo — firmy zmieniają platformy ATS

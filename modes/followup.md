@@ -1,173 +1,173 @@
-# Mode: followup -- Follow-up Cadence Tracker
+# Tryb: followup — Tracker kadencji follow-up
 
-## Purpose
+## Cel
 
-Track follow-up cadence for active applications. Flag overdue follow-ups, extract contacts from notes, and generate tailored follow-up email/LinkedIn drafts using report context.
+Śledź kadencję follow-upów dla aktywnych aplikacji. Oznaczaj zaległe follow-upy, wyciągaj kontakty z notatek i generuj dopasowane szkice e-maili/wiadomości LinkedIn z użyciem kontekstu raportu.
 
-## Inputs
+## Wejścia
 
-- `data/applications.md` — Application tracker
-- `data/follow-ups.md` — Follow-up history (created on first use)
-- `reports/` — Evaluation reports (for context in drafts)
-- `config/profile.yml` — User profile (name, identity)
-- `cv.md` — CV for proof points in drafts
+- `data/applications.md` — Tracker aplikacji
+- `data/follow-ups.md` — Historia follow-upów (tworzona przy pierwszym użyciu)
+- `reports/` — Raporty oceny (kontekst do szkiców)
+- `config/profile.yml` — Profil użytkownika (imię, tożsamość)
+- `cv.md` — CV dla proof pointów w szkicach
 
-## Step 1 — Run Cadence Script
+## Krok 1 — Uruchom skrypt kadencji
 
-Execute:
+Wykonaj:
 
 ```bash
 node followup-cadence.mjs
 ```
 
-Parse the JSON output. It contains:
+Sparsuj wyjście JSON. Zawiera:
 
-| Key | Contents |
-|-----|----------|
-| `metadata` | Analysis date, total tracked, actionable count, overdue/urgent/cold/waiting counts |
-| `entries` | Per-application: company, role, status, days since application, follow-up count, urgency, next follow-up date, extracted contacts, report path |
-| `cadenceConfig` | Cadence rules (applied: 7 days, responded: 3 days, interview: 1 day) |
+| Klucz | Zawartość |
+|-------|-----------|
+| `metadata` | Data analizy, łącznie śledzonych, liczba do działania, liczniki overdue/urgent/cold/waiting |
+| `entries` | Per aplikacja: firma, rola, status, dni od aplikacji, liczba follow-upów, pilność, data kolejnego follow-up, wyciągnięte kontakty, ścieżka raportu |
+| `cadenceConfig` | Reguły kadencji (applied: 7 dni, responded: 3 dni, interview: 1 dzień) |
 
-If no actionable entries, tell the user:
-> "No active applications to follow up on. Apply to some roles first with `/career-ops` and come back when they're aging."
+Jeśli brak pozycji do działania, powiedz użytkownikowi:
+> "Brak aktywnych aplikacji do follow-upu. Najpierw zaaplikuj na kilka ról przez `/career-ops` i wróć, gdy się postarzeją."
 
-## Step 2 — Display Dashboard
+## Krok 2 — Pokaż dashboard
 
-Show a cadence dashboard sorted by urgency (urgent > overdue > waiting > cold):
-
-```
-Follow-up Cadence Dashboard — {date}
-{N} applications tracked, {N} actionable
-
-| # | Company | Role | Status | Days | Follow-ups | Next | Urgency | Contact |
-```
-
-Use visual indicators:
-- **URGENT** — respond within 24 hours (company replied)
-- **OVERDUE** — follow-up is past due
-- **waiting (X days)** — on track, follow-up scheduled
-- **COLD** — 2+ follow-ups sent, suggest closing
-
-## Step 3 — Generate Follow-up Drafts
-
-For each **overdue** or **urgent** entry only:
-
-1. Read the linked report (`reportPath` from JSON) for company context
-2. Read `cv.md` for proof points
-3. Read `config/profile.yml` for candidate name and identity
-
-### Email Follow-up Framework (first follow-up, followupCount == 0)
-
-Generate a 3-4 sentence email:
-
-1. **Sentence 1:** Reference the specific role + when you applied. Be specific — mention the company name and role title.
-2. **Sentence 2:** One concrete value-add from the report's Block B match or a proof point from cv.md. Quantify if possible.
-3. **Sentence 3:** Soft ask + availability. Offer a specific time window ("this week" or "next Tuesday").
-4. **Sentence 4 (optional):** Brief mention of a relevant recent project or achievement.
-
-**Rules:**
-- Professional but warm, NOT desperate
-- **NEVER** use "just checking in", "just following up", "touching base", or "circling back"
-- Lead with value, not with the ask
-- Reference something specific to THAT company (from report Block A)
-- Keep under 150 words
-- Include a subject line
-- Use the candidate's name from `config/profile.yml`
-
-**Example tone:**
-> Subject: Re: Senior PHP/Laravel Developer — IxDF
->
-> Hi [contact name or "team"],
->
-> I submitted my application for the Senior PHP/Laravel Developer role on April 7th. I wanted to share that my production Laravel app (Barbeiro.app — 120 models, 315 API endpoints, full test suite) closely mirrors the TDD-driven culture described in the posting.
->
-> I'd love to discuss how my 15 years of PHP experience and hands-on AI tooling workflow could contribute to IxDF's platform. Would any time this week work for a brief conversation?
->
-> Best,
-> [Name]
-
-### LinkedIn Follow-up (if no email contact found)
-
-Reuse the contacto framework: 3 sentences, 300 character max.
-- Hook specific to company → proof point → soft ask
-- Suggest the user run `/career-ops contacto {company}` to find the right person first
-
-### Second Follow-up (followupCount == 1)
-
-Shorter than first (2-3 sentences). Take a **new angle**:
-- Share a relevant insight, article, or project update
-- Don't repeat the first follow-up's content
-- Still reference the role specifically
-
-### Cold Application (followupCount >= 2)
-
-Do NOT generate another follow-up. Instead suggest:
-> "This application has had {N} follow-ups with no response. Consider:
-> - Updating status to `Discarded` if the role seems filled
-> - Trying a different contact via `/career-ops contacto`
-> - Keeping in `Applied` status but deprioritizing"
-
-## Step 4 — Present Drafts
-
-For each draft, show:
+Pokaż dashboard kadencji posortowany wg pilności (urgent > overdue > waiting > cold):
 
 ```
-## Follow-up: {Company} — {Role} (#{num})
+Dashboard kadencji follow-up — {data}
+{N} śledzonych aplikacji, {N} do działania
 
-**To:** {email or "No contact found — run `/career-ops contacto` first"}
-**Subject:** {subject line}
-**Days since application:** {N}
-**Follow-ups sent:** {N}
-**Channel:** Email / LinkedIn
-
-{draft text}
+| # | Firma | Rola | Status | Dni | Follow-upy | Następny | Pilność | Kontakt |
 ```
 
-## Step 5 — Record Follow-ups
+Użyj wskaźników wizualnych:
+- **PILNE** — odpowiedz w 24h (firma się odezwała)
+- **ZALEGŁE** — follow-up po terminie
+- **czeka (X dni)** — zgodnie z planem, follow-up zaplanowany
+- **ZIMNE** — wysłano 2+ follow-upy, sugeruj zamknięcie
 
-After the user reviews and says they've sent a follow-up, record it:
+## Krok 3 — Generuj szkice follow-up
 
-1. If `data/follow-ups.md` doesn't exist, create it:
+Tylko dla pozycji **overdue** lub **urgent**:
+
+1. Przeczytaj powiązany raport (`reportPath` z JSON) dla kontekstu firmy
+2. Przeczytaj `cv.md` dla proof pointów
+3. Przeczytaj `config/profile.yml` dla imienia i tożsamości kandydata
+
+### Schemat e-maila follow-up (pierwszy follow-up, followupCount == 0)
+
+Wygeneruj e-mail na 3-4 zdania:
+
+1. **Zdanie 1:** Odwołaj się do konkretnej roli + kiedy aplikowano. Konkretnie — podaj nazwę firmy i tytuł roli.
+2. **Zdanie 2:** Jedna konkretna wartość dodana z dopasowania Bloku B raportu lub proof point z cv.md. Skwantyfikuj, jeśli możliwe.
+3. **Zdanie 3:** Delikatna prośba + dostępność. Zaproponuj konkretne okno czasowe ("w tym tygodniu" lub "w przyszły wtorek").
+4. **Zdanie 4 (opcjonalnie):** Krótka wzmianka o istotnym niedawnym projekcie lub osiągnięciu.
+
+**Reguły:**
+- Profesjonalnie, ale ciepło, NIE desperacko
+- **NIGDY** nie używaj "tylko sprawdzam", "chciałem przypomnieć", "wracam z pytaniem", "odświeżam temat"
+- Prowadź wartością, nie prośbą
+- Odwołaj się do czegoś konkretnego dla TEJ firmy (z Bloku A raportu)
+- Trzymaj poniżej 150 słów
+- Dołącz temat wiadomości
+- Użyj imienia kandydata z `config/profile.yml`
+
+**Przykładowy ton:**
+> Temat: Re: Senior PHP/Laravel Developer — IxDF
+>
+> Dzień dobry [imię kontaktu lub "Zespole"],
+>
+> Wysłałem aplikację na rolę Senior PHP/Laravel Developer 7 kwietnia. Chciałem dodać, że moja produkcyjna aplikacja w Laravel (Barbeiro.app — 120 modeli, 315 endpointów API, pełny zestaw testów) blisko odzwierciedla kulturę TDD opisaną w ogłoszeniu.
+>
+> Chętnie porozmawiam, jak moje 15 lat doświadczenia w PHP i praktyczny workflow z narzędziami AI mogłyby wesprzeć platformę IxDF. Czy pasowałby termin w tym tygodniu na krótką rozmowę?
+>
+> Pozdrawiam,
+> [Imię]
+
+### Follow-up na LinkedIn (jeśli nie znaleziono kontaktu e-mail)
+
+Użyj ponownie schematu contacto: 3 zdania, maks. 300 znaków.
+- Hak specyficzny dla firmy → proof point → delikatna prośba
+- Zasugeruj użytkownikowi uruchomienie `/career-ops contacto {firma}`, by najpierw znaleźć właściwą osobę
+
+### Drugi follow-up (followupCount == 1)
+
+Krótszy niż pierwszy (2-3 zdania). Weź **nowy kąt**:
+- Podziel się istotnym spostrzeżeniem, artykułem lub aktualizacją projektu
+- Nie powtarzaj treści pierwszego follow-up
+- Wciąż odwołuj się konkretnie do roli
+
+### Zimna aplikacja (followupCount >= 2)
+
+NIE generuj kolejnego follow-up. Zamiast tego zasugeruj:
+> "Ta aplikacja miała {N} follow-upów bez odpowiedzi. Rozważ:
+> - Zmianę statusu na `Discarded`, jeśli rola wydaje się obsadzona
+> - Próbę innego kontaktu przez `/career-ops contacto`
+> - Pozostawienie statusu `Applied`, ale z niższym priorytetem"
+
+## Krok 4 — Prezentuj szkice
+
+Dla każdego szkicu pokaż:
+
+```
+## Follow-up: {Firma} — {Rola} (#{num})
+
+**Do:** {email lub "Brak kontaktu — najpierw uruchom `/career-ops contacto`"}
+**Temat:** {temat}
+**Dni od aplikacji:** {N}
+**Wysłane follow-upy:** {N}
+**Kanał:** Email / LinkedIn
+
+{treść szkicu}
+```
+
+## Krok 5 — Zapisz follow-upy
+
+Po tym, jak użytkownik przejrzy i powie, że wysłał follow-up, zapisz go:
+
+1. Jeśli `data/follow-ups.md` nie istnieje, utwórz:
    ```markdown
-   # Follow-up History
+   # Historia follow-upów
 
-   | # | App# | Date | Company | Role | Channel | Contact | Notes |
-   |---|------|------|---------|------|---------|---------|-------|
+   | # | App# | Data | Firma | Rola | Kanał | Kontakt | Notatki |
+   |---|------|------|-------|------|-------|---------|---------|
    ```
 
-2. Append a row with:
-   - `#` = next sequential number in the follow-ups table
-   - `App#` = application number from tracker
-   - `Date` = today's date
-   - `Company` = company name
-   - `Role` = role title
-   - `Channel` = Email / LinkedIn / Other
-   - `Contact` = who it was sent to
-   - `Notes` = brief note (e.g., "First follow-up, referenced Barbeiro.app")
+2. Dopisz wiersz z:
+   - `#` = kolejny numer w tabeli follow-upów
+   - `App#` = numer aplikacji z trackera
+   - `Data` = dzisiejsza data
+   - `Firma` = nazwa firmy
+   - `Rola` = tytuł roli
+   - `Kanał` = Email / LinkedIn / Inny
+   - `Kontakt` = do kogo wysłano
+   - `Notatki` = krótka notka (np. "Pierwszy follow-up, odwołanie do Barbeiro.app")
 
-3. Optionally update the Notes column in `data/applications.md` with "Follow-up {N} sent {YYYY-MM-DD}"
+3. Opcjonalnie zaktualizuj kolumnę Notatki w `data/applications.md` o "Follow-up {N} wysłany {YYYY-MM-DD}"
 
-**IMPORTANT:** Only record follow-ups the user confirms they actually sent. Never record a draft as sent.
+**WAŻNE:** Zapisuj tylko follow-upy, których wysłanie użytkownik potwierdzi. Nigdy nie zapisuj szkicu jako wysłanego.
 
-## Step 6 — Summary
+## Krok 6 — Podsumowanie
 
-After showing all drafts, summarize:
+Po pokazaniu wszystkich szkiców podsumuj:
 
-> **Follow-up Dashboard** ({date})
-> - {N} applications being tracked
-> - {N} overdue — drafts generated above
-> - {N} urgent — respond today
-> - {N} waiting — next follow-up dates shown
-> - {N} cold — consider closing
+> **Dashboard follow-up** ({data})
+> - {N} śledzonych aplikacji
+> - {N} zaległych — szkice wygenerowane powyżej
+> - {N} pilnych — odpowiedz dziś
+> - {N} czekających — daty kolejnych follow-upów pokazane
+> - {N} zimnych — rozważ zamknięcie
 >
-> Review the drafts above and tell me which ones you've sent so I can record them.
+> Przejrzyj szkice powyżej i powiedz, które wysłałeś, bym je zapisał.
 
-## Cadence Rules Reference
+## Referencja reguł kadencji
 
-| Status | First follow-up | Subsequent | Max attempts |
-|--------|----------------|------------|-------------|
-| Applied | 7 days after application | Every 7 days | 2 (then mark cold) |
-| Responded | 1 day (urgent reply) | Every 3 days | No limit |
-| Interview | 1 day after (thank-you) | Every 3 days | No limit |
+| Status | Pierwszy follow-up | Kolejne | Maks. prób |
+|--------|--------------------|---------|------------|
+| Applied | 7 dni po aplikacji | Co 7 dni | 2 (potem oznacz zimne) |
+| Responded | 1 dzień (pilna odpowiedź) | Co 3 dni | Bez limitu |
+| Interview | 1 dzień po (podziękowanie) | Co 3 dni | Bez limitu |
 
-These defaults can be overridden via `node followup-cadence.mjs --applied-days N`.
+Te domyślne wartości można nadpisać przez `node followup-cadence.mjs --applied-days N`.

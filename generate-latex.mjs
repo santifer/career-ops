@@ -19,10 +19,10 @@ import { execFileSync } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
 
 const REQUIRED_SECTIONS = [
-  '\\\\section{Education}',
-  '\\\\section{Work Experience}',
-  '\\\\section{Personal Projects}',
-  '\\\\section{Technical Skills}',
+  '\\\\section{Wykształcenie}',
+  '\\\\section{Doświadczenie zawodowe}',
+  '\\\\section{Projekty własne}',
+  '\\\\section{Umiejętności techniczne}',
 ];
 
 const REQUIRED_COMMANDS = [

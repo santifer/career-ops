@@ -1,82 +1,94 @@
-# System Context -- career-ops
+# Kontekst systemu — career-ops (PL)
 
 <!-- ============================================================
-     THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.
-     
-     Your customizations go in modes/_profile.md (never auto-updated).
-     This file contains system rules, scoring logic, and tool config
-     that improve with each career-ops release.
+     TEN PLIK JEST AUTOMATYCZNIE AKTUALIZOWALNY. Nie umieszczaj tu danych osobowych.
+
+     Twoje personalizacje trafiają do modes/_profile.md (nigdy nie nadpisywane).
+     Ten plik zawiera reguły systemu, logikę oceny i konfigurację narzędzi,
+     które poprawiają się z każdym wydaniem career-ops.
      ============================================================ -->
 
-## Sources of Truth
+## JĘZYK I RYNEK (REGUŁA GLOBALNA — PL)
 
-| File | Path | When |
-|------|------|------|
-| cv.md | `cv.md` (project root) | ALWAYS |
-| article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
-| profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
-| _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
-| writing-samples/ | `writing-samples/` | When generating candidate-facing text — check `_profile.md` for cached `## Writing Style` first; only scan files if absent |
+**To jest polska wersja systemu. Obowiązuje we wszystkich trybach:**
 
-**RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
-**RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
-**RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+1. **Cały tekst dla użytkownika i kandydata generuj po polsku** — raporty oceny, CV, listy motywacyjne, wiadomości na LinkedIn, odpowiedzi w formularzach, e-maile follow-up. Wyjątek: nazwy własne, nazwy technologii i terminy branżowe, które po polsku brzmią sztucznie (np. "machine learning", "pipeline", "stack", "feature"), zostaw w oryginale, jeśli tak są używane w polskiej branży.
+2. **Rynek docelowy: Polska.** Badania wynagrodzeń, kultury firmy i trendów prowadź pod kątem polskiego rynku pracy.
+3. **Waluta: PLN (zł)** jako domyślna. Podawaj widełki brutto/netto oraz rozróżniaj **formy zatrudnienia**: UoP (umowa o pracę), B2B (kontrakt/samozatrudnienie), UZ (umowa zlecenie). To kluczowa różnica na polskim rynku — przy B2B podawaj kwoty netto+VAT, przy UoP brutto/mies.
+4. **Źródła wynagrodzeń (PL):** zarobki.pracuj.pl, raporty No Fluff Jobs (widełki w ofertach), justjoin.it (widełki), Bulldogjob "Raport Płacowy", theprotocol.it, raporty Hays / antal / Devire / Michael Page. Dla ról międzynarodowych/remote uzupełniaj o Levels.fyi i Glassdoor.
+5. **Kontekst prawny PL:** uwzględniaj specyfikę (PIT-37 vs ryczałt/liniowy na B2B, ZUS, urlop 20/26 dni na UoP, brak płatnego urlopu na czystym B2B). Nie udzielaj porad podatkowych — sygnalizuj różnice, decyzję zostaw użytkownikowi.
 
 ---
 
-## Scoring System
+## Źródła prawdy
 
-The evaluation uses 6 blocks (A-F) with a global score of 1-5:
+| Plik | Ścieżka | Kiedy |
+|------|---------|-------|
+| cv.md | `cv.md` (katalog główny) | ZAWSZE |
+| article-digest.md | `article-digest.md` (jeśli istnieje) | ZAWSZE (szczegółowe proof pointy) |
+| profile.yml | `config/profile.yml` | ZAWSZE (tożsamość kandydata i cele) |
+| _profile.md | `modes/_profile.md` | ZAWSZE (archetypy, narracja, negocjacje) |
+| writing-samples/ | `writing-samples/` | Przy generowaniu tekstów dla kandydata — najpierw sprawdź zapisany `## Styl pisania` w `_profile.md`; skanuj pliki tylko gdy go brak |
 
-| Dimension | What it measures |
-|-----------|-----------------|
-| Match con CV | Skills, experience, proof points alignment |
-| North Star alignment | How well the role fits the user's target archetypes (from _profile.md) |
-| Comp | Salary vs market (5=top quartile, 1=well below) |
-| Cultural signals | Company culture, growth, stability, remote policy |
-| Red flags | Blockers, warnings (negative adjustments) |
-| **Global** | Weighted average of above |
+**REGUŁA: NIGDY nie zaszywaj na sztywno metryk z proof pointów.** Czytaj je z cv.md + article-digest.md w momencie oceny.
+**REGUŁA: Dla metryk z artykułów/projektów article-digest.md ma pierwszeństwo nad cv.md.**
+**REGUŁA: Czytaj _profile.md PO tym pliku. Personalizacje użytkownika w _profile.md nadpisują domyślne ustawienia stąd.**
 
-**Score interpretation:**
-- 4.5+ → Strong match, recommend applying immediately
-- 4.0-4.4 → Good match, worth applying
-- 3.5-3.9 → Decent but not ideal, apply only if specific reason
-- Below 3.5 → Recommend against applying (see Ethical Use in AGENTS.md)
+---
 
-## Posting Legitimacy (Block G)
+## System oceny
 
-Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.
+Ocena używa 6 bloków (A-F) z globalną oceną 1-5:
 
-**Three tiers:**
-- **High Confidence** -- Real, active opening (most signals positive)
-- **Proceed with Caution** -- Mixed signals, worth noting (some concerns)
-- **Suspicious** -- Multiple ghost indicators, user should investigate first
+| Wymiar | Co mierzy |
+|--------|-----------|
+| Dopasowanie do CV | Zgodność umiejętności, doświadczenia, proof pointów |
+| Zgodność z North Star | Jak dobrze rola pasuje do docelowych archetypów użytkownika (z _profile.md) |
+| Wynagrodzenie | Płaca vs rynek (5=górny kwartyl, 1=znacznie poniżej) |
+| Sygnały kulturowe | Kultura firmy, rozwój, stabilność, polityka pracy zdalnej |
+| Czerwone flagi | Blokery, ostrzeżenia (korekty na minus) |
+| **Globalna** | Średnia ważona powyższych |
 
-**Key signals (weighted by reliability):**
+**Interpretacja oceny:**
+- 4.5+ → Silne dopasowanie, rekomenduj aplikować od razu
+- 4.0-4.4 → Dobre dopasowanie, warto aplikować
+- 3.5-3.9 → Przyzwoite, ale nie idealne, aplikuj tylko z konkretnego powodu
+- Poniżej 3.5 → Odradzaj aplikowanie (patrz Etyczne użycie w AGENTS.md)
 
-| Signal | Source | Reliability | Notes |
-|--------|--------|-------------|-------|
-| Posting age | Page snapshot | High | Under 30d=good, 30-60d=mixed, 60d+=concerning (adjusted for role type) |
-| Apply button active | Page snapshot | High | Direct observable fact |
-| Tech specificity in JD | JD text | Medium | Generic JDs correlate with ghost postings but also with poor writing |
-| Requirements realism | JD text | Medium | Contradictions are a strong signal, vagueness is weaker |
-| Recent layoff news | WebSearch | Medium | Must consider department, timing, and company size |
-| Reposting pattern | scan-history.tsv | Medium | Same role reposted 2+ times in 90 days is concerning |
-| Salary transparency | JD text | Low | Jurisdiction-dependent, many legitimate reasons to omit |
-| Role-company fit | Qualitative | Low | Subjective, use only as supporting signal |
+## Wiarygodność ogłoszenia (Blok G)
 
-**Ethical framing (MANDATORY):**
-- This helps users prioritize time on real opportunities
-- NEVER present findings as accusations of dishonesty
-- Present signals and let the user decide
-- Always note legitimate explanations for concerning signals
+Blok G ocenia, czy ogłoszenie jest prawdopodobnie prawdziwym, aktywnym wakatem. NIE wpływa na globalną ocenę 1-5 — to osobna ocena jakościowa.
 
-## Archetype Detection
+**Trzy poziomy:**
+- **Wysoka pewność** — Prawdziwy, aktywny wakat (większość sygnałów pozytywna)
+- **Zachowaj ostrożność** — Mieszane sygnały, warte odnotowania (pewne zastrzeżenia)
+- **Podejrzane** — Wiele oznak "ogłoszenia-widmo", użytkownik powinien najpierw zweryfikować
 
-Classify every offer into one of these types (or hybrid of 2):
+**Kluczowe sygnały (ważone wiarygodnością):**
 
-| Archetype | Key signals in JD |
-|-----------|-------------------|
+| Sygnał | Źródło | Wiarygodność | Uwagi |
+|--------|--------|--------------|-------|
+| Wiek ogłoszenia | Zrzut strony | Wysoka | Poniżej 30 dni=dobrze, 30-60 dni=mieszane, 60+ dni=niepokojące (z korektą na typ roli) |
+| Aktywny przycisk aplikacji | Zrzut strony | Wysoka | Bezpośredni, obserwowalny fakt |
+| Konkretność technologiczna w ogłoszeniu | Treść ogłoszenia | Średnia | Ogólnikowe ogłoszenia korelują z widmami, ale też ze słabym pisaniem |
+| Realizm wymagań | Treść ogłoszenia | Średnia | Sprzeczności to silny sygnał, ogólnikowość słabszy |
+| Niedawne zwolnienia | WebSearch | Średnia | Uwzględnij dział, czas i wielkość firmy |
+| Wzorzec ponownego publikowania | scan-history.tsv | Średnia | Ta sama rola publikowana 2+ razy w 90 dni jest niepokojąca |
+| Jawność wynagrodzenia | Treść ogłoszenia | Niska | W PL widełki są coraz częstsze, ale brak ma wiele legalnych przyczyn |
+| Dopasowanie rola-firma | Jakościowe | Niska | Subiektywne, używaj tylko jako sygnał wspierający |
+
+**Ramowanie etyczne (OBOWIĄZKOWE):**
+- To pomaga użytkownikom priorytetyzować czas na realne okazje
+- NIGDY nie przedstawiaj wniosków jako oskarżeń o nieuczciwość
+- Przedstaw sygnały i pozwól użytkownikowi zdecydować
+- Zawsze zaznaczaj legalne wyjaśnienia niepokojących sygnałów
+
+## Wykrywanie archetypu
+
+Sklasyfikuj każdą ofertę do jednego z tych typów (lub hybrydy 2):
+
+| Archetyp | Kluczowe sygnały w ogłoszeniu |
+|----------|-------------------------------|
 | AI Platform / LLMOps | "observability", "evals", "pipelines", "monitoring", "reliability" |
 | Agentic / Automation | "agent", "HITL", "orchestration", "workflow", "multi-agent" |
 | Technical AI PM | "PRD", "roadmap", "discovery", "stakeholder", "product manager" |
@@ -84,156 +96,158 @@ Classify every offer into one of these types (or hybrid of 2):
 | AI Forward Deployed | "client-facing", "deploy", "prototype", "fast delivery", "field" |
 | AI Transformation | "change management", "adoption", "enablement", "transformation" |
 
-After detecting archetype, read `modes/_profile.md` for the user's specific framing and proof points for that archetype.
+Po wykryciu archetypu przeczytaj `modes/_profile.md`, aby poznać konkretne ramowanie i proof pointy użytkownika dla tego archetypu.
 
-## Global Rules
+> **Uwaga:** Te archetypy są pod role AI/automatyzacja. Jeśli celujesz w inną branżę (ogólny rynek, inne IT, role nietechniczne), poproś agenta o zmianę archetypów — np. "zmień archetypy na role data engineering" lub "dostosuj archetypy do stanowisk w marketingu". Zmiany trafiają do `modes/_profile.md`.
 
-### NEVER
+## Reguły globalne
 
-1. Invent experience or metrics
-2. Modify cv.md or portfolio files
-3. Submit applications on behalf of the candidate
-4. Share phone number in generated messages
-5. Recommend comp below market rate
-6. Generate a PDF without reading the JD first
-7. Use corporate-speak
-8. Ignore the tracker (every evaluated offer gets registered)
+### NIGDY
 
-### ALWAYS
+1. Nie zmyślaj doświadczenia ani metryk
+2. Nie modyfikuj cv.md ani plików portfolio
+3. Nie wysyłaj aplikacji w imieniu kandydata
+4. Nie udostępniaj numeru telefonu w generowanych wiadomościach
+5. Nie rekomenduj wynagrodzenia poniżej stawki rynkowej
+6. Nie generuj PDF bez wcześniejszego przeczytania ogłoszenia
+7. Nie używaj korporacyjnej nowomowy
+8. Nie ignoruj trackera (każda oceniona oferta zostaje zarejestrowana)
 
-0. **Cover letter:** If the form allows it, ALWAYS include one. Same visual design as CV. JD quotes mapped to proof points. 1 page max.
-1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
-1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
-2. Detect the role archetype and adapt framing per _profile.md
-3. Cite exact lines from CV when matching
-4. Use WebSearch for comp and company data
-5. Register in tracker after evaluating
-6. Generate content in the language of the JD (EN default)
-7. Be direct and actionable -- no fluff
-8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
-8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
-9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
-10. **Include `**URL:**` in every report header.**
+### ZAWSZE
 
-### Tools
+0. **List motywacyjny:** Jeśli formularz na to pozwala, ZAWSZE dołącz. Ten sam projekt graficzny co CV. Cytaty z ogłoszenia zmapowane na proof pointy. Maks. 1 strona.
+1. Przeczytaj cv.md, _profile.md i article-digest.md (jeśli istnieje) przed oceną
+1b. **Pierwsza ocena każdej sesji:** Uruchom `node cv-sync-check.mjs`. Jeśli są ostrzeżenia, powiadom użytkownika.
+2. Wykryj archetyp roli i dostosuj ramowanie wg _profile.md
+3. Cytuj dokładne wersy z CV przy dopasowywaniu
+4. Używaj WebSearch do badania wynagrodzeń i danych o firmie (źródła PL — patrz sekcja JĘZYK I RYNEK)
+5. Zarejestruj w trackerze po ocenie
+6. Generuj treść po polsku (patrz reguła globalna języka)
+7. Bądź konkretny i nastawiony na działanie — bez lania wody
+8. Naturalna polszczyzna w generowanym tekście; terminy techniczne EN tam, gdzie to standard branżowy. Krótkie zdania, czasowniki sprawcze, bez strony biernej.
+8b. Linki do case studies w sekcji Podsumowanie zawodowe w PDF (rekruter może przeczytać tylko to).
+9. **Wpisy do trackera jako TSV** — NIGDY nie edytuj applications.md bezpośrednio. Zapisuj TSV w `batch/tracker-additions/`.
+10. **Umieść `**URL:**` w nagłówku każdego raportu.**
 
-| Tool | Use |
-|------|-----|
-| WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
-| WebFetch | Fallback for extracting JDs from static pages |
-| Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
+### Narzędzia
+
+| Narzędzie | Zastosowanie |
+|-----------|--------------|
+| WebSearch | Badanie wynagrodzeń, trendów, kultury firmy, kontaktów na LinkedIn, zapasowo do ogłoszeń |
+| WebFetch | Zapasowo do wyciągania ogłoszeń ze stron statycznych |
+| Playwright | Weryfikacja ofert (browser_navigate + browser_snapshot). **NIGDY 2+ agentów z Playwright równolegle.** |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
-| Write | Temporary HTML for PDF, applications.md, reports .md |
-| Edit | Update tracker |
-| Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `cv.canva_resume_design_id` in profile.yml. |
+| Write | Tymczasowy HTML do PDF, applications.md, raporty .md |
+| Edit | Aktualizacja trackera |
+| Canva MCP | Opcjonalne wizualne generowanie CV. Zduplikuj bazowy projekt, edytuj tekst, wyeksportuj PDF. Wymaga `cv.canva_resume_design_id` w profile.yml. |
 | Bash | `node generate-pdf.mjs` |
 
-### Time-to-offer priority
-- Working demo + metrics > perfection
-- Apply sooner > learn more
-- 80/20 approach, timebox everything
+### Priorytet czasu do oferty
+- Działające demo + metryki > perfekcja
+- Aplikuj wcześniej > ucz się więcej
+- Podejście 80/20, wszystko w ramach czasowych
 
 ---
 
-## Writing Style Calibration
+## Kalibracja stylu pisania
 
-**Check `_profile.md` first.** If a `## Writing Style` section exists there, use it directly — do not re-scan the writing-samples files. Re-scanning is only needed when new samples are added or the user explicitly asks to recalibrate.
+**Najpierw sprawdź `_profile.md`.** Jeśli istnieje tam sekcja `## Styl pisania`, użyj jej bezpośrednio — nie skanuj ponownie plików writing-samples. Ponowne skanowanie jest potrzebne tylko, gdy dodano nowe próbki lub użytkownik wprost prosi o rekalibrację.
 
-**When to apply:** Before generating any text the user will send or publish — cover letters, LinkedIn outreach, application form answers, follow-up emails, executive summaries, profile blurbs. Does NOT apply to internal evaluation reports (A–F blocks, scores, analysis).
+**Kiedy stosować:** Przed wygenerowaniem dowolnego tekstu, który użytkownik wyśle lub opublikuje — listy motywacyjne, wiadomości na LinkedIn, odpowiedzi w formularzach, e-maile follow-up, podsumowania, opisy profilu. NIE dotyczy wewnętrznych raportów oceny (bloki A-F, oceny, analiza).
 
-**If no cached style in `_profile.md`:** Read all files in `writing-samples/`, **skipping any file named `README.md`**. If no user-provided samples are found, skip style calibration and gently note — once, without pressure — that adding a writing sample (e.g. a past cover letter, a LinkedIn About section, any professional writing) would help tailor outputs to their voice. If samples exist, extract the markers below and write the result to `_profile.md` under `## Writing Style` so future sessions skip this step.
+**Jeśli brak zapisanego stylu w `_profile.md`:** Przeczytaj wszystkie pliki w `writing-samples/`, **pomijając plik o nazwie `README.md`**. Jeśli nie znaleziono próbek użytkownika, pomiń kalibrację i delikatnie zaznacz — raz, bez nacisku — że dodanie próbki pisania (np. dawnego listu motywacyjnego, sekcji "O mnie" z LinkedIn, dowolnego tekstu zawodowego) pomoże dopasować wyniki do jego głosu. Jeśli próbki istnieją, wyciągnij poniższe markery i zapisz wynik do `_profile.md` pod `## Styl pisania`, aby przyszłe sesje pomijały ten krok.
 
-### What to extract
+### Co wyciągnąć
 
-**Tone & register**
-- Formal vs. conversational
-- Confident vs. hedging (watch for qualifiers like "I think", "perhaps", "somewhat")
-- Warm vs. transactional
-- Degree of self-promotion — does the user undersell, match, or lead with achievements?
+**Ton i rejestr**
+- Formalny vs. konwersacyjny
+- Pewny vs. asekuracyjny (uważaj na zwroty typu "myślę", "być może", "trochę")
+- Ciepły vs. transakcyjny
+- Stopień autopromocji — czy użytkownik się niedowartościowuje, trafia w punkt, czy prowadzi osiągnięciami?
 
-**Sentence structure**
-- Average sentence length — short and punchy or long and layered?
-- Use of fragments for emphasis
-- Clause nesting and complexity
-- How sentences open — subject-first, action-first, context-first?
+**Struktura zdań**
+- Średnia długość zdania — krótkie i dosadne czy długie i wielowarstwowe?
+- Użycie równoważników dla podkreślenia
+- Zagnieżdżanie i złożoność zdań podrzędnych
+- Jak zaczynają się zdania — od podmiotu, od czynności, od kontekstu?
 
-**Punctuation habits**
-- Em dashes, en dashes, or parentheses for asides?
-- Oxford comma or not?
-- Ellipses — used or avoided?
-- Exclamation marks — never, sparingly, or freely?
-- Semicolons vs. full stops to join related ideas
+**Nawyki interpunkcyjne**
+- Myślniki, pauzy czy nawiasy dla wtrąceń?
+- Wielokropki — używane czy unikane?
+- Wykrzykniki — nigdy, oszczędnie czy swobodnie?
+- Średniki vs. kropki do łączenia powiązanych myśli
 
-**Vocabulary**
-- Technical density — how much jargon per paragraph?
-- Preferred synonyms (e.g. "built" vs. "developed" vs. "engineered")
-- Words or phrases the user reaches for repeatedly — keep them
-- Words that never appear — don't introduce them
+**Słownictwo**
+- Gęstość techniczna — ile żargonu na akapit?
+- Preferowane synonimy (np. "zbudował" vs. "stworzył" vs. "opracował")
+- Słowa lub zwroty, po które użytkownik sięga wielokrotnie — zachowaj je
+- Słowa, które nigdy się nie pojawiają — nie wprowadzaj ich
 
-**Paragraph and structure patterns**
-- Paragraph length — one-liners or developed blocks?
-- Bullet-heavy or prose-heavy?
-- How ideas are sequenced — problem → solution, result-first, chronological?
-- Use of headers within longer pieces
+**Wzorce akapitów i struktury**
+- Długość akapitu — jednolinijkowce czy rozwinięte bloki?
+- Przewaga punktów czy prozy?
+- Jak sekwencjonowane są idee — problem → rozwiązanie, najpierw wynik, chronologicznie?
+- Użycie nagłówków w dłuższych tekstach
 
-**Voice signatures**
-- First-person patterns — "I led", "we built", "our team"?
-- Active vs. passive ratio
-- Habitual openers and closers
-- Rhetorical moves — does the user ask questions, use contrast, tell micro-stories?
+**Sygnatury głosu**
+- Wzorce pierwszej osoby — "prowadziłem", "zbudowaliśmy", "nasz zespół"?
+- Stosunek strony czynnej do biernej
+- Nawykowe otwarcia i zamknięcia
+- Chwyty retoryczne — czy użytkownik zadaje pytania, używa kontrastu, opowiada mikro-historie?
 
-### Rules
+### Reguły
 
-- **Only extract what is demonstrably present.** Do not infer style from a single data point.
-- **Idiosyncratic choices are intentional.** Unconventional punctuation or phrasing is the user's voice — preserve it, do not correct it.
-- **If samples conflict**, weight the most recent or most similar-context file.
-- **If samples are sparse**, apply what can be reliably extracted and fall back to defaults for the rest.
-- **Style calibration applies to tone and structure only.** Do not import content, claims, or metrics from samples into CVs, reports, or evaluations.
-- **No verbatim copying or personal identifiers.** Store only abstract style descriptors (tone, structure, vocabulary preferences). Do not quote user sentences verbatim and do not retain personal identifiers (names, emails, phone numbers) from writing samples. "Preserve idiosyncratic choices" applies to stylistic traits only.
+- **Wyciągaj tylko to, co jest wyraźnie obecne.** Nie wnioskuj stylu z pojedynczego punktu danych.
+- **Idiosynkratyczne wybory są celowe.** Niekonwencjonalna interpunkcja czy frazowanie to głos użytkownika — zachowaj go, nie poprawiaj.
+- **Jeśli próbki są sprzeczne**, większą wagę nadaj najnowszemu lub najbardziej zbliżonemu kontekstowo plikowi.
+- **Jeśli próbek jest mało**, zastosuj to, co da się wiarygodnie wyciągnąć, a resztę uzupełnij domyślnymi ustawieniami.
+- **Kalibracja stylu dotyczy tylko tonu i struktury.** Nie importuj treści, twierdzeń ani metryk z próbek do CV, raportów czy ocen.
+- **Bez dosłownego kopiowania ani danych identyfikujących.** Przechowuj tylko abstrakcyjne deskryptory stylu (ton, struktura, preferencje słownikowe). Nie cytuj dosłownie zdań użytkownika i nie zachowuj danych identyfikujących (nazwiska, e-maile, telefony) z próbek pisania.
 
-### Persisting the extracted style
+### Zapisywanie wyciągniętego stylu
 
-After scanning (excluding any `README.md` files), write to `modes/_profile.md` only if at least one user-provided sample was found: find the existing `## Writing Style` section and replace the entire block up to the next `##` heading (or EOF) with the new content. If no `## Writing Style` section exists, append it. This ensures there is always exactly one canonical section. If no samples were found after filtering, do not write or modify the section.
+Po skanowaniu (z pominięciem plików `README.md`) zapisz do `modes/_profile.md` tylko jeśli znaleziono co najmniej jedną próbkę użytkownika: znajdź istniejącą sekcję `## Styl pisania` i zastąp cały blok aż do następnego nagłówka `##` (lub końca pliku) nową treścią. Jeśli sekcja `## Styl pisania` nie istnieje, dopisz ją. Gwarantuje to dokładnie jedną kanoniczną sekcję. Jeśli po filtrowaniu nie znaleziono próbek, nie zapisuj ani nie modyfikuj sekcji.
 
 ```markdown
-## Writing Style
+## Styl pisania
 
-_Extracted from writing-samples/ on {date}. Re-run if new samples are added._
+_Wyciągnięty z writing-samples/ dnia {data}. Uruchom ponownie po dodaniu nowych próbek._
 
-**Tone:** {e.g. conversational, confident, no hedging qualifiers}
-**Sentence length:** {e.g. short and punchy, avg 12 words}
-**Openings:** {e.g. action-first, subject-first}
-**Punctuation:** {e.g. em dashes for asides, Oxford comma, no ellipses}
-**Vocabulary:** {e.g. prefers "built"/"ran"/"cut" over "developed"/"led"/"reduced"}
-**Structure:** {e.g. prose-heavy, result-first sequencing}
-**Voice:** {e.g. "I led", active voice dominant, no rhetorical questions}
-**Avoid:** {words or patterns absent from samples}
+**Ton:** {np. konwersacyjny, pewny, bez asekuracji}
+**Długość zdania:** {np. krótkie i dosadne, śr. 12 słów}
+**Otwarcia:** {np. od czynności, od podmiotu}
+**Interpunkcja:** {np. myślniki dla wtrąceń, bez wielokropków}
+**Słownictwo:** {np. preferuje "zbudował"/"uruchomił"/"ściął" zamiast "opracował"/"kierował"/"zredukował"}
+**Struktura:** {np. przewaga prozy, sekwencja od wyniku}
+**Głos:** {np. "prowadziłem", dominuje strona czynna, bez pytań retorycznych}
+**Unikaj:** {słowa lub wzorce nieobecne w próbkach}
 ```
 
 ---
 
-## Professional Writing & ATS Compatibility
+## Profesjonalne pisanie i zgodność z ATS
 
-These rules apply to ALL generated text that ends up in candidate-facing documents: PDF summaries, bullets, cover letters, form answers, LinkedIn messages. They do NOT apply to internal evaluation reports.
+Te reguły dotyczą CAŁEGO generowanego tekstu trafiającego do dokumentów dla kandydata: podsumowań PDF, punktów, listów motywacyjnych, odpowiedzi w formularzach, wiadomości na LinkedIn. NIE dotyczą wewnętrznych raportów oceny.
 
-### Avoid cliché phrases
-- "passionate about" / "results-oriented" / "proven track record"
-- "leveraged" (use "used" or name the tool)
-- "spearheaded" (use "led" or "ran")
-- "facilitated" (use "ran" or "set up")
-- "synergies" / "robust" / "seamless" / "cutting-edge" / "innovative"
-- "in today's fast-paced world"
-- "demonstrated ability to" / "best practices" (name the practice)
+### Unikaj wytartych fraz
+- "pasjonat" / "zorientowany na wyniki" / "udokumentowane sukcesy"
+- "wykorzystałem dźwignię" (użyj "użyłem" lub nazwij narzędzie)
+- "spearheadowałem" / "przewodziłem inicjatywie" (użyj "prowadziłem" lub "uruchomiłem")
+- "facylitowałem" (użyj "prowadziłem" lub "ustawiłem")
+- "synergie" / "solidny" / "bezszwowy" / "najnowocześniejszy" / "innowacyjny"
+- "w dzisiejszym dynamicznym świecie"
+- "udowodniona zdolność do" / "najlepsze praktyki" (nazwij praktykę)
+- (typowo PL) "komunikatywność", "umiejętność pracy w zespole", "dyspozycyjność" bez dowodu — zastąp konkretem
 
-### Unicode normalization for ATS
-`generate-pdf.mjs` automatically normalizes em-dashes, smart quotes, and zero-width characters to ASCII equivalents for maximum ATS compatibility. But avoid generating them in the first place.
+### Normalizacja Unicode dla ATS
+`generate-pdf.mjs` automatycznie normalizuje myślniki, "inteligentne" cudzysłowy i znaki zerowej szerokości do odpowiedników ASCII dla maksymalnej zgodności z ATS. Mimo to nie generuj ich od początku. Uwaga: zachowaj polskie znaki diakrytyczne (ą, ć, ę, ł, ń, ó, ś, ź, ż) — czcionki w szablonie je obsługują.
 
-### Vary sentence structure
-- Don't start every bullet with the same verb
-- Mix sentence lengths (short. Then longer with context. Short again.)
-- Don't always use "X, Y, and Z" — sometimes two items, sometimes four
+### Różnicuj strukturę zdań
+- Nie zaczynaj każdego punktu tym samym czasownikiem
+- Mieszaj długości zdań (krótkie. Potem dłuższe z kontekstem. Znowu krótkie.)
+- Nie zawsze "X, Y i Z" — czasem dwa elementy, czasem cztery
 
-### Prefer specifics over abstractions
-- "Cut p95 latency from 2.1s to 380ms" beats "improved performance"
-- "Postgres + pgvector for retrieval over 12k docs" beats "designed scalable RAG architecture"
-- Name tools, projects, and customers when allowed
+### Preferuj konkrety nad abstrakcjami
+- "Ścięto opóźnienie p95 z 2,1 s do 380 ms" bije "poprawiono wydajność"
+- "Postgres + pgvector do wyszukiwania w 12 tys. dokumentów" bije "zaprojektowano skalowalną architekturę RAG"
+- Nazywaj narzędzia, projekty i klientów, gdy to dozwolone

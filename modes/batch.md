@@ -1,74 +1,74 @@
-# Mode: batch — Mass Processing of Jobs
+# Tryb: batch — Masowe przetwarzanie ofert
 
-Two usage modes: **conductor --chrome** (navigates portals in real time) or **standalone** (script for URLs already collected).
+Dwa tryby użycia: **conductor --chrome** (nawiguje portale w czasie rzeczywistym) lub **standalone** (skrypt dla już zebranych URL-i).
 
-## Architecture
+## Architektura
 
 ```text
-Conductor (headed browser mode)
+Conductor (tryb przeglądarki z UI)
   │
-  │  Chrome: navigates portals (logged-in sessions)
-  │  Reads DOM directly — the user sees everything in real time
+  │  Chrome: nawiguje portale (zalogowane sesje)
+  │  Czyta DOM bezpośrednio — użytkownik widzi wszystko na żywo
   │
-  ├─ Job 1: reads JD from DOM + URL
-  │    └─► headless worker → report .md + PDF + tracker-line
+  ├─ Oferta 1: czyta ogłoszenie z DOM + URL
+  │    └─► headless worker → raport .md + PDF + linia trackera
   │
-  ├─ Job 2: click next, read JD + URL
-  │    └─► headless worker → report .md + PDF + tracker-line
+  ├─ Oferta 2: kliknij następną, czytaj ogłoszenie + URL
+  │    └─► headless worker → raport .md + PDF + linia trackera
   │
-  └─ End: merge tracker-additions → applications.md + summary
+  └─ Koniec: scal tracker-additions → applications.md + podsumowanie
 ```
 
-Each worker is a headless child process with a clean 200K token context. The conductor only orchestrates. See the **Headless / Batch Mode** table in `AGENTS.md` for the correct command per CLI.
+Każdy worker to headless proces potomny z czystym kontekstem 200K tokenów. Conductor tylko orkiestruje. Patrz tabela **Headless / Batch Mode** w `AGENTS.md` dla poprawnej komendy per CLI.
 
-## Files
+## Pliki
 
 ```text
 batch/
-  batch-input.tsv               # URLs (from conductor or manual)
-  batch-state.tsv               # Progress (auto-generated, gitignored)
-  batch-runner.sh               # Standalone orchestrator script
-  batch-prompt.md               # Prompt template for workers
-  logs/                         # One log per job (gitignored)
-  tracker-additions/            # Tracker lines (gitignored)
+  batch-input.tsv               # URL-e (z conductora lub ręcznie)
+  batch-state.tsv               # Postęp (auto-generowany, gitignored)
+  batch-runner.sh               # Skrypt orkiestratora standalone
+  batch-prompt.md               # Szablon promptu dla workerów
+  logs/                         # Jeden log na ofertę (gitignored)
+  tracker-additions/            # Linie trackera (gitignored)
 ```
 
-## Mode A: Conductor --chrome
+## Tryb A: Conductor --chrome
 
-1. **Read state**: `batch/batch-state.tsv` → identify what has already been processed
-2. **Navigate portal**: Chrome → search URL
-3. **Extract URLs**: Read results DOM → extract URL list → append to `batch-input.tsv`
-4. **For each pending URL**:
-   a. Chrome: click on the job → read JD text from the DOM
-   b. Save JD to `/tmp/batch-jd-{id}.txt`
-   c. Calculate next sequential REPORT_NUM
-   d. Execute via Bash:
+1. **Przeczytaj stan**: `batch/batch-state.tsv` → zidentyfikuj, co już przetworzono
+2. **Nawiguj portal**: Chrome → URL wyszukiwania
+3. **Wyciągnij URL-e**: Przeczytaj DOM wyników → wyciągnij listę URL-i → dopisz do `batch-input.tsv`
+4. **Dla każdego oczekującego URL-a**:
+   a. Chrome: kliknij ofertę → przeczytaj tekst ogłoszenia z DOM
+   b. Zapisz ogłoszenie do `/tmp/batch-jd-{id}.txt`
+   c. Oblicz kolejny numer sekwencyjny REPORT_NUM
+   d. Wykonaj przez Bash:
 
       ```bash
-      # Use your CLI's headless command (see AGENTS.md — Headless / Batch Mode)
-      <headless-cmd> "Process this job. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
+      # Użyj komendy headless swojego CLI (patrz AGENTS.md — Headless / Batch Mode)
+      <headless-cmd> "Przetwórz tę ofertę. URL: {url}. Ogłoszenie: /tmp/batch-jd-{id}.txt. Raport: {num}. ID: {id}"
       ```
 
-   e. Update `batch-state.tsv` (completed/failed + score + report_num)
-   f. Log to `logs/{report_num}-{id}.log`
-   g. Chrome: go back → next job
-5. **Pagination**: If no more jobs → click "Next" → repeat
-6. **End**: Merge `tracker-additions/` → `applications.md` + summary
+   e. Zaktualizuj `batch-state.tsv` (completed/failed + ocena + report_num)
+   f. Zaloguj do `logs/{report_num}-{id}.log`
+   g. Chrome: wróć → następna oferta
+5. **Paginacja**: Jeśli brak ofert → kliknij "Następna" → powtórz
+6. **Koniec**: Scal `tracker-additions/` → `applications.md` + podsumowanie
 
-## Mode B: Standalone script
+## Tryb B: Skrypt standalone
 
 ```bash
-batch/batch-runner.sh [OPTIONS]
+batch/batch-runner.sh [OPCJE]
 ```
 
-Options:
-- `--dry-run` — list pending jobs without executing
-- `--retry-failed` — retry only failed jobs
-- `--start-from N` — start from ID N
-- `--parallel N` — N workers in parallel
-- `--max-retries N` — attempts per job (default: 2)
+Opcje:
+- `--dry-run` — wylistuj oczekujące oferty bez wykonywania
+- `--retry-failed` — ponów tylko nieudane oferty
+- `--start-from N` — zacznij od ID N
+- `--parallel N` — N workerów równolegle
+- `--max-retries N` — próby na ofertę (domyślnie: 2)
 
-## batch-state.tsv Format
+## Format batch-state.tsv
 
 ```text
 id	url	status	started_at	completed_at	report_num	score	error	retries
@@ -77,29 +77,29 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 3	https://...	pending	-	-	-	-	-	0
 ```
 
-## Resumability
+## Wznawialność
 
-- If it crashes → re-run → reads `batch-state.tsv` → skip completed jobs
-- Lock file (`batch-runner.pid`) prevents double execution
-- Each worker is independent: failure in job #47 does not affect the others
+- Jeśli się wywali → uruchom ponownie → czyta `batch-state.tsv` → pomija ukończone oferty
+- Plik blokady (`batch-runner.pid`) zapobiega podwójnemu wykonaniu
+- Każdy worker jest niezależny: porażka oferty #47 nie wpływa na pozostałe
 
-## Workers (headless mode)
+## Workery (tryb headless)
 
-Each worker receives `batch-prompt.md` as a system prompt. It is self-contained. Use your CLI's headless command — see the **Headless / Batch Mode** table in `AGENTS.md`.
+Każdy worker dostaje `batch-prompt.md` jako prompt systemowy. Jest samowystarczalny. Użyj komendy headless swojego CLI — patrz tabela **Headless / Batch Mode** w `AGENTS.md`.
 
-The worker produces:
-1. `.md` report in `reports/`
-2. PDF in `output/`
-3. Tracker line in `batch/tracker-additions/{id}.tsv`
-4. Result JSON via stdout
+Worker produkuje:
+1. Raport `.md` w `reports/`
+2. PDF w `output/`
+3. Linię trackera w `batch/tracker-additions/{id}.tsv`
+4. Wynik JSON przez stdout
 
-## Error handling
+## Obsługa błędów
 
-| Error | Recovery |
-|-------|----------|
-| URL inaccessible | Worker fails → conductor marks `failed`, continues |
-| JD behind login | Conductor attempts to read DOM. If it fails → `failed` |
-| Portal changes layout | Conductor reasons about HTML, adapts |
-| Worker crashes | Conductor marks `failed`, continues. Retry with `--retry-failed` |
-| Conductor crashes | Re-run → reads state → skip completed jobs |
-| PDF fails | .md report is saved. PDF remains pending |
+| Błąd | Naprawa |
+|------|---------|
+| URL niedostępny | Worker pada → conductor oznacza `failed`, kontynuuje |
+| Ogłoszenie za logowaniem | Conductor próbuje czytać DOM. Jeśli pada → `failed` |
+| Portal zmienia layout | Conductor wnioskuje o HTML, adaptuje się |
+| Worker pada | Conductor oznacza `failed`, kontynuuje. Ponów z `--retry-failed` |
+| Conductor pada | Uruchom ponownie → czyta stan → pomija ukończone oferty |
+| PDF pada | Raport .md jest zapisany. PDF pozostaje oczekujący |

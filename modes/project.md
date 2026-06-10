@@ -1,33 +1,33 @@
-# Mode: project — Portfolio Project Evaluation
+# Tryb: project — Ocena projektu do portfolio
 
 **URL:** {project-url}
-**Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
+**Wiarygodność:** {Wysoka pewność | Zachowaj ostrożność | Podejrzane}
 
-Scoring matrix with 6 dimensions (1–5):
+Macierz oceny z 6 wymiarami (1–5):
 
-| Dimension | Weight | 5 = ... | 1 = ... |
-|-----------|------|---------|---------|
-| Signal for target roles | 25% | Directly demonstrates JD skill | Not related |
-| Uniqueness | 20% | Nobody has done this | Very common |
-| Demo ability | 20% | Live demo in 2 min | Code only, not visual |
-| Metrics potential | 15% | Clear metrics (latency, cost, accuracy) | No metrics possible |
-| Time to MVP | 10% | 1 week | 3+ months |
-| STAR story potential | 10% | Rich story with trade-offs | Implementation only |
+| Wymiar | Waga | 5 = ... | 1 = ... |
+|--------|------|---------|---------|
+| Sygnał dla ról docelowych | 25% | Wprost demonstruje umiejętność z ogłoszenia | Niezwiązany |
+| Unikalność | 20% | Nikt tego nie zrobił | Bardzo pospolity |
+| Demonstrowalność | 20% | Demo na żywo w 2 min | Tylko kod, niewizualny |
+| Potencjał metryk | 15% | Jasne metryki (opóźnienie, koszt, dokładność) | Metryki niemożliwe |
+| Czas do MVP | 10% | 1 tydzień | 3+ miesiące |
+| Potencjał na historię STAR | 10% | Bogata historia z kompromisami | Tylko implementacja |
 
-## "Interview Pack" Requirements
+## Wymagania "Interview Pack"
 
-For each approved project:
-1. **One-pager**: product + architecture + metrics + evaluation plan
-2. **Demo**: live URL or 2 min recorded walkthrough
-3. **Postmortem**: what worked, what didn’t, mitigations
+Dla każdego zatwierdzonego projektu:
+1. **One-pager**: produkt + architektura + metryki + plan ewaluacji
+2. **Demo**: URL na żywo lub 2-min nagrany przegląd
+3. **Postmortem**: co zadziałało, co nie, mitygacje
 
-## 80/20 Plan
+## Plan 80/20
 
-- Week 1 → MVP with core metric
-- Week 2 → polish + interview pack
+- Tydzień 1 → MVP z kluczową metryką
+- Tydzień 2 → dopracowanie + interview pack
 
-## Verdicts
+## Werdykty
 
-- **BUILD** → plan with weekly milestones
-- **SKIP** → why and what to do instead
-- **PIVOT TO [alternative]** → more impactful variant
+- **BUDOWAĆ** → plan z cotygodniowymi kamieniami milowymi
+- **POMIŃ** → dlaczego i co robić zamiast
+- **ZWROT NA [alternatywa]** → wariant o większym wpływie

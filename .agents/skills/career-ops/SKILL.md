@@ -1,22 +1,22 @@
 ---
 name: career-ops
-description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
-arguments: mode # Claude Code specific
+description: Centrum dowodzenia poszukiwaniem pracy AI — oceniaj oferty, generuj CV, skanuj portale, śledź aplikacje
+arguments: mode # specyficzne dla Claude Code
 user-invocable: true
 argument-hint: "[scan | deep | pdf | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
 license: MIT
 ---
 
-# career-ops -- Router
+# career-ops — Router
 
-## Mode Routing
+## Routing trybów
 
-Determine the mode from `$mode`:
+Ustal tryb na podstawie `$mode`:
 
-| Input | Mode |
-|-------|------|
-| (empty / no args) | `discovery` -- Show command menu |
-| JD text or URL (no sub-command) | **`auto-pipeline`** |
+| Wejście | Tryb |
+|---------|------|
+| (puste / brak argumentów) | `discovery` — Pokaż menu komend |
+| Tekst ogłoszenia lub URL (bez sub-komendy) | **`auto-pipeline`** |
 | `oferta` | `oferta` |
 | `ofertas` | `ofertas` |
 | `contacto` | `contacto` |
@@ -34,67 +34,67 @@ Determine the mode from `$mode`:
 | `followup` | `followup` |
 | `update` | `update` |
 
-**Auto-pipeline detection:** If `$mode` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
+**Wykrywanie auto-pipeline:** Jeśli `$mode` nie jest znaną sub-komendą ORAZ zawiera tekst ogłoszenia (słowa kluczowe: "obowiązki", "wymagania", "kwalifikacje", "o roli", "szukamy", "responsibilities", "requirements", nazwa firmy + stanowisko) lub URL do ogłoszenia, wykonaj `auto-pipeline`.
 
-If `$mode` is not a sub-command AND doesn't look like a JD, show discovery.
-
----
-
-## Discovery Mode (no arguments)
-
-Show this menu:
-
-```
-career-ops -- Command Center
-
-Available commands:
-  /career-ops {JD}      → AUTO-PIPELINE: evaluate + report + PDF + tracker (paste text or URL)
-  /career-ops pipeline  → Process pending URLs from inbox (data/pipeline.md)
-  /career-ops oferta    → Evaluation only A-F (no auto PDF)
-  /career-ops ofertas   → Compare and rank multiple offers
-  /career-ops contacto  → LinkedIn power move: find contacts + draft message
-  /career-ops deep      → Deep research prompt about company
-  /career-ops interview-prep → Generate company-specific interview prep doc
-  /career-ops pdf       → PDF only, ATS-optimized CV
-  /career-ops training  → Evaluate course/cert against North Star
-  /career-ops project   → Evaluate portfolio project idea
-  /career-ops tracker   → Application status overview
-  /career-ops apply     → Live application assistant (reads form + generates answers)
-  /career-ops scan      → Scan portals and discover new offers
-  /career-ops batch     → Batch processing with parallel workers
-  /career-ops patterns  → Analyze rejection patterns and improve targeting
-  /career-ops followup  → Follow-up cadence tracker: flag overdue, generate drafts
-  /career-ops update    → Update career-ops system files with diff preview + compat check
-
-Inbox: add URLs to data/pipeline.md → /career-ops pipeline
-Or paste a JD directly to run the full pipeline.
-```
+Jeśli `$mode` nie jest sub-komendą ORAZ nie wygląda jak ogłoszenie, pokaż discovery.
 
 ---
 
-## Context Loading by Mode
+## Tryb Discovery (brak argumentów)
 
-After determining the mode, load the necessary files before executing:
+Pokaż to menu:
 
-### Modes that require `_shared.md` + their mode file:
-Read `modes/_shared.md` + `modes/{mode}.md`
+```
+career-ops — Centrum dowodzenia
 
-Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
+Dostępne komendy:
+  /career-ops {ogłoszenie} → AUTO-PIPELINE: ocena + raport + PDF + tracker (wklej tekst lub URL)
+  /career-ops pipeline  → Przetwórz oczekujące URL-e ze skrzynki (data/pipeline.md)
+  /career-ops oferta    → Sama ocena A-F (bez automatycznego PDF)
+  /career-ops ofertas   → Porównaj i uszereguj wiele ofert
+  /career-ops contacto  → Ruch na LinkedIn: znajdź kontakty + napisz wiadomość
+  /career-ops deep      → Pogłębiony research o firmie
+  /career-ops interview-prep → Wygeneruj dokument przygotowania do rozmowy pod firmę
+  /career-ops pdf       → Samo PDF, CV zoptymalizowane pod ATS
+  /career-ops training  → Oceń kurs/certyfikat względem North Star
+  /career-ops project   → Oceń pomysł na projekt do portfolio
+  /career-ops tracker   → Przegląd statusów aplikacji
+  /career-ops apply     → Asystent aplikacji na żywo (czyta formularz + generuje odpowiedzi)
+  /career-ops scan      → Skanuj portale i odkrywaj nowe oferty
+  /career-ops batch     → Przetwarzanie wsadowe z równoległymi workerami
+  /career-ops patterns  → Analizuj wzorce odrzuceń i poprawiaj targetowanie
+  /career-ops followup  → Tracker kadencji follow-up: oznacz zaległe, generuj szkice
+  /career-ops update    → Aktualizuj pliki systemu career-ops z podglądem zmian + kontrolą zgodności
 
-### Standalone modes (only their mode file):
-Read `modes/{mode}.md`
+Skrzynka: dodaj URL-e do data/pipeline.md → /career-ops pipeline
+Lub wklej ogłoszenie bezpośrednio, aby uruchomić pełny pipeline.
+```
 
-Applies to: `tracker`, `deep`, `interview-prep`, `training`, `project`, `patterns`, `followup`
+---
 
-### Modes delegated to subagent:
-For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
+## Ładowanie kontekstu wg trybu
+
+Po ustaleniu trybu załaduj niezbędne pliki przed wykonaniem:
+
+### Tryby wymagające `_shared.md` + ich pliku trybu:
+Przeczytaj `modes/_shared.md` + `modes/{mode}.md`
+
+Dotyczy: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
+
+### Tryby samodzielne (tylko ich plik trybu):
+Przeczytaj `modes/{mode}.md`
+
+Dotyczy: `tracker`, `deep`, `interview-prep`, `training`, `project`, `patterns`, `followup`
+
+### Tryby delegowane do subagenta:
+Dla `scan`, `apply` (z Playwright) i `pipeline` (3+ URL-e): uruchom jako Agent z wstrzykniętą do promptu subagenta treścią `_shared.md` + `modes/{mode}.md`.
 
 ```
 Agent(
   subagent_type="general-purpose",
-  prompt="[content of modes/_shared.md]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
+  prompt="[treść modes/_shared.md]\n\n[treść modes/{mode}.md]\n\n[dane specyficzne dla wywołania]",
   description="career-ops {mode}"
 )
 ```
 
-Execute the instructions from the loaded mode file.
+Wykonaj instrukcje z załadowanego pliku trybu.

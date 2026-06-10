@@ -1,179 +1,179 @@
-# Mode: pdf — ATS-Optimized PDF Generation
+# Tryb: pdf — Generowanie PDF zoptymalizowanego pod ATS
 
-## Full pipeline
+## Pełny pipeline
 
-1. Read `cv.md` as the source of truth
-2. Ask the user for the JD if it is not in context (text or URL)
-3. Extract 15-20 keywords from the JD
-4. Detect JD language → CV language (EN default)
-5. Detect company location → paper format:
-   - US/Canada → `letter`
-   - Rest of the world → `a4`
-6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-8. Select top 3-4 most relevant projects for the job
-9. Reorder experience bullets by JD relevance
-10. Build competency grid from JD requirements (6-8 keyword phrases)
-11. Inject keywords naturally into existing achievements (NEVER invent)
-12. Generate full HTML from template + personalized content
-13. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
-15. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-16. Report: PDF path, number of pages, keyword coverage %
+1. Przeczytaj `cv.md` jako źródło prawdy
+2. Poproś użytkownika o ogłoszenie (JD), jeśli nie ma go w kontekście (tekst lub URL)
+3. Wyciągnij 15-20 słów kluczowych z ogłoszenia
+4. Wykryj język ogłoszenia → język CV (domyślnie PL)
+5. Wykryj lokalizację firmy → format papieru:
+   - USA/Kanada → `letter`
+   - Reszta świata → `a4`
+6. Wykryj archetyp roli → dostosuj ramowanie
+7. Przepisz Podsumowanie zawodowe, wstrzykując słowa kluczowe z JD + pomost narracyjny (np. „Zbudowałem i rozwinąłem produkcyjne systemy. Teraz stosuję myślenie systemowe w [domena z JD].")
+8. Wybierz 3-4 najtrafniejsze projekty pod tę rolę
+9. Przestaw punkty doświadczenia według trafności do JD
+10. Zbuduj siatkę kompetencji z wymagań JD (6-8 fraz kluczowych)
+11. Wstrzyknij słowa kluczowe naturalnie do istniejących osiągnięć (NIGDY nie zmyślaj)
+12. Wygeneruj pełny HTML z szablonu + spersonalizowana treść
+13. Przeczytaj `name` z `config/profile.yml` → znormalizuj do kebab-case małymi literami (np. „Jan Kowalski" → „jan-kowalski") → `{candidate}`
+14. Zapisz HTML do `/tmp/cv-{candidate}-{company}.html`
+15. Wykonaj: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+16. Zaraportuj: ścieżkę PDF, liczbę stron, % pokrycia słów kluczowych
 
-## ATS Rules (clean parsing)
+## Reguły ATS (czyste parsowanie)
 
-- Single-column layout (no sidebars, no parallel columns)
-- Standard headers: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
-- No text in images/SVGs
-- No critical info in PDF headers/footers (ATS ignores them)
-- UTF-8, selectable text (not rasterized)
-- No nested tables
-- Distributed JD keywords: Summary (top 5), first bullet of each role, Skills section
+- Układ jednokolumnowy (bez pasków bocznych, bez kolumn równoległych)
+- Standardowe nagłówki: „Podsumowanie zawodowe", „Doświadczenie zawodowe", „Wykształcenie", „Umiejętności", „Certyfikaty", „Projekty"
+- Bez tekstu w obrazach/SVG
+- Bez kluczowych informacji w nagłówkach/stopkach PDF (ATS je ignoruje)
+- UTF-8, tekst zaznaczalny (nie rasteryzowany)
+- Bez zagnieżdżonych tabel
+- Rozłożone słowa kluczowe z JD: Podsumowanie (top 5), pierwszy punkt każdej roli, sekcja Umiejętności
 
-## PDF Design
+## Projekt PDF
 
-- **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- **Fonts self-hosted**: `fonts/`
-- **Header**: name in Space Grotesk 24px bold + gradient line `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + contact row
-- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, color cyan primary
-- **Body**: DM Sans 11px, line-height 1.5
-- **Company names**: accent purple color `hsl(270,70%,45%)`
-- **Margins**: 0.6in
-- **Background**: pure white
+- **Fonty**: Space Grotesk (nagłówki, 600-700) + DM Sans (tekst, 400-500)
+- **Fonty self-hosted**: `fonts/`
+- **Nagłówek**: imię i nazwisko w Space Grotesk 24px bold + linia gradientu `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + wiersz kontaktowy
+- **Nagłówki sekcji**: Space Grotesk 13px, wielkie litery, letter-spacing 0.05em, kolor cyjan podstawowy
+- **Tekst**: DM Sans 11px, line-height 1.5
+- **Nazwy firm**: akcentowy fioletowy `hsl(270,70%,45%)`
+- **Marginesy**: 0.6in
+- **Tło**: czysta biel
 
-## Section order (optimized "6-second recruiter scan")
+## Kolejność sekcji (zoptymalizowana pod „6-sekundowy skan rekrutera")
 
-1. Header (large name, gradient, contact, portfolio link)
-2. Professional Summary (3-4 lines, keyword-dense)
-3. Core Competencies (6-8 keyword phrases in flex-grid)
-4. Work Experience (reverse chronological)
-5. Projects (top 3-4 most relevant)
-6. Education & Certifications
-7. Skills (languages + technical)
+1. Nagłówek (duże imię i nazwisko, gradient, kontakt, link do portfolio)
+2. Podsumowanie zawodowe (3-4 linie, gęste w słowa kluczowe)
+3. Kluczowe kompetencje (6-8 fraz kluczowych w flex-grid)
+4. Doświadczenie zawodowe (chronologia odwrotna)
+5. Projekty (3-4 najtrafniejsze)
+6. Wykształcenie i certyfikaty
+7. Umiejętności (języki + techniczne)
 
-## Keyword injection strategy (ethical, truth-based)
+## Strategia wstrzykiwania słów kluczowych (etyczna, oparta na prawdzie)
 
-Examples of legitimate reformulation:
-- JD says "RAG pipelines" and CV says "LLM workflows with retrieval" → change to "RAG pipeline design and LLM orchestration workflows"
-- JD says "MLOps" and CV says "observability, evals, error handling" → change to "MLOps and observability: evals, error handling, cost monitoring"
-- JD says "stakeholder management" and CV says "collaborated with team" → change to "stakeholder management across engineering, operations, and business"
+Przykłady legalnego przeformułowania:
+- JD mówi „pipeline'y RAG", a CV mówi „workflow z LLM z retrievalem" → zmień na „projektowanie pipeline'ów RAG i orkiestracja workflow z LLM"
+- JD mówi „MLOps", a CV mówi „observability, ewaluacje, obsługa błędów" → zmień na „MLOps i observability: ewaluacje, obsługa błędów, monitoring kosztów"
+- JD mówi „zarządzanie interesariuszami", a CV mówi „współpracowałem z zespołem" → zmień na „zarządzanie interesariuszami w obszarach inżynierii, operacji i biznesu"
 
-**NEVER add skills that the candidate does not have. Only reword real experience using the exact JD vocabulary.**
+**NIGDY nie dodawaj umiejętności, których kandydat nie ma. Przeformułowuj tylko realne doświadczenie, używając dokładnego słownictwa z JD.**
 
-## Template HTML
+## Szablon HTML
 
-Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
+Użyj szablonu w `cv-template.html`. Zastąp placeholdery `{{...}}` spersonalizowaną treścią:
 
-| Placeholder | Content |
+| Placeholder | Treść |
 |-------------|-----------|
-| `{{LANG}}` | `en` or `es` |
-| `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
-| `{{NAME}}` | (from profile.yml) |
-| `{{PHONE}}` | (from profile.yml — include with its separator only when `profile.yml` has a non-empty `phone` value; omit both `<span>` and `<span class="separator">` otherwise) |
-| `{{EMAIL}}` | (from profile.yml) |
-| `{{LINKEDIN_URL}}` | [from profile.yml] |
-| `{{LINKEDIN_DISPLAY}}` | [from profile.yml] |
-| `{{PORTFOLIO_URL}}` | [from profile.yml] (or /es depending on language) |
-| `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (or /es depending on language) |
-| `{{LOCATION}}` | [from profile.yml] |
-| `{{SECTION_SUMMARY}}` | Professional Summary |
-| `{{SUMMARY_TEXT}}` | Personalized summary with keywords |
-| `{{SECTION_COMPETENCIES}}` | Core Competencies |
-| `{{COMPETENCIES}}` | `<span class="competency-tag">keyword</span>` × 6-8 |
-| `{{SECTION_EXPERIENCE}}` | Work Experience |
-| `{{EXPERIENCE}}` | HTML for each job with reordered bullets |
-| `{{SECTION_PROJECTS}}` | Projects |
-| `{{PROJECTS}}` | HTML for top 3-4 projects |
-| `{{SECTION_EDUCATION}}` | Education |
-| `{{EDUCATION}}` | Education HTML |
-| `{{SECTION_CERTIFICATIONS}}` | Certifications |
-| `{{CERTIFICATIONS}}` | Certifications HTML |
-| `{{SECTION_SKILLS}}` | Skills |
-| `{{SKILLS}}` | Skills HTML |
+| `{{LANG}}` | `pl`, `en` lub `es` |
+| `{{PAGE_WIDTH}}` | `8.5in` (letter) lub `210mm` (A4) |
+| `{{NAME}}` | (z profile.yml) |
+| `{{PHONE}}` | (z profile.yml — dołącz wraz z separatorem tylko, gdy `profile.yml` ma niepuste pole `phone`; w przeciwnym razie pomiń oba `<span>` i `<span class="separator">`) |
+| `{{EMAIL}}` | (z profile.yml) |
+| `{{LINKEDIN_URL}}` | [z profile.yml] |
+| `{{LINKEDIN_DISPLAY}}` | [z profile.yml] |
+| `{{PORTFOLIO_URL}}` | [z profile.yml] (lub /pl zależnie od języka) |
+| `{{PORTFOLIO_DISPLAY}}` | [z profile.yml] (lub /pl zależnie od języka) |
+| `{{LOCATION}}` | [z profile.yml] |
+| `{{SECTION_SUMMARY}}` | Podsumowanie zawodowe |
+| `{{SUMMARY_TEXT}}` | Spersonalizowane podsumowanie ze słowami kluczowymi |
+| `{{SECTION_COMPETENCIES}}` | Kluczowe kompetencje |
+| `{{COMPETENCIES}}` | `<span class="competency-tag">słowo-kluczowe</span>` × 6-8 |
+| `{{SECTION_EXPERIENCE}}` | Doświadczenie zawodowe |
+| `{{EXPERIENCE}}` | HTML każdej pracy z przestawionymi punktami |
+| `{{SECTION_PROJECTS}}` | Projekty |
+| `{{PROJECTS}}` | HTML 3-4 najlepszych projektów |
+| `{{SECTION_EDUCATION}}` | Wykształcenie |
+| `{{EDUCATION}}` | HTML wykształcenia |
+| `{{SECTION_CERTIFICATIONS}}` | Certyfikaty |
+| `{{CERTIFICATIONS}}` | HTML certyfikatów |
+| `{{SECTION_SKILLS}}` | Umiejętności |
+| `{{SKILLS}}` | HTML umiejętności |
 
-## Canva CV Generation (optional)
+## Generowanie CV w Canva (opcjonalne)
 
-If `config/profile.yml` has `cv.canva_resume_design_id` set, offer the user a choice before generating:
-- **"HTML/PDF (fast, ATS-optimized)"** — existing flow above
-- **"Canva CV (visual, design-preserving)"** — new flow below
+Jeśli `config/profile.yml` ma ustawione `cv.canva_resume_design_id`, zaproponuj użytkownikowi wybór przed generowaniem:
+- **„HTML/PDF (szybkie, zoptymalizowane pod ATS)"** — istniejący przepływ powyżej
+- **„CV w Canva (wizualne, zachowuje projekt graficzny)"** — nowy przepływ poniżej
 
-If the user has no `cv.canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
+Jeśli użytkownik nie ma `cv.canva_resume_design_id`, pomiń ten monit i użyj przepływu HTML/PDF.
 
-### Canva workflow
+### Przepływ Canva
 
-#### Step 1 — Duplicate the base design
+#### Krok 1 — Zduplikuj projekt bazowy
 
-a. `export-design` the base design (using `cv.canva_resume_design_id`) as PDF → get download URL
-b. `import-design-from-url` using that download URL → creates a new editable design (the duplicate)
-c. Note the new `design_id` for the duplicate
+a. `export-design` projektu bazowego (z użyciem `cv.canva_resume_design_id`) jako PDF → uzyskaj URL pobierania
+b. `import-design-from-url` z tym URL-em pobierania → tworzy nowy edytowalny projekt (duplikat)
+c. Zanotuj nowe `design_id` duplikatu
 
-#### Step 2 — Read the design structure
+#### Krok 2 — Przeczytaj strukturę projektu
 
-a. `get-design-content` on the new design → returns all text elements (richtexts) with their content
-b. Map text elements to CV sections by content matching:
-   - Look for the candidate's name → header section
-   - Look for "Summary" or "Professional Summary" → summary section
-   - Look for company names from cv.md → experience sections
-   - Look for degree/school names → education section
-   - Look for skill keywords → skills section
-c. If mapping fails, show the user what was found and ask for guidance
+a. `get-design-content` na nowym projekcie → zwraca wszystkie elementy tekstowe (richtexts) z ich treścią
+b. Zmapuj elementy tekstowe na sekcje CV przez dopasowanie treści:
+   - Szukaj imienia i nazwiska kandydata → sekcja nagłówka
+   - Szukaj „Podsumowanie" lub „Podsumowanie zawodowe" → sekcja podsumowania
+   - Szukaj nazw firm z cv.md → sekcje doświadczenia
+   - Szukaj nazw stopni/uczelni → sekcja wykształcenia
+   - Szukaj słów kluczowych umiejętności → sekcja umiejętności
+c. Jeśli mapowanie zawiedzie, pokaż użytkownikowi, co znaleziono, i poproś o wskazówki
 
-#### Step 3 — Generate tailored content
+#### Krok 3 — Wygeneruj dopasowaną treść
 
-Same content generation as the HTML flow (Steps 1-11 above):
-- Rewrite Professional Summary with JD keywords + exit narrative
-- Reorder experience bullets by JD relevance
-- Select top competencies from JD requirements
-- Inject keywords naturally (NEVER invent)
+To samo generowanie treści co w przepływie HTML (Kroki 1-11 powyżej):
+- Przepisz Podsumowanie zawodowe ze słowami kluczowymi z JD + narracja
+- Przestaw punkty doświadczenia według trafności do JD
+- Wybierz najlepsze kompetencje z wymagań JD
+- Wstrzyknij słowa kluczowe naturalnie (NIGDY nie zmyślaj)
 
-**IMPORTANT — Character budget rule:** Each replacement text MUST be approximately the same length as the original text it replaces (within ±15% character count). If tailored content is longer, condense it. The Canva design has fixed-size text boxes — longer text causes overlapping with adjacent elements. Count the characters in each original element from Step 2 and enforce this budget when generating replacements.
+**WAŻNE — reguła budżetu znaków:** Każdy tekst zastępujący MUSI mieć w przybliżeniu taką samą długość jak oryginał, który zastępuje (w granicach ±15% liczby znaków). Jeśli dopasowana treść jest dłuższa, skondensuj ją. Projekt w Canva ma pola tekstowe o stałym rozmiarze — dłuższy tekst powoduje nakładanie się na sąsiednie elementy. Policz znaki w każdym oryginalnym elemencie z Kroku 2 i egzekwuj ten budżet przy generowaniu zamienników.
 
-#### Step 4 — Apply edits
+#### Krok 4 — Zastosuj edycje
 
-a. `start-editing-transaction` on the duplicate design
-b. `perform-editing-operations` with `find_and_replace_text` for each section:
-   - Replace summary text with tailored summary
-   - Replace each experience bullet with reordered/rewritten bullets
-   - Replace competency/skills text with JD-matched terms
-   - Replace project descriptions with top relevant projects
-c. **Reflow layout after text replacement:**
-   After applying all text replacements, the text boxes auto-resize but neighboring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
-   1. Read the updated element positions and dimensions from the `perform-editing-operations` response
-   2. For each work experience section (top to bottom), calculate where the bullets text box ends: `end_y = top + height`
-   3. The next section's header should start at `end_y + consistent_gap` (use the original gap from the template, typically ~30px)
-   4. Use `position_element` to move the next section's date, company name, role title, and bullets elements to maintain even spacing
-   5. Repeat for all work experience sections
-d. **Verify layout before commit:**
-   - `get-design-thumbnail` with the transaction_id and page_index=1
-   - Visually inspect the thumbnail for: text overlapping, uneven spacing, text cut off, text too small
-   - If issues remain, adjust with `position_element`, `resize_element`, or `format_text`
-   - Repeat until layout is clean
-e. Show the user the final preview and ask for approval
-f. `commit-editing-transaction` to save (ONLY after user approval)
+a. `start-editing-transaction` na zduplikowanym projekcie
+b. `perform-editing-operations` z `find_and_replace_text` dla każdej sekcji:
+   - Zastąp tekst podsumowania dopasowanym podsumowaniem
+   - Zastąp każdy punkt doświadczenia przestawionymi/przepisanymi punktami
+   - Zastąp tekst kompetencji/umiejętności terminami dopasowanymi do JD
+   - Zastąp opisy projektów najtrafniejszymi projektami
+c. **Przeporządkuj układ po zastąpieniu tekstu:**
+   Po zastosowaniu wszystkich zamian tekstu pola tekstowe auto-skalują się, ale sąsiednie elementy zostają w miejscu. Powoduje to nierówne odstępy między sekcjami doświadczenia. Napraw to:
+   1. Przeczytaj zaktualizowane pozycje i wymiary elementów z odpowiedzi `perform-editing-operations`
+   2. Dla każdej sekcji doświadczenia (z góry na dół) oblicz, gdzie kończy się pole tekstowe punktów: `end_y = top + height`
+   3. Nagłówek następnej sekcji powinien zaczynać się na `end_y + consistent_gap` (użyj oryginalnego odstępu z szablonu, zwykle ~30px)
+   4. Użyj `position_element`, by przesunąć datę, nazwę firmy, tytuł roli i punkty następnej sekcji, zachowując równe odstępy
+   5. Powtórz dla wszystkich sekcji doświadczenia
+d. **Zweryfikuj układ przed zatwierdzeniem:**
+   - `get-design-thumbnail` z transaction_id i page_index=1
+   - Wizualnie sprawdź miniaturę pod kątem: nakładania tekstu, nierównych odstępów, ucięcia tekstu, zbyt małego tekstu
+   - Jeśli problemy pozostają, dostosuj przez `position_element`, `resize_element` lub `format_text`
+   - Powtarzaj, aż układ będzie czysty
+e. Pokaż użytkownikowi finalny podgląd i poproś o akceptację
+f. `commit-editing-transaction`, by zapisać (TYLKO po akceptacji użytkownika)
 
-#### Step 5 — Export and download PDF
+#### Krok 5 — Eksportuj i pobierz PDF
 
-a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
-b. **IMMEDIATELY** download the PDF using Bash:
+a. `export-design` duplikatu jako PDF (format: a4 lub letter na podstawie lokalizacji z JD)
+b. **NATYCHMIAST** pobierz PDF przez Bash:
    ```bash
    curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
    ```
-   The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
-c. Verify the download:
+   URL eksportu to wstępnie podpisany link S3, który wygasa po ~2 godzinach. Pobierz go od razu.
+c. Zweryfikuj pobranie:
    ```bash
    file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
    ```
-   Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
-d. Report: PDF path, file size, Canva design URL (for manual tweaking)
+   Musi pokazać „PDF document". Jeśli pokazuje XML lub HTML, URL wygasł — eksportuj ponownie i spróbuj jeszcze raz.
+d. Zaraportuj: ścieżkę PDF, rozmiar pliku, URL projektu Canva (do ręcznych poprawek)
 
-#### Error handling
+#### Obsługa błędów
 
-- If `import-design-from-url` fails → fall back to HTML/PDF pipeline with message
-- If text elements can't be mapped → warn user, show what was found, ask for manual mapping
-- If `find_and_replace_text` finds no matches → try broader substring matching
-- Always provide the Canva design URL so the user can edit manually if auto-edit fails
+- Jeśli `import-design-from-url` zawiedzie → wróć do pipeline'u HTML/PDF z komunikatem
+- Jeśli nie da się zmapować elementów tekstowych → ostrzeż użytkownika, pokaż, co znaleziono, poproś o ręczne mapowanie
+- Jeśli `find_and_replace_text` nie znajdzie dopasowań → spróbuj szerszego dopasowania po fragmencie
+- Zawsze podawaj URL projektu Canva, by użytkownik mógł edytować ręcznie, gdy auto-edycja zawiedzie
 
-## Post-generation
+## Po wygenerowaniu
 
-Update tracker if the job is already registered: change PDF from ❌ to ✅.
+Zaktualizuj tracker, jeśli oferta jest już zarejestrowana: zmień PDF z ❌ na ✅.

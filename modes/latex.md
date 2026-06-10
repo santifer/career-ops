@@ -1,104 +1,104 @@
-# Mode: latex — LaTeX/Overleaf CV Export
+# Tryb: latex — Eksport CV do LaTeX/Overleaf
 
-Export a tailored, ATS-optimized CV as a `.tex` file and compile it to PDF via `tectonic` or `pdflatex`.
+Wyeksportuj dopasowane, zoptymalizowane pod ATS CV jako plik `.tex` i skompiluj je do PDF przez `tectonic` lub `pdflatex`.
 
 ## Pipeline
 
-1. Read `cv.md` as source of truth
-2. Read `config/profile.yml` for candidate identity and contact info
-3. Ask the user for the JD if not already in context (text or URL)
-4. Extract 15-20 keywords from the JD
-5. Detect JD language → CV language (EN default)
-6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary injecting JD keywords (same rules as `pdf` mode — NEVER invent skills)
-8. Select top 3-4 most relevant projects for the offer
-9. Reorder experience bullets by JD relevance
-10. Inject keywords naturally into existing achievements
-11. Generate the `.tex` file using `templates/cv-template.tex`
-12. Write to `output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex`
-13. Run: `node generate-latex.mjs output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf`
-14. Report: .tex path, .pdf path, file sizes, section count, keyword coverage %
+1. Przeczytaj `cv.md` jako źródło prawdy
+2. Przeczytaj `config/profile.yml` dla tożsamości kandydata i danych kontaktowych
+3. Poproś użytkownika o ogłoszenie (JD), jeśli nie ma go w kontekście (tekst lub URL)
+4. Wyciągnij 15-20 słów kluczowych z ogłoszenia
+5. Wykryj język ogłoszenia → język CV (domyślnie PL)
+6. Wykryj archetyp roli → dostosuj ramowanie
+7. Przepisz Podsumowanie zawodowe, wstrzykując słowa kluczowe z JD (te same reguły co w trybie `pdf` — NIGDY nie zmyślaj umiejętności)
+8. Wybierz 3-4 najtrafniejsze projekty pod ofertę
+9. Przestaw punkty doświadczenia według trafności do JD
+10. Wstrzyknij słowa kluczowe naturalnie do istniejących osiągnięć
+11. Wygeneruj plik `.tex` z użyciem `templates/cv-template.tex`
+12. Zapisz do `output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex`
+13. Uruchom: `node generate-latex.mjs output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf`
+14. Zaraportuj: ścieżkę .tex, ścieżkę .pdf, rozmiary plików, liczbę sekcji, % pokrycia słów kluczowych
 
-**Requires:** `tectonic` (preferred — `brew install tectonic`, auto-downloads packages) or `pdflatex` (MiKTeX / TeX Live) on PATH.
+**Wymaga:** `tectonic` (preferowany — `brew install tectonic`, auto-pobiera pakiety) lub `pdflatex` (MiKTeX / TeX Live) na PATH.
 
-## Template Placeholders
+## Placeholdery szablonu
 
-The template at `templates/cv-template.tex` uses `{{PLACEHOLDER}}` syntax:
+Szablon w `templates/cv-template.tex` używa składni `{{PLACEHOLDER}}`:
 
-| Placeholder | Source |
+| Placeholder | Źródło |
 |-------------|--------|
 | `{{NAME}}` | `profile.yml → candidate.full_name` |
-| `{{CONTACT_LINE}}` | Phone / City, State / Visa status — built from profile.yml |
-| `{{EMAIL_URL}}` | Raw email for `mailto:` URL — must not be LaTeX-escaped (from profile.yml) |
-| `{{EMAIL_DISPLAY}}` | Escaped email for display text — LaTeX-special chars like `_` must be escaped, e.g. `first\_name@example.com` |
-| `{{LINKEDIN_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://linkedin.com/in/username`. If `profile.yml` stores a bare host+path (no scheme), prepend `https://` before substitution. |
-| `{{LINKEDIN_DISPLAY}}` | Display text only (no scheme): `linkedin.com/in/username` |
-| `{{GITHUB_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://github.com/username`. If `profile.yml` stores a bare host+path, prepend `https://`. |
-| `{{GITHUB_DISPLAY}}` | Display text only (no scheme): `github.com/username` |
-| `{{EDUCATION}}` | LaTeX `\resumeSubheading` blocks from cv.md Education section |
-| `{{EXPERIENCE}}` | LaTeX `\resumeSubheading` + `\resumeItem` blocks — reordered bullets |
-| `{{PROJECTS}}` | LaTeX `\resumeProjectHeading` + `\resumeItem` blocks — top 3-4 selected |
-| `{{SKILLS}}` | LaTeX `\textbf{Category}{: items}` lines from cv.md Technical Skills |
+| `{{CONTACT_LINE}}` | Telefon / Miasto, region / status wizowy — budowane z profile.yml |
+| `{{EMAIL_URL}}` | Surowy email dla URL `mailto:` — nie może być escapowany w LaTeX (z profile.yml) |
+| `{{EMAIL_DISPLAY}}` | Escapowany email do wyświetlenia — znaki specjalne LaTeX jak `_` muszą być escapowane, np. `imie\_nazwisko@example.com` |
+| `{{LINKEDIN_URL}}` | Pełny URL ze schematem dla `\href{}`: np. `https://linkedin.com/in/username`. Jeśli `profile.yml` przechowuje sam host+ścieżkę (bez schematu), dodaj `https://` przed podstawieniem. |
+| `{{LINKEDIN_DISPLAY}}` | Tylko tekst do wyświetlenia (bez schematu): `linkedin.com/in/username` |
+| `{{GITHUB_URL}}` | Pełny URL ze schematem dla `\href{}`: np. `https://github.com/username`. Jeśli `profile.yml` przechowuje sam host+ścieżkę, dodaj `https://`. |
+| `{{GITHUB_DISPLAY}}` | Tylko tekst do wyświetlenia (bez schematu): `github.com/username` |
+| `{{EDUCATION}}` | Bloki LaTeX `\resumeSubheading` z sekcji Wykształcenie w cv.md |
+| `{{EXPERIENCE}}` | Bloki LaTeX `\resumeSubheading` + `\resumeItem` — przestawione punkty |
+| `{{PROJECTS}}` | Bloki LaTeX `\resumeProjectHeading` + `\resumeItem` — 3-4 wybrane |
+| `{{SKILLS}}` | Linie LaTeX `\textbf{Kategoria}{: elementy}` z sekcji Umiejętności techniczne w cv.md |
 
-## LaTeX Content Generation Rules
+## Reguły generowania treści LaTeX
 
-### Education
+### Wykształcenie
 
-Each entry becomes:
+Każdy wpis staje się:
 
 ```latex
     \resumeSubheading
-    {Institution}{City, State}
-    {Degree}{Date Range}
+    {Instytucja}{Miasto, region}
+    {Stopień}{Zakres dat}
 ```
 
-If coursework exists, add:
+Jeśli istnieją przedmioty, dodaj:
 
 ```latex
         \resumeItemListStart
-            \resumeItem{\textbf{Coursework:} Course1, Course2, ...}
+            \resumeItem{\textbf{Przedmioty:} Przedmiot1, Przedmiot2, ...}
         \resumeItemListEnd
 ```
 
-### Experience
+### Doświadczenie
 
-Each role becomes:
+Każda rola staje się:
 
 ```latex
     \resumeSubheading
-      {Company}{Date Range}
-      {Role Title}{Location}
+      {Firma}{Zakres dat}
+      {Tytuł roli}{Lokalizacja}
       \resumeItemListStart
-        \resumeItem{Bullet text with JD keywords injected}
+        \resumeItem{Tekst punktu ze wstrzykniętymi słowami kluczowymi z JD}
         ...
       \resumeItemListEnd
 ```
 
-### Projects
+### Projekty
 
-Each project becomes:
+Każdy projekt staje się:
 
 ```latex
-\resumeProjectHeading{Project Name \emph{$|$ Affiliation/Context}}{Date}
+\resumeProjectHeading{Nazwa projektu \emph{$|$ Afiliacja/Kontekst}}{Data}
 \resumeItemListStart
-    \resumeItem{Bullet text}
+    \resumeItem{Tekst punktu}
     ...
 \resumeItemListEnd
 ```
 
-### Skills
+### Umiejętności
 
 ```latex
-    \textbf{Languages}{: C, C++, Java, ...} \\
-    \textbf{Frameworks \& ML}{: PyTorch, LangChain, ...} \\
-    \textbf{Tools \& Cloud}{: Docker, Kubernetes, ...}
+    \textbf{Języki}{: C, C++, Java, ...} \\
+    \textbf{Frameworki \& ML}{: PyTorch, LangChain, ...} \\
+    \textbf{Narzędzia \& Cloud}{: Docker, Kubernetes, ...}
 ```
 
-## LaTeX Escaping (CRITICAL)
+## Escapowanie LaTeX (KRYTYCZNE)
 
-All text content MUST be escaped for LaTeX before insertion:
+Cała treść tekstowa MUSI być escapowana pod LaTeX przed wstawieniem:
 
-| Character | Escape |
+| Znak | Escape |
 |-----------|--------|
 | `&` | `\&` |
 | `%` | `\%` |
@@ -113,35 +113,35 @@ All text content MUST be escaped for LaTeX before insertion:
 | `±` | `$\pm$` |
 | `→` | `$\rightarrow$` |
 
-**Exception:** Do NOT escape LaTeX commands themselves (`\resumeItem`, `\textbf`, etc.) — only user-supplied text content.
+**Wyjątek:** NIE escapuj samych komend LaTeX (`\resumeItem`, `\textbf` itp.) — tylko treść tekstową dostarczoną przez użytkownika.
 
-**Exception for URLs:** Do NOT escape text inside `\href{URL}{...}` first arguments. The URL must remain raw (or RFC 3986 percent-encoded). Only escape the *display text* (second argument). For example:
+**Wyjątek dla URL-i:** NIE escapuj tekstu w pierwszym argumencie `\href{URL}{...}`. URL musi pozostać surowy (lub zakodowany procentowo wg RFC 3986). Escapuj tylko *tekst wyświetlany* (drugi argument). Na przykład:
 ```latex
 \href{https://example.com/path_with_underscores}{Example\_Display}
 ```
 
-## ATS Rules (same as pdf mode)
+## Reguły ATS (te same co w trybie pdf)
 
-- Single-column layout (enforced by template)
-- Standard section headers: Education, Work Experience, Personal Projects, Technical Skills
-- UTF-8, machine-readable via `\pdfgentounicode=1`
-- Keywords distributed: first bullet of each role, skills section
-- No images, no graphics, no color in body text
+- Układ jednokolumnowy (wymuszony przez szablon)
+- Standardowe nagłówki sekcji: Wykształcenie, Doświadczenie zawodowe, Projekty własne, Umiejętności techniczne
+- UTF-8, czytelny maszynowo przez `\pdfgentounicode=1`
+- Rozłożone słowa kluczowe: pierwszy punkt każdej roli, sekcja umiejętności
+- Bez obrazów, bez grafiki, bez koloru w tekście
 
-## Keyword Injection Strategy
+## Strategia wstrzykiwania słów kluczowych
 
-Same ethical rules as `modes/pdf.md`:
-- NEVER add skills the candidate doesn't have
-- Only reformulate existing experience using JD vocabulary
-- Examples:
-  - JD says "RAG pipelines" → reword "LLM workflows with retrieval" to "RAG pipeline design"
-  - JD says "MLOps" → reword "observability, evals" to "MLOps and observability"
+Te same reguły etyczne co w `modes/pdf.md`:
+- NIGDY nie dodawaj umiejętności, których kandydat nie ma
+- Przeformułowuj tylko istniejące doświadczenie, używając słownictwa z JD
+- Przykłady:
+  - JD mówi „pipeline'y RAG" → przeformułuj „workflow z LLM z retrievalem" na „projektowanie pipeline'ów RAG"
+  - JD mówi „MLOps" → przeformułuj „observability, ewaluacje" na „MLOps i observability"
 
-## Overleaf Compatibility
+## Kompatybilność z Overleaf
 
-The generated `.tex` file uses only standard CTAN packages (no custom or bundled dependencies):
+Wygenerowany plik `.tex` używa wyłącznie standardowych pakietów CTAN (bez własnych ani dołączonych zależności):
 
 - `latexsym`, `fullpage`, `titlesec`, `marvosym`, `color`, `verbatim`, `enumitem`
 - `hyperref`, `fancyhdr`, `babel`, `tabularx`, `fontawesome5`, `multicol`, `glyphtounicode`
 
-Upload the `.tex` file directly to Overleaf — compiles with no extra configuration.
+Wgraj plik `.tex` bezpośrednio do Overleaf — kompiluje się bez dodatkowej konfiguracji.

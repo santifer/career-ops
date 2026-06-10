@@ -1,102 +1,107 @@
-# User Profile Context -- career-ops
+# Kontekst profilu użytkownika — career-ops
 
 <!-- ============================================================
-     THIS FILE IS YOURS. It will NEVER be auto-updated.
-     
-     Customize everything here: your archetypes, narrative,
-     proof points, negotiation scripts, location policy.
-     
-     The system reads _shared.md (updatable) first, then this
-     file (your overrides). Your customizations always win.
+     TEN PLIK JEST TWÓJ. NIGDY nie zostanie automatycznie zaktualizowany.
+
+     Personalizuj tu wszystko: archetypy, narrację, proof pointy,
+     skrypty negocjacyjne, politykę lokalizacji.
+
+     System czyta najpierw _shared.md (aktualizowalny), potem ten
+     plik (Twoje nadpisania). Twoje personalizacje zawsze wygrywają.
      ============================================================ -->
 
-## Your Target Roles
+## Twoje role docelowe
 
-<!-- Replace these with YOUR target roles. Examples:
+<!-- Zastąp je SWOIMI rolami docelowymi. Przykłady:
      - Senior Backend Engineer / Staff Platform Engineer
      - AI Product Manager / Technical PM
      - Data Engineer / ML Engineer
      - DevOps / SRE / Platform
-     Whatever you're optimizing for. -->
+     - Specjalista ds. marketingu / Project Manager / Analityk
+     Cokolwiek jest Twoim celem. -->
 
-| Archetype | Thematic axes | What they buy |
-|-----------|---------------|---------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Someone who puts AI in production with metrics |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Someone who builds reliable agent systems |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Someone who translates business to AI product |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Someone who designs end-to-end AI architectures |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Someone who delivers AI solutions to clients fast |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Someone who leads AI transformation in an org |
+| Archetyp | Osie tematyczne | Co "kupują" |
+|----------|-----------------|-------------|
+| **AI Platform / LLMOps Engineer** | Ewaluacja, observability, niezawodność, pipelines | Ktoś, kto wdraża AI na produkcję z metrykami |
+| **Agentic Workflows / Automatyzacja** | HITL, tooling, orkiestracja, multi-agent | Ktoś, kto buduje niezawodne systemy agentowe |
+| **Technical AI Product Manager** | GenAI/agenty, PRD, discovery, dostarczanie | Ktoś, kto tłumaczy biznes na produkt AI |
+| **AI Solutions Architect** | Hiperautomatyzacja, enterprise, integracje | Ktoś, kto projektuje architektury AI end-to-end |
+| **AI Forward Deployed Engineer** | Kontakt z klientem, szybkie dostarczanie, prototypowanie | Ktoś, kto szybko dowozi rozwiązania AI klientom |
+| **AI Transformation Lead** | Zarządzanie zmianą, adopcja, enablement organizacji | Ktoś, kto prowadzi transformację AI w organizacji |
 
-## Your Adaptive Framing
+## Twoje adaptacyjne ramowanie
 
-<!-- Map YOUR projects to each archetype. Example:
-     | Platform / LLMOps | My monitoring dashboard project | article-digest.md |
-     | Agentic | My chatbot with HITL escalation | cv.md section 3 | -->
+<!-- Zmapuj SWOJE projekty na każdy archetyp. Przykład:
+     | Platform / LLMOps | Mój projekt dashboardu monitoringu | article-digest.md |
+     | Agentic | Mój chatbot z eskalacją HITL | cv.md sekcja 3 | -->
 
-| If the role is... | Emphasize about you... | Proof point sources |
-|-------------------|------------------------|---------------------|
-| Platform / LLMOps | Production systems builder, observability, evals | article-digest.md + cv.md |
-| Agentic / Automation | Multi-agent orchestration, HITL, reliability | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, metrics | cv.md + article-digest.md |
-| Solutions Architect | System design, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype to prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
+| Jeśli rola to... | Podkreśl u siebie... | Źródła proof pointów |
+|------------------|----------------------|----------------------|
+| Platform / LLMOps | Budowniczy systemów produkcyjnych, observability, evals | article-digest.md + cv.md |
+| Agentic / Automatyzacja | Orkiestracja multi-agent, HITL, niezawodność | article-digest.md + cv.md |
+| Technical AI PM | Product discovery, PRD, metryki | cv.md + article-digest.md |
+| Solutions Architect | Projektowanie systemów, integracje, gotowość enterprise | article-digest.md + cv.md |
+| Forward Deployed Engineer | Szybkie dostarczanie, kontakt z klientem, prototyp na produkcję | cv.md + article-digest.md |
+| AI Transformation Lead | Zarządzanie zmianą, enablement zespołu, adopcja | cv.md + article-digest.md |
 
-## Your Exit Narrative
+## Twoja narracja "exit"
 
-<!-- Replace with YOUR story. This frames everything. -->
+<!-- Zastąp SWOJĄ historią. To ramuje wszystko. -->
 
-Use the candidate's exit story from `config/profile.yml` to frame ALL content:
-- **In PDF Summaries:** Bridge from past to future
-- **In STAR stories:** Reference proof points from article-digest.md
-- **In Draft Answers:** The transition narrative appears in the first response
+Użyj historii kandydata z `config/profile.yml`, aby uramować CAŁĄ treść:
+- **W podsumowaniach PDF:** Most z przeszłości do przyszłości
+- **W historiach STAR:** Odwołuj się do proof pointów z article-digest.md
+- **W szkicach odpowiedzi:** Narracja przejścia pojawia się w pierwszej odpowiedzi
 
-## Your Cross-cutting Advantage
+## Twoja przewaga przekrojowa
 
-<!-- What's your "signature move"? What do you do that others can't? -->
+<!-- Jaki jest Twój "znak firmowy"? Co robisz, czego inni nie potrafią? -->
 
-Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role.
+Ramuj profil jako **"Praktyk z realnymi dowodami"**, który dostosowuje ramowanie do roli.
 
-## Your Portfolio / Demo
+## Twoje portfolio / demo
 
-<!-- If you have a live demo, dashboard, or public project:
-     url: https://yoursite.dev/demo
+<!-- Jeśli masz działające demo, dashboard lub publiczny projekt:
+     url: https://twojastrona.dev/demo
      password: demo-2026
-     when_to_share: "LLMOps, AI Platform roles" -->
+     when_to_share: "role LLMOps, AI Platform" -->
 
-If you have a live demo/dashboard (check profile.yml), offer access in applications for relevant roles.
+Jeśli masz działające demo/dashboard (sprawdź profile.yml), oferuj dostęp w aplikacjach na odpowiednie role.
 
-## Your Comp Targets
+## Twoje cele wynagrodzeniowe
 
-<!-- Research comp ranges for YOUR target roles -->
+<!-- Zbadaj widełki dla SWOICH ról docelowych na rynku PL -->
 
-**General guidance:**
-- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind)
-- Frame by role title, not by skills
-- Contractor rates are typically 30-50% higher than employee base
+**Ogólne wskazówki (rynek PL):**
+- Użyj WebSearch do aktualnych danych rynkowych: zarobki.pracuj.pl, No Fluff Jobs (widełki w ofertach), justjoin.it, Bulldogjob "Raport Płacowy", theprotocol.it, raporty Hays/Antal/Devire
+- Ramuj wg nazwy stanowiska, nie wg umiejętności
+- **B2B vs UoP:** stawki B2B są zwykle o 15-30% wyższe od brutto na UoP (kompensują brak urlopu, ZUS, składek). Zawsze rozróżniaj formę zatrudnienia przy porównaniach.
+- Stawki kontraktorskie/B2B podawaj jako netto + VAT (zł/h lub zł/mies.); UoP jako brutto/mies.
 
-## Your Negotiation Scripts
+## Twoje skrypty negocjacyjne
 
-<!-- Adapt to YOUR situation, currency, location -->
+<!-- Dostosuj do SWOJEJ sytuacji, waluty (PLN), lokalizacji -->
 
-**Salary expectations:**
-> "Based on market data for this role, I'm targeting [RANGE from profile.yml]. I'm flexible on structure -- what matters is the total package and the opportunity."
+**Oczekiwania płacowe:**
+> "Na podstawie danych rynkowych dla tej roli celuję w [WIDEŁKI z profile.yml]. Jestem elastyczny co do struktury (UoP/B2B) — liczy się całość pakietu i sama szansa."
 
-**Geographic discount pushback:**
-> "The roles I'm competitive for are output-based, not location-based. My track record doesn't change based on postal code."
+**Odpowiedź na "zniżkę geograficzną":**
+> "Role, w których jestem konkurencyjny, są rozliczane z efektów, nie z lokalizacji. Moje wyniki nie zmieniają się wraz z kodem pocztowym."
 
-**When offered below target:**
-> "I'm comparing with opportunities in the [higher range]. I'm drawn to [company] because of [reason]. Can we explore [target]?"
+**Gdy oferta poniżej celu:**
+> "Porównuję z ofertami w [wyższych widełkach]. Ciągnie mnie do [firma] z powodu [powód]. Czy możemy poruszyć [cel]?"
 
-## Your Location Policy
+**Forma zatrudnienia (specyfika PL):**
+> "Jestem otwarty na UoP i B2B. Przy B2B moja stawka netto to [kwota], co odpowiada [kwota] brutto na UoP — gotów dopasować strukturę do Waszych preferencji."
 
-<!-- Adapt to YOUR situation -->
+## Twoja polityka lokalizacji
 
-**In forms:**
-- Follow your actual availability from profile.yml
-- Specify timezone overlap in free-text fields
+<!-- Dostosuj do SWOJEJ sytuacji -->
 
-**In evaluations (scoring):**
-- Remote dimension for hybrid outside your country: score **3.0** (not 1.0)
-- Only score 1.0 if JD says "must be on-site 4-5 days/week, no exceptions"
+**W formularzach:**
+- Kieruj się rzeczywistą dostępnością z profile.yml
+- Określaj nakładanie się stref czasowych w polach tekstowych (dla ról międzynarodowych)
+
+**W ocenach (scoring):**
+- Wymiar "remote" dla hybrydy poza Twoim miastem: oceń **3.0** (nie 1.0)
+- Oceń 1.0 tylko jeśli ogłoszenie mówi "praca w biurze 4-5 dni/tydz., bez wyjątków"

@@ -1,154 +1,154 @@
-# Mode: patterns -- Rejection Pattern Detector
+# Tryb: patterns — Detektor wzorców odrzuceń
 
-## Purpose
+## Cel
 
-Analyze all tracked applications to find patterns in outcomes and surface actionable insights. Identifies what's working (archetypes, remote policies, score ranges) and what's wasting time (geo-restricted roles, stack mismatches, low-score applications).
+Analizuj wszystkie śledzone aplikacje, by znaleźć wzorce w wynikach i wydobyć praktyczne wnioski. Identyfikuje, co działa (archetypy, polityki remote, zakresy ocen) i co marnuje czas (role z ograniczeniem geo, niedopasowanie stacku, aplikacje o niskiej ocenie).
 
-## Inputs
+## Wejścia
 
-- `data/applications.md` — Application tracker
-- `reports/` — Individual evaluation reports
-- `config/profile.yml` — User profile (for recommendation context)
-- `modes/_profile.md` — User archetypes and framing
-- `portals.yml` — Portal config (for filter update recommendations)
+- `data/applications.md` — Tracker aplikacji
+- `reports/` — Pojedyncze raporty oceny
+- `config/profile.yml` — Profil użytkownika (kontekst rekomendacji)
+- `modes/_profile.md` — Archetypy i ramowanie użytkownika
+- `portals.yml` — Konfiguracja portali (rekomendacje aktualizacji filtrów)
 
-## Minimum Threshold
+## Próg minimalny
 
-Before running analysis, check: does `data/applications.md` have at least 5 entries with status beyond "Evaluated" (i.e., Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP)?
+Przed uruchomieniem analizy sprawdź: czy `data/applications.md` ma co najmniej 5 wpisów ze statusem poza "Evaluated" (tj. Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP)?
 
-If not, tell the user:
-> "Not enough data yet -- {N}/5 applications have progressed beyond evaluation. Keep applying and come back when you have more outcomes to analyze."
+Jeśli nie, powiedz użytkownikowi:
+> "Za mało danych — {N}/5 aplikacji przeszło poza ocenę. Aplikuj dalej i wróć, gdy będziesz mieć więcej wyników do analizy."
 
-Exit gracefully.
+Zakończ łagodnie.
 
-## Step 1 — Run Analysis Script
+## Krok 1 — Uruchom skrypt analizy
 
-Execute:
+Wykonaj:
 
 ```bash
 node analyze-patterns.mjs
 ```
 
-Parse the JSON output. It contains:
+Sparsuj wyjście JSON. Zawiera:
 
-| Key | Contents |
-|-----|----------|
-| `metadata` | Total entries, date range, analysis date, counts by outcome |
-| `funnel` | Count per status stage (evaluated, applied, interview, offer, etc.) |
-| `scoreComparison` | Avg/min/max score per outcome group (positive, negative, self_filtered, pending) |
-| `archetypeBreakdown` | Per-archetype: total, positive, negative, self_filtered, conversion rate |
-| `blockerAnalysis` | Most frequent hard blockers: geo-restriction, stack-mismatch, seniority, onsite |
-| `remotePolicy` | Per-policy bucket: total, positive, negative, conversion rate |
-| `companySizeBreakdown` | Per-size bucket: startup, scaleup, enterprise |
-| `scoreThreshold` | Recommended minimum score + reasoning |
-| `techStackGaps` | Most frequent tech gaps in negative outcomes |
-| `recommendations` | Top 5 actionable items with reasoning and impact level |
+| Klucz | Zawartość |
+|-------|-----------|
+| `metadata` | Łącznie wpisów, zakres dat, data analizy, liczniki wg wyniku |
+| `funnel` | Liczba per etap statusu (evaluated, applied, interview, offer itp.) |
+| `scoreComparison` | Śr./min/maks. ocena per grupa wyniku (positive, negative, self_filtered, pending) |
+| `archetypeBreakdown` | Per archetyp: total, positive, negative, self_filtered, współczynnik konwersji |
+| `blockerAnalysis` | Najczęstsze twarde blokery: geo-restriction, stack-mismatch, seniority, onsite |
+| `remotePolicy` | Per koszyk polityki: total, positive, negative, współczynnik konwersji |
+| `companySizeBreakdown` | Per koszyk wielkości: startup, scaleup, enterprise |
+| `scoreThreshold` | Rekomendowana minimalna ocena + uzasadnienie |
+| `techStackGaps` | Najczęstsze luki technologiczne w wynikach negatywnych |
+| `recommendations` | Top 5 działań z uzasadnieniem i poziomem wpływu |
 
-If the script returns `error`, display the error message and exit.
+Jeśli skrypt zwróci `error`, wyświetl komunikat błędu i zakończ.
 
-## Step 2 — Generate Report
+## Krok 2 — Wygeneruj raport
 
-Write the report to `reports/pattern-analysis-{YYYY-MM-DD}.md`.
+Zapisz raport do `reports/pattern-analysis-{YYYY-MM-DD}.md`.
 
-### Report Structure
+### Struktura raportu
 
 ```markdown
-# Pattern Analysis -- {YYYY-MM-DD}
+# Analiza wzorców — {YYYY-MM-DD}
 
-**Applications analyzed:** {total}
-**Date range:** {from} to {to}
-**Outcomes:** {positive} positive, {negative} negative, {self_filtered} self-filtered, {pending} pending
+**Przeanalizowane aplikacje:** {total}
+**Zakres dat:** {od} do {do}
+**Wyniki:** {positive} pozytywnych, {negative} negatywnych, {self_filtered} odfiltrowanych, {pending} oczekujących
 
 ---
 
-## Conversion Funnel
+## Lejek konwersji
 
-Show each status with count and percentage of total. Use a simple table:
+Pokaż każdy status z liczbą i procentem całości. Użyj prostej tabeli:
 
-| Stage | Count | % |
-|-------|-------|---|
+| Etap | Liczba | % |
+|------|--------|---|
 | Evaluated | X | X% |
 | Applied | X | X% |
 | ... | | |
 
-## Score vs Outcome
+## Ocena vs wynik
 
-| Outcome | Avg Score | Min | Max | Count |
-|---------|-----------|-----|-----|-------|
-| Positive | X.X/5 | X.X | X.X | X |
-| Negative | ... | | | |
-| Self-filtered | ... | | | |
-| Pending | ... | | | |
+| Wynik | Śr. ocena | Min | Maks | Liczba |
+|-------|-----------|-----|------|--------|
+| Pozytywny | X.X/5 | X.X | X.X | X |
+| Negatywny | ... | | | |
+| Odfiltrowany | ... | | | |
+| Oczekujący | ... | | | |
 
-## Archetype Performance
+## Skuteczność archetypów
 
-Table with each archetype, total applications, positive outcomes, conversion rate.
-Highlight the best-performing archetype and the worst.
+Tabela z każdym archetypem, łączną liczbą aplikacji, wynikami pozytywnymi, współczynnikiem konwersji.
+Wyróżnij najlepiej i najgorzej działający archetyp.
 
-## Top Blockers
+## Główne blokery
 
-Frequency table of recurring hard blockers (geo-restriction, stack-mismatch, etc.).
-Note the percentage of all applications affected by each.
+Tabela częstotliwości powracających twardych blokerów (geo-restriction, stack-mismatch itp.).
+Odnotuj procent wszystkich aplikacji dotkniętych każdym.
 
-## Remote Policy Patterns
+## Wzorce polityki remote
 
-Table showing conversion rate by remote policy bucket (global, regional, geo-restricted, hybrid/onsite).
+Tabela pokazująca współczynnik konwersji wg koszyka polityki remote (global, regional, geo-restricted, hybrid/onsite).
 
-## Tech Stack Gaps
+## Luki w stacku technologicznym
 
-List of most common missing skills in negative/self-filtered outcomes with frequency.
+Lista najczęstszych brakujących umiejętności w wynikach negatywnych/odfiltrowanych z częstotliwością.
 
-## Recommended Score Threshold
+## Rekomendowany próg oceny
 
-State the data-driven minimum score and reasoning.
+Podaj oparty na danych minimalny próg oceny i uzasadnienie.
 
-## Recommendations
+## Rekomendacje
 
-Number the top recommendations (from the script output). For each:
-1. **[IMPACT]** Action to take
-   Reasoning behind the recommendation.
+Ponumeruj główne rekomendacje (z wyjścia skryptu). Dla każdej:
+1. **[WPŁYW]** Działanie do podjęcia
+   Uzasadnienie rekomendacji.
 ```
 
-## Step 3 — Present Summary
+## Krok 3 — Prezentuj podsumowanie
 
-Show the user a condensed version with:
-1. One-line stat summary (X applications, Y% applied, Z% positive outcome)
-2. Top 3 findings (most impactful patterns)
-3. Link to full report
+Pokaż użytkownikowi skondensowaną wersję z:
+1. Jednowierszowym podsumowaniem statystyk (X aplikacji, Y% zaaplikowanych, Z% pozytywnych)
+2. Top 3 ustaleniami (najbardziej wpływowe wzorce)
+3. Linkiem do pełnego raportu
 
-Example:
-> **Pattern Analysis Complete** (24 applications, Apr 7-8)
+Przykład:
+> **Analiza wzorców gotowa** (24 aplikacje, 7-8 kwietnia)
 >
-> Key findings:
-> - Geo-restricted roles are 0% conversion (7 of 24) -- stop evaluating US/Canada-only postings
-> - Regional/global remote roles convert at 57-67% -- these are your sweet spot
-> - No positive outcomes below 4.2/5 -- consider this your score floor
+> Kluczowe ustalenia:
+> - Role z ograniczeniem geo mają 0% konwersji (7 z 24) — przestań oceniać ogłoszenia tylko US/Kanada
+> - Role regional/global remote konwertują na poziomie 57-67% — to Twój słodki punkt
+> - Brak pozytywnych wyników poniżej 4.2/5 — rozważ to jako Twój próg
 >
-> Full report: `reports/pattern-analysis-2026-04-08.md`
+> Pełny raport: `reports/pattern-analysis-2026-04-08.md`
 
-## Step 4 — Offer to Apply Recommendations
+## Krok 4 — Zaproponuj wdrożenie rekomendacji
 
-Ask the user if they want to act on any recommendations:
+Zapytaj użytkownika, czy chce działać na rekomendacjach:
 
-> "Want me to apply any of these recommendations? I can:
-> - Update `portals.yml` to filter out geo-restricted roles
-> - Set a score threshold in `_profile.md` for PDF generation
-> - Adjust archetype targeting based on what's converting
+> "Chcesz, bym wdrożył którąś z tych rekomendacji? Mogę:
+> - Zaktualizować `portals.yml`, by odfiltrować role z ograniczeniem geo
+> - Ustawić próg oceny w `_profile.md` dla generowania PDF
+> - Dostosować targetowanie archetypów na podstawie tego, co konwertuje
 >
-> Just say which ones, or 'all' to apply everything."
+> Powiedz które, lub 'wszystkie', by wdrożyć całość."
 
-If the user agrees:
-- For portal filter changes: edit `portals.yml`
-- For profile/archetype changes: edit `modes/_profile.md` (NEVER `_shared.md`)
-- For score threshold: add to `config/profile.yml` under a `patterns` key
+Jeśli użytkownik się zgodzi:
+- Dla zmian filtrów portali: edytuj `portals.yml`
+- Dla zmian profilu/archetypów: edytuj `modes/_profile.md` (NIGDY `_shared.md`)
+- Dla progu oceny: dodaj do `config/profile.yml` pod kluczem `patterns`
 
-## Outcome Classification
+## Klasyfikacja wyników
 
-For reference, outcomes are classified as:
+Dla referencji wyniki klasyfikuje się jako:
 
-| Status | Outcome |
-|--------|---------|
-| Interview, Offer, Responded, Applied | **Positive** (invested effort or got traction) |
-| Rejected, Discarded | **Negative** (company said no or offer closed) |
-| SKIP, NO APLICAR | **Self-filtered** (user decided not to apply) |
-| Evaluated | **Pending** (no action taken yet) |
+| Status | Wynik |
+|--------|-------|
+| Interview, Offer, Responded, Applied | **Pozytywny** (zainwestowano wysiłek lub jest trakcja) |
+| Rejected, Discarded | **Negatywny** (firma odmówiła lub oferta zamknięta) |
+| SKIP, NO APLICAR | **Odfiltrowany** (użytkownik zdecydował nie aplikować) |
+| Evaluated | **Oczekujący** (brak działania) |

@@ -1,27 +1,27 @@
-# Career-Ops Profile Configuration
-# Copy this file to config/profile.yml and fill in your details.
-# This is the single source of truth for your personal data across all modes.
+# Konfiguracja profilu Career-Ops (PL)
+# Skopiuj ten plik do config/profile.yml i uzupełnij swoimi danymi.
+# To jest jedyne źródło prawdy o Twoich danych osobowych we wszystkich trybach.
 
 candidate:
-  full_name: "Jane Smith"
-  email: "jane@example.com"
-  phone: "+1-555-0123"
-  location: "San Francisco, CA"
-  linkedin: "linkedin.com/in/janesmith"
-  portfolio_url: "https://janesmith.dev"
-  github: "github.com/janesmith"
-  twitter: "https://x.com/janesmith"
+  full_name: "Jan Kowalski"
+  email: "jan.kowalski@example.com"
+  phone: "+48 600 100 200"
+  location: "Warszawa, Polska"
+  linkedin: "linkedin.com/in/jankowalski"
+  portfolio_url: "https://jankowalski.dev"
+  github: "github.com/jankowalski"
+  twitter: "https://x.com/jankowalski"
 
 target_roles:
-  # Your North Star roles — what you're optimizing for
+  # Twoje role North Star — to, pod co optymalizujesz
   primary:
     - "Senior AI Engineer"
     - "Staff ML Engineer"
-  # Archetypes help the evaluation system score fit
+  # Archetypy pomagają systemowi oceniać dopasowanie
   archetypes:
     - name: "AI/ML Engineer"
       level: "Senior/Staff"
-      fit: "primary"        # primary = dream role, secondary = good fit, adjacent = stretch
+      fit: "primary"        # primary = rola marzeń, secondary = dobre dopasowanie, adjacent = ambitne
     - name: "AI Product Manager"
       level: "Senior"
       fit: "secondary"
@@ -30,64 +30,65 @@ target_roles:
       fit: "adjacent"
 
 narrative:
-  # Your professional headline (1 line)
-  headline: "ML Engineer turned AI product builder"
-  # Your exit story — what makes you unique
-  exit_story: "Built and sold my SaaS after 5 years. Now focused on applied AI at scale."
-  # Your top 3-5 superpowers
+  # Twój nagłówek zawodowy (1 linia)
+  headline: "ML Engineer, który został budowniczym produktów AI"
+  # Twoja historia "exit" — co Cię wyróżnia
+  exit_story: "Zbudowałem i sprzedałem własny SaaS po 5 latach. Teraz skupiam się na stosowanym AI w skali."
+  # Twoje 3-5 supermocy
   superpowers:
-    - "End-to-end ML pipelines"
-    - "Fast prototyping (idea to prod in 2 weeks)"
-    - "Cross-functional communication"
-  # Proof points — projects, articles, case studies with measurable impact
+    - "Pipeline'y ML end-to-end"
+    - "Szybkie prototypowanie (od pomysłu do produkcji w 2 tygodnie)"
+    - "Komunikacja międzydziałowa"
+  # Proof pointy — projekty, artykuły, case studies z mierzalnym wpływem
   proof_points:
-    - name: "Project Alpha"
-      url: "https://janesmith.dev/project-alpha"
-      hero_metric: "Reduced inference latency 40%"
-    - name: "Open Source Tool"
-      url: "https://github.com/janesmith/tool"
-      hero_metric: "2K+ GitHub stars"
-  # Optional: dashboard/demo URL with credentials
+    - name: "Projekt Alpha"
+      url: "https://jankowalski.dev/projekt-alpha"
+      hero_metric: "Zmniejszono opóźnienie inferencji o 40%"
+    - name: "Narzędzie open source"
+      url: "https://github.com/jankowalski/narzedzie"
+      hero_metric: "2 tys.+ gwiazdek na GitHub"
+  # Opcjonalnie: URL dashboardu/demo z danymi dostępowymi
   # dashboard:
-  #   url: "https://janesmith.dev/demo"
+  #   url: "https://jankowalski.dev/demo"
   #   password: "demo-2026"
 
 compensation:
-  target_range: "$150K-200K"     # Your target total comp
-  currency: "USD"
-  minimum: "$120K"               # Walk-away number
-  location_flexibility: "Remote preferred, 1 week/month on-site possible"
+  # Specyfika PL: rozróżniaj formę zatrudnienia. Podaj widełki dla preferowanej formy.
+  employment_type: "B2B"          # "UoP" | "B2B" | "UZ" — preferowana forma
+  target_range: "25 000-32 000 zł" # Docelowe wynagrodzenie (netto+VAT dla B2B, brutto/mies. dla UoP)
+  currency: "PLN"
+  minimum: "20 000 zł"            # Kwota progowa (poniżej rezygnujesz)
+  location_flexibility: "Preferowany remote, możliwy 1 tydzień/mies. w biurze"
 
 location:
-  country: "United States"
-  city: "San Francisco"
-  timezone: "PST"
-  visa_status: "No sponsorship needed"
-  # For remote roles outside your country:
-  # onsite_availability: "1 week/month in any city"
+  country: "Polska"
+  city: "Warszawa"
+  timezone: "CET"
+  visa_status: "Nie wymaga sponsoringu wizy (obywatel UE)"
+  # Dla ról zdalnych poza Polską:
+  # onsite_availability: "1 tydzień/mies. w dowolnym mieście"
 
 cv:
-  output_format: "html" # "html" (default) or "latex"
-  # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
-  # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
-  # The ID starts with "D" and is 11 characters long.
+  output_format: "html" # "html" (domyślnie) lub "latex"
+  # (Opcjonalnie) ID projektu CV w Canva do wizualnego generowania przez /career-ops pdf.
+  # Znajdziesz je w URL projektu Canva: https://www.canva.com/design/DAxxxxxxx/...
+  # ID zaczyna się od "D" i ma 11 znaków.
   # canva_resume_design_id: "DAxxxxxxxxx"
 
-# Auto-PDF threshold during evaluation (used by `/career-ops pipeline` and
+# Próg auto-PDF podczas oceny (używany przez `/career-ops pipeline` i
 # `bash batch/batch-runner.sh`).
 #
-# An offer's tailored CV PDF is auto-generated only when its score is
-# >= this threshold. Generating a PDF costs ~30-60s per offer (Playwright
-# launch + HTML render), and most offers in a scan score 2.x/3.x and never
-# become an actual application — so the gate avoids wasted renders.
+# Dopasowane CV w PDF jest generowane automatycznie tylko gdy ocena oferty
+# jest >= tego progu. Generowanie PDF kosztuje ~30-60 s na ofertę (start
+# Playwright + render HTML), a większość ofert ze skanu dostaje 2.x/3.x i nigdy
+# nie staje się realną aplikacją — więc próg unika marnowania renderów.
 #
-# Default (key absent OR commented out): 3.0 — the original gate of
-# `/career-ops pipeline`. Both evaluation paths apply the same default, so
-# a batch run and an interactive run treat the same offer identically.
+# Domyślnie (klucz nieobecny LUB zakomentowany): 3.0 — pierwotny próg
+# `/career-ops pipeline`. Obie ścieżki oceny stosują ten sam domyślny próg,
+# więc batch i tryb interaktywny traktują tę samą ofertę identycznie.
 #
-# Raise it (e.g. 4.0) to auto-generate PDFs only for stronger matches and
-# leave the rest report-only — those can still be produced on demand via
-# `/career-ops pdf {company-slug}`. Fractional thresholds work (e.g. 3.5 —
-# half-point scores like 3.5/5 occur in evaluations). Set it to 0 to
-# generate a PDF for every offer.
+# Podnieś go (np. 4.0), aby generować PDF tylko dla mocniejszych dopasowań,
+# a resztę zostawić jako sam raport — te można wygenerować na żądanie przez
+# `/career-ops pdf {company-slug}`. Działają progi ułamkowe (np. 3.5 — oceny
+# z połówką, jak 3.5/5, występują). Ustaw 0, aby generować PDF dla każdej oferty.
 # auto_pdf_score_threshold: 4.0

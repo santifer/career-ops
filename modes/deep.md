@@ -1,47 +1,47 @@
-# Mode: deep — Deep Research Prompt
+# Tryb: deep — Prompt do pogłębionego researchu
 
-Generate a structured prompt for Perplexity/Claude/ChatGPT with 6 axes:
+Wygeneruj ustrukturyzowany prompt dla Perplexity/Claude/ChatGPT z 6 osiami:
 
 ```text
-## Deep Research: [Company] — [Role]
+## Pogłębiony research: [Firma] — [Rola]
 
-Context: I am evaluating a candidacy for [role] at [company]. I need actionable information for the interview.
+Kontekst: Oceniam kandydaturę na [rola] w [firma]. Potrzebuję praktycznych informacji do rozmowy.
 
-### 1. AI Strategy
-- What products/features use AI/ML?
-- What is their AI stack? (models, infrastructure, tools)
-- Do they have an engineering blog? What do they publish?
-- What papers or talks have they presented on AI?
+### 1. Strategia AI
+- Które produkty/funkcje używają AI/ML?
+- Jaki mają stack AI? (modele, infrastruktura, narzędzia)
+- Czy mają blog inżynierski? Co publikują?
+- Jakie prace lub prelekcje o AI prezentowali?
 
-### 2. Recent moves (last 6 months)
-- Relevant hires in AI/ML/product?
-- Acquisitions or partnerships?
-- Product launches or pivots?
-- Funding rounds or leadership changes?
+### 2. Niedawne ruchy (ostatnie 6 miesięcy)
+- Istotne zatrudnienia w AI/ML/produkcie?
+- Przejęcia lub partnerstwa?
+- Premiery produktów lub zwroty (pivoty)?
+- Rundy finansowania lub zmiany w kierownictwie?
 
-### 3. Engineering culture
-- How do they ship? (deployment cadence, CI/CD)
-- Monorepo or multirepo?
-- What languages/frameworks do they use?
-- Remote-first or office-first?
-- Glassdoor/Blind reviews about engineering culture?
+### 3. Kultura inżynierska
+- Jak wdrażają? (kadencja deploymentu, CI/CD)
+- Monorepo czy multirepo?
+- Jakich języków/frameworków używają?
+- Remote-first czy office-first?
+- Opinie z Glassdoor/GoWork/Blind o kulturze inżynierskiej?
 
-### 4. Likely challenges
-- What scaling problems do they have?
-- Reliability, cost, latency challenges?
-- Are they migrating anything? (infrastructure, models, platforms)
-- What pain points do people mention in reviews?
+### 4. Prawdopodobne wyzwania
+- Jakie mają problemy ze skalowaniem?
+- Wyzwania niezawodności, kosztów, opóźnień?
+- Czy coś migrują? (infrastruktura, modele, platformy)
+- Jakie bóle wspominają ludzie w opiniach?
 
-### 5. Competitors and differentiation
-- Who are their main competitors?
-- What is their moat/differentiator?
-- How are they positioned vs competitors?
+### 5. Konkurenci i wyróżnik
+- Kto to ich główni konkurenci?
+- Jaka jest ich przewaga (moat)/wyróżnik?
+- Jak są pozycjonowani vs konkurencja?
 
-### 6. Candidate angle
-Given my profile (read from cv.md and profile.yml for specific experience):
-- What unique value do I bring to this team?
-- Which of my projects are most relevant?
-- What story should I tell in the interview?
+### 6. Kąt kandydata
+Biorąc pod uwagę mój profil (przeczytaj cv.md i profile.yml dla konkretnego doświadczenia):
+- Jaką unikalną wartość wnoszę do tego zespołu?
+- Które z moich projektów są najbardziej istotne?
+- Jaką historię opowiedzieć na rozmowie?
 ```
 
-Personalize each section with the specific context of the job being evaluated.
+Spersonalizuj każdą sekcję konkretnym kontekstem ocenianej oferty.

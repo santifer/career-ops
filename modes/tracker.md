@@ -1,23 +1,27 @@
-# Modo: tracker — Tracker de Aplicaciones
+# Tryb: tracker — Tracker aplikacji
 
-Lee y muestra `data/applications.md`.
+Przeczytaj i pokaż `data/applications.md`.
 
-**Formato del tracker:**
+**Format trackera:**
 ```markdown
-| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
+| # | Data | Firma | Rola | Ocena | Status | PDF | Raport |
 ```
 
-Estados posibles: `Evaluada` → `Aplicado` → `Respondido` → `Contacto` → `Entrevista` → `Oferta` / `Rechazada` / `Descartada` / `NO APLICAR`
+Możliwe statusy (wartości kanoniczne EN czytane przez dashboard; w nawiasach polski alias):
+`Evaluated` (Oceniona) → `Applied` (Wysłana) → `Responded` (Odpowiedź) → `Interview` (Rozmowa) → `Offer` (Oferta) / `Rejected` (Odrzucona) / `Discarded` (Odrzucona przez kandydata) / `SKIP` (Nie aplikować)
 
-- `Aplicado` = el candidato envió su candidatura
-- `Respondido` = Un recruiter/empresa contactó y el candidato respondió (inbound)
-- `Contacto` = El candidato contactó proactivamente a alguien de la empresa (outbound, ej: LinkedIn power move)
+- `Applied` = kandydat wysłał aplikację
+- `Responded` = rekruter/firma odezwał się, a kandydat odpowiedział (inbound)
+- `Interview` = aktywny proces rozmów
+- Ruch wychodzący (kandydat sam pisze do kogoś z firmy, np. ruch na LinkedIn) odnotowuj w notce, status pozostaje `Applied`/`Evaluated`
 
-Si el usuario pide actualizar un estado, editar la fila correspondiente.
+W kolumnie Status używaj wartości kanonicznej EN (dla zgodności z dashboardem i normalizatorem). Polskie aliasy są akceptowane przy wpisywaniu — `normalize-statuses.mjs` zmapuje je na kanoniczne.
 
-Mostrar también estadísticas:
-- Total de aplicaciones
-- Por estado
-- Score promedio
-- % con PDF generado
-- % con report generado
+Jeśli użytkownik prosi o aktualizację statusu, edytuj odpowiedni wiersz.
+
+Pokaż też statystyki:
+- Łączna liczba aplikacji
+- Wg statusu
+- Średnia ocena
+- % z wygenerowanym PDF
+- % z wygenerowanym raportem
