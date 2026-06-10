@@ -123,7 +123,7 @@ Write a JSON file with this structure. `build-cv-latex.mjs` handles template mer
 ## ATS Rules (same as pdf mode)
 
 - Single-column layout (enforced by template)
-- Standard Jake's Resume section headers: Education, Experience, Projects, Technical Skills
+- Standard section headers: Education, Work Experience, Personal Projects, Technical Skills
 - UTF-8, machine-readable via `\pdfgentounicode=1`
 - Keywords distributed: first bullet of each role, skills section
 - No images, no graphics, no color in body text

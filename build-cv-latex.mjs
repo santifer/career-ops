@@ -13,8 +13,7 @@ function escapeLatex(text, mode = 'text') {
   if (typeof text !== 'string') return '';
   if (mode === 'url') return text;
   return text
-    .replace(/\\/g, '\\textbackslash{}')
-    .replace(/([{}])/g, '\\$1')
+    .replace(/([{}])/g, '\\$1')           // braces first so inserted \\textbackslash etc are not mutated
     .replace(/\^/g, '\\textasciicircum{}')
     .replace(/~/g, '\\textasciitilde{}')
     .replace(/_/g, '\\_')
@@ -22,16 +21,31 @@ function escapeLatex(text, mode = 'text') {
     .replace(/%/g, '\\%')
     .replace(/\$/g, '\\$')
     .replace(/#/g, '\\#')
+    .replace(/\\/g, '\\textbackslash{}')  // backslash last — safe after braces are escaped
     .replace(/±/g, '$\\pm$')
     .replace(/→/g, '$\\rightarrow$');
 }
 
+function sanitizeUrl(url) {
+  if (typeof url !== 'string') return '';
+  url = url.trim();
+  if (!url) return '';
+  const allowedSchemes = ['mailto:', 'http:', 'https:'];
+  const hasScheme = allowedSchemes.some(s => url.toLowerCase().startsWith(s));
+  if (!hasScheme) {
+    url = 'https://' + url;
+  }
+  url = url.replace(/[{}%$#\\~^]/g, '');
+  return url;
+}
+
 function buildEducation(entries) {
-  if (!entries || entries.length === 0) return '';
+  if (!Array.isArray(entries) || entries.length === 0) return '';
   const blocks = [];
   for (const e of entries) {
+    if (!e) continue;
     let block = `    \\resumeSubheading\n      {${escapeLatex(e.institution)}}{${escapeLatex(e.location)}}\n      {${escapeLatex(e.degree)}}{${escapeLatex(e.dates)}}`;
-    if (e.coursework && e.coursework.length > 0) {
+    if (Array.isArray(e.coursework) && e.coursework.length > 0) {
       const courses = e.coursework.map(c => escapeLatex(c)).join(', ');
       block += `\n        \\resumeItemListStart\n            \\resumeItem{\\textbf{Coursework:} ${courses}}\n        \\resumeItemListEnd`;
     }
@@ -41,31 +55,35 @@ function buildEducation(entries) {
 }
 
 function buildExperience(entries) {
-  if (!entries || entries.length === 0) return '';
+  if (!Array.isArray(entries) || entries.length === 0) return '';
   const blocks = [];
   for (const e of entries) {
-    const bullets = (e.bullets || []).map(b => `            \\resumeItem{${escapeLatex(b)}}`).join('\n');
+    if (!e) continue;
+    const bullets = Array.isArray(e.bullets) ? e.bullets.map(b => `            \\resumeItem{${escapeLatex(b)}}`).join('\n') : '';
     blocks.push(`    \\resumeSubheading\n      {${escapeLatex(e.company)}}{${escapeLatex(e.dates)}}\n      {${escapeLatex(e.role)}}{${escapeLatex(e.location)}}\n      \\resumeItemListStart\n${bullets}\n      \\resumeItemListEnd`);
   }
   return blocks.join('\n\n');
 }
 
 function buildProjects(entries) {
-  if (!entries || entries.length === 0) return '';
+  if (!Array.isArray(entries) || entries.length === 0) return '';
   const blocks = [];
   for (const e of entries) {
+    if (!e) continue;
     const context = e.context ? ` \\emph{$|$ ${escapeLatex(e.context)}}` : '';
-    const bullets = (e.bullets || []).map(b => `            \\resumeItem{${escapeLatex(b)}}`).join('\n');
+    const bullets = Array.isArray(e.bullets) ? e.bullets.map(b => `            \\resumeItem{${escapeLatex(b)}}`).join('\n') : '';
     blocks.push(`    \\resumeProjectHeading\n      {\\textbf{${escapeLatex(e.name)}}${context}}{${escapeLatex(e.dates)}}\n      \\resumeItemListStart\n${bullets}\n      \\resumeItemListEnd`);
   }
   return blocks.join('\n\n');
 }
 
 function buildSkills(categories) {
-  if (!categories || categories.length === 0) return '';
-  return categories.map(c =>
-    `        \\textbf{${escapeLatex(c.category)}}{: ${escapeLatex(c.items)}} \\\\`
-  ).join('\n');
+  if (!Array.isArray(categories) || categories.length === 0) return '';
+  return categories.map(c => {
+    if (!c) return '';
+    const items = Array.isArray(c.items) ? c.items.join(', ') : (c.items || '');
+    return `        \\textbf{${escapeLatex(c.category)}}{: ${escapeLatex(items)}} \\\\`;
+  }).filter(Boolean).join('\n');
 }
 
 async function main() {
@@ -115,11 +133,11 @@ async function main() {
 
   let template = await readFile(TEMPLATE_PATH, 'utf-8');
 
-  const emailUrl = payload.email?.url || '';
+  const emailUrl = sanitizeUrl(payload.email?.url || '');
   const emailDisplay = payload.email?.display || emailUrl;
-  const linkedinUrl = payload.linkedin?.url || '';
+  const linkedinUrl = sanitizeUrl(payload.linkedin?.url || '');
   const linkedinDisplay = payload.linkedin?.display || '';
-  const githubUrl = payload.github?.url || '';
+  const githubUrl = sanitizeUrl(payload.github?.url || '');
   const githubDisplay = payload.github?.display || '';
 
   const substitutions = {
@@ -166,10 +184,11 @@ async function main() {
       experienceEntries: (payload.experience || []).length,
       projectEntries: (payload.projects || []).length,
       skillCategories: (payload.skills || []).length,
-      totalBullets: [
-        ...(payload.experience || []).flatMap(e => e.bullets || []),
-        ...(payload.projects || []).flatMap(p => p.bullets || []),
-      ].length,
+      totalBullets: (() => {
+        const ex = Array.isArray(payload.experience) ? payload.experience.flatMap(e => Array.isArray(e?.bullets) ? e.bullets : []) : [];
+        const pr = Array.isArray(payload.projects) ? payload.projects.flatMap(p => Array.isArray(p?.bullets) ? p.bullets : []) : [];
+        return ex.length + pr.length;
+      })(),
     },
     valid: true,
   };
@@ -231,11 +250,11 @@ async function runSelfTest() {
 
   let template = await readFile(TEMPLATE_PATH, 'utf-8');
 
-  const emailUrl = sample.email?.url || '';
+  const emailUrl = sanitizeUrl(sample.email?.url || '');
   const emailDisplay = sample.email?.display || emailUrl;
-  const linkedinUrl = sample.linkedin?.url || '';
+  const linkedinUrl = sanitizeUrl(sample.linkedin?.url || '');
   const linkedinDisplay = sample.linkedin?.display || '';
-  const githubUrl = sample.github?.url || '';
+  const githubUrl = sanitizeUrl(sample.github?.url || '');
   const githubDisplay = sample.github?.display || '';
 
   const substitutions = {
@@ -284,10 +303,11 @@ async function runSelfTest() {
       experienceEntries: sample.experience.length,
       projectEntries: sample.projects.length,
       skillCategories: sample.skills.length,
-      totalBullets: [
-        ...sample.experience.flatMap(e => e.bullets || []),
-        ...sample.projects.flatMap(p => p.bullets || []),
-      ].length,
+      totalBullets: (() => {
+        const ex = Array.isArray(sample.experience) ? sample.experience.flatMap(e => Array.isArray(e?.bullets) ? e.bullets : []) : [];
+        const pr = Array.isArray(sample.projects) ? sample.projects.flatMap(p => Array.isArray(p?.bullets) ? p.bullets : []) : [];
+        return ex.length + pr.length;
+      })(),
     },
   };
 
