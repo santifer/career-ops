@@ -313,7 +313,16 @@ for (const f of userFiles) {
 }
 
 const batchRunnerSource = readFile('batch/batch-runner.sh');
-if (/below-min-score" "\$retries"[\s\S]{0,220}return 0/.test(batchRunnerSource)) {
+const minScoreSkipIndex = batchRunnerSource.indexOf('update_state "$id" "$url" "skipped"');
+const minScoreReturnIndex = batchRunnerSource.indexOf('return 0', minScoreSkipIndex);
+const completedStateIndex = batchRunnerSource.indexOf('update_state "$id" "$url" "completed"', minScoreSkipIndex);
+if (
+  minScoreSkipIndex !== -1 &&
+  minScoreReturnIndex !== -1 &&
+  completedStateIndex !== -1 &&
+  minScoreSkipIndex < minScoreReturnIndex &&
+  minScoreReturnIndex < completedStateIndex
+) {
   pass('Batch min-score gate returns before completed state update');
 } else {
   fail('Batch min-score gate can fall through to completed state update');
