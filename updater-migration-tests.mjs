@@ -73,6 +73,7 @@ const requiredBootstrapPaths = [
   '.agents/',
   'providers/',
   'liveness-browser.mjs',
+  'updater-migration-tests.mjs',
 ];
 
 for (const path of requiredSystemPaths) {
