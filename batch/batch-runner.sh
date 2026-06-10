@@ -45,7 +45,7 @@ AGENT_COMMAND_BUILDER=""
 AGENT_RATE_LIMIT_PATTERN=""
 
 # name<TAB>binary<TAB>command-builder<TAB>rate-limit-pattern
-AGENT_ADAPTERS=$'claude\tclaude\tbuild_claude_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|at capacity|over capacity|overloaded|service unavailable|requests? exceeded)\ncodex\tcodex\tbuild_codex_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|at capacity|over capacity|overloaded|service unavailable|requests? exceeded|usage limit)'
+AGENT_ADAPTERS=$'claude\tclaude\tbuild_claude_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)\ncodex\tcodex\tbuild_codex_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)'
 
 usage() {
   cat <<'USAGE'
@@ -355,7 +355,7 @@ update_state() {
 
 is_rate_limit_log() {
   local log_file="$1"
-  grep -Eiq "$AGENT_RATE_LIMIT_PATTERN" "$log_file"
+  tail -40 "$log_file" 2>/dev/null | grep -Eiq "$AGENT_RATE_LIMIT_PATTERN"
 }
 
 is_session_limit_log() {

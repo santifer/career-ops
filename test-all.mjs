@@ -513,14 +513,18 @@ const rateLimitSamples = [
   'Error: request was throttled by the service',
   'Codex is temporarily at capacity, try again later',
   'model overloaded, please retry',
-  'service unavailable',
-  'monthly requests exceeded',
+  'Error: service unavailable',
+  'Error: requests exceeded',
+  '503 Service Unavailable',
 ];
 const nonRateLimitSamples = [
   'Candidate has capacity to start immediately',
+  'Runbook includes service unavailable incident examples',
+  'Monthly requests exceeded the hiring team forecast',
   'Application completed successfully',
 ];
 if (adapterRateLimitPatterns.length >= 2 &&
+    batchRunnerSource.includes('tail -40 "$log_file"') &&
     adapterRateLimitPatterns.every(pattern => rateLimitSamples.every(sample => pattern.test(sample))) &&
     adapterRateLimitPatterns.every(pattern => nonRateLimitSamples.every(sample => !pattern.test(sample)))) {
   pass('Batch rate-limit detection covers Codex/Claude transient capacity logs');
