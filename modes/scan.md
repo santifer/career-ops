@@ -10,7 +10,7 @@ Scans configured job portals, filters by title relevance, and adds new offers to
 
 Execute as a subagent to avoid consuming the main agent's context:
 
-```
+```python
 Agent(
     subagent_type="general-purpose",
     prompt="[content of this file + specific data]",
@@ -264,14 +264,14 @@ If a non-publicly accessible URL is found:
 
 `data/scan-history.tsv` tracks ALL seen URLs:
 
-```
+```tsv
 url	first_seen	portal	title	company	status
 https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 ```
 
 ## Output Summary
 
-```
+```text
 Portal Scan — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Queries executed: N
