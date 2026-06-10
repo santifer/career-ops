@@ -5,7 +5,7 @@
 
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { basename, dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -94,7 +94,7 @@ export function verifyModeParity({ modesDir = MODES_DIR } = {}) {
       }));
     }
   }
-  return findings.map((finding) => ({ ...finding, file: basename(finding.file) }));
+  return findings.map((finding) => ({ ...finding, file: relative(modesDir, finding.file) || finding.file }));
 }
 
 function writeFixture(root, locale, files) {
