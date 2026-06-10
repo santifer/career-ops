@@ -1,0 +1,40 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "./dashboard/main.go", "--path", "."],
+      "port": 0,
+      "_note": "Bubbletea TUI — terminal app, no HTTP port. Run in a terminal session."
+    },
+    {
+      "name": "scan",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scan.mjs"],
+      "port": 0,
+      "_note": "CLI tool — scans Greenhouse/Ashby/Lever APIs for new job postings."
+    },
+    {
+      "name": "ingest",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["ingest.mjs"],
+      "port": 0,
+      "_note": "CLI tool — processes ingest specs from data/ingest/ to generate resumes."
+    },
+    {
+      "name": "pdf",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["generate-pdf.mjs"],
+      "port": 0,
+      "_note": "CLI tool — renders HTML CV template to PDF via Playwright."
+    },
+    {
+      "name": "doctor",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["doctor.mjs"],
+      "port": 0,
+      "_note": "CLI tool — pipeline health check (dependencies, config, file integrity)."
+    }
+  ]
+}

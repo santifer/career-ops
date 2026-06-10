@@ -1,0 +1,139 @@
+{
+  "kind": "resume",
+  "applicant": {
+    "name": "Danielle Evans",
+    "headline": "Administration Professional | Customer Service & Scheduling",
+    "location": "Ningi, Moreton Bay QLD 4511",
+    "phone": "0430 205 402",
+    "email": "danielleevans@outlook.com.au",
+    "linkedin": "linkedin.com/in/danielleqld",
+    "status_chips": [
+      "Australian Citizen",
+      "Full Work Rights",
+      "Moreton Bay, QLD",
+      "Available Immediately"
+    ],
+    "lang": "en-AU"
+  },
+  "job": {
+    "company": "Australian Trade Training College (ATTC)",
+    "role": "Skills Assessment Administrator",
+    "ref_number": "F9TTF"
+  },
+  "summary": {
+    "meta": "15+ years | multi-stakeholder coordination",
+    "text": "Administration professional with 15+ years in regulated and operational environments. Skilled in managing concurrent caseloads, scheduling, stakeholder correspondence and delivering accurate outcomes under competing priorities. Experienced in liaising with diverse internal and external parties — including clients, agents, insurers and service providers — with a consistent service-first approach. Brings strong attention to detail, structured record-keeping and competency across the Microsoft Office suite and cloud-based systems, alongside a genuine willingness to learn and grow within a values-driven organisation."
+  },
+  "capabilities": [
+    {
+      "group": "Administrative Processing",
+      "items": [
+        "Caseload management & scheduling",
+        "Records maintenance & document control",
+        "Application processing & follow-up",
+        "Data accuracy & file integrity"
+      ]
+    },
+    {
+      "group": "Stakeholder & Customer Service",
+      "items": [
+        "Applicant & agent liaison",
+        "Internal & external stakeholder coordination",
+        "Enquiry handling & professional correspondence",
+        "Relationship building & service delivery"
+      ]
+    },
+    {
+      "group": "Systems & Tools",
+      "items": [
+        "Microsoft Word, Excel, Outlook & Teams",
+        "SharePoint & cloud document systems",
+        "Workflow templates & process improvement",
+        "CRM and operational tracking tools"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "title": "Creative Design and Business Operations",
+      "contract": false,
+      "dates": "2016 - 2025",
+      "company": "Self-Employed",
+      "location": "Moreton Bay, QLD",
+      "context": "Managed all client-facing administration, scheduling, correspondence and records for a self-run business across concurrent client commitments.",
+      "key": "Built strong client relationships through reliable communication and consistent follow-through across a steady caseload of concurrent projects.",
+      "bullets": [
+        "Managed enquiries, scheduling, project coordination, quotes, invoices and records across multiple active client commitments simultaneously.",
+        "Delivered reliable, professional service to a diverse client base — responding promptly, following up proactively and maintaining organised records of all interactions.",
+        "Developed standard templates, scheduling systems and documented workflows that improved consistency and reduced turnaround time by approximately 30%."
+      ]
+    },
+    {
+      "title": "Health and Safety Administrator",
+      "contract": false,
+      "dates": "2014 - 2016",
+      "company": "4cRisk Pty Ltd",
+      "location": "Brisbane, QLD",
+      "context": "Coordinated health, workers compensation and compliance administration across a diverse portfolio of mining, construction and corporate clients.",
+      "key": "Managed concurrent cases involving coordination across applicants, clients, insurers, medical providers and rehabilitation professionals — directly comparable to liaising with applicants and migration agents.",
+      "bullets": [
+        "Coordinated documentation and correspondence across multiple external parties simultaneously, progressing cases accurately while maintaining strict confidentiality.",
+        "Maintained scheduling, case records and supporting documentation for workers compensation and health cases, ensuring timely follow-up and accurate records throughout.",
+        "Provided professional, empathetic communication to all stakeholders when handling sensitive or complex situations requiring discretion."
+      ]
+    },
+    {
+      "title": "Safety Systems Administrator",
+      "contract": true,
+      "dates": "2014",
+      "company": "Virgin Australia",
+      "location": "Brisbane, QLD",
+      "bullets": [
+        "Maintained accurate records, reporting and document control within a high-volume, time-sensitive operational environment.",
+        "Handled sensitive case information with discretion, ensuring all records were current, complete and accessible for relevant stakeholders."
+      ]
+    },
+    {
+      "title": "Administrative Officer, HSE Support",
+      "contract": true,
+      "dates": "2013 - 2014",
+      "company": "Origin Energy",
+      "location": "Brisbane, QLD",
+      "bullets": [
+        "Coordinated administrative processes across multiple Queensland sites and stakeholder groups, managing registers, records and correspondence to firm deadlines.",
+        "Supported onboarding and induction scheduling, handling end-to-end coordination of documentation and communications for new workers.",
+        "Standardised documentation templates and reporting workflows to improve consistency and reduce manual effort across the team."
+      ]
+    },
+    {
+      "title": "Safety Administrator and Office Manager",
+      "contract": false,
+      "dates": "2011 - 2013",
+      "company": "TrackStar Alliance / Thiess Pty Ltd",
+      "location": "Brisbane, QLD",
+      "context": "Administered safety and office operations for a workforce of 150+ across multiple rail infrastructure project sites, managing high-volume records and multi-site coordination.",
+      "key": "Managed records, scheduling, inductions and case documentation for 150+ workers simultaneously across multiple sites — demonstrating the caseload discipline this role requires.",
+      "bullets": [
+        "Maintained structured records, registers and scheduling across a large, multi-site workforce — managing high volumes of concurrent cases with accuracy and attention to detail.",
+        "Coordinated across multiple internal and external stakeholder groups to progress scheduling, documentation and follow-up tasks on time.",
+        "Designed a reporting process that reduced average incident notification time from 45 minutes to under 10 minutes, later adopted across multiple sites."
+      ]
+    }
+  ],
+  "education": [
+    "Graduate Certificate in Occupational Health and Safety - Australian Catholic University",
+    "Certificate IV in Training and Assessment",
+    "Rehabilitation and Return to Work Coordinator training"
+  ],
+  "certifications": [
+    "Working with Children Check (Blue Card), current",
+    "First Aid Certificate, current",
+    "Queensland C Class Driver's Licence, current"
+  ],
+  "tools": [
+    "Microsoft Word, Excel, Outlook, PowerPoint and Teams",
+    "SharePoint, OneDrive, Google Drive and Dropbox",
+    "Oracle, MySQL, Salesforce, HubSpot, Zoho Desk, Zendesk and Jira",
+    "Asana, ClickUp, Microsoft Project, Slack, Zoom and Confluence"
+  ]
+}
