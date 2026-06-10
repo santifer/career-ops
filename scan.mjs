@@ -460,7 +460,6 @@ async function main() {
       const resolved = resolveProvider(entry, providers);
       if (!resolved) {
         skippedCount++;
-        // Logika z brancha main przeniesiona tutaj
         if (entry.scan_method === 'websearch') {
           agentHandoff.push({
             company: entry.name,
