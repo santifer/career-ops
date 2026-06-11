@@ -222,8 +222,9 @@ function parseScore(s) {
  * Parse one Markdown table row from applications.md into a tracker object.
  *
  * Header and separator rows return null because they either lack enough cells
- * or do not have a numeric tracker id. Valid data rows keep the raw line so
- * later updates and removals can map back to the original file line.
+ * or do not have a numeric tracker id. Valid data rows keep the raw line; the
+ * caller attaches the physical line index after parsing so later updates and
+ * removals never depend on tracker numbers being globally unique.
  *
  * @param {string} line - One line from applications.md.
  * @returns {object|null} Parsed tracker row, or null for non-application lines.
@@ -257,14 +258,13 @@ const lines = content.split('\n');
 
 // Parse all entries
 const entries = [];
-const entryLineMap = new Map(); // num → line index
 
 for (let i = 0; i < lines.length; i++) {
   if (!lines[i].startsWith('|')) continue;
   const app = parseAppLine(lines[i]);
   if (app && app.num > 0) {
+    app.lineIdx = i;
     entries.push(app);
-    entryLineMap.set(app.num, i);
   }
 }
 
@@ -319,7 +319,7 @@ for (const [company, companyEntries] of groups) {
 
     // Update keeper's status if a removed entry had a more advanced one
     if (bestStatus !== keeper.status) {
-      const lineIdx = entryLineMap.get(keeper.num);
+      const lineIdx = keeper.lineIdx;
       if (lineIdx !== undefined) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
         parts[6] = bestStatus;
@@ -331,7 +331,7 @@ for (const [company, companyEntries] of groups) {
     // Remove duplicates
     for (let k = 1; k < cluster.length; k++) {
       const dup = cluster[k];
-      const lineIdx = entryLineMap.get(dup.num);
+      const lineIdx = dup.lineIdx;
       if (lineIdx !== undefined) {
         linesToRemove.add(lineIdx);
         removed++;
