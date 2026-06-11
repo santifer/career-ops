@@ -23,6 +23,13 @@ function resolveApiUrl(entry) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// NaN-safe Date.parse — `|| undefined` would also coerce a valid epoch 0.
+function toEpochMs(value) {
+  if (!value) return undefined;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
 /** @type {Provider} */
 export default {
   id: 'ashby',
@@ -51,7 +58,7 @@ export default {
           url: j.jobUrl || '',
           company: entry.name,
           location: j.location || '',
-          postedAt: j.publishedAt ? Date.parse(j.publishedAt) || undefined : undefined,
+          postedAt: toEpochMs(j.publishedAt),
         }));
       } catch (e) {
         lastErr = e;

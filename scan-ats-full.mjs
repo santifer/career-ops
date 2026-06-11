@@ -23,6 +23,7 @@
  *   node scan-ats-full.mjs --limit 200          # max companies per ATS (default: all)
  *   node scan-ats-full.mjs --dry-run            # preview without writing files
  *   node scan-ats-full.mjs --liveness           # Playwright-verify matches before writing
+ *   node scan-ats-full.mjs --verbose            # log per-board fetch failures
  *   node scan-ats-full.mjs --md-out <dir>       # also write a dated markdown digest to <dir>
  */
 
@@ -44,8 +45,17 @@ const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
 const PIPELINE_PATH = 'data/pipeline.md';
 const CACHE_DIR = 'data/cache/ats-companies';
 const CACHE_TTL_HOURS = 24;
+// Tracks `main` deliberately: the dataset's value is freshness (new boards
+// appear weekly), so pinning a commit would defeat the purpose. The integrity
+// boundary is SLUG_RE below — every entry is validated against a safe charset
+// before it is interpolated into a provider URL, so a tampered dataset can at
+// worst name boards that don't exist.
 const DATASET_BASE = 'https://raw.githubusercontent.com/Feashliaa/job-board-aggregator/main/data';
 const CONCURRENCY = 20;
+
+// Dataset entries are external input destined for URL interpolation — reject
+// anything outside a conservative slug charset.
+const SLUG_RE = /^[A-Za-z0-9._-]+$/;
 
 // Each source: the provider module that does the fetching, plus how to turn a
 // dataset entry into a synthetic PortalEntry the provider can detect/fetch.
@@ -53,17 +63,20 @@ const SOURCES = {
   greenhouse: {
     provider: greenhouse,
     dataset: `${DATASET_BASE}/greenhouse_companies.json`,
-    toEntry: (slug) => ({ name: slug, careers_url: `https://job-boards.greenhouse.io/${slug}` }),
+    toEntry: (slug) => SLUG_RE.test(String(slug))
+      ? { name: String(slug), careers_url: `https://job-boards.greenhouse.io/${slug}` } : null,
   },
   lever: {
     provider: lever,
     dataset: `${DATASET_BASE}/lever_companies.json`,
-    toEntry: (slug) => ({ name: slug, careers_url: `https://jobs.lever.co/${slug}` }),
+    toEntry: (slug) => SLUG_RE.test(String(slug))
+      ? { name: String(slug), careers_url: `https://jobs.lever.co/${slug}` } : null,
   },
   ashby: {
     provider: ashby,
     dataset: `${DATASET_BASE}/ashby_companies.json`,
-    toEntry: (slug) => ({ name: slug, careers_url: `https://jobs.ashbyhq.com/${slug}` }),
+    toEntry: (slug) => SLUG_RE.test(String(slug))
+      ? { name: String(slug), careers_url: `https://jobs.ashbyhq.com/${slug}` } : null,
   },
   workday: {
     provider: workday,
@@ -71,7 +84,7 @@ const SOURCES = {
     // Dataset entries are "tenant|instance|site" triples.
     toEntry: (line) => {
       const [tenant, instance, site] = String(line).split('|');
-      if (!tenant || !instance || !site) return null;
+      if (![tenant, instance, site].every(p => p && SLUG_RE.test(p))) return null;
       return { name: tenant, careers_url: `https://${tenant}.${instance}.myworkdayjobs.com/${site}` };
     },
   },
@@ -102,6 +115,7 @@ function parseArgs(argv) {
     ats,
     dryRun: args.includes('--dry-run'),
     liveness: args.includes('--liveness'),
+    verbose: args.includes('--verbose'),
     mdOut: valueOf('--md-out'),
   };
 }
@@ -226,8 +240,11 @@ async function main() {
           seenUrls.add(job.url); // intra-scan dedup
           newOffers.push({ ...job, source: `${name}-full` });
         }
-      } catch {
-        errors++; // mostly defunct boards in the public dataset — expected noise
+      } catch (err) {
+        // Mostly defunct boards in the public dataset — expected noise, so the
+        // default stays quiet; --verbose surfaces per-board failures.
+        errors++;
+        if (opts.verbose) console.error(`  ✗ ${name}/${entry.name}: ${err.message}`);
       }
       done++;
       if (done % 200 === 0 || done === entries.length) {

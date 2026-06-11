@@ -35,6 +35,13 @@ function resolveApiUrl(entry) {
   return null;
 }
 
+// NaN-safe Date.parse — `|| undefined` would also coerce a valid epoch 0.
+function toEpochMs(value) {
+  if (!value) return undefined;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
 /** @type {Provider} */
 export default {
   id: 'greenhouse',
@@ -61,7 +68,7 @@ export default {
       url: j.absolute_url,
       company: entry.name,
       location: j.location?.name || '',
-      postedAt: j.first_published ? Date.parse(j.first_published) || undefined : undefined,
+      postedAt: toEpochMs(j.first_published),
     }));
   },
 };
