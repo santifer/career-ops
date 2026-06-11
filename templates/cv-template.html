@@ -284,6 +284,11 @@
   }
 
   /* === CERTIFICATIONS === */
+  .cert-table {
+    display: table;
+    width: 100%;
+  }
+
   .cert-item {
     display: table-row;
   }
@@ -387,7 +392,7 @@
     text-align: left;
   }
 
-  html[lang="ar"] .cert-item {
+  html[lang="ar"] .cert-table {
     direction: rtl;
   }
 </style>
@@ -447,7 +452,7 @@
   <!-- CERTIFICATIONS -->
   <div class="section avoid-break">
     <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
-    {{CERTIFICATIONS}}
+    <div class="cert-table">{{CERTIFICATIONS}}</div>
   </div>
 
   <!-- SKILLS -->
