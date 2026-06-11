@@ -512,6 +512,21 @@ if (
   fail('apply mode missing liveness/role-match preflight gate');
 }
 
+const ofertaMode = readFile('modes/oferta.md');
+const autoPipelineMode = readFile('modes/auto-pipeline.md');
+if (
+  ofertaMode.includes('## Liveness gate (URL inputs)') &&
+  ofertaMode.includes('closed posting evidence') &&
+  ofertaMode.includes('Do not continue to Block A until this gate is resolved') &&
+  autoPipelineMode.includes('## Step 0.5 — Liveness gate') &&
+  autoPipelineMode.includes('closed posting evidence') &&
+  autoPipelineMode.includes('Do not continue to Step 1 until this gate is resolved')
+) {
+  pass('eval modes (oferta/auto-pipeline) gate dead links before evaluation');
+} else {
+  fail('eval modes missing liveness gate before evaluation');
+}
+
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
 console.log('\n9. Local parser contract');
