@@ -61,6 +61,7 @@ export default {
       url: j.absolute_url,
       company: entry.name,
       location: j.location?.name || '',
+      postedAt: j.first_published ? Date.parse(j.first_published) || undefined : undefined,
     }));
   },
 };

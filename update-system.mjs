@@ -69,6 +69,7 @@ const SYSTEM_PATHS = [
   'cv-sync-check.mjs',
   'update-system.mjs',
   'scan.mjs',
+  'scan-ats-full.mjs',
   'providers/',
   'doctor.mjs',
   'check-liveness.mjs',

@@ -51,6 +51,7 @@ export default {
           url: j.jobUrl || '',
           company: entry.name,
           location: j.location || '',
+          postedAt: j.publishedAt ? Date.parse(j.publishedAt) || undefined : undefined,
         }));
       } catch (e) {
         lastErr = e;
