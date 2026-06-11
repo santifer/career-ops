@@ -265,15 +265,48 @@ async function searchForNewUrl(page, offer) {
 
 // ── Dedup ───────────────────────────────────────────────────────────
 
-function loadSeenUrls() {
+const PERMANENT_SCAN_HISTORY_STATUSES = new Set([
+  'skipped_invalid_url',
+  'skipped_blocked_host',
+]);
+
+function daysBetweenIsoDates(start, end) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return null;
+  const startDate = new Date(`${start}T00:00:00Z`);
+  const endDate = new Date(`${end}T00:00:00Z`);
+  if (startDate.toISOString().slice(0, 10) !== start || endDate.toISOString().slice(0, 10) !== end) return null;
+  return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+}
+
+export function shouldDedupScanHistoryRow({ firstSeen, status = 'added' }, { recheckAfterDays = null, today = new Date().toISOString().slice(0, 10) } = {}) {
+  if (PERMANENT_SCAN_HISTORY_STATUSES.has(status)) return true;
+  if (status !== 'added') return true;
+  if (recheckAfterDays == null) return true;
+  const ageDays = daysBetweenIsoDates(firstSeen, today);
+  if (ageDays == null) return true;
+  return ageDays < recheckAfterDays;
+}
+
+function scanHistoryPolicy(config = {}) {
+  const raw = config.scan_history?.recheck_after_days;
+  const parsed = Number.parseInt(raw, 10);
+  return {
+    recheckAfterDays: Number.isFinite(parsed) && parsed >= 0 ? parsed : null,
+  };
+}
+
+function loadSeenUrls(policy = {}) {
   const seen = new Set();
+  let recheckEligible = 0;
 
   // scan-history.tsv
   if (existsSync(SCAN_HISTORY_PATH)) {
     const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n');
     for (const line of lines.slice(1)) { // skip header
-      const url = line.split('\t')[0];
-      if (url) seen.add(url);
+      const [url, firstSeen, , , , status = 'added'] = line.split('\t');
+      if (!url) continue;
+      if (shouldDedupScanHistoryRow({ firstSeen, status }, policy)) seen.add(url);
+      else recheckEligible++;
     }
   }
 
@@ -293,7 +326,7 @@ function loadSeenUrls() {
     }
   }
 
-  return seen;
+  return { seen, recheckEligible };
 }
 
 function loadSeenCompanyRoles() {
@@ -574,7 +607,9 @@ async function main() {
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   // 4. Load dedup sets
-  const seenUrls = loadSeenUrls();
+  const historyPolicy = scanHistoryPolicy(config);
+  const seenUrlState = loadSeenUrls(historyPolicy);
+  const seenUrls = seenUrlState.seen;
   const seenCompanyRoles = loadSeenCompanyRoles();
 
   // 5. Fetch from each target
@@ -714,6 +749,9 @@ async function main() {
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
+  if (historyPolicy.recheckAfterDays != null) {
+    console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);
+  }
   if (verify) {
     console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
     console.log(`Rediscovered (moved):  ${migratedOffers.length} migrated`);
