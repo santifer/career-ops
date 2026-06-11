@@ -21,6 +21,7 @@ TRACKER_DIR="$BATCH_DIR/tracker-additions"
 REPORTS_DIR="$PROJECT_DIR/reports"
 APPLICATIONS_FILE="$PROJECT_DIR/data/applications.md"
 LOCK_FILE="$BATCH_DIR/batch-runner.pid"
+PAUSE_FILE="$BATCH_DIR/batch-runner.paused"
 STATE_LOCK_DIR="$BATCH_DIR/.batch-state.lock"
 STATE_LOCK_PID_FILE="$STATE_LOCK_DIR/pid"
 STATE_LOCK_TIMEOUT_SECONDS=30
@@ -30,11 +31,13 @@ MAIN_PID="${BASHPID:-$$}"
 PARALLEL=1
 DRY_RUN=false
 RETRY_FAILED=false
+RESUME_PAUSED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
 MODEL=""  # empty = let claude -p use the Claude Max default
 RATE_LIMIT_SLEEP=300
+BATCH_PAUSED=false
 
 usage() {
   cat <<'USAGE'
@@ -47,6 +50,7 @@ Options:
   --parallel N         Number of parallel workers (default: 1)
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
+  --resume-paused      Resume offers paused by a Claude session/rate limit
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
@@ -85,6 +89,7 @@ while [[ $# -gt 0 ]]; do
     --parallel) PARALLEL="$2"; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --retry-failed) RETRY_FAILED=true; shift ;;
+    --resume-paused) RESUME_PAUSED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
@@ -317,6 +322,22 @@ is_rate_limit_log() {
   grep -Eiq '(rate limit|rate_limit|too many requests|429|quota exceeded|try again later|temporarily unavailable)' "$log_file"
 }
 
+is_session_limit_log() {
+  local log_file="$1"
+  grep -Eiq '(session limit|resets [0-9:]+[ap]m|usage limit|limit[[:space:]]+reached)' "$log_file"
+}
+
+mark_paused_rate_limit() {
+  local id="$1" url="$2" started_at="$3" report_num="$4" retries="$5" log_file="$6"
+  local completed_at
+  completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  local error_msg
+  error_msg=$(tail -5 "$log_file" 2>/dev/null | tr '\n' ' ' | cut -c1-200 || echo "session/rate limit reached")
+  update_state "$id" "$url" "paused_rate_limit" "$started_at" "$completed_at" "$report_num" "-" "$error_msg" "$retries"
+  printf '%s\t%s\t%s\n' "$id" "$report_num" "$error_msg" > "$PAUSE_FILE"
+  BATCH_PAUSED=true
+}
+
 reserve_report_num_unlocked() {
   local id="$1" url="$2" started="$3" retries="$4"
 
@@ -378,6 +399,20 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
+  # Inject user-layer personalization into the temporary worker prompt.
+  # The resolved prompt is gitignored runtime state, so user profile data stays
+  # out of the system layer while batch scoring matches interactive scoring.
+  for context_file in "$PROJECT_DIR/modes/_profile.md" "$PROJECT_DIR/config/profile.yml"; do
+    if [[ -f "$context_file" ]]; then
+      {
+        printf '\n\n---\n\n'
+        printf '## Runtime personalization: %s\n\n' "${context_file#$PROJECT_DIR/}"
+        sed 's/^/    /' "$context_file"
+        printf '\n'
+      } >> "$resolved_prompt"
+    fi
+  done
+
   # Launch claude -p worker.
   # Model defaults to the Claude Max subscription default unless --model was
   # passed. Building the command in an array keeps quoting safe regardless.
@@ -397,11 +432,17 @@ process_offer() {
       break
     fi
 
+    if is_session_limit_log "$log_file"; then
+      mark_paused_rate_limit "$id" "$url" "$started_at" "$report_num" "$retries" "$log_file"
+      echo "    ⏸️  Session/rate limit reached; pausing batch without consuming retry budget."
+      terminal_failure_recorded=true
+      break
+    fi
+
     if is_rate_limit_log "$log_file" && (( retries < MAX_RETRIES )); then
       if (( RATE_LIMIT_SLEEP <= 0 )); then
-        retries=$((retries + 1))
-        update_state "$id" "$url" "failed" "$started_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$report_num" "-" "rate-limit; no wait configured" "$retries"
-        echo "    ❌ Rate limited and --rate-limit-sleep is 0; not retrying."
+        mark_paused_rate_limit "$id" "$url" "$started_at" "$report_num" "$retries" "$log_file"
+        echo "    ⏸️  Rate limited and --rate-limit-sleep is 0; pausing batch without consuming retry budget."
         terminal_failure_recorded=true
         break
       fi
@@ -437,7 +478,7 @@ process_offer() {
       if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        return 0
       fi
     fi
 
@@ -474,7 +515,7 @@ print_summary() {
     return
   fi
 
-  local total=0 completed=0 failed=0 pending=0
+  local total=0 completed=0 skipped=0 failed=0 pending=0
   local score_sum=0 score_count=0
 
   while IFS=$'\t' read -r sid _ sstatus _ _ _ sscore _ _; do
@@ -487,12 +528,13 @@ print_summary() {
           score_count=$((score_count + 1))
         fi
         ;;
+      skipped) skipped=$((skipped + 1)) ;;
       failed) failed=$((failed + 1)) ;;
       *) pending=$((pending + 1)) ;;
     esac
   done < "$STATE_FILE"
 
-  echo "Total: $total | Completed: $completed | Failed: $failed | Pending: $pending"
+  echo "Total: $total | Completed: $completed | Skipped: $skipped | Failed: $failed | Pending: $pending"
 
   if (( score_count > 0 )); then
     local avg
@@ -507,6 +549,7 @@ main() {
 
   if [[ "$DRY_RUN" == "false" ]]; then
     acquire_lock
+    rm -f "$PAUSE_FILE"
   fi
 
   init_state
@@ -547,7 +590,11 @@ main() {
     local status
     status=$(get_status "$id")
 
-    if [[ "$RETRY_FAILED" == "true" ]]; then
+    if [[ "$RESUME_PAUSED" == "true" ]]; then
+      if [[ "$status" != "paused_rate_limit" ]]; then
+        continue
+      fi
+    elif [[ "$RETRY_FAILED" == "true" ]]; then
       # Only process failed offers
       if [[ "$status" != "failed" ]]; then
         continue
@@ -560,8 +607,12 @@ main() {
         continue
       fi
     else
-      # Skip completed offers
-      if [[ "$status" == "completed" ]]; then
+      # Skip terminal offers
+      if [[ "$status" == "completed" || "$status" == "skipped" ]]; then
+        continue
+      fi
+      # Paused rate-limit offers resume explicitly with --resume-paused.
+      if [[ "$status" == "paused_rate_limit" ]]; then
         continue
       fi
       # Skip failed offers that hit retry limit (unless --retry-failed)
@@ -610,6 +661,10 @@ main() {
     # Sequential processing
     for i in "${!pending_ids[@]}"; do
       process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}"
+      if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
+        echo "=== Batch paused: session/rate limit reached. Resume later with --resume-paused. ==="
+        break
+      fi
     done
   else
     # Parallel processing with job control
@@ -618,6 +673,11 @@ main() {
     local -a pid_ids=()
 
     for i in "${!pending_ids[@]}"; do
+      if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
+        echo "=== Batch paused: session/rate limit reached. Waiting for running workers, not scheduling new offers. ==="
+        break
+      fi
+
       # Wait if we're at parallel limit
       while (( running >= PARALLEL )); do
         # Wait for any child to finish
@@ -632,8 +692,16 @@ main() {
         # Compact arrays
         pids=("${pids[@]}")
         pid_ids=("${pid_ids[@]}")
+        if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
+          echo "=== Batch paused: session/rate limit reached. Waiting for running workers, not scheduling new offers. ==="
+          break
+        fi
         sleep 1
       done
+
+      if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
+        break
+      fi
 
       # Launch worker in background
       process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}" &

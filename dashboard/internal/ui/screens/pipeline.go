@@ -1123,6 +1123,8 @@ func (m PipelineModel) renderPreview() string {
 		lines = append(lines, padStyle.Render(strings.Join(facts, "   ")))
 	}
 
+	outcome := previewOutcome(app)
+
 	// Check report cache
 	if summary, ok := m.reportCache[app.ReportPath]; ok {
 		if summary.archetype != "" {
@@ -1141,15 +1143,41 @@ func (m PipelineModel) renderPreview() string {
 			lines = append(lines, padStyle.Render(
 				labelStyle.Render("Remote: ")+valueStyle.Render(summary.remote)))
 		}
-	} else if app.Notes != "" {
-		// Fallback: show notes
+	} else if app.Notes != "" && outcome == "" {
+		// Fallback: show notes (the outcome line below already carries them)
 		notes := truncateRunes(app.Notes, m.width-10)
 		lines = append(lines, padStyle.Render(dimStyle.Render(notes)))
-	} else {
+	} else if outcome == "" {
 		lines = append(lines, padStyle.Render(dimStyle.Render("Loading preview...")))
 	}
 
+	// Closed-out postings: surface what happened as the last preview line.
+	// The notes-only fallback above disappears once a report summary is
+	// cached, which is exactly when the discard reason got lost (#787).
+	if outcome != "" {
+		// Width budget: 4 cols padding + 9 for the "Outcome: " label + slack,
+		// mirroring the m.width-10 budget of the notes fallback above.
+		lines = append(lines, padStyle.Render(
+			labelStyle.Render("Outcome: ")+valueStyle.Render(truncateRunes(outcome, m.width-14))))
+	}
+
 	return strings.Join(lines, "\n")
+}
+
+// previewOutcome returns "what happened" to a closed-out application — the raw
+// status (which often carries the decision date, e.g. "descartado 2026-03-12")
+// plus the tracker notes holding the reason. Returns "" for apps still in play.
+func previewOutcome(app model.CareerApplication) string {
+	switch data.NormalizeStatus(app.Status) {
+	case "discarded", "skip", "rejected":
+	default:
+		return ""
+	}
+	outcome := strings.TrimSpace(strings.ReplaceAll(app.Status, "**", ""))
+	if app.Notes != "" {
+		outcome += " — " + app.Notes
+	}
+	return outcome
 }
 
 func (m PipelineModel) renderHelp() string {

@@ -258,6 +258,60 @@ try {
   } else {
     fail(`No-display degrade path wrong: ${noHeadedAvailable.result} (${noHeadedAvailable.code})`);
   }
+
+  // SSRF guard — `rejectPrivateOrInvalid` has to refuse every URL whose host
+  // resolves to loopback / private / link-local space. The earlier guard only
+  // matched literal IPv4 patterns and bracketless IPv6, so several Chromium-
+  // routable bypasses (0.0.0.0, [::], [::1] (bracketed), [::ffff:127.0.0.1],
+  // localhost.) slipped through. These cases keep that regression covered.
+  const { rejectPrivateOrInvalid } = await import(
+    pathToFileURL(join(ROOT, 'liveness-browser.mjs')).href
+  );
+  const blockCases = [
+    ['http://0.0.0.0/admin', 'IPv4 all-zeros (Linux routes to loopback)'],
+    ['http://[::]/', 'IPv6 all-zeros (Linux routes to loopback)'],
+    ['http://[::1]/', 'IPv6 loopback (brackets included in url.hostname)'],
+    ['http://[::ffff:127.0.0.1]/', 'IPv4-mapped IPv6 loopback (dotted form)'],
+    ['http://[::ffff:7f00:1]/', 'IPv4-mapped IPv6 loopback (hex form)'],
+    ['http://[::ffff:169.254.169.254]/', 'IPv4-mapped IPv6 link-local (cloud metadata)'],
+    ['http://[fc00::1]/', 'IPv6 ULA (private)'],
+    ['http://[fe80::1]/', 'IPv6 link-local'],
+    ['http://localhost./', 'FQDN-trailing-dot localhost'],
+    ['http://localhost.localdomain/', 'localhost.localdomain alias'],
+    ['http://169.254.169.254/latest/meta-data/', 'cloud metadata IPv4 link-local'],
+    ['http://10.0.0.5/', 'IPv4 RFC1918'],
+  ];
+  let blockMissed = 0;
+  for (const [url, label] of blockCases) {
+    const verdict = rejectPrivateOrInvalid(url);
+    if (verdict?.code !== 'blocked_host') {
+      fail(`SSRF guard missed ${label}: ${url} → ${verdict ? verdict.code : 'allowed'}`);
+      blockMissed += 1;
+    }
+  }
+  if (blockMissed === 0) pass(`SSRF guard blocks ${blockCases.length} known bypass vectors`);
+
+  const allowCases = [
+    'https://boards.greenhouse.io/example/jobs/123',
+    'https://jobs.lever.co/example/abc-def',
+    'https://example.com/careers/role',
+    'https://www.pracuj.pl/praca/role,oferta,1234567',
+  ];
+  let allowDenied = 0;
+  for (const url of allowCases) {
+    if (rejectPrivateOrInvalid(url) !== null) {
+      fail(`SSRF guard false-positive on legitimate ATS URL: ${url}`);
+      allowDenied += 1;
+    }
+  }
+  if (allowDenied === 0) pass('SSRF guard lets legitimate ATS URLs through');
+
+  const protoCase = rejectPrivateOrInvalid('file:///etc/passwd');
+  if (protoCase?.code === 'unsupported_protocol') {
+    pass('SSRF guard rejects unsupported protocol');
+  } else {
+    fail(`SSRF guard let unsupported protocol through: ${protoCase?.code ?? 'allowed'}`);
+  }
 } catch (e) {
   fail(`Liveness classification tests crashed: ${e.message}`);
 }
@@ -312,6 +366,36 @@ for (const f of userFiles) {
   }
 }
 
+const batchRunnerSource = readFile('batch/batch-runner.sh');
+const minScoreSkipIndex = batchRunnerSource.indexOf('update_state "$id" "$url" "skipped"');
+const minScoreReturnIndex = batchRunnerSource.indexOf('return 0', minScoreSkipIndex);
+const completedStateIndex = batchRunnerSource.indexOf('update_state "$id" "$url" "completed"', minScoreSkipIndex);
+if (
+  minScoreSkipIndex !== -1 &&
+  minScoreReturnIndex !== -1 &&
+  completedStateIndex !== -1 &&
+  minScoreSkipIndex < minScoreReturnIndex &&
+  minScoreReturnIndex < completedStateIndex
+) {
+  pass('Batch min-score gate returns before completed state update');
+} else {
+  fail('Batch min-score gate can fall through to completed state update');
+}
+
+if (/if \[\[ "\$status" == "completed" \|\| "\$status" == "skipped" \]\]/.test(batchRunnerSource)) {
+  pass('Batch resume treats min-score skipped offers as terminal');
+} else {
+  fail('Batch resume can reprocess min-score skipped offers');
+}
+
+if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSource) &&
+    /skipped\) skipped=\$\(\(skipped \+ 1\)\)/.test(batchRunnerSource) &&
+    /Completed: \$completed \| Skipped: \$skipped \| Failed: \$failed \| Pending: \$pending/.test(batchRunnerSource)) {
+  pass('Batch summary reports skipped offers separately from pending');
+} else {
+  fail('Batch summary can misreport skipped offers as pending');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
@@ -324,7 +408,7 @@ const leakPatterns = [
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.es.md', 'README.ja.md', 'README.ko-KR.md',
+  'README.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
   'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
@@ -441,8 +525,8 @@ if (fileExists('providers/local-parser.mjs')) {
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
 if (
   scanMode.includes('local_parser_ok') &&
-  scanMode.includes('no repetir scraping caro') &&
-  scanMode.includes('nombre no listado en `local_parser_ok`')
+  (scanMode.includes('No Expensive Scraping Repetition') || scanMode.includes('no repetir scraping caro')) &&
+  (scanMode.includes('name not listed in `local_parser_ok`') || scanMode.includes('nombre no listado en `local_parser_ok`'))
 ) {
   pass('scan.md skips expensive levels after successful local parser');
 } else {
@@ -508,7 +592,7 @@ if (fileExists('VERSION')) {
 console.log('\n11. Location filter — always_allow tier');
 
 try {
-  const { buildLocationFilter } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { buildLocationFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
@@ -629,6 +713,19 @@ try {
   // step rather than being silently dropped here.
   if (filter(42) === true) pass('non-string locations are passed through to downstream evaluation, not silently dropped');
   else fail('non-string locations should pass through');
+
+  if (
+    shouldDedupScanHistoryRow({ firstSeen: '2026-06-01', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-05-01', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === false &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-02-31', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-05-01', status: 'skipped_blocked_host' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-05-01', status: 'added' }, { today: '2026-06-10' }) === true &&
+    scanScript.includes('Recheck eligible:')
+  ) {
+    pass('scan-history TTL rechecks old added URLs while permanent statuses stay deduped');
+  } else {
+    fail('scan-history TTL policy did not match expected recheck/permanent behavior');
+  }
 
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
@@ -1307,6 +1404,150 @@ try {
   rmSync(ready, { recursive: true, force: true });
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
+}
+
+// ── 15. URL REDISCOVERY FALLBACK (--rediscover-404) ─────────────
+
+console.log('\n15. URL rediscovery fallback');
+
+try {
+  const { extractCareersUrlDomain, pickRediscoveredUrl } = await import(
+    pathToFileURL(join(ROOT, 'scan.mjs')).href
+  );
+
+  // extractCareersUrlDomain — pure hostname extraction, null on missing/invalid
+  if (extractCareersUrlDomain('https://job-boards.greenhouse.io/anthropic') === 'job-boards.greenhouse.io') {
+    pass('extractCareersUrlDomain pulls hostname from a careers URL');
+  } else {
+    fail('extractCareersUrlDomain failed on a valid URL');
+  }
+  if (extractCareersUrlDomain(null) === null) {
+    pass('extractCareersUrlDomain returns null for missing careers_url');
+  } else {
+    fail('extractCareersUrlDomain did not return null for null input');
+  }
+  if (extractCareersUrlDomain('not-a-url') === null) {
+    pass('extractCareersUrlDomain returns null for an unparseable URL');
+  } else {
+    fail('extractCareersUrlDomain did not return null for a bad URL');
+  }
+
+  // pickRediscoveredUrl — first search hit whose hostname exactly matches domain
+  const domain = 'job-boards.greenhouse.io';
+  const hrefs = [
+    'https://duckduckgo.com/l/?uddg=ad',          // search-engine chrome / noise
+    'https://other-board.lever.co/acme/123',      // wrong domain
+    'https://job-boards.greenhouse.io/acme/456',  // first real match
+    'https://job-boards.greenhouse.io/acme/789',  // later match
+  ];
+  if (pickRediscoveredUrl(hrefs, domain) === 'https://job-boards.greenhouse.io/acme/456') {
+    pass('pickRediscoveredUrl returns the first same-domain result');
+  } else {
+    fail(`pickRediscoveredUrl picked the wrong URL: ${pickRediscoveredUrl(hrefs, domain)}`);
+  }
+  if (pickRediscoveredUrl(['https://elsewhere.com/x'], domain) === null) {
+    pass('pickRediscoveredUrl returns null when no result matches the domain');
+  } else {
+    fail('pickRediscoveredUrl did not return null for no domain match');
+  }
+  if (pickRediscoveredUrl([], domain) === null) {
+    pass('pickRediscoveredUrl returns null for an empty result set');
+  } else {
+    fail('pickRediscoveredUrl did not return null for empty input');
+  }
+  // Redirect unwrapping is restricted to real DuckDuckGo hosts: a look-alike
+  // host must not get its uddg target unwrapped (and its own hostname does not
+  // match the careers domain, so the result is null).
+  const lookAlike = `https://evil-duckduckgo.com/l/?uddg=${encodeURIComponent('https://job-boards.greenhouse.io/acme/456')}`;
+  if (pickRediscoveredUrl([lookAlike], domain) === null) {
+    pass('pickRediscoveredUrl ignores uddg redirects from look-alike hosts');
+  } else {
+    fail('pickRediscoveredUrl unwrapped a redirect from a look-alike host');
+  }
+  // DuckDuckGo HTML wraps each result in a /l/?uddg= redirect — must be
+  // unwrapped, otherwise every hostname looks like duckduckgo.com and nothing
+  // ever matches the careers domain (the fallback would silently never fire).
+  const ddg = ['//duckduckgo.com/l/?uddg=' + encodeURIComponent('https://job-boards.greenhouse.io/acme/999')];
+  if (pickRediscoveredUrl(ddg, domain) === 'https://job-boards.greenhouse.io/acme/999') {
+    pass('pickRediscoveredUrl unwraps DuckDuckGo redirect links');
+  } else {
+    fail(`pickRediscoveredUrl did not unwrap DDG redirect: ${pickRediscoveredUrl(ddg, domain)}`);
+  }
+  // A look-alike host that merely contains the domain as a substring must not match.
+  if (pickRediscoveredUrl(['https://job-boards.greenhouse.io.attacker.com/x'], domain) === null) {
+    pass('pickRediscoveredUrl rejects look-alike hostnames');
+  } else {
+    fail('pickRediscoveredUrl accepted a look-alike hostname');
+  }
+} catch (e) {
+  fail(`URL rediscovery tests crashed: ${e.message}`);
+}
+
+// ── 13. BATCH RATE-LIMIT PAUSE ──────────────────────────────────
+
+console.log('\n13. Batch rate-limit pause');
+
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-rate-'));
+  const batchDir = join(tmp, 'batch');
+  const fakeBin = join(tmp, 'bin');
+  mkdirSync(batchDir, { recursive: true });
+  mkdirSync(join(tmp, 'reports'), { recursive: true });
+  mkdirSync(join(tmp, 'data'), { recursive: true });
+  mkdirSync(fakeBin, { recursive: true });
+
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8'));
+  execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
+  writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
+  writeFileSync(join(batchDir, 'batch-input.tsv'), [
+    'id\turl\tsource\tnotes',
+    '1\thttps://example.com/one\tfixture\t-',
+    '2\thttps://example.com/two\tfixture\t-',
+    '3\thttps://example.com/three\tfixture\t-',
+  ].join('\n') + '\n');
+  writeFileSync(join(fakeBin, 'claude'), [
+    '#!/usr/bin/env bash',
+    'echo "You\\x27ve hit your session limit · resets 12:30pm (Asia/Taipei)"',
+    'exit 1',
+  ].join('\n') + '\n');
+  execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+
+  const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
+  const out = run('bash', [join(batchDir, 'batch-runner.sh'), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  const state = readFileSync(join(batchDir, 'batch-state.tsv'), 'utf-8').trim().split('\n');
+  const first = state[1]?.split('\t') || [];
+
+  if (state.length === 2 && first[0] === '1' && first[2] === 'paused_rate_limit' && first[8] === '0' && out.includes('pausing batch')) {
+    pass('session-limit pauses batch without consuming retry budget or scheduling more jobs');
+  } else {
+    fail(`session-limit pause wrong: lines=${state.length}, first=${JSON.stringify(first)}, out=${JSON.stringify(out.slice(-240))}`);
+  }
+
+  writeFileSync(join(batchDir, 'batch-state.tsv'), [
+    'id\turl\tstatus\tstarted_at\tcompleted_at\treport_num\tscore\terror\tretries',
+    '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
+    '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
+  ].join('\n') + '\n');
+  const dry = run('bash', [join(batchDir, 'batch-runner.sh'), '--resume-paused', '--dry-run'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  if (dry.includes('#1: https://example.com/one') && !dry.includes('#2: https://example.com/two')) {
+    pass('--resume-paused dry-run selects paused jobs only');
+  } else {
+    fail(`--resume-paused selection wrong: ${dry}`);
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`Batch rate-limit pause test crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
