@@ -1608,33 +1608,37 @@ try {
       '| 27 | 2026-01-08 | Acme | Solutions Engineer, Revenue | 3.0/5 | Applied | ❌ | [27](../reports/027-revenue-applied.md) | applied exact-title row |\n' +
       '| 28 | 2026-01-09 | Acme | Solutions Engineer, Revenue | 4.6/5 | Evaluated | ❌ | [28](../reports/028-revenue-eval.md) | evaluated exact-title row |\n');
 
-    run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
-    const deduped = readFileSync(tracker, 'utf-8');
-
-    if (deduped.includes('Full Stack Engineer, Foundation') && deduped.includes('Full Stack Engineer, Guarded Releases')) {
-      pass('dedup-tracker preserves distinct Full Stack Engineer sibling rows');
+    const dedupResult = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (dedupResult === null) {
+      fail('dedup-tracker.mjs crashed during shared role matcher safety test');
     } else {
-      fail('dedup-tracker removed a distinct Full Stack Engineer sibling row');
-    }
+      const deduped = readFileSync(tracker, 'utf-8');
 
-    if (deduped.includes('Staff Software Engineer, API') && deduped.includes('Staff Software Engineer, SDK')) {
-      pass('dedup-tracker preserves short-acronym sibling rows');
-    } else {
-      fail('dedup-tracker removed a short-acronym sibling row');
-    }
+      if (deduped.includes('Full Stack Engineer, Foundation') && deduped.includes('Full Stack Engineer, Guarded Releases')) {
+        pass('dedup-tracker preserves distinct Full Stack Engineer sibling rows');
+      } else {
+        fail('dedup-tracker removed a distinct Full Stack Engineer sibling row');
+      }
 
-    const growthRows = deduped.split('\n').filter(l => l.includes('Product Engineer, Growth'));
-    if (growthRows.length === 1 && growthRows[0].includes('4.0/5')) {
-      pass('dedup-tracker still removes a real duplicate evaluated row');
-    } else {
-      fail(`dedup-tracker duplicate handling broken: ${growthRows.length} Growth rows`);
-    }
+      if (deduped.includes('Staff Software Engineer, API') && deduped.includes('Staff Software Engineer, SDK')) {
+        pass('dedup-tracker preserves short-acronym sibling rows');
+      } else {
+        fail('dedup-tracker removed a short-acronym sibling row');
+      }
 
-    const revenueRows = deduped.split('\n').filter(l => l.includes('Solutions Engineer, Revenue'));
-    if (revenueRows.length === 2 && revenueRows.some(l => l.includes('Applied'))) {
-      pass('dedup-tracker never removes Applied+ rows by fuzzy title match');
-    } else {
-      fail('dedup-tracker removed an Applied+ row by fuzzy title match');
+      const growthRows = deduped.split('\n').filter(l => l.includes('Product Engineer, Growth'));
+      if (growthRows.length === 1 && growthRows[0].includes('4.0/5')) {
+        pass('dedup-tracker still removes a real duplicate evaluated row');
+      } else {
+        fail(`dedup-tracker duplicate handling broken: ${growthRows.length} Growth rows`);
+      }
+
+      const revenueRows = deduped.split('\n').filter(l => l.includes('Solutions Engineer, Revenue'));
+      if (revenueRows.length === 2 && revenueRows.some(l => l.includes('Applied'))) {
+        pass('dedup-tracker never removes Applied+ rows by fuzzy title match');
+      } else {
+        fail('dedup-tracker removed an Applied+ row by fuzzy title match');
+      }
     }
   } finally {
     rmSync(dedupTmp, { recursive: true, force: true });
@@ -1678,29 +1682,33 @@ try {
     writeFileSync(join(additionsDir, '005-streamco.tsv'),
       '5\t2026-01-06\tStreamCo\tFull Stack Engineer 5, Ads Reporting\tEvaluated\t4.5/5\t❌\t[5](reports/005-streamco-2026-01-06.md)\trepost\n');
 
-    run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
-    const merged = readFileSync(tracker, 'utf-8');
-
-    // Distinct role sharing a long prefix must be ADDED, not folded into the existing row.
-    if (merged.includes('AI Insights & Visualizations') && merged.includes('Ads Reporting')) {
-      pass('distinct roles with shared prefix kept as separate rows');
+    const mergeResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    if (mergeResult === null) {
+      fail('merge-tracker.mjs crashed during fuzzy dedup regression test');
     } else {
-      fail('distinct role with shared prefix was merged away (silent data loss)');
-    }
+      const merged = readFileSync(tracker, 'utf-8');
 
-    // #751 repro: different teams under one brand token must both survive.
-    if (merged.includes('UberEats Feed') && merged.includes('Consumer Fulfillment')) {
-      pass('brand-token roles (#751: UberEats Feed vs Consumer Fulfillment) kept separate');
-    } else {
-      fail('brand-token roles were deduped (#751 regression)');
-    }
+      // Distinct role sharing a long prefix must be ADDED, not folded into the existing row.
+      if (merged.includes('AI Insights & Visualizations') && merged.includes('Ads Reporting')) {
+        pass('distinct roles with shared prefix kept as separate rows');
+      } else {
+        fail('distinct role with shared prefix was merged away (silent data loss)');
+      }
 
-    // True repost (identical role tokens) must still UPDATE in place — exactly one row, score bumped.
-    const adsRows = merged.split('\n').filter(l => l.includes('Ads Reporting'));
-    if (adsRows.length === 1 && adsRows[0].includes('4.5/5')) {
-      pass('true repost still updates the existing row in place (4.4 → 4.5, no duplicate)');
-    } else {
-      fail(`repost handling broken: ${adsRows.length} 'Ads Reporting' rows, expected 1 updated to 4.5/5`);
+      // #751 repro: different teams under one brand token must both survive.
+      if (merged.includes('UberEats Feed') && merged.includes('Consumer Fulfillment')) {
+        pass('brand-token roles (#751: UberEats Feed vs Consumer Fulfillment) kept separate');
+      } else {
+        fail('brand-token roles were deduped (#751 regression)');
+      }
+
+      // True repost (identical role tokens) must still UPDATE in place — exactly one row, score bumped.
+      const adsRows = merged.split('\n').filter(l => l.includes('Ads Reporting'));
+      if (adsRows.length === 1 && adsRows[0].includes('4.5/5')) {
+        pass('true repost still updates the existing row in place (4.4 → 4.5, no duplicate)');
+      } else {
+        fail(`repost handling broken: ${adsRows.length} 'Ads Reporting' rows, expected 1 updated to 4.5/5`);
+      }
     }
   } finally {
     rmSync(mergeTmp, { recursive: true, force: true });
