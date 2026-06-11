@@ -35,12 +35,20 @@
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
 import { createHash } from 'crypto';
-import { dirname } from 'path';
+import { dirname, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
 const MD_PATH = process.env.CAREER_OPS_TRACKER || 'data/applications.md';
-const DB_PATH = process.env.CAREER_OPS_TRACKER_DB || MD_PATH.replace(/\.md$/, '.db');
+const DB_PATH = process.env.CAREER_OPS_TRACKER_DB
+  || (MD_PATH.endsWith('.md') ? MD_PATH.slice(0, -3) + '.db' : MD_PATH + '.db');
+
+// SQLite must never open the source of truth itself (an explicit
+// CAREER_OPS_TRACKER_DB could point both names at the same file).
+if (resolve(MD_PATH) === resolve(DB_PATH)) {
+  console.error(`Error: DB path must differ from the markdown path (${MD_PATH}).`);
+  process.exit(1);
+}
 const STATES_PATH = 'templates/states.yml';
 const HEADER = '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |';
 const SEPARATOR = '|---|------|---------|------|-------|--------|-----|--------|-------|';
@@ -406,6 +414,7 @@ async function exportMd(args) {
     process.stdout.write(out);
     return;
   }
+  mkdirSync(dirname(outPath) || '.', { recursive: true });
   // Never silently clobber — whatever was there is backed up first.
   if (existsSync(outPath)) {
     copyFileSync(outPath, outPath + '.bak');
