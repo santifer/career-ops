@@ -1,6 +1,6 @@
 # Career-Ops
 
-[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md)
+[English](README.md) | [Español](README.es.md) | [Français](README.fr.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [العربية](README.ar.md)
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops 多代理求职系统" width="800"></a>
@@ -132,18 +132,15 @@ career-ops 原生支持 [Gemini CLI](https://github.com/google-gemini/gemini-cli
 ### 选项 A —— 原生 Gemini CLI（推荐）
 
 ```bash
-# 1. 安装 Gemini CLI
+# 1. 安装 Gemini CLI（需要 Node.js 20+）
 npm install -g @google/gemini-cli
 # 或: npx @google/gemini-cli --version
 
-# 2. 认证（免费 —— 使用你的 Google 账号）
-gemini auth
-
-# 3. 在 career-ops 目录中运行
+# 2. 在 career-ops 目录中运行 —— 首次启动时使用你的 Google 账号登录（免费）完成认证
 cd career-ops
 gemini
 
-# 4. 像 Claude Code 一样使用斜杠命令
+# 3. 像 Claude Code 一样使用斜杠命令
 /career-ops "Anthropic 的资深 AI 工程师..."
 /career-ops-evaluate --file ./jds/openai.txt
 /career-ops-scan
