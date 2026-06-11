@@ -14,7 +14,8 @@ These files contain your personal data, customizations, and work product. Update
 | `article-digest.md` | Your proof points from portfolio |
 | `interview-prep/story-bank.md` | Your accumulated STAR+R stories |
 | `portals.yml` | Your customized company list |
-| `data/applications.md` | Your application tracker |
+| `data/applications.md` | Your application tracker (rendered view when SQLite is enabled) |
+| `data/applications.db` | Your application tracker database (SQLite, opt-in — see `tracker.mjs`) |
 | `data/pipeline.md` | Your URL inbox |
 | `data/scan-history.tsv` | Your scan history |
 | `data/follow-ups.md` | Your follow-up history |

@@ -63,6 +63,7 @@ const SYSTEM_PATHS = [
   'generate-latex.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
+  'tracker.mjs',
   'verify-pipeline.mjs',
   'dedup-tracker.mjs',
   'normalize-statuses.mjs',

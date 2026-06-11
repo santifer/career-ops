@@ -19,6 +19,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run tracker` | `tracker.mjs` | SQLite tracker store (opt-in) — query/add/update/render |
 
 ---
 
@@ -216,3 +217,28 @@ npm run scan
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.
+
+---
+
+## tracker
+
+SQLite storage layer for the applications tracker (RFC #918). **Opt-in** — nothing changes until you run `migrate`. After migration, `data/applications.db` is the source of truth and `data/applications.md` becomes a rendered read-only view (same table format, so all downstream tooling and git diffs keep working).
+
+Why: at hundreds of rows a markdown table degrades structurally (encoding corruption, column drift, `|` inside cells shifting columns), and agents grepping it get model-dependent results. A schema-validated store returns the same rows for every model on every CLI, and one query replaces reading the whole table into context.
+
+Zero new dependencies — uses `node:sqlite`, built into Node ≥ 22.5.
+
+```bash
+node tracker.mjs migrate --dry-run        # preview parse + repairs, no writes
+node tracker.mjs migrate                  # applications.md → applications.db (md backed up first)
+node tracker.mjs query --status Applied --since 2026-05-01
+node tracker.mjs query --company acme --json
+node tracker.mjs add --company "Acme" --role "Designer" --score 4.2/5
+node tracker.mjs update --id 42 --status Interview
+node tracker.mjs history --id 42          # status transition log (Applied → Interview → ...)
+node tracker.mjs render                   # regenerate applications.md from the DB
+```
+
+`migrate` repairs the corruption classes markdown accumulates: mojibake placeholder cells, scores stranded in the status column (moved back, status defaulted to `Evaluated`), non-canonical statuses (normalized via `templates/states.yml` aliases; unknowns preserved in notes), and missing/duplicate ids. `add` enforces the company+role dedup rule; `update` records status transitions in a `status_events` table, which gives `analyze-patterns.mjs` a real funnel instead of only the current snapshot.
+
+**Exit codes:** `0` success, `1` validation error, missing prerequisites (Node < 22.5, no `applications.md` to migrate), or refusing an unsafe operation (re-migrating a populated DB, rendering an empty DB over an existing tracker).
