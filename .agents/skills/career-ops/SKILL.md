@@ -1,9 +1,9 @@
 ---
 name: career-ops
 description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
-arguments: mode # Claude Code specific
+user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
+argument-hint: "[scan | deep | pdf | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | interview | patterns | followup | update]"
 license: MIT
 ---
 
@@ -22,6 +22,7 @@ Determine the mode from `$mode`:
 | `contacto` | `contacto` |
 | `deep` | `deep` |
 | `interview-prep` | `interview-prep` |
+| `interview` | `interview` |
 | `pdf` | `pdf` |
 | `training` | `training` |
 | `project` | `project` |
@@ -32,6 +33,8 @@ Determine the mode from `$mode`:
 | `batch` | `batch` |
 | `patterns` | `patterns` |
 | `followup` | `followup` |
+| `update` | `update` |
+| `cover` | `cover` |
 
 **Auto-pipeline detection:** If `$mode` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
 
@@ -54,7 +57,9 @@ Available commands:
   /career-ops contacto  → LinkedIn power move: find contacts + draft message
   /career-ops deep      → Deep research prompt about company
   /career-ops interview-prep → Generate company-specific interview prep doc
+  /career-ops interview    → Interactive profile/CV onboarding interview
   /career-ops pdf       → PDF only, ATS-optimized CV
+  /career-ops cover     → Cover letter: standalone JD paste or /career-ops cover {slug}
   /career-ops training  → Evaluate course/cert against North Star
   /career-ops project   → Evaluate portfolio project idea
   /career-ops tracker   → Application status overview
@@ -63,6 +68,7 @@ Available commands:
   /career-ops batch     → Batch processing with parallel workers
   /career-ops patterns  → Analyze rejection patterns and improve targeting
   /career-ops followup  → Follow-up cadence tracker: flag overdue, generate drafts
+  /career-ops update    → Update career-ops system files with diff preview + compat check
 
 Inbox: add URLs to data/pipeline.md → /career-ops pipeline
 Or paste a JD directly to run the full pipeline.
@@ -82,7 +88,7 @@ Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `p
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`
 
-Applies to: `tracker`, `deep`, `interview-prep`, `training`, `project`, `patterns`, `followup`
+Applies to: `tracker`, `deep`, `interview-prep`, `interview`, `training`, `project`, `patterns`, `followup`, `cover`
 
 ### Modes delegated to subagent:
 For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
