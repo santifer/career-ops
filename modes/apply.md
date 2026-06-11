@@ -74,6 +74,16 @@ Classify each question:
 - **Already answered in Section G** → adapt the existing response
 - **New question** → generate response from the report + cv.md
 
+For each field, preserve the application form contract:
+- `field_type`: `text`, `textarea`, `select`, `radio`, `checkbox`, `number`, `file`, or `unknown`
+- `required`: `yes`, `no`, or `unknown`
+- `limit`: exact character/word limit if visible; otherwise `unknown`
+- `options`: visible options for select/radio/checkbox fields
+- `needs_candidate_confirmation`: `yes` for legal, demographic, work authorization, visa, relocation, salary, disability, veteran, sponsorship, background-check, or self-identification questions unless the answer is explicitly present in `config/profile.yml`
+
+Never invent answers for legal, demographic, work-authorization, visa/sponsorship, salary, disability, veteran, background-check, relocation, or self-identification fields. If the answer is not present in `config/profile.yml` or visible context, mark it as needing candidate confirmation and provide the safest question to ask the candidate.
+
+
 ## Step 7 — Generate responses
 
 For each question, generate the response following:
@@ -94,7 +104,7 @@ Based on: Report #NNN | Score: X.X/5 | Archetype: [type]
 ---
 
 ### 1. [Exact form question]
-> [Response ready for copy-paste]
+> [Response ready for copy-paste, or "Ask candidate: ..." if the field needs confirmation]
 
 ### 2. [Next question]
 > [Response]
@@ -108,7 +118,7 @@ Notes:
 - [Personalization suggestions the candidate should review]
 ```
 
-## Step 6 — Post-apply (optional)
+## Step 8 — Post-apply (optional)
 
 If the candidate confirms that they submitted the application:
 1. Update status in `applications.md` from "Evaluated" to "Applied"
