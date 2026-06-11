@@ -512,6 +512,29 @@ if (
   fail('apply mode missing liveness/role-match preflight gate');
 }
 
+// #835 — the eval side (oferta / auto-pipeline) must gate on URL liveness as
+// step 0, so a dead link is caught before a full A-G report + tailored CV.
+const ofertaMode = readFile('modes/oferta.md');
+if (
+  ofertaMode.includes('## Step 0 — Liveness gate') &&
+  ofertaMode.includes('stop before Block A') &&
+  ofertaMode.includes('Do not continue to Step 1 until liveness is resolved')
+) {
+  pass('oferta mode gates evaluation on a step-0 liveness check');
+} else {
+  fail('oferta mode missing the step-0 liveness gate');
+}
+
+const autoPipelineMode = readFile('modes/auto-pipeline.md');
+if (
+  autoPipelineMode.includes('Liveness gate (first)') &&
+  autoPipelineMode.includes('do not run Step 1 evaluation')
+) {
+  pass('auto-pipeline mode gates evaluation on URL liveness');
+} else {
+  fail('auto-pipeline mode missing the liveness gate before evaluation');
+}
+
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
 console.log('\n9. Local parser contract');

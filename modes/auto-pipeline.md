@@ -6,6 +6,8 @@ When the user pastes a JD (text or URL) without an explicit sub-command, execute
 
 If the input is a **URL** (not pasted JD text), follow this strategy to extract the content:
 
+**Liveness gate (first):** Confirm the URL is live before any evaluation (#835). While navigating to read the JD, check for dead-posting evidence — 404/410, "position closed / filled / no longer accepting applications", a hard redirect to a generic careers or search page, or a page with no JD. If the posting is dead, **stop here**: do not run Step 1 evaluation, write a report, or generate a PDF. Mark the entry in `data/pipeline.md` as `- [x] ~~Company | Role~~ — posting expired` and tell the user the link is dead. The headless `check-liveness.mjs <url>` script is the fallback when Playwright MCP is unavailable.
+
 **Priority order:**
 
 1. **Playwright (preferred):** Most job portals (Lever, Ashby, Greenhouse, Workday) are SPAs. Use `browser_navigate` + `browser_snapshot` to render and read the JD.

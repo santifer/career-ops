@@ -2,7 +2,21 @@
 
 When the candidate pastes a job (text or URL), ALWAYS deliver the 7 blocks (A-F evaluation + G legitimacy):
 
-## Step 0 — Archetype Detection
+## Step 0 — Liveness gate
+
+When the candidate provides a **URL** (not pasted JD text), confirm the posting is still live before spending any evaluation tokens. Dead links must be caught here — not after a full A-G report and a tailored CV have already been generated for a 404 (#835).
+
+1. `browser_navigate` to the URL and take a `browser_snapshot` (this snapshot is reused by Block G — Posting Freshness).
+2. Read the URL, page title, JD body, and any closed/expired signals:
+   - **active evidence:** role title + a real job description + an apply/submit path
+   - **dead evidence:** 404/410, "position closed / filled / no longer accepting applications", a hard redirect to a generic careers or search page, or a page with only nav/footer and no JD
+3. If the posting is dead, **stop before Block A** — do not evaluate, write a report, or generate a CV. Mark the entry in `data/pipeline.md` as `- [x] ~~Company | Role~~ — posting expired` and tell the candidate the link is dead.
+4. If liveness cannot be verified (no Playwright, or navigation blocked by a challenge/403), say so and ask the candidate to confirm the posting is active before continuing. The headless `check-liveness.mjs <url>` script is the fallback when Playwright MCP is unavailable.
+5. If the input is pasted JD text (no URL), skip this gate.
+
+Do not continue to Step 1 until liveness is resolved.
+
+## Step 1 — Archetype Detection
 
 Classify the job into one of the 6 archetypes (see `_shared.md`). If it is a hybrid, indicate the 2 closest ones. This determines:
 - Which proof points to prioritize in block B
