@@ -148,18 +148,16 @@ Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) na
 ### Option A: Native Gemini CLI (Recommended)
 
 ```bash
-# 1. Install Gemini CLI
+# 1. Install Gemini CLI (requires Node.js 20+)
 npm install -g @google/gemini-cli
 # or: npx @google/gemini-cli --version
 
-# 2. Authenticate (free, uses your Google account)
-gemini auth
-
-# 3. Run in the career-ops directory
+# 2. Run in the career-ops directory — on first launch, sign in with your
+#    Google account (free) to authenticate
 cd career-ops
 gemini
 
-# 4. Use slash commands just like Claude Code
+# 3. Use slash commands just like Claude Code
 /career-ops "Senior AI Engineer at Anthropic..."
 /career-ops-evaluate --file ./jds/openai.txt
 /career-ops-scan
