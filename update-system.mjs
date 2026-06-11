@@ -72,6 +72,7 @@ const SYSTEM_PATHS = [
   'update-system.mjs',
   'reserve-report-num.mjs',
   'scan.mjs',
+  'scan-ats-full.mjs',
   'providers/',
   'doctor.mjs',
   'check-liveness.mjs',
@@ -82,6 +83,7 @@ const SYSTEM_PATHS = [
   'gemini-eval.mjs',
   'test-all.mjs',
   'test-salary-filter.mjs',
+  'updater-migration-tests.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/README.md',
@@ -368,7 +370,7 @@ async function apply() {
     // Every release that adds a file imported by other system scripts MUST
     // append it here, or clients on older versions break on upgrade
     // (e.g. v1.8.x → v1.9.0: merge-tracker.mjs imports tracker-links.mjs).
-    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'scaffolder/', 'reserve-report-num.mjs'];
+    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs'];
     for (const path of BOOTSTRAP_PATHS) {
       if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
       try {

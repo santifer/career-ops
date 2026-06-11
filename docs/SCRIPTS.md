@@ -19,6 +19,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run scan:full` | `scan-ats-full.mjs` | Reverse ATS discovery scanner |
 
 ---
 
@@ -218,3 +219,21 @@ npm run scan
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.
+
+## scan:full
+
+Reverse ATS discovery scanner. Where `scan.mjs` scans the companies you track in `portals.yml`, this inverts the direction: it walks public directories of companies per ATS (Greenhouse, Lever, Ashby, Workday) and surfaces fresh postings matching your `portals.yml` `title_filter` / `location_filter` — no manual company curation. Company directories come from the public [job-board-aggregator](https://github.com/Feashliaa/job-board-aggregator) dataset, cached in `data/cache/` for 24 hours.
+
+Postings without a usable publish date are skipped — a reverse scan is only useful for fresh postings. New matches are appended to `data/pipeline.md` and `data/scan-history.tsv` in the same format as `scan.mjs`.
+
+```bash
+npm run scan:full                              # all ATS directories, last 3 days
+node scan-ats-full.mjs --since 7               # postings from the last 7 days
+node scan-ats-full.mjs --ats greenhouse,workday # subset of sources
+node scan-ats-full.mjs --limit 200             # max companies per ATS
+node scan-ats-full.mjs --dry-run               # preview without writing
+node scan-ats-full.mjs --liveness              # Playwright-verify matches first
+node scan-ats-full.mjs --md-out notes/scans    # also write a dated markdown digest
+```
+
+**Exit codes:** `0` scan completed, `1` configuration error (no portals.yml, unknown `--ats` source) or fatal scan error.

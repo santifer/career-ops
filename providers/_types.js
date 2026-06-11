@@ -18,6 +18,11 @@
  * @property {string} company  May be empty when the source can't expose it
  *                             at the list-page level; populated downstream.
  * @property {string} location May be empty.
+ * @property {number} [postedAt] Epoch ms when the posting was published.
+ *                               Omitted when the source doesn't expose a
+ *                               usable date. scan.mjs ignores it; consumers
+ *                               like scan-ats-full.mjs use it for recency
+ *                               filtering.
  */
 
 /**
