@@ -127,6 +127,7 @@ const SYSTEM_PATHS = [
   'CITATION.cff',
   '.github/',
   'package.json',
+  'build-cv-latex.mjs',
   'scaffolder/',
   'Dockerfile',
   'docker-compose.yml',
