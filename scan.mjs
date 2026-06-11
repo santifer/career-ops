@@ -25,6 +25,9 @@
  *   node scan.mjs --dry-run        # preview without writing files
  *   node scan.mjs --company Cohere # scan a single company
  *   node scan.mjs --verify         # Playwright-check each new URL; drop expired postings
+ *   node scan.mjs --verify --headed-fallback  # retry anti-bot-blocked URLs in a headed browser (needs a display)
+ *   node scan.mjs --verify --throttle          # jittered ~5-10s gap between checks (stay under rate limits)
+ *   node scan.mjs --verify --throttle=8000     # custom base gap in ms (waits base..2*base)
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
@@ -175,15 +178,48 @@ export function buildLocationFilter(locationFilter) {
 
 // ── Dedup ───────────────────────────────────────────────────────────
 
-function loadSeenUrls() {
+const PERMANENT_SCAN_HISTORY_STATUSES = new Set([
+  'skipped_invalid_url',
+  'skipped_blocked_host',
+]);
+
+function daysBetweenIsoDates(start, end) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return null;
+  const startDate = new Date(`${start}T00:00:00Z`);
+  const endDate = new Date(`${end}T00:00:00Z`);
+  if (startDate.toISOString().slice(0, 10) !== start || endDate.toISOString().slice(0, 10) !== end) return null;
+  return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+}
+
+export function shouldDedupScanHistoryRow({ firstSeen, status = 'added' }, { recheckAfterDays = null, today = new Date().toISOString().slice(0, 10) } = {}) {
+  if (PERMANENT_SCAN_HISTORY_STATUSES.has(status)) return true;
+  if (status !== 'added') return true;
+  if (recheckAfterDays == null) return true;
+  const ageDays = daysBetweenIsoDates(firstSeen, today);
+  if (ageDays == null) return true;
+  return ageDays < recheckAfterDays;
+}
+
+function scanHistoryPolicy(config = {}) {
+  const raw = config.scan_history?.recheck_after_days;
+  const parsed = Number.parseInt(raw, 10);
+  return {
+    recheckAfterDays: Number.isFinite(parsed) && parsed >= 0 ? parsed : null,
+  };
+}
+
+function loadSeenUrls(policy = {}) {
   const seen = new Set();
+  let recheckEligible = 0;
 
   // scan-history.tsv
   if (existsSync(SCAN_HISTORY_PATH)) {
     const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n');
     for (const line of lines.slice(1)) { // skip header
-      const url = line.split('\t')[0];
-      if (url) seen.add(url);
+      const [url, firstSeen, , , , status = 'added'] = line.split('\t');
+      if (!url) continue;
+      if (shouldDedupScanHistoryRow({ firstSeen, status }, policy)) seen.add(url);
+      else recheckEligible++;
     }
   }
 
@@ -203,7 +239,7 @@ function loadSeenUrls() {
     }
   }
 
-  return seen;
+  return { seen, recheckEligible };
 }
 
 function loadSeenCompanyRoles() {
@@ -292,13 +328,18 @@ async function parallelFetch(tasks, limit) {
 
 // ── Main ────────────────────────────────────────────────────────────
 
-async function verifyOffers(offers) {
+async function verifyOffers(offers, { headedFallback = false, throttleBaseMs = 0 } = {}) {
   // Dynamic imports keep the default zero-token path free of Playwright startup
   let chromium;
   let checkUrlLiveness;
+  let checkUrlLivenessWithFallback;
+  let createHeadedPageProvider;
+  let newLivenessPage;
+  let jitteredDelayMs;
+  let sleep;
   try {
     ({ chromium } = await import('playwright'));
-    ({ checkUrlLiveness } = await import('./liveness-browser.mjs'));
+    ({ checkUrlLiveness, checkUrlLivenessWithFallback, createHeadedPageProvider, newLivenessPage, jitteredDelayMs, sleep } = await import('./liveness-browser.mjs'));
   } catch (err) {
     throw new Error(
       `--verify requires Playwright with Chromium (run "npx playwright install chromium"): ${err.message}`,
@@ -328,11 +369,17 @@ async function verifyOffers(offers) {
   const dropped = [];
   const invalid = [];
 
+  const headed = headedFallback ? createHeadedPageProvider(chromium) : null;
+  const getHeadedPage = headed ? () => headed.get() : undefined;
+
   try {
-    const page = await browser.newPage();
+    const page = await newLivenessPage(browser);
     // Sequential — project rule: never Playwright in parallel
-    for (const offer of offers) {
-      const { result, code, reason } = await checkUrlLiveness(page, offer.url);
+    for (let i = 0; i < offers.length; i++) {
+      const offer = offers[i];
+      const { result, code, reason } = headed
+        ? await checkUrlLivenessWithFallback(page, offer.url, { getHeadedPage })
+        : await checkUrlLiveness(page, offer.url);
       if (result === 'expired') {
         expired.push({ ...offer, reason });
         console.log(`  ❌ expired   ${offer.company} | ${offer.title} (${reason})`);
@@ -354,8 +401,12 @@ async function verifyOffers(offers) {
         const icon = result === 'active' ? '✅' : '⚠️';
         console.log(`  ${icon} ${result.padEnd(9)} ${offer.company} | ${offer.title}`);
       }
+
+      const wait = i < offers.length - 1 ? jitteredDelayMs(throttleBaseMs) : 0;
+      if (wait) await sleep(wait);
     }
   } finally {
+    if (headed) await headed.close();
     await browser.close();
   }
 
@@ -378,6 +429,15 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const verify = args.includes('--verify');
+  // Opt-in: on an anti-bot challenge (e.g. pracuj.pl Cloudflare wall), retry the
+  // URL in a headed browser. Off by default — headed Chromium needs a display, so
+  // scheduled/unattended scans should not rely on it.
+  const headedFallback = args.includes('--headed-fallback');
+  // --throttle or --throttle=<ms>: jittered gap between --verify checks to stay
+  // under rate-based WAF limits (pracuj.pl flags the session after a few rapid
+  // hits). Default base 5000ms. Off by default — most ATS feeds don't need it.
+  const throttleArg = args.find((a) => a === '--throttle' || a.startsWith('--throttle='));
+  const throttleBaseMs = throttleArg ? (Number(throttleArg.split('=')[1]) || 5000) : 0;
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
 
@@ -403,6 +463,7 @@ async function main() {
   const targets = [];
   let skippedCount = 0;
   const resolveErrors = [];
+  const agentHandoff = [];
   for (const company of companies) {
     if (!company || typeof company !== 'object') continue;
     if (company.enabled === false) continue;
@@ -412,7 +473,17 @@ async function main() {
     }
     if (filterCompany && !company.name.toLowerCase().includes(filterCompany)) continue;
     const resolved = resolveProvider(company, providers);
-    if (!resolved) { skippedCount++; continue; }
+    if (!resolved) {
+      skippedCount++;
+      if (company.scan_method === 'websearch') {
+        agentHandoff.push({
+          company: company.name,
+          method: 'websearch',
+          query: company.scan_query || company.search_query || company.careers_url || '',
+        });
+      }
+      continue;
+    }
     if (resolved.error) { resolveErrors.push({ company: company.name, error: resolved.error }); continue; }
     targets.push({ ...company, _provider: resolved.provider });
   }
@@ -422,7 +493,9 @@ async function main() {
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   // 4. Load dedup sets
-  const seenUrls = loadSeenUrls();
+  const historyPolicy = scanHistoryPolicy(config);
+  const seenUrlState = loadSeenUrls(historyPolicy);
+  const seenUrls = seenUrlState.seen;
   const seenCompanyRoles = loadSeenCompanyRoles();
 
   // 5. Fetch from each target
@@ -496,7 +569,7 @@ async function main() {
   let invalidOffers = [];
   if (verify && newOffers.length > 0) {
     console.log(`\nVerifying liveness of ${newOffers.length} new offer(s) with Playwright (sequential)...`);
-    const result = await verifyOffers(newOffers);
+    const result = await verifyOffers(newOffers, { headedFallback, throttleBaseMs });
     verifiedOffers = result.verified;
     expiredOffers = result.expired;
     droppedOffers = result.dropped;
@@ -541,12 +614,26 @@ async function main() {
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
+  if (historyPolicy.recheckAfterDays != null) {
+    console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);
+  }
   if (verify) {
     console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
     console.log(`No apply control:      ${droppedOffers.length} dropped`);
     console.log(`Invalid (guarded):     ${invalidOffers.length} dropped`);
   }
   console.log(`New offers added:      ${verifiedOffers.length}`);
+
+  if (agentHandoff.length > 0) {
+    console.log(`Agent/WebSearch handoff: ${agentHandoff.length} compan${agentHandoff.length === 1 ? 'y' : 'ies'} not handled by zero-token providers`);
+    for (const item of agentHandoff.slice(0, 25)) {
+      const hint = item.query ? ` — ${item.query}` : '';
+      console.log(`  • ${item.company} (${item.method})${hint}`);
+    }
+    if (agentHandoff.length > 25) {
+      console.log(`  … ${agentHandoff.length - 25} more omitted; narrow with --company or inspect portals.yml`);
+    }
+  }
 
   if (errors.length > 0) {
     console.log(`\nErrors (${errors.length}):`);

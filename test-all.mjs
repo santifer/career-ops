@@ -136,6 +136,182 @@ try {
   } else {
     fail(`Closed mycareersfuture posting misclassified as ${closedMycareersfuture.result}`);
   }
+
+  const cloudflareChallenge = classifyLiveness({
+    status: 403,
+    finalUrl: 'https://www.pracuj.pl/praca/sap-consultant,oferta,1004870954',
+    bodyText: 'www.pracuj.pl\nJust a moment...\nPerforming security verification\nThis website uses a security service to protect against malicious bots.\nRay ID: a06489bab8bc4cd7\nPerformance and Security by Cloudflare',
+    applyControls: [],
+  });
+  if (cloudflareChallenge.result === 'uncertain' && cloudflareChallenge.code === 'bot_challenge') {
+    pass('Cloudflare anti-bot challenge pages are uncertain, not expired');
+  } else {
+    fail(`Cloudflare challenge misclassified as ${cloudflareChallenge.result} (${cloudflareChallenge.code})`);
+  }
+
+  const blocked403 = classifyLiveness({
+    status: 403,
+    finalUrl: 'https://www.pracuj.pl/praca/sap-consultant,oferta,1004870954',
+    bodyText: 'Access denied',
+    applyControls: [],
+  });
+  if (blocked403.result === 'uncertain' && blocked403.code === 'access_blocked') {
+    pass('HTTP 403 is treated as access-blocked (uncertain), not expired');
+  } else {
+    fail(`HTTP 403 misclassified as ${blocked403.result} (${blocked403.code})`);
+  }
+
+  const activePolishPosting = classifyLiveness({
+    status: 200,
+    finalUrl: 'https://www.pracuj.pl/praca/administrator-sap-utilities-warszawa,oferta,1004870954',
+    bodyText: 'Administrator SAP Utilities. Connectis_. Siedziba firmy: Chmielna 71, Warszawa. '.repeat(6),
+    applyControls: ['Aplikuj Aplikuj na ogłoszenie'],
+  });
+  if (activePolishPosting.result === 'active') {
+    pass('Polish "Aplikuj" apply control marks a loaded posting active');
+  } else {
+    fail(`Polish apply control not recognized: ${activePolishPosting.result} (${activePolishPosting.code})`);
+  }
+
+  // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
+  // pages script the goto/evaluate calls so we can exercise the wrapper without
+  // launching a browser. checkUrlLiveness reads body text first, apply controls
+  // second — the fake returns them in that order.
+  const { checkUrlLivenessWithFallback, isChallengeResult, jitteredDelayMs } =
+    await import(pathToFileURL(join(ROOT, 'liveness-browser.mjs')).href);
+
+  const disabled = jitteredDelayMs(0) === 0 && jitteredDelayMs(-1) === 0;
+  let inRange = true;
+  for (let i = 0; i < 200; i += 1) {
+    const d = jitteredDelayMs(5000);
+    if (d < 5000 || d >= 10000) { inRange = false; break; }
+  }
+  if (disabled && inRange) {
+    pass('jitteredDelayMs returns 0 when disabled and stays in [base, 2*base)');
+  } else {
+    fail(`jitteredDelayMs out of spec (disabled=${disabled}, inRange=${inRange})`);
+  }
+
+  const fakePage = ({ status, finalUrl, bodyText, applyControls }) => {
+    let evalCall = 0;
+    return {
+      async goto() { return { status: () => status }; },
+      async waitForTimeout() {},
+      url() { return finalUrl; },
+      async evaluate() { evalCall += 1; return evalCall === 1 ? bodyText : applyControls; },
+    };
+  };
+  const URL = 'https://www.pracuj.pl/praca/sap-consultant,oferta,1004870954';
+  const challengePage = () => fakePage({
+    status: 403,
+    finalUrl: URL,
+    bodyText: 'Just a moment... Performing security verification. Ray ID: abc123. Cloudflare.',
+    applyControls: [],
+  });
+  const livePage = () => fakePage({
+    status: 200,
+    finalUrl: URL,
+    bodyText: 'Administrator SAP Utilities. '.repeat(20),
+    applyControls: ['Apply for this job'],
+  });
+
+  if (isChallengeResult({ result: 'uncertain', code: 'bot_challenge' }) &&
+      isChallengeResult({ result: 'uncertain', code: 'access_blocked' }) &&
+      !isChallengeResult({ result: 'expired', code: 'http_gone' }) &&
+      !isChallengeResult({ result: 'active', code: 'apply_control_visible' })) {
+    pass('isChallengeResult flags only bot_challenge/access_blocked uncertains');
+  } else {
+    fail('isChallengeResult misclassified a result');
+  }
+
+  const fellBackToActive = await checkUrlLivenessWithFallback(challengePage(), URL, {
+    getHeadedPage: async () => livePage(),
+  });
+  if (fellBackToActive.result === 'active') {
+    pass('Headed fallback recovers a challenge-blocked page as active');
+  } else {
+    fail(`Headed fallback did not recover page: ${fellBackToActive.result} (${fellBackToActive.code})`);
+  }
+
+  const noProvider = await checkUrlLivenessWithFallback(challengePage(), URL, {});
+  if (noProvider.result === 'uncertain' && noProvider.code === 'bot_challenge') {
+    pass('No fallback provider keeps the original challenge result');
+  } else {
+    fail(`Missing provider changed result to ${noProvider.result} (${noProvider.code})`);
+  }
+
+  const stillBlocked = await checkUrlLivenessWithFallback(challengePage(), URL, {
+    getHeadedPage: async () => challengePage(),
+  });
+  if (stillBlocked.result === 'uncertain' && stillBlocked.code === 'bot_challenge'
+      && /headed retry also blocked/.test(stillBlocked.reason)) {
+    pass('Persistent challenge stays uncertain after headed retry (never upgraded to expired)');
+  } else {
+    fail(`Persistent challenge mishandled: ${stillBlocked.result} (${stillBlocked.code})`);
+  }
+
+  const noHeadedAvailable = await checkUrlLivenessWithFallback(challengePage(), URL, {
+    getHeadedPage: async () => null, // headed launch failed (no display)
+  });
+  if (noHeadedAvailable.result === 'uncertain' && noHeadedAvailable.code === 'bot_challenge') {
+    pass('Headless-only environment degrades to original challenge result');
+  } else {
+    fail(`No-display degrade path wrong: ${noHeadedAvailable.result} (${noHeadedAvailable.code})`);
+  }
+
+  // SSRF guard — `rejectPrivateOrInvalid` has to refuse every URL whose host
+  // resolves to loopback / private / link-local space. The earlier guard only
+  // matched literal IPv4 patterns and bracketless IPv6, so several Chromium-
+  // routable bypasses (0.0.0.0, [::], [::1] (bracketed), [::ffff:127.0.0.1],
+  // localhost.) slipped through. These cases keep that regression covered.
+  const { rejectPrivateOrInvalid } = await import(
+    pathToFileURL(join(ROOT, 'liveness-browser.mjs')).href
+  );
+  const blockCases = [
+    ['http://0.0.0.0/admin', 'IPv4 all-zeros (Linux routes to loopback)'],
+    ['http://[::]/', 'IPv6 all-zeros (Linux routes to loopback)'],
+    ['http://[::1]/', 'IPv6 loopback (brackets included in url.hostname)'],
+    ['http://[::ffff:127.0.0.1]/', 'IPv4-mapped IPv6 loopback (dotted form)'],
+    ['http://[::ffff:7f00:1]/', 'IPv4-mapped IPv6 loopback (hex form)'],
+    ['http://[::ffff:169.254.169.254]/', 'IPv4-mapped IPv6 link-local (cloud metadata)'],
+    ['http://[fc00::1]/', 'IPv6 ULA (private)'],
+    ['http://[fe80::1]/', 'IPv6 link-local'],
+    ['http://localhost./', 'FQDN-trailing-dot localhost'],
+    ['http://localhost.localdomain/', 'localhost.localdomain alias'],
+    ['http://169.254.169.254/latest/meta-data/', 'cloud metadata IPv4 link-local'],
+    ['http://10.0.0.5/', 'IPv4 RFC1918'],
+  ];
+  let blockMissed = 0;
+  for (const [url, label] of blockCases) {
+    const verdict = rejectPrivateOrInvalid(url);
+    if (verdict?.code !== 'blocked_host') {
+      fail(`SSRF guard missed ${label}: ${url} → ${verdict ? verdict.code : 'allowed'}`);
+      blockMissed += 1;
+    }
+  }
+  if (blockMissed === 0) pass(`SSRF guard blocks ${blockCases.length} known bypass vectors`);
+
+  const allowCases = [
+    'https://boards.greenhouse.io/example/jobs/123',
+    'https://jobs.lever.co/example/abc-def',
+    'https://example.com/careers/role',
+    'https://www.pracuj.pl/praca/role,oferta,1234567',
+  ];
+  let allowDenied = 0;
+  for (const url of allowCases) {
+    if (rejectPrivateOrInvalid(url) !== null) {
+      fail(`SSRF guard false-positive on legitimate ATS URL: ${url}`);
+      allowDenied += 1;
+    }
+  }
+  if (allowDenied === 0) pass('SSRF guard lets legitimate ATS URLs through');
+
+  const protoCase = rejectPrivateOrInvalid('file:///etc/passwd');
+  if (protoCase?.code === 'unsupported_protocol') {
+    pass('SSRF guard rejects unsupported protocol');
+  } else {
+    fail(`SSRF guard let unsupported protocol through: ${protoCase?.code ?? 'allowed'}`);
+  }
 } catch (e) {
   fail(`Liveness classification tests crashed: ${e.message}`);
 }
@@ -190,6 +366,36 @@ for (const f of userFiles) {
   }
 }
 
+const batchRunnerSource = readFile('batch/batch-runner.sh');
+const minScoreSkipIndex = batchRunnerSource.indexOf('update_state "$id" "$url" "skipped"');
+const minScoreReturnIndex = batchRunnerSource.indexOf('return 0', minScoreSkipIndex);
+const completedStateIndex = batchRunnerSource.indexOf('update_state "$id" "$url" "completed"', minScoreSkipIndex);
+if (
+  minScoreSkipIndex !== -1 &&
+  minScoreReturnIndex !== -1 &&
+  completedStateIndex !== -1 &&
+  minScoreSkipIndex < minScoreReturnIndex &&
+  minScoreReturnIndex < completedStateIndex
+) {
+  pass('Batch min-score gate returns before completed state update');
+} else {
+  fail('Batch min-score gate can fall through to completed state update');
+}
+
+if (/if \[\[ "\$status" == "completed" \|\| "\$status" == "skipped" \]\]/.test(batchRunnerSource)) {
+  pass('Batch resume treats min-score skipped offers as terminal');
+} else {
+  fail('Batch resume can reprocess min-score skipped offers');
+}
+
+if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSource) &&
+    /skipped\) skipped=\$\(\(skipped \+ 1\)\)/.test(batchRunnerSource) &&
+    /Completed: \$completed \| Skipped: \$skipped \| Failed: \$failed \| Pending: \$pending/.test(batchRunnerSource)) {
+  pass('Batch summary reports skipped offers separately from pending');
+} else {
+  fail('Batch summary can misreport skipped offers as pending');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
@@ -202,7 +408,7 @@ const leakPatterns = [
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.es.md', 'README.ja.md', 'README.ko-KR.md',
+  'README.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
   'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
@@ -319,8 +525,8 @@ if (fileExists('providers/local-parser.mjs')) {
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
 if (
   scanMode.includes('local_parser_ok') &&
-  scanMode.includes('no repetir scraping caro') &&
-  scanMode.includes('nombre no listado en `local_parser_ok`')
+  (scanMode.includes('No Expensive Scraping Repetition') || scanMode.includes('no repetir scraping caro')) &&
+  (scanMode.includes('name not listed in `local_parser_ok`') || scanMode.includes('nombre no listado en `local_parser_ok`'))
 ) {
   pass('scan.md skips expensive levels after successful local parser');
 } else {
@@ -369,7 +575,9 @@ for (const section of requiredSections) {
 console.log('\n11. Version file');
 
 if (fileExists('VERSION')) {
-  const version = readFile('VERSION').trim();
+  // VERSION may carry a release-please marker, e.g. "1.9.0 # x-release-please-version".
+  // Validate the first whitespace-delimited token, mirroring update-system.mjs parseVersionFile().
+  const version = readFile('VERSION').trim().split(/\s+/)[0];
   if (/^\d+\.\d+\.\d+$/.test(version)) {
     pass(`VERSION is valid semver: ${version}`);
   } else {
@@ -384,7 +592,7 @@ if (fileExists('VERSION')) {
 console.log('\n11. Location filter — always_allow tier');
 
 try {
-  const { buildLocationFilter } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { buildLocationFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
@@ -505,6 +713,19 @@ try {
   // step rather than being silently dropped here.
   if (filter(42) === true) pass('non-string locations are passed through to downstream evaluation, not silently dropped');
   else fail('non-string locations should pass through');
+
+  if (
+    shouldDedupScanHistoryRow({ firstSeen: '2026-06-01', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-05-01', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === false &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-02-31', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-05-01', status: 'skipped_blocked_host' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
+    shouldDedupScanHistoryRow({ firstSeen: '2026-05-01', status: 'added' }, { today: '2026-06-10' }) === true &&
+    scanScript.includes('Recheck eligible:')
+  ) {
+    pass('scan-history TTL rechecks old added URLs while permanent statuses stay deduped');
+  } else {
+    fail('scan-history TTL policy did not match expected recheck/permanent behavior');
+  }
 
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
@@ -1084,6 +1305,172 @@ try {
   }
 } catch (e) {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
+// roleFuzzyMatch over-matched whenever the token overlap dominated the
+// SMALLER side: two distinct roles sharing a long prefix ("Full-Stack
+// Engineer 5, AI Insights & Visualizations" vs "Full Stack Engineer 5, Ads
+// Reporting") or a brand token (#751: "UberEats Feed" vs "Consumer
+// Fulfillment (UberEats)") collapsed onto one tracker row — silently
+// dropping evaluations. The ratio now divides by the token UNION (true
+// Jaccard): genuine reposts (identical token sets) still score 1.0, while
+// distinct specialties fall below the 0.6 threshold.
+console.log('\n🧪 Testing merge-tracker fuzzy dedup (distinct roles vs reposts)...');
+try {
+  const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-'));
+  try {
+    mkdirSync(join(mergeTmp, 'data'));
+    mkdirSync(join(mergeTmp, 'reports'));
+    const additionsDir = join(mergeTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(mergeTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | StreamCo | Full Stack Engineer 5, Ads Reporting | 4.4/5 | Evaluated | ❌ | [1](../reports/001-streamco-2026-01-04.md) | existing |\n' +
+      '| 2 | 2026-01-04 | Uber | Senior Software Engineer, Consumer Fulfillment (UberEats) | 4.2/5 | Evaluated | ❌ | [2](../reports/002-uber-2026-01-04.md) | existing |\n');
+    for (const n of ['001-streamco-2026-01-04', '002-uber-2026-01-04', '003-streamco-2026-01-05', '004-uber-2026-01-05', '005-streamco-2026-01-06']) {
+      writeFileSync(join(mergeTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+    // Two DISTINCT roles (long shared prefix / shared brand token) + one true repost (score bump).
+    writeFileSync(join(additionsDir, '003-streamco.tsv'),
+      '3\t2026-01-05\tStreamCo\tFull-Stack Engineer 5, AI Insights & Visualizations\tEvaluated\t4.6/5\t❌\t[3](reports/003-streamco-2026-01-05.md)\tdistinct role\n');
+    writeFileSync(join(additionsDir, '004-uber.tsv'),
+      '4\t2026-01-05\tUber\tSenior Software Engineer, UberEats Feed\tEvaluated\t4.1/5\t❌\t[4](reports/004-uber-2026-01-05.md)\tdistinct team (#751)\n');
+    writeFileSync(join(additionsDir, '005-streamco.tsv'),
+      '5\t2026-01-06\tStreamCo\tFull Stack Engineer 5, Ads Reporting\tEvaluated\t4.5/5\t❌\t[5](reports/005-streamco-2026-01-06.md)\trepost\n');
+
+    run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    const merged = readFileSync(tracker, 'utf-8');
+
+    // Distinct role sharing a long prefix must be ADDED, not folded into the existing row.
+    if (merged.includes('AI Insights & Visualizations') && merged.includes('Ads Reporting')) {
+      pass('distinct roles with shared prefix kept as separate rows');
+    } else {
+      fail('distinct role with shared prefix was merged away (silent data loss)');
+    }
+
+    // #751 repro: different teams under one brand token must both survive.
+    if (merged.includes('UberEats Feed') && merged.includes('Consumer Fulfillment')) {
+      pass('brand-token roles (#751: UberEats Feed vs Consumer Fulfillment) kept separate');
+    } else {
+      fail('brand-token roles were deduped (#751 regression)');
+    }
+
+    // True repost (identical role tokens) must still UPDATE in place — exactly one row, score bumped.
+    const adsRows = merged.split('\n').filter(l => l.includes('Ads Reporting'));
+    if (adsRows.length === 1 && adsRows[0].includes('4.5/5')) {
+      pass('true repost still updates the existing row in place (4.4 → 4.5, no duplicate)');
+    } else {
+      fail(`repost handling broken: ${adsRows.length} 'Ads Reporting' rows, expected 1 updated to 4.5/5`);
+    }
+  } finally {
+    rmSync(mergeTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
+}
+
+// ── 12. COLD-START TRIGGER ──────────────────────────────────────
+
+console.log('\n12. Cold-start trigger (deterministic onboarding state)');
+
+try {
+  // Virgin env: none of the 4 user-layer prerequisites present → must onboard.
+  const virgin = mkdtempSync(join(tmpdir(), 'co-cold-'));
+  const v = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', virgin]) || '{}');
+  if (v.onboardingNeeded === true && Array.isArray(v.missing) && v.missing.length === 4) {
+    pass('Virgin env → onboarding triggered (4 prerequisites missing)');
+  } else {
+    fail(`Virgin env not flagged for onboarding: ${JSON.stringify(v)}`);
+  }
+  rmSync(virgin, { recursive: true, force: true });
+
+  // Fully provisioned env: all 4 present → must NOT onboard.
+  const ready = mkdtempSync(join(tmpdir(), 'co-ready-'));
+  mkdirSync(join(ready, 'config'), { recursive: true });
+  mkdirSync(join(ready, 'modes'), { recursive: true });
+  for (const f of ['cv.md', 'config/profile.yml', 'modes/_profile.md', 'portals.yml']) {
+    writeFileSync(join(ready, f), 'x');
+  }
+  const r = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', ready]) || '{}');
+  if (r.onboardingNeeded === false) {
+    pass('Provisioned env → no onboarding');
+  } else {
+    fail(`Provisioned env falsely flagged for onboarding: ${JSON.stringify(r)}`);
+  }
+  rmSync(ready, { recursive: true, force: true });
+} catch (e) {
+  fail(`Cold-start trigger test crashed: ${e.message}`);
+}
+
+// ── 13. BATCH RATE-LIMIT PAUSE ──────────────────────────────────
+
+console.log('\n13. Batch rate-limit pause');
+
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-rate-'));
+  const batchDir = join(tmp, 'batch');
+  const fakeBin = join(tmp, 'bin');
+  mkdirSync(batchDir, { recursive: true });
+  mkdirSync(join(tmp, 'reports'), { recursive: true });
+  mkdirSync(join(tmp, 'data'), { recursive: true });
+  mkdirSync(fakeBin, { recursive: true });
+
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8'));
+  execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
+  writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
+  writeFileSync(join(batchDir, 'batch-input.tsv'), [
+    'id\turl\tsource\tnotes',
+    '1\thttps://example.com/one\tfixture\t-',
+    '2\thttps://example.com/two\tfixture\t-',
+    '3\thttps://example.com/three\tfixture\t-',
+  ].join('\n') + '\n');
+  writeFileSync(join(fakeBin, 'claude'), [
+    '#!/usr/bin/env bash',
+    'echo "You\\x27ve hit your session limit · resets 12:30pm (Asia/Taipei)"',
+    'exit 1',
+  ].join('\n') + '\n');
+  execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+
+  const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
+  const out = run('bash', [join(batchDir, 'batch-runner.sh'), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  const state = readFileSync(join(batchDir, 'batch-state.tsv'), 'utf-8').trim().split('\n');
+  const first = state[1]?.split('\t') || [];
+
+  if (state.length === 2 && first[0] === '1' && first[2] === 'paused_rate_limit' && first[8] === '0' && out.includes('pausing batch')) {
+    pass('session-limit pauses batch without consuming retry budget or scheduling more jobs');
+  } else {
+    fail(`session-limit pause wrong: lines=${state.length}, first=${JSON.stringify(first)}, out=${JSON.stringify(out.slice(-240))}`);
+  }
+
+  writeFileSync(join(batchDir, 'batch-state.tsv'), [
+    'id\turl\tstatus\tstarted_at\tcompleted_at\treport_num\tscore\terror\tretries',
+    '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
+    '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
+  ].join('\n') + '\n');
+  const dry = run('bash', [join(batchDir, 'batch-runner.sh'), '--resume-paused', '--dry-run'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  if (dry.includes('#1: https://example.com/one') && !dry.includes('#2: https://example.com/two')) {
+    pass('--resume-paused dry-run selects paused jobs only');
+  } else {
+    fail(`--resume-paused selection wrong: ${dry}`);
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`Batch rate-limit pause test crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

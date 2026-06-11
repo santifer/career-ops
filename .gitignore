@@ -40,6 +40,9 @@ bun.lock
 # Report-number reservation sentinels (ephemeral, created by reserve-report-num.mjs)
 reports/*-RESERVED.md
 
+# Backup files written by normalize-statuses.mjs / dedup-tracker.mjs
+*.bak
+
 # OS
 .DS_Store
 *.mov
@@ -50,3 +53,6 @@ reports/*-RESERVED.md
 .claude/memory/
 career-dashboard
 package-lock.json
+
+# Playwright MCP server run artifacts (ephemeral, machine-local — never commit)
+.playwright-mcp/
