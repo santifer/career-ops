@@ -1546,7 +1546,9 @@ try {
    * @param {number} ms - Milliseconds to wait.
    * @returns {Promise<void>} Resolves after the delay.
    */
-  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
   /**
    * Spawn one isolated `merge-tracker.mjs` process against the temporary fixture.
    *
@@ -1561,25 +1563,27 @@ try {
    * @returns {Promise<{code:number|null,stdout:string,stderr:string}>}
    * Process result after `merge-tracker.mjs` exits.
    */
-  const runMergeAsync = (additionsDir, holdMs = 0) => new Promise(resolve => {
-    const child = spawn(NODE, ['merge-tracker.mjs'], {
-      cwd: ROOT,
-      env: {
-        ...process.env,
-        CAREER_OPS_TRACKER: join(mergeTmp, 'data', 'applications.md'),
-        CAREER_OPS_ADDITIONS: additionsDir,
-        CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'tracker-merge.lock'),
-        CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
+  function runMergeAsync(additionsDir, holdMs = 0) {
+    return new Promise(resolve => {
+      const child = spawn(NODE, ['merge-tracker.mjs'], {
+        cwd: ROOT,
+        env: {
+          ...process.env,
+          CAREER_OPS_TRACKER: join(mergeTmp, 'data', 'applications.md'),
+          CAREER_OPS_ADDITIONS: additionsDir,
+          CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'tracker-merge.lock'),
+          CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', chunk => { stdout += chunk; });
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      child.on('error', err => resolve({ code: -1, stdout, stderr: String(err) }));
+      child.on('close', code => resolve({ code, stdout, stderr }));
     });
-    let stdout = '';
-    let stderr = '';
-    child.stdout.on('data', chunk => { stdout += chunk; });
-    child.stderr.on('data', chunk => { stderr += chunk; });
-    child.on('error', err => resolve({ code: -1, stdout, stderr: String(err) }));
-    child.on('close', code => resolve({ code, stdout, stderr }));
-  });
+  }
 
   try {
     mkdirSync(join(mergeTmp, 'data'));
