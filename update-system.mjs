@@ -90,7 +90,7 @@ const SYSTEM_PATHS = [
   '.env.example',
   '.agents/',
   '.claude/skills/',
-
+  '.claude-plugin/',
   '.gemini/commands/',
   '.qwen/',
   'docs/',
