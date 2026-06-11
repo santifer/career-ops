@@ -15,7 +15,7 @@
  * See DATA_CONTRACT.md for the full system/user layer definitions.
  */
 
-import { execFileSync, execSync } from 'child_process';
+import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -33,6 +33,7 @@ const SYSTEM_PATHS = [
   'modes/_profile.template.md',
   'modes/oferta.md',
   'modes/pdf.md',
+  'modes/cover.md',
   'modes/scan.md',
   'modes/batch.md',
   'modes/apply.md',
@@ -61,6 +62,7 @@ const SYSTEM_PATHS = [
   'GEMINI.md',
   'generate-pdf.mjs',
   'generate-latex.mjs',
+  'generate-cover-letter.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
   'verify-pipeline.mjs',
@@ -68,6 +70,7 @@ const SYSTEM_PATHS = [
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
+  'reserve-report-num.mjs',
   'scan.mjs',
   'providers/',
   'doctor.mjs',
@@ -100,8 +103,10 @@ const SYSTEM_PATHS = [
   'README.md',
   'README.cn.md',
   'README.es.md',
+  'README.fr.md',
   'README.ja.md',
   'README.ko-KR.md',
+  'README.pl.md',
   'README.pt-BR.md',
   'README.ru.md',
   'README.ua.md',
@@ -119,6 +124,11 @@ const SYSTEM_PATHS = [
   '.github/',
   'package.json',
   'scaffolder/',
+  'Dockerfile',
+  'docker-compose.yml',
+  '.dockerignore',
+  'cops',
+  'DOCKER.md',
 ];
 
 // User layer paths — NEVER touch these (safety check)
@@ -221,15 +231,20 @@ function addPaths(paths) {
 // not respect but curl handles transparently.  The --silent / --fail flags
 // match the failure-handling already used throughout apply().
 function curlGet(url, extraArgs = []) {
-  try {
-    return execFileSync(
+  return new Promise((resolve) => {
+    execFile(
       'curl',
       ['--silent', '--fail', '--max-time', '10', ...extraArgs, url],
       { encoding: 'utf-8', timeout: 12000 },
-    ).trim();
-  } catch {
-    return null; // network unreachable, 404, timeout, etc.
-  }
+      (error, stdout) => {
+        if (error) {
+          resolve(null);
+        } else {
+          resolve(stdout.trim());
+        }
+      }
+    );
+  });
 }
 
 async function check() {
@@ -249,7 +264,14 @@ async function check() {
   // both failing is the only true-offline signal.
   const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
 
-  const rawVersion = curlGet(RAW_VERSION_URL);
+  const [rawVersion, releaseRaw] = await Promise.all([
+    curlGet(RAW_VERSION_URL),
+    curlGet(RELEASES_API, [
+      '--header', 'Accept: application/vnd.github.v3+json',
+      '--header', 'User-Agent: career-ops-update-checker',
+    ]),
+  ]);
+
   if (rawVersion !== null) {
     try {
       const raw = parseVersionFile(rawVersion);
@@ -260,10 +282,6 @@ async function check() {
     }
   }
 
-  const releaseRaw = curlGet(RELEASES_API, [
-    '--header', 'Accept: application/vnd.github.v3+json',
-    '--header', 'User-Agent: career-ops-update-checker',
-  ]);
   if (releaseRaw !== null) {
     try {
       const release = JSON.parse(releaseRaw);
@@ -346,7 +364,10 @@ async function apply() {
     // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
     // checked out while `.claude/skills/` was updated to symlink into it.
     // See: https://github.com/santifer/career-ops/issues/649
-    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs'];
+    // Every release that adds a file imported by other system scripts MUST
+    // append it here, or clients on older versions break on upgrade
+    // (e.g. v1.8.x → v1.9.0: merge-tracker.mjs imports tracker-links.mjs).
+    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'scaffolder/', 'reserve-report-num.mjs'];
     for (const path of BOOTSTRAP_PATHS) {
       if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
       try {
