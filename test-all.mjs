@@ -67,9 +67,14 @@ console.log('\n2. Script execution (graceful on empty data)');
 const scripts = [
   { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
   { name: 'verify-pipeline.mjs', expectExit: 0 },
-  { name: 'normalize-statuses.mjs', expectExit: 0 },
-  { name: 'dedup-tracker.mjs', expectExit: 0 },
-  { name: 'merge-tracker.mjs', expectExit: 0 },
+  // --dry-run: these three scripts resolve ROOT from import.meta.url and write
+  // data/applications.md in place. On a provisioned working copy (real tracker
+  // present) running them without --dry-run mutates user data — the fuzzy dedup
+  // can merge distinct same-company roles and drop rows. Harmless in this repo
+  // (no tracker shipped), destructive for end users who run `node test-all.mjs`.
+  { name: 'normalize-statuses.mjs --dry-run', expectExit: 0 },
+  { name: 'dedup-tracker.mjs --dry-run', expectExit: 0 },
+  { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
