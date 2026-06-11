@@ -11,7 +11,7 @@
  */
 
 import { chromium } from 'playwright';
-import { resolve, dirname } from 'path';
+import { resolve, dirname, relative, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -244,12 +244,20 @@ async function generatePDF() {
 export async function inlineLocalFonts(html) {
   const FONT_REF = /url\(\s*(['"]?)\.\/fonts\/([^'")\s]+)\1\s*\)/g;
   const MIME = { woff2: 'font/woff2', woff: 'font/woff', otf: 'font/otf', ttf: 'font/ttf' };
+  const fontsDir = resolve(__dirname, 'fonts');
   const names = [...new Set([...html.matchAll(FONT_REF)].map((m) => m[2]))];
   const dataUrls = new Map();
   for (const name of names) {
-    if (name.includes('..')) continue;
+    // Containment check: ".." segments and absolute names (./fonts//etc/passwd)
+    // would otherwise resolve outside fonts/.
+    const fontPath = resolve(fontsDir, name);
+    const rel = relative(fontsDir, fontPath);
+    if (rel.startsWith('..') || isAbsolute(rel)) {
+      console.warn(`⚠️  Font reference escapes fonts/, keeping original reference: ${name}`);
+      continue;
+    }
     try {
-      const buf = await readFile(resolve(__dirname, 'fonts', name));
+      const buf = await readFile(fontPath);
       const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
       dataUrls.set(name, `url('data:${MIME[ext] || 'application/octet-stream'};base64,${buf.toString('base64')}')`);
     } catch (err) {

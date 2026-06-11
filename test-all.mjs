@@ -2229,12 +2229,19 @@ try {
     fail('missing font file mangled the url() reference');
   }
 
-  // Traversal outside fonts/ must never be inlined.
+  // Traversal outside fonts/ must never be inlined — neither via ".."
+  // segments nor via absolute names (resolve() returns those verbatim).
   const traversal = await inlineLocalFonts(`<style>src: url('./fonts/../cv.md');</style>`);
   if (traversal.includes(`url('./fonts/../cv.md')`)) {
     pass('path traversal outside fonts/ is not inlined');
   } else {
     fail('path traversal escaped the fonts/ directory');
+  }
+  const absolute = await inlineLocalFonts(`<style>src: url('./fonts//etc/passwd');</style>`);
+  if (absolute.includes(`url('./fonts//etc/passwd')`)) {
+    pass('absolute-path escape (./fonts//etc/passwd) is not inlined');
+  } else {
+    fail('absolute-path reference escaped the fonts/ directory');
   }
 } catch (e) {
   fail(`font inlining test crashed: ${e.message}`);
