@@ -14,7 +14,7 @@ import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync } from 'fs';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -221,7 +221,7 @@ async function generatePDF() {
   const fontsDir = resolve(__dirname, 'fonts');
   html = html.replace(
     /url\(['"]?\.\/fonts\//g,
-    `url('file://${fontsDir}/`
+    `url('${pathToFileURL(fontsDir).href}/`
   );
   // Close any unclosed quotes from the replacement (handles all font formats)
   html = html.replace(
@@ -262,7 +262,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     // Set content with file base URL for any relative resources
     await page.setContent(html, {
       waitUntil: 'load',
-      baseURL: `file://${baseDir}/`,
+      baseURL: `${pathToFileURL(baseDir).href}/`,
     });
 
     // Wait for fonts to load
@@ -299,7 +299,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   }
 }
 
-const isMain = process.argv[1] && import.meta.url === `file://${resolve(process.argv[1])}`;
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) {
   generatePDF().catch((err) => {
     console.error('❌ PDF generation failed:', err.message);
