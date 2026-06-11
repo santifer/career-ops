@@ -1573,6 +1573,41 @@ try {
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
+
+// ── 12b. PLAYWRIGHT MCP DETECTION WARNING (#522) ────────────────
+
+console.log('\n12b. Playwright MCP detection warning');
+
+try {
+  // No project MCP config → doctor surfaces a (non-fatal) warning instead of
+  // letting SPA job boards fail silently.
+  const noMcp = mkdtempSync(join(tmpdir(), 'co-nomcp-'));
+  const a = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', noMcp]) || '{}');
+  if (Array.isArray(a.warnings) && a.warnings.some((w) => /playwright mcp/i.test(w))) {
+    pass('No Playwright MCP config → warning surfaced');
+  } else {
+    fail(`Expected a Playwright MCP warning, got: ${JSON.stringify(a.warnings)}`);
+  }
+  rmSync(noMcp, { recursive: true, force: true });
+
+  // A project that registers a Playwright MCP server → no warning.
+  const withMcp = mkdtempSync(join(tmpdir(), 'co-mcp-'));
+  mkdirSync(join(withMcp, '.claude'), { recursive: true });
+  writeFileSync(
+    join(withMcp, '.claude', 'settings.json'),
+    JSON.stringify({ mcpServers: { playwright: { command: 'npx', args: ['@playwright/mcp', '--headless'] } } }),
+  );
+  const b = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', withMcp]) || '{}');
+  if (Array.isArray(b.warnings) && !b.warnings.some((w) => /playwright mcp/i.test(w))) {
+    pass('Playwright MCP configured → no warning');
+  } else {
+    fail(`Did not expect a Playwright MCP warning, got: ${JSON.stringify(b.warnings)}`);
+  }
+  rmSync(withMcp, { recursive: true, force: true });
+} catch (e) {
+  fail(`Playwright MCP detection test crashed: ${e.message}`);
+}
+
 // ── 15. PROVIDERS — SolidJobs ─────────────────────────────────────
 
 console.log('\n15. Provider — solidjobs');
