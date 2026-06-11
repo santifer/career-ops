@@ -57,6 +57,7 @@
  * @property {Object<string,string>} [headers]
  * @property {string}                [method]
  * @property {(string|null)}         [body]
+ * @property {('error'|'follow'|'manual')} [redirect]
  */
 
 /**

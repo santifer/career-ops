@@ -211,7 +211,7 @@ async function main() {
 
   console.log(`Reverse ATS scan — sources: ${opts.ats.join(', ')} | since ${opts.sinceDays}d${opts.limit < Infinity ? ` | limit ${opts.limit}/ats` : ''}${opts.liveness ? ' | liveness' : ''}${opts.dryRun ? ' | DRY RUN' : ''}`);
 
-  const seenUrls = loadSeenUrls();
+  const { seen: seenUrls } = loadSeenUrls();
   const ctx = makeHttpCtx();
   const date = new Date().toISOString().slice(0, 10);
 
