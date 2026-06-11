@@ -11,7 +11,7 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
-import { execSync, execFileSync } from 'child_process';
+import { execSync, execFileSync, spawn } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
@@ -1523,6 +1523,80 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
+// Report-number reservation is atomic now (#803), but tracker merges are a
+// separate read/modify/write step. If two merge-tracker processes read the same
+// old applications.md snapshot and then write back independently, one process
+// can erase the row added by the other. This fixture gives each process a
+// different additions dir and pauses the first process after it has read the
+// tracker, making the old race deterministic.
+console.log('\n🧪 Testing merge-tracker concurrent writes...');
+try {
+  const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-lock-'));
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const runMergeAsync = (additionsDir, holdMs = 0) => new Promise(resolve => {
+    const child = spawn(NODE, ['merge-tracker.mjs'], {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        CAREER_OPS_TRACKER: join(mergeTmp, 'data', 'applications.md'),
+        CAREER_OPS_ADDITIONS: additionsDir,
+        CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'tracker-merge.lock'),
+        CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', err => resolve({ code: -1, stdout, stderr: String(err) }));
+    child.on('close', code => resolve({ code, stdout, stderr }));
+  });
+
+  try {
+    mkdirSync(join(mergeTmp, 'data'));
+    mkdirSync(join(mergeTmp, 'reports'));
+    const additionsA = join(mergeTmp, 'additions-a');
+    const additionsB = join(mergeTmp, 'additions-b');
+    mkdirSync(additionsA);
+    mkdirSync(additionsB);
+
+    writeFileSync(join(mergeTmp, 'data', 'applications.md'),
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n');
+    writeFileSync(join(mergeTmp, 'reports', '010-alpha-2026-01-07.md'), '# fixture\n');
+    writeFileSync(join(mergeTmp, 'reports', '011-beta-2026-01-07.md'), '# fixture\n');
+    writeFileSync(join(additionsA, '010-alpha.tsv'),
+      '10\t2026-01-07\tAlpha\tPlatform Engineer\tEvaluated\t4.1/5\t❌\t[10](reports/010-alpha-2026-01-07.md)\tfirst concurrent merge\n');
+    writeFileSync(join(additionsB, '011-beta.tsv'),
+      '11\t2026-01-07\tBeta\tData Engineer\tEvaluated\t4.2/5\t❌\t[11](reports/011-beta-2026-01-07.md)\tsecond concurrent merge\n');
+
+    const first = runMergeAsync(additionsA, 350);
+    await wait(75);
+    const second = runMergeAsync(additionsB, 0);
+    const [firstResult, secondResult] = await Promise.all([first, second]);
+
+    if (firstResult.code === 0 && secondResult.code === 0) {
+      pass('concurrent merge processes both exited successfully');
+    } else {
+      fail(`concurrent merge process failed: first=${firstResult.code} second=${secondResult.code} stderr=${firstResult.stderr || secondResult.stderr}`);
+    }
+
+    const merged = readFileSync(join(mergeTmp, 'data', 'applications.md'), 'utf-8');
+    if (merged.includes('Alpha') && merged.includes('Beta')) {
+      pass('concurrent tracker merges preserve rows from both processes');
+    } else {
+      fail(`concurrent tracker merge lost a row: ${merged}`);
+    }
+  } finally {
+    rmSync(mergeTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker concurrent write test crashed: ${e.message}`);
 }
 
 // ── 12. COLD-START TRIGGER ──────────────────────────────────────

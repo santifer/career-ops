@@ -14,10 +14,12 @@
  * Run: node career-ops/merge-tracker.mjs [--dry-run] [--verify]
  */
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync, rmSync, statSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import { createHash, randomUUID } from 'crypto';
+import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
@@ -37,6 +39,11 @@ const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 const MIGRATE = process.argv.includes('--migrate');
+const MERGE_HOLD_MS = Number(process.env.CAREER_OPS_MERGE_HOLD_MS) || 0;
+
+const trackerLockKey = createHash('sha256').update(APPS_FILE).digest('hex').slice(0, 16);
+const TRACKER_LOCK_DIR = process.env.CAREER_OPS_TRACKER_LOCK
+  || join(tmpdir(), `career-ops-merge-tracker-${trackerLockKey}.lock`);
 
 // The reports/ dir sits at the repo root, which is the tracker's parent in the
 // data/ layout (data/applications.md) and the tracker's own dir at root layout.
@@ -48,6 +55,114 @@ const normalizeReportLink = (reportField) => normalizeLink(reportField, TRACKER_
 // Ensure required directories exist (fresh setup)
 mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
 mkdirSync(ADDITIONS_DIR, { recursive: true });
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function processIsAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err?.code === 'EPERM';
+  }
+}
+
+function readLockOwner(lockDir) {
+  try {
+    return JSON.parse(readFileSync(join(lockDir, 'owner.json'), 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function lockCanRecover(lockDir, staleMs) {
+  const owner = readLockOwner(lockDir);
+  if (owner?.pid) return !processIsAlive(owner.pid);
+
+  try {
+    return Date.now() - statSync(lockDir).mtimeMs > staleMs;
+  } catch {
+    return true;
+  }
+}
+
+async function acquireTrackerLock(lockDir, options = {}) {
+  const timeoutMs = options.timeoutMs ?? 60_000;
+  const retryMs = options.retryMs ?? 75;
+  const staleMs = options.staleMs ?? 10 * 60_000;
+  const token = randomUUID();
+  const startedAt = Date.now();
+  let attempts = 0;
+  let staleRecovered = false;
+
+  while (Date.now() - startedAt < timeoutMs) {
+    attempts++;
+    try {
+      mkdirSync(lockDir);
+      writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
+        pid: process.pid,
+        token,
+        started_at: new Date().toISOString(),
+        tracker: APPS_FILE,
+      }, null, 2));
+
+      let released = false;
+      return {
+        attempts,
+        waitMs: Date.now() - startedAt,
+        staleRecovered,
+        release() {
+          if (released) return;
+          released = true;
+          const owner = readLockOwner(lockDir);
+          if (owner?.token === token) {
+            rmSync(lockDir, { recursive: true, force: true });
+          }
+        },
+      };
+    } catch (err) {
+      if (err?.code !== 'EEXIST') throw err;
+      if (lockCanRecover(lockDir, staleMs)) {
+        rmSync(lockDir, { recursive: true, force: true });
+        staleRecovered = true;
+        continue;
+      }
+      await sleep(retryMs);
+    }
+  }
+
+  throw new Error(`Timed out waiting for tracker merge lock at ${lockDir}`);
+}
+
+function writeFileAtomic(path, content) {
+  const tmpPath = join(dirname(path), `.${basename(path)}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`);
+  try {
+    writeFileSync(tmpPath, content);
+    renameSync(tmpPath, path);
+  } catch (err) {
+    rmSync(tmpPath, { force: true });
+    throw err;
+  }
+}
+
+let trackerLock;
+try {
+  trackerLock = await acquireTrackerLock(TRACKER_LOCK_DIR, {
+    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+  });
+  process.once('exit', () => trackerLock?.release());
+  if (trackerLock.waitMs > 0 || trackerLock.staleRecovered) {
+    console.log(`🔒 Tracker merge lock acquired (wait_ms=${trackerLock.waitMs} | attempts=${trackerLock.attempts} | stale_recovered=${trackerLock.staleRecovered})`);
+  }
+} catch (err) {
+  console.error(`❌ ${err.message}`);
+  process.exit(1);
+}
 
 // Canonical states and aliases
 const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
@@ -282,6 +397,9 @@ if (!existsSync(APPS_FILE)) {
   process.exit(0);
 }
 const appContent = readFileSync(APPS_FILE, 'utf-8');
+if (MERGE_HOLD_MS > 0) {
+  await sleep(MERGE_HOLD_MS);
+}
 
 // One-time migration: rewrite existing report links so they resolve relative
 // to the tracker file's directory (see #760). Run with: node merge-tracker.mjs --migrate
@@ -295,7 +413,7 @@ if (MIGRATE) {
   if (DRY_RUN) {
     console.log(`🔎 Migration (dry-run): ${changed} row(s) would be rewritten in ${basename(APPS_FILE)}`);
   } else {
-    writeFileSync(APPS_FILE, migrated.join('\n'));
+    writeFileAtomic(APPS_FILE, migrated.join('\n'));
     console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === CAREER_OPS ? 'repo root' : 'data/'}`);
   }
   process.exit(0);
@@ -434,7 +552,7 @@ if (newLines.length > 0) {
 
 // Write back
 if (!DRY_RUN) {
-  writeFileSync(APPS_FILE, appLines.join('\n'));
+  writeFileAtomic(APPS_FILE, appLines.join('\n'));
 
   // Move processed files to merged/
   if (!existsSync(MERGED_DIR)) mkdirSync(MERGED_DIR, { recursive: true });
@@ -446,6 +564,7 @@ if (!DRY_RUN) {
 
 console.log(`\n📊 Summary: +${added} added, 🔄${updated} updated, ⏭️${skipped} skipped`);
 if (DRY_RUN) console.log('(dry-run — no changes written)');
+trackerLock.release();
 
 // Optional verify
 if (VERIFY && !DRY_RUN) {
