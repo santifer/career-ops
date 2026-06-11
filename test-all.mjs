@@ -1535,7 +1535,32 @@ try {
 console.log('\n🧪 Testing merge-tracker concurrent writes...');
 try {
   const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-lock-'));
+  /**
+   * Wait briefly between starting concurrent merge processes.
+   *
+   * The first process is started with `CAREER_OPS_MERGE_HOLD_MS`, then this
+   * helper gives it time to acquire the tracker lock before the second process
+   * starts. That makes the test exercise lock waiting instead of relying on
+   * scheduler luck.
+   *
+   * @param {number} ms - Milliseconds to wait.
+   * @returns {Promise<void>} Resolves after the delay.
+   */
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  /**
+   * Spawn one isolated `merge-tracker.mjs` process against the temporary fixture.
+   *
+   * Each spawned process receives the same tracker path and lock path but a
+   * different additions directory. Without serialization, both processes can
+   * read the same old tracker and the later write can lose the other row. The
+   * returned result captures stdout/stderr so failures explain which worker
+   * failed and why.
+   *
+   * @param {string} additionsDir - Directory containing this process's TSV row.
+   * @param {number} [holdMs=0] - Optional post-read delay injected into the merge.
+   * @returns {Promise<{code:number|null,stdout:string,stderr:string}>}
+   * Process result after `merge-tracker.mjs` exits.
+   */
   const runMergeAsync = (additionsDir, holdMs = 0) => new Promise(resolve => {
     const child = spawn(NODE, ['merge-tracker.mjs'], {
       cwd: ROOT,

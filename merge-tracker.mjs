@@ -56,10 +56,34 @@ const normalizeReportLink = (reportField) => normalizeLink(reportField, TRACKER_
 mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
 mkdirSync(ADDITIONS_DIR, { recursive: true });
 
+/**
+ * Pause the async merge flow for a fixed number of milliseconds.
+ *
+ * This is used in two places:
+ * - the lock retry loop, where waiting briefly avoids a tight CPU spin while
+ *   another `merge-tracker.mjs` process owns the tracker lock;
+ * - the regression test hook (`CAREER_OPS_MERGE_HOLD_MS`), which deliberately
+ *   holds the first merge after it reads `applications.md` so a second merge can
+ *   try to enter the same critical section.
+ *
+ * @param {number} ms - Milliseconds to wait before resolving.
+ * @returns {Promise<void>} Resolves after the requested delay.
+ */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Determine whether a process id still belongs to a live process.
+ *
+ * The tracker lock stores the owner PID in `owner.json`. When another process
+ * finds an existing lock, this check lets it distinguish a valid live owner from
+ * a crashed process that left a stale lock directory behind. `EPERM` counts as
+ * alive because the process exists even if the current user cannot signal it.
+ *
+ * @param {number} pid - Process id recorded by the lock owner.
+ * @returns {boolean} True when the process appears to still exist.
+ */
 function processIsAlive(pid) {
   if (!Number.isInteger(pid) || pid <= 0) return false;
   try {
@@ -70,6 +94,16 @@ function processIsAlive(pid) {
   }
 }
 
+/**
+ * Read lock ownership metadata from a tracker lock directory.
+ *
+ * The metadata contains the owner PID, a unique release token, the acquisition
+ * timestamp, and the tracker path. Invalid or missing metadata is treated as
+ * unreadable so the stale-lock recovery path can fall back to directory age.
+ *
+ * @param {string} lockDir - Directory that represents the active lock.
+ * @returns {object|null} Parsed owner metadata, or null when unavailable.
+ */
 function readLockOwner(lockDir) {
   try {
     return JSON.parse(readFileSync(join(lockDir, 'owner.json'), 'utf-8'));
@@ -78,6 +112,19 @@ function readLockOwner(lockDir) {
   }
 }
 
+/**
+ * Decide whether an existing lock can be safely recovered.
+ *
+ * Recovery is conservative: if the lock has an owner PID and that process is
+ * still alive, the lock is never considered stale merely because it is old. If
+ * the owner process is gone, or if the metadata cannot be read and the lock
+ * directory itself is older than the stale threshold, the waiting process may
+ * remove the lock and retry acquisition.
+ *
+ * @param {string} lockDir - Directory that represents the active lock.
+ * @param {number} staleMs - Age threshold for metadata-free lock recovery.
+ * @returns {boolean} True when the caller may remove and recreate the lock.
+ */
 function lockCanRecover(lockDir, staleMs) {
   const owner = readLockOwner(lockDir);
   if (owner?.pid) return !processIsAlive(owner.pid);
@@ -89,6 +136,24 @@ function lockCanRecover(lockDir, staleMs) {
   }
 }
 
+/**
+ * Acquire an exclusive filesystem lock for one tracker merge.
+ *
+ * The critical section must cover the full read/modify/write/move sequence, not
+ * just the final write. Otherwise two processes can read the same old tracker
+ * snapshot, compute independent updates, and let the later writer erase rows
+ * written by the earlier one. The lock is implemented with atomic directory
+ * creation, owner metadata, retry/backoff, stale-owner recovery, and a release
+ * token so one process cannot delete another process's newer lock.
+ *
+ * @param {string} lockDir - Directory path used as the lock sentinel.
+ * @param {object} [options] - Lock timing options.
+ * @param {number} [options.timeoutMs=60000] - Maximum time to wait for the lock.
+ * @param {number} [options.retryMs=75] - Delay between acquisition attempts.
+ * @param {number} [options.staleMs=600000] - Metadata-free stale-lock threshold.
+ * @returns {Promise<{attempts:number,waitMs:number,staleRecovered:boolean,release:Function}>}
+ * Lock handle with metadata and an idempotent release method.
+ */
 async function acquireTrackerLock(lockDir, options = {}) {
   const timeoutMs = options.timeoutMs ?? 60_000;
   const retryMs = options.retryMs ?? 75;
@@ -137,6 +202,18 @@ async function acquireTrackerLock(lockDir, options = {}) {
   throw new Error(`Timed out waiting for tracker merge lock at ${lockDir}`);
 }
 
+/**
+ * Replace a tracker file atomically using a same-directory temporary file.
+ *
+ * Writing into the same directory keeps the final `renameSync` atomic on normal
+ * filesystems and avoids exposing a partially written `applications.md` to other
+ * readers. If the write or rename fails, the temporary file is cleaned up before
+ * the original error is rethrown.
+ *
+ * @param {string} path - Final file path to replace.
+ * @param {string} content - Complete file content to write.
+ * @returns {void}
+ */
 function writeFileAtomic(path, content) {
   const tmpPath = join(dirname(path), `.${basename(path)}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`);
   try {
