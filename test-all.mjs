@@ -1379,6 +1379,82 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER NUMBER-COLLISION GUARD (#912) ─────────────────
+// TSV numbers carry the REPORT sequence while the tracker `#` column is its
+// own row sequence, and the two drift (#867). A TSV whose report number
+// collides with the report number on an unrelated company's row must NOT be
+// treated as a duplicate — the unguarded report-number match overwrote that
+// row's company/role/notes. The colliding TSV has to be appended as a new
+// row with the next free number, leaving the existing row byte-identical.
+console.log('\n🧪 Testing merge-tracker number-collision guard (#912)...');
+try {
+  const collTmp = mkdtempSync(join(tmpdir(), 'career-ops-collision-'));
+  try {
+    mkdirSync(join(collTmp, 'data'));
+    mkdirSync(join(collTmp, 'reports'));
+    const additionsDir = join(collTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(collTmp, 'data', 'applications.md');
+    const mergeEnv = { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir };
+
+    // Row #1 carries report number 1 — the same number the new TSV brings.
+    const oldcoRow = '| 1 | 2026-01-09 | OldCo | Senior Widget Engineer | 4.1/5 | Interview | ❌ | [1](../reports/001-oldco-2026-01-09.md) | precious row-one notes |';
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      oldcoRow + '\n' +
+      '| 2 | 2026-01-01 | OtherCo | Widget Engineer | N/A | Applied | ❌ | — | row two |\n');
+    for (const n of ['001-oldco-2026-01-09', '001-newco-2026-01-10', '001-newco-2026-01-11']) {
+      writeFileSync(join(collTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+
+    // Colliding TSV: report number 1 (= row #1's report number), DIFFERENT company,
+    // higher score than row #1 so the update-in-place branch would fire if matched.
+    writeFileSync(join(additionsDir, '001-newco.tsv'),
+      '1\t2026-01-10\tNewCo\tPlatform Reliability Lead\tEvaluated\t4.7/5\t❌\t[1](reports/001-newco-2026-01-10.md)\tfresh eval\n');
+
+    run(NODE, ['merge-tracker.mjs'], { env: mergeEnv });
+    const after = readFileSync(tracker, 'utf-8');
+
+    if (after.includes(oldcoRow)) {
+      pass('report-number collision: existing row #1 (OldCo) left byte-identical');
+    } else {
+      fail('report-number collision OVERWROTE row #1 (#912 regression — bare number match must not dedup)');
+    }
+
+    const newcoRows = after.split('\n').filter(l => l.includes('NewCo'));
+    if (newcoRows.length === 1 && /^\| 3 \| 2026-01-10 \| NewCo \| Platform Reliability Lead \|/.test(newcoRows[0])) {
+      pass('colliding TSV appended as a new row with the next free number (#3)');
+    } else {
+      fail(`colliding TSV not appended as #3: ${JSON.stringify(newcoRows)}`);
+    }
+
+    // Positive control: SAME company + same report number with a higher score
+    // must still UPDATE in place via the (now company-guarded) report-number path.
+    writeFileSync(join(additionsDir, '001-newco.tsv'),
+      '1\t2026-01-11\tNewCo\tPlatform Reliability Lead\tEvaluated\t4.9/5\t❌\t[1](reports/001-newco-2026-01-11.md)\tre-evaluated\n');
+
+    run(NODE, ['merge-tracker.mjs'], { env: mergeEnv });
+    const after2 = readFileSync(tracker, 'utf-8');
+    const newcoRows2 = after2.split('\n').filter(l => l.includes('NewCo'));
+    if (newcoRows2.length === 1 && newcoRows2[0].startsWith('| 3 |') && newcoRows2[0].includes('4.9/5')) {
+      pass('same-company report-number match still updates in place (no duplicate row)');
+    } else {
+      fail(`same-company re-eval did not update #3 in place: ${JSON.stringify(newcoRows2)}`);
+    }
+    if (after2.includes(oldcoRow)) {
+      pass('row #1 still intact after the same-company re-eval merge');
+    } else {
+      fail('row #1 was modified by the same-company re-eval merge');
+    }
+  } finally {
+    rmSync(collTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker number-collision tests crashed: ${e.message}`);
+}
+
 // ── 12. COLD-START TRIGGER ──────────────────────────────────────
 
 console.log('\n12. Cold-start trigger (deterministic onboarding state)');
