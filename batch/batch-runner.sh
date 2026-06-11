@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for headless AI CLI workers
-# Reads batch-input.tsv, delegates each offer to a headless CLI worker,
+# career-ops batch runner — standalone orchestrator for claude -p workers
+# Reads batch-input.tsv, delegates each offer to a claude -p worker,
 # tracks state in batch-state.tsv for resumability.
 #
-# Supports: Claude Code (`claude -p`), OpenCode (`opencode run`).
-# Set CLI with --cli flag (default: claude).
+# NOTE: This script is Claude Code-specific. It uses claude -p with
+# --dangerously-skip-permissions and --append-system-prompt-file flags
+# that are not available in other CLIs. Multi-CLI support is out of scope
+# for now — contributions welcome.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -33,20 +35,19 @@ RESUME_PAUSED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
-CLI="claude"  # default CLI
-MODEL=""      # empty = let claude -p use the Claude Max default
+MODEL=""  # empty = let claude -p use the Claude Max default
 RATE_LIMIT_SLEEP=300
 BATCH_PAUSED=false
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via headless CLI workers
+career-ops batch runner — process job offers in batch via claude -p workers
+Uses your default Claude model (Claude Max subscription).
 
 Usage: batch-runner.sh [OPTIONS]
 
 Options:
   --parallel N         Number of parallel workers (default: 1)
-  --cli NAME           CLI to use: "claude" (default) or "opencode"
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
   --resume-paused      Resume offers paused by a Claude session/rate limit
@@ -55,8 +56,9 @@ Options:
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
   --rate-limit-sleep N Seconds to wait before retrying a rate-limited worker
                        (default: 300)
-  --model NAME         Model name passed to the CLI's --model flag (both claude -p and opencode run).
-                       Default: unset = CLI's default model.
+  --model NAME         Claude model passed to `claude -p --model` (default:
+                       unset = Claude Max default). Use a cheaper model for
+                       large batches, e.g. `--model claude-sonnet-4-6`.
   -h, --help           Show this help
 
 Files:
@@ -70,11 +72,8 @@ Examples:
   # Dry run to see pending offers
   ./batch-runner.sh --dry-run
 
-  # Process all pending with Claude Code
+  # Process all pending
   ./batch-runner.sh
-
-  # Process all pending with OpenCode
-  ./batch-runner.sh --cli opencode
 
   # Retry only failed offers
   ./batch-runner.sh --retry-failed
@@ -88,7 +87,6 @@ USAGE
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --parallel) PARALLEL="$2"; shift 2 ;;
-    --cli) CLI="$2"; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --retry-failed) RETRY_FAILED=true; shift ;;
     --resume-paused) RESUME_PAUSED=true; shift ;;
@@ -149,8 +147,8 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v "$CLI" &>/dev/null; then
-    echo "ERROR: '$CLI' CLI not found in PATH."
+  if ! command -v claude &>/dev/null; then
+    echo "ERROR: 'claude' CLI not found in PATH."
     exit 1
   fi
 
@@ -427,38 +425,12 @@ process_offer() {
     claude_args+=(--model "$MODEL")
   fi
   claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+
   local exit_code=0
   local terminal_failure_recorded=false
-
-  # Build CLI args
-  case "$CLI" in
-    claude)
-      local -a cli_args=(-p --dangerously-skip-permissions)
-      if [[ -n "$MODEL" ]]; then
-        cli_args+=(--model "$MODEL")
-      fi
-      cli_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
-      ;;
-    opencode)
-      local opencode_prompt
-      opencode_prompt="$(cat "$resolved_prompt")"$'\n\n'"$prompt"
-      local -a cli_args=(run "$opencode_prompt")
-      if [[ -n "$MODEL" ]]; then
-        cli_args+=(--model "$MODEL")
-      fi
-      ;;
-    *)
-      echo "ERROR: Unsupported CLI '$CLI'. Use 'claude' or 'opencode'."
-      exit 1
-      ;;
-  esac
-
   while true; do
     exit_code=0
-    case "$CLI" in
-      claude)   claude   "${cli_args[@]}" > "$log_file" 2>&1 || exit_code=$? ;;
-      opencode) opencode "${cli_args[@]}" > "$log_file" 2>&1 || exit_code=$? ;;
-    esac
+    claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
 
     if [[ $exit_code -eq 0 ]]; then
       break
