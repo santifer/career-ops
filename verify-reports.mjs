@@ -11,7 +11,16 @@ import yaml from 'js-yaml';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const REPORTS_DIR = process.env.CAREER_OPS_REPORTS || join(ROOT, 'reports');
-const VALID_LEGITIMACY = new Set(['high', 'medium', 'low', 'uncertain', 'unverified']);
+const VALID_LEGITIMACY = new Set([
+  'high',
+  'medium',
+  'low',
+  'uncertain',
+  'unverified',
+  'high confidence',
+  'proceed with caution',
+  'suspicious',
+]);
 const MACHINE_SUMMARY_FIELDS = ['company', 'role', 'score', 'final_decision'];
 
 function reportFiles(dir) {
@@ -37,7 +46,7 @@ export function validateReport(content) {
   const warnings = [];
 
   if (!/\*\*URL:\*\*\s*\S+/i.test(content)) errors.push('missing **URL:** header');
-  const legitimacy = content.match(/\*\*Legitimacy:\*\*\s*([A-Za-z_-]+)/i)?.[1]?.toLowerCase();
+  const legitimacy = content.match(/\*\*Legitimacy:\*\*\s*([A-Za-z][A-Za-z _-]*)/i)?.[1]?.trim().toLowerCase();
   if (!legitimacy) {
     errors.push('missing **Legitimacy:** header');
   } else if (!VALID_LEGITIMACY.has(legitimacy)) {
@@ -97,7 +106,7 @@ function selfTest() {
       '**Score:** 4.2/5',
       '**URL:** https://jobs.example/acme',
       '**PDF:** ✅',
-      '**Legitimacy:** high',
+      '**Legitimacy:** High Confidence',
       '',
       '## Machine Summary',
       '```yaml',
