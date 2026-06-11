@@ -480,7 +480,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md',
+  'interview.md', 'latex.md',
 ];
 
 for (const mode of expectedModes) {
@@ -497,6 +497,15 @@ if (shared.includes('_profile.md')) {
   pass('_shared.md references _profile.md');
 } else {
   fail('_shared.md does NOT reference _profile.md');
+}
+
+for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+  const skill = readFile(skillPath);
+  if (skill.includes('/career-ops latex')) {
+    pass(`${skillPath} exposes /career-ops latex in discovery menu`);
+  } else {
+    fail(`${skillPath} does not expose /career-ops latex in discovery menu`);
+  }
 }
 
 const applyMode = readFile('modes/apply.md');
