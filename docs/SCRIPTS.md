@@ -20,6 +20,8 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run scan:full` | `scan-ats-full.mjs` | Reverse ATS discovery scanner |
+| `npm run validate:portals` | `validate-portals.mjs` | Validate portals.yml shape before scanning |
 
 ---
 
@@ -90,6 +92,22 @@ npm run merge -- --verify     # merge then run verify-pipeline
 Processed TSVs are moved to `batch/tracker-additions/merged/`.
 
 **Exit codes:** `0` success, `1` verification errors (with `--verify`).
+
+---
+
+## validate:portals
+
+Validates `portals.yml` before running the scanner. The validator is offline: it reads YAML, loads local provider IDs from `providers/*.mjs`, and checks common configuration mistakes without fetching any job boards.
+
+It reports errors for invalid YAML shape, unknown explicit providers, malformed URLs, empty filter keywords, and invalid local parser blocks. Duplicate enabled company names are warnings because they may be intentional during migrations, but they are worth reviewing.
+
+```bash
+npm run validate:portals
+npm run validate:portals -- --file templates/portals.example.yml
+node validate-portals.mjs --self-test
+```
+
+**Exit codes:** `0` no errors (warnings allowed), `1` one or more errors found.
 
 ---
 
@@ -212,6 +230,8 @@ Each URL gets a verdict: `active`, `expired`, or `uncertain` with a reason.
 
 Zero-token portal scanner. Runs configured local parsers for SSR/static career pages and hits ATS APIs (Greenhouse, Ashby, Lever) directly — no LLM tokens consumed. Reads `portals.yml` for target companies, outputs matching listings to stdout, and optionally appends to `data/pipeline.md`.
 
+`scan_history.recheck_after_days` in `portals.yml` lets old `added` URLs become eligible for recheck after the configured number of days. If absent, scan-history dedup keeps the historical behavior and dedups forever. Permanent invalid statuses such as blocked host and malformed URL remain permanent.
+
 For custom SSR pages, configure a tracked company with `scan_method: local_parser` and a `parser` block. The parser can be written in JavaScript, Python, or any language available as a local executable. Company-specific parsers usually already know their source URL and only need to print JSON jobs to stdout:
 
 ```yaml
@@ -230,3 +250,21 @@ npm run scan
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.
+
+## scan:full
+
+Reverse ATS discovery scanner. Where `scan.mjs` scans the companies you track in `portals.yml`, this inverts the direction: it walks public directories of companies per ATS (Greenhouse, Lever, Ashby, Workday) and surfaces fresh postings matching your `portals.yml` `title_filter` / `location_filter` — no manual company curation. Company directories come from the public [job-board-aggregator](https://github.com/Feashliaa/job-board-aggregator) dataset, cached in `data/cache/` for 24 hours.
+
+Postings without a usable publish date are skipped — a reverse scan is only useful for fresh postings. New matches are appended to `data/pipeline.md` and `data/scan-history.tsv` in the same format as `scan.mjs`.
+
+```bash
+npm run scan:full                              # all ATS directories, last 3 days
+node scan-ats-full.mjs --since 7               # postings from the last 7 days
+node scan-ats-full.mjs --ats greenhouse,workday # subset of sources
+node scan-ats-full.mjs --limit 200             # max companies per ATS
+node scan-ats-full.mjs --dry-run               # preview without writing
+node scan-ats-full.mjs --liveness              # Playwright-verify matches first
+node scan-ats-full.mjs --md-out notes/scans    # also write a dated markdown digest
+```
+
+**Exit codes:** `0` scan completed, `1` configuration error (no portals.yml, unknown `--ats` source) or fatal scan error.

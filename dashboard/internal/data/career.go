@@ -131,6 +131,9 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 			app.Notes = fields[8]
 		}
 
+		// Lift location / work mode / pay / last-contact out of the notes free-text
+		deriveNoteFields(&app)
+
 		apps = append(apps, app)
 	}
 
