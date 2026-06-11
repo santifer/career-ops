@@ -55,12 +55,15 @@ async function loadSqlite() {
     console.error('Error: node:sqlite is not available. tracker.mjs needs Node >= 22.5 (you are on ' + process.version + ').');
     console.error('The markdown tracker keeps working without it — SQLite is opt-in.');
     process.exit(1);
+  } finally {
+    process.emitWarning = origEmit; // the warning fires at import time — safe to restore here
   }
 }
 
 function openDb(DatabaseSync) {
   mkdirSync('data', { recursive: true });
   const db = new DatabaseSync(DB_PATH);
+  db.exec('PRAGMA foreign_keys = ON'); // SQLite ignores REFERENCES without this
   db.exec(`
     CREATE TABLE IF NOT EXISTS applications (
       id      INTEGER PRIMARY KEY,
@@ -89,6 +92,10 @@ function openDb(DatabaseSync) {
 // ── Canonical states (templates/states.yml is the source of truth) ──
 
 function loadStates() {
+  if (!existsSync(STATES_PATH)) {
+    console.error(`Error: ${STATES_PATH} not found — cannot validate statuses. Run from the career-ops root.`);
+    process.exit(1);
+  }
   const doc = yaml.load(readFileSync(STATES_PATH, 'utf-8'));
   const byKey = new Map(); // lowercased label/alias → canonical label
   const labels = [];
@@ -332,7 +339,9 @@ async function update(args) {
   const params = [];
   for (const field of ['score', 'pdf', 'report', 'notes', 'company', 'role', 'date']) {
     const v = flagValue(args, '--' + field);
-    if (v !== null) { sets.push(`${field} = ?`); params.push(v); }
+    if (v === null) continue;
+    if (field === 'date' && !DATE_RE.test(v)) { console.error('Error: --date must be YYYY-MM-DD'); process.exit(1); }
+    sets.push(`${field} = ?`); params.push(v);
   }
   const statusRaw = flagValue(args, '--status');
   let newStatus = null;
