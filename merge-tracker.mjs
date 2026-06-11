@@ -7,7 +7,8 @@
  * - 8-col: num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport (no notes)
  * - Pipe-delimited (markdown table row): | col | col | ... |
  *
- * Dedup: company normalized + role fuzzy match + report number match
+ * Dedup: report-number or entry-number match (company-guarded — a bare
+ * number collision is never a duplicate), or company + role fuzzy match
  * If duplicate with higher score → update in-place, update report link
  * Validates status against states.yml (rejects non-canonical, logs warning)
  *
@@ -354,17 +355,23 @@ for (const file of tsvFiles) {
   addition.report = normalizeReportLink(addition.report);
 
   // Check for duplicate by:
-  // 1. Exact report number match
-  // 2. Company + role fuzzy match
+  // 1. Report number match (same company only)
+  // 2. Entry number match (same company only)
+  // 3. Company + role fuzzy match
   const reportNum = extractReportNum(addition.report);
+  const normCompany = normalizeCompany(addition.company);
+  const sameCompany = (app) => normalizeCompany(app.company) === normCompany;
   let duplicate = null;
 
   if (reportNum) {
-    // Check if this report number already exists
-    duplicate = existingApps.find(app => {
-      const existingReportNum = extractReportNum(app.report);
-      return existingReportNum === reportNum;
-    });
+    // Report number already used — but only when the company also matches.
+    // The same drift described for entry numbers below applies here: report
+    // numbering is its own sequence, so a tracker row whose link happens to
+    // carry the same number (manually added rows, renumbering after drift)
+    // is unrelated unless the company matches too. An unguarded hit here
+    // overwrote other companies' rows (#912).
+    duplicate = existingApps.find(app =>
+      sameCompany(app) && extractReportNum(app.report) === reportNum);
   }
 
   if (!duplicate) {
@@ -374,19 +381,15 @@ for (const file of tsvFiles) {
     // 067 while the tracker was already at #69). A bare num collision across
     // *different* companies is that drift, not a duplicate — matching on num
     // alone silently merges a brand-new role into an unrelated existing row.
-    const normCompany = normalizeCompany(addition.company);
     duplicate = existingApps.find(app =>
-      app.num === addition.num && normalizeCompany(app.company) === normCompany
+      app.num === addition.num && sameCompany(app)
     );
   }
 
   if (!duplicate) {
     // Company + role fuzzy match
-    const normCompany = normalizeCompany(addition.company);
-    duplicate = existingApps.find(app => {
-      if (normalizeCompany(app.company) !== normCompany) return false;
-      return roleFuzzyMatch(addition.role, app.role);
-    });
+    duplicate = existingApps.find(app =>
+      sameCompany(app) && roleFuzzyMatch(addition.role, app.role));
   }
 
   if (duplicate) {
@@ -406,7 +409,9 @@ for (const file of tsvFiles) {
       skipped++;
     }
   } else {
-    // New entry — use the number from the TSV
+    // New entry — use the TSV's number if it extends the sequence; otherwise
+    // (number already taken, e.g. a report number colliding with another
+    // company's row) append with the next free number instead of reusing it.
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
     if (addition.num > maxNum) maxNum = addition.num;
 
