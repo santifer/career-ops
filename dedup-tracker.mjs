@@ -12,16 +12,21 @@
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { roleFuzzyMatch } from './role-matcher.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
+// Support both layouts: data/applications.md (boilerplate) and applications.md
+// (original). CAREER_OPS_TRACKER lets tests point the script at an isolated
+// fixture so the real user tracker is never touched.
+const APPS_FILE = process.env.CAREER_OPS_TRACKER
+  ? process.env.CAREER_OPS_TRACKER
+  : existsSync(join(CAREER_OPS, 'data/applications.md'))
+    ? join(CAREER_OPS, 'data/applications.md')
+    : join(CAREER_OPS, 'applications.md');
 const DRY_RUN = process.argv.includes('--dry-run');
 
-// Ensure required directories exist (fresh setup)
-mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+// Ensure the target tracker directory exists in both normal and fixture mode.
+mkdirSync(dirname(APPS_FILE), { recursive: true });
 
 // Status advancement order (higher = more advanced in pipeline)
 // Aplicado > Rechazado because active application > terminal state
@@ -57,42 +62,59 @@ function normalizeCompany(name) {
     .trim();
 }
 
-function normalizeRole(role) {
-  return role.toLowerCase()
-    .replace(/[()]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 /]/g, '')
-    .trim();
+function normalizeStatus(status) {
+  return String(status ?? '')
+    .replace(/\*\*/g, '')
+    .replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '')
+    .trim()
+    .toLowerCase();
 }
 
-const ROLE_STOPWORDS = new Set([
-  'senior', 'junior', 'lead', 'staff', 'principal', 'head', 'chief',
-  'manager', 'director', 'associate', 'intern', 'contractor',
-  'remote', 'hybrid', 'onsite',
-  'engineer', 'engineering',
-]);
+function statusRank(status) {
+  return STATUS_RANK[normalizeStatus(status)] || 0;
+}
 
-const LOCATION_STOPWORDS = new Set([
-  'tokyo', 'japan', 'london', 'berlin', 'paris', 'singapore',
-  'york', 'francisco', 'angeles', 'seattle', 'austin', 'boston',
-  'chicago', 'denver', 'toronto', 'amsterdam', 'dublin', 'sydney',
-  'remote', 'global', 'emea', 'apac', 'latam',
-]);
+function isAdvancedStatus(status) {
+  return statusRank(status) >= STATUS_RANK.applied;
+}
+
+function extractReportNum(reportStr) {
+  const m = String(reportStr ?? '').match(/\[(\d+)\]/);
+  return m ? parseInt(m[1]) : null;
+}
+
+function sameReportIdentity(a, b) {
+  if (a.num === b.num) return true;
+  const reportA = extractReportNum(a.report);
+  const reportB = extractReportNum(b.report);
+  return reportA !== null && reportA === reportB;
+}
+
+function pairKey(a, b) {
+  return [a.num, b.num].sort((x, y) => x - y).join(':');
+}
+
+const protectedFuzzyPairs = new Set();
 
 function roleMatch(a, b) {
-  const filterStopwords = (words) =>
-    words.filter(w => !ROLE_STOPWORDS.has(w) && !LOCATION_STOPWORDS.has(w));
+  if (sameReportIdentity(a, b)) return true;
+  if (!roleFuzzyMatch(a.role, b.role)) return false;
 
-  const wordsA = filterStopwords(normalizeRole(a).split(/\s+/).filter(w => w.length > 2));
-  const wordsB = filterStopwords(normalizeRole(b).split(/\s+/).filter(w => w.length > 2));
+  // Fuzzy title matches are intentionally conservative once either row has
+  // entered the real application pipeline. A user may already have applied to
+  // one sibling role, so deleting that row because a higher-scored sibling has
+  // similar wording would lose status, report, and notes. Keep both unless the
+  // rows point to the exact same report identity.
+  if (isAdvancedStatus(a.status) || isAdvancedStatus(b.status)) {
+    const key = pairKey(a, b);
+    if (!protectedFuzzyPairs.has(key)) {
+      protectedFuzzyPairs.add(key);
+      console.warn(`⚠️  Keep #${a.num} and #${b.num}: fuzzy role match but advanced status requires exact report identity`);
+    }
+    return false;
+  }
 
-  if (wordsA.length === 0 || wordsB.length === 0) return false;
-
-  const overlap = wordsA.filter(w => wordsB.some(wb => wb === w));
-  const smaller = Math.min(wordsA.length, wordsB.length);
-  const ratio = overlap.length / smaller;
-
-  return overlap.length >= 2 && ratio >= 0.6;
+  return true;
 }
 
 function parseScore(s) {
@@ -166,7 +188,7 @@ for (const [company, companyEntries] of groups) {
 
     for (let j = i + 1; j < companyEntries.length; j++) {
       if (processed.has(j)) continue;
-      if (roleMatch(companyEntries[i].role, companyEntries[j].role)) {
+      if (roleMatch(companyEntries[i], companyEntries[j])) {
         cluster.push(companyEntries[j]);
         processed.add(j);
       }
@@ -179,10 +201,10 @@ for (const [company, companyEntries] of groups) {
     const keeper = cluster[0];
 
     // Check if any removed entry has more advanced status
-    let bestStatusRank = STATUS_RANK[keeper.status.toLowerCase()] || 0;
+    let bestStatusRank = statusRank(keeper.status);
     let bestStatus = keeper.status;
     for (let k = 1; k < cluster.length; k++) {
-      const rank = STATUS_RANK[cluster[k].status.toLowerCase()] || 0;
+      const rank = statusRank(cluster[k].status);
       if (rank > bestStatusRank) {
         bestStatusRank = rank;
         bestStatus = cluster[k].status;

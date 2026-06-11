@@ -68,10 +68,10 @@ const scripts = [
   { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
   { name: 'verify-pipeline.mjs', expectExit: 0 },
   // --dry-run: these three scripts resolve ROOT from import.meta.url and write
-  // data/applications.md in place. On a provisioned working copy (real tracker
-  // present) running them without --dry-run mutates user data — the fuzzy dedup
-  // can merge distinct same-company roles and drop rows. Harmless in this repo
-  // (no tracker shipped), destructive for end users who run `node test-all.mjs`.
+  // data/applications.md in place. On a provisioned working copy with a real
+  // tracker present, running them without --dry-run mutates user data. Harmless
+  // in this repo (no tracker shipped), risky for end users who run tests inside
+  // their active career-ops workspace.
   { name: 'normalize-statuses.mjs --dry-run', expectExit: 0 },
   { name: 'dedup-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
@@ -1506,6 +1506,87 @@ try {
   }
 } catch (e) {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
+}
+
+// ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
+// dedup-tracker.mjs used to ship an older fuzzy role matcher than
+// merge-tracker.mjs. That weaker matcher collapsed sibling roles at the same
+// company when they shared generic title words such as "Full Stack Engineer",
+// and could delete an already-Applied row because data/applications.md is
+// normally gitignored. The matcher is now shared, and dedup protects advanced
+// application states from fuzzy-only deletion.
+console.log('\n🧪 Testing shared role matcher and dedup-tracker safety...');
+try {
+  const { roleFuzzyMatch } = await import(pathToFileURL(join(ROOT, 'role-matcher.mjs')).href);
+
+  if (!roleFuzzyMatch('Full Stack Engineer, Foundation', 'Full Stack Engineer, Guarded Releases')) {
+    pass('role matcher keeps Full Stack Engineer sibling teams distinct (#947)');
+  } else {
+    fail('role matcher still collapses distinct Full Stack Engineer sibling teams');
+  }
+
+  if (!roleFuzzyMatch('Staff Software Engineer, API', 'Staff Software Engineer, SDK')) {
+    pass('role matcher keeps short-acronym sibling teams distinct');
+  } else {
+    fail('role matcher collapsed API and SDK sibling teams');
+  }
+
+  if (roleFuzzyMatch('Staff Software Engineer, API', 'Staff Software Engineer, API Platform')) {
+    pass('role matcher still uses short specialty acronyms for true overlaps');
+  } else {
+    fail('role matcher ignored a real short-acronym overlap');
+  }
+
+  const dedupTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-'));
+  try {
+    mkdirSync(join(dedupTmp, 'data'));
+    const tracker = join(dedupTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 21 | 2026-01-08 | Acme | Full Stack Engineer, Foundation | 3.9/5 | Applied | ❌ | [21](../reports/021-foundation.md) | applied sibling |\n' +
+      '| 22 | 2026-01-08 | Acme | Full Stack Engineer, Guarded Releases | 4.3/5 | Evaluated | ❌ | [22](../reports/022-guarded.md) | evaluated sibling |\n' +
+      '| 23 | 2026-01-08 | Acme | Staff Software Engineer, API | 4.0/5 | Evaluated | ❌ | [23](../reports/023-api.md) | acronym sibling |\n' +
+      '| 24 | 2026-01-08 | Acme | Staff Software Engineer, SDK | 4.2/5 | Evaluated | ❌ | [24](../reports/024-sdk.md) | acronym sibling |\n' +
+      '| 25 | 2026-01-08 | Acme | Product Engineer, Growth | 3.8/5 | Evaluated | ❌ | [25](../reports/025-growth-old.md) | duplicate old |\n' +
+      '| 26 | 2026-01-09 | Acme | Product Engineer, Growth | 4.0/5 | Evaluated | ❌ | [26](../reports/026-growth-new.md) | duplicate new |\n' +
+      '| 27 | 2026-01-08 | Acme | Solutions Engineer, Revenue | 3.0/5 | Applied | ❌ | [27](../reports/027-revenue-applied.md) | applied exact-title row |\n' +
+      '| 28 | 2026-01-09 | Acme | Solutions Engineer, Revenue | 4.6/5 | Evaluated | ❌ | [28](../reports/028-revenue-eval.md) | evaluated exact-title row |\n');
+
+    run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    const deduped = readFileSync(tracker, 'utf-8');
+
+    if (deduped.includes('Full Stack Engineer, Foundation') && deduped.includes('Full Stack Engineer, Guarded Releases')) {
+      pass('dedup-tracker preserves distinct Full Stack Engineer sibling rows');
+    } else {
+      fail('dedup-tracker removed a distinct Full Stack Engineer sibling row');
+    }
+
+    if (deduped.includes('Staff Software Engineer, API') && deduped.includes('Staff Software Engineer, SDK')) {
+      pass('dedup-tracker preserves short-acronym sibling rows');
+    } else {
+      fail('dedup-tracker removed a short-acronym sibling row');
+    }
+
+    const growthRows = deduped.split('\n').filter(l => l.includes('Product Engineer, Growth'));
+    if (growthRows.length === 1 && growthRows[0].includes('4.0/5')) {
+      pass('dedup-tracker still removes a real duplicate evaluated row');
+    } else {
+      fail(`dedup-tracker duplicate handling broken: ${growthRows.length} Growth rows`);
+    }
+
+    const revenueRows = deduped.split('\n').filter(l => l.includes('Solutions Engineer, Revenue'));
+    if (revenueRows.length === 2 && revenueRows.some(l => l.includes('Applied'))) {
+      pass('dedup-tracker never removes Applied+ rows by fuzzy title match');
+    } else {
+      fail('dedup-tracker removed an Applied+ row by fuzzy title match');
+    }
+  } finally {
+    rmSync(dedupTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`shared role matcher / dedup safety tests crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
