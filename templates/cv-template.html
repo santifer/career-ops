@@ -284,19 +284,25 @@
   }
 
   /* === CERTIFICATIONS === */
+  .cert-table {
+    display: table;
+    width: 100%;
+  }
+
   .cert-item {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(90px, max-content) 44px;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 6px;
+    display: table-row;
+  }
+
+  .cert-item > * {
+    display: table-cell;
+    vertical-align: baseline;
+    padding-bottom: 6px;
   }
 
   .cert-title {
     font-size: 10.5px;
     font-weight: 500;
     color: #333;
-    min-width: 0;
   }
 
   .cert-org {
@@ -309,6 +315,7 @@
     color: #777;
     white-space: nowrap;
     text-align: right;
+    width: 44px;
   }
 
   /* === SKILLS === */
@@ -349,6 +356,44 @@
   .cert-item {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  /* === RTL (Arabic) Support === */
+  html[lang="ar"] body {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  }
+
+  html[lang="ar"] .header h1,
+  html[lang="ar"] .section-title,
+  html[lang="ar"] .job-company,
+  html[lang="ar"] .project-title,
+  html[lang="ar"] .competency-tag,
+  html[lang="ar"] .skill-category {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  }
+
+  html[lang="ar"] .header-gradient {
+    background: linear-gradient(to left, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
+  }
+
+  html[lang="ar"] .job ul {
+    padding-right: 18px;
+    padding-left: 0;
+  }
+
+  html[lang="ar"] .project-badge {
+    margin-right: 6px;
+    margin-left: 0;
+  }
+
+  html[lang="ar"] .cert-year {
+    text-align: left;
+  }
+
+  html[lang="ar"] .cert-table {
+    direction: rtl;
   }
 </style>
 </head>
@@ -407,7 +452,7 @@
   <!-- CERTIFICATIONS -->
   <div class="section avoid-break">
     <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
-    {{CERTIFICATIONS}}
+    <div class="cert-table">{{CERTIFICATIONS}}</div>
   </div>
 
   <!-- SKILLS -->
