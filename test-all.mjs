@@ -472,6 +472,22 @@ if (!absPathResult) {
   }
 }
 
+// ── 7b. PDF RENDER WAIT CONDITION ───────────────────────────────
+
+console.log('\n7b. PDF render wait condition');
+
+const generatePdfScript = readFile('generate-pdf.mjs');
+if (/waitUntil:\s*['"]load['"]/.test(generatePdfScript)) {
+  pass('generate-pdf waits for load before rendering');
+} else {
+  fail('generate-pdf does not wait for load before rendering');
+}
+if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
+  pass('generate-pdf does not wait for networkidle');
+} else {
+  fail('generate-pdf still waits for networkidle');
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
