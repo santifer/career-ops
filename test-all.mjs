@@ -516,6 +516,10 @@ if (shared.includes('_profile.md')) {
 }
 
 for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+  if (!fileExists(skillPath)) {
+    fail(`${skillPath} is missing`);
+    continue;
+  }
   const skill = readFile(skillPath);
   if (skill.includes('/career-ops latex')) {
     pass(`${skillPath} exposes /career-ops latex in discovery menu`);
@@ -1561,35 +1565,25 @@ console.log('\n🧪 Testing merge-tracker concurrent writes...');
 try {
   const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-lock-'));
   /**
-   * Wait briefly between starting concurrent merge processes.
-   *
-   * The first process is started with `CAREER_OPS_MERGE_HOLD_MS`, then this
-   * helper gives it time to acquire the tracker lock before the second process
-   * starts. That makes the test exercise lock waiting instead of relying on
-   * scheduler luck.
-   *
-   * @param {number} ms - Milliseconds to wait.
-   * @returns {Promise<void>} Resolves after the delay.
-   */
-  function wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-  /**
    * Spawn one isolated `merge-tracker.mjs` process against the temporary fixture.
    *
    * Each spawned process receives the same tracker path and lock path but a
    * different additions directory. Without serialization, both processes can
    * read the same old tracker and the later write can lose the other row. The
-   * returned result captures stdout/stderr so failures explain which worker
-   * failed and why.
+   * first worker also sends an IPC readiness message after reading the tracker
+   * and before its test hold, which lets the test launch the second worker at
+   * the exact old race point instead of relying on scheduler timing.
    *
    * @param {string} additionsDir - Directory containing this process's TSV row.
    * @param {number} [holdMs=0] - Optional post-read delay injected into the merge.
-   * @returns {Promise<{code:number|null,stdout:string,stderr:string}>}
-   * Process result after `merge-tracker.mjs` exits.
+   * @returns {{ready: Promise<void>, result: Promise<{code:number|null,stdout:string,stderr:string}>}}
+   * Worker readiness and final process result promises.
    */
-  function runMergeAsync(additionsDir, holdMs = 0) {
-    return new Promise(resolve => {
+  function spawnMerge(additionsDir, holdMs = 0) {
+    let markReady;
+    let readyMarked = false;
+    const ready = new Promise(resolve => { markReady = resolve; });
+    const result = new Promise(resolve => {
       const child = spawn(NODE, ['merge-tracker.mjs'], {
         cwd: ROOT,
         env: {
@@ -1598,16 +1592,50 @@ try {
           CAREER_OPS_ADDITIONS: additionsDir,
           CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'career-ops-merge-tracker-fixture.lock'),
           CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
+          CAREER_OPS_MERGE_READY_IPC: '1',
         },
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
       });
       let stdout = '';
       let stderr = '';
+      const resolveReady = () => {
+        if (readyMarked) return;
+        readyMarked = true;
+        markReady();
+      };
       child.stdout.on('data', chunk => { stdout += chunk; });
       child.stderr.on('data', chunk => { stderr += chunk; });
-      child.on('error', err => resolve({ code: -1, stdout, stderr: String(err) }));
-      child.on('close', code => resolve({ code, stdout, stderr }));
+      child.on('message', msg => {
+        if (msg?.type === 'merge-tracker-ready') resolveReady();
+      });
+      child.on('error', err => {
+        resolveReady();
+        resolve({ code: -1, stdout, stderr: String(err) });
+      });
+      child.on('close', code => {
+        resolveReady();
+        resolve({ code, stdout, stderr });
+      });
     });
+    return { ready, result };
+  }
+
+  /**
+   * Fail fast when a worker never reaches the deterministic race checkpoint.
+   *
+   * A missing readiness signal would otherwise hang the test suite. Timing out
+   * turns that broken test contract into a normal assertion failure with a clear
+   * message.
+   *
+   * @param {Promise<void>} ready - Worker readiness promise.
+   * @param {number} timeoutMs - Maximum milliseconds to wait.
+   * @returns {Promise<void>} Resolves when ready arrives before the timeout.
+   */
+  function waitForReady(ready, timeoutMs) {
+    return Promise.race([
+      ready,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('merge worker did not signal readiness')), timeoutMs)),
+    ]);
   }
 
   try {
@@ -1629,10 +1657,10 @@ try {
     writeFileSync(join(additionsB, '011-beta.tsv'),
       '11\t2026-01-07\tBeta\tData Engineer\tEvaluated\t4.2/5\t❌\t[11](reports/011-beta-2026-01-07.md)\tsecond concurrent merge\n');
 
-    const first = runMergeAsync(additionsA, 350);
-    await wait(75);
-    const second = runMergeAsync(additionsB, 0);
-    const [firstResult, secondResult] = await Promise.all([first, second]);
+    const first = spawnMerge(additionsA, 350);
+    await waitForReady(first.ready, 2_000);
+    const second = spawnMerge(additionsB, 0);
+    const [firstResult, secondResult] = await Promise.all([first.result, second.result]);
 
     if (firstResult.code === 0 && secondResult.code === 0) {
       pass('concurrent merge processes both exited successfully');

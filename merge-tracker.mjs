@@ -41,6 +41,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 const MIGRATE = process.argv.includes('--migrate');
 const MERGE_HOLD_MS = Number(process.env.CAREER_OPS_MERGE_HOLD_MS) || 0;
+const MERGE_READY_IPC = process.env.CAREER_OPS_MERGE_READY_IPC === '1';
 
 const trackerLockKey = createHash('sha256').update(APPS_FILE).digest('hex').slice(0, 16);
 const TRACKER_LOCK_DIR = resolveTrackerLockDir(process.env.CAREER_OPS_TRACKER_LOCK, trackerLockKey);
@@ -552,6 +553,12 @@ if (!existsSync(APPS_FILE)) {
   process.exit(0);
 }
 const appContent = readFileSync(APPS_FILE, 'utf-8');
+// Test-only synchronization hook: the concurrent merge test waits for the
+// first worker to read the tracker while still holding the lock, then starts a
+// second worker to prove the lock prevents the old lost-update race.
+if (MERGE_READY_IPC && typeof process.send === 'function') {
+  process.send({ type: 'merge-tracker-ready' });
+}
 if (MERGE_HOLD_MS > 0) {
   await sleep(MERGE_HOLD_MS);
 }
