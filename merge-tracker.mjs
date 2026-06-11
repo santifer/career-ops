@@ -14,8 +14,8 @@
  * Run: node career-ops/merge-tracker.mjs [--dry-run] [--verify]
  */
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync, rmSync, statSync } from 'fs';
-import { join, basename, dirname } from 'path';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync, rmSync, statSync, realpathSync } from 'fs';
+import { join, basename, dirname, resolve, relative, isAbsolute, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
 import { createHash, randomUUID } from 'crypto';
@@ -25,11 +25,12 @@ import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
 // CAREER_OPS_TRACKER overrides the path (used by tests and non-standard layouts).
-const APPS_FILE = process.env.CAREER_OPS_TRACKER
+const APPS_FILE_RAW = process.env.CAREER_OPS_TRACKER
   ? process.env.CAREER_OPS_TRACKER
   : existsSync(join(CAREER_OPS, 'data/applications.md'))
     ? join(CAREER_OPS, 'data/applications.md')
     : join(CAREER_OPS, 'applications.md');
+const APPS_FILE = canonicalizeTrackerPath(APPS_FILE_RAW);
 const TRACKER_DIR = dirname(APPS_FILE);
 // CAREER_OPS_ADDITIONS overrides the additions dir (used by tests, mirrors CAREER_OPS_TRACKER).
 const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS
@@ -42,8 +43,7 @@ const MIGRATE = process.argv.includes('--migrate');
 const MERGE_HOLD_MS = Number(process.env.CAREER_OPS_MERGE_HOLD_MS) || 0;
 
 const trackerLockKey = createHash('sha256').update(APPS_FILE).digest('hex').slice(0, 16);
-const TRACKER_LOCK_DIR = process.env.CAREER_OPS_TRACKER_LOCK
-  || join(tmpdir(), `career-ops-merge-tracker-${trackerLockKey}.lock`);
+const TRACKER_LOCK_DIR = resolveTrackerLockDir(process.env.CAREER_OPS_TRACKER_LOCK, trackerLockKey);
 
 // The reports/ dir sits at the repo root, which is the tracker's parent in the
 // data/ layout (data/applications.md) and the tracker's own dir at root layout.
@@ -55,6 +55,67 @@ const normalizeReportLink = (reportField) => normalizeLink(reportField, TRACKER_
 // Ensure required directories exist (fresh setup)
 mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
 mkdirSync(ADDITIONS_DIR, { recursive: true });
+
+/**
+ * Convert the tracker path into one stable absolute spelling before hashing it.
+ *
+ * Equivalent tracker paths can be written in multiple ways, such as a relative
+ * path from the current shell, an absolute path, or a path that travels through
+ * a symlink. The lock key must be based on one canonical spelling so all merge
+ * processes that target the same tracker also target the same lock directory.
+ *
+ * @param {string} path - Raw tracker path from config, env, or the default.
+ * @returns {string} Absolute canonical path when the file exists, else resolved path.
+ */
+function canonicalizeTrackerPath(path) {
+  const absolutePath = resolve(path);
+  try {
+    return realpathSync(absolutePath);
+  } catch {
+    return absolutePath;
+  }
+}
+
+/**
+ * Check whether one absolute path stays inside another directory.
+ *
+ * This protects recursive lock cleanup from accepting paths that escape the
+ * system temp directory through `..` segments or unrelated absolute roots.
+ *
+ * @param {string} childPath - Candidate path to validate.
+ * @param {string} parentDir - Required parent directory boundary.
+ * @returns {boolean} True when childPath is inside parentDir or equal to it.
+ */
+function pathIsInside(childPath, parentDir) {
+  const relativePath = relative(parentDir, childPath);
+  return relativePath === '' || (relativePath !== '..' && !relativePath.startsWith(`..${sep}`) && !isAbsolute(relativePath));
+}
+
+/**
+ * Validate and resolve the tracker lock directory.
+ *
+ * `CAREER_OPS_TRACKER_LOCK` exists for tests and unusual local layouts, but the
+ * merge script later removes the lock directory recursively. To keep that safe,
+ * env-provided lock paths must be absolute, live under the OS temp directory,
+ * and use the career-ops lock-name prefix. Invalid values are ignored and the
+ * deterministic temp-dir default is used instead.
+ *
+ * @param {string|undefined} envValue - Optional lock path override.
+ * @param {string} lockKey - Stable tracker hash suffix.
+ * @returns {string} Safe lock directory path.
+ */
+function resolveTrackerLockDir(envValue, lockKey) {
+  const tmpRoot = realpathSync(tmpdir());
+  const fallback = join(tmpRoot, `career-ops-merge-tracker-${lockKey}.lock`);
+  if (!envValue || !isAbsolute(envValue)) return fallback;
+
+  const candidate = resolve(envValue);
+  const parentDir = dirname(candidate);
+  const canonicalParent = existsSync(parentDir) ? realpathSync(parentDir) : resolve(parentDir);
+  if (!pathIsInside(canonicalParent, tmpRoot)) return fallback;
+  if (!basename(candidate).startsWith('career-ops-merge-tracker-')) return fallback;
+  return candidate;
+}
 
 /**
  * Pause the async merge flow for a fixed number of milliseconds.
@@ -158,6 +219,7 @@ async function acquireTrackerLock(lockDir, options = {}) {
   const timeoutMs = options.timeoutMs ?? 60_000;
   const retryMs = options.retryMs ?? 75;
   const staleMs = options.staleMs ?? 10 * 60_000;
+  const recoverGuardDir = `${lockDir}.recover`;
   const token = randomUUID();
   const startedAt = Date.now();
   let attempts = 0;
@@ -190,11 +252,27 @@ async function acquireTrackerLock(lockDir, options = {}) {
       };
     } catch (err) {
       if (err?.code !== 'EEXIST') throw err;
-      if (lockCanRecover(lockDir, staleMs)) {
-        rmSync(lockDir, { recursive: true, force: true });
-        staleRecovered = true;
-        continue;
+
+      let hasRecoverGuard = false;
+      try {
+        mkdirSync(recoverGuardDir);
+        hasRecoverGuard = true;
+      } catch (guardErr) {
+        if (guardErr?.code !== 'EEXIST') throw guardErr;
       }
+
+      if (hasRecoverGuard) {
+        try {
+          if (lockCanRecover(lockDir, staleMs)) {
+            rmSync(lockDir, { recursive: true, force: true });
+            staleRecovered = true;
+            continue;
+          }
+        } finally {
+          rmSync(recoverGuardDir, { recursive: true, force: true });
+        }
+      }
+
       await sleep(retryMs);
     }
   }

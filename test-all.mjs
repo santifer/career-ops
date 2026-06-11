@@ -1571,7 +1571,7 @@ try {
           ...process.env,
           CAREER_OPS_TRACKER: join(mergeTmp, 'data', 'applications.md'),
           CAREER_OPS_ADDITIONS: additionsDir,
-          CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'tracker-merge.lock'),
+          CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'career-ops-merge-tracker-fixture.lock'),
           CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
         },
         stdio: ['ignore', 'pipe', 'pipe'],
