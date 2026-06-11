@@ -242,7 +242,14 @@ IMPORTANT OPERATING RULES FOR THIS CLI SESSION
    - For Block G (Legitimacy): analyze the JD text only; skip URL/page freshness checks.
    - Post-evaluation file saving is handled by the script, not by you.
 2. Generate Blocks A through G in full, in English, unless the JD is in another language.
-3. At the very end, output a machine-readable summary block in this exact format:
+3. Do NOT use markdown tables anywhere in your response. Instead, represent all data (including Block A) using clean, compact bulleted lists.
+4. Keep all sections extremely brief and dense to fit within the output token limit:
+   - Block B (Match with CV): Limit to 3 matches (max 1 sentence each) and 2 small gaps.
+   - Block C, D, E: Limit each to 3 brief bullet points (max 1-2 sentences per point).
+   - Block F (Interview Plan): Limit to exactly 2 STAR+R stories, with each section (S, T, A, R, Reflection) restricted to exactly 1 short sentence.
+   - Block G: Limit to 3 concise bullet points.
+   - Cover Letter Draft: Limit to 3 short paragraphs (max 2 sentences each) and 3 keywords.
+5. At the very end, output a machine-readable summary block in this exact format:
 
 ---SCORE_SUMMARY---
 COMPANY: <company name or "Unknown">
@@ -262,27 +269,36 @@ const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({
   model: modelName,
   generationConfig: {
-    temperature: 0.4,      // deterministic enough for structured evaluation
+    temperature: 0.7,      // deterministic enough for structured evaluation
     maxOutputTokens: 8192, // full 7-block evaluation
   },
 });
 
 let evaluationText;
-try {
-  const result = await model.generateContent([
-    { text: systemPrompt },
-    { text: `\n\nJOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
-  ]);
-  evaluationText = result.response.text();
-} catch (err) {
-  const sanitizedMsg = (err.message || '').split(apiKey).join('[REDACTED]');
-  console.error('❌  Gemini API error:', sanitizedMsg);
-  if (sanitizedMsg.includes('API_KEY')) {
-    console.error('    Check your GEMINI_API_KEY in .env');
-  } else if (sanitizedMsg.includes('quota') || sanitizedMsg.includes('rate')) {
-    console.error('    You may have hit the free-tier rate limit. Wait 60s and retry.');
+let attempts = 4;
+for (let attempt = 1; attempt <= attempts; attempt++) {
+  try {
+    const result = await model.generateContent([
+      { text: systemPrompt },
+      { text: `\n\nJOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
+    ]);
+    evaluationText = result.response.text();
+    break; // success
+  } catch (err) {
+    const sanitizedMsg = (err.message || '').split(apiKey).join('[REDACTED]');
+    if (attempt < attempts && (sanitizedMsg.includes('503') || sanitizedMsg.includes('Service Unavailable') || sanitizedMsg.includes('quota') || sanitizedMsg.includes('rate') || sanitizedMsg.includes('429'))) {
+      console.warn(`⚠️  Gemini API call failed (Attempt ${attempt}/${attempts}): ${sanitizedMsg.trim()}. Retrying in 10s...`);
+      await new Promise(resolve => setTimeout(resolve, 10000));
+    } else {
+      console.error('❌  Gemini API error:', sanitizedMsg);
+      if (sanitizedMsg.includes('API_KEY')) {
+        console.error('    Check your GEMINI_API_KEY in .env');
+      } else if (sanitizedMsg.includes('quota') || sanitizedMsg.includes('rate')) {
+        console.error('    You may have hit the free-tier rate limit. Wait 60s and retry.');
+      }
+      process.exit(1);
+    }
   }
-  process.exit(1);
 }
 
 // ---------------------------------------------------------------------------

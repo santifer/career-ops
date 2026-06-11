@@ -53,6 +53,8 @@ reports/*-RESERVED.md
 .claude/settings.local.json
 .claude/memory/
 career-dashboard
+dashboard/career-dashboard.exe
+scratch_run_evals.mjs
 package-lock.json
 
 # Playwright MCP server run artifacts (ephemeral, machine-local — never commit)

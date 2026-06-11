@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hire_Help Job Search Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f0f14;
+            --bg-secondary: #16161e;
+            --bg-card: #1a1a26;
+            --bg-card-hover: #1e1e2e;
+            --bg-input: #22223a;
+            --border: #2a2a40;
+            --border-active: #6c5ce7;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a8;
+            --text-muted: #5a5a7a;
+            --accent: #6c5ce7;
+            --accent-glow: rgba(108, 92, 231, 0.3);
+            --success: #00d68f;
+            --warning: #f0a020;
+            --danger: #ff4d6a;
+            --info: #00b4d8;
+            --applied: #6c5ce7;
+            --interview: #00b4d8;
+            --offered: #00d68f;
+            --rejected: #ff4d6a;
+            --pending: #f0a020;
+            --messaged: #a29bfe;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 28px 40px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 50%, #00b4d8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .header-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* ── STATS CARDS ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .stat-card:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
+        }
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* ── TABS ── */
+        .tabs-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 40px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+        .tab:hover { background: var(--bg-card); color: var(--text-primary); }
+        .tab.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .tab .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 6px;
+        }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 40px;
+            background: var(--bg-secondary);
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .search-box input:focus { border-color: var(--accent); }
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .btn-primary:hover { background: #5a4bd4; }
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+        .btn-secondary:hover { background: var(--bg-card-hover); }
+        .btn-success {
+            background: var(--success);
+            color: #000;
+            border-color: var(--success);
+        }
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* ── TABLE ── */
+        .table-container {
+            padding: 0 40px 40px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 16px;
+        }
+        thead th {
+            background: var(--bg-card);
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+        thead th:hover { color: var(--text-primary); }
+        thead th:first-child { border-radius: 10px 0 0 0; }
+        thead th:last-child { border-radius: 0 10px 0 0; }
+        tbody tr {
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody td {
+            padding: 12px 16px;
+            font-size: 0.84rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            vertical-align: middle;
+        }
+
+        /* ── STATUS BADGES ── */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .status-applied { background: rgba(108,92,231,0.15); color: var(--applied); }
+        .status-interview { background: rgba(0,180,216,0.15); color: var(--interview); }
+        .status-offered { background: rgba(0,214,143,0.15); color: var(--offered); }
+        .status-rejected { background: rgba(255,77,106,0.15); color: var(--rejected); }
+        .status-pending { background: rgba(240,160,32,0.15); color: var(--pending); }
+        .status-messaged { background: rgba(162,155,254,0.15); color: var(--messaged); }
+        .status-evaluated { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+        .status-skip { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+        /* ── PRIORITY DOT ── */
+        .priority-high { color: var(--danger); }
+        .priority-medium { color: var(--warning); }
+        .priority-low { color: var(--success); }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 720px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+            animation: modalIn 0.25s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        /* ── EXPORT BAR ── */
+        .export-bar {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .emoji { font-size: 3rem; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 1.1rem; color: var(--text-primary); margin-bottom: 8px; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 2000;
+            animation: toastIn 0.3s ease;
+            display: none;
+        }
+        .toast.show { display: block; }
+        .toast-success { background: var(--success); color: #000; }
+        .toast-error { background: var(--danger); color: #fff; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .header, .toolbar, .table-container, .tabs-container { padding-left: 16px; padding-right: 16px; }
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-top">
+        <div>
+            <h1>🚀 Hire_Help Job Search Command Center</h1>
+            <div class="header-subtitle">Data Analyst · Business Analyst · AI/ML Roles — Tracking everything in one place</div>
+        </div>
+        <div class="export-bar">
+            <button class="btn btn-secondary" onclick="exportCSV()">📥 Export CSV</button>
+            <button class="btn btn-secondary" onclick="exportJSON()">📋 Export JSON</button>
+        </div>
+    </div>
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number" style="color:var(--accent)" id="stat-total">0</div>
+            <div class="stat-label">Total Tracked</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:var(--applied)" id="stat-applied">0</div>
+            <div class="stat-label">Applied</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:var(--messaged)" id="stat-messaged">0</div>
+            <div class="stat-label">HRs Messaged</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:var(--interview)" id="stat-interview">0</div>
+            <div class="stat-label">Interviews</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:var(--offered)" id="stat-offered">0</div>
+            <div class="stat-label">Offers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:var(--rejected)" id="stat-rejected">0</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:var(--pending)" id="stat-pending">0</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-container">
+    <div class="tab active" data-tab="all" onclick="switchTab('all')">All <span class="badge" id="tab-all">0</span></div>
+    <div class="tab" data-tab="applications" onclick="switchTab('applications')">Applications <span class="badge" id="tab-applications">0</span></div>
+    <div class="tab" data-tab="hr-outreach" onclick="switchTab('hr-outreach')">HR Outreach <span class="badge" id="tab-hr-outreach">0</span></div>
+    <div class="tab" data-tab="interviews" onclick="switchTab('interviews')">Interviews <span class="badge" id="tab-interviews">0</span></div>
+    <div class="tab" data-tab="offers" onclick="switchTab('offers')">Offers <span class="badge" id="tab-offers">0</span></div>
+    <div class="tab" data-tab="rejected" onclick="switchTab('rejected')">Rejected <span class="badge" id="tab-rejected">0</span></div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search company, role, HR name, notes..." oninput="renderTable()">
+    </div>
+    <button class="btn btn-primary" onclick="openModal('evaluate')" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); border: none;">🤖 Evaluate Job (AI)</button>
+    <button class="btn btn-secondary" onclick="openModal('application')">＋ Add Application</button>
+    <button class="btn btn-secondary" onclick="openModal('hr')">＋ Add HR Contact</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-container">
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th onclick="sortBy('id')">#</th>
+                <th onclick="sortBy('date')">Date ↕</th>
+                <th onclick="sortBy('company')">Company ↕</th>
+                <th onclick="sortBy('role')">Role ↕</th>
+                <th onclick="sortBy('platform')">Platform</th>
+                <th onclick="sortBy('status')">Status ↕</th>
+                <th onclick="sortBy('score')">Score ↕</th>
+                <th>HR Contact</th>
+                <th>HR Messaged</th>
+                <th>Follow-up</th>
+                <th>Salary</th>
+                <th>Notes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+        </tbody>
+    </table>
+    <div class="empty-state" id="emptyState">
+        <div class="emoji">📋</div>
+        <h3>No entries yet</h3>
+        <p>Click "＋ Add Application" to start tracking your job search</p>
+    </div>
+</div>
+
+<!-- ADD APPLICATION MODAL -->
+<div class="modal-overlay" id="modalApplication">
+    <div class="modal">
+        <h2 id="modalTitle">➕ Add Application</h2>
+        <input type="hidden" id="editId" value="">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Company *</label>
+                <input type="text" id="f-company" placeholder="e.g. TCS, Infosys, Flipkart">
+            </div>
+            <div class="form-group">
+                <label>Role *</label>
+                <input type="text" id="f-role" placeholder="e.g. Data Analyst">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Platform</label>
+                <select id="f-platform">
+                    <option value="">Select...</option>
+                    <option>LinkedIn</option>
+                    <option>Naukri</option>
+                    <option>Indeed</option>
+                    <option>Glassdoor</option>
+                    <option>Company Website</option>
+                    <option>Internshala</option>
+                    <option>Unstop</option>
+                    <option>AngelList / Wellfound</option>
+                    <option>Referral</option>
+                    <option>Career-Ops Scanner</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="f-status">
+                    <option value="Pending">Pending</option>
+                    <option value="Applied">Applied</option>
+                    <option value="Evaluated">Evaluated</option>
+                    <option value="Responded">Responded</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Offer">Offer</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Discarded">Discarded</option>
+                    <option value="SKIP">SKIP</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Score (0-5)</label>
+                <input type="number" id="f-score" min="0" max="5" step="0.1" placeholder="e.g. 4.2">
+            </div>
+            <div class="form-group">
+                <label>Salary / CTC</label>
+                <input type="text" id="f-salary" placeholder="e.g. ₹5 LPA">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>HR Name</label>
+                <input type="text" id="f-hr-name" placeholder="e.g. Priya Sharma">
+            </div>
+            <div class="form-group">
+                <label>HR LinkedIn / Email</label>
+                <input type="text" id="f-hr-contact" placeholder="LinkedIn URL or email">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>HR Messaged?</label>
+                <select id="f-hr-messaged">
+                    <option value="">No</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Email">Email</option>
+                    <option value="Both">Both</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Follow-up Date</label>
+                <input type="date" id="f-followup">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Job URL</label>
+            <input type="url" id="f-url" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea id="f-notes" rows="3" placeholder="Any notes, referral info, interview feedback..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('modalApplication')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveApplication()">💾 Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ADD HR CONTACT MODAL -->
+<div class="modal-overlay" id="modalHR">
+    <div class="modal">
+        <h2>👤 Add HR Contact</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label>HR Name *</label>
+                <input type="text" id="hr-name" placeholder="Full name">
+            </div>
+            <div class="form-group">
+                <label>Company *</label>
+                <input type="text" id="hr-company" placeholder="Company name">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>LinkedIn URL</label>
+                <input type="url" id="hr-linkedin" placeholder="https://linkedin.com/in/...">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="hr-email" placeholder="hr@company.com">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Designation</label>
+                <input type="text" id="hr-designation" placeholder="e.g. Talent Acquisition Lead">
+            </div>
+            <div class="form-group">
+                <label>Messaged Via</label>
+                <select id="hr-messaged-via">
+                    <option value="">Not yet</option>
+                    <option>LinkedIn</option>
+                    <option>Email</option>
+                    <option>Both</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Message Date</label>
+            <input type="date" id="hr-msg-date">
+        </div>
+        <div class="form-group">
+            <label>Response</label>
+            <select id="hr-response">
+                <option value="">No response yet</option>
+                <option>Replied - Positive</option>
+                <option>Replied - Negative</option>
+                <option>Replied - Forwarded</option>
+                <option>Viewed</option>
+                <option>No response</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea id="hr-notes" rows="2" placeholder="Message sent, response details..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('modalHR')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveHRContact()">💾 Save Contact</button>
+        </div>
+    </div>
+</div>
+
+<!-- AI EVALUATE JOB MODAL -->
+<div class="modal-overlay" id="modalEvaluate">
+    <div class="modal" style="max-width: 600px; width: 90%;">
+        <h2>🤖 AI Job Evaluation</h2>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:15px;">Paste the Job Description text below to evaluate it against your CV using Gemini.</p>
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label>Job Description Text</label>
+            <textarea id="jd-text-input" rows="12" placeholder="Paste full Job Description text here..." style="width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:12px;border-radius:6px;resize:vertical;font-family:inherit;font-size:0.9rem;"></textarea>
+        </div>
+        <div id="eval-loading" style="display:none;text-align:center;padding:20px 0;">
+            <div style="border: 4px solid var(--border); border-top: 4px solid var(--accent); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto 12px auto;"></div>
+            <p style="color:var(--accent);font-weight:600;font-size:0.9rem;">Gemini is evaluating the job...</p>
+            <p style="color:var(--text-secondary);font-size:0.75rem;">This will take 30-45 seconds. Please wait.</p>
+        </div>
+        <div class="modal-actions" id="eval-actions">
+            <button class="btn btn-secondary" onclick="closeModal('modalEvaluate')">Cancel</button>
+            <button class="btn btn-primary" onclick="runEvaluation()">🚀 Start Evaluation</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW REPORT MODAL -->
+<div class="modal-overlay" id="modalReport">
+    <div class="modal" style="max-width: 800px; width: 95%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+            <h2 id="reportTitle">📄 Evaluation Report</h2>
+            <button class="btn btn-secondary" onclick="closeModal('modalReport')" style="padding:4px 8px;">Close</button>
+        </div>
+        <div id="report-content" style="max-height:65vh;overflow-y:auto;background:var(--bg-primary);border:1px solid var(--border);padding:20px;border-radius:6px;font-family:monospace;white-space:pre-wrap;color:var(--text-primary);font-size:0.85rem;line-height:1.5;text-align:left;">
+            Loading report...
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+    // ── DATA STORE ──
+    const IS_SERVER = window.location.protocol.startsWith('http');
+    let data = { applications: [], hrContacts: [] };
+    let currentTab = 'all';
+    let sortField = 'date';
+    let sortAsc = false;
+
+    // Load from localStorage as fallback
+    if (!IS_SERVER) {
+        data = JSON.parse(localStorage.getItem('careerOpsTracker') || '{"applications":[],"hrContacts":[]}');
+    }
+
+    async function loadFromServer() {
+        if (!IS_SERVER) return;
+        try {
+            const res = await fetch('/api/applications');
+            const apps = await res.json();
+            data.applications = apps;
+            updateStats();
+            renderTable();
+        } catch (err) {
+            showToast('Failed to load applications: ' + err.message, 'error');
+        }
+    }
+
+    async function save(appId = null, updatedFields = null) {
+        if (IS_SERVER) {
+            if (appId !== null && updatedFields !== null) {
+                try {
+                    const res = await fetch(`/api/applications/${appId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedFields)
+                    });
+                    const resData = await res.json();
+                    if (resData.error) {
+                        showToast(resData.error, 'error');
+                        return;
+                    }
+                    showToast('Tracker updated successfully!', 'success');
+                } catch (err) {
+                    showToast('Failed to update tracker: ' + err.message, 'error');
+                }
+            }
+            await loadFromServer();
+        } else {
+            localStorage.setItem('careerOpsTracker', JSON.stringify(data));
+            updateStats();
+            renderTable();
+        }
+    }
+
+    // ── RUN AI EVALUATION ──
+    async function runEvaluation() {
+        const jdText = document.getElementById('jd-text-input').value.trim();
+        if (!jdText) {
+            showToast('Please paste a job description first', 'error');
+            return;
+        }
+
+        const loading = document.getElementById('eval-loading');
+        const actions = document.getElementById('eval-actions');
+        loading.style.display = 'block';
+        actions.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jdText })
+            });
+            const resData = await res.json();
+            if (resData.error) {
+                showToast(resData.error, 'error');
+            } else {
+                showToast('Evaluation completed successfully!', 'success');
+                document.getElementById('jd-text-input').value = '';
+                closeModal('modalEvaluate');
+                await loadFromServer();
+            }
+        } catch (err) {
+            showToast('Evaluation failed: ' + err.message, 'error');
+        } finally {
+            loading.style.display = 'none';
+            actions.style.display = 'flex';
+        }
+    }
+
+    // ── VIEW REPORT ──
+    async function viewReport(reportPath) {
+        if (!IS_SERVER) {
+            showToast('Reports can only be viewed when running the local server', 'error');
+            return;
+        }
+        document.getElementById('report-content').textContent = 'Loading report...';
+        openModal('modalReport');
+
+        try {
+            // Get filename from reportPath (e.g. "../reports/001-click2cloud.md" -> "001-click2cloud.md")
+            const filename = reportPath.split('/').pop();
+            const res = await fetch(`/api/reports/${filename}`);
+            if (res.status === 404) {
+                document.getElementById('report-content').textContent = 'Report file not found.';
+                return;
+            }
+            const markdown = await res.text();
+            document.getElementById('report-content').textContent = markdown;
+        } catch (err) {
+            document.getElementById('report-content').textContent = 'Failed to load report: ' + err.message;
+        }
+    }
+
+    // ── STATS ──
+    function updateStats() {
+        const apps = data.applications;
+        document.getElementById('stat-total').textContent = apps.length;
+        document.getElementById('stat-applied').textContent = apps.filter(a => a.status === 'Applied').length;
+        document.getElementById('stat-messaged').textContent = apps.filter(a => a.hrMessaged).length + data.hrContacts.filter(h => h.messagedVia).length;
+        document.getElementById('stat-interview').textContent = apps.filter(a => a.status === 'Interview').length;
+        document.getElementById('stat-offered').textContent = apps.filter(a => a.status === 'Offer').length;
+        document.getElementById('stat-rejected').textContent = apps.filter(a => a.status === 'Rejected').length;
+        document.getElementById('stat-pending').textContent = apps.filter(a => ['Pending','Evaluated'].includes(a.status)).length;
+
+        document.getElementById('tab-all').textContent = apps.length;
+        document.getElementById('tab-applications').textContent = apps.filter(a => ['Applied','Pending','Evaluated'].includes(a.status)).length;
+        document.getElementById('tab-hr-outreach').textContent = data.hrContacts.length;
+        document.getElementById('tab-interviews').textContent = apps.filter(a => a.status === 'Interview').length;
+        document.getElementById('tab-offers').textContent = apps.filter(a => a.status === 'Offer').length;
+        document.getElementById('tab-rejected').textContent = apps.filter(a => ['Rejected','Discarded','SKIP'].includes(a.status)).length;
+    }
+
+    // ── RENDER TABLE ──
+    function renderTable() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        let items = [];
+
+        if (currentTab === 'hr-outreach') {
+            items = data.hrContacts.map((h, i) => ({
+                id: i + 1, date: h.msgDate || '', company: h.company, role: h.designation || 'HR Contact',
+                platform: '', status: h.messagedVia ? 'Messaged' : 'Not contacted', score: '',
+                hrName: h.name, hrMessaged: h.messagedVia || '', followup: '', salary: '',
+                notes: (h.response ? h.response + '. ' : '') + (h.notes || ''), url: h.linkedin || h.email || '',
+                type: 'hr', origIndex: i
+            }));
+        } else {
+            items = data.applications.map((a, i) => ({
+                ...a, type: 'app', origIndex: i
+            }));
+            if (currentTab === 'applications') items = items.filter(a => ['Applied','Pending','Evaluated'].includes(a.status));
+            if (currentTab === 'interviews') items = items.filter(a => a.status === 'Interview');
+            if (currentTab === 'offers') items = items.filter(a => a.status === 'Offer');
+            if (currentTab === 'rejected') items = items.filter(a => ['Rejected','Discarded','SKIP'].includes(a.status));
+        }
+
+        if (search) {
+            items = items.filter(a =>
+                (a.company || '').toLowerCase().includes(search) ||
+                (a.role || '').toLowerCase().includes(search) ||
+                (a.hrName || '').toLowerCase().includes(search) ||
+                (a.notes || '').toLowerCase().includes(search) ||
+                (a.platform || '').toLowerCase().includes(search)
+            );
+        }
+
+        // Sort
+        items.sort((a, b) => {
+            let va = a[sortField] || '', vb = b[sortField] || '';
+            if (sortField === 'score') { va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }
+            if (sortField === 'id') { va = parseInt(va) || 0; vb = parseInt(vb) || 0; }
+            if (va < vb) return sortAsc ? -1 : 1;
+            if (va > vb) return sortAsc ? 1 : -1;
+            return 0;
+        });
+
+        const tbody = document.getElementById('tableBody');
+        const empty = document.getElementById('emptyState');
+
+        if (items.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        tbody.innerHTML = items.map(a => `
+            <tr>
+                <td style="color:var(--text-muted);font-weight:600">${a.id}</td>
+                <td style="white-space:nowrap">${a.date || '—'}</td>
+                <td style="font-weight:600">${esc(a.company)}</td>
+                <td>${a.url ? `<a href="${esc(a.url)}" target="_blank" style="color:var(--info);text-decoration:none">${esc(a.role)}</a>` : esc(a.role)}</td>
+                <td style="color:var(--text-secondary)">${esc(a.platform || '')}</td>
+                <td><span class="status-badge status-${(a.status || '').toLowerCase().replace(/\s/g,'')}">${esc(a.status)}</span></td>
+                <td style="font-weight:700;color:${scoreColor(a.score)}">${a.score ? a.score + '/5' : '—'}</td>
+                <td style="color:var(--text-secondary)">${esc(a.hrName || '—')}</td>
+                <td>${a.hrMessaged ? `<span class="status-badge status-messaged">${esc(a.hrMessaged)}</span>` : '—'}</td>
+                <td style="color:${isOverdue(a.followup) ? 'var(--danger)' : 'var(--text-secondary)'}">${a.followup || '—'}</td>
+                <td style="color:var(--success)">${esc(a.salary || '—')}</td>
+                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(a.notes || '')}">${esc(a.notes || '—')}</td>
+                <td style="white-space:nowrap">
+                    ${a.type === 'app' ? `
+                        ${a.report ? `<button onclick="viewReport('${a.report}')" style="background:none;border:none;cursor:pointer;font-size:0.9rem;margin-right:6px;" title="View Report">📄</button>` : ''}
+                        <button onclick="editApp(${a.origIndex})" style="background:none;border:none;cursor:pointer;font-size:0.9rem;margin-right:6px;" title="Edit">✏️</button>
+                        <button onclick="deleteApp(${a.origIndex})" style="background:none;border:none;cursor:pointer;font-size:0.9rem" title="Delete">🗑️</button>
+                    ` : `
+                        <button onclick="deleteHR(${a.origIndex})" style="background:none;border:none;cursor:pointer;font-size:0.9rem" title="Delete">🗑️</button>
+                    `}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function scoreColor(s) {
+        const n = parseFloat(s);
+        if (!n) return 'var(--text-muted)';
+        if (n >= 4) return 'var(--success)';
+        if (n >= 3) return 'var(--warning)';
+        return 'var(--danger)';
+    }
+    function isOverdue(d) { return d && new Date(d) < new Date(); }
+
+    // ── TABS ──
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        renderTable();
+    }
+
+    // ── SORT ──
+    function sortBy(field) {
+        if (sortField === field) { sortAsc = !sortAsc; } else { sortField = field; sortAsc = true; }
+        renderTable();
+    }
+
+    // ── MODAL ──
+    function openModal(type) {
+        if (type === 'application') {
+            document.getElementById('editId').value = '';
+            document.getElementById('modalTitle').textContent = '➕ Add Application';
+            ['f-company','f-role','f-platform','f-status','f-score','f-salary','f-hr-name','f-hr-contact','f-hr-messaged','f-followup','f-url','f-notes'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                else el.value = '';
+            });
+            document.getElementById('modalApplication').classList.add('active');
+        } else if (type === 'evaluate') {
+            document.getElementById('jd-text-input').value = '';
+            document.getElementById('modalEvaluate').classList.add('active');
+        } else if (type === 'modalReport') {
+            document.getElementById('modalReport').classList.add('active');
+        } else {
+            ['hr-name','hr-company','hr-linkedin','hr-email','hr-designation','hr-messaged-via','hr-msg-date','hr-response','hr-notes'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                else el.value = '';
+            });
+            document.getElementById('modalHR').classList.add('active');
+        }
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // ── SAVE APPLICATION ──
+    function saveApplication() {
+        const company = document.getElementById('f-company').value.trim();
+        const role = document.getElementById('f-role').value.trim();
+        if (!company || !role) { showToast('Company and Role are required', 'error'); return; }
+
+        const entry = {
+            date: new Date().toISOString().split('T')[0],
+            company,
+            role,
+            platform: document.getElementById('f-platform').value,
+            status: document.getElementById('f-status').value || 'Pending',
+            score: document.getElementById('f-score').value,
+            salary: document.getElementById('f-salary').value,
+            hrName: document.getElementById('f-hr-name').value.trim(),
+            hrContact: document.getElementById('f-hr-contact').value.trim(),
+            hrMessaged: document.getElementById('f-hr-messaged').value,
+            followup: document.getElementById('f-followup').value,
+            url: document.getElementById('f-url').value.trim(),
+            notes: document.getElementById('f-notes').value.trim()
+        };
+
+        const editId = document.getElementById('editId').value;
+        if (editId !== '') {
+            const origApp = data.applications[parseInt(editId)];
+            entry.date = origApp.date;
+            entry.report = origApp.report; // preserve report path
+            save(origApp.id, entry);
+        } else {
+            const newId = data.applications.length > 0 ? Math.max(...data.applications.map(a => parseInt(a.id))) + 1 : 1;
+            entry.id = newId;
+            data.applications.push(entry);
+            save();
+        }
+        closeModal('modalApplication');
+        showToast(`${editId !== '' ? 'Updated' : 'Added'}: ${company} — ${role}`, 'success');
+    }
+
+    // ── EDIT ──
+    function editApp(idx) {
+        const a = data.applications[idx];
+        document.getElementById('editId').value = idx;
+        document.getElementById('modalTitle').textContent = '✏️ Edit Application';
+        document.getElementById('f-company').value = a.company || '';
+        document.getElementById('f-role').value = a.role || '';
+        document.getElementById('f-platform').value = a.platform || '';
+        document.getElementById('f-status').value = a.status || 'Pending';
+        document.getElementById('f-score').value = a.score || '';
+        document.getElementById('f-salary').value = a.salary || '';
+        document.getElementById('f-hr-name').value = a.hrName || '';
+        document.getElementById('f-hr-contact').value = a.hrContact || '';
+        document.getElementById('f-hr-messaged').value = a.hrMessaged || '';
+        document.getElementById('f-followup').value = a.followup || '';
+        document.getElementById('f-url').value = a.url || '';
+        document.getElementById('f-notes').value = a.notes || '';
+        document.getElementById('modalApplication').classList.add('active');
+    }
+
+    // ── DELETE ──
+    function deleteApp(idx) {
+        if (confirm('Delete this application?')) {
+            const app = data.applications[idx];
+            data.applications.splice(idx, 1);
+            save();
+            showToast('Application deleted', 'success');
+        }
+    }
+
+    // ── SAVE HR ──
+    function saveHRContact() {
+        const name = document.getElementById('hr-name').value.trim();
+        const company = document.getElementById('hr-company').value.trim();
+        if (!name || !company) { showToast('Name and Company are required', 'error'); return; }
+
+        data.hrContacts.push({
+            name,
+            company,
+            linkedin: document.getElementById('hr-linkedin').value.trim(),
+            email: document.getElementById('hr-email').value.trim(),
+            designation: document.getElementById('hr-designation').value.trim(),
+            messagedVia: document.getElementById('hr-messaged-via').value,
+            msgDate: document.getElementById('hr-msg-date').value,
+            response: document.getElementById('hr-response').value,
+            notes: document.getElementById('hr-notes').value.trim()
+        });
+        save();
+        closeModal('modalHR');
+        showToast(`HR Contact added: ${name} @ ${company}`, 'success');
+    }
+
+    function deleteHR(idx) {
+        if (confirm('Delete this HR contact?')) {
+            data.hrContacts.splice(idx, 1);
+            save();
+            showToast('HR contact deleted', 'success');
+        }
+    }
+
+    // ── EXPORT CSV ──
+    function exportCSV() {
+        const headers = ['Date','Company','Role','Platform','Status','Score','Salary','HR Name','HR Contact','HR Messaged','Follow-up','URL','Notes'];
+        const rows = data.applications.map(a => [
+            a.date, a.company, a.role, a.platform, a.status, a.score, a.salary,
+            a.hrName, a.hrContact, a.hrMessaged, a.followup, a.url, a.notes
+        ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
+
+        data.hrContacts.forEach(h => {
+            rows.push([
+                h.msgDate, h.company, h.designation || 'HR Contact', '', h.messagedVia ? 'Messaged' : 'Not contacted', '',
+                '', h.name, h.linkedin || h.email, h.messagedVia, '', h.linkedin || h.email, h.notes
+            ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
+        });
+
+        const csv = [headers.join(','), ...rows].join('\n');
+        download(csv, `job-search-tracker-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+        showToast('CSV exported!', 'success');
+    }
+
+    // ── EXPORT JSON ──
+    function exportJSON() {
+        download(JSON.stringify(data, null, 2), `job-search-tracker-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+        showToast('JSON exported!', 'success');
+    }
+
+    function download(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    // ── TOAST ──
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast show toast-${type}`;
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── CLOSE MODAL ON ESC / OVERLAY CLICK ──
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        }
+    });
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+    });
+
+    // ── INIT ──
+    if (IS_SERVER) {
+        loadFromServer();
+    } else {
+        updateStats();
+        renderTable();
+    }
+</script>
+</body>
+</html>
