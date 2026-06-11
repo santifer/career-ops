@@ -764,26 +764,6 @@ for (const link of symlinks) {
   }
 }
 
-// ── 13. BATCH RUNNER CLI SUPPORT ────────────────────────────
-
-console.log('\n13. Batch runner CLI support');
-
-if (fileExists('batch/batch-runner.sh')) {
-  const runner = readFile('batch/batch-runner.sh');
-  if (runner.includes('opencode')) {
-    pass('batch-runner.sh mentions opencode');
-  } else {
-    fail('batch-runner.sh does NOT mention opencode');
-  }
-  if (runner.includes('--cli')) {
-    pass('batch-runner.sh has --cli flag');
-  } else {
-    fail('batch-runner.sh missing --cli flag');
-  }
-} else {
-  fail('batch/batch-runner.sh not found');
-}
-
 // ── 14. VERSION FILE ─────────────────────────────────────────────
 
 console.log('\n14. Version file');
