@@ -33,7 +33,7 @@
  * so the index can never serve stale reads.
  */
 
-import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync, statSync } from 'fs';
 import { createHash } from 'crypto';
 import { dirname, resolve } from 'path';
 import { pathToFileURL } from 'url';
@@ -413,6 +413,10 @@ async function exportMd(args) {
   if (!outPath) {
     process.stdout.write(out);
     return;
+  }
+  if (existsSync(outPath) && statSync(outPath).isDirectory()) {
+    console.error(`Error: --out ${outPath} is a directory — pass a file path.`);
+    process.exit(1);
   }
   mkdirSync(dirname(outPath) || '.', { recursive: true });
   // Never silently clobber — whatever was there is backed up first.
