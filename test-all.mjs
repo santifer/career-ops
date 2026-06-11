@@ -26,10 +26,51 @@ let passed = 0;
 let failed = 0;
 let warnings = 0;
 
+/**
+ * Record and print one passing test assertion.
+ *
+ * The suite uses these small counters instead of a framework so it can run in
+ * any freshly cloned career-ops checkout with only Node.js available.
+ *
+ * @param {string} msg - Human-readable success message for the terminal log.
+ * @returns {void}
+ */
 function pass(msg) { console.log(`  ✅ ${msg}`); passed++; }
+
+/**
+ * Record and print one failing test assertion.
+ *
+ * Failures increment the shared counter that controls the final process exit
+ * code, while still allowing later checks to run and show the full problem set.
+ *
+ * @param {string} msg - Human-readable failure message for the terminal log.
+ * @returns {void}
+ */
 function fail(msg) { console.log(`  ❌ ${msg}`); failed++; }
+
+/**
+ * Record and print one non-fatal warning.
+ *
+ * Warnings are used for expected local-environment gaps, such as missing user
+ * data in a clean repo, where the check should stay visible but not fail CI.
+ *
+ * @param {string} msg - Human-readable warning message for the terminal log.
+ * @returns {void}
+ */
 function warn(msg) { console.log(`  ⚠️  ${msg}`); warnings++; }
 
+/**
+ * Run a shell command or executable and return trimmed stdout on success.
+ *
+ * Array-form arguments use execFileSync to avoid shell parsing. String-only
+ * commands use execSync for existing simple checks. Failures return null so the
+ * caller can decide whether to count the result as a failure or warning.
+ *
+ * @param {string} cmd - Command or executable to run.
+ * @param {string[]} [args=[]] - Optional argument vector for execFileSync.
+ * @param {object} [opts={}] - Extra child_process options.
+ * @returns {string|null} Trimmed stdout, or null when the command fails.
+ */
 function run(cmd, args = [], opts = {}) {
   try {
     if (Array.isArray(args) && args.length > 0) {
@@ -41,7 +82,20 @@ function run(cmd, args = [], opts = {}) {
   }
 }
 
+/**
+ * Check whether a repo-relative file exists.
+ *
+ * @param {string} path - Path relative to the career-ops repository root.
+ * @returns {boolean} True when the file exists.
+ */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
+
+/**
+ * Read a repo-relative text file as UTF-8.
+ *
+ * @param {string} path - Path relative to the career-ops repository root.
+ * @returns {string} File contents.
+ */
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
 
 console.log('\n🧪 career-ops test suite\n');
