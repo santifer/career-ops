@@ -54,6 +54,17 @@ const STATUS_RANK = {
   'oferta': 6,
 };
 
+/**
+ * Normalize a company name into the grouping key used by deduplication.
+ *
+ * The tracker may contain punctuation, parenthetical branding, or spacing
+ * differences for the same employer. This function removes those presentation
+ * differences while keeping the alphanumeric company identity that determines
+ * which rows are safe to compare for duplicate roles.
+ *
+ * @param {string} name - Company name from an applications.md row.
+ * @returns {string} Lowercase company key used for same-company grouping.
+ */
 function normalizeCompany(name) {
   return name.toLowerCase()
     .replace(/[()]/g, '')
@@ -62,6 +73,16 @@ function normalizeCompany(name) {
     .trim();
 }
 
+/**
+ * Normalize tracker status text before ranking or comparing it.
+ *
+ * Existing trackers can contain bold Markdown wrappers or legacy dates appended
+ * to the status cell. Dedup needs the canonical status word only, in lowercase,
+ * so advanced-state protection works the same for old and new tracker rows.
+ *
+ * @param {string} status - Raw status cell from applications.md.
+ * @returns {string} Lowercase status key with Markdown/date noise removed.
+ */
 function normalizeStatus(status) {
   return String(status ?? '')
     .replace(/\*\*/g, '')
@@ -70,19 +91,61 @@ function normalizeStatus(status) {
     .toLowerCase();
 }
 
+/**
+ * Convert a tracker status into its pipeline-advancement rank.
+ *
+ * Higher ranks represent states that carry more user intent and should not be
+ * casually overwritten or removed. Unknown statuses rank as 0 so malformed data
+ * is treated conservatively rather than promoted.
+ *
+ * @param {string} status - Raw or normalized status value.
+ * @returns {number} Numeric rank from STATUS_RANK, or 0 for unknown statuses.
+ */
 function statusRank(status) {
   return STATUS_RANK[normalizeStatus(status)] || 0;
 }
 
+/**
+ * Check whether a status represents a real application already in motion.
+ *
+ * Rows at Applied or later have user-visible history that dedup must preserve
+ * unless the duplicate relationship is exact. This guard prevents fuzzy title
+ * matches from silently deleting an active application record.
+ *
+ * @param {string} status - Raw status value from the tracker row.
+ * @returns {boolean} True when the row is Applied, Responded, Interview, or Offer.
+ */
 function isAdvancedStatus(status) {
   return statusRank(status) >= STATUS_RANK.applied;
 }
 
+/**
+ * Extract the report number from a Markdown report link.
+ *
+ * Tracker report cells are normally written as links like
+ * `[123](../reports/123-company-role-date.md)`. The bracketed number is the
+ * stable report identity used to distinguish exact duplicates from merely
+ * similar fuzzy-title matches.
+ *
+ * @param {string} reportStr - Raw report cell from applications.md.
+ * @returns {number|null} Parsed report number, or null when no link number exists.
+ */
 function extractReportNum(reportStr) {
   const m = String(reportStr ?? '').match(/\[(\d+)\]/);
   return m ? parseInt(m[1]) : null;
 }
 
+/**
+ * Determine whether two tracker rows point to the same exact report identity.
+ *
+ * Exact identity is stronger than fuzzy role matching. If two rows share the
+ * same tracker number or bracketed report number, dedup may treat them as the
+ * same record even when an advanced status is present.
+ *
+ * @param {object} a - First parsed applications.md row.
+ * @param {object} b - Second parsed applications.md row.
+ * @returns {boolean} True when both rows represent the same report identity.
+ */
 function sameReportIdentity(a, b) {
   if (a.num === b.num) return true;
   const reportA = extractReportNum(a.report);
@@ -90,12 +153,36 @@ function sameReportIdentity(a, b) {
   return reportA !== null && reportA === reportB;
 }
 
+/**
+ * Build a stable key for logging one protected fuzzy pair only once.
+ *
+ * The nested dedup loop can encounter a protected pair during cluster building.
+ * Sorting the row numbers produces the same key regardless of comparison order,
+ * which keeps the warning output readable and avoids repeated noise.
+ *
+ * @param {object} a - First parsed applications.md row.
+ * @param {object} b - Second parsed applications.md row.
+ * @returns {string} Stable pair key in ascending tracker-number order.
+ */
 function pairKey(a, b) {
   return [a.num, b.num].sort((x, y) => x - y).join(':');
 }
 
 const protectedFuzzyPairs = new Set();
 
+/**
+ * Decide whether two same-company tracker rows should be deduplicated.
+ *
+ * The function first accepts exact report identity, then applies the shared
+ * fuzzy role matcher. If either row is already Applied or later, fuzzy matching
+ * alone is not enough; dedup keeps both rows and warns because deleting one
+ * would lose application status, report link, and notes for a potentially
+ * distinct opening.
+ *
+ * @param {object} a - First parsed applications.md row.
+ * @param {object} b - Second parsed applications.md row.
+ * @returns {boolean} True when dedup may cluster the two rows as duplicates.
+ */
 function roleMatch(a, b) {
   if (sameReportIdentity(a, b)) return true;
   if (!roleFuzzyMatch(a.role, b.role)) return false;
@@ -117,11 +204,30 @@ function roleMatch(a, b) {
   return true;
 }
 
+/**
+ * Parse a tracker score cell into a numeric value for keeper selection.
+ *
+ * Scores may include Markdown bolding or a `/5` suffix. Dedup only needs the
+ * numeric part so it can keep the highest-scored duplicate row in a cluster.
+ *
+ * @param {string} s - Raw score cell such as `4.3/5` or `**4.3/5**`.
+ * @returns {number} Parsed score, or 0 when no number is present.
+ */
 function parseScore(s) {
   const m = s.replace(/\*\*/g, '').match(/([\d.]+)/);
   return m ? parseFloat(m[1]) : 0;
 }
 
+/**
+ * Parse one Markdown table row from applications.md into a tracker object.
+ *
+ * Header and separator rows return null because they either lack enough cells
+ * or do not have a numeric tracker id. Valid data rows keep the raw line so
+ * later updates and removals can map back to the original file line.
+ *
+ * @param {string} line - One line from applications.md.
+ * @returns {object|null} Parsed tracker row, or null for non-application lines.
+ */
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
   if (parts.length < 9) return null;
