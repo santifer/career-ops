@@ -1,41 +1,49 @@
 #!/usr/bin/env node
 
 /**
- * tracker.mjs — SQLite storage layer for the applications tracker (RFC #918).
+ * tracker.mjs — SQLite derived index for the applications tracker (RFC #918, phase 1).
  *
- * SQLite becomes the source of truth; data/applications.md becomes a rendered
- * read-only view. Opt-in: nothing changes for users who never run `migrate`.
+ * data/applications.md stays the source of truth. The SQLite DB is a derived
+ * index, built and rebuilt from the markdown — safe to delete at any time, it
+ * regenerates on the next sync. Tools and agents READ through the index for
+ * schema-validated, model-independent results; all writes keep going to the
+ * markdown exactly as today (merge-tracker.mjs, hand edits).
  *
  * Why: at hundreds of rows, a markdown table degrades structurally — encoding
  * corruption propagates, columns drift, a `|` inside a cell shifts every
  * column after it, and agents grepping the table get model-dependent results.
- * A schema-validated store makes every query return the same rows for every
- * model on every CLI, and one query replaces reading the whole table into
- * context.
+ * The index normalizes on sync (canonical statuses, repaired columns) so every
+ * query returns the same rows for every model on every CLI, and corruption is
+ * DETECTED at sync time instead of propagating silently.
+ *
+ * Phase 2 of #918 (DB becomes source of truth, markdown becomes a rendered
+ * view) is a separate, explicit per-user opt-in — not implemented here.
  *
  * Zero new dependencies — uses node:sqlite (built into Node >= 22.5).
  *
  * Usage:
- *   node tracker.mjs migrate [--dry-run]        # one-time: applications.md → applications.db (repairs corruption)
+ *   node tracker.mjs sync [--check]             # (re)build applications.db from applications.md
+ *                                               # --check: diagnose only, no write; exit 1 if issues found
  *   node tracker.mjs query [--status Applied] [--company acme] [--role designer]
- *                          [--since 2026-01-01] [--limit 20] [--json]
- *   node tracker.mjs add --company X --role Y [--status Evaluated] [--score 4.2/5]
- *                        [--date YYYY-MM-DD] [--pdf ✅] [--report ...] [--notes ...] [--force]
- *   node tracker.mjs update --id N [--status X] [--score X] [--notes X] [--pdf X] [--report X]
- *   node tracker.mjs history --id N             # status transition log for one application
- *   node tracker.mjs render                     # applications.db → applications.md (view)
+ *                          [--since 2026-01-01] [--id N] [--limit 20] [--json]
+ *   node tracker.mjs history --id N             # status transition log observed across syncs
+ *   node tracker.mjs export [--out FILE]        # inverse: applications.db → canonical markdown (stdout by default)
+ *
+ * query/history auto-resync when applications.md changed since the last sync,
+ * so the index can never serve stale reads.
  */
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
+import { createHash } from 'crypto';
+import { dirname } from 'path';
 import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
-const DB_PATH = 'data/applications.db';
-const MD_PATH = 'data/applications.md';
+const MD_PATH = process.env.CAREER_OPS_TRACKER || 'data/applications.md';
+const DB_PATH = process.env.CAREER_OPS_TRACKER_DB || MD_PATH.replace(/\.md$/, '.db');
 const STATES_PATH = 'templates/states.yml';
 const HEADER = '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |';
 const SEPARATOR = '|---|------|---------|------|-------|--------|-----|--------|-------|';
-const RENDER_MARKER = '<!-- Rendered from data/applications.db by tracker.mjs — query/edit via `node tracker.mjs`, do not hand-edit (RFC #918) -->';
 
 // ── node:sqlite loading ─────────────────────────────────────────────
 
@@ -53,7 +61,7 @@ async function loadSqlite() {
     return DatabaseSync;
   } catch {
     console.error('Error: node:sqlite is not available. tracker.mjs needs Node >= 22.5 (you are on ' + process.version + ').');
-    console.error('The markdown tracker keeps working without it — SQLite is opt-in.');
+    console.error('The markdown tracker keeps working without it — the index is optional.');
     process.exit(1);
   } finally {
     process.emitWarning = origEmit; // the warning fires at import time — safe to restore here
@@ -61,12 +69,13 @@ async function loadSqlite() {
 }
 
 function openDb(DatabaseSync) {
-  mkdirSync('data', { recursive: true });
+  mkdirSync(dirname(DB_PATH) || '.', { recursive: true });
   const db = new DatabaseSync(DB_PATH);
   db.exec('PRAGMA foreign_keys = ON'); // SQLite ignores REFERENCES without this
   db.exec(`
     CREATE TABLE IF NOT EXISTS applications (
       id      INTEGER PRIMARY KEY,
+      pos     INTEGER NOT NULL,
       date    TEXT NOT NULL,
       company TEXT NOT NULL,
       role    TEXT NOT NULL,
@@ -81,6 +90,10 @@ function openDb(DatabaseSync) {
       app_id INTEGER NOT NULL REFERENCES applications(id),
       status TEXT NOT NULL,
       date   TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS meta (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_apps_status ON applications(status);
     CREATE INDEX IF NOT EXISTS idx_apps_company ON applications(company);
@@ -132,33 +145,33 @@ function repairPlaceholder(cell) {
   return cell;
 }
 
-// ── Markdown parsing (migrate) ──────────────────────────────────────
+// ── Markdown parsing ────────────────────────────────────────────────
 
-function parseMarkdownRows(text) {
+function parseMarkdownRows(text, diag) {
   const rows = [];
   for (const line of text.split('\n')) {
     if (!line.trim().startsWith('|')) continue;
     let cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
     if (cells.length < 2) continue;
     if (cells[0] === '#' || /^[-: ]*$/.test(cells.join(''))) continue; // header / separator
-    if (cells.length > 9) cells = [...cells.slice(0, 8), cells.slice(8).join(' | ')]; // stray pipes → notes
+    if (cells.length > 9) {
+      cells = [...cells.slice(0, 8), cells.slice(8).join(' | ')]; // stray pipes → notes
+      if (diag) diag.strayPipes++;
+    }
     while (cells.length < 9) cells.push('');
     rows.push(cells);
   }
   return rows;
 }
 
-async function migrate(args) {
-  const dryRun = args.includes('--dry-run');
-  if (!existsSync(MD_PATH)) {
-    console.error(`Error: ${MD_PATH} not found — nothing to migrate.`);
-    process.exit(1);
-  }
-  const states = loadStates();
-  const rows = parseMarkdownRows(readFileSync(MD_PATH, 'utf-8'));
-  console.log(`Parsed ${rows.length} data rows from ${MD_PATH}`);
+// Parse + normalize the markdown into index-ready rows. The markdown itself is
+// never modified — normalization lives only in the derived index, and the
+// diagnostics tell the user what to fix at the source (normalize-statuses.mjs,
+// dedup-tracker.mjs).
+function parseTracker(states) {
+  const diag = { mojibake: 0, scoreInStatus: 0, unknownStatus: 0, badId: 0, badDate: 0, strayPipes: 0 };
+  const rows = parseMarkdownRows(readFileSync(MD_PATH, 'utf-8'), diag);
 
-  const repairs = { mojibake: 0, scoreInStatus: 0, unknownStatus: 0, badId: 0, badDate: 0 };
   const usedIds = new Set();
   let maxId = 0;
   const apps = [];
@@ -170,21 +183,21 @@ async function migrate(args) {
     score = repairPlaceholder(score);
     pdf = repairPlaceholder(pdf);
     report = repairPlaceholder(report);
-    if ([score, pdf, report].join('|') !== before) repairs.mojibake++;
+    if ([score, pdf, report].join('|') !== before) diag.mojibake++;
 
     // Score sitting in the status column (column drift)
     const scoreInStatus = status.match(SCORE_RE);
     if (scoreInStatus) {
       if (!SCORE_RE.test(score)) score = scoreInStatus[1];
       status = 'Evaluated';
-      repairs.scoreInStatus++;
+      diag.scoreInStatus++;
     }
 
     const canonical = normalizeStatus(status, states);
     if (!canonical) {
-      notes = notes ? `${notes} [migrate: original status "${status}"]` : `[migrate: original status "${status}"]`;
+      notes = notes ? `${notes} [sync: original status "${status}"]` : `[sync: original status "${status}"]`;
       status = 'Evaluated';
-      repairs.unknownStatus++;
+      diag.unknownStatus++;
     } else {
       status = canonical;
     }
@@ -192,51 +205,110 @@ async function migrate(args) {
     let id = parseInt(idRaw, 10);
     if (!Number.isInteger(id) || id <= 0 || usedIds.has(id)) {
       id = 0; // assign after the pass, once maxId is known
-      repairs.badId++;
+      diag.badId++;
     } else {
       usedIds.add(id);
       if (id > maxId) maxId = id;
     }
 
-    if (!DATE_RE.test(date)) repairs.badDate++; // kept as-is — flagged, not destroyed
+    if (!DATE_RE.test(date)) diag.badDate++; // kept as-is — flagged, not destroyed
 
-    apps.push({ id, date, company, role, score: score || '—', status, pdf: pdf || '❌', report: report || '—', notes });
+    apps.push({ id, pos: apps.length, date, company, role, score: score || '—', status, pdf: pdf || '❌', report: report || '—', notes });
   }
   for (const app of apps) if (app.id === 0) app.id = ++maxId;
 
-  console.log(`Repairs: ${repairs.mojibake} mojibake placeholders, ${repairs.scoreInStatus} scores moved out of status column, ` +
-    `${repairs.unknownStatus} unknown statuses defaulted to Evaluated (original kept in notes), ` +
-    `${repairs.badId} missing/duplicate ids reassigned, ${repairs.badDate} malformed dates flagged`);
+  return { apps, diag };
+}
 
-  if (dryRun) {
-    console.log('(dry run — no database written)');
-    return;
+function mdHash() {
+  return createHash('sha256').update(readFileSync(MD_PATH)).digest('hex');
+}
+
+// ── Sync (markdown → derived index) ─────────────────────────────────
+
+function reportDiagnostics(diag) {
+  const total = Object.values(diag).reduce((a, b) => a + b, 0);
+  if (total === 0) {
+    console.error('No corruption detected — index matches the markdown cleanly.');
+    return 0;
   }
+  console.error(`Corruption detected in ${MD_PATH} (normalized in the index only — the markdown is untouched):`);
+  if (diag.mojibake) console.error(`  ${diag.mojibake} mojibake placeholder cell(s)`);
+  if (diag.scoreInStatus) console.error(`  ${diag.scoreInStatus} score(s) sitting in the status column`);
+  if (diag.unknownStatus) console.error(`  ${diag.unknownStatus} non-canonical status(es), indexed as Evaluated (original kept in notes)`);
+  if (diag.badId) console.error(`  ${diag.badId} missing/duplicate id(s), reassigned in the index`);
+  if (diag.badDate) console.error(`  ${diag.badDate} malformed date(s), kept as-is`);
+  if (diag.strayPipes) console.error(`  ${diag.strayPipes} row(s) with stray pipes, folded into notes`);
+  console.error('Fix at the source with `node normalize-statuses.mjs` / `node dedup-tracker.mjs`, then re-sync.');
+  return total;
+}
 
-  const DatabaseSync = await loadSqlite();
-  const db = openDb(DatabaseSync);
-  const existing = db.prepare('SELECT COUNT(*) AS n FROM applications').get().n;
-  if (existing > 0) {
-    console.error(`Error: ${DB_PATH} already contains ${existing} rows. Delete the file to re-migrate.`);
-    process.exit(1);
-  }
+function syncIndex(db, states) {
+  const { apps, diag } = parseTracker(states);
+  const today = new Date().toISOString().slice(0, 10);
 
-  copyFileSync(MD_PATH, MD_PATH + '.pre-migrate.bak');
-  const insertApp = db.prepare('INSERT INTO applications (id, date, company, role, score, status, pdf, report, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  const insertEvent = db.prepare('INSERT INTO status_events (app_id, status, date) VALUES (?, ?, ?)');
   db.exec('BEGIN');
+  db.exec('PRAGMA defer_foreign_keys = ON'); // full rebuild — FKs settle at commit
   try {
+    db.exec('DELETE FROM applications');
+    const insertApp = db.prepare('INSERT INTO applications (id, pos, date, company, role, score, status, pdf, report, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const a of apps) insertApp.run(a.id, a.pos, a.date, a.company, a.role, a.score, a.status, a.pdf, a.report, a.notes);
+
+    // Status history: events persist across rebuilds, keyed by id. An app whose
+    // status changed since the last sync gets a new event; rows that left the
+    // markdown lose their events (the index never outlives its source).
+    db.exec('DELETE FROM status_events WHERE app_id NOT IN (SELECT id FROM applications)');
+    const latestEvent = db.prepare('SELECT status FROM status_events WHERE app_id = ? ORDER BY id DESC LIMIT 1');
+    const insertEvent = db.prepare('INSERT INTO status_events (app_id, status, date) VALUES (?, ?, ?)');
     for (const a of apps) {
-      insertApp.run(a.id, a.date, a.company, a.role, a.score, a.status, a.pdf, a.report, a.notes);
-      insertEvent.run(a.id, a.status, DATE_RE.test(a.date) ? a.date : new Date().toISOString().slice(0, 10));
+      const last = latestEvent.get(a.id);
+      if (!last) insertEvent.run(a.id, a.status, DATE_RE.test(a.date) ? a.date : today);
+      else if (last.status !== a.status) insertEvent.run(a.id, a.status, today);
     }
+
+    db.prepare('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+      .run('md_sha256', mdHash());
     db.exec('COMMIT');
   } catch (err) {
     db.exec('ROLLBACK');
     throw err;
   }
-  console.log(`Migrated ${apps.length} applications into ${DB_PATH} (markdown backed up to ${MD_PATH}.pre-migrate.bak)`);
-  console.log(`Next: \`node tracker.mjs render\` regenerates ${MD_PATH} as a clean view.`);
+  return { apps, diag };
+}
+
+async function sync(args) {
+  if (!existsSync(MD_PATH)) {
+    console.error(`Error: ${MD_PATH} not found — nothing to index.`);
+    process.exit(1);
+  }
+  const states = loadStates();
+
+  if (args.includes('--check')) {
+    const { apps, diag } = parseTracker(states);
+    console.error(`Parsed ${apps.length} data rows from ${MD_PATH}`);
+    const issues = reportDiagnostics(diag);
+    console.error('(--check — no index written)');
+    process.exit(issues > 0 ? 1 : 0);
+  }
+
+  const DatabaseSync = await loadSqlite();
+  const db = openDb(DatabaseSync);
+  const { apps, diag } = syncIndex(db, states);
+  console.error(`Indexed ${apps.length} applications from ${MD_PATH} into ${DB_PATH}`);
+  reportDiagnostics(diag);
+}
+
+// query/history must never serve stale reads: if the markdown changed since
+// the last sync (or was never synced), rebuild the index first.
+function ensureFresh(db, states) {
+  if (!existsSync(MD_PATH)) {
+    console.error(`Error: ${MD_PATH} not found — the index has no source of truth to read from.`);
+    process.exit(1);
+  }
+  const synced = db.prepare('SELECT value FROM meta WHERE key = ?').get('md_sha256');
+  if (synced && synced.value === mdHash()) return;
+  console.error(`(index stale — resyncing from ${MD_PATH})`);
+  syncIndex(db, states);
 }
 
 // ── Query helpers ───────────────────────────────────────────────────
@@ -257,6 +329,7 @@ async function query(args) {
   const DatabaseSync = await loadSqlite();
   const db = openDb(DatabaseSync);
   const states = loadStates();
+  ensureFresh(db, states);
 
   const where = [];
   const params = [];
@@ -278,7 +351,8 @@ async function query(args) {
   const id = flagValue(args, '--id');
   if (id) { where.push('id = ?'); params.push(parseInt(id, 10)); }
 
-  let sql = 'SELECT * FROM applications' + (where.length ? ' WHERE ' + where.join(' AND ') : '') + ' ORDER BY id DESC';
+  let sql = 'SELECT id, date, company, role, score, status, pdf, report, notes FROM applications'
+    + (where.length ? ' WHERE ' + where.join(' AND ') : '') + ' ORDER BY id DESC';
   const limit = parseInt(flagValue(args, '--limit') || '0', 10);
   if (limit > 0) { sql += ' LIMIT ?'; params.push(limit); }
 
@@ -293,77 +367,10 @@ async function query(args) {
   }
 }
 
-// ── Mutations ───────────────────────────────────────────────────────
-
-async function add(args) {
-  const DatabaseSync = await loadSqlite();
-  const db = openDb(DatabaseSync);
-  const states = loadStates();
-
-  const company = flagValue(args, '--company');
-  const role = flagValue(args, '--role');
-  if (!company || !role) { console.error('Error: add requires --company and --role'); process.exit(1); }
-
-  // Repo rule: never create a new entry when company+role already exists.
-  const dupe = db.prepare('SELECT id, status FROM applications WHERE lower(company) = ? AND lower(role) = ?')
-    .get(company.toLowerCase(), role.toLowerCase());
-  if (dupe && !args.includes('--force')) {
-    console.error(`Error: "${company}" + "${role}" already exists as #${dupe.id} (${dupe.status}). Use \`update --id ${dupe.id}\` or --force.`);
-    process.exit(1);
-  }
-
-  const status = normalizeStatus(flagValue(args, '--status') || 'Evaluated', states);
-  if (!status) { console.error(`Error: unknown status. Canonical: ${states.labels.join(', ')}`); process.exit(1); }
-  const date = flagValue(args, '--date') || new Date().toISOString().slice(0, 10);
-  if (!DATE_RE.test(date)) { console.error('Error: --date must be YYYY-MM-DD'); process.exit(1); }
-
-  const id = (db.prepare('SELECT COALESCE(MAX(id), 0) AS m FROM applications').get().m) + 1;
-  db.prepare('INSERT INTO applications (id, date, company, role, score, status, pdf, report, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(id, date, company, role, flagValue(args, '--score') || '—', status,
-      flagValue(args, '--pdf') || '❌', flagValue(args, '--report') || '—', flagValue(args, '--notes') || '');
-  db.prepare('INSERT INTO status_events (app_id, status, date) VALUES (?, ?, ?)').run(id, status, date);
-  console.log(rowToMarkdown(db.prepare('SELECT * FROM applications WHERE id = ?').get(id)));
-}
-
-async function update(args) {
-  const DatabaseSync = await loadSqlite();
-  const db = openDb(DatabaseSync);
-  const states = loadStates();
-
-  const id = parseInt(flagValue(args, '--id') || '', 10);
-  if (!Number.isInteger(id)) { console.error('Error: update requires --id N'); process.exit(1); }
-  const row = db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
-  if (!row) { console.error(`Error: no application with id ${id}`); process.exit(1); }
-
-  const sets = [];
-  const params = [];
-  for (const field of ['score', 'pdf', 'report', 'notes', 'company', 'role', 'date']) {
-    const v = flagValue(args, '--' + field);
-    if (v === null) continue;
-    if (field === 'date' && !DATE_RE.test(v)) { console.error('Error: --date must be YYYY-MM-DD'); process.exit(1); }
-    sets.push(`${field} = ?`); params.push(v);
-  }
-  const statusRaw = flagValue(args, '--status');
-  let newStatus = null;
-  if (statusRaw) {
-    newStatus = normalizeStatus(statusRaw, states);
-    if (!newStatus) { console.error(`Error: unknown status "${statusRaw}". Canonical: ${states.labels.join(', ')}`); process.exit(1); }
-    sets.push('status = ?'); params.push(newStatus);
-  }
-  if (sets.length === 0) { console.error('Error: nothing to update — pass at least one field flag'); process.exit(1); }
-
-  params.push(id);
-  db.prepare(`UPDATE applications SET ${sets.join(', ')} WHERE id = ?`).run(...params);
-  if (newStatus && newStatus !== row.status) {
-    const eventDate = flagValue(args, '--date') || new Date().toISOString().slice(0, 10);
-    db.prepare('INSERT INTO status_events (app_id, status, date) VALUES (?, ?, ?)').run(id, newStatus, eventDate);
-  }
-  console.log(rowToMarkdown(db.prepare('SELECT * FROM applications WHERE id = ?').get(id)));
-}
-
 async function history(args) {
   const DatabaseSync = await loadSqlite();
   const db = openDb(DatabaseSync);
+  ensureFresh(db, loadStates());
   const id = parseInt(flagValue(args, '--id') || '', 10);
   if (!Number.isInteger(id)) { console.error('Error: history requires --id N'); process.exit(1); }
   const app = db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
@@ -374,44 +381,49 @@ async function history(args) {
   }
 }
 
-// ── Render (db → markdown view) ─────────────────────────────────────
+// ── Export (index → canonical markdown) ─────────────────────────────
+// The inverse of sync: regenerates the canonical table from the index. Used by
+// the round-trip tests (md → db → md must be lossless for clean input), and as
+// a repaired copy the user can review and adopt by hand. It never touches
+// applications.md unless explicitly asked to via --out.
 
-async function render() {
+async function exportMd(args) {
   const DatabaseSync = await loadSqlite();
   const db = openDb(DatabaseSync);
-  const rows = db.prepare('SELECT * FROM applications ORDER BY id DESC').all();
-  if (rows.length === 0) {
-    console.error(`Error: ${DB_PATH} is empty — run \`migrate\` first (refusing to overwrite ${MD_PATH} with nothing).`);
-    process.exit(1);
-  }
-  // Safety: never silently clobber a hand-maintained tracker that was never migrated.
-  if (existsSync(MD_PATH) && !readFileSync(MD_PATH, 'utf-8').includes(RENDER_MARKER)) {
-    copyFileSync(MD_PATH, MD_PATH + '.bak');
-    console.log(`Existing hand-maintained ${MD_PATH} backed up to ${MD_PATH}.bak`);
-  }
+  ensureFresh(db, loadStates());
+  const rows = db.prepare('SELECT * FROM applications ORDER BY pos').all();
   const out = [
     '# Applications Tracker',
-    '',
-    RENDER_MARKER,
     '',
     HEADER,
     SEPARATOR,
     ...rows.map(rowToMarkdown),
     '',
   ].join('\n');
-  writeFileSync(MD_PATH, out, 'utf-8');
-  console.log(`Rendered ${rows.length} applications to ${MD_PATH}`);
+
+  const outPath = flagValue(args, '--out');
+  if (!outPath) {
+    process.stdout.write(out);
+    return;
+  }
+  // Never silently clobber — whatever was there is backed up first.
+  if (existsSync(outPath)) {
+    copyFileSync(outPath, outPath + '.bak');
+    console.error(`Existing ${outPath} backed up to ${outPath}.bak`);
+  }
+  writeFileSync(outPath, out, 'utf-8');
+  console.error(`Exported ${rows.length} applications to ${outPath}`);
 }
 
 // ── Main ────────────────────────────────────────────────────────────
 
-const COMMANDS = { migrate, query, add, update, history, render };
+const COMMANDS = { sync, query, history, export: exportMd };
 
 async function main() {
   const [command, ...args] = process.argv.slice(2);
   const fn = COMMANDS[command];
   if (!fn) {
-    console.log('Usage: node tracker.mjs <migrate|query|add|update|history|render> [flags]');
+    console.log('Usage: node tracker.mjs <sync|query|history|export> [flags]');
     console.log('See the header comment of this file for examples, or docs/SCRIPTS.md.');
     process.exit(command ? 1 : 0);
   }

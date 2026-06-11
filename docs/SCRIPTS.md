@@ -19,7 +19,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
-| `npm run tracker` | `tracker.mjs` | SQLite tracker store (opt-in) — query/add/update/render |
+| `npm run tracker` | `tracker.mjs` | SQLite derived index over applications.md — sync/query/history/export |
 
 ---
 
@@ -222,23 +222,26 @@ npm run scan
 
 ## tracker
 
-SQLite storage layer for the applications tracker (RFC #918). **Opt-in** — nothing changes until you run `migrate`. After migration, `data/applications.db` is the source of truth and `data/applications.md` becomes a rendered read-only view (same table format, so all downstream tooling and git diffs keep working).
+SQLite **derived index** for the applications tracker (RFC #918, phase 1). `data/applications.md` stays the source of truth; `data/applications.db` is built from it by `sync` and is safe to delete at any time — it regenerates on the next sync. All writes keep going to the markdown exactly as today (`merge-tracker.mjs`, hand edits); the index is read-only infrastructure.
 
-Why: at hundreds of rows a markdown table degrades structurally (encoding corruption, column drift, `|` inside cells shifting columns), and agents grepping it get model-dependent results. A schema-validated store returns the same rows for every model on every CLI, and one query replaces reading the whole table into context.
+Why: at hundreds of rows a markdown table degrades structurally (encoding corruption, column drift, `|` inside cells shifting columns), and agents grepping it get model-dependent results. The index normalizes on sync, so a query returns the same rows for every model on every CLI — and corruption is detected at sync time instead of propagating silently.
 
 Zero new dependencies — uses `node:sqlite`, built into Node ≥ 22.5.
 
 ```bash
-node tracker.mjs migrate --dry-run        # preview parse + repairs, no writes
-node tracker.mjs migrate                  # applications.md → applications.db (md backed up first)
+node tracker.mjs sync                     # (re)build applications.db from applications.md
+node tracker.mjs sync --check             # diagnose corruption only, no write (exit 1 if issues found)
 node tracker.mjs query --status Applied --since 2026-05-01
 node tracker.mjs query --company acme --json
-node tracker.mjs add --company "Acme" --role "Designer" --score 4.2/5
-node tracker.mjs update --id 42 --status Interview
-node tracker.mjs history --id 42          # status transition log (Applied → Interview → ...)
-node tracker.mjs render                   # regenerate applications.md from the DB
+node tracker.mjs history --id 42          # status transitions observed across syncs (Applied → Interview → ...)
+node tracker.mjs export                   # inverse: index → canonical markdown table on stdout
+node tracker.mjs export --out repaired.md # write to a file (existing file backed up to .bak first)
 ```
 
-`migrate` repairs the corruption classes markdown accumulates: mojibake placeholder cells, scores stranded in the status column (moved back, status defaulted to `Evaluated`), non-canonical statuses (normalized via `templates/states.yml` aliases; unknowns preserved in notes), and missing/duplicate ids. `add` enforces the company+role dedup rule; `update` records status transitions in a `status_events` table, which gives `analyze-patterns.mjs` a real funnel instead of only the current snapshot.
+`query` and `history` auto-resync when the markdown changed since the last sync, so the index can never serve stale reads.
 
-**Exit codes:** `0` success, `1` validation error, missing prerequisites (Node < 22.5, no `applications.md` to migrate), or refusing an unsafe operation (re-migrating a populated DB, rendering an empty DB over an existing tracker).
+`sync` detects and reports the corruption classes markdown accumulates — mojibake placeholder cells, scores stranded in the status column, non-canonical statuses (resolved via `templates/states.yml` aliases), missing/duplicate ids, stray pipes — and normalizes them **in the index only**; the markdown is never modified. Fix at the source with `normalize-statuses.mjs` / `dedup-tracker.mjs`, then re-sync. Status changes between syncs accumulate in a `status_events` table, which gives `analyze-patterns.mjs` a real funnel instead of only the current snapshot.
+
+`export` is the inverse of `sync` (round-trip `md → db → md` is lossless for clean input — enforced by `test-all.mjs`). It writes to stdout by default and never touches `applications.md` unless you explicitly pass it as `--out`. Phase 2 of #918 (DB becomes source of truth, markdown becomes a rendered view) is a separate, explicit per-user opt-in — not part of this script yet.
+
+**Exit codes:** `0` success, `1` validation error, missing prerequisites (Node < 22.5, no `applications.md` to index), or corruption found by `sync --check`.
