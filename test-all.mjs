@@ -1792,6 +1792,41 @@ try {
   fail(`Batch runner MCP isolation test crashed: ${e.message}`);
 }
 
+// ── 16. UPDATE-SYSTEM SEMVER PARSING (#923) ─────────────────────
+
+console.log('\n16. update-system SEMVER_RE');
+
+try {
+  // Importing must not trigger the CLI (the import.meta.url guard); it
+  // exposes SEMVER_RE, which the releases-API fallback uses on release.tag_name.
+  const { SEMVER_RE } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+  const parse = (tag) => String(tag).trim().match(SEMVER_RE)?.[1] ?? null;
+
+  // Release Please tags carry the component prefix (career-ops-v1.9.0); the
+  // prefix must be stripped or the releases-API fallback is dead code (#923).
+  if (parse('career-ops-v1.9.0') === '1.9.0') {
+    pass('SEMVER_RE parses Release Please component-prefixed tag (career-ops-v1.9.0 → 1.9.0)');
+  } else {
+    fail(`SEMVER_RE failed on career-ops-v1.9.0 (got ${parse('career-ops-v1.9.0')}) — releases-API fallback is dead code (#923)`);
+  }
+
+  // No regression on plain tags.
+  if (parse('v1.9.0') === '1.9.0' && parse('1.9.0') === '1.9.0') {
+    pass('SEMVER_RE still parses plain v-prefixed and bare semver tags');
+  } else {
+    fail(`SEMVER_RE regressed on plain tags (v1.9.0 → ${parse('v1.9.0')}, 1.9.0 → ${parse('1.9.0')})`);
+  }
+
+  // Non-semver input must not match.
+  if (parse('career-ops') === null && parse('v1.9') === null) {
+    pass('SEMVER_RE rejects non-semver input');
+  } else {
+    fail(`SEMVER_RE matched non-semver input (career-ops → ${parse('career-ops')}, v1.9 → ${parse('v1.9')})`);
+  }
+} catch (e) {
+  fail(`update-system SEMVER_RE test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
