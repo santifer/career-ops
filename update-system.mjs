@@ -234,6 +234,32 @@ function addPaths(paths) {
   git('add', '--', ...paths);
 }
 
+function dashboardGoSourcesChanged() {
+  try {
+    const changed = git('diff', '--name-only', 'HEAD', '--', 'dashboard');
+    return changed
+      .split('\n')
+      .some(path => path.startsWith('dashboard/') && path.endsWith('.go'));
+  } catch {
+    return false;
+  }
+}
+
+function rebuildDashboardBinaryIfNeeded() {
+  if (!dashboardGoSourcesChanged()) return;
+
+  try {
+    execFileSync('go', ['build', '-o', 'career-dashboard', '.'], {
+      cwd: join(ROOT, 'dashboard'),
+      timeout: 60000,
+      stdio: 'pipe',
+    });
+    console.log('dashboard binary rebuilt');
+  } catch {
+    console.log('dashboard binary rebuild skipped -- run: cd dashboard && go build -o career-dashboard . manually');
+  }
+}
+
 // ── CHECK ───────────────────────────────────────────────────────
 
 // curl helper used by check() — curl works inside the Claude Code sandbox
@@ -466,7 +492,10 @@ async function apply() {
       console.log('npm install skipped (may need manual run)');
     }
 
-    // 6. Commit the update
+    // 6. Rebuild compiled dashboard if Go sources changed
+    rebuildDashboardBinaryIfNeeded();
+
+    // 7. Commit the update
     const remote = localVersion(); // Re-read after checkout updated VERSION
     try {
       const pathsToStage = [...updated];

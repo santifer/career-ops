@@ -493,6 +493,23 @@ if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
   fail('generate-pdf still waits for networkidle');
 }
 
+// ── 7c. UPDATER DASHBOARD REBUILD ─────────────────────────────────
+
+console.log('\n7c. Updater dashboard rebuild');
+
+const updateSystemScript = readFile('update-system.mjs');
+if (
+  /git\('diff',\s*'--name-only',\s*'HEAD',\s*'--',\s*'dashboard'\)/.test(updateSystemScript) &&
+  /path\.startsWith\(['"]dashboard\/['"]\)\s*&&\s*path\.endsWith\(['"]\.go['"]\)/.test(updateSystemScript) &&
+  /go build -o career-dashboard \./.test(updateSystemScript) &&
+  /cwd:\s*join\(ROOT,\s*['"]dashboard['"]\)/.test(updateSystemScript) &&
+  /dashboard binary rebuild skipped/.test(updateSystemScript)
+) {
+  pass('update-system rebuilds dashboard binary when dashboard Go sources change');
+} else {
+  fail('update-system does not rebuild dashboard binary after dashboard Go source updates');
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
