@@ -2200,6 +2200,46 @@ try {
   fail(`update-system SEMVER_RE test crashed: ${e.message}`);
 }
 
+// ── 17. FONT INLINING (#951) ────────────────────────────────────
+
+console.log('\n17. Font inlining (data: URLs, #951)');
+
+try {
+  // Importing must not trigger the CLI (the import.meta.url guard); it
+  // exposes inlineLocalFonts, which renderHtmlToPdf runs before setContent.
+  const { inlineLocalFonts } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+
+  // Chromium blocks file:// subresources from setContent() pages (the page
+  // stays at about:blank), so ./fonts refs must become data: URLs (#951).
+  const fontFile = readdirSync(join(ROOT, 'fonts')).find(f => f.endsWith('.woff2'));
+  const inlined = await inlineLocalFonts(
+    `<style>@font-face { src: url('./fonts/${fontFile}') format('woff2'); }</style>`
+  );
+  if (inlined.includes('data:font/woff2;base64,') && !inlined.includes('./fonts/')) {
+    pass('local ./fonts references are inlined as data: URLs');
+  } else {
+    fail('./fonts reference was not inlined as a data: URL — fonts will silently fall back (#951)');
+  }
+
+  // A missing font file must not corrupt the HTML or throw.
+  const missing = await inlineLocalFonts(`<style>src: url('./fonts/does-not-exist.woff2');</style>`);
+  if (missing.includes(`url('./fonts/does-not-exist.woff2')`)) {
+    pass('missing font files keep their original reference');
+  } else {
+    fail('missing font file mangled the url() reference');
+  }
+
+  // Traversal outside fonts/ must never be inlined.
+  const traversal = await inlineLocalFonts(`<style>src: url('./fonts/../cv.md');</style>`);
+  if (traversal.includes(`url('./fonts/../cv.md')`)) {
+    pass('path traversal outside fonts/ is not inlined');
+  } else {
+    fail('path traversal escaped the fonts/ directory');
+  }
+} catch (e) {
+  fail(`font inlining test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

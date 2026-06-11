@@ -207,7 +207,6 @@ async function generatePDF() {
   console.log(`📁 Output: ${outputPath}`);
   console.log(`📏 Format: ${format.toUpperCase()}`);
 
-  // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
   let cvMarkdown = '';
   try {
@@ -216,18 +215,6 @@ async function generatePDF() {
     if (err?.code !== 'ENOENT') throw err;
   }
   validateCvSectionOrder(html, cvMarkdown);
-
-  // Resolve font paths relative to career-ops/fonts/
-  const fontsDir = resolve(__dirname, 'fonts');
-  html = html.replace(
-    /url\(['"]?\.\/fonts\//g,
-    `url('${pathToFileURL(fontsDir).href}/`
-  );
-  // Close any unclosed quotes from the replacement (handles all font formats)
-  html = html.replace(
-    /file:\/\/([^'")]+)\.(woff2?|ttf|otf)['"]?\)/g,
-    `file://$1.$2')`
-  );
 
   // Normalize text for ATS compatibility (issue #1)
   const normalized = normalizeTextForATS(html);
@@ -242,7 +229,42 @@ async function generatePDF() {
 }
 
 /**
+ * Inline url('./fonts/...') references as base64 data: URLs.
+ *
+ * Chromium refuses to load file:// subresources from a setContent() page
+ * (the document stays at about:blank), so fonts referenced by path are
+ * silently dropped and PDFs fall back to system fonts. data: URLs carry
+ * no origin restriction, so they load from any page. See #951.
+ *
+ * Missing font files keep their original reference and log a warning.
+ *
+ * @param {string} html - HTML that may reference url('./fonts/<file>').
+ * @returns {Promise<string>} HTML with local font references inlined.
+ */
+export async function inlineLocalFonts(html) {
+  const FONT_REF = /url\(\s*(['"]?)\.\/fonts\/([^'")\s]+)\1\s*\)/g;
+  const MIME = { woff2: 'font/woff2', woff: 'font/woff', otf: 'font/otf', ttf: 'font/ttf' };
+  const names = [...new Set([...html.matchAll(FONT_REF)].map((m) => m[2]))];
+  const dataUrls = new Map();
+  for (const name of names) {
+    if (name.includes('..')) continue;
+    try {
+      const buf = await readFile(resolve(__dirname, 'fonts', name));
+      const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+      dataUrls.set(name, `url('data:${MIME[ext] || 'application/octet-stream'};base64,${buf.toString('base64')}')`);
+    } catch (err) {
+      if (err?.code !== 'ENOENT') throw err;
+      console.warn(`⚠️  Font file not found, keeping original reference: fonts/${name}`);
+    }
+  }
+  return html.replace(FONT_REF, (match, _quote, name) => dataUrls.get(name) || match);
+}
+
+/**
  * Render an HTML string to a PDF file via headless Chromium.
+ *
+ * Local url('./fonts/...') references are inlined as data: URLs first so
+ * fonts render regardless of page origin (see inlineLocalFonts).
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
@@ -254,6 +276,8 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const baseDir = opts.baseDir || process.cwd();
 
   mkdirSync(dirname(outputPath), { recursive: true });
+
+  html = await inlineLocalFonts(html);
 
   const browser = await chromium.launch({ headless: true });
   try {
