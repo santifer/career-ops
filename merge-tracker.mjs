@@ -421,6 +421,47 @@ function parseScore(s) {
   return m ? parseFloat(m[1]) : 0;
 }
 
+// Column layout for the applications.md table. The tracker may use the original
+// 9-column layout, or a customized one with an extra/reordered column (e.g. a
+// Location column after Role). We map columns by header NAME rather than fixed
+// position so both work — fixed-position indexing would otherwise read, say,
+// Location where it expects Score. Falls back to the legacy layout when no
+// recognizable header row is found.
+const LEGACY_COLMAP = { num: 1, date: 2, company: 3, role: 4, score: 5, status: 6, pdf: 7, report: 8, notes: 9 };
+let COLMAP = LEGACY_COLMAP;
+
+const HEADER_ALIASES = {
+  '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
+  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
+  'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
+};
+
+// Scan the table for a header row and build a header-name → column-index map.
+// Indexing matches `line.split('|')` (leading empty cell before the first pipe),
+// the same split parseAppLine uses. Returns null — caller keeps the legacy
+// layout — unless the essential columns are all present, so a stray pipe line
+// can't yield a bogus mapping.
+function detectColumns(lines) {
+  for (const line of lines) {
+    if (!line.startsWith('|')) continue;
+    const cells = line.split('|').map(s => s.trim().toLowerCase());
+    if (!cells.includes('company') || !cells.includes('role')) continue;
+    const map = {};
+    cells.forEach((c, i) => { if (HEADER_ALIASES[c] != null) map[HEADER_ALIASES[c]] = i; });
+    if (['num', 'company', 'role', 'score', 'status'].every(k => map[k] != null)) return map;
+  }
+  return null;
+}
+
+// Build a tracker row string matching the detected layout (with or without the
+// optional Location column) so writes round-trip through the same schema.
+function buildRow(o) {
+  if (COLMAP.location != null) {
+    return `| ${o.num} | ${o.date} | ${o.company} | ${o.role} | ${o.location || '—'} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
+  }
+  return `| ${o.num} | ${o.date} | ${o.company} | ${o.role} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
+}
+
 /**
  * Parse one Markdown applications.md table row into a tracker object.
  *
@@ -433,13 +474,22 @@ function parseScore(s) {
  */
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
-  const num = parseInt(parts[1]);
+  const maxIdx = Math.max(...Object.values(COLMAP));
+  if (parts.length <= maxIdx) return null;
+  const num = parseInt(parts[COLMAP.num]);
   if (isNaN(num) || num === 0) return null;
   return {
-    num, date: parts[2], company: parts[3], role: parts[4],
-    score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
-    notes: parts[9] || '', raw: line,
+    num,
+    date: parts[COLMAP.date],
+    company: parts[COLMAP.company],
+    role: parts[COLMAP.role],
+    location: COLMAP.location != null ? parts[COLMAP.location] : '',
+    score: parts[COLMAP.score],
+    status: parts[COLMAP.status],
+    pdf: parts[COLMAP.pdf],
+    report: parts[COLMAP.report],
+    notes: COLMAP.notes != null ? (parts[COLMAP.notes] || '') : '',
+    raw: line,
   };
 }
 
@@ -469,7 +519,7 @@ function parseTsvContent(content, filename) {
       console.warn(`⚠️  Skipping malformed pipe-delimited ${filename}: ${parts.length} fields`);
       return null;
     }
-    // Format: num | date | company | role | score | status | pdf | report | notes
+    // Format: num | date | company | role | score | status | pdf | report | notes [| location]
     addition = {
       num: parseInt(parts[0]),
       date: parts[1],
@@ -480,6 +530,7 @@ function parseTsvContent(content, filename) {
       pdf: parts[6],
       report: parts[7],
       notes: parts[8] || '',
+      location: (parts[9] || '').trim(),
     };
   } else {
     // Tab-separated
@@ -523,6 +574,8 @@ function parseTsvContent(content, filename) {
       pdf: parts[6],
       report: parts[7],
       notes: parts[8] || '',
+      // Optional trailing field: tab-separated TSVs may append a location.
+      location: (parts[9] || '').trim(),
     };
   }
 
@@ -571,6 +624,11 @@ if (MIGRATE) {
 }
 
 const appLines = appContent.split('\n');
+// Detect the tracker's column layout via header names so parsing and writing
+// both work whether the table uses the original 9-column layout or a customized
+// one (e.g. with a Location column after Role). Falls back to the legacy layout.
+COLMAP = detectColumns(appLines) || LEGACY_COLMAP;
+if (COLMAP.location != null) console.log('🧭 Detected Location column.');
 const existingApps = [];
 let maxNum = 0;
 
@@ -666,7 +724,13 @@ for (const file of tsvFiles) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+        const updatedLine = buildRow({
+          num: duplicate.num, date: addition.date, company: addition.company, role: addition.role,
+          location: addition.location || duplicate.location || '—',
+          score: addition.score, status: duplicate.status, pdf: duplicate.pdf,
+          report: addition.report,
+          notes: `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`,
+        });
         appLines[lineIdx] = updatedLine;
         updated++;
       }
@@ -679,7 +743,12 @@ for (const file of tsvFiles) {
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
     if (addition.num > maxNum) maxNum = addition.num;
 
-    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
+    const newLine = buildRow({
+      num: entryNum, date: addition.date, company: addition.company, role: addition.role,
+      location: addition.location || '—',
+      score: addition.score, status: addition.status, pdf: addition.pdf,
+      report: addition.report, notes: addition.notes,
+    });
     newLines.push(newLine);
     added++;
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
