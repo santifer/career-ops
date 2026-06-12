@@ -6,6 +6,7 @@ data/scan-history.tsv
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
+data/cache/ats-companies/
 reports/*.md
 !reports/.gitkeep
 output/*
@@ -37,6 +38,11 @@ modes/_profile.md
 .resolved-prompt-*
 node_modules/
 bun.lock
+# Report-number reservation sentinels (ephemeral, created by reserve-report-num.mjs)
+reports/*-RESERVED.md
+
+# Backup files written by normalize-statuses.mjs / dedup-tracker.mjs
+*.bak
 
 # OS
 .DS_Store
@@ -47,5 +53,15 @@ bun.lock
 .claude/settings.local.json
 .claude/memory/
 career-dashboard
+<<<<<<< agent-feat/GH795/dashboard-npm-scripts
 career-dashboard.exe
 package-lock.json
+=======
+package-lock.json
+
+# Playwright MCP server run artifacts (ephemeral, machine-local — never commit)
+.playwright-mcp/
+
+# Planning (local scratchpad)
+plan/
+>>>>>>> main

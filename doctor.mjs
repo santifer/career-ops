@@ -5,17 +5,22 @@
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
-import { existsSync, mkdirSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = __dirname;
+const argv = process.argv.slice(2);
+const targetIdx = argv.indexOf('--target');
+const projectRoot =
+  targetIdx !== -1 && argv[targetIdx + 1] ? argv[targetIdx + 1] : __dirname;
+const JSON_OUT = argv.includes('--json');
 
 // ANSI colors (only on TTY)
 const isTTY = process.stdout.isTTY;
 const green = (s) => isTTY ? `\x1b[32m${s}\x1b[0m` : s;
 const red = (s) => isTTY ? `\x1b[31m${s}\x1b[0m` : s;
+const yellow = (s) => isTTY ? `\x1b[33m${s}\x1b[0m` : s;
 const dim = (s) => isTTY ? `\x1b[2m${s}\x1b[0m` : s;
 
 function checkNodeVersion() {
@@ -62,46 +67,91 @@ async function checkPlaywright() {
   }
 }
 
-function checkCv() {
-  if (existsSync(join(projectRoot, 'cv.md'))) {
-    return { pass: true, label: 'cv.md found' };
+// The browser tools (`browser_navigate` / `browser_snapshot`) that scan / pipeline /
+// apply rely on are provided by the Playwright MCP server, registered through a
+// project-level Claude Code config (`.mcp.json` or `.claude/settings.json`). When it
+// is absent, SPA job boards silently return empty or stale content (#522) — so doctor
+// surfaces it as a non-fatal warning rather than letting it fail invisibly.
+const PLAYWRIGHT_MCP_WARNING = 'Playwright MCP tools not detected';
+
+function playwrightMcpConfigured(root) {
+  const configFiles = ['.mcp.json', '.claude/settings.json', '.claude/settings.local.json'];
+  for (const rel of configFiles) {
+    const file = join(root, ...rel.split('/'));
+    if (!existsSync(file)) continue;
+    try {
+      const servers = JSON.parse(readFileSync(file, 'utf8'))?.mcpServers;
+      if (servers && typeof servers === 'object') {
+        for (const server of Object.values(servers)) {
+          if (JSON.stringify(server ?? '').toLowerCase().includes('playwright')) return true;
+        }
+      }
+    } catch {
+      // Malformed config — keep scanning the other locations; never crash doctor on it.
+    }
+  }
+  return false;
+}
+
+function checkPlaywrightMcp(root) {
+  if (playwrightMcpConfigured(root)) {
+    return { pass: true, label: 'Playwright MCP server configured' };
   }
   return {
-    pass: false,
-    label: 'cv.md not found',
+    warn: true,
+    label: PLAYWRIGHT_MCP_WARNING,
+    fix: [
+      'Browser-driven JD fetching and liveness checks (scan / pipeline / apply) need the',
+      'Playwright MCP server, which this project does not configure yet — SPA job boards',
+      'may return empty or stale content. Tracking: https://github.com/santifer/career-ops/issues/506',
+    ],
+  };
+}
+
+// Single source of truth for the four user-layer prerequisites (the list
+// AGENTS.md "First Run" documents). BOTH the human checklist (`checkPrereq`)
+// and the machine-readable cold-start state (`onboardingState`) derive from
+// THIS array, so they cannot drift. Paths use "/" and are split for join().
+const USER_LAYER_PREREQS = [
+  {
+    path: 'cv.md',
     fix: [
       'Create cv.md in the project root with your CV in markdown',
       'See examples/ for reference CVs',
     ],
-  };
-}
-
-function checkProfile() {
-  if (existsSync(join(projectRoot, 'config', 'profile.yml'))) {
-    return { pass: true, label: 'config/profile.yml found' };
-  }
-  return {
-    pass: false,
-    label: 'config/profile.yml not found',
+  },
+  {
+    path: 'config/profile.yml',
     fix: [
       'Run: cp config/profile.example.yml config/profile.yml',
       'Then edit it with your details',
     ],
-  };
-}
-
-function checkPortals() {
-  if (existsSync(join(projectRoot, 'portals.yml'))) {
-    return { pass: true, label: 'portals.yml found' };
-  }
-  return {
-    pass: false,
-    label: 'portals.yml not found',
+  },
+  {
+    path: 'modes/_profile.md',
+    fix: [
+      'Run: cp modes/_profile.template.md modes/_profile.md',
+      'Then customize your archetypes / targeting narrative',
+    ],
+  },
+  {
+    path: 'portals.yml',
     fix: [
       'Run: cp templates/portals.example.yml portals.yml',
       'Then customize with your target companies',
     ],
-  };
+  },
+];
+
+function prereqPresent(root, path) {
+  return existsSync(join(root, ...path.split('/')));
+}
+
+function checkPrereq({ path, fix }) {
+  if (prereqPresent(projectRoot, path)) {
+    return { pass: true, label: `${path} found` };
+  }
+  return { pass: false, label: `${path} not found`, fix };
 }
 
 function checkFonts() {
@@ -157,9 +207,8 @@ async function main() {
     checkNodeVersion(),
     checkDependencies(),
     await checkPlaywright(),
-    checkCv(),
-    checkProfile(),
-    checkPortals(),
+    checkPlaywrightMcp(projectRoot),
+    ...USER_LAYER_PREREQS.map(checkPrereq),
     checkFonts(),
     checkAutoDir('data'),
     checkAutoDir('output'),
@@ -167,14 +216,21 @@ async function main() {
   ];
 
   let failures = 0;
+  let warnings = 0;
 
   for (const result of checks) {
-    if (result.pass) {
+    const fixes = Array.isArray(result.fix) ? result.fix : result.fix ? [result.fix] : [];
+    if (result.warn) {
+      warnings++;
+      console.log(`${yellow('⚠')} ${result.label}`);
+      for (const hint of fixes) {
+        console.log(`  ${dim('→ ' + hint)}`);
+      }
+    } else if (result.pass) {
       console.log(`${green('✓')} ${result.label}`);
     } else {
       failures++;
       console.log(`${red('✗')} ${result.label}`);
-      const fixes = Array.isArray(result.fix) ? result.fix : [result.fix];
       for (const hint of fixes) {
         console.log(`  ${dim('→ ' + hint)}`);
       }
@@ -186,14 +242,32 @@ async function main() {
     console.log(`Result: ${failures} issue${failures === 1 ? '' : 's'} found. Fix them and run \`npm run doctor\` again.`);
     process.exit(1);
   } else {
-    console.log('Result: All checks passed. You\'re ready to go! Run `claude` to start.');
+    const warnNote = warnings > 0 ? ` (${warnings} warning${warnings === 1 ? '' : 's'} — see above)` : '';
+    console.log(`Result: All checks passed${warnNote}. You're ready to go! Run \`claude\` to start.`);
     console.log('');
     console.log('Join the community: https://discord.gg/8pRpHETxa4');
     process.exit(0);
   }
 }
 
-main().catch((err) => {
-  console.error('doctor.mjs failed:', err.message);
-  process.exit(1);
-});
+// Single source of truth for the cold-start state: the same four user-layer
+// prerequisites that AGENTS.md "First Run" lists. `--json` turns the trigger into
+// a deterministic mechanism the agent runs (instead of re-deriving it from prose),
+// and `--target <dir>` lets the test suite point it at a simulated virgin env.
+function onboardingState(root) {
+  const missing = USER_LAYER_PREREQS
+    .filter(({ path }) => !prereqPresent(root, path))
+    .map(({ path }) => path);
+  const warnings = playwrightMcpConfigured(root) ? [] : [PLAYWRIGHT_MCP_WARNING];
+  return { onboardingNeeded: missing.length > 0, missing, warnings };
+}
+
+if (JSON_OUT) {
+  console.log(JSON.stringify(onboardingState(projectRoot)));
+  process.exit(0);
+} else {
+  main().catch((err) => {
+    console.error('doctor.mjs failed:', err.message);
+    process.exit(1);
+  });
+}
