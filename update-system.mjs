@@ -18,7 +18,7 @@
 import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -26,6 +26,12 @@ const ROOT = __dirname;
 const CANONICAL_REPO = 'https://github.com/santifer/career-ops.git';
 const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/career-ops/main/VERSION';
 const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/latest';
+
+// Matches a semver, with or without a leading `v` and an optional
+// Release Please component prefix (e.g. `career-ops-v1.9.0` → `1.9.0`).
+// Anchoring on `(?:^|-)` lets the releases-API fallback parse our tags,
+// which Release Please always prefixes with the component name.
+export const SEMVER_RE = /(?:^|-)v?(\d+\.\d+\.\d+)$/i;
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
@@ -268,8 +274,6 @@ async function check() {
   // Use curl instead of fetch() so the check works inside the Claude Code
   // sandbox (see curlGet() above for rationale).  Two sources are tried;
   // both failing is the only true-offline signal.
-  const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
-
   const [rawVersion, releaseRaw] = await Promise.all([
     curlGet(RAW_VERSION_URL),
     curlGet(RELEASES_API, [
@@ -580,22 +584,27 @@ function dismiss() {
 
 // ── MAIN ────────────────────────────────────────────────────────
 
-const cmd = process.argv[2] || 'check';
+// Only run the CLI when executed directly, so importing this module
+// (e.g. from test-all.mjs to exercise SEMVER_RE) does not trigger a
+// live update check.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const cmd = process.argv[2] || 'check';
 
-try {
-  switch (cmd) {
-    case 'check': await check(); break;
-    case 'apply': await apply(); break;
-    case 'rollback': rollback(); break;
-    case 'dismiss': dismiss(); break;
-    default:
-      console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
-      process.exit(1);
+  try {
+    switch (cmd) {
+      case 'check': await check(); break;
+      case 'apply': await apply(); break;
+      case 'rollback': rollback(); break;
+      case 'dismiss': dismiss(); break;
+      default:
+        console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+        process.exit(1);
+    }
+  } catch (err) {
+    // Subcommands now `throw` on aborts so their outer `finally` blocks
+    // run (e.g. apply() must release `.update-lock`). Print a clean
+    // message here instead of letting Node spit out a stack trace.
+    console.error(err.message || err);
+    process.exit(1);
   }
-} catch (err) {
-  // Subcommands now `throw` on aborts so their outer `finally` blocks
-  // run (e.g. apply() must release `.update-lock`). Print a clean
-  // message here instead of letting Node spit out a stack trace.
-  console.error(err.message || err);
-  process.exit(1);
 }

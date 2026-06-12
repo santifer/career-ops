@@ -11,8 +11,8 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
-import { execSync, execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
+import { execSync, execFileSync, spawn } from 'child_process';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -67,9 +67,14 @@ console.log('\n2. Script execution (graceful on empty data)');
 const scripts = [
   { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
   { name: 'verify-pipeline.mjs', expectExit: 0 },
-  { name: 'normalize-statuses.mjs', expectExit: 0 },
-  { name: 'dedup-tracker.mjs', expectExit: 0 },
-  { name: 'merge-tracker.mjs', expectExit: 0 },
+  // --dry-run: these three scripts resolve ROOT from import.meta.url and write
+  // data/applications.md in place. On a provisioned working copy (real tracker
+  // present) running them without --dry-run mutates user data — the fuzzy dedup
+  // can merge distinct same-company roles and drop rows. Harmless in this repo
+  // (no tracker shipped), destructive for end users who run `node test-all.mjs`.
+  { name: 'normalize-statuses.mjs --dry-run', expectExit: 0 },
+  { name: 'dedup-tracker.mjs --dry-run', expectExit: 0 },
+  { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
@@ -517,6 +522,10 @@ if (shared.includes('_profile.md')) {
 }
 
 for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+  if (!fileExists(skillPath)) {
+    fail(`${skillPath} is missing`);
+    continue;
+  }
   const skill = readFile(skillPath);
   if (skill.includes('/career-ops latex')) {
     pass(`${skillPath} exposes /career-ops latex in discovery menu`);
@@ -536,6 +545,21 @@ if (
   pass('apply mode includes liveness and role-match preflight gate');
 } else {
   fail('apply mode missing liveness/role-match preflight gate');
+}
+
+const ofertaMode = readFile('modes/oferta.md');
+const autoPipelineMode = readFile('modes/auto-pipeline.md');
+if (
+  ofertaMode.includes('## Liveness gate (URL inputs)') &&
+  ofertaMode.includes('closed posting evidence') &&
+  ofertaMode.includes('Do not continue to Block A until this gate is resolved') &&
+  autoPipelineMode.includes('## Step 0.5 — Liveness gate') &&
+  autoPipelineMode.includes('closed posting evidence') &&
+  autoPipelineMode.includes('Do not continue to Step 1 until this gate is resolved')
+) {
+  pass('eval modes (oferta/auto-pipeline) gate dead links before evaluation');
+} else {
+  fail('eval modes missing liveness gate before evaluation');
 }
 
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
@@ -1611,6 +1635,133 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
+// Report-number reservation is atomic now (#803), but tracker merges are a
+// separate read/modify/write step. If two merge-tracker processes read the same
+// old applications.md snapshot and then write back independently, one process
+// can erase the row added by the other. This fixture gives each process a
+// different additions dir and pauses the first process after it has read the
+// tracker, making the old race deterministic.
+console.log('\n🧪 Testing merge-tracker concurrent writes...');
+try {
+  const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-lock-'));
+  /**
+   * Spawn one isolated `merge-tracker.mjs` process against the temporary fixture.
+   *
+   * Each spawned process receives the same tracker path and lock path but a
+   * different additions directory. Without serialization, both processes can
+   * read the same old tracker and the later write can lose the other row. The
+   * first worker also sends an IPC readiness message after reading the tracker
+   * and before its test hold, which lets the test launch the second worker at
+   * the exact old race point instead of relying on scheduler timing.
+   *
+   * @param {string} additionsDir - Directory containing this process's TSV row.
+   * @param {number} [holdMs=0] - Optional post-read delay injected into the merge.
+   * @returns {{ready: Promise<void>, result: Promise<{code:number|null,stdout:string,stderr:string}>}}
+   * Worker readiness and final process result promises.
+   */
+  function spawnMerge(additionsDir, holdMs = 0) {
+    let markReady;
+    let readyMarked = false;
+    const ready = new Promise(resolve => { markReady = resolve; });
+    const result = new Promise(resolve => {
+      const child = spawn(NODE, ['merge-tracker.mjs'], {
+        cwd: ROOT,
+        env: {
+          ...process.env,
+          CAREER_OPS_TRACKER: join(mergeTmp, 'data', 'applications.md'),
+          CAREER_OPS_ADDITIONS: additionsDir,
+          CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'career-ops-merge-tracker-fixture.lock'),
+          CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
+          CAREER_OPS_MERGE_READY_IPC: '1',
+        },
+        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      });
+      let stdout = '';
+      let stderr = '';
+      const resolveReady = () => {
+        if (readyMarked) return;
+        readyMarked = true;
+        markReady();
+      };
+      child.stdout.on('data', chunk => { stdout += chunk; });
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      child.on('message', msg => {
+        if (msg?.type === 'merge-tracker-ready') resolveReady();
+      });
+      child.on('error', err => {
+        resolveReady();
+        resolve({ code: -1, stdout, stderr: String(err) });
+      });
+      child.on('close', code => {
+        resolveReady();
+        resolve({ code, stdout, stderr });
+      });
+    });
+    return { ready, result };
+  }
+
+  /**
+   * Fail fast when a worker never reaches the deterministic race checkpoint.
+   *
+   * A missing readiness signal would otherwise hang the test suite. Timing out
+   * turns that broken test contract into a normal assertion failure with a clear
+   * message.
+   *
+   * @param {Promise<void>} ready - Worker readiness promise.
+   * @param {number} timeoutMs - Maximum milliseconds to wait.
+   * @returns {Promise<void>} Resolves when ready arrives before the timeout.
+   */
+  function waitForReady(ready, timeoutMs) {
+    return Promise.race([
+      ready,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('merge worker did not signal readiness')), timeoutMs)),
+    ]);
+  }
+
+  try {
+    mkdirSync(join(mergeTmp, 'data'));
+    mkdirSync(join(mergeTmp, 'reports'));
+    const additionsA = join(mergeTmp, 'additions-a');
+    const additionsB = join(mergeTmp, 'additions-b');
+    mkdirSync(additionsA);
+    mkdirSync(additionsB);
+
+    writeFileSync(join(mergeTmp, 'data', 'applications.md'),
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n');
+    writeFileSync(join(mergeTmp, 'reports', '010-alpha-2026-01-07.md'), '# fixture\n');
+    writeFileSync(join(mergeTmp, 'reports', '011-beta-2026-01-07.md'), '# fixture\n');
+    writeFileSync(join(additionsA, '010-alpha.tsv'),
+      '10\t2026-01-07\tAlpha\tPlatform Engineer\tEvaluated\t4.1/5\t❌\t[10](reports/010-alpha-2026-01-07.md)\tfirst concurrent merge\n');
+    writeFileSync(join(additionsB, '011-beta.tsv'),
+      '11\t2026-01-07\tBeta\tData Engineer\tEvaluated\t4.2/5\t❌\t[11](reports/011-beta-2026-01-07.md)\tsecond concurrent merge\n');
+
+    const first = spawnMerge(additionsA, 350);
+    await waitForReady(first.ready, 2_000);
+    const second = spawnMerge(additionsB, 0);
+    const [firstResult, secondResult] = await Promise.all([first.result, second.result]);
+
+    if (firstResult.code === 0 && secondResult.code === 0) {
+      pass('concurrent merge processes both exited successfully');
+    } else {
+      fail(`concurrent merge process failed: first=${firstResult.code} second=${secondResult.code} stderr=${firstResult.stderr || secondResult.stderr}`);
+    }
+
+    const merged = readFileSync(join(mergeTmp, 'data', 'applications.md'), 'utf-8');
+    if (merged.includes('Alpha') && merged.includes('Beta')) {
+      pass('concurrent tracker merges preserve rows from both processes');
+    } else {
+      fail(`concurrent tracker merge lost a row: ${merged}`);
+    }
+  } finally {
+    rmSync(mergeTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker concurrent write test crashed: ${e.message}`);
+}
+
 // ── 12. COLD-START TRIGGER ──────────────────────────────────────
 
 console.log('\n12. Cold-start trigger (deterministic onboarding state)');
@@ -1659,6 +1810,41 @@ try {
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
+
+// ── 12b. PLAYWRIGHT MCP DETECTION WARNING (#522) ────────────────
+
+console.log('\n12b. Playwright MCP detection warning');
+
+try {
+  // No project MCP config → doctor surfaces a (non-fatal) warning instead of
+  // letting SPA job boards fail silently.
+  const noMcp = mkdtempSync(join(tmpdir(), 'co-nomcp-'));
+  const a = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', noMcp]) || '{}');
+  if (Array.isArray(a.warnings) && a.warnings.some((w) => /playwright mcp/i.test(w))) {
+    pass('No Playwright MCP config → warning surfaced');
+  } else {
+    fail(`Expected a Playwright MCP warning, got: ${JSON.stringify(a.warnings)}`);
+  }
+  rmSync(noMcp, { recursive: true, force: true });
+
+  // A project that registers a Playwright MCP server → no warning.
+  const withMcp = mkdtempSync(join(tmpdir(), 'co-mcp-'));
+  mkdirSync(join(withMcp, '.claude'), { recursive: true });
+  writeFileSync(
+    join(withMcp, '.claude', 'settings.json'),
+    JSON.stringify({ mcpServers: { playwright: { command: 'npx', args: ['@playwright/mcp', '--headless'] } } }),
+  );
+  const b = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', withMcp]) || '{}');
+  if (Array.isArray(b.warnings) && !b.warnings.some((w) => /playwright mcp/i.test(w))) {
+    pass('Playwright MCP configured → no warning');
+  } else {
+    fail(`Did not expect a Playwright MCP warning, got: ${JSON.stringify(b.warnings)}`);
+  }
+  rmSync(withMcp, { recursive: true, force: true });
+} catch (e) {
+  fail(`Playwright MCP detection test crashed: ${e.message}`);
+}
+
 // ── 15. PROVIDERS — SolidJobs ─────────────────────────────────────
 
 console.log('\n15. Provider — solidjobs');
@@ -2038,6 +2224,41 @@ try {
   }
 } catch (e) {
   fail(`Batch runner MCP isolation test crashed: ${e.message}`);
+}
+
+// ── 16. UPDATE-SYSTEM SEMVER PARSING (#923) ─────────────────────
+
+console.log('\n16. update-system SEMVER_RE');
+
+try {
+  // Importing must not trigger the CLI (the import.meta.url guard); it
+  // exposes SEMVER_RE, which the releases-API fallback uses on release.tag_name.
+  const { SEMVER_RE } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+  const parse = (tag) => String(tag).trim().match(SEMVER_RE)?.[1] ?? null;
+
+  // Release Please tags carry the component prefix (career-ops-v1.9.0); the
+  // prefix must be stripped or the releases-API fallback is dead code (#923).
+  if (parse('career-ops-v1.9.0') === '1.9.0') {
+    pass('SEMVER_RE parses Release Please component-prefixed tag (career-ops-v1.9.0 → 1.9.0)');
+  } else {
+    fail(`SEMVER_RE failed on career-ops-v1.9.0 (got ${parse('career-ops-v1.9.0')}) — releases-API fallback is dead code (#923)`);
+  }
+
+  // No regression on plain tags.
+  if (parse('v1.9.0') === '1.9.0' && parse('1.9.0') === '1.9.0') {
+    pass('SEMVER_RE still parses plain v-prefixed and bare semver tags');
+  } else {
+    fail(`SEMVER_RE regressed on plain tags (v1.9.0 → ${parse('v1.9.0')}, 1.9.0 → ${parse('1.9.0')})`);
+  }
+
+  // Non-semver input must not match.
+  if (parse('career-ops') === null && parse('v1.9') === null) {
+    pass('SEMVER_RE rejects non-semver input');
+  } else {
+    fail(`SEMVER_RE matched non-semver input (career-ops → ${parse('career-ops')}, v1.9 → ${parse('v1.9')})`);
+  }
+} catch (e) {
+  fail(`update-system SEMVER_RE test crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

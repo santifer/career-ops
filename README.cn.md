@@ -132,18 +132,15 @@ career-ops 原生支持 [Gemini CLI](https://github.com/google-gemini/gemini-cli
 ### 选项 A —— 原生 Gemini CLI（推荐）
 
 ```bash
-# 1. 安装 Gemini CLI
+# 1. 安装 Gemini CLI（需要 Node.js 20+）
 npm install -g @google/gemini-cli
 # 或: npx @google/gemini-cli --version
 
-# 2. 认证（免费 —— 使用你的 Google 账号）
-gemini auth
-
-# 3. 在 career-ops 目录中运行
+# 2. 在 career-ops 目录中运行 —— 首次启动时使用你的 Google 账号登录（免费）完成认证
 cd career-ops
 gemini
 
-# 4. 像 Claude Code 一样使用斜杠命令
+# 3. 像 Claude Code 一样使用斜杠命令
 /career-ops "Anthropic 的资深 AI 工程师..."
 /career-ops-evaluate --file ./jds/openai.txt
 /career-ops-scan
