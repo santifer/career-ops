@@ -1,6 +1,7 @@
 # Personal data (user fills these)
 cv.md
 data/applications.md
+data/applications.db
 data/pipeline.md
 data/scan-history.tsv
 data/parser-output/**/*.json
@@ -20,11 +21,18 @@ batch/tracker-additions/**/*.tsv
 jds/*
 !jds/.gitkeep
 
-# Interview transcripts (contain real interviewer names + companies — never committed)
+# Interview prep (accumulated STAR+R stories — user data)
+interview-prep/*
+!interview-prep/.gitkeep
+# Interview transcripts (contain real interviewer names + companies — never committed).
+# The directories themselves must be un-ignored first so git descends into them,
+# then their contents are re-ignored except the tracked scaffold.
+!interview-prep/transcripts/
 interview-prep/transcripts/*
 !interview-prep/transcripts/.gitkeep
 !interview-prep/transcripts/README.md
 # Mock-interview sessions (if the mock mode is installed)
+!interview-prep/sessions/
 interview-prep/sessions/*
 !interview-prep/sessions/.gitkeep
 
@@ -57,9 +65,11 @@ reports/*-RESERVED.md
 *.mov
 *.mp4
 
-# Claude Code local
+# CLI-specific local config
 .claude/settings.local.json
 .claude/memory/
+.opencode/settings.local.json
+.opencode/memory/
 career-dashboard
 package-lock.json
 
