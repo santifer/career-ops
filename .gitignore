@@ -19,6 +19,7 @@ batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*
 !jds/.gitkeep
+interview-prep/*
 
 # Writing samples (user's personal files — never committed)
 writing-samples/*
