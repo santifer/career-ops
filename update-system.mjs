@@ -65,6 +65,7 @@ const SYSTEM_PATHS = [
   'modes/tr/',
   'modes/ua/',
   'CLAUDE.md',
+  'OPENCODE.md',
   'AGENTS.md',
   'GEMINI.md',
   'generate-pdf.mjs',
@@ -72,8 +73,10 @@ const SYSTEM_PATHS = [
   'generate-cover-letter.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
+  'tracker.mjs',
   'verify-pipeline.mjs',
   'dedup-tracker.mjs',
+  'role-matcher.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
@@ -103,6 +106,7 @@ const SYSTEM_PATHS = [
   '.env.example',
   '.agents/',
   '.claude/skills/',
+  '.opencode/skills/',
   '.claude-plugin/',
   '.gemini/commands/',
   '.qwen/',
@@ -233,6 +237,32 @@ function revertPaths(paths) {
 function addPaths(paths) {
   if (paths.length === 0) return;
   git('add', '--', ...paths);
+}
+
+function dashboardGoSourcesChanged() {
+  try {
+    const changed = git('diff', '--name-only', 'HEAD', '--', 'dashboard');
+    return changed
+      .split('\n')
+      .some(path => path.startsWith('dashboard/') && path.endsWith('.go'));
+  } catch {
+    return false;
+  }
+}
+
+function rebuildDashboardBinaryIfNeeded() {
+  if (!dashboardGoSourcesChanged()) return;
+
+  try {
+    execFileSync('go', ['build', '-o', 'career-dashboard', '.'], {
+      cwd: join(ROOT, 'dashboard'),
+      timeout: 60000,
+      stdio: 'pipe',
+    });
+    console.log('dashboard binary rebuilt');
+  } catch {
+    console.log('dashboard binary rebuild skipped -- run: cd dashboard && go build -o career-dashboard . manually');
+  }
 }
 
 // ── CHECK ───────────────────────────────────────────────────────
@@ -377,7 +407,7 @@ async function apply() {
     // Every release that adds a file imported by other system scripts MUST
     // append it here, or clients on older versions break on upgrade
     // (e.g. v1.8.x → v1.9.0: merge-tracker.mjs imports tracker-links.mjs).
-    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs'];
+    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs'];
     for (const path of BOOTSTRAP_PATHS) {
       if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
       try {
@@ -467,7 +497,10 @@ async function apply() {
       console.log('npm install skipped (may need manual run)');
     }
 
-    // 6. Commit the update
+    // 6. Rebuild compiled dashboard if Go sources changed
+    rebuildDashboardBinaryIfNeeded();
+
+    // 7. Commit the update
     const remote = localVersion(); // Re-read after checkout updated VERSION
     try {
       const pathsToStage = [...updated];
