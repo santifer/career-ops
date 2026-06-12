@@ -313,7 +313,7 @@ node generate-pdf.mjs \
   output/cv-candidate-{company-slug}.html \
   output/cv-candidate-{company-slug}-{{DATE}}.pdf \
   --format={letter|a4} \
-  --report={num}
+  --report={{REPORT_NUM}}
 ```
 14. Reporta: ruta PDF, nº páginas, % cobertura keywords
 

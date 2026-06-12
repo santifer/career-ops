@@ -136,7 +136,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // openNow hands a URL or file path to the OS default handler, blocking
 // until the launcher returns.
-func openNow(target string) {
+func openNow(target string) error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "darwin":
@@ -148,14 +148,14 @@ func openNow(target string) {
 	default:
 		cmd = exec.Command("xdg-open", target)
 	}
-	_ = cmd.Run()
+	return cmd.Run()
 }
 
 // openWithDefaultApp wraps openNow as a tea.Cmd. Shared by the job-URL
 // (`o`) and CV-PDF (`d`) actions.
 func openWithDefaultApp(target string) tea.Cmd {
 	return func() tea.Msg {
-		openNow(target)
+		_ = openNow(target)
 		return nil
 	}
 }
@@ -180,7 +180,9 @@ func runGeneratePDF(msg screens.PipelineGeneratePDFMsg) tea.Cmd {
 			return screens.PipelinePDFGeneratedMsg{Err: summarizeCmdError(err, out)}
 		}
 		pdfAbs := filepath.Join(msg.CareerOpsPath, filepath.FromSlash(msg.PDFPath))
-		openNow(pdfAbs)
+		if err := openNow(pdfAbs); err != nil {
+			return screens.PipelinePDFGeneratedMsg{Err: fmt.Sprintf("PDF generated but could not open: %v", err)}
+		}
 		return screens.PipelinePDFGeneratedMsg{Path: pdfAbs}
 	}
 }

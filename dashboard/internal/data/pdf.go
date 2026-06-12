@@ -28,6 +28,23 @@ type PDFManifestEntry struct {
 // report number are not indexed (the glob path covers them).
 type PDFManifest map[string]PDFManifestEntry
 
+// isSafeRepoRelativePath returns true iff p is a non-empty, non-absolute path
+// with no ".." traversal components. Used to reject crafted TSV rows before
+// they reach dashboard open/regenerate flows.
+func isSafeRepoRelativePath(p string) bool {
+	p = filepath.Clean(filepath.FromSlash(strings.TrimSpace(p)))
+	if p == "." || p == "" {
+		return false
+	}
+	if filepath.IsAbs(p) {
+		return false
+	}
+	if p == ".." || strings.HasPrefix(p, ".."+string(filepath.Separator)) {
+		return false
+	}
+	return true
+}
+
 // normalizeReportKey strips leading zeros so the zero-padded report-link
 // form ("008") and the unpadded tracker-# form ("8") key identically.
 func normalizeReportKey(s string) string {
@@ -79,11 +96,14 @@ func LoadPDFEntriesByPath(careerOpsPath string) map[string]PDFManifestEntry {
 			ReportNumber: strings.TrimSpace(fields[0]),
 			PDFPath:      strings.TrimSpace(fields[1]),
 		}
-		if entry.PDFPath == "" {
+		if entry.PDFPath == "" || !isSafeRepoRelativePath(entry.PDFPath) {
 			continue
 		}
 		if len(fields) > 2 {
 			entry.HTMLPath = strings.TrimSpace(fields[2])
+			if entry.HTMLPath != "" && !isSafeRepoRelativePath(entry.HTMLPath) {
+				entry.HTMLPath = ""
+			}
 		}
 		if len(fields) > 3 {
 			entry.Format = strings.TrimSpace(fields[3])
@@ -123,6 +143,9 @@ func LoadPDFManifest(careerOpsPath string) PDFManifest {
 		}
 		if len(fields) > 2 {
 			entry.HTMLPath = strings.TrimSpace(fields[2])
+			if entry.HTMLPath != "" && !isSafeRepoRelativePath(entry.HTMLPath) {
+				entry.HTMLPath = ""
+			}
 		}
 		if len(fields) > 3 {
 			entry.Format = strings.TrimSpace(fields[3])
@@ -130,7 +153,7 @@ func LoadPDFManifest(careerOpsPath string) PDFManifest {
 		if len(fields) > 4 {
 			entry.Date = strings.TrimSpace(fields[4])
 		}
-		if entry.ReportNumber == "" || entry.PDFPath == "" {
+		if entry.ReportNumber == "" || entry.PDFPath == "" || !isSafeRepoRelativePath(entry.PDFPath) {
 			continue
 		}
 		manifest[normalizeReportKey(entry.ReportNumber)] = entry
@@ -250,18 +273,24 @@ func ResolveHTML(careerOpsPath string, app model.CareerApplication) (htmlPath, p
 	if slug == "" {
 		return "", ""
 	}
-	pattern := filepath.Join(careerOpsPath, "output", "cv-*"+slug+"*.html")
-	matches, _ := filepath.Glob(pattern)
-	if len(matches) == 0 {
-		return "", ""
-	}
-	// Sort newest first — ISO-date suffixes sort lexicographically, same as PDFs.
-	sort.Slice(matches, func(i, j int) bool { return matches[i] > matches[j] })
-	rel, err := filepath.Rel(careerOpsPath, matches[0])
+	globbed, err := filepath.Glob(filepath.Join(careerOpsPath, "output", "cv-*.html"))
 	if err != nil {
 		return "", ""
 	}
-	relHTML := filepath.ToSlash(rel)
+	var matches []string
+	for _, p := range globbed {
+		base := strings.ToLower(filepath.Base(p))
+		if matchesCompanySlug(base, slug) {
+			if rel, err := filepath.Rel(careerOpsPath, p); err == nil {
+				matches = append(matches, filepath.ToSlash(rel))
+			}
+		}
+	}
+	if len(matches) == 0 {
+		return "", ""
+	}
+	sortPDFsNewestFirst(careerOpsPath, matches)
+	relHTML := matches[0]
 	relPDF := strings.TrimSuffix(relHTML, ".html") + ".pdf"
 	return relHTML, relPDF
 }
