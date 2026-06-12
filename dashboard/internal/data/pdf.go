@@ -240,3 +240,28 @@ func kebabCase(s string) string {
 	}
 	return strings.TrimRight(b.String(), "-")
 }
+
+// ResolveHTML returns the newest output/cv-*{companySlug}*.html for app and
+// a companion PDF path derived from it (same base, .pdf extension). Returns
+// ("","") when no matching HTML file is found. Used by the D handler to allow
+// PDF generation for entries that have a tailored CV HTML but no prior PDF.
+func ResolveHTML(careerOpsPath string, app model.CareerApplication) (htmlPath, pdfPath string) {
+	slug := kebabCase(app.Company)
+	if slug == "" {
+		return "", ""
+	}
+	pattern := filepath.Join(careerOpsPath, "output", "cv-*"+slug+"*.html")
+	matches, _ := filepath.Glob(pattern)
+	if len(matches) == 0 {
+		return "", ""
+	}
+	// Sort newest first — ISO-date suffixes sort lexicographically, same as PDFs.
+	sort.Slice(matches, func(i, j int) bool { return matches[i] > matches[j] })
+	rel, err := filepath.Rel(careerOpsPath, matches[0])
+	if err != nil {
+		return "", ""
+	}
+	relHTML := filepath.ToSlash(rel)
+	relPDF := strings.TrimSuffix(relHTML, ".html") + ".pdf"
+	return relHTML, relPDF
+}
