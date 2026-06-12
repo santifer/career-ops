@@ -1,4 +1,4 @@
-package screens
+﻿package screens
 
 import (
 	"fmt"
@@ -1350,7 +1350,8 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Enter") + descStyle.Render(" report  ") +
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
-		keyStyle.Render("d/D") + descStyle.Render(" PDF/regen  ") +
+		keyStyle.Render("d") + descStyle.Render(" open PDF  ") +
+		keyStyle.Render("D") + descStyle.Render(" regen PDF  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
 		keyStyle.Render("p") + descStyle.Render(" progress  ") +
