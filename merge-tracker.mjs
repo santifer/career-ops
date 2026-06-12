@@ -16,6 +16,7 @@
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
 import { join, basename } from 'path';
+import { fileURLToPath } from 'url';
 import {
   validateStatus,
   normalizeCompany,
@@ -26,7 +27,8 @@ import {
   parseTsvContent,
 } from './lib/merge-core.mjs';
 
-const CAREER_OPS = new URL('.', import.meta.url).pathname;
+// fileURLToPath gives a real OS path; .pathname yields "/C:/..." and breaks on Windows.
+const CAREER_OPS = fileURLToPath(new URL('.', import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')
