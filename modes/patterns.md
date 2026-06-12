@@ -62,7 +62,7 @@ If neither directory contains a transcript, **skip this step silently** and proc
 
 If transcripts exist, for each one:
 1. Separate the candidate's answers from the interviewer's questions. If speaker labels are missing, infer them.
-2. Tag each substantive answer with the competency / role-signal it demonstrates (e.g. *instructional-design*, *systems-architecture*, *data-analysis*, *stakeholder-management*, *people-leadership*).
+2. Determine the competency / role-signal each substantive answer demonstrates (e.g. *instructional-design*, *systems-architecture*, *data-analysis*, *stakeholder-management*, *people-leadership*). **Tags first, inference as fallback:** if the answer already carries an explicit competency tag — `<!-- competency: ... -->` per the convention in `interview-prep/transcripts/README.md`, whether written by hand or emitted by a debrief tool (e.g. `interview/debrief`, #686) — use it directly. Only infer the competency yourself when no tag is present.
 3. Mark whether the answer is **fluent and specific** (concrete metrics, named tools, real decisions) or **flat and generic** (hedged, vague, textbook).
 
 Then aggregate across all transcripts:
