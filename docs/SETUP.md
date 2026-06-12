@@ -68,7 +68,6 @@ node verify-pipeline.mjs     # Check pipeline integrity
 ## Build Dashboard (Optional)
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..  # Opens TUI pipeline viewer
+npm run serve:dashboard     # Opens TUI pipeline viewer
+npm run build:dashboard     # Optional: build the standalone binary
 ```

@@ -190,9 +190,8 @@ career-ops 是一個具有多種模式的單一斜線指令：
 內建的終端機儀表板讓你以視覺化方式瀏覽求職管道：
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..
+npm run serve:dashboard   # launch the TUI
+npm run build:dashboard   # optional: build the standalone binary
 ```
 
 功能：6 個篩選分頁、4 種排序模式、分組/平鋪檢視、延遲載入預覽、內嵌狀態修改。

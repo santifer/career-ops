@@ -60,6 +60,10 @@ reports/*-RESERVED.md
 .opencode/settings.local.json
 .opencode/memory/
 career-dashboard
+<<<<<<< agent-feat/GH795/dashboard-npm-scripts
+career-dashboard.exe
+package-lock.json
+=======
 package-lock.json
 
 # Playwright MCP server run artifacts (ephemeral, machine-local — never commit)
@@ -67,3 +71,4 @@ package-lock.json
 
 # Planning (local scratchpad)
 plan/
+>>>>>>> main
