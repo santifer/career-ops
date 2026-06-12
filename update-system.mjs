@@ -16,7 +16,7 @@
  */
 
 import { execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -45,48 +45,80 @@ const SYSTEM_PATHS = [
   'modes/tracker.md',
   'modes/training.md',
   'modes/latex.md',
+  'modes/followup.md',
+  'modes/interview-prep.md',
+  'modes/patterns.md',
+  'modes/update.md',
   'modes/de/',
   'modes/fr/',
   'modes/ja/',
   'modes/pt/',
   'modes/ru/',
+  'modes/tr/',
+  'modes/ua/',
   'CLAUDE.md',
   'AGENTS.md',
   'GEMINI.md',
   'generate-pdf.mjs',
   'generate-latex.mjs',
   'merge-tracker.mjs',
+  'tracker-links.mjs',
   'verify-pipeline.mjs',
   'dedup-tracker.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
   'scan.mjs',
+  'providers/',
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
+  'liveness-browser.mjs',
   'analyze-patterns.mjs',
   'followup-cadence.mjs',
   'gemini-eval.mjs',
   'test-all.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
+  'batch/README.md',
   'dashboard/',
   'templates/',
   'fonts/',
+  'examples/',
+  'config/profile.example.yml',
+  '.env.example',
   '.agents/',
   '.claude/skills/',
+  '.claude-plugin/',
   '.gemini/commands/',
+  '.qwen/',
   'docs/',
   'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
   'README.md',
+  'README.cn.md',
+  'README.es.md',
+  'README.ja.md',
+  'README.ko-KR.md',
+  'README.pt-BR.md',
+  'README.ru.md',
+  'README.ua.md',
+  'README.zh-TW.md',
+  'CHANGELOG.md',
+  'CODE_OF_CONDUCT.md',
+  'CONTRIBUTORS.md',
+  'GOVERNANCE.md',
+  'LEGAL_DISCLAIMER.md',
+  'SECURITY.md',
+  'SUPPORT.md',
+  'TRADEMARK.md',
   'LICENSE',
   'CITATION.cff',
   '.github/',
   'package.json',
+  'scaffolder/',
 ];
 
 // User layer paths — NEVER touch these (safety check)
@@ -104,9 +136,15 @@ const USER_PATHS = [
   'writing-samples/',
 ];
 
+function parseVersionFile(raw) {
+  // VERSION may carry a release-please marker, e.g. "1.6.0 # x-release-please-version".
+  // Take the first whitespace-delimited token so the marker doesn't break semver parsing.
+  return raw.trim().split(/\s+/)[0] || '';
+}
+
 function localVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return existsSync(vPath) ? parseVersionFile(readFileSync(vPath, 'utf-8')) : '0.0.0';
 }
 
 function compareVersions(a, b) {
@@ -117,6 +155,36 @@ function compareVersions(a, b) {
     if ((pa[i] || 0) > (pb[i] || 0)) return 1;
   }
   return 0;
+}
+
+function updateBackupBranchName(version, date = new Date()) {
+  const stamp = date.toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z');
+  return `backup-pre-update-${version}-${stamp}`;
+}
+
+function backupTimestamp(branchName) {
+  const match = branchName.match(/-(\d{8}T\d{6}Z)$/);
+  if (!match) return 0;
+  const [date, time] = match[1].split('T');
+  return Date.parse(
+    `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}Z`,
+  ) || 0;
+}
+
+function newestBackupBranch(branches) {
+  const branchList = branches.split('\n').map(b => b.trim()).filter(Boolean);
+  if (branchList.length === 0) return null;
+
+  // Prefer timestamped backup branches created by current versions. Older
+  // backups are still accepted below for rollback compatibility.
+  const timestamped = branchList
+    .map(branch => ({ branch, timestamp: backupTimestamp(branch) }))
+    .filter(entry => entry.timestamp > 0)
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  return timestamped[0]?.branch || branchList[0];
 }
 
 function git(...args) {
@@ -147,6 +215,23 @@ function addPaths(paths) {
 
 // ── CHECK ───────────────────────────────────────────────────────
 
+// curl helper used by check() — curl works inside the Claude Code sandbox
+// where Node's built-in fetch() fails (ENOTFOUND) because the sandbox
+// routes network traffic through an HTTP/HTTPS proxy that fetch() does
+// not respect but curl handles transparently.  The --silent / --fail flags
+// match the failure-handling already used throughout apply().
+function curlGet(url, extraArgs = []) {
+  try {
+    return execFileSync(
+      'curl',
+      ['--silent', '--fail', '--max-time', '10', ...extraArgs, url],
+      { encoding: 'utf-8', timeout: 12000 },
+    ).trim();
+  } catch {
+    return null; // network unreachable, 404, timeout, etc.
+  }
+}
+
 async function check() {
   // Respect dismiss flag
   if (existsSync(join(ROOT, '.update-dismissed'))) {
@@ -159,57 +244,44 @@ async function check() {
   let releaseVersion = '';
   let changelog = '';
 
-  // Fetch both sources in parallel — only fail offline if BOTH are unreachable.
-  // Use AbortSignal so a hung TCP connection can't stall the session-start check.
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-  let versionResult, releaseResult;
-  try {
-    [versionResult, releaseResult] = await Promise.allSettled([
-      fetch(RAW_VERSION_URL, { signal: controller.signal }),
-      fetch(RELEASES_API, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'career-ops-update-checker',
-        },
-        signal: controller.signal,
-      }),
-    ]);
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
+  // Use curl instead of fetch() so the check works inside the Claude Code
+  // sandbox (see curlGet() above for rationale).  Two sources are tried;
+  // both failing is the only true-offline signal.
   const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
 
-  if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
+  const rawVersion = curlGet(RAW_VERSION_URL);
+  if (rawVersion !== null) {
     try {
-      const raw = (await versionResult.value.text()).trim();
+      const raw = parseVersionFile(rawVersion);
       const match = raw.match(SEMVER_RE);
       remote = match ? match[1] : '';
     } catch {
-      // Body read failed; treat as no VERSION source
+      // Unparseable body; treat as no VERSION source
     }
   }
 
-  if (releaseResult.status === 'fulfilled' && releaseResult.value.ok) {
+  const releaseRaw = curlGet(RELEASES_API, [
+    '--header', 'Accept: application/vnd.github.v3+json',
+    '--header', 'User-Agent: career-ops-update-checker',
+  ]);
+  if (releaseRaw !== null) {
     try {
-      const release = await releaseResult.value.json();
+      const release = JSON.parse(releaseRaw);
       changelog = release.body || '';
       const rawTag = String(release.tag_name || '').trim();
       const match = rawTag.match(SEMVER_RE);
       releaseVersion = match ? match[1] : '';
     } catch {
-      // Body parse failed; treat as no release source
+      // Unparseable body; treat as no release source
     }
   }
 
   if (!remote && !releaseVersion) {
-    // Distinguish true network failures from "fetched OK but response was
-    // unparseable" — the latter shouldn't be silenced as offline since the
-    // network is actually fine.
-    const bothNetworkFailed =
-      versionResult.status !== 'fulfilled' &&
-      releaseResult.status !== 'fulfilled';
+    // Both curl calls returned null → genuine network failure.
+    // If one returned non-null but unparseable, remote/releaseVersion are
+    // empty strings, which still reaches the offline branch — that's the
+    // right conservative behaviour (no version = can't determine status).
+    const bothNetworkFailed = rawVersion === null && releaseRaw === null;
     const status = bothNetworkFailed ? 'offline' : 'no-remote-version';
     console.log(JSON.stringify({ status, local }));
     return;
@@ -255,13 +327,9 @@ async function apply() {
 
   try {
     // 1. Backup: create branch
-    const backupBranch = `backup-pre-update-${local}`;
-    try {
-      git('branch', backupBranch);
-      console.log(`Backup branch created: ${backupBranch}`);
-    } catch {
-      console.log(`Backup branch already exists (${backupBranch}), continuing...`);
-    }
+    const backupBranch = updateBackupBranchName(local);
+    git('branch', backupBranch);
+    console.log(`Backup branch created: ${backupBranch}`);
 
     // 2. Fetch from canonical repo
     console.log('Fetching latest from upstream...');
@@ -270,6 +338,25 @@ async function apply() {
     // 3. Checkout system files only
     console.log('Updating system files...');
     const updated = [];
+
+    // 3a. Bootstrap newly-introduced paths that the local update-system.mjs
+    // doesn't yet know about. Without this, cross-version migrations where
+    // a path is added to SYSTEM_PATHS by the new version can leave dangling
+    // symlinks — e.g. v1.6.x → v1.7.x where .agents/ was introduced but the
+    // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
+    // checked out while `.claude/skills/` was updated to symlink into it.
+    // See: https://github.com/santifer/career-ops/issues/649
+    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs'];
+    for (const path of BOOTSTRAP_PATHS) {
+      if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
+      try {
+        git('checkout', 'FETCH_HEAD', '--', path);
+        updated.push(path);
+      } catch {
+        // Path may not exist in FETCH_HEAD yet
+      }
+    }
+
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', 'FETCH_HEAD', '--', path);
@@ -279,8 +366,13 @@ async function apply() {
       }
     }
 
-    // 4. Validate: check NO user files were touched
-    let userFileTouched = false;
+    // 4. Validate: check NO user files were touched.
+    //
+    // Track which user paths the update unexpectedly touched so we
+    // can revert them too — reverting only `updated` would leave the
+    // repo in a half-applied state with the user-layer changes still
+    // staged.
+    const violatedUserPaths = new Set();
     try {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
@@ -291,18 +383,50 @@ async function apply() {
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
-            userFileTouched = true;
+            violatedUserPaths.add(file);
           }
         }
       }
-    } catch {
-      // git status failed, skip validation
+    } catch (err) {
+      // Fail closed: if we can't validate the safety invariant we must
+      // not silently proceed — that would let a real violation slip
+      // through. Revert what we already applied and abort.
+      console.error(`Aborting: could not validate user-layer safety (${err.message}).`);
+      try {
+        revertPaths(updated);
+      } catch (revertErr) {
+        // If the revert itself fails (likely whatever broke `git
+        // status` also broke `git checkout --`), don't lose the
+        // original validation error — chain it via `cause`.
+        throw new Error(
+          `Validation failed (${err.message}) and revert also failed (${revertErr.message})`,
+          { cause: err },
+        );
+      }
+      throw err;
     }
 
-    if (userFileTouched) {
+    if (violatedUserPaths.size > 0) {
       console.error('Aborting: user files were touched. Rolling back...');
-      revertPaths(updated);
-      process.exit(1);
+      // Revert BOTH the system-layer updates and the user-layer paths
+      // the update unexpectedly modified — otherwise the repo is left
+      // in a half-applied state.
+      const violation = new Error('Update aborted: user files were touched.');
+      try {
+        revertPaths([...updated, ...violatedUserPaths]);
+      } catch (revertErr) {
+        // If the revert itself fails, don't lose the safety-violation
+        // diagnostic — chain it via `cause` so the user sees both.
+        throw new Error(
+          `Safety violation (${violation.message}) and revert also failed (${revertErr.message})`,
+          { cause: violation },
+        );
+      }
+      // `throw` (not `process.exit`) so the outer `finally` runs and
+      // .update-lock is removed. Exiting here would leak the lock and
+      // permanently block subsequent updates until the user deletes
+      // it manually.
+      throw violation;
     }
 
     // 5. Install any new dependencies
@@ -343,29 +467,76 @@ function rollback() {
   // Find most recent backup branch
   try {
     const branches = git('for-each-ref', '--sort=-committerdate', '--format=%(refname:short)', 'refs/heads/backup-pre-update-*');
-    const branchList = branches.split('\n').map(b => b.trim()).filter(Boolean);
+    const latest = newestBackupBranch(branches);
 
-    if (branchList.length === 0) {
+    if (!latest) {
       console.error('No backup branches found. Nothing to rollback.');
       process.exit(1);
     }
 
-    const latest = branchList[0];
     console.log(`Rolling back to: ${latest}`);
 
-    // Checkout system files from backup branch
+    // Checkout system files from backup branch.
+    //
+    // Two failure modes for `git checkout` here:
+    //   (a) the path didn't exist in the backup branch — the apply()
+    //       that produced this backup was on an older version that
+    //       didn't track this path yet. Rollback must DELETE the path
+    //       so the working tree mirrors the backup state.
+    //   (b) anything else — propagate so we don't silently leave the
+    //       working tree in a partially-restored state.
+    //
+    // Limitation: `git checkout <ref> -- <dir>` restores blobs from
+    // the backup tree but doesn't remove files that were added INSIDE
+    // an already-tracked directory between backup and rollback. Rolling
+    // back per-file via `git diff --name-status <backup>` would catch
+    // that but is a larger change; tracked separately if it ever bites.
+    const restored = [];
+    const removed = [];
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', latest, '--', path);
-      } catch {
-        // File may not have existed in backup
+        restored.push(path);
+      } catch (err) {
+        const pathspec = path.endsWith('/') ? path.slice(0, -1) : path;
+        let existedInBackup = true;
+        try {
+          git('cat-file', '-e', `${latest}:${pathspec}`);
+        } catch {
+          existedInBackup = false;
+        }
+        if (existedInBackup) {
+          throw err;
+        }
+        // Path was introduced by a later apply() — remove it so the
+        // tree truly matches the backup. `git rm` stages the deletion
+        // for tracked files; `rmSync` cleans up the untracked-but-
+        // on-disk case (e.g. an apply() that crashed between checkout
+        // and commit, leaving the path untracked locally).
+        git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec);
+        try {
+          rmSync(join(ROOT, pathspec), { recursive: true, force: true });
+        } catch {
+          // Already gone, or not present on disk — fine.
+        }
+        removed.push(pathspec);
       }
     }
 
-    addPaths(SYSTEM_PATHS);
-    git('commit', '-m', `chore: rollback system files from ${latest}`);
+    if (restored.length > 0) addPaths(restored);
+    try {
+      git('commit', '-m', `chore: rollback system files from ${latest}`);
+    } catch {
+      // Tolerate any commit failure here — the common case is the
+      // "nothing to commit" no-op when the working tree already
+      // matched the backup (e.g. user ran rollback twice). This
+      // mirrors apply()'s broad-catch in the commit step; narrowing
+      // to a specific git-error string is fragile and would diverge
+      // from that pattern. Genuine setup problems (hooks, signing,
+      // disk full) will resurface on the next normal git operation.
+    }
 
-    console.log(`Rollback complete. System files restored from ${latest}.`);
+    console.log(`Rollback complete. Restored ${restored.length} path(s) from ${latest}, removed ${removed.length} path(s) added after the backup.`);
     console.log('Your data (CV, profile, tracker, reports) was not affected.');
   } catch (err) {
     console.error('Rollback failed:', err.message);
@@ -384,12 +555,20 @@ function dismiss() {
 
 const cmd = process.argv[2] || 'check';
 
-switch (cmd) {
-  case 'check': await check(); break;
-  case 'apply': await apply(); break;
-  case 'rollback': rollback(); break;
-  case 'dismiss': dismiss(); break;
-  default:
-    console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
-    process.exit(1);
+try {
+  switch (cmd) {
+    case 'check': await check(); break;
+    case 'apply': await apply(); break;
+    case 'rollback': rollback(); break;
+    case 'dismiss': dismiss(); break;
+    default:
+      console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+      process.exit(1);
+  }
+} catch (err) {
+  // Subcommands now `throw` on aborts so their outer `finally` blocks
+  // run (e.g. apply() must release `.update-lock`). Print a clean
+  // message here instead of letting Node spit out a stack trace.
+  console.error(err.message || err);
+  process.exit(1);
 }

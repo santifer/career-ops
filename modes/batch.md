@@ -67,6 +67,7 @@ Options:
 - `--start-from N` — start from ID N
 - `--parallel N` — N workers in parallel
 - `--max-retries N` — attempts per job (default: 2)
+- `--rate-limit-sleep N` — seconds to wait before retrying a rate-limited worker (default: 300; use 0 to fail immediately)
 
 ## batch-state.tsv Format
 
@@ -75,7 +76,10 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 1	https://...	completed	2026-...	2026-...	002	4.2	-	0
 2	https://...	failed	2026-...	2026-...	-	-	Error msg	1
 3	https://...	pending	-	-	-	-	-	0
+4	https://...	rate_limited	2026-...	2026-...	004	-	rate-limit; retrying after 300s	1
 ```
+
+Valid statuses include `pending`, `processing`, `completed`, `failed`, `skipped`, and `rate_limited`. `rate_limited` is an intermediate non-completed state emitted while the runner waits before retrying; if the run is interrupted there, a later non-`--retry-failed` run treats it as pending work.
 
 ## Resumability
 
