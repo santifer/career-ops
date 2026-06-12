@@ -44,6 +44,16 @@ function run(cmd, args = [], opts = {}) {
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
 
+function toBashPath(p) {
+  if (process.platform !== 'win32') return p;
+  const resolved = join(p).replace(/\\/g, '/');
+  const match = resolved.match(/^([A-Za-z]):(.*)/);
+  if (match) {
+    return `/${match[1].toLowerCase()}${match[2]}`;
+  }
+  return resolved;
+}
+
 console.log('\n🧪 career-ops test suite\n');
 
 // ── 1. SYNTAX CHECKS ────────────────────────────────────────────
@@ -525,7 +535,15 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
     fail(`${skillPath} is missing`);
     continue;
   }
-  const skill = readFile(skillPath);
+  let skill = readFile(skillPath);
+  if (process.platform === 'win32' && skill.trim().startsWith('..')) {
+    try {
+      const targetPath = join(dirname(join(ROOT, skillPath)), skill.trim());
+      skill = readFileSync(targetPath, 'utf-8');
+    } catch (err) {
+      console.error(`Error reading symlink target ${skillPath}:`, err);
+    }
+  }
   if (skill.includes('/career-ops latex')) {
     pass(`${skillPath} exposes /career-ops latex in discovery menu`);
   } else {
@@ -1764,6 +1782,7 @@ if (!sqliteAvailable) {
   warn('node:sqlite unavailable (Node < 22.5) — tracker index tests skipped');
 } else {
   try {
+    const sqlite = await import('node:sqlite');
     const idxTmp = mkdtempSync(join(tmpdir(), 'career-ops-index-'));
     try {
       const md = join(idxTmp, 'applications.md');
@@ -1833,6 +1852,73 @@ if (!sqliteAvailable) {
       } else {
         fail(`history missing status transition: ${log}`);
       }
+
+      // 5. Phase 2: Migration to DB as source of truth.
+      if (trackerRun(['migrate']) === null) {
+        fail('tracker migrate command crashed');
+      } else {
+        pass('tracker migrate command succeeds');
+      }
+      
+      const dbFile = md.replace('.md', '.db');
+      const testDb = new sqlite.DatabaseSync(dbFile);
+      const sot = testDb.prepare("SELECT value FROM meta WHERE key = 'source_of_truth'").get();
+      if (sot && sot.value === 'db') {
+        pass('migration correctly sets source_of_truth to db');
+      } else {
+        fail('migration did not set source_of_truth to db');
+      }
+      testDb.close();
+
+      // 6. Verify merge-tracker writes to DB in source-of-truth mode.
+      const additionsDir = join(idxTmp, 'batch', 'tracker-additions');
+      mkdirSync(additionsDir, { recursive: true });
+      writeFileSync(join(additionsDir, '004-gamma.tsv'),
+        '4\t2026-01-08\tGamma\tQA\tEvaluated\t4.4/5\t❌\t[4](../reports/004-gamma-2026-01-08.md)\tnew row\n'
+      );
+      
+      // Run merge-tracker
+      const mergeOut = run(NODE, ['merge-tracker.mjs'], {
+        env: {
+          ...env,
+          CAREER_OPS_TRACKER: md,
+          CAREER_OPS_ADDITIONS: additionsDir
+        }
+      });
+      
+      // Verify database has the new record
+      const testDb2 = new sqlite.DatabaseSync(dbFile);
+      const row = testDb2.prepare("SELECT * FROM applications WHERE id = 4").get();
+      if (row && row.company === 'Gamma' && row.role === 'QA' && row.score === '4.4/5') {
+        pass('merge-tracker writes through to DB in source-of-truth mode');
+      } else {
+        fail('merge-tracker did not write through to DB in source-of-truth mode');
+      }
+      testDb2.close();
+
+      // Verify applications.md was updated (rendered view)
+      const mdContent = readFileSync(md, 'utf-8');
+      if (mdContent.includes('Gamma') && mdContent.includes('QA') && mdContent.includes('4.4/5')) {
+        pass('merge-tracker updates applications.md rendered view in source-of-truth mode');
+      } else {
+        fail('merge-tracker did not update applications.md rendered view');
+      }
+
+      // 7. Rollback migration
+      if (trackerRun(['rollback-migration']) === null) {
+        fail('tracker rollback-migration command crashed');
+      } else {
+        pass('tracker rollback-migration command succeeds');
+      }
+
+      const testDb3 = new sqlite.DatabaseSync(dbFile);
+      const sotRollback = testDb3.prepare("SELECT value FROM meta WHERE key = 'source_of_truth'").get();
+      if (!sotRollback) {
+        pass('rollback correctly removes source_of_truth key');
+      } else {
+        fail('rollback did not remove source_of_truth key');
+      }
+      testDb3.close();
     } finally {
       rmSync(idxTmp, { recursive: true, force: true });
     }
@@ -2181,8 +2267,10 @@ try {
   mkdirSync(join(tmp, 'data'), { recursive: true });
   mkdirSync(fakeBin, { recursive: true });
 
-  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8'));
-  execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  if (process.platform !== 'win32') {
+    execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  }
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
@@ -2197,14 +2285,49 @@ try {
     'echo "You\\x27ve hit your session limit · resets 12:30pm (Asia/Taipei)"',
     'exit 1',
   ].join('\n') + '\n');
-  execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+  const nodeGitBashPath = toBashPath(NODE);
+  const nodeWslPath = nodeGitBashPath.replace(/^\/c\//i, '/mnt/c/');
+  writeFileSync(join(fakeBin, 'node'), [
+    '#!/usr/bin/env bash',
+    'if [ -d "/mnt/c" ]; then',
+    '  args=()',
+    '  for arg in "$@"; do',
+    '    if [[ "$arg" == /* ]]; then',
+    '      args+=("$(wslpath -w "$arg")")',
+    '    else',
+    '      args+=("$arg")',
+    '    fi',
+    '  done',
+    `  "${nodeWslPath}" "\${args[@]}"`,
+    'else',
+    `  "${nodeGitBashPath}" "$@"`,
+    'fi'
+  ].join('\n') + '\n');
+  if (process.platform !== 'win32') {
+    execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+    execFileSync('chmod', ['+x', join(fakeBin, 'node')]);
+  }
 
-  const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
-  const out = run('bash', [join(batchDir, 'batch-runner.sh'), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
-    cwd: tmp,
-    env,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  }) || '';
+  const sep = process.platform === 'win32' ? ';' : ':';
+  const env = { ...process.env, PATH: `${fakeBin}${sep}${process.env.PATH}` };
+  if (process.platform === 'win32') {
+    env.Path = env.PATH;
+  }
+  let out = '';
+  try {
+    out = execFileSync('bash', ['batch/batch-runner.sh', '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+      cwd: tmp,
+      env,
+      encoding: 'utf-8',
+      timeout: 30000
+    }).trim();
+  } catch (e) {
+    console.error("BATCH RUNNER ERROR STATUS:", e.status);
+    console.error("BATCH RUNNER ERROR STDOUT:", e.stdout);
+    console.error("BATCH RUNNER ERROR STDERR:", e.stderr);
+    console.error("BATCH RUNNER ERROR MSG:", e.message);
+    out = e.stdout || '';
+  }
   const state = readFileSync(join(batchDir, 'batch-state.tsv'), 'utf-8').trim().split('\n');
   const first = state[1]?.split('\t') || [];
 
@@ -2219,7 +2342,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [join(batchDir, 'batch-runner.sh'), '--resume-paused', '--dry-run'], {
+  const dry = run('bash', ['batch/batch-runner.sh', '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -2230,7 +2353,16 @@ try {
     fail(`--resume-paused selection wrong: ${dry}`);
   }
 
-  rmSync(tmp, { recursive: true, force: true });
+  try {
+    rmSync(tmp, { recursive: true, force: true });
+  } catch (e) {
+    if (process.platform === 'win32') {
+      try { execFileSync(NODE, ['-e', 'setTimeout(()=>{}, 100)']); } catch {}
+      rmSync(tmp, { recursive: true, force: true });
+    } else {
+      throw e;
+    }
+  }
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
 }

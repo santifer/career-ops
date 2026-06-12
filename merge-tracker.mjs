@@ -21,6 +21,7 @@ import { execFileSync } from 'child_process';
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
+import { loadSqlite, openDb, isDbSource } from './tracker.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -547,53 +548,85 @@ function parseTsvContent(content, filename) {
 
 // ---- Main ----
 
-// Read applications.md
-if (!existsSync(APPS_FILE)) {
-  console.log('No applications.md found. Nothing to merge into.');
-  process.exit(0);
-}
-const appContent = readFileSync(APPS_FILE, 'utf-8');
-// Test-only synchronization hook: the concurrent merge test waits for the
-// first worker to read the tracker while still holding the lock, then starts a
-// second worker to prove the lock prevents the old lost-update race.
-if (MERGE_READY_IPC && typeof process.send === 'function') {
-  process.send({ type: 'merge-tracker-ready' });
-}
-if (MERGE_HOLD_MS > 0) {
-  await sleep(MERGE_HOLD_MS);
+let dbIsSource = false;
+let db = null;
+try {
+  const DatabaseSync = await loadSqlite();
+  db = openDb(DatabaseSync);
+  dbIsSource = isDbSource(db);
+} catch (e) {
+  dbIsSource = false;
 }
 
-// One-time migration: rewrite existing report links so they resolve relative
-// to the tracker file's directory (see #760). Run with: node merge-tracker.mjs --migrate
-if (MIGRATE) {
-  const migrated = appContent
-    .split('\n')
-    .map(line => (line.startsWith('|') ? normalizeReportLink(line) : line));
-  const before = appContent.split('\n');
-  const changed = migrated.filter((l, i) => l !== before[i]).length;
-
-  if (DRY_RUN) {
-    console.log(`🔎 Migration (dry-run): ${changed} row(s) would be rewritten in ${basename(APPS_FILE)}`);
-  } else {
-    writeFileAtomic(APPS_FILE, migrated.join('\n'));
-    console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === CAREER_OPS ? 'repo root' : 'data/'}`);
-  }
-  process.exit(0);
-}
-
-const appLines = appContent.split('\n');
 const existingApps = [];
 let maxNum = 0;
+let appLines = [];
 
-for (const line of appLines) {
-  if (line.startsWith('|') && !line.includes('---') && !line.includes('Empresa')) {
-    const app = parseAppLine(line);
-    if (app) {
-      existingApps.push(app);
-      if (app.num > maxNum) maxNum = app.num;
+if (dbIsSource) {
+  const rows = db.prepare('SELECT * FROM applications ORDER BY pos').all();
+  for (const r of rows) {
+    existingApps.push({
+      num: r.id,
+      date: r.date,
+      company: r.company,
+      role: r.role,
+      score: r.score,
+      status: r.status,
+      pdf: r.pdf,
+      report: r.report,
+      notes: r.notes
+    });
+    if (r.id > maxNum) maxNum = r.id;
+  }
+} else {
+  // Read applications.md
+  if (!existsSync(APPS_FILE)) {
+    console.log('No applications.md found. Nothing to merge into.');
+    process.exit(0);
+  }
+  const appContent = readFileSync(APPS_FILE, 'utf-8');
+  // Test-only synchronization hook: the concurrent merge test waits for the
+  // first worker to read the tracker while still holding the lock, then starts a
+  // second worker to prove the lock prevents the old lost-update race.
+  if (MERGE_READY_IPC && typeof process.send === 'function') {
+    process.send({ type: 'merge-tracker-ready' });
+  }
+  if (MERGE_HOLD_MS > 0) {
+    await sleep(MERGE_HOLD_MS);
+  }
+
+  // One-time migration: rewrite existing report links so they resolve relative
+  // to the tracker file's directory (see #760). Run with: node merge-tracker.mjs --migrate
+  if (MIGRATE) {
+    const migrated = appContent
+      .split('\n')
+      .map(line => (line.startsWith('|') ? normalizeReportLink(line) : line));
+    const before = appContent.split('\n');
+    const changed = migrated.filter((l, i) => l !== before[i]).length;
+
+    if (DRY_RUN) {
+      console.log(`🔎 Migration (dry-run): ${changed} row(s) would be rewritten in ${basename(APPS_FILE)}`);
+    } else {
+      writeFileAtomic(APPS_FILE, migrated.join('\n'));
+      console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === CAREER_OPS ? 'repo root' : 'data/'}`);
+    }
+    process.exit(0);
+  }
+
+  appLines = appContent.split('\n');
+  for (const line of appLines) {
+    if (line.startsWith('|') && !line.includes('---') && !line.includes('Empresa')) {
+      const app = parseAppLine(line);
+      if (app) {
+        existingApps.push(app);
+        if (app.num > maxNum) maxNum = app.num;
+      }
     }
   }
 }
+
+const dbUpdates = [];
+const dbInserts = [];
 
 console.log(`📊 Existing: ${existingApps.length} entries, max #${maxNum}`);
 
@@ -675,12 +708,24 @@ for (const file of tsvFiles) {
 
     if (newScore > oldScore) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
-      const lineIdx = appLines.indexOf(duplicate.raw);
-      if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
-        appLines[lineIdx] = updatedLine;
-        updated++;
+      if (dbIsSource) {
+        dbUpdates.push({
+          id: duplicate.num,
+          date: addition.date,
+          company: addition.company,
+          role: addition.role,
+          score: addition.score,
+          report: addition.report,
+          notes: `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`
+        });
+      } else {
+        const lineIdx = appLines.indexOf(duplicate.raw);
+        if (lineIdx >= 0) {
+          const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+          appLines[lineIdx] = updatedLine;
+        }
       }
+      updated++;
     } else {
       console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
       skipped++;
@@ -690,8 +735,23 @@ for (const file of tsvFiles) {
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
     if (addition.num > maxNum) maxNum = addition.num;
 
-    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
-    newLines.push(newLine);
+    if (dbIsSource) {
+      dbInserts.push({
+        id: entryNum,
+        pos: existingApps.length + dbInserts.length,
+        date: addition.date,
+        company: addition.company,
+        role: addition.role,
+        score: addition.score,
+        status: addition.status,
+        pdf: addition.pdf,
+        report: addition.report,
+        notes: addition.notes
+      });
+    } else {
+      const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
+      newLines.push(newLine);
+    }
     added++;
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
   }
@@ -712,9 +772,50 @@ if (newLines.length > 0) {
   }
 }
 
+function rowToMarkdown(r) {
+  const clean = (v) => String(v ?? '').replace(/\|/g, '│').replace(/\r?\n/g, ' ');
+  return `| ${r.id} | ${clean(r.date)} | ${clean(r.company)} | ${clean(r.role)} | ${clean(r.score)} | ${clean(r.status)} | ${clean(r.pdf)} | ${clean(r.report)} | ${clean(r.notes)} |`;
+}
+
 // Write back
 if (!DRY_RUN) {
-  writeFileAtomic(APPS_FILE, appLines.join('\n'));
+  if (dbIsSource) {
+    db.exec('BEGIN');
+    try {
+      const updateStmt = db.prepare('UPDATE applications SET date = ?, company = ?, role = ?, score = ?, report = ?, notes = ? WHERE id = ?');
+      for (const u of dbUpdates) {
+        updateStmt.run(u.date, u.company, u.role, u.score, u.report, u.notes, u.id);
+      }
+      const insertStmt = db.prepare('INSERT INTO applications (id, pos, date, company, role, score, status, pdf, report, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const insertEvent = db.prepare('INSERT INTO status_events (app_id, status, date) VALUES (?, ?, ?)');
+      for (const i of dbInserts) {
+        insertStmt.run(i.id, i.pos, i.date, i.company, i.role, i.score, i.status, i.pdf, i.report, i.notes);
+        insertEvent.run(i.id, i.status, i.date);
+      }
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+
+    const rows = db.prepare('SELECT * FROM applications ORDER BY pos').all();
+    const HEADER = '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |';
+    const SEPARATOR = '|---|------|---------|------|-------|--------|-----|--------|-------|';
+    const out = [
+      '# Applications Tracker',
+      '',
+      HEADER,
+      SEPARATOR,
+      ...rows.map(rowToMarkdown),
+      '',
+    ].join('\n');
+    writeFileAtomic(APPS_FILE, out);
+
+    const mdHash = createHash('sha256').update(out).digest('hex');
+    db.prepare("INSERT INTO meta (key, value) VALUES ('md_sha256', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(mdHash);
+  } else {
+    writeFileAtomic(APPS_FILE, appLines.join('\n'));
+  }
 
   // Move processed files to merged/
   if (!existsSync(MERGED_DIR)) mkdirSync(MERGED_DIR, { recursive: true });
