@@ -67,6 +67,8 @@ Calibrate the plan to the round. Over-preparing depth for a screening wastes tim
 
 Calculate hours available from now until interview time. Divide into blocks:
 
+Before sizing the blocks, check `interview-prep/question-bank.md` (if it exists). Any question marked 🔴 from a prior round is a proven gap — it gets a dedicated block regardless of how the CV-vs-JD analysis ranks it. Real performance data outranks inferred risk.
+
 **Template (adjust block sizes based on total hours available):**
 
 ```
@@ -143,6 +145,8 @@ Save the plan to `interview-prep/{company-slug}-{role-slug}.md` if a file doesn'
 
 - **Calibrate to the round.** A screening prep plan looks very different from a design-panel prep plan. Don't default to maximum depth for every interview.
 - **Gaps first.** Time is finite. The candidate's strengths don't need prep — their gaps do.
+- **🔴 gaps from the question bank take priority over inferred gaps.** Real performance data beats CV-vs-JD analysis. If the candidate already knows they struggle on a topic, don't bury it.
 - **One topic per block.** Mixing topics in a single block reduces retention.
 - **Always include rest time.** A rested candidate outperforms a cramming one.
 - **Never generate fake company intel.** If you don't have research, say so — don't invent culture claims or technical details about the company.
+- **Never invent claims for the candidate.** The anchor sentence and pre-interview talking points in the quick-reference (Step 4) must be grounded in what the candidate actually has — `cv.md`, `article-digest.md`, or the story bank. Don't draft claims that depend on experience or metrics the candidate doesn't have. If a claim appears in `interview-prep/retracted-claims.md`, never include it.
