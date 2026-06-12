@@ -1,4 +1,4 @@
-# Skill: Practice Interviewer
+# Mode: interview/practice — Practice Interviewer
 
 Run a realistic practice interview — one question at a time — and give structured feedback after each answer. Tracks what landed and what needs work.
 

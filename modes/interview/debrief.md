@@ -1,4 +1,4 @@
-# Skill: Post-Interview Debrief
+# Mode: interview/debrief — Post-Interview Debrief
 
 After a real interview, capture what was asked, assess what landed and what didn't, close gaps before the next round, and update the question bank.
 
