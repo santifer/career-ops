@@ -749,7 +749,7 @@ if (fileExists('VERSION')) {
 console.log('\n11. Location filter — always_allow tier');
 
 try {
-  const { buildLocationFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { buildLocationFilter, buildContentFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
@@ -882,6 +882,54 @@ try {
     pass('scan-history TTL rechecks old added URLs while permanent statuses stay deduped');
   } else {
     fail('scan-history TTL policy did not match expected recheck/permanent behavior');
+  }
+
+  // ── content_filter (#734) ──
+  // Absent config → all jobs pass.
+  const noContentFilter = buildContentFilter(null);
+  if (noContentFilter('any description') === true && noContentFilter('') === true) {
+    pass('content_filter absent → all jobs pass');
+  } else {
+    fail('content_filter absent should pass all jobs');
+  }
+
+  // Empty / missing description always passes (providers without descriptions
+  // must never be silently dropped).
+  const cf = buildContentFilter({ positive: ['rust'], negative: ['php'] });
+  if (cf('') === true && cf('   ') === true && cf(undefined) === true && cf(null) === true && cf(42) === true) {
+    pass('content_filter passes empty/missing/non-string descriptions');
+  } else {
+    fail('content_filter should pass empty/missing/non-string descriptions');
+  }
+
+  // Negative keyword present → reject (even if a positive also matches).
+  if (cf('We build in PHP and Rust') === false && cf('Legacy PHP shop') === false) {
+    pass('content_filter rejects descriptions containing a negative keyword');
+  } else {
+    fail('content_filter should reject negative-keyword descriptions');
+  }
+
+  // Positive required when positive list is non-empty.
+  if (cf('We write everything in Rust') === true && cf('A Python and Go team') === false) {
+    pass('content_filter requires a positive keyword when positives are set');
+  } else {
+    fail('content_filter should require a positive keyword');
+  }
+
+  // Positive empty → pass after clearing negatives.
+  const negOnly = buildContentFilter({ negative: ['wordpress'] });
+  if (negOnly('Modern TypeScript stack') === true && negOnly('WordPress maintenance') === false) {
+    pass('content_filter with only negatives blocks them and passes the rest');
+  } else {
+    fail('content_filter negative-only behavior wrong');
+  }
+
+  // Case-insensitive.
+  const caseCf = buildContentFilter({ positive: ['Kubernetes'] });
+  if (caseCf('deploys on KUBERNETES daily') === true) {
+    pass('content_filter matches case-insensitively');
+  } else {
+    fail('content_filter should be case-insensitive');
   }
 
 } catch (e) {

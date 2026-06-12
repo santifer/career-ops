@@ -176,6 +176,37 @@ export function buildLocationFilter(locationFilter) {
   };
 }
 
+// ── Content filter ──────────────────────────────────────────────────
+// Optional. If `content_filter` is absent from portals.yml, all jobs pass.
+// Filters on the job DESCRIPTION text to separate same-titled roles with
+// different stacks (a "Software Engineer" listing that mentions "PHP" vs one
+// that mentions "Rust"). Semantics (case-insensitive substring, in order):
+//   - Empty / whitespace-only / non-string description → PASS. The scanner is
+//     zero-token and only sees descriptions a provider already returns in its
+//     list payload; providers without one must never be silently dropped.
+//   - any `negative` keyword present → reject
+//   - `positive` empty → pass (already cleared negatives)
+//   - `positive` non-empty → at least one keyword must be present
+//
+// Provider support: only providers whose list API ships the description for
+// free (no extra per-job request, which would break the zero-token design)
+// populate `job.description`. Lever (`descriptionPlain`) does today; others
+// leave it empty and therefore always pass this filter.
+
+export function buildContentFilter(contentFilter) {
+  if (!contentFilter) return () => true;
+  const positive = normalizeKeywordList(contentFilter.positive);
+  const negative = normalizeKeywordList(contentFilter.negative);
+
+  return (description) => {
+    if (typeof description !== 'string' || description.trim() === '') return true;
+    const lower = description.toLowerCase();
+    if (negative.length > 0 && negative.some(k => lower.includes(k))) return false;
+    if (positive.length === 0) return true;
+    return positive.some(k => lower.includes(k));
+  };
+}
+
 // ── Salary filter ───────────────────────────────────────────────────
 // Optional. If `salary_filter` is absent from portals.yml, all salaries pass.
 // Semantics:
@@ -642,6 +673,7 @@ async function main() {
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
   const salaryFilter = buildSalaryFilter(config.salary_filter);
+  const contentFilter = buildContentFilter(config.content_filter);
 
   // 3. Resolve a provider for each enabled company / board
   const targets = [];
@@ -713,6 +745,7 @@ async function main() {
   let totalFilteredTitle = 0;
   let totalFilteredLocation = 0;
   let totalFilteredSalary = 0;
+  let totalFilteredContent = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
@@ -753,6 +786,10 @@ async function main() {
         }
         if (!salaryFilter(job.salary)) {
           totalFilteredSalary++;
+          continue;
+        }
+        if (!contentFilter(job.description)) {
+          totalFilteredContent++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -852,6 +889,7 @@ async function main() {
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
+  console.log(`Filtered by content:  ${totalFilteredContent} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (historyPolicy.recheckAfterDays != null) {
     console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);
