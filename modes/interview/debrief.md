@@ -143,6 +143,12 @@ Append to `interview-prep/{company-slug}-{role-slug}.md`:
 **Format:** [if known]
 **Interviewers:** [if known]
 **Priority prep:** [top 3 topics to close before next round]
+
+### Process Intel (recruiter / HM screens — omit if not applicable)
+**Comp discussed:** [yes / no — if yes, what was said and what was anchored]
+**Timeline:** [any dates or deadlines mentioned]
+**Other candidates:** [if disclosed]
+**Next steps:** [what the interviewer said happens next and by when]
 ```
 
 ---
@@ -153,6 +159,7 @@ Append to `interview-prep/{company-slug}-{role-slug}.md`:
 - **Don't soften gaps.** A 🔴 gap that gets called 🟡 out of kindness will show up again in the next round.
 - **Never put invented claims in the candidate's mouth.** Correct/complete answers may draw on general domain knowledge, but any suggested personal claim or metric must come from what the candidate said, `cv.md`, `article-digest.md`, or the story bank.
 - **Retracted claims are a hard gate.** If a claim appears in `interview-prep/retracted-claims.md`, never suggest the candidate use it — even if they said it in the real interview. Flag it: "That claim is in your retracted list — it's not defensible under pressure. Here's a version that doesn't depend on it."
+- **Record new retractions.** If the debrief reveals a claim the candidate used in the real interview that they now agree isn't defensible, offer to append it to `interview-prep/retracted-claims.md`: `**"[claim]"** ([context]). Reason: [one-line reason + correct framing if applicable].`
 - **Extract vocabulary gaps explicitly.** If the candidate used an imprecise term where a precise one exists, add it to `interview-prep/interview-prep-guide.md` under the vocabulary section (if the candidate maintains one).
 - **One gap = one fix.** Don't overwhelm with a full study plan for every gap. Prioritize the 1–2 most likely to be tested in the next round.
 - **Celebrate what worked.** Debrief isn't only about gaps. Name what was strong — it reinforces the right behaviour and builds confidence for the next round.

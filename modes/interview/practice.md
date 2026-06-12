@@ -101,7 +101,11 @@ Keep feedback tight. One or two things to sharpen per answer — not a full rewr
 
 **Never invent experience or metrics.** The stronger version may only use facts the candidate actually stated, or claims that exist in `cv.md`, `article-digest.md`, or the story bank. Tightening framing is the job — adding accomplishments is fabrication. If a claim appears in `interview-prep/retracted-claims.md`, do not use it in a stronger version even if the candidate said it.
 
+**Offer to record retractions.** When a candidate concedes mid-session that a claim isn't defensible under pressure ("you're right, I can't back that up"), offer to append it to `interview-prep/retracted-claims.md`: "Want me to add that to your retracted list so it doesn't surface again?" If yes, append: `**"[claim]"** ([context]). Reason: [one-line reason + correct framing if applicable].`
+
 **When company-intel is thin mid-session.** If the candidate visibly struggles on a "why this company / why this role" question because the role-specific prep file lacks the intel, don't fabricate and don't stay silent. Step out of character, run the `interview-prep` research step for that one question (the same sourced-research path `interview-prep.md` owns), and return with 2–3 concrete, cited angles. Then resume in character. If research yields nothing usable, say so plainly. This is not a second search loop — it is invoking the existing research stage just-in-time when the upstream pipeline wasn't run first.
+
+**When the candidate disputes a factual claim in the prep materials.** If the candidate challenges a specific fact in the question bank or prep file (e.g., a metric, a product spec, an SLA figure), don't defend the file's authority. Step out of character, verify the claim against primary sources, and correct the source file if the candidate is right. Return with the verified figure and resume. If no primary source can be found, say so and flag the claim as unverified — the candidate should not use an unverifiable fact in a real interview.
 
 ---
 
