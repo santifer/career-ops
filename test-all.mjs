@@ -1574,6 +1574,64 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER FUZZY DEDUP: ROLE-ALTITUDE FALSE POSITIVE ─────
+// #751's union ratio fixed long titles ("Product Manager, GTM Experiences"
+// scores 2/4 = 0.5) but not the root cause: two "Product Manager, X" roles
+// share [product, manager], and because 'product' was not a BASELINE token it
+// counted as discriminating overlap. When the distinguishing token is a short
+// acronym that the length filter strips ('gtm'), the overlap is [product,
+// manager] over a 3-token union = 0.667 >= 0.6 — a false dup that SKIPS the
+// new role (silent data loss). 'product' is now a role-altitude baseline word
+// and 'gtm' a kept specialty acronym, so the roles stay distinct.
+console.log('\n🧪 Testing merge-tracker fuzzy dedup (role-altitude: PM GTM vs PM Enterprise)...');
+try {
+  const gtmTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-gtm-'));
+  try {
+    mkdirSync(join(gtmTmp, 'data'));
+    mkdirSync(join(gtmTmp, 'reports'));
+    const additionsDir = join(gtmTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(gtmTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | Anthropic | Product Manager, Enterprise | 4.5/5 | Evaluated | ❌ | [1](../reports/001-anthropic-2026-01-04.md) | existing |\n');
+    for (const n of ['001-anthropic-2026-01-04', '002-anthropic-gtm-2026-01-05', '003-anthropic-2026-01-06']) {
+      writeFileSync(join(gtmTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+    // Distinct role at the same company sharing only [product, manager], with a
+    // LOWER score than the existing row: a false-positive dup would SKIP it.
+    writeFileSync(join(additionsDir, '002-anthropic-gtm.tsv'),
+      '2\t2026-01-05\tAnthropic\tProduct Manager, GTM\tEvaluated\t3.8/5\t❌\t[2](reports/002-anthropic-gtm-2026-01-05.md)\tdistinct GTM role\n');
+    // True repost of the existing role (higher score) must still UPDATE in place.
+    writeFileSync(join(additionsDir, '003-anthropic-enterprise.tsv'),
+      '3\t2026-01-06\tAnthropic\tProduct Manager, Enterprise\tEvaluated\t4.7/5\t❌\t[3](reports/003-anthropic-2026-01-06.md)\trepost\n');
+
+    run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    const merged = readFileSync(tracker, 'utf-8');
+
+    // The distinct role must be ADDED, not folded into the Enterprise row.
+    if (merged.includes('Product Manager, GTM') && merged.includes('Product Manager, Enterprise')) {
+      pass('role-altitude roles kept separate (PM GTM vs PM Enterprise)');
+    } else {
+      fail('"Product Manager, GTM" was skipped as a false-positive duplicate of "Product Manager, Enterprise"');
+    }
+
+    // Same-role dedup must still work: the repost updates the one existing row in place.
+    const enterpriseRows = merged.split('\n').filter(l => l.includes('Product Manager, Enterprise'));
+    if (enterpriseRows.length === 1 && enterpriseRows[0].includes('4.7/5')) {
+      pass('true repost still updates the existing row in place (4.5 → 4.7, no duplicate)');
+    } else {
+      fail(`repost handling broken: ${enterpriseRows.length} 'Enterprise' rows, expected 1 updated to 4.7/5`);
+    }
+  } finally {
+    rmSync(gtmTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker GTM dedup test crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
 // Report-number reservation is atomic now (#803), but tracker merges are a
 // separate read/modify/write step. If two merge-tracker processes read the same
