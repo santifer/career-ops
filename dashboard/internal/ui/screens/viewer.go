@@ -527,7 +527,11 @@ func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style, c
 			if careerOpsPath == "" {
 				return styled
 			}
-			absPath := filepath.Join(careerOpsPath, filepath.FromSlash(relPath))
+			joined := filepath.Join(careerOpsPath, filepath.FromSlash(relPath))
+			absPath, err := filepath.Abs(joined)
+			if err != nil {
+				return styled
+			}
 			forward := filepath.ToSlash(absPath)
 			if !strings.HasPrefix(forward, "/") {
 				forward = "/" + forward // Windows: C:/... → /C:/...
