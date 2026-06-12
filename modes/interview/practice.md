@@ -31,7 +31,7 @@ Before setting the scene, confirm which files exist:
 
 If the question bank and role-specific prep file are both absent, tell the candidate plainly:
 
-> "You have the practice protocol but not your question bank or prep notes for this role. Feedback will be generic until those exist. Want to run `interview-prep` or `plan` first to build them?"
+> "You have the practice protocol but not your question bank or prep notes for this role. Feedback will be generic until those exist. Want to run `interview-prep` or `interview/plan` first to build them?"
 
 Don't silently run a thin session as if it were a full one. If the candidate confirms they want to proceed anyway, continue — but note in the session summary that question sourcing fell back to generated defaults.
 

@@ -104,7 +104,7 @@ If the candidate knows the next round format:
 
 2. **Build a priority list** for next round prep — ordered by gap severity and likelihood of being tested
 
-3. **Suggest running** `plan.md` with the next round details to build a full prep plan
+3. **Suggest running** `interview/plan` with the next round details to build a full prep plan
 
 ---
 
