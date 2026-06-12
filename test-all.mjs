@@ -2200,6 +2200,37 @@ try {
   fail(`update-system SEMVER_RE test crashed: ${e.message}`);
 }
 
+// ── TRANSCRIPT-DRIVEN TARGETING SIGNAL (#960) ───────────────────
+
+console.log('\nTranscript-driven targeting signal (patterns Step 1b)');
+
+const patternsMode = fileExists('modes/patterns.md') ? readFile('modes/patterns.md') : '';
+if (
+  patternsMode.includes('Step 1b') &&
+  patternsMode.includes('interview-prep/transcripts/') &&
+  patternsMode.includes('skip this step silently')
+) {
+  pass('patterns mode documents Step 1b transcript targeting signal (optional, graceful skip)');
+} else {
+  fail('patterns mode missing Step 1b transcript targeting signal');
+}
+
+if (fileExists('interview-prep/transcripts/README.md') && fileExists('interview-prep/transcripts/.gitkeep')) {
+  pass('interview-prep/transcripts/ scaffold present (README + .gitkeep)');
+} else {
+  fail('interview-prep/transcripts/ scaffold missing (README and/or .gitkeep)');
+}
+
+const gitignoreTxt = fileExists('.gitignore') ? readFile('.gitignore') : '';
+if (
+  gitignoreTxt.includes('interview-prep/transcripts/*') &&
+  gitignoreTxt.includes('!interview-prep/transcripts/README.md')
+) {
+  pass('.gitignore protects interview transcripts (keeps README/.gitkeep)');
+} else {
+  fail('.gitignore does NOT protect interview-prep/transcripts (privacy risk)');
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
