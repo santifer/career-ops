@@ -13,6 +13,8 @@ These files contain your personal data, customizations, and work product. Update
 | `modes/_profile.md` | Your archetypes, narrative, negotiation scripts |
 | `article-digest.md` | Your proof points from portfolio |
 | `interview-prep/story-bank.md` | Your accumulated STAR+R stories |
+| `interview-prep/transcripts/*` | Your interview transcripts (sensitive — real names/companies), except `interview-prep/transcripts/README.md` and `.gitkeep`, which are system-owned scaffold delivered by updates. Drives `patterns` Step 1b targeting signal |
+| `interview-prep/sessions/*` | Mock-interview session transcripts (optional; created by the mock-interview mode if installed; sensitive), except `interview-prep/sessions/.gitkeep`, which is system-owned scaffold delivered by updates. Also consumed by `patterns` Step 1b |
 | `portals.yml` | Your customized company list |
 | `data/applications.md` | Your application tracker (source of truth) |
 | `data/applications.db` | Derived query index over `applications.md` (SQLite, rebuilt by `node tracker.mjs sync` — safe to delete) |

@@ -262,7 +262,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
-| Asks about rejection patterns or wants to improve targeting | `patterns` |
+| Asks about rejection patterns, wants to improve targeting, or asks which roles their interview answers fit best | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
 
 ### CV Source of Truth

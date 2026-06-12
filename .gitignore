@@ -24,6 +24,17 @@ jds/*
 # Interview prep (accumulated STAR+R stories — user data)
 interview-prep/*
 !interview-prep/.gitkeep
+# Interview transcripts (contain real interviewer names + companies — never committed).
+# The directories themselves must be un-ignored first so git descends into them,
+# then their contents are re-ignored except the tracked scaffold.
+!interview-prep/transcripts/
+interview-prep/transcripts/*
+!interview-prep/transcripts/.gitkeep
+!interview-prep/transcripts/README.md
+# Mock-interview sessions (if the mock mode is installed)
+!interview-prep/sessions/
+interview-prep/sessions/*
+!interview-prep/sessions/.gitkeep
 
 # Writing samples (user's personal files — never committed)
 writing-samples/*
