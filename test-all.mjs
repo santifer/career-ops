@@ -2224,8 +2224,10 @@ if (fileExists('interview-prep/transcripts/README.md') && fileExists('interview-
 const gitignoreTxt = fileExists('.gitignore') ? readFile('.gitignore') : '';
 if (
   gitignoreTxt.includes('interview-prep/transcripts/*') &&
+  gitignoreTxt.includes('!interview-prep/transcripts/.gitkeep') &&
   gitignoreTxt.includes('!interview-prep/transcripts/README.md') &&
-  gitignoreTxt.includes('interview-prep/sessions/*')
+  gitignoreTxt.includes('interview-prep/sessions/*') &&
+  gitignoreTxt.includes('!interview-prep/sessions/.gitkeep')
 ) {
   pass('.gitignore protects interview transcripts and sessions (keeps README/.gitkeep)');
 } else {
