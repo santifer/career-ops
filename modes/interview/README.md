@@ -30,6 +30,6 @@ These skills assume the following files exist (career-ops defaults):
 | `interview-prep/question-bank.md` | Question bank with gap tracking (created on first use) |
 | `interview-prep/interview-prep-guide.md` | General interview principles (optional) |
 | `interview-prep/{company}-{role}.md` | Role-specific prep file |
-| `interview-prep/retracted-claims.md` | Claims the candidate has rejected as indefensible — hard gate in practice and debrief (format: `**"claim"** (context).` Reason: one-line reason.) |
+| `interview-prep/retracted-claims.md` | Claims the candidate has rejected as indefensible — hard gate in practice and debrief (format: `**"[claim]"** ([context]). Reason: [one-line reason + correct framing if applicable].`) |
 
 If you're using these skills outside career-ops, substitute your own equivalents or instruct the AI to create them.
