@@ -105,9 +105,8 @@ const (
 	ColDate        ColumnID = iota // APPLIED date
 	ColLocation                    // LOCATION city+state
 	ColPay                         // PAY range
-	ColWorkMode                    // MODE: RMT/HYB/RFLX/SITE
-	ColHasPDF                      // PDF: ✓/—
 	ColHasReport                   // RPT: ✓/—
+	ColHasPDF                      // PDF: ✓/—
 	ColLastContact                 // LAST contact date
 )
 
@@ -124,9 +123,8 @@ var optionalCols = []colDef{
 	{ColDate, "APPLIED", "", 10, true},
 	{ColLocation, "LOCATION", "", 20, true},
 	{ColPay, "PAY", "", 16, true},
-	{ColWorkMode, "MODE", "RMT/HYB/RFLX/SITE", 5, false},
-	{ColHasPDF, "PDF", "✓/—", 4, false},
 	{ColHasReport, "RPT", "✓/—", 4, false},
+	{ColHasPDF, "PDF", "✓/—", 4, false},
 	{ColLastContact, "LAST", "", 10, false},
 }
 
@@ -283,7 +281,6 @@ func (m PipelineModel) CurrentApp() (model.CareerApplication, bool) {
 func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		m.flash = ""
 		if m.colPicker {
 			return m.handleColPicker(msg)
 		}
@@ -576,42 +573,6 @@ func (m PipelineModel) handleColPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 		m.visibleCols[col.id] = !m.visibleCols[col.id]
 	}
 	return m, nil
-}
-
-// handlePDFPicker consumes keys while the PDF picker overlay is open.
-func (m PipelineModel) handlePDFPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
-	switch msg.String() {
-	case "esc", "q":
-		m.pdfPicker = false
-		return m, nil
-
-	case "down", "j":
-		m.pdfCursor++
-		if m.pdfCursor >= len(m.pdfChoices) {
-			m.pdfCursor = len(m.pdfChoices) - 1
-		}
-
-	case "up", "k":
-		m.pdfCursor--
-		if m.pdfCursor < 0 {
-			m.pdfCursor = 0
-		}
-
-	case "enter", "d":
-		m.pdfPicker = false
-		if m.pdfCursor >= 0 && m.pdfCursor < len(m.pdfChoices) {
-			return m, m.openPDFCmd(m.pdfChoices[m.pdfCursor])
-		}
-	}
-	return m, nil
-}
-
-// openPDFCmd emits a PipelineOpenPDFMsg for a root-relative PDF path.
-func (m PipelineModel) openPDFCmd(relPath string) tea.Cmd {
-	fullPath := filepath.Join(m.careerOpsPath, filepath.FromSlash(relPath))
-	return func() tea.Msg {
-		return PipelineOpenPDFMsg{Path: fullPath}
-	}
 }
 
 func (m PipelineModel) loadCurrentReport() tea.Cmd {
@@ -1034,7 +995,7 @@ func (m PipelineModel) renderBody() string {
 type colWidths struct {
 	num, score, company, status, role int
 	// optional columns — 0 means the column is hidden
-	date, loc, pay, mode, pdf, rpt, last int
+	date, loc, pay, rpt, pdf, last int
 }
 
 func (m PipelineModel) colVisible(id ColumnID) bool {
@@ -1061,19 +1022,16 @@ func (m PipelineModel) columnWidths() colWidths {
 	if m.colVisible(ColPay) {
 		c.pay = 16
 	}
-	if m.colVisible(ColWorkMode) {
-		c.mode = 5
+	if m.colVisible(ColHasReport) {
+		c.rpt = 4
 	}
 	if m.colVisible(ColHasPDF) {
 		c.pdf = 4
 	}
-	if m.colVisible(ColHasReport) {
-		c.rpt = 4
-	}
 	if m.colVisible(ColLastContact) {
 		c.last = 10
 	}
-	fixed := c.num + c.score + c.date + c.company + c.status + c.loc + c.pay + c.mode + c.pdf + c.rpt + c.last
+	fixed := c.num + c.score + c.date + c.company + c.status + c.loc + c.pay + c.rpt + c.pdf + c.last
 	c.role = m.width - fixed - 14 // separators + outer padding
 	if c.role < 15 {
 		c.role = 15
@@ -1109,27 +1067,6 @@ func (m PipelineModel) renderLocCell(app model.CareerApplication, width int) str
 		text = "—"
 	}
 	return lipgloss.NewStyle().Foreground(m.workModeColor(app.WorkMode)).Width(width).Render(truncateRunes(text, width))
-}
-
-// workModeAbbr returns a short abbreviation for the MODE column.
-func workModeAbbr(mode string) string {
-	switch mode {
-	case "Remote":
-		return "RMT"
-	case "RemoteFlex":
-		return "RFLX"
-	case "Hybrid":
-		return "HYB"
-	case "Full":
-		return "SITE"
-	default:
-		return "—"
-	}
-}
-
-func (m PipelineModel) renderModeCell(app model.CareerApplication, width int) string {
-	text := workModeAbbr(app.WorkMode)
-	return lipgloss.NewStyle().Foreground(m.workModeColor(app.WorkMode)).Width(width).Render(text)
 }
 
 func (m PipelineModel) renderCheckCell(yes bool, width int) string {
@@ -1186,14 +1123,11 @@ func (m PipelineModel) renderColumnHeader() string {
 	if cw.pay > 0 {
 		segments = append(segments, cell("PAY", cw.pay))
 	}
-	if cw.mode > 0 {
-		segments = append(segments, cell("MODE", cw.mode))
+	if cw.rpt > 0 {
+		segments = append(segments, cell("RPT", cw.rpt))
 	}
 	if cw.pdf > 0 {
 		segments = append(segments, cell("PDF", cw.pdf))
-	}
-	if cw.rpt > 0 {
-		segments = append(segments, cell("RPT", cw.rpt))
 	}
 	if cw.last > 0 {
 		segments = append(segments, cell("LAST", cw.last))
@@ -1256,14 +1190,11 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	if cw.pay > 0 {
 		segments = append(segments, m.renderPayCell(app, cw.pay))
 	}
-	if cw.mode > 0 {
-		segments = append(segments, m.renderModeCell(app, cw.mode))
+	if cw.rpt > 0 {
+		segments = append(segments, m.renderCheckCell(app.ReportPath != "", cw.rpt))
 	}
 	if cw.pdf > 0 {
 		segments = append(segments, m.renderCheckCell(app.HasPDF, cw.pdf))
-	}
-	if cw.rpt > 0 {
-		segments = append(segments, m.renderCheckCell(app.ReportPath != "", cw.rpt))
 	}
 	if cw.last > 0 {
 		lastText := "—"
@@ -1400,15 +1331,6 @@ func (m PipelineModel) renderHelp() string {
 	keyStyle := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Text)
 	descStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
 
-	if m.flash != "" {
-		flashStyle := lipgloss.NewStyle().
-			Foreground(m.theme.Yellow).
-			Background(m.theme.Surface).
-			Width(m.width).
-			Padding(0, 1)
-		return flashStyle.Render(m.flash)
-	}
-
 	if m.colPicker {
 		return style.Render(
 			keyStyle.Render("↑↓/jk") + descStyle.Render(" navigate  ") +
@@ -1416,7 +1338,7 @@ func (m PipelineModel) renderHelp() string {
 				keyStyle.Render("Esc/C") + descStyle.Render(" close"))
 	}
 
-	if m.statusPicker || m.pdfPicker {
+	if m.statusPicker {
 		return style.Render(
 			keyStyle.Render("↑↓/jk") + descStyle.Render(" navigate  ") +
 				keyStyle.Render("Enter") + descStyle.Render(" confirm  ") +
@@ -1515,41 +1437,6 @@ func (m PipelineModel) overlayColPicker(body string) string {
 		}
 		row := checkStr + " " + label
 		picker = append(picker, padStyle.Render(style.Render(row)))
-	}
-
-	bodyLines = append(bodyLines, picker...)
-	return strings.Join(bodyLines, "\n")
-}
-
-// overlayPDFPicker renders the PDF chooser inline at the bottom of the body,
-// mirroring overlayStatusPicker. Choices show the PDF filename only — the
-// directory is always output/ and the role variant lives in the name.
-func (m PipelineModel) overlayPDFPicker(body string) string {
-	bodyLines := strings.Split(body, "\n")
-
-	pickerWidth := m.width - 8
-	if pickerWidth < 30 {
-		pickerWidth = 30
-	}
-	padStyle := lipgloss.NewStyle().Padding(0, 2)
-	borderStyle := lipgloss.NewStyle().
-		Foreground(m.theme.Blue).
-		Bold(true)
-
-	var picker []string
-	picker = append(picker, padStyle.Render(borderStyle.Render("Open CV PDF:")))
-
-	for i, choice := range m.pdfChoices {
-		style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
-		if i == m.pdfCursor {
-			style = style.Background(m.theme.Overlay).Bold(true)
-		}
-		prefix := "  "
-		if i == m.pdfCursor {
-			prefix = "> "
-		}
-		name := truncateRunes(filepath.Base(filepath.FromSlash(choice)), pickerWidth-2)
-		picker = append(picker, padStyle.Render(style.Render(prefix+name)))
 	}
 
 	bodyLines = append(bodyLines, picker...)
