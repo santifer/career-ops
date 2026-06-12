@@ -389,18 +389,24 @@ const ROLE_STOPWORDS = new Set([
 // a specific team or technology, and excludes broad ones like 'ai' / 'ml' /
 // 'llm' that appear across many roles (AI Engineer, ML Manager, etc.).
 // Adding the broad ones would regress #329's AI Success/Deployment case.
+// 'gtm' (go-to-market) names a specific commercial function, like 'crm'/'erp';
+// without it, "Product Manager, GTM Experiences" loses its discriminating
+// token and collapses into other "Product Manager, X" roles.
 const SHORT_SPECIALTY = new Set([
   'api', 'sre', 'sdk', 'cli', 'gpu', 'cpu',
   'ios', 'qa', 'ux', 'ui', 'ar', 'vr',
-  'ocr', 'crm', 'erp',
+  'ocr', 'crm', 'erp', 'gtm',
 ]);
 
 // Generic role-level descriptors. Two roles whose ONLY overlap is in this
 // set (e.g. [software, engineer]) are NOT the same role — they're just
 // labelled at the same altitude. See Issue #633: "Staff SWE, API" vs
 // "Staff SWE, Kubernetes Platform" share [software, engineer] only.
+// 'product' is the same kind of altitude word as 'manager'/'engineer':
+// "Product Manager, GTM Experiences" vs "Product Manager, Enterprise" share
+// only [product, manager] and are different roles, not duplicates.
 const BASELINE_TOKENS = new Set([
-  'software', 'engineer', 'developer', 'manager', 'architect',
+  'software', 'engineer', 'developer', 'manager', 'product', 'architect',
   'analyst', 'designer', 'consultant', 'specialist',
   'platform', 'systems', 'services',
   'backend', 'frontend', 'fullstack',
