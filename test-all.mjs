@@ -1020,6 +1020,41 @@ try {
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }
+
+// ── 11b. TITLE FILTER — acronym word boundaries ──────────────────
+console.log('\n11b. Title filter — acronym word boundaries');
+try {
+  const { buildTitleFilter, compileKeyword } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // Short all-letter acronyms match on WORD BOUNDARIES, not as substrings.
+  const cooFilter = buildTitleFilter({ positive: ['coo'] });
+  if (cooFilter('Chief Operating Officer (COO)') === true) pass('"COO" positive matches the standalone token in a title');
+  else fail('"COO" should match a title containing the standalone token COO');
+  if (cooFilter('Sales Coordinator') === false) pass('"COO" positive does NOT match "Coordinator" (no mid-word match)');
+  else fail('"COO" must not match "Coordinator"');
+
+  // An acronym used as a NEGATIVE keyword must not knock out an unrelated word.
+  const negFilter = buildTitleFilter({ positive: [], negative: ['coo'] });
+  if (negFilter('Marketing Coordinator') === true) pass('negative "COO" does not reject "Coordinator"');
+  else fail('negative "COO" wrongly rejected "Coordinator"');
+  if (negFilter('Group COO') === false) pass('negative "COO" still rejects a standalone "COO" title');
+  else fail('negative "COO" should reject "Group COO"');
+
+  // Multi-word phrases and non-letter keywords keep permissive substring matching.
+  const phraseFilter = buildTitleFilter({ positive: ['head of'] });
+  if (phraseFilter('Head of Finance & Strategy') === true) pass('multi-word "head of" still matches by substring');
+  else fail('"head of" should substring-match "Head of Finance & Strategy"');
+
+  // compileKeyword is exported and directly testable.
+  if (compileKeyword('cfo')('group cfo, emea') === true && compileKeyword('cfo')('cfom') === false) {
+    pass('compileKeyword("cfo") is word-boundary anchored');
+  } else {
+    fail('compileKeyword("cfo") boundary behavior wrong');
+  }
+} catch (e) {
+  fail(`title filter acronym tests crashed: ${e.message}`);
+}
+
 // ── 12. FOLLOW-UP CADENCE LOGIC ─────────────────────────────────
 
 console.log('\n12. Follow-up cadence logic');
