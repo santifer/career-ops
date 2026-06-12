@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 
 /**
  * generate-pdf.mjs — HTML → PDF via Playwright
