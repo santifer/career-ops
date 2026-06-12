@@ -46,6 +46,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/training.md` | Training evaluation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
+| `modes/interview/*` | Interview prep planning, practice, and debrief skills |
 | `modes/de/*` | German language modes |
 | `modes/fr/*` | French language modes |
 | `modes/ja/*` | Japanese language modes |

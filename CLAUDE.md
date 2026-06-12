@@ -254,6 +254,9 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants interactive profile/CV onboarding | `interview` |
+| Wants a time-blocked prep plan for an upcoming interview | `interview/plan` |
+| Wants to run practice interview questions with feedback | `interview/practice` |
+| Wants to debrief after a real interview and close gaps | `interview/debrief` |
 | Wants to generate CV/PDF | `pdf` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
