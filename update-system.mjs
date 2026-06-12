@@ -52,6 +52,7 @@ const SYSTEM_PATHS = [
   'modes/tracker.md',
   'modes/training.md',
   'modes/latex.md',
+  'modes/docx.md',
   'modes/followup.md',
   'modes/interview-prep.md',
   'modes/patterns.md',
@@ -68,6 +69,7 @@ const SYSTEM_PATHS = [
   'GEMINI.md',
   'generate-pdf.mjs',
   'generate-latex.mjs',
+  'generate-docx.mjs',
   'generate-cover-letter.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
@@ -376,7 +378,7 @@ async function apply() {
     // Every release that adds a file imported by other system scripts MUST
     // append it here, or clients on older versions break on upgrade
     // (e.g. v1.8.x → v1.9.0: merge-tracker.mjs imports tracker-links.mjs).
-    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs'];
+    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs', 'generate-docx.mjs', 'modes/docx.md'];
     for (const path of BOOTSTRAP_PATHS) {
       if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
       try {
