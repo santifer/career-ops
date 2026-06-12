@@ -87,10 +87,11 @@ func TestPDFKeyOpensSingleMatchDirectly(t *testing.T) {
 	}
 }
 
-func TestPDFKeyOpensPickerForAmbiguousMatches(t *testing.T) {
+func TestPDFKeyOpensNewestForMultipleMatches(t *testing.T) {
 	root := t.TempDir()
-	writePDFFixture(t, root, "output/cv-jane-doe-anthropic-staff-ui-2026-06-05.pdf")
-	writePDFFixture(t, root, "output/cv-jane-doe-anthropic-fullstack-2026-06-05.pdf")
+	// Write two PDFs for the same company with distinct dates so ordering is predictable.
+	writePDFFixture(t, root, "output/cv-jane-doe-anthropic-2026-06-05.pdf")
+	writePDFFixture(t, root, "output/cv-jane-doe-anthropic-2026-06-10.pdf")
 	apps := []model.CareerApplication{
 		{Company: "Anthropic", Role: "Staff UI Engineer", Status: "Evaluated", Score: 4.6},
 	}
@@ -98,26 +99,19 @@ func TestPDFKeyOpensPickerForAmbiguousMatches(t *testing.T) {
 	pm := newPDFTestModel(t, root, apps)
 	updated, cmd := pm.Update(keyMsg("d"))
 
-	if cmd != nil {
-		t.Fatal("expected no command until a picker choice is made")
-	}
-	if !updated.pdfPicker {
-		t.Fatal("expected picker for ambiguous matches")
-	}
-	if len(updated.pdfChoices) != 2 {
-		t.Fatalf("expected 2 choices, got %d", len(updated.pdfChoices))
-	}
-
-	// Choosing the highlighted entry emits the open message.
-	chosen, cmd := updated.Update(keyMsg("d")) // `d` confirms too, mirroring `enter`
-	if chosen.pdfPicker {
-		t.Fatal("expected picker to close after confirm")
+	// Multiple candidates → open the newest one immediately, no picker.
+	if updated.pdfPicker {
+		t.Fatal("expected no picker — newest match should be opened directly")
 	}
 	if cmd == nil {
-		t.Fatal("expected an open command after confirming")
+		t.Fatal("expected an open command for the newest match")
 	}
-	if _, ok := cmd().(PipelineOpenPDFMsg); !ok {
+	msg, ok := cmd().(PipelineOpenPDFMsg)
+	if !ok {
 		t.Fatalf("expected PipelineOpenPDFMsg, got %T", cmd())
+	}
+	if !strings.HasSuffix(msg.Path, "cv-jane-doe-anthropic-2026-06-10.pdf") {
+		t.Fatalf("expected newest PDF to be opened, got %q", msg.Path)
 	}
 }
 
@@ -178,25 +172,3 @@ func TestRegenerateKeyEmitsGenerateMsgFromManifest(t *testing.T) {
 	}
 }
 
-func TestPDFPickerEscCancels(t *testing.T) {
-	root := t.TempDir()
-	writePDFFixture(t, root, "output/cv-jane-doe-acme-a-2026-06-05.pdf")
-	writePDFFixture(t, root, "output/cv-jane-doe-acme-b-2026-06-05.pdf")
-	apps := []model.CareerApplication{
-		{Company: "Acme", Role: "Engineer", Status: "Evaluated", Score: 4.0},
-	}
-
-	pm := newPDFTestModel(t, root, apps)
-	updated, _ := pm.Update(keyMsg("d"))
-	if !updated.pdfPicker {
-		t.Fatal("expected picker to open")
-	}
-
-	cancelled, cmd := updated.Update(tea.KeyMsg{Type: tea.KeyEsc})
-	if cancelled.pdfPicker {
-		t.Fatal("expected Esc to close the picker")
-	}
-	if cmd != nil {
-		t.Fatal("expected no command on cancel")
-	}
-}
