@@ -399,15 +399,10 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		if app, ok := m.CurrentApp(); ok {
 			manifest := data.LoadPDFManifest(m.careerOpsPath)
 			candidates := data.ResolvePDFs(m.careerOpsPath, app, manifest)
-			switch len(candidates) {
-			case 0:
+			if len(candidates) == 0 {
 				m.flash = "No CV PDF found for this application — generate one with /career-ops pdf"
-			case 1:
-				return m, m.openPDFCmd(candidates[0])
-			default:
-				m.pdfPicker = true
-				m.pdfCursor = 0
-				m.pdfChoices = candidates
+			} else {
+				return m, m.openPDFCmd(candidates[0]) // newest first
 			}
 		}
 
@@ -415,6 +410,19 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		if app, ok := m.CurrentApp(); ok {
 			manifest := data.LoadPDFManifest(m.careerOpsPath)
 			entry, found := manifest.Lookup(app)
+			// Manifest lookup requires a report number; fall back to PDF-path
+			// index when the manifest was written without --report (common case).
+			if !found || entry.HTMLPath == "" {
+				byPath := data.LoadPDFEntriesByPath(m.careerOpsPath)
+				candidates := data.ResolvePDFs(m.careerOpsPath, app, manifest)
+				for _, c := range candidates {
+					if e, ok := byPath[c]; ok && e.HTMLPath != "" {
+						entry = e
+						found = true
+						break
+					}
+				}
+			}
 			if !found || entry.HTMLPath == "" {
 				m.flash = "No recorded source HTML for this application — run /career-ops pdf once; later runs are regenerable with D"
 				return m, nil
