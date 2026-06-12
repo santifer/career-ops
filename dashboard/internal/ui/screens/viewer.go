@@ -2,6 +2,7 @@ package screens
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -25,10 +26,11 @@ type ViewerModel struct {
 	width         int
 	height        int
 	theme         theme.Theme
+	careerOpsPath string // for resolving relative PDF paths as file:// links
 }
 
 // NewViewerModel creates a new file viewer for the given path.
-func NewViewerModel(t theme.Theme, path, title string, width, height int) ViewerModel {
+func NewViewerModel(t theme.Theme, careerOpsPath, path, title string, width, height int) ViewerModel {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		content = []byte("Error reading file: " + err.Error())
@@ -40,11 +42,12 @@ func NewViewerModel(t theme.Theme, path, title string, width, height int) Viewer
 	}
 
 	m := ViewerModel{
-		lines:  lines,
-		title:  title,
-		width:  width,
-		height: height,
-		theme:  t,
+		lines:         lines,
+		title:         title,
+		width:         width,
+		height:        height,
+		theme:         t,
+		careerOpsPath: careerOpsPath,
 	}
 	m.rebuildRender()
 	return m
@@ -422,6 +425,7 @@ var (
 	reBareURL    = regexp.MustCompile(`https?://\S*[^\s\)\]\.,;:!?]`)
 	reInlineCode = regexp.MustCompile("`([^`]+)`")
 	reListNumber = regexp.MustCompile(`^(\s*\d+\.\s+)(.*)$`)
+	reRelPDFPath = regexp.MustCompile(`output/cv-[^\s\)\]\.,;:!?"']+\.pdf`)
 )
 
 func isHeadingLine(line string) bool {
@@ -470,7 +474,7 @@ func (m ViewerModel) renderInlineElementsAs(line string, baseColor lipgloss.Colo
 	var b strings.Builder
 	rest := line
 	for rest != "" {
-		match := findInlineMatch(rest, codeStyle, boldStyle, linkStyle)
+		match := findInlineMatch(rest, codeStyle, boldStyle, linkStyle, m.careerOpsPath)
 		if match == nil {
 			b.WriteString(baseStyle.Render(rest))
 			break
@@ -489,7 +493,7 @@ type inlineMatch struct {
 	rendered   string
 }
 
-func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style) *inlineMatch {
+func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style, careerOpsPath string) *inlineMatch {
 	var best *inlineMatch
 	consider := func(loc []int, rendered func() string) {
 		if loc == nil || (best != nil && loc[0] >= best.start) {
@@ -515,6 +519,26 @@ func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style) *
 	}
 	if loc := reBareURL.FindStringIndex(s); loc != nil {
 		consider(loc, func() string { return linkStyle.Render(s[loc[0]:loc[1]]) })
+	}
+	if loc := reRelPDFPath.FindStringIndex(s); loc != nil {
+		consider(loc, func() string {
+			relPath := s[loc[0]:loc[1]]
+			styled := linkStyle.Render(relPath)
+			if careerOpsPath == "" {
+				return styled
+			}
+			joined := filepath.Join(careerOpsPath, filepath.FromSlash(relPath))
+			absPath, err := filepath.Abs(joined)
+			if err != nil {
+				return styled
+			}
+			forward := filepath.ToSlash(absPath)
+			if !strings.HasPrefix(forward, "/") {
+				forward = "/" + forward // Windows: C:/... → /C:/...
+			}
+			// OSC 8 hyperlink: ESC ] 8 ; ; URL BEL text ESC ] 8 ; ; BEL
+			return "\x1b]8;;" + "file://" + forward + "\x07" + styled + "\x1b]8;;\x07"
+		})
 	}
 	return best
 }
