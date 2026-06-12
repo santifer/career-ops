@@ -704,6 +704,7 @@ try {
   const invalidProviderPath = join(tmp, 'invalid-provider.yml');
   const emptyKeywordPath = join(tmp, 'empty-keyword.yml');
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
+  const badContentFilterPath = join(tmp, 'bad-content-filter.yml');
 
   writeFileSync(validPath, `
 title_filter:
@@ -741,6 +742,18 @@ tracked_companies:
     careers_url: "https://jobs.lever.co/acme2"
 `, 'utf-8');
 
+  // content_filter with an empty-string keyword must be rejected, same as
+  // title/location filters (an empty keyword would match every description).
+  writeFileSync(badContentFilterPath, `
+title_filter:
+  positive: ["AI"]
+content_filter:
+  positive: ["rust", "   "]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
   const validResult = run(NODE, ['validate-portals.mjs', '--file', validPath]);
   if (validResult !== null && validResult.includes('0 errors')) {
     pass('validate-portals accepts a minimal valid portals file');
@@ -774,6 +787,13 @@ tracked_companies:
     pass('validate-portals warns on duplicate enabled company names');
   } else {
     fail('validate-portals should warn on duplicate enabled company names');
+  }
+
+  const badContentFilterResult = run(NODE, ['validate-portals.mjs', '--file', badContentFilterPath]);
+  if (badContentFilterResult === null) {
+    pass('validate-portals rejects empty content_filter keywords');
+  } else {
+    fail('validate-portals should reject empty content_filter keywords');
   }
 
   rmSync(tmp, { recursive: true, force: true });
