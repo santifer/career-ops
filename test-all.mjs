@@ -498,7 +498,7 @@ if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
 console.log('\n8. Mode file integrity');
 
 const expectedModes = [
-  '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
+  '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'docx.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md',
@@ -536,7 +536,7 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
 const applyMode = readFile('modes/apply.md');
 if (
   applyMode.includes('## Step 5 — Preflight gate') &&
-  applyMode.includes('verify liveness with Playwright') &&
+  applyMode.includes('node check-liveness.mjs') &&
   applyMode.includes('matching report has been loaded') &&
   applyMode.includes('Do not continue to Step 6 until this preflight is resolved') &&
   applyMode.includes('refuse to generate final copy')

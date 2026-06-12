@@ -10,6 +10,7 @@
     "dedup": "node dedup-tracker.mjs",
     "merge": "node merge-tracker.mjs",
     "pdf": "node generate-pdf.mjs",
+    "build:cv": "node generate-cv-html.mjs && node generate-pdf.mjs output/cv-sparsh-garg.html output/SparshGarg_Resume.pdf && node -e \"const fs = require('fs'); fs.copyFileSync('output/SparshGarg_Resume.pdf', 'SparshGarg_Resume (1).pdf')\"",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
     "update:test": "node updater-migration-tests.mjs",
@@ -40,6 +41,8 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "cheerio": "^1.0.0",
+    "docx": "^8.5.0",
     "dotenv": "^17.0.0",
     "js-yaml": "^4.1.1",
     "playwright": "1.58.1"
