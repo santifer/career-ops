@@ -14,7 +14,7 @@ Run a realistic practice interview — one question at a time — and give struc
 6. **Story bank** at `interview-prep/story-bank.md` — to verify story accuracy in feedback
 7. **Question bank** at `interview-prep/question-bank.md` — to update status after each answer
 8. **Role-specific prep file** — for company intel, sourced questions, comp strategy
-9. **Retracted claims** at `interview-prep/retracted-claims.md` (if present) — claims the candidate has explicitly rejected as undefensible; treat as a hard gate
+9. **Retracted claims** at `interview-prep/retracted-claims.md` (if present) — claims the candidate has explicitly rejected as indefensible; treat as a hard gate
 
 ---
 
