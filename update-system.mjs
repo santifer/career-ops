@@ -54,6 +54,7 @@ const SYSTEM_PATHS = [
   'modes/latex.md',
   'modes/followup.md',
   'modes/interview-prep.md',
+  'modes/interview/',
   'modes/patterns.md',
   'modes/update.md',
   'modes/de/',
