@@ -1,6 +1,7 @@
 # Personal data (user fills these)
 cv.md
 data/applications.md
+data/applications.db
 data/pipeline.md
 data/scan-history.tsv
 data/parser-output/**/*.json
@@ -19,6 +20,10 @@ batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*
 !jds/.gitkeep
+
+# Interview prep (accumulated STAR+R stories — user data)
+interview-prep/*
+!interview-prep/.gitkeep
 
 # Writing samples (user's personal files — never committed)
 writing-samples/*
@@ -49,9 +54,11 @@ reports/*-RESERVED.md
 *.mov
 *.mp4
 
-# Claude Code local
+# CLI-specific local config
 .claude/settings.local.json
 .claude/memory/
+.opencode/settings.local.json
+.opencode/memory/
 career-dashboard
 <<<<<<< agent-feat/GH795/dashboard-npm-scripts
 career-dashboard.exe
