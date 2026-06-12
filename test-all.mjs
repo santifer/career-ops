@@ -12,8 +12,8 @@
  */
 
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, chmodSync } from 'fs';
+import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -525,7 +525,11 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
     fail(`${skillPath} is missing`);
     continue;
   }
-  const skill = readFile(skillPath);
+  let skill = readFile(skillPath);
+  if (skill.trim().startsWith('../') && skill.trim().split('\n').length === 1) {
+    const targetPath = join(dirname(join(ROOT, skillPath)), skill.trim());
+    skill = readFileSync(targetPath, 'utf-8');
+  }
   if (skill.includes('/career-ops latex')) {
     pass(`${skillPath} exposes /career-ops latex in discovery menu`);
   } else {
@@ -2091,7 +2095,7 @@ try {
   mkdirSync(fakeBin, { recursive: true });
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8'));
-  execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  chmodSync(join(batchDir, 'batch-runner.sh'), 0o755);
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
@@ -2106,14 +2110,32 @@ try {
     'echo "You\\x27ve hit your session limit · resets 12:30pm (Asia/Taipei)"',
     'exit 1',
   ].join('\n') + '\n');
-  execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+  chmodSync(join(fakeBin, 'claude'), 0o755);
 
-  const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
-  const out = run('bash', [join(batchDir, 'batch-runner.sh'), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
-    cwd: tmp,
-    env,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  }) || '';
+  let bashCmd = 'bash';
+  if (process.platform === 'win32') {
+    const gitBash = 'C:\\Program Files\\Git\\bin\\bash.exe';
+    if (existsSync(gitBash)) {
+      bashCmd = gitBash;
+    }
+  }
+
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
+  const scriptPath = join(batchDir, 'batch-runner.sh').replace(/\\/g, '/');
+  let out = '';
+  try {
+    out = execFileSync(bashCmd, [scriptPath, '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+      cwd: tmp,
+      env,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch (err) {
+    console.error('execFileSync failed in test block 13:', err);
+    if (err.stdout) console.error('stdout:', err.stdout);
+    if (err.stderr) console.error('stderr:', err.stderr);
+    throw err;
+  }
   const state = readFileSync(join(batchDir, 'batch-state.tsv'), 'utf-8').trim().split('\n');
   const first = state[1]?.split('\t') || [];
 
@@ -2128,11 +2150,20 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [join(batchDir, 'batch-runner.sh'), '--resume-paused', '--dry-run'], {
-    cwd: tmp,
-    env,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  }) || '';
+  let dry = '';
+  try {
+    dry = execFileSync(bashCmd, [scriptPath, '--resume-paused', '--dry-run'], {
+      cwd: tmp,
+      env,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch (err) {
+    console.error('execFileSync dry-run failed in test block 13:', err);
+    if (err.stdout) console.error('stdout:', err.stdout);
+    if (err.stderr) console.error('stderr:', err.stderr);
+    throw err;
+  }
   if (dry.includes('#1: https://example.com/one') && !dry.includes('#2: https://example.com/two')) {
     pass('--resume-paused dry-run selects paused jobs only');
   } else {
