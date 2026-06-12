@@ -1,4 +1,4 @@
-# Skill: Interview Prep Planner
+# Mode: interview/plan — Interview Prep Planner
 
 Given a job description and interview date/time, build a structured, time-blocked preparation plan tailored to the candidate's specific gaps.
 
