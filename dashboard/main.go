@@ -84,6 +84,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineOpenReportMsg:
 		m.viewer = screens.NewViewerModel(
 			m.theme,
+			m.careerOpsPath,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
 		)

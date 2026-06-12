@@ -99,45 +99,6 @@ func LoadPDFManifest(careerOpsPath string) PDFManifest {
 	return manifest
 }
 
-// LoadPDFEntriesByPath reads data/pdf-index.tsv and returns all entries indexed
-// by their relative PDF path. Unlike LoadPDFManifest, this includes rows that
-// were generated without a --report flag. Later rows in the file win.
-func LoadPDFEntriesByPath(careerOpsPath string) map[string]PDFManifestEntry {
-	byPath := make(map[string]PDFManifestEntry)
-	raw, err := os.ReadFile(filepath.Join(careerOpsPath, "data", "pdf-index.tsv"))
-	if err != nil {
-		return byPath
-	}
-	for _, line := range strings.Split(string(raw), "\n") {
-		line = strings.TrimRight(line, "\r")
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		fields := strings.Split(line, "\t")
-		if len(fields) < 2 {
-			continue
-		}
-		entry := PDFManifestEntry{
-			ReportNumber: strings.TrimSpace(fields[0]),
-			PDFPath:      strings.TrimSpace(fields[1]),
-		}
-		if entry.PDFPath == "" {
-			continue
-		}
-		if len(fields) > 2 {
-			entry.HTMLPath = strings.TrimSpace(fields[2])
-		}
-		if len(fields) > 3 {
-			entry.Format = strings.TrimSpace(fields[3])
-		}
-		if len(fields) > 4 {
-			entry.Date = strings.TrimSpace(fields[4])
-		}
-		byPath[entry.PDFPath] = entry
-	}
-	return byPath
-}
-
 // rePDFDate extracts the trailing YYYY-MM-DD stamp from generated CV
 // filenames (cv-{candidate}-{slug}-{date}.pdf).
 var rePDFDate = regexp.MustCompile(`(\d{4}-\d{2}-\d{2})\.pdf$`)

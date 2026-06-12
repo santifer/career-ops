@@ -1278,35 +1278,6 @@ func (m PipelineModel) renderPreview() string {
 		lines = append(lines, padStyle.Render(dimStyle.Render("Loading preview...")))
 	}
 
-	// PDF line: show the associated CV PDF as a clickable file:// hyperlink.
-	{
-		manifest := data.LoadPDFManifest(m.careerOpsPath)
-		byPath := data.LoadPDFEntriesByPath(m.careerOpsPath)
-		candidates := data.ResolvePDFs(m.careerOpsPath, app, manifest)
-		if len(candidates) > 0 {
-			relPDF := candidates[0]
-			displayText := relPDF
-			if entry, ok := byPath[relPDF]; ok && entry.Date != "" {
-				displayText = relPDF + " (generated " + entry.Date
-				if entry.Format != "" {
-					displayText += ", " + entry.Format
-				}
-				displayText += ")"
-			}
-			absPath := filepath.Join(m.careerOpsPath, filepath.FromSlash(relPDF))
-			forward := filepath.ToSlash(absPath)
-			if !strings.HasPrefix(forward, "/") {
-				forward = "/" + forward // Windows: C:/... → /C:/...
-			}
-			fileURL := "file://" + forward
-			// OSC 8 hyperlink wraps the styled text so terminals render both
-			// the color and the clickable link correctly.
-			styled := valueStyle.Render(displayText)
-			linked := "\x1b]8;;" + fileURL + "\x07" + styled + "\x1b]8;;\x07"
-			lines = append(lines, padStyle.Render(labelStyle.Render("PDF:  ")+linked))
-		}
-	}
-
 	// Closed-out postings: surface what happened as the last preview line.
 	// The notes-only fallback above disappears once a report summary is
 	// cached, which is exactly when the discard reason got lost (#787).
