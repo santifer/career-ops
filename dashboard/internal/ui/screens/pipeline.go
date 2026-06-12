@@ -424,15 +424,6 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 				}
 			}
 			if !found || entry.HTMLPath == "" {
-				// Last resort: glob for a tailored CV HTML that was never indexed
-				// (e.g. the HTML was generated but PDF generation failed or was
-				// never triggered for this entry).
-				if htmlPath, pdfPath := data.ResolveHTML(m.careerOpsPath, app); htmlPath != "" {
-					entry = data.PDFManifestEntry{HTMLPath: htmlPath, PDFPath: pdfPath, Format: "letter"}
-					found = true
-				}
-			}
-			if !found || entry.HTMLPath == "" {
 				m.flash = "No source HTML found for this application — run /career-ops pdf first"
 				return m, nil
 			}
