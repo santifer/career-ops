@@ -106,7 +106,9 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineOpenURLMsg:
 		url := msg.URL
 		return m, func() tea.Msg {
-			_ = openWithDefaultApp(url)
+			if err := openWithDefaultApp(url); err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: failed to open URL %q: %v\n", url, err)
+			}
 			return nil
 		}
 
