@@ -5,7 +5,7 @@
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
-import { existsSync, mkdirSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -20,6 +20,7 @@ const JSON_OUT = argv.includes('--json');
 const isTTY = process.stdout.isTTY;
 const green = (s) => isTTY ? `\x1b[32m${s}\x1b[0m` : s;
 const red = (s) => isTTY ? `\x1b[31m${s}\x1b[0m` : s;
+const yellow = (s) => isTTY ? `\x1b[33m${s}\x1b[0m` : s;
 const dim = (s) => isTTY ? `\x1b[2m${s}\x1b[0m` : s;
 
 function checkNodeVersion() {
@@ -64,6 +65,47 @@ async function checkPlaywright() {
       fix: 'Run: npx playwright install chromium',
     };
   }
+}
+
+// The browser tools (`browser_navigate` / `browser_snapshot`) that scan / pipeline /
+// apply rely on are provided by the Playwright MCP server, registered through a
+// project-level Claude Code config (`.mcp.json` or `.claude/settings.json`). When it
+// is absent, SPA job boards silently return empty or stale content (#522) — so doctor
+// surfaces it as a non-fatal warning rather than letting it fail invisibly.
+const PLAYWRIGHT_MCP_WARNING = 'Playwright MCP tools not detected';
+
+function playwrightMcpConfigured(root) {
+  const configFiles = ['.mcp.json', '.claude/settings.json', '.claude/settings.local.json'];
+  for (const rel of configFiles) {
+    const file = join(root, ...rel.split('/'));
+    if (!existsSync(file)) continue;
+    try {
+      const servers = JSON.parse(readFileSync(file, 'utf8'))?.mcpServers;
+      if (servers && typeof servers === 'object') {
+        for (const server of Object.values(servers)) {
+          if (JSON.stringify(server ?? '').toLowerCase().includes('playwright')) return true;
+        }
+      }
+    } catch {
+      // Malformed config — keep scanning the other locations; never crash doctor on it.
+    }
+  }
+  return false;
+}
+
+function checkPlaywrightMcp(root) {
+  if (playwrightMcpConfigured(root)) {
+    return { pass: true, label: 'Playwright MCP server configured' };
+  }
+  return {
+    warn: true,
+    label: PLAYWRIGHT_MCP_WARNING,
+    fix: [
+      'Browser-driven JD fetching and liveness checks (scan / pipeline / apply) need the',
+      'Playwright MCP server, which this project does not configure yet — SPA job boards',
+      'may return empty or stale content. Tracking: https://github.com/santifer/career-ops/issues/506',
+    ],
+  };
 }
 
 // Single source of truth for the four user-layer prerequisites (the list
@@ -165,6 +207,7 @@ async function main() {
     checkNodeVersion(),
     checkDependencies(),
     await checkPlaywright(),
+    checkPlaywrightMcp(projectRoot),
     ...USER_LAYER_PREREQS.map(checkPrereq),
     checkFonts(),
     checkAutoDir('data'),
@@ -173,14 +216,21 @@ async function main() {
   ];
 
   let failures = 0;
+  let warnings = 0;
 
   for (const result of checks) {
-    if (result.pass) {
+    const fixes = Array.isArray(result.fix) ? result.fix : result.fix ? [result.fix] : [];
+    if (result.warn) {
+      warnings++;
+      console.log(`${yellow('⚠')} ${result.label}`);
+      for (const hint of fixes) {
+        console.log(`  ${dim('→ ' + hint)}`);
+      }
+    } else if (result.pass) {
       console.log(`${green('✓')} ${result.label}`);
     } else {
       failures++;
       console.log(`${red('✗')} ${result.label}`);
-      const fixes = Array.isArray(result.fix) ? result.fix : [result.fix];
       for (const hint of fixes) {
         console.log(`  ${dim('→ ' + hint)}`);
       }
@@ -192,7 +242,8 @@ async function main() {
     console.log(`Result: ${failures} issue${failures === 1 ? '' : 's'} found. Fix them and run \`npm run doctor\` again.`);
     process.exit(1);
   } else {
-    console.log('Result: All checks passed. You\'re ready to go! Run `claude` to start.');
+    const warnNote = warnings > 0 ? ` (${warnings} warning${warnings === 1 ? '' : 's'} — see above)` : '';
+    console.log(`Result: All checks passed${warnNote}. You're ready to go! Run \`claude\` (or \`opencode\`) to start.`);
     console.log('');
     console.log('Join the community: https://discord.gg/8pRpHETxa4');
     process.exit(0);
@@ -207,7 +258,8 @@ function onboardingState(root) {
   const missing = USER_LAYER_PREREQS
     .filter(({ path }) => !prereqPresent(root, path))
     .map(({ path }) => path);
-  return { onboardingNeeded: missing.length > 0, missing };
+  const warnings = playwrightMcpConfigured(root) ? [] : [PLAYWRIGHT_MCP_WARNING];
+  return { onboardingNeeded: missing.length > 0, missing, warnings };
 }
 
 if (JSON_OUT) {
