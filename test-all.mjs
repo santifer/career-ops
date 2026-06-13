@@ -1018,16 +1018,15 @@ try {
   }
 
   const pipelineTmp = mkdtempSync(join(tmpdir(), 'career-ops-pipeline-'));
-  const previousCwd = process.cwd();
   try {
     mkdirSync(join(pipelineTmp, 'data'), { recursive: true });
-    writeFileSync(join(pipelineTmp, 'data', 'pipeline.md'), '# Pipeline\n\n## Pendientes\n\n## Procesadas\n');
-    process.chdir(pipelineTmp);
+    const pipelinePath = join(pipelineTmp, 'data', 'pipeline.md');
+    writeFileSync(pipelinePath, '# Pipeline\n\n## Pendientes\n\n## Procesadas\n');
     appendToPipeline([
       { url: 'https://jobs.example.com/with-location', company: 'Acme', title: 'AI Engineer', location: 'Remote, EU' },
       { url: 'https://jobs.example.com/legacy-shape', company: 'Beta', title: 'Product Lead', location: '' },
-    ]);
-    const pipelineText = readFileSync(join(pipelineTmp, 'data', 'pipeline.md'), 'utf-8');
+    ], pipelinePath);
+    const pipelineText = readFileSync(pipelinePath, 'utf-8');
     if (pipelineText.includes('- [ ] https://jobs.example.com/with-location | Acme | AI Engineer | Remote, EU')) {
       pass('scan pipeline writer preserves location as optional fourth column');
     } else {
@@ -1038,7 +1037,11 @@ try {
     } else {
       fail('scan pipeline writer should omit empty location columns for backward compatibility');
     }
-    const { seen } = loadSeenUrls();
+    const { seen } = loadSeenUrls({}, {
+      applicationsPath: join(pipelineTmp, 'data', 'applications.md'),
+      pipelinePath,
+      scanHistoryPath: join(pipelineTmp, 'data', 'scan-history.tsv'),
+    });
     if (seen.has('https://jobs.example.com/with-location') && seen.has('https://jobs.example.com/legacy-shape')) {
       pass('pipeline URL dedup still reads location and legacy pipeline rows');
     } else {
@@ -1050,7 +1053,6 @@ try {
       fail('formatPipelineOffer should not write blank location columns');
     }
   } finally {
-    process.chdir(previousCwd);
     rmSync(pipelineTmp, { recursive: true, force: true });
   }
 
