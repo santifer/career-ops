@@ -10,6 +10,7 @@
     "dedup": "node dedup-tracker.mjs",
     "merge": "node merge-tracker.mjs",
     "pdf": "node generate-pdf.mjs",
+    "cover-letter": "node generate-cover-letter.mjs --payload",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
     "update:test": "node updater-migration-tests.mjs",

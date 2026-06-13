@@ -82,6 +82,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineOpenReportMsg:
 		m.viewer = screens.NewViewerModel(
 			m.theme,
+			m.careerOpsPath,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
 		)
@@ -91,6 +92,15 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.ViewerClosedMsg:
 		m.state = viewPipeline
 		return m, nil
+
+	case screens.ViewerOpenCoverLetterMsg:
+		path := msg.Path
+		return m, func() tea.Msg {
+			if err := openWithDefaultApp(path); err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: could not open cover letter: %v\n", err)
+			}
+			return nil
+		}
 
 	case screens.PipelineOpenProgressMsg:
 		m.progress = screens.NewProgressModel(
@@ -108,18 +118,9 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineOpenURLMsg:
 		url := msg.URL
 		return m, func() tea.Msg {
-			var cmd *exec.Cmd
-			switch runtime.GOOS {
-			case "darwin":
-				cmd = exec.Command("open", url)
-			case "linux":
-				cmd = exec.Command("xdg-open", url)
-			case "windows":
-				cmd = exec.Command("cmd", "/c", "start", "", url)
-			default:
-				cmd = exec.Command("xdg-open", url)
+			if err := openWithDefaultApp(url); err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: could not open URL: %v\n", err)
 			}
-			_ = cmd.Run()
 			return nil
 		}
 
@@ -149,6 +150,22 @@ func (m appModel) View() string {
 	default:
 		return m.pipeline.View()
 	}
+}
+
+// openWithDefaultApp opens a file or URL with the OS default application.
+func openWithDefaultApp(target string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("open", target)
+	case "linux":
+		cmd = exec.Command("xdg-open", target)
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", "", target)
+	default:
+		cmd = exec.Command("xdg-open", target)
+	}
+	return cmd.Run()
 }
 
 func main() {
