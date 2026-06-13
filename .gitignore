@@ -60,6 +60,8 @@ reports/*-RESERVED.md
 .opencode/settings.local.json
 .opencode/memory/
 career-dashboard
+dashboard/career-dashboard.exe
+scratch_run_evals.mjs
 package-lock.json
 
 # Playwright MCP server run artifacts (ephemeral, machine-local — never commit)
