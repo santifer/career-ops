@@ -91,6 +91,12 @@ for (const userPath of ['cv.md', 'config/profile.yml', 'modes/_profile.md', 'por
   else fail(`USER_PATHS missing ${userPath}`);
 }
 
+if (source.includes('function dirtyUserLayerPaths()') && source.includes('Update aborted: user-layer files have uncommitted changes.')) {
+  pass('apply() refuses to run with dirty user-layer paths');
+} else {
+  fail('apply() must refuse to run with dirty user-layer paths before checkout');
+}
+
 const allowedSystemUserOverlap = new Set(['writing-samples/README.md']);
 let hasSystemUserCollision = false;
 for (const systemPath of systemPaths) {

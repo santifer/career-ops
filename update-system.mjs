@@ -228,6 +228,26 @@ function gitStatusEntries() {
     }));
 }
 
+function pathMatches(path, candidate) {
+  if (candidate.endsWith('/')) return path.startsWith(candidate);
+  return path === candidate;
+}
+
+function isSystemLayerPath(path) {
+  return SYSTEM_PATHS.some(systemPath => pathMatches(path, systemPath));
+}
+
+function isUserLayerPath(path) {
+  if (isSystemLayerPath(path)) return false;
+  return USER_PATHS.some(userPath => pathMatches(path, userPath));
+}
+
+function dirtyUserLayerPaths() {
+  return gitStatusEntries()
+    .filter(entry => isUserLayerPath(entry.path))
+    .map(entry => entry.path);
+}
+
 function revertPaths(paths) {
   if (paths.length === 0) return;
   git('checkout', '--', ...paths);
@@ -371,6 +391,16 @@ async function check() {
 async function apply() {
   const local = localVersion();
   const initialStatusPaths = new Set(gitStatusEntries().map(entry => entry.path));
+  const dirtyUserPaths = dirtyUserLayerPaths();
+
+  if (dirtyUserPaths.length > 0) {
+    console.error('Update aborted: user-layer files have uncommitted changes.');
+    console.error('Commit, stash, or back up these files before running update-system.mjs apply:');
+    for (const path of dirtyUserPaths) {
+      console.error(`- ${path}`);
+    }
+    process.exit(1);
+  }
 
   // Check for lock
   const lockFile = join(ROOT, '.update-lock');
@@ -439,12 +469,10 @@ async function apply() {
         if (initialStatusPaths.has(file)) continue;
         // Explicit SYSTEM_PATHS entries override USER_PATHS prefix matches.
         // (e.g. writing-samples/README.md is system-owned doc inside a user dir.)
-        if (SYSTEM_PATHS.includes(file)) continue;
-        for (const userPath of USER_PATHS) {
-          if (file.startsWith(userPath)) {
-            console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
-            violatedUserPaths.add(file);
-          }
+        if (isSystemLayerPath(file)) continue;
+        if (isUserLayerPath(file)) {
+          console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
+          violatedUserPaths.add(file);
         }
       }
     } catch (err) {
