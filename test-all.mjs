@@ -1735,6 +1735,47 @@ try {
   fail(`shared role matcher / dedup safety tests crashed: ${e.message}`);
 }
 
+// dedup-tracker / normalize-statuses rebuilt promoted rows with
+// `parts.slice(1, -1)`, which assumes the closing `|` produced a trailing empty
+// cell. A valid row written WITHOUT a trailing pipe keeps its real last cell
+// (the notes) at the end, so the old reconstruction silently dropped the notes
+// when promoting a keeper's status during dedup. rebuildRow() now preserves it.
+console.log('\n🧪 Testing dedup row rebuild preserves notes on no-trailing-pipe rows...');
+try {
+  const rebuildTmp = mkdtempSync(join(tmpdir(), 'career-ops-rebuild-'));
+  try {
+    mkdirSync(join(rebuildTmp, 'data'));
+    const tracker = join(rebuildTmp, 'data', 'applications.md');
+    // Keeper row #50 has the higher score AND no trailing pipe; dup #51 carries a
+    // more-advanced status (both below Applied, so the advanced-status safety
+    // guard doesn't block the collapse), so dedup promotes #50's status and
+    // rewrites the row — exercising rebuildRow() on a no-trailing-pipe row.
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 50 | 2026-02-01 | Globex | Widget Engineer | 4.5/5 | Rejected | ❌ | [50](../reports/050-widget.md) | KEEPER_NOTE_SENTINEL\n' +
+      '| 51 | 2026-02-02 | Globex | Widget Engineer | 3.0/5 | Evaluated | ❌ | [51](../reports/051-widget.md) | dup row |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker.mjs crashed during notes-preservation test');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const keeperRow = out.split('\n').find(l => l.includes('| 50 |'));
+      if (keeperRow && keeperRow.includes('KEEPER_NOTE_SENTINEL') && keeperRow.includes('Evaluated')) {
+        pass('dedup row rebuild preserves the notes column on rows without a trailing pipe');
+      } else {
+        fail(`dedup row rebuild dropped notes / status on no-trailing-pipe row: "${keeperRow}"`);
+      }
+    }
+  } finally {
+    rmSync(rebuildTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`dedup row-rebuild notes test crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
 // roleFuzzyMatch over-matched whenever the token overlap dominated the
 // SMALLER side: two distinct roles sharing a long prefix ("Full-Stack
