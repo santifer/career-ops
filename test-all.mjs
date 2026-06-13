@@ -3083,6 +3083,82 @@ try {
 
 // ── 15. BATCH RUNNER MCP ISOLATION (#506) ───────────────────────
 
+// Batch Codex adapter
+
+console.log('\n14. Batch Codex adapter');
+
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-codex-'));
+  const batchDir = join(tmp, 'batch');
+  const fakeBin = join(tmp, 'bin');
+  mkdirSync(batchDir, { recursive: true });
+  mkdirSync(join(tmp, 'reports'), { recursive: true });
+  mkdirSync(join(tmp, 'data'), { recursive: true });
+  mkdirSync(join(tmp, 'config'), { recursive: true });
+  mkdirSync(join(tmp, 'modes'), { recursive: true });
+  mkdirSync(fakeBin, { recursive: true });
+
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8'));
+  execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
+  writeFileSync(join(tmp, 'config', 'profile.yml'), 'target_roles:\n  - Staff Engineer\n');
+  writeFileSync(join(tmp, 'modes', '_profile.md'), '# User profile fixture\n');
+  writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
+  writeFileSync(join(batchDir, 'batch-input.tsv'), [
+    'id\turl\tsource\tnotes',
+    '1\thttps://example.com/one?x=1&y=2\tfixture\t-',
+  ].join('\n') + '\n');
+  writeFileSync(join(fakeBin, 'codex'), [
+    '#!/usr/bin/env bash',
+    'printf "%s\\n" "$@" > "$CAPTURE_DIR/codex-args.txt"',
+    'cat > "$CAPTURE_DIR/codex-stdin.md"',
+    'printf \'{"score":4.6}\\n\'',
+    'exit 0',
+  ].join('\n') + '\n');
+  execFileSync('chmod', ['+x', join(fakeBin, 'codex')]);
+
+  const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, CAPTURE_DIR: tmp };
+  const out = run('bash', [join(batchDir, 'batch-runner.sh'), '--agent', 'codex', '--parallel', '1'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  const args = readFileSync(join(tmp, 'codex-args.txt'), 'utf-8');
+  const stdin = readFileSync(join(tmp, 'codex-stdin.md'), 'utf-8');
+  const state = readFileSync(join(batchDir, 'batch-state.tsv'), 'utf-8');
+  const leftovers = readdirSync(batchDir).filter(name => name.startsWith('.resolved-codex-'));
+
+  if (state.includes('\tcompleted\t') && out.includes('Completed')) {
+    pass('Codex adapter can complete a batch offer');
+  } else {
+    fail(`Codex adapter did not complete fixture offer: ${JSON.stringify({ out: out.slice(-240), state })}`);
+  }
+  const argLines = args.trim().split('\n');
+  if (argLines[0] === 'exec' && argLines.includes('-C') && argLines.includes('--full-auto') && argLines.at(-1) === '-' &&
+      !args.includes('--dangerously-bypass-approvals-and-sandbox')) {
+    pass('Codex adapter uses safe default exec arguments');
+  } else {
+    fail(`Codex adapter args wrong: ${JSON.stringify(args)}`);
+  }
+  if (stdin.includes('Runtime personalization: modes/_profile.md') &&
+      stdin.includes('Runtime personalization: config/profile.yml') &&
+      stdin.includes('Task:')) {
+    pass('Codex adapter stdin includes resolved prompt, profile context, and task');
+  } else {
+    fail('Codex adapter stdin is missing prompt/profile/task context');
+  }
+  if (leftovers.length === 0 && readFile('.gitignore').includes('batch/.resolved-codex-*')) {
+    pass('Codex adapter cleans and ignores temporary resolved prompt files');
+  } else {
+    fail(`Codex resolved prompt cleanup/ignore failed: leftovers=${leftovers.join(',')}`);
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`Batch Codex adapter test crashed: ${e.message}`);
+}
+
 console.log('\n15. Batch runner MCP isolation');
 
 try {
