@@ -10,16 +10,18 @@
    - US/Canada → `letter`
    - Rest of the world → `a4`
 6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-8. Select top 3-4 most relevant projects for the job
-9. Reorder experience bullets by JD relevance
-10. Build competency grid from JD requirements (6-8 keyword phrases)
-11. Inject keywords naturally into existing achievements (NEVER invent)
-12. Generate full HTML from template + personalized content
-13. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
-15. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-16. Report: PDF path, number of pages, keyword coverage %
+7. Build an internal recruiter-side risk map from the JD using `modes/heuristics/recruiter-side.md`: likely doubts, matching evidence, and which document section should address each doubt
+8. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
+9. Select top 3-4 most relevant projects for the job
+10. Reorder experience bullets by JD relevance and by the risk map: strongest matching evidence first
+11. Build competency grid from JD requirements (6-8 keyword phrases)
+12. Inject keywords naturally into existing achievements (NEVER invent)
+13. Apply the six-second clarity gate from `modes/heuristics/recruiter-side.md`: top third must make target role, strongest fit, and proof obvious
+14. Generate full HTML from template + personalized content
+15. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
+16. Write HTML to `/tmp/cv-{candidate}-{company}.html`
+17. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+18. Report: PDF path, number of pages, keyword coverage %
 
 ## ATS Rules (clean parsing)
 
@@ -30,6 +32,14 @@
 - UTF-8, selectable text (not rasterized)
 - No nested tables
 - Distributed JD keywords: Summary (top 5), first bullet of each role, Skills section
+- No hidden text, keyword stuffing, or white-font tricks. Optimize for parseability plus human review.
+
+## Recruiter Review Gates
+
+- The summary should answer: "What role is this person targeting, and why this one?"
+- The first screen should show 1-2 proof points that map to the JD's highest-risk requirements.
+- Bullets should emphasize outcomes, systems, users, or business effects rather than task history.
+- Logistics such as location, work authorization, salary, and availability belong in the CV only when appropriate for the market and profile; otherwise handle them in form answers or recruiter scripts.
 
 ## PDF Design
 

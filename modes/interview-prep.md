@@ -9,6 +9,7 @@ When the user asks to prep for an interview at a specific company+role, or when 
 3. **Story bank** at `interview-prep/story-bank.md` — read for existing prepared stories
 4. **CV** at `cv.md` + `article-digest.md` — read for proof points
 5. **Profile** at `config/profile.yml` + `modes/_profile.md` — read for candidate context
+6. **Recruiter-side risk map** from the evaluation/PDF/application flow if present — use `modes/heuristics/recruiter-side.md` for the risk categories the interview process must resolve
 
 ## Step 1 — Research
 
@@ -118,6 +119,15 @@ Group all discovered and inferred questions by the audience that asks them, not 
 
 If any of those profile files are missing, incomplete, or out-of-date, note the gap inline (e.g. "comp target unknown — defer to recruiter band") and proceed with what's available rather than blocking the prep. The mode's value is partial-but-honest output, not perfect-or-nothing.
 
+For every answer, use result-first framing:
+
+1. **Headline** — the result, decision, or point.
+2. **Effect** — why it mattered to the business, users, system, or team.
+3. **Rationale** — what tradeoff or constraint shaped the choice.
+4. **Operations** — what the candidate actually did, with enough implementation detail to be credible.
+
+This is especially important for senior, technical, and leadership answers. Simple recruiter answers can be shorter, but should still start with the point.
+
 ### Audience: `recruiter-screen`
 
 The recruiter is screening for fit, not testing skill. Wrong-foot answers (vague comp, fuzzy motivation, missing logistics) end the process before any technical signal is collected. Cover at minimum:
@@ -136,6 +146,7 @@ The HM is screening for motivation + scope fit. They've already trusted the recr
 
 - **"Why this role, why now?"** — connect candidate's last 1–2 roles + `_profile.md` narrative to the team's named challenge from Step 1.
 - **"What would your first 90 days look like here?"** — derived from JD scope + the team's recent work (engineering blog, public roadmap).
+- **Risk map closure** — make sure the strongest likely doubts from the evaluation are answered with concrete proof, not enthusiasm.
 - **Leadership / collaboration questions** — map to `interview-prep/story-bank.md`.
 - **Sharp questions to ask back** — 2–3 tied to a specific recent thing the team shipped or wrote about, not generic "what's the team like".
 

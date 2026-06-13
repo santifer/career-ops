@@ -51,6 +51,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/ja/*` | Japanese language modes |
 | `modes/pt/*` | Portuguese language modes |
 | `modes/ru/*` | Russian language modes |
+| `modes/heuristics/*` | Shared candidate-facing application heuristics |
 | `CLAUDE.md` | Agent instructions (Claude Code) |
 | `OPENCODE.md` | Agent instructions (OpenCode) |
 | `AGENTS.md` | Canonical agent instructions (imported by CLI-specific wrappers) |
