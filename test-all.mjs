@@ -882,7 +882,7 @@ if (fileExists('VERSION')) {
 console.log('\n15. Location filter — always_allow tier');
 
 try {
-  const { buildLocationFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { appendToPipeline, buildLocationFilter, formatPipelineOffer, loadSeenUrls, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
@@ -1015,6 +1015,56 @@ try {
     pass('scan-history TTL rechecks old added URLs while permanent statuses stay deduped');
   } else {
     fail('scan-history TTL policy did not match expected recheck/permanent behavior');
+  }
+
+  const pipelineTmp = mkdtempSync(join(tmpdir(), 'career-ops-pipeline-'));
+  try {
+    mkdirSync(join(pipelineTmp, 'data'), { recursive: true });
+    const pipelinePath = join(pipelineTmp, 'data', 'pipeline.md');
+    writeFileSync(pipelinePath, '# Pipeline\n\n## Pendientes\n\n## Procesadas\n');
+    appendToPipeline([
+      { url: 'https://jobs.example.com/with-location', company: 'Acme', title: 'AI Engineer', location: 'Remote, EU' },
+      { url: 'https://jobs.example.com/legacy-shape', company: 'Beta', title: 'Product Lead', location: '' },
+    ], pipelinePath);
+    const pipelineText = readFileSync(pipelinePath, 'utf-8');
+    if (pipelineText.includes('- [ ] https://jobs.example.com/with-location | Acme | AI Engineer | Remote, EU')) {
+      pass('scan pipeline writer preserves location as optional fourth column');
+    } else {
+      fail('scan pipeline writer did not preserve location in pipeline.md');
+    }
+    if (pipelineText.includes('- [ ] https://jobs.example.com/legacy-shape | Beta | Product Lead')) {
+      pass('scan pipeline writer keeps legacy 3-column shape when location is missing');
+    } else {
+      fail('scan pipeline writer should omit empty location columns for backward compatibility');
+    }
+    const { seen } = loadSeenUrls({}, {
+      applicationsPath: join(pipelineTmp, 'data', 'applications.md'),
+      pipelinePath,
+      scanHistoryPath: join(pipelineTmp, 'data', 'scan-history.tsv'),
+    });
+    if (seen.has('https://jobs.example.com/with-location') && seen.has('https://jobs.example.com/legacy-shape')) {
+      pass('pipeline URL dedup still reads location and legacy pipeline rows');
+    } else {
+      fail('pipeline URL dedup should read both location and legacy pipeline rows');
+    }
+    if (formatPipelineOffer({ url: 'u', company: 'c', title: 't', location: '  ' }) === '- [ ] u | c | t') {
+      pass('formatPipelineOffer trims blank locations instead of writing empty columns');
+    } else {
+      fail('formatPipelineOffer should not write blank location columns');
+    }
+
+    const missingPipelinePath = join(pipelineTmp, 'missing', 'data', 'pipeline.md');
+    appendToPipeline([
+      { url: 'https://jobs.example.com/new-file', company: 'Gamma', title: 'ML Engineer', location: 'Paris' },
+    ], missingPipelinePath);
+    const missingPipelineText = readFileSync(missingPipelinePath, 'utf-8');
+    if (missingPipelineText.includes('## Pendientes') && missingPipelineText.includes('- [ ] https://jobs.example.com/new-file | Gamma | ML Engineer | Paris')) {
+      pass('scan pipeline writer creates missing pipeline files before appending');
+    } else {
+      fail('scan pipeline writer should create missing pipeline files before appending');
+    }
+  } finally {
+    rmSync(pipelineTmp, { recursive: true, force: true });
   }
 
 } catch (e) {

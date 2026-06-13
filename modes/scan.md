@@ -236,8 +236,8 @@ Levels are additive — they are executed in order, and results are merged and d
    **Do not interrupt the entire scan if a single URL fails.** If `browser_navigate` errors (timeout, 403, etc.), mark as `skipped_expired` and continue with the next one.
 
 8. **For each new verified offer that passes filters**:
-   a. Add to the `pipeline.md` "Pending" section: `- [ ] {url} | {company} | {title}`
-   b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
+   a. Add to the `pipeline.md` pending section (`## Pendientes` in the stock file): `- [ ] {url} | {company} | {title} | {location}` when location is known. If location is missing, keep the legacy 3-column shape: `- [ ] {url} | {company} | {title}`.
+   b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded\t{location}`
 
 9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`.
 10. **Duplicate offers**: record with status `skipped_dup`.
@@ -258,15 +258,18 @@ Generic regex: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
 
 If a non-publicly accessible URL is found:
 1. Save the JD in `jds/{company}-{role-slug}.md`.
-2. Add to `pipeline.md` as: `- [ ] local:jds/{company}-{role-slug}.md | {company} | {title}`
+2. Add to `pipeline.md` as: `- [ ] local:jds/{company}-{role-slug}.md | {company} | {title} | {location}` when location is known.
 
 ## Scan History
 
 `data/scan-history.tsv` tracks ALL seen URLs:
 
+The scanner writes `location` as a trailing column when known; legacy 6-column
+history rows remain valid.
+
 ```tsv
-url	first_seen	portal	title	company	status
-https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
+url	first_seen	portal	title	company	status	location
+https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added	Remote, EU
 ```
 
 ## Output Summary

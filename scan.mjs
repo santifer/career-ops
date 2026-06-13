@@ -356,13 +356,16 @@ function scanHistoryPolicy(config = {}) {
   };
 }
 
-export function loadSeenUrls(policy = {}) {
+export function loadSeenUrls(policy = {}, paths = {}) {
+  const scanHistoryPath = paths.scanHistoryPath || SCAN_HISTORY_PATH;
+  const pipelinePath = paths.pipelinePath || PIPELINE_PATH;
+  const applicationsPath = paths.applicationsPath || APPLICATIONS_PATH;
   const seen = new Set();
   let recheckEligible = 0;
 
   // scan-history.tsv
-  if (existsSync(SCAN_HISTORY_PATH)) {
-    const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n');
+  if (existsSync(scanHistoryPath)) {
+    const lines = readFileSync(scanHistoryPath, 'utf-8').split('\n');
     for (const line of lines.slice(1)) { // skip header
       const [url, firstSeen, , , , status = 'added'] = line.split('\t');
       if (!url) continue;
@@ -372,16 +375,16 @@ export function loadSeenUrls(policy = {}) {
   }
 
   // pipeline.md — extract URLs from checkbox lines
-  if (existsSync(PIPELINE_PATH)) {
-    const text = readFileSync(PIPELINE_PATH, 'utf-8');
+  if (existsSync(pipelinePath)) {
+    const text = readFileSync(pipelinePath, 'utf-8');
     for (const match of text.matchAll(/- \[[ x]\] (https?:\/\/\S+)/g)) {
       seen.add(match[1]);
     }
   }
 
   // applications.md — extract URLs from report links and any inline URLs
-  if (existsSync(APPLICATIONS_PATH)) {
-    const text = readFileSync(APPLICATIONS_PATH, 'utf-8');
+  if (existsSync(applicationsPath)) {
+    const text = readFileSync(applicationsPath, 'utf-8');
     for (const match of text.matchAll(/https?:\/\/[^\s|)]+/g)) {
       seen.add(match[0]);
     }
@@ -408,10 +411,29 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
-export function appendToPipeline(offers) {
+/**
+ * Format a pending pipeline row while preserving the legacy 3-column shape.
+ *
+ * Providers may return location metadata, but existing pipeline readers accept
+ * URL-only or `URL | Company | Role` rows. Only write the fourth column when
+ * location is a non-blank string so older user-maintained rows stay valid.
+ */
+export function formatPipelineOffer(o) {
+  const fields = [o.url, o.company, o.title];
+  const location = typeof o.location === 'string' ? o.location.trim() : '';
+  if (location) fields.push(location);
+  return `- [ ] ${fields.join(' | ')}`;
+}
+
+export function appendToPipeline(offers, pipelinePath = PIPELINE_PATH) {
   if (offers.length === 0) return;
 
-  let text = readFileSync(PIPELINE_PATH, 'utf-8');
+  mkdirSync(path.dirname(pipelinePath), { recursive: true });
+  if (!existsSync(pipelinePath)) {
+    writeFileSync(pipelinePath, '', 'utf-8');
+  }
+
+  let text = readFileSync(pipelinePath, 'utf-8');
 
   // Find "## Pendientes" section and append after it
   const marker = '## Pendientes';
@@ -421,7 +443,7 @@ export function appendToPipeline(offers) {
     const procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
     const block = `\n${marker}\n\n` + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
+      formatPipelineOffer(o)
     ).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
@@ -431,12 +453,12 @@ export function appendToPipeline(offers) {
     const insertAt = nextSection === -1 ? text.length : nextSection;
 
     const block = '\n' + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
+      formatPipelineOffer(o)
     ).join('\n') + '\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   }
 
-  writeFileSync(PIPELINE_PATH, text, 'utf-8');
+  writeFileSync(pipelinePath, text, 'utf-8');
 }
 
 export function appendToScanHistory(offers, date, status = 'added') {
