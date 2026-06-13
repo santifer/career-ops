@@ -228,6 +228,25 @@ function gitStatusEntries() {
     }));
 }
 
+function extractArrayFromSource(source, name) {
+  const match = source.match(new RegExp(`const\\s+${name}\\s*=\\s*\\[([\\s\\S]*?)\\];`));
+  if (!match) return [];
+  return Array.from(match[1].matchAll(/['"]([^'"]+)['"]/g), (entry) => entry[1]);
+}
+
+function mergePathLists(...lists) {
+  const merged = [];
+  const seen = new Set();
+  for (const list of lists) {
+    for (const path of list) {
+      if (seen.has(path)) continue;
+      seen.add(path);
+      merged.push(path);
+    }
+  }
+  return merged;
+}
+
 function revertPaths(paths) {
   if (paths.length === 0) return;
   git('checkout', '--', ...paths);
@@ -371,53 +390,70 @@ async function check() {
 async function apply() {
   const local = localVersion();
   const initialStatusPaths = new Set(gitStatusEntries().map(entry => entry.path));
+  const isReexec = process.env.CAREER_OPS_UPDATE_REEXEC === '1';
 
   // Check for lock
   const lockFile = join(ROOT, '.update-lock');
-  if (existsSync(lockFile)) {
+  if (existsSync(lockFile) && !isReexec) {
     console.error('Update already in progress (.update-lock exists). If stuck, delete it manually.');
     process.exit(1);
   }
 
   // Create lock
-  writeFileSync(lockFile, new Date().toISOString());
+  if (!isReexec) {
+    writeFileSync(lockFile, new Date().toISOString());
+  }
 
   try {
     // 1. Backup: create branch
-    const backupBranch = updateBackupBranchName(local);
-    git('branch', backupBranch);
-    console.log(`Backup branch created: ${backupBranch}`);
+    const backupBranch = process.env.CAREER_OPS_UPDATE_BACKUP_BRANCH || updateBackupBranchName(local);
+    if (!isReexec) {
+      git('branch', backupBranch);
+      console.log(`Backup branch created: ${backupBranch}`);
+    }
 
     // 2. Fetch from canonical repo
     console.log('Fetching latest from upstream...');
     git('fetch', CANONICAL_REPO, 'main');
 
-    // 3. Checkout system files only
-    console.log('Updating system files...');
-    const updated = [];
-
-    // 3a. Bootstrap newly-introduced paths that the local update-system.mjs
-    // doesn't yet know about. Without this, cross-version migrations where
-    // a path is added to SYSTEM_PATHS by the new version can leave dangling
-    // symlinks — e.g. v1.6.x → v1.7.x where .agents/ was introduced but the
-    // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
-    // checked out while `.claude/skills/` was updated to symlink into it.
-    // See: https://github.com/santifer/career-ops/issues/649
-    // Every release that adds a file imported by other system scripts MUST
-    // append it here, or clients on older versions break on upgrade
-    // (e.g. v1.8.x → v1.9.0: merge-tracker.mjs imports tracker-links.mjs).
-    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs'];
-    for (const path of BOOTSTRAP_PATHS) {
-      if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
+    if (!isReexec) {
       try {
-        git('checkout', 'FETCH_HEAD', '--', path);
-        updated.push(path);
-      } catch {
-        // Path may not exist in FETCH_HEAD yet
+        git('checkout', 'FETCH_HEAD', '--', 'update-system.mjs');
+        execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
+          cwd: ROOT,
+          stdio: 'inherit',
+          timeout: 120000,
+          env: {
+            ...process.env,
+            CAREER_OPS_UPDATE_REEXEC: '1',
+            CAREER_OPS_UPDATE_BACKUP_BRANCH: backupBranch,
+          },
+        });
+        return;
+      } catch (err) {
+        console.error(`Updater self-reexec failed: ${err.message}`);
+        throw err;
       }
     }
 
-    for (const path of SYSTEM_PATHS) {
+    // 3. Checkout system files only
+    console.log('Updating system files...');
+    const updated = [];
+    let remoteSystemPaths = [];
+    try {
+      const remoteUpdaterSource = git('show', 'FETCH_HEAD:update-system.mjs');
+      remoteSystemPaths = extractArrayFromSource(remoteUpdaterSource, 'SYSTEM_PATHS');
+    } catch {
+      // Older targets may not have update-system.mjs. Fall back to the
+      // local manifest plus bootstrap paths below.
+    }
+
+    // 3a. Keep bootstrap paths as a fallback for very old targets, but the
+    // target updater's SYSTEM_PATHS is now the source of truth for new files.
+    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs'];
+    const updatePaths = mergePathLists(SYSTEM_PATHS, remoteSystemPaths, BOOTSTRAP_PATHS);
+
+    for (const path of updatePaths) {
       try {
         git('checkout', 'FETCH_HEAD', '--', path);
         updated.push(path);
@@ -439,7 +475,7 @@ async function apply() {
         if (initialStatusPaths.has(file)) continue;
         // Explicit SYSTEM_PATHS entries override USER_PATHS prefix matches.
         // (e.g. writing-samples/README.md is system-owned doc inside a user dir.)
-        if (SYSTEM_PATHS.includes(file)) continue;
+        if (updatePaths.includes(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
@@ -520,7 +556,7 @@ async function apply() {
 
   } finally {
     // Remove lock
-    if (existsSync(lockFile)) unlinkSync(lockFile);
+    if (!isReexec && existsSync(lockFile)) unlinkSync(lockFile);
   }
 }
 
