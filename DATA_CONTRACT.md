@@ -39,6 +39,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/auto-pipeline.md` | Auto-pipeline instructions |
 | `modes/contacto.md` | LinkedIn outreach instructions |
 | `modes/deep.md` | Research prompt instructions |
+| `modes/regional/*` | Regional market calibration modes |
 | `modes/ofertas.md` | Comparison instructions |
 | `modes/pipeline.md` | Pipeline processing instructions |
 | `modes/project.md` | Project evaluation instructions |
