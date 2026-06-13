@@ -1052,6 +1052,17 @@ try {
     } else {
       fail('formatPipelineOffer should not write blank location columns');
     }
+
+    const missingPipelinePath = join(pipelineTmp, 'missing', 'data', 'pipeline.md');
+    appendToPipeline([
+      { url: 'https://jobs.example.com/new-file', company: 'Gamma', title: 'ML Engineer', location: 'Paris' },
+    ], missingPipelinePath);
+    const missingPipelineText = readFileSync(missingPipelinePath, 'utf-8');
+    if (missingPipelineText.includes('## Pendientes') && missingPipelineText.includes('- [ ] https://jobs.example.com/new-file | Gamma | ML Engineer | Paris')) {
+      pass('scan pipeline writer creates missing pipeline files before appending');
+    } else {
+      fail('scan pipeline writer should create missing pipeline files before appending');
+    }
   } finally {
     rmSync(pipelineTmp, { recursive: true, force: true });
   }
