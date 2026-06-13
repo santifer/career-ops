@@ -47,9 +47,11 @@ const bootstrapPaths = extractArray('BOOTSTRAP_PATHS');
 
 const requiredSystemPaths = [
   'modes/followup.md',
+  'modes/interview.md',
   'modes/interview-prep.md',
   'modes/patterns.md',
   'modes/update.md',
+  'modes/ar/',
   'modes/tr/',
   'modes/ua/',
   'batch/README.md',
@@ -58,7 +60,9 @@ const requiredSystemPaths = [
   '.env.example',
   '.claude-plugin/',
   '.qwen/',
+  'tracker-columns-tests.mjs',
   'updater-migration-tests.mjs',
+  'README.ar.md',
   'README.ja.md',
   'README.ua.md',
   'CHANGELOG.md',
@@ -74,6 +78,7 @@ const requiredBootstrapPaths = [
   'providers/',
   'liveness-browser.mjs',
   'updater-migration-tests.mjs',
+  'tracker-columns-tests.mjs',
 ];
 
 for (const path of requiredSystemPaths) {
