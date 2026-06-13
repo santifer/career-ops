@@ -634,6 +634,19 @@ if (
   fail('eval modes missing liveness gate before evaluation');
 }
 
+const pipelineMode = readFile('modes/pipeline.md');
+if (
+  pipelineMode.includes('## Liveness sweep') &&
+  pipelineMode.includes('check-liveness.mjs') &&
+  pipelineMode.includes('unconfirmed') &&
+  pipelineMode.includes('Do not') &&
+  pipelineMode.includes('liveness sweep')
+) {
+  pass('pipeline mode sweeps unconfirmed entries for liveness before processing');
+} else {
+  fail('pipeline mode missing batch liveness sweep for unconfirmed entries');
+}
+
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
 console.log('\n9. Local parser contract');
