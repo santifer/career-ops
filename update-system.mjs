@@ -69,6 +69,7 @@ const SYSTEM_PATHS = [
   'GEMINI.md',
   'generate-pdf.mjs',
   'generate-latex.mjs',
+  'archive-posting.mjs',
   'generate-cover-letter.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',

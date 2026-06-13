@@ -21,7 +21,8 @@
     "validate:portals": "node validate-portals.mjs",
     "tracker": "node tracker.mjs",
     "patterns": "node analyze-patterns.mjs",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "archive": "node archive-posting.mjs"
   },
   "keywords": [
     "ai",
