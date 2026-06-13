@@ -428,6 +428,11 @@ export function formatPipelineOffer(o) {
 export function appendToPipeline(offers, pipelinePath = PIPELINE_PATH) {
   if (offers.length === 0) return;
 
+  mkdirSync(path.dirname(pipelinePath), { recursive: true });
+  if (!existsSync(pipelinePath)) {
+    writeFileSync(pipelinePath, '', 'utf-8');
+  }
+
   let text = readFileSync(pipelinePath, 'utf-8');
 
   // Find "## Pendientes" section and append after it
