@@ -174,6 +174,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **Arabic (Middle East / Arab market):** `modes/ar/` — native Arabic translations with Arab region-specific vocabulary (مكافأة نهاية الخدمة, التأمينات الاجتماعية, راتب إجمالي/صافي, فترة التجربة, فترة الإخطار, البدلات, etc.). Includes `_shared.md`, `fursah.md` (evaluation), `takdeem.md` (apply), `pipeline.md`.
 - **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
 - **Turkish (Turkey market):** `modes/tr/` — native Turkish translations with Turkey-specific vocabulary (SGK, kıdem tazminatı, ihbar süresi, brüt/net maaş, AGİ, BES, yemek kartı, yol yardımı, TÜFE zammı, etc.). Includes `_shared.md`, `is-ilani.md` (evaluation), `basvuru.md` (apply), `pipeline.md`.
+- **Polish (Poland market):** `modes/pl/` — native Polish translations with Poland-specific vocabulary (UoP, B2B, netto/brutto, VAT, ZUS, PIT, okres wypowiedzenia, L4, Multisport, LuxMed, etc.). Includes `_shared.md`, `oferta.md` (evaluation), `aplikuj.md` (apply), `pipeline.md`.
 
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
@@ -200,7 +201,12 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/tr` in `config/profile.yml` → always use Turkish modes
 3. You detect a Turkish JD → suggest switching to Turkish modes
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, or Turkish companies, use the default English modes — *unless* the user has explicitly requested another mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection).
+**When to use Polish modes:** If the user is targeting Polish-language job postings, lives in Poland, is comparing UoP/B2B offers, or asks for Polish output. Either:
+1. User says "use Polish modes" → read from `modes/pl/` instead of `modes/`
+2. User sets `language.modes_dir: modes/pl` in `config/profile.yml` → always use Polish modes
+3. You detect a Polish-market JD → suggest switching to Polish modes
+
+**When NOT to:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Polish companies, use the default English modes — *unless* the user has explicitly requested another mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection).
 
 ### Skill Modes
 
