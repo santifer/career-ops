@@ -8,7 +8,7 @@ set -euo pipefail
 # Built-in adapters:
 #   - claude: existing claude -p flow, including --dangerously-skip-permissions
 #   - codex: codex exec with a combined stdin prompt
-# Codex dangerous bypass is opt-in via CAREER_OPS_UNSAFE_AGENT_EXEC=1.
+# Codex dangerous bypass is opt-in via CAREER_OPS_UNSAFE_AGENT_EXEC=1 or true.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -58,7 +58,7 @@ Options:
   --parallel N         Number of parallel workers (default: 1)
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
-  --resume-paused      Resume offers paused by a Claude session/rate limit
+  --resume-paused      Resume offers paused by a worker session/rate limit
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
