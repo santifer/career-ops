@@ -82,6 +82,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineOpenReportMsg:
 		m.viewer = screens.NewViewerModel(
 			m.theme,
+			m.careerOpsPath,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
 		)
@@ -91,6 +92,24 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.ViewerClosedMsg:
 		m.state = viewPipeline
 		return m, nil
+
+	case screens.ViewerOpenCoverLetterMsg:
+		path := msg.Path
+		return m, func() tea.Msg {
+			var cmd *exec.Cmd
+			switch runtime.GOOS {
+			case "darwin":
+				cmd = exec.Command("open", path)
+			case "linux":
+				cmd = exec.Command("xdg-open", path)
+			case "windows":
+				cmd = exec.Command("cmd", "/c", "start", "", path)
+			default:
+				cmd = exec.Command("xdg-open", path)
+			}
+			_ = cmd.Run()
+			return nil
+		}
 
 	case screens.PipelineOpenProgressMsg:
 		m.progress = screens.NewProgressModel(
