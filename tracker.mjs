@@ -484,7 +484,6 @@ async function migrate(args) {
 async function rollbackMigration(args) {
   const DatabaseSync = await loadSqlite();
   const db = openDb(DatabaseSync);
-  const states = loadStates();
 
   if (!isDbSource(db)) {
     console.error('Error: Database is not currently the source of truth.');
