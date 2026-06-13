@@ -408,6 +408,13 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
+export function formatPipelineOffer(o) {
+  const fields = [o.url, o.company, o.title];
+  const location = typeof o.location === 'string' ? o.location.trim() : '';
+  if (location) fields.push(location);
+  return `- [ ] ${fields.join(' | ')}`;
+}
+
 export function appendToPipeline(offers) {
   if (offers.length === 0) return;
 
@@ -421,7 +428,7 @@ export function appendToPipeline(offers) {
     const procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
     const block = `\n${marker}\n\n` + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
+      formatPipelineOffer(o)
     ).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
@@ -431,7 +438,7 @@ export function appendToPipeline(offers) {
     const insertAt = nextSection === -1 ? text.length : nextSection;
 
     const block = '\n' + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
+      formatPipelineOffer(o)
     ).join('\n') + '\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   }

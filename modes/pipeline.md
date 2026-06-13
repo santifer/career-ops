@@ -28,12 +28,17 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 ## Pending
 - [ ] https://jobs.example.com/posting/123
 - [ ] https://boards.greenhouse.io/company/jobs/456 | Company Inc | Senior PM
+- [ ] https://jobs.example.com/posting/789 | Acme Corp | AI Engineer | Remote, EU
 - [!] https://private.url/job — Error: login required
 
 ## Processed
 - [x] #143 | https://jobs.example.com/posting/789 | Acme Corp | AI PM | 4.2/5 | PDF ✅
 - [x] #144 | https://boards.greenhouse.io/xyz/jobs/012 | BigCo | SA | 2.1/5 | PDF ❌
 ```
+
+The pending metadata after the URL is optional. Legacy URL-only and
+`URL | Company | Role` rows remain valid; scanner-created rows include
+`URL | Company | Role | Location` when the provider returns location.
 
 ## Intelligent JD detection from URL
 
