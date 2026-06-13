@@ -299,7 +299,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   }
 }
 
-const isMain = process.argv[1] && import.meta.url === `file://${resolve(process.argv[1])}`;
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 if (isMain) {
   generatePDF().catch((err) => {
     console.error('❌ PDF generation failed:', err.message);
