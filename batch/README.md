@@ -24,6 +24,12 @@ Process multiple job offers in parallel via headless workers. Each worker runs t
    ./batch/batch-runner.sh
    ```
 
+   To use Codex instead of Claude Code:
+
+   ```bash
+   CAREER_OPS_AGENT=codex ./batch/batch-runner.sh
+   ```
+
 4. **Results** are automatically merged into `data/applications.md` and verified with `verify-pipeline.mjs` at the end of the run.
 
 ## Options
@@ -33,10 +39,23 @@ Process multiple job offers in parallel via headless workers. Each worker runs t
 | `--parallel N` | `1` | Number of concurrent headless workers |
 | `--dry-run` | off | Preview pending offers without processing |
 | `--retry-failed` | off | Only retry offers marked as `failed` in state |
-| `--resume-paused` | off | Resume offers paused after a Claude session/rate limit |
+| `--resume-paused` | off | Resume offers paused after a worker session/rate limit |
 | `--start-from N` | `0` | Skip offers with ID below N |
 | `--max-retries N` | `2` | Max retry attempts per offer before giving up |
 | `--rate-limit-sleep N` | `300` | Seconds to wait before retrying a transient rate-limited worker; use `0` to pause the batch immediately |
+| `--agent NAME` | `CAREER_OPS_AGENT`, otherwise `claude` | Worker CLI: `claude` or `codex` |
+| `--model NAME` | unset | Model passed to the selected CLI |
+
+## Codex Safety
+
+Claude keeps the existing batch default, including `--dangerously-skip-permissions`
+and `--strict-mcp-config`, to avoid breaking current headless users. Codex does
+not pass its dangerous bypass flag unless explicitly requested with
+`CAREER_OPS_UNSAFE_AGENT_EXEC=1` or `true`:
+
+```bash
+CAREER_OPS_AGENT=codex CAREER_OPS_UNSAFE_AGENT_EXEC=1 ./batch/batch-runner.sh
+```
 
 ## Directory Layout
 
@@ -73,7 +92,7 @@ Run `npm run merge` manually if you need to merge outside of a batch run.
 
 `batch-state.tsv` tracks the status of every offer (`pending`, `processing`, `completed`, `failed`, `skipped`, `rate_limited`, `paused_rate_limit`). If the batch is interrupted, re-running `batch-runner.sh` picks up where it left off -- completed offers are skipped automatically. `rate_limited` is a non-completed state used while the runner waits before retrying, so interrupted rate-limited jobs are eligible on the next normal run.
 
-`paused_rate_limit` is different: it means a worker hit a Claude session/usage limit, so the runner stopped scheduling new offers and preserved the retry count. Resume those rows explicitly after the limit resets:
+`paused_rate_limit` is different: it means a worker hit a session/usage limit, so the runner stopped scheduling new offers and preserved the retry count. Resume those rows explicitly after the limit resets:
 
 ```bash
 ./batch/batch-runner.sh --resume-paused
