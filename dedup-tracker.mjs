@@ -229,6 +229,27 @@ function parseScore(s) {
  * @param {string} line - One line from applications.md.
  * @returns {object|null} Parsed tracker row, or null for non-application lines.
  */
+/**
+ * Rebuild a markdown table row from the cells produced by `line.split('|')`.
+ *
+ * `split('|')` yields a leading empty element (before the opening `|`) and,
+ * when the row ends with a trailing `|`, a trailing empty element too. The old
+ * `slice(1, -1)` assumed that trailing empty always existed — but a row written
+ * without a trailing pipe (`| 5 | … | note`, still a valid 9-cell row) has its
+ * real last cell (the notes) at the end, so `slice(1, -1)` silently dropped it.
+ * Here we drop the leading empty and only drop a trailing element when it is
+ * actually empty, preserving every real cell regardless of trailing-pipe style
+ * (and tolerating extra columns like a custom Location).
+ *
+ * @param {string[]} parts - Trimmed cells from `line.split('|').map(s => s.trim())`.
+ * @returns {string} The rebuilt `| a | b | … |` row.
+ */
+function rebuildRow(parts) {
+  const cells = parts.slice(1);
+  if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop();
+  return '| ' + cells.join(' | ') + ' |';
+}
+
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
   if (parts.length < 9) return null;
@@ -323,7 +344,7 @@ for (const [company, companyEntries] of groups) {
       if (lineIdx !== undefined) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
         parts[6] = bestStatus;
-        lines[lineIdx] = '| ' + parts.slice(1, -1).join(' | ') + ' |';
+        lines[lineIdx] = rebuildRow(parts);
         console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
       }
     }
