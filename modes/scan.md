@@ -236,7 +236,7 @@ Levels are additive — they are executed in order, and results are merged and d
    **Do not interrupt the entire scan if a single URL fails.** If `browser_navigate` errors (timeout, 403, etc.), mark as `skipped_expired` and continue with the next one.
 
 8. **For each new verified offer that passes filters**:
-   a. Add to the `pipeline.md` "Pending" section: `- [ ] {url} | {company} | {title} | {location}` when location is known. If location is missing, keep the legacy 3-column shape: `- [ ] {url} | {company} | {title}`.
+   a. Add to the `pipeline.md` pending section (`## Pendientes` in the stock file): `- [ ] {url} | {company} | {title} | {location}` when location is known. If location is missing, keep the legacy 3-column shape: `- [ ] {url} | {company} | {title}`.
    b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded\t{location}`
 
 9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`.
