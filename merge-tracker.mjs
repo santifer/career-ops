@@ -22,7 +22,7 @@ import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
-import { loadSqlite, openDb, isDbSource, checkDivergence, rowToMarkdown, HEADER, SEPARATOR } from './tracker.mjs';
+import { loadSqlite, openDb, isDbSource, checkDivergence, rowToMarkdown, HEADER, SEPARATOR, DB_PATH } from './tracker.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -592,12 +592,19 @@ function parseTsvContent(content, filename) {
 
 let dbIsSource = false;
 let db = null;
-try {
-  const DatabaseSync = await loadSqlite();
-  db = openDb(DatabaseSync);
-  dbIsSource = isDbSource(db);
-} catch (e) {
-  dbIsSource = false;
+if (existsSync(DB_PATH)) {
+  try {
+    const DatabaseSync = await loadSqlite(false);
+    db = openDb(DatabaseSync);
+    dbIsSource = isDbSource(db);
+  } catch (e) {
+    if (e.message?.includes('not available') || e.code === 'ERR_MODULE_NOT_FOUND') {
+      dbIsSource = false;
+    } else {
+      console.error(`Error: failed to open SQLite database at ${DB_PATH}: ${e.message}`);
+      process.exit(1);
+    }
+  }
 }
 
 if (dbIsSource) {
@@ -771,6 +778,7 @@ for (const file of tsvFiles) {
           date: addition.date,
           company: addition.company,
           role: addition.role,
+          location: addition.location || duplicate.location || '—',
           score: addition.score,
           report: addition.report,
           notes: `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`
@@ -805,6 +813,7 @@ for (const file of tsvFiles) {
         date: addition.date,
         company: addition.company,
         role: addition.role,
+        location: addition.location || '—',
         score: addition.score,
         status: addition.status,
         pdf: addition.pdf,
@@ -846,35 +855,36 @@ if (!DRY_RUN) {
   if (dbIsSource) {
     db.exec('BEGIN');
     try {
-      const updateStmt = db.prepare('UPDATE applications SET date = ?, company = ?, role = ?, score = ?, report = ?, notes = ? WHERE id = ?');
+      const updateStmt = db.prepare('UPDATE applications SET date = ?, company = ?, role = ?, location = ?, score = ?, report = ?, notes = ? WHERE id = ?');
       for (const u of dbUpdates) {
-        updateStmt.run(u.date, u.company, u.role, u.score, u.report, u.notes, u.id);
+        updateStmt.run(u.date, u.company, u.role, u.location, u.score, u.report, u.notes, u.id);
       }
-      const insertStmt = db.prepare('INSERT INTO applications (id, pos, date, company, role, score, status, pdf, report, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const insertStmt = db.prepare('INSERT INTO applications (id, pos, date, company, role, location, score, status, pdf, report, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
       const insertEvent = db.prepare('INSERT INTO status_events (app_id, status, date) VALUES (?, ?, ?)');
       for (const i of dbInserts) {
-        insertStmt.run(i.id, i.pos, i.date, i.company, i.role, i.score, i.status, i.pdf, i.report, i.notes);
+        insertStmt.run(i.id, i.pos, i.date, i.company, i.role, i.location, i.score, i.status, i.pdf, i.report, i.notes);
         insertEvent.run(i.id, i.status, i.date);
       }
+
+      const rows = db.prepare('SELECT * FROM applications ORDER BY pos').all();
+      const out = [
+        '# Applications Tracker',
+        '',
+        HEADER,
+        SEPARATOR,
+        ...rows.map(rowToMarkdown),
+        '',
+      ].join('\n');
+      writeFileAtomic(APPS_FILE, out);
+
+      const mdHash = createHash('sha256').update(out).digest('hex');
+      db.prepare("INSERT INTO meta (key, value) VALUES ('md_sha256', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(mdHash);
+
       db.exec('COMMIT');
     } catch (err) {
       db.exec('ROLLBACK');
       throw err;
     }
-
-    const rows = db.prepare('SELECT * FROM applications ORDER BY pos').all();
-    const out = [
-      '# Applications Tracker',
-      '',
-      HEADER,
-      SEPARATOR,
-      ...rows.map(rowToMarkdown),
-      '',
-    ].join('\n');
-    writeFileAtomic(APPS_FILE, out);
-
-    const mdHash = createHash('sha256').update(out).digest('hex');
-    db.prepare("INSERT INTO meta (key, value) VALUES ('md_sha256', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(mdHash);
   } else {
     writeFileAtomic(APPS_FILE, appLines.join('\n'));
   }
