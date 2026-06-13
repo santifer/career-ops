@@ -2322,6 +2322,213 @@ try {
   fail(`solidjobs provider tests crashed: ${e.message}`);
 }
 
+// ── 16. PROVIDERS — JustJoin.it ───────────────────────────────────────────
+
+console.log('\n16. Provider — justjoin');
+
+try {
+  const jj = (await import(pathToFileURL(join(ROOT, 'providers/justjoin.mjs')).href)).default;
+  const { parseJustJoinResponse } = await import(pathToFileURL(join(ROOT, 'providers/justjoin.mjs')).href);
+
+  if (jj.id === 'justjoin') pass('justjoin.id is "justjoin"');
+  else fail(`justjoin.id is ${JSON.stringify(jj.id)}`);
+
+  if (jj.detect({ name: 'JustJoin', careers_url: 'https://justjoin.it/job-offers/all-locations' })?.url) {
+    pass('justjoin.detect() matches job-offers URL');
+  } else {
+    fail('justjoin.detect() should match justjoin.it job-offers URL');
+  }
+
+  if (jj.detect({ name: 'X', careers_url: 'https://evil.example/justjoin.it/job-offers' }) === null) {
+    pass('justjoin.detect() rejects path-spoofed URLs');
+  } else {
+    fail('justjoin.detect() must reject path-spoofed URLs');
+  }
+
+  if (jj.detect({ name: 'X', api: 'https://justjoin.it/api/candidate-api/offers/count' }) === null) {
+    pass('justjoin.detect() rejects non-offers API paths');
+  } else {
+    fail('justjoin.detect() must reject non-offers API paths');
+  }
+
+  const fakeResponse = {
+    data: [
+      {
+        slug: 'acme-senior-dev-warsaw-javascript',
+        title: 'Senior Developer',
+        companyName: 'Acme',
+        workplaceType: 'remote',
+        locations: [{ city: 'Warszawa' }],
+        publishedAt: '2026-06-12T10:00:00.000Z',
+      },
+      { slug: '', title: 'Missing Slug', companyName: 'Broken' },
+      null,
+    ],
+    meta: { next: { cursor: null } },
+  };
+
+  const parsed = parseJustJoinResponse(fakeResponse);
+  if (parsed.length === 1) pass('justjoin parser filters malformed rows');
+  else fail(`justjoin parser returned ${parsed.length} rows, expected 1`);
+
+  if (parsed[0].title === 'Senior Developer' && parsed[0].url === 'https://justjoin.it/job-offer/acme-senior-dev-warsaw-javascript') {
+    pass('justjoin parser maps title and URL');
+  } else {
+    fail(`justjoin parser mapped title/url incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  if (parsed[0].company === 'Acme' && parsed[0].location === 'remote, Warszawa' && typeof parsed[0].postedAt === 'number') {
+    pass('justjoin parser maps company, location, and postedAt');
+  } else {
+    fail(`justjoin parser mapped fields incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  let capturedUrl = '';
+  let capturedOpts = null;
+  const fetched = await jj.fetch(
+    { name: 'JustJoin', careers_url: 'https://justjoin.it/job-offers/all-locations', max_pages: 1 },
+    {
+      transport: 'http',
+      fetchJson: async (url, opts) => {
+        capturedUrl = url;
+        capturedOpts = opts;
+        return fakeResponse;
+      },
+      fetchText: async () => '',
+    },
+  );
+  if (fetched.length === 1 && capturedUrl.startsWith('https://justjoin.it/api/candidate-api/offers?')) {
+    pass('justjoin.fetch() uses candidate API endpoint');
+  } else {
+    fail(`justjoin.fetch() endpoint/result wrong: ${capturedUrl} ${JSON.stringify(fetched)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') pass('justjoin.fetch() passes redirect:"error"');
+  else fail(`justjoin.fetch() should pass redirect:"error", got ${JSON.stringify(capturedOpts)}`);
+
+  let ssrfRejected = false;
+  try {
+    await jj.fetch({ name: 'Evil', careers_url: 'https://evil.example/job-offers/all-locations' }, { transport: 'http', fetchJson: async () => fakeResponse, fetchText: async () => '' });
+  } catch (e) {
+    if (e.message.includes('trusted justjoin.it')) ssrfRejected = true;
+  }
+  if (ssrfRejected) pass('justjoin.fetch() rejects untrusted host');
+  else fail('justjoin.fetch() should reject untrusted host');
+
+  let badShape = false;
+  try {
+    parseJustJoinResponse({ jobs: [] });
+  } catch (e) {
+    if (e.message.includes('unexpected API response')) badShape = true;
+  }
+  if (badShape) pass('justjoin parser throws on bad response shape');
+  else fail('justjoin parser should throw on bad response shape');
+} catch (e) {
+  fail(`justjoin provider tests crashed: ${e.message}`);
+}
+
+// ── 17. PROVIDERS — NoFluffJobs ───────────────────────────────────────────
+
+console.log('\n17. Provider — nofluffjobs');
+
+try {
+  const nfj = (await import(pathToFileURL(join(ROOT, 'providers/nofluffjobs.mjs')).href)).default;
+  const { parseNoFluffJobsResponse } = await import(pathToFileURL(join(ROOT, 'providers/nofluffjobs.mjs')).href);
+
+  if (nfj.id === 'nofluffjobs') pass('nofluffjobs.id is "nofluffjobs"');
+  else fail(`nofluffjobs.id is ${JSON.stringify(nfj.id)}`);
+
+  if (nfj.detect({ name: 'NoFluff', careers_url: 'https://nofluffjobs.com/pl' })?.url) {
+    pass('nofluffjobs.detect() matches nofluffjobs.com URL');
+  } else {
+    fail('nofluffjobs.detect() should match nofluffjobs.com URL');
+  }
+
+  if (nfj.detect({ name: 'X', careers_url: 'https://evil.example/nofluffjobs.com/pl' }) === null) {
+    pass('nofluffjobs.detect() rejects path-spoofed URLs');
+  } else {
+    fail('nofluffjobs.detect() must reject path-spoofed URLs');
+  }
+
+  const fakeResponse = {
+    postings: [
+      {
+        title: 'Frontend Engineer',
+        name: 'ExampleCo',
+        url: 'frontend-engineer-remote',
+        posted: 1781270000000,
+        fullyRemote: true,
+        location: { places: [{ city: 'Kraków' }] },
+      },
+      { title: '', name: 'Broken', url: 'missing-title' },
+      7,
+    ],
+    totalPages: 1,
+  };
+
+  const parsed = parseNoFluffJobsResponse(fakeResponse);
+  if (parsed.length === 1) pass('nofluffjobs parser filters malformed rows');
+  else fail(`nofluffjobs parser returned ${parsed.length} rows, expected 1`);
+
+  if (parsed[0].title === 'Frontend Engineer' && parsed[0].url === 'https://nofluffjobs.com/pl/job/frontend-engineer-remote') {
+    pass('nofluffjobs parser maps title and URL');
+  } else {
+    fail(`nofluffjobs parser mapped title/url incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  if (parsed[0].company === 'ExampleCo' && parsed[0].location === 'Remote, Kraków' && parsed[0].postedAt === 1781270000000) {
+    pass('nofluffjobs parser maps company, location, and postedAt');
+  } else {
+    fail(`nofluffjobs parser mapped fields incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  let capturedUrl = '';
+  let capturedOpts = null;
+  const fetched = await nfj.fetch(
+    { name: 'NoFluffJobs', careers_url: 'https://nofluffjobs.com/pl', max_pages: 1 },
+    {
+      transport: 'http',
+      fetchJson: async (url, opts) => {
+        capturedUrl = url;
+        capturedOpts = opts;
+        return fakeResponse;
+      },
+      fetchText: async () => '',
+    },
+  );
+  if (fetched.length === 1 && capturedUrl.startsWith('https://nofluffjobs.com/api/search/posting?')) {
+    pass('nofluffjobs.fetch() uses search posting API endpoint');
+  } else {
+    fail(`nofluffjobs.fetch() endpoint/result wrong: ${capturedUrl} ${JSON.stringify(fetched)}`);
+  }
+
+  if (capturedOpts && capturedOpts.method === 'POST' && capturedOpts.redirect === 'error') {
+    pass('nofluffjobs.fetch() uses POST and redirect:"error"');
+  } else {
+    fail(`nofluffjobs.fetch() should use POST and redirect:"error", got ${JSON.stringify(capturedOpts)}`);
+  }
+
+  let ssrfRejected = false;
+  try {
+    await nfj.fetch({ name: 'Evil', careers_url: 'https://evil.example/pl' }, { transport: 'http', fetchJson: async () => fakeResponse, fetchText: async () => '' });
+  } catch (e) {
+    if (e.message.includes('trusted nofluffjobs.com')) ssrfRejected = true;
+  }
+  if (ssrfRejected) pass('nofluffjobs.fetch() rejects untrusted host');
+  else fail('nofluffjobs.fetch() should reject untrusted host');
+
+  let badShape = false;
+  try {
+    parseNoFluffJobsResponse({ jobs: [] });
+  } catch (e) {
+    if (e.message.includes('unexpected API response')) badShape = true;
+  }
+  if (badShape) pass('nofluffjobs parser throws on bad response shape');
+  else fail('nofluffjobs parser should throw on bad response shape');
+} catch (e) {
+  fail(`nofluffjobs provider tests crashed: ${e.message}`);
+}
+
 // ── 15. URL REDISCOVERY FALLBACK (--rediscover-404) ─────────────
 
 console.log('\n15. URL rediscovery fallback');
