@@ -177,7 +177,11 @@ async function check() {
     clearTimeout(timeoutId);
   }
 
-  const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
+  // Extract semver from anywhere in the string. The VERSION file may include
+  // a trailing release-please comment ("1.10.0 # x-release-please-version"),
+  // and the GitHub Releases tag may carry a monorepo prefix
+  // ("career-ops-v1.10.0"). Strict ^v?...$ rejects both.
+  const SEMVER_RE = /(\d+\.\d+\.\d+)/;
 
   if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
     try {
