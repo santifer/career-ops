@@ -139,11 +139,12 @@ export function buildHtml(payload) {
     "{{FOOTNOTES_BLOCK}}": buildFootnotesBlock(letter.footnotes),
   };
 
-  for (const [token, value] of Object.entries(replacements)) {
-    html = html.split(token).join(value);
-  }
-
-  return html;
+  // Single-pass substitution: each {{TOKEN}} is replaced exactly once against
+  // the original template. A single regex pass (rather than iterative
+  // split/join) ensures a substituted value that itself contains a {{TOKEN}}
+  // sequence is left literal instead of being re-interpreted as a placeholder.
+  // Tokens with no entry in the map are left untouched.
+  return html.replace(/\{\{[A-Z_]+\}\}/g, (token) => replacements[token] ?? token);
 }
 
 async function main() {

@@ -2576,6 +2576,42 @@ try {
   fail(`Cover letter greeting test crashed: ${e.message}`);
 }
 
+// ── 18. COVER LETTER SINGLE-PASS SUBSTITUTION ───────────────────
+
+console.log('\n18. Cover letter single-pass substitution');
+
+try {
+  const { buildHtml } = await import(pathToFileURL(join(ROOT, 'generate-cover-letter.mjs')).href);
+
+  // A field value that itself contains literal {{TOKEN}} sequences must NOT be
+  // re-substituted. The old iterative split/join loop would have blanked these
+  // (no footnotes/closing in the payload → replaced with ""). Single-pass leaves
+  // them verbatim because replacement output is never re-scanned.
+  const injected = buildHtml({
+    candidate: { name: 'Jane Doe' },
+    letter: {
+      role_title: 'Engineer',
+      opening: 'See {{FOOTNOTES_BLOCK}} and {{CLOSING_BLOCK}} markers.',
+      profile_intro: 'Intro.',
+    },
+  });
+
+  if (injected.includes('See {{FOOTNOTES_BLOCK}} and {{CLOSING_BLOCK}} markers.')) {
+    pass('Field values containing {{TOKEN}} are left literal (single-pass, not re-substituted)');
+  } else {
+    fail('A field value containing {{TOKEN}} was re-substituted');
+  }
+
+  // Known template tokens still resolve, and no unreplaced tokens leak through.
+  if (injected.includes('Jane Doe') && !injected.includes('{{NAME}}') && !injected.includes('{{ROLE_TITLE}}')) {
+    pass('Known template tokens still substitute under single-pass');
+  } else {
+    fail('Single-pass substitution left a known token unreplaced');
+  }
+} catch (e) {
+  fail(`Cover letter single-pass substitution test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
