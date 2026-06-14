@@ -31,6 +31,7 @@ writing-samples/*
 
 # User config and customization (never auto-updated)
 config/profile.yml
+config/cv-facts.json
 portals.yml
 modes/_profile.md
 .update-dismissed

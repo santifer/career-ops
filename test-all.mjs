@@ -147,6 +147,42 @@ for (const { name, allowFail } of scripts) {
   }
 }
 
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'career-ops-cv-facts-'));
+  const hiddenScriptMetric = join(tmp, 'hidden-script-metric.html');
+  const visibleMetric = join(tmp, 'visible-metric.html');
+  writeFileSync(
+    hiddenScriptMetric,
+    '<html><body><script>const claim = "500 users";</script\t\n bar><p>Generated CV</p></body></html>'
+  );
+  writeFileSync(
+    visibleMetric,
+    '<html><body><p>Improved onboarding for 500 users.</p></body></html>'
+  );
+
+  const hiddenResult = run(NODE, ['verify-cv-facts.mjs', hiddenScriptMetric], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (hiddenResult !== null) {
+    pass('verify-cv-facts strips script tags with irregular closing tags');
+  } else {
+    fail('verify-cv-facts treated script contents as visible CV facts');
+  }
+
+  const visibleResult = run(NODE, ['verify-cv-facts.mjs', visibleMetric], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (visibleResult === null) {
+    pass('verify-cv-facts still flags visible unsupported metrics');
+  } else {
+    fail('verify-cv-facts missed a visible unsupported metric');
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`verify-cv-facts regression tests crashed: ${e.message}`);
+}
+
 // ── 3. LIVENESS CLASSIFICATION ──────────────────────────────────
 
 console.log('\n3. Liveness classification');
