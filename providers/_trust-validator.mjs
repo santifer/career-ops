@@ -48,11 +48,11 @@ const DEFAULT_ATS_ALLOWLIST = [
 ];
 
 /** @type {Record<string, number>} */
-const DEDUCTIONS = {
-  invalid_url: -50,
-  missing_apply_url: -40,
-  suspicious_domain: -25,
-  company_domain_mismatch: -15,
+const PENALTIES = {
+  invalid_url: 50,
+  missing_apply_url: 40,
+  suspicious_domain: 25,
+  company_domain_mismatch: 15,
 };
 
 /**
@@ -167,18 +167,20 @@ export function buildTrustValidator(config) {
     // Rule 1 — Missing URL
     if (!url) {
       flags.push('missing_apply_url');
-      score += DEDUCTIONS.missing_apply_url;
+      score -= PENALTIES.missing_apply_url;
       // Can't run further URL-based checks
-      return { score: Math.max(0, score), flags, level: classifyTrustLevel(Math.max(0, score)) };
+      const clamped = Math.max(0, score);
+      return { score: clamped, flags, level: classifyTrustLevel(clamped) };
     }
 
     // Rule 2 — URL structure validation
     const urlCheck = validateUrl(url);
     if (!urlCheck.valid) {
       flags.push('invalid_url');
-      score += DEDUCTIONS.invalid_url;
+      score -= PENALTIES.invalid_url;
       // Can't parse hostname → skip domain checks
-      return { score: Math.max(0, score), flags, level: classifyTrustLevel(Math.max(0, score)) };
+      const clamped = Math.max(0, score);
+      return { score: clamped, flags, level: classifyTrustLevel(clamped) };
     }
 
     // Parse hostname for domain checks
@@ -187,13 +189,14 @@ export function buildTrustValidator(config) {
       hostname = new URL(url).hostname.toLowerCase();
     } catch {
       // Already validated above, but guard defensively
-      return { score: Math.max(0, score), flags, level: classifyTrustLevel(Math.max(0, score)) };
+      const clamped = Math.max(0, score);
+      return { score: clamped, flags, level: classifyTrustLevel(clamped) };
     }
 
     // Rule 3 — Suspicious domain detection
     if (matchesDomainList(hostname, suspiciousDomains)) {
       flags.push('suspicious_domain');
-      score += DEDUCTIONS.suspicious_domain;
+      score -= PENALTIES.suspicious_domain;
     }
 
     // Rule 4 — Company ↔ domain mismatch (skip for ATS-hosted URLs)
@@ -201,7 +204,7 @@ export function buildTrustValidator(config) {
     if (company && !matchesDomainList(hostname, atsAllowlist)) {
       if (!companyMatchesHostname(company, hostname)) {
         flags.push('company_domain_mismatch');
-        score += DEDUCTIONS.company_domain_mismatch;
+        score -= PENALTIES.company_domain_mismatch;
       }
     }
 

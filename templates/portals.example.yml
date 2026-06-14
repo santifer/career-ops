@@ -113,6 +113,13 @@
 #     - "forms.gle"
 #     - "goo.gl"
 #     - "shorturl.at"
+#   # Override the built-in ATS allowlist (greenhouse, lever, workday, etc.).
+#   # URLs hosted on these domains skip the company↔domain mismatch check.
+#   # ats_allowlist:
+#   #   - "greenhouse.io"
+#   #   - "ashbyhq.com"
+#   #   - "lever.co"
+#   #   - "custom-ats.example.com"
 
 # -- Title filter --
 # The scanner uses these keywords to decide if a title is relevant.
