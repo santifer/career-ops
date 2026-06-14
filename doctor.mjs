@@ -15,6 +15,9 @@ const targetIdx = argv.indexOf('--target');
 const projectRoot =
   targetIdx !== -1 && argv[targetIdx + 1] ? argv[targetIdx + 1] : __dirname;
 const JSON_OUT = argv.includes('--json');
+// --strict adds a live ATS-slug probe of portals.yml (network). Opt-in so the
+// default `npm run doctor` stays fast and fully offline.
+const STRICT = argv.includes('--strict');
 
 // ANSI colors (only on TTY)
 const isTTY = process.stdout.isTTY;
@@ -199,6 +202,35 @@ function checkAutoDir(name) {
   }
 }
 
+// --strict only: probe the ATS slug of every tracked company in portals.yml so
+// a typo'd slug (which 404s silently on scans) surfaces here. Skipped gracefully
+// when portals.yml is absent. Delegates to verify-portals.mjs so there is one
+// slug-probing implementation. Network-bound, hence opt-in.
+async function checkPortalSlugs(root) {
+  const portalsPath = join(root, 'portals.yml');
+  if (!existsSync(portalsPath)) {
+    return { pass: true, label: 'ATS slugs: no portals.yml yet (skipped)' };
+  }
+  try {
+    const { verifyPortalsFile } = await import('./verify-portals.mjs');
+    const { results } = await verifyPortalsFile(portalsPath);
+    const unresolved = results.filter((r) => r.status === 'missing');
+    if (unresolved.length === 0) {
+      return { pass: true, label: 'All ATS slugs in portals.yml resolve' };
+    }
+    return {
+      pass: false,
+      label: `${unresolved.length} ATS slug(s) in portals.yml do not resolve`,
+      fix: [
+        ...unresolved.map((r) => `${r.name}: ${r.ats || '?'}/${r.slug || '?'} — ${r.reason || 'unresolved'}`),
+        'Probe variants with: node verify-portals.mjs --add "<company>"',
+      ],
+    };
+  } catch (err) {
+    return { warn: true, label: `ATS slug check skipped: ${err.message}` };
+  }
+}
+
 async function main() {
   console.log('\ncareer-ops doctor');
   console.log('================\n');
@@ -214,6 +246,11 @@ async function main() {
     checkAutoDir('output'),
     checkAutoDir('reports'),
   ];
+
+  // Network-bound ATS slug probe — only under --strict.
+  if (STRICT) {
+    checks.push(await checkPortalSlugs(projectRoot));
+  }
 
   let failures = 0;
   let warnings = 0;
