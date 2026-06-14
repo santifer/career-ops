@@ -15,10 +15,10 @@
  * See DATA_CONTRACT.md for the full system/user layer definitions.
  */
 
-import { execFileSync, execSync } from 'child_process';
+import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -27,12 +27,19 @@ const CANONICAL_REPO = 'https://github.com/santifer/career-ops.git';
 const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/career-ops/main/VERSION';
 const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/latest';
 
+// Matches a semver, with or without a leading `v` and an optional
+// Release Please component prefix (e.g. `career-ops-v1.9.0` → `1.9.0`).
+// Anchoring on `(?:^|-)` lets the releases-API fallback parse our tags,
+// which Release Please always prefixes with the component name.
+export const SEMVER_RE = /(?:^|-)v?(\d+\.\d+\.\d+)$/i;
+
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
   'modes/_shared.md',
   'modes/_profile.template.md',
   'modes/oferta.md',
   'modes/pdf.md',
+  'modes/cover.md',
   'modes/scan.md',
   'modes/batch.md',
   'modes/apply.md',
@@ -45,24 +52,36 @@ const SYSTEM_PATHS = [
   'modes/tracker.md',
   'modes/training.md',
   'modes/latex.md',
+  'modes/followup.md',
+  'modes/interview-prep.md',
+  'modes/patterns.md',
+  'modes/update.md',
   'modes/de/',
   'modes/fr/',
   'modes/ja/',
   'modes/pt/',
   'modes/ru/',
+  'modes/tr/',
+  'modes/ua/',
   'CLAUDE.md',
+  'OPENCODE.md',
   'AGENTS.md',
   'GEMINI.md',
   'generate-pdf.mjs',
   'generate-latex.mjs',
+  'generate-cover-letter.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
+  'tracker.mjs',
   'verify-pipeline.mjs',
   'dedup-tracker.mjs',
+  'role-matcher.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
+  'reserve-report-num.mjs',
   'scan.mjs',
+  'scan-ats-full.mjs',
   'providers/',
   'doctor.mjs',
   'check-liveness.mjs',
@@ -72,24 +91,59 @@ const SYSTEM_PATHS = [
   'followup-cadence.mjs',
   'gemini-eval.mjs',
   'test-all.mjs',
+  'test-salary-filter.mjs',
+  'validate-portals.mjs',
+  'updater-migration-tests.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
+  'batch/README.md',
   'dashboard/',
   'templates/',
   'fonts/',
+  'examples/',
+  'config/profile.example.yml',
+  '.env.example',
   '.agents/',
   '.claude/skills/',
+  '.opencode/skills/',
+  '.claude-plugin/',
   '.gemini/commands/',
+  '.qwen/',
   'docs/',
   'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
   'README.md',
+  'README.cn.md',
+  'README.es.md',
+  'README.fr.md',
+  'README.ja.md',
+  'README.ko-KR.md',
+  'README.pl.md',
+  'README.pt-BR.md',
+  'README.ru.md',
+  'README.ua.md',
+  'README.zh-TW.md',
+  'CHANGELOG.md',
+  'CODE_OF_CONDUCT.md',
+  'CONTRIBUTORS.md',
+  'GOVERNANCE.md',
+  'LEGAL_DISCLAIMER.md',
+  'SECURITY.md',
+  'SUPPORT.md',
+  'TRADEMARK.md',
   'LICENSE',
   'CITATION.cff',
   '.github/',
   'package.json',
+  'build-cv-latex.mjs',
+  'scaffolder/',
+  'Dockerfile',
+  'docker-compose.yml',
+  '.dockerignore',
+  'cops',
+  'DOCKER.md',
 ];
 
 // User layer paths — NEVER touch these (safety check)
@@ -128,6 +182,36 @@ function compareVersions(a, b) {
   return 0;
 }
 
+function updateBackupBranchName(version, date = new Date()) {
+  const stamp = date.toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z');
+  return `backup-pre-update-${version}-${stamp}`;
+}
+
+function backupTimestamp(branchName) {
+  const match = branchName.match(/-(\d{8}T\d{6}Z)$/);
+  if (!match) return 0;
+  const [date, time] = match[1].split('T');
+  return Date.parse(
+    `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}Z`,
+  ) || 0;
+}
+
+function newestBackupBranch(branches) {
+  const branchList = branches.split('\n').map(b => b.trim()).filter(Boolean);
+  if (branchList.length === 0) return null;
+
+  // Prefer timestamped backup branches created by current versions. Older
+  // backups are still accepted below for rollback compatibility.
+  const timestamped = branchList
+    .map(branch => ({ branch, timestamp: backupTimestamp(branch) }))
+    .filter(entry => entry.timestamp > 0)
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  return timestamped[0]?.branch || branchList[0];
+}
+
 function git(...args) {
   return execFileSync('git', args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
 }
@@ -154,7 +238,55 @@ function addPaths(paths) {
   git('add', '--', ...paths);
 }
 
+function dashboardGoSourcesChanged() {
+  try {
+    const changed = git('diff', '--name-only', 'HEAD', '--', 'dashboard');
+    return changed
+      .split('\n')
+      .some(path => path.startsWith('dashboard/') && path.endsWith('.go'));
+  } catch {
+    return false;
+  }
+}
+
+function rebuildDashboardBinaryIfNeeded() {
+  if (!dashboardGoSourcesChanged()) return;
+
+  try {
+    execFileSync('go', ['build', '-o', 'career-dashboard', '.'], {
+      cwd: join(ROOT, 'dashboard'),
+      timeout: 60000,
+      stdio: 'pipe',
+    });
+    console.log('dashboard binary rebuilt');
+  } catch {
+    console.log('dashboard binary rebuild skipped -- run: cd dashboard && go build -o career-dashboard . manually');
+  }
+}
+
 // ── CHECK ───────────────────────────────────────────────────────
+
+// curl helper used by check() — curl works inside the Claude Code sandbox
+// where Node's built-in fetch() fails (ENOTFOUND) because the sandbox
+// routes network traffic through an HTTP/HTTPS proxy that fetch() does
+// not respect but curl handles transparently.  The --silent / --fail flags
+// match the failure-handling already used throughout apply().
+function curlGet(url, extraArgs = []) {
+  return new Promise((resolve) => {
+    execFile(
+      'curl',
+      ['--silent', '--fail', '--max-time', '10', ...extraArgs, url],
+      { encoding: 'utf-8', timeout: 12000 },
+      (error, stdout) => {
+        if (error) {
+          resolve(null);
+        } else {
+          resolve(stdout.trim());
+        }
+      }
+    );
+  });
+}
 
 async function check() {
   // Respect dismiss flag
@@ -168,57 +300,45 @@ async function check() {
   let releaseVersion = '';
   let changelog = '';
 
-  // Fetch both sources in parallel — only fail offline if BOTH are unreachable.
-  // Use AbortSignal so a hung TCP connection can't stall the session-start check.
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-  let versionResult, releaseResult;
-  try {
-    [versionResult, releaseResult] = await Promise.allSettled([
-      fetch(RAW_VERSION_URL, { signal: controller.signal }),
-      fetch(RELEASES_API, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'career-ops-update-checker',
-        },
-        signal: controller.signal,
-      }),
-    ]);
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  // Use curl instead of fetch() so the check works inside the Claude Code
+  // sandbox (see curlGet() above for rationale).  Two sources are tried;
+  // both failing is the only true-offline signal.
+  const [rawVersion, releaseRaw] = await Promise.all([
+    curlGet(RAW_VERSION_URL),
+    curlGet(RELEASES_API, [
+      '--header', 'Accept: application/vnd.github.v3+json',
+      '--header', 'User-Agent: career-ops-update-checker',
+    ]),
+  ]);
 
-  const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
-
-  if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
+  if (rawVersion !== null) {
     try {
-      const raw = parseVersionFile(await versionResult.value.text());
+      const raw = parseVersionFile(rawVersion);
       const match = raw.match(SEMVER_RE);
       remote = match ? match[1] : '';
     } catch {
-      // Body read failed; treat as no VERSION source
+      // Unparseable body; treat as no VERSION source
     }
   }
 
-  if (releaseResult.status === 'fulfilled' && releaseResult.value.ok) {
+  if (releaseRaw !== null) {
     try {
-      const release = await releaseResult.value.json();
+      const release = JSON.parse(releaseRaw);
       changelog = release.body || '';
       const rawTag = String(release.tag_name || '').trim();
       const match = rawTag.match(SEMVER_RE);
       releaseVersion = match ? match[1] : '';
     } catch {
-      // Body parse failed; treat as no release source
+      // Unparseable body; treat as no release source
     }
   }
 
   if (!remote && !releaseVersion) {
-    // Distinguish true network failures from "fetched OK but response was
-    // unparseable" — the latter shouldn't be silenced as offline since the
-    // network is actually fine.
-    const bothNetworkFailed =
-      versionResult.status !== 'fulfilled' &&
-      releaseResult.status !== 'fulfilled';
+    // Both curl calls returned null → genuine network failure.
+    // If one returned non-null but unparseable, remote/releaseVersion are
+    // empty strings, which still reaches the offline branch — that's the
+    // right conservative behaviour (no version = can't determine status).
+    const bothNetworkFailed = rawVersion === null && releaseRaw === null;
     const status = bothNetworkFailed ? 'offline' : 'no-remote-version';
     console.log(JSON.stringify({ status, local }));
     return;
@@ -264,13 +384,9 @@ async function apply() {
 
   try {
     // 1. Backup: create branch
-    const backupBranch = `backup-pre-update-${local}`;
-    try {
-      git('branch', backupBranch);
-      console.log(`Backup branch created: ${backupBranch}`);
-    } catch {
-      console.log(`Backup branch already exists (${backupBranch}), continuing...`);
-    }
+    const backupBranch = updateBackupBranchName(local);
+    git('branch', backupBranch);
+    console.log(`Backup branch created: ${backupBranch}`);
 
     // 2. Fetch from canonical repo
     console.log('Fetching latest from upstream...');
@@ -287,7 +403,10 @@ async function apply() {
     // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
     // checked out while `.claude/skills/` was updated to symlink into it.
     // See: https://github.com/santifer/career-ops/issues/649
-    const BOOTSTRAP_PATHS = ['.agents/', 'providers/', 'liveness-browser.mjs'];
+    // Every release that adds a file imported by other system scripts MUST
+    // append it here, or clients on older versions break on upgrade
+    // (e.g. v1.8.x → v1.9.0: merge-tracker.mjs imports tracker-links.mjs).
+    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs'];
     for (const path of BOOTSTRAP_PATHS) {
       if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
       try {
@@ -377,7 +496,10 @@ async function apply() {
       console.log('npm install skipped (may need manual run)');
     }
 
-    // 6. Commit the update
+    // 6. Rebuild compiled dashboard if Go sources changed
+    rebuildDashboardBinaryIfNeeded();
+
+    // 7. Commit the update
     const remote = localVersion(); // Re-read after checkout updated VERSION
     try {
       const pathsToStage = [...updated];
@@ -408,14 +530,13 @@ function rollback() {
   // Find most recent backup branch
   try {
     const branches = git('for-each-ref', '--sort=-committerdate', '--format=%(refname:short)', 'refs/heads/backup-pre-update-*');
-    const branchList = branches.split('\n').map(b => b.trim()).filter(Boolean);
+    const latest = newestBackupBranch(branches);
 
-    if (branchList.length === 0) {
+    if (!latest) {
       console.error('No backup branches found. Nothing to rollback.');
       process.exit(1);
     }
 
-    const latest = branchList[0];
     console.log(`Rolling back to: ${latest}`);
 
     // Checkout system files from backup branch.
@@ -495,22 +616,27 @@ function dismiss() {
 
 // ── MAIN ────────────────────────────────────────────────────────
 
-const cmd = process.argv[2] || 'check';
+// Only run the CLI when executed directly, so importing this module
+// (e.g. from test-all.mjs to exercise SEMVER_RE) does not trigger a
+// live update check.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const cmd = process.argv[2] || 'check';
 
-try {
-  switch (cmd) {
-    case 'check': await check(); break;
-    case 'apply': await apply(); break;
-    case 'rollback': rollback(); break;
-    case 'dismiss': dismiss(); break;
-    default:
-      console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
-      process.exit(1);
+  try {
+    switch (cmd) {
+      case 'check': await check(); break;
+      case 'apply': await apply(); break;
+      case 'rollback': rollback(); break;
+      case 'dismiss': dismiss(); break;
+      default:
+        console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+        process.exit(1);
+    }
+  } catch (err) {
+    // Subcommands now `throw` on aborts so their outer `finally` blocks
+    // run (e.g. apply() must release `.update-lock`). Print a clean
+    // message here instead of letting Node spit out a stack trace.
+    console.error(err.message || err);
+    process.exit(1);
   }
-} catch (err) {
-  // Subcommands now `throw` on aborts so their outer `finally` blocks
-  // run (e.g. apply() must release `.update-lock`). Print a clean
-  // message here instead of letting Node spit out a stack trace.
-  console.error(err.message || err);
-  process.exit(1);
 }
