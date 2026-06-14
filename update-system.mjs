@@ -93,6 +93,7 @@ const SYSTEM_PATHS = [
   'test-all.mjs',
   'test-salary-filter.mjs',
   'validate-portals.mjs',
+  'verify-portals.mjs',
   'updater-migration-tests.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',

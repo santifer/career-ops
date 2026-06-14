@@ -133,6 +133,9 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
+  // Bare run: no portals.yml in the repo, so it must exit 0 gracefully (and hit
+  // no network). The probe logic itself is unit-tested below with a mock.
+  { name: 'verify-portals.mjs', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
@@ -779,6 +782,59 @@ tracked_companies:
   rmSync(tmp, { recursive: true, force: true });
 } catch (e) {
   fail(`portals validator tests crashed: ${e.message}`);
+}
+
+// ── 10b. PORTAL SLUG VALIDATOR (verify-portals.mjs) ─────────────
+
+console.log('\n10b. Portal slug validator');
+
+try {
+  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies } =
+    await import(pathToFileURL(join(ROOT, 'verify-portals.mjs')).href);
+
+  const slugs = deriveSlugCandidates('Acme Corp!');
+  if (JSON.stringify(slugs) === JSON.stringify(['acmecorp', 'acme-corp', 'acme_corp', 'acme'])) {
+    pass('verify-portals derives slug candidates from a company name');
+  } else {
+    fail(`verify-portals slug candidates wrong: ${JSON.stringify(slugs)}`);
+  }
+
+  if (
+    parseAtsSlug('https://job-boards.greenhouse.io/acme')?.ats === 'greenhouse' &&
+    parseAtsSlug('https://jobs.ashbyhq.com/acme')?.ats === 'ashby' &&
+    parseAtsSlug('https://api.lever.co/v0/postings/acme')?.slug === 'acme' &&
+    parseAtsSlug('https://openai.com/careers') === null
+  ) {
+    pass('verify-portals recognizes ATS slugs and skips branded URLs');
+  } else {
+    fail('verify-portals parseAtsSlug misclassified an ATS or branded URL');
+  }
+
+  // Mock fetchJson: 200+jobs → live, 200+empty → empty, otherwise 404 → missing.
+  const mockFetch = async (url) => {
+    if (url.includes('/boards/live/')) return { jobs: [{}, {}] };
+    if (url.includes('/boards/empty/')) return { jobs: [] };
+    const err = new Error('HTTP 404'); err.status = 404; throw err;
+  };
+  const results = await verifyCompanies([
+    { name: 'Live', careers_url: 'https://job-boards.greenhouse.io/live' },
+    { name: 'Empty', careers_url: 'https://job-boards.greenhouse.io/empty' },
+    { name: 'Typo', careers_url: 'https://job-boards.greenhouse.io/nope' },
+    { name: 'Branded', careers_url: 'https://acme.com/careers' },
+    { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
+  ], { fetchJson: mockFetch });
+  const byName = Object.fromEntries(results.map((r) => [r.name, r.status]));
+  if (
+    results.length === 4 &&
+    byName.Live === 'live' && byName.Empty === 'empty' &&
+    byName.Typo === 'missing' && byName.Branded === 'skipped'
+  ) {
+    pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
+  } else {
+    fail(`verify-portals classification wrong: ${JSON.stringify(byName)} (${results.length} rows)`);
+  }
+} catch (e) {
+  fail(`portal slug validator tests crashed: ${e.message}`);
 }
 
 // ── 11. AGENTS.md INTEGRITY ─────────────────────────────────────
