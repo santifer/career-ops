@@ -379,6 +379,7 @@ if (summaryMatch) {
 // Save report
 // ---------------------------------------------------------------------------
 if (saveReport) {
+  let reportSaved = false;
   try {
     if (!existsSync(PATHS.reports)) {
       mkdirSync(PATHS.reports, { recursive: true });
@@ -421,16 +422,25 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
     writeFileSync(trackerPath, `${trackerFields.join('\t')}\n`, 'utf-8');
     console.log(`\n✅  Report saved: reports/${filename}`);
     console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
-    const mergeOutput = execFileSync(process.execPath, [join(ROOT, 'merge-tracker.mjs')], {
-      cwd: ROOT,
-      encoding: 'utf-8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    if (mergeOutput.trim()) console.log(mergeOutput.trim());
-    console.log('📊  Tracker merged into data/applications.md.');
+    reportSaved = true;
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
     process.exitCode = 1;
+  }
+
+  if (reportSaved) {
+    try {
+      const mergeOutput = execFileSync(process.execPath, [join(ROOT, 'merge-tracker.mjs')], {
+        cwd: ROOT,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      if (mergeOutput.trim()) console.log(mergeOutput.trim());
+      console.log('📊  Tracker merged into data/applications.md.');
+    } catch (err) {
+      console.warn(`⚠️   Report saved, but could not merge tracker addition into data/applications.md: ${err.message}`);
+      process.exitCode = 1;
+    }
   }
 }
 
