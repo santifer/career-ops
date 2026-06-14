@@ -408,14 +408,32 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
-// Render one pipeline.md checkbox line. Location is appended as a 4th
-// pipe-delimited column when present; offers without a location degrade to the
-// original 3-column form, which downstream readers treat as an empty location.
-// scan.mjs's own dedup (loadSeenUrls) matches the URL by regex and ignores
-// trailing columns, so the extra column is backward-compatible.
+// Format an offer's parsed compensation (the annualized {min,max,currency} that
+// providers like Ashby attach as `offer.salary`) into a compact, pipe-safe cell
+// such as `120000-160000 USD`. Returns '' when there is no usable salary data.
+export function formatCompensation(salary) {
+  if (!salary || typeof salary !== 'object') return '';
+  // Drop non-positive bounds: a 0 min/max is meaningless comp data, not "$0".
+  const num = (n) => (Number.isFinite(n) && n > 0 ? String(Math.round(n)) : null);
+  const lo = num(salary.min);
+  const hi = num(salary.max);
+  const range = lo && hi && lo !== hi ? `${lo}-${hi}` : (lo || hi || '');
+  if (!range) return '';
+  const currency = typeof salary.currency === 'string' ? salary.currency.trim() : '';
+  return currency ? `${range} ${currency}` : range;
+}
+
+// Render one pipeline.md checkbox line. Optional columns are appended in order:
+// location (4th) and compensation (5th). Because the columns are positional, a
+// present compensation forces the location cell to be written (possibly empty)
+// so comp always lands in column 5. Offers with neither degrade to the original
+// 3-column form. scan.mjs's own dedup (loadSeenUrls) matches the URL by regex
+// and ignores trailing columns, so the extra columns are backward-compatible.
 export function formatPipelineEntry(offer) {
   const base = `- [ ] ${offer.url} | ${offer.company} | ${offer.title}`;
   const location = typeof offer.location === 'string' ? offer.location.trim() : '';
+  const compensation = formatCompensation(offer.salary);
+  if (compensation) return `${base} | ${location} | ${compensation}`;
   return location ? `${base} | ${location}` : base;
 }
 

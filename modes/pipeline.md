@@ -29,6 +29,7 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 - [ ] https://jobs.example.com/posting/123
 - [ ] https://boards.greenhouse.io/company/jobs/456 | Company Inc | Senior PM
 - [ ] https://jobs.ashbyhq.com/acme/789 | Acme Corp | Solutions Architect | Remote (US)
+- [ ] https://jobs.ashbyhq.com/acme/790 | Acme Corp | AI Engineer | Remote (US) | 180000-220000 USD
 - [!] https://private.url/job — Error: login required
 
 ## Processed
@@ -36,9 +37,12 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 - [x] #144 | https://boards.greenhouse.io/xyz/jobs/012 | BigCo | SA | 2.1/5 | PDF ❌
 ```
 
-Pending lines are `- [ ] {url} | {company} | {title} | {location}`. The scanner
-fills the trailing `| {location}` column when the ATS exposes it; older
-3-column lines (no location) remain valid and are read as an empty location.
+Pending lines are `- [ ] {url} | {company} | {title} | {location} | {compensation}`.
+The scanner fills the trailing `| {location}` and `| {compensation}` columns when
+the ATS exposes them (compensation as a range like `180000-220000 USD`). The
+columns are positional, so a line with compensation always includes the location
+cell (empty if unknown). Older 3-column lines remain valid and are read as having
+neither location nor compensation.
 
 ## Intelligent JD detection from URL
 

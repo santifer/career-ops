@@ -669,7 +669,7 @@ if (fileExists('providers/local-parser.mjs')) {
 // 4th pipe-delimited column when present, and degrades to the original 3-column
 // form when the ATS exposes no location.
 try {
-  const { formatPipelineEntry } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { formatPipelineEntry, formatCompensation } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
   const withLoc = formatPipelineEntry({ url: 'https://x/1', company: 'Acme', title: 'SA', location: 'Remote (US)' });
   const noLoc = formatPipelineEntry({ url: 'https://x/2', company: 'BigCo', title: 'PM' });
   const blankLoc = formatPipelineEntry({ url: 'https://x/3', company: 'Co', title: 'Eng', location: '   ' });
@@ -681,6 +681,28 @@ try {
     pass('scan.mjs formatPipelineEntry appends location column (degrades to 3 cols when absent)');
   } else {
     fail(`scan.mjs formatPipelineEntry location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}"`);
+  }
+
+  // pipeline.md compensation column (B3): formatCompensation renders the parsed
+  // {min,max,currency} salary; formatPipelineEntry appends it as the 5th column,
+  // forcing the (possibly empty) location cell so comp stays positionally 5th.
+  const compRange = formatCompensation({ min: 180000, max: 220000, currency: 'USD' });
+  const compSingle = formatCompensation({ min: 150000, max: 150000, currency: 'usd' });
+  const compNone = formatCompensation(null);
+  const compNoCur = formatCompensation({ min: 0, max: 200000, currency: '' });
+  const withComp = formatPipelineEntry({ url: 'https://x/4', company: 'Acme', title: 'AI Eng', location: 'Remote', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  const compNoLoc = formatPipelineEntry({ url: 'https://x/5', company: 'Acme', title: 'AI Eng', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  if (
+    compRange === '180000-220000 USD' &&
+    compSingle === '150000 usd' &&
+    compNone === '' &&
+    compNoCur === '200000' &&
+    withComp === '- [ ] https://x/4 | Acme | AI Eng | Remote | 180000-220000 USD' &&
+    compNoLoc === '- [ ] https://x/5 | Acme | AI Eng |  | 180000-220000 USD'
+  ) {
+    pass('scan.mjs formatPipelineEntry appends compensation column (forces empty location cell when needed)');
+  } else {
+    fail(`scan.mjs compensation column wrong: "${compRange}" / "${compSingle}" / "${compNone}" / "${compNoCur}" / "${withComp}" / "${compNoLoc}"`);
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineEntry import failed: ${err.message}`);
