@@ -408,6 +408,17 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
+// Render one pipeline.md checkbox line. Location is appended as a 4th
+// pipe-delimited column when present; offers without a location degrade to the
+// original 3-column form, which downstream readers treat as an empty location.
+// scan.mjs's own dedup (loadSeenUrls) matches the URL by regex and ignores
+// trailing columns, so the extra column is backward-compatible.
+export function formatPipelineEntry(offer) {
+  const base = `- [ ] ${offer.url} | ${offer.company} | ${offer.title}`;
+  const location = typeof offer.location === 'string' ? offer.location.trim() : '';
+  return location ? `${base} | ${location}` : base;
+}
+
 export function appendToPipeline(offers) {
   if (offers.length === 0) return;
 
@@ -420,9 +431,7 @@ export function appendToPipeline(offers) {
     // No Pendientes section — append at end before Procesadas
     const procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
-    const block = `\n${marker}\n\n` + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n\n';
+    const block = `\n${marker}\n\n` + offers.map(formatPipelineEntry).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
     // Find the end of existing Pendientes content (next ## or end)
@@ -430,9 +439,7 @@ export function appendToPipeline(offers) {
     const nextSection = text.indexOf('\n## ', afterMarker);
     const insertAt = nextSection === -1 ? text.length : nextSection;
 
-    const block = '\n' + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n';
+    const block = '\n' + offers.map(formatPipelineEntry).join('\n') + '\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   }
 
