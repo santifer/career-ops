@@ -149,12 +149,16 @@ export function buildTrustValidator(config) {
     return () => ({ score: 100, flags: [], level: /** @type {const} */ ('high') });
   }
 
-  const suspiciousDomains = (config.suspicious_domains || DEFAULT_SUSPICIOUS_DOMAINS)
-    .map(d => d.toLowerCase().trim())
+  const suspiciousDomains = (Array.isArray(config.suspicious_domains)
+    ? config.suspicious_domains
+    : DEFAULT_SUSPICIOUS_DOMAINS)
+    .map(d => String(d).toLowerCase().trim())
     .filter(Boolean);
 
-  const atsAllowlist = (config.ats_allowlist || DEFAULT_ATS_ALLOWLIST)
-    .map(d => d.toLowerCase().trim())
+  const atsAllowlist = (Array.isArray(config.ats_allowlist)
+    ? config.ats_allowlist
+    : DEFAULT_ATS_ALLOWLIST)
+    .map(d => String(d).toLowerCase().trim())
     .filter(Boolean);
 
   return (job) => {
@@ -162,7 +166,7 @@ export function buildTrustValidator(config) {
     const flags = [];
     let score = 100;
 
-    const url = (job.url ?? '').trim();
+    const url = typeof job.url === 'string' ? job.url.trim() : '';
 
     // Rule 1 — Missing URL
     if (!url) {
@@ -200,7 +204,7 @@ export function buildTrustValidator(config) {
     }
 
     // Rule 4 — Company ↔ domain mismatch (skip for ATS-hosted URLs)
-    const company = (job.company ?? '').trim();
+    const company = typeof job.company === 'string' ? job.company.trim() : '';
     if (company && !matchesDomainList(hostname, atsAllowlist)) {
       if (!companyMatchesHostname(company, hostname)) {
         flags.push('company_domain_mismatch');
