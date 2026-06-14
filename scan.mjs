@@ -408,6 +408,35 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
+// Format an offer's parsed compensation (the annualized {min,max,currency} that
+// providers like Ashby attach as `offer.salary`) into a compact, pipe-safe cell
+// such as `120000-160000 USD`. Returns '' when there is no usable salary data.
+export function formatCompensation(salary) {
+  if (!salary || typeof salary !== 'object') return '';
+  // Drop non-positive bounds: a 0 min/max is meaningless comp data, not "$0".
+  const num = (n) => (Number.isFinite(n) && n > 0 ? String(Math.round(n)) : null);
+  const lo = num(salary.min);
+  const hi = num(salary.max);
+  const range = lo && hi && lo !== hi ? `${lo}-${hi}` : (lo || hi || '');
+  if (!range) return '';
+  const currency = typeof salary.currency === 'string' ? salary.currency.trim() : '';
+  return currency ? `${range} ${currency}` : range;
+}
+
+// Render one pipeline.md checkbox line. Optional columns are appended in order:
+// location (4th) and compensation (5th). Because the columns are positional, a
+// present compensation forces the location cell to be written (possibly empty)
+// so comp always lands in column 5. Offers with neither degrade to the original
+// 3-column form. scan.mjs's own dedup (loadSeenUrls) matches the URL by regex
+// and ignores trailing columns, so the extra columns are backward-compatible.
+export function formatPipelineEntry(offer) {
+  const base = `- [ ] ${offer.url} | ${offer.company} | ${offer.title}`;
+  const location = typeof offer.location === 'string' ? offer.location.trim() : '';
+  const compensation = formatCompensation(offer.salary);
+  if (compensation) return `${base} | ${location} | ${compensation}`;
+  return location ? `${base} | ${location}` : base;
+}
+
 export function appendToPipeline(offers) {
   if (offers.length === 0) return;
 
@@ -420,9 +449,7 @@ export function appendToPipeline(offers) {
     // No Pendientes section — append at end before Procesadas
     const procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
-    const block = `\n${marker}\n\n` + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n\n';
+    const block = `\n${marker}\n\n` + offers.map(formatPipelineEntry).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
     // Find the end of existing Pendientes content (next ## or end)
@@ -430,9 +457,7 @@ export function appendToPipeline(offers) {
     const nextSection = text.indexOf('\n## ', afterMarker);
     const insertAt = nextSection === -1 ? text.length : nextSection;
 
-    const block = '\n' + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n';
+    const block = '\n' + offers.map(formatPipelineEntry).join('\n') + '\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   }
 
