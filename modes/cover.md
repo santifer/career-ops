@@ -36,6 +36,8 @@ Read `cv.md` for:
 
 Read `article-digest.md` if it exists — supplementary proof points and metrics take precedence over cv.md where they overlap.
 
+Read `modes/_profile.md` if it exists — the candidate's personalization file. It captures their target roles, adaptive framing and archetypes, exit narrative, cross-cutting advantage, proof points, comp targets, negotiation scripts, location policy, and any voice or writing-style rules they have added. Its rules **govern the letter's voice and structure and override the generic defaults in this mode**, so the candidate's personalization is never lost.
+
 ---
 
 ## Step 2 — Parse the JD
