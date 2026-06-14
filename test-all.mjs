@@ -2522,6 +2522,60 @@ try {
   fail(`update-system SEMVER_RE test crashed: ${e.message}`);
 }
 
+// ── 17. COVER LETTER GREETING BLOCK ─────────────────────────────
+
+console.log('\n17. Cover letter greeting block');
+
+try {
+  const { buildHtml } = await import(pathToFileURL(join(ROOT, 'generate-cover-letter.mjs')).href);
+
+  const basePayload = {
+    candidate: { name: 'Jane Doe' },
+    letter: {
+      role_title: 'Head of Applied AI',
+      opening: 'OPENING_MARKER sentence.',
+      profile_intro: 'Profile intro.',
+    },
+  };
+
+  // (a) greeting present → renders <p class="greeting"> above the opening
+  const withGreeting = buildHtml({
+    ...basePayload,
+    letter: { ...basePayload.letter, greeting: 'Dear Hiring Manager,' },
+  });
+  const greetingTag = '<p class="greeting">Dear Hiring Manager,</p>';
+  const greetingIdx = withGreeting.indexOf(greetingTag);
+  const openingIdx = withGreeting.indexOf('OPENING_MARKER');
+  if (greetingIdx !== -1 && openingIdx !== -1 && greetingIdx < openingIdx) {
+    pass('Greeting renders as <p class="greeting"> above the opening');
+  } else {
+    fail(`Greeting block missing or misordered (greeting=${greetingIdx}, opening=${openingIdx})`);
+  }
+
+  // greeting text is HTML-escaped
+  const escaped = buildHtml({
+    ...basePayload,
+    letter: { ...basePayload.letter, greeting: 'Dear <O\'Brien> & "Co",' },
+  });
+  if (escaped.includes('Dear &lt;O&#39;Brien&gt; &amp; &quot;Co&quot;,') && !escaped.includes('Dear <O\'Brien>')) {
+    pass('Greeting text is HTML-escaped');
+  } else {
+    fail('Greeting text was not HTML-escaped');
+  }
+
+  // (b) greeting omitted → no salutation, no leftover token (backward compatible)
+  const withoutGreeting = buildHtml(basePayload);
+  if (!withoutGreeting.includes('class="greeting"')
+      && !withoutGreeting.includes('{{GREETING_BLOCK}}')
+      && withoutGreeting.includes('OPENING_MARKER')) {
+    pass('Omitted greeting leaves no salutation and no leftover token (backward compatible)');
+  } else {
+    fail('Omitted greeting did not render cleanly (stray greeting markup or unreplaced token)');
+  }
+} catch (e) {
+  fail(`Cover letter greeting test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

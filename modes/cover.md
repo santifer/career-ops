@@ -215,6 +215,9 @@ Cover Letter: [Role Title]
 
 ────────────────────────────────────────────────
 
+[Salutation — optional]
+Address the named hiring manager if known, e.g. "Dear Jane Smith,". Omit if no name.
+
 [Opening — 2 sentences]
 Why applying + functional summary. Derived from Angle A. Uses JD mirror vocabulary.
 
@@ -282,6 +285,7 @@ Assemble the JSON payload:
     "company": "{company name}",
     "city": "{JD city}",
     "date": "{YYYY-MM-DD}",
+    "greeting": "{optional salutation, e.g. 'Dear Jane Smith,'; omit the key to skip the salutation}",
     "opening": "{approved opening paragraph}",
     "profile_intro": "{approved profile intro}",
     "achievements": [
