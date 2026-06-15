@@ -10,11 +10,11 @@
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  */
 
-import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync } from 'fs';
+import { mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -249,13 +249,86 @@ async function generatePDF() {
  * @param {{format?: 'a4'|'letter', baseDir?: string}} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
  */
+function findSystemChrome() {
+  const candidates = ['google-chrome-stable', 'google-chrome', 'chromium-browser', 'chromium'];
+  if (process.platform === 'win32') {
+    candidates.push('chrome');
+  }
+  for (const candidate of candidates) {
+    try {
+      execSync(`"${candidate}" --version`, { stdio: 'ignore' });
+      return candidate;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+async function renderWithSystemChrome(html, outputPath, opts) {
+  const chromeBin = findSystemChrome();
+  if (!chromeBin) {
+    throw new Error('Neither Playwright nor system Google Chrome/Chromium is installed.');
+  }
+
+  const tempHtmlPath = outputPath + '.temp.html';
+  const { writeFile, unlink } = await import('fs/promises');
+  await writeFile(tempHtmlPath, html);
+
+  try {
+    console.log(`🌐 Fallback: Rendering PDF via system ${chromeBin} CLI...`);
+    execSync(`"${chromeBin}" --headless --disable-gpu --print-to-pdf="${resolve(outputPath)}" "${resolve(tempHtmlPath)}"`, { stdio: 'ignore' });
+
+    if (!existsSync(outputPath)) {
+      throw new Error('System Chrome print command failed to generate a PDF file.');
+    }
+
+    const { stat } = await import('fs/promises');
+    const stats = await stat(outputPath);
+    const pdfBuffer = await readFile(outputPath);
+    const pdfString = pdfBuffer.toString('latin1');
+    const pageCount = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length;
+
+    console.log(`✅ PDF generated: ${outputPath}`);
+    console.log(`📊 Pages: ${pageCount}`);
+    console.log(`📦 Size: ${(stats.size / 1024).toFixed(1)} KB`);
+
+    return { outputPath, pageCount, size: stats.size };
+  } finally {
+    try {
+      await unlink(tempHtmlPath);
+    } catch {}
+  }
+}
+
+/**
+ * Render an HTML string to a PDF file via headless Chromium.
+ *
+ * @param {string} html - Full HTML document to render.
+ * @param {string} outputPath - Absolute path to write the PDF to.
+ * @param {{format?: 'a4'|'letter', baseDir?: string}} [opts]
+ * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
+ */
 export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const format = opts.format || 'a4';
   const baseDir = opts.baseDir || process.cwd();
 
   mkdirSync(dirname(outputPath), { recursive: true });
 
-  const browser = await chromium.launch({ headless: true });
+  let playwright;
+  try {
+    playwright = await import('playwright');
+  } catch (err) {
+    return renderWithSystemChrome(html, outputPath, opts);
+  }
+
+  let browser;
+  try {
+    browser = await playwright.chromium.launch({ headless: true });
+  } catch (err) {
+    console.warn('⚠️ Playwright launch failed or browser binaries missing. Falling back to system Chrome...');
+    return renderWithSystemChrome(html, outputPath, opts);
+  }
   try {
     const page = await browser.newPage();
 
