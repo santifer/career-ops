@@ -7,7 +7,7 @@ The evidence graph connects user-owned proof points to generated CVs, cover lett
 ## Evidence Item
 
 ```yaml
-id: ev_...
+id: ev_a1b2c3d4e5f6
 source: article-digest.md
 source_anchor: "Project Alpha"
 claim_type: metric
@@ -31,15 +31,15 @@ urls:
 Generated artifacts may reference evidence internally:
 
 ```markdown
-<!-- evidence: ev_latency_40, ev_project_alpha -->
+<!-- evidence: ev_a1b2c3d4e5f6, ev_1234abcd5678 -->
 ```
 
 Reports may also include metadata:
 
 ```yaml
 evidence_ids:
-  - ev_latency_40
-  - ev_project_alpha
+  - ev_a1b2c3d4e5f6
+  - ev_1234abcd5678
 ```
 
 ## Unsupported Claim Rule
@@ -52,4 +52,3 @@ Before finalizing candidate-facing output, agents should flag claims that:
 - cite a URL that is not present in the user layer
 
 The graph remains local. Evidence IDs may appear in generated metadata, but private source content must not be shared without explicit privacy-mode consent.
-
