@@ -46,3 +46,28 @@ export function makeHttpCtx() {
     fetchText,
   };
 }
+
+// Normalize a posting date to epoch milliseconds (or null if absent/unparseable).
+// Accepts ISO strings ("2026-05-22T16:05:41-04:00"), epoch seconds (~1.7e9),
+// and epoch milliseconds (~1.7e12). Used by providers to populate Job.postedAt
+// so scan.mjs can apply the freshness_filter uniformly. null = "no date" = keep.
+export function toEpochMs(value) {
+  if (value == null) return null;
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value <= 0) return null;
+    return value < 1e12 ? value * 1000 : value; // < 1e12 ⇒ seconds
+  }
+  if (typeof value === 'string') {
+    const s = value.trim();
+    // Numeric timestamp strings ("1710000000" / "1710000000000") — Date.parse
+    // would return NaN for these, so handle them like the numeric branch.
+    if (/^\d+$/.test(s)) {
+      const n = Number(s);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      return n < 1e12 ? n * 1000 : n;
+    }
+    const t = Date.parse(s);
+    return Number.isNaN(t) || t <= 0 ? null : t;
+  }
+  return null;
+}

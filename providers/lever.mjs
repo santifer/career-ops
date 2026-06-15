@@ -6,9 +6,12 @@
 
 function resolveApiUrl(entry) {
   const url = entry.careers_url || '';
-  const match = url.match(/jobs\.lever\.co\/([^/?#]+)/);
+  // Lever has a US instance (jobs.lever.co / api.lever.co) and an EU instance
+  // (jobs.eu.lever.co / api.eu.lever.co) — match both and route to the right host.
+  const match = url.match(/jobs(?:\.eu)?\.lever\.co\/([^/?#]+)/);
   if (!match) return null;
-  return `https://api.lever.co/v0/postings/${match[1]}`;
+  const apiHost = /jobs\.eu\.lever\.co/i.test(url) ? 'api.eu.lever.co' : 'api.lever.co';
+  return `https://${apiHost}/v0/postings/${match[1]}`;
 }
 
 /** @type {Provider} */

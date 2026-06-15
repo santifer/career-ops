@@ -121,14 +121,27 @@ function resolveProvider(entry, providers, { skipIds = [] } = {}) {
 
 // ── Title filter ────────────────────────────────────────────────────
 
+// Compile a lowercased keyword into a matcher. Short all-letter acronyms
+// (2-3 chars: cfo, coo, sdr, bdr, gsi…) match on WORD BOUNDARIES so "COO" no
+// longer matches "Coordinator", "SDR" no longer matches anything mid-word, etc.
+// Multi-word phrases and keywords containing non-letters (".NET", "SAP ",
+// "L&D") keep fast, permissive substring matching.
+export function compileKeyword(kw) {
+  if (/^[a-z]{2,3}$/.test(kw)) {
+    const re = new RegExp(`\\b${kw}\\b`);
+    return (lower) => re.test(lower);
+  }
+  return (lower) => lower.includes(kw);
+}
+
 export function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+  const positive = normalizeKeywordList(titleFilter?.positive).map(compileKeyword);
+  const negative = normalizeKeywordList(titleFilter?.negative).map(compileKeyword);
 
   return (title) => {
-    const lower = title.toLowerCase();
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
-    const hasNegative = negative.some(k => lower.includes(k));
+    const lower = (title || '').toLowerCase();
+    const hasPositive = positive.length === 0 || positive.some(m => m(lower));
+    const hasNegative = negative.some(m => m(lower));
     return hasPositive && !hasNegative;
   };
 }
@@ -322,6 +335,24 @@ async function searchForNewUrl(page, offer) {
       /* ignore — best-effort cleanup */
     }
   }
+}
+
+// ── Freshness filter ────────────────────────────────────────────────
+// Optional. Drops postings older than `freshness_filter.max_age_days`, based on
+// each job's provider-supplied `postedAt` (epoch ms). Jobs with no `postedAt`
+// are kept (missing = pass, same rule as the location filter). `max_age_days`
+// <= 0 / absent / non-numeric disables it.
+// Providers without an authoritative date (personio, workday, bamboohr) return
+// no postedAt, so their jobs always pass — the filter only acts where the date
+// is trustworthy (greenhouse, ashby, lever, workable, recruitee, getro, teamtailor).
+export function buildFreshnessFilter(freshnessFilter) {
+  const maxAgeDays = Number(freshnessFilter?.max_age_days);
+  if (!Number.isFinite(maxAgeDays) || maxAgeDays <= 0) return () => true;
+  const cutoff = Date.now() - maxAgeDays * 86_400_000;
+  return (postedAt) => {
+    if (postedAt == null || !Number.isFinite(postedAt)) return true;
+    return postedAt >= cutoff;
+  };
 }
 
 // ── Dedup ───────────────────────────────────────────────────────────
@@ -642,6 +673,9 @@ async function main() {
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
   const salaryFilter = buildSalaryFilter(config.salary_filter);
+  const freshnessFilter = buildFreshnessFilter(config.freshness_filter);
+  const maxAgeDays = Number(config.freshness_filter?.max_age_days);
+  const freshnessActive = Number.isFinite(maxAgeDays) && maxAgeDays > 0;
 
   // 3. Resolve a provider for each enabled company / board
   const targets = [];
@@ -713,6 +747,7 @@ async function main() {
   let totalFilteredTitle = 0;
   let totalFilteredLocation = 0;
   let totalFilteredSalary = 0;
+  let totalFilteredStale = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
@@ -753,6 +788,10 @@ async function main() {
         }
         if (!salaryFilter(job.salary)) {
           totalFilteredSalary++;
+          continue;
+        }
+        if (!freshnessFilter(job.postedAt)) {
+          totalFilteredStale++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -852,6 +891,9 @@ async function main() {
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
+  if (freshnessActive) {
+    console.log(`Filtered by age:       ${totalFilteredStale} removed (>${maxAgeDays}d old)`);
+  }
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (historyPolicy.recheckAfterDays != null) {
     console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);

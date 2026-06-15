@@ -287,6 +287,15 @@ New added to pipeline.md: N
 → Run /career-ops pipeline to evaluate the new offers.
 ```
 
+## Final step: Newsletters (InnovatorsRoom)
+
+As part of the regular scan cadence, after Levels 0-3 also run the InnovatorsRoom
+newsletter import (see `modes/innovatorsroom.md`): search Gmail for new issues
+(TechJobs + JobDrops), parse each with `node innovatorsroom.mjs`, and add the
+relevant roles to `data/pipeline.md`. Use the same `title_filter` / `location_filter`
+so results are deduped and filtered identically to the portal scan. Include its
+summary alongside the portal scan summary.
+
 ## Managing careers_url
 
 Every company in `tracked_companies` must have a `careers_url` — the direct URL to its offers page. This avoids searching for it every time.
