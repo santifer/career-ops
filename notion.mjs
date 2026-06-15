@@ -18,7 +18,7 @@
 import { readFileSync, existsSync } from 'fs';
 import {
   resolveDBs, findRecords, getRecordById, queryDB, plain,
-  createPage, appendBlocks, api, rich, mdToBlocks, pageMarkdown,
+  createPage, appendMarkdown, api, rich, pageMarkdown,
   canonicalStatus, statusLabels,
 } from './notion-lib.mjs';
 
@@ -92,12 +92,12 @@ async function cmdAdd(apps) {
       { existing: dupes[0].id });
   }
 
-  let url = flags.url, body = [];
+  let url = flags.url, body = '';
   if (flags.report) {
     if (!existsSync(flags.report)) die(`Report file not found: ${flags.report}`);
     const md = readFileSync(flags.report, 'utf-8');
     if (!url) url = (md.match(/^\*\*URL:\*\*\s*(\S+)/m) || [])[1];
-    body = mdToBlocks(md);
+    body = md;
   }
 
   const props = { Role: { title: rich(role) }, Company: { rich_text: rich(company) }, Status: { select: { name: status } }, PDF: { checkbox: !!flags.pdf } };
@@ -112,8 +112,8 @@ async function cmdAdd(apps) {
   if (flags['gate-lane'] !== undefined) props['Gate: Lane'] = { checkbox: gateBool(flags['gate-lane']) };
 
   const page = await createPage(apps, props, body);
-  out(`✓ Added: ${company} — ${role} [${status}]${body.length ? ` (+${body.length} body blocks)` : ''}\n  id:  ${page.id}\n  url: ${page.url}`,
-    { id: page.id, url: page.url, company, role, status, blocks: body.length });
+  out(`✓ Added: ${company} — ${role} [${status}]${body ? ' (+report body)' : ''}\n  id:  ${page.id}\n  url: ${page.url}`,
+    { id: page.id, url: page.url, company, role, status, body: body.length });
 }
 
 async function cmdUpdate(apps) {
@@ -142,15 +142,10 @@ async function cmdUpdate(apps) {
 async function cmdLog(apps) {
   const rec = await resolveTarget(apps);
   if (!flags.date || !flags.summary) die('log requires --date and --summary (and optionally --detail).');
-  const head = { type: 'heading_3', heading_3: { rich_text: rich(`🗓️ ${flags.date}`) } };
-  const summary = String(flags.summary).split('\n').filter(Boolean)
-    .map((s) => ({ type: 'bulleted_list_item', bulleted_list_item: { rich_text: rich(s) } }));
-  const blocks = [head, ...summary];
-  if (flags.detail) {
-    blocks.push({ type: 'toggle', toggle: { rich_text: rich('Detail'),
-      children: String(flags.detail).split('\n').filter(Boolean).map((s) => ({ type: 'paragraph', paragraph: { rich_text: rich(s) } })) } });
-  }
-  await appendBlocks(rec.id, blocks);
+  const summary = String(flags.summary).split('\n').filter(Boolean).map((s) => `- ${s}`).join('\n');
+  let md = `### 🗓️ ${flags.date}\n${summary}`;
+  if (flags.detail) md += `\n\n${String(flags.detail).split('\n').filter(Boolean).join('\n\n')}`;
+  await appendMarkdown(rec.id, `\n${md}\n`);
   out(`✓ Logged ${flags.date} on ${rec.company} — ${rec.role}\n  id: ${rec.id}`, { id: rec.id, date: flags.date });
 }
 
