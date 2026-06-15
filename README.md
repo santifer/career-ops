@@ -203,15 +203,15 @@ npm install -g @google/gemini-cli
 cd career-ops
 gemini
 
-# 3. Use slash commands just like Claude Code
+# 3. Use the unified /career-ops command with subcommands:
 /career-ops "Senior AI Engineer at Anthropic..."
-/career-ops-evaluate --file ./jds/openai.txt
-/career-ops-scan
-/career-ops-pdf
-/career-ops-tracker
+/career-ops pipeline
+/career-ops scan
+/career-ops pdf
+/career-ops tracker
 ```
 
-The `GEMINI.md` file is auto-loaded as context. All 15 commands are defined in `.gemini/commands/*.toml`.
+The `GEMINI.md` file is auto-loaded as context. All subcommands are routed via the unified `.agents/skills/career-ops/SKILL.md` definition.
 
 ### Option B: Standalone API Script (No CLI install needed)
 

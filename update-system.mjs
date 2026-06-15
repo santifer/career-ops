@@ -107,7 +107,6 @@ const SYSTEM_PATHS = [
   '.claude/skills/',
   '.opencode/skills/',
   '.claude-plugin/',
-  '.gemini/commands/',
   '.qwen/',
   'docs/',
   'writing-samples/README.md',
