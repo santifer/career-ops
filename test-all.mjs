@@ -1058,7 +1058,10 @@ try {
       { url: 'https://jobs.example.com/new-file', company: 'Gamma', title: 'ML Engineer', location: 'Paris' },
     ], missingPipelinePath);
     const missingPipelineText = readFileSync(missingPipelinePath, 'utf-8');
-    if (missingPipelineText.includes('## Pendientes') && missingPipelineText.includes('- [ ] https://jobs.example.com/new-file | Gamma | ML Engineer | Paris')) {
+    if (
+      missingPipelineText.startsWith('# Pipeline\n\n## Pendientes\n') &&
+      missingPipelineText.includes('- [ ] https://jobs.example.com/new-file | Gamma | ML Engineer | Paris')
+    ) {
       pass('scan pipeline writer creates missing pipeline files before appending');
     } else {
       fail('scan pipeline writer should create missing pipeline files before appending');

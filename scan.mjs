@@ -430,7 +430,7 @@ export function appendToPipeline(offers, pipelinePath = PIPELINE_PATH) {
 
   mkdirSync(path.dirname(pipelinePath), { recursive: true });
   if (!existsSync(pipelinePath)) {
-    writeFileSync(pipelinePath, '', 'utf-8');
+    writeFileSync(pipelinePath, '# Pipeline\n\n## Pendientes\n', 'utf-8');
   }
 
   let text = readFileSync(pipelinePath, 'utf-8');
