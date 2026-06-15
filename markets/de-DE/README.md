@@ -37,3 +37,9 @@ language:
 
 `market_pack` selects market conventions. `modes_dir` continues to select localized mode files until scripts grow first-class market-pack loading.
 
+During the migration period, the two fields compose:
+
+- `market_pack` is the authoritative market-convention selector when code or agents understand market packs.
+- `modes_dir` remains the authoritative mode-loading selector for current scripts that still load prompts from `modes/<lang>/`.
+- If only `market_pack` is set before scripts support it, current mode-loading behavior falls back to the default modes while agents can still read this pack for market guidance.
+- Once first-class loading exists, scripts should resolve `market_pack` first and treat `modes_dir` as a backward-compatible fallback. Deprecating `modes_dir` should happen only after all CLI entrypoints can load modes through market packs.

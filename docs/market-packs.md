@@ -34,6 +34,58 @@ Agents and future scripts should resolve market context in this order:
 
 The market pack controls market vocabulary and local conventions. It must not override user-specific goals, compensation floors, constraints, preferred tone, or personal evidence.
 
+## File Schemas
+
+### `portals.example.yml`
+
+Purpose: market-specific public job-board and ATS defaults. Required top-level key: `portals`, an array of portal entries.
+
+Each portal entry should include:
+
+- `name` (string, required): display name.
+- `url` (string, required): base URL or search URL.
+- `type` (string, optional): `ats`, `job_board`, `company`, or `aggregator`.
+- `enabled` (boolean, optional): default inclusion flag.
+- `notes` (string, optional): market-specific caveats.
+
+### `compensation.yml`
+
+Purpose: salary vocabulary and normalization hints. Required top-level key: `terms`, an array.
+
+Each term should include:
+
+- `term` (string, required): local phrase.
+- `normalized` (string, required): canonical career-ops meaning.
+- `category` (string, optional): `base`, `bonus`, `equity`, `benefit`, `tax`, or `frequency`.
+- `notes` (string, optional): interpretation guidance.
+
+### `location-aliases.yml`
+
+Purpose: normalize cities, regions, remote-work phrases, and cross-border location terms. Required top-level key: `aliases`, an array.
+
+Each alias should include:
+
+- `alias` (string, required): observed phrase.
+- `canonical` (string, required): normalized location or work-mode bucket.
+- `country` (string, optional): ISO country code or region name.
+- `work_mode` (string, optional): `remote`, `hybrid`, `onsite`, or `unknown`.
+
+### `cv-conventions.md`
+
+Purpose: human-readable conventions for CV/resume expectations in the market.
+
+It should cover expected length, photo usage, reverse chronology norms, language expectations, credential formatting, and common ATS concerns.
+
+### `legitimacy-signals.yml`
+
+Purpose: market-specific public signals for credible or risky postings. Required top-level keys: `positive_signals` and `risk_signals`, both arrays of strings or objects.
+
+Object entries may include:
+
+- `signal` (string, required): observed public fact.
+- `severity` (string, optional): `low`, `medium`, or `high`.
+- `notes` (string, optional): evaluation guidance.
+
 ## Separation From User Personalization
 
 Market packs may contain:
@@ -66,4 +118,3 @@ The existing `modes/de/` directory maps naturally to a DACH-style market pack:
 - `modes/de/_shared.md` -> shared German-language market vocabulary
 
 `markets/de-DE/README.md` documents the first reference bundle without moving the existing modes.
-
