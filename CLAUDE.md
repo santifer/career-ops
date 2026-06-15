@@ -226,6 +226,23 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
 - **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
 
+### Output Language vs Market Modes
+
+`config/profile.yml` may set:
+
+```yaml
+language:
+  output: en
+  modes_dir: modes/de
+```
+
+These are two separate axes:
+
+- `language.output` controls human-facing output: reports, tracker notes, PDFs, cover letters, outreach, interview prep, form answers, and any user-visible prose. Default: `en` when absent.
+- `language.modes_dir` controls market vocabulary and local evaluation rules. For example, `modes/de` supplies DACH-specific concepts like 13. Monatsgehalt and Probezeit.
+
+**Composition rule:** `language.output` is authoritative for prose. `modes_dir` only supplies market context.
+
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
 2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
@@ -241,7 +258,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
+**When NOT to switch market modes:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English market modes unless `language.modes_dir` says otherwise. This does not override `language.output`; prose still follows `language.output`.
 
 ### Skill Modes
 

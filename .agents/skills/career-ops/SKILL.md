@@ -44,6 +44,21 @@ If `$mode` is not a sub-command AND doesn't look like a JD, show discovery.
 
 ---
 
+## Output Language Directive
+
+Before executing any mode, read `config/profile.yml` if it exists and resolve:
+
+- `language.output` → ISO language code for human-facing output. Default: `en`.
+- `language.modes_dir` → optional market-mode directory. This controls market vocabulary and local evaluation rules only.
+
+Inject this directive after loading the mode instructions and before producing any user-visible content:
+
+> Write all human-facing output in `{language.output}` regardless of the language of these instructions or of the job description. This includes reports, tracker notes, PDFs, cover letters, outreach, interview prep, form answers, and summaries. If `language.modes_dir` supplies market-specific vocabulary, keep the market logic but explain terms in `{language.output}` when needed.
+
+`language.output` is authoritative for prose. `modes_dir` is market context; it must not force the prose language.
+
+---
+
 ## Discovery Mode (no arguments)
 
 Show this menu:
@@ -99,7 +114,7 @@ For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent
 ```
 Agent(
   subagent_type="general-purpose",
-  prompt="[content of modes/_shared.md]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
+  prompt="[output language directive]\n\n[content of modes/_shared.md]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
   description="career-ops {mode}"
 )
 ```
