@@ -27,11 +27,17 @@ export const FORBIDDEN_CANDIDATE_FIELDS = [
 ];
 
 function normalizePart(value) {
-  return String(value || '')
+  return String(value ?? '')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ');
 }
+
+function normalizeFieldName(value) {
+  return String(value ?? '').replace(/[_\-\s]+/g, '').toLowerCase();
+}
+
+const FORBIDDEN_FIELD_NAMES = new Set(FORBIDDEN_CANDIDATE_FIELDS.map(normalizeFieldName));
 
 export function computeJobFactsKey(input = {}) {
   const parts = [
@@ -43,6 +49,7 @@ export function computeJobFactsKey(input = {}) {
     input.location,
     input.workMode,
     input.canonicalUrl || input.sourceUrl,
+    input.retrieved_at || input.retrievedAt,
     input.contentHash,
   ].map(normalizePart);
   return `jobfacts_${createHash('sha256').update(parts.join('\n')).digest('hex').slice(0, 24)}`;
@@ -54,7 +61,7 @@ export function containsForbiddenCandidateField(payload = {}) {
     const current = stack.pop();
     if (!current || typeof current !== 'object') continue;
     for (const [key, value] of Object.entries(current)) {
-      if (FORBIDDEN_CANDIDATE_FIELDS.includes(key)) return true;
+      if (FORBIDDEN_FIELD_NAMES.has(normalizeFieldName(key))) return true;
       if (value && typeof value === 'object') stack.push(value);
     }
   }
@@ -73,7 +80,13 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
     console.error('Usage: node evaluation-cache.mjs <job-facts.json>');
     process.exit(2);
   }
-  const payload = JSON.parse(readFileSync(file, 'utf8'));
+  let payload;
+  try {
+    payload = JSON.parse(readFileSync(file, 'utf8'));
+  } catch (error) {
+    console.error(`Could not read or parse job facts payload: ${error.message}`);
+    process.exit(1);
+  }
   if (!hasReusableJobFacts(payload)) {
     console.error('Job facts payload is not reusable.');
     process.exit(1);
