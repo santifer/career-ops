@@ -12,7 +12,7 @@
  */
 
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
+import { chmodSync, readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -79,6 +79,27 @@ function run(cmd, args = [], opts = {}) {
     return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
   } catch (e) {
     return null;
+  }
+}
+
+const BASH_AVAILABLE = run('bash', ['-lc', 'printf ok'], { stdio: ['ignore', 'pipe', 'pipe'] }) === 'ok';
+
+function requireBashTest(name) {
+  if (BASH_AVAILABLE) return true;
+  warn(`${name} skipped because bash is unavailable in this environment`);
+  return false;
+}
+
+function makeExecutable(path) {
+  try {
+    chmodSync(path, 0o755);
+  } catch {
+    // Windows ignores POSIX execute bits; Unix CI still gets executable fixtures.
+  }
+  if (process.platform === 'win32' && BASH_AVAILABLE) {
+    try {
+      execFileSync('bash', ['-lc', `chmod +x ${JSON.stringify(toBashPath(path))}`]);
+    } catch {}
   }
 }
 
@@ -500,7 +521,7 @@ if (/AGENT="\$\{CAREER_OPS_AGENT:-claude\}"/.test(batchRunnerSource) &&
   fail('Batch runner missing CAREER_OPS_AGENT/agent adapter table support');
 }
 
-if (batchRunnerSource.includes('worker_command=("$AGENT_BIN" -p --dangerously-skip-permissions --strict-mcp-config)')) {
+if (/worker_command=\(\s*"\$AGENT_BIN"\s+-p\s+--dangerously-skip-permissions\s+--strict-mcp-config\s*\)/.test(batchRunnerSource)) {
   pass('Batch runner preserves existing Claude headless defaults and strict MCP isolation');
 } else {
   fail('Batch runner changed Claude headless defaults or lost strict MCP isolation');
@@ -3011,6 +3032,7 @@ try {
 console.log('\n13. Batch rate-limit pause');
 
 try {
+  if (requireBashTest('Batch rate-limit pause')) {
   const tmp = mkdtempSync(join(tmpdir(), 'co-batch-rate-'));
   const batchDir = join(tmp, 'batch');
   const fakeBin = join(tmp, 'bin');
@@ -3020,11 +3042,7 @@ try {
   mkdirSync(fakeBin, { recursive: true });
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
-  if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
-  } else {
-    execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
-  }
+  makeExecutable(join(batchDir, 'batch-runner.sh'));
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
@@ -3039,11 +3057,7 @@ try {
     'echo "You\\x27ve hit your session limit · resets 12:30pm (Asia/Taipei)"',
     'exit 1',
   ].join('\n') + '\n');
-  if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
-  } else {
-    execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
-  }
+  makeExecutable(join(fakeBin, 'claude'));
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
   const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
@@ -3076,7 +3090,8 @@ try {
     fail(`--resume-paused selection wrong: ${dry}`);
   }
 
-  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+  rmSync(tmp, { recursive: true, force: true });
+  }
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
 }
@@ -3088,6 +3103,7 @@ try {
 console.log('\n14. Batch Codex adapter');
 
 try {
+  if (requireBashTest('Batch Codex adapter')) {
   const tmp = mkdtempSync(join(tmpdir(), 'co-batch-codex-'));
   const batchDir = join(tmp, 'batch');
   const fakeBin = join(tmp, 'bin');
@@ -3098,8 +3114,8 @@ try {
   mkdirSync(join(tmp, 'modes'), { recursive: true });
   mkdirSync(fakeBin, { recursive: true });
 
-  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8'));
-  execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  makeExecutable(join(batchDir, 'batch-runner.sh'));
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(tmp, 'config', 'profile.yml'), 'target_roles:\n  - Staff Engineer\n');
@@ -3116,10 +3132,10 @@ try {
     'printf \'{"score":4.6}\\n\'',
     'exit 0',
   ].join('\n') + '\n');
-  execFileSync('chmod', ['+x', join(fakeBin, 'codex')]);
+  makeExecutable(join(fakeBin, 'codex'));
 
-  const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, CAPTURE_DIR: tmp };
-  const out = run('bash', [join(batchDir, 'batch-runner.sh'), '--agent', 'codex', '--parallel', '1'], {
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, CAPTURE_DIR: tmp };
+  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--agent', 'codex', '--parallel', '1'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3155,6 +3171,7 @@ try {
   }
 
   rmSync(tmp, { recursive: true, force: true });
+  }
 } catch (e) {
   fail(`Batch Codex adapter test crashed: ${e.message}`);
 }
