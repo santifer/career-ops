@@ -58,6 +58,11 @@ compensation:
   minimum: "$120K"               # Walk-away number
   location_flexibility: "Remote preferred, 1 week/month on-site possible"
 
+privacy:
+  # Default privacy mode. Keep local_only unless you explicitly opt in to a
+  # future sharing or sync feature.
+  mode: "local_only"
+
 location:
   country: "United States"
   city: "San Francisco"

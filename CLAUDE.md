@@ -22,6 +22,8 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
 
+**Privacy mode rule:** Before any feature shares, syncs, uploads, or contributes data outside the local repo, read `config/profile.yml` `privacy.mode` and follow `docs/privacy-modes.md`. The default is `local_only`; do not share anything unless the user has explicitly opted into a mode that allows it and has seen an auditable preview.
+
 ## Update Check
 
 On the first message of each session, run the update checker silently:
