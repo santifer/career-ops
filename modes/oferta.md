@@ -71,7 +71,7 @@ Top 5 changes to CV + Top 5 changes to LinkedIn to maximize match.
 
 The **Reflection** column captures what was learned or what would be done differently. This signals seniority — junior candidates describe what happened, senior candidates extract lessons.
 
-**Story Bank:** If `interview-prep/story-bank.md` exists, check if any of these stories are already there. If not, append new ones. Over time this builds a reusable bank of 5-10 master stories that can be adapted to any interview question.
+**Story Bank:** Use `interview-prep/story-bank.md` (the user's live bank, gitignored). If it does not exist yet, seed it once by copying `interview-prep/story-bank.template.md`. Check whether any of these stories are already there; if not, append new ones. Over time this builds a reusable bank of 5-10 master stories that can be adapted to any interview question.
 
 **Selected and framed according to the archetype:**
 - FDE → emphasize delivery speed and client-facing

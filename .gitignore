@@ -56,6 +56,8 @@ package-lock.json
 .playwright-mcp/
 # Personal interview prep — never commit (company names / problem statements)
 practice/
-interview-prep/
+interview-prep/*
+# ...but ship the generic scaffold (zero personal data), like modes/_profile.template.md
+!interview-prep/story-bank.template.md
 migrate-*.mjs
 .scrape-tmp.mjs
