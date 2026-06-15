@@ -24,28 +24,52 @@
 
 ---
 
-## Scoring System
+## Scoring System: Gates → Substance → Bucket
 
-The evaluation uses 6 blocks (A-F) with a global score of 1-5:
+Every evaluation produces three things: **Gates** (hard pass/fail eligibility),
+a **Substance** score (1-5, how good the role is on its own merits), and a derived
+**Bucket** (the one-glance verdict). They are independent on purpose: a role can be
+excellent on the merits *and* fail a gate. Don't collapse that into one number.
 
-| Dimension | What it measures |
-|-----------|-----------------|
-| Match con CV | Skills, experience, proof points alignment |
-| North Star alignment | How well the role fits the user's target archetypes (from _profile.md) |
-| Comp | Salary vs market (5=top quartile, 1=well below) |
-| Cultural signals | Company culture, growth, stability, remote policy |
-| Red flags | Blockers, warnings (negative adjustments) |
-| **Global** | Weighted average of above |
+**The user's specific gate definitions and substance weighting live in `_profile.md`.**
+This file defines only the mechanism; `_profile.md` fills in the content.
 
-**Score interpretation:**
-- 4.5+ → Strong match, recommend applying immediately
-- 4.0-4.4 → Good match, worth applying
-- 3.5-3.9 → Decent but not ideal, apply only if specific reason
-- Below 3.5 → Recommend against applying (see Ethical Use in AGENTS.md)
+### 1. Gates (hard PASS / FAIL)
+
+A small set of non-negotiables, defined per-user in `_profile.md` (typically things
+like location/remote policy, level/track, and role lane/domain). Each gate is a binary
+PASS or FAIL. A gate failure does **not** lower the Substance score; gates and
+Substance answer different questions ("can I take this?" vs "how good is it?").
+
+### 2. Substance (1-5): this is the `Score`
+
+Grade the role **on its own merits, independent of the gates**, on a few weighted axes
+(defined in `_profile.md`, typically fit/interest, team caliber, and comp). Fit
+usually dominates. This is a qualitative blend, not a rigid formula.
+
+**Substance interpretation:**
+- 4.5+ → exceptional role on the merits
+- 4.0-4.4 → strong
+- 3.5-3.9 → decent but not standout
+- Below 3.5 → weak on the merits
+
+A high Substance score is necessary but not sufficient to apply; the Bucket (below)
+combines it with the gates. (See Ethical Use in AGENTS.md: don't push low-fit applies.)
+
+### 3. Bucket (derived verdict)
+
+| Bucket | Rule |
+|--------|------|
+| **Serious** | All gates PASS **and** Substance is high → a real target to apply to. |
+| **Practice** | Exactly one *designated* gate fails (per `_profile.md`, e.g. location) while the rest PASS, **and** the bar is high → worth doing as practice toward a target, even if not takeable as-is. |
+| **Skip** | A core gate fails, **or** Substance is low → don't spend application effort. |
+
+`_profile.md` specifies which gate (if any) is "practice-eligible" and which are core
+(a core-gate failure always means Skip). When in doubt, default to Skip.
 
 ## Posting Legitimacy (Block G)
 
-Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.
+Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 Substance score and is not a gate -- it is a separate qualitative assessment.
 
 **Three tiers:**
 - **High Confidence** -- Real, active opening (most signals positive)

@@ -140,6 +140,22 @@ Analyze the job posting for signals that indicate whether this is a real, active
 - **No date available:** If posting age cannot be determined and no other signals are concerning, default to "Proceed with Caution" with a note that limited data was available. NEVER default to "Suspicious" without evidence.
 - **Recruiter-sourced (no public posting):** Freshness signals unavailable. Note that active recruiter contact is itself a positive legitimacy signal.
 
+## Scoring — Gates → Substance → Bucket
+
+After blocks A-G, score per the framework in `_shared.md`, with the user's specific
+gate/axis definitions from `_profile.md`:
+
+1. **Gates:** evaluate each hard gate PASS/FAIL (e.g. Location from Block A remote
+   policy, Level from Block C, Lane from Step 0 archetype). State each verdict.
+2. **Substance:** score 1-5 on the role's own merits (Fit/Caliber/Comp per
+   `_profile.md`). This is the `Score`. **A gate failure must NOT pull this number
+   down**; gates and Substance are independent.
+3. **Bucket:** derive Serious / Practice / Skip from the gates + Substance using the
+   rule in `_profile.md` (a core-gate failure → Skip; only the practice-eligible gate
+   failing at a high bar → Practice; all gates PASS + high Substance → Serious).
+
+Put all three in the report header (`**Score:**`, `**Gates:**`, `**Bucket:**`).
+
 ---
 
 ## Post-evaluation
@@ -162,7 +178,9 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Date:** {YYYY-MM-DD}
 **URL:**
 **Archetype:** {detected}
-**Score:** {X/5}
+**Score:** {X/5}  <!-- Substance: role on its own merits (see _shared.md) -->
+**Gates:** Location {PASS|FAIL} · Level {PASS|FAIL} · Lane {PASS|FAIL}
+**Bucket:** {Serious | Practice | Skip}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **PDF:** {path or pending}
 
@@ -200,12 +218,22 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### 2. Record in tracker
 
-**ALWAYS** record in `data/applications.md`:
+**ALWAYS** record the evaluation. On the Notion backend, log via the CLI so the new
+scoring fields are written:
+
+```
+node notion.mjs add --company "X" --role "Y" --status Evaluated \
+  --score {substance 1-5} --bucket {Serious|Practice|Skip} \
+  --gate-location {pass|fail} --gate-level {pass|fail} --gate-lane {pass|fail} \
+  --url ... --report reports/{###}-{slug}-{date}.md
+```
+
+For the file-based tracker (`data/applications.md`), record:
 - Next sequential number
 - Current date
 - Company
 - Role
-- Score: match average (1-5)
+- Score: Substance (1-5)
 - Status: `Evaluated`
 - PDF: ❌ (or ✅ if auto-pipeline generated PDF)
 - Report: root-relative link `[001](reports/001-company-2026-01-01.md)` (when merged via `merge-tracker.mjs` it is normalized to be relative to the tracker's own dir, e.g. `../reports/...`; see #760)

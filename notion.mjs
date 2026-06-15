@@ -6,8 +6,8 @@
  * converter, DB resolution, status validation, and record matching all live in
  * notion-lib.mjs. The usual caller is an LLM agent running one stable command.
  *
- *   node notion.mjs add    --company "X" --role "Y" [--status Evaluated --score 4.2 --url ... --report file.md --notes ... --connections ... --date YYYY-MM-DD --pdf] [--force]
- *   node notion.mjs update <match>|--id ID  [--status ... --score ... --notes ... --connections ... --url ... --company ... --role ... --date ... --pdf]
+ *   node notion.mjs add    --company "X" --role "Y" [--status Evaluated --score 4.2 --bucket Serious --gate-location pass --gate-level pass --gate-lane pass --url ... --report file.md --notes ... --connections ... --date YYYY-MM-DD --pdf] [--force]
+ *   node notion.mjs update <match>|--id ID  [--status ... --score ... --bucket ... --gate-location ... --gate-level ... --gate-lane ... --notes ... --connections ... --url ... --company ... --role ... --date ... --pdf]
  *   node notion.mjs log    <match>|--id ID  --date YYYY-MM-DD --summary "..." [--detail "..."]
  *   node notion.mjs get    <match>|--id ID
  *   node notion.mjs list   [--status X] [--company Y]
@@ -47,10 +47,30 @@ function checkStatus(raw) {
   if (!c) die(`"${raw}" is not a canonical status. Valid: ${statusLabels().join(', ')}`);
   return c;
 }
+const BUCKETS = ['Serious', 'Practice', 'Skip'];
+function checkBucket(raw) {
+  const hit = BUCKETS.find((b) => b.toLowerCase() === String(raw).trim().toLowerCase());
+  if (!hit) die(`"${raw}" is not a valid bucket. Valid: ${BUCKETS.join(', ')}`);
+  return hit;
+}
+function gateBool(raw) {
+  const v = String(raw).trim().toLowerCase();
+  if (v === 'pass' || v === 'true') return true;
+  if (v === 'fail' || v === 'false') return false;
+  die(`"${raw}" is not a valid gate value. Use pass or fail.`);
+}
+// Maps a record's gate checkboxes to a compact "Location:PASS Level:PASS Lane:FAIL" string.
+const GATE_PROPS = { Location: 'Gate: Location', Level: 'Gate: Level', Lane: 'Gate: Lane' };
+function gatesOf(props) {
+  return Object.entries(GATE_PROPS)
+    .filter(([, p]) => props[p]?.checkbox !== undefined)
+    .map(([label, p]) => `${label}:${props[p].checkbox ? 'PASS' : 'FAIL'}`)
+    .join(' ');
+}
 async function resolveTarget(dbId) {
   if (flags.id) return getRecordById(flags.id);
   const match = positionals[0];
-  if (!match) die('Provide a match string or --id. e.g. update "Warp/Applied AI" --status Interview');
+  if (!match) die('Provide a match string or --id. e.g. update "Acme/Staff Engineer" --status Interview');
   const hits = await findRecords(dbId, match);
   if (hits.length === 0) die(`No record matches "${match}".`);
   if (hits.length > 1) die(`"${match}" is ambiguous (${hits.length} matches). Narrow it or use --id.`,
@@ -86,6 +106,10 @@ async function cmdAdd(apps) {
   if (flags.date) props.Date = { date: { start: flags.date } };
   if (flags.notes) props.Notes = { rich_text: rich(flags.notes) };
   if (flags.connections) props.Connections = { rich_text: rich(flags.connections) };
+  if (flags.bucket) props.Bucket = { select: { name: checkBucket(flags.bucket) } };
+  if (flags['gate-location'] !== undefined) props['Gate: Location'] = { checkbox: gateBool(flags['gate-location']) };
+  if (flags['gate-level'] !== undefined) props['Gate: Level'] = { checkbox: gateBool(flags['gate-level']) };
+  if (flags['gate-lane'] !== undefined) props['Gate: Lane'] = { checkbox: gateBool(flags['gate-lane']) };
 
   const page = await createPage(apps, props, body);
   out(`✓ Added: ${company} — ${role} [${status}]${body.length ? ` (+${body.length} body blocks)` : ''}\n  id:  ${page.id}\n  url: ${page.url}`,
@@ -105,7 +129,11 @@ async function cmdUpdate(apps) {
   if (flags.notes) props.Notes = { rich_text: rich(flags.notes) };
   if (flags.connections) props.Connections = { rich_text: rich(flags.connections) };
   if (flags.pdf !== undefined) props.PDF = { checkbox: flags.pdf === true || flags.pdf === 'true' };
-  if (!Object.keys(props).length) die('Nothing to update. Pass at least one of --status/--score/--url/--date/--company/--role/--notes/--connections/--pdf.');
+  if (flags.bucket) props.Bucket = { select: { name: checkBucket(flags.bucket) } };
+  if (flags['gate-location'] !== undefined) props['Gate: Location'] = { checkbox: gateBool(flags['gate-location']) };
+  if (flags['gate-level'] !== undefined) props['Gate: Level'] = { checkbox: gateBool(flags['gate-level']) };
+  if (flags['gate-lane'] !== undefined) props['Gate: Lane'] = { checkbox: gateBool(flags['gate-lane']) };
+  if (!Object.keys(props).length) die('Nothing to update. Pass at least one of --status/--score/--bucket/--gate-location/--gate-level/--gate-lane/--url/--date/--company/--role/--notes/--connections/--pdf.');
   await api(`pages/${rec.id}`, 'PATCH', { properties: props });
   out(`✓ Updated: ${rec.company} — ${rec.role} (${Object.keys(props).join(', ')})\n  id: ${rec.id}`,
     { id: rec.id, updated: Object.keys(props) });
@@ -129,39 +157,46 @@ async function cmdLog(apps) {
 async function cmdGet(apps) {
   const rec = await resolveTarget(apps);
   const md = await pageMarkdown(rec.id);
+  const bucket = rec.raw.properties.Bucket?.select?.name || null;
+  const gates = gatesOf(rec.raw.properties);
   if (JSON_OUT) {
     console.log(JSON.stringify({ company: rec.company, role: rec.role, status: rec.status, score: rec.score,
+      bucket, gates: gates || null,
       notes: plain(rec.raw.properties.Notes), connections: plain(rec.raw.properties.Connections),
       id: rec.id, url: rec.raw.properties.URL?.url || null, body: md }, null, 2));
     return;
   }
   console.log(`# ${rec.company} — ${rec.role}`);
-  console.log(`Status: ${rec.status} | Score: ${rec.score ?? '—'} | URL: ${rec.raw.properties.URL?.url || '—'}`);
+  console.log(`Status: ${rec.status} | Score: ${rec.score ?? '—'} | Bucket: ${bucket || '—'} | URL: ${rec.raw.properties.URL?.url || '—'}`);
+  if (gates) console.log(`Gates: ${gates}`);
   console.log(`id: ${rec.id}\n`);
   console.log(md || '(empty body)');
 }
 
 async function cmdList(apps) {
   let rows = (await queryDB(apps)).map((r) => ({ company: plain(r.properties.Company), role: plain(r.properties.Role),
-    status: r.properties.Status?.select?.name || '', score: r.properties.Score?.number ?? null, id: r.id }));
+    status: r.properties.Status?.select?.name || '', score: r.properties.Score?.number ?? null,
+    bucket: r.properties.Bucket?.select?.name || null, id: r.id }));
   if (flags.status) { const s = checkStatus(flags.status); rows = rows.filter((r) => r.status === s); }
+  if (flags.bucket) { const b = checkBucket(flags.bucket); rows = rows.filter((r) => r.bucket === b); }
   if (flags.company) rows = rows.filter((r) => r.company.toLowerCase().includes(String(flags.company).toLowerCase()));
   rows.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
   if (JSON_OUT) { console.log(JSON.stringify(rows, null, 2)); return; }
   console.log(`${rows.length} record(s):`);
-  for (const r of rows) console.log(`  ${(r.score ?? '—').toString().padStart(3)} | ${(r.status || '').padEnd(10)} | ${r.company} — ${r.role}`);
+  for (const r of rows) console.log(`  ${(r.score ?? '—').toString().padStart(3)} | ${(r.bucket || '—').padEnd(8)} | ${(r.status || '').padEnd(10)} | ${r.company} — ${r.role}`);
 }
 
 function cmdHelp() {
   console.log(`career-ops Notion backend CLI
 
-  add    --company X --role Y [--status Evaluated --score 4.2 --url U --report f.md --notes N --connections C --date YYYY-MM-DD --pdf] [--force]
-  update <match>|--id ID  [--status ... --score ... --url ... --date ... --company ... --role ... --notes ... --connections ... --pdf]
+  add    --company X --role Y [--status Evaluated --score 4.2 --bucket Serious --gate-location pass --gate-level pass --gate-lane pass --url U --report f.md --notes N --connections C --date YYYY-MM-DD --pdf] [--force]
+  update <match>|--id ID  [--status ... --score ... --bucket ... --gate-location pass|fail --gate-level pass|fail --gate-lane pass|fail --url ... --date ... --company ... --role ... --notes ... --connections ... --pdf]
   log    <match>|--id ID  --date YYYY-MM-DD --summary "..." [--detail "..."]
   get    <match>|--id ID
-  list   [--status X] [--company Y]
+  list   [--status X] [--bucket Y] [--company Z]
 
   <match> = substring of "Company / Role" (case-insensitive). Ambiguous matches fail loudly; use --id to pin.
+  Score = Substance (1-5, role on its merits). Gates (Location/Level/Lane) are hard pass/fail. Bucket: ${BUCKETS.join(', ')}.
   Add --json for machine-readable output. Statuses validated against templates/states.yml: ${statusLabels().join(', ')}.`);
 }
 
