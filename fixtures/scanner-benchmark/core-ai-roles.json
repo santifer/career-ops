@@ -1,0 +1,43 @@
+{
+  "schema_version": "career-ops.scanner-benchmark/v1",
+  "name": "core-ai-roles",
+  "expected": [
+    {
+      "id": "expected-1",
+      "company": "Example Inc",
+      "title": "Senior AI Engineer",
+      "location": "Berlin",
+      "fresh": true
+    },
+    {
+      "id": "expected-2",
+      "company": "Acme Labs",
+      "title": "Applied ML Engineer",
+      "location": "Remote",
+      "fresh": true
+    }
+  ],
+  "actual": [
+    {
+      "provider": "greenhouse",
+      "company": "Example Inc",
+      "title": "Senior AI Engineer",
+      "location": "Berlin",
+      "fresh": true
+    },
+    {
+      "provider": "lever",
+      "company": "Acme Labs",
+      "title": "Applied ML Engineer",
+      "location": "Remote",
+      "fresh": true
+    },
+    {
+      "provider": "workday",
+      "company": "Old Corp",
+      "title": "Frontend Intern",
+      "location": "Paris",
+      "fresh": false
+    }
+  ]
+}
