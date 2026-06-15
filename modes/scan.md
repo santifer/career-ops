@@ -215,7 +215,7 @@ Levels are additive — they are executed in order, and results are merged and d
 7. **Deduplicate** against 3 sources:
    - `scan-history.tsv` → exact URL already seen
    - `applications.md` → normalized company + role already evaluated
-   - `pipeline.md` → exact URL already in pending or processed list
+   - `pipeline.md` → exact public `http(s)` URL already in pending or processed list
 
 7.5. **Verify Liveness of WebSearch Results (Level 3)** — BEFORE adding to pipeline:
 
@@ -237,7 +237,7 @@ Levels are additive — they are executed in order, and results are merged and d
 
 8. **For each new verified offer that passes filters**:
    a. Add to the `pipeline.md` pending section (`## Pendientes` in the stock file): `- [ ] {url} | {company} | {title} | {location}` when location is known. If location is missing, keep the legacy 3-column shape: `- [ ] {url} | {company} | {title}`.
-   b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded\t{location}`
+   b. Record in `scan-history.tsv`: `{url}\t{date}\t{portal}\t{title}\t{company}\tadded\t{location}`
 
 9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`.
 10. **Duplicate offers**: record with status `skipped_dup`.
@@ -259,6 +259,7 @@ Generic regex: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
 If a non-publicly accessible URL is found:
 1. Save the JD in `jds/{company}-{role-slug}.md`.
 2. Add to `pipeline.md` as: `- [ ] local:jds/{company}-{role-slug}.md | {company} | {title} | {location}` when location is known.
+3. Keep the original source URL in `scan-history.tsv` when available; `pipeline.md` URL dedup only indexes public `http(s)` rows.
 
 ## Scan History
 
@@ -284,7 +285,7 @@ Duplicates: N (already evaluated or in pipeline)
 Expired discarded: N (dead links, Level 3)
 New added to pipeline.md: N
 
-  + {company} | {title} | {query_name}
+  + {company} | {title} | {portal}
   ...
 
 → Run /career-ops pipeline to evaluate the new offers.
