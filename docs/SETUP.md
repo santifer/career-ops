@@ -71,7 +71,7 @@ node verify-pipeline.mjs     # Check pipeline integrity
 Claude headless flags, including MCP isolation, for compatibility. Set
 `CAREER_OPS_AGENT=codex` or pass `--agent codex` to run Codex CLI workers.
 Codex omits its dangerous bypass flag unless `CAREER_OPS_UNSAFE_AGENT_EXEC=1`
-is set explicitly.
+or `true` is set explicitly.
 
 ## Build Dashboard (Optional)
 
