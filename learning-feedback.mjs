@@ -1,10 +1,26 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync } from 'fs';
+import { relative, resolve, sep } from 'path';
 import { fileURLToPath } from 'url';
 
 const DEFAULT_FILE = 'data/profile-feedback.md';
+const SAFE_DATA_DIR = resolve('data');
 const ACTIVE_STATUSES = new Set(['pending', 'proposed']);
+const REQUIRED_FIELDS = ['type', 'status', 'feedback'];
+
+function isInsideSafeDataDir(file) {
+  const relativePath = relative(SAFE_DATA_DIR, file);
+  return relativePath && !relativePath.startsWith('..') && !relativePath.startsWith(sep);
+}
+
+export function safeFeedbackPath(file = DEFAULT_FILE) {
+  const resolvedFile = resolve(file);
+  if (!isInsideSafeDataDir(resolvedFile)) {
+    throw new Error('Feedback files must live under the data/ directory.');
+  }
+  return resolvedFile;
+}
 
 export function parseFeedbackRecords(markdown = '') {
   const sections = markdown.split(/^##\s+/m).slice(1);
@@ -17,7 +33,10 @@ export function parseFeedbackRecords(markdown = '') {
       record[match[1]] = match[2].replace(/^"|"$/g, '').trim();
     }
     return record;
-  }).filter((record) => record.title);
+  }).filter((record) => (
+    record.title
+    && REQUIRED_FIELDS.every((field) => record[field])
+  ));
 }
 
 export function summarizeOpenFeedback(records = []) {
@@ -28,7 +47,13 @@ export function summarizeOpenFeedback(records = []) {
 }
 
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
-  const file = process.argv[2] || DEFAULT_FILE;
+  let file;
+  try {
+    file = safeFeedbackPath(process.argv[2] || DEFAULT_FILE);
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
   if (!existsSync(file)) {
     console.log('No profile feedback queue found.');
     process.exit(0);
