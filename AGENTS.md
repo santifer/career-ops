@@ -239,6 +239,27 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **Turkish (Turkey market):** `modes/tr/` — native Turkish translations with Turkey-specific vocabulary (SGK, kıdem tazminatı, ihbar süresi, brüt/net maaş, AGİ, BES, yemek kartı, yol yardımı, TÜFE zammı, etc.). Includes `_shared.md`, `is-ilani.md` (evaluation), `basvuru.md` (apply), `pipeline.md`.
 - **Hindi (India market):** `modes/hi/` — native Hindi (Devanagari) translations with India-specific vocabulary (CTC vs. in-hand salary, PF/EPF, Gratuity, Notice period/buyout, Bond clause, ESOPs, HRA/LTA, moonlighting policy, Labour Codes 2020, etc.). Includes `_shared.md`, `naukri.md` (evaluation), `aavedan.md` (apply), `pipeline.md`.
 
+### Output Language vs Market Modes
+
+`config/profile.yml` may set:
+
+```yaml
+language:
+  output: en
+  modes_dir: modes/de
+```
+
+These are two separate axes:
+
+- `language.output` controls human-facing output: reports, tracker notes, PDFs, cover letters, outreach, interview prep, form answers, and any user-visible prose. Default: `en` when absent.
+- `language.modes_dir` controls market vocabulary and local evaluation rules. For example, `modes/de` supplies DACH-specific concepts like 13. Monatsgehalt and Probezeit.
+
+**Composition rule:** `language.output` is authoritative for prose. `modes_dir` only supplies market context. A user can request English output with DACH market vocabulary, French output with Japan-market vocabulary, etc.
+
+**Agent rule:** After loading the mode instructions and user profile, inject this directive into every mode and subagent prompt:
+
+> Write all human-facing output in `{language.output}` regardless of the language of these instructions or the job description. Keep market-specific terms from `language.modes_dir` when they are relevant, but explain them in the output language when needed.
+
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
 2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
@@ -269,7 +290,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/hi` in `config/profile.yml` → always use Hindi modes
 3. You detect a Hindi JD → suggest switching to Hindi modes
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Indian companies, use the default English modes — *unless* the user has explicitly requested another mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection).
+**When NOT to switch market modes:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Indian companies, use the default English market modes — *unless* the user has explicitly requested another market mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection). This does not override `language.output`; prose still follows `language.output`.
 
 ### Skill Modes
 

@@ -254,12 +254,59 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 |----------|-----|---------|
 | German | `modes/de/` | DACH (Germany, Austria, Switzerland) |
 | French | `modes/fr/` | France, Belgium, Switzerland, Luxembourg, Quebec |
+| Arabic | `modes/ar/` | Middle East / Arab region |
 | Japanese | `modes/ja/` | Japan |
+| Turkish | `modes/tr/` | Turkey |
 | Hindi | `modes/hi/` | India |
 
-**When to use a `{lang}` mode** — if any holds: the user says "use {lang} modes"; `config/profile.yml` sets `language.modes_dir: modes/{lang}`; or you detect a {lang} JD (then suggest switching). Read from `modes/{lang}/` instead of `modes/`.
+### Output Language vs Market Modes
 
-**When NOT to:** if the user applies to English-language roles — even at French, German, Japanese, or Indian companies — use the default English modes.
+`config/profile.yml` may set:
+
+```yaml
+language:
+  output: en
+  modes_dir: modes/de
+```
+
+These are two separate axes:
+
+- `language.output` controls human-facing output: reports, tracker notes, PDFs, cover letters, outreach, interview prep, form answers, and any user-visible prose. Default: `en` when absent.
+- `language.modes_dir` controls market vocabulary and local evaluation rules. For example, `modes/de` supplies DACH-specific concepts like 13. Monatsgehalt and Probezeit.
+
+**Composition rule:** `language.output` is authoritative for prose. `modes_dir` only supplies market context.
+
+**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
+1. User says "use German modes" → read from `modes/de/` instead of `modes/`
+2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
+3. You detect a German JD → suggest switching to German modes
+
+**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
+1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
+2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
+3. You detect a French JD → suggest switching to French modes
+
+**When to use Arabic modes:** If the user is targeting Arabic-language job postings, lives in the Middle East / Arab region, or asks for Arabic output. Either:
+1. User says "use Arabic modes" → read from `modes/ar/` instead of `modes/`
+2. User sets `language.modes_dir: modes/ar` in `config/profile.yml` → always use Arabic modes
+3. You detect an Arabic JD → suggest switching to Arabic modes
+
+**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
+1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
+2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
+3. You detect a Japanese JD → suggest switching to Japanese modes
+
+**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or asks for Turkish output. Either:
+1. User says "use Turkish modes" → read from `modes/tr/` instead of `modes/`
+2. User sets `language.modes_dir: modes/tr` in `config/profile.yml` → always use Turkish modes
+3. You detect a Turkish JD → suggest switching to Turkish modes
+
+**When to use Hindi modes:** If the user is targeting Indian job postings, lives in India, or asks for Hindi output. Either:
+1. User says "use Hindi modes" → read from `modes/hi/` instead of `modes/`
+2. User sets `language.modes_dir: modes/hi` in `config/profile.yml` → always use Hindi modes
+3. You detect a Hindi JD → suggest switching to Hindi modes
+
+**When NOT to switch market modes:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Indian companies, use the default English market modes unless `language.modes_dir` says otherwise. This does not override `language.output`; prose still follows `language.output`.
 
 ### Skill Modes
 
