@@ -56,5 +56,6 @@ Any non-local mode must show an auditable preview containing:
 - redaction summary
 - payload hash
 
-Agents must treat missing `privacy.mode` as `local_only`.
+If the user does not explicitly confirm the preview, the contribution or sync operation is blocked and no payload may be sent.
 
+Agents must treat missing `privacy.mode` as `local_only`.
