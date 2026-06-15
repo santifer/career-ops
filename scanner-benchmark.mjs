@@ -35,8 +35,22 @@ export function scoreScannerBenchmark(fixture = {}) {
   };
 }
 
+export function loadFixture(file) {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch (error) {
+    throw new Error(`Unable to load benchmark fixture "${file}": ${error.message}`);
+  }
+}
+
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
   const file = process.argv[2] || 'fixtures/scanner-benchmark/core-ai-roles.json';
-  const fixture = JSON.parse(readFileSync(file, 'utf8'));
+  let fixture;
+  try {
+    fixture = loadFixture(file);
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
   console.log(JSON.stringify(scoreScannerBenchmark(fixture), null, 2));
 }
