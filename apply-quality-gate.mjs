@@ -6,7 +6,7 @@ export const DEFAULT_APPLY_QUALITY_THRESHOLD = 4.0;
 
 export function evaluateApplyQualityGate({ score, threshold = DEFAULT_APPLY_QUALITY_THRESHOLD, overrideReason = '' } = {}) {
   const numericScore = Number(score);
-  const numericThreshold = Number(threshold || DEFAULT_APPLY_QUALITY_THRESHOLD);
+  const numericThreshold = Number(threshold ?? DEFAULT_APPLY_QUALITY_THRESHOLD);
   if (!Number.isFinite(numericScore)) {
     return { allowed: false, status: 'missing_score', threshold: numericThreshold };
   }
