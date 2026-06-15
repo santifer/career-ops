@@ -10,8 +10,8 @@ The personal CRM graph is a read-only relationship model over user-layer artifac
 
 - `id`: stable local slug
 - `name`: display name
-- `domain`: optional public domain
-- `warmth`: derived from applications and interactions
+- `applications`: count of parsed applications for this company
+- `interactions`: count of parsed follow-up interactions for this company
 
 ### Person
 
@@ -20,13 +20,13 @@ The personal CRM graph is a read-only relationship model over user-layer artifac
 - `company_id`: associated company when known
 - `source`: tracker, follow-up, contact output, or interview notes
 
+Person extraction is deferred in the initial implementation. The current graph emits `persons: []` and keeps `person_id` empty on interactions until a parser can extract named contacts reliably.
+
 ### Role
 
 - `id`: stable local slug
 - `company_id`
 - `title`
-- `source_url`
-- `listing_fingerprint`
 
 ### Application
 
@@ -40,10 +40,10 @@ The personal CRM graph is a read-only relationship model over user-layer artifac
 
 ### Interaction
 
-- `id`: stable local slug
+- `id`: stable local slug derived from company, date, and summary
 - `company_id`
-- `person_id`
-- `application_id`
+- `person_id`: empty until person extraction is implemented
+- `application_id`: empty until follow-ups can be linked to tracker rows
 - `type`: outreach, reply, interview, follow-up, note
 - `date`
 - `summary`
@@ -54,6 +54,9 @@ The graph can be derived from:
 
 - `data/applications.md`
 - `data/follow-ups.md`
+
+Future versions may also derive optional nodes and links from:
+
 - `reports/*.md`
 - `interview-prep/*.md`
 - contact/outreach outputs
@@ -72,3 +75,4 @@ The graph is an index, not a new source of truth. Raw personal data remains in t
 
 The CRM graph must not be shared unless a future privacy mode explicitly allows the selected data classes. By default, it stays local-only.
 
+Local graph output may include unredacted company names, role titles, status history, report paths, PDF paths, follow-up summaries, personal notes, and references to private artifacts. Treat it as personal user-layer data, not anonymous market intelligence.

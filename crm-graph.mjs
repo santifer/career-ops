@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 
@@ -7,15 +8,23 @@ const DEFAULT_TRACKER = 'data/applications.md';
 const DEFAULT_FOLLOWUPS = 'data/follow-ups.md';
 
 function slug(value) {
-  return String(value || 'unknown')
+  return String(value ?? 'unknown')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '') || 'unknown';
 }
 
+function stableInteractionId({ companyId, date, summary }) {
+  const digest = createHash('sha256')
+    .update([companyId, date || '', summary].join('\n'))
+    .digest('hex')
+    .slice(0, 12);
+  return `interaction_${companyId}_${digest}`;
+}
+
 export function parseApplications(markdown = '') {
   return markdown.split('\n')
-    .filter((line) => /^\|\s*\d+\s*\|/.test(line))
+    .filter((line) => /^\|\s*[\w-]+\s*\|/.test(line))
     .map((line) => line.split('|').slice(1, -1).map((cell) => cell.trim()))
     .map(([id, date, company, role, score, status, pdf, report, notes]) => ({
       id,
@@ -32,7 +41,7 @@ export function parseApplications(markdown = '') {
 
 export function buildCrmGraph({ applications = [], followups = '' } = {}) {
   const companies = new Map();
-  const roles = [];
+  const roles = new Map();
   const apps = [];
   const interactions = [];
 
@@ -43,7 +52,9 @@ export function buildCrmGraph({ applications = [], followups = '' } = {}) {
     }
     companies.get(companyId).applications += 1;
     const roleId = `${companyId}-${slug(app.role)}`;
-    roles.push({ id: roleId, company_id: companyId, title: app.role });
+    if (!roles.has(roleId)) {
+      roles.set(roleId, { id: roleId, company_id: companyId, title: app.role });
+    }
     apps.push({ id: app.id, company_id: companyId, role_id: roleId, status: app.status, score: app.score, report: app.report, pdf: app.pdf });
   }
 
@@ -57,13 +68,23 @@ export function buildCrmGraph({ applications = [], followups = '' } = {}) {
       companies.set(companyId, { id: companyId, name: companyName, applications: 0, interactions: 0 });
     }
     companies.get(companyId).interactions += 1;
-    interactions.push({ id: `${companyId}-${interactions.length + 1}`, company_id: companyId, type: 'follow-up', date: match[1] || '', summary });
+    const date = match[1] || '';
+    interactions.push({
+      id: stableInteractionId({ companyId, date, summary }),
+      company_id: companyId,
+      person_id: '',
+      application_id: '',
+      type: 'follow-up',
+      date,
+      summary,
+    });
   }
 
   return {
     schema_version: 'career-ops.crm-graph/v1',
     companies: Array.from(companies.values()),
-    roles,
+    persons: [],
+    roles: Array.from(roles.values()),
     applications: apps,
     interactions,
   };
