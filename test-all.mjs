@@ -829,8 +829,10 @@ const symlinks = [
 ];
 
 let canonicalReal = null;
+let canonicalContent = null;
 try {
   canonicalReal = realpathSync(join(ROOT, canonicalSkill));
+  canonicalContent = readFile(canonicalSkill);
   pass(`Canonical skill resolves: ${canonicalSkill}`);
 } catch {
   fail(`Canonical skill not found: ${canonicalSkill}`);
@@ -855,8 +857,123 @@ for (const link of symlinks) {
   }
   if (resolved === canonicalReal) {
     pass(`${link} → canonical skill`);
+  } else if (canonicalContent !== null && readFile(link) === canonicalContent) {
+    pass(`${link} is a materialized copy of canonical skill`);
   } else {
-    fail(`${link} resolves to ${resolved}, expected ${canonicalReal}`);
+    fail(`${link} resolves to ${resolved}, expected ${canonicalReal} or byte-identical canonical skill copy`);
+  }
+}
+
+console.log('\n12a. Skill entrypoint materialization');
+
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-'));
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+    mkdirSync(opencodeDir, { recursive: true });
+
+    const fixtureSkill = '---\nname: career-ops\n---\n\n# canonical skill\n';
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+    writeFileSync(join(canonicalDir, 'SKILL.md'), fixtureSkill);
+    writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
+    writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot).sort();
+    const expected = [
+      '.claude/skills/career-ops/SKILL.md',
+      '.opencode/skills/career-ops/SKILL.md',
+    ];
+
+    if (JSON.stringify(materialized) === JSON.stringify(expected)) {
+      pass('update-system materializes pointer skill entrypoints');
+    } else {
+      fail(`unexpected materialized skill entrypoints: ${JSON.stringify(materialized)}`);
+    }
+
+    const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
+    const opencodeSkill = readFileSync(join(opencodeDir, 'SKILL.md'), 'utf-8');
+    if (claudeSkill === fixtureSkill && opencodeSkill === fixtureSkill) {
+      pass('materialized skill entrypoints match canonical content');
+    } else {
+      fail('materialized skill entrypoints do not match canonical content');
+    }
+  } catch (e) {
+    fail(`skill entrypoint materialization test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+console.log('\n12b. Materialized skill index mode');
+
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skill-git-'));
+  const gitRun = (args, opts = {}) => execFileSync('git', args, {
+    cwd: fixtureRoot,
+    encoding: 'utf-8',
+    timeout: 30000,
+    ...opts,
+  }).trim();
+  const gitRaw = (args) => execFileSync('git', args, {
+    cwd: fixtureRoot,
+    encoding: 'utf-8',
+    timeout: 30000,
+  });
+
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+    mkdirSync(opencodeDir, { recursive: true });
+
+    const fixtureSkill = '---\nname: career-ops\n---\n\n# canonical skill\n';
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+
+    gitRun(['init']);
+    gitRun(['config', 'core.symlinks', 'false']);
+    gitRun(['config', 'user.email', 'test@example.com']);
+    gitRun(['config', 'user.name', 'Test User']);
+
+    writeFileSync(join(canonicalDir, 'SKILL.md'), fixtureSkill);
+    writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
+    writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
+    gitRun(['add', '--', '.agents/skills/career-ops/SKILL.md']);
+
+    const pointerBlob = gitRun(['hash-object', '-w', '--stdin'], { input: pointer });
+    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.claude/skills/career-ops/SKILL.md`]);
+    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.opencode/skills/career-ops/SKILL.md`]);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    updater.prepareMaterializedSkillEntrypointsForStage(materialized, fixtureRoot);
+    gitRun(['add', '--', '.claude/skills/', '.opencode/skills/']);
+
+    const claudeIndex = gitRun(['ls-files', '-s', '--', '.claude/skills/career-ops/SKILL.md']);
+    const opencodeIndex = gitRun(['ls-files', '-s', '--', '.opencode/skills/career-ops/SKILL.md']);
+    if (claudeIndex.startsWith('100644 ') && opencodeIndex.startsWith('100644 ')) {
+      pass('materialized skill entrypoints stage as regular files, not symlink blobs');
+    } else {
+      fail(`materialized skill entrypoints staged with wrong modes: ${JSON.stringify([claudeIndex, opencodeIndex])}`);
+    }
+
+    const claudeBlob = gitRaw(['show', ':.claude/skills/career-ops/SKILL.md']);
+    const opencodeBlob = gitRaw(['show', ':.opencode/skills/career-ops/SKILL.md']);
+    if (claudeBlob === fixtureSkill && opencodeBlob === fixtureSkill) {
+      pass('materialized skill blobs contain canonical skill content');
+    } else {
+      fail('materialized skill blobs do not contain canonical skill content');
+    }
+  } catch (e) {
+    fail(`skill entrypoint index-mode test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
   }
 }
 
