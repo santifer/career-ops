@@ -2659,6 +2659,76 @@ try {
   fail(`font inlining test crashed: ${e.message}`);
 }
 
+// ── 20. LATEX VALIDATOR I18N ────────────────────────────────────
+
+console.log('\n20. LaTeX validator i18n (localized sections + CJK guard)');
+
+// Run generate-latex.mjs and return its JSON report, capturing stdout even
+// when it exits non-zero (validation issues exit 1 but still print the report).
+function latexValidate(tex) {
+  const dir = mkdtempSync(join(tmpdir(), 'latex-i18n-'));
+  const texPath = join(dir, 'cv.tex');
+  writeFileSync(texPath, tex, 'utf-8');
+  let out;
+  try {
+    out = execFileSync(NODE, ['generate-latex.mjs', texPath], { cwd: ROOT, encoding: 'utf-8', timeout: 30000 });
+  } catch (e) {
+    out = (e.stdout || '').toString();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  try { return JSON.parse(out); } catch { return null; }
+}
+
+const baseTex = (sectionTitle) => `\\documentclass{article}
+\\pdfgentounicode=1
+\\begin{document}
+\\section{${sectionTitle}}
+\\section{Experiencia}
+\\section{Proyectos}
+\\section{Habilidades}
+\\resumeSubheading
+\\resumeItem
+\\resumeProjectHeading
+\\end{document}
+`;
+
+try {
+  // Localized (Spanish) section titles must not trigger a "Missing section".
+  const localized = latexValidate(baseTex('Educación'));
+  if (localized && !localized.issues.some((i) => /section/i.test(i))) {
+    pass('localized section titles validate (no spurious "Missing section")');
+  } else {
+    fail(`localized section titles wrongly flagged: ${JSON.stringify(localized && localized.issues)}`);
+  }
+
+  // Too few sections must still be flagged.
+  const tooFew = latexValidate(`\\documentclass{article}
+\\pdfgentounicode=1
+\\begin{document}
+\\section{Education}
+\\resumeSubheading
+\\resumeItem
+\\resumeProjectHeading
+\\end{document}
+`);
+  if (tooFew && tooFew.issues.some((i) => /at least 4/i.test(i))) {
+    pass('fewer than 4 sections is still flagged');
+  } else {
+    fail('section-count check did not flag a CV with too few sections');
+  }
+
+  // CJK content must be rejected with actionable guidance.
+  const cjk = latexValidate(baseTex('職務経歴'));
+  if (cjk && cjk.issues.some((i) => /CJK/.test(i)) && cjk.valid === false) {
+    pass('CJK content is rejected with guidance to use pdf mode');
+  } else {
+    fail(`CJK content was not rejected with guidance: ${JSON.stringify(cjk && cjk.issues)}`);
+  }
+} catch (e) {
+  fail(`LaTeX validator i18n test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
