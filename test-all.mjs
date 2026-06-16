@@ -1853,8 +1853,8 @@ try {
         fail('report-number collision (#912): OtherCo row was overwritten by NewCo addition');
       }
 
-      const col912NewCoRow = col912Rows.find(r => r.includes('NewCo')) || '';
-      if (col912NewCoRow.includes('New Role') && col912NewCoRow.includes('2.7/5') && col912NewCoRow.includes('collision')) {
+      const expectedNewCoRow = '| 2 | 2026-01-05 | NewCo | New Role | 2.7/5 | Evaluated | ❌ | [1](../reports/001-newco-2026-01-05.md) | collision |';
+      if (col912Rows.some(r => r.trim() === expectedNewCoRow.trim())) {
         pass('report-number collision (#912): NewCo appended as a new entry with correct data');
       } else {
         fail('report-number collision (#912): NewCo entry was swallowed or has incorrect data');
