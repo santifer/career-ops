@@ -17,7 +17,7 @@ if (!raw || raw.kty !== "EC") {
   process.exit(1);
 }
 
-const kid = raw.kid || kidArg;
+const kid = kidArg || raw.kid;
 if (!kid) {
   console.error("No kid in the file and none passed as 2nd argument.");
   process.exit(1);

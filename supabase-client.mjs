@@ -18,6 +18,17 @@
 import 'dotenv/config';
 import { execFileSync } from 'child_process';
 
+const PRIVILEGED_JWT_ROLES = new Set(['service_role', 'supabase_admin', 'postgres']);
+
+function decodeJwtRole(token) {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    return typeof payload.role === 'string' ? payload.role : null;
+  } catch { return null; }
+}
+
 function envRequired(name) {
   const value = process.env[name]?.trim();
   if (!value) {
@@ -39,10 +50,14 @@ export function getSupabaseEnv(role = 'dashboard') {
     // Cron: publishable key on apikey header, minted JWT on Authorization header.
     const apikey = envRequired('SUPABASE_CRON_PUBLISHABLE_KEY');
     const authToken = envRequired('SUPABASE_CRON_JWT');
-    // sb_secret_ keys bypass RLS — never allow them on the cron path.
+    // Never allow keys that bypass RLS on the cron path.
     for (const [label, val] of [['SUPABASE_CRON_PUBLISHABLE_KEY', apikey], ['SUPABASE_CRON_JWT', authToken]]) {
       if (val.startsWith('sb_secret_')) {
         throw new Error(`${label} must not be an sb_secret_ key (bypasses RLS). Use a publishable key or minted JWT.`);
+      }
+      const jwtRole = decodeJwtRole(val);
+      if (jwtRole && PRIVILEGED_JWT_ROLES.has(jwtRole)) {
+        throw new Error(`${label} carries a privileged role (${jwtRole}) that bypasses RLS. Use a publishable key or a career_ops_cron-scoped JWT.`);
       }
     }
     return { role, url, apikey, authToken };

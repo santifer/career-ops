@@ -726,6 +726,28 @@ try {
     }
     if (threw) pass('getSupabaseEnv(cron) fails loud when SUPABASE_CRON_JWT is missing');
     else fail('getSupabaseEnv(cron) should fail loud when SUPABASE_CRON_JWT is missing');
+
+    // Test: service_role JWT on SUPABASE_CRON_JWT throws
+    const srPayload = Buffer.from(JSON.stringify({ role: 'service_role' })).toString('base64url');
+    const srJwt = `eyJhbGciOiJFUzI1NiJ9.${srPayload}.fakesig`;
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    process.env.SUPABASE_CRON_JWT = srJwt;
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('service_role')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects service_role JWT on SUPABASE_CRON_JWT');
+    else fail('getSupabaseEnv(cron) should reject service_role JWT on SUPABASE_CRON_JWT');
+
+    // Test: service_role JWT on SUPABASE_CRON_PUBLISHABLE_KEY throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = srJwt;
+    process.env.SUPABASE_CRON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role';
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('service_role')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects service_role JWT on SUPABASE_CRON_PUBLISHABLE_KEY');
+    else fail('getSupabaseEnv(cron) should reject service_role JWT on SUPABASE_CRON_PUBLISHABLE_KEY');
   } finally {
     restoreEnv();
   }

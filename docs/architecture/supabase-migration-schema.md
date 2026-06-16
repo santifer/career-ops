@@ -4,7 +4,7 @@
 > `data/apply-queue.json` to a Supabase Postgres backend, enabling a GitHub
 > Actions cron to insert fresh roles while the laptop is off.
 
-**Status:** DRAFT -- needs Neil's review before implementation.
+**Status:** DRAFT -- needs review before implementation.
 **Repo visibility:** PUBLIC. Every design decision assumes an attacker can read
 every column definition and every RLS policy.
 
@@ -141,8 +141,8 @@ If any match, skip. This is a single SQL query with `NOT EXISTS` subqueries.
 
 | Current field in `apply-queue.json` | Why it is banned | Where it stays |
 |-------------------------------------|------------------|----------------|
-| `reason` | Scoring rationale references the candidate's background ("Neil does not yet have...", "seniority mismatch"). | Local `apply-queue.json` or a local sidecar file. |
-| `visa_answer` | The candidate's visa selection ("485 Temporary Graduate Visa"). Reveals immigration status. | Local only. |
+| `reason` | Scoring rationale references the candidate's background ("the candidate does not yet have...", "seniority mismatch"). | Local `apply-queue.json` or a local sidecar file. |
+| `visa_answer` | The candidate's visa selection (e.g. `<visa-type>`). Reveals immigration status. | Local only. |
 | `drafts` | Form answers: name, email, phone, LinkedIn, visa consent, cover letter text, custom field answers. Pure PII. | Local only. |
 | `cv_pdf` | Path to a tailored CV PDF. The path contains the candidate's name. | Local only. |
 | `cover_letter_path` | Path to a generated cover letter. | Local only. |
@@ -164,9 +164,9 @@ data/local-enrichments.json  (or kept in apply-queue.json during transition)
 {
   "greenhouse:easygo:5097649007": {
     "reason": "Strong data analytics match...",
-    "visa_answer": "485 Temporary Graduate Visa",
+    "visa_answer": "<visa-type>",
     "drafts": { ... },
-    "cv_pdf": "output/cv-neil-shekhar-easygo-kick-2026-06-03.pdf",
+    "cv_pdf": "output/cv-<candidate>-<role>-<date>.pdf",
     "cover_letter_path": null,
     "ksc_path": null
   }
@@ -182,10 +182,10 @@ if uploaded to Supabase:
 
 | Field | Example value | Violation type |
 |-------|---------------|----------------|
-| `reason` | "Lead-level role requiring team leadership and mentoring experience Neil does not yet have" | Names candidate, references their experience gaps. |
-| `visa_answer` | "485 Temporary Graduate Visa" | Immigration status. |
-| `drafts.*` | `{"answer": "Neil", "source": "deterministic"}` | PII: name, email, phone, visa consent, custom answers. |
-| `cv_pdf` | `"output/cv-neil-shekhar-easygo-kick-2026-06-03.pdf"` | Candidate name in path. |
+| `reason` | "Lead-level role requiring team leadership and mentoring experience the candidate does not yet have" | References candidate's background. |
+| `visa_answer` | `"<visa-type>"` | Immigration status. |
+| `drafts.*` | `{"answer": "<candidate-name>", "source": "deterministic"}` | PII: name, email, phone, visa consent, custom answers. |
+| `cv_pdf` | `"output/cv-<candidate>-<role>-<date>.pdf"` | Candidate name in path. |
 
 ---
 
@@ -208,7 +208,7 @@ This is enforced at three levels:
 
 1. **Application logic:** The cron's SQL uses `WHERE status = 'new'` for liveness
    eviction and `ON CONFLICT (url) DO NOTHING` for inserts.
-2. **RLS policy:** The cron's service role has a policy:
+2. **RLS policy:** The cron's `career_ops_cron` role has a policy:
    `USING (status = 'new')` on UPDATE and DELETE. Rows the user has advanced
    past `new` are invisible to the cron's write operations.
 3. **CHECK constraint:** The `status` CHECK on `active_roles` rejects terminal
@@ -298,10 +298,15 @@ Produce this document. No code changes, no Supabase project created.
   (`active_roles` + local sidecar for PII fields), `saveQueue()` writes to
   Supabase + local sidecar. Atomic write guarantee shifts from filesystem
   rename to Postgres transaction.
-- A new `supabase-client.mjs` module handles the Supabase JS client
-  initialization. The project URL and service-role key are read from
-  environment variables (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`) or a local
-  `.env` file (gitignored).
+- A new `supabase-client.mjs` module handles Supabase REST calls. Two credential
+  paths (read from `.env`, gitignored):
+  - **Dashboard** (`SUPABASE_DASHBOARD_KEY`): `sb_secret_` key → resolves to
+    `service_role`, intentionally bypasses RLS (trusted local high-privilege
+    client). Only on localhost.
+  - **Cron** (`SUPABASE_CRON_PUBLISHABLE_KEY` + `SUPABASE_CRON_JWT`): publishable
+    key on the `apikey` header plus a minted `career_ops_cron` JWT on the
+    `Authorization: Bearer` header. RLS is enforced; the cron sees only
+    what its policies allow.
 - `queue-ingest.mjs` writes stubs to Supabase instead of local JSON.
 - `dashboard-server.mjs` reads from Supabase via `queue-store.mjs` (no direct
   SQL). The active-lanes filter is structural (the table only holds open roles).
@@ -340,7 +345,9 @@ Produce this document. No code changes, no Supabase project created.
   4. INSERTs new `status = 'new'` stubs with `ON CONFLICT DO NOTHING`.
   5. Re-checks liveness of existing `status = 'new'` rows (HTTP-only).
   6. Evicts expired `new` rows.
-- The workflow uses a `SUPABASE_SERVICE_KEY` secret (repo secret, never in code).
+- The workflow uses `SUPABASE_CRON_PUBLISHABLE_KEY` and `SUPABASE_CRON_JWT`
+  secrets (repo secrets, never in code). The cron JWT is minted with
+  `role=career_ops_cron` (ES256) and scoped by RLS to INSERT/DELETE `new` rows.
 - The workflow does NOT score, prepare, fill, or decide. It only inserts stubs
   and evicts expired ones.
 - `portals.yml` is safe to commit: it contains company names and search
@@ -395,7 +402,7 @@ share the project with other tooling. Decide before creating the project.
 ### 5.5 `reason` field: cloud or local?
 
 The spec bans `reason` from the cloud because it currently references the
-candidate ("Neil does not yet have..."). However, if the scoring agent were
+candidate ("the candidate does not yet have..."). However, if the scoring agent were
 instructed to write reasons that reference only the role (e.g., "Lead-level
 role; marketing analytics domain"), the field would be cloud-safe. Options:
 
@@ -418,21 +425,26 @@ Options:
 Full offline mode is the most robust but adds reconciliation complexity.
 Recommendation: start with fail-loud + local shadow read, add write queue later.
 
-### 5.7 RLS: anon vs service-role
+### 5.7 RLS: split dashboard / cron credential model — DECIDED
 
-The dashboard runs on `localhost:7777`. It talks to Supabase using the
-service-role key (stored in `.env`, gitignored). The anon key is never used
-and the anon role has no RLS grants. This means:
+**Dashboard (localhost:7777):** `SUPABASE_DASHBOARD_KEY` is an `sb_secret_` key.
+Supabase resolves this to `service_role`, which intentionally bypasses RLS. This
+is the trusted local high-privilege path. The key is stored in `.env` (gitignored)
+and never committed.
 
-- The Supabase REST API is not publicly queryable even if someone discovers the
-  project URL.
-- The service-role key must never be committed. It is read from `SUPABASE_SERVICE_KEY`
-  env var or `.env`.
+**Cron (GitHub Actions):** `SUPABASE_CRON_PUBLISHABLE_KEY` is the project's anon
+key (sent on the `apikey` header). `SUPABASE_CRON_JWT` is a minted ES256 JWT with
+`role=career_ops_cron` (sent on `Authorization: Bearer`). The anon role has no
+RLS grants; the cron JWT role has RLS policies that allow only:
+- `INSERT` into `active_roles` where `status = 'new'`
+- `DELETE` from `active_roles` where `status = 'new'`
+- `SELECT` on `seen_urls` and `active_roles` (for dedup checks)
+- `INSERT` into `seen_urls`
 
-Confirm this is acceptable, or decide if you want a more granular RLS setup
-(e.g., a custom `cron_role` for the GitHub Actions workflow that can only
-INSERT `new` rows and DELETE `new` rows, separate from the local
-`dashboard_role` that can do everything).
+`supabase-client.mjs` enforces that neither cron credential is an `sb_secret_`
+key or a JWT with a privileged role (`service_role`, `supabase_admin`, `postgres`).
+
+The live boundary test (`test-cron-rls-negative.mjs`) proved this 6/6.
 
 ### 5.8 Migration of existing data
 
@@ -455,7 +467,7 @@ This is a one-time migration script. Confirm you want it automated or manual.
 2. **`portals.yml` privacy** (5.2) -- keep public or hide?
 3. **`reason` field** (5.5) -- cloud or local?
 4. **Offline fallback** (5.6) -- fail-loud + shadow, or full offline?
-5. **RLS granularity** (5.7) -- single service-role key, or split cron/dashboard?
+5. ~~**RLS granularity** (5.7)~~ -- **Decided:** split dashboard (`sb_secret_` / service_role) + cron (`career_ops_cron` JWT, RLS-enforced). See §5.7.
 6. **Migration approach** (5.8) -- automated script or manual?
 7. **Supabase region** (5.4) -- Sydney or elsewhere?
 8. **PII boundary** (Section 2) -- confirm the banned-fields list is complete.
