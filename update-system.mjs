@@ -141,6 +141,7 @@ const SYSTEM_PATHS = [
   '.github/',
   'package.json',
   'build-cv-latex.mjs',
+  'build-dashboard.mjs',
   'scaffolder/',
   'Dockerfile',
   'docker-compose.yml',
@@ -275,14 +276,14 @@ function rebuildDashboardBinaryIfNeeded() {
   if (!dashboardGoSourcesChanged()) return;
 
   try {
-    execFileSync('go', ['build', '-o', 'career-dashboard', '.'], {
-      cwd: join(ROOT, 'dashboard'),
-      timeout: 60000,
+    execFileSync(process.execPath, ['build-dashboard.mjs'], {
+      cwd: ROOT,
+      timeout: 120000,
       stdio: 'pipe',
     });
     console.log('dashboard binary rebuilt');
   } catch {
-    console.log('dashboard binary rebuild skipped -- run: cd dashboard && go build -o career-dashboard . manually');
+    console.log('dashboard binary rebuild skipped -- run: npm run build:dashboard manually');
   }
 }
 

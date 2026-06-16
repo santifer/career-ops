@@ -21,7 +21,9 @@
     "validate:portals": "node validate-portals.mjs",
     "tracker": "node tracker.mjs",
     "patterns": "node analyze-patterns.mjs",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "build:dashboard": "node build-dashboard.mjs",
+    "serve:dashboard": "cd dashboard && go run . --path .."
   },
   "keywords": [
     "ai",
