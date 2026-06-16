@@ -557,8 +557,7 @@ const updateSystemScript = readFile('update-system.mjs');
 if (
   /git\('diff',\s*'--name-only',\s*'HEAD',\s*'--',\s*'dashboard'\)/.test(updateSystemScript) &&
   /path\.startsWith\(['"]dashboard\/['"]\)\s*&&\s*path\.endsWith\(['"]\.go['"]\)/.test(updateSystemScript) &&
-  /go build -o career-dashboard \./.test(updateSystemScript) &&
-  /cwd:\s*join\(ROOT,\s*['"]dashboard['"]\)/.test(updateSystemScript) &&
+  /execFileSync\(process\.execPath,\s*\['build-dashboard\.mjs'\]/.test(updateSystemScript) &&
   /dashboard binary rebuild skipped/.test(updateSystemScript)
 ) {
   pass('update-system rebuilds dashboard binary when dashboard Go sources change');
