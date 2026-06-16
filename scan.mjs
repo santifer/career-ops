@@ -492,22 +492,46 @@ export function formatScanHistoryRow(offer, date, status = 'added') {
   ].map(sanitizeTsvField).join('\t');
 }
 
+// Standard skeleton created on fresh install — matches the format documented
+// in modes/pipeline.md and expected by /career-ops pipeline.
+const PIPELINE_SKELETON = `# Pipeline — Pending URLs
+
+Paste job URLs below as \`- [ ] {url}\` then run \`/career-ops pipeline\`.
+
+## Pending
+
+## Processed
+`;
+
+// Current section names (English). Legacy Spanish names are checked as fallback
+// so existing pipeline.md files created before this change keep working.
+const PENDING_MARKERS = ['## Pending', '## Pendientes'];
+const PROCESSED_MARKERS = ['## Processed', '## Procesadas'];
+
 export function appendToPipeline(offers) {
   if (offers.length === 0) return;
 
+  // Auto-create with standard skeleton if missing (fresh-install guard).
+  if (!existsSync(PIPELINE_PATH)) {
+    writeFileSync(PIPELINE_PATH, PIPELINE_SKELETON, 'utf-8');
+  }
+
   let text = readFileSync(PIPELINE_PATH, 'utf-8');
 
-  // Find "## Pendientes" section and append after it
-  const marker = '## Pendientes';
-  const idx = text.indexOf(marker);
+  const marker = PENDING_MARKERS.find(m => text.includes(m)) ?? null;
+  const idx = marker !== null ? text.indexOf(marker) : -1;
+
   if (idx === -1) {
-    // No Pendientes section — append at end before Procesadas
-    const procIdx = text.indexOf('## Procesadas');
+    // No Pending section found — insert one before Processed (or at end)
+    const procIdx = PROCESSED_MARKERS.reduce((found, m) => {
+      const i = text.indexOf(m);
+      return (found === -1 || (i !== -1 && i < found)) ? i : found;
+    }, -1);
     const insertAt = procIdx === -1 ? text.length : procIdx;
-    const block = `\n${marker}\n\n` + offers.map(formatPipelineOffer).join('\n') + '\n\n';
+    const block = `\n## Pending\n\n` + offers.map(formatPipelineOffer).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
-    // Find the end of existing Pendientes content (next ## or end)
+    // Find the end of existing Pending content (next ## or end)
     const afterMarker = idx + marker.length;
     const nextSection = text.indexOf('\n## ', afterMarker);
     const insertAt = nextSection === -1 ? text.length : nextSection;

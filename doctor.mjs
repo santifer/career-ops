@@ -5,7 +5,7 @@
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -47,23 +47,33 @@ function checkDependencies() {
 }
 
 async function checkPlaywright() {
+  let chromium;
   try {
-    const { chromium } = await import('playwright');
-    const execPath = chromium.executablePath();
-    if (existsSync(execPath)) {
-      return { pass: true, label: 'Playwright chromium installed' };
-    }
-    return {
-      pass: false,
-      label: 'Playwright chromium not installed',
-      fix: 'Run: npx playwright install chromium',
-    };
+    ({ chromium } = await import('playwright'));
   } catch {
     return {
       pass: false,
       label: 'Playwright chromium not installed',
       fix: 'Run: npx playwright install chromium',
     };
+  }
+  // Validate by launching — chromium.executablePath() points at Chrome for Testing
+  // (full binary) but chromium.launch() may use the headless-shell binary, which
+  // lives at a different path and requires a separate install. Launching directly
+  // tests the exact binary the runtime uses and catches stub-installs (directory
+  // present but no binary — just ABOUT + LICENSE files).
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true });
+    return { pass: true, label: 'Playwright chromium installed' };
+  } catch {
+    return {
+      pass: false,
+      label: 'Playwright chromium not installed',
+      fix: 'Run: npx playwright install chromium',
+    };
+  } finally {
+    try { await browser?.close(); } catch { /* ignore */ }
   }
 }
 
@@ -199,6 +209,33 @@ function checkAutoDir(name) {
   }
 }
 
+const PIPELINE_SKELETON = `# Pipeline — Pending URLs
+
+Paste job URLs below as \`- [ ] {url}\` then run \`/career-ops pipeline\`.
+
+## Pending
+
+## Processed
+`;
+
+function checkPipelineFile() {
+  const filePath = join(projectRoot, 'data', 'pipeline.md');
+  if (existsSync(filePath)) {
+    return { pass: true, label: 'data/pipeline.md ready' };
+  }
+  try {
+    mkdirSync(join(projectRoot, 'data'), { recursive: true });
+    writeFileSync(filePath, PIPELINE_SKELETON, 'utf-8');
+    return { pass: true, label: 'data/pipeline.md ready (auto-created)' };
+  } catch {
+    return {
+      pass: false,
+      label: 'data/pipeline.md could not be created',
+      fix: 'Run: mkdir -p data && touch data/pipeline.md',
+    };
+  }
+}
+
 async function main() {
   console.log('\ncareer-ops doctor');
   console.log('================\n');
@@ -211,6 +248,7 @@ async function main() {
     ...USER_LAYER_PREREQS.map(checkPrereq),
     checkFonts(),
     checkAutoDir('data'),
+    checkPipelineFile(),
     checkAutoDir('output'),
     checkAutoDir('reports'),
   ];
