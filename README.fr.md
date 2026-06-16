@@ -147,15 +147,15 @@ gemini auth
 cd career-ops
 gemini
 
-# 4. Utilisez les commandes slash comme avec Claude Code
+# 4. Utilisez la commande unifiée /career-ops avec ses sous-commandes :
 /career-ops "Senior AI Engineer at Anthropic..."
-/career-ops-evaluate --file ./jds/openai.txt
-/career-ops-scan
-/career-ops-pdf
-/career-ops-tracker
+/career-ops pipeline
+/career-ops scan
+/career-ops pdf
+/career-ops tracker
 ```
 
-Le fichier `GEMINI.md` is chargé automatiquement comme contexte. Les 15 commandes sont définies dans `.gemini/commands/*.toml`.
+Le fichier `GEMINI.md` est chargé automatiquement comme contexte. Toutes les sous-commandes sont routées via la définition unifiée `.agents/skills/career-ops/SKILL.md`.
 
 ### Option B : Script d'API autonome (Aucune installation de CLI requise)
 
