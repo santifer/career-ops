@@ -138,7 +138,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 
 ## Voice DNA (writing guardrail)
 
-If `voice-dna.md` exists in the project root, it is the authoritative voice guide for generated prose. It is user-layer and optional — never assume it exists, and skip this block silently if it doesn't. It layers on top of the personal style below; the two are complementary, not competing.
+If `voice-dna.md` exists in the project root, it is a writing guardrail for generated prose. It is user-layer and optional — never assume it exists, and skip this block silently if it doesn't. It layers **under** the user's personal style: it catches AI-slop and fills gaps, but it always defers to the user's own voice rules in `_profile.md` (see Precedence below).
 
 **Two-tier scope (this is what keeps CVs accurate):**
 
@@ -147,7 +147,7 @@ If `voice-dna.md` exists in the project root, it is the authoritative voice guid
 
 **Accuracy always wins over style.** Facts from `cv.md` and `article-digest.md` are never overridden by voice-dna. Never drop, soften, or hedge a real metric to improve rhythm. Never invent detail to sound more human. Voice-dna shapes wording; it never changes content.
 
-**Precedence with personal style:** voice-dna HARD RULES (Tier 1) override an extracted `## Writing Style` whenever they conflict — e.g. if the user's samples use em-dashes, voice-dna's no-em-dash rule still wins. The extracted style governs tone and vocabulary where voice-dna leaves latitude (it labels most preferences "light").
+**Precedence with personal style (`_profile.md` always wins):** The user's `## Writing Style` in `_profile.md` is the authority on voice and tone. Where `voice-dna.md` and `_profile.md` conflict, `_profile.md` wins — voice-dna never overrides a rule the user set for themselves. Example: if the user's `_profile.md` style uses em-dashes, keep them, even though voice-dna discourages them. voice-dna's anti-AI-slop rules apply only where `_profile.md` is silent. (`voice-dna.md` is itself a user file, so a user who wants the strict guardrail to win can simply leave that preference out of `_profile.md`.)
 
 ---
 
