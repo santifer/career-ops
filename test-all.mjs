@@ -202,15 +202,19 @@ const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
   'README.md', 'README.es.md', 'README.ja.md', 'README.ko-KR.md',
-  'README.pt-BR.md', 'README.ru.md',
+  'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.ua.md',
+  'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
   'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'AGENTS.md', 'go.mod', 'test-all.mjs',
+  'CHANGELOG.md', 'TRADEMARK.md', '.claude-plugin/plugin.json',
+  '.claude-plugin/marketplace.json',
   // Community / governance files (added in v1.3.0, all legitimately reference the maintainer)
   'CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'SECURITY.md', 'SUPPORT.md',
   '.github/SECURITY.md',
   // Dashboard credit string
   'dashboard/internal/ui/screens/pipeline.go',
+  'dashboard/internal/ui/screens/progress.go',
 ];
 
 // Build pathspec for git grep — only scan tracked files matching these
@@ -564,6 +568,191 @@ try {
 
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
+}
+
+// ── 14. SUPABASE QUEUE STORE CONTRACT ───────────────────────────
+
+console.log('\n14. Supabase queue store contract');
+
+try {
+  const sqlPath = 'supabase/migrations/202606060001_queue_store.sql';
+  const sql = readFile(sqlPath);
+  const queueStore = readFile('queue-store.mjs');
+  const supabaseClient = readFile('supabase-client.mjs');
+  const migrationScript = readFile('migrate-queue-to-supabase.mjs');
+
+  if (
+    sql.includes('create table if not exists public.active_roles') &&
+    sql.includes('create table if not exists public.seen_urls') &&
+    sql.includes("check (status in ('new','scored','prepare-queued','prepared','prefilled','filled'))")
+  ) {
+    pass('Supabase SQL creates active_roles/seen_urls with active status CHECK');
+  } else {
+    fail('Supabase SQL missing queue tables or active status CHECK');
+  }
+
+  if (
+    sql.includes('source text not null default') &&
+    sql.includes('idx_active_roles_source')
+  ) {
+    pass('active_roles has source column for discovery-source agnostic inserts');
+  } else {
+    fail('active_roles missing source column/index');
+  }
+
+  if (
+    sql.includes('career_ops_cron') &&
+    sql.includes('career_ops_dashboard') &&
+    sql.includes("with check (status = 'new')") &&
+    sql.includes("using (status = 'new')")
+  ) {
+    pass('Supabase SQL declares split cron/dashboard RLS roles and new-row cron limits');
+  } else {
+    fail('Supabase SQL missing split RLS role policies');
+  }
+
+  if (
+    sql.includes('active_roles_set_updated_at') &&
+    sql.includes('public.save_queue') &&
+    sql.includes('security invoker')
+  ) {
+    pass('Supabase SQL has updated_at trigger and transactional queue RPC');
+  } else {
+    fail('Supabase SQL missing updated_at trigger or save_queue RPC');
+  }
+
+  if (!/\breason\s+(text|varchar|jsonb)\b/i.test(sql) && !/\bdrafts\s+(text|varchar|jsonb)\b/i.test(sql)) {
+    pass('PII fields reason/drafts are not cloud columns');
+  } else {
+    fail('PII fields leaked into Supabase schema');
+  }
+
+  const { CLOUD_ROLE_FIELDS, LOCAL_ONLY_ROLE_FIELDS } = await import(pathToFileURL(join(ROOT, 'queue-store.mjs')).href);
+  if (
+    queueStore.includes('Default-local guard') &&
+    CLOUD_ROLE_FIELDS.has('source') &&
+    !CLOUD_ROLE_FIELDS.has('reason') &&
+    !CLOUD_ROLE_FIELDS.has('drafts') &&
+    LOCAL_ONLY_ROLE_FIELDS.has('reason') &&
+    LOCAL_ONLY_ROLE_FIELDS.has('drafts')
+  ) {
+    pass('queue-store has allowlist guard and keeps reason local-only');
+  } else {
+    fail('queue-store PII allowlist/default-local guard missing or reason cloud-allowed');
+  }
+
+  if (
+    supabaseClient.includes('SUPABASE_DASHBOARD_KEY') &&
+    supabaseClient.includes('SUPABASE_CRON_PUBLISHABLE_KEY') &&
+    supabaseClient.includes('SUPABASE_CRON_JWT') &&
+    !supabaseClient.includes('SUPABASE_SERVICE_KEY')
+  ) {
+    pass('supabase-client uses split dashboard/cron env keys, not service-role fallback');
+  } else {
+    fail('supabase-client env contract should use split keys without service-role fallback');
+  }
+
+  if (
+    migrationScript.includes('DRY RUN ONLY') &&
+    migrationScript.includes('--apply') &&
+    migrationScript.includes('active_roles') &&
+    migrationScript.includes('local_enrichments')
+  ) {
+    pass('migration script is dry-run-first and prints cloud/sidecar plan');
+  } else {
+    fail('migration script missing dry-run-first insert plan behavior');
+  }
+
+  const integration = run(NODE, ['test-supabase-store.mjs'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  if (integration !== null) {
+    pass('Supabase round-trip integration test script exits cleanly (skips without test env)');
+  } else {
+    fail('Supabase round-trip integration test script failed');
+  }
+
+  // ── Cron credential unit tests (no network) ──
+  // Temporarily set env vars, call getSupabaseEnv, then restore.
+  const { getSupabaseEnv } = await import(pathToFileURL(join(ROOT, 'supabase-client.mjs')).href);
+  const savedEnv = { ...process.env };
+  const restoreEnv = () => {
+    for (const k of ['SUPABASE_URL', 'SUPABASE_CRON_PUBLISHABLE_KEY', 'SUPABASE_CRON_JWT']) {
+      if (savedEnv[k] !== undefined) process.env[k] = savedEnv[k];
+      else delete process.env[k];
+    }
+  };
+
+  try {
+    // Test: cron returns distinct apikey and authToken
+    process.env.SUPABASE_URL = 'https://test.supabase.co';
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    process.env.SUPABASE_CRON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role';
+    const cronEnv = getSupabaseEnv('cron');
+    if (
+      cronEnv.apikey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon' &&
+      cronEnv.authToken === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role' &&
+      cronEnv.apikey !== cronEnv.authToken
+    ) {
+      pass('getSupabaseEnv(cron) returns distinct apikey and authToken');
+    } else {
+      fail('getSupabaseEnv(cron) should return distinct apikey vs authToken');
+    }
+
+    // Test: sb_secret_ on publishable key throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'sb_secret_bad_value';
+    process.env.SUPABASE_CRON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role';
+    let threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('sb_secret_')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects sb_secret_ on publishable key');
+    else fail('getSupabaseEnv(cron) should reject sb_secret_ on publishable key');
+
+    // Test: sb_secret_ on JWT throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    process.env.SUPABASE_CRON_JWT = 'sb_secret_bad_jwt';
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('sb_secret_')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects sb_secret_ on JWT');
+    else fail('getSupabaseEnv(cron) should reject sb_secret_ on JWT');
+
+    // Test: missing SUPABASE_CRON_JWT throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    delete process.env.SUPABASE_CRON_JWT;
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('SUPABASE_CRON_JWT')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) fails loud when SUPABASE_CRON_JWT is missing');
+    else fail('getSupabaseEnv(cron) should fail loud when SUPABASE_CRON_JWT is missing');
+
+    // Test: service_role JWT on SUPABASE_CRON_JWT throws
+    const srPayload = Buffer.from(JSON.stringify({ role: 'service_role' })).toString('base64url');
+    const srJwt = `eyJhbGciOiJFUzI1NiJ9.${srPayload}.fakesig`;
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    process.env.SUPABASE_CRON_JWT = srJwt;
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('service_role')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects service_role JWT on SUPABASE_CRON_JWT');
+    else fail('getSupabaseEnv(cron) should reject service_role JWT on SUPABASE_CRON_JWT');
+
+    // Test: service_role JWT on SUPABASE_CRON_PUBLISHABLE_KEY throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = srJwt;
+    process.env.SUPABASE_CRON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role';
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('service_role')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects service_role JWT on SUPABASE_CRON_PUBLISHABLE_KEY');
+    else fail('getSupabaseEnv(cron) should reject service_role JWT on SUPABASE_CRON_PUBLISHABLE_KEY');
+  } finally {
+    restoreEnv();
+  }
+} catch (e) {
+  fail(`Supabase queue store contract checks crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
