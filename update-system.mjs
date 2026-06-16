@@ -16,7 +16,7 @@
  */
 
 import { execFile, execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync, lstatSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -286,6 +286,62 @@ function rebuildDashboardBinaryIfNeeded() {
   }
 }
 
+// ── SKILL ENTRYPOINTS ────────────────────────────────────────────
+//
+// The Claude Code and OpenCode skill entrypoints are tracked in git as
+// symlinks pointing to the canonical .agents/skills/career-ops/SKILL.md.
+// On Windows checkouts that lack symlink support, git materializes them
+// as 43-byte text files containing the relative target path.  After every
+// update these pointer files must be replaced with real content so that
+// the skill router works across all CLIs.
+
+const CANONICAL_SKILL_REL = '.agents/skills/career-ops/SKILL.md';
+const SKILL_ENTRYPOINTS_REL = [
+  '.claude/skills/career-ops/SKILL.md',
+  '.opencode/skills/career-ops/SKILL.md',
+];
+
+function materializeSkillEntrypoints() {
+  const canonicalPath = join(ROOT, CANONICAL_SKILL_REL);
+  if (!existsSync(canonicalPath)) return;
+  let canonicalContent;
+  try {
+    canonicalContent = readFileSync(canonicalPath, 'utf-8');
+  } catch {
+    return;
+  }
+  for (const rel of SKILL_ENTRYPOINTS_REL) {
+    const fullPath = join(ROOT, rel);
+    if (!existsSync(fullPath)) continue;
+    let stat;
+    try {
+      stat = lstatSync(fullPath);
+    } catch {
+      continue;
+    }
+    // Real symlinks work fine on all platforms — leave them alone.
+    if (stat.isSymbolicLink()) continue;
+    let content;
+    try {
+      content = readFileSync(fullPath, 'utf-8');
+    } catch {
+      continue;
+    }
+    // A pointer file contains the symlink target text; a real SKILL.md
+    // starts with '---' (YAML front matter).  Replace pointer files with
+    // the canonical content so the skill router works on Windows.
+    if (content === canonicalContent) continue;
+    if (!content.trimStart().startsWith('---')) {
+      try {
+        writeFileSync(fullPath, canonicalContent, 'utf-8');
+        console.log(`Materialized skill entrypoint: ${rel}`);
+      } catch {
+        console.log(`Warning: could not write ${rel} — skill may not work on this platform`);
+      }
+    }
+  }
+}
+
 // ── CHECK ───────────────────────────────────────────────────────
 
 // curl helper used by check() — curl works inside the Claude Code sandbox
@@ -537,6 +593,10 @@ async function apply() {
 
     // 6. Rebuild compiled dashboard if Go sources changed
     rebuildDashboardBinaryIfNeeded();
+
+    // 6a. On Windows, git may have checked out symlink skill entrypoints as
+    // plain pointer-text files.  Replace them with the real canonical content.
+    materializeSkillEntrypoints();
 
     // 7. Commit the update
     const remote = localVersion(); // Re-read after checkout updated VERSION

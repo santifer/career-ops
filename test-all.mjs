@@ -838,25 +838,32 @@ try {
 
 for (const link of symlinks) {
   let resolved = null;
-  let target = null;
-  try {
-    target = realpathSync(join(ROOT, link));
-  } catch {
-    target = null;
-  }
-  if (target === null) {
-    fail(`Symlink missing: ${link}`);
-    continue;
-  }
   try {
     resolved = realpathSync(join(ROOT, link));
   } catch {
     resolved = null;
   }
+  if (resolved === null) {
+    fail(`Symlink missing: ${link}`);
+    continue;
+  }
   if (resolved === canonicalReal) {
-    pass(`${link} → canonical skill`);
+    pass(`${link} → canonical skill (symlink)`);
   } else {
-    fail(`${link} resolves to ${resolved}, expected ${canonicalReal}`);
+    // On Windows, git materializes symlinks as 43-byte pointer-text files.
+    // update-system.mjs replaces these with real content after each apply.
+    // Accept a byte-identical copy of the canonical skill as valid.
+    try {
+      const linkContent = readFileSync(join(ROOT, link), 'utf-8');
+      const canonContent = canonicalReal ? readFileSync(canonicalReal, 'utf-8') : null;
+      if (canonContent !== null && linkContent === canonContent) {
+        pass(`${link} → canonical skill (copy)`);
+      } else {
+        fail(`${link} resolves to ${resolved}, expected ${canonicalReal}`);
+      }
+    } catch {
+      fail(`${link} resolves to ${resolved}, expected ${canonicalReal}`);
+    }
   }
 }
 
