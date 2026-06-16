@@ -1805,6 +1805,68 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER REPORT-NUMBER COLLISION (#912) ─────────────────
+// The report-number dedup check was not company-guarded: a TSV for NewCo
+// with report [1] would find the existing tracker row [1] for OtherCo and
+// update it in-place instead of appending NewCo as a new row.
+console.log('\n🧪 Testing merge-tracker report-number cross-company collision (#912)...');
+try {
+  const col912Tmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-912-'));
+  try {
+    mkdirSync(join(col912Tmp, 'data'));
+    mkdirSync(join(col912Tmp, 'reports'));
+    const col912Additions = join(col912Tmp, 'additions');
+    mkdirSync(col912Additions);
+
+    const col912Tracker = join(col912Tmp, 'data', 'applications.md');
+    writeFileSync(col912Tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-01 | OtherCo | Staff Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-otherco-2026-01-01.md) | original |\n');
+    writeFileSync(join(col912Tmp, 'reports', '001-otherco-2026-01-01.md'), '# fixture\n');
+    writeFileSync(join(col912Tmp, 'reports', '001-newco-2026-01-05.md'), '# fixture\n');
+
+    // NewCo TSV also carries report number [1] — cross-company collision
+    writeFileSync(join(col912Additions, '001-newco.tsv'),
+      '1\t2026-01-05\tNewCo\tNew Role\tEvaluated\t2.7/5\t❌\t[1](reports/001-newco-2026-01-05.md)\tcollision\n');
+
+    const col912Result = run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: col912Tracker, CAREER_OPS_ADDITIONS: col912Additions },
+    });
+    if (col912Result === null) {
+      fail('merge-tracker crashed during report-number collision test (#912)');
+    } else {
+      const col912Merged = readFileSync(col912Tracker, 'utf-8');
+      const col912Rows = col912Merged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
+      const expectedOtherCoRow = '| 1 | 2026-01-01 | OtherCo | Staff Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-otherco-2026-01-01.md) | original |';
+
+      if (col912Rows.length === 2) {
+        pass('report-number collision (#912): merged tracker has exactly 2 rows');
+      } else {
+        fail(`report-number collision (#912): expected 2 rows, got ${col912Rows.length}`);
+      }
+
+      if (col912Rows.some(r => r.trim() === expectedOtherCoRow.trim())) {
+        pass('report-number collision (#912): existing OtherCo row left untouched (exact match)');
+      } else {
+        fail('report-number collision (#912): OtherCo row was overwritten by NewCo addition');
+      }
+
+      const col912NewCoRow = col912Rows.find(r => r.includes('NewCo')) || '';
+      if (col912NewCoRow.includes('New Role') && col912NewCoRow.includes('2.7/5') && col912NewCoRow.includes('collision')) {
+        pass('report-number collision (#912): NewCo appended as a new entry with correct data');
+      } else {
+        fail('report-number collision (#912): NewCo entry was swallowed or has incorrect data');
+      }
+    }
+  } finally {
+    rmSync(col912Tmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker report-number collision test crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
 // Report-number reservation is atomic now (#803), but tracker merges are a
 // separate read/modify/write step. If two merge-tracker processes read the same
