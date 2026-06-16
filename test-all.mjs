@@ -2659,6 +2659,35 @@ try {
   fail(`font inlining test crashed: ${e.message}`);
 }
 
+// ── 20. CJK CV RENDERING (lang="ja" font fallback) ──────────────
+
+console.log('\n20. CJK CV rendering (lang="ja" font fallback)');
+
+try {
+  // The bundled webfonts are Latin-only, so a Japanese CV (html lang="ja")
+  // needs a CJK system-font fallback or it renders as tofu (□) in headless
+  // Chromium. This mirrors the existing lang="ar" handling.
+  const template = readFileSync(join(ROOT, 'templates', 'cv-template.html'), 'utf-8');
+
+  if (/html\[lang="ja"\]\s+body/.test(template)) {
+    pass('cv-template.html has a lang="ja" body rule for CJK text');
+  } else {
+    fail('cv-template.html is missing a lang="ja" font fallback — Japanese CVs render as tofu (□)');
+  }
+
+  // The fallback must name a real CJK font family, not just rely on sans-serif
+  // (the generic sans-serif has no CJK glyphs on minimal/CI environments).
+  const cjkFonts = ['Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', 'Noto Sans JP', 'Meiryo', 'MS PGothic'];
+  const jaBlock = template.slice(template.indexOf('html[lang="ja"]'));
+  if (cjkFonts.some((f) => jaBlock.includes(f))) {
+    pass('lang="ja" rules name a concrete CJK font family');
+  } else {
+    fail('lang="ja" rules do not name any CJK font family — CJK fallback will not work');
+  }
+} catch (e) {
+  fail(`CJK rendering test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
