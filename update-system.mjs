@@ -252,7 +252,27 @@ function mergePathLists(...lists) {
 
 function revertPaths(paths) {
   if (paths.length === 0) return;
-  git('checkout', '--', ...paths);
+  // Must restore from HEAD, not from the index (#915 bug 1). After
+  // `git checkout FETCH_HEAD -- <path>` the index already holds the new
+  // content, so `git checkout -- <path>` (index→worktree) is a no-op.
+  // `git checkout HEAD -- <path>` resets both the index and the worktree
+  // to the pre-update commit, which is the correct rollback target.
+  for (const p of paths) {
+    try {
+      git('checkout', 'HEAD', '--', p);
+    } catch (err) {
+      const pathspec = p.endsWith('/') ? p.slice(0, -1) : p;
+      // Only remove if the path genuinely doesn't exist in HEAD.
+      // Other errors (permissions, corrupt refs) should re-throw.
+      let existsInHead = true;
+      try { git('cat-file', '-e', `HEAD:${pathspec}`); } catch { existsInHead = false; }
+      if (existsInHead) throw err;
+      // Path was newly introduced by the update — remove it so the
+      // working tree is consistent with HEAD.
+      try { git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec); } catch { /* ignore */ }
+      try { rmSync(join(ROOT, pathspec), { recursive: true, force: true }); } catch { /* already gone */ }
+    }
+  }
 }
 
 function addPaths(paths) {
@@ -408,9 +428,22 @@ async function apply() {
   }
 
   try {
-    // 1. Backup: create branch
+    // 1. Backup: create branch + stash uncommitted work (#915 bug 3).
+    // The branch only captures committed state; any uncommitted edits are
+    // invisible to `git branch` and can be lost if the update aborts.
+    // `git stash create` builds a stash object without touching the stash
+    // stack, giving a recoverable ref for WIP even if the update fails.
     const backupBranch = process.env.CAREER_OPS_UPDATE_BACKUP_BRANCH || updateBackupBranchName(local);
     if (!isReexec) {
+      try {
+        const wip = git('stash', 'create');
+        if (wip) {
+          git('update-ref', `refs/backup-pre-update-wip/${local}`, wip);
+          console.log(`WIP stash ref saved: refs/backup-pre-update-wip/${local} (recover with: git stash apply refs/backup-pre-update-wip/${local})`);
+        }
+      } catch {
+        // Non-fatal: stash creation can fail in bare repos or empty trees.
+      }
       git('branch', backupBranch);
       console.log(`Backup branch created: ${backupBranch}`);
     }
@@ -548,7 +581,11 @@ async function apply() {
         pathsToStage.push('.update-dismissed');
       }
       addPaths(pathsToStage);
-      git('commit', '-m', `chore: auto-update system files to v${remote}`);
+      // Scope the commit to only the staged update paths (#915 bug 2).
+      // A bare `git commit` would sweep any unrelated pre-staged files into
+      // the update commit. Passing the explicit pathspec list constrains the
+      // commit to exactly the files this update touched.
+      git('commit', '-m', `chore: auto-update system files to v${remote}`, '--', ...pathsToStage);
     } catch {
       // Nothing to commit (already up to date)
     }
@@ -626,8 +663,13 @@ function rollback() {
     }
 
     if (restored.length > 0) addPaths(restored);
+    const rollbackPaths = [...restored, ...removed];
     try {
-      git('commit', '-m', `chore: rollback system files from ${latest}`);
+      // Scope the commit to the rollback paths (#915 bug 2). A bare
+      // `git commit` would sweep unrelated staged files into the rollback.
+      if (rollbackPaths.length > 0) {
+        git('commit', '-m', `chore: rollback system files from ${latest}`, '--', ...rollbackPaths);
+      }
     } catch {
       // Tolerate any commit failure here — the common case is the
       // "nothing to commit" no-op when the working tree already
