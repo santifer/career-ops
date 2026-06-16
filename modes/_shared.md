@@ -17,6 +17,7 @@
 | profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
 | _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
 | writing-samples/ | `writing-samples/` | When generating candidate-facing text — check `_profile.md` for cached `## Writing Style` first; only scan files if absent |
+| voice-dna.md | `voice-dna.md` (project root, if exists) | When generating candidate-facing text. Anti-AI-slop guardrail + voice. See Voice DNA precedence below. |
 
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
@@ -135,6 +136,21 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 
 ---
 
+## Voice DNA (writing guardrail)
+
+If `voice-dna.md` exists in the project root, it is the authoritative voice guide for generated prose. It is user-layer and optional — never assume it exists, and skip this block silently if it doesn't. It layers on top of the personal style below; the two are complementary, not competing.
+
+**Two-tier scope (this is what keeps CVs accurate):**
+
+- **Tier 1 — anti-AI-slop guardrail** (voice-dna §3 Banned List, §4 Patterns to Avoid: banned words, dead phrases, no em-dashes, no negative parallelisms, formatting rules). These are HARD RULES. They apply to **all** generated text, including CV bullets and the Professional Summary.
+- **Tier 2 — conversational voice** (voice-dna §1-2: contractions, And/But sentence openers, hedging like "I think"/"maybe", parenthetical asides, direct "I"/"you"). Apply **only** to conversational candidate-facing prose: cover letters, LinkedIn outreach, follow-up emails. **Do NOT apply Tier 2 to CV/ATS text** (PDF bullets, Professional Summary) — those keep the formal, keyword-dense register in the ATS Rules below.
+
+**Accuracy always wins over style.** Facts from `cv.md` and `article-digest.md` are never overridden by voice-dna. Never drop, soften, or hedge a real metric to improve rhythm. Never invent detail to sound more human. Voice-dna shapes wording; it never changes content.
+
+**Precedence with personal style:** voice-dna HARD RULES (Tier 1) override an extracted `## Writing Style` whenever they conflict — e.g. if the user's samples use em-dashes, voice-dna's no-em-dash rule still wins. The extracted style governs tone and vocabulary where voice-dna leaves latitude (it labels most preferences "light").
+
+---
+
 ## Writing Style Calibration
 
 **Check `_profile.md` first.** If a `## Writing Style` section exists there, use it directly — do not re-scan the writing-samples files. Re-scanning is only needed when new samples are added or the user explicitly asks to recalibrate.
@@ -217,6 +233,7 @@ _Extracted from writing-samples/ on {date}. Re-run if new samples are added._
 These rules apply to ALL generated text that ends up in candidate-facing documents: PDF summaries, bullets, cover letters, form answers, LinkedIn messages. They do NOT apply to internal evaluation reports.
 
 ### Avoid cliché phrases
+_If `voice-dna.md` exists, its §3 Banned List is the canonical, fuller version of this list and takes precedence. The list below is the fallback for users without that file._
 - "passionate about" / "results-oriented" / "proven track record"
 - "leveraged" (use "used" or name the tool)
 - "spearheaded" (use "led" or "ran")
