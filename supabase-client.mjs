@@ -7,47 +7,48 @@
  *
  * Expected env:
  *   SUPABASE_URL=https://<project-ref>.supabase.co
- *   SUPABASE_DASHBOARD_KEY=<JWT/API key for career_ops_dashboard>
- *   SUPABASE_CRON_KEY=<JWT/API key for career_ops_cron>
+ *   SUPABASE_DASHBOARD_KEY=<sb_secret_ key — bypasses RLS, local-only high-privilege client>
+ *   SUPABASE_CRON_PUBLISHABLE_KEY=<publishable/anon key — goes on apikey header>
+ *   SUPABASE_CRON_JWT=<minted JWT with role=career_ops_cron — goes on Authorization header>
  *
- * The cron key is deliberately separate from the dashboard key. Do not use
- * service_role for the cron path: service_role bypasses RLS.
+ * The cron path uses a minted JWT so RLS sees role=career_ops_cron.
+ * Do not send a secret key on the cron path: sb_secret_ keys bypass RLS.
  */
 
 import 'dotenv/config';
 import { execFileSync } from 'child_process';
 
-const ROLE_KEY_ENVS = {
-  dashboard: ['SUPABASE_DASHBOARD_KEY', 'CAREER_OPS_DASHBOARD_KEY'],
-  cron: ['SUPABASE_CRON_KEY', 'CAREER_OPS_CRON_KEY'],
-};
-
-function firstEnv(names) {
-  for (const name of names) {
-    const value = process.env[name];
-    if (value && value.trim()) return { name, value: value.trim() };
+function envRequired(name) {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} is required; add it to .env or the process environment`);
   }
-  return null;
+  return value;
 }
 
 export function getSupabaseEnv(role = 'dashboard') {
-  const url = process.env.SUPABASE_URL?.trim();
-  if (!url) {
-    throw new Error('SUPABASE_URL is required; add it to .env or the process environment');
+  const url = envRequired('SUPABASE_URL').replace(/\/+$/, '');
+
+  if (role === 'dashboard') {
+    // Dashboard: single sb_secret_ key → intentionally bypasses RLS (trusted local client).
+    const key = envRequired('SUPABASE_DASHBOARD_KEY');
+    return { role, url, apikey: key, authToken: key };
   }
 
-  const keyEnv = firstEnv(ROLE_KEY_ENVS[role] ?? []);
-  if (!keyEnv) {
-    const names = (ROLE_KEY_ENVS[role] ?? []).join(' or ');
-    throw new Error(`${names} is required for Supabase ${role} access`);
+  if (role === 'cron') {
+    // Cron: publishable key on apikey header, minted JWT on Authorization header.
+    const apikey = envRequired('SUPABASE_CRON_PUBLISHABLE_KEY');
+    const authToken = envRequired('SUPABASE_CRON_JWT');
+    // sb_secret_ keys bypass RLS — never allow them on the cron path.
+    for (const [label, val] of [['SUPABASE_CRON_PUBLISHABLE_KEY', apikey], ['SUPABASE_CRON_JWT', authToken]]) {
+      if (val.startsWith('sb_secret_')) {
+        throw new Error(`${label} must not be an sb_secret_ key (bypasses RLS). Use a publishable key or minted JWT.`);
+      }
+    }
+    return { role, url, apikey, authToken };
   }
 
-  return {
-    role,
-    url: url.replace(/\/+$/, ''),
-    key: keyEnv.value,
-    keyEnvName: keyEnv.name,
-  };
+  throw new Error(`Unknown Supabase role: ${role}`);
 }
 
 export function isSupabaseConfigured(role = 'dashboard') {
@@ -72,8 +73,8 @@ export class SupabaseRestClient {
     const env = getSupabaseEnv(role);
     this.role = env.role;
     this.baseUrl = env.url;
-    this.key = env.key;
-    this.keyEnvName = env.keyEnvName;
+    this.apikey = env.apikey;
+    this.authToken = env.authToken;
     this.timeoutSeconds = options.timeoutSeconds ?? 20;
   }
 
@@ -90,9 +91,9 @@ export class SupabaseRestClient {
       '--request',
       method,
       '--header',
-      `apikey: ${this.key}`,
+      `apikey: ${this.apikey}`,
       '--header',
-      `Authorization: Bearer ${this.key}`,
+      `Authorization: Bearer ${this.authToken}`,
       '--header',
       'Accept: application/json',
     ];

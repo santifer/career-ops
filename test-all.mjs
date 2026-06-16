@@ -643,7 +643,8 @@ try {
 
   if (
     supabaseClient.includes('SUPABASE_DASHBOARD_KEY') &&
-    supabaseClient.includes('SUPABASE_CRON_KEY') &&
+    supabaseClient.includes('SUPABASE_CRON_PUBLISHABLE_KEY') &&
+    supabaseClient.includes('SUPABASE_CRON_JWT') &&
     !supabaseClient.includes('SUPABASE_SERVICE_KEY')
   ) {
     pass('supabase-client uses split dashboard/cron env keys, not service-role fallback');
@@ -667,6 +668,66 @@ try {
     pass('Supabase round-trip integration test script exits cleanly (skips without test env)');
   } else {
     fail('Supabase round-trip integration test script failed');
+  }
+
+  // ── Cron credential unit tests (no network) ──
+  // Temporarily set env vars, call getSupabaseEnv, then restore.
+  const { getSupabaseEnv } = await import(pathToFileURL(join(ROOT, 'supabase-client.mjs')).href);
+  const savedEnv = { ...process.env };
+  const restoreEnv = () => {
+    for (const k of ['SUPABASE_URL', 'SUPABASE_CRON_PUBLISHABLE_KEY', 'SUPABASE_CRON_JWT']) {
+      if (savedEnv[k] !== undefined) process.env[k] = savedEnv[k];
+      else delete process.env[k];
+    }
+  };
+
+  try {
+    // Test: cron returns distinct apikey and authToken
+    process.env.SUPABASE_URL = 'https://test.supabase.co';
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    process.env.SUPABASE_CRON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role';
+    const cronEnv = getSupabaseEnv('cron');
+    if (
+      cronEnv.apikey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon' &&
+      cronEnv.authToken === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role' &&
+      cronEnv.apikey !== cronEnv.authToken
+    ) {
+      pass('getSupabaseEnv(cron) returns distinct apikey and authToken');
+    } else {
+      fail('getSupabaseEnv(cron) should return distinct apikey vs authToken');
+    }
+
+    // Test: sb_secret_ on publishable key throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'sb_secret_bad_value';
+    process.env.SUPABASE_CRON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cron_role';
+    let threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('sb_secret_')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects sb_secret_ on publishable key');
+    else fail('getSupabaseEnv(cron) should reject sb_secret_ on publishable key');
+
+    // Test: sb_secret_ on JWT throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    process.env.SUPABASE_CRON_JWT = 'sb_secret_bad_jwt';
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('sb_secret_')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) rejects sb_secret_ on JWT');
+    else fail('getSupabaseEnv(cron) should reject sb_secret_ on JWT');
+
+    // Test: missing SUPABASE_CRON_JWT throws
+    process.env.SUPABASE_CRON_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.anon';
+    delete process.env.SUPABASE_CRON_JWT;
+    threw = false;
+    try { getSupabaseEnv('cron'); } catch (e) {
+      if (e.message.includes('SUPABASE_CRON_JWT')) threw = true;
+    }
+    if (threw) pass('getSupabaseEnv(cron) fails loud when SUPABASE_CRON_JWT is missing');
+    else fail('getSupabaseEnv(cron) should fail loud when SUPABASE_CRON_JWT is missing');
+  } finally {
+    restoreEnv();
   }
 } catch (e) {
   fail(`Supabase queue store contract checks crashed: ${e.message}`);

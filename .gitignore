@@ -36,6 +36,7 @@ modes/_profile.md
 
 # Secrets (never commit — use .env.example as template)
 .env
+career_ops_signing_key_private.json
 
 # Portal credentials (auto-generated passwords, never commit)
 data/portal-credentials.json
@@ -60,3 +61,4 @@ bun.lock
 .claude/scheduled_tasks.lock
 career-dashboard
 package-lock.json
+

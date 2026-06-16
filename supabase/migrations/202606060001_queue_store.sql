@@ -170,6 +170,13 @@ grant usage on schema public to career_ops_cron, career_ops_dashboard;
 grant select, insert, update, delete on public.active_roles to career_ops_dashboard;
 grant select, insert, update, delete on public.seen_urls to career_ops_dashboard;
 
+-- Supabase sb_secret_ keys authorize as service_role. That trusted local
+-- dashboard path intentionally bypasses RLS, but still needs table/RPC grants
+-- when public-schema privileges have been tightened explicitly.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.active_roles to service_role;
+grant select, insert, update, delete on public.seen_urls to service_role;
+
 grant select, insert, delete on public.active_roles to career_ops_cron;
 grant select, insert on public.seen_urls to career_ops_cron;
 
@@ -421,5 +428,6 @@ end
 $$;
 
 grant execute on function public.save_queue(jsonb, jsonb) to career_ops_dashboard;
+grant execute on function public.save_queue(jsonb, jsonb) to service_role;
 
 commit;
