@@ -506,13 +506,17 @@ async function apply() {
     }
 
     if (violatedUserPaths.size > 0) {
-      console.error('Aborting: user files were touched. Rolling back...');
-      // Revert BOTH the system-layer updates and the user-layer paths
-      // the update unexpectedly modified — otherwise the repo is left
-      // in a half-applied state.
+      console.error('Aborting: user files were touched. Rolling back system files...');
+      // Revert ONLY the system-layer updates — never `git checkout` the
+      // violated user paths back to HEAD. Doing so would overwrite the
+      // user's working-tree content (accumulated STAR+R stories, local
+      // edits) with whatever is committed upstream, causing data loss.
+      // The user files were flagged as touched by the update, not by the
+      // user; leaving them as-is is the safe choice — the user decides
+      // what to do with them.
       const violation = new Error('Update aborted: user files were touched.');
       try {
-        revertPaths([...updated, ...violatedUserPaths]);
+        revertPaths([...updated]);
       } catch (revertErr) {
         // If the revert itself fails, don't lose the safety-violation
         // diagnostic — chain it via `cause` so the user sees both.
@@ -521,6 +525,8 @@ async function apply() {
           { cause: violation },
         );
       }
+      console.error(`User file(s) left as-is (your content was NOT overwritten):`);
+      for (const f of violatedUserPaths) console.error(`  ${f}`);
       // `throw` (not `process.exit`) so the outer `finally` runs and
       // .update-lock is removed. Exiting here would leak the lock and
       // permanently block subsequent updates until the user deletes
