@@ -190,7 +190,11 @@ function extractContacts(notes) {
 function resolveReportPath(reportField) {
   const match = reportField.match(/\]\(([^)]+)\)/);
   if (!match) return null;
-  const fullPath = join(CAREER_OPS, match[1]);
+  // Report links in the tracker are normalized relative to the tracker file's
+  // own directory (see PR #760 — `merge-tracker.mjs --migrate`). Resolve against
+  // dirname(APPS_FILE), not the project root, otherwise relative paths like
+  // `../reports/...` (the data/applications.md layout) escape above the project.
+  const fullPath = join(dirname(APPS_FILE), match[1]);
   return existsSync(fullPath) ? match[1] : null;
 }
 
