@@ -4,7 +4,7 @@ These are my personal conventions. Follow them in every session, in every repo.
 
 ## Who I am
 
-I'm Lav. I'm building Vyuhix. I prefer TDD. Start a fresh Copilot/Cowork session for each new task -- don't continue in the same thread.
+I'm Lavkesh. Senior software engineer, fifteen years in. I build cloud-native systems and agentic AI, and I write about what actually works in production at lavkesh.com (Blissful Bytes). I prefer TDD. Start a fresh Copilot/Cowork session for each new task -- don't continue in the same thread.
 
 ## Writing style
 
