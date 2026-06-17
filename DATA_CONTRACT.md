@@ -14,9 +14,12 @@ These files contain your personal data, customizations, and work product. Update
 | `article-digest.md` | Your proof points from portfolio |
 | `interview-prep/story-bank.md` | Your accumulated STAR+R stories |
 | `portals.yml` | Your customized company list |
-| `data/applications.md` | Your application tracker |
+| `data/applications.md` | Your application tracker (source of truth) |
+| `data/applications.db` | Derived query index over `applications.md` (SQLite, rebuilt by `node tracker.mjs sync` — safe to delete) |
 | `data/pipeline.md` | Your URL inbox |
 | `data/scan-history.tsv` | Your scan history |
+| `data/follow-ups.md` | Your follow-up history |
+| `writing-samples/*` | Your personal writing samples for style calibration (except `writing-samples/README.md`, which is system-owned documentation delivered by updates) |
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
 | `jds/*` | Your saved job descriptions |
@@ -41,19 +44,28 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/project.md` | Project evaluation instructions |
 | `modes/tracker.md` | Tracker instructions |
 | `modes/training.md` | Training evaluation instructions |
+| `modes/patterns.md` | Pattern analysis instructions |
+| `modes/followup.md` | Follow-up cadence instructions |
 | `modes/de/*` | German language modes |
-| `CLAUDE.md` | Agent instructions |
-| `AGENTS.md` | Codex instructions |
+| `modes/fr/*` | French language modes |
+| `modes/ja/*` | Japanese language modes |
+| `modes/pt/*` | Portuguese language modes |
+| `modes/ru/*` | Russian language modes |
+| `CLAUDE.md` | Agent instructions (Claude Code) |
+| `OPENCODE.md` | Agent instructions (OpenCode) |
+| `AGENTS.md` | Canonical agent instructions (imported by CLI-specific wrappers) |
 | `*.mjs` | Utility scripts |
 | `batch/batch-prompt.md` | Batch worker prompt |
 | `batch/batch-runner.sh` | Batch orchestrator |
 | `dashboard/*` | Go TUI dashboard |
 | `templates/*` | Base templates |
 | `fonts/*` | Self-hosted fonts |
-| `.claude/skills/*` | Skill definitions |
+| `.claude/skills/*` | Skill definitions (Claude Code) |
+| `.opencode/skills/*` | Skill definitions (OpenCode) |
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
 | `DATA_CONTRACT.md` | This file |
+| `writing-samples/README.md` | System-owned onboarding documentation for the writing-samples directory |
 
 ## The Rule
 
