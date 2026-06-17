@@ -55,9 +55,12 @@ const FETCH_TIMEOUT_MS = 12000; // bound each request so a hung ATS endpoint can
 async function getJson(url, opts = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  // Forward a caller-supplied signal so the timeout is always enforced (using
+  // controller.signal) without ignoring an external abort.
+  if (opts.signal) opts.signal.addEventListener('abort', () => controller.abort(), { once: true });
   const headers = { 'user-agent': UA, accept: 'application/json', ...(opts.headers || {}) };
   try {
-    const res = await fetch(url, { ...opts, headers, signal: opts.signal ?? controller.signal });
+    const res = await fetch(url, { ...opts, headers, signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
     return res.json();
   } finally {
