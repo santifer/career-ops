@@ -7,6 +7,7 @@ System-layer template files used by career-ops scripts and modes. These files ar
 | File | Used By | Purpose |
 |------|---------|---------|
 | `cv-template.html` | `generate-pdf.mjs` | HTML/CSS template for ATS-optimized CV PDFs |
+| `resume-template.html` | `generate-pdf.mjs` (via `--template`) | Resume-branded variant of `cv-template.html`. Same layout and placeholder tokens; identical to `cv-template.html` except the `<title>` tag reads "Resume" instead of "CV" |
 | `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
 | `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
 | `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
@@ -18,6 +19,12 @@ The HTML template rendered by Playwright into PDF. Uses placeholder tokens (`{{N
 **Design:** Space Grotesk headings + DM Sans body, single-column ATS-safe layout, self-hosted fonts from `fonts/`.
 
 **Customization:** Edit this file to change colors, spacing, or section order. The placeholder tokens are documented in `batch/batch-prompt.md` under "Template placeholders."
+
+### resume-template.html
+
+Resume-branded variant of `cv-template.html`. Identical HTML/CSS and placeholder tokens — the only difference is the `<title>` tag reads "Resume" instead of "CV." This template exists so users in US/industry markets can reference the expected terminology without needing a separate pipeline.
+
+**Keep in sync:** When updating `cv-template.html`, apply the same changes to `resume-template.html` (only the `<title>` should differ).
 
 ### cv-template.tex
 
