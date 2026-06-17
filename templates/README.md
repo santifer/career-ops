@@ -22,9 +22,15 @@ The HTML template rendered by Playwright into PDF. Uses placeholder tokens (`{{N
 
 ### resume-template.html
 
-Resume-branded variant of `cv-template.html`. Identical HTML/CSS and placeholder tokens — the only difference is the `<title>` tag reads "Resume" instead of "CV." This template exists so users in US/industry markets can reference the expected terminology without needing a separate pipeline.
+Resume-branded variant of `cv-template.html` for US/industry job applications. Key differences from the CV template:
 
-**Keep in sync:** When updating `cv-template.html`, apply the same changes to `resume-template.html` (only the `<title>` should differ).
+- **Title** reads "Resume" instead of "CV"
+- **No Certifications section** — resumes focus on recent, relevant experience
+- **Designed for 1–2 pages** — omits academic-style sections
+
+Otherwise uses the same placeholder tokens (`{{NAME}}`, `{{SUMMARY_TEXT}}`, etc.) and is fully compatible with the existing PDF pipeline.
+
+**Keep in sync:** When updating `cv-template.html`, apply matching changes to `resume-template.html` (preserving the differences noted above).
 
 ### cv-template.tex
 

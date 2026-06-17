@@ -1,4 +1,18 @@
 <!DOCTYPE html>
+<!--
+  Resume variant of cv-template.html.
+  
+  Differences from cv-template.html:
+  - Title says "Resume" instead of "CV"
+  - No Certifications section (resumes focus on recent, relevant experience)
+  - Designed for 1-2 page US/industry job applications
+  
+  CV vs Resume:
+  - Resume: 1-2 pages, recent/relevant experience, impact metrics, for industry
+  - CV: 2+ pages, full career history, publications, certifications, for academia
+  
+  When updating cv-template.html, update this file too (keep sections in sync).
+-->
 <html lang="{{LANG}}">
 <head>
 <meta charset="UTF-8">
@@ -471,12 +485,6 @@
   <div class="section avoid-break">
     <div class="section-title">{{SECTION_EDUCATION}}</div>
     {{EDUCATION}}
-  </div>
-
-  <!-- CERTIFICATIONS -->
-  <div class="section avoid-break">
-    <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
-    <div class="cert-table">{{CERTIFICATIONS}}</div>
   </div>
 
   <!-- SKILLS -->
