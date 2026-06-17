@@ -67,7 +67,7 @@ Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with 
 
 | Placeholder | Content |
 |-------------|-----------|
-| `{{LANG}}` | `en` or `es` |
+| `{{LANG}}` | CV language code (e.g. `en`, `es`, `ja`, `ar`). Drives language-specific CSS in the template: `ja` enables a CJK font fallback so Japanese renders instead of tofu (□); `ar` enables RTL + Arabic fonts. Use the BCP-47/ISO-639 code that matches the CV language. |
 | `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
 | `{{NAME}}` | (from profile.yml) |
 | `{{PHONE}}` | (from profile.yml — include with its separator only when `profile.yml` has a non-empty `phone` value; omit both `<span>` and `<span class="separator">` otherwise) |
@@ -173,6 +173,30 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 - If text elements can't be mapped → warn user, show what was found, ask for manual mapping
 - If `find_and_replace_text` finds no matches → try broader substring matching
 - Always provide the Canva design URL so the user can edit manually if auto-edit fails
+
+## Cover Letter Sub-flow
+
+After generating the CV PDF, offer to generate a cover letter:
+
+```text
+CV PDF generated: output/{path}
+
+Want a cover letter for this role too?
+- Say "yes" or "cover letter" to generate one now
+- Or run `/career-ops cover {slug}` later
+```
+
+If the user says yes, run the full cover letter flow from `modes/cover.md` in slug mode:
+1. Load the existing `## Cover Letter Draft` from the evaluation report as a starting point
+2. Run company research (Step 3 of cover.md)
+3. Present keyword list for confirmation (Step 4)
+4. Surface any gaps (Step 5)
+5. Ask the four prompts: why / problems / approach / tone (Step 6)
+6. Draft in chat, wait for approval (Steps 7-8)
+7. Generate cover letter PDF via `node generate-cover-letter.mjs` (Step 9)
+8. Report both PDF paths
+
+Do not auto-generate the cover letter PDF without going through the interactive steps above.
 
 ## Post-generation
 
