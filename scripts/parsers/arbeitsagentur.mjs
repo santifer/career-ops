@@ -73,12 +73,30 @@ const KEYWORDS = positional.length
       .map((s) => s.trim())
       .filter(Boolean);
 
-const SIZE = Number(flags.size || process.env.AA_SIZE || 100);          // results per keyword (API max 100)
-const VEROEFFENTLICHT_DAYS = Number(flags.days || process.env.AA_DAYS || 30); // recency window
-const PER_REQUEST_TIMEOUT_MS = Number(process.env.AA_TIMEOUT_MS || 12_000);
-const WO = String(flags.wo || process.env.AA_WO || '').trim();          // anchor city; empty = nationwide
-const UMKREIS = String(flags.umkreis || process.env.AA_UMKREIS || 50);  // km; only used when WO set
-const REMOTE_NATIONWIDE = Boolean(flags['remote-nationwide'] || process.env.AA_REMOTE_NATIONWIDE);
+// Parse an integer runtime input, falling back to `def` for NaN/non-finite and
+// clamping into [min, max] so bad flags/env can't produce empty queries
+// (size=0) or instant-abort timeouts (negative) and silently drop results.
+function intInRange(val, def, min, max) {
+  const n = Number(val);
+  if (!Number.isFinite(n)) return def;
+  return Math.min(max, Math.max(min, Math.trunc(n)));
+}
+
+// Truthy parse for boolean flags/env. A bare `--flag` arrives as `true`; env is a
+// string, so "0"/"false"/"no"/"off"/"" must read as false (Boolean() gets these wrong).
+function truthy(val) {
+  if (val === true) return true;
+  if (val == null || val === false) return false;
+  const s = String(val).trim().toLowerCase();
+  return s !== '' && s !== '0' && s !== 'false' && s !== 'no' && s !== 'off';
+}
+
+const SIZE = intInRange(flags.size ?? process.env.AA_SIZE, 100, 1, 100);                 // results/keyword (API max 100)
+const VEROEFFENTLICHT_DAYS = intInRange(flags.days ?? process.env.AA_DAYS, 30, 1, 1000); // recency window (days)
+const PER_REQUEST_TIMEOUT_MS = intInRange(process.env.AA_TIMEOUT_MS, 12_000, 1000, 600_000);
+const WO = String(flags.wo || process.env.AA_WO || '').trim();                           // anchor city; empty = nationwide
+const UMKREIS = intInRange(flags.umkreis ?? process.env.AA_UMKREIS, 50, 0, 1000);        // km; only used when WO set
+const REMOTE_NATIONWIDE = truthy(flags['remote-nationwide'] ?? process.env.AA_REMOTE_NATIONWIDE);
 const REMOTE_RE = /(remote|homeoffice|home[-\s]?office|ortsunabh|deutschlandweit|bundesweit|100\s*%|full[-\s]?remote|fully remote)/i;
 
 async function fetchKeyword(was, extra = {}) {
