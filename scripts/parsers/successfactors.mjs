@@ -18,6 +18,13 @@
  * scan.mjs applies title_filter + location_filter + dedup afterwards, so this
  * parser over-fetches (recall-first). Logs to stderr; JSON array to stdout.
  *
+ * Security: BASE is operator-supplied config (portals.yml / CLI / env), NOT
+ * untrusted input — it must be a trusted, public SuccessFactors careers URL. As
+ * defence-in-depth the script still requires an `https:` URL and uses
+ * `redirect: 'error'` so a server-side redirect can't bounce the fetch to an
+ * internal host. A host allowlist is intentionally NOT used: SF tenants run on
+ * arbitrary custom domains (e.g. jobs.fraunhofer.de), which an allowlist breaks.
+ *
  * Usage: node successfactors.mjs <searchBaseUrl> [companyLabel]
  */
 
@@ -108,6 +115,7 @@ async function fetchPage(url) {
     const res = await fetch(url, {
       headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': 'de-DE,de;q=0.9' },
       signal: controller.signal,
+      redirect: 'error', // a trusted SF page must not redirect us to an internal host (SSRF guard)
     });
     if (!res.ok) { console.error(`  ! ${url}: HTTP ${res.status}`); return null; }
     return await res.text();
@@ -121,7 +129,10 @@ async function fetchPage(url) {
 
 async function main() {
   if (!BASE) { console.error('successfactors: no search base URL (arg 1 / SF_BASE)'); process.stdout.write('[]'); return; }
-  const origin = new URL(BASE).origin;
+  let baseUrl;
+  try { baseUrl = new URL(BASE); } catch { console.error(`successfactors: invalid base URL: ${BASE}`); process.stdout.write('[]'); return; }
+  if (baseUrl.protocol !== 'https:') { console.error(`successfactors: base URL must be https (got "${baseUrl.protocol}"): ${BASE}`); process.stdout.write('[]'); return; }
+  const origin = baseUrl.origin;
   console.error(`SuccessFactors: ${BASE} (company=${COMPANY || '?'}), paginating startrow by ${PAGE_SIZE}`);
 
   const byId = new Map();
