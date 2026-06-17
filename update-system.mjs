@@ -584,9 +584,7 @@ async function apply() {
     // 4. Validate: check NO user files were touched.
     //
     // Track which user paths the update unexpectedly touched so we
-    // can revert them too — reverting only `updated` would leave the
-    // repo in a half-applied state with the user-layer changes still
-    // staged.
+    // can exclude them from the revert and log what was preserved.
     const violatedUserPaths = new Set();
     try {
       for (const entry of gitStatusEntries()) {
