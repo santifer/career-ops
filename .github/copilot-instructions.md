@@ -17,7 +17,7 @@ All docs, comments, and responses must sound human. First-person, conversational
 ## Code changes
 
 - Make the smallest change that fully solves the problem
-- Only push template/scaffold files. Keep sensitive business logic out of commits
+- Never commit sensitive business logic or personal data
 - Update the README before pushing any meaningful change, in the same commit
 - Fix bugs only if they're directly caused by your change
 
