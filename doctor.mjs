@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * doctor.mjs — Setup validation for career-ops
+ * doctor.mjs â€” Setup validation for career-ops
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
@@ -57,11 +57,11 @@ async function checkPlaywright() {
       fix: 'Run: npx playwright install chromium',
     };
   }
-  // Validate by launching — chromium.executablePath() points at Chrome for Testing
+  // Validate by launching â€” chromium.executablePath() points at Chrome for Testing
   // (full binary) but chromium.launch() may use the headless-shell binary, which
   // lives at a different path and requires a separate install. Launching directly
   // tests the exact binary the runtime uses and catches stub-installs (directory
-  // present but no binary — just ABOUT + LICENSE files).
+  // present but no binary â€” just ABOUT + LICENSE files).
   let browser;
   try {
     browser = await chromium.launch({ headless: true });
@@ -80,7 +80,7 @@ async function checkPlaywright() {
 // The browser tools (`browser_navigate` / `browser_snapshot`) that scan / pipeline /
 // apply rely on are provided by the Playwright MCP server, registered through a
 // project-level Claude Code config (`.mcp.json` or `.claude/settings.json`). When it
-// is absent, SPA job boards silently return empty or stale content (#522) — so doctor
+// is absent, SPA job boards silently return empty or stale content (#522) â€” so doctor
 // surfaces it as a non-fatal warning rather than letting it fail invisibly.
 const PLAYWRIGHT_MCP_WARNING = 'Playwright MCP tools not detected';
 
@@ -97,7 +97,7 @@ function playwrightMcpConfigured(root) {
         }
       }
     } catch {
-      // Malformed config — keep scanning the other locations; never crash doctor on it.
+      // Malformed config â€” keep scanning the other locations; never crash doctor on it.
     }
   }
   return false;
@@ -112,7 +112,7 @@ function checkPlaywrightMcp(root) {
     label: PLAYWRIGHT_MCP_WARNING,
     fix: [
       'Browser-driven JD fetching and liveness checks (scan / pipeline / apply) need the',
-      'Playwright MCP server, which this project does not configure yet — SPA job boards',
+      'Playwright MCP server, which this project does not configure yet â€” SPA job boards',
       'may return empty or stale content. Tracking: https://github.com/santifer/career-ops/issues/506',
     ],
   };
@@ -209,7 +209,7 @@ function checkAutoDir(name) {
   }
 }
 
-const PIPELINE_SKELETON = `# Pipeline — Pending URLs
+const PIPELINE_SKELETON = `# Pipeline â€” Pending URLs
 
 Paste job URLs below as \`- [ ] {url}\` then run \`/career-ops pipeline\`.
 
@@ -224,7 +224,6 @@ function checkPipelineFile() {
     return { pass: true, label: 'data/pipeline.md ready' };
   }
   try {
-    mkdirSync(join(projectRoot, 'data'), { recursive: true });
     writeFileSync(filePath, PIPELINE_SKELETON, 'utf-8');
     return { pass: true, label: 'data/pipeline.md ready (auto-created)' };
   } catch {
@@ -260,17 +259,17 @@ async function main() {
     const fixes = Array.isArray(result.fix) ? result.fix : result.fix ? [result.fix] : [];
     if (result.warn) {
       warnings++;
-      console.log(`${yellow('⚠')} ${result.label}`);
+      console.log(`${yellow('âš ')} ${result.label}`);
       for (const hint of fixes) {
-        console.log(`  ${dim('→ ' + hint)}`);
+        console.log(`  ${dim('â†’ ' + hint)}`);
       }
     } else if (result.pass) {
-      console.log(`${green('✓')} ${result.label}`);
+      console.log(`${green('âœ“')} ${result.label}`);
     } else {
       failures++;
-      console.log(`${red('✗')} ${result.label}`);
+      console.log(`${red('âœ—')} ${result.label}`);
       for (const hint of fixes) {
-        console.log(`  ${dim('→ ' + hint)}`);
+        console.log(`  ${dim('â†’ ' + hint)}`);
       }
     }
   }
@@ -280,7 +279,7 @@ async function main() {
     console.log(`Result: ${failures} issue${failures === 1 ? '' : 's'} found. Fix them and run \`npm run doctor\` again.`);
     process.exit(1);
   } else {
-    const warnNote = warnings > 0 ? ` (${warnings} warning${warnings === 1 ? '' : 's'} — see above)` : '';
+    const warnNote = warnings > 0 ? ` (${warnings} warning${warnings === 1 ? '' : 's'} â€” see above)` : '';
     console.log(`Result: All checks passed${warnNote}. You're ready to go! Run \`claude\` (or \`opencode\`) to start.`);
     console.log('');
     console.log('Join the community: https://discord.gg/8pRpHETxa4');
