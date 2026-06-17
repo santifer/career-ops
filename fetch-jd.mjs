@@ -50,10 +50,19 @@ function htmlToText(html) {
     .trim();
 }
 
+const FETCH_TIMEOUT_MS = 12000; // bound each request so a hung ATS endpoint can't stall a worker
+
 async function getJson(url, opts = {}) {
-  const res = await fetch(url, { headers: { 'user-agent': UA, accept: 'application/json' }, ...opts });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  return res.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const headers = { 'user-agent': UA, accept: 'application/json', ...(opts.headers || {}) };
+  try {
+    const res = await fetch(url, { ...opts, headers, signal: opts.signal ?? controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ── Provider detectors + single-job fetchers ─────────────────────────

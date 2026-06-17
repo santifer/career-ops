@@ -211,7 +211,7 @@ Rules:
 
 ### Paso 2.5 — Gate de dos etapas (ahorro de tokens)
 
-Lee `auto_pdf_score_threshold` de `config/profile.yml` (default `3.5` si falta). Es el umbral de aplicación del candidato. El razonamiento A-G completo SIEMPRE se hace para calcular el score; lo que cambia es cuánta PROSA se escribe:
+Lee `auto_pdf_score_threshold` de `config/profile.yml` (default `3.0` si falta — mismo umbral y mismo default que el gate de PDF en Paso 4). Es el umbral de aplicación del candidato. El razonamiento A-G completo SIEMPRE se hace para calcular el score; lo que cambia es cuánta PROSA se escribe:
 
 - **Global score < umbral (la mayoría de ofertas):** escribe un report **ABREVIADO** — solo el header + el bloque `## Machine Summary` + una sección `## Veredicto` de 2-3 líneas (score, archetype, el/los hard-stop(s), y por qué cae bajo el umbral). **NO** escribas los bloques A-G en prosa. **NO** generes PDF; marca PDF ❌. (El report largo no se usaría: la oferta no se va a aplicar.)
 - **Global score ≥ umbral:** escribe el report **COMPLETO** (todos los bloques A-G abajo) y aplica el gate de PDF (mismo umbral).
