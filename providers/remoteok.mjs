@@ -30,12 +30,14 @@ export default {
     }
 
     return data
-      .filter(j => j && typeof j === 'object' && typeof j.position === 'string' && typeof j.url === 'string' && j.url.trim() !== '')
+      .filter(j => j && typeof j === 'object'
+        && typeof j.position === 'string' && j.position.trim() !== ''
+        && typeof j.url === 'string' && /^https?:\/\//i.test(j.url.trim()))
       .map(j => ({
-        title: j.position,
-        url: j.url,
-        company: typeof j.company === 'string' && j.company.trim() ? j.company : (entry.name || 'RemoteOK'),
-        location: typeof j.location === 'string' ? j.location : '',
+        title: j.position.trim(),
+        url: j.url.trim(),
+        company: typeof j.company === 'string' && j.company.trim() ? j.company.trim() : (entry.name || 'RemoteOK'),
+        location: typeof j.location === 'string' ? j.location.trim() : '',
       }));
   },
 };

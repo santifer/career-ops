@@ -28,10 +28,16 @@ const MAX_RECORDS = 600; // safety cap on pagination
  */
 function buildPostFilter(cfg) {
   const must = [];
-  if (Array.isArray(cfg.categories) && cfg.categories.length) {
-    must.push({ bool: { should: cfg.categories.map(c => ({ term: { field_keyword_08: c } })) } });
+  // Sanitize operator config: keep only non-empty trimmed strings so a stray/
+  // mistyped entry can't inject empty or non-string filter terms.
+  const categories = Array.isArray(cfg.categories)
+    ? cfg.categories.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim())
+    : [];
+  if (categories.length) {
+    must.push({ bool: { should: categories.map(c => ({ term: { field_keyword_08: c } })) } });
   }
-  if (cfg.country) must.push({ term: { field_keyword_05: cfg.country } });
+  const country = typeof cfg.country === 'string' ? cfg.country.trim() : '';
+  if (country) must.push({ term: { field_keyword_05: country } });
   return { bool: { must } };
 }
 
@@ -82,12 +88,13 @@ export default {
 
       for (const h of hits) {
         const s = (h && h._source) || {};
-        if (typeof s.title !== 'string' || typeof s.url !== 'string' || !s.url.trim()) continue;
-        const loc = typeof s.field_keyword_19 === 'string' ? s.field_keyword_19 : '';
-        const mode = typeof s.field_keyword_17 === 'string' ? s.field_keyword_17 : '';
+        if (typeof s.title !== 'string' || s.title.trim() === '') continue;
+        if (typeof s.url !== 'string' || !/^https?:\/\//i.test(s.url.trim())) continue;
+        const loc = typeof s.field_keyword_19 === 'string' ? s.field_keyword_19.trim() : '';
+        const mode = typeof s.field_keyword_17 === 'string' ? s.field_keyword_17.trim() : '';
         out.push({
-          title: s.title,
-          url: s.url,
+          title: s.title.trim(),
+          url: s.url.trim(),
           company: 'IBM',
           location: [loc, mode].filter(Boolean).join(' · '),
         });

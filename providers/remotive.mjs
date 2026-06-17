@@ -29,12 +29,14 @@ export default {
     }
 
     return json.jobs
-      .filter(j => j && typeof j === 'object' && typeof j.title === 'string' && typeof j.url === 'string' && j.url.trim() !== '')
+      .filter(j => j && typeof j === 'object'
+        && typeof j.title === 'string' && j.title.trim() !== ''
+        && typeof j.url === 'string' && /^https?:\/\//i.test(j.url.trim()))
       .map(j => ({
-        title: j.title,
-        url: j.url,
-        company: typeof j.company_name === 'string' && j.company_name.trim() ? j.company_name : (entry.name || 'Remotive'),
-        location: typeof j.candidate_required_location === 'string' ? j.candidate_required_location : '',
+        title: j.title.trim(),
+        url: j.url.trim(),
+        company: typeof j.company_name === 'string' && j.company_name.trim() ? j.company_name.trim() : (entry.name || 'Remotive'),
+        location: typeof j.candidate_required_location === 'string' ? j.candidate_required_location.trim() : '',
       }));
   },
 };
