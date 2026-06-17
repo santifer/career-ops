@@ -2820,6 +2820,350 @@ try {
   fail(`CJK rendering test crashed: ${e.message}`);
 }
 
+// ── 22. PROVIDERS — Jobstreet ──────────────────────────────────────
+
+console.log('\n22. Provider — jobstreet');
+
+try {
+  const jobstreet = (await import(pathToFileURL(join(ROOT, 'providers/jobstreet.mjs')).href)).default;
+  const { parseJobstreetItem } = await import(pathToFileURL(join(ROOT, 'providers/jobstreet.mjs')).href);
+
+  // id check
+  if (jobstreet.id === 'jobstreet') pass('jobstreet.id is "jobstreet"');
+  else fail(`jobstreet.id is ${JSON.stringify(jobstreet.id)}`);
+
+  // detect() always returns null (job board, not ATS)
+  if (jobstreet.detect({ name: 'X', careers_url: 'https://id.jobstreet.com/jobs' }) === null) {
+    pass('jobstreet.detect() returns null — explicit provider only, no URL auto-detection');
+  } else {
+    fail('jobstreet.detect() should return null for any URL');
+  }
+
+  // parseJobstreetItem — valid item
+  const sampleItem = {
+    id: 123456,
+    title: 'Senior Data Scientist',
+    branding: { companyName: 'TechCorp Indonesia' },
+    location: 'Jakarta Selatan',
+    listingDate: '2026-06-15T00:00:00Z',
+    jobUrl: '/id/job/123456',
+  };
+  const parsed = parseJobstreetItem(sampleItem, 'https://id.jobstreet.com', 'FallbackCo');
+  if (parsed && parsed.title === 'Senior Data Scientist'
+      && parsed.url === 'https://id.jobstreet.com/id/job/123456'
+      && parsed.company === 'TechCorp Indonesia'
+      && parsed.location === 'Jakarta Selatan'
+      && parsed.postedAt != null) {
+    pass('parseJobstreetItem extracts title, url, company, location, postedAt correctly');
+  } else {
+    fail(`parseJobstreetItem returned ${JSON.stringify(parsed)}`);
+  }
+
+  // parseJobstreetItem — resolves absolute URL without modification
+  const absItem = { id: 1, title: 'Role', jobUrl: 'https://id.jobstreet.com/id/job/999' };
+  const absParsed = parseJobstreetItem(absItem, 'https://id.jobstreet.com', 'Co');
+  if (absParsed && absParsed.url === 'https://id.jobstreet.com/id/job/999') {
+    pass('parseJobstreetItem preserves absolute URLs');
+  } else {
+    fail(`parseJobstreetItem absolute URL: ${JSON.stringify(absParsed)}`);
+  }
+
+  // parseJobstreetItem — rejects items without title
+  if (parseJobstreetItem({ jobUrl: '/id/job/1' }, 'https://id.jobstreet.com', 'Co') === null) {
+    pass('parseJobstreetItem returns null for items without title');
+  } else {
+    fail('parseJobstreetItem should return null for title-less items');
+  }
+
+  // parseJobstreetItem — rejects items without url
+  if (parseJobstreetItem({ title: 'Role' }, 'https://id.jobstreet.com', 'Co') === null) {
+    pass('parseJobstreetItem returns null for items without jobUrl');
+  } else {
+    fail('parseJobstreetItem should return null for URL-less items');
+  }
+
+  // parseJobstreetItem — rejects off-domain URLs
+  const offDomain = parseJobstreetItem(
+    { title: 'Role', jobUrl: 'https://evil.example.com/jobs/1' },
+    'https://id.jobstreet.com', 'Co'
+  );
+  if (offDomain === null) pass('parseJobstreetItem rejects off-domain job URLs');
+  else fail(`parseJobstreetItem should reject off-domain URLs, got ${JSON.stringify(offDomain)}`);
+
+  // parseJobstreetItem — handles null/malformed input safely
+  if (parseJobstreetItem(null, 'https://id.jobstreet.com', 'Co') === null) pass('parseJobstreetItem(null) → null');
+  else fail('parseJobstreetItem(null) should return null');
+  if (parseJobstreetItem(7, 'https://id.jobstreet.com', 'Co') === null) pass('parseJobstreetItem(7) → null');
+  else fail('parseJobstreetItem(number) should return null');
+
+  // parseJobstreetItem — fallback company when branding is missing
+  const noBrand = parseJobstreetItem(
+    { id: 1, title: 'Engineer', jobUrl: '/id/job/42' },
+    'https://id.jobstreet.com', 'PortalFallback'
+  );
+  if (noBrand && noBrand.company === 'PortalFallback') {
+    pass('parseJobstreetItem uses fallback company when branding is absent');
+  } else {
+    fail(`parseJobstreetItem fallback company: ${JSON.stringify(noBrand)}`);
+  }
+
+  // fetch() — happy path with mock context
+  const mockCtx = {
+    transport: 'http',
+    fetchJson: async (url) => {
+      if (!url.startsWith('https://id.jobstreet.com/')) throw new Error('Unexpected URL');
+      return {
+        data: [
+          { id: 1, title: 'AI Engineer', branding: { companyName: 'TestCo' }, location: 'Remote', listingDate: '2026-01-01T00:00:00Z', jobUrl: '/id/job/1' },
+        ],
+      };
+    },
+    fetchText: async () => { throw new Error('should not be called'); },
+  };
+  const jobs = await jobstreet.fetch(
+    { name: 'Jobstreet ID', provider: 'jobstreet', searchKeywords: 'AI' },
+    mockCtx,
+  );
+  if (jobs.length === 1 && jobs[0].title === 'AI Engineer') pass('jobstreet.fetch() returns parsed jobs');
+  else fail(`jobstreet.fetch() returned ${JSON.stringify(jobs)}`);
+
+  // fetch() — handles empty results
+  const emptyCtx = {
+    transport: 'http',
+    fetchJson: async () => ({ data: [] }),
+    fetchText: async () => { throw new Error('should not be called'); },
+  };
+  const emptyJobs = await jobstreet.fetch(
+    { name: 'Jobstreet ID', provider: 'jobstreet', searchKeywords: 'nonexistent' },
+    emptyCtx,
+  );
+  if (emptyJobs.length === 0) pass('jobstreet.fetch() handles empty results');
+  else fail(`jobstreet.fetch() should return empty array for no results, got ${emptyJobs.length}`);
+
+  // fetch() — rejects invalid hostname
+  let hostRejected = false;
+  try {
+    await jobstreet.fetch(
+      { name: 'Bad', provider: 'jobstreet', api: 'https://evil.example.com/api/search' },
+      { transport: 'http', fetchJson: async () => ({}), fetchText: async () => '' },
+    );
+  } catch (e) {
+    if (e.message.includes('untrusted hostname')) hostRejected = true;
+    else fail(`jobstreet.fetch() host rejection wrong error: ${e.message}`);
+  }
+  if (hostRejected) pass('jobstreet.fetch() rejects untrusted hostnames');
+  else fail('jobstreet.fetch() should reject non-jobstreet hostnames');
+
+  // fetch() — handles non-array data field
+  const badDataCtx = {
+    transport: 'http',
+    fetchJson: async () => ({ data: null }),
+    fetchText: async () => { throw new Error('should not be called'); },
+  };
+  const badDataJobs = await jobstreet.fetch(
+    { name: 'Jobstreet ID', provider: 'jobstreet', searchKeywords: 'test' },
+    badDataCtx,
+  );
+  if (badDataJobs.length === 0) pass('jobstreet.fetch() handles null data field');
+  else fail(`jobstreet.fetch() should return empty for null data`);
+
+} catch (e) {
+  fail(`jobstreet provider tests crashed: ${e.message}`);
+}
+
+// ── 23. PROVIDERS — Glints ─────────────────────────────────────────
+
+console.log('\n23. Provider — glints');
+
+try {
+  const glints = (await import(pathToFileURL(join(ROOT, 'providers/glints.mjs')).href)).default;
+  const { parseGlintsItem } = await import(pathToFileURL(join(ROOT, 'providers/glints.mjs')).href);
+
+  // id check
+  if (glints.id === 'glints') pass('glints.id is "glints"');
+  else fail(`glints.id is ${JSON.stringify(glints.id)}`);
+
+  // detect() always returns null (job board, not ATS)
+  if (glints.detect({ name: 'X', careers_url: 'https://glints.com/id/jobs' }) === null) {
+    pass('glints.detect() returns null — explicit provider only, no URL auto-detection');
+  } else {
+    fail('glints.detect() should return null for any URL');
+  }
+
+  // parseGlintsItem — valid item
+  const sampleItem = {
+    id: 'abc123',
+    title: 'Backend Engineer',
+    company: { name: 'StartupCorp' },
+    location: 'Jakarta, Indonesia',
+    postedAt: '2026-06-10T00:00:00Z',
+    url: 'https://glints.com/id/jobs/backend-engineer/abc123',
+  };
+  const parsed = parseGlintsItem(sampleItem, 'https://glints.com', 'FallbackCo');
+  if (parsed && parsed.title === 'Backend Engineer'
+      && parsed.url === 'https://glints.com/id/jobs/backend-engineer/abc123'
+      && parsed.company === 'StartupCorp'
+      && parsed.location === 'Jakarta, Indonesia'
+      && parsed.postedAt != null) {
+    pass('parseGlintsItem extracts title, url, company, location, postedAt correctly');
+  } else {
+    fail(`parseGlintsItem returned ${JSON.stringify(parsed)}`);
+  }
+
+  // parseGlintsItem — resolves relative URL
+  const relItem = { id: 'x', title: 'Dev', url: '/id/jobs/dev/x' };
+  const relParsed = parseGlintsItem(relItem, 'https://glints.com', 'Co');
+  if (relParsed && relParsed.url === 'https://glints.com/id/jobs/dev/x') {
+    pass('parseGlintsItem resolves relative URLs');
+  } else {
+    fail(`parseGlintsItem relative URL: ${JSON.stringify(relParsed)}`);
+  }
+
+  // parseGlintsItem — rejects items without title
+  if (parseGlintsItem({ url: 'https://glints.com/job/1' }, 'https://glints.com', 'Co') === null) {
+    pass('parseGlintsItem returns null for title-less items');
+  } else {
+    fail('parseGlintsItem should return null for items without title');
+  }
+
+  // parseGlintsItem — rejects items without url
+  if (parseGlintsItem({ title: 'Role' }, 'https://glints.com', 'Co') === null) {
+    pass('parseGlintsItem returns null for URL-less items');
+  } else {
+    fail('parseGlintsItem should return null for items without URL');
+  }
+
+  // parseGlintsItem — rejects off-domain URLs
+  const offDomain = parseGlintsItem(
+    { title: 'Role', url: 'https://evil.example.com/jobs/1' },
+    'https://glints.com', 'Co'
+  );
+  if (offDomain === null) pass('parseGlintsItem rejects off-domain URLs');
+  else fail(`parseGlintsItem should reject off-domain URLs, got ${JSON.stringify(offDomain)}`);
+
+  // parseGlintsItem — allows subdomains of glints.com
+  const subdomainItem = parseGlintsItem(
+    { title: 'Role', url: 'https://www.glints.com/id/jobs/role/1' },
+    'https://glints.com', 'Co'
+  );
+  if (subdomainItem && subdomainItem.url === 'https://www.glints.com/id/jobs/role/1') {
+    pass('parseGlintsItem accepts www.glints.com subdomain URLs');
+  } else {
+    fail(`parseGlintsItem subdomain URL rejected: ${JSON.stringify(subdomainItem)}`);
+  }
+
+  // parseGlintsItem — handles null/malformed input
+  if (parseGlintsItem(null, 'https://glints.com', 'Co') === null) pass('parseGlintsItem(null) → null');
+  else fail('parseGlintsItem(null) should return null');
+  if (parseGlintsItem(42, 'https://glints.com', 'Co') === null) pass('parseGlintsItem(number) → null');
+  else fail('parseGlintsItem(number) should return null');
+
+  // parseGlintsItem — fallback company when company.name is missing
+  const noCompany = parseGlintsItem(
+    { title: 'Engineer', url: 'https://glints.com/id/jobs/eng/1' },
+    'https://glints.com', 'PortalName'
+  );
+  if (noCompany && noCompany.company === 'PortalName') {
+    pass('parseGlintsItem uses fallback company when company.name is absent');
+  } else {
+    fail(`parseGlintsItem fallback company: ${JSON.stringify(noCompany)}`);
+  }
+
+  // fetch() — happy path with mock context
+  const mockCtx = {
+    transport: 'http',
+    fetchJson: async (url, opts) => {
+      if (opts?.method !== 'POST') throw new Error('Expected POST');
+      const body = JSON.parse(opts.body || '{}');
+      if (!body.query) throw new Error('Expected GraphQL query');
+      return {
+        data: {
+          opportunities: {
+            data: [
+              { title: 'AI PM', company: { name: 'TechCo' }, location: 'Remote', postedAt: '2026-01-01T00:00:00Z', url: 'https://glints.com/id/jobs/ai-pm/1' },
+            ],
+            totalCount: 1,
+          },
+        },
+      };
+    },
+    fetchText: async () => { throw new Error('should not be called'); },
+  };
+  const jobs = await glints.fetch(
+    { name: 'Glints ID', provider: 'glints', searchKeywords: 'AI' },
+    mockCtx,
+  );
+  if (jobs.length === 1 && jobs[0].title === 'AI PM') pass('glints.fetch() returns parsed jobs via GraphQL');
+  else fail(`glints.fetch() returned ${JSON.stringify(jobs)}`);
+
+  // fetch() — handles empty results
+  const emptyCtx = {
+    transport: 'http',
+    fetchJson: async () => ({ data: { opportunities: { data: [], totalCount: 0 } } }),
+    fetchText: async () => { throw new Error('should not be called'); },
+  };
+  const emptyJobs = await glints.fetch(
+    { name: 'Glints ID', provider: 'glints', searchKeywords: 'nonexistent' },
+    emptyCtx,
+  );
+  if (emptyJobs.length === 0) pass('glints.fetch() handles empty results');
+  else fail(`glints.fetch() should return empty array for no results, got ${emptyJobs.length}`);
+
+  // fetch() — handles flat opportunities array (alternative response shape)
+  const flatCtx = {
+    transport: 'http',
+    fetchJson: async () => ({
+      data: {
+        opportunities: [
+          { title: 'Dev', company: { name: 'Co' }, location: 'Remote', url: 'https://glints.com/id/jobs/dev/1' },
+        ],
+      },
+    }),
+    fetchText: async () => { throw new Error('should not be called'); },
+  };
+  const flatJobs = await glints.fetch(
+    { name: 'Glints ID', provider: 'glints', searchKeywords: 'dev' },
+    flatCtx,
+  );
+  if (flatJobs.length === 1) pass('glints.fetch() handles flat opportunities array response');
+  else fail(`glints.fetch() flat array: ${JSON.stringify(flatJobs)}`);
+
+  // fetch() — rejects invalid hostname
+  let hostRejected = false;
+  try {
+    await glints.fetch(
+      { name: 'Bad', provider: 'glints', api: 'https://evil.example.com/graphql' },
+      { transport: 'http', fetchJson: async () => ({}), fetchText: async () => '' },
+    );
+  } catch (e) {
+    if (e.message.includes('untrusted hostname')) hostRejected = true;
+    else fail(`glints.fetch() host rejection wrong error: ${e.message}`);
+  }
+  if (hostRejected) pass('glints.fetch() rejects untrusted hostnames');
+  else fail('glints.fetch() should reject non-glints hostnames');
+
+  // fetch() — throws on missing opportunities in response
+  let missingThrew = false;
+  try {
+    await glints.fetch(
+      { name: 'Glints ID', provider: 'glints', searchKeywords: 'test' },
+      {
+        transport: 'http',
+        fetchJson: async () => ({ data: { somethingElse: [] } }),
+        fetchText: async () => { throw new Error('should not be called'); },
+      },
+    );
+  } catch (e) {
+    if (e.message.includes('unexpected API response')) missingThrew = true;
+    else fail(`glints.fetch() missing opportunities wrong error: ${e.message}`);
+  }
+  if (missingThrew) pass('glints.fetch() throws on unexpected API response shape');
+  else fail('glints.fetch() should throw when opportunities is missing');
+
+} catch (e) {
+  fail(`glints provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
