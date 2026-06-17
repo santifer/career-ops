@@ -63,7 +63,7 @@ function maxSlot() {
   const entries = readdirSync(REPORTS_DIR);
   let max = 0;
   for (const name of entries) {
-    const m = name.match(/^(\d{3})-/);
+    const m = name.match(/^(\d+)-/);
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
   return max;
