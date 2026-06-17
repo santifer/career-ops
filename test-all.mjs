@@ -1806,6 +1806,68 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER REPORT-NUMBER COLLISION (#912) ─────────────────
+// The report-number dedup check was not company-guarded: a TSV for NewCo
+// with report [1] would find the existing tracker row [1] for OtherCo and
+// update it in-place instead of appending NewCo as a new row.
+console.log('\n🧪 Testing merge-tracker report-number cross-company collision (#912)...');
+try {
+  const col912Tmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-912-'));
+  try {
+    mkdirSync(join(col912Tmp, 'data'));
+    mkdirSync(join(col912Tmp, 'reports'));
+    const col912Additions = join(col912Tmp, 'additions');
+    mkdirSync(col912Additions);
+
+    const col912Tracker = join(col912Tmp, 'data', 'applications.md');
+    writeFileSync(col912Tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-01 | OtherCo | Staff Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-otherco-2026-01-01.md) | original |\n');
+    writeFileSync(join(col912Tmp, 'reports', '001-otherco-2026-01-01.md'), '# fixture\n');
+    writeFileSync(join(col912Tmp, 'reports', '001-newco-2026-01-05.md'), '# fixture\n');
+
+    // NewCo TSV also carries report number [1] — cross-company collision
+    writeFileSync(join(col912Additions, '001-newco.tsv'),
+      '1\t2026-01-05\tNewCo\tNew Role\tEvaluated\t2.7/5\t❌\t[1](reports/001-newco-2026-01-05.md)\tcollision\n');
+
+    const col912Result = run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: col912Tracker, CAREER_OPS_ADDITIONS: col912Additions },
+    });
+    if (col912Result === null) {
+      fail('merge-tracker crashed during report-number collision test (#912)');
+    } else {
+      const col912Merged = readFileSync(col912Tracker, 'utf-8');
+      const col912Rows = col912Merged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
+      const expectedOtherCoRow = '| 1 | 2026-01-01 | OtherCo | Staff Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-otherco-2026-01-01.md) | original |';
+
+      if (col912Rows.length === 2) {
+        pass('report-number collision (#912): merged tracker has exactly 2 rows');
+      } else {
+        fail(`report-number collision (#912): expected 2 rows, got ${col912Rows.length}`);
+      }
+
+      if (col912Rows.some(r => r.trim() === expectedOtherCoRow.trim())) {
+        pass('report-number collision (#912): existing OtherCo row left untouched (exact match)');
+      } else {
+        fail('report-number collision (#912): OtherCo row was overwritten by NewCo addition');
+      }
+
+      const expectedNewCoRow = '| 2 | 2026-01-05 | NewCo | New Role | 2.7/5 | Evaluated | ❌ | [1](../reports/001-newco-2026-01-05.md) | collision |';
+      if (col912Rows.some(r => r.trim() === expectedNewCoRow.trim())) {
+        pass('report-number collision (#912): NewCo appended as a new entry with correct data');
+      } else {
+        fail('report-number collision (#912): NewCo entry was swallowed or has incorrect data');
+      }
+    }
+  } finally {
+    rmSync(col912Tmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker report-number collision test crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
 // Report-number reservation is atomic now (#803), but tracker merges are a
 // separate read/modify/write step. If two merge-tracker processes read the same
@@ -2658,6 +2720,105 @@ try {
   }
 } catch (e) {
   fail(`font inlining test crashed: ${e.message}`);
+}
+
+// ── 20. LATEX VALIDATOR I18N ────────────────────────────────────
+
+console.log('\n20. LaTeX validator i18n (localized sections + CJK guard)');
+
+// Run generate-latex.mjs and return its JSON report, capturing stdout even
+// when it exits non-zero (validation issues exit 1 but still print the report).
+function latexValidate(tex) {
+  const dir = mkdtempSync(join(tmpdir(), 'latex-i18n-'));
+  const texPath = join(dir, 'cv.tex');
+  writeFileSync(texPath, tex, 'utf-8');
+  let out;
+  try {
+    out = execFileSync(NODE, ['generate-latex.mjs', texPath], { cwd: ROOT, encoding: 'utf-8', timeout: 30000 });
+  } catch (e) {
+    out = (e.stdout || '').toString();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  try { return JSON.parse(out); } catch { return null; }
+}
+
+const baseTex = (sectionTitle) => `\\documentclass{article}
+\\pdfgentounicode=1
+\\begin{document}
+\\section{${sectionTitle}}
+\\section{Experiencia}
+\\section{Proyectos}
+\\section{Habilidades}
+\\resumeSubheading
+\\resumeItem
+\\resumeProjectHeading
+\\end{document}
+`;
+
+try {
+  // Localized (Spanish) section titles must not trigger a "Missing section".
+  const localized = latexValidate(baseTex('Educación'));
+  if (localized && !localized.issues.some((i) => /section/i.test(i))) {
+    pass('localized section titles validate (no spurious "Missing section")');
+  } else {
+    fail(`localized section titles wrongly flagged: ${JSON.stringify(localized && localized.issues)}`);
+  }
+
+  // Too few sections must still be flagged.
+  const tooFew = latexValidate(`\\documentclass{article}
+\\pdfgentounicode=1
+\\begin{document}
+\\section{Education}
+\\resumeSubheading
+\\resumeItem
+\\resumeProjectHeading
+\\end{document}
+`);
+  if (tooFew && tooFew.issues.some((i) => /at least 4/i.test(i))) {
+    pass('fewer than 4 sections is still flagged');
+  } else {
+    fail('section-count check did not flag a CV with too few sections');
+  }
+
+  // CJK content must be rejected with actionable guidance.
+  const cjk = latexValidate(baseTex('職務経歴'));
+  if (cjk && cjk.issues.some((i) => /CJK/.test(i)) && cjk.valid === false) {
+    pass('CJK content is rejected with guidance to use pdf mode');
+  } else {
+    fail(`CJK content was not rejected with guidance: ${JSON.stringify(cjk && cjk.issues)}`);
+  }
+} catch (e) {
+  fail(`LaTeX validator i18n test crashed: ${e.message}`);
+}
+
+// ── 21. CJK CV RENDERING (lang="ja" font fallback) ──────────────
+
+console.log('\n21. CJK CV rendering (lang="ja" font fallback)');
+
+try {
+  // The bundled webfonts are Latin-only, so a Japanese CV (html lang="ja")
+  // needs a CJK system-font fallback or it renders as tofu (□) in headless
+  // Chromium. This mirrors the existing lang="ar" handling.
+  const template = readFileSync(join(ROOT, 'templates', 'cv-template.html'), 'utf-8');
+
+  if (/html\[lang="ja"\]\s+body/.test(template)) {
+    pass('cv-template.html has a lang="ja" body rule for CJK text');
+  } else {
+    fail('cv-template.html is missing a lang="ja" font fallback — Japanese CVs render as tofu (□)');
+  }
+
+  // The fallback must name a real CJK font family, not just rely on sans-serif
+  // (the generic sans-serif has no CJK glyphs on minimal/CI environments).
+  const cjkFonts = ['Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', 'Noto Sans JP', 'Meiryo', 'MS PGothic'];
+  const jaBlock = template.slice(template.indexOf('html[lang="ja"]'));
+  if (cjkFonts.some((f) => jaBlock.includes(f))) {
+    pass('lang="ja" rules name a concrete CJK font family');
+  } else {
+    fail('lang="ja" rules do not name any CJK font family — CJK fallback will not work');
+  }
+} catch (e) {
+  fail(`CJK rendering test crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

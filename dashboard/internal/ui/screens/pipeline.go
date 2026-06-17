@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"math"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -1295,23 +1296,29 @@ func (m PipelineModel) countByNormStatus(status string) int {
 	return count
 }
 
-// formatTimeAgo renders an ISO date as a relative duration: hours while the
-// contact is less than a day old ("5h ago"), days otherwise ("3d ago").
-// Tracker dates are day-granular, so hours count from local midnight of that day.
+// formatTimeAgo renders an ISO date as a relative duration in calendar days:
+// "today", "yesterday", or "Nd ago". Tracker dates are day-granular (no
+// time-of-day), so we never report sub-day hours — doing so would fabricate
+// precision the data doesn't have (e.g. an entry dated today would otherwise
+// read "13h ago" simply because it's 1pm, not because contact was 13h back).
 func formatTimeAgo(dateStr string) string {
 	t, err := time.ParseInLocation("2006-01-02", dateStr, time.Local)
 	if err != nil {
 		return dateStr // not a date — show it untouched rather than lie
 	}
-	d := time.Since(t)
-	if d < 0 {
-		d = 0
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	contactDay := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+	// Round to the nearest day so DST transitions don't skew the count.
+	days := int(math.Round(today.Sub(contactDay).Hours() / 24))
+	switch {
+	case days <= 0:
+		return "today"
+	case days == 1:
+		return "yesterday"
+	default:
+		return fmt.Sprintf("%dd ago", days)
 	}
-	hours := int(d.Hours())
-	if hours < 24 {
-		return fmt.Sprintf("%dh ago", hours)
-	}
-	return fmt.Sprintf("%dd ago", hours/24)
 }
 
 // truncateRunes truncates a string to at most maxRunes runes, appending "..." if truncated.
