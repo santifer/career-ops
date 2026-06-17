@@ -11,7 +11,8 @@
      words (e.g. "SUM M ARY", "Germ any") — which corrupts ATS keyword parsing.
      This template's job is clean machine-readable parsing, so we use a standard
      static system sans stack instead. Verified clean via pypdf text extraction.
-     Latin base stack is reused by the lang="ja"/lang="ar" rules below. */
+     The lang="ja" rules reuse this Latin base stack (with a CJK fallback added);
+     the lang="ar" rules below intentionally define their own Arabic stack. */
 
   * {
     margin: 0;
