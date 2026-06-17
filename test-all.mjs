@@ -13,7 +13,7 @@
 
 import { execSync, execFileSync, spawn } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -90,13 +90,38 @@ function run(cmd, args = [], opts = {}) {
  */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 
+function toBashPath(wpath) {
+  if (process.platform !== 'win32') return wpath;
+  try {
+    const forwardSlashed = wpath.replace(/\\/g, '/');
+    const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    if (out) return out;
+  } catch {}
+  try {
+    const forwardSlashed = wpath.replace(/\\/g, '/');
+    const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    if (out) return out;
+  } catch {}
+  return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
+}
+
 /**
  * Read a repo-relative text file as UTF-8.
  *
  * @param {string} path - Path relative to the career-ops repository root.
  * @returns {string} File contents.
  */
-function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
+function readFile(path) {
+  const fullPath = join(ROOT, path);
+  let content = readFileSync(fullPath, 'utf-8');
+  if (content.trim().startsWith('..') && content.trim().split('\n').length === 1) {
+    const target = join(dirname(fullPath), content.trim());
+    if (existsSync(target)) {
+      content = readFileSync(target, 'utf-8');
+    }
+  }
+  return content;
+}
 
 console.log('\n🧪 career-ops test suite\n');
 
@@ -409,6 +434,7 @@ const systemFiles = [
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
+  '.antigravitycli/skills/career-ops/SKILL.md',
 ];
 
 for (const f of systemFiles) {
@@ -826,6 +852,7 @@ const canonicalSkill = '.agents/skills/career-ops/SKILL.md';
 const symlinks = [
   '.claude/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
+  '.antigravitycli/skills/career-ops/SKILL.md',
 ];
 
 let canonicalReal = null;
@@ -838,20 +865,20 @@ try {
 
 for (const link of symlinks) {
   let resolved = null;
-  let target = null;
-  try {
-    target = realpathSync(join(ROOT, link));
-  } catch {
-    target = null;
-  }
-  if (target === null) {
-    fail(`Symlink missing: ${link}`);
-    continue;
-  }
   try {
     resolved = realpathSync(join(ROOT, link));
+    if (resolved !== canonicalReal) {
+      const content = readFileSync(resolved, 'utf-8').trim();
+      if (content.startsWith('..') && content.split('\n').length === 1) {
+        resolved = realpathSync(join(dirname(join(ROOT, link)), content));
+      }
+    }
   } catch {
     resolved = null;
+  }
+  if (resolved === null) {
+    fail(`Symlink missing: ${link}`);
+    continue;
   }
   if (resolved === canonicalReal) {
     pass(`${link} → canonical skill`);
@@ -2474,8 +2501,12 @@ try {
   mkdirSync(join(tmp, 'data'), { recursive: true });
   mkdirSync(fakeBin, { recursive: true });
 
-  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8'));
-  execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  if (process.platform === 'win32') {
+    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+  } else {
+    execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  }
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
@@ -2490,10 +2521,14 @@ try {
     'echo "You\\x27ve hit your session limit · resets 12:30pm (Asia/Taipei)"',
     'exit 1',
   ].join('\n') + '\n');
-  execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+  if (process.platform === 'win32') {
+    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+  } else {
+    execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+  }
 
-  const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
-  const out = run('bash', [join(batchDir, 'batch-runner.sh'), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
+  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -2512,7 +2547,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [join(batchDir, 'batch-runner.sh'), '--resume-paused', '--dry-run'], {
+  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -2523,7 +2558,7 @@ try {
     fail(`--resume-paused selection wrong: ${dry}`);
   }
 
-  rmSync(tmp, { recursive: true, force: true });
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
 }
