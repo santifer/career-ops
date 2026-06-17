@@ -31,7 +31,7 @@ Company-specific interview prep guides for AI/tech roles. Each file covers the i
 
 Load any guide before an interview for a quick, structured briefing:
 
-```
+```bash
 /career-ops interview-intel OpenAI
 ```
 
