@@ -146,14 +146,15 @@ console.log('\n2. Script execution (graceful on empty data)');
 const scripts = [
   { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
   { name: 'verify-pipeline.mjs', expectExit: 0 },
-  // --dry-run: these three scripts resolve ROOT from import.meta.url and write
-  // data/applications.md in place. On a provisioned working copy with a real
-  // tracker present, running them without --dry-run mutates user data. Harmless
-  // in this repo (no tracker shipped), risky for end users who run tests inside
-  // their active career-ops workspace.
+  // --dry-run: these scripts resolve ROOT from import.meta.url and write
+  // data/applications.md (or data/pipeline.md) in place. On a provisioned working
+  // copy with a real tracker present, running them without --dry-run mutates user
+  // data. Harmless in this repo (no tracker shipped), risky for end users who run
+  // tests inside their active career-ops workspace.
   { name: 'normalize-statuses.mjs --dry-run', expectExit: 0 },
   { name: 'dedup-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
+  { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
@@ -660,6 +661,19 @@ if (
   fail('eval modes missing liveness gate before evaluation');
 }
 
+const pipelineMode = readFile('modes/pipeline.md');
+if (
+  pipelineMode.includes('## Liveness sweep') &&
+  pipelineMode.includes('check-liveness.mjs') &&
+  pipelineMode.includes('unconfirmed') &&
+  pipelineMode.includes('Do not') &&
+  pipelineMode.includes('liveness sweep')
+) {
+  pass('pipeline mode sweeps unconfirmed entries for liveness before processing');
+} else {
+  fail('pipeline mode missing batch liveness sweep for unconfirmed entries');
+}
+
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
 console.log('\n9. Local parser contract');
@@ -806,6 +820,7 @@ try {
   const invalidProviderPath = join(tmp, 'invalid-provider.yml');
   const emptyKeywordPath = join(tmp, 'empty-keyword.yml');
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
+  const badContentFilterPath = join(tmp, 'bad-content-filter.yml');
 
   writeFileSync(validPath, `
 title_filter:
@@ -843,6 +858,18 @@ tracked_companies:
     careers_url: "https://jobs.lever.co/acme2"
 `, 'utf-8');
 
+  // content_filter with an empty-string keyword must be rejected, same as
+  // title/location filters (an empty keyword would match every description).
+  writeFileSync(badContentFilterPath, `
+title_filter:
+  positive: ["AI"]
+content_filter:
+  positive: ["rust", "   "]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
   const validResult = run(NODE, ['validate-portals.mjs', '--file', validPath]);
   if (validResult !== null && validResult.includes('0 errors')) {
     pass('validate-portals accepts a minimal valid portals file');
@@ -876,6 +903,13 @@ tracked_companies:
     pass('validate-portals warns on duplicate enabled company names');
   } else {
     fail('validate-portals should warn on duplicate enabled company names');
+  }
+
+  const badContentFilterResult = run(NODE, ['validate-portals.mjs', '--file', badContentFilterPath]);
+  if (badContentFilterResult === null) {
+    pass('validate-portals rejects empty content_filter keywords');
+  } else {
+    fail('validate-portals should reject empty content_filter keywords');
   }
 
   rmSync(tmp, { recursive: true, force: true });
@@ -932,8 +966,10 @@ const symlinks = [
 ];
 
 let canonicalReal = null;
+let canonicalContent = null;
 try {
   canonicalReal = realpathSync(join(ROOT, canonicalSkill));
+  canonicalContent = readFile(canonicalSkill);
   pass(`Canonical skill resolves: ${canonicalSkill}`);
 } catch {
   fail(`Canonical skill not found: ${canonicalSkill}`);
@@ -958,8 +994,181 @@ for (const link of symlinks) {
   }
   if (resolved === canonicalReal) {
     pass(`${link} → canonical skill`);
+  } else if (canonicalContent !== null && readFile(link) === canonicalContent) {
+    pass(`${link} is a materialized copy of canonical skill`);
   } else {
-    fail(`${link} resolves to ${resolved}, expected ${canonicalReal}`);
+    fail(`${link} resolves to ${resolved}, expected ${canonicalReal} or byte-identical canonical skill copy`);
+  }
+}
+
+console.log('\n12a. Skill entrypoint materialization');
+
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-'));
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+    mkdirSync(opencodeDir, { recursive: true });
+
+    const fixtureSkill = '---\nname: career-ops\n---\n\n# canonical skill\n';
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+    writeFileSync(join(canonicalDir, 'SKILL.md'), fixtureSkill);
+    writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
+    writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot).sort();
+    const expected = [
+      '.claude/skills/career-ops/SKILL.md',
+      '.opencode/skills/career-ops/SKILL.md',
+    ];
+
+    if (JSON.stringify(materialized) === JSON.stringify(expected)) {
+      pass('update-system materializes pointer skill entrypoints');
+    } else {
+      fail(`unexpected materialized skill entrypoints: ${JSON.stringify(materialized)}`);
+    }
+
+    const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
+    const opencodeSkill = readFileSync(join(opencodeDir, 'SKILL.md'), 'utf-8');
+    if (claudeSkill === fixtureSkill && opencodeSkill === fixtureSkill) {
+      pass('materialized skill entrypoints match canonical content');
+    } else {
+      fail('materialized skill entrypoints do not match canonical content');
+    }
+  } catch (e) {
+    fail(`skill entrypoint materialization test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-unreadable-'));
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+    mkdirSync(join(canonicalDir, 'SKILL.md'));
+    writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
+    if (materialized.length === 0 && claudeSkill === pointer) {
+      pass('update-system skips skill materialization when canonical entrypoint is unreadable');
+    } else {
+      fail(`unreadable canonical skill unexpectedly materialized: ${JSON.stringify(materialized)}`);
+    }
+  } catch (e) {
+    fail(`unreadable canonical skill test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-entry-dir-'));
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+    mkdirSync(opencodeDir, { recursive: true });
+
+    const fixtureSkill = '---\nname: career-ops\n---\n\n# canonical skill\n';
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+    writeFileSync(join(canonicalDir, 'SKILL.md'), fixtureSkill);
+    mkdirSync(join(claudeDir, 'SKILL.md'));
+    writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const opencodeSkill = readFileSync(join(opencodeDir, 'SKILL.md'), 'utf-8');
+    if (JSON.stringify(materialized) === JSON.stringify(['.opencode/skills/career-ops/SKILL.md']) && opencodeSkill === fixtureSkill) {
+      pass('update-system skips non-file skill entrypoints while materializing valid pointers');
+    } else {
+      fail(`non-file skill entrypoint handling was unexpected: ${JSON.stringify(materialized)}`);
+    }
+  } catch (e) {
+    fail(`non-file skill entrypoint test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+console.log('\n12b. Materialized skill index mode');
+
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skill-git-'));
+  const gitRun = (args, opts = {}) => execFileSync('git', args, {
+    cwd: fixtureRoot,
+    encoding: 'utf-8',
+    timeout: 30000,
+    ...opts,
+  }).trim();
+  const gitRaw = (args) => execFileSync('git', args, {
+    cwd: fixtureRoot,
+    encoding: 'utf-8',
+    timeout: 30000,
+  });
+
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+    mkdirSync(opencodeDir, { recursive: true });
+
+    const fixtureSkill = '---\nname: career-ops\n---\n\n# canonical skill\n';
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+
+    gitRun(['init']);
+    gitRun(['config', 'core.symlinks', 'false']);
+    gitRun(['config', 'user.email', 'test@example.com']);
+    gitRun(['config', 'user.name', 'Test User']);
+
+    writeFileSync(join(canonicalDir, 'SKILL.md'), fixtureSkill);
+    writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
+    writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
+    gitRun(['add', '--', '.agents/skills/career-ops/SKILL.md']);
+
+    const pointerBlob = gitRun(['hash-object', '-w', '--stdin'], { input: pointer });
+    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.claude/skills/career-ops/SKILL.md`]);
+    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.opencode/skills/career-ops/SKILL.md`]);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    updater.prepareMaterializedSkillEntrypointsForStage(materialized, fixtureRoot);
+    gitRun(['add', '--', '.claude/skills/', '.opencode/skills/']);
+
+    const claudeIndex = gitRun(['ls-files', '-s', '--', '.claude/skills/career-ops/SKILL.md']);
+    const opencodeIndex = gitRun(['ls-files', '-s', '--', '.opencode/skills/career-ops/SKILL.md']);
+    if (claudeIndex.startsWith('100644 ') && opencodeIndex.startsWith('100644 ')) {
+      pass('materialized skill entrypoints stage as regular files, not symlink blobs');
+    } else {
+      fail(`materialized skill entrypoints staged with wrong modes: ${JSON.stringify([claudeIndex, opencodeIndex])}`);
+    }
+
+    const claudeBlob = gitRaw(['show', ':.claude/skills/career-ops/SKILL.md']);
+    const opencodeBlob = gitRaw(['show', ':.opencode/skills/career-ops/SKILL.md']);
+    if (claudeBlob === fixtureSkill && opencodeBlob === fixtureSkill) {
+      pass('materialized skill blobs contain canonical skill content');
+    } else {
+      fail('materialized skill blobs do not contain canonical skill content');
+    }
+  } catch (e) {
+    fail(`skill entrypoint index-mode test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
   }
 }
 
@@ -985,7 +1194,13 @@ if (fileExists('VERSION')) {
 console.log('\n15. Location filter — always_allow tier');
 
 try {
-  const { buildLocationFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const {
+    buildLocationFilter,
+    buildContentFilter,
+    shouldDedupScanHistoryRow,
+    formatPipelineOffer,
+    formatScanHistoryRow,
+  } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
@@ -1120,6 +1335,94 @@ try {
     fail('scan-history TTL policy did not match expected recheck/permanent behavior');
   }
 
+  const hostileOffer = {
+    url: 'https://jobs.example.com/123|evil\nhttps://evil.example/later',
+    source: 'local-parser',
+    title: 'Senior Engineer | Growth\n- [ ] https://evil.example/job | EvilCorp | Injected',
+    company: '=ACME\\Corp\t| R&D',
+    location: '@Remote\nEU',
+  };
+  const pipelineRow = formatPipelineOffer(hostileOffer);
+  const pendingLines = pipelineRow.split('\n').filter(line => /^\s*- \[ \] https?:\/\//.test(line));
+  const pipelineFields = pipelineRow.split('|').map(part => part.trim());
+  if (
+    pendingLines.length === 1 &&
+    pipelineFields.length === 3 &&
+    pipelineFields[0] === '- [ ] https://jobs.example.com/123%7Cevil' &&
+    !pipelineRow.includes('\n') &&
+    !pipelineRow.includes('\t') &&
+    !pipelineRow.includes('\\|') &&
+    pipelineRow.includes('=ACME\\\\Corp / R&D') &&
+    pipelineRow.includes('- \\[ \\] https://evil.example/job / EvilCorp / Injected')
+  ) {
+    pass('scan pipeline writer preserves row shape without injected checkboxes or extra pipes');
+  } else {
+    fail(`scan pipeline metadata sanitizer produced unsafe row: ${pipelineRow}`);
+  }
+
+  const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
+  const historyColumns = historyRow.split('\t');
+  if (
+    historyColumns.length === 7 &&
+    !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
+    historyColumns[0] === 'https://jobs.example.com/123|evil' &&
+    historyColumns[3].includes('- [ ] https://evil.example/job') &&
+    historyColumns[4] === "'=ACME\\Corp | R&D" &&
+    historyColumns[6] === "'@Remote EU"
+  ) {
+    pass('scan-history writer preserves row shape and neutralizes spreadsheet formulas');
+  } else {
+    fail(`scan-history metadata sanitizer produced unsafe TSV row: ${JSON.stringify(historyColumns)}`);
+  }
+
+  // ── content_filter (#734) ──
+  // Absent config → all jobs pass.
+  const noContentFilter = buildContentFilter(null);
+  if (noContentFilter('any description') === true && noContentFilter('') === true) {
+    pass('content_filter absent → all jobs pass');
+  } else {
+    fail('content_filter absent should pass all jobs');
+  }
+
+  // Empty / missing description always passes (providers without descriptions
+  // must never be silently dropped).
+  const cf = buildContentFilter({ positive: ['rust'], negative: ['php'] });
+  if (cf('') === true && cf('   ') === true && cf(undefined) === true && cf(null) === true && cf(42) === true) {
+    pass('content_filter passes empty/missing/non-string descriptions');
+  } else {
+    fail('content_filter should pass empty/missing/non-string descriptions');
+  }
+
+  // Negative keyword present → reject (even if a positive also matches).
+  if (cf('We build in PHP and Rust') === false && cf('Legacy PHP shop') === false) {
+    pass('content_filter rejects descriptions containing a negative keyword');
+  } else {
+    fail('content_filter should reject negative-keyword descriptions');
+  }
+
+  // Positive required when positive list is non-empty.
+  if (cf('We write everything in Rust') === true && cf('A Python and Go team') === false) {
+    pass('content_filter requires a positive keyword when positives are set');
+  } else {
+    fail('content_filter should require a positive keyword');
+  }
+
+  // Positive empty → pass after clearing negatives.
+  const negOnly = buildContentFilter({ negative: ['wordpress'] });
+  if (negOnly('Modern TypeScript stack') === true && negOnly('WordPress maintenance') === false) {
+    pass('content_filter with only negatives blocks them and passes the rest');
+  } else {
+    fail('content_filter negative-only behavior wrong');
+  }
+
+  // Case-insensitive.
+  const caseCf = buildContentFilter({ positive: ['Kubernetes'] });
+  if (caseCf('deploys on KUBERNETES daily') === true) {
+    pass('content_filter matches case-insensitively');
+  } else {
+    fail('content_filter should be case-insensitive');
+  }
+
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }
@@ -1163,6 +1466,36 @@ try {
     pass('parseDate rejects malformed input and accepts ISO dates');
   } else {
     fail('parseDate validation wrong');
+  }
+
+  // parseAppliedDate — extracts the real submission date from notes (the
+  // tracker `date` column is the evaluation date), case-insensitive.
+  if (cadence.parseAppliedDate('Applied 2026-06-09 via Personio; raised part-time') === '2026-06-09') {
+    pass('parseAppliedDate extracts "Applied YYYY-MM-DD" from notes');
+  } else {
+    fail(`parseAppliedDate got ${JSON.stringify(cadence.parseAppliedDate('Applied 2026-06-09 via Personio; raised part-time'))}`);
+  }
+  if (cadence.parseAppliedDate('APPLIED 2026-06-17 (German CV; jobId=104170)') === '2026-06-17') {
+    pass('parseAppliedDate is case-insensitive (APPLIED)');
+  } else {
+    fail('parseAppliedDate should match uppercase APPLIED');
+  }
+  // First "Applied" date wins even when a later status date follows.
+  if (cadence.parseAppliedDate('Applied 2026-06-09. No response; discarded 2026-06-18.') === '2026-06-09') {
+    pass('parseAppliedDate takes the first applied date, not a later status date');
+  } else {
+    fail('parseAppliedDate should take the first applied date');
+  }
+  if (cadence.parseAppliedDate('On-archetype fit; no submission yet') === null && cadence.parseAppliedDate('') === null) {
+    pass('parseAppliedDate returns null when notes carry no applied date');
+  } else {
+    fail('parseAppliedDate should return null without an applied date');
+  }
+  // "reapplied" must not be mistaken for an applied date (word boundary).
+  if (cadence.parseAppliedDate('reapplied 2026-06-09 after rejection') === null) {
+    pass('parseAppliedDate does not match inside "reapplied"');
+  } else {
+    fail('parseAppliedDate should not match the date inside "reapplied"');
   }
 
   // Status normalization (strips bold + trailing date, lowercases, maps aliases)
@@ -1836,6 +2169,47 @@ try {
   }
 } catch (e) {
   fail(`shared role matcher / dedup safety tests crashed: ${e.message}`);
+}
+
+// dedup-tracker / normalize-statuses rebuilt promoted rows with
+// `parts.slice(1, -1)`, which assumes the closing `|` produced a trailing empty
+// cell. A valid row written WITHOUT a trailing pipe keeps its real last cell
+// (the notes) at the end, so the old reconstruction silently dropped the notes
+// when promoting a keeper's status during dedup. rebuildRow() now preserves it.
+console.log('\n🧪 Testing dedup row rebuild preserves notes on no-trailing-pipe rows...');
+try {
+  const rebuildTmp = mkdtempSync(join(tmpdir(), 'career-ops-rebuild-'));
+  try {
+    mkdirSync(join(rebuildTmp, 'data'));
+    const tracker = join(rebuildTmp, 'data', 'applications.md');
+    // Keeper row #50 has the higher score AND no trailing pipe; dup #51 carries a
+    // more-advanced status (both below Applied, so the advanced-status safety
+    // guard doesn't block the collapse), so dedup promotes #50's status and
+    // rewrites the row — exercising rebuildRow() on a no-trailing-pipe row.
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 50 | 2026-02-01 | Globex | Widget Engineer | 4.5/5 | Rejected | ❌ | [50](../reports/050-widget.md) | KEEPER_NOTE_SENTINEL\n' +
+      '| 51 | 2026-02-02 | Globex | Widget Engineer | 3.0/5 | Evaluated | ❌ | [51](../reports/051-widget.md) | dup row |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker.mjs crashed during notes-preservation test');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const keeperRow = out.split('\n').find(l => l.includes('| 50 |'));
+      if (keeperRow && keeperRow.includes('KEEPER_NOTE_SENTINEL') && keeperRow.includes('Evaluated')) {
+        pass('dedup row rebuild preserves the notes column on rows without a trailing pipe');
+      } else {
+        fail(`dedup row rebuild dropped notes / status on no-trailing-pipe row: "${keeperRow}"`);
+      }
+    }
+  } finally {
+    rmSync(rebuildTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`dedup row-rebuild notes test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
@@ -3436,6 +3810,100 @@ try {
 
 } catch (e) {
   fail(`arbeitsagentur provider tests crashed: ${e.message}`);
+}
+
+console.log('\n24. Provider — ibm');
+
+try {
+  const ibm = (await import(pathToFileURL(join(ROOT, 'providers/ibm.mjs')).href)).default;
+  const { parseIbmResponse, buildPostFilter } = await import(pathToFileURL(join(ROOT, 'providers/ibm.mjs')).href);
+
+  if (ibm.id === 'ibm') pass('ibm.id is "ibm"');
+  else fail(`ibm.id is ${JSON.stringify(ibm.id)}`);
+
+  // buildPostFilter — empty config yields no filter terms
+  if (buildPostFilter({}).bool.must.length === 0) pass('buildPostFilter({}) → no must terms');
+  else fail(`buildPostFilter({}) = ${JSON.stringify(buildPostFilter({}))}`);
+
+  // buildPostFilter — country + categories produce the expected facet terms
+  const pf = buildPostFilter({ country: 'Germany', categories: ['Software Engineering', 'Data & Analytics'] });
+  const countryTerm = pf.bool.must.find(m => m.term && m.term.field_keyword_05);
+  const catTerm = pf.bool.must.find(m => m.bool && m.bool.should);
+  if (countryTerm?.term.field_keyword_05 === 'Germany' && catTerm?.bool.should.length === 2) {
+    pass('buildPostFilter maps country → field_keyword_05 and categories → field_keyword_08 should[]');
+  } else {
+    fail(`buildPostFilter facets = ${JSON.stringify(pf)}`);
+  }
+
+  // buildPostFilter — sanitizes empty/non-string category entries
+  const sanitized = buildPostFilter({ categories: ['Valid', '', '   ', 42, null] });
+  const sanitizedShould = sanitized.bool.must.find(m => m.bool && m.bool.should)?.bool.should;
+  if (sanitizedShould?.length === 1 && sanitizedShould[0].term.field_keyword_08 === 'Valid') {
+    pass('buildPostFilter drops empty/non-string category entries');
+  } else {
+    fail(`buildPostFilter sanitization = ${JSON.stringify(sanitizedShould)}`);
+  }
+
+  // parseIbmResponse — happy path, location assembled from keyword_19 · keyword_17
+  const sample = {
+    hits: {
+      hits: [
+        { _source: { title: 'ML Engineer', url: 'https://ibm.com/careers/1', field_keyword_19: 'Berlin, Germany', field_keyword_17: 'Hybrid' } },
+        { _source: { title: 'Data Scientist', url: 'https://ibm.com/careers/2', field_keyword_19: 'Remote' } },
+      ],
+    },
+  };
+  const jobs = parseIbmResponse(sample);
+  if (jobs.length === 2 && jobs[0].company === 'IBM') pass('parseIbmResponse extracts 2 jobs with company "IBM"');
+  else fail(`parseIbmResponse returned ${JSON.stringify(jobs)}`);
+
+  if (jobs[0].location === 'Berlin, Germany · Hybrid') pass('parseIbmResponse joins location · work mode');
+  else fail(`row 0 location = ${JSON.stringify(jobs[0]?.location)}`);
+
+  if (jobs[1].location === 'Remote') pass('parseIbmResponse omits the separator when work mode is absent');
+  else fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}`);
+
+  // parseIbmResponse — drops title-less, url-less, and non-http(s) entries
+  const dirty = parseIbmResponse({
+    hits: {
+      hits: [
+        { _source: { title: '', url: 'https://ibm.com/careers/3' } },
+        { _source: { title: 'No URL' } },
+        { _source: { title: 'Bad scheme', url: 'ftp://ibm.com/careers/4' } },
+        { _source: { title: 'Good', url: 'https://ibm.com/careers/5' } },
+      ],
+    },
+  });
+  if (dirty.length === 1 && dirty[0].title === 'Good') pass('parseIbmResponse drops title-less, url-less, and non-http(s) entries');
+  else fail(`parseIbmResponse dirty = ${JSON.stringify(dirty)}`);
+
+  // parseIbmResponse — throws on unexpected shape (endpoint drift surfaces loudly)
+  let drifted = false;
+  try { parseIbmResponse({ results: [] }); } catch { drifted = true; }
+  if (drifted) pass('parseIbmResponse throws when hits.hits[] is missing');
+  else fail('parseIbmResponse should throw on unexpected API response shape');
+
+  // fetch() — paginates until a short page, via mock ctx
+  let calls = 0;
+  const mockCtx = {
+    fetchJson: async (url, opts) => {
+      calls++;
+      if (url !== 'https://www-api.ibm.com/search/api/v2') throw new Error(`unexpected url ${url}`);
+      if (opts?.method !== 'POST') throw new Error('Expected POST');
+      // Page 1: a full page (30 hits) → keep paging; page 2: short page → stop.
+      const n = calls === 1 ? 30 : 2;
+      const hits = Array.from({ length: n }, (_, i) => ({
+        _source: { title: `Role ${calls}-${i}`, url: `https://ibm.com/careers/${calls}-${i}` },
+      }));
+      return { hits: { hits } };
+    },
+  };
+  const fetched = await ibm.fetch({ name: 'IBM', ibm: { country: 'Germany' } }, mockCtx);
+  if (calls === 2 && fetched.length === 32) pass('ibm.fetch() paginates and stops on the first short page');
+  else fail(`ibm.fetch() made ${calls} calls, returned ${fetched.length} jobs`);
+
+} catch (e) {
+  fail(`ibm provider tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

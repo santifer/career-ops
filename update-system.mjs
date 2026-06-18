@@ -16,7 +16,7 @@
  */
 
 import { execFile, execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync, lstatSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -76,6 +76,7 @@ const SYSTEM_PATHS = [
   'tracker-links.mjs',
   'tracker.mjs',
   'verify-pipeline.mjs',
+  'reconcile-pipeline.mjs',
   'dedup-tracker.mjs',
   'role-matcher.mjs',
   'normalize-statuses.mjs',
@@ -150,6 +151,18 @@ const SYSTEM_PATHS = [
   'DOCKER.md',
 ];
 
+const CANONICAL_SKILL_PATH = '.agents/skills/career-ops/SKILL.md';
+const SKILL_ENTRYPOINTS = [
+  {
+    path: '.claude/skills/career-ops/SKILL.md',
+    pointer: '../../../.agents/skills/career-ops/SKILL.md',
+  },
+  {
+    path: '.opencode/skills/career-ops/SKILL.md',
+    pointer: '../../../.agents/skills/career-ops/SKILL.md',
+  },
+];
+
 // User layer paths — NEVER touch these (safety check)
 const USER_PATHS = [
   'cv.md',
@@ -216,8 +229,12 @@ function newestBackupBranch(branches) {
   return timestamped[0]?.branch || branchList[0];
 }
 
+function gitIn(root, ...args) {
+  return execFileSync('git', args, { cwd: root, encoding: 'utf-8', timeout: 30000 }).trim();
+}
+
 function git(...args) {
-  return execFileSync('git', args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
+  return gitIn(ROOT, ...args);
 }
 
 function gitStatusEntries() {
@@ -249,6 +266,63 @@ function mergePathLists(...lists) {
     }
   }
   return merged;
+}
+
+function repoPath(root, path) {
+  return join(root, ...path.split('/'));
+}
+
+export function materializeSkillEntrypoints(root = ROOT) {
+  const canonicalPath = repoPath(root, CANONICAL_SKILL_PATH);
+  if (!existsSync(canonicalPath)) return [];
+
+  let canonicalContent = '';
+  try {
+    canonicalContent = readFileSync(canonicalPath, 'utf-8');
+  } catch {
+    return [];
+  }
+  const materialized = [];
+
+  for (const entry of SKILL_ENTRYPOINTS) {
+    const entryPath = repoPath(root, entry.path);
+    if (!existsSync(entryPath)) continue;
+
+    let stat = null;
+    try {
+      stat = lstatSync(entryPath);
+    } catch {
+      continue;
+    }
+    if (stat.isSymbolicLink()) continue;
+    if (!stat.isFile()) continue;
+
+    try {
+      const content = readFileSync(entryPath, 'utf-8').trim();
+      if (content !== entry.pointer) continue;
+      writeFileSync(entryPath, canonicalContent);
+    } catch {
+      continue;
+    }
+    materialized.push(entry.path);
+  }
+
+  return materialized;
+}
+
+export function prepareMaterializedSkillEntrypointsForStage(paths, root = ROOT) {
+  const prepared = [];
+  for (const path of paths) {
+    const entry = gitIn(root, 'ls-files', '-s', '--', path);
+    if (!entry) continue;
+
+    const mode = entry.split(/\s+/, 1)[0];
+    if (mode === '120000') {
+      gitIn(root, 'rm', '--cached', '-f', '--', path);
+    }
+    prepared.push(path);
+  }
+  return prepared;
 }
 
 function revertPaths(paths) {
@@ -466,6 +540,14 @@ async function apply() {
       }
     }
 
+    const materializedSkillEntrypoints = materializeSkillEntrypoints();
+    if (materializedSkillEntrypoints.length > 0) {
+      for (const path of materializedSkillEntrypoints) {
+        if (!updated.includes(path)) updated.push(path);
+      }
+      console.log(`Materialized ${materializedSkillEntrypoints.length} skill entrypoint(s) for filesystems without symlink support`);
+    }
+
     // 4. Validate: check NO user files were touched.
     //
     // Track which user paths the update unexpectedly touched so we
@@ -555,6 +637,7 @@ async function apply() {
         unlinkSync(dismissFile);
         pathsToStage.push('.update-dismissed');
       }
+      prepareMaterializedSkillEntrypointsForStage(materializedSkillEntrypoints);
       addPaths(pathsToStage);
       git('commit', '-m', `chore: auto-update system files to v${remote}`);
     } catch {
