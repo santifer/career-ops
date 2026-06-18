@@ -48,7 +48,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-audit --no-fund
         # Playwright browsers are NOT installed — the cron uses only the
         # zero-token API/HTTP path (Greenhouse/Lever/Ashby). No --production
         # flag so jose and js-yaml are available.
