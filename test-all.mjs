@@ -1165,6 +1165,36 @@ try {
     fail('parseDate validation wrong');
   }
 
+  // parseAppliedDate — extracts the real submission date from notes (the
+  // tracker `date` column is the evaluation date), case-insensitive.
+  if (cadence.parseAppliedDate('Applied 2026-06-09 via Personio; raised part-time') === '2026-06-09') {
+    pass('parseAppliedDate extracts "Applied YYYY-MM-DD" from notes');
+  } else {
+    fail(`parseAppliedDate got ${JSON.stringify(cadence.parseAppliedDate('Applied 2026-06-09 via Personio; raised part-time'))}`);
+  }
+  if (cadence.parseAppliedDate('APPLIED 2026-06-17 (German CV; jobId=104170)') === '2026-06-17') {
+    pass('parseAppliedDate is case-insensitive (APPLIED)');
+  } else {
+    fail('parseAppliedDate should match uppercase APPLIED');
+  }
+  // First "Applied" date wins even when a later status date follows.
+  if (cadence.parseAppliedDate('Applied 2026-06-09. No response; discarded 2026-06-18.') === '2026-06-09') {
+    pass('parseAppliedDate takes the first applied date, not a later status date');
+  } else {
+    fail('parseAppliedDate should take the first applied date');
+  }
+  if (cadence.parseAppliedDate('On-archetype fit; no submission yet') === null && cadence.parseAppliedDate('') === null) {
+    pass('parseAppliedDate returns null when notes carry no applied date');
+  } else {
+    fail('parseAppliedDate should return null without an applied date');
+  }
+  // "reapplied" must not be mistaken for an applied date (word boundary).
+  if (cadence.parseAppliedDate('reapplied 2026-06-09 after rejection') === null) {
+    pass('parseAppliedDate does not match inside "reapplied"');
+  } else {
+    fail('parseAppliedDate should not match the date inside "reapplied"');
+  }
+
   // Status normalization (strips bold + trailing date, lowercases, maps aliases)
   if (cadence.normalizeStatus('**Applied** 2026-05-01') === 'applied') {
     pass('normalizeStatus strips bold + trailing date and lowercases');
