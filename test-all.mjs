@@ -1160,22 +1160,25 @@ try {
   }
 
   const hostileOffer = {
-    url: 'https://jobs.example.com/123',
+    url: 'https://jobs.example.com/123|evil',
     source: 'local-parser',
     title: 'Senior Engineer | Growth\n- [ ] https://evil.example/job | EvilCorp | Injected',
-    company: 'ACME\\Corp\t| R&D',
-    location: 'Remote\nEU',
+    company: '=ACME\\Corp\t| R&D',
+    location: '@Remote\nEU',
   };
   const pipelineRow = formatPipelineOffer(hostileOffer);
   const pendingLines = pipelineRow.split('\n').filter(line => /^\s*- \[ \] https?:\/\//.test(line));
   if (
     pendingLines.length === 1 &&
+    pipelineRow.split('|').length === 3 &&
     !pipelineRow.includes('\n') &&
     !pipelineRow.includes('\t') &&
-    pipelineRow.includes('ACME\\\\Corp \\| R&D') &&
-    pipelineRow.includes('- \\[ \\] https://evil.example/job')
+    !pipelineRow.includes('\\|') &&
+    pipelineRow.includes('https://jobs.example.com/123%7Cevil') &&
+    pipelineRow.includes('=ACME\\\\Corp / R&D') &&
+    pipelineRow.includes('- \\[ \\] https://evil.example/job / EvilCorp / Injected')
   ) {
-    pass('scan pipeline writer sanitizes external metadata without creating injected checkboxes');
+    pass('scan pipeline writer preserves row shape without injected checkboxes or extra pipes');
   } else {
     fail(`scan pipeline metadata sanitizer produced unsafe row: ${pipelineRow}`);
   }
@@ -1186,10 +1189,10 @@ try {
     historyColumns.length === 7 &&
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
-    historyColumns[4] === 'ACME\\Corp | R&D' &&
-    historyColumns[6] === 'Remote EU'
+    historyColumns[4] === "'=ACME\\Corp | R&D" &&
+    historyColumns[6] === "'@Remote EU"
   ) {
-    pass('scan-history writer preserves row shape when metadata contains TSV control chars');
+    pass('scan-history writer preserves row shape and neutralizes spreadsheet formulas');
   } else {
     fail(`scan-history metadata sanitizer produced unsafe TSV row: ${JSON.stringify(historyColumns)}`);
   }

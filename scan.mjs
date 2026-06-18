@@ -450,19 +450,27 @@ const MARKDOWN_ESCAPE_CHARS = {
   '\\': '\\\\',
   '[': '\\[',
   ']': '\\]',
-  '|': '\\|',
 };
 
 export function sanitizeMarkdownField(value) {
-  return normalizeScanScalar(value).replace(/[\\[\]|]/g, char => MARKDOWN_ESCAPE_CHARS[char]);
+  return normalizeScanScalar(value)
+    .replace(/[\\[\]]/g, char => MARKDOWN_ESCAPE_CHARS[char])
+    .replace(/\|/g, '/');
+}
+
+function sanitizePipelineUrl(value) {
+  return normalizeScanScalar(value)
+    .replace(/[\\[\]]/g, char => MARKDOWN_ESCAPE_CHARS[char])
+    .replace(/\|/g, '%7C');
 }
 
 export function sanitizeTsvField(value) {
-  return normalizeScanScalar(value);
+  const normalized = normalizeScanScalar(value);
+  return /^[=+\-@]/.test(normalized) ? `'${normalized}` : normalized;
 }
 
 export function formatPipelineOffer(offer) {
-  const url = normalizeScanScalar(offer.url);
+  const url = sanitizePipelineUrl(offer.url);
   const company = sanitizeMarkdownField(offer.company);
   const title = sanitizeMarkdownField(offer.title);
   return `- [ ] ${url} | ${company} | ${title}`;
