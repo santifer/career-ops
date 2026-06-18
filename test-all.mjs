@@ -694,6 +694,82 @@ if (
   fail('portals example still points at a bundled Cohere parser');
 }
 
+// Security hardening: command allowlist, in-repo script containment, careers_url/company validation.
+try {
+  const localParser = (await import(pathToFileURL(join(ROOT, 'providers/local-parser.mjs')).href)).default;
+
+  if (localParser.detect({ name: 'X', careers_url: 'https://x.co', parser: { command: 'rm' } }) === null) {
+    pass('local-parser rejects a non-interpreter command (e.g. rm)');
+  } else {
+    fail('local-parser should reject a command that is not a whitelisted interpreter or in-repo script');
+  }
+
+  if (localParser.detect({ name: 'X', careers_url: 'https://x.co', parser: { command: 'python3', script: '/etc/passwd' } }) === null) {
+    pass('local-parser rejects a script outside the project root');
+  } else {
+    fail('local-parser should reject a script path that escapes the project root');
+  }
+
+  const okEntry = localParser.detect({
+    name: 'X', careers_url: 'https://x.co',
+    parser: { command: 'node', script: 'scan.mjs' },
+  });
+  if (okEntry && okEntry.url) pass('local-parser accepts a whitelisted interpreter + an in-repo script');
+  else fail('local-parser should accept a whitelisted interpreter with an in-repo script');
+
+  let rejectedUrl = false;
+  try {
+    await localParser.fetch({ name: 'X', careers_url: '--oops', parser: { command: 'python3', args: ['--url', '{careers_url}'] } });
+  } catch (e) {
+    rejectedUrl = /careers_url/.test(e.message);
+  }
+  if (rejectedUrl) pass('local-parser rejects a non-URL careers_url before spawning (argument injection guard)');
+  else fail('local-parser should reject a careers_url that is not http(s)');
+
+  let rejectedCompany = false;
+  try {
+    await localParser.fetch({ name: '--rf', careers_url: 'https://x.co', parser: { command: 'python3', args: ['--company', '{company}'] } });
+  } catch (e) {
+    rejectedCompany = /company/.test(e.message);
+  }
+  if (rejectedCompany) pass('local-parser rejects a company name that could be read as a flag');
+  else fail('local-parser should reject an unsafe company name');
+
+  if (localParser.detect({ name: 'X', careers_url: 'https://x.co', parser: { command: 'node', args: ['-e', 'process.exit(0)'] } }) === null) {
+    pass('local-parser rejects inline interpreter code (node -e ...)');
+  } else {
+    fail('local-parser should reject inline-code flags (-e/-c/--eval)');
+  }
+
+  if (localParser.detect({ name: 'X', careers_url: 'https://x.co', parser: { command: 'node', args: ['--eval=globalThis.x=1', 'scan.mjs'] } }) === null) {
+    pass('local-parser rejects interpreter options before the script (node --eval=… script)');
+  } else {
+    fail('local-parser should reject interpreter options preceding the parser script');
+  }
+
+  if (localParser.detect({ name: 'Yahoo!', careers_url: 'https://x.co', parser: { command: 'node', script: 'scan.mjs' } })?.url) {
+    pass('local-parser accepts a company name with punctuation when {company} is unused');
+  } else {
+    fail('local-parser should not reject a fixed-script entry over an unused company placeholder');
+  }
+} catch (e) {
+  fail(`local-parser hardening tests crashed: ${e.message}`);
+}
+
+// Reverse-scan SSRF guard: a constructed careers_url must resolve to the ATS's own host.
+try {
+  const { entryOnHost } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const canonical = entryOnHost('acme', 'https://jobs.lever.co/acme', (h) => h === 'jobs.lever.co');
+  const offHost = entryOnHost('acme', 'https://evil.example.com/acme', (h) => h === 'jobs.lever.co');
+  if (canonical && canonical.careers_url === 'https://jobs.lever.co/acme' && offHost === null) {
+    pass('scan-ats-full entryOnHost keeps canonical ATS hosts and drops others (SSRF guard)');
+  } else {
+    fail('scan-ats-full entryOnHost should keep canonical hosts and drop non-canonical ones');
+  }
+} catch (e) {
+  fail(`scan-ats-full host-guard test crashed: ${e.message}`);
+}
+
 // ── 10. PORTALS CONFIG VALIDATOR ────────────────────────────────
 
 console.log('\n10. Portals config validator');
