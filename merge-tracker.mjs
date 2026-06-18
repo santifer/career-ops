@@ -687,10 +687,15 @@ for (const file of tsvFiles) {
   let duplicate = null;
 
   if (reportNum) {
-    // Check if this report number already exists
+    // Report-number match must also confirm company (#912). Report-file
+    // sequence and tracker-row sequence are independent, so the same number
+    // appearing for two different companies is sequence drift, not a duplicate.
+    // Without the company guard, a NewCo TSV with report [1] silently overwrites
+    // the existing tracker row [1] belonging to an unrelated company.
+    const normCompany = normalizeCompany(addition.company);
     duplicate = existingApps.find(app => {
       const existingReportNum = extractReportNum(app.report);
-      return existingReportNum === reportNum;
+      return existingReportNum === reportNum && normalizeCompany(app.company) === normCompany;
     });
   }
 
