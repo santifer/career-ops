@@ -1018,7 +1018,13 @@ if (fileExists('VERSION')) {
 console.log('\n15. Location filter — always_allow tier');
 
 try {
-  const { buildLocationFilter, buildContentFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const {
+    buildLocationFilter,
+    buildContentFilter,
+    shouldDedupScanHistoryRow,
+    formatPipelineOffer,
+    formatScanHistoryRow,
+  } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
@@ -1151,6 +1157,41 @@ try {
     pass('scan-history TTL rechecks old added URLs while permanent statuses stay deduped');
   } else {
     fail('scan-history TTL policy did not match expected recheck/permanent behavior');
+  }
+
+  const hostileOffer = {
+    url: 'https://jobs.example.com/123',
+    source: 'local-parser',
+    title: 'Senior Engineer | Growth\n- [ ] https://evil.example/job | EvilCorp | Injected',
+    company: 'ACME\tCorp | R&D',
+    location: 'Remote\nEU',
+  };
+  const pipelineRow = formatPipelineOffer(hostileOffer);
+  const pendingLines = pipelineRow.split('\n').filter(line => /^\s*- \[ \] https?:\/\//.test(line));
+  if (
+    pendingLines.length === 1 &&
+    !pipelineRow.includes('\n') &&
+    !pipelineRow.includes('\t') &&
+    pipelineRow.includes('ACME Corp \\| R&D') &&
+    pipelineRow.includes('- \\[ \\] https://evil.example/job')
+  ) {
+    pass('scan pipeline writer sanitizes external metadata without creating injected checkboxes');
+  } else {
+    fail(`scan pipeline metadata sanitizer produced unsafe row: ${pipelineRow}`);
+  }
+
+  const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
+  const historyColumns = historyRow.split('\t');
+  if (
+    historyColumns.length === 7 &&
+    !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
+    historyColumns[3].includes('- [ ] https://evil.example/job') &&
+    historyColumns[4] === 'ACME Corp | R&D' &&
+    historyColumns[6] === 'Remote EU'
+  ) {
+    pass('scan-history writer preserves row shape when metadata contains TSV control chars');
+  } else {
+    fail(`scan-history metadata sanitizer produced unsafe TSV row: ${JSON.stringify(historyColumns)}`);
   }
 
   // ── content_filter (#734) ──

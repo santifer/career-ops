@@ -439,6 +439,40 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
+function normalizeScanScalar(value) {
+  return String(value ?? '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/ {2,}/g, ' ')
+    .trim();
+}
+
+export function sanitizeMarkdownField(value) {
+  return normalizeScanScalar(value).replace(/[|[\]]/g, '\\$&');
+}
+
+export function sanitizeTsvField(value) {
+  return normalizeScanScalar(value);
+}
+
+export function formatPipelineOffer(offer) {
+  const url = normalizeScanScalar(offer.url);
+  const company = sanitizeMarkdownField(offer.company);
+  const title = sanitizeMarkdownField(offer.title);
+  return `- [ ] ${url} | ${company} | ${title}`;
+}
+
+export function formatScanHistoryRow(offer, date, status = 'added') {
+  return [
+    offer.url,
+    date,
+    offer.source,
+    offer.title,
+    offer.company,
+    status,
+    offer.location || '',
+  ].map(sanitizeTsvField).join('\t');
+}
+
 export function appendToPipeline(offers) {
   if (offers.length === 0) return;
 
@@ -451,9 +485,7 @@ export function appendToPipeline(offers) {
     // No Pendientes section — append at end before Procesadas
     const procIdx = text.indexOf('## Procesadas');
     const insertAt = procIdx === -1 ? text.length : procIdx;
-    const block = `\n${marker}\n\n` + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n\n';
+    const block = `\n${marker}\n\n` + offers.map(formatPipelineOffer).join('\n') + '\n\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   } else {
     // Find the end of existing Pendientes content (next ## or end)
@@ -461,9 +493,7 @@ export function appendToPipeline(offers) {
     const nextSection = text.indexOf('\n## ', afterMarker);
     const insertAt = nextSection === -1 ? text.length : nextSection;
 
-    const block = '\n' + offers.map(o =>
-      `- [ ] ${o.url} | ${o.company} | ${o.title}`
-    ).join('\n') + '\n';
+    const block = '\n' + offers.map(formatPipelineOffer).join('\n') + '\n';
     text = text.slice(0, insertAt) + block + text.slice(insertAt);
   }
 
@@ -480,9 +510,7 @@ export function appendToScanHistory(offers, date, status = 'added') {
     writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\n', 'utf-8');
   }
 
-  const lines = offers.map(o =>
-    `${o.url}\t${date}\t${o.source}\t${o.title}\t${o.company}\t${status}\t${o.location || ''}`
-  ).join('\n') + '\n';
+  const lines = offers.map(o => formatScanHistoryRow(o, date, status)).join('\n') + '\n';
 
   appendFileSync(SCAN_HISTORY_PATH, lines, 'utf-8');
 }
