@@ -289,10 +289,13 @@ export function materializeSkillEntrypoints(root = ROOT) {
     }
     if (stat.isSymbolicLink()) continue;
 
-    const content = readFileSync(entryPath, 'utf-8').trim();
-    if (content !== entry.pointer) continue;
-
-    writeFileSync(entryPath, canonicalContent);
+    try {
+      const content = readFileSync(entryPath, 'utf-8').trim();
+      if (content !== entry.pointer) continue;
+      writeFileSync(entryPath, canonicalContent);
+    } catch {
+      continue;
+    }
     materialized.push(entry.path);
   }
 
