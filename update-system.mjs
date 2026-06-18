@@ -105,6 +105,7 @@ const SYSTEM_PATHS = [
   'scan.mjs',
   'scan-ats-full.mjs',
   'match-star.mjs',
+  'fetch-jd.mjs',
   'providers/',
   'doctor.mjs',
   'check-liveness.mjs',

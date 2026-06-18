@@ -18,6 +18,8 @@
  * back. Mirrors the API conventions in providers/ and modes/scan.md.
  */
 
+import { fileURLToPath } from 'node:url';
+
 const UA = 'career-ops-fetch-jd/1.0';
 const MIN_USEFUL = 200; // chars; below this we treat as a miss and fall back
 
@@ -27,14 +29,14 @@ const ENTITIES = {
   '&rsquo;': "'", '&lsquo;': "'", '&ldquo;': '"', '&rdquo;': '"', '&hellip;': '...',
 };
 
-function decodeEntities(s) {
+export function decodeEntities(s) {
   return s
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&[a-z]+;|&#x?\d*;/gi, m => ENTITIES[m.toLowerCase()] ?? m);
 }
 
-function htmlToText(html) {
+export function htmlToText(html) {
   if (!html) return '';
   // Decode entities FIRST (Greenhouse `content` is entity-encoded HTML, e.g.
   // &lt;div&gt;), THEN strip tags — otherwise encoded tags survive as text.
@@ -133,6 +135,18 @@ async function workday(url) {
 
 const PROVIDERS = [greenhouse, ashby, lever, workday];
 
+// Classify a job URL by ATS provider without fetching (host-based). Returns the
+// provider id, or null when no provider handles the host (caller falls back to
+// WebFetch). Exported for tests.
+export function detectProvider(url) {
+  const u = String(url || '');
+  if (/greenhouse\.io\//.test(u)) return 'greenhouse';
+  if (/jobs\.ashbyhq\.com\//.test(u)) return 'ashby';
+  if (/lever\.co\//.test(u)) return 'lever';
+  if (/\.myworkdayjobs\.com\//.test(u)) return 'workday';
+  return null;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const json = args.includes('--json');
@@ -157,4 +171,7 @@ async function main() {
   }
 }
 
-main().catch(err => { process.stderr.write(`fetch-jd error: ${err.message}\n`); process.exit(1); });
+// Only run the CLI when invoked directly, so the module can be imported by tests.
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  main().catch(err => { process.stderr.write(`fetch-jd error: ${err.message}\n`); process.exit(1); });
+}
