@@ -29,8 +29,9 @@ Find every role in `data/apply-queue.json` with `"status": "new"`. For each:
 
 ### Step 1 — Read the JD
 
-Read the file at `jd_path`. If the file is missing or empty, note it in the
-reason and set `confidence: "low"`.
+Use `role.jd_text` if present and non-empty (roles discovered by the cron carry
+the full JD text directly). Otherwise read the file at `jd_path`. If neither is
+available, note it in the reason and set `confidence: "low"`.
 
 ### Step 2 — Determine employment type (do this while reading the JD)
 
@@ -88,7 +89,7 @@ Populate `flags[]` with any active signals:
 | `pr-citizenship-required` | eligibility == "blocked" |
 | `low-confidence` | `confidence == "low"` |
 | `custom-form-fields` | any `free_text_fields` entry has `kind: "custom"` |
-| `no-jd` | JD file missing or empty |
+| `no-jd` | `jd_text` is absent/empty AND `jd_path` file is missing or empty |
 
 ### Step 6 — Update the record
 
@@ -157,7 +158,7 @@ few fields that survive to Layer 3.
 
 2. **Layer 3 — answer the novel fields, then teach the cache.** For each item in
    the `novel` list, write an answer grounded in `config/profile.yml`, `cv.md`,
-   and the JD at `jd_path` (use `article-digest.md` if present; never invent).
+   and the JD (`role.jd_text` if present and non-empty, else `jd_path`; use `article-digest.md` if present; never invent).
    For each, decide whether the answer is **employer-independent** (safe to
    reuse → `reusable: true`) or company/role-specific (`reusable: false`), and
    note any key `entities` it is tied to. Then store + teach in one call:
@@ -180,7 +181,7 @@ experience") are usually employer-independent → `reusable: true`.
 Run the existing PDF generation pipeline:
 
 1. Read cv.md + article-digest.md.
-2. Extract keywords from the JD at `jd_path`.
+2. Extract keywords from the JD: use `role.jd_text` if present and non-empty, otherwise read `jd_path`.
 3. Tailor and rewrite as per `modes/pdf.md` (keyword injection, summary rewrite,
    project reorder — never invent experience).
 4. Generate: `node generate-pdf.mjs /tmp/cv-{candidate}-{company-slug}.html output/cv-{candidate}-{company-slug}-{date}.pdf`

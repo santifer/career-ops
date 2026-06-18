@@ -446,11 +446,12 @@ export function buildQueueSeenSets(queue) {
   return { ids, urls, companyRoles };
 }
 
-export function loadQueueSeenSets(queue = loadQueue()) {
+export function loadQueueSeenSets(queue = loadQueue(), { role = 'dashboard' } = {}) {
   const sets = buildQueueSeenSets(queue);
-  if (!isSupabaseConfigured('dashboard')) return sets;
+  if (!isSupabaseConfigured(role)) return sets;
 
-  const client = createSupabaseClient('dashboard');
+  const client = createSupabaseClient(role);
+  const { ids, urls, companyRoles } = sets;
   const add = (row) => {
     if (row.id) ids.add(row.id);
     if (row.url) urls.add(row.url);
@@ -458,7 +459,6 @@ export function loadQueueSeenSets(queue = loadQueue()) {
       companyRoles.add(`${row.company.toLowerCase()}::${row.title.toLowerCase()}`);
     }
   };
-  const { ids, urls, companyRoles } = sets;
 
   for (const row of client.selectSync('active_roles', { select: 'id,url,company,title' }) ?? []) {
     add(row);
@@ -467,6 +467,45 @@ export function loadQueueSeenSets(queue = loadQueue()) {
     add(row);
   }
   return sets;
+}
+
+/**
+ * Insert status='new' stubs via the cron credential (RLS-bounded direct REST).
+ * Does NOT call save_queue, does NOT write sidecar or shadow JSON.
+ * The cron role has no UPDATE grant and no execute on save_queue.
+ *
+ * @param {object[]} stubs — array of role objects (built by queue-ingest --cron)
+ * @returns {{ inserted: number, skipped: number }}
+ */
+export async function insertNewStubsCron(stubs) {
+  const client = createSupabaseClient('cron');
+  const rows = [];
+  let skipped = 0;
+
+  for (const stub of stubs) {
+    const { cloud } = splitRoleForPersistence(stub);
+    // Hard-guard: defence in depth above RLS — only insert status='new'
+    if (cloud.status !== 'new') {
+      console.warn(`insertNewStubsCron: skipping stub with status='${cloud.status}' (${cloud.url})`);
+      skipped++;
+      continue;
+    }
+    rows.push(cloud);
+  }
+
+  if (rows.length === 0) return { attempted: 0, inserted: 0, skipped };
+
+  // ON CONFLICT (url) DO NOTHING via PostgREST resolution header.
+  // return=representation gives back only the rows actually inserted (duplicates
+  // are dropped silently), so resp.length is a true inserted count.
+  const resp = client.requestSync('POST', 'active_roles', {
+    query: { on_conflict: 'url' },
+    body: rows,
+    headers: { Prefer: 'resolution=ignore-duplicates,return=representation' },
+  });
+  const inserted = Array.isArray(resp) ? resp.length : 0;
+
+  return { attempted: rows.length, inserted, skipped };
 }
 
 // -- Lane stats helper (used by server + SPA) --------------------------------

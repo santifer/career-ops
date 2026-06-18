@@ -755,6 +755,219 @@ try {
   fail(`Supabase queue store contract checks crashed: ${e.message}`);
 }
 
+// ── 15. API-CRON CONTRACT ────────────────────────────────────────
+
+console.log('\n15. API-cron contract');
+
+// 15a. mint-cron-jwt.mjs: importable export + CLI guard
+try {
+  const mintMod = await import(pathToFileURL(join(ROOT, 'mint-cron-jwt.mjs')).href);
+  if (typeof mintMod.mintCronJwt === 'function') {
+    pass('mint-cron-jwt.mjs exports mintCronJwt function');
+  } else {
+    fail('mint-cron-jwt.mjs does not export mintCronJwt');
+  }
+
+  // Verify the CLI guard is present (import.meta.url check)
+  const mintSrc = readFile('mint-cron-jwt.mjs');
+  if (mintSrc.includes('import.meta.url') && mintSrc.includes('process.argv[1]')) {
+    pass('mint-cron-jwt.mjs has import.meta.url CLI guard');
+  } else {
+    fail('mint-cron-jwt.mjs missing import.meta.url CLI guard — importing it will run the CLI');
+  }
+
+  // Verify env-key source is present
+  if (mintSrc.includes('CAREER_OPS_SIGNING_KEY')) {
+    pass('mint-cron-jwt.mjs supports CAREER_OPS_SIGNING_KEY env-key source');
+  } else {
+    fail('mint-cron-jwt.mjs missing CAREER_OPS_SIGNING_KEY env-key source');
+  }
+
+  // Verify --exp-seconds flag is present
+  if (mintSrc.includes('--exp-seconds')) {
+    pass('mint-cron-jwt.mjs supports --exp-seconds flag');
+  } else {
+    fail('mint-cron-jwt.mjs missing --exp-seconds flag');
+  }
+} catch (e) {
+  fail(`mint-cron-jwt.mjs import or source checks crashed: ${e.message}`);
+}
+
+// 15b. queue-store.mjs: insertNewStubsCron export + loadQueueSeenSets role param
+try {
+  const qsMod = await import(pathToFileURL(join(ROOT, 'queue-store.mjs')).href);
+  if (typeof qsMod.insertNewStubsCron === 'function') {
+    pass('queue-store.mjs exports insertNewStubsCron');
+  } else {
+    fail('queue-store.mjs missing insertNewStubsCron export');
+  }
+
+  // Check loadQueueSeenSets signature accepts a role option
+  const qsSrc = readFile('queue-store.mjs');
+  if (qsSrc.includes("role = 'dashboard'") && qsSrc.includes('loadQueueSeenSets')) {
+    pass('loadQueueSeenSets accepts { role } option with dashboard default');
+  } else {
+    fail('loadQueueSeenSets does not accept { role } option');
+  }
+
+  // Check insertNewStubsCron has the status guard
+  if (qsSrc.includes("cloud.status !== 'new'")) {
+    pass('insertNewStubsCron has hard status guard (only inserts status=new)');
+  } else {
+    fail('insertNewStubsCron missing status guard');
+  }
+
+  // Check it uses resolution=ignore-duplicates (ON CONFLICT DO NOTHING)
+  if (qsSrc.includes('resolution=ignore-duplicates')) {
+    pass('insertNewStubsCron uses resolution=ignore-duplicates (idempotent insert)');
+  } else {
+    fail('insertNewStubsCron missing resolution=ignore-duplicates header');
+  }
+
+  // Check it uses return=representation (true inserted count, not overstating)
+  if (qsSrc.includes('return=representation')) {
+    pass('insertNewStubsCron uses return=representation (accurate inserted count)');
+  } else {
+    fail('insertNewStubsCron missing return=representation — inserted count will overstate duplicates');
+  }
+
+  // Check it returns attempted (not just inserted)
+  if (qsSrc.includes("attempted: rows.length")) {
+    pass('insertNewStubsCron returns attempted count (distinct from inserted)');
+  } else {
+    fail('insertNewStubsCron missing attempted field — caller cannot tell dedup rate');
+  }
+
+  // Check it does NOT call save_queue
+  const insertFnMatch = qsSrc.match(/export async function insertNewStubsCron[\s\S]+?^}/m);
+  if (insertFnMatch && !insertFnMatch[0].includes('save_queue')) {
+    pass('insertNewStubsCron does not call save_queue');
+  } else {
+    fail('insertNewStubsCron must not call save_queue (cron has no execute grant on it)');
+  }
+} catch (e) {
+  fail(`queue-store.mjs cron checks crashed: ${e.message}`);
+}
+
+// 15c. queue-ingest.mjs: --cron and --api-only flags present
+try {
+  const qiSrc = readFile('queue-ingest.mjs');
+  if (qiSrc.includes('--cron') && qiSrc.includes('CRON_MODE')) {
+    pass('queue-ingest.mjs has --cron flag');
+  } else {
+    fail('queue-ingest.mjs missing --cron flag');
+  }
+  if (qiSrc.includes('--api-only') && qiSrc.includes('API_ONLY')) {
+    pass('queue-ingest.mjs has --api-only flag');
+  } else {
+    fail('queue-ingest.mjs missing --api-only flag');
+  }
+  if (qiSrc.includes("atsInfo.ats === 'custom'") && qiSrc.includes('API_ONLY')) {
+    pass('queue-ingest.mjs skips custom ATS when --api-only is set');
+  } else {
+    fail('queue-ingest.mjs missing custom-ATS skip for --api-only');
+  }
+  if (qiSrc.includes('insertNewStubsCron')) {
+    pass('queue-ingest.mjs calls insertNewStubsCron in cron mode');
+  } else {
+    fail('queue-ingest.mjs missing insertNewStubsCron call');
+  }
+
+  // Cron stub must carry jd_text (durable) and null jd_path (ephemeral runner)
+  if (qiSrc.includes('jd_text: jdData.description') && qiSrc.includes('jd_path: null')) {
+    pass('queue-ingest.mjs cron stub sets jd_text and nulls jd_path');
+  } else {
+    fail('queue-ingest.mjs cron stub missing jd_text or still sets jd_path — scoring will fail after load from Supabase');
+  }
+
+  // Local write must be guarded (CRON_MODE skips the ephemeral jds/ write)
+  if (qiSrc.includes('!CRON_MODE') && qiSrc.includes('writeFileSync')) {
+    pass('queue-ingest.mjs guards local jds/ write with !CRON_MODE');
+  } else {
+    fail('queue-ingest.mjs missing CRON_MODE guard on writeFileSync — cron wastes I/O writing ephemeral files');
+  }
+} catch (e) {
+  fail(`queue-ingest.mjs cron checks crashed: ${e.message}`);
+}
+
+// 15e. modes/queue.md: jd_text fallback for scoring and prepare phases
+try {
+  const queueModeSrc = readFile('modes/queue.md');
+  if (queueModeSrc.includes('jd_text') && queueModeSrc.includes('jd_path')) {
+    pass('modes/queue.md references jd_text as fallback alongside jd_path');
+  } else {
+    fail('modes/queue.md missing jd_text fallback — cron-discovered roles will score with low-confidence (no local JD file)');
+  }
+} catch (e) {
+  fail(`modes/queue.md jd_text check crashed: ${e.message}`);
+}
+
+// 15d. api-cron.yml: workflow file exists and has required structure
+try {
+  const wfPath = '.github/workflows/api-cron.yml';
+  if (fileExists(wfPath)) {
+    const wf = readFile(wfPath);
+    if (wf.includes("cron: '0 19 * * *'")) pass('api-cron.yml has once-daily schedule');
+    else fail('api-cron.yml missing or wrong schedule');
+
+    if (wf.includes('environment: cron')) pass('api-cron.yml uses cron environment (secret scoping)');
+    else fail('api-cron.yml missing environment: cron');
+
+    if (wf.includes('SUPABASE_CRON_SIGNING_KEY') && wf.includes('CAREER_OPS_SIGNING_KEY')) {
+      pass('api-cron.yml mints JWT from signing key env var');
+    } else {
+      fail('api-cron.yml missing signing key → mint step');
+    }
+
+    if (wf.includes('::add-mask::')) pass('api-cron.yml masks the minted JWT');
+    else fail('api-cron.yml missing ::add-mask:: for minted JWT');
+
+    if (wf.includes('--cron') && wf.includes('--api-only')) {
+      pass('api-cron.yml runs queue-ingest with --cron --api-only');
+    } else {
+      fail('api-cron.yml missing --cron --api-only flags on queue-ingest');
+    }
+
+    if (!wf.includes("echo '${{") && !wf.includes('echo "${{')) {
+      pass('api-cron.yml does not echo secrets inline (no injection risk)');
+    } else {
+      fail('api-cron.yml echoes secrets inline — injection risk');
+    }
+
+    // Hardening: least-privilege permissions block
+    if (wf.includes('permissions:') && wf.includes('contents: read')) {
+      pass('api-cron.yml has least-privilege permissions: contents: read');
+    } else {
+      fail('api-cron.yml missing permissions block — defaults to write-all on public repo');
+    }
+
+    // Hardening: persist-credentials: false (workflow never pushes)
+    if (wf.includes('persist-credentials: false')) {
+      pass('api-cron.yml sets persist-credentials: false on checkout');
+    } else {
+      fail('api-cron.yml missing persist-credentials: false — token unnecessarily persisted');
+    }
+
+    // Hardening: actions are SHA-pinned (not mutable tags)
+    if (wf.includes('actions/checkout@') && /checkout@[0-9a-f]{40}/.test(wf)) {
+      pass('api-cron.yml SHA-pins actions/checkout');
+    } else {
+      fail('api-cron.yml actions/checkout uses mutable tag — SHA-pin required on signing-key workflow');
+    }
+
+    // Hardening: --ignore-scripts on npm install
+    if (wf.includes('--ignore-scripts')) {
+      pass('api-cron.yml uses npm install --ignore-scripts');
+    } else {
+      fail('api-cron.yml missing --ignore-scripts on npm install — postinstall scripts can run during dep install');
+    }
+  } else {
+    fail('api-cron.yml workflow file missing');
+  }
+} catch (e) {
+  fail(`api-cron.yml checks crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

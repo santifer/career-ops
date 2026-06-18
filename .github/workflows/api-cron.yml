@@ -1,0 +1,97 @@
+name: API Discovery Cron
+
+# Once-daily ATS portal scan (Greenhouse/Lever/Ashby API path only — zero LLM tokens).
+# Discovers new roles and inserts status='new' stubs into Supabase via the
+# RLS-bounded career_ops_cron credential. No websearch, no Playwright, no push.
+#
+# Security notes:
+# - SUPABASE_CRON_SIGNING_KEY lives in the 'cron' GitHub Environment, which is
+#   restricted to the default branch (main). Non-main branches cannot read it.
+# - The signing key is never written to disk; mint-cron-jwt.mjs reads it from
+#   the CAREER_OPS_SIGNING_KEY env var and prints only the JWT to stdout.
+# - The minted JWT exists for 10 minutes and is masked with ::add-mask:: so it
+#   never appears in logs. GitHub auto-masks the registered secrets.
+# - portals.yml is reconstructed from a secret via printf (never echoed).
+# - Nothing is committed or pushed; the runner is ephemeral.
+# - actions/* are SHA-pinned (see steps below) to prevent supply-chain attacks
+#   on this signing-key-bearing workflow. npm install uses --ignore-scripts.
+# - Note: committing package-lock.json + npm ci would add dep-version pinning;
+#   deferred as a repo-wide convention change.
+#
+on:
+  schedule:
+    # 19:00 UTC = 05:00 AEST (next-day) — scans fresh roles overnight
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+    # Manual trigger for testing. Note: if SUPABASE_CRON_SIGNING_KEY is
+    # scoped to the 'cron' environment with a default-branch-only policy,
+    # workflow_dispatch from a feature branch will fail on the mint step.
+    # Options: (a) run after merge to main, or (b) temporarily add the
+    # feature branch to the cron environment's branch policy during dev.
+
+permissions:
+  contents: read  # checkout only; nothing is committed or pushed
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    environment: cron
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+        with:
+          persist-credentials: false  # workflow never pushes
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+        # Playwright browsers are NOT installed — the cron uses only the
+        # zero-token API/HTTP path (Greenhouse/Lever/Ashby). No --production
+        # flag so jose and js-yaml are available.
+
+      - name: Reconstruct portals.yml
+        # portals.yml is gitignored; reconstruct from the secret.
+        # printf prevents a trailing newline that some editors add; never
+        # use echo here (would reveal contents on --xtrace).
+        env:
+          PORTALS_YML: ${{ secrets.PORTALS_YML }}
+        run: printf '%s' "$PORTALS_YML" > portals.yml
+
+      - name: Seed data/pipeline.md
+        # scan.mjs reads pipeline.md via readFileSync (no existence guard).
+        # Create a minimal file so appendToPipeline doesn't throw ENOENT.
+        run: |
+          mkdir -p data
+          if [ ! -f data/pipeline.md ]; then
+            printf '## Pendientes\n\n## Procesadas\n' > data/pipeline.md
+          fi
+
+      - name: Mint short-lived cron JWT
+        # The signing key stays in memory (env var) — never written to disk.
+        # The minted JWT is masked so it never appears in logs.
+        env:
+          CAREER_OPS_SIGNING_KEY: ${{ secrets.SUPABASE_CRON_SIGNING_KEY }}
+        run: |
+          JWT="$(node mint-cron-jwt.mjs --exp-seconds 600)"
+          echo "::add-mask::$JWT"
+          echo "SUPABASE_CRON_JWT=$JWT" >> "$GITHUB_ENV"
+
+      - name: Scan portals (API path)
+        # Zero-token ATS scan: Greenhouse/Lever/Ashby APIs only.
+        # Writes new URLs to data/pipeline.md and data/scan-history.tsv
+        # on the ephemeral runner (gitignored, never committed).
+        run: node scan.mjs
+
+      - name: Ingest new stubs to Supabase
+        # --cron: uses cron credential (SUPABASE_CRON_JWT from previous step)
+        # --api-only: skips custom/websearch ATS entries
+        # RLS enforces status='new' on insert; no save_queue RPC called.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_CRON_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_CRON_PUBLISHABLE_KEY }}
+          # SUPABASE_CRON_JWT is already in GITHUB_ENV from the mint step
+        run: node queue-ingest.mjs --cron --api-only
