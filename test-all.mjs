@@ -1168,14 +1168,14 @@ try {
   };
   const pipelineRow = formatPipelineOffer(hostileOffer);
   const pendingLines = pipelineRow.split('\n').filter(line => /^\s*- \[ \] https?:\/\//.test(line));
+  const pipelineFields = pipelineRow.split('|').map(part => part.trim());
   if (
     pendingLines.length === 1 &&
-    pipelineRow.split('|').length === 3 &&
+    pipelineFields.length === 3 &&
+    pipelineFields[0] === '- [ ] https://jobs.example.com/123%7Cevil' &&
     !pipelineRow.includes('\n') &&
     !pipelineRow.includes('\t') &&
     !pipelineRow.includes('\\|') &&
-    pipelineRow.includes('https://jobs.example.com/123%7Cevil') &&
-    !pipelineRow.includes('https://evil.example/later') &&
     pipelineRow.includes('=ACME\\\\Corp / R&D') &&
     pipelineRow.includes('- \\[ \\] https://evil.example/job / EvilCorp / Injected')
   ) {
