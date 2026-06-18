@@ -293,6 +293,7 @@ export function materializeSkillEntrypoints(root = ROOT) {
       continue;
     }
     if (stat.isSymbolicLink()) continue;
+    if (!stat.isFile()) continue;
 
     try {
       const content = readFileSync(entryPath, 'utf-8').trim();

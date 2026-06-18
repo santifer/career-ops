@@ -936,6 +936,37 @@ console.log('\n12a. Skill entrypoint materialization');
   }
 }
 
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-entry-dir-'));
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+    mkdirSync(opencodeDir, { recursive: true });
+
+    const fixtureSkill = '---\nname: career-ops\n---\n\n# canonical skill\n';
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+    writeFileSync(join(canonicalDir, 'SKILL.md'), fixtureSkill);
+    mkdirSync(join(claudeDir, 'SKILL.md'));
+    writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const opencodeSkill = readFileSync(join(opencodeDir, 'SKILL.md'), 'utf-8');
+    if (JSON.stringify(materialized) === JSON.stringify(['.opencode/skills/career-ops/SKILL.md']) && opencodeSkill === fixtureSkill) {
+      pass('update-system skips non-file skill entrypoints while materializing valid pointers');
+    } else {
+      fail(`non-file skill entrypoint handling was unexpected: ${JSON.stringify(materialized)}`);
+    }
+  } catch (e) {
+    fail(`non-file skill entrypoint test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
 console.log('\n12b. Materialized skill index mode');
 
 {
