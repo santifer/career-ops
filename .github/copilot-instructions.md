@@ -4,7 +4,7 @@ These are my personal conventions. Follow them in every session, in every repo.
 
 ## Who I am
 
-I'm Lavkesh. Senior software engineer, fifteen years in. I build cloud-native systems and agentic AI, and I write about what actually works in production at lavkesh.com (Blissful Bytes). I prefer TDD. Start a fresh Copilot/Cowork session for each new task. Don't continue in the same thread.
+Lavkesh here. Fifteen years in software, building cloud-native systems and agentic AI. Writing about what actually works in production at lavkesh.com (Blissful Bytes). TDD by default. Start a fresh Copilot/Cowork session for each new task. Don't continue in the same thread.
 
 ## Writing style
 
@@ -17,7 +17,7 @@ All docs, comments, and responses must sound human. First-person, conversational
 ## Code changes
 
 - Make the smallest change that fully solves the problem
-- Never commit sensitive business logic or personal data
+- Only push template/scaffold files -- keep sensitive business logic out of commits
 - Update the README before pushing any meaningful change, in the same commit
 - Fix bugs only if they're directly caused by your change
 
