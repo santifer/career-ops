@@ -125,31 +125,42 @@ export default {
 
     const byRef = new Map();
     const errors = [];
+    let succeeded = 0; // keywords whose primary pass completed (i.e. the source answered)
     for (const kw of keywords) {
+      let primary;
       try {
         // Pass A: commutable radius around `wo`, or a single nationwide pass.
-        const primary = wo
+        primary = wo
           ? await fetchKeyword(kw, { wo, umkreis: String(umkreis) })
           : await fetchKeyword(kw);
-        // Pass B (optional): nationwide, keep only explicitly remote-titled hits
-        // (captures remote roles hosted at a far HQ).
-        const wide = wo && remoteNationwide
-          ? (await fetchKeyword(kw)).filter(j => REMOTE_RE.test(String((j && j.titel) || '')))
-          : [];
-        for (const raw of [...primary, ...wide]) {
-          const job = normalizeJob(raw);
-          if (job && !byRef.has(job.refnr)) byRef.set(job.refnr, job);
-        }
+        succeeded++;
       } catch (err) {
         // Recall-first: tolerate a single failed keyword and keep going.
         errors.push(`"${kw}": ${(err && err.message) || err}`);
+        continue;
+      }
+      // Pass B (optional): nationwide, keep only explicitly remote-titled hits
+      // (captures remote roles hosted at a far HQ). Its failure must NOT discard
+      // the primary results already fetched above.
+      let wide = [];
+      if (wo && remoteNationwide) {
+        try {
+          wide = (await fetchKeyword(kw)).filter(j => REMOTE_RE.test(String((j && j.titel) || '')));
+        } catch (err) {
+          errors.push(`"${kw}" (remote pass): ${(err && err.message) || err}`);
+        }
+      }
+      for (const raw of [...primary, ...wide]) {
+        const job = normalizeJob(raw);
+        if (job && !byRef.has(job.refnr)) byRef.set(job.refnr, job);
       }
     }
 
-    // Don't fail silently if the whole source is down — surface it so scan.mjs
-    // records the error instead of treating an outage as "zero new offers".
-    if (!byRef.size && errors.length) {
-      throw new Error(`arbeitsagentur: all ${errors.length} keyword request(s) failed — ${errors[0]}`);
+    // Total outage = every primary request failed. A keyword that answered with
+    // zero results is not an outage, so key off the success count, not the
+    // deduped result size — otherwise a legitimately-empty search throws.
+    if (succeeded === 0 && errors.length) {
+      throw new Error(`arbeitsagentur: all ${keywords.length} keyword request(s) failed — ${errors[0]}`);
     }
 
     return [...byRef.values()].map(({ refnr, ...job }) => job);

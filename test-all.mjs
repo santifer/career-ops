@@ -3398,6 +3398,42 @@ try {
   if (outage) pass('aa.fetch() throws when every keyword request fails (no silent empty)');
   else fail('aa.fetch() should throw on total outage');
 
+  // fetch() — one keyword answers (empty) while another fails → NOT a total
+  // outage; partial success must not throw.
+  let partialThrew = false;
+  let partial;
+  try {
+    partial = await aa.fetch(
+      { name: 'AA', arbeitsagentur: { keywords: ['OK', 'BAD'] } },
+      { fetchJson: async (url) => {
+          if (new URL(url).searchParams.get('was') === 'BAD') throw new Error('HTTP 503');
+          return { stellenangebote: [] }; // OK answers, just empty
+        } },
+    );
+  } catch { partialThrew = true; }
+  if (!partialThrew && Array.isArray(partial) && partial.length === 0) {
+    pass('aa.fetch() does not throw when one keyword succeeds empty and another fails');
+  } else {
+    fail(`aa.fetch() partial-success threw=${partialThrew}, result=${JSON.stringify(partial)}`);
+  }
+
+  // fetch() — Pass A succeeds with jobs, optional Pass B fails → Pass A jobs kept.
+  const passBFail = await aa.fetch(
+    { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true } },
+    { fetchJson: async (url) => {
+        // Pass A (wo set) returns a job; Pass B (no wo) throws.
+        if (new URL(url).searchParams.has('wo')) {
+          return { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] };
+        }
+        throw new Error('HTTP 503');
+      } },
+  );
+  if (passBFail.length === 1 && passBFail[0].url.endsWith('L')) {
+    pass('aa.fetch() preserves primary (Pass A) results when the remote pass (Pass B) fails');
+  } else {
+    fail(`aa.fetch() Pass B failure dropped primary: ${JSON.stringify(passBFail)}`);
+  }
+
 } catch (e) {
   fail(`arbeitsagentur provider tests crashed: ${e.message}`);
 }
