@@ -909,6 +909,33 @@ console.log('\n12a. Skill entrypoint materialization');
   }
 }
 
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-unreadable-'));
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+    mkdirSync(join(canonicalDir, 'SKILL.md'));
+    writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
+
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
+    if (materialized.length === 0 && claudeSkill === pointer) {
+      pass('update-system skips skill materialization when canonical entrypoint is unreadable');
+    } else {
+      fail(`unreadable canonical skill unexpectedly materialized: ${JSON.stringify(materialized)}`);
+    }
+  } catch (e) {
+    fail(`unreadable canonical skill test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
 console.log('\n12b. Materialized skill index mode');
 
 {

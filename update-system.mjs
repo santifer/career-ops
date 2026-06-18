@@ -274,7 +274,12 @@ export function materializeSkillEntrypoints(root = ROOT) {
   const canonicalPath = repoPath(root, CANONICAL_SKILL_PATH);
   if (!existsSync(canonicalPath)) return [];
 
-  const canonicalContent = readFileSync(canonicalPath, 'utf-8');
+  let canonicalContent = '';
+  try {
+    canonicalContent = readFileSync(canonicalPath, 'utf-8');
+  } catch {
+    return [];
+  }
   const materialized = [];
 
   for (const entry of SKILL_ENTRYPOINTS) {
