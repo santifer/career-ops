@@ -82,7 +82,30 @@ function run(cmd, args = [], opts = {}) {
   }
 }
 
-const BASH_AVAILABLE = run('bash', ['-lc', 'printf ok'], { stdio: ['ignore', 'pipe', 'pipe'] }) === 'ok';
+function resolveBashCommand() {
+  const candidates = ['bash'];
+  if (process.platform === 'win32') {
+    candidates.push(
+      'C:\\Program Files\\Git\\bin\\bash.exe',
+      'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
+    );
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const out = execFileSync(candidate, ['-lc', 'printf ok'], {
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 30000,
+      }).trim();
+      if (out === 'ok') return candidate;
+    } catch {}
+  }
+  return null;
+}
+
+const BASH_CMD = resolveBashCommand();
+const BASH_AVAILABLE = BASH_CMD !== null;
 
 function requireBashTest(name) {
   if (BASH_AVAILABLE) return true;
@@ -98,7 +121,7 @@ function makeExecutable(path) {
   }
   if (process.platform === 'win32' && BASH_AVAILABLE) {
     try {
-      execFileSync('bash', ['-lc', `chmod +x ${JSON.stringify(toBashPath(path))}`]);
+      execFileSync(BASH_CMD, ['-lc', `chmod +x ${JSON.stringify(toBashPath(path))}`]);
     } catch {}
   }
 }
@@ -527,7 +550,9 @@ if (/worker_command=\(\s*"\$AGENT_BIN"\s+-p\s+--dangerously-skip-permissions\s+-
   fail('Batch runner changed Claude headless defaults or lost strict MCP isolation');
 }
 
-if (/if \[\[ "\$UNSAFE_AGENT_EXEC" == "1" \|\| "\$UNSAFE_AGENT_EXEC" == "true" \]\][\s\S]{0,180}worker_command\+=\(--dangerously-bypass-approvals-and-sandbox\)/.test(batchRunnerSource)) {
+if (/AGENT_ADAPTERS=\$'[^']*codex\\tcodex\\tbuild_codex_worker_command[^']*\\tCAREER_OPS_UNSAFE_AGENT_EXEC/.test(batchRunnerSource) &&
+    /agent_unsafe_exec_enabled\(\)[\s\S]*\$\{!AGENT_UNSAFE_ENV_VAR:-false\}[\s\S]*unsafe_value" == "1"[\s\S]*unsafe_value" == "true"/.test(batchRunnerSource) &&
+    /if agent_unsafe_exec_enabled; then[\s\S]{0,120}worker_command\+=\(--dangerously-bypass-approvals-and-sandbox\)/.test(batchRunnerSource)) {
   pass('Batch runner gates Codex dangerous bypass behind explicit opt-in');
 } else {
   fail('Batch runner does not gate Codex dangerous bypass correctly');
@@ -3060,7 +3085,7 @@ try {
   makeExecutable(join(fakeBin, 'claude'));
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const out = run(BASH_CMD, [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3079,7 +3104,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
+  const dry = run(BASH_CMD, [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3135,7 +3160,7 @@ try {
   makeExecutable(join(fakeBin, 'codex'));
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, CAPTURE_DIR: tmp };
-  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--agent', 'codex', '--parallel', '1'], {
+  const out = run(BASH_CMD, [toBashPath(join(batchDir, 'batch-runner.sh')), '--agent', 'codex', '--parallel', '1'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3151,7 +3176,8 @@ try {
     fail(`Codex adapter did not complete fixture offer: ${JSON.stringify({ out: out.slice(-240), state })}`);
   }
   const argLines = args.trim().split('\n');
-  if (argLines[0] === 'exec' && argLines.includes('-C') && argLines.includes('--full-auto') && argLines.at(-1) === '-' &&
+  if (argLines[0] === 'exec' && argLines.includes('-C') &&
+      args.includes('--sandbox\nworkspace-write') && argLines.at(-1) === '-' &&
       !args.includes('--dangerously-bypass-approvals-and-sandbox')) {
     pass('Codex adapter uses safe default exec arguments');
   } else {

@@ -41,13 +41,13 @@ RATE_LIMIT_SLEEP=300
 BATCH_PAUSED=false
 STATUS_ONLY=false
 WATCH_MODE=false
-UNSAFE_AGENT_EXEC="${CAREER_OPS_UNSAFE_AGENT_EXEC:-false}"
 AGENT_BIN=""
 AGENT_COMMAND_BUILDER=""
 AGENT_RATE_LIMIT_PATTERN=""
+AGENT_UNSAFE_ENV_VAR=""
 
-# name<TAB>binary<TAB>command-builder<TAB>rate-limit-pattern
-AGENT_ADAPTERS=$'claude\tclaude\tbuild_claude_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)\ncodex\tcodex\tbuild_codex_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)'
+# name<TAB>binary<TAB>command-builder<TAB>rate-limit-pattern<TAB>unsafe-opt-in-env
+AGENT_ADAPTERS=$'claude\tclaude\tbuild_claude_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)\t-\ncodex\tcodex\tbuild_codex_worker_command\t(rate[ _-]?limit(ed)?|too many requests|429|quota exceeded|try again later|temporarily unavailable|throttl(e|ed|ing)|temporarily at capacity|currently at capacity|model (is )?(at capacity|overloaded)|server (is )?(at capacity|overloaded)|error: (service unavailable|requests? exceeded)|status: 503|503 service unavailable)\tCAREER_OPS_UNSAFE_AGENT_EXEC'
 
 usage() {
   cat <<'USAGE'
@@ -160,13 +160,15 @@ resolve_agent_adapter() {
   AGENT_BIN=""
   AGENT_COMMAND_BUILDER=""
   AGENT_RATE_LIMIT_PATTERN=""
+  AGENT_UNSAFE_ENV_VAR=""
 
-  local name binary builder rate_limit_pattern
-  while IFS=$'\t' read -r name binary builder rate_limit_pattern; do
+  local name binary builder rate_limit_pattern unsafe_env_var
+  while IFS=$'\t' read -r name binary builder rate_limit_pattern unsafe_env_var; do
     if [[ "$name" == "$AGENT" ]]; then
       AGENT_BIN="$binary"
       AGENT_COMMAND_BUILDER="$builder"
       AGENT_RATE_LIMIT_PATTERN="$rate_limit_pattern"
+      [[ "$unsafe_env_var" != "-" ]] && AGENT_UNSAFE_ENV_VAR="$unsafe_env_var"
       return 0
     fi
   done <<< "$AGENT_ADAPTERS"
@@ -369,6 +371,12 @@ is_session_limit_log() {
   grep -Eiq '(session limit|resets [0-9:]+[ap]m|usage limit|limit[[:space:]]+reached)' "$log_file"
 }
 
+agent_unsafe_exec_enabled() {
+  [[ -n "$AGENT_UNSAFE_ENV_VAR" ]] || return 1
+  local unsafe_value="${!AGENT_UNSAFE_ENV_VAR:-false}"
+  [[ "$unsafe_value" == "1" || "$unsafe_value" == "true" ]]
+}
+
 mark_paused_rate_limit() {
   local id="$1" url="$2" started_at="$3" report_num="$4" retries="$5" log_file="$6"
   local completed_at
@@ -404,10 +412,10 @@ build_codex_worker_command() {
   } > "$worker_stdin_file"
 
   worker_command=("$AGENT_BIN" exec -C "$PROJECT_DIR")
-  if [[ "$UNSAFE_AGENT_EXEC" == "1" || "$UNSAFE_AGENT_EXEC" == "true" ]]; then
+  if agent_unsafe_exec_enabled; then
     worker_command+=(--dangerously-bypass-approvals-and-sandbox)
   else
-    worker_command+=(--full-auto)
+    worker_command+=(--sandbox workspace-write)
   fi
   if [[ -n "$MODEL" ]]; then
     worker_command+=(--model "$MODEL")
