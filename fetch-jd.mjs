@@ -56,14 +56,23 @@ async function getJson(url, opts = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   // Forward a caller-supplied signal so the timeout is always enforced (using
-  // controller.signal) without ignoring an external abort.
-  if (opts.signal) opts.signal.addEventListener('abort', () => controller.abort(), { once: true });
+  // controller.signal) without ignoring an external abort — including one that
+  // is already aborted before we attach the listener (the 'abort' event does not
+  // fire retroactively).
+  let forwardAbort;
+  if (opts.signal?.aborted) {
+    controller.abort(opts.signal.reason);
+  } else if (opts.signal) {
+    forwardAbort = () => controller.abort(opts.signal.reason);
+    opts.signal.addEventListener('abort', forwardAbort, { once: true });
+  }
   const headers = { 'user-agent': UA, accept: 'application/json', ...(opts.headers || {}) };
   try {
     const res = await fetch(url, { ...opts, headers, signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
     return res.json();
   } finally {
+    if (forwardAbort) opts.signal.removeEventListener('abort', forwardAbort);
     clearTimeout(timer);
   }
 }
