@@ -13,6 +13,7 @@ These files contain your personal data, customizations, and work product. Update
 | `modes/_profile.md` | Your archetypes, narrative, negotiation scripts |
 | `article-digest.md` | Your proof points from portfolio |
 | `interview-prep/story-bank.md` | Your accumulated STAR+R stories |
+| `interview-prep/{company}-{role}.md` | Company-specific interview prep reports (written by `/career-ops interview-prep`) |
 | `portals.yml` | Your customized company list |
 | `data/applications.md` | Your application tracker (source of truth) |
 | `data/applications.db` | Derived query index over `applications.md` (SQLite, rebuilt by `node tracker.mjs sync` — safe to delete) |
@@ -62,6 +63,8 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `fonts/*` | Self-hosted fonts |
 | `.claude/skills/*` | Skill definitions (Claude Code) |
 | `.opencode/skills/*` | Skill definitions (OpenCode) |
+| `.qwen/skills/*` | Skill definitions (Qwen Code) |
+| `.antigravitycli/skills/*` | Skill definitions (Antigravity CLI) |
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
 | `DATA_CONTRACT.md` | This file |

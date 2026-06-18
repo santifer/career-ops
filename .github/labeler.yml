@@ -14,6 +14,8 @@
           - modes/**/*.md
           - .claude/skills/**
           - .opencode/skills/**
+          - .qwen/skills/**
+          - .antigravitycli/skills/**
 
 "🔧 scripts":
   - changed-files:
