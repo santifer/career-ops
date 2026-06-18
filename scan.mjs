@@ -446,8 +446,15 @@ function normalizeScanScalar(value) {
     .trim();
 }
 
+const MARKDOWN_ESCAPE_CHARS = {
+  '\\': '\\\\',
+  '[': '\\[',
+  ']': '\\]',
+  '|': '\\|',
+};
+
 export function sanitizeMarkdownField(value) {
-  return normalizeScanScalar(value).replace(/[|[\]]/g, '\\$&');
+  return normalizeScanScalar(value).replace(/[\\[\]|]/g, char => MARKDOWN_ESCAPE_CHARS[char]);
 }
 
 export function sanitizeTsvField(value) {
