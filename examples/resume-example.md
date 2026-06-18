@@ -1,4 +1,12 @@
-# CV -- Alex Chen
+# Resume — Alex Chen
+
+<!-- 
+  This is the resume variant of cv-example.md. 
+  In the US tech industry, "resume" (1–2 pages, targeted) is the standard term,
+  while "CV" typically refers to the longer academic variant.
+  career-ops supports both — use whichever fits your target market.
+  This example is intentionally concise (1 page) to demonstrate the resume format.
+-->
 
 **Location:** Austin, TX
 **Email:** alex@example.com
@@ -34,8 +42,8 @@ Full-stack AI engineer with 6 years building production ML systems. Led the ML p
 
 ## Projects
 
-- **FraudShield** (Open Source) -- Real-time fraud detection framework. Kafka Streams + feature store + model serving. 500+ GitHub stars
-- **LLM Eval Toolkit** (Open Source) -- Evaluation framework for LLM applications. Supports custom metrics, regression testing, CI integration
+- **FraudShield** (Open Source) — Real-time fraud detection framework. Kafka Streams + feature store + model serving. 500+ GitHub stars
+- **LLM Eval Toolkit** (Open Source) — Evaluation framework for LLM applications. Supports custom metrics, regression testing, CI integration
 
 ## Education
 
