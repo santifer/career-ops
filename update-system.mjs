@@ -111,6 +111,7 @@ const SYSTEM_PATHS = [
   '.opencode/skills/',
   '.claude-plugin/',
   '.qwen/',
+  '.antigravitycli/skills/',
   'docs/',
   'writing-samples/README.md',
   'VERSION',
@@ -453,7 +454,7 @@ async function apply() {
 
     // 3a. Keep bootstrap paths as a fallback for very old targets, but the
     // target updater's SYSTEM_PATHS is now the source of truth for new files.
-    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs', 'tracker-columns-tests.mjs'];
+    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', '.antigravitycli/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs', 'tracker-columns-tests.mjs'];
     const updatePaths = mergePathLists(SYSTEM_PATHS, remoteSystemPaths, BOOTSTRAP_PATHS);
 
     for (const path of updatePaths) {
@@ -533,6 +534,13 @@ async function apply() {
       execSync('npm install --silent', { cwd: ROOT, timeout: 60000 });
     } catch {
       console.log('npm install skipped (may need manual run)');
+    }
+
+    // 5b. Ensure Playwright browser binary is up to date after npm install
+    try {
+      execSync('npx playwright install chromium', { cwd: ROOT, timeout: 120000, stdio: 'ignore' });
+    } catch {
+      console.log('playwright install skipped (run manually: npx playwright install chromium)');
     }
 
     // 6. Rebuild compiled dashboard if Go sources changed

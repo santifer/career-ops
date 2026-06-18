@@ -60,6 +60,7 @@ const requiredSystemPaths = [
   '.env.example',
   '.claude-plugin/',
   '.qwen/',
+  '.antigravitycli/skills/',
   'tracker-columns-tests.mjs',
   'updater-migration-tests.mjs',
   'README.ar.md',
@@ -76,6 +77,7 @@ const requiredSystemPaths = [
 const requiredBootstrapPaths = [
   '.agents/',
   '.opencode/skills/',
+  '.antigravitycli/skills/',
   'providers/',
   'liveness-browser.mjs',
   'role-matcher.mjs',

@@ -1284,3 +1284,26 @@ job_boards:
     provider: solidjobs
     enabled: false
     notes: "Polish job board — Other specialists division"
+
+  # -- Indonesia job boards (provider: jobstreet / glints) --
+
+  - name: Jobstreet Indonesia
+    provider: jobstreet
+    api: https://id.jobstreet.com/api/chalice-search/v4/search
+    siteKey: ID-Main
+    searchKeywords: "data scientist"
+    searchLocation: "Jakarta"
+    pageSize: 30
+    maxPages: 3
+    enabled: false
+    notes: "Indonesia's largest job board (SEEK group). Public JSON search API — zero tokens."
+
+  - name: Glints Indonesia
+    provider: glints
+    api: https://glints.com/api/graphql
+    searchKeywords: "data scientist"
+    countryCode: ID
+    pageSize: 30
+    maxPages: 3
+    enabled: false
+    notes: "SEA job platform covering ID/SG/MY/VN. Undocumented public GraphQL API — adjust graphqlQuery if schema changes."
