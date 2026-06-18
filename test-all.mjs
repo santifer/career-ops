@@ -1160,7 +1160,7 @@ try {
   }
 
   const hostileOffer = {
-    url: 'https://jobs.example.com/123|evil',
+    url: 'https://jobs.example.com/123|evil\nhttps://evil.example/later',
     source: 'local-parser',
     title: 'Senior Engineer | Growth\n- [ ] https://evil.example/job | EvilCorp | Injected',
     company: '=ACME\\Corp\t| R&D',
@@ -1175,6 +1175,7 @@ try {
     !pipelineRow.includes('\t') &&
     !pipelineRow.includes('\\|') &&
     pipelineRow.includes('https://jobs.example.com/123%7Cevil') &&
+    !pipelineRow.includes('https://evil.example/later') &&
     pipelineRow.includes('=ACME\\\\Corp / R&D') &&
     pipelineRow.includes('- \\[ \\] https://evil.example/job / EvilCorp / Injected')
   ) {
@@ -1188,6 +1189,7 @@ try {
   if (
     historyColumns.length === 7 &&
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
+    historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
     historyColumns[4] === "'=ACME\\Corp | R&D" &&
     historyColumns[6] === "'@Remote EU"

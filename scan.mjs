@@ -446,6 +446,10 @@ function normalizeScanScalar(value) {
     .trim();
 }
 
+function normalizeScanUrl(value) {
+  return String(value ?? '').trim().split(/\s+/)[0] || '';
+}
+
 const MARKDOWN_ESCAPE_CHARS = {
   '\\': '\\\\',
   '[': '\\[',
@@ -459,7 +463,7 @@ export function sanitizeMarkdownField(value) {
 }
 
 function sanitizePipelineUrl(value) {
-  return normalizeScanScalar(value)
+  return normalizeScanUrl(value)
     .replace(/[\\[\]]/g, char => MARKDOWN_ESCAPE_CHARS[char])
     .replace(/\|/g, '%7C');
 }
@@ -478,7 +482,7 @@ export function formatPipelineOffer(offer) {
 
 export function formatScanHistoryRow(offer, date, status = 'added') {
   return [
-    offer.url,
+    normalizeScanUrl(offer.url),
     date,
     offer.source,
     offer.title,
