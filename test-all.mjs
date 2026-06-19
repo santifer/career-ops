@@ -2041,22 +2041,25 @@ try {
     fail('recruitee.detect() must NOT misdetect path-spoofed URLs');
   }
 
-  // Off-domain offer URL is dropped (URL validation)
-  const offDomainOffers = parseRecruiteeResponse(
+  // Per-offer URL validation: custom-domain https URLs are KEPT (Recruitee
+  // tenants serve postings on their own domain, e.g. careers.hostaway.com);
+  // only non-https and malformed/missing URLs are dropped. The per-offer URL
+  // is display-only and not host-locked to *.recruitee.com — see #recruitee.
+  const offerUrlOffers = parseRecruiteeResponse(
     {
       offers: [
-        { title: 'Good', careers_url: 'https://channable.recruitee.com/o/good' },
-        { title: 'Evil', careers_url: 'https://evil.example/o/evil' },
+        { title: 'Recruitee domain', careers_url: 'https://channable.recruitee.com/o/good' },
+        { title: 'Custom domain', careers_url: 'https://careers.hostaway.com/o/senior-backend' },
         { title: 'Insecure', careers_url: 'http://channable.recruitee.com/o/insecure' },
         { title: 'No URL field' },
       ],
     },
     'Channable',
   );
-  if (offDomainOffers[0]?.url === 'https://channable.recruitee.com/o/good' && offDomainOffers[1]?.url === '' && offDomainOffers[2]?.url === '' && offDomainOffers[3]?.url === '') {
-    pass('parseRecruiteeResponse drops off-domain, non-https, and missing offer URLs');
+  if (offerUrlOffers[0]?.url === 'https://channable.recruitee.com/o/good' && offerUrlOffers[1]?.url === 'https://careers.hostaway.com/o/senior-backend' && offerUrlOffers[2]?.url === '' && offerUrlOffers[3]?.url === '') {
+    pass('parseRecruiteeResponse keeps custom-domain https URLs, drops non-https and missing');
   } else {
-    fail(`URL validation: row0=${JSON.stringify(offDomainOffers[0]?.url)}, row1=${JSON.stringify(offDomainOffers[1]?.url)}, row2=${JSON.stringify(offDomainOffers[2]?.url)}, row3=${JSON.stringify(offDomainOffers[3]?.url)}`);
+    fail(`URL validation: row0=${JSON.stringify(offerUrlOffers[0]?.url)}, row1=${JSON.stringify(offerUrlOffers[1]?.url)}, row2=${JSON.stringify(offerUrlOffers[2]?.url)}, row3=${JSON.stringify(offerUrlOffers[3]?.url)}`);
   }
 
 } catch (e) {
