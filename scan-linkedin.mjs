@@ -26,7 +26,7 @@
  *   node scan-linkedin.mjs --week     # past 7 days
  *   node scan-linkedin.mjs --dry-run  # discover + gate + classify, write nothing
  */
-import { readFileSync, appendFileSync, existsSync } from 'fs';
+import { readFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -36,6 +36,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const BLOCKFILE = join(__dirname, 'data', 'blocked-companies.txt');
 const HISTORY   = join(__dirname, 'data', 'scan-history.tsv');
 const PIPELINE  = join(__dirname, 'data', 'pipeline.md');
+mkdirSync(join(__dirname, 'data'), { recursive: true });  // ensure data/ exists on a fresh clone before any append
 const clean = (s) => String(s ?? '').replace(/[|\t\r\n]+/g, ' ').trim();
 
 const WEEK = process.argv.includes('--week');
@@ -104,6 +105,10 @@ const ENTRY = /\b(new grad|new-grad|university grad|early career|entry[- ]level|
 const NEG = /(\bsenior\b|\bsr\b|\bstaff\b|\bprincipal\b|\blead\b|\bmanager\b|\bdirector\b|\bvp\b|\bii\b|\biii\b|\bfounding\b|engineer ii|engineer iii|5\+|3\+ years|clearance|secret|citizen)/i;
 const NONSWE = /(nurse|physician|practitioner|recruit|consultant|mechanical|electrical|civil|sales|designer|hardware|firmware)/i;
 const INTERN = /\b(intern|internship|co-op|coop)\b/i;
+// Internships are dropped UNLESS they target the current or next summer. Year is derived at
+// runtime so the gate never goes stale (was hardcoded "summer 2026").
+const _NOW_YEAR = new Date().getFullYear();
+const SUMMER_OK = new RegExp(`summer (${_NOW_YEAR}|${_NOW_YEAR + 1})`, 'i');
 const BLOCKED = /\b(fiserv|sigma|veeva|dropbox|synergisticit|vaco|spacex|tiktok|bytedance|gitlab|booz|raytheon|boeing|lockheed|leidos|saic|anduril|honeywell|aerospace|defense|northrop|general dynamics|hackajob|mygwork|jobright|dice|chaos industries|fusion technology|rividium|technomile|prescient edge|amentum|two six|captivation|devtechnology)\b|\b(radar|effector|munition|missile|itar)\b/i;
 const _BLOCK = existsSync(BLOCKFILE) ? readFileSync(BLOCKFILE, 'utf8').split('\n').map(s => s.trim().toLowerCase()).filter(s => s && !s.startsWith('#')) : [];
 const inBlockfile = s => { const x = (s || '').toLowerCase(); return _BLOCK.some(t => x.includes(t)); };
@@ -219,7 +224,7 @@ for (const title of TITLES) {
         // senior/staff/II/III roles LinkedIn occasionally mis-tags; the full JD
         // exp-gate (EXP_DISQUALIFY) below is the real backstop for "3+ years".
         if (NEG.test(c.title)) continue;
-        if (INTERN.test(c.title) && !/summer 2026/i.test(c.title)) continue;
+        if (INTERN.test(c.title) && !SUMMER_OK.test(c.title)) continue;
         if (BLOCKED.test(c.company) || BLOCKED.test(c.title) || inBlockfile(c.company) || inBlockfile(c.title)) continue;
         if (c.date && Date.parse(c.date) && Date.parse(c.date) < cutoff) continue;
         c.tag = pass.tag;
