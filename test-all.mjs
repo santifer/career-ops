@@ -4528,6 +4528,71 @@ try {
   fail(`breezy provider tests crashed: ${e.message}`);
 }
 
+// ── 28. OPTIONAL PROFILE PHOTO (opt-in, DACH/European — #264) ────
+
+console.log('\n28. Optional profile photo (opt-in, DACH/European, #264)');
+
+try {
+  const cvTemplate = readFileSync(join(ROOT, 'templates', 'cv-template.html'), 'utf-8');
+
+  // The opt-in photo must exist as a .cv-photo CSS rule.
+  if (/\.cv-photo\s*\{/.test(cvTemplate)) {
+    pass('cv-template.html defines a .cv-photo rule');
+  } else {
+    fail('cv-template.html is missing a .cv-photo rule — #264 opt-in photo not wired');
+  }
+
+  // It MUST be floated (taken out of normal flow) so a present photo is wrapped
+  // by the text beside it (the classic DACH top-corner photo) and an absent one
+  // leaves the layout unchanged. Anchor the check to the .cv-photo rule block so
+  // it can't accidentally read another rule (e.g. the lang="ar" float:left
+  // mirror) via offset slicing.
+  const photoRule = cvTemplate.match(/\.cv-photo\s*\{[^}]*\}/);
+  if (photoRule && /float:\s*right/.test(photoRule[0])) {
+    pass('.cv-photo floats right (text wraps when present; absent ⇒ unchanged layout)');
+  } else {
+    fail('.cv-photo must float so a present photo sits beside the text and an absent one does not shift the layout (#264)');
+  }
+
+  // The photo is an opt-in {{PHOTO}} slot, empty by default. The agent fills it
+  // only when config/profile.yml sets candidate.photo; otherwise it stays empty.
+  if (cvTemplate.includes('{{PHOTO}}')) {
+    pass('cv-template.html exposes a {{PHOTO}} opt-in slot (empty by default)');
+  } else {
+    fail('cv-template.html is missing the {{PHOTO}} opt-in slot (#264)');
+  }
+
+  // The slot MUST sit before the header (outside .header): the float anchors at
+  // the top of the page, and removing the line when absent cannot then perturb
+  // the header's own structure. Guards against a regression that moves the slot
+  // inside .header (which would shift the photoless layout).
+  const photoIdx = cvTemplate.indexOf('{{PHOTO}}');
+  const headerIdx = cvTemplate.indexOf('<!-- HEADER -->');
+  if (photoIdx !== -1 && headerIdx !== -1 && photoIdx < headerIdx) {
+    pass('{{PHOTO}} slot precedes the header (outside .header — keeps the photoless layout intact)');
+  } else {
+    fail('{{PHOTO}} slot must sit before <!-- HEADER --> so an absent photo leaves the header unchanged (#264)');
+  }
+
+  // The shipped template must NOT carry an active <img>: photos are opt-in,
+  // never the default (recruiters in the US/UK/many markets penalize photos).
+  if (!/<img[^>]*class="cv-photo"/.test(cvTemplate)) {
+    pass('default template has no active <img class="cv-photo"> (opt-in, not default)');
+  } else {
+    fail('cv-template.html ships an active photo <img> — photos must be opt-in, never default (#264)');
+  }
+
+  // RTL (Arabic) must mirror the photo to the opposite corner, like the other
+  // lang="ar" rules in this template.
+  if (/html\[lang="ar"\]\s+\.cv-photo/.test(cvTemplate)) {
+    pass('lang="ar" mirrors .cv-photo to the opposite corner');
+  } else {
+    fail('cv-template.html is missing an RTL mirror for .cv-photo (#264)');
+  }
+} catch (e) {
+  fail(`profile photo test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

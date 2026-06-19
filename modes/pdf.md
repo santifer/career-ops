@@ -79,6 +79,7 @@ Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with 
 |-------------|-----------|
 | `{{LANG}}` | CV language code (e.g. `en`, `es`, `ja`, `ar`). Drives language-specific CSS in the template: `ja` enables a CJK font fallback so Japanese renders instead of tofu (□); `ar` enables RTL + Arabic fonts. Use the BCP-47/ISO-639 code that matches the CV language. |
 | `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
+| `{{PHOTO}}` | Opt-in profile photo (#264). When `profile.yml` has a non-empty `candidate.photo`, replace with `<img class="cv-photo" src="<path-or-data-URL>" alt="{{NAME}}">`; otherwise **remove the whole `{{PHOTO}}` line** so no markup (and no `<img>`) is emitted. Opt-in for DACH/European markets — an absent photo renders identically (pixel-for-pixel) to the photoless layout (US/UK and many-market ATS penalize photos). |
 | `{{NAME}}` | (from profile.yml) |
 | `{{PHONE}}` | (from profile.yml — include with its separator only when `profile.yml` has a non-empty `phone` value; omit both the `<a href="tel:…">` element and the following `<span class="separator">` otherwise) |
 | `{{EMAIL}}` | (from profile.yml) |
@@ -101,6 +102,15 @@ Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with 
 | `{{CERTIFICATIONS}}` | Certifications HTML |
 | `{{SECTION_SKILLS}}` | Skills |
 | `{{SKILLS}}` | Skills HTML |
+
+### Profile photo (opt-in, market-specific)
+
+The `{{PHOTO}}` slot is **off by default** and intentionally market-specific:
+
+- **DACH / much of continental Europe** (Germany, Austria, Switzerland): a professional photo is standard and often expected. Opt in by setting `candidate.photo` in `config/profile.yml` (a local file path or a `data:` URL).
+- **US / UK / Canada / Australia and many ATS-first markets**: photos are discouraged and can trip bias-avoidance filters. Leave `candidate.photo` empty — the `{{PHOTO}}` line is dropped entirely, no `<img>` is emitted, and the CV renders **pixel-for-pixel identical** to today's photoless layout.
+
+When set, the photo floats into the top corner (mirrored for RTL/Arabic) and the header/summary text wraps beside it; `.cv-photo` in `cv-template.html` controls its size and framing.
 
 ## Canva CV Generation (optional)
 
