@@ -28,7 +28,8 @@ const APPS_FILE = process.env.CAREER_OPS_TRACKER
     ? join(CAREER_OPS, 'data/applications.md')
     : join(CAREER_OPS, 'applications.md');
 const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
-const REPORTS_DIR = join(CAREER_OPS, 'reports');
+// CAREER_OPS_REPORTS_DIR overrides the reports directory (used by tests).
+const REPORTS_DIR = process.env.CAREER_OPS_REPORTS_DIR || join(CAREER_OPS, 'reports');
 const STATES_FILE = existsSync(join(CAREER_OPS, 'templates/states.yml'))
   ? join(CAREER_OPS, 'templates/states.yml')
   : join(CAREER_OPS, 'states.yml');
@@ -233,6 +234,56 @@ if (existsSync(REPORTS_DIR)) {
   }
 }
 if (staleSentinels === 0) ok('No stale reservation sentinels');
+
+// --- Check 9: Duplicate report file numbers ---
+// reserve-report-num.mjs and batch runs can collide on a number and write two
+// files sharing the same NNN- prefix. Earlier checks only catch duplicate
+// tracker rows, so the orphaned twin stays invisible to any script that
+// iterates reports by number.
+let dupReportNums = 0;
+if (existsSync(REPORTS_DIR)) {
+  const numMap = new Map();
+  for (const name of readdirSync(REPORTS_DIR)) {
+    if (!name.endsWith('.md') || name.endsWith('-RESERVED.md')) continue;
+    const m = name.match(/^(\d+)-/);
+    if (!m) continue;
+    if (!numMap.has(m[1])) numMap.set(m[1], []);
+    numMap.get(m[1]).push(name);
+  }
+  for (const [n, files] of numMap) {
+    if (files.length > 1) {
+      warn(`Duplicate report number ${n}: ${files.join(', ')} — renumber the orphan to a free slot`);
+      dupReportNums++;
+    }
+  }
+}
+if (dupReportNums === 0) ok('No duplicate report numbers');
+
+// --- Check 10: Machine Summary present on actionable reports ---
+// analyze-patterns.mjs reads a report's metadata from its `## Machine Summary`
+// fenced block. Applied/Responded/Interview/Offer rows are the actionable ones
+// whose metadata feeds pattern analysis — warn when their report lacks it.
+const ACTIONABLE_STATUSES = new Set(['applied', 'responded', 'interview', 'offer']);
+let missingMachineSummary = 0;
+for (const e of entries) {
+  const st = e.status.replace(/\*\*/g, '').trim().toLowerCase().replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
+  const canon = CANONICAL_STATUSES.includes(st) ? st : (ALIASES[st] || st);
+  if (!ACTIONABLE_STATUSES.has(canon)) continue;
+  const match = e.report.match(/\]\(([^)]+)\)/);
+  if (!match) continue;
+  const link = match[1];
+  const path = existsSync(join(TRACKER_DIR, link)) ? join(TRACKER_DIR, link)
+    : existsSync(join(CAREER_OPS, link)) ? join(CAREER_OPS, link) : null;
+  if (!path) continue; // broken link already flagged by the report-links check
+  // Mirror analyze-patterns.mjs's parseMachineSummary regex: a bare heading with
+  // no fenced YAML block still yields null there, so require the fence too.
+  const MACHINE_SUMMARY_RE = /##\s*Machine Summary\s*\n+```(?:yaml|yml|json)?\s*\n[\s\S]*?\n```/i;
+  if (!MACHINE_SUMMARY_RE.test(readFileSync(path, 'utf-8'))) {
+    warn(`#${e.num} (${canon}): report missing a parseable "## Machine Summary" block — analyze-patterns can't read its metadata`);
+    missingMachineSummary++;
+  }
+}
+if (missingMachineSummary === 0) ok('All actionable reports have a Machine Summary');
 
 // --- Summary ---
 console.log('\n' + '='.repeat(50));
