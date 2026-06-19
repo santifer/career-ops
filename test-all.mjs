@@ -2917,6 +2917,45 @@ try {
   fail(`solidjobs provider tests crashed: ${e.message}`);
 }
 
+// ── 16. SSRF redirect hardening (lever / ashby / workday) ───────
+// _http.mjs defaults to redirect:'follow', so a server-side redirect from any
+// of these ATS APIs to an internal address is an SSRF vector. Every other GET
+// provider passes redirect:'error'; these three were missing it.
+
+console.log('\n16. Provider — SSRF redirect hardening (lever / ashby / workday)');
+
+try {
+  const lever = (await import(pathToFileURL(join(ROOT, 'providers/lever.mjs')).href)).default;
+  const ashby = (await import(pathToFileURL(join(ROOT, 'providers/ashby.mjs')).href)).default;
+  const workday = (await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href)).default;
+
+  let leverOpts = null;
+  await lever.fetch(
+    { name: 'L', careers_url: 'https://jobs.lever.co/example' },
+    { transport: 'http', fetchJson: async (_u, opts) => { leverOpts = opts; return []; }, fetchText: async () => '' },
+  );
+  if (leverOpts && leverOpts.redirect === 'error') pass('lever.fetch() passes redirect:"error"');
+  else fail(`lever.fetch() should pass redirect:"error", got ${JSON.stringify(leverOpts)}`);
+
+  let ashbyOpts = null;
+  await ashby.fetch(
+    { name: 'A', careers_url: 'https://jobs.ashbyhq.com/example' },
+    { transport: 'http', fetchJson: async (_u, opts) => { ashbyOpts = opts; return { jobs: [] }; }, fetchText: async () => '' },
+  );
+  if (ashbyOpts && ashbyOpts.redirect === 'error') pass('ashby.fetch() passes redirect:"error"');
+  else fail(`ashby.fetch() should pass redirect:"error", got ${JSON.stringify(ashbyOpts)}`);
+
+  let workdayOpts = null;
+  await workday.fetch(
+    { name: 'W', careers_url: 'https://example.wd5.myworkdayjobs.com/careers' },
+    { transport: 'http', fetchJson: async (_u, opts) => { workdayOpts = opts; return { jobPostings: [] }; }, fetchText: async () => '' },
+  );
+  if (workdayOpts && workdayOpts.redirect === 'error') pass('workday.fetch() passes redirect:"error"');
+  else fail(`workday.fetch() should pass redirect:"error", got ${JSON.stringify(workdayOpts)}`);
+} catch (e) {
+  fail(`SSRF redirect hardening tests crashed: ${e.message}`);
+}
+
 // ── 15. URL REDISCOVERY FALLBACK (--rediscover-404) ─────────────
 
 console.log('\n15. URL rediscovery fallback');
