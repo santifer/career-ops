@@ -31,19 +31,9 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
 import { fetchJson as defaultFetchJson, fetchText as defaultFetchText } from './providers/_http.mjs';
+import { isSafeUrl } from './providers/_url-guard.mjs';
 
 const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
-
-function isSafeUrl(rawUrl) {
-  let parsed;
-  try { parsed = new URL(rawUrl); } catch { return false; }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
-  const h = parsed.hostname;
-  if (h === 'localhost' || h === '::1') return false;
-  if (/^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h)) return false;
-  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h) || /^169\.254\./.test(h) || /^0\./.test(h)) return false;
-  return true;
-}
 
 // How to turn a slug into a probe URL, and where the job list lives in the
 // response, for each supported ATS. Greenhouse/Ashby wrap jobs in `{ jobs }`;
