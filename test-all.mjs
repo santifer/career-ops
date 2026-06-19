@@ -2304,6 +2304,82 @@ try {
   fail(`shared column map tests crashed: ${e.message}`);
 }
 
+// ── NON-LATIN COMPANY + ROLE DEDUP (i18n) ───────────────────────
+// normalizeCompany() (in BOTH dedup-tracker.mjs and merge-tracker.mjs) and the
+// shared roleTokens() stripped every non-[a-z0-9] character. All Cyrillic / CJK
+// / Arabic company names collapsed to the same empty key, and non-Latin role
+// titles tokenized to [] so roleFuzzyMatch() bailed out. Net effect: unrelated
+// non-Latin employers were merged, while genuine duplicates at the same
+// non-Latin company never deduplicated. Both now keep Unicode letters/digits
+// (\p{L}\p{N}) and NFC-normalize first.
+console.log('\n🧪 Testing non-Latin company + role dedup (i18n)...');
+try {
+  const { roleFuzzyMatch } = await import(pathToFileURL(join(ROOT, 'role-matcher.mjs')).href);
+
+  if (roleFuzzyMatch('Бэкенд разработчик', 'Бэкенд разработчик')) {
+    pass('roleFuzzyMatch matches identical Cyrillic role titles');
+  } else {
+    fail('roleFuzzyMatch fails on identical Cyrillic roles (non-Latin tokens stripped)');
+  }
+  if (!roleFuzzyMatch('Бэкенд разработчик', 'Фронтенд дизайнер')) {
+    pass('roleFuzzyMatch keeps distinct Cyrillic roles separate');
+  } else {
+    fail('roleFuzzyMatch merged two distinct Cyrillic roles');
+  }
+
+  const nlTmp = mkdtempSync(join(tmpdir(), 'career-ops-nonlatin-'));
+  try {
+    mkdirSync(join(nlTmp, 'data'));
+    const tracker = join(nlTmp, 'data', 'applications.md');
+    const nfc = 'Société Générale'.normalize('NFC');
+    const nfd = 'Société Générale'.normalize('NFD');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      // same Cyrillic company + role → must dedup to the higher-scored row
+      '| 60 | 2026-03-01 | Яндекс | Бэкенд-разработчик | 4.0/5 | Evaluated | ❌ | [60](../reports/060-ya-a.md) | cyrillic dup low |\n' +
+      '| 61 | 2026-03-01 | Яндекс | Бэкенд-разработчик | 4.3/5 | Evaluated | ❌ | [61](../reports/061-ya-b.md) | cyrillic dup high |\n' +
+      // distinct Cyrillic company, same role → must survive
+      '| 62 | 2026-03-01 | Сбербанк | Бэкенд-разработчик | 4.1/5 | Evaluated | ❌ | [62](../reports/062-sber.md) | distinct cyrillic |\n' +
+      // CJK + Arabic companies → must NOT collapse into each other
+      '| 63 | 2026-03-01 | 百度 | Frontend Developer | 3.0/5 | Evaluated | ❌ | [63](../reports/063-cjk.md) | cjk company |\n' +
+      '| 64 | 2026-03-01 | أمازون | DevOps Engineer | 3.5/5 | Evaluated | ❌ | [64](../reports/064-ar.md) | arabic company |\n' +
+      // NFC vs NFD of the SAME accented company + same role → must dedup to 1
+      `| 65 | 2026-03-01 | ${nfc} | Risk Engineer | 3.8/5 | Evaluated | ❌ | [65](../reports/065-sg-nfc.md) | nfc |\n` +
+      `| 66 | 2026-03-01 | ${nfd} | Risk Engineer | 4.2/5 | Evaluated | ❌ | [66](../reports/066-sg-nfd.md) | nfd |\n`);
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker.mjs crashed during non-Latin dedup test');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const lines = out.split('\n');
+      const yandexRows = lines.filter(l => l.includes('Яндекс'));
+      if (yandexRows.length === 1 && yandexRows[0].includes('4.3/5')) {
+        pass('dedup-tracker deduplicates same Cyrillic company+role, keeping the higher score');
+      } else {
+        fail(`dedup-tracker Cyrillic dedup wrong: ${yandexRows.length} Яндекс rows`);
+      }
+      if (out.includes('Сбербанк') && out.includes('百度') && out.includes('أمازون')) {
+        pass('dedup-tracker keeps distinct Cyrillic / CJK / Arabic companies separate (no empty-key collision)');
+      } else {
+        fail('dedup-tracker merged or dropped a distinct non-Latin company');
+      }
+      const riskRows = lines.filter(l => l.includes('Risk Engineer'));
+      if (riskRows.length === 1 && riskRows[0].includes('4.2/5')) {
+        pass('dedup-tracker deduplicates NFC/NFD variants of the same accented company');
+      } else {
+        fail(`dedup-tracker NFC/NFD dedup wrong: ${riskRows.length} "Risk Engineer" rows`);
+      }
+    }
+  } finally {
+    rmSync(nlTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`non-Latin dedup test crashed: ${e.message}`);
+}
+
 // dedup-tracker / normalize-statuses rebuilt promoted rows with
 // `parts.slice(1, -1)`, which assumes the closing `|` produced a trailing empty
 // cell. A valid row written WITHOUT a trailing pipe keeps its real last cell

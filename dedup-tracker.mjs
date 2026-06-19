@@ -67,11 +67,23 @@ const STATUS_RANK = {
  * @returns {string} Lowercase company key used for same-company grouping.
  */
 function normalizeCompany(name) {
-  return name.toLowerCase()
+  // Use Unicode letter/number classes (\p{L}\p{N}), not [a-z0-9]: Cyrillic, CJK,
+  // Arabic and other non-Latin company names must keep their letters. Stripping
+  // them collapsed every non-Latin company into the same empty key, which let the
+  // fuzzy role matcher merge unrelated rows — silent data loss for non-English
+  // markets (the localized de/fr/ja/ar/tr modes target exactly these users).
+  // NFC-normalize first so NFC/NFD variants of the same accented name (e.g.
+  // "Société" pasted as decomposed e + ´) don't strip the combining mark and
+  // produce a different key for the same company.
+  const key = name.normalize('NFC').toLowerCase()
     .replace(/[()]/g, '')
     .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/[^\p{L}\p{N} ]/gu, '')
     .trim();
+  // Never group under an empty key. A name that is all punctuation/emoji would
+  // normalize to '' and cluster with every other such name; fall back to the
+  // trimmed lowercase original so those rows stay distinct.
+  return key || name.normalize('NFC').toLowerCase().trim();
 }
 
 /**
