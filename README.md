@@ -395,7 +395,7 @@ career-ops/
 - **Agent**: AI coding CLI with shared skills and modes (`AGENTS.md` + CLI wrapper)
 - **PDF**: Playwright/Puppeteer + HTML template
 - **Cover letters**: HTML template + Playwright (A4 PDF, same pipeline as CVs)
-- **Scanner**: Playwright + Greenhouse / Ashby / Lever / Teamtailor APIs & feeds + WebSearch
+- **Scanner**: Playwright + Greenhouse / Ashby / Lever / Teamtailor / Workday / SmartRecruiters / Workable and more APIs & feeds + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
 - **Data**: Markdown tables + YAML config + TSV batch files
 

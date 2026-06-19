@@ -5,9 +5,20 @@
 // Auto-detects from careers_url matching *.teamtailor.com.
 // For companies with a custom domain, set `provider: teamtailor` in portals.yml.
 
+function isSafeUrl(rawUrl) {
+  let parsed;
+  try { parsed = new URL(rawUrl); } catch { return false; }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+  const h = parsed.hostname;
+  if (h === 'localhost' || h === '::1') return false;
+  if (/^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h)) return false;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h) || /^169\.254\./.test(h) || /^0\./.test(h)) return false;
+  return true;
+}
+
 function resolveRssUrl(entry) {
   const url = (entry.careers_url || '').replace(/\/$/, '');
-  if (!url) return null;
+  if (!url || !isSafeUrl(url)) return null;
   // Auto-detect: slug.teamtailor.com
   if (/\.teamtailor\.com$/i.test(new URL(url).hostname)) return `${url}/jobs.rss`;
   // Explicit provider: custom domain — append /jobs.rss to the base

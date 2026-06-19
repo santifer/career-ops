@@ -34,6 +34,17 @@ import { fetchJson as defaultFetchJson, fetchText as defaultFetchText } from './
 
 const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
 
+function isSafeUrl(rawUrl) {
+  let parsed;
+  try { parsed = new URL(rawUrl); } catch { return false; }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+  const h = parsed.hostname;
+  if (h === 'localhost' || h === '::1') return false;
+  if (/^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h)) return false;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h) || /^169\.254\./.test(h) || /^0\./.test(h)) return false;
+  return true;
+}
+
 // How to turn a slug into a probe URL, and where the job list lives in the
 // response, for each supported ATS. Greenhouse/Ashby wrap jobs in `{ jobs }`;
 // Lever returns a bare array. `includeCompensation` mirrors the ashby provider.
@@ -172,6 +183,10 @@ export async function verifyCompanies(companies, { fetchJson = defaultFetchJson,
     // so parseAtsSlug won't recognize it. Probe the RSS URL directly using the
     // full careers_url as the "slug" — probeUrl is the identity in this case.
     if (company.provider === 'teamtailor' && company.careers_url && !parseAtsSlug(company.careers_url)) {
+      if (!isSafeUrl(company.careers_url)) {
+        results.push({ name, ats: 'teamtailor', slug: company.careers_url, status: 'missing', reason: 'SSRF: non-public host rejected' });
+        continue;
+      }
       const rssUrl = company.careers_url.replace(/\/$/, '') + '/jobs.rss';
       try {
         const text = await fetchText(rssUrl);
