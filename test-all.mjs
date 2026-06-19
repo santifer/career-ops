@@ -2458,6 +2458,42 @@ try {
   fail(`dedup row-rebuild notes test crashed: ${e.message}`);
 }
 
+// rebuildRow() is now shared from tracker-utils.mjs (extracted from the two
+// copies introduced in #1004). Unit-test the helper contract directly.
+console.log('\n🧪 Testing shared tracker-utils rebuildRow()...');
+try {
+  const { rebuildRow } = await import(pathToFileURL(join(ROOT, 'tracker-utils.mjs')).href);
+  const cellsOf = (line) => line.split('|').map(s => s.trim());
+
+  // Trailing-pipe row → unchanged round-trip.
+  const withPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
+  if (rebuildRow(cellsOf(withPipe)) === withPipe) {
+    pass('rebuildRow round-trips a row that already has a trailing pipe');
+  } else {
+    fail(`rebuildRow changed a trailing-pipe row: "${rebuildRow(cellsOf(withPipe))}"`);
+  }
+
+  // No-trailing-pipe row → last cell (notes) preserved, trailing pipe added.
+  const noPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | keepme';
+  const rebuilt = rebuildRow(cellsOf(noPipe));
+  if (rebuilt.includes('keepme') && rebuilt.endsWith('|')) {
+    pass('rebuildRow preserves the notes cell on a row without a trailing pipe');
+  } else {
+    fail(`rebuildRow dropped notes on no-trailing-pipe row: "${rebuilt}"`);
+  }
+
+  // Extra column (e.g. a custom Location) → every cell preserved.
+  const extra = '| 5 | 2026-02-01 | Acme | Eng | Berlin | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
+  const rebuiltExtra = rebuildRow(cellsOf(extra));
+  if (rebuiltExtra === extra && rebuiltExtra.includes('Berlin')) {
+    pass('rebuildRow preserves extra columns (custom Location)');
+  } else {
+    fail(`rebuildRow mangled an extra-column row: "${rebuiltExtra}"`);
+  }
+} catch (e) {
+  fail(`tracker-utils rebuildRow unit test crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
 // roleFuzzyMatch over-matched whenever the token overlap dominated the
 // SMALLER side: two distinct roles sharing a long prefix ("Full-Stack
