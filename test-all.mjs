@@ -1152,15 +1152,15 @@ try {
   }
 
   // Teamtailor: parseAtsSlug extracts subdomain from *.teamtailor.com
-  const ttSlug = parseAtsSlug('https://viragames.teamtailor.com');
-  if (ttSlug?.ats === 'teamtailor' && ttSlug?.slug === 'viragames') {
+  const ttSlug = parseAtsSlug('https://acme-corp.teamtailor.com');
+  if (ttSlug?.ats === 'teamtailor' && ttSlug?.slug === 'acme-corp') {
     pass('verify-portals parseAtsSlug extracts teamtailor subdomain slug');
   } else {
     fail(`verify-portals parseAtsSlug teamtailor: ${JSON.stringify(ttSlug)}`);
   }
 
   // Custom domain (provider: teamtailor) is not recognized by parseAtsSlug
-  if (parseAtsSlug('https://careers.bookingkit.com') === null) {
+  if (parseAtsSlug('https://careers.example-company.com') === null) {
     pass('verify-portals parseAtsSlug returns null for teamtailor custom domain (handled separately)');
   } else {
     fail('verify-portals parseAtsSlug should return null for custom domains');
@@ -1169,16 +1169,16 @@ try {
   // Mock fetchText for RSS probing
   const mockRss = (items) => `<?xml version="1.0"?><rss><channel>${'<item></item>'.repeat(items)}</channel></rss>`;
   const mockFetchText = async (url) => {
-    if (url === 'https://viragames.teamtailor.com/jobs.rss') return mockRss(4);
+    if (url === 'https://acme-corp.teamtailor.com/jobs.rss') return mockRss(4);
     if (url === 'https://empty.teamtailor.com/jobs.rss') return mockRss(0);
-    if (url === 'https://careers.bookingkit.com/jobs.rss') return mockRss(5);
+    if (url === 'https://careers.example-company.com/jobs.rss') return mockRss(5);
     const err = new Error('HTTP 404'); err.status = 404; throw err;
   };
 
   // probeSlug for teamtailor (RSS path)
   const { probeSlug } = await import(pathToFileURL(join(ROOT, 'verify-portals.mjs')).href);
-  const ttLive = await probeSlug('teamtailor', 'viragames', { fetchText: mockFetchText });
-  if (ttLive.status === 'live' && ttLive.jobCount === 4 && ttLive.url === 'https://viragames.teamtailor.com/jobs.rss') {
+  const ttLive = await probeSlug('teamtailor', 'acme-corp', { fetchText: mockFetchText });
+  if (ttLive.status === 'live' && ttLive.jobCount === 4 && ttLive.url === 'https://acme-corp.teamtailor.com/jobs.rss') {
     pass('verify-portals probeSlug(teamtailor) reports live with item count');
   } else {
     fail(`verify-portals probeSlug(teamtailor) live: ${JSON.stringify(ttLive)}`);
@@ -1203,8 +1203,8 @@ try {
     { name: 'Typo', careers_url: 'https://job-boards.greenhouse.io/nope' },
     { name: 'Branded', careers_url: 'https://acme.com/careers' },
     { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
-    { name: 'TT Auto', careers_url: 'https://viragames.teamtailor.com' },
-    { name: 'TT Custom', careers_url: 'https://careers.bookingkit.com', provider: 'teamtailor' },
+    { name: 'TT Auto', careers_url: 'https://acme-corp.teamtailor.com' },
+    { name: 'TT Custom', careers_url: 'https://careers.example-company.com', provider: 'teamtailor' },
   ], { fetchJson: mockFetch, fetchText: mockFetchText });
   const byName = Object.fromEntries(results.map((r) => [r.name, r.status]));
   if (
