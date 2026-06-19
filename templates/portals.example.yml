@@ -491,10 +491,12 @@ search_queries:
 #   personio        <slug>.jobs.personio.(de|com)
 #   pinpoint        <slug>.pinpointhq.com
 #   rippling        ats.rippling.com/<slug>/jobs
+#   teamtailor      <slug>.teamtailor.com  (RSS feed at careers_url/jobs.rss)
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
-# bypass detect(). The `provider:` field wins over auto-detection.
+# bypass detect(). For Teamtailor custom domains set `provider: teamtailor`
+# instead. The `provider:` field wins over auto-detection.
 #
 # Some providers are job boards / aggregators with no per-company careers
 # URL to detect, so they must be selected with an explicit `provider:`
@@ -630,6 +632,25 @@ search_queries:
 #     enabled: true
 
 tracked_companies:
+
+  # ── Teamtailor provider examples ──────────────────────────────────────
+  # These entries are NOT curated companies — they demonstrate the two
+  # Teamtailor URL patterns. Replace or remove them as you see fit.
+  #
+  # Pattern 1 — auto-detect: any *.teamtailor.com careers_url is picked up
+  # automatically; the scanner fetches careers_url/jobs.rss.
+  - name: Vira Games
+    careers_url: https://viragames.teamtailor.com
+    notes: "Kyiv UA / Stockholm SE. Mobile gaming studio."
+    enabled: false
+
+  # Pattern 2 — custom domain: set `provider: teamtailor` so the scanner
+  # knows to fetch careers_url/jobs.rss instead of treating it as a generic page.
+  - name: Bookingkit
+    careers_url: https://careers.bookingkit.com
+    provider: teamtailor
+    notes: "Berlin DE. Online booking SaaS."
+    enabled: false
 
   # -- AI Labs & LLM providers --
 

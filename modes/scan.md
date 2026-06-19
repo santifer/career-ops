@@ -128,7 +128,7 @@ For companies with a public API or structured feed **that are not in `local_pars
 - **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR**: list `https://{company}.bamboohr.com/careers/list`; job details `https://{company}.bamboohr.com/careers/{id}/detail`
 - **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
-- **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
+- **Teamtailor**: RSS feed at `{careers_url}/jobs.rss` — `careers_url` must be the base URL (no `/jobs` suffix). Auto-detected for `*.teamtailor.com` hosts; for custom domains (e.g. `https://careers.bookingkit.com`) set `provider: teamtailor`.
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 - **Breezy**: `https://{company}.breezy.hr/json`
 
@@ -137,7 +137,7 @@ For companies with a public API or structured feed **that are not in `local_pars
 - `ashby`: GraphQL `ApiJobBoardWithTeams` with `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; build public URL if not present in payload)
 - `bamboohr`: list `result[]` → `jobOpeningName`, `id`; build detail URL `https://{company}.bamboohr.com/careers/{id}/detail`; to read full JD, make a GET request to the detail URL and use `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
 - `lever`: root array `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
-- `teamtailor`: RSS items → `title`, `link`
+- `teamtailor`: RSS `<item>` → `title` (HTML entities decoded), `link` → url; location from `tt:city` + `tt:country` + `remoteStatus` (`fully` → "Remote (city, country)"); `pubDate` → `postedAt` (epoch ms, omitted when absent)
 - `workday`: `jobPostings[]`/`jobPostings` (based on tenant) → `title`, `externalPath` or URL built from the host
 - `breezy`: top-level array `[]` → `name`, `url` (absolute), `location.name` (or city/state/country + `is_remote`), `published_date`
 
@@ -182,7 +182,7 @@ Levels are additive — they are executed in order, and results are merged and d
    g. If `careers_url` fails (404, redirect), attempt `scan_query` as a fallback and note it to update the URL later.
 
 5. **Level 2 — ATS APIs / Feeds** (parallel):
-   For each company in `tracked_companies` with a defined `api:`, `enabled: true`, and a **name not listed in `local_parser_ok`**:
+   For each company in `tracked_companies` with a defined `api:` (or a Teamtailor-detected `careers_url`), `enabled: true`, and a **name not listed in `local_parser_ok`**:
    a. WebFetch the API/feed URL.
    b. If `api_provider` is defined, use its parser; if undefined, infer by domain (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`, `*.breezy.hr`).
    c. For **Ashby**, send a POST request with:
@@ -191,8 +191,9 @@ Levels are additive — they are executed in order, and results are merged and d
       - GraphQL query of `jobBoardWithTeams` + `jobPostings { id title locationName employmentType compensationTierSummary }`
    d. For **BambooHR**, the list only returns basic metadata. For each relevant item, retrieve the `id`, make a GET request to `https://{company}.bamboohr.com/careers/{id}/detail`, and extract the full JD from `result.jobOpening`. Use `jobOpeningShareUrl` as the public URL if present; otherwise, use the detail URL.
    e. For **Workday**, send a JSON POST request with at least `{"appliedFacets":{},"limit":20,"offset":0,"searchText":""}` and paginate by `offset` until results are exhausted.
-   f. For each job, extract and normalize: `{title, url, company}`.
-   g. Accumulate in the candidates list (deduplicated against Level 1).
+   f. For **Teamtailor**, derive the feed URL as `{careers_url}/jobs.rss` (strip trailing slash; do not use the `/jobs` page URL as `careers_url`). Parse RSS `<item>` elements: `title` (HTML entities decoded), `link` → url, `tt:city` + `tt:country` + `remoteStatus` → location.
+   g. For each job, extract and normalize: `{title, url, company}`.
+   h. Accumulate in the candidates list (deduplicated against Level 1).
 
 6. **Level 3 — WebSearch Queries** (parallel if possible):
    For each query in `search_queries` with `enabled: true` (general queries by portal/role — not dedicated queries for a company with an active local parser):
@@ -314,7 +315,7 @@ Fallback: if you only have the direct ATS URL, navigate first to the company's w
 - **Greenhouse:** `https://job-boards.greenhouse.io/{slug}` or `https://job-boards.eu.greenhouse.io/{slug}`
 - **Lever:** `https://jobs.lever.co/{slug}`
 - **BambooHR:** list `https://{company}.bamboohr.com/careers/list`; detail `https://{company}.bamboohr.com/careers/{id}/detail`
-- **Teamtailor:** `https://{company}.teamtailor.com/jobs`
+- **Teamtailor:** `https://{slug}.teamtailor.com` (base URL, not `.../jobs`) — e.g. `https://viragames.teamtailor.com`; for custom domains (e.g. `https://careers.bookingkit.com`) set `provider: teamtailor`
 - **Workday:** `https://{company}.{shard}.myworkdayjobs.com/{site}`
 - **Custom:** The company's own URL (e.g. `https://openai.com/careers`)
 
@@ -322,7 +323,7 @@ Fallback: if you only have the direct ATS URL, navigate first to the company's w
 - **Ashby API:** `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR API:** list `https://{company}.bamboohr.com/careers/list`; detail `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
 - **Lever API:** `https://api.lever.co/v0/postings/{company}?mode=json`
-- **Teamtailor RSS:** `https://{company}.teamtailor.com/jobs.rss`
+- **Teamtailor RSS:** `{careers_url}/jobs.rss` — derived from `careers_url` (works for `*.teamtailor.com` subdomains and custom domains with `provider: teamtailor`)
 - **Workday API:** `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
 **If `careers_url` does not exist** for a company:

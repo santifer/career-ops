@@ -30,13 +30,15 @@ import { resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
-import { fetchJson as defaultFetchJson } from './providers/_http.mjs';
+import { fetchJson as defaultFetchJson, fetchText as defaultFetchText } from './providers/_http.mjs';
 
 const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
 
 // How to turn a slug into a probe URL, and where the job list lives in the
 // response, for each supported ATS. Greenhouse/Ashby wrap jobs in `{ jobs }`;
 // Lever returns a bare array. `includeCompensation` mirrors the ashby provider.
+// Teamtailor is RSS-based: use `itemCount` (receives raw XML text) instead of
+// `jobCount` (receives parsed JSON). `probeSlug` dispatches on which is present.
 export const ATS = {
   greenhouse: {
     probeUrl: (slug) => `https://boards-api.greenhouse.io/v1/boards/${slug}/jobs`,
@@ -49,6 +51,10 @@ export const ATS = {
   lever: {
     probeUrl: (slug) => `https://api.lever.co/v0/postings/${slug}`,
     jobCount: (json) => (Array.isArray(json) ? json.length : null),
+  },
+  teamtailor: {
+    probeUrl: (slug) => `https://${slug}.teamtailor.com/jobs.rss`,
+    itemCount: (text) => (text.match(/<item>/g) || []).length,
   },
 };
 
@@ -63,6 +69,10 @@ const ATS_URL_PATTERNS = [
   { ats: 'ashby', re: /jobs\.ashbyhq\.com\/([^/?#]+)/ },
   { ats: 'lever', re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
   { ats: 'lever', re: /jobs\.lever\.co\/([^/?#]+)/ },
+  // Teamtailor: extract subdomain slug from *.teamtailor.com URLs.
+  // Custom domains (e.g. careers.bookingkit.com with provider: teamtailor) are
+  // handled separately in verifyCompanies — no slug to extract from the URL.
+  { ats: 'teamtailor', re: /^https?:\/\/([^.]+)\.teamtailor\.com/ },
 ];
 
 /**
@@ -109,18 +119,26 @@ export function deriveSlugCandidates(name) {
 /**
  * Probe one ATS for one slug and classify the result.
  *
- * @param {string} ats - Key into ATS (greenhouse | ashby | lever).
- * @param {string} slug - Candidate slug to probe.
- * @param {{fetchJson?: Function}} [deps] - Injectable HTTP for testability.
+ * JSON-based ATS (greenhouse/ashby/lever): fetches JSON, calls `spec.jobCount`.
+ * RSS-based ATS (teamtailor): fetches raw text, calls `spec.itemCount`.
+ *
+ * @param {string} ats - Key into ATS.
+ * @param {string} slug - Candidate slug to probe (or full RSS URL for Teamtailor custom domains).
+ * @param {{fetchJson?: Function, fetchText?: Function}} [deps] - Injectable HTTP for testability.
  * @returns {Promise<{ats,slug,url,status,jobCount?,httpStatus?,reason?}>}
  *   status is 'live' (jobs > 0), 'empty' (200, no jobs), or 'missing'
  *   (404/error/unexpected shape).
  */
-export async function probeSlug(ats, slug, { fetchJson = defaultFetchJson } = {}) {
+export async function probeSlug(ats, slug, { fetchJson = defaultFetchJson, fetchText = defaultFetchText } = {}) {
   const spec = ATS[ats];
   if (!spec) return { ats, slug, url: '', status: 'missing', reason: `unknown ATS: ${ats}` };
   const url = spec.probeUrl(slug);
   try {
+    if (spec.itemCount) {
+      const text = await fetchText(url);
+      const count = spec.itemCount(text);
+      return { ats, slug, url, status: count > 0 ? 'live' : 'empty', jobCount: count };
+    }
     const json = await fetchJson(url);
     const count = spec.jobCount(json);
     if (count == null) return { ats, slug, url, status: 'missing', reason: 'unexpected response shape' };
@@ -142,19 +160,35 @@ export async function probeSlug(ats, slug, { fetchJson = defaultFetchJson } = {}
  * @param {{fetchJson?: Function}} [deps]
  * @returns {Promise<Array<object>>} One result row per company.
  */
-export async function verifyCompanies(companies, { fetchJson = defaultFetchJson } = {}) {
+export async function verifyCompanies(companies, { fetchJson = defaultFetchJson, fetchText = defaultFetchText } = {}) {
   const list = Array.isArray(companies) ? companies : [];
   const results = [];
   for (const company of list) {
     if (!company || typeof company !== 'object') continue;
     if (company.enabled === false) continue;
     const name = typeof company.name === 'string' ? company.name : '(unnamed)';
-    const match = parseAtsSlug(company.api) || parseAtsSlug(company.careers_url);
-    if (!match) {
-      results.push({ name, status: 'skipped', reason: 'no Greenhouse/Ashby/Lever slug in careers_url or api' });
+
+    // Teamtailor custom domain: careers_url is not a *.teamtailor.com subdomain,
+    // so parseAtsSlug won't recognize it. Probe the RSS URL directly using the
+    // full careers_url as the "slug" — probeUrl is the identity in this case.
+    if (company.provider === 'teamtailor' && company.careers_url && !parseAtsSlug(company.careers_url)) {
+      const rssUrl = company.careers_url.replace(/\/$/, '') + '/jobs.rss';
+      try {
+        const text = await fetchText(rssUrl);
+        const count = (text.match(/<item>/g) || []).length;
+        results.push({ name, ats: 'teamtailor', slug: company.careers_url, url: rssUrl, status: count > 0 ? 'live' : 'empty', jobCount: count });
+      } catch (err) {
+        results.push({ name, ats: 'teamtailor', slug: company.careers_url, url: rssUrl, status: 'missing', httpStatus: err?.status, reason: err?.message || String(err) });
+      }
       continue;
     }
-    const probe = await probeSlug(match.ats, match.slug, { fetchJson });
+
+    const match = parseAtsSlug(company.api) || parseAtsSlug(company.careers_url);
+    if (!match) {
+      results.push({ name, status: 'skipped', reason: 'no Greenhouse/Ashby/Lever/Teamtailor slug in careers_url or api' });
+      continue;
+    }
+    const probe = await probeSlug(match.ats, match.slug, { fetchJson, fetchText });
     results.push({ name, ...probe });
   }
   return results;
@@ -164,15 +198,15 @@ export async function verifyCompanies(companies, { fetchJson = defaultFetchJson 
  * Read a portals file and verify its tracked companies' slugs.
  *
  * @param {string} filePath - Path to a portals.yml.
- * @param {{fetchJson?: Function}} [deps]
+ * @param {{fetchJson?: Function, fetchText?: Function}} [deps]
  * @returns {Promise<{found: boolean, results: Array<object>}>} found=false when
  *   the file is absent (a graceful no-op for fresh setups / CI).
  */
-export async function verifyPortalsFile(filePath, { fetchJson = defaultFetchJson } = {}) {
+export async function verifyPortalsFile(filePath, { fetchJson = defaultFetchJson, fetchText = defaultFetchText } = {}) {
   if (!existsSync(filePath)) return { found: false, results: [] };
   const config = yaml.load(readFileSync(filePath, 'utf-8'));
   const companies = Array.isArray(config?.tracked_companies) ? config.tracked_companies : [];
-  const results = await verifyCompanies(companies, { fetchJson });
+  const results = await verifyCompanies(companies, { fetchJson, fetchText });
   return { found: true, results };
 }
 
@@ -190,17 +224,17 @@ function printResults(results) {
   }
 }
 
-async function runAdd(name, { fetchJson }) {
+async function runAdd(name, { fetchJson, fetchText }) {
   const candidates = deriveSlugCandidates(name);
   if (candidates.length === 0) {
     console.error('verify-portals: --add needs a company name');
     process.exit(1);
   }
-  console.log(`Probing ${candidates.length} slug candidate(s) for "${name}" across Greenhouse/Ashby/Lever...\n`);
+  console.log(`Probing ${candidates.length} slug candidate(s) for "${name}" across Greenhouse/Ashby/Lever/Teamtailor...\n`);
   const hits = [];
   for (const slug of candidates) {
     for (const ats of Object.keys(ATS)) {
-      const r = await probeSlug(ats, slug, { fetchJson });
+      const r = await probeSlug(ats, slug, { fetchJson, fetchText });
       if (r.status !== 'missing') {
         hits.push(r);
         console.log(`  ${ICON[r.status]} ${ats}: ${slug}` + (r.status === 'empty' ? ' (live but empty)' : ` (${r.jobCount} jobs)`));
@@ -219,10 +253,11 @@ async function main() {
   const args = process.argv.slice(2);
   const strict = args.includes('--strict');
   const fetchJson = defaultFetchJson;
+  const fetchText = defaultFetchText;
 
   const addFlag = args.indexOf('--add');
   if (addFlag !== -1) {
-    await runAdd(args[addFlag + 1] || '', { fetchJson });
+    await runAdd(args[addFlag + 1] || '', { fetchJson, fetchText });
     return;
   }
 

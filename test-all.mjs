@@ -1151,6 +1151,46 @@ try {
     fail('verify-portals parseAtsSlug misclassified an ATS or branded URL');
   }
 
+  // Teamtailor: parseAtsSlug extracts subdomain from *.teamtailor.com
+  const ttSlug = parseAtsSlug('https://viragames.teamtailor.com');
+  if (ttSlug?.ats === 'teamtailor' && ttSlug?.slug === 'viragames') {
+    pass('verify-portals parseAtsSlug extracts teamtailor subdomain slug');
+  } else {
+    fail(`verify-portals parseAtsSlug teamtailor: ${JSON.stringify(ttSlug)}`);
+  }
+
+  // Custom domain (provider: teamtailor) is not recognized by parseAtsSlug
+  if (parseAtsSlug('https://careers.bookingkit.com') === null) {
+    pass('verify-portals parseAtsSlug returns null for teamtailor custom domain (handled separately)');
+  } else {
+    fail('verify-portals parseAtsSlug should return null for custom domains');
+  }
+
+  // Mock fetchText for RSS probing
+  const mockRss = (items) => `<?xml version="1.0"?><rss><channel>${'<item></item>'.repeat(items)}</channel></rss>`;
+  const mockFetchText = async (url) => {
+    if (url === 'https://viragames.teamtailor.com/jobs.rss') return mockRss(4);
+    if (url === 'https://empty.teamtailor.com/jobs.rss') return mockRss(0);
+    if (url === 'https://careers.bookingkit.com/jobs.rss') return mockRss(5);
+    const err = new Error('HTTP 404'); err.status = 404; throw err;
+  };
+
+  // probeSlug for teamtailor (RSS path)
+  const { probeSlug } = await import(pathToFileURL(join(ROOT, 'verify-portals.mjs')).href);
+  const ttLive = await probeSlug('teamtailor', 'viragames', { fetchText: mockFetchText });
+  if (ttLive.status === 'live' && ttLive.jobCount === 4 && ttLive.url === 'https://viragames.teamtailor.com/jobs.rss') {
+    pass('verify-portals probeSlug(teamtailor) reports live with item count');
+  } else {
+    fail(`verify-portals probeSlug(teamtailor) live: ${JSON.stringify(ttLive)}`);
+  }
+
+  const ttEmpty = await probeSlug('teamtailor', 'empty', { fetchText: mockFetchText });
+  if (ttEmpty.status === 'empty' && ttEmpty.jobCount === 0) {
+    pass('verify-portals probeSlug(teamtailor) reports empty board');
+  } else {
+    fail(`verify-portals probeSlug(teamtailor) empty: ${JSON.stringify(ttEmpty)}`);
+  }
+
   // Mock fetchJson: 200+jobs → live, 200+empty → empty, otherwise 404 → missing.
   const mockFetch = async (url) => {
     if (url.includes('/boards/live/')) return { jobs: [{}, {}] };
@@ -1163,14 +1203,17 @@ try {
     { name: 'Typo', careers_url: 'https://job-boards.greenhouse.io/nope' },
     { name: 'Branded', careers_url: 'https://acme.com/careers' },
     { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
-  ], { fetchJson: mockFetch });
+    { name: 'TT Auto', careers_url: 'https://viragames.teamtailor.com' },
+    { name: 'TT Custom', careers_url: 'https://careers.bookingkit.com', provider: 'teamtailor' },
+  ], { fetchJson: mockFetch, fetchText: mockFetchText });
   const byName = Object.fromEntries(results.map((r) => [r.name, r.status]));
   if (
-    results.length === 4 &&
+    results.length === 6 &&
     byName.Live === 'live' && byName.Empty === 'empty' &&
-    byName.Typo === 'missing' && byName.Branded === 'skipped'
+    byName.Typo === 'missing' && byName.Branded === 'skipped' &&
+    byName['TT Auto'] === 'live' && byName['TT Custom'] === 'live'
   ) {
-    pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
+    pass('verify-portals classifies live/empty/unresolved/non-ATS + Teamtailor auto + custom domain');
   } else {
     fail(`verify-portals classification wrong: ${JSON.stringify(byName)} (${results.length} rows)`);
   }
@@ -8206,6 +8249,138 @@ try {
 } finally {
   console.warn = __origWarn;
   if (__pluginTmp) { try { rmSync(__pluginTmp, { recursive: true, force: true }); } catch {} }
+}
+
+// ── 50. PROVIDERS — Teamtailor ──────────────────────────────────────────
+console.log('\n50. Provider — teamtailor');
+
+try {
+  const teamtailor = (await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href)).default;
+
+  if (teamtailor.id === 'teamtailor') pass('teamtailor.id is "teamtailor"');
+  else fail(`teamtailor.id is ${JSON.stringify(teamtailor.id)}`);
+
+  // detect() — auto-detects *.teamtailor.com URLs
+  const hit = teamtailor.detect({ name: 'TestCo', careers_url: 'https://acme.teamtailor.com' });
+  if (hit?.url === 'https://acme.teamtailor.com/jobs.rss') {
+    pass('teamtailor.detect() resolves *.teamtailor.com → /jobs.rss');
+  } else {
+    fail(`teamtailor.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect() — custom domain with explicit provider: teamtailor
+  const customHit = teamtailor.detect({ name: 'TestCo', careers_url: 'https://careers.example.com', provider: 'teamtailor' });
+  if (customHit?.url === 'https://careers.example.com/jobs.rss') {
+    pass('teamtailor.detect() handles custom domain with explicit provider: teamtailor');
+  } else {
+    fail(`teamtailor.detect() custom domain returned ${JSON.stringify(customHit)}`);
+  }
+
+  // detect() — returns null for non-teamtailor URLs
+  const miss = teamtailor.detect({ name: 'TestCo', careers_url: 'https://jobs.lever.co/acme' });
+  if (miss === null || miss === undefined) pass('teamtailor.detect() returns null for non-teamtailor URLs');
+  else fail(`teamtailor.detect() should return null, got ${JSON.stringify(miss)}`);
+
+  // detect() — trailing slash is stripped
+  const trailingSlash = teamtailor.detect({ name: 'TestCo', careers_url: 'https://acme.teamtailor.com/' });
+  if (trailingSlash?.url === 'https://acme.teamtailor.com/jobs.rss') {
+    pass('teamtailor.detect() strips trailing slash before appending /jobs.rss');
+  } else {
+    fail(`teamtailor.detect() trailing slash returned ${JSON.stringify(trailingSlash)}`);
+  }
+
+  const sampleRss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:tt="https://teamtailor.com/locations">
+  <channel>
+    <title>Acme Corp</title>
+    <item>
+      <title>Senior AI Engineer (m/f/d)</title>
+      <link>https://careers.acme.com/jobs/123-senior-ai-engineer</link>
+      <tt:city>Berlin</tt:city>
+      <tt:country>Germany</tt:country>
+      <remoteStatus>fully</remoteStatus>
+      <pubDate>Mon, 16 Jun 2025 08:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Product Manager &amp; Lead</title>
+      <link>https://careers.acme.com/jobs/456-product-manager</link>
+      <tt:city>Munich</tt:city>
+      <tt:country>Germany</tt:country>
+      <remoteStatus>none</remoteStatus>
+    </item>
+    <item>
+      <title></title>
+      <link>https://careers.acme.com/jobs/789-no-title</link>
+    </item>
+  </channel>
+</rss>`;
+
+  const jobs = await teamtailor.fetch(
+    { name: 'AcmeCorp', careers_url: 'https://acme.teamtailor.com', provider: 'teamtailor' },
+    {
+      fetchText: async (url) => {
+        if (url === 'https://acme.teamtailor.com/jobs.rss') return sampleRss;
+        throw new Error(`Unexpected URL: ${url}`);
+      },
+      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+    },
+  );
+
+  if (jobs.length === 2) pass('teamtailor.fetch() skips items with empty title');
+  else fail(`teamtailor.fetch() returned ${jobs.length} jobs, expected 2`);
+
+  if (jobs[0]?.title === 'Senior AI Engineer (m/f/d)' && jobs[0]?.company === 'AcmeCorp') {
+    pass('teamtailor.fetch() extracts title and company correctly');
+  } else {
+    fail(`teamtailor.fetch() job[0] = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.location === 'Remote (Berlin, Germany)') {
+    pass('teamtailor.fetch() builds "Remote (city, country)" for fully-remote jobs');
+  } else {
+    fail(`teamtailor.fetch() remote location = ${JSON.stringify(jobs[0]?.location)}`);
+  }
+
+  if (jobs[1]?.location === 'Munich, Germany') {
+    pass('teamtailor.fetch() builds "city, country" for non-remote jobs');
+  } else {
+    fail(`teamtailor.fetch() onsite location = ${JSON.stringify(jobs[1]?.location)}`);
+  }
+
+  if (jobs[1]?.title === 'Product Manager & Lead') {
+    pass('teamtailor.fetch() decodes &amp; HTML entity in title');
+  } else {
+    fail(`teamtailor.fetch() HTML entity decode: ${JSON.stringify(jobs[1]?.title)}`);
+  }
+
+  const expectedPostedAt = Date.parse('Mon, 16 Jun 2025 08:00:00 +0000');
+  if (jobs[0]?.postedAt === expectedPostedAt) {
+    pass('teamtailor.fetch() parses pubDate into postedAt (epoch ms)');
+  } else {
+    fail(`teamtailor.fetch() postedAt: expected ${expectedPostedAt}, got ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.postedAt === undefined) {
+    pass('teamtailor.fetch() omits postedAt when pubDate is absent');
+  } else {
+    fail(`teamtailor.fetch() postedAt should be absent when no pubDate, got ${JSON.stringify(jobs[1]?.postedAt)}`);
+  }
+
+  // fetch() — throws when RSS URL cannot be resolved
+  let threw = false;
+  try {
+    await teamtailor.fetch(
+      { name: 'Bad', careers_url: 'https://evil.com/not-teamtailor' },
+      { fetchText: async () => { throw new Error('SSRF! should not reach here'); } },
+    );
+  } catch (e) {
+    if (e.message.includes('RSS URL')) threw = true;
+  }
+  if (threw) pass('teamtailor.fetch() throws when RSS URL cannot be resolved');
+  else fail('teamtailor.fetch() should throw for non-teamtailor careers_url without explicit provider');
+
+} catch (e) {
+  fail(`teamtailor provider tests crashed: ${e.message}\n${e.stack}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
