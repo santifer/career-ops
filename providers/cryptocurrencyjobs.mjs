@@ -58,7 +58,7 @@ function decodeEntities(str) {
  * @param {string} raw
  * @returns {{ title: string; company: string }}
  */
-function splitTitle(raw) {
+export function splitTitle(raw) {
   const sep = ' at ';
   const idx = raw.lastIndexOf(sep);
   if (idx <= 0) return { title: raw, company: '' };
@@ -93,11 +93,17 @@ export function parseCryptocurrencyJobsRss(xml) {
       const pubDateStr = extractTag(block, 'pubDate');
       const postedAt = pubDateStr ? new Date(pubDateStr).getTime() : undefined;
 
+      // The feed carries the job description for free in the same payload;
+      // populate it so scan.mjs's content_filter can run (it's a remote-only
+      // board, so location stays 'Remote').
+      const description = decodeEntities(extractTag(block, 'description'));
+
       results.push({
         title,
         url: link,
         company,
         location: 'Remote',
+        ...(description ? { description } : {}),
         ...(postedAt && Number.isFinite(postedAt) ? { postedAt } : {}),
       });
     } catch {
@@ -115,7 +121,9 @@ export default {
   async fetch(_entry, ctx) {
     let xml;
     try {
-      xml = await ctx.fetchText(FEED);
+      // redirect:'error' — refuse server-side redirects (SSRF hardening, matches
+      // the other HTTP providers); the feed host is fixed so a redirect is a flag.
+      xml = await ctx.fetchText(FEED, { redirect: 'error' });
     } catch {
       return [];
     }
