@@ -71,7 +71,10 @@ function normalizeCompany(name) {
   // them collapsed every non-Latin company into the same empty key, which let the
   // fuzzy role matcher merge unrelated rows — silent data loss for non-English
   // markets (the localized de/fr/ja/ar/tr modes target exactly these users).
-  const key = name.toLowerCase()
+  // NFC-normalize first so NFC/NFD variants of the same accented name (e.g.
+  // "Société" pasted as decomposed e + ´) don't strip the combining mark and
+  // produce a different key for the same company.
+  const key = name.normalize('NFC').toLowerCase()
     .replace(/[()]/g, '')
     .replace(/\s+/g, ' ')
     .replace(/[^\p{L}\p{N} ]/gu, '')
@@ -79,7 +82,7 @@ function normalizeCompany(name) {
   // Never group under an empty key. A name that is all punctuation/emoji would
   // normalize to '' and cluster with every other such name; fall back to the
   // trimmed lowercase original so those rows stay distinct.
-  return key || name.toLowerCase().trim();
+  return key || name.normalize('NFC').toLowerCase().trim();
 }
 
 /**

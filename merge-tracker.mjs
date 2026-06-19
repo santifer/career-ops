@@ -388,7 +388,13 @@ function validateStatus(status) {
  * @returns {string} Lowercase alphanumeric company key.
  */
 function normalizeCompany(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Mirror of dedup-tracker.mjs's normalizeCompany. Use Unicode letter/number
+  // classes (\p{L}\p{N}), not [a-z0-9]: stripping non-Latin characters collapsed
+  // every Cyrillic/CJK/Arabic company to the same empty key, so a TSV addition
+  // for one non-Latin company would merge into an unrelated one. NFC-normalize
+  // first so NFC/NFD variants of the same accented name (e.g. "Société") agree.
+  const key = name.normalize('NFC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  return key || name.normalize('NFC').toLowerCase().trim();
 }
 
 /**

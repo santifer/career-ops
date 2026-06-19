@@ -63,8 +63,13 @@ export const BASELINE_TOKENS = new Set([
 export function roleTokens(role) {
   const text = typeof role === 'string' ? role : String(role ?? '');
   return text
+    .normalize('NFC')
+    // Keep Unicode letters/digits (\p{L}\p{N}), not just [a-z0-9]: a [^a-z0-9\s]
+    // class erased every Cyrillic/CJK/Arabic character, so non-Latin role titles
+    // tokenized to [] and roleFuzzyMatch() bailed out — duplicate non-Latin-role
+    // rows never deduplicated even once the company key was correct.
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .split(/\s+/)
     .filter(w => (w.length > 3 || SHORT_SPECIALTY.has(w)) && !ROLE_STOPWORDS.has(w));
 }
