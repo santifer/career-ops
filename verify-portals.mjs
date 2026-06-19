@@ -71,7 +71,7 @@ const ATS_URL_PATTERNS = [
   { ats: 'lever', re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
   { ats: 'lever', re: /jobs\.lever\.co\/([^/?#]+)/ },
   // Teamtailor: extract subdomain slug from *.teamtailor.com URLs.
-  // Custom domains (e.g. careers.bookingkit.com with provider: teamtailor) are
+  // Custom domains (e.g. careers.example-company.com with provider: teamtailor) are
   // handled separately in verifyCompanies — no slug to extract from the URL.
   { ats: 'teamtailor', re: /^https?:\/\/([^.]+)\.teamtailor\.com/ },
 ];
