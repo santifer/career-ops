@@ -2284,11 +2284,17 @@ try {
       '# Applications Tracker\n\n' +
       '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
       '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 70 | 2026-04-01 | Acme | Backend Engineer | 4.0/5 | Applied | ❌ | [70](../reports/070-acme.md) | applied row |\n');
-    // Applied report WITHOUT a Machine Summary block.
-    writeFileSync(join(vpTmp, 'reports', '070-acme.md'), '# Evaluation: Acme\n\nProse only, no machine summary.\n');
+      '| 70 | 2026-04-01 | Acme | Backend Engineer | 4.0/5 | Applied | ❌ | [70](../reports/070-acme.md) | heading, no fence |\n' +
+      '| 71 | 2026-04-01 | Globex | Backend Engineer | 4.1/5 | Applied | ❌ | [71](../reports/071-globex.md) | compliant report |\n');
+    // Applied report #70 has the heading but NO fenced YAML — analyze-patterns
+    // returns null for this, so the check must still warn (old heading-only
+    // regex would have passed it).
+    writeFileSync(join(vpTmp, 'reports', '070-acme.md'), '# Evaluation: Acme\n\n## Machine Summary\n\nstatus: applied (no fenced block)\n');
     // A second file colliding on report number 070.
     writeFileSync(join(vpTmp, 'reports', '070-acme-orphan.md'), '# duplicate-numbered orphan\n');
+    // Applied report #71 has a proper fenced Machine Summary — must NOT warn.
+    writeFileSync(join(vpTmp, 'reports', '071-globex.md'),
+      '# Evaluation: Globex\n\n## Machine Summary\n\n```yaml\ncompany: Globex\nscore: 4.1\n```\n');
 
     const out = run(NODE, ['verify-pipeline.mjs'], {
       env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_REPORTS_DIR: join(vpTmp, 'reports') },
@@ -2301,10 +2307,15 @@ try {
       } else {
         fail('verify-pipeline did not flag a duplicate report number');
       }
-      if (/missing "## Machine Summary"/.test(out)) {
-        pass('verify-pipeline flags actionable reports missing a Machine Summary');
+      if (/#70 .*missing a parseable "## Machine Summary"/.test(out)) {
+        pass('verify-pipeline flags a heading-only report (no fenced YAML) as unparseable');
       } else {
-        fail('verify-pipeline did not flag a missing Machine Summary on an Applied report');
+        fail('verify-pipeline did not flag the heading-only (no-fence) Machine Summary report');
+      }
+      if (!/#71 /.test(out)) {
+        pass('verify-pipeline does not warn on a compliant fenced Machine Summary (no false positive)');
+      } else {
+        fail('verify-pipeline warned on a report that has a valid fenced Machine Summary');
       }
     }
   } finally {

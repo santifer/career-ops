@@ -259,7 +259,7 @@ if (existsSync(REPORTS_DIR)) {
   const numMap = new Map();
   for (const name of readdirSync(REPORTS_DIR)) {
     if (!name.endsWith('.md') || name.endsWith('-RESERVED.md')) continue;
-    const m = name.match(/^(\d{3})-/);
+    const m = name.match(/^(\d+)-/);
     if (!m) continue;
     if (!numMap.has(m[1])) numMap.set(m[1], []);
     numMap.get(m[1]).push(name);
@@ -289,8 +289,11 @@ for (const e of entries) {
   const path = existsSync(join(TRACKER_DIR, link)) ? join(TRACKER_DIR, link)
     : existsSync(join(CAREER_OPS, link)) ? join(CAREER_OPS, link) : null;
   if (!path) continue; // broken link already flagged by the report-links check
-  if (!/##\s*Machine Summary/i.test(readFileSync(path, 'utf-8'))) {
-    warn(`#${e.num} (${canon}): report missing "## Machine Summary" — analyze-patterns can't read its metadata`);
+  // Mirror analyze-patterns.mjs's parseMachineSummary regex: a bare heading with
+  // no fenced YAML block still yields null there, so require the fence too.
+  const MACHINE_SUMMARY_RE = /##\s*Machine Summary\s*\n+```(?:yaml|yml|json)?\s*\n[\s\S]*?\n```/i;
+  if (!MACHINE_SUMMARY_RE.test(readFileSync(path, 'utf-8'))) {
+    warn(`#${e.num} (${canon}): report missing a parseable "## Machine Summary" block — analyze-patterns can't read its metadata`);
     missingMachineSummary++;
   }
 }
