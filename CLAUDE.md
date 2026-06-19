@@ -12,6 +12,7 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 
 - **Interview / coding practice problem statements contain ONLY the problem** — model, rules, API, levels, examples, optional reference solution. NEVER embed interview coaching (no "say this", no posture, no "what they're evaluating", no weak-spot tips). Keep any performance coaching separate from the problem.
 - **NEVER commit or push to git** the user's interview practice problem statements, or the names of companies they are interviewing at (or any file revealing them: `data/`, `reports/`, `practice/`, `interview-prep/`, `batch/`, `jds/`). The pipeline lives in the private Notion backend, not the repo. Only generic system/tooling code is committed. Before any commit/push, scan the staged diff for company names or problem content; if in doubt, don't push.
+- **NEVER reason or act on truncated Notion/tracker output.** Tool results and commands like `notion.mjs list` can exceed the view and be cut off (piping through `head`, token limits, paging). Before concluding a record is absent (e.g., checking for a duplicate before adding an entry), fetch the COMPLETE result: filter with `--company`, use `--json`, or page through. A truncated list is never evidence that a record does not exist.
 
 ## Data Contract (CRITICAL)
 
