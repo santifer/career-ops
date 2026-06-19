@@ -1332,3 +1332,11 @@ job_boards:
     maxPages: 3
     enabled: false
     notes: "SEA job platform covering ID/SG/MY/VN. Undocumented public GraphQL API — adjust graphqlQuery if schema changes."
+
+  # ── CryptocurrencyJobs (Web3 / crypto) ─────────────────────────────
+  # Curated Web3/crypto job board. Public RSS feed, no auth, 100% remote.
+  # The feed URL is hardcoded in the provider, so no careers_url/api is needed.
+  - name: CryptocurrencyJobs
+    provider: cryptocurrencyjobs
+    enabled: false
+    notes: "Curated Web3/crypto job board (RSS, 100% remote)."
