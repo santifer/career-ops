@@ -17,6 +17,7 @@
 import { readFileSync, readdirSync, existsSync, mkdirSync, unlinkSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { resolveColumns } from './column-map.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -73,24 +74,9 @@ const lines = content.split('\n');
 // Location column after Role). Fixed-position indexing would otherwise read
 // Location where Score is expected and flag false errors. Falls back to the
 // legacy fixed layout when no recognizable header row is found.
-const LEGACY_COLMAP = { num: 1, date: 2, company: 3, role: 4, score: 5, status: 6, pdf: 7, report: 8, notes: 9 };
-const HEADER_ALIASES = {
-  '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
-  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
-  'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
-};
-function detectColumns(allLines) {
-  for (const line of allLines) {
-    if (!line.startsWith('|')) continue;
-    const cells = line.split('|').map(s => s.trim().toLowerCase());
-    if (!cells.includes('company') || !cells.includes('role')) continue;
-    const map = {};
-    cells.forEach((c, i) => { if (HEADER_ALIASES[c] != null) map[HEADER_ALIASES[c]] = i; });
-    if (['num', 'company', 'role', 'score', 'status'].every(k => map[k] != null)) return map;
-  }
-  return null;
-}
-const COLMAP = detectColumns(lines) || LEGACY_COLMAP;
+// Column detection is shared via column-map.mjs (resolveColumns falls back to
+// the legacy fixed layout when no recognizable header row is found).
+const COLMAP = resolveColumns(lines);
 const MAX_IDX = Math.max(...Object.values(COLMAP));
 
 const entries = [];

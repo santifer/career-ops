@@ -2227,6 +2227,83 @@ try {
   fail(`shared role matcher / dedup safety tests crashed: ${e.message}`);
 }
 
+// ── SHARED COLUMN MAP + OPTIONAL LOCATION COLUMN ────────────────
+// column-map.mjs is the single source of truth for tracker column detection.
+// dedup-tracker / normalize-statuses / analyze-patterns / followup-cadence used
+// to hardcode parts[5]=score / parts[6]=status; with the optional Location
+// column (inserted after Role) those offsets shift, so they read Score as
+// Status and could write a status back into the Score cell. They now resolve
+// columns by header like merge-tracker.mjs and verify-pipeline.mjs.
+console.log('\n🧪 Testing shared column map + optional Location column...');
+try {
+  const { resolveColumns, parseTrackerRow } = await import(pathToFileURL(join(ROOT, 'column-map.mjs')).href);
+
+  const legacy = resolveColumns(['| # | Date | Company | Role | Score | Status | PDF | Report | Notes |']);
+  if (legacy.score === 5 && legacy.status === 6 && legacy.location == null) {
+    pass('resolveColumns maps the 9-column layout (Score=5, Status=6, no Location)');
+  } else {
+    fail(`resolveColumns 9-col wrong: ${JSON.stringify(legacy)}`);
+  }
+
+  const withLoc = resolveColumns(['| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |']);
+  if (withLoc.location === 5 && withLoc.score === 6 && withLoc.status === 7) {
+    pass('resolveColumns shifts Score/Status when a Location column is present');
+  } else {
+    fail(`resolveColumns Location layout wrong: ${JSON.stringify(withLoc)}`);
+  }
+
+  if (resolveColumns(['plain text, no table']).score === 5) {
+    pass('resolveColumns falls back to the legacy layout when no header row exists');
+  } else {
+    fail('resolveColumns should fall back to LEGACY_COLMAP without a header');
+  }
+
+  const row = parseTrackerRow('| 1 | 2026-01-01 | Acme | Backend Engineer | Remote | 4.2/5 | Applied | ❌ | [1](../reports/001.md) | n |', withLoc);
+  if (row && row.score === '4.2/5' && row.status === 'Applied' && row.location === 'Remote' && row.company === 'Acme') {
+    pass('parseTrackerRow reads Score/Status/Location correctly with a Location column');
+  } else {
+    fail(`parseTrackerRow Location row wrong: ${JSON.stringify(row)}`);
+  }
+  if (parseTrackerRow('| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |', withLoc) === null) {
+    pass('parseTrackerRow returns null for the header row');
+  } else {
+    fail('parseTrackerRow should return null for the header row');
+  }
+
+  // Integration: dedup-tracker on a Location-column tracker must dedup correctly
+  // (it read Score as Status before, so it missed the duplicate entirely).
+  const colTmp = mkdtempSync(join(tmpdir(), 'career-ops-colmap-'));
+  try {
+    mkdirSync(join(colTmp, 'data'));
+    const tracker = join(colTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|----------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-05-01 | Acme | Product Engineer, Growth | Remote | 3.0/5 | Evaluated | ❌ | [1](../reports/001-a.md) | lower-scored dup |\n' +
+      '| 2 | 2026-05-02 | Acme | Product Engineer, Growth | Remote | 4.5/5 | Evaluated | ❌ | [2](../reports/002-b.md) | higher-scored dup |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker.mjs crashed on a Location-column tracker');
+    } else {
+      const dataRows = readFileSync(tracker, 'utf-8').split('\n').filter(l => /^\|\s*\d/.test(l));
+      // The fix lets dedup read Score from the Location-shifted column, so it
+      // keeps the genuinely higher-scored row (4.5). The old hardcoded offset
+      // read Location ("Remote") as the score → both scored 0 → wrong keeper.
+      if (dataRows.length === 1 && dataRows[0].includes('4.5/5') && dataRows[0].includes('Evaluated')) {
+        pass('dedup-tracker deduplicates a Location-column tracker, keeping the higher-scored row');
+      } else {
+        fail(`dedup-tracker Location dedup wrong: ${dataRows.length} rows -> ${JSON.stringify(dataRows)}`);
+      }
+    }
+  } finally {
+    rmSync(colTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`shared column map tests crashed: ${e.message}`);
+}
+
 // dedup-tracker / normalize-statuses rebuilt promoted rows with
 // `parts.slice(1, -1)`, which assumes the closing `|` produced a trailing empty
 // cell. A valid row written WITHOUT a trailing pipe keeps its real last cell
