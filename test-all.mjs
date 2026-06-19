@@ -2227,6 +2227,46 @@ try {
   fail(`shared role matcher / dedup safety tests crashed: ${e.message}`);
 }
 
+// ── NON-LATIN COMPANY DEDUP (i18n) ──────────────────────────────
+// normalizeCompany() stripped every non-[a-z0-9] character, so Cyrillic / CJK /
+// Arabic company names all collapsed to the same empty key. Two unrelated
+// non-Latin employers sharing one generic role were then grouped and a row was
+// deleted as a "duplicate" — silent data loss for the localized de/fr/ja/ar/tr
+// markets. normalizeCompany now keeps Unicode letters/digits (\p{L}\p{N}).
+console.log('\n🧪 Testing dedup-tracker keeps distinct non-Latin companies...');
+try {
+  const nlTmp = mkdtempSync(join(tmpdir(), 'career-ops-nonlatin-'));
+  try {
+    mkdirSync(join(nlTmp, 'data'));
+    const tracker = join(nlTmp, 'data', 'applications.md');
+    // Two DIFFERENT companies (Яндекс vs Сбербанк) with the SAME role. Under the
+    // old all-ASCII normalization both companies keyed to '' and the identical
+    // role made them look like duplicates, so one row would be deleted.
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 60 | 2026-03-01 | Яндекс | Бэкенд-разработчик | 4.0/5 | Evaluated | ❌ | [60](../reports/060-ya.md) | distinct employer A |\n' +
+      '| 61 | 2026-03-01 | Сбербанк | Бэкенд-разработчик | 4.1/5 | Evaluated | ❌ | [61](../reports/061-sber.md) | distinct employer B |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker.mjs crashed during non-Latin company test');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      if (out.includes('Яндекс') && out.includes('Сбербанк')) {
+        pass('dedup-tracker keeps distinct non-Latin companies (no empty-key collision)');
+      } else {
+        fail('dedup-tracker merged two distinct non-Latin companies into one');
+      }
+    }
+  } finally {
+    rmSync(nlTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`non-Latin company dedup test crashed: ${e.message}`);
+}
+
 // dedup-tracker / normalize-statuses rebuilt promoted rows with
 // `parts.slice(1, -1)`, which assumes the closing `|` produced a trailing empty
 // cell. A valid row written WITHOUT a trailing pipe keeps its real last cell
