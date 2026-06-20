@@ -41,6 +41,7 @@ BATCH_PAUSED=false
 STATUS_ONLY=false
 WATCH_MODE=false
 
+# Return success for non-negative integer or decimal strings.
 is_decimal_number() {
   [[ "$1" =~ ^[0-9]+([.][0-9]+)?$ ]]
 }
@@ -170,6 +171,7 @@ check_prerequisites() {
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
 }
 
+# Status/watch mode only needs prior batch state, not worker prerequisites.
 check_status_prerequisites() {
   if [[ ! -f "$STATE_FILE" ]]; then
     echo "No state file found at $STATE_FILE"
