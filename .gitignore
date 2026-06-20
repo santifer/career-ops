@@ -2,6 +2,7 @@
 cv.md
 data/applications.md
 data/applications.db
+data/activities.md
 data/pipeline.md
 data/scan-history.tsv
 data/parser-output/**/*.json
