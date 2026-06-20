@@ -1633,8 +1633,9 @@ console.log('\n14. Version file');
 if (fileExists('VERSION')) {
   // VERSION may carry a release-please marker, e.g. "1.9.0 # x-release-please-version".
   // Validate the first whitespace-delimited token, mirroring update-system.mjs parseVersionFile().
+  // Accept full SemVer 2.0.0 incl. optional prerelease (e.g. 2.0.0-rc.1) and build (+meta) suffixes.
   const version = readFile('VERSION').trim().split(/\s+/)[0];
-  if (/^\d+\.\d+\.\d+$/.test(version)) {
+  if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) {
     pass(`VERSION is valid semver: ${version}`);
   } else {
     fail(`VERSION is not valid semver: "${version}"`);
