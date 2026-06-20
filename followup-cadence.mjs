@@ -206,7 +206,9 @@ export function resolveReportPath(reportField, appsFile = APPS_FILE, repoRoot = 
   // dirname(APPS_FILE), not the project root, otherwise relative paths like
   // `../reports/...` (the data/applications.md layout) escape above the project.
   const fullPath = join(dirname(appsFile), match[1]);
-  return existsSync(fullPath) ? relative(repoRoot, fullPath).split(sep).join('/') : null;
+  const repoRelative = relative(repoRoot, fullPath).split(sep).join('/');
+  if (repoRelative.startsWith('../') || repoRelative === '..' || !repoRelative.startsWith('reports/')) return null;
+  return existsSync(fullPath) ? repoRelative : null;
 }
 
 // --- Compute urgency ---

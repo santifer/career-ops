@@ -2151,6 +2151,12 @@ try {
     } else {
       fail(`follow-up reportPath wrong (#1126): ${resolved}`);
     }
+    const escaped = resolveReportPath('[99](../../outside.md)', appsFile, followupTmp);
+    if (escaped === null) {
+      pass('follow-up reportPath rejects links outside reports/ (#1126)');
+    } else {
+      fail(`follow-up reportPath allowed escaped link (#1126): ${escaped}`);
+    }
   } finally {
     rmSync(followupTmp, { recursive: true, force: true });
   }
