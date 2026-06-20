@@ -113,7 +113,8 @@ function list() {
   let rows = parseRows();
   const company = opt('company');
   const since = opt('since');
-  const limit = Number(opt('limit', '20')) || 20;
+  const limit = Number(opt('limit', '20'));
+  if (!Number.isInteger(limit) || limit < 1) fail('--limit must be a positive integer');
   if (company) rows = rows.filter((r) => r.company.toLowerCase().includes(String(company).toLowerCase()));
   if (since) rows = rows.filter((r) => r.date >= since);
   rows = rows.sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, limit);

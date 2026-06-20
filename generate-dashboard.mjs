@@ -34,7 +34,10 @@ const STATES_PATH = 'templates/states.yml';
 // else the legacy root-level applications.md (mirrors merge-tracker/verify-pipeline).
 function resolveTrackerPath() {
   const env = process.env.CAREER_OPS_TRACKER;
-  if (env) return existsSync(env) ? env : null;
+  if (env) {
+    if (existsSync(env)) return env;
+    throw new Error(`CAREER_OPS_TRACKER is set but does not exist: ${env}`);
+  }
   if (existsSync('data/applications.md')) return 'data/applications.md';
   if (existsSync('applications.md')) return 'applications.md';
   return null;
@@ -592,7 +595,9 @@ function openInBrowser(file) {
   const cmd = process.platform === 'darwin' ? 'open'
     : process.platform === 'win32' ? 'cmd' : 'xdg-open';
   const args = process.platform === 'win32' ? ['/c', 'start', '', file] : [file];
-  spawn(cmd, args, { detached: true, stdio: 'ignore' }).unref();
+  const child = spawn(cmd, args, { detached: true, stdio: 'ignore' });
+  child.on('error', (err) => process.stderr.write(`Could not auto-open dashboard: ${err.message}\n`));
+  child.unref();
 }
 
 function main() {

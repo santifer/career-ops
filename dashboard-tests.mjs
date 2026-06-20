@@ -29,6 +29,8 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const NODE = process.execPath;
 const DASH = join(ROOT, 'generate-dashboard.mjs');
 const ACT = join(ROOT, 'activity.mjs');
+// Date helper so stale-window assertions stay deterministic regardless of run date.
+const isoDaysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
 
 let passed = 0;
 let failed = 0;
@@ -86,15 +88,15 @@ console.log('2. App#-tagged activity matches only its application');
     '# Applications Tracker', '',
     '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
     '|---|------|---------|------|-------|--------|-----|--------|-------|',
-    '| 7 | 2026-05-01 | Acme | ML Eng | 4.5/5 | Applied | ✅ | [7](reports/007.md) | a |',
-    '| 8 | 2026-05-02 | Acme | Data Eng | 4.3/5 | Applied | ✅ | [8](reports/008.md) | b |',
+    `| 7 | ${isoDaysAgo(40)} | Acme | ML Eng | 4.5/5 | Applied | ✅ | [7](reports/007.md) | a |`,
+    `| 8 | ${isoDaysAgo(40)} | Acme | Data Eng | 4.3/5 | Applied | ✅ | [8](reports/008.md) | b |`,
     '',
   ].join('\n');
   const acts = [
     '# Activity Log', '',
     '| Date | App# | Company | Role | Type | Minutes | Notes |',
     '|------|------|---------|------|------|---------|-------|',
-    '| 2026-06-19 | 7 | Acme | ML Eng | call | 30 | app 7 only |',
+    `| ${isoDaysAgo(1)} | 7 | Acme | ML Eng | call | 30 | app 7 only |`,
     '',
   ].join('\n');
   const { data } = genDashboard(md, acts);
@@ -109,7 +111,7 @@ console.log('3. Stale scan includes interview-stage apps');
     '# Applications Tracker', '',
     '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
     '|---|------|---------|------|-------|--------|-----|--------|-------|',
-    '| 1 | 2026-04-01 | Globex | Lead | 4.0/5 | Interview | ✅ | [1](reports/001.md) | old interview |',
+    `| 1 | ${isoDaysAgo(40)} | Globex | Lead | 4.0/5 | Interview | ✅ | [1](reports/001.md) | old interview |`,
     '',
   ].join('\n');
   const { data } = genDashboard(md);
