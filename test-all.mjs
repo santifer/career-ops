@@ -494,6 +494,23 @@ if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSou
   fail('Batch summary can misreport skipped offers as pending');
 }
 
+if (!/\bbc\b/.test(batchRunnerSource)) {
+  pass('Batch runner does not depend on bc for score arithmetic');
+} else {
+  fail('Batch runner still depends on bc for score arithmetic');
+}
+
+if (
+  !/awk "BEGIN\{[^"]*\$MIN_SCORE/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$score/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$sscore/.test(batchRunnerSource) &&
+  /awk -v score="\$score" -v min="\$MIN_SCORE"/.test(batchRunnerSource)
+) {
+  pass('Batch runner passes score values to awk via -v');
+} else {
+  fail('Batch runner interpolates score values into awk programs');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
@@ -3062,6 +3079,26 @@ try {
     pass('--resume-paused dry-run selects paused jobs only');
   } else {
     fail(`--resume-paused selection wrong: ${dry}`);
+  }
+
+  rmSync(join(batchDir, 'batch-input.tsv'), { force: true });
+  rmSync(join(batchDir, 'batch-prompt.md'), { force: true });
+  rmSync(join(fakeBin, 'claude'), { force: true });
+  writeFileSync(join(batchDir, 'batch-state.tsv'), [
+    'id\turl\tstatus\tstarted_at\tcompleted_at\treport_num\tscore\terror\tretries',
+    '1\thttps://example.com/one\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t4.5\t-\t0',
+    '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
+    '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
+  ].join('\n') + '\n');
+  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  if (statusOnly.includes('Average score: 4.5/5 (1 scored)') && statusOnly.includes('bad);system("oops")')) {
+    pass('--status reads existing state without full batch prerequisites');
+  } else {
+    fail(`--status prerequisite/score handling wrong: ${statusOnly}`);
   }
 
   try { rmSync(tmp, { recursive: true, force: true }); } catch {}

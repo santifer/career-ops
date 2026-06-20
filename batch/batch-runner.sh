@@ -41,6 +41,10 @@ BATCH_PAUSED=false
 STATUS_ONLY=false
 WATCH_MODE=false
 
+is_decimal_number() {
+  [[ "$1" =~ ^[0-9]+([.][0-9]+)?$ ]]
+}
+
 usage() {
   cat <<'USAGE'
 career-ops batch runner — process job offers in batch via claude -p workers
@@ -115,6 +119,11 @@ if ! [[ "$RATE_LIMIT_SLEEP" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
+if ! is_decimal_number "$MIN_SCORE"; then
+  echo "ERROR: --min-score must be a non-negative number."
+  exit 1
+fi
+
 # Lock file to prevent double execution
 acquire_lock() {
   if [[ -f "$LOCK_FILE" ]]; then
@@ -159,6 +168,13 @@ check_prerequisites() {
   fi
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
+}
+
+check_status_prerequisites() {
+  if [[ ! -f "$STATE_FILE" ]]; then
+    echo "No state file found at $STATE_FILE"
+    exit 0
+  fi
 }
 
 # Initialize state file if it doesn't exist
@@ -484,8 +500,8 @@ process_offer() {
     fi
 
     # Check min-score gate
-    if [[ "$score" != "-" && -n "$score" ]] && awk "BEGIN{exit !($MIN_SCORE > 0)}"; then
-      if awk "BEGIN{exit !($score < $MIN_SCORE)}"; then
+    if is_decimal_number "$score" && awk -v min="$MIN_SCORE" 'BEGIN{exit !(min > 0)}'; then
+      if awk -v score="$score" -v min="$MIN_SCORE" 'BEGIN{exit !(score < min)}'; then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
         return 0
@@ -536,8 +552,8 @@ print_summary() {
     total=$((total + 1))
     case "$sstatus" in
       completed) completed=$((completed + 1))
-        if [[ "$sscore" != "-" && -n "$sscore" ]]; then
-          score_sum=$(awk "BEGIN{print $score_sum + $sscore}" 2>/dev/null || echo "$score_sum")
+        if is_decimal_number "$sscore"; then
+          score_sum=$(awk -v sum="$score_sum" -v score="$sscore" 'BEGIN{print sum + score}' 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
         fi
         ;;
@@ -551,7 +567,7 @@ print_summary() {
 
   if (( score_count > 0 )); then
     local avg
-    avg=$(awk "BEGIN{printf \"%.1f\", $score_sum / $score_count}" 2>/dev/null || echo "N/A")
+    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{printf "%.1f", sum / count}' 2>/dev/null || echo "N/A")
     echo "Average score: $avg/5 ($score_count scored)"
   fi
 }
@@ -581,8 +597,8 @@ print_status_table() {
     case "$sstatus" in
       completed)
         completed=$((completed + 1))
-        if [[ "$sscore" != "-" && -n "$sscore" ]]; then
-          score_sum=$(echo "$score_sum + $sscore" | bc 2>/dev/null || echo "$score_sum")
+        if is_decimal_number "$sscore"; then
+          score_sum=$(awk -v sum="$score_sum" -v score="$sscore" 'BEGIN{print sum + score}' 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
         fi
         ;;
@@ -599,7 +615,7 @@ print_status_table() {
   echo "Total: $total | Completed: $completed | Processing: $processing | Failed: $failed | Pending: $pending | Skipped: $skipped | Rate Limited: $rate_limited | Paused: $paused_rate_limit"
   if (( score_count > 0 )); then
     local avg
-    avg=$(echo "scale=1; $score_sum / $score_count" | bc 2>/dev/null || echo "N/A")
+    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{printf "%.1f", sum / count}' 2>/dev/null || echo "N/A")
     echo "Average score: $avg/5 ($score_count scored)"
   fi
   echo ""
@@ -665,17 +681,19 @@ watch_status() {
 
 # Main
 main() {
-  check_prerequisites
-
   if [[ "$STATUS_ONLY" == "true" ]]; then
+    check_status_prerequisites
     print_status_table
     exit 0
   fi
 
   if [[ "$WATCH_MODE" == "true" ]]; then
+    check_status_prerequisites
     watch_status
     exit 0
   fi
+
+  check_prerequisites
 
   if [[ "$DRY_RUN" == "false" ]]; then
     acquire_lock
