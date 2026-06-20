@@ -3003,7 +3003,14 @@ try {
 
   let ssrfRejected = false;
   try {
-    await jj.fetch({ name: 'Evil', careers_url: 'https://evil.example/job-offers/all-locations' }, { transport: 'http', fetchJson: async () => fakeResponse, fetchText: async () => '' });
+    await jj.fetch(
+      { name: 'Evil', careers_url: 'https://evil.example/job-offers/all-locations' },
+      {
+        transport: 'http',
+        fetchJson: async () => { throw new Error('SSRF! should not reach here'); },
+        fetchText: async () => '',
+      },
+    );
   } catch (e) {
     if (e.message.includes('trusted justjoin.it')) ssrfRejected = true;
   }
