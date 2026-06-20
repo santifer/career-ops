@@ -60,6 +60,7 @@ const requiredSystemPaths = [
   '.env.example',
   '.claude-plugin/',
   '.qwen/',
+  '.antigravitycli/skills/',
   'tracker-columns-tests.mjs',
   'updater-migration-tests.mjs',
   'README.ar.md',
@@ -76,6 +77,7 @@ const requiredSystemPaths = [
 const requiredBootstrapPaths = [
   '.agents/',
   '.opencode/skills/',
+  '.antigravitycli/skills/',
   'providers/',
   'liveness-browser.mjs',
   'role-matcher.mjs',
@@ -125,6 +127,22 @@ const twoPassManifestChecks = [
   {
     name: 'apply checks out the merged manifest instead of only the local manifest',
     pattern: /for\s*\(const path of updatePaths\)/,
+  },
+  {
+    name: 'revertPaths uses git checkout HEAD (not just --) to reset index+worktree (#915)',
+    pattern: /git\('checkout',\s*'HEAD',\s*'--'/,
+  },
+  {
+    name: 'apply commit is scoped to update paths, not bare commit (#915)',
+    pattern: /git\('commit',\s*'-m',[^)]+'--',\s*\.\.\.pathsToStage\)/,
+  },
+  {
+    name: 'rollback commit is scoped to rollback paths, not bare commit (#915)',
+    pattern: /git\('commit',\s*'-m',[^)]+'--',\s*\.\.\.rollbackPaths\)/,
+  },
+  {
+    name: 'apply captures uncommitted work via git stash create before branching (#915)',
+    pattern: /git\('stash',\s*'create'\)/,
   },
 ];
 

@@ -5,7 +5,7 @@
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -15,6 +15,9 @@ const targetIdx = argv.indexOf('--target');
 const projectRoot =
   targetIdx !== -1 && argv[targetIdx + 1] ? argv[targetIdx + 1] : __dirname;
 const JSON_OUT = argv.includes('--json');
+// --strict adds a live ATS-slug probe of portals.yml (network). Opt-in so the
+// default `npm run doctor` stays fast and fully offline.
+const STRICT = argv.includes('--strict');
 
 // ANSI colors (only on TTY)
 const isTTY = process.stdout.isTTY;
@@ -47,23 +50,33 @@ function checkDependencies() {
 }
 
 async function checkPlaywright() {
+  let chromium;
   try {
-    const { chromium } = await import('playwright');
-    const execPath = chromium.executablePath();
-    if (existsSync(execPath)) {
-      return { pass: true, label: 'Playwright chromium installed' };
-    }
-    return {
-      pass: false,
-      label: 'Playwright chromium not installed',
-      fix: 'Run: npx playwright install chromium',
-    };
+    ({ chromium } = await import('playwright'));
   } catch {
     return {
       pass: false,
       label: 'Playwright chromium not installed',
       fix: 'Run: npx playwright install chromium',
     };
+  }
+  // Validate by launching — chromium.executablePath() points at Chrome for Testing
+  // (full binary) but chromium.launch() may use the headless-shell binary, which
+  // lives at a different path and requires a separate install. Launching directly
+  // tests the exact binary the runtime uses and catches stub-installs (directory
+  // present but no binary — just ABOUT + LICENSE files).
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true });
+    return { pass: true, label: 'Playwright chromium installed' };
+  } catch {
+    return {
+      pass: false,
+      label: 'Playwright chromium not installed',
+      fix: 'Run: npx playwright install chromium',
+    };
+  } finally {
+    try { await browser?.close(); } catch { /* ignore */ }
   }
 }
 
@@ -199,6 +212,61 @@ function checkAutoDir(name) {
   }
 }
 
+// --strict only: probe the ATS slug of every tracked company in portals.yml so
+// a typo'd slug (which 404s silently on scans) surfaces here. Skipped gracefully
+// when portals.yml is absent. Delegates to verify-portals.mjs so there is one
+// slug-probing implementation. Network-bound, hence opt-in.
+async function checkPortalSlugs(root) {
+  const portalsPath = join(root, 'portals.yml');
+  if (!existsSync(portalsPath)) {
+    return { pass: true, label: 'ATS slugs: no portals.yml yet (skipped)' };
+  }
+  try {
+    const { verifyPortalsFile } = await import('./verify-portals.mjs');
+    const { results } = await verifyPortalsFile(portalsPath);
+    const unresolved = results.filter((r) => r.status === 'missing');
+    if (unresolved.length === 0) {
+      return { pass: true, label: 'All ATS slugs in portals.yml resolve' };
+    }
+    return {
+      pass: false,
+      label: `${unresolved.length} ATS slug(s) in portals.yml do not resolve`,
+      fix: [
+        ...unresolved.map((r) => `${r.name}: ${r.ats || '?'}/${r.slug || '?'} — ${r.reason || 'unresolved'}`),
+        'Probe variants with: node verify-portals.mjs --add "<company>"',
+      ],
+    };
+  } catch (err) {
+    return { warn: true, label: `ATS slug check skipped: ${err.message}` };
+  }
+}
+
+const PIPELINE_SKELETON = `# Pipeline — Pending URLs
+
+Paste job URLs below as \`- [ ] {url}\` then run \`/career-ops pipeline\`.
+
+## Pending
+
+## Processed
+`;
+
+function checkPipelineFile() {
+  const filePath = join(projectRoot, 'data', 'pipeline.md');
+  if (existsSync(filePath)) {
+    return { pass: true, label: 'data/pipeline.md ready' };
+  }
+  try {
+    writeFileSync(filePath, PIPELINE_SKELETON, 'utf-8');
+    return { pass: true, label: 'data/pipeline.md ready (auto-created)' };
+  } catch {
+    return {
+      pass: false,
+      label: 'data/pipeline.md could not be created',
+      fix: 'Run: mkdir -p data && touch data/pipeline.md',
+    };
+  }
+}
+
 async function main() {
   console.log('\ncareer-ops doctor');
   console.log('================\n');
@@ -211,9 +279,15 @@ async function main() {
     ...USER_LAYER_PREREQS.map(checkPrereq),
     checkFonts(),
     checkAutoDir('data'),
+    checkPipelineFile(),
     checkAutoDir('output'),
     checkAutoDir('reports'),
   ];
+
+  // Network-bound ATS slug probe — only under --strict.
+  if (STRICT) {
+    checks.push(await checkPortalSlugs(projectRoot));
+  }
 
   let failures = 0;
   let warnings = 0;

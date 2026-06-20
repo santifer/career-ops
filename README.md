@@ -62,6 +62,7 @@
   <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
   <img src="https://img.shields.io/badge/OpenCode-111827?style=flat&logo=terminal&logoColor=white" alt="OpenCode">
   <img src="https://img.shields.io/badge/Gemini_CLI-4285F4?style=flat&logo=google&logoColor=white" alt="Gemini CLI">
+  <img src="https://img.shields.io/badge/Antigravity_CLI-4285F4?style=flat&logo=google&logoColor=white" alt="Antigravity CLI">
   <img src="https://img.shields.io/badge/Codex-412991?style=flat&logo=openai&logoColor=white" alt="Codex">
   <img src="https://img.shields.io/badge/Qwen-615CED?style=flat" alt="Qwen">
   <img src="https://img.shields.io/badge/GitHub_Copilot-000?style=flat&logo=githubcopilot&logoColor=white" alt="GitHub Copilot">
@@ -124,7 +125,7 @@ This clones the latest release into `./career-ops` and installs dependencies. Th
 
 ```bash
 cd career-ops
-claude   # or gemini / codex / qwen / opencode — open your AI CLI here
+claude   # or gemini / codex / qwen / opencode / agy — open your AI CLI here
 ```
 
 **On first launch, career-ops walks you through setup — your CV, profile and target roles — just by chatting. Nothing to edit by hand.**
@@ -167,9 +168,9 @@ opencode # Or use OpenCode
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
-## Gemini CLI Integration
+## Gemini & Antigravity CLI Integration
 
-Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) natively, the same way it supports Claude Code and OpenCode. All 15 slash commands are available, using the same `modes/*.md` evaluation logic.
+Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) and Antigravity CLI natively, the same way it supports Claude Code and OpenCode. All 15 slash commands are available, using the same `modes/*.md` evaluation logic.
 
 ### Option A: Native Gemini CLI (Recommended)
 
@@ -191,7 +192,7 @@ gemini
 /career-ops tracker
 ```
 
-The `GEMINI.md` file is auto-loaded as context. All subcommands are routed via the unified `.agents/skills/career-ops/SKILL.md` definition.
+The `GEMINI.md` file is auto-loaded as context. The skill is defined using the open standard in `.agents/skills/career-ops/SKILL.md` and symlinked/referenced for each supported CLI (e.g. `.claude/`, `.qwen/`, `.antigravitycli/`).
 
 ### Option B: Standalone API Script (No CLI install needed)
 
