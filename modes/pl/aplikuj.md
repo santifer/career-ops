@@ -84,7 +84,7 @@ Każda odpowiedź ma być:
 - bez przesady i bez wymyślania,
 - w języku formularza, chyba że użytkownik chce inaczej.
 
-Używaj proof points z CV i `_profile.md`. Nie podawaj telefonu w odpowiedziach tekstowych, chyba że formularz ma osobne pole telefonu i użytkownik chce je wypełnić.
+Używaj proof points z CV i `modes/_profile.md`. Nie podawaj telefonu w odpowiedziach tekstowych, chyba że formularz ma osobne pole telefonu i użytkownik chce je wypełnić.
 
 ## Polskie pola formularzy
 
@@ -114,7 +114,7 @@ Używaj proof points z CV i `_profile.md`. Nie podawaj telefonu w odpowiedziach 
 ```markdown
 ## Odpowiedzi: {Firma} -- {Rola}
 
-Kontekst: raport #{NNN} | Score: {X.X}/5 | Arketyp: {arketype}
+Kontekst: raport #{NNN} | Score: {X.X}/5 | Arketyp: {arketyp}
 
 ---
 

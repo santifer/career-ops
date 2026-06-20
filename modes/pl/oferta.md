@@ -213,8 +213,10 @@ Jeśli oferta jest projektowa, freelance, fixed-term albo wymaga potencjalnej ty
 Zapisz raport jako:
 
 ```text
-reports/{###}-{company-slug}-{YYYY-MM-DD}.md
+reports/{num}-{company-slug}-{date}.md
 ```
+
+`{num}` to trzycyfrowy numer raportu, a `{date}` to data w formacie `YYYY-MM-DD`.
 
 Wymagany nagłówek:
 
@@ -259,7 +261,7 @@ Nie dodawaj nowych wpisów bezpośrednio do `data/applications.md`.
 Zapisz TSV:
 
 ```tsv
-{num}\t{date}\t{company}\t{role}\tEvaluated\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+{num}\t{date}\t{company}\t{role}\tEvaluated\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{company-slug}-{date}.md)\t{note}
 ```
 
 Potem uruchom:

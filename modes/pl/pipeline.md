@@ -7,18 +7,22 @@ Przetwarza URL-e zapisane w `data/pipeline.md`. Użytkownik może zbierać linki
 1. **Przeczytaj** `data/pipeline.md` i znajdź pozycje `- [ ]` w sekcji "Pending" albo jej lokalnym odpowiedniku.
 2. **Dla każdego pending URL-a**:
    a. Zarezerwuj kolejny `REPORT_NUM` przez `node reserve-report-num.mjs` i zwolnij sentinel po zapisaniu raportu przez `node reserve-report-num.mjs --release <num>`.
-   b. Wyciągnij JD: Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch.
+   b. Wyciągnij JD: Playwright (`browser_navigate` + `browser_snapshot`), jeśli jest dostępny → WebFetch → WebSearch.
    c. Jeśli URL jest niedostępny, oznacz go jako `- [!]` z krótką notatką i przejdź dalej.
-   d. Uruchom pełny auto-pipeline: ocena A-F → raport `.md` → PDF według progu `auto_pdf_score_threshold` → tracker.
+   d. Uruchom pełny auto-pipeline: ocena A-G z Block G / `Legitimacy` → raport `.md` → PDF według progu `auto_pdf_score_threshold` → tracker.
    e. Przenieś wpis z "Pending" do "Processed": `- [x] #NNN | URL | Company | Role | Score/5 | PDF ✅/❌`.
+
+Tylko aktywny proces pipeline albo koordynator może aktualizować `data/pipeline.md`. Workerzy równolegli nie mogą edytować `data/pipeline.md` ani `data/applications.md`; zapisują tylko raporty, TSV w `batch/tracker-additions/`, logi i wyniki per oferta.
+
+**Legitimacy / Block G:** każda ocena musi obliczyć tier `High Confidence`, `Proceed with Caution` albo `Suspicious` zgodnie z `modes/oferta.md`. Ten tier wpisz w nagłówku raportu jako `**Legitimacy:**`, w sekcji `## G) Posting Legitimacy` oraz w tabeli końcowej. Jeśli narzędzia weryfikacyjne są niedostępne, oznacz brakujące fakty jako `needs_check` zamiast zgadywać.
 
 **Próg PDF:** przeczytaj `config/profile.yml` → `auto_pdf_score_threshold`. Jeśli klucz nie istnieje, domyślnie użyj `3.0`. Jeśli score jest niższy niż próg, zapisz raport bez PDF, wpisz w nagłówku `**PDF:** not generated — run /career-ops pdf {company-slug} to create on demand` i oznacz PDF jako ❌ w trackerze. Jeśli score jest równy lub wyższy od progu, wygeneruj PDF normalnie.
 
-3. **Jeśli są 3+ pending URL-e**, uruchom agentów równolegle zgodnie z bazowym trybem pipeline.
+3. **Jeśli są 3+ pending URL-e**, użyj bazowego koordynatora pipeline dla równoległości, resume i retry. Zachowaj granicę: koordynator aktualizuje wspólne pliki, workerzy wykonują tylko pracę per oferta.
 4. **Na końcu** pokaż tabelę:
 
 ```markdown
-| # | Firma | Rola | Score | PDF | Rekomendowany następny krok |
+| # | Firma | Rola | Score | Legitimacy | PDF | Rekomendowany następny krok |
 ```
 
 ## Format `data/pipeline.md`

@@ -162,8 +162,8 @@ Zawsze korzystaj z `config/profile.yml` dla targetów kandydata. W polskich ofer
 1. Przeczytaj `cv.md`, `config/profile.yml` i `modes/_profile.md` przed oceną.
 2. Jeśli istnieje `article-digest.md`, przeczytaj je dla proof points.
 3. W pierwszej ocenie sesji uruchom `node cv-sync-check.mjs`; jeśli są ostrzeżenia, powiedz użytkownikowi.
-4. Zweryfikuj aktywność oferty Playwrightem, gdy to możliwe.
-5. Użyj WebSearch do danych o wynagrodzeniu, rynku i firmie.
+4. Zweryfikuj aktywność oferty Playwrightem, gdy jest dostępny; jeśli nie, użyj dostępnego fallbacku i oznacz poziom pewności.
+5. Użyj WebSearch do danych o wynagrodzeniu, rynku i firmie, gdy jest dostępny; jeśli nie, opisz braki i oznacz elementy jako `needs_check`.
 6. W raporcie dodaj `**URL:**` i `**Legitimacy:**`.
 7. Dla nowych wpisów trackera zapisz TSV i potem uruchom `node merge-tracker.mjs`.
 8. Pisz prosto, konkretnie i bez nadmuchanych deklaracji.
