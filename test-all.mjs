@@ -1010,6 +1010,13 @@ for (const f of cliWrappers) {
   }
 }
 
+const claudeWrapperLines = readFile('CLAUDE.md').trim().split(/\r?\n/);
+if (claudeWrapperLines.length <= 5 && claudeWrapperLines[0].includes('AGENTS.md')) {
+  pass('CLAUDE.md is a thin AGENTS.md wrapper (#1088)');
+} else {
+  fail('CLAUDE.md duplicates AGENTS.md instead of acting as a thin wrapper (#1088)');
+}
+
 // ── 12. SKILL SYMLINK INTEGRITY ─────────────────────────────
 
 console.log('\n12. Skill symlink integrity');
@@ -2562,15 +2569,16 @@ try {
   }
   rmSync(ready, { recursive: true, force: true });
 
+  const canonicalAgentDoc = readFile('AGENTS.md');
   const claudeDoc = readFile('CLAUDE.md');
   if (
-    /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&
-    /"warnings"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /node\s+doctor\.mjs\s+--json/.test(canonicalAgentDoc) &&
+    /"warnings"\s*:\s*\[\.\.\.\]/.test(canonicalAgentDoc) &&
     !/Does\s+`cv\.md`\s+exist\?/i.test(claudeDoc)
   ) {
-    pass('CLAUDE.md delegates onboarding state to doctor --json');
+    pass('AGENTS.md delegates onboarding state to doctor --json and CLAUDE.md stays thin');
   } else {
-    fail('CLAUDE.md still duplicates onboarding prerequisite checks');
+    fail('Onboarding docs still duplicate prerequisite checks or CLAUDE.md is not thin');
   }
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
