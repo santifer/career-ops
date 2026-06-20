@@ -2180,7 +2180,7 @@ if (
 }
 
 const claudeWrapperLines = readFile('CLAUDE.md').trim().split(/\r?\n/);
-if (claudeWrapperLines.length <= 8 && claudeWrapperLines[0].includes('AGENTS.md')) {
+if (claudeWrapperLines.length <= 8 && claudeWrapperLines[0] === '@AGENTS.md') {
   pass('CLAUDE.md is a thin AGENTS.md wrapper (#1088)');
 } else {
   fail('CLAUDE.md duplicates AGENTS.md instead of acting as a thin wrapper (#1088)');
