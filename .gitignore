@@ -4,6 +4,7 @@ data/applications.md
 data/applications.db
 data/pipeline.md
 data/scan-history.tsv
+data/agent-inbox.md
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
