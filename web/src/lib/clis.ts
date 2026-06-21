@@ -35,6 +35,17 @@ function searchDirs(): string[] {
     "/usr/local/bin",
     "/usr/bin",
   ];
+  if (process.platform === "win32") {
+    // Windows CLIs frequently install under per-user AppData roots and don't
+    // reliably add themselves to PATH (e.g. Antigravity → %LOCALAPPDATA%\agy\bin).
+    const localAppData = process.env.LOCALAPPDATA || path.join(home, "AppData", "Local");
+    const appData = process.env.APPDATA || path.join(home, "AppData", "Roaming");
+    extra.push(
+      path.join(localAppData, "agy", "bin"), // Antigravity CLI
+      path.join(localAppData, "Microsoft", "WindowsApps"), // winget/Store shims
+      path.join(appData, "npm"), // npm global prefix on Windows
+    );
+  }
   const fromPath = (process.env.PATH || "").split(path.delimiter).filter(Boolean);
   return [...new Set([...fromPath, ...extra])];
 }
