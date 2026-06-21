@@ -55,9 +55,16 @@ function searchDirs(): string[] {
 // found, not just an extensionless npm shim. On POSIX, "" keeps the bare name.
 function binCandidates(bin: string): string[] {
   if (process.platform !== "win32") return [bin];
-  const exts = (process.env.PATHEXT || ".EXE;.CMD;.BAT;.PS1").split(";").filter(Boolean);
-  // Try the bare name too (npm drops an extensionless sh shim on PATH).
-  return [bin, ...exts.map((ext) => bin + ext.toLowerCase())];
+  const pathext = process.env.PATHEXT || ".COM;.EXE;.BAT;.CMD";
+  const exts = pathext
+    .split(";")
+    .map((e) => e.trim())
+    .filter(Boolean)
+    // Only include extensions that `child_process.spawn()` can execute directly.
+    .filter((e) => [".com", ".exe", ".bat", ".cmd"].includes(e.toLowerCase()));
+
+  // Try the bare name too (some environments provide an extensionless shim).
+  return [bin, ...exts.map((ext) => bin + ext)];
 }
 
 export function findBin(bin: string, dirs = searchDirs()): string | null {
