@@ -39,14 +39,26 @@ function searchDirs(): string[] {
   return [...new Set([...fromPath, ...extra])];
 }
 
+// On Windows, executables carry an extension (claude.exe, claude.cmd, ...).
+// Mirror the shell's PATHEXT resolution so a native-installer claude.exe is
+// found, not just an extensionless npm shim. On POSIX, "" keeps the bare name.
+function binCandidates(bin: string): string[] {
+  if (process.platform !== "win32") return [bin];
+  const exts = (process.env.PATHEXT || ".EXE;.CMD;.BAT;.PS1").split(";").filter(Boolean);
+  // Try the bare name too (npm drops an extensionless sh shim on PATH).
+  return [bin, ...exts.map((ext) => bin + ext.toLowerCase())];
+}
+
 export function findBin(bin: string, dirs = searchDirs()): string | null {
   for (const dir of dirs) {
-    const p = path.join(dir, bin);
-    try {
-      fs.accessSync(p, fs.constants.X_OK);
-      return p;
-    } catch {
-      /* not here */
+    for (const candidate of binCandidates(bin)) {
+      const p = path.join(dir, candidate);
+      try {
+        fs.accessSync(p, fs.constants.X_OK);
+        return p;
+      } catch {
+        /* not here */
+      }
     }
   }
   return null;
