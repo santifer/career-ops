@@ -61,6 +61,7 @@ const SYSTEM_PATHS = [
   'modes/de/',
   'modes/fr/',
   'modes/ja/',
+  'modes/pl/',
   'modes/pt/',
   'modes/ru/',
   'modes/tr/',
