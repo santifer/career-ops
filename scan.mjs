@@ -121,14 +121,22 @@ function resolveProvider(entry, providers, { skipIds = [] } = {}) {
 
 // ── Title filter ────────────────────────────────────────────────────
 
+// Match a keyword only when it is not flanked by other letters, so short
+// acronyms ("CTO", "VP") don't match as substrings inside longer words
+// (e.g. "CTO" inside "direCTOr", which would let every Director role pass a
+// CTO-targeted filter). Surrounding spaces and punctuation still match.
+function boundaried(k) {
+  const esc = k.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![a-z])${esc}(?![a-z])`, 'i');
+}
+
 export function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+  const positive = (titleFilter?.positive || []).map(boundaried);
+  const negative = (titleFilter?.negative || []).map(boundaried);
 
   return (title) => {
-    const lower = title.toLowerCase();
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
-    const hasNegative = negative.some(k => lower.includes(k));
+    const hasPositive = positive.length === 0 || positive.some(re => re.test(title));
+    const hasNegative = negative.some(re => re.test(title));
     return hasPositive && !hasNegative;
   };
 }

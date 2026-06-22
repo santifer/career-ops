@@ -1251,12 +1251,35 @@ console.log('\n15. Location filter — always_allow tier');
 
 try {
   const {
+    buildTitleFilter,
     buildLocationFilter,
     buildContentFilter,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
     formatScanHistoryRow,
   } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // Title filter — keywords must match on word boundaries, not as substrings.
+  // Regression: the short keyword "CTO" matched inside "direCTOr", so every
+  // non-engineering Director role passed a CTO/Director-of-Engineering filter.
+  const titleFilter = buildTitleFilter({
+    positive: ['CTO', 'VP of Engineering', 'Director of Engineering', 'Head of Engineering'],
+    negative: ['VP Sales'],
+  });
+  if (titleFilter('Director of Analytics') === false) pass('"Director of Analytics" rejected — "CTO" no longer matches inside "direCTOr"');
+  else fail('"Director of Analytics" should be rejected (CTO substring bug)');
+  if (titleFilter('Director, FP&A - Growth') === false) pass('"Director, FP&A - Growth" rejected (no CTO substring match)');
+  else fail('"Director, FP&A - Growth" should be rejected');
+  if (titleFilter('CTO') === true) pass('"CTO" still matches as a whole word');
+  else fail('"CTO" should still match');
+  if (titleFilter('Chief Technology Officer (CTO)') === true) pass('"CTO" matches when flanked by punctuation/parens');
+  else fail('"CTO" in parentheses should still match');
+  if (titleFilter('VP of Engineering') === true) pass('"VP of Engineering" still matches');
+  else fail('"VP of Engineering" should match');
+  if (titleFilter('Director of Engineering') === true) pass('"Director of Engineering" still matches');
+  else fail('"Director of Engineering" should match');
+  if (titleFilter('VP Sales, Engineering Partnerships') === false) pass('negative keyword "VP Sales" still rejects on word boundary');
+  else fail('"VP Sales, Engineering Partnerships" should be rejected by negative keyword');
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
