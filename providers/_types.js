@@ -18,6 +18,18 @@
  * @property {string} company  May be empty when the source can't expose it
  *                             at the list-page level; populated downstream.
  * @property {string} location May be empty.
+ * @property {string} [description] Job description text, populated ONLY when the
+ *                               provider's list payload carries it for free (no
+ *                               extra per-job request — the scanner is zero-token).
+ *                               Lever supplies it via `descriptionPlain`; most
+ *                               providers omit it. Consumed by scan.mjs's
+ *                               content_filter; an empty/absent value always
+ *                               passes the filter.
+ * @property {number} [postedAt] Epoch ms when the posting was published.
+ *                               Omitted when the source doesn't expose a
+ *                               usable date. scan.mjs ignores it; consumers
+ *                               like scan-ats-full.mjs use it for recency
+ *                               filtering.
  */
 
 /**
@@ -32,6 +44,7 @@
  * @property {string}             name             User-facing label; appears in logs and placeholders.
  * @property {boolean}            [enabled]        Default: true.
  * @property {string}             [careers_url]    Public listing URL; consumed by detect().
+ * @property {string}             [api]            JSON API URL; used directly by greenhouse/ashby providers.
  * @property {string}             [provider]       Explicit provider id — bypasses detect().
  * @property {('http')}           [transport]      Default: 'http'. Reserved for future transports.
  */
@@ -52,6 +65,7 @@
  * @property {Object<string,string>} [headers]
  * @property {string}                [method]
  * @property {(string|null)}         [body]
+ * @property {('error'|'follow'|'manual')} [redirect]
  */
 
 /**

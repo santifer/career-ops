@@ -12,6 +12,7 @@ Contributors with sustained technical ownership over specific areas. Full author
 
 ## Shipping with the project
 
+- **[@razour08](https://github.com/razour08)** (Ramzi Dekali) — Arabic translation support (`modes/ar/` and `README.ar.md`) for the Arab market.
 - **[@CURT1S03](https://github.com/CURT1S03)** (Curtis) — LaTeX/Overleaf CV export ([PR #362](https://github.com/santifer/career-ops/pull/362), merged — resolves [#47](https://github.com/santifer/career-ops/issues/47))
 - **[@vivek-gite](https://github.com/vivek-gite)** — A16Z provider support ([PR #271](https://github.com/santifer/career-ops/pull/271), in review)
 - **@3fones** — LinkedIn scanner (WIP, paid Claude Max to build on top of the project)

@@ -5,11 +5,13 @@ data/apply-queue.json
 data/local-enrichments.json
 data/answer-cache.json
 data/.answer-cache-*.tmp
+data/applications.db
 data/pipeline.md
 data/scan-history.tsv
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
+data/cache/ats-companies/
 reports/*.md
 !reports/.gitkeep
 output/*
@@ -22,6 +24,10 @@ batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*
 !jds/.gitkeep
+
+# Interview prep (accumulated STAR+R stories — user data)
+interview-prep/*
+!interview-prep/.gitkeep
 
 # Writing samples (user's personal files — never committed)
 writing-samples/*
@@ -49,16 +55,25 @@ data/portal-credentials.json
 .playwright-mcp/
 node_modules/
 bun.lock
+# Report-number reservation sentinels (ephemeral, created by reserve-report-num.mjs)
+reports/*-RESERVED.md
+
+# Backup files written by normalize-statuses.mjs / dedup-tracker.mjs
+*.bak
 
 # OS
 .DS_Store
 *.mov
 *.mp4
 
-# Claude Code local
+# CLI-specific local config
 .claude/settings.local.json
 .claude/memory/
 .claude/scheduled_tasks.lock
+.opencode/settings.local.json
+.opencode/memory/
 career-dashboard
 package-lock.json
 
+# Planning (local scratchpad)
+plan/
