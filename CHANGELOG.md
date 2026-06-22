@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.10.0](https://github.com/neilshekhar/career-ops/compare/career-ops-v1.9.0...career-ops-v1.10.0) (2026-06-22)
+
+Catch-up merge of upstream `santifer/career-ops` (through upstream v1.12.0) into
+Neil's fork, landed only after the full `UPSTREAM_MERGE_CHECKLIST.md` gate passed
+(engine zero-diff, 531/0 tests, pipeline clean, cron RLS 6/6, jose mint,
+states.yml vocabulary intact, dashboard three-lane launch, DOCX cover letter).
+Neil's apply/queue/Supabase engine is byte-identical to the prior release.
+
+### Features
+
+* **cover:** add cover letter generation mode (`modes/cover.md`, `generate-cover-letter.mjs`) with `_profile.md` personalization and optional salutation
+* **modes:** add interactive interview onboarding subcommand (`modes/interview.md`)
+* **dashboard:** customizable + sortable pipeline columns with column picker; keep discard reason in preview; cross-platform open helpers
+* **providers:** add Workable, SmartRecruiters, Recruitee, SolidJobs, RemoteOK, Remotive, Working Nomads, IBM, Jobstreet, Glints, Arbeitsagentur, Workday providers + content/description and salary filters
+* **scan:** add `scan-ats-full.mjs` reverse discovery, `portals.yml` schema validator (`validate-portals.mjs`/`verify-portals.mjs`), scan-history TTL/recheck, `--rediscover-404`
+* **tracker:** SQLite derived index over `applications.md`; header-name column mapping
+* **i18n:** add full Arabic and Chinese language modes; add French/Polish READMEs
+* **cv:** `build-cv-latex.mjs` structured JSON to LaTeX; Japanese CJK PDF font fallback
+* **infra:** Dockerize project; Antigravity CLI compatibility; first-class OpenCode support; npx scaffolder
+* **doctor:** `doctor --json` as the single onboarding-state source; Playwright MCP warning
+
+### Bug Fixes
+
+* numerous upstream `update`, `batch`, `pdf`, `merge-tracker`, `security`, and `liveness` hardening fixes (see merged commit history)
+
+### Fork Maintenance
+
+* add `UPSTREAM_MERGE_CHECKLIST.md` as standing precedent for all future upstream pulls, referenced from `CLAUDE.md` and `AGENTS.md`
+
 ## [1.9.0](https://github.com/neilshekhar/career-ops/compare/career-ops-v1.8.0...career-ops-v1.9.0) (2026-06-18)
 
 
