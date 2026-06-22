@@ -159,9 +159,10 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
-  // Bare run: no portals.yml in the repo, so it must exit 0 gracefully (and hit
-  // no network). The probe logic itself is unit-tested below with a mock.
-  { name: 'verify-portals.mjs', expectExit: 0 },
+  // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
+  // default portals.yml because end-user workspaces often have a real user-layer
+  // portals file that would trigger a live remote sweep during tests.
+  { name: 'verify-portals.mjs --file .tmp-test-missing-portals.yml', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
@@ -996,7 +997,7 @@ for (const section of requiredSections) {
 
 console.log('\n11. CLI wrapper file integrity');
 
-const cliWrappers = ['CLAUDE.md', 'OPENCODE.md', 'GEMINI.md'];
+const cliWrappers = ['CLAUDE.md', 'OPENCODE.md'];
 for (const f of cliWrappers) {
   if (!fileExists(f)) {
     fail(`Missing CLI wrapper: ${f}`);
@@ -1007,6 +1008,16 @@ for (const f of cliWrappers) {
     pass(`${f} references AGENTS.md`);
   } else {
     fail(`${f} does NOT reference AGENTS.md`);
+  }
+}
+if (!fileExists('GEMINI.md')) {
+  fail('Missing legacy Gemini context guard: GEMINI.md');
+} else {
+  const geminiContext = readFile('GEMINI.md');
+  if (/^@(?:\.\/)?AGENTS\.md/m.test(geminiContext)) {
+    fail('GEMINI.md imports AGENTS.md and duplicates Antigravity context');
+  } else {
+    pass('GEMINI.md is a no-op context guard for Antigravity');
   }
 }
 
