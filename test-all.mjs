@@ -4922,6 +4922,178 @@ try {
   fail(`Personal scoring guard check crashed: ${e.message}`);
 }
 
+// ── 25. COVER LETTER MARKDOWN RENDERER ──────────────────────────
+
+console.log('\n25. Cover letter markdown renderer (buildMarkdown)');
+
+try {
+  const { buildMarkdown } = await import(pathToFileURL(join(ROOT, 'generate-cover-markdown.mjs')).href);
+
+  const md = buildMarkdown({
+    candidate: {
+      name: 'Jane Doe',
+      location: 'Melbourne',
+      email: 'jane@example.com',
+      credentials: ['BSc Data Science', 'AWS Certified'],
+    },
+    letter: {
+      role_title: 'Data Analyst',
+      company: 'Acme',
+      city: 'Melbourne',
+      date: '2026-06-22',
+      greeting: 'Dear Hiring Manager,',
+      opening: 'OPEN_MARKER first sentence.',
+      profile_intro: 'Five years in analytics.',
+      achievements: [
+        { lead: 'Cut latency', impact: 'from 2s to 380ms across the pipeline.' },
+      ],
+      problems_section: 'I would tackle PROBLEM_MARKER first.',
+      closing: 'Available immediately.',
+    },
+  });
+
+  if (md.startsWith('# Jane Doe')) pass('buildMarkdown renders the name as an H1');
+  else fail('buildMarkdown did not render name as H1');
+
+  if (md.includes('- **Cut latency,** from 2s to 380ms across the pipeline.')) {
+    pass('buildMarkdown renders achievement bullets with bold lead + comma');
+  } else {
+    fail('buildMarkdown achievement bullet formatting wrong');
+  }
+
+  if (md.includes('OPEN_MARKER') && md.includes('PROBLEM_MARKER') && md.includes('Dear Hiring Manager,')) {
+    pass('buildMarkdown includes opening, problems, and greeting');
+  } else {
+    fail('buildMarkdown missing a required section');
+  }
+
+  // No em/en dashes (Lesson 18): an em dash in input is normalised away.
+  const dashed = buildMarkdown({
+    candidate: { name: 'X' },
+    letter: { role_title: 'R', opening: 'A \u2014 B em dash.', profile_intro: 'P \u2013 Q en dash.' },
+  });
+  if (!dashed.includes('\u2014') && !dashed.includes('\u2013')) {
+    pass('buildMarkdown strips em/en dashes from prose');
+  } else {
+    fail('buildMarkdown left an em/en dash in the output');
+  }
+
+  // Missing required field throws.
+  let threw = false;
+  try { buildMarkdown({ candidate: {}, letter: {} }); } catch { threw = true; }
+  if (threw) pass('buildMarkdown throws on a payload missing required fields');
+  else fail('buildMarkdown did not throw on an invalid payload');
+} catch (e) {
+  fail(`Cover markdown renderer test crashed: ${e.message}`);
+}
+
+// ── 26. COVER FORMAT DECISION POLICY ────────────────────────────
+
+console.log('\n26. Cover format decision policy (chooseCoverFormat)');
+
+try {
+  const { chooseCoverFormat, formatFallbackOrder, acceptAllowsDocx, acceptAllowsPdf } =
+    await import(pathToFileURL(join(ROOT, 'cover-format-policy.mjs')).href);
+
+  // Direct/human channel → polished PDF.
+  if (chooseCoverFormat({ channel: 'email' }).format === 'pdf') {
+    pass('chooseCoverFormat: email channel → pdf (human format)');
+  } else {
+    fail('chooseCoverFormat: email channel did not pick pdf');
+  }
+
+  // Portal upload, unspecified accept → DOCX (machine format default).
+  if (chooseCoverFormat({ accept: '' }).format === 'docx') {
+    pass('chooseCoverFormat: portal upload (no accept) → docx');
+  } else {
+    fail('chooseCoverFormat: portal upload default was not docx');
+  }
+
+  // Field accepts both → DOCX.
+  if (chooseCoverFormat({ accept: '.pdf,.docx' }).format === 'docx') {
+    pass('chooseCoverFormat: field accepts both → docx');
+  } else {
+    fail('chooseCoverFormat: accepts-both did not pick docx');
+  }
+
+  // Field restricts to PDF only → polished PDF.
+  if (chooseCoverFormat({ accept: '.pdf' }).format === 'pdf') {
+    pass('chooseCoverFormat: PDF-only field → pdf');
+  } else {
+    fail('chooseCoverFormat: PDF-only field did not pick pdf');
+  }
+
+  // Field restricts to Word only → DOCX.
+  if (chooseCoverFormat({ accept: '.docx' }).format === 'docx') {
+    pass('chooseCoverFormat: Word-only field → docx');
+  } else {
+    fail('chooseCoverFormat: Word-only field did not pick docx');
+  }
+
+  // Policy override: portal_default pdf flips the unspecified-accept default.
+  if (chooseCoverFormat({ accept: '' }, { portal_default: 'pdf' }).format === 'pdf') {
+    pass('chooseCoverFormat: portal_default override (pdf) respected');
+  } else {
+    fail('chooseCoverFormat: portal_default override not respected');
+  }
+
+  // accept helpers: empty means "anything".
+  if (acceptAllowsDocx('') && acceptAllowsPdf('') && acceptAllowsDocx('.docx') && !acceptAllowsDocx('.pdf')) {
+    pass('acceptAllowsDocx/Pdf handle empty (any) and explicit lists');
+  } else {
+    fail('acceptAllowsDocx/Pdf logic incorrect');
+  }
+
+  // Fallback order degrades docx → pdf and pdf → docx.
+  const docxOrder = formatFallbackOrder('docx');
+  const pdfOrder  = formatFallbackOrder('pdf');
+  if (docxOrder[0] === 'docx' && docxOrder.includes('pdf') && pdfOrder[0] === 'pdf' && pdfOrder.includes('docx')) {
+    pass('formatFallbackOrder degrades each format to the other');
+  } else {
+    fail('formatFallbackOrder degradation order wrong');
+  }
+} catch (e) {
+  fail(`Cover format policy test crashed: ${e.message}`);
+}
+
+// ── 27. COVER FORMATS ORCHESTRATOR + APPLY WIRING ───────────────
+
+console.log('\n27. Cover formats orchestrator + apply wiring');
+
+try {
+  const formatsSrc = readFile('generate-cover-formats.mjs');
+  if (formatsSrc.includes('generateCoverFormats') && formatsSrc.includes('.payload.json')) {
+    pass('generate-cover-formats.mjs exports generateCoverFormats and writes a canonical payload');
+  } else {
+    fail('generate-cover-formats.mjs missing orchestrator export or payload persistence');
+  }
+  if (formatsSrc.includes("import { buildMarkdown }") && formatsSrc.includes("import { buildHtml }") && formatsSrc.includes("generateDocxFromString")) {
+    pass('generate-cover-formats.mjs derives all formats from the one payload (md/pdf/docx)');
+  } else {
+    fail('generate-cover-formats.mjs does not reuse the shared renderers');
+  }
+
+  const ffSrc = readFile('form-fill.mjs');
+  if (ffSrc.includes('chooseCoverFormat') && ffSrc.includes('coverLetterPaths') && ffSrc.includes('cover_letter_paths')) {
+    pass('form-fill.mjs auto-picks cover format from cover_letter_paths via chooseCoverFormat');
+  } else {
+    fail('form-fill.mjs does not wire the cover format decision');
+  }
+  if (ffSrc.includes('acceptAllowsDocx') && ffSrc.includes('acceptAllowsPdf') && ffSrc.includes('resolveRolePath')) {
+    pass('form-fill.mjs filters cover-letter fallbacks by accepted file types and supports absolute paths');
+  } else {
+    fail('form-fill.mjs may attach an incompatible cover-letter fallback or mishandle absolute paths');
+  }
+  // Back-compat: a bare cover_letter_path is still honored as the polished PDF.
+  if (ffSrc.includes('role.cover_letter_path') && ffSrc.includes('!set.pdf')) {
+    pass('form-fill.mjs keeps cover_letter_path back-compat (treated as polished PDF)');
+  } else {
+    fail('form-fill.mjs dropped cover_letter_path back-compat');
+  }
+} catch (e) {
+  fail(`Cover orchestrator/apply wiring test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

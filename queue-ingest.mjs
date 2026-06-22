@@ -530,6 +530,7 @@ async function main() {
       drafts:           {},
       cv_pdf:           null,
       cover_letter_path: null,
+      cover_letter_paths: null,
       ksc_path:          null,
       status:           'new',
     };

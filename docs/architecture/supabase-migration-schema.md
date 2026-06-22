@@ -145,7 +145,7 @@ If any match, skip. This is a single SQL query with `NOT EXISTS` subqueries.
 | `visa_answer` | The candidate's visa selection (e.g. `<visa-type>`). Reveals immigration status. | Local only. |
 | `drafts` | Form answers: name, email, phone, LinkedIn, visa consent, cover letter text, custom field answers. Pure PII. | Local only. |
 | `cv_pdf` | Path to a tailored CV PDF. The path contains the candidate's name. | Local only. |
-| `cover_letter_path` | Path to a generated cover letter. | Local only. |
+| `cover_letter_path`, `cover_letter_paths` | Path(s) to generated cover letter files. | Local only. |
 | `ksc_path` | Path to a Key Selection Criteria response document. | Local only. |
 | `decided_at` (in `active_roles`) | Not banned, but only written locally as part of the decision flow. Appears in `seen_urls` after the role leaves. | In `seen_urls` after decision. |
 

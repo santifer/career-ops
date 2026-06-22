@@ -35,7 +35,7 @@
  */
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
-import { join, dirname, basename } from 'path';
+import { join, dirname, basename, isAbsolute } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'crypto';
 import yaml from 'js-yaml';
@@ -52,6 +52,9 @@ import {
 } from './login-core.mjs';
 import { getOrCreateCredentials } from './credentials-store.mjs';
 import { formatDate, formatPhone, isDateField, isPhoneField } from './format-au.mjs';
+import {
+  acceptAllowsDocx, acceptAllowsPdf, chooseCoverFormat, formatFallbackOrder,
+} from './cover-format-policy.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
@@ -343,18 +346,72 @@ async function verifyUpload(page, inputEl, filePath) {
   }
 }
 
-function pickUploadDocument(role, labelText, accepted = '') {
+// Cover-letter format policy is read from config/profile.yml once and cached.
+let _coverPolicyCache;
+function getCoverPolicy() {
+  if (_coverPolicyCache !== undefined) return _coverPolicyCache;
+  try {
+    const prof = loadProfile();
+    _coverPolicyCache = (prof && prof.cover_letter && prof.cover_letter.format_policy) || {};
+  } catch {
+    _coverPolicyCache = {};
+  }
+  return _coverPolicyCache;
+}
+
+/**
+ * Resolve the set of rendered cover-letter formats for a role.
+ * Back-compat: a bare `cover_letter_path` is treated as the polished PDF.
+ */
+function coverLetterPaths(role) {
+  const set = { ...(role.cover_letter_paths || {}) };
+  if (role.cover_letter_path && !set.pdf) set.pdf = role.cover_letter_path;
+  return set;
+}
+
+function resolveRolePath(filePath) {
+  return isAbsolute(filePath) ? filePath : join(ROOT, filePath);
+}
+
+/**
+ * Pick the right rendered cover letter for this field, given the field's accepted
+ * types and the host. Returns a repo-relative path (which attachDocumentInput
+ * still existence-checks), or null when no cover renderings are available.
+ */
+function pickCoverPath(paths, accepted, host) {
+  if (!paths || !Object.keys(paths).length) return null;
+  const { format } = chooseCoverFormat({ accept: accepted, host }, getCoverPolicy());
+  const allowed = new Set();
+  if (acceptAllowsDocx(accepted)) allowed.add('docx');
+  if (acceptAllowsPdf(accepted)) allowed.add('pdf');
+  const candidates = formatFallbackOrder(format).filter((fmt) => allowed.has(fmt));
+  for (const fmt of candidates) {
+    if (paths[fmt] && existsSync(resolveRolePath(paths[fmt]))) return paths[fmt];
+  }
+  // None of the preferred formats are on disk yet — surface a provided path so
+  // the attach step can flag "not generated" downstream rather than silently skip.
+  for (const fmt of candidates) {
+    if (paths[fmt]) return paths[fmt];
+  }
+  return null;
+}
+
+function pickUploadDocument(role, labelText, accepted = '', host = '') {
   const wantsDocx = accepted.includes('.docx') || accepted.includes('officedocument');
   let docPath = null;
   let docKey  = 'cv_pdf';
 
-  if (COVER_RE.test(labelText) && role.cover_letter_path) {
-    docPath = role.cover_letter_path;
+  const coverPick = COVER_RE.test(labelText)
+    ? pickCoverPath(coverLetterPaths(role), accepted, host)
+    : null;
+
+  if (coverPick) {
+    docPath = coverPick;
     docKey  = 'cover_letter_path';
   } else if (KSC_RE.test(labelText) && role.ksc_path) {
     docPath = role.ksc_path;
     docKey  = 'ksc_path';
-  } else if (wantsDocx && role.cv_docx && existsSync(join(ROOT, role.cv_docx))) {
+  } else if (wantsDocx && role.cv_docx && existsSync(resolveRolePath(role.cv_docx))) {
     docPath = role.cv_docx;
     docKey  = 'cv_docx';
   } else if (role.cv_pdf) {
@@ -370,14 +427,17 @@ async function attachDocumentInput(page, input, role, labelText, accepted, fille
     return;
   }
 
-  const { docPath, docKey, wantsDocx } = pickUploadDocument(role, labelText, accepted);
-  if (!docPath || !existsSync(join(ROOT, docPath))) {
+  let host = '';
+  try { host = new URL(page.url()).hostname; } catch {}
+  const { docPath, docKey, wantsDocx } = pickUploadDocument(role, labelText, accepted, host);
+  if (!docPath || !existsSync(resolveRolePath(docPath))) {
     manual.push({ label: labelText, reason: 'document not generated — run /career-ops queue prepare' });
     return;
   }
 
-  await input.setInputFiles(join(ROOT, docPath)).catch(() => {});
-  const verify = await verifyUpload(page, input, join(ROOT, docPath));
+  const resolvedDocPath = resolveRolePath(docPath);
+  await input.setInputFiles(resolvedDocPath).catch(() => {});
+  const verify = await verifyUpload(page, input, resolvedDocPath);
   if (!verify.ok) {
     manual.push({ label: labelText, reason: `upload failed: ${verify.reason}` });
     return;

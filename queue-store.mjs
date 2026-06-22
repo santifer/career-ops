@@ -68,6 +68,7 @@ export const LOCAL_ONLY_ROLE_FIELDS = new Set([
   'drafts',
   'cv_pdf',
   'cover_letter_path',
+  'cover_letter_paths',
   'ksc_path',
   'decided_at',
   'confirmation_number',

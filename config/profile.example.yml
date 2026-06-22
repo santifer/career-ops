@@ -174,6 +174,22 @@ cover_letter:
       # Only trigger this entry when the JD location is in one of these countries.
       countries: [Spain, Mexico, Argentina, Colombia, Chile]
 
+  # Which rendered cover-letter format the apply layer auto-attaches per channel.
+  # One approved letter renders to several formats (`generate-cover-formats.mjs`):
+  # polished PDF (the human format), DOCX (the machine/ATS format), and Markdown
+  # (a paste copy). At apply time `chooseCoverFormat()` picks one from the form
+  # field's accepted types and the host. Researched defaults (2026): DOCX parses
+  # more reliably than PDF on every major ATS (Workday, Greenhouse, Lever, iCIMS,
+  # Taleo), so portal uploads default to DOCX; direct email to a human gets the
+  # polished PDF. Override here only if you want different behavior. Omit the whole
+  # block to use the defaults.
+  format_policy:
+    # What to upload when a portal field accepts both Word and PDF: docx | pdf.
+    portal_default: docx
+    # Channel hints that mean a human reads the file directly (no ATS parser),
+    # which always get the polished PDF.
+    human_channels: [email, direct, human, hiring-manager]
+
 # ── Auto-PDF threshold ──────────────────────────────────────────────────────
 #
 # Auto-PDF threshold during evaluation (used by `/career-ops pipeline` and

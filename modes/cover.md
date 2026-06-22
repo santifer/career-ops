@@ -265,9 +265,24 @@ End the draft with: "How does this read? Once you approve I'll generate the PDF.
 
 ---
 
-## Step 9 — Generate PDF
+## Step 9 — Render the approved letter (all formats)
 
 Only after explicit user approval.
+
+The approved letter is authored once and rendered many ways. The **JSON payload is
+the single source of truth**; every format is derived from it, so there is no
+duplicated writing logic:
+
+- **Polished PDF** (`generate-cover-letter.mjs` template) — the *human* format:
+  direct email, hiring managers, applications where presentation matters.
+- **DOCX** — the *machine* format: most reliable ATS parsing. Researched default
+  for any portal upload field that accepts Word (DOCX out-parses PDF on Workday,
+  Greenhouse, Lever, iCIMS and especially Taleo). Many AU government / university
+  portals require it.
+- **Markdown** — the canonical editable copy and the paste-ready version for
+  rich-text boxes (CKEditor on ELMO, Seek "paste cover letter" fields). Not a
+  file upload. Editing the `.md` by hand means re-rendering, not parsing it back
+  into a payload.
 
 Assemble the JSON payload:
 
@@ -303,12 +318,39 @@ Assemble the JSON payload:
 
 Write payload to `/tmp/cover-payload-{company-slug}.json`.
 
-Run:
+Render all formats from that one payload:
 ```bash
-node generate-cover-letter.mjs --payload /tmp/cover-payload-{company-slug}.json
+node generate-cover-formats.mjs --payload /tmp/cover-payload-{company-slug}.json
 ```
 
-Report the output path and file size.
+This writes, next to each other under `output/`:
+- `{company-slug}-{role-slug}-cover.payload.json` — canonical source (re-renderable)
+- `{company-slug}-{role-slug}-cover.md` — markdown / paste copy
+- `{company-slug}-{role-slug}-cover.pdf` — polished PDF (human format)
+- `{company-slug}-{role-slug}-cover.docx` — Word (machine/ATS format; skipped with
+  a warning if `pandoc` is not installed)
+
+To render a subset, pass `--formats md,pdf,docx`. To render only the polished PDF
+(legacy behavior) you may still call `node generate-cover-letter.mjs --payload ...`.
+
+Report which formats were written and their file sizes. If DOCX was skipped because
+pandoc is absent, say so and note that the polished PDF still covers uploads.
+
+**Format selection at apply time is automatic.** When a role is later filled by the
+apply layer, `form-fill.mjs` reads the form field's accepted types and the portal
+host and picks the right rendering via `chooseCoverFormat()` (DOCX for parser-facing
+portal uploads, polished PDF for PDF-only fields and direct/human channels). Record
+the rendered paths on the queue role as:
+
+```json
+"cover_letter_paths": {
+  "pdf":  "output/{company-slug}-{role-slug}-cover.pdf",
+  "docx": "output/{company-slug}-{role-slug}-cover.docx",
+  "md":   "output/{company-slug}-{role-slug}-cover.md"
+}
+```
+
+(`cover_letter_path` remains supported as the polished-PDF fallback.)
 
 ---
 
