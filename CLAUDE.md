@@ -298,6 +298,17 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **Dependabot** monitors npm, Go modules, and GitHub Actions for security updates
 - **Contributing process**: issue first → discussion → PR with linked issue → CI passes → maintainer review → merge
 
+## Upstream Merges (Fork Maintenance)
+
+This repo is a personal fork that periodically catches up to santifer's upstream.
+**Every upstream pull MUST pass the full validation gate in `UPSTREAM_MERGE_CHECKLIST.md`
+before it lands on `main`.** That checklist is standing precedent, not a one-off: engine
+zero-diff, `test-all.mjs` green, `verify-pipeline.mjs` clean, cron RLS 6/6, `jose` mint,
+`states.yml` queue vocabulary intact, dashboard launches (three lanes), DOCX cover letter
+generates, and the expected gains present. **No upstream pull lands on `main` until all
+pass.** Any red → stop, report the failure, fix on the merge branch, re-run the whole gate.
+After it lands, cut a release on Neil's own version line and update `handover.md`.
+
 ## Community and Governance
 
 - **Code of Conduct**: Contributor Covenant 2.1 with enforcement actions (see `CODE_OF_CONDUCT.md`)
