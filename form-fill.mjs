@@ -36,7 +36,7 @@
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, dirname, basename } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'crypto';
 import yaml from 'js-yaml';
 import { chromium } from 'playwright';
@@ -71,6 +71,9 @@ const NAV_ALLOWLIST = /^(continue|next|save and continue|save & continue|review|
 
 // Final submit: buttons we NEVER click
 const FINAL_SUBMIT_DENYLIST = /^(submit|submit application|send application|confirm and submit|submit my application|apply now|submit now)$/i;
+
+// Export regexes for testability (the import is side-effect-free when guarded below)
+export { FINAL_SUBMIT_DENYLIST, NAV_ALLOWLIST, KSC_RE, COVER_RE };
 
 // ── Profile loader ─────────────────────────────────────────────────────────────
 
@@ -991,7 +994,12 @@ async function main() {
   await new Promise(() => {});
 }
 
-main().catch((err) => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});
+// CLI guard: only run main() when invoked directly, not when imported as a module.
+// This keeps `import { FINAL_SUBMIT_DENYLIST, NAV_ALLOWLIST } from './form-fill.mjs'`
+// side-effect-free so tests can assert the regexes without launching Playwright.
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  main().catch((err) => {
+    console.error('Fatal:', err.message);
+    process.exit(1);
+  });
+}

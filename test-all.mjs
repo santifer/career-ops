@@ -12,7 +12,7 @@
  */
 
 import { execSync, execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -966,6 +966,507 @@ try {
   }
 } catch (e) {
   fail(`api-cron.yml checks crashed: ${e.message}`);
+}
+
+// ── 16. FORM-FILL SUBMIT SAFETY ─────────────────────────────────
+
+console.log('\n16. Form-fill submit safety — FINAL_SUBMIT_DENYLIST and NAV_ALLOWLIST');
+
+try {
+  const { FINAL_SUBMIT_DENYLIST, NAV_ALLOWLIST } = await import(pathToFileURL(join(ROOT, 'form-fill.mjs')).href);
+
+  // Every final-submit label must match FINAL_SUBMIT_DENYLIST
+  const denyLabels = [
+    'Submit', 'Submit application', 'Send application',
+    'Confirm and submit', 'Submit my application', 'Apply now', 'Submit now',
+  ];
+  for (const label of denyLabels) {
+    if (FINAL_SUBMIT_DENYLIST.test(label)) pass(`FINAL_SUBMIT_DENYLIST blocks "${label}"`);
+    else fail(`FINAL_SUBMIT_DENYLIST does NOT block "${label}"`);
+  }
+
+  // Every nav label must match NAV_ALLOWLIST AND must NOT match FINAL_SUBMIT_DENYLIST
+  const navLabels = [
+    'Continue', 'Next', 'Save and continue', 'Save & continue',
+    'Review', 'Proceed', 'Next step', 'Next page',
+  ];
+  for (const label of navLabels) {
+    if (NAV_ALLOWLIST.test(label) && !FINAL_SUBMIT_DENYLIST.test(label)) {
+      pass(`"${label}" is in NAV_ALLOWLIST and not in denylist`);
+    } else if (!NAV_ALLOWLIST.test(label)) {
+      fail(`"${label}" is NOT in NAV_ALLOWLIST — navigation will stall`);
+    } else {
+      fail(`"${label}" is in BOTH lists — denylist would block navigation`);
+    }
+  }
+
+  // No overlap between the two lists (deny wins on any overlap — catch accidental collision)
+  const overlap = navLabels.filter(l => FINAL_SUBMIT_DENYLIST.test(l));
+  if (overlap.length === 0) pass('No NAV_ALLOWLIST label appears in FINAL_SUBMIT_DENYLIST (lists are disjoint)');
+  else fail(`Overlap between nav and deny lists: ${overlap.join(', ')}`);
+
+  // The click-path guard is still in place (source check — ensures the regex is actually used)
+  const formFillSrc = readFile('form-fill.mjs');
+  if (formFillSrc.includes('if (FINAL_SUBMIT_DENYLIST.test(text)) continue;')) {
+    pass('findNavButton still contains FINAL_SUBMIT_DENYLIST short-circuit guard');
+  } else {
+    fail('findNavButton FINAL_SUBMIT_DENYLIST guard missing — click path could reach deny labels');
+  }
+} catch (e) {
+  fail(`Form-fill submit safety checks crashed: ${e.message}`);
+}
+
+// ── 17. APPLY.MD DENYLIST PRESENCE + CODE/PROSE PARITY ──────────
+
+console.log('\n17. apply.md denylist/allowlist presence and code-prose parity');
+
+try {
+  const applyMd = readFile('modes/apply.md');
+
+  // apply.md must still contain all 4 canonical deny phrases from the procedure
+  const proseDenyPhrases = ['Submit', 'Submit application', 'Send application', 'Confirm and submit'];
+  for (const phrase of proseDenyPhrases) {
+    if (applyMd.includes(phrase)) pass(`apply.md contains denylist phrase: "${phrase}"`);
+    else fail(`apply.md MISSING denylist phrase: "${phrase}"`);
+  }
+
+  // apply.md must still contain the 4 allow phrases (multi-page navigation)
+  const proseAllowPhrases = ['Continue', 'Next', 'Save and continue', 'Review'];
+  for (const phrase of proseAllowPhrases) {
+    if (applyMd.includes(phrase)) pass(`apply.md contains allowlist phrase: "${phrase}"`);
+    else fail(`apply.md MISSING allowlist phrase: "${phrase}"`);
+  }
+
+  // Parity: every prose deny phrase must be matched by the code FINAL_SUBMIT_DENYLIST.
+  // Code may be stricter (more phrases) — that is fine.
+  // Code being LESS strict than prose is a regression gap.
+  const { FINAL_SUBMIT_DENYLIST } = await import(pathToFileURL(join(ROOT, 'form-fill.mjs')).href);
+  let parityOk = true;
+  for (const phrase of proseDenyPhrases) {
+    if (FINAL_SUBMIT_DENYLIST.test(phrase)) {
+      pass(`Code FINAL_SUBMIT_DENYLIST covers prose phrase: "${phrase}"`);
+    } else {
+      fail(`CODE/PROSE PARITY GAP: FINAL_SUBMIT_DENYLIST does not match apply.md phrase "${phrase}"`);
+      parityOk = false;
+    }
+  }
+  if (parityOk) pass('Code FINAL_SUBMIT_DENYLIST is at least as strict as apply.md prose (no drift)');
+} catch (e) {
+  fail(`apply.md denylist checks crashed: ${e.message}`);
+}
+
+// ── 18. RESOLVER LAYER PRECEDENCE ───────────────────────────────
+
+console.log('\n18. Resolver layer precedence (L1 rule → L2 cache → L3 model)');
+
+try {
+  const resolveSrc = readFile('queue-resolve.mjs');
+
+  // Layer 1 (matchProfileRule) must appear before Layer 2 (l2candidates accumulator)
+  const l1Idx     = resolveSrc.indexOf('matchProfileRule');
+  const l2Idx     = resolveSrc.indexOf('l2candidates');
+  const novelIdx  = resolveSrc.indexOf('novel.push');
+
+  if (l1Idx !== -1 && l2Idx !== -1 && l1Idx < l2Idx) {
+    pass('L1 matchProfileRule precedes L2 candidate accumulation in queue-resolve');
+  } else {
+    fail('L1 matchProfileRule does NOT precede L2 — resolver layer order broken');
+  }
+
+  if (l2Idx !== -1 && novelIdx !== -1 && l2Idx < novelIdx) {
+    pass('L2 cache candidates precede L3 novel (model) path');
+  } else {
+    fail('L2 cache candidates do NOT precede L3 novel — resolver layer order broken');
+  }
+
+  // Distinct provenance labels for all 3 layers
+  if (resolveSrc.includes("source: 'deterministic'") && resolveSrc.includes("source: 'cache'")) {
+    pass('Resolver emits distinct provenance: deterministic (L1) and cache (L2)');
+  } else {
+    fail('Resolver missing provenance labels for deterministic or cache — traceability broken');
+  }
+
+  // form-fill provenanceLabel handles all 3 sources
+  const formFillSrc = readFile('form-fill.mjs');
+  if (
+    formFillSrc.includes("if (source === 'cache')") &&
+    formFillSrc.includes("if (source === 'model')") &&
+    formFillSrc.includes('return `deterministic')
+  ) {
+    pass('form-fill provenanceLabel handles all 3 sources: cache, model, deterministic');
+  } else {
+    fail('form-fill provenanceLabel missing a source branch — provenance labels will be wrong');
+  }
+} catch (e) {
+  fail(`Resolver layer precedence checks crashed: ${e.message}`);
+}
+
+// ── 19. CRON JWT MINT + VERIFY + RLS SUITE ──────────────────────
+
+console.log('\n19. Cron JWT mint + verify and RLS suite');
+
+try {
+  const { mintCronJwt } = await import(pathToFileURL(join(ROOT, 'mint-cron-jwt.mjs')).href);
+  const { generateKeyPair, exportJWK, jwtVerify, importJWK: importJwkJose } = await import('jose');
+
+  // extractable: true is required so exportJWK can read the key material
+  const { privateKey, publicKey } = await generateKeyPair('ES256', { extractable: true });
+  const privateJwk = { ...(await exportJWK(privateKey)), kid: 'test-key-gate' };
+  const publicJwk  = { ...(await exportJWK(publicKey)),  kid: 'test-key-gate' };
+
+  const EXP = 600; // 10 minutes — short-lived, different from 30-day default
+  const before = Math.floor(Date.now() / 1000);
+  const token  = await mintCronJwt({ jwk: privateJwk, kid: 'test-key-gate', expSeconds: EXP });
+  const after  = Math.floor(Date.now() / 1000);
+
+  const pubKey = await importJwkJose(publicJwk, 'ES256');
+  const { payload } = await jwtVerify(token, pubKey);
+
+  if (payload.role === 'career_ops_cron') {
+    pass('mintCronJwt emits role: career_ops_cron claim');
+  } else {
+    fail(`mintCronJwt role claim wrong: ${payload.role}`);
+  }
+
+  const ttl = payload.exp - payload.iat;
+  if (ttl === EXP) {
+    pass(`mintCronJwt TTL matches requested expSeconds (${EXP}s)`);
+  } else {
+    fail(`mintCronJwt TTL mismatch: got ${ttl}s, expected ${EXP}s`);
+  }
+
+  if (payload.iat >= before && payload.iat <= after + 1) {
+    pass('mintCronJwt iat is in the expected range (clock skew ≤1s)');
+  } else {
+    fail(`mintCronJwt iat out of range: ${payload.iat} vs window [${before}, ${after}]`);
+  }
+
+  // Token must be rejected by a different key pair
+  const { privateKey: otherPriv } = await generateKeyPair('ES256', { extractable: true });
+  const otherPub = await importJwkJose({ ...(await exportJWK(otherPriv)), kid: 'other' }, 'ES256');
+  let verifyFailed = false;
+  try { await jwtVerify(token, otherPub); } catch { verifyFailed = true; }
+  if (verifyFailed) pass('mintCronJwt token is rejected by a different public key (signature verified)');
+  else fail('mintCronJwt token accepted by wrong key — ES256 signature not enforced');
+} catch (e) {
+  fail(`Cron JWT mint+verify crashed: ${e.message}`);
+}
+
+// Wire test-cron-rls-negative.mjs into the gate (skip-clean if Supabase env absent)
+try {
+  const envPath = join(ROOT, '.env');
+  const envContent = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
+  const hasSupabaseCreds = [
+    'SUPABASE_URL', 'SUPABASE_DASHBOARD_KEY',
+    'SUPABASE_CRON_PUBLISHABLE_KEY', 'SUPABASE_CRON_JWT',
+  ].every(k => envContent.includes(k + '='));
+
+  if (!hasSupabaseCreds) {
+    warn('test-cron-rls-negative.mjs skipped — Supabase env vars not in .env (expected on fresh clone)');
+  } else {
+    const result = run(NODE, ['test-cron-rls-negative.mjs'], { stdio: ['pipe', 'pipe', 'pipe'] });
+    if (result !== null) {
+      pass('test-cron-rls-negative.mjs (RLS boundary suite) exits cleanly');
+    } else {
+      fail('test-cron-rls-negative.mjs exited with error — RLS boundary broken');
+    }
+  }
+} catch (e) {
+  fail(`test-cron-rls-negative.mjs wiring crashed: ${e.message}`);
+}
+
+// ── 20. QUEUE STATUS VOCABULARY ─────────────────────────────────
+
+console.log('\n20. Queue status vocabulary');
+
+try {
+  const states = readFile('templates/states.yml');
+  const sql    = readFile('supabase/migrations/202606060001_queue_store.sql');
+
+  // states.yml must declare prefilled and filled as first-class ids
+  for (const id of ['prefilled', 'filled', 'prepared']) {
+    if (states.includes(`id: ${id}`)) pass(`states.yml declares queue status id: ${id}`);
+    else fail(`states.yml missing queue status id: ${id}`);
+  }
+
+  // states.yml must register 'new' as an alias (via the 'saved' entry)
+  if (states.includes('aliases: [new,') || states.includes('aliases: [new,') || /aliases:\s*\[new/.test(states)) {
+    pass("states.yml maps 'new' as an alias (under saved)");
+  } else {
+    fail("states.yml does not map 'new' as an alias — Supabase 'new' rows have no canonical mapping");
+  }
+
+  // SQL CHECK constraint must still list all 6 active_roles statuses unchanged
+  const sqlCheck = "check (status in ('new','scored','prepare-queued','prepared','prefilled','filled'))";
+  if (sql.includes(sqlCheck)) {
+    pass('SQL active_roles CHECK constraint enforces all 6 queue statuses (unchanged)');
+  } else {
+    fail('SQL CHECK constraint for active_roles statuses changed or missing');
+  }
+
+  // ACTIVE_STATUSES in queue-store.mjs must include the key fill-flow statuses
+  const { ACTIVE_STATUSES, LANE_STATUSES } = await import(pathToFileURL(join(ROOT, 'queue-store.mjs')).href);
+  for (const s of ['prepared', 'prefilled', 'filled']) {
+    if (ACTIVE_STATUSES.has(s)) pass(`ACTIVE_STATUSES.has('${s}')`);
+    else fail(`ACTIVE_STATUSES missing '${s}'`);
+    if (LANE_STATUSES.has(s)) pass(`LANE_STATUSES.has('${s}')`);
+    else fail(`LANE_STATUSES missing '${s}'`);
+  }
+} catch (e) {
+  fail(`Queue status vocabulary checks crashed: ${e.message}`);
+}
+
+// ── 21. TRACKER WRITE-BACK ROUND-TRIP ───────────────────────────
+
+console.log('\n21. Tracker write-back round-trip (column swap, dedup, non-canonical status)');
+
+// Locate the applications.md path (mirrors merge-tracker.mjs logic)
+const APPS_FILE_PATH = existsSync(join(ROOT, 'data/applications.md'))
+  ? join(ROOT, 'data/applications.md')
+  : join(ROOT, 'applications.md');
+const ADDITIONS_DIR_PATH = join(ROOT, 'batch', 'tracker-additions');
+const MERGED_DIR_PATH    = join(ROOT, 'batch', 'tracker-additions', 'merged');
+
+// Back up real data before touching anything
+const appsBackup = existsSync(APPS_FILE_PATH) ? readFileSync(APPS_FILE_PATH, 'utf-8') : null;
+
+// Slugs for our test TSVs (large numbers unlikely to collide with real reports)
+const TSV_LOW    = '990-merge-write-test-low.tsv';    // added first (lower sort key)
+const TSV_HIGH   = '991-merge-write-test-high.tsv';   // duplicate with higher score (tests in-place update + column swap)
+const TSV_NONCAN = '992-merge-write-test-noncan.tsv'; // non-canonical status
+
+try {
+  // 1. Replace applications.md with a clean header
+  mkdirSync(join(ROOT, 'data'), { recursive: true });
+  writeFileSync(APPS_FILE_PATH, [
+    '# Applications Tracker',
+    '',
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '',
+  ].join('\n'));
+
+  mkdirSync(ADDITIONS_DIR_PATH, { recursive: true });
+
+  // 2a. Write low-score TSV (standard format: num date company role STATUS SCORE pdf report notes)
+  writeFileSync(join(ADDITIONS_DIR_PATH, TSV_LOW),
+    '200\t2026-06-22\tMergeTestCo\tSoftware Engineer\tEvaluated\t3.5/5\t❌\t[200](reports/200-mergetestco-2026-06-22.md)\tBaseline row'
+  );
+
+  // 2b. Write high-score TSV with SWAPPED columns (SCORE then STATUS — tests column-swap heuristic)
+  writeFileSync(join(ADDITIONS_DIR_PATH, TSV_HIGH),
+    '201\t2026-06-22\tMergeTestCo\tSoftware Engineer\t4.8/5\tEvaluated\t✅\t[201](reports/201-mergetestco-2026-06-22.md)\tHigher score swapped-col row'
+  );
+
+  // 3. Run merge-tracker (processes low first → adds row; processes high → dup with higher score, updates in-place)
+  const r1 = run(NODE, ['merge-tracker.mjs'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  if (r1 === null) {
+    fail('merge-tracker.mjs crashed on write-back test (first run)');
+  } else {
+    const content = readFileSync(APPS_FILE_PATH, 'utf-8');
+
+    if (content.includes('MergeTestCo')) {
+      pass('merge-tracker.mjs wrote MergeTestCo row to applications.md');
+    } else {
+      fail('merge-tracker.mjs did not write MergeTestCo row');
+    }
+
+    if (content.includes('4.8/5')) {
+      pass('merge-tracker.mjs higher-score in-place update won (4.8/5 > 3.5/5)');
+    } else if (content.includes('3.5/5')) {
+      fail('merge-tracker.mjs kept lower score — higher-score in-place update failed');
+    } else {
+      fail('merge-tracker.mjs did not write any score value');
+    }
+
+    if (content.includes('Evaluated')) {
+      pass('merge-tracker.mjs preserved canonical Evaluated status after column-swap processing');
+    } else {
+      fail('merge-tracker.mjs lost canonical status — column-swap may be broken');
+    }
+
+    // TSVs should have been moved to merged/
+    if (!existsSync(join(ADDITIONS_DIR_PATH, TSV_LOW)) && !existsSync(join(ADDITIONS_DIR_PATH, TSV_HIGH))) {
+      pass('merge-tracker.mjs moved processed TSVs to merged/ (not left in tracker-additions/)');
+    } else {
+      fail('merge-tracker.mjs left processed TSVs in tracker-additions/ — cleanup failed');
+    }
+  }
+
+  // 4. Non-canonical status test (separate run on fresh header)
+  writeFileSync(APPS_FILE_PATH, [
+    '# Applications Tracker',
+    '',
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '',
+  ].join('\n'));
+
+  writeFileSync(join(ADDITIONS_DIR_PATH, TSV_NONCAN),
+    '203\t2026-06-22\tNonCanonCo\tBackend Dev\tApplying\t2.0/5\t❌\t[203](reports/203-noncanon-2026-06-22.md)\tNon-canonical status test'
+  );
+
+  const r2 = run(NODE, ['merge-tracker.mjs'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  if (r2 === null) {
+    fail('merge-tracker.mjs crashed on non-canonical status test');
+  } else {
+    const c2 = readFileSync(APPS_FILE_PATH, 'utf-8');
+    if (c2.includes('NonCanonCo') && !c2.includes('Applying') && c2.includes('Evaluated')) {
+      pass("merge-tracker.mjs defaults non-canonical status 'Applying' to 'Evaluated'");
+    } else if (!c2.includes('NonCanonCo')) {
+      fail('merge-tracker.mjs did not write NonCanonCo row');
+    } else {
+      fail("merge-tracker.mjs wrote non-canonical status 'Applying' unchanged");
+    }
+  }
+} finally {
+  // Always restore applications.md to its pre-test state
+  if (appsBackup !== null) {
+    writeFileSync(APPS_FILE_PATH, appsBackup);
+  }
+  // Remove any surviving test TSVs from additions/ and merged/
+  for (const slug of [TSV_LOW, TSV_HIGH, TSV_NONCAN]) {
+    const inAdd    = join(ADDITIONS_DIR_PATH, slug);
+    const inMerged = join(MERGED_DIR_PATH, slug);
+    if (existsSync(inAdd))    rmSync(inAdd);
+    if (existsSync(inMerged)) rmSync(inMerged);
+  }
+}
+
+// ── 22. DOCX GENERATION + KSC ROUTING ───────────────────────────
+
+console.log('\n22. Docx generation and KSC/cover-letter routing');
+
+try {
+  const { generateDocxFromString } = await import(pathToFileURL(join(ROOT, 'generate-docx.mjs')).href);
+
+  // Check if pandoc is available
+  const pandocPath = run('which pandoc 2>/dev/null || command -v pandoc 2>/dev/null');
+  if (!pandocPath) {
+    warn('docx generation test skipped — pandoc not installed (brew install pandoc)');
+  } else {
+    // Generate a minimal docx and verify it starts with PK (ZIP magic — all docx are ZIP files)
+    const outPath = join(ROOT, 'output', '.test-docx-gate.docx');
+    mkdirSync(join(ROOT, 'output'), { recursive: true });
+    try {
+      await generateDocxFromString('# Gate test\n\nThis file is generated by test-all.mjs and can be deleted.', outPath);
+      if (existsSync(outPath)) {
+        const magic = readFileSync(outPath).slice(0, 2);
+        if (magic[0] === 0x50 && magic[1] === 0x4b) {
+          pass('generateDocxFromString emits a valid .docx (ZIP PK magic bytes present)');
+        } else {
+          fail('generateDocxFromString output is not a valid ZIP/docx');
+        }
+      } else {
+        fail('generateDocxFromString did not produce output file');
+      }
+    } finally {
+      if (existsSync(outPath)) rmSync(outPath);
+    }
+  }
+
+  // KSC and cover-letter regexes exported from form-fill
+  const { KSC_RE, COVER_RE } = await import(pathToFileURL(join(ROOT, 'form-fill.mjs')).href);
+
+  const kscLabels  = ['Key Selection Criteria', 'KSC', 'Address the selection criteria', 'Selection criteria'];
+  const noKscLabel = 'Upload your resume';
+  for (const label of kscLabels) {
+    if (KSC_RE.test(label)) pass(`KSC_RE matches upload label: "${label}"`);
+    else fail(`KSC_RE does not match label: "${label}"`);
+  }
+  if (!KSC_RE.test(noKscLabel)) pass('KSC_RE does not false-positive on resume label');
+  else fail('KSC_RE false-positives on resume label');
+
+  const coverLabels  = ['Cover letter', 'Cover Letter', 'cover-letter'];
+  const noCoverLabel = 'Resume';
+  for (const label of coverLabels) {
+    if (COVER_RE.test(label)) pass(`COVER_RE matches upload label: "${label}"`);
+    else fail(`COVER_RE does not match label: "${label}"`);
+  }
+  if (!COVER_RE.test(noCoverLabel)) pass('COVER_RE does not false-positive on resume label');
+  else fail('COVER_RE false-positives on resume label');
+
+  // KSC detection logic exists in queue-ingest (source structure check)
+  const ingestSrc = readFile('queue-ingest.mjs');
+  if (ingestSrc.includes('KSC_PATTERNS') && ingestSrc.includes('detectDocRequirements')) {
+    pass('queue-ingest.mjs has KSC_PATTERNS and detectDocRequirements function');
+  } else {
+    fail('queue-ingest.mjs missing KSC_PATTERNS or detectDocRequirements');
+  }
+  if (ingestSrc.includes("? 'ksc'") && ingestSrc.includes('KSC_PATTERNS.some')) {
+    pass("queue-ingest.mjs routes KSC upload fields to kind: 'ksc'");
+  } else {
+    fail("queue-ingest.mjs missing KSC_PATTERNS routing to 'ksc' kind");
+  }
+} catch (e) {
+  fail(`Docx + KSC routing checks crashed: ${e.message}`);
+}
+
+// ── 23. DASHBOARD SERVER LOCALHOST BINDING + LANES ───────────────
+
+console.log('\n23. Dashboard server localhost binding and lane definitions');
+
+try {
+  const serverSrc = readFile('dashboard-server.mjs');
+  const appJs     = readFile('dashboard/web/app.js');
+
+  // HOST must be hardcoded to 127.0.0.1 — must never be 0.0.0.0
+  if (serverSrc.includes("'127.0.0.1'") && !serverSrc.includes("'0.0.0.0'")) {
+    pass("dashboard-server.mjs HOST is hardcoded to '127.0.0.1' (localhost only)");
+  } else {
+    fail("dashboard-server.mjs HOST is NOT '127.0.0.1' — server may be externally accessible");
+  }
+
+  // server.listen must use the HOST constant
+  if (serverSrc.includes('server.listen(PORT, HOST')) {
+    pass('dashboard-server.mjs passes HOST to server.listen (localhost binding enforced)');
+  } else {
+    fail('dashboard-server.mjs server.listen does not reference HOST — binding may be wrong');
+  }
+
+  // All 3 lane keys must be rendered
+  for (const lane of ['ready', 'needs', 'review']) {
+    if (appJs.includes(`renderLane('${lane}'`)) {
+      pass(`dashboard/web/app.js calls renderLane('${lane}')`);
+    } else {
+      fail(`dashboard/web/app.js missing renderLane('${lane}') call`);
+    }
+  }
+
+  // Lane map initialised with all 3 keys
+  if (appJs.includes('ready: []') && appJs.includes('needs: []') && appJs.includes('review: []')) {
+    pass('dashboard/web/app.js initialises laneMap with ready, needs, review arrays');
+  } else {
+    fail('dashboard/web/app.js laneMap missing one or more lanes');
+  }
+
+  // Static web files exist
+  for (const f of ['dashboard/web/index.html', 'dashboard/web/app.js', 'dashboard/web/style.css']) {
+    if (fileExists(f)) pass(`${f} exists`);
+    else fail(`${f} missing — dashboard SPA is incomplete`);
+  }
+} catch (e) {
+  fail(`Dashboard server checks crashed: ${e.message}`);
+}
+
+// ── 24. PERSONAL SCORING GUARD (skip-clean on fresh clone) ──────
+
+console.log('\n24. Personal scoring guard (test-personal.mjs)');
+
+try {
+  const personalTestPath = join(ROOT, 'test-personal.mjs');
+  if (!existsSync(personalTestPath)) {
+    warn('test-personal.mjs not found — personal scoring guard skipped (expected on fresh clone)');
+  } else {
+    const result = run(NODE, ['test-personal.mjs'], { stdio: ['pipe', 'pipe', 'pipe'] });
+    if (result !== null) {
+      pass('test-personal.mjs (personal scoring guard) exits cleanly');
+    } else {
+      fail('test-personal.mjs exited with error — personal scoring structure broken');
+    }
+  }
+} catch (e) {
+  fail(`Personal scoring guard check crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
