@@ -104,6 +104,55 @@ func TestDeriveNoteFields(t *testing.T) {
 			workMode: "",
 			last:     "2026-06-01",
 		},
+		{
+			name: "international city with euro posted range",
+			app: model.CareerApplication{
+				Date:  "2026-06-07",
+				Notes: "Berlin (Hybrid). Base €130-170K (POSTED). Via Ashby",
+			},
+			location: "Berlin",
+			workMode: "Hybrid",
+			payRange: "€130-170K",
+			paySrc:   "POSTED",
+			last:     "2026-06-07",
+		},
+		{
+			name: "role title international city with gbp range",
+			app: model.CareerApplication{
+				Date:  "2026-06-08",
+				Role:  "Staff AI Engineer - London",
+				Notes: "Remote-first UK. Comp £175-225K (market est)",
+			},
+			location: "London",
+			workMode: "RemoteFlex",
+			payRange: "£175-225K",
+			paySrc:   "est",
+			last:     "2026-06-08",
+		},
+		{
+			name: "chf code range with space",
+			app: model.CareerApplication{
+				Date:  "2026-06-09",
+				Notes: "Zurich onsite. Salary CHF 165-185K (POSTED)",
+			},
+			location: "Zurich",
+			workMode: "Full",
+			payRange: "CHF 165-185K",
+			paySrc:   "POSTED",
+			last:     "2026-06-09",
+		},
+		{
+			name: "country names are not international city fallback",
+			app: model.CareerApplication{
+				Date:  "2026-06-10",
+				Notes: "Remote EU. Portugal eligible. Salary EUR 95-120K (est)",
+			},
+			location: "",
+			workMode: "Remote",
+			payRange: "EUR 95-120K",
+			paySrc:   "est",
+			last:     "2026-06-10",
+		},
 	}
 
 	for _, tc := range cases {
@@ -138,6 +187,11 @@ func TestPayCeiling(t *testing.T) {
 		"~$124.2-198.7K":   198_700,
 		"$170K":            170_000,
 		"$95-159K":         159_000,
+		"€130-170K":        170_000,
+		"£175-225K":        225_000,
+		"CHF 165-185K":     185_000,
+		"EUR 95-120K":      120_000,
+		"USD 180-220K":     220_000,
 		"":                 0,
 	}
 	for span, want := range cases {
