@@ -65,6 +65,14 @@ node cv-sync-check.mjs      # Check configuration
 node verify-pipeline.mjs     # Check pipeline integrity
 ```
 
+## Batch Runtime
+
+`batch/batch-runner.sh` uses Claude Code by default and keeps the existing
+Claude headless flags, including MCP isolation, for compatibility. Set
+`CAREER_OPS_AGENT=codex` or pass `--agent codex` to run Codex CLI workers.
+Codex omits its dangerous bypass flag unless `CAREER_OPS_UNSAFE_AGENT_EXEC=1`
+or `true` is set explicitly.
+
 ## Build Dashboard (Optional)
 
 ```bash

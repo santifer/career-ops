@@ -12,7 +12,7 @@
  */
 
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
+import { chmodSync, readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -79,6 +79,50 @@ function run(cmd, args = [], opts = {}) {
     return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
   } catch (e) {
     return null;
+  }
+}
+
+function resolveBashCommand() {
+  const candidates = ['bash'];
+  if (process.platform === 'win32') {
+    candidates.push(
+      'C:\\Program Files\\Git\\bin\\bash.exe',
+      'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
+    );
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const out = execFileSync(candidate, ['-lc', 'printf ok'], {
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 30000,
+      }).trim();
+      if (out === 'ok') return candidate;
+    } catch {}
+  }
+  return null;
+}
+
+const BASH_CMD = resolveBashCommand();
+const BASH_AVAILABLE = BASH_CMD !== null;
+
+function requireBashTest(name) {
+  if (BASH_AVAILABLE) return true;
+  warn(`${name} skipped because bash is unavailable in this environment`);
+  return false;
+}
+
+function makeExecutable(path) {
+  try {
+    chmodSync(path, 0o755);
+  } catch {
+    // Windows ignores POSIX execute bits; Unix CI still gets executable fixtures.
+  }
+  if (process.platform === 'win32' && BASH_AVAILABLE) {
+    try {
+      execFileSync(BASH_CMD, ['-lc', `chmod +x ${JSON.stringify(toBashPath(path))}`]);
+    } catch {}
   }
 }
 
@@ -520,6 +564,76 @@ if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSou
   pass('Batch summary reports skipped offers separately from pending');
 } else {
   fail('Batch summary can misreport skipped offers as pending');
+}
+
+// Check batch runner agent-adapter invariants.
+if (/AGENT="\$\{CAREER_OPS_AGENT:-claude\}"/.test(batchRunnerSource) &&
+    /--agent\)/.test(batchRunnerSource) &&
+    /AGENT_ADAPTERS=\$'[^']*claude\\tclaude\\tbuild_claude_worker_command[^']*codex\\tcodex\\tbuild_codex_worker_command/s.test(batchRunnerSource)) {
+  pass('Batch runner selects workers through an extensible agent adapter table');
+} else {
+  fail('Batch runner missing CAREER_OPS_AGENT/agent adapter table support');
+}
+
+if (/worker_command=\(\s*"\$AGENT_BIN"\s+-p\s+--dangerously-skip-permissions\s+--strict-mcp-config\s*\)/.test(batchRunnerSource)) {
+  pass('Batch runner preserves existing Claude headless defaults and strict MCP isolation');
+} else {
+  fail('Batch runner changed Claude headless defaults or lost strict MCP isolation');
+}
+
+if (/AGENT_ADAPTERS=\$'[^']*codex\\tcodex\\tbuild_codex_worker_command[^']*\\tCAREER_OPS_UNSAFE_AGENT_EXEC/.test(batchRunnerSource) &&
+    /agent_unsafe_exec_enabled\(\)[\s\S]*\$\{!AGENT_UNSAFE_ENV_VAR:-false\}[\s\S]*unsafe_value" == "1"[\s\S]*unsafe_value" == "true"/.test(batchRunnerSource) &&
+    /if agent_unsafe_exec_enabled; then[\s\S]{0,120}worker_command\+=\(--dangerously-bypass-approvals-and-sandbox\)/.test(batchRunnerSource)) {
+  pass('Batch runner gates Codex dangerous bypass behind explicit opt-in');
+} else {
+  fail('Batch runner does not gate Codex dangerous bypass correctly');
+}
+
+const retryLoopMatch = batchRunnerSource.match(/while true; do[\s\S]*?run_worker "\$resolved_prompt" "\$prompt" "\$log_file" "\$id"[\s\S]*?is_rate_limit_log "\$log_file"[\s\S]*?continue[\s\S]*?done/);
+if (retryLoopMatch) {
+  pass('Batch rate-limit retry wraps the selected worker agent');
+} else {
+  fail('Batch rate-limit retry does not wrap the selected worker agent');
+}
+
+const profileInjectionIndex = batchRunnerSource.indexOf('## Runtime personalization: %s');
+const runWorkerIndex = batchRunnerSource.indexOf('run_worker "$resolved_prompt" "$prompt" "$log_file" "$id"');
+if (profileInjectionIndex !== -1 && runWorkerIndex !== -1 && profileInjectionIndex < runWorkerIndex) {
+  pass('Batch worker prompts keep user profile context before agent dispatch');
+} else {
+  fail('Batch worker prompts can lose user profile context');
+}
+
+const adapterTableMatch = batchRunnerSource.match(/AGENT_ADAPTERS=\$'([^']+)'/s);
+const adapterRateLimitPatterns = adapterTableMatch
+  ? adapterTableMatch[1]
+    .split('\\n')
+    .map(row => row.split('\\t')[3])
+    .filter(Boolean)
+    .map(pattern => new RegExp(pattern, 'i'))
+  : [];
+const rateLimitSamples = [
+  '429 Too Many Requests',
+  'Error: request was throttled by the service',
+  'Codex is temporarily at capacity, try again later',
+  'model overloaded, please retry',
+  'Error: service unavailable',
+  'Error: requests exceeded',
+  '503 Service Unavailable',
+];
+const nonRateLimitSamples = [
+  'Candidate has capacity to start immediately',
+  'Runbook includes service unavailable incident examples',
+  'Monthly requests exceeded the hiring team forecast',
+  'Application completed successfully',
+];
+if (adapterRateLimitPatterns.length >= 2 &&
+    batchRunnerSource.includes('tail -40 "$log_file"') &&
+    adapterRateLimitPatterns.every(pattern => rateLimitSamples.every(sample => pattern.test(sample))) &&
+    adapterRateLimitPatterns.every(pattern => nonRateLimitSamples.every(sample => !pattern.test(sample)))) {
+  pass('Batch rate-limit detection covers Codex/Claude transient capacity logs');
+} else {
+  fail('Batch rate-limit detection misses expected agent capacity logs or is too broad');
 }
 
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
@@ -3104,6 +3218,7 @@ try {
 console.log('\n13. Batch rate-limit pause');
 
 try {
+  if (requireBashTest('Batch rate-limit pause')) {
   const tmp = mkdtempSync(join(tmpdir(), 'co-batch-rate-'));
   const batchDir = join(tmp, 'batch');
   const fakeBin = join(tmp, 'bin');
@@ -3113,11 +3228,7 @@ try {
   mkdirSync(fakeBin, { recursive: true });
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
-  if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
-  } else {
-    execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
-  }
+  makeExecutable(join(batchDir, 'batch-runner.sh'));
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
@@ -3132,14 +3243,10 @@ try {
     'echo "You\\x27ve hit your session limit · resets 12:30pm (Asia/Taipei)"',
     'exit 1',
   ].join('\n') + '\n');
-  if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
-  } else {
-    execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
-  }
+  makeExecutable(join(fakeBin, 'claude'));
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const out = run(BASH_CMD, [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3158,7 +3265,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
+  const dry = run(BASH_CMD, [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3169,12 +3276,92 @@ try {
     fail(`--resume-paused selection wrong: ${dry}`);
   }
 
-  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+  rmSync(tmp, { recursive: true, force: true });
+  }
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
 }
 
 // ── 15. BATCH RUNNER MCP ISOLATION (#506) ───────────────────────
+
+// Batch Codex adapter
+
+console.log('\n14. Batch Codex adapter');
+
+try {
+  if (requireBashTest('Batch Codex adapter')) {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-codex-'));
+  const batchDir = join(tmp, 'batch');
+  const fakeBin = join(tmp, 'bin');
+  mkdirSync(batchDir, { recursive: true });
+  mkdirSync(join(tmp, 'reports'), { recursive: true });
+  mkdirSync(join(tmp, 'data'), { recursive: true });
+  mkdirSync(join(tmp, 'config'), { recursive: true });
+  mkdirSync(join(tmp, 'modes'), { recursive: true });
+  mkdirSync(fakeBin, { recursive: true });
+
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  makeExecutable(join(batchDir, 'batch-runner.sh'));
+  writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
+  writeFileSync(join(tmp, 'config', 'profile.yml'), 'target_roles:\n  - Staff Engineer\n');
+  writeFileSync(join(tmp, 'modes', '_profile.md'), '# User profile fixture\n');
+  writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
+  writeFileSync(join(batchDir, 'batch-input.tsv'), [
+    'id\turl\tsource\tnotes',
+    '1\thttps://example.com/one?x=1&y=2\tfixture\t-',
+  ].join('\n') + '\n');
+  writeFileSync(join(fakeBin, 'codex'), [
+    '#!/usr/bin/env bash',
+    'printf "%s\\n" "$@" > "$CAPTURE_DIR/codex-args.txt"',
+    'cat > "$CAPTURE_DIR/codex-stdin.md"',
+    'printf \'{"score":4.6}\\n\'',
+    'exit 0',
+  ].join('\n') + '\n');
+  makeExecutable(join(fakeBin, 'codex'));
+
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, CAPTURE_DIR: tmp };
+  const out = run(BASH_CMD, [toBashPath(join(batchDir, 'batch-runner.sh')), '--agent', 'codex', '--parallel', '1'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  const args = readFileSync(join(tmp, 'codex-args.txt'), 'utf-8');
+  const stdin = readFileSync(join(tmp, 'codex-stdin.md'), 'utf-8');
+  const state = readFileSync(join(batchDir, 'batch-state.tsv'), 'utf-8');
+  const leftovers = readdirSync(batchDir).filter(name => name.startsWith('.resolved-codex-'));
+
+  if (state.includes('\tcompleted\t') && out.includes('Completed')) {
+    pass('Codex adapter can complete a batch offer');
+  } else {
+    fail(`Codex adapter did not complete fixture offer: ${JSON.stringify({ out: out.slice(-240), state })}`);
+  }
+  const argLines = args.trim().split('\n');
+  if (argLines[0] === 'exec' && argLines.includes('-C') &&
+      args.includes('--sandbox\nworkspace-write') && argLines.at(-1) === '-' &&
+      !args.includes('--dangerously-bypass-approvals-and-sandbox')) {
+    pass('Codex adapter uses safe default exec arguments');
+  } else {
+    fail(`Codex adapter args wrong: ${JSON.stringify(args)}`);
+  }
+  if (stdin.includes('Runtime personalization: modes/_profile.md') &&
+      stdin.includes('Runtime personalization: config/profile.yml') &&
+      stdin.includes('Task:')) {
+    pass('Codex adapter stdin includes resolved prompt, profile context, and task');
+  } else {
+    fail('Codex adapter stdin is missing prompt/profile/task context');
+  }
+  if (leftovers.length === 0 && readFile('.gitignore').includes('batch/.resolved-codex-*')) {
+    pass('Codex adapter cleans and ignores temporary resolved prompt files');
+  } else {
+    fail(`Codex resolved prompt cleanup/ignore failed: leftovers=${leftovers.join(',')}`);
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`Batch Codex adapter test crashed: ${e.message}`);
+}
 
 console.log('\n15. Batch runner MCP isolation');
 
@@ -3183,10 +3370,10 @@ try {
   // Workers must be spawned with --strict-mcp-config so they don't inherit the
   // parent session's MCP servers (e.g. Playwright) and deadlock fighting over a
   // single browser when --parallel > 1 (issue #506).
-  const claudeArgsLine = batchRunner
+  const claudeWorkerLine = batchRunner
     .split('\n')
-    .find(l => l.includes('claude_args=('));
-  if (claudeArgsLine && claudeArgsLine.includes('--strict-mcp-config')) {
+    .find(l => l.includes('worker_command=') && l.includes('-p'));
+  if (claudeWorkerLine && claudeWorkerLine.includes('--strict-mcp-config')) {
     pass('batch workers spawn with --strict-mcp-config (no inherited MCP)');
   } else {
     fail('batch-runner.sh worker spawn missing --strict-mcp-config (issue #506 regression)');
