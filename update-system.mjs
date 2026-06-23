@@ -90,6 +90,7 @@ const SYSTEM_PATHS = [
   'check-liveness.mjs',
   'liveness-core.mjs',
   'liveness-browser.mjs',
+  'liveness-api.mjs',
   'analyze-patterns.mjs',
   'followup-cadence.mjs',
   'gemini-eval.mjs',

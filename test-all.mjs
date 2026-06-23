@@ -264,6 +264,34 @@ try {
     fail(`Polish apply control not recognized: ${activePolishPosting.result} (${activePolishPosting.code})`);
   }
 
+  // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
+  // pure URL→API resolution + SSRF guard; the network fetch is conservative by
+  // construction (only 404/410→expired, 200→active, else null→Playwright fallback).
+  const { resolveAtsApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
+  const ghApi = resolveAtsApi('https://boards.greenhouse.io/acme/jobs/4567890');
+  if (ghApi?.ats === 'greenhouse' && ghApi.apiUrl === 'https://boards-api.greenhouse.io/v1/boards/acme/jobs/4567890') {
+    pass('resolveAtsApi maps a Greenhouse posting to its per-job API URL');
+  } else {
+    fail(`Greenhouse API URL wrong: ${JSON.stringify(ghApi)}`);
+  }
+  const lvApi = resolveAtsApi('https://jobs.lever.co/acme/abc-123-def');
+  if (lvApi?.ats === 'lever' && lvApi.apiUrl === 'https://api.lever.co/v0/postings/acme/abc-123-def') {
+    pass('resolveAtsApi maps a Lever posting to its per-job API URL');
+  } else {
+    fail(`Lever API URL wrong: ${JSON.stringify(lvApi)}`);
+  }
+  if (resolveAtsApi('https://example.com/jobs/123') === null) {
+    pass('resolveAtsApi returns null for non-ATS URLs (→ Playwright fallback)');
+  } else {
+    fail('resolveAtsApi should return null for an unknown host');
+  }
+  if (resolveAtsApi('https://boards.greenhouse.io/acme/jobs/not-a-number') === null
+      && resolveAtsApi('http://boards.greenhouse.io/acme/jobs/123') === null) {
+    pass('resolveAtsApi rejects non-numeric Greenhouse ids and non-https (SSRF guard)');
+  } else {
+    fail('resolveAtsApi guard failed (bad id or http accepted)');
+  }
+
   // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
   // pages script the goto/evaluate calls so we can exercise the wrapper without
   // launching a browser. checkUrlLiveness reads body text first, apply controls
