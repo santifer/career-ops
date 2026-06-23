@@ -86,6 +86,15 @@ Classify every offer into one of these types (or hybrid of 2):
 
 After detecting archetype, read `modes/_profile.md` for the user's specific framing and proof points for that archetype.
 
+## Application Heuristics (Recruiter & ATS)
+
+When generating application materials (PDFs, cover letters, form answers), apply these EU SWE-focused risk mapping heuristics:
+
+1. **Top-Third Clarity:** The top third of the document (or first response) must immediately answer the recruiter's primary risk vectors (visa status, location/relocation, language proficiency, hard technical matches). Do not bury logistics.
+2. **Business-Value Bullet Shaping:** Every technical achievement must map to a business outcome. "Built X using Y" must become "Built X using Y, unlocking Z business value (e.g., revenue, cost-savings, unblocking teams)."
+3. **ATS Reality Check:** Optimize for parseability *and* human review. Never keyword-stuff. Contextualize keywords within sentences so human reviewers see authentic experience.
+4. **Guardrails for Form Answers:** Keep answers to application forms concise (under 150 words unless specified). Direct, active voice, and structured with bullet points if applicable. No fluff.
+
 ## Global Rules
 
 ### NEVER

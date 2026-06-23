@@ -30,6 +30,7 @@
 - UTF-8, selectable text (not rasterized)
 - No nested tables
 - Distributed JD keywords: Summary (top 5), first bullet of each role, Skills section
+- **ATS Reality Check**: Ensure keywords are contextualized authentically. The PDF will be read by human recruiters after ATS parsing—avoid keyword stuffing that reads unnaturally.
 
 ## PDF Design
 

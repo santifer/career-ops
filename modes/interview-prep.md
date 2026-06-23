@@ -196,6 +196,7 @@ Things to say, do, and avoid — segmented by who's listening. The same fact can
 - **What NOT to volunteer**: hard comp number when leverage is uncertain (defer to band); ongoing process details; opinions on the company's recent layoffs / press.
 - **Vocabulary**: official company language for benefits and policies (from careers page).
 - **Red flags they screen for**: visa surprises, comp mismatch, "looking everywhere" energy.
+- **Application Handoff**: Reference the specific business-value metrics and top-third logistics (visa/location) you emphasized in your application. Ensure verbal answers align perfectly with written materials to reduce perceived recruiter risk.
 
 ### To the hiring manager
 
