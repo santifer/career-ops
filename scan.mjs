@@ -135,8 +135,14 @@ export function compileKeyword(kw) {
 }
 
 export function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase()).map(compileKeyword);
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase()).map(compileKeyword);
+  // Normalize defensively: a malformed title_filter (a null, numeric, or otherwise
+  // non-string entry in the YAML) must not crash the scan via k.toLowerCase().
+  const normalize = (arr) => (Array.isArray(arr) ? arr : [])
+    .filter(k => typeof k === 'string' && k.length > 0)
+    .map(k => k.toLowerCase())
+    .map(compileKeyword);
+  const positive = normalize(titleFilter?.positive);
+  const negative = normalize(titleFilter?.negative);
 
   return (title) => {
     const lower = (title || '').toLowerCase();

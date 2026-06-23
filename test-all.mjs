@@ -1569,6 +1569,14 @@ try {
   } else {
     fail('compileKeyword("cfo") boundary behavior wrong');
   }
+
+  // A malformed title_filter (null / numeric / empty entries) must not crash.
+  const messyFilter = buildTitleFilter({ positive: ['cfo', null, 123, '', 'head of'] });
+  if (messyFilter('Group CFO') === true && messyFilter('Marketing Coordinator') === false) {
+    pass('buildTitleFilter ignores non-string/empty keyword entries without crashing');
+  } else {
+    fail('buildTitleFilter should ignore non-string/empty keyword entries');
+  }
 } catch (e) {
   fail(`title filter acronym tests crashed: ${e.message}`);
 }
