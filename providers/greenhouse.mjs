@@ -11,6 +11,7 @@ const ALLOWED_GREENHOUSE_HOSTS = new Set([
   'job-boards.eu.greenhouse.io',
 ]);
 
+/** @param {string} url */
 function assertGreenhouseUrl(url) {
   let parsed;
   try {
@@ -24,6 +25,7 @@ function assertGreenhouseUrl(url) {
   return url;
 }
 
+/** @param {import('./_types.js').PortalEntry} entry */
 function resolveApiUrl(entry) {
   if (entry.api) {
     assertGreenhouseUrl(entry.api);
@@ -33,6 +35,13 @@ function resolveApiUrl(entry) {
   const match = url.match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
   if (match) return `https://boards-api.greenhouse.io/v1/boards/${match[1]}/jobs`;
   return null;
+}
+
+// NaN-safe Date.parse — `|| undefined` would also coerce a valid epoch 0.
+function toEpochMs(value) {
+  if (!value) return undefined;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
 }
 
 /** @type {Provider} */
@@ -54,13 +63,14 @@ export default {
     assertGreenhouseUrl(apiUrl);
     // redirect:'error' prevents SSRF via server-side redirects; combined with
     // assertGreenhouseUrl above it guarantees the final hostname stays in the allowlist.
-    const json = await ctx.fetchJson(apiUrl, { redirect: 'error' });
+    const json = /** @type {any} */ (await ctx.fetchJson(apiUrl, { redirect: 'error' }));
     const jobs = Array.isArray(json?.jobs) ? json.jobs : [];
-    return jobs.filter(j => j.absolute_url).map(j => ({
+    return jobs.filter(/** @param {any} j */ j => j.absolute_url).map(/** @param {any} j */ j => ({
       title: j.title || '',
       url: j.absolute_url,
       company: entry.name,
       location: j.location?.name || '',
+      postedAt: toEpochMs(j.first_published),
     }));
   },
 };
