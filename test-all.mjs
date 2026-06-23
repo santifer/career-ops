@@ -3962,6 +3962,39 @@ try {
   fail(`ibm provider tests crashed: ${e.message}`);
 }
 
+// ── 26. ATS LIGATURE SUPPRESSION ────────────────────────────────
+
+console.log('\n26. ATS ligature suppression');
+
+try {
+  // Headless Chromium substitutes fi/fl/ffi with the Unicode ligature glyphs
+  // U+FB01/FB02/FB03 at PDF layout time. PDF text extractors (what ATS reads)
+  // decode them back to those codepoints, so "verification" parses as
+  // "veriﬁcation" and a literal keyword search misses it. The templates disable
+  // common, contextual, and discretionary ligatures in CSS so the output stays
+  // font-independent. A live render-and-extract test is font and OS dependent
+  // (the bug only appears where a ligature-bearing font is installed), so it is
+  // not reliable in CI; this guards the CSS source, which is the fix itself.
+  const LIGATURE_TEMPLATES = [
+    'cv-template.html',
+    'resume-template.html',
+    'cover-letter-template.html',
+  ];
+  const variantRe = /font-variant-ligatures:\s*none/;
+  const featureRe = /font-feature-settings:\s*"liga"\s*0\s*,\s*"clig"\s*0\s*,\s*"dlig"\s*0/;
+
+  for (const name of LIGATURE_TEMPLATES) {
+    const css = readFileSync(join(ROOT, 'templates', name), 'utf-8');
+    if (variantRe.test(css) && featureRe.test(css)) {
+      pass(`${name} disables ligatures (font-variant-ligatures + font-feature-settings)`);
+    } else {
+      fail(`${name} is missing ligature suppression (PDF text extraction would read "veriﬁcation" not "verification")`);
+    }
+  }
+} catch (e) {
+  fail(`ATS ligature suppression test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
