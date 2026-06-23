@@ -3999,6 +3999,49 @@ try {
     fail(`aa.fetch() remoteNationwide = ${calls} calls, ${JSON.stringify(remoteFetched.map(j => j.url))}`);
   }
 
+  // parseArbeitsagenturConfig — remoteMatch mode + remoteMaxPages (config-driven remote detection)
+  const rcfg = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'filter', remoteMaxPages: 50 } });
+  if (rcfg.remoteMatch === 'filter' && rcfg.remoteMaxPages === 20) {
+    pass('parseArbeitsagenturConfig parses remoteMatch and clamps remoteMaxPages');
+  } else {
+    fail(`parseArbeitsagenturConfig remoteMatch/maxPages = ${JSON.stringify({ m: rcfg.remoteMatch, p: rcfg.remoteMaxPages })}`);
+  }
+  const rdef = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'bogus' } });
+  if (rdef.remoteMatch === 'title' && rdef.remoteMaxPages === 1) {
+    pass('parseArbeitsagenturConfig defaults remoteMatch to "title" and remoteMaxPages to 1');
+  } else {
+    fail(`parseArbeitsagenturConfig remote defaults = ${JSON.stringify({ m: rdef.remoteMatch, p: rdef.remoteMaxPages })}`);
+  }
+
+  // fetch() — remoteMatch:'filter' uses server-side homeoffice filter, paginates, and tags remote roles
+  let usedHomeoffice = false;
+  const pagesSeen = new Set();
+  const filterFetched = await aa.fetch(
+    { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true, remoteMatch: 'filter', remoteMaxPages: 5, size: 2 } },
+    {
+      fetchJson: async (url) => {
+        const sp = new URL(url).searchParams;
+        if (sp.has('wo')) {
+          return { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] };
+        }
+        usedHomeoffice = usedHomeoffice || sp.get('homeoffice') === 'nv_true';
+        pagesSeen.add(sp.get('page'));
+        return Number(sp.get('page')) === 1
+          ? { stellenangebote: [ // full page (== size) → pagination continues
+              { refnr: 'R1', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'München' } },
+              { refnr: 'R2', titel: 'ML Scientist', arbeitgeber: 'Co', arbeitsort: { ort: 'Stuttgart' } },
+            ] }
+          : { stellenangebote: [{ refnr: 'R3', titel: 'NLP Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Köln' } }] }; // short → stop
+      },
+    },
+  );
+  const munich = filterFetched.find(j => j.url.endsWith('R1'));
+  if (usedHomeoffice && pagesSeen.has('1') && pagesSeen.has('2') && munich && /Deutschlandweit \(Homeoffice\)/.test(munich.location)) {
+    pass('aa.fetch() remoteMatch:filter sends homeoffice=nv_true, paginates, and tags far-city remote roles');
+  } else {
+    fail(`aa.fetch() filter mode = ${JSON.stringify({ usedHomeoffice, pages: [...pagesSeen], munichLoc: munich?.location })}`);
+  }
+
   // fetch() — no keywords throws; total outage throws (not silent)
   let noKw = false;
   try { await aa.fetch({ name: 'AA', arbeitsagentur: {} }, mkCtx({})); } catch { noKw = true; }
