@@ -38,6 +38,13 @@ MIN_SCORE=0
 MODEL=""  # empty = let claude -p use the Claude Max default
 RATE_LIMIT_SLEEP=300
 BATCH_PAUSED=false
+STATUS_ONLY=false
+WATCH_MODE=false
+
+# Return success for non-negative integer or decimal strings.
+is_decimal_number() {
+  [[ "$1" =~ ^[0-9]+([.][0-9]+)?$ ]]
+}
 
 usage() {
   cat <<'USAGE'
@@ -59,6 +66,8 @@ Options:
   --model NAME         Claude model passed to `claude -p --model` (default:
                        unset = Claude Max default). Use a cheaper model for
                        large batches, e.g. `--model claude-sonnet-4-6`.
+  --status             Show batch progress and a per-job table, then exit
+  --watch              Live-refresh progress until the run completes
   -h, --help           Show this help
 
 Files:
@@ -99,6 +108,8 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --model) MODEL="$2"; shift 2 ;;
+    --status) STATUS_ONLY=true; shift ;;
+    --watch) WATCH_MODE=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -106,6 +117,11 @@ done
 
 if ! [[ "$RATE_LIMIT_SLEEP" =~ ^[0-9]+$ ]]; then
   echo "ERROR: --rate-limit-sleep must be a non-negative integer (seconds)."
+  exit 1
+fi
+
+if ! is_decimal_number "$MIN_SCORE"; then
+  echo "ERROR: --min-score must be a non-negative number."
   exit 1
 fi
 
@@ -153,6 +169,14 @@ check_prerequisites() {
   fi
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
+}
+
+# Status/watch mode only needs prior batch state, not worker prerequisites.
+check_status_prerequisites() {
+  if [[ ! -f "$STATE_FILE" ]]; then
+    echo "No state file found at $STATE_FILE"
+    exit 0
+  fi
 }
 
 # Initialize state file if it doesn't exist
@@ -478,8 +502,8 @@ process_offer() {
     fi
 
     # Check min-score gate
-    if [[ "$score" != "-" && -n "$score" ]] && (( $(echo "$MIN_SCORE > 0" | bc -l) )); then
-      if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
+    if is_decimal_number "$score" && awk -v min="$MIN_SCORE" 'BEGIN{exit !(min > 0)}'; then
+      if awk -v score="$score" -v min="$MIN_SCORE" 'BEGIN{exit !(score < min)}'; then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
         return 0
@@ -505,6 +529,9 @@ merge_tracker() {
   echo "=== Merging tracker additions ==="
   node "$PROJECT_DIR/merge-tracker.mjs"
   echo ""
+  echo "=== Reconciling pipeline.md ==="
+  node "$PROJECT_DIR/reconcile-pipeline.mjs" || echo "⚠️  Pipeline reconcile had issues (see above)"
+  echo ""
   echo "=== Verifying pipeline integrity ==="
   node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
 }
@@ -527,8 +554,8 @@ print_summary() {
     total=$((total + 1))
     case "$sstatus" in
       completed) completed=$((completed + 1))
-        if [[ "$sscore" != "-" && -n "$sscore" ]]; then
-          score_sum=$(echo "$score_sum + $sscore" | bc 2>/dev/null || echo "$score_sum")
+        if is_decimal_number "$sscore"; then
+          score_sum=$(awk -v sum="$score_sum" -v score="$sscore" 'BEGIN{print sum + score}' 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
         fi
         ;;
@@ -542,13 +569,132 @@ print_summary() {
 
   if (( score_count > 0 )); then
     local avg
-    avg=$(echo "scale=1; $score_sum / $score_count" | bc 2>/dev/null || echo "N/A")
+    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{printf "%.1f", sum / count}' 2>/dev/null || echo "N/A")
     echo "Average score: $avg/5 ($score_count scored)"
+  fi
+}
+
+print_status_table() {
+  if [[ ! -f "$STATE_FILE" ]]; then
+    echo "No state file found at $STATE_FILE"
+    return
+  fi
+
+  local total=0 completed=0 processing=0 failed=0 pending=0 skipped=0 rate_limited=0 paused_rate_limit=0
+  local score_sum=0 score_count=0
+
+  # Read first line to skip header
+  local header=true
+  while IFS=$'\t' read -r sid surl sstatus sstarted scompleted sreport sscore serror sretries || [[ -n "$sid" ]]; do
+    if [[ "$header" == "true" ]]; then
+      header=false
+      continue
+    fi
+    [[ -z "$sid" ]] && continue
+    sstatus="${sstatus%$'\r'}"
+    sscore="${sscore%$'\r'}"
+    serror="${serror%$'\r'}"
+    sreport="${sreport%$'\r'}"
+    total=$((total + 1))
+    case "$sstatus" in
+      completed)
+        completed=$((completed + 1))
+        if is_decimal_number "$sscore"; then
+          score_sum=$(awk -v sum="$score_sum" -v score="$sscore" 'BEGIN{print sum + score}' 2>/dev/null || echo "$score_sum")
+          score_count=$((score_count + 1))
+        fi
+        ;;
+      processing) processing=$((processing + 1)) ;;
+      failed) failed=$((failed + 1)) ;;
+      skipped) skipped=$((skipped + 1)) ;;
+      rate_limited) rate_limited=$((rate_limited + 1)) ;;
+      paused_rate_limit) paused_rate_limit=$((paused_rate_limit + 1)) ;;
+      *) pending=$((pending + 1)) ;;
+    esac
+  done < "$STATE_FILE"
+
+  echo "=== Batch Progress ==="
+  echo "Total: $total | Completed: $completed | Processing: $processing | Failed: $failed | Pending: $pending | Skipped: $skipped | Rate Limited: $rate_limited | Paused: $paused_rate_limit"
+  if (( score_count > 0 )); then
+    local avg
+    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN{printf "%.1f", sum / count}' 2>/dev/null || echo "N/A")
+    echo "Average score: $avg/5 ($score_count scored)"
+  fi
+  echo ""
+
+  # Format the per-job table:
+  # Columns: ID, Status, Report, Score, Target (URL or Error Message)
+  printf "%-4s | %-17s | %-6s | %-5s | %-40s\n" "ID" "Status" "Report" "Score" "URL / Error"
+  printf "%-4s+%-19s+%-8s+%-7s+%-42s\n" "----" "-------------------" "--------" "-------" "------------------------------------------"
+
+  header=true
+  while IFS=$'\t' read -r sid surl sstatus sstarted scompleted sreport sscore serror sretries || [[ -n "$sid" ]]; do
+    if [[ "$header" == "true" ]]; then
+      header=false
+      continue
+    fi
+    [[ -z "$sid" ]] && continue
+    sstatus="${sstatus%$'\r'}"
+    sscore="${sscore%$'\r'}"
+    serror="${serror%$'\r'}"
+    sreport="${sreport%$'\r'}"
+    local target="$surl"
+    if [[ "$sstatus" == "failed" && -n "$serror" && "$serror" != "-" ]]; then
+      target="Error: $serror"
+    fi
+    # Trim target to fit nicely (e.g. 50 chars)
+    if (( ${#target} > 50 )); then
+      target="${target:0:47}..."
+    fi
+    printf "%-4s | %-17s | %-6s | %-5s | %-50s\n" "$sid" "$sstatus" "$sreport" "$sscore" "$target"
+  done < "$STATE_FILE"
+}
+
+watch_status() {
+  local active_pid=""
+  if [[ -f "$LOCK_FILE" ]]; then
+    active_pid=$(cat "$LOCK_FILE" 2>/dev/null || true)
+  fi
+
+  if [[ -n "$active_pid" ]] && kill -0 "$active_pid" 2>/dev/null; then
+    echo "Watching batch-runner (PID $active_pid)... Press Ctrl+C to stop."
+    while kill -0 "$active_pid" 2>/dev/null; do
+      clear || printf "\033[c"
+      echo "=== Watching Batch Progress (PID $active_pid) ==="
+      print_status_table
+      sleep 2
+    done
+    echo ""
+    echo "=== Batch runner process (PID $active_pid) has finished ==="
+  else
+    echo "No active batch-runner detected."
+  fi
+
+  echo "Showing final status:"
+  print_status_table
+
+  # Chain verify-pipeline.mjs
+  if [[ -f "$PROJECT_DIR/verify-pipeline.mjs" ]]; then
+    echo ""
+    echo "=== Running pipeline verification ==="
+    node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues"
   fi
 }
 
 # Main
 main() {
+  if [[ "$STATUS_ONLY" == "true" ]]; then
+    check_status_prerequisites
+    print_status_table
+    exit 0
+  fi
+
+  if [[ "$WATCH_MODE" == "true" ]]; then
+    check_status_prerequisites
+    watch_status
+    exit 0
+  fi
+
   check_prerequisites
 
   if [[ "$DRY_RUN" == "false" ]]; then
@@ -725,6 +871,8 @@ main() {
 
   # Print summary
   print_summary
+
+  exit 0
 }
 
 main "$@"
