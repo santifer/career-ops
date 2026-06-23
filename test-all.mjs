@@ -4628,6 +4628,20 @@ try {
   fail(`test-cron-rls-negative.mjs wiring crashed: ${e.message}`);
 }
 
+// Wire test-cron-evict.mjs into the gate.
+// Proof 3 (shouldEvict app-logic guard) runs on every clone; network proofs
+// self-skip when Supabase env vars are absent and the test still exits 0.
+try {
+  const result = run(NODE, ['test-cron-evict.mjs'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  if (result !== null) {
+    pass('test-cron-evict.mjs (eviction guard + boundary suite) exits cleanly');
+  } else {
+    fail('test-cron-evict.mjs exited with error — eviction guard broken');
+  }
+} catch (e) {
+  fail(`test-cron-evict.mjs wiring crashed: ${e.message}`);
+}
+
 // ── 20. QUEUE STATUS VOCABULARY ─────────────────────────────────
 
 console.log('\n20. Queue status vocabulary');

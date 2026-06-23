@@ -95,3 +95,26 @@ jobs:
           SUPABASE_CRON_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_CRON_PUBLISHABLE_KEY }}
           # SUPABASE_CRON_JWT is already in GITHUB_ENV from the mint step
         run: node queue-ingest.mjs --cron --api-only
+
+      - name: Re-mint cron JWT for eviction
+        # Eviction is one sequential HTTP check per status='new' row, which can outlive
+        # the token minted before scan+ingest. Re-mint a fresh 600s window before evict.
+        # Key stays in memory (env var, never on disk); JWT is masked so it never appears
+        # in logs. Same recipe as the mint step above.
+        env:
+          CAREER_OPS_SIGNING_KEY: ${{ secrets.SUPABASE_CRON_SIGNING_KEY }}
+        run: |
+          JWT="$(node mint-cron-jwt.mjs --exp-seconds 600)"
+          echo "::add-mask::$JWT"
+          echo "SUPABASE_CRON_JWT=$JWT" >> "$GITHUB_ENV"
+
+      - name: Evict expired stubs from Supabase
+        # --evict: HTTP-liveness re-check of status='new' rows in active_roles.
+        # Deletes expired stubs and records them in seen_urls(final_status='expired')
+        # so they are never re-inserted. Cron credential only; no RLS widening.
+        # SUPABASE_CRON_JWT is the fresh JWT from the re-mint step above.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_CRON_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_CRON_PUBLISHABLE_KEY }}
+          # SUPABASE_CRON_JWT is in GITHUB_ENV from the re-mint step above
+        run: node queue-ingest.mjs --evict

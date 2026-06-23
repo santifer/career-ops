@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 
 import { createSupabaseClient, isSupabaseConfigured } from './supabase-client.mjs';
+import { checkUrlLivenessHttp } from './liveness-http.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 export const QUEUE_PATH = join(ROOT, 'data', 'apply-queue.json');
@@ -507,6 +508,131 @@ export async function insertNewStubsCron(stubs) {
   const inserted = Array.isArray(resp) ? resp.length : 0;
 
   return { attempted: rows.length, inserted, skipped };
+}
+
+// ── Cron eviction seam ────────────────────────────────────────────────────────
+
+/**
+ * App-logic guard for cron eviction — independent of RLS.
+ * Only status='new' rows with a STRONG expired HTTP signal are evicted.
+ * 'uncertain' (including insufficient_content, bot_challenge, fetch_error)
+ * and 'active' are always kept to avoid losing live SPA postings that look
+ * empty over plain HTTP.
+ *
+ * Invariant: only evict verdicts that classifyLiveness() decides BEFORE the
+ * hasApplyControl(applyControls) gate (liveness-core.mjs:100). The HTTP path
+ * omits applyControls, so any code decided after that gate (listing_page,
+ * insufficient_content, no_apply_control) is unreliable — a live board/search
+ * page with a visible Apply button would show 'active' in the browser but
+ * 'listing_page' over HTTP, causing a false eviction and permanent seen_urls
+ * lockout. Strong (pre-gate) codes: http_gone, expired_url, expired_body.
+ *
+ * Exported so regression tests can prove the guard independently of RLS/network.
+ *
+ * @param {{ status: string }|null} row
+ * @param {{ result: string, code: string }|null} verdict
+ * @returns {boolean}
+ */
+export function shouldEvict(row, verdict) {
+  return row?.status === 'new'
+    && verdict?.result === 'expired'
+    && HTTP_EVICT_CODES.has(verdict?.code);
+}
+
+const HTTP_EVICT_CODES = new Set(['http_gone', 'expired_url', 'expired_body']);
+
+/**
+ * HTTP-liveness re-check of status='new' rows via the cron credential.
+ * Deletes expired stubs and records them in seen_urls(final_status='expired')
+ * so they are never re-inserted by the scanner. Mirrors insertNewStubsCron:
+ * same credential wiring, same direct-REST pattern, no save_queue RPC.
+ *
+ * Eviction is conservative by design: only strong expired signals trigger a
+ * delete (see shouldEvict). 'uncertain' and 'active' verdicts always keep the row.
+ *
+ * Write ordering: DELETE first, seen_urls only on confirmed delete.
+ * If the DELETE returns 0 rows (status advanced between SELECT and DELETE),
+ * seen_urls is NOT written — avoids permanently marking an active URL as expired.
+ *
+ * @param {{ check?: Function, dryRun?: boolean }} opts
+ *   check   — injectable liveness function (url) → {result,code,reason}.
+ *             Defaults to checkUrlLivenessHttp. Override in tests.
+ *   dryRun  — when true, log would-be evictions but write/delete nothing.
+ * @returns {Promise<{ checked: number, evicted: number, kept: number, errors: number, dryRun: boolean }>}
+ */
+export async function evictExpiredNewStubsCron({ check, dryRun = false } = {}) {
+  const live = check ?? checkUrlLivenessHttp;
+  const client = createSupabaseClient('cron');
+
+  // SELECT only status='new' rows — the cron's eviction scope.
+  const rows = client.selectSync('active_roles', {
+    select: 'id,url,company,title,created_at,status',
+    query: { status: 'eq.new' },
+  }) ?? [];
+
+  let checked = 0, evicted = 0, kept = 0, errors = 0;
+
+  for (const row of rows) {
+    if (!row.url) { kept++; continue; }
+    checked++;
+
+    let verdict;
+    try {
+      verdict = await live(row.url);
+    } catch (e) {
+      errors++;
+      console.warn(`evictExpiredNewStubsCron: liveness threw for ${row.url}: ${e.message}`);
+      continue;
+    }
+
+    if (!shouldEvict(row, verdict)) {
+      kept++;
+      continue;
+    }
+
+    if (dryRun) {
+      evicted++;
+      console.log(`  WOULD evict: ${row.url}  (${verdict.code})`);
+      continue;
+    }
+
+    try {
+      // Hard-guard: status=eq.new on the DELETE — defence in depth above RLS.
+      // If the row has advanced past 'new' since our SELECT (race), the DELETE
+      // returns 0 rows and we skip the seen_urls write to avoid a false-expired
+      // dedup entry for a URL the human pipeline is actively working on.
+      const resp = client.requestSync('DELETE', 'active_roles', {
+        query: { id: `eq.${row.id}`, status: 'eq.new' },
+        headers: { Prefer: 'return=representation' },
+      });
+      if ((Array.isArray(resp) ? resp.length : 0) === 0) {
+        // Row was already gone or status advanced — skip seen_urls safely.
+        kept++;
+        continue;
+      }
+
+      // Row confirmed deleted. Record in seen_urls so it is never re-inserted.
+      // ON CONFLICT (url) DO NOTHING — cron has no UPDATE grant on seen_urls.
+      // decided_at left unset (NULL) per architecture doc §3.4.
+      client.requestSync('POST', 'seen_urls', {
+        query: { on_conflict: 'url' },
+        body: [{
+          url:          row.url,
+          company:      row.company ?? null,
+          title:        row.title ?? null,
+          final_status: 'expired',
+          first_seen:   dateOnly(row.created_at),
+        }],
+        headers: { Prefer: 'resolution=ignore-duplicates,return=representation' },
+      });
+      evicted++;
+    } catch (e) {
+      errors++;
+      console.warn(`evictExpiredNewStubsCron: failed to evict ${row.url}: ${e.message}`);
+    }
+  }
+
+  return { checked, evicted, kept, errors, dryRun };
 }
 
 // -- Lane stats helper (used by server + SPA) --------------------------------

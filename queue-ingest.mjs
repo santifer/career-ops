@@ -22,6 +22,7 @@ import { createHash } from 'crypto';
 
 import {
   loadQueue, saveQueue, appendRole, loadQueueSeenSets, insertNewStubsCron,
+  evictExpiredNewStubsCron,
 } from './queue-store.mjs';
 import { fetchJson, fetchText } from './providers/_http.mjs';
 
@@ -36,6 +37,10 @@ const DRY_RUN  = process.argv.includes('--dry-run');
 const CRON_MODE = process.argv.includes('--cron');
 // --api-only: skip custom/websearch ATS entries (implied by --cron)
 const API_ONLY  = CRON_MODE || process.argv.includes('--api-only');
+// --evict: HTTP-liveness re-check of status='new' rows; delete expired ones.
+//   Uses cron credential. Runs standalone — skips discovery/insert entirely.
+//   Combine with --dry-run to preview without deleting.
+const EVICT_MODE = process.argv.includes('--evict');
 
 // ── Greenhouse ────────────────────────────────────────────────────────────────
 // Allowed hostnames (mirrors providers/greenhouse.mjs allowlist)
@@ -391,6 +396,16 @@ function loadApplicationsSeenSets() {
 
 async function main() {
   mkdirSync(JDS_DIR, { recursive: true });
+
+  // --evict: HTTP-liveness eviction of expired status='new' stubs.
+  // Early return — does not run discovery or insert.
+  if (EVICT_MODE) {
+    if (DRY_RUN) console.log('Cron evict (dry run — no rows deleted):');
+    const { checked, evicted, kept, errors, dryRun } = await evictExpiredNewStubsCron({ dryRun: DRY_RUN });
+    const verb = dryRun ? 'WOULD evict' : 'evicted';
+    console.log(`\nCron evict: ${evicted} ${verb} / ${checked} checked (${kept} kept, ${errors} errors)`);
+    return;
+  }
 
   // Cron mode: dedup from cloud via cron credential (no dashboard client needed).
   // Standard mode: dedup from local queue + dashboard Supabase.
