@@ -264,6 +264,34 @@ try {
     fail(`Polish apply control not recognized: ${activePolishPosting.result} (${activePolishPosting.code})`);
   }
 
+  // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
+  // pure URL→API resolution + SSRF guard; the network fetch is conservative by
+  // construction (only 404/410→expired, 200→active, else null→Playwright fallback).
+  const { resolveAtsApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
+  const ghApi = resolveAtsApi('https://boards.greenhouse.io/acme/jobs/4567890');
+  if (ghApi?.ats === 'greenhouse' && ghApi.apiUrl === 'https://boards-api.greenhouse.io/v1/boards/acme/jobs/4567890') {
+    pass('resolveAtsApi maps a Greenhouse posting to its per-job API URL');
+  } else {
+    fail(`Greenhouse API URL wrong: ${JSON.stringify(ghApi)}`);
+  }
+  const lvApi = resolveAtsApi('https://jobs.lever.co/acme/abc-123-def');
+  if (lvApi?.ats === 'lever' && lvApi.apiUrl === 'https://api.lever.co/v0/postings/acme/abc-123-def') {
+    pass('resolveAtsApi maps a Lever posting to its per-job API URL');
+  } else {
+    fail(`Lever API URL wrong: ${JSON.stringify(lvApi)}`);
+  }
+  if (resolveAtsApi('https://example.com/jobs/123') === null) {
+    pass('resolveAtsApi returns null for non-ATS URLs (→ Playwright fallback)');
+  } else {
+    fail('resolveAtsApi should return null for an unknown host');
+  }
+  if (resolveAtsApi('https://boards.greenhouse.io/acme/jobs/not-a-number') === null
+      && resolveAtsApi('http://boards.greenhouse.io/acme/jobs/123') === null) {
+    pass('resolveAtsApi rejects non-numeric Greenhouse ids and non-https (SSRF guard)');
+  } else {
+    fail('resolveAtsApi guard failed (bad id or http accepted)');
+  }
+
   // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
   // pages script the goto/evaluate calls so we can exercise the wrapper without
   // launching a browser. checkUrlLiveness reads body text first, apply controls
@@ -1482,6 +1510,41 @@ try {
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }
+
+// ── 11b. TITLE FILTER — acronym word boundaries ──────────────────
+console.log('\n11b. Title filter — acronym word boundaries');
+try {
+  const { buildTitleFilter, compileKeyword } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // Short all-letter acronyms match on WORD BOUNDARIES, not as substrings.
+  const cooFilter = buildTitleFilter({ positive: ['coo'] });
+  if (cooFilter('Chief Operating Officer (COO)') === true) pass('"COO" positive matches the standalone token in a title');
+  else fail('"COO" should match a title containing the standalone token COO');
+  if (cooFilter('Sales Coordinator') === false) pass('"COO" positive does NOT match "Coordinator" (no mid-word match)');
+  else fail('"COO" must not match "Coordinator"');
+
+  // An acronym used as a NEGATIVE keyword must not knock out an unrelated word.
+  const negFilter = buildTitleFilter({ positive: [], negative: ['coo'] });
+  if (negFilter('Marketing Coordinator') === true) pass('negative "COO" does not reject "Coordinator"');
+  else fail('negative "COO" wrongly rejected "Coordinator"');
+  if (negFilter('Group COO') === false) pass('negative "COO" still rejects a standalone "COO" title');
+  else fail('negative "COO" should reject "Group COO"');
+
+  // Multi-word phrases and non-letter keywords keep permissive substring matching.
+  const phraseFilter = buildTitleFilter({ positive: ['head of'] });
+  if (phraseFilter('Head of Finance & Strategy') === true) pass('multi-word "head of" still matches by substring');
+  else fail('"head of" should substring-match "Head of Finance & Strategy"');
+
+  // compileKeyword is exported and directly testable.
+  if (compileKeyword('cfo')('group cfo, emea') === true && compileKeyword('cfo')('cfom') === false) {
+    pass('compileKeyword("cfo") is word-boundary anchored');
+  } else {
+    fail('compileKeyword("cfo") boundary behavior wrong');
+  }
+} catch (e) {
+  fail(`title filter acronym tests crashed: ${e.message}`);
+}
+
 // ── 12. FOLLOW-UP CADENCE LOGIC ─────────────────────────────────
 
 console.log('\n12. Follow-up cadence logic');
@@ -2915,6 +2978,45 @@ try {
   }
 } catch (e) {
   fail(`solidjobs provider tests crashed: ${e.message}`);
+}
+
+// ── 16. SSRF redirect hardening (lever / ashby / workday) ───────
+// _http.mjs defaults to redirect:'follow', so a server-side redirect from any
+// of these ATS APIs to an internal address is an SSRF vector. Every other GET
+// provider passes redirect:'error'; these three were missing it.
+
+console.log('\n16. Provider — SSRF redirect hardening (lever / ashby / workday)');
+
+try {
+  const lever = (await import(pathToFileURL(join(ROOT, 'providers/lever.mjs')).href)).default;
+  const ashby = (await import(pathToFileURL(join(ROOT, 'providers/ashby.mjs')).href)).default;
+  const workday = (await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href)).default;
+
+  let leverOpts = null;
+  await lever.fetch(
+    { name: 'L', careers_url: 'https://jobs.lever.co/example' },
+    { transport: 'http', fetchJson: async (_u, opts) => { leverOpts = opts; return []; }, fetchText: async () => '' },
+  );
+  if (leverOpts && leverOpts.redirect === 'error') pass('lever.fetch() passes redirect:"error"');
+  else fail(`lever.fetch() should pass redirect:"error", got ${JSON.stringify(leverOpts)}`);
+
+  let ashbyOpts = null;
+  await ashby.fetch(
+    { name: 'A', careers_url: 'https://jobs.ashbyhq.com/example' },
+    { transport: 'http', fetchJson: async (_u, opts) => { ashbyOpts = opts; return { jobs: [] }; }, fetchText: async () => '' },
+  );
+  if (ashbyOpts && ashbyOpts.redirect === 'error') pass('ashby.fetch() passes redirect:"error"');
+  else fail(`ashby.fetch() should pass redirect:"error", got ${JSON.stringify(ashbyOpts)}`);
+
+  let workdayOpts = null;
+  await workday.fetch(
+    { name: 'W', careers_url: 'https://example.wd5.myworkdayjobs.com/careers' },
+    { transport: 'http', fetchJson: async (_u, opts) => { workdayOpts = opts; return { jobPostings: [] }; }, fetchText: async () => '' },
+  );
+  if (workdayOpts && workdayOpts.redirect === 'error') pass('workday.fetch() passes redirect:"error"');
+  else fail(`workday.fetch() should pass redirect:"error", got ${JSON.stringify(workdayOpts)}`);
+} catch (e) {
+  fail(`SSRF redirect hardening tests crashed: ${e.message}`);
 }
 
 // ── 15. URL REDISCOVERY FALLBACK (--rediscover-404) ─────────────
