@@ -18,6 +18,15 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Disable fi/fl/ffi ligatures. Headless Chromium substitutes these letter
+       pairs with the Unicode glyphs U+FB01/FB02/FB03 at PDF layout time, and PDF
+       text extractors (what ATS systems read) decode them back to those
+       codepoints, so "verification" becomes "veriﬁcation" and a literal keyword
+       search misses it. Setting this on every element covers headings and
+       competency tags too. Required ligatures (rlig) stay on, so Arabic shaping
+       is unaffected. */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
   }
 
   html {
@@ -33,6 +42,9 @@
     background: #ffffff;
     padding: 0;
     margin: 0;
+    /* Disable ligatures here as well; see the * rule above. */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
   }
 
   .page {
@@ -402,9 +414,9 @@
     <h1>{{NAME}}</h1>
     <div class="header-gradient"></div>
     <div class="contact-row">
-      <span>{{PHONE}}</span>
+      <a href="tel:{{PHONE}}">{{PHONE}}</a>
       <span class="separator">|</span>
-      <span>{{EMAIL}}</span>
+      <a href="mailto:{{EMAIL}}">{{EMAIL}}</a>
       <span class="separator">|</span>
       <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
       <span class="separator">|</span>
