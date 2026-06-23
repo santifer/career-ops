@@ -39,7 +39,11 @@
   <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a></p>
 
 <p align="center">
-  <sub>技术栈</sub><br>
+  <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Built_with-Claude_Code-000?style=for-the-badge&logo=anthropic&logoColor=white" alt="Built with Claude Code"></a>
+</p>
+
+<p align="center">
+  <sub>同样支持任何符合 agent-skill 标准的 CLI</sub><br>
   <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
   <img src="https://img.shields.io/badge/OpenCode-111827?style=flat&logo=terminal&logoColor=white" alt="OpenCode">
   <img src="https://img.shields.io/badge/Gemini_CLI-4285F4?style=flat&logo=google&logoColor=white" alt="Gemini CLI">
@@ -140,15 +144,15 @@ npm install -g @google/gemini-cli
 cd career-ops
 gemini
 
-# 3. 像 Claude Code 一样使用斜杠命令
+# 3. 使用统一的 /career-ops 命令及其子命令：
 /career-ops "Anthropic 的资深 AI 工程师..."
-/career-ops-evaluate --file ./jds/openai.txt
-/career-ops-scan
-/career-ops-pdf
-/career-ops-tracker
+/career-ops pipeline
+/career-ops scan
+/career-ops pdf
+/career-ops tracker
 ```
 
-`GEMINI.md` 文件会自动作为上下文加载。所有 15 个命令都定义在 `.gemini/commands/*.toml` 中。
+`GEMINI.md` 文件会自动作为上下文加载。所有子命令都通过统一的 `.agents/skills/career-ops/SKILL.md` 定义进行路由。
 
 ### 选项 B —— 独立 API 脚本（无需安装 CLI）
 
