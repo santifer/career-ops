@@ -69,9 +69,9 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy), plus `## Machine Summary` YAML for downstream scripts. Header includes `**Legitimacy:** {tier}`. |
 
-### OpenCode & Gemini CLI Commands
+### OpenCode & Antigravity CLI Commands
 
-Both [OpenCode](https://opencode.ai) and [Gemini CLI](https://github.com/google-gemini/gemini-cli) natively support the open agent skill standard (`agentskills.io`). 
+Both [OpenCode](https://opencode.ai) and Antigravity CLI natively support the open agent skill standard (`agentskills.io`).
 
 Instead of registering individual `.toml` files for every slash command, all subcommands are routed through the single unified skill defined in `.agents/skills/career-ops/SKILL.md`.
 
@@ -99,7 +99,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 * `followup` — Update and calculate follow-ups
 * `update` — Update system files
 
-All `modes/*` files and prompt contexts (e.g., `GEMINI.md`) are shared across Claude Code, OpenCode, and Gemini CLI.
+All `modes/*` files and prompt contexts are shared across Claude Code, OpenCode, and Antigravity CLI. `GEMINI.md` remains only as a legacy no-op guard so Antigravity does not duplicate the full project instructions.
 
 ### First Run — Onboarding (IMPORTANT)
 

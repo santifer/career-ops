@@ -159,9 +159,10 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
-  // Bare run: no portals.yml in the repo, so it must exit 0 gracefully (and hit
-  // no network). The probe logic itself is unit-tested below with a mock.
-  { name: 'verify-portals.mjs', expectExit: 0 },
+  // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
+  // default portals.yml because end-user workspaces often have a real user-layer
+  // portals file that would trigger a live remote sweep during tests.
+  { name: 'verify-portals.mjs --file .tmp-test-missing-portals.yml', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
@@ -520,6 +521,23 @@ if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSou
   pass('Batch summary reports skipped offers separately from pending');
 } else {
   fail('Batch summary can misreport skipped offers as pending');
+}
+
+if (!/\bbc\b/.test(batchRunnerSource)) {
+  pass('Batch runner does not depend on bc for score arithmetic');
+} else {
+  fail('Batch runner still depends on bc for score arithmetic');
+}
+
+if (
+  !/awk "BEGIN\{[^"]*\$MIN_SCORE/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$score/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$sscore/.test(batchRunnerSource) &&
+  /awk -v score="\$score" -v min="\$MIN_SCORE"/.test(batchRunnerSource)
+) {
+  pass('Batch runner passes score values to awk via -v');
+} else {
+  fail('Batch runner interpolates score values into awk programs');
 }
 
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
@@ -1024,7 +1042,7 @@ for (const section of requiredSections) {
 
 console.log('\n11. CLI wrapper file integrity');
 
-const cliWrappers = ['CLAUDE.md', 'OPENCODE.md', 'GEMINI.md'];
+const cliWrappers = ['CLAUDE.md', 'OPENCODE.md'];
 for (const f of cliWrappers) {
   if (!fileExists(f)) {
     fail(`Missing CLI wrapper: ${f}`);
@@ -1035,6 +1053,16 @@ for (const f of cliWrappers) {
     pass(`${f} references AGENTS.md`);
   } else {
     fail(`${f} does NOT reference AGENTS.md`);
+  }
+}
+if (!fileExists('GEMINI.md')) {
+  fail('Missing legacy Gemini context guard: GEMINI.md');
+} else {
+  const geminiContext = readFile('GEMINI.md');
+  if (/^@(?:\.\/)?AGENTS\.md/m.test(geminiContext)) {
+    fail('GEMINI.md imports AGENTS.md and duplicates Antigravity context');
+  } else {
+    pass('GEMINI.md is a no-op context guard for Antigravity');
   }
 }
 
@@ -2171,6 +2199,13 @@ try {
     fail(`non-report link altered: ${other}`);
   }
 
+  const pipelineProcessed = normalizeReportLink('[12](reports/012-acme-2026-01-04.md)', join(repo, 'data'), repo);
+  if (pipelineProcessed === '[12](../reports/012-acme-2026-01-04.md)') {
+    pass('pipeline processed links are relative to data/pipeline.md (#1126)');
+  } else {
+    fail(`pipeline processed link normalization wrong (#1126): ${pipelineProcessed}`);
+  }
+
   // End-to-end migration against a fictional fixture tracker (no personal data)
   const tmpDir = mkdtempSync(join(tmpdir(), 'career-ops-migrate-'));
   try {
@@ -2194,6 +2229,30 @@ try {
     }
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
+  }
+
+  const { resolveReportPath } = await import(pathToFileURL(join(ROOT, 'followup-cadence.mjs')).href);
+  const followupTmp = mkdtempSync(join(tmpdir(), 'career-ops-followup-link-'));
+  try {
+    mkdirSync(join(followupTmp, 'data'), { recursive: true });
+    mkdirSync(join(followupTmp, 'reports'), { recursive: true });
+    const reportFile = join(followupTmp, 'reports', '012-acme-2026-01-04.md');
+    writeFileSync(reportFile, '# fixture\n');
+    const appsFile = join(followupTmp, 'data', 'applications.md');
+    const resolved = resolveReportPath('[12](../reports/012-acme-2026-01-04.md)', appsFile, followupTmp);
+    if (resolved === 'reports/012-acme-2026-01-04.md') {
+      pass('follow-up reportPath is repo-root relative for data/ tracker links (#1126)');
+    } else {
+      fail(`follow-up reportPath wrong (#1126): ${resolved}`);
+    }
+    const escaped = resolveReportPath('[99](../../outside.md)', appsFile, followupTmp);
+    if (escaped === null) {
+      pass('follow-up reportPath rejects links outside reports/ (#1126)');
+    } else {
+      fail(`follow-up reportPath allowed escaped link (#1126): ${escaped}`);
+    }
+  } finally {
+    rmSync(followupTmp, { recursive: true, force: true });
   }
 } catch (e) {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
@@ -3167,6 +3226,26 @@ try {
     pass('--resume-paused dry-run selects paused jobs only');
   } else {
     fail(`--resume-paused selection wrong: ${dry}`);
+  }
+
+  rmSync(join(batchDir, 'batch-input.tsv'), { force: true });
+  rmSync(join(batchDir, 'batch-prompt.md'), { force: true });
+  rmSync(join(fakeBin, 'claude'), { force: true });
+  writeFileSync(join(batchDir, 'batch-state.tsv'), [
+    'id\turl\tstatus\tstarted_at\tcompleted_at\treport_num\tscore\terror\tretries',
+    '1\thttps://example.com/one\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t4.5\t-\t0',
+    '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
+    '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
+  ].join('\n') + '\n');
+  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  if (statusOnly.includes('Average score: 4.5/5 (1 scored)') && statusOnly.includes('bad);system("oops")')) {
+    pass('--status reads existing state without full batch prerequisites');
+  } else {
+    fail(`--status prerequisite/score handling wrong: ${statusOnly}`);
   }
 
   try { rmSync(tmp, { recursive: true, force: true }); } catch {}
