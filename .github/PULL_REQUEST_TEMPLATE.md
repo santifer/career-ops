@@ -19,7 +19,7 @@
 
 - [ ] I have read [CONTRIBUTING.md](https://github.com/santifer/career-ops/blob/main/CONTRIBUTING.md)
 - [ ] I linked a related issue above (required for features and architecture changes)
-- [ ] My PR does not include personal data (CV, email, real names)
+- [ ] My PR does not include personal data (CV, email, real names, scan results, or pipeline data)
 - [ ] I ran `node test-all.mjs` and all tests pass
 - [ ] My changes respect the [Data Contract](https://github.com/santifer/career-ops/blob/main/DATA_CONTRACT.md) (no modifications to user-layer files)
 - [ ] My changes align with the [project roadmap](https://github.com/santifer/career-ops/discussions/156)
