@@ -16,7 +16,7 @@
  */
 
 import { execFile, execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync, lstatSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -76,6 +76,7 @@ const SYSTEM_PATHS = [
   'tracker-links.mjs',
   'tracker.mjs',
   'verify-pipeline.mjs',
+  'reconcile-pipeline.mjs',
   'dedup-tracker.mjs',
   'role-matcher.mjs',
   'normalize-statuses.mjs',
@@ -89,6 +90,7 @@ const SYSTEM_PATHS = [
   'check-liveness.mjs',
   'liveness-core.mjs',
   'liveness-browser.mjs',
+  'liveness-api.mjs',
   'analyze-patterns.mjs',
   'followup-cadence.mjs',
   'gemini-eval.mjs',
@@ -96,6 +98,7 @@ const SYSTEM_PATHS = [
   'test-salary-filter.mjs',
   'tracker-columns-tests.mjs',
   'validate-portals.mjs',
+  'verify-portals.mjs',
   'updater-migration-tests.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
@@ -150,14 +153,27 @@ const SYSTEM_PATHS = [
   'DOCKER.md',
 ];
 
+const CANONICAL_SKILL_PATH = '.agents/skills/career-ops/SKILL.md';
+const SKILL_ENTRYPOINTS = [
+  {
+    path: '.claude/skills/career-ops/SKILL.md',
+    pointer: '../../../.agents/skills/career-ops/SKILL.md',
+  },
+  {
+    path: '.opencode/skills/career-ops/SKILL.md',
+    pointer: '../../../.agents/skills/career-ops/SKILL.md',
+  },
+];
+
 // User layer paths — NEVER touch these (safety check)
 const USER_PATHS = [
   'cv.md',
   'config/profile.yml',
   'modes/_profile.md',
+  'voice-dna.md',
   'portals.yml',
   'article-digest.md',
-  'interview-prep/story-bank.md',
+  'interview-prep/',
   'data/',
   'reports/',
   'output/',
@@ -216,8 +232,12 @@ function newestBackupBranch(branches) {
   return timestamped[0]?.branch || branchList[0];
 }
 
+function gitIn(root, ...args) {
+  return execFileSync('git', args, { cwd: root, encoding: 'utf-8', timeout: 30000 }).trim();
+}
+
 function git(...args) {
-  return execFileSync('git', args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
+  return gitIn(ROOT, ...args);
 }
 
 function gitStatusEntries() {
@@ -251,9 +271,86 @@ function mergePathLists(...lists) {
   return merged;
 }
 
+function repoPath(root, path) {
+  return join(root, ...path.split('/'));
+}
+
+export function materializeSkillEntrypoints(root = ROOT) {
+  const canonicalPath = repoPath(root, CANONICAL_SKILL_PATH);
+  if (!existsSync(canonicalPath)) return [];
+
+  let canonicalContent = '';
+  try {
+    canonicalContent = readFileSync(canonicalPath, 'utf-8');
+  } catch {
+    return [];
+  }
+  const materialized = [];
+
+  for (const entry of SKILL_ENTRYPOINTS) {
+    const entryPath = repoPath(root, entry.path);
+    if (!existsSync(entryPath)) continue;
+
+    let stat = null;
+    try {
+      stat = lstatSync(entryPath);
+    } catch {
+      continue;
+    }
+    if (stat.isSymbolicLink()) continue;
+    if (!stat.isFile()) continue;
+
+    try {
+      const content = readFileSync(entryPath, 'utf-8').trim();
+      if (content !== entry.pointer) continue;
+      writeFileSync(entryPath, canonicalContent);
+    } catch {
+      continue;
+    }
+    materialized.push(entry.path);
+  }
+
+  return materialized;
+}
+
+export function prepareMaterializedSkillEntrypointsForStage(paths, root = ROOT) {
+  const prepared = [];
+  for (const path of paths) {
+    const entry = gitIn(root, 'ls-files', '-s', '--', path);
+    if (!entry) continue;
+
+    const mode = entry.split(/\s+/, 1)[0];
+    if (mode === '120000') {
+      gitIn(root, 'rm', '--cached', '-f', '--', path);
+    }
+    prepared.push(path);
+  }
+  return prepared;
+}
+
 function revertPaths(paths) {
   if (paths.length === 0) return;
-  git('checkout', '--', ...paths);
+  // Must restore from HEAD, not from the index (#915 bug 1). After
+  // `git checkout FETCH_HEAD -- <path>` the index already holds the new
+  // content, so `git checkout -- <path>` (index→worktree) is a no-op.
+  // `git checkout HEAD -- <path>` resets both the index and the worktree
+  // to the pre-update commit, which is the correct rollback target.
+  for (const p of paths) {
+    try {
+      git('checkout', 'HEAD', '--', p);
+    } catch (err) {
+      const pathspec = p.endsWith('/') ? p.slice(0, -1) : p;
+      // Only remove if the path genuinely doesn't exist in HEAD.
+      // Other errors (permissions, corrupt refs) should re-throw.
+      let existsInHead = true;
+      try { git('cat-file', '-e', `HEAD:${pathspec}`); } catch { existsInHead = false; }
+      if (existsInHead) throw err;
+      // Path was newly introduced by the update — remove it so the
+      // working tree is consistent with HEAD.
+      try { git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec); } catch { /* ignore */ }
+      try { rmSync(join(ROOT, pathspec), { recursive: true, force: true }); } catch { /* already gone */ }
+    }
+  }
 }
 
 function addPaths(paths) {
@@ -409,9 +506,22 @@ async function apply() {
   }
 
   try {
-    // 1. Backup: create branch
+    // 1. Backup: create branch + stash uncommitted work (#915 bug 3).
+    // The branch only captures committed state; any uncommitted edits are
+    // invisible to `git branch` and can be lost if the update aborts.
+    // `git stash create` builds a stash object without touching the stash
+    // stack, giving a recoverable ref for WIP even if the update fails.
     const backupBranch = process.env.CAREER_OPS_UPDATE_BACKUP_BRANCH || updateBackupBranchName(local);
     if (!isReexec) {
+      try {
+        const wip = git('stash', 'create');
+        if (wip) {
+          git('update-ref', `refs/backup-pre-update-wip/${local}`, wip);
+          console.log(`WIP stash ref saved: refs/backup-pre-update-wip/${local} (recover with: git stash apply refs/backup-pre-update-wip/${local})`);
+        }
+      } catch {
+        // Non-fatal: stash creation can fail in bare repos or empty trees.
+      }
       git('branch', backupBranch);
       console.log(`Backup branch created: ${backupBranch}`);
     }
@@ -466,12 +576,18 @@ async function apply() {
       }
     }
 
+    const materializedSkillEntrypoints = materializeSkillEntrypoints();
+    if (materializedSkillEntrypoints.length > 0) {
+      for (const path of materializedSkillEntrypoints) {
+        if (!updated.includes(path)) updated.push(path);
+      }
+      console.log(`Materialized ${materializedSkillEntrypoints.length} skill entrypoint(s) for filesystems without symlink support`);
+    }
+
     // 4. Validate: check NO user files were touched.
     //
     // Track which user paths the update unexpectedly touched so we
-    // can revert them too — reverting only `updated` would leave the
-    // repo in a half-applied state with the user-layer changes still
-    // staged.
+    // can exclude them from the revert and log what was preserved.
     const violatedUserPaths = new Set();
     try {
       for (const entry of gitStatusEntries()) {
@@ -507,13 +623,17 @@ async function apply() {
     }
 
     if (violatedUserPaths.size > 0) {
-      console.error('Aborting: user files were touched. Rolling back...');
-      // Revert BOTH the system-layer updates and the user-layer paths
-      // the update unexpectedly modified — otherwise the repo is left
-      // in a half-applied state.
+      console.error('Aborting: user files were touched. Rolling back system files...');
+      // Revert ONLY the system-layer updates — never `git checkout` the
+      // violated user paths back to HEAD. Doing so would overwrite the
+      // user's working-tree content (accumulated STAR+R stories, local
+      // edits) with whatever is committed upstream, causing data loss.
+      // The user files were flagged as touched by the update, not by the
+      // user; leaving them as-is is the safe choice — the user decides
+      // what to do with them.
       const violation = new Error('Update aborted: user files were touched.');
       try {
-        revertPaths([...updated, ...violatedUserPaths]);
+        revertPaths([...updated]);
       } catch (revertErr) {
         // If the revert itself fails, don't lose the safety-violation
         // diagnostic — chain it via `cause` so the user sees both.
@@ -522,6 +642,8 @@ async function apply() {
           { cause: violation },
         );
       }
+      console.error(`User file(s) left as-is (your content was NOT overwritten):`);
+      for (const f of violatedUserPaths) console.error(`  ${f}`);
       // `throw` (not `process.exit`) so the outer `finally` runs and
       // .update-lock is removed. Exiting here would leak the lock and
       // permanently block subsequent updates until the user deletes
@@ -555,8 +677,13 @@ async function apply() {
         unlinkSync(dismissFile);
         pathsToStage.push('.update-dismissed');
       }
+      prepareMaterializedSkillEntrypointsForStage(materializedSkillEntrypoints);
       addPaths(pathsToStage);
-      git('commit', '-m', `chore: auto-update system files to v${remote}`);
+      // Scope the commit to only the staged update paths (#915 bug 2).
+      // A bare `git commit` would sweep any unrelated pre-staged files into
+      // the update commit. Passing the explicit pathspec list constrains the
+      // commit to exactly the files this update touched.
+      git('commit', '-m', `chore: auto-update system files to v${remote}`, '--', ...pathsToStage);
     } catch {
       // Nothing to commit (already up to date)
     }
@@ -634,8 +761,13 @@ function rollback() {
     }
 
     if (restored.length > 0) addPaths(restored);
+    const rollbackPaths = [...restored, ...removed];
     try {
-      git('commit', '-m', `chore: rollback system files from ${latest}`);
+      // Scope the commit to the rollback paths (#915 bug 2). A bare
+      // `git commit` would sweep unrelated staged files into the rollback.
+      if (rollbackPaths.length > 0) {
+        git('commit', '-m', `chore: rollback system files from ${latest}`, '--', ...rollbackPaths);
+      }
     } catch {
       // Tolerate any commit failure here — the common case is the
       // "nothing to commit" no-op when the working tree already

@@ -26,7 +26,7 @@ const MAX_RECORDS = 600; // safety cap on pagination
  * Builds the Elasticsearch post_filter from the entry's `ibm:` config.
  * @param {{ country?: string, categories?: string[] }} cfg
  */
-function buildPostFilter(cfg) {
+export function buildPostFilter(cfg) {
   const must = [];
   // Sanitize operator config: keep only non-empty trimmed strings so a stray/
   // mistyped entry can't inject empty or non-string filter terms.
@@ -39,6 +39,36 @@ function buildPostFilter(cfg) {
   const country = typeof cfg.country === 'string' ? cfg.country.trim() : '';
   if (country) must.push({ term: { field_keyword_05: country } });
   return { bool: { must } };
+}
+
+/**
+ * Normalizes one page of the IBM careers API response into job entries.
+ * Throws if the response doesn't carry the expected `hits.hits[]` shape, so a
+ * silent endpoint change surfaces as a hard error instead of empty results.
+ * @param {any} json - A single API response page.
+ * @returns {Array<{title: string, url: string, company: string, location: string}>}
+ */
+export function parseIbmResponse(json) {
+  const hits = json && json.hits && Array.isArray(json.hits.hits) ? json.hits.hits : null;
+  if (!hits) {
+    throw new Error(`ibm: unexpected API response — expected hits.hits[], got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`);
+  }
+
+  const out = [];
+  for (const h of hits) {
+    const s = (h && h._source) || {};
+    if (typeof s.title !== 'string' || s.title.trim() === '') continue;
+    if (typeof s.url !== 'string' || !/^https?:\/\//i.test(s.url.trim())) continue;
+    const loc = typeof s.field_keyword_19 === 'string' ? s.field_keyword_19.trim() : '';
+    const mode = typeof s.field_keyword_17 === 'string' ? s.field_keyword_17.trim() : '';
+    out.push({
+      title: s.title.trim(),
+      url: s.url.trim(),
+      company: 'IBM',
+      location: [loc, mode].filter(Boolean).join(' · '),
+    });
+  }
+  return out;
 }
 
 /** @type {Provider} */
@@ -81,29 +111,12 @@ export default {
         redirect: 'error',
       });
 
-      const hits = json && json.hits && Array.isArray(json.hits.hits) ? json.hits.hits : null;
-      if (!hits) {
-        throw new Error(`ibm: unexpected API response — expected hits.hits[], got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`);
-      }
-
-      for (const h of hits) {
-        const s = (h && h._source) || {};
-        if (typeof s.title !== 'string' || s.title.trim() === '') continue;
-        if (typeof s.url !== 'string' || !/^https?:\/\//i.test(s.url.trim())) continue;
-        const loc = typeof s.field_keyword_19 === 'string' ? s.field_keyword_19.trim() : '';
-        const mode = typeof s.field_keyword_17 === 'string' ? s.field_keyword_17.trim() : '';
-        out.push({
-          title: s.title.trim(),
-          url: s.url.trim(),
-          company: 'IBM',
-          location: [loc, mode].filter(Boolean).join(' · '),
-        });
-      }
+      out.push(...parseIbmResponse(json));
 
       // Stop on the first short page. IBM's `total` is unreliable (often
       // capped at the page size), so don't trust it for the loop bound —
       // MAX_RECORDS is the hard ceiling.
-      if (hits.length < PAGE_SIZE) break;
+      if (json.hits.hits.length < PAGE_SIZE) break;
     }
 
     return out;
