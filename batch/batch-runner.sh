@@ -35,6 +35,7 @@ RESUME_PAUSED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
+SKIP_PDF=false
 MODEL=""  # empty = let claude -p use the Claude Max default
 RATE_LIMIT_SLEEP=300
 BATCH_PAUSED=false
@@ -61,6 +62,7 @@ Options:
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
+  --skip-pdf           Skip PDF generation entirely (write ❌ in tracker PDF column)
   --rate-limit-sleep N Seconds to wait before retrying a rate-limited worker
                        (default: 300)
   --model NAME         Claude model passed to `claude -p --model` (default:
@@ -102,6 +104,7 @@ while [[ $# -gt 0 ]]; do
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
+    --skip-pdf) SKIP_PDF=true; shift ;;
     --rate-limit-sleep)
       [[ $# -ge 2 ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
       RATE_LIMIT_SLEEP="$2"
@@ -395,7 +398,12 @@ process_offer() {
 
   # Build the prompt with placeholders replaced
   local prompt
-  prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-F + report .md + PDF + tracker line."
+  if [[ "$SKIP_PDF" == "true" ]]; then
+    prompt="Procesa esta oferta de empleo. Ejecuta el pipeline: evaluación A-F + report .md + tracker line. NO generes PDF; en el tracker escribe ❌ en la columna PDF y en el JSON final establece \"pdf\": null."
+    echo "    ⏭️  --skip-pdf set — skipping PDF generation for #$id ($url)"
+  else
+    prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-F + report .md + PDF + tracker line."
+  fi
   prompt="$prompt URL: $url"
   prompt="$prompt JD file: $jd_file"
   prompt="$prompt Report number: $report_num"
