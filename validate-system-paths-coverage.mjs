@@ -35,7 +35,7 @@ function extractArray(name) {
     console.error(`FAIL: ${name} array not found in update-system.mjs`);
     process.exit(1);
   }
-  return Array.from(match[1].matchAll(/'([^']+)'/g), (m) => m[1]);
+  return Array.from(match[1].matchAll(/['"]([^'"]+)['"]/g), (m) => m[1]);
 }
 
 const SYSTEM_PATHS = extractArray('SYSTEM_PATHS');
