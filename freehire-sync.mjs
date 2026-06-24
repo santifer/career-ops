@@ -36,7 +36,7 @@ const syncNotes = args.includes('--notes');
 // Verify freehire CLI is present on PATH unless in dry-run/mock mode
 if (!dryRun && !process.env.FREEHIRE_MOCK) {
   try {
-    execFileSync('freehire', ['--help'], { stdio: 'ignore' });
+    execFileSync('freehire', ['--help'], { stdio: 'ignore', timeout: 30000 });
   } catch (err) {
     console.error("Error: 'freehire' CLI command not found on PATH. Please install freehire and run 'freehire auth login' first.");
     process.exit(1);
@@ -91,7 +91,7 @@ for (let i = 0; i < lines.length; i++) {
       remoteStage = process.env.FREEHIRE_MOCK_DRIFT === '1' ? 'saved' : stage;
     } else {
       try {
-        const stdout = execFileSync('freehire', ['show', slug, '--json'], { encoding: 'utf-8' });
+        const stdout = execFileSync('freehire', ['show', slug, '--json'], { encoding: 'utf-8', timeout: 30000 });
         const job = JSON.parse(stdout);
         remoteStage = job.stage || job.status || null;
       } catch (err) {
@@ -111,7 +111,7 @@ for (let i = 0; i < lines.length; i++) {
       console.log(`[dry-run] Would run: freehire stage ${slug} ${stage}`);
     } else {
       try {
-        execFileSync('freehire', ['stage', slug, stage]);
+        execFileSync('freehire', ['stage', slug, stage], { timeout: 30000 });
       } catch (err) {
         console.error(`⚠️  Failed to sync stage for ${company} - ${role} (${slug}): ${err.message}`);
         continue;
@@ -124,7 +124,7 @@ for (let i = 0; i < lines.length; i++) {
         console.log(`[dry-run] Would run: freehire note ${slug} "${notes}"`);
       } else {
         try {
-          execFileSync('freehire', ['note', slug, notes]);
+          execFileSync('freehire', ['note', slug, notes], { timeout: 30000 });
         } catch (err) {
           console.error(`⚠️  Failed to sync notes for ${company} - ${role} (${slug}): ${err.message}`);
         }

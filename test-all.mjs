@@ -3275,14 +3275,14 @@ try {
     const newPath = `${fakeBin}${pathSeparator}${process.env.PATH || process.env.Path || ''}`;
     env = { ...process.env, PATH: newPath, Path: newPath };
   } else {
-    const wslFakeBin = toBashPath(fakeBin, true);
+    const wslFakeBin = toBashPath(fakeBin);
     let wslPath = '';
     try {
       wslPath = execSync('wsl printenv PATH', { encoding: 'utf-8' }).trim();
     } catch {}
     if (!wslPath) {
       const paths = (process.env.PATH || process.env.Path || '').split(';');
-      const translated = paths.map(p => toBashPath(p, true)).filter(Boolean);
+      const translated = paths.map(p => toBashPath(p)).filter(Boolean);
       wslPath = translated.join(':');
     }
     env = { ...process.env, PATH: `${wslFakeBin}:${wslPath}` };
@@ -4598,16 +4598,20 @@ try {
   const cp = await import('child_process');
   const originalExecFileSync = cp.default.execFileSync;
   let execCalledArgs = null;
-  cp.default.execFileSync = (cmd, args, opts) => {
-    if (cmd === 'freehire') {
-      execCalledArgs = args;
-      return JSON.stringify(mockRawJobs);
-    }
-    return originalExecFileSync(cmd, args, opts);
-  };
+  let providerFetched;
+  try {
+    cp.default.execFileSync = (cmd, args, opts) => {
+      if (cmd === 'freehire') {
+        execCalledArgs = args;
+        return JSON.stringify(mockRawJobs);
+      }
+      return originalExecFileSync(cmd, args, opts);
+    };
 
-  const providerFetched = await freehireProvider.fetch({ name: 'Acme', query: 'open' }, {});
-  cp.default.execFileSync = originalExecFileSync; // Restore immediately
+    providerFetched = await freehireProvider.fetch({ name: 'Acme', query: 'open' }, {});
+  } finally {
+    cp.default.execFileSync = originalExecFileSync; // Restore immediately
+  }
 
   if (execCalledArgs && execCalledArgs[1] === 'open' && providerFetched.length === 1) {
     pass('freehire-provider: fetch() spawns freehire and maps jobs successfully');

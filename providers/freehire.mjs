@@ -16,7 +16,7 @@ export default {
     const args = buildSearchArgs(entry);
     let stdout;
     try {
-      stdout = cp.execFileSync('freehire', args, { encoding: 'utf-8' });
+      stdout = cp.execFileSync('freehire', args, { encoding: 'utf-8', timeout: 30000 });
     } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error("freehire: CLI command 'freehire' not found on PATH. Please install freehire and run 'freehire auth login'.");
@@ -39,7 +39,7 @@ export default {
     const mapped = mapJobs(rawJobs, entry);
 
     // Update the local slug map with any mappings returned
-    const slugMap = loadSlugMap();
+    const slugMap = loadSlugMap(process.env.FREEHIRE_SLUG_MAP);
     let mapChanged = false;
     for (const j of rawJobs) {
       if (j && typeof j === 'object') {
@@ -52,7 +52,7 @@ export default {
       }
     }
     if (mapChanged) {
-      saveSlugMap(slugMap);
+      saveSlugMap(slugMap, process.env.FREEHIRE_SLUG_MAP);
     }
 
     return mapped;

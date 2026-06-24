@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 
 /**
  * Builds array of command-line arguments for running 'freehire search'.
@@ -49,6 +50,7 @@ export function loadSlugMap(filePath = 'data/freehire-slugs.json') {
  * @param {string} [filePath]
  */
 export function saveSlugMap(map, filePath = 'data/freehire-slugs.json') {
+  mkdirSync(dirname(filePath), { recursive: true });
   writeFileSync(filePath, JSON.stringify(map, null, 2), 'utf-8');
 }
 
