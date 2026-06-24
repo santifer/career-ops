@@ -3444,6 +3444,9 @@ console.log('\n13. Batch rate-limit pause');
 
 try {
   const tmp = mkdtempSync(join(tmpdir(), 'co-batch-rate-'));
+  const bashShell = process.platform === 'win32' && existsSync('C:\\Program Files\\Git\\bin\\bash.exe')
+    ? 'C:\\Program Files\\Git\\bin\\bash.exe'
+    : 'bash';
   const batchDir = join(tmp, 'batch');
   const fakeBin = join(tmp, 'bin');
   mkdirSync(batchDir, { recursive: true });
@@ -3453,7 +3456,7 @@ try {
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+    try { execFileSync(bashShell, ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
@@ -3472,13 +3475,34 @@ try {
     'exit 1',
   ].join('\n') + '\n');
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+    try { execFileSync(bashShell, ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
   }
 
-  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const isWsl = process.platform === 'win32' && !bashShell.includes('Git');
+  const script = isWsl ? toBashPath(join(batchDir, 'batch-runner.sh')) : join(batchDir, 'batch-runner.sh');
+
+  let env;
+  if (!isWsl) {
+    const pathSeparator = process.platform === 'win32' ? ';' : ':';
+    const newPath = `${fakeBin}${pathSeparator}${process.env.PATH || process.env.Path || ''}`;
+    env = { ...process.env, PATH: newPath, Path: newPath };
+  } else {
+    const wslFakeBin = toBashPath(fakeBin, true);
+    let wslPath = '';
+    try {
+      wslPath = execSync('wsl printenv PATH', { encoding: 'utf-8' }).trim();
+    } catch {}
+    if (!wslPath) {
+      const paths = (process.env.PATH || process.env.Path || '').split(';');
+      const translated = paths.map(p => toBashPath(p, true)).filter(Boolean);
+      wslPath = translated.join(':');
+    }
+    env = { ...process.env, PATH: `${wslFakeBin}:${wslPath}` };
+  }
+
+  const out = run(bashShell, [script, '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3497,7 +3521,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
+  const dry = run(bashShell, [script, '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3517,7 +3541,7 @@ try {
     '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
     '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
   ].join('\n') + '\n');
-  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+  const statusOnly = run(bashShell, [script, '--status'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
