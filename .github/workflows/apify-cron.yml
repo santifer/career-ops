@@ -1,0 +1,140 @@
+name: Apify Job Discovery Cron
+
+# Seek + Indeed + Fantastic.jobs Workday job discovery via Apify actors.
+# Discovers new roles and inserts status='new' stubs into Supabase via the
+# RLS-bounded career_ops_cron credential. Zero LLM tokens — pure HTTP + JSON.
+#
+# Schedules:
+#   Daily (Sun + Tue-Sat, 19:30 UTC): Seek + Indeed only (20 results/title cap each).
+#   Weekly (Monday, 20:00 UTC): all three actors, including Fantastic 200-job run.
+#   Monday avoids the daily trigger so Seek/Indeed run exactly once per day.
+#   api-cron.yml runs at 19:00 UTC; this workflow is offset +30–60 min to prevent
+#   concurrent Supabase writes.
+#
+# ── First-run validation ────────────────────────────────────────────────────────
+# DO NOT rely on the scheduled triggers for first validation.
+# Trigger workflow_dispatch manually (default: seek,indeed) and confirm:
+#   (a) stubs appear in Supabase active_roles with status='new'
+#   (b) the JWT mint step shows the token as *** in logs — nothing leaks
+#   (c) the run stays in budget (no 200-job Fantastic call on the default choice)
+# Only after a green watched smoke run should the scheduled triggers run unattended.
+# ───────────────────────────────────────────────────────────────────────────────
+#
+# Security notes:
+# - SUPABASE_CRON_SIGNING_KEY lives in the 'cron' GitHub Environment, which is
+#   restricted to the default branch (main). Non-main branches cannot read it.
+# - The signing key is never written to disk; mint-cron-jwt.mjs reads it from
+#   the CAREER_OPS_SIGNING_KEY env var and prints only the JWT to stdout.
+# - The minted JWT exists for 10 minutes and is masked with ::add-mask:: so it
+#   never appears in logs. GitHub auto-masks the registered secrets.
+# - portals.yml is reconstructed from a secret via printf (never echoed).
+# - Nothing is committed or pushed; the runner is ephemeral.
+# - actions/* are SHA-pinned (see steps below) to prevent supply-chain attacks
+#   on this signing-key-bearing workflow. npm install uses --ignore-scripts.
+# - Note: committing package-lock.json + npm ci would add dep-version pinning;
+#   deferred as a repo-wide convention change.
+#
+# Secrets required in the 'cron' GitHub Environment:
+#   Reused from api-cron: SUPABASE_URL, SUPABASE_CRON_PUBLISHABLE_KEY,
+#                          SUPABASE_CRON_SIGNING_KEY, PORTALS_YML
+#   New (add before first run): APIFY_TOKEN — personal Apify API token.
+#   Without APIFY_TOKEN, the run step fails immediately at apifyToken() with a
+#   clear error; no Apify actor cost is incurred.
+#
+on:
+  schedule:
+    # 19:30 UTC = 05:30 AEST (next-day) — Seek + Indeed only; Mon excluded
+    # (Monday is covered by the weekly all-actors run below)
+    - cron: '30 19 * * 0,2-6'
+    # Monday 20:00 UTC = 06:00 AEST (next-day) — all three actors incl. Fantastic
+    - cron: '0 20 * * 1'
+  workflow_dispatch:
+    # Manual trigger for smoke testing and on-demand runs.
+    # Default is the cheap subset (no 200-job Fantastic cost) so a smoke run
+    # doesn't spend budget unless you explicitly choose 'all'.
+    # Note: workflow_dispatch from a feature branch will fail on the mint step
+    # if the 'cron' environment restricts secrets to main only. Run from main,
+    # or temporarily add the branch to the environment's branch policy during dev.
+    inputs:
+      source:
+        description: 'Actors to run'
+        type: choice
+        default: 'seek,indeed'
+        options:
+          - 'seek,indeed'   # Seek + Indeed only (cheap, ~20 results/title each)
+          - 'all'           # Seek + Indeed + Fantastic (200-job min; weekly budget)
+
+permissions:
+  contents: read  # checkout only; nothing is committed or pushed
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    environment: cron
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+        with:
+          persist-credentials: false  # workflow never pushes
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+        # Playwright browsers are NOT installed — apify-discover.mjs is pure
+        # HTTP + JSON (no Playwright, no Chromium). No --production flag so
+        # jose, js-yaml, and dotenv are available.
+
+      - name: Reconstruct portals.yml
+        # portals.yml is gitignored; reconstruct from the secret.
+        # printf prevents a trailing newline that some editors add; never
+        # use echo here (would reveal contents on --xtrace).
+        env:
+          PORTALS_YML: ${{ secrets.PORTALS_YML }}
+        run: printf '%s' "$PORTALS_YML" > portals.yml
+
+      - name: Mint short-lived cron JWT
+        # The signing key stays in memory (env var) — never written to disk.
+        # The minted JWT is masked so it never appears in logs.
+        env:
+          CAREER_OPS_SIGNING_KEY: ${{ secrets.SUPABASE_CRON_SIGNING_KEY }}
+        run: |
+          JWT="$(node mint-cron-jwt.mjs --exp-seconds 600)"
+          echo "::add-mask::$JWT"
+          echo "SUPABASE_CRON_JWT=$JWT" >> "$GITHUB_ENV"
+
+      - name: Run Apify discovery
+        # apify-discover.mjs selects actors via --source (or runs all three if
+        # omitted). The script logic, caps, guards, and dedup are unchanged:
+        #   Seek:    maxResults 20/title, incremental mode (changeType filter)
+        #   Indeed:  maxItems 20/title, last-24h datePosted
+        #   Fantastic: maxJobs 200, weekly-intended budget
+        # --apply is always passed so inserts actually happen; fail-closed guards
+        # inside the script reject --apply when cron creds or portals.yml are absent.
+        # SUPABASE_CRON_JWT is already in GITHUB_ENV from the mint step above.
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_CRON_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_CRON_PUBLISHABLE_KEY }}
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          DISPATCH_SOURCE: ${{ github.event.inputs.source }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$DISPATCH_SOURCE" = "all" ]; then
+              # All three actors including Fantastic 200-job — only when explicitly chosen
+              node apify-discover.mjs --apply
+            else
+              # Default: seek,indeed only (cheap smoke run)
+              node apify-discover.mjs --source "$DISPATCH_SOURCE" --apply
+            fi
+          elif [ "$SCHEDULE" = "0 20 * * 1" ]; then
+            # Monday weekly run: all three actors, Fantastic included
+            node apify-discover.mjs --apply
+          else
+            # Daily (Sun + Tue-Sat): Seek + Indeed only
+            node apify-discover.mjs --source seek,indeed --apply
+          fi
