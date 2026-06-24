@@ -96,6 +96,26 @@ jobs:
           PORTALS_YML: ${{ secrets.PORTALS_YML }}
         run: printf '%s' "$PORTALS_YML" > portals.yml
 
+      - name: Validate reconstructed portals.yml has a non-empty title filter
+        # Fail closed on a blank/empty PORTALS_YML secret. An empty
+        # title_filter.positive makes buildTitleFilter() pass ALL titles, which
+        # would spend Apify credit and insert off-target stubs under --apply.
+        # apify-discover.mjs only fails closed when the file is missing/unreadable,
+        # not when it parses to {} — so guard here, before mint + Apify.
+        # No ${{ }} interpolation in this step (no injection surface).
+        run: |
+          node -e '
+            const yaml = require("js-yaml");
+            const fs = require("fs");
+            const cfg = yaml.load(fs.readFileSync("portals.yml", "utf8")) || {};
+            const pos = (cfg.title_filter && cfg.title_filter.positive) || [];
+            if (!Array.isArray(pos) || pos.length === 0) {
+              console.error("FATAL: portals.yml has no non-empty title_filter.positive — refusing to run (would pass all titles).");
+              process.exit(1);
+            }
+            console.log("title_filter.positive OK (" + pos.length + " keyword(s))");
+          '
+
       - name: Mint short-lived cron JWT
         # The signing key stays in memory (env var) — never written to disk.
         # The minted JWT is masked so it never appears in logs.
