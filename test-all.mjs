@@ -4515,6 +4515,186 @@ try {
   fail(`breezy provider tests crashed: ${e.message}`);
 }
 
+// ── 28. PROVIDERS — Freehire & Sync ──────────────────────────────
+
+console.log('\n28. Provider — freehire & sync');
+
+try {
+  const core = await import(pathToFileURL(join(ROOT, 'freehire-core.mjs')).href);
+  const freehireProvider = (await import(pathToFileURL(join(ROOT, 'providers/freehire.mjs')).href)).default;
+
+  // 1. Core buildSearchArgs
+  const searchArgs = core.buildSearchArgs({
+    query: 'senior developer',
+    remote: true,
+    region: ['US', 'CA'],
+    limit: 10
+  });
+  if (
+    searchArgs[0] === 'search' &&
+    searchArgs[1] === 'senior developer' &&
+    searchArgs.includes('--remote') &&
+    searchArgs.includes('--region') &&
+    searchArgs.includes('--limit') &&
+    searchArgs.includes('--json')
+  ) {
+    pass('freehire-core: buildSearchArgs formats query, remote, regions, limit, and --json');
+  } else {
+    fail(`freehire-core: buildSearchArgs failed: ${JSON.stringify(searchArgs)}`);
+  }
+
+  // 2. Core mapStatusToStage
+  if (
+    core.mapStatusToStage('Applied') === 'applied' &&
+    core.mapStatusToStage('Interview') === 'interview' &&
+    core.mapStatusToStage('Discarded') === 'withdrawn' &&
+    core.mapStatusToStage('Evaluated') === null
+  ) {
+    pass('freehire-core: mapStatusToStage maps statuses to stages correctly');
+  } else {
+    fail('freehire-core: mapStatusToStage mapping incorrect');
+  }
+
+  // 3. Core mapJobs
+  const mockRawJobs = [
+    { title: 'Open Job', url: 'https://example.com/open', company: 'Acme', location: 'Remote', published_at: '2026-06-01T00:00:00Z' },
+    { title: 'Closed Job', url: 'https://example.com/closed', company: 'Acme', location: 'Remote', closed_at: '2026-06-02T00:00:00Z' },
+  ];
+  const mapped = core.mapJobs(mockRawJobs, { name: 'Acme' });
+  if (mapped.length === 1 && mapped[0].title === 'Open Job' && mapped[0].postedAt !== undefined) {
+    pass('freehire-core: mapJobs maps open jobs and drops closed ones');
+  } else {
+    fail(`freehire-core: mapJobs failed: ${JSON.stringify(mapped)}`);
+  }
+
+  // 4. Core load/save slug map
+  const tmpSlugDir = mkdtempSync(join(tmpdir(), 'co-slug-'));
+  const tmpSlugPath = join(tmpSlugDir, 'slugs.json');
+  const initialMap = core.loadSlugMap(tmpSlugPath);
+  if (Object.keys(initialMap).length === 0) {
+    pass('freehire-core: loadSlugMap returns empty object when file does not exist');
+  } else {
+    fail('freehire-core: loadSlugMap did not handle missing file gracefully');
+  }
+  
+  const testMap = { 'https://example.com/open': 'open-job-slug' };
+  core.saveSlugMap(testMap, tmpSlugPath);
+  const loadedMap = core.loadSlugMap(tmpSlugPath);
+  if (loadedMap['https://example.com/open'] === 'open-job-slug') {
+    pass('freehire-core: save/load slug map is round-trip lossless');
+  } else {
+    fail('freehire-core: save/load slug map failed');
+  }
+  rmSync(tmpSlugDir, { recursive: true, force: true });
+
+  // 5. Provider detect
+  if (freehireProvider.detect({ name: 'X' }) === null) {
+    pass('freehire-provider: detect() always returns null');
+  } else {
+    fail('freehire-provider: detect() should return null');
+  }
+
+  // 6. Provider fetch (with child_process mock)
+  const cp = await import('child_process');
+  const originalExecFileSync = cp.default.execFileSync;
+  let execCalledArgs = null;
+  cp.default.execFileSync = (cmd, args, opts) => {
+    if (cmd === 'freehire') {
+      execCalledArgs = args;
+      return JSON.stringify(mockRawJobs);
+    }
+    return originalExecFileSync(cmd, args, opts);
+  };
+
+  const providerFetched = await freehireProvider.fetch({ name: 'Acme', query: 'open' }, {});
+  cp.default.execFileSync = originalExecFileSync; // Restore immediately
+
+  if (execCalledArgs && execCalledArgs[1] === 'open' && providerFetched.length === 1) {
+    pass('freehire-provider: fetch() spawns freehire and maps jobs successfully');
+  } else {
+    fail(`freehire-provider: fetch() failed: ${JSON.stringify(providerFetched)}`);
+  }
+
+  // 7. Sync CLI Integration (Push & Pull / Drift Detection)
+  const syncTmpDir = mkdtempSync(join(tmpdir(), 'co-sync-'));
+  try {
+    mkdirSync(join(syncTmpDir, 'data'));
+    const syncTracker = join(syncTmpDir, 'data', 'applications.md');
+    const syncSlugPath = join(syncTmpDir, 'data', 'freehire-slugs.json');
+
+    writeFileSync(syncTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-06-24 | Acme | Developer | 4.0/5 | Applied | ❌ | [1](../reports/001.md) | [Job URL](https://example.com/job1) |\n' +
+      '| 2 | 2026-06-24 | Beta | Analyst | 4.0/5 | Interview | ❌ | [2](../reports/002.md) | [Job URL](https://example.com/job2) some note |\n'
+    );
+
+    writeFileSync(syncSlugPath, JSON.stringify({
+      'https://example.com/job1': 'acme-dev-slug',
+      'https://example.com/job2': 'beta-analyst-slug'
+    }, null, 2));
+
+    // A. Push Sync Test (Mock Env)
+    const pushResult = run(NODE, ['freehire-sync.mjs'], {
+      env: {
+        ...process.env,
+        CAREER_OPS_TRACKER: syncTracker,
+        CAREER_OPS_TRACKER_DB: join(syncTmpDir, 'data', 'applications.db'),
+        FREEHIRE_SLUG_MAP: syncSlugPath,
+        FREEHIRE_MOCK: '1'
+      }
+    });
+
+    if (pushResult && pushResult.includes('Syncing Acme') && pushResult.includes('stage: applied') && pushResult.includes('Push sync complete')) {
+      pass('freehire-sync: push CLI runs successfully and outputs sync lines');
+    } else {
+      fail(`freehire-sync: push CLI failed: ${pushResult}`);
+    }
+
+    // B. Push Notes Sync Test
+    const pushNotesResult = run(NODE, ['freehire-sync.mjs', '--notes'], {
+      env: {
+        ...process.env,
+        CAREER_OPS_TRACKER: syncTracker,
+        CAREER_OPS_TRACKER_DB: join(syncTmpDir, 'data', 'applications.db'),
+        FREEHIRE_SLUG_MAP: syncSlugPath,
+        FREEHIRE_MOCK: '1'
+      }
+    });
+
+    if (pushNotesResult && pushNotesResult.includes('Syncing notes for Beta') && pushNotesResult.includes('freehire note beta-analyst-slug "[Job URL](https://example.com/job2) some note"')) {
+      pass('freehire-sync: push CLI with --notes stages note sync commands');
+    } else {
+      fail(`freehire-sync: push CLI with --notes failed: ${pushNotesResult}`);
+    }
+
+    // C. Drift Detection Test (Mock Env)
+    const pullResult = run(NODE, ['freehire-sync.mjs', '--pull'], {
+      env: {
+        ...process.env,
+        CAREER_OPS_TRACKER: syncTracker,
+        CAREER_OPS_TRACKER_DB: join(syncTmpDir, 'data', 'applications.db'),
+        FREEHIRE_SLUG_MAP: syncSlugPath,
+        FREEHIRE_MOCK: '1',
+        FREEHIRE_MOCK_DRIFT: '1'
+      }
+    });
+
+    if (pullResult && pullResult.includes('[DRIFT]') && pullResult.includes('vs Freehire stage \'saved\'') && pullResult.includes('Found 2 drifted')) {
+      pass('freehire-sync: pull CLI drift detection reports drifts correctly');
+    } else {
+      fail(`freehire-sync: pull CLI drift detection failed: ${pullResult}`);
+    }
+
+  } finally {
+    rmSync(syncTmpDir, { recursive: true, force: true });
+  }
+
+} catch (e) {
+  fail(`freehire & sync tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

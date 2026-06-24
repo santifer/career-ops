@@ -93,6 +93,8 @@ const SYSTEM_PATHS = [
   'scan-ats-full.mjs',
   'rank-pipeline.mjs',
   'providers/',
+  'freehire-core.mjs',
+  'freehire-sync.mjs',
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
