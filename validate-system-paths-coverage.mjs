@@ -54,8 +54,6 @@ const EXCLUDES = [
   'batch/logs/.gitkeep',
   'batch/tracker-additions/.gitkeep',
   'interview-prep/.gitkeep',
-  'web/.gitignore',
-  'web/package-lock.json',
 ];
 
 function covered(file) {
