@@ -606,10 +606,72 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
-// replaceStatusInLine replaces the old status with new status in a table line.
+// replaceStatusInLine rewrites only the Status cell of a tracker row, leaving
+// every other cell untouched. The previous implementation used
+// strings.Replace(line, oldStatus, …, 1), which replaces the first occurrence of
+// the status text anywhere in the row — so a status word appearing as a
+// substring of an earlier cell (e.g. Company "Applied Materials") was rewritten
+// instead of the Status cell, corrupting that cell while the status appeared to
+// stay unchanged (#1180). Matching is whole-cell (never a substring) and, as the
+// old comment claimed but the code did not, case-insensitive.
 func replaceStatusInLine(line, oldStatus, newStatus string) string {
-	// Case-insensitive replacement of the status field
-	return strings.Replace(line, oldStatus, newStatus, 1)
+	want := strings.TrimSpace(oldStatus)
+
+	// Mixed "| " + tab-separated format (mirrors ParseApplications). The Status
+	// field is index 5 of the tab-split body.
+	if strings.Contains(line, "\t") {
+		prefix, body, found := strings.Cut(line, "|")
+		if !found {
+			return line
+		}
+		cells := strings.Split(body, "\t")
+		if idx := statusCellIndex(cells, 5, want); idx >= 0 {
+			cells[idx] = spliceCellValue(cells[idx], newStatus)
+			return prefix + "|" + strings.Join(cells, "\t")
+		}
+		return line
+	}
+
+	// Pure pipe format. strings.Split keeps the segments between pipes; content
+	// cell N is segment N+1 (segment 0 is the empty text before the leading
+	// pipe), so the canonical Status column (ParseApplications field 5) is
+	// segment 6.
+	segments := strings.Split(line, "|")
+	if idx := statusCellIndex(segments, 6, want); idx >= 0 {
+		segments[idx] = spliceCellValue(segments[idx], newStatus)
+		return strings.Join(segments, "|")
+	}
+	return line
+}
+
+// statusCellIndex returns the index of the Status cell. It prefers the canonical
+// column (canonicalIdx, matching ParseApplications) and verifies it by value; if
+// that doesn't match — e.g. a custom tracker layout — it falls back to the first
+// cell that equals want exactly. Matching is whole-cell and case-insensitive,
+// never a substring, so a status word inside an earlier cell is never hit.
+// Returns -1 when nothing matches, so the caller leaves the row untouched rather
+// than corrupt a guess.
+func statusCellIndex(cells []string, canonicalIdx int, want string) int {
+	if canonicalIdx < len(cells) && strings.EqualFold(strings.TrimSpace(cells[canonicalIdx]), want) {
+		return canonicalIdx
+	}
+	for i, c := range cells {
+		if strings.EqualFold(strings.TrimSpace(c), want) {
+			return i
+		}
+	}
+	return -1
+}
+
+// spliceCellValue swaps a cell's inner value while preserving its surrounding
+// whitespace, so "| Applied |" becomes "| Interview |" rather than "|Interview|".
+func spliceCellValue(cell, newVal string) string {
+	trimmed := strings.TrimSpace(cell)
+	if trimmed == "" {
+		return cell
+	}
+	start := strings.Index(cell, trimmed)
+	return cell[:start] + newVal + cell[start+len(trimmed):]
 }
 
 // cleanTableCell removes trailing pipes and whitespace from a table cell value.
