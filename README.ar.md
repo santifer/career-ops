@@ -15,6 +15,9 @@
 <p align="center">
   <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Built_with-Claude_Code-000?style=for-the-badge&logo=anthropic&logoColor=white" alt="Built with Claude Code"></a>
 </p>
+<p align="center">
+  <a href="https://socialistic.ai/en/skill/career-ops-8025e8?utm_source=github&amp;utm_medium=readme&amp;utm_campaign=try-online" target="_blank" rel="noopener noreferrer"><img src="https://socialistic.ai/api/embed/career-ops-8025e8?lang=en" alt="Try career-ops on Socialistic" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+</p>
 
 <p align="center">
   <sub>يعمل أيضاً على أي واجهة سطر أوامر تدعم معيار agent-skill</sub><br>

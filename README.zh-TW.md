@@ -17,6 +17,9 @@
   &nbsp;&nbsp;
   <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Career-Ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
+<p align="center">
+  <a href="https://socialistic.ai/en/skill/career-ops-8025e8?utm_source=github&amp;utm_medium=readme&amp;utm_campaign=try-online" target="_blank" rel="noopener noreferrer"><img src="https://socialistic.ai/api/embed/career-ops-8025e8?lang=en" alt="Try career-ops on Socialistic" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+</p>
 
 <p align="center"><sub>媒體報導</sub></p>
 
