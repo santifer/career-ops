@@ -6,25 +6,31 @@ subscription required. This guide covers setup, limits, and trade-offs.
 ## Quick Start
 
 1. Install Gemini CLI (requires Node.js 18+):
+
    ```bash
    npm install -g @google/gemini-cli
    ```
 
 2. Authenticate with your Google account:
+
    ```bash
    gemini auth login
    ```
 
 3. Enable free-tier mode by setting the environment variable:
+
    ```bash
    export GEMINI_FREE_TIER=true
    ```
+
    On Windows (PowerShell):
+
    ```powershell
    $env:GEMINI_FREE_TIER = "true"
    ```
 
 4. Run career-ops as usual:
+
    ```bash
    gemini          # interactive — paste a URL, evaluate, scan, etc.
    gemini -p "..." # headless / batch mode
@@ -48,9 +54,11 @@ a rate-limit error; career-ops will pause and suggest retrying tomorrow.
 
 - `batch-runner.sh` spawns `claude -p` workers by default (Claude Code
   specific). To use Gemini CLI workers instead, invoke them manually:
+
   ```bash
   gemini -p "evaluate <URL>"
   ```
+
 - With free-tier limits, keep `--parallel 1` to avoid burning through
   your daily quota on parallel requests.
 - Large batches (50+ offers) will likely span multiple days. Use
