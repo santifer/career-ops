@@ -159,9 +159,10 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
-  // Bare run: no portals.yml in the repo, so it must exit 0 gracefully (and hit
-  // no network). The probe logic itself is unit-tested below with a mock.
-  { name: 'verify-portals.mjs', expectExit: 0 },
+  // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
+  // default portals.yml because end-user workspaces often have a real user-layer
+  // portals file that would trigger a live remote sweep during tests.
+  { name: 'verify-portals.mjs --file .tmp-test-missing-portals.yml', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
@@ -522,6 +523,23 @@ if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSou
   fail('Batch summary can misreport skipped offers as pending');
 }
 
+if (!/\bbc\b/.test(batchRunnerSource)) {
+  pass('Batch runner does not depend on bc for score arithmetic');
+} else {
+  fail('Batch runner still depends on bc for score arithmetic');
+}
+
+if (
+  !/awk "BEGIN\{[^"]*\$MIN_SCORE/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$score/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$sscore/.test(batchRunnerSource) &&
+  /awk -v score="\$score" -v min="\$MIN_SCORE"/.test(batchRunnerSource)
+) {
+  pass('Batch runner passes score values to awk via -v');
+} else {
+  fail('Batch runner interpolates score values into awk programs');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
@@ -841,6 +859,63 @@ try {
   fail(`scan-ats-full host-guard test crashed: ${e.message}`);
 }
 
+// Reverse-scan date gate (--include-undated) + cap-aware sampling (--shuffle).
+try {
+  const { classifyPostingDate, sampleCompanies } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const cutoff = 1_000_000;
+  const dateOk =
+    classifyPostingDate({ postedAt: 2_000_000 }, cutoff) === 'keep' &&
+    classifyPostingDate({ postedAt: 500_000 }, cutoff) === 'stale' &&
+    classifyPostingDate({}, cutoff) === 'undated' &&
+    classifyPostingDate({ postedAt: null }, cutoff) === 'undated';
+  if (dateOk) pass('scan-ats-full classifyPostingDate: fresh→keep, old→stale, no-date→undated (the --include-undated gate)');
+  else fail('scan-ats-full classifyPostingDate gate is wrong');
+
+  const list = ['a', 'b', 'c', 'd', 'e'];
+  const prefix = sampleCompanies(list, 3, false);
+  const all = sampleCompanies(list, 99, false);
+  const shuffled = sampleCompanies(list, 3, true);
+  const sampleOk =
+    JSON.stringify(prefix) === JSON.stringify(['a', 'b', 'c']) &&        // default = alphabetical prefix
+    all.length === 5 &&                                                  // limit >= length → all
+    shuffled.length === 3 &&                                             // --shuffle still respects the cap
+    shuffled.every((x) => list.includes(x)) &&                           // --shuffle preserves membership
+    JSON.stringify(list) === JSON.stringify(['a', 'b', 'c', 'd', 'e']);  // never mutates the input
+  if (sampleOk) pass('scan-ats-full sampleCompanies: alphabetical prefix by default; capped, membership-preserving, non-mutating on --shuffle');
+  else fail('scan-ats-full sampleCompanies behaves wrong');
+} catch (e) {
+  fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
+}
+
+// tracker.mjs delete: removeRowByNum removes the right row, preserves the rest.
+try {
+  const { removeRowByNum } = await import(pathToFileURL(join(ROOT, 'tracker.mjs')).href);
+  const md = [
+    '# Applications',
+    '',
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 1 | 2026-06-01 | Acme | Dev | 4.0/5 | Evaluated | y | [r1](reports/1.md) | a |',
+    '| 2 | 2026-06-02 | Beta | Eng | 3.5/5 | Applied | y | [r2](reports/2.md) | b |',
+    '| 3 | 2026-06-03 | Gamma | Lead | 4.5/5 | Interview | y | [r3](reports/3.md) | c |',
+    '',
+  ].join('\n');
+  const r2 = removeRowByNum(md, 2);
+  const miss = removeRowByNum(md, 99);
+  const ok =
+    r2.removed && r2.removedCount === 1 &&
+    r2.report === '[r2](reports/2.md)' &&            // report column (index 7) surfaced for orphan note
+    !r2.newContent.includes('| 2 |') &&              // the target row is gone
+    r2.newContent.includes('| 1 |') && r2.newContent.includes('| 3 |') && // other rows kept
+    r2.newContent.includes('# Applications') &&      // non-table line preserved
+    r2.newContent.includes('|---|') &&               // separator preserved
+    miss.removed === false && miss.newContent === md; // no-op on a missing number
+  if (ok) pass('tracker.mjs removeRowByNum: removes the matching row, preserves header/separator/other rows, no-op on miss');
+  else fail('tracker.mjs removeRowByNum behaves wrong');
+} catch (e) {
+  fail(`tracker.mjs removeRowByNum test crashed: ${e.message}`);
+}
+
 // ── 10. PORTALS CONFIG VALIDATOR ────────────────────────────────
 
 console.log('\n10. Portals config validator');
@@ -1024,7 +1099,7 @@ for (const section of requiredSections) {
 
 console.log('\n11. CLI wrapper file integrity');
 
-const cliWrappers = ['CLAUDE.md', 'OPENCODE.md', 'GEMINI.md'];
+const cliWrappers = ['CLAUDE.md', 'OPENCODE.md'];
 for (const f of cliWrappers) {
   if (!fileExists(f)) {
     fail(`Missing CLI wrapper: ${f}`);
@@ -1035,6 +1110,16 @@ for (const f of cliWrappers) {
     pass(`${f} references AGENTS.md`);
   } else {
     fail(`${f} does NOT reference AGENTS.md`);
+  }
+}
+if (!fileExists('GEMINI.md')) {
+  fail('Missing legacy Gemini context guard: GEMINI.md');
+} else {
+  const geminiContext = readFile('GEMINI.md');
+  if (/^@(?:\.\/)?AGENTS\.md/m.test(geminiContext)) {
+    fail('GEMINI.md imports AGENTS.md and duplicates Antigravity context');
+  } else {
+    pass('GEMINI.md is a no-op context guard for Antigravity');
   }
 }
 
@@ -2171,6 +2256,13 @@ try {
     fail(`non-report link altered: ${other}`);
   }
 
+  const pipelineProcessed = normalizeReportLink('[12](reports/012-acme-2026-01-04.md)', join(repo, 'data'), repo);
+  if (pipelineProcessed === '[12](../reports/012-acme-2026-01-04.md)') {
+    pass('pipeline processed links are relative to data/pipeline.md (#1126)');
+  } else {
+    fail(`pipeline processed link normalization wrong (#1126): ${pipelineProcessed}`);
+  }
+
   // End-to-end migration against a fictional fixture tracker (no personal data)
   const tmpDir = mkdtempSync(join(tmpdir(), 'career-ops-migrate-'));
   try {
@@ -2194,6 +2286,30 @@ try {
     }
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
+  }
+
+  const { resolveReportPath } = await import(pathToFileURL(join(ROOT, 'followup-cadence.mjs')).href);
+  const followupTmp = mkdtempSync(join(tmpdir(), 'career-ops-followup-link-'));
+  try {
+    mkdirSync(join(followupTmp, 'data'), { recursive: true });
+    mkdirSync(join(followupTmp, 'reports'), { recursive: true });
+    const reportFile = join(followupTmp, 'reports', '012-acme-2026-01-04.md');
+    writeFileSync(reportFile, '# fixture\n');
+    const appsFile = join(followupTmp, 'data', 'applications.md');
+    const resolved = resolveReportPath('[12](../reports/012-acme-2026-01-04.md)', appsFile, followupTmp);
+    if (resolved === 'reports/012-acme-2026-01-04.md') {
+      pass('follow-up reportPath is repo-root relative for data/ tracker links (#1126)');
+    } else {
+      fail(`follow-up reportPath wrong (#1126): ${resolved}`);
+    }
+    const escaped = resolveReportPath('[99](../../outside.md)', appsFile, followupTmp);
+    if (escaped === null) {
+      pass('follow-up reportPath rejects links outside reports/ (#1126)');
+    } else {
+      fail(`follow-up reportPath allowed escaped link (#1126): ${escaped}`);
+    }
+  } finally {
+    rmSync(followupTmp, { recursive: true, force: true });
   }
 } catch (e) {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
@@ -3169,6 +3285,26 @@ try {
     fail(`--resume-paused selection wrong: ${dry}`);
   }
 
+  rmSync(join(batchDir, 'batch-input.tsv'), { force: true });
+  rmSync(join(batchDir, 'batch-prompt.md'), { force: true });
+  rmSync(join(fakeBin, 'claude'), { force: true });
+  writeFileSync(join(batchDir, 'batch-state.tsv'), [
+    'id\turl\tstatus\tstarted_at\tcompleted_at\treport_num\tscore\terror\tretries',
+    '1\thttps://example.com/one\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t4.5\t-\t0',
+    '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
+    '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
+  ].join('\n') + '\n');
+  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  if (statusOnly.includes('Average score: 4.5/5 (1 scored)') && statusOnly.includes('bad);system("oops")')) {
+    pass('--status reads existing state without full batch prerequisites');
+  } else {
+    fail(`--status prerequisite/score handling wrong: ${statusOnly}`);
+  }
+
   try { rmSync(tmp, { recursive: true, force: true }); } catch {}
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
@@ -3918,6 +4054,49 @@ try {
     pass('aa.fetch() remoteNationwide keeps remote-titled wide hits and drops onsite ones');
   } else {
     fail(`aa.fetch() remoteNationwide = ${calls} calls, ${JSON.stringify(remoteFetched.map(j => j.url))}`);
+  }
+
+  // parseArbeitsagenturConfig — remoteMatch mode + remoteMaxPages (config-driven remote detection)
+  const rcfg = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'filter', remoteMaxPages: 50 } });
+  if (rcfg.remoteMatch === 'filter' && rcfg.remoteMaxPages === 20) {
+    pass('parseArbeitsagenturConfig parses remoteMatch and clamps remoteMaxPages');
+  } else {
+    fail(`parseArbeitsagenturConfig remoteMatch/maxPages = ${JSON.stringify({ m: rcfg.remoteMatch, p: rcfg.remoteMaxPages })}`);
+  }
+  const rdef = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'bogus' } });
+  if (rdef.remoteMatch === 'title' && rdef.remoteMaxPages === 1) {
+    pass('parseArbeitsagenturConfig defaults remoteMatch to "title" and remoteMaxPages to 1');
+  } else {
+    fail(`parseArbeitsagenturConfig remote defaults = ${JSON.stringify({ m: rdef.remoteMatch, p: rdef.remoteMaxPages })}`);
+  }
+
+  // fetch() — remoteMatch:'filter' uses server-side homeoffice filter, paginates, and tags remote roles
+  let usedHomeoffice = false;
+  const pagesSeen = new Set();
+  const filterFetched = await aa.fetch(
+    { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true, remoteMatch: 'filter', remoteMaxPages: 5, size: 2 } },
+    {
+      fetchJson: async (url) => {
+        const sp = new URL(url).searchParams;
+        if (sp.has('wo')) {
+          return { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] };
+        }
+        usedHomeoffice = usedHomeoffice || sp.get('homeoffice') === 'nv_true';
+        pagesSeen.add(sp.get('page'));
+        return Number(sp.get('page')) === 1
+          ? { stellenangebote: [ // full page (== size) → pagination continues
+              { refnr: 'R1', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'München' } },
+              { refnr: 'R2', titel: 'ML Scientist', arbeitgeber: 'Co', arbeitsort: { ort: 'Stuttgart' } },
+            ] }
+          : { stellenangebote: [{ refnr: 'R3', titel: 'NLP Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Köln' } }] }; // short → stop
+      },
+    },
+  );
+  const munich = filterFetched.find(j => j.url.endsWith('R1'));
+  if (usedHomeoffice && pagesSeen.has('1') && pagesSeen.has('2') && munich && /Deutschlandweit \(Homeoffice\)/.test(munich.location)) {
+    pass('aa.fetch() remoteMatch:filter sends homeoffice=nv_true, paginates, and tags far-city remote roles');
+  } else {
+    fail(`aa.fetch() filter mode = ${JSON.stringify({ usedHomeoffice, pages: [...pagesSeen], munichLoc: munich?.location })}`);
   }
 
   // fetch() — no keywords throws; total outage throws (not silent)
