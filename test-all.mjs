@@ -859,6 +859,63 @@ try {
   fail(`scan-ats-full host-guard test crashed: ${e.message}`);
 }
 
+// Reverse-scan date gate (--include-undated) + cap-aware sampling (--shuffle).
+try {
+  const { classifyPostingDate, sampleCompanies } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const cutoff = 1_000_000;
+  const dateOk =
+    classifyPostingDate({ postedAt: 2_000_000 }, cutoff) === 'keep' &&
+    classifyPostingDate({ postedAt: 500_000 }, cutoff) === 'stale' &&
+    classifyPostingDate({}, cutoff) === 'undated' &&
+    classifyPostingDate({ postedAt: null }, cutoff) === 'undated';
+  if (dateOk) pass('scan-ats-full classifyPostingDate: fresh→keep, old→stale, no-date→undated (the --include-undated gate)');
+  else fail('scan-ats-full classifyPostingDate gate is wrong');
+
+  const list = ['a', 'b', 'c', 'd', 'e'];
+  const prefix = sampleCompanies(list, 3, false);
+  const all = sampleCompanies(list, 99, false);
+  const shuffled = sampleCompanies(list, 3, true);
+  const sampleOk =
+    JSON.stringify(prefix) === JSON.stringify(['a', 'b', 'c']) &&        // default = alphabetical prefix
+    all.length === 5 &&                                                  // limit >= length → all
+    shuffled.length === 3 &&                                             // --shuffle still respects the cap
+    shuffled.every((x) => list.includes(x)) &&                           // --shuffle preserves membership
+    JSON.stringify(list) === JSON.stringify(['a', 'b', 'c', 'd', 'e']);  // never mutates the input
+  if (sampleOk) pass('scan-ats-full sampleCompanies: alphabetical prefix by default; capped, membership-preserving, non-mutating on --shuffle');
+  else fail('scan-ats-full sampleCompanies behaves wrong');
+} catch (e) {
+  fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
+}
+
+// tracker.mjs delete: removeRowByNum removes the right row, preserves the rest.
+try {
+  const { removeRowByNum } = await import(pathToFileURL(join(ROOT, 'tracker.mjs')).href);
+  const md = [
+    '# Applications',
+    '',
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 1 | 2026-06-01 | Acme | Dev | 4.0/5 | Evaluated | y | [r1](reports/1.md) | a |',
+    '| 2 | 2026-06-02 | Beta | Eng | 3.5/5 | Applied | y | [r2](reports/2.md) | b |',
+    '| 3 | 2026-06-03 | Gamma | Lead | 4.5/5 | Interview | y | [r3](reports/3.md) | c |',
+    '',
+  ].join('\n');
+  const r2 = removeRowByNum(md, 2);
+  const miss = removeRowByNum(md, 99);
+  const ok =
+    r2.removed && r2.removedCount === 1 &&
+    r2.report === '[r2](reports/2.md)' &&            // report column (index 7) surfaced for orphan note
+    !r2.newContent.includes('| 2 |') &&              // the target row is gone
+    r2.newContent.includes('| 1 |') && r2.newContent.includes('| 3 |') && // other rows kept
+    r2.newContent.includes('# Applications') &&      // non-table line preserved
+    r2.newContent.includes('|---|') &&               // separator preserved
+    miss.removed === false && miss.newContent === md; // no-op on a missing number
+  if (ok) pass('tracker.mjs removeRowByNum: removes the matching row, preserves header/separator/other rows, no-op on miss');
+  else fail('tracker.mjs removeRowByNum behaves wrong');
+} catch (e) {
+  fail(`tracker.mjs removeRowByNum test crashed: ${e.message}`);
+}
+
 // ── 10. PORTALS CONFIG VALIDATOR ────────────────────────────────
 
 console.log('\n10. Portals config validator');
@@ -4007,6 +4064,49 @@ try {
     fail(`aa.fetch() remoteNationwide = ${calls} calls, ${JSON.stringify(remoteFetched.map(j => j.url))}`);
   }
 
+  // parseArbeitsagenturConfig — remoteMatch mode + remoteMaxPages (config-driven remote detection)
+  const rcfg = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'filter', remoteMaxPages: 50 } });
+  if (rcfg.remoteMatch === 'filter' && rcfg.remoteMaxPages === 20) {
+    pass('parseArbeitsagenturConfig parses remoteMatch and clamps remoteMaxPages');
+  } else {
+    fail(`parseArbeitsagenturConfig remoteMatch/maxPages = ${JSON.stringify({ m: rcfg.remoteMatch, p: rcfg.remoteMaxPages })}`);
+  }
+  const rdef = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'bogus' } });
+  if (rdef.remoteMatch === 'title' && rdef.remoteMaxPages === 1) {
+    pass('parseArbeitsagenturConfig defaults remoteMatch to "title" and remoteMaxPages to 1');
+  } else {
+    fail(`parseArbeitsagenturConfig remote defaults = ${JSON.stringify({ m: rdef.remoteMatch, p: rdef.remoteMaxPages })}`);
+  }
+
+  // fetch() — remoteMatch:'filter' uses server-side homeoffice filter, paginates, and tags remote roles
+  let usedHomeoffice = false;
+  const pagesSeen = new Set();
+  const filterFetched = await aa.fetch(
+    { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true, remoteMatch: 'filter', remoteMaxPages: 5, size: 2 } },
+    {
+      fetchJson: async (url) => {
+        const sp = new URL(url).searchParams;
+        if (sp.has('wo')) {
+          return { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] };
+        }
+        usedHomeoffice = usedHomeoffice || sp.get('homeoffice') === 'nv_true';
+        pagesSeen.add(sp.get('page'));
+        return Number(sp.get('page')) === 1
+          ? { stellenangebote: [ // full page (== size) → pagination continues
+              { refnr: 'R1', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'München' } },
+              { refnr: 'R2', titel: 'ML Scientist', arbeitgeber: 'Co', arbeitsort: { ort: 'Stuttgart' } },
+            ] }
+          : { stellenangebote: [{ refnr: 'R3', titel: 'NLP Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Köln' } }] }; // short → stop
+      },
+    },
+  );
+  const munich = filterFetched.find(j => j.url.endsWith('R1'));
+  if (usedHomeoffice && pagesSeen.has('1') && pagesSeen.has('2') && munich && /Deutschlandweit \(Homeoffice\)/.test(munich.location)) {
+    pass('aa.fetch() remoteMatch:filter sends homeoffice=nv_true, paginates, and tags far-city remote roles');
+  } else {
+    fail(`aa.fetch() filter mode = ${JSON.stringify({ usedHomeoffice, pages: [...pagesSeen], munichLoc: munich?.location })}`);
+  }
+
   // fetch() — no keywords throws; total outage throws (not silent)
   let noKw = false;
   try { await aa.fetch({ name: 'AA', arbeitsagentur: {} }, mkCtx({})); } catch { noKw = true; }
@@ -4283,6 +4383,111 @@ try {
   }
 } catch (e) {
   fail(`ATS ligature suppression test crashed: ${e.message}`);
+}
+
+// ── 27. Provider — breezy ───────────────────────────────────────
+console.log('\n27. Provider — breezy');
+
+try {
+  const breezy = (await import(pathToFileURL(join(ROOT, 'providers/breezy.mjs')).href)).default;
+  const { parseBreezyResponse } = await import(pathToFileURL(join(ROOT, 'providers/breezy.mjs')).href);
+
+  if (breezy.id === 'breezy') pass('breezy.id is "breezy"');
+  else fail(`breezy.id is ${JSON.stringify(breezy.id)}`);
+
+  // detect: careers_url with a path still resolves the tenant /json feed
+  const hit = breezy.detect({ name: 'New Incentives', careers_url: 'https://new-incentives.breezy.hr/' });
+  if (hit && hit.url === 'https://new-incentives.breezy.hr/json') {
+    pass('breezy.detect() resolves <tenant>.breezy.hr → /json feed');
+  } else {
+    fail(`breezy.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect: explicit api: URL is honoured over careers_url
+  const apiHit = breezy.detect({ name: 'X', api: 'https://acme.breezy.hr', careers_url: 'https://example.com' });
+  if (apiHit && apiHit.url === 'https://acme.breezy.hr/json') {
+    pass('breezy.detect() honours an explicit api: URL');
+  } else {
+    fail(`breezy.detect() api: → ${JSON.stringify(apiHit)}`);
+  }
+
+  if (breezy.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('breezy.detect() returns null for non-breezy URLs');
+  } else {
+    fail('breezy.detect() should return null for non-breezy URLs');
+  }
+
+  if (breezy.detect({ name: 'X', careers_url: null }) === null && breezy.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('breezy.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('breezy.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: breezy.hr in the PATH (not host) must not be detected.
+  if (breezy.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.breezy.hr/json' }) === null) {
+    pass('breezy.detect() rejects path-spoofed URLs');
+  } else {
+    fail('breezy.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // parseBreezyResponse — top-level array
+  const sample = [
+    {
+      name: 'Assistant Field Manager',
+      url: 'https://new-incentives.breezy.hr/p/b8e6-assistant-field-manager',
+      published_date: '2026-05-25T14:45:23.799Z',
+      location: { name: 'Niger, Sokoto, NG', city: 'Niger', country: { name: 'NG' }, is_remote: false },
+    },
+    {
+      name: 'Remote Backend Engineer',
+      url: 'https://new-incentives.breezy.hr/p/aa01-backend',
+      location: { city: 'Lagos', state: 'Lagos', country: { name: 'NG' }, is_remote: true },
+    },
+    { name: 'No URL row', location: { name: 'Remote' } },
+    { name: 'Insecure URL', url: 'http://new-incentives.breezy.hr/p/x', location: {} },
+  ];
+  const jobs = parseBreezyResponse(sample, 'New Incentives');
+
+  if (jobs.length === 2) pass('parseBreezyResponse keeps 2 rows (drops missing/non-https url)');
+  else fail(`parseBreezyResponse returned ${jobs.length} rows (expected 2)`);
+
+  if (jobs[0]?.title === 'Assistant Field Manager' && jobs[0]?.company === 'New Incentives' && jobs[0]?.location === 'Niger, Sokoto, NG') {
+    pass('parseBreezyResponse prefers ready-made location.name');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('2026-05-25T14:45:23.799Z')) {
+    pass('parseBreezyResponse parses published_date → postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.location === 'Lagos, Lagos, NG, Remote') {
+    pass('parseBreezyResponse assembles city/state/country and appends Remote');
+  } else {
+    fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Lagos, Lagos, NG, Remote"`);
+  }
+
+  if (jobs[1]?.postedAt === undefined) {
+    pass('parseBreezyResponse omits postedAt when published_date is absent');
+  } else {
+    fail(`row 1 postedAt should be undefined, got ${JSON.stringify(jobs[1]?.postedAt)}`);
+  }
+
+  if (parseBreezyResponse(null, 'X').length === 0 && parseBreezyResponse({}, 'X').length === 0) {
+    pass('non-array payload → empty result (no crash)');
+  } else {
+    fail('non-array payload should yield empty result');
+  }
+
+  // a row already containing "Remote" must not get a duplicate "Remote" suffix
+  const noDup = parseBreezyResponse([{ name: 'R', url: 'https://acme.breezy.hr/p/r', location: { name: 'Remote, EMEA', is_remote: true } }], 'X');
+  if (noDup[0]?.location === 'Remote, EMEA') pass('parseBreezyResponse does not double-append Remote');
+  else fail(`expected "Remote, EMEA", got ${JSON.stringify(noDup[0]?.location)}`);
+
+} catch (e) {
+  fail(`breezy provider tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
