@@ -4,10 +4,30 @@ name: Apify Job Discovery Cron
 # Discovers new roles and inserts status='new' stubs into Supabase via the
 # RLS-bounded career_ops_cron credential. Zero LLM tokens — pure HTTP + JSON.
 #
-# Schedules:
-#   Daily (Sun + Tue-Sat, 19:30 UTC): Seek + Indeed only (20 results/title cap each).
-#   Weekly (Monday, 20:00 UTC): all three actors, including Fantastic 200-job run.
-#   Monday avoids the daily trigger so Seek/Indeed run exactly once per day.
+# Schedules (budget-adaptive — cadence scales with the Apify balance):
+#   Weekly (Monday, 20:00 UTC):   all three actors, including Fantastic 200-job run.
+#   Weekly (Thursday, 19:30 UTC): Seek + Indeed only (20 results/title cap each).
+#   Weekly (Tuesday, 19:30 UTC):  Seek + Indeed only — POST-RESET ONLY (see below).
+#
+#   Two budget regimes, switched automatically by the 'Decide run plan' step
+#   (no manual edit needed at the boundary):
+#     • Now → 2026-07-22 (~$3.38 balance): Mon all-three + Thu Seek+Indeed only.
+#       The Tuesday trigger still fires but the decision gate makes it a no-op
+#       (no JWT mint, no Apify call, $0) until the reset date.
+#     • 2026-07-23 onward ($5/mo recurring): the Tuesday pass activates, giving
+#       Mon all-three + Tue + Thu Seek+Indeed = 2× weekly Seek+Indeed. A single
+#       permanent date threshold suffices — each monthly reset refills $5 and the
+#       Mon+Tue+Thu cadence stays sized for it.
+#
+#   Cost calibration (Apify Store pricing, 2026): Seek $0.01/run + $0.002/result
+#   (incremental mode → cheap after baseline); Indeed $0.005/run + $0.003/result;
+#   Fantastic $1.20/1000 jobs → ~$0.24 for the 200-job Monday run. A Seek+Indeed
+#   pass (5+5 per-title invocations) runs ~$0.20–0.42; a Monday all-three ~$0.44–0.66.
+#   The 4 weekly Monday all-three runs (~$1.8–2.6/cycle) are the dominant cost.
+#     - $3.38 window (~29 days): ~4 Thu + 4 Mon ≈ $2.6 realistic — survives to reset
+#       (daily burned it in ~9 days; every-other-day in ~16).
+#     - $5/mo window: ~8–9 Tue+Thu + 4 Mon ≈ $3.6 (realistic) to ~$4.9 (mid) — fits $5.
+#   apify-discover.mjs logic/caps/per-title loops are unchanged.
 #   api-cron.yml runs at 19:00 UTC; this workflow is offset +30–60 min to prevent
 #   concurrent Supabase writes.
 #
@@ -43,9 +63,18 @@ name: Apify Job Discovery Cron
 #
 on:
   schedule:
-    # 19:30 UTC = 05:30 AEST (next-day) — Seek + Indeed only; Mon excluded
-    # (Monday is covered by the weekly all-actors run below)
-    - cron: '30 19 * * 0,2-6'
+    # Thursday 19:30 UTC = Friday 05:30 AEST — Seek + Indeed only, weekly.
+    # Always-on in both budget regimes (see the # Schedules: header for the
+    # $3.38 → $5 transition). Day-of-week weekly (not day-of-month stepping) so
+    # there is NO month-boundary drift and the spacing is even.
+    - cron: '30 19 * * 4'
+    # Tuesday 19:30 UTC = Wednesday 05:30 AEST — Seek + Indeed only, weekly.
+    # POST-RESET ONLY: this is the second weekly Seek+Indeed pass that the $5/mo
+    # budget affords from 2026-07-23 onward. The 'Decide run plan' step below
+    # gates it to a no-op (no JWT mint, no Apify call, $0) on every Tuesday
+    # BEFORE 2026-07-23, so it costs nothing during the current $3.38 window.
+    # Intentional, not a bug — do not remove the date gate.
+    - cron: '30 19 * * 2'
     # Monday 20:00 UTC = 06:00 AEST (next-day) — all three actors incl. Fantastic
     - cron: '0 20 * * 1'
   workflow_dispatch:
@@ -72,17 +101,67 @@ jobs:
     runs-on: ubuntu-latest
     environment: cron
     steps:
+      - name: Decide run plan
+        # Single source of truth for "should this invocation spend Apify credit,
+        # and with which actors?". Emits two outputs:
+        #   should_run: 'true'/'false' — gates EVERY step below (checkout, Node,
+        #               install, PORTALS_YML reconstruction, validate, JWT mint,
+        #               Apify run) so a no-op invocation is a true no-op: no
+        #               secret reconstruction, no JWT mint, no Apify call ($0).
+        #   mode:       'all' | 'seek,indeed' — which actors to run.
+        # The Tuesday schedule is the only date-gated branch: it is the second
+        # weekly Seek+Indeed pass that the $5/mo budget affords, so it stays a
+        # no-op until the budget resets on 2026-07-23. No ${{ }} interpolation
+        # here (github.event values are read via env, not spliced into bash).
+        id: decide
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          DISPATCH_SOURCE: ${{ github.event.inputs.source }}
+        run: |
+          SHOULD_RUN=false
+          MODE="seek,indeed"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            SHOULD_RUN=true
+            if [ "$DISPATCH_SOURCE" = "all" ]; then MODE="all"; fi
+          elif [ "$SCHEDULE" = "0 20 * * 1" ]; then
+            # Monday weekly: all three actors, Fantastic included.
+            SHOULD_RUN=true
+            MODE="all"
+          elif [ "$SCHEDULE" = "30 19 * * 4" ]; then
+            # Thursday weekly: Seek + Indeed. Always on (both budget regimes).
+            SHOULD_RUN=true
+          elif [ "$SCHEDULE" = "30 19 * * 2" ]; then
+            # Tuesday weekly: Seek + Indeed, POST-RESET ONLY. Spend only once the
+            # $5/mo budget is in effect (2026-07-23 onward). UTC epoch compare;
+            # GNU date on ubuntu-latest supports -d.
+            NOW="$(date -u +%s)"
+            RESET="$(date -u -d '2026-07-23' +%s)"
+            if [ "$NOW" -ge "$RESET" ]; then SHOULD_RUN=true; fi
+          fi
+          echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Decision: should_run=$SHOULD_RUN mode=$MODE (event=$EVENT_NAME schedule='$SCHEDULE')"
+
+      # ── Every step below is gated on the decision ────────────────────────────
+      # A no-op invocation (e.g. a pre-2026-07-23 Tuesday) does NOTHING but the
+      # decision step above: no checkout, no Node, no npm install, and crucially
+      # no PORTALS_YML secret reconstruction or JWT mint. True no-op — zero Apify
+      # spend, zero secret exposure, negligible Actions minutes.
       - name: Checkout
+        if: steps.decide.outputs.should_run == 'true'
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           persist-credentials: false  # workflow never pushes
 
       - name: Set up Node.js
+        if: steps.decide.outputs.should_run == 'true'
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
         with:
           node-version: '20'
 
       - name: Install dependencies
+        if: steps.decide.outputs.should_run == 'true'
         run: npm install --ignore-scripts --no-audit --no-fund
         # Playwright browsers are NOT installed — apify-discover.mjs is pure
         # HTTP + JSON (no Playwright, no Chromium). No --production flag so
@@ -92,11 +171,13 @@ jobs:
         # portals.yml is gitignored; reconstruct from the secret.
         # printf prevents a trailing newline that some editors add; never
         # use echo here (would reveal contents on --xtrace).
+        if: steps.decide.outputs.should_run == 'true'
         env:
           PORTALS_YML: ${{ secrets.PORTALS_YML }}
         run: printf '%s' "$PORTALS_YML" > portals.yml
 
       - name: Validate reconstructed portals.yml has a non-empty title filter
+        if: steps.decide.outputs.should_run == 'true'
         # Fail closed on a blank/degenerate PORTALS_YML secret. An empty OR
         # blank-keyword title_filter.positive makes buildTitleFilter() pass ALL
         # titles (String.includes("") is always true), which would spend Apify
@@ -122,6 +203,9 @@ jobs:
       - name: Mint short-lived cron JWT
         # The signing key stays in memory (env var) — never written to disk.
         # The minted JWT is masked so it never appears in logs.
+        # Gated on the decision: a no-op invocation (e.g. a pre-2026-07-23
+        # Tuesday) mints nothing.
+        if: steps.decide.outputs.should_run == 'true'
         env:
           CAREER_OPS_SIGNING_KEY: ${{ secrets.SUPABASE_CRON_SIGNING_KEY }}
         run: |
@@ -138,26 +222,19 @@ jobs:
         # --apply is always passed so inserts actually happen; fail-closed guards
         # inside the script reject --apply when cron creds or portals.yml are absent.
         # SUPABASE_CRON_JWT is already in GITHUB_ENV from the mint step above.
+        # RUN_MODE ('all' | 'seek,indeed') comes from the 'Decide run plan' step,
+        # which already resolved event/schedule/date — this step just dispatches.
+        if: steps.decide.outputs.should_run == 'true'
         env:
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_CRON_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_CRON_PUBLISHABLE_KEY }}
-          EVENT_NAME: ${{ github.event_name }}
-          SCHEDULE: ${{ github.event.schedule }}
-          DISPATCH_SOURCE: ${{ github.event.inputs.source }}
+          RUN_MODE: ${{ steps.decide.outputs.mode }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            if [ "$DISPATCH_SOURCE" = "all" ]; then
-              # All three actors including Fantastic 200-job — only when explicitly chosen
-              node apify-discover.mjs --apply
-            else
-              # Default: seek,indeed only (cheap smoke run)
-              node apify-discover.mjs --source "$DISPATCH_SOURCE" --apply
-            fi
-          elif [ "$SCHEDULE" = "0 20 * * 1" ]; then
-            # Monday weekly run: all three actors, Fantastic included
+          if [ "$RUN_MODE" = "all" ]; then
+            # All three actors including Fantastic 200-job (Monday, or dispatch 'all')
             node apify-discover.mjs --apply
           else
-            # Daily (Sun + Tue-Sat): Seek + Indeed only
+            # Seek + Indeed only (Thursday, post-reset Tuesday, or dispatch default)
             node apify-discover.mjs --source seek,indeed --apply
           fi
