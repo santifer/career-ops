@@ -887,6 +887,35 @@ try {
   fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
 }
 
+// tracker.mjs delete: removeRowByNum removes the right row, preserves the rest.
+try {
+  const { removeRowByNum } = await import(pathToFileURL(join(ROOT, 'tracker.mjs')).href);
+  const md = [
+    '# Applications',
+    '',
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 1 | 2026-06-01 | Acme | Dev | 4.0/5 | Evaluated | y | [r1](reports/1.md) | a |',
+    '| 2 | 2026-06-02 | Beta | Eng | 3.5/5 | Applied | y | [r2](reports/2.md) | b |',
+    '| 3 | 2026-06-03 | Gamma | Lead | 4.5/5 | Interview | y | [r3](reports/3.md) | c |',
+    '',
+  ].join('\n');
+  const r2 = removeRowByNum(md, 2);
+  const miss = removeRowByNum(md, 99);
+  const ok =
+    r2.removed && r2.removedCount === 1 &&
+    r2.report === '[r2](reports/2.md)' &&            // report column (index 7) surfaced for orphan note
+    !r2.newContent.includes('| 2 |') &&              // the target row is gone
+    r2.newContent.includes('| 1 |') && r2.newContent.includes('| 3 |') && // other rows kept
+    r2.newContent.includes('# Applications') &&      // non-table line preserved
+    r2.newContent.includes('|---|') &&               // separator preserved
+    miss.removed === false && miss.newContent === md; // no-op on a missing number
+  if (ok) pass('tracker.mjs removeRowByNum: removes the matching row, preserves header/separator/other rows, no-op on miss');
+  else fail('tracker.mjs removeRowByNum behaves wrong');
+} catch (e) {
+  fail(`tracker.mjs removeRowByNum test crashed: ${e.message}`);
+}
+
 // ── 10. PORTALS CONFIG VALIDATOR ────────────────────────────────
 
 console.log('\n10. Portals config validator');
