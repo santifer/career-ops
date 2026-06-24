@@ -248,6 +248,19 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ---
 
+## Secrets & Credentials -- CRITICAL
+
+**Never open, read, or inspect** `.env`, `.env.*`, credential files (e.g. `data/portal-credentials.json`), or any file whose name or path suggests it contains API keys, tokens, passwords, or secrets — not even to confirm a variable name exists. Do not request permission to read these files.
+
+If a task requires knowing whether a key is configured:
+
+- Check only that the file **exists** (e.g. `test -f .env`), or
+- **Grep for the variable name** in non-secret sources (e.g. `.env.example`, workflow YAML, scripts) — never the value in `.env` itself.
+
+If a script reads from `process.env` at runtime, that is sufficient; run the script instead of opening secrets files.
+
+---
+
 ## Ethical Use -- CRITICAL
 
 **This system is designed for quality, not quantity.** The goal is to help the user find and apply to roles where there is a genuine match -- not to spam companies with mass applications.
