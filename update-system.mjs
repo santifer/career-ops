@@ -43,6 +43,7 @@ export const SEMVER_RE = /(?:^|-)v?(\d+\.\d+\.\d+)$/i;
 const SYSTEM_PATHS = [
   'modes/_shared.md',
   'modes/_profile.template.md',
+  'modes/_custom.template.md',
   'modes/oferta.md',
   'modes/pdf.md',
   'modes/cover.md',
@@ -171,6 +172,7 @@ const USER_PATHS = [
   'cv.md',
   'config/profile.yml',
   'modes/_profile.md',
+  'modes/_custom.md',
   'voice-dna.md',
   'portals.yml',
   'article-digest.md',

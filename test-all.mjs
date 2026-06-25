@@ -4642,6 +4642,49 @@ try {
   fail(`profile photo test crashed: ${e.message}`);
 }
 
+// ── 29. CUSTOM INSTRUCTIONS extension point (user-layer, #1198) ────
+
+console.log('\n29. Custom instructions extension point (modes/_custom.md, #1198)');
+
+try {
+  // The template MUST ship — it seeds the user file on first run.
+  if (existsSync(join(ROOT, 'modes', '_custom.template.md'))) {
+    pass('modes/_custom.template.md exists (seed for the user custom-instructions file)');
+  } else {
+    fail('modes/_custom.template.md is missing — the custom-instructions seed is not shipped (#1198)');
+  }
+
+  const updater = readFileSync(join(ROOT, 'update-system.mjs'), 'utf-8');
+
+  // The user file MUST be in USER_PATHS so update-system.mjs never overwrites
+  // the user's house rules — that is the whole point of #1198. Anchor to the
+  // USER_PATHS array block so a stray match elsewhere can't give a false pass.
+  const userBlock = (updater.match(/USER_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  if (userBlock.includes("'modes/_custom.md'")) {
+    pass('modes/_custom.md is in USER_PATHS (custom rules survive update-system.mjs)');
+  } else {
+    fail('modes/_custom.md is NOT in USER_PATHS — custom instructions would be wiped on update (#1198)');
+  }
+
+  // The template MUST be in SYSTEM_PATHS so updates deliver/refresh it.
+  const sysBlock = (updater.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  if (sysBlock.includes("'modes/_custom.template.md'")) {
+    pass('modes/_custom.template.md is in SYSTEM_PATHS (shipped + updatable)');
+  } else {
+    fail('modes/_custom.template.md is NOT in SYSTEM_PATHS — the seed never updates (#1198)');
+  }
+
+  // CLAUDE.md MUST route custom rules to the file AND seed it on onboarding.
+  const claudeMd = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf-8');
+  if (claudeMd.includes('modes/_custom.md') && claudeMd.includes('modes/_custom.template.md')) {
+    pass('CLAUDE.md routes custom rules to modes/_custom.md + seeds it from the template');
+  } else {
+    fail('CLAUDE.md does not reference modes/_custom.md / its template — agents will not use it (#1198)');
+  }
+} catch (e) {
+  fail(`custom instructions test crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
