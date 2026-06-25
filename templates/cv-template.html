@@ -353,13 +353,26 @@
   }
 
   /* === PAGE BREAK CONTROL === */
-  .avoid-break,
-  .job,
-  .project,
+  /* Only avoid breaking small atomic units (a cert row, an education line, the
+     header, a single competency or skill).  Sections and multi-bullet roles are
+     allowed to flow across a page boundary so content packs tight instead of
+     jumping wholesale and leaving large bottom gaps. */
+  .header,
   .edu-item,
-  .cert-item {
+  .cert-item,
+  .competency-tag,
+  .skill-item {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  /* Keep a heading attached to the content that follows it, so headings are not
+     orphaned at the bottom of a page. */
+  .section-title,
+  .job-company,
+  .project-title {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   /* === RTL (Arabic) Support === */
@@ -429,7 +442,7 @@
 <div class="page">
 
   <!-- HEADER -->
-  <div class="header avoid-break">
+  <div class="header">
     {{#if PHOTO}}
     <img class="cv-photo" src="{{PHOTO}}" alt="Profile photo" />
     {{/if}}
@@ -449,7 +462,7 @@
   </div>
 
   <!-- PROFESSIONAL SUMMARY -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_SUMMARY}}</div>
     <div class="summary-text">{{SUMMARY_TEXT}}</div>
   </div>
@@ -469,25 +482,25 @@
   </div>
 
   <!-- PROJECTS -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_PROJECTS}}</div>
     {{PROJECTS}}
   </div>
 
   <!-- EDUCATION -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_EDUCATION}}</div>
     {{EDUCATION}}
   </div>
 
   <!-- CERTIFICATIONS -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
     <div class="cert-table">{{CERTIFICATIONS}}</div>
   </div>
 
   <!-- SKILLS -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_SKILLS}}</div>
     {{SKILLS}}
   </div>

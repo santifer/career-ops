@@ -464,6 +464,7 @@ const systemFiles = [
   'CLAUDE.md', 'OPENCODE.md', 'VERSION', 'DATA_CONTRACT.md',
   'modes/_shared.md', 'modes/_profile.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
+  'modes/heuristics/recruiter-side.md',
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
@@ -552,7 +553,7 @@ const leakPatterns = [
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
+  'README.md', 'README.da.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
   'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
@@ -651,6 +652,7 @@ const expectedModes = [
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md',
+  'regional/eu-swe.md',
 ];
 
 for (const mode of expectedModes) {
@@ -2456,6 +2458,42 @@ try {
   }
 } catch (e) {
   fail(`dedup row-rebuild notes test crashed: ${e.message}`);
+}
+
+// rebuildRow() is now shared from tracker-utils.mjs (extracted from the two
+// copies introduced in #1004). Unit-test the helper contract directly.
+console.log('\n🧪 Testing shared tracker-utils rebuildRow()...');
+try {
+  const { rebuildRow } = await import(pathToFileURL(join(ROOT, 'tracker-utils.mjs')).href);
+  const cellsOf = (line) => line.split('|').map(s => s.trim());
+
+  // Trailing-pipe row → unchanged round-trip.
+  const withPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
+  if (rebuildRow(cellsOf(withPipe)) === withPipe) {
+    pass('rebuildRow round-trips a row that already has a trailing pipe');
+  } else {
+    fail(`rebuildRow changed a trailing-pipe row: "${rebuildRow(cellsOf(withPipe))}"`);
+  }
+
+  // No-trailing-pipe row → last cell (notes) preserved, trailing pipe added.
+  const noPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | keepme';
+  const rebuilt = rebuildRow(cellsOf(noPipe));
+  if (rebuilt.includes('keepme') && rebuilt.endsWith('|')) {
+    pass('rebuildRow preserves the notes cell on a row without a trailing pipe');
+  } else {
+    fail(`rebuildRow dropped notes on no-trailing-pipe row: "${rebuilt}"`);
+  }
+
+  // Extra column (e.g. a custom Location) → every cell preserved.
+  const extra = '| 5 | 2026-02-01 | Acme | Eng | Berlin | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
+  const rebuiltExtra = rebuildRow(cellsOf(extra));
+  if (rebuiltExtra === extra && rebuiltExtra.includes('Berlin')) {
+    pass('rebuildRow preserves extra columns (custom Location)');
+  } else {
+    fail(`rebuildRow mangled an extra-column row: "${rebuiltExtra}"`);
+  }
+} catch (e) {
+  fail(`tracker-utils rebuildRow unit test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
