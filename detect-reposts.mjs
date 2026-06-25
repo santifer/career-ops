@@ -173,11 +173,17 @@ function detectRepostsInGroup(rows, windowDays) {
       if (span <= windowDays) {
         cluster.push(row);
       } else {
+        // Span exceeds window. Seal the current cluster if it has 2+ rows,
+        // then slide the window: drop the oldest row(s) until the new row
+        // fits within windowDays of the new cluster start. This preserves
+        // valid overlapping repost pairs that would otherwise be dropped
+        // (e.g. Jan 1 + Mar 15 sealed, but Mar 15 + Jun 10 also valid).
         if (cluster.length >= 2) {
           const result = buildRepostCluster(cluster, windowDays);
           if (result) results.push(result);
         }
-        cluster = [row];
+        cluster = cluster.filter(c => daysBetween(c.date, row.date) <= windowDays);
+        cluster.push(row);
       }
     }
     if (cluster.length >= 2) {

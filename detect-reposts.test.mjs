@@ -379,10 +379,11 @@ const transResult = detectReposts([
   row({ url: 'https://x.com/2', date: d('2026-03-01'), dateStr: '2026-03-01' }),
   row({ url: 'https://x.com/3', date: d('2026-05-01'), dateStr: '2026-05-01' }),
 ], 90);
-ok('transitive chain: at least 1 cluster found (A-B not dropped)', transResult.length >= 1);
-if (transResult.length >= 1) {
-  eq('transitive chain: first cluster has 2 reposts', transResult[0].repostCount, 2);
-  eq('transitive chain: first cluster span = 59d', transResult[0].daysSpan, 59);
+ok('transitive chain: at least 2 clusters found (both pairs detected)', transResult.length >= 2);
+if (transResult.length >= 2) {
+  // Clusters sorted by lastSeen descending: Mar 1-May 1 (61d) first, Jan 1-Mar 1 (59d) second
+  eq('transitive chain: first cluster span = 61d (Mar 1 - May 1)', transResult[0].daysSpan, 61);
+  eq('transitive chain: second cluster span = 59d (Jan 1 - Mar 1)', transResult[1].daysSpan, 59);
 }
 
 // 3 reposts all within window
@@ -418,6 +419,21 @@ const splitResult = detectReposts([
 ok('4 reposts split: at least 1 cluster (first 3 within window)', splitResult.length >= 1);
 if (splitResult.length >= 1) {
   eq('split: first cluster has 3 reposts', splitResult[0].repostCount, 3);
+}
+
+// Sliding window: overlapping repost pairs (CodeRabbit's exact scenario)
+// Jan 1 + Mar 15 = 73d (within 90), Mar 15 + Jun 10 = 87d (within 90),
+// but Jan 1 + Jun 10 = 160d (exceeds 90). Both pairs must be detected.
+const slidingResult = detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-03-15'), dateStr: '2026-03-15' }),
+  row({ url: 'https://x.com/3', date: d('2026-06-10'), dateStr: '2026-06-10' }),
+], 90);
+eq('sliding window: 2 clusters (both overlapping pairs detected)', slidingResult.length, 2);
+if (slidingResult.length === 2) {
+  // Sorted by lastSeen descending: Jun 10 cluster first, Mar 15 cluster second
+  eq('sliding window: cluster 1 is Mar 15-Jun 10 (87d)', slidingResult[0].daysSpan, 87);
+  eq('sliding window: cluster 2 is Jan 1-Mar 15 (73d)', slidingResult[1].daysSpan, 73);
 }
 
 // Dates not in chronological order in input
