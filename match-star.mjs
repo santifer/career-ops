@@ -25,8 +25,12 @@ const LIST_MODE  = args.includes('--list');
 const jdFlag     = args.indexOf('--jd');
 const jdPath     = jdFlag !== -1 ? args[jdFlag + 1] : null;
 const topFlag    = args.indexOf('--top');
-const TOP_N      = topFlag !== -1 ? parseInt(args[topFlag + 1]) || 1 : 1;
-const question   = args.filter(a => !a.startsWith('--') && a !== args[jdFlag + 1] && a !== args[topFlag + 1]).join(' ').trim();
+const topRaw     = topFlag !== -1 ? parseInt(args[topFlag + 1], 10) : NaN;
+const TOP_N      = Number.isInteger(topRaw) && topRaw > 0 ? topRaw : 1;
+// Only exclude flag values from positional args when the flags are actually present
+const question   = args
+  .filter(a => !a.startsWith('--') && a !== (jdFlag !== -1 ? args[jdFlag + 1] : null) && a !== (topFlag !== -1 ? args[topFlag + 1] : null))
+  .join(' ').trim();
 
 // ── Parser ───────────────────────────────────────────────────────────
 
@@ -126,10 +130,12 @@ function score(story, queryTokens, jdTokens) {
     if (bodyTokens.includes(token)) s += 1;
   }
 
-  // JD boost: if a tag appears in the JD, weight it higher
+  // JD boost: stopword-filtered JD tokens matched against tokenized tags (exact token overlap)
   if (jdTokens.length > 0) {
+    const jdSignal = new Set(jdTokens.filter(t => !STOPWORDS.has(t)));
     for (const tag of story.tags) {
-      if (jdTokens.some(t => tag.includes(t) || t.includes(tag))) s += 2;
+      const tagTokens = tokenize(tag);
+      if (tagTokens.some(t => jdSignal.has(t))) s += 2;
     }
   }
 
@@ -153,8 +159,13 @@ function formatAts(story, question) {
   if (story.result)    parts.push(story.result);
   if (story.reflection) parts.push(story.reflection);
 
-  const prose = parts.filter(Boolean).join(' ');
-  const words = prose.split(/\s+/).length;
+  const wordArr = parts.filter(Boolean).join(' ').split(/\s+/);
+  // Enforce 500-word ceiling; prose below 250 words gets a warning
+  const prose   = wordArr.slice(0, 500).join(' ');
+  const words   = Math.min(wordArr.length, 500);
+  const notice  = wordArr.length < 250
+    ? '\n   ⚠️  Under 250 words — consider expanding this story in story-bank.md.'
+    : '';
 
   return [
     `— ${story.title}${story.theme ? ` [${story.theme}]` : ''}`,
@@ -163,7 +174,7 @@ function formatAts(story, question) {
     '',
     prose,
     '',
-    `   (~${words} words)`,
+    `   (~${words} words)${notice}`,
   ].filter(s => s !== null).join('\n');
 }
 
@@ -231,6 +242,6 @@ for (let i = 0; i < ranked.length; i++) {
   console.log('');
 }
 
-if (ranked[0].score === 0) {
+if (ranked.length > 0 && ranked[0].score === 0) {
   console.log('⚠️  No strong match found. Consider adding a story to story-bank.md that covers this competency.');
 }
