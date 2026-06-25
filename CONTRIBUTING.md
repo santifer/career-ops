@@ -58,6 +58,7 @@ Rule of thumb before you build: **provider modules, languages, CLI support, mode
 - **PRs that enable auto-submitting applications** without human review. career-ops is a decision-support tool, not a spam bot.
 - **PRs that add external API dependencies** without prior discussion in an issue.
 - **PRs that add centralized or hosted infrastructure to the core** (proxies, aggregation services, shared Workers). That's the separate opt-in service, not the open-core — bring it to the [direction discussion](https://github.com/santifer/career-ops/discussions/904) first.
+- **PRs that add third-party hosted entry-points or service badges to the README** — links or embeds that route users' resumes or job data through a service the project doesn't operate. The README stays to assets the project controls, and the official online experience is something we keep first-party (see [The Vision](https://github.com/santifer/career-ops/discussions/156)). Projects built on career-ops are welcome — share them in the [Discord](https://discord.gg/8pRpHETxa4) or Discussions, just not on the front page.
 - **PRs containing personal data** (real CVs, emails, phone numbers). Use `examples/` with fictional data instead.
 
 ## Development
