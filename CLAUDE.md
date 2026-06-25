@@ -69,9 +69,9 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy), plus `## Machine Summary` YAML for downstream scripts. Header includes `**Legitimacy:** {tier}`. |
 
-### OpenCode & Gemini CLI Commands
+### OpenCode & Antigravity CLI Commands
 
-Both [OpenCode](https://opencode.ai) and [Gemini CLI](https://github.com/google-gemini/gemini-cli) natively support the open agent skill standard (`agentskills.io`). 
+Both [OpenCode](https://opencode.ai) and Antigravity CLI natively support the open agent skill standard (`agentskills.io`).
 
 Instead of registering individual `.toml` files for every slash command, all subcommands are routed through the single unified skill defined in `.agents/skills/career-ops/SKILL.md`.
 
@@ -99,7 +99,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 * `followup` — Update and calculate follow-ups
 * `update` — Update system files
 
-All `modes/*` files and prompt contexts (e.g., `GEMINI.md`) are shared across Claude Code, OpenCode, and Gemini CLI.
+All `modes/*` files and prompt contexts are shared across Claude Code, OpenCode, and Antigravity CLI. `GEMINI.md` remains only as a legacy no-op guard so Antigravity does not duplicate the full project instructions.
 
 ### First Run — Onboarding (IMPORTANT)
 
@@ -174,7 +174,7 @@ Store any insights the user shares in `config/profile.yml` (under narrative), `m
 Once all files exist, confirm:
 > "You're all set! You can now:
 > - Paste a job URL to evaluate it
-> - Run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) to search portals
+> - Run `/career-ops scan` to search portals
 > - Run `/career-ops` to see all commands
 >
 > Everything is customizable — just ask me to change anything.
@@ -184,7 +184,7 @@ Once all files exist, confirm:
 Then suggest automation:
 > "Want me to scan for new offers automatically? I can set up a recurring scan every few days so you don't miss anything. Just say 'scan every 3 days' and I'll configure it."
 
-If the user accepts, use the `/loop` or `/schedule` skill (if available) to set up a recurring `/career-ops scan` (or `/career-ops-scan` if using OpenCode). If those aren't available, suggest adding a cron job or remind them to run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) periodically.
+If the user accepts, use the `/loop` or `/schedule` skill (if available) to set up a recurring `/career-ops scan`. If those aren't available, suggest adding a cron job or remind them to run `/career-ops scan` periodically.
 
 ### Personalization
 
@@ -200,28 +200,17 @@ This system is designed to be customized by YOU (AI Agent). When the user asks y
 
 ### Language Modes
 
-Default modes are in `modes/` (English). Additional language-specific modes are available:
+Default modes are in `modes/` (English). Language-specific modes live in `modes/{lang}/` — each has `_shared.md`, the eval/apply/`pipeline.md` modes, and a `README.md` documenting that market's vocabulary:
 
-- **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
-- **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
-- **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
+| Language | Dir | Markets |
+|----------|-----|---------|
+| German | `modes/de/` | DACH (Germany, Austria, Switzerland) |
+| French | `modes/fr/` | France, Belgium, Switzerland, Luxembourg, Quebec |
+| Japanese | `modes/ja/` | Japan |
 
-**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
-1. User says "use German modes" → read from `modes/de/` instead of `modes/`
-2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
-3. You detect a German JD → suggest switching to German modes
+**When to use a `{lang}` mode** — if any holds: the user says "use {lang} modes"; `config/profile.yml` sets `language.modes_dir: modes/{lang}`; or you detect a {lang} JD (then suggest switching). Read from `modes/{lang}/` instead of `modes/`.
 
-**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
-1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
-2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
-3. You detect a French JD → suggest switching to French modes
-
-**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
-1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
-2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
-3. You detect a Japanese JD → suggest switching to Japanese modes
-
-**When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
+**When NOT to:** if the user applies to English-language roles — even at French, German, or Japanese companies — use the default English modes.
 
 ### Skill Modes
 
@@ -266,12 +255,14 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ## Offer Verification -- MANDATORY
 
-**NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Playwright:
-1. `browser_navigate` to the URL
-2. `browser_snapshot` to read content
-3. Only footer/navbar without JD = closed. Title + description + Apply = active.
+Verify a posting is still live before applying — using the cheapest check that works (a false "expired" is worse than a slow check: it makes the user miss a real job):
 
-**Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
+1. **ATS-hosted postings (Greenhouse, Lever, ...) — API first, zero tokens:** run `node check-liveness.mjs <url>`. It hits the posting's public ATS JSON API directly (no browser, no tokens) and reports `active`/`expired`, falling back to a browser only when the API is inconclusive. A definitive `expired` from the API is authoritative.
+2. **Non-ATS pages, or when the API is inconclusive — Playwright:** `browser_navigate` to the URL + `browser_snapshot`. Only footer/navbar without JD = closed; title + description + Apply = active.
+
+**NEVER decide liveness from a bare WebSearch/WebFetch snippet** — use `check-liveness.mjs` (which does the API rung) or Playwright.
+
+**Exception for batch workers (`claude -p`):** Playwright is unavailable in headless pipe mode. The API rung above still works for ATS postings; for non-ATS pages use WebFetch as a fallback and mark the report header `**Verification:** unconfirmed (batch mode)`.
 
 ---
 
@@ -336,22 +327,8 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 
 ### Canonical States (applications.md)
 
-**Source of truth:** `templates/states.yml`
+**Source of truth (full descriptions + aliases):** `templates/states.yml`. The 8 canonical states (use exactly one): `Evaluated` · `Applied` · `Responded` · `Interview` · `Offer` · `Rejected` · `Discarded` · `SKIP`.
 
-| State | When to use |
-|-------|-------------|
-| `Evaluated` | Report completed, pending decision |
-| `Applied` | Application sent |
-| `Responded` | Company responded |
-| `Interview` | In interview process |
-| `Offer` | Offer received |
-| `Rejected` | Rejected by company |
-| `Discarded` | Discarded by candidate or offer closed |
-| `SKIP` | Doesn't fit, don't apply |
-
-**RULES:**
-- No markdown bold (`**`) in status field
-- No dates in status field (use the date column)
-- No extra text (use the notes column)
+**RULES:** no markdown bold (`**`), no dates (those go in the date column), no extra text (use the notes column) in the status field.
 @AGENTS.md
 <!-- Add anything Claude Code specific that other agents don't need -->

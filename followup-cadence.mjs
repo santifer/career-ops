@@ -12,7 +12,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
@@ -198,15 +198,17 @@ function extractContacts(notes) {
 }
 
 // --- Resolve report path ---
-function resolveReportPath(reportField) {
+export function resolveReportPath(reportField, appsFile = APPS_FILE, repoRoot = CAREER_OPS) {
   const match = reportField.match(/\]\(([^)]+)\)/);
   if (!match) return null;
   // Report links in the tracker are normalized relative to the tracker file's
   // own directory (see PR #760 — `merge-tracker.mjs --migrate`). Resolve against
   // dirname(APPS_FILE), not the project root, otherwise relative paths like
   // `../reports/...` (the data/applications.md layout) escape above the project.
-  const fullPath = join(dirname(APPS_FILE), match[1]);
-  return existsSync(fullPath) ? match[1] : null;
+  const fullPath = join(dirname(appsFile), match[1]);
+  const repoRelative = relative(repoRoot, fullPath).split(sep).join('/');
+  if (repoRelative.startsWith('../') || repoRelative === '..' || !repoRelative.startsWith('reports/')) return null;
+  return existsSync(fullPath) ? repoRelative : null;
 }
 
 // --- Compute urgency ---

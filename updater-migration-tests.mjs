@@ -81,6 +81,7 @@ const requiredBootstrapPaths = [
   'providers/',
   'liveness-browser.mjs',
   'role-matcher.mjs',
+  'tracker-utils.mjs',
   'updater-migration-tests.mjs',
   'tracker-columns-tests.mjs',
 ];

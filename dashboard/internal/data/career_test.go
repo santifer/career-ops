@@ -3,8 +3,64 @@ package data
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+// Regression for #1180: a status word appearing as a substring of an earlier
+// cell (Company "Applied Materials" contains "Applied") must not be rewritten;
+// only the Status column changes.
+func TestUpdateApplicationStatusOnlyRewritesStatusColumn(t *testing.T) {
+	tempDir := t.TempDir()
+	dataDir := filepath.Join(tempDir, "data")
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		t.Fatalf("failed to create data dir: %v", err)
+	}
+
+	applications := `# Applications Tracker
+
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|-------|--------|-----|--------|-------|
+| 7 | 2026-06-23 | Applied Materials | Staff Android Engineer | 4.2/5 | Applied | ✅ | [7](reports/007.md) | substring trap |
+`
+	path := filepath.Join(dataDir, "applications.md")
+	if err := os.WriteFile(path, []byte(applications), 0o644); err != nil {
+		t.Fatalf("failed to write tracker: %v", err)
+	}
+
+	apps := ParseApplications(tempDir)
+	if len(apps) != 1 {
+		t.Fatalf("expected 1 parsed application, got %d", len(apps))
+	}
+
+	if err := UpdateApplicationStatus(tempDir, apps[0], "Interview"); err != nil {
+		t.Fatalf("UpdateApplicationStatus: %v", err)
+	}
+
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read back: %v", err)
+	}
+	out := string(got)
+
+	if !strings.Contains(out, "| Applied Materials |") {
+		t.Errorf("Company cell was corrupted, file now:\n%s", out)
+	}
+	if !strings.Contains(out, "| Interview |") {
+		t.Errorf("Status cell was not updated to Interview, file now:\n%s", out)
+	}
+	if strings.Contains(out, "Interview Materials") {
+		t.Errorf("status word was replaced inside the Company cell, file now:\n%s", out)
+	}
+
+	reparsed := ParseApplications(tempDir)
+	if reparsed[0].Company != "Applied Materials" {
+		t.Errorf("company = %q, want \"Applied Materials\"", reparsed[0].Company)
+	}
+	if reparsed[0].Status != "Interview" {
+		t.Errorf("status = %q, want \"Interview\"", reparsed[0].Status)
+	}
+}
 
 func TestParseApplicationsUsesTrackerNumberColumn(t *testing.T) {
 	tempDir := t.TempDir()
