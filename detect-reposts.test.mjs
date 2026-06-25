@@ -766,6 +766,95 @@ ok('multi-company: Delta not in any cluster (same URL = dedup)', !multiResult.so
 ok('multi-company: Epsilon not in any cluster (expired)', !multiResult.some(c => c.company === 'Epsilon'));
 
 // ============================================================================
+// 10.5 Sliding window: overlapping repost pairs
+// ============================================================================
+console.log('\n--- 10.5 sliding window ---');
+
+// CodeRabbit scenario: Jan 1, Mar 15, Jun 10, 90-day window
+// Jan1-Mar15 = 73d (within), Mar15-Jun10 = 87d (within), Jan1-Jun10 = 160d (exceeds)
+const sw1 = detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-03-15'), dateStr: '2026-03-15' }),
+  row({ url: 'https://x.com/3', date: d('2026-06-10'), dateStr: '2026-06-10' }),
+], 90);
+eq('SW: 2 clusters (both overlapping pairs)', sw1.length, 2);
+eq('SW: cluster 1 = Mar15-Jun10 (87d)', sw1[0]?.daysSpan, 87);
+eq('SW: cluster 2 = Jan1-Mar15 (73d)', sw1[1]?.daysSpan, 73);
+ok('SW: x.com/2 in both clusters (shared row)', sw1[0].appearances.some(a => a.url === 'https://x.com/2') && sw1[1].appearances.some(a => a.url === 'https://x.com/2'));
+
+// All within window — 1 cluster, no over-splitting
+eq('SW: 3 within window = 1 cluster', detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-02-01'), dateStr: '2026-02-01' }),
+  row({ url: 'https://x.com/3', date: d('2026-03-01'), dateStr: '2026-03-01' }),
+], 90).length, 1);
+
+// 4-row chain: A-B, B-C, C-D within window, A-C exceeds
+const sw4 = detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-03-01'), dateStr: '2026-03-01' }),
+  row({ url: 'https://x.com/3', date: d('2026-05-01'), dateStr: '2026-05-01' }),
+  row({ url: 'https://x.com/4', date: d('2026-07-01'), dateStr: '2026-07-01' }),
+], 90);
+eq('SW: 4-row chain = 3 overlapping clusters', sw4.length, 3);
+if (sw4.length === 3) {
+  eq('SW: chain cluster 1 = C-D (61d)', sw4[0].daysSpan, 61);
+  eq('SW: chain cluster 2 = B-C (61d)', sw4[1].daysSpan, 61);
+  eq('SW: chain cluster 3 = A-B (59d)', sw4[2].daysSpan, 59);
+}
+
+// Exact 90-day boundary between consecutive
+const sw6 = detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-04-01'), dateStr: '2026-04-01' }),
+  row({ url: 'https://x.com/3', date: d('2026-06-30'), dateStr: '2026-06-30' }),
+], 90);
+eq('SW: exact 90d boundary = 2 clusters', sw6.length, 2);
+eq('SW: boundary cluster 1 = 90d', sw6[0]?.daysSpan, 90);
+eq('SW: boundary cluster 2 = 90d', sw6[1]?.daysSpan, 90);
+
+// 91 days exceeds — only the valid pair detected
+const sw7 = detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-04-02'), dateStr: '2026-04-02' }),
+  row({ url: 'https://x.com/3', date: d('2026-07-01'), dateStr: '2026-07-01' }),
+], 90);
+eq('SW: 91d excluded, only B-C cluster', sw7.length, 1);
+eq('SW: 91d cluster = B-C (90d)', sw7[0]?.daysSpan, 90);
+
+// 6 rows, 45d apart — sliding produces 4 clusters of 3
+const sw8 = detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-02-15'), dateStr: '2026-02-15' }),
+  row({ url: 'https://x.com/3', date: d('2026-04-01'), dateStr: '2026-04-01' }),
+  row({ url: 'https://x.com/4', date: d('2026-05-16'), dateStr: '2026-05-16' }),
+  row({ url: 'https://x.com/5', date: d('2026-06-30'), dateStr: '2026-06-30' }),
+  row({ url: 'https://x.com/6', date: d('2026-08-14'), dateStr: '2026-08-14' }),
+], 90);
+eq('SW: 6 rows 45d apart = 4 clusters', sw8.length, 4);
+if (sw8.length === 4) {
+  for (let i = 0; i < 4; i++) {
+    eq(`SW: 6-row cluster ${i+1} has 3 reposts`, sw8[i].repostCount, 3);
+    eq(`SW: 6-row cluster ${i+1} span = 90d`, sw8[i].daysSpan, 90);
+  }
+}
+
+// Regression: URL dedup with sliding window
+eq('SW: URL dedup works with sliding', detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01' }),
+  row({ url: 'https://x.com/1', date: d('2026-02-01'), dateStr: '2026-02-01' }),
+  row({ url: 'https://x.com/2', date: d('2026-03-01'), dateStr: '2026-03-01' }),
+  row({ url: 'https://x.com/3', date: d('2026-06-01'), dateStr: '2026-06-01' }),
+], 90).length, 1);
+
+// Regression: distinct roles not grouped
+eq('SW: distinct roles not grouped', detectReposts([
+  row({ url: 'https://x.com/1', date: d('2026-01-01'), dateStr: '2026-01-01', title: 'Backend Engineer Platform' }),
+  row({ url: 'https://x.com/2', date: d('2026-02-01'), dateStr: '2026-02-01', title: 'Engineering Manager Platform Infrastructure' }),
+  row({ url: 'https://x.com/3', date: d('2026-03-01'), dateStr: '2026-03-01', title: 'Backend Engineer Platform' }),
+], 90).length, 1);
+
+// ============================================================================
 // 11. Performance
 // ============================================================================
 console.log('\n--- 11. performance ---');
