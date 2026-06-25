@@ -100,6 +100,25 @@
     margin-bottom: 20px;
   }
 
+  .cv-photo {
+    width: 110px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+    float: right;
+    margin-left: 20px;
+    border: 1px solid #eaeaea;
+  }
+
+  /* Photo layout adjustments to prevent overlap, preserving 100% byte-identity when no photo is used */
+  .header:has(.cv-photo) h1,
+  .header:has(.cv-photo) .header-gradient,
+  .header:has(.cv-photo) .contact-row {
+    margin-right: 130px;
+  }
+
+
+
   .header h1 {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 28px;
@@ -416,6 +435,9 @@
 
   <!-- HEADER -->
   <div class="header avoid-break">
+    {{#if PHOTO}}
+    <img class="cv-photo" src="{{PHOTO}}" alt="Profile photo" />
+    {{/if}}
     <h1>{{NAME}}</h1>
     <div class="header-gradient"></div>
     <div class="contact-row">

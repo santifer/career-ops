@@ -63,12 +63,13 @@ Examples of legitimate reformulation:
 
 ## Template HTML
 
-Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
+Use the template in `cv-template.html` (for CVs) or `resume-template.html` (for resumes). Replace the `{{...}}` placeholders with HTML-escaped personalized content:
 
 | Placeholder | Content |
 |-------------|-----------|
 | `{{LANG}}` | CV language code (e.g. `en`, `es`, `ja`, `ar`). Drives language-specific CSS in the template: `ja` enables a CJK font fallback so Japanese renders instead of tofu (□); `ar` enables RTL + Arabic fonts. Use the BCP-47/ISO-639 code that matches the CV language. |
 | `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
+| `{{PHOTO}}` | (from profile.yml `candidate.photo` — if configured and file exists, base64-encode the image as a Data URL (e.g., `data:image/jpeg;base64,...` or `data:image/png;base64,...`) and map it here. If omitted or empty, omit the entire `{{#if PHOTO}}...{{/if}}` block from the template so the output is 100% byte-identical to the original layout) |
 | `{{NAME}}` | (from profile.yml) |
 | `{{PHONE}}` | (from profile.yml — include with its separator only when `profile.yml` has a non-empty `phone` value; omit both the `<a href="tel:…">` element and the following `<span class="separator">` otherwise) |
 | `{{EMAIL}}` | (from profile.yml) |

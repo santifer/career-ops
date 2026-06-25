@@ -11,6 +11,9 @@ candidate:
   portfolio_url: "https://janesmith.dev"
   github: "github.com/janesmith"
   twitter: "https://x.com/janesmith"
+  # Optional path to a profile photo (e.g. for DACH/European markets).
+  # Leave blank or comment out to generate a photo-less ATS-safe CV/Resume.
+  # photo: "assets/photo.jpg"
 
 target_roles:
   # Your North Star roles — what you're optimizing for
