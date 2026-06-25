@@ -42,8 +42,11 @@ const windowDays = windowIdx !== -1 && args[windowIdx + 1] !== undefined
 
 // --- Date helpers ---
 function parseDate(dateStr) {
-  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr).trim())) return null;
-  return new Date(String(dateStr).trim() + 'T00:00:00Z');
+  const iso = String(dateStr || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso) return null;
+  return date;
 }
 
 function daysBetween(d1, d2) {
@@ -94,13 +97,20 @@ function loadScanHistory(path = SCAN_HISTORY_PATH) {
 //
 // Exported so external tests can call detectReposts() directly on a row list.
 export function detectReposts(rows, windowDays = DEFAULT_WINDOW_DAYS) {
-  const valid = rows.filter(r => r.status === 'added' && r.url && r.date);
+  if (!Array.isArray(rows)) return [];
+  const valid = rows.filter(r =>
+    r.status === 'added' &&
+    String(r.url || '').trim() &&
+    r.date &&
+    String(r.company || '').trim() &&
+    String(r.title || '').trim()
+  );
   if (valid.length < 2) return [];
 
   // Group by company (case-insensitive).
   const byCompany = new Map();
   for (const row of valid) {
-    const key = row.company.toLowerCase();
+    const key = row.company.toLowerCase().trim();
     if (!byCompany.has(key)) byCompany.set(key, []);
     byCompany.get(key).push(row);
   }
@@ -113,60 +123,56 @@ export function detectReposts(rows, windowDays = DEFAULT_WINDOW_DAYS) {
   return clusters.sort((a, b) => (a.lastSeen < b.lastSeen ? 1 : -1));
 }
 
-// Cluster rows in a single company group. Two rows are linked when their
-// titles roleFuzzyMatch AND their first_seen dates are within windowDays of
-// each other. This date constraint is applied during edge construction (not
-// after) so that a role posted 10 months apart doesn't pull a genuine 30-day
-// repost pair into a single 300-day cluster that the span check then rejects.
+// Cluster rows in a single company group. Rows are first grouped by title
+// (exact or fuzzy match), then each title group is sorted by date and a
+// sliding window finds sub-clusters within the windowDays span. This two-phase
+// approach prevents non-matching roles (e.g. a Product Manager between two
+// Backend Engineer postings) from breaking a valid repost cluster.
 function detectRepostsInGroup(rows, windowDays) {
-  const n = rows.length;
-  const parent = Array.from({ length: n }, (_, i) => i);
+  const titleGroups = [];
+  const used = new Set();
 
-  const find = (x) => {
-    let root = x;
-    while (parent[root] !== root) root = parent[root];
-    let cur = x;
-    while (parent[cur] !== root) {
-      const next = parent[cur];
-      parent[cur] = root;
-      cur = next;
+  for (const row of rows) {
+    if (used.has(row)) continue;
+    const group = [row];
+    used.add(row);
+    for (const other of rows) {
+      if (used.has(other)) continue;
+      if (row.title.toLowerCase() === other.title.toLowerCase() || roleFuzzyMatch(row.title, other.title)) {
+        group.push(other);
+        used.add(other);
+      }
     }
-    return root;
-  };
-  const union = (a, b) => {
-    const ra = find(a);
-    const rb = find(b);
-    if (ra !== rb) parent[ra] = rb;
-  };
-
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      // Fast path: identical normalized titles are always the same role,
-      // even when roleFuzzyMatch's tokenizer strips them to a single token
-      // (e.g. "Senior ML Engineer" -> only "engineer" survives -> < 2 tokens
-      // -> roleFuzzyMatch returns false). Without this, short identical titles
-      // with many stopwords would slip past repost detection.
-      const sameTitle = rows[i].title.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim()
-        === rows[j].title.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
-      if (!sameTitle && !roleFuzzyMatch(rows[i].title, rows[j].title)) continue;
-      const span = Math.abs(daysBetween(rows[i].date, rows[j].date));
-      if (span <= windowDays) union(i, j);
-    }
-  }
-
-  // Collect clusters.
-  const clusterMap = new Map();
-  for (let i = 0; i < n; i++) {
-    const root = find(i);
-    if (!clusterMap.has(root)) clusterMap.set(root, []);
-    clusterMap.get(root).push(rows[i]);
+    titleGroups.push(group);
   }
 
   const results = [];
-  for (const clusterRows of clusterMap.values()) {
-    if (clusterRows.length < 2) continue;
-    const result = buildRepostCluster(clusterRows, windowDays);
-    if (result) results.push(result);
+  for (const group of titleGroups) {
+    if (group.length < 2) continue;
+    const sorted = [...group].sort((a, b) => (a.date < b.date ? -1 : 1));
+    let cluster = [];
+
+    for (const row of sorted) {
+      if (cluster.length === 0) {
+        cluster = [row];
+        continue;
+      }
+      const first = cluster[0];
+      const span = daysBetween(first.date, row.date);
+      if (span <= windowDays) {
+        cluster.push(row);
+      } else {
+        if (cluster.length >= 2) {
+          const result = buildRepostCluster(cluster, windowDays);
+          if (result) results.push(result);
+        }
+        cluster = [row];
+      }
+    }
+    if (cluster.length >= 2) {
+      const result = buildRepostCluster(cluster, windowDays);
+      if (result) results.push(result);
+    }
   }
   return results;
 }
