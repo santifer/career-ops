@@ -14,6 +14,7 @@
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { resolveColumns } from './column-map.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
@@ -110,6 +111,9 @@ if (!existsSync(APPS_FILE)) {
 }
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
+// Resolve columns by header so Score/Status read correctly when an optional
+// Location column shifts their positions (shared with column-map.mjs).
+const COLMAP = resolveColumns(lines);
 
 let changes = 0;
 let unknowns = [];
@@ -126,7 +130,7 @@ for (let i = 0; i < lines.length; i++) {
   const num = parseInt(parts[1]);
   if (isNaN(num)) continue;
 
-  const rawStatus = parts[6];
+  const rawStatus = parts[COLMAP.status];
   const result = normalizeStatus(rawStatus);
 
   if (result.unknown) {
@@ -138,21 +142,20 @@ for (let i = 0; i < lines.length; i++) {
 
   // Apply change
   const oldStatus = rawStatus;
-  parts[6] = result.status;
+  parts[COLMAP.status] = result.status;
 
   // Move DUPLICADO info to notes if needed
-  if (result.moveToNotes && parts[9]) {
-    const existing = parts[9] || '';
+  const notesIdx = COLMAP.notes;
+  if (result.moveToNotes && notesIdx != null) {
+    const existing = parts[notesIdx] || '';
     if (!existing.includes(result.moveToNotes)) {
-      parts[9] = result.moveToNotes + (existing ? '. ' + existing : '');
+      parts[notesIdx] = result.moveToNotes + (existing ? '. ' + existing : '');
     }
-  } else if (result.moveToNotes && !parts[9]) {
-    parts[9] = result.moveToNotes;
   }
 
   // Also strip bold from score field
-  if (parts[5]) {
-    parts[5] = parts[5].replace(/\*\*/g, '');
+  if (parts[COLMAP.score]) {
+    parts[COLMAP.score] = parts[COLMAP.score].replace(/\*\*/g, '');
   }
 
   // Reconstruct line

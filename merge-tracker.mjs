@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, exists
 import { join, basename, dirname, resolve, relative, isAbsolute, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import { LEGACY_COLMAP, detectColumns } from './column-map.mjs';
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
@@ -388,7 +389,13 @@ function validateStatus(status) {
  * @returns {string} Lowercase alphanumeric company key.
  */
 function normalizeCompany(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Mirror of dedup-tracker.mjs's normalizeCompany. Use Unicode letter/number
+  // classes (\p{L}\p{N}), not [a-z0-9]: stripping non-Latin characters collapsed
+  // every Cyrillic/CJK/Arabic company to the same empty key, so a TSV addition
+  // for one non-Latin company would merge into an unrelated one. NFC-normalize
+  // first so NFC/NFD variants of the same accented name (e.g. "Société") agree.
+  const key = name.normalize('NFC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  return key || name.normalize('NFC').toLowerCase().trim();
 }
 
 /**
@@ -427,31 +434,8 @@ function parseScore(s) {
 // position so both work — fixed-position indexing would otherwise read, say,
 // Location where it expects Score. Falls back to the legacy layout when no
 // recognizable header row is found.
-const LEGACY_COLMAP = { num: 1, date: 2, company: 3, role: 4, score: 5, status: 6, pdf: 7, report: 8, notes: 9 };
+// Column detection (LEGACY_COLMAP + detectColumns) is shared via column-map.mjs.
 let COLMAP = LEGACY_COLMAP;
-
-const HEADER_ALIASES = {
-  '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
-  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
-  'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
-};
-
-// Scan the table for a header row and build a header-name → column-index map.
-// Indexing matches `line.split('|')` (leading empty cell before the first pipe),
-// the same split parseAppLine uses. Returns null — caller keeps the legacy
-// layout — unless the essential columns are all present, so a stray pipe line
-// can't yield a bogus mapping.
-function detectColumns(lines) {
-  for (const line of lines) {
-    if (!line.startsWith('|')) continue;
-    const cells = line.split('|').map(s => s.trim().toLowerCase());
-    if (!cells.includes('company') || !cells.includes('role')) continue;
-    const map = {};
-    cells.forEach((c, i) => { if (HEADER_ALIASES[c] != null) map[HEADER_ALIASES[c]] = i; });
-    if (['num', 'company', 'role', 'score', 'status'].every(k => map[k] != null)) return map;
-  }
-  return null;
-}
 
 // Build a tracker row string matching the detected layout (with or without the
 // optional Location column) so writes round-trip through the same schema.

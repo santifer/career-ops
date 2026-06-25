@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { roleFuzzyMatch } from './role-matcher.mjs';
+import { resolveColumns, parseTrackerRow } from './column-map.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md
@@ -66,11 +67,23 @@ const STATUS_RANK = {
  * @returns {string} Lowercase company key used for same-company grouping.
  */
 function normalizeCompany(name) {
-  return name.toLowerCase()
+  // Use Unicode letter/number classes (\p{L}\p{N}), not [a-z0-9]: Cyrillic, CJK,
+  // Arabic and other non-Latin company names must keep their letters. Stripping
+  // them collapsed every non-Latin company into the same empty key, which let the
+  // fuzzy role matcher merge unrelated rows — silent data loss for non-English
+  // markets (the localized de/fr/ja/ar/tr modes target exactly these users).
+  // NFC-normalize first so NFC/NFD variants of the same accented name (e.g.
+  // "Société" pasted as decomposed e + ´) don't strip the combining mark and
+  // produce a different key for the same company.
+  const key = name.normalize('NFC').toLowerCase()
     .replace(/[()]/g, '')
     .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/[^\p{L}\p{N} ]/gu, '')
     .trim();
+  // Never group under an empty key. A name that is all punctuation/emoji would
+  // normalize to '' and cluster with every other such name; fall back to the
+  // trimmed lowercase original so those rows stay distinct.
+  return key || name.normalize('NFC').toLowerCase().trim();
 }
 
 /**
@@ -251,22 +264,10 @@ function rebuildRow(parts) {
 }
 
 function parseAppLine(line) {
-  const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
-  const num = parseInt(parts[1]);
-  if (isNaN(num)) return null;
-  return {
-    num,
-    date: parts[2],
-    company: parts[3],
-    role: parts[4],
-    score: parts[5],
-    status: parts[6],
-    pdf: parts[7],
-    report: parts[8],
-    notes: parts[9] || '',
-    raw: line,
-  };
+  // Column indices come from COLMAP (resolved by header) so Score/Status read
+  // correctly when an optional Location column shifts their positions.
+  const row = parseTrackerRow(line, COLMAP);
+  return row ? { ...row, raw: line } : null;
 }
 
 // Read
@@ -276,6 +277,10 @@ if (!existsSync(APPS_FILE)) {
 }
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
+// Resolve columns by header (shared via column-map.mjs) so parseAppLine and the
+// status write-back below address Score/Status correctly even when an optional
+// Location column is present.
+const COLMAP = resolveColumns(lines);
 
 // Parse all entries
 const entries = [];
@@ -343,7 +348,7 @@ for (const [company, companyEntries] of groups) {
       const lineIdx = keeper.lineIdx;
       if (lineIdx !== undefined) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
-        parts[6] = bestStatus;
+        parts[COLMAP.status] = bestStatus;
         lines[lineIdx] = rebuildRow(parts);
         console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
       }

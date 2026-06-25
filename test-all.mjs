@@ -2417,6 +2417,159 @@ try {
   fail(`shared role matcher / dedup safety tests crashed: ${e.message}`);
 }
 
+// ── SHARED COLUMN MAP + OPTIONAL LOCATION COLUMN ────────────────
+// column-map.mjs is the single source of truth for tracker column detection.
+// dedup-tracker / normalize-statuses / analyze-patterns / followup-cadence used
+// to hardcode parts[5]=score / parts[6]=status; with the optional Location
+// column (inserted after Role) those offsets shift, so they read Score as
+// Status and could write a status back into the Score cell. They now resolve
+// columns by header like merge-tracker.mjs and verify-pipeline.mjs.
+console.log('\n🧪 Testing shared column map + optional Location column...');
+try {
+  const { resolveColumns, parseTrackerRow } = await import(pathToFileURL(join(ROOT, 'column-map.mjs')).href);
+
+  const legacy = resolveColumns(['| # | Date | Company | Role | Score | Status | PDF | Report | Notes |']);
+  if (legacy.score === 5 && legacy.status === 6 && legacy.location == null) {
+    pass('resolveColumns maps the 9-column layout (Score=5, Status=6, no Location)');
+  } else {
+    fail(`resolveColumns 9-col wrong: ${JSON.stringify(legacy)}`);
+  }
+
+  const withLoc = resolveColumns(['| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |']);
+  if (withLoc.location === 5 && withLoc.score === 6 && withLoc.status === 7) {
+    pass('resolveColumns shifts Score/Status when a Location column is present');
+  } else {
+    fail(`resolveColumns Location layout wrong: ${JSON.stringify(withLoc)}`);
+  }
+
+  if (resolveColumns(['plain text, no table']).score === 5) {
+    pass('resolveColumns falls back to the legacy layout when no header row exists');
+  } else {
+    fail('resolveColumns should fall back to LEGACY_COLMAP without a header');
+  }
+
+  const row = parseTrackerRow('| 1 | 2026-01-01 | Acme | Backend Engineer | Remote | 4.2/5 | Applied | ❌ | [1](../reports/001.md) | n |', withLoc);
+  if (row && row.score === '4.2/5' && row.status === 'Applied' && row.location === 'Remote' && row.company === 'Acme') {
+    pass('parseTrackerRow reads Score/Status/Location correctly with a Location column');
+  } else {
+    fail(`parseTrackerRow Location row wrong: ${JSON.stringify(row)}`);
+  }
+  if (parseTrackerRow('| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |', withLoc) === null) {
+    pass('parseTrackerRow returns null for the header row');
+  } else {
+    fail('parseTrackerRow should return null for the header row');
+  }
+
+  // Integration: dedup-tracker on a Location-column tracker must dedup correctly
+  // (it read Score as Status before, so it missed the duplicate entirely).
+  const colTmp = mkdtempSync(join(tmpdir(), 'career-ops-colmap-'));
+  try {
+    mkdirSync(join(colTmp, 'data'));
+    const tracker = join(colTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|----------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-05-01 | Acme | Product Engineer, Growth | Remote | 3.0/5 | Evaluated | ❌ | [1](../reports/001-a.md) | lower-scored dup |\n' +
+      '| 2 | 2026-05-02 | Acme | Product Engineer, Growth | Remote | 4.5/5 | Evaluated | ❌ | [2](../reports/002-b.md) | higher-scored dup |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker.mjs crashed on a Location-column tracker');
+    } else {
+      const dataRows = readFileSync(tracker, 'utf-8').split('\n').filter(l => /^\|\s*\d/.test(l));
+      // The fix lets dedup read Score from the Location-shifted column, so it
+      // keeps the genuinely higher-scored row (4.5). The old hardcoded offset
+      // read Location ("Remote") as the score → both scored 0 → wrong keeper.
+      if (dataRows.length === 1 && dataRows[0].includes('4.5/5') && dataRows[0].includes('Evaluated')) {
+        pass('dedup-tracker deduplicates a Location-column tracker, keeping the higher-scored row');
+      } else {
+        fail(`dedup-tracker Location dedup wrong: ${dataRows.length} rows -> ${JSON.stringify(dataRows)}`);
+      }
+    }
+  } finally {
+    rmSync(colTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`shared column map tests crashed: ${e.message}`);
+}
+
+// ── NON-LATIN COMPANY + ROLE DEDUP (i18n) ───────────────────────
+// normalizeCompany() (in BOTH dedup-tracker.mjs and merge-tracker.mjs) and the
+// shared roleTokens() stripped every non-[a-z0-9] character. All Cyrillic / CJK
+// / Arabic company names collapsed to the same empty key, and non-Latin role
+// titles tokenized to [] so roleFuzzyMatch() bailed out. Net effect: unrelated
+// non-Latin employers were merged, while genuine duplicates at the same
+// non-Latin company never deduplicated. Both now keep Unicode letters/digits
+// (\p{L}\p{N}) and NFC-normalize first.
+console.log('\n🧪 Testing non-Latin company + role dedup (i18n)...');
+try {
+  const { roleFuzzyMatch } = await import(pathToFileURL(join(ROOT, 'role-matcher.mjs')).href);
+
+  if (roleFuzzyMatch('Бэкенд разработчик', 'Бэкенд разработчик')) {
+    pass('roleFuzzyMatch matches identical Cyrillic role titles');
+  } else {
+    fail('roleFuzzyMatch fails on identical Cyrillic roles (non-Latin tokens stripped)');
+  }
+  if (!roleFuzzyMatch('Бэкенд разработчик', 'Фронтенд дизайнер')) {
+    pass('roleFuzzyMatch keeps distinct Cyrillic roles separate');
+  } else {
+    fail('roleFuzzyMatch merged two distinct Cyrillic roles');
+  }
+
+  const nlTmp = mkdtempSync(join(tmpdir(), 'career-ops-nonlatin-'));
+  try {
+    mkdirSync(join(nlTmp, 'data'));
+    const tracker = join(nlTmp, 'data', 'applications.md');
+    const nfc = 'Société Générale'.normalize('NFC');
+    const nfd = 'Société Générale'.normalize('NFD');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      // same Cyrillic company + role → must dedup to the higher-scored row
+      '| 60 | 2026-03-01 | Яндекс | Бэкенд-разработчик | 4.0/5 | Evaluated | ❌ | [60](../reports/060-ya-a.md) | cyrillic dup low |\n' +
+      '| 61 | 2026-03-01 | Яндекс | Бэкенд-разработчик | 4.3/5 | Evaluated | ❌ | [61](../reports/061-ya-b.md) | cyrillic dup high |\n' +
+      // distinct Cyrillic company, same role → must survive
+      '| 62 | 2026-03-01 | Сбербанк | Бэкенд-разработчик | 4.1/5 | Evaluated | ❌ | [62](../reports/062-sber.md) | distinct cyrillic |\n' +
+      // CJK + Arabic companies → must NOT collapse into each other
+      '| 63 | 2026-03-01 | 百度 | Frontend Developer | 3.0/5 | Evaluated | ❌ | [63](../reports/063-cjk.md) | cjk company |\n' +
+      '| 64 | 2026-03-01 | أمازون | DevOps Engineer | 3.5/5 | Evaluated | ❌ | [64](../reports/064-ar.md) | arabic company |\n' +
+      // NFC vs NFD of the SAME accented company + same role → must dedup to 1
+      `| 65 | 2026-03-01 | ${nfc} | Risk Engineer | 3.8/5 | Evaluated | ❌ | [65](../reports/065-sg-nfc.md) | nfc |\n` +
+      `| 66 | 2026-03-01 | ${nfd} | Risk Engineer | 4.2/5 | Evaluated | ❌ | [66](../reports/066-sg-nfd.md) | nfd |\n`);
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker.mjs crashed during non-Latin dedup test');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const lines = out.split('\n');
+      const yandexRows = lines.filter(l => l.includes('Яндекс'));
+      if (yandexRows.length === 1 && yandexRows[0].includes('4.3/5')) {
+        pass('dedup-tracker deduplicates same Cyrillic company+role, keeping the higher score');
+      } else {
+        fail(`dedup-tracker Cyrillic dedup wrong: ${yandexRows.length} Яндекс rows`);
+      }
+      if (out.includes('Сбербанк') && out.includes('百度') && out.includes('أمازون')) {
+        pass('dedup-tracker keeps distinct Cyrillic / CJK / Arabic companies separate (no empty-key collision)');
+      } else {
+        fail('dedup-tracker merged or dropped a distinct non-Latin company');
+      }
+      const riskRows = lines.filter(l => l.includes('Risk Engineer'));
+      if (riskRows.length === 1 && riskRows[0].includes('4.2/5')) {
+        pass('dedup-tracker deduplicates NFC/NFD variants of the same accented company');
+      } else {
+        fail(`dedup-tracker NFC/NFD dedup wrong: ${riskRows.length} "Risk Engineer" rows`);
+      }
+    }
+  } finally {
+    rmSync(nlTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`non-Latin dedup test crashed: ${e.message}`);
+}
+
 // dedup-tracker / normalize-statuses rebuilt promoted rows with
 // `parts.slice(1, -1)`, which assumes the closing `|` produced a trailing empty
 // cell. A valid row written WITHOUT a trailing pipe keeps its real last cell
@@ -2456,6 +2609,63 @@ try {
   }
 } catch (e) {
   fail(`dedup row-rebuild notes test crashed: ${e.message}`);
+}
+
+// ── VERIFY-PIPELINE INTEGRITY CHECKS (dup report #, machine summary) ──
+// verify-pipeline.mjs gained two warning-only checks: duplicate report file
+// numbers (orphan twins invisible to number-indexed scripts) and a missing
+// `## Machine Summary` block on actionable rows (which analyze-patterns.mjs
+// needs to read a report's metadata). Both must warn without failing the run.
+console.log('\n🧪 Testing verify-pipeline integrity checks...');
+try {
+  const vpTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-'));
+  try {
+    mkdirSync(join(vpTmp, 'data'));
+    mkdirSync(join(vpTmp, 'reports'));
+    const tracker = join(vpTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 70 | 2026-04-01 | Acme | Backend Engineer | 4.0/5 | Applied | ❌ | [70](../reports/070-acme.md) | heading, no fence |\n' +
+      '| 71 | 2026-04-01 | Globex | Backend Engineer | 4.1/5 | Applied | ❌ | [71](../reports/071-globex.md) | compliant report |\n');
+    // Applied report #70 has the heading but NO fenced YAML — analyze-patterns
+    // returns null for this, so the check must still warn (old heading-only
+    // regex would have passed it).
+    writeFileSync(join(vpTmp, 'reports', '070-acme.md'), '# Evaluation: Acme\n\n## Machine Summary\n\nstatus: applied (no fenced block)\n');
+    // A second file colliding on report number 070.
+    writeFileSync(join(vpTmp, 'reports', '070-acme-orphan.md'), '# duplicate-numbered orphan\n');
+    // Applied report #71 has a proper fenced Machine Summary — must NOT warn.
+    writeFileSync(join(vpTmp, 'reports', '071-globex.md'),
+      '# Evaluation: Globex\n\n## Machine Summary\n\n```yaml\ncompany: Globex\nscore: 4.1\n```\n');
+
+    const out = run(NODE, ['verify-pipeline.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_REPORTS_DIR: join(vpTmp, 'reports') },
+    });
+    if (out === null) {
+      fail('verify-pipeline.mjs exited non-zero on warning-only input (warnings must not fail the run)');
+    } else {
+      if (/Duplicate report number 070/.test(out)) {
+        pass('verify-pipeline flags duplicate report file numbers');
+      } else {
+        fail('verify-pipeline did not flag a duplicate report number');
+      }
+      if (/#70 .*missing a parseable "## Machine Summary"/.test(out)) {
+        pass('verify-pipeline flags a heading-only report (no fenced YAML) as unparseable');
+      } else {
+        fail('verify-pipeline did not flag the heading-only (no-fence) Machine Summary report');
+      }
+      if (!/#71 /.test(out)) {
+        pass('verify-pipeline does not warn on a compliant fenced Machine Summary (no false positive)');
+      } else {
+        fail('verify-pipeline warned on a report that has a valid fenced Machine Summary');
+      }
+    }
+  } finally {
+    rmSync(vpTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`verify-pipeline integrity-check tests crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
