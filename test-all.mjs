@@ -4421,6 +4421,45 @@ try {
   fail(`api-cron.yml checks crashed: ${e.message}`);
 }
 
+// 15f. release.yml: npm publish must not fail fork releases without NPM_TOKEN
+try {
+  const wfPath = '.github/workflows/release.yml';
+  if (fileExists(wfPath)) {
+    const wf = readFile(wfPath);
+
+    if (wf.includes('NPM_TOKEN: ${{ secrets.NPM_TOKEN }}')) {
+      pass('release.yml maps NPM_TOKEN through job env for conditional checks');
+    } else {
+      fail('release.yml missing job env NPM_TOKEN mapping for conditional publish guard');
+    }
+
+    if (wf.includes("env.NPM_TOKEN == ''") && wf.includes('skipping npm publish')) {
+      pass('release.yml emits a skip notice when NPM_TOKEN is unavailable');
+    } else {
+      fail('release.yml missing missing-NPM_TOKEN skip notice');
+    }
+
+    if (
+      wf.includes("steps.release.outputs.release_created == 'true' && env.NPM_TOKEN != ''") &&
+      wf.includes('npm publish --provenance --access public')
+    ) {
+      pass('release.yml gates npm publish on release_created and non-empty NPM_TOKEN');
+    } else {
+      fail('release.yml npm publish is not guarded by release_created + non-empty NPM_TOKEN');
+    }
+
+    if (wf.includes('NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}')) {
+      pass('release.yml publishes with the guarded NPM_TOKEN env value');
+    } else {
+      fail('release.yml publish step does not use the guarded NPM_TOKEN env value');
+    }
+  } else {
+    fail('release.yml workflow file missing');
+  }
+} catch (e) {
+  fail(`release.yml checks crashed: ${e.message}`);
+}
+
 // ── 16. FORM-FILL SUBMIT SAFETY ─────────────────────────────────
 
 console.log('\n16. Form-fill submit safety — FINAL_SUBMIT_DENYLIST and NAV_ALLOWLIST');

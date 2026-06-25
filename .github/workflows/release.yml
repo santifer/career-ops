@@ -11,6 +11,8 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
@@ -21,16 +23,19 @@ jobs:
       # Publish the npm scaffolder only when a release was just created.
       # Runs in the same job because a release created via GITHUB_TOKEN does
       # not trigger separate `on: release` workflows.
+      - name: Skip npm publish when NPM_TOKEN is unavailable
+        if: ${{ steps.release.outputs.release_created == 'true' && env.NPM_TOKEN == '' }}
+        run: echo "::notice::NPM_TOKEN is not configured; skipping npm publish."
       - uses: actions/checkout@v6
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' && env.NPM_TOKEN != '' }}
       - uses: actions/setup-node@v6
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' && env.NPM_TOKEN != '' }}
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
       - name: Publish scaffolder to npm
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' && env.NPM_TOKEN != '' }}
         run: npm publish --provenance --access public
         working-directory: scaffolder
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
