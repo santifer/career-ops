@@ -1,39 +1,41 @@
-# Career-Ops on the Free Tier (Gemini CLI)
+# Career-Ops on the Free Tier (Antigravity CLI)
 
-career-ops works with **Gemini CLI's free tier** — no API key or paid
+career-ops works with **Antigravity CLI's free tier** — no API key or paid
 subscription required. This guide covers setup, limits, and trade-offs.
 
 ## Quick Start
 
-1. Install Gemini CLI (requires Node.js 18+):
+1. Install Antigravity CLI:
+
+   On macOS / Linux:
 
    ```bash
-   npm install -g @google/gemini-cli
-   ```
-
-2. Authenticate with your Google account:
-
-   ```bash
-   gemini auth login
-   ```
-
-3. Enable free-tier mode by setting the environment variable:
-
-   ```bash
-   export GEMINI_FREE_TIER=true
+   curl -fsSL https://antigravity.google/cli/install.sh | bash
    ```
 
    On Windows (PowerShell):
 
    ```powershell
-   $env:GEMINI_FREE_TIER = "true"
+   irm https://antigravity.google/cli/install.ps1 | iex
    ```
 
-4. Run career-ops as usual:
+   On Windows (CMD):
+
+   ```cmd
+   curl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd && install.cmd && del install.cmd
+   ```
+
+2. Authenticate with your Google account:
 
    ```bash
-   gemini          # interactive — paste a URL, evaluate, scan, etc.
-   gemini -p "..." # headless / batch mode
+   agy auth login
+   ```
+
+3. Run career-ops as usual:
+
+   ```bash
+   agy          # interactive — paste a URL, evaluate, scan, etc.
+   agy -p "..." # headless / batch mode
    ```
 
 ## Daily Limits
@@ -53,10 +55,10 @@ a rate-limit error; career-ops will pause and suggest retrying tomorrow.
 ## Batch Mode Behavior
 
 - `batch-runner.sh` spawns `claude -p` workers by default (Claude Code
-  specific). To use Gemini CLI workers instead, invoke them manually:
+  specific). To use Antigravity CLI workers instead, invoke them manually:
 
   ```bash
-  gemini -p "evaluate <URL>"
+  agy -p "evaluate <URL>"
   ```
 
 - With free-tier limits, keep `--parallel 1` to avoid burning through
@@ -78,5 +80,4 @@ a rate-limit error; career-ops will pause and suggest retrying tomorrow.
 
 If you outgrow the free tier, you can switch to a paid Google AI plan
 or use Claude Code (`claude` CLI) with a Claude Max subscription. Both
-are fully supported — just remove the `GEMINI_FREE_TIER` variable and
-authenticate with your preferred provider.
+are fully supported — just authenticate with your preferred provider.
