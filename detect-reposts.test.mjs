@@ -17,7 +17,7 @@
  * Run: node detect-reposts.test.mjs
  */
 
-import { detectReposts } from './detect-reposts.mjs';
+import { detectReposts, parseScanHistory } from './detect-reposts.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdtempSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
@@ -592,31 +592,9 @@ const tmpDir = mkdtempSync(join(tmpdir(), 'detect-reposts-test-'));
 const tmpTsv = join(tmpDir, 'scan-history.tsv');
 writeFileSync(tmpTsv, tsvContent);
 
-// Test: run the actual script against the temp TSV
-const scriptPath = join(dirname(fileURLToPath(import.meta.url)), 'detect-reposts.mjs');
-
 try {
-  // We can't easily redirect SCAN_HISTORY_PATH (it's computed from __dirname).
-  // Instead, test parseScanHistory logic by replicating it and feeding to detectReposts.
-  // This is an integration test for the parsing + detection pipeline.
-
-  // Parse the TSV manually (matching parseScanHistory logic)
-  const lines = tsvContent.split('\n');
-  const parsedRows = [];
-  for (const line of lines.slice(1)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const cols = trimmed.split('\t');
-    if (cols.length < 6) continue;
-    const [url, firstSeen, portal, title, company, status, location] = cols;
-    const date = parseDate(firstSeen);
-    if (!url || !date) continue;
-    parsedRows.push({
-      url: url.trim(), date, dateStr: firstSeen.trim(),
-      portal: portal.trim(), title: title.trim(), company: company.trim(),
-      status: status.trim(), location: (location || '').trim(),
-    });
-  }
+  // Parse using the production parser
+  const parsedRows = parseScanHistory(tsvContent);
 
   const tsvResult = detectReposts(parsedRows, 90);
   eq('TSV round-trip: 1 cluster found', tsvResult.length, 1);
@@ -633,47 +611,17 @@ try {
     'https://a.com/2\t2026-02-01\tgreenhouse\tBackend Engineer Platform\tAcme\tadded\tRemote',
     '',
   ].join('\n');
-  const blankLines = tsvWithBlanks.split('\n');
-  const blankParsed = [];
-  for (const line of blankLines.slice(1)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const cols = trimmed.split('\t');
-    if (cols.length < 6) continue;
-    const [url, firstSeen, portal, title, company, status, location] = cols;
-    const date = parseDate(firstSeen);
-    if (!url || !date) continue;
-    blankParsed.push({
-      url: url.trim(), date, dateStr: firstSeen.trim(),
-      portal: portal.trim(), title: title.trim(), company: company.trim(),
-      status: status.trim(), location: (location || '').trim(),
-    });
-  }
+  const blankParsed = parseScanHistory(tsvWithBlanks);
   eq('TSV with blank lines: parsed correctly', blankParsed.length, 2);
   eq('TSV with blank lines: 1 cluster', detectReposts(blankParsed, 90).length, 1);
 
-  // TSV with fewer than 6 columns (malformed)
+  // TSV with fewer than 5 columns (malformed)
   const tsvShort = [
     'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation',
     'https://a.com/1\t2026-01-01\tgreenhouse',
     'https://a.com/2\t2026-02-01\tgreenhouse\tBackend Engineer Platform\tAcme\tadded\tRemote',
   ].join('\n');
-  const shortLines = tsvShort.split('\n');
-  const shortParsed = [];
-  for (const line of shortLines.slice(1)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const cols = trimmed.split('\t');
-    if (cols.length < 6) continue;
-    const [url, firstSeen, portal, title, company, status, location] = cols;
-    const date = parseDate(firstSeen);
-    if (!url || !date) continue;
-    shortParsed.push({
-      url: url.trim(), date, dateStr: firstSeen.trim(),
-      portal: portal.trim(), title: title.trim(), company: company.trim(),
-      status: status.trim(), location: (location || '').trim(),
-    });
-  }
+  const shortParsed = parseScanHistory(tsvShort);
   eq('TSV with short row: only valid row parsed', shortParsed.length, 1);
   eq('TSV with short row: no clusters (need 2)', detectReposts(shortParsed, 90).length, 0);
 
@@ -683,22 +631,7 @@ try {
     'https://a.com/1\t2026-02-31\tgreenhouse\tBackend Engineer Platform\tAcme\tadded\tRemote',
     'https://a.com/2\t2026-02-01\tgreenhouse\tBackend Engineer Platform\tAcme\tadded\tRemote',
   ].join('\n');
-  const badDateLines = tsvBadDate.split('\n');
-  const badDateParsed = [];
-  for (const line of badDateLines.slice(1)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const cols = trimmed.split('\t');
-    if (cols.length < 6) continue;
-    const [url, firstSeen, portal, title, company, status, location] = cols;
-    const date = parseDate(firstSeen);
-    if (!url || !date) continue;
-    badDateParsed.push({
-      url: url.trim(), date, dateStr: firstSeen.trim(),
-      portal: portal.trim(), title: title.trim(), company: company.trim(),
-      status: status.trim(), location: (location || '').trim(),
-    });
-  }
+  const badDateParsed = parseScanHistory(tsvBadDate);
   eq('TSV with calendar-invalid date: only valid row parsed', badDateParsed.length, 1);
   eq('TSV with calendar-invalid date: no clusters', detectReposts(badDateParsed, 90).length, 0);
 
@@ -708,25 +641,20 @@ try {
     'https://a.com/1\t2026-01-01\tgreenhouse\tBackend Engineer Platform\t\tadded\tRemote',
     'https://b.com/2\t2026-02-01\tgreenhouse\tBackend Engineer Platform\t\tadded\tRemote',
   ].join('\n');
-  const emptyCoLines = tsvEmptyCompany.split('\n');
-  const emptyCoParsed = [];
-  for (const line of emptyCoLines.slice(1)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const cols = trimmed.split('\t');
-    if (cols.length < 6) continue;
-    const [url, firstSeen, portal, title, company, status, location] = cols;
-    const date = parseDate(firstSeen);
-    if (!url || !date) continue;
-    emptyCoParsed.push({
-      url: url.trim(), date, dateStr: firstSeen.trim(),
-      portal: portal.trim(), title: title.trim(), company: company.trim(),
-      status: status.trim(), location: (location || '').trim(),
-    });
-  }
-  // parseScanHistory would produce rows with empty company, but detectReposts filters them
+  const emptyCoParsed = parseScanHistory(tsvEmptyCompany);
+  // parseScanHistory produces rows with empty company, but detectReposts filters them out
   eq('TSV with empty company: rows parsed (2)', emptyCoParsed.length, 2);
   eq('TSV with empty company: no clusters (filtered by detectReposts)', detectReposts(emptyCoParsed, 90).length, 0);
+
+  // Headerless 5-column TSV parsing test (Older scan-history and seed file backward compat)
+  const headerlessTsv = [
+    'https://a.com/1\t2026-01-01\tgreenhouse\tBackend Engineer Platform\tAcme',
+    'https://a.com/2\t2026-02-01\tgreenhouse\tBackend Engineer Platform\tAcme',
+  ].join('\n');
+  const headerlessParsed = parseScanHistory(headerlessTsv);
+  eq('Headerless 5-column TSV: both rows parsed successfully', headerlessParsed.length, 2);
+  eq('Headerless 5-column TSV: default status applied is added', headerlessParsed[0]?.status, 'added');
+  eq('Headerless 5-column TSV: 1 cluster found', detectReposts(headerlessParsed, 90).length, 1);
 
 } finally {
   rmSync(tmpDir, { recursive: true, force: true });
@@ -885,6 +813,8 @@ ok('500 rows across 50 companies completes without throwing', true);
 // 12. CLI behavior
 // ============================================================================
 console.log('\n--- 12. CLI behavior ---');
+
+const scriptPath = join(dirname(fileURLToPath(import.meta.url)), 'detect-reposts.mjs');
 
 // Test --self-test exit code
 try {

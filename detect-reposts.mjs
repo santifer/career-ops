@@ -55,7 +55,7 @@ function daysBetween(d1, d2) {
 
 // --- Parse scan-history.tsv ---
 // Format: url, first_seen, portal, title, company, status, location
-function parseScanHistory(content) {
+export function parseScanHistory(content) {
   const lines = content.split('\n').filter(line => line.trim());
   if (lines.length === 0) return [];
   const rows = [];
@@ -65,8 +65,8 @@ function parseScanHistory(content) {
   const hasHeader = /^\s*url\s*\t/i.test(lines[0]);
   for (const line of lines.slice(hasHeader ? 1 : 0)) {
     const cols = line.split('\t');
-    if (cols.length < 6) continue;
-    const [url, firstSeen, portal, title, company, status, location] = cols;
+    if (cols.length < 5) continue;
+    const [url, firstSeen, portal = '', title = '', company = '', status = 'added', location = ''] = cols;
     const date = parseDate(firstSeen);
     if (!url || !date) continue;
     rows.push({
@@ -76,7 +76,7 @@ function parseScanHistory(content) {
       portal: portal.trim(),
       title: title.trim(),
       company: company.trim(),
-      status: status.trim(),
+      status: (status || 'added').trim(),
       location: (location || '').trim(),
     });
   }
