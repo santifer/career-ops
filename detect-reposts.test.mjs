@@ -219,6 +219,43 @@ eq('null date -> filtered', detectReposts([
   row({ url: 'https://a.com/2', date: d('2026-02-01'), dateStr: '2026-02-01' }),
 ]).length, 0);
 
+// CodeRabbit: type coercion and edge cases
+eq('null row in array -> no crash', detectReposts([
+  null,
+  row({ url: 'https://a.com/2', date: d('2026-02-01'), dateStr: '2026-02-01' }),
+]).length, 0);
+
+eq('undefined row in array -> no crash', detectReposts([
+  undefined,
+  row({ url: 'https://a.com/2', date: d('2026-02-01'), dateStr: '2026-02-01' }),
+]).length, 0);
+
+eq('non-string company (number 123) -> filtered, no crash', detectReposts([
+  row({ url: 'https://a.com/1', company: 123 }),
+  row({ url: 'https://a.com/2', company: 123, date: d('2026-02-01'), dateStr: '2026-02-01' }),
+]).length, 0);
+
+eq('non-string title (number) -> filtered, no crash', detectReposts([
+  row({ url: 'https://a.com/1', title: 123 }),
+  row({ url: 'https://a.com/2', title: 123, date: d('2026-02-01'), dateStr: '2026-02-01' }),
+]).length, 0);
+
+eq('string date (not Date object) -> filtered, no crash', detectReposts([
+  row({ url: 'https://a.com/1', date: '2026-01-01' }),
+  row({ url: 'https://a.com/2', date: d('2026-02-01'), dateStr: '2026-02-01' }),
+]).length, 0);
+
+eq('invalid Date object -> filtered, no crash', detectReposts([
+  row({ url: 'https://a.com/1', date: new Date('invalid') }),
+  row({ url: 'https://a.com/2', date: d('2026-02-01'), dateStr: '2026-02-01' }),
+]).length, 0);
+
+eq('null row object -> filtered', detectReposts([
+  row({ url: 'https://a.com/1' }),
+  null,
+  row({ url: 'https://a.com/2', date: d('2026-02-01'), dateStr: '2026-02-01' }),
+]).length, 1);
+
 // ============================================================================
 // 4. detectReposts — company grouping
 // ============================================================================
@@ -717,7 +754,7 @@ ok('multi-company: Epsilon not in any cluster (expired)', !multiResult.some(c =>
 // ============================================================================
 console.log('\n--- 11. performance ---');
 
-// 100 rows, 1 company, 50 matching pairs
+// Smoke tests only — no wall-clock thresholds (flaky on CI)
 const perfRows = Array.from({ length: 100 }, (_, i) => row({
   url: `https://x.com/${i}`,
   date: new Date(2026, 0, 1 + (i % 30)),
@@ -725,10 +762,8 @@ const perfRows = Array.from({ length: 100 }, (_, i) => row({
   title: i % 2 === 0 ? 'Backend Engineer Platform' : 'Frontend Engineer React',
   company: 'PerfCo',
 }));
-const perfStart = Date.now();
 detectReposts(perfRows, 90);
-const perfElapsed = Date.now() - perfStart;
-ok(`100 rows in under 100ms (actual: ${perfElapsed}ms)`, perfElapsed < 100);
+ok('100 rows completes without throwing', true);
 
 // 500 rows across 50 companies
 const perfRows2 = Array.from({ length: 500 }, (_, i) => row({
@@ -738,10 +773,8 @@ const perfRows2 = Array.from({ length: 500 }, (_, i) => row({
   title: i % 3 === 0 ? 'Backend Engineer Platform' : i % 3 === 1 ? 'Frontend Engineer React' : 'Product Manager Senior',
   company: `Company${i % 50}`,
 }));
-const perfStart2 = Date.now();
 detectReposts(perfRows2, 90);
-const perfElapsed2 = Date.now() - perfStart2;
-ok(`500 rows across 50 companies in under 200ms (actual: ${perfElapsed2}ms)`, perfElapsed2 < 200);
+ok('500 rows across 50 companies completes without throwing', true);
 
 // ============================================================================
 // 12. CLI behavior

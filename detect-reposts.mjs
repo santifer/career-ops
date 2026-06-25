@@ -56,14 +56,15 @@ function daysBetween(d1, d2) {
 // --- Parse scan-history.tsv ---
 // Format: url, first_seen, portal, title, company, status, location
 function parseScanHistory(content) {
-  const lines = content.split('\n');
-  if (lines.length < 2) return [];
+  const lines = content.split('\n').filter(line => line.trim());
+  if (lines.length === 0) return [];
   const rows = [];
-  // Skip the header line, parse the rest.
-  for (const line of lines.slice(1)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const cols = trimmed.split('\t');
+  // Only skip the header when it actually looks like one — older
+  // headerless scan-history.tsv files and the seed file in the repo
+  // don't have a header row, and slice(1) would silently lose row 0.
+  const hasHeader = /^\s*url\s*\t/i.test(lines[0]);
+  for (const line of lines.slice(hasHeader ? 1 : 0)) {
+    const cols = line.split('\t');
     if (cols.length < 6) continue;
     const [url, firstSeen, portal, title, company, status, location] = cols;
     const date = parseDate(firstSeen);
@@ -98,19 +99,29 @@ function loadScanHistory(path = SCAN_HISTORY_PATH) {
 // Exported so external tests can call detectReposts() directly on a row list.
 export function detectReposts(rows, windowDays = DEFAULT_WINDOW_DAYS) {
   if (!Array.isArray(rows)) return [];
-  const valid = rows.filter(r =>
-    r.status === 'added' &&
-    String(r.url || '').trim() &&
-    r.date &&
-    String(r.company || '').trim() &&
-    String(r.title || '').trim()
-  );
+  const valid = rows
+    .filter(r =>
+      r &&
+      typeof r === 'object' &&
+      r.status === 'added' &&
+      typeof r.url === 'string' && r.url.trim() &&
+      r.date instanceof Date &&
+      !Number.isNaN(r.date.getTime()) &&
+      typeof r.company === 'string' && r.company.trim() &&
+      typeof r.title === 'string' && r.title.trim()
+    )
+    .map(r => ({
+      ...r,
+      url: r.url.trim(),
+      company: r.company.trim(),
+      title: r.title.trim(),
+    }));
   if (valid.length < 2) return [];
 
   // Group by company (case-insensitive).
   const byCompany = new Map();
   for (const row of valid) {
-    const key = row.company.toLowerCase().trim();
+    const key = row.company.toLowerCase();
     if (!byCompany.has(key)) byCompany.set(key, []);
     byCompany.get(key).push(row);
   }
