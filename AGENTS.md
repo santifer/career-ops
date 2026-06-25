@@ -283,6 +283,25 @@ If a script reads from `process.env` at runtime, that is sufficient; run the scr
 
 ---
 
+## Form Fill — Tab Management (CRITICAL)
+
+When filling multiple applications in one session (Stage 4 FILL or any apply run):
+
+1. **Open each role in a new browser tab** using `browser_tabs` with `action: "new"` and `url:`.
+   **NEVER use `browser_navigate` with `newTab: true`** — despite the parameter name, the
+   generated JS is `page.goto()` which replaces the current tab and destroys the filled form.
+2. **Fill ALL roles first**, leaving every tab open. Do not prompt the candidate to submit
+   after each individual role.
+3. **Present a summary** of all open tabs (role · company · URL · fill status) when done.
+4. **The candidate submits everything manually at the end** — after reviewing all tabs together.
+5. **Never close a tab** — closing is the candidate's job, not the agent's.
+6. **Never click Submit / Submit application / Send application / Confirm and submit /
+   Apply now / Submit my application / Submit now** — these are unconditional denylists.
+
+Full apply-flow details: `modes/apply.md` (custom ATS / MCP Playwright path).
+
+---
+
 ## CI/CD and Quality
 
 - **GitHub Actions** run on every PR: `test-all.mjs` (63+ checks), auto-labeler (risk-based: 🔴 core-architecture, ⚠️ agent-behavior, 📄 docs), welcome bot for first-time contributors

@@ -226,7 +226,39 @@ for (const e of entries) {
 }
 if (boldScores === 0) ok('No bold in scores');
 
-// --- Check 8: Stale report-number sentinels (GC) ---
+// --- Check 8: Queue roles prepared with empty drafts (regression guard) ---
+// Catches the failure mode where a shortcut script flipped status to 'prepared'
+// and wrote cv_pdf WITHOUT running queue-resolve.mjs --pre (all 40 roles had empty
+// drafts in the 2026-06-25 session). Uses cv_pdf as the signal: if PREPARE wrote a
+// CV path, it must also have run the resolver. free_text_fields is cloud-only
+// (Supabase) so we can't use it from the local shadow.
+const QUEUE_FILE = join(CAREER_OPS, 'data/apply-queue.json');
+const PREPARED_OR_LATER = new Set(['prepared', 'prefilled', 'filled', 'submitted', 'reviewed', 'closed']);
+if (existsSync(QUEUE_FILE)) {
+  try {
+    const queue = JSON.parse(readFileSync(QUEUE_FILE, 'utf-8'));
+    const roles = queue.roles || (Array.isArray(queue) ? queue : []);
+    let emptyDraftCount = 0;
+    for (const role of roles) {
+      if (!PREPARED_OR_LATER.has(role.status)) continue;
+      // Only flag roles where cv_pdf is set — PREPARE's CV step ran,
+      // meaning queue-resolve.mjs --pre should also have run.
+      if (!role.cv_pdf) continue;
+      const drafts = role.drafts;
+      const isEmpty = !drafts
+        || (Array.isArray(drafts) ? drafts.length === 0 : Object.keys(drafts).length === 0);
+      if (isEmpty) {
+        warn(`Queue: "${role.company || '?'} — ${role.title || role.role || '?'}" (${role.status}) has cv_pdf but empty drafts — queue-resolve.mjs --pre was not run`);
+        emptyDraftCount++;
+      }
+    }
+    if (emptyDraftCount === 0) ok('All prepared queue roles have populated drafts');
+  } catch (e) {
+    warn(`Could not check queue drafts: ${e.message}`);
+  }
+}
+
+// --- Check 10: Stale report-number sentinels (GC) ---
 // reserve-report-num.mjs drops NNN-RESERVED.md files in reports/ when a
 // number is claimed.  If the process crashed before writing the real report
 // and deleting the sentinel it will linger.  Sentinels older than 4 h are

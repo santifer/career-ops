@@ -10,8 +10,12 @@ Before starting the interactive apply flow, check whether a `data/apply-queue.js
 record exists for this role (match by URL or company+title):
 
 - **If a queue record exists:** load its `employment_type`, `visa_answer`, `drafts`,
-  `cv_pdf`, and `free_text_fields`. Use these instead of re-deriving them from scratch.
-  This ensures the visa answer selected during scoring is used consistently.
+  `cv_pdf`, and `free_text_fields`. The `drafts` object is the **primary source of
+  answers** in Step 6 — pre-resolved fields are used verbatim without invoking the LLM.
+  Only the fields with no draft go to Step 7 (LLM). Novel answers are then taught back
+  to the cache in Step 7b so future portals can reuse them. **This protocol applies to
+  every portal** — SEEK, JobAdder, Gem, Workday, PulseSoftware, Greenhouse, Lever,
+  Ashby, and any other — not only deterministic ATSes.
 - **If no queue record exists:** proceed normally, deriving answers from
   `config/profile.yml` and `modes/_profile.md`.
 
@@ -79,6 +83,15 @@ for the exact behavior.
    screenshot to `output/`, call `POST /api/role/:id/decision {decision:"submitted"}`
    to sync the tracker.
 
+**Multi-role sessions — tab management (CRITICAL):**
+- When filling multiple roles in one session, open each role in a **separate browser tab**.
+- Use `browser_tabs` with `action: "new"` and `url:` to open the next role. **NEVER use
+  `browser_navigate` with `newTab: true`** — that replaces the current tab (the generated
+  JS is `page.goto()`) and destroys the filled form.
+- Fill **all** roles first, leaving every tab open. Present a summary of open tabs when done.
+- The candidate reviews all filled forms together and submits manually at the end.
+- **Never close a tab** — closing is the candidate's job, not the agent's.
+
 **Note on passwords:** all auto-generated portal passwords are stored in
 `data/portal-credentials.json` (gitignored). If you need to look up a password for
 a portal the candidate already has an account on, read that file.
@@ -98,8 +111,9 @@ a portal the candidate already has an account on, read that file.
 3. SEARCH      → Match against existing reports in reports/
 4. LOAD        → Read full report + Section G (if it exists)
 5. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
-6. ANALYZE     → Identify ALL visible form questions
-7. GENERATE    → For each question, generate a personalized response
+6. ANALYZE     → Identify ALL visible form questions; classify as draft-resolved or novel
+7. GENERATE    → Novel fields only: generate a personalized response
+7b. TEACH      → Store novel answers via queue-resolve.mjs --teach (grows the cache)
 8. PRESENT     → Show formatted responses for copy-paste
 ```
 
@@ -155,7 +169,21 @@ Identify ALL visible questions:
 - Salary fields (range, expectation)
 - Upload fields (resume, cover letter PDF)
 
-Classify each question:
+**Drafts-first — applies to every portal (SEEK, JobAdder, Gem, Workday, GH/Lever/Ashby):**
+For each field, normalize the label (lowercase, strip asterisks and trailing punctuation —
+same `normLabel` used by `form-fill.mjs` and `field-rules.mjs`) and look it up in
+`role.drafts`. Classify as:
+
+- **draft-resolved** (`source: deterministic` or `source: cache`): use `draft.answer`
+  verbatim — do NOT re-derive with the LLM. Note provenance inline
+  (e.g. "✓ deterministic", "✓ cache (score: 0.91)").
+- **novel** (no draft key, or `source: model` that needs contextual refresh): collect
+  into a list — these are the only fields that go to Step 7.
+
+Upload / file fields are handled separately (attach `cv_pdf` / `cover_letter_paths` from
+the queue record); they do not go through the drafts lookup.
+
+Legacy classification (keep for back-compat when no queue record exists):
 - **Already answered in Section G** → adapt the existing response
 - **New question** → generate response from the report + cv.md
 
@@ -187,12 +215,13 @@ For each field, preserve the application form contract:
 
 Never invent answers for legal, demographic, work-authorization, visa/sponsorship, salary, disability, veteran, background-check, relocation, or self-identification fields. If the answer is not present in `config/profile.yml` or visible context, mark it as needing candidate confirmation and provide the safest question to ask the candidate.
 
-## Step 7 — Generate responses
+## Step 7 — Generate responses (novel fields only)
 
-For each question, generate the response following:
+For **novel fields only** — those with no pre-resolved draft from Step 6 — generate the
+response following:
 
 1. **Report context**: Use proof points from block B, STAR stories from block F
-2. **Previous Section G**: If a draft response exists, use it as a base and refine
+2. **Previous Section G**: If a `source: model` draft exists, use it as a base and refine
 3. **"I'm choosing you" tone**: Same auto-pipeline framework
 4. **Specificity**: Reference something specific from the JD visible on screen
 5. **career-ops proof point**: Include in "Additional info" if there is a field for it
@@ -220,6 +249,36 @@ Notes:
 - [Any observations about the role, changes, etc.]
 - [Personalization suggestions the candidate should review]
 ```
+
+## Step 7b — Teach the cache (after novel answers are generated)
+
+After generating all novel answers in Step 7, write them to a temp file and run:
+
+```
+node queue-resolve.mjs --teach <role-id> '@/tmp/answers-<company-slug>.json'
+```
+
+Format for each item:
+```json
+{ "label": "<exact question label>", "type": "textarea|text|select", "answer": "<answer>",
+  "reusable": true|false, "confidence": "high|medium|low" }
+```
+
+- **`reusable: true`** — employer-independent answers: work-rights text, availability
+  phrasing, salary format, behavioural/skills questions. These will be reused verbatim on
+  any future portal when cosine similarity ≥ 0.85 and entity-compatibility passes.
+- **`reusable: false`** — company-specific answers: why this company/role, culture fit,
+  motivational questions. Stored in `role.drafts` with `source: model` but not reused
+  elsewhere.
+
+This call writes the answers into `role.drafts` (provenance `model`) **and** upserts each
+question + its embedding into `data/answer-cache.json`. The cache is portal-agnostic — the
+next SEEK, JobAdder, Gem, Workday, or Greenhouse form that asks a paraphrase of the same
+question resolves it at Layer 2 (zero LLM cost) instead of Layer 3. **This is the
+mechanism that makes the embed-cache apply across every portal type.**
+
+Skip this step only if the role has no `id` in the queue or all fields were file-upload
+only (no free-text novel answers were generated).
 
 ## Step 8 — Post-apply (optional)
 
