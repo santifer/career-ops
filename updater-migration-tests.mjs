@@ -105,7 +105,7 @@ const twoPassManifestChecks = [
   },
   {
     name: 'apply first updates update-system.mjs from FETCH_HEAD',
-    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*'update-system\.mjs'\)/,
+    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*'update-system\.mjs',\s*'scaffolder\/bin\/skill-entrypoints\.mjs'\)/,
   },
   {
     name: 'apply re-execs through the current Node binary',

@@ -495,7 +495,7 @@ async function apply() {
 
     if (!isReexec) {
       try {
-        git('checkout', 'FETCH_HEAD', '--', 'update-system.mjs');
+        git('checkout', 'FETCH_HEAD', '--', 'update-system.mjs', 'scaffolder/bin/skill-entrypoints.mjs');
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',

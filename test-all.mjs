@@ -468,6 +468,7 @@ const systemFiles = [
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
+  '.qwen/skills/career-ops/SKILL.md',
   '.antigravitycli/skills/career-ops/SKILL.md',
   '.grok/skills/career-ops/SKILL.md',
 ];
@@ -1134,6 +1135,7 @@ const canonicalSkill = '.agents/skills/career-ops/SKILL.md';
 const symlinks = [
   '.claude/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
+  '.qwen/skills/career-ops/SKILL.md',
   '.antigravitycli/skills/career-ops/SKILL.md',
   '.grok/skills/career-ops/SKILL.md',
 ];
@@ -1322,7 +1324,7 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
   }
 }
 
-console.log('\n12b. Materialized skill index mode');
+console.log('\n12c. Materialized skill index mode');
 
 {
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skill-git-'));
@@ -2944,7 +2946,7 @@ if (!sqliteAvailable) {
 
 // ── 12b. PLAYWRIGHT MCP DETECTION WARNING (#522) ────────────────
 
-console.log('\n12b. Playwright MCP detection warning');
+console.log('\n12d. Playwright MCP detection warning');
 
 try {
   // No project MCP config → doctor surfaces a (non-fatal) warning instead of
