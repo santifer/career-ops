@@ -30,16 +30,33 @@ To configure OpenCode with a custom provider:
 3. Set the `provider` to your chosen endpoint (e.g., OpenRouter or a custom OpenAI-compatible endpoint).
 4. Configure the environment variables for custom endpoints if needed:
    ```bash
-   # Example: Routing OpenCode to OpenRouter
-   set OPENAI_API_BASE="https://openrouter.ai/api/v1"
-   set OPENAI_API_KEY="your_openrouter_api_key_here"
+   # For Git Bash / Linux / macOS:
+   export OPENAI_API_BASE="https://openrouter.ai/api/v1"
+   export OPENAI_API_KEY="your_openrouter_api_key_here"
+
+   # For Windows CMD:
+   set OPENAI_API_BASE=https://openrouter.ai/api/v1
+   set OPENAI_API_KEY=your_openrouter_api_key_here
+
+   # For Windows PowerShell:
+   $env:OPENAI_API_BASE="https://openrouter.ai/api/v1"
+   $env:OPENAI_API_KEY="your_openrouter_api_key_here"
    ```
 
 ### Qwen CLI
 Qwen CLI natively supports Qwen models but can be configured to point to any custom OpenAI-compatible API base URL:
 ```bash
-set QWEN_API_BASE="https://api.deepseek.com/v1"
-set QWEN_API_KEY="your_deepseek_api_key_here"
+# For Git Bash / Linux / macOS:
+export QWEN_API_BASE="https://api.deepseek.com/v1"
+export QWEN_API_KEY="your_deepseek_api_key_here"
+
+# For Windows CMD:
+set QWEN_API_BASE=https://api.deepseek.com/v1
+set QWEN_API_KEY=your_deepseek_api_key_here
+
+# For Windows PowerShell:
+$env:QWEN_API_BASE="https://api.deepseek.com/v1"
+$env:QWEN_API_KEY="your_deepseek_api_key_here"
 ```
 
 ---
@@ -79,8 +96,11 @@ Running 32B or 70B models locally requires substantial system resources:
 
 To prevent unnecessary API costs or hitting rate limits, implement the following practices:
 
-1. **Incremental Batch Processing**:
-   Instead of loading hundreds of job listings into `batch/batch-input.tsv` at once, prepare and evaluate them in smaller chunks of 5-10 jobs. This lets you inspect the output quality before committing to a larger run.
+1. **Use the Batch Limit Flag**:
+   Instead of manually splitting `batch/batch-input.tsv`, use the `--limit <N>` flag to process only a small capped number of offers (e.g. 5-10) in a single run. This lets you inspect the output quality before committing to a larger run:
+   ```bash
+   ./batch/batch-runner.sh --limit 5
+   ```
 2. **Use the Dry Run Flag**:
    Always run a dry run first to verify which offers will be processed:
    ```bash
