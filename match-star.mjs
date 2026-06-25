@@ -27,9 +27,13 @@ const jdPath     = jdFlag !== -1 ? args[jdFlag + 1] : null;
 const topFlag    = args.indexOf('--top');
 const topRaw     = topFlag !== -1 ? parseInt(args[topFlag + 1], 10) : NaN;
 const TOP_N      = Number.isInteger(topRaw) && topRaw > 0 ? topRaw : 1;
-// Only exclude flag values from positional args when the flags are actually present
-const question   = args
-  .filter(a => !a.startsWith('--') && a !== (jdFlag !== -1 ? args[jdFlag + 1] : null) && a !== (topFlag !== -1 ? args[topFlag + 1] : null))
+// Exclude flag operands by index position, not by value, to preserve repeated text in the question
+const excludeIdx = new Set([
+  ...(jdFlag  !== -1 ? [jdFlag + 1]  : []),
+  ...(topFlag !== -1 ? [topFlag + 1] : []),
+]);
+const question = args
+  .filter((a, i) => !a.startsWith('--') && !excludeIdx.has(i))
   .join(' ').trim();
 
 // ── Parser ───────────────────────────────────────────────────────────
@@ -159,7 +163,7 @@ function formatAts(story, question) {
   if (story.result)    parts.push(story.result);
   if (story.reflection) parts.push(story.reflection);
 
-  const wordArr = parts.filter(Boolean).join(' ').split(/\s+/);
+  const wordArr = parts.filter(Boolean).join(' ').split(/\s+/).filter(Boolean);
   // Enforce 500-word ceiling; prose below 250 words gets a warning
   const prose   = wordArr.slice(0, 500).join(' ');
   const words   = Math.min(wordArr.length, 500);
