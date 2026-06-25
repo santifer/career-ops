@@ -84,9 +84,13 @@ export function ensureSkillEntrypoints(root) {
     const entryPath = repoPath(root, entry.path);
 
     if (!existsSync(entryPath)) {
-      mkdirSync(dirname(entryPath), { recursive: true });
-      writeFileSync(entryPath, entry.pointer);
-      touched.push(entry.path);
+      try {
+        mkdirSync(dirname(entryPath), { recursive: true });
+        writeFileSync(entryPath, entry.pointer);
+        touched.push(entry.path);
+      } catch {
+        continue;
+      }
     }
 
     let stat = null;
