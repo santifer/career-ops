@@ -95,9 +95,13 @@ const SAFE_SLUG = /^[a-zA-Z0-9._-]+$/;
 function detectAts(url) {
   const path = url.pathname;
 
+  const GH_HOSTS  = new Set(['boards.greenhouse.io', 'greenhouse.io']);
+  const ASH_HOSTS = new Set(['jobs.ashbyhq.com', 'ashbyhq.com']);
+  const LEV_HOSTS = new Set(['jobs.lever.co', 'lever.co']);
+
   // Greenhouse: /company/jobs/123
   const gh = path.match(/^\/([^/]+)\/jobs\/(\d+)/);
-  if (gh && url.hostname.includes('greenhouse.io')) {
+  if (gh && GH_HOSTS.has(url.hostname)) {
     const [, company, jobId] = gh;
     if (!SAFE_SLUG.test(company)) return null;
     return { ats: 'greenhouse', companySlug: company, jobId };
@@ -105,7 +109,7 @@ function detectAts(url) {
 
   // Ashby: /company/uuid-or-slug
   const ash = path.match(/^\/([^/]+)\/([^/]+)/);
-  if (ash && url.hostname.includes('ashbyhq.com')) {
+  if (ash && ASH_HOSTS.has(url.hostname)) {
     const [, company, jobId] = ash;
     if (!SAFE_SLUG.test(company) || !SAFE_SLUG.test(jobId)) return null;
     return { ats: 'ashby', companySlug: company, jobId };
@@ -113,7 +117,7 @@ function detectAts(url) {
 
   // Lever: /company/posting-id (UUID or any non-slash segment)
   const lev = path.match(/^\/([^/]+)\/([^/]+)/);
-  if (lev && url.hostname.includes('lever.co')) {
+  if (lev && LEV_HOSTS.has(url.hostname)) {
     const [, company, jobId] = lev;
     if (!SAFE_SLUG.test(company) || !SAFE_SLUG.test(jobId)) return null;
     return { ats: 'lever', companySlug: company, jobId };
