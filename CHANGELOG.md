@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/neilshekhar/career-ops/compare/career-ops-v1.11.0...career-ops-v1.11.1) (2026-06-25)
+
+
+### Bug Fixes
+
+* **release:** skip npm publish without token ([0570e0d](https://github.com/neilshekhar/career-ops/commit/0570e0dbb680a8adc965e382088868ada2f0b601))
+
 ## [1.11.0](https://github.com/neilshekhar/career-ops/compare/career-ops-v1.10.0...career-ops-v1.11.0) (2026-06-24)
 
 
