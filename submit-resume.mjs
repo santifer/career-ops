@@ -16,8 +16,19 @@
  *   Lever       jobs.lever.co / lever.co
  */
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, statSync, existsSync } from 'fs';
 import { basename } from 'path';
+
+const FETCH_TIMEOUT_MS = 30_000;
+
+const ALLOWED_HOSTS = new Set([
+  'boards.greenhouse.io',
+  'greenhouse.io',
+  'jobs.ashbyhq.com',
+  'ashbyhq.com',
+  'jobs.lever.co',
+  'lever.co',
+]);
 
 // ── CLI args ────────────────────────────────────────────────────────
 
@@ -33,32 +44,103 @@ if (!applyUrl || !pdfPath) {
   process.exit(1);
 }
 
+// Validate PDF: must exist and be a regular file
 if (!existsSync(pdfPath)) {
   console.error(`Error: PDF not found at ${pdfPath}`);
+  process.exit(1);
+}
+try {
+  const stat = statSync(pdfPath);
+  if (!stat.isFile()) {
+    console.error(`Error: ${pdfPath} is not a file`);
+    process.exit(1);
+  }
+} catch (err) {
+  console.error(`Error: cannot read ${pdfPath}: ${err.message}`);
+  process.exit(1);
+}
+
+// ── URL validation ──────────────────────────────────────────────────
+
+/** @type {URL} */
+let parsedUrl;
+try {
+  parsedUrl = new URL(applyUrl);
+} catch {
+  console.error(`Error: invalid URL: ${applyUrl}`);
+  process.exit(1);
+}
+
+if (parsedUrl.protocol !== 'https:') {
+  console.error(`Error: URL must use https (got ${parsedUrl.protocol})`);
+  process.exit(1);
+}
+
+if (!ALLOWED_HOSTS.has(parsedUrl.hostname)) {
+  console.error(`Error: URL hostname "${parsedUrl.hostname}" is not a supported ATS host.`);
+  console.error(`Supported hosts: ${[...ALLOWED_HOSTS].join(', ')}`);
   process.exit(1);
 }
 
 // ── ATS detection ───────────────────────────────────────────────────
 
+// Safe slug: alphanumeric, hyphens, underscores, dots only
+const SAFE_SLUG = /^[a-zA-Z0-9._-]+$/;
+
 /**
  * Detect which ATS the apply URL belongs to.
- * @param {string} url
+ * @param {URL} url
  * @returns {{ ats: string, companySlug: string, jobId: string } | null}
  */
 function detectAts(url) {
-  // Greenhouse: boards.greenhouse.io/company/jobs/123 or greenhouse.io/company/jobs/123
-  const gh = url.match(/greenhouse\.io\/([^/]+)\/jobs\/(\d+)/);
-  if (gh) return { ats: 'greenhouse', companySlug: gh[1], jobId: gh[2] };
+  const path = url.pathname;
 
-  // Ashby: jobs.ashbyhq.com/company/uuid or ashbyhq.com/...
-  const ash = url.match(/ashbyhq\.com\/([^/]+)\/([a-f0-9-]{36})/i);
-  if (ash) return { ats: 'ashby', companySlug: ash[1], jobId: ash[2] };
+  // Greenhouse: /company/jobs/123
+  const gh = path.match(/^\/([^/]+)\/jobs\/(\d+)/);
+  if (gh && url.hostname.includes('greenhouse.io')) {
+    const [, company, jobId] = gh;
+    if (!SAFE_SLUG.test(company)) return null;
+    return { ats: 'greenhouse', companySlug: company, jobId };
+  }
 
-  // Lever: jobs.lever.co/company/uuid
-  const lev = url.match(/lever\.co\/([^/]+)\/([a-f0-9-]{36})/i);
-  if (lev) return { ats: 'lever', companySlug: lev[1], jobId: lev[2] };
+  // Ashby: /company/uuid-or-slug
+  const ash = path.match(/^\/([^/]+)\/([^/]+)/);
+  if (ash && url.hostname.includes('ashbyhq.com')) {
+    const [, company, jobId] = ash;
+    if (!SAFE_SLUG.test(company) || !SAFE_SLUG.test(jobId)) return null;
+    return { ats: 'ashby', companySlug: company, jobId };
+  }
+
+  // Lever: /company/posting-id (UUID or any non-slash segment)
+  const lev = path.match(/^\/([^/]+)\/([^/]+)/);
+  if (lev && url.hostname.includes('lever.co')) {
+    const [, company, jobId] = lev;
+    if (!SAFE_SLUG.test(company) || !SAFE_SLUG.test(jobId)) return null;
+    return { ats: 'lever', companySlug: company, jobId };
+  }
 
   return null;
+}
+
+// ── Fetch with timeout ──────────────────────────────────────────────
+
+/**
+ * fetch() with an AbortController timeout.
+ * @param {string} url
+ * @param {RequestInit} options
+ * @param {number} timeoutMs
+ */
+async function fetchWithTimeout(url, options, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`Request timed out after ${timeoutMs / 1000}s`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ── Upload handlers ─────────────────────────────────────────────────
@@ -95,13 +177,13 @@ function buildMultipart(fields, fileBuffer, fileField, fileName) {
 async function uploadGreenhouse(companySlug, jobId, pdfBuffer, fileName) {
   const url = `https://boards-api.greenhouse.io/v1/boards/${companySlug}/jobs/${jobId}/applications`;
   const { body, contentType } = buildMultipart(
-    { first_name: '', last_name: '', email: '' }, // placeholders — user fills on confirmation page
+    { first_name: '', last_name: '', email: '' },
     pdfBuffer,
     'resume',
     fileName
   );
 
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': contentType },
     body,
@@ -123,7 +205,7 @@ async function uploadAshby(companySlug, jobId, pdfBuffer, fileName) {
     fileName
   );
 
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': contentType },
     body,
@@ -145,7 +227,7 @@ async function uploadLever(companySlug, jobId, pdfBuffer, fileName) {
     fileName
   );
 
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': contentType },
     body,
@@ -156,7 +238,7 @@ async function uploadLever(companySlug, jobId, pdfBuffer, fileName) {
 
 // ── Main ─────────────────────────────────────────────────────────────
 
-const detected = detectAts(applyUrl);
+const detected = detectAts(parsedUrl);
 
 if (!detected) {
   console.error(`Error: URL not recognized as Greenhouse, Ashby, or Lever.\n  URL: ${applyUrl}`);
@@ -165,8 +247,15 @@ if (!detected) {
 }
 
 const { ats, companySlug, jobId } = detected;
-const fileName  = basename(pdfPath);
-const pdfBuffer = readFileSync(pdfPath);
+const fileName = basename(pdfPath);
+
+let pdfBuffer;
+try {
+  pdfBuffer = readFileSync(pdfPath);
+} catch (err) {
+  console.error(`Error: could not read PDF at ${pdfPath}: ${err.message}`);
+  process.exit(1);
+}
 
 console.log(`\nATS Resume Upload`);
 console.log('─'.repeat(40));
@@ -202,7 +291,7 @@ if (result.status >= 200 && result.status < 300) {
     if (parsed.id || parsed.applicationId || parsed.token) {
       console.log(`   Token: ${parsed.id || parsed.applicationId || parsed.token}`);
     }
-  } catch { /* non-JSON response, that's fine */ }
+  } catch { /* non-JSON response is fine */ }
 } else {
   console.error(`❌ Upload failed (HTTP ${result.status}).`);
   if (result.body) console.error(`   Response: ${result.body.slice(0, 300)}`);
