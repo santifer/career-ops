@@ -92,9 +92,14 @@ for the exact behavior.
 - The candidate reviews all filled forms together and submits manually at the end.
 - **Never close a tab** — closing is the candidate's job, not the agent's.
 
-**Note on passwords:** all auto-generated portal passwords are stored in
-`data/portal-credentials.json` (gitignored). If you need to look up a password for
-a portal the candidate already has an account on, read that file.
+**Note on passwords:** all auto-generated portal passwords are managed by
+`credentials-store.mjs` and stored in `data/portal-credentials.json`. This file is the
+one narrow credentials exception: you may read or update it only to create, retrieve,
+or use the password for the current application portal. Prefer the helper functions
+(`getCredentials`, `upsertCredentials`, `getOrCreateCredentials`) when possible. If you
+inspect the JSON directly, inspect only the target host entry and never print or paste
+the password into chat, reports, tracker rows, or `handover.md`. For OTP/CAPTCHA/email
+verification, ask the candidate to complete the step in the browser while you poll.
 
 ---
 
@@ -174,11 +179,11 @@ For each field, normalize the label (lowercase, strip asterisks and trailing pun
 same `normLabel` used by `form-fill.mjs` and `field-rules.mjs`) and look it up in
 `role.drafts`. Classify as:
 
-- **draft-resolved** (`source: deterministic` or `source: cache`): use `draft.answer`
-  verbatim — do NOT re-derive with the LLM. Note provenance inline
-  (e.g. "✓ deterministic", "✓ cache (score: 0.91)").
-- **novel** (no draft key, or `source: model` that needs contextual refresh): collect
-  into a list — these are the only fields that go to Step 7.
+- **draft-resolved** (`source: deterministic`, `source: cache`, or `source: model`):
+  use `draft.answer` verbatim — do NOT re-derive with the LLM. Note provenance inline
+  (e.g. "✓ deterministic", "✓ cache (score: 0.91)", "✓ model-reasoned").
+- **novel** (no draft key, or a draft whose label/options visibly no longer match the
+  live form): collect into a list — these are the only fields that go to Step 7.
 
 Upload / file fields are handled separately (attach `cv_pdf` / `cover_letter_paths` from
 the queue record); they do not go through the drafts lookup.
@@ -221,7 +226,7 @@ For **novel fields only** — those with no pre-resolved draft from Step 6 — g
 response following:
 
 1. **Report context**: Use proof points from block B, STAR stories from block F
-2. **Previous Section G**: If a `source: model` draft exists, use it as a base and refine
+2. **Previous Section G**: If no queue draft exists but Section G has a prior answer, use it as a base and refine
 3. **"I'm choosing you" tone**: Same auto-pipeline framework
 4. **Specificity**: Reference something specific from the JD visible on screen
 5. **career-ops proof point**: Include in "Additional info" if there is a field for it

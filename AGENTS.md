@@ -250,7 +250,9 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ## Secrets & Credentials -- CRITICAL
 
-**Never open, read, or inspect** `.env`, `.env.*`, credential files (e.g. `data/portal-credentials.json`), or any file whose name or path suggests it contains API keys, tokens, passwords, or secrets — not even to confirm a variable name exists. Do not request permission to read these files.
+**Never open, read, or inspect** `.env`, `.env.*`, API-key files, signing keys, service-role keys, token files, or any file whose name or path suggests it contains API keys, tokens, passwords, or secrets — not even to confirm a variable name exists. Do not request permission to read these files.
+
+**Narrow exception: `data/portal-credentials.json` is allowed ONLY for portal login/password handling in the application flow.** Agents may read or update this one file when the task is specifically to create, retrieve, or use a job-portal password for the current application portal. Prefer `credentials-store.mjs` helpers (`getCredentials`, `upsertCredentials`, `getOrCreateCredentials`) when possible. If direct inspection is needed, inspect only the target portal host entry; do not browse unrelated entries, do not print or paste passwords into chat, reports, tracker rows, or `handover.md`, and do not use this exception for any other secret file.
 
 If a task requires knowing whether a key is configured:
 
