@@ -73,26 +73,39 @@ export default {
   },
 };
 
-// Decode the handful of XML entities that appear in Personio job text.
-// &amp; is decoded LAST so it doesn't double-decode (e.g. "&amp;lt;").
+function fromCodePoint(cp) {
+  try {
+    return String.fromCodePoint(cp);
+  } catch {
+    return '';
+  }
+}
+
+// Decode the XML entities that appear in Personio job text: numeric (&#38; /
+// &#x27;) and the named five. Numeric forms are decoded first; &amp; is decoded
+// LAST so a literal "&amp;lt;" yields "&lt;" rather than over-decoding to "<".
 function decodeXmlEntities(s) {
   return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => fromCodePoint(parseInt(d, 10)))
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#0*39;|&apos;/g, "'")
+    .replace(/&apos;/g, "'")
     .replace(/&amp;/g, '&');
 }
 
-// Extract the text of the first <tag>…</tag> in a block, unwrapping a CDATA
-// section and decoding entities. Returns '' when the tag is absent.
-function tagText(block, tag) {
-  const m = block.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`));
-  if (!m) return '';
-  let inner = m[1];
+// Resolve a tag's inner text: unwrap a CDATA section, else decode entities.
+function extractText(inner) {
   const cdata = inner.match(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/);
   if (cdata) return cdata[1].trim();
   return decodeXmlEntities(inner).trim();
+}
+
+// Extract the text of the first <tag>…</tag> in a block. Returns '' when absent.
+function tagText(block, tag) {
+  const m = block.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`));
+  return m ? extractText(m[1]) : '';
 }
 
 /**
@@ -121,17 +134,22 @@ export function parsePersonioXml(xml, companyName, host) {
   const jobs = [];
   const blocks = xml.match(/<position\b[^>]*>[\s\S]*?<\/position>/g) || [];
   for (const block of blocks) {
-    const title = tagText(block, 'name');
+    // Strip the <jobDescriptions> subtree before reading scalar fields: it holds
+    // per-section <name>/<value> pairs whose nested <name> would otherwise race
+    // the position's own <name> (and the same for any other scalar tag).
+    const scalar = block.replace(/<jobDescriptions\b[^>]*>[\s\S]*?<\/jobDescriptions>/gi, '');
+
+    const title = tagText(scalar, 'name');
     if (!title) continue;
 
-    const id = tagText(block, 'id');
+    const id = tagText(scalar, 'id');
     if (!/^\d+$/.test(id)) continue; // need a clean numeric id to build the url
 
     // Collect every <office> (primary + additionalOffices), de-dupe, join.
     const offices = [];
     const seen = new Set();
-    for (const om of block.matchAll(/<office\b[^>]*>([\s\S]*?)<\/office>/g)) {
-      const name = decodeXmlEntities(om[1]).trim();
+    for (const om of scalar.matchAll(/<office\b[^>]*>([\s\S]*?)<\/office>/g)) {
+      const name = extractText(om[1]);
       if (name && !seen.has(name)) {
         seen.add(name);
         offices.push(name);
@@ -143,7 +161,7 @@ export function parsePersonioXml(xml, companyName, host) {
       url: `https://${host}/job/${id}`,
       location: offices.join(', '),
       company: companyName,
-      postedAt: toEpochMs(tagText(block, 'createdAt')),
+      postedAt: toEpochMs(tagText(scalar, 'createdAt')),
     });
   }
   return jobs;

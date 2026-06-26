@@ -4806,6 +4806,30 @@ try {
     fail('empty / non-string feed should yield empty result');
   }
 
+  // Hardening: <jobDescriptions> carries per-section <name>/<value> pairs whose
+  // nested <name> must NOT be mistaken for the position's own title; numeric
+  // entities decode; an office wrapped in CDATA unwraps.
+  const tricky = `<workzag-jobs><position>
+    <id>42</id>
+    <office><![CDATA[München]]></office>
+    <name>Real Title &#38; More</name>
+    <jobDescriptions>
+      <jobDescription><name>Your tasks</name><value>do things</value></jobDescription>
+    </jobDescriptions>
+    <createdAt>2025-03-04T00:00:00+00:00</createdAt>
+  </position></workzag-jobs>`;
+  const tj = parsePersonioXml(tricky, 'Acme', HOST);
+  if (tj.length === 1 && tj[0].title === 'Real Title & More') {
+    pass('parsePersonioXml ignores nested <jobDescriptions><name> + decodes numeric entity');
+  } else {
+    fail(`tricky title = ${JSON.stringify(tj[0]?.title)} (len ${tj.length})`);
+  }
+  if (tj[0]?.location === 'München') {
+    pass('parsePersonioXml unwraps a CDATA <office>');
+  } else {
+    fail(`tricky location = ${JSON.stringify(tj[0]?.location)}`);
+  }
+
 } catch (e) {
   fail(`personio provider tests crashed: ${e.message}`);
 }
