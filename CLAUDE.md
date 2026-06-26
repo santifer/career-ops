@@ -115,14 +115,6 @@ If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silent
 
 **If, after that, `onboardingNeeded` is still true (any of `cv.md` / `config/profile.yml` / `portals.yml` is missing), enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
 
-#### Step 0: Free Tier Check
-
-If the user mentions cost, pricing, budget, or asks about free alternatives during onboarding, proactively surface the free path:
-
-> "career-ops works fully on Antigravity CLI's free tier — no API key or paid subscription needed. See [FREE_TIER.md](docs/FREE_TIER.md) for setup (`agy auth login`, daily limits, and batch tips)."
-
-If the user is already on a paid plan (Claude Max, Google AI, etc.) or does not mention cost, skip this step silently.
-
 #### Step 1: CV (required)
 If `cv.md` is missing, ask:
 > "I don't have your CV yet. You can either:
