@@ -4804,6 +4804,22 @@ try {
   if (noDup[0]?.location === 'Remote, EMEA') pass('parseComeetResponse does not double-append Remote');
   else fail(`expected "Remote, EMEA", got ${JSON.stringify(noDup[0]?.location)}`);
 
+  // malformed members (null / non-object / whitespace-only name) must neither
+  // throw nor slip through: a row needs a non-empty trimmed title AND a url.
+  const dirty = [
+    null,
+    'not an object',
+    42,
+    { name: '   ', url_active_page: 'https://www.comeet.com/jobs/x/blank' }, // blank title → dropped
+    { name: '  Padded Role  ', url_active_page: 'https://www.comeet.com/jobs/x/p', location: {} }, // trimmed, kept
+  ];
+  const cleaned = parseComeetResponse(dirty, 'X');
+  if (cleaned.length === 1 && cleaned[0].title === 'Padded Role') {
+    pass('parseComeetResponse skips null/non-object/blank-title rows and trims the title');
+  } else {
+    fail(`dirty parse = ${JSON.stringify(cleaned)} (expected 1 row "Padded Role")`);
+  }
+
 } catch (e) {
   fail(`comeet provider tests crashed: ${e.message}`);
 }

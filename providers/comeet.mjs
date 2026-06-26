@@ -31,26 +31,26 @@ function assertComeetUrl(url) {
   try {
     parsed = new URL(url);
   } catch {
-    throw new Error(`comeet: invalid URL: ${url}`);
+    throw new Error(`comeet: invalid URL: ${redactToken(url)}`);
   }
-  if (parsed.protocol !== 'https:') throw new Error(`comeet: URL must use HTTPS: ${url}`);
+  if (parsed.protocol !== 'https:') throw new Error(`comeet: URL must use HTTPS: ${redactToken(url)}`);
   if (parsed.hostname !== COMEET_API_HOST)
     throw new Error(`comeet: untrusted hostname "${parsed.hostname}" — must be ${COMEET_API_HOST}`);
   if (!parsed.pathname.startsWith('/careers-api/'))
-    throw new Error(`comeet: URL path must be the careers-api endpoint: ${url}`);
+    throw new Error(`comeet: URL path must be the careers-api endpoint: ${redactToken(url)}`);
   return url;
 }
 
-// Redact the per-tenant ?token= so the (informational, possibly-logged)
-// DetectHit url never carries the secret. Best-effort: returns the input
-// unchanged if it can't be parsed.
+// Redact the per-tenant ?token= so neither the (informational, possibly-logged)
+// DetectHit url nor a thrown validation error carries the secret. Best-effort:
+// falls back to a regex strip when the value can't be parsed as a URL.
 function redactToken(url) {
   try {
     const parsed = new URL(url);
     if (parsed.searchParams.has('token')) parsed.searchParams.set('token', 'REDACTED');
     return parsed.href;
   } catch {
-    return url;
+    return typeof url === 'string' ? url.replace(/([?&]token=)[^&#]*/gi, '$1REDACTED') : url;
   }
 }
 
@@ -115,7 +115,9 @@ export default {
 export function parseComeetResponse(json, companyName) {
   const positions = Array.isArray(json) ? json : [];
   return positions
-    .map(j => {
+    .map(row => {
+      // Coerce each row to a safe object so null / non-object members can't throw.
+      const j = (row && typeof row === 'object') ? row : {};
       // Resolve a display-only https URL; drop the position if none is usable.
       let url = '';
       const rawUrl = j.url_active_page || j.url_comeet_hosted_page || '';
@@ -137,12 +139,12 @@ export function parseComeetResponse(json, companyName) {
         : base;
 
       return {
-        title: j.name || '',
+        title: (typeof j.name === 'string' ? j.name.trim() : ''),
         url,
         location,
         company: companyName,
         postedAt: toEpochMs(j.time_updated),
       };
     })
-    .filter(job => job.url);
+    .filter(job => job.title && job.url);
 }
