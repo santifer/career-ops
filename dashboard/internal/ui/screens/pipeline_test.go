@@ -426,3 +426,158 @@ func TestSearchTypingDoesNotLoadReports(t *testing.T) {
 		}
 	}
 }
+
+func previewModelWith(t *testing.T, app model.CareerApplication) PipelineModel {
+	t.Helper()
+
+	pm := NewPipelineModel(
+		theme.NewTheme("catppuccin-mocha"),
+		[]model.CareerApplication{app},
+		model.PipelineMetrics{Total: 1},
+		"..",
+		120,
+		40,
+	)
+	pm.applyFilterAndSort()
+	pm.cursor = 0
+	return pm
+}
+
+func TestPreviewKeepsDiscardReasonWhenTlDrIsCached(t *testing.T) {
+	app := model.CareerApplication{
+		Company:    "Acme",
+		Role:       "Backend Engineer",
+		Status:     "Descartado 2026-03-12",
+		Notes:      "took too long to respond",
+		ReportPath: "reports/001-acme.md",
+	}
+	pm := previewModelWith(t, app)
+	pm.reportCache[app.ReportPath] = reportSummary{tldr: "great team, fast pace"}
+
+	preview := pm.renderPreview()
+
+	if !strings.Contains(preview, "great team, fast pace") {
+		t.Fatalf("expected preview to keep the cached TL;DR, got %q", preview)
+	}
+	// Regression for #787: before the Outcome line, a cached TL;DR replaced the
+	// notes entirely and the discard reason disappeared from the preview.
+	if !strings.Contains(preview, "took too long to respond") {
+		t.Fatalf("expected preview to keep the discard reason alongside the TL;DR, got %q", preview)
+	}
+	if !strings.Contains(preview, "Descartado 2026-03-12") {
+		t.Fatalf("expected preview to show the closing status, got %q", preview)
+	}
+}
+
+func TestPreviewOutcomeShownWithoutReportSummary(t *testing.T) {
+	pm := previewModelWith(t, model.CareerApplication{
+		Company: "Beta",
+		Role:    "Platform Engineer",
+		Status:  "SKIP",
+		Notes:   "geo blocker",
+	})
+
+	preview := pm.renderPreview()
+
+	if !strings.Contains(preview, "Outcome:") || !strings.Contains(preview, "geo blocker") {
+		t.Fatalf("expected outcome line with notes for skipped app, got %q", preview)
+	}
+	if strings.Count(preview, "geo blocker") != 1 {
+		t.Fatalf("expected notes to appear exactly once, got %q", preview)
+	}
+}
+
+func TestPreviewOutcomeOmittedForActiveApps(t *testing.T) {
+	app := model.CareerApplication{
+		Company:    "Gamma",
+		Role:       "AI Engineer",
+		Status:     "Applied 2026-04-01",
+		Notes:      "warm intro via referral",
+		ReportPath: "reports/003-gamma.md",
+	}
+	pm := previewModelWith(t, app)
+	pm.reportCache[app.ReportPath] = reportSummary{tldr: "strong fit"}
+
+	preview := pm.renderPreview()
+
+	if strings.Contains(preview, "Outcome:") {
+		t.Fatalf("expected no outcome line for an active app, got %q", preview)
+	}
+}
+
+func TestPreviewOutcomeForStatusWithoutNotes(t *testing.T) {
+	pm := previewModelWith(t, model.CareerApplication{
+		Company: "Delta",
+		Role:    "SRE",
+		Status:  "**Rejected** 2026-05-02",
+	})
+
+	preview := pm.renderPreview()
+
+	if !strings.Contains(preview, "Rejected 2026-05-02") {
+		t.Fatalf("expected outcome to show the bare closing status, got %q", preview)
+	}
+	if strings.Contains(preview, "Loading preview...") {
+		t.Fatalf("expected outcome line to replace the loading placeholder, got %q", preview)
+	}
+}
+
+func TestWithReloadedDataPreservesCursorWhenAppRemoved(t *testing.T) {
+	initialApps := []model.CareerApplication{
+		{
+			Company:    "Acme",
+			Role:       "Backend Engineer",
+			Status:     "Applied",
+			Score:      4.2,
+			ReportPath: "reports/001-acme.md",
+		},
+		{
+			Company:    "Beta",
+			Role:       "Platform Engineer",
+			Status:     "Applied",
+			Score:      4.6,
+			ReportPath: "reports/002-beta.md",
+		},
+		{
+			Company:    "Gamma",
+			Role:       "AI Engineer",
+			Status:     "Applied",
+			Score:      4.8,
+			ReportPath: "reports/003-gamma.md",
+		},
+	}
+
+	pm := NewPipelineModel(
+		theme.NewTheme("catppuccin-mocha"),
+		initialApps,
+		model.PipelineMetrics{Total: len(initialApps)},
+		"..",
+		120,
+		40,
+	)
+	pm.activeTab = tabIndexForFilter(t, filterApplied)
+	pm.applyFilterAndSort()
+	pm.cursor = 1
+
+	refreshedApps := []model.CareerApplication{
+		initialApps[0],
+		{
+			Company:    "Beta",
+			Role:       "Platform Engineer",
+			Status:     "Rejected", // Changed!
+			Score:      4.6,
+			ReportPath: "reports/002-beta.md",
+		},
+		initialApps[2],
+	}
+
+	reloaded := pm.WithReloadedData(refreshedApps, model.PipelineMetrics{Total: len(refreshedApps)})
+
+	if got := len(reloaded.filtered); got != 2 {
+		t.Fatalf("expected 2 filtered apps after refresh, got %d", got)
+	}
+	if reloaded.cursor < 0 || reloaded.cursor >= len(reloaded.filtered) {
+		t.Fatalf("expected cursor to be within [0, %d], got %d", len(reloaded.filtered)-1, reloaded.cursor)
+	}
+}
+

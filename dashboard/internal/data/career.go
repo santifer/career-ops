@@ -16,15 +16,35 @@ import (
 var (
 	reReportLink     = regexp.MustCompile(`\[(\d+)\]\(([^)]+)\)`)
 	reScoreValue     = regexp.MustCompile(`(\d+\.?\d*)/5`)
-	reArchetype      = regexp.MustCompile(`(?i)\*\*Arquetipo(?:\s+detectado)?\*\*\s*\|\s*(.+)`)
+	reArchetype      = regexp.MustCompile(`(?i)\*\*(?:Arquetipo|Archetype)(?:\s+(?:detectado|detected))?\*\*\s*\|\s*(.+)`)
 	reTlDr           = regexp.MustCompile(`(?i)\*\*TL;DR\*\*\s*\|\s*(.+)`)
 	reTlDrColon      = regexp.MustCompile(`(?i)\*\*TL;DR:\*\*\s*(.+)`)
 	reRemote         = regexp.MustCompile(`(?i)\*\*Remote\*\*\s*\|\s*(.+)`)
 	reComp           = regexp.MustCompile(`(?i)\*\*Comp\*\*\s*\|\s*(.+)`)
-	reArchetypeColon = regexp.MustCompile(`(?i)\*\*Arquetipo:\*\*\s*(.+)`)
+	reArchetypeColon = regexp.MustCompile(`(?i)\*\*(?:Arquetipo|Archetype):\*\*\s*(.+)`)
+	reArchetypeYAML  = regexp.MustCompile(`(?m)^archetype:\s*"?([^"\n]+)"?\s*$`)
 	reReportURL      = regexp.MustCompile(`(?m)^\*\*URL:\*\*\s*(https?://\S+)`)
 	reBatchID        = regexp.MustCompile(`(?m)^\*\*Batch ID:\*\*\s*(\d+)`)
 )
+
+// resolveReportPath converts a report link from the tracker into a path
+// relative to careerOpsPath. Links are normally relative to the tracker
+// file's own directory (see merge-tracker.mjs link normalization, #760);
+// legacy trackers may still carry root-relative links, so fall back to the
+// raw link when the tracker-relative resolution does not exist on disk.
+func resolveReportPath(careerOpsPath, trackerPath, link string) string {
+	resolved := filepath.Join(filepath.Dir(trackerPath), link)
+	if _, err := os.Stat(resolved); err != nil {
+		legacy := filepath.Join(careerOpsPath, link)
+		if _, err2 := os.Stat(legacy); err2 == nil {
+			resolved = legacy
+		}
+	}
+	if rel, err := filepath.Rel(careerOpsPath, resolved); err == nil {
+		return rel
+	}
+	return link
+}
 
 // ParseApplications reads applications.md and returns parsed applications.
 // It tries both {path}/applications.md and {path}/data/applications.md for compatibility.
@@ -96,16 +116,24 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 			app.Score, _ = strconv.ParseFloat(sm[1], 64)
 		}
 
-		// Parse report link
+		// Parse report link. Tracker links are written relative to the
+		// tracker file itself (e.g. ../reports/... when the tracker lives in
+		// data/), so resolve against the tracker's directory and normalize
+		// back to a careerOpsPath-relative path, which is what every
+		// consumer joins against. Legacy root-relative links are kept as a
+		// fallback when the resolved file does not exist.
 		if rm := reReportLink.FindStringSubmatch(fields[7]); rm != nil {
 			app.ReportNumber = rm[1]
-			app.ReportPath = rm[2]
+			app.ReportPath = resolveReportPath(careerOpsPath, filePath, rm[2])
 		}
 
 		// Notes (field 8 if exists)
 		if len(fields) > 8 {
 			app.Notes = fields[8]
 		}
+
+		// Lift location / work mode / pay / last-contact out of the notes free-text
+		deriveNoteFields(&app)
 
 		apps = append(apps, app)
 	}
@@ -516,6 +544,8 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 		archetype = cleanTableCell(m[1])
 	} else if m := reArchetypeColon.FindStringSubmatch(text); m != nil {
 		archetype = cleanTableCell(m[1])
+	} else if m := reArchetypeYAML.FindStringSubmatch(text); m != nil {
+		archetype = strings.TrimSpace(m[1])
 	}
 
 	// Try table-format TL;DR first (most reports), then colon format
@@ -576,10 +606,72 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
-// replaceStatusInLine replaces the old status with new status in a table line.
+// replaceStatusInLine rewrites only the Status cell of a tracker row, leaving
+// every other cell untouched. The previous implementation used
+// strings.Replace(line, oldStatus, …, 1), which replaces the first occurrence of
+// the status text anywhere in the row — so a status word appearing as a
+// substring of an earlier cell (e.g. Company "Applied Materials") was rewritten
+// instead of the Status cell, corrupting that cell while the status appeared to
+// stay unchanged (#1180). Matching is whole-cell (never a substring) and, as the
+// old comment claimed but the code did not, case-insensitive.
 func replaceStatusInLine(line, oldStatus, newStatus string) string {
-	// Case-insensitive replacement of the status field
-	return strings.Replace(line, oldStatus, newStatus, 1)
+	want := strings.TrimSpace(oldStatus)
+
+	// Mixed "| " + tab-separated format (mirrors ParseApplications). The Status
+	// field is index 5 of the tab-split body.
+	if strings.Contains(line, "\t") {
+		prefix, body, found := strings.Cut(line, "|")
+		if !found {
+			return line
+		}
+		cells := strings.Split(body, "\t")
+		if idx := statusCellIndex(cells, 5, want); idx >= 0 {
+			cells[idx] = spliceCellValue(cells[idx], newStatus)
+			return prefix + "|" + strings.Join(cells, "\t")
+		}
+		return line
+	}
+
+	// Pure pipe format. strings.Split keeps the segments between pipes; content
+	// cell N is segment N+1 (segment 0 is the empty text before the leading
+	// pipe), so the canonical Status column (ParseApplications field 5) is
+	// segment 6.
+	segments := strings.Split(line, "|")
+	if idx := statusCellIndex(segments, 6, want); idx >= 0 {
+		segments[idx] = spliceCellValue(segments[idx], newStatus)
+		return strings.Join(segments, "|")
+	}
+	return line
+}
+
+// statusCellIndex returns the index of the Status cell. It prefers the canonical
+// column (canonicalIdx, matching ParseApplications) and verifies it by value; if
+// that doesn't match — e.g. a custom tracker layout — it falls back to the first
+// cell that equals want exactly. Matching is whole-cell and case-insensitive,
+// never a substring, so a status word inside an earlier cell is never hit.
+// Returns -1 when nothing matches, so the caller leaves the row untouched rather
+// than corrupt a guess.
+func statusCellIndex(cells []string, canonicalIdx int, want string) int {
+	if canonicalIdx < len(cells) && strings.EqualFold(strings.TrimSpace(cells[canonicalIdx]), want) {
+		return canonicalIdx
+	}
+	for i, c := range cells {
+		if strings.EqualFold(strings.TrimSpace(c), want) {
+			return i
+		}
+	}
+	return -1
+}
+
+// spliceCellValue swaps a cell's inner value while preserving its surrounding
+// whitespace, so "| Applied |" becomes "| Interview |" rather than "|Interview|".
+func spliceCellValue(cell, newVal string) string {
+	trimmed := strings.TrimSpace(cell)
+	if trimmed == "" {
+		return cell
+	}
+	start := strings.Index(cell, trimmed)
+	return cell[:start] + newVal + cell[start+len(trimmed):]
 }
 
 // cleanTableCell removes trailing pipes and whitespace from a table cell value.
