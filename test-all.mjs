@@ -5051,11 +5051,16 @@ try {
       <link>/remote-jobs/bad-link</link>
       <region>Europe Only</region>
     </item>
+    <item>
+      <title>Off Host Inc: Dropped Role</title>
+      <link>https://example.com/remote-jobs/off-host</link>
+      <region>Internal</region>
+    </item>
   </channel>
 </rss>`;
   const jobs = parseWwrFeed(sample, 'WWR Board');
 
-  if (jobs.length === 2) pass('parseWwrFeed keeps 2 items (drops missing/non-absolute links)');
+  if (jobs.length === 2) pass('parseWwrFeed keeps 2 items (drops missing/relative/off-host links)');
   else fail(`parseWwrFeed returned ${jobs.length} jobs (expected 2)`);
 
   if (jobs[0]?.company === 'Acme & Co' && jobs[0]?.title === 'Staff AI Engineer') {

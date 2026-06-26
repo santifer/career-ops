@@ -92,7 +92,14 @@ function tagText(block, tag) {
 function cleanUrl(value) {
   if (!value) return '';
   const trimmed = value.trim();
-  return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    const trusted = host === TRUSTED_HOST || host.endsWith(`.${TRUSTED_HOST}`);
+    return parsed.protocol === 'https:' && trusted ? parsed.href : '';
+  } catch {
+    return '';
+  }
 }
 
 function splitTitle(rawTitle, defaultCompany) {
