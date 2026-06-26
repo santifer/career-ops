@@ -1,405 +1,745 @@
-# Career-Ops
+# Career-Ops CNX
 
-[English](README.md) | [Español](README.es.md) | [Français](README.fr.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Dansk](README.da.md) | [العربية](README.ar.md)
+**CNX-hardened Career-Ops for human-in-the-loop job search operations.**
 
-<p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops Multi-Agent Job Search System" width="800"></a>
-</p>
+`career-ops-cnx` is a governance-focused fork of [`santifer/career-ops`](https://github.com/santifer/career-ops).
+The original project turns AI coding CLIs into a job-search command center. This fork keeps that practical foundation and adds a stricter operating boundary:
 
-<p align="center">
-  <em>I spent months applying to jobs the hard way. So I engineered the system I wish I had.</em><br>
-  Companies use AI to filter candidates. <strong>I just gave candidates AI to <em>choose</em> companies.</strong><br>
-  <em>Now it's open source.</em>
-</p>
+> AI may assist, analyze, draft, score, filter, and organize.
+> AI must not silently authorize actions, invent career facts, submit applications, mutate external systems, or convert uncertainty into user action.
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-</p>
-
-<p align="center">
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="Career-Ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
-</p>
-
-<p align="center"><sub>FEATURED IN</sub></p>
-
-<p align="center">
-  <a href="https://wired.com.gr/article/to-ai-ergaleio-pou-fernei-epanastasi-ston-tropo-pou-psachnoume-douleia/" rel="noopener noreferrer nofollow"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/press/wired-dark.svg"><img src="docs/press/wired.svg" alt="WIRED" height="32"></picture></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.businessinsider.com/how-i-built-tool-filter-job-listings-landed-head-ai-2026-4" rel="noopener noreferrer nofollow"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/press/business-insider-dark.svg"><img src="docs/press/business-insider.svg" alt="Business Insider" height="32"></picture></a>
-</p>
+This fork is for job seekers who want the leverage of AI-assisted career operations without turning their job search into an uncontrolled automation pipeline.
 
 ---
 
-<p align="center">
-  <img src="docs/demo.gif" alt="Career-Ops Demo" width="800">
-</p>
+## Status
 
-<p align="center"><strong>740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed</strong></p>
+```text
+Project: career-ops-cnx
+Fork origin: santifer/career-ops
+Current focus: CNX/SCL hardening
+Default posture: human-in-the-loop
+Implementation status: early fork hardening
+Authority posture: no silent action authorization
+```
 
-<p align="center">
-  <a href="https://warpchart.dev/hq">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://warpchart.dev/api/chart?theme=dark&v=3">
-      <img alt="Live star telemetry of santifer/career-ops" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
-    </picture>
-  </a>
-</p>
+This fork is currently in a hardening phase. Some inherited upstream files, modes, translations, and workflows may still reflect the original project until they are reviewed and updated.
 
-<p align="center">
-  <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Join_the_community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
-</p>
+Do not treat this fork as independently audited or fully CNX-compliant until the PMT/RIM review, policy gates, fallback paths, and audit replay checks are complete.
 
-<p align="center">
-  <a href="https://github.com/santifer/career-ops/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2Fcareer-ops?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
-</p>
+---
 
-<p align="center">
-  <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Built_with-Claude_Code-000?style=for-the-badge&logo=anthropic&logoColor=white" alt="Built with Claude Code"></a>
-</p>
+## Attribution
 
-<p align="center">
-  <sub>Also runs on any agent-skill-standard CLI</sub><br>
-  <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
-  <img src="https://img.shields.io/badge/OpenCode-111827?style=flat&logo=terminal&logoColor=white" alt="OpenCode">
-  <img src="https://img.shields.io/badge/Antigravity_CLI-4285F4?style=flat&logo=google&logoColor=white" alt="Antigravity CLI">
-  <img src="https://img.shields.io/badge/Codex-412991?style=flat&logo=openai&logoColor=white" alt="Codex">
-  <img src="https://img.shields.io/badge/Qwen-615CED?style=flat" alt="Qwen">
-  <img src="https://img.shields.io/badge/GitHub_Copilot-000?style=flat&logo=githubcopilot&logoColor=white" alt="GitHub Copilot">
-  <img src="https://img.shields.io/badge/Grok_Build_CLI-000?style=flat&logo=x&logoColor=white" alt="Grok Build CLI">
-  <br>
-  <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
-  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white" alt="Playwright">
-  <img src="https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white" alt="Bubble Tea">
-  <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT">
-  <a href="TRADEMARK.md"><img src="https://img.shields.io/badge/Trademark-Policy-blue.svg" alt="Trademark Policy"></a>
-</p>
+This repository is a fork of the original **Career-Ops** project by Santiago Fernández de Valderrama:
 
-## What Is This
+* Original repository: [`santifer/career-ops`](https://github.com/santifer/career-ops)
+* Original project website: [`career-ops.org`](https://career-ops.org)
+* Original license: MIT, subject to the upstream license and trademark policy
 
-Career-Ops ([career-ops.org](https://career-ops.org), also known as **careerops**) turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+This fork is maintained separately by Ivan Silva / Carlonoscopen, LLC for CNX/SCL hardening, governance review, local-first privacy, and authority-separation research.
 
-- **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
-- **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
-- **Scans portals** automatically (Greenhouse, Ashby, Lever, company pages)
-- **Processes in batch** -- evaluate 10+ offers in parallel with sub-agents
-- **Tracks everything** in a single source of truth with integrity checks
+This fork is not presented as an official upstream release unless explicitly accepted upstream.
 
-> **Important: This is NOT a spray-and-pray tool.** Career-ops is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
+---
 
-Career-ops is agentic: whichever AI coding CLI you choose navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
+## What Is Career-Ops CNX?
 
-> **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
+Career-Ops CNX is a candidate-side job-search operations system.
 
-Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
+It helps a job seeker:
 
-## Features
+* evaluate job descriptions,
+* compare roles against a CV and profile,
+* generate tailored CV drafts,
+* generate cover letter drafts,
+* prepare interview stories,
+* scan job portals,
+* track applications,
+* identify stale, suspicious, or low-fit postings,
+* preserve a structured job-search pipeline.
 
-| Feature                  | Description                                                                                                                              |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Auto-Pipeline**        | Paste a URL, get a full evaluation + PDF + tracker entry                                                                                 |
-| **6-Block Evaluation**   | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R) -- plus a Block G posting-legitimacy check that flags scams and ghost jobs |
-| **Interview Story Bank** | Accumulates STAR+Reflection stories across evaluations -- 5-10 master stories that answer any behavioral question                        |
-| **Negotiation Scripts**  | Salary negotiation frameworks, geographic discount pushback, competing offer leverage                                                    |
-| **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
-| **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via the same HTML + Playwright pipeline as CVs. Auto-drafts on every evaluation; complete and generate on demand via `/career-ops cover` |
-| **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Batch Processing**     | Parallel evaluation with headless CLI workers (`claude -p` / `opencode run`)                                                             |
-| **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
-| **Human-in-the-Loop**    | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call               |
-| **Pipeline Integrity**   | Automated merge, dedup, status normalization, health checks                                                                              |
+The CNX fork adds a stronger safety frame:
+
+* **No auto-submit by default**
+* **No invented experience**
+* **No silent cloud calls**
+* **No silent career-impacting decisions**
+* **No mutation without policy**
+* **No action without fallback**
+* **No confidence without evidence framing**
+* **No job-search automation that bypasses the user**
+
+---
+
+## Why This Matters
+
+Companies increasingly use ATS filters, automated ranking, AI-assisted screening, and structured hiring workflows.
+
+Job seekers often still operate with scattered spreadsheets, manual rewriting, fragile memory, and emotional fatigue.
+
+Career-Ops CNX aims to give job seekers a structured operating layer while keeping the human in control.
+
+The goal is not to spam employers.
+
+The goal is to help a candidate answer:
+
+```text
+Is this role worth my time?
+Does my actual background support this application?
+What evidence do I have?
+What should I tailor?
+What should I avoid claiming?
+What is stale, fake, low-quality, or risky?
+What action, if any, should I take next?
+```
+
+---
+
+## CNX Operating Principle
+
+```text
+Passing an AI evaluation is not action authorization.
+A polished career artifact is not proof.
+A score is not truth.
+A recommendation is not permission.
+The user remains the authority boundary.
+```
+
+Career-Ops CNX separates:
+
+```text
+claim
+evidence
+source
+recommendation
+policy
+action
+audit
+```
+
+The system may help produce artifacts, but the user must review and approve anything that affects external systems, employers, applications, accounts, or personal representation.
+
+---
+
+## Core Safety Rules
+
+Career-Ops CNX follows these non-negotiable rules.
+
+### 1. No automatic application submission
+
+The system must not click final submit, confirm, accept, purchase, authorize, or equivalent external-action buttons.
+
+Form-filling assistance must stop before irreversible submission.
+
+### 2. No invented career facts
+
+Generated CVs, cover letters, reports, and interview stories must not invent:
+
+* employers,
+* job titles,
+* dates,
+* credentials,
+* education,
+* certifications,
+* publications,
+* patents,
+* salary history,
+* work authorization,
+* metrics,
+* responsibilities,
+* achievements,
+* tools or skills not supported by the user's source material.
+
+### 3. Human review is mandatory
+
+All generated career artifacts are drafts.
+
+The user must review them before use.
+
+### 4. Cloud routes must be visible
+
+Any cloud AI provider route must disclose:
+
+* provider,
+* model or service,
+* privacy route,
+* likely data exposure,
+* cost risk,
+* fallback path.
+
+### 5. Local-first where feasible
+
+For private CV/profile processing, local or user-controlled model routes should be preferred when practical.
+
+### 6. Stale or suspicious postings route to fallback
+
+Unverified, stale, scam-like, or low-confidence postings should be flagged for review, not treated as trustworthy opportunities.
+
+### 7. No hidden authority escalation
+
+An AI coding CLI must not reinterpret a mode, command, prompt, or workflow as permission to perform higher-authority actions.
+
+---
+
+## SCL Primitive Chain
+
+This fork uses the SCL/CNX primitive chain as its design model:
+
+```text
+REFERENCE -> PROJECT -> SIGNATURE -> BZ_REFINE ->
+VALIDATE -> POLICY -> ACT/FALLBACK -> LOG
+```
+
+For Career-Ops CNX, this means:
+
+| Primitive   | Career-Ops CNX Meaning                                                            |
+| ----------- | --------------------------------------------------------------------------------- |
+| `REFERENCE` | CV, profile, proof points, preferences, modes, templates, portal config           |
+| `PROJECT`   | Job description, job URL, ATS feed, company page, pipeline state                  |
+| `SIGNATURE` | Fit score, role archetype, risk signal, legitimacy signal, gap analysis           |
+| `BZ_REFINE` | Draft CV, draft cover letter, interview prep, negotiation script, recommendation  |
+| `VALIDATE`  | Liveness check, trust check, source check, tracker integrity, user evidence check |
+| `POLICY`    | Human-in-loop gate, no-auto-submit rule, privacy/cost boundary                    |
+| `ACT`       | Generate report, generate PDF, update local tracker, archive posting              |
+| `FALLBACK`  | Safe no-op, manual review, skip posting, preserve existing state                  |
+| `LOG`       | Report, tracker entry, pipeline state, audit record                               |
+
+---
+
+## Authority Levels
+
+Career-Ops CNX separates actions by authority level.
+
+| Level | Meaning               | Allowed Examples                                                      | Not Allowed                                           |
+| ----- | --------------------- | --------------------------------------------------------------------- | ----------------------------------------------------- |
+| L1    | Report-only           | analyze JD, summarize role, flag risks, suggest questions             | write files, alter tracker, submit forms              |
+| L2    | Assisted local action | generate local report, generate PDF, update tracker after user intent | external submit, deploy, delete, spend money          |
+| L3    | High-authority action | future explicit workflows with verifier and rollback                  | silent external mutation, auto-apply, account actions |
+
+Current default target: **L1/L2 only**.
+
+No L3 workflow should be considered safe until independently reviewed, policy-gated, and audit-replayable.
+
+---
+
+## Features Inherited from Career-Ops
+
+This fork inherits the upstream Career-Ops architecture, including support for:
+
+| Feature           | Description                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| Job evaluation    | Structured role evaluation against the user's CV/profile                                       |
+| CV tailoring      | Draft ATS-oriented CV variants based on a job description                                      |
+| Cover letters     | Draft cover letters with user review                                                           |
+| Portal scanning   | Scan configured job portals and ATS feeds                                                      |
+| Liveness checks   | Verify whether postings still appear active                                                    |
+| Pipeline tracking | Track roles, reports, statuses, and application workflow                                       |
+| Batch processing  | Evaluate multiple jobs with worker prompts                                                     |
+| Dashboard         | Terminal UI for browsing and updating pipeline state                                           |
+| Multi-CLI support | Claude Code, OpenCode, Antigravity CLI, Codex, Qwen, Grok Build CLI, and compatible agent CLIs |
+
+Inherited features should be treated as under review until CNX hardening is complete.
+
+---
+
+## CNX Hardening Roadmap
+
+### Phase 1 — PMT/RIM Structural Review
+
+Goal: inspect the project as a whole system before changing behavior.
+
+Deliverables:
+
+* source integrity review,
+* dependency graph,
+* folder/file authority map,
+* action inventory,
+* external access inventory,
+* mutation surface inventory,
+* risk register,
+* test matrix,
+* first policy boundary.
+
+### Phase 2 — Policy and Guardrail Hardening
+
+Goal: enforce rules in agent instructions, modes, and runtime scripts.
+
+Targets:
+
+* no-auto-submit policy,
+* no invented career facts,
+* evidence-bounded CV generation,
+* cloud disclosure,
+* local-first guidance,
+* explicit fallback paths,
+* CLI wrapper parity.
+
+### Phase 3 — Validation and Audit
+
+Goal: make the system replayable and safer under failure.
+
+Targets:
+
+* tracker backup/recovery,
+* audit records for generated artifacts,
+* liveness uncertainty handling,
+* scam/ghost job fallback,
+* batch budget controls,
+* report regeneration checks,
+* test coverage for denial paths.
+
+### Phase 4 — Local-First Evaluation
+
+Goal: reduce privacy and cost risk.
+
+Targets:
+
+* Ollama/local evaluator profile,
+* cloud route disclosure,
+* provider capability registry,
+* user-controlled model selection,
+* privacy-preserving default modes.
+
+---
 
 ## Quick Start
 
-**Fastest way — one command:**
+This fork should currently be installed manually from GitHub.
 
 ```bash
-npx @santifer/career-ops init
-```
-
-> 💡 `npx` ships with [Node.js](https://nodejs.org) — it runs the installer once,
-> without installing anything globally. No Node yet? Install it first.
-> (Already using a Claude Code / Gemini / Codex CLI? Then you already have it.)
-
-This clones the latest release into `./career-ops` and installs dependencies. Then:
-
-```bash
-cd career-ops
-claude   # or gemini / codex / qwen / opencode / agy / grok — open your AI CLI here
-```
-
-**On first launch, career-ops walks you through setup — your CV, profile and target roles — just by chatting. Nothing to edit by hand.**
-
-<details>
-<summary><b>Prefer to set it up manually? (git clone)</b></summary>
-
-```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
-npx playwright install chromium   # only needed for PDF generation
-
-# 2. Check setup
-npm run doctor                     # Validates all prerequisites
-
-# 3. Configure
-cp config/profile.example.yml config/profile.yml  # Edit with your details
-cp templates/portals.example.yml portals.yml       # Customize companies
-
-# 4. Add your CV
-# Create cv.md in the project root with your CV in markdown
-
-# 5. Personalize
-claude   # Open Claude Code in this directory
-opencode # Or use OpenCode
-
-# Then ask your CLI to adapt the system to you:
-# "Change the archetypes to backend engineering roles"
-# "Translate the modes to English"
-# "Add these 5 companies to portals.yml"
-# "Update my profile with this CV I'm pasting"
-
-# 6. Start using
-# Paste a job URL or run /career-ops
-```
-
-</details>
-
-> **The system is designed to be customized by your AI coding CLI itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask it to change them. It reads the same files it uses, so it knows exactly what to edit.
-
-See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, and [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for instructions on running career-ops cheaply using custom or local models.
-
-## Antigravity CLI Integration
-
-Career-ops supports Antigravity CLI natively, the same way it supports Claude Code and OpenCode. All slash commands are available through the shared skill entrypoint, using the same `modes/*.md` evaluation logic.
-
-Google has transitioned consumer Gemini CLI access to Antigravity CLI. `GEMINI.md` is now a no-op compatibility guard so Antigravity does not duplicate the full project instructions when it reads both `AGENTS.md` and `GEMINI.md`.
-
-### Native Antigravity CLI
-
-```bash
-# 1. Run in the career-ops directory
-cd career-ops
-agy
-
-# 2. Use the unified /career-ops command with subcommands:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
-```
-
-The skill is defined using the open standard in `.agents/skills/career-ops/SKILL.md` and symlinked/referenced for each supported CLI (e.g. `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`).
-
-## Grok Build CLI Integration
-
-Career-ops supports Grok Build CLI natively, the same way it supports Claude Code and OpenCode. `AGENTS.md` is auto-loaded as project rules, and all slash commands are available through the shared skill entrypoint.
-
-### Native Grok Build CLI
-
-```bash
-# 1. Run in the career-ops directory
-cd career-ops
-grok
-
-# 2. Use the unified /career-ops command with subcommands:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
-```
-
-For headless batch workers, use `grok -p "prompt"` (add `--yolo` to auto-approve tool executions).
-
-### Standalone Gemini API Script (No CLI install needed)
-
-```bash
-# 1. Get a free API key at https://aistudio.google.com/apikey
-cp .env.example .env
-# Edit .env, set GEMINI_API_KEY=your_key_here
-
-# 2. Install dependencies
+git clone https://github.com/ivan33609/career-ops-cnx.git
+cd career-ops-cnx
 npm install
-
-# 3. Evaluate a job description
-node gemini-eval.mjs "We are looking for a Senior AI Engineer..."
-node gemini-eval.mjs --file ./jds/my-job.txt
-npm run gemini:eval -- "JD text here"
 ```
 
-> **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.5-flash` (15 RPM, 1M tokens/day free).
+Install Chromium for PDF generation and browser-based verification:
+
+```bash
+npx playwright install chromium
+```
+
+Run the project health check:
+
+```bash
+npm run doctor
+```
+
+Create your local profile and portal configuration:
+
+```bash
+cp config/profile.example.yml config/profile.yml
+cp templates/portals.example.yml portals.yml
+```
+
+Create your CV file:
+
+```text
+cv.md
+```
+
+Optional proof-point file:
+
+```text
+article-digest.md
+```
+
+Then open the project with your AI coding CLI:
+
+```bash
+claude
+# or
+opencode
+# or
+agy
+# or another supported CLI
+```
+
+---
+
+## Important Installation Note
+
+The upstream project may provide an `npx @santifer/career-ops init` installer.
+
+That command installs the upstream package, not necessarily this CNX fork.
+
+For this fork, use the GitHub clone command above unless a dedicated CNX package is released later.
+
+---
 
 ## Usage
 
-Career-ops is a single slash command with multiple modes:
+The inherited command interface is centered around `/career-ops`.
 
-```
-/career-ops                → Show all available commands
-/career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
-/career-ops scan           → Scan portals for new offers
-/career-ops pdf            → Generate ATS-optimized CV
-/career-ops cover          → Cover letter generator (paste JD or /career-ops cover {slug})
-/career-ops batch          → Batch evaluate multiple offers
-/career-ops tracker        → View application status
-/career-ops apply          → Fill application forms with AI
-/career-ops pipeline       → Process pending URLs
-/career-ops contacto       → LinkedIn outreach message
-/career-ops deep           → Deep company research
-/career-ops training       → Evaluate a course/cert
-/career-ops project        → Evaluate a portfolio project
-```
+Typical commands include:
 
-Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
-
-## How It Works
-
-```
-You paste a job URL or description
-        │
-        ▼
-┌──────────────────┐
-│  Archetype       │  Classifies: LLMOps / Agentic / PM / SA / FDE / Transformation
-│  Detection       │
-└────────┬─────────┘
-         │
-┌────────▼─────────┐
-│  A-F Evaluation  │  Match, gaps, comp research, STAR stories
-│  (reads cv.md)   │
-└────────┬─────────┘
-         │
-    ┌────┼────┐
-    ▼    ▼    ▼
- Report  PDF  Tracker
-  .md   .pdf   .tsv
+```text
+/career-ops                -> Show available commands
+/career-ops {paste a JD}   -> Evaluate a job description
+/career-ops scan           -> Scan configured portals
+/career-ops pdf            -> Generate a CV PDF draft
+/career-ops cover          -> Generate a cover letter draft
+/career-ops batch          -> Batch evaluate roles
+/career-ops tracker        -> View or manage application tracking
+/career-ops pipeline       -> Process pending URLs
+/career-ops deep           -> Research a company or role
+/career-ops training       -> Evaluate a course or certification
+/career-ops project        -> Evaluate a portfolio project
 ```
 
-## Pre-configured Portals
+Use `/career-ops apply` only with extreme caution.
 
-The scanner comes with **45+ companies** ready to scan and **19 search queries** across major job boards. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
+CNX policy requires that any form-filling workflow stop before final submission unless the user manually acts outside the agent. This fork should not be used as an auto-application bot.
 
-**AI Labs:** Anthropic, OpenAI, Mistral, Cohere, LangChain, Pinecone
-**Voice AI:** ElevenLabs, PolyAI, Parloa, Hume AI, Deepgram, Vapi, Bland AI
-**AI Platforms:** Retool, Airtable, Vercel, Temporal, Glean, Arize AI
-**Contact Center:** Ada, LivePerson, Sierra, Decagon, Talkdesk, Genesys
-**Enterprise:** Salesforce, Twilio, Gong, Dialpad
-**LLMOps:** Langfuse, Weights & Biases, Lindy, Cognigy, Speechmatics
-**Automation:** n8n, Zapier, Make.com
-**European:** Factorial, Attio, Tinybird, Clarity AI, Travelperk
+---
 
-**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
+## Recommended First Run
 
-By default `node scan.mjs` (a.k.a. `npm run scan`) trusts what each ATS feed returns. Some companies leave stale postings in their public API even after the role is closed, so those expired entries can leak into `pipeline.md`. Pass `--verify` to launch Playwright after the API pass and drop expired postings before they hit the pipeline:
+Start with a single job description, not a batch.
+
+```text
+/career-ops {paste one job description}
+```
+
+Then review:
+
+```text
+reports/
+output/
+data/pipeline.md
+```
+
+Before using any generated CV or cover letter, check:
+
+```text
+Does every claim come from my actual background?
+Are all dates, employers, titles, and metrics accurate?
+Did the system overstate my experience?
+Did it add tools or skills I do not actually have?
+Is the role still live?
+Is the company/posting legitimate?
+Do I want to apply?
+```
+
+---
+
+## Local-First and Privacy
+
+This project may process sensitive personal data, including:
+
+* CV,
+* employment history,
+* contact details,
+* salary preferences,
+* career goals,
+* immigration/work authorization context,
+* writing samples,
+* interview stories,
+* application history.
+
+Before using any cloud model, understand where your data is going.
+
+Preferred privacy posture:
+
+```text
+local model first where feasible
+explicit cloud disclosure where not
+no silent provider fallback
+no hidden paid call
+no upload of private career data without user awareness
+```
+
+If using local models, review the inherited local/Ollama evaluator support and budget documentation.
+
+---
+
+## Job Posting Trust
+
+Career-Ops CNX should not blindly trust a job feed.
+
+Job postings may be:
+
+* stale,
+* duplicated,
+* fake,
+* scam-like,
+* closed but still listed,
+* location-mismatched,
+* compensation-misleading,
+* seniority-mismatched,
+* harvested from unreliable sources.
+
+Use verification where possible:
 
 ```bash
-node scan.mjs --verify          # zero-token discovery + Playwright liveness check
+node scan.mjs --verify
 ```
 
-The verification is sequential and only runs against new offers (after dedup), so the cost stays bounded.
+Uncertain postings should be routed to manual review.
 
-## Dashboard TUI
-
-The built-in terminal dashboard lets you browse your pipeline visually:
-
-```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..
-```
-
-Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.
+---
 
 ## Project Structure
 
-```
-career-ops/
-├── AGENTS.md                    # Canonical agent instructions (all CLIs)
-├── CLAUDE.md                    # Claude Code wrapper (imports AGENTS.md)
-├── OPENCODE.md                  # OpenCode wrapper (imports AGENTS.md)
-├── GEMINI.md                    # Legacy no-op guard to avoid Antigravity duplicate context
-├── cv.md                        # Your CV (create this)
-├── article-digest.md            # Your proof points (optional)
+The inherited project structure is approximately:
+
+```text
+career-ops-cnx/
+├── AGENTS.md                    # Canonical agent instructions
+├── CLAUDE.md                    # Claude Code wrapper
+├── OPENCODE.md                  # OpenCode wrapper
+├── GEMINI.md                    # Gemini / Antigravity compatibility guard
+├── cv.md                        # Your CV, created locally
+├── article-digest.md            # Optional proof points, created locally
 ├── config/
-│   └── profile.example.yml      # Template for your profile
-├── modes/                       # 15 skill modes
-│   ├── _shared.md               # Shared context (customize this)
-│   ├── oferta.md                # Single evaluation
-│   ├── pdf.md                   # PDF generation
-│   ├── cover.md                 # Cover letter generation
-│   ├── scan.md                  # Portal scanner
-│   ├── batch.md                 # Batch processing
+│   └── profile.example.yml      # Profile template
+├── modes/                       # Skill modes
+│   ├── _shared.md
+│   ├── oferta.md
+│   ├── pdf.md
+│   ├── cover.md
+│   ├── scan.md
+│   ├── batch.md
 │   └── ...
 ├── templates/
-│   ├── cv-template.html         # ATS-optimized CV template
-│   ├── portals.example.yml      # Scanner config template
-│   └── states.yml               # Canonical statuses
+│   ├── cv-template.html
+│   ├── portals.example.yml
+│   └── states.yml
 ├── batch/
-│   ├── batch-prompt.md          # Self-contained worker prompt
-│   └── batch-runner.sh          # Orchestrator script
-├── dashboard/                   # Go TUI pipeline viewer
-├── data/                        # Your tracking data (gitignored)
-├── reports/                     # Evaluation reports (gitignored)
-├── output/                      # Generated PDFs (gitignored)
-├── fonts/                       # Space Grotesk + DM Sans
-├── docs/                        # Setup, customization, budget guide, architecture
-└── examples/                    # Sample CV, report, proof points
+│   ├── batch-prompt.md
+│   └── batch-runner.sh
+├── dashboard/                   # Go terminal dashboard
+├── data/                        # Local tracking data, usually gitignored
+├── reports/                     # Generated reports, usually gitignored
+├── output/                      # Generated PDFs, usually gitignored
+├── docs/                        # Documentation
+├── providers/                   # Job source providers
+├── jds/                         # Job descriptions
+└── examples/                    # Sample artifacts
 ```
 
-## Tech Stack
+Future CNX-specific documentation may be added under:
 
-![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
-![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
-![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
+```text
+docs/cnx/
+```
 
-- **Agent**: Claude Code with custom skills and modes
-- **PDF**: Playwright/Puppeteer + HTML template
-- **Cover letters**: HTML template + Playwright (A4 PDF, same pipeline as CVs)
-- **Scanner**: Playwright + Greenhouse API + WebSearch
-- **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
-- **Data**: Markdown tables + YAML config + TSV batch files
+Suggested CNX documents:
 
-## Also Open Source
+```text
+docs/cnx/PMT_RIM_PHASE1_REVIEW.md
+docs/cnx/AUTHORITY_POLICY.md
+docs/cnx/NO_AUTO_SUBMIT_POLICY.md
+docs/cnx/CLOUD_AND_PRIVACY_POLICY.md
+docs/cnx/RISK_REGISTER.md
+docs/cnx/AUDIT_REPLAY_REQUIREMENTS.md
+```
 
-- **[cv-santiago](https://github.com/santifer/cv-santiago)** -- The portfolio website (santifer.io) with AI chatbot, LLMOps dashboard, and case studies. If you need a portfolio to showcase alongside your job search, fork it and make it yours.
+---
 
-## About the Author
+## Development Policy for This Fork
 
-I'm Santiago -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built career-ops to manage my own job search. It worked: I used it to land my current role.
+Before changing behavior, follow the PMT/RIM discipline:
 
-My portfolio and other open source projects → [santifer.io](https://santifer.io)
+```text
+1. Review the project as a structural manifold.
+2. Map folders and files to authority levels.
+3. Identify external access.
+4. Identify mutation surfaces.
+5. Identify fallback paths.
+6. Identify audit requirements.
+7. Derive tests.
+8. Only then modify code.
+```
 
-## Disclaimer
+No code change should add a new action path without answering:
 
-**career-ops is a local, open-source tool, NOT a hosted service.** By using this software, you acknowledge:
+```text
+What does it consume?
+What does it produce?
+Does it mutate state?
+Can it affect an external system?
+What policy authorizes it?
+What fallback exists?
+How is it logged?
+How can it be replayed?
+```
 
-1. **You control your data.** Your CV, contact info, and personal data stay on your machine and are sent directly to the AI provider you choose (Anthropic, OpenAI, etc.). We do not collect, store, or have access to any of your data.
-2. **You control the AI.** The default prompts instruct the AI not to auto-submit applications, but AI models can behave unpredictably. If you modify the prompts or use different models, you do so at your own risk. **Always review AI-generated content for accuracy before submitting.**
-3. **You comply with third-party ToS.** You must use this tool in accordance with the Terms of Service of the career portals you interact with (Greenhouse, Lever, Workday, LinkedIn, etc.). Do not use this tool to spam employers or overwhelm ATS systems.
-4. **No guarantees.** Evaluations are recommendations, not truth. AI models may hallucinate skills or experience. The authors are not liable for employment outcomes, rejected applications, account restrictions, or any other consequences.
+---
 
-See [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) for full details. This software is provided under the [MIT License](LICENSE) "as is", without warranty of any kind.
+## Testing
 
-## Contributors
+Run the inherited test suite:
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
-</a>
+```bash
+npm test
+```
 
-Got hired using career-ops? [Share your story!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+Run the all-in-one test script if available:
 
-## License & Trademark
+```bash
+node test-all.mjs
+```
 
-The code is licensed under [MIT](LICENSE). The "career-ops" name and
-brand are governed by the [Trademark Policy](TRADEMARK.md), permissive
-for community use, reserved for commercial product naming and
-endorsement.
+Run setup validation:
 
-## Let's Connect
+```bash
+npm run doctor
+```
 
-[![Website](https://img.shields.io/badge/santifer.io-000?style=for-the-badge&logo=safari&logoColor=white)](https://santifer.io)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/santifer)
-[![X](https://img.shields.io/badge/X-000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/santifer)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8pRpHETxa4)
-[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hi@santifer.io)
+Run specific validation scripts as needed:
+
+```bash
+node verify-pipeline.mjs
+node verify-portals.mjs
+node test-trust-validator.mjs
+node tracker-columns-tests.mjs
+```
+
+Before accepting a CNX hardening change, denial paths must also be tested.
+
+No acceptance if:
+
+```text
+an invalid career claim is generated without warning
+an uncertain validator authorizes action
+a form flow can silently submit
+a cloud route runs without disclosure
+a tracker mutation lacks recovery
+a batch workflow lacks budget limits
+a policy denial lacks fallback or safe no-op
+```
+
+---
+
+## Security and Safety
+
+This project handles sensitive career data.
+
+Do not commit:
+
+```text
+cv.md
+config/profile.yml
+article-digest.md
+data/
+reports/
+output/
+.env
+.env.local
+private writing samples
+salary history
+personal contact data
+application history
+```
+
+Check `.gitignore` before committing.
+
+Use local test data when contributing.
+
+---
+
+## Not a Hosted Service
+
+Career-Ops CNX is local open-source software.
+
+The maintainers of this fork do not collect, host, or process your CV, job-search data, generated reports, or application materials.
+
+However, your chosen AI provider, browser automation target, or job portal may receive data depending on how you configure and use the tool.
+
+You are responsible for reviewing provider terms, portal terms, privacy implications, and generated artifacts.
+
+---
+
+## Legal and Employment Disclaimer
+
+This software does not guarantee interviews, offers, salary outcomes, visa outcomes, or employment.
+
+Generated evaluations are recommendations, not truth.
+
+Generated CVs, cover letters, and interview material are drafts, not verified personal records.
+
+You are responsible for ensuring that every application, CV, cover letter, portfolio claim, and interview answer is accurate and lawful.
+
+Do not use this tool to spam employers, bypass platform rules, misrepresent yourself, or overwhelm applicant tracking systems.
+
+See the inherited `LEGAL_DISCLAIMER.md`, `LICENSE`, `SECURITY.md`, and `TRADEMARK.md` files for additional terms.
+
+---
+
+## License
+
+This fork preserves the upstream MIT license unless otherwise stated.
+
+See:
+
+```text
+LICENSE
+TRADEMARK.md
+LEGAL_DISCLAIMER.md
+```
+
+The `career-ops` name and branding may be subject to the upstream trademark policy. This fork uses the name `career-ops-cnx` to distinguish the CNX hardening work from the original project.
+
+---
+
+## Contributing
+
+Contributions are welcome if they strengthen the human-in-the-loop, privacy-preserving, evidence-bounded direction of the fork.
+
+High-priority contribution areas:
+
+* no-auto-submit enforcement,
+* evidence-bounded CV generation,
+* local/Ollama evaluation routes,
+* cloud disclosure,
+* tracker backup/recovery,
+* liveness uncertainty handling,
+* scam/ghost-job detection,
+* audit replay,
+* CLI wrapper parity,
+* prompt-injection resistance,
+* test coverage for denial paths.
+
+Please avoid changes that encourage:
+
+* spray-and-pray applications,
+* fabricated career claims,
+* silent cloud usage,
+* hidden provider fallback,
+* autonomous submission,
+* employer spam,
+* bypassing portal restrictions,
+* replacing user judgment with model confidence.
+
+---
+
+## Maintainer Note
+
+This fork is part of a broader CNX/SCL research and engineering direction:
+
+```text
+CNX prevents intelligence from silently becoming authority.
+SCL structures the primitive chain from reference to action.
+PMT unfolds the project before implementation.
+RIM tests whether the unfolded structure can safely become action.
+```
+
+In this repository, that means job-search automation must remain accountable to the job seeker, bounded by evidence, and safe under uncertainty.
+
+---
+
+## Original Project Credit
+
+Career-Ops was originally created by Santiago Fernández de Valderrama.
+
+If you want the original project, visit:
+
+```text
+https://github.com/santifer/career-ops
+https://career-ops.org
+```
+
+This fork exists because the original idea is valuable: job seekers need leverage too.
+
+Career-Ops CNX aims to preserve that value while adding stronger governance, privacy, auditability, and authority separation.
