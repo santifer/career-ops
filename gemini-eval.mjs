@@ -32,6 +32,12 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import {
+  buildJobFactsPayload,
+  contentHash,
+  readJobFactsCache,
+  writeJobFactsCache,
+} from './evaluation-cache.mjs';
 
 // ---------------------------------------------------------------------------
 // Bootstrap: load .env before anything else
@@ -62,6 +68,7 @@ const PATHS = {
   reports:     join(ROOT, 'reports'),
   tracker:     join(ROOT, 'data', 'applications.md'),
   trackerAdditions: join(ROOT, 'batch', 'tracker-additions'),
+  jobFactsCache: join(ROOT, 'data', 'cache', 'job-facts'),
 };
 
 // ---------------------------------------------------------------------------
@@ -242,6 +249,26 @@ const cvContent      = readFile(PATHS.cv,          'cv.md');
 const profileContent = readFile(PATHS.profile,     'modes/_profile.md');
 const profileYml     = readFile(PATHS.profileYml,  'config/profile.yml');
 
+const jdContentHash = contentHash(jdText);
+const sourceUrlMatch = jdText.match(/https?:\/\/\S+/);
+const jobFactsSeed = buildJobFactsPayload({
+  sourceUrl: sourceUrlMatch ? sourceUrlMatch[0] : '',
+  contentHash: jdContentHash,
+});
+const jobFactsCache = readJobFactsCache(jobFactsSeed.cache_key, {
+  cacheDir: PATHS.jobFactsCache,
+});
+
+let reusableJobFactsContext = 'No reusable public job facts cache hit.';
+if (jobFactsCache.status === 'hit') {
+  reusableJobFactsContext = JSON.stringify(jobFactsCache.payload.facts || {}, null, 2);
+  console.log(`📦  Job facts cache hit: ${jobFactsSeed.cache_key}`);
+} else if (jobFactsCache.status === 'stale') {
+  console.log(`📦  Job facts cache stale: ${jobFactsSeed.cache_key}`);
+} else {
+  console.log(`📦  Job facts cache miss: ${jobFactsSeed.cache_key}`);
+}
+
 // ---------------------------------------------------------------------------
 // Build the system prompt (mirrors the Claude skill router logic)
 // ---------------------------------------------------------------------------
@@ -274,6 +301,11 @@ ${profileYml}
 USER ARCHETYPES & NARRATIVE (_profile.md)
 ═══════════════════════════════════════════════════════
 ${profileContent}
+
+═══════════════════════════════════════════════════════
+REUSABLE PUBLIC JOB FACTS CACHE
+═══════════════════════════════════════════════════════
+${reusableJobFactsContext}
 
 ═══════════════════════════════════════════════════════
 IMPORTANT OPERATING RULES FOR THIS CLI SESSION
@@ -373,6 +405,27 @@ if (summaryMatch) {
   score      = extract('SCORE');
   archetype  = extract('ARCHETYPE');
   legitimacy = extract('LEGITIMACY');
+}
+
+if (saveReport) {
+  const cachePayload = buildJobFactsPayload({
+    ...jobFactsSeed,
+    cache_key: jobFactsSeed.cache_key,
+    contentHash: jdContentHash,
+  }, {
+    facts: {
+      company,
+      role,
+      legitimacy,
+      source_text_hash: jdContentHash,
+    },
+  });
+  const cacheWrite = writeJobFactsCache(cachePayload, { cacheDir: PATHS.jobFactsCache });
+  if (cacheWrite.status === 'written') {
+    console.log(`📦  Job facts cache saved: ${jobFactsSeed.cache_key}`);
+  } else {
+    console.warn(`⚠️   Job facts cache not saved: ${cacheWrite.reason}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
