@@ -11,10 +11,11 @@
  */
 
 import { chromium } from 'playwright';
-import { resolve, dirname } from 'path';
+import { resolve, dirname, relative, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { randomUUID } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -207,7 +208,6 @@ async function generatePDF() {
   console.log(`📁 Output: ${outputPath}`);
   console.log(`📏 Format: ${format.toUpperCase()}`);
 
-  // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
   let cvMarkdown = '';
   try {
@@ -216,18 +216,6 @@ async function generatePDF() {
     if (err?.code !== 'ENOENT') throw err;
   }
   validateCvSectionOrder(html, cvMarkdown);
-
-  // Resolve font paths relative to career-ops/fonts/
-  const fontsDir = resolve(__dirname, 'fonts');
-  html = html.replace(
-    /url\(['"]?\.\/fonts\//g,
-    `url('file://${fontsDir}/`
-  );
-  // Close any unclosed quotes from the replacement (handles all font formats)
-  html = html.replace(
-    /file:\/\/([^'")]+)\.(woff2?|ttf|otf)['"]?\)/g,
-    `file://$1.$2')`
-  );
 
   // Normalize text for ATS compatibility (issue #1)
   const normalized = normalizeTextForATS(html);
@@ -242,7 +230,55 @@ async function generatePDF() {
 }
 
 /**
+ * Inline url('./fonts/...') references as base64 data: URLs.
+ *
+ * Chromium refuses to load file:// subresources from a setContent() page
+ * (the document stays at about:blank), so fonts referenced by path are
+ * silently dropped and PDFs fall back to system fonts. data: URLs carry
+ * no origin restriction, so they load from any page. See #951.
+ *
+ * Missing font files keep their original reference and log a warning.
+ *
+ * @param {string} html - HTML that may reference url('./fonts/<file>').
+ * @returns {Promise<string>} HTML with local font references inlined.
+ */
+export async function inlineLocalFonts(html) {
+  const FONT_REF = /url\(\s*(['"]?)\.\/fonts\/([^'")\s]+)\1\s*\)/g;
+  const MIME = { woff2: 'font/woff2', woff: 'font/woff', otf: 'font/otf', ttf: 'font/ttf' };
+  const fontsDir = resolve(__dirname, 'fonts');
+  const names = [...new Set([...html.matchAll(FONT_REF)].map((m) => m[2]))];
+  const dataUrls = new Map();
+  for (const name of names) {
+    // Containment check: ".." segments and absolute names (./fonts//etc/passwd)
+    // would otherwise resolve outside fonts/.
+    const fontPath = resolve(fontsDir, name);
+    const rel = relative(fontsDir, fontPath);
+    if (rel.startsWith('..') || isAbsolute(rel)) {
+      console.warn(`⚠️  Font reference escapes fonts/, keeping original reference: ${name}`);
+      continue;
+    }
+    try {
+      const buf = await readFile(fontPath);
+      const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+      dataUrls.set(name, `url('data:${MIME[ext] || 'application/octet-stream'};base64,${buf.toString('base64')}')`);
+    } catch (err) {
+      if (err?.code !== 'ENOENT') throw err;
+      console.warn(`⚠️  Font file not found, keeping original reference: fonts/${name}`);
+    }
+  }
+  return html.replace(FONT_REF, (match, _quote, name) => dataUrls.get(name) || match);
+}
+
+/**
  * Render an HTML string to a PDF file via headless Chromium.
+ *
+ * Writes the HTML to a temporary file in the baseDir and loads it via
+ * page.goto() to give the page a file:// origin. This allows relative
+ * resources (images, fonts) to load — setContent() runs from about:blank
+ * and Chromium blocks file:// subresource loads from non-file origins.
+ *
+ * Local url('./fonts/...') references are inlined as data: URLs first so
+ * fonts also survive the ATS normalization pass (which may strip font refs).
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
@@ -255,17 +291,24 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
 
   mkdirSync(dirname(outputPath), { recursive: true });
 
+  html = await inlineLocalFonts(html);
+
+  // Write HTML to a temp file in baseDir so page.goto() gives a file://
+  // origin that can load local images, fonts, and other resources.
+  const tmpHtmlPath = resolve(baseDir, `.career-ops-render-${randomUUID()}.html`);
+  const { writeFile, unlink } = await import('fs/promises');
+  await writeFile(tmpHtmlPath, html, 'utf-8');
+
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
 
-    // Set content with file base URL for any relative resources
-    await page.setContent(html, {
+    // Load from file:// so the page origin allows local subresources
+    await page.goto(pathToFileURL(tmpHtmlPath).href, {
       waitUntil: 'load',
-      baseURL: `file://${baseDir}/`,
     });
 
-    // Wait for fonts to load
+    // Wait for fonts and images to settle
     await page.evaluate(() => document.fonts.ready);
 
     // Generate PDF
@@ -282,7 +325,6 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     });
 
     // Write PDF
-    const { writeFile } = await import('fs/promises');
     await writeFile(outputPath, pdfBuffer);
 
     // Count pages (approximate from PDF structure)
@@ -296,10 +338,12 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     return { outputPath, pageCount, size: pdfBuffer.length };
   } finally {
     await browser.close();
+    // Clean up temp file
+    await unlink(tmpHtmlPath).catch(() => {});
   }
 }
 
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) {
   generatePDF().catch((err) => {
     console.error('❌ PDF generation failed:', err.message);

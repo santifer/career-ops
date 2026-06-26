@@ -1,6 +1,6 @@
 # Career-Ops
 
-[English](README.md) | [Español](README.es.md) | [Français](README.fr.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [العربية](README.ar.md)
+[English](README.md) | [Español](README.es.md) | [Français](README.fr.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Dansk](README.da.md) | [العربية](README.ar.md)
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops Multi-Agent Job Search System" width="800"></a>
@@ -54,13 +54,18 @@
 </p>
 
 <p align="center">
-  <sub>Built with</sub><br>
+  <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Built_with-Claude_Code-000?style=for-the-badge&logo=anthropic&logoColor=white" alt="Built with Claude Code"></a>
+</p>
+
+<p align="center">
+  <sub>Also runs on any agent-skill-standard CLI</sub><br>
   <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
   <img src="https://img.shields.io/badge/OpenCode-111827?style=flat&logo=terminal&logoColor=white" alt="OpenCode">
-  <img src="https://img.shields.io/badge/Gemini_CLI-4285F4?style=flat&logo=google&logoColor=white" alt="Gemini CLI">
+  <img src="https://img.shields.io/badge/Antigravity_CLI-4285F4?style=flat&logo=google&logoColor=white" alt="Antigravity CLI">
   <img src="https://img.shields.io/badge/Codex-412991?style=flat&logo=openai&logoColor=white" alt="Codex">
   <img src="https://img.shields.io/badge/Qwen-615CED?style=flat" alt="Qwen">
   <img src="https://img.shields.io/badge/GitHub_Copilot-000?style=flat&logo=githubcopilot&logoColor=white" alt="GitHub Copilot">
+  <img src="https://img.shields.io/badge/Grok_Build_CLI-000?style=flat&logo=x&logoColor=white" alt="Grok Build CLI">
   <br>
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
@@ -82,7 +87,7 @@ Career-Ops ([career-ops.org](https://career-ops.org), also known as **careerops*
 
 > **Important: This is NOT a spray-and-pray tool.** Career-ops is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
 
-Career-ops is agentic: Claude Code navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
+Career-ops is agentic: whichever AI coding CLI you choose navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
 
 > **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
 
@@ -97,9 +102,9 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Interview Story Bank** | Accumulates STAR+Reflection stories across evaluations -- 5-10 master stories that answer any behavioral question                        |
 | **Negotiation Scripts**  | Salary negotiation frameworks, geographic discount pushback, competing offer leverage                                                    |
 | **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
-| **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via ReportLab. Auto-drafts on every evaluation; complete and generate on demand via `/career-ops cover` |
+| **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via the same HTML + Playwright pipeline as CVs. Auto-drafts on every evaluation; complete and generate on demand via `/career-ops cover` |
 | **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Batch Processing**     | Parallel evaluation with `claude -p` workers                                                                                             |
+| **Batch Processing**     | Parallel evaluation with headless CLI workers (`claude -p` / `opencode run`)                                                             |
 | **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
 | **Human-in-the-Loop**    | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call               |
 | **Pipeline Integrity**   | Automated merge, dedup, status normalization, health checks                                                                              |
@@ -120,7 +125,7 @@ This clones the latest release into `./career-ops` and installs dependencies. Th
 
 ```bash
 cd career-ops
-claude   # or gemini / codex / qwen / opencode — open your AI CLI here
+claude   # or gemini / codex / qwen / opencode / agy / grok — open your AI CLI here
 ```
 
 **On first launch, career-ops walks you through setup — your CV, profile and target roles — just by chatting. Nothing to edit by hand.**
@@ -132,42 +137,82 @@ claude   # or gemini / codex / qwen / opencode — open your AI CLI here
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
 npx playwright install chromium   # only needed for PDF generation
-claude   # open your AI CLI — it onboards you on first launch
+
+# 2. Check setup
+npm run doctor                     # Validates all prerequisites
+
+# 3. Configure
+cp config/profile.example.yml config/profile.yml  # Edit with your details
+cp templates/portals.example.yml portals.yml       # Customize companies
+
+# 4. Add your CV
+# Create cv.md in the project root with your CV in markdown
+
+# 5. Personalize
+claude   # Open Claude Code in this directory
+opencode # Or use OpenCode
+
+# Then ask your CLI to adapt the system to you:
+# "Change the archetypes to backend engineering roles"
+# "Translate the modes to English"
+# "Add these 5 companies to portals.yml"
+# "Update my profile with this CV I'm pasting"
+
+# 6. Start using
+# Paste a job URL or run /career-ops
 ```
 
 </details>
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
+> **The system is designed to be customized by your AI coding CLI itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask it to change them. It reads the same files it uses, so it knows exactly what to edit.
 
-See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
+See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, and [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for instructions on running career-ops cheaply using custom or local models.
 
-## Gemini CLI Integration
+## Antigravity CLI Integration
 
-Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) natively, the same way it supports Claude Code and OpenCode. All 15 slash commands are available, using the same `modes/*.md` evaluation logic.
+Career-ops supports Antigravity CLI natively, the same way it supports Claude Code and OpenCode. All slash commands are available through the shared skill entrypoint, using the same `modes/*.md` evaluation logic.
 
-### Option A: Native Gemini CLI (Recommended)
+Google has transitioned consumer Gemini CLI access to Antigravity CLI. `GEMINI.md` is now a no-op compatibility guard so Antigravity does not duplicate the full project instructions when it reads both `AGENTS.md` and `GEMINI.md`.
+
+### Native Antigravity CLI
 
 ```bash
-# 1. Install Gemini CLI (requires Node.js 20+)
-npm install -g @google/gemini-cli
-# or: npx @google/gemini-cli --version
-
-# 2. Run in the career-ops directory — on first launch, sign in with your
-#    Google account (free) to authenticate
+# 1. Run in the career-ops directory
 cd career-ops
-gemini
+agy
 
-# 3. Use slash commands just like Claude Code
+# 2. Use the unified /career-ops command with subcommands:
 /career-ops "Senior AI Engineer at Anthropic..."
-/career-ops-evaluate --file ./jds/openai.txt
-/career-ops-scan
-/career-ops-pdf
-/career-ops-tracker
+/career-ops pipeline
+/career-ops scan
+/career-ops pdf
+/career-ops tracker
 ```
 
-The `GEMINI.md` file is auto-loaded as context. All 15 commands are defined in `.gemini/commands/*.toml`.
+The skill is defined using the open standard in `.agents/skills/career-ops/SKILL.md` and symlinked/referenced for each supported CLI (e.g. `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`).
 
-### Option B: Standalone API Script (No CLI install needed)
+## Grok Build CLI Integration
+
+Career-ops supports Grok Build CLI natively, the same way it supports Claude Code and OpenCode. `AGENTS.md` is auto-loaded as project rules, and all slash commands are available through the shared skill entrypoint.
+
+### Native Grok Build CLI
+
+```bash
+# 1. Run in the career-ops directory
+cd career-ops
+grok
+
+# 2. Use the unified /career-ops command with subcommands:
+/career-ops "Senior AI Engineer at Anthropic..."
+/career-ops pipeline
+/career-ops scan
+/career-ops pdf
+/career-ops tracker
+```
+
+For headless batch workers, use `grok -p "prompt"` (add `--yolo` to auto-approve tool executions).
+
+### Standalone Gemini API Script (No CLI install needed)
 
 ```bash
 # 1. Get a free API key at https://aistudio.google.com/apikey
@@ -270,6 +315,8 @@ Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, 
 career-ops/
 ├── AGENTS.md                    # Canonical agent instructions (all CLIs)
 ├── CLAUDE.md                    # Claude Code wrapper (imports AGENTS.md)
+├── OPENCODE.md                  # OpenCode wrapper (imports AGENTS.md)
+├── GEMINI.md                    # Legacy no-op guard to avoid Antigravity duplicate context
 ├── cv.md                        # Your CV (create this)
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
@@ -294,7 +341,7 @@ career-ops/
 ├── reports/                     # Evaluation reports (gitignored)
 ├── output/                      # Generated PDFs (gitignored)
 ├── fonts/                       # Space Grotesk + DM Sans
-├── docs/                        # Setup, customization, architecture
+├── docs/                        # Setup, customization, budget guide, architecture
 └── examples/                    # Sample CV, report, proof points
 ```
 
