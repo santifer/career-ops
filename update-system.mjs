@@ -93,6 +93,8 @@ const SYSTEM_PATHS = [
   'tracker-utils.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
+  'listing-fingerprint.mjs',
+  'listing-fingerprint-tests.mjs',
   'update-system.mjs',
   'reserve-report-num.mjs',
   'scan.mjs',

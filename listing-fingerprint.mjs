@@ -23,6 +23,10 @@ function normalizePath(path) {
   return String(path).replace(/\/+$/, '') || '/';
 }
 
+function hasValue(value) {
+  return normalize(value) !== '';
+}
+
 export function normalizeUrlParts(url) {
   try {
     const parsed = new URL(url);
@@ -42,17 +46,21 @@ export function computeListingFingerprint(input = {}) {
   const sourceUrl = pick(input, 'sourceUrl', 'source_url');
   const urlParts = normalizeUrlParts(canonicalUrl || sourceUrl || '');
   const canonicalPath = pick(input, 'canonicalPath', 'canonical_path');
+  const atsProvider = pick(input, 'atsProvider', 'ats_provider');
+  const boardSlug = pick(input, 'boardSlug', 'board_slug');
+  const postingId = pick(input, 'postingId', 'posting_id');
+  const hasStableAtsIdentity = hasValue(atsProvider) && hasValue(boardSlug) && hasValue(postingId);
   const fields = [
     LISTING_FINGERPRINT_SCHEMA_VERSION,
-    pick(input, 'atsProvider', 'ats_provider'),
-    pick(input, 'boardSlug', 'board_slug'),
-    pick(input, 'postingId', 'posting_id'),
+    atsProvider,
+    boardSlug,
+    postingId,
     input.company,
     input.title,
     input.location,
     pick(input, 'workMode', 'work_mode'),
-    pick(input, 'canonicalHost', 'canonical_host') || urlParts.canonicalHost,
-    normalizePath(canonicalPath) || urlParts.canonicalPath,
+    hasStableAtsIdentity ? '' : (pick(input, 'canonicalHost', 'canonical_host') || urlParts.canonicalHost),
+    hasStableAtsIdentity ? '' : (normalizePath(canonicalPath) || urlParts.canonicalPath),
     pick(input, 'contentHash', 'content_hash'),
   ].map(normalize);
   const digest = createHash('sha256').update(fields.join('\n')).digest('hex').slice(0, 32);

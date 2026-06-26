@@ -25,6 +25,26 @@ The listing fingerprint identifies a public job posting without including candid
 }
 ```
 
+## Canonical v1 Input Set
+
+The v1 digest is computed from this ordered public input set:
+
+1. `schema_version`
+2. `ats_provider`
+3. `board_slug`
+4. `posting_id`
+5. `company`
+6. `title`
+7. `location`
+8. `work_mode`
+9. `canonical_host`
+10. `canonical_path`
+11. `content_hash`
+
+Implementations may accept camelCase aliases for developer ergonomics, but the
+documented contract is snake_case. Do not include candidate data in the v1 input
+set.
+
 ## Share-Safe Inputs
 
 Allowed inputs are public posting facts:
@@ -54,9 +74,13 @@ Branded pages and ATS-hosted pages can point to the same role. Implementations s
 - company casing and punctuation
 - title whitespace and punctuation
 
-When both a branded page and an ATS page are available, prefer the ATS provider, board slug, and posting id as the strongest identity fields.
+ATS identity wins over URL aliases. When `ats_provider`, `board_slug`, and
+`posting_id` are all present, v1 omits `canonical_host` and `canonical_path`
+from the digest so a branded careers page and the ATS-hosted page collapse to
+the same fingerprint. When that stable ATS identity is missing, v1 falls back to
+the normalized `canonical_host` and `canonical_path` so different public URLs do
+not collapse accidentally.
 
 ## Versioning
 
 The version prefix `fp_v1_` is part of the fingerprint. If normalization changes in a backward-incompatible way, create a new version such as `fp_v2_` rather than rewriting old fingerprints.
-

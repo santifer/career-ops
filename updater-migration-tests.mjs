@@ -63,6 +63,8 @@ const requiredSystemPaths = [
   '.antigravitycli/skills/',
   '.grok/skills/',
   'tracker-columns-tests.mjs',
+  'listing-fingerprint.mjs',
+  'listing-fingerprint-tests.mjs',
   'updater-migration-tests.mjs',
   'README.ar.md',
   'README.ja.md',
