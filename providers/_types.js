@@ -18,11 +18,32 @@
  * @property {string} company  May be empty when the source can't expose it
  *                             at the list-page level; populated downstream.
  * @property {string} location May be empty.
+ * @property {string} [description] Job description text, populated ONLY when the
+ *                               provider's list payload carries it for free (no
+ *                               extra per-job request — the scanner is zero-token).
+ *                               Lever supplies it via `descriptionPlain`; most
+ *                               providers omit it. Consumed by scan.mjs's
+ *                               content_filter; an empty/absent value always
+ *                               passes the filter.
  * @property {number} [postedAt] Epoch ms when the posting was published.
  *                               Omitted when the source doesn't expose a
  *                               usable date. scan.mjs ignores it; consumers
  *                               like scan-ats-full.mjs use it for recency
  *                               filtering.
+ * @property {number} [trustScore] 0-100 trust score from _trust-validator.mjs.
+ * @property {string[]} [trustFlags] Flags raised by trust validation (e.g.
+ *                                   'invalid_url', 'suspicious_domain').
+ * @property {'high'|'medium'|'low'} [trustLevel] Classification derived from
+ *                                                 trustScore.
+ */
+
+/**
+ * Result returned by the trust validator for a single job posting.
+ *
+ * @typedef {object} TrustResult
+ * @property {number} score       0-100, where 100 = fully trusted.
+ * @property {string[]} flags     Flags raised (e.g. 'invalid_url', 'suspicious_domain').
+ * @property {'high'|'medium'|'low'} level  Classification: 90-100 high, 60-89 medium, 0-59 low.
  */
 
 /**
