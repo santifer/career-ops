@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -87,12 +86,22 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.careerOpsPath,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
+			msg.App,
 		)
 		m.state = viewReport
 		return m, nil
 
 	case screens.ViewerClosedMsg:
 		m.state = viewPipeline
+		return m, nil
+
+	case screens.ViewerUpdateStatusMsg:
+		err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
+		}
+		m.viewer.UpdateAppStatus(msg.NewStatus)
+		m.reloadPipelineData()
 		return m, nil
 
 	case screens.PipelineOpenProgressMsg:
@@ -109,10 +118,10 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case screens.PipelineOpenURLMsg:
-		return m, openWithDefaultApp(msg.URL)
+		return m, openCmd(msg.URL)
 
 	case screens.PipelineOpenPDFMsg:
-		return m, openWithDefaultApp(msg.Path)
+		return m, openCmd(msg.Path)
 
 	case screens.PipelineGeneratePDFMsg:
 		return m, runGeneratePDF(msg)
@@ -134,28 +143,13 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-// openNow hands a URL or file path to the OS default handler, blocking
-// until the launcher returns.
-func openNow(target string) error {
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = exec.Command("open", target)
-	case "linux":
-		cmd = exec.Command("xdg-open", target)
-	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", "", target)
-	default:
-		cmd = exec.Command("xdg-open", target)
-	}
-	return cmd.Run()
-}
-
-// openWithDefaultApp wraps openNow as a tea.Cmd. Shared by the job-URL
-// (`o`) and CV-PDF (`d`) actions.
-func openWithDefaultApp(target string) tea.Cmd {
+// openCmd wraps openWithDefaultApp (OS-specific) as a tea.Cmd. Shared by the
+// job-URL (`o`) and CV-PDF (`d`) actions.
+func openCmd(target string) tea.Cmd {
 	return func() tea.Msg {
-		_ = openNow(target)
+		if err := openWithDefaultApp(target); err != nil {
+			fmt.Fprintf(os.Stderr, "WARN: failed to open %q: %v\n", target, err)
+		}
 		return nil
 	}
 }
@@ -180,7 +174,7 @@ func runGeneratePDF(msg screens.PipelineGeneratePDFMsg) tea.Cmd {
 			return screens.PipelinePDFGeneratedMsg{Err: summarizeCmdError(err, out)}
 		}
 		pdfAbs := filepath.Join(msg.CareerOpsPath, filepath.FromSlash(msg.PDFPath))
-		if err := openNow(pdfAbs); err != nil {
+		if err := openWithDefaultApp(pdfAbs); err != nil {
 			return screens.PipelinePDFGeneratedMsg{Err: fmt.Sprintf("PDF generated but could not open: %v", err)}
 		}
 		return screens.PipelinePDFGeneratedMsg{Path: pdfAbs}
