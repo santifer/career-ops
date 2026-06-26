@@ -97,6 +97,7 @@ const SYSTEM_PATHS = [
   'reserve-report-num.mjs',
   'scan.mjs',
   'scan-ats-full.mjs',
+  'match-star.mjs',
   'providers/',
   'doctor.mjs',
   'check-liveness.mjs',
