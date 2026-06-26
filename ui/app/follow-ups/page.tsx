@@ -1,24 +1,8 @@
 import Link from 'next/link';
 import { getFollowups } from '@/lib/followups';
-import { getCareerOpsRoot } from '@/lib/pipeline';
-import { StatusPill } from '@/components/StatusPill';
-import type { FollowupEntry } from '@/lib/followups';
-
-const STATUS_DISPLAY: Record<string, string> = {
-  evaluated: 'Evaluated',
-  applied: 'Applied',
-  responded: 'Responded',
-  interview: 'Interview',
-  offer: 'Offer',
-  rejected: 'Rejected',
-  discarded: 'Discarded',
-  skip: 'SKIP',
-};
-
-function normalizeStatus(s: string): string {
-  const lower = s.toLowerCase();
-  return STATUS_DISPLAY[lower] ?? s;
-}
+import { getFollowupHistory } from '@/lib/followups-history';
+import { FollowupCard, type FollowupCardData } from '@/components/FollowupCard';
+import { sortFollowups, normalizeStatus } from '@/components/followup-shared';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -27,23 +11,30 @@ export default function FollowUpsPage() {
   const data = getFollowups();
   const { metadata, entries, cadenceConfig } = data;
 
-  const groups = {
-    overdue: entries.filter((e) => e.urgency === 'overdue' || e.urgency === 'urgent'),
-    waiting: entries.filter((e) => e.urgency === 'waiting'),
-    cold: entries.filter((e) => e.urgency === 'cold'),
-  };
-  void groups;
-  const ordered: FollowupEntry[] = [...entries].sort((a, b) => {
-    const ao = urgencyRank(a.urgency);
-    const bo = urgencyRank(b.urgency);
-    if (ao !== bo) return ao - bo;
-    const ad = a.daysUntilNext ?? 0;
-    const bd = b.daysUntilNext ?? 0;
-    return ad - bd;
-  });
+  const history = getFollowupHistory();
+  const historyByApp = new Map<number, number>();
+  for (const h of history) {
+    historyByApp.set(h.appNumber, (historyByApp.get(h.appNumber) ?? 0) + 1);
+  }
 
-  const root = getCareerOpsRoot();
-  void root;
+  const cards: FollowupCardData[] = entries.map((e) => ({
+    num: e.num,
+    date: e.date,
+    company: e.company,
+    role: e.role,
+    status: e.status,
+    statusDisplay: normalizeStatus(e.status),
+    score: e.score,
+    notes: e.notes,
+    appliedDate: e.appliedDate,
+    daysSinceApplication: e.daysSinceApplication,
+    daysUntilNext: e.daysUntilNext,
+    followupCount: historyByApp.get(e.num) ?? e.followupCount,
+    urgency: e.urgency,
+    contacts: e.contacts,
+  }));
+
+  const ordered = sortFollowups(cards);
 
   return (
     <div className="space-y-6">
@@ -70,124 +61,56 @@ export default function FollowUpsPage() {
         <Stat label="Cold" value={metadata.cold} accent="slate" />
       </section>
 
+      {history.length > 0 && (
+        <section className="rounded-lg border border-ink-800 bg-ink-900/60 p-5">
+          <h2 className="font-semibold text-slate-200 mb-3">
+            Recorded follow-ups · {history.length}
+          </h2>
+          <div className="rounded border border-ink-800 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-slate-500 border-b border-ink-800 bg-ink-950/40">
+                  <th className="px-3 py-2 text-left">#</th>
+                  <th className="px-3 text-left">App</th>
+                  <th className="px-3 text-left">Date</th>
+                  <th className="px-3 text-left">Company</th>
+                  <th className="px-3 text-left">Channel</th>
+                  <th className="px-3 text-left">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.slice().reverse().slice(0, 10).map((h) => (
+                  <tr key={h.number} className="border-b border-ink-800/50">
+                    <td className="px-3 py-1.5 mono text-slate-400">{h.number}</td>
+                    <td className="px-3">
+                      <Link href={`/applications/${h.appNumber}`} className="mono text-accent-300 hover:underline">#{h.appNumber}</Link>
+                    </td>
+                    <td className="px-3 mono text-slate-400">{h.date}</td>
+                    <td className="px-3 text-slate-200">{h.company}</td>
+                    <td className="px-3"><span className="text-xs text-slate-400">{h.channel}</span></td>
+                    <td className="px-3 text-slate-300 truncate max-w-xs">{h.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {ordered.length === 0 && (
         <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-6 text-center text-emerald-200">
-          No follow-ups needed. 🎉
+          No follow-ups needed.
         </div>
       )}
 
       {ordered.length > 0 && (
         <section className="space-y-3">
           {ordered.map((e) => (
-            <article
-              key={e.num}
-              className={`rounded-lg border p-4 ${cardStyle(e.urgency)}`}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link href={`/applications/${e.num}`} className="text-lg font-semibold hover:underline">
-                      <span className="text-accent-300">{e.company}</span>
-                    </Link>
-                    <span className="text-slate-300 truncate">— {e.role}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-2 text-sm text-slate-400">
-                    <span className="mono">#{e.num}</span>
-                    <span>·</span>
-                    <span className="mono">{e.date}</span>
-                    <span>·</span>
-                    <StatusPill status={normalizeStatus(e.status)} />
-                    {e.score && (
-                      <>
-                        <span>·</span>
-                        <span className="mono">{e.score}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <UrgencyBadge urgency={e.urgency} />
-                  {e.daysUntilNext !== null && e.daysUntilNext < 0 && (
-                    <p className="text-xs text-slate-400 mono mt-1">
-                      {Math.abs(e.daysUntilNext)}d overdue
-                    </p>
-                  )}
-                  {e.daysUntilNext !== null && e.daysUntilNext >= 0 && (
-                    <p className="text-xs text-slate-400 mono mt-1">
-                      due in {e.daysUntilNext}d
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {e.notes && (
-                <p className="text-sm text-slate-300 mt-3 border-l-2 border-ink-700 pl-3 line-clamp-2">
-                  {e.notes}
-                </p>
-              )}
-
-              <div className="flex flex-wrap gap-2 mt-3 text-xs text-slate-400">
-                <span className="mono">applied {e.appliedDate ?? '—'}</span>
-                {e.daysSinceApplication !== null && (
-                  <>
-                    <span>·</span>
-                    <span>{e.daysSinceApplication}d ago</span>
-                  </>
-                )}
-                <span>·</span>
-                <span>{e.followupCount === 0 ? 'no follow-ups yet' : `${e.followupCount} follow-up${e.followupCount === 1 ? '' : 's'}`}</span>
-                {e.contacts.length > 0 && (
-                  <>
-                    <span>·</span>
-                    <span>contacts: {e.contacts.join(', ')}</span>
-                  </>
-                )}
-                {e.nextFollowupDate && (
-                  <>
-                    <span>·</span>
-                    <span>next: <span className="mono">{e.nextFollowupDate}</span></span>
-                  </>
-                )}
-              </div>
-            </article>
+            <FollowupCard key={e.num} entry={e} />
           ))}
         </section>
       )}
     </div>
-  );
-}
-
-function urgencyRank(u: string): number {
-  switch (u) {
-    case 'urgent': return 0;
-    case 'overdue': return 1;
-    case 'waiting': return 2;
-    case 'cold': return 3;
-    default: return 4;
-  }
-}
-
-function cardStyle(u: string): string {
-  switch (u) {
-    case 'urgent': return 'border-amber-700/50 bg-amber-950/20';
-    case 'overdue': return 'border-rose-700/50 bg-rose-950/20';
-    case 'waiting': return 'border-emerald-700/40 bg-emerald-950/10';
-    case 'cold': return 'border-slate-700/40 bg-slate-900/40';
-    default: return 'border-ink-800 bg-ink-900/60';
-  }
-}
-
-function UrgencyBadge({ urgency }: { urgency: string }) {
-  const colors: Record<string, string> = {
-    urgent: 'bg-amber-700/40 text-amber-200 border-amber-700/60',
-    overdue: 'bg-rose-700/40 text-rose-200 border-rose-700/60',
-    waiting: 'bg-emerald-700/40 text-emerald-200 border-emerald-700/60',
-    cold: 'bg-slate-700/60 text-slate-300 border-slate-700/60',
-  };
-  return (
-    <span className={`inline-block rounded-full border px-2 py-0.5 text-xs uppercase tracking-wider ${colors[urgency] ?? ''}`}>
-      {urgency}
-    </span>
   );
 }
 

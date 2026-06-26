@@ -8,7 +8,8 @@ Local visual layer over your `data/applications.md`. The CLI agent stays the sou
 |---|---|
 | `/` | Dashboard — KPIs, status funnel chart, score histogram, weekly cadence, recent activity |
 | `/pipeline` | Application list — filter, sort, search (incl. report body), status edit |
-| `/follow-ups` | Overdue follow-ups — sourced from `followup-cadence.mjs`, sorted by urgency |
+| `/inbox` | Pending URLs from `data/pipeline.md` — grouped by company, copy URL, see processed history |
+| `/follow-ups` | Overdue follow-ups from `followup-cadence.mjs`, with inline "Record follow-up" button |
 | `/applications/[num]` | Application detail — full report, status editor, metadata |
 | `/cv` | Read-only preview of `cv.md` |
 | `/settings` | Read-only view of `config/profile.yml` and `modes/_profile.md` |
@@ -16,14 +17,15 @@ Local visual layer over your `data/applications.md`. The CLI agent stays the sou
 | `/api/applications/[num]` | PATCH status/notes |
 | `/api/applications.csv` | CSV export |
 | `/api/follow-ups` | JSON from upstream `followup-cadence.mjs` |
+| `/api/follow-ups/record` | POST to append a row to `data/follow-ups.md` |
 | `/api/events` | SSE stream — emits on filesystem changes |
 | `/output/[name]` | Serves PDFs from `output/` |
 
-## Phase 2 highlights
+## Phase 3 highlights
 
-- **Charts on `/`**: Recharts (status funnel, score histogram, weekly applications timeline).
-- **`/follow-ups`**: spawns `followup-cadence.mjs` and renders 13-overdue cards with urgency, days overdue, next-due date, contacts.
-- **Body search**: `/pipeline?q=...` now matches report markdown body, not just company/role/notes.
+- **`/inbox`**: parses `data/pipeline.md`, groups pending URLs by company, copy-URL button per role, shows recently processed history.
+- **"Record follow-up" button** on every `/follow-ups` card: opens a small form (date / channel / contact / notes) → POSTs to `/api/follow-ups/record` → writes a row to `data/follow-ups.md`. Once recorded, the cadence script counts it on the next refresh and the app moves from `overdue` → `waiting`.
+- **`data/follow-ups.md` is auto-created** with the canonical header on first record.
 
 ## Running
 
@@ -48,6 +50,7 @@ Next.js (Node, in-memory)
   ├─ parseApplications() reads data/applications.md on each request
   ├─ In-memory cache; rebuilds on file change (no persistent DB)
   ├─ followups() spawns upstream followup-cadence.mjs (30s cache)
+  ├─ inbox() parses data/pipeline.md into {pending, processed} groups
   └─ Writer uses file mutex (.ui-update.lock) for atomic edits
        ↓
   Filesystem (data/, reports/, cv.md)
@@ -63,6 +66,7 @@ Next.js (Node, in-memory)
 - Writer preserves original number formatting (`001` stays `001`) and report link format
 - PDF serving is path-validated (`/output/[name]` rejects paths outside `output/`)
 - Followups page wraps upstream CLI; failure surfaces as empty cards, never corrupts data
+- Follow-up recording requires explicit user click on the form's Save button — never implicit
 
 ## Tests
 
@@ -71,4 +75,4 @@ cd ui
 npm test
 ```
 
-Covers: parser, report summarizer, status round-trip, notes round-trip, canonical-status validation, link-format preservation.
+10 tests covering: parser, report summary, status round-trip, notes round-trip, canonical-status validation, link preservation, inbox parser.
