@@ -46,3 +46,18 @@ export function makeHttpCtx() {
     fetchText,
   };
 }
+
+/**
+ * Convert a date value to epoch milliseconds for freshness comparisons.
+ * Handles ISO 8601 strings, RFC 2822 (RSS pubDate), Unix seconds, and epoch ms.
+ * Returns null for missing or unparseable values.
+ */
+export function toEpochMs(value) {
+  if (value == null || value === '') return null;
+  if (typeof value === 'number') {
+    // Heuristic: values < 1e12 are Unix seconds, >= 1e12 are already ms
+    return value < 1_000_000_000_000 ? value * 1000 : value;
+  }
+  const ms = Date.parse(value);
+  return isNaN(ms) ? null : ms;
+}
