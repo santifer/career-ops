@@ -4830,6 +4830,34 @@ try {
     fail(`tricky location = ${JSON.stringify(tj[0]?.location)}`);
   }
 
+  // Hardening: a <jobDescriptions> value carrying a literal "</position>" must
+  // not truncate the block split. Stripping descriptions from the whole feed
+  // first keeps both positions intact.
+  const sneaky = `<workzag-jobs><position>
+    <id>1</id><name>First</name>
+    <jobDescriptions><jobDescription><name>About</name><value>uses &lt;/position&gt; literally: </position></value></jobDescription></jobDescriptions>
+  </position><position>
+    <id>2</id><name>Second</name>
+  </position></workzag-jobs>`;
+  const sj2 = parsePersonioXml(sneaky, 'Acme', HOST);
+  if (sj2.length === 2 && sj2[0].title === 'First' && sj2[1].title === 'Second') {
+    pass('parsePersonioXml survives a literal </position> inside <jobDescriptions>');
+  } else {
+    fail(`sneaky parse = ${JSON.stringify(sj2.map(j => j.title))} (len ${sj2.length})`);
+  }
+
+  // fetch() passes redirect:'error' to fetchText (SSRF hardening must not regress)
+  let capturedOpts = null;
+  await personio.fetch(
+    { name: 'Acme', careers_url: 'https://acme.jobs.personio.de/' },
+    { fetchText: async (_url, opts) => { capturedOpts = opts; return '<workzag-jobs></workzag-jobs>'; } },
+  );
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('personio.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail(`personio.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
 } catch (e) {
   fail(`personio provider tests crashed: ${e.message}`);
 }

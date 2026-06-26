@@ -132,13 +132,14 @@ function tagText(block, tag) {
 export function parsePersonioXml(xml, companyName, host) {
   if (typeof xml !== 'string') return [];
   const jobs = [];
-  const blocks = xml.match(/<position\b[^>]*>[\s\S]*?<\/position>/g) || [];
-  for (const block of blocks) {
-    // Strip the <jobDescriptions> subtree before reading scalar fields: it holds
-    // per-section <name>/<value> pairs whose nested <name> would otherwise race
-    // the position's own <name> (and the same for any other scalar tag).
-    const scalar = block.replace(/<jobDescriptions\b[^>]*>[\s\S]*?<\/jobDescriptions>/gi, '');
-
+  // Strip every <jobDescriptions> subtree from the WHOLE feed before splitting
+  // into <position> blocks: descriptions are free-text HTML that can carry a
+  // literal "</position>" which would otherwise truncate the non-greedy block
+  // match. It also drops the per-section <name>/<value> pairs whose nested
+  // <name> would race the position's own <name> (same for any other scalar tag).
+  const stripped = xml.replace(/<jobDescriptions\b[^>]*>[\s\S]*?<\/jobDescriptions>/gi, '');
+  const blocks = stripped.match(/<position\b[^>]*>[\s\S]*?<\/position>/g) || [];
+  for (const scalar of blocks) {
     const title = tagText(scalar, 'name');
     if (!title) continue;
 
