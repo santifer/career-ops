@@ -495,8 +495,8 @@ search_queries:
 #   arbeitsagentur:
 #     keywords: ["AI Engineer", "Machine Learning"]  # required (>=1)
 #     wo: Berlin          # optional anchor city ('' / omit = all of Germany)
-#     umkreis: 50         # optional km radius (used with wo)
-#     days: 30            # optional recency window
+#     umkreis: 50         # optional km radius around wo (0-1000)
+#     days: 30            # optional recency window (1-1000)
 #     size: 100           # optional results per keyword (1-100)
 #   enabled: true
 #
