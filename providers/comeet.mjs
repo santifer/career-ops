@@ -41,6 +41,19 @@ function assertComeetUrl(url) {
   return url;
 }
 
+// Redact the per-tenant ?token= so the (informational, possibly-logged)
+// DetectHit url never carries the secret. Best-effort: returns the input
+// unchanged if it can't be parsed.
+function redactToken(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.searchParams.has('token')) parsed.searchParams.set('token', 'REDACTED');
+    return parsed.href;
+  } catch {
+    return url;
+  }
+}
+
 /** @param {import('./_types.js').PortalEntry} entry */
 function resolveApiUrl(entry) {
   if (isComeetApiUrl(entry.api)) return entry.api;
@@ -64,7 +77,10 @@ export default {
 
   detect(entry) {
     const apiUrl = resolveApiUrl(entry);
-    return apiUrl ? { url: apiUrl } : null;
+    // The DetectHit url is informational (the framework may log it), so strip
+    // the secret ?token= before returning it — fetch() re-resolves the real
+    // URL from the entry, so redaction here is safe.
+    return apiUrl ? { url: redactToken(apiUrl) } : null;
   },
 
   async fetch(entry, ctx) {

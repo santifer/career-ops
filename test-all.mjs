@@ -4695,18 +4695,26 @@ try {
   if (comeet.id === 'comeet') pass('comeet.id is "comeet"');
   else fail(`comeet.id is ${JSON.stringify(comeet.id)}`);
 
-  // detect: explicit api: careers-api URL is honoured
+  // detect: explicit api: careers-api URL is honoured (and the secret token is
+  // redacted from the informational DetectHit url).
   const apiUrl = 'https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=ABC123';
   const apiHit = comeet.detect({ name: 'Spark Hire', api: apiUrl, careers_url: 'https://www.comeet.com/jobs/spark-hire/30.005' });
-  if (apiHit && apiHit.url === apiUrl) {
-    pass('comeet.detect() resolves an explicit api: careers-api URL');
+  if (apiHit && apiHit.url === 'https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=REDACTED') {
+    pass('comeet.detect() resolves an explicit api: URL and redacts the token');
   } else {
     fail(`comeet.detect() api: → ${JSON.stringify(apiHit)}`);
   }
 
+  // the DetectHit url must not leak the real token (it may be logged)
+  if (apiHit && !apiHit.url.includes('ABC123')) {
+    pass('comeet.detect() does not leak the real token in the DetectHit url');
+  } else {
+    fail(`comeet.detect() leaked the token: ${JSON.stringify(apiHit)}`);
+  }
+
   // detect: full careers-api URL pasted into careers_url is also accepted
   const cuHit = comeet.detect({ name: 'X', careers_url: apiUrl });
-  if (cuHit && cuHit.url === apiUrl) {
+  if (cuHit && cuHit.url === 'https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=REDACTED') {
     pass('comeet.detect() accepts a careers-api URL in careers_url');
   } else {
     fail(`comeet.detect() careers_url → ${JSON.stringify(cuHit)}`);
