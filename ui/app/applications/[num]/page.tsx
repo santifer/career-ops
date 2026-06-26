@@ -10,6 +10,7 @@ import { getCanonicalStatuses } from '@/lib/states';
 import { getCareerOpsRoot } from '@/lib/pipeline';
 import { StatusEditor } from './StatusEditor';
 import { StatusPill } from '@/components/StatusPill';
+import { RunJobButton } from '@/components/RunJobButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +64,14 @@ export default function ApplicationDetail({ params }: { params: { num: string } 
               Jump to report
             </Link>
           )}
+          <RunJobButton
+            kind="script"
+            id="generate-pdf"
+            label={pdfExists ? 'Regenerate PDF' : 'Generate PDF'}
+            variant="secondary"
+            defaultArgs={{ number: String(app.number) }}
+            size="md"
+          />
         </div>
         {app.notes && (
           <p className="mt-4 text-sm text-slate-300 border-l-2 border-accent-500/40 pl-3">

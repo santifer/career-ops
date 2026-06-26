@@ -6,6 +6,7 @@ import { StatusFunnel } from '@/components/StatusFunnel';
 import { ScoreHistogram } from '@/components/ScoreHistogram';
 import { ApplicationsTimeline } from '@/components/ApplicationsTimeline';
 import { StatusPill } from '@/components/StatusPill';
+import { RunJobButton } from '@/components/RunJobButton';
 import { getFollowups } from '@/lib/followups';
 
 export const dynamic = 'force-dynamic';
@@ -129,6 +130,47 @@ export default function Home() {
         </div>
         <RecentTable limit={5} />
       </section>
+
+      <section className="rounded-lg border border-ink-800 bg-ink-900/60 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-slate-200">Quick actions</h2>
+          <Link href="/jobs" className="text-accent-300 text-sm hover:underline">All jobs →</Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <QuickAction
+            title="Scan portals"
+            desc="Pull fresh job postings from portals.yml"
+            kind="script" id="scan"
+            label="Scan now"
+          />
+          <QuickAction
+            title="Check liveness"
+            desc="Confirm each tracked posting is still live"
+            kind="script" id="liveness"
+            label="Check"
+          />
+          <QuickAction
+            title="Analyze patterns"
+            desc="Funnel conversion, archetype effectiveness"
+            kind="script" id="analyze-patterns"
+            label="Analyze"
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function QuickAction({ title, desc, kind, id, label }: { title: string; desc: string; kind: 'script' | 'ai'; id: string; label: string }) {
+  return (
+    <div className="rounded-lg border border-ink-800 bg-ink-950/40 p-4 flex flex-col gap-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-slate-200 text-sm">{title}</h3>
+          <p className="text-xs text-slate-400 mt-1">{desc}</p>
+        </div>
+        <RunJobButton kind={kind} id={id} label={label} variant="secondary" />
+      </div>
     </div>
   );
 }

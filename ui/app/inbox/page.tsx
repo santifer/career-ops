@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { parsePipelineInbox, getInboxSummary } from '@/lib/inbox';
 import { CopyButton } from '@/components/CopyButton';
+import { RunJobButton } from '@/components/RunJobButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,14 +40,17 @@ export default function InboxPage({ searchParams }: { searchParams: SearchParams
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Inbox</h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Pending URLs from <code className="mono">data/pipeline.md</code>. Paste a URL into the CLI agent to evaluate it.
-        </p>
-        <p className="text-slate-500 text-xs mt-1 mono">
-          {summary.pending} pending · {summary.processed} processed · {summary.companies} unique companies
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Inbox</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Pending URLs from <code className="mono">data/pipeline.md</code>. Paste a URL into the CLI agent to evaluate it.
+          </p>
+          <p className="text-slate-500 text-xs mt-1 mono">
+            {summary.pending} pending · {summary.processed} processed · {summary.companies} unique companies
+          </p>
+        </div>
+        <RunJobButton kind="script" id="scan" label="Scan portals now" variant="primary" />
       </div>
 
       <form className="flex flex-wrap gap-3 items-end" method="get">

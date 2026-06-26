@@ -6,11 +6,13 @@ Local visual layer over your `data/applications.md`. The CLI agent stays the sou
 
 | Route | Purpose |
 |---|---|
-| `/` | Dashboard — KPIs, status funnel chart, score histogram, weekly cadence, recent activity |
+| `/` | Dashboard — KPIs, status funnel chart, score histogram, weekly cadence, recent activity, quick actions |
 | `/pipeline` | Application list — filter, sort, search (incl. report body), status edit |
-| `/inbox` | Pending URLs from `data/pipeline.md` — grouped by company, copy URL, see processed history |
+| `/inbox` | Pending URLs from `data/pipeline.md` — grouped by company, copy URL, see processed history, "Scan now" button |
 | `/follow-ups` | Overdue follow-ups from `followup-cadence.mjs`, with inline "Record follow-up" button |
-| `/applications/[num]` | Application detail — full report, status editor, metadata |
+| `/jobs` | Trigger CLI scripts and AI modes from the UI; view job list |
+| `/jobs/[id]` | Single job with live log streaming |
+| `/applications/[num]` | Application detail — full report, status editor, metadata, "Generate PDF" button |
 | `/cv` | Read-only preview of `cv.md` |
 | `/settings` | Read-only view of `config/profile.yml` and `modes/_profile.md` |
 | `/api/applications` | JSON list (filter/sort/paginate) |
@@ -18,6 +20,9 @@ Local visual layer over your `data/applications.md`. The CLI agent stays the sou
 | `/api/applications.csv` | CSV export |
 | `/api/follow-ups` | JSON from upstream `followup-cadence.mjs` |
 | `/api/follow-ups/record` | POST to append a row to `data/follow-ups.md` |
+| `/api/jobs` | POST to start a script/AI job, GET to list recent |
+| `/api/jobs/[id]` | GET job status, DELETE to cancel |
+| `/api/jobs/[id]/logs` | SSE stream of job stdout/stderr |
 | `/api/events` | SSE stream — emits on filesystem changes |
 | `/output/[name]` | Serves PDFs from `output/` |
 
@@ -26,6 +31,14 @@ Local visual layer over your `data/applications.md`. The CLI agent stays the sou
 - **`/inbox`**: parses `data/pipeline.md`, groups pending URLs by company, copy-URL button per role, shows recently processed history.
 - **"Record follow-up" button** on every `/follow-ups` card: opens a small form (date / channel / contact / notes) → POSTs to `/api/follow-ups/record` → writes a row to `data/follow-ups.md`. Once recorded, the cadence script counts it on the next refresh and the app moves from `overdue` → `waiting`.
 - **`data/follow-ups.md` is auto-created** with the canonical header on first record.
+
+## Phase 4 highlights
+
+- **`/jobs`**: trigger any of 9 whitelisted scripts (`scan`, `liveness`, `merge-tracker`, `analyze-patterns`, `cv-sync-check`, `verify-portals`, `followup-cadence`, `scan-ats-full`, `generate-pdf`) and 5 AI modes (`interview-prep`, `apply`, `contacto`, `cover`, `pipeline`) from the UI.
+- **Live log streaming** at `/jobs/[id]` — SSE-backed, auto-scrolls, color-coded (stdout / stderr / system), cancel button.
+- **AI mode** spawns a headless CLI agent (opencode → claude → codex fallback) with the matching `modes/<mode>.md` injected as system context.
+- **Safety**: scripts must be in the explicit whitelist, 5-min default timeout (10 min for AI), 4 MB log cap, single concurrent job, per-file mutex on applications.md.
+- **Buttons throughout**: "Scan portals" on `/inbox`, "Generate PDF" on `/applications/[num]`, Quick Actions panel on `/`.
 
 ## Running
 
