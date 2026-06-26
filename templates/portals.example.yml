@@ -467,7 +467,7 @@ search_queries:
 # Some providers are job boards / aggregators with no per-company careers
 # URL to detect, so they must be selected with an explicit `provider:`
 # field: arbeitsagentur, glints, jobstreet, ibm, remoteok, remotive,
-# workingnomads. Examples for every built-in provider are below.
+# weworkremotely, workingnomads. Examples for every built-in provider are below.
 
 # ── Built-in provider examples ────────────────────────────────────
 # Commented config for each provider in providers/. Copy a stanza into
@@ -531,6 +531,10 @@ search_queries:
 #
 # - name: Remotive
 #   provider: remotive
+#   enabled: true
+#
+# - name: We Work Remotely
+#   provider: weworkremotely
 #   enabled: true
 #
 # - name: Working Nomads
