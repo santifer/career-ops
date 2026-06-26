@@ -159,9 +159,10 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
-  // Bare run: no portals.yml in the repo, so it must exit 0 gracefully (and hit
-  // no network). The probe logic itself is unit-tested below with a mock.
-  { name: 'verify-portals.mjs', expectExit: 0 },
+  // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
+  // default portals.yml because end-user workspaces often have a real user-layer
+  // portals file that would trigger a live remote sweep during tests.
+  { name: 'verify-portals.mjs --file .tmp-test-missing-portals.yml', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
@@ -262,6 +263,34 @@ try {
     pass('Polish "Aplikuj" apply control marks a loaded posting active');
   } else {
     fail(`Polish apply control not recognized: ${activePolishPosting.result} (${activePolishPosting.code})`);
+  }
+
+  // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
+  // pure URL→API resolution + SSRF guard; the network fetch is conservative by
+  // construction (only 404/410→expired, 200→active, else null→Playwright fallback).
+  const { resolveAtsApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
+  const ghApi = resolveAtsApi('https://boards.greenhouse.io/acme/jobs/4567890');
+  if (ghApi?.ats === 'greenhouse' && ghApi.apiUrl === 'https://boards-api.greenhouse.io/v1/boards/acme/jobs/4567890') {
+    pass('resolveAtsApi maps a Greenhouse posting to its per-job API URL');
+  } else {
+    fail(`Greenhouse API URL wrong: ${JSON.stringify(ghApi)}`);
+  }
+  const lvApi = resolveAtsApi('https://jobs.lever.co/acme/abc-123-def');
+  if (lvApi?.ats === 'lever' && lvApi.apiUrl === 'https://api.lever.co/v0/postings/acme/abc-123-def') {
+    pass('resolveAtsApi maps a Lever posting to its per-job API URL');
+  } else {
+    fail(`Lever API URL wrong: ${JSON.stringify(lvApi)}`);
+  }
+  if (resolveAtsApi('https://example.com/jobs/123') === null) {
+    pass('resolveAtsApi returns null for non-ATS URLs (→ Playwright fallback)');
+  } else {
+    fail('resolveAtsApi should return null for an unknown host');
+  }
+  if (resolveAtsApi('https://boards.greenhouse.io/acme/jobs/not-a-number') === null
+      && resolveAtsApi('http://boards.greenhouse.io/acme/jobs/123') === null) {
+    pass('resolveAtsApi rejects non-numeric Greenhouse ids and non-https (SSRF guard)');
+  } else {
+    fail('resolveAtsApi guard failed (bad id or http accepted)');
   }
 
   // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
@@ -435,10 +464,13 @@ const systemFiles = [
   'CLAUDE.md', 'OPENCODE.md', 'VERSION', 'DATA_CONTRACT.md',
   'modes/_shared.md', 'modes/_profile.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
+  'modes/heuristics/recruiter-side.md',
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
+  '.qwen/skills/career-ops/SKILL.md',
   '.antigravitycli/skills/career-ops/SKILL.md',
+  '.grok/skills/career-ops/SKILL.md',
 ];
 
 for (const f of systemFiles) {
@@ -494,6 +526,23 @@ if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSou
   fail('Batch summary can misreport skipped offers as pending');
 }
 
+if (!/\bbc\b/.test(batchRunnerSource)) {
+  pass('Batch runner does not depend on bc for score arithmetic');
+} else {
+  fail('Batch runner still depends on bc for score arithmetic');
+}
+
+if (
+  !/awk "BEGIN\{[^"]*\$MIN_SCORE/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$score/.test(batchRunnerSource) &&
+  !/awk "BEGIN\{[^"]*\$sscore/.test(batchRunnerSource) &&
+  /awk -v score="\$score" -v min="\$MIN_SCORE"/.test(batchRunnerSource)
+) {
+  pass('Batch runner passes score values to awk via -v');
+} else {
+  fail('Batch runner interpolates score values into awk programs');
+}
+
 // ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
 console.log('\n6. Personal data leak check');
@@ -506,7 +555,7 @@ const leakPatterns = [
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
+  'README.md', 'README.da.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
   'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
@@ -605,6 +654,7 @@ const expectedModes = [
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md',
+  'regional/eu-swe.md',
 ];
 
 for (const mode of expectedModes) {
@@ -813,6 +863,63 @@ try {
   fail(`scan-ats-full host-guard test crashed: ${e.message}`);
 }
 
+// Reverse-scan date gate (--include-undated) + cap-aware sampling (--shuffle).
+try {
+  const { classifyPostingDate, sampleCompanies } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const cutoff = 1_000_000;
+  const dateOk =
+    classifyPostingDate({ postedAt: 2_000_000 }, cutoff) === 'keep' &&
+    classifyPostingDate({ postedAt: 500_000 }, cutoff) === 'stale' &&
+    classifyPostingDate({}, cutoff) === 'undated' &&
+    classifyPostingDate({ postedAt: null }, cutoff) === 'undated';
+  if (dateOk) pass('scan-ats-full classifyPostingDate: fresh→keep, old→stale, no-date→undated (the --include-undated gate)');
+  else fail('scan-ats-full classifyPostingDate gate is wrong');
+
+  const list = ['a', 'b', 'c', 'd', 'e'];
+  const prefix = sampleCompanies(list, 3, false);
+  const all = sampleCompanies(list, 99, false);
+  const shuffled = sampleCompanies(list, 3, true);
+  const sampleOk =
+    JSON.stringify(prefix) === JSON.stringify(['a', 'b', 'c']) &&        // default = alphabetical prefix
+    all.length === 5 &&                                                  // limit >= length → all
+    shuffled.length === 3 &&                                             // --shuffle still respects the cap
+    shuffled.every((x) => list.includes(x)) &&                           // --shuffle preserves membership
+    JSON.stringify(list) === JSON.stringify(['a', 'b', 'c', 'd', 'e']);  // never mutates the input
+  if (sampleOk) pass('scan-ats-full sampleCompanies: alphabetical prefix by default; capped, membership-preserving, non-mutating on --shuffle');
+  else fail('scan-ats-full sampleCompanies behaves wrong');
+} catch (e) {
+  fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
+}
+
+// tracker.mjs delete: removeRowByNum removes the right row, preserves the rest.
+try {
+  const { removeRowByNum } = await import(pathToFileURL(join(ROOT, 'tracker.mjs')).href);
+  const md = [
+    '# Applications',
+    '',
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 1 | 2026-06-01 | Acme | Dev | 4.0/5 | Evaluated | y | [r1](reports/1.md) | a |',
+    '| 2 | 2026-06-02 | Beta | Eng | 3.5/5 | Applied | y | [r2](reports/2.md) | b |',
+    '| 3 | 2026-06-03 | Gamma | Lead | 4.5/5 | Interview | y | [r3](reports/3.md) | c |',
+    '',
+  ].join('\n');
+  const r2 = removeRowByNum(md, 2);
+  const miss = removeRowByNum(md, 99);
+  const ok =
+    r2.removed && r2.removedCount === 1 &&
+    r2.report === '[r2](reports/2.md)' &&            // report column (index 7) surfaced for orphan note
+    !r2.newContent.includes('| 2 |') &&              // the target row is gone
+    r2.newContent.includes('| 1 |') && r2.newContent.includes('| 3 |') && // other rows kept
+    r2.newContent.includes('# Applications') &&      // non-table line preserved
+    r2.newContent.includes('|---|') &&               // separator preserved
+    miss.removed === false && miss.newContent === md; // no-op on a missing number
+  if (ok) pass('tracker.mjs removeRowByNum: removes the matching row, preserves header/separator/other rows, no-op on miss');
+  else fail('tracker.mjs removeRowByNum behaves wrong');
+} catch (e) {
+  fail(`tracker.mjs removeRowByNum test crashed: ${e.message}`);
+}
+
 // ── 10. PORTALS CONFIG VALIDATOR ────────────────────────────────
 
 console.log('\n10. Portals config validator');
@@ -996,7 +1103,7 @@ for (const section of requiredSections) {
 
 console.log('\n11. CLI wrapper file integrity');
 
-const cliWrappers = ['CLAUDE.md', 'OPENCODE.md', 'GEMINI.md'];
+const cliWrappers = ['CLAUDE.md', 'OPENCODE.md'];
 for (const f of cliWrappers) {
   if (!fileExists(f)) {
     fail(`Missing CLI wrapper: ${f}`);
@@ -1009,6 +1116,16 @@ for (const f of cliWrappers) {
     fail(`${f} does NOT reference AGENTS.md`);
   }
 }
+if (!fileExists('GEMINI.md')) {
+  fail('Missing legacy Gemini context guard: GEMINI.md');
+} else {
+  const geminiContext = readFile('GEMINI.md');
+  if (/^@(?:\.\/)?AGENTS\.md/m.test(geminiContext)) {
+    fail('GEMINI.md imports AGENTS.md and duplicates Antigravity context');
+  } else {
+    pass('GEMINI.md is a no-op context guard for Antigravity');
+  }
+}
 
 // ── 12. SKILL SYMLINK INTEGRITY ─────────────────────────────
 
@@ -1018,7 +1135,9 @@ const canonicalSkill = '.agents/skills/career-ops/SKILL.md';
 const symlinks = [
   '.claude/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
+  '.qwen/skills/career-ops/SKILL.md',
   '.antigravitycli/skills/career-ops/SKILL.md',
+  '.grok/skills/career-ops/SKILL.md',
 ];
 
 let canonicalReal = null;
@@ -1102,6 +1221,51 @@ console.log('\n12a. Skill entrypoint materialization');
   }
 }
 
+console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
+
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-ensure-skills-'));
+  try {
+    const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    mkdirSync(canonicalDir, { recursive: true });
+    mkdirSync(claudeDir, { recursive: true });
+
+    const fixtureSkill = '---\nname: career-ops\n---\n\n# canonical skill\n';
+    const pointer = '../../../.agents/skills/career-ops/SKILL.md';
+    writeFileSync(join(canonicalDir, 'SKILL.md'), fixtureSkill);
+    writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
+
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const touched = skills.ensureSkillEntrypoints(fixtureRoot).sort();
+    const expectedTouched = [
+      '.antigravitycli/skills/career-ops/SKILL.md',
+      '.claude/skills/career-ops/SKILL.md',
+      '.grok/skills/career-ops/SKILL.md',
+      '.opencode/skills/career-ops/SKILL.md',
+      '.qwen/skills/career-ops/SKILL.md',
+    ];
+
+    if (JSON.stringify(touched) === JSON.stringify(expectedTouched)) {
+      pass('ensureSkillEntrypoints bootstraps all CLI skill entrypoints');
+    } else {
+      fail(`unexpected bootstrapped skill entrypoints: ${JSON.stringify(touched)}`);
+    }
+
+    const grokSkill = readFileSync(join(fixtureRoot, '.grok', 'skills', 'career-ops', 'SKILL.md'), 'utf-8');
+    const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
+    if (grokSkill === fixtureSkill && claudeSkill === fixtureSkill) {
+      pass('ensureSkillEntrypoints materializes canonical skill content');
+    } else {
+      fail('bootstrapped skill entrypoints do not match canonical content');
+    }
+  } catch (e) {
+    fail(`skill entrypoint bootstrap test crashed: ${e.message}`);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
 {
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-unreadable-'));
   try {
@@ -1160,7 +1324,7 @@ console.log('\n12a. Skill entrypoint materialization');
   }
 }
 
-console.log('\n12b. Materialized skill index mode');
+console.log('\n12c. Materialized skill index mode');
 
 {
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skill-git-'));
@@ -1482,6 +1646,49 @@ try {
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }
+
+// ── 11b. TITLE FILTER — acronym word boundaries ──────────────────
+console.log('\n11b. Title filter — acronym word boundaries');
+try {
+  const { buildTitleFilter, compileKeyword } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // Short all-letter acronyms match on WORD BOUNDARIES, not as substrings.
+  const cooFilter = buildTitleFilter({ positive: ['coo'] });
+  if (cooFilter('Chief Operating Officer (COO)') === true) pass('"COO" positive matches the standalone token in a title');
+  else fail('"COO" should match a title containing the standalone token COO');
+  if (cooFilter('Sales Coordinator') === false) pass('"COO" positive does NOT match "Coordinator" (no mid-word match)');
+  else fail('"COO" must not match "Coordinator"');
+
+  // An acronym used as a NEGATIVE keyword must not knock out an unrelated word.
+  const negFilter = buildTitleFilter({ positive: [], negative: ['coo'] });
+  if (negFilter('Marketing Coordinator') === true) pass('negative "COO" does not reject "Coordinator"');
+  else fail('negative "COO" wrongly rejected "Coordinator"');
+  if (negFilter('Group COO') === false) pass('negative "COO" still rejects a standalone "COO" title');
+  else fail('negative "COO" should reject "Group COO"');
+
+  // Multi-word phrases and non-letter keywords keep permissive substring matching.
+  const phraseFilter = buildTitleFilter({ positive: ['head of'] });
+  if (phraseFilter('Head of Finance & Strategy') === true) pass('multi-word "head of" still matches by substring');
+  else fail('"head of" should substring-match "Head of Finance & Strategy"');
+
+  // compileKeyword is exported and directly testable.
+  if (compileKeyword('cfo')('group cfo, emea') === true && compileKeyword('cfo')('cfom') === false) {
+    pass('compileKeyword("cfo") is word-boundary anchored');
+  } else {
+    fail('compileKeyword("cfo") boundary behavior wrong');
+  }
+
+  // A malformed title_filter (null / numeric / empty entries) must not crash.
+  const messyFilter = buildTitleFilter({ positive: ['cfo', null, 123, '', 'head of'] });
+  if (messyFilter('Group CFO') === true && messyFilter('Marketing Coordinator') === false) {
+    pass('buildTitleFilter ignores non-string/empty keyword entries without crashing');
+  } else {
+    fail('buildTitleFilter should ignore non-string/empty keyword entries');
+  }
+} catch (e) {
+  fail(`title filter acronym tests crashed: ${e.message}`);
+}
+
 // ── 12. FOLLOW-UP CADENCE LOGIC ─────────────────────────────────
 
 console.log('\n12. Follow-up cadence logic');
@@ -2041,22 +2248,25 @@ try {
     fail('recruitee.detect() must NOT misdetect path-spoofed URLs');
   }
 
-  // Off-domain offer URL is dropped (URL validation)
-  const offDomainOffers = parseRecruiteeResponse(
+  // Per-offer URL validation: custom-domain https URLs are KEPT (Recruitee
+  // tenants serve postings on their own domain, e.g. careers.hostaway.com);
+  // only non-https and malformed/missing URLs are dropped. The per-offer URL
+  // is display-only and not host-locked to *.recruitee.com — see #recruitee.
+  const offerUrlOffers = parseRecruiteeResponse(
     {
       offers: [
-        { title: 'Good', careers_url: 'https://channable.recruitee.com/o/good' },
-        { title: 'Evil', careers_url: 'https://evil.example/o/evil' },
+        { title: 'Recruitee domain', careers_url: 'https://channable.recruitee.com/o/good' },
+        { title: 'Custom domain', careers_url: 'https://careers.hostaway.com/o/senior-backend' },
         { title: 'Insecure', careers_url: 'http://channable.recruitee.com/o/insecure' },
         { title: 'No URL field' },
       ],
     },
     'Channable',
   );
-  if (offDomainOffers[0]?.url === 'https://channable.recruitee.com/o/good' && offDomainOffers[1]?.url === '' && offDomainOffers[2]?.url === '' && offDomainOffers[3]?.url === '') {
-    pass('parseRecruiteeResponse drops off-domain, non-https, and missing offer URLs');
+  if (offerUrlOffers[0]?.url === 'https://channable.recruitee.com/o/good' && offerUrlOffers[1]?.url === 'https://careers.hostaway.com/o/senior-backend' && offerUrlOffers[2]?.url === '' && offerUrlOffers[3]?.url === '') {
+    pass('parseRecruiteeResponse keeps custom-domain https URLs, drops non-https and missing');
   } else {
-    fail(`URL validation: row0=${JSON.stringify(offDomainOffers[0]?.url)}, row1=${JSON.stringify(offDomainOffers[1]?.url)}, row2=${JSON.stringify(offDomainOffers[2]?.url)}, row3=${JSON.stringify(offDomainOffers[3]?.url)}`);
+    fail(`URL validation: row0=${JSON.stringify(offerUrlOffers[0]?.url)}, row1=${JSON.stringify(offerUrlOffers[1]?.url)}, row2=${JSON.stringify(offerUrlOffers[2]?.url)}, row3=${JSON.stringify(offerUrlOffers[3]?.url)}`);
   }
 
 } catch (e) {
@@ -2105,6 +2315,13 @@ try {
     fail(`non-report link altered: ${other}`);
   }
 
+  const pipelineProcessed = normalizeReportLink('[12](reports/012-acme-2026-01-04.md)', join(repo, 'data'), repo);
+  if (pipelineProcessed === '[12](../reports/012-acme-2026-01-04.md)') {
+    pass('pipeline processed links are relative to data/pipeline.md (#1126)');
+  } else {
+    fail(`pipeline processed link normalization wrong (#1126): ${pipelineProcessed}`);
+  }
+
   // End-to-end migration against a fictional fixture tracker (no personal data)
   const tmpDir = mkdtempSync(join(tmpdir(), 'career-ops-migrate-'));
   try {
@@ -2128,6 +2345,30 @@ try {
     }
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
+  }
+
+  const { resolveReportPath } = await import(pathToFileURL(join(ROOT, 'followup-cadence.mjs')).href);
+  const followupTmp = mkdtempSync(join(tmpdir(), 'career-ops-followup-link-'));
+  try {
+    mkdirSync(join(followupTmp, 'data'), { recursive: true });
+    mkdirSync(join(followupTmp, 'reports'), { recursive: true });
+    const reportFile = join(followupTmp, 'reports', '012-acme-2026-01-04.md');
+    writeFileSync(reportFile, '# fixture\n');
+    const appsFile = join(followupTmp, 'data', 'applications.md');
+    const resolved = resolveReportPath('[12](../reports/012-acme-2026-01-04.md)', appsFile, followupTmp);
+    if (resolved === 'reports/012-acme-2026-01-04.md') {
+      pass('follow-up reportPath is repo-root relative for data/ tracker links (#1126)');
+    } else {
+      fail(`follow-up reportPath wrong (#1126): ${resolved}`);
+    }
+    const escaped = resolveReportPath('[99](../../outside.md)', appsFile, followupTmp);
+    if (escaped === null) {
+      pass('follow-up reportPath rejects links outside reports/ (#1126)');
+    } else {
+      fail(`follow-up reportPath allowed escaped link (#1126): ${escaped}`);
+    }
+  } finally {
+    rmSync(followupTmp, { recursive: true, force: true });
   }
 } catch (e) {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
@@ -2266,6 +2507,42 @@ try {
   }
 } catch (e) {
   fail(`dedup row-rebuild notes test crashed: ${e.message}`);
+}
+
+// rebuildRow() is now shared from tracker-utils.mjs (extracted from the two
+// copies introduced in #1004). Unit-test the helper contract directly.
+console.log('\n🧪 Testing shared tracker-utils rebuildRow()...');
+try {
+  const { rebuildRow } = await import(pathToFileURL(join(ROOT, 'tracker-utils.mjs')).href);
+  const cellsOf = (line) => line.split('|').map(s => s.trim());
+
+  // Trailing-pipe row → unchanged round-trip.
+  const withPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
+  if (rebuildRow(cellsOf(withPipe)) === withPipe) {
+    pass('rebuildRow round-trips a row that already has a trailing pipe');
+  } else {
+    fail(`rebuildRow changed a trailing-pipe row: "${rebuildRow(cellsOf(withPipe))}"`);
+  }
+
+  // No-trailing-pipe row → last cell (notes) preserved, trailing pipe added.
+  const noPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | keepme';
+  const rebuilt = rebuildRow(cellsOf(noPipe));
+  if (rebuilt.includes('keepme') && rebuilt.endsWith('|')) {
+    pass('rebuildRow preserves the notes cell on a row without a trailing pipe');
+  } else {
+    fail(`rebuildRow dropped notes on no-trailing-pipe row: "${rebuilt}"`);
+  }
+
+  // Extra column (e.g. a custom Location) → every cell preserved.
+  const extra = '| 5 | 2026-02-01 | Acme | Eng | Berlin | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
+  const rebuiltExtra = rebuildRow(cellsOf(extra));
+  if (rebuiltExtra === extra && rebuiltExtra.includes('Berlin')) {
+    pass('rebuildRow preserves extra columns (custom Location)');
+  } else {
+    fail(`rebuildRow mangled an extra-column row: "${rebuiltExtra}"`);
+  }
+} catch (e) {
+  fail(`tracker-utils rebuildRow unit test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
@@ -2669,7 +2946,7 @@ if (!sqliteAvailable) {
 
 // ── 12b. PLAYWRIGHT MCP DETECTION WARNING (#522) ────────────────
 
-console.log('\n12b. Playwright MCP detection warning');
+console.log('\n12d. Playwright MCP detection warning');
 
 try {
   // No project MCP config → doctor surfaces a (non-fatal) warning instead of
@@ -2917,6 +3194,45 @@ try {
   fail(`solidjobs provider tests crashed: ${e.message}`);
 }
 
+// ── 16. SSRF redirect hardening (lever / ashby / workday) ───────
+// _http.mjs defaults to redirect:'follow', so a server-side redirect from any
+// of these ATS APIs to an internal address is an SSRF vector. Every other GET
+// provider passes redirect:'error'; these three were missing it.
+
+console.log('\n16. Provider — SSRF redirect hardening (lever / ashby / workday)');
+
+try {
+  const lever = (await import(pathToFileURL(join(ROOT, 'providers/lever.mjs')).href)).default;
+  const ashby = (await import(pathToFileURL(join(ROOT, 'providers/ashby.mjs')).href)).default;
+  const workday = (await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href)).default;
+
+  let leverOpts = null;
+  await lever.fetch(
+    { name: 'L', careers_url: 'https://jobs.lever.co/example' },
+    { transport: 'http', fetchJson: async (_u, opts) => { leverOpts = opts; return []; }, fetchText: async () => '' },
+  );
+  if (leverOpts && leverOpts.redirect === 'error') pass('lever.fetch() passes redirect:"error"');
+  else fail(`lever.fetch() should pass redirect:"error", got ${JSON.stringify(leverOpts)}`);
+
+  let ashbyOpts = null;
+  await ashby.fetch(
+    { name: 'A', careers_url: 'https://jobs.ashbyhq.com/example' },
+    { transport: 'http', fetchJson: async (_u, opts) => { ashbyOpts = opts; return { jobs: [] }; }, fetchText: async () => '' },
+  );
+  if (ashbyOpts && ashbyOpts.redirect === 'error') pass('ashby.fetch() passes redirect:"error"');
+  else fail(`ashby.fetch() should pass redirect:"error", got ${JSON.stringify(ashbyOpts)}`);
+
+  let workdayOpts = null;
+  await workday.fetch(
+    { name: 'W', careers_url: 'https://example.wd5.myworkdayjobs.com/careers' },
+    { transport: 'http', fetchJson: async (_u, opts) => { workdayOpts = opts; return { jobPostings: [] }; }, fetchText: async () => '' },
+  );
+  if (workdayOpts && workdayOpts.redirect === 'error') pass('workday.fetch() passes redirect:"error"');
+  else fail(`workday.fetch() should pass redirect:"error", got ${JSON.stringify(workdayOpts)}`);
+} catch (e) {
+  fail(`SSRF redirect hardening tests crashed: ${e.message}`);
+}
+
 // ── 15. URL REDISCOVERY FALLBACK (--rediscover-404) ─────────────
 
 console.log('\n15. URL rediscovery fallback');
@@ -3062,6 +3378,26 @@ try {
     pass('--resume-paused dry-run selects paused jobs only');
   } else {
     fail(`--resume-paused selection wrong: ${dry}`);
+  }
+
+  rmSync(join(batchDir, 'batch-input.tsv'), { force: true });
+  rmSync(join(batchDir, 'batch-prompt.md'), { force: true });
+  rmSync(join(fakeBin, 'claude'), { force: true });
+  writeFileSync(join(batchDir, 'batch-state.tsv'), [
+    'id\turl\tstatus\tstarted_at\tcompleted_at\treport_num\tscore\terror\tretries',
+    '1\thttps://example.com/one\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t4.5\t-\t0',
+    '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
+    '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
+  ].join('\n') + '\n');
+  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  if (statusOnly.includes('Average score: 4.5/5 (1 scored)') && statusOnly.includes('bad);system("oops")')) {
+    pass('--status reads existing state without full batch prerequisites');
+  } else {
+    fail(`--status prerequisite/score handling wrong: ${statusOnly}`);
   }
 
   try { rmSync(tmp, { recursive: true, force: true }); } catch {}
@@ -3815,6 +4151,49 @@ try {
     fail(`aa.fetch() remoteNationwide = ${calls} calls, ${JSON.stringify(remoteFetched.map(j => j.url))}`);
   }
 
+  // parseArbeitsagenturConfig — remoteMatch mode + remoteMaxPages (config-driven remote detection)
+  const rcfg = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'filter', remoteMaxPages: 50 } });
+  if (rcfg.remoteMatch === 'filter' && rcfg.remoteMaxPages === 20) {
+    pass('parseArbeitsagenturConfig parses remoteMatch and clamps remoteMaxPages');
+  } else {
+    fail(`parseArbeitsagenturConfig remoteMatch/maxPages = ${JSON.stringify({ m: rcfg.remoteMatch, p: rcfg.remoteMaxPages })}`);
+  }
+  const rdef = parseArbeitsagenturConfig({ arbeitsagentur: { keywords: ['ML'], remoteMatch: 'bogus' } });
+  if (rdef.remoteMatch === 'title' && rdef.remoteMaxPages === 1) {
+    pass('parseArbeitsagenturConfig defaults remoteMatch to "title" and remoteMaxPages to 1');
+  } else {
+    fail(`parseArbeitsagenturConfig remote defaults = ${JSON.stringify({ m: rdef.remoteMatch, p: rdef.remoteMaxPages })}`);
+  }
+
+  // fetch() — remoteMatch:'filter' uses server-side homeoffice filter, paginates, and tags remote roles
+  let usedHomeoffice = false;
+  const pagesSeen = new Set();
+  const filterFetched = await aa.fetch(
+    { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true, remoteMatch: 'filter', remoteMaxPages: 5, size: 2 } },
+    {
+      fetchJson: async (url) => {
+        const sp = new URL(url).searchParams;
+        if (sp.has('wo')) {
+          return { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] };
+        }
+        usedHomeoffice = usedHomeoffice || sp.get('homeoffice') === 'nv_true';
+        pagesSeen.add(sp.get('page'));
+        return Number(sp.get('page')) === 1
+          ? { stellenangebote: [ // full page (== size) → pagination continues
+              { refnr: 'R1', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'München' } },
+              { refnr: 'R2', titel: 'ML Scientist', arbeitgeber: 'Co', arbeitsort: { ort: 'Stuttgart' } },
+            ] }
+          : { stellenangebote: [{ refnr: 'R3', titel: 'NLP Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Köln' } }] }; // short → stop
+      },
+    },
+  );
+  const munich = filterFetched.find(j => j.url.endsWith('R1'));
+  if (usedHomeoffice && pagesSeen.has('1') && pagesSeen.has('2') && munich && /Deutschlandweit \(Homeoffice\)/.test(munich.location)) {
+    pass('aa.fetch() remoteMatch:filter sends homeoffice=nv_true, paginates, and tags far-city remote roles');
+  } else {
+    fail(`aa.fetch() filter mode = ${JSON.stringify({ usedHomeoffice, pages: [...pagesSeen], munichLoc: munich?.location })}`);
+  }
+
   // fetch() — no keywords throws; total outage throws (not silent)
   let noKw = false;
   try { await aa.fetch({ name: 'AA', arbeitsagentur: {} }, mkCtx({})); } catch { noKw = true; }
@@ -3960,6 +4339,350 @@ try {
 
 } catch (e) {
   fail(`ibm provider tests crashed: ${e.message}`);
+}
+
+console.log('\n26. Provider — bamboohr');
+try {
+  const bamboohr = (await import(pathToFileURL(join(ROOT, 'providers/bamboohr.mjs')).href)).default;
+  const { parseBambooHRResponse } = await import(pathToFileURL(join(ROOT, 'providers/bamboohr.mjs')).href);
+
+  if (bamboohr.id === 'bamboohr') pass('bamboohr.id is "bamboohr"');
+  else fail(`bamboohr.id is ${JSON.stringify(bamboohr.id)}`);
+
+  // detect: <tenant>.bamboohr.com → /careers/list
+  const hit = bamboohr.detect({ name: 'Acme', careers_url: 'https://acme.bamboohr.com/careers' });
+  if (hit && hit.url === 'https://acme.bamboohr.com/careers/list') {
+    pass('bamboohr.detect() resolves <tenant>.bamboohr.com → /careers/list');
+  } else {
+    fail(`bamboohr.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect: honours an explicit api: URL
+  const apiHit = bamboohr.detect({ name: 'Acme', api: 'https://acme.bamboohr.com' });
+  if (apiHit && apiHit.url === 'https://acme.bamboohr.com/careers/list') pass('bamboohr.detect() honours explicit api: URL');
+  else fail(`bamboohr.detect() api: returned ${JSON.stringify(apiHit)}`);
+
+  // detect: null for non-bamboohr URLs
+  if (bamboohr.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('bamboohr.detect() returns null for non-bamboohr URLs');
+  } else {
+    fail('bamboohr.detect() should return null for non-bamboohr URLs');
+  }
+
+  // detect: null for non-string careers_url
+  if (bamboohr.detect({ name: 'X', careers_url: null }) === null && bamboohr.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('bamboohr.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('bamboohr.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: bamboohr.com in the PATH (not host) must not be detected.
+  if (bamboohr.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.bamboohr.com/foo' }) === null) {
+    pass('bamboohr.detect() rejects path-spoofed URLs');
+  } else {
+    fail('bamboohr.detect() must reject path-spoofed URLs');
+  }
+
+  // parseBambooHRResponse — real BambooHR list shape
+  const sample = {
+    meta: {},
+    result: [
+      { id: '15', jobOpeningName: 'IT Security Engineer', location: { city: 'Mayfair', state: 'London, City of' }, isRemote: null },
+      { id: 22, jobOpeningName: 'Android Engineer', location: { city: 'Bengaluru', state: 'Karnataka' }, isRemote: 1 },
+      { id: '7', jobOpeningName: '', location: { city: 'X' } },          // no title → dropped
+      { jobOpeningName: 'No ID Role', location: { city: 'Y' } },          // no id → dropped
+      { id: '   ', jobOpeningName: 'Blank ID Role', location: { city: 'Z' } }, // blank/whitespace id → dropped
+    ],
+  };
+  const jobs = parseBambooHRResponse(sample, 'Acme', 'https://acme.bamboohr.com');
+  if (jobs.length === 2) pass('parseBambooHRResponse keeps rows with non-empty id + title, drops the rest');
+  else fail(`parseBambooHRResponse returned ${jobs.length} jobs (expected 2)`);
+
+  if (!jobs.some(j => j.title === 'Blank ID Role')) pass('parseBambooHRResponse drops blank/whitespace-id rows (no /careers/ URL)');
+  else fail('parseBambooHRResponse should drop blank/whitespace-id rows');
+
+  if (jobs[0]?.url === 'https://acme.bamboohr.com/careers/15' && jobs[0]?.company === 'Acme') {
+    pass('parseBambooHRResponse builds <origin>/careers/<id> URL');
+  } else {
+    fail(`parseBambooHRResponse url was ${jobs[0]?.url}`);
+  }
+
+  if (jobs[0]?.location === 'Mayfair, London, City of') pass('parseBambooHRResponse joins city + state');
+  else fail(`parseBambooHRResponse location[0] was ${JSON.stringify(jobs[0]?.location)}`);
+
+  if (jobs[1]?.location === 'Bengaluru, Karnataka, Remote') pass('parseBambooHRResponse appends Remote when isRemote is set');
+  else fail(`parseBambooHRResponse location[1] was ${JSON.stringify(jobs[1]?.location)}`);
+
+  if (jobs[1]?.url === 'https://acme.bamboohr.com/careers/22') pass('parseBambooHRResponse coerces numeric id to URL');
+  else fail(`parseBambooHRResponse numeric-id url was ${jobs[1]?.url}`);
+
+  // empty / malformed payloads → []
+  if (parseBambooHRResponse({}, 'X', 'https://x.bamboohr.com').length === 0) pass('parseBambooHRResponse empty {} → []');
+  else fail('parseBambooHRResponse should return [] for {}');
+  if (parseBambooHRResponse({ result: null }, 'X', 'https://x.bamboohr.com').length === 0) pass('parseBambooHRResponse result:null → []');
+  else fail('parseBambooHRResponse should return [] for result:null');
+
+  // fetch() — via mock ctx, asserts the resolved URL + SSRF redirect pinning + parsing
+  let fetchedUrl = '';
+  let fetchedOpts;
+  const mockCtx = {
+    fetchJson: async (url, opts) => { fetchedUrl = url; fetchedOpts = opts; return sample; },
+  };
+  const fetched = await bamboohr.fetch({ name: 'Acme', careers_url: 'https://acme.bamboohr.com/careers' }, mockCtx);
+  if (fetchedUrl === 'https://acme.bamboohr.com/careers/list' && fetchedOpts?.redirect === 'error' && fetched.length === 2) {
+    pass('bamboohr.fetch() calls /careers/list with redirect:error and returns parsed jobs');
+  } else {
+    fail(`bamboohr.fetch() url=${fetchedUrl} redirect=${JSON.stringify(fetchedOpts)} jobs=${fetched.length}`);
+  }
+
+} catch (e) {
+  fail(`bamboohr provider tests crashed: ${e.message}`);
+}
+
+// ── 27. ATS LIGATURE SUPPRESSION ────────────────────────────────
+
+console.log('\n27. ATS ligature suppression');
+
+try {
+  // Headless Chromium substitutes fi/fl/ffi with the Unicode ligature glyphs
+  // U+FB01/FB02/FB03 at PDF layout time. PDF text extractors (what ATS reads)
+  // decode them back to those codepoints, so "verification" parses as
+  // "veriﬁcation" and a literal keyword search misses it. The templates disable
+  // common, contextual, and discretionary ligatures in CSS so the output stays
+  // font-independent. A live render-and-extract test is font and OS dependent
+  // (the bug only appears where a ligature-bearing font is installed), so it is
+  // not reliable in CI; this guards the CSS source, which is the fix itself.
+  const LIGATURE_TEMPLATES = [
+    'cv-template.html',
+    'resume-template.html',
+    'cover-letter-template.html',
+  ];
+  const variantRe = /font-variant-ligatures:\s*none/;
+  const featureRe = /font-feature-settings:\s*"liga"\s*0\s*,\s*"clig"\s*0\s*,\s*"dlig"\s*0/;
+
+  for (const name of LIGATURE_TEMPLATES) {
+    const css = readFileSync(join(ROOT, 'templates', name), 'utf-8');
+    if (variantRe.test(css) && featureRe.test(css)) {
+      pass(`${name} disables ligatures (font-variant-ligatures + font-feature-settings)`);
+    } else {
+      fail(`${name} is missing ligature suppression (PDF text extraction would read "veriﬁcation" not "verification")`);
+    }
+  }
+} catch (e) {
+  fail(`ATS ligature suppression test crashed: ${e.message}`);
+}
+
+// ── 27. Provider — breezy ───────────────────────────────────────
+console.log('\n27. Provider — breezy');
+
+try {
+  const breezy = (await import(pathToFileURL(join(ROOT, 'providers/breezy.mjs')).href)).default;
+  const { parseBreezyResponse } = await import(pathToFileURL(join(ROOT, 'providers/breezy.mjs')).href);
+
+  if (breezy.id === 'breezy') pass('breezy.id is "breezy"');
+  else fail(`breezy.id is ${JSON.stringify(breezy.id)}`);
+
+  // detect: careers_url with a path still resolves the tenant /json feed
+  const hit = breezy.detect({ name: 'New Incentives', careers_url: 'https://new-incentives.breezy.hr/' });
+  if (hit && hit.url === 'https://new-incentives.breezy.hr/json') {
+    pass('breezy.detect() resolves <tenant>.breezy.hr → /json feed');
+  } else {
+    fail(`breezy.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect: explicit api: URL is honoured over careers_url
+  const apiHit = breezy.detect({ name: 'X', api: 'https://acme.breezy.hr', careers_url: 'https://example.com' });
+  if (apiHit && apiHit.url === 'https://acme.breezy.hr/json') {
+    pass('breezy.detect() honours an explicit api: URL');
+  } else {
+    fail(`breezy.detect() api: → ${JSON.stringify(apiHit)}`);
+  }
+
+  if (breezy.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('breezy.detect() returns null for non-breezy URLs');
+  } else {
+    fail('breezy.detect() should return null for non-breezy URLs');
+  }
+
+  if (breezy.detect({ name: 'X', careers_url: null }) === null && breezy.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('breezy.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('breezy.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: breezy.hr in the PATH (not host) must not be detected.
+  if (breezy.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.breezy.hr/json' }) === null) {
+    pass('breezy.detect() rejects path-spoofed URLs');
+  } else {
+    fail('breezy.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // parseBreezyResponse — top-level array
+  const sample = [
+    {
+      name: 'Assistant Field Manager',
+      url: 'https://new-incentives.breezy.hr/p/b8e6-assistant-field-manager',
+      published_date: '2026-05-25T14:45:23.799Z',
+      location: { name: 'Niger, Sokoto, NG', city: 'Niger', country: { name: 'NG' }, is_remote: false },
+    },
+    {
+      name: 'Remote Backend Engineer',
+      url: 'https://new-incentives.breezy.hr/p/aa01-backend',
+      location: { city: 'Lagos', state: 'Lagos', country: { name: 'NG' }, is_remote: true },
+    },
+    { name: 'No URL row', location: { name: 'Remote' } },
+    { name: 'Insecure URL', url: 'http://new-incentives.breezy.hr/p/x', location: {} },
+  ];
+  const jobs = parseBreezyResponse(sample, 'New Incentives');
+
+  if (jobs.length === 2) pass('parseBreezyResponse keeps 2 rows (drops missing/non-https url)');
+  else fail(`parseBreezyResponse returned ${jobs.length} rows (expected 2)`);
+
+  if (jobs[0]?.title === 'Assistant Field Manager' && jobs[0]?.company === 'New Incentives' && jobs[0]?.location === 'Niger, Sokoto, NG') {
+    pass('parseBreezyResponse prefers ready-made location.name');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('2026-05-25T14:45:23.799Z')) {
+    pass('parseBreezyResponse parses published_date → postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.location === 'Lagos, Lagos, NG, Remote') {
+    pass('parseBreezyResponse assembles city/state/country and appends Remote');
+  } else {
+    fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Lagos, Lagos, NG, Remote"`);
+  }
+
+  if (jobs[1]?.postedAt === undefined) {
+    pass('parseBreezyResponse omits postedAt when published_date is absent');
+  } else {
+    fail(`row 1 postedAt should be undefined, got ${JSON.stringify(jobs[1]?.postedAt)}`);
+  }
+
+  if (parseBreezyResponse(null, 'X').length === 0 && parseBreezyResponse({}, 'X').length === 0) {
+    pass('non-array payload → empty result (no crash)');
+  } else {
+    fail('non-array payload should yield empty result');
+  }
+
+  // a row already containing "Remote" must not get a duplicate "Remote" suffix
+  const noDup = parseBreezyResponse([{ name: 'R', url: 'https://acme.breezy.hr/p/r', location: { name: 'Remote, EMEA', is_remote: true } }], 'X');
+  if (noDup[0]?.location === 'Remote, EMEA') pass('parseBreezyResponse does not double-append Remote');
+  else fail(`expected "Remote, EMEA", got ${JSON.stringify(noDup[0]?.location)}`);
+
+} catch (e) {
+  fail(`breezy provider tests crashed: ${e.message}`);
+}
+
+// ── 28. OPTIONAL PROFILE PHOTO (opt-in, DACH/European — #264) ────
+
+console.log('\n28. Optional profile photo (opt-in, DACH/European, #264)');
+
+try {
+  const cvTemplate = readFileSync(join(ROOT, 'templates', 'cv-template.html'), 'utf-8');
+
+  // The opt-in photo must exist as a .cv-photo CSS rule.
+  if (/\.cv-photo\s*\{/.test(cvTemplate)) {
+    pass('cv-template.html defines a .cv-photo rule');
+  } else {
+    fail('cv-template.html is missing a .cv-photo rule — #264 opt-in photo not wired');
+  }
+
+  // It MUST be floated (taken out of normal flow) so a present photo is wrapped
+  // by the text beside it (the classic DACH top-corner photo) and an absent one
+  // leaves the layout unchanged. Anchor the check to the .cv-photo rule block so
+  // it can't accidentally read another rule (e.g. the lang="ar" float:left
+  // mirror) via offset slicing.
+  const photoRule = cvTemplate.match(/\.cv-photo\s*\{[^}]*\}/);
+  if (photoRule && /float:\s*right/.test(photoRule[0])) {
+    pass('.cv-photo floats right (text wraps when present; absent ⇒ unchanged layout)');
+  } else {
+    fail('.cv-photo must float so a present photo sits beside the text and an absent one does not shift the layout (#264)');
+  }
+
+  // The photo is an opt-in {{PHOTO}} slot, empty by default. The agent fills it
+  // only when config/profile.yml sets candidate.photo; otherwise it stays empty.
+  if (cvTemplate.includes('{{PHOTO}}')) {
+    pass('cv-template.html exposes a {{PHOTO}} opt-in slot (empty by default)');
+  } else {
+    fail('cv-template.html is missing the {{PHOTO}} opt-in slot (#264)');
+  }
+
+  // The slot MUST sit before the header (outside .header): the float anchors at
+  // the top of the page, and removing the line when absent cannot then perturb
+  // the header's own structure. Guards against a regression that moves the slot
+  // inside .header (which would shift the photoless layout).
+  const photoIdx = cvTemplate.indexOf('{{PHOTO}}');
+  const headerIdx = cvTemplate.indexOf('<!-- HEADER -->');
+  if (photoIdx !== -1 && headerIdx !== -1 && photoIdx < headerIdx) {
+    pass('{{PHOTO}} slot precedes the header (outside .header — keeps the photoless layout intact)');
+  } else {
+    fail('{{PHOTO}} slot must sit before <!-- HEADER --> so an absent photo leaves the header unchanged (#264)');
+  }
+
+  // The shipped template must NOT carry an active <img>: photos are opt-in,
+  // never the default (recruiters in the US/UK/many markets penalize photos).
+  if (!/<img[^>]*class="cv-photo"/.test(cvTemplate)) {
+    pass('default template has no active <img class="cv-photo"> (opt-in, not default)');
+  } else {
+    fail('cv-template.html ships an active photo <img> — photos must be opt-in, never default (#264)');
+  }
+
+  // RTL (Arabic) must mirror the photo to the opposite corner, like the other
+  // lang="ar" rules in this template.
+  if (/html\[lang="ar"\]\s+\.cv-photo/.test(cvTemplate)) {
+    pass('lang="ar" mirrors .cv-photo to the opposite corner');
+  } else {
+    fail('cv-template.html is missing an RTL mirror for .cv-photo (#264)');
+  }
+} catch (e) {
+  fail(`profile photo test crashed: ${e.message}`);
+}
+
+// ── 29. CUSTOM INSTRUCTIONS extension point (user-layer, #1198) ────
+
+console.log('\n29. Custom instructions extension point (modes/_custom.md, #1198)');
+
+try {
+  // The template MUST ship — it seeds the user file on first run.
+  if (existsSync(join(ROOT, 'modes', '_custom.template.md'))) {
+    pass('modes/_custom.template.md exists (seed for the user custom-instructions file)');
+  } else {
+    fail('modes/_custom.template.md is missing — the custom-instructions seed is not shipped (#1198)');
+  }
+
+  const updater = readFileSync(join(ROOT, 'update-system.mjs'), 'utf-8');
+
+  // The user file MUST be in USER_PATHS so update-system.mjs never overwrites
+  // the user's house rules — that is the whole point of #1198. Anchor to the
+  // USER_PATHS array block so a stray match elsewhere can't give a false pass.
+  const userBlock = (updater.match(/USER_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  if (userBlock.includes("'modes/_custom.md'")) {
+    pass('modes/_custom.md is in USER_PATHS (custom rules survive update-system.mjs)');
+  } else {
+    fail('modes/_custom.md is NOT in USER_PATHS — custom instructions would be wiped on update (#1198)');
+  }
+
+  // The template MUST be in SYSTEM_PATHS so updates deliver/refresh it.
+  const sysBlock = (updater.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  if (sysBlock.includes("'modes/_custom.template.md'")) {
+    pass('modes/_custom.template.md is in SYSTEM_PATHS (shipped + updatable)');
+  } else {
+    fail('modes/_custom.template.md is NOT in SYSTEM_PATHS — the seed never updates (#1198)');
+  }
+
+  // CLAUDE.md MUST route custom rules to the file AND seed it on onboarding.
+  const claudeMd = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf-8');
+  if (claudeMd.includes('modes/_custom.md') && claudeMd.includes('modes/_custom.template.md')) {
+    pass('CLAUDE.md routes custom rules to modes/_custom.md + seeds it from the template');
+  } else {
+    fail('CLAUDE.md does not reference modes/_custom.md / its template — agents will not use it (#1198)');
+  }
+} catch (e) {
+  fail(`custom instructions test crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

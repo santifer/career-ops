@@ -1027,6 +1027,28 @@ tracked_companies:
     notes: "Vilnius LT / Berlin. C2C marketplace unicorn, data science & ML roles."
     enabled: true
 
+  # -- Denmark AI / tech --
+
+  - name: Corti
+    careers_url: https://jobs.ashbyhq.com/corti
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/corti'
+    notes: "Copenhagen DK. Medical AI (ambient clinical documentation), ML / NLP roles."
+    enabled: true
+
+  - name: Pleo
+    careers_url: https://jobs.ashbyhq.com/pleo
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/pleo'
+    notes: "Copenhagen DK. Spend-management fintech, ML / data / platform roles."
+    enabled: true
+
+  - name: Templafy
+    careers_url: https://job-boards.greenhouse.io/templafy
+    api: https://boards-api.greenhouse.io/v1/boards/templafy/jobs
+    notes: "Copenhagen DK. Document-generation / content-enablement platform."
+    enabled: true
+
   # -- Iberia AI --
 
   - name: Amplemarket

@@ -121,14 +121,33 @@ function resolveProvider(entry, providers, { skipIds = [] } = {}) {
 
 // ── Title filter ────────────────────────────────────────────────────
 
+// Compile a lowercased keyword into a matcher. Short all-letter acronyms
+// (2-3 chars: cfo, coo, sdr, bdr, gsi…) match on WORD BOUNDARIES so "COO" no
+// longer matches "Coordinator", "SDR" no longer matches anything mid-word, etc.
+// Multi-word phrases and keywords containing non-letters (".NET", "SAP ",
+// "L&D") keep fast, permissive substring matching.
+export function compileKeyword(kw) {
+  if (/^[a-z]{2,3}$/.test(kw)) {
+    const re = new RegExp(`\\b${kw}\\b`);
+    return (lower) => re.test(lower);
+  }
+  return (lower) => lower.includes(kw);
+}
+
 export function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+  // Normalize defensively: a malformed title_filter (a null, numeric, or otherwise
+  // non-string entry in the YAML) must not crash the scan via k.toLowerCase().
+  const normalize = (arr) => (Array.isArray(arr) ? arr : [])
+    .filter(k => typeof k === 'string' && k.length > 0)
+    .map(k => k.toLowerCase())
+    .map(compileKeyword);
+  const positive = normalize(titleFilter?.positive);
+  const negative = normalize(titleFilter?.negative);
 
   return (title) => {
-    const lower = title.toLowerCase();
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
-    const hasNegative = negative.some(k => lower.includes(k));
+    const lower = (title || '').toLowerCase();
+    const hasPositive = positive.length === 0 || positive.some(m => m(lower));
+    const hasNegative = negative.some(m => m(lower));
     return hasPositive && !hasNegative;
   };
 }
