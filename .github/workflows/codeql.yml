@@ -22,7 +22,7 @@ jobs:
         language: ['javascript-typescript', 'go']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
