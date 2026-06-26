@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
-	"runtime"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -85,6 +83,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.careerOpsPath,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
+			msg.App,
 		)
 		m.state = viewReport
 		return m, nil
@@ -101,6 +100,15 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return nil
 		}
+
+	case screens.ViewerUpdateStatusMsg:
+		err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
+		}
+		m.viewer.UpdateAppStatus(msg.NewStatus)
+		m.reloadPipelineData()
+		return m, nil
 
 	case screens.PipelineOpenProgressMsg:
 		m.progress = screens.NewProgressModel(
@@ -119,7 +127,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		url := msg.URL
 		return m, func() tea.Msg {
 			if err := openWithDefaultApp(url); err != nil {
-				fmt.Fprintf(os.Stderr, "WARN: could not open URL: %v\n", err)
+				fmt.Fprintf(os.Stderr, "WARN: failed to open URL %q: %v\n", url, err)
 			}
 			return nil
 		}
@@ -150,22 +158,6 @@ func (m appModel) View() string {
 	default:
 		return m.pipeline.View()
 	}
-}
-
-// openWithDefaultApp opens a file or URL with the OS default application.
-func openWithDefaultApp(target string) error {
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = exec.Command("open", target)
-	case "linux":
-		cmd = exec.Command("xdg-open", target)
-	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", "", target)
-	default:
-		cmd = exec.Command("xdg-open", target)
-	}
-	return cmd.Run()
 }
 
 func main() {
