@@ -454,10 +454,18 @@ search_queries:
 #   workable        apply.workable.com/<slug>
 #   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
 #   recruitee       <slug>.recruitee.com
+#   personio        <slug>.jobs.personio.(de|com)
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
 # bypass detect(). The `provider:` field wins over auto-detection.
+#
+# Personio (common across DACH/EU) auto-detects from its careers host and
+# pulls the public no-auth XML feed at <slug>.jobs.personio.de/xml — e.g.:
+#
+#   - name: Example GmbH
+#     careers_url: https://example-gmbh.jobs.personio.de
+#     enabled: true
 
 tracked_companies:
 

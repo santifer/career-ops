@@ -4685,6 +4685,131 @@ try {
   fail(`custom instructions test crashed: ${e.message}`);
 }
 
+// ── 30. Provider — personio ─────────────────────────────────────
+console.log('\n30. Provider — personio');
+
+try {
+  const personio = (await import(pathToFileURL(join(ROOT, 'providers/personio.mjs')).href)).default;
+  const { parsePersonioXml } = await import(pathToFileURL(join(ROOT, 'providers/personio.mjs')).href);
+
+  if (personio.id === 'personio') pass('personio.id is "personio"');
+  else fail(`personio.id is ${JSON.stringify(personio.id)}`);
+
+  // detect: <slug>.jobs.personio.de careers host → /xml feed
+  const hit = personio.detect({ name: 'Acme', careers_url: 'https://acme.jobs.personio.de/' });
+  if (hit && hit.url === 'https://acme.jobs.personio.de/xml') {
+    pass('personio.detect() resolves <slug>.jobs.personio.de → /xml feed');
+  } else {
+    fail(`personio.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect: the .com TLD variant is also accepted
+  const comHit = personio.detect({ name: 'Acme', careers_url: 'https://acme.jobs.personio.com/jobs' });
+  if (comHit && comHit.url === 'https://acme.jobs.personio.com/xml') {
+    pass('personio.detect() accepts the .com TLD variant');
+  } else {
+    fail(`personio.detect() .com → ${JSON.stringify(comHit)}`);
+  }
+
+  if (personio.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('personio.detect() returns null for non-personio URLs');
+  } else {
+    fail('personio.detect() should return null for non-personio URLs');
+  }
+
+  if (personio.detect({ name: 'X', careers_url: null }) === null && personio.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('personio.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('personio.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: jobs.personio.de in the PATH (not host) must not be detected.
+  if (personio.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.jobs.personio.de/xml' }) === null) {
+    pass('personio.detect() rejects path-spoofed URLs');
+  } else {
+    fail('personio.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // SSRF: a look-alike host (suffix attack) must be rejected.
+  if (personio.detect({ name: 'Spoof', careers_url: 'https://acme.jobs.personio.de.evil.com/xml' }) === null) {
+    pass('personio.detect() rejects suffix-spoofed look-alike hosts');
+  } else {
+    fail('personio.detect() must reject suffix-spoofed hosts');
+  }
+
+  // parsePersonioXml — the real <workzag-jobs> shape (confirmed live)
+  const HOST = 'acme.jobs.personio.de';
+  const sample = `<?xml version="1.0" encoding="UTF-8"?>
+<workzag-jobs>
+<position>
+  <id>1834171</id>
+  <office>Munich</office>
+  <additionalOffices><office>Berlin</office></additionalOffices>
+  <name>Staff Software Engineer, Data &amp; Platform</name>
+  <createdAt>2024-11-13T14:10:41+00:00</createdAt>
+</position>
+<position>
+  <id>900100</id>
+  <office>Remote</office>
+  <name><![CDATA[Senior Engineer (m/f/d)]]></name>
+  <createdAt>2025-01-02T09:00:00+00:00</createdAt>
+</position>
+<position>
+  <id>777</id>
+  <office>Cologne</office>
+  <name></name>
+</position>
+<position>
+  <id>not-a-number</id>
+  <office>Hamburg</office>
+  <name>Bad ID Role</name>
+</position>
+</workzag-jobs>`;
+  const jobs = parsePersonioXml(sample, 'Acme', HOST);
+
+  if (jobs.length === 2) pass('parsePersonioXml keeps 2 positions (drops empty name + non-numeric id)');
+  else fail(`parsePersonioXml returned ${jobs.length} positions (expected 2)`);
+
+  if (jobs[0]?.title === 'Staff Software Engineer, Data & Platform' && jobs[0]?.company === 'Acme') {
+    pass('parsePersonioXml decodes &amp; in the title');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.url === 'https://acme.jobs.personio.de/job/1834171') {
+    pass('parsePersonioXml builds the job URL from host + numeric id');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (jobs[0]?.location === 'Munich, Berlin') {
+    pass('parsePersonioXml joins primary + additionalOffices');
+  } else {
+    fail(`row 0 location = ${JSON.stringify(jobs[0]?.location)}, expected "Munich, Berlin"`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('2024-11-13T14:10:41+00:00')) {
+    pass('parsePersonioXml parses createdAt → postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.title === 'Senior Engineer (m/f/d)') {
+    pass('parsePersonioXml unwraps a CDATA name');
+  } else {
+    fail(`row 1 title = ${JSON.stringify(jobs[1]?.title)}`);
+  }
+
+  if (parsePersonioXml('', 'X', HOST).length === 0 && parsePersonioXml(null, 'X', HOST).length === 0) {
+    pass('empty / non-string feed → empty result (no crash)');
+  } else {
+    fail('empty / non-string feed should yield empty result');
+  }
+
+} catch (e) {
+  fail(`personio provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
