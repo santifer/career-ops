@@ -1588,15 +1588,16 @@ try {
   const pipelineFields = pipelineRow.split('|').map(part => part.trim());
   if (
     pendingLines.length === 1 &&
-    pipelineFields.length === 3 &&
+    pipelineFields.length === 4 &&
     pipelineFields[0] === '- [ ] https://jobs.example.com/123%7Cevil' &&
+    pipelineFields[3] === '@Remote EU' &&
     !pipelineRow.includes('\n') &&
     !pipelineRow.includes('\t') &&
     !pipelineRow.includes('\\|') &&
     pipelineRow.includes('=ACME\\\\Corp / R&D') &&
     pipelineRow.includes('- \\[ \\] https://evil.example/job / EvilCorp / Injected')
   ) {
-    pass('scan pipeline writer preserves row shape without injected checkboxes or extra pipes');
+    pass('scan pipeline writer preserves row shape (optional location 4th col) without injected checkboxes or extra pipes');
   } else {
     fail(`scan pipeline metadata sanitizer produced unsafe row: ${pipelineRow}`);
   }
