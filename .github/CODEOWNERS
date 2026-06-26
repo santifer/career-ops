@@ -1,0 +1,13 @@
+# CODEOWNERS — front-page and contributor-policy surfaces require maintainer review.
+#
+# Rationale: the README is career-ops's front page. Changes to it (badges, links,
+# branding, third-party embeds) are maintainer calls, not drive-by edits — this file
+# auto-requests maintainer review on those surfaces so they don't land unseen.
+# See CONTRIBUTING.md → "What we do NOT accept".
+
+# READMEs — front page + all localized variants
+/README*.md          @santifer
+
+# Contributor policy + this ownership file
+/CONTRIBUTING.md     @santifer
+/.github/CODEOWNERS  @santifer
