@@ -454,11 +454,23 @@ search_queries:
 #   workable        apply.workable.com/<slug>
 #   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
 #   recruitee       <slug>.recruitee.com
+#   comeet          api: https://www.comeet.co/careers-api/2.0/company/<uid>/positions?token=<token>
 #   personio        <slug>.jobs.personio.(de|com)
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
 # bypass detect(). The `provider:` field wins over auto-detection.
+#
+# Comeet needs the full careers-api URL (it carries a per-tenant token that a
+# branded careers page does not expose), so set it via the api: field — e.g.:
+#
+#   - name: Spark Hire
+#     careers_url: https://www.comeet.com/jobs/spark-hire/30.005
+#     api: https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=YOUR_TOKEN
+#     enabled: true
+#
+# Find <uid> and <token> in Comeet under Settings → Sourcing → Careers Website →
+# Integrated website → Careers API.
 #
 # Personio (common across DACH/EU) auto-detects from its careers host and
 # pulls the public no-auth XML feed at <slug>.jobs.personio.de/xml — e.g.:
