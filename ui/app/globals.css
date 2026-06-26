@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background: #0a0f1c;
+  color: #e2e8f0;
+  min-height: 100%;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+a {
+  color: #818cf8;
+}
+
+code, pre, .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+table th, table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.report h1 { font-size: 1.5rem; font-weight: 700; margin: 0.75rem 0; }
+.report h2 { font-size: 1.2rem; font-weight: 600; margin: 0.75rem 0 0.4rem; color: #c7d2fe; }
+.report h3 { font-size: 1rem; font-weight: 600; margin: 0.6rem 0 0.3rem; color: #a5b4fc; }
+.report p  { margin: 0.4rem 0; line-height: 1.55; }
+.report ul, .report ol { padding-left: 1.4rem; margin: 0.4rem 0; }
+.report li { margin: 0.15rem 0; }
+.report table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.875rem; }
+.report table th, .report table td { border: 1px solid #1e293b; padding: 0.4rem 0.6rem; }
+.report table th { background: #0f172a; color: #cbd5e1; font-weight: 600; }
+.report hr { border-color: #1e293b; margin: 1rem 0; }
+.report blockquote {
+  border-left: 3px solid #6366f1;
+  background: #0f172a;
+  padding: 0.4rem 0.8rem;
+  margin: 0.6rem 0;
+  color: #cbd5e1;
+}
+.report code {
+  background: #0f172a;
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+.report pre {
+  background: #0f172a;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.8rem;
+}

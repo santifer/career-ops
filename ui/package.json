@@ -1,0 +1,35 @@
+{
+  "name": "career-ops-ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "chokidar": "4.0.1",
+    "clsx": "2.1.1",
+    "js-yaml": "4.1.0",
+    "next": "14.2.18",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-markdown": "9.0.1",
+    "recharts": "2.13.3",
+    "rehype-highlight": "7.0.0",
+    "remark-gfm": "4.0.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "20.16.10",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.47",
+    "tailwindcss": "3.4.13",
+    "typescript": "5.6.2",
+    "vitest": "2.1.2"
+  }
+}
