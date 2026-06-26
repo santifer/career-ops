@@ -32,18 +32,28 @@ Exit gracefully.
 
 ## Step 1 — Discover Sessions
 
-List all `.md` files in `interview-prep/sessions/`. Group by company slug (first segment of filename before the second `-`).
+List all `.md` files in `interview-prep/sessions/`. Parse each filename using the `YYYY-MM-DD` date segment as the anchor:
 
-For each company group, note:
+```
+{company-slug}-{role-slug}-{YYYY-MM-DD}-{round}.md
+         ↑            ↑          ↑           ↑
+ everything     segment      date anchor   round label
+ before role    immediately
+                before date
+```
+
+Example: `acme-corp-swe-2024-01-15-hr.md` → company=`acme-corp`, role=`swe`, date=`2024-01-15`, round=`hr`.
+
+Group files by `{company-slug}`. For each company group, note:
 - Number of rounds on file
 - Date range of sessions
-- Role slugs covered
+- Role slugs covered (a company may have sessions across multiple roles)
 
 ## Step 2 — Classify Interviewer Signals Per Session
 
 For each transcript, read **only the interviewer's turns** (lines attributed to the interviewer, moderator, or prefixed with role labels). Ignore candidate turns for this pass.
 
-Classify signals present in each session. A signal counts if it appears **more than once** in the session (single occurrence = noise):
+Mark each of the four signal types as **present** or **absent** for the session. A signal is present if it is directly observable in the transcript — do not infer. Single occurrence within a session is sufficient to mark it present; noise filtering happens at the company-level aggregation step (Step 3).
 
 ### Signal taxonomy
 
@@ -75,11 +85,14 @@ Compute a **red-flag score**:
 
 ## Step 5 — Generate Output
 
-Append a `## Red-Flag Analysis` section to the company's `interview-prep/{company}-{role}.md` file (create the section if absent; do not overwrite existing content).
+**Output routing:** Red-flag analysis is company-wide (signals aggregate across rounds regardless of role). Write to a single company-level file: `interview-prep/{company-slug}-redflags.md`. Create it if absent. If sessions span multiple role slugs, note all roles in the header. Do not append to per-role intel files — those are role-specific, this is company-specific.
+
+Write the following structure:
 
 ```markdown
-## Red-Flag Analysis
+# Red-Flag Analysis — {Company}
 
+**Roles covered:** {role-slug(s)}
 **Sessions analysed:** {N} round(s) — {date range}
 **Warning level:** {emoji} {label}
 
@@ -121,7 +134,7 @@ Signals:
   • {signal}: {n}/{total} sessions {(pattern) if 2+}
   ...
 
-→ Full analysis appended to interview-prep/{company}-{role}.md
+→ Full analysis written to interview-prep/{company-slug}-redflags.md
 ```
 
 If multiple companies were analysed in one run, show a summary table:
