@@ -20,6 +20,7 @@ The files below are the **ONLY** sources for user-facing content (CV, cover lett
 | _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
 | writing-samples/ | `writing-samples/` | When generating candidate-facing text — check `_profile.md` for cached `## Writing Style` first; only scan files if absent |
 | voice-dna.md | `voice-dna.md` (project root, if exists) | When generating candidate-facing text. Anti-AI-slop guardrail + voice. See Voice DNA precedence below. |
+| interview-prep | `interview-prep/story-bank.md`, `interview-prep/{company}-{role}.md` | When generating ATS form answers / interview content — the user's own STAR stories + prep notes (same trust as cv.md). Consumed by `apply`/`match-star` + interview modes |
 
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
