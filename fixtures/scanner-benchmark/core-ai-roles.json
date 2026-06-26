@@ -7,7 +7,8 @@
       "company": "Example Inc",
       "title": "Senior AI Engineer",
       "location": "Berlin",
-      "fresh": true
+      "fresh": true,
+      "compensation_expected": true
     },
     {
       "id": "expected-2",
@@ -23,7 +24,12 @@
       "company": "Example Inc",
       "title": "Senior AI Engineer",
       "location": "Berlin",
-      "fresh": true
+      "fresh": true,
+      "compensation": {
+        "min": 120000,
+        "max": 160000,
+        "currency": "EUR"
+      }
     },
     {
       "provider": "lever",
@@ -38,6 +44,20 @@
       "title": "Frontend Intern",
       "location": "Paris",
       "fresh": false
+    }
+  ],
+  "provider_results": [
+    {
+      "provider": "greenhouse",
+      "status": "ok"
+    },
+    {
+      "provider": "lever",
+      "status": "ok"
+    },
+    {
+      "provider": "workday",
+      "status": "timeout"
     }
   ]
 }
