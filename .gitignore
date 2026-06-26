@@ -65,7 +65,14 @@ reports/*-RESERVED.md
 .opencode/settings.local.json
 .opencode/memory/
 career-dashboard
+# Lockfile: root keeps a checked-in one for npm install reproducibility.
+# ui/ has its own lockfile (different dependency tree) and is committed so
+# downstream users get the exact same install.
 package-lock.json
+!ui/package-lock.json
+
+# UI runtime artifacts (ephemeral)
+.ui-update.lock
 
 # Playwright MCP server run artifacts (ephemeral, machine-local — never commit)
 .playwright-mcp/
