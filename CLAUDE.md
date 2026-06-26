@@ -34,6 +34,7 @@ User-facing content (CV, cover letters, form answers, recruiter outreach, applic
 - `config/profile.yml`
 - `modes/_profile.md`
 - `writing-samples/`
+- `voice-dna.md` (voice/style only — governs *how* text reads, never introduces factual claims)
 
 Anything not in this list is **out of scope for content generation**, including:
 
