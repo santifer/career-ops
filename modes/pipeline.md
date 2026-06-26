@@ -2,11 +2,25 @@
 
 Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time and then executes `/career-ops pipeline` to process them all.
 
+## Liveness sweep
+
+**Run this before processing any URLs.** Entries added by the scanner in headless/batch mode carry `**Verification:** unconfirmed (batch mode)` because Playwright was unavailable at scan time — they were never checked for liveness. Without a sweep, dead postings reach evaluation one tab at a time, burning time and tokens on phantom roles (a single inbox of 8 stale URLs produces 8 wasted evaluations).
+
+Sweep all pending URLs in one batch with the zero-token liveness checker before the per-URL loop:
+
+1. Collect every `- [ ]` URL from the "Pending" section into a temp file (one URL per line).
+2. Run `node check-liveness.mjs --file <tmpfile>` (add `--throttle` for large batches to stay under WAF rate limits; it's pure Playwright, zero Claude tokens). The checker prints a per-URL verdict and exits non-zero if any are expired/uncertain.
+3. For every URL the checker reports as **expired/closed**, resolve the pipeline entry instead of processing it: move it to "Processed" as `- [x] ~~URL | Company | Role~~ — posting expired (liveness sweep)` and, if it already has a tracker row, mark it `Discarded`. **Do not** extract the JD, evaluate, or generate a report/PDF for it.
+4. Leave `uncertain` results in place to be confirmed during normal per-URL extraction (a transient timeout shouldn't drop a possibly-live posting).
+5. Only the surviving live URLs continue to the per-URL processing loop below.
+
+This complements — does not replace — the per-URL liveness gate in `auto-pipeline` (Step 0.5) and the `apply` preflight: the sweep drops the dead postings up front, in bulk, so the user never opens a tab or spends a token on them.
+
 ## Workflow
 
-1. **Read** `data/pipeline.md` → search for `- [ ]` items in the "Pending" section
-2. **For each pending URL**:
-   a. Calculate the next sequential `REPORT_NUM` (read `reports/`, take the highest number + 1)
+1. **Read** `data/pipeline.md` → search for `- [ ]` items in the "Pending" section. Run the **Liveness sweep** (above) first and drop any expired entries before continuing.
+2. **For each surviving pending URL**:
+   a. Claim the next sequential `REPORT_NUM` atomically by running `node reserve-report-num.mjs` (and release the sentinel using `node reserve-report-num.mjs --release <num>` after the report is written)
    b. **Extract JD** using Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    c. If the URL is not accessible → mark as `- [!]` with a note and continue
    d. **Execute full auto-pipeline**: Evaluation A-F → Report .md → PDF (if score >= `auto_pdf_score_threshold`) → Tracker
@@ -48,9 +62,9 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 
 ## Automatic numbering
 
-1. List all files in `reports/`
-2. Extract the number from the prefix (e.g., `142-medispend...` → 142)
-3. New number = maximum found + 1
+1. Run `node reserve-report-num.mjs` to claim the next sequential number (stdout returns `{###}`).
+2. Write the report file using that number.
+3. Release the sentinel by running `node reserve-report-num.mjs --release {###}` once the report is written.
 
 ## Source synchronization
 

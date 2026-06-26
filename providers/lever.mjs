@@ -23,13 +23,17 @@ export default {
   async fetch(entry, ctx) {
     const apiUrl = resolveApiUrl(entry);
     if (!apiUrl) throw new Error(`lever: cannot derive API URL for ${entry.name}`);
-    const json = await ctx.fetchJson(apiUrl);
+    const json = await ctx.fetchJson(apiUrl, { redirect: 'error' });
     if (!Array.isArray(json)) return [];
     return json.map(j => ({
       title: j.text || '',
       url: j.hostedUrl || '',
       company: entry.name,
       location: j.categories?.location || '',
+      // Lever's v0 postings list ships the full description for free (same
+      // payload, no per-job request) — enables scan.mjs content_filter.
+      description: typeof j.descriptionPlain === 'string' ? j.descriptionPlain : '',
+      postedAt: typeof j.createdAt === 'number' ? j.createdAt : undefined,
     }));
   },
 };

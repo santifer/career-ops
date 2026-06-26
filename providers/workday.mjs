@@ -1,49 +1,40 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
 
-// Workday provider - uses the public CXS jobs endpoint exposed by Workday
-// career sites. Workday tenant/site names cannot be derived reliably from a
-// branded careers URL, so entries should provide an explicit `api:` URL:
-// https://<tenant>.<shard>.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs
+// Workday provider — hits the public CXS jobs endpoint (POST, paginated).
+// Auto-detects from careers_url pattern
+// `https://<tenant>.<instance>.myworkdayjobs.com[/<locale>]/<site>`,
+// e.g. https://23andme.wd5.myworkdayjobs.com/23 →
+//      POST https://23andme.wd5.myworkdayjobs.com/wday/cxs/23andme/23/jobs
+//
+// Workday only exposes a relative "postedOn" label ("Posted Today",
+// "Posted 5 Days Ago", "Posted 30+ Days Ago"); postedAt is derived from it
+// and omitted for the unbounded "30+ Days Ago" form.
 
 const PAGE_SIZE = 20;
-const MAX_PAGES = 250;
+const MAX_PAGES = 50; // safety cap — at most 1000 postings per site
 
-function parseApiUrl(value) {
-  if (typeof value !== 'string' || !value) return null;
-  let parsed;
-  try {
-    parsed = new URL(value);
-  } catch {
-    return null;
-  }
-  if (parsed.protocol !== 'https:') return null;
-  if (!/(^|\.)myworkdayjobs\.com$/i.test(parsed.hostname)) return null;
-  if (!/^\/wday\/cxs\/[^/]+\/[^/]+\/jobs\/?$/i.test(parsed.pathname)) return null;
-  return parsed;
+function resolveEndpoint(entry) {
+  const url = entry.careers_url || '';
+  const m = url.match(/^https:\/\/([\w-]+)\.(wd[\w-]*)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([^/?#]+)/);
+  if (!m) return null;
+  const [, tenant, instance, site] = m;
+  const origin = `https://${tenant}.${instance}.myworkdayjobs.com`;
+  return {
+    api: `${origin}/wday/cxs/${tenant}/${site}/jobs`,
+    // externalPath is relative to the site, not the host root — without the
+    // site segment the URL 404s.
+    jobBase: `${origin}/${site}`,
+  };
 }
 
-function resolveApiUrl(entry) {
-  const parsed = parseApiUrl(entry.api);
-  return parsed ? parsed.href.replace(/\/$/, '') : null;
-}
-
-function publicBaseFromApi(apiUrl, entry) {
-  const explicit = typeof entry.careers_url === 'string' ? entry.careers_url : '';
-  if (explicit) {
-    try {
-      const parsed = new URL(explicit);
-      if (parsed.protocol === 'https:' && /(^|\.)myworkdayjobs\.com$/i.test(parsed.hostname)) {
-        return `${parsed.origin}${parsed.pathname.replace(/\/$/, '')}`;
-      }
-    } catch {
-      // Use the API-derived public base.
-    }
-  }
-
-  const parsed = new URL(apiUrl);
-  const match = parsed.pathname.match(/^\/wday\/cxs\/[^/]+\/([^/]+)\/jobs\/?$/i);
-  return `${parsed.origin}/en-US/${match?.[1] || ''}`.replace(/\/$/, '');
+function parsePostedOn(label) {
+  if (!label) return undefined;
+  if (/posted\s+today/i.test(label)) return Date.now();
+  if (/posted\s+yesterday/i.test(label)) return Date.now() - 86_400_000;
+  const m = label.match(/posted\s+(\d+)(\+?)\s*day/i);
+  if (!m || m[2] === '+') return undefined; // "30+ Days Ago" — unbounded, no usable date
+  return Date.now() - Number(m[1]) * 86_400_000;
 }
 
 /** @type {Provider} */
@@ -51,88 +42,41 @@ export default {
   id: 'workday',
 
   detect(entry) {
-    const apiUrl = resolveApiUrl(entry);
-    return apiUrl ? { url: apiUrl } : null;
+    const ep = resolveEndpoint(entry);
+    return ep ? { url: ep.api } : null;
   },
 
   async fetch(entry, ctx) {
-    const apiUrl = resolveApiUrl(entry);
-    if (!apiUrl) {
-      throw new Error(`workday: expected an HTTPS myworkdayjobs.com CXS jobs URL in api for ${entry.name}`);
-    }
+    const ep = resolveEndpoint(entry);
+    if (!ep) throw new Error(`workday: cannot derive CXS endpoint for ${entry.name}`);
 
-    const all = [];
-    const publicBase = publicBaseFromApi(apiUrl, entry);
-    let expectedTotal = null;
-
+    const jobs = [];
     for (let page = 0; page < MAX_PAGES; page++) {
-      const offset = page * PAGE_SIZE;
-      const json = await ctx.fetchJson(apiUrl, {
-        method: 'POST',
-        timeoutMs: 30_000,
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/json',
-        },
-        body: JSON.stringify({
-          appliedFacets: {},
-          limit: PAGE_SIZE,
-          offset,
-          searchText: '',
-        }),
-        redirect: 'error',
+      const body = JSON.stringify({
+        limit: PAGE_SIZE,
+        offset: page * PAGE_SIZE,
+        searchText: '',
+        appliedFacets: {},
       });
-
-      const jobs = parseWorkdayResponse(json, entry.name, publicBase);
-      all.push(...jobs);
-
-      const reportedTotal = Number(json?.total);
-      if (page === 0 && Number.isFinite(reportedTotal) && reportedTotal > 0) {
-        expectedTotal = reportedTotal;
+      const json = await ctx.fetchJson(ep.api, {
+        method: 'POST',
+        redirect: 'error',
+        body,
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+      });
+      const postings = Array.isArray(json?.jobPostings) ? json.jobPostings : [];
+      for (const j of postings) {
+        if (!j.externalPath) continue;
+        jobs.push({
+          title: j.title || '',
+          url: ep.jobBase + j.externalPath,
+          company: entry.name,
+          location: j.locationsText || '',
+          postedAt: parsePostedOn(j.postedOn),
+        });
       }
-      if (jobs.length === 0) break;
-      if (expectedTotal !== null && offset + jobs.length >= expectedTotal) break;
-      if (jobs.length < PAGE_SIZE) break;
+      if (postings.length < PAGE_SIZE) break;
     }
-
-    return all;
+    return jobs;
   },
 };
-
-export function parseWorkdayResponse(json, companyName, publicBase) {
-  const postings = Array.isArray(json?.jobPostings) ? json.jobPostings : [];
-  const jobs = [];
-
-  for (const posting of postings) {
-    const title = typeof posting?.title === 'string' ? posting.title.trim() : '';
-    const externalPath = typeof posting?.externalPath === 'string' ? posting.externalPath.trim() : '';
-    if (!title || !externalPath) continue;
-
-    let url;
-    try {
-      url = new URL(`${publicBase.replace(/\/$/, '')}/${externalPath.replace(/^\//, '')}`).href;
-      const parsed = new URL(url);
-      if (parsed.protocol !== 'https:' || !/(^|\.)myworkdayjobs\.com$/i.test(parsed.hostname)) continue;
-    } catch {
-      continue;
-    }
-
-    const locations = [];
-    if (typeof posting.locationsText === 'string') locations.push(posting.locationsText);
-    if (Array.isArray(posting.locations)) {
-      for (const location of posting.locations) {
-        if (typeof location === 'string') locations.push(location);
-        else if (typeof location?.descriptor === 'string') locations.push(location.descriptor);
-      }
-    }
-
-    jobs.push({
-      title,
-      url,
-      company: companyName,
-      location: [...new Set(locations.map(x => x.trim()).filter(Boolean))].join(', '),
-    });
-  }
-
-  return jobs;
-}

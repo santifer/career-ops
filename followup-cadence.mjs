@@ -12,14 +12,16 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import yaml from 'js-yaml';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')
   : join(CAREER_OPS, 'applications.md');
 const FOLLOWUPS_FILE = join(CAREER_OPS, 'data/follow-ups.md');
+const PROFILE_FILE = process.env.CAREER_OPS_PROFILE || join(CAREER_OPS, 'config/profile.yml');
 
 
 // --- CLI args ---
@@ -27,17 +29,57 @@ const args = process.argv.slice(2);
 const summaryMode = args.includes('--summary');
 const overdueOnly = args.includes('--overdue-only');
 const appliedDaysIdx = args.indexOf('--applied-days');
-const APPLIED_FIRST = appliedDaysIdx !== -1 ? parseInt(args[appliedDaysIdx + 1]) || 7 : 7;
+const appliedDaysOverride = appliedDaysIdx !== -1 ? parseInt(args[appliedDaysIdx + 1], 10) : null;
 
 // --- Cadence config ---
-const CADENCE = {
-  applied_first: APPLIED_FIRST,
+export const DEFAULT_CADENCE = {
+  applied_first: 7,
   applied_subsequent: 7,
   applied_max_followups: 2,
   responded_initial: 1,
   responded_subsequent: 3,
   interview_thankyou: 1,
 };
+
+const PROFILE_CADENCE_KEYS = {
+  applied_first_days: 'applied_first',
+  applied_subsequent_days: 'applied_subsequent',
+  applied_max_followups: 'applied_max_followups',
+  responded_initial_days: 'responded_initial',
+  responded_subsequent_days: 'responded_subsequent',
+  interview_thankyou_days: 'interview_thankyou',
+};
+
+function positiveInteger(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+export function loadProfileCadence(profilePath = PROFILE_FILE) {
+  if (!profilePath || !existsSync(profilePath)) return {};
+  let raw;
+  try {
+    raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+  } catch {
+    return {};
+  }
+  const source = raw.followup_cadence || {};
+  const cadence = {};
+  for (const [profileKey, cadenceKey] of Object.entries(PROFILE_CADENCE_KEYS)) {
+    const parsed = positiveInteger(source[profileKey]);
+    if (parsed !== null) cadence[cadenceKey] = parsed;
+  }
+  return cadence;
+}
+
+export function resolveCadenceConfig({ profilePath = PROFILE_FILE, appliedDays = appliedDaysOverride } = {}) {
+  const cadence = { ...DEFAULT_CADENCE, ...loadProfileCadence(profilePath) };
+  const cliApplied = positiveInteger(appliedDays);
+  if (cliApplied !== null) cadence.applied_first = cliApplied;
+  return cadence;
+}
+
+const CADENCE = resolveCadenceConfig();
 
 // --- Status normalization (mirrors verify-pipeline.mjs) ---
 const ALIASES = {
@@ -70,6 +112,17 @@ function today() {
 export function parseDate(dateStr) {
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) return null;
   return new Date(dateStr.trim());
+}
+
+// The tracker `date` column is often the evaluation date, while the real
+// submission date is recorded in the notes as "Applied YYYY-MM-DD" (or
+// "APPLIED ..."). Prefer that so cadence reflects when the application actually
+// went out, not when the role was evaluated. Returns the first such date, or
+// null when the notes don't carry one (caller falls back to the date column).
+export function parseAppliedDate(notes) {
+  if (!notes) return null;
+  const m = String(notes).match(/\bapplied\s+(\d{4}-\d{2}-\d{2})/i);
+  return m ? m[1] : null;
 }
 
 export function daysBetween(d1, d2) {
@@ -145,11 +198,17 @@ function extractContacts(notes) {
 }
 
 // --- Resolve report path ---
-function resolveReportPath(reportField) {
+export function resolveReportPath(reportField, appsFile = APPS_FILE, repoRoot = CAREER_OPS) {
   const match = reportField.match(/\]\(([^)]+)\)/);
   if (!match) return null;
-  const fullPath = join(CAREER_OPS, match[1]);
-  return existsSync(fullPath) ? match[1] : null;
+  // Report links in the tracker are normalized relative to the tracker file's
+  // own directory (see PR #760 — `merge-tracker.mjs --migrate`). Resolve against
+  // dirname(APPS_FILE), not the project root, otherwise relative paths like
+  // `../reports/...` (the data/applications.md layout) escape above the project.
+  const fullPath = join(dirname(appsFile), match[1]);
+  const repoRelative = relative(repoRoot, fullPath).split(sep).join('/');
+  if (repoRelative.startsWith('../') || repoRelative === '..' || !repoRelative.startsWith('reports/')) return null;
+  return existsSync(fullPath) ? repoRelative : null;
 }
 
 // --- Compute urgency ---
@@ -213,7 +272,9 @@ function analyze() {
     const normalized = normalizeStatus(app.status);
     if (!ACTIONABLE_STATUSES.includes(normalized)) continue;
 
-    const appDate = parseDate(app.date);
+    // Prefer the "Applied YYYY-MM-DD" date from notes; fall back to the column.
+    const appliedDate = parseAppliedDate(app.notes) || app.date;
+    const appDate = parseDate(appliedDate);
     if (!appDate) continue;
 
     const daysSinceApp = daysBetween(appDate, now);
@@ -231,7 +292,7 @@ function analyze() {
     }
 
     const urgency = computeUrgency(normalized, daysSinceApp, daysSinceLastFollowup, followupCount);
-    const nextFollowupDate = computeNextFollowupDate(normalized, app.date, lastFollowupDate, followupCount);
+    const nextFollowupDate = computeNextFollowupDate(normalized, appliedDate, lastFollowupDate, followupCount);
     const nextDate = nextFollowupDate ? parseDate(nextFollowupDate) : null;
     const daysUntilNext = nextDate ? daysBetween(now, nextDate) : null;
 
@@ -241,6 +302,7 @@ function analyze() {
     entries.push({
       num: app.num,
       date: app.date,
+      appliedDate,
       company: app.company,
       role: app.role,
       status: normalized,
