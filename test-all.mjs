@@ -11,8 +11,9 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
+
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -164,6 +165,7 @@ const scripts = [
   // portals file that would trigger a live remote sweep during tests.
   { name: 'verify-portals.mjs --file .tmp-test-missing-portals.yml', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
+  { name: 'archive-posting.mjs --help', expectExit: 0 },
 ];
 
 for (const { name, allowFail } of scripts) {
@@ -756,6 +758,27 @@ if (fileExists('providers/local-parser.mjs')) {
   pass('local-parser provider module exists');
 } else {
   fail('local-parser provider module is missing');
+}
+
+// pipeline.md location column (B1): formatPipelineOffer appends location as a
+// 4th pipe-delimited column when present, and degrades to the original 3-column
+// form when the ATS exposes no location.
+try {
+  const { formatPipelineOffer } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const withLoc = formatPipelineOffer({ url: 'https://x/1', company: 'Acme', title: 'SA', location: 'Remote (US)' });
+  const noLoc = formatPipelineOffer({ url: 'https://x/2', company: 'BigCo', title: 'PM' });
+  const blankLoc = formatPipelineOffer({ url: 'https://x/3', company: 'Co', title: 'Eng', location: '   ' });
+  if (
+    withLoc === '- [ ] https://x/1 | Acme | SA | Remote (US)' &&
+    noLoc === '- [ ] https://x/2 | BigCo | PM' &&
+    blankLoc === '- [ ] https://x/3 | Co | Eng'
+  ) {
+    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent)');
+  } else {
+    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}"`);
+  }
+} catch (err) {
+  fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
 }
 
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
@@ -1409,9 +1432,112 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
-// ── 15. LOCATION FILTER — always_allow tier ───────────────────────
+// ── 12. ARCHIVE-POSTING ─────────────────────────────────────────
 
-console.log('\n15. Location filter — always_allow tier');
+console.log('\n12. archive-posting.mjs');
+
+const todayStr = new Date().toISOString().split('T')[0];
+
+// dry-run: URL-based company detection across each supported ATS
+for (const [url, expected] of [
+  ['https://boards.greenhouse.io/openai/jobs/123', 'openai'],
+  ['https://jobs.ashbyhq.com/ElevenLabs/abc',      'elevenlabs'],
+  ['https://jobs.lever.co/retool/xyz',              'retool'],
+]) {
+  const out = run(NODE, ['archive-posting.mjs', '--dry-run', url]);
+  const { hostname } = new URL(url);
+  out?.toLowerCase().includes(expected)
+    ? pass(`dry-run: company detected from ${hostname}`)
+    : fail(`dry-run: company not detected from ${hostname}`);
+}
+
+// dry-run: --company / --role overrides win over URL detection
+const overrideOut = run(NODE, [
+  'archive-posting.mjs', '--dry-run',
+  'https://jobs.lever.co/retool/xyz', '--company=Acme', '--role=Staff Engineer',
+]);
+overrideOut?.includes('Acme') && overrideOut?.includes('staff-engineer')
+  ? pass('dry-run: --company and --role overrides respected')
+  : fail('dry-run: --company / --role overrides not reflected in output');
+
+// dry-run: output always contains a local:jds/ reference and today's date
+const refOut = run(NODE, ['archive-posting.mjs', '--dry-run', 'https://boards.greenhouse.io/openai/jobs/123']);
+refOut?.includes('local:jds/') && refOut?.includes(todayStr)
+  ? pass('dry-run: local:jds/ reference and date emitted')
+  : fail('dry-run: reference or date missing from output');
+
+// argument validation: no args → shows help, exits 0
+run(NODE, ['archive-posting.mjs']) !== null
+  ? pass('no-args: exits 0 (shows help)')
+  : fail('no-args: should exit 0 and print help');
+
+// argument validation: flag without URL → exits non-zero
+run(NODE, ['archive-posting.mjs', '--dry-run']) === null
+  ? pass('flag-without-url: exits non-zero (URL required)')
+  : fail('flag-without-url: should exit non-zero when URL is missing');
+
+// argument validation: --company without URL → exits non-zero
+run(NODE, ['archive-posting.mjs', '--company=Acme']) === null
+  ? pass('--company without URL: exits non-zero')
+  : fail('--company without URL: should exit non-zero');
+
+// live render: gated behind Playwright executable availability
+let hasBrowser = false;
+try {
+  const { chromium } = await import('playwright');
+  hasBrowser = existsSync(chromium.executablePath());
+} catch { /* playwright not installed */ }
+
+if (!hasBrowser) {
+  warn('archive render skipped — no Playwright browser in env');
+} else {
+  let liveJobUrl = null;
+  try {
+    const res = await fetch('https://boards-api.greenhouse.io/v1/boards/anthropic/jobs?content=false');
+    const { jobs } = await res.json();
+    const candidate = jobs?.[0]?.absolute_url ?? null;
+    if (candidate) {
+      const u = new URL(candidate);
+      const allowed = new Set(['boards.greenhouse.io', 'job-boards.greenhouse.io']);
+      if (u.protocol === 'https:' && allowed.has(u.hostname)) liveJobUrl = candidate;
+    }
+  } catch { /* offline — degrade gracefully */ }
+
+  if (!liveJobUrl) {
+    warn('archive render skipped — Greenhouse API unreachable');
+  } else {
+    const JDS_DIR = join(ROOT, 'jds');
+    const startedAt = Date.now();
+    const archiveOut = run('node', ['archive-posting.mjs', liveJobUrl], { timeout: 60000 });
+
+    if (archiveOut === null) {
+      fail('live archive: script exited non-zero on live URL');
+    } else {
+      pass('live archive: exited 0');
+
+      const recent = existsSync(JDS_DIR)
+        ? readdirSync(JDS_DIR)
+            .filter(f => f.endsWith('.pdf'))
+            .filter(f => statSync(join(JDS_DIR, f)).mtimeMs >= startedAt)
+        : [];
+
+      if (recent.length === 0) {
+        fail('live archive: no PDF written to jds/ during test run');
+      } else {
+        const pdf = join(JDS_DIR, recent[0]);
+        const { size } = statSync(pdf);
+        size > 50 * 1024
+          ? pass(`live archive: PDF has real content (${(size / 1024).toFixed(0)} KB)`)
+          : fail(`live archive: PDF suspiciously small — likely empty page (${size} bytes)`);
+        unlinkSync(pdf);
+      }
+    }
+  }
+}
+
+// ── 13. LOCATION FILTER — always_allow tier ───────────────────────
+
+console.log('\n13. Location filter — always_allow tier');
 
 try {
   const {
@@ -1567,15 +1693,16 @@ try {
   const pipelineFields = pipelineRow.split('|').map(part => part.trim());
   if (
     pendingLines.length === 1 &&
-    pipelineFields.length === 3 &&
+    pipelineFields.length === 4 &&
     pipelineFields[0] === '- [ ] https://jobs.example.com/123%7Cevil' &&
+    pipelineFields[3] === '@Remote EU' &&
     !pipelineRow.includes('\n') &&
     !pipelineRow.includes('\t') &&
     !pipelineRow.includes('\\|') &&
     pipelineRow.includes('=ACME\\\\Corp / R&D') &&
     pipelineRow.includes('- \\[ \\] https://evil.example/job / EvilCorp / Injected')
   ) {
-    pass('scan pipeline writer preserves row shape without injected checkboxes or extra pipes');
+    pass('scan pipeline writer preserves row shape (optional location 4th col) without injected checkboxes or extra pipes');
   } else {
     fail(`scan pipeline metadata sanitizer produced unsafe row: ${pipelineRow}`);
   }

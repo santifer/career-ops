@@ -36,6 +36,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 
 import { makeHttpCtx } from './providers/_http.mjs';
+import { buildTrustValidator } from './providers/_trust-validator.mjs';
 
 const parseYaml = yaml.load;
 
@@ -496,7 +497,13 @@ export function formatPipelineOffer(offer) {
   const url = sanitizePipelineUrl(offer.url);
   const company = sanitizeMarkdownField(offer.company);
   const title = sanitizeMarkdownField(offer.title);
-  return `- [ ] ${url} | ${company} | ${title}`;
+  // Location is appended as an optional 4th pipe-delimited column when the ATS
+  // exposes it (sanitized like every other field). Offers without a location
+  // keep the original 3-column form, which downstream readers treat as empty;
+  // loadSeenUrls dedups on the URL and ignores trailing columns (backward-compatible).
+  const location = sanitizeMarkdownField(offer.location);
+  const base = `- [ ] ${url} | ${company} | ${title}`;
+  return location ? `${base} | ${location}` : base;
 }
 
 export function formatScanHistoryRow(offer, date, status = 'added') {
@@ -763,6 +770,7 @@ async function main() {
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
   const salaryFilter = buildSalaryFilter(config.salary_filter);
+  const trustValidator = buildTrustValidator(config.trust_filter);
   const contentFilter = buildContentFilter(config.content_filter);
 
   // 3. Resolve a provider for each enabled company / board
@@ -866,6 +874,12 @@ async function main() {
       totalFound += jobs.length;
 
       for (const job of jobs) {
+        // Trust enrichment — runs before filters, never drops
+        const trustResult = trustValidator(job);
+        job.trustScore = trustResult.score;
+        job.trustFlags = trustResult.flags;
+        job.trustLevel = trustResult.level;
+
         if (!titleFilter(job.title)) {
           totalFilteredTitle++;
           continue;
@@ -992,6 +1006,26 @@ async function main() {
   }
   console.log(`New offers added:      ${verifiedOffers.length}`);
 
+  // Trust validation summary (only when trust_filter is configured)
+  if (config.trust_filter && config.trust_filter.enabled !== false && verifiedOffers.length > 0) {
+    const trustHigh = verifiedOffers.filter(o => o.trustLevel === 'high').length;
+    const trustMedium = verifiedOffers.filter(o => o.trustLevel === 'medium').length;
+    const trustLow = verifiedOffers.filter(o => o.trustLevel === 'low').length;
+    console.log(`Trust validation:      ${trustHigh} high, ${trustMedium} medium, ${trustLow} low`);
+    // Flag breakdown
+    /** @type {Record<string, number>} */
+    const flagCounts = {};
+    for (const o of verifiedOffers) {
+      for (const f of (o.trustFlags || [])) {
+        flagCounts[f] = (flagCounts[f] || 0) + 1;
+      }
+    }
+    if (Object.keys(flagCounts).length > 0) {
+      const parts = Object.entries(flagCounts).map(([k, v]) => `${k}: ${v}`);
+      console.log(`Trust flags:           ${parts.join(', ')}`);
+    }
+  }
+
   if (agentHandoff.length > 0) {
     console.log(`Agent/WebSearch handoff: ${agentHandoff.length} compan${agentHandoff.length === 1 ? 'y' : 'ies'} not handled by zero-token providers`);
     for (const item of agentHandoff.slice(0, 25)) {
@@ -1013,7 +1047,10 @@ async function main() {
   if (verifiedOffers.length > 0) {
     console.log('\nNew offers:');
     for (const o of verifiedOffers) {
-      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}`);
+      const trustSuffix = o.trustScore != null && o.trustScore < 100
+        ? ` [Trust: ${o.trustScore}/100${o.trustFlags?.length ? ' — ' + o.trustFlags.join(', ') : ''}]`
+        : '';
+      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}${trustSuffix}`);
     }
     if (dryRun) {
       console.log('\n(dry run — run without --dry-run to save results)');

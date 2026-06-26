@@ -24,7 +24,9 @@
     "tracker": "node tracker.mjs",
     "patterns": "node analyze-patterns.mjs",
     "gemini:eval": "node gemini-eval.mjs",
+    "ollama:eval": "node ollama-eval.mjs",
     "star": "node match-star.mjs",
+    "archive": "node archive-posting.mjs",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps"
   },
   "keywords": [
