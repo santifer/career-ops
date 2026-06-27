@@ -4685,6 +4685,48 @@ try {
   fail(`custom instructions test crashed: ${e.message}`);
 }
 
+// ── PREPARE-APPLICATION — ATS AUTO-FILL CONTRACT ────────────────
+
+console.log('\n prepare-application: ATS auto-fill contract');
+
+try {
+  const src = readFile('prepare-application.mjs');
+
+  if (!/\bfetch\s*\(/.test(src) && !/fetchWithTimeout/.test(src)) {
+    pass('prepare-application.mjs makes no network requests');
+  } else {
+    fail('prepare-application.mjs calls fetch — must be prefill-only, no POST');
+  }
+
+  for (const ats of ['greenhouse', 'ashby', 'lever']) {
+    if (src.includes(ats)) {
+      pass(`prepare-application.mjs handles ${ats}`);
+    } else {
+      fail(`prepare-application.mjs missing handler for ${ats}`);
+    }
+  }
+
+  if (/config\/profile\.yml/.test(src)) {
+    pass('prepare-application.mjs reads config/profile.yml');
+  } else {
+    fail('prepare-application.mjs does not read config/profile.yml');
+  }
+
+  if (/https:/.test(src)) {
+    pass('prepare-application.mjs enforces https-only URLs');
+  } else {
+    fail('prepare-application.mjs missing https enforcement');
+  }
+
+  if (!/submit-resume/.test(src)) {
+    pass('prepare-application.mjs does not reference old submit-resume name');
+  } else {
+    fail('prepare-application.mjs still references submit-resume');
+  }
+} catch (e) {
+  fail(`prepare-application contract check crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
