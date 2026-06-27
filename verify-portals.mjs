@@ -47,7 +47,9 @@ export const ATS = {
     jobCount: (json) => (Array.isArray(json?.jobs) ? json.jobs.length : null),
   },
   lever: {
-    probeUrl: (slug) => `https://api.lever.co/v0/postings/${slug}`,
+    // EU boards (jobs.eu.lever.co) resolve to api.eu.lever.co, mirroring the
+    // provider's resolveApiUrl; the default is the US instance.
+    probeUrl: (slug, { eu = false } = {}) => `https://api${eu ? '.eu' : ''}.lever.co/v0/postings/${slug}`,
     jobCount: (json) => (Array.isArray(json) ? json.length : null),
   },
 };
@@ -61,6 +63,8 @@ const ATS_URL_PATTERNS = [
   { ats: 'greenhouse', re: /boards\.greenhouse\.io\/([^/?#]+)/ },
   { ats: 'ashby', re: /api\.ashbyhq\.com\/posting-api\/job-board\/([^/?#]+)/ },
   { ats: 'ashby', re: /jobs\.ashbyhq\.com\/([^/?#]+)/ },
+  { ats: 'lever', re: /api\.eu\.lever\.co\/v0\/postings\/([^/?#]+)/, eu: true },
+  { ats: 'lever', re: /jobs\.eu\.lever\.co\/([^/?#]+)/, eu: true },
   { ats: 'lever', re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
   { ats: 'lever', re: /jobs\.lever\.co\/([^/?#]+)/ },
 ];
@@ -74,9 +78,9 @@ const ATS_URL_PATTERNS = [
  */
 export function parseAtsSlug(url) {
   const text = String(url || '');
-  for (const { ats, re } of ATS_URL_PATTERNS) {
+  for (const { ats, re, eu } of ATS_URL_PATTERNS) {
     const m = text.match(re);
-    if (m && m[1]) return { ats, slug: m[1] };
+    if (m && m[1]) return eu ? { ats, slug: m[1], eu: true } : { ats, slug: m[1] };
   }
   return null;
 }
@@ -116,10 +120,10 @@ export function deriveSlugCandidates(name) {
  *   status is 'live' (jobs > 0), 'empty' (200, no jobs), or 'missing'
  *   (404/error/unexpected shape).
  */
-export async function probeSlug(ats, slug, { fetchJson = defaultFetchJson } = {}) {
+export async function probeSlug(ats, slug, { fetchJson = defaultFetchJson, eu = false } = {}) {
   const spec = ATS[ats];
   if (!spec) return { ats, slug, url: '', status: 'missing', reason: `unknown ATS: ${ats}` };
-  const url = spec.probeUrl(slug);
+  const url = spec.probeUrl(slug, { eu });
   try {
     const json = await fetchJson(url);
     const count = spec.jobCount(json);
@@ -154,7 +158,7 @@ export async function verifyCompanies(companies, { fetchJson = defaultFetchJson 
       results.push({ name, status: 'skipped', reason: 'no Greenhouse/Ashby/Lever slug in careers_url or api' });
       continue;
     }
-    const probe = await probeSlug(match.ats, match.slug, { fetchJson });
+    const probe = await probeSlug(match.ats, match.slug, { fetchJson, eu: match.eu });
     results.push({ name, ...probe });
   }
   return results;
