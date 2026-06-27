@@ -49,7 +49,13 @@ if (!applyUrl || !pdfPath) {
 
 // ── PDF validation ────────────────────────────────────────────────────
 
-const absPdf = resolve(ROOT, pdfPath);
+const outputDir = resolve(ROOT, 'output');
+const absPdf    = resolve(ROOT, pdfPath);
+
+if (!absPdf.startsWith(outputDir + '/') && absPdf !== outputDir) {
+  console.error(`Error: --pdf must point to a file inside output/ (got ${pdfPath})`);
+  process.exit(1);
+}
 if (!existsSync(absPdf)) {
   console.error(`Error: PDF not found at ${pdfPath}`);
   process.exit(1);
@@ -151,8 +157,12 @@ function readCover() {
     console.error(`Warning: cover letter not found at ${coverPath} — skipping`);
     return null;
   }
+  if (!statSync(abs).isFile()) {
+    console.error(`Warning: ${coverPath} is not a file — skipping`);
+    return null;
+  }
   const text = readFileSync(abs, 'utf-8').trim();
-  return { wordCount: text.split(/\s+/).filter(Boolean).length };
+  return { text, wordCount: text.split(/\s+/).filter(Boolean).length };
 }
 
 // ── Field maps per ATS ────────────────────────────────────────────────
@@ -164,7 +174,7 @@ function buildGreenhouseFields(profile, cover, pdfFile) {
     ['email',        profile.email],
     ['phone',        profile.phone],
     ['resume',       `${pdfFile}  ← attach this file`],
-    cover ? ['cover_letter', `(${cover.wordCount} words — paste from cover file)`] : null,
+    cover ? ['cover_letter', `${cover.wordCount} words — ${cover.text.slice(0, 80).replace(/\n/g, ' ')}…`] : null,
     profile.linkedin     ? ['linkedin_profile', profile.linkedin]     : null,
     profile.portfolioUrl ? ['website',          profile.portfolioUrl] : null,
   ].filter(Boolean);

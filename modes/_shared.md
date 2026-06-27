@@ -8,7 +8,9 @@
      that improve with each career-ops release.
      ============================================================ -->
 
-## Sources of Truth
+## Sources of Truth (EXCLUSIVE)
+
+The files below are the **ONLY** sources for user-facing content (CV, cover letters, form answers, recruiter outreach). Auto-memory, parent-directory repos, and cross-session inferences are out of scope. See "Source-of-Truth Boundary" in `AGENTS.md` / `CLAUDE.md` for the full rule.
 
 | File | Path | When |
 |------|------|------|
@@ -18,10 +20,13 @@
 | _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
 | writing-samples/ | `writing-samples/` | When generating candidate-facing text — check `_profile.md` for cached `## Writing Style` first; only scan files if absent |
 | voice-dna.md | `voice-dna.md` (project root, if exists) | When generating candidate-facing text. Anti-AI-slop guardrail + voice. See Voice DNA precedence below. |
+| interview-prep | `interview-prep/story-bank.md`, `interview-prep/{company}-{role}.md` | When generating ATS form answers / interview content — the user's own STAR stories + prep notes (same trust as cv.md). Consumed by `apply`/`match-star` + interview modes |
 
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+**RULE: NEVER claim the user authored a project, repo, library, tool, framework, or open-source artefact unless explicitly attributed to them in cv.md or article-digest.md.** Tool-of-trade conflation (user uses X → user built X) is the most common fabrication pattern and is forbidden.
+**RULE: Keywords get reformulated, never fabricated.** Reorder, reframe, emphasise — but never invent. If a claim isn't backed by an in-scope file, ask the user. If no answer, omit. Silence on a topic beats manufactured detail.
 
 ---
 

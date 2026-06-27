@@ -11,8 +11,9 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
+
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -164,6 +165,7 @@ const scripts = [
   // portals file that would trigger a live remote sweep during tests.
   { name: 'verify-portals.mjs --file .tmp-test-missing-portals.yml', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
+  { name: 'archive-posting.mjs --help', expectExit: 0 },
 ];
 
 for (const { name, allowFail } of scripts) {
@@ -756,6 +758,27 @@ if (fileExists('providers/local-parser.mjs')) {
   pass('local-parser provider module exists');
 } else {
   fail('local-parser provider module is missing');
+}
+
+// pipeline.md location column (B1): formatPipelineOffer appends location as a
+// 4th pipe-delimited column when present, and degrades to the original 3-column
+// form when the ATS exposes no location.
+try {
+  const { formatPipelineOffer } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const withLoc = formatPipelineOffer({ url: 'https://x/1', company: 'Acme', title: 'SA', location: 'Remote (US)' });
+  const noLoc = formatPipelineOffer({ url: 'https://x/2', company: 'BigCo', title: 'PM' });
+  const blankLoc = formatPipelineOffer({ url: 'https://x/3', company: 'Co', title: 'Eng', location: '   ' });
+  if (
+    withLoc === '- [ ] https://x/1 | Acme | SA | Remote (US)' &&
+    noLoc === '- [ ] https://x/2 | BigCo | PM' &&
+    blankLoc === '- [ ] https://x/3 | Co | Eng'
+  ) {
+    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent)');
+  } else {
+    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}"`);
+  }
+} catch (err) {
+  fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
 }
 
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
@@ -1409,9 +1432,112 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
-// ── 15. LOCATION FILTER — always_allow tier ───────────────────────
+// ── 12. ARCHIVE-POSTING ─────────────────────────────────────────
 
-console.log('\n15. Location filter — always_allow tier');
+console.log('\n12. archive-posting.mjs');
+
+const todayStr = new Date().toISOString().split('T')[0];
+
+// dry-run: URL-based company detection across each supported ATS
+for (const [url, expected] of [
+  ['https://boards.greenhouse.io/openai/jobs/123', 'openai'],
+  ['https://jobs.ashbyhq.com/ElevenLabs/abc',      'elevenlabs'],
+  ['https://jobs.lever.co/retool/xyz',              'retool'],
+]) {
+  const out = run(NODE, ['archive-posting.mjs', '--dry-run', url]);
+  const { hostname } = new URL(url);
+  out?.toLowerCase().includes(expected)
+    ? pass(`dry-run: company detected from ${hostname}`)
+    : fail(`dry-run: company not detected from ${hostname}`);
+}
+
+// dry-run: --company / --role overrides win over URL detection
+const overrideOut = run(NODE, [
+  'archive-posting.mjs', '--dry-run',
+  'https://jobs.lever.co/retool/xyz', '--company=Acme', '--role=Staff Engineer',
+]);
+overrideOut?.includes('Acme') && overrideOut?.includes('staff-engineer')
+  ? pass('dry-run: --company and --role overrides respected')
+  : fail('dry-run: --company / --role overrides not reflected in output');
+
+// dry-run: output always contains a local:jds/ reference and today's date
+const refOut = run(NODE, ['archive-posting.mjs', '--dry-run', 'https://boards.greenhouse.io/openai/jobs/123']);
+refOut?.includes('local:jds/') && refOut?.includes(todayStr)
+  ? pass('dry-run: local:jds/ reference and date emitted')
+  : fail('dry-run: reference or date missing from output');
+
+// argument validation: no args → shows help, exits 0
+run(NODE, ['archive-posting.mjs']) !== null
+  ? pass('no-args: exits 0 (shows help)')
+  : fail('no-args: should exit 0 and print help');
+
+// argument validation: flag without URL → exits non-zero
+run(NODE, ['archive-posting.mjs', '--dry-run']) === null
+  ? pass('flag-without-url: exits non-zero (URL required)')
+  : fail('flag-without-url: should exit non-zero when URL is missing');
+
+// argument validation: --company without URL → exits non-zero
+run(NODE, ['archive-posting.mjs', '--company=Acme']) === null
+  ? pass('--company without URL: exits non-zero')
+  : fail('--company without URL: should exit non-zero');
+
+// live render: gated behind Playwright executable availability
+let hasBrowser = false;
+try {
+  const { chromium } = await import('playwright');
+  hasBrowser = existsSync(chromium.executablePath());
+} catch { /* playwright not installed */ }
+
+if (!hasBrowser) {
+  warn('archive render skipped — no Playwright browser in env');
+} else {
+  let liveJobUrl = null;
+  try {
+    const res = await fetch('https://boards-api.greenhouse.io/v1/boards/anthropic/jobs?content=false');
+    const { jobs } = await res.json();
+    const candidate = jobs?.[0]?.absolute_url ?? null;
+    if (candidate) {
+      const u = new URL(candidate);
+      const allowed = new Set(['boards.greenhouse.io', 'job-boards.greenhouse.io']);
+      if (u.protocol === 'https:' && allowed.has(u.hostname)) liveJobUrl = candidate;
+    }
+  } catch { /* offline — degrade gracefully */ }
+
+  if (!liveJobUrl) {
+    warn('archive render skipped — Greenhouse API unreachable');
+  } else {
+    const JDS_DIR = join(ROOT, 'jds');
+    const startedAt = Date.now();
+    const archiveOut = run('node', ['archive-posting.mjs', liveJobUrl], { timeout: 60000 });
+
+    if (archiveOut === null) {
+      fail('live archive: script exited non-zero on live URL');
+    } else {
+      pass('live archive: exited 0');
+
+      const recent = existsSync(JDS_DIR)
+        ? readdirSync(JDS_DIR)
+            .filter(f => f.endsWith('.pdf'))
+            .filter(f => statSync(join(JDS_DIR, f)).mtimeMs >= startedAt)
+        : [];
+
+      if (recent.length === 0) {
+        fail('live archive: no PDF written to jds/ during test run');
+      } else {
+        const pdf = join(JDS_DIR, recent[0]);
+        const { size } = statSync(pdf);
+        size > 50 * 1024
+          ? pass(`live archive: PDF has real content (${(size / 1024).toFixed(0)} KB)`)
+          : fail(`live archive: PDF suspiciously small — likely empty page (${size} bytes)`);
+        unlinkSync(pdf);
+      }
+    }
+  }
+}
+
+// ── 13. LOCATION FILTER — always_allow tier ───────────────────────
+
+console.log('\n13. Location filter — always_allow tier');
 
 try {
   const {
@@ -1567,15 +1693,16 @@ try {
   const pipelineFields = pipelineRow.split('|').map(part => part.trim());
   if (
     pendingLines.length === 1 &&
-    pipelineFields.length === 3 &&
+    pipelineFields.length === 4 &&
     pipelineFields[0] === '- [ ] https://jobs.example.com/123%7Cevil' &&
+    pipelineFields[3] === '@Remote EU' &&
     !pipelineRow.includes('\n') &&
     !pipelineRow.includes('\t') &&
     !pipelineRow.includes('\\|') &&
     pipelineRow.includes('=ACME\\\\Corp / R&D') &&
     pipelineRow.includes('- \\[ \\] https://evil.example/job / EvilCorp / Injected')
   ) {
-    pass('scan pipeline writer preserves row shape without injected checkboxes or extra pipes');
+    pass('scan pipeline writer preserves row shape (optional location 4th col) without injected checkboxes or extra pipes');
   } else {
     fail(`scan pipeline metadata sanitizer produced unsafe row: ${pipelineRow}`);
   }
@@ -4685,6 +4812,454 @@ try {
   fail(`custom instructions test crashed: ${e.message}`);
 }
 
+// ── 30. Provider — comeet ───────────────────────────────────────
+console.log('\n30. Provider — comeet');
+
+try {
+  const comeet = (await import(pathToFileURL(join(ROOT, 'providers/comeet.mjs')).href)).default;
+  const { parseComeetResponse } = await import(pathToFileURL(join(ROOT, 'providers/comeet.mjs')).href);
+
+  if (comeet.id === 'comeet') pass('comeet.id is "comeet"');
+  else fail(`comeet.id is ${JSON.stringify(comeet.id)}`);
+
+  // detect: explicit api: careers-api URL is honoured (and the secret token is
+  // redacted from the informational DetectHit url).
+  const apiUrl = 'https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=ABC123';
+  const apiHit = comeet.detect({ name: 'Spark Hire', api: apiUrl, careers_url: 'https://www.comeet.com/jobs/spark-hire/30.005' });
+  if (apiHit && apiHit.url === 'https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=REDACTED') {
+    pass('comeet.detect() resolves an explicit api: URL and redacts the token');
+  } else {
+    fail(`comeet.detect() api: → ${JSON.stringify(apiHit)}`);
+  }
+
+  // the DetectHit url must not leak the real token (it may be logged)
+  if (apiHit && !apiHit.url.includes('ABC123')) {
+    pass('comeet.detect() does not leak the real token in the DetectHit url');
+  } else {
+    fail(`comeet.detect() leaked the token: ${JSON.stringify(apiHit)}`);
+  }
+
+  // detect: full careers-api URL pasted into careers_url is also accepted
+  const cuHit = comeet.detect({ name: 'X', careers_url: apiUrl });
+  if (cuHit && cuHit.url === 'https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=REDACTED') {
+    pass('comeet.detect() accepts a careers-api URL in careers_url');
+  } else {
+    fail(`comeet.detect() careers_url → ${JSON.stringify(cuHit)}`);
+  }
+
+  // detect: a branded www.comeet.com/jobs page carries no token → not claimed
+  if (comeet.detect({ name: 'X', careers_url: 'https://www.comeet.com/jobs/spark-hire/30.005' }) === null) {
+    pass('comeet.detect() returns null for a branded careers page (no token)');
+  } else {
+    fail('comeet.detect() should not claim a tokenless branded careers page');
+  }
+
+  if (comeet.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('comeet.detect() returns null for non-comeet URLs');
+  } else {
+    fail('comeet.detect() should return null for non-comeet URLs');
+  }
+
+  if (comeet.detect({ name: 'X', careers_url: null }) === null && comeet.detect({ name: 'X', api: 7 }) === null) {
+    pass('comeet.detect() returns null for non-string url fields (null and 7)');
+  } else {
+    fail('comeet.detect() should treat non-string url fields as missing');
+  }
+
+  // SSRF: comeet.co in the PATH (not host) must not be detected.
+  if (comeet.detect({ name: 'Spoof', api: 'https://evil.example/www.comeet.co/careers-api/2.0/company/x/positions' }) === null) {
+    pass('comeet.detect() rejects path-spoofed URLs');
+  } else {
+    fail('comeet.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // SSRF: the wrong comeet host (www.comeet.com, the hosted-page origin) is rejected.
+  if (comeet.detect({ name: 'Spoof', api: 'https://www.comeet.com/careers-api/2.0/company/x/positions?token=y' }) === null) {
+    pass('comeet.detect() pins to www.comeet.co (rejects www.comeet.com)');
+  } else {
+    fail('comeet.detect() must pin to www.comeet.co');
+  }
+
+  // parseComeetResponse — top-level array (real shape, confirmed live)
+  const sample = [
+    {
+      name: 'AI Engineer',
+      url_active_page: 'https://www.comeet.com/jobs/spark-hire/30.005/ai-engineer/F1.B67',
+      url_comeet_hosted_page: 'https://www.comeet.com/jobs/spark-hire/30.005/ai-engineer/F1.B67',
+      time_updated: '2026-06-11T07:49:20Z',
+      location: { name: 'Tel Aviv, Israel', is_remote: true },
+    },
+    {
+      name: 'Backend Engineer',
+      url_comeet_hosted_page: 'https://www.comeet.com/jobs/spark-hire/30.005/backend/AB.C12',
+      location: { name: 'Berlin, Germany', is_remote: false },
+    },
+    { name: 'No URL row', location: { name: 'Remote' } },
+    { name: 'Insecure URL', url_active_page: 'http://www.comeet.com/jobs/x', location: {} },
+  ];
+  const jobs = parseComeetResponse(sample, 'Spark Hire');
+
+  if (jobs.length === 2) pass('parseComeetResponse keeps 2 rows (drops missing/non-https url)');
+  else fail(`parseComeetResponse returned ${jobs.length} rows (expected 2)`);
+
+  if (jobs[0]?.title === 'AI Engineer' && jobs[0]?.company === 'Spark Hire' && jobs[0]?.location === 'Tel Aviv, Israel, Remote') {
+    pass('parseComeetResponse maps name/location.name and appends Remote');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('2026-06-11T07:49:20Z')) {
+    pass('parseComeetResponse parses time_updated → postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.url === 'https://www.comeet.com/jobs/spark-hire/30.005/backend/AB.C12' && jobs[1]?.location === 'Berlin, Germany' && jobs[1]?.postedAt === undefined) {
+    pass('parseComeetResponse falls back to url_comeet_hosted_page and omits absent postedAt');
+  } else {
+    fail(`row 1 = ${JSON.stringify(jobs[1])}`);
+  }
+
+  if (parseComeetResponse(null, 'X').length === 0 && parseComeetResponse({}, 'X').length === 0) {
+    pass('non-array payload → empty result (no crash)');
+  } else {
+    fail('non-array payload should yield empty result');
+  }
+
+  // a location already containing "Remote" must not get a duplicate suffix
+  const noDup = parseComeetResponse([{ name: 'R', url_active_page: 'https://www.comeet.com/jobs/x/r', location: { name: 'Remote, EMEA', is_remote: true } }], 'X');
+  if (noDup[0]?.location === 'Remote, EMEA') pass('parseComeetResponse does not double-append Remote');
+  else fail(`expected "Remote, EMEA", got ${JSON.stringify(noDup[0]?.location)}`);
+
+  // malformed members (null / non-object / whitespace-only name) must neither
+  // throw nor slip through: a row needs a non-empty trimmed title AND a url.
+  const dirty = [
+    null,
+    'not an object',
+    42,
+    { name: '   ', url_active_page: 'https://www.comeet.com/jobs/x/blank' }, // blank title → dropped
+    { name: '  Padded Role  ', url_active_page: 'https://www.comeet.com/jobs/x/p', location: {} }, // trimmed, kept
+  ];
+  const cleaned = parseComeetResponse(dirty, 'X');
+  if (cleaned.length === 1 && cleaned[0].title === 'Padded Role') {
+    pass('parseComeetResponse skips null/non-object/blank-title rows and trims the title');
+  } else {
+    fail(`dirty parse = ${JSON.stringify(cleaned)} (expected 1 row "Padded Role")`);
+  }
+
+} catch (e) {
+  fail(`comeet provider tests crashed: ${e.message}`);
+}
+
+// ── 31. Provider — personio ─────────────────────────────────────
+console.log('\n31. Provider — personio');
+
+try {
+  const personio = (await import(pathToFileURL(join(ROOT, 'providers/personio.mjs')).href)).default;
+  const { parsePersonioXml } = await import(pathToFileURL(join(ROOT, 'providers/personio.mjs')).href);
+
+  if (personio.id === 'personio') pass('personio.id is "personio"');
+  else fail(`personio.id is ${JSON.stringify(personio.id)}`);
+
+  // detect: <slug>.jobs.personio.de careers host → /xml feed
+  const hit = personio.detect({ name: 'Acme', careers_url: 'https://acme.jobs.personio.de/' });
+  if (hit && hit.url === 'https://acme.jobs.personio.de/xml') {
+    pass('personio.detect() resolves <slug>.jobs.personio.de → /xml feed');
+  } else {
+    fail(`personio.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect: the .com TLD variant is also accepted
+  const comHit = personio.detect({ name: 'Acme', careers_url: 'https://acme.jobs.personio.com/jobs' });
+  if (comHit && comHit.url === 'https://acme.jobs.personio.com/xml') {
+    pass('personio.detect() accepts the .com TLD variant');
+  } else {
+    fail(`personio.detect() .com → ${JSON.stringify(comHit)}`);
+  }
+
+  if (personio.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('personio.detect() returns null for non-personio URLs');
+  } else {
+    fail('personio.detect() should return null for non-personio URLs');
+  }
+
+  if (personio.detect({ name: 'X', careers_url: null }) === null && personio.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('personio.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('personio.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: jobs.personio.de in the PATH (not host) must not be detected.
+  if (personio.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.jobs.personio.de/xml' }) === null) {
+    pass('personio.detect() rejects path-spoofed URLs');
+  } else {
+    fail('personio.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // SSRF: a look-alike host (suffix attack) must be rejected.
+  if (personio.detect({ name: 'Spoof', careers_url: 'https://acme.jobs.personio.de.evil.com/xml' }) === null) {
+    pass('personio.detect() rejects suffix-spoofed look-alike hosts');
+  } else {
+    fail('personio.detect() must reject suffix-spoofed hosts');
+  }
+
+  // parsePersonioXml — the real <workzag-jobs> shape (confirmed live)
+  const HOST = 'acme.jobs.personio.de';
+  const sample = `<?xml version="1.0" encoding="UTF-8"?>
+<workzag-jobs>
+<position>
+  <id>1834171</id>
+  <office>Munich</office>
+  <additionalOffices><office>Berlin</office></additionalOffices>
+  <name>Staff Software Engineer, Data &amp; Platform</name>
+  <createdAt>2024-11-13T14:10:41+00:00</createdAt>
+</position>
+<position>
+  <id>900100</id>
+  <office>Remote</office>
+  <name><![CDATA[Senior Engineer (m/f/d)]]></name>
+  <createdAt>2025-01-02T09:00:00+00:00</createdAt>
+</position>
+<position>
+  <id>777</id>
+  <office>Cologne</office>
+  <name></name>
+</position>
+<position>
+  <id>not-a-number</id>
+  <office>Hamburg</office>
+  <name>Bad ID Role</name>
+</position>
+</workzag-jobs>`;
+  const jobs = parsePersonioXml(sample, 'Acme', HOST);
+
+  if (jobs.length === 2) pass('parsePersonioXml keeps 2 positions (drops empty name + non-numeric id)');
+  else fail(`parsePersonioXml returned ${jobs.length} positions (expected 2)`);
+
+  if (jobs[0]?.title === 'Staff Software Engineer, Data & Platform' && jobs[0]?.company === 'Acme') {
+    pass('parsePersonioXml decodes &amp; in the title');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.url === 'https://acme.jobs.personio.de/job/1834171') {
+    pass('parsePersonioXml builds the job URL from host + numeric id');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (jobs[0]?.location === 'Munich, Berlin') {
+    pass('parsePersonioXml joins primary + additionalOffices');
+  } else {
+    fail(`row 0 location = ${JSON.stringify(jobs[0]?.location)}, expected "Munich, Berlin"`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('2024-11-13T14:10:41+00:00')) {
+    pass('parsePersonioXml parses createdAt → postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.title === 'Senior Engineer (m/f/d)') {
+    pass('parsePersonioXml unwraps a CDATA name');
+  } else {
+    fail(`row 1 title = ${JSON.stringify(jobs[1]?.title)}`);
+  }
+
+  if (parsePersonioXml('', 'X', HOST).length === 0 && parsePersonioXml(null, 'X', HOST).length === 0) {
+    pass('empty / non-string feed → empty result (no crash)');
+  } else {
+    fail('empty / non-string feed should yield empty result');
+  }
+
+  // Hardening: <jobDescriptions> carries per-section <name>/<value> pairs whose
+  // nested <name> must NOT be mistaken for the position's own title; numeric
+  // entities decode; an office wrapped in CDATA unwraps.
+  const tricky = `<workzag-jobs><position>
+    <id>42</id>
+    <office><![CDATA[München]]></office>
+    <name>Real Title &#38; More</name>
+    <jobDescriptions>
+      <jobDescription><name>Your tasks</name><value>do things</value></jobDescription>
+    </jobDescriptions>
+    <createdAt>2025-03-04T00:00:00+00:00</createdAt>
+  </position></workzag-jobs>`;
+  const tj = parsePersonioXml(tricky, 'Acme', HOST);
+  if (tj.length === 1 && tj[0].title === 'Real Title & More') {
+    pass('parsePersonioXml ignores nested <jobDescriptions><name> + decodes numeric entity');
+  } else {
+    fail(`tricky title = ${JSON.stringify(tj[0]?.title)} (len ${tj.length})`);
+  }
+  if (tj[0]?.location === 'München') {
+    pass('parsePersonioXml unwraps a CDATA <office>');
+  } else {
+    fail(`tricky location = ${JSON.stringify(tj[0]?.location)}`);
+  }
+
+  // Hardening: a <jobDescriptions> value carrying a literal "</position>" must
+  // not truncate the block split. Stripping descriptions from the whole feed
+  // first keeps both positions intact.
+  const sneaky = `<workzag-jobs><position>
+    <id>1</id><name>First</name>
+    <jobDescriptions><jobDescription><name>About</name><value>uses &lt;/position&gt; literally: </position></value></jobDescription></jobDescriptions>
+  </position><position>
+    <id>2</id><name>Second</name>
+  </position></workzag-jobs>`;
+  const sj2 = parsePersonioXml(sneaky, 'Acme', HOST);
+  if (sj2.length === 2 && sj2[0].title === 'First' && sj2[1].title === 'Second') {
+    pass('parsePersonioXml survives a literal </position> inside <jobDescriptions>');
+  } else {
+    fail(`sneaky parse = ${JSON.stringify(sj2.map(j => j.title))} (len ${sj2.length})`);
+  }
+
+  // fetch() passes redirect:'error' to fetchText (SSRF hardening must not regress)
+  let capturedOpts = null;
+  await personio.fetch(
+    { name: 'Acme', careers_url: 'https://acme.jobs.personio.de/' },
+    { fetchText: async (_url, opts) => { capturedOpts = opts; return '<workzag-jobs></workzag-jobs>'; } },
+  );
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('personio.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail(`personio.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+} catch (e) {
+  fail(`personio provider tests crashed: ${e.message}`);
+}
+
+// -- 32. Provider - weworkremotely ---------------------------------------
+console.log('\n32. Provider - weworkremotely');
+
+try {
+  const wwrModule = await import(pathToFileURL(join(ROOT, 'providers/weworkremotely.mjs')).href);
+  const weworkremotely = wwrModule.default;
+  const { parseWwrFeed } = wwrModule;
+
+  if (weworkremotely.id === 'weworkremotely') pass('weworkremotely.id is "weworkremotely"');
+  else fail(`weworkremotely.id is ${JSON.stringify(weworkremotely.id)}`);
+
+  const hit = weworkremotely.detect({ name: 'WWR', provider: 'weworkremotely' });
+  if (hit && hit.url === 'https://weworkremotely.com/remote-jobs.rss') {
+    pass('weworkremotely.detect() claims explicit provider config');
+  } else {
+    fail(`weworkremotely.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  if (weworkremotely.detect({ name: 'Remote Board', provider: 'remoteok' }) === null) {
+    pass('weworkremotely.detect() ignores other provider ids');
+  } else {
+    fail('weworkremotely.detect() should only claim provider: weworkremotely');
+  }
+
+  const sample = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title><![CDATA[Acme & Co: Staff AI Engineer]]></title>
+      <link>https://weworkremotely.com/remote-jobs/acme-staff-ai-engineer</link>
+      <pubDate>Thu, 13 Nov 2025 14:10:41 +0000</pubDate>
+      <region><![CDATA[Anywhere in the World]]></region>
+      <category>Programming</category>
+    </item>
+    <item>
+      <title>Principal Platform Engineer &amp; Tooling</title>
+      <link>https://weworkremotely.com/remote-jobs/example-platform-engineer</link>
+      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
+      <category>DevOps and Sysadmin</category>
+    </item>
+    <item>
+      <title>Missing Link Inc: Dropped Role</title>
+      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
+      <region>USA Only</region>
+    </item>
+    <item>
+      <title>Bad Link Inc: Dropped Role</title>
+      <link>/remote-jobs/bad-link</link>
+      <region>Europe Only</region>
+    </item>
+    <item>
+      <title>Off Host Inc: Dropped Role</title>
+      <link>https://example.com/remote-jobs/off-host</link>
+      <region>Internal</region>
+    </item>
+  </channel>
+</rss>`;
+  const jobs = parseWwrFeed(sample, 'WWR Board');
+
+  if (jobs.length === 2) pass('parseWwrFeed keeps 2 items (drops missing/relative/off-host links)');
+  else fail(`parseWwrFeed returned ${jobs.length} jobs (expected 2)`);
+
+  if (jobs[0]?.company === 'Acme & Co' && jobs[0]?.title === 'Staff AI Engineer') {
+    pass('parseWwrFeed splits "Company: Role" titles');
+  } else {
+    fail(`row 0 title/company = ${JSON.stringify({ title: jobs[0]?.title, company: jobs[0]?.company })}`);
+  }
+
+  if (jobs[0]?.url === 'https://weworkremotely.com/remote-jobs/acme-staff-ai-engineer') {
+    pass('parseWwrFeed maps <link> to url');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (jobs[0]?.location === 'Anywhere in the World') {
+    pass('parseWwrFeed maps <region> to location');
+  } else {
+    fail(`row 0 location = ${JSON.stringify(jobs[0]?.location)}`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('Thu, 13 Nov 2025 14:10:41 +0000')) {
+    pass('parseWwrFeed parses pubDate -> postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.company === 'WWR Board' && jobs[1]?.title === 'Principal Platform Engineer & Tooling') {
+    pass('parseWwrFeed falls back to entry name and decodes entities');
+  } else {
+    fail(`row 1 = ${JSON.stringify(jobs[1])}`);
+  }
+
+  if (jobs[1]?.location === 'DevOps and Sysadmin') {
+    pass('parseWwrFeed falls back to <category> when <region> is absent');
+  } else {
+    fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}`);
+  }
+
+  if (parseWwrFeed('', 'X').length === 0 && parseWwrFeed(null, 'X').length === 0) {
+    pass('parseWwrFeed empty / non-string feed -> empty result (no crash)');
+  } else {
+    fail('parseWwrFeed empty / non-string feed should yield empty result');
+  }
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await weworkremotely.fetch(
+    { name: 'WWR Board', provider: 'weworkremotely' },
+    { fetchText: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://weworkremotely.com/remote-jobs.rss') {
+    pass('weworkremotely.fetch() requests the pinned RSS feed URL');
+  } else {
+    fail(`weworkremotely.fetch() requested ${JSON.stringify(capturedUrl)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('weworkremotely.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail(`weworkremotely.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+  if (fetched[0]?.company === 'Acme & Co' && fetched[0]?.title === 'Staff AI Engineer') {
+    pass('provider: weworkremotely config returns normalized jobs');
+  } else {
+    fail(`weworkremotely.fetch() normalized row = ${JSON.stringify(fetched[0])}`);
+  }
+} catch (e) {
+  fail(`weworkremotely provider tests crashed: ${e.message}`);
+}
+
 // ── PREPARE-APPLICATION — ATS AUTO-FILL CONTRACT ────────────────
 
 console.log('\n prepare-application: ATS auto-fill contract');
@@ -4692,36 +5267,61 @@ console.log('\n prepare-application: ATS auto-fill contract');
 try {
   const src = readFile('prepare-application.mjs');
 
-  if (!/\bfetch\s*\(/.test(src) && !/fetchWithTimeout/.test(src)) {
+  // Must not make any network requests
+  if (!/\bfetch\s*\(/.test(src) && !/https?\.request/.test(src) && !/createConnection/.test(src)) {
     pass('prepare-application.mjs makes no network requests');
   } else {
-    fail('prepare-application.mjs calls fetch — must be prefill-only, no POST');
+    fail('prepare-application.mjs calls a network API — must be prefill-only, no POST');
   }
 
-  for (const ats of ['greenhouse', 'ashby', 'lever']) {
-    if (src.includes(ats)) {
-      pass(`prepare-application.mjs handles ${ats}`);
+  // Must have concrete handler functions for all three ATS
+  for (const fn of ['buildGreenhouseFields', 'buildAshbyFields', 'buildLeverFields']) {
+    if (new RegExp(`function ${fn}`).test(src)) {
+      pass(`prepare-application.mjs defines ${fn}`);
     } else {
-      fail(`prepare-application.mjs missing handler for ${ats}`);
+      fail(`prepare-application.mjs missing concrete handler: ${fn}`);
     }
   }
 
+  // Must read config/profile.yml
   if (/config\/profile\.yml/.test(src)) {
     pass('prepare-application.mjs reads config/profile.yml');
   } else {
     fail('prepare-application.mjs does not read config/profile.yml');
   }
 
-  if (/https:/.test(src)) {
+  // Must restrict PDF to output/ directory
+  if (/output[^'"`\n]*startsWith|startsWith.*output/.test(src)) {
+    pass('prepare-application.mjs restricts PDF path to output/');
+  } else {
+    fail('prepare-application.mjs missing output/ directory restriction for --pdf');
+  }
+
+  // Must enforce https-only
+  if (/protocol.*https:|https:.*protocol/.test(src)) {
     pass('prepare-application.mjs enforces https-only URLs');
   } else {
     fail('prepare-application.mjs missing https enforcement');
   }
 
+  // Must not reference old script name
   if (!/submit-resume/.test(src)) {
     pass('prepare-application.mjs does not reference old submit-resume name');
   } else {
     fail('prepare-application.mjs still references submit-resume');
+  }
+
+  // package.json must expose prepare:application, not submit:resume
+  const pkg = readFile('package.json');
+  if (/prepare.application.*prepare-application\.mjs/.test(pkg)) {
+    pass('package.json exposes prepare:application script');
+  } else {
+    fail('package.json missing prepare:application script pointing to prepare-application.mjs');
+  }
+  if (!/submit.resume/.test(pkg)) {
+    pass('package.json does not reference removed submit-resume.mjs');
+  } else {
+    fail('package.json still references removed submit-resume.mjs');
   }
 } catch (e) {
   fail(`prepare-application contract check crashed: ${e.message}`);

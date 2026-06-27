@@ -91,6 +91,36 @@
 #   max: 0
 #   currency: "USD"
 
+# -- Trust filter (optional) --
+# Enriches each scanned job with a trust score (0-100) and flags.
+# Jobs are NEVER dropped — only annotated. The trust score helps you
+# prioritize which postings to evaluate first.
+#
+# Heuristics (V1):
+#   1. URL structure validation (malformed or non-http URLs)
+#   2. Missing application URL
+#   3. Suspicious domain detection (link shorteners, form builders)
+#   4. Company ↔ domain mismatch (with ATS allowlist)
+#
+# If this block is absent or enabled: false, all jobs get score 100.
+#
+# trust_filter:
+#   enabled: true
+#   suspicious_domains:
+#     - "bit.ly"
+#     - "tinyurl.com"
+#     - "t.co"
+#     - "forms.gle"
+#     - "goo.gl"
+#     - "shorturl.at"
+#   # Override the built-in ATS allowlist (greenhouse, lever, workday, etc.).
+#   # URLs hosted on these domains skip the company↔domain mismatch check.
+#   # ats_allowlist:
+#   #   - "greenhouse.io"
+#   #   - "ashbyhq.com"
+#   #   - "lever.co"
+#   #   - "custom-ats.example.com"
+
 # -- Content filter (optional) --
 # Filters on the job DESCRIPTION text, not just the title — useful when
 # companies post generic titles ("Software Engineer") with very different
@@ -454,10 +484,110 @@ search_queries:
 #   workable        apply.workable.com/<slug>
 #   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
 #   recruitee       <slug>.recruitee.com
+#   bamboohr        <tenant>.bamboohr.com               (or api: field)
+#   breezy          <tenant>.breezy.hr                  (or api: field)
+#   solidjobs       solid.jobs/public-api/offers/<division>
+#   comeet          api: https://www.comeet.co/careers-api/2.0/company/<uid>/positions?token=<token>
+#   personio        <slug>.jobs.personio.(de|com)
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
 # bypass detect(). The `provider:` field wins over auto-detection.
+#
+# Some providers are job boards / aggregators with no per-company careers
+# URL to detect, so they must be selected with an explicit `provider:`
+# field: arbeitsagentur, glints, jobstreet, ibm, remoteok, remotive,
+# weworkremotely, workingnomads. Examples for every built-in provider are below.
+
+# ── Built-in provider examples ────────────────────────────────────
+# Commented config for each provider in providers/. Copy a stanza into
+# tracked_companies, uncomment, and adjust. Auto-detected providers only
+# need careers_url; the rest need provider: plus any fields shown.
+#
+# -- Auto-detected company ATS (careers_url is enough) --
+#
+# - name: Example BambooHR Co
+#   careers_url: https://exampleco.bamboohr.com/careers   # any *.bamboohr.com host
+#   enabled: true
+#
+# - name: Example Breezy Co
+#   careers_url: https://exampleco.breezy.hr              # any *.breezy.hr host
+#   enabled: true
+#
+# - name: SolidJobs — Engineering
+#   # division path is required; one of:
+#   # it, engineering, marketing, sales, hr, logistics, finances, other
+#   careers_url: https://solid.jobs/public-api/offers/engineering
+#   enabled: true
+#
+# -- Job boards / aggregators (no careers_url; set provider: explicitly) --
+#
+# - name: Arbeitsagentur — AI Roles      # German federal jobs API
+#   provider: arbeitsagentur
+#   arbeitsagentur:
+#     keywords: ["AI Engineer", "Machine Learning"]  # required (>=1)
+#     wo: Berlin          # optional anchor city ('' / omit = all of Germany)
+#     umkreis: 50         # optional km radius around wo (0-1000)
+#     days: 30            # optional recency window (1-1000)
+#     size: 100           # optional results per keyword (1-100)
+#   enabled: true
+#
+# - name: Glints — Indonesia             # SE-Asia aggregator (SG/ID/MY/VN)
+#   provider: glints
+#   searchKeywords: "AI Engineer"
+#   countryCode: ID       # optional 2-letter code (default ID)
+#   enabled: true
+#
+# - name: Jobstreet — Indonesia          # SEEK aggregator
+#   provider: jobstreet
+#   searchKeywords: "Software Engineer"
+#   siteKey: ID-Main      # optional SEEK site key (default ID-Main)
+#   searchLocation: ""    # optional location filter
+#   enabled: true
+#
+# - name: IBM — Germany SWE              # IBM global careers
+#   provider: ibm
+#   ibm:
+#     country: Germany                      # optional facet filter
+#     categories: ["Software Engineering"]  # optional facet filter
+#   enabled: true
+#
+# -- Remote-job feeds (no careers_url, no extra fields) --
+# title_filter / location_filter defined above still apply.
+#
+# - name: RemoteOK
+#   provider: remoteok
+#   enabled: true
+#
+# - name: Remotive
+#   provider: remotive
+#   enabled: true
+#
+# - name: We Work Remotely
+#   provider: weworkremotely
+#   enabled: true
+#
+# - name: Working Nomads
+#   provider: workingnomads
+#   enabled: true
+#
+# Comeet needs the full careers-api URL (it carries a per-tenant token that a
+# branded careers page does not expose), so set it via the api: field — e.g.:
+#
+#   - name: Spark Hire
+#     careers_url: https://www.comeet.com/jobs/spark-hire/30.005
+#     api: https://www.comeet.co/careers-api/2.0/company/30.005/positions?token=YOUR_TOKEN
+#     enabled: true
+#
+# Find <uid> and <token> in Comeet under Settings → Sourcing → Careers Website →
+# Integrated website → Careers API.
+#
+# Personio (common across DACH/EU) auto-detects from its careers host and
+# pulls the public no-auth XML feed at <slug>.jobs.personio.de/xml — e.g.:
+#
+#   - name: Example GmbH
+#     careers_url: https://example-gmbh.jobs.personio.de
+#     enabled: true
 
 tracked_companies:
 
