@@ -95,9 +95,11 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `data/pipeline.md` | Inbox of pending URLs |
 | `data/scan-history.tsv` | Scanner dedup history |
 | `portals.yml` | Query and company config |
-| `templates/cv-template.html` | HTML template for CVs |
+| `templates/cv-template.typ` | Typst template for CVs (default PDF flow, frozen house style) |
+| `templates/cv-template.html` | HTML template for CVs (CJK/RTL fallback flow) |
 | `templates/cv-template.tex` | LaTeX/Overleaf template for CVs |
-| `generate-pdf.mjs` | Playwright: HTML to PDF |
+| `generate-typst.mjs` | Typst CV validator + `typst` compiler (default PDF flow) |
+| `generate-pdf.mjs` | Playwright: HTML to PDF (CJK/RTL fallback) |
 | `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |

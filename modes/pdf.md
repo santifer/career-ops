@@ -17,10 +17,10 @@
 11. Build competency grid from JD requirements (6-8 keyword phrases)
 12. Inject keywords naturally into existing achievements (NEVER invent)
 13. Apply the six-second clarity gate from `modes/heuristics/recruiter-side.md`: top third must make target role, strongest fit, and proof obvious
-14. Generate full HTML from template + personalized content
+14. Fill the Typst template (`templates/cv-template.typ`) with personalized content — **swap the `{{PLACEHOLDER}}` content only; never touch the frozen preamble** (margins, font sizes, leading, helpers)
 15. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-16. Write HTML to `/tmp/cv-{candidate}-{company}.html`
-17. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+16. Write the filled Typst to `/tmp/cv-{candidate}-{company}.typ`
+17. Execute: `node generate-typst.mjs /tmp/cv-{candidate}-{company}.typ output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf`
 18. Report: PDF path, number of pages, keyword coverage %
 
 ## ATS Rules (clean parsing)
@@ -41,26 +41,30 @@
 - Bullets should emphasize outcomes, systems, users, or business effects rather than task history.
 - Logistics such as location, work authorization, salary, and availability belong in the CV only when appropriate for the market and profile; otherwise handle them in form answers or recruiter scripts.
 
-## PDF Design
+## PDF Design (FROZEN — do not change)
 
-- **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- **Fonts self-hosted**: `fonts/`
-- **Header**: name in Space Grotesk 24px bold + gradient line `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + contact row
-- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, color cyan primary
-- **Body**: DM Sans 11px, line-height 1.5
-- **Company names**: accent purple color `hsl(270,70%,45%)`
-- **Margins**: 0.6in
-- **Background**: pure white
+The visual style is the candidate's approved house style, defined entirely in the
+preamble of `templates/cv-template.typ`. **Never** edit padding, font sizes, leading,
+or the helper functions — per job you only swap the content in the `{{PLACEHOLDER}}`
+slots. The frozen spec:
+
+- **Engine**: `typst` (single binary; no Chromium, no TeX distro)
+- **Font**: Typst default serif (New Computer Modern), classic and ATS-clean
+- **Page**: A4, margins `top 0.35in / bottom 0.27in / left+right 0.56in`
+- **Body**: 10.6pt, paragraph leading 0.56em
+- **Name**: 25.2pt centered; contact line 9.9pt centered, links underlined
+- **Section headers**: 13.9pt with a 0.45pt full-width rule beneath
+- **Detail/sub text** (achievement detail): 9.7pt
+- **Bullets**: `•` indented 0.85em via the `#bullet` helper
 
 ## Section order (optimized "6-second recruiter scan")
 
-1. Header (large name, gradient, contact, portfolio link)
-2. Professional Summary (3-4 lines, keyword-dense)
-3. Core Competencies (6-8 keyword phrases in flex-grid)
-4. Work Experience (reverse chronological)
-5. Projects (top 3-4 most relevant)
-6. Education & Certifications
-7. Skills (languages + technical)
+The frozen template ships these sections in order: **Education → Projects →
+Achievements → Technical Skills & Certifications**. If the candidate's `cv.md`
+also has a Professional Summary or Work Experience, add a matching `#section[...]`
+block (using the same helpers) in the natural scan order: Header → Summary →
+Experience → Projects → Education → Skills. Keep the frozen styling for any added
+section — reuse `#section`, `#dated-row`, `#bullet`.
 
 ## Keyword injection strategy (ethical, truth-based)
 
@@ -71,54 +75,36 @@ Examples of legitimate reformulation:
 
 **NEVER add skills that the candidate does not have. Only reword real experience using the exact JD vocabulary.**
 
-## Template HTML
+## Template (Typst)
 
-Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
+Use `templates/cv-template.typ`. Copy it, then replace **only** the `{{...}}`
+content placeholders — leave the preamble (page/text/par settings and the
+`#section`, `#dated-row`, `#bullet`, `#achievement`, `#linked-label` helpers)
+byte-for-byte unchanged.
 
 | Placeholder | Content |
 |-------------|-----------|
-| `{{LANG}}` | CV language code (e.g. `en`, `es`, `ja`, `ar`). Drives language-specific CSS in the template: `ja` enables a CJK font fallback so Japanese renders instead of tofu (□); `ar` enables RTL + Arabic fonts. Use the BCP-47/ISO-639 code that matches the CV language. |
-| `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
-| `{{PHOTO}}` | Opt-in profile photo (#264). When `profile.yml` has a non-empty `candidate.photo`, replace with `<img class="cv-photo" src="<path-or-data-URL>" alt="{{NAME}}">`; otherwise **remove the whole `{{PHOTO}}` line** so no markup (and no `<img>`) is emitted. Opt-in for DACH/European markets — an absent photo renders identically (pixel-for-pixel) to the photoless layout (US/UK and many-market ATS penalize photos). |
-| `{{NAME}}` | (from profile.yml) |
-| `{{PHONE}}` | (from profile.yml — include with its separator only when `profile.yml` has a non-empty `phone` value; omit both the `<a href="tel:…">` element and the following `<span class="separator">` otherwise) |
-| `{{EMAIL}}` | (from profile.yml) |
-| `{{LINKEDIN_URL}}` | [from profile.yml] |
-| `{{LINKEDIN_DISPLAY}}` | [from profile.yml] |
-| `{{PORTFOLIO_URL}}` | [from profile.yml] (or /es depending on language) |
-| `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (or /es depending on language) |
-| `{{LOCATION}}` | [from profile.yml] |
-| `{{SECTION_SUMMARY}}` | Professional Summary |
-| `{{SUMMARY_TEXT}}` | Personalized summary with keywords |
-| `{{SECTION_COMPETENCIES}}` | Core Competencies |
-| `{{COMPETENCIES}}` | `<span class="competency-tag">keyword</span>` × 6-8 |
-| `{{SECTION_EXPERIENCE}}` | Work Experience |
-| `{{EXPERIENCE}}` | HTML for each job with reordered bullets |
-| `{{SECTION_PROJECTS}}` | Projects |
-| `{{PROJECTS}}` | HTML for top 3-4 projects |
-| `{{SECTION_EDUCATION}}` | Education |
-| `{{EDUCATION}}` | Education HTML |
-| `{{SECTION_CERTIFICATIONS}}` | Certifications |
-| `{{CERTIFICATIONS}}` | Certifications HTML |
-| `{{SECTION_SKILLS}}` | Skills |
-| `{{SKILLS}}` | Skills HTML |
+| `{{NAME}}` | Candidate full name (from `profile.yml`) — header |
+| `{{CONTACT}}` | One Typst line: location \| phone \| email \| links, separated by ` \| `. Email `@` must be escaped as `\@`. Wrap URLs with `#linked-label("<url>", "<display>")`. Omit phone (and its separator) if `profile.yml` has no phone. |
+| `{{EDUCATION}}` | Education body — typically `#dated-row([#strong[School] \ Degree], [(years)])` |
+| `{{PROJECTS}}` | Top 3-4 JD-relevant projects. Per project: `#dated-row([#strong[Name] \| stack], [(date)])` then `#bullet[...]` lines, and a final `#bullet[#linked-label("<repo>", "Repository: <repo>")]`. Separate projects with `#v(0.9em)`. |
+| `{{ACHIEVEMENTS}}` | Achievements via the `#achievement(title, event, detail, year, desc: [...])` helper, separated by `#v(0.6em)`. |
+| `{{SKILLS}}` | Skill lines, each `#pad(left: 0.85em)[#strong[Category:] items]` separated by `#v(0.42em)`. |
 
-### Profile photo (opt-in, market-specific)
+**Composing rules**
+- Reorder/rewrite project bullets to the JD — reframe with the JD's exact vocabulary, never invent.
+- Keep line length sane so the CV stays one page; trim the weakest project/bullet first.
+- `{{LANG}}` / paper format: the template hardcodes A4 + default serif. For a US/Canada role you may change `paper: "a4"` to `paper: "us-letter"` in the copied file (this is a per-output content choice, not a style change). For CJK/RTL CVs, prefer the HTML/Playwright flow (`generate-pdf.mjs`) which carries CJK and Arabic fonts — Typst default serif won't render them.
 
-The `{{PHOTO}}` slot is **off by default** and intentionally market-specific:
-
-- **DACH / much of continental Europe** (Germany, Austria, Switzerland): a professional photo is standard and often expected. Opt in by setting `candidate.photo` in `config/profile.yml` (a local file path or a `data:` URL).
-- **US / UK / Canada / Australia and many ATS-first markets**: photos are discouraged and can trip bias-avoidance filters. Leave `candidate.photo` empty — the `{{PHOTO}}` line is dropped entirely, no `<img>` is emitted, and the CV renders **pixel-for-pixel identical** to today's photoless layout.
-
-When set, the photo floats into the top corner (mirrored for RTL/Arabic) and the header/summary text wraps beside it; `.cv-photo` in `cv-template.html` controls its size and framing.
+Validate + compile with `generate-typst.mjs`; it fails the build if any `{{PLACEHOLDER}}` is left unresolved or a frozen-style helper is missing.
 
 ## Canva CV Generation (optional)
 
 If `config/profile.yml` has `cv.canva_resume_design_id` set, offer the user a choice before generating:
-- **"HTML/PDF (fast, ATS-optimized)"** — existing flow above
+- **"Typst/PDF (fast, ATS-optimized)"** — default flow above
 - **"Canva CV (visual, design-preserving)"** — new flow below
 
-If the user has no `cv.canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
+If the user has no `cv.canva_resume_design_id`, skip this prompt and use the Typst/PDF flow.
 
 ### Canva workflow
 
