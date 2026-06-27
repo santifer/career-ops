@@ -1,6 +1,6 @@
 {
   "name": "career-ops",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, OpenCode, Gemini, Codex, Qwen)",
   "private": true,
   "scripts": {
@@ -24,6 +24,9 @@
     "tracker": "node tracker.mjs",
     "patterns": "node analyze-patterns.mjs",
     "gemini:eval": "node gemini-eval.mjs",
+    "ollama:eval": "node ollama-eval.mjs",
+    "star": "node match-star.mjs",
+    "archive": "node archive-posting.mjs",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps"
   },
   "keywords": [

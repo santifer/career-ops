@@ -41,6 +41,7 @@ RATE_LIMIT_SLEEP=300
 BATCH_PAUSED=false
 STATUS_ONLY=false
 WATCH_MODE=false
+LIMIT=0
 
 # Return success for non-negative integer or decimal strings.
 is_decimal_number() {
@@ -60,6 +61,7 @@ Options:
   --retry-failed       Only retry offers marked as "failed" in state
   --resume-paused      Resume offers paused by a Claude session/rate limit
   --start-from N       Start from offer ID N (skip earlier IDs)
+  --limit N            Max number of offers to process in this run
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
   --skip-pdf           Skip PDF generation entirely (write ❌ in tracker PDF column)
@@ -102,6 +104,7 @@ while [[ $# -gt 0 ]]; do
     --retry-failed) RETRY_FAILED=true; shift ;;
     --resume-paused) RESUME_PAUSED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
+    --limit) LIMIT="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
     --skip-pdf) SKIP_PDF=true; shift ;;
@@ -125,6 +128,11 @@ fi
 
 if ! is_decimal_number "$MIN_SCORE"; then
   echo "ERROR: --min-score must be a non-negative number."
+  exit 1
+fi
+
+if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: --limit must be a non-negative integer."
   exit 1
 fi
 
@@ -190,12 +198,17 @@ init_state() {
 }
 
 acquire_state_lock() {
+  if [[ "${STATE_LOCK_DISABLED:-0}" -eq 1 ]]; then
+    return 0
+  fi
+
   local waited=0
   local max_waits=$((STATE_LOCK_TIMEOUT_SECONDS * 10))
 
   while true; do
     if mkdir "$STATE_LOCK_DIR" 2>/dev/null; then
       if printf '%s\n' "${BASHPID:-$$}" > "$STATE_LOCK_PID_FILE"; then
+        STATE_LOCK_OWNED=1
         return 0
       fi
       rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
@@ -205,6 +218,12 @@ acquire_state_lock() {
     fi
 
     if [[ ! -d "$STATE_LOCK_DIR" ]]; then
+      if (( PARALLEL <= 1 )); then
+        echo "WARN: State lock creation failed. Falling back to lock-free operation (single-worker mode)." >&2
+        STATE_LOCK_DISABLED=1
+        STATE_LOCK_OWNED=0
+        return 0
+      fi
       echo "ERROR: Failed to create state lock directory $STATE_LOCK_DIR"
       return 1
     fi
@@ -233,8 +252,12 @@ acquire_state_lock() {
 }
 
 release_state_lock() {
+  if [[ "${STATE_LOCK_OWNED:-0}" -ne 1 ]]; then
+    return
+  fi
   rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
   rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
+  STATE_LOCK_OWNED=0
 }
 
 run_with_state_lock() {
@@ -460,12 +483,22 @@ process_offer() {
 
   local exit_code=0
   local terminal_failure_recorded=false
+  local shim_retries=0
+  local max_shim_retries=4
   while true; do
     exit_code=0
     claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
 
     if [[ $exit_code -eq 0 ]]; then
       break
+    fi
+
+    # Check for Claude Code npm shim swap (exit code 127 + command not found)
+    if [[ $exit_code -eq 127 ]] && grep -qE "(claude: command not found|claude:.*not found|cannot find.*claude)" "$log_file" && (( shim_retries < max_shim_retries )); then
+      shim_retries=$((shim_retries + 1))
+      echo "    ⏳ Claude command not found (shim swap detected). Retrying in 30s (attempt $shim_retries/$max_shim_retries)..."
+      sleep 30
+      continue
     fi
 
     if is_session_limit_log "$log_file"; then
@@ -723,7 +756,11 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
-  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  if (( LIMIT > 0 )); then
+    echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES | Limit: $LIMIT"
+  else
+    echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  fi
   echo "Input: $total_input offers"
   echo ""
 
@@ -782,6 +819,10 @@ main() {
           continue
         fi
       fi
+    fi
+
+    if (( LIMIT > 0 )) && (( ${#pending_ids[@]} >= LIMIT )); then
+      break
     fi
 
     pending_ids+=("$id")
@@ -884,3 +925,4 @@ main() {
 }
 
 main "$@"
+

@@ -61,6 +61,7 @@ const requiredSystemPaths = [
   '.claude-plugin/',
   '.qwen/',
   '.antigravitycli/skills/',
+  '.grok/skills/',
   'tracker-columns-tests.mjs',
   'updater-migration-tests.mjs',
   'README.ar.md',
@@ -78,9 +79,11 @@ const requiredBootstrapPaths = [
   '.agents/',
   '.opencode/skills/',
   '.antigravitycli/skills/',
+  '.grok/skills/',
   'providers/',
   'liveness-browser.mjs',
   'role-matcher.mjs',
+  'tracker-utils.mjs',
   'updater-migration-tests.mjs',
   'tracker-columns-tests.mjs',
 ];
@@ -102,7 +105,7 @@ const twoPassManifestChecks = [
   },
   {
     name: 'apply first updates update-system.mjs from FETCH_HEAD',
-    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*'update-system\.mjs'\)/,
+    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*'update-system\.mjs',\s*'scaffolder\/bin\/skill-entrypoints\.mjs'\)/,
   },
   {
     name: 'apply re-execs through the current Node binary',
