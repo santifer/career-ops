@@ -5260,6 +5260,73 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
+// ── PREPARE-APPLICATION — ATS AUTO-FILL CONTRACT ────────────────
+
+console.log('\n prepare-application: ATS auto-fill contract');
+
+try {
+  const src = readFile('prepare-application.mjs');
+
+  // Must not make any network requests
+  if (!/\bfetch\s*\(/.test(src) && !/https?\.request/.test(src) && !/createConnection/.test(src)) {
+    pass('prepare-application.mjs makes no network requests');
+  } else {
+    fail('prepare-application.mjs calls a network API — must be prefill-only, no POST');
+  }
+
+  // Must have concrete handler functions for all three ATS
+  for (const fn of ['buildGreenhouseFields', 'buildAshbyFields', 'buildLeverFields']) {
+    if (new RegExp(`function ${fn}`).test(src)) {
+      pass(`prepare-application.mjs defines ${fn}`);
+    } else {
+      fail(`prepare-application.mjs missing concrete handler: ${fn}`);
+    }
+  }
+
+  // Must read config/profile.yml
+  if (/config\/profile\.yml/.test(src)) {
+    pass('prepare-application.mjs reads config/profile.yml');
+  } else {
+    fail('prepare-application.mjs does not read config/profile.yml');
+  }
+
+  // Must restrict PDF to output/ directory
+  if (/output[^'"`\n]*startsWith|startsWith.*output/.test(src)) {
+    pass('prepare-application.mjs restricts PDF path to output/');
+  } else {
+    fail('prepare-application.mjs missing output/ directory restriction for --pdf');
+  }
+
+  // Must enforce https-only
+  if (/protocol.*https:|https:.*protocol/.test(src)) {
+    pass('prepare-application.mjs enforces https-only URLs');
+  } else {
+    fail('prepare-application.mjs missing https enforcement');
+  }
+
+  // Must not reference old script name
+  if (!/submit-resume/.test(src)) {
+    pass('prepare-application.mjs does not reference old submit-resume name');
+  } else {
+    fail('prepare-application.mjs still references submit-resume');
+  }
+
+  // package.json must expose prepare:application, not submit:resume
+  const pkg = readFile('package.json');
+  if (/prepare.application.*prepare-application\.mjs/.test(pkg)) {
+    pass('package.json exposes prepare:application script');
+  } else {
+    fail('package.json missing prepare:application script pointing to prepare-application.mjs');
+  }
+  if (!/submit.resume/.test(pkg)) {
+    pass('package.json does not reference removed submit-resume.mjs');
+  } else {
+    fail('package.json still references removed submit-resume.mjs');
+  }
+} catch (e) {
+  fail(`prepare-application contract check crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
