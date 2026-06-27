@@ -647,6 +647,45 @@ if (
   fail('update-system does not rebuild dashboard binary after dashboard Go source updates');
 }
 
+// ── 7d. OUTPUT LANGUAGE CONTRACT ─────────────────────────────────
+
+console.log('\n7d. Output language contract');
+
+const profileExample = readFile('config/profile.example.yml');
+const agentsDoc = readFile('AGENTS.md');
+const careerOpsSkill = readFile('.agents/skills/career-ops/SKILL.md');
+const batchPrompt = readFile('batch/batch-prompt.md');
+
+if (/language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(profileExample)) {
+  pass('profile.example.yml documents language.output default');
+} else {
+  fail('profile.example.yml is missing language.output default');
+}
+
+if (/language\.output/.test(agentsDoc) && /human-facing output/i.test(agentsDoc) && /modes_dir/.test(agentsDoc)) {
+  pass('AGENTS.md documents output language separately from market modes');
+} else {
+  fail('AGENTS.md does not document the language.output vs modes_dir contract');
+}
+
+if (/language\.output/.test(careerOpsSkill) && /human-facing output/i.test(careerOpsSkill)) {
+  pass('career-ops skill injects the output language rule');
+} else {
+  fail('career-ops skill does not inject the output language rule');
+}
+
+if (/Language Rule/i.test(batchPrompt) && /language\.output/.test(batchPrompt) && /write all human-facing output/i.test(batchPrompt)) {
+  pass('batch prompt honors language.output for worker prose');
+} else {
+  fail('batch prompt does not honor language.output for worker prose');
+}
+
+if (/^# career-ops Batch Worker — Complete Evaluation \+ PDF \+ Tracker Line/m.test(batchPrompt)) {
+  pass('batch prompt uses an English canonical base');
+} else {
+  fail('batch prompt canonical base is not English');
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');

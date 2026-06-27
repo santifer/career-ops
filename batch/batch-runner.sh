@@ -422,10 +422,10 @@ process_offer() {
   # Build the prompt with placeholders replaced
   local prompt
   if [[ "$SKIP_PDF" == "true" ]]; then
-    prompt="Procesa esta oferta de empleo. Ejecuta el pipeline: evaluación A-F + report .md + tracker line. NO generes PDF; en el tracker escribe ❌ en la columna PDF y en el JSON final establece \"pdf\": null."
+    prompt="Process this job offer. Run the pipeline: A-G evaluation + report .md + tracker line. Do NOT generate a PDF; write ❌ in the tracker PDF column and set \"pdf\": null in the final JSON."
     echo "    ⏭️  --skip-pdf set — skipping PDF generation for #$id ($url)"
   else
-    prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-F + report .md + PDF + tracker line."
+    prompt="Process this job offer. Run the full pipeline: A-G evaluation + report .md + optional PDF + tracker line."
   fi
   prompt="$prompt URL: $url"
   prompt="$prompt JD file: $jd_file"
