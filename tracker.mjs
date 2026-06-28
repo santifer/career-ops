@@ -41,7 +41,7 @@ import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
 const MD_PATH = process.env.CAREER_OPS_TRACKER || 'data/applications.md';
-const DB_PATH = process.env.CAREER_OPS_TRACKER_DB
+export const DB_PATH = process.env.CAREER_OPS_TRACKER_DB
   || (MD_PATH.endsWith('.md') ? MD_PATH.slice(0, -3) + '.db' : MD_PATH + '.db');
 
 // SQLite must never open the source of truth itself (an explicit
@@ -51,12 +51,51 @@ if (resolve(MD_PATH) === resolve(DB_PATH)) {
   process.exit(1);
 }
 const STATES_PATH = 'templates/states.yml';
-const HEADER = '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |';
-const SEPARATOR = '|---|------|---------|------|-------|--------|-----|--------|-------|';
+
+export const LEGACY_COLMAP = { num: 1, date: 2, company: 3, role: 4, score: 5, status: 6, pdf: 7, report: 8, notes: 9 };
+export const HEADER_ALIASES = {
+  '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
+  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
+  'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
+};
+
+/**
+ * Detects the column mapping from markdown lines by looking for a header row.
+ * @param {string[]} lines - Markdown file lines.
+ * @returns {object|null} A map of header name to column index, or null if invalid.
+ */
+export function detectColumns(lines) {
+  for (const line of lines) {
+    if (!line.startsWith('|')) continue;
+    const cells = line.split('|').map(s => s.trim().toLowerCase());
+    if (!cells.includes('company') || !cells.includes('role')) continue;
+    const map = {};
+    cells.forEach((c, i) => { if (HEADER_ALIASES[c] != null) map[HEADER_ALIASES[c]] = i; });
+    if (['num', 'company', 'role', 'score', 'status'].every(k => map[k] != null)) return map;
+  }
+  return null;
+}
+
+/**
+ * Updates the global HEADER and SEPARATOR layout based on the column map.
+ * @param {object} colmap - The column map.
+ */
+export function updateHeaderLayout(colmap) {
+  if (colmap.location != null) {
+    HEADER = '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |';
+    SEPARATOR = '|---|------|---------|------|----------|-------|--------|-----|--------|-------|';
+  } else {
+    HEADER = '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |';
+    SEPARATOR = '|---|------|---------|------|-------|--------|-----|--------|-------|';
+  }
+}
+
+export let HEADER = '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |';
+export let SEPARATOR = '|---|------|---------|------|-------|--------|-----|--------|-------|';
 
 // ── node:sqlite loading ─────────────────────────────────────────────
 
-async function loadSqlite() {
+export async function loadSqlite() {
   // node:sqlite is stable in behavior but still flagged experimental in some
   // Node lines — silence only that one warning, leave everything else alone.
   const origEmit = process.emitWarning;
@@ -77,7 +116,7 @@ async function loadSqlite() {
   }
 }
 
-function openDb(DatabaseSync) {
+export function openDb(DatabaseSync) {
   mkdirSync(dirname(DB_PATH) || '.', { recursive: true });
   const db = new DatabaseSync(DB_PATH);
   db.exec('PRAGMA foreign_keys = ON'); // SQLite ignores REFERENCES without this
@@ -113,7 +152,7 @@ function openDb(DatabaseSync) {
 
 // ── Canonical states (templates/states.yml is the source of truth) ──
 
-function loadStates() {
+export function loadStates() {
   if (!existsSync(STATES_PATH)) {
     console.error(`Error: ${STATES_PATH} not found — cannot validate statuses. Run from the career-ops root.`);
     process.exit(1);
@@ -133,7 +172,7 @@ function loadStates() {
 
 // Strip markdown bold, trailing dates, and surrounding noise, then resolve
 // against canonical labels/aliases. Returns the canonical label or null.
-function normalizeStatus(raw, states) {
+export function normalizeStatus(raw, states) {
   if (!raw) return null;
   const cleaned = String(raw)
     .replace(/\*\*/g, '')
@@ -310,12 +349,21 @@ function syncIndex(db, states) {
   return { apps, diag };
 }
 
-async function sync(args) {
+export async function sync(args) {
   if (!existsSync(MD_PATH)) {
     console.error(`Error: ${MD_PATH} not found — nothing to index.`);
     process.exit(1);
   }
   const states = loadStates();
+
+  const DatabaseSync = await loadSqlite();
+  const db = openDb(DatabaseSync);
+
+  if (isDbSource(db) && !args.includes('--force') && !args.includes('--check')) {
+    console.error('Error: Database is currently the source of truth. Running sync could overwrite newer database data with markdown.');
+    console.error('If you really want to sync from markdown to DB, run with `node tracker.mjs sync --force`.');
+    process.exit(1);
+  }
 
   if (args.includes('--check')) {
     const { apps, diag } = parseTracker(states);
@@ -325,8 +373,6 @@ async function sync(args) {
     process.exit(issues > 0 ? 1 : 0);
   }
 
-  const DatabaseSync = await loadSqlite();
-  const db = openDb(DatabaseSync);
   const { apps, diag } = syncIndex(db, states);
   console.error(`Indexed ${apps.length} applications from ${MD_PATH} into ${DB_PATH}`);
   reportDiagnostics(diag);
@@ -334,7 +380,8 @@ async function sync(args) {
 
 // query/history must never serve stale reads: if the markdown changed since
 // the last sync (or was never synced), rebuild the index first.
-function ensureFresh(db, states) {
+export function ensureFresh(db, states) {
+  if (isDbSource(db)) return; // DB is source of truth, no resync from markdown!
   if (!existsSync(MD_PATH)) {
     console.error(`Error: ${MD_PATH} not found — the index has no source of truth to read from.`);
     process.exit(1);
@@ -354,7 +401,7 @@ function flagValue(args, flag) {
   return kv ? kv.split('=').slice(1).join('=') : null;
 }
 
-function rowToMarkdown(r) {
+export function rowToMarkdown(r) {
   const clean = (v) => String(v ?? '').replace(/\|/g, '│').replace(/\r?\n/g, ' ');
   return `| ${r.id} | ${clean(r.date)} | ${clean(r.company)} | ${clean(r.role)} | ${clean(r.score)} | ${clean(r.status)} | ${clean(r.pdf)} | ${clean(r.report)} | ${clean(r.notes)} |`;
 }
@@ -421,7 +468,7 @@ async function history(args) {
 // a repaired copy the user can review and adopt by hand. It never touches
 // applications.md unless explicitly asked to via --out.
 
-async function exportMd(args) {
+export async function exportMd(args) {
   const DatabaseSync = await loadSqlite();
   const db = openDb(DatabaseSync);
   ensureFresh(db, loadStates());
@@ -452,6 +499,105 @@ async function exportMd(args) {
   }
   writeFileSync(outPath, out, 'utf-8');
   console.error(`Exported ${rows.length} applications to ${outPath}`);
+}
+
+
+/**
+ * Checks if the SQLite database is currently the source of truth.
+ * @param {any} db - SQLite database instance.
+ * @returns {boolean} True if the DB is the source of truth, false otherwise.
+ */
+export function isDbSource(db) {
+  try {
+    const row = db.prepare("SELECT value FROM meta WHERE key = 'source_of_truth'").get();
+    return row?.value === 'db';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Checks for divergence between markdown file and database, aborting if found.
+ * @param {any} db - SQLite database instance.
+ * @param {boolean} [force=false] - If true, bypasses the check.
+ */
+export function checkDivergence(db, force = false) {
+  if (!isDbSource(db)) return;
+  if (force) return;
+  const synced = db.prepare("SELECT value FROM meta WHERE key = 'md_sha256'").get();
+  const currentHash = existsSync(MD_PATH) ? mdHash() : null;
+  if (currentHash !== null && (!synced || !synced.value || synced.value !== currentHash)) {
+    console.error('Error: applications.md has been modified directly on disk and has diverged from the SQLite database.');
+    console.error('To resolve this:');
+    console.error('  1. If you want to overwrite your manual markdown edits with the database state, run the command again with --force.');
+    console.error('  2. If you want to import your manual markdown edits into the database, run `node tracker.mjs sync --force`.');
+    process.exit(1);
+  }
+}
+
+/**
+ * Command: Migrates the tracker from markdown-first to DB-first mode.
+ * @param {string[]} args - CLI arguments.
+ * @returns {Promise<void>}
+ */
+export async function migrate(args) {
+  const DatabaseSync = await loadSqlite();
+  const db = openDb(DatabaseSync);
+  const states = loadStates();
+
+  if (isDbSource(db)) {
+    console.error('Error: Database is already the source of truth.');
+    process.exit(1);
+  }
+
+  console.error('Migrating: syncing database from applications.md first...');
+  // Force a sync to make sure the DB has all latest data
+  syncIndex(db, states);
+
+  // Set source of truth to 'db'
+  db.prepare("INSERT INTO meta (key, value) VALUES ('source_of_truth', 'db') ON CONFLICT(key) DO UPDATE SET value = excluded.value").run();
+
+  // Export back to applications.md so it is canonical/rendered
+  console.error(`Rewriting ${MD_PATH} to be the rendered view of the database...`);
+  await exportMd(['--out', MD_PATH]);
+
+  // Update md_sha256 meta key to match the new markdown file hash
+  db.prepare("INSERT INTO meta (key, value) VALUES ('md_sha256', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+    .run(mdHash());
+
+  console.log('Migration successful. The SQLite database at ' + DB_PATH + ' is now the source of truth.');
+  console.log(MD_PATH + ' has been updated and is now a rendered view.');
+  console.log('Deleting the database file will revert the source of truth back to ' + MD_PATH + '.');
+}
+
+/**
+ * Command: Rolls back from DB-first mode to markdown-first mode.
+ * @param {string[]} args - CLI arguments.
+ * @returns {Promise<void>}
+ */
+export async function rollbackMigration(args) {
+  const DatabaseSync = await loadSqlite();
+  const db = openDb(DatabaseSync);
+
+  if (!isDbSource(db)) {
+    console.error('Error: Database is not currently the source of truth.');
+    process.exit(1);
+  }
+
+  checkDivergence(db, args.includes('--force'));
+
+  console.error('Rolling back: exporting database to applications.md to ensure it is fresh...');
+  await exportMd(['--out', MD_PATH, ...(args.includes('--force') ? ['--force'] : [])]);
+
+  // Remove source of truth key
+  db.prepare("DELETE FROM meta WHERE key = 'source_of_truth'").run();
+
+  // Update md_sha256 key
+  db.prepare("INSERT INTO meta (key, value) VALUES ('md_sha256', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+    .run(mdHash());
+
+  console.log('Rollback successful. ' + MD_PATH + ' is now the source of truth again.');
+  console.log('The database at ' + DB_PATH + ' is now a derived index.');
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -510,13 +656,24 @@ async function deleteApp(args) {
   if (report) console.error(`Note: report file may now be orphaned — ${report}`);
 }
 
-const COMMANDS = { sync, query, history, export: exportMd, delete: deleteApp };
+const COMMANDS = {
+  sync,
+  query,
+  history,
+  export: exportMd,
+  migrate,
+  'rollback-migration': rollbackMigration,
+  delete: deleteApp
+};
 
 async function main() {
-  const [command, ...args] = process.argv.slice(2);
+  let [command, ...args] = process.argv.slice(2);
+  if (command === 'migrate' && args.includes('--rollback')) {
+    command = 'rollback-migration';
+  }
   const fn = COMMANDS[command];
   if (!fn) {
-    console.log('Usage: node tracker.mjs <sync|query|history|export|delete> [flags]');
+    console.log('Usage: node tracker.mjs <sync|query|history|export|migrate|rollback-migration|delete> [flags]');
     console.log('See the header comment of this file for examples, or docs/SCRIPTS.md.');
     process.exit(command ? 1 : 0);
   }

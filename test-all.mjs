@@ -3071,6 +3071,147 @@ if (!sqliteAvailable) {
   }
 }
 
+// ── 15b. TRACKER DB SOURCE OF TRUTH (#918 phase 2) ──────────────────
+// opt-in DB source-of-truth mode. migrate command imports markdown, activates
+// DB-first mode, and renders applications.md. merge-tracker writes to the DB
+// and re-renders applications.md. rollback-migration reverts back.
+// Any manual edit to applications.md in DB-first mode must be detected as a
+// divergence, blocking further writes unless --force is passed.
+
+console.log('\n15b. Tracker DB source of truth (migrate, rollback, merge write-through, divergence guard)');
+
+if (!sqliteAvailable) {
+  warn('node:sqlite unavailable (Node < 22.5) — tracker Phase 2 tests skipped');
+} else {
+  try {
+    const sqlite = await import('node:sqlite');
+    const idxTmp2 = mkdtempSync(join(tmpdir(), 'career-ops-db-first-'));
+    try {
+      const md = join(idxTmp2, 'applications.md');
+      const env = { ...process.env, CAREER_OPS_TRACKER: md };
+      const trackerRun = (args) => run(NODE, ['tracker.mjs', ...args], { env, stdio: ['pipe', 'pipe', 'pipe'] });
+
+      const clean =
+        '# Applications Tracker\n\n' +
+        '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+        '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+        '| 2 | 2026-01-05 | Beta | Designer | 4.0/5 | Applied | ✅ | [2](../reports/002-beta-2026-01-05.md) | second |\n' +
+        '| 1 | 2026-01-04 | Acme | Engineer | 4.2/5 | Evaluated | ❌ | [1](../reports/001-acme-2026-01-04.md) | first |\n';
+      writeFileSync(md, clean);
+
+      // Initialize derived index
+      trackerRun(['sync']);
+
+      // 1. Migrate to DB source of truth
+      if (trackerRun(['migrate']) === null) {
+        fail('tracker migrate command crashed');
+      } else {
+        pass('tracker migrate command succeeds');
+      }
+
+      const dbFile = md.replace('.md', '.db');
+      const testDb = new sqlite.DatabaseSync(dbFile);
+      const sot = testDb.prepare("SELECT value FROM meta WHERE key = 'source_of_truth'").get();
+      if (sot && sot.value === 'db') {
+        pass('migration correctly sets source_of_truth to db');
+      } else {
+        fail('migration did not set source_of_truth to db');
+      }
+      testDb.close();
+
+      // 2. Verify merge-tracker writes to DB in source-of-truth mode
+      const additionsDir = join(idxTmp2, 'batch', 'tracker-additions');
+      mkdirSync(additionsDir, { recursive: true });
+      writeFileSync(join(additionsDir, '004-gamma.tsv'),
+        '4\t2026-01-08\tGamma\tQA\tEvaluated\t4.4/5\t❌\t[4](../reports/004-gamma-2026-01-08.md)\tnew row\n'
+      );
+
+      const mergeResult = run(NODE, ['merge-tracker.mjs'], {
+        env: {
+          ...env,
+          CAREER_OPS_ADDITIONS: additionsDir
+        }
+      });
+      if (mergeResult === null) {
+        fail('merge-tracker crashed in db-first mode');
+      } else {
+        pass('merge-tracker runs successfully in db-first mode');
+      }
+
+      const testDb2 = new sqlite.DatabaseSync(dbFile);
+      const row = testDb2.prepare("SELECT * FROM applications WHERE id = 4").get();
+      if (row && row.company === 'Gamma' && row.role === 'QA' && row.score === '4.4/5') {
+        pass('merge-tracker writes through to DB in source-of-truth mode');
+      } else {
+        fail('merge-tracker did not write through to DB in source-of-truth mode');
+      }
+      testDb2.close();
+
+      // Verify applications.md was updated (rendered view)
+      let mdContent = readFileSync(md, 'utf-8');
+      if (mdContent.includes('Gamma') && mdContent.includes('QA') && mdContent.includes('4.4/5')) {
+        pass('merge-tracker updates applications.md rendered view in source-of-truth mode');
+      } else {
+        fail('merge-tracker did not update applications.md rendered view');
+      }
+
+      // 3. Divergence Guard test (silent data loss prevention)
+      // Manually edit applications.md to cause a hash mismatch
+      writeFileSync(md, mdContent + '| 5 | 2026-01-09 | Manual | Edit | 1.0/5 | Evaluated | ❌ | — | hand edited |\n');
+
+      // Attempt to run merge-tracker again without --force (should fail/abort)
+      const additionsDir2 = join(idxTmp2, 'batch', 'tracker-additions-2');
+      mkdirSync(additionsDir2, { recursive: true });
+      writeFileSync(join(additionsDir2, '006-invalid.tsv'),
+        '6\t2026-01-10\tInvalid\tRole\tEvaluated\t3.0/5\t❌\t—\tshould fail\n'
+      );
+      const mergeDiverged = run(NODE, ['merge-tracker.mjs'], {
+        env: {
+          ...env,
+          CAREER_OPS_ADDITIONS: additionsDir2
+        },
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+      if (mergeDiverged === null) {
+        pass('merge-tracker aborts when markdown has diverged (prevents data loss)');
+      } else {
+        fail('merge-tracker did not abort on diverged markdown');
+      }
+
+      // Attempt to run rollback-migration without --force (should fail/abort)
+      const rollbackDiverged = run(NODE, ['tracker.mjs', 'rollback-migration'], { env, stdio: ['pipe', 'pipe', 'pipe'] });
+      if (rollbackDiverged === null) {
+        pass('rollback-migration aborts when markdown has diverged (prevents data loss)');
+      } else {
+        fail('rollback-migration did not abort on diverged markdown');
+      }
+
+      // Run rollback-migration WITH --force (should succeed)
+      const rollbackForced = run(NODE, ['tracker.mjs', 'rollback-migration', '--force'], { env, stdio: ['pipe', 'pipe', 'pipe'] });
+      if (rollbackForced !== null) {
+        pass('rollback-migration with --force bypasses divergence check and succeeds');
+      } else {
+        fail('rollback-migration with --force failed to execute');
+      }
+
+      // Verify source_of_truth key is removed after successful rollback
+      const testDb3 = new sqlite.DatabaseSync(dbFile);
+      const sotRollback = testDb3.prepare("SELECT value FROM meta WHERE key = 'source_of_truth'").get();
+      if (!sotRollback) {
+        pass('rollback correctly removes source_of_truth key');
+      } else {
+        fail('rollback did not remove source_of_truth key');
+      }
+      testDb3.close();
+
+    } finally {
+      rmSync(idxTmp2, { recursive: true, force: true });
+    }
+  } catch (e) {
+    fail(`tracker Phase 2 tests crashed: ${e.message}`);
+  }
+}
+
 // ── 12b. PLAYWRIGHT MCP DETECTION WARNING (#522) ────────────────
 
 console.log('\n12d. Playwright MCP detection warning');
