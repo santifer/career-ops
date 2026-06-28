@@ -100,7 +100,7 @@ function toBashPath(wpath) {
   } catch { }
   try {
     const forwardSlashed = wpath.replace(/\\/g, '/');
-    const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const out = execFileSync('cygpath', ['-u', forwardSlashed], { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch { }
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
