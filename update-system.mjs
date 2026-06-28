@@ -112,6 +112,7 @@ const SYSTEM_PATHS = [
   'ollama-eval.mjs',
   'test-all.mjs',
   'test-salary-filter.mjs',
+  'test-trust-validator.mjs',
   'tracker-columns-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
@@ -261,7 +262,7 @@ function gitStatusEntries() {
     }));
 }
 
-function extractArrayFromSource(source, name) {
+export function extractArrayFromSource(source, name) {
   const match = source.match(new RegExp(`const\\s+${name}\\s*=\\s*\\[([\\s\\S]*?)\\];`));
   if (!match) return [];
   return Array.from(match[1].matchAll(/['"]([^'"]+)['"]/g), (entry) => entry[1]);
