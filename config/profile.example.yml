@@ -138,3 +138,33 @@ cover_letter:
 # half-point scores like 3.5/5 occur in evaluations). Set it to 0 to
 # generate a PDF for every offer.
 # auto_pdf_score_threshold: 4.0
+
+
+# ── Re-apply Cooldown Windows ────────────────────────────────────────────
+#
+# Used by scan.mjs to skip postings from companies where you're inside a
+# declared re-apply cooldown period. This prevents wasting evaluation tokens
+# on positions you cannot apply to yet.
+#
+# Each entry follows this schema:
+#   CompanyName:
+#     same_role_days:       <number>  # Cooldown period in days for the same role
+#     cross_role_bucket:    <string>  # (Optional) Keyword matching a family of roles
+#     applied_to:           [list]    # (Optional) Specific role titles you applied to
+#     last_apply_date:      "YYYY-MM-DD"  # When you last applied
+#     source:               <string>  # (Optional) Where this cooldown was declared
+#
+# Tip: You can auto-populate this via node audit-reapply.mjs after scanning
+# saved JDs from jds/*.json (future feature). For now, fill it manually.
+#
+# re_apply_windows:
+#   Anthropic:
+#     same_role_days: 180
+#     cross_role_bucket: "all_EM_roles"
+#     applied_to: ["Senior Software Engineer"]
+#     last_apply_date: "2026-03-15"
+#     source: "Job description cooldown clause"
+#   OpenAI:
+#     same_role_days: 90
+#     applied_to: ["Staff Engineer"]
+#     last_apply_date: "2026-01-20"

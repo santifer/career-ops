@@ -46,6 +46,7 @@ const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
 const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
+const PROFILE_PATH = 'config/profile.yml';
 const PROVIDERS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'providers');
 
 // Ensure required directories exist (fresh setup)
@@ -725,6 +726,58 @@ function guardStatusFor(code) {
   return 'skipped_invalid_url';
 }
 
+/**
+ * buildCooldownFilter — Creates a cooldown-checking function from re_apply_windows config.
+ *
+ * Reads re_apply_windows from config/profile.yml (if present). Returns a function
+ * that checks each offer's company + role against declared cooldown windows.
+ *
+ * @param {Object} reApplyWindows - from config/profile.yml.re_apply_windows
+ * @returns {(offer: Object) => { cooldown: boolean, reason: string|null }}
+ */
+export function buildCooldownFilter(reApplyWindows) {
+  if (!reApplyWindows || typeof reApplyWindows !== 'object' || Object.keys(reApplyWindows).length === 0) {
+    return () => ({ cooldown: false, reason: null });
+  }
+
+  // Pre-compute cooldown thresholds at build time
+  const thresholds = {};
+  for (const [company, win] of Object.entries(reApplyWindows)) {
+    if (!win.last_apply_date) continue;
+    const lastApply = new Date(win.last_apply_date);
+    if (isNaN(lastApply.getTime())) continue;
+    const sameRoleDays = win.same_role_days || 0;
+    const crossRoleBucket = win.cross_role_bucket || null;
+    const cooldownUntil = new Date(lastApply);
+    cooldownUntil.setDate(cooldownUntil.getDate() + sameRoleDays);
+    thresholds[company.toLowerCase()] = { cooldownUntil, crossRoleBucket: crossRoleBucket ? crossRoleBucket.toLowerCase() : null, appliedTo: Array.isArray(win.applied_to) ? win.applied_to.map(function(r) { return r.toLowerCase(); }) : [] };
+  }
+
+  return function(offer) {
+    var name = (offer.company || '').toLowerCase();
+    var title = (offer.title || '').toLowerCase();
+    var entry = thresholds[name];
+    if (!entry) return { cooldown: false, reason: null };
+    if (new Date() < entry.cooldownUntil) {
+      if (entry.appliedTo.length > 0) {
+        for (var r = 0; r < entry.appliedTo.length; r++) {
+          if (title.indexOf(entry.appliedTo[r]) !== -1) {
+            return { cooldown: true, reason: 'cooldown:' + name + ':same_role:' + entry.cooldownUntil.toISOString().slice(0, 10) };
+          }
+        }
+      }
+      if (entry.crossRoleBucket && title.indexOf(entry.crossRoleBucket) !== -1) {
+        return { cooldown: true, reason: 'cooldown:' + name + ':cross_role:' + entry.cooldownUntil.toISOString().slice(0, 10) };
+      }
+      if (entry.appliedTo.length === 0 && !entry.crossRoleBucket) {
+        return { cooldown: true, reason: 'cooldown:' + name + ':blanket:' + entry.cooldownUntil.toISOString().slice(0, 10) };
+      }
+    }
+    return { cooldown: false, reason: null };
+  };
+}
+
+
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
@@ -772,6 +825,21 @@ async function main() {
   const salaryFilter = buildSalaryFilter(config.salary_filter);
   const trustValidator = buildTrustValidator(config.trust_filter);
   const contentFilter = buildContentFilter(config.content_filter);
+
+  // ── Cooldown / re-apply window filter ──
+  var cooldownFilter;
+  try {
+    if (existsSync(PROFILE_PATH)) {
+      var profileRaw = readFileSync(PROFILE_PATH, 'utf-8');
+      var profile = parseYaml(profileRaw);
+      cooldownFilter = buildCooldownFilter(profile != null ? profile.re_apply_windows : null);
+    } else {
+      cooldownFilter = buildCooldownFilter(null);
+    }
+  } catch (err) {
+    console.error('Warning: failed to load cooldown config from ' + PROFILE_PATH + ': ' + err.message);
+    cooldownFilter = buildCooldownFilter(null);
+  }
 
   // 3. Resolve a provider for each enabled company / board
   const targets = [];
@@ -845,7 +913,9 @@ async function main() {
   let totalFilteredSalary = 0;
   let totalFilteredContent = 0;
   let totalDupes = 0;
+  var totalFilteredCooldown = 0;
   const newOffers = [];
+  var cooldownOffers = [];
   const errors = [...resolveErrors];
 
   const tasks = targets.map(company => async () => {
@@ -894,6 +964,13 @@ async function main() {
         }
         if (!contentFilter(job.description)) {
           totalFilteredContent++;
+          continue;
+        }
+        // Cooldown filter: skip if user is inside a re-apply cooldown window
+        var cooldownResult = cooldownFilter(job);
+        if (cooldownResult.cooldown) {
+          totalFilteredCooldown++;
+          cooldownOffers.push({ company: job.company, title: job.title, url: job.url, cooldownReason: cooldownResult.reason });
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -960,6 +1037,12 @@ async function main() {
   if (!dryRun && expiredForHistory.length > 0) {
     appendToScanHistory(expiredForHistory, date, 'skipped_expired');
   }
+  // Cooldown-skipped offers recorded so subsequent scans re-evaluate after window expires.
+  if (!dryRun && cooldownOffers.length > 0) {
+    for (var k = 0; k < cooldownOffers.length; k++) {
+      appendToScanHistory([cooldownOffers[k]], date, cooldownOffers[k].cooldownReason || 'skipped_cooldown');
+    }
+  }
   // Pages that loaded but had no Apply control: record so we don't re-verify
   // them next scan, but never let them reach pipeline.md.
   if (!dryRun && droppedOffers.length > 0) {
@@ -994,6 +1077,7 @@ async function main() {
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
   console.log(`Filtered by content:  ${totalFilteredContent} removed`);
+  console.log('Filtered by cooldown:  ' + totalFilteredCooldown + ' removed');
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (historyPolicy.recheckAfterDays != null) {
     console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);
