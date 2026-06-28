@@ -65,6 +65,7 @@ const requiredSystemPaths = [
   'tracker-columns-tests.mjs',
   'updater-migration-tests.mjs',
   'README.ar.md',
+  'README.de.md',
   'README.ja.md',
   'README.ua.md',
   'CHANGELOG.md',
