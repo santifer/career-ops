@@ -10,7 +10,7 @@
 
 ## Sources of Truth (EXCLUSIVE)
 
-The files below are the **ONLY** sources for user-facing content (CV, cover letters, form answers, recruiter outreach). Auto-memory, parent-directory repos, and cross-session inferences are out of scope. See "Source-of-Truth Boundary" in `AGENTS.md` / `CLAUDE.md` for the full rule.
+The files below are the **ONLY** sources for user-facing content (CV, cover letters, form answers, recruiter outreach). Auto-memory, parent-directory repos, and cross-session inferences are out of scope. See "Source-of-Truth Boundary" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for the full rule.
 
 | File | Path | When |
 |------|------|------|

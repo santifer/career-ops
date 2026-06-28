@@ -8,7 +8,7 @@ Scans configured job portals, filters by title relevance, and adds new offers to
 
 ## Recommended Execution
 
-Execute as a subagent to avoid consuming the main agent's context:
+Execute as a worker/subagent if your CLI supports it, to avoid consuming the main interactive context:
 
 ```python
 Agent(
@@ -286,7 +286,7 @@ New added to pipeline.md: N
   + {company} | {title} | {query_name}
   ...
 
-→ Run /career-ops pipeline to evaluate the new offers.
+→ Run the `pipeline` mode to evaluate the new offers (`/career-ops pipeline` where available, or ask the agent to run `pipeline`).
 ```
 
 ## Managing careers_url
