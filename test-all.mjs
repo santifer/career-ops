@@ -100,9 +100,9 @@ function toBashPath(wpath) {
   } catch { }
   try {
     const forwardSlashed = wpath.replace(/\\/g, '/');
-    const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const out = execFileSync('cygpath', ['-u', forwardSlashed], { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
-  } catch { }
+  } catch {}
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
 }
 
@@ -5279,7 +5279,7 @@ try {
   else fail(`jobicy.id is ${JSON.stringify(jobicy.id)}`);
 
   const hit = jobicy.detect({ name: 'Jobicy Board', provider: 'jobicy' });
-  if (hit && hit.url === 'https://jobicy.com/api/v2/remote-jobs') {
+  if (hit && hit.url === 'https://jobicy.com/api/v2/remote-jobs?count=50') {
     pass('jobicy.detect() claims explicit provider config');
   } else {
     fail(`jobicy.detect() returned ${JSON.stringify(hit)}`);
@@ -5376,7 +5376,7 @@ try {
     { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
   );
 
-  if (capturedUrl === 'https://jobicy.com/api/v2/remote-jobs') {
+  if (capturedUrl === 'https://jobicy.com/api/v2/remote-jobs?count=50') {
     pass('jobicy.fetch() requests the pinned JSON feed URL');
   } else {
     fail(`jobicy.fetch() requested ${JSON.stringify(capturedUrl)}`);

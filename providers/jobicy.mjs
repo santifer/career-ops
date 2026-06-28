@@ -50,14 +50,35 @@ export function parseJobicyResponse(json, defaultCompany = 'Jobicy') {
   };
 
   return json.jobs
-    .filter(j => j && typeof j === 'object'
-      && typeof j.jobTitle === 'string' && j.jobTitle.trim() !== ''
-      && typeof j.url === 'string' && /^https?:\/\//i.test(j.url.trim()))
-    .map(j => ({
-      title: j.jobTitle.trim(),
-      url: j.url.trim(),
-      company: typeof j.companyName === 'string' && j.companyName.trim() ? j.companyName.trim() : defaultCompany,
-      location: typeof j.jobGeo === 'string' ? j.jobGeo.trim() : '',
-      postedAt: toEpochMs(j.pubDate),
-    }));
+    .map(j => {
+      if (!j || typeof j !== 'object') return null;
+
+      const title = typeof j.jobTitle === 'string' ? j.jobTitle.trim() : '';
+      if (!title) return null;
+
+      const rawUrl = typeof j.url === 'string' ? j.url.trim() : '';
+      let url = null;
+      try {
+        const parsed = new URL(rawUrl);
+        if (parsed.protocol === 'https:' && (parsed.hostname === 'jobicy.com' || parsed.hostname === 'www.jobicy.com')) {
+          url = parsed.href;
+        }
+      } catch {
+        // Invalid or malformed URL
+      }
+      if (!url) return null;
+
+      const company = typeof j.companyName === 'string' && j.companyName.trim() ? j.companyName.trim() : defaultCompany;
+      const location = typeof j.jobGeo === 'string' ? j.jobGeo.trim() : '';
+      const postedAt = toEpochMs(j.pubDate);
+
+      return {
+        title,
+        url,
+        company,
+        location,
+        postedAt,
+      };
+    })
+    .filter(j => j !== null);
 }
