@@ -1244,6 +1244,32 @@ console.log('\n12a. Skill entrypoint materialization');
   }
 }
 
+{
+  try {
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const fixtureSource = `
+      import { execFileSync } from 'child_process';
+      import defaultThing from './scaffolder/bin/skill-entrypoints.mjs';
+      import { helper } from "./lib/helper.mjs";
+      import data from '../outside.mjs';
+      import yaml from 'js-yaml';
+    `;
+    const imports = updater.extractStaticLocalImportPaths(fixtureSource).sort();
+    const expected = [
+      'lib/helper.mjs',
+      'scaffolder/bin/skill-entrypoints.mjs',
+    ];
+
+    if (JSON.stringify(imports) === JSON.stringify(expected)) {
+      pass('update-system extracts static local import paths for re-exec bootstrap (#1245)');
+    } else {
+      fail(`unexpected static local imports: ${JSON.stringify(imports)}`);
+    }
+  } catch (e) {
+    fail(`static local import extraction test crashed: ${e.message}`);
+  }
+}
+
 console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
 
 {

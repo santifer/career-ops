@@ -238,6 +238,27 @@ function newestBackupBranch(branches) {
   return timestamped[0]?.branch || branchList[0];
 }
 
+export function extractStaticLocalImportPaths(source) {
+  const paths = new Set();
+  const importRe = /\bimport\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/g;
+  const exportRe = /\bexport\s+[^'"]*?\s+from\s+['"]([^'"]+)['"]/g;
+
+  for (const re of [importRe, exportRe]) {
+    for (const match of source.matchAll(re)) {
+      const specifier = match[1];
+      if (!specifier.startsWith('./')) continue;
+      const normalized = specifier
+        .replace(/^\.\//, '')
+        .replace(/\\/g, '/')
+        .replace(/\/+/g, '/');
+      if (!normalized || normalized.startsWith('../') || normalized.includes('/../')) continue;
+      paths.add(normalized);
+    }
+  }
+
+  return [...paths].sort();
+}
+
 function gitIn(root, ...args) {
   return execFileSync('git', args, { cwd: root, encoding: 'utf-8', timeout: 30000 }).trim();
 }
@@ -500,7 +521,9 @@ async function apply() {
 
     if (!isReexec) {
       try {
-        git('checkout', 'FETCH_HEAD', '--', 'update-system.mjs', 'scaffolder/bin/skill-entrypoints.mjs');
+        const remoteUpdaterSource = git('show', 'FETCH_HEAD:update-system.mjs');
+        const bootstrapImportPaths = ['update-system.mjs', ...extractStaticLocalImportPaths(remoteUpdaterSource)];
+        git('checkout', 'FETCH_HEAD', '--', ...bootstrapImportPaths);
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',

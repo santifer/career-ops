@@ -104,8 +104,12 @@ const twoPassManifestChecks = [
     pattern: /CAREER_OPS_UPDATE_REEXEC/,
   },
   {
-    name: 'apply first updates update-system.mjs from FETCH_HEAD',
-    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*'update-system\.mjs',\s*'scaffolder\/bin\/skill-entrypoints\.mjs'\)/,
+    name: 'apply reads target updater imports before self re-exec (#1245)',
+    pattern: /extractStaticLocalImportPaths\(remoteUpdaterSource\)/,
+  },
+  {
+    name: 'apply bootstraps target updater import closure before self re-exec (#1245)',
+    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*\.\.\.bootstrapImportPaths\)/,
   },
   {
     name: 'apply re-execs through the current Node binary',
