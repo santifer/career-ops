@@ -155,7 +155,7 @@ Append to `interview-prep/{company-slug}-{role-slug}.md`:
 
 ## Step 9 — Write Session Transcript
 
-After the debrief, also write a machine-readable session transcript to `interview-prep/sessions/{company-slug}-{role-slug}-{round}-{YYYY-MM-DD}.md`. This is the canonical artifact downstream modes consume (`patterns` Step 1b reads the candidate side; `interview-redflag` reads the interviewer side). The full contract lives in `interview-prep/sessions/README.md`.
+After the debrief, also write a machine-readable session transcript to `interview-prep/sessions/{company-slug}-{role-slug}-{round}-{YYYY-MM-DD}.md`. This is a structured record of the round for downstream analysis modes; the speaker-labelled turns let a consumer read either side without re-inferring who spoke. The full contract lives in `interview-prep/sessions/README.md`.
 
 Format:
 
