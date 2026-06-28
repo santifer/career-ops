@@ -5490,7 +5490,7 @@ try {
     {
       fetchJson: async (url, opts) => {
         capturedUrl = url; capturedOpts = opts;
-        return { results: sampleResults, page: 0, page_count: 10 };
+        return { results: sampleResults, page: 0, page_count: 1 };
       },
     },
   );
@@ -5510,6 +5510,30 @@ try {
   if (fetched[0]?.title === 'Staff AI Engineer' && fetched[0]?.company === 'Acme Corp')
     pass('themuse.fetch() returns correct title and company for first result');
   else fail(`themuse.fetch() row 0 = ${JSON.stringify(fetched[0])}`);
+
+  // Pagination: page_count > 1 causes all pages to be fetched and aggregated.
+  const paginationCalls = [];
+  const page1Result = { name: 'Data Engineer', refs: { landing_page: 'https://www.themuse.com/jobs/acme/de' }, company: { name: 'Acme' }, locations: [] };
+  const paginatedJobs = await themuse.fetch(
+    { name: 'The Muse Board', provider: 'themuse' },
+    {
+      fetchJson: async (url, opts) => {
+        paginationCalls.push(url);
+        const page = parseInt(new URL(url).searchParams.get('page') ?? '0', 10);
+        if (page === 0) return { results: [sampleResults[0]], page: 0, page_count: 2 };
+        return { results: [page1Result], page: 1, page_count: 2 };
+      },
+    },
+  );
+  if (paginationCalls.length === 2 &&
+      paginationCalls[0] === 'https://www.themuse.com/api/public/jobs?page=0' &&
+      paginationCalls[1] === 'https://www.themuse.com/api/public/jobs?page=1')
+    pass('themuse.fetch() iterates all pages when page_count > 1');
+  else fail(`themuse.fetch() pagination calls = ${JSON.stringify(paginationCalls)}`);
+
+  if (paginatedJobs.length === 2 && paginatedJobs[1]?.title === 'Data Engineer')
+    pass('themuse.fetch() aggregates results from all pages');
+  else fail(`themuse.fetch() paginated results = ${JSON.stringify(paginatedJobs.map(j => j.title))}`);
 
   let badResponseThrew = false;
   try {

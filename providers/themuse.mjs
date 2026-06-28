@@ -2,12 +2,13 @@
 /** @typedef {import('./_types.js').Provider} Provider */
 
 // The Muse provider — public, zero-auth JSON jobs feed.
-// Endpoint: https://www.themuse.com/api/public/jobs?page=0
-// Response shape: { results: [...], page: 0, page_count: N }
+// Endpoint: https://www.themuse.com/api/public/jobs?page={n}
+// Response shape: { results: [...], page: n, page_count: N }
+// All pages are fetched sequentially and aggregated before normalizing.
 //
 // Wire in via a `job_boards:` entry with `provider: themuse`.
 
-const FEED_URL = 'https://www.themuse.com/api/public/jobs?page=0';
+const FEED_BASE = 'https://www.themuse.com/api/public/jobs';
 const TRUSTED_HOST = 'www.themuse.com';
 
 /** @param {string} url */
@@ -61,14 +62,24 @@ export default {
   id: 'themuse',
 
   async fetch(_entry, ctx) {
-    assertMuseUrl(FEED_URL);
-    // redirect:'error' prevents SSRF via server-side redirects
-    const json = await ctx.fetchJson(FEED_URL, { redirect: 'error' });
-    if (!json || !Array.isArray(json.results)) {
-      throw new Error(
-        `themuse: unexpected API response — expected { results: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`,
-      );
+    assertMuseUrl(FEED_BASE);
+    const allResults = [];
+    // Fetch page 0 first to discover page_count, then iterate remaining pages.
+    let pageCount = 1;
+    for (let page = 0; page < pageCount; page++) {
+      const url = `${FEED_BASE}?page=${page}`;
+      // redirect:'error' prevents SSRF via server-side redirects
+      const json = await ctx.fetchJson(url, { redirect: 'error' });
+      if (!json || !Array.isArray(json.results)) {
+        throw new Error(
+          `themuse: unexpected API response on page ${page} — expected { results: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`,
+        );
+      }
+      if (page === 0 && typeof json.page_count === 'number' && json.page_count > 1) {
+        pageCount = json.page_count;
+      }
+      allResults.push(...json.results);
     }
-    return json.results.map(normalizeMuseJob).filter(Boolean);
+    return allResults.map(normalizeMuseJob).filter(Boolean);
   },
 };
