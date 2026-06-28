@@ -489,6 +489,7 @@ search_queries:
 #   solidjobs       solid.jobs/public-api/offers/<division>
 #   comeet          api: https://www.comeet.co/careers-api/2.0/company/<uid>/positions?token=<token>
 #   personio        <slug>.jobs.personio.(de|com)
+#   teamtailor      <slug>.teamtailor.com
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
@@ -512,6 +513,10 @@ search_queries:
 #
 # - name: Example Breezy Co
 #   careers_url: https://exampleco.breezy.hr              # any *.breezy.hr host
+#   enabled: true
+#
+# - name: Example Teamtailor Co
+#   careers_url: https://exampleco.teamtailor.com         # any *.teamtailor.com host
 #   enabled: true
 #
 # - name: SolidJobs — Engineering

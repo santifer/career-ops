@@ -23,6 +23,7 @@ are shared helpers and are not loaded as providers.
 | Remotive | API | Reads the board-wide `https://remotive.com/api/remote-jobs` JSON feed, then applies local scanner filters. |
 | SmartRecruiters | API | Auto-detects SmartRecruiters careers URLs or uses `provider: smartrecruiters` for branded custom domains. |
 | SolidJobs | API | Auto-detects `https://solid.jobs/public-api/offers/<division>` and reads the public offers API. |
+| Teamtailor | RSS | Auto-detects `<slug>.teamtailor.com` career sites and parses the public zero-auth `/jobs.rss` feed in-process. |
 | We Work Remotely | RSS | Reads the public `https://weworkremotely.com/remote-jobs.rss` feed and parses it in-process. |
 | Workable | Parser | Auto-detects `https://apply.workable.com/<slug>` and parses Workable's public markdown jobs feed. |
 | Workday | API | Auto-detects Workday `myworkdayjobs.com` careers URLs and posts to the public CXS jobs endpoint. |

@@ -5405,6 +5405,219 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
+// ── 34. Provider — teamtailor ───────────────────────────────────
+console.log('\n34. Provider — teamtailor');
+
+try {
+  const teamtailorModule = await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href);
+  const teamtailor = teamtailorModule.default;
+  const { parseTeamtailorRss } = teamtailorModule;
+
+  if (teamtailor.id === 'teamtailor') pass('teamtailor.id is "teamtailor"');
+  else fail(`teamtailor.id is ${JSON.stringify(teamtailor.id)}`);
+
+  // detect(): <slug>.teamtailor.com careers_url → jobs.rss feed.
+  const hit = teamtailor.detect({ name: 'Acme', careers_url: 'https://acme.teamtailor.com' });
+  if (hit && hit.url === 'https://acme.teamtailor.com/jobs.rss') {
+    pass('teamtailor.detect() resolves <slug>.teamtailor.com → jobs.rss');
+  } else {
+    fail(`teamtailor.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect() ignores the path on the careers_url — feed is host-rooted.
+  const hitWithPath = teamtailor.detect({ name: 'X', careers_url: 'https://acme.teamtailor.com/jobs' });
+  if (hitWithPath && hitWithPath.url === 'https://acme.teamtailor.com/jobs.rss') {
+    pass('teamtailor.detect() ignores careers_url path and roots jobs.rss at the host');
+  } else {
+    fail(`teamtailor.detect() with path returned ${JSON.stringify(hitWithPath)}`);
+  }
+
+  if (teamtailor.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('teamtailor.detect() returns null for non-teamtailor URLs');
+  } else {
+    fail('teamtailor.detect() should return null for non-teamtailor URLs');
+  }
+
+  // careers_url with non-string value → detect() returns null without crashing.
+  if (teamtailor.detect({ name: 'X', careers_url: null }) === null && teamtailor.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('teamtailor.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('teamtailor.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: a URL with teamtailor.com in the PATH (not host) must not be detected.
+  if (teamtailor.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.teamtailor.com/foo' }) === null) {
+    pass('teamtailor.detect() rejects path-spoofed URLs');
+  } else {
+    fail('teamtailor.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // SSRF: non-https careers_url must not be detected.
+  if (teamtailor.detect({ name: 'Insecure', careers_url: 'http://acme.teamtailor.com' }) === null) {
+    pass('teamtailor.detect() rejects non-https careers_url');
+  } else {
+    fail('teamtailor.detect() must reject non-https careers_url');
+  }
+
+  // Hostname label must be a valid DNS label — not start or end with a hyphen.
+  if (teamtailor.detect({ name: 'Trailing', careers_url: 'https://acme-.teamtailor.com' }) === null
+      && teamtailor.detect({ name: 'Leading', careers_url: 'https://-acme.teamtailor.com' }) === null) {
+    pass('teamtailor.detect() rejects tenant labels that start or end with a hyphen');
+  } else {
+    fail('teamtailor.detect() must reject hyphen-edged tenant labels (e.g. acme-.teamtailor.com)');
+  }
+
+  // A hyphen in the middle of the label is still valid.
+  if (teamtailor.detect({ name: 'Mid', careers_url: 'https://acme-co.teamtailor.com' })?.url
+      === 'https://acme-co.teamtailor.com/jobs.rss') {
+    pass('teamtailor.detect() still accepts internal hyphens (acme-co.teamtailor.com)');
+  } else {
+    fail('teamtailor.detect() should accept internal hyphens in the tenant label');
+  }
+
+  // parseTeamtailorRss — deterministic sample, no network. The first item's
+  // <description> hides an ENCODED "</item>" to prove description-stripping keeps
+  // the block split robust.
+  const sampleRss = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:tt="https://teamtailor.com/locations">',
+    '  <channel>',
+    '    <title>Acme Inc</title>',
+    '    <description>Our job openings</description>',
+    '    <link>https://acme.teamtailor.com/jobs</link>',
+    '    <item>',
+    '      <title>Staff AI Engineer &amp; Lead</title>',
+    '      <description>&lt;p&gt;body with &lt;/item&gt; trap&lt;/p&gt;</description>',
+    '      <pubDate>Wed, 25 Feb 2026 18:22:13 +0100</pubDate>',
+    '      <link>https://acme.teamtailor.com/jobs/1-staff-ai-engineer</link>',
+    '      <tt:locations><tt:location>',
+    '        <tt:name>Cologne, Germany</tt:name>',
+    '        <tt:city>Cologne</tt:city><tt:country>Germany</tt:country>',
+    '      </tt:location></tt:locations>',
+    '    </item>',
+    '    <item>',
+    '      <title>Platform Engineer</title>',
+    '      <description>plain</description>',
+    '      <link>https://acme.teamtailor.com/jobs/2-platform-engineer</link>',
+    '      <tt:locations><tt:location>',
+    '        <tt:city>Berlin</tt:city><tt:country>Germany</tt:country>',
+    '      </tt:location></tt:locations>',
+    '    </item>',
+    '    <item>',
+    '      <title>No URL Role</title><description>x</description>',
+    '    </item>',
+    '    <item>',
+    '      <title></title>',
+    '      <link>https://acme.teamtailor.com/jobs/4-empty-title</link>',
+    '    </item>',
+    '    <item>',
+    '      <title>Insecure URL Role</title>',
+    '      <link>http://acme.teamtailor.com/jobs/5-insecure</link>',
+    '    </item>',
+    '  </channel>',
+    '</rss>',
+  ].join('\n');
+
+  const jobs = parseTeamtailorRss(sampleRss, 'Entry Fallback');
+
+  if (jobs.length === 2) pass('parseTeamtailorRss keeps 2 valid items (drops no-url / empty-title / non-https)');
+  else fail(`parseTeamtailorRss returned ${jobs.length} items (expected 2)`);
+
+  if (jobs[0]?.title === 'Staff AI Engineer & Lead'
+      && jobs[0]?.url === 'https://acme.teamtailor.com/jobs/1-staff-ai-engineer') {
+    pass('parseTeamtailorRss maps title (entity-decoded) and link, and the encoded </item> in description does not split the block');
+  } else {
+    fail(`parseTeamtailorRss row 0 title/url = ${JSON.stringify({ title: jobs[0]?.title, url: jobs[0]?.url })}`);
+  }
+
+  if (jobs[0]?.company === 'Acme Inc') {
+    pass('parseTeamtailorRss sets company from the channel <title>');
+  } else {
+    fail(`parseTeamtailorRss row 0 company = ${JSON.stringify(jobs[0]?.company)} (expected channel title "Acme Inc")`);
+  }
+
+  if (jobs[0]?.location === 'Cologne, Germany') {
+    pass('parseTeamtailorRss prefers the <tt:name> location');
+  } else {
+    fail(`parseTeamtailorRss row 0 location = ${JSON.stringify(jobs[0]?.location)}`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('Wed, 25 Feb 2026 18:22:13 +0100')) {
+    pass('parseTeamtailorRss parses <pubDate> into postedAt epoch ms');
+  } else {
+    fail(`parseTeamtailorRss row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.location === 'Berlin, Germany') {
+    pass('parseTeamtailorRss assembles location from tt:city/tt:country when no tt:name');
+  } else {
+    fail(`parseTeamtailorRss row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Berlin, Germany"`);
+  }
+
+  if (jobs[1]?.postedAt === undefined) {
+    pass('parseTeamtailorRss leaves postedAt undefined when <pubDate> is absent');
+  } else {
+    fail(`parseTeamtailorRss row 1 postedAt = ${JSON.stringify(jobs[1]?.postedAt)} (expected undefined)`);
+  }
+
+  // company falls back to the entry name when the channel has no <title>.
+  const noTitleFeed = '<rss><channel><item><title>Role</title><link>https://acme.teamtailor.com/jobs/9</link></item></channel></rss>';
+  const fallbackJobs = parseTeamtailorRss(noTitleFeed, 'Entry Name');
+  if (fallbackJobs[0]?.company === 'Entry Name') {
+    pass('parseTeamtailorRss falls back to entry name when the channel omits <title>');
+  } else {
+    fail(`parseTeamtailorRss fallback company = ${JSON.stringify(fallbackJobs[0]?.company)}`);
+  }
+
+  if (parseTeamtailorRss('', 'X').length === 0 && parseTeamtailorRss(null, 'X').length === 0) {
+    pass('parseTeamtailorRss: empty / non-string feed → empty result (no crash)');
+  } else {
+    fail('parseTeamtailorRss should yield empty result for empty / non-string input');
+  }
+
+  // fetch(): requests the derived jobs.rss URL and passes the SSRF guard.
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await teamtailor.fetch(
+    { name: 'Acme', careers_url: 'https://acme.teamtailor.com' },
+    { fetchText: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sampleRss; } },
+  );
+
+  if (capturedUrl === 'https://acme.teamtailor.com/jobs.rss') {
+    pass('teamtailor.fetch() requests the derived jobs.rss URL');
+  } else {
+    fail(`teamtailor.fetch() requested ${JSON.stringify(capturedUrl)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('teamtailor.fetch() passes redirect:"error" to fetchText (SSRF guard)');
+  } else {
+    fail(`teamtailor.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+  if (fetched.length === 2 && fetched[0]?.company === 'Acme Inc') {
+    pass('teamtailor.fetch() returns normalized jobs with company from the channel title');
+  } else {
+    fail(`teamtailor.fetch() returned ${fetched.length} jobs, row 0 = ${JSON.stringify(fetched[0])}`);
+  }
+
+  // fetch(): a non-teamtailor careers_url cannot derive a feed → throws.
+  let badEntryThrew = false;
+  try {
+    await teamtailor.fetch(
+      { name: 'X', careers_url: 'https://example.com/careers' },
+      { fetchText: async () => '' },
+    );
+  } catch (e) {
+    badEntryThrew = /cannot derive feed URL/.test(e.message);
+  }
+  if (badEntryThrew) pass('teamtailor.fetch() throws when the careers_url is not a teamtailor.com host');
+  else fail('teamtailor.fetch() should throw for a non-teamtailor careers_url');
+
+} catch (e) {
+  fail(`teamtailor provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
