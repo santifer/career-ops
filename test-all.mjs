@@ -5430,10 +5430,11 @@ try {
     fail('patterns mode missing "skip this step silently" guard for Step 1b');
   }
 
-  if (fileExists('interview-prep/sessions/README.md') && fileExists('interview-prep/sessions/.gitkeep')) {
-    pass('interview-prep/sessions/ scaffold (README.md + .gitkeep) present');
+  const dataContractTxt = readFile('DATA_CONTRACT.md');
+  if (dataContractTxt.includes('interview-prep/sessions/')) {
+    pass('DATA_CONTRACT.md registers interview-prep/sessions/ as User Layer');
   } else {
-    fail('interview-prep/sessions/ scaffold missing — README.md or .gitkeep absent');
+    fail('DATA_CONTRACT.md missing interview-prep/sessions/ registration');
   }
 
   if (
