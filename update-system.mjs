@@ -110,6 +110,7 @@ const SYSTEM_PATHS = [
   'followup-cadence.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
+  'openai-eval.mjs',
   'test-all.mjs',
   'test-salary-filter.mjs',
   'tracker-columns-tests.mjs',
