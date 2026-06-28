@@ -75,8 +75,8 @@ export default {
           `themuse: unexpected API response on page ${page} — expected { results: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`,
         );
       }
-      if (page === 0 && typeof json.page_count === 'number' && json.page_count > 1) {
-        pageCount = json.page_count;
+      if (page === 0 && Number.isInteger(json.page_count) && json.page_count > 1) {
+        pageCount = Math.min(json.page_count, 100);
       }
       allResults.push(...json.results);
     }

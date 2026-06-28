@@ -5535,6 +5535,24 @@ try {
     pass('themuse.fetch() aggregates results from all pages');
   else fail(`themuse.fetch() paginated results = ${JSON.stringify(paginatedJobs.map(j => j.title))}`);
 
+  // page_count cap: a huge value must be clamped to 100, not cause unbounded requests.
+  let cappedCalls = 0;
+  await themuse.fetch(
+    { name: 'X', provider: 'themuse' },
+    { fetchJson: async () => { cappedCalls++; return { results: [], page: 0, page_count: 99999 }; } },
+  );
+  if (cappedCalls === 100) pass('themuse.fetch() clamps page_count to 100 (prevents unbounded requests)');
+  else fail(`themuse.fetch() made ${cappedCalls} requests for page_count=99999 (expected 100)`);
+
+  // Non-integer page_count must be ignored (NaN passes typeof==='number' but not Number.isInteger).
+  let nonIntCalls = 0;
+  await themuse.fetch(
+    { name: 'X', provider: 'themuse' },
+    { fetchJson: async () => { nonIntCalls++; return { results: [], page: 0, page_count: 1.5 }; } },
+  );
+  if (nonIntCalls === 1) pass('themuse.fetch() ignores non-integer page_count (fetches only page 0)');
+  else fail(`themuse.fetch() made ${nonIntCalls} requests for page_count=1.5 (expected 1)`);
+
   let badResponseThrew = false;
   try {
     await themuse.fetch(
