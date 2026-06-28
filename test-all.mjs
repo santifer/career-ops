@@ -5260,6 +5260,83 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
+// ── match-star.mjs — fixture story-bank + top match assertion ───────────────
+
+console.log('\n🧪 Testing match-star.mjs keyword scorer...');
+
+try {
+  // Import the real production functions — tests exercise actual implementation
+  const { parseStories, tokenize, score } = await import(pathToFileURL(join(ROOT, 'match-star.mjs')).href);
+
+  // Inline fixture: two stories with distinct competency tags
+  const FIXTURE_MD = `
+### [Leadership] Led cross-functional rollout under deadline
+
+**Source:** Work
+**S (Situation):** Our team had 3 weeks to ship a platform migration affecting 6 departments.
+**T (Task):** I was asked to coordinate across engineering, ops, and comms with no formal authority.
+**A (Action):** I mapped dependencies, ran daily standups, and escalated blockers to leadership.
+**R (Result):** Shipped on time, zero downtime, positive feedback from all department leads.
+**Reflection:** Influence without authority is the real skill.
+**Best for questions about:** leadership, project management, cross-functional collaboration, deadline pressure
+
+### [Conflict] Resolved a data pipeline disagreement with a senior engineer
+
+**Source:** Work
+**S (Situation):** A senior engineer wanted to rewrite our ETL in Spark; I thought it was premature.
+**T (Task):** Present my case without creating a political problem.
+**A (Action):** I pulled query benchmarks and showed the bottleneck was upstream, not the pipeline itself.
+**R (Result):** Team agreed to a targeted fix; saved 6 weeks of rewrite work.
+**Reflection:** Data beats seniority.
+**Best for questions about:** conflict resolution, disagreement, data-driven decision making, stakeholder management
+`.trim();
+
+  const stories = parseStories(FIXTURE_MD);
+
+  if (stories.length === 2) {
+    pass('match-star fixture: parseStories returns 2 stories');
+  } else {
+    fail(`match-star fixture: expected 2 stories, got ${stories.length}`);
+  }
+
+  // Leadership question → should match story[0] (leadership/deadline tags)
+  const leadershipQ = tokenize('Tell me about a time you led a project under deadline pressure');
+  const leadershipScores = stories.map(s => score(s, leadershipQ, []));
+  if (leadershipScores[0] > leadershipScores[1]) {
+    pass('match-star scorer: leadership question surfaces the leadership story first');
+  } else {
+    fail(`match-star scorer: leadership question picked wrong story (scores: ${leadershipScores})`);
+  }
+
+  // Conflict question → should match story[1] (conflict/disagreement tags)
+  const conflictQ = tokenize('Describe a conflict or disagreement with a colleague');
+  const conflictScores = stories.map(s => score(s, conflictQ, []));
+  if (conflictScores[1] > conflictScores[0]) {
+    pass('match-star scorer: conflict question surfaces the conflict story first');
+  } else {
+    fail(`match-star scorer: conflict question picked wrong story (scores: ${conflictScores})`);
+  }
+
+  // Tag-match weight (3) should outweigh body-match weight (1) for a tag-exact token
+  const tagExactQ = tokenize('stakeholder management');
+  const tagExactScores = stories.map(s => score(s, tagExactQ, []));
+  if (tagExactScores[1] >= 6) {
+    pass('match-star scorer: tag-exact match yields ≥ 6 points (3 per token × 2 tokens)');
+  } else {
+    fail(`match-star scorer: tag-exact match score too low (got ${tagExactScores[1]})`);
+  }
+
+  // match-star.mjs file must exist (existsSync-guarded in the script itself)
+  if (existsSync(join(ROOT, 'match-star.mjs'))) {
+    pass('match-star.mjs: file present in repo root');
+  } else {
+    fail('match-star.mjs: file missing from repo root');
+  }
+
+} catch (e) {
+  fail(`match-star tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
