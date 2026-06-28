@@ -5405,6 +5405,57 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
+// ── PATTERNS STEP 1b — SESSION-PATH CONTRACT ────────────────────
+
+console.log('\n🧪 patterns mode: session-path contract');
+try {
+  const patternsMode = readFile('modes/patterns.md');
+  const gitignoreTxt = readFile('.gitignore');
+
+  if (patternsMode.includes('interview-prep/sessions/')) {
+    pass('patterns mode references interview-prep/sessions/');
+  } else {
+    fail('patterns mode does not reference interview-prep/sessions/ — path contract broken');
+  }
+
+  if (!patternsMode.includes('interview-prep/transcripts')) {
+    pass('patterns mode does not reference deprecated interview-prep/transcripts/');
+  } else {
+    fail('patterns mode still references interview-prep/transcripts/ — should use sessions/ only');
+  }
+
+  if (patternsMode.includes('skip this step silently')) {
+    pass('patterns mode Step 1b has graceful skip when no sessions present');
+  } else {
+    fail('patterns mode missing "skip this step silently" guard for Step 1b');
+  }
+
+  if (fileExists('interview-prep/sessions/README.md') && fileExists('interview-prep/sessions/.gitkeep')) {
+    pass('interview-prep/sessions/ scaffold (README.md + .gitkeep) present');
+  } else {
+    fail('interview-prep/sessions/ scaffold missing — README.md or .gitkeep absent');
+  }
+
+  if (
+    gitignoreTxt.includes('interview-prep/sessions/*') &&
+    gitignoreTxt.includes('!interview-prep/sessions/.gitkeep') &&
+    gitignoreTxt.includes('!interview-prep/sessions/') &&
+    gitignoreTxt.includes('!interview-prep/sessions/README.md')
+  ) {
+    pass('.gitignore protects sessions content but tracks scaffold files');
+  } else {
+    fail('.gitignore sessions scaffold rules incomplete — check re-include entries');
+  }
+
+  if (!gitignoreTxt.includes('interview-prep/transcripts')) {
+    pass('.gitignore does not contain deprecated transcripts/ rules');
+  } else {
+    fail('.gitignore still has deprecated interview-prep/transcripts/ rules');
+  }
+} catch (e) {
+  fail(`patterns session-path contract check crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
