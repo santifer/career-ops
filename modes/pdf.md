@@ -21,7 +21,8 @@
 15. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
 16. Write HTML to `/tmp/cv-{candidate}-{company}.html`
 17. Execute: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-18. Report: PDF path, number of pages, keyword coverage %
+18. Verify ATS keyword coverage of the **tailored** CV against the role's evaluation report (when one exists): `node keyword-match.mjs reports/{report}.md --cv /tmp/cv-{candidate}-{company}.html`. This text-extracts the HTML you just built and reports coverage %, present, thin, and missing keywords — the diagnostic for the document being sent. Surface any missing/thin keywords to the user (reformulate from real experience, never fabricate).
+19. Report: PDF path, number of pages, and keyword coverage %
 
 ## ATS Rules (clean parsing)
 
