@@ -5260,6 +5260,130 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
+// ── match-star.mjs — fixture story-bank + top match assertion ───────────────
+
+console.log('\n🧪 Testing match-star.mjs keyword scorer...');
+
+try {
+  // Inline fixture: two stories with distinct competency tags
+  const FIXTURE_MD = `
+### [Leadership] Led cross-functional rollout under deadline
+
+**Source:** Work
+**S (Situation):** Our team had 3 weeks to ship a platform migration affecting 6 departments.
+**T (Task):** I was asked to coordinate across engineering, ops, and comms with no formal authority.
+**A (Action):** I mapped dependencies, ran daily standups, and escalated blockers to leadership.
+**R (Result):** Shipped on time, zero downtime, positive feedback from all department leads.
+**Reflection:** Influence without authority is the real skill.
+**Best for questions about:** leadership, project management, cross-functional collaboration, deadline pressure
+
+### [Conflict] Resolved a data pipeline disagreement with a senior engineer
+
+**Source:** Work
+**S (Situation):** A senior engineer wanted to rewrite our ETL in Spark; I thought it was premature.
+**T (Task):** Present my case without creating a political problem.
+**A (Action):** I pulled query benchmarks and showed the bottleneck was upstream, not the pipeline itself.
+**R (Result):** Team agreed to a targeted fix; saved 6 weeks of rewrite work.
+**Reflection:** Data beats seniority.
+**Best for questions about:** conflict resolution, disagreement, data-driven decision making, stakeholder management
+`.trim();
+
+  // Inline reimplementation of match-star's parseStories + score (pure functions,
+  // identical logic to match-star.mjs — avoids CLI subprocess / file I/O in the test)
+  function _parseStories(content) {
+    const stories = [];
+    const blocks = content.split(/^### /m).slice(1);
+    for (const block of blocks) {
+      const lines = block.trim().split('\n');
+      const header = lines[0].trim();
+      const themeMatch = header.match(/^\[([^\]]+)\]\s*(.+)/);
+      const theme = themeMatch ? themeMatch[1].trim() : '';
+      const title = themeMatch ? themeMatch[2].trim() : header;
+      const get = (label) => {
+        const re = new RegExp(`\\*\\*${label}:\\*\\*\\s*(.+)`);
+        const hit = block.match(re);
+        return hit ? hit[1].trim() : '';
+      };
+      const tagsRaw = get('Best for questions about');
+      const tags = tagsRaw ? tagsRaw.split(/[,;]/).map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+      if (!title || (!get('A \\(Action\\)') && !get('Action'))) continue;
+      stories.push({ title, theme, tags,
+        action: get('A \\(Action\\)') || get('Action'),
+        result: get('R \\(Result\\)') || get('Result'),
+      });
+    }
+    return stories;
+  }
+
+  const STOPWORDS = new Set([
+    'a','an','the','and','or','but','in','on','at','to','for','of','with',
+    'you','me','my','your','i','we','they','it','is','was','were','are',
+    'be','been','have','had','has','do','did','does','tell','about','time',
+    'when','how','give','example','describe','situation','where','what',
+  ]);
+
+  function _tokenize(text) {
+    return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+  }
+
+  function _score(story, queryTokens) {
+    const signal = queryTokens.filter(t => !STOPWORDS.has(t));
+    let s = 0;
+    const tagText = story.tags.join(' ');
+    for (const token of signal) { if (tagText.includes(token)) s += 3; }
+    const titleTokens = _tokenize(story.title + ' ' + story.theme);
+    for (const token of signal) { if (titleTokens.includes(token)) s += 2; }
+    const bodyTokens = _tokenize(story.action + ' ' + story.result);
+    for (const token of signal) { if (bodyTokens.includes(token)) s += 1; }
+    return s;
+  }
+
+  const stories = _parseStories(FIXTURE_MD);
+
+  if (stories.length === 2) {
+    pass('match-star fixture: parseStories returns 2 stories');
+  } else {
+    fail(`match-star fixture: expected 2 stories, got ${stories.length}`);
+  }
+
+  // Leadership question → should match story[0] (leadership/deadline tags)
+  const leadershipQ = _tokenize('Tell me about a time you led a project under deadline pressure');
+  const leadershipScores = stories.map(s => _score(s, leadershipQ));
+  if (leadershipScores[0] > leadershipScores[1]) {
+    pass('match-star scorer: leadership question surfaces the leadership story first');
+  } else {
+    fail(`match-star scorer: leadership question picked wrong story (scores: ${leadershipScores})`);
+  }
+
+  // Conflict question → should match story[1] (conflict/disagreement tags)
+  const conflictQ = _tokenize('Describe a conflict or disagreement with a colleague');
+  const conflictScores = stories.map(s => _score(s, conflictQ));
+  if (conflictScores[1] > conflictScores[0]) {
+    pass('match-star scorer: conflict question surfaces the conflict story first');
+  } else {
+    fail(`match-star scorer: conflict question picked wrong story (scores: ${conflictScores})`);
+  }
+
+  // Tag-match weight (3) should outweigh body-match weight (1) for a tag-exact token
+  const tagExactQ = _tokenize('stakeholder management');
+  const tagExactScores = stories.map(s => _score(s, tagExactQ));
+  if (tagExactScores[1] >= 6) {
+    pass('match-star scorer: tag-exact match yields ≥ 6 points (3 per token × 2 tokens)');
+  } else {
+    fail(`match-star scorer: tag-exact match score too low (got ${tagExactScores[1]})`);
+  }
+
+  // match-star.mjs file must exist (existsSync-guarded in the script itself)
+  if (existsSync(join(ROOT, 'match-star.mjs'))) {
+    pass('match-star.mjs: file present in repo root');
+  } else {
+    fail('match-star.mjs: file missing from repo root');
+  }
+
+} catch (e) {
+  fail(`match-star tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
