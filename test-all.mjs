@@ -5459,6 +5459,22 @@ try {
     fail('pinpoint.detect() must reject non-https careers_url');
   }
 
+  // Hostname label must be a valid DNS label — not end (or start) with a hyphen.
+  if (pinpoint.detect({ name: 'Trailing', careers_url: 'https://acme-.pinpointhq.com' }) === null
+      && pinpoint.detect({ name: 'Leading', careers_url: 'https://-acme.pinpointhq.com' }) === null) {
+    pass('pinpoint.detect() rejects tenant labels that start or end with a hyphen');
+  } else {
+    fail('pinpoint.detect() must reject hyphen-edged tenant labels (e.g. acme-.pinpointhq.com)');
+  }
+
+  // A hyphen in the middle of the label is still valid.
+  if (pinpoint.detect({ name: 'Mid', careers_url: 'https://acme-co.pinpointhq.com' })?.url
+      === 'https://acme-co.pinpointhq.com/postings.json') {
+    pass('pinpoint.detect() still accepts internal hyphens (acme-co.pinpointhq.com)');
+  } else {
+    fail('pinpoint.detect() should accept internal hyphens in the tenant label');
+  }
+
   // parsePinpointResponse — deterministic sample, no network.
   const sample = {
     data: [

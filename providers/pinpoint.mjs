@@ -14,7 +14,12 @@
 // match on `<safe-slug>.pinpointhq.com` rather than a static allowlist, the
 // same approach as the recruitee provider.
 
-const PINPOINT_HOST_RE = /^[a-z0-9][a-z0-9-]*\.pinpointhq\.com$/;
+// The tenant label must be a valid DNS label: it may contain hyphens but must
+// not start or end with one (so `acme-.pinpointhq.com` is rejected). The
+// optional trailing group keeps single-character labels (e.g. `a.pinpointhq.com`)
+// valid. detect() and fetch() both route through this constant via
+// resolveApiUrl()/assertPinpointUrl(), so the stricter check applies everywhere.
+const PINPOINT_HOST_RE = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.pinpointhq\.com$/;
 
 /** @param {string} url */
 function assertPinpointUrl(url) {
