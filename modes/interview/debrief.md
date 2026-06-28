@@ -153,6 +153,41 @@ Append to `interview-prep/{company-slug}-{role-slug}.md`:
 
 ---
 
+## Step 9 — Write Session Transcript
+
+After the debrief, also write a machine-readable session transcript to `interview-prep/sessions/{company-slug}-{role-slug}-{round}-{YYYY-MM-DD}.md`. This is the canonical artifact downstream modes consume (`patterns` Step 1b reads the candidate side; `interview-redflag` reads the interviewer side). The full contract lives in `interview-prep/sessions/README.md`.
+
+Format:
+
+```markdown
+---
+company: [company]
+role: [role]
+round: [screen | hiring-manager | technical | system-design | behavioral | onsite | final]
+date: YYYY-MM-DD
+interviewer_role: [role, if known]
+source: debrief
+---
+
+## Q1
+**Interviewer:** [question as asked]
+<!-- competency: tag[, tag...] -->
+**Candidate:** [answer as delivered / reconstructed in this debrief]
+
+## Q2
+...
+```
+
+Rules for the transcript:
+
+- **Map the round type to the enum** above (e.g. recruiter screen → `screen`, HM screen → `hiring-manager`, technical deep-dive → `technical`, design/case-study → `system-design`).
+- **Tag each answer.** On the line directly above each `**Candidate:**` line, emit `<!-- competency: tag[, tag...] -->` — lowercase-kebab-case, comma-separated for multi-competency answers (e.g. `system-design`, `people-leadership`, `incident-response`). You already assessed each answer in Step 2, so tag from that assessment rather than re-reading. Tags are free-form; pick the competency the question actually tested.
+- **Reconstruct the candidate turn faithfully.** Use what the candidate reported saying in Step 1, not an idealized answer. The "correct/complete answer" from Step 2 belongs in the debrief file, never in the transcript — the transcript records what happened.
+- **`source: debrief`.**
+- The session file lands in a gitignored directory (real names/companies never enter version control); write it without redacting.
+
+---
+
 ## Rules
 
 - **Debrief immediately.** Memory of interview details degrades fast — within hours, specific questions and reactions are forgotten. Run this skill the same day.

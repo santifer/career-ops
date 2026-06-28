@@ -131,6 +131,41 @@ Keep feedback tight. One or two things to sharpen per answer — not a full rewr
 
 ---
 
+### Write Session Transcript
+
+After the summary, write a machine-readable session transcript to `interview-prep/sessions/{company-slug}-{role-slug}-{round}-{YYYY-MM-DD}.md` (use `practice` for the company/role slug if this wasn't a company-specific session). This is the canonical artifact downstream modes consume (`patterns` Step 1b reads the candidate side; `interview-redflag` reads the interviewer side). The full contract lives in `interview-prep/sessions/README.md`.
+
+Format:
+
+```markdown
+---
+company: [company, or "practice"]
+role: [role]
+round: [screen | hiring-manager | technical | system-design | behavioral | onsite | final]
+date: YYYY-MM-DD
+interviewer_role: [persona role, if set]
+source: practice
+---
+
+## Q1
+**Interviewer:** [the question you asked]
+<!-- competency: tag[, tag...] -->
+**Candidate:** [the candidate's answer, verbatim]
+
+## Q2
+...
+```
+
+Rules for the transcript:
+
+- **Map the round type to the enum** above (recruiter screen → `screen`, HM screen → `hiring-manager`, technical/domain → `technical`, design/case study → `system-design`, behavioral → `behavioral`).
+- **Tag each answer.** On the line directly above each `**Candidate:**` line, emit `<!-- competency: tag[, tag...] -->` — lowercase-kebab-case, comma-separated for multi-competency answers. You already assessed each answer during the session, so tag from that. Tags are free-form; pick the competency the question actually tested.
+- **Record the candidate's answer verbatim**, not the "stronger version" — the transcript records what happened, not the coaching.
+- **`source: practice`.**
+- The session file lands in a gitignored directory (real names/companies never enter version control); write it without redacting.
+
+---
+
 ## Question Sets by Round Type
 
 If no question list is provided, source questions in this order of precedence:
