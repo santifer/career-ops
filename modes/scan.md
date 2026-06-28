@@ -18,6 +18,8 @@ Agent(
 )
 ```
 
+The spawned subagent is a **single-pass worker**: it runs the scan with the parsers/APIs/Playwright/WebSearch named below, directly. It must **not** spawn further subagents or invoke other skills (see `modes/_shared.md` → Subagent delegation). Scanning is bounded by `portals.yml`; it is never an open-ended research task.
+
 ## Configuration
 
 Read `portals.yml` which contains:

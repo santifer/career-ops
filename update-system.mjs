@@ -17,7 +17,7 @@
 
 import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, posix as pathPosix } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
   ensureSkillEntrypoints,
@@ -278,6 +278,66 @@ function mergePathLists(...lists) {
   return merged;
 }
 
+// Files the self-reexec stage must check out so the TARGET update-system.mjs
+// loads without a missing-module crash. Today this is the entry plus its only
+// local import; resolveReexecCheckout derives the real set from the fetched
+// source, so this is only a defensive fallback if parsing ever misses one.
+const REEXEC_FALLBACK_FILES = ['update-system.mjs', 'scaffolder/bin/skill-entrypoints.mjs'];
+
+// Extracts static relative import/export specifiers ('./x.mjs', '../y.mjs')
+// from ESM source. Bare ('node:fs') and package ('js-yaml') specifiers are
+// ignored — only on-disk relative modules need to exist before re-exec.
+export function relativeImportSpecifiers(source) {
+  const specs = new Set();
+  const fromRe = /\b(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]/g;
+  const bareRe = /\bimport\s*['"]([^'"]+)['"]/g;
+  let match;
+  while ((match = fromRe.exec(source))) specs.add(match[1]);
+  while ((match = bareRe.exec(source))) specs.add(match[1]);
+  return [...specs].filter((spec) => spec.startsWith('.'));
+}
+
+// Resolves the relative-import closure of `entry` within a git ref and returns
+// the repo-relative paths (forward-slash, Windows-safe) the re-exec stage must
+// check out. Only files actually present in the ref are returned; the known
+// fallback files are appended defensively. This generalizes the previously
+// hardcoded checkout list so a future new top-level import can't reintroduce
+// the self-reexec ERR_MODULE_NOT_FOUND crash (issue #1245).
+function resolveReexecCheckout(ref, entry) {
+  const visited = new Set();
+  const present = new Set();
+  const order = [];
+  const stack = [entry];
+  while (stack.length) {
+    const file = stack.pop();
+    if (visited.has(file)) continue;
+    visited.add(file);
+    let source;
+    try {
+      source = git('show', `${ref}:${file}`);
+    } catch {
+      continue; // absent in this ref — leave it to the normal update stage
+    }
+    present.add(file);
+    order.push(file);
+    const dir = pathPosix.dirname(file);
+    for (const spec of relativeImportSpecifiers(source)) {
+      stack.push(pathPosix.join(dir, spec));
+    }
+  }
+  for (const file of REEXEC_FALLBACK_FILES) {
+    if (present.has(file)) continue;
+    try {
+      git('show', `${ref}:${file}`);
+      order.push(file);
+      present.add(file);
+    } catch {
+      // Not in the target tree (older version) — nothing to check out.
+    }
+  }
+  return order;
+}
+
 function repoPath(root, path) {
   return join(root, ...path.split('/'));
 }
@@ -501,7 +561,12 @@ async function apply() {
 
     if (!isReexec) {
       try {
-        git('checkout', 'FETCH_HEAD', '--', 'update-system.mjs', 'scaffolder/bin/skill-entrypoints.mjs');
+        // The re-exec runs the TARGET updater, so every local module it imports
+        // at load time must exist first. Resolve the fetched update-system.mjs's
+        // relative-import closure and check out exactly those files, so a future
+        // new top-level import can't reintroduce the self-reexec crash (#1245).
+        const reexecFiles = resolveReexecCheckout('FETCH_HEAD', 'update-system.mjs');
+        git('checkout', 'FETCH_HEAD', '--', ...reexecFiles);
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',
