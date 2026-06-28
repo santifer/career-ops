@@ -1812,6 +1812,16 @@ try {
   } else {
     fail('buildTitleFilter should ignore non-string/empty keyword entries');
   }
+
+  // Whitespace-only keywords must be trimmed away, not compiled into matchers.
+  // A bare-spaces negative keyword would otherwise reject any title containing
+  // a run of spaces (e.g. "   " matches "Senior   Engineer" via includes()).
+  const wsNegFilter = buildTitleFilter({ positive: [], negative: ['   '] });
+  if (wsNegFilter('Senior   Engineer') === true) {
+    pass('buildTitleFilter drops whitespace-only keywords instead of matching on spaces');
+  } else {
+    fail('buildTitleFilter should drop whitespace-only keywords');
+  }
 } catch (e) {
   fail(`title filter acronym tests crashed: ${e.message}`);
 }
