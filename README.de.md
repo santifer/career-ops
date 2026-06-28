@@ -37,6 +37,15 @@
 <p align="center"><strong>740+ Stellenanzeigen bewertet · 100+ personalisierte Lebensläufe · 1 Traumrolle bekommen</strong></p>
 
 <p align="center">
+  <a href="https://warpchart.dev/hq">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://warpchart.dev/api/chart?theme=dark&v=3">
+      <img alt="Live-Sterne-Telemetrie von santifer/career-ops" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Community_beitreten-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
 </p>
 
