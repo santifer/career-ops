@@ -393,6 +393,19 @@ function daysBetweenIsoDates(start, end) {
 
 export function shouldDedupScanHistoryRow({ firstSeen, status = 'added' }, { recheckAfterDays = null, today = new Date().toISOString().slice(0, 10) } = {}) {
   if (PERMANENT_SCAN_HISTORY_STATUSES.has(status)) return true;
+  // Cooldown statuses embed a cooldownUntil date in the format:
+  //   cooldown:{company}:{type}:{YYYY-MM-DD}
+  // Treat them as temporary: once the embedded date has passed, the URL is
+  // recheck-eligible so the cooldown filter re-evaluates it next scan.
+  if (typeof status === 'string' && status.startsWith('cooldown:')) {
+    const parts = status.split(':');
+    const cooldownDate = parts[parts.length - 1];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(cooldownDate)) {
+      // Dedup while still in cooldown; allow recheck after it expires
+      return cooldownDate >= today;
+    }
+    return true;
+  }
   if (status !== 'added') return true;
   if (recheckAfterDays == null) return true;
   const ageDays = daysBetweenIsoDates(firstSeen, today);
@@ -970,7 +983,7 @@ async function main() {
         var cooldownResult = cooldownFilter(job);
         if (cooldownResult.cooldown) {
           totalFilteredCooldown++;
-          cooldownOffers.push({ company: job.company, title: job.title, url: job.url, cooldownReason: cooldownResult.reason });
+          cooldownOffers.push({ company: job.company, title: job.title, url: job.url, location: job.location, source: sourceName, cooldownReason: cooldownResult.reason });
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -1037,10 +1050,13 @@ async function main() {
   if (!dryRun && expiredForHistory.length > 0) {
     appendToScanHistory(expiredForHistory, date, 'skipped_expired');
   }
-  // Cooldown-skipped offers recorded with status='added' so they flow through the normal
-  // recheckAfterDays mechanism. The cooldown filter re-evaluates them when the URL is re-fetched.
+  // Cooldown-skipped offers recorded with cooldown reason so subsequent scans
+  // can re-evaluate after the window expires. The cooldown status embeds the
+  // cooldownUntil date; shouldDedupScanHistoryRow treats it as temporary.
   if (!dryRun && cooldownOffers.length > 0) {
-    appendToScanHistory(cooldownOffers, date, 'added');
+    for (var k = 0; k < cooldownOffers.length; k++) {
+      appendToScanHistory([cooldownOffers[k]], date, cooldownOffers[k].cooldownReason || 'skipped_cooldown');
+    }
   }
   // Pages that loaded but had no Apply control: record so we don't re-verify
   // them next scan, but never let them reach pipeline.md.
