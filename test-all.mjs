@@ -157,6 +157,7 @@ const scripts = [
   { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
+  { name: 'keyword-match.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
@@ -5403,6 +5404,74 @@ try {
   }
 } catch (e) {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
+}
+
+console.log('\n33. Keyword coverage (ATS match)');
+
+try {
+  const { analyzeCoverage, extractKeywords, countOccurrences, variantForms, htmlToText } =
+    await import(pathToFileURL(join(ROOT, 'keyword-match.mjs')).href);
+
+  const cv = [
+    'Senior engineer. Built Python services with FastAPI. Python remains my primary language.',
+    'Deployed on k8s. Owned CI/CD pipelines. Wrote C++ modules and some JavaScript.',
+    'Strong in machine  learning and PostgreSQL. Set up observability once.',
+  ].join('\n');
+  const keywords = ['Python', 'FastAPI', 'Kubernetes', 'CI/CD', 'C++',
+    'Machine Learning', 'Postgres', 'observability', 'Java', 'gRPC'];
+  const r = analyzeCoverage(keywords, cv);
+
+  if (r.present.includes('Python')) pass('keyword coverage: exact match (Python)');
+  else fail('keyword coverage: Python should be present');
+
+  if (!r.thin.includes('Python')) pass('keyword coverage: count>1 keyword not flagged thin (Python x2)');
+  else fail('keyword coverage: Python appears twice and must not be thin');
+
+  if (r.present.includes('Kubernetes')) pass('keyword coverage: synonym match (k8s -> Kubernetes)');
+  else fail('keyword coverage: Kubernetes should match via k8s synonym');
+
+  if (r.present.includes('Machine Learning')) pass('keyword coverage: case + collapsed-whitespace match');
+  else fail('keyword coverage: Machine Learning should match "machine  learning"');
+
+  if (r.present.includes('C++') && r.present.includes('CI/CD')) pass('keyword coverage: symbol-bearing keywords match (C++, CI/CD)');
+  else fail('keyword coverage: C++ / CI/CD should match');
+
+  if (r.present.includes('Postgres')) pass('keyword coverage: synonym match (PostgreSQL -> Postgres)');
+  else fail('keyword coverage: Postgres should match via postgresql synonym');
+
+  if (!r.present.includes('Java') && r.missing.includes('Java')) pass('keyword coverage: word boundary holds (Java != JavaScript)');
+  else fail('keyword coverage: Java must not match inside JavaScript');
+
+  if (r.missing.includes('gRPC')) pass('keyword coverage: genuine miss reported (gRPC)');
+  else fail('keyword coverage: gRPC should be missing');
+
+  if (r.thin.includes('observability')) pass('keyword coverage: count-1 keyword flagged thin (observability)');
+  else fail('keyword coverage: observability should be thin');
+
+  if (r.coveragePct === 80) pass('keyword coverage: percentage computed correctly (8/10 = 80%)');
+  else fail(`keyword coverage: percentage wrong: ${r.coveragePct} (expected 80)`);
+
+  if (countOccurrences('java', 'javascript and java') === 1) pass('keyword coverage: countOccurrences respects word boundaries');
+  else fail(`keyword coverage: countOccurrences boundary wrong: ${countOccurrences('java', 'javascript and java')}`);
+
+  if (!variantForms('aws').includes('aw') && !variantForms('k8s').includes('k8')) pass('keyword coverage: variantForms does not truncate short acronyms (aws, k8s)');
+  else fail(`keyword coverage: variantForms truncates acronyms: ${JSON.stringify(variantForms('aws'))}`);
+
+  const stripped = htmlToText('<style>.x{}</style><p>Python &amp; <b>gRPC</b></p>');
+  if (stripped === 'Python & gRPC') pass('keyword coverage: htmlToText strips tags/style and decodes entities');
+  else fail(`keyword coverage: htmlToText wrong: ${JSON.stringify(stripped)}`);
+
+  const htmlCv = '<html><body><h2>Summary</h2><p>Built Python and gRPC services.</p></body></html>';
+  const rHtml = analyzeCoverage(['Python', 'gRPC', 'Java'], htmlToText(htmlCv));
+  if (rHtml.coveragePct === 67 && rHtml.present.includes('gRPC')) pass('keyword coverage: scans text extracted from tailored HTML');
+  else fail(`keyword coverage: HTML scan wrong: ${JSON.stringify(rHtml)}`);
+
+  const kws = extractKeywords('## Keywords extracted\n- Python\n- FastAPI, gRPC\n\n## Next');
+  if (kws.length === 3 && kws[0] === 'Python' && kws[2] === 'gRPC') pass('keyword coverage: extractKeywords parses bullets + commas, stops at next heading');
+  else fail(`keyword coverage: extractKeywords wrong: ${JSON.stringify(kws)}`);
+
+} catch (e) {
+  fail(`keyword coverage tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
