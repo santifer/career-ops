@@ -33,7 +33,7 @@ Run the career-ops pdf mode.
 Run the career-ops tracker mode.
 ```
 
-For one-shot workers or batch tasks in Codex, use `codex exec`:
+For one-shot workers or batch tasks in Codex, use `codex exec`. See [docs/CODEX.md](CODEX.md) for the full guide.
 
 ```bash
 codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"

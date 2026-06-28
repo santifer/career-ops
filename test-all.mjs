@@ -463,7 +463,7 @@ console.log('\n5. Data contract validation');
 
 // Check system files exist
 const systemFiles = [
-  'CLAUDE.md', 'CODEX.md', 'OPENCODE.md', 'VERSION', 'DATA_CONTRACT.md',
+  'CLAUDE.md', 'CODEX.md', 'OPENCODE.md', 'VERSION', 'DATA_CONTRACT.md', 'docs/CODEX.md',
   'modes/_shared.md', 'modes/_profile.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
   'modes/heuristics/recruiter-side.md',
@@ -1161,6 +1161,18 @@ if (/^@(?:\.\/)?AGENTS\.md/m.test(codexWrapper)) {
   pass('CODEX.md imports AGENTS.md as a thin wrapper');
 } else {
   fail('CODEX.md is not a thin AGENTS.md wrapper');
+}
+
+const codexGuideDoc = fileExists('docs/CODEX.md') ? readFile('docs/CODEX.md') : '';
+if (
+  /AGENTS\.md/.test(codexGuideDoc) &&
+  /CODEX\.md/.test(codexGuideDoc) &&
+  /codex exec/.test(codexGuideDoc) &&
+  /Codex/i.test(codexGuideDoc)
+) {
+  pass('docs/CODEX.md is a complete Codex guide');
+} else {
+  fail('docs/CODEX.md is missing required content');
 }
 
 // ── 12. SKILL SYMLINK INTEGRITY ─────────────────────────────
