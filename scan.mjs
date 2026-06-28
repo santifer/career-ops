@@ -1037,11 +1037,10 @@ async function main() {
   if (!dryRun && expiredForHistory.length > 0) {
     appendToScanHistory(expiredForHistory, date, 'skipped_expired');
   }
-  // Cooldown-skipped offers recorded so subsequent scans re-evaluate after window expires.
+  // Cooldown-skipped offers recorded with status='added' so they flow through the normal
+  // recheckAfterDays mechanism. The cooldown filter re-evaluates them when the URL is re-fetched.
   if (!dryRun && cooldownOffers.length > 0) {
-    for (var k = 0; k < cooldownOffers.length; k++) {
-      appendToScanHistory([cooldownOffers[k]], date, cooldownOffers[k].cooldownReason || 'skipped_cooldown');
-    }
+    appendToScanHistory(cooldownOffers, date, 'added');
   }
   // Pages that loaded but had no Apply control: record so we don't re-verify
   // them next scan, but never let them reach pipeline.md.
@@ -1155,3 +1154,5 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
     process.exit(1);
   });
 }
+
+
