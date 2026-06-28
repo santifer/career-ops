@@ -73,6 +73,15 @@ When choosing a budget-friendly model, you need strong reasoning capabilities to
 | **GLM-4-Air / GLM-4** | Zhipu AI / OpenRouter | Very Cheap | Reliable multi-turn reasoning and JSON/Markdown generation. |
 | **Gemini 2.5 Flash** | Google AI Studio | Free Tier (15 RPM) | Available via the standalone script `node gemini-eval.mjs`. Excellent for zero-cost low-volume runs, but subject to rate limits. |
 
+> **Standalone evaluator (no CLI config needed):** every OpenAI-compatible provider above (DeepSeek, Qwen, GLM, Together, Groq, OpenRouter, …) works directly through `node openai-eval.mjs` — just set a base URL, model, and key:
+> ```bash
+> OPENAI_BASE_URL=https://openrouter.ai/api/v1 \
+> OPENAI_MODEL=deepseek/deepseek-chat \
+> OPENAI_API_KEY=your_key \
+> node openai-eval.mjs --file ./jds/job.txt
+> ```
+> Run `node openai-eval.mjs --help` for per-provider examples. For 100% local/private use, point `--url` at a local server (LM Studio / llama.cpp / vLLM) or use `node ollama-eval.mjs`.
+
 ---
 
 ## 4. Local LLM Tradeoffs (Ollama / Llama.cpp)
