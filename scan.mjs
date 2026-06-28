@@ -759,7 +759,7 @@ export function buildCooldownFilter(reApplyWindows) {
     if (!win.last_apply_date) continue;
     const lastApply = new Date(win.last_apply_date);
     if (isNaN(lastApply.getTime())) continue;
-    const sameRoleDays = win.same_role_days || 0;
+    const sameRoleDays = Math.max(0, parseInt(win.same_role_days, 10) || 0);
     const crossRoleBucket = win.cross_role_bucket || null;
     const cooldownUntil = new Date(lastApply);
     cooldownUntil.setDate(cooldownUntil.getDate() + sameRoleDays);
