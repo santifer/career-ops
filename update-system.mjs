@@ -138,6 +138,8 @@ const SYSTEM_PATHS = [
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
+  'MAINTAINERS.md',
+  'ARCHITECTURE.md',
   'README.md',
   'README.ar.md',
   'README.cn.md',

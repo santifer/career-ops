@@ -1,13 +1,28 @@
-# CODEOWNERS — front-page and contributor-policy surfaces require maintainer review.
-#
-# Rationale: the README is career-ops's front page. Changes to it (badges, links,
-# branding, third-party embeds) are maintainer calls, not drive-by edits — this file
-# auto-requests maintainer review on those surfaces so they don't land unseen.
-# See CONTRIBUTING.md → "What we do NOT accept".
+# CODEOWNERS — auto-requests review from a maintainer on sensitive paths.
+# Last matching pattern wins. See MAINTAINERS.md for the team + ladder.
 
-# READMEs — front page + all localized variants
-/README*.md          @santifer
+# Repo docs & governance
+/README*.md            @santifer
+/CONTRIBUTING.md       @santifer
+/MAINTAINERS.md        @santifer
+/ARCHITECTURE.md       @santifer
+/.github/CODEOWNERS    @santifer
 
-# Contributor policy + this ownership file
-/CONTRIBUTING.md     @santifer
-/.github/CODEOWNERS  @santifer
+# Critical: agent behavior, scoring, and the data contract
+/CLAUDE.md             @santifer
+/AGENTS.md             @santifer
+/CODEX.md              @santifer
+/OPENCODE.md           @santifer
+/GEMINI.md             @santifer
+/modes/_shared.md      @santifer
+/DATA_CONTRACT.md      @santifer
+
+# High-blast-radius core scripts
+/update-system.mjs     @santifer
+/scan.mjs              @santifer
+/scan-ats-full.mjs     @santifer
+/generate-pdf.mjs      @santifer
+/test-all.mjs          @santifer
+/updater-migration-tests.mjs  @santifer
+/batch/batch-runner.sh @santifer
+/package.json          @santifer
