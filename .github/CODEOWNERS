@@ -1,5 +1,12 @@
-# CODEOWNERS — auto-requests review from a maintainer on sensitive paths.
+# CODEOWNERS — auto-requests maintainer review on sensitive paths.
 # Last matching pattern wins. See MAINTAINERS.md for the team + ladder.
+#
+# Scope principle: gate what CI can't catch (a bad change here passes the
+# tests silently) + the catastrophic updater + governance docs. Code that
+# test-all.mjs / Renovate / dependency-review already guard (scan.mjs,
+# generate-pdf.mjs, test-all.mjs, package.json) is intentionally NOT gated,
+# so routine contributor PRs aren't bottlenecked on a single owner. Broaden
+# this list once there is more than one code owner.
 
 # Repo docs & governance
 /README*.md            @santifer
@@ -8,21 +15,17 @@
 /ARCHITECTURE.md       @santifer
 /.github/CODEOWNERS    @santifer
 
-# Critical: agent behavior, scoring, and the data contract
+# Agent behavior & the multi-CLI contract (prompt layer — CI-blind)
 /CLAUDE.md             @santifer
 /AGENTS.md             @santifer
 /CODEX.md              @santifer
 /OPENCODE.md           @santifer
 /GEMINI.md             @santifer
+
+# Scoring & the system/user data contract (CI-blind; silent-danger)
 /modes/_shared.md      @santifer
 /DATA_CONTRACT.md      @santifer
 
-# High-blast-radius core scripts
+# The self-updater (catastrophic if wrong — touches user installs)
 /update-system.mjs     @santifer
-/scan.mjs              @santifer
-/scan-ats-full.mjs     @santifer
-/generate-pdf.mjs      @santifer
-/test-all.mjs          @santifer
 /updater-migration-tests.mjs  @santifer
-/batch/batch-runner.sh @santifer
-/package.json          @santifer
