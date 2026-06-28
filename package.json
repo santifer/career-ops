@@ -25,6 +25,7 @@
     "patterns": "node analyze-patterns.mjs",
     "gemini:eval": "node gemini-eval.mjs",
     "ollama:eval": "node ollama-eval.mjs",
+    "openai:eval": "node openai-eval.mjs",
     "star": "node match-star.mjs",
     "archive": "node archive-posting.mjs",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps"
