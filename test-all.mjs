@@ -97,12 +97,12 @@ function toBashPath(wpath) {
     const forwardSlashed = wpath.replace(/\\/g, '/');
     const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
-  } catch {}
+  } catch { }
   try {
     const forwardSlashed = wpath.replace(/\\/g, '/');
     const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
-  } catch {}
+  } catch { }
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
 }
 
@@ -289,7 +289,7 @@ try {
     fail('resolveAtsApi should return null for an unknown host');
   }
   if (resolveAtsApi('https://boards.greenhouse.io/acme/jobs/not-a-number') === null
-      && resolveAtsApi('http://boards.greenhouse.io/acme/jobs/123') === null) {
+    && resolveAtsApi('http://boards.greenhouse.io/acme/jobs/123') === null) {
     pass('resolveAtsApi rejects non-numeric Greenhouse ids and non-https (SSRF guard)');
   } else {
     fail('resolveAtsApi guard failed (bad id or http accepted)');
@@ -318,7 +318,7 @@ try {
     let evalCall = 0;
     return {
       async goto() { return { status: () => status }; },
-      async waitForTimeout() {},
+      async waitForTimeout() { },
       url() { return finalUrl; },
       async evaluate() { evalCall += 1; return evalCall === 1 ? bodyText : applyControls; },
     };
@@ -338,9 +338,9 @@ try {
   });
 
   if (isChallengeResult({ result: 'uncertain', code: 'bot_challenge' }) &&
-      isChallengeResult({ result: 'uncertain', code: 'access_blocked' }) &&
-      !isChallengeResult({ result: 'expired', code: 'http_gone' }) &&
-      !isChallengeResult({ result: 'active', code: 'apply_control_visible' })) {
+    isChallengeResult({ result: 'uncertain', code: 'access_blocked' }) &&
+    !isChallengeResult({ result: 'expired', code: 'http_gone' }) &&
+    !isChallengeResult({ result: 'active', code: 'apply_control_visible' })) {
     pass('isChallengeResult flags only bot_challenge/access_blocked uncertains');
   } else {
     fail('isChallengeResult misclassified a result');
@@ -366,7 +366,7 @@ try {
     getHeadedPage: async () => challengePage(),
   });
   if (stillBlocked.result === 'uncertain' && stillBlocked.code === 'bot_challenge'
-      && /headed retry also blocked/.test(stillBlocked.reason)) {
+    && /headed retry also blocked/.test(stillBlocked.reason)) {
     pass('Persistent challenge stays uncertain after headed retry (never upgraded to expired)');
   } else {
     fail(`Persistent challenge mishandled: ${stillBlocked.result} (${stillBlocked.code})`);
@@ -448,7 +448,7 @@ if (!QUICK) {
   if (goBuild !== null) {
     pass('Dashboard compiles');
     if (isWindows) {
-      try { rmSync(join(ROOT, 'dashboard', 'career-dashboard-test.exe'), { force: true }); } catch (e) {}
+      try { rmSync(join(ROOT, 'dashboard', 'career-dashboard-test.exe'), { force: true }); } catch (e) { }
     }
   } else {
     fail('Dashboard build failed');
@@ -521,8 +521,8 @@ if (/if \[\[ "\$status" == "completed" \|\| "\$status" == "skipped" \]\]/.test(b
 }
 
 if (/local total=0 completed=0 skipped=0 failed=0 pending=0/.test(batchRunnerSource) &&
-    /skipped\) skipped=\$\(\(skipped \+ 1\)\)/.test(batchRunnerSource) &&
-    /Completed: \$completed \| Skipped: \$skipped \| Failed: \$failed \| Pending: \$pending/.test(batchRunnerSource)) {
+  /skipped\) skipped=\$\(\(skipped \+ 1\)\)/.test(batchRunnerSource) &&
+  /Completed: \$completed \| Skipped: \$skipped \| Failed: \$failed \| Pending: \$pending/.test(batchRunnerSource)) {
   pass('Batch summary reports skipped offers separately from pending');
 } else {
   fail('Batch summary can misreport skipped offers as pending');
@@ -1441,8 +1441,8 @@ const todayStr = new Date().toISOString().split('T')[0];
 // dry-run: URL-based company detection across each supported ATS
 for (const [url, expected] of [
   ['https://boards.greenhouse.io/openai/jobs/123', 'openai'],
-  ['https://jobs.ashbyhq.com/ElevenLabs/abc',      'elevenlabs'],
-  ['https://jobs.lever.co/retool/xyz',              'retool'],
+  ['https://jobs.ashbyhq.com/ElevenLabs/abc', 'elevenlabs'],
+  ['https://jobs.lever.co/retool/xyz', 'retool'],
 ]) {
   const out = run(NODE, ['archive-posting.mjs', '--dry-run', url]);
   const { hostname } = new URL(url);
@@ -1517,8 +1517,8 @@ if (!hasBrowser) {
 
       const recent = existsSync(JDS_DIR)
         ? readdirSync(JDS_DIR)
-            .filter(f => f.endsWith('.pdf'))
-            .filter(f => statSync(join(JDS_DIR, f)).mtimeMs >= startedAt)
+          .filter(f => f.endsWith('.pdf'))
+          .filter(f => statSync(join(JDS_DIR, f)).mtimeMs >= startedAt)
         : [];
 
       if (recent.length === 0) {
@@ -3452,7 +3452,7 @@ try {
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch { }
   } else {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
@@ -3471,7 +3471,7 @@ try {
     'exit 1',
   ].join('\n') + '\n');
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch { }
   } else {
     execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
   }
@@ -3527,7 +3527,7 @@ try {
     fail(`--status prerequisite/score handling wrong: ${statusOnly}`);
   }
 
-  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+  try { rmSync(tmp, { recursive: true, force: true }); } catch { }
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
 }
@@ -3632,8 +3632,8 @@ try {
   // (b) greeting omitted → no salutation, no leftover token (backward compatible)
   const withoutGreeting = buildHtml(basePayload);
   if (!withoutGreeting.includes('class="greeting"')
-      && !withoutGreeting.includes('{{GREETING_BLOCK}}')
-      && withoutGreeting.includes('OPENING_MARKER')) {
+    && !withoutGreeting.includes('{{GREETING_BLOCK}}')
+    && withoutGreeting.includes('OPENING_MARKER')) {
     pass('Omitted greeting leaves no salutation and no leftover token (backward compatible)');
   } else {
     fail('Omitted greeting did not render cleanly (stray greeting markup or unreplaced token)');
@@ -3854,10 +3854,10 @@ try {
   };
   const parsed = parseJobstreetItem(sampleItem, 'https://id.jobstreet.com', 'FallbackCo');
   if (parsed && parsed.title === 'Senior Data Scientist'
-      && parsed.url === 'https://id.jobstreet.com/id/job/123456'
-      && parsed.company === 'TechCorp Indonesia'
-      && parsed.location === 'Jakarta Selatan'
-      && parsed.postedAt != null) {
+    && parsed.url === 'https://id.jobstreet.com/id/job/123456'
+    && parsed.company === 'TechCorp Indonesia'
+    && parsed.location === 'Jakarta Selatan'
+    && parsed.postedAt != null) {
     pass('parseJobstreetItem extracts title, url, company, location, postedAt correctly');
   } else {
     fail(`parseJobstreetItem returned ${JSON.stringify(parsed)}`);
@@ -4005,10 +4005,10 @@ try {
   };
   const parsed = parseGlintsItem(sampleItem, 'https://glints.com', 'FallbackCo');
   if (parsed && parsed.title === 'Backend Engineer'
-      && parsed.url === 'https://glints.com/id/jobs/backend-engineer/abc123'
-      && parsed.company === 'StartupCorp'
-      && parsed.location === 'Jakarta, Indonesia'
-      && parsed.postedAt != null) {
+    && parsed.url === 'https://glints.com/id/jobs/backend-engineer/abc123'
+    && parsed.company === 'StartupCorp'
+    && parsed.location === 'Jakarta, Indonesia'
+    && parsed.postedAt != null) {
     pass('parseGlintsItem extracts title, url, company, location, postedAt correctly');
   } else {
     fail(`parseGlintsItem returned ${JSON.stringify(parsed)}`);
@@ -4218,8 +4218,8 @@ try {
   // normalizeJob — happy path encodes refnr into the detail URL
   const norm = normalizeJob({ refnr: '10000-123/4 X', titel: '  ML Engineer  ', arbeitgeber: ' ACME ', arbeitsort: { ort: 'Berlin' } });
   if (norm && norm.title === 'ML Engineer' && norm.company === 'ACME'
-      && norm.url === 'https://www.arbeitsagentur.de/jobsuche/jobdetail/' + encodeURIComponent('10000-123/4 X')
-      && norm.refnr === '10000-123/4 X') {
+    && norm.url === 'https://www.arbeitsagentur.de/jobsuche/jobdetail/' + encodeURIComponent('10000-123/4 X')
+    && norm.refnr === '10000-123/4 X') {
     pass('normalizeJob trims fields and URL-encodes refnr');
   } else {
     fail(`normalizeJob = ${JSON.stringify(norm)}`);
@@ -4265,10 +4265,12 @@ try {
         // Pass A (wo set) → local hit; Pass B (no wo) → one remote-titled, one not.
         return hasWo
           ? { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] }
-          : { stellenangebote: [
+          : {
+            stellenangebote: [
               { refnr: 'R', titel: 'ML Engineer (Remote)', arbeitgeber: 'Co', arbeitsort: { ort: 'Hamburg' } },
               { refnr: 'X', titel: 'Onsite ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Hamburg' } },
-            ] };
+            ]
+          };
       },
     },
   );
@@ -4306,10 +4308,12 @@ try {
         usedHomeoffice = usedHomeoffice || sp.get('homeoffice') === 'nv_true';
         pagesSeen.add(sp.get('page'));
         return Number(sp.get('page')) === 1
-          ? { stellenangebote: [ // full page (== size) → pagination continues
+          ? {
+            stellenangebote: [ // full page (== size) → pagination continues
               { refnr: 'R1', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'München' } },
               { refnr: 'R2', titel: 'ML Scientist', arbeitgeber: 'Co', arbeitsort: { ort: 'Stuttgart' } },
-            ] }
+            ]
+          }
           : { stellenangebote: [{ refnr: 'R3', titel: 'NLP Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Köln' } }] }; // short → stop
       },
     },
@@ -4341,10 +4345,12 @@ try {
   try {
     partial = await aa.fetch(
       { name: 'AA', arbeitsagentur: { keywords: ['OK', 'BAD'] } },
-      { fetchJson: async (url) => {
+      {
+        fetchJson: async (url) => {
           if (new URL(url).searchParams.get('was') === 'BAD') throw new Error('HTTP 503');
           return { stellenangebote: [] }; // OK answers, just empty
-        } },
+        }
+      },
     );
   } catch { partialThrew = true; }
   if (!partialThrew && Array.isArray(partial) && partial.length === 0) {
@@ -4356,13 +4362,15 @@ try {
   // fetch() — Pass A succeeds with jobs, optional Pass B fails → Pass A jobs kept.
   const passBFail = await aa.fetch(
     { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true } },
-    { fetchJson: async (url) => {
+    {
+      fetchJson: async (url) => {
         // Pass A (wo set) returns a job; Pass B (no wo) throws.
         if (new URL(url).searchParams.has('wo')) {
           return { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] };
         }
         throw new Error('HTTP 503');
-      } },
+      }
+    },
   );
   if (passBFail.length === 1 && passBFail[0].url.endsWith('L')) {
     pass('aa.fetch() preserves primary (Pass A) results when the remote pass (Pass B) fails');
@@ -5258,6 +5266,136 @@ try {
   }
 } catch (e) {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
+}
+
+// ── 33. Provider — jobicy ───────────────────────────────────────
+console.log('\n33. Provider — jobicy');
+
+try {
+  const jobicy = (await import(pathToFileURL(join(ROOT, 'providers/jobicy.mjs')).href)).default;
+  const { parseJobicyResponse } = await import(pathToFileURL(join(ROOT, 'providers/jobicy.mjs')).href);
+
+  if (jobicy.id === 'jobicy') pass('jobicy.id is "jobicy"');
+  else fail(`jobicy.id is ${JSON.stringify(jobicy.id)}`);
+
+  const hit = jobicy.detect({ name: 'Jobicy Board', provider: 'jobicy' });
+  if (hit && hit.url === 'https://jobicy.com/api/v2/remote-jobs') {
+    pass('jobicy.detect() claims explicit provider config');
+  } else {
+    fail(`jobicy.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  if (jobicy.detect({ name: 'Remote Board', provider: 'remoteok' }) === null) {
+    pass('jobicy.detect() ignores other provider ids');
+  } else {
+    fail('jobicy.detect() should only claim provider: jobicy');
+  }
+
+  const sample = {
+    jobs: [
+      {
+        jobTitle: 'Senior AI Engineer',
+        companyName: 'Acme Corp',
+        jobGeo: 'Worldwide',
+        url: 'https://jobicy.com/jobs/senior-ai-engineer',
+        pubDate: '2026-06-27T10:00:00',
+      },
+      {
+        jobTitle: 'Staff Backend Developer',
+        companyName: 'Globex',
+        jobGeo: 'Europe',
+        url: 'https://jobicy.com/jobs/staff-backend-developer',
+        pubDate: '2026-06-25T12:00:00Z',
+      },
+      {
+        jobTitle: 'Role With Missing URL',
+        companyName: 'Incomplete',
+        jobGeo: 'USA',
+        pubDate: '2026-06-24T08:00:00Z',
+      },
+      {
+        jobTitle: 'Role With Invalid URL',
+        companyName: 'Invalid',
+        url: 'not-a-valid-url',
+        jobGeo: 'USA',
+      },
+      {
+        jobTitle: '',
+        companyName: 'Empty Title',
+        url: 'https://jobicy.com/jobs/empty-title',
+        jobGeo: 'USA',
+      }
+    ]
+  };
+
+  const jobs = parseJobicyResponse(sample, 'Jobicy Board');
+
+  if (jobs.length === 2) pass('parseJobicyResponse keeps 2 jobs (drops missing/invalid url and empty title)');
+  else fail(`parseJobicyResponse returned ${jobs.length} jobs (expected 2)`);
+
+  if (jobs[0]?.company === 'Acme Corp' && jobs[0]?.title === 'Senior AI Engineer') {
+    pass('parseJobicyResponse maps jobTitle -> title, companyName -> company');
+  } else {
+    fail(`row 0 title/company = ${JSON.stringify({ title: jobs[0]?.title, company: jobs[0]?.company })}`);
+  }
+
+  if (jobs[0]?.url === 'https://jobicy.com/jobs/senior-ai-engineer') {
+    pass('parseJobicyResponse maps url to url');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (jobs[0]?.location === 'Worldwide') {
+    pass('parseJobicyResponse maps jobGeo to location');
+  } else {
+    fail(`row 0 location = ${JSON.stringify(jobs[0]?.location)}`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('2026-06-27T10:00:00')) {
+    pass('parseJobicyResponse parses pubDate -> postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.company === 'Globex' && jobs[1]?.title === 'Staff Backend Developer') {
+    pass('parseJobicyResponse parses second job correctly');
+  } else {
+    fail(`row 1 = ${JSON.stringify(jobs[1])}`);
+  }
+
+  if (parseJobicyResponse('', 'X').length === 0 && parseJobicyResponse(null, 'X').length === 0) {
+    pass('parseJobicyResponse empty / non-object payload -> empty result (no crash)');
+  } else {
+    fail('parseJobicyResponse empty / non-object payload should yield empty result');
+  }
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await jobicy.fetch(
+    { name: 'Jobicy Board', provider: 'jobicy' },
+    { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://jobicy.com/api/v2/remote-jobs') {
+    pass('jobicy.fetch() requests the pinned JSON feed URL');
+  } else {
+    fail(`jobicy.fetch() requested ${JSON.stringify(capturedUrl)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('jobicy.fetch() passes redirect:"error" to fetchJson');
+  } else {
+    fail(`jobicy.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+  if (fetched[0]?.company === 'Acme Corp' && fetched[0]?.title === 'Senior AI Engineer') {
+    pass('provider: jobicy config returns normalized jobs');
+  } else {
+    fail(`jobicy.fetch() normalized row = ${JSON.stringify(fetched[0])}`);
+  }
+
+} catch (e) {
+  fail(`jobicy provider tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
