@@ -5405,6 +5405,91 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
+// ── 32. INTERVIEW SESSION PRODUCER (#956 / #1242 contract) ──────
+
+console.log('\n32. Interview session producer (#1242 transcript contract)');
+
+// Scaffold is system-owned and MUST ship (tracked) so the updater can deliver it.
+for (const f of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
+  if (!fileExists(f)) {
+    fail(`Missing session scaffold: ${f}`);
+  } else if (run('git', ['ls-files', f])) {
+    pass(`Session scaffold shipped (tracked): ${f}`);
+  } else {
+    fail(`Session scaffold exists but is NOT tracked (won't ship): ${f}`);
+  }
+}
+
+// Real session files contain real names/companies — they MUST be gitignored.
+{
+  const real = 'interview-prep/sessions/acme-corp-instructional-designer-behavioral-2026-06-01.md';
+  if (run('git', ['check-ignore', real])) {
+    pass('Real session files are gitignored (PII never committed)');
+  } else {
+    fail(`Real session file is NOT gitignored: ${real}`);
+  }
+}
+
+// ...but the scaffold itself must be force-included past that ignore rule.
+for (const f of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
+  if (run('git', ['check-ignore', f])) {
+    fail(`Session scaffold is gitignored (won't ship): ${f}`);
+  } else {
+    pass(`Session scaffold is force-included past the ignore rule: ${f}`);
+  }
+}
+
+// The scaffold must be in SYSTEM_PATHS (the updater delivers/refreshes it).
+{
+  const updater = readFile('update-system.mjs');
+  const sysBlock = (updater.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  for (const p of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
+    if (sysBlock.includes(`'${p}'`)) {
+      pass(`Session scaffold in SYSTEM_PATHS: ${p}`);
+    } else {
+      fail(`Session scaffold NOT in SYSTEM_PATHS (won't update): ${p}`);
+    }
+  }
+  // Never ship the directory itself — that would let an update wipe user sessions.
+  if (sysBlock.includes("'interview-prep/sessions/'")) {
+    fail("interview-prep/sessions/ dir is in SYSTEM_PATHS — an update could overwrite user sessions");
+  } else {
+    pass('interview-prep/sessions/ dir is NOT a SYSTEM_PATHS entry (user sessions safe)');
+  }
+}
+
+// Both producers must document writing a session transcript with competency tags.
+for (const mode of ['modes/interview/debrief.md', 'modes/interview/practice.md']) {
+  const body = readFile(mode);
+  if (body.includes('interview-prep/sessions/')) {
+    pass(`${mode} writes to interview-prep/sessions/`);
+  } else {
+    fail(`${mode} does not write a session transcript (producer missing)`);
+  }
+  if (body.includes('<!-- competency:')) {
+    pass(`${mode} emits the competency tag`);
+  } else {
+    fail(`${mode} does not emit the <!-- competency: --> tag`);
+  }
+}
+
+// The README is the consumer contract — it must document speaker labels + tag format.
+if (!fileExists('interview-prep/sessions/README.md')) {
+  fail('sessions/README.md missing — cannot verify the consumer contract');
+} else {
+  const readme = readFile('interview-prep/sessions/README.md');
+  if (readme.includes('**Interviewer:**') && readme.includes('**Candidate:**')) {
+    pass('sessions/README documents Interviewer/Candidate speaker labels');
+  } else {
+    fail('sessions/README missing speaker-label contract');
+  }
+  if (readme.includes('<!-- competency:')) {
+    pass('sessions/README documents the competency tag format');
+  } else {
+    fail('sessions/README missing competency tag format');
+  }
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
