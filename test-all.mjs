@@ -1290,6 +1290,44 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
 }
 
 {
+  // Regression guard for #1245: the self-reexec checkout derives its file list
+  // from update-system.mjs's static relative imports, so the parser must catch
+  // every relative import/export form and ignore bare/package specifiers.
+  try {
+    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+    const sample = [
+      "import { a } from './scaffolder/bin/skill-entrypoints.mjs';",
+      'import b from "../lib/helper.mjs";',
+      "export { c } from './sibling.mjs';",
+      "import './side-effect.mjs';",
+      "import { readFileSync } from 'node:fs';",
+      "import yaml from 'js-yaml';",
+    ].join('\n');
+    const specs = updater.relativeImportSpecifiers(sample).sort();
+    const expected = [
+      '../lib/helper.mjs',
+      './scaffolder/bin/skill-entrypoints.mjs',
+      './sibling.mjs',
+      './side-effect.mjs',
+    ];
+    if (JSON.stringify(specs) === JSON.stringify(expected)) {
+      pass('relativeImportSpecifiers extracts relative imports, ignores bare/package (#1245)');
+    } else {
+      fail(`relativeImportSpecifiers mismatch: got ${JSON.stringify(specs)}`);
+    }
+
+    const liveSource = readFileSync(join(ROOT, 'update-system.mjs'), 'utf-8');
+    if (updater.relativeImportSpecifiers(liveSource).includes('./scaffolder/bin/skill-entrypoints.mjs')) {
+      pass('relativeImportSpecifiers picks up the live skill-entrypoints import (#1245)');
+    } else {
+      fail('relativeImportSpecifiers missed the live skill-entrypoints import');
+    }
+  } catch (e) {
+    fail(`relativeImportSpecifiers test crashed: ${e.message}`);
+  }
+}
+
+{
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-unreadable-'));
   try {
     const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
