@@ -8,7 +8,7 @@ This mode answers: *"Even if I win this process — is this company safe to join
 
 ## Dependency
 
-Requires transcripts produced by `modes/interview/debrief.md` (#686) or `modes/interview/practice.md` (#509). Each transcript must be saved under `interview-prep/sessions/` (gitignored). If no session files exist, exit gracefully with an onboarding message.
+Requires transcripts produced by `modes/interview/debrief.md` or `modes/interview/practice.md` (#956). Each transcript must be saved under `interview-prep/sessions/` (gitignored). If no session files exist, exit gracefully with an onboarding message.
 
 ## Inputs
 
@@ -16,9 +16,9 @@ Requires transcripts produced by `modes/interview/debrief.md` (#686) or `modes/i
 - `interview-prep/{company}-{role}.md` — Company intel file (for context + output target).
 - `config/profile.yml` — User profile (for role/archetype context).
 
-Expected transcript filename convention (from #686/#509):
+Expected transcript filename convention (from #956):
 ```
-{company-slug}-{role-slug}-{YYYY-MM-DD}-{round}.md
+{company-slug}-{role-slug}-{round}-{YYYY-MM-DD}.md
 ```
 
 ## Minimum Threshold
@@ -35,14 +35,18 @@ Exit gracefully.
 List all `.md` files in `interview-prep/sessions/`. Parse each filename using the `YYYY-MM-DD` date segment as the anchor:
 
 ```
-{company-slug}-{role-slug}-{YYYY-MM-DD}-{round}.md
-         ↑            ↑          ↑           ↑
- everything     segment      date anchor   round label
- before role    immediately
-                before date
+{company-slug}-{role-slug}-{round}-{YYYY-MM-DD}.md
+         ↑            ↑        ↑          ↑
+ everything     segment    round      date anchor
+ before round   immediately label      (trailing)
+                before round
 ```
 
-Example: `acme-corp-swe-2024-01-15-hr.md` → company=`acme-corp`, role=`swe`, date=`2024-01-15`, round=`hr`.
+- `YYYY-MM-DD` is the anchor — find the date, work left from it.
+- `round` = segment immediately before the date anchor.
+- `company+role` = everything before `round`.
+
+Example: `acme-corp-swe-hr-2024-01-15.md` → company=`acme-corp`, role=`swe`, round=`hr`, date=`2024-01-15`.
 
 Group files by `{company-slug}`. For each company group, note:
 - Number of rounds on file
