@@ -595,6 +595,10 @@ search_queries:
 #   provider: remotive
 #   enabled: true
 #
+# - name: NoDesk
+#   provider: nodesk
+#   enabled: true
+#
 # - name: We Work Remotely
 #   provider: weworkremotely
 #   enabled: true
