@@ -1,0 +1,37 @@
+name: 'Plugin registry validate'
+
+# Runs on PRs that touch the curated plugin registry. Uses `pull_request` (NOT
+# pull_request_target), read-only permissions, and NO secrets — so cloning +
+# statically auditing a submitter's plugin can never reach a token or write the
+# repo. No plugin code is executed (the manifest is parsed, the audit is static).
+on:
+  pull_request:
+    paths:
+      - 'plugins-registry.json'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate registry entries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Deterministic shape gate (no network).
+      - name: Validate registry shape
+        run: node validate-plugin-registry.mjs
+
+      # Deep gate: clone each entry at its pinned SHA + static-validate + audit.
+      # No secrets are present in this job; nothing the plugin ships is executed.
+      - name: Clone + audit each registry entry
+        run: node validate-plugin-registry.mjs --deep
+
+      - name: One plugin per PR
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- plugins-registry.json | wc -l)
+          if [ "$CHANGED" -gt 1 ]; then echo "Only plugins-registry.json may change in a registry PR"; exit 1; fi
