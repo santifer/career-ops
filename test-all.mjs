@@ -5437,10 +5437,11 @@ try {
   // company fallbacks: entry name, then "The Hub".
   const coEntry = normalizeHubJob({ title: 'T', absoluteJobUrl: 'https://thehub.io/jobs/c1', company: {} }, 'Entry Name');
   const coDefault = normalizeHubJob({ title: 'T', absoluteJobUrl: 'https://thehub.io/jobs/c2' });
-  if (coEntry?.company === 'Entry Name' && coDefault?.company === 'The Hub') {
-    pass('normalizeHubJob falls back company → entry name → "The Hub"');
+  const coBlank = normalizeHubJob({ title: 'T', absoluteJobUrl: 'https://thehub.io/jobs/c3' }, '   '); // whitespace-only → "The Hub"
+  if (coEntry?.company === 'Entry Name' && coDefault?.company === 'The Hub' && coBlank?.company === 'The Hub') {
+    pass('normalizeHubJob falls back company → entry name → "The Hub" (whitespace-only entry name ignored)');
   } else {
-    fail(`normalizeHubJob company fallbacks = ${JSON.stringify({ a: coEntry?.company, b: coDefault?.company })}`);
+    fail(`normalizeHubJob company fallbacks = ${JSON.stringify({ a: coEntry?.company, b: coDefault?.company, c: coBlank?.company })}`);
   }
 
   // postedAt falls back to createdAt; omitted when both absent.
@@ -5515,6 +5516,34 @@ try {
     pass('thehub.fetch() honors max_pages (stops at the cap even on a full page)');
   } else {
     fail(`thehub.fetch() max_pages:1 requested ${JSON.stringify(capReq)}`);
+  }
+
+  // A full page with a large `pages` (so neither short-stop nor pages-stop fires)
+  // lets us assert the implicit default cap and the hard cap purely on page count.
+  const fullDeepPage = (page) => ({ docs: Array.from({ length: 15 }, (_, i) => mk(page * 100 + i)), page, pages: 999, limit: 15 });
+
+  // Default max_pages (no override) → exactly 3 pages.
+  const defReq = [];
+  await thehub.fetch(
+    { name: 'The Hub' },
+    { fetchJson: async (url) => { defReq.push(Number(new URL(url).searchParams.get('page'))); return fullDeepPage(defReq.length); } },
+  );
+  if (defReq.length === 3 && defReq[0] === 1 && defReq[2] === 3) {
+    pass('thehub.fetch() defaults to 3 pages when max_pages is not set');
+  } else {
+    fail(`thehub.fetch() default-cap requested ${JSON.stringify(defReq)} (expected pages 1..3)`);
+  }
+
+  // max_pages above the hard cap → clamped to 67 pages.
+  const cap67Req = [];
+  await thehub.fetch(
+    { name: 'The Hub', max_pages: 1000 },
+    { fetchJson: async (url) => { cap67Req.push(Number(new URL(url).searchParams.get('page'))); return fullDeepPage(cap67Req.length); } },
+  );
+  if (cap67Req.length === 67 && cap67Req[0] === 1 && cap67Req[66] === 67) {
+    pass('thehub.fetch() clamps max_pages to the hard cap of 67');
+  } else {
+    fail(`thehub.fetch() hard-cap requested ${cap67Req.length} pages (expected 67)`);
   }
 
   // unexpected API response → throws.

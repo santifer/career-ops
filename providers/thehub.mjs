@@ -90,7 +90,9 @@ export function normalizeHubJob(j, fallbackCompany) {
   const company =
     j.company && typeof j.company === 'object' && typeof j.company.name === 'string' && j.company.name.trim()
       ? j.company.name.trim()
-      : fallbackCompany || 'The Hub';
+      : typeof fallbackCompany === 'string' && fallbackCompany.trim()
+        ? fallbackCompany.trim()
+        : 'The Hub';
 
   const loc = j.location && typeof j.location === 'object' ? j.location : {};
   const address = typeof loc.address === 'string' ? loc.address.trim() : '';
