@@ -23,6 +23,26 @@ claude   # or gemini / codex / qwen / opencode / agy / grok
 
 **On first launch, career-ops walks you through setup by chatting** — it asks for your CV, your details (name, target roles, salary), and sets up the job scanner with pre-configured companies. Nothing to edit by hand: just answer its questions. Then paste a job offer URL or description and it evaluates it, writes a report, generates a tailored PDF, and tracks it.
 
+If you are using Codex, start the interactive session with `codex`. Slash commands are not guaranteed in Codex, so use the same mode names in a prompt if `/career-ops` is unavailable:
+
+```text
+Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
+Run the career-ops scan mode.
+Run the career-ops pipeline mode.
+Run the career-ops pdf mode.
+Run the career-ops tracker mode.
+```
+
+For one-shot workers or batch tasks in Codex, use `codex exec`:
+
+```bash
+codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"
+codex exec "Run career-ops scan mode in this repo."
+codex exec "Run career-ops pipeline mode for data/pipeline.md."
+codex exec "Run career-ops pdf mode for the latest evaluated role."
+codex exec "Run career-ops tracker mode and summarize the current statuses."
+```
+
 ### Advanced — clone manually
 
 <details>
@@ -51,12 +71,12 @@ npx playwright install chromium
 | Action | How |
 |--------|-----|
 | Evaluate an offer | Paste a URL or JD text |
-| Search for offers | `/career-ops scan` |
-| Process pending URLs | `/career-ops pipeline` |
-| Generate a PDF | `/career-ops pdf` |
-| Batch evaluate | `/career-ops batch` |
-| Check tracker status | `/career-ops tracker` |
-| Fill application form | `/career-ops apply` |
+| Search for offers | `/career-ops scan` or ask the agent to run `scan` |
+| Process pending URLs | `/career-ops pipeline` or ask the agent to run `pipeline` |
+| Generate a PDF | `/career-ops pdf` or ask the agent to run `pdf` |
+| Batch evaluate | `/career-ops batch` or use `codex exec "Run career-ops batch mode ..."` |
+| Check tracker status | `/career-ops tracker` or ask the agent to run `tracker` |
+| Fill application form | `/career-ops apply` or ask the agent to run `apply` |
 
 ## Verify Setup
 
