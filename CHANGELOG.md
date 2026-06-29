@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.14.0](https://github.com/santifer/career-ops/compare/career-ops-v1.13.0...career-ops-v1.14.0) (2026-06-28)
+
+
+### Features
+
+* add modes/_custom.md for user custom instructions ([#1198](https://github.com/santifer/career-ops/issues/1198)) ([3cc8844](https://github.com/santifer/career-ops/commit/3cc8844c51975e2bcd94cb9078bc734a75626c71))
+* **apply:** ATS behavioural question matcher from story-bank.md ([#1228](https://github.com/santifer/career-ops/issues/1228)) ([9d79931](https://github.com/santifer/career-ops/commit/9d7993153ffa914f80c3f5198d2deec1f963e49f))
+* **archive:** add archive-posting.mjs to save live job postings as PDF ([#697](https://github.com/santifer/career-ops/issues/697)) ([571b114](https://github.com/santifer/career-ops/commit/571b114bb56aedc5d32a4ecd9a5861854acd4ae0))
+* **batch:** add --limit flag + budget guide ([0607ee5](https://github.com/santifer/career-ops/commit/0607ee57e176c93422732ee1ad1530cd606f70b6))
+* **cli:** add first-class Codex support ([#1269](https://github.com/santifer/career-ops/issues/1269)) ([43a7d0e](https://github.com/santifer/career-ops/commit/43a7d0eb6d7c24232f47a482c7ea0178b00c824d))
+* **cli:** add Grok Build CLI support ([0a89381](https://github.com/santifer/career-ops/commit/0a8938186ed8a4787a84b2e5bc1680a55aac59ca))
+* **cli:** register Kimi as a supported CLI host ([#1193](https://github.com/santifer/career-ops/issues/1193)) ([d3d34f3](https://github.com/santifer/career-ops/commit/d3d34f38ecabd2fbbe4b387c53504577a6255b6f))
+* **cv:** add opt-in profile photo for DACH/European CVs ([fcccd58](https://github.com/santifer/career-ops/commit/fcccd58abf4be7b2d620576ffe754861cab933d4))
+* **eval:** add openai-eval.mjs for any OpenAI-compatible endpoint ([#1278](https://github.com/santifer/career-ops/issues/1278)) ([5838391](https://github.com/santifer/career-ops/commit/58383910c365e81f41deed34f6340636674d73f8))
+* **modes:** add Danish (da) locale ([5407811](https://github.com/santifer/career-ops/commit/54078118a70fa6b42123a68450bb584206af8ac4))
+* **modes:** add EU SWE application calibration mode ([f024317](https://github.com/santifer/career-ops/commit/f02431721ad1cbb7e49882b23ebb4dec00eaafff))
+* **modes:** add recruiter-side application heuristics ([2ea0814](https://github.com/santifer/career-ops/commit/2ea0814b8436aeae76200a70d2df6be795e498e0))
+* **ollama:** add local interactive Ollama evaluator ([#681](https://github.com/santifer/career-ops/issues/681)) ([1b44790](https://github.com/santifer/career-ops/commit/1b447901198fa4defba79062acc3ce1e219373f5))
+* **providers:** add Comeet ATS provider ([#1222](https://github.com/santifer/career-ops/issues/1222)) ([f5af817](https://github.com/santifer/career-ops/commit/f5af81760436b38901ba4f1c090c1f077b90941e))
+* **providers:** add Personio ATS provider ([#1223](https://github.com/santifer/career-ops/issues/1223)) ([f25570b](https://github.com/santifer/career-ops/commit/f25570b3a5ecbaa18adf6ef6579e167ed3b68294))
+* **providers:** add WeWorkRemotely RSS provider ([#1243](https://github.com/santifer/career-ops/issues/1243)) ([39ea2d4](https://github.com/santifer/career-ops/commit/39ea2d4324b1279737f7640e9d0b447a2608e159)), closes [#1241](https://github.com/santifer/career-ops/issues/1241)
+* **scan:** add early trust validation and job trust metadata ([#985](https://github.com/santifer/career-ops/issues/985)) ([ef07461](https://github.com/santifer/career-ops/commit/ef07461a8d3c4b29418e39a450c0fae4450257f7))
+* **scan:** preserve job location in pipeline.md ([#1015](https://github.com/santifer/career-ops/issues/1015)) ([7671517](https://github.com/santifer/career-ops/commit/76715172f3abc23c62af963977306f3ec721408e))
+
+
+### Bug Fixes
+
+* **batch:** single-worker lock fallback + exit-127 shim-swap retry ([#910](https://github.com/santifer/career-ops/issues/910)) ([9a6e2ce](https://github.com/santifer/career-ops/commit/9a6e2ce5eaaa841b6ffdeaa04af034e2ee063a0a))
+* **modes:** bound subagent delegation to prevent research fan-out ([#1268](https://github.com/santifer/career-ops/issues/1268)) ([1cf34a9](https://github.com/santifer/career-ops/commit/1cf34a91f6840440de5d641805d118c4c65d29cc)), closes [#1235](https://github.com/santifer/career-ops/issues/1235)
+* **plugin:** drop non-schema skills/permissions keys from plugin.json ([5ff910c](https://github.com/santifer/career-ops/commit/5ff910c0014a9d0f6061b65acd2472d15a72487b))
+* **scan:** trim title-filter keywords before the length check ([#1261](https://github.com/santifer/career-ops/issues/1261)) ([0842bbf](https://github.com/santifer/career-ops/commit/0842bbf2beb1a6601bbdf2e06bc9b0a5a77e5cb2))
+* **template:** scope break-inside to atomic units to prevent CV pagination breaks ([7ef8182](https://github.com/santifer/career-ops/commit/7ef81821684b9959acc0f9e76bef2169ca5d6ec0))
+* **updater:** resolve self-reexec checkout from the import closure ([#1267](https://github.com/santifer/career-ops/issues/1267)) ([0a830b5](https://github.com/santifer/career-ops/commit/0a830b5092076b2c7037e4d24ea2b86067b400a9)), closes [#1245](https://github.com/santifer/career-ops/issues/1245)
+
 ## [1.13.0](https://github.com/santifer/career-ops/compare/career-ops-v1.12.0...career-ops-v1.13.0) (2026-06-25)
 
 

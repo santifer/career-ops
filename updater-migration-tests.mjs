@@ -65,6 +65,7 @@ const requiredSystemPaths = [
   'tracker-columns-tests.mjs',
   'updater-migration-tests.mjs',
   'README.ar.md',
+  'README.de.md',
   'README.ja.md',
   'README.ua.md',
   'CHANGELOG.md',
@@ -84,6 +85,7 @@ const requiredBootstrapPaths = [
   'liveness-browser.mjs',
   'role-matcher.mjs',
   'tracker-utils.mjs',
+  'tracker-parse.mjs',
   'updater-migration-tests.mjs',
   'tracker-columns-tests.mjs',
 ];
@@ -104,8 +106,16 @@ const twoPassManifestChecks = [
     pattern: /CAREER_OPS_UPDATE_REEXEC/,
   },
   {
-    name: 'apply first updates update-system.mjs from FETCH_HEAD',
-    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*'update-system\.mjs',\s*'scaffolder\/bin\/skill-entrypoints\.mjs'\)/,
+    name: 'apply resolves the re-exec checkout closure from FETCH_HEAD (#1245)',
+    pattern: /resolveReexecCheckout\('FETCH_HEAD',\s*'update-system\.mjs'\)/,
+  },
+  {
+    name: 'apply checks out the resolved re-exec files from FETCH_HEAD (#1245)',
+    pattern: /git\('checkout',\s*'FETCH_HEAD',\s*'--',\s*\.\.\.reexecFiles\)/,
+  },
+  {
+    name: 're-exec fallback still covers the skill-entrypoints import (#1245)',
+    pattern: /REEXEC_FALLBACK_FILES\s*=\s*\[[^\]]*'scaffolder\/bin\/skill-entrypoints\.mjs'/,
   },
   {
     name: 'apply re-execs through the current Node binary',

@@ -1,16 +1,22 @@
 {
   "name": "career-ops",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, OpenCode, Gemini, Codex, Qwen)",
   "private": true,
   "scripts": {
     "doctor": "node doctor.mjs",
+    "or": "node openrouter-runner.mjs",
+    "or:scan": "node openrouter-runner.mjs scan",
+    "or:pipeline": "node openrouter-runner.mjs pipeline",
+    "or:eval": "node openrouter-runner.mjs evaluate",
+    "or:apply": "node openrouter-runner.mjs apply",
     "verify": "node verify-pipeline.mjs",
     "normalize": "node normalize-statuses.mjs",
     "dedup": "node dedup-tracker.mjs",
     "merge": "node merge-tracker.mjs",
     "reconcile": "node reconcile-pipeline.mjs",
     "pdf": "node generate-pdf.mjs",
+    "cover-letter": "node generate-cover-letter.mjs --payload",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
     "update:test": "node updater-migration-tests.mjs",
@@ -25,8 +31,11 @@
     "patterns": "node analyze-patterns.mjs",
     "gemini:eval": "node gemini-eval.mjs",
     "ollama:eval": "node ollama-eval.mjs",
+    "openai:eval": "node openai-eval.mjs",
     "star": "node match-star.mjs",
     "archive": "node archive-posting.mjs",
+    "build:dashboard": "node build-dashboard.mjs",
+    "serve:dashboard": "cd dashboard && go run . --path ..",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps"
   },
   "keywords": [
@@ -50,6 +59,6 @@
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.0.0",
     "js-yaml": "^4.1.1",
-    "playwright": "1.61.0"
+    "playwright": "1.61.1"
   }
 }

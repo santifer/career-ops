@@ -43,6 +43,7 @@ const parseYaml = yaml.load;
 // ── Config ──────────────────────────────────────────────────────────
 
 const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
+const PROFILE_PATH = process.env.CAREER_OPS_PROFILE || 'config/profile.yml';
 const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
@@ -139,8 +140,9 @@ export function buildTitleFilter(titleFilter) {
   // Normalize defensively: a malformed title_filter (a null, numeric, or otherwise
   // non-string entry in the YAML) must not crash the scan via k.toLowerCase().
   const normalize = (arr) => (Array.isArray(arr) ? arr : [])
-    .filter(k => typeof k === 'string' && k.length > 0)
-    .map(k => k.toLowerCase())
+    .filter(k => typeof k === 'string')
+    .map(k => k.trim().toLowerCase())
+    .filter(k => k.length > 0)
     .map(compileKeyword);
   const positive = normalize(titleFilter?.positive);
   const negative = normalize(titleFilter?.negative);
@@ -288,6 +290,113 @@ export function buildSalaryFilter(salaryFilter) {
   };
 }
 
+export function companyMatch(jobCompany, windowCompany) {
+  const cleanNoSpaces = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const c1NoSpaces = cleanNoSpaces(jobCompany);
+  const c2NoSpaces = cleanNoSpaces(windowCompany);
+  if (c1NoSpaces === c2NoSpaces) return true;
+
+  const cleanWithSpaces = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const c1WithSpaces = cleanWithSpaces(jobCompany);
+  const c2WithSpaces = cleanWithSpaces(windowCompany);
+  if (!c1WithSpaces || !c2WithSpaces) return false;
+
+  const regex1 = new RegExp('\\b' + c2WithSpaces.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b');
+  const regex2 = new RegExp('\\b' + c1WithSpaces.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b');
+  return regex1.test(c1WithSpaces) || regex2.test(c2WithSpaces);
+}
+
+export function addDays(dateStr, days) {
+  const date = new Date(`${dateStr}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export function loadReApplyWindows(profilePath = PROFILE_PATH) {
+  if (!existsSync(profilePath)) return {};
+  try {
+    const raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+    const windows = raw.re_apply_windows || {};
+    const validWindows = {};
+    for (const [company, win] of Object.entries(windows)) {
+      if (!win || typeof win !== 'object') continue;
+      const lastApplyDate = win.last_apply_date;
+      if (typeof lastApplyDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(lastApplyDate)) continue;
+      if (isNaN(Date.parse(lastApplyDate))) continue;
+      
+      const sameRoleDays = win.same_role_days;
+      if (sameRoleDays !== undefined && (!Number.isInteger(sameRoleDays) || sameRoleDays < 0)) continue;
+
+      if (win.applied_to !== undefined && !Array.isArray(win.applied_to)) continue;
+      if (win.applied_to !== undefined && win.applied_to.some(x => typeof x !== 'string')) continue;
+
+      if (win.cross_role_bucket !== undefined && typeof win.cross_role_bucket !== 'string') continue;
+
+      validWindows[company] = win;
+    }
+    return validWindows;
+  } catch {
+    return {};
+  }
+}
+
+export function buildCooldownFilter(windows, today) {
+  if (!windows || Object.keys(windows).length === 0) {
+    return () => ({ skip: false });
+  }
+
+  const genericKeywords = new Set(['all', 'roles', 'role', 'family', 'bucket', 'group', 'team']);
+
+  return (job) => {
+    const jobCompany = job.company || '';
+    const jobTitleLower = (job.title || '').toLowerCase();
+
+    for (const [windowCompany, window] of Object.entries(windows)) {
+      if (companyMatch(jobCompany, windowCompany)) {
+        const lastApplyDate = window.last_apply_date;
+        const sameRoleDays = Number(window.same_role_days || 0);
+        if (!lastApplyDate) continue;
+
+        const cooldownUntil = addDays(lastApplyDate, sameRoleDays);
+        if (today >= cooldownUntil) {
+          continue;
+        }
+
+        if (Array.isArray(window.applied_to)) {
+          const matchesApplied = window.applied_to.some(role => {
+            const roleLower = role.toLowerCase();
+            return jobTitleLower.includes(roleLower);
+          });
+          if (matchesApplied) {
+            return { skip: true, reason: `cooldown:${windowCompany}:${cooldownUntil}`, cooldownUntil };
+          }
+        }
+
+        if (window.cross_role_bucket) {
+          const bucketKeywords = window.cross_role_bucket
+            .toLowerCase()
+            .split('_')
+            .filter(kw => kw && !genericKeywords.has(kw));
+
+          const matchesBucket = bucketKeywords.some(kw => {
+            if (kw === 'em') {
+              return /\bem\b/i.test(jobTitleLower) || jobTitleLower.includes('engineering manager');
+            }
+            return jobTitleLower.includes(kw);
+          });
+
+          if (matchesBucket) {
+            return { skip: true, reason: `cooldown:${windowCompany}:${cooldownUntil}`, cooldownUntil };
+          }
+        }
+      }
+    }
+
+    return { skip: false };
+  };
+}
+
+
 // ── URL rediscovery (--rediscover-404) ──────────────────────────────
 // When a tracked company's job URL returns 404/410, the role may have just
 // moved to a new URL (Workday/Greenhouse rotate URLs without closing roles).
@@ -392,6 +501,11 @@ function daysBetweenIsoDates(start, end) {
 
 export function shouldDedupScanHistoryRow({ firstSeen, status = 'added' }, { recheckAfterDays = null, today = new Date().toISOString().slice(0, 10) } = {}) {
   if (PERMANENT_SCAN_HISTORY_STATUSES.has(status)) return true;
+  if (status.startsWith('cooldown:')) {
+    const parts = status.split(':');
+    const cooldownUntil = parts[parts.length - 1];
+    return today < cooldownUntil;
+  }
   if (status !== 'added') return true;
   if (recheckAfterDays == null) return true;
   const ageDays = daysBetweenIsoDates(firstSeen, today);
@@ -493,16 +607,36 @@ export function sanitizeTsvField(value) {
   return /^[=+\-@]/.test(normalized) ? `'${normalized}` : normalized;
 }
 
+// Format an offer's parsed compensation (the annualized {min,max,currency} that
+// providers like Ashby attach as `offer.salary`) into a compact, sanitized cell
+// such as `120000-160000 USD`. Returns '' when there is no usable salary data.
+// Non-positive bounds are dropped (a 0 min/max is meaningless comp data, not "$0").
+export function formatCompensation(salary) {
+  if (!salary || typeof salary !== 'object') return '';
+  const num = (n) => (Number.isFinite(n) && n > 0 ? String(Math.round(n)) : null);
+  const lo = num(salary.min);
+  const hi = num(salary.max);
+  const range = lo && hi && lo !== hi ? `${lo}-${hi}` : (lo || hi || '');
+  if (!range) return '';
+  const currency = typeof salary.currency === 'string' ? salary.currency.trim() : '';
+  return sanitizeMarkdownField(currency ? `${range} ${currency}` : range);
+}
+
 export function formatPipelineOffer(offer) {
   const url = sanitizePipelineUrl(offer.url);
   const company = sanitizeMarkdownField(offer.company);
   const title = sanitizeMarkdownField(offer.title);
-  // Location is appended as an optional 4th pipe-delimited column when the ATS
-  // exposes it (sanitized like every other field). Offers without a location
-  // keep the original 3-column form, which downstream readers treat as empty;
+  // Optional trailing columns, each sanitized like every other field:
+  //   4th = location, 5th = compensation.
+  // Gate location on an actual string so malformed provider data (a number or
+  // object) degrades to the 3-column form instead of stringifying into a
+  // spurious column. The columns are positional, so a present compensation
+  // forces the (possibly empty) location cell to keep comp in column 5.
   // loadSeenUrls dedups on the URL and ignores trailing columns (backward-compatible).
-  const location = sanitizeMarkdownField(offer.location);
+  const location = typeof offer.location === 'string' ? sanitizeMarkdownField(offer.location) : '';
+  const compensation = formatCompensation(offer.salary);
   const base = `- [ ] ${url} | ${company} | ${title}`;
+  if (compensation) return `${base} | ${location} | ${compensation}`;
   return location ? `${base} | ${location}` : base;
 }
 
@@ -839,6 +973,10 @@ async function main() {
 
   // 5. Fetch from each target
   const date = new Date().toISOString().slice(0, 10);
+  const windows = loadReApplyWindows();
+  const cooldownFilter = buildCooldownFilter(windows, date);
+  let totalFilteredCooldown = 0;
+  const cooldownOffers = [];
   let totalFound = 0;
   let totalFilteredTitle = 0;
   let totalFilteredLocation = 0;
@@ -905,6 +1043,15 @@ async function main() {
           totalDupes++;
           continue;
         }
+        const cooldownResult = cooldownFilter(job);
+        if (cooldownResult.skip) {
+          totalFilteredCooldown++;
+          cooldownOffers.push({
+            job: { ...job, source: sourceName },
+            status: cooldownResult.reason,
+          });
+          continue;
+        }
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
@@ -951,6 +1098,18 @@ async function main() {
     appendToPipeline(verifiedOffers);
     appendToScanHistory(verifiedOffers, date);
   }
+  if (!dryRun && cooldownOffers.length > 0) {
+    const cooldownGroups = {};
+    for (const item of cooldownOffers) {
+      if (!cooldownGroups[item.status]) {
+        cooldownGroups[item.status] = [];
+      }
+      cooldownGroups[item.status].push(item.job);
+    }
+    for (const [status, group] of Object.entries(cooldownGroups)) {
+      appendToScanHistory(group, date, status);
+    }
+  }
   // Expired postings — plus the old URLs of migrated offers — are recorded as
   // skipped_expired so subsequent scans dedup-skip the dead URLs.
   const expiredForHistory = [
@@ -994,6 +1153,9 @@ async function main() {
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
   console.log(`Filtered by content:  ${totalFilteredContent} removed`);
+  if (Object.keys(windows).length > 0 || totalFilteredCooldown > 0) {
+    console.log(`Filtered by cooldown:  ${totalFilteredCooldown} removed`);
+  }
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (historyPolicy.recheckAfterDays != null) {
     console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);
