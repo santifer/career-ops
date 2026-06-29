@@ -723,6 +723,22 @@ if (
   fail('eval modes missing liveness gate before evaluation');
 }
 
+if (
+  ofertaMode.includes('## Bounded Research Budget') &&
+  ofertaMode.includes('single-pass') &&
+  ofertaMode.includes('hard cap: 5 total WebSearch queries') &&
+  ofertaMode.includes('Do not invoke `deep-research`') &&
+  ofertaMode.includes('Do not spawn subagents') &&
+  ofertaMode.includes('Do not continue researching after the query cap is reached') &&
+  autoPipelineMode.includes('bounded research budget') &&
+  autoPipelineMode.includes('must not invoke `deep-research`') &&
+  autoPipelineMode.includes('must not spawn subagents')
+) {
+  pass('eval modes bound company/comp research to a non-recursive query budget (#1235)');
+} else {
+  fail('eval modes do not bound company/comp research against recursive fanout (#1235)');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -786,6 +802,32 @@ try {
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
+}
+
+try {
+  const { appendToPipeline } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-missing-pipeline-'));
+  const originalCwd = process.cwd();
+  try {
+    mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
+    process.chdir(fixtureRoot);
+    appendToPipeline([{ url: 'https://jobs.example.com/1', company: 'Acme', title: 'Engineer' }]);
+    const pipeline = readFileSync(join(fixtureRoot, 'data', 'pipeline.md'), 'utf-8');
+    if (
+      pipeline.includes('# Pipeline') &&
+      pipeline.includes('## Pending') &&
+      pipeline.includes('- [ ] https://jobs.example.com/1 | Acme | Engineer')
+    ) {
+      pass('scan.mjs creates data/pipeline.md before appending offers on fresh installs (#1252)');
+    } else {
+      fail(`scan.mjs fresh-install pipeline contents wrong: ${JSON.stringify(pipeline)}`);
+    }
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+} catch (err) {
+  fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
 }
 
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
