@@ -157,6 +157,7 @@ Negli annunci e nelle trattative in Italia si usano termini e tutele specifici c
 - Punteggio 1.0 solo se l'annuncio dichiara esplicitamente "presenza obbligatoria in sede 4-5 giorni a settimana, nessuna eccezione"
 
 ### Priorità time-to-offer
+
 - Demo funzionante + metriche > perfezione formale
 - Candidarsi subito > approfondire all'infinito
 - Approccio 80/20, ogni attività è in timebox
@@ -198,7 +199,7 @@ Negli annunci e nelle trattative in Italia si usano termini e tutele specifici c
 |-----------|----------|
 | WebSearch | Ricerca retribuzioni, tendenze, cultura aziendale, contatti LinkedIn, fallback annunci |
 | WebFetch | Fallback per estrarre annunci da pagine statiche |
-| Playwright | Verificare se gli annunci sono attivi (browser_navigate + browser_snapshot), estrarre annunci da SPA. **CRITICO: non eseguire MAI 2+ agenti in parallelo con Playwright -- condividono la stessa istanza del browser** |
+| Playwright | Verificare se gli annunci sono attivi (browser_navigate + browser_snapshot), estrarre annunci da Single Page Application (SPA). **CRITICO: non eseguire MAI 2+ agenti in parallelo con Playwright -- condividono la stessa istanza del browser** |
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | HTML temporaneo per PDF, applications.md, report .md |
 | Edit | Aggiornare il tracker |

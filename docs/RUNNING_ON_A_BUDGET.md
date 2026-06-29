@@ -125,3 +125,46 @@ To prevent unnecessary API costs or hitting rate limits, implement the following
    ```bash
    npm run scan -- --verify
    ```
+
+---
+
+## 6. Worked Example: Running the Pipeline Cheaply
+
+Here is a concrete, end-to-end walkthrough of scanning for jobs and evaluating a single posting using **DeepSeek V3 via OpenRouter** and the standalone `openai-eval.mjs` evaluator. This bypasses the need for an expensive CLI agent for the heavy evaluation block.
+
+### Step 1: Scan for Job Offers (0 Tokens)
+The portal scanner queries ATS APIs directly using Playwright and standard HTTPS requests. It doesn't use the LLM to read job boards.
+```bash
+node scan.mjs
+```
+**Cost:** 0 tokens, $0.00.
+*(This generates a list of new job URLs and populates `data/pipeline.md`.)*
+
+### Step 2: Fetch the Job Description (0 Tokens)
+Open one of the URLs found by the scanner, copy the text of the job description, and save it locally (e.g., `jds/my-target-role.txt`).
+
+### Step 3: Evaluate the Offer (~4,500 Tokens)
+We'll run the evaluation against OpenRouter's DeepSeek V3 endpoint. The script reads your `cv.md` and the job description, then generates the full A-G evaluation report and tracker entry.
+
+```bash
+OPENAI_API_KEY="sk-or-your_openrouter_key" \
+node openai-eval.mjs \
+  --url https://openrouter.ai/api/v1 \
+  --model deepseek/deepseek-chat \
+  --file ./jds/my-target-role.txt
+```
+
+**Approximate Token Usage:**
+- **Input:** ~3,500 tokens (System prompt + your `cv.md` + JD)
+- **Output:** ~1,000 tokens (The A-G evaluation report)
+- **Cost:** ~4,500 tokens total. At DeepSeek V3 prices (~$0.14/1M input, ~$0.28/1M output), this costs **less than $0.001** per evaluation.
+
+### Step 4: Generate ATS-Optimized PDF (0 Tokens)
+Once you have the evaluation report, the PDF generator uses Playwright to compile your local HTML/CSS into a tailored CV.
+
+```bash
+node generate-pdf.mjs
+```
+**Cost:** 0 tokens, $0.00.
+
+By routing the heaviest step (Evaluation) to a cheap OpenAI-compatible endpoint, a complete end-to-end job application cycle drops from ~$0.05 - $0.15 on frontier models to a fraction of a cent, allowing you to run bulk batch processing affordably.
