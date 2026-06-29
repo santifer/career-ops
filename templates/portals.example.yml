@@ -601,6 +601,10 @@ search_queries:
 #   provider: jobicy
 #   enabled: true
 #
+# - name: Jobspresso
+#   provider: jobspresso
+#   enabled: true
+#
 # Comeet needs the full careers-api URL (it carries a per-tenant token that a
 # branded careers page does not expose), so set it via the api: field — e.g.:
 #

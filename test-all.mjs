@@ -7246,6 +7246,138 @@ try {
   fail(`nofluffjobs provider tests crashed: ${e.message}`);
 }
 
+// ── 44. Provider — jobspresso ────────────────────────────────────────────
+
+console.log('\n44. Provider — jobspresso');
+
+try {
+  const jobspressoModule = await import(pathToFileURL(join(ROOT, 'providers/jobspresso.mjs')).href);
+  const jobspresso = jobspressoModule.default;
+  const { parseJobspressoFeed } = jobspressoModule;
+
+  if (jobspresso.id === 'jobspresso') pass('jobspresso.id is "jobspresso"');
+  else fail(`jobspresso.id is ${JSON.stringify(jobspresso.id)}`);
+
+  const hit = jobspresso.detect({ name: 'Jobspresso', provider: 'jobspresso' });
+  if (hit && hit.url === 'https://jobspresso.co/?feed=job_feed') {
+    pass('jobspresso.detect() claims explicit provider config');
+  } else {
+    fail(`jobspresso.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  if (jobspresso.detect({ name: 'Other', provider: 'remoteok' }) === null) {
+    pass('jobspresso.detect() ignores other provider ids');
+  } else {
+    fail('jobspresso.detect() should only claim provider: jobspresso');
+  }
+
+  const sample = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:job_listing="https://jobspresso.co">
+  <channel>
+    <item>
+      <title>Engineering Manager &#038; AI</title>
+      <link>https://jobspresso.co/job/engineering-manager-ai/</link>
+      <pubDate>Sun, 07 Jun 2026 02:23:51 +0000</pubDate>
+      <job_listing:location><![CDATA[United States]]></job_listing:location>
+      <job_listing:company><![CDATA[Rula]]></job_listing:company>
+    </item>
+    <item>
+      <title><![CDATA[Platform Engineer]]></title>
+      <link>https://jobspresso.co/job/platform-engineer/</link>
+      <pubDate>Tue, 12 May 2026 09:54:58 +0000</pubDate>
+      <job_listing:location><![CDATA[Worldwide]]></job_listing:location>
+    </item>
+    <item>
+      <title>Bad Relative Link</title>
+      <link>/job/bad-relative/</link>
+      <job_listing:company><![CDATA[Bad Co]]></job_listing:company>
+    </item>
+    <item>
+      <title>Bad Host Link</title>
+      <link>https://example.com/job/bad-host/</link>
+      <job_listing:company><![CDATA[Bad Co]]></job_listing:company>
+    </item>
+    <item>
+      <link>https://jobspresso.co/job/missing-title/</link>
+      <job_listing:company><![CDATA[Bad Co]]></job_listing:company>
+    </item>
+    <item>
+      <title>Bad Date</title>
+      <link>https://jobspresso.co/job/bad-date/</link>
+      <pubDate>not-a-date</pubDate>
+      <job_listing:company><![CDATA[Fallback Co]]></job_listing:company>
+    </item>
+  </channel>
+</rss>`;
+
+  const jobs = parseJobspressoFeed(sample, 'Jobspresso Board');
+  if (jobs.length === 3) pass('parseJobspressoFeed keeps valid items and drops malformed links / titles');
+  else fail(`parseJobspressoFeed returned ${jobs.length} jobs (expected 3)`);
+
+  if (
+    jobs[0]?.title === 'Engineering Manager & AI'
+    && jobs[0]?.url === 'https://jobspresso.co/job/engineering-manager-ai/'
+    && jobs[0]?.company === 'Rula'
+    && jobs[0]?.location === 'United States'
+    && jobs[0]?.postedAt === Date.parse('Sun, 07 Jun 2026 02:23:51 +0000')
+  ) {
+    pass('parseJobspressoFeed maps title/url/company/location/postedAt');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[1]?.company === 'Jobspresso Board' && jobs[1]?.location === 'Worldwide') {
+    pass('parseJobspressoFeed falls back to entry name when company is absent');
+  } else {
+    fail(`row 1 fallback fields = ${JSON.stringify(jobs[1])}`);
+  }
+
+  if (jobs[2]?.title === 'Bad Date' && jobs[2]?.postedAt === undefined) {
+    pass('parseJobspressoFeed keeps NaN-safe date parsing (bad dates -> undefined)');
+  } else {
+    fail(`row 2 bad-date handling = ${JSON.stringify(jobs[2])}`);
+  }
+
+  if (parseJobspressoFeed('', 'X').length === 0 && parseJobspressoFeed(null, 'X').length === 0) {
+    pass('parseJobspressoFeed empty / non-string feed -> empty result (no crash)');
+  } else {
+    fail('parseJobspressoFeed empty / non-string feed should yield empty result');
+  }
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await jobspresso.fetch(
+    { name: 'Jobspresso Board', provider: 'jobspresso' },
+    {
+      fetchText: async (url, opts) => {
+        capturedUrl = url;
+        capturedOpts = opts;
+        return sample;
+      },
+    },
+  );
+
+  if (capturedUrl === 'https://jobspresso.co/?feed=job_feed') {
+    pass('jobspresso.fetch() requests the pinned XML feed URL');
+  } else {
+    fail(`jobspresso.fetch() requested ${JSON.stringify(capturedUrl)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('jobspresso.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail(`jobspresso.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+  if (fetched[0]?.company === 'Rula' && fetched[0]?.title === 'Engineering Manager & AI') {
+    pass('provider: jobspresso config returns normalized jobs');
+  } else {
+    fail(`jobspresso.fetch() normalized row = ${JSON.stringify(fetched[0])}`);
+  }
+} catch (e) {
+  fail(`jobspresso provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
