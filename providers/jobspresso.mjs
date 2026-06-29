@@ -89,7 +89,7 @@ function cleanUrl(value) {
   try {
     const parsed = new URL(trimmed);
     const host = parsed.hostname.toLowerCase();
-    const trusted = host === TRUSTED_HOST || host.endsWith(`.${TRUSTED_HOST}`);
+    const trusted = host === TRUSTED_HOST;
     return parsed.protocol === 'https:' && trusted ? parsed.href : '';
   } catch {
     return '';
