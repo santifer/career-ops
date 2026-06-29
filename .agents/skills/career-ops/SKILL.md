@@ -4,11 +4,30 @@ description: AI job search command center -- evaluate offers, generate CVs, scan
 arguments: mode
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | latex | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | interview | patterns | followup | update]"
+argument-hint: "[scan | deep | pdf | latex | cover | eu-swe | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | interview | patterns | followup | update]"
 license: MIT
 ---
 
 # career-ops -- Router
+
+career-ops is a multi-CLI job-search command center. The routing below is shared across supported agent CLIs even when the invocation surface differs.
+
+## Invocation Notes
+
+- CLIs with slash-command registration can expose this router as `/career-ops`.
+- Interactive Codex sessions use `codex` in the repo root. Slash commands are not guaranteed in Codex, so ask Codex to run the same mode by name if `/career-ops` is unavailable.
+- Headless Codex workers use `codex exec "prompt"`.
+- The routing semantics below stay the same regardless of whether the entrypoint is a slash command or a natural-language prompt.
+
+Codex prompt examples that map to the same router semantics:
+
+```text
+Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
+Run the career-ops scan mode and summarize new matches.
+Run the career-ops pipeline mode for data/pipeline.md.
+Run the career-ops pdf mode for the latest evaluated role.
+Run the career-ops tracker mode and summarize the current statuses.
+```
 
 ## Mode Routing
 
@@ -24,6 +43,7 @@ Determine the mode from `$mode`:
 | `deep` | `deep` |
 | `interview-prep` | `interview-prep` |
 | `interview` | `interview` |
+| `eu-swe` | `regional/eu-swe` |
 | `pdf` | `pdf` |
 | `latex` | `latex` |
 | `training` | `training` |
@@ -46,6 +66,18 @@ If `$mode` is not a sub-command AND doesn't look like a JD, show discovery.
 
 ## Discovery Mode (no arguments)
 
+If your CLI supports `/career-ops`, show this menu. In Codex, surface the same options in plain text and map the requested mode the same way.
+
+Concrete equivalents for Codex prompt-driven sessions:
+
+```text
+/career-ops {JD}           ↔ "Evaluate this JD with career-ops auto-pipeline: {JD or URL}"
+/career-ops scan           ↔ "Run the career-ops scan mode and summarize new matches."
+/career-ops pipeline       ↔ "Run the career-ops pipeline mode for data/pipeline.md."
+/career-ops pdf            ↔ "Run the career-ops pdf mode for the latest evaluated role."
+/career-ops tracker        ↔ "Run the career-ops tracker mode and summarize the current statuses."
+```
+
 Show this menu:
 
 ```
@@ -60,6 +92,7 @@ Available commands:
   /career-ops deep      → Deep research prompt about company
   /career-ops interview-prep → Generate company-specific interview prep doc
   /career-ops interview    → Interactive profile/CV onboarding interview
+  /career-ops eu-swe    → Calibrate a European SWE application before CV/apply/interview
   /career-ops pdf       → PDF only, ATS-optimized CV
   /career-ops latex     → Export CV as LaTeX/Overleaf .tex
   /career-ops cover     → Cover letter: standalone JD paste or /career-ops cover {slug}
@@ -91,10 +124,10 @@ Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `p
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`
 
-Applies to: `tracker`, `deep`, `interview-prep`, `interview`, `latex`, `training`, `project`, `patterns`, `followup`, `cover`
+Applies to: `tracker`, `deep`, `interview-prep`, `interview`, `regional/eu-swe`, `latex`, `training`, `project`, `patterns`, `followup`, `cover`
 
 ### Modes delegated to subagent:
-For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
+For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as a worker/subagent with the content of `_shared.md` + `modes/{mode}.md` injected into the worker prompt. If your CLI exposes an `Agent(...)` primitive, the call looks like this:
 
 ```
 Agent(

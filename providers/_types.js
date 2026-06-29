@@ -30,6 +30,20 @@
  *                               usable date. scan.mjs ignores it; consumers
  *                               like scan-ats-full.mjs use it for recency
  *                               filtering.
+ * @property {number} [trustScore] 0-100 trust score from _trust-validator.mjs.
+ * @property {string[]} [trustFlags] Flags raised by trust validation (e.g.
+ *                                   'invalid_url', 'suspicious_domain').
+ * @property {'high'|'medium'|'low'} [trustLevel] Classification derived from
+ *                                                 trustScore.
+ */
+
+/**
+ * Result returned by the trust validator for a single job posting.
+ *
+ * @typedef {object} TrustResult
+ * @property {number} score       0-100, where 100 = fully trusted.
+ * @property {string[]} flags     Flags raised (e.g. 'invalid_url', 'suspicious_domain').
+ * @property {'high'|'medium'|'low'} level  Classification: 90-100 high, 60-89 medium, 0-59 low.
  */
 
 /**

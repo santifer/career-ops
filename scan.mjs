@@ -36,6 +36,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 
 import { makeHttpCtx } from './providers/_http.mjs';
+import { buildTrustValidator } from './providers/_trust-validator.mjs';
 
 const parseYaml = yaml.load;
 
@@ -121,14 +122,34 @@ function resolveProvider(entry, providers, { skipIds = [] } = {}) {
 
 // ── Title filter ────────────────────────────────────────────────────
 
+// Compile a lowercased keyword into a matcher. Short all-letter acronyms
+// (2-3 chars: cfo, coo, sdr, bdr, gsi…) match on WORD BOUNDARIES so "COO" no
+// longer matches "Coordinator", "SDR" no longer matches anything mid-word, etc.
+// Multi-word phrases and keywords containing non-letters (".NET", "SAP ",
+// "L&D") keep fast, permissive substring matching.
+export function compileKeyword(kw) {
+  if (/^[a-z]{2,3}$/.test(kw)) {
+    const re = new RegExp(`\\b${kw}\\b`);
+    return (lower) => re.test(lower);
+  }
+  return (lower) => lower.includes(kw);
+}
+
 export function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+  // Normalize defensively: a malformed title_filter (a null, numeric, or otherwise
+  // non-string entry in the YAML) must not crash the scan via k.toLowerCase().
+  const normalize = (arr) => (Array.isArray(arr) ? arr : [])
+    .filter(k => typeof k === 'string')
+    .map(k => k.trim().toLowerCase())
+    .filter(k => k.length > 0)
+    .map(compileKeyword);
+  const positive = normalize(titleFilter?.positive);
+  const negative = normalize(titleFilter?.negative);
 
   return (title) => {
-    const lower = title.toLowerCase();
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
-    const hasNegative = negative.some(k => lower.includes(k));
+    const lower = (title || '').toLowerCase();
+    const hasPositive = positive.length === 0 || positive.some(m => m(lower));
+    const hasNegative = negative.some(m => m(lower));
     return hasPositive && !hasNegative;
   };
 }
@@ -477,7 +498,13 @@ export function formatPipelineOffer(offer) {
   const url = sanitizePipelineUrl(offer.url);
   const company = sanitizeMarkdownField(offer.company);
   const title = sanitizeMarkdownField(offer.title);
-  return `- [ ] ${url} | ${company} | ${title}`;
+  // Location is appended as an optional 4th pipe-delimited column when the ATS
+  // exposes it (sanitized like every other field). Offers without a location
+  // keep the original 3-column form, which downstream readers treat as empty;
+  // loadSeenUrls dedups on the URL and ignores trailing columns (backward-compatible).
+  const location = sanitizeMarkdownField(offer.location);
+  const base = `- [ ] ${url} | ${company} | ${title}`;
+  return location ? `${base} | ${location}` : base;
 }
 
 export function formatScanHistoryRow(offer, date, status = 'added') {
@@ -744,6 +771,7 @@ async function main() {
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
   const salaryFilter = buildSalaryFilter(config.salary_filter);
+  const trustValidator = buildTrustValidator(config.trust_filter);
   const contentFilter = buildContentFilter(config.content_filter);
 
   // 3. Resolve a provider for each enabled company / board
@@ -847,6 +875,12 @@ async function main() {
       totalFound += jobs.length;
 
       for (const job of jobs) {
+        // Trust enrichment — runs before filters, never drops
+        const trustResult = trustValidator(job);
+        job.trustScore = trustResult.score;
+        job.trustFlags = trustResult.flags;
+        job.trustLevel = trustResult.level;
+
         if (!titleFilter(job.title)) {
           totalFilteredTitle++;
           continue;
@@ -973,6 +1007,26 @@ async function main() {
   }
   console.log(`New offers added:      ${verifiedOffers.length}`);
 
+  // Trust validation summary (only when trust_filter is configured)
+  if (config.trust_filter && config.trust_filter.enabled !== false && verifiedOffers.length > 0) {
+    const trustHigh = verifiedOffers.filter(o => o.trustLevel === 'high').length;
+    const trustMedium = verifiedOffers.filter(o => o.trustLevel === 'medium').length;
+    const trustLow = verifiedOffers.filter(o => o.trustLevel === 'low').length;
+    console.log(`Trust validation:      ${trustHigh} high, ${trustMedium} medium, ${trustLow} low`);
+    // Flag breakdown
+    /** @type {Record<string, number>} */
+    const flagCounts = {};
+    for (const o of verifiedOffers) {
+      for (const f of (o.trustFlags || [])) {
+        flagCounts[f] = (flagCounts[f] || 0) + 1;
+      }
+    }
+    if (Object.keys(flagCounts).length > 0) {
+      const parts = Object.entries(flagCounts).map(([k, v]) => `${k}: ${v}`);
+      console.log(`Trust flags:           ${parts.join(', ')}`);
+    }
+  }
+
   if (agentHandoff.length > 0) {
     console.log(`Agent/WebSearch handoff: ${agentHandoff.length} compan${agentHandoff.length === 1 ? 'y' : 'ies'} not handled by zero-token providers`);
     for (const item of agentHandoff.slice(0, 25)) {
@@ -994,7 +1048,10 @@ async function main() {
   if (verifiedOffers.length > 0) {
     console.log('\nNew offers:');
     for (const o of verifiedOffers) {
-      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}`);
+      const trustSuffix = o.trustScore != null && o.trustScore < 100
+        ? ` [Trust: ${o.trustScore}/100${o.trustFlags?.length ? ' — ' + o.trustFlags.join(', ') : ''}]`
+        : '';
+      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}${trustSuffix}`);
     }
     if (dryRun) {
       console.log('\n(dry run — run without --dry-run to save results)');

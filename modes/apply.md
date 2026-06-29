@@ -6,7 +6,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 ## Requirements
 
-- **Best with Playwright in visible mode**: In visible mode, the candidate sees the browser and Claude can interact with the page.
+- **Best with Playwright in visible mode**: In visible mode, the candidate sees the browser and the agent can interact with the page.
 - **Without Playwright**: the candidate shares a screenshot or pastes the questions manually.
 
 ## Workflow
@@ -97,6 +97,8 @@ For each question, generate the response following:
 3. **"I'm choosing you" tone**: Same auto-pipeline framework
 4. **Specificity**: Reference something specific from the JD visible on screen
 5. **career-ops proof point**: Include in "Additional info" if there is a field for it
+6. **Recruiter-side risk map**: Use `modes/heuristics/recruiter-side.md` to identify what doubt the question is trying to resolve (motivation, stack fit, logistics, comp, work-auth, availability, seniority) and answer that doubt directly.
+7. **Disclosure discipline**: Answer logistics questions truthfully when asked, but do not volunteer sensitive or HR-only details in unrelated motivation/fit answers.
 
 **Output format:**
 
@@ -127,7 +129,7 @@ Notes:
 If the candidate confirms that they submitted the application:
 1. Update status in `applications.md` from "Evaluated" to "Applied"
 2. Update Section G of the report with the final responses
-3. Suggest next step: `/career-ops contacto` for LinkedIn outreach
+3. Suggest next step: run the `contacto` mode (`/career-ops contacto` where available) for LinkedIn outreach
 
 ## Scroll handling
 

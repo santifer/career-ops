@@ -11,6 +11,12 @@ candidate:
   portfolio_url: "https://janesmith.dev"
   github: "github.com/janesmith"
   twitter: "https://x.com/janesmith"
+  # Optional profile photo for the PDF CV (opt-in, #264). Leave empty to omit it
+  # entirely: US/UK and many-market ATS penalize photos, so the photoless layout
+  # is the default. Set it only for DACH/European markets (Germany, Austria,
+  # Switzerland) where a professional photo is expected. Use a local file path or
+  # a data: URL — the PDF renderer inlines local images.
+  photo: ""
 
 target_roles:
   # Your North Star roles — what you're optimizing for

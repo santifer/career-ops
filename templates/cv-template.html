@@ -18,6 +18,15 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Disable fi/fl/ffi ligatures. Headless Chromium substitutes these letter
+       pairs with the Unicode glyphs U+FB01/FB02/FB03 at PDF layout time, and PDF
+       text extractors (what ATS systems read) decode them back to those
+       codepoints, so "verification" becomes "veriﬁcation" and a literal keyword
+       search misses it. Setting this on every element covers headings and
+       competency tags too. Required ligatures (rlig) stay on, so Arabic shaping
+       is unaffected. */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
   }
 
   html {
@@ -33,6 +42,9 @@
     background: #ffffff;
     padding: 0;
     margin: 0;
+    /* Disable ligatures here as well; see the * rule above. */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
   }
 
   .page {
@@ -81,6 +93,22 @@
 
   .contact-row .separator {
     color: #ccc;
+  }
+
+  /* === OPTIONAL PROFILE PHOTO (opt-in, DACH/European markets — #264) ===
+     Off by default: with no candidate.photo the {{PHOTO}} slot is empty, no
+     <img> is emitted, and the layout is byte-identical to a photoless CV.
+     When opted in (candidate.photo in config/profile.yml) the photo floats into
+     the top corner and the header/summary text wraps beside it. Photos are
+     penalized by US/UK/many-market ATS, so this is never on by default. */
+  .cv-photo {
+    float: right;
+    width: 80px;
+    height: 100px;
+    object-fit: cover;
+    margin: 0 0 8px 14px;
+    border-radius: 3px;
+    border: 1px solid #e2e2e2;
   }
 
   /* === SECTIONS === */
@@ -322,13 +350,26 @@
   }
 
   /* === PAGE BREAK CONTROL === */
-  .avoid-break,
-  .job,
-  .project,
+  /* Only avoid breaking small atomic units (a cert row, an education line, the
+     header, a single competency or skill).  Sections and multi-bullet roles are
+     allowed to flow across a page boundary so content packs tight instead of
+     jumping wholesale and leaving large bottom gaps. */
+  .header,
   .edu-item,
-  .cert-item {
+  .cert-item,
+  .competency-tag,
+  .skill-item {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  /* Keep a heading attached to the content that follows it, so headings are not
+     orphaned at the bottom of a page. */
+  .section-title,
+  .job-company,
+  .project-title {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   /* === RTL (Arabic) Support === */
@@ -369,6 +410,11 @@
     direction: rtl;
   }
 
+  html[lang="ar"] .cv-photo {
+    float: left;
+    margin: 0 14px 8px 0;
+  }
+
   /* === CJK (Japanese) font fallback === */
   /* The bundled webfonts are Latin-only (see #951). Without a CJK fallback,
      Japanese text renders as tofu (□) in headless Chromium on any system
@@ -397,14 +443,15 @@
 <body>
 <div class="page">
 
+  {{PHOTO}}
   <!-- HEADER -->
-  <div class="header avoid-break">
+  <div class="header">
     <h1>{{NAME}}</h1>
     <div class="header-gradient"></div>
     <div class="contact-row">
-      <span>{{PHONE}}</span>
+      <a href="tel:{{PHONE}}">{{PHONE}}</a>
       <span class="separator">|</span>
-      <span>{{EMAIL}}</span>
+      <a href="mailto:{{EMAIL}}">{{EMAIL}}</a>
       <span class="separator">|</span>
       <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
       <span class="separator">|</span>
@@ -415,7 +462,7 @@
   </div>
 
   <!-- PROFESSIONAL SUMMARY -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_SUMMARY}}</div>
     <div class="summary-text">{{SUMMARY_TEXT}}</div>
   </div>
@@ -435,25 +482,25 @@
   </div>
 
   <!-- PROJECTS -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_PROJECTS}}</div>
     {{PROJECTS}}
   </div>
 
   <!-- EDUCATION -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_EDUCATION}}</div>
     {{EDUCATION}}
   </div>
 
   <!-- CERTIFICATIONS -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_CERTIFICATIONS}}</div>
     <div class="cert-table">{{CERTIFICATIONS}}</div>
   </div>
 
   <!-- SKILLS -->
-  <div class="section avoid-break">
+  <div class="section">
     <div class="section-title">{{SECTION_SKILLS}}</div>
     {{SKILLS}}
   </div>
