@@ -29,3 +29,16 @@
 # The self-updater (catastrophic if wrong — touches user installs)
 /update-system.mjs     @santifer
 /updater-migration-tests.mjs  @santifer
+
+# Plugin governance chokepoint (a bad change here ships unreviewed code to
+# every user — the registry pin, the gates, and the CI must stay single-owner).
+/plugins-registry.json         @santifer
+/validate-plugin-registry.mjs  @santifer
+/plugin-install.mjs            @santifer
+/plugin-audit.mjs              @santifer
+/plugins/_engine.mjs           @santifer
+/plugins/_lock.mjs             @santifer
+/plugins/_net.mjs              @santifer
+/plugins/_registry.mjs         @santifer
+/.github/workflows/            @santifer
+/docs/PLUGIN_REVIEW.md         @santifer

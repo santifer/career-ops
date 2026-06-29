@@ -1,0 +1,5 @@
+{
+  "registryVersion": 1,
+  "_comment": "Curated list of community plugins career-ops has reviewed. Each entry is approved at an exact, pinned commit. Users install with `node plugins.mjs add <name>`. Entries are added ONLY via a reviewed PR (see docs/PLUGIN_REVIEW.md). The bundled plugins (apify/gmail/notion) live in plugins/ and are NOT listed here.",
+  "plugins": []
+}
