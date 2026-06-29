@@ -555,6 +555,10 @@ search_queries:
 # -- Remote-job feeds (no careers_url, no extra fields) --
 # title_filter / location_filter defined above still apply.
 #
+# - name: Landing.jobs                    # tech board, Europe-focused
+#   provider: landingjobs
+#   enabled: true
+#
 # - name: RemoteOK
 #   provider: remoteok
 #   enabled: true

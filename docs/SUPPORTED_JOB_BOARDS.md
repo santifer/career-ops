@@ -15,6 +15,7 @@ are shared helpers and are not loaded as providers.
 | Greenhouse | API | Handles explicit `api:` URLs and auto-detects public Greenhouse board URLs for the boards API. |
 | IBM Careers | API | Posts to IBM's public careers search API and supports optional IBM facet filters in the portal entry. |
 | Jobstreet / SEEK | API | Uses the public SEEK chalice-search JSON API for Jobstreet and SEEK sites. Configure explicitly with `provider: jobstreet`. |
+| Landing.jobs | API | Reads the board-wide `https://landing.jobs/api/v1/jobs` JSON feed (tech, Europe). Configure with `provider: landingjobs`; company is derived from the posting URL slug. |
 | Lever | API | Auto-detects `https://jobs.lever.co/<slug>` boards and uses Lever's public postings endpoint. |
 | Local parser | Parser | Runs an in-repo parser command from `portals.yml`. Use this for stable SSR or HTML pages that need a custom extractor. |
 | Personio | RSS | Auto-detects `<slug>.jobs.personio.de` or `.com` hosts and parses the public XML jobs feed. |
