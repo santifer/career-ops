@@ -2,6 +2,19 @@
 
 Thanks for your interest in contributing! Career-Ops is built with Claude Code, and you can use it for development too.
 
+## Why contribute here
+
+career-ops is a great place to make your **first open-source contribution** — and a great line on your résumé.
+
+- **You already get it.** This is a job-search tool. If you're job-hunting, you understand the problem better than most — which makes you a better contributor.
+- **A real merged PR, on something people use.** 55K+ stars, shipping most weeks. Your name in the history of a real project, not a toy repo.
+- **We answer fast.** Open an issue or PR and you'll hear back, usually within a day or two. No black holes.
+- **Tiny on-ramps.** Browse [`good first issue`](https://github.com/santifer/career-ops/contribute) — each is scoped small, with a time estimate, the pattern to copy, and a clear "done", so your first PR is a win, not a maze.
+- **Your human work gets a real review.** We read every PR. We don't drown contributors in bot noise, and we don't merge AI-slop — put thought in, get thought back.
+- **A path forward.** Consistent, high-quality contributors get credited publicly and invited into bigger roles (reviewer, then maintainer).
+
+New to all this? That's the point. Claim an issue with a comment, ask anything in [Discord](https://discord.gg/8pRpHETxa4), and we'll help you land it.
+
 ## Before Submitting a PR
 
 **For a new feature, a new mode or command, or an architecture change, please open an issue first.** It saves you from investing time in something we'd have to redirect, and lets us align on direction before you write code.
@@ -41,6 +54,17 @@ A large *feature* PR that skipped this step may be asked to start with an issue 
 - New skill modes (in `modes/`)
 - Script improvements (`.mjs` utilities)
 
+## The contribution ladder
+
+There's a clear path here — we promote people who show up:
+
+1. **First-time contributor** — you landed a PR. Welcome aboard.
+2. **Trusted contributor** — a few solid merges; we fast-track your PRs and tag you on related work.
+3. **Reviewer** — you help triage and review others' PRs. We invite you.
+4. **Maintainer** — you help steer the project.
+
+We credit contributors publicly and invite high-signal folks up the ladder. Want to help more? Just say so in an issue.
+
 ## Scope: the core vs. the shared layer
 
 career-ops core is **local-first and human-in-the-loop** by design — it runs on your machine and drafts applications for *you* to review and submit. Centralized infrastructure — hosted job aggregation, a shared matching service, proxies or Workers the project would operate — is **not part of the core**: it's heavier than a free local tool should carry, and it's where the project is headed as a *separate, opt-in service*. See the direction here: **[Where career-ops is going](https://github.com/santifer/career-ops/discussions/904)**.
@@ -51,7 +75,7 @@ Rule of thumb before you build: **provider modules, languages, CLI support, mode
 
 - Keep modes language-agnostic when possible (Claude handles both EN and ES)
 - Scripts should handle missing files gracefully (check `existsSync` before `readFileSync`)
-- Dashboard changes require `go build` — test with real data before submitting
+- Dashboard changes require a build (`npm run build:dashboard`) — test with real data before submitting
 - Don't commit personal data (cv.md, profile.yml, applications.md, reports/)
 
 ## What we do NOT accept
@@ -73,8 +97,8 @@ node verify-pipeline.mjs     # Health check
 node cv-sync-check.mjs        # Config check
 
 # Dashboard
-cd dashboard && go build -o career-dashboard .
-./career-dashboard --path ..
+npm run build:dashboard       # go build with platform-correct binary name
+npm run serve:dashboard       # launch the TUI against the repo root
 ```
 
 ## Brand and Trademark

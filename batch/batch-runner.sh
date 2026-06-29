@@ -198,12 +198,17 @@ init_state() {
 }
 
 acquire_state_lock() {
+  if [[ "${STATE_LOCK_DISABLED:-0}" -eq 1 ]]; then
+    return 0
+  fi
+
   local waited=0
   local max_waits=$((STATE_LOCK_TIMEOUT_SECONDS * 10))
 
   while true; do
     if mkdir "$STATE_LOCK_DIR" 2>/dev/null; then
       if printf '%s\n' "${BASHPID:-$$}" > "$STATE_LOCK_PID_FILE"; then
+        STATE_LOCK_OWNED=1
         return 0
       fi
       rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
@@ -213,6 +218,12 @@ acquire_state_lock() {
     fi
 
     if [[ ! -d "$STATE_LOCK_DIR" ]]; then
+      if (( PARALLEL <= 1 )); then
+        echo "WARN: State lock creation failed. Falling back to lock-free operation (single-worker mode)." >&2
+        STATE_LOCK_DISABLED=1
+        STATE_LOCK_OWNED=0
+        return 0
+      fi
       echo "ERROR: Failed to create state lock directory $STATE_LOCK_DIR"
       return 1
     fi
@@ -241,8 +252,12 @@ acquire_state_lock() {
 }
 
 release_state_lock() {
+  if [[ "${STATE_LOCK_OWNED:-0}" -ne 1 ]]; then
+    return
+  fi
   rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
   rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
+  STATE_LOCK_OWNED=0
 }
 
 run_with_state_lock() {
@@ -400,7 +415,11 @@ process_offer() {
   report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
   local date
   date=$(date +%Y-%m-%d)
-  local jd_file="/tmp/batch-jd-${id}.txt"
+  # Use mktemp instead of a predictable /tmp path: a fixed name like
+  # /tmp/batch-jd-${id}.txt is guessable, so an attacker on a shared machine
+  # could pre-create it as a symlink and redirect or clobber the write.
+  local jd_file
+  jd_file="$(mktemp "${TMPDIR:-/tmp}/batch-jd-${id}.XXXXXX")"
 
   echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
 
@@ -468,12 +487,22 @@ process_offer() {
 
   local exit_code=0
   local terminal_failure_recorded=false
+  local shim_retries=0
+  local max_shim_retries=4
   while true; do
     exit_code=0
     claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
 
     if [[ $exit_code -eq 0 ]]; then
       break
+    fi
+
+    # Check for Claude Code npm shim swap (exit code 127 + command not found)
+    if [[ $exit_code -eq 127 ]] && grep -qE "(claude: command not found|claude:.*not found|cannot find.*claude)" "$log_file" && (( shim_retries < max_shim_retries )); then
+      shim_retries=$((shim_retries + 1))
+      echo "    ⏳ Claude command not found (shim swap detected). Retrying in 30s (attempt $shim_retries/$max_shim_retries)..."
+      sleep 30
+      continue
     fi
 
     if is_session_limit_log "$log_file"; then
