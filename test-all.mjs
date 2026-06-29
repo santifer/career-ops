@@ -5519,6 +5519,22 @@ try {
     fail('parseRipplingResponse should yield empty result for non-array input');
   }
 
+  // Regression: the per-item url is host-locked to ats.rippling.com — an external
+  // https URL is dropped, a valid ats.rippling.com posting URL is kept.
+  const hostLocked = parseRipplingResponse(
+    [
+      { name: 'External Host', url: 'https://evil.example/acme/jobs/uuid-x' },
+      { name: 'Valid Host', url: 'https://ats.rippling.com/acme/jobs/uuid-9' },
+    ],
+    'Acme',
+  );
+  if (hostLocked.length === 1 && hostLocked[0]?.title === 'Valid Host'
+      && hostLocked[0]?.url === 'https://ats.rippling.com/acme/jobs/uuid-9') {
+    pass('parseRipplingResponse host-locks the posting url to ats.rippling.com (drops external https URLs)');
+  } else {
+    fail(`parseRipplingResponse host-lock = ${JSON.stringify(hostLocked)}`);
+  }
+
   // fetch(): requests the derived API URL and passes the SSRF guard.
   let capturedUrl = null;
   let capturedOpts = null;

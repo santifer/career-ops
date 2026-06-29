@@ -86,10 +86,11 @@ export default {
  * The response is a top-level JSON ARRAY of postings. Field mapping → the
  * normalized Job shape:
  *   - title:    `name`, trimmed (postings without one are dropped).
- *   - url:      `url` — an absolute posting URL on `ats.rippling.com`. It is the
- *               dedup key (postings without a valid `https:` URL are dropped) and
- *               is display-only (written to the pipeline/history, never server-
- *               fetched here).
+ *   - url:      `url` — an absolute `https:` posting URL host-locked to
+ *               `ats.rippling.com` (Rippling always serves postings there, so an
+ *               off-host or non-https URL is untrusted and the posting is dropped).
+ *               It is the dedup key and is display-only (written to the
+ *               pipeline/history, never server-fetched here).
  *   - company:  the portal entry name (the feed is per-tenant and carries no
  *               company field, same as recruitee).
  *   - location: `workLocation.label` (e.g. "Remote (United States)"); falls back
@@ -106,12 +107,15 @@ export function parseRipplingResponse(json, companyName) {
       const title = typeof j?.name === 'string' ? j.name.trim() : '';
       if (!title) return null;
 
+      // url must be an absolute https posting link on ats.rippling.com — Rippling
+      // always serves postings there (no custom-domain case), so an off-host URL
+      // is untrusted and dropped. url is the dedup key.
       let url = '';
       const rawUrl = typeof j?.url === 'string' ? j.url.trim() : '';
       if (rawUrl) {
         try {
           const parsed = new URL(rawUrl);
-          if (parsed.protocol === 'https:') url = parsed.href;
+          if (parsed.protocol === 'https:' && parsed.hostname === CAREERS_HOST) url = parsed.href;
         } catch {
           // malformed URL → leave url = '' → dropped below
         }
