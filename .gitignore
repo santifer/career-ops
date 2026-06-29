@@ -22,6 +22,14 @@ batch/tracker-additions/**/*.tsv
 jds/*
 !jds/.gitkeep
 
+# Personal documents — never commit scans or copies of these (PII).
+# Catches common identity/credential filenames so they can't be staged by accident.
+*passport*
+*diploma*
+*简历*
+*学位*
+*成绩单*
+
 # Interview prep (accumulated STAR+R stories — user data)
 interview-prep/*
 !interview-prep/.gitkeep
