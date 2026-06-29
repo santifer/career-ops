@@ -22,6 +22,7 @@ import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
+import { LEGACY_COLMAP, detectColumns } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -427,31 +428,11 @@ function parseScore(s) {
 // position so both work — fixed-position indexing would otherwise read, say,
 // Location where it expects Score. Falls back to the legacy layout when no
 // recognizable header row is found.
-const LEGACY_COLMAP = { num: 1, date: 2, company: 3, role: 4, score: 5, status: 6, pdf: 7, report: 8, notes: 9 };
+// LEGACY_COLMAP, HEADER_ALIASES and detectColumns are the shared header-name
+// mapping, now sourced from tracker-parse.mjs so every tracker reader stays in
+// lockstep (see imports above). COLMAP stays mutable here — it is reassigned to
+// the detected layout once the table is read (below).
 let COLMAP = LEGACY_COLMAP;
-
-const HEADER_ALIASES = {
-  '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
-  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
-  'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
-};
-
-// Scan the table for a header row and build a header-name → column-index map.
-// Indexing matches `line.split('|')` (leading empty cell before the first pipe),
-// the same split parseAppLine uses. Returns null — caller keeps the legacy
-// layout — unless the essential columns are all present, so a stray pipe line
-// can't yield a bogus mapping.
-function detectColumns(lines) {
-  for (const line of lines) {
-    if (!line.startsWith('|')) continue;
-    const cells = line.split('|').map(s => s.trim().toLowerCase());
-    if (!cells.includes('company') || !cells.includes('role')) continue;
-    const map = {};
-    cells.forEach((c, i) => { if (HEADER_ALIASES[c] != null) map[HEADER_ALIASES[c]] = i; });
-    if (['num', 'company', 'role', 'score', 'status'].every(k => map[k] != null)) return map;
-  }
-  return null;
-}
 
 // Build a tracker row string matching the detected layout (with or without the
 // optional Location column) so writes round-trip through the same schema.
