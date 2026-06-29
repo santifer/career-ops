@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline';
+import yaml from 'js-yaml';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -341,7 +342,25 @@ function buildSystemPrompt(modeContent, ctx) {
 // ---------------------------------------------------------------------------
 // Job page content fetcher (Playwright-first, plain fetch fallback)
 // ---------------------------------------------------------------------------
+// Reject unsafe fetch targets (SSRF defense-in-depth): http(s) only, never
+// loopback / link-local / private / cloud-metadata hosts. URLs come from the
+// user's own portals.yml / pipeline.md, but we still fail closed.
+function assertSafeRemoteUrl(url) {
+  let u;
+  try { u = new URL(url); } catch { throw new Error(`Invalid URL: ${url}`); }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') {
+    throw new Error(`Refusing non-HTTP(S) URL: ${url}`);
+  }
+  const host = u.hostname.toLowerCase();
+  const blocked = host === 'localhost' || host === '::1' || host.endsWith('.local') ||
+    /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) ||
+    /^169\.254\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+  if (blocked) throw new Error(`Refusing private/loopback host: ${host}`);
+  return u;
+}
+
 async function fetchJobPage(url) {
+  assertSafeRemoteUrl(url);
   let chromium;
   try {
     ({ chromium } = await import('playwright'));
@@ -382,72 +401,36 @@ async function fetchJobPage(url) {
 }
 
 // ---------------------------------------------------------------------------
-// portals.yml parser
-// Note: this is a minimal YAML subset parser. It handles simple scalar values,
-// quoted strings, and list items. It does NOT support: anchors/aliases (&/*),
-// multi-line strings (|/>), inline maps/sequences, or comments after values.
-// If portals.yml uses any of these, consider switching to the js-yaml package.
+// portals.yml parser — reads the canonical schema with js-yaml (same library and
+// field names as scan.mjs: `title_filter.positive/negative` + `tracked_companies`),
+// so it never drifts from the main scanner. The runner's no-CLI scan path covers
+// companies that expose a direct JSON `api:`; careers_url-only / Playwright /
+// search-query companies are handled by the full /career-ops scan pipeline.
+// `rawOverride` lets tests feed YAML text directly (see test-all.mjs drift guard).
 // ---------------------------------------------------------------------------
-function parsePortals() {
-  const raw = readFile('portals.yml');
+function normKeywords(v) {
+  if (!Array.isArray(v)) return [];
+  return v.map(x => String(x ?? '').toLowerCase().trim()).filter(Boolean);
+}
+
+export function parsePortals(rawOverride) {
+  const raw = rawOverride ?? readFile('portals.yml');
   if (!raw) throw new Error('portals.yml not found');
-  // Normalize Windows CRLF line endings
-  const yaml = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const config = yaml.load(raw) || {};
 
-  // Keyword list extractor — handles comment lines reliably
-  function extractList(section) {
-    const lines = yaml.split('\n');
-    let inSection = false;
-    let sectionIndent = -1;
-    const items = [];
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      const indent  = line.length - line.trimStart().length;
-
-      // Find section header
-      if (!inSection) {
-        const match = line.match(/^(\s*)(positive|negative|seniority_boost):\s*$/);
-        if (match && match[2] === section) {
-          inSection     = true;
-          sectionIndent = indent;
-        }
-        continue;
-      }
-
-      // Same or lower indent non-list key means section ended
-      if (trimmed && indent <= sectionIndent && !trimmed.startsWith('-')) break;
-
-      // Real list item
-      const item = line.match(/^\s+-\s+"?([^"#\n]+?)"?\s*$/);
-      if (item) items.push(item[1].trim().toLowerCase());
-    }
-
-    return items;
-  }
-
-  const positive = extractList('positive');
-  const negative = extractList('negative');
-
+  const tf = config.title_filter || {};
+  const positive = normKeywords(tf.positive);
+  const negative = normKeywords(tf.negative);
   function titleMatches(title) {
-    const t = title.toLowerCase();
+    const t = String(title ?? '').toLowerCase();
     return positive.some(k => t.includes(k)) && !negative.some(k => t.includes(k));
   }
 
-  // Greenhouse API companies
-  const companies = [];
-  const blockRe = /- name:\s*(.+?)\n((?:[ \t]+\S[^\n]*\n?)*)/g;
-  let m;
-  while ((m = blockRe.exec(yaml)) !== null) {
-    const name = m[1].trim();
-    const body = m[2];
-    const apiM = body.match(/api:\s*(\S+)/);
-    const enM  = body.match(/enabled:\s*(true|false)/);
-    const enabled = enM ? enM[1] === 'true' : true;
-    if (apiM && enabled) {
-      companies.push({ name, api: apiM[1].trim() });
-    }
-  }
+  // Companies with a direct JSON `api:` endpoint (the no-CLI scan path).
+  const tracked = Array.isArray(config.tracked_companies) ? config.tracked_companies : [];
+  const companies = tracked
+    .filter(c => c && c.api && c.enabled !== false)
+    .map(c => ({ name: String(c.name ?? c.company ?? 'Unknown'), api: String(c.api).trim() }));
 
   return { companies, titleMatches };
 }
@@ -483,7 +466,7 @@ function markPipelineDone(url) {
 }
 
 function addToPipeline(entries) {
-  const history = readFile('data/scan-history.tsv') ?? 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n';
+  const history = readFile('data/scan-history.tsv') ?? 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\n';
   const seenUrls = new Set(history.split('\n').slice(1).map(l => l.split('\t')[0]).filter(Boolean));
 
   const existingPipeline = readFile('data/pipeline.md') ?? '# Pipeline\n\n## Pending\n';
@@ -511,7 +494,7 @@ function addToPipeline(entries) {
 
   for (const e of newEntries) {
     pipeline += `- [ ] ${e.url} | ${e.company} | ${e.role}\n`;
-    hist     += `${e.url}\t${today}\tscan\t${e.role}\t${e.company}\tadded\n`;
+    hist     += `${e.url}\t${today}\tscan\t${e.role}\t${e.company}\tadded\t${e.location ?? ''}\n`;
   }
 
   writeFile('data/pipeline.md', pipeline);
@@ -565,6 +548,7 @@ async function cmdScan() {
   for (const c of companies) {
     process.stdout.write(`  ${c.name.padEnd(25)} → `);
     try {
+      assertSafeRemoteUrl(c.api);
       const r = await fetch(c.api);
       if (!r.ok) { console.log(`HTTP ${r.status}`); continue; }
       const data = await r.json();
@@ -572,7 +556,7 @@ async function cmdScan() {
       const matched = jobs.filter(j => titleMatches(j.title));
       console.log(`${jobs.length} listings, ${matched.length} matched`);
       for (const j of matched) {
-        found.push({ url: j.absolute_url ?? c.api, company: c.name, role: j.title });
+        found.push({ url: j.absolute_url ?? c.api, company: c.name, role: j.title, location: j.location?.name ?? '' });
       }
     } catch (e) {
       console.log(`ERROR: ${e.message}`);
@@ -728,15 +712,19 @@ async function cmdApply(ref, ctx) {
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
-const [,, command, ...args] = process.argv;
-const ctx = loadContext();
+// Only run the CLI when invoked directly (`node openrouter-runner.mjs ...`), so the
+// module can be imported (e.g. by test-all.mjs) without executing a command.
+const invokedDirectly = process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const [,, command, ...args] = invokedDirectly ? process.argv : [];
+const ctx = invokedDirectly ? loadContext() : null;
 
 // Load free models list before running any AI command (skip when a model is pinned)
-if (['evaluate', 'eval', 'pipeline', 'apply', 'models'].includes(command) && !process.env.CAREER_OPS_MODEL) {
+if (invokedDirectly && ['evaluate', 'eval', 'pipeline', 'apply', 'models'].includes(command) && !process.env.CAREER_OPS_MODEL) {
   await loadFreeModels();
 }
 
-switch (command) {
+if (invokedDirectly) switch (command) {
   case 'scan':
     await cmdScan();
     break;

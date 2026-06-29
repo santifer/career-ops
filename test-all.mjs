@@ -7246,6 +7246,33 @@ try {
   fail(`nofluffjobs provider tests crashed: ${e.message}`);
 }
 
+// ── 44. openrouter-runner — portals drift guard ─────────────────
+console.log('\n44. openrouter-runner — portals drift guard');
+
+try {
+  const { parsePortals } = await import(pathToFileURL(join(ROOT, 'openrouter-runner.mjs')).href);
+  const exampleYaml = readFileSync(join(ROOT, 'templates/portals.example.yml'), 'utf-8');
+  const { companies, titleMatches } = parsePortals(exampleYaml);
+
+  // The no-CLI runner must read the SAME canonical portals schema as scan.mjs
+  // (tracked_companies[].api + title_filter.positive/negative). If the schema
+  // drifts and the runner stops matching, this fails loudly — instead of the
+  // runner silently scanning zero companies (the exact bug this guard prevents).
+  if (companies.length > 0) pass(`runner parsePortals extracts ${companies.length} api-companies from the canonical portals schema`);
+  else fail('runner parsePortals extracted 0 companies from templates/portals.example.yml — schema drift');
+
+  if (companies.length > 0 && companies.every(c => c.name && c.api)) pass('each extracted company has a name and a JSON api endpoint');
+  else fail(`runner companies missing name/api: ${JSON.stringify(companies.slice(0, 3))}`);
+
+  if (titleMatches('AI Engineer') && !titleMatches('Forklift Operator')) {
+    pass('runner titleMatches honors title_filter.positive/negative from the canonical schema');
+  } else {
+    fail(`runner titleMatches drift: "AI Engineer"=${titleMatches('AI Engineer')} "Forklift Operator"=${titleMatches('Forklift Operator')}`);
+  }
+} catch (e) {
+  fail(`openrouter-runner portals drift guard crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
