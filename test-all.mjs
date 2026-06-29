@@ -5453,9 +5453,10 @@ try {
     normalizeArbeitnowJob({ title: 'No URL' }),
     normalizeArbeitnowJob({ title: 'Insecure', url: 'http://www.arbeitnow.com/jobs/d3' }),
     normalizeArbeitnowJob({ title: 'Relative', url: '/jobs/d4' }),
+    normalizeArbeitnowJob({ title: 'Off host', url: 'https://evil.example/jobs/d5' }), // host-lock: external https dropped
     normalizeArbeitnowJob(null),
   ];
-  if (drops.every(r => r === null)) pass('normalizeArbeitnowJob drops empty-title / no-url / non-https / relative / non-object');
+  if (drops.every(r => r === null)) pass('normalizeArbeitnowJob drops empty-title / no-url / non-https / relative / off-host / non-object');
   else fail(`normalizeArbeitnowJob drops = ${JSON.stringify(drops)}`);
 
   // missing created_at → no postedAt key.

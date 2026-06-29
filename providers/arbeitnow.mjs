@@ -48,10 +48,10 @@ function resolveMaxPages(entry) {
  *
  * Field mapping → the normalized Job shape:
  *   - title:    `title`, trimmed (items without one are dropped).
- *   - url:      `url` — an absolute posting URL on www.arbeitnow.com. It is the
- *               dedup key (items without a valid `https:` URL are dropped) and is
- *               display-only (written to the pipeline/history, never server-
- *               fetched here).
+ *   - url:      `url` — an absolute `https:` posting URL host-locked to
+ *               www.arbeitnow.com (an off-host or non-https URL is untrusted and
+ *               drops the item). It is the dedup key and is display-only (written
+ *               to the pipeline/history, never server-fetched here).
  *   - company:  `company_name`, falling back to the portal entry name, then
  *               "Arbeitnow".
  *   - location: `location`, with "Remote" appended when `remote` is true.
@@ -67,12 +67,14 @@ export function normalizeArbeitnowJob(j, fallbackCompany) {
   const title = typeof j.title === 'string' ? j.title.trim() : '';
   if (!title) return null;
 
+  // url must be an absolute https posting link on www.arbeitnow.com — Arbeitnow
+  // always serves postings there, so an off-host URL is untrusted and dropped.
   let url = '';
   const rawUrl = typeof j.url === 'string' ? j.url.trim() : '';
   if (rawUrl) {
     try {
       const parsed = new URL(rawUrl);
-      if (parsed.protocol === 'https:') url = parsed.href;
+      if (parsed.protocol === 'https:' && parsed.hostname === TRUSTED_HOST) url = parsed.href;
     } catch {
       // malformed URL → leave url = '' → dropped below
     }
