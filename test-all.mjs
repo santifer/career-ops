@@ -722,6 +722,22 @@ if (
   fail('eval modes missing liveness gate before evaluation');
 }
 
+if (
+  ofertaMode.includes('## Bounded Research Budget') &&
+  ofertaMode.includes('single-pass') &&
+  ofertaMode.includes('hard cap: 5 total WebSearch queries') &&
+  ofertaMode.includes('Do not invoke `deep-research`') &&
+  ofertaMode.includes('Do not spawn subagents') &&
+  ofertaMode.includes('Do not continue researching after the query cap is reached') &&
+  autoPipelineMode.includes('bounded research budget') &&
+  autoPipelineMode.includes('must not invoke `deep-research`') &&
+  autoPipelineMode.includes('must not spawn subagents')
+) {
+  pass('eval modes bound company/comp research to a non-recursive query budget (#1235)');
+} else {
+  fail('eval modes do not bound company/comp research against recursive fanout (#1235)');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -785,6 +801,32 @@ try {
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
+}
+
+try {
+  const { appendToPipeline } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-missing-pipeline-'));
+  const originalCwd = process.cwd();
+  try {
+    mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
+    process.chdir(fixtureRoot);
+    appendToPipeline([{ url: 'https://jobs.example.com/1', company: 'Acme', title: 'Engineer' }]);
+    const pipeline = readFileSync(join(fixtureRoot, 'data', 'pipeline.md'), 'utf-8');
+    if (
+      pipeline.includes('# Pipeline') &&
+      pipeline.includes('## Pending') &&
+      pipeline.includes('- [ ] https://jobs.example.com/1 | Acme | Engineer')
+    ) {
+      pass('scan.mjs creates data/pipeline.md before appending offers on fresh installs (#1252)');
+    } else {
+      fail(`scan.mjs fresh-install pipeline contents wrong: ${JSON.stringify(pipeline)}`);
+    }
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+} catch (err) {
+  fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
 }
 
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
@@ -2780,6 +2822,89 @@ try {
   }
 } catch (e) {
   fail(`tracker-utils rebuildRow unit test crashed: ${e.message}`);
+}
+
+// #946/#954 header-name column mapping lived only in merge-tracker; followup-cadence,
+// analyze-patterns and dedup-tracker still parsed by fixed index, so an inserted
+// Location column mis-parsed (Location read as Score, etc.). The logic is now shared
+// in tracker-parse.mjs and all four readers use it.
+console.log('\n🧪 Testing shared tracker-parse column mapping...');
+try {
+  const { resolveColumns, parseTrackerRow, LEGACY_COLMAP } = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
+
+  const withLocation = [
+    '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|----------|-------|--------|-----|--------|-------|',
+    '| 7 | 2026-06-28 | Acme | Eng | Berlin | 4.5/5 | Applied | ✅ | [7](r.md) | keep |',
+  ];
+  const cmLoc = resolveColumns(withLocation);
+  const rowLoc = parseTrackerRow(withLocation[2], cmLoc);
+  if (rowLoc && rowLoc.score === '4.5/5' && rowLoc.status === 'Applied' && rowLoc.location === 'Berlin') {
+    pass('tracker-parse maps columns by header — inserted Location column does not shift Score/Status');
+  } else {
+    fail(`tracker-parse mis-parsed a Location-column row: ${JSON.stringify(rowLoc)}`);
+  }
+
+  const legacy = [
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 8 | 2026-06-28 | Beta | PM | 3.0/5 | Evaluated | ❌ | [8](r.md) | n |',
+  ];
+  const rowLeg = parseTrackerRow(legacy[2], resolveColumns(legacy));
+  if (rowLeg && rowLeg.score === '3.0/5' && rowLeg.status === 'Evaluated' && rowLeg.location === undefined) {
+    pass('tracker-parse still parses the legacy fixed layout correctly');
+  } else {
+    fail(`tracker-parse broke the legacy layout: ${JSON.stringify(rowLeg)}`);
+  }
+
+  // No header row → falls back to legacy map; header/separator/stray rows → null.
+  if (resolveColumns(['| 9 | … |']) === LEGACY_COLMAP &&
+      parseTrackerRow(legacy[0], LEGACY_COLMAP) === null &&
+      parseTrackerRow(legacy[1], LEGACY_COLMAP) === null &&
+      parseTrackerRow('not a table row', LEGACY_COLMAP) === null) {
+    pass('tracker-parse falls back to legacy map and rejects header/separator/non-rows');
+  } else {
+    fail('tracker-parse fallback / non-row rejection wrong');
+  }
+} catch (e) {
+  fail(`tracker-parse unit test crashed: ${e.message}`);
+}
+
+// dedup-tracker reads AND writes by column; with a Location column its status
+// promotion must target the Status cell, not fixed parts[6].
+console.log('\n🧪 Testing dedup-tracker with an inserted Location column...');
+try {
+  const locTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-loc-'));
+  try {
+    mkdirSync(join(locTmp, 'data'));
+    const tracker = join(locTmp, 'data', 'applications.md');
+    // Two dup rows (same company+role) with a Location column. Keeper #60 has the
+    // higher score but the lower status; dedup must promote its Status cell.
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|----------|-------|--------|-----|--------|-------|\n' +
+      '| 60 | 2026-02-01 | Globex | Widget Engineer | Berlin | 4.5/5 | Rejected | ❌ | [60](r.md) | LOC_SENTINEL |\n' +
+      '| 61 | 2026-02-02 | Globex | Widget Engineer | Berlin | 3.0/5 | Evaluated | ❌ | [61](r.md) | dup |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker crashed on a Location-column tracker');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const keeper = out.split('\n').find(l => l.includes('| 60 |'));
+      // Status cell promoted to Evaluated; Location (Berlin) and the score untouched.
+      if (keeper && keeper.includes('Berlin') && keeper.includes('4.5/5') && keeper.includes('Evaluated') && keeper.includes('LOC_SENTINEL')) {
+        pass('dedup-tracker promotes the Status cell (not a fixed index) on a Location-column tracker');
+      } else {
+        fail(`dedup-tracker mis-handled a Location-column row: "${keeper}"`);
+      }
+    }
+  } finally {
+    rmSync(locTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`dedup-tracker Location-column test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
@@ -5405,8 +5530,755 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
-// ── 36. Provider — thehub ───────────────────────────────────────
-console.log('\n36. Provider — thehub');
+// ── 33. Provider — remotive ─────────────────────────────────────
+console.log('\n33. Provider — remotive');
+
+try {
+  const remotiveModule = await import(pathToFileURL(join(ROOT, 'providers/remotive.mjs')).href);
+  const remotive = remotiveModule.default;
+
+  if (remotive.id === 'remotive') pass('remotive.id is "remotive"');
+  else fail(`remotive.id is ${JSON.stringify(remotive.id)}`);
+
+  // Deterministic sample payload — no network. Two valid jobs plus two that must
+  // be dropped by the filter (empty title, non-absolute url).
+  const sample = {
+    jobs: [
+      {
+        title: 'Staff AI Engineer',
+        url: 'https://remotive.com/remote-jobs/acme-staff-ai-engineer',
+        company_name: 'Acme Corp',
+        candidate_required_location: 'Worldwide',
+      },
+      {
+        title: '  Platform Engineer  ',                 // leading/trailing space → trimmed
+        url: '  https://remotive.com/remote-jobs/beta-platform-engineer  ',
+        company_name: '',                               // empty → falls back to entry.name
+        // candidate_required_location omitted → location ''
+      },
+      {
+        title: '',                                       // dropped: empty title
+        url: 'https://remotive.com/remote-jobs/bad-empty-title',
+        company_name: 'Bad Co',
+      },
+      {
+        title: 'Relative URL Role',                      // dropped: non-absolute url
+        url: '/remote-jobs/relative',
+        company_name: 'Rel Co',
+      },
+    ],
+  };
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await remotive.fetch(
+    { name: 'Remotive Board', provider: 'remotive' },
+    { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://remotive.com/api/remote-jobs')
+    pass('remotive.fetch() requests the board-wide feed URL');
+  else fail(`remotive.fetch() requested ${JSON.stringify(capturedUrl)}`);
+
+  if (capturedOpts && capturedOpts.redirect === 'error')
+    pass('remotive.fetch() passes redirect:"error" to fetchJson (SSRF guard)');
+  else fail(`remotive.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+
+  if (fetched.length === 2)
+    pass('remotive.fetch() keeps 2 valid jobs (drops empty-title + non-absolute-url rows)');
+  else fail(`remotive.fetch() returned ${fetched.length} jobs (expected 2)`);
+
+  // Normalized shape: exactly { title, url, company, location }.
+  if (fetched[0] && Object.keys(fetched[0]).sort().join(',') === 'company,location,title,url')
+    pass('remotive.fetch() returns the normalized { title, url, company, location } shape');
+  else fail(`remotive.fetch() row 0 keys = ${JSON.stringify(fetched[0] && Object.keys(fetched[0]))}`);
+
+  if (fetched[0]?.title === 'Staff AI Engineer'
+      && fetched[0]?.url === 'https://remotive.com/remote-jobs/acme-staff-ai-engineer'
+      && fetched[0]?.company === 'Acme Corp'
+      && fetched[0]?.location === 'Worldwide')
+    pass('remotive.fetch() maps title/url/company_name/candidate_required_location for a full row');
+  else fail(`remotive.fetch() row 0 = ${JSON.stringify(fetched[0])}`);
+
+  if (fetched[1]?.title === 'Platform Engineer'
+      && fetched[1]?.url === 'https://remotive.com/remote-jobs/beta-platform-engineer')
+    pass('remotive.fetch() trims whitespace from title and url');
+  else fail(`remotive.fetch() row 1 title/url = ${JSON.stringify({ title: fetched[1]?.title, url: fetched[1]?.url })}`);
+
+  if (fetched[1]?.company === 'Remotive Board')
+    pass('remotive.fetch() falls back to entry.name when company_name is empty');
+  else fail(`remotive.fetch() row 1 company = ${JSON.stringify(fetched[1]?.company)}`);
+
+  if (fetched[1]?.location === '')
+    pass('remotive.fetch() yields empty location when candidate_required_location is absent');
+  else fail(`remotive.fetch() row 1 location = ${JSON.stringify(fetched[1]?.location)}`);
+
+  // company default when both company_name and entry.name are missing → 'Remotive'.
+  const noName = await remotive.fetch(
+    {},
+    { fetchJson: async () => ({ jobs: [{ title: 'Role', url: 'https://remotive.com/remote-jobs/x' }] }) },
+  );
+  if (noName[0]?.company === 'Remotive')
+    pass('remotive.fetch() defaults company to "Remotive" when company_name and entry.name are both missing');
+  else fail(`remotive.fetch() default company = ${JSON.stringify(noName[0]?.company)}`);
+
+  let badResponseThrew = false;
+  try {
+    await remotive.fetch(
+      { name: 'X', provider: 'remotive' },
+      { fetchJson: async () => ({ wrong: true }) },
+    );
+  } catch (e) {
+    badResponseThrew = /unexpected API response/.test(e.message);
+  }
+  if (badResponseThrew) pass('remotive.fetch() throws on unexpected API response shape');
+  else fail('remotive.fetch() should throw when the jobs array is absent');
+
+} catch (e) {
+  fail(`remotive provider tests crashed: ${e.message}`);
+}
+
+// ── 34. Provider — themuse ─────────────────────────────────────
+console.log('\n34. Provider — themuse');
+
+try {
+  const museModule = await import(pathToFileURL(join(ROOT, 'providers/themuse.mjs')).href);
+  const themuse = museModule.default;
+  const { normalizeMuseJob } = museModule;
+
+  if (themuse.id === 'themuse') pass('themuse.id is "themuse"');
+  else fail(`themuse.id is ${JSON.stringify(themuse.id)}`);
+
+  // normalizeMuseJob — field mapping
+  const job = normalizeMuseJob({
+    name: 'Staff AI Engineer',
+    refs: { landing_page: 'https://www.themuse.com/jobs/acme/staff-ai-engineer' },
+    company: { name: 'Acme Corp' },
+    locations: [{ name: 'Remote' }],
+  });
+  if (job?.title === 'Staff AI Engineer') pass('normalizeMuseJob maps name → title');
+  else fail(`normalizeMuseJob title = ${JSON.stringify(job?.title)}`);
+
+  if (job?.url === 'https://www.themuse.com/jobs/acme/staff-ai-engineer')
+    pass('normalizeMuseJob maps refs.landing_page → url');
+  else fail(`normalizeMuseJob url = ${JSON.stringify(job?.url)}`);
+
+  if (job?.company === 'Acme Corp') pass('normalizeMuseJob maps company.name → company');
+  else fail(`normalizeMuseJob company = ${JSON.stringify(job?.company)}`);
+
+  if (job?.location === 'Remote') pass('normalizeMuseJob maps locations[0].name → location');
+  else fail(`normalizeMuseJob location = ${JSON.stringify(job?.location)}`);
+
+  // Missing/invalid field handling
+  if (normalizeMuseJob({ name: '', refs: { landing_page: 'https://www.themuse.com/jobs/x' }, company: { name: 'X' }, locations: [] }) === null)
+    pass('normalizeMuseJob drops entries with empty title');
+  else fail('normalizeMuseJob should return null for empty title');
+
+  if (normalizeMuseJob({ name: 'Role', refs: { landing_page: '/relative' }, company: { name: 'X' }, locations: [] }) === null)
+    pass('normalizeMuseJob drops entries with a non-absolute landing_page URL');
+  else fail('normalizeMuseJob should return null for a relative URL');
+
+  const noLoc = normalizeMuseJob({
+    name: 'Role', refs: { landing_page: 'https://www.themuse.com/jobs/x' }, company: { name: 'X' }, locations: [],
+  });
+  if (noLoc?.location === '') pass('normalizeMuseJob returns empty location when locations array is empty');
+  else fail(`normalizeMuseJob location for empty locations = ${JSON.stringify(noLoc?.location)}`);
+
+  const noCompany = normalizeMuseJob({
+    name: 'Role', refs: { landing_page: 'https://www.themuse.com/jobs/x' }, company: null, locations: [{ name: 'NYC' }],
+  });
+  if (noCompany?.company === 'The Muse') pass('normalizeMuseJob falls back to "The Muse" when company.name is missing');
+  else fail(`normalizeMuseJob company fallback = ${JSON.stringify(noCompany?.company)}`);
+
+  if (normalizeMuseJob(null) === null && normalizeMuseJob('string') === null)
+    pass('normalizeMuseJob returns null for non-object inputs');
+  else fail('normalizeMuseJob should return null for null/non-object input');
+
+  // fetch() — mock ctx
+  const sampleResults = [
+    {
+      name: 'Staff AI Engineer',
+      refs: { landing_page: 'https://www.themuse.com/jobs/acme/staff-ai-engineer' },
+      company: { name: 'Acme Corp' },
+      locations: [{ name: 'Remote' }],
+    },
+    {
+      name: 'Platform Engineer',
+      refs: { landing_page: 'https://www.themuse.com/jobs/beta/platform-engineer' },
+      company: { name: 'Beta Inc' },
+      locations: [],
+    },
+    {
+      name: '',
+      refs: { landing_page: 'https://www.themuse.com/jobs/bad/role' },
+      company: { name: 'Bad Co' },
+      locations: [],
+    },
+  ];
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await themuse.fetch(
+    { name: 'The Muse Board', provider: 'themuse' },
+    {
+      fetchJson: async (url, opts) => {
+        capturedUrl = url; capturedOpts = opts;
+        return { results: sampleResults, page: 0, page_count: 1 };
+      },
+    },
+  );
+
+  if (capturedUrl === 'https://www.themuse.com/api/public/jobs?page=0')
+    pass('themuse.fetch() requests the correct API endpoint');
+  else fail(`themuse.fetch() requested ${JSON.stringify(capturedUrl)}`);
+
+  if (capturedOpts && capturedOpts.redirect === 'error')
+    pass('themuse.fetch() passes redirect:"error" to fetchJson');
+  else fail(`themuse.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+
+  if (fetched.length === 2)
+    pass('themuse.fetch() normalizes 2 valid jobs (drops the empty-title entry)');
+  else fail(`themuse.fetch() returned ${fetched.length} jobs (expected 2)`);
+
+  if (fetched[0]?.title === 'Staff AI Engineer' && fetched[0]?.company === 'Acme Corp')
+    pass('themuse.fetch() returns correct title and company for first result');
+  else fail(`themuse.fetch() row 0 = ${JSON.stringify(fetched[0])}`);
+
+  // Pagination: page_count > 1 causes all pages to be fetched and aggregated.
+  const paginationCalls = [];
+  const page1Result = { name: 'Data Engineer', refs: { landing_page: 'https://www.themuse.com/jobs/acme/de' }, company: { name: 'Acme' }, locations: [] };
+  const paginatedJobs = await themuse.fetch(
+    { name: 'The Muse Board', provider: 'themuse' },
+    {
+      fetchJson: async (url, opts) => {
+        paginationCalls.push(url);
+        const page = parseInt(new URL(url).searchParams.get('page') ?? '0', 10);
+        if (page === 0) return { results: [sampleResults[0]], page: 0, page_count: 2 };
+        return { results: [page1Result], page: 1, page_count: 2 };
+      },
+    },
+  );
+  if (paginationCalls.length === 2 &&
+      paginationCalls[0] === 'https://www.themuse.com/api/public/jobs?page=0' &&
+      paginationCalls[1] === 'https://www.themuse.com/api/public/jobs?page=1')
+    pass('themuse.fetch() iterates all pages when page_count > 1');
+  else fail(`themuse.fetch() pagination calls = ${JSON.stringify(paginationCalls)}`);
+
+  if (paginatedJobs.length === 2 && paginatedJobs[1]?.title === 'Data Engineer')
+    pass('themuse.fetch() aggregates results from all pages');
+  else fail(`themuse.fetch() paginated results = ${JSON.stringify(paginatedJobs.map(j => j.title))}`);
+
+  // page_count cap: a huge value must be clamped to 100, not cause unbounded requests.
+  let cappedCalls = 0;
+  await themuse.fetch(
+    { name: 'X', provider: 'themuse' },
+    { fetchJson: async () => { cappedCalls++; return { results: [], page: 0, page_count: 99999 }; } },
+  );
+  if (cappedCalls === 100) pass('themuse.fetch() clamps page_count to 100 (prevents unbounded requests)');
+  else fail(`themuse.fetch() made ${cappedCalls} requests for page_count=99999 (expected 100)`);
+
+  // Non-integer page_count must be ignored (NaN passes typeof==='number' but not Number.isInteger).
+  let nonIntCalls = 0;
+  await themuse.fetch(
+    { name: 'X', provider: 'themuse' },
+    { fetchJson: async () => { nonIntCalls++; return { results: [], page: 0, page_count: 1.5 }; } },
+  );
+  if (nonIntCalls === 1) pass('themuse.fetch() ignores non-integer page_count (fetches only page 0)');
+  else fail(`themuse.fetch() made ${nonIntCalls} requests for page_count=1.5 (expected 1)`);
+
+  let badResponseThrew = false;
+  try {
+    await themuse.fetch(
+      { name: 'X', provider: 'themuse' },
+      { fetchJson: async () => ({ wrong: true }) },
+    );
+  } catch (e) {
+    badResponseThrew = /unexpected API response/.test(e.message);
+  }
+  if (badResponseThrew) pass('themuse.fetch() throws on unexpected API response shape');
+  else fail('themuse.fetch() should throw when results array is absent');
+
+} catch (e) {
+  fail(`themuse provider tests crashed: ${e.message}`);
+}
+
+// ── 35. Provider — pinpoint ─────────────────────────────────────
+console.log('\n35. Provider — pinpoint');
+
+try {
+  const pinpointModule = await import(pathToFileURL(join(ROOT, 'providers/pinpoint.mjs')).href);
+  const pinpoint = pinpointModule.default;
+  const { parsePinpointResponse } = pinpointModule;
+
+  if (pinpoint.id === 'pinpoint') pass('pinpoint.id is "pinpoint"');
+  else fail(`pinpoint.id is ${JSON.stringify(pinpoint.id)}`);
+
+  // detect(): <slug>.pinpointhq.com careers_url → postings.json endpoint.
+  const hit = pinpoint.detect({ name: 'Pinpoint', careers_url: 'https://workwithus.pinpointhq.com' });
+  if (hit && hit.url === 'https://workwithus.pinpointhq.com/postings.json') {
+    pass('pinpoint.detect() resolves <slug>.pinpointhq.com → postings.json');
+  } else {
+    fail(`pinpoint.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect() ignores the path/locale on the careers_url — endpoint is host-rooted.
+  const hitWithPath = pinpoint.detect({ name: 'X', careers_url: 'https://acme.pinpointhq.com/en/jobs' });
+  if (hitWithPath && hitWithPath.url === 'https://acme.pinpointhq.com/postings.json') {
+    pass('pinpoint.detect() ignores careers_url path and roots postings.json at the host');
+  } else {
+    fail(`pinpoint.detect() with path returned ${JSON.stringify(hitWithPath)}`);
+  }
+
+  if (pinpoint.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('pinpoint.detect() returns null for non-pinpoint URLs');
+  } else {
+    fail('pinpoint.detect() should return null for non-pinpoint URLs');
+  }
+
+  // careers_url with non-string value → detect() returns null without crashing.
+  if (pinpoint.detect({ name: 'X', careers_url: null }) === null && pinpoint.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('pinpoint.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('pinpoint.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: a URL with pinpointhq.com in the PATH (not host) must not be detected.
+  if (pinpoint.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.pinpointhq.com/foo' }) === null) {
+    pass('pinpoint.detect() rejects path-spoofed URLs');
+  } else {
+    fail('pinpoint.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // SSRF: non-https careers_url must not be detected.
+  if (pinpoint.detect({ name: 'Insecure', careers_url: 'http://acme.pinpointhq.com' }) === null) {
+    pass('pinpoint.detect() rejects non-https careers_url');
+  } else {
+    fail('pinpoint.detect() must reject non-https careers_url');
+  }
+
+  // Hostname label must be a valid DNS label — not end (or start) with a hyphen.
+  if (pinpoint.detect({ name: 'Trailing', careers_url: 'https://acme-.pinpointhq.com' }) === null
+      && pinpoint.detect({ name: 'Leading', careers_url: 'https://-acme.pinpointhq.com' }) === null) {
+    pass('pinpoint.detect() rejects tenant labels that start or end with a hyphen');
+  } else {
+    fail('pinpoint.detect() must reject hyphen-edged tenant labels (e.g. acme-.pinpointhq.com)');
+  }
+
+  // A hyphen in the middle of the label is still valid.
+  if (pinpoint.detect({ name: 'Mid', careers_url: 'https://acme-co.pinpointhq.com' })?.url
+      === 'https://acme-co.pinpointhq.com/postings.json') {
+    pass('pinpoint.detect() still accepts internal hyphens (acme-co.pinpointhq.com)');
+  } else {
+    fail('pinpoint.detect() should accept internal hyphens in the tenant label');
+  }
+
+  // parsePinpointResponse — deterministic sample, no network.
+  const sample = {
+    data: [
+      {
+        title: 'Senior Product Manager',
+        url: 'https://workwithus.pinpointhq.com/en/postings/abc-123',
+        location: { id: '283', city: 'London', province: 'London', name: 'Remote' },
+      },
+      {
+        title: '  Backend Engineer  ',                                   // trimmed
+        url: '  https://workwithus.pinpointhq.com/en/postings/def-456  ', // trimmed
+        location: { city: 'Berlin', province: 'Berlin' },                // no name → assembled
+      },
+      {
+        title: 'No Location Role',
+        url: 'https://workwithus.pinpointhq.com/en/postings/ghi-789',
+        // location omitted → ''
+      },
+      { title: '', url: 'https://workwithus.pinpointhq.com/en/postings/jkl' }, // dropped: empty title
+      { title: 'Missing URL Role' },                                          // dropped: no url
+      { title: 'Relative URL Role', url: '/en/postings/mno' },                // dropped: non-absolute
+      { title: 'Insecure URL Role', url: 'http://workwithus.pinpointhq.com/en/postings/pqr' }, // dropped: non-https
+    ],
+  };
+  const jobs = parsePinpointResponse(sample, 'Pinpoint');
+
+  if (jobs.length === 3) pass('parsePinpointResponse keeps 3 valid postings (drops empty-title / no-url / non-absolute / non-https)');
+  else fail(`parsePinpointResponse returned ${jobs.length} postings (expected 3)`);
+
+  // Normalized shape: exactly { title, url, company, location }.
+  if (jobs[0] && Object.keys(jobs[0]).sort().join(',') === 'company,location,title,url') {
+    pass('parsePinpointResponse returns the normalized { title, url, company, location } shape');
+  } else {
+    fail(`parsePinpointResponse row 0 keys = ${JSON.stringify(jobs[0] && Object.keys(jobs[0]))}`);
+  }
+
+  if (jobs[0]?.title === 'Senior Product Manager'
+      && jobs[0]?.url === 'https://workwithus.pinpointhq.com/en/postings/abc-123'
+      && jobs[0]?.company === 'Pinpoint'
+      && jobs[0]?.location === 'Remote') {
+    pass('parsePinpointResponse maps title/url, sets company from entry name, prefers location.name');
+  } else {
+    fail(`parsePinpointResponse row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[1]?.title === 'Backend Engineer'
+      && jobs[1]?.url === 'https://workwithus.pinpointhq.com/en/postings/def-456') {
+    pass('parsePinpointResponse trims whitespace from title and url');
+  } else {
+    fail(`parsePinpointResponse row 1 title/url = ${JSON.stringify({ title: jobs[1]?.title, url: jobs[1]?.url })}`);
+  }
+
+  if (jobs[1]?.location === 'Berlin, Berlin') {
+    pass('parsePinpointResponse assembles location from city/province when name is absent');
+  } else {
+    fail(`parsePinpointResponse row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Berlin, Berlin"`);
+  }
+
+  if (jobs[2]?.location === '') {
+    pass('parsePinpointResponse yields empty location when the location object is absent');
+  } else {
+    fail(`parsePinpointResponse row 2 location = ${JSON.stringify(jobs[2]?.location)}`);
+  }
+
+  if (parsePinpointResponse({}, 'X').length === 0) pass('parsePinpointResponse: empty {} → empty result');
+  else fail('parsePinpointResponse: empty {} should yield empty result');
+
+  if (parsePinpointResponse({ data: null }, 'X').length === 0) {
+    pass('parsePinpointResponse: null data → empty result (no crash)');
+  } else {
+    fail('parsePinpointResponse: null data should yield empty result');
+  }
+
+  // fetch(): requests the derived postings.json URL and passes the SSRF guard.
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await pinpoint.fetch(
+    { name: 'Pinpoint', careers_url: 'https://workwithus.pinpointhq.com' },
+    { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://workwithus.pinpointhq.com/postings.json') {
+    pass('pinpoint.fetch() requests the derived postings.json URL');
+  } else {
+    fail(`pinpoint.fetch() requested ${JSON.stringify(capturedUrl)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('pinpoint.fetch() passes redirect:"error" to fetchJson (SSRF guard)');
+  } else {
+    fail(`pinpoint.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+  if (fetched.length === 3 && fetched[0]?.company === 'Pinpoint') {
+    pass('pinpoint.fetch() returns normalized jobs with company from entry name');
+  } else {
+    fail(`pinpoint.fetch() returned ${fetched.length} jobs, row 0 = ${JSON.stringify(fetched[0])}`);
+  }
+
+  // fetch(): a non-pinpoint careers_url cannot derive an endpoint → throws.
+  let badEntryThrew = false;
+  try {
+    await pinpoint.fetch(
+      { name: 'X', careers_url: 'https://example.com/careers' },
+      { fetchJson: async () => ({ data: [] }) },
+    );
+  } catch (e) {
+    badEntryThrew = /cannot derive API URL/.test(e.message);
+  }
+  if (badEntryThrew) pass('pinpoint.fetch() throws when the careers_url is not a pinpointhq.com host');
+  else fail('pinpoint.fetch() should throw for a non-pinpoint careers_url');
+
+} catch (e) {
+  fail(`pinpoint provider tests crashed: ${e.message}`);
+}
+
+// ── 36. Provider — arbeitnow ────────────────────────────────────
+console.log('\n36. Provider — arbeitnow');
+
+try {
+  const arbeitnowModule = await import(pathToFileURL(join(ROOT, 'providers/arbeitnow.mjs')).href);
+  const arbeitnow = arbeitnowModule.default;
+  const { normalizeArbeitnowJob } = arbeitnowModule;
+
+  if (arbeitnow.id === 'arbeitnow') pass('arbeitnow.id is "arbeitnow"');
+  else fail(`arbeitnow.id is ${JSON.stringify(arbeitnow.id)}`);
+
+  // normalizeArbeitnowJob — field mapping.
+  const full = normalizeArbeitnowJob(
+    { title: '  Staff AI Engineer  ', url: '  https://www.arbeitnow.com/jobs/x1  ', company_name: '  Acme Co  ', location: '  Berlin  ', remote: false, created_at: 1782693032 },
+    'Fallback',
+  );
+  if (full && full.title === 'Staff AI Engineer' && full.url === 'https://www.arbeitnow.com/jobs/x1'
+      && full.company === 'Acme Co' && full.location === 'Berlin' && full.postedAt === 1782693032000) {
+    pass('normalizeArbeitnowJob maps + trims title/url/company/location and converts created_at seconds → ms');
+  } else {
+    fail(`normalizeArbeitnowJob full row = ${JSON.stringify(full)}`);
+  }
+
+  // remote:true appends "Remote" to the location.
+  const remoteJob = normalizeArbeitnowJob({ title: 'R', url: 'https://www.arbeitnow.com/jobs/r', location: 'Munich', remote: true }, 'X');
+  if (remoteJob?.location === 'Munich, Remote') pass('normalizeArbeitnowJob appends "Remote" when remote is true');
+  else fail(`normalizeArbeitnowJob remote location = ${JSON.stringify(remoteJob?.location)}`);
+
+  // remote-only (no base location) → "Remote".
+  const remoteOnly = normalizeArbeitnowJob({ title: 'R', url: 'https://www.arbeitnow.com/jobs/r2', remote: true }, 'X');
+  if (remoteOnly?.location === 'Remote') pass('normalizeArbeitnowJob yields "Remote" when remote is true and location is absent');
+  else fail(`normalizeArbeitnowJob remote-only location = ${JSON.stringify(remoteOnly?.location)}`);
+
+  // company fallbacks: entry name, then "Arbeitnow".
+  const coFromEntry = normalizeArbeitnowJob({ title: 'T', url: 'https://www.arbeitnow.com/jobs/c1', company_name: '' }, 'Entry Name');
+  const coDefault = normalizeArbeitnowJob({ title: 'T', url: 'https://www.arbeitnow.com/jobs/c2' });
+  if (coFromEntry?.company === 'Entry Name' && coDefault?.company === 'Arbeitnow') {
+    pass('normalizeArbeitnowJob falls back company → entry name → "Arbeitnow"');
+  } else {
+    fail(`normalizeArbeitnowJob company fallbacks = ${JSON.stringify({ a: coFromEntry?.company, b: coDefault?.company })}`);
+  }
+
+  // drops: empty title, missing url, non-https url, malformed url, non-object.
+  const drops = [
+    normalizeArbeitnowJob({ title: '', url: 'https://www.arbeitnow.com/jobs/d1' }),
+    normalizeArbeitnowJob({ title: 'No URL' }),
+    normalizeArbeitnowJob({ title: 'Insecure', url: 'http://www.arbeitnow.com/jobs/d3' }),
+    normalizeArbeitnowJob({ title: 'Relative', url: '/jobs/d4' }),
+    normalizeArbeitnowJob({ title: 'Off host', url: 'https://evil.example/jobs/d5' }), // host-lock: external https dropped
+    normalizeArbeitnowJob(null),
+  ];
+  if (drops.every(r => r === null)) pass('normalizeArbeitnowJob drops empty-title / no-url / non-https / relative / off-host / non-object');
+  else fail(`normalizeArbeitnowJob drops = ${JSON.stringify(drops)}`);
+
+  // missing created_at → no postedAt key.
+  const noDate = normalizeArbeitnowJob({ title: 'T', url: 'https://www.arbeitnow.com/jobs/nd' });
+  if (noDate && !('postedAt' in noDate)) pass('normalizeArbeitnowJob omits postedAt when created_at is absent');
+  else fail(`normalizeArbeitnowJob postedAt presence = ${JSON.stringify(noDate)}`);
+
+  // fetch(): pagination by self-built ?page=N, stop on a short page.
+  const mk = (i) => ({ title: `Role ${i}`, url: `https://www.arbeitnow.com/jobs/x${i}`, company_name: `Co ${i}`, location: 'Berlin', remote: false, created_at: 1782693032 + i });
+  const page1 = Array.from({ length: 100 }, (_, i) => mk(i));            // full page → continue
+  const page2 = [mk(100), mk(101), { title: '', url: 'https://www.arbeitnow.com/jobs/bad' }]; // short page (3 < 100) → stop; 1 drop
+  const requested = [];
+  const pagedFetch = async (url, opts) => {
+    requested.push({ url, redirect: opts?.redirect });
+    const u = new URL(url);
+    const page = Number(u.searchParams.get('page'));
+    // links.next deliberately points at a featured ?search= URL to prove we DON'T follow it.
+    if (page === 1) return { data: page1, links: { next: 'https://www.arbeitnow.com/api/job-board-api?search=foo&page=2' }, meta: {} };
+    if (page === 2) return { data: page2, links: { next: null }, meta: {} };
+    return { data: [], links: {}, meta: {} };
+  };
+
+  const paged = await arbeitnow.fetch({ name: 'Arbeitnow' }, { fetchJson: pagedFetch });
+
+  if (requested.length === 2
+      && requested[0].url === 'https://www.arbeitnow.com/api/job-board-api?page=1'
+      && requested[1].url === 'https://www.arbeitnow.com/api/job-board-api?page=2') {
+    pass('arbeitnow.fetch() builds ?page=N URLs itself (ignores links.next) and stops after the short page');
+  } else {
+    fail(`arbeitnow.fetch() requested = ${JSON.stringify(requested.map(r => r.url))}`);
+  }
+
+  if (requested.every(r => r.redirect === 'error')) pass('arbeitnow.fetch() passes redirect:"error" on every page (SSRF guard)');
+  else fail(`arbeitnow.fetch() redirect opts = ${JSON.stringify(requested.map(r => r.redirect))}`);
+
+  if (paged.length === 102) pass('arbeitnow.fetch() aggregates valid jobs across pages (100 + 2, dropping the empty-title row)');
+  else fail(`arbeitnow.fetch() returned ${paged.length} jobs (expected 102)`);
+
+  // max_pages cap: only the first page is requested even though it is full.
+  const capRequested = [];
+  await arbeitnow.fetch(
+    { name: 'Arbeitnow', max_pages: 1 },
+    { fetchJson: async (url, opts) => { capRequested.push(url); return { data: Array.from({ length: 100 }, (_, i) => mk(i)) }; } },
+  );
+  if (capRequested.length === 1 && capRequested[0] === 'https://www.arbeitnow.com/api/job-board-api?page=1') {
+    pass('arbeitnow.fetch() honors max_pages (stops at the cap even on a full page)');
+  } else {
+    fail(`arbeitnow.fetch() max_pages:1 requested ${JSON.stringify(capRequested)}`);
+  }
+
+  // unexpected API response → throws.
+  let badThrew = false;
+  try {
+    await arbeitnow.fetch({ name: 'X' }, { fetchJson: async () => ({ wrong: true }) });
+  } catch (e) {
+    badThrew = /unexpected API response/.test(e.message);
+  }
+  if (badThrew) pass('arbeitnow.fetch() throws on unexpected API response shape');
+  else fail('arbeitnow.fetch() should throw when the data array is absent');
+
+} catch (e) {
+  fail(`arbeitnow provider tests crashed: ${e.message}`);
+}
+
+// ── 37. Provider — rippling ─────────────────────────────────────
+console.log('\n37. Provider — rippling');
+
+try {
+  const ripplingModule = await import(pathToFileURL(join(ROOT, 'providers/rippling.mjs')).href);
+  const rippling = ripplingModule.default;
+  const { parseRipplingResponse } = ripplingModule;
+
+  if (rippling.id === 'rippling') pass('rippling.id is "rippling"');
+  else fail(`rippling.id is ${JSON.stringify(rippling.id)}`);
+
+  // detect(): ats.rippling.com/<slug>/jobs → board API URL.
+  const hit = rippling.detect({ name: 'Acme', careers_url: 'https://ats.rippling.com/acme-corp/jobs' });
+  if (hit && hit.url === 'https://api.rippling.com/platform/api/ats/v1/board/acme-corp/jobs') {
+    pass('rippling.detect() resolves ats.rippling.com/<slug>/jobs → board API URL');
+  } else {
+    fail(`rippling.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect() also works when careers_url is just /<slug> (no /jobs suffix).
+  const hitNoJobs = rippling.detect({ name: 'X', careers_url: 'https://ats.rippling.com/acme-corp' });
+  if (hitNoJobs && hitNoJobs.url === 'https://api.rippling.com/platform/api/ats/v1/board/acme-corp/jobs') {
+    pass('rippling.detect() derives the slug from the first path segment (no /jobs needed)');
+  } else {
+    fail(`rippling.detect() no-/jobs returned ${JSON.stringify(hitNoJobs)}`);
+  }
+
+  if (rippling.detect({ name: 'X', careers_url: 'https://example.com/acme/jobs' }) === null) {
+    pass('rippling.detect() returns null for non-rippling hosts');
+  } else {
+    fail('rippling.detect() should return null for non-rippling hosts');
+  }
+
+  // careers_url with non-string value → detect() returns null without crashing.
+  if (rippling.detect({ name: 'X', careers_url: null }) === null && rippling.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('rippling.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('rippling.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF/format: non-https, empty path (no slug), and host-spoof in the path.
+  if (rippling.detect({ name: 'X', careers_url: 'http://ats.rippling.com/acme/jobs' }) === null
+      && rippling.detect({ name: 'X', careers_url: 'https://ats.rippling.com/' }) === null
+      && rippling.detect({ name: 'X', careers_url: 'https://evil.example/ats.rippling.com/acme/jobs' }) === null) {
+    pass('rippling.detect() rejects non-https, empty-path, and path-spoofed URLs');
+  } else {
+    fail('rippling.detect() must reject non-https / empty-path / path-spoofed URLs');
+  }
+
+  // Slug safety: a first segment that is not a clean token (space, dot, hyphen-edged) is rejected.
+  if (rippling.detect({ name: 'X', careers_url: 'https://ats.rippling.com/a%20b/jobs' }) === null
+      && rippling.detect({ name: 'X', careers_url: 'https://ats.rippling.com/acme.corp/jobs' }) === null
+      && rippling.detect({ name: 'X', careers_url: 'https://ats.rippling.com/-acme/jobs' }) === null) {
+    pass('rippling.detect() rejects unsafe slugs (space, dot, leading hyphen)');
+  } else {
+    fail('rippling.detect() must reject unsafe slugs');
+  }
+
+  // Internal hyphens are valid.
+  if (rippling.detect({ name: 'X', careers_url: 'https://ats.rippling.com/just-appraised-jobs/jobs' })?.url
+      === 'https://api.rippling.com/platform/api/ats/v1/board/just-appraised-jobs/jobs') {
+    pass('rippling.detect() accepts slugs with internal hyphens');
+  } else {
+    fail('rippling.detect() should accept internal hyphens in the slug');
+  }
+
+  // parseRipplingResponse — deterministic sample (top-level array).
+  const sample = [
+    { uuid: '1', name: 'Account Executive', url: 'https://ats.rippling.com/acme/jobs/uuid-1', department: { label: 'Sales' }, workLocation: { label: 'Remote (United States)', id: 'x' } },
+    { uuid: '2', name: '  ML Engineer  ', url: '  https://ats.rippling.com/acme/jobs/uuid-2  ', workLocation: { label: 'Canada' } },
+    { uuid: '3', name: 'String Loc Role', url: 'https://ats.rippling.com/acme/jobs/uuid-3', workLocation: 'New York' }, // workLocation as bare string
+    { uuid: '4', name: 'No Loc Role', url: 'https://ats.rippling.com/acme/jobs/uuid-4', workLocation: null },           // null → ''
+    { uuid: '5', name: '', url: 'https://ats.rippling.com/acme/jobs/uuid-5' },                                          // drop: empty name
+    { uuid: '6', name: 'No URL Role' },                                                                                 // drop: no url
+    { uuid: '7', name: 'Insecure', url: 'http://ats.rippling.com/acme/jobs/uuid-7' },                                   // drop: non-https
+  ];
+  const jobs = parseRipplingResponse(sample, 'Acme');
+
+  if (jobs.length === 4) pass('parseRipplingResponse keeps 4 valid postings (drops empty-name / no-url / non-https)');
+  else fail(`parseRipplingResponse returned ${jobs.length} postings (expected 4)`);
+
+  if (jobs[0] && Object.keys(jobs[0]).sort().join(',') === 'company,location,title,url') {
+    pass('parseRipplingResponse returns the normalized { title, url, company, location } shape');
+  } else {
+    fail(`parseRipplingResponse row 0 keys = ${JSON.stringify(jobs[0] && Object.keys(jobs[0]))}`);
+  }
+
+  if (jobs[0]?.title === 'Account Executive'
+      && jobs[0]?.url === 'https://ats.rippling.com/acme/jobs/uuid-1'
+      && jobs[0]?.company === 'Acme'
+      && jobs[0]?.location === 'Remote (United States)') {
+    pass('parseRipplingResponse maps name→title, url, company from entry name, workLocation.label→location');
+  } else {
+    fail(`parseRipplingResponse row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[1]?.title === 'ML Engineer' && jobs[1]?.url === 'https://ats.rippling.com/acme/jobs/uuid-2') {
+    pass('parseRipplingResponse trims whitespace from name and url');
+  } else {
+    fail(`parseRipplingResponse row 1 title/url = ${JSON.stringify({ title: jobs[1]?.title, url: jobs[1]?.url })}`);
+  }
+
+  if (jobs[2]?.location === 'New York' && jobs[3]?.location === '') {
+    pass('parseRipplingResponse accepts a bare-string workLocation and yields "" when workLocation is null');
+  } else {
+    fail(`parseRipplingResponse loc fallbacks = ${JSON.stringify({ str: jobs[2]?.location, none: jobs[3]?.location })}`);
+  }
+
+  if (parseRipplingResponse({}, 'X').length === 0 && parseRipplingResponse(null, 'X').length === 0) {
+    pass('parseRipplingResponse: non-array input → empty result (no crash)');
+  } else {
+    fail('parseRipplingResponse should yield empty result for non-array input');
+  }
+
+  // Regression: the per-item url is host-locked to ats.rippling.com — an external
+  // https URL is dropped, a valid ats.rippling.com posting URL is kept.
+  const hostLocked = parseRipplingResponse(
+    [
+      { name: 'External Host', url: 'https://evil.example/acme/jobs/uuid-x' },
+      { name: 'Valid Host', url: 'https://ats.rippling.com/acme/jobs/uuid-9' },
+    ],
+    'Acme',
+  );
+  if (hostLocked.length === 1 && hostLocked[0]?.title === 'Valid Host'
+      && hostLocked[0]?.url === 'https://ats.rippling.com/acme/jobs/uuid-9') {
+    pass('parseRipplingResponse host-locks the posting url to ats.rippling.com (drops external https URLs)');
+  } else {
+    fail(`parseRipplingResponse host-lock = ${JSON.stringify(hostLocked)}`);
+  }
+
+  // fetch(): requests the derived API URL and passes the SSRF guard.
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await rippling.fetch(
+    { name: 'Acme', careers_url: 'https://ats.rippling.com/acme-corp/jobs' },
+    { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://api.rippling.com/platform/api/ats/v1/board/acme-corp/jobs') {
+    pass('rippling.fetch() requests the derived board API URL');
+  } else {
+    fail(`rippling.fetch() requested ${JSON.stringify(capturedUrl)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('rippling.fetch() passes redirect:"error" to fetchJson (SSRF guard)');
+  } else {
+    fail(`rippling.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+  if (fetched.length === 4 && fetched[0]?.company === 'Acme') {
+    pass('rippling.fetch() returns normalized jobs with company from entry name');
+  } else {
+    fail(`rippling.fetch() returned ${fetched.length} jobs, row 0 = ${JSON.stringify(fetched[0])}`);
+  }
+
+  // fetch(): a non-rippling careers_url cannot derive an endpoint → throws.
+  let badEntryThrew = false;
+  try {
+    await rippling.fetch(
+      { name: 'X', careers_url: 'https://example.com/careers' },
+      { fetchJson: async () => [] },
+    );
+  } catch (e) {
+    badEntryThrew = /cannot derive API URL/.test(e.message);
+  }
+  if (badEntryThrew) pass('rippling.fetch() throws when the careers_url is not an ats.rippling.com host');
+  else fail('rippling.fetch() should throw for a non-rippling careers_url');
+
+} catch (e) {
+  fail(`rippling provider tests crashed: ${e.message}`);
+}
+
+// ── 38. Provider — thehub ───────────────────────────────────────
+console.log('\n38. Provider — thehub');
 
 try {
   const thehubModule = await import(pathToFileURL(join(ROOT, 'providers/thehub.mjs')).href);
