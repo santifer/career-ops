@@ -81,10 +81,11 @@ async function checkPlaywright() {
 }
 
 // The browser tools (`browser_navigate` / `browser_snapshot`) that scan / pipeline /
-// apply rely on are provided by the Playwright MCP server, registered through a
-// project-level Claude Code config (`.mcp.json` or `.claude/settings.json`). When it
-// is absent, SPA job boards silently return empty or stale content (#522) — so doctor
-// surfaces it as a non-fatal warning rather than letting it fail invisibly.
+// apply rely on are provided by the Playwright MCP server, usually registered through a
+// project-level MCP config (for example `.mcp.json`, `.claude/settings.json`, or
+// `.claude/settings.local.json`). When no common config is detected, SPA job boards can
+// silently return empty or stale content (#522), so doctor surfaces a non-fatal warning
+// instead of letting it fail invisibly.
 const PLAYWRIGHT_MCP_WARNING = 'Playwright MCP tools not detected';
 
 function playwrightMcpConfigured(root) {
@@ -115,8 +116,9 @@ function checkPlaywrightMcp(root) {
     label: PLAYWRIGHT_MCP_WARNING,
     fix: [
       'Browser-driven JD fetching and liveness checks (scan / pipeline / apply) need the',
-      'Playwright MCP server, which this project does not configure yet — SPA job boards',
-      'may return empty or stale content. Tracking: https://github.com/santifer/career-ops/issues/506',
+      'Playwright MCP server. No project-level MCP config was detected in `.mcp.json`',
+      'or `.claude/settings*.json`, so SPA job boards may return empty or stale content.',
+      'Tracking: https://github.com/santifer/career-ops/issues/506',
     ],
   };
 }
