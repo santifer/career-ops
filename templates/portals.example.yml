@@ -522,6 +522,11 @@ search_queries:
 #
 # -- Job boards / aggregators (no careers_url; set provider: explicitly) --
 #
+# - name: The Hub                         # Nordic/EU startup board
+#   provider: thehub
+#   max_pages: 3          # optional page cap (15 jobs/page, default 3, max 67)
+#   enabled: true
+#
 # - name: Arbeitsagentur — AI Roles      # German federal jobs API
 #   provider: arbeitsagentur
 #   arbeitsagentur:
