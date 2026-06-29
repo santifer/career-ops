@@ -63,6 +63,8 @@ const requiredSystemPaths = [
   '.antigravitycli/skills/',
   '.grok/skills/',
   'tracker-columns-tests.mjs',
+  'evaluation-cache.mjs',
+  'evaluation-cache-tests.mjs',
   'updater-migration-tests.mjs',
   'README.ar.md',
   'README.de.md',

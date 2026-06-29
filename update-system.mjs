@@ -97,6 +97,8 @@ const SYSTEM_PATHS = [
   'tracker-parse.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
+  'evaluation-cache.mjs',
+  'evaluation-cache-tests.mjs',
   'update-system.mjs',
   'reserve-report-num.mjs',
   'scan.mjs',
