@@ -10,7 +10,7 @@
 
 ## Sources of Truth (EXCLUSIVE)
 
-The files below are the **ONLY** sources for user-facing content (CV, cover letters, form answers, recruiter outreach). Auto-memory, parent-directory repos, and cross-session inferences are out of scope. See "Source-of-Truth Boundary" in `AGENTS.md` / `CLAUDE.md` for the full rule.
+The files below are the **ONLY** sources for user-facing content (CV, cover letters, form answers, recruiter outreach). Auto-memory, parent-directory repos, and cross-session inferences are out of scope. See "Source-of-Truth Boundary" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for the full rule.
 
 | File | Path | When |
 |------|------|------|
@@ -104,6 +104,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 6. Generate a PDF without reading the JD first
 7. Use corporate-speak
 8. Ignore the tracker (every evaluated offer gets registered)
+9. Spawn nested subagents, or hand company/role/comp research to an open-ended research skill — research is bounded and inline (see Tools → Subagent delegation)
 
 ### ALWAYS
 
@@ -133,6 +134,14 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 | Edit | Update tracker |
 | Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `cv.canva_resume_design_id` in profile.yml. |
 | Bash | `node generate-pdf.mjs` |
+
+### Subagent delegation (cost guardrail)
+
+A mode may tell you to run work in a background subagent (e.g. `scan`, or parallel `pipeline` URLs) to spare the main agent's context. Any subagent you spawn for career-ops is a **single-pass worker**:
+
+- It MUST NOT spawn further subagents, and MUST NOT invoke other skills — especially open-ended or recursive research skills (e.g. a `deep-research` skill). Those fan out into nested agents and can burn tens of millions of tokens on one run.
+- Company, role, and compensation research is ALWAYS done **inline**, with the small explicit set of WebSearch/WebFetch queries the mode names (e.g. `oferta` Blocks C/D) — never delegated to a recursive research harness.
+- One `/career-ops <JD>` evaluates one role; it must never explode into a self-replicating swarm of agents. If you are about to delegate research or nest agents, stop and do it inline, bounded.
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection
