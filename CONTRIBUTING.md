@@ -75,7 +75,7 @@ Rule of thumb before you build: **provider modules, languages, CLI support, mode
 
 - Keep modes language-agnostic when possible (Claude handles both EN and ES)
 - Scripts should handle missing files gracefully (check `existsSync` before `readFileSync`)
-- Dashboard changes require `go build` — test with real data before submitting
+- Dashboard changes require a build (`npm run build:dashboard`) — test with real data before submitting
 - Don't commit personal data (cv.md, profile.yml, applications.md, reports/)
 
 ## What we do NOT accept
@@ -97,8 +97,8 @@ node verify-pipeline.mjs     # Health check
 node cv-sync-check.mjs        # Config check
 
 # Dashboard
-cd dashboard && go build -o career-dashboard .
-./career-dashboard --path ..
+npm run build:dashboard       # go build with platform-correct binary name
+npm run serve:dashboard       # launch the TUI against the repo root
 ```
 
 ## Brand and Trademark

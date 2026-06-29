@@ -160,6 +160,8 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
+  { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
+  { name: 'validate-system-paths-coverage.mjs', expectExit: 0 },
   // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
   // default portals.yml because end-user workspaces often have a real user-layer
   // portals file that would trigger a live remote sweep during tests.
@@ -786,18 +788,42 @@ if (fileExists('providers/local-parser.mjs')) {
 // 4th pipe-delimited column when present, and degrades to the original 3-column
 // form when the ATS exposes no location.
 try {
-  const { formatPipelineOffer } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { formatPipelineOffer, formatCompensation } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
   const withLoc = formatPipelineOffer({ url: 'https://x/1', company: 'Acme', title: 'SA', location: 'Remote (US)' });
   const noLoc = formatPipelineOffer({ url: 'https://x/2', company: 'BigCo', title: 'PM' });
   const blankLoc = formatPipelineOffer({ url: 'https://x/3', company: 'Co', title: 'Eng', location: '   ' });
+  const nonStringLoc = formatPipelineOffer({ url: 'https://x/3b', company: 'Co', title: 'Eng', location: 42 });
   if (
     withLoc === '- [ ] https://x/1 | Acme | SA | Remote (US)' &&
     noLoc === '- [ ] https://x/2 | BigCo | PM' &&
-    blankLoc === '- [ ] https://x/3 | Co | Eng'
+    blankLoc === '- [ ] https://x/3 | Co | Eng' &&
+    nonStringLoc === '- [ ] https://x/3b | Co | Eng'
   ) {
-    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent)');
+    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent / non-string)');
   } else {
-    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}"`);
+    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}" / "${nonStringLoc}"`);
+  }
+
+  // pipeline.md compensation column (B3): formatCompensation renders the parsed
+  // {min,max,currency} salary; formatPipelineOffer appends it as the 5th column,
+  // forcing the (possibly empty) location cell so comp stays positionally 5th.
+  const compRange = formatCompensation({ min: 180000, max: 220000, currency: 'USD' });
+  const compSingle = formatCompensation({ min: 150000, max: 150000, currency: 'usd' });
+  const compNone = formatCompensation(null);
+  const compZeroMin = formatCompensation({ min: 0, max: 200000, currency: '' });
+  const withComp = formatPipelineOffer({ url: 'https://x/4', company: 'Acme', title: 'AI Eng', location: 'Remote', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  const compNoLoc = formatPipelineOffer({ url: 'https://x/5', company: 'Acme', title: 'AI Eng', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  if (
+    compRange === '180000-220000 USD' &&
+    compSingle === '150000 usd' &&
+    compNone === '' &&
+    compZeroMin === '200000' &&
+    withComp === '- [ ] https://x/4 | Acme | AI Eng | Remote | 180000-220000 USD' &&
+    compNoLoc === '- [ ] https://x/5 | Acme | AI Eng |  | 180000-220000 USD'
+  ) {
+    pass('scan.mjs formatPipelineOffer appends compensation column (forces empty location cell when needed)');
+  } else {
+    fail(`scan.mjs compensation column wrong: "${compRange}" / "${compSingle}" / "${compNone}" / "${compZeroMin}" / "${withComp}" / "${compNoLoc}"`);
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
@@ -7273,8 +7299,198 @@ try {
   fail(`openrouter-runner portals drift guard crashed: ${e.message}`);
 }
 
-// ── 45. Provider — workingnomads ────────────────────────────────
-console.log('\n45. Provider — workingnomads');
+// ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
+
+console.log('\n45. Scan cooldown filter');
+try {
+  const { addDays, buildCooldownFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // addDays tests
+  if (addDays('2026-06-24', 180) === '2026-12-21') {
+    pass('addDays computes date correctly (180 days)');
+  } else {
+    fail(`addDays expected 2026-12-21 but got ${addDays('2026-06-24', 180)}`);
+  }
+
+  // shouldDedupScanHistoryRow tests
+  const activeCo = shouldDedupScanHistoryRow({ firstSeen: '2026-06-24', status: 'cooldown:CompanyA:2026-12-21' }, { today: '2026-06-25' });
+  const expiredCo = shouldDedupScanHistoryRow({ firstSeen: '2026-06-24', status: 'cooldown:CompanyA:2026-12-21' }, { today: '2026-12-22' });
+  if (activeCo === true && expiredCo === false) {
+    pass('shouldDedupScanHistoryRow dedups active cooldowns and lets expired ones through');
+  } else {
+    fail(`shouldDedupScanHistoryRow wrong: activeCo=${activeCo}, expiredCo=${expiredCo}`);
+  }
+
+  // buildCooldownFilter tests
+  const windows = {
+    CompanyA: {
+      same_role_days: 180,
+      cross_role_bucket: 'all_EM_roles',
+      applied_to: ['Senior Software Engineer'],
+      last_apply_date: '2026-06-01',
+    }
+  };
+
+  const filterToday = '2026-06-15'; // within 180 days from 2026-06-01 (cooldownUntil = 2026-11-28)
+  const filterExpired = '2026-12-01'; // expired
+  const filterBoundary = '2026-11-28'; // exactly cooldownUntil
+
+  const cooldownFilterActive = buildCooldownFilter(windows, filterToday);
+  const cooldownFilterExpired = buildCooldownFilter(windows, filterExpired);
+  const cooldownFilterBoundary = buildCooldownFilter(windows, filterBoundary);
+
+  // Exact/substring role match test
+  const jobSameRole = { company: 'Company A', title: 'Senior Software Engineer' };
+  const jobSubRole = { company: 'CompanyA Corp', title: 'Lead Senior Software Engineer' };
+  const jobOtherRole = { company: 'Company A', title: 'Staff QA Engineer' };
+  const jobCrossRole = { company: 'Company A', title: 'Engineering Manager' };
+
+  if (cooldownFilterActive(jobSameRole).skip === true &&
+      cooldownFilterActive(jobSubRole).skip === true &&
+      cooldownFilterActive(jobOtherRole).skip === false &&
+      cooldownFilterActive(jobCrossRole).skip === true) {
+    pass('cooldownFilter active skips same role, substring role, and cross role bucket matches');
+  } else {
+    fail(`cooldownFilter active: sameRole=${cooldownFilterActive(jobSameRole).skip}, subRole=${cooldownFilterActive(jobSubRole).skip}, otherRole=${cooldownFilterActive(jobOtherRole).skip}, crossRole=${cooldownFilterActive(jobCrossRole).skip}`);
+  }
+
+  if (cooldownFilterExpired(jobSameRole).skip === false) {
+    pass('cooldownFilter does not skip when cooldown window has expired');
+  } else {
+    fail('cooldownFilter skipped job after expiration');
+  }
+
+  // Boundary day test
+  if (cooldownFilterBoundary(jobSameRole).skip === false) {
+    pass('cooldownFilter does not skip on boundary day (today === cooldownUntil)');
+  } else {
+    fail('cooldownFilter skipped job on boundary day');
+  }
+
+  // Lookalike company test
+  const jobLookalikeCompany = { company: 'CompanyAlpha', title: 'Senior Software Engineer' };
+  if (cooldownFilterActive(jobLookalikeCompany).skip === false) {
+    pass('cooldownFilter does not match lookalike company (CompanyAlpha vs CompanyA)');
+  } else {
+    fail('cooldownFilter matched lookalike company');
+  }
+
+} catch (e) {
+  fail(`cooldown filter tests crashed: ${e.message}`);
+}
+
+// ── 46. Provider — jobspresso ──────────────────────────────────────
+
+console.log('\nXX. Provider — jobspresso');
+
+try {
+  const {
+    default: jobspresso,
+    parseJobspressoFeed,
+  } = await import(pathToFileURL(join(ROOT, 'providers/jobspresso.mjs')).href);
+
+  if (jobspresso.id === 'jobspresso') {
+    pass('jobspresso.id is "jobspresso"');
+  } else {
+    fail(`jobspresso.id is "${jobspresso.id}"`);
+  }
+
+  if (
+    jobspresso.detect({ provider: 'jobspresso' })?.url ===
+      'https://jobspresso.co/?feed=job_feed'
+  ) {
+    pass('jobspresso.detect() claims explicit provider config');
+  } else {
+    fail('jobspresso.detect() failed');
+  }
+
+  if (jobspresso.detect({ provider: 'other' }) === null) {
+    pass('jobspresso.detect() ignores other provider ids');
+  } else {
+    fail('jobspresso.detect() should ignore other providers');
+  }
+
+  const xml = `
+<rss>
+  <channel>
+    <item>
+      <title><![CDATA[Senior Backend Engineer]]></title>
+      <link>https://jobspresso.co/job/acme/backend</link>
+      <pubDate>Mon, 02 Jun 2025 12:00:00 GMT</pubDate>
+      <job_listing:company><![CDATA[Acme]]></job_listing:company>
+      <job_listing:location><![CDATA[Remote]]></job_listing:location>
+    </item>
+
+    <item>
+      <title></title>
+      <link>https://jobspresso.co/job/skip</link>
+    </item>
+
+    <item>
+      <title>Bad Host</title>
+      <link>https://evil.com/job</link>
+    </item>
+  </channel>
+</rss>
+`;
+
+  const jobs = parseJobspressoFeed(xml);
+
+  if (jobs.length === 1) {
+    pass('parseJobspressoFeed keeps valid items and drops malformed ones');
+  } else {
+    fail(`expected 1 job, got ${jobs.length}`);
+  }
+
+  const job = jobs[0];
+
+  if (
+    job.title === 'Senior Backend Engineer' &&
+    job.company === 'Acme' &&
+    job.location === 'Remote' &&
+    job.url === 'https://jobspresso.co/job/acme/backend' &&
+    typeof job.postedAt === 'number'
+  ) {
+    pass('parseJobspressoFeed maps title, url, company, location and postedAt');
+  } else {
+    fail(`unexpected parsed job: ${JSON.stringify(job)}`);
+  }
+
+  let fetchCalled = false;
+
+  const fetched = await jobspresso.fetch({}, {
+    async fetchText(url, opts) {
+      fetchCalled = true;
+
+      if (
+        url !== 'https://jobspresso.co/?feed=job_feed' ||
+        opts?.redirect !== 'error'
+      ) {
+        throw new Error('unexpected fetch arguments');
+      }
+
+      return xml;
+    },
+  });
+
+  if (fetchCalled && fetched.length === 1) {
+    pass('jobspresso.fetch() requests the pinned RSS feed');
+  } else {
+    fail('jobspresso.fetch() did not fetch correctly');
+  }
+
+  if (fetchCalled) {
+    pass('jobspresso.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail('jobspresso.fetch() never called fetchText');
+  }
+
+} catch (e) {
+  fail(`jobspresso provider tests crashed: ${e.message}`);
+}
+
+// ── 47. Provider — workingnomads ────────────────────────────────
+console.log('\n47. Provider — workingnomads');
 
 try {
   const workingnomadsModule = await import(pathToFileURL(join(ROOT, 'providers/workingnomads.mjs')).href);
