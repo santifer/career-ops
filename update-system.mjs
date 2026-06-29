@@ -109,6 +109,8 @@ const SYSTEM_PATHS = [
   'liveness-browser.mjs',
   'liveness-api.mjs',
   'analyze-patterns.mjs',
+  'scanner-benchmark.mjs',
+  'scanner-benchmark-tests.mjs',
   'followup-cadence.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
