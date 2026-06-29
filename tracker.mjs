@@ -28,14 +28,15 @@
  *                          [--since 2026-01-01] [--id N] [--limit 20] [--json]
  *   node tracker.mjs history --id N             # status transition log observed across syncs
  *   node tracker.mjs export [--out FILE]        # inverse: applications.db → canonical markdown (stdout by default)
+ *   node tracker.mjs delete --num N [--dry-run] # remove one application row from applications.md + reindex
  *
  * query/history auto-resync when applications.md changed since the last sync,
  * so the index can never serve stale reads.
  */
 
-import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync, statSync, renameSync, rmSync } from 'fs';
 import { createHash } from 'crypto';
-import { dirname, resolve } from 'path';
+import { dirname, resolve, join, basename } from 'path';
 import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
@@ -170,6 +171,31 @@ function parseMarkdownRows(text, diag) {
     rows.push(cells);
   }
   return rows;
+}
+
+// Remove every table row whose first cell (the application number) equals `num`,
+// preserving the rest of the file (header, separators, spacing, other rows)
+// byte-for-byte. Pure: returns { removed, removedCount, report, newContent }.
+// `report` is the report-column value of the first removed row, so callers can
+// surface the now-orphaned report file. Numbers are unique in practice, but any
+// duplicates are all removed.
+export function removeRowByNum(content, num) {
+  const target = String(num).trim();
+  let removedCount = 0;
+  let report = null;
+  const kept = content.split('\n').filter((line) => {
+    const t = line.trim();
+    if (!t.startsWith('|')) return true; // non-table line — keep verbatim
+    const cells = t.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+    if (cells[0] === '#' || /^[-: ]*$/.test(cells.join(''))) return true; // header / separator
+    if (cells[0] === target) {
+      removedCount++;
+      if (report === null) report = cells[7] || null; // report column (index 7)
+      return false;
+    }
+    return true;
+  });
+  return { removed: removedCount > 0, removedCount, report, newContent: kept.join('\n') };
 }
 
 // Parse + normalize the markdown into index-ready rows. The markdown itself is
@@ -430,13 +456,67 @@ async function exportMd(args) {
 
 // ── Main ────────────────────────────────────────────────────────────
 
-const COMMANDS = { sync, query, history, export: exportMd };
+// Atomic file replace via a same-directory temp file + rename, so a reader never
+// sees a partially written applications.md (mirrors merge-tracker's writer).
+function writeFileAtomic(filePath, content) {
+  const tmp = join(dirname(filePath), `.${basename(filePath)}.${process.pid}.${Date.now()}.tmp`);
+  try {
+    writeFileSync(tmp, content);
+    renameSync(tmp, filePath);
+  } catch (err) {
+    rmSync(tmp, { force: true });
+    throw err;
+  }
+}
+
+// `delete --num N` removes one application row from applications.md and rebuilds
+// the derived index. The markdown stays the source of truth: callers (incl. the
+// web) orchestrate this script rather than editing applications.md directly, so
+// the write-gate holds. The write is atomic; callers should still avoid running
+// a delete concurrently with a scan-merge (they share the same file — serialize
+// at the orchestration layer; a shared lock is a follow-up once merge-tracker is
+// import-safe).
+async function deleteApp(args) {
+  const num = flagValue(args, '--num');
+  if (!num) {
+    console.error('Usage: node tracker.mjs delete --num <N> [--dry-run]   (remove one application row by its number)');
+    process.exit(1);
+  }
+  if (!existsSync(MD_PATH)) {
+    console.error(`Error: ${MD_PATH} not found — nothing to delete.`);
+    process.exit(1);
+  }
+  const { removed, removedCount, report, newContent } = removeRowByNum(readFileSync(MD_PATH, 'utf-8'), num);
+  if (!removed) {
+    console.error(`No application numbered ${num} in ${MD_PATH}.`);
+    process.exit(1);
+  }
+  if (args.includes('--dry-run')) {
+    console.error(`Would remove application ${num} (${removedCount} row${removedCount > 1 ? 's' : ''}) from ${MD_PATH}.`);
+    if (report) console.error(`(report file would be orphaned: ${report})`);
+    return;
+  }
+  writeFileAtomic(MD_PATH, newContent);
+  // Rebuild the derived SQLite index from the now-updated markdown.
+  try {
+    const states = loadStates();
+    const DatabaseSync = await loadSqlite();
+    const db = openDb(DatabaseSync);
+    syncIndex(db, states);
+  } catch (e) {
+    console.error(`(row removed; index resync skipped: ${e.message})`);
+  }
+  console.error(`Removed application ${num} (${removedCount} row${removedCount > 1 ? 's' : ''}) from ${MD_PATH} and reindexed.`);
+  if (report) console.error(`Note: report file may now be orphaned — ${report}`);
+}
+
+const COMMANDS = { sync, query, history, export: exportMd, delete: deleteApp };
 
 async function main() {
   const [command, ...args] = process.argv.slice(2);
   const fn = COMMANDS[command];
   if (!fn) {
-    console.log('Usage: node tracker.mjs <sync|query|history|export> [flags]');
+    console.log('Usage: node tracker.mjs <sync|query|history|export|delete> [flags]');
     console.log('See the header comment of this file for examples, or docs/SCRIPTS.md.');
     process.exit(command ? 1 : 0);
   }

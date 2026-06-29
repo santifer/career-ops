@@ -15,6 +15,7 @@ import { resolve, dirname, relative, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { randomUUID } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -271,8 +272,13 @@ export async function inlineLocalFonts(html) {
 /**
  * Render an HTML string to a PDF file via headless Chromium.
  *
+ * Writes the HTML to a temporary file in the baseDir and loads it via
+ * page.goto() to give the page a file:// origin. This allows relative
+ * resources (images, fonts) to load — setContent() runs from about:blank
+ * and Chromium blocks file:// subresource loads from non-file origins.
+ *
  * Local url('./fonts/...') references are inlined as data: URLs first so
- * fonts render regardless of page origin (see inlineLocalFonts).
+ * fonts also survive the ATS normalization pass (which may strip font refs).
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
@@ -287,17 +293,22 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
 
   html = await inlineLocalFonts(html);
 
+  // Write HTML to a temp file in baseDir so page.goto() gives a file://
+  // origin that can load local images, fonts, and other resources.
+  const tmpHtmlPath = resolve(baseDir, `.career-ops-render-${randomUUID()}.html`);
+  const { writeFile, unlink } = await import('fs/promises');
+  await writeFile(tmpHtmlPath, html, 'utf-8');
+
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
 
-    // Set content with file base URL for any relative resources
-    await page.setContent(html, {
+    // Load from file:// so the page origin allows local subresources
+    await page.goto(pathToFileURL(tmpHtmlPath).href, {
       waitUntil: 'load',
-      baseURL: `${pathToFileURL(baseDir).href}/`,
     });
 
-    // Wait for fonts to load
+    // Wait for fonts and images to settle
     await page.evaluate(() => document.fonts.ready);
 
     // Generate PDF
@@ -314,7 +325,6 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     });
 
     // Write PDF
-    const { writeFile } = await import('fs/promises');
     await writeFile(outputPath, pdfBuffer);
 
     // Count pages (approximate from PDF structure)
@@ -328,6 +338,8 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     return { outputPath, pageCount, size: pdfBuffer.length };
   } finally {
     await browser.close();
+    // Clean up temp file
+    await unlink(tmpHtmlPath).catch(() => {});
   }
 }
 

@@ -16,6 +16,7 @@
           - .opencode/skills/**
           - .qwen/skills/**
           - .antigravitycli/skills/**
+          - .grok/skills/**
 
 "🔧 scripts":
   - changed-files:

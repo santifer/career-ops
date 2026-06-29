@@ -13,6 +13,8 @@ import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { roleFuzzyMatch } from './role-matcher.mjs';
+import { rebuildRow } from './tracker-utils.mjs';
+import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md
@@ -229,44 +231,8 @@ function parseScore(s) {
  * @param {string} line - One line from applications.md.
  * @returns {object|null} Parsed tracker row, or null for non-application lines.
  */
-/**
- * Rebuild a markdown table row from the cells produced by `line.split('|')`.
- *
- * `split('|')` yields a leading empty element (before the opening `|`) and,
- * when the row ends with a trailing `|`, a trailing empty element too. The old
- * `slice(1, -1)` assumed that trailing empty always existed — but a row written
- * without a trailing pipe (`| 5 | … | note`, still a valid 9-cell row) has its
- * real last cell (the notes) at the end, so `slice(1, -1)` silently dropped it.
- * Here we drop the leading empty and only drop a trailing element when it is
- * actually empty, preserving every real cell regardless of trailing-pipe style
- * (and tolerating extra columns like a custom Location).
- *
- * @param {string[]} parts - Trimmed cells from `line.split('|').map(s => s.trim())`.
- * @returns {string} The rebuilt `| a | b | … |` row.
- */
-function rebuildRow(parts) {
-  const cells = parts.slice(1);
-  if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop();
-  return '| ' + cells.join(' | ') + ' |';
-}
-
 function parseAppLine(line) {
-  const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
-  const num = parseInt(parts[1]);
-  if (isNaN(num)) return null;
-  return {
-    num,
-    date: parts[2],
-    company: parts[3],
-    role: parts[4],
-    score: parts[5],
-    status: parts[6],
-    pdf: parts[7],
-    report: parts[8],
-    notes: parts[9] || '',
-    raw: line,
-  };
+  return parseTrackerRow(line, COLMAP);
 }
 
 // Read
@@ -276,6 +242,8 @@ if (!existsSync(APPS_FILE)) {
 }
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
+// Header-aware column map (tolerates an inserted Location column, etc.).
+const COLMAP = resolveColumns(lines);
 
 // Parse all entries
 const entries = [];
@@ -343,7 +311,7 @@ for (const [company, companyEntries] of groups) {
       const lineIdx = keeper.lineIdx;
       if (lineIdx !== undefined) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
-        parts[6] = bestStatus;
+        parts[COLMAP.status] = bestStatus;
         lines[lineIdx] = rebuildRow(parts);
         console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
       }
