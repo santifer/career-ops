@@ -64,6 +64,12 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 	apps := make([]model.CareerApplication, 0)
 	num := 0
 
+	// Map columns by header name rather than fixed position, so a customized or
+	// reordered tracker (e.g. an inserted Location column) does not desync the
+	// reader. Falls back to the legacy fixed layout when no header is present.
+	// This matches the Node tracker tooling, which became header-aware in #954.
+	cols := resolveTrackerColumns(lines)
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "# ") || strings.HasPrefix(line, "|---") || strings.HasPrefix(line, "| #") {
@@ -73,46 +79,35 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 			continue
 		}
 
-		// Detect delimiter: if line contains tabs, use tab-aware splitting
-		var fields []string
-		if strings.Contains(line, "\t") {
-			// Mixed format: starts with "| " then tab-separated
-			line = strings.TrimPrefix(line, "|")
-			line = strings.TrimSpace(line)
-			parts := strings.Split(line, "\t")
-			for _, p := range parts {
-				fields = append(fields, strings.TrimSpace(strings.Trim(p, "|")))
-			}
-		} else {
-			// Pure pipe format
-			line = strings.Trim(line, "|")
-			parts := strings.Split(line, "|")
-			for _, p := range parts {
-				fields = append(fields, strings.TrimSpace(p))
-			}
-		}
-
+		fields := splitTrackerRow(line)
 		if len(fields) < 8 {
 			continue
 		}
 
+		at := func(name string) string {
+			if idx, ok := cols[name]; ok && idx >= 0 && idx < len(fields) {
+				return fields[idx]
+			}
+			return ""
+		}
+
 		num++
 		trackerNumber := num
-		if parsedNumber, err := strconv.Atoi(fields[0]); err == nil {
+		if parsedNumber, err := strconv.Atoi(at("num")); err == nil {
 			trackerNumber = parsedNumber
 		}
 		app := model.CareerApplication{
 			Number:  trackerNumber,
-			Date:    fields[1],
-			Company: fields[2],
-			Role:    fields[3],
-			Status:  fields[5],
-			HasPDF:  strings.Contains(fields[6], "\u2705"),
+			Date:    at("date"),
+			Company: at("company"),
+			Role:    at("role"),
+			Status:  at("status"),
+			HasPDF:  strings.Contains(at("pdf"), "\u2705"),
 		}
 
-		// Parse score (field 4 = Score column)
-		app.ScoreRaw = fields[4]
-		if sm := reScoreValue.FindStringSubmatch(fields[4]); sm != nil {
+		// Parse score from the Score column.
+		app.ScoreRaw = at("score")
+		if sm := reScoreValue.FindStringSubmatch(at("score")); sm != nil {
 			app.Score, _ = strconv.ParseFloat(sm[1], 64)
 		}
 
@@ -122,15 +117,13 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 		// back to a careerOpsPath-relative path, which is what every
 		// consumer joins against. Legacy root-relative links are kept as a
 		// fallback when the resolved file does not exist.
-		if rm := reReportLink.FindStringSubmatch(fields[7]); rm != nil {
+		if rm := reReportLink.FindStringSubmatch(at("report")); rm != nil {
 			app.ReportNumber = rm[1]
 			app.ReportPath = resolveReportPath(careerOpsPath, filePath, rm[2])
 		}
 
-		// Notes (field 8 if exists)
-		if len(fields) > 8 {
-			app.Notes = fields[8]
-		}
+		// Notes column, when present.
+		app.Notes = at("notes")
 
 		// Lift location / work mode / pay / last-contact out of the notes free-text
 		deriveNoteFields(&app)
@@ -571,6 +564,91 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 	return
 }
 
+// splitTrackerRow splits a tracker table line into trimmed cell values, using
+// the same delimiter logic as ParseApplications: a mixed "| " + tab-separated
+// body, or a pure pipe-delimited row. Field 0 is the first real column (num), so
+// the returned indices match the legacy layout (Status is field 5).
+func splitTrackerRow(line string) []string {
+	line = strings.TrimSpace(line)
+	var fields []string
+	if strings.Contains(line, "\t") {
+		// Mixed format: starts with "| " then tab-separated.
+		line = strings.TrimPrefix(line, "|")
+		line = strings.TrimSpace(line)
+		for _, p := range strings.Split(line, "\t") {
+			fields = append(fields, strings.TrimSpace(strings.Trim(p, "|")))
+		}
+	} else {
+		// Pure pipe format.
+		line = strings.Trim(line, "|")
+		for _, p := range strings.Split(line, "|") {
+			fields = append(fields, strings.TrimSpace(p))
+		}
+	}
+	return fields
+}
+
+// trackerHeaderAliases maps a lowercased header cell to a canonical field name.
+// Mirrors HEADER_ALIASES in tracker-parse.mjs (including the Spanish aliases) so
+// the Go data layer tolerates the same customized layouts as the Node tracker
+// tooling after #954.
+var trackerHeaderAliases = map[string]string{
+	"#": "num", "num": "num", "date": "date",
+	"company": "company", "empresa": "company",
+	"role": "role", "puesto": "role",
+	"location": "location", "score": "score", "status": "status",
+	"pdf": "pdf", "report": "report", "notes": "notes",
+}
+
+// legacyTrackerColumns is the original fixed layout in splitTrackerRow field
+// space (num=0 … notes=8), used when no recognizable header row is present.
+var legacyTrackerColumns = map[string]int{
+	"num": 0, "date": 1, "company": 2, "role": 3, "score": 4,
+	"status": 5, "pdf": 6, "report": 7, "notes": 8,
+}
+
+// detectTrackerColumns scans for the table header row and maps canonical field
+// names to column indices in splitTrackerRow field space. It returns nil unless
+// the essential columns are all present, so a stray pipe line cannot yield a
+// bogus mapping and the caller falls back to legacyTrackerColumns. Mirrors
+// detectColumns in tracker-parse.mjs (#954).
+func detectTrackerColumns(lines []string) map[string]int {
+	for _, line := range lines {
+		if !strings.HasPrefix(strings.TrimSpace(line), "|") {
+			continue
+		}
+		cells := splitTrackerRow(line)
+		m := make(map[string]int)
+		for i, c := range cells {
+			if name, ok := trackerHeaderAliases[strings.ToLower(c)]; ok {
+				if _, seen := m[name]; !seen {
+					m[name] = i
+				}
+			}
+		}
+		complete := true
+		for _, k := range []string{"num", "company", "role", "score", "status"} {
+			if _, ok := m[k]; !ok {
+				complete = false
+				break
+			}
+		}
+		if complete {
+			return m
+		}
+	}
+	return nil
+}
+
+// resolveTrackerColumns returns the header-detected column map, falling back to
+// the legacy fixed layout when no header row is found.
+func resolveTrackerColumns(lines []string) map[string]int {
+	if m := detectTrackerColumns(lines); m != nil {
+		return m
+	}
+	return legacyTrackerColumns
+}
+
 // UpdateApplicationStatus updates the status of an application in applications.md.
 func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, newStatus string) error {
 	filePath := filepath.Join(careerOpsPath, "applications.md")
@@ -586,6 +664,11 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 	lines := strings.Split(string(content), "\n")
 	found := false
 
+	// Locate the Status column by header name so a customized layout (e.g. an
+	// inserted Location column) is written to the right cell. Falls back to the
+	// legacy fixed index when no header is present.
+	statusIdx := resolveTrackerColumns(lines)["status"]
+
 	for i, line := range lines {
 		if !strings.HasPrefix(strings.TrimSpace(line), "|") {
 			continue
@@ -593,7 +676,7 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 		// Match by report number
 		if app.ReportNumber != "" && strings.Contains(line, fmt.Sprintf("[%s]", app.ReportNumber)) {
 			// Replace the status field
-			lines[i] = replaceStatusInLine(line, app.Status, newStatus)
+			lines[i] = replaceStatusInLine(line, app.Status, newStatus, statusIdx)
 			found = true
 			break
 		}
@@ -614,18 +697,22 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 // instead of the Status cell, corrupting that cell while the status appeared to
 // stay unchanged (#1180). Matching is whole-cell (never a substring) and, as the
 // old comment claimed but the code did not, case-insensitive.
-func replaceStatusInLine(line, oldStatus, newStatus string) string {
+//
+// statusField is the Status column index in splitTrackerRow field space (5 in
+// the legacy layout), resolved from the table header so a customized layout
+// (e.g. an inserted Location column) targets the right cell.
+func replaceStatusInLine(line, oldStatus, newStatus string, statusField int) string {
 	want := strings.TrimSpace(oldStatus)
 
-	// Mixed "| " + tab-separated format (mirrors ParseApplications). The Status
-	// field is index 5 of the tab-split body.
+	// Mixed "| " + tab-separated format (mirrors ParseApplications). The body is
+	// tab-split, so cell index equals the field index.
 	if strings.Contains(line, "\t") {
 		prefix, body, found := strings.Cut(line, "|")
 		if !found {
 			return line
 		}
 		cells := strings.Split(body, "\t")
-		if idx := statusCellIndex(cells, 5, want); idx >= 0 {
+		if idx := statusCellIndex(cells, statusField, want); idx >= 0 {
 			cells[idx] = spliceCellValue(cells[idx], newStatus)
 			return prefix + "|" + strings.Join(cells, "\t")
 		}
@@ -634,10 +721,9 @@ func replaceStatusInLine(line, oldStatus, newStatus string) string {
 
 	// Pure pipe format. strings.Split keeps the segments between pipes; content
 	// cell N is segment N+1 (segment 0 is the empty text before the leading
-	// pipe), so the canonical Status column (ParseApplications field 5) is
-	// segment 6.
+	// pipe), so the Status field maps to segment statusField+1.
 	segments := strings.Split(line, "|")
-	if idx := statusCellIndex(segments, 6, want); idx >= 0 {
+	if idx := statusCellIndex(segments, statusField+1, want); idx >= 0 {
 		segments[idx] = spliceCellValue(segments[idx], newStatus)
 		return strings.Join(segments, "|")
 	}
