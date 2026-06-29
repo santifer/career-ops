@@ -29,13 +29,30 @@ import { toEpochMs } from './_http.mjs';
 const ENDPOINT_PATH = '/api-boards/search-jobs';
 const DEFAULT_SIZE = 500;
 
+// SSRF guard. The POST target host is config-driven (built from the portals.yml
+// careers_url), so pin it to a public HTTPS origin before fetching. Consider
+// boards are always real registrable domains (jobs.founderful.com, …); reject
+// non-HTTPS, IP-literal, and loopback/internal hosts so a malicious or
+// misconfigured careers_url can't aim the POST at an internal target
+// (127.0.0.1, 169.254.169.254 cloud-metadata, ::1, localhost, *.internal).
+// Mirrors the hostname-pinning lever.mjs / weworkremotely.mjs already do; here
+// the allowlist is structural (public domain) since the board host varies.
 function resolveOrigin(entry) {
-  const url = entry.careers_url || '';
+  let parsed;
   try {
-    return new URL(url).origin;
+    parsed = new URL(entry.careers_url || '');
   } catch {
     return null;
   }
+  if (parsed.protocol !== 'https:') return null;
+  let host = parsed.hostname.toLowerCase();
+  if (host.endsWith('.')) host = host.slice(0, -1); // strip FQDN trailing dot
+  if (host.startsWith('[') || host.includes(':')) return null;        // IPv6 literal
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;              // IPv4 literal (incl. metadata/private)
+  if (host === 'localhost' || host === 'localhost.localdomain') return null;
+  if (host.endsWith('.local') || host.endsWith('.internal')) return null;
+  if (!host.includes('.')) return null;                              // single-label / non-public
+  return parsed.origin;
 }
 
 function locationString(job) {
@@ -59,12 +76,15 @@ export default {
 
   async fetch(entry, ctx) {
     const origin = resolveOrigin(entry);
-    if (!origin) throw new Error(`consider: ${entry.name} needs a valid careers_url`);
+    if (!origin) throw new Error(`consider: ${entry.name} needs an https careers_url on a public host`);
     if (!entry.consider_board) throw new Error(`consider: ${entry.name} needs a 'consider_board' id in portals.yml`);
     const size = Number.isInteger(entry.consider_size) && entry.consider_size > 0 ? entry.consider_size : DEFAULT_SIZE;
 
     const json = await ctx.fetchJson(origin + ENDPOINT_PATH, {
       method: 'POST',
+      // redirect:'error' so a 3xx from the (config-driven) board host can't be
+      // followed to a private/metadata IP — the host guard above pins the first hop.
+      redirect: 'error',
       headers: { 'content-type': 'application/json', accept: 'application/json', referer: origin + '/jobs' },
       body: JSON.stringify({
         meta: { size },

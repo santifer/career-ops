@@ -39,11 +39,20 @@ export async function fetchText(url, opts = {}) {
   return await res.text();
 }
 
+// Returns the raw Response (after the timeout + non-2xx guard) so providers that
+// need response headers — e.g. startup.ch reads Set-Cookie to prime a session —
+// can route through ctx instead of re-implementing fetch. Pass redirect:'error'
+// like every other provider call so a 3xx can't be followed to a private IP.
+export async function fetchResponse(url, opts = {}) {
+  return await fetchWithTimeout(url, opts);
+}
+
 export function makeHttpCtx() {
   return {
     transport: 'http',
     fetchJson,
     fetchText,
+    fetchResponse,
   };
 }
 

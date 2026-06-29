@@ -68,6 +68,9 @@ export default {
     for (let page = 0; page < maxPages && page * HITS_PER_PAGE < total; page++) {
       const json = await ctx.fetchJson(apiUrl, {
         method: 'POST',
+        // redirect:'error' — apiUrl is pinned to api.getro.com (https), so a 3xx
+        // to a private/metadata IP must not be followed (matches every provider).
+        redirect: 'error',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify({ hitsPerPage: HITS_PER_PAGE, page }),
       });

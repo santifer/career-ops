@@ -31,7 +31,9 @@ export default {
   },
 
   async fetch(entry, ctx) {
-    const html = await ctx.fetchText(BROWSE_URL);
+    // redirect:'error' — BROWSE_URL is pinned to joinup.ch (https); a 3xx must
+    // not be followed to a private/metadata IP (matches every other provider).
+    const html = await ctx.fetchText(BROWSE_URL, { redirect: 'error' });
     const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
     // Fail closed: a missing/unparseable __NEXT_DATA__ is a scraper break, not an
     // empty board — throw so the scan logs it instead of silently reporting zero.

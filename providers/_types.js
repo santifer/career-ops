@@ -91,6 +91,7 @@
  * @property {('http')} transport
  * @property {(url: string, opts?: FetchOptions) => Promise<string>}  fetchText
  * @property {(url: string, opts?: FetchOptions) => Promise<unknown>} fetchJson
+ * @property {(url: string, opts?: FetchOptions) => Promise<Response>} fetchResponse  Raw Response (timeout + non-2xx guard applied); for providers needing response headers.
  */
 
 /**

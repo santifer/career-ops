@@ -5260,6 +5260,252 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
+// -- 33. Provider — consider (SSRF guard + redirect + payloads) ----------
+console.log('\n33. Provider — consider');
+
+try {
+  const consider = (await import(pathToFileURL(join(ROOT, 'providers/consider.mjs')).href)).default;
+
+  if (consider.id === 'consider') pass('consider.id is "consider"');
+  else fail(`consider.id is ${JSON.stringify(consider.id)}`);
+
+  const okEntry = { name: 'Founderful', consider_board: 'wingman', careers_url: 'https://jobs.founderful.com/jobs' };
+  const hit = consider.detect(okEntry);
+  if (hit && hit.url === 'https://jobs.founderful.com/api-boards/search-jobs') pass('consider.detect() claims a valid https board');
+  else fail(`consider.detect() returned ${JSON.stringify(hit)}`);
+
+  if (consider.detect({ name: 'X', careers_url: 'https://jobs.founderful.com/jobs' }) === null) {
+    pass('consider.detect() returns null without consider_board');
+  } else {
+    fail('consider.detect() must require consider_board');
+  }
+
+  // SSRF: non-https + IP-literal + loopback/internal hosts are all rejected.
+  const considerEvil = [
+    ['http://jobs.founderful.com/jobs', 'non-https'],
+    ['https://127.0.0.1/jobs', 'IPv4 loopback'],
+    ['https://169.254.169.254/jobs', 'cloud metadata IPv4'],
+    ['https://[::1]/jobs', 'IPv6 loopback'],
+    ['https://localhost/jobs', 'localhost'],
+    ['https://stuff.internal/jobs', '.internal suffix'],
+    ['https://box.local/jobs', '.local suffix'],
+  ];
+  let considerBlocked = 0;
+  for (const [url, label] of considerEvil) {
+    if (consider.detect({ name: 'Evil', consider_board: 'x', careers_url: url }) === null) considerBlocked++;
+    else fail(`consider.detect() should reject unsafe host (${label}): ${url}`);
+  }
+  if (considerBlocked === considerEvil.length) pass(`consider host guard rejects ${considerEvil.length} unsafe hosts (SSRF)`);
+
+  // fetch() passes redirect:'error' on the happy path.
+  let considerOpts = null;
+  const considerJobs = await consider.fetch(okEntry, {
+    fetchJson: async (_url, opts) => {
+      considerOpts = opts;
+      return { jobs: [{ title: 'AI Eng', url: 'https://jobs.founderful.com/x', companyName: 'Acme', locations: ['Remote'], timeStamp: '2026-01-02' }] };
+    },
+  });
+  if (considerOpts?.redirect === 'error') pass('consider.fetch() passes redirect:"error"');
+  else fail(`consider.fetch() should pass redirect:"error", got ${JSON.stringify(considerOpts)}`);
+  if (considerJobs.length === 1 && considerJobs[0].company === 'Acme') pass('consider.fetch() normalizes a job row');
+  else fail(`consider.fetch() row = ${JSON.stringify(considerJobs[0])}`);
+
+  // fetch() refuses an unsafe host BEFORE touching the network.
+  let considerThrew = false;
+  try {
+    await consider.fetch(
+      { name: 'Evil', consider_board: 'x', careers_url: 'https://169.254.169.254/jobs' },
+      { fetchJson: async () => { throw new Error('SSRF! should not reach here'); } },
+    );
+  } catch (e) { considerThrew = /public host|https/.test(e.message); }
+  if (considerThrew) pass('consider.fetch() rejects unsafe host before fetch');
+  else fail('consider.fetch() must throw on an unsafe host without fetching');
+
+  // Malformed / empty payloads → empty array, no crash.
+  const considerEmpty = await consider.fetch(okEntry, { fetchJson: async () => ({}) });
+  const considerNoUrl = await consider.fetch(okEntry, { fetchJson: async () => ({ jobs: [{ title: 'No URL' }] }) });
+  if (Array.isArray(considerEmpty) && considerEmpty.length === 0 && Array.isArray(considerNoUrl) && considerNoUrl.length === 0) {
+    pass('consider.fetch() tolerates malformed/empty payloads');
+  } else {
+    fail(`consider.fetch() malformed handling: ${JSON.stringify({ considerEmpty, considerNoUrl })}`);
+  }
+} catch (e) {
+  fail(`consider provider tests crashed: ${e.message}`);
+}
+
+// -- 34. Provider — getro (input guard + redirect + payloads) ------------
+console.log('\n34. Provider — getro');
+
+try {
+  const getro = (await import(pathToFileURL(join(ROOT, 'providers/getro.mjs')).href)).default;
+
+  if (getro.id === 'getro') pass('getro.id is "getro"');
+  else fail(`getro.id is ${JSON.stringify(getro.id)}`);
+
+  const getHit = getro.detect({ name: 'b2v', getro_collection: 4283 });
+  if (getHit && getHit.url === 'https://api.getro.com/api/v2/collections/4283/search/jobs') pass('getro.detect() claims a numeric collection');
+  else fail(`getro.detect() returned ${JSON.stringify(getHit)}`);
+
+  // Injection-ish / non-numeric collection ids are rejected (URL is built from this).
+  for (const bad of ['abc', '4283; DROP', '../evil', '4283/../../x', '']) {
+    if (getro.detect({ name: 'X', getro_collection: bad }) !== null) {
+      fail(`getro.detect() should reject non-numeric collection: ${JSON.stringify(bad)}`);
+    }
+  }
+  pass('getro.detect() rejects non-numeric collection ids');
+
+  // fetch() passes redirect:'error'.
+  let getroOpts = null;
+  const getroJobs = await getro.fetch({ name: 'b2v', getro_collection: 4283 }, {
+    fetchJson: async (_url, opts) => {
+      getroOpts = opts;
+      // No created_at → undated job is kept ("missing = pass"), so this test is
+      // robust against the rolling 90-day pagination cutoff.
+      return { results: { count: 1, jobs: [{ title: 'Principal', url: 'https://jobs.b2venture.vc/x', organization: { name: 'Acme' }, locations: ['Zurich'] }] } };
+    },
+  });
+  if (getroOpts?.redirect === 'error') pass('getro.fetch() passes redirect:"error"');
+  else fail(`getro.fetch() should pass redirect:"error", got ${JSON.stringify(getroOpts)}`);
+  if (getroJobs.length === 1 && getroJobs[0].company === 'Acme') pass('getro.fetch() normalizes a job row');
+  else fail(`getro.fetch() row = ${JSON.stringify(getroJobs[0])}`);
+
+  // Malformed / empty payload → empty array, no crash, no infinite pagination.
+  const getroEmpty = await getro.fetch({ name: 'b2v', getro_collection: 4283 }, { fetchJson: async () => ({}) });
+  if (Array.isArray(getroEmpty) && getroEmpty.length === 0) pass('getro.fetch() tolerates an empty payload');
+  else fail(`getro.fetch() empty handling: ${JSON.stringify(getroEmpty)}`);
+} catch (e) {
+  fail(`getro provider tests crashed: ${e.message}`);
+}
+
+// -- 35. Provider — joinup (host guard + redirect + payloads) ------------
+console.log('\n35. Provider — joinup');
+
+try {
+  const joinup = (await import(pathToFileURL(join(ROOT, 'providers/joinup.mjs')).href)).default;
+
+  if (joinup.id === 'joinup') pass('joinup.id is "joinup"');
+  else fail(`joinup.id is ${JSON.stringify(joinup.id)}`);
+
+  if (joinup.detect({ name: 'J', careers_url: 'https://joinup.ch/browse/jobs' })?.url === 'https://joinup.ch/browse/jobs') {
+    pass('joinup.detect() claims a joinup.ch careers_url');
+  } else {
+    fail('joinup.detect() should claim joinup.ch');
+  }
+
+  // SSRF: path-spoofed / off-host careers_url must not be detected as joinup.
+  if (joinup.detect({ name: 'Spoof', careers_url: 'https://evil.example/joinup.ch' }) === null
+      && joinup.detect({ name: 'Other', careers_url: 'https://example.com/jobs' }) === null) {
+    pass('joinup.detect() rejects path-spoofed / off-host URLs (SSRF)');
+  } else {
+    fail('joinup.detect() must only claim the joinup.ch hostname');
+  }
+
+  // fetch() passes redirect:'error' and parses __NEXT_DATA__.
+  const nextData = JSON.stringify({ props: { pageProps: { serverState: { initialResults: { jobs: { results: [{ hits: [{ title: 'Head of Finance', startup: 'Acme', slug: 'acme-hof', location: 'Zurich', created: '2026-01-02' }] }] } } } } } });
+  let joinupOpts = null;
+  const joinupJobs = await joinup.fetch({ name: 'J', careers_url: 'https://joinup.ch/browse/jobs' }, {
+    fetchText: async (_url, opts) => { joinupOpts = opts; return `<script id="__NEXT_DATA__" type="application/json">${nextData}</script>`; },
+  });
+  if (joinupOpts?.redirect === 'error') pass('joinup.fetch() passes redirect:"error"');
+  else fail(`joinup.fetch() should pass redirect:"error", got ${JSON.stringify(joinupOpts)}`);
+  if (joinupJobs.length === 1 && joinupJobs[0].url === 'https://joinup.ch/job/acme-hof' && joinupJobs[0].company === 'Acme') {
+    pass('joinup.fetch() maps a __NEXT_DATA__ hit to a job');
+  } else {
+    fail(`joinup.fetch() row = ${JSON.stringify(joinupJobs[0])}`);
+  }
+
+  // Missing/unparseable __NEXT_DATA__ fails closed (throws, not silent zero).
+  let joinupThrew = false;
+  try {
+    await joinup.fetch({ name: 'J', careers_url: 'https://joinup.ch/browse/jobs' }, { fetchText: async () => '<html>no data here</html>' });
+  } catch (e) { joinupThrew = /__NEXT_DATA__/.test(e.message); }
+  if (joinupThrew) pass('joinup.fetch() throws on missing __NEXT_DATA__ (fails closed)');
+  else fail('joinup.fetch() should throw when __NEXT_DATA__ is absent');
+} catch (e) {
+  fail(`joinup provider tests crashed: ${e.message}`);
+}
+
+// -- 36. Provider — startupch (host guard + ctx routing + payloads) ------
+console.log('\n36. Provider — startupch');
+
+try {
+  const startupch = (await import(pathToFileURL(join(ROOT, 'providers/startupch.mjs')).href)).default;
+
+  if (startupch.id === 'startupch') pass('startupch.id is "startupch"');
+  else fail(`startupch.id is ${JSON.stringify(startupch.id)}`);
+
+  if (startupch.detect({ name: 'S', careers_url: 'https://www.startup.ch/jobs' })?.url === 'https://www.startup.ch/jobs') {
+    pass('startupch.detect() claims a startup.ch careers_url');
+  } else {
+    fail('startupch.detect() should claim startup.ch');
+  }
+
+  // SSRF: path-spoofed / off-host careers_url must not be detected as startup.ch.
+  if (startupch.detect({ name: 'Spoof', careers_url: 'https://evil.example/startup.ch' }) === null
+      && startupch.detect({ name: 'Other', careers_url: 'https://example.com/jobs' }) === null) {
+    pass('startupch.detect() rejects path-spoofed / off-host URLs (SSRF)');
+  } else {
+    fail('startupch.detect() must only claim the startup.ch hostname');
+  }
+
+  // A minimal Response-like stub so the provider can read text + Set-Cookie.
+  const makeRes = (html, setCookie = null) => ({
+    headers: {
+      getSetCookie: () => (setCookie ? [setCookie] : []),
+      get: () => setCookie,
+    },
+    text: async () => html,
+  });
+  const sampleHtml = [
+    '<div class="white-box startup-box">',
+    '  <a href="index.cfm?page=137888&profil_id=42&JobID=999#job_999"></a>',
+    '  <img src="x.png" alt="Acme AG" />',
+    '  <h4 class="top10-title foo">Head of Operations</h4>',
+    '  <img src="location.png" /><p class="d-inline-flex mb-1">Zurich</p>',
+    '</div>',
+  ].join('\n');
+
+  // fetch() routes through ctx.fetchResponse with redirect:'error' (both hops).
+  const startOpts = [];
+  const startJobs = await startupch.fetch(
+    { name: 'startup.ch', careers_url: 'https://www.startup.ch/jobs' },
+    { fetchResponse: async (_url, opts) => { startOpts.push(opts); return makeRes(sampleHtml, 'CFID=1'); } },
+  );
+  if (startOpts.length >= 1 && startOpts.every(o => o?.redirect === 'error')) {
+    pass('startupch.fetch() routes through ctx.fetchResponse with redirect:"error"');
+  } else {
+    fail(`startupch.fetch() opts = ${JSON.stringify(startOpts)}`);
+  }
+  if (startJobs.length === 1 && startJobs[0].title === 'Head of Operations'
+      && startJobs[0].url === 'https://www.startup.ch/index.cfm?page=137888&profil_id=42&JobID=999'
+      && startJobs[0].company === 'Acme AG') {
+    pass('startupch.fetch() parses a listing card into a job');
+  } else {
+    fail(`startupch.fetch() row = ${JSON.stringify(startJobs[0])}`);
+  }
+
+  // Anti-bot/error page fails closed (throws, not silent zero).
+  let startThrew = false;
+  try {
+    await startupch.fetch(
+      { name: 'startup.ch', careers_url: 'https://www.startup.ch/jobs' },
+      { fetchResponse: async () => makeRes('<title>Error</title> unerwarteter Fehler') },
+    );
+  } catch (e) { startThrew = /error|anti-bot|rate-limit/i.test(e.message); }
+  if (startThrew) pass('startupch.fetch() throws on the anti-bot/error page (fails closed)');
+  else fail('startupch.fetch() should throw on the error page');
+
+  // Genuinely empty board → empty array (no cards, no error markers).
+  const startEmpty = await startupch.fetch(
+    { name: 'startup.ch', careers_url: 'https://www.startup.ch/jobs' },
+    { fetchResponse: async () => makeRes('<html><body>No openings right now</body></html>') },
+  );
+  if (Array.isArray(startEmpty) && startEmpty.length === 0) pass('startupch.fetch() returns [] for an empty board');
+  else fail(`startupch.fetch() empty board = ${JSON.stringify(startEmpty)}`);
+} catch (e) {
+  fail(`startupch provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

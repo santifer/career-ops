@@ -39,22 +39,6 @@ function decodeEntities(s) {
     .replace(/&amp;/g, '&').trim();
 }
 
-async function fetchWithTimeout(url, headers, timeoutMs = 12000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { headers, redirect: 'follow', signal: controller.signal });
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      const snippet = body.replace(/\s+/g, ' ').trim().slice(0, 300);
-      throw new Error(snippet ? `HTTP ${res.status}: ${snippet}` : `HTTP ${res.status}`);
-    }
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /** @type {Provider} */
 export default {
   id: 'startupch',
@@ -65,18 +49,24 @@ export default {
     return /(^|\.)startup\.ch$/i.test(host) ? { url: LIST_URL } : null;
   },
 
-  async fetch(entry /* , ctx */) {
+  async fetch(entry, ctx) {
+    // Both hops are pinned to the hardcoded https://www.startup.ch host and go
+    // through ctx with redirect:'error' (no private fetch, no redirect-following)
+    // so the SSRF posture matches every other provider. ctx.fetchResponse exposes
+    // the raw Response so we can still read Set-Cookie to prime a session.
+    const fetchOpts = (headers) => ({ headers, redirect: 'error', timeoutMs: 12_000 });
+
     // Prime a CFID/CFTOKEN session from the homepage (best-effort).
     let cookie = '';
     try {
-      const home = await fetchWithTimeout(HOME_URL, BROWSER_HEADERS);
+      const home = await ctx.fetchResponse(HOME_URL, fetchOpts(BROWSER_HEADERS));
       const setCookies = typeof home.headers.getSetCookie === 'function'
         ? home.headers.getSetCookie()
         : [home.headers.get('set-cookie')].filter(Boolean);
       cookie = setCookies.map(c => c.split(';')[0]).join('; ');
     } catch { /* proceed without a primed cookie */ }
 
-    const res = await fetchWithTimeout(LIST_URL, { ...BROWSER_HEADERS, ...(cookie ? { cookie } : {}) });
+    const res = await ctx.fetchResponse(LIST_URL, fetchOpts({ ...BROWSER_HEADERS, ...(cookie ? { cookie } : {}) }));
     const html = await res.text();
 
     const chunks = html.split(/white-box startup-box/i).slice(1);
