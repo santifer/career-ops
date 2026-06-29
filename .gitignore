@@ -1,5 +1,6 @@
 # Personal data (user fills these)
 cv.md
+article-digest.md
 data/applications.md
 data/applications.db
 data/pipeline.md
@@ -17,6 +18,8 @@ batch/logs/*
 !batch/logs/.gitkeep
 batch/batch-state.tsv
 batch/batch-input.tsv
+batch/pipeline-*.json
+batch/pipeline-*.tsv
 batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*
@@ -72,6 +75,8 @@ data/model-blacklist.json
 *.mp4
 
 # CLI-specific local config
+.codex/
+.mcp.json
 .claude/settings.local.json
 .claude/memory/
 .opencode/settings.local.json
