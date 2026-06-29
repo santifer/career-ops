@@ -376,9 +376,9 @@ Escribir una línea TSV a:
 batch/tracker-additions/{{ID}}.tsv
 ```
 
-Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
+Formato TSV (una sola línea, sin header, 9 columnas tab-separated + una 10ª opcional `url`):
 ```
-{next_num}\t{{DATE}}\t{empresa}\t{rol}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{nota_1_frase}
+{next_num}\t{{DATE}}\t{empresa}\t{rol}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{nota_1_frase}\t{url}
 ```
 
 **Columnas TSV (orden exacto):**
@@ -394,6 +394,7 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 | 7 | pdf | emoji | `✅` o `❌` | Si se generó PDF |
 | 8 | report | md link | `[647](reports/647-...)` | Link root-relative; merge-tracker.mjs lo normaliza relativo al tracker (ej. `../reports/...`, #760) |
 | 9 | notes | string | `APPLY HIGH...` | Resumen 1 frase |
+| 10 | url | string (opcional) | `https://...` | URL del posting. Clave de dedup **determinista** en merge-tracker.mjs (fallback a fuzzy company+role solo si falta). Detectada por su prefijo `http(s)://`, orden-independiente con una location opcional. Aditiva y retrocompatible. |
 
 **IMPORTANTE:** El orden TSV tiene status ANTES de score (col 5→status, col 6→score). En applications.md el orden es inverso (col 5→score, col 6→status). merge-tracker.mjs maneja la conversión.
 
