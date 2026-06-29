@@ -489,6 +489,8 @@ search_queries:
 #   solidjobs       solid.jobs/public-api/offers/<division>
 #   comeet          api: https://www.comeet.co/careers-api/2.0/company/<uid>/positions?token=<token>
 #   personio        <slug>.jobs.personio.(de|com)
+#   pinpoint        <slug>.pinpointhq.com
+#   rippling        ats.rippling.com/<slug>/jobs
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
@@ -496,7 +498,8 @@ search_queries:
 #
 # Some providers are job boards / aggregators with no per-company careers
 # URL to detect, so they must be selected with an explicit `provider:`
-# field: arbeitsagentur, glints, jobstreet, ibm, remoteok, remotive,
+# field: 4dayweek, arbeitnow, arbeitsagentur, glints, himalayas, ibm, jobicy,
+# jobstreet, justjoin, landingjobs, nofluffjobs, remoteok, remotive, thehub,
 # weworkremotely, workingnomads. Examples for every built-in provider are below.
 
 # ── Built-in provider examples ────────────────────────────────────
@@ -514,6 +517,14 @@ search_queries:
 #   careers_url: https://exampleco.breezy.hr              # any *.breezy.hr host
 #   enabled: true
 #
+# - name: Example Pinpoint Co
+#   careers_url: https://exampleco.pinpointhq.com         # any *.pinpointhq.com host
+#   enabled: true
+#
+# - name: Example Rippling Co
+#   careers_url: https://ats.rippling.com/exampleco/jobs  # any ats.rippling.com/<slug>
+#   enabled: true
+#
 # - name: SolidJobs — Engineering
 #   # division path is required; one of:
 #   # it, engineering, marketing, sales, hr, logistics, finances, other
@@ -521,6 +532,21 @@ search_queries:
 #   enabled: true
 #
 # -- Job boards / aggregators (no careers_url; set provider: explicitly) --
+#
+# - name: 4 Day Week                      # 4-day-week / reduced-hours roles
+#   provider: 4dayweek
+#   max_pages: 3          # optional page cap (25 jobs/page, default 3, max 50)
+#   enabled: true
+#
+# - name: The Hub                         # Nordic/EU startup board
+#   provider: thehub
+#   max_pages: 3          # optional page cap (15 jobs/page, default 3, max 67)
+#   enabled: true
+#
+# - name: Arbeitnow                       # EU/DACH-heavy board, newest-first
+#   provider: arbeitnow
+#   max_pages: 3          # optional page cap (100 jobs/page, default 3, max 50)
+#   enabled: true
 #
 # - name: Arbeitsagentur — AI Roles      # German federal jobs API
 #   provider: arbeitsagentur
@@ -555,6 +581,12 @@ search_queries:
 # -- Remote-job feeds (no careers_url, no extra fields) --
 # title_filter / location_filter defined above still apply.
 #
+# - name: Himalayas
+#   provider: himalayas
+# - name: Landing.jobs                    # tech board, Europe-focused
+#   provider: landingjobs
+#   enabled: true
+#
 # - name: RemoteOK
 #   provider: remoteok
 #   enabled: true
@@ -569,6 +601,10 @@ search_queries:
 #
 # - name: Working Nomads
 #   provider: workingnomads
+#   enabled: true
+#
+# - name: Jobicy
+#   provider: jobicy
 #   enabled: true
 #
 # Comeet needs the full careers-api URL (it carries a per-tenant token that a
@@ -1461,6 +1497,22 @@ job_boards:
     provider: solidjobs
     enabled: false
     notes: "Polish job board — Other specialists division"
+
+  # ── JustJoin.it / NoFluffJobs (Polish tech market) ────────────────────────
+  # Public job-board APIs. Disabled by default; enable and rely on the global
+  # title_filter/location_filter/salary_filter above for your target profile.
+
+  - name: JustJoin.it
+    careers_url: https://justjoin.it/job-offers/all-locations
+    provider: justjoin
+    enabled: false
+    notes: "Polish tech job board — newest public offers"
+
+  - name: NoFluffJobs
+    careers_url: https://nofluffjobs.com/pl
+    provider: nofluffjobs
+    enabled: false
+    notes: "Polish tech job board — newest public postings"
 
   # -- Indonesia job boards (provider: jobstreet / glints) --
 

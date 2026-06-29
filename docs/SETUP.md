@@ -33,7 +33,7 @@ Run the career-ops pdf mode.
 Run the career-ops tracker mode.
 ```
 
-For one-shot workers or batch tasks in Codex, use `codex exec`:
+For one-shot workers or batch tasks in Codex, use `codex exec`. See [docs/CODEX.md](CODEX.md) for the full guide.
 
 ```bash
 codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"
@@ -88,7 +88,6 @@ node verify-pipeline.mjs     # Check pipeline integrity
 ## Build Dashboard (Optional)
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..  # Opens TUI pipeline viewer
+npm run serve:dashboard     # Opens TUI pipeline viewer
+npm run build:dashboard     # Optional: build the standalone binary
 ```
