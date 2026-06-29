@@ -192,7 +192,9 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
   const manifestPath = resolve(__dirname, 'data', 'pdf-index.tsv');
   const toRel = (p) => relative(__dirname, p).split(sep).join('/');
   const relPDF = toRel(pdfPath);
-  const relHTML = toRel(htmlPath);
+  // htmlPath is optional: leave the HTML column empty when the caller does not
+  // know the source (e.g. cover-letter generation). Never write the PDF path here.
+  const relHTML = htmlPath ? toRel(htmlPath) : '';
   const date = new Date().toISOString().slice(0, 10);
   // "008" and "8" are the same report — zero-padded report-link form vs
   // unpadded tracker-# form. Normalize so replacement rows match.
@@ -288,7 +290,7 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath });
 }
 
 /**
@@ -344,12 +346,19 @@ export async function inlineLocalFonts(html) {
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
- * @param {{format?: 'a4'|'letter', baseDir?: string}} [opts]
+ * @param {{format?: 'a4'|'letter', baseDir?: string, reportNum?: string, inputPath?: string}} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
  */
 export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const format = opts.format || 'a4';
   const baseDir = opts.baseDir || process.cwd();
+  // reportNum + inputPath live in the CLI caller; thread them through opts so the
+  // manifest write below has them in scope (previously referenced free variables,
+  // which threw "reportNum is not defined" and silently skipped pdf-index.tsv).
+  const reportNum = opts.reportNum || '';
+  // Empty (not the PDF path) when the caller omits the source HTML, so the
+  // manifest's optional HTML column stays blank rather than corrupted.
+  const htmlSourcePath = opts.inputPath || '';
 
   mkdirSync(dirname(outputPath), { recursive: true });
 
@@ -398,7 +407,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
 
     try {
-      updatePDFManifest(reportNum, outputPath, inputPath, format);
+      updatePDFManifest(reportNum, outputPath, htmlSourcePath, format);
       console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
     } catch (err) {
       // The PDF itself succeeded — never fail the run over manifest bookkeeping.
