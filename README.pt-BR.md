@@ -192,9 +192,8 @@ O scanner já vem com **45+ empresas** prontas para escanear e **19 consultas de
 O dashboard de terminal integrado permite navegar visualmente pelo seu pipeline:
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..
+npm run serve:dashboard   # launch the TUI
+npm run build:dashboard   # optional: build the standalone binary
 ```
 
 Recursos: 6 abas de filtro, 4 modos de ordenação, visualização agrupada/plana, prévias com carregamento sob demanda e alterações de status inline.
