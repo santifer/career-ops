@@ -139,8 +139,9 @@ export function buildTitleFilter(titleFilter) {
   // Normalize defensively: a malformed title_filter (a null, numeric, or otherwise
   // non-string entry in the YAML) must not crash the scan via k.toLowerCase().
   const normalize = (arr) => (Array.isArray(arr) ? arr : [])
-    .filter(k => typeof k === 'string' && k.length > 0)
-    .map(k => k.toLowerCase())
+    .filter(k => typeof k === 'string')
+    .map(k => k.trim().toLowerCase())
+    .filter(k => k.length > 0)
     .map(compileKeyword);
   const positive = normalize(titleFilter?.positive);
   const negative = normalize(titleFilter?.negative);
