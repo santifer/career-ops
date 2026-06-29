@@ -138,3 +138,14 @@ cover_letter:
 # half-point scores like 3.5/5 occur in evaluations). Set it to 0 to
 # generate a PDF for every offer.
 # auto_pdf_score_threshold: 4.0
+
+# ── Apply quality gate ──────────────────────────────────────────────────────
+#
+# Candidate-facing apply packages should normally be generated only for roles
+# that meet the project's quality bar. Low-score roles can still be applied to,
+# but the user should provide a short override reason so the exception is
+# auditable in user-layer notes.
+#
+# Default (key absent OR commented out): 4.0.
+# apply_quality:
+#   threshold: 4.0
