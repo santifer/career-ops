@@ -5519,6 +5519,34 @@ try {
   if (kws.length === 3 && kws[0] === 'Python' && kws[2] === 'gRPC') pass('keyword coverage: extractKeywords parses bullets + commas, stops at next heading');
   else fail(`keyword coverage: extractKeywords wrong: ${JSON.stringify(kws)}`);
 
+  // Negative-path CLI: --self-test never touches the report/CV file-resolution path,
+  // so exercise it directly. A nonexistent report (and a no-arg invocation) must fail
+  // GRACEFULLY — clean exit 1 + a readable message, never an uncaught stack trace.
+  const kmCli = join(ROOT, 'keyword-match.mjs');
+  const noStack = (s) => !/\n\s+at\s/.test(s); // Node prints "    at <frame>" on an uncaught throw
+  const runCli = (argv) => {
+    try {
+      execFileSync(NODE, [kmCli, ...argv], { cwd: ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 });
+      return { status: 0, stderr: '' };
+    } catch (e) {
+      return { status: e.status, stderr: (e.stderr || '').toString() };
+    }
+  };
+
+  const missing = runCli([join(ROOT, '.tmp-test-no-such-report.md')]);
+  if (missing.status === 1 && /not found/i.test(missing.stderr) && noStack(missing.stderr)) {
+    pass('keyword coverage: CLI exits 1 with a clean message on a missing report file');
+  } else {
+    fail(`keyword coverage: CLI missing-report handling wrong: status=${missing.status} stderr=${JSON.stringify(missing.stderr)}`);
+  }
+
+  const noArg = runCli([]);
+  if (noArg.status === 1 && /Usage:/i.test(noArg.stderr) && noStack(noArg.stderr)) {
+    pass('keyword coverage: CLI prints usage + exits 1 when no report arg is given');
+  } else {
+    fail(`keyword coverage: CLI no-arg handling wrong: status=${noArg.status} stderr=${JSON.stringify(noArg.stderr)}`);
+  }
+
 } catch (e) {
   fail(`keyword coverage tests crashed: ${e.message}`);
 }
