@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -80,9 +83,10 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineOpenReportMsg:
 		m.viewer = screens.NewViewerModel(
 			m.theme,
+			m.careerOpsPath,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
-			msg.App, m.careerOpsPath,
+			msg.App,
 		)
 		m.state = viewReport
 		return m, nil
@@ -90,6 +94,15 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.ViewerClosedMsg:
 		m.state = viewPipeline
 		return m, nil
+
+	case screens.ViewerOpenCoverLetterMsg:
+		path := msg.Path
+		return m, func() tea.Msg {
+			if err := openWithDefaultApp(path); err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: could not open cover letter: %v\n", err)
+			}
+			return nil
+		}
 
 	case screens.ViewerUpdateStatusMsg:
 		err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
@@ -114,13 +127,13 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case screens.PipelineOpenURLMsg:
-		url := msg.URL
-		return m, func() tea.Msg {
-			if err := openWithDefaultApp(url); err != nil {
-				fmt.Fprintf(os.Stderr, "WARN: failed to open URL %q: %v\n", url, err)
-			}
-			return nil
-		}
+		return m, openCmd(msg.URL)
+
+	case screens.PipelineOpenPDFMsg:
+		return m, openCmd(msg.Path)
+
+	case screens.PipelineGeneratePDFMsg:
+		return m, runGeneratePDF(msg)
 
 	default:
 		if m.state == viewReport {
@@ -137,6 +150,57 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.pipeline = pm
 		return m, cmd
 	}
+}
+
+// openCmd wraps openWithDefaultApp (OS-specific) as a tea.Cmd. Shared by the
+// job-URL (`o`) and CV-PDF (`d`) actions.
+func openCmd(target string) tea.Cmd {
+	return func() tea.Msg {
+		if err := openWithDefaultApp(target); err != nil {
+			fmt.Fprintf(os.Stderr, "WARN: failed to open %q: %v\n", target, err)
+		}
+		return nil
+	}
+}
+
+// runGeneratePDF shells out to node generate-pdf.mjs in the career-ops root,
+// opens the resulting PDF on success, and reports the outcome back to the
+// pipeline screen as a PipelinePDFGeneratedMsg. Runs in a tea.Cmd goroutine,
+// so the UI stays responsive while Chromium renders.
+func runGeneratePDF(msg screens.PipelineGeneratePDFMsg) tea.Cmd {
+	return func() tea.Msg {
+		args := []string{"generate-pdf.mjs", msg.HTMLPath, msg.PDFPath}
+		if msg.Format != "" {
+			args = append(args, "--format="+msg.Format)
+		}
+		if msg.ReportNumber != "" {
+			args = append(args, "--report="+msg.ReportNumber)
+		}
+		cmd := exec.Command("node", args...)
+		cmd.Dir = msg.CareerOpsPath
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			return screens.PipelinePDFGeneratedMsg{Err: summarizeCmdError(err, out)}
+		}
+		pdfAbs := filepath.Join(msg.CareerOpsPath, filepath.FromSlash(msg.PDFPath))
+		if err := openWithDefaultApp(pdfAbs); err != nil {
+			return screens.PipelinePDFGeneratedMsg{Err: fmt.Sprintf("PDF generated but could not open: %v", err)}
+		}
+		return screens.PipelinePDFGeneratedMsg{Path: pdfAbs}
+	}
+}
+
+// summarizeCmdError condenses a failed command into one help-bar-sized line:
+// the last non-empty output line when there is one (generate-pdf.mjs prints
+// its error there), otherwise the exec error itself.
+func summarizeCmdError(err error, out []byte) string {
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		if line := strings.TrimSpace(lines[i]); line != "" {
+			return line
+		}
+	}
+	return err.Error()
 }
 
 func (m appModel) View() string {
