@@ -18,7 +18,7 @@
  *      node keyword-match.mjs --self-test                 (built-in assertions)
  */
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, statSync  } from 'fs';
 import { join, dirname, isAbsolute, basename } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -139,7 +139,7 @@ export function analyzeCoverage(keywords, cvText) {
   for (const raw of keywords || []) {
     const k = String(raw).trim();
     if (!k) continue;
-    const key = k.toLowerCase();
+    const key = normalizeText(k);
     if (seen.has(key)) continue;
     seen.add(key);
     cleaned.push(k);
@@ -299,37 +299,69 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     let reportArg = null;
     for (let i = 0; i < args.length; i++) {
       const a = args[i];
-      if (a === '--json') jsonMode = true;
-      else if (a === '--cv') cvArg = args[++i] ?? null;
-      else if (!a.startsWith('--') && reportArg === null) reportArg = a;
+
+      if (a === '--json') {
+        jsonMode = true;
+      } 
+      else if (a === '--cv') {
+        const next = args[i + 1];
+
+        if (!next || next.startsWith('--')) {
+          console.error('Missing value for --cv');
+          process.exit(1);
+        }
+
+        cvArg = next;
+        i++;
+      } 
+      else if (!a.startsWith('--') && reportArg === null) {
+        reportArg = a;
+      }
     }
 
     if (!reportArg) {
       console.error('Usage: node keyword-match.mjs <report-file> [--cv <path>] [--json]');
-      process.exit(0);
+      process.exit(1);
     }
 
     const reportPath = isAbsolute(reportArg) ? reportArg : join(process.cwd(), reportArg);
-    if (!existsSync(reportPath)) {
+
+    if (!existsSync(reportPath) || !statSync(reportPath).isFile()) {
       console.error(`Report not found: ${reportArg}`);
-      process.exit(0);
+      process.exit(1);
     }
 
-    const keywords = extractKeywords(readFileSync(reportPath, 'utf-8'));
+    let reportText;
+    try {
+      reportText = readFileSync(reportPath, 'utf-8');
+    } catch {
+      console.error(`Unable to read report: ${reportArg}`);
+      process.exit(1);
+    }
+
+    const keywords = extractKeywords(reportText);
+
     if (keywords.length === 0) {
       console.error('No "## Keywords extracted" block found (or it is empty).');
-      process.exit(0);
+      process.exit(1);
     }
 
     const cvPath = cvArg
       ? (isAbsolute(cvArg) ? cvArg : join(process.cwd(), cvArg))
       : join(CAREER_OPS, 'cv.md');
-    if (!existsSync(cvPath)) {
+
+    if (!existsSync(cvPath) || !statSync(cvPath).isFile()) {
       console.error(`CV not found: ${cvPath}. Pass --cv <path> to point at your CV.`);
-      process.exit(0);
+      process.exit(1);
     }
 
-    const rawCv = readFileSync(cvPath, 'utf-8');
+    let rawCv;
+    try {
+      rawCv = readFileSync(cvPath, 'utf-8');
+    } catch {
+      console.error(`Unable to read CV: ${cvPath}`);
+      process.exit(1);
+    }
     const cvText = /\.html?$/i.test(cvPath) ? htmlToText(rawCv) : rawCv;
     const sourceLabel = cvArg ? basename(cvPath) : 'cv.md (base CV, before per-role tailoring)';
 
