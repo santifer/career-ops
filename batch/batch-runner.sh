@@ -415,7 +415,11 @@ process_offer() {
   report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
   local date
   date=$(date +%Y-%m-%d)
-  local jd_file="/tmp/batch-jd-${id}.txt"
+  # Use mktemp instead of a predictable /tmp path: a fixed name like
+  # /tmp/batch-jd-${id}.txt is guessable, so an attacker on a shared machine
+  # could pre-create it as a symlink and redirect or clobber the write.
+  local jd_file
+  jd_file="$(mktemp "${TMPDIR:-/tmp}/batch-jd-${id}.XXXXXX")"
 
   echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
 

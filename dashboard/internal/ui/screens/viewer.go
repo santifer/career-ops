@@ -2,6 +2,7 @@ package screens
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -18,6 +19,9 @@ import (
 // ViewerClosedMsg is emitted when the viewer is dismissed.
 type ViewerClosedMsg struct{}
 
+// ViewerOpenCoverLetterMsg is emitted when the user requests to open the cover letter PDF.
+type ViewerOpenCoverLetterMsg struct{ Path string }
+
 // ViewerUpdateStatusMsg is emitted when a status update is requested from the viewer.
 type ViewerUpdateStatusMsg struct {
 	App       model.CareerApplication
@@ -26,21 +30,22 @@ type ViewerUpdateStatusMsg struct {
 
 // ViewerModel implements an integrated file viewer screen.
 type ViewerModel struct {
-	lines         []string
-	renderedLines []string
-	title         string
-	scrollOffset  int
-	width         int
-	height        int
-	theme         theme.Theme
-	app           model.CareerApplication
-	careerOpsPath string
-	statusPicker  bool
-	statusCursor  int
+	lines           []string
+	renderedLines   []string
+	title           string
+	scrollOffset    int
+	width           int
+	height          int
+	theme           theme.Theme
+	app             model.CareerApplication
+	careerOpsPath   string
+	coverLetterPath string
+	statusPicker    bool
+	statusCursor    int
 }
 
 // NewViewerModel creates a new file viewer for the given path.
-func NewViewerModel(t theme.Theme, path, title string, width, height int, app model.CareerApplication, careerOpsPath string) ViewerModel {
+func NewViewerModel(t theme.Theme, careerOpsPath, path, title string, width, height int, app model.CareerApplication) ViewerModel {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		content = []byte("Error reading file: " + err.Error())
@@ -52,16 +57,43 @@ func NewViewerModel(t theme.Theme, path, title string, width, height int, app mo
 	}
 
 	m := ViewerModel{
-		lines:         lines,
-		title:         title,
-		width:         width,
-		height:        height,
-		theme:         t,
-		app:           app,
-		careerOpsPath: careerOpsPath,
+		lines:           lines,
+		title:           title,
+		width:           width,
+		height:          height,
+		theme:           t,
+		app:             app,
+		careerOpsPath:   careerOpsPath,
+		coverLetterPath: parseCoverLetterPath(lines, careerOpsPath),
 	}
 	m.rebuildRender()
 	return m
+}
+
+// parseCoverLetterPath scans the report lines for a "PDF generated: output/..." line
+// inside a "## Cover Letter Draft" section and returns the relative path if the file exists.
+func parseCoverLetterPath(lines []string, careerOpsPath string) string {
+	inCoverSection := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "## Cover Letter Draft") {
+			inCoverSection = true
+			continue
+		}
+		if inCoverSection && strings.HasPrefix(trimmed, "## ") {
+			break
+		}
+		if inCoverSection {
+			if m := reCoverLetterPDF.FindStringSubmatch(line); m != nil {
+				relPath := m[1]
+				abs := filepath.Join(careerOpsPath, filepath.FromSlash(relPath))
+				if _, err := os.Stat(abs); err == nil {
+					return relPath
+				}
+			}
+		}
+	}
+	return ""
 }
 
 // rebuildRender recomputes renderedLines from raw lines using the current width.
@@ -157,6 +189,12 @@ func (m ViewerModel) Update(msg tea.Msg) (ViewerModel, tea.Cmd) {
 				maxScroll = 0
 			}
 			m.scrollOffset = maxScroll
+
+		case "L":
+			if m.coverLetterPath != "" {
+				fullPath := filepath.Join(m.careerOpsPath, filepath.FromSlash(m.coverLetterPath))
+				return m, func() tea.Msg { return ViewerOpenCoverLetterMsg{Path: fullPath} }
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -453,11 +491,13 @@ func (m ViewerModel) renderTableBlock(lines []string) []string {
 }
 
 var (
-	reBold       = regexp.MustCompile(`\*\*([^*]+)\*\*`)
-	reLink       = regexp.MustCompile(`\[([^\]]+)\]\(([^)]+)\)`)
-	reBareURL    = regexp.MustCompile(`https?://\S*[^\s\)\]\.,;:!?]`)
-	reInlineCode = regexp.MustCompile("`([^`]+)`")
-	reListNumber = regexp.MustCompile(`^(\s*\d+\.\s+)(.*)$`)
+	reBold           = regexp.MustCompile(`\*\*([^*]+)\*\*`)
+	reLink           = regexp.MustCompile(`\[([^\]]+)\]\(([^)]+)\)`)
+	reBareURL        = regexp.MustCompile(`https?://\S*[^\s\)\]\.,;:!?]`)
+	reInlineCode     = regexp.MustCompile("`([^`]+)`")
+	reListNumber     = regexp.MustCompile(`^(\s*\d+\.\s+)(.*)$`)
+	reCoverLetterPDF = regexp.MustCompile(`PDF generated:\s*(output/[^\s]+\.pdf)`)
+	reRelPDFPath     = regexp.MustCompile(`output/cv-[^\s\)\]\.,;:!?"']+\.pdf`)
 )
 
 func isHeadingLine(line string) bool {
@@ -506,7 +546,7 @@ func (m ViewerModel) renderInlineElementsAs(line string, baseColor lipgloss.Colo
 	var b strings.Builder
 	rest := line
 	for rest != "" {
-		match := findInlineMatch(rest, codeStyle, boldStyle, linkStyle)
+		match := findInlineMatch(rest, codeStyle, boldStyle, linkStyle, m.careerOpsPath)
 		if match == nil {
 			b.WriteString(baseStyle.Render(rest))
 			break
@@ -525,7 +565,7 @@ type inlineMatch struct {
 	rendered   string
 }
 
-func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style) *inlineMatch {
+func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style, careerOpsPath string) *inlineMatch {
 	var best *inlineMatch
 	consider := func(loc []int, rendered func() string) {
 		if loc == nil || (best != nil && loc[0] >= best.start) {
@@ -551,6 +591,26 @@ func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style) *
 	}
 	if loc := reBareURL.FindStringIndex(s); loc != nil {
 		consider(loc, func() string { return linkStyle.Render(s[loc[0]:loc[1]]) })
+	}
+	if loc := reRelPDFPath.FindStringIndex(s); loc != nil {
+		consider(loc, func() string {
+			relPath := s[loc[0]:loc[1]]
+			styled := linkStyle.Render(relPath)
+			if careerOpsPath == "" {
+				return styled
+			}
+			joined := filepath.Join(careerOpsPath, filepath.FromSlash(relPath))
+			absPath, err := filepath.Abs(joined)
+			if err != nil {
+				return styled
+			}
+			forward := filepath.ToSlash(absPath)
+			if !strings.HasPrefix(forward, "/") {
+				forward = "/" + forward // Windows: C:/... → /C:/...
+			}
+			// OSC 8 hyperlink: ESC ] 8 ; ; URL BEL text ESC ] 8 ; ; BEL
+			return "\x1b]8;;" + "file://" + forward + "\x07" + styled + "\x1b]8;;\x07"
+		})
 	}
 	return best
 }
@@ -661,12 +721,17 @@ func (m ViewerModel) renderFooter() string {
 				keyStyle.Render("Esc/q") + descStyle.Render(" cancel"))
 	}
 
-	return style.Render(
-		keyStyle.Render("↑↓") + descStyle.Render(" scroll  ") +
-			keyStyle.Render("PgUp/Dn") + descStyle.Render(" page  ") +
-			keyStyle.Render("g/G") + descStyle.Render(" top/end  ") +
-			keyStyle.Render("c") + descStyle.Render(" status  ") +
-			keyStyle.Render("Esc") + descStyle.Render(" back"))
+	footer := keyStyle.Render("↑↓") + descStyle.Render(" scroll  ") +
+		keyStyle.Render("PgUp/Dn") + descStyle.Render(" page  ") +
+		keyStyle.Render("g/G") + descStyle.Render(" top/end  ") +
+		keyStyle.Render("c") + descStyle.Render(" status  ") +
+		keyStyle.Render("Esc") + descStyle.Render(" back")
+
+	if m.coverLetterPath != "" {
+		footer += "  " + keyStyle.Render("L") + descStyle.Render(" cover letter")
+	}
+
+	return style.Render(footer)
 }
 
 func (m ViewerModel) handleStatusPicker(msg tea.KeyMsg) (ViewerModel, tea.Cmd) {
