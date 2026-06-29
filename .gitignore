@@ -4,6 +4,7 @@ data/applications.md
 data/applications.db
 data/pipeline.md
 data/scan-history.tsv
+data/pdf-index.tsv
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
@@ -20,6 +21,14 @@ batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*
 !jds/.gitkeep
+
+# Personal documents — never commit scans or copies of these (PII).
+# Catches common identity/credential filenames so they can't be staged by accident.
+*passport*
+*diploma*
+*简历*
+*学位*
+*成绩单*
 
 # Interview prep (accumulated STAR+R stories — user data)
 interview-prep/*
