@@ -161,6 +161,8 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
+  { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
+  { name: 'validate-system-paths-coverage.mjs', expectExit: 0 },
   // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
   // default portals.yml because end-user workspaces often have a real user-layer
   // portals file that would trigger a live remote sweep during tests.
@@ -787,18 +789,42 @@ if (fileExists('providers/local-parser.mjs')) {
 // 4th pipe-delimited column when present, and degrades to the original 3-column
 // form when the ATS exposes no location.
 try {
-  const { formatPipelineOffer } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { formatPipelineOffer, formatCompensation } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
   const withLoc = formatPipelineOffer({ url: 'https://x/1', company: 'Acme', title: 'SA', location: 'Remote (US)' });
   const noLoc = formatPipelineOffer({ url: 'https://x/2', company: 'BigCo', title: 'PM' });
   const blankLoc = formatPipelineOffer({ url: 'https://x/3', company: 'Co', title: 'Eng', location: '   ' });
+  const nonStringLoc = formatPipelineOffer({ url: 'https://x/3b', company: 'Co', title: 'Eng', location: 42 });
   if (
     withLoc === '- [ ] https://x/1 | Acme | SA | Remote (US)' &&
     noLoc === '- [ ] https://x/2 | BigCo | PM' &&
-    blankLoc === '- [ ] https://x/3 | Co | Eng'
+    blankLoc === '- [ ] https://x/3 | Co | Eng' &&
+    nonStringLoc === '- [ ] https://x/3b | Co | Eng'
   ) {
-    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent)');
+    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent / non-string)');
   } else {
-    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}"`);
+    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}" / "${nonStringLoc}"`);
+  }
+
+  // pipeline.md compensation column (B3): formatCompensation renders the parsed
+  // {min,max,currency} salary; formatPipelineOffer appends it as the 5th column,
+  // forcing the (possibly empty) location cell so comp stays positionally 5th.
+  const compRange = formatCompensation({ min: 180000, max: 220000, currency: 'USD' });
+  const compSingle = formatCompensation({ min: 150000, max: 150000, currency: 'usd' });
+  const compNone = formatCompensation(null);
+  const compZeroMin = formatCompensation({ min: 0, max: 200000, currency: '' });
+  const withComp = formatPipelineOffer({ url: 'https://x/4', company: 'Acme', title: 'AI Eng', location: 'Remote', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  const compNoLoc = formatPipelineOffer({ url: 'https://x/5', company: 'Acme', title: 'AI Eng', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  if (
+    compRange === '180000-220000 USD' &&
+    compSingle === '150000 usd' &&
+    compNone === '' &&
+    compZeroMin === '200000' &&
+    withComp === '- [ ] https://x/4 | Acme | AI Eng | Remote | 180000-220000 USD' &&
+    compNoLoc === '- [ ] https://x/5 | Acme | AI Eng |  | 180000-220000 USD'
+  ) {
+    pass('scan.mjs formatPipelineOffer appends compensation column (forces empty location cell when needed)');
+  } else {
+    fail(`scan.mjs compensation column wrong: "${compRange}" / "${compSingle}" / "${compNone}" / "${compZeroMin}" / "${withComp}" / "${compNoLoc}"`);
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
@@ -7031,6 +7057,670 @@ try {
 
 } catch (e) {
   fail(`jobicy provider tests crashed: ${e.message}`);
+}
+
+// ── 42. PROVIDERS — JustJoin.it ───────────────────────────────────────────
+
+console.log('\n42. Provider — justjoin');
+
+try {
+  const jj = (await import(pathToFileURL(join(ROOT, 'providers/justjoin.mjs')).href)).default;
+  const { parseJustJoinResponse } = await import(pathToFileURL(join(ROOT, 'providers/justjoin.mjs')).href);
+
+  if (jj.id === 'justjoin') pass('justjoin.id is "justjoin"');
+  else fail(`justjoin.id is ${JSON.stringify(jj.id)}`);
+
+  if (jj.detect({ name: 'JustJoin', careers_url: 'https://justjoin.it/job-offers/all-locations' })?.url) {
+    pass('justjoin.detect() matches job-offers URL');
+  } else {
+    fail('justjoin.detect() should match justjoin.it job-offers URL');
+  }
+
+  if (jj.detect({ name: 'X', careers_url: 'https://evil.example/justjoin.it/job-offers' }) === null) {
+    pass('justjoin.detect() rejects path-spoofed URLs');
+  } else {
+    fail('justjoin.detect() must reject path-spoofed URLs');
+  }
+
+  if (jj.detect({ name: 'X', api: 'https://justjoin.it/api/candidate-api/offers/count' }) === null) {
+    pass('justjoin.detect() rejects non-offers API paths');
+  } else {
+    fail('justjoin.detect() must reject non-offers API paths');
+  }
+
+  const fakeResponse = {
+    data: [
+      {
+        slug: 'acme-senior-dev-warsaw-javascript',
+        title: 'Senior Developer',
+        companyName: 'Acme',
+        workplaceType: 'remote',
+        locations: [{ city: 'Warszawa' }],
+        publishedAt: '2026-06-12T10:00:00.000Z',
+      },
+      { slug: '', title: 'Missing Slug', companyName: 'Broken' },
+      null,
+    ],
+    meta: { next: { cursor: null } },
+  };
+
+  const parsed = parseJustJoinResponse(fakeResponse);
+  if (parsed.length === 1) pass('justjoin parser filters malformed rows');
+  else fail(`justjoin parser returned ${parsed.length} rows, expected 1`);
+
+  if (parsed[0].title === 'Senior Developer' && parsed[0].url === 'https://justjoin.it/job-offer/acme-senior-dev-warsaw-javascript') {
+    pass('justjoin parser maps title and URL');
+  } else {
+    fail(`justjoin parser mapped title/url incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  if (parsed[0].company === 'Acme' && parsed[0].location === 'remote, Warszawa' && typeof parsed[0].postedAt === 'number') {
+    pass('justjoin parser maps company, location, and postedAt');
+  } else {
+    fail(`justjoin parser mapped fields incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  let capturedUrl = '';
+  let capturedOpts = null;
+  const fetched = await jj.fetch(
+    { name: 'JustJoin', careers_url: 'https://justjoin.it/job-offers/all-locations', max_pages: 1 },
+    {
+      transport: 'http',
+      fetchJson: async (url, opts) => {
+        capturedUrl = url;
+        capturedOpts = opts;
+        return fakeResponse;
+      },
+      fetchText: async () => '',
+    },
+  );
+  if (fetched.length === 1 && capturedUrl.startsWith('https://justjoin.it/api/candidate-api/offers?')) {
+    pass('justjoin.fetch() uses candidate API endpoint');
+  } else {
+    fail(`justjoin.fetch() endpoint/result wrong: ${capturedUrl} ${JSON.stringify(fetched)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') pass('justjoin.fetch() passes redirect:"error"');
+  else fail(`justjoin.fetch() should pass redirect:"error", got ${JSON.stringify(capturedOpts)}`);
+
+  let ssrfRejected = false;
+  try {
+    await jj.fetch(
+      { name: 'Evil', careers_url: 'https://evil.example/job-offers/all-locations' },
+      {
+        transport: 'http',
+        fetchJson: async () => { throw new Error('SSRF! should not reach here'); },
+        fetchText: async () => '',
+      },
+    );
+  } catch (e) {
+    if (e.message.includes('trusted justjoin.it')) ssrfRejected = true;
+  }
+  if (ssrfRejected) pass('justjoin.fetch() rejects untrusted host');
+  else fail('justjoin.fetch() should reject untrusted host');
+
+  let badShape = false;
+  try {
+    parseJustJoinResponse({ jobs: [] });
+  } catch (e) {
+    if (e.message.includes('unexpected API response')) badShape = true;
+  }
+  if (badShape) pass('justjoin parser throws on bad response shape');
+  else fail('justjoin parser should throw on bad response shape');
+} catch (e) {
+  fail(`justjoin provider tests crashed: ${e.message}`);
+}
+
+// ── 43. PROVIDERS — NoFluffJobs ───────────────────────────────────────────
+
+console.log('\n43. Provider — nofluffjobs');
+
+try {
+  const nfj = (await import(pathToFileURL(join(ROOT, 'providers/nofluffjobs.mjs')).href)).default;
+  const { parseNoFluffJobsResponse } = await import(pathToFileURL(join(ROOT, 'providers/nofluffjobs.mjs')).href);
+
+  if (nfj.id === 'nofluffjobs') pass('nofluffjobs.id is "nofluffjobs"');
+  else fail(`nofluffjobs.id is ${JSON.stringify(nfj.id)}`);
+
+  if (nfj.detect({ name: 'NoFluff', careers_url: 'https://nofluffjobs.com/pl' })?.url) {
+    pass('nofluffjobs.detect() matches nofluffjobs.com URL');
+  } else {
+    fail('nofluffjobs.detect() should match nofluffjobs.com URL');
+  }
+
+  if (nfj.detect({ name: 'X', careers_url: 'https://evil.example/nofluffjobs.com/pl' }) === null) {
+    pass('nofluffjobs.detect() rejects path-spoofed URLs');
+  } else {
+    fail('nofluffjobs.detect() must reject path-spoofed URLs');
+  }
+
+  const fakeResponse = {
+    postings: [
+      {
+        title: 'Frontend Engineer',
+        name: 'ExampleCo',
+        url: 'frontend-engineer-remote',
+        posted: 1781270000000,
+        fullyRemote: true,
+        location: { places: [{ city: 'Kraków' }] },
+      },
+      { title: '', name: 'Broken', url: 'missing-title' },
+      7,
+    ],
+    totalPages: 1,
+  };
+
+  const parsed = parseNoFluffJobsResponse(fakeResponse);
+  if (parsed.length === 1) pass('nofluffjobs parser filters malformed rows');
+  else fail(`nofluffjobs parser returned ${parsed.length} rows, expected 1`);
+
+  if (parsed[0].title === 'Frontend Engineer' && parsed[0].url === 'https://nofluffjobs.com/pl/job/frontend-engineer-remote') {
+    pass('nofluffjobs parser maps title and URL');
+  } else {
+    fail(`nofluffjobs parser mapped title/url incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  if (parsed[0].company === 'ExampleCo' && parsed[0].location === 'Remote, Kraków' && parsed[0].postedAt === 1781270000000) {
+    pass('nofluffjobs parser maps company, location, and postedAt');
+  } else {
+    fail(`nofluffjobs parser mapped fields incorrectly: ${JSON.stringify(parsed[0])}`);
+  }
+
+  let capturedUrl = '';
+  let capturedOpts = null;
+  const fetched = await nfj.fetch(
+    { name: 'NoFluffJobs', careers_url: 'https://nofluffjobs.com/pl', max_pages: 1 },
+    {
+      transport: 'http',
+      fetchJson: async (url, opts) => {
+        capturedUrl = url;
+        capturedOpts = opts;
+        return fakeResponse;
+      },
+      fetchText: async () => '',
+    },
+  );
+  if (fetched.length === 1 && capturedUrl.startsWith('https://nofluffjobs.com/api/search/posting?')) {
+    pass('nofluffjobs.fetch() uses search posting API endpoint');
+  } else {
+    fail(`nofluffjobs.fetch() endpoint/result wrong: ${capturedUrl} ${JSON.stringify(fetched)}`);
+  }
+
+  if (capturedOpts && capturedOpts.method === 'POST' && capturedOpts.redirect === 'error') {
+    pass('nofluffjobs.fetch() uses POST and redirect:"error"');
+  } else {
+    fail(`nofluffjobs.fetch() should use POST and redirect:"error", got ${JSON.stringify(capturedOpts)}`);
+  }
+
+  let ssrfRejected = false;
+  try {
+    await nfj.fetch({ name: 'Evil', careers_url: 'https://evil.example/pl' }, { transport: 'http', fetchJson: async () => fakeResponse, fetchText: async () => '' });
+  } catch (e) {
+    if (e.message.includes('trusted nofluffjobs.com')) ssrfRejected = true;
+  }
+  if (ssrfRejected) pass('nofluffjobs.fetch() rejects untrusted host');
+  else fail('nofluffjobs.fetch() should reject untrusted host');
+
+  let badShape = false;
+  try {
+    parseNoFluffJobsResponse({ jobs: [] });
+  } catch (e) {
+    if (e.message.includes('unexpected API response')) badShape = true;
+  }
+  if (badShape) pass('nofluffjobs parser throws on bad response shape');
+  else fail('nofluffjobs parser should throw on bad response shape');
+} catch (e) {
+  fail(`nofluffjobs provider tests crashed: ${e.message}`);
+}
+
+// ── 44. openrouter-runner — portals drift guard ─────────────────
+console.log('\n44. openrouter-runner — portals drift guard');
+
+try {
+  const { parsePortals } = await import(pathToFileURL(join(ROOT, 'openrouter-runner.mjs')).href);
+  const exampleYaml = readFileSync(join(ROOT, 'templates/portals.example.yml'), 'utf-8');
+  const { companies, titleMatches } = parsePortals(exampleYaml);
+
+  // The no-CLI runner must read the SAME canonical portals schema as scan.mjs
+  // (tracked_companies[].api + title_filter.positive/negative). If the schema
+  // drifts and the runner stops matching, this fails loudly — instead of the
+  // runner silently scanning zero companies (the exact bug this guard prevents).
+  if (companies.length > 0) pass(`runner parsePortals extracts ${companies.length} api-companies from the canonical portals schema`);
+  else fail('runner parsePortals extracted 0 companies from templates/portals.example.yml — schema drift');
+
+  if (companies.length > 0 && companies.every(c => c.name && c.api)) pass('each extracted company has a name and a JSON api endpoint');
+  else fail(`runner companies missing name/api: ${JSON.stringify(companies.slice(0, 3))}`);
+
+  if (titleMatches('AI Engineer') && !titleMatches('Forklift Operator')) {
+    pass('runner titleMatches honors title_filter.positive/negative from the canonical schema');
+  } else {
+    fail(`runner titleMatches drift: "AI Engineer"=${titleMatches('AI Engineer')} "Forklift Operator"=${titleMatches('Forklift Operator')}`);
+  }
+} catch (e) {
+  fail(`openrouter-runner portals drift guard crashed: ${e.message}`);
+}
+
+// ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
+
+console.log('\n45. Scan cooldown filter');
+try {
+  const { addDays, buildCooldownFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // addDays tests
+  if (addDays('2026-06-24', 180) === '2026-12-21') {
+    pass('addDays computes date correctly (180 days)');
+  } else {
+    fail(`addDays expected 2026-12-21 but got ${addDays('2026-06-24', 180)}`);
+  }
+
+  // shouldDedupScanHistoryRow tests
+  const activeCo = shouldDedupScanHistoryRow({ firstSeen: '2026-06-24', status: 'cooldown:CompanyA:2026-12-21' }, { today: '2026-06-25' });
+  const expiredCo = shouldDedupScanHistoryRow({ firstSeen: '2026-06-24', status: 'cooldown:CompanyA:2026-12-21' }, { today: '2026-12-22' });
+  if (activeCo === true && expiredCo === false) {
+    pass('shouldDedupScanHistoryRow dedups active cooldowns and lets expired ones through');
+  } else {
+    fail(`shouldDedupScanHistoryRow wrong: activeCo=${activeCo}, expiredCo=${expiredCo}`);
+  }
+
+  // buildCooldownFilter tests
+  const windows = {
+    CompanyA: {
+      same_role_days: 180,
+      cross_role_bucket: 'all_EM_roles',
+      applied_to: ['Senior Software Engineer'],
+      last_apply_date: '2026-06-01',
+    }
+  };
+
+  const filterToday = '2026-06-15'; // within 180 days from 2026-06-01 (cooldownUntil = 2026-11-28)
+  const filterExpired = '2026-12-01'; // expired
+  const filterBoundary = '2026-11-28'; // exactly cooldownUntil
+
+  const cooldownFilterActive = buildCooldownFilter(windows, filterToday);
+  const cooldownFilterExpired = buildCooldownFilter(windows, filterExpired);
+  const cooldownFilterBoundary = buildCooldownFilter(windows, filterBoundary);
+
+  // Exact/substring role match test
+  const jobSameRole = { company: 'Company A', title: 'Senior Software Engineer' };
+  const jobSubRole = { company: 'CompanyA Corp', title: 'Lead Senior Software Engineer' };
+  const jobOtherRole = { company: 'Company A', title: 'Staff QA Engineer' };
+  const jobCrossRole = { company: 'Company A', title: 'Engineering Manager' };
+
+  if (cooldownFilterActive(jobSameRole).skip === true &&
+      cooldownFilterActive(jobSubRole).skip === true &&
+      cooldownFilterActive(jobOtherRole).skip === false &&
+      cooldownFilterActive(jobCrossRole).skip === true) {
+    pass('cooldownFilter active skips same role, substring role, and cross role bucket matches');
+  } else {
+    fail(`cooldownFilter active: sameRole=${cooldownFilterActive(jobSameRole).skip}, subRole=${cooldownFilterActive(jobSubRole).skip}, otherRole=${cooldownFilterActive(jobOtherRole).skip}, crossRole=${cooldownFilterActive(jobCrossRole).skip}`);
+  }
+
+  if (cooldownFilterExpired(jobSameRole).skip === false) {
+    pass('cooldownFilter does not skip when cooldown window has expired');
+  } else {
+    fail('cooldownFilter skipped job after expiration');
+  }
+
+  // Boundary day test
+  if (cooldownFilterBoundary(jobSameRole).skip === false) {
+    pass('cooldownFilter does not skip on boundary day (today === cooldownUntil)');
+  } else {
+    fail('cooldownFilter skipped job on boundary day');
+  }
+
+  // Lookalike company test
+  const jobLookalikeCompany = { company: 'CompanyAlpha', title: 'Senior Software Engineer' };
+  if (cooldownFilterActive(jobLookalikeCompany).skip === false) {
+    pass('cooldownFilter does not match lookalike company (CompanyAlpha vs CompanyA)');
+  } else {
+    fail('cooldownFilter matched lookalike company');
+  }
+
+} catch (e) {
+  fail(`cooldown filter tests crashed: ${e.message}`);
+}
+
+// ── 46. Provider — jobspresso ──────────────────────────────────────
+
+console.log('\nXX. Provider — jobspresso');
+
+try {
+  const {
+    default: jobspresso,
+    parseJobspressoFeed,
+  } = await import(pathToFileURL(join(ROOT, 'providers/jobspresso.mjs')).href);
+
+  if (jobspresso.id === 'jobspresso') {
+    pass('jobspresso.id is "jobspresso"');
+  } else {
+    fail(`jobspresso.id is "${jobspresso.id}"`);
+  }
+
+  if (
+    jobspresso.detect({ provider: 'jobspresso' })?.url ===
+      'https://jobspresso.co/?feed=job_feed'
+  ) {
+    pass('jobspresso.detect() claims explicit provider config');
+  } else {
+    fail('jobspresso.detect() failed');
+  }
+
+  if (jobspresso.detect({ provider: 'other' }) === null) {
+    pass('jobspresso.detect() ignores other provider ids');
+  } else {
+    fail('jobspresso.detect() should ignore other providers');
+  }
+
+  const xml = `
+<rss>
+  <channel>
+    <item>
+      <title><![CDATA[Senior Backend Engineer]]></title>
+      <link>https://jobspresso.co/job/acme/backend</link>
+      <pubDate>Mon, 02 Jun 2025 12:00:00 GMT</pubDate>
+      <job_listing:company><![CDATA[Acme]]></job_listing:company>
+      <job_listing:location><![CDATA[Remote]]></job_listing:location>
+    </item>
+
+    <item>
+      <title></title>
+      <link>https://jobspresso.co/job/skip</link>
+    </item>
+
+    <item>
+      <title>Bad Host</title>
+      <link>https://evil.com/job</link>
+    </item>
+  </channel>
+</rss>
+`;
+
+  const jobs = parseJobspressoFeed(xml);
+
+  if (jobs.length === 1) {
+    pass('parseJobspressoFeed keeps valid items and drops malformed ones');
+  } else {
+    fail(`expected 1 job, got ${jobs.length}`);
+  }
+
+  const job = jobs[0];
+
+  if (
+    job.title === 'Senior Backend Engineer' &&
+    job.company === 'Acme' &&
+    job.location === 'Remote' &&
+    job.url === 'https://jobspresso.co/job/acme/backend' &&
+    typeof job.postedAt === 'number'
+  ) {
+    pass('parseJobspressoFeed maps title, url, company, location and postedAt');
+  } else {
+    fail(`unexpected parsed job: ${JSON.stringify(job)}`);
+  }
+
+  let fetchCalled = false;
+
+  const fetched = await jobspresso.fetch({}, {
+    async fetchText(url, opts) {
+      fetchCalled = true;
+
+      if (
+        url !== 'https://jobspresso.co/?feed=job_feed' ||
+        opts?.redirect !== 'error'
+      ) {
+        throw new Error('unexpected fetch arguments');
+      }
+
+      return xml;
+    },
+  });
+
+  if (fetchCalled && fetched.length === 1) {
+    pass('jobspresso.fetch() requests the pinned RSS feed');
+  } else {
+    fail('jobspresso.fetch() did not fetch correctly');
+  }
+
+  if (fetchCalled) {
+    pass('jobspresso.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail('jobspresso.fetch() never called fetchText');
+  }
+
+} catch (e) {
+  fail(`jobspresso provider tests crashed: ${e.message}`);
+}
+
+// ── 47. Provider — workingnomads ────────────────────────────────
+console.log('\n47. Provider — workingnomads');
+
+try {
+  const workingnomadsModule = await import(pathToFileURL(join(ROOT, 'providers/workingnomads.mjs')).href);
+  const workingnomads = workingnomadsModule.default;
+
+  if (workingnomads.id === 'workingnomads') pass('workingnomads.id is "workingnomads"');
+  else fail(`workingnomads.id is ${JSON.stringify(workingnomads.id)}`);
+
+  if (typeof workingnomads.fetch === 'function') pass('workingnomads exports a fetch() function');
+  else fail('workingnomads.fetch should be a function');
+
+  // Deterministic sample payload (top-level array) — no network. Two valid jobs
+  // plus two that must be dropped (empty title, non-absolute url). Row 0 carries
+  // surrounding whitespace on every field to verify trimming.
+  const sample = [
+    {
+      title: 'Senior AI Engineer',
+      url: 'https://www.workingnomads.com/jobs/acme-senior-ai-engineer',
+      company_name: '  Acme Corp  ',                 // surrounding space → trimmed
+      location: '  Remote (Worldwide)  ',            // surrounding space → trimmed
+    },
+    {
+      title: '  Platform Engineer  ',              // leading/trailing space → trimmed
+      url: '  https://www.workingnomads.com/jobs/beta-platform-engineer  ',
+      company_name: '',                            // empty → falls back to entry.name
+      // location omitted → ''
+    },
+    {
+      title: '',                                    // dropped: empty title
+      url: 'https://www.workingnomads.com/jobs/bad-empty-title',
+      company_name: 'Bad Co',
+    },
+    {
+      title: 'Relative URL Role',                   // dropped: non-absolute url
+      url: '/jobs/relative',
+      company_name: 'Rel Co',
+    },
+  ];
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await workingnomads.fetch(
+    { name: 'Working Nomads Board', provider: 'workingnomads' },
+    { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://www.workingnomads.com/api/exposed_jobs/')
+    pass('workingnomads.fetch() requests the board-wide feed URL');
+  else fail(`workingnomads.fetch() requested ${JSON.stringify(capturedUrl)}`);
+
+  if (capturedOpts && capturedOpts.redirect === 'error')
+    pass('workingnomads.fetch() passes redirect:"error" to fetchJson (SSRF guard)');
+  else fail(`workingnomads.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+
+  if (fetched.length === 2)
+    pass('workingnomads.fetch() keeps 2 valid jobs (drops empty-title + non-absolute-url rows)');
+  else fail(`workingnomads.fetch() returned ${fetched.length} jobs (expected 2)`);
+
+  // Normalized shape: exactly { title, url, company, location }.
+  if (fetched[0] && Object.keys(fetched[0]).sort().join(',') === 'company,location,title,url')
+    pass('workingnomads.fetch() returns the normalized { title, url, company, location } shape');
+  else fail(`workingnomads.fetch() row 0 keys = ${JSON.stringify(fetched[0] && Object.keys(fetched[0]))}`);
+
+  if (fetched[0]?.title === 'Senior AI Engineer'
+      && fetched[0]?.url === 'https://www.workingnomads.com/jobs/acme-senior-ai-engineer'
+      && fetched[0]?.company === 'Acme Corp'
+      && fetched[0]?.location === 'Remote (Worldwide)')
+    pass('workingnomads.fetch() maps title/url and trims company_name + location into the normalized shape');
+  else fail(`workingnomads.fetch() row 0 = ${JSON.stringify(fetched[0])}`);
+
+  if (fetched[1]?.title === 'Platform Engineer'
+      && fetched[1]?.url === 'https://www.workingnomads.com/jobs/beta-platform-engineer')
+    pass('workingnomads.fetch() trims whitespace from title and url');
+  else fail(`workingnomads.fetch() row 1 title/url = ${JSON.stringify({ title: fetched[1]?.title, url: fetched[1]?.url })}`);
+
+  if (fetched[1]?.company === 'Working Nomads Board')
+    pass('workingnomads.fetch() falls back to entry.name when company_name is empty');
+  else fail(`workingnomads.fetch() row 1 company = ${JSON.stringify(fetched[1]?.company)}`);
+
+  if (fetched[1]?.location === '')
+    pass('workingnomads.fetch() yields empty location when location is absent');
+  else fail(`workingnomads.fetch() row 1 location = ${JSON.stringify(fetched[1]?.location)}`);
+
+  // company default when both company_name and entry.name are missing → 'Working Nomads'.
+  const noName = await workingnomads.fetch(
+    {},
+    { fetchJson: async () => ([{ title: 'Role', url: 'https://www.workingnomads.com/jobs/x' }]) },
+  );
+  if (noName[0]?.company === 'Working Nomads')
+    pass('workingnomads.fetch() defaults company to "Working Nomads" when company_name and entry.name are both missing');
+  else fail(`workingnomads.fetch() default company = ${JSON.stringify(noName[0]?.company)}`);
+
+  // Empty-feed safety: an empty array yields an empty result (no crash).
+  const empty = await workingnomads.fetch({ name: 'X' }, { fetchJson: async () => ([]) });
+  if (Array.isArray(empty) && empty.length === 0) pass('workingnomads.fetch() returns [] for an empty feed');
+  else fail(`workingnomads.fetch() empty feed = ${JSON.stringify(empty)}`);
+
+  // Malformed (non-array) response → throws.
+  let badResponseThrew = false;
+  try {
+    await workingnomads.fetch(
+      { name: 'X', provider: 'workingnomads' },
+      { fetchJson: async () => ({ jobs: [] }) },
+    );
+  } catch (e) {
+    badResponseThrew = /unexpected API response/.test(e.message);
+  }
+  if (badResponseThrew) pass('workingnomads.fetch() throws on a non-array API response');
+  else fail('workingnomads.fetch() should throw when the response is not an array');
+
+} catch (e) {
+  fail(`workingnomads provider tests crashed: ${e.message}`);
+}
+
+// ── 48. Provider — 4dayweek ─────────────────────────────────────
+console.log('\n48. Provider — 4dayweek');
+
+try {
+  const fdwModule = await import(pathToFileURL(join(ROOT, 'providers/4dayweek.mjs')).href);
+  const fourdayweek = fdwModule.default;
+  const { normalize4dwJob } = fdwModule;
+
+  if (fourdayweek.id === '4dayweek') pass('4dayweek.id is "4dayweek"');
+  else fail(`4dayweek.id is ${JSON.stringify(fourdayweek.id)}`);
+
+  // normalize4dwJob — full mapping (url is BUILT from slug; feed has no url).
+  const full = normalize4dwJob(
+    { title: '  Financial Controller  ', slug: 'financial-controller-at-panzerglass-45369c18', company_name: '  PanzerGlass  ', locations: [{ city: 'Hinnerup', country: 'Denmark' }], work_arrangement: 'onsite', posted: 1782731975, is_expired: false },
+    'Fallback',
+  );
+  if (full && full.title === 'Financial Controller'
+      && full.url === 'https://4dayweek.io/job/financial-controller-at-panzerglass-45369c18'
+      && full.company === 'PanzerGlass' && full.location === 'Hinnerup, Denmark'
+      && full.postedAt === 1782731975 * 1000) {
+    pass('normalize4dwJob maps title, builds /job/<slug> url, company_name, location, posted(seconds)→ms');
+  } else {
+    fail(`normalize4dwJob full row = ${JSON.stringify(full)}`);
+  }
+
+  // work_arrangement: remote → "Remote" appended.
+  const remoteJob = normalize4dwJob({ title: 'R', slug: 'r-1', locations: [{ city: 'Berlin', country: 'Germany' }], work_arrangement: 'remote' });
+  if (remoteJob?.location === 'Berlin, Germany, Remote') pass('normalize4dwJob appends "Remote" when work_arrangement is "remote"');
+  else fail(`normalize4dwJob remote location = ${JSON.stringify(remoteJob?.location)}`);
+
+  // company fallbacks: company.name → entry name → "4 Day Week" (whitespace-only ignored).
+  const coNested = normalize4dwJob({ title: 'T', slug: 's-1', company: { name: 'Nested Co' } });
+  const coEntry = normalize4dwJob({ title: 'T', slug: 's-2' }, 'Entry Name');
+  const coDefault = normalize4dwJob({ title: 'T', slug: 's-3' });
+  const coBlank = normalize4dwJob({ title: 'T', slug: 's-4' }, '   ');
+  if (coNested?.company === 'Nested Co' && coEntry?.company === 'Entry Name'
+      && coDefault?.company === '4 Day Week' && coBlank?.company === '4 Day Week') {
+    pass('normalize4dwJob falls back company → company.name → entry name → "4 Day Week" (whitespace-only ignored)');
+  } else {
+    fail(`normalize4dwJob company fallbacks = ${JSON.stringify({ n: coNested?.company, e: coEntry?.company, d: coDefault?.company, b: coBlank?.company })}`);
+  }
+
+  // postedAt omitted when posted is absent / non-finite.
+  const noDate = normalize4dwJob({ title: 'T', slug: 's-5' });
+  const nanDate = normalize4dwJob({ title: 'T', slug: 's-6', posted: 'oops' });
+  if (noDate && !('postedAt' in noDate) && nanDate && !('postedAt' in nanDate)) {
+    pass('normalize4dwJob omits postedAt when posted is absent or non-numeric (NaN-safe)');
+  } else {
+    fail(`normalize4dwJob date handling = ${JSON.stringify({ none: noDate, nan: nanDate })}`);
+  }
+
+  // drops: expired, empty title, missing/unsafe slug, non-object.
+  const drops = [
+    normalize4dwJob({ title: 'Expired', slug: 'x-1', is_expired: true }),
+    normalize4dwJob({ title: '', slug: 'x-2' }),
+    normalize4dwJob({ title: 'No slug' }),
+    normalize4dwJob({ title: 'Unsafe slug', slug: 'a/b' }),
+    normalize4dwJob({ title: 'Spacey slug', slug: 'a b' }),
+    normalize4dwJob(null),
+  ];
+  if (drops.every(r => r === null)) {
+    pass('normalize4dwJob drops expired / empty-title / no-slug / unsafe-slug / non-object');
+  } else {
+    fail(`normalize4dwJob drops = ${JSON.stringify(drops)}`);
+  }
+
+  // fetch(): pagination by ?page=N, stop on has_more:false.
+  const mk = (i) => ({ title: `Role ${i}`, slug: `role-${i}`, company_name: `Co ${i}`, locations: [{ city: 'Lisbon', country: 'Portugal' }], posted: 1782731975 + i, is_expired: false });
+  const page1 = { jobs: Array.from({ length: 25 }, (_, i) => mk(i)), total: 50, page: 1, has_more: true };
+  const page2 = { jobs: [mk(25), mk(26), { title: '', slug: 'bad' }], total: 50, page: 2, has_more: false }; // has_more:false → stop; 1 drop
+  const requested = [];
+  const pagedFetch = async (url, opts) => {
+    requested.push({ url, redirect: opts?.redirect });
+    return Number(new URL(url).searchParams.get('page')) === 1 ? page1 : page2;
+  };
+  const paged = await fourdayweek.fetch({ name: '4 Day Week' }, { fetchJson: pagedFetch });
+
+  if (requested.length === 2
+      && requested[0].url === 'https://4dayweek.io/api/jobs?page=1'
+      && requested[1].url === 'https://4dayweek.io/api/jobs?page=2') {
+    pass('4dayweek.fetch() builds ?page=N URLs and stops when has_more is false');
+  } else {
+    fail(`4dayweek.fetch() requested = ${JSON.stringify(requested.map(r => r.url))}`);
+  }
+
+  if (requested.every(r => r.redirect === 'error')) pass('4dayweek.fetch() passes redirect:"error" on every page (SSRF guard)');
+  else fail(`4dayweek.fetch() redirect opts = ${JSON.stringify(requested.map(r => r.redirect))}`);
+
+  if (paged.length === 27) pass('4dayweek.fetch() aggregates valid jobs across pages (25 + 2, dropping the empty-title row)');
+  else fail(`4dayweek.fetch() returned ${paged.length} jobs (expected 27)`);
+
+  // max_pages cap: only the first page is requested even though has_more is true.
+  const capReq = [];
+  await fourdayweek.fetch(
+    { name: '4 Day Week', max_pages: 1 },
+    { fetchJson: async (url) => { capReq.push(url); return { jobs: Array.from({ length: 25 }, (_, i) => mk(i)), total: 999, has_more: true }; } },
+  );
+  if (capReq.length === 1 && capReq[0] === 'https://4dayweek.io/api/jobs?page=1') {
+    pass('4dayweek.fetch() honors max_pages (stops at the cap even when has_more is true)');
+  } else {
+    fail(`4dayweek.fetch() max_pages:1 requested ${JSON.stringify(capReq)}`);
+  }
+
+  // unexpected API response → throws.
+  let badThrew = false;
+  try {
+    await fourdayweek.fetch({ name: 'X' }, { fetchJson: async () => ([]) });
+  } catch (e) {
+    badThrew = /unexpected API response/.test(e.message);
+  }
+  if (badThrew) pass('4dayweek.fetch() throws on unexpected API response shape (no jobs array)');
+  else fail('4dayweek.fetch() should throw when the jobs array is absent');
+
+} catch (e) {
+  fail(`4dayweek provider tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

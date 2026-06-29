@@ -43,6 +43,7 @@ This complements — does not replace — the per-URL liveness gate in `auto-pip
 - [ ] https://jobs.example.com/posting/123
 - [ ] https://boards.greenhouse.io/company/jobs/456 | Company Inc | Senior PM
 - [ ] https://jobs.ashbyhq.com/acme/789 | Acme Corp | Solutions Architect | Remote (US)
+- [ ] https://jobs.ashbyhq.com/acme/790 | Acme Corp | AI Engineer | Remote (US) | 180000-220000 USD
 - [!] https://private.url/job — Error: login required
 
 ## Processed
@@ -50,9 +51,16 @@ This complements — does not replace — the per-URL liveness gate in `auto-pip
 - [x] #144 | https://boards.greenhouse.io/xyz/jobs/012 | BigCo | SA | 2.1/5 | PDF ❌
 ```
 
-Pending lines are `- [ ] {url} | {company} | {title} | {location}`. The scanner
-fills the trailing `| {location}` column when the ATS exposes it; older
-3-column lines (no location) remain valid and are read as an empty location.
+Pending lines are variable-width. The rawest form is a bare pasted URL,
+`- [ ] {url}` (1 column) — what you drop into the inbox by hand. Scanner-written
+entries add `| {company} | {title}` (3 columns) plus two optional trailing
+columns: `| {location}` (4th) and `| {compensation}` (5th). The scanner fills the
+trailing columns only when the ATS exposes them, so 1-, 3-, 4-, and 5-column rows
+are all valid — `{url} | {company} | {title} | {location} | {compensation}` is the
+maximum (canonical) shape, not the only one. The columns are positional, so a row
+carrying compensation always includes the location cell (empty if unknown); a row
+with only a location stays 4 columns. Existing shorter rows remain valid and are
+read as having empty values for the missing trailing columns.
 
 ## Intelligent JD detection from URL
 
