@@ -45,6 +45,11 @@ modes/_profile.md
 .update-dismissed
 .update-lock
 
+# Plugin layer — opt-in toggles + user-installed plugins + integrity lock (never auto-updated)
+config/plugins.yml
+plugins.local/
+plugins.lock
+
 # Secrets (never commit — use .env.example as template)
 .env
 # Universal safety net — protects ALL checkouts/branches, incl. untracked subprojects

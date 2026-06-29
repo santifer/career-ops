@@ -151,3 +151,116 @@ func TestParseApplicationsResolvesTrackerRelativeReportLinks(t *testing.T) {
 		}
 	}
 }
+
+// writeTracker writes applications.md under data/ and returns the temp root and
+// the tracker path.
+func writeTracker(t *testing.T, body string) (string, string) {
+	t.Helper()
+	tempDir := t.TempDir()
+	dataDir := filepath.Join(tempDir, "data")
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	path := filepath.Join(dataDir, "applications.md")
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatalf("write tracker: %v", err)
+	}
+	return tempDir, path
+}
+
+const insertedColumnTracker = `# Applications Tracker
+
+| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|----------|-------|--------|-----|--------|-------|
+| 1 | 2026-06-01 | Acme | VP Marketing | Remote | 4.5/5 | Applied | ✅ | [1](reports/001.md) | hot lead |
+`
+
+// A tracker with a Location column inserted before Score (the customized layout
+// the Node tracker tooling supports since #954) must not desync the Go reader.
+// Without header-aware mapping, Status reads the Score cell and the report link
+// reads the PDF cell, so ReportNumber comes back empty.
+func TestParseApplicationsMapsColumnsByHeader(t *testing.T) {
+	tempDir, _ := writeTracker(t, insertedColumnTracker)
+
+	apps := ParseApplications(tempDir)
+	if len(apps) != 1 {
+		t.Fatalf("expected 1 application, got %d", len(apps))
+	}
+	a := apps[0]
+	if a.Company != "Acme" {
+		t.Errorf("Company = %q, want \"Acme\"", a.Company)
+	}
+	if a.Role != "VP Marketing" {
+		t.Errorf("Role = %q, want \"VP Marketing\"", a.Role)
+	}
+	if a.Status != "Applied" {
+		t.Errorf("Status = %q, want \"Applied\"", a.Status)
+	}
+	if a.ScoreRaw != "4.5/5" {
+		t.Errorf("ScoreRaw = %q, want \"4.5/5\"", a.ScoreRaw)
+	}
+	if !a.HasPDF {
+		t.Errorf("HasPDF = false, want true")
+	}
+	if a.ReportNumber != "1" {
+		t.Errorf("ReportNumber = %q, want \"1\"", a.ReportNumber)
+	}
+}
+
+// End-to-end status update on the inserted-column layout: parse, update, and
+// re-parse. Only the Status cell may change; every other cell stays intact.
+func TestUpdateApplicationStatusInsertedColumn(t *testing.T) {
+	tempDir, path := writeTracker(t, insertedColumnTracker)
+
+	apps := ParseApplications(tempDir)
+	if len(apps) != 1 {
+		t.Fatalf("expected 1 application, got %d", len(apps))
+	}
+	if err := UpdateApplicationStatus(tempDir, apps[0], "Interview"); err != nil {
+		t.Fatalf("UpdateApplicationStatus: %v", err)
+	}
+
+	out, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read back: %v", err)
+	}
+	got := string(out)
+	if !strings.Contains(got, "| Interview |") {
+		t.Errorf("Status cell not updated to Interview, file now:\n%s", got)
+	}
+	if strings.Count(got, "Interview") != 1 {
+		t.Errorf("write touched an unintended cell; %d occurrences of Interview:\n%s", strings.Count(got, "Interview"), got)
+	}
+	for _, cell := range []string{"| Acme |", "| VP Marketing |", "| Remote |", "| 4.5/5 |", "| ✅ |"} {
+		if !strings.Contains(got, cell) {
+			t.Errorf("expected intact cell %q missing after write:\n%s", cell, got)
+		}
+	}
+
+	reparsed := ParseApplications(tempDir)
+	if reparsed[0].Status != "Interview" {
+		t.Errorf("reparsed Status = %q, want \"Interview\"", reparsed[0].Status)
+	}
+	if reparsed[0].ScoreRaw != "4.5/5" {
+		t.Errorf("reparsed ScoreRaw = %q, want \"4.5/5\"", reparsed[0].ScoreRaw)
+	}
+}
+
+// resolveTrackerColumns detects the header layout, and falls back to the legacy
+// fixed layout when no recognizable header row is present.
+func TestResolveTrackerColumns(t *testing.T) {
+	header := strings.Split(insertedColumnTracker, "\n")
+	cols := resolveTrackerColumns(header)
+	if cols["status"] != 6 {
+		t.Errorf("status index = %d, want 6 (inserted Location column)", cols["status"])
+	}
+	if cols["score"] != 5 {
+		t.Errorf("score index = %d, want 5", cols["score"])
+	}
+
+	headerless := []string{"| 1 | 2026-06-01 | Acme | VP Marketing | 4.5/5 | Applied | ✅ | [1](reports/001.md) | note |"}
+	fallback := resolveTrackerColumns(headerless)
+	if fallback["status"] != 5 {
+		t.Errorf("fallback status index = %d, want 5 (legacy layout)", fallback["status"])
+	}
+}
