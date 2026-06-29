@@ -722,6 +722,22 @@ if (
   fail('eval modes missing liveness gate before evaluation');
 }
 
+if (
+  ofertaMode.includes('## Bounded Research Budget') &&
+  ofertaMode.includes('single-pass') &&
+  ofertaMode.includes('hard cap: 5 total WebSearch queries') &&
+  ofertaMode.includes('Do not invoke `deep-research`') &&
+  ofertaMode.includes('Do not spawn subagents') &&
+  ofertaMode.includes('Do not continue researching after the query cap is reached') &&
+  autoPipelineMode.includes('bounded research budget') &&
+  autoPipelineMode.includes('must not invoke `deep-research`') &&
+  autoPipelineMode.includes('must not spawn subagents')
+) {
+  pass('eval modes bound company/comp research to a non-recursive query budget (#1235)');
+} else {
+  fail('eval modes do not bound company/comp research against recursive fanout (#1235)');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -785,6 +801,32 @@ try {
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
+}
+
+try {
+  const { appendToPipeline } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-missing-pipeline-'));
+  const originalCwd = process.cwd();
+  try {
+    mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
+    process.chdir(fixtureRoot);
+    appendToPipeline([{ url: 'https://jobs.example.com/1', company: 'Acme', title: 'Engineer' }]);
+    const pipeline = readFileSync(join(fixtureRoot, 'data', 'pipeline.md'), 'utf-8');
+    if (
+      pipeline.includes('# Pipeline') &&
+      pipeline.includes('## Pending') &&
+      pipeline.includes('- [ ] https://jobs.example.com/1 | Acme | Engineer')
+    ) {
+      pass('scan.mjs creates data/pipeline.md before appending offers on fresh installs (#1252)');
+    } else {
+      fail(`scan.mjs fresh-install pipeline contents wrong: ${JSON.stringify(pipeline)}`);
+    }
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+} catch (err) {
+  fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
 }
 
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
@@ -2780,6 +2822,89 @@ try {
   }
 } catch (e) {
   fail(`tracker-utils rebuildRow unit test crashed: ${e.message}`);
+}
+
+// #946/#954 header-name column mapping lived only in merge-tracker; followup-cadence,
+// analyze-patterns and dedup-tracker still parsed by fixed index, so an inserted
+// Location column mis-parsed (Location read as Score, etc.). The logic is now shared
+// in tracker-parse.mjs and all four readers use it.
+console.log('\n🧪 Testing shared tracker-parse column mapping...');
+try {
+  const { resolveColumns, parseTrackerRow, LEGACY_COLMAP } = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
+
+  const withLocation = [
+    '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|----------|-------|--------|-----|--------|-------|',
+    '| 7 | 2026-06-28 | Acme | Eng | Berlin | 4.5/5 | Applied | ✅ | [7](r.md) | keep |',
+  ];
+  const cmLoc = resolveColumns(withLocation);
+  const rowLoc = parseTrackerRow(withLocation[2], cmLoc);
+  if (rowLoc && rowLoc.score === '4.5/5' && rowLoc.status === 'Applied' && rowLoc.location === 'Berlin') {
+    pass('tracker-parse maps columns by header — inserted Location column does not shift Score/Status');
+  } else {
+    fail(`tracker-parse mis-parsed a Location-column row: ${JSON.stringify(rowLoc)}`);
+  }
+
+  const legacy = [
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 8 | 2026-06-28 | Beta | PM | 3.0/5 | Evaluated | ❌ | [8](r.md) | n |',
+  ];
+  const rowLeg = parseTrackerRow(legacy[2], resolveColumns(legacy));
+  if (rowLeg && rowLeg.score === '3.0/5' && rowLeg.status === 'Evaluated' && rowLeg.location === undefined) {
+    pass('tracker-parse still parses the legacy fixed layout correctly');
+  } else {
+    fail(`tracker-parse broke the legacy layout: ${JSON.stringify(rowLeg)}`);
+  }
+
+  // No header row → falls back to legacy map; header/separator/stray rows → null.
+  if (resolveColumns(['| 9 | … |']) === LEGACY_COLMAP &&
+      parseTrackerRow(legacy[0], LEGACY_COLMAP) === null &&
+      parseTrackerRow(legacy[1], LEGACY_COLMAP) === null &&
+      parseTrackerRow('not a table row', LEGACY_COLMAP) === null) {
+    pass('tracker-parse falls back to legacy map and rejects header/separator/non-rows');
+  } else {
+    fail('tracker-parse fallback / non-row rejection wrong');
+  }
+} catch (e) {
+  fail(`tracker-parse unit test crashed: ${e.message}`);
+}
+
+// dedup-tracker reads AND writes by column; with a Location column its status
+// promotion must target the Status cell, not fixed parts[6].
+console.log('\n🧪 Testing dedup-tracker with an inserted Location column...');
+try {
+  const locTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-loc-'));
+  try {
+    mkdirSync(join(locTmp, 'data'));
+    const tracker = join(locTmp, 'data', 'applications.md');
+    // Two dup rows (same company+role) with a Location column. Keeper #60 has the
+    // higher score but the lower status; dedup must promote its Status cell.
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|----------|-------|--------|-----|--------|-------|\n' +
+      '| 60 | 2026-02-01 | Globex | Widget Engineer | Berlin | 4.5/5 | Rejected | ❌ | [60](r.md) | LOC_SENTINEL |\n' +
+      '| 61 | 2026-02-02 | Globex | Widget Engineer | Berlin | 3.0/5 | Evaluated | ❌ | [61](r.md) | dup |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker crashed on a Location-column tracker');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const keeper = out.split('\n').find(l => l.includes('| 60 |'));
+      // Status cell promoted to Evaluated; Location (Berlin) and the score untouched.
+      if (keeper && keeper.includes('Berlin') && keeper.includes('4.5/5') && keeper.includes('Evaluated') && keeper.includes('LOC_SENTINEL')) {
+        pass('dedup-tracker promotes the Status cell (not a fixed index) on a Location-column tracker');
+      } else {
+        fail(`dedup-tracker mis-handled a Location-column row: "${keeper}"`);
+      }
+    }
+  } finally {
+    rmSync(locTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`dedup-tracker Location-column test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
