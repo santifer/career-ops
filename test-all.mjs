@@ -788,18 +788,42 @@ if (fileExists('providers/local-parser.mjs')) {
 // 4th pipe-delimited column when present, and degrades to the original 3-column
 // form when the ATS exposes no location.
 try {
-  const { formatPipelineOffer } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { formatPipelineOffer, formatCompensation } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
   const withLoc = formatPipelineOffer({ url: 'https://x/1', company: 'Acme', title: 'SA', location: 'Remote (US)' });
   const noLoc = formatPipelineOffer({ url: 'https://x/2', company: 'BigCo', title: 'PM' });
   const blankLoc = formatPipelineOffer({ url: 'https://x/3', company: 'Co', title: 'Eng', location: '   ' });
+  const nonStringLoc = formatPipelineOffer({ url: 'https://x/3b', company: 'Co', title: 'Eng', location: 42 });
   if (
     withLoc === '- [ ] https://x/1 | Acme | SA | Remote (US)' &&
     noLoc === '- [ ] https://x/2 | BigCo | PM' &&
-    blankLoc === '- [ ] https://x/3 | Co | Eng'
+    blankLoc === '- [ ] https://x/3 | Co | Eng' &&
+    nonStringLoc === '- [ ] https://x/3b | Co | Eng'
   ) {
-    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent)');
+    pass('scan.mjs formatPipelineOffer appends location column (degrades to 3 cols when absent / non-string)');
   } else {
-    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}"`);
+    fail(`scan.mjs formatPipelineOffer location column wrong: "${withLoc}" / "${noLoc}" / "${blankLoc}" / "${nonStringLoc}"`);
+  }
+
+  // pipeline.md compensation column (B3): formatCompensation renders the parsed
+  // {min,max,currency} salary; formatPipelineOffer appends it as the 5th column,
+  // forcing the (possibly empty) location cell so comp stays positionally 5th.
+  const compRange = formatCompensation({ min: 180000, max: 220000, currency: 'USD' });
+  const compSingle = formatCompensation({ min: 150000, max: 150000, currency: 'usd' });
+  const compNone = formatCompensation(null);
+  const compZeroMin = formatCompensation({ min: 0, max: 200000, currency: '' });
+  const withComp = formatPipelineOffer({ url: 'https://x/4', company: 'Acme', title: 'AI Eng', location: 'Remote', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  const compNoLoc = formatPipelineOffer({ url: 'https://x/5', company: 'Acme', title: 'AI Eng', salary: { min: 180000, max: 220000, currency: 'USD' } });
+  if (
+    compRange === '180000-220000 USD' &&
+    compSingle === '150000 usd' &&
+    compNone === '' &&
+    compZeroMin === '200000' &&
+    withComp === '- [ ] https://x/4 | Acme | AI Eng | Remote | 180000-220000 USD' &&
+    compNoLoc === '- [ ] https://x/5 | Acme | AI Eng |  | 180000-220000 USD'
+  ) {
+    pass('scan.mjs formatPipelineOffer appends compensation column (forces empty location cell when needed)');
+  } else {
+    fail(`scan.mjs compensation column wrong: "${compRange}" / "${compSingle}" / "${compNone}" / "${compZeroMin}" / "${withComp}" / "${compNoLoc}"`);
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
