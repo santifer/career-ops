@@ -722,6 +722,22 @@ if (
   fail('eval modes missing liveness gate before evaluation');
 }
 
+if (
+  ofertaMode.includes('## Bounded Research Budget') &&
+  ofertaMode.includes('single-pass') &&
+  ofertaMode.includes('hard cap: 5 total WebSearch queries') &&
+  ofertaMode.includes('Do not invoke `deep-research`') &&
+  ofertaMode.includes('Do not spawn subagents') &&
+  ofertaMode.includes('Do not continue researching after the query cap is reached') &&
+  autoPipelineMode.includes('bounded research budget') &&
+  autoPipelineMode.includes('must not invoke `deep-research`') &&
+  autoPipelineMode.includes('must not spawn subagents')
+) {
+  pass('eval modes bound company/comp research to a non-recursive query budget (#1235)');
+} else {
+  fail('eval modes do not bound company/comp research against recursive fanout (#1235)');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -785,6 +801,32 @@ try {
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
+}
+
+try {
+  const { appendToPipeline } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-missing-pipeline-'));
+  const originalCwd = process.cwd();
+  try {
+    mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
+    process.chdir(fixtureRoot);
+    appendToPipeline([{ url: 'https://jobs.example.com/1', company: 'Acme', title: 'Engineer' }]);
+    const pipeline = readFileSync(join(fixtureRoot, 'data', 'pipeline.md'), 'utf-8');
+    if (
+      pipeline.includes('# Pipeline') &&
+      pipeline.includes('## Pending') &&
+      pipeline.includes('- [ ] https://jobs.example.com/1 | Acme | Engineer')
+    ) {
+      pass('scan.mjs creates data/pipeline.md before appending offers on fresh installs (#1252)');
+    } else {
+      fail(`scan.mjs fresh-install pipeline contents wrong: ${JSON.stringify(pipeline)}`);
+    }
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+} catch (err) {
+  fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
 }
 
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
@@ -2780,6 +2822,89 @@ try {
   }
 } catch (e) {
   fail(`tracker-utils rebuildRow unit test crashed: ${e.message}`);
+}
+
+// #946/#954 header-name column mapping lived only in merge-tracker; followup-cadence,
+// analyze-patterns and dedup-tracker still parsed by fixed index, so an inserted
+// Location column mis-parsed (Location read as Score, etc.). The logic is now shared
+// in tracker-parse.mjs and all four readers use it.
+console.log('\n🧪 Testing shared tracker-parse column mapping...');
+try {
+  const { resolveColumns, parseTrackerRow, LEGACY_COLMAP } = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
+
+  const withLocation = [
+    '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|----------|-------|--------|-----|--------|-------|',
+    '| 7 | 2026-06-28 | Acme | Eng | Berlin | 4.5/5 | Applied | ✅ | [7](r.md) | keep |',
+  ];
+  const cmLoc = resolveColumns(withLocation);
+  const rowLoc = parseTrackerRow(withLocation[2], cmLoc);
+  if (rowLoc && rowLoc.score === '4.5/5' && rowLoc.status === 'Applied' && rowLoc.location === 'Berlin') {
+    pass('tracker-parse maps columns by header — inserted Location column does not shift Score/Status');
+  } else {
+    fail(`tracker-parse mis-parsed a Location-column row: ${JSON.stringify(rowLoc)}`);
+  }
+
+  const legacy = [
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 8 | 2026-06-28 | Beta | PM | 3.0/5 | Evaluated | ❌ | [8](r.md) | n |',
+  ];
+  const rowLeg = parseTrackerRow(legacy[2], resolveColumns(legacy));
+  if (rowLeg && rowLeg.score === '3.0/5' && rowLeg.status === 'Evaluated' && rowLeg.location === undefined) {
+    pass('tracker-parse still parses the legacy fixed layout correctly');
+  } else {
+    fail(`tracker-parse broke the legacy layout: ${JSON.stringify(rowLeg)}`);
+  }
+
+  // No header row → falls back to legacy map; header/separator/stray rows → null.
+  if (resolveColumns(['| 9 | … |']) === LEGACY_COLMAP &&
+      parseTrackerRow(legacy[0], LEGACY_COLMAP) === null &&
+      parseTrackerRow(legacy[1], LEGACY_COLMAP) === null &&
+      parseTrackerRow('not a table row', LEGACY_COLMAP) === null) {
+    pass('tracker-parse falls back to legacy map and rejects header/separator/non-rows');
+  } else {
+    fail('tracker-parse fallback / non-row rejection wrong');
+  }
+} catch (e) {
+  fail(`tracker-parse unit test crashed: ${e.message}`);
+}
+
+// dedup-tracker reads AND writes by column; with a Location column its status
+// promotion must target the Status cell, not fixed parts[6].
+console.log('\n🧪 Testing dedup-tracker with an inserted Location column...');
+try {
+  const locTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-loc-'));
+  try {
+    mkdirSync(join(locTmp, 'data'));
+    const tracker = join(locTmp, 'data', 'applications.md');
+    // Two dup rows (same company+role) with a Location column. Keeper #60 has the
+    // higher score but the lower status; dedup must promote its Status cell.
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|----------|-------|--------|-----|--------|-------|\n' +
+      '| 60 | 2026-02-01 | Globex | Widget Engineer | Berlin | 4.5/5 | Rejected | ❌ | [60](r.md) | LOC_SENTINEL |\n' +
+      '| 61 | 2026-02-02 | Globex | Widget Engineer | Berlin | 3.0/5 | Evaluated | ❌ | [61](r.md) | dup |\n');
+
+    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
+    if (r === null) {
+      fail('dedup-tracker crashed on a Location-column tracker');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const keeper = out.split('\n').find(l => l.includes('| 60 |'));
+      // Status cell promoted to Evaluated; Location (Berlin) and the score untouched.
+      if (keeper && keeper.includes('Berlin') && keeper.includes('4.5/5') && keeper.includes('Evaluated') && keeper.includes('LOC_SENTINEL')) {
+        pass('dedup-tracker promotes the Status cell (not a fixed index) on a Location-column tracker');
+      } else {
+        fail(`dedup-tracker mis-handled a Location-column row: "${keeper}"`);
+      }
+    }
+  } finally {
+    rmSync(locTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`dedup-tracker Location-column test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER FUZZY DEDUP (#751 / #721 family) ──────────────
@@ -5405,8 +5530,116 @@ try {
   fail(`weworkremotely provider tests crashed: ${e.message}`);
 }
 
-// ── 33. Provider — themuse ─────────────────────────────────────
-console.log('\n33. Provider — themuse');
+// ── 33. Provider — remotive ─────────────────────────────────────
+console.log('\n33. Provider — remotive');
+
+try {
+  const remotiveModule = await import(pathToFileURL(join(ROOT, 'providers/remotive.mjs')).href);
+  const remotive = remotiveModule.default;
+
+  if (remotive.id === 'remotive') pass('remotive.id is "remotive"');
+  else fail(`remotive.id is ${JSON.stringify(remotive.id)}`);
+
+  // Deterministic sample payload — no network. Two valid jobs plus two that must
+  // be dropped by the filter (empty title, non-absolute url).
+  const sample = {
+    jobs: [
+      {
+        title: 'Staff AI Engineer',
+        url: 'https://remotive.com/remote-jobs/acme-staff-ai-engineer',
+        company_name: 'Acme Corp',
+        candidate_required_location: 'Worldwide',
+      },
+      {
+        title: '  Platform Engineer  ',                 // leading/trailing space → trimmed
+        url: '  https://remotive.com/remote-jobs/beta-platform-engineer  ',
+        company_name: '',                               // empty → falls back to entry.name
+        // candidate_required_location omitted → location ''
+      },
+      {
+        title: '',                                       // dropped: empty title
+        url: 'https://remotive.com/remote-jobs/bad-empty-title',
+        company_name: 'Bad Co',
+      },
+      {
+        title: 'Relative URL Role',                      // dropped: non-absolute url
+        url: '/remote-jobs/relative',
+        company_name: 'Rel Co',
+      },
+    ],
+  };
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await remotive.fetch(
+    { name: 'Remotive Board', provider: 'remotive' },
+    { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://remotive.com/api/remote-jobs')
+    pass('remotive.fetch() requests the board-wide feed URL');
+  else fail(`remotive.fetch() requested ${JSON.stringify(capturedUrl)}`);
+
+  if (capturedOpts && capturedOpts.redirect === 'error')
+    pass('remotive.fetch() passes redirect:"error" to fetchJson (SSRF guard)');
+  else fail(`remotive.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+
+  if (fetched.length === 2)
+    pass('remotive.fetch() keeps 2 valid jobs (drops empty-title + non-absolute-url rows)');
+  else fail(`remotive.fetch() returned ${fetched.length} jobs (expected 2)`);
+
+  // Normalized shape: exactly { title, url, company, location }.
+  if (fetched[0] && Object.keys(fetched[0]).sort().join(',') === 'company,location,title,url')
+    pass('remotive.fetch() returns the normalized { title, url, company, location } shape');
+  else fail(`remotive.fetch() row 0 keys = ${JSON.stringify(fetched[0] && Object.keys(fetched[0]))}`);
+
+  if (fetched[0]?.title === 'Staff AI Engineer'
+      && fetched[0]?.url === 'https://remotive.com/remote-jobs/acme-staff-ai-engineer'
+      && fetched[0]?.company === 'Acme Corp'
+      && fetched[0]?.location === 'Worldwide')
+    pass('remotive.fetch() maps title/url/company_name/candidate_required_location for a full row');
+  else fail(`remotive.fetch() row 0 = ${JSON.stringify(fetched[0])}`);
+
+  if (fetched[1]?.title === 'Platform Engineer'
+      && fetched[1]?.url === 'https://remotive.com/remote-jobs/beta-platform-engineer')
+    pass('remotive.fetch() trims whitespace from title and url');
+  else fail(`remotive.fetch() row 1 title/url = ${JSON.stringify({ title: fetched[1]?.title, url: fetched[1]?.url })}`);
+
+  if (fetched[1]?.company === 'Remotive Board')
+    pass('remotive.fetch() falls back to entry.name when company_name is empty');
+  else fail(`remotive.fetch() row 1 company = ${JSON.stringify(fetched[1]?.company)}`);
+
+  if (fetched[1]?.location === '')
+    pass('remotive.fetch() yields empty location when candidate_required_location is absent');
+  else fail(`remotive.fetch() row 1 location = ${JSON.stringify(fetched[1]?.location)}`);
+
+  // company default when both company_name and entry.name are missing → 'Remotive'.
+  const noName = await remotive.fetch(
+    {},
+    { fetchJson: async () => ({ jobs: [{ title: 'Role', url: 'https://remotive.com/remote-jobs/x' }] }) },
+  );
+  if (noName[0]?.company === 'Remotive')
+    pass('remotive.fetch() defaults company to "Remotive" when company_name and entry.name are both missing');
+  else fail(`remotive.fetch() default company = ${JSON.stringify(noName[0]?.company)}`);
+
+  let badResponseThrew = false;
+  try {
+    await remotive.fetch(
+      { name: 'X', provider: 'remotive' },
+      { fetchJson: async () => ({ wrong: true }) },
+    );
+  } catch (e) {
+    badResponseThrew = /unexpected API response/.test(e.message);
+  }
+  if (badResponseThrew) pass('remotive.fetch() throws on unexpected API response shape');
+  else fail('remotive.fetch() should throw when the jobs array is absent');
+
+} catch (e) {
+  fail(`remotive provider tests crashed: ${e.message}`);
+}
+
+// ── 34. Provider — themuse ─────────────────────────────────────
+console.log('\n34. Provider — themuse');
 
 try {
   const museModule = await import(pathToFileURL(join(ROOT, 'providers/themuse.mjs')).href);
