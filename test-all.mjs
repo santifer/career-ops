@@ -445,16 +445,21 @@ try {
 
 if (!QUICK) {
   console.log('\n4. Dashboard build');
-  const isWindows = process.platform === 'win32';
-  const outPath = isWindows ? 'career-dashboard-test.exe' : '/tmp/career-dashboard-test';
-  const goBuild = run(`cd dashboard && go build -o ${outPath} . 2>&1`);
-  if (goBuild !== null) {
-    pass('Dashboard compiles');
-    if (isWindows) {
-      try { rmSync(join(ROOT, 'dashboard', 'career-dashboard-test.exe'), { force: true }); } catch (e) {}
-    }
+  const goAvailable = run('go version') !== null;
+  if (!goAvailable) {
+    warn('go not found — dashboard build skipped');
   } else {
-    fail('Dashboard build failed');
+    const isWindows = process.platform === 'win32';
+    const outPath = isWindows ? 'career-dashboard-test.exe' : '/tmp/career-dashboard-test';
+    const goBuild = run(`cd dashboard && go build -o ${outPath} . 2>&1`);
+    if (goBuild !== null) {
+      pass('Dashboard compiles');
+      if (isWindows) {
+        try { rmSync(join(ROOT, 'dashboard', 'career-dashboard-test.exe'), { force: true }); } catch (e) {}
+      }
+    } else {
+      fail('Dashboard build failed');
+    }
   }
 } else {
   console.log('\n4. Dashboard build (skipped --quick)');
