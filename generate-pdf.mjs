@@ -251,6 +251,14 @@ async function generatePDF() {
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
 
+  // Path-traversal guard: keep the PDF write inside the project directory so a
+  // crafted output argument (e.g. "../../etc/cron.d/x") can't escape the repo.
+  const relOut = relative(process.cwd(), outputPath);
+  if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
+    console.error(`Refusing to write the PDF outside the project directory: ${outputPath}`);
+    process.exit(1);
+  }
+
   // Validate format
   const validFormats = ['a4', 'letter'];
   if (!validFormats.includes(format)) {
