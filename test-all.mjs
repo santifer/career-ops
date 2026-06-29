@@ -160,6 +160,8 @@ const scripts = [
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
+  { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
+  { name: 'validate-system-paths-coverage.mjs', expectExit: 0 },
   // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
   // default portals.yml because end-user workspaces often have a real user-layer
   // portals file that would trigger a live remote sweep during tests.
@@ -7273,7 +7275,87 @@ try {
   fail(`openrouter-runner portals drift guard crashed: ${e.message}`);
 }
 
-// ── 45. Provider — jobspresso ──────────────────────────────────────
+// ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
+
+console.log('\n45. Scan cooldown filter');
+try {
+  const { addDays, buildCooldownFilter, shouldDedupScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // addDays tests
+  if (addDays('2026-06-24', 180) === '2026-12-21') {
+    pass('addDays computes date correctly (180 days)');
+  } else {
+    fail(`addDays expected 2026-12-21 but got ${addDays('2026-06-24', 180)}`);
+  }
+
+  // shouldDedupScanHistoryRow tests
+  const activeCo = shouldDedupScanHistoryRow({ firstSeen: '2026-06-24', status: 'cooldown:CompanyA:2026-12-21' }, { today: '2026-06-25' });
+  const expiredCo = shouldDedupScanHistoryRow({ firstSeen: '2026-06-24', status: 'cooldown:CompanyA:2026-12-21' }, { today: '2026-12-22' });
+  if (activeCo === true && expiredCo === false) {
+    pass('shouldDedupScanHistoryRow dedups active cooldowns and lets expired ones through');
+  } else {
+    fail(`shouldDedupScanHistoryRow wrong: activeCo=${activeCo}, expiredCo=${expiredCo}`);
+  }
+
+  // buildCooldownFilter tests
+  const windows = {
+    CompanyA: {
+      same_role_days: 180,
+      cross_role_bucket: 'all_EM_roles',
+      applied_to: ['Senior Software Engineer'],
+      last_apply_date: '2026-06-01',
+    }
+  };
+
+  const filterToday = '2026-06-15'; // within 180 days from 2026-06-01 (cooldownUntil = 2026-11-28)
+  const filterExpired = '2026-12-01'; // expired
+  const filterBoundary = '2026-11-28'; // exactly cooldownUntil
+
+  const cooldownFilterActive = buildCooldownFilter(windows, filterToday);
+  const cooldownFilterExpired = buildCooldownFilter(windows, filterExpired);
+  const cooldownFilterBoundary = buildCooldownFilter(windows, filterBoundary);
+
+  // Exact/substring role match test
+  const jobSameRole = { company: 'Company A', title: 'Senior Software Engineer' };
+  const jobSubRole = { company: 'CompanyA Corp', title: 'Lead Senior Software Engineer' };
+  const jobOtherRole = { company: 'Company A', title: 'Staff QA Engineer' };
+  const jobCrossRole = { company: 'Company A', title: 'Engineering Manager' };
+
+  if (cooldownFilterActive(jobSameRole).skip === true &&
+      cooldownFilterActive(jobSubRole).skip === true &&
+      cooldownFilterActive(jobOtherRole).skip === false &&
+      cooldownFilterActive(jobCrossRole).skip === true) {
+    pass('cooldownFilter active skips same role, substring role, and cross role bucket matches');
+  } else {
+    fail(`cooldownFilter active: sameRole=${cooldownFilterActive(jobSameRole).skip}, subRole=${cooldownFilterActive(jobSubRole).skip}, otherRole=${cooldownFilterActive(jobOtherRole).skip}, crossRole=${cooldownFilterActive(jobCrossRole).skip}`);
+  }
+
+  if (cooldownFilterExpired(jobSameRole).skip === false) {
+    pass('cooldownFilter does not skip when cooldown window has expired');
+  } else {
+    fail('cooldownFilter skipped job after expiration');
+  }
+
+  // Boundary day test
+  if (cooldownFilterBoundary(jobSameRole).skip === false) {
+    pass('cooldownFilter does not skip on boundary day (today === cooldownUntil)');
+  } else {
+    fail('cooldownFilter skipped job on boundary day');
+  }
+
+  // Lookalike company test
+  const jobLookalikeCompany = { company: 'CompanyAlpha', title: 'Senior Software Engineer' };
+  if (cooldownFilterActive(jobLookalikeCompany).skip === false) {
+    pass('cooldownFilter does not match lookalike company (CompanyAlpha vs CompanyA)');
+  } else {
+    fail('cooldownFilter matched lookalike company');
+  }
+
+} catch (e) {
+  fail(`cooldown filter tests crashed: ${e.message}`);
+}
+
+// ── 46. Provider — jobspresso ──────────────────────────────────────
 
 console.log('\nXX. Provider — jobspresso');
 

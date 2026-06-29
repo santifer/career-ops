@@ -76,6 +76,7 @@ const SYSTEM_PATHS = [
   'modes/ua/',
   'modes/heuristics/',
   'modes/regional/',
+  'modes/zh/',
   'CLAUDE.md',
   'CODEX.md',
   'OPENCODE.md',
@@ -106,8 +107,8 @@ const SYSTEM_PATHS = [
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
-  'liveness-browser.mjs',
   'liveness-api.mjs',
+  'liveness-browser.mjs',
   'analyze-patterns.mjs',
   'followup-cadence.mjs',
   'gemini-eval.mjs',
@@ -116,10 +117,12 @@ const SYSTEM_PATHS = [
   'openrouter-runner.mjs',
   'test-all.mjs',
   'test-salary-filter.mjs',
+  'test-trust-validator.mjs',
   'tracker-columns-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
   'updater-migration-tests.mjs',
+  'validate-system-paths-coverage.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/README.md',
@@ -132,6 +135,7 @@ const SYSTEM_PATHS = [
   '.agents/',
   '.claude/skills/',
   '.opencode/skills/',
+  '.opencode/commands/',
   '.claude-plugin/',
   '.qwen/',
   '.antigravitycli/skills/',
@@ -267,7 +271,7 @@ function gitStatusEntries() {
     }));
 }
 
-function extractArrayFromSource(source, name) {
+export function extractArrayFromSource(source, name) {
   const match = source.match(new RegExp(`const\\s+${name}\\s*=\\s*\\[([\\s\\S]*?)\\];`));
   if (!match) return [];
   return Array.from(match[1].matchAll(/['"]([^'"]+)['"]/g), (entry) => entry[1]);
