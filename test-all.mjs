@@ -5461,6 +5461,13 @@ try {
   if (stripped === 'Python & gRPC') pass('keyword coverage: htmlToText strips tags/style and decodes entities');
   else fail(`keyword coverage: htmlToText wrong: ${JSON.stringify(stripped)}`);
 
+  // Adversarial: a nested entity must resolve to the literal text "&lt;" (guards the
+  // &amp;-decoded-last fix, so it is not re-decoded into a "<" tag char), and a
+  // comment-sheltered or attribute-laden <script> must still be stripped (tag-filter fix).
+  const hardened = htmlToText('<!--<script>x</script>--><script type="text/js">evil()</script>a &amp;lt;b&gt; c');
+  if (hardened === 'a &lt;b> c') pass('keyword coverage: htmlToText resists nested-entity + sheltered-script bypass');
+  else fail(`keyword coverage: htmlToText hardening wrong: ${JSON.stringify(hardened)}`);
+
   const htmlCv = '<html><body><h2>Summary</h2><p>Built Python and gRPC services.</p></body></html>';
   const rHtml = analyzeCoverage(['Python', 'gRPC', 'Java'], htmlToText(htmlCv));
   if (rHtml.coveragePct === 67 && rHtml.present.includes('gRPC')) pass('keyword coverage: scans text extracted from tailored HTML');

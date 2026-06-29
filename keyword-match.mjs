@@ -204,15 +204,21 @@ export function extractKeywords(reportText) {
  */
 export function htmlToText(html) {
   return String(html || '')
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    // Strip comments first so a comment can't shelter a tag from the strips below.
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    // Match the full opening tag (incl. attributes) before the lazy body, and
+    // tolerate whitespace in the closing tag — a stricter filter CodeQL accepts.
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>')
     .replace(/&#0?39;|&apos;/gi, "'")
     .replace(/&quot;/gi, '"')
+    // Decode &amp; LAST so a nested entity like &amp;lt; resolves to the literal
+    // "&lt;" rather than being re-decoded into a "<" tag character.
+    .replace(/&amp;/gi, '&')
     .replace(/\s+/g, ' ')
     .trim();
 }
