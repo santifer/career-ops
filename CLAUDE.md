@@ -241,41 +241,9 @@ This system is designed to be customized by YOU (AI Agent). When the user asks y
 - "Change the CV template design" → edit `templates/cv-template.html`
 - "Adjust the scoring weights" → edit `modes/_profile.md` for user-specific weighting, or edit `modes/_shared.md` and `batch/batch-prompt.md` only when changing the shared system defaults for everyone
 
-### Language Modes
+### Language Modes & Skill Modes
 
-Default modes are in `modes/` (English). Language-specific modes live in `modes/{lang}/` — each has `_shared.md`, the eval/apply/`pipeline.md` modes, and a `README.md` documenting that market's vocabulary:
-
-| Language | Dir | Markets |
-|----------|-----|---------|
-| German | `modes/de/` | DACH (Germany, Austria, Switzerland) |
-| French | `modes/fr/` | France, Belgium, Switzerland, Luxembourg, Quebec |
-| Japanese | `modes/ja/` | Japan |
-
-**When to use a `{lang}` mode** — if any holds: the user says "use {lang} modes"; `config/profile.yml` sets `language.modes_dir: modes/{lang}`; or you detect a {lang} JD (then suggest switching). Read from `modes/{lang}/` instead of `modes/`.
-
-**When NOT to:** if the user applies to English-language roles — even at French, German, or Japanese companies — use the default English modes.
-
-### Skill Modes
-
-| If the user... | Mode |
-|----------------|------|
-| Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
-| Asks to evaluate offer | `oferta` |
-| Asks to compare offers | `ofertas` |
-| Wants LinkedIn outreach | `contacto` |
-| Asks for company research | `deep` |
-| Preps for interview at specific company | `interview-prep` |
-| Wants interactive profile/CV onboarding | `interview` |
-| Wants to generate CV/PDF | `pdf` |
-| Evaluates a course/cert | `training` |
-| Evaluates portfolio project | `project` |
-| Asks about application status | `tracker` |
-| Fills out application form | `apply` |
-| Searches for new offers | `scan` |
-| Processes pending URLs | `pipeline` |
-| Batch processes offers | `batch` |
-| Asks about rejection patterns or wants to improve targeting | `patterns` |
-| Asks about follow-ups or application cadence | `followup` |
+See `AGENTS.md` — it is the canonical, always-current reference for both. The tables formerly duplicated here fell out of sync between upstream updates.
 
 ### CV Source of Truth
 
