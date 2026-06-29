@@ -5450,10 +5450,11 @@ try {
   // company fallback: url is landing.jobs but not /at/<slug>/ → entry name, then "Landing.jobs".
   const coEntry = normalizeLandingJob({ title: 'T', url: 'https://landing.jobs/jobs/99' }, 'Entry Name');
   const coDefault = normalizeLandingJob({ title: 'T', url: 'https://landing.jobs/jobs/100' });
-  if (coEntry?.company === 'Entry Name' && coDefault?.company === 'Landing.jobs') {
-    pass('normalizeLandingJob falls back company → entry name → "Landing.jobs" when the slug is absent');
+  const coBlank = normalizeLandingJob({ title: 'T', url: 'https://landing.jobs/jobs/101' }, '   '); // whitespace-only → "Landing.jobs"
+  if (coEntry?.company === 'Entry Name' && coDefault?.company === 'Landing.jobs' && coBlank?.company === 'Landing.jobs') {
+    pass('normalizeLandingJob falls back company → entry name → "Landing.jobs" (whitespace-only entry name ignored)');
   } else {
-    fail(`normalizeLandingJob company fallbacks = ${JSON.stringify({ a: coEntry?.company, b: coDefault?.company })}`);
+    fail(`normalizeLandingJob company fallbacks = ${JSON.stringify({ a: coEntry?.company, b: coDefault?.company, c: coBlank?.company })}`);
   }
 
   // postedAt falls back to created_at; omitted when both absent.

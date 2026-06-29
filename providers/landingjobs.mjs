@@ -96,7 +96,9 @@ export function normalizeLandingJob(j, fallbackCompany) {
   }
   if (!url) return null;
 
-  const company = companyFromUrl(url) || fallbackCompany || 'Landing.jobs';
+  const company =
+    companyFromUrl(url) ||
+    (typeof fallbackCompany === 'string' && fallbackCompany.trim() ? fallbackCompany.trim() : 'Landing.jobs');
 
   const first = Array.isArray(j.locations) && j.locations[0] && typeof j.locations[0] === 'object' ? j.locations[0] : {};
   const city = typeof first.city === 'string' ? first.city.trim() : '';
