@@ -340,10 +340,10 @@ When spawning headless workers for batch processing, use the appropriate command
 
 ### TSV Format for Tracker Additions
 
-Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
+Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns plus an optional 10th `url`:
 
 ```
-{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}\t{url}
 ```
 
 **Column order (IMPORTANT -- status BEFORE score):**
@@ -356,6 +356,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 7. `pdf` -- `✅` or `❌`
 8. `report` -- markdown link, always written **root-relative**: `[num](reports/...)`
 9. `notes` -- one-line summary
+10. `url` -- (optional) the posting URL. `merge-tracker.mjs` uses it as the **deterministic dedup key** (the stable natural key), falling back to fuzzy company+role only when a row has no URL. Detected by its `http(s)://` prefix, so it is order-independent with an optional trailing location field. Additive and backward-compatible: 9-column TSVs and trackers without a `URL` column still work. Backfill existing rows from their reports with `node merge-tracker.mjs --backfill-urls`.
 
 **Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
 

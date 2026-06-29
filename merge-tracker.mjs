@@ -22,6 +22,7 @@ import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
+import { normalizeUrl } from './url-key.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -41,6 +42,7 @@ const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 const MIGRATE = process.argv.includes('--migrate');
+const BACKFILL_URLS = process.argv.includes('--backfill-urls');
 const MERGE_HOLD_MS = Number(process.env.CAREER_OPS_MERGE_HOLD_MS) || 0;
 const MERGE_READY_IPC = process.env.CAREER_OPS_MERGE_READY_IPC === '1';
 
@@ -434,6 +436,7 @@ const HEADER_ALIASES = {
   '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
   'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
   'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
+  'url': 'url', 'link': 'url',
 };
 
 // Scan the table for a header row and build a header-name → column-index map.
@@ -453,13 +456,28 @@ function detectColumns(lines) {
   return null;
 }
 
-// Build a tracker row string matching the detected layout (with or without the
-// optional Location column) so writes round-trip through the same schema.
+// Build a tracker row string from the DETECTED column layout (COLMAP), placing
+// each field at its own index. This round-trips any layout — the legacy 9-col,
+// an optional Location column after Role, and/or a trailing URL column — without
+// a separate hand-written branch per combination. Reading and writing by the
+// same name→index map is what makes adding a column an additive, non-breaking
+// change (a positional builder would silently shift cells when a column moved).
 function buildRow(o) {
-  if (COLMAP.location != null) {
-    return `| ${o.num} | ${o.date} | ${o.company} | ${o.role} | ${o.location || '—'} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
-  }
-  return `| ${o.num} | ${o.date} | ${o.company} | ${o.role} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
+  const maxIdx = Math.max(...Object.values(COLMAP));
+  const cells = new Array(maxIdx).fill('');
+  const put = (key, val) => { if (COLMAP[key] != null) cells[COLMAP[key] - 1] = String(val ?? ''); };
+  put('num', o.num);
+  put('date', o.date);
+  put('company', o.company);
+  put('role', o.role);
+  put('location', o.location || '—');
+  put('score', o.score);
+  put('status', o.status);
+  put('pdf', o.pdf);
+  put('report', o.report);
+  put('notes', o.notes);
+  put('url', o.url || '');
+  return `| ${cells.join(' | ')} |`;
 }
 
 /**
@@ -489,8 +507,37 @@ function parseAppLine(line) {
     pdf: parts[COLMAP.pdf],
     report: parts[COLMAP.report],
     notes: COLMAP.notes != null ? (parts[COLMAP.notes] || '') : '',
+    url: COLMAP.url != null ? (parts[COLMAP.url] || '') : '',
     raw: line,
   };
+}
+
+/**
+ * Resolve the optional trailing TSV fields (location and/or URL) by CONTENT.
+ *
+ * The 9-column contract is followed by up to two optional trailing fields: an
+ * (older) location and a (new) posting URL. Parsing them by fixed position is
+ * fragile — a row with a URL but no location would otherwise read the URL as a
+ * location. A URL is unambiguous (it starts with http(s)://), so we classify
+ * each present trailing field by shape, which makes the two fields
+ * order-independent and keeps old location-only rows working untouched.
+ *
+ * @param {string[]} fields - Candidate trailing cells (already string-typed).
+ * @returns {{url: string, location: string}} Classified trailing values.
+ */
+function splitTrailing(fields) {
+  let url = '';
+  let location = '';
+  for (const f of fields) {
+    const t = (f || '').trim();
+    if (!t) continue;
+    if (/^https?:\/\//i.test(t)) {
+      if (!url) url = t;
+    } else if (!location) {
+      location = t;
+    }
+  }
+  return { url, location };
 }
 
 /**
@@ -519,7 +566,7 @@ function parseTsvContent(content, filename) {
       console.warn(`⚠️  Skipping malformed pipe-delimited ${filename}: ${parts.length} fields`);
       return null;
     }
-    // Format: num | date | company | role | score | status | pdf | report | notes [| location]
+    // Format: num | date | company | role | score | status | pdf | report | notes [| location] [| url]
     addition = {
       num: parseInt(parts[0]),
       date: parts[1],
@@ -530,7 +577,7 @@ function parseTsvContent(content, filename) {
       pdf: parts[6],
       report: parts[7],
       notes: parts[8] || '',
-      location: (parts[9] || '').trim(),
+      ...splitTrailing([parts[9], parts[10]]),
     };
   } else {
     // Tab-separated
@@ -574,8 +621,9 @@ function parseTsvContent(content, filename) {
       pdf: parts[6],
       report: parts[7],
       notes: parts[8] || '',
-      // Optional trailing field: tab-separated TSVs may append a location.
-      location: (parts[9] || '').trim(),
+      // Optional trailing fields (location and/or posting URL), classified by
+      // content so a URL-but-no-location row isn't misread as a location.
+      ...splitTrailing([parts[9], parts[10]]),
     };
   }
 
@@ -585,6 +633,100 @@ function parseTsvContent(content, filename) {
   }
 
   return addition;
+}
+
+// Status funnel as a small lattice. A re-evaluation arrives as "Evaluated", so
+// status merges by the LEAST UPPER BOUND of the funnel (monotonic join) rather
+// than by overwrite: a re-eval can advance status but must never downgrade it.
+// Terminal states are absorbing — once a human marks a row Rejected/Discarded/
+// SKIP, a re-eval can't revive it to Evaluated.
+const STATUS_RANK = { 'Evaluated': 0, 'Applied': 1, 'Responded': 2, 'Interview': 3, 'Offer': 4 };
+const TERMINAL_STATES = new Set(['Rejected', 'Discarded', 'SKIP']);
+
+/**
+ * Merge two statuses by the funnel lattice (never downgrade).
+ * @param {string} existing - Status already on the tracker row.
+ * @param {string} incoming - Status from the new addition.
+ * @returns {string} The joined (higher) status.
+ */
+function mergeStatus(existing, incoming) {
+  const e = existing || 'Evaluated';
+  const i = incoming || 'Evaluated';
+  if (TERMINAL_STATES.has(e)) return e;      // terminal is absorbing — keep it
+  if (TERMINAL_STATES.has(i)) return i;      // a new terminal decision advances
+  return (STATUS_RANK[i] ?? 0) > (STATUS_RANK[e] ?? 0) ? i : e;
+}
+
+/**
+ * Merge the PDF flag monotonically — a ✅ (a generated tailored PDF) is never
+ * lost to a later ❌ re-eval that simply didn't regenerate one.
+ * @param {string} existing - Existing PDF cell.
+ * @param {string} incoming - Incoming PDF cell.
+ * @returns {string} '✅' if either side has it, else the incoming/existing value.
+ */
+function mergePdf(existing, incoming) {
+  if (existing === '✅' || incoming === '✅') return '✅';
+  return incoming || existing || '❌';
+}
+
+/**
+ * Find the existing tracker row that is the same opening as `addition`.
+ *
+ * Pass 0 (deterministic): exact match on the normalized posting URL — the stable
+ * natural key. When it hits, it is authoritative.
+ *
+ * Passes 1-3 (legacy fallback, for rows with no URL yet): report-number +
+ * company, entry-number + company, then company + fuzzy role. A fallback
+ * candidate is REJECTED when it carries a URL that DIFFERS from the addition's
+ * URL — two different posting URLs are two different postings, so a fuzzy title
+ * collision must not collapse them (this is the over-dedup bug). A candidate
+ * with no URL stays eligible so legacy un-backfilled rows still match.
+ *
+ * @param {object} addition - Parsed TSV addition.
+ * @param {object[]} existingApps - Parsed tracker rows.
+ * @returns {{match: object, reason: string}|null}
+ */
+function findDuplicate(addition, existingApps) {
+  const addUrl = normalizeUrl(addition.url);
+
+  if (addUrl) {
+    const m = existingApps.find(a => a.url && normalizeUrl(a.url) === addUrl);
+    if (m) return { match: m, reason: 'url' };
+  }
+
+  const normCompany = normalizeCompany(addition.company);
+  // Guard the fuzzy/num/report fallback against collapsing distinct postings:
+  //  - candidate has no URL          → eligible (legacy un-backfilled rows);
+  //  - candidate has a URL, addition has none → REJECT: the candidate is a known
+  //    specific posting and a URL-less addition must not silently claim/clobber
+  //    it (it may be a different role at the same company — the over-dedup bug);
+  //  - both have URLs                → conflict only when they differ.
+  const urlConflict = (cand) => {
+    if (!cand.url) return false;
+    if (!addUrl) return true;
+    return normalizeUrl(cand.url) !== addUrl;
+  };
+
+  const reportNum = extractReportNum(addition.report);
+  if (reportNum) {
+    const m = existingApps.find(a =>
+      extractReportNum(a.report) === reportNum && normalizeCompany(a.company) === normCompany);
+    if (m && !urlConflict(m)) return { match: m, reason: 'report+company' };
+  }
+
+  {
+    const m = existingApps.find(a =>
+      a.num === addition.num && normalizeCompany(a.company) === normCompany);
+    if (m && !urlConflict(m)) return { match: m, reason: 'num+company' };
+  }
+
+  {
+    const m = existingApps.find(a =>
+      normalizeCompany(a.company) === normCompany && roleFuzzyMatch(addition.role, a.role));
+    if (m && !urlConflict(m)) return { match: m, reason: 'fuzzy' };
+  }
+
+  return null;
 }
 
 // ---- Main ----
@@ -632,8 +774,14 @@ if (COLMAP.location != null) console.log('🧭 Detected Location column.');
 const existingApps = [];
 let maxNum = 0;
 
+// Match the markdown separator row PRECISELY (a row of only pipes/dashes/colons/
+// spaces). A blanket `line.includes('---')` also matches DATA rows whose URL
+// contains `---` (common in Workday slugs, e.g. `Product-Strategy---Operations`),
+// which would silently drop those rows from existingApps and break their dedup.
+const isSeparatorRow = (l) => /^\|[\s|:-]+\|\s*$/.test(l);
+
 for (const line of appLines) {
-  if (line.startsWith('|') && !line.includes('---') && !line.includes('Empresa')) {
+  if (line.startsWith('|') && !isSeparatorRow(line) && !line.includes('Empresa')) {
     const app = parseAppLine(line);
     if (app) {
       existingApps.push(app);
@@ -643,6 +791,51 @@ for (const line of appLines) {
 }
 
 console.log(`📊 Existing: ${existingApps.length} entries, max #${maxNum}`);
+
+// One-time backfill: populate the URL column on existing rows from each row's
+// linked report (**URL:** header). This is the EXPAND-phase backfill (Fowler,
+// Parallel Change) — deterministic URL-keyed dedup can't engage on a row until
+// it has a URL, so the key must be backfilled before the merge relies on it.
+// Idempotent: only fills rows whose URL is empty, so it is safe to re-run.
+// Run with: node merge-tracker.mjs --backfill-urls [--dry-run]
+if (BACKFILL_URLS) {
+  if (COLMAP.url == null) {
+    console.error('❌ --backfill-urls: this tracker has no URL column. Add a `URL` header column first (additive, see #URL-dedup), then re-run.');
+    trackerLock.release();
+    process.exit(1);
+  }
+  let filled = 0, noReport = 0, noUrl = 0, already = 0;
+  for (const app of existingApps) {
+    if ((app.url || '').trim()) { already++; continue; }   // idempotent: skip filled rows
+    const linkMatch = (app.report || '').match(/\]\(([^)]+)\)/);
+    if (!linkMatch) { noReport++; continue; }
+    // Report files live under REPORTS_ROOT/reports/. Tracker links may be
+    // root-relative (`reports/...`) or data-relative (`../reports/...`); resolve
+    // both against REPORTS_ROOT after stripping any leading `../` so backfill
+    // finds the report regardless of which link style a row uses (#URL-dedup).
+    const reportPath = resolve(REPORTS_ROOT, linkMatch[1].trim().replace(/^(\.\.\/)+/, ''));
+    let url = '';
+    try {
+      const txt = readFileSync(reportPath, 'utf-8');
+      const um = txt.match(/\*\*URL:\*\*\s*(\S+)/i);
+      if (um) url = um[1].trim();
+    } catch { noReport++; continue; }
+    if (!/^https?:\/\//i.test(url)) { noUrl++; continue; }
+    const lineIdx = appLines.indexOf(app.raw);
+    if (lineIdx < 0) continue;
+    appLines[lineIdx] = buildRow({ ...app, url });
+    filled++;
+  }
+  const summary = `filled ${filled}; ${already} already had one; ${noReport} missing/unreadable report; ${noUrl} report had no URL`;
+  if (DRY_RUN) {
+    console.log(`🔎 Backfill URLs (dry-run): would fill ${filled} row(s). (${summary})`);
+  } else {
+    writeFileAtomic(APPS_FILE, appLines.join('\n'));
+    console.log(`✅ Backfill URLs: ${summary}.`);
+  }
+  trackerLock.release();
+  process.exit(0);
+}
 
 // Read tracker additions
 if (!existsSync(ADDITIONS_DIR)) {
@@ -668,6 +861,7 @@ console.log(`📥 Found ${tsvFiles.length} pending additions`);
 let added = 0;
 let updated = 0;
 let skipped = 0;
+let warnedNoUrlCol = false;
 const newLines = [];
 
 for (const file of tsvFiles) {
@@ -675,72 +869,76 @@ for (const file of tsvFiles) {
   const addition = parseTsvContent(content, file);
   if (!addition) { skipped++; continue; }
 
+  // If additions carry a URL but the tracker has no URL column, deterministic
+  // URL dedup can't engage (falls back to fuzzy). Warn once so it's not silent.
+  if (addition.url && COLMAP.url == null && !warnedNoUrlCol) {
+    console.warn('⚠️  Additions carry a URL but this tracker has no URL column — URL dedup is INACTIVE (fuzzy fallback). Add a `URL` header column to enable it.');
+    warnedNoUrlCol = true;
+  }
+
   // Normalize the report link to be relative to the tracker file's directory.
   // The TSV convention carries a root-relative `reports/...` link; rewrite it
   // so it resolves correctly when clicked from applications.md (see #760).
   addition.report = normalizeReportLink(addition.report);
 
-  // Check for duplicate by:
-  // 1. Exact report number match
-  // 2. Company + role fuzzy match
-  const reportNum = extractReportNum(addition.report);
-  let duplicate = null;
+  // Find a duplicate. Pass 0 is the deterministic posting-URL key (the stable
+  // natural key); report/num/fuzzy are the legacy fallback for rows without a
+  // URL yet, guarded so two distinct URLs never collapse. See findDuplicate().
+  const found = findDuplicate(addition, existingApps);
 
-  if (reportNum) {
-    // Report-number match must also confirm company (#912). Report-file
-    // sequence and tracker-row sequence are independent, so the same number
-    // appearing for two different companies is sequence drift, not a duplicate.
-    // Without the company guard, a NewCo TSV with report [1] silently overwrites
-    // the existing tracker row [1] belonging to an unrelated company.
-    const normCompany = normalizeCompany(addition.company);
-    duplicate = existingApps.find(app => {
-      const existingReportNum = extractReportNum(app.report);
-      return existingReportNum === reportNum && normalizeCompany(app.company) === normCompany;
-    });
-  }
-
-  if (!duplicate) {
-    // Exact entry number match — but only when the company also matches.
-    // The TSV `num` doubles as the tracker row id, yet report-file numbering
-    // and tracker-row numbering can drift out of sync (e.g. reports maxed at
-    // 067 while the tracker was already at #69). A bare num collision across
-    // *different* companies is that drift, not a duplicate — matching on num
-    // alone silently merges a brand-new role into an unrelated existing row.
-    const normCompany = normalizeCompany(addition.company);
-    duplicate = existingApps.find(app =>
-      app.num === addition.num && normalizeCompany(app.company) === normCompany
-    );
-  }
-
-  if (!duplicate) {
-    // Company + role fuzzy match
-    const normCompany = normalizeCompany(addition.company);
-    duplicate = existingApps.find(app => {
-      if (normalizeCompany(app.company) !== normCompany) return false;
-      return roleFuzzyMatch(addition.role, app.role);
-    });
-  }
-
-  if (duplicate) {
+  if (found) {
+    const { match: duplicate, reason } = found;
     const newScore = parseScore(addition.score);
     const oldScore = parseScore(duplicate.score);
+    const lineIdx = appLines.indexOf(duplicate.raw);
+    const mergedStatus = mergeStatus(duplicate.status, addition.status);
+    const mergedPdf = mergePdf(duplicate.pdf, addition.pdf);
 
-    if (newScore > oldScore) {
-      console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
-      const lineIdx = appLines.indexOf(duplicate.raw);
+    if (reason === 'url') {
+      // Same posting (confirmed by URL key) → LAST-WRITE-WINS on the evaluation.
+      // The newest eval is the truth; this also stops a stale wrong-high score
+      // from being pinned forever (the failed-fetch hazard the old max-score gate
+      // created). EXCEPTION: an unscoreable re-eval (N/A / failed fetch →
+      // parseScore 0) must NOT overwrite a real score — "never trust a
+      // WebFetch-failed score". In that case keep the prior score/report/date and
+      // only merge status/PDF/url. Status/PDF always merge monotonically.
       if (lineIdx >= 0) {
-        const updatedLine = buildRow({
+        const incomingScored = newScore > 0;
+        const note = incomingScored
+          ? (newScore !== oldScore ? `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`.trim() : addition.notes)
+          : duplicate.notes;
+        appLines[lineIdx] = buildRow({
+          num: duplicate.num,
+          date: incomingScored ? addition.date : duplicate.date,
+          company: addition.company, role: addition.role,
+          location: addition.location || duplicate.location || '—',
+          score: incomingScored ? addition.score : duplicate.score,
+          status: mergedStatus, pdf: mergedPdf,
+          report: incomingScored ? addition.report : duplicate.report,
+          notes: note,
+          url: addition.url || duplicate.url || '',
+        });
+        console.log(`🔄 Update [url]: #${duplicate.num} ${addition.company} — ${addition.role} ${incomingScored ? `(${oldScore}→${newScore})` : `(kept ${oldScore}; re-eval unscored)`}`);
+        updated++;
+      }
+    } else if (newScore > oldScore) {
+      // Fallback match (no stable URL identity) → keep the conservative
+      // max-score gate. Do NOT stamp a URL here: a fuzzy/num/report match can be
+      // wrong, and writing a URL onto it would make a bad merge look canonical.
+      if (lineIdx >= 0) {
+        appLines[lineIdx] = buildRow({
           num: duplicate.num, date: addition.date, company: addition.company, role: addition.role,
           location: addition.location || duplicate.location || '—',
-          score: addition.score, status: duplicate.status, pdf: duplicate.pdf,
+          score: addition.score, status: mergedStatus, pdf: mergedPdf,
           report: addition.report,
           notes: `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`,
+          url: duplicate.url || '',
         });
-        appLines[lineIdx] = updatedLine;
+        console.log(`🔄 Update [${reason}]: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
         updated++;
       }
     } else {
-      console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
+      console.log(`⏭️  Skip [${reason}]: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
       skipped++;
     }
   } else {
@@ -753,6 +951,7 @@ for (const file of tsvFiles) {
       location: addition.location || '—',
       score: addition.score, status: addition.status, pdf: addition.pdf,
       report: addition.report, notes: addition.notes,
+      url: addition.url || '',
     });
     newLines.push(newLine);
     added++;
@@ -762,10 +961,11 @@ for (const file of tsvFiles) {
 
 // Insert new lines after the header (line index of first data row)
 if (newLines.length > 0) {
-  // Find header separator (|---|...) and insert after it
+  // Find header separator (|---|...) and insert after it. Use the precise
+  // separator test so a data row with `---` in its URL isn't mistaken for it.
   let insertIdx = -1;
   for (let i = 0; i < appLines.length; i++) {
-    if (appLines[i].includes('---') && appLines[i].startsWith('|')) {
+    if (isSeparatorRow(appLines[i])) {
       insertIdx = i + 1;
       break;
     }
