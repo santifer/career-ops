@@ -248,11 +248,13 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 |----------|-----|---------|
 | German | `modes/de/` | DACH (Germany, Austria, Switzerland) |
 | French | `modes/fr/` | France, Belgium, Switzerland, Luxembourg, Quebec |
+| Arabic | `modes/ar/` | Middle East / Arab region |
 | Japanese | `modes/ja/` | Japan |
+| Turkish | `modes/tr/` | Turkey |
 
 **When to use a `{lang}` mode** — if any holds: the user says "use {lang} modes"; `config/profile.yml` sets `language.modes_dir: modes/{lang}`; or you detect a {lang} JD (then suggest switching). Read from `modes/{lang}/` instead of `modes/`.
 
-**When NOT to:** if the user applies to English-language roles — even at French, German, or Japanese companies — use the default English modes.
+**When NOT to:** if the user applies to English-language roles — even at French, German, Arabic, Japanese, or Turkish companies — use the default English modes.
 
 ### Skill Modes
 
@@ -279,6 +281,8 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Batch processes offers | `batch` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
+| Wants to update the system | `update` |
+| Wants to queue a request for later / check the inbox between sessions | `agent-inbox` — append-only checklist; nothing auto-submits |
 
 ### CV Source of Truth
 
