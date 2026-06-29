@@ -83,6 +83,7 @@ const SYSTEM_PATHS = [
   'AGENTS.md',
   'GEMINI.md',
   'KIMI.md',
+  'build-dashboard.mjs',
   'generate-pdf.mjs',
   'generate-latex.mjs',
   'archive-posting.mjs',
