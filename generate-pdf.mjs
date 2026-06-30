@@ -288,7 +288,12 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+  return renderHtmlToPdf(html, outputPath, {
+    format,
+    baseDir: dirname(inputPath),
+    reportNum,
+    sourceHtmlPath: inputPath,
+  });
 }
 
 /**
@@ -344,12 +349,16 @@ export async function inlineLocalFonts(html) {
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
- * @param {{format?: 'a4'|'letter', baseDir?: string}} [opts]
+ * @param {{format?: 'a4'|'letter', baseDir?: string, reportNum?: string, sourceHtmlPath?: string}} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
  */
 export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const format = opts.format || 'a4';
   const baseDir = opts.baseDir || process.cwd();
+  const reportNum = opts.reportNum || '';
+  // Source HTML recorded for regeneration. Callers that render inline HTML with
+  // no on-disk source (e.g. cover letters) fall back to the PDF path.
+  const sourceHtmlPath = opts.sourceHtmlPath || outputPath;
 
   mkdirSync(dirname(outputPath), { recursive: true });
 
@@ -398,7 +407,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
 
     try {
-      updatePDFManifest(reportNum, outputPath, inputPath, format);
+      updatePDFManifest(reportNum, outputPath, sourceHtmlPath, format);
       console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
     } catch (err) {
       // The PDF itself succeeded — never fail the run over manifest bookkeeping.
