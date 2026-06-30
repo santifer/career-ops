@@ -88,6 +88,7 @@ const SYSTEM_PATHS = [
   'generate-pdf.mjs',
   'generate-latex.mjs',
   'archive-posting.mjs',
+  'application-answers.mjs',
   'generate-cover-letter.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
