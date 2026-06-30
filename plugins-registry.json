@@ -1,5 +1,20 @@
 {
   "registryVersion": 1,
   "_comment": "Curated list of community plugins career-ops has reviewed. Each entry is approved at an exact, pinned commit. Users install with `node plugins.mjs add <name>`. Entries are added ONLY via a reviewed PR (see docs/PLUGIN_REVIEW.md). The bundled plugins (apify/gmail/notion) live in plugins/ and are NOT listed here.",
-  "plugins": []
+  "plugins": [
+    {
+      "id": "tavily",
+      "name": "career-ops-plugin-tavily",
+      "version": "0.1.0",
+      "license": "MIT",
+      "description": "Tavily search/extract for job scanning, liveness checks, and company research.",
+      "repo": "https://github.com/Schlaflied/career-ops-plugin-tavily",
+      "sha": "446ea4fffc66e058481e7a595ee9d46636b03d71",
+      "hooks": ["search", "checkLiveness", "researchCompany"],
+      "requiredEnv": ["TAVILY_API_KEY"],
+      "allowedHosts": ["api.tavily.com"],
+      "registrationIssue": "https://github.com/santifer/career-ops/issues/1344",
+      "addedAt": "2026-06-29"
+    }
+  ]
 }
