@@ -5,7 +5,7 @@
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
@@ -359,7 +359,40 @@ async function main() {
 // prerequisites that AGENTS.md "First Run" lists. `--json` turns the trigger into
 // a deterministic mechanism the agent runs (instead of re-deriving it from prose),
 // and `--target <dir>` lets the test suite point it at a simulated virgin env.
+//
+// Auto-copy rules (mirrors the "copy silently" instruction in AGENTS.md §First Run):
+//   modes/_profile.md  ← modes/_profile.template.md  (user archetype/narrative overrides)
+//   modes/_custom.md   ← modes/_custom.template.md    (user house-rules / custom workflows)
+// These are the ONLY user-layer files that have a safe template to auto-provision.
+// They are never overwritten once they exist. All other user-layer files (cv.md,
+// config/profile.yml, portals.yml) require deliberate user input and are left to
+// the onboarding flow.
+const TEMPLATE_COPIES = [
+  { dest: 'modes/_profile.md', src: 'modes/_profile.template.md' },
+  { dest: 'modes/_custom.md',  src: 'modes/_custom.template.md'  },
+];
+
 function onboardingState(root) {
+  // Auto-provision template-backed files before computing the missing list so
+  // the returned state always reflects the post-copy reality. This prevents
+  // agents from receiving onboardingNeeded:true purely because these files
+  // were absent, then failing to update their in-context state after copying
+  // them manually — the original cause of issue #782 (setup every session).
+  const autoCopied = [];
+  for (const { dest, src } of TEMPLATE_COPIES) {
+    const destPath = join(root, ...dest.split('/'));
+    const srcPath  = join(root, ...src.split('/'));
+    if (!existsSync(destPath) && existsSync(srcPath)) {
+      try {
+        copyFileSync(srcPath, destPath);
+        autoCopied.push(dest);
+      } catch {
+        // Non-fatal: if the copy fails (e.g. read-only FS) the file stays
+        // missing and will correctly appear in the missing[] list below.
+      }
+    }
+  }
+
   const missing = USER_LAYER_PREREQS
     .filter(({ path }) => !prereqPresent(root, path))
     .map(({ path }) => path);
@@ -372,7 +405,7 @@ function onboardingState(root) {
       return { id: m.id, hooks: m.hooks, enabled: s.enabled, missingEnv: s.missingEnv };
     });
   } catch { plugins = []; }
-  return { onboardingNeeded: missing.length > 0, missing, warnings, plugins };
+  return { onboardingNeeded: missing.length > 0, missing, autoCopied, warnings, plugins };
 }
 
 if (JSON_OUT) {
