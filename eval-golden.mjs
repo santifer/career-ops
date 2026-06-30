@@ -30,8 +30,7 @@ import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const GOLDEN_DIR  = join(ROOT, 'evals', 'golden');
-const FIXTURE_DIR = join(ROOT, 'evals', 'fixtures');
+const GOLDEN_DIR = join(ROOT, 'evals', 'golden');
 
 // ---------------------------------------------------------------------------
 // TODO(#1354): the four open design calls, surfaced as tunable constants.
@@ -61,6 +60,7 @@ if (args.includes('--help') || args.includes('-h')) {
   --live           Call the model live via openai-eval.mjs (needs key + cv.md)
   --model <id>     Candidate model id to evaluate (default: cheap-stub)
   --golden <dir>   Golden-set directory (default: evals/golden)
+  --fixtures <dir> Replay fixtures directory (default: sibling of --golden)
   --help           Show this help
 `);
   process.exit(0);
@@ -69,6 +69,9 @@ if (args.includes('--help') || args.includes('-h')) {
 const mode  = args.includes('--live') ? 'live' : 'replay';
 const model = argValue('--model') || 'cheap-stub';
 const goldenDir = argValue('--golden') || GOLDEN_DIR;
+// Keep fixtures next to the golden set so a custom --golden dir resolves its
+// own fixtures (the default lands on evals/fixtures); override with --fixtures.
+const fixtureDir = argValue('--fixtures') || join(dirname(goldenDir), 'fixtures');
 
 /**
  * Read the value following a `--flag` token in argv.
@@ -120,9 +123,9 @@ function parseSummary(text) {
  */
 function getCompletion(testCase) {
   if (mode === 'replay') {
-    const fixture = join(FIXTURE_DIR, `${testCase.id}__${model}.txt`);
+    const fixture = join(fixtureDir, `${testCase.id}__${model}.txt`);
     if (!existsSync(fixture)) {
-      throw new Error(`missing replay fixture: evals/fixtures/${testCase.id}__${model}.txt — record it or run --live`);
+      throw new Error(`missing replay fixture: ${fixture} — record it or run --live`);
     }
     return readFileSync(fixture, 'utf8');
   }
@@ -165,9 +168,24 @@ if (!existsSync(goldenDir)) {
   process.exit(1);
 }
 
-const cases = readdirSync(goldenDir)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => ({ ...JSON.parse(readFileSync(join(goldenDir, f), 'utf8')) }));
+let cases;
+try {
+  cases = readdirSync(goldenDir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => {
+      const parsed = JSON.parse(readFileSync(join(goldenDir, f), 'utf8'));
+      if (typeof parsed?.id !== 'string' ||
+          typeof parsed?.jd !== 'string' ||
+          typeof parsed?.label?.archetype !== 'string' ||
+          typeof parsed?.label?.score !== 'number') {
+        throw new Error(`invalid golden case ${f}: need string id/jd and label.{archetype:string, score:number}`);
+      }
+      return parsed;
+    });
+} catch (err) {
+  console.error(`❌  ${err.message || err}`);
+  process.exit(1);
+}
 
 if (cases.length === 0) {
   console.error(`❌  no golden cases (*.json) in ${goldenDir}`);
