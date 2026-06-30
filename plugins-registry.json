@@ -1,5 +1,18 @@
 {
   "registryVersion": 1,
   "_comment": "Curated list of community plugins career-ops has reviewed. Each entry is approved at an exact, pinned commit. Users install with `node plugins.mjs add <name>`. Entries are added ONLY via a reviewed PR (see docs/PLUGIN_REVIEW.md). The bundled plugins (apify/gmail/notion) live in plugins/ and are NOT listed here.",
-  "plugins": []
+  "plugins": [
+    {
+      "id": "google-calendar",
+      "name": "google-calendar",
+      "description": "Google Calendar ingest — detect upcoming interview events and surface them in the career-ops pipeline.",
+      "repo": "https://github.com/Schlaflied/career-ops-plugin-google-calendar",
+      "sha": "0953aaa6d153e663b6f4f6fb130d6ecd7bca5e07",
+      "hooks": ["ingest"],
+      "requiredEnv": ["GOOGLE_CALENDAR_CLIENT_ID", "GOOGLE_CALENDAR_CLIENT_SECRET", "GOOGLE_CALENDAR_REFRESH_TOKEN"],
+      "allowedHosts": ["oauth2.googleapis.com", "www.googleapis.com"],
+      "registrationIssue": "https://github.com/santifer/career-ops/issues/1346",
+      "addedAt": "2026-06-29"
+    }
+  ]
 }
