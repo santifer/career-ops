@@ -4,24 +4,17 @@
   "plugins": [
     {
       "id": "tavily",
-      "name": "tavily",
+      "name": "career-ops-plugin-tavily",
       "version": "0.1.0",
-      "repo": "Schlaflied/career-ops-plugin-tavily",
+      "license": "MIT",
+      "description": "Tavily search/extract for job scanning, liveness checks, and company research.",
+      "repo": "https://github.com/Schlaflied/career-ops-plugin-tavily",
       "sha": "446ea4fffc66e058481e7a595ee9d46636b03d71",
-      "hooks": [
-        "search",
-        "checkLiveness",
-        "researchCompany"
-      ],
-      "requiredEnv": [
-        "TAVILY_API_KEY"
-      ],
-      "allowedHosts": [
-        "api.tavily.com"
-      ],
-      "trust": "approved",
-      "registrationIssue": 1344,
-      "description": "Tavily search/extract for job scanning, liveness checks, and company research"
+      "hooks": ["search", "checkLiveness", "researchCompany"],
+      "requiredEnv": ["TAVILY_API_KEY"],
+      "allowedHosts": ["api.tavily.com"],
+      "registrationIssue": "https://github.com/santifer/career-ops/issues/1344",
+      "addedAt": "2026-06-29"
     }
   ]
 }
