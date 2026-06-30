@@ -9,7 +9,9 @@
       "repo": "Schlaflied/career-ops-plugin-tavily",
       "sha": "446ea4fffc66e058481e7a595ee9d46636b03d71",
       "hooks": [
-        "search"
+        "search",
+        "checkLiveness",
+        "researchCompany"
       ],
       "requiredEnv": [
         "TAVILY_API_KEY"
