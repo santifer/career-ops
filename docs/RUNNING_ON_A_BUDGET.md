@@ -4,6 +4,10 @@ Token usage costs and rate limits are the most common bottlenecks when setting u
 
 Fortunately, **Career-Ops is completely AI-agnostic.** The pipeline relies on the AI coding CLI (or standalone scripts) to process prompt files under `modes/`. This means you can point your CLI to cheaper API providers or local models with **zero code changes** in Career-Ops.
 
+## Zero-Cost Model Paths
+You can use the following zero-cost model paths with Career-Ops:
+- `npm run or` / `or:scan` / `or:pipeline`
+
 ---
 
 ## 1. The Core Concept: Model Agnosticism
@@ -73,6 +77,15 @@ When choosing a budget-friendly model, you need strong reasoning capabilities to
 | **GLM-4-Air / GLM-4** | Zhipu AI / OpenRouter | Very Cheap | Reliable multi-turn reasoning and JSON/Markdown generation. |
 | **Gemini 2.5 Flash** | Google AI Studio | Free Tier (15 RPM) | Available via the standalone script `node gemini-eval.mjs`. Excellent for zero-cost low-volume runs, but subject to rate limits. |
 
+> **Standalone evaluator (no CLI config needed):** every OpenAI-compatible provider above (DeepSeek, Qwen, GLM, Together, Groq, OpenRouter, …) works directly through `node openai-eval.mjs` — just set a base URL, model, and key:
+> ```bash
+> OPENAI_BASE_URL=https://openrouter.ai/api/v1 \
+> OPENAI_MODEL=deepseek/deepseek-chat \
+> OPENAI_API_KEY=your_key \
+> node openai-eval.mjs --file ./jds/job.txt
+> ```
+> Run `node openai-eval.mjs --help` for per-provider examples. For 100% local/private use, point `--url` at a local server (LM Studio / llama.cpp / vLLM) or use `node ollama-eval.mjs`.
+
 ---
 
 ## 4. Local LLM Tradeoffs (Ollama / Llama.cpp)
@@ -116,3 +129,46 @@ To prevent unnecessary API costs or hitting rate limits, implement the following
    ```bash
    npm run scan -- --verify
    ```
+
+---
+
+## 6. Worked Example: Running the Pipeline Cheaply
+
+Here is a concrete, end-to-end walkthrough of scanning for jobs and evaluating a single posting using **DeepSeek V3 via OpenRouter** and the standalone `openai-eval.mjs` evaluator. This bypasses the need for an expensive CLI agent for the heavy evaluation block.
+
+### Step 1: Scan for Job Offers (0 Tokens)
+The portal scanner queries ATS APIs directly using Playwright and standard HTTPS requests. It doesn't use the LLM to read job boards.
+```bash
+node scan.mjs
+```
+**Cost:** 0 tokens, $0.00.
+*(This generates a list of new job URLs and populates `data/pipeline.md`.)*
+
+### Step 2: Fetch the Job Description (0 Tokens)
+Open one of the URLs found by the scanner, copy the text of the job description, and save it locally (e.g., `jds/my-target-role.txt`).
+
+### Step 3: Evaluate the Offer (~4,500 Tokens)
+We'll run the evaluation against OpenRouter's DeepSeek V3 endpoint. The script reads your `cv.md` and the job description, then generates the full A-G evaluation report and tracker entry.
+
+```bash
+OPENAI_API_KEY="sk-or-your_openrouter_key" \
+node openai-eval.mjs \
+  --url https://openrouter.ai/api/v1 \
+  --model deepseek/deepseek-chat \
+  --file ./jds/my-target-role.txt
+```
+
+**Approximate Token Usage:**
+- **Input:** ~3,500 tokens (System prompt + your `cv.md` + JD)
+- **Output:** ~1,000 tokens (The A-G evaluation report)
+- **Cost:** ~4,500 tokens total. At DeepSeek V3 prices (~$0.14/1M input, ~$0.28/1M output), this costs **less than $0.001** per evaluation.
+
+### Step 4: Generate ATS-Optimized PDF (0 Tokens)
+Once you have the evaluation report, the PDF generator uses Playwright to compile your local HTML/CSS into a tailored CV.
+
+```bash
+node generate-pdf.mjs
+```
+**Cost:** 0 tokens, $0.00.
+
+By routing the heaviest step (Evaluation) to a cheap OpenAI-compatible endpoint, a complete end-to-end job application cycle drops from ~$0.05 - $0.15 on frontier models to a fraction of a cent, allowing you to run bulk batch processing affordably.
