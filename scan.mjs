@@ -910,7 +910,9 @@ async function main() {
 
   // Seniority tier classifier integration
   let classifyTier = null;
-  const skipTiers = Array.isArray(config.skip_tiers) ? config.skip_tiers.map(t => t.toLowerCase()) : [];
+  const skipTiers = Array.isArray(config.skip_tiers)
+    ? config.skip_tiers.filter(t => typeof t === 'string').map(t => t.toLowerCase())
+    : [];
   if (skipTiers.length > 0) {
     const mod = await import('./classify-tier.mjs');
     classifyTier = mod.classifyTier || mod.default;
@@ -993,6 +995,7 @@ async function main() {
   const cooldownOffers = [];
   let totalFound = 0;
   let totalFilteredTitle = 0;
+  let totalFilteredTier = 0;
   let totalFilteredLocation = 0;
   let totalFilteredSalary = 0;
   let totalFilteredContent = 0;
@@ -1037,6 +1040,7 @@ async function main() {
           continue;
         }
         if (classifyTier && skipTiers.includes(classifyTier(job.title))) {
+          totalFilteredTier++;
           continue;
         }
         if (!locationFilter(job.location)) {
@@ -1167,6 +1171,9 @@ async function main() {
   if (summaryBoards > 0) console.log(`Job boards scanned:    ${summaryBoards}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
+  if (skipTiers.length > 0) {
+    console.log(`Filtered by tier:      ${totalFilteredTier} removed`);
+  }
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
   console.log(`Filtered by content:  ${totalFilteredContent} removed`);
