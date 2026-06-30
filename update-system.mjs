@@ -117,6 +117,8 @@ const SYSTEM_PATHS = [
   'gemini-eval.mjs',
   'ollama-eval.mjs',
   'openai-eval.mjs',
+  'eval-golden.mjs',
+  'evals/',
   'openrouter-runner.mjs',
   'test-all.mjs',
   'detect-reposts.test.mjs',
