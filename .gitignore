@@ -2,6 +2,7 @@
 cv.md
 data/applications.md
 data/applications.db
+data/follow-ups.md
 data/pipeline.md
 data/scan-history.tsv
 data/pdf-index.tsv
@@ -42,6 +43,7 @@ writing-samples/*
 config/profile.yml
 portals.yml
 modes/_profile.md
+modes/_custom.md
 .update-dismissed
 .update-lock
 
