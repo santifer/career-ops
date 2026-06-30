@@ -9,7 +9,7 @@
       "license": "MIT",
       "description": "Tavily search/extract for job scanning, liveness checks, and company research.",
       "repo": "https://github.com/Schlaflied/career-ops-plugin-tavily",
-      "sha": "b8dc3dd53ced61fffe271663b596ea8a55fd2103",
+      "sha": "79cc4bcab0f746ca27ee8ce5a01d53e709946eac",
       "hooks": ["search"],
       "requiredEnv": ["TAVILY_API_KEY"],
       "allowedHosts": ["api.tavily.com"],
