@@ -1019,6 +1019,160 @@ try {
   fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
 }
 
+// ── VC Portfolio Seed Fetcher ────────────────────────────────────────
+// Tests the pure (no-network) parseSeedEntries(), parseYCPayload(),
+// parseA16zPayload(), toPortalEntry(), and the SEED_SOURCES registry.
+// Inline fixtures — no HTTP calls, CI-safe.
+
+console.log('\n9b. VC portfolio seed fetcher (seeds/vc-portfolios.mjs)');
+
+try {
+  const {
+    parseYCPayload,
+    parseA16zPayload,
+    parseSeedEntries,
+    toPortalEntry,
+    SEED_SOURCES,
+    SLUG_RE,
+  } = await import(pathToFileURL(join(ROOT, 'seeds/vc-portfolios.mjs')).href);
+
+  // ── 1. YC payload parsing ──────────────────────────────────────────
+  const ycFixture = {
+    companies: [
+      { name: 'Stripe', slug: 'stripe', website: 'https://stripe.com', batch: 'W11' },
+      { name: 'Airbnb', slug: 'airbnb', website: 'https://airbnb.com', batch: 'W09' },
+      { name: 'OpenAI', slug: 'openai', website: 'https://openai.com', batch: 'W16' },
+    ],
+  };
+  const ycEntries = parseYCPayload(ycFixture);
+  const ycOk =
+    ycEntries.length === 3 &&
+    ycEntries[0].name === 'Stripe' &&
+    ycEntries[0].slug === 'stripe' &&
+    ycEntries[0].url === 'https://stripe.com' &&
+    ycEntries[0].source === 'yc' &&
+    ycEntries[0].batch === 'W11' &&
+    ycEntries[1].slug === 'airbnb' &&
+    ycEntries[2].slug === 'openai';
+  if (ycOk) pass('parseYCPayload: parses companies array into SeedCompany[] with name/slug/url/source/batch');
+  else fail(`parseYCPayload: output wrong — ${JSON.stringify(ycEntries[0])}`);
+
+  // parseSeedEntries() is the universal entry point used by the issue acceptance criteria.
+  const viaGeneric = parseSeedEntries(ycFixture, 'yc');
+  if (viaGeneric.length === 3 && viaGeneric[0].slug === 'stripe') {
+    pass('parseSeedEntries(payload, "yc") delegates to parseYCPayload correctly');
+  } else {
+    fail('parseSeedEntries with source="yc" did not return expected entries');
+  }
+
+  // ── 2. a16z HTML parsing ───────────────────────────────────────────
+  // Sample HTML fixture with data-company-name attributes (the most reliable strategy).
+  const a16zHtml = `
+    <div class="portfolio-grid">
+      <a href="https://github.com" data-company-name="GitHub" data-company-url="https://github.com" class="portfolio-card"></a>
+      <a href="https://lyft.com" data-company-name="Lyft" data-company-url="https://lyft.com" class="portfolio-card"></a>
+      <a href="https://slack.com" data-company-name="Slack" data-company-url="https://slack.com" class="portfolio-card"></a>
+    </div>
+  `;
+  const a16zEntries = parseA16zPayload(a16zHtml);
+  const a16zOk =
+    a16zEntries.length === 3 &&
+    a16zEntries.some(e => e.name === 'GitHub' && e.source === 'a16z' && e.url === 'https://github.com') &&
+    a16zEntries.some(e => e.name === 'Lyft' && e.source === 'a16z') &&
+    a16zEntries.some(e => e.name === 'Slack' && e.source === 'a16z');
+  if (a16zOk) pass('parseA16zPayload: extracts companies from data-company-name HTML attributes');
+  else fail(`parseA16zPayload: output wrong — got ${a16zEntries.length} entries: ${JSON.stringify(a16zEntries.map(e => e.name))}`);
+
+  // parseSeedEntries() delegating to a16z.
+  const a16zViaGeneric = parseSeedEntries(a16zHtml, 'a16z');
+  if (a16zViaGeneric.length === 3 && a16zViaGeneric.some(e => e.slug === 'github')) {
+    pass('parseSeedEntries(html, "a16z") delegates to parseA16zPayload correctly');
+  } else {
+    fail('parseSeedEntries with source="a16z" did not return expected entries');
+  }
+
+  // ── 3. SLUG_RE validation — invalid slugs are dropped ─────────────
+  const badSlugFixture = {
+    companies: [
+      { name: 'Good Co', slug: 'good-co', website: 'https://good.co' },
+      { name: 'Bad Slash', slug: 'bad/slash', website: 'https://bad.com' },      // rejected: /
+      { name: 'Bad Space', slug: 'bad space', website: 'https://bad2.com' },     // rejected: space
+      { name: 'Bad Bang', slug: 'bad!bang', website: 'https://bad3.com' },       // rejected: !
+      { name: 'Also Good', slug: 'also.good_123', website: 'https://also.co' }, // valid: . _ digits
+    ],
+  };
+  const slugFiltered = parseYCPayload(badSlugFixture);
+  const slugOk =
+    slugFiltered.length === 2 &&
+    slugFiltered.some(e => e.slug === 'good-co') &&
+    slugFiltered.some(e => e.slug === 'also.good_123') &&
+    !slugFiltered.some(e => e.slug.includes('/') || e.slug.includes(' ') || e.slug.includes('!'));
+  if (slugOk) pass('SLUG_RE validation: entries with invalid slug characters (/, space, !) are dropped; valid slugs pass through');
+  else fail(`SLUG_RE validation wrong — got: ${JSON.stringify(slugFiltered.map(e => e.slug))}`);
+
+  // ── 4. toPortalEntry — explicit ATS hint ──────────────────────────
+  const withGreenhouse = toPortalEntry({ name: 'Stripe', slug: 'stripe', url: 'https://stripe.com', source: 'yc', ats: 'greenhouse', ats_id: 'stripe' });
+  const withLever = toPortalEntry({ name: 'Acme', slug: 'acme', url: 'https://acme.com', source: 'yc', ats: 'lever', ats_id: 'acme' });
+  const withAshby = toPortalEntry({ name: 'Beta', slug: 'beta', url: 'https://beta.com', source: 'yc', ats: 'ashby', ats_id: 'beta-corp' });
+  const atsHintOk =
+    withGreenhouse.careers_url === 'https://job-boards.greenhouse.io/stripe' &&
+    withGreenhouse.name === 'Stripe' &&
+    withGreenhouse.source === 'yc' &&
+    withLever.careers_url === 'https://jobs.lever.co/acme' &&
+    withAshby.careers_url === 'https://jobs.ashbyhq.com/beta-corp';
+  if (atsHintOk) pass('toPortalEntry: explicit ats+ats_id hint maps to correct Greenhouse/Lever/Ashby URL');
+  else fail(`toPortalEntry ATS hint wrong — greenhouse: ${withGreenhouse.careers_url}, lever: ${withLever.careers_url}`);
+
+  // ── 5. toPortalEntry — no ATS hint, slug-based fallback ───────────
+  const noHint = toPortalEntry({ name: 'NewCo', slug: 'newco', url: 'https://newco.io', source: 'yc' });
+  const noHintOk =
+    noHint.careers_url === 'https://job-boards.greenhouse.io/newco' && // Greenhouse is the default probe
+    noHint.name === 'NewCo';
+  if (noHintOk) pass('toPortalEntry: no ATS hint falls back to Greenhouse URL from slug (provider.detect() validates at scan time)');
+  else fail(`toPortalEntry fallback wrong — got: ${noHint.careers_url}`);
+
+  // ── 5b. toPortalEntry — website fallback when slug is empty ───────
+  const noSlug = toPortalEntry({ name: 'Custom', slug: '', url: 'https://custom.com', source: 'a16z' });
+  if (noSlug.careers_url === 'https://custom.com') {
+    pass('toPortalEntry: empty slug falls back to company website URL');
+  } else {
+    fail(`toPortalEntry website fallback wrong — got: ${noSlug.careers_url}`);
+  }
+
+  // ── 6. Dedup guard — duplicate slugs yield only one entry ─────────
+  const dupFixture = {
+    companies: [
+      { name: 'Stripe', slug: 'stripe', website: 'https://stripe.com' },
+      { name: 'Stripe Inc', slug: 'stripe', website: 'https://stripe.com/inc' }, // same slug → dropped
+      { name: 'Airbnb', slug: 'airbnb', website: 'https://airbnb.com' },
+    ],
+  };
+  const dedupd = parseYCPayload(dupFixture);
+  if (dedupd.length === 2 && dedupd.filter(e => e.slug === 'stripe').length === 1) {
+    pass('parseSeedEntries dedup: duplicate slugs produce only one entry (first one wins)');
+  } else {
+    fail(`parseSeedEntries dedup wrong — got ${dedupd.length} entries`);
+  }
+
+  // ── 7. SEED_SOURCES registry ───────────────────────────────────────
+  const registryOk =
+    typeof SEED_SOURCES === 'object' &&
+    SEED_SOURCES !== null &&
+    typeof SEED_SOURCES.yc === 'object' &&
+    typeof SEED_SOURCES.yc.fetch === 'function' &&
+    typeof SEED_SOURCES.yc.label === 'string' &&
+    typeof SEED_SOURCES.a16z === 'object' &&
+    typeof SEED_SOURCES.a16z.fetch === 'function' &&
+    typeof SEED_SOURCES.a16z.label === 'string' &&
+    Object.keys(SEED_SOURCES).includes('yc') &&
+    Object.keys(SEED_SOURCES).includes('a16z');
+  if (registryOk) pass('SEED_SOURCES registry: both "yc" and "a16z" keys exist with fetch function and label string');
+  else fail(`SEED_SOURCES registry malformed — keys: ${JSON.stringify(Object.keys(SEED_SOURCES || {}))}`);
+
+} catch (e) {
+  fail(`VC portfolio seed fetcher tests crashed: ${e.message}`);
+}
+
 // tracker.mjs delete: removeRowByNum removes the right row, preserves the rest.
 try {
   const { removeRowByNum } = await import(pathToFileURL(join(ROOT, 'tracker.mjs')).href);
