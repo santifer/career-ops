@@ -308,7 +308,17 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath });
+  const result = await renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+
+  try {
+    updatePDFManifest(reportNum, outputPath, inputPath, format);
+    console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
+  } catch (err) {
+    // The PDF itself succeeded — never fail the run over manifest bookkeeping.
+    console.error(`⚠️  Manifest update failed: ${err.message}`);
+  }
+
+  return result;
 }
 
 /**
@@ -418,14 +428,6 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     console.log(`✅ PDF generated: ${outputPath}`);
     console.log(`📊 Pages: ${pageCount}`);
     console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
-
-    try {
-      updatePDFManifest(reportNum, outputPath, inputPath, format);
-      console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
-    } catch (err) {
-      // The PDF itself succeeded — never fail the run over manifest bookkeeping.
-      console.error(`⚠️  Manifest update failed: ${err.message}`);
-    }
 
     return { outputPath, pageCount, size: pdfBuffer.length };
   } finally {
