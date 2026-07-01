@@ -10,9 +10,15 @@
       "description": "Tavily search/extract for job scanning, liveness checks, and company research.",
       "repo": "https://github.com/Schlaflied/career-ops-plugin-tavily",
       "sha": "79cc4bcab0f746ca27ee8ce5a01d53e709946eac",
-      "hooks": ["search"],
-      "requiredEnv": ["TAVILY_API_KEY"],
-      "allowedHosts": ["api.tavily.com"],
+      "hooks": [
+        "search"
+      ],
+      "requiredEnv": [
+        "TAVILY_API_KEY"
+      ],
+      "allowedHosts": [
+        "api.tavily.com"
+      ],
       "registrationIssue": "https://github.com/santifer/career-ops/issues/1344",
       "addedAt": "2026-06-29"
     },
@@ -24,9 +30,18 @@
       "description": "Google Calendar ingest — detect upcoming interview events and surface them in the career-ops pipeline.",
       "repo": "https://github.com/Schlaflied/career-ops-plugin-google-calendar",
       "sha": "d4b8cf40f5090b58510affbad9379570a23b34d2",
-      "hooks": ["ingest"],
-      "requiredEnv": ["GOOGLE_CALENDAR_CLIENT_ID", "GOOGLE_CALENDAR_CLIENT_SECRET", "GOOGLE_CALENDAR_REFRESH_TOKEN"],
-      "allowedHosts": ["oauth2.googleapis.com", "www.googleapis.com"],
+      "hooks": [
+        "ingest"
+      ],
+      "requiredEnv": [
+        "GOOGLE_CALENDAR_CLIENT_ID",
+        "GOOGLE_CALENDAR_CLIENT_SECRET",
+        "GOOGLE_CALENDAR_REFRESH_TOKEN"
+      ],
+      "allowedHosts": [
+        "oauth2.googleapis.com",
+        "www.googleapis.com"
+      ],
       "registrationIssue": "https://github.com/santifer/career-ops/issues/1346",
       "addedAt": "2026-06-29"
     },
@@ -38,23 +53,40 @@
       "description": "LinkedIn job alert ingest — parse LinkedIn alert emails from your Gmail inbox, normalize tracking links to canonical job URLs, and surface them in the career-ops pipeline.",
       "repo": "https://github.com/Schlaflied/career-ops-plugin-linkedin-alerts",
       "sha": "de54949b7dc642a6f6106a0ce18f0031e46f61ee",
-      "hooks": ["ingest"],
-      "requiredEnv": ["GMAIL_CLIENT_ID", "GMAIL_CLIENT_SECRET", "GMAIL_REFRESH_TOKEN"],
-      "allowedHosts": ["oauth2.googleapis.com", "gmail.googleapis.com"],
+      "hooks": [
+        "ingest"
+      ],
+      "requiredEnv": [
+        "GMAIL_CLIENT_ID",
+        "GMAIL_CLIENT_SECRET",
+        "GMAIL_REFRESH_TOKEN"
+      ],
+      "allowedHosts": [
+        "oauth2.googleapis.com",
+        "gmail.googleapis.com"
+      ],
       "registrationIssue": "https://github.com/santifer/career-ops/issues/1394",
       "addedAt": "2026-07-01"
     },
     {
       "id": "outlook-interviews",
       "name": "career-ops-plugin-outlook-interviews",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "license": "MIT",
       "description": "Outlook interview ingest — detect interview invitation emails via Microsoft Graph, extract company / role / meeting link, and surface them in the career-ops pipeline.",
       "repo": "https://github.com/Schlaflied/career-ops-plugin-outlook-interviews",
-      "sha": "07fcd1352a0a4bb8be72322b7bf33acc09696920",
-      "hooks": ["ingest"],
-      "requiredEnv": ["MSGRAPH_CLIENT_ID", "MSGRAPH_REFRESH_TOKEN"],
-      "allowedHosts": ["login.microsoftonline.com", "graph.microsoft.com"],
+      "sha": "ac70c743a28733eeb9602b3f620689e4d01bc26c",
+      "hooks": [
+        "ingest"
+      ],
+      "requiredEnv": [
+        "MSGRAPH_CLIENT_ID",
+        "MSGRAPH_REFRESH_TOKEN"
+      ],
+      "allowedHosts": [
+        "login.microsoftonline.com",
+        "graph.microsoft.com"
+      ],
       "registrationIssue": "https://github.com/santifer/career-ops/issues/1396",
       "addedAt": "2026-07-01"
     }
