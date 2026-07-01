@@ -37,7 +37,7 @@ export function ExplorerView({
   appsSnapshot: Application[];
   rootExists: boolean;
 }) {
-  const { filters, setFilters, initFilters, phase, running, offers, discover, status, error, mode, setMode, aiIntent, setAiIntent, discoverAI } = useExplore();
+  const { filters, setFilters, initFilters, phase, running, offers, discover, status, error, mode, setMode, aiIntent, setAiIntent, discoverAI, companiesScanned, partial } = useExplore();
   const inited = useRef(false);
   const [refineOpen, setRefineOpen] = useState(false);
   const [cli, setCli] = useState<{ id: string | null; name?: string }>({ id: null });
@@ -187,9 +187,9 @@ export function ExplorerView({
 
           {phase === "empty-current" && (
             <EmptyState
-              tone="good"
-              title="You're all caught up."
-              body="Nothing new since your last scan. Your pipeline is current — that's the goal."
+              tone={partial ? "warning" : "good"}
+              title={partial ? (companiesScanned === 0 ? "Scan failed — network issues" : "Scan partially completed") : "You're all caught up."}
+              body={partial ? (companiesScanned === 0 ? "All ATS directories were unreachable or rate-limited. Checked 0 companies. Please try again later." : `Nothing new found. Note: some ATS sources were unreachable. Checked ${companiesScanned} companies.`) : `Nothing new since your last scan. Your pipeline is current — that's the goal. Checked ${companiesScanned} companies.`}
               onRerun={() => {
                 setFilters({ ...filters, sinceDays: Math.max(filters.sinceDays, 30) });
                 void discover();
@@ -199,9 +199,9 @@ export function ExplorerView({
           )}
           {phase === "empty-loose" && (
             <EmptyState
-              tone="loose"
-              title="No fresh matches — yet."
-              body="Discovery is free — loosen and re-cast as often as you want."
+              tone={partial ? "warning" : "loose"}
+              title={partial ? (companiesScanned === 0 ? "Scan failed — network issues" : "No fresh matches (Scan incomplete)") : "No fresh matches — yet."}
+              body={partial ? (companiesScanned === 0 ? "All ATS directories were unreachable or rate-limited. Checked 0 companies. Please try again later." : `No new matches found. Note: some ATS sources were unreachable. Checked ${companiesScanned} companies.`) : `Discovery is free — loosen and re-cast as often as you want. Checked ${companiesScanned} companies.`}
               onRerun={() => {
                 setFilters({ ...filters, sinceDays: 30, block: [], allow: [] });
                 void discover();
@@ -235,11 +235,30 @@ function DiscoverBar({ canDiscover, onDiscover, label }: { canDiscover: boolean;
   );
 }
 
-function EmptyState({ tone, title, body, onRerun, rerunLabel }: { tone: "good" | "loose"; title: string; body: string; onRerun: () => void; rerunLabel: string }) {
+function EmptyState({
+  tone,
+  title,
+  body,
+  onRerun,
+  rerunLabel,
+}: {
+  tone: "good" | "loose" | "warning";
+  title: string;
+  body: string;
+  onRerun: () => void;
+  rerunLabel: string;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-surface/30 px-6 py-12 text-center">
-      <div className={cn("mx-auto grid size-12 place-items-center rounded-full", tone === "good" ? "bg-emerald-500/12 text-emerald-500" : "bg-brand-soft text-brand")}>
-        <Sparkles className="size-6" />
+      <div
+        className={cn(
+          "mx-auto grid size-12 place-items-center rounded-full",
+          tone === "good" ? "bg-emerald-500/12 text-emerald-500" :
+          tone === "warning" ? "bg-amber-500/12 text-amber-500" :
+          "bg-brand-soft text-brand"
+        )}
+      >
+        {tone === "warning" ? <AlertTriangle className="size-6" /> : <Sparkles className="size-6" />}
       </div>
       <h2 className={`${instrumentSerif.className} mt-4 text-2xl text-foreground`}>{title}</h2>
       <p className="mx-auto mt-1.5 max-w-md text-sm text-muted">{body}</p>
