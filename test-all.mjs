@@ -644,11 +644,48 @@ if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
 } else {
   fail('generate-pdf still waits for networkidle');
 }
-const renderHtmlToPdfCall = generatePdfScript.match(/renderHtmlToPdf\(html,\s*outputPath,\s*\{([\s\S]*?)\}\)/);
-if (renderHtmlToPdfCall && /\breportNum\b/.test(renderHtmlToPdfCall[1]) && /\binputPath\b/.test(renderHtmlToPdfCall[1])) {
+
+function extractRenderHtmlToPdfOptions(source) {
+  const call = /renderHtmlToPdf\s*\(\s*html\s*,\s*outputPath\s*,/g.exec(source);
+  if (!call) return '';
+  const objectStart = source.indexOf('{', call.index + call[0].length);
+  if (objectStart === -1) return '';
+
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  for (let i = objectStart; i < source.length; i += 1) {
+    const ch = source[i];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(objectStart + 1, i);
+    }
+  }
+  return '';
+}
+
+const renderHtmlToPdfOptions = extractRenderHtmlToPdfOptions(generatePdfScript);
+if (renderHtmlToPdfOptions && /\breportNum\b/.test(renderHtmlToPdfOptions) && /\binputPath\b/.test(renderHtmlToPdfOptions)) {
   pass('generate-pdf threads reportNum/inputPath into renderHtmlToPdf');
 } else {
   fail('generate-pdf does not pass reportNum/inputPath into renderHtmlToPdf');
+}
+const nestedRenderOptions = extractRenderHtmlToPdfOptions('return renderHtmlToPdf(html, outputPath, { format, metadata: { reportNum, inputPath } });');
+if (/\breportNum\b/.test(nestedRenderOptions) && /\binputPath\b/.test(nestedRenderOptions)) {
+  pass('generate-pdf renderHtmlToPdf option matcher handles nested object literals');
+} else {
+  fail('generate-pdf renderHtmlToPdf option matcher fails on nested object literals');
 }
 if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('opts.inputPath')) {
   pass('renderHtmlToPdf reads manifest metadata from opts');
