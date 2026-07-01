@@ -121,7 +121,10 @@ export default {
 
       const seed = parseRoleAtCompany(subject);
       const cleanUrls = extractUrls(getMessageBody(msg.payload)).filter(isCleanUrl);
-      for (const url of cleanUrls) {
+      for (let url of cleanUrls) {
+        if (url.includes('|')) {
+          url = url.replace(/\|/g, '%7C');
+        }
         if (seenUrls.has(url)) continue;
         seenUrls.add(url);
         jobs.push({

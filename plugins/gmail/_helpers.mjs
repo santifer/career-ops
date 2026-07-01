@@ -51,12 +51,18 @@ export function isCleanUrl(url) {
  */
 export function isAuthenticEmail(headers) {
   if (!Array.isArray(headers)) return false;
+  let hasPass = false;
   for (const h of headers) {
-    if (h.name && h.name.toLowerCase() === 'authentication-results') {
-      if (h.value && /dmarc=pass/i.test(h.value)) return true;
+    if (h.name && h.name.toLowerCase() === 'authentication-results' && h.value) {
+      if (/dmarc=fail/i.test(h.value)) {
+        return false;
+      }
+      if (/dmarc=pass/i.test(h.value)) {
+        hasPass = true;
+      }
     }
   }
-  return false;
+  return hasPass;
 }
 
 /**
