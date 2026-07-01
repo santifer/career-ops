@@ -646,6 +646,36 @@ if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
 } else {
   fail('generate-pdf still waits for networkidle');
 }
+const renderHtmlToPdfCall = generatePdfScript.match(/renderHtmlToPdf\(html,\s*outputPath,\s*\{([\s\S]*?)\}\)/);
+if (renderHtmlToPdfCall && /\breportNum\b/.test(renderHtmlToPdfCall[1]) && /\binputPath\b/.test(renderHtmlToPdfCall[1])) {
+  pass('generate-pdf threads reportNum/inputPath into renderHtmlToPdf');
+} else {
+  fail('generate-pdf does not pass reportNum/inputPath into renderHtmlToPdf');
+}
+if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('opts.inputPath')) {
+  pass('renderHtmlToPdf reads manifest metadata from opts');
+} else {
+  fail('renderHtmlToPdf does not read manifest metadata from opts');
+}
+try {
+  const { repoRelativeManifestPath } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const insideHtmlPath = join(ROOT, 'templates', 'cv-template.html');
+  const outsideHtmlPath = join(dirname(ROOT), 'outside-cv-template.html');
+
+  if (repoRelativeManifestPath(insideHtmlPath) === 'templates/cv-template.html') {
+    pass('PDF manifest records repo-local source HTML paths');
+  } else {
+    fail('PDF manifest does not normalize repo-local source HTML paths');
+  }
+
+  if (repoRelativeManifestPath('') === '' && repoRelativeManifestPath(outsideHtmlPath) === '') {
+    pass('PDF manifest leaves HTML column blank when source HTML is missing or outside the repo');
+  } else {
+    fail('PDF manifest mishandles missing or external source HTML paths');
+  }
+} catch (e) {
+  fail(`PDF manifest path helper test crashed: ${e.message}`);
+}
 
 // ── 7c. UPDATER DASHBOARD REBUILD ─────────────────────────────────
 
