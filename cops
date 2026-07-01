@@ -62,7 +62,7 @@ esac
 cmd="$1"; shift || true
 
 case "$cmd" in
-  doctor|verify|normalize|dedup|merge|pdf|sync-check|liveness|scan|gemini:eval|update|update:check|rollback)
+  doctor|verify|normalize|dedup|merge|pdf|sync-check|liveness|scan|gemini:eval|update|update:check|rollback|agent-inbox)
     ensure_up
     exec docker compose exec -it "$SERVICE" npm run --silent "$cmd" -- "$@"
     ;;

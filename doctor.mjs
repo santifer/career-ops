@@ -319,8 +319,32 @@ async function main() {
     const warnNote = warnings > 0 ? ` (${warnings} warning${warnings === 1 ? '' : 's'} — see above)` : '';
     console.log(`Result: All checks passed${warnNote}. You're ready to go! Run \`claude\` (or \`opencode\`) to start.`);
     console.log('');
+    const inboxCount = getPendingInboxCount(projectRoot);
+    if (inboxCount > 0) {
+      console.log(`${inboxCount} task(s) in agent inbox — run career-ops agent-inbox list`);
+      console.log('');
+    }
     console.log('Join the community: https://discord.gg/8pRpHETxa4');
     process.exit(0);
+  }
+}
+
+function getPendingInboxCount(root) {
+  const inboxFile = join(root, 'data', 'agent-inbox.md');
+  if (!existsSync(inboxFile)) return 0;
+  try {
+    const content = readFileSync(inboxFile, 'utf-8');
+    const lines = content.split('\n');
+    let pendingCount = 0;
+    for (const line of lines) {
+      const match = line.match(/^\|\s*\d+\s*\|\s*[^|]+?\s*\|\s*[^|]+?\s*\|\s*([^|]+?)\s*\|/);
+      if (match && match[1].trim().toLowerCase() === 'pending') {
+        pendingCount++;
+      }
+    }
+    return pendingCount;
+  } catch {
+    return 0;
   }
 }
 
@@ -333,7 +357,8 @@ function onboardingState(root) {
     .filter(({ path }) => !prereqPresent(root, path))
     .map(({ path }) => path);
   const warnings = playwrightMcpConfigured(root) ? [] : [PLAYWRIGHT_MCP_WARNING];
-  return { onboardingNeeded: missing.length > 0, missing, warnings };
+  const inboxCount = getPendingInboxCount(root);
+  return { onboardingNeeded: missing.length > 0, missing, warnings, inboxCount };
 }
 
 if (JSON_OUT) {
