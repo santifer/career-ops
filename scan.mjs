@@ -1049,13 +1049,14 @@ async function main() {
   let totalDupes = 0;
   let totalDeferredByRunCap = 0;
   let totalDeferredByCompanyCap = 0;
-  const newOffers = [];
+  const targetCandidates = targets.map(() => []);
   const errors = [...resolveErrors];
 
-  const tasks = targets.map(company => async () => {
+  const tasks = targets.map((company, targetIndex) => async () => {
     let provider = company._provider;
     const ctx = makeHttpCtx();
     let sourceName = provider.id === 'local-parser' ? 'local-parser' : `${provider.id}-api`;
+    const candidates = [];
     try {
       let jobs;
       try {
@@ -1100,32 +1101,11 @@ async function main() {
           totalFilteredContent++;
           continue;
         }
-        if (seenUrls.has(job.url)) {
-          totalDupes++;
-          continue;
-        }
-        const key = `${job.company.toLowerCase()}::${job.title.toLowerCase()}`;
-        if (seenCompanyRoles.has(key)) {
-          totalDupes++;
-          continue;
-        }
-        const cooldownResult = cooldownFilter(job);
-        if (cooldownResult.skip) {
-          totalFilteredCooldown++;
-          cooldownOffers.push({
-            job: { ...job, source: sourceName },
-            status: cooldownResult.reason,
-          });
-          continue;
-        }
-        // Mark as seen to avoid intra-scan dupes
-        seenUrls.add(job.url);
-        seenCompanyRoles.add(key);
         // Tag with the company's careers domain so verify can offer a 404/410
         // rediscovery fallback. A null domain (no careers_url) marks the offer
         // as broad-discovery — ineligible for the fallback, per the issue scope.
         const careersUrlDomain = extractCareersUrlDomain(company.careers_url);
-        newOffers.push({
+        candidates.push({
           ...job,
           source: sourceName,
           tracked: Boolean(careersUrlDomain),
@@ -1134,10 +1114,41 @@ async function main() {
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
+    } finally {
+      targetCandidates[targetIndex] = candidates;
     }
   });
 
   await parallelFetch(tasks, CONCURRENCY);
+
+  // Flatten per-target results in configured target order. Fetches run in
+  // parallel, so mutating a shared offer list inside tasks would make
+  // --max-new / --max-per-company depend on response timing.
+  const newOffers = [];
+  for (const offer of targetCandidates.flat()) {
+    if (seenUrls.has(offer.url)) {
+      totalDupes++;
+      continue;
+    }
+    const key = `${String(offer.company || '').toLowerCase()}::${String(offer.title || '').toLowerCase()}`;
+    if (seenCompanyRoles.has(key)) {
+      totalDupes++;
+      continue;
+    }
+    const cooldownResult = cooldownFilter(offer);
+    if (cooldownResult.skip) {
+      totalFilteredCooldown++;
+      cooldownOffers.push({
+        job: { ...offer },
+        status: cooldownResult.reason,
+      });
+      continue;
+    }
+    // Mark as seen to avoid intra-scan dupes after deterministic flattening.
+    seenUrls.add(offer.url);
+    seenCompanyRoles.add(key);
+    newOffers.push(offer);
+  }
 
   let offersToVerify = newOffers;
   if (maxNew != null || maxPerCompany != null) {

@@ -1,39 +1,16 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
 
+import {
+  assertHttpsUrl,
+  BROWSER_HEADERS,
+  cleanString,
+  validHttpUrl,
+} from './_http-utils.mjs';
+
 // Getro provider — portfolio job boards such as Speedinvest, Atomico, Khosla,
 // and Backed render Next.js pages whose `__NEXT_DATA__` payload includes
 // `props.pageProps.initialState.jobs.found`.
-
-const BROWSER_HEADERS = {
-  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36',
-  accept: 'text/html,application/xhtml+xml',
-};
-
-function assertHttpsUrl(value) {
-  let parsed;
-  try {
-    parsed = new URL(value);
-  } catch {
-    throw new Error(`getro: invalid URL: ${value}`);
-  }
-  if (parsed.protocol !== 'https:') throw new Error(`getro: URL must use HTTPS: ${value}`);
-  return parsed.href;
-}
-
-function cleanString(value) {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-function validHttpUrl(value, baseUrl) {
-  try {
-    const parsed = new URL(value, baseUrl);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
-    return parsed.href;
-  } catch {
-    return '';
-  }
-}
 
 function getroSalary(job) {
   const period = cleanString(job?.compensationPeriod).toLowerCase();
@@ -94,12 +71,19 @@ export default {
 
   // Generic Getro boards use custom domains, so require explicit
   // `provider: getro` in portals.yml instead of guessing from hostname.
-  detect() {
-    return null;
+  detect(entry) {
+    if (entry?.provider !== 'getro') return null;
+    const raw = typeof entry.careers_url === 'string' ? entry.careers_url : '';
+    if (!raw) return null;
+    try {
+      return { url: assertHttpsUrl(raw, 'getro') };
+    } catch {
+      return null;
+    }
   },
 
   async fetch(entry, ctx) {
-    const url = assertHttpsUrl(entry.careers_url);
+    const url = assertHttpsUrl(entry.careers_url, 'getro');
     const html = await ctx.fetchText(url, { redirect: 'follow', headers: BROWSER_HEADERS });
     return parseGetroJobsPage(html, url, entry.name || 'Getro');
   },

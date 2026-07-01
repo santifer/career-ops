@@ -1,40 +1,18 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
 
+import {
+  assertHttpsUrl,
+  BROWSER_HEADERS,
+  cleanString,
+  validHttpUrl,
+} from './_http-utils.mjs';
+
 // Consider provider — portfolio job boards such as a16z, Sequoia, Balderton,
 // and Phoenix Court expose a public JSON endpoint at /api-boards/search-jobs.
 // The board id is available in the initial `window.serverInitialData` payload.
 
 const DEFAULT_PAGE_SIZE = 50;
-const BROWSER_HEADERS = {
-  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36',
-  accept: 'text/html,application/xhtml+xml',
-};
-
-function assertHttpsUrl(value) {
-  let parsed;
-  try {
-    parsed = new URL(value);
-  } catch {
-    throw new Error(`consider: invalid URL: ${value}`);
-  }
-  if (parsed.protocol !== 'https:') throw new Error(`consider: URL must use HTTPS: ${value}`);
-  return parsed.href;
-}
-
-function cleanString(value) {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-function validHttpUrl(value, baseUrl) {
-  try {
-    const parsed = new URL(value, baseUrl);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
-    return parsed.href;
-  } catch {
-    return '';
-  }
-}
 
 function clampPageSize(value) {
   const n = Number(value);
@@ -125,12 +103,19 @@ export default {
 
   // Consider boards use many custom domains. Require explicit `provider:
   // consider` so an arbitrary page is never guessed as a Consider board.
-  detect() {
-    return null;
+  detect(entry) {
+    if (entry?.provider !== 'consider') return null;
+    const raw = typeof entry.careers_url === 'string' ? entry.careers_url : '';
+    if (!raw) return null;
+    try {
+      return { url: assertHttpsUrl(raw, 'consider') };
+    } catch {
+      return null;
+    }
   },
 
   async fetch(entry, ctx) {
-    const pageUrl = assertHttpsUrl(entry.careers_url);
+    const pageUrl = assertHttpsUrl(entry.careers_url, 'consider');
     const page = new URL(pageUrl);
     const html = await ctx.fetchText(pageUrl, { redirect: 'follow', headers: BROWSER_HEADERS });
     const initial = parseConsiderInitialData(html);

@@ -8326,6 +8326,21 @@ try {
   if (getro.id === 'getro') pass('getro.id is "getro"');
   else fail(`getro.id is ${JSON.stringify(getro.id)}`);
 
+  const getroExplicitHit = getro.detect({ provider: 'getro', careers_url: 'https://jobs.speedinvest.com/jobs' });
+  if (getroExplicitHit?.url === 'https://jobs.speedinvest.com/jobs') pass('getro.detect() accepts explicit provider config with HTTPS URL');
+  else fail(`getro.detect() explicit provider returned ${JSON.stringify(getroExplicitHit)}`);
+
+  if (
+    getro.detect({ careers_url: 'https://jobs.speedinvest.com/jobs' }) === null &&
+    getro.detect({ provider: 'other', careers_url: 'https://jobs.speedinvest.com/jobs' }) === null &&
+    getro.detect({ provider: 'getro', careers_url: 'http://jobs.speedinvest.com/jobs' }) === null &&
+    getro.detect({ careers_url: 'https://evil.example/https://jobs.speedinvest.com/jobs' }) === null
+  ) {
+    pass('getro.detect() rejects non-explicit, wrong-provider, non-HTTPS, and path-spoofed URLs');
+  } else {
+    fail('getro.detect() should only accept explicit HTTPS provider config');
+  }
+
   const getroPayload = {
     props: {
       pageProps: {
@@ -8369,6 +8384,21 @@ try {
 
   if (consider.id === 'consider') pass('consider.id is "consider"');
   else fail(`consider.id is ${JSON.stringify(consider.id)}`);
+
+  const considerExplicitHit = consider.detect({ provider: 'consider', careers_url: 'https://jobs.a16z.com/jobs' });
+  if (considerExplicitHit?.url === 'https://jobs.a16z.com/jobs') pass('consider.detect() accepts explicit provider config with HTTPS URL');
+  else fail(`consider.detect() explicit provider returned ${JSON.stringify(considerExplicitHit)}`);
+
+  if (
+    consider.detect({ careers_url: 'https://jobs.a16z.com/jobs' }) === null &&
+    consider.detect({ provider: 'other', careers_url: 'https://jobs.a16z.com/jobs' }) === null &&
+    consider.detect({ provider: 'consider', careers_url: 'http://jobs.a16z.com/jobs' }) === null &&
+    consider.detect({ careers_url: 'https://evil.example/https://jobs.a16z.com/jobs' }) === null
+  ) {
+    pass('consider.detect() rejects non-explicit, wrong-provider, non-HTTPS, and path-spoofed URLs');
+  } else {
+    fail('consider.detect() should only accept explicit HTTPS provider config');
+  }
 
   const initialHtml = '<script>window.serverInitialData = {"board":{"id":"a16z","isParent":true},"fixedBoard":"a16z"};</script>';
   if (parseConsiderInitialData(initialHtml)?.board?.id === 'a16z') {

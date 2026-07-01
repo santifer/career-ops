@@ -1,6 +1,13 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
 
+import {
+  assertHttpsUrl,
+  BROWSER_HEADERS,
+  cleanString,
+  validHttpUrl,
+} from './_http-utils.mjs';
+
 // Y Combinator Jobs / Work at a Startup provider.
 //
 // YC renders public job listing pages with an escaped `data-page` JSON payload
@@ -8,19 +15,10 @@
 // a single HTML fetch, without browser automation or account cookies.
 
 const YC_HOSTS = new Set(['www.ycombinator.com', 'ycombinator.com', 'www.workatastartup.com', 'workatastartup.com']);
-const BROWSER_HEADERS = {
-  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36',
-  accept: 'text/html,application/xhtml+xml',
-};
 
 function assertYcUrl(value) {
-  let parsed;
-  try {
-    parsed = new URL(value);
-  } catch {
-    throw new Error(`ycombinator: invalid URL: ${value}`);
-  }
-  if (parsed.protocol !== 'https:') throw new Error(`ycombinator: URL must use HTTPS: ${value}`);
+  const href = assertHttpsUrl(value, 'ycombinator');
+  const parsed = new URL(href);
   if (!YC_HOSTS.has(parsed.hostname)) {
     throw new Error(`ycombinator: untrusted hostname "${parsed.hostname}"`);
   }
@@ -34,20 +32,6 @@ function decodeHtmlAttr(value) {
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
-}
-
-function cleanString(value) {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-function validHttpUrl(value, baseUrl) {
-  try {
-    const parsed = new URL(value, baseUrl);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
-    return parsed.href;
-  } catch {
-    return '';
-  }
 }
 
 /**
