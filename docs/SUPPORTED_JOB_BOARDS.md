@@ -13,6 +13,8 @@ are shared helpers and are not loaded as providers.
 | BambooHR | API | Auto-detects `<tenant>.bamboohr.com` careers pages, reads `/careers/list`, and follows public detail endpoints for job URLs. |
 | Breezy HR | API | Auto-detects `<tenant>.breezy.hr` boards and reads the public JSON position feed. |
 | Comeet / Spark Hire Recruit | API | Uses Comeet's public careers API. Provide the full API URL with `api:` or `careers_url`; it cannot derive the endpoint from a branded careers page. |
+| Consider | API | Reads VC portfolio boards that expose `/api-boards/search-jobs` (for example a16z, Sequoia, Balderton). Configure explicitly with `provider: consider`; the board id is derived from the page or can be set under `consider.board_id`. |
+| Getro | Parser | Parses Getro-powered portfolio boards from their embedded Next.js payload. Configure explicitly with `provider: getro`; scanner filters apply after parsing. |
 | Glints | API | Uses Glints' public GraphQL job search endpoint. Configure with `provider: glints`; query and filters can be set on the portal entry. |
 | Greenhouse | API | Handles explicit `api:` URLs and auto-detects public Greenhouse board URLs for the boards API. |
 | IBM Careers | API | Posts to IBM's public careers search API and supports optional IBM facet filters in the portal entry. |
@@ -34,6 +36,7 @@ are shared helpers and are not loaded as providers.
 | Workable | Parser | Auto-detects `https://apply.workable.com/<slug>` and parses Workable's public markdown jobs feed. |
 | Workday | API | Auto-detects Workday `myworkdayjobs.com` careers URLs and posts to the public CXS jobs endpoint. |
 | Working Nomads | API | Reads the board-wide `https://www.workingnomads.com/api/exposed_jobs/` JSON feed, then applies scanner filters. |
+| Y Combinator / Work at a Startup | Parser | Auto-detects `ycombinator.com/jobs` and `workatastartup.com/jobs` pages, then parses the embedded public jobs payload. |
 
 When adding a new provider, add a new non-helper module under `providers/` and
 update this table in the same PR.

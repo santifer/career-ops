@@ -1752,8 +1752,10 @@ console.log('\n13. Location filter — always_allow tier');
 
 try {
   const {
+    buildTitleFilter,
     buildLocationFilter,
     buildContentFilter,
+    capNewOffers,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
     formatScanHistoryRow,
@@ -1854,6 +1856,51 @@ try {
   // Case 13: whitespace-only location is treated as missing (pass-all-tiers)
   if (filter('   \t  ') === true) pass('whitespace-only location passes (treated as missing)');
   else fail('whitespace-only location should pass');
+
+  const titleFilter = buildTitleFilter({
+    positive: ['AI', 'ML', 'Go', 'Forward Deployed', 'Backend'],
+    negative: ['Java '],
+  });
+  if (
+    titleFilter('Senior AI Engineer') === true &&
+    titleFilter('AI-first Product Engineer') === true &&
+    titleFilter('Forward Deployed Engineer') === true &&
+    titleFilter('Go Platform Engineer') === true
+  ) {
+    pass('title_filter matches standalone short tokens and longer phrases');
+  } else {
+    fail('title_filter should match standalone AI/Go tokens and longer phrases');
+  }
+
+  if (
+    titleFilter('Test Maintenance Lead') === false &&
+    titleFilter('Head of Banking Operations') === false &&
+    titleFilter('Opérateur de saisie GTA') === false &&
+    titleFilter('Django Engineer') === false
+  ) {
+    pass('title_filter does not match short tokens inside unrelated words');
+  } else {
+    fail('title_filter should not match AI/Go inside Maintenance/Banking/saisie/Django');
+  }
+
+  const capped = capNewOffers([
+    { company: 'Anthropic', title: 'A1' },
+    { company: 'Anthropic', title: 'A2' },
+    { company: 'Anthropic', title: 'A3' },
+    { company: 'Intercom', title: 'I1' },
+    { company: 'Intercom', title: 'I2' },
+    { company: 'Langfuse', title: 'L1' },
+  ], { maxNew: 4, maxPerCompany: 2 });
+  if (
+    capped.offers.length === 4 &&
+    capped.offers.map(o => o.title).join(',') === 'A1,A2,I1,I2' &&
+    capped.deferredByCompanyCap === 1 &&
+    capped.deferredByRunCap === 1
+  ) {
+    pass('scan caps bound first-run batches by run and company');
+  } else {
+    fail(`scan caps returned unexpected result: ${JSON.stringify(capped)}`);
+  }
 
   // Case 14: non-string location (number/object/null) → pass without throwing
   let crashed = false;
@@ -8236,6 +8283,143 @@ try {
 } finally {
   console.warn = __origWarn;
   if (__pluginTmp) { try { rmSync(__pluginTmp, { recursive: true, force: true }); } catch {} }
+}
+
+console.log('\nProvider - startup job boards');
+
+try {
+  const yc = (await import(pathToFileURL(join(ROOT, 'providers/ycombinator.mjs')).href)).default;
+  const { parseYCombinatorJobsPage } = await import(pathToFileURL(join(ROOT, 'providers/ycombinator.mjs')).href);
+
+  if (yc.id === 'ycombinator') pass('ycombinator.id is "ycombinator"');
+  else fail(`ycombinator.id is ${JSON.stringify(yc.id)}`);
+
+  const ycHit = yc.detect({ name: 'YC', careers_url: 'https://www.ycombinator.com/jobs/role/software-engineer' });
+  if (ycHit?.url === 'https://www.ycombinator.com/jobs/role/software-engineer') pass('ycombinator.detect() matches YC jobs pages');
+  else fail(`ycombinator.detect() returned ${JSON.stringify(ycHit)}`);
+
+  if (yc.detect({ name: 'Spoof', careers_url: 'https://evil.example/www.ycombinator.com/jobs' }) === null) {
+    pass('ycombinator.detect() rejects path-spoofed URLs');
+  } else {
+    fail('ycombinator.detect() must reject path-spoofed URLs');
+  }
+
+  const ycPayload = {
+    props: {
+      jobPostings: [
+        { title: 'Founding AI Engineer', url: '/companies/acme/jobs/1-founding-ai-engineer', companyName: 'Acme AI', location: 'Remote' },
+        { title: '', url: '/companies/acme/jobs/2-empty-title', companyName: 'Acme AI', location: 'Remote' },
+      ],
+    },
+  };
+  const ycHtml = `<div data-page="${JSON.stringify(ycPayload).replace(/"/g, '&quot;')}"></div>`;
+  const ycJobs = parseYCombinatorJobsPage(ycHtml, 'https://www.ycombinator.com/jobs/role/all/remote');
+  if (ycJobs.length === 1 && ycJobs[0].url === 'https://www.ycombinator.com/companies/acme/jobs/1-founding-ai-engineer') {
+    pass('parseYCombinatorJobsPage extracts and resolves job postings');
+  } else {
+    fail(`parseYCombinatorJobsPage returned ${JSON.stringify(ycJobs)}`);
+  }
+
+  const getro = (await import(pathToFileURL(join(ROOT, 'providers/getro.mjs')).href)).default;
+  const { parseGetroJobsPage } = await import(pathToFileURL(join(ROOT, 'providers/getro.mjs')).href);
+
+  if (getro.id === 'getro') pass('getro.id is "getro"');
+  else fail(`getro.id is ${JSON.stringify(getro.id)}`);
+
+  const getroPayload = {
+    props: {
+      pageProps: {
+        initialState: {
+          jobs: {
+            found: [
+              {
+                title: 'Platform Engineer',
+                url: 'https://startup.example/jobs/platform',
+                organization: { name: 'StartupCo' },
+                locations: ['London, UK', 'Remote'],
+                compensationAmountMinCents: 9000000,
+                compensationAmountMaxCents: 12000000,
+                compensationCurrency: 'GBP',
+                compensationPeriod: 'year',
+              },
+            ],
+          },
+        },
+      },
+    },
+  };
+  const getroHtml = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify(getroPayload)}</script>`;
+  const getroJobs = parseGetroJobsPage(getroHtml, 'https://careers.example/jobs', 'Example Board');
+  if (
+    getroJobs.length === 1 &&
+    getroJobs[0].company === 'StartupCo' &&
+    getroJobs[0].salary?.min === 90000 &&
+    getroJobs[0].location === 'London, UK, Remote'
+  ) {
+    pass('parseGetroJobsPage extracts company, locations, and annual salary');
+  } else {
+    fail(`parseGetroJobsPage returned ${JSON.stringify(getroJobs)}`);
+  }
+
+  const consider = (await import(pathToFileURL(join(ROOT, 'providers/consider.mjs')).href)).default;
+  const {
+    parseConsiderInitialData,
+    parseConsiderJobsResponse,
+  } = await import(pathToFileURL(join(ROOT, 'providers/consider.mjs')).href);
+
+  if (consider.id === 'consider') pass('consider.id is "consider"');
+  else fail(`consider.id is ${JSON.stringify(consider.id)}`);
+
+  const initialHtml = '<script>window.serverInitialData = {"board":{"id":"a16z","isParent":true},"fixedBoard":"a16z"};</script>';
+  if (parseConsiderInitialData(initialHtml)?.board?.id === 'a16z') {
+    pass('parseConsiderInitialData extracts board id');
+  } else {
+    fail('parseConsiderInitialData failed to extract board id');
+  }
+
+  const considerJobs = parseConsiderJobsResponse({
+    jobs: [
+      {
+        title: 'Forward Deployed Engineer',
+        url: '/companies/acme/jobs/fde',
+        companyName: 'Acme',
+        locations: ['London, UK'],
+        remote: true,
+        salary: { minValue: 100000, maxValue: 130000, currency: { value: 'GBP' }, period: { value: 'year' } },
+      },
+      { title: 'Bad URL', url: 'ftp://bad.example/job', companyName: 'BadCo' },
+    ],
+  }, 'https://jobs.example.com/', 'Board');
+  if (
+    considerJobs.length === 1 &&
+    considerJobs[0].url === 'https://jobs.example.com/companies/acme/jobs/fde' &&
+    considerJobs[0].location === 'London, UK, Remote' &&
+    considerJobs[0].salary?.max === 130000
+  ) {
+    pass('parseConsiderJobsResponse extracts flat jobs and filters invalid URLs');
+  } else {
+    fail(`parseConsiderJobsResponse returned ${JSON.stringify(considerJobs)}`);
+  }
+
+  let capturedPayload = null;
+  const fetched = await consider.fetch(
+    { name: 'Consider Board', careers_url: 'https://jobs.example.com/', limit: 10 },
+    {
+      fetchText: async () => initialHtml,
+      fetchJson: async (url, opts) => {
+        if (url !== 'https://jobs.example.com/api-boards/search-jobs') throw new Error(`unexpected URL ${url}`);
+        capturedPayload = JSON.parse(opts.body);
+        return { jobs: [{ title: 'AI Engineer', url: 'https://jobs.example.com/job/1', companyName: 'Acme', locations: [] }] };
+      },
+    },
+  );
+  if (capturedPayload?.board?.id === 'a16z' && capturedPayload?.meta?.size === 10 && fetched.length === 1) {
+    pass('consider.fetch() derives board id and POSTs search-jobs payload');
+  } else {
+    fail(`consider.fetch() payload/result wrong: ${JSON.stringify({ capturedPayload, fetched })}`);
+  }
+} catch (e) {
+  fail(`startup job board provider tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

@@ -491,6 +491,7 @@ search_queries:
 #   personio        <slug>.jobs.personio.(de|com)
 #   pinpoint        <slug>.pinpointhq.com
 #   rippling        ats.rippling.com/<slug>/jobs
+#   ycombinator     (www.)ycombinator.com/jobs/<...> or workatastartup.com/jobs/<...>
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
@@ -500,7 +501,9 @@ search_queries:
 # URL to detect, so they must be selected with an explicit `provider:`
 # field: 4dayweek, arbeitnow, arbeitsagentur, glints, himalayas, ibm, jobicy,
 # jobstreet, justjoin, landingjobs, nofluffjobs, remoteok, remotive, thehub,
-# weworkremotely, workingnomads. Examples for every built-in provider are below.
+# weworkremotely, workingnomads. Portfolio-board providers such as consider
+# and getro also use explicit provider selection because they run on many
+# custom domains. Examples for every built-in provider are below.
 
 # ── Built-in provider examples ────────────────────────────────────
 # Commented config for each provider in providers/. Copy a stanza into
@@ -529,6 +532,24 @@ search_queries:
 #   # division path is required; one of:
 #   # it, engineering, marketing, sales, hr, logistics, finances, other
 #   careers_url: https://solid.jobs/public-api/offers/engineering
+#   enabled: true
+#
+# - name: YC Startups — Software Engineering
+#   careers_url: https://www.ycombinator.com/jobs/role/software-engineer
+#   provider: ycombinator
+#   enabled: true
+#
+# - name: a16z Portfolio Jobs
+#   careers_url: https://jobs.a16z.com/jobs
+#   provider: consider
+#   # Optional when the board id cannot be derived from the page:
+#   # consider:
+#   #   board_id: a16z
+#   enabled: true
+#
+# - name: Speedinvest Portfolio Jobs
+#   careers_url: https://jobs.speedinvest.com/jobs
+#   provider: getro
 #   enabled: true
 #
 # -- Job boards / aggregators (no careers_url; set provider: explicitly) --
