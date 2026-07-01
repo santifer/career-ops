@@ -84,6 +84,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 #### Subcommands:
 * `pipeline` — Process pending URLs from inbox
 * `scan` — Scan job portals for new offers
+* `rank` — Run opt-in relevance pass to rank pending entries
 * `tracker` — Show application status overview
 * `pdf` — Generate ATS-optimized CV PDF
 * `latex` — Export CV as LaTeX/Overleaf .tex
