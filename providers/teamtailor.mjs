@@ -9,16 +9,28 @@
 // providers/nodesk.mjs / providers/personio.mjs rather than adding an XML
 // dependency.
 //
-// Auto-detects `https://<slug>.teamtailor.com/...` careers URLs; you can also
-// wire it in explicitly with `provider: teamtailor` plus a `careers_url` (or
-// `api:`) on the same host. Job `<link>`s may point at a branded custom domain
-// (e.g. careers.acme.com), so only the feed URL is host-pinned — the SSRF
-// guard sits on the fetch, not on the emitted job URLs.
+// Auto-detects `https://<slug>.teamtailor.com/...` careers URLs. Many tenants
+// front the same feed on a branded domain (e.g. careers.acme.com also serves
+// /jobs.rss), so an entry with an explicit `provider: teamtailor` may point its
+// `careers_url` (or `api:`) at that branded host and it will be used directly.
+//
+// SSRF stance mirrors the other providers: auto-detection stays pinned to
+// `*.teamtailor.com` so untrusted careers URLs can never steer the fetch at an
+// arbitrary host; a branded host is honored only when the user opted in with an
+// explicit `provider: teamtailor`. Either way the fetch is HTTPS-only with
+// `redirect: 'error'`. Job `<link>`s (branded domains) are emitted as-is and
+// never fetched.
 
 const TEAMTAILOR_HOST_RE = /^([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.teamtailor\.com$/i;
 
-/** @param {string} url */
-function assertTeamtailorUrl(url) {
+/**
+ * Validate a feed URL before fetching. Always HTTPS-only. The hostname is
+ * pinned to `*.teamtailor.com` for auto-detected entries; an explicit
+ * `provider: teamtailor` entry may use its configured branded host.
+ * @param {string} url
+ * @param {{ explicit?: boolean }} [opts]
+ */
+function assertFeedUrl(url, { explicit = false } = {}) {
   let parsed;
   try {
     parsed = new URL(url);
@@ -26,19 +38,23 @@ function assertTeamtailorUrl(url) {
     throw new Error(`teamtailor: invalid URL: ${url}`);
   }
   if (parsed.protocol !== 'https:') throw new Error(`teamtailor: URL must use HTTPS: ${url}`);
-  if (!TEAMTAILOR_HOST_RE.test(parsed.hostname)) {
-    throw new Error(`teamtailor: untrusted hostname "${parsed.hostname}" — must be <slug>.teamtailor.com`);
+  if (!explicit && !TEAMTAILOR_HOST_RE.test(parsed.hostname)) {
+    throw new Error(`teamtailor: untrusted hostname "${parsed.hostname}" — must be <slug>.teamtailor.com (or set "provider: teamtailor" to use a branded careers domain)`);
   }
   return url;
 }
 
-// Derive the RSS feed URL from a tracked_companies entry. Accepts an explicit
-// `api:`/`careers_url` on a *.teamtailor.com host and normalizes any path to
-// /jobs.rss. Returns null when the entry isn't a Teamtailor career site.
-/** @param {import('./_types.js').PortalEntry} entry */
-function resolveFeedUrl(entry) {
+// Derive the RSS feed URL from a tracked_companies entry by normalizing any
+// path on the configured host to /jobs.rss. Auto-detection (explicit=false)
+// only claims *.teamtailor.com hosts; an explicit `provider: teamtailor` entry
+// (explicit=true) may use a branded careers host. Returns null otherwise.
+/**
+ * @param {import('./_types.js').PortalEntry} entry
+ * @param {{ explicit?: boolean }} [opts]
+ */
+function resolveFeedUrl(entry, { explicit = false } = {}) {
   const raw = entry?.api || entry?.careers_url || '';
-  if (!raw) return null;
+  if (typeof raw !== 'string' || !raw) return null;
   let parsed;
   try {
     parsed = new URL(raw);
@@ -46,7 +62,7 @@ function resolveFeedUrl(entry) {
     return null;
   }
   if (parsed.protocol !== 'https:') return null;
-  if (!TEAMTAILOR_HOST_RE.test(parsed.hostname)) return null;
+  if (!explicit && !TEAMTAILOR_HOST_RE.test(parsed.hostname)) return null;
   return `https://${parsed.hostname}/jobs.rss`;
 }
 
@@ -59,17 +75,19 @@ export default {
   id: 'teamtailor',
 
   detect(entry) {
-    const url = resolveFeedUrl(entry);
+    // Auto-detection never claims a branded host — only *.teamtailor.com.
+    const url = resolveFeedUrl(entry, { explicit: false });
     return url ? { url } : null;
   },
 
   async fetch(entry, ctx) {
-    const feedUrl = resolveFeedUrl(entry);
+    const explicit = entry?.provider === 'teamtailor';
+    const feedUrl = resolveFeedUrl(entry, { explicit });
     if (!feedUrl) throw new Error(`teamtailor: cannot derive jobs.rss URL for ${fallbackCompany(entry)}`);
-    assertTeamtailorUrl(feedUrl);
+    assertFeedUrl(feedUrl, { explicit });
     // redirect:'error' prevents SSRF via server-side redirects; combined with
-    // assertTeamtailorUrl above it keeps the request pinned to a
-    // <slug>.teamtailor.com host.
+    // assertFeedUrl above it keeps the request pinned to the trusted host
+    // (*.teamtailor.com, or the branded host the user explicitly configured).
     const text = await ctx.fetchText(feedUrl, { redirect: 'error' });
     return parseTeamtailorFeed(text, fallbackCompany(entry));
   },

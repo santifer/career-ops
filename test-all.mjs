@@ -2728,22 +2728,71 @@ try {
   if (noLink.length === 0) pass('item without <link> is dropped');
   else fail(`item without <link> should be dropped, got ${JSON.stringify(noLink)}`);
 
-  // fetch() pins the request to the teamtailor.com host on the happy path.
+  // fetch() pins the request to the teamtailor.com host on the happy path and
+  // must pass redirect:'error' (asserting the SSRF guard, not just the URL).
   const fetchJobs = await teamtailor.fetch(
     { name: 'Podimo', careers_url: 'https://podimo.teamtailor.com/jobs' },
     {
       transport: 'http',
-      fetchText: async (url) => {
+      fetchText: async (url, options) => {
         if (url !== 'https://podimo.teamtailor.com/jobs.rss') {
           throw new Error(`fetchText called with unexpected URL: ${url}`);
+        }
+        if (options?.redirect !== 'error') {
+          throw new Error(`fetchText called without redirect:'error': ${JSON.stringify(options)}`);
         }
         return sampleXml;
       },
       fetchJson: async () => { throw new Error('fetchJson should not be called'); },
     },
   );
-  if (fetchJobs.length === 2) pass('teamtailor.fetch() hits /jobs.rss and returns parsed jobs');
+  if (fetchJobs.length === 2) pass('teamtailor.fetch() hits /jobs.rss with redirect:error and returns parsed jobs');
   else fail(`teamtailor.fetch() returned ${fetchJobs.length} jobs, expected 2`);
+
+  // Branded careers domain: auto-detection must NOT claim it (stays pinned to
+  // *.teamtailor.com), but an explicit `provider: teamtailor` entry may fetch
+  // the same /jobs.rss off the branded host the user configured.
+  if (teamtailor.detect({ name: 'Podimo', careers_url: 'https://careers.podimo.com/jobs' }) === null) {
+    pass('teamtailor.detect() does NOT auto-claim a branded (non-teamtailor.com) host');
+  } else {
+    fail('teamtailor.detect() must not auto-detect branded hosts');
+  }
+
+  const brandedJobs = await teamtailor.fetch(
+    { name: 'Podimo', provider: 'teamtailor', careers_url: 'https://careers.podimo.com/jobs' },
+    {
+      transport: 'http',
+      fetchText: async (url, options) => {
+        if (url !== 'https://careers.podimo.com/jobs.rss') {
+          throw new Error(`fetchText called with unexpected URL: ${url}`);
+        }
+        if (options?.redirect !== 'error') {
+          throw new Error(`fetchText called without redirect:'error': ${JSON.stringify(options)}`);
+        }
+        return sampleXml;
+      },
+      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+    },
+  );
+  if (brandedJobs.length === 2) pass('explicit provider:teamtailor fetches /jobs.rss off a branded careers host');
+  else fail(`branded-host fetch returned ${brandedJobs.length} jobs, expected 2`);
+
+  // A branded host WITHOUT the explicit provider opt-in must still be refused by fetch().
+  let brandedRefused = false;
+  try {
+    await teamtailor.fetch(
+      { name: 'Podimo', careers_url: 'https://careers.podimo.com/jobs' },
+      {
+        transport: 'http',
+        fetchText: async () => { throw new Error('fetchText should not be reached'); },
+        fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+      },
+    );
+  } catch {
+    brandedRefused = true;
+  }
+  if (brandedRefused) pass('teamtailor.fetch() refuses a branded host without explicit provider:teamtailor');
+  else fail('teamtailor.fetch() should refuse a branded host when not explicitly configured');
 
 } catch (e) {
   fail(`teamtailor provider tests crashed: ${e.message}`);
