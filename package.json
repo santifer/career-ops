@@ -25,6 +25,8 @@
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
     "scan:full": "node scan-ats-full.mjs",
+    "rank": "node rank-pipeline.mjs",
+    "pipeline:rank": "node rank-pipeline.mjs",
     "validate:portals": "node validate-portals.mjs",
     "verify:portals": "node verify-portals.mjs",
     "tracker": "node tracker.mjs",
