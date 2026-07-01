@@ -31,6 +31,7 @@
     "verify:portals": "node verify-portals.mjs",
     "tracker": "node tracker.mjs",
     "patterns": "node analyze-patterns.mjs",
+    "keyword-match": "node keyword-match.mjs",
     "reposts": "node detect-reposts.mjs",
     "gemini:eval": "node gemini-eval.mjs",
     "ollama:eval": "node ollama-eval.mjs",
