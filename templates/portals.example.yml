@@ -15,7 +15,7 @@
 #
 # HOW TO CUSTOMIZE:
 #   1. Copy this file to portals.yml in the project root
-#   2. Edit title_filter.positive with YOUR target role keywords
+#   2. Edit relevance_filter (jd_require_any = YOUR core terms; title_exclude = wrong roles)
 #   3. Add/remove companies in tracked_companies
 #   4. Adjust search_queries for your preferred job boards
 #   5. Set enabled: false on companies you don't care about
@@ -53,57 +53,30 @@
 #     - "Brazil"
 #     - "Australia"
 
-# -- Title filter --
-# The scanner uses these keywords to decide if a title is relevant.
-# At least 1 positive must match AND 0 negatives must match (case-insensitive).
+# -- Relevance filter (two-stage: title reject → JD require) -- RECOMMENDED
+# Philosophy: LOOSE on titles, STRICT on JD bodies. The best-fit roles often carry
+# generic titles ("Solutions Engineer", "Member of Technical Staff") while the
+# discriminating signal lives in the JD body. Title-only filtering forces a bad
+# trade: loose enough to catch them = flooded with noise; tight enough to kill
+# noise = drops the good ones. So reject on titles, REQUIRE on JD content.
+#
+# scan.mjs reads the JD body for free from the ATS API payload (Greenhouse
+# `?content=true`, Lever/Ashby `descriptionPlain`) — no extra HTTP calls, no
+# measurable time cost. Browser sources (LinkedIn/hiring.cafe) apply Stage 1 at
+# scan time and defer the JD gate to evaluation time (see modes/scan.md).
+#
+#   STAGE 1   title_exclude       reject if the TITLE contains any term
+#   STAGE 1.5 title_require_any   (optional) TITLE must name a target role/term
+#   STAGE 2   jd_require_any      JD body (title+description) must contain ≥1 term
+#   STAGE 2b  jd_deprioritize_any (optional) drop JDs where these terms rival core terms
+#   STAGE 2c  jd_exclude_any      (optional) hard reject on any JD term
+#
+# If `relevance_filter` is absent, scan.mjs falls back to the legacy `title_filter`
+# (positive/negative on title only) shown commented at the bottom of this section.
 
-title_filter:
-  positive:
-    # [CUSTOMIZE] Add keywords matching YOUR target roles
-    # -- AI/ML roles --
-    - "AI"
-    - "ML"
-    - "LLM"
-    - "Agent"
-    - "Agentic"
-    - "GenAI"
-    - "Generative AI"
-    - "NLP"
-    - "LLMOps"
-    - "MLOps"
-    - "Voice AI"
-    - "Conversational AI"
-    - "Speech"
-    # -- German AI/ML keywords (DACH market) --
-    - "KI"
-    - "Künstliche Intelligenz"
-    - "KI Engineer"
-    - "KI Trainer"
-    - "Dozent"
-    - "Weiterbildung"
-    # -- Engineering roles --
-    - "Platform Engineer"
-    - "Solutions Architect"
-    - "Solutions Engineer"
-    - "Forward Deployed"
-    - "Deployed Engineer"
-    - "Customer Engineer"
-    - "Integration Engineer"
-    # -- Product roles --
-    - "Product Manager"
-    - "Technical PM"
-    # -- Automation roles --
-    - "Automation"
-    - "Hyperautomation"
-    - "Low-Code"
-    - "No-Code"
-    - "GTM Engineer"
-    - "RevOps"
-    - "Business Systems"
-    - "Internal Tools"
-    - "Transformation"
-  negative:
-    # [CUSTOMIZE] Add keywords for roles you want to exclude
+relevance_filter:
+  # STAGE 1 — title reject only (fast, no fetch)
+  title_exclude:
     - "Junior"
     - "Intern"
     - ".NET"
@@ -124,13 +97,50 @@ title_filter:
     - "Oracle EBS"
     - "Mainframe"
     - "COBOL"
-  seniority_boost:
-    # These prefixes add relevance but are not required
-    - "Senior"
-    - "Staff"
-    - "Principal"
-    - "Lead"
-    - "Head"
+
+  # STAGE 1.5 (optional) — title must name a target ROLE (functional gate). Kills
+  # wrong-function roles whose JD mentions your domain only as company boilerplate.
+  # Omit the whole key to disable this stage.
+  # title_require_any:
+  #   - "engineer"
+  #   - "architect"
+  #   - "product manager"
+
+  # STAGE 2 — JD body must contain ≥1 of these core terms
+  jd_require_any:
+    - "LLM"
+    - "large language model"
+    - "machine learning"
+    - "generative ai"
+    - "agentic"
+    - "NLP"
+    - "MLOps"
+    - "automation"
+
+  # STAGE 2b (optional) — dominance reject: drop JDs where these terms are as
+  # prevalent as core terms (a role that only name-drops your domain once).
+  # jd_deprioritize_any:
+  #   - "blockchain"
+  #   - "web3"
+
+  # STAGE 2c (optional) — hard JD reject (e.g. blockers you cannot meet)
+  # jd_exclude_any:
+  #   - "u.s. citizenship required"
+  #   - "security clearance required"
+
+# -- Title filter (LEGACY fallback) --
+# Used ONLY when relevance_filter is absent. At least 1 positive must match AND
+# 0 negatives must match (case-insensitive, title only).
+# title_filter:
+#   positive:
+#     - "AI"
+#     - "Product Manager"
+#   negative:
+#     - "Junior"
+#     - "Intern"
+#   seniority_boost:
+#     - "Senior"
+#     - "Staff"
     - "Director"
 
 # -- Search queries --

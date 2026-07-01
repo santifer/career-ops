@@ -34,10 +34,16 @@ const FETCH_TIMEOUT_MS = 10_000;
 
 // ── API detection ───────────────────────────────────────────────────
 
+// Append a query param, respecting any existing query string.
+function withParam(url, key, value) {
+  return url + (url.includes('?') ? '&' : '?') + `${key}=${value}`;
+}
+
 function detectApi(company) {
-  // Greenhouse: explicit api field
+  // Greenhouse: explicit api field. content=true returns the full JD body inline
+  // in the SAME call (no extra requests) so the JD-relevance filter is free.
   if (company.api && company.api.includes('greenhouse')) {
-    return { type: 'greenhouse', url: company.api };
+    return { type: 'greenhouse', url: withParam(company.api, 'content', 'true') };
   }
 
   const url = company.careers_url || '';
@@ -65,7 +71,7 @@ function detectApi(company) {
   if (ghEuMatch && !company.api) {
     return {
       type: 'greenhouse',
-      url: `https://boards-api.greenhouse.io/v1/boards/${ghEuMatch[1]}/jobs`,
+      url: `https://boards-api.greenhouse.io/v1/boards/${ghEuMatch[1]}/jobs?content=true`,
     };
   }
 
@@ -81,6 +87,7 @@ function parseGreenhouse(json, companyName) {
     url: j.absolute_url || '',
     company: companyName,
     location: j.location?.name || '',
+    content: j.content || '',            // HTML-encoded JD body (content=true)
   }));
 }
 
@@ -91,6 +98,7 @@ function parseAshby(json, companyName) {
     url: j.jobUrl || '',
     company: companyName,
     location: j.location || '',
+    content: j.descriptionPlain || j.descriptionHtml || j.description || '',
   }));
 }
 
@@ -101,6 +109,7 @@ function parseLever(json, companyName) {
     url: j.hostedUrl || '',
     company: companyName,
     location: j.categories?.location || '',
+    content: j.descriptionPlain || j.description || '',
   }));
 }
 
@@ -120,17 +129,65 @@ async function fetchJson(url) {
   }
 }
 
-// ── Title filter ────────────────────────────────────────────────────
+// ── Relevance filter (two-stage: title reject → JD require) ──────────
+// Returns { pass, reason }. Reasons: 'title_exclude' | 'jd_exclude' |
+// 'no_core' | 'deprioritized'. See relevance_filter docs in portals.yml.
+//
+// Philosophy: LOOSE on titles, STRICT on JD bodies. A generic title
+// ("Device Design Engineer") passes Stage 1; the JD body must then carry a
+// core term (Stage 2). This keeps generic-title dream jobs whose JD says
+// "MEMS" and drops generic-title roles whose JD never mentions the domain.
 
-function buildTitleFilter(titleFilter) {
+function buildRelevanceFilter(rf) {
+  const titleExclude = (rf.title_exclude || []).map(k => k.toLowerCase());
+  const titleRequire = (rf.title_require_any || []).map(k => k.toLowerCase());
+  const requireAny   = (rf.jd_require_any || []).map(k => k.toLowerCase());
+  const deprioAny    = (rf.jd_deprioritize_any || []).map(k => k.toLowerCase());
+  const jdExclude    = (rf.jd_exclude_any || []).map(k => k.toLowerCase());
+
+  return (title, content = '') => {
+    const t = (title || '').toLowerCase();
+    const c = (content || '').toLowerCase();
+    const hay = t + ' \n ' + c;   // title + JD body — a term in either satisfies require
+
+    // Stage 1 — title reject
+    if (titleExclude.some(k => t.includes(k))) return { pass: false, reason: 'title_exclude' };
+
+    // Stage 1.5 — title must name an engineering/fab role (functional gate)
+    if (titleRequire.length > 0 && !titleRequire.some(k => t.includes(k)))
+      return { pass: false, reason: 'title_no_role' };
+
+    // Stage 2c — hard JD reject (citizenship/clearance blockers)
+    if (jdExclude.some(k => c.includes(k))) return { pass: false, reason: 'jd_exclude' };
+
+    // Stage 2 — require ≥1 core term in title or JD body
+    const coreHits = requireAny.filter(k => hay.includes(k)).length;
+    if (requireAny.length > 0 && coreHits === 0) return { pass: false, reason: 'no_core' };
+
+    // Stage 2b — aggressive dominance: drop JDs where interventional-medtech terms
+    // are as prevalent as core terms (only when a JD body is available to judge).
+    if (c) {
+      const deprioHits = deprioAny.filter(k => c.includes(k)).length;
+      if (deprioHits > 0 && deprioHits >= coreHits) return { pass: false, reason: 'deprioritized' };
+    }
+
+    return { pass: true };
+  };
+}
+
+// Legacy fallback: old title_filter (positive/negative on title only), wrapped
+// in the same { pass, reason } contract so main() stays uniform.
+function buildLegacyTitleFilter(titleFilter) {
   const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
   const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
 
   return (title) => {
-    const lower = title.toLowerCase();
+    const lower = (title || '').toLowerCase();
     const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
     const hasNegative = negative.some(k => lower.includes(k));
-    return hasPositive && !hasNegative;
+    return (hasPositive && !hasNegative)
+      ? { pass: true }
+      : { pass: false, reason: 'title' };
   };
 }
 
@@ -288,7 +345,10 @@ async function main() {
 
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
-  const titleFilter = buildTitleFilter(config.title_filter);
+  // Prefer the new two-stage relevance_filter; fall back to legacy title_filter.
+  const relevanceFilter = config.relevance_filter
+    ? buildRelevanceFilter(config.relevance_filter)
+    : buildLegacyTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
 
   // 2. Filter to enabled companies with detectable APIs
@@ -310,7 +370,7 @@ async function main() {
   // 4. Fetch all APIs
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
-  let totalFilteredTitle = 0;
+  let totalFilteredRelevance = 0;
   let totalFilteredLocation = 0;
   let totalDupes = 0;
   const newOffers = [];
@@ -324,8 +384,8 @@ async function main() {
       totalFound += jobs.length;
 
       for (const job of jobs) {
-        if (!titleFilter(job.title)) {
-          totalFilteredTitle++;
+        if (!relevanceFilter(job.title, job.content).pass) {
+          totalFilteredRelevance++;
           continue;
         }
         if (!locationFilter(job.location)) {
@@ -344,7 +404,9 @@ async function main() {
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
-        newOffers.push({ ...job, source: `${type}-api` });
+        // Drop the (large) JD body before persisting — only used for filtering.
+        const { content, ...lean } = job;
+        newOffers.push({ ...lean, source: `${type}-api` });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
@@ -365,7 +427,7 @@ async function main() {
   console.log(`${'━'.repeat(45)}`);
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
-  console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
+  console.log(`Filtered by relevance: ${totalFilteredRelevance} removed (title reject + JD gate)`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);

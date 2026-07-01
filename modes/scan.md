@@ -104,10 +104,35 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
       - **company**: después del " @ " en el título, o extraer del dominio/path
    c. Acumular en lista de candidatos (dedup con Nivel 1+2)
 
-6. **Filtrar por título** usando `title_filter` de `portals.yml`:
-   - Al menos 1 keyword de `positive` debe aparecer en el título (case-insensitive)
-   - 0 keywords de `negative` deben aparecer
-   - `seniority_boost` keywords dan prioridad pero no son obligatorios
+6. **Filtrar por relevancia (dos etapas)** usando `relevance_filter` de `portals.yml`.
+   Filosofía: **laxo en títulos, estricto en el cuerpo del JD.** Los mejores puestos
+   de dispositivos tienen títulos genéricos ("Device Design Engineer"); la señal
+   discriminante (microfluidic, MEMS, acoustofluidic, PDMS, cleanroom) vive en el JD.
+
+   - **Etapa 1 — `title_exclude`:** rechazar si el TÍTULO contiene cualquier término
+     (seniority, función incorrecta, dominios 2B: catéter/semi/manufactura/Process Engineer).
+   - **Etapa 1.5 — `title_require_any`:** el título debe nombrar un rol de
+     ingeniería/fabricación (o un término de dominio core). Descarta roles de función
+     incorrecta (Scientist, Chemist, Biologist) cuyo JD sólo menciona el dominio como
+     boilerplate corporativo. Es un filtro FUNCIONAL, no de keyword de dominio.
+   - **Etapa 2 — `jd_require_any`:** el cuerpo del JD (título + descripción) debe
+     contener ≥1 término core, o se descarta.
+   - **Etapa 2b — `jd_deprioritize_any`:** rechazo por dominancia (agresivo). Si el JD
+     nombra tantos o más términos de medtech intervencionista (catéter/endovascular/
+     ablación/stent) como términos core, descartar. Sólo términos intervencionistas —
+     wafer/etch/packaging son técnicas MEMS legítimas y quedan a nivel de título.
+   - **Etapa 2c — `jd_exclude_any`:** rechazo duro (ciudadanía/clearance que Nicole no puede cumplir).
+
+   **Coste del JD-gate por fuente (importante para el límite de 45 min de scan):**
+   - **`scan.mjs` (Greenhouse/Ashby/Lever):** el JD llega gratis en la MISMA llamada
+     de API (`?content=true` en Greenhouse; `descriptionPlain` en Lever/Ashby). Aplicar
+     las 4 etapas en el scan. Sin peticiones extra, sin coste de tiempo.
+   - **Fuentes de navegador (LinkedIn / hiring.cafe / Playwright):** NO abrir cada JD
+     en el scan (multiplicaría navegaciones y agotaría el presupuesto de 45 min).
+     Aplicar sólo Etapa 1 + 1.5 (sobre el título, gratis) al añadir a `pipeline.md`.
+     La Etapa 2 (JD-require) se aplica como **early-exit en el momento de evaluación**
+     (ver `modes/pipeline.md`): el eval ya descarga el JD, así que si no hay término
+     core → marcar `SKIP` inmediatamente sin escribir el reporte A–G completo.
 
 6b. **Filtrar por ubicación (opcional)** usando `location_filter` de `portals.yml`:
    - Si el bloque `location_filter` está ausente, todas las ubicaciones pasan (comportamiento por defecto)
