@@ -347,6 +347,10 @@ try {
     const cvAshbyLive = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
     globalThis.fetch = async () => ({ status: 200, json: async () => ({ jobs: [] }) });
     const cvAshbyGone = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
+    // 200 but a malformed board (no `jobs` array): interpret returns null, so the
+    // orchestration must fall through to null (→ Playwright), not a false verdict.
+    globalThis.fetch = async () => ({ status: 200, json: async () => ({}) });
+    const cvAshbyMalformed = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
     globalThis.fetch = async () => ({ status: 200 });
     const cvGhLive = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
     globalThis.fetch = async () => ({ status: 404 });
@@ -355,12 +359,13 @@ try {
     const cvErr = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
     if (cvAshbyLive?.result === 'active' && cvAshbyLive?.code === 'ashby_api_ok'
         && cvAshbyGone?.result === 'expired' && cvAshbyGone?.code === 'ashby_api_unlisted'
+        && cvAshbyMalformed === null
         && cvGhLive?.result === 'active'
         && cvGone?.result === 'expired'
         && cvErr === null) {
-      pass('checkLivenessViaApi: 200→interpret (Ashby), greenhouse 200→active, 404→expired, fetch error→null');
+      pass('checkLivenessViaApi: 200→interpret (Ashby), malformed→null, greenhouse 200→active, 404→expired, fetch error→null');
     } else {
-      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)}`);
+      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} malformed=${JSON.stringify(cvAshbyMalformed)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)}`);
     }
   } finally {
     globalThis.fetch = origFetch;
