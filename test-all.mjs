@@ -3851,6 +3851,66 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
+// ── 12c. ONBOARDING FILES ARE SETUP WARNINGS, NOT FAILURES (#772) ──
+
+console.log('\n12c. Onboarding files emit setup warnings, not hard failures (#772)');
+
+try {
+  // Build a temp dir that has modes/_profile.md (hard-failure prereq) but is
+  // missing the three setup-severity files: cv.md, config/profile.yml, portals.yml.
+  const warnDir = mkdtempSync(join(tmpdir(), 'co-warn772-'));
+  mkdirSync(join(warnDir, 'modes'), { recursive: true });
+  mkdirSync(join(warnDir, 'config'), { recursive: true });
+  mkdirSync(join(warnDir, 'data'), { recursive: true });
+  mkdirSync(join(warnDir, 'fonts'), { recursive: true });
+  // Stub node_modules so the Dependencies check passes (otherwise exit non-zero)
+  mkdirSync(join(warnDir, 'node_modules'), { recursive: true });
+  // Provide modes/_profile.md so that prereq is satisfied (hard-failure)
+  writeFileSync(join(warnDir, 'modes', '_profile.md'), 'x');
+  // Provide a stub font so fonts/ check passes
+  writeFileSync(join(warnDir, 'fonts', 'stub.ttf'), 'stub');
+  // Run in human-readable (non-json) mode; exit 0 means run() returns the stdout string
+  const doctorOut = run(NODE, ['doctor.mjs', '--target', warnDir], { stdio: ['pipe', 'pipe', 'pipe'] });
+  if (doctorOut === null) {
+    // doctor exited non-zero → at least one hard failure is counted, which is wrong
+    fail('#772: doctor.mjs exited non-zero even though only setup-severity files are missing');
+  } else {
+    const SETUP_PATHS = ['cv.md', 'config/profile.yml', 'portals.yml'];
+    const warnSymbol = '\u26a0'; // ⚠
+    const failSymbol = '\u2717'; // ✗
+    let allWarn = true;
+    for (const p of SETUP_PATHS) {
+      // The line for this path must contain the warning symbol, not the failure symbol
+      const line = doctorOut.split('\n').find((l) => l.includes(p));
+      if (!line) {
+        fail(`#772: No output line found for ${p}`);
+        allWarn = false;
+        break;
+      }
+      if (!line.includes(warnSymbol) || line.includes(failSymbol)) {
+        fail(`#772: ${p} missing-file line is not a warning: ${line.trim()}`);
+        allWarn = false;
+        break;
+      }
+    }
+    if (allWarn) {
+      pass('#772: missing cv.md / config/profile.yml / portals.yml each emit ⚠ setup warning, not ✗ failure');
+    }
+    // Also assert that the --json contract is unchanged: all 3 still appear in missing[]
+    const jsonOut = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', warnDir]) || '{}');
+    const missingPaths = new Set(jsonOut.missing ?? []);
+    const allInMissing = SETUP_PATHS.every((p) => missingPaths.has(p));
+    if (allInMissing) {
+      pass('#772: --json contract unchanged — all three setup files still listed in missing[]');
+    } else {
+      fail(`#772: --json missing[] does not contain all setup files: ${JSON.stringify(jsonOut.missing)}`);
+    }
+  }
+  rmSync(warnDir, { recursive: true, force: true });
+} catch (e) {
+  fail(`#772 setup-warning test crashed: ${e.message}`);
+}
+
 // ── 15. TRACKER DERIVED INDEX (#918 phase 1) ────────────────────
 // applications.md is the source of truth; applications.db is a derived index
 // rebuilt from it. Round-trip md → db → md must be lossless for clean input
