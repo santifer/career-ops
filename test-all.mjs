@@ -8133,6 +8133,50 @@ try {
   if (reg.validateRegistryEntry({ ...goodEntry, requiredEnv: ['GEMINI_API_KEY'] }, regOpts).length > 0) pass('registry: a reserved/core env var is rejected');
   else fail('registry: reserved env should fail');
 
+  // Seed → successor: a bundled "reference" plugin can be superseded by a
+  // maintained community plugin of the same id — but ONLY when registry-approved
+  // AND installed at the exact pinned sha (the no-downgrade trust hinge).
+  if (reg.validateRegistryEntry({ ...goodEntry, supersedesBundled: true }, regOpts).length === 0) pass('registry: supersedesBundled:true is accepted');
+  else fail('registry: supersedesBundled:true should validate');
+  if (reg.validateRegistryEntry({ ...goodEntry, supersedesBundled: 'yes' }, regOpts).length > 0) pass('registry: supersedesBundled must be the boolean true (non-boolean rejected)');
+  else fail('registry: a non-boolean supersedesBundled should fail');
+
+  const succTmp = mkdtempSync(join(tmpdir(), 'co-succ-'));
+  const SUCC_SHA = 'b'.repeat(40);
+  mkdirSync(join(succTmp, 'plugins', 'gmail'), { recursive: true });
+  writeFileSync(join(succTmp, 'plugins', 'gmail', 'manifest.json'), JSON.stringify({ id: 'gmail', apiVersion: 1, description: 'bundled reference gmail', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true }));
+  writeFileSync(join(succTmp, 'plugins', 'gmail', 'index.mjs'), 'export default { ingest: async () => [] };');
+  mkdirSync(join(succTmp, 'plugins.local', 'gmail'), { recursive: true });
+  writeFileSync(join(succTmp, 'plugins.local', 'gmail', 'manifest.json'), JSON.stringify({ id: 'gmail', apiVersion: 1, description: 'community successor gmail', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true }));
+  writeFileSync(join(succTmp, 'plugins.local', 'gmail', 'index.mjs'), 'export default { ingest: async () => [] };');
+  writeFileSync(join(succTmp, 'plugins-registry.json'), JSON.stringify({ registryVersion: 1, plugins: [{ name: 'career-ops-plugin-gmail', id: 'gmail', repo: 'https://github.com/a/career-ops-plugin-gmail', author: 'a', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], license: 'MIT', version: '2.0.0', sha: SUCC_SHA, supersedesBundled: true }] }));
+  const bundledGmail = join(succTmp, 'plugins', 'gmail');
+  const localGmail = join(succTmp, 'plugins.local', 'gmail');
+
+  // (1) No install (no lock entry) → unverified local must NOT override the bundled reference.
+  if (!eng.resolveSuccessorIds(succTmp).has('gmail')) pass('successor: an unverified plugins.local/<id> (no lock) does NOT override the bundled reference (no-downgrade)');
+  else fail('successor: unverified local must not override bundled');
+  const disc0 = eng.discoverPlugins(eng.pluginRoots(succTmp), eng.resolveSuccessorIds(succTmp)).find(m => m.id === 'gmail');
+  if (disc0 && disc0.dir === bundledGmail) pass('successor: with no approved install, discovery returns the BUNDLED gmail');
+  else fail('successor: bundled should win without an approved successor install');
+
+  // (2) Installed but at the WRONG sha → off-registry, still no override (the pin invariant).
+  lockMod.writeLockEntry(succTmp, 'gmail', { source: 'local', sha: 'c'.repeat(40), version: '2.0.0', integrity: 'x', files: {}, consent: {} });
+  if (!eng.resolveSuccessorIds(succTmp).has('gmail')) pass('successor: an installed sha that differs from the registry pin does NOT override (off-registry never wins)');
+  else fail('successor: sha mismatch must not override');
+
+  // (3) Installed at the EXACT registry sha → the maintained successor wins.
+  lockMod.writeLockEntry(succTmp, 'gmail', { source: 'local', sha: SUCC_SHA, version: '2.0.0', integrity: 'x', files: {}, consent: {} });
+  const ids1 = eng.resolveSuccessorIds(succTmp);
+  if (ids1.has('gmail')) pass('successor: a registry-approved successor installed at the pinned sha is resolved as an override');
+  else fail('successor: approved+pinned successor should be resolved');
+  const disc1 = eng.discoverPlugins(eng.pluginRoots(succTmp), ids1).find(m => m.id === 'gmail');
+  if (disc1 && disc1.dir === localGmail) pass('successor: an approved+pinned successor overrides the bundled reference of the same id');
+  else fail('successor: approved successor should override the bundled reference');
+  if (reg.successorFor(succTmp, 'gmail')?.name === 'career-ops-plugin-gmail') pass('successor: successorFor() surfaces the maintained version of a bundled id');
+  else fail('successor: successorFor should return the registered successor');
+  rmSync(succTmp, { recursive: true, force: true });
+
   if (install.parseRepoArg('alice/career-ops-plugin-foo').id === 'foo') pass('install: owner/career-ops-plugin-foo parses to id "foo"');
   else fail('install: should parse owner/repo');
   let extRej = false; try { install.parseRepoArg('ext::sh -c whoami'); } catch { extRej = true; }
