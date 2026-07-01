@@ -168,3 +168,72 @@ node generate-pdf.mjs
 **Cost:** 0 tokens, $0.00.
 
 By routing the heaviest step (Evaluation) to a cheap OpenAI-compatible endpoint, a complete end-to-end job application cycle drops from ~$0.05 - $0.15 on frontier models to a fraction of a cent, allowing you to run bulk batch processing affordably.
+
+---
+
+## 7. Zero-Cost Paths (No Claude / Paid CLI Required)
+
+Career-ops ships a full pipeline that runs **entirely on free models** — no Claude Code, no Anthropic API key, no paid CLI subscription. Everything below works out of the box after a one-time `.env` setup.
+
+### Path A: OpenRouter Free Models (`or:*` scripts)
+
+No Claude Code CLI required — uses OpenRouter free models with automatic fallback.
+
+**npm shortcuts** (cover the whole pipeline):
+
+```bash
+npm run or:scan        # Scan portals for new listings (Greenhouse API, 0 tokens)
+npm run or:pipeline    # Process all pending URLs from data/pipeline.md
+npm run or:eval        # Evaluate a single offer (paste URL or text)
+npm run or:apply       # Generate draft application answers for a report
+```
+
+**Usage** 
+
+```bash
+node openrouter-runner.mjs scan              # Scan Greenhouse API companies for new listings
+node openrouter-runner.mjs evaluate <url>    # Evaluate a job by URL
+node openrouter-runner.mjs evaluate          # Paste job text interactively
+node openrouter-runner.mjs pipeline          # Process all pending URLs from pipeline.md
+node openrouter-runner.mjs apply <report_no> # Generate draft application form answers
+node openrouter-runner.mjs models            # List available free models
+node openrouter-runner.mjs help              # Show this help
+```
+
+**Setup:**
+
+```bash
+1. copy .env.example .env
+2. Add OPENROUTER_API_KEY=sk-or-v1-... to .env
+3. Free API key: https://openrouter.ai
+```
+
+### Path B: Fully Local with Ollama (`ollama:eval`)
+
+If you want **zero network calls** and complete privacy, run evaluations against a local Ollama instance:
+
+```bash
+npm run ollama:eval
+```
+
+This calls `ollama-eval.mjs` which hits your local Ollama server. No API key, no internet, no cost. See [Section 4](#4-local-llm-tradeoffs-ollama--llamacpp) for model size recommendations (32B+ minimum for reliable scoring).
+
+### Path C: Any OpenAI-Compatible Endpoint (`openai:eval`)
+
+Point at **any** endpoint that speaks the OpenAI chat-completions API — NVIDIA NIM (free tier), Zhipu GLM, Together, Groq, LM Studio, llama.cpp, vLLM, or even Ollama's `/v1` route:
+
+```bash
+npm run openai:eval
+```
+
+Configure via `.env`:
+
+```dotenv
+OPENAI_BASE_URL=https://integrate.api.nvidia.com/v1   # or any compatible base URL
+OPENAI_MODEL=meta/llama-3.1-70b-instruct              # model name at that endpoint
+OPENAI_API_KEY=your_provider_key_here                  # some free endpoints need a key
+```
+
+Run `node openai-eval.mjs --help` for per-provider examples with exact URLs and model names.
+
+**Which to pick:** Start with **Path A** (one env var, full pipeline). Use B for air-gapped/local-only, C if you already run your own inference endpoint.
