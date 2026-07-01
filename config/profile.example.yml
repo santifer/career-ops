@@ -56,7 +56,7 @@ narrative:
   # Optional: dashboard/demo URL with credentials
   # dashboard:
   #   url: "https://janesmith.dev/demo"
-  #   password: "demo-2026"
+  #   password: "YOUR_DEMO_PASSWORD"
 
 compensation:
   target_range: "$150K-200K"     # Your target total comp

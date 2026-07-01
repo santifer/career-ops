@@ -89,7 +89,7 @@ Pozycjonuj "Builder" jako sygnał profesjonalny -- a nie jako "majsterkowicza". 
      Przykład:
      dashboard:
        url: "https://twojadomena.dev/demo"
-       password: "demo-2026"
+       password: "YOUR_DEMO_PASSWORD"
        when_to_share: "Role LLMOps, AI Platform, Observability"
      Czytane z config/profile.yml -> narrative.proof_points i narrative.dashboard -->
 

@@ -89,7 +89,7 @@ Positionér "Builder" som et professionelt signal -- ikke som "hobbyist". De æg
      Eksempel:
      dashboard:
        url: "https://ditdomæne.dev/demo"
-       password: "demo-2026"
+       password: "YOUR_DEMO_PASSWORD"
        when_to_share: "LLMOps, AI Platform, Observability-roller"
      Læses fra config/profile.yml -> narrative.proof_points og narrative.dashboard -->
 

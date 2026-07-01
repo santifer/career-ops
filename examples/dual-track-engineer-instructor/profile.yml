@@ -86,7 +86,7 @@ narrative:
   # Optional dashboard / live demo
   # dashboard:
   #   url: "https://sam-rivera.example.dev/demo"
-  #   password: "demo-2026"
+  #   password: "YOUR_DEMO_PASSWORD"
 
 compensation:
   # Default range = engineering range (typically higher).

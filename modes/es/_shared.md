@@ -89,7 +89,7 @@ Posicionar "Builder" como señal profesional — no como "artesano improvisado".
      Ejemplo:
      dashboard:
        url: "https://tudominio.dev/demo"
-       password: "demo-2026"
+       password: "YOUR_DEMO_PASSWORD"
        when_to_share: "Roles LLMOps, AI Platform, Observability"
      Leído desde config/profile.yml -> narrative.proof_points y narrative.dashboard -->
 

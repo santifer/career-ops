@@ -89,7 +89,7 @@ Profil framen als **"Technischer Builder mit nachweisbarer Praxis"**, der das Fr
      Beispiel:
      dashboard:
        url: "https://deinedomain.dev/demo"
-       password: "demo-2026"
+       password: "YOUR_DEMO_PASSWORD"
        when_to_share: "LLMOps, AI-Platform, Observability-Rollen"
      Wird gelesen aus config/profile.yml → narrative.proof_points und narrative.dashboard -->
 

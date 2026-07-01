@@ -107,7 +107,7 @@ Posicionar "Builder" como sinal profissional — não como "hobbyista". Proof po
      Exemplo:
      dashboard:
        url: "https://seudominio.dev/demo"
-       password: "demo-2026"
+       password: "YOUR_DEMO_PASSWORD"
        when_to_share: "LLMOps, AI-Platform, vagas de Observability"
      Lido de config/profile.yml -> narrative.proof_points e narrative.dashboard -->
 

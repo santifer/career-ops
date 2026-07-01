@@ -62,7 +62,7 @@ Frame profile as **"Technical builder with real-world proof"** that adapts frami
 
 <!-- If you have a live demo, dashboard, or public project:
      url: https://yoursite.dev/demo
-     password: demo-2026
+     password: YOUR_DEMO_PASSWORD
      when_to_share: "LLMOps, AI Platform roles" -->
 
 If you have a live demo/dashboard (check profile.yml), offer access in applications for relevant roles.
