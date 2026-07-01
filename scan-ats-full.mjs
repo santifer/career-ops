@@ -38,6 +38,7 @@ import lever from './providers/lever.mjs';
 import ashby from './providers/ashby.mjs';
 import workday from './providers/workday.mjs';
 import { buildTitleFilter, buildLocationFilter, loadSeenUrls, appendToPipeline, appendToScanHistory } from './scan.mjs';
+import { SEED_SOURCES, toPortalEntry } from './seeds/vc-portfolios.mjs';
 
 // ── Config ──────────────────────────────────────────────────────────
 
@@ -124,7 +125,23 @@ function parseArgs(argv) {
   const sinceDays = Number(valueOf('--since')) || 3;
   const limit = Number(valueOf('--limit')) || Infinity;
   const atsArg = valueOf('--ats');
-  const ats = atsArg ? atsArg.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : Object.keys(SOURCES);
+  // --seeds: optional comma-separated VC portfolio sources (e.g. yc,a16z).
+  // When set, the seed companies are fetched and probed via the ATS providers
+  // instead of (or in addition to) the regular ATS directory walk.
+  const seedsArg = valueOf('--seeds');
+  const seeds = seedsArg
+    ? seedsArg.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    : [];
+  const unknownSeeds = seeds.filter(s => !SEED_SOURCES[s]);
+  if (unknownSeeds.length) {
+    console.error(`Error: unknown seed source(s): ${unknownSeeds.join(', ')}. Valid: ${Object.keys(SEED_SOURCES).join(', ')}`);
+    process.exit(1);
+  }
+  // When --seeds is the only discovery flag (no --ats), default --ats to none
+  // so we don't also walk the full ATS directories unintentionally.
+  const ats = atsArg
+    ? atsArg.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    : (seeds.length > 0 ? [] : Object.keys(SOURCES));
   const unknown = ats.filter(a => !SOURCES[a]);
   if (unknown.length) {
     console.error(`Error: unknown ATS source(s): ${unknown.join(', ')}. Valid: ${Object.keys(SOURCES).join(', ')}`);
@@ -134,6 +151,7 @@ function parseArgs(argv) {
     sinceDays,
     limit,
     ats,
+    seeds,
     dryRun: args.includes('--dry-run'),
     liveness: args.includes('--liveness'),
     verbose: args.includes('--verbose'),
@@ -198,6 +216,89 @@ export function sampleCompanies(list, limit, shuffle) {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy.slice(0, limit);
+}
+
+// ── VC portfolio seed scan ──────────────────────────────────────────
+
+// ATS providers that can auto-detect from a careers_url, in probe order.
+// Workday is excluded: its URL format requires a tenant|instance|site triple
+// that can't be derived from a portfolio slug alone.
+const SEED_PROVIDERS = [greenhouse, lever, ashby];
+
+/**
+ * Scan a VC portfolio seed source and return matching job offers.
+ * Companies are converted to PortalEntry shape, then each ATS provider's
+ * detect() is tried in order (greenhouse → lever → ashby). The first hit
+ * wins and its fetch() is called — identical to how portals.yml tracked
+ * companies flow through scan.mjs.
+ *
+ * @param {string}   seedId      Key from SEED_SOURCES (e.g. 'yc').
+ * @param {object}   opts        Parsed CLI options.
+ * @param {object}   ctx         HTTP context from makeHttpCtx().
+ * @param {Set}      seenUrls    Shared dedup set (mutated in place).
+ * @param {string}   label       Human-readable source label for logs.
+ * @returns {Promise<object[]>}  New job offers (same shape as ATS scan offers).
+ */
+export async function runSeedScan(seedId, opts, ctx, seenUrls, label) {
+  const source = SEED_SOURCES[seedId];
+  if (!source) throw new Error(`runSeedScan: unknown seed "${seedId}"`);
+
+  let companies;
+  try {
+    companies = await source.fetch();
+  } catch (err) {
+    console.error(`⚠️  ${seedId}: could not fetch portfolio — ${err.message}`);
+    return [];
+  }
+
+  // Apply the --limit cap here too (by slug, consistent with sampleCompanies).
+  const capped = opts.limit < companies.length
+    ? (opts.shuffle
+      ? (() => { const c = companies.slice(); for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [c[i], c[j]] = [c[j], c[i]]; } return c.slice(0, opts.limit); })()
+      : companies.slice(0, opts.limit))
+    : companies;
+
+  const cutoff = Date.now() - opts.sinceDays * 86_400_000;
+  const offers = [];
+  let errors = 0;
+
+  await parallelEach(capped, CONCURRENCY, async (company) => {
+    const entry = toPortalEntry(company);
+    if (!entry.careers_url) return;
+
+    // Try each ATS provider's detect() — first hit wins.
+    let provider = null;
+    for (const p of SEED_PROVIDERS) {
+      try {
+        if (p.detect?.(entry)) { provider = p; break; }
+      } catch { /* no-op */ }
+    }
+    if (!provider) return; // No ATS detected — skip silently (or log in --verbose).
+
+    let jobs;
+    try {
+      jobs = await provider.fetch(entry, ctx);
+    } catch (err) {
+      errors++;
+      if (opts.verbose) console.error(`  ✗ ${seedId}/${entry.name}: ${err.message}`);
+      return;
+    }
+
+    const sourceName = `${seedId}-seed`;
+    for (const job of jobs) {
+      if (!job.url || !job.title) continue;
+      const dateClass = classifyPostingDate(job, cutoff);
+      if (dateClass === 'stale') continue;
+      if (dateClass === 'undated' && !opts.includeUndated) continue;
+      if (!opts.titleFilter(job.title)) continue;
+      if (!opts.locationFilter(job.location)) continue;
+      if (seenUrls.has(job.url)) continue;
+      seenUrls.add(job.url);
+      offers.push({ ...job, source: sourceName, dateStatus: job.postedAt ? 'dated' : 'unknown' });
+    }
+  });
+
+  return { offers, errors, total: capped.length };
 }
 
 // ── Parallel fetch with concurrency limit ───────────────────────────
@@ -265,8 +366,14 @@ async function main() {
   if (!config?.title_filter?.positive?.length) {
     console.error('⚠️  portals.yml has no title_filter.positive — every fresh posting on every board will match. Consider adding keywords.');
   }
+  // Attach filters to opts so runSeedScan can use them without extra parameters.
+  opts.titleFilter = titleFilter;
+  opts.locationFilter = locationFilter;
 
-  log(`Reverse ATS scan — sources: ${opts.ats.join(', ')} | since ${opts.sinceDays}d${opts.limit < Infinity ? ` | limit ${opts.limit}/ats` : ''}${opts.shuffle ? ' | shuffled' : ''}${opts.includeUndated ? ' | +undated' : ''}${opts.liveness ? ' | liveness' : ''}${opts.dryRun ? ' | DRY RUN' : ''}`);
+  const atsSummary = opts.ats.length ? `ats: ${opts.ats.join(', ')}` : '';
+  const seedsSummary = opts.seeds.length ? `seeds: ${opts.seeds.join(', ')}` : '';
+  const sourcesSummary = [atsSummary, seedsSummary].filter(Boolean).join(' | ');
+  log(`Reverse ATS scan — ${sourcesSummary} | since ${opts.sinceDays}d${opts.limit < Infinity ? ` | limit ${opts.limit}/ats` : ''}${opts.shuffle ? ' | shuffled' : ''}${opts.includeUndated ? ' | +undated' : ''}${opts.liveness ? ' | liveness' : ''}${opts.dryRun ? ' | DRY RUN' : ''}`);
 
   const { seen: seenUrls } = loadSeenUrls();
   const ctx = makeHttpCtx();
@@ -322,6 +429,19 @@ async function main() {
     });
     totalErrors += errors;
     log(`\n  done (${errors} unreachable boards skipped)`);
+  }
+
+  // ── VC portfolio seed sources (--seeds flag) ───────────────────────
+  for (const seedId of opts.seeds) {
+    const seedSource = SEED_SOURCES[seedId];
+    log(`\n🌱 ${seedSource.label} (${seedId}-seed) — fetching portfolio...`);
+    const result = await runSeedScan(seedId, opts, ctx, seenUrls, seedSource.label);
+    if (result && result.offers) {
+      totalCompaniesScanned += result.total || 0;
+      totalErrors += result.errors || 0;
+      newOffers.push(...result.offers);
+      log(`  done — ${result.total} companies probed, ${result.offers.length} matches (${result.errors} errors)`);
+    }
   }
 
   let offers = newOffers;

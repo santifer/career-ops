@@ -595,6 +595,10 @@ search_queries:
 #   provider: remotive
 #   enabled: true
 #
+# - name: NoDesk
+#   provider: nodesk
+#   enabled: true
+#
 # - name: We Work Remotely
 #   provider: weworkremotely
 #   enabled: true
@@ -1536,3 +1540,14 @@ job_boards:
     maxPages: 3
     enabled: false
     notes: "SEA job platform covering ID/SG/MY/VN. Undocumented public GraphQL API — adjust graphqlQuery if schema changes."
+
+  # ── HigherEdJobs (university / higher-ed RSS) ────────────────────────
+  # Public no-auth RSS category feed. cat_id selects the HigherEdJobs
+  # category. Common ones:
+  #   68 = Higher Education, 64 = Educational Administration, 22 = Career Development
+  # Full list: https://www.higheredjobs.com/rss/
+
+  # - name: HigherEdJobs — Higher Education
+  #   provider: higheredjobs
+  #   cat_id: 68
+  #   enabled: true

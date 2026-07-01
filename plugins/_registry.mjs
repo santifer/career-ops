@@ -78,5 +78,20 @@ export function validateRegistryEntry(e, { idRe, hookKinds, reservedEnv }) {
   else if (Array.isArray(e.requiredEnv) && e.requiredEnv.length > 0 && e.allowedHosts.length === 0) errs.push('a keyed plugin must declare allowedHosts');
   if (typeof e.license !== 'string' || !e.license) errs.push('license is required');
   if (typeof e.version !== 'string') errs.push('version is required');
+  // Optional successor marker: a community plugin can declare itself the
+  // maintained successor of the bundled plugin with the SAME id. When present
+  // it must be the literal boolean true; the engine only grants it precedence
+  // once the user installs it at this exact pinned sha (resolveSuccessorIds).
+  if (e.supersedesBundled !== undefined && e.supersedesBundled !== true) errs.push('supersedesBundled, if present, must be the boolean true');
   return errs;
+}
+
+/**
+ * The registry entry that is the maintained successor of a bundled plugin id
+ * (declares `supersedesBundled: true` and shares the id), or null. Used only to
+ * SURFACE the relationship in `plugins.mjs list`/`available` — precedence itself
+ * is decided by the engine's resolveSuccessorIds() (which also checks install + sha).
+ */
+export function successorFor(root, bundledId) {
+  return loadRegistry(root).plugins.find(p => p.supersedesBundled === true && p.id === bundledId) || null;
 }

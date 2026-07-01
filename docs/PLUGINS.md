@@ -71,8 +71,38 @@ trust).
    (your release workflow opens it from your own fork). Users only ever get the
    commit we approved.
 
-Broadly-useful, low/zero-key plugins may be promoted from listed to **bundled**
-(shipped in `plugins/`). See `docs/PLUGIN_REVIEW.md`.
+Broadly-useful, low/zero-key plugins may be shipped **bundled** in `plugins/`
+(e.g. `apify`, `gmail`, `notion`). Bundled plugins are **reference seeds**:
+reviewed in-tree, always present, and a working example to copy — kept minimal
+and stable on purpose, **not** a home for ongoing feature work.
+
+### Improving a bundled plugin → publish a maintained successor
+
+We **don't take feature PRs against bundled plugins.** If you want to extend one
+(more options, a richer mapping, new behavior), own it properly:
+
+1. Publish `career-ops-plugin-<id>` with the **same `id`** as the bundled plugin
+   (start from the bundled plugin's code — it's MIT and credits its origins).
+2. In your registry PR, set **`"supersedesBundled": true`** on your entry.
+3. Once approved + pinned, anyone who runs `node plugins.mjs add career-ops-plugin-<id>`
+   installs your version, and the engine gives **your maintained successor
+   precedence over the bundled reference** of the same id. `node plugins.mjs available`
+   surfaces the link: *"gmail — 🔁 maintained version: career-ops-plugin-gmail"*.
+
+This keeps the core lean and **puts the integration in your hands, with your name
+on it** — while the bundled seed stays as the always-present fallback, so the
+feature never breaks even if a successor goes quiet. Precedence is granted ONLY
+to a registry-approved successor installed at its exact pinned commit — so an
+unprompted, unreviewed community plugin can never shadow a bundled one.
+
+**Trust boundary (plainly).** The thing this protects is the *supply chain*: the
+registry is a reviewed system file and installs pin an exact commit, so no
+upstream author can push code over a bundled plugin without a maintainer merging
+their entry. It does **not** try to stop *you* from running your own modified
+code on your own machine — career-ops is local-first and the source is yours; if
+you edit `plugins.local/` or your `plugins.lock`, you're choosing to run your own
+version, exactly as you always could. Removing a successor restores the bundled
+reference.
 
 ## Not a plugin
 
