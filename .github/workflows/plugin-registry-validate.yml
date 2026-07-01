@@ -7,7 +7,8 @@ name: 'Plugin registry validate'
 on:
   pull_request:
     paths:
-      - 'plugins-registry.json'
+      - 'plugins-registry/**'
+      - 'plugins-registry.json'  # legacy single-file location (pre-migration forks)
 
 permissions:
   contents: read
@@ -33,5 +34,5 @@ jobs:
 
       - name: One plugin per PR
         run: |
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- plugins-registry.json | wc -l)
-          if [ "$CHANGED" -gt 1 ]; then echo "Only plugins-registry.json may change in a registry PR"; exit 1; fi
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'plugins-registry/*.json' plugins-registry.json | wc -l)
+          if [ "$CHANGED" -gt 1 ]; then echo "A registry PR may add or bump exactly one plugins-registry/<id>.json file"; exit 1; fi
