@@ -37,6 +37,7 @@ MAX_RETRIES=2
 MIN_SCORE=0
 SKIP_PDF=false
 MODEL=""  # empty = let claude -p use the Claude Max default
+raw_tier=""
 RATE_LIMIT_SLEEP=300
 BATCH_PAUSED=false
 STATUS_ONLY=false
@@ -135,6 +136,34 @@ if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
   echo "ERROR: --limit must be a non-negative integer."
   exit 1
 fi
+
+# ── Spend Tier: model routing from config/profile.yml ─────────────────────
+# Read spend_tier if --model was not passed explicitly on the command line.
+# economy → Haiku (cheapest), standard → Sonnet (default), premium → Opus.
+PROFILE_FILE="$PROJECT_DIR/config/profile.yml"
+HAIKU_MODEL="claude-3-5-haiku-latest"
+HAIKU_GATE="false"  # true when tier warrants a Haiku pre-screen pass
+
+if [[ -z "$MODEL" && -f "$PROFILE_FILE" ]]; then
+  raw_tier=$(grep -m1 '^spend_tier:' "$PROFILE_FILE" 2>/dev/null \
+    | sed 's/spend_tier:[[:space:]]*//' \
+    | sed 's/#.*//' \
+    | tr -d '"'"'"'[:space:]' || true)
+  case "${raw_tier:-standard}" in
+    economy)
+      MODEL="$HAIKU_MODEL"
+      ;;
+    premium)
+      MODEL="claude-opus-4-6"
+      HAIKU_GATE="true"
+      ;;
+    *)  # standard or unrecognized / missing
+      MODEL="claude-sonnet-4-6"
+      HAIKU_GATE="true"
+      ;;
+  esac
+fi
+
 
 # Lock file to prevent double execution
 acquire_lock() {
@@ -472,6 +501,41 @@ process_offer() {
     fi
   done
 
+  # ── Haiku pre-screen gate (standard / premium tiers) ──────────────────────
+  # Run a cheap Haiku worker first. If the pre-screen score is < 3.0 the offer
+  # is unlikely to be a strong match; use the Haiku report as-is and skip the
+  # more expensive main-model evaluation. Only applies in batch mode (single
+  # interactive evaluations skip this — the user already decided it's worth it).
+  local use_main_model=true
+  if [[ "$HAIKU_GATE" == "true" && -n "$MODEL" && "$MODEL" != "$HAIKU_MODEL" ]]; then
+    local haiku_log="$LOGS_DIR/${report_num}-${id}-haiku-gate.log"
+    local haiku_prompt="Quick pre-screen (score only): evaluate this job offer and output a JSON object on the last line with format {\"score\": <number 1-5>}. URL: $url"
+    local -a haiku_args=(-p --dangerously-skip-permissions --strict-mcp-config --model "$HAIKU_MODEL")
+    haiku_args+=(--append-system-prompt-file "$resolved_prompt" "$haiku_prompt")
+    echo "    🔍 Haiku pre-screen gate for #$id..."
+    local haiku_exit=0
+    claude "${haiku_args[@]}" > "$haiku_log" 2>&1 || haiku_exit=$?
+    if [[ $haiku_exit -eq 0 ]]; then
+      # Extract score from last line JSON: {"score": N.N}
+      local gate_score
+      gate_score=$(tail -5 "$haiku_log" \
+        | grep -oE '"score"[[:space:]]*:[[:space:]]*[0-9]+(\.[0-9]+)?' \
+        | grep -oE '[0-9]+(\.[0-9]+)?' | tail -1 || true)
+      if is_decimal_number "$gate_score" && awk -v s="$gate_score" 'BEGIN{exit !(s < 3.0)}'; then
+        echo "    ⚡ Pre-screen score $gate_score < 3.0 — using Haiku report, skipping $MODEL."
+        # Promote haiku log as the main log; mark with economy-gate note
+        cp "$haiku_log" "$log_file"
+        printf '\n\n[Haiku pre-screen gate: score=%s < 3.0; main model skipped]\n' "$gate_score" >> "$log_file"
+        use_main_model=false
+      else
+        echo "    ✅ Pre-screen score ${gate_score:-?} >= 3.0 — running $MODEL."
+      fi
+    else
+      echo "    ⚠️  Haiku gate failed (exit $haiku_exit); proceeding with $MODEL."
+    fi
+    rm -f "$haiku_log"
+  fi
+
   # Launch claude -p worker.
   # Model defaults to the Claude Max subscription default unless --model was
   # passed. Building the command in an array keeps quoting safe regardless.
@@ -489,47 +553,49 @@ process_offer() {
   local terminal_failure_recorded=false
   local shim_retries=0
   local max_shim_retries=4
-  while true; do
-    exit_code=0
-    claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+  if [[ "$use_main_model" == "true" ]]; then
+    while true; do
+      exit_code=0
+      claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
 
-    if [[ $exit_code -eq 0 ]]; then
-      break
-    fi
+      if [[ $exit_code -eq 0 ]]; then
+        break
+      fi
 
-    # Check for Claude Code npm shim swap (exit code 127 + command not found)
-    if [[ $exit_code -eq 127 ]] && grep -qE "(claude: command not found|claude:.*not found|cannot find.*claude)" "$log_file" && (( shim_retries < max_shim_retries )); then
-      shim_retries=$((shim_retries + 1))
-      echo "    ⏳ Claude command not found (shim swap detected). Retrying in 30s (attempt $shim_retries/$max_shim_retries)..."
-      sleep 30
-      continue
-    fi
+      # Check for Claude Code npm shim swap (exit code 127 + command not found)
+      if [[ $exit_code -eq 127 ]] && grep -qE "(claude: command not found|claude:.*not found|cannot find.*claude)" "$log_file" && (( shim_retries < max_shim_retries )); then
+        shim_retries=$((shim_retries + 1))
+        echo "    ⏳ Claude command not found (shim swap detected). Retrying in 30s (attempt $shim_retries/$max_shim_retries)..."
+        sleep 30
+        continue
+      fi
 
-    if is_session_limit_log "$log_file"; then
-      mark_paused_rate_limit "$id" "$url" "$started_at" "$report_num" "$retries" "$log_file"
-      echo "    ⏸️  Session/rate limit reached; pausing batch without consuming retry budget."
-      terminal_failure_recorded=true
-      break
-    fi
-
-    if is_rate_limit_log "$log_file" && (( retries < MAX_RETRIES )); then
-      if (( RATE_LIMIT_SLEEP <= 0 )); then
+      if is_session_limit_log "$log_file"; then
         mark_paused_rate_limit "$id" "$url" "$started_at" "$report_num" "$retries" "$log_file"
-        echo "    ⏸️  Rate limited and --rate-limit-sleep is 0; pausing batch without consuming retry budget."
+        echo "    ⏸️  Session/rate limit reached; pausing batch without consuming retry budget."
         terminal_failure_recorded=true
         break
       fi
-      retries=$((retries + 1))
-      local retry_completed_at
-      retry_completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-      update_state "$id" "$url" "rate_limited" "$started_at" "$retry_completed_at" "$report_num" "-" "rate-limit; retrying after ${RATE_LIMIT_SLEEP}s" "$retries"
-      echo "    ⏳ Rate limited (attempt $retries/$MAX_RETRIES). Waiting ${RATE_LIMIT_SLEEP}s before retry..."
-      sleep "$RATE_LIMIT_SLEEP"
-      continue
-    fi
 
-    break
-  done
+      if is_rate_limit_log "$log_file" && (( retries < MAX_RETRIES )); then
+        if (( RATE_LIMIT_SLEEP <= 0 )); then
+          mark_paused_rate_limit "$id" "$url" "$started_at" "$report_num" "$retries" "$log_file"
+          echo "    ⏸️  Rate limited and --rate-limit-sleep is 0; pausing batch without consuming retry budget."
+          terminal_failure_recorded=true
+          break
+        fi
+        retries=$((retries + 1))
+        local retry_completed_at
+        retry_completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        update_state "$id" "$url" "rate_limited" "$started_at" "$retry_completed_at" "$report_num" "-" "rate-limit; retrying after ${RATE_LIMIT_SLEEP}s" "$retries"
+        echo "    ⏳ Rate limited (attempt $retries/$MAX_RETRIES). Waiting ${RATE_LIMIT_SLEEP}s before retry..."
+        sleep "$RATE_LIMIT_SLEEP"
+        continue
+      fi
+
+      break
+    done
+  fi
 
   # Cleanup resolved prompt
   rm -f "$resolved_prompt"
@@ -766,6 +832,15 @@ main() {
     echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
   fi
   echo "Input: $total_input offers"
+  local gate_status=""
+  if [[ "$HAIKU_GATE" == "true" ]]; then
+    gate_status=" (Haiku pre-screen gate enabled)"
+  fi
+  local tier_info=""
+  if [[ -n "$raw_tier" ]]; then
+    tier_info="spend_tier=$raw_tier → "
+  fi
+  echo "ℹ️  ${tier_info}model=${MODEL:-default}$gate_status"
   echo ""
 
   # Build list of offers to process
