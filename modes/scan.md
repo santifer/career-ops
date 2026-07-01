@@ -131,6 +131,9 @@ For companies with a public API or structured feed **that are not in `local_pars
 - **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 - **Breezy**: `https://{company}.breezy.hr/json`
+- **Y Combinator / Work at a Startup**: public jobs pages with embedded `data-page` payload
+- **Consider**: VC portfolio boards with `/api-boards/search-jobs` (explicit `provider: consider`)
+- **Getro**: portfolio boards with embedded `__NEXT_DATA__` jobs payload (explicit `provider: getro`)
 
 **Parsing Conventions by Provider:**
 - `greenhouse`: `jobs[]` → `title`, `absolute_url`
@@ -140,6 +143,17 @@ For companies with a public API or structured feed **that are not in `local_pars
 - `teamtailor`: RSS items → `title`, `link`
 - `workday`: `jobPostings[]`/`jobPostings` (based on tenant) → `title`, `externalPath` or URL built from the host
 - `breezy`: top-level array `[]` → `name`, `url` (absolute), `location.name` (or city/state/country + `is_remote`), `published_date`
+- `ycombinator`: embedded `props.jobPostings[]` → `title`, `url`, `companyName`, `location`
+- `consider`: `jobs[]` from `/api-boards/search-jobs` → `title`, `url`/`applyUrl`, `companyName`, `locations`, optional annual salary
+- `getro`: `props.pageProps.initialState.jobs.found[]` → `title`, `url`, `organization.name`, `locations`, optional annual salary
+
+For broad boards that may return a large first-run backlog, bound the scan
+without marking deferred rows as seen:
+
+```bash
+node scan.mjs --max-new=30 --max-per-company=3
+node scan.mjs --verify --max-new=30 --max-per-company=3
+```
 
 ### Level 3 — WebSearch Queries (BROAD DISCOVERY)
 
