@@ -107,6 +107,7 @@ const SYSTEM_PATHS = [
   'scan-ats-full.mjs',
   'match-star.mjs',
   'providers/',
+  'seeds/',
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
