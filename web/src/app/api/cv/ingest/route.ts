@@ -126,9 +126,11 @@ export async function POST(req: Request) {
   }
 
   const encoder = new TextEncoder();
+  let closed = false;
+  let safeClose = () => {};
+
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      let closed = false;
       let buf = "";
       let emitted = false;
       const killer = setTimeout(() => {
@@ -138,7 +140,7 @@ export async function POST(req: Request) {
           /* ignore */
         }
       }, 240_000);
-      const safeClose = () => {
+      safeClose = () => {
         if (!closed) {
           closed = true;
           clearTimeout(killer);
@@ -199,7 +201,7 @@ export async function POST(req: Request) {
       } catch {
         /* ignore */
       }
-      if (tempFile) cleanupTemp(tempFile);
+      safeClose();
     },
   });
 
