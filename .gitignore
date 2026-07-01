@@ -3,6 +3,7 @@ cv.md
 data/applications.md
 data/applications.db
 data/pipeline.md
+data/agent-inbox.md
 data/scan-history.tsv
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep

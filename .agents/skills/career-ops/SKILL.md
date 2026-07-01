@@ -4,7 +4,7 @@ description: AI job search command center -- evaluate offers, generate CVs, scan
 arguments: mode
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | latex | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | interview | patterns | followup | update]"
+argument-hint: "[scan | agent-inbox | deep | pdf | latex | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | interview | patterns | followup | update]"
 license: MIT
 ---
 
@@ -32,6 +32,7 @@ Determine the mode from `$mode`:
 | `pipeline` | `pipeline` |
 | `apply` | `apply` |
 | `scan` | `scan` |
+| `agent-inbox` | `agent-inbox` |
 | `batch` | `batch` |
 | `patterns` | `patterns` |
 | `followup` | `followup` |
@@ -54,6 +55,7 @@ career-ops -- Command Center
 Available commands:
   /career-ops {JD}      → AUTO-PIPELINE: evaluate + report + PDF + tracker (paste text or URL)
   /career-ops pipeline  → Process pending URLs from inbox (data/pipeline.md)
+  /career-ops agent-inbox → Manage deferred HITL tasks (add, list, done)
   /career-ops oferta    → Evaluation only A-F (no auto PDF)
   /career-ops ofertas   → Compare and rank multiple offers
   /career-ops contacto  → LinkedIn power move: find contacts + draft message
