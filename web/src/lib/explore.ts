@@ -89,6 +89,7 @@ export function cleanChips(v: unknown): string[] {
     if (typeof item !== "string") continue;
     const k = item.trim();
     if (!k) continue;
+    if (!/[\p{L}\p{N}]/u.test(k)) continue;
     const key = k.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);

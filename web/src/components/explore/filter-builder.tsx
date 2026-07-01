@@ -36,8 +36,23 @@ function KeywordField({
   onChange: (v: string[]) => void;
 }) {
   const [draft, setDraft] = useState("");
-  const commit = (text: string) => {
-    const parts = text.split(",");
+  const commit = (text: string, isPaste = false) => {
+    let parts: string[] = [];
+    if (isPaste) {
+      const hasStrictDelimiters = /[,;\n\r\t]/.test(text);
+      if (hasStrictDelimiters) {
+        parts = text.split(/[,;\n\r\t]+/);
+      } else {
+        const words = text.trim().split(/\s+/);
+        if (words.length > 3) {
+          parts = words;
+        } else {
+          parts = [text];
+        }
+      }
+    } else {
+      parts = text.split(/[,;\n\r\t]+/);
+    }
     const next = cleanChips([...values, ...parts]);
     onChange(next);
     setDraft("");
@@ -57,7 +72,7 @@ function KeywordField({
         value={draft}
         onChange={(e) => {
           const val = e.target.value;
-          if (val.endsWith(",")) commit(val);
+          if (val.endsWith(",") || val.endsWith(";")) commit(val);
           else setDraft(val);
         }}
         onKeyDown={(e) => {
@@ -70,10 +85,8 @@ function KeywordField({
         }}
         onPaste={(e) => {
           const text = e.clipboardData.getData("text");
-          if (text.includes(",")) {
-            e.preventDefault();
-            commit(draft + text);
-          }
+          e.preventDefault();
+          commit(draft + text, true);
         }}
         onBlur={() => draft.trim() && commit(draft)}
         placeholder={values.length ? "" : placeholder}
