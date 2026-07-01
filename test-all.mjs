@@ -273,7 +273,7 @@ try {
   // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
   // pure URL→API resolution + SSRF guard; the network fetch is conservative by
   // construction (only 404/410→expired, 200→active, else null→Playwright fallback).
-  const { resolveAtsApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
+  const { resolveAtsApi, classifyAshbyBoard } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
   const ghApi = resolveAtsApi('https://boards.greenhouse.io/acme/jobs/4567890');
   if (ghApi?.ats === 'greenhouse' && ghApi.apiUrl === 'https://boards-api.greenhouse.io/v1/boards/acme/jobs/4567890') {
     pass('resolveAtsApi maps a Greenhouse posting to its per-job API URL');
@@ -296,6 +296,45 @@ try {
     pass('resolveAtsApi rejects non-numeric Greenhouse ids and non-https (SSRF guard)');
   } else {
     fail('resolveAtsApi guard failed (bad id or http accepted)');
+  }
+  // Ashby: org-level board endpoint. Ashby pages are JS-rendered, so the browser/
+  // static rung sees only nav/footer and false-reports live postings as expired —
+  // the API rung must resolve the org board and confirm the specific job id.
+  const AS_UUID = '00fd8024-7804-4278-a38b-c9d60d929dbb';
+  const asApi = resolveAtsApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
+  if (asApi?.ats === 'ashby'
+      && asApi.apiUrl === 'https://api.ashbyhq.com/posting-api/job-board/deepgram'
+      && asApi.parts?.jobId === AS_UUID
+      && typeof asApi.interpret === 'function') {
+    pass('resolveAtsApi maps an Ashby posting to its org job-board API URL');
+  } else {
+    fail(`Ashby API URL wrong: ${JSON.stringify(asApi)}`);
+  }
+  // The /application apply-link variant must resolve to the same org + job id.
+  const asApply = resolveAtsApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}/application`);
+  if (asApply?.ats === 'ashby' && asApply.parts?.org === 'deepgram' && asApply.parts?.jobId === AS_UUID) {
+    pass('resolveAtsApi handles the Ashby /application apply-link variant');
+  } else {
+    fail(`Ashby /application variant not resolved: ${JSON.stringify(asApply)}`);
+  }
+  // A bare board root (no job id) isn't a specific posting → null → Playwright.
+  if (resolveAtsApi('https://jobs.ashbyhq.com/deepgram') === null) {
+    pass('resolveAtsApi returns null for an Ashby board root (no job id)');
+  } else {
+    fail('resolveAtsApi should not treat an Ashby board root as a posting');
+  }
+  // classifyAshbyBoard — pure per-job liveness from the board payload.
+  const asListed = classifyAshbyBoard({ jobs: [{ id: AS_UUID, isListed: true }] }, AS_UUID);
+  const asAbsent = classifyAshbyBoard({ jobs: [{ id: 'other-id', isListed: true }] }, AS_UUID);
+  const asUnlisted = classifyAshbyBoard({ jobs: [{ id: AS_UUID, isListed: false }] }, AS_UUID);
+  const asBadShape = classifyAshbyBoard({ notJobs: [] }, AS_UUID);
+  if (asListed?.result === 'active'
+      && asAbsent?.result === 'expired'
+      && asUnlisted?.result === 'expired'
+      && asBadShape === null) {
+    pass('classifyAshbyBoard: listed→active, absent/unlisted→expired, bad shape→null');
+  } else {
+    fail(`classifyAshbyBoard wrong: listed=${JSON.stringify(asListed)} absent=${JSON.stringify(asAbsent)} unlisted=${JSON.stringify(asUnlisted)} badShape=${JSON.stringify(asBadShape)}`);
   }
 
   // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
