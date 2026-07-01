@@ -92,6 +92,25 @@ Classify every offer into one of these types (or hybrid of 2):
 
 After detecting archetype, read `modes/_profile.md` for the user's specific framing and proof points for that archetype.
 
+## Spend Tier — Model Routing
+
+Read `spend_tier` from `config/profile.yml` at the start of every batch or pipeline evaluation run. If the key is missing or invalid, treat it as `standard`.
+
+| `spend_tier` | Claude model | Extended thinking | Batch pre-screen gate |
+|---|---|---|---|
+| `economy` | `claude-3-5-haiku-latest` | — | — (already cheapest) |
+| `standard` | `claude-sonnet-4-6` | off | Haiku gate → Sonnet |
+| `premium` | `claude-opus-4-6` | adaptive | Haiku gate → Opus |
+
+**Batch pre-screen gate (standard / premium only):**
+In batch and pipeline modes, a fast Haiku worker performs a quick pre-screen to score the offer. If the score is **< 3.0**, the offer is skipped from full evaluation, and only the score-only JSON log is retained, marking the offer as completed at minimal token cost. If the score is **≥ 3.0**, the temporary pre-screen log is deleted and the main model (Sonnet or Opus) evaluates the offer fully. The gate is skipped for single interactive evaluations.
+
+**Scan sub-agents are always Haiku** — `scan.mjs` and portal scanning are zero-LLM or deterministic API calls; `spend_tier` has no effect there.
+
+**Output format is identical across tiers** — when a full evaluation is performed, the A–F report structure and tracker entry format do not change with tier. Gated offers scoring < 3.0 bypass full evaluation and do not generate these artifacts. Quality may differ; the workflow does not.
+
+---
+
 ## Global Rules
 
 ### NEVER

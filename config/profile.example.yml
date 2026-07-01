@@ -150,3 +150,21 @@ cover_letter:
 #     cross_role_bucket: "all_EM_roles"
 #     applied_to: ["Senior Software Engineer"]
 #     last_apply_date: "2026-01-01"
+
+# ── Spend Tier ──────────────────────────────────────────────────────────────
+#
+# Controls which Claude model is used for batch and pipeline evaluations.
+# Set once at onboarding; can be changed here at any time.
+#
+#   economy  → claude-3-5-haiku-latest   (~$0.01–0.03 / evaluation)
+#   standard → claude-sonnet-4-6          (~$0.05–0.15 / evaluation)
+#   premium  → claude-opus-4-6            (~$0.20–0.50 / evaluation)
+#
+# Standard and premium also apply a cheap Haiku pre-screen gate in batch mode:
+# a Haiku worker scores each offer first; only offers scoring >= 3.0 are
+# forwarded to the main model, saving tokens on obvious mismatches.
+#
+# Omitting this key (or leaving it commented out) is equivalent to "standard".
+#
+spend_tier: standard  # economy | standard | premium
+
