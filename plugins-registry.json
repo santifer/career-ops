@@ -83,6 +83,9 @@
         "MSGRAPH_CLIENT_ID",
         "MSGRAPH_REFRESH_TOKEN"
       ],
+      "optionalEnv": [
+        "MSGRAPH_CLIENT_SECRET"
+      ],
       "allowedHosts": [
         "login.microsoftonline.com",
         "graph.microsoft.com"
