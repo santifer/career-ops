@@ -125,6 +125,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 #### Subcommands:
 * `pipeline` — Process pending URLs from inbox
 * `scan` — Scan job portals for new offers
+* `agent-inbox` — Manage deferred HITL tasks (add, list, done)
 * `tracker` — Show application status overview
 * `pdf` — Generate ATS-optimized CV PDF
 * `latex` — Export CV as LaTeX/Overleaf .tex
@@ -150,7 +151,10 @@ All `modes/*` files and prompt contexts are shared across Claude Code, OpenCode,
 node doctor.mjs --json
 ```
 
-Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...]}`, where `missing` lists whichever of `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml` are absent. `warnings` is reserved for non-blocking setup signals.
+Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "inboxCount": <number>}`, where `missing` lists whichever of `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml` are absent. `warnings` is reserved for non-blocking setup signals, and `inboxCount` indicates the number of pending tasks in the agent inbox.
+
+- **If `inboxCount > 0`, output a non-blocking message at the start of the session:**
+  > "N task(s) in agent inbox — run career-ops agent-inbox list"
 
 If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently. This is the user's customization file — it will never be overwritten by updates.
 

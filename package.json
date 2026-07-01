@@ -25,6 +25,7 @@
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
     "scan:full": "node scan-ats-full.mjs",
+    "agent-inbox": "node agent-inbox.mjs",
     "validate:portals": "node validate-portals.mjs",
     "verify:portals": "node verify-portals.mjs",
     "tracker": "node tracker.mjs",
