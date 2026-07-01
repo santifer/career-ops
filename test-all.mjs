@@ -8992,6 +8992,43 @@ try {
   fail(`higheredjobs provider tests crashed: ${e.message}`);
 }
 
+// ── 50. fetch-jd.mjs (JD provider pre-fetch) + two-stage report gate ──
+console.log('\n50. fetch-jd.mjs (JD provider pre-fetch) + two-stage report gate');
+
+try {
+  const { htmlToText, detectProvider } = await import(pathToFileURL(join(ROOT, 'fetch-jd.mjs')).href);
+  const { readFileSync } = await import('node:fs');
+
+  // htmlToText: entity-decode THEN strip tags (Greenhouse content is entity-encoded)
+  const t = htmlToText('&lt;p&gt;Senior &amp; Staff&lt;/p&gt;<script>x</script><b>Eng</b>');
+  if (!t.includes('<') && t.includes('Senior & Staff') && t.includes('Eng')) {
+    pass('fetch-jd htmlToText decodes entities and strips tags');
+  } else {
+    fail(`fetch-jd htmlToText unexpected output: ${JSON.stringify(t)}`);
+  }
+
+  // detectProvider: host-based ATS classification + null fallback
+  if (detectProvider('https://job-boards.greenhouse.io/x/jobs/1') === 'greenhouse'
+      && detectProvider('https://jobs.ashbyhq.com/x/uuid') === 'ashby'
+      && detectProvider('https://jobs.lever.co/x/id') === 'lever'
+      && detectProvider('https://x.wd5.myworkdayjobs.com/Y/job/Z') === 'workday'
+      && detectProvider('https://example.com/job') === null) {
+    pass('fetch-jd detectProvider classifies all ATS providers + null fallback');
+  } else {
+    fail('fetch-jd detectProvider misclassified a provider URL');
+  }
+
+  // two-stage gate present in the batch worker prompt
+  const bp = readFileSync(join(ROOT, 'batch/batch-prompt.md'), 'utf-8');
+  if (/Paso 2\.5/.test(bp) && /auto_pdf_score_threshold/.test(bp)) {
+    pass('batch-prompt two-stage gate (Paso 2.5) reads auto_pdf_score_threshold');
+  } else {
+    fail('batch-prompt two-stage gate missing or not referencing auto_pdf_score_threshold');
+  }
+} catch (e) {
+  fail(`fetch-jd / two-stage gate tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
