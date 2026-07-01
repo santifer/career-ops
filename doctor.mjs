@@ -172,7 +172,7 @@ function checkPrereq({ path, severity, fix }) {
     return { pass: true, label: `${path} found` };
   }
   if (severity === 'setup') {
-    return { warn: true, label: `${path} not found (run onboarding to create it)`, fix };
+    return { pass: false, severity, label: `${path} not found (run onboarding to create it)`, fix };
   }
   return { pass: false, label: `${path} not found`, fix };
 }
@@ -331,7 +331,7 @@ async function main() {
 
   for (const result of checks) {
     const fixes = Array.isArray(result.fix) ? result.fix : result.fix ? [result.fix] : [];
-    if (result.warn) {
+    if (result.warn || (result.severity === 'setup' && !result.pass)) {
       warnings++;
       console.log(`${yellow('⚠')} ${result.label}`);
       for (const hint of fixes) {
