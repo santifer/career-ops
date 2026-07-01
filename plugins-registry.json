@@ -47,11 +47,11 @@
     {
       "id": "outlook-interviews",
       "name": "career-ops-plugin-outlook-interviews",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "license": "MIT",
       "description": "Outlook interview ingest — detect interview invitation emails via Microsoft Graph, extract company / role / meeting link, and surface them in the career-ops pipeline.",
       "repo": "https://github.com/Schlaflied/career-ops-plugin-outlook-interviews",
-      "sha": "07fcd1352a0a4bb8be72322b7bf33acc09696920",
+      "sha": "ac70c743a28733eeb9602b3f620689e4d01bc26c",
       "hooks": ["ingest"],
       "requiredEnv": ["MSGRAPH_CLIENT_ID", "MSGRAPH_REFRESH_TOKEN"],
       "allowedHosts": ["login.microsoftonline.com", "graph.microsoft.com"],
