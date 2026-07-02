@@ -207,8 +207,9 @@ tracked_companies:
     enabled: true
 
   - name: Tesla
-    careers_url: https://www.tesla.com/careers/search/?query=software%20intern
+    careers_url: https://www.tesla.com/careers/search/
     scan_method: playwright
+    search_terms: "software intern"
     priority: high
     enabled: true
 

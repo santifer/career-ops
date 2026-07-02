@@ -248,6 +248,39 @@ function normalizeAnchorTitle(text) {
     .slice(0, 180);
 }
 
+async function tryCareersPageSearch(page, terms) {
+  const query = String(terms || '').trim();
+  if (!query) return false;
+
+  const selectors = [
+    'input[type="search"]',
+    'input[name*="search" i]',
+    'input[id*="search" i]',
+    'input[placeholder*="search" i]',
+    'input[aria-label*="search" i]',
+    'input[name*="keyword" i]',
+    'input[id*="keyword" i]',
+    'input[placeholder*="keyword" i]',
+    'input[name*="query" i]',
+    'input[id*="query" i]',
+  ];
+
+  for (const selector of selectors) {
+    const input = page.locator(selector).first();
+    try {
+      if (await input.count() === 0 || !(await input.isVisible({ timeout: 1500 }))) continue;
+      await input.fill(query, { timeout: 5000 });
+      await input.press('Enter', { timeout: 5000 }).catch(() => {});
+      await page.waitForLoadState('domcontentloaded', { timeout: 10_000 }).catch(() => {});
+      await page.waitForTimeout(Number(process.env.PLAYWRIGHT_SEARCH_SETTLE_MS || 3000));
+      return true;
+    } catch {
+      // Try the next likely search input.
+    }
+  }
+  return false;
+}
+
 function allowsUndatedPostings(config) {
   return config.freshness_filter?.enabled === false || config.freshness_filter?.keep_undated !== false;
 }
@@ -289,6 +322,10 @@ async function runPlaywrightFallback(config, scanFns) {
         page.setDefaultTimeout(30_000);
         await page.goto(entry.careers_url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
         await page.waitForTimeout(Number(process.env.PLAYWRIGHT_SCAN_SETTLE_MS || 2500));
+        if (entry.search_terms) {
+          const searched = await tryCareersPageSearch(page, entry.search_terms);
+          console.log(`  ${entry.name}: ${searched ? `searched "${entry.search_terms}"` : 'no search box found; scanning page as loaded'}`);
+        }
         const anchors = await page.evaluate(() => Array.from(document.querySelectorAll('a[href]'))
           .map(a => ({
             href: a.href,
