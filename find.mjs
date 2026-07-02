@@ -131,13 +131,15 @@ function main() {
   const query = args.filter(a => a !== '--json').join(' ').trim();
   if (!query) {
     console.log('Usage: node find.mjs <report# | tracker# | company/role fragment> [--json]');
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const trackerPath = process.env.CAREER_OPS_TRACKER || resolve(ROOT, 'data', 'applications.md');
   if (!existsSync(trackerPath)) {
     console.error(`Error: ${trackerPath} not found — nothing to search.`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   const rows = parseTrackerRows(readFileSync(trackerPath, 'utf-8'));
 
@@ -149,11 +151,13 @@ function main() {
   const matches = findMatches(rows, query, pdfIndex);
   if (json) {
     console.log(JSON.stringify(matches, null, 2));
-    process.exit(matches.length ? 0 : 1);
+    if (matches.length === 0) process.exitCode = 1;
+    return;
   }
   if (matches.length === 0) {
     console.log(`No application matches "${query}" — try a report #, tracker #, or company fragment.`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const headers = ['Tracker#', 'Report#', 'Company', 'Role', 'Status', 'PDF', 'Report'];
