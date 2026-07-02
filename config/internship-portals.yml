@@ -8,7 +8,12 @@
 # can use its simple browser fallback after the Career-Ops scanner runs.
 
 scan_history:
-  recheck_after_days: 120
+  recheck_after_days: 365
+
+freshness_filter:
+  enabled: true
+  max_age_days: 14
+  keep_undated: false
 
 title_filter:
   positive:

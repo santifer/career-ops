@@ -291,6 +291,39 @@ export function buildSalaryFilter(salaryFilter) {
   };
 }
 
+// Optional. If `freshness_filter` is absent, all postings pass.
+// When enabled, postings with provider-supplied `postedAt` older than
+// max_age_days are skipped and recorded in scan-history as skipped_stale.
+// `keep_undated: false` is useful for alerting workflows where old-but-newly-
+// discovered postings should not generate notifications.
+export function buildFreshnessFilter(freshnessFilter) {
+  if (!freshnessFilter || freshnessFilter.enabled === false) {
+    return () => ({ keep: true });
+  }
+
+  const maxAgeDays = Number(freshnessFilter.max_age_days ?? freshnessFilter.maxAgeDays ?? 0);
+  const keepUndated = freshnessFilter.keep_undated !== false;
+  if (!Number.isFinite(maxAgeDays) || maxAgeDays <= 0) {
+    return () => ({ keep: true });
+  }
+
+  const now = Date.now();
+  const cutoff = now - maxAgeDays * 86_400_000;
+
+  return (job) => {
+    const postedAt = Number(job?.postedAt);
+    if (!Number.isFinite(postedAt) || postedAt <= 0) {
+      return keepUndated
+        ? { keep: true }
+        : { keep: false, status: 'skipped_undated' };
+    }
+    if (postedAt < cutoff) {
+      return { keep: false, status: 'skipped_stale' };
+    }
+    return { keep: true };
+  };
+}
+
 export function companyMatch(jobCompany, windowCompany) {
   const cleanNoSpaces = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const c1NoSpaces = cleanNoSpaces(jobCompany);
@@ -911,6 +944,7 @@ async function main() {
   const salaryFilter = buildSalaryFilter(config.salary_filter);
   const trustValidator = buildTrustValidator(config.trust_filter);
   const contentFilter = buildContentFilter(config.content_filter);
+  const freshnessFilter = buildFreshnessFilter(config.freshness_filter);
 
   // 3. Resolve a provider for each enabled company / board
   const targets = [];
@@ -987,8 +1021,10 @@ async function main() {
   let totalFilteredLocation = 0;
   let totalFilteredSalary = 0;
   let totalFilteredContent = 0;
+  let totalFilteredFreshness = 0;
   let totalDupes = 0;
   const newOffers = [];
+  const freshnessSkippedOffers = [];
   const errors = [...resolveErrors];
 
   const tasks = targets.map(company => async () => {
@@ -1037,6 +1073,15 @@ async function main() {
         }
         if (!contentFilter(job.description)) {
           totalFilteredContent++;
+          continue;
+        }
+        const freshnessResult = freshnessFilter(job);
+        if (!freshnessResult.keep) {
+          totalFilteredFreshness++;
+          freshnessSkippedOffers.push({
+            job: { ...job, source: sourceName },
+            status: freshnessResult.status || 'skipped_stale',
+          });
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -1115,6 +1160,18 @@ async function main() {
       appendToScanHistory(group, date, status);
     }
   }
+  if (!dryRun && freshnessSkippedOffers.length > 0) {
+    const freshnessGroups = {};
+    for (const item of freshnessSkippedOffers) {
+      if (!freshnessGroups[item.status]) {
+        freshnessGroups[item.status] = [];
+      }
+      freshnessGroups[item.status].push(item.job);
+    }
+    for (const [status, group] of Object.entries(freshnessGroups)) {
+      appendToScanHistory(group, date, status);
+    }
+  }
   // Expired postings — plus the old URLs of migrated offers — are recorded as
   // skipped_expired so subsequent scans dedup-skip the dead URLs.
   const expiredForHistory = [
@@ -1158,6 +1215,9 @@ async function main() {
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
   console.log(`Filtered by content:  ${totalFilteredContent} removed`);
+  if (config.freshness_filter || totalFilteredFreshness > 0) {
+    console.log(`Filtered by freshness:${String(totalFilteredFreshness).padStart(4)} removed`);
+  }
   if (Object.keys(windows).length > 0 || totalFilteredCooldown > 0) {
     console.log(`Filtered by cooldown:  ${totalFilteredCooldown} removed`);
   }

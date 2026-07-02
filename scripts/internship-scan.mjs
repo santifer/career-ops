@@ -248,11 +248,19 @@ function normalizeAnchorTitle(text) {
     .slice(0, 180);
 }
 
+function allowsUndatedPostings(config) {
+  return config.freshness_filter?.enabled === false || config.freshness_filter?.keep_undated !== false;
+}
+
 async function runPlaywrightFallback(config, scanFns) {
   const entries = (config.tracked_companies || [])
     .filter(entry => entry?.enabled !== false && entry.scan_method === 'playwright' && entry.careers_url);
 
   if (entries.length === 0 || skipPlaywrightFallback) return [];
+  if (!allowsUndatedPostings(config)) {
+    console.log('Generic career-page scan skipped: freshness_filter.keep_undated=false and these pages do not expose reliable post dates.');
+    return [];
+  }
 
   let chromium;
   let checkUrlLiveness;
