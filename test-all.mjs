@@ -9768,7 +9768,8 @@ try {
         attributes: {
           title: '  Platform Engineer  ',                  // leading/trailing space → trimmed
           remote: false,
-          countries: 'Chile',
+          countries: ['Chile'],                            // live API sends an array of country names
+          published_at: 1700000000,                        // epoch seconds → postedAt in ms
           company: { data: { attributes: { name: '' } } }, // empty → falls back to entry.name
         },
         links: { public_url: '  https://www.getonbrd.com/jobs/beta-platform-engineer  ' },
@@ -9824,8 +9825,12 @@ try {
   else fail(`getonbrd.fetch() row 1 company = ${JSON.stringify(fetched[1]?.company)}`);
 
   if (fetched[1]?.location === 'Chile')
-    pass('getonbrd.fetch() uses countries for location when not remote');
+    pass('getonbrd.fetch() joins the countries array into location when not remote');
   else fail(`getonbrd.fetch() row 1 location = ${JSON.stringify(fetched[1]?.location)}`);
+
+  if (fetched[1]?.postedAt === 1700000000 * 1000)
+    pass('getonbrd.fetch() maps published_at (epoch seconds) to postedAt in ms');
+  else fail(`getonbrd.fetch() row 1 postedAt = ${JSON.stringify(fetched[1]?.postedAt)}`);
 
   const noName = await getonbrd.fetch(
     {},
@@ -9855,11 +9860,16 @@ try {
   const pageCalls = [];
   const paged = await getonbrd.fetch(
     { name: 'GOB', provider: 'getonbrd' },
-    { fetchJson: async (url) => { pageCalls.push(url); return pageCalls.length === 1 ? fullPage : shortPage; } },
+    { fetchJson: async (url, opts) => { pageCalls.push({ url, opts }); return pageCalls.length === 1 ? fullPage : shortPage; } },
   );
-  if (pageCalls.length === 2 && /[?&]page=1(?:&|$)/.test(pageCalls[0]) && /[?&]page=2(?:&|$)/.test(pageCalls[1]))
+  const pageUrls = pageCalls.map((c) => c.url);
+  if (pageCalls.length === 2 && /[?&]page=1(?:&|$)/.test(pageUrls[0]) && /[?&]page=2(?:&|$)/.test(pageUrls[1]))
     pass('getonbrd.fetch() paginates ?page=N until a short page is returned');
-  else fail(`getonbrd.fetch() page URLs = ${JSON.stringify(pageCalls)}`);
+  else fail(`getonbrd.fetch() page URLs = ${JSON.stringify(pageUrls)}`);
+
+  if (pageCalls.length > 1 && pageCalls.every((c) => c.opts && c.opts.redirect === 'error'))
+    pass('getonbrd.fetch() passes redirect:"error" on every paginated request (not just page 1)');
+  else fail(`getonbrd.fetch() paginated opts = ${JSON.stringify(pageCalls.map((c) => c.opts))}`);
 
   if (paged.length === 101)
     pass('getonbrd.fetch() accumulates jobs across pages (100 + 1)');

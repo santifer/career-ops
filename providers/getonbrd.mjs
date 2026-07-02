@@ -50,11 +50,14 @@ function resolveMaxPages(entry) {
  *               the dedup key and is display-only (never server-fetched here).
  *   - company:  `attributes.company.data.attributes.name` (from `expand[]=company`),
  *               falling back to the portal entry name, then "Get on Board".
- *   - location: "Remote" when `attributes.remote` is true, else `attributes.countries`.
+ *   - location: "Remote" when `attributes.remote` is true, else the joined
+ *               `attributes.countries` (an array of country names in the live
+ *               API; a plain string is tolerated for older payloads).
+ *   - postedAt: `attributes.published_at` (epoch SECONDS) → epoch ms (omitted when absent).
  *
  * @param {any} j
  * @param {string} [fallbackCompany]
- * @returns {{ title: string, url: string, company: string, location: string } | null}
+ * @returns {{ title: string, url: string, company: string, location: string, postedAt?: number } | null}
  */
 export function normalizeGetonbrdJob(j, fallbackCompany) {
   if (!j || typeof j !== 'object' || !j.attributes || typeof j.attributes !== 'object') return null;
@@ -79,10 +82,26 @@ export function normalizeGetonbrdJob(j, fallbackCompany) {
   const name = attr.company?.data?.attributes?.name;
   const company =
     typeof name === 'string' && name.trim() ? name.trim() : fallbackCompany || 'Get on Board';
-  const location =
-    attr.remote === true ? 'Remote' : typeof attr.countries === 'string' ? attr.countries.trim() : '';
 
-  return { title, url, company, location };
+  // `attributes.countries` is an array of country names in the live API (e.g.
+  // ["Chile"]); older/edge payloads may send a plain string. Handle both.
+  let location = '';
+  if (attr.remote === true) {
+    location = 'Remote';
+  } else if (Array.isArray(attr.countries)) {
+    location = attr.countries
+      .filter((c) => typeof c === 'string' && c.trim())
+      .map((c) => c.trim())
+      .join(', ');
+  } else if (typeof attr.countries === 'string') {
+    location = attr.countries.trim();
+  }
+
+  /** @type {{ title: string, url: string, company: string, location: string, postedAt?: number }} */
+  const job = { title, url, company, location };
+  // `attributes.published_at` is epoch SECONDS → convert to ms (omitted when absent).
+  if (Number.isFinite(attr.published_at)) job.postedAt = attr.published_at * 1000;
+  return job;
 }
 
 /** @type {Provider} */
