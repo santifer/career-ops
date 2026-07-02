@@ -3340,6 +3340,35 @@ try {
     fail(`env override failed: stdout=${single}, sentinel in tmp=${existsSync(join(reserveTmp, '001-RESERVED.md'))}`);
   }
   rmSync(reserveTmp, { recursive: true, force: true });
+
+  // --count N: contiguous range from an empty dir.
+  const rangeTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-range-'));
+  const range = reserveRun(['--count', '3'], rangeTmp);
+  const rangeSentinels = ['001', '002', '003']
+    .every(n => existsSync(join(rangeTmp, `${n}-RESERVED.md`)));
+  if (range === '001-003' && rangeSentinels) {
+    pass('--count 3 reserves contiguous range and prints START-END');
+  } else {
+    fail(`--count 3 produced stdout=${range}, all sentinels=${rangeSentinels}`);
+  }
+
+  // --count N continues after existing reports.
+  writeFileSync(join(rangeTmp, '007-acme-2026-07-02.md'), '# stub');
+  const afterExisting = reserveRun(['--count', '2'], rangeTmp);
+  if (afterExisting === '008-009') {
+    pass('--count starts range after highest existing slot');
+  } else {
+    fail(`--count after existing report produced ${afterExisting}, expected 008-009`);
+  }
+
+  // --count 1 keeps the single-number output format (backwards compatible).
+  const countOne = reserveRun(['--count', '1'], rangeTmp);
+  if (countOne === '010') {
+    pass('--count 1 prints single number without dash');
+  } else {
+    fail(`--count 1 produced ${countOne}, expected 010`);
+  }
+  rmSync(rangeTmp, { recursive: true, force: true });
 } catch (e) {
   fail(`reserve-report-num tests crashed: ${e.message}`);
 }
