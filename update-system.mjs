@@ -188,6 +188,7 @@ const SYSTEM_PATHS = [
   'CITATION.cff',
   '.github/',
   'package.json',
+  '.npmignore',
   'build-cv-latex.mjs',
   'scaffolder/',
   'Dockerfile',
