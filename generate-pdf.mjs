@@ -273,7 +273,10 @@ async function generatePDF() {
 
   // Path-traversal guard: keep the PDF write inside the project directory so a
   // crafted output argument (e.g. "../../etc/cron.d/x") can't escape the repo.
-  const relOut = relative(process.cwd(), outputPath);
+  // Anchored to the repo root (__dirname), not process.cwd(): running the script
+  // from outside the repo used to falsely refuse in-repo outputs — and, worse,
+  // would have allowed writes anywhere under an arbitrary cwd.
+  const relOut = relative(__dirname, outputPath);
   if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
     console.error(`Refusing to write the PDF outside the project directory: ${outputPath}`);
     process.exit(1);
