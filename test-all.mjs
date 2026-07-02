@@ -3320,6 +3320,30 @@ try {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
+// ── RESERVE-REPORT-NUM RANGE RESERVATION (#1426) ────────────────
+// Manual multi-agent fan-outs need N report numbers up front. --count N
+// reserves a contiguous range (per-slot atomic sentinels); tests run against
+// a temp dir via the CAREER_OPS_REPORTS_DIR override.
+console.log('\n🧪 Testing reserve-report-num env override and range reservation...');
+try {
+  const RESERVE = join(ROOT, 'reserve-report-num.mjs');
+  const reserveRun = (args, dir) => execFileSync(NODE, [RESERVE, ...args], {
+    encoding: 'utf-8',
+    env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir },
+  }).trim();
+
+  const reserveTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-'));
+  const single = reserveRun([], reserveTmp);
+  if (single === '001' && existsSync(join(reserveTmp, '001-RESERVED.md'))) {
+    pass('CAREER_OPS_REPORTS_DIR override redirects sentinel to temp dir');
+  } else {
+    fail(`env override failed: stdout=${single}, sentinel in tmp=${existsSync(join(reserveTmp, '001-RESERVED.md'))}`);
+  }
+  rmSync(reserveTmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`reserve-report-num tests crashed: ${e.message}`);
+}
+
 // ── VERIFY-PIPELINE REPORT CHECKS (#1425) ───────────────────────
 // Parallel evaluators can write two reports for the same company+role, and
 // tracker dedup can leave a report file with no tracker row. verify-pipeline
