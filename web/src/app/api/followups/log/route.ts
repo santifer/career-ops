@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { careerOpsRoot } from "@/lib/career-ops";
 import { atomicWrite } from "@/lib/core/safe-write";
 import { CHANNELS, isRealISODate, localISODate } from "@/lib/followups";
+import { followupsLogPath, withLogLock } from "@/lib/followups-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,20 +25,6 @@ function cell(v: unknown, max?: number): string {
 }
 
 const TABLE_HEADER = "| num | appNum | date | company | role | channel | contact | notes |\n|---|---|---|---|---|---|---|---|\n";
-
-// Serialize log-file mutations: POST derives the next num from a read of the
-// file, so two concurrent requests (two tabs, home card + dialog) could mint
-// the same num. The web app is a single local server process, so an in-process
-// queue is sufficient — no cross-process lock needed.
-let logQueue: Promise<unknown> = Promise.resolve();
-function withLogLock<T>(fn: () => T): Promise<T> {
-  const run = logQueue.then(fn, fn);
-  logQueue = run.then(
-    () => undefined,
-    () => undefined,
-  );
-  return run;
-}
 
 export async function POST(req: Request) {
   let body: {
@@ -81,7 +67,7 @@ export async function POST(req: Request) {
   const contact = cell(body.contact, 120);
   const notes = cell(body.notes ?? body.note ?? "");
 
-  const file = path.join(careerOpsRoot(), "data", "follow-ups.md");
+  const file = followupsLogPath();
   try {
     return await withLogLock(() => {
       fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -132,7 +118,7 @@ export async function DELETE(req: Request) {
   const num = Number.parseInt(String(body.num ?? ""), 10);
   if (!Number.isInteger(num) || num <= 0) return Response.json({ error: "num required" }, { status: 400 });
 
-  const file = path.join(careerOpsRoot(), "data", "follow-ups.md");
+  const file = followupsLogPath();
   if (!fs.existsSync(file)) return Response.json({ error: "no follow-up log" }, { status: 404 });
   try {
     return await withLogLock(() => {

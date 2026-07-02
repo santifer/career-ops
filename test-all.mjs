@@ -2675,6 +2675,47 @@ try {
   } else {
     fail(`noteless bullet parsed wrong: ${JSON.stringify(noteless)}`);
   }
+
+  // Next-date overrides (pins): `- next #N YYYY-MM-DD (set YYYY-MM-DD)` lines
+  // pin an app's next follow-up date until a follow-up logged after the pin
+  // resumes the cadence. Last pin per app wins; impossible dates are ignored.
+  const pinContent = [
+    '| 1 | 42 | 2026-06-20 | Acme | Lead | Email |  | ping |',
+    '- next #42 2026-07-10 (set 2026-07-01)',
+    '- next #7 2026-07-04',
+    '- next #42 2026-07-12 (set 2026-07-02)',
+    '- next #9 2026-13-45 (set 2026-07-01)',
+  ].join('\n');
+  const pins = cadence.parseNextOverrides(pinContent);
+  const pin42 = pins.get(42);
+  if (pin42 && pin42.date === '2026-07-12' && pin42.setDate === '2026-07-02') {
+    pass('parseNextOverrides: last pin per application wins');
+  } else {
+    fail(`pin #42 parsed wrong: ${JSON.stringify(pin42)}`);
+  }
+  const pin7 = pins.get(7);
+  if (pin7 && pin7.date === '2026-07-04' && pin7.setDate === '2026-07-04' && !pins.has(9)) {
+    pass('parseNextOverrides: missing set-date defaults to pin date; impossible dates ignored');
+  } else {
+    fail(`pin defaults/impossible handling wrong: ${JSON.stringify([pin7, pins.has(9)])}`);
+  }
+  if (cadence.parseFollowupsContent(pinContent).length === 1) {
+    pass('pin lines are NOT counted as follow-ups');
+  } else {
+    fail('pin lines leaked into parseFollowupsContent');
+  }
+  const pinCases = [
+    [[pin42, null], '2026-07-12', 'active with no follow-ups logged'],
+    [[pin42, '2026-07-01'], '2026-07-12', 'active when the last touch predates the pin'],
+    [[pin42, '2026-07-02'], '2026-07-12', 'same-day tie favors the pin (log-then-pin flow)'],
+    [[pin42, '2026-07-03'], null, 'a follow-up logged after the pin resumes the cadence'],
+    [[undefined, '2026-07-03'], null, 'no pin → null'],
+  ];
+  for (const [args, expected, label] of pinCases) {
+    const got = cadence.resolveNextOverride(...args);
+    if (got === expected) pass(`resolveNextOverride: ${label}`);
+    else fail(`resolveNextOverride ${label}: expected ${expected}, got ${got}`);
+  }
 } catch (e) {
   fail(`follow-up cadence module crashed: ${e.message}`);
 }

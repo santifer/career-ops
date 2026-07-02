@@ -60,6 +60,8 @@ export type CadenceEntry = {
   followups: FollowupLogEntry[];
   urgency: Urgency;
   nextFollowupDate: string | null;
+  /** User-pinned next date (overrides the computed cadence); absent on older engines. */
+  nextOverride?: string | null;
   daysUntilNext: number | null;
 };
 

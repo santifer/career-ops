@@ -152,6 +152,22 @@ After the user reviews and says they've sent a follow-up, record it:
 
 **IMPORTANT:** Only record follow-ups the user confirms they actually sent. Never record a draft as sent.
 
+### Pinning a custom next follow-up date
+
+If the user wants to override the computed cadence for one application ("remind
+me on the 10th", "push this one out a week"), append a pin line to
+`data/follow-ups.md`:
+
+```markdown
+- next #42 2026-07-10 (set 2026-07-02)
+```
+
+`#42` is the application number, the first date is the pinned NEXT follow-up
+date, and `(set …)` is today. The pin takes precedence over the computed
+schedule (it even revives a cold application) until a follow-up is logged on or
+after the set-date, which resumes the normal cadence. The latest pin line per
+application wins; remove the line to clear the pin.
+
 ## Step 6 — Summary
 
 After showing all drafts, summarize:

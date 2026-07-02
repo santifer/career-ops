@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronRight, Loader2, Search, Trash2 } from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronRight, Loader2, Pin, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CompanyLogo } from "@/components/company-logo";
 import { LogDialog } from "@/components/followups/log-dialog";
+import { NextDateDialog } from "@/components/followups/next-date-dialog";
 import { scoreTone } from "@/lib/format";
 import {
   type CadenceEntry,
@@ -85,6 +86,7 @@ export function FollowupsView() {
   const [data, setData] = useState<CadenceResponse | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [dialogFor, setDialogFor] = useState<CadenceEntry | null>(null);
+  const [pinFor, setPinFor] = useState<CadenceEntry | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const refetch = useCallback(() => {
@@ -278,6 +280,7 @@ export function FollowupsView() {
                   expanded={expanded.has(e.num)}
                   onToggle={() => toggleExpand(e.num)}
                   onLog={() => setDialogFor(e)}
+                  onPin={() => setPinFor(e)}
                   onRemove={removeLogged}
                 />
               ))}
@@ -287,6 +290,7 @@ export function FollowupsView() {
       )}
 
       {dialogFor && <LogDialog entry={dialogFor} onClose={() => setDialogFor(null)} onLogged={refetch} />}
+      {pinFor && <NextDateDialog entry={pinFor} onClose={() => setPinFor(null)} onChanged={refetch} />}
     </div>
   );
 }
@@ -329,12 +333,14 @@ function FollowupRow({
   expanded,
   onToggle,
   onLog,
+  onPin,
   onRemove,
 }: {
   entry: CadenceEntry;
   expanded: boolean;
   onToggle: () => void;
   onLog: () => void;
+  onPin: () => void;
   onRemove: (num: number) => void;
 }) {
   const statusLabel = e.status.charAt(0).toUpperCase() + e.status.slice(1);
@@ -385,20 +391,42 @@ function FollowupRow({
               {relativeDays(e.daysUntilNext)}
             </span>
           )}
+          {e.nextOverride && (
+            <span
+              className="ml-1.5 inline-flex align-[-1px]"
+              title={`Pinned to ${e.nextOverride} — cleared when you log a follow-up`}
+              aria-label="Pinned manually"
+            >
+              <Pin className="size-3 text-brand" />
+            </span>
+          )}
         </td>
         <td className="px-2.5 py-3 tabular-nums">{e.followupCount}</td>
         <td className={cn("px-2.5 py-3 tabular-nums", daysHeatClass(e.daysSinceLastFollowup))}>
           {e.daysSinceLastFollowup == null ? <span className="text-faint">—</span> : e.daysSinceLastFollowup}
         </td>
         <td className="whitespace-nowrap px-2.5 py-3">
-          <button
-            type="button"
-            onClick={onLog}
-            title="Log a follow-up (date, channel, contact, notes)"
-            className="rounded-md px-2 py-1 text-xs font-medium text-muted transition-colors hover:bg-brand-soft hover:text-brand"
-          >
-            Log
-          </button>
+          <span className="inline-flex items-center gap-0.5">
+            <button
+              type="button"
+              onClick={onLog}
+              title="Log a follow-up (date, channel, contact, notes)"
+              className="rounded-md px-2 py-1 text-xs font-medium text-muted transition-colors hover:bg-brand-soft hover:text-brand"
+            >
+              Log
+            </button>
+            <button
+              type="button"
+              onClick={onPin}
+              title={e.nextOverride ? `Next date pinned to ${e.nextOverride} — change or clear` : "Pin a custom next follow-up date"}
+              className={cn(
+                "rounded-md p-1 transition-colors hover:bg-brand-soft hover:text-brand",
+                e.nextOverride ? "text-brand" : "text-faint",
+              )}
+            >
+              <CalendarClock className="size-3.5" />
+            </button>
+          </span>
         </td>
       </tr>
       {expanded && (
