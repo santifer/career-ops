@@ -35,7 +35,7 @@ are shared helpers and are not loaded as providers.
 | The Hub | API | Reads the board-wide `https://thehub.io/api/jobs` JSON feed (Nordic/EU startups). Configure with `provider: thehub`; paginates `?page=N` up to `max_pages` (default 3), then scanner filters apply. |
 | We Work Remotely | RSS | Reads the public `https://weworkremotely.com/remote-jobs.rss` feed and parses it in-process. |
 | Workable | Parser | Auto-detects `https://apply.workable.com/<slug>` and parses Workable's public markdown jobs feed. |
-| Workday | API | Auto-detects Workday `myworkdayjobs.com` careers URLs and posts to the public CXS jobs endpoint. |
+| Workday | API | Auto-detects `<tenant>.<instance>.myworkdayjobs.com[/<locale>]/<site>` careers URLs and posts to the public CXS jobs endpoint; paginates via offset up to `max_pages` (default 50), warning if a tenant's postings exceed the cap. |
 | Working Nomads | API | Reads the board-wide `https://www.workingnomads.com/api/exposed_jobs/` JSON feed, then applies scanner filters. |
 
 When adding a new provider, add a new non-helper module under `providers/` and
