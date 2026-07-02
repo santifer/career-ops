@@ -72,4 +72,21 @@ Paste job URLs below as `- [ ] {url}` then run `/career-ops pipeline`.
 
 - [ ] https://jobs.lever.co/palantir/d5486403-c050-4920-b2e0-91b69b61ebb2 | Palantir | Forward Deployed Software Engineer, Internship - Commercial | Chicago, IL
 
+- [ ] https://job-boards.greenhouse.io/anthropic/jobs/5147352008 | Anthropic | Internal Content Producer | San Francisco, CA
+
+- [ ] https://careers.snowflake.com/us/en/job/SNCOUSA92A900C56C24CF68C2EFCD183A84E58EXTERNALENUS26A0AE5297A64A4692163C382570D89B/Software-Engineer-Intern-Zurich-2026 | Snowflake | Software Engineer Intern - Zurich (2026) Software Engineer Intern - Zurich (2026) Job ID is a92a900c-56c2-4cf6-8c2e-fcd183a84e58
+- [ ] https://careers.snowflake.com/us/en/job/SNCOUS3A9BAEAFB10741FBA9B3A98AB78275EDEXTERNALENUS41E65C6CA01E4F40AF14AE75D3B95E27/Software-Engineer-Intern-Berlin-2026 | Snowflake | Software Engineer Intern - Berlin (2026) Software Engineer Intern - Berlin (2026) Job ID is 3a9baeaf-b107-41fb-a9b3-a98ab78275ed
+- [ ] https://careers.snowflake.com/us/en/job/SNCOUS4298E941D1294D7FA965FAA68E6E599EEXTERNALENUS897E1850C5904462B1870516B65B2034/Software-Engineer-Intern-AI-ML-2026 | Snowflake | Software Engineer Intern (AI/ML) - 2026 Software Engineer Intern (AI/ML) - 2026 Job ID is 4298e941-d129-4d7f-a965-faa68e6e599e
+- [ ] https://jobs.sap.com/job/Sofia-Intern-Developer-%28fmd%29-1407/1406336933/ | SAP | Intern - Developer (f/m/d)
+- [ ] https://jobs.sap.com/job/Shanghai-SAP-China-iXp-Intern-AI-Agent-Full-Stack-Developer-Intern-Shanghai-201203/1406004733/ | SAP | SAP China iXp Intern - AI Agent / Full Stack Developer Intern - Shanghai
+- [ ] https://jobs.sap.com/job/Sofia-SAP-BTP-iXp-Intern-Cloud-DevOps-Engineer-1407/1406333333/ | SAP | SAP BTP iXp Intern - Cloud DevOps Engineer
+- [ ] https://jobs.sap.com/job/Shanghai-SAP-China-iXp-Intern-Open-Source-Software-Governance-Tools-Developer-Shanghai-201203/1409662833/ | SAP | SAP China iXp Intern - Open Source Software Governance Tools Developer - Shanghai
+- [ ] https://jobs.sap.com/job/Vancouver-SAP-iXp-Intern-Software-Developer-of-Cloud-Application-and-AI-Brit-V6B-1A9/1408444133/ | SAP | SAP iXp Intern - Software Developer of Cloud Application and AI
+- [ ] https://jobs.sap.com/job/Sofia-SAP-iXP-Intern-AI-Programs-&-Customer360-Solutions%2C-Development-and-Configuration-1407/1402808633/ | SAP | SAP iXP Intern - AI Programs & Customer360 Solutions, Development and Configuration
+- [ ] https://jobs.sap.com/job/Shanghai-SAP-China-iXp-Interns-Backend-Software-Development-Intern-201203/1392176533/ | SAP | SAP China iXp Interns - Backend Software Development Intern
+- [ ] https://jobs.sap.com/job/Kyiv-Software-Engineering-Intern-03150/1409860133/ | SAP | Software Engineering Intern
+- [ ] https://jobs.sap.com/job/Shanghai-SAP-China-iXp-Intern-Developer-Intern-for-SAP-Business-One-Web-Client-Shanghai-201203/1408498633/ | SAP | SAP China iXp Intern - Developer Intern for SAP Business One Web Client - Shanghai
+- [ ] https://jobs.sap.com/job/Sofia-SAP-iXP-Intern-Software-Engineer-in-Gardener-with-Go-and-Kubernetes-1407/1402364033/ | SAP | SAP iXP Intern - Software Engineer in Gardener with Go and Kubernetes
+- [ ] https://jobs.sap.com/job/Chengdu-SAP-iXp-Interns-Platform-Developer%28AIOps%29-CX-Cloud-Operation-610041/1398663033/ | SAP | SAP iXp Interns - Platform Developer(AIOps) CX Cloud Operation
+
 ## Processed
