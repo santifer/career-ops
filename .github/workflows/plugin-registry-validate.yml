@@ -23,7 +23,11 @@ jobs:
     name: Validate registry entries
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 so the "One plugin per PR" diff below has the base
+      # branch's history + merge-base available (a shallow checkout truncates it).
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -43,5 +47,8 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
+          # Make origin/$BASE_REF resolvable (checkout of a PR merge ref does not
+          # create the base remote-tracking branch on its own).
+          git fetch --no-tags origin "$BASE_REF"
           CHANGED=$(git diff --name-only "origin/$BASE_REF"...HEAD -- 'plugins-registry/*.json' plugins-registry.json | wc -l)
           if [ "$CHANGED" -gt 1 ]; then echo "A registry PR may add or bump exactly one plugins-registry/<id>.json file"; exit 1; fi
