@@ -18,14 +18,96 @@ const PAGE_SIZE = 20;
 // keep coming back), so a misbehaving/compromised API can't drive this into
 // fetching an unbounded number of pages. Override with `max_pages` on the
 // portal entry for a tenant that genuinely exceeds it.
-const DEFAULT_MAX_PAGES = 50;
-const MAX_PAGES_CAP = 500;
+const DEFAULT_MAX_PAGES = 100;
+// Hard ceiling even for an explicit override. 1500 pages (30,000 postings)
+// covers known large tenants (dollartree: 23,609; oreillyauto: 17,061;
+// cvshealth: ~16,800) with headroom — not a completeness guarantee, since a
+// company directory this size has no fixed upper bound.
+const MAX_PAGES_CAP = 1500;
+
+// Retry policy for transient page failures (429 rate-limit, 5xx, timeouts/aborts).
+// Workday's CXS API is fronted by a WAF that rate-limits in bursts; without
+// retry, a single 429 silently truncates an entire tenant (e.g. a
+// 3,383-posting tenant reduced to 20 jobs on page 2). Non-transient errors
+// (4xx other than 429) are not retried — retrying a malformed request just
+// wastes the budget.
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 500;
+const RETRY_MAX_DELAY_MS = 8_000;
+
+// Delay between successive pages *within one tenant's own pagination loop*
+// (not between tenants — that's scan-ats-full.mjs's concurrency, a separate
+// knob). A burst of same-host requests with zero delay risks Workday's
+// WAF-level rate limiting on any tenant that paginates several pages deep
+// (large boards like rollsroyce, sec, roche). Only tenants that loop past
+// page 1 pay this; no-date-skip and early-stopped tenants never do.
+const INTER_PAGE_DELAY_MS = 150;
+
+// Workday returns postings newest-first, so pagination can stop once a
+// page's oldest *dated* posting is well past --since — no point paying for
+// (and rate-limit-risking) pages that are entirely stale. Only unambiguous
+// numeric ages ("Posted N Days Ago", N < 30) count for this; the unbounded
+// "30+ Days Ago" bucket never triggers it, so a wide --since (>=30 days)
+// simply never early-stops rather than risk a false stop.
+//
+// The sort isn't perfectly monotonic day-to-day — some tenants (e.g. Adobe)
+// return day-labels slightly out of order across consecutive postings ("27
+// Days Ago | 26 Days Ago | 27 Days Ago"), roughly 1 day of jitter. The
+// margin only needs to clear that; 2 is double it as a plain safety factor,
+// not a second measurement.
+const EARLY_STOP_MARGIN_MS = 2 * 86_400_000;
 
 /** Resolve the page cap: a positive integer `max_pages` on the entry, capped. */
 function resolveMaxPages(entry) {
   const v = entry?.max_pages;
   if (Number.isInteger(v) && v > 0) return Math.min(v, MAX_PAGES_CAP);
   return DEFAULT_MAX_PAGES;
+}
+
+function sleep(ms, ctx) {
+  if (typeof ctx?.sleep === 'function') return ctx.sleep(ms);
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Parses a `Retry-After` header value (seconds, or an HTTP-date) to ms, or null. */
+function parseRetryAfterMs(value) {
+  if (!value) return null;
+  const secs = Number(value);
+  if (Number.isFinite(secs) && secs >= 0) return secs * 1000;
+  const dateMs = Date.parse(value);
+  return Number.isFinite(dateMs) ? Math.max(0, dateMs - Date.now()) : null;
+}
+
+function isRetryableError(err) {
+  const status = err?.status;
+  if (status === 429) return true;
+  if (typeof status === 'number' && status >= 500) return true;
+  return status === undefined; // network error / timeout / abort — no status set
+}
+
+/** Fetches a single page, retrying transient failures with backoff. */
+async function fetchPageWithRetry(ctx, api, opts) {
+  let lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await ctx.fetchJson(api, opts);
+    } catch (err) {
+      lastErr = err;
+      if (attempt === MAX_RETRIES || !isRetryableError(err)) throw err;
+      const backoff = Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS);
+      const delayMs = parseRetryAfterMs(err?.retryAfter) ?? (backoff + Math.random() * 250);
+      await sleep(delayMs, ctx);
+    }
+  }
+  throw lastErr;
+}
+
+/** True once a page's oldest unambiguously-dated posting is past the --since window. */
+function pageIsPastWindow(pageJobs, sinceMs) {
+  if (typeof sinceMs !== 'number') return false;
+  const dated = pageJobs.map((j) => j.postedAt).filter((v) => typeof v === 'number');
+  if (dated.length === 0) return false;
+  return Math.min(...dated) < sinceMs - EARLY_STOP_MARGIN_MS;
 }
 
 function resolveEndpoint(entry) {
@@ -95,8 +177,9 @@ export default {
 
     const postOpts = { method: 'POST', redirect: 'error', headers: { 'content-type': 'application/json', accept: 'application/json' } };
     const makeBody = (offset) => JSON.stringify({ limit: PAGE_SIZE, offset, searchText: '', appliedFacets: {} });
+    const sinceMs = typeof ctx?.sinceMs === 'number' ? ctx.sinceMs : null;
 
-    const first = await ctx.fetchJson(ep.api, { ...postOpts, body: makeBody(0) });
+    const first = await fetchPageWithRetry(ctx, ep.api, { ...postOpts, body: makeBody(0) });
     const jobs = parseWorkdayResponse(first, entry);
 
     const total = typeof first?.total === 'number' ? first.total : null;
@@ -111,40 +194,88 @@ export default {
       ? Math.min(Math.ceil(total / PAGE_SIZE), maxPages)
       : (firstPostings.length >= PAGE_SIZE ? maxPages : 1);
 
+    // Why pagination stopped — drives which warning (if any) fires below.
+    // 'fetch-error' must NOT produce the "raise max_pages" advice: that knob
+    // does nothing for a tenant that died on a rate limit rather than hit the cap.
+    let stopReason = 'complete';
+    if (pageIsPastWindow(jobs, sinceMs)) stopReason = 'early-stop';
+    // Some tenants' CXS responses never include postedOn at all (e.g.
+    // adventhealth, on every page). Early-stop can't apply then — there's
+    // no dated posting to recognize as "past the window".
+    let sawAnyDatedPosting = jobs.some((j) => typeof j.postedAt === 'number');
+
+    // Zero dated postings on page 0, --include-undated off, --since-bounded
+    // scan: further pagination is pure waste — every posting from this
+    // tenant will be dropped downstream as undated regardless of page count
+    // (newest-first sort means if the *freshest* postings lack a date, older
+    // ones will too). Return page 0's results instead of grinding to maxPages.
+    if (stopReason === 'complete' && sinceMs !== null && ctx?.includeUndated !== true
+      && !sawAnyDatedPosting && jobs.length > 0) {
+      stopReason = 'no-date-skip';
+    }
+
     // Sequential, not concurrent (mirrors providers/4dayweek.mjs, thehub.mjs,
     // arbeitnow.mjs, jibeapply.mjs) — a single tenant's API has no reason to
     // receive a burst of parallel requests, and a mid-run failure stops
     // cleanly with whatever pages were already gathered instead of
     // discarding them (Promise.all would fail the whole batch on one error).
     let page = 1;
-    for (; page < pagesToFetch; page++) {
-      let json;
-      try {
-        json = await ctx.fetchJson(ep.api, { ...postOpts, body: makeBody(page * PAGE_SIZE) });
-      } catch (err) {
-        console.error(`⚠️  workday: ${entry.name} page ${page + 1} fetch failed — ${err.message} (returning ${jobs.length} jobs fetched so far)`);
-        break;
+    if (stopReason === 'complete') {
+      for (; page < pagesToFetch; page++) {
+        await sleep(INTER_PAGE_DELAY_MS, ctx);
+        let json;
+        try {
+          json = await fetchPageWithRetry(ctx, ep.api, { ...postOpts, body: makeBody(page * PAGE_SIZE) });
+        } catch (err) {
+          const jobsSummary = `${jobs.length}${total !== null ? ` of ${total}` : ''} jobs`;
+          console.error(`⚠️  workday: ${entry.name} truncated at ${page + 1} of ${pagesToFetch} pages after ${MAX_RETRIES + 1} attempts (${jobsSummary}): ${err.message}`);
+          stopReason = 'fetch-error';
+          break;
+        }
+        const pageJobs = parseWorkdayResponse(json, entry);
+        jobs.push(...pageJobs);
+        if (!sawAnyDatedPosting && pageJobs.some((j) => typeof j.postedAt === 'number')) sawAnyDatedPosting = true;
+        if (total === null) {
+          const postings = Array.isArray(json?.jobPostings) ? json.jobPostings : [];
+          if (postings.length < PAGE_SIZE) break; // short page → last page reached
+        }
+        if (pageIsPastWindow(pageJobs, sinceMs)) { stopReason = 'early-stop'; break; }
       }
-      jobs.push(...parseWorkdayResponse(json, entry));
-      if (total === null) {
-        const postings = Array.isArray(json?.jobPostings) ? json.jobPostings : [];
-        if (postings.length < PAGE_SIZE) break; // short page → last page reached
+      if (stopReason === 'complete' && page === pagesToFetch && pagesToFetch === maxPages) {
+        stopReason = 'cap';
       }
     }
 
-    // The cap is silent by design (it's a safety net, not a working limit),
-    // but a tenant that actually exceeds it needs to be surfaced — otherwise
-    // the user has no way to notice postings are missing from their scan.
-    const truncated = total !== null
-      ? Math.ceil(total / PAGE_SIZE) > maxPages
-      : page === pagesToFetch && pagesToFetch === maxPages;
-    if (truncated) {
-      console.error(
-        `⚠️  workday: ${entry.name} has more postings than max_pages allows ` +
-        `(fetched ${jobs.length}${total !== null ? ` of ${total}` : ''}) — ` +
-        `set max_pages on this portal entry to raise the cap (current: ${maxPages})`,
-      );
+    // The cap is a safety net, not a working limit — silent by design, but a
+    // tenant that actually hits it needs to be surfaced, in one short line
+    // (a full-directory scan can hit this on dozens of tenants).
+    //
+    // "raise max_pages" only applies when `entry` is a real portals.yml
+    // tracked_companies entry (scan.mjs, sinceMs === null). scan-ats-full.mjs's
+    // reverse scan (the only caller that sets ctx.sinceMs) synthesizes entries
+    // from the external dataset — there's no portal entry to edit, and no
+    // fixed cap can guarantee full coverage of an unbounded company
+    // directory anyway, so there's nothing else to suggest.
+    if (stopReason === 'cap') {
+      const jobsSummary = `${jobs.length}${total !== null ? ` of ${total}` : ''} jobs`;
+      if (sinceMs === null) {
+        console.error(`⚠️  workday: ${entry.name} truncated at max_pages=${maxPages} (${jobsSummary}) — raise max_pages on this entry for more`);
+      } else {
+        // Workday's CXS backend can report `total` as exactly
+        // maxPages*PAGE_SIZE when the real count is far higher (e.g.
+        // dickssportinggoods: total=2000, public site lists 7,120; requests
+        // at offset 2000/4000 return the same first posting as offset 0).
+        // Flag it, don't explain it here.
+        const suspectTag = total !== null && total === maxPages * PAGE_SIZE ? ' (total may be Workday-capped, not real)' : '';
+        console.error(`⚠️  workday: ${entry.name} truncated at ${maxPages} pages (${jobsSummary})${suspectTag}`);
+      }
     }
+    // 'no-date-skip' hits many tenants in a full-directory scan (a company
+    // with several Workday sites, like a1group or ashealthnet, triggers it
+    // once per site) — a console.error per hit would repeat thousands of
+    // times, so tag the array instead; scan-ats-full.mjs aggregates it into
+    // one summary line.
+    if (stopReason === 'no-date-skip') jobs.workdayNoDateSkip = true;
 
     return jobs;
   },

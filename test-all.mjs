@@ -9743,10 +9743,13 @@ try {
   const { parseWorkdayResponse } = await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href);
 
   // Shared mock ctx shape for workday.fetch() calls below — only fetchJson varies per test.
-  const mkWorkdayCtx = (fetchJson) => ({
+  // sleep is a no-op so retry-backoff delays don't slow the test suite down.
+  const mkWorkdayCtx = (fetchJson, extra = {}) => ({
     transport: 'http',
     fetchText: async () => { throw new Error('fetchText should not be called'); },
     fetchJson,
+    sleep: async () => {},
+    ...extra,
   });
 
   if (workday.id === 'workday') pass('workday.id is "workday"');
@@ -9905,9 +9908,10 @@ try {
   }
 
   // fetch() pagination cap — an inflated `total` must not trigger unbounded
-  // requests (DEFAULT_MAX_PAGES = 50 in providers/workday.mjs), and hitting
-  // the cap must be visible (console.error), not silent — a real tenant
-  // (Deutsche Bank, total=1030) already exceeds the 50-page/1000-job default.
+  // requests (DEFAULT_MAX_PAGES = 100 in providers/workday.mjs), and hitting
+  // the cap must be visible (console.error), not silent — real tenants
+  // (Dollar Tree, total=23,609; CVS Health, total=16,974) already exceed the
+  // 100-page/2000-job default.
   let hugeWorkdayRequests = 0;
   const capturedWarnings = [];
   const originalConsoleError = console.error;
@@ -9921,12 +9925,12 @@ try {
   } finally {
     console.error = originalConsoleError;
   }
-  if (hugeWorkdayRequests === 50 && fetchedHugeWorkday.length === 1000) {
+  if (hugeWorkdayRequests === 100 && fetchedHugeWorkday.length === 2000) {
     pass('workday.fetch() caps pagination at DEFAULT_MAX_PAGES despite an inflated total');
   } else {
-    fail(`workday fetch pagination cap: requests=${hugeWorkdayRequests}, total=${fetchedHugeWorkday.length} (expected 50/1000)`);
+    fail(`workday fetch pagination cap: requests=${hugeWorkdayRequests}, total=${fetchedHugeWorkday.length} (expected 100/2000)`);
   }
-  if (capturedWarnings.some(w => /has more postings than max_pages allows/.test(w))) {
+  if (capturedWarnings.some(w => /truncated at max_pages=\d+/.test(w))) {
     pass('workday.fetch() warns (console.error) when the cap truncates real results');
   } else {
     fail(`workday fetch cap: expected a truncation warning, got ${JSON.stringify(capturedWarnings)}`);
@@ -9946,18 +9950,18 @@ try {
     fail(`workday fetch max_pages override: requests=${overriddenWorkdayRequests}, total=${fetchedOverriddenWorkday.length} (expected 80/1600)`);
   }
 
-  // entry.max_pages is itself capped (MAX_PAGES_CAP = 500) — an absurd override
-  // can't turn this into an unbounded scan either.
+  // entry.max_pages is itself capped (MAX_PAGES_CAP = 1500) — an absurd
+  // override can't turn this into an unbounded scan either.
   let absurdWorkdayRequests = 0;
   const absurdWorkdayEntry = { name: 'AbsurdCo', careers_url: 'https://absurdco.wd5.myworkdayjobs.com/careers', max_pages: 100_000 };
   const fetchedAbsurdWorkday = await workday.fetch(absurdWorkdayEntry, mkWorkdayCtx(async () => {
     absurdWorkdayRequests++;
     return { total: 10_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
   }));
-  if (absurdWorkdayRequests === 500 && fetchedAbsurdWorkday.length === 10_000) {
+  if (absurdWorkdayRequests === 1500 && fetchedAbsurdWorkday.length === 30_000) {
     pass('workday.fetch() caps an absurd entry.max_pages at MAX_PAGES_CAP');
   } else {
-    fail(`workday fetch max_pages hard cap: requests=${absurdWorkdayRequests}, total=${fetchedAbsurdWorkday.length} (expected 500/10000)`);
+    fail(`workday fetch max_pages hard cap: requests=${absurdWorkdayRequests}, total=${fetchedAbsurdWorkday.length} (expected 1500/30000)`);
   }
 
   // Invalid max_pages values (negative, zero, non-numeric) fall back to
@@ -9972,16 +9976,19 @@ try {
     // Number.isNaN(NaN) is true but JSON.stringify(NaN) === 'null', which would
     // be indistinguishable from the literal `null` case in the log below.
     const label = Number.isNaN(invalidMaxPages) ? 'NaN' : JSON.stringify(invalidMaxPages);
-    if (invalidRequests === 50 && fetchedInvalid.length === 1000) {
+    if (invalidRequests === 100 && fetchedInvalid.length === 2000) {
       pass(`workday.fetch() falls back to DEFAULT_MAX_PAGES for invalid max_pages=${label}`);
     } else {
-      fail(`workday fetch invalid max_pages=${label}: requests=${invalidRequests}, total=${fetchedInvalid.length} (expected 50/1000)`);
+      fail(`workday fetch invalid max_pages=${label}: requests=${invalidRequests}, total=${fetchedInvalid.length} (expected 100/2000)`);
     }
   }
 
-  // fetch() pagination — a failure on a later page returns the jobs gathered
-  // so far instead of discarding everything (sequential, not Promise.all),
-  // and the failure itself is visible (console.error), not silent.
+  // fetch() pagination — a failure that persists across every retry attempt
+  // on a later page returns the jobs gathered so far instead of discarding
+  // everything (sequential, not Promise.all), retries MAX_RETRIES+1=4 times
+  // on that page before giving up, and the failure itself is visible
+  // (console.error), not silent. The truncation ("raise max_pages") warning
+  // must NOT also fire — that knob does nothing for a rate-limited tenant.
   let flakyWorkdayRequests = 0;
   const flakyWarnings = [];
   console.error = (msg) => flakyWarnings.push(msg);
@@ -9991,21 +9998,274 @@ try {
       flakyWorkdayRequests++;
       const body = JSON.parse(opts.body);
       const page = body.offset / 20; // PAGE_SIZE in providers/workday.mjs
-      if (page === 2) throw new Error('HTTP 503');
+      if (page === 2) { const err = new Error('HTTP 503'); err.status = 503; throw err; }
       return { total: 80, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job p${page}-${i}`, externalPath: `/job/board/p${page}-${i}` })) };
     }));
   } finally {
     console.error = originalConsoleError;
   }
-  if (flakyWorkdayRequests === 3 && flakyWorkdayJobs.length === 40) {
-    pass('workday.fetch() returns partial results when a later page fails');
+  if (flakyWorkdayRequests === 6 && flakyWorkdayJobs.length === 40) {
+    pass('workday.fetch() retries a failing page 4x then returns partial results');
   } else {
-    fail(`workday fetch partial failure: requests=${flakyWorkdayRequests}, total=${flakyWorkdayJobs.length} (expected 3/40)`);
+    fail(`workday fetch partial failure: requests=${flakyWorkdayRequests}, total=${flakyWorkdayJobs.length} (expected 6/40)`);
   }
-  if (flakyWarnings.some(w => /page \d+ fetch failed/.test(w))) {
-    pass('workday.fetch() warns (console.error) when a page fetch fails mid-pagination');
+  if (flakyWarnings.some(w => /truncated at \d+ of \d+ pages after 4 attempts/.test(w))) {
+    pass('workday.fetch() warns (console.error) when a page fetch fails after exhausting retries, with the attempt count');
   } else {
     fail(`workday fetch page failure: expected a fetch-failed warning, got ${JSON.stringify(flakyWarnings)}`);
+  }
+  // The failure message must show scale — which page out of how many were
+  // planned, and how many jobs came back out of the tenant's real total —
+  // not just "page 3, 40 jobs" with no sense of how much was actually lost.
+  // Same "truncated at ... (N of M jobs)" shape as the cap-hit warning below,
+  // so the two read consistently.
+  if (flakyWarnings.some(w => /truncated at 3 of 4 pages after 4 attempts \(40 of 80 jobs\): HTTP 503/.test(w))) {
+    pass('workday.fetch() fetch-failure warning reports scale (page X of Y, N of total jobs)');
+  } else {
+    fail(`workday fetch-failure warning missing scale context: ${JSON.stringify(flakyWarnings)}`);
+  }
+  if (!flakyWarnings.some(w => /raise max_pages/.test(w))) {
+    pass('workday.fetch() does NOT fire the "raise max_pages" warning on a fetch-error stop');
+  } else {
+    fail(`workday fetch-error stop should not also warn about max_pages: ${JSON.stringify(flakyWarnings)}`);
+  }
+
+  // fetch() retry — a 429 that succeeds on a later attempt is transparent to
+  // the caller (no jobs lost, no error surfaced) and respects Retry-After.
+  let retrySleepCalls = [];
+  let retryAttempts = 0;
+  const retryEntry = { name: 'RetryCo', careers_url: 'https://retryco.wd5.myworkdayjobs.com/careers' };
+  const retryJobs = await workday.fetch(retryEntry, mkWorkdayCtx(async () => {
+    retryAttempts++;
+    if (retryAttempts === 1) { const err = new Error('HTTP 429'); err.status = 429; err.retryAfter = '1'; throw err; }
+    return { total: 1, jobPostings: [{ title: 'Recovered Job', externalPath: '/job/board/recovered' }] };
+  }, { sleep: async (ms) => { retrySleepCalls.push(ms); } }));
+  if (retryAttempts === 2 && retryJobs.length === 1 && retryJobs[0].title === 'Recovered Job') {
+    pass('workday.fetch() retries a 429 and recovers transparently');
+  } else {
+    fail(`workday 429 retry: attempts=${retryAttempts}, jobs=${JSON.stringify(retryJobs)}`);
+  }
+  if (retrySleepCalls[0] === 1000) {
+    pass('workday.fetch() honors Retry-After header for backoff delay');
+  } else {
+    fail(`workday retry-after: expected first backoff delay 1000ms, got ${JSON.stringify(retrySleepCalls)}`);
+  }
+
+  // fetch() retry — a non-retryable 4xx (e.g. malformed request) breaks
+  // immediately, without wasting retry attempts.
+  let non429Attempts = 0;
+  const non429Warnings = [];
+  console.error = (msg) => non429Warnings.push(msg);
+  let non429Jobs;
+  try {
+    non429Jobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+      non429Attempts++;
+      const body = JSON.parse(opts.body);
+      if (body.offset === 0) return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
+      const err = new Error('HTTP 400: bad request'); err.status = 400; throw err;
+    }));
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (non429Attempts === 2 && non429Jobs.length === 20) {
+    pass('workday.fetch() does not retry a non-retryable 4xx error');
+  } else {
+    fail(`workday non-retryable 4xx: attempts=${non429Attempts}, jobs=${non429Jobs.length} (expected 2/20)`);
+  }
+
+  // fetch() early-stop — once a page's postings are all clearly past
+  // ctx.sinceMs, pagination stops without hitting max_pages, and the
+  // "raise max_pages" warning does NOT fire (this isn't a cap hit).
+  const SINCE_DAYS = 3; // mirrors scan-ats-full.mjs's --since default
+  const nowMs = Date.now();
+  const sinceMs = nowMs - SINCE_DAYS * 86_400_000;
+  let earlyStopRequests = 0;
+  const earlyStopWarnings = [];
+  console.error = (msg) => earlyStopWarnings.push(msg);
+  let earlyStopJobs;
+  try {
+    earlyStopJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+      earlyStopRequests++;
+      const body = JSON.parse(opts.body);
+      const page = body.offset / 20;
+      if (page === 0) {
+        // Page 0: fresh postings, well within the window.
+        return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Fresh ${i}`, externalPath: `/job/board/fresh-${i}`, postedOn: 'Posted Today' })) };
+      }
+      // Every later page: clearly stale (well past sinceMs - margin) — if
+      // early-stop didn't work, this mock would be asked for 100 pages.
+      return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Stale ${i}`, externalPath: `/job/board/stale-${i}`, postedOn: 'Posted 20 Days Ago' })) };
+    }, { sinceMs }));
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (earlyStopRequests === 2 && earlyStopJobs.length === 40) {
+    pass('workday.fetch() stops paginating once a page is past --since (early-stop)');
+  } else {
+    fail(`workday early-stop: requests=${earlyStopRequests}, jobs=${earlyStopJobs.length} (expected 2/40)`);
+  }
+  if (!earlyStopWarnings.some(w => /truncated at/.test(w))) {
+    pass('workday.fetch() does NOT warn about max_pages when it stopped early on --since');
+  } else {
+    fail(`workday early-stop should not warn about max_pages: ${JSON.stringify(earlyStopWarnings)}`);
+  }
+
+  // fetch() early-stop — a wide --since window (>= 30 days) never triggers
+  // early-stop off the unbounded "30+ Days Ago" bucket; pagination still
+  // proceeds until max_pages/total, as before. includeUndated: true isolates
+  // this from the no-date-skip optimization tested separately below — every
+  // posting here is undated ("30+"), which would otherwise short-circuit
+  // after page 1 regardless of --since width.
+  const WIDE_SINCE_DAYS = 90; // >= 30 — past the "30+ Days Ago" bucket's ambiguity threshold
+  const wideSinceMs = nowMs - WIDE_SINCE_DAYS * 86_400_000;
+  let wideRequests = 0;
+  const wideJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+    wideRequests++;
+    const body = JSON.parse(opts.body);
+    if (body.offset === 0) {
+      return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Old ${i}`, externalPath: `/job/board/old-${i}`, postedOn: 'Posted 30+ Days Ago' })) };
+    }
+    return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Old2 ${i}`, externalPath: `/job/board/old2-${i}`, postedOn: 'Posted 30+ Days Ago' })) };
+  }, { sinceMs: wideSinceMs, includeUndated: true }));
+  if (wideRequests === 2 && wideJobs.length === 40) {
+    pass('workday.fetch() never early-stops off the unbounded "30+ Days Ago" bucket');
+  } else {
+    fail(`workday wide-since: requests=${wideRequests}, jobs=${wideJobs.length} (expected 2/40)`);
+  }
+
+  // fetch() cap-hit warning — reverse-scan context (ctx.sinceMs set, as
+  // scan-ats-full.mjs always does) where entries are synthesized from an
+  // external dataset, not portals.yml: there's no portal entry to edit, and
+  // — per the "no fixed cap can guarantee full coverage" conclusion — no
+  // fix to advise at all, so the message is just the short fact, with
+  // neither "raise max_pages" nor a portals.yml edit suggested.
+  // includeUndated: true forces this past the no-date-skip short-circuit
+  // (tested separately below) so the fetch actually reaches the cap.
+  const noDateSinceMs = nowMs - SINCE_DAYS * 86_400_000;
+  const noDateWarnings = [];
+  console.error = (msg) => noDateWarnings.push(msg);
+  try {
+    await workday.fetch(entry, mkWorkdayCtx(async () => ({
+      total: 1_000_000,
+      jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `NoDate ${i}`, externalPath: `/job/board/nodate-${i}` })), // no postedOn
+    }), { sinceMs: noDateSinceMs, includeUndated: true }));
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (noDateWarnings.some(w => /truncated at \d+ pages/.test(w))) {
+    pass('workday.fetch() cap-hit warning fires in reverse-scan context (tenant has no dates, includeUndated on)');
+  } else {
+    fail(`workday no-date cap warning missing: ${JSON.stringify(noDateWarnings)}`);
+  }
+  if (!noDateWarnings.some(w => /raise max_pages|portal entry|portals\.yml/.test(w))) {
+    pass('workday.fetch() reverse-scan cap warning gives no inactionable advice (no portal entry to edit)');
+  } else {
+    fail(`workday reverse-scan cap warning should not suggest editing a portal entry: ${JSON.stringify(noDateWarnings)}`);
+  }
+
+  // fetch() no-date-skip — the default case (includeUndated NOT set, as
+  // scan-ats-full.mjs leaves it by default): a tenant whose first page has
+  // zero dated postings stops right there instead of grinding through up to
+  // maxPages requests whose results would all be dropped as 'undated'
+  // downstream anyway. Only 1 request should fire, not maxPages (100).
+  const skipSinceMs = nowMs - SINCE_DAYS * 86_400_000;
+  let skipRequests = 0;
+  const skipWarnings = [];
+  console.error = (msg) => skipWarnings.push(msg);
+  let skipJobs;
+  try {
+    skipJobs = await workday.fetch(entry, mkWorkdayCtx(async () => {
+      skipRequests++;
+      return {
+        total: 1_000_000,
+        jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `NoDate ${i}`, externalPath: `/job/board/skip-${i}` })), // no postedOn
+      };
+    }, { sinceMs: skipSinceMs })); // includeUndated intentionally omitted — the default, falsy case
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (skipRequests === 1 && skipJobs.length === 20) {
+    pass('workday.fetch() skips pagination after page 1 when includeUndated is off and the tenant has no dated postings');
+  } else {
+    fail(`workday no-date-skip: requests=${skipRequests}, jobs=${skipJobs.length} (expected 1/20)`);
+  }
+  // A full-directory scan hits this on a large fraction of tenants — a
+  // console.error per occurrence would just be the same line thousands of
+  // times, so the signal is a tag on the returned array instead (aggregated
+  // by scan-ats-full.mjs into one summary line at the end of the run).
+  if (skipJobs.workdayNoDateSkip === true) {
+    pass('workday.fetch() tags the returned jobs array for no-date-skip aggregation');
+  } else {
+    fail(`workday no-date-skip tag missing: jobs.workdayNoDateSkip = ${JSON.stringify(skipJobs.workdayNoDateSkip)}`);
+  }
+  if (skipWarnings.length === 0) {
+    pass('workday.fetch() does not console.error per-company on a no-date-skip (aggregated instead)');
+  } else {
+    fail(`workday no-date-skip should not log anything directly: ${JSON.stringify(skipWarnings)}`);
+  }
+
+  // fetch() no-date-skip — does NOT trigger when includeUndated is true (the
+  // "hit the cap while genuinely undated" scenario above already covers that
+  // the fetch continues in that case); this just re-confirms the gate.
+  let noSkipWithIncludeUndatedRequests = 0;
+  const noSkipJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+    noSkipWithIncludeUndatedRequests++;
+    const body = JSON.parse(opts.body);
+    if (body.offset === 0) return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `ND ${i}`, externalPath: `/job/board/nd-${i}` })) };
+    return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `ND2 ${i}`, externalPath: `/job/board/nd2-${i}` })) };
+  }, { sinceMs: skipSinceMs, includeUndated: true }));
+  if (noSkipWithIncludeUndatedRequests === 2 && noSkipJobs.length === 40) {
+    pass('workday.fetch() does not no-date-skip when includeUndated is true');
+  } else {
+    fail(`workday no-date-skip gate: requests=${noSkipWithIncludeUndatedRequests}, jobs=${noSkipJobs.length} (expected 2/40)`);
+  }
+
+  // fetch() cap-hit warning — reverse-scan context, tenant genuinely has
+  // more within --since than the cap allows (total far above the window,
+  // e.g. cvshealth-scale): short line, no suspect-cap tag.
+  const datedCapSinceMs = nowMs - SINCE_DAYS * 86_400_000;
+  const datedCapWarnings = [];
+  console.error = (msg) => datedCapWarnings.push(msg);
+  try {
+    await workday.fetch(entry, mkWorkdayCtx(async () => ({
+      total: 1_000_000,
+      jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Fresh ${i}`, externalPath: `/job/board/fresh-${i}`, postedOn: 'Posted Today' })),
+    }), { sinceMs: datedCapSinceMs }));
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (datedCapWarnings.some(w => /truncated at \d+ pages \(2000 of 1000000 jobs\)/.test(w))) {
+    pass('workday.fetch() cap-hit warning reports the short "truncated at N pages" form');
+  } else {
+    fail(`workday dated cap-hit warning mismatch: ${JSON.stringify(datedCapWarnings)}`);
+  }
+  if (!datedCapWarnings.some(w => /Workday-capped/.test(w))) {
+    pass('workday.fetch() cap-hit warning omits the suspected-Workday-cap tag when total is far above the window');
+  } else {
+    fail(`workday cap-hit warning should not suspect a Workday-side cap here (total=1,000,000, window=2,000): ${JSON.stringify(datedCapWarnings)}`);
+  }
+
+  // fetch() cap-hit warning — Workday's own CXS backend has been observed
+  // reporting `total` as exactly maxPages*PAGE_SIZE even when the real count
+  // is far higher (verified live: dickssportinggoods reported total=2000 but
+  // its public careers page listed 7,120 openings, and offset=2000/4000
+  // requests returned the same first posting as offset=0 instead of new
+  // results). This exact-match case must carry a distinct, short tag.
+  const suspectCapSinceMs = nowMs - SINCE_DAYS * 86_400_000;
+  const suspectCapWarnings = [];
+  console.error = (msg) => suspectCapWarnings.push(msg);
+  try {
+    await workday.fetch(entry, mkWorkdayCtx(async () => ({
+      total: 2000, // === DEFAULT_MAX_PAGES (100) * PAGE_SIZE (20)
+      jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Suspect ${i}`, externalPath: `/job/board/suspect-${i}`, postedOn: 'Posted Today' })),
+    }), { sinceMs: suspectCapSinceMs }));
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (suspectCapWarnings.some(w => /\(total may be Workday-capped, not real\)/.test(w))) {
+    pass('workday.fetch() cap-hit warning flags a suspected Workday-side total cap when total === maxPages*PAGE_SIZE');
+  } else {
+    fail(`workday suspected-cap tag missing: ${JSON.stringify(suspectCapWarnings)}`);
   }
 
   // Verify POST method was used
@@ -10030,6 +10290,75 @@ try {
 
 } catch (e) {
   fail(`workday provider tests crashed: ${e.message}`);
+}
+
+// ── 54. _http.mjs — error messages are status code + reason phrase only ──
+// WAF challenge pages (seen live: Workday 429s) carry no actionable text —
+// whether it's raw HTML markup or a human-readable challenge page ("Security
+// Check ... Support ID: ... Client IP: ..."), neither tells the caller
+// anything useful. The status code and its standard reason phrase carry the
+// signal instead; the raw body is still attached as err.body for callers
+// that parse it (providers/glints.mjs does, for its own error detail
+// extraction).
+
+console.log('\n54. _http.mjs — error message is status + reason phrase only');
+
+try {
+  const { fetchJson } = await import(pathToFileURL(join(ROOT, 'providers/_http.mjs')).href);
+  const originalFetch = globalThis.fetch;
+
+  const mockFetch = (status, statusText, body, headers = {}) => async () => ({
+    ok: false,
+    status,
+    statusText,
+    text: async () => body,
+    headers: { get: (name) => headers[name.toLowerCase()] ?? null },
+  });
+
+  try {
+    globalThis.fetch = mockFetch(429, 'Too Many Requests', '<!DOCTYPE html><html><body><style>body{color:red}</style>Security Check Enable JavaScript and cookies to continue Support ID: 0000000000000000 – Client IP: 203.0.113.42</body></html>', { 'content-type': 'text/html; charset=utf-8' });
+    let err;
+    try { await fetchJson('https://example.com/api'); } catch (e2) { err = e2; }
+    if (err?.message === 'HTTP 429 Too Many Requests') {
+      pass('_http.mjs builds the error message from status + reason phrase only');
+    } else {
+      fail(`error message = ${JSON.stringify(err?.message)}, expected "HTTP 429 Too Many Requests"`);
+    }
+    if (err && !/Security Check|Support ID|Client IP|<style>|<html/i.test(err.message)) {
+      pass('_http.mjs excludes the response body from the error message entirely (HTML or plain text)');
+    } else {
+      fail(`error message should not contain any body text: ${JSON.stringify(err?.message)}`);
+    }
+    if (err?.status === 429) pass('_http.mjs sets err.status from the response');
+    else fail(`err.status = ${JSON.stringify(err?.status)}, expected 429`);
+    if (err?.body?.includes('Support ID')) {
+      pass('_http.mjs still attaches the raw body as err.body for callers that need it (e.g. providers/glints.mjs)');
+    } else {
+      fail(`err.body missing or altered: ${JSON.stringify(err?.body)}`);
+    }
+
+    // No statusText available (some mocked/edge responses omit it) — falls
+    // back to just the status code, no trailing space or "undefined".
+    globalThis.fetch = mockFetch(503, '', 'irrelevant body');
+    let noReasonErr;
+    try { await fetchJson('https://example.com/api'); } catch (e2) { noReasonErr = e2; }
+    if (noReasonErr?.message === 'HTTP 503') {
+      pass('_http.mjs falls back to just the status code when statusText is empty');
+    } else {
+      fail(`error message = ${JSON.stringify(noReasonErr?.message)}, expected "HTTP 503"`);
+    }
+
+    // Retry-After header is captured onto the error for callers (workday.mjs) to use.
+    globalThis.fetch = mockFetch(429, 'Too Many Requests', '', { 'retry-after': '7' });
+    let retryAfterErr;
+    try { await fetchJson('https://example.com/api'); } catch (e2) { retryAfterErr = e2; }
+    if (retryAfterErr?.retryAfter === '7') pass('_http.mjs captures the Retry-After header onto the error');
+    else fail(`err.retryAfter = ${JSON.stringify(retryAfterErr?.retryAfter)}, expected "7"`);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+} catch (e) {
+  fail(`_http.mjs error message tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
