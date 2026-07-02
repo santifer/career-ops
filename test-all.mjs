@@ -3289,6 +3289,82 @@ try {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
+// ── VERIFY-PIPELINE REPORT CHECKS (#1425) ───────────────────────
+// Parallel evaluators can write two reports for the same company+role, and
+// tracker dedup can leave a report file with no tracker row. verify-pipeline
+// must surface both as warnings (not errors — re-evaluations are legitimate).
+console.log('\n🧪 Testing verify-pipeline duplicate/orphan report checks...');
+try {
+  const vpTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-reports-'));
+  try {
+    const vpReports = join(vpTmp, 'reports');
+    mkdirSync(vpReports, { recursive: true });
+    const vpTracker = join(vpTmp, 'applications.md');
+    const vpEnv = { ...process.env, CAREER_OPS_TRACKER: vpTracker, CAREER_OPS_REPORTS: vpReports };
+
+    const report = (company, role) =>
+      `# Evaluación: ${company} — ${role}\n\n## Machine Summary\n\n\`\`\`yaml\ncompany: "${company}"\nrole: "${role}"\nscore: 4.2\n\`\`\`\n`;
+
+    // #1 and #3 are the same role at Acme written by two concurrent workers;
+    // #2 is a different Acme role (must NOT be flagged as duplicate);
+    // #3 also has no tracker row (orphan — tracker dedup kept #1).
+    writeFileSync(join(vpReports, '001-acme-2026-01-04.md'), report('Acme', 'Staff AI Engineer'));
+    writeFileSync(join(vpReports, '002-acme-2026-01-05.md'), report('Acme', 'Platform Engineer'));
+    writeFileSync(join(vpReports, '003-acme-2026-01-05.md'), report('Acme', 'Staff AI Engineer'));
+
+    writeFileSync(vpTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | Acme | Staff AI Engineer | 4.2/5 | Evaluated | ❌ | [1](reports/001-acme-2026-01-04.md) | ok |\n' +
+      '| 2 | 2026-01-05 | Acme | Platform Engineer | 4.0/5 | Evaluated | ❌ | [2](reports/002-acme-2026-01-05.md) | ok |\n');
+
+    const vpOut = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (vpOut === null) {
+      fail('verify-pipeline crashed on duplicate/orphan report fixture');
+    } else {
+      if (vpOut.includes('Duplicate reports for same company+role') &&
+          vpOut.includes('001-acme-2026-01-04.md') && vpOut.includes('003-acme-2026-01-05.md')) {
+        pass('duplicate reports for the same company+role are flagged (#1425)');
+      } else {
+        fail('duplicate company+role reports not flagged');
+      }
+      if (vpOut.includes('002-acme-2026-01-05.md') && /Duplicate reports[^\n]*002-acme/.test(vpOut)) {
+        fail('different role at the same company falsely flagged as duplicate report');
+      } else {
+        pass('different role at the same company is not flagged as duplicate');
+      }
+      if (/Orphan report[^\n]*#3[^\n]*003-acme-2026-01-05\.md/.test(vpOut)) {
+        pass('orphan report with no tracker row is flagged (#1425)');
+      } else {
+        fail('orphan report not flagged');
+      }
+      if (/Orphan report[^\n]*(001|002)-acme/.test(vpOut)) {
+        fail('referenced report falsely flagged as orphan');
+      } else {
+        pass('referenced reports are not flagged as orphans');
+      }
+      // run() returns non-null only on exit 0 — warnings must not fail the check.
+      pass('duplicate/orphan report findings stay warning-level (exit 0)');
+    }
+
+    // Clean fixture: one row, one report — both checks must pass green.
+    rmSync(join(vpReports, '003-acme-2026-01-05.md'));
+    const vpClean = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (vpClean !== null &&
+        vpClean.includes('No duplicate reports for the same company+role') &&
+        vpClean.includes('No orphan reports')) {
+      pass('clean tracker+reports fixture passes both report checks');
+    } else {
+      fail('clean fixture did not pass duplicate/orphan report checks');
+    }
+  } finally {
+    rmSync(vpTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`verify-pipeline report checks crashed: ${e.message}`);
+}
+
 // ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
 // dedup-tracker.mjs used to ship an older fuzzy role matcher than
 // merge-tracker.mjs. That weaker matcher collapsed sibling roles at the same
