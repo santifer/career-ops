@@ -3371,7 +3371,9 @@ try {
   rmSync(rangeTmp, { recursive: true, force: true });
 
   // Collision mid-range: pre-place a sentinel at 007 with existing max 005.
-  // Attempt 1 claims 006, collides at 007 → must release 006 and restart at 008.
+  // maxSlot() counts RESERVED sentinels as occupied, so a foreign sentinel at
+  // 007 bases the range past it (008-) — no slot below is ever attempted.
+  // (The rollback path is exercised by the next test, not this one.)
   const collideTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-collide-'));
   writeFileSync(join(collideTmp, '005-acme-2026-07-02.md'), '# stub');
   writeFileSync(join(collideTmp, '007-RESERVED.md'), '');
@@ -3379,11 +3381,34 @@ try {
   const leaked006 = existsSync(join(collideTmp, '006-RESERVED.md'));
   const foreign007 = existsSync(join(collideTmp, '007-RESERVED.md'));
   if (collided === '008-010' && !leaked006 && foreign007) {
-    pass('--count restarts past collision, releases partial claims, keeps foreign sentinel');
+    pass('--count treats a foreign sentinel as occupied and bases the range past it');
   } else {
-    fail(`collision handling: stdout=${collided} (want 008-010), leaked 006=${leaked006}, foreign 007 kept=${foreign007}`);
+    fail(`sentinel-as-occupied: stdout=${collided} (want 008-010), 006 sentinel=${leaked006}, foreign 007 kept=${foreign007}`);
   }
   rmSync(collideTmp, { recursive: true, force: true });
+
+  // Mid-range collision → rollback. reserveRange must claim a partial range,
+  // fail on a later slot, release the partial claims, and restart past the
+  // collision. A blocker visible to maxSlot() can't trigger this (it bumps the
+  // base instead, as the previous test pins), so plant one maxSlot() can't
+  // see: its /^(\d{3})-/ regex skips 4-digit names, while claimSlot's
+  // occupancy check matches any numeric prefix. Seeding max=999 puts the base
+  // at 1000; "1001-taken.md" then collides mid-range exactly like a slot
+  // claimed by a racing process after the base was computed.
+  const rollbackTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-rollback-'));
+  writeFileSync(join(rollbackTmp, '999-acme-2026-07-02.md'), '# stub');
+  writeFileSync(join(rollbackTmp, '1001-taken.md'), '# stub');
+  const rolledBack = reserveRun(['--count', '3'], rollbackTmp);
+  const released1000 = !existsSync(join(rollbackTmp, '1000-RESERVED.md'));
+  const blocker1001 = existsSync(join(rollbackTmp, '1001-taken.md'));
+  const restarted = ['1002', '1003', '1004']
+    .every(n => existsSync(join(rollbackTmp, `${n}-RESERVED.md`)));
+  if (rolledBack === '1002-1004' && released1000 && blocker1001 && restarted) {
+    pass('mid-range collision releases partially claimed slots and restarts past it');
+  } else {
+    fail(`rollback: stdout=${rolledBack} (want 1002-1004), 1000 released=${released1000}, blocker kept=${blocker1001}, restarted sentinels=${restarted}`);
+  }
+  rmSync(rollbackTmp, { recursive: true, force: true });
 
   // Range-vs-range: two concurrent --count 4 reservations must not overlap.
   // Terminates by construction: each restart strictly advances the base.

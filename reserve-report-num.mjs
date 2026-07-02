@@ -82,14 +82,33 @@ function maxSlot() {
   return max;
 }
 
-/** Attempt to atomically claim slot `n`. Returns true on success. */
-function claimSlot(n) {
-  // Check if any file (real report or sentinel) already occupies this slot
-  if (existsSync(REPORTS_DIR)) {
-    const prefix = `${pad(n)}-`;
-    const alreadyExists = readdirSync(REPORTS_DIR).some(name => name.startsWith(prefix));
-    if (alreadyExists) return false;
+/**
+ * One readdir pass → Set of numeric prefixes currently occupying slots
+ * (e.g. "042" from "042-acme-2026-07-02.md" or "042-RESERVED.md").
+ * Advisory only — real atomicity comes from claimSlot's O_CREAT|O_EXCL write.
+ */
+function takenPrefixes() {
+  const taken = new Set();
+  if (!existsSync(REPORTS_DIR)) return taken;
+  for (const name of readdirSync(REPORTS_DIR)) {
+    const m = name.match(/^(\d+)-/);
+    if (m) taken.add(m[1]);
   }
+  return taken;
+}
+
+/**
+ * Attempt to atomically claim slot `n`. Returns true on success.
+ * `taken` is an optional pre-scanned Set from takenPrefixes(); without it,
+ * the occupancy pre-check scans REPORTS_DIR itself. Either way the check is
+ * only advisory — the 'wx' write below is what guarantees atomicity.
+ */
+function claimSlot(n, taken = null) {
+  // Check if any file (real report or sentinel) already occupies this slot
+  const occupied = taken
+    ? taken.has(pad(n))
+    : existsSync(REPORTS_DIR) && readdirSync(REPORTS_DIR).some(name => name.startsWith(`${pad(n)}-`));
+  if (occupied) return false;
 
   const sentinel = join(REPORTS_DIR, `${pad(n)}-RESERVED.md`);
   try {
@@ -122,11 +141,14 @@ function releaseSlot(n) {
 function reserveRange(count) {
   let base = maxSlot() + 1;
   let tries = 0;
+  // One directory scan per attempt, shared by every per-slot check;
+  // refreshed only after a collision forces a retry.
+  let taken = takenPrefixes();
   while (tries < MAX_RETRIES) {
     const claimed = [];
     let failedAt = -1;
     for (let n = base; n < base + count; n++) {
-      if (claimSlot(n)) {
+      if (claimSlot(n, taken)) {
         claimed.push(n);
       } else {
         failedAt = n;
@@ -137,6 +159,7 @@ function reserveRange(count) {
     for (const n of claimed) releaseSlot(n);
     base = failedAt + 1;
     tries++;
+    taken = takenPrefixes();
   }
   return null;
 }
