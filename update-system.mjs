@@ -60,6 +60,7 @@ const SYSTEM_PATHS = [
   'modes/tracker.md',
   'modes/training.md',
   'modes/interview.md',
+  'modes/interview-redflag.md',
   'modes/latex.md',
   'modes/followup.md',
   'modes/interview-prep.md',
