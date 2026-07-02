@@ -8,6 +8,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import yaml from 'js-yaml';
+import { discoverPlugins, pluginRoots, pluginStatus } from './plugins/_engine.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -81,10 +83,11 @@ async function checkPlaywright() {
 }
 
 // The browser tools (`browser_navigate` / `browser_snapshot`) that scan / pipeline /
-// apply rely on are provided by the Playwright MCP server, registered through a
-// project-level Claude Code config (`.mcp.json` or `.claude/settings.json`). When it
-// is absent, SPA job boards silently return empty or stale content (#522) — so doctor
-// surfaces it as a non-fatal warning rather than letting it fail invisibly.
+// apply rely on are provided by the Playwright MCP server, usually registered through a
+// project-level MCP config (for example `.mcp.json`, `.claude/settings.json`, or
+// `.claude/settings.local.json`). When no common config is detected, SPA job boards can
+// silently return empty or stale content (#522), so doctor surfaces a non-fatal warning
+// instead of letting it fail invisibly.
 const PLAYWRIGHT_MCP_WARNING = 'Playwright MCP tools not detected';
 
 function playwrightMcpConfigured(root) {
@@ -115,8 +118,9 @@ function checkPlaywrightMcp(root) {
     label: PLAYWRIGHT_MCP_WARNING,
     fix: [
       'Browser-driven JD fetching and liveness checks (scan / pipeline / apply) need the',
-      'Playwright MCP server, which this project does not configure yet — SPA job boards',
-      'may return empty or stale content. Tracking: https://github.com/santifer/career-ops/issues/506',
+      'Playwright MCP server. No project-level MCP config was detected in `.mcp.json`',
+      'or `.claude/settings*.json`, so SPA job boards may return empty or stale content.',
+      'Tracking: https://github.com/santifer/career-ops/issues/506',
     ],
   };
 }
@@ -267,6 +271,32 @@ function checkPipelineFile() {
   }
 }
 
+// Discover plugins + their non-secret config block, synchronously. Used by both
+// the human check and the --json onboarding state.
+function readPluginConfigSync(root) {
+  const cfgPath = join(root, 'config', 'plugins.yml');
+  if (!existsSync(cfgPath)) return {};
+  try { return yaml.load(readFileSync(cfgPath, 'utf8')) || {}; } catch { return {}; }
+}
+
+// Plugin layer health: list discovered plugins + whether each enabled one's keys
+// are present. WARN-not-FAIL so a half-configured plugin never blocks setup.
+function checkPlugins(root) {
+  let manifests;
+  try { manifests = discoverPlugins(pluginRoots(root)); } catch { return { pass: true, label: 'Plugins: none' }; }
+  if (manifests.length === 0) return { pass: true, label: 'Plugins: none installed' };
+  const cfg = readPluginConfigSync(root);
+  const lines = [];
+  const fixes = [];
+  for (const m of manifests) {
+    const s = pluginStatus(m, cfg);
+    lines.push(`${m.id} (${s.enabled ? 'enabled' : s.configured ? `missing ${s.missingEnv.join(', ')}` : 'off'})`);
+    if (s.configured && s.missingEnv.length) fixes.push(`${m.id}: add ${s.missingEnv.join(', ')} to .env`);
+  }
+  const label = `Plugins: ${lines.join(', ')}`;
+  return fixes.length ? { warn: true, label, fix: fixes } : { pass: true, label };
+}
+
 async function main() {
   console.log('\ncareer-ops doctor');
   console.log('================\n');
@@ -282,6 +312,7 @@ async function main() {
     checkPipelineFile(),
     checkAutoDir('output'),
     checkAutoDir('reports'),
+    checkPlugins(projectRoot),
   ];
 
   // Network-bound ATS slug probe — only under --strict.
@@ -333,7 +364,15 @@ function onboardingState(root) {
     .filter(({ path }) => !prereqPresent(root, path))
     .map(({ path }) => path);
   const warnings = playwrightMcpConfigured(root) ? [] : [PLAYWRIGHT_MCP_WARNING];
-  return { onboardingNeeded: missing.length > 0, missing, warnings };
+  let plugins = [];
+  try {
+    const cfg = readPluginConfigSync(root);
+    plugins = discoverPlugins(pluginRoots(root)).map((m) => {
+      const s = pluginStatus(m, cfg);
+      return { id: m.id, hooks: m.hooks, enabled: s.enabled, missingEnv: s.missingEnv };
+    });
+  } catch { plugins = []; }
+  return { onboardingNeeded: missing.length > 0, missing, warnings, plugins };
 }
 
 if (JSON_OUT) {

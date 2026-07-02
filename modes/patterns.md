@@ -40,11 +40,37 @@ Parse the JSON output. It contains:
 | `blockerAnalysis` | Most frequent hard blockers: geo-restriction, stack-mismatch, seniority, onsite |
 | `remotePolicy` | Per-policy bucket: total, positive, negative, conversion rate |
 | `companySizeBreakdown` | Per-size bucket: startup, scaleup, enterprise |
+| `vendorAnalysis` | ATS channel analysis: per-vendor advance rate + coverage (see below) |
 | `scoreThreshold` | Recommended minimum score + reasoning |
 | `techStackGaps` | Most frequent tech gaps in negative outcomes |
 | `recommendations` | Top 5 actionable items with reasoning and impact level |
 
 If the script returns `error`, display the error message and exit.
+
+### `vendorAnalysis` — how to present it (IMPORTANT: causal humility)
+
+`vendorAnalysis` groups **submitted** applications by the ATS vendor detected from
+each report's `**URL:**` (community ATS with clean fingerprints only: Greenhouse,
+Lever, Ashby, Workday — white-labeled ATS are not URL-detectable and fall into an
+unreported `unknown` bucket). `advanceRate` = share that reached
+`Responded`/`Interview`/`Offer` (a bare `Applied` does **not** count).
+
+Motivation: *Algorithmic Monocultures in Hiring* (Bommasani et al., FAccT 2026,
+[arXiv:2605.27371](https://arxiv.org/abs/2605.27371)) — rejections through a shared
+screener are correlated, not independent, so a concentrated dead channel has
+diminishing returns.
+
+When you narrate this to the user:
+- **Report channel yield, NOT discrimination.** A single tracker cannot separate
+  "the vendor's algorithm filters me" from "that vendor skews toward a segment I
+  fit poorly." Never claim bias. The honest, useful framing is: *"X% of your
+  applications go through {vendor} and it's advancing far less than your other
+  channels — route those companies through referral/direct contact instead."*
+- Respect `sufficientSample`: if false, mention the vendor only as an observation
+  ("too few to conclude"), never as a recommendation.
+- Always state coverage (`coveragePct`) so the user knows the stats cover a subset.
+- The `recommendations` array already contains the `high`-impact channel action
+  when one qualifies — surface it verbatim rather than inventing a stronger claim.
 
 ## Step 2 — Generate Report
 
