@@ -26,8 +26,18 @@
  *   node reserve-report-num.mjs
  *   # stdout: 035           (zero-padded, 3 digits)
  *
+ *   node reserve-report-num.mjs --count 8
+ *   # stdout: 042-049       (reserves a contiguous range — for multi-agent
+ *   #                        fan-outs: reserve first, hand each parallel
+ *   #                        worker its own number. On collision the whole
+ *   #                        range restarts past the taken slot, so skipped
+ *   #                        numbers become permanent gaps — expected, not
+ *   #                        corruption. Range protection follows the normal
+ *   #                        sentinel TTL: reserve right before spawning.)
+ *
  *   node reserve-report-num.mjs --release 035
- *   # Deletes the sentinel for 035 (call after writing the real report).
+ *   node reserve-report-num.mjs --release 042-049
+ *   # Deletes the sentinel(s) (call after writing the real report(s)).
  *
  *   node reserve-report-num.mjs --gc
  *   # Removes all stale sentinels older than MAX_SENTINEL_AGE_MS.
