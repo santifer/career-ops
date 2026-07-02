@@ -24,7 +24,6 @@ Paste job URLs below as `- [ ] {url}` then run `/career-ops pipeline`.
 - [ ] https://jobs.lever.co/palantir/75cc1c09-8ebd-44c8-b3bc-d122cd1fecb3 | Palantir | Year at Palantir - Forward Deployed Software Engineer, Internship - Commercial | Chicago, IL
 - [ ] https://jobs.lever.co/palantir/5c7bb70c-83ea-43e7-8055-0c8f319f4333 | Palantir | Year at Palantir - Forward Deployed Software Engineer, Internship - USG | New York, NY
 - [ ] https://jobs.lever.co/palantir/655f9937-a4ce-4e7d-80e2-a6659af07329 | Palantir | Year at Palantir - Software Engineer, Internship | New York, NY
-- [ ] https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/US-CA-Santa-Clara/DGX-Cloud-Kubernetes-Runtime-Intern---Fall-2026_JR2009619 | NVIDIA | DGX Cloud Kubernetes Runtime Intern - Fall 2026 | US, CA, Santa Clara
 
 - [ ] https://www.amazon.jobs/en/jobs/3120598/software-development-intern-intech | Amazon | Software Development Intern, Intech
 - [ ] https://www.amazon.jobs/en/jobs/3136815/robotics-software-development-engineer-intern-2026-toronto | Amazon | Robotics - Software Development Engineer Intern - 2026 - Toronto
@@ -34,7 +33,6 @@ Paste job URLs below as `- [ ] {url}` then run `/career-ops pipeline`.
 - [ ] https://www.amazon.jobs/en/jobs/3179209/software-development-engineer-fall-intern-military-veteran | Amazon | Software Development Engineer Fall Intern - Military Veteran
 - [ ] https://www.amazon.jobs/en/jobs/3149107/software-dev-engineer-intern-embedded-system-eero | Amazon | Software Dev Engineer Intern - Embedded System, eero
 - [ ] https://jobs.ericsson.com/careers/job/563121775970409 | Ericsson | Software Developer Intern / Thesis WorkerJorvas, Kirkkonummi,Jorvas, Kirkkonummi,FinlandProduct DevelopmentPosted a month ago : Software Developer Intern / Thesis Worker
-- [ ] https://jobs.ericsson.com/careers/job/563121776572004 | Ericsson | Intern-Developer SoftwareChengdu,Sichuan,ChinaProduct DevelopmentPosted 8 days ago : Intern-Developer Software
 - [ ] https://jobs.ericsson.com/careers/job/563121776072188 | Ericsson | CCRC SW Developer InternMontreal,Quebec,CanadaProduct DevelopmentPosted 13 hours ago : CCRC SW Developer Intern
 - [ ] https://jobs.ericsson.com/careers/job/563121776297570 | Ericsson | Coopérative d'innovation et de prototypageMontreal,Quebec,CanadaProduct DevelopmentHybridPosted 13 hours ago : Coopérative d'innovation et de prototypage
 - [ ] https://www.janestreet.com/join-jane-street/position/8343131002/ | Jane Street | Quantitative Researcher Internship Hong Kong Trading, Research, and Machine Learning December-February
