@@ -3369,6 +3369,45 @@ try {
     fail(`--count 1 produced ${countOne}, expected 010`);
   }
   rmSync(rangeTmp, { recursive: true, force: true });
+
+  // Collision mid-range: pre-place a sentinel at 007 with existing max 005.
+  // Attempt 1 claims 006, collides at 007 → must release 006 and restart at 008.
+  const collideTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-collide-'));
+  writeFileSync(join(collideTmp, '005-acme-2026-07-02.md'), '# stub');
+  writeFileSync(join(collideTmp, '007-RESERVED.md'), '');
+  const collided = reserveRun(['--count', '3'], collideTmp);
+  const leaked006 = existsSync(join(collideTmp, '006-RESERVED.md'));
+  const foreign007 = existsSync(join(collideTmp, '007-RESERVED.md'));
+  if (collided === '008-010' && !leaked006 && foreign007) {
+    pass('--count restarts past collision, releases partial claims, keeps foreign sentinel');
+  } else {
+    fail(`collision handling: stdout=${collided} (want 008-010), leaked 006=${leaked006}, foreign 007 kept=${foreign007}`);
+  }
+  rmSync(collideTmp, { recursive: true, force: true });
+
+  // Range-vs-range: two concurrent --count 4 reservations must not overlap.
+  // Terminates by construction: each restart strictly advances the base.
+  const concTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-conc-'));
+  const spawnReserve = () => new Promise(resolve => {
+    const child = spawn(NODE, [RESERVE, '--count', '4'], {
+      env: { ...process.env, CAREER_OPS_REPORTS_DIR: concTmp },
+    });
+    let stdout = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.on('close', () => resolve(stdout.trim()));
+  });
+  const [rangeX, rangeY] = await Promise.all([spawnReserve(), spawnReserve()]);
+  const toNums = r => {
+    const [s, e] = r.split('-').map(Number);
+    return Array.from({ length: e - s + 1 }, (_, i) => s + i);
+  };
+  const overlap = toNums(rangeX).filter(n => toNums(rangeY).includes(n));
+  if (rangeX && rangeY && overlap.length === 0) {
+    pass(`concurrent --count 4 reservations are disjoint (${rangeX} vs ${rangeY})`);
+  } else {
+    fail(`concurrent ranges overlap: ${rangeX} vs ${rangeY} share [${overlap}]`);
+  }
+  rmSync(concTmp, { recursive: true, force: true });
 } catch (e) {
   fail(`reserve-report-num tests crashed: ${e.message}`);
 }
