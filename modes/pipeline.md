@@ -21,7 +21,11 @@ This complements — does not replace — the per-URL liveness gate in `auto-pip
 1. **Read** `data/pipeline.md` → search for `- [ ]` items in the "Pending" section. Run the **Liveness sweep** (above) first and drop any expired entries before continuing.
 2. **For each surviving pending URL**:
    a. Claim the next sequential `REPORT_NUM` atomically by running `node reserve-report-num.mjs` (and release the sentinel using `node reserve-report-num.mjs --release <num>` after the report is written)
-   b. **Extract JD** using Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
+   b. **Extract JD (token-efficient order):**
+      1. **Provider API first (cheapest):** `node fetch-jd.mjs "{url}"` — clean JD text via the ATS API (Greenhouse/Ashby/Lever/Workday), ~80-90% fewer tokens than a page scrape and no SPA mis-fetch. Use its stdout as the JD.
+      2. **Playwright on API miss / for liveness:** if `fetch-jd.mjs` exits non-zero, `browser_navigate` then `browser_snapshot` **with `filename:` to save the snapshot to a file** — then read/grep the file for the JD + liveness signals. Do NOT return the full a11y tree into context.
+      3. **WebFetch / WebSearch:** last-resort fallbacks for static pages.
+      For high-value roles, still run a quick Playwright liveness check (navigate + saved snapshot, grep for expired signals) even when the API returned the JD.
    c. If the URL is not accessible → mark as `- [!]` with a note and continue
    d. **Execute full auto-pipeline**: Evaluation A-F → Report .md → PDF (if score >= `auto_pdf_score_threshold`) → Tracker
    e. **Move from "Pending" to "Processed"**: `- [x] #NNN | URL | Company | Role | Score/5 | PDF ✅/❌`
@@ -64,9 +68,10 @@ read as having empty values for the missing trailing columns.
 
 ## Intelligent JD detection from URL
 
-1. **Playwright (preferred):** `browser_navigate` + `browser_snapshot`. Works with all SPAs.
-2. **WebFetch (fallback):** For static pages or when Playwright is unavailable.
-3. **WebSearch (last resort):** Search in secondary portals that index the JD.
+1. **Provider API (preferred — cheapest):** `node fetch-jd.mjs "{url}"` returns clean JD text via the ATS API (Greenhouse/Ashby/Lever/Workday). ~80-90% fewer tokens than scraping a page, and no SPA mis-fetch. Exits non-zero on unknown provider / API miss → fall through.
+2. **Playwright (liveness + API-miss fallback):** `browser_navigate` + `browser_snapshot` **saved to a file via `filename:`**, then grep the file — never dump the full a11y tree into context. Use for real-time liveness verification and when the API misses.
+3. **WebFetch (fallback):** For static pages or when the above are unavailable.
+4. **WebSearch (last resort):** Search secondary portals that index the JD.
 
 **Special cases:**
 - **LinkedIn**: May require login → mark `[!]` and ask the user to paste the text

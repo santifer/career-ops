@@ -111,6 +111,7 @@ const SYSTEM_PATHS = [
   'classify-tier.mjs',
   'scan-ats-full.mjs',
   'match-star.mjs',
+  'fetch-jd.mjs',
   'providers/',
   'seeds/',
   'doctor.mjs',
