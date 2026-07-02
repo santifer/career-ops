@@ -47,6 +47,15 @@ const nonInternshipTitlePatterns = [
   /\bfull[-\s]?time\b/i,
 ];
 
+const closedPostingPatterns = [
+  /\bnot currently accepting applications\b/i,
+  /\bno longer accepting applications\b/i,
+  /\bposition has been filled\b/i,
+  /\bjob is closed\b/i,
+  /\bclosed[-\s]?internship\b/i,
+  /\/closed[-\s]?internship\//i,
+];
+
 const roleWords = [
   'software',
   'swe',
@@ -127,6 +136,8 @@ function isSoftwareTarget(text) {
 }
 
 function isTargetPosting(title, context = title) {
+  const haystack = `${title} ${context}`;
+  if (closedPostingPatterns.some(pattern => pattern.test(haystack))) return false;
   return isInternshipPosting(title) && isSoftwareTarget(context);
 }
 
@@ -248,6 +259,85 @@ function normalizeAnchorTitle(text) {
     .slice(0, 180);
 }
 
+function isGenericAnchorTitle(title) {
+  const value = lower(normalizeAnchorTitle(title));
+  if (!value || value.length < 8) return true;
+  return /^(apply now|apply|learn more|view job|view jobs|search jobs|all jobs|open roles|job openings|careers|internships?|student programs?|students|university programs?|early careers?|campus)$/.test(value);
+}
+
+function bestCandidateTitle(anchorText, contextText = '') {
+  const contextLines = String(contextText || '')
+    .split(/\r?\n/)
+    .map(normalizeAnchorTitle)
+    .filter(Boolean);
+  const candidates = [normalizeAnchorTitle(anchorText), ...contextLines];
+  return candidates.find(candidate => !isGenericAnchorTitle(candidate) && isInternshipPosting(candidate))
+    || candidates.find(candidate => !isGenericAnchorTitle(candidate))
+    || '';
+}
+
+function isLikelyJobPostingUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+
+  const host = lower(parsed.hostname);
+  const path = lower(parsed.pathname);
+  const search = lower(parsed.search);
+  const full = `${host}${path}${search}`;
+
+  if (closedPostingPatterns.some(pattern => pattern.test(full))) return false;
+  if (/(^|\/)(students?|internships?|student-programs?|university|campus|early-careers?|life-at|benefits|culture|events|locations|teams)(\/)?$/.test(path)) {
+    return false;
+  }
+  if (/\/(search|jobs\/search|careers\/search)(\/)?$/.test(path) && !/(gh_jid|jobid|job_id|requisition|reqid)=/.test(search)) {
+    return false;
+  }
+
+  if (/(gh_jid|jobid|job_id|requisition|reqid)=/.test(search)) return true;
+  if (/(lever\.co|greenhouse\.io|ashbyhq\.com|myworkdayjobs\.com|workdayjobs\.com|smartrecruiters\.com)/.test(host)) return true;
+  return /\/(jobs?|careers\/jobs?|careers\/job|open-positions\/job|positions?|postings?|join-us\/jobs?|join-jane-street\/position)\//.test(path);
+}
+
+function parsePipelineEntry(line) {
+  const match = line.match(/^-\s+\[[ xX]\]\s+(\S+)(?:\s+\|\s+([^|]*?)\s+\|\s+([^|]*?)(?:\s+\|\s+(.*))?)?\s*$/);
+  if (!match) return null;
+  return {
+    url: match[1],
+    company: (match[2] || '').trim(),
+    title: (match[3] || '').trim(),
+    location: (match[4] || '').trim(),
+    hasScannerMetadata: Boolean(match[2] && match[3]),
+  };
+}
+
+function cleanupPipelineFile() {
+  if (dryRun || !existsSync('data/pipeline.md')) return 0;
+
+  const original = readText('data/pipeline.md');
+  const lines = original.split(/\r?\n/);
+  let removed = 0;
+  const kept = lines.filter(line => {
+    const entry = parsePipelineEntry(line);
+    if (!entry || !entry.hasScannerMetadata) return true;
+
+    const context = `${entry.title} ${entry.company} ${entry.location} ${entry.url}`;
+    const keep = isLikelyJobPostingUrl(entry.url) && isTargetPosting(entry.title, context);
+    if (!keep) removed++;
+    return keep;
+  });
+
+  if (removed > 0) {
+    writeFileSync('data/pipeline.md', kept.join('\n').replace(/\n*$/, '\n'), 'utf-8');
+    console.log(`Cleaned ${removed} non-target internship row(s) from data/pipeline.md`);
+  }
+
+  return removed;
+}
+
 async function tryCareersPageSearch(page, terms) {
   const query = String(terms || '').trim();
   if (!query) return false;
@@ -328,21 +418,26 @@ async function runPlaywrightFallback(config, scanFns) {
           console.log(`  ${entry.name}: ${searched ? `searched "${searchTerms}"` : 'no search box found; scanning page as loaded'}`);
         }
         const anchors = await page.evaluate(() => Array.from(document.querySelectorAll('a[href]'))
-          .map(a => ({
-            href: a.href,
-            text: [
-              a.textContent,
-              a.getAttribute('aria-label'),
-              a.getAttribute('title'),
-            ].filter(Boolean).join(' '),
-          })));
+          .map(a => {
+            const container = a.closest('[data-job-id], [data-testid*="job" i], article, li, tr, .job, .jobs-list-item, .posting, .position, .role, .card') || a;
+            return {
+              href: a.href,
+              text: [
+                a.textContent,
+                a.getAttribute('aria-label'),
+                a.getAttribute('title'),
+              ].filter(Boolean).join(' '),
+              context: container.innerText || '',
+            };
+          }));
 
         let keptForCompany = 0;
         for (const anchor of anchors) {
           if (keptForCompany >= GENERIC_MAX_PER_COMPANY) break;
-          const text = normalizeAnchorTitle(anchor.text);
-          const haystack = `${text} ${anchor.href}`;
-          if (!text || !anchor.href || !isTargetPosting(text, haystack)) continue;
+          if (!anchor.href || !isLikelyJobPostingUrl(anchor.href)) continue;
+          const text = bestCandidateTitle(anchor.text, anchor.context);
+          const haystack = `${text} ${anchor.context || ''} ${anchor.href}`;
+          if (!text || !isTargetPosting(text, haystack)) continue;
           if (seen.has(anchor.href)) continue;
           seen.add(anchor.href);
           candidates.push({
@@ -449,6 +544,7 @@ async function main() {
 
   const scanFns = await import('../scan.mjs');
   await runPlaywrightFallback(config, scanFns);
+  cleanupPipelineFile();
 
   const afterHistory = readText(HISTORY_PATH);
   const newRows = historyDelta(beforeHistory, afterHistory)
