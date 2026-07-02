@@ -74,4 +74,5 @@ Paste job URLs below as `- [ ] {url}` then run `/career-ops pipeline`.
 
 - [ ] https://jobs.ericsson.com/careers/job/563121776440630 | Ericsson | Software Developer InternBudapest,Budapest,HungaryProduct DevelopmentPosted 22 mins ago : Software Developer Intern
 
+
 ## Processed
