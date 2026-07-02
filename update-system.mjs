@@ -17,7 +17,7 @@
 
 import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, posix as pathPosix } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
   ensureSkillEntrypoints,
@@ -62,12 +62,17 @@ const SYSTEM_PATHS = [
   'modes/latex.md',
   'modes/followup.md',
   'modes/interview-prep.md',
+  'modes/interview/',
+  'interview-prep/sessions/.gitkeep',
+  'interview-prep/sessions/README.md',
   'modes/patterns.md',
   'modes/update.md',
   'modes/ar/',
   'modes/da/',
   'modes/de/',
   'modes/fr/',
+  'modes/es/',
+  'modes/it/',
   'modes/ja/',
   'modes/pl/',
   'modes/pt/',
@@ -76,13 +81,18 @@ const SYSTEM_PATHS = [
   'modes/ua/',
   'modes/heuristics/',
   'modes/regional/',
+  'modes/zh/',
   'CLAUDE.md',
+  'CODEX.md',
   'OPENCODE.md',
   'AGENTS.md',
   'GEMINI.md',
+  'KIMI.md',
+  'build-dashboard.mjs',
   'generate-pdf.mjs',
   'generate-latex.mjs',
   'archive-posting.mjs',
+  'application-answers.mjs',
   'generate-cover-letter.mjs',
   'merge-tracker.mjs',
   'tracker-links.mjs',
@@ -92,29 +102,40 @@ const SYSTEM_PATHS = [
   'dedup-tracker.mjs',
   'role-matcher.mjs',
   'tracker-utils.mjs',
+  'tracker-parse.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
   'reserve-report-num.mjs',
   'scan.mjs',
+  'classify-tier.mjs',
   'scan-ats-full.mjs',
   'match-star.mjs',
+  'prepare-application.mjs',
   'providers/',
+  'seeds/',
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
-  'liveness-browser.mjs',
   'liveness-api.mjs',
+  'liveness-browser.mjs',
   'analyze-patterns.mjs',
+  'detect-reposts.mjs',
   'followup-cadence.mjs',
+  'followup-cadence.test.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
+  'openai-eval.mjs',
+  'openrouter-runner.mjs',
   'test-all.mjs',
+  'detect-reposts.test.mjs',
   'test-salary-filter.mjs',
+  'test-trust-validator.mjs',
   'tracker-columns-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
   'updater-migration-tests.mjs',
+  'validate-system-paths-coverage.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/README.md',
@@ -127,19 +148,24 @@ const SYSTEM_PATHS = [
   '.agents/',
   '.claude/skills/',
   '.opencode/skills/',
+  '.opencode/commands/',
   '.claude-plugin/',
   '.qwen/',
   '.antigravitycli/skills/',
   '.grok/skills/',
+  '.kimi/skills/',
   'docs/',
   'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
+  'MAINTAINERS.md',
+  'ARCHITECTURE.md',
   'README.md',
   'README.ar.md',
   'README.cn.md',
   'README.da.md',
+  'README.de.md',
   'README.es.md',
   'README.fr.md',
   'README.ja.md',
@@ -168,6 +194,13 @@ const SYSTEM_PATHS = [
   '.dockerignore',
   'cops',
   'DOCKER.md',
+  'plugins/',
+  'plugins.mjs',
+  'plugins-registry.json',
+  'plugin-install.mjs',
+  'plugin-audit.mjs',
+  'validate-plugin-registry.mjs',
+  'config/plugins.example.yml',
 ];
 
 // User layer paths — NEVER touch these (safety check)
@@ -185,6 +218,9 @@ const USER_PATHS = [
   'output/',
   'jds/',
   'writing-samples/',
+  'config/plugins.yml',
+  'plugins.local/',
+  'plugins.lock',
 ];
 
 function parseVersionFile(raw) {
@@ -258,7 +294,7 @@ function gitStatusEntries() {
     }));
 }
 
-function extractArrayFromSource(source, name) {
+export function extractArrayFromSource(source, name) {
   const match = source.match(new RegExp(`const\\s+${name}\\s*=\\s*\\[([\\s\\S]*?)\\];`));
   if (!match) return [];
   return Array.from(match[1].matchAll(/['"]([^'"]+)['"]/g), (entry) => entry[1]);
@@ -275,6 +311,66 @@ function mergePathLists(...lists) {
     }
   }
   return merged;
+}
+
+// Files the self-reexec stage must check out so the TARGET update-system.mjs
+// loads without a missing-module crash. Today this is the entry plus its only
+// local import; resolveReexecCheckout derives the real set from the fetched
+// source, so this is only a defensive fallback if parsing ever misses one.
+const REEXEC_FALLBACK_FILES = ['update-system.mjs', 'scaffolder/bin/skill-entrypoints.mjs'];
+
+// Extracts static relative import/export specifiers ('./x.mjs', '../y.mjs')
+// from ESM source. Bare ('node:fs') and package ('js-yaml') specifiers are
+// ignored — only on-disk relative modules need to exist before re-exec.
+export function relativeImportSpecifiers(source) {
+  const specs = new Set();
+  const fromRe = /\b(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]/g;
+  const bareRe = /\bimport\s*['"]([^'"]+)['"]/g;
+  let match;
+  while ((match = fromRe.exec(source))) specs.add(match[1]);
+  while ((match = bareRe.exec(source))) specs.add(match[1]);
+  return [...specs].filter((spec) => spec.startsWith('.'));
+}
+
+// Resolves the relative-import closure of `entry` within a git ref and returns
+// the repo-relative paths (forward-slash, Windows-safe) the re-exec stage must
+// check out. Only files actually present in the ref are returned; the known
+// fallback files are appended defensively. This generalizes the previously
+// hardcoded checkout list so a future new top-level import can't reintroduce
+// the self-reexec ERR_MODULE_NOT_FOUND crash (issue #1245).
+function resolveReexecCheckout(ref, entry) {
+  const visited = new Set();
+  const present = new Set();
+  const order = [];
+  const stack = [entry];
+  while (stack.length) {
+    const file = stack.pop();
+    if (visited.has(file)) continue;
+    visited.add(file);
+    let source;
+    try {
+      source = git('show', `${ref}:${file}`);
+    } catch {
+      continue; // absent in this ref — leave it to the normal update stage
+    }
+    present.add(file);
+    order.push(file);
+    const dir = pathPosix.dirname(file);
+    for (const spec of relativeImportSpecifiers(source)) {
+      stack.push(pathPosix.join(dir, spec));
+    }
+  }
+  for (const file of REEXEC_FALLBACK_FILES) {
+    if (present.has(file)) continue;
+    try {
+      git('show', `${ref}:${file}`);
+      order.push(file);
+      present.add(file);
+    } catch {
+      // Not in the target tree (older version) — nothing to check out.
+    }
+  }
+  return order;
 }
 
 function repoPath(root, path) {
@@ -500,7 +596,12 @@ async function apply() {
 
     if (!isReexec) {
       try {
-        git('checkout', 'FETCH_HEAD', '--', 'update-system.mjs', 'scaffolder/bin/skill-entrypoints.mjs');
+        // The re-exec runs the TARGET updater, so every local module it imports
+        // at load time must exist first. Resolve the fetched update-system.mjs's
+        // relative-import closure and check out exactly those files, so a future
+        // new top-level import can't reintroduce the self-reexec crash (#1245).
+        const reexecFiles = resolveReexecCheckout('FETCH_HEAD', 'update-system.mjs');
+        git('checkout', 'FETCH_HEAD', '--', ...reexecFiles);
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',
@@ -532,7 +633,7 @@ async function apply() {
 
     // 3a. Keep bootstrap paths as a fallback for very old targets, but the
     // target updater's SYSTEM_PATHS is now the source of truth for new files.
-    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', '.antigravitycli/skills/', '.grok/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'tracker-utils.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs', 'tracker-columns-tests.mjs'];
+    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', '.antigravitycli/skills/', '.grok/skills/', '.kimi/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'tracker-utils.mjs', 'tracker-parse.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs', 'tracker-columns-tests.mjs', 'plugins/', 'plugins.mjs', 'plugins-registry.json', 'plugin-install.mjs', 'plugin-audit.mjs', 'validate-plugin-registry.mjs', 'config/plugins.example.yml'];
     const updatePaths = mergePathLists(SYSTEM_PATHS, remoteSystemPaths, BOOTSTRAP_PATHS);
 
     for (const path of updatePaths) {

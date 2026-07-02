@@ -8,7 +8,7 @@ Scans configured job portals, filters by title relevance, and adds new offers to
 
 ## Recommended Execution
 
-Execute as a subagent to avoid consuming the main agent's context:
+Execute as a worker/subagent if your CLI supports it, to avoid consuming the main interactive context:
 
 ```python
 Agent(
@@ -17,6 +17,8 @@ Agent(
     run_in_background=True
 )
 ```
+
+The spawned subagent is a **single-pass worker**: it runs the scan with the parsers/APIs/Playwright/WebSearch named below, directly. It must **not** spawn further subagents or invoke other skills (see `modes/_shared.md` → Subagent delegation). Scanning is bounded by `portals.yml`; it is never an open-ended research task.
 
 ## Configuration
 
@@ -120,6 +122,8 @@ During the agent's scan, keep the **`local_parser_ok`** set in memory. This set 
 For companies with a public API or structured feed **that are not in `local_parser_ok`**, use the JSON/XML response as a fast complement to Level 1. This is faster than Playwright and reduces visual scraping errors.
 
 **Current Support (variables inside `{}`):**
+- Full provider table: [Supported job boards](../docs/SUPPORTED_JOB_BOARDS.md)
+
 - **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
 - **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR**: list `https://{company}.bamboohr.com/careers/list`; job details `https://{company}.bamboohr.com/careers/{id}/detail`
@@ -286,7 +290,7 @@ New added to pipeline.md: N
   + {company} | {title} | {query_name}
   ...
 
-→ Run /career-ops pipeline to evaluate the new offers.
+→ Run the `pipeline` mode to evaluate the new offers (`/career-ops pipeline` where available, or ask the agent to run `pipeline`).
 ```
 
 ## Managing careers_url

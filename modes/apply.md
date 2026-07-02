@@ -6,7 +6,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 ## Requirements
 
-- **Best with Playwright in visible mode**: In visible mode, the candidate sees the browser and Claude can interact with the page.
+- **Best with Playwright in visible mode**: In visible mode, the candidate sees the browser and the agent can interact with the page.
 - **Without Playwright**: the candidate shares a screenshot or pastes the questions manually.
 
 ## Workflow
@@ -15,11 +15,12 @@ Interactive mode for when the candidate is filling out an application form in Ch
 1. DETECT      → Read active Chrome tab (screenshot/URL/title)
 2. IDENTIFY    → Extract company + role from the page
 3. SEARCH      → Match against existing reports in reports/
-4. LOAD        → Read full report + Section G (if it exists)
+4. LOAD        → Read full report + Section H / Application Answers (if they exist)
 5. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
 6. ANALYZE     → Identify ALL visible form questions
 7. GENERATE    → For each question, generate a personalized response
 8. PRESENT     → Show formatted responses for copy-paste
+9. PERSIST     → Save the final filled/submitted answers into the report
 ```
 
 ## Step 5 — Preflight gate
@@ -54,7 +55,7 @@ Do not continue to Step 6 until this preflight is resolved.
 1. Extract company name and role title from the page
 2. Search in `reports/` by company name (case-insensitive grep)
 3. If there is a match → load the full report
-4. If there is a Section G → load previous draft answers as a base
+4. If there is a Section H or `## Application Answers` → load previous answers as a base
 5. If there is NO match → notify and offer to run a quick auto-pipeline
 
 ## Step 3 — Detect changes in the role
@@ -62,7 +63,7 @@ Do not continue to Step 6 until this preflight is resolved.
 If the role on screen differs from the one evaluated:
 - **Notify the candidate**: "The role has changed from [X] to [Y]. Do you want me to re-evaluate or adapt the responses to the new title?"
 - **If adapt**: Adjust responses to the new role without re-evaluating, only after the candidate explicitly accepts the mismatch
-- **If re-evaluate**: Execute full A-F evaluation, update report, regenerate Section G
+- **If re-evaluate**: Execute full A-F evaluation, update report, regenerate Section H
 - **Update tracker**: Change role title in applications.md if applicable
 
 ## Step 6 — Analyze form questions
@@ -75,7 +76,7 @@ Identify ALL visible questions:
 - Upload fields (resume, cover letter PDF)
 
 Classify each question:
-- **Already answered in Section G** → adapt the existing response
+- **Already answered in Section H or `## Application Answers`** → adapt the existing response
 - **New question** → generate response from the report + cv.md
 
 For each field, preserve the application form contract:
@@ -93,7 +94,7 @@ Never invent answers for legal, demographic, work-authorization, visa/sponsorshi
 For each question, generate the response following:
 
 1. **Report context**: Use proof points from block B, STAR stories from block F
-2. **Previous Section G**: If a draft response exists, use it as a base and refine
+2. **Previous Section H / Application Answers**: If a draft or final response exists, use it as a base and refine
 3. **"I'm choosing you" tone**: Same auto-pipeline framework
 4. **Specificity**: Reference something specific from the JD visible on screen
 5. **career-ops proof point**: Include in "Additional info" if there is a field for it
@@ -124,12 +125,32 @@ Notes:
 - [Personalization suggestions the candidate should review]
 ```
 
-## Step 8 — Post-apply (optional)
+## Step 8 — Persist application snapshot
+
+After the final answers are filled into the form or handed to the candidate for copy-paste, update the matched report with an additive `## Application Answers` section. If the candidate later confirms submission, update that same section from `filled` to `submitted`.
+
+The section must include:
+- `**Date:** YYYY-MM-DD`
+- `**State:** filled` or `**State:** submitted`
+- Free-text answers exactly as submitted
+- Dropdown/radio/checkbox selections made
+- Number or short-answer fields such as compensation, availability, start date, and work authorization
+- Files used, including CV, cover letter, portfolio, or other uploads with version/path when known
+
+Write the section at the end of the report, or replace only the existing `## Application Answers` section if it already exists. Do not rename, reorder, or edit the existing A-H report blocks or `## Keywords extracted`.
+
+Use `application-answers.mjs` when possible to format/upsert the section:
+
+```bash
+node application-answers.mjs --report reports/NNN-company-role-date.md --input answers.json --state filled
+```
+
+## Step 9 — Post-apply (optional)
 
 If the candidate confirms that they submitted the application:
 1. Update status in `applications.md` from "Evaluated" to "Applied"
-2. Update Section G of the report with the final responses
-3. Suggest next step: `/career-ops contacto` for LinkedIn outreach
+2. Refresh the report's `## Application Answers` section with the final field values and `**State:** submitted`
+3. Suggest next step: run the `contacto` mode (`/career-ops contacto` where available) for LinkedIn outreach
 
 ## Scroll handling
 
