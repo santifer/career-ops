@@ -30,14 +30,21 @@ const dryRun = args.includes('--dry-run');
 const skipCareerOps = args.includes('--skip-career-ops');
 const skipPlaywrightFallback = args.includes('--skip-playwright-fallback');
 
-const internshipWords = [
-  'intern',
-  'internship',
-  'co-op',
-  'co op',
-  'coop',
-  'student',
-  'university',
+const internshipTitlePatterns = [
+  /\binterns?\b/i,
+  /\binternship(s)?\b/i,
+  /\bco[-\s]?op\b/i,
+  /\bcoop\b/i,
+  /\bpey\b/i,
+];
+
+const nonInternshipTitlePatterns = [
+  /\bnew\s+grad(uate)?s?\b/i,
+  /\buniversity\s+grad(uate)?s?\b/i,
+  /\bgraduate\s+(software|backend|platform|infrastructure|cloud|developer|engineer)/i,
+  /\bearly\s+career\b/i,
+  /\bentry[-\s]?level\b/i,
+  /\bfull[-\s]?time\b/i,
 ];
 
 const roleWords = [
@@ -109,16 +116,18 @@ function hasAny(text, words) {
   return words.some(word => l.includes(word));
 }
 
-function isInternshipPosting(text) {
-  return hasAny(text, internshipWords);
+function isInternshipPosting(title) {
+  const value = String(title || '');
+  if (nonInternshipTitlePatterns.some(pattern => pattern.test(value))) return false;
+  return internshipTitlePatterns.some(pattern => pattern.test(value));
 }
 
 function isSoftwareTarget(text) {
   return hasAny(text, roleWords) && !hasAny(text, negativeWords);
 }
 
-function isTargetPosting(text) {
-  return isInternshipPosting(text) && isSoftwareTarget(text);
+function isTargetPosting(title, context = title) {
+  return isInternshipPosting(title) && isSoftwareTarget(context);
 }
 
 function inferTerm(title) {
@@ -203,7 +212,7 @@ function scorePosting(row, priorities) {
     reasons.push('North America or remote location');
   }
 
-  if (!isTargetPosting(haystack)) score = Math.min(score, 3.6);
+  if (!isTargetPosting(title, haystack)) score = Math.min(score, 3.6);
   const rounded = Math.min(5, Math.round(score * 10) / 10);
 
   return {
@@ -287,7 +296,7 @@ async function runPlaywrightFallback(config, scanFns) {
           if (keptForCompany >= GENERIC_MAX_PER_COMPANY) break;
           const text = normalizeAnchorTitle(anchor.text);
           const haystack = `${text} ${anchor.href}`;
-          if (!text || !anchor.href || !isTargetPosting(haystack)) continue;
+          if (!text || !anchor.href || !isTargetPosting(text, haystack)) continue;
           if (seen.has(anchor.href)) continue;
           seen.add(anchor.href);
           candidates.push({
@@ -394,7 +403,7 @@ async function main() {
   const afterHistory = readText(HISTORY_PATH);
   const newRows = historyDelta(beforeHistory, afterHistory)
     .filter(row => row.status === 'added')
-    .filter(row => isTargetPosting(`${row.title} ${row.company} ${row.location} ${row.url}`));
+    .filter(row => isTargetPosting(row.title, `${row.title} ${row.company} ${row.location} ${row.url}`));
 
   const scored = uniqueRows(newRows)
     .map(row => scorePosting(row, priorities))
