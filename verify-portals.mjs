@@ -10,7 +10,7 @@
  * Greenhouse / Ashby / Lever endpoints for a company's slug (or for candidate
  * slugs derived from its name) and reports which resolve.
  *
- * A 200 that returns an empty job list is reported as "live but empty" — a
+ * A 200 that returns an empty job list is reported as 'live but empty' — a
  * legitimate state during between-hires periods — kept distinct from an
  * unresolved (404/wrong) slug so a quiet board isn't mistaken for a typo.
  *
@@ -25,14 +25,14 @@
  * through an injectable `fetchJson`, so the pure logic is testable offline.
  */
 
-import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
-import { fileURLToPath, pathToFileURL } from "url";
-import yaml from "js-yaml";
+import { existsSync, readFileSync } from 'fs';
+import { resolve } from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+import yaml from 'js-yaml';
 
-import { fetchJson as defaultFetchJson } from "./providers/_http.mjs";
+import { fetchJson as defaultFetchJson } from './providers/_http.mjs';
 
-const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || "portals.yml";
+const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
 
 // How to turn a slug into a probe URL, and where the job list lives in the
 // response, for each supported ATS. Greenhouse/Ashby wrap jobs in `{ jobs }`;
@@ -59,15 +59,15 @@ export const ATS = {
 // cover entries that pin the resolved endpoint directly. First match wins.
 const ATS_URL_PATTERNS = [
   {
-    ats: "greenhouse",
+    ats: 'greenhouse',
     re: /boards-api\.greenhouse\.io\/v1\/boards\/([^/?#]+)/,
   },
-  { ats: "greenhouse", re: /job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/ },
-  { ats: "greenhouse", re: /boards\.greenhouse\.io\/([^/?#]+)/ },
-  { ats: "ashby", re: /api\.ashbyhq\.com\/posting-api\/job-board\/([^/?#]+)/ },
-  { ats: "ashby", re: /jobs\.ashbyhq\.com\/([^/?#]+)/ },
-  { ats: "lever", re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
-  { ats: "lever", re: /jobs\.lever\.co\/([^/?#]+)/ },
+  { ats: 'greenhouse', re: /job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/ },
+  { ats: 'greenhouse', re: /boards\.greenhouse\.io\/([^/?#]+)/ },
+  { ats: 'ashby', re: /api\.ashbyhq\.com\/posting-api\/job-board\/([^/?#]+)/ },
+  { ats: 'ashby', re: /jobs\.ashbyhq\.com\/([^/?#]+)/ },
+  { ats: 'lever', re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
+  { ats: 'lever', re: /jobs\.lever\.co\/([^/?#]+)/ },
 ];
 
 /**
@@ -78,7 +78,7 @@ const ATS_URL_PATTERNS = [
  *   (branded careers pages, Workday, job boards, etc.) which this tool skips.
  */
 export function parseAtsSlug(url) {
-  const text = String(url || "");
+  const text = String(url || '');
   for (const { ats, re } of ATS_URL_PATTERNS) {
     const m = text.match(re);
     if (m && m[1]) return { ats, slug: m[1] };
@@ -91,33 +91,33 @@ export function parseAtsSlug(url) {
  *
  * Slugs are conventionally the company name lowercased with separators dropped
  * or dashed, so we generate the common shapes plus the first word alone (many
- * boards use just the brand, e.g. "Acme Corp" → "acme"). Order is deterministic
+ * boards use just the brand, e.g. 'Acme Corp' → 'acme'). Order is deterministic
  * and duplicates are removed so `--add` probes each distinct candidate once.
  *
  * @param {string} name - Company display name.
  * @returns {string[]} Distinct candidate slugs, most-specific first.
  */
-const SLUG_SUFFIXES = ["ai", "tech", "io", "hq", "labs"];
+const SLUG_SUFFIXES = ['ai', 'tech', 'io', 'hq', 'labs'];
 
 export function deriveSlugCandidates(name) {
-  const lower = String(name || "")
+  const lower = String(name || '')
     .toLowerCase()
     .trim();
   if (!lower) return [];
   const words = lower
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
-    .split(" ")
+    .split(' ')
     .filter(Boolean);
   if (words.length === 0) return [];
   const candidates = [
-    words.join(""), // acmecorp
-    words.join("-"), // acme-corp
-    words.join("_"), // acme_corp
+    words.join(''), // acmecorp
+    words.join('-'), // acme-corp
+    words.join('_'), // acme_corp
     words[0], // acme
   ];
-  const bases = [words.join(""), words[0]].filter(Boolean);
+  const bases = [words.join(''), words[0]].filter(Boolean);
   for (const base of bases) {
     for (const suf of SLUG_SUFFIXES) candidates.push(`${base}${suf}`);
     candidates.push(`${base}.tech`, `${base}.io`);
@@ -132,20 +132,20 @@ export function deriveSlugCandidates(name) {
  * @returns {'slug_gone'|'auth'|'network'|'server'|'unknown'}
  */
 export function classifyFetchError(err) {
-  if (!err) return "unknown";
-  if (err.name === "AbortError") return "network";
+  if (!err) return 'unknown';
+  if (err.name === 'AbortError') return 'network';
   const msg = String(err.message || err);
   if (/ECONNREFUSED|ENOTFOUND|ETIMEDOUT|fetch failed|network/i.test(msg)) {
-    return "network";
+    return 'network';
   }
   const status = err.status;
-  if (status === 404 || status === 410) return "slug_gone";
-  if (status === 401 || status === 403) return "auth";
-  if (typeof status === "number" && status >= 500) return "server";
-  if (/HTTP 404|HTTP 410/.test(msg)) return "slug_gone";
-  if (/HTTP 401|HTTP 403/.test(msg)) return "auth";
-  if (/HTTP 5\d\d/.test(msg)) return "server";
-  return "unknown";
+  if (status === 404 || status === 410) return 'slug_gone';
+  if (status === 401 || status === 403) return 'auth';
+  if (typeof status === 'number' && status >= 500) return 'server';
+  if (/HTTP 404|HTTP 410/.test(msg)) return 'slug_gone';
+  if (/HTTP 401|HTTP 403/.test(msg)) return 'auth';
+  if (/HTTP 5\d\d/.test(msg)) return 'server';
+  return 'unknown';
 }
 
 /**
@@ -168,9 +168,9 @@ export async function probeSlug(
     return {
       ats,
       slug,
-      url: "",
-      status: "missing",
-      errorKind: "unknown",
+      url: '',
+      status: 'missing',
+      errorKind: 'unknown',
       reason: `unknown ATS: ${ats}`,
     };
   const url = spec.probeUrl(slug);
@@ -182,15 +182,15 @@ export async function probeSlug(
         ats,
         slug,
         url,
-        status: "missing",
-        errorKind: "unknown",
-        reason: "unexpected response shape",
+        status: 'missing',
+        errorKind: 'unknown',
+        reason: 'unexpected response shape',
       };
     return {
       ats,
       slug,
       url,
-      status: count > 0 ? "live" : "empty",
+      status: count > 0 ? 'live' : 'empty',
       jobCount: count,
     };
   } catch (err) {
@@ -198,7 +198,7 @@ export async function probeSlug(
       ats,
       slug,
       url,
-      status: "missing",
+      status: 'missing',
       errorKind: classifyFetchError(err),
       httpStatus: err?.status,
       reason: err?.message || String(err),
@@ -208,14 +208,15 @@ export async function probeSlug(
 
 /** Probe slug variants across all ATSes; prefer live boards over empty ones. */
 async function discoverAlternates(name, { fetchJson }) {
-  const hits = [];
+  let bestEmpty = null;
   for (const slug of deriveSlugCandidates(name)) {
     for (const ats of Object.keys(ATS)) {
       const r = await probeSlug(ats, slug, { fetchJson });
-      if (r.status !== "missing") hits.push(r);
+      if (r.status === 'live') return r;
+      if (r.status === 'empty' && !bestEmpty) bestEmpty = r;
     }
   }
-  return hits.find((h) => h.status === "live") || hits[0] || null;
+  return bestEmpty;
 }
 
 /**
@@ -237,27 +238,26 @@ export async function verifyCompanies(
   const list = Array.isArray(companies) ? companies : [];
   const results = [];
   for (const company of list) {
-    if (!company || typeof company !== "object") continue;
+    if (!company || typeof company !== 'object') continue;
     if (company.enabled === false) continue;
-    const name = typeof company.name === "string" ? company.name : "(unnamed)";
+    const name = typeof company.name === 'string' ? company.name : '(unnamed)';
     const match =
       parseAtsSlug(company.api) || parseAtsSlug(company.careers_url);
     if (!match) {
       results.push({
         name,
-        status: "skipped",
-        reason: "no Greenhouse/Ashby/Lever slug in careers_url or api",
+        status: 'skipped',
+        reason: 'no Greenhouse/Ashby/Lever slug in careers_url or api',
       });
       continue;
     }
     const probe = await probeSlug(match.ats, match.slug, { fetchJson });
-    if (probe.status === "live" || probe.status === "empty") {
+    if (probe.status === 'live' || probe.status === 'empty') {
       results.push({ name, ...probe });
       continue;
     }
-    // Wrong slug or ATS migration — cross-probe variants unless the failure
-    // looks transient (network / server error on the configured board).
-    if (probe.errorKind !== "network" && probe.errorKind !== "server") {
+    // Wrong slug or ATS migration — cross-probe only for slug/unknown failures.
+    if (probe.errorKind === 'slug_gone' || probe.errorKind === 'unknown') {
       const suggested = await discoverAlternates(name, { fetchJson });
       if (suggested) {
         results.push({ name, ...probe, suggested });
@@ -282,7 +282,7 @@ export async function verifyPortalsFile(
   { fetchJson = defaultFetchJson } = {},
 ) {
   if (!existsSync(filePath)) return { found: false, results: [] };
-  const config = yaml.load(readFileSync(filePath, "utf-8"));
+  const config = yaml.load(readFileSync(filePath, 'utf-8'));
   const companies = Array.isArray(config?.tracked_companies)
     ? config.tracked_companies
     : [];
@@ -290,32 +290,32 @@ export async function verifyPortalsFile(
   return { found: true, results };
 }
 
-const ICON = { live: "✅", empty: "🟡", missing: "❌", skipped: "➖" };
+const ICON = { live: '✅', empty: '🟡', missing: '❌', skipped: '➖' };
 
 const ERROR_KIND_LABEL = {
-  slug_gone: "slug not found",
-  auth: "auth blocked",
-  network: "network error",
-  server: "server error",
-  unknown: "unresolved",
+  slug_gone: 'slug not found',
+  auth: 'auth blocked',
+  network: 'network error',
+  server: 'server error',
+  unknown: 'unresolved',
 };
 
 function printResults(results) {
   for (const r of results) {
-    const icon = ICON[r.status] || "?";
+    const icon = ICON[r.status] || '?';
     let detail;
-    if (r.status === "live") {
+    if (r.status === 'live') {
       detail = `${r.ats}/${r.slug} (${r.jobCount} live)`;
-    } else if (r.status === "empty") {
+    } else if (r.status === 'empty') {
       detail = `${r.ats}/${r.slug} (live but empty)`;
-    } else if (r.status === "missing") {
-      const kind = ERROR_KIND_LABEL[r.errorKind] || "unresolved";
-      detail = `${r.ats || "?"}/${r.slug || "?"} (${kind}) — ${r.reason || "unresolved"}`;
+    } else if (r.status === 'missing') {
+      const kind = ERROR_KIND_LABEL[r.errorKind] || 'unresolved';
+      detail = `${r.ats || '?'}/${r.slug || '?'} (${kind}) — ${r.reason || 'unresolved'}`;
       if (r.suggested) {
         detail += ` → try ${r.suggested.ats}/${r.suggested.slug}`;
       }
     } else {
-      detail = r.reason || "";
+      detail = r.reason || '';
     }
     console.log(`  ${icon} ${r.name} — ${detail}`);
   }
@@ -324,22 +324,22 @@ function printResults(results) {
 async function runAdd(name, { fetchJson }) {
   const candidates = deriveSlugCandidates(name);
   if (candidates.length === 0) {
-    console.error("verify-portals: --add needs a company name");
+    console.error('verify-portals: --add needs a company name');
     process.exit(1);
   }
   console.log(
-    `Probing ${candidates.length} slug candidate(s) for "${name}" across Greenhouse/Ashby/Lever...\n`,
+    `Probing ${candidates.length} slug candidate(s) for '${name}' across Greenhouse/Ashby/Lever...\n`,
   );
   const hits = [];
   for (const slug of candidates) {
     for (const ats of Object.keys(ATS)) {
       const r = await probeSlug(ats, slug, { fetchJson });
-      if (r.status !== "missing") {
+      if (r.status !== 'missing') {
         hits.push(r);
         console.log(
           `  ${ICON[r.status]} ${ats}: ${slug}` +
-            (r.status === "empty"
-              ? " (live but empty)"
+            (r.status === 'empty'
+              ? ' (live but empty)'
               : ` (${r.jobCount} jobs)`),
         );
       }
@@ -347,30 +347,30 @@ async function runAdd(name, { fetchJson }) {
   }
   if (hits.length === 0) {
     console.log(
-      "  ❌ No slug variant resolved on any ATS. Check the careers_url manually.",
+      '  ❌ No slug variant resolved on any ATS. Check the careers_url manually.',
     );
   } else {
-    const best = hits.find((h) => h.status === "live") || hits[0];
+    const best = hits.find((h) => h.status === 'live') || hits[0];
     console.log(
-      `\nSuggested: careers_url for ${best.ats} → slug "${best.slug}"`,
+      `\nSuggested: careers_url for ${best.ats} → slug '${best.slug}'`,
     );
   }
 }
 
 async function main() {
   const args = process.argv.slice(2);
-  const strict = args.includes("--strict");
+  const strict = args.includes('--strict');
   const fetchJson = defaultFetchJson;
 
-  const addFlag = args.indexOf("--add");
+  const addFlag = args.indexOf('--add');
   if (addFlag !== -1) {
-    await runAdd(args[addFlag + 1] || "", { fetchJson });
+    await runAdd(args[addFlag + 1] || '', { fetchJson });
     return;
   }
 
-  const fileFlag = args.indexOf("--file");
+  const fileFlag = args.indexOf('--file');
   const filePath = resolve(
-    fileFlag === -1 ? DEFAULT_PORTALS_PATH : args[fileFlag + 1] || "",
+    fileFlag === -1 ? DEFAULT_PORTALS_PATH : args[fileFlag + 1] || '',
   );
 
   const { found, results } = await verifyPortalsFile(filePath, { fetchJson });
@@ -386,25 +386,34 @@ async function main() {
   console.log(`verify-portals: ${filePath}\n`);
   printResults(results);
 
-  const live = results.filter((r) => r.status === "live").length;
-  const empty = results.filter((r) => r.status === "empty").length;
-  const missing = results.filter((r) => r.status === "missing");
-  const skipped = results.filter((r) => r.status === "skipped").length;
-  const slugGone = missing.filter((r) => r.errorKind === "slug_gone").length;
-  const network = missing.filter((r) => r.errorKind === "network").length;
+  const live = results.filter((r) => r.status === 'live').length;
+  const empty = results.filter((r) => r.status === 'empty').length;
+  const missing = results.filter((r) => r.status === 'missing');
+  const skipped = results.filter((r) => r.status === 'skipped').length;
+  const kindCounts = Object.fromEntries(
+    Object.keys(ERROR_KIND_LABEL).map((k) => [k, 0]),
+  );
+  for (const r of missing) {
+    const k = r.errorKind && ERROR_KIND_LABEL[r.errorKind] ? r.errorKind : 'unknown';
+    kindCounts[k]++;
+  }
+  const breakdown = Object.entries(kindCounts)
+    .filter(([, n]) => n > 0)
+    .map(([k, n]) => `${n} ${ERROR_KIND_LABEL[k]}`)
+    .join(', ');
   console.log(
-    `\n${live} live, ${empty} live-but-empty, ${missing.length} unresolved (${slugGone} slug, ${network} network), ${skipped} non-ATS (skipped)`,
+    `\n${live} live, ${empty} live-but-empty, ${missing.length} unresolved${breakdown ? ` (${breakdown})` : ''}, ${skipped} non-ATS (skipped)`,
   );
 
   if (strict && missing.length > 0) {
-    console.log("🔴 Unresolved slugs found (--strict).");
+    console.log('🔴 Unresolved slugs found (--strict).');
     process.exit(1);
   }
 }
 
 // Only run main() when invoked directly (`node verify-portals.mjs`), not when
 // imported by tests. `|| ''` guards `node -e` invocations with no script arg.
-if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   main().catch((err) => {
     console.error(`verify-portals failed: ${err.message}`);
     process.exit(1);

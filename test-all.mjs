@@ -1621,9 +1621,9 @@ try {
 
   // Mock fetchJson: 200+jobs → live, 200+empty → empty, otherwise 404 → missing.
   const mockFetch = async (url) => {
-    if (url.includes('/boards/live/')) return { jobs: [{}, {}] };
-    if (url.includes('/boards/empty/')) return { jobs: [] };
-    if (url.includes('ashbyhq.com') && url.includes('deepsetai')) return { jobs: [{}] };
+    if (url.includes('/boards/live/jobs')) return { jobs: [{}, {}] };
+    if (url.includes('/boards/empty/jobs')) return { jobs: [] };
+    if (url.includes('/posting-api/job-board/deepsetai')) return { jobs: [{}] };
     const err = new Error('HTTP 404'); err.status = 404; throw err;
   };
   const results = await verifyCompanies([

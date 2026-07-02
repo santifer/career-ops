@@ -1003,7 +1003,7 @@ async function main() {
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
-  const emptyBoards = [];
+  const emptyTargets = [];
 
   const tasks = targets.map(company => async () => {
     let provider = company._provider;
@@ -1030,7 +1030,7 @@ async function main() {
       }
       totalFound += jobs.length;
       if (!company._isBoard && jobs.length === 0) {
-        emptyBoards.push(company.name);
+        emptyTargets.push(company.name);
       }
 
       for (const job of jobs) {
@@ -1232,20 +1232,20 @@ async function main() {
     }
   }
 
-  const unreachableBoards = errors.filter((e) => e.kind === 'slug_gone');
-  const networkBoards = errors.filter((e) => e.kind === 'network');
+  const unreachableTargets = errors.filter((e) => e.kind === 'slug_gone');
+  const networkTargets = errors.filter((e) => e.kind === 'network');
   const otherErrors = errors.filter((e) => e.kind !== 'slug_gone' && e.kind !== 'network');
 
-  if (unreachableBoards.length > 0) {
-    const names = unreachableBoards.map((e) => e.company).join(', ');
-    console.log(`\n⚠️  ${unreachableBoards.length} board(s) unreachable (slug?): ${names} — run: node verify-portals.mjs`);
+  if (unreachableTargets.length > 0) {
+    const names = unreachableTargets.map((e) => e.company).join(', ');
+    console.log(`\n⚠️  ${unreachableTargets.length} target(s) unreachable (slug?): ${names} — run: node verify-portals.mjs`);
   }
-  if (emptyBoards.length > 0) {
-    console.log(`🟡 ${emptyBoards.length} board(s) live but empty: ${emptyBoards.join(', ')}`);
+  if (emptyTargets.length > 0) {
+    console.log(`🟡 ${emptyTargets.length} target(s) live but empty: ${emptyTargets.join(', ')}`);
   }
-  if (networkBoards.length > 0) {
-    console.log(`\nNetwork errors (${networkBoards.length}):`);
-    for (const e of networkBoards) {
+  if (networkTargets.length > 0) {
+    console.log(`\nNetwork errors (${networkTargets.length}):`);
+    for (const e of networkTargets) {
       console.log(`  ✗ ${e.company}: ${e.error}`);
     }
   }
