@@ -89,4 +89,30 @@ Paste job URLs below as `- [ ] {url}` then run `/career-ops pipeline`.
 - [ ] https://jobs.sap.com/job/Sofia-SAP-iXP-Intern-Software-Engineer-in-Gardener-with-Go-and-Kubernetes-1407/1402364033/ | SAP | SAP iXP Intern - Software Engineer in Gardener with Go and Kubernetes
 - [ ] https://jobs.sap.com/job/Chengdu-SAP-iXp-Interns-Platform-Developer%28AIOps%29-CX-Cloud-Operation-610041/1398663033/ | SAP | SAP iXp Interns - Platform Developer(AIOps) CX Cloud Operation
 
+- [ ] https://academy.hubspot.com/education-partner-program/micro-internships-students-faq?q=software+intern&from_search_result=true | HubSpot | Micro-Internships FAQ - Students
+- [ ] https://academy.hubspot.com/education-partner-program/micro-internships-customers?q=software+intern&from_search_result=true | HubSpot | HubSpot Education Partner Program - Micro-Internships - Customers
+- [ ] https://www.hubspot.com/blog/bid/4808/meet-hubspot-s-summer-interns?q=software+intern&from_search_result=true | HubSpot | Meet HubSpot's Summer Interns
+- [ ] https://apply.careers.microsoft.com/careers/job/1970393556911730 | Microsoft | Software Engineering INTERNIndia, Multiple Locations, Multiple LocationsPosted a day ago : Software Engineering INTERN
+- [ ] https://www.amazon.jobs/en/search?base_query=software+intern&loc_query=&latitude=&longitude=&loc_group_id=&invalid_location=false&country=&city=&region=&county=# | Amazon | software intern
+- [ ] https://www.amazon.jobs/en/jobs/10418355/2027-software-dev-engineer-intern | Amazon | 2027 Software Dev Engineer Intern
+- [ ] https://www.amazon.jobs/en/jobs/3072042/2026-software-dev-engineer-intern-ireland | Amazon | 2026 Software Dev Engineer Intern - Ireland
+- [ ] https://www.amazon.jobs/en/jobs/10375983/software-dev-engineer-intern-2026-beijing | Amazon | Software Dev Engineer Intern, 2026 Beijing
+- [ ] https://www.amazon.jobs/en/jobs/10376009/software-dev-engineer-intern-2026-shanghai | Amazon | Software Dev Engineer Intern, 2026 Shanghai
+- [ ] https://www.amazon.jobs/en/jobs/3204846/2026-software-dev-engineer-intern-location-sydney | Amazon | 2026 Software Dev Engineer Intern (Location : Sydney)
+- [ ] https://www.amazon.jobs/en/jobs/10377010/software-dev-engineer-intern-alexa-2026-shenzhen | Amazon | Software Dev Engineer Intern, (Alexa) 2026 Shenzhen
+- [ ] https://www.amazon.jobs/en/jobs/10376731/software-dev-engineer-intern-devices-2026-shanghai | Amazon | Software Dev Engineer Intern, (Devices) 2026 Shanghai
+- [ ] https://www.amazon.jobs/en/jobs/3147202/2026-software-dev-engineer-intern-haifa-israel | Amazon | 2026 Software Dev Engineer Intern - Haifa, Israel
+- [ ] https://www.janestreet.com/join-jane-street/internships/ | Jane Street | Internships www.janestreet.com/join-jane-street/internships/ We offer opportunities in a variety of disciplines — quantitative trading, machine learning, software engineering, quan
+- [ ] https://blog.janestreet.com/project-pairing/ | Jane Street | How Jane Street Pairs Interns to Projects and Teams During the ... blog.janestreet.com/project-pairing/ Blog Post Jan 14, 2022 ... Software engineering intern candidates often ask
+- [ ] https://www.janestreet.com/join-jane-street/closed-internship/software-engineer-january-april-nyc/ | Jane Street | Software Engineer Internship, NYC - Jane Street www.janestreet.com/...internship/software-engineer-january-april-ny... We are looking for Software Engineering interns to join our W
+- [ ] https://blog.janestreet.com/what-the-interns-have-wrought-2023/ | Jane Street | What the interns have wrought, 2023 edition - Jane Street Blog blog.janestreet.com/what-the-interns-have-wrought-2023/ Blog Post Sep 12, 2023 ... We had 152 software engineering in
+- [ ] https://blog.janestreet.com/research-internships-tnc/ | Jane Street | Research internships in our Tools and Compilers group blog.janestreet.com/research-internships-tnc/ Blog Post Mar 4, 2022 ... Our existing software engineering internships program
+- [ ] https://www.janestreet.com/join-jane-street/position/4274288002/ | Jane Street | Software Engineer, New York - Jane Street www.janestreet.com/join-jane-street/position/4274288002/ Open Roles INTERNSHIPS · INTERVIEWING. Who We Are · What We Do · OVERVIEW · CLIEN
+- [ ] https://signalsandthreads.com/an-inside-look-at-jane-streets-tech-internship/ | Jane Street | An inside look at Jane Street's tech internship - Signals and Threads signalsandthreads.com/an-inside-look-at-jane-streets-tech-internship/ Podcast Nov 4, 2020 ... I am a software
+- [ ] https://www.janestreet.com/preparing-for-a-software-engineering-interview/ | Jane Street | Preparing for a Software Engineering Interview - Jane Street www.janestreet.com/preparing-for-a-software-engineering-interview/ INTERNSHIPS · INTERVIEWING. Who We Are · What We Do
+- [ ] https://blog.janestreet.com/search/?query=wrought | Jane Street | Jane Street Blog blog.janestreet.com/search/?query=wrought Blog Post Software engineering intern candidates often ask how team placement works and how much input incoming interns h
+- [ ] https://www.janestreet.com/join-jane-street/apply/7582902002/ | Jane Street | Software Engineer - Jane Street www.janestreet.com/join-jane-street//7582902002/ Software Engineer Internship, December-February. Hong Kong, Summer Internship (December-February).
+- [ ] https://blog.janestreet.com/page/2/ | Jane Street | Jane Street Blog blog.janestreet.com/page/2/ Blog Post Jul 22, 2024 ... How Jane Street Pairs Interns to Projects and Teams During the Software Engineering Internship. Software eng
+- [ ] https://blog.janestreet.com/author/smitchell/ | Jane Street | Posted by smitchell - Jane Street Blog blog.janestreet.com/author/smitchell/ Blog Post Jan 14, 2022 ... Software engineering intern candidates often ask how team placement works an
+
 ## Processed

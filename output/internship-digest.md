@@ -1,5 +1,36 @@
 # 2027 Internship Digest - 2026-07-02
 
-New matching postings: 0
+New matching postings: 14
 
-No new matching postings met the score threshold.
+| Company | Role | Location | Term | Score | Action | Date Found | URL |
+|---|---|---|---|---:|---|---|---|
+| Jane Street | Internships www.janestreet.com/join-jane-street/internships/ We offer opportunities in a variety of disciplines — quantitative trading, machine learning, software engineering, quan | N/A | N/A | 4.6/5 | Apply Now | 2026-07-02 | https://www.janestreet.com/join-jane-street/internships/ |
+| Jane Street | Software Engineer - Jane Street www.janestreet.com/join-jane-street//7582902002/ Software Engineer Internship, December-February. Hong Kong, Summer Internship (December-February). | N/A | N/A | 4.5/5 | Apply Now | 2026-07-02 | https://www.janestreet.com/join-jane-street/apply/7582902002/ |
+| Jane Street | How Jane Street Pairs Interns to Projects and Teams During the ... blog.janestreet.com/project-pairing/ Blog Post Jan 14, 2022 ... Software engineering intern candidates often ask | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://blog.janestreet.com/project-pairing/ |
+| Jane Street | Software Engineer Internship, NYC - Jane Street www.janestreet.com/...internship/software-engineer-january-april-ny... We are looking for Software Engineering interns to join our W | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://www.janestreet.com/join-jane-street/closed-internship/software-engineer-january-april-nyc/ |
+| Jane Street | What the interns have wrought, 2023 edition - Jane Street Blog blog.janestreet.com/what-the-interns-have-wrought-2023/ Blog Post Sep 12, 2023 ... We had 152 software engineering in | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://blog.janestreet.com/what-the-interns-have-wrought-2023/ |
+| Jane Street | Research internships in our Tools and Compilers group blog.janestreet.com/research-internships-tnc/ Blog Post Mar 4, 2022 ... Our existing software engineering internships program | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://blog.janestreet.com/research-internships-tnc/ |
+| Jane Street | Software Engineer, New York - Jane Street www.janestreet.com/join-jane-street/position/4274288002/ Open Roles INTERNSHIPS · INTERVIEWING. Who We Are · What We Do · OVERVIEW · CLIEN | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://www.janestreet.com/join-jane-street/position/4274288002/ |
+| Jane Street | Preparing for a Software Engineering Interview - Jane Street www.janestreet.com/preparing-for-a-software-engineering-interview/ INTERNSHIPS · INTERVIEWING. Who We Are · What We Do | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://www.janestreet.com/preparing-for-a-software-engineering-interview/ |
+| Jane Street | Jane Street Blog blog.janestreet.com/search/?query=wrought Blog Post Software engineering intern candidates often ask how team placement works and how much input incoming interns h | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://blog.janestreet.com/search/?query=wrought |
+| Jane Street | Jane Street Blog blog.janestreet.com/page/2/ Blog Post Jul 22, 2024 ... How Jane Street Pairs Interns to Projects and Teams During the Software Engineering Internship. Software eng | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://blog.janestreet.com/page/2/ |
+| Jane Street | Posted by smitchell - Jane Street Blog blog.janestreet.com/author/smitchell/ Blog Post Jan 14, 2022 ... Software engineering intern candidates often ask how team placement works an | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://blog.janestreet.com/author/smitchell/ |
+| Microsoft | Software Engineering INTERNIndia, Multiple Locations, Multiple LocationsPosted a day ago : Software Engineering INTERN | N/A | N/A | 4.3/5 | Review | 2026-07-02 | https://apply.careers.microsoft.com/careers/job/1970393556911730 |
+| Amazon | 2027 Software Dev Engineer Intern | N/A | 2027 | 4/5 | Review | 2026-07-02 | https://www.amazon.jobs/en/jobs/10418355/2027-software-dev-engineer-intern |
+| HubSpot | Meet HubSpot's Summer Interns | N/A | N/A | 4/5 | Review | 2026-07-02 | https://www.hubspot.com/blog/bid/4808/meet-hubspot-s-summer-interns?q=software+intern&from_search_result=true |
+
+## Why These Matched
+- Jane Street - Internships www.janestreet.com/join-jane-street/internships/ We offer opportunities in a variety of disciplines — quantitative trading, machine learning, software engineering, quan: quant/trading target; software engineering internship title; quantitative systems signal
+- Jane Street - Software Engineer - Jane Street www.janestreet.com/join-jane-street//7582902002/ Software Engineer Internship, December-February. Hong Kong, Summer Internship (December-February).: quant/trading target; software engineering internship title; internship term signal
+- Jane Street - How Jane Street Pairs Interns to Projects and Teams During the ... blog.janestreet.com/project-pairing/ Blog Post Jan 14, 2022 ... Software engineering intern candidates often ask: quant/trading target; software engineering internship title
+- Jane Street - Software Engineer Internship, NYC - Jane Street www.janestreet.com/...internship/software-engineer-january-april-ny... We are looking for Software Engineering interns to join our W: quant/trading target; software engineering internship title
+- Jane Street - What the interns have wrought, 2023 edition - Jane Street Blog blog.janestreet.com/what-the-interns-have-wrought-2023/ Blog Post Sep 12, 2023 ... We had 152 software engineering in: quant/trading target; software engineering internship title
+- Jane Street - Research internships in our Tools and Compilers group blog.janestreet.com/research-internships-tnc/ Blog Post Mar 4, 2022 ... Our existing software engineering internships program: quant/trading target; software engineering internship title
+- Jane Street - Software Engineer, New York - Jane Street www.janestreet.com/join-jane-street/position/4274288002/ Open Roles INTERNSHIPS · INTERVIEWING. Who We Are · What We Do · OVERVIEW · CLIEN: quant/trading target; software engineering internship title
+- Jane Street - Preparing for a Software Engineering Interview - Jane Street www.janestreet.com/preparing-for-a-software-engineering-interview/ INTERNSHIPS · INTERVIEWING. Who We Are · What We Do: quant/trading target; software engineering internship title
+- Jane Street - Jane Street Blog blog.janestreet.com/search/?query=wrought Blog Post Software engineering intern candidates often ask how team placement works and how much input incoming interns h: quant/trading target; software engineering internship title
+- Jane Street - Jane Street Blog blog.janestreet.com/page/2/ Blog Post Jul 22, 2024 ... How Jane Street Pairs Interns to Projects and Teams During the Software Engineering Internship. Software eng: quant/trading target; software engineering internship title
+- Jane Street - Posted by smitchell - Jane Street Blog blog.janestreet.com/author/smitchell/ Blog Post Jan 14, 2022 ... Software engineering intern candidates often ask how team placement works an: quant/trading target; software engineering internship title
+- Microsoft - Software Engineering INTERNIndia, Multiple Locations, Multiple LocationsPosted a day ago : Software Engineering INTERN: high-priority target company; software engineering internship title
+- Amazon - 2027 Software Dev Engineer Intern: high-priority target company; internship term signal
+- HubSpot - Meet HubSpot's Summer Interns: high-priority target company; internship term signal
