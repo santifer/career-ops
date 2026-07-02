@@ -160,11 +160,18 @@ function gc() {
 const [,, cmd, arg] = process.argv;
 
 if (cmd === '--release') {
-  if (!arg || !/^\d{1,3}$/.test(arg)) {
-    process.stderr.write('Usage: node reserve-report-num.mjs --release <NNN>\n');
+  const m = (arg || '').match(/^(\d{1,3})(?:-(\d{1,3}))?$/);
+  if (!m) {
+    process.stderr.write('Usage: node reserve-report-num.mjs --release <NNN>[-<MMM>]\n');
     process.exit(1);
   }
-  releaseSlot(parseInt(arg, 10));
+  const start = parseInt(m[1], 10);
+  const end = m[2] ? parseInt(m[2], 10) : start;
+  if (end < start) {
+    process.stderr.write('reserve-report-num: --release range end must be >= start\n');
+    process.exit(1);
+  }
+  for (let n = start; n <= end; n++) releaseSlot(n);
   process.exit(0);
 }
 

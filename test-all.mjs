@@ -3408,6 +3408,41 @@ try {
     fail(`concurrent ranges overlap: ${rangeX} vs ${rangeY} share [${overlap}]`);
   }
   rmSync(concTmp, { recursive: true, force: true });
+
+  // --release with a range deletes every sentinel in it.
+  const reserveRunFail = (args, dir) => {
+    try {
+      execFileSync(NODE, [RESERVE, ...args], {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir },
+      });
+      return null;
+    } catch (err) {
+      return err.status;
+    }
+  };
+  const relTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-release-'));
+  reserveRun(['--count', '4'], relTmp); // reserves 001-004
+  reserveRun(['--release', '001-004'], relTmp);
+  const anyLeft = ['001', '002', '003', '004']
+    .some(n => existsSync(join(relTmp, `${n}-RESERVED.md`)));
+  if (!anyLeft) {
+    pass('--release NNN-MMM deletes all sentinels in range');
+  } else {
+    fail('--release range left sentinels behind');
+  }
+
+  // Invalid inputs exit non-zero.
+  const badCount = reserveRunFail(['--count', '0'], relTmp);
+  const hugeCount = reserveRunFail(['--count', '999'], relTmp);
+  const badRelease = reserveRunFail(['--release', '009-004'], relTmp);
+  if (badCount === 1 && hugeCount === 1 && badRelease === 1) {
+    pass('invalid --count and inverted --release range exit 1');
+  } else {
+    fail(`validation exits: count0=${badCount}, count999=${hugeCount}, inverted=${badRelease}`);
+  }
+  rmSync(relTmp, { recursive: true, force: true });
 } catch (e) {
   fail(`reserve-report-num tests crashed: ${e.message}`);
 }
