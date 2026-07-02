@@ -104,6 +104,21 @@ you edit `plugins.local/` or your `plugins.lock`, you're choosing to run your ow
 version, exactly as you always could. Removing a successor restores the bundled
 reference.
 
+## Community plugins
+
+Reviewed community plugins available via `node plugins.mjs add <name>`.
+Each entry is [pinned to an exact commit](#trust-badges) and reviewed before it reaches users — see [Publishing + getting approved](#publishing--getting-approved) for the full trust model.
+
+| Plugin | What it does | Hooks | Keys needed | Author |
+| --- | --- | --- | --- | --- |
+| [tavily](https://github.com/Schlaflied/career-ops-plugin-tavily) | Tavily search/extract for job scanning, liveness checks, and company research. | search | `TAVILY_API_KEY` | @Schlaflied |
+| [google-calendar](https://github.com/Schlaflied/career-ops-plugin-google-calendar) | Google Calendar ingest — detect upcoming interview events and surface them in the pipeline. | ingest | `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `GOOGLE_CALENDAR_REFRESH_TOKEN` | @Schlaflied |
+| [linkedin-alerts](https://github.com/Schlaflied/career-ops-plugin-linkedin-alerts) | LinkedIn job alert ingest — parse alert emails from Gmail, normalize tracking links to canonical job URLs. | ingest | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | @Schlaflied |
+| [outlook-interviews](https://github.com/Schlaflied/career-ops-plugin-outlook-interviews) | Outlook interview ingest — detect interview invitation emails via Microsoft Graph, extract company / role / meeting link. | ingest | `MSGRAPH_CLIENT_ID`, `MSGRAPH_REFRESH_TOKEN` | @Schlaflied |
+| [obsidian](https://github.com/Schlaflied/career-ops-plugin-obsidian) | Obsidian export — mirror the tracker into your vault as frontmatter notes queryable by Dataview/Bases. | export | *(none)* | @Schlaflied |
+
+To publish your own plugin, follow the [Publishing + getting approved](#publishing--getting-approved) flow above.
+
 ## Not a plugin
 
 - **Centralized infrastructure** the project would run (hosted aggregation,
