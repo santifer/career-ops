@@ -281,12 +281,12 @@ async function runPlaywrightFallback(config, scanFns) {
   const expired = [];
 
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
-    page.setDefaultTimeout(30_000);
-
     for (const entry of entries) {
       console.log(`Generic career-page scan: ${entry.name}`);
+      let page;
       try {
+        page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
+        page.setDefaultTimeout(30_000);
         await page.goto(entry.careers_url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
         await page.waitForTimeout(Number(process.env.PLAYWRIGHT_SCAN_SETTLE_MS || 2500));
         const anchors = await page.evaluate(() => Array.from(document.querySelectorAll('a[href]'))
@@ -320,6 +320,10 @@ async function runPlaywrightFallback(config, scanFns) {
         }
       } catch (err) {
         console.error(`  ${entry.name}: ${err.message}`);
+      } finally {
+        if (page) {
+          await page.close().catch(() => {});
+        }
       }
     }
 
