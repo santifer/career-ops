@@ -102,7 +102,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
-| `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
+| `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `data/follow-ups.md` | Follow-up history tracker |
 | `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |

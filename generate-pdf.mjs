@@ -4,16 +4,21 @@
  * generate-pdf.mjs — HTML → PDF via Playwright
  *
  * Usage:
- *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
+ *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN]
+ *
+ * --report links the generated PDF to its tracker/report number and records
+ * the linkage in data/pdf-index.tsv so downstream tools (e.g. the TUI
+ * dashboard's `d`/`D` hotkeys) can locate the exact PDF for an application.
+ * Without --report a manifest row is still written, just unkeyed.
  *
  * Requires: @playwright/test (or playwright) installed.
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  */
 
 import { chromium } from 'playwright';
-import { resolve, dirname, relative, isAbsolute } from 'path';
+import { resolve, dirname, relative, sep, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
 
@@ -173,15 +178,79 @@ function validateCvSectionOrder(html, cvMarkdown) {
   }
 }
 
+/**
+ * Convert a path to a repo-relative manifest entry, or blank if it is unknown
+ * or outside the career-ops repository.
+ *
+ * @param {string} pathValue - Absolute or cwd-relative filesystem path.
+ * @returns {string} Repo-relative path using forward slashes, or an empty string.
+ */
+export function repoRelativeManifestPath(pathValue) {
+  if (!pathValue) return '';
+  const rel = relative(__dirname, resolve(pathValue));
+  if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return '';
+  return rel.split(sep).join('/');
+}
+
+/**
+ * Record a generated PDF in data/pdf-index.tsv so tools can map a tracker
+ * report number to the exact PDF (and its source HTML for regeneration).
+ *
+ * Columns: report \t pdf \t html \t format \t date — paths relative to the
+ * career-ops root with forward slashes. One row per PDF path; when a report
+ * number is given, older rows for that report are dropped too (regenerated
+ * CVs supersede stale entries). The file is gitignored: it references
+ * gitignored output/ artifacts and is meaningless on another machine.
+ */
+function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
+  const manifestPath = resolve(__dirname, 'data', 'pdf-index.tsv');
+  const toRel = (p) => relative(__dirname, p).split(sep).join('/');
+  const relPDF = toRel(pdfPath);
+  const relHTML = repoRelativeManifestPath(htmlPath);
+  const date = new Date().toISOString().slice(0, 10);
+  // "008" and "8" are the same report — zero-padded report-link form vs
+  // unpadded tracker-# form. Normalize so replacement rows match.
+  const normKey = (s) => (s || '').trim().replace(/^0+(?=\d)/, '');
+
+  let lines = [];
+  if (existsSync(manifestPath)) {
+    lines = readFileSync(manifestPath, 'utf-8').split('\n').filter((line) => {
+      if (!line.trim() || line.startsWith('#')) return false;
+      const fields = line.split('\t');
+      if (fields[1] === relPDF) return false;
+      if (reportNum && normKey(fields[0]) === normKey(reportNum)) return false;
+      return true;
+    });
+  }
+
+  lines.push([reportNum || '', relPDF, relHTML, format, date].join('\t'));
+
+  mkdirSync(dirname(manifestPath), { recursive: true });
+  writeFileSync(
+    manifestPath,
+    '# report\tpdf\thtml\tformat\tdate — written by generate-pdf.mjs, do not edit\n' +
+      lines.join('\n') + '\n'
+  );
+  return relPDF;
+}
+
+/**
+ * CLI entrypoint that reads an HTML file, applies ATS-safe normalization, and
+ * renders the PDF while preserving report/source metadata for the manifest.
+ *
+ * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
+ */
 async function generatePDF() {
   const args = process.argv.slice(2);
 
   // Parse arguments
-  let inputPath, outputPath, format = 'a4';
+  let inputPath, outputPath, format = 'a4', reportNum = '';
 
   for (const arg of args) {
     if (arg.startsWith('--format=')) {
       format = arg.split('=')[1].toLowerCase();
+    } else if (arg.startsWith('--report=')) {
+      reportNum = arg.split('=')[1].trim();
     } else if (!inputPath) {
       inputPath = arg;
     } else if (!outputPath) {
@@ -190,12 +259,25 @@ async function generatePDF() {
   }
 
   if (!inputPath || !outputPath) {
-    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]');
+    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN]');
+    process.exit(1);
+  }
+
+  if (reportNum && !/^\d+$/.test(reportNum)) {
+    console.error(`Invalid --report "${reportNum}". Use the numeric tracker/report number, e.g. --report=018`);
     process.exit(1);
   }
 
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
+
+  // Path-traversal guard: keep the PDF write inside the project directory so a
+  // crafted output argument (e.g. "../../etc/cron.d/x") can't escape the repo.
+  const relOut = relative(process.cwd(), outputPath);
+  if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
+    console.error(`Refusing to write the PDF outside the project directory: ${outputPath}`);
+    process.exit(1);
+  }
 
   // Validate format
   const validFormats = ['a4', 'letter'];
@@ -226,7 +308,7 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath });
 }
 
 /**
@@ -282,12 +364,14 @@ export async function inlineLocalFonts(html) {
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
- * @param {{format?: 'a4'|'letter', baseDir?: string}} [opts]
+ * @param {{format?: 'a4'|'letter', baseDir?: string, reportNum?: string, inputPath?: string}} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
  */
 export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const format = opts.format || 'a4';
   const baseDir = opts.baseDir || process.cwd();
+  const reportNum = opts.reportNum || '';
+  const inputPath = opts.inputPath || '';
 
   mkdirSync(dirname(outputPath), { recursive: true });
 
@@ -335,6 +419,14 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     console.log(`📊 Pages: ${pageCount}`);
     console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
 
+    try {
+      updatePDFManifest(reportNum, outputPath, inputPath, format);
+      console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
+    } catch (err) {
+      // The PDF itself succeeded — never fail the run over manifest bookkeeping.
+      console.error(`⚠️  Manifest update failed: ${err.message}`);
+    }
+
     return { outputPath, pageCount, size: pdfBuffer.length };
   } finally {
     await browser.close();
@@ -343,7 +435,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   }
 }
 
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 if (isMain) {
   generatePDF().catch((err) => {
     console.error('❌ PDF generation failed:', err.message);

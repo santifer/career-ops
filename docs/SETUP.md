@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- An AI coding CLI — [Claude Code](https://claude.ai/code), Gemini CLI, Codex, Qwen Code, OpenCode, GitHub Copilot CLI, Antigravity CLI, or Grok Build CLI
+- An AI coding CLI — [Claude Code](https://claude.ai/code), Gemini CLI, Codex, Qwen Code, OpenCode, GitHub Copilot CLI, Antigravity CLI, or Grok Build CLI (see [Supported CLIs](SUPPORTED_CLIS.md))
 - [Node.js](https://nodejs.org) 18+ and `git` (`npx` ships with Node — the installer refuses to run without them) — note: the Gemini CLI integration requires Node.js 20+
 - (Optional) Go 1.21+ (for the dashboard TUI)
 
@@ -33,7 +33,7 @@ Run the career-ops pdf mode.
 Run the career-ops tracker mode.
 ```
 
-For one-shot workers or batch tasks in Codex, use `codex exec`:
+For one-shot workers or batch tasks in Codex, use `codex exec`. See [docs/CODEX.md](CODEX.md) for the full guide.
 
 ```bash
 codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"
@@ -88,7 +88,6 @@ node verify-pipeline.mjs     # Check pipeline integrity
 ## Build Dashboard (Optional)
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..  # Opens TUI pipeline viewer
+npm run serve:dashboard     # Opens TUI pipeline viewer
+npm run build:dashboard     # Optional: build the standalone binary
 ```
