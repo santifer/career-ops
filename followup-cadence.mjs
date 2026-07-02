@@ -112,7 +112,14 @@ function today() {
 
 export function parseDate(dateStr) {
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) return null;
-  return new Date(dateStr.trim());
+  const s = dateStr.trim();
+  const d = new Date(s);
+  // Reject impossible calendar dates (2026-13-45, 2026-02-31): they match the
+  // regex but produce an Invalid Date, which is TRUTHY — without this check it
+  // slips through `if (!date)` guards and addDays().toISOString() throws,
+  // killing the whole analysis over one bad row.
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s) return null;
+  return d;
 }
 
 // The tracker `date` column is often the evaluation date, while the real
@@ -131,6 +138,10 @@ export function daysBetween(d1, d2) {
 }
 
 export function addDays(date, days) {
+  // Null-safe: parseDate() returns null for unparseable/impossible dates —
+  // degrade to "no scheduled date" instead of crashing (new Date(null) would
+  // silently be the 1970 epoch).
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
   const result = new Date(date);
   result.setUTCDate(result.getUTCDate() + days);
   return result.toISOString().split('T')[0];
@@ -151,28 +162,52 @@ function parseTracker() {
 }
 
 // --- Parse follow-ups.md ---
-function parseFollowups() {
-  if (!existsSync(FOLLOWUPS_FILE)) return [];
-  const content = readFileSync(FOLLOWUPS_FILE, 'utf-8');
+// Two formats coexist in the log (both append-only):
+//   1. Table rows:  | num | appNum | date | company | role | channel | contact | notes |
+//   2. Legacy bullets written by early web builds: `- YYYY-MM-DD · #NUM Company — note`
+// Bullets carry no channel/contact/role (mapped to Other/''/''), and bullets
+// without a `#NUM` are skipped — they can't be attributed to an application.
+const BULLET_RE = /^-\s+(\d{4}-\d{2}-\d{2})\s+·\s+#(\d+)\s+(.+?)(?:\s+—\s+(.*))?$/;
+
+export function parseFollowupsContent(content) {
   const entries = [];
   for (const line of content.split('\n')) {
-    if (!line.startsWith('|')) continue;
-    const parts = line.split('|').map(s => s.trim());
-    if (parts.length < 8) continue;
-    const num = parseInt(parts[1]);
-    if (isNaN(num)) continue;
+    if (line.startsWith('|')) {
+      const parts = line.split('|').map(s => s.trim());
+      if (parts.length < 8) continue;
+      const num = parseInt(parts[1]);
+      if (isNaN(num)) continue;
+      entries.push({
+        num,
+        appNum: parseInt(parts[2]),
+        date: parts[3],
+        company: parts[4],
+        role: parts[5],
+        channel: parts[6],
+        contact: parts[7],
+        notes: parts[8] || '',
+      });
+      continue;
+    }
+    const m = line.match(BULLET_RE);
+    if (!m) continue;
     entries.push({
-      num,
-      appNum: parseInt(parts[2]),
-      date: parts[3],
-      company: parts[4],
-      role: parts[5],
-      channel: parts[6],
-      contact: parts[7],
-      notes: parts[8] || '',
+      num: null,
+      appNum: parseInt(m[2]),
+      date: m[1],
+      company: m[3],
+      role: '',
+      channel: 'Other',
+      contact: '',
+      notes: m[4] || '',
     });
   }
   return entries;
+}
+
+function parseFollowups() {
+  if (!existsSync(FOLLOWUPS_FILE)) return [];
+  return parseFollowupsContent(readFileSync(FOLLOWUPS_FILE, 'utf-8'));
 }
 
 // --- Extract contacts from notes ---
@@ -207,6 +242,10 @@ export function resolveReportPath(reportField, appsFile = APPS_FILE, repoRoot = 
 }
 
 // --- Compute urgency ---
+// For responded/interview, logged follow-ups CLEAR the overdue state and the
+// clock restarts from the last touch (re-overdue every responded_subsequent
+// days) — matching the cadence table in modes/followup.md ("Responded: every
+// 3 days · Interview: thank-you, then every 3 days, no limit").
 export function computeUrgency(status, daysSinceApp, daysSinceLastFollowup, followupCount) {
   if (status === 'applied') {
     if (followupCount >= CADENCE.applied_max_followups) return 'cold';
@@ -215,13 +254,18 @@ export function computeUrgency(status, daysSinceApp, daysSinceLastFollowup, foll
     return 'waiting';
   }
   if (status === 'responded') {
+    if (daysSinceLastFollowup !== null) {
+      return daysSinceLastFollowup >= CADENCE.responded_subsequent ? 'overdue' : 'waiting';
+    }
     if (daysSinceApp < CADENCE.responded_initial) return 'urgent';
     if (daysSinceApp >= CADENCE.responded_subsequent) return 'overdue';
     return 'waiting';
   }
   if (status === 'interview') {
-    if (daysSinceApp >= CADENCE.interview_thankyou) return 'overdue';
-    return 'waiting';
+    if (daysSinceLastFollowup !== null) {
+      return daysSinceLastFollowup >= CADENCE.responded_subsequent ? 'overdue' : 'waiting';
+    }
+    return daysSinceApp >= CADENCE.interview_thankyou ? 'overdue' : 'waiting';
   }
   return 'waiting';
 }
@@ -239,6 +283,9 @@ export function computeNextFollowupDate(status, appDate, lastFollowupDate, follo
     return addDays(parseDate(appDate), CADENCE.responded_initial);
   }
   if (status === 'interview') {
+    // After the thank-you is logged, subsequent touches follow the responded
+    // cadence (modes/followup.md: "Every 3 days · No limit").
+    if (lastFollowupDate) return addDays(parseDate(lastFollowupDate), CADENCE.responded_subsequent);
     return addDays(parseDate(appDate), CADENCE.interview_thankyou);
   }
   return null;
@@ -276,12 +323,13 @@ function analyze() {
     const appFollowups = followupsByApp.get(app.num) || [];
     const followupCount = appFollowups.length;
 
-    // Find most recent follow-up
+    // Find most recent follow-up (sorted date-desc; also exposed per entry so
+    // the web dashboard can render history without a second parser).
     let lastFollowupDate = null;
     let daysSinceLastFollowup = null;
-    if (appFollowups.length > 0) {
-      const sorted = appFollowups.sort((a, b) => (a.date > b.date ? -1 : 1));
-      lastFollowupDate = sorted[0].date;
+    const sortedFollowups = [...appFollowups].sort((a, b) => (a.date > b.date ? -1 : 1));
+    if (sortedFollowups.length > 0) {
+      lastFollowupDate = sortedFollowups[0].date;
       const lastDate = parseDate(lastFollowupDate);
       if (lastDate) daysSinceLastFollowup = daysBetween(lastDate, now);
     }
@@ -308,6 +356,7 @@ function analyze() {
       daysSinceApplication: daysSinceApp,
       daysSinceLastFollowup,
       followupCount,
+      followups: sortedFollowups,
       urgency,
       nextFollowupDate,
       daysUntilNext,

@@ -7,26 +7,35 @@ import { CompanyLogo } from "@/components/company-logo";
 
 export type FollowUp = { num?: number; company: string; role?: string; status?: string; appliedDate?: string; notes?: string };
 
-// One-tap overdue follow-up row (demand loop). "Mark followed up" appends to
-// data/follow-ups.md (append-only) and optimistically clears the row; "Snooze" is
-// a client dismiss. The cadence is the core's — we just surface + record.
+// One-tap overdue follow-up row (demand loop). "Mark followed up" appends a
+// table row to data/follow-ups.md (append-only) so the core cadence advances;
+// "Snooze" is a client dismiss. The cadence is the core's — we just surface + record.
 export function FollowUpCard({ followup, onLogged }: { followup: FollowUp; onLogged?: () => void }) {
-  const [state, setState] = useState<"idle" | "logging" | "done" | "snoozed">("idle");
+  const [state, setState] = useState<"idle" | "logging" | "done" | "snoozed" | "error">("idle");
   if (state === "snoozed" || state === "done") return null;
 
   const log = async () => {
     setState("logging");
     try {
-      await fetch("/api/followups/log", {
+      const res = await fetch("/api/followups/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ num: followup.num, company: followup.company, note: "Followed up" }),
+        body: JSON.stringify({
+          appNum: followup.num,
+          company: followup.company,
+          role: followup.role,
+          channel: "Other",
+          notes: "Followed up",
+        }),
       });
+      // A 4xx/5xx means nothing was written — showing "done" would silently
+      // drop the log and the nag would just come back next visit.
+      if (!res.ok) throw new Error(String(res.status));
+      onLogged?.();
+      setState("done");
     } catch {
-      /* best-effort */
+      setState("error"); // keep the row visible so the user can retry
     }
-    onLogged?.();
-    setState("done");
   };
 
   return (
@@ -48,9 +57,14 @@ export function FollowUpCard({ followup, onLogged }: { followup: FollowUp; onLog
           type="button"
           disabled={state === "logging"}
           onClick={log}
-          className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-surface-hover px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-brand-soft hover:text-brand")}
+          className={cn(
+            "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-surface-hover px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-brand-soft hover:text-brand",
+            state === "error" && "text-red-500 hover:text-red-400",
+          )}
         >
-          {state === "logging" ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} <span className="hidden sm:inline">Mark followed up</span><span className="sm:hidden">Followed up</span>
+          {state === "logging" ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}{" "}
+          <span className="hidden sm:inline">{state === "error" ? "Failed — retry" : "Mark followed up"}</span>
+          <span className="sm:hidden">{state === "error" ? "Retry" : "Followed up"}</span>
         </button>
         {followup.num != null && (
           <a href={`/pipeline/${followup.num}`} title="Open report" className="shrink-0 rounded p-1 text-faint transition hover:text-brand">

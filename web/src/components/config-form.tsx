@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { CadenceSettings } from "@/components/followups/cadence-settings";
 
 type Cli = {
   id: string;
@@ -283,6 +284,8 @@ export function ConfigForm() {
           />
         </span>
       </button>
+
+      <CadenceSettings />
 
       <div className="mt-8 flex items-center gap-3">
         <button
