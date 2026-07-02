@@ -9742,6 +9742,13 @@ try {
   const workday = (await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href)).default;
   const { parseWorkdayResponse } = await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href);
 
+  // Shared mock ctx shape for workday.fetch() calls below — only fetchJson varies per test.
+  const mkWorkdayCtx = (fetchJson) => ({
+    transport: 'http',
+    fetchText: async () => { throw new Error('fetchText should not be called'); },
+    fetchJson,
+  });
+
   if (workday.id === 'workday') pass('workday.id is "workday"');
   else fail(`workday.id is ${JSON.stringify(workday.id)}`);
 
@@ -9842,20 +9849,15 @@ try {
   // fetch() with mock ctx — uses total field to bound sequential pagination
   let postRequests = 0;
   const capturedRedirects = [];
-  const mockCtx = {
-    transport: 'http',
-    fetchText: async () => { throw new Error('fetchText should not be called'); },
-    fetchJson: async (_url, opts) => {
-      postRequests++;
-      capturedRedirects.push(opts?.redirect);
-      const body = JSON.parse(opts.body);
-      if (body.offset === 0) {
-        return { total: 30, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job P1-${i}`, externalPath: `/job/board/p1-${i}` })) };
-      }
-      return { total: 30, jobPostings: Array.from({ length: 10 }, (_, i) => ({ title: `Job P2-${i}`, externalPath: `/job/board/p2-${i}` })) };
-    },
-  };
-  const fetchedJobs = await workday.fetch(entry, mockCtx);
+  const fetchedJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+    postRequests++;
+    capturedRedirects.push(opts?.redirect);
+    const body = JSON.parse(opts.body);
+    if (body.offset === 0) {
+      return { total: 30, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job P1-${i}`, externalPath: `/job/board/p1-${i}` })) };
+    }
+    return { total: 30, jobPostings: Array.from({ length: 10 }, (_, i) => ({ title: `Job P2-${i}`, externalPath: `/job/board/p2-${i}` })) };
+  }));
   if (postRequests === 2 && fetchedJobs.length === 30) {
     pass('workday.fetch() uses total field to fetch exact pages sequentially (20+10=30)');
   } else {
@@ -9892,14 +9894,10 @@ try {
   console.error = (msg) => capturedWarnings.push(msg);
   let fetchedHugeWorkday;
   try {
-    fetchedHugeWorkday = await workday.fetch(entry, {
-      transport: 'http',
-      fetchText: async () => { throw new Error('not expected'); },
-      fetchJson: async () => {
-        hugeWorkdayRequests++;
-        return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
-      },
-    });
+    fetchedHugeWorkday = await workday.fetch(entry, mkWorkdayCtx(async () => {
+      hugeWorkdayRequests++;
+      return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
+    }));
   } finally {
     console.error = originalConsoleError;
   }
@@ -9918,18 +9916,47 @@ try {
   // large tenant (e.g. Deutsche Bank-scale postings)
   let overriddenWorkdayRequests = 0;
   const bigWorkdayEntry = { name: 'BigCo', careers_url: 'https://bigco.wd5.myworkdayjobs.com/careers', max_pages: 80 };
-  const fetchedOverriddenWorkday = await workday.fetch(bigWorkdayEntry, {
-    transport: 'http',
-    fetchText: async () => { throw new Error('not expected'); },
-    fetchJson: async () => {
-      overriddenWorkdayRequests++;
-      return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
-    },
-  });
+  const fetchedOverriddenWorkday = await workday.fetch(bigWorkdayEntry, mkWorkdayCtx(async () => {
+    overriddenWorkdayRequests++;
+    return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
+  }));
   if (overriddenWorkdayRequests === 80 && fetchedOverriddenWorkday.length === 1600) {
     pass('workday.fetch() honors entry.max_pages to raise the cap above the default');
   } else {
     fail(`workday fetch max_pages override: requests=${overriddenWorkdayRequests}, total=${fetchedOverriddenWorkday.length} (expected 80/1600)`);
+  }
+
+  // entry.max_pages is itself capped (MAX_PAGES_CAP = 500) — an absurd override
+  // can't turn this into an unbounded scan either.
+  let absurdWorkdayRequests = 0;
+  const absurdWorkdayEntry = { name: 'AbsurdCo', careers_url: 'https://absurdco.wd5.myworkdayjobs.com/careers', max_pages: 100_000 };
+  const fetchedAbsurdWorkday = await workday.fetch(absurdWorkdayEntry, mkWorkdayCtx(async () => {
+    absurdWorkdayRequests++;
+    return { total: 10_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
+  }));
+  if (absurdWorkdayRequests === 500 && fetchedAbsurdWorkday.length === 10_000) {
+    pass('workday.fetch() caps an absurd entry.max_pages at MAX_PAGES_CAP');
+  } else {
+    fail(`workday fetch max_pages hard cap: requests=${absurdWorkdayRequests}, total=${fetchedAbsurdWorkday.length} (expected 500/10000)`);
+  }
+
+  // Invalid max_pages values (negative, zero, non-numeric) fall back to
+  // DEFAULT_MAX_PAGES, same as omitting max_pages entirely.
+  for (const invalidMaxPages of [-5, 0, 'abc', NaN, null]) {
+    let invalidRequests = 0;
+    const invalidEntry = { name: 'InvalidCo', careers_url: 'https://invalidco.wd5.myworkdayjobs.com/careers', max_pages: invalidMaxPages };
+    const fetchedInvalid = await workday.fetch(invalidEntry, mkWorkdayCtx(async () => {
+      invalidRequests++;
+      return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
+    }));
+    // Number.isNaN(NaN) is true but JSON.stringify(NaN) === 'null', which would
+    // be indistinguishable from the literal `null` case in the log below.
+    const label = Number.isNaN(invalidMaxPages) ? 'NaN' : JSON.stringify(invalidMaxPages);
+    if (invalidRequests === 50 && fetchedInvalid.length === 1000) {
+      pass(`workday.fetch() falls back to DEFAULT_MAX_PAGES for invalid max_pages=${label}`);
+    } else {
+      fail(`workday fetch invalid max_pages=${label}: requests=${invalidRequests}, total=${fetchedInvalid.length} (expected 50/1000)`);
+    }
   }
 
   // fetch() pagination — a failure on a later page returns the jobs gathered
@@ -9940,17 +9967,13 @@ try {
   console.error = (msg) => flakyWarnings.push(msg);
   let flakyWorkdayJobs;
   try {
-    flakyWorkdayJobs = await workday.fetch(entry, {
-      transport: 'http',
-      fetchText: async () => { throw new Error('not expected'); },
-      fetchJson: async (_url, opts) => {
-        flakyWorkdayRequests++;
-        const body = JSON.parse(opts.body);
-        const page = body.offset / 20; // PAGE_SIZE in providers/workday.mjs
-        if (page === 2) throw new Error('HTTP 503');
-        return { total: 80, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job p${page}-${i}`, externalPath: `/job/board/p${page}-${i}` })) };
-      },
-    });
+    flakyWorkdayJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+      flakyWorkdayRequests++;
+      const body = JSON.parse(opts.body);
+      const page = body.offset / 20; // PAGE_SIZE in providers/workday.mjs
+      if (page === 2) throw new Error('HTTP 503');
+      return { total: 80, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job p${page}-${i}`, externalPath: `/job/board/p${page}-${i}` })) };
+    }));
   } finally {
     console.error = originalConsoleError;
   }
@@ -9967,26 +9990,18 @@ try {
 
   // Verify POST method was used
   let capturedMethod = null;
-  await workday.fetch(entry, {
-    transport: 'http',
-    fetchText: async () => '',
-    fetchJson: async (_url, opts) => { capturedMethod = opts?.method; return { total: 0, jobPostings: [] }; },
-  });
+  await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => { capturedMethod = opts?.method; return { total: 0, jobPostings: [] }; }));
   if (capturedMethod === 'POST') pass('workday.fetch() uses POST method');
   else fail(`workday.fetch() method is ${JSON.stringify(capturedMethod)}, expected POST`);
 
   // Fallback: no total field — paginate sequentially until short page
   let fallbackRequests = 0;
-  const fallbackJobs = await workday.fetch(entry, {
-    transport: 'http',
-    fetchText: async () => { throw new Error('not expected'); },
-    fetchJson: async (_url, opts) => {
-      fallbackRequests++;
-      const body = JSON.parse(opts.body);
-      if (body.offset === 0) return { jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `FB P1-${i}`, externalPath: `/job/board/fb-${i}` })) };
-      return { jobPostings: Array.from({ length: 5 }, (_, i) => ({ title: `FB P2-${i}`, externalPath: `/job/board/fb2-${i}` })) };
-    },
-  });
+  const fallbackJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+    fallbackRequests++;
+    const body = JSON.parse(opts.body);
+    if (body.offset === 0) return { jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `FB P1-${i}`, externalPath: `/job/board/fb-${i}` })) };
+    return { jobPostings: Array.from({ length: 5 }, (_, i) => ({ title: `FB P2-${i}`, externalPath: `/job/board/fb2-${i}` })) };
+  }));
   if (fallbackRequests === 2 && fallbackJobs.length === 25) {
     pass('workday.fetch() fallback (no total): paginates sequentially, stops on short page (20+5=25)');
   } else {
