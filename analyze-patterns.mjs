@@ -9,6 +9,7 @@
  * Run: node analyze-patterns.mjs          (JSON to stdout)
  *      node analyze-patterns.mjs --summary (human-readable table)
  *      node analyze-patterns.mjs --min-threshold 3
+ *      node analyze-patterns.mjs --min-vendor-n 8   (per-vendor sample floor)
  *      node analyze-patterns.mjs --self-test
  */
 
@@ -51,6 +52,13 @@ const minThresholdIdx = args.indexOf('--min-threshold');
 const MIN_THRESHOLD = minThresholdIdx !== -1 && args[minThresholdIdx + 1] !== undefined
   ? (Number.isNaN(parseInt(args[minThresholdIdx + 1])) ? 5 : parseInt(args[minThresholdIdx + 1]))
   : 5;
+
+// Minimum per-vendor sample before a channel-yield recommendation fires. Kept
+// modest (small trackers) but high enough that one unlucky bucket isn't a claim.
+const minVendorNIdx = args.indexOf('--min-vendor-n');
+const MIN_VENDOR_N = minVendorNIdx !== -1 && args[minVendorNIdx + 1] !== undefined
+  ? (Number.isNaN(parseInt(args[minVendorNIdx + 1])) ? 8 : parseInt(args[minVendorNIdx + 1]))
+  : 8;
 
 // --- Status normalization (mirrors verify-pipeline.mjs) ---
 const ALIASES = {
@@ -141,12 +149,30 @@ next_action: "Follow up on ticket #42 with tailored CV"
   if (summary?.soft_gaps?.[0] !== 'No direct healthcare domain experience') failures.push('list item was not parsed');
   if (summary?.next_action !== 'Follow up on ticket #42 with tailored CV') failures.push('hash-containing scalar field was not parsed');
 
+  // Vendor detection (community ATS only; white-labeled → null)
+  const vendorCases = [
+    ['https://boards.greenhouse.io/acme/jobs/12345', 'greenhouse'],
+    ['https://job-boards.eu.greenhouse.io/acme/jobs/9', 'greenhouse'],
+    ['https://jobs.lever.co/acme/abc-def', 'lever'],
+    ['https://jobs.ashbyhq.com/acme/uuid', 'ashby'],
+    ['https://acme.wd1.myworkdayjobs.com/en-US/careers/job/R-1', 'workday'],
+    ['https://careers.icims.com/jobs/9/x', null],
+    ['https://jobs.dayforcehcm.com/en-US/co/CANDIDATEPORTAL/jobs/1', null],
+    ['not a url', null],
+    ['', null],
+    [null, null],
+  ];
+  for (const [url, expected] of vendorCases) {
+    const got = detectVendor(url);
+    if (got !== expected) failures.push(`detectVendor(${JSON.stringify(url)}) → ${JSON.stringify(got)}, expected ${JSON.stringify(expected)}`);
+  }
+
   if (failures.length > 0) {
-    console.error(`Machine Summary parser self-test failed: ${failures.join('; ')}`);
+    console.error(`analyze-patterns self-test failed: ${failures.join('; ')}`);
     process.exit(1);
   }
 
-  console.log('Machine Summary parser self-test OK');
+  console.log('analyze-patterns self-test OK (Machine Summary parser + vendor detection)');
   process.exit(0);
 }
 
@@ -171,6 +197,7 @@ function parseReport(reportPath) {
   const report = {
     company: null,
     role: null,
+    url: null,
     archetype: null,
     legitimacyTier: null,
     finalDecision: null,
@@ -230,6 +257,12 @@ function parseReport(reportPath) {
 
   // Fallback: report header field `Archetype: ...` or `Arquetipo: ...` (newer reports use this).
   const headerArchRegex = /^(?:Archetype|Arquetipo):\s*(.+?)$/im;
+
+  // Report header carries `**URL:**` between Score and PDF (see CLAUDE.md /
+  // Pipeline Integrity). Capture the first http(s) URL on that line for vendor
+  // detection; reports predating the field simply leave url null (→ unknown bucket).
+  const urlMatch = plain.match(/^URL:\s*(https?:\/\/\S+)/im);
+  if (urlMatch && !report.url) report.url = urlMatch[1].trim().replace(/[)>\].,]+$/, '');
 
   const archMatch = plain.match(blockARegex) || plain.match(headerArchRegex);
   if (archMatch && !report.archetype) report.archetype = archMatch[1].trim();
@@ -311,6 +344,32 @@ function classifyRemote(raw) {
   return 'unknown';
 }
 
+// --- Detect ATS vendor from a posting URL ---
+// Host-only match, deliberately looser than liveness-api.mjs's resolveAtsApi()
+// (which needs the full posting path to build an API URL) — a tracker report's
+// URL may point at a board/careers page, not a canonical posting.
+//
+// SCOPE (intentional): only community ATS with clean, public URL fingerprints —
+// Greenhouse, Lever, Ashby, Workday. White-labeled ATS (iCIMS/UKG/Dayforce) are
+// NOT detectable from the URL alone and are deferred until the community adds a
+// reliable signal (e.g. confirmation-email domain). Undetected → 'unknown'.
+const VENDOR_HOST_PATTERNS = [
+  { id: 'greenhouse', test: (h) => /(^|\.)greenhouse\.io$/.test(h) },
+  { id: 'lever',      test: (h) => h === 'jobs.lever.co' || h.endsWith('.lever.co') },
+  { id: 'ashby',      test: (h) => h === 'jobs.ashbyhq.com' || h.endsWith('.ashbyhq.com') },
+  { id: 'workday',    test: (h) => h.endsWith('.myworkdayjobs.com') || h.endsWith('.myworkdaysite.com') },
+];
+
+function detectVendor(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  let u;
+  try { u = new URL(rawUrl.trim()); } catch { return null; }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+  const host = u.hostname.toLowerCase();
+  for (const v of VENDOR_HOST_PATTERNS) if (v.test(host)) return v.id;
+  return null;
+}
+
 // --- Classify company size ---
 function classifyCompanySize(teamSize) {
   if (!teamSize) return 'unknown';
@@ -371,6 +430,7 @@ function analyze() {
       report: reportData,
       remoteBucket: classifyRemote(remoteSource),
       companySize: classifyCompanySize(teamSource),
+      vendor: detectVendor(reportData?.url),
     };
   });
 
@@ -479,6 +539,66 @@ function analyze() {
     conversionRate: data.total > 0 ? Math.round((data.positive / data.total) * 100) : 0,
   })).sort((a, b) => b.total - a.total);
 
+  // --- ATS vendor / channel analysis (algorithmic-monoculture aware) ---
+  // Motivation: Bommasani et al., "Algorithmic Monocultures in Hiring" (FAccT
+  // 2026, arXiv:2605.27371) — rejections routed through a shared screening
+  // vendor are correlated, not independent. If a concentrated channel yields
+  // nothing, feeding it the same profile has diminishing returns; the rational
+  // move is to divert those companies to referral/direct contact.
+  //
+  // HONESTY: this reports CHANNEL YIELD, not discrimination. A single tracker
+  // can't causally separate "the vendor's algorithm filters me" from "that
+  // vendor skews toward a segment I fit poorly" — but "stop feeding a dead
+  // channel, go around it" is rational under either explanation.
+  //
+  // "Advanced" here is STRICTER than the outcome=='positive' bucket: a bare
+  // 'applied' (submitted, no reply yet) does NOT count as passing screening.
+  const ADVANCED_STATUSES = new Set(['responded', 'interview', 'offer']);
+  const SUBMITTED_STATUSES = new Set(['applied', 'responded', 'interview', 'offer', 'rejected', 'discarded']);
+  const isAdvanced = (e) => ADVANCED_STATUSES.has(e.normalizedStatus);
+
+  // Only applications we actually submitted count toward channel yield (drop
+  // 'evaluated' = never applied, and 'skip' = self-filtered).
+  const submitted = enriched.filter(e => SUBMITTED_STATUSES.has(e.normalizedStatus));
+  const overallAdvanced = submitted.filter(isAdvanced).length;
+  const overallAdvanceRate = submitted.length > 0
+    ? Math.round((overallAdvanced / submitted.length) * 100) : 0;
+
+  const vendorMap = new Map();
+  for (const e of submitted) {
+    const v = e.vendor || 'unknown';
+    if (!vendorMap.has(v)) vendorMap.set(v, { total: 0, advanced: 0 });
+    const entry = vendorMap.get(v);
+    entry.total++;
+    if (isAdvanced(e)) entry.advanced++;
+  }
+
+  // Recommendations only fire on buckets with enough n to not be noise; the
+  // breakdown still SHOWS every bucket (with its n) so nothing is hidden.
+  const vendorBreakdown = [...vendorMap.entries()]
+    .filter(([v]) => v !== 'unknown')
+    .map(([vendor, data]) => ({
+      vendor,
+      total: data.total,
+      advanced: data.advanced,
+      advanceRate: data.total > 0 ? Math.round((data.advanced / data.total) * 100) : 0,
+      sharePct: submitted.length > 0 ? Math.round((data.total / submitted.length) * 100) : 0,
+      sufficientSample: data.total >= MIN_VENDOR_N,
+    }))
+    .sort((a, b) => b.total - a.total);
+
+  const identifiedCount = submitted.length - (vendorMap.get('unknown')?.total || 0);
+  const vendorAnalysis = {
+    scope: ['greenhouse', 'lever', 'ashby', 'workday'],
+    minSampleForClaim: MIN_VENDOR_N,
+    submitted: submitted.length,
+    identified: identifiedCount,
+    coveragePct: submitted.length > 0 ? Math.round((identifiedCount / submitted.length) * 100) : 0,
+    overallAdvanceRate,
+    breakdown: vendorBreakdown,
+    citation: 'Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026 (arXiv:2605.27371)',
+  };
+
   // --- Score threshold analysis ---
   const positiveScores = scoresByOutcome.positive.filter(s => s > 0);
   const minPositiveScore = positiveScores.length > 0 ? Math.min(...positiveScores) : 0;
@@ -567,6 +687,31 @@ function analyze() {
     });
   }
 
+  // Channel-monoculture recommendation: a concentrated vendor (>= 25% of
+  // submissions, sufficient sample) whose advance rate is well below EVERY OTHER
+  // channel is a dead channel worth routing around, not re-feeding. The baseline
+  // is leave-one-out (this vendor vs all other submissions) — comparing to an
+  // overall rate that INCLUDES the vendor understates the gap when it dominates.
+  let deadChannel = null;
+  for (const v of vendorBreakdown) {
+    if (!v.sufficientSample || v.sharePct < 25) continue;
+    const others = submitted.filter(e => (e.vendor || 'unknown') !== v.vendor);
+    if (others.length === 0) continue;
+    const othersRate = Math.round((others.filter(isAdvanced).length / others.length) * 100);
+    // Meaningful gap only: the rest of the pipeline must be doing at least
+    // moderately better, so we're not flagging a uniformly cold market.
+    if (v.advanceRate < othersRate && othersRate - v.advanceRate >= 10) {
+      if (!deadChannel || v.advanceRate < deadChannel.advanceRate) deadChannel = { ...v, othersRate };
+    }
+  }
+  if (deadChannel) {
+    recommendations.push({
+      action: `Route ${deadChannel.vendor} companies through referral / direct contact -- ${deadChannel.sharePct}% of your applications flow through it at a ${deadChannel.advanceRate}% advance rate (vs ${deadChannel.othersRate}% through other channels)`,
+      reasoning: `${deadChannel.advanced}/${deadChannel.total} ${deadChannel.vendor} applications advanced past screening, well below your other channels. Under algorithmic monoculture (Bommasani et al., FAccT 2026) a shared screener's rejections are correlated -- re-applying the same profile through the same engine has diminishing returns; a human channel bypasses it. Channel yield, not a discrimination claim.`,
+      impact: 'high',
+    });
+  }
+
   // Date range
   const dates = enriched.map(e => e.date).filter(Boolean).sort();
 
@@ -588,6 +733,7 @@ function analyze() {
     blockerAnalysis,
     remotePolicy,
     companySizeBreakdown,
+    vendorAnalysis,
     scoreThreshold,
     techStackGaps,
     recommendations,
@@ -651,6 +797,19 @@ function printSummary(result) {
     for (const g of techStackGaps.slice(0, 10)) {
       console.log(`  ${g.skill.padEnd(20)} ${g.frequency}x`);
     }
+  }
+
+  // ATS vendor / channel analysis
+  const va = result.vendorAnalysis;
+  if (va && va.breakdown.length > 0) {
+    console.log('\nATS CHANNEL ANALYSIS (community ATS only)');
+    console.log('-'.repeat(40));
+    console.log(`  vendor identified for ${va.identified}/${va.submitted} submissions (${va.coveragePct}% coverage); overall advance rate ${va.overallAdvanceRate}%`);
+    for (const v of va.breakdown) {
+      const flag = v.sufficientSample ? '' : '  (n too small for a claim)';
+      console.log(`  ${v.vendor.padEnd(12)} ${String(v.total).padStart(3)} apps  ${String(v.sharePct).padStart(3)}% share  ${String(v.advanceRate).padStart(3)}% advance${flag}`);
+    }
+    console.log('  Channel yield, not discrimination — see Bommasani et al., FAccT 2026.');
   }
 
   // Score threshold
