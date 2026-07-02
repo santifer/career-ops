@@ -38,7 +38,24 @@ async function applicationsDb(client) {
   return apps;
 }
 
+/**
+ * Parse a tracker score cell into a numeric value for the Notion DB Score property.
+ *
+ * Scores in applications.md may be formatted like `4.2/5`, `**4.2/5**`, `4.25`, etc.
+ * Strips formatting and extracts the first numeric value so slash-formatted
+ * scores (e.g. 4.2/5) are not mangled into 4.25 (#1414).
+ *
+ * @param {unknown} s - Raw score value from tracker row.
+ * @returns {number} Parsed score, or NaN if no valid number is present.
+ */
+export function parseScore(s) {
+  const m = String(s ?? '').replace(/\*\*/g, '').match(/([\d.]+)/);
+  return m ? parseFloat(m[1]) : NaN;
+}
+
 export default {
+  parseScore,
+
   /**
    * export: upsert each tracker row into the user's Notion Applications DB.
    * Receives a frozen read-only snapshot of the tracker — never a file handle.
@@ -60,7 +77,7 @@ export default {
       const props = { Role: { title: rich(role) }, Company: { rich_text: rich(company) } };
       const status = canonicalStatus(row.status);
       if (status) props.Status = { select: { name: status } };
-      const score = parseFloat(String(row.score ?? '').replace(/[^\d.]/g, ''));
+      const score = parseScore(row.score);
       if (Number.isFinite(score)) props.Score = { number: score };
 
       if (ctx?.dryRun) { ctx.log(`would push: ${company} — ${role}`); pushed++; continue; }

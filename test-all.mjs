@@ -91,16 +91,38 @@ function run(cmd, args = [], opts = {}) {
  */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 
+const BASH = (() => {
+  if (process.platform !== 'win32') return 'bash';
+  try {
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
+    return 'bash';
+  } catch {}
+  const candidates = [
+    'C:\\Program Files\\Git\\bin\\bash.exe',
+    'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
+    'bash'
+  ];
+  for (const cmd of candidates) {
+    try {
+      execSync(`"${cmd}" -c "true"`, { stdio: 'ignore' });
+      return cmd;
+    } catch {}
+  }
+  return 'bash';
+})();
+
 function toBashPath(wpath) {
   if (process.platform !== 'win32') return wpath;
   try {
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
     const forwardSlashed = wpath.replace(/\\/g, '/');
     const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   try {
     const forwardSlashed = wpath.replace(/\\/g, '/');
-    const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const cygpathCmd = existsSync('C:\\Program Files\\Git\\usr\\bin\\cygpath.exe') ? '"C:\\Program Files\\Git\\usr\\bin\\cygpath.exe"' : 'cygpath';
+    const out = execSync(`${cygpathCmd} -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
@@ -518,29 +540,38 @@ try {
 
 if (!QUICK) {
   console.log('\n4. Dashboard build');
-  const isWindows = process.platform === 'win32';
-  const dashboardBuildTmp = mkdtempSync(join(tmpdir(), 'career-dashboard-build-'));
-  const outPath = join(dashboardBuildTmp, isWindows ? 'career-dashboard-test.exe' : 'career-dashboard-test');
-  const goEnv = { ...process.env };
-  if (isWindows && !goEnv.GOCACHE) {
-    goEnv.GOCACHE = join(tmpdir(), 'career-ops-go-build-cache');
-  }
-  if (goEnv.GOCACHE) {
-    try { mkdirSync(goEnv.GOCACHE, { recursive: true }); } catch (e) {}
-  }
-  const goBuild = run('go', ['build', '-o', outPath, '.'], {
-    cwd: join(ROOT, 'dashboard'),
-    env: goEnv,
-    stdio: ['pipe', 'pipe', 'pipe'],
-    timeout: 60000,
-  });
-  if (goBuild !== null) {
-    pass('Dashboard compiles');
-    try { rmSync(outPath, { force: true }); } catch (e) {}
+  let hasGo = false;
+  try {
+    execSync('go version', { stdio: 'ignore' });
+    hasGo = true;
+  } catch {}
+  if (!hasGo) {
+    warn('Dashboard build skipped — go compiler not in env');
   } else {
-    fail('Dashboard build failed');
+    const isWindows = process.platform === 'win32';
+    const dashboardBuildTmp = mkdtempSync(join(tmpdir(), 'career-dashboard-build-'));
+    const outPath = join(dashboardBuildTmp, isWindows ? 'career-dashboard-test.exe' : 'career-dashboard-test');
+    const goEnv = { ...process.env };
+    if (isWindows && !goEnv.GOCACHE) {
+      goEnv.GOCACHE = join(tmpdir(), 'career-ops-go-build-cache');
+    }
+    if (goEnv.GOCACHE) {
+      try { mkdirSync(goEnv.GOCACHE, { recursive: true }); } catch (e) {}
+    }
+    const goBuild = run('go', ['build', '-o', outPath, '.'], {
+      cwd: join(ROOT, 'dashboard'),
+      env: goEnv,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 60000,
+    });
+    if (goBuild !== null) {
+      pass('Dashboard compiles');
+      try { rmSync(outPath, { force: true }); } catch (e) {}
+    } else {
+      fail('Dashboard build failed');
+    }
+    try { rmSync(dashboardBuildTmp, { recursive: true, force: true }); } catch (e) {}
   }
-  try { rmSync(dashboardBuildTmp, { recursive: true, force: true }); } catch (e) {}
 } else {
   console.log('\n4. Dashboard build (skipped --quick)');
 }
@@ -3289,6 +3320,82 @@ try {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
+// ── VERIFY-PIPELINE REPORT CHECKS (#1425) ───────────────────────
+// Parallel evaluators can write two reports for the same company+role, and
+// tracker dedup can leave a report file with no tracker row. verify-pipeline
+// must surface both as warnings (not errors — re-evaluations are legitimate).
+console.log('\n🧪 Testing verify-pipeline duplicate/orphan report checks...');
+try {
+  const vpTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-reports-'));
+  try {
+    const vpReports = join(vpTmp, 'reports');
+    mkdirSync(vpReports, { recursive: true });
+    const vpTracker = join(vpTmp, 'applications.md');
+    const vpEnv = { ...process.env, CAREER_OPS_TRACKER: vpTracker, CAREER_OPS_REPORTS: vpReports };
+
+    const report = (company, role) =>
+      `# Evaluación: ${company} — ${role}\n\n## Machine Summary\n\n\`\`\`yaml\ncompany: "${company}"\nrole: "${role}"\nscore: 4.2\n\`\`\`\n`;
+
+    // #1 and #3 are the same role at Acme written by two concurrent workers;
+    // #2 is a different Acme role (must NOT be flagged as duplicate);
+    // #3 also has no tracker row (orphan — tracker dedup kept #1).
+    writeFileSync(join(vpReports, '001-acme-2026-01-04.md'), report('Acme', 'Staff AI Engineer'));
+    writeFileSync(join(vpReports, '002-acme-2026-01-05.md'), report('Acme', 'Platform Engineer'));
+    writeFileSync(join(vpReports, '003-acme-2026-01-05.md'), report('Acme', 'Staff AI Engineer'));
+
+    writeFileSync(vpTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | Acme | Staff AI Engineer | 4.2/5 | Evaluated | ❌ | [1](reports/001-acme-2026-01-04.md) | ok |\n' +
+      '| 2 | 2026-01-05 | Acme | Platform Engineer | 4.0/5 | Evaluated | ❌ | [2](reports/002-acme-2026-01-05.md) | ok |\n');
+
+    const vpOut = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (vpOut === null) {
+      fail('verify-pipeline crashed on duplicate/orphan report fixture');
+    } else {
+      if (vpOut.includes('Duplicate reports for same company+role') &&
+          vpOut.includes('001-acme-2026-01-04.md') && vpOut.includes('003-acme-2026-01-05.md')) {
+        pass('duplicate reports for the same company+role are flagged (#1425)');
+      } else {
+        fail('duplicate company+role reports not flagged');
+      }
+      if (vpOut.includes('002-acme-2026-01-05.md') && /Duplicate reports[^\n]*002-acme/.test(vpOut)) {
+        fail('different role at the same company falsely flagged as duplicate report');
+      } else {
+        pass('different role at the same company is not flagged as duplicate');
+      }
+      if (/Orphan report[^\n]*#3[^\n]*003-acme-2026-01-05\.md/.test(vpOut)) {
+        pass('orphan report with no tracker row is flagged (#1425)');
+      } else {
+        fail('orphan report not flagged');
+      }
+      if (/Orphan report[^\n]*(001|002)-acme/.test(vpOut)) {
+        fail('referenced report falsely flagged as orphan');
+      } else {
+        pass('referenced reports are not flagged as orphans');
+      }
+      // run() returns non-null only on exit 0 — warnings must not fail the check.
+      pass('duplicate/orphan report findings stay warning-level (exit 0)');
+    }
+
+    // Clean fixture: one row, one report — both checks must pass green.
+    rmSync(join(vpReports, '003-acme-2026-01-05.md'));
+    const vpClean = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (vpClean !== null &&
+        vpClean.includes('No duplicate reports for the same company+role') &&
+        vpClean.includes('No orphan reports')) {
+      pass('clean tracker+reports fixture passes both report checks');
+    } else {
+      fail('clean fixture did not pass duplicate/orphan report checks');
+    }
+  } finally {
+    rmSync(vpTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`verify-pipeline report checks crashed: ${e.message}`);
+}
+
 // ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
 // dedup-tracker.mjs used to ship an older fuzzy role matcher than
 // merge-tracker.mjs. That weaker matcher collapsed sibling roles at the same
@@ -3504,6 +3611,72 @@ try {
   }
 } catch (e) {
   fail(`tracker-parse unit test crashed: ${e.message}`);
+}
+
+// #1431 "Apply to #13" is ambiguous: report numbers and tracker row numbers
+// diverge, and mapping company ↔ report# ↔ tracker# ↔ PDF used to require
+// opening three files. find.mjs resolves a report#, tracker#, or company/role
+// fragment to the full pipeline identity in one read-only lookup.
+console.log('\n🧪 Testing find.mjs pipeline identity lookup...');
+try {
+  const { parseTrackerRows, parsePdfIndex, findMatches } = await import(pathToFileURL(join(ROOT, 'find.mjs')).href);
+
+  // Tracker# and report# intentionally diverge: row 3 carries report 12, and a
+  // different row is numbered 12 — the exact friction the tool exists to solve.
+  const rows = parseTrackerRows([
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 3 | 2026-06-01 | Acme Labs | Platform Engineer | 4.2/5 | **Applied** (2026-06-02) | ✅ | [12](reports/012-acme-labs-2026-06-01.md) | strong fit |',
+    '| 12 | 2026-06-10 | Globex | Data Engineer | 3.8/5 | Evaluated | ❌ | [15](reports/015-globex-2026-06-10.md) | — |',
+  ].join('\n'));
+  const pdfIndex = parsePdfIndex(
+    '# report\tpdf\thtml\tformat\tdate — written by generate-pdf.mjs, do not edit\n' +
+    '012\toutput/cv-acme-labs.pdf\toutput/cv-acme-labs.html\tats\t2026-06-01\n');
+
+  const byTracker = findMatches(rows, '3', pdfIndex);
+  if (byTracker.length === 1 && byTracker[0].company === 'Acme Labs' &&
+      byTracker[0].trackerNum === 3 && byTracker[0].reportNum === '12' &&
+      byTracker[0].reportPath === 'reports/012-acme-labs-2026-06-01.md' &&
+      byTracker[0].status === 'Applied' &&
+      byTracker[0].pdfPath === 'output/cv-acme-labs.pdf') {
+    pass('find.mjs resolves a tracker# to company, report#, canonical status, and PDF path');
+  } else {
+    fail(`find.mjs tracker# lookup wrong: ${JSON.stringify(byTracker)}`);
+  }
+
+  // "12" is both Acme's report# and Globex's tracker# — both rows must surface
+  // (with the zero-padded "012" report-link form treated as the same number).
+  const ambiguous = findMatches(rows, '012', pdfIndex);
+  const companies = ambiguous.map(m => m.company).sort();
+  if (ambiguous.length === 2 && companies[0] === 'Acme Labs' && companies[1] === 'Globex') {
+    pass('find.mjs surfaces report#/tracker# collisions as multiple matches (zero-pad normalized)');
+  } else {
+    fail(`find.mjs numeric collision lookup wrong: ${JSON.stringify(ambiguous)}`);
+  }
+
+  const byFragment = findMatches(rows, 'acme', pdfIndex);
+  if (byFragment.length === 1 && byFragment[0].company === 'Acme Labs') {
+    pass('find.mjs matches a case-insensitive company fragment');
+  } else {
+    fail(`find.mjs company fragment lookup wrong: ${JSON.stringify(byFragment)}`);
+  }
+
+  // Fuzzy multi-word lookup reuses role-matcher.mjs (stopwords like "remote"
+  // dropped) instead of reinventing matching.
+  const byFuzzy = findMatches(rows, 'remote data engineer', pdfIndex);
+  if (byFuzzy.length === 1 && byFuzzy[0].company === 'Globex' && byFuzzy[0].pdfPath === null) {
+    pass('find.mjs fuzzy-matches a role phrase via role-matcher and reports a missing PDF');
+  } else {
+    fail(`find.mjs fuzzy role lookup wrong: ${JSON.stringify(byFuzzy)}`);
+  }
+
+  if (findMatches(rows, 'no-such-company', pdfIndex).length === 0) {
+    pass('find.mjs returns zero matches cleanly for an unknown query');
+  } else {
+    fail('find.mjs matched a query that exists nowhere in the tracker');
+  }
+} catch (e) {
+  fail(`find.mjs unit test crashed: ${e.message}`);
 }
 
 // dedup-tracker reads AND writes by column; with a Location column its status
@@ -3837,15 +4010,47 @@ try {
   }
   rmSync(ready, { recursive: true, force: true });
 
+  // Auto-copy template: when modes/_profile.md or modes/_custom.md is missing but template exists,
+  // doctor --json auto-copies them, records them in autoCopied, and does not report them as missing (#1369).
+  const autoCopy = mkdtempSync(join(tmpdir(), 'co-autocopy-'));
+  mkdirSync(join(autoCopy, 'config'), { recursive: true });
+  mkdirSync(join(autoCopy, 'modes'), { recursive: true });
+  for (const f of ['cv.md', 'config/profile.yml', 'portals.yml']) {
+    writeFileSync(join(autoCopy, f), 'x');
+  }
+  writeFileSync(join(autoCopy, 'modes/_profile.template.md'), '# profile template\n');
+  writeFileSync(join(autoCopy, 'modes/_custom.template.md'), '# custom template\n');
+  const ac = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', autoCopy]) || '{}');
+  if (
+    ac.onboardingNeeded === false &&
+    Array.isArray(ac.missing) &&
+    ac.missing.length === 0 &&
+    Array.isArray(ac.autoCopied) &&
+    ac.autoCopied.includes('modes/_profile.md') &&
+    ac.autoCopied.includes('modes/_custom.md') &&
+    existsSync(join(autoCopy, 'modes/_profile.md')) &&
+    readFileSync(join(autoCopy, 'modes/_profile.md'), 'utf-8') === '# profile template\n' &&
+    existsSync(join(autoCopy, 'modes/_custom.md')) &&
+    readFileSync(join(autoCopy, 'modes/_custom.md'), 'utf-8') === '# custom template\n'
+  ) {
+    pass('Auto-copy template → modes/_profile.md and modes/_custom.md copied silently in --json mode (#1369)');
+  } else {
+    fail(`Auto-copy template failed in --json mode: ${JSON.stringify(ac)}`);
+  }
+  rmSync(autoCopy, { recursive: true, force: true });
+
   const claudeDoc = readFile('CLAUDE.md');
+  const agentsDoc = readFile('AGENTS.md');
   if (
     /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&
     /"warnings"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(agentsDoc) &&
     !/Does\s+`cv\.md`\s+exist\?/i.test(claudeDoc)
   ) {
-    pass('CLAUDE.md delegates onboarding state to doctor --json');
+    pass('CLAUDE.md and AGENTS.md delegate onboarding state and autoCopied to doctor --json');
   } else {
-    fail('CLAUDE.md still duplicates onboarding prerequisite checks');
+    fail('CLAUDE.md or AGENTS.md still duplicates onboarding prerequisite checks or misses autoCopied doc');
   }
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
@@ -4358,7 +4563,7 @@ try {
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+    try { execFileSync(BASH, ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
@@ -4377,13 +4582,13 @@ try {
     'exit 1',
   ].join('\n') + '\n');
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+    try { execFileSync(BASH, ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
   }
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const out = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -4402,7 +4607,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
+  const dry = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -4422,7 +4627,7 @@ try {
     '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
     '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
   ].join('\n') + '\n');
-  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+  const statusOnly = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -8807,6 +9012,14 @@ try {
   }
   if (importOk) pass('every bundled plugin entry imports cleanly with a default hook export');
   else fail('a bundled plugin failed to import or lacks a default export');
+
+  const notionMod = await import(pathToFileURL(join(ROOT, 'plugins', 'notion', 'index.mjs')).href);
+  const notionParseScore = notionMod.parseScore || notionMod.default?.parseScore;
+  if (typeof notionParseScore === 'function' && notionParseScore('4.2/5') === 4.2 && notionParseScore('5/5') === 5 && notionParseScore('**4.2/5**') === 4.2) {
+    pass('notion plugin parseScore sanitizes slash-formatted scores cleanly (4.2/5 -> 4.2, 5/5 -> 5) (#1414)');
+  } else {
+    fail(`notion plugin parseScore broken: 4.2/5 -> ${notionParseScore?.('4.2/5')}, 5/5 -> ${notionParseScore?.('5/5')}`);
+  }
 
   // Recursively collect every .mjs under plugins/ (the deny-list must not be flat-only).
   const allPluginMjs = [];

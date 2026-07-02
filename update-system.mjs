@@ -97,6 +97,7 @@ const SYSTEM_PATHS = [
   'merge-tracker.mjs',
   'tracker-links.mjs',
   'tracker.mjs',
+  'find.mjs',
   'verify-pipeline.mjs',
   'reconcile-pipeline.mjs',
   'dedup-tracker.mjs',

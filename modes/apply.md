@@ -158,3 +158,37 @@ If the form has more questions than the visible ones:
 - Ask the candidate to scroll and share another screenshot
 - Or paste the remaining questions
 - Process in iterations until the entire form is covered
+
+## Known ATS Quirks
+
+Field-tested across ~12 Playwright-driven applications (Ashby, Greenhouse, Lever, Workable). These quirks silently break an apply run if not accounted for.
+
+### Ashby — email-based candidate dedup
+
+- **Symptom:** Submitting a second application at the same company silently fails or merges into the existing candidate record. Ashby deduplicates by email per company.
+- **Agent:** Before filling the email field, check whether an earlier report for the same company already exists in `reports/`. If it does, warn the candidate and pre-fill a `+tag` alias (e.g., `user+teamname@domain.com`) as the suggested value.
+- **Candidate:** Confirms or changes the email before the form is submitted.
+
+### Lever — hCaptcha intercepts checkbox/radio clicks
+
+- **Symptom:** Programmatic `click()` on checkboxes or radio buttons triggers an hCaptcha challenge mid-form, blocking the rest of the fill.
+- **Agent:** Fill `<input type="text">`, `<textarea>`, and `<select>` fields only. Skip all checkboxes, radio buttons, and the captcha widget. List the skipped fields with their recommended values so the candidate can tick them.
+- **Candidate:** Completes the checkboxes, solves the captcha, and clicks Submit.
+
+### Workable — SPA re-renders break form refs
+
+- **Symptom:** Workable's SPA re-renders form components between fills, invalidating element references. Sequential `fill()` calls hit stale-element errors.
+- **Agent:** Copy each answer to the clipboard and present a numbered paste list. If Playwright is active, dispatch `Ctrl+V` per field with a fresh element query before each paste — do not cache refs across fields.
+- **Candidate:** Pastes remaining answers manually if clipboard dispatch fails, then submits.
+
+### React-select autocomplete widgets
+
+- **Symptom:** `react-select` (common in Greenhouse, Ashby, Lever for location/department fields) destroys and recreates its internal DOM on every keystroke. Cached refs go stale instantly.
+- **Agent:** Type character-by-character with short delays (~100 ms). Re-snapshot after every selection to pick up the new DOM state. Never cache element references across interactions.
+- **Candidate:** Verifies each selected value is correct before moving on; corrects any mis-selection inline.
+
+### Huge native `<select>` elements (1 000+ options)
+
+- **Symptom:** Country, university, or field-of-study dropdowns contain thousands of `<option>` entries. Snapshotting them floods context and stalls the agent.
+- **Agent:** Use `select_option` directly by value or visible label. Never snapshot the full option list. If the exact label is unknown, ask the candidate for the value instead of dumping options into context.
+- **Candidate:** Provides the correct label when the agent cannot infer it from `config/profile.yml`.
