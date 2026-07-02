@@ -15,7 +15,7 @@ freshness_filter:
   max_age_days: 14
   keep_undated: true
 
-playwright_search_terms: "software engineer intern"
+playwright_search_terms: "software intern"
 
 title_filter:
   positive:
