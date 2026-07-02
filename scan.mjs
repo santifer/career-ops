@@ -42,16 +42,26 @@ import { mergeProviderPlugins } from './plugins/_engine.mjs';
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
+import { getCareerOpsRoot } from './path-resolver.mjs';
+const CODE_ROOT = path.dirname(fileURLToPath(import.meta.url));
+const DATA_ROOT = getCareerOpsRoot();
 
-const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
-const PROFILE_PATH = process.env.CAREER_OPS_PROFILE || 'config/profile.yml';
-const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
-const PIPELINE_PATH = 'data/pipeline.md';
-const APPLICATIONS_PATH = 'data/applications.md';
-const PROVIDERS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'providers');
+const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || path.join(DATA_ROOT, 'portals.yml');
+const PROFILE_PATH = process.env.CAREER_OPS_PROFILE || path.join(DATA_ROOT, 'config/profile.yml');
+const SCAN_HISTORY_PATH = path.join(DATA_ROOT, 'data/scan-history.tsv');
+const PIPELINE_PATH = path.join(DATA_ROOT, 'data/pipeline.md');
+const APPLICATIONS_PATH = path.join(DATA_ROOT, 'data/applications.md');
+const PROVIDERS_DIR = path.resolve(CODE_ROOT, 'providers');
 
 // Ensure required directories exist (fresh setup)
-mkdirSync('data', { recursive: true });
+const targetDataDir = path.join(DATA_ROOT, 'data');
+try {
+  mkdirSync(targetDataDir, { recursive: true });
+} catch (err) {
+  console.error(`ERROR: Could not create data directory at "${targetDataDir}": ${err.message}`);
+  process.exit(1);
+}
+
 
 const CONCURRENCY = 10;
 

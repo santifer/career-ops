@@ -3285,6 +3285,7 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
+<<<<<<< HEAD
 // ── 15. TRACKER DERIVED INDEX (#918 phase 1) ────────────────────
 // applications.md is the source of truth; applications.db is a derived index
 // rebuilt from it. Round-trip md → db → md must be lossless for clean input
@@ -8238,6 +8239,116 @@ try {
   console.warn = __origWarn;
   if (__pluginTmp) { try { rmSync(__pluginTmp, { recursive: true, force: true }); } catch {} }
 }
+
+// ── 20. PATH RESOLUTION LAYER AND OVERRIDES ───────────────────
+
+console.log('\n20. Path resolution layer and overrides');
+
+try {
+  const { getCareerOpsRoot } = await import(pathToFileURL(join(ROOT, 'path-resolver.mjs')).href);
+
+  // 1. Unset env vars should resolve to codebase root (ROOT)
+  const originalRoot = process.env.CAREER_OPS_ROOT;
+  const originalDataDir = process.env.CAREER_OPS_DATA_DIR;
+  delete process.env.CAREER_OPS_ROOT;
+  delete process.env.CAREER_OPS_DATA_DIR;
+
+  try {
+    const defaultRoot = getCareerOpsRoot();
+    if (defaultRoot === ROOT) {
+      pass('getCareerOpsRoot() defaults to codebase root when environment variables are unset');
+    } else {
+      fail(`getCareerOpsRoot() returned ${defaultRoot}, expected ${ROOT}`);
+    }
+
+    // 2. CAREER_OPS_ROOT should override the resolved path
+    const testOverridePath = join(ROOT, 'test-override-path');
+    process.env.CAREER_OPS_ROOT = testOverridePath;
+    const overriddenRoot = getCareerOpsRoot();
+    if (overriddenRoot === testOverridePath) {
+      pass('getCareerOpsRoot() respects process.env.CAREER_OPS_ROOT override');
+    } else {
+      fail(`getCareerOpsRoot() returned ${overriddenRoot}, expected ${testOverridePath}`);
+    }
+    delete process.env.CAREER_OPS_ROOT;
+
+    // 3. CAREER_OPS_DATA_DIR should override the resolved path
+    process.env.CAREER_OPS_DATA_DIR = testOverridePath;
+    const overriddenDataDirRoot = getCareerOpsRoot();
+    if (overriddenDataDirRoot === testOverridePath) {
+      pass('getCareerOpsRoot() respects process.env.CAREER_OPS_DATA_DIR override');
+    } else {
+      fail(`getCareerOpsRoot() returned ${overriddenDataDirRoot}, expected ${testOverridePath}`);
+    }
+  } finally {
+    // Restore original env vars
+    if (originalRoot) process.env.CAREER_OPS_ROOT = originalRoot;
+    else delete process.env.CAREER_OPS_ROOT;
+
+    if (originalDataDir) process.env.CAREER_OPS_DATA_DIR = originalDataDir;
+    else delete process.env.CAREER_OPS_DATA_DIR;
+  }
+
+  // 4. Test doctor.mjs respects target directory or target override when CAREER_OPS_ROOT is set
+  const tempTarget = mkdtempSync(join(ROOT, 'co-temp-target-'));
+  try {
+    process.env.CAREER_OPS_ROOT = tempTarget;
+    const r = JSON.parse(run(NODE, ['doctor.mjs', '--json']) || '{}');
+    if (r.onboardingNeeded === true && r.missing.includes('cv.md')) {
+      pass('doctor.mjs respects CAREER_OPS_ROOT default root check');
+    } else {
+      fail(`doctor.mjs with CAREER_OPS_ROOT override failed: ${JSON.stringify(r)}`);
+    }
+  } finally {
+    delete process.env.CAREER_OPS_ROOT;
+  }
+
+  // 4b. Test doctor.mjs respects CAREER_OPS_DATA_DIR override
+  try {
+    process.env.CAREER_OPS_DATA_DIR = tempTarget;
+    const r = JSON.parse(run(NODE, ['doctor.mjs', '--json']) || '{}');
+    if (r.onboardingNeeded === true && r.missing.includes('cv.md')) {
+      pass('doctor.mjs respects CAREER_OPS_DATA_DIR override check');
+    } else {
+      fail(`doctor.mjs with CAREER_OPS_DATA_DIR override failed: ${JSON.stringify(r)}`);
+    }
+  } finally {
+    delete process.env.CAREER_OPS_DATA_DIR;
+    rmSync(tempTarget, { recursive: true, force: true });
+  }
+
+  // 5. Test normalize-statuses respects CAREER_OPS_ROOT and does not touch main repo tracker
+  const tempRoot = mkdtempSync(join(ROOT, 'co-temp-root-'));
+  const tempTrackerDir = join(tempRoot, 'data');
+  mkdirSync(tempTrackerDir, { recursive: true });
+  const tempTracker = join(tempTrackerDir, 'applications.md');
+  const dummyContent = `
+# Applications
+
+| Num | Date | Company | Role | Status | Score | PDF | Report | Notes |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 2026-07-01 | TestCo | Engineer | **Applied** | 4.0 | ❌ | - | - |
+`;
+  writeFileSync(tempTracker, dummyContent, 'utf-8');
+
+  try {
+    process.env.CAREER_OPS_ROOT = tempRoot;
+    run(NODE, ['normalize-statuses.mjs']);
+    const updated = readFileSync(tempTracker, 'utf-8');
+    if (updated.includes('Aplicado') && !updated.includes('**Applied**')) {
+      pass('normalize-statuses.mjs respects CAREER_OPS_ROOT and modifies the correct tracker file');
+    } else {
+      fail(`normalize-statuses.mjs did not modify target tracker correctly, content: ${updated}`);
+    }
+  } finally {
+    delete process.env.CAREER_OPS_ROOT;
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+
+} catch (e) {
+  fail(`Path resolution layer test crashed: ${e.message}`);
+}
+
 
 // ── SUMMARY ─────────────────────────────────────────────────────
 

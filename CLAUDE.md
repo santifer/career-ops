@@ -25,6 +25,10 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 - **Procedural rules** (house rules, custom workflows, output preferences, "always/never do X" automations) → `modes/_custom.md` (create it from `modes/_custom.template.md` if missing).
 - **NEVER** edit `modes/_shared.md`, `CLAUDE.md`, or any other system file for user-specific content — those get overwritten on update.
 
+**Path Resolution Override:**
+The User Layer location can be overridden using the `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` environment variables. If set, User Layer files are loaded and written relative to that path, while System Layer files remain relative to the repository. Precedence: `CAREER_OPS_TRACKER` overrides specific tracker file path over `CAREER_OPS_ROOT` directory.
+
+
 ## Source-of-Truth Boundary (CRITICAL)
 
 User-facing content (CV, cover letters, form answers, recruiter outreach, application form responses) is generated **exclusively** from these files plus statements the user makes directly in the current conversation:
@@ -62,6 +66,7 @@ Auto-memory **never** holds content claims about the user's work, technical acco
 ### Where rules live
 
 Rules belong in files the harness reads automatically — `CLAUDE.md`, `AGENTS.md`, `modes/*.md`, `MEMORY.md`. Do not create sidecar documentation that requires manual loading. Reinforcement-without-enforcement decays.
+
 
 ## Update Check
 

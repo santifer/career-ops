@@ -10,12 +10,14 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { discoverPlugins, pluginRoots, pluginStatus } from './plugins/_engine.mjs';
+import { getCareerOpsRoot } from './path-resolver.mjs';
+
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const targetIdx = argv.indexOf('--target');
 const projectRoot =
-  targetIdx !== -1 && argv[targetIdx + 1] ? argv[targetIdx + 1] : __dirname;
+  targetIdx !== -1 && argv[targetIdx + 1] ? argv[targetIdx + 1] : getCareerOpsRoot();
 const JSON_OUT = argv.includes('--json');
 // --strict adds a live ATS-slug probe of portals.yml (network). Opt-in so the
 // default `npm run doctor` stays fast and fully offline.
@@ -172,7 +174,7 @@ function checkPrereq({ path, fix }) {
 }
 
 function checkFonts() {
-  const fontsDir = join(projectRoot, 'fonts');
+  const fontsDir = join(__dirname, 'fonts');
   if (!existsSync(fontsDir)) {
     return {
       pass: false,

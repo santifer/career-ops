@@ -21,11 +21,19 @@ import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
+import { getCareerOpsRoot } from './path-resolver.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Ensure output directory exists (fresh setup)
-mkdirSync(resolve(__dirname, 'output'), { recursive: true });
+const outputDir = resolve(getCareerOpsRoot(), 'output');
+try {
+  mkdirSync(outputDir, { recursive: true });
+} catch (err) {
+  console.error(`ERROR: Could not create output directory at "${outputDir}": ${err.message}`);
+  process.exit(1);
+}
+
 
 /**
  * Normalize text for ATS compatibility by converting problematic Unicode.

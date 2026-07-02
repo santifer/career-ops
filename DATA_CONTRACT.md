@@ -91,3 +91,11 @@ These files contain system logic, scripts, templates, and instructions that impr
 **If a file is in the User Layer, no update process may read, modify, or delete it.**
 
 **If a file is in the System Layer, it can be safely replaced with the latest version from the upstream repo.**
+
+## Custom Data Directory
+
+By default, all User Layer files reside inside the project repository root. You can configure a separate, external directory for your personal data using environment variables.
+
+- **`CAREER_OPS_ROOT`** or **`CAREER_OPS_DATA_DIR`**: Set this to the path of your custom data directory.
+- When set, all User Layer files/directories (e.g. `cv.md`, `config/profile.yml`, `data/`, `reports/`, `output/`, `portals.yml`) will be resolved and written relative to that path.
+- System Layer files (scripts, templates, `modes/` prompt files) continue to be resolved relative to the codebase/repository root, keeping code and personal data completely separate.

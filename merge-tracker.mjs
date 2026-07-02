@@ -21,18 +21,16 @@ import { execFileSync } from 'child_process';
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
-import { roleFuzzyMatch } from './role-matcher.mjs';
+import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 import { LEGACY_COLMAP, detectColumns } from './tracker-parse.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+
+const CAREER_OPS = getCareerOpsRoot();
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
 // CAREER_OPS_TRACKER overrides the path (used by tests and non-standard layouts).
-const APPS_FILE_RAW = process.env.CAREER_OPS_TRACKER
-  ? process.env.CAREER_OPS_TRACKER
-  : existsSync(join(CAREER_OPS, 'data/applications.md'))
-    ? join(CAREER_OPS, 'data/applications.md')
-    : join(CAREER_OPS, 'applications.md');
+const APPS_FILE_RAW = resolveTrackerPath(CAREER_OPS);
 const APPS_FILE = canonicalizeTrackerPath(APPS_FILE_RAW);
+
 const TRACKER_DIR = dirname(APPS_FILE);
 // CAREER_OPS_ADDITIONS overrides the additions dir (used by tests, mirrors CAREER_OPS_TRACKER).
 const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS

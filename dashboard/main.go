@@ -215,7 +215,13 @@ func (m appModel) View() string {
 }
 
 func main() {
-	pathFlag := flag.String("path", ".", "Path to career-ops directory")
+	defaultPath := "."
+	if envPath := os.Getenv("CAREER_OPS_ROOT"); envPath != "" {
+		defaultPath = envPath
+	} else if envPath := os.Getenv("CAREER_OPS_DATA_DIR"); envPath != "" {
+		defaultPath = envPath
+	}
+	pathFlag := flag.String("path", defaultPath, "Path to career-ops directory")
 	flag.Parse()
 
 	careerOpsPath := *pathFlag
