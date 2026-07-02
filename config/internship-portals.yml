@@ -13,7 +13,7 @@ scan_history:
 freshness_filter:
   enabled: true
   max_age_days: 14
-  keep_undated: false
+  keep_undated: true
 
 title_filter:
   positive:
