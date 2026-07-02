@@ -13,6 +13,11 @@ on:
 permissions:
   contents: read
 
+# Cancel superseded runs when the same PR is pushed again.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     name: Validate registry entries
@@ -33,6 +38,10 @@ jobs:
         run: node validate-plugin-registry.mjs --deep
 
       - name: One plugin per PR
+        # base_ref goes through env, never ${{ }}-spliced into the script —
+        # anything expanded inside run: is literal shell code (template injection).
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'plugins-registry/*.json' plugins-registry.json | wc -l)
+          CHANGED=$(git diff --name-only "origin/$BASE_REF"...HEAD -- 'plugins-registry/*.json' plugins-registry.json | wc -l)
           if [ "$CHANGED" -gt 1 ]; then echo "A registry PR may add or bump exactly one plugins-registry/<id>.json file"; exit 1; fi
