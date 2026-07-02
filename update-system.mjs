@@ -109,6 +109,8 @@ const SYSTEM_PATHS = [
   'role-matcher.mjs',
   'tracker-utils.mjs',
   'tracker-parse.mjs',
+  'set-status.mjs',
+  'set-status-tests.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
