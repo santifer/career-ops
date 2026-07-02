@@ -538,8 +538,8 @@ search_queries:
 #
 # - name: Example Workday Co
 #   careers_url: https://exampleco.wd5.myworkdayjobs.com/en-US/exampleco-careers  # any <tenant>.wd<N>.myworkdayjobs.com
-#   max_pages: 50          # optional page cap (20 jobs/page, default 50, max 500) —
-#                          # raise it for a tenant with 1000+ open postings (a warning
+#   max_pages: 100         # optional page cap (20 jobs/page, default 100, max 1500) —
+#                          # raise it for a tenant with 2000+ open postings (a warning
 #                          # is logged if the cap truncates real results)
 #   enabled: true
 #

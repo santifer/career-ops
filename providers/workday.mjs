@@ -95,7 +95,12 @@ async function fetchPageWithRetry(ctx, api, opts) {
       lastErr = err;
       if (attempt === MAX_RETRIES || !isRetryableError(err)) throw err;
       const backoff = Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS);
-      const delayMs = parseRetryAfterMs(err?.retryAfter) ?? (backoff + Math.random() * 250);
+      // A server-supplied Retry-After is honored, but still clamped — an
+      // unbounded value (hostile or just misconfigured: Retry-After: 86400)
+      // would otherwise stall this tenant's fetch for as long as the server
+      // says, defeating the whole point of a bounded backoff.
+      const retryAfterMs = parseRetryAfterMs(err?.retryAfter);
+      const delayMs = retryAfterMs !== null ? Math.min(retryAfterMs, RETRY_MAX_DELAY_MS * 4) : (backoff + Math.random() * 250);
       await sleep(delayMs, ctx);
     }
   }
@@ -202,7 +207,7 @@ export default {
     // Some tenants' CXS responses never include postedOn at all (e.g.
     // adventhealth, on every page). Early-stop can't apply then — there's
     // no dated posting to recognize as "past the window".
-    let sawAnyDatedPosting = jobs.some((j) => typeof j.postedAt === 'number');
+    const sawAnyDatedPosting = jobs.some((j) => typeof j.postedAt === 'number');
 
     // Zero dated postings on page 0, --include-undated off, --since-bounded
     // scan: further pagination is pure waste — every posting from this
@@ -234,7 +239,6 @@ export default {
         }
         const pageJobs = parseWorkdayResponse(json, entry);
         jobs.push(...pageJobs);
-        if (!sawAnyDatedPosting && pageJobs.some((j) => typeof j.postedAt === 'number')) sawAnyDatedPosting = true;
         if (total === null) {
           const postings = Array.isArray(json?.jobPostings) ? json.jobPostings : [];
           if (postings.length < PAGE_SIZE) break; // short page → last page reached

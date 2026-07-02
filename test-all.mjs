@@ -10051,6 +10051,24 @@ try {
     fail(`workday retry-after: expected first backoff delay 1000ms, got ${JSON.stringify(retrySleepCalls)}`);
   }
 
+  // fetch() retry — a hostile or misconfigured Retry-After (e.g. 86400s = a
+  // full day) must not be honored verbatim: it's clamped to
+  // RETRY_MAX_DELAY_MS * 4 (32s) so a single bad header can't stall a
+  // tenant's fetch indefinitely, defeating the point of a bounded backoff.
+  let hostileRetrySleepCalls = [];
+  let hostileRetryAttempts = 0;
+  const hostileRetryEntry = { name: 'HostileRetryCo', careers_url: 'https://hostileretryco.wd5.myworkdayjobs.com/careers' };
+  await workday.fetch(hostileRetryEntry, mkWorkdayCtx(async () => {
+    hostileRetryAttempts++;
+    if (hostileRetryAttempts === 1) { const err = new Error('HTTP 429'); err.status = 429; err.retryAfter = '86400'; throw err; }
+    return { total: 0, jobPostings: [] };
+  }, { sleep: async (ms) => { hostileRetrySleepCalls.push(ms); } }));
+  if (hostileRetrySleepCalls[0] === 32_000) {
+    pass('workday.fetch() clamps an oversized Retry-After to RETRY_MAX_DELAY_MS * 4');
+  } else {
+    fail(`workday retry-after clamp: expected 32000ms, got ${JSON.stringify(hostileRetrySleepCalls)}`);
+  }
+
   // fetch() retry — a non-retryable 4xx (e.g. malformed request) breaks
   // immediately, without wasting retry attempts.
   let non429Attempts = 0;
