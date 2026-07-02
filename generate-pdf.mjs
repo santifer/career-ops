@@ -288,7 +288,21 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+  const result = await renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+
+  // Record the PDF<->report linkage for the dashboard's d/D regenerate hotkeys.
+  // Manifest bookkeeping lives here (the CLI entry) where reportNum + inputPath
+  // are in scope — not in renderHtmlToPdf, which is a reusable render primitive
+  // also called by generate-cover-letter.mjs (which has no report number).
+  try {
+    updatePDFManifest(reportNum, outputPath, inputPath, format);
+    console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
+  } catch (err) {
+    // The PDF itself succeeded — never fail the run over manifest bookkeeping.
+    console.error(`⚠️  Manifest update failed: ${err.message}`);
+  }
+
+  return result;
 }
 
 /**
@@ -396,14 +410,6 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     console.log(`✅ PDF generated: ${outputPath}`);
     console.log(`📊 Pages: ${pageCount}`);
     console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
-
-    try {
-      updatePDFManifest(reportNum, outputPath, inputPath, format);
-      console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
-    } catch (err) {
-      // The PDF itself succeeded — never fail the run over manifest bookkeeping.
-      console.error(`⚠️  Manifest update failed: ${err.message}`);
-    }
 
     return { outputPath, pageCount, size: pdfBuffer.length };
   } finally {
