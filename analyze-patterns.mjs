@@ -56,9 +56,13 @@ const MIN_THRESHOLD = minThresholdIdx !== -1 && args[minThresholdIdx + 1] !== un
 // Minimum per-vendor sample before a channel-yield recommendation fires. Kept
 // modest (small trackers) but high enough that one unlucky bucket isn't a claim.
 const minVendorNIdx = args.indexOf('--min-vendor-n');
-const MIN_VENDOR_N = minVendorNIdx !== -1 && args[minVendorNIdx + 1] !== undefined
-  ? (Number.isNaN(parseInt(args[minVendorNIdx + 1])) ? 8 : parseInt(args[minVendorNIdx + 1]))
-  : 8;
+const MIN_VENDOR_N = (() => {
+  if (minVendorNIdx === -1 || args[minVendorNIdx + 1] === undefined) return 8;
+  const n = parseInt(args[minVendorNIdx + 1], 10);
+  // Reject 0/negative: a floor of 0 makes sufficientSample always true and
+  // silently defeats the "don't claim on noise" guard the whole feature rests on.
+  return Number.isNaN(n) || n < 1 ? 8 : n;
+})();
 
 // --- Status normalization (mirrors verify-pipeline.mjs) ---
 const ALIASES = {
