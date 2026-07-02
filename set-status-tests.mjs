@@ -193,6 +193,14 @@ const TRACKER_10 = `# Applications Tracker
   } else {
     fail('note: retry duplicated the note');
   }
+  // A note that itself contains "; " must also stay idempotent.
+  runSetStatus(['3', 'Responded', '--note', 'Called; left voicemail'], sb);
+  runSetStatus(['3', 'Responded', '--note', 'Called; left voicemail'], sb);
+  if ((readTracker(sb).match(/left voicemail/g) || []).length === 1) {
+    pass('note: retry with semicolon-bearing note does not duplicate');
+  } else {
+    fail('note: semicolon-bearing note duplicated on retry');
+  }
   // Pipes/newlines in a note would corrupt the table — must be sanitized.
   runSetStatus(['2', 'Applied', '--note', 'weird | note'], sb);
   const after3 = readTracker(sb);
@@ -216,6 +224,13 @@ const TRACKER_10 = `# Applications Tracker
     pass('no-op: same status again exits 0, changed:false, file untouched');
   } else {
     fail(`no-op: code=${r.code} changed=${parsed?.changed}\n${r.stdout}${r.stderr}`);
+  }
+  // #1430 hook must fire only on a real transition into Applied — a re-run
+  // must not invite the consumer to seed a duplicate follow-up.
+  if (parsed && parsed.followupSeedCandidate === undefined) {
+    pass('no-op: followupSeedCandidate absent on idempotent Applied re-run');
+  } else {
+    fail(`no-op: followupSeedCandidate leaked on re-run\n${r.stdout}`);
   }
   rmSync(sb.dir, { recursive: true, force: true });
 }

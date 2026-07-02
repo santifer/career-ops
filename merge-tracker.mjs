@@ -21,7 +21,7 @@ import { execFileSync } from 'child_process';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import { LEGACY_COLMAP, detectColumns } from './tracker-parse.mjs';
-import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic } from './tracker-utils.mjs';
+import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic, normalizeCompany, cell } from './tracker-utils.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md
@@ -142,21 +142,6 @@ function validateStatus(status) {
 }
 
 /**
- * Normalize company names for duplicate lookup during tracker merges.
- *
- * Company names can contain spaces, punctuation, or branding variants in the
- * tracker and incoming TSV rows. Removing non-alphanumeric characters gives the
- * merge step a stable same-company key before it compares report numbers or
- * fuzzy role titles.
- *
- * @param {string} name - Company name from the tracker or addition row.
- * @returns {string} Lowercase alphanumeric company key.
- */
-function normalizeCompany(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-/**
  * Extract the bracketed report number from a Markdown report link.
  *
  * Report-number equality is an exact duplicate signal, but only after company
@@ -197,16 +182,6 @@ function parseScore(s) {
 // lockstep (see imports above). COLMAP stays mutable here — it is reassigned to
 // the detected layout once the table is read (below).
 let COLMAP = LEGACY_COLMAP;
-
-// Neutralize characters that would corrupt the applications.md table. Both this
-// file and tracker-parse.mjs read rows with a raw `line.split('|')`, so a literal
-// pipe or a newline in a free-text value (company/role/location/notes) would shift
-// every later column. Replace rather than backslash-escape: `\|` would still split
-// on the inner pipe. This is additive — normal cells are unchanged; only values
-// that would already break the table get sanitized (also keeps the web reader safe).
-function cell(v) {
-  return String(v ?? '').replace(/[\r\n]+/g, ' ').replace(/\s*\|\s*/g, ' / ').trim();
-}
 
 // Build a tracker row string matching the detected layout (with or without the
 // optional Location column) so writes round-trip through the same schema.

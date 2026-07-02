@@ -41,7 +41,7 @@ import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import {
   rebuildRow, resolveTrackerPath, trackerLockDirFor, acquireTrackerLock,
-  writeFileAtomic, loadCanonicalStates, resolveCanonicalState,
+  writeFileAtomic, loadCanonicalStates, resolveCanonicalState, normalizeCompany, cell,
 } from './tracker-utils.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
@@ -96,7 +96,7 @@ const [selector, stateInput] = positional;
  * @returns {never}
  */
 function failWith(exitCode, code, message, extra = {}) {
-  if (flags?.json) {
+  if (flags.json) {
     console.log(JSON.stringify({ error: message, code, ...extra }));
   }
   console.error(`❌ ${message}`);
@@ -132,29 +132,6 @@ if (!existsSync(APPS_FILE)) {
 }
 
 /**
- * Normalize company names to the same key merge-tracker uses for dedup, so
- * "set-status globex" finds the row merge-tracker would treat as Globex.
- *
- * @param {string} name - Company name from the CLI or a tracker row.
- * @returns {string} Lowercase alphanumeric company key.
- */
-function normalizeCompany(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-/**
- * Neutralize characters that would corrupt the markdown table. Same rule as
- * merge-tracker: rows are read with a raw split('|'), so a literal pipe or
- * newline in a note would shift every later column.
- *
- * @param {string} v - Free-text value headed for a table cell.
- * @returns {string} Table-safe value.
- */
-function cell(v) {
-  return String(v ?? '').replace(/[\r\n]+/g, ' ').replace(/\s*\|\s*/g, ' / ').trim();
-}
-
-/**
  * Find the tracker row matching the CLI selector.
  *
  * @param {object[]} rows - Parsed data rows (parseTrackerRow output + lineIdx).
@@ -185,19 +162,23 @@ function resolveRow(rows) {
   if (matches.length > 1) {
     const candidates = matches.map(r => ({ num: r.num, company: r.company, role: r.role }));
     const listing = candidates.map(c => `#${c.num}\t${c.company}\t${c.role}`).join('\n');
-    if (flags.json) {
-      console.log(JSON.stringify({ error: `Company "${selector}" matches ${matches.length} rows`, code: 'ambiguous', candidates }));
-    }
-    console.error(`❌ Company "${selector}" matches ${matches.length} rows — pass the # or narrow with --role:\n${listing}`);
-    process.exit(EXIT_AMBIGUOUS);
+    failWith(EXIT_AMBIGUOUS, 'ambiguous',
+      `Company "${selector}" matches ${matches.length} rows — pass the # or narrow with --role:\n${listing}`,
+      { candidates });
   }
   return matches[0];
 }
 
 // ── locked read-modify-write ─────────────────────────────────────
 
-const lock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), { tracker: APPS_FILE });
-process.once('exit', () => lock.release());
+// Dry-run never writes, so it must not hold the exclusive lock: a read-only
+// preview should not block (or be blocked by) merge-tracker or another
+// set-status writer. A stale read is acceptable for a preview.
+const lock = flags.dryRun ? null : await acquireTrackerLock(trackerLockDirFor(APPS_FILE), { tracker: APPS_FILE });
+// Safety net: failWith/failUsage/resolveRow call process.exit() directly and
+// skip the explicit release below. release() is idempotent, so both firing
+// on the happy path is fine.
+if (lock) process.once('exit', () => lock.release());
 
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
@@ -230,7 +211,9 @@ if (note) {
     failWith(EXIT_USAGE, 'no-notes-column', 'Tracker has no Notes column — cannot apply --note');
   }
   const existing = parts[colmap.notes] ?? '';
-  const hasNote = existing.split(';').map(s => s.trim()).includes(note);
+  // Substring check keeps retries idempotent even when the note itself
+  // contains "; " — a segment-wise comparison would re-append it forever.
+  const hasNote = existing.includes(note);
   if (!hasNote) {
     parts[colmap.notes] = existing && existing !== '—' && existing !== '-' ? `${existing}; ${note}` : note;
     noteChanged = true;
@@ -243,7 +226,7 @@ if (changed && !flags.dryRun) {
   lines[target.lineIdx] = rebuildRow(parts);
   writeFileAtomic(APPS_FILE, lines.join('\n'));
 }
-lock.release();
+lock?.release();
 
 // ── report ───────────────────────────────────────────────────────
 
@@ -256,7 +239,10 @@ const result = {
   newStatus,
   ...(note != null ? { note } : {}),
   ...(flags.dryRun ? { dryRun: true } : {}),
-  ...(newStatus === 'Applied' ? { followupSeedCandidate: true } : {}),
+  // Fire the #1430 hook only on an actual transition INTO Applied — an
+  // idempotent re-run of an already-Applied row must not invite a consumer
+  // to seed a duplicate follow-up.
+  ...(statusChanged && newStatus === 'Applied' ? { followupSeedCandidate: true } : {}),
   tracker: APPS_FILE,
 };
 
@@ -265,7 +251,7 @@ if (flags.json) {
 } else {
   const verb = flags.dryRun ? 'would set' : changed ? 'set' : 'already';
   console.log(`✅ #${target.num} ${target.company} — ${target.role}: ${verb} ${oldStatus} → ${newStatus}${note ? ` (note: ${note})` : ''}`);
-  if (newStatus === 'Applied') {
+  if (statusChanged && !flags.dryRun && newStatus === 'Applied') {
     console.error('ℹ️  Status is Applied — consider seeding follow-ups in data/follow-ups.md (#1430: node followup-cadence.mjs)');
   }
 }

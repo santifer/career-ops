@@ -36,6 +36,37 @@ export function rebuildRow(parts) {
 }
 
 /**
+ * Normalize company names for same-company lookups across tracker scripts.
+ *
+ * Company names can contain spaces, punctuation, or branding variants in the
+ * tracker and incoming rows. Removing non-alphanumeric characters gives every
+ * consumer (merge-tracker dedup, set-status row resolution) the same stable
+ * company key, so a row one script would match is never missed by another.
+ *
+ * @param {string} name - Company name from the tracker or an input row.
+ * @returns {string} Lowercase alphanumeric company key.
+ */
+export function normalizeCompany(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * Neutralize characters that would corrupt the applications.md table.
+ *
+ * Tracker rows are read with a raw `line.split('|')`, so a literal pipe or a
+ * newline in a free-text value (company/role/location/notes) would shift every
+ * later column. Replace rather than backslash-escape: `\|` would still split
+ * on the inner pipe. Additive — normal cells are unchanged; only values that
+ * would already break the table get sanitized.
+ *
+ * @param {*} v - Free-text value headed for a table cell.
+ * @returns {string} Table-safe value.
+ */
+export function cell(v) {
+  return String(v ?? '').replace(/[\r\n]+/g, ' ').replace(/\s*\|\s*/g, ' / ').trim();
+}
+
+/**
  * Resolve the tracker file path for the current workspace.
  *
  * Supports both layouts: `data/applications.md` (boilerplate) and
