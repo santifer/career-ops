@@ -70,4 +70,6 @@ Paste job URLs below as `- [ ] {url}` then run `/career-ops pipeline`.
 - [ ] https://www.optiver.com/join-us/jobs/technology/chicago/software-engineer-intern-summer-2027-chicago/ | Optiver | Software Engineer Intern (Summer 2027 - Chicago)
 - [ ] https://jobs.ashbyhq.com/notion/5b15697c-fa91-4511-9482-c98a6ff29f90 | Notion | Software Engineer Intern (Fall 2026)San Francisco, California
 
+- [ ] https://jobs.lever.co/palantir/d5486403-c050-4920-b2e0-91b69b61ebb2 | Palantir | Forward Deployed Software Engineer, Internship - Commercial | Chicago, IL
+
 ## Processed
