@@ -9836,6 +9836,26 @@ try {
   if (noLocParsed[2]?.location === 'Remote, Hungary') pass('parseWorkdayResponse prefers locationsText over URL path when present');
   else fail(`parseWorkdayResponse locationsText priority: expected "Remote, Hungary", got ${JSON.stringify(noLocParsed[2]?.location)}`);
 
+  // parseWorkdayResponse — malformed percent-encoding in the URL path segment
+  // must not throw (decodeURIComponent) and must not abort processing of
+  // other job records in the same response.
+  const malformedPathJson = {
+    jobPostings: [
+      { title: 'Broken Encoding', externalPath: '/job/%E0%A4%A/Broken-Encoding_JR1' },
+      { title: 'Fine Job', externalPath: '/job/Berlin/Fine-Job_JR2' },
+    ],
+  };
+  try {
+    const malformedParsed = parseWorkdayResponse(malformedPathJson, entry);
+    if (malformedParsed.length === 2 && malformedParsed[1].location === 'Berlin') {
+      pass('parseWorkdayResponse tolerates malformed percent-encoding without dropping other records');
+    } else {
+      fail(`parseWorkdayResponse malformed encoding result = ${JSON.stringify(malformedParsed)}`);
+    }
+  } catch (e4) {
+    fail(`parseWorkdayResponse should not throw on malformed percent-encoding: ${e4.message}`);
+  }
+
   // parseWorkdayResponse — empty / malformed input
   if (parseWorkdayResponse({}, entry).length === 0) pass('parseWorkdayResponse({}) → empty result');
   else fail('parseWorkdayResponse({}) should be empty');

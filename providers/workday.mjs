@@ -55,7 +55,10 @@ function parsePostedOn(label) {
 // Use it as fallback when locationsText is absent (common on some tenants).
 function locationFromPath(externalPath) {
   const m = String(externalPath || '').match(/\/job\/([^/]+)\//);
-  return m ? decodeURIComponent(m[1]).replace(/-/g, ' ') : '';
+  if (!m) return '';
+  let segment;
+  try { segment = decodeURIComponent(m[1]); } catch { segment = m[1]; }
+  return segment.replace(/-/g, ' ');
 }
 
 export function parseWorkdayResponse(json, entry) {
