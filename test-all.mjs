@@ -3837,6 +3837,30 @@ try {
   }
   rmSync(ready, { recursive: true, force: true });
 
+  // Issue #782: 3 required files present, modes/_profile.md absent but template exists.
+  // doctor.mjs --json must auto-copy the template and return onboardingNeeded:false.
+  const issue782 = mkdtempSync(join(tmpdir(), 'co-782-'));
+  mkdirSync(join(issue782, 'config'), { recursive: true });
+  mkdirSync(join(issue782, 'modes'), { recursive: true });
+  // The 3 user-input files exist (simulating a real user who completed onboarding)
+  for (const f of ['cv.md', 'config/profile.yml', 'portals.yml']) {
+    writeFileSync(join(issue782, f), 'x');
+  }
+  // Template exists (present in the real repo clone), but _profile.md was never created
+  writeFileSync(join(issue782, 'modes', '_profile.template.md'), 'template content');
+  const i782 = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', issue782]) || '{}');
+  if (
+    i782.onboardingNeeded === false &&
+    Array.isArray(i782.missing) && i782.missing.length === 0 &&
+    Array.isArray(i782.autoCopied) && i782.autoCopied.includes('modes/_profile.md')
+  ) {
+    pass('Issue #782: template auto-copied → no false onboarding trigger');
+  } else {
+    fail(`Issue #782 not fixed: ${JSON.stringify(i782)}`);
+  }
+  rmSync(issue782, { recursive: true, force: true });
+
+
   const claudeDoc = readFile('CLAUDE.md');
   if (
     /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&

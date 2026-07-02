@@ -126,10 +126,15 @@ Some users enable plugins (external integrations). If an enabled plugin ships a 
 node doctor.mjs --json
 ```
 
-Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...]}`, where `missing` lists whichever of `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml` are absent. `warnings` is reserved for non-blocking setup signals.
+Output: `{"onboardingNeeded": <bool>, "missing": [...], "autoCopied": [...], "warnings": [...]}`, where:
+- `missing` lists whichever of `cv.md`, `config/profile.yml`, `portals.yml` are absent (require user input)
+- `autoCopied` lists any template-backed files auto-provisioned by the check itself (`modes/_profile.md`, `modes/_custom.md`) — these are never overwritten once they exist
+- `warnings` is reserved for non-blocking setup signals
 
-- If `modes/_profile.md` is in `missing`, copy it silently from `modes/_profile.template.md` (the user's customization file — never overwritten by updates). It's then resolved.
-- **If, after that, `onboardingNeeded` is still true (any of `cv.md` / `config/profile.yml` / `portals.yml` is missing), enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
+> **Note:** `doctor.mjs --json` now auto-copies `modes/_profile.md` (from `modes/_profile.template.md`) and `modes/_custom.md` (from `modes/_custom.template.md`) before computing `onboardingNeeded`. You do not need to copy these files manually. The returned state already reflects the post-copy reality (fixes issue #782).
+
+- **If `onboardingNeeded` is true (any of `cv.md` / `config/profile.yml` / `portals.yml` is missing), enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
+
 
 #### Step 0: Free Tier Check
 
