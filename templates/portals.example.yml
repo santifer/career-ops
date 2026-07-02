@@ -149,6 +149,8 @@
 # -- Title filter --
 # The scanner uses these keywords to decide if a title is relevant.
 # At least 1 positive must match AND 0 negatives must match (case-insensitive).
+#
+# skip_tiers: [intern, entry]  # optional: skip listings by seniority tier (note: unrecognized/plain titles fall back to 'mid')
 
 title_filter:
   positive:

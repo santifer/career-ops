@@ -105,6 +105,7 @@ const SYSTEM_PATHS = [
   'update-system.mjs',
   'reserve-report-num.mjs',
   'scan.mjs',
+  'classify-tier.mjs',
   'scan-ats-full.mjs',
   'match-star.mjs',
   'providers/',
