@@ -38,6 +38,11 @@ const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/
 // Anchoring on `(?:^|-)` lets the releases-API fallback parse our tags,
 // which Release Please always prefixes with the component name.
 export const SEMVER_RE = /(?:^|-)v?(\d+\.\d+\.\d+)$/i;
+const DEFAULT_GIT_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_GIT_TIMEOUT_MS, 30000);
+const DEFAULT_GIT_FETCH_TIMEOUT_MS = parsePositiveInt(
+  process.env.CAREER_OPS_GIT_FETCH_TIMEOUT_MS,
+  Math.max(DEFAULT_GIT_TIMEOUT_MS, 300000),
+);
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
@@ -268,8 +273,33 @@ function newestBackupBranch(branches) {
   return timestamped[0]?.branch || branchList[0];
 }
 
+export function parsePositiveInt(value, fallback) {
+  const parsed = Number.parseInt(String(value || ''), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export function gitTimeoutMs(args) {
+  return args[0] === 'fetch' ? DEFAULT_GIT_FETCH_TIMEOUT_MS : DEFAULT_GIT_TIMEOUT_MS;
+}
+
+export function reexecTimeoutMs() {
+  return Math.max(120000, DEFAULT_GIT_FETCH_TIMEOUT_MS + DEFAULT_GIT_TIMEOUT_MS + 60000);
+}
+
+function describeGitCommand(args) {
+  return `git ${args.join(' ')}`;
+}
+
 function gitIn(root, ...args) {
-  return execFileSync('git', args, { cwd: root, encoding: 'utf-8', timeout: 30000 }).trim();
+  const timeout = gitTimeoutMs(args);
+  try {
+    return execFileSync('git', args, { cwd: root, encoding: 'utf-8', timeout }).trim();
+  } catch (err) {
+    if (err?.code === 'ETIMEDOUT' || err?.signal === 'SIGTERM') {
+      throw new Error(`${describeGitCommand(args)} timed out after ${Math.round(timeout / 1000)}s. If your network is slow, retry or set CAREER_OPS_GIT_FETCH_TIMEOUT_MS to a larger value.`);
+    }
+    throw err;
+  }
 }
 
 function git(...args) {
@@ -599,7 +629,7 @@ async function apply() {
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',
-          timeout: 120000,
+          timeout: reexecTimeoutMs(),
           env: {
             ...process.env,
             CAREER_OPS_UPDATE_REEXEC: '1',

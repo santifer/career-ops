@@ -552,7 +552,7 @@ console.log('\n5. Data contract validation');
 // Check system files exist
 const systemFiles = [
   'CLAUDE.md', 'CODEX.md', 'OPENCODE.md', 'VERSION', 'DATA_CONTRACT.md', 'docs/CODEX.md',
-  'modes/_shared.md', 'modes/_profile.template.md',
+  'modes/_shared.md', 'modes/_profile.template.md', 'modes/_custom.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
   'modes/heuristics/recruiter-side.md',
   'templates/states.yml', 'templates/cv-template.html',
@@ -573,7 +573,7 @@ for (const f of systemFiles) {
 
 // Check user files are NOT tracked (gitignored)
 const userFiles = [
-  'config/profile.yml', 'modes/_profile.md', 'portals.yml',
+  'config/profile.yml', 'modes/_profile.md', 'modes/_custom.md', 'portals.yml',
 ];
 for (const f of userFiles) {
   const tracked = run('git', ['ls-files', f]);
@@ -766,7 +766,7 @@ if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('
   fail('renderHtmlToPdf does not read manifest metadata from opts');
 }
 try {
-  const { repoRelativeManifestPath } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const { repoRelativeManifestPath, injectPrintPageCss } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
   const insideHtmlPath = join(ROOT, 'templates', 'cv-template.html');
   const outsideHtmlPath = join(dirname(ROOT), 'outside-cv-template.html');
 
@@ -780,6 +780,26 @@ try {
     pass('PDF manifest leaves HTML column blank when source HTML is missing or outside the repo');
   } else {
     fail('PDF manifest mishandles missing or external source HTML paths');
+  }
+
+  const injectedPageCss = injectPrintPageCss('<html><head><title>CV</title></head><body></body></html>', 'letter');
+  if (
+    injectedPageCss.includes('@page { size: Letter; margin: 0.6in; }') &&
+    injectedPageCss.indexOf('career-ops-page-setup') < injectedPageCss.indexOf('</head>')
+  ) {
+    pass('PDF renderer injects CSS page size and margins before rendering');
+  } else {
+    fail('PDF renderer does not inject CSS page size/margins into the document head');
+  }
+
+  if (
+    generatePdfScript.includes('preferCSSPageSize: true') &&
+    generatePdfScript.includes("right: '0'") &&
+    generatePdfScript.includes('injectPrintPageCss(html, format)')
+  ) {
+    pass('PDF renderer uses CSS @page margins instead of Playwright margins');
+  } else {
+    fail('PDF renderer may clip right-aligned content by ignoring CSS page sizing (#1341)');
   }
 } catch (e) {
   fail(`PDF manifest path helper test crashed: ${e.message}`);
@@ -808,12 +828,24 @@ if (updateSystemScript.includes("'CODEX.md'")) {
   fail('update-system does not preserve CODEX.md');
 }
 
+if (
+  updateSystemScript.includes('CAREER_OPS_GIT_TIMEOUT_MS') &&
+  updateSystemScript.includes('CAREER_OPS_GIT_FETCH_TIMEOUT_MS') &&
+  /args\[0\]\s*===\s*['"]fetch['"]/.test(updateSystemScript) &&
+  updateSystemScript.includes('timed out after') &&
+  updateSystemScript.includes('timeout: reexecTimeoutMs()')
+) {
+  pass('update-system gives fetch/reexec a longer configurable timeout with readable failures');
+} else {
+  fail('update-system still risks a bare 30s git fetch timeout (#1393)');
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
 
 const expectedModes = [
-  '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
+  '_shared.md', '_profile.template.md', '_custom.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md',
@@ -836,6 +868,12 @@ if (shared.includes('_profile.md')) {
   fail('_shared.md does NOT reference _profile.md');
 }
 
+if (shared.includes('_custom.md')) {
+  pass('_shared.md references _custom.md');
+} else {
+  fail('_shared.md does NOT reference _custom.md');
+}
+
 for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
   if (!fileExists(skillPath)) {
     fail(`${skillPath} is missing`);
@@ -846,6 +884,15 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
     pass(`${skillPath} exposes /career-ops latex in discovery menu`);
   } else {
     fail(`${skillPath} does not expose /career-ops latex in discovery menu`);
+  }
+
+  if (
+    skill.includes('modes/_custom.md') &&
+    skill.includes('[content of modes/_custom.md if exists]')
+  ) {
+    pass(`${skillPath} loads modes/_custom.md for direct and delegated modes`);
+  } else {
+    fail(`${skillPath} does not load modes/_custom.md for career-ops modes (#1388)`);
   }
 }
 
@@ -5770,6 +5817,13 @@ try {
     pass('CLAUDE.md routes custom rules to modes/_custom.md + seeds it from the template');
   } else {
     fail('CLAUDE.md does not reference modes/_custom.md / its template — agents will not use it (#1198)');
+  }
+
+  const agentsMd = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
+  if (agentsMd.includes('modes/_custom.md') && agentsMd.includes('modes/_custom.template.md')) {
+    pass('AGENTS.md routes procedural customizations to modes/_custom.md');
+  } else {
+    fail('AGENTS.md does not document modes/_custom.md as a user-layer customization file (#1388)');
   }
 } catch (e) {
   fail(`custom instructions test crashed: ${e.message}`);
