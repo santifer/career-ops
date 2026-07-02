@@ -1038,6 +1038,17 @@ if (
   fail('eval modes do not bound company/comp research against recursive fanout (#1235)');
 }
 
+if (
+  ofertaMode.includes('### Geo-mismatch check') &&
+  ofertaMode.includes('binding attendance requirement') &&
+  ofertaMode.includes('⚠️ **Geo-mismatch:** location field says remote, but JD body says') &&
+  ofertaMode.includes('silence is absence of signal, not agreement')
+) {
+  pass('oferta cross-checks the remote location field against JD-body signals (#1433)');
+} else {
+  fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
