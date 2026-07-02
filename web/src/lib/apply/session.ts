@@ -19,6 +19,13 @@ async function richestControlFrame(page: Page): Promise<Frame> {
   return best;
 }
 
+/** Escape a value for use inside a double-quoted CSS attribute selector.
+ *  Backslash FIRST, then quote — escaping only the quote would let a trailing
+ *  backslash neutralize the closing quote (CodeQL js/incomplete-sanitization). */
+function cssAttr(v: string): string {
+  return v.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 /** Navigate resiliently: a transient nav error / slow ATS shouldn't fail the
  *  whole apply. Up to 3 attempts with backoff; returns the navigation Response
  *  (status/headers feed the cheap status-block check). */
@@ -463,7 +470,7 @@ export async function fillSession(
             done = true;
           } else {
             const cid = await loc.getAttribute("id").catch(() => null);
-            const lab = cid ? s.frame.locator(`label[for="${cid.replace(/"/g, '\\"')}"]`).first() : null;
+            const lab = cid ? s.frame.locator(`label[for="${cssAttr(cid)}"]`).first() : null;
             if (lab && (await lab.count())) {
               await lab.click().catch(() => {});
               done = true;
@@ -479,11 +486,11 @@ export async function fillSession(
         }
         gaveUp = !done;
       } else if (meta.type === "radio") {
-        const r = s.frame.locator(`[data-co-field="${fid}"][data-co-option="${value.replace(/"/g, '\\"')}"]`).first();
+        const r = s.frame.locator(`[data-co-field="${cssAttr(fid)}"][data-co-option="${cssAttr(value)}"]`).first();
         await r.check({ timeout: 3000 }).catch(async () => {
           await r.check({ force: true }).catch(async () => {
             const rid = await r.getAttribute("id").catch(() => null);
-            if (rid) await s.frame.locator(`label[for="${rid.replace(/"/g, '\\"')}"]`).first().click().catch(() => { gaveUp = true; });
+            if (rid) await s.frame.locator(`label[for="${cssAttr(rid)}"]`).first().click().catch(() => { gaveUp = true; });
             else gaveUp = true;
           });
         });

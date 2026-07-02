@@ -24,7 +24,9 @@ function cacheDir(): string {
 /** Plausible domains for a company name, cheapest/likeliest first. */
 function companyDomains(company: string): string[] {
   const paren = company.match(/\(([A-Za-z0-9]{2,12})\)/)?.[1]; // "… (5WPR)"
-  const base = company.replace(/\([^)]*\)/g, "").trim();
+  // [^()] (not [^)]) keeps the match unambiguous — no polynomial backtracking on
+  // adversarial inputs full of unclosed parens (CodeQL js/polynomial-redos).
+  const base = company.replace(/\([^()]*\)/g, "").trim();
   const compact = base.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, "");
   const firstWord = base.toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, "");
   const stems = [...new Set([compact, paren?.toLowerCase(), firstWord].filter((s): s is string => !!s && s.length >= 2 && s.length <= 30))];
@@ -71,7 +73,10 @@ export async function GET(req: NextRequest) {
     return new Response("need domain or company", { status: 400 });
   }
 
-  const file = path.join(cacheDir(), `${key}.png`);
+  // `key` is already sanitized above, but enforce containment anyway: a cache
+  // path must never resolve outside the cache dir (defense in depth).
+  const file = path.resolve(cacheDir(), `${key}.png`);
+  if (!file.startsWith(path.resolve(cacheDir()) + path.sep)) return new Response("bad key", { status: 400 });
 
   // 1) serve from disk cache forever (hit, or empty sentinel = known miss)
   try {

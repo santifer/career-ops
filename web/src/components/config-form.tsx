@@ -52,7 +52,6 @@ export function ConfigForm() {
         if (v.mode === "cli") setMode("cli");
         if (v.cliId) setCliId(v.cliId);
         if (v.provider) setProvider(v.provider);
-        if (typeof v.apiKey === "string") setApiKey(v.apiKey);
         if (typeof v.logos === "boolean") setLogos(v.logos);
       }
     } catch {
@@ -74,7 +73,10 @@ export function ConfigForm() {
   }, []);
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode, cliId, provider, apiKey, logos }));
+    // The API key is deliberately NOT persisted: nothing reads it yet (the
+    // key/manual panel is unwired) and a secret must never sit in clear-text
+    // localStorage. Keys belong in the user's own CLI/provider config.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode, cliId, provider, logos }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }

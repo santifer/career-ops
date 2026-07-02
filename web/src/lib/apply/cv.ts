@@ -19,7 +19,9 @@ export function resolveTailoredCv(company?: string): string | null {
   } catch {
     return null;
   }
-  const slug = c.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  // Token-extract instead of replace-then-trim: same slug, and no `-+$`-style
+  // pattern that backtracks polynomially on adversarial input (CodeQL).
+  const slug = (c.toLowerCase().match(/[a-z0-9]+/g) ?? []).join("-");
   const first = slug.split("-")[0];
   const matches = files.filter((f) => {
     const l = f.toLowerCase();
