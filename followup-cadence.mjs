@@ -177,9 +177,11 @@ export function parseFollowupsContent(content) {
       if (parts.length < 8) continue;
       const num = parseInt(parts[1]);
       if (isNaN(num)) continue;
+      const appNum = parseInt(parts[2]);
+      if (isNaN(appNum)) continue; // unattributable row would poison per-app grouping
       entries.push({
         num,
-        appNum: parseInt(parts[2]),
+        appNum,
         date: parts[3],
         company: parts[4],
         role: parts[5],

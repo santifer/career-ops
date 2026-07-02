@@ -91,10 +91,10 @@ export async function POST(req: Request) {
       const num = maxNum + 1;
 
       let out = "";
-      if (!hasHeader) {
-        if (existing && !existing.endsWith("\n")) out += "\n";
-        out += TABLE_HEADER;
-      }
+      // CLI-created files may lack a trailing newline — guard regardless of
+      // whether we're also inserting the header, or the row glues to the last line.
+      if (existing && !existing.endsWith("\n")) out += "\n";
+      if (!hasHeader) out += TABLE_HEADER;
       out += `| ${num} | ${appNum} | ${date} | ${company} | ${role} | ${channel} | ${contact} | ${notes} |\n`;
       fs.appendFileSync(file, out, "utf8");
       return Response.json({ ok: true, num, appNum, date, channel });

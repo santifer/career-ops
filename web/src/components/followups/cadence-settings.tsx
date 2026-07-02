@@ -47,7 +47,9 @@ export function CadenceSettings() {
     if (!values) return;
     const payload: Partial<Record<ProfileCadenceKey, number>> = {};
     for (const k of PROFILE_CADENCE_KEYS) {
-      const n = Number.parseInt(values[k], 10);
+      // Number(), not parseInt(): "3.5" and "7abc" must be rejected, not truncated.
+      const raw = values[k].trim();
+      const n = raw === "" ? Number.NaN : Number(raw);
       if (!Number.isInteger(n) || n < 0) {
         setError(`"${FIELDS.find((f) => f.key === k)?.label}" must be a whole number ≥ 0.`);
         return;

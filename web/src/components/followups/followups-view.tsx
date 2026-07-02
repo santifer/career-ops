@@ -250,22 +250,21 @@ export function FollowupsView() {
                 {COLUMNS.map((c) => {
                   const active = sortKey === c.key;
                   return (
-                    <th
-                      key={c.key}
-                      aria-sort={active ? (dir === 1 ? "ascending" : "descending") : "none"}
-                      className="cursor-pointer select-none px-2.5 py-2.5 font-medium hover:text-foreground"
-                      onClick={() =>
-                        // First click on Urgency descends (most pressing first —
-                        // how ▼ reads); other columns start ascending.
-                        setParams({ sort: c.key, dir: active ? dir * -1 : c.key === "urgency" ? -1 : 1 })
-                      }
-                    >
-                      <span className="inline-flex items-center gap-1">
+                    <th key={c.key} aria-sort={active ? (dir === 1 ? "ascending" : "descending") : "none"} className="px-2.5 py-2.5 font-medium">
+                      <button
+                        type="button"
+                        className="inline-flex cursor-pointer select-none items-center gap-1 uppercase tracking-wide hover:text-foreground"
+                        onClick={() =>
+                          // First click on Urgency descends (most pressing first —
+                          // how ▼ reads); other columns start ascending.
+                          setParams({ sort: c.key, dir: active ? dir * -1 : c.key === "urgency" ? -1 : 1 })
+                        }
+                      >
                         {c.label}
                         <span aria-hidden="true" className={cn(!active && "text-faint")}>
                           {active ? (dir === 1 ? "▲" : "▼") : "⇅"}
                         </span>
-                      </span>
+                      </button>
                     </th>
                   );
                 })}

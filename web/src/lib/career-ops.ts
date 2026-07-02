@@ -187,12 +187,8 @@ export function findReportFile(n: string): string | null {
   const linked = app?.report.match(/\]\(([^)]+)\)/)?.[1];
   if (linked) {
     const p = path.resolve(root, "data", linked);
-    try {
-      // Containment: a hand-edited link must not resolve outside the project.
-      if (p.startsWith(path.resolve(root) + path.sep) && p.endsWith(".md") && fs.existsSync(p)) return p;
-    } catch {
-      /* fall through to the filename scan */
-    }
+    // Containment: a hand-edited link must not resolve outside the project.
+    if (p.endsWith(".md") && containedRealpath(p, root)) return p;
   }
   let files: string[];
   try {
@@ -201,7 +197,19 @@ export function findReportFile(n: string): string | null {
     return null;
   }
   const match = files.find((f) => f.endsWith(".md") && parseInt(f, 10) === target);
-  return match ? path.join(root, "reports", match) : null;
+  if (!match) return null;
+  const p = path.join(root, "reports", match);
+  return containedRealpath(p, root) ? p : null;
+}
+
+/** True containment check: resolves symlinks before comparing, so a link
+ *  planted under data/ or reports/ can't leak files outside the project. */
+function containedRealpath(p: string, root: string): boolean {
+  try {
+    return fs.realpathSync(p).startsWith(fs.realpathSync(root) + path.sep);
+  } catch {
+    return false; // missing file or unresolvable link — treat as not found
+  }
 }
 
 export function readReport(n: string): ReportData | null {
