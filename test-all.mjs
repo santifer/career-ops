@@ -9578,8 +9578,8 @@ try {
     { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
   );
 
-  if (capturedUrl === 'https://www.getonbrd.com/api/v0/categories/programming/jobs?per_page=100&expand[]=company')
-    pass('getonbrd.fetch() requests the board-wide category feed URL');
+  if (capturedUrl === 'https://www.getonbrd.com/api/v0/categories/programming/jobs?per_page=100&expand[]=company&page=1')
+    pass('getonbrd.fetch() requests the board-wide category feed URL (page 1)');
   else fail(`getonbrd.fetch() requested ${JSON.stringify(capturedUrl)}`);
 
   if (capturedOpts && capturedOpts.redirect === 'error')
@@ -9633,6 +9633,33 @@ try {
   }
   if (badResponseThrew) pass('getonbrd.fetch() throws on unexpected API response shape');
   else fail('getonbrd.fetch() should throw when the data array is absent');
+
+  // Pagination: a full first page (=per_page) is followed until a short page.
+  const mkJob = i => ({ attributes: { title: `Role ${i}`, remote: true }, links: { public_url: `https://www.getonbrd.com/jobs/role-${i}` } });
+  const fullPage = { data: Array.from({ length: 100 }, (_, i) => mkJob(i)) };
+  const shortPage = { data: [mkJob(999)] };
+
+  const pageCalls = [];
+  const paged = await getonbrd.fetch(
+    { name: 'GOB', provider: 'getonbrd' },
+    { fetchJson: async (url) => { pageCalls.push(url); return pageCalls.length === 1 ? fullPage : shortPage; } },
+  );
+  if (pageCalls.length === 2 && /[?&]page=1(?:&|$)/.test(pageCalls[0]) && /[?&]page=2(?:&|$)/.test(pageCalls[1]))
+    pass('getonbrd.fetch() paginates ?page=N until a short page is returned');
+  else fail(`getonbrd.fetch() page URLs = ${JSON.stringify(pageCalls)}`);
+
+  if (paged.length === 101)
+    pass('getonbrd.fetch() accumulates jobs across pages (100 + 1)');
+  else fail(`getonbrd.fetch() paginated total = ${paged.length} (expected 101)`);
+
+  const capCalls = [];
+  await getonbrd.fetch(
+    { name: 'GOB', max_pages: 1 },
+    { fetchJson: async (url) => { capCalls.push(url); return fullPage; } },
+  );
+  if (capCalls.length === 1)
+    pass('getonbrd.fetch() respects the max_pages override (stops after 1 page)');
+  else fail(`getonbrd.fetch() max_pages=1 made ${capCalls.length} page calls`);
 
 } catch (e) {
   fail(`getonbrd provider tests crashed: ${e.message}`);
