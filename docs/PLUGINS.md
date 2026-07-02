@@ -122,5 +122,5 @@ reference.
 | [career-ops-plugin-outlook-interviews](https://github.com/Schlaflied/career-ops-plugin-outlook-interviews) | Outlook interview ingest — detect interview invitation emails via Microsoft Graph, extract company / role / meeting link, and surface them in the career-ops pipeline.   | ingest | MSGRAPH_CLIENT_ID, MSGRAPH_REFRESH_TOKEN (optional: MSGRAPH_CLIENT_SECRET)              | @Schlaflied |
 | [career-ops-plugin-obsidian](https://github.com/Schlaflied/career-ops-plugin-obsidian)                     | Obsidian export — mirror the tracker into your vault as frontmatter notes queryable by Dataview/Bases; frontmatter belongs to the machine, the note body belongs to you. | export | —                                                                                       | @Schlaflied |
 
-See the "Publishing + getting approved" section above for how to publish your own plugin.
-Entries are reviewed and pinned to an exact commit in the registry to ensure supply-chain integrity.
+See [Publishing + getting approved](#publishing--getting-approved) above for how to publish your own plugin.  
+Entries are reviewed and pinned to an exact commit in the registry (see #publishing--getting-approved).
