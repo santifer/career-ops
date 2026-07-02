@@ -24,12 +24,12 @@ keys must be in your `.env`. `node doctor.mjs` shows what's missing.
 
 ### Trust badges
 
-| Badge | Meaning |
-|-------|---------|
-| `📦 bundled` | Shipped in `plugins/`, reviewed in-tree, auto-updated with the core. |
-| `✓ approved` | A community plugin we reviewed at an exact pinned commit (in the registry). |
+| Badge                     | Meaning                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `📦 bundled`              | Shipped in `plugins/`, reviewed in-tree, auto-updated with the core.           |
+| `✓ approved`              | A community plugin we reviewed at an exact pinned commit (in the registry).    |
 | `❓ community-unverified` | You installed it from a repo we haven't reviewed — you're trusting the author. |
-| `⚠️ off-registry` | Installed commit differs from the approved one. |
+| `⚠️ off-registry`         | Installed commit differs from the approved one.                                |
 
 If a plugin's files change without a version bump, career-ops **blocks it** and
 asks you to review + `node plugins.mjs trust <id>` to re-pin (tamper detection).
@@ -87,7 +87,7 @@ We **don't take feature PRs against bundled plugins.** If you want to extend one
 3. Once approved + pinned, anyone who runs `node plugins.mjs add career-ops-plugin-<id>`
    installs your version, and the engine gives **your maintained successor
    precedence over the bundled reference** of the same id. `node plugins.mjs available`
-   surfaces the link: *"gmail — 🔁 maintained version: career-ops-plugin-gmail"*.
+   surfaces the link: _"gmail — 🔁 maintained version: career-ops-plugin-gmail"_.
 
 This keeps the core lean and **puts the integration in your hands, with your name
 on it** — while the bundled seed stays as the always-present fallback, so the
@@ -95,10 +95,10 @@ feature never breaks even if a successor goes quiet. Precedence is granted ONLY
 to a registry-approved successor installed at its exact pinned commit — so an
 unprompted, unreviewed community plugin can never shadow a bundled one.
 
-**Trust boundary (plainly).** The thing this protects is the *supply chain*: the
+**Trust boundary (plainly).** The thing this protects is the _supply chain_: the
 registry is a reviewed system file and installs pin an exact commit, so no
 upstream author can push code over a bundled plugin without a maintainer merging
-their entry. It does **not** try to stop *you* from running your own modified
+their entry. It does **not** try to stop _you_ from running your own modified
 code on your own machine — career-ops is local-first and the source is yours; if
 you edit `plugins.local/` or your `plugins.lock`, you're choosing to run your own
 version, exactly as you always could. Removing a successor restores the bundled
@@ -111,3 +111,16 @@ reference.
   [Discussion #904](https://github.com/santifer/career-ops/discussions/904).
 - **Auto-submitting / blind-applying** → out of the core everywhere. career-ops
   drafts for you to review and submit; it is a decision-support tool, not a bot.
+
+  ## Community plugins
+
+| Plugin                                                                                                     | What it does                                                                                                                                                             | Hooks  | Keys needed                                                                             | Author      |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------- | ----------- |
+| [career-ops-plugin-tavily](https://github.com/Schlaflied/career-ops-plugin-tavily)                         | Tavily search/extract for job scanning, liveness checks, and company research.                                                                                           | search | TAVILY_API_KEY                                                                          | @Schlaflied |
+| [career-ops-plugin-google-calendar](https://github.com/Schlaflied/career-ops-plugin-google-calendar)       | Google Calendar ingest — detect upcoming interview events and surface them in the career-ops pipeline.                                                                   | ingest | GOOGLE_CALENDAR_CLIENT_ID, GOOGLE_CALENDAR_CLIENT_SECRET, GOOGLE_CALENDAR_REFRESH_TOKEN | @Schlaflied |
+| [career-ops-plugin-linkedin-alerts](https://github.com/Schlaflied/career-ops-plugin-linkedin-alerts)       | LinkedIn job alert ingest — parse LinkedIn alert emails from Gmail inbox, normalize tracking links to canonical job URLs, and surface them in the career-ops pipeline.   | ingest | GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN                               | @Schlaflied |
+| [career-ops-plugin-outlook-interviews](https://github.com/Schlaflied/career-ops-plugin-outlook-interviews) | Outlook interview ingest — detect interview invitation emails via Microsoft Graph, extract company / role / meeting link, and surface them in the career-ops pipeline.   | ingest | MSGRAPH_CLIENT_ID, MSGRAPH_REFRESH_TOKEN (optional: MSGRAPH_CLIENT_SECRET)              | @Schlaflied |
+| [career-ops-plugin-obsidian](https://github.com/Schlaflied/career-ops-plugin-obsidian)                     | Obsidian export — mirror the tracker into your vault as frontmatter notes queryable by Dataview/Bases; frontmatter belongs to the machine, the note body belongs to you. | export | —                                                                                       | @Schlaflied |
+
+See the "Publishing + getting approved" section above for how to publish your own plugin.
+Entries are reviewed and pinned to an exact commit in the registry to ensure supply-chain integrity.
