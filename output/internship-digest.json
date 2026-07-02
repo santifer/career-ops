@@ -1,11 +1,25 @@
 {
-  "generatedAt": "2026-07-02T13:48:29.556Z",
+  "generatedAt": "2026-07-02T14:15:46.631Z",
   "minScore": 4,
   "summary": {
-    "newRows": 0,
-    "emailedRows": 0,
+    "newRows": 1,
+    "emailedRows": 1,
     "dryRun": false,
     "portalsPath": "config/internship-portals.yml"
   },
-  "items": []
+  "items": [
+    {
+      "url": "https://jobs.ericsson.com/careers/job/563121776440630",
+      "firstSeen": "2026-07-02",
+      "source": "playwright-careers",
+      "title": "Software Developer InternBudapest,Budapest,HungaryProduct DevelopmentPosted 22 mins ago : Software Developer Intern",
+      "company": "Ericsson",
+      "status": "added",
+      "location": "",
+      "term": "",
+      "score": 4.3,
+      "why": "high-priority target company; software engineering internship title",
+      "suggestedAction": "Review"
+    }
+  ]
 }

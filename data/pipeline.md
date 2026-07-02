@@ -72,4 +72,6 @@ Paste job URLs below as `- [ ] {url}` then run `/career-ops pipeline`.
 - [ ] https://www.amazon.jobs/en/jobs/3147202/2026-software-dev-engineer-intern-haifa-israel | Amazon | 2026 Software Dev Engineer Intern - Haifa, Israel
 - [ ] https://www.janestreet.com/join-jane-street/position/4274288002/ | Jane Street | Software Engineer, New York - Jane Street www.janestreet.com/join-jane-street/position/4274288002/ Open Roles INTERNSHIPS · INTERVIEWING. Who We Are · What We Do · OVERVIEW · CLIEN
 
+- [ ] https://jobs.ericsson.com/careers/job/563121776440630 | Ericsson | Software Developer InternBudapest,Budapest,HungaryProduct DevelopmentPosted 22 mins ago : Software Developer Intern
+
 ## Processed
