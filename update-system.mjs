@@ -43,6 +43,9 @@ const DEFAULT_GIT_FETCH_TIMEOUT_MS = parsePositiveInt(
   process.env.CAREER_OPS_GIT_FETCH_TIMEOUT_MS,
   Math.max(DEFAULT_GIT_TIMEOUT_MS, 300000),
 );
+const NPM_INSTALL_TIMEOUT_MS = 60000;
+const PLAYWRIGHT_INSTALL_TIMEOUT_MS = 120000;
+const DASHBOARD_REBUILD_TIMEOUT_MS = 60000;
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
@@ -283,11 +286,31 @@ export function gitTimeoutMs(args) {
 }
 
 export function reexecTimeoutMs() {
-  return Math.max(120000, DEFAULT_GIT_FETCH_TIMEOUT_MS + DEFAULT_GIT_TIMEOUT_MS + 60000);
+  return Math.max(
+    120000,
+    DEFAULT_GIT_FETCH_TIMEOUT_MS +
+      DEFAULT_GIT_TIMEOUT_MS * 3 +
+      NPM_INSTALL_TIMEOUT_MS +
+      PLAYWRIGHT_INSTALL_TIMEOUT_MS +
+      DASHBOARD_REBUILD_TIMEOUT_MS +
+      60000,
+  );
 }
 
 function describeGitCommand(args) {
   return `git ${args.join(' ')}`;
+}
+
+function isTimeoutLikeError(err) {
+  return err?.code === 'ETIMEDOUT' || err?.signal === 'SIGTERM';
+}
+
+function timeoutSeconds(timeout) {
+  return Math.round(timeout / 1000);
+}
+
+function gitTimeoutEnvVar(args) {
+  return args[0] === 'fetch' ? 'CAREER_OPS_GIT_FETCH_TIMEOUT_MS' : 'CAREER_OPS_GIT_TIMEOUT_MS';
 }
 
 function gitIn(root, ...args) {
@@ -295,8 +318,8 @@ function gitIn(root, ...args) {
   try {
     return execFileSync('git', args, { cwd: root, encoding: 'utf-8', timeout }).trim();
   } catch (err) {
-    if (err?.code === 'ETIMEDOUT' || err?.signal === 'SIGTERM') {
-      throw new Error(`${describeGitCommand(args)} timed out after ${Math.round(timeout / 1000)}s. If your network is slow, retry or set CAREER_OPS_GIT_FETCH_TIMEOUT_MS to a larger value.`);
+    if (isTimeoutLikeError(err)) {
+      throw new Error(`${describeGitCommand(args)} timed out after ${timeoutSeconds(timeout)}s. If your network is slow, retry or set ${gitTimeoutEnvVar(args)} to a larger value.`);
     }
     throw err;
   }
@@ -463,7 +486,7 @@ function rebuildDashboardBinaryIfNeeded() {
   try {
     execFileSync('go', ['build', '-o', 'career-dashboard', '.'], {
       cwd: join(ROOT, 'dashboard'),
-      timeout: 60000,
+      timeout: DASHBOARD_REBUILD_TIMEOUT_MS,
       stdio: 'pipe',
     });
     console.log('dashboard binary rebuilt');
@@ -626,10 +649,11 @@ async function apply() {
         // new top-level import can't reintroduce the self-reexec crash (#1245).
         const reexecFiles = resolveReexecCheckout('FETCH_HEAD', 'update-system.mjs');
         git('checkout', 'FETCH_HEAD', '--', ...reexecFiles);
+        const timeout = reexecTimeoutMs();
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',
-          timeout: reexecTimeoutMs(),
+          timeout,
           env: {
             ...process.env,
             CAREER_OPS_UPDATE_REEXEC: '1',
@@ -638,6 +662,10 @@ async function apply() {
         });
         return;
       } catch (err) {
+        if (isTimeoutLikeError(err)) {
+          console.error(`Updater self-reexec timed out after ${timeoutSeconds(reexecTimeoutMs())}s.`);
+          throw err;
+        }
         console.error(`Updater self-reexec failed: ${err.message}`);
         throw err;
       }
@@ -746,14 +774,14 @@ async function apply() {
 
     // 5. Install any new dependencies
     try {
-      execSync('npm install --silent', { cwd: ROOT, timeout: 60000 });
+      execSync('npm install --silent', { cwd: ROOT, timeout: NPM_INSTALL_TIMEOUT_MS });
     } catch {
       console.log('npm install skipped (may need manual run)');
     }
 
     // 5b. Ensure Playwright browser binary is up to date after npm install
     try {
-      execSync('npx playwright install chromium', { cwd: ROOT, timeout: 120000, stdio: 'ignore' });
+      execSync('npx playwright install chromium', { cwd: ROOT, timeout: PLAYWRIGHT_INSTALL_TIMEOUT_MS, stdio: 'ignore' });
     } catch {
       console.log('playwright install skipped (run manually: npx playwright install chromium)');
     }

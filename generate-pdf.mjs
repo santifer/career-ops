@@ -201,6 +201,10 @@ export function injectPrintPageCss(html, format = 'a4') {
     return html.replace(/<\/head>/i, `${pageStyle}\n</head>`);
   }
 
+  if (/<html\b[^>]*>/i.test(html)) {
+    return html.replace(/<html\b[^>]*>/i, match => `${match}\n<head>\n${pageStyle}\n</head>`);
+  }
+
   return `${pageStyle}\n${html}`;
 }
 

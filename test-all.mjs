@@ -792,6 +792,24 @@ try {
     fail('PDF renderer does not inject CSS page size/margins into the document head');
   }
 
+  const doctypeNoHead = injectPrintPageCss('<!doctype html><html lang="en"><body></body></html>');
+  if (
+    doctypeNoHead.startsWith('<!doctype html>') &&
+    doctypeNoHead.includes('<html lang="en">\n<head>\n<style id="career-ops-page-setup">') &&
+    doctypeNoHead.indexOf('<head>') < doctypeNoHead.indexOf('<body>')
+  ) {
+    pass('PDF renderer preserves doctype when injecting page CSS into full HTML without head');
+  } else {
+    fail('PDF renderer may insert page CSS before doctype for full HTML without head');
+  }
+
+  const fragmentPageCss = injectPrintPageCss('<section>CV</section>');
+  if (fragmentPageCss.startsWith('<style id="career-ops-page-setup">')) {
+    pass('PDF renderer still prepends page CSS for HTML fragments');
+  } else {
+    fail('PDF renderer no longer handles HTML fragments with fallback CSS injection');
+  }
+
   if (
     generatePdfScript.includes('preferCSSPageSize: true') &&
     generatePdfScript.includes("right: '0'") &&
@@ -832,12 +850,29 @@ if (
   updateSystemScript.includes('CAREER_OPS_GIT_TIMEOUT_MS') &&
   updateSystemScript.includes('CAREER_OPS_GIT_FETCH_TIMEOUT_MS') &&
   /args\[0\]\s*===\s*['"]fetch['"]/.test(updateSystemScript) &&
+  /gitTimeoutEnvVar\(args\)/.test(updateSystemScript) &&
   updateSystemScript.includes('timed out after') &&
-  updateSystemScript.includes('timeout: reexecTimeoutMs()')
+  updateSystemScript.includes('const timeout = reexecTimeoutMs()') &&
+  updateSystemScript.includes('Updater self-reexec timed out after')
 ) {
   pass('update-system gives fetch/reexec a longer configurable timeout with readable failures');
 } else {
   fail('update-system still risks a bare 30s git fetch timeout (#1393)');
+}
+
+try {
+  const { gitTimeoutMs, reexecTimeoutMs } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+  const fetchTimeout = gitTimeoutMs(['fetch']);
+  const gitCommandTimeout = gitTimeoutMs(['checkout']);
+  const minimumReexecBudget = fetchTimeout + gitCommandTimeout * 3 + 60000 + 120000 + 60000 + 60000;
+
+  if (reexecTimeoutMs() >= minimumReexecBudget) {
+    pass('update-system sizes self-reexec timeout for downstream fetch/git/install/rebuild work');
+  } else {
+    fail('update-system self-reexec timeout budget is too small for downstream apply work');
+  }
+} catch (e) {
+  fail(`update-system timeout helper test crashed: ${e.message}`);
 }
 
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
