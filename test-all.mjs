@@ -91,16 +91,38 @@ function run(cmd, args = [], opts = {}) {
  */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 
+const BASH = (() => {
+  if (process.platform !== 'win32') return 'bash';
+  try {
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
+    return 'bash';
+  } catch {}
+  const candidates = [
+    'C:\\Program Files\\Git\\bin\\bash.exe',
+    'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
+    'bash'
+  ];
+  for (const cmd of candidates) {
+    try {
+      execSync(`"${cmd}" -c "true"`, { stdio: 'ignore' });
+      return cmd;
+    } catch {}
+  }
+  return 'bash';
+})();
+
 function toBashPath(wpath) {
   if (process.platform !== 'win32') return wpath;
   try {
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
     const forwardSlashed = wpath.replace(/\\/g, '/');
     const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   try {
     const forwardSlashed = wpath.replace(/\\/g, '/');
-    const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const cygpathCmd = existsSync('C:\\Program Files\\Git\\usr\\bin\\cygpath.exe') ? '"C:\\Program Files\\Git\\usr\\bin\\cygpath.exe"' : 'cygpath';
+    const out = execSync(`${cygpathCmd} -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
@@ -518,29 +540,38 @@ try {
 
 if (!QUICK) {
   console.log('\n4. Dashboard build');
-  const isWindows = process.platform === 'win32';
-  const dashboardBuildTmp = mkdtempSync(join(tmpdir(), 'career-dashboard-build-'));
-  const outPath = join(dashboardBuildTmp, isWindows ? 'career-dashboard-test.exe' : 'career-dashboard-test');
-  const goEnv = { ...process.env };
-  if (isWindows && !goEnv.GOCACHE) {
-    goEnv.GOCACHE = join(tmpdir(), 'career-ops-go-build-cache');
-  }
-  if (goEnv.GOCACHE) {
-    try { mkdirSync(goEnv.GOCACHE, { recursive: true }); } catch (e) {}
-  }
-  const goBuild = run('go', ['build', '-o', outPath, '.'], {
-    cwd: join(ROOT, 'dashboard'),
-    env: goEnv,
-    stdio: ['pipe', 'pipe', 'pipe'],
-    timeout: 60000,
-  });
-  if (goBuild !== null) {
-    pass('Dashboard compiles');
-    try { rmSync(outPath, { force: true }); } catch (e) {}
+  let hasGo = false;
+  try {
+    execSync('go version', { stdio: 'ignore' });
+    hasGo = true;
+  } catch {}
+  if (!hasGo) {
+    warn('Dashboard build skipped — go compiler not in env');
   } else {
-    fail('Dashboard build failed');
+    const isWindows = process.platform === 'win32';
+    const dashboardBuildTmp = mkdtempSync(join(tmpdir(), 'career-dashboard-build-'));
+    const outPath = join(dashboardBuildTmp, isWindows ? 'career-dashboard-test.exe' : 'career-dashboard-test');
+    const goEnv = { ...process.env };
+    if (isWindows && !goEnv.GOCACHE) {
+      goEnv.GOCACHE = join(tmpdir(), 'career-ops-go-build-cache');
+    }
+    if (goEnv.GOCACHE) {
+      try { mkdirSync(goEnv.GOCACHE, { recursive: true }); } catch (e) {}
+    }
+    const goBuild = run('go', ['build', '-o', outPath, '.'], {
+      cwd: join(ROOT, 'dashboard'),
+      env: goEnv,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 60000,
+    });
+    if (goBuild !== null) {
+      pass('Dashboard compiles');
+      try { rmSync(outPath, { force: true }); } catch (e) {}
+    } else {
+      fail('Dashboard build failed');
+    }
+    try { rmSync(dashboardBuildTmp, { recursive: true, force: true }); } catch (e) {}
   }
-  try { rmSync(dashboardBuildTmp, { recursive: true, force: true }); } catch (e) {}
 } else {
   console.log('\n4. Dashboard build (skipped --quick)');
 }
@@ -3837,15 +3868,47 @@ try {
   }
   rmSync(ready, { recursive: true, force: true });
 
+  // Auto-copy template: when modes/_profile.md or modes/_custom.md is missing but template exists,
+  // doctor --json auto-copies them, records them in autoCopied, and does not report them as missing (#1369).
+  const autoCopy = mkdtempSync(join(tmpdir(), 'co-autocopy-'));
+  mkdirSync(join(autoCopy, 'config'), { recursive: true });
+  mkdirSync(join(autoCopy, 'modes'), { recursive: true });
+  for (const f of ['cv.md', 'config/profile.yml', 'portals.yml']) {
+    writeFileSync(join(autoCopy, f), 'x');
+  }
+  writeFileSync(join(autoCopy, 'modes/_profile.template.md'), '# profile template\n');
+  writeFileSync(join(autoCopy, 'modes/_custom.template.md'), '# custom template\n');
+  const ac = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', autoCopy]) || '{}');
+  if (
+    ac.onboardingNeeded === false &&
+    Array.isArray(ac.missing) &&
+    ac.missing.length === 0 &&
+    Array.isArray(ac.autoCopied) &&
+    ac.autoCopied.includes('modes/_profile.md') &&
+    ac.autoCopied.includes('modes/_custom.md') &&
+    existsSync(join(autoCopy, 'modes/_profile.md')) &&
+    readFileSync(join(autoCopy, 'modes/_profile.md'), 'utf-8') === '# profile template\n' &&
+    existsSync(join(autoCopy, 'modes/_custom.md')) &&
+    readFileSync(join(autoCopy, 'modes/_custom.md'), 'utf-8') === '# custom template\n'
+  ) {
+    pass('Auto-copy template → modes/_profile.md and modes/_custom.md copied silently in --json mode (#1369)');
+  } else {
+    fail(`Auto-copy template failed in --json mode: ${JSON.stringify(ac)}`);
+  }
+  rmSync(autoCopy, { recursive: true, force: true });
+
   const claudeDoc = readFile('CLAUDE.md');
+  const agentsDoc = readFile('AGENTS.md');
   if (
     /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&
     /"warnings"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(agentsDoc) &&
     !/Does\s+`cv\.md`\s+exist\?/i.test(claudeDoc)
   ) {
-    pass('CLAUDE.md delegates onboarding state to doctor --json');
+    pass('CLAUDE.md and AGENTS.md delegate onboarding state and autoCopied to doctor --json');
   } else {
-    fail('CLAUDE.md still duplicates onboarding prerequisite checks');
+    fail('CLAUDE.md or AGENTS.md still duplicates onboarding prerequisite checks or misses autoCopied doc');
   }
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
@@ -4358,7 +4421,7 @@ try {
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+    try { execFileSync(BASH, ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
@@ -4377,13 +4440,13 @@ try {
     'exit 1',
   ].join('\n') + '\n');
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+    try { execFileSync(BASH, ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
   }
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const out = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -4402,7 +4465,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
+  const dry = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -4422,7 +4485,7 @@ try {
     '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
     '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
   ].join('\n') + '\n');
-  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+  const statusOnly = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
