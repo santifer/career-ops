@@ -30,7 +30,9 @@ export async function GET(req: Request) {
       });
     }
     // Overdue first; cap for the home (full list lives in /followups).
-    const overdue = entries.filter((e: { urgency?: string; status?: string }) => /overdue|urgent/i.test(String(e.urgency ?? e.status))).slice(0, 8);
+    // Check BOTH fields — not urgency-with-status-fallback — so output where
+    // either one signals overdue/urgent lands in the priority bucket.
+    const overdue = entries.filter((e: { urgency?: string; status?: string }) => /overdue|urgent/i.test(`${e.urgency ?? ""} ${e.status ?? ""}`)).slice(0, 8);
     const top = (overdue.length ? overdue : entries).slice(0, 6);
     return Response.json({ available: true, metadata: j.metadata ?? null, entries: top });
   } catch {

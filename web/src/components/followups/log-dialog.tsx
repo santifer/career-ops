@@ -33,6 +33,12 @@ export function LogDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Keep free text single-line and pipe-free BEFORE it leaves the client
+  // (the API's cell() normalizes again server-side — defense in depth): the
+  // log is a pipe-delimited markdown table, so `|` and newlines would break
+  // the row format.
+  const tableSafe = (s: string) => s.replace(/[\r\n]+/g, " ").replace(/\|/g, "/").trim();
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -47,8 +53,8 @@ export function LogDialog({
           role: entry.role,
           date,
           channel,
-          contact,
-          notes,
+          contact: tableSafe(contact),
+          notes: tableSafe(notes),
         }),
       });
       const j = await res.json().catch(() => ({}));
