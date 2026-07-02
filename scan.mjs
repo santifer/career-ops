@@ -38,6 +38,7 @@ import yaml from 'js-yaml';
 import { makeHttpCtx } from './providers/_http.mjs';
 import { buildTrustValidator } from './providers/_trust-validator.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
+import { classifyFetchError } from './verify-portals.mjs';
 
 const parseYaml = yaml.load;
 
@@ -1002,6 +1003,7 @@ async function main() {
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
+  const emptyBoards = [];
 
   const tasks = targets.map(company => async () => {
     let provider = company._provider;
@@ -1027,6 +1029,9 @@ async function main() {
         throw new Error(`${provider.id}: fetch() did not return an array`);
       }
       totalFound += jobs.length;
+      if (!company._isBoard && jobs.length === 0) {
+        emptyBoards.push(company.name);
+      }
 
       for (const job of jobs) {
         // Trust enrichment — runs before filters, never drops
@@ -1088,7 +1093,11 @@ async function main() {
         });
       }
     } catch (err) {
-      errors.push({ company: company.name, error: err.message });
+      errors.push({
+        company: company.name,
+        error: err.message,
+        kind: classifyFetchError(err),
+      });
     }
   });
 
@@ -1223,9 +1232,26 @@ async function main() {
     }
   }
 
-  if (errors.length > 0) {
-    console.log(`\nErrors (${errors.length}):`);
-    for (const e of errors) {
+  const unreachableBoards = errors.filter((e) => e.kind === 'slug_gone');
+  const networkBoards = errors.filter((e) => e.kind === 'network');
+  const otherErrors = errors.filter((e) => e.kind !== 'slug_gone' && e.kind !== 'network');
+
+  if (unreachableBoards.length > 0) {
+    const names = unreachableBoards.map((e) => e.company).join(', ');
+    console.log(`\n⚠️  ${unreachableBoards.length} board(s) unreachable (slug?): ${names} — run: node verify-portals.mjs`);
+  }
+  if (emptyBoards.length > 0) {
+    console.log(`🟡 ${emptyBoards.length} board(s) live but empty: ${emptyBoards.join(', ')}`);
+  }
+  if (networkBoards.length > 0) {
+    console.log(`\nNetwork errors (${networkBoards.length}):`);
+    for (const e of networkBoards) {
+      console.log(`  ✗ ${e.company}: ${e.error}`);
+    }
+  }
+  if (otherErrors.length > 0) {
+    console.log(`\nErrors (${otherErrors.length}):`);
+    for (const e of otherErrors) {
       console.log(`  ✗ ${e.company}: ${e.error}`);
     }
   }

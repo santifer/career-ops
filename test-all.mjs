@@ -1581,14 +1581,31 @@ tracked_companies:
 console.log('\n10b. Portal slug validator');
 
 try {
-  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies } =
+  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies, classifyFetchError } =
     await import(pathToFileURL(join(ROOT, 'verify-portals.mjs')).href);
 
   const slugs = deriveSlugCandidates('Acme Corp!');
-  if (JSON.stringify(slugs) === JSON.stringify(['acmecorp', 'acme-corp', 'acme_corp', 'acme'])) {
+  const baseSlugs = ['acmecorp', 'acme-corp', 'acme_corp', 'acme'];
+  if (baseSlugs.every((s) => slugs.includes(s)) && slugs.includes('acmeai') && slugs.includes('acme.tech')) {
     pass('verify-portals derives slug candidates from a company name');
   } else {
     fail(`verify-portals slug candidates wrong: ${JSON.stringify(slugs)}`);
+  }
+
+  if (deriveSlugCandidates('Deepset').includes('deepsetai')) {
+    pass('verify-portals derives common slug suffixes (e.g. deepsetai)');
+  } else {
+    fail('verify-portals missing deepsetai suffix for Deepset');
+  }
+
+  if (
+    classifyFetchError({ status: 404 }) === 'slug_gone' &&
+    classifyFetchError({ name: 'AbortError' }) === 'network' &&
+    classifyFetchError({ status: 503 }) === 'server'
+  ) {
+    pass('verify-portals classifies fetch errors by kind');
+  } else {
+    fail('verify-portals classifyFetchError misclassified HTTP errors');
   }
 
   if (
@@ -1606,20 +1623,24 @@ try {
   const mockFetch = async (url) => {
     if (url.includes('/boards/live/')) return { jobs: [{}, {}] };
     if (url.includes('/boards/empty/')) return { jobs: [] };
+    if (url.includes('ashbyhq.com') && url.includes('deepsetai')) return { jobs: [{}] };
     const err = new Error('HTTP 404'); err.status = 404; throw err;
   };
   const results = await verifyCompanies([
     { name: 'Live', careers_url: 'https://job-boards.greenhouse.io/live' },
     { name: 'Empty', careers_url: 'https://job-boards.greenhouse.io/empty' },
     { name: 'Typo', careers_url: 'https://job-boards.greenhouse.io/nope' },
+    { name: 'Deepset', careers_url: 'https://job-boards.greenhouse.io/deepset' },
     { name: 'Branded', careers_url: 'https://acme.com/careers' },
     { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
   ], { fetchJson: mockFetch });
-  const byName = Object.fromEntries(results.map((r) => [r.name, r.status]));
+  const byName = Object.fromEntries(results.map((r) => [r.name, r]));
   if (
-    results.length === 4 &&
-    byName.Live === 'live' && byName.Empty === 'empty' &&
-    byName.Typo === 'missing' && byName.Branded === 'skipped'
+    results.length === 5 &&
+    byName.Live.status === 'live' && byName.Empty.status === 'empty' &&
+    byName.Typo.status === 'missing' && byName.Typo.errorKind === 'slug_gone' &&
+    byName.Branded.status === 'skipped' &&
+    byName.Deepset.suggested?.ats === 'ashby' && byName.Deepset.suggested?.slug === 'deepsetai'
   ) {
     pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
   } else {
