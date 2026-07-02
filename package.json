@@ -25,6 +25,8 @@
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
     "scan:full": "node scan-ats-full.mjs",
+    "scan:seeds": "node scan-ats-full.mjs --seeds yc,a16z",
+    "scan:yc": "node scan-ats-full.mjs --seeds yc",
     "validate:portals": "node validate-portals.mjs",
     "verify:portals": "node verify-portals.mjs",
     "tracker": "node tracker.mjs",
@@ -35,6 +37,7 @@
     "openai:eval": "node openai-eval.mjs",
     "star": "node match-star.mjs",
     "archive": "node archive-posting.mjs",
+    "prepare:application": "node prepare-application.mjs",
     "build:dashboard": "node build-dashboard.mjs",
     "serve:dashboard": "cd dashboard && go run . --path ..",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps"

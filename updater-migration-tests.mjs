@@ -169,7 +169,13 @@ for (const userPath of ['cv.md', 'config/profile.yml', 'modes/_profile.md', 'por
   else fail(`USER_PATHS missing ${userPath}`);
 }
 
-const allowedSystemUserOverlap = new Set(['writing-samples/README.md']);
+const allowedSystemUserOverlap = new Set([
+  'writing-samples/README.md',
+  // System-owned scaffold inside the user-layer interview-prep/ dir (#1242):
+  // the updater ships these two, but never the real session files alongside them.
+  'interview-prep/sessions/.gitkeep',
+  'interview-prep/sessions/README.md',
+]);
 let hasSystemUserCollision = false;
 for (const systemPath of systemPaths) {
   const overlapsUserPath = userPaths.some((userPath) => {

@@ -5,6 +5,8 @@
 // the CI additionally clones each changed entry at its pinned SHA and runs the
 // min-file + manifest + audit checks in a no-secret, read-only sandbox.
 
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { loadRegistry, validateRegistryEntry } from './plugins/_registry.mjs';
 import { HOOK_KINDS, RESERVED_ENV } from './plugins/_engine.mjs';
 
@@ -22,6 +24,11 @@ export function validateRegistry(root) {
     }
     if (e.name && names.has(e.name)) problems.push(`duplicate name: ${e.name}`);
     if (e.id && ids.has(e.id)) problems.push(`duplicate id: ${e.id}`);
+    // A supersedesBundled entry must name a REAL bundled plugin (anti-typo/phantom):
+    // its id has to correspond to an in-tree plugins/<id>/ before it can be granted precedence.
+    if (e.supersedesBundled === true && e.id && !existsSync(path.join(root, 'plugins', e.id, 'manifest.json'))) {
+      problems.push(`${e.name || e.id}: supersedesBundled names "${e.id}" but no bundled plugin (plugins/${e.id}/) exists to supersede`);
+    }
     names.add(e.name); ids.add(e.id);
   }
   return problems;
