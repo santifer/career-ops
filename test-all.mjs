@@ -113,16 +113,23 @@ const BASH = (() => {
 
 function toBashPath(wpath) {
   if (process.platform !== 'win32') return wpath;
+  const forwardSlashed = wpath.replace(/\\/g, '/');
+  // Try cygpath first: it ships with Git for Windows, which is also what
+  // provides `bash` on PATH on most Windows dev machines (see BASH const
+  // above). cygpath emits /c/... paths that match Git Bash's mount scheme.
+  // wslpath emits /mnt/c/... paths, which only resolve inside WSL's own
+  // bash -- if WSL happens to be installed but `bash` on PATH still
+  // resolves to Git Bash, a wslpath-first order silently produces a path
+  // Git Bash can't find (see #1409). Only fall back to wslpath (and only
+  // pay the cost of booting the WSL VM) when cygpath is unavailable.
   try {
-    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
-    const forwardSlashed = wpath.replace(/\\/g, '/');
-    const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const cygpathCmd = existsSync('C:\\Program Files\\Git\\usr\\bin\\cygpath.exe') ? '"C:\\Program Files\\Git\\usr\\bin\\cygpath.exe"' : 'cygpath';
+    const out = execSync(`${cygpathCmd} -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   try {
-    const forwardSlashed = wpath.replace(/\\/g, '/');
-    const cygpathCmd = existsSync('C:\\Program Files\\Git\\usr\\bin\\cygpath.exe') ? '"C:\\Program Files\\Git\\usr\\bin\\cygpath.exe"' : 'cygpath';
-    const out = execSync(`${cygpathCmd} -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
+    const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
