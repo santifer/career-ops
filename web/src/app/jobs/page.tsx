@@ -3,15 +3,8 @@
 import Link from "next/link";
 import { Check, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useJobs } from "@/components/jobs/job-store";
-import { pillTone } from "@/components/jobs/worker-pills";
+import { pillTone, TONE } from "@/components/jobs/worker-pills";
 import { cn } from "@/lib/cn";
-
-const TONE_CHIP = {
-  good: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  warn: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  bad: "bg-red-500/15 text-red-700 dark:text-red-400",
-  muted: "bg-surface-hover text-muted",
-} as const;
 
 export default function JobsHistory() {
   const { jobs, clearFinished } = useJobs();
@@ -60,7 +53,7 @@ export default function JobsHistory() {
                     )}
                   </div>
                   {j.result?.score != null && (
-                    <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums", TONE_CHIP[tone])}>
+                    <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums", TONE[tone].chip)}>
                       {j.result.score}/5
                     </span>
                   )}

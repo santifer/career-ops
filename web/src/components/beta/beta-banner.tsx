@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bug, X, ShieldCheck } from "lucide-react";
 import { collect, issueBody, issueUrl, type Diag } from "@/lib/report/report";
 import "@/lib/report/logbuf"; // install the client error ring-buffer (side-effect)
@@ -14,6 +14,8 @@ export function BetaBanner() {
   const [open, setOpen] = useState(false);
   const [desc, setDesc] = useState("");
   const [diag, setDiag] = useState<Diag | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     fetch("/api/version")
@@ -26,12 +28,29 @@ export function BetaBanner() {
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { closeModal(); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button, a[href], textarea, input, [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const closeModal = () => { setOpen(false); triggerRef.current?.focus(); };
+
   const openReport = async () => {
+    setDesc("");
     setDiag(await collect());
     setOpen(true);
   };
@@ -45,13 +64,13 @@ export function BetaBanner() {
           <span className="size-1.5 animate-pulse rounded-full bg-brand" /> {meta.version} · {meta.channel}
         </span>
         {meta.sha && <span className="hidden font-mono text-faint sm:inline">{meta.sha}</span>}
-        <button onClick={openReport} className="ml-1 inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 font-medium text-brand transition-colors hover:bg-brand/15">
+        <button ref={triggerRef} onClick={openReport} className="ml-1 inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 font-medium text-brand transition-colors hover:bg-brand/15">
           <Bug className="size-3" /> Report a bug
         </button>
       </div>
 
       {open && diag && (
-        <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Report a bug" onClick={() => setOpen(false)}>
+        <div ref={dialogRef} className="fixed inset-0 z-[96] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Report a bug" onClick={closeModal}>
           <div className="w-full max-w-lg rounded-2xl border border-border bg-[var(--bg)] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center gap-2">
               <Bug className="size-4 text-brand" />
@@ -76,14 +95,14 @@ export function BetaBanner() {
               <ShieldCheck className="mt-px size-3.5 shrink-0 text-emerald-500" /> Opens a GitHub issue you confirm — nothing is sent until you click. NEVER includes your CV, profile, application answers, or job URLs.
             </p>
             <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setOpen(false)} className="rounded-full px-4 py-2 text-sm text-muted transition-colors hover:text-foreground">
+              <button onClick={closeModal} className="rounded-full px-4 py-2 text-sm text-muted transition-colors hover:text-foreground">
                 Cancel
               </button>
               <a
                 href={issueUrl(diag, desc)}
                 target="_blank"
                 rel="noreferrer"
-                onClick={() => setOpen(false)}
+                onClick={closeModal}
                 className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-200"
               >
                 <Bug className="size-4" /> Open GitHub issue

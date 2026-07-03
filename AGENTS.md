@@ -131,6 +131,8 @@ Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "inbo
 - **If `inboxCount > 0`, output a non-blocking message at the start of the session:**
   > "N task(s) in agent inbox — run career-ops agent-inbox list"
 
+  > ⚠️ **HITL boundary**: The agent may only *add* tasks to the inbox. Never run `agent-inbox done <id>` autonomously — only mark items done when the user explicitly instructs it.
+
 - If `modes/_profile.md` is in `missing`, copy it silently from `modes/_profile.template.md` (the user's customization file — never overwritten by updates). It's then resolved.
 - **If, after that, `onboardingNeeded` is still true (any of `cv.md` / `config/profile.yml` / `portals.yml` is missing), enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
 

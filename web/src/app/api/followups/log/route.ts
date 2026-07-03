@@ -15,10 +15,10 @@ export async function POST(req: Request) {
   } catch {
     return Response.json({ error: "bad json" }, { status: 400 });
   }
-  const company = (body.company || "").toString().trim();
+  const company = (body.company || "").toString().replace(/[\r\n]+/g, " ").trim();
   if (!company) return Response.json({ error: "company required" }, { status: 400 });
   const today = new Date().toISOString().slice(0, 10);
-  const num = body.num != null ? `#${body.num} ` : "";
+  const num = body.num != null ? `#${String(body.num).replace(/[\r\n]+/g, " ").trim()} ` : "";
   const note = (body.note || "Followed up").toString().replace(/[\r\n]+/g, " ").trim();
   const line = `- ${today} · ${num}${company} — ${note}\n`;
 

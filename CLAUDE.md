@@ -156,6 +156,8 @@ Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "inbo
 - **If `inboxCount > 0`, output a non-blocking message at the start of the session:**
   > "N task(s) in agent inbox — run career-ops agent-inbox list"
 
+  > ⚠️ **HITL boundary**: The agent may only *add* tasks to the inbox. Never run `agent-inbox done <id>` on your own — only mark items done when the user explicitly instructs it.
+
 If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently. This is the user's customization file — it will never be overwritten by updates.
 
 If `modes/_custom.md` is missing, copy from `modes/_custom.template.md` silently — it holds the user's house rules / custom workflows / automations and is likewise never overwritten by updates.

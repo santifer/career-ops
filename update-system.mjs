@@ -193,6 +193,11 @@ const SYSTEM_PATHS = [
   'plugin-audit.mjs',
   'validate-plugin-registry.mjs',
   'config/plugins.example.yml',
+  'agent-inbox.mjs',
+  'modes/cv-ingest.md',
+  'modes/discover.md',
+  'write-profile.mjs',
+  'web/',
 ];
 
 // User layer paths — NEVER touch these (safety check)

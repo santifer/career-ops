@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   const company = (req.nextUrl.searchParams.get("company") ?? "").trim();
   if (!company) return new Response("company required", { status: 400 });
   const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  if (!slug) return new Response("company required", { status: 400 });
   const dir = path.join(careerOpsRoot(), "output");
   // Match the slug at a token boundary (delimited by non-alphanumerics) so "Meta"
   // doesn't serve "Metabase"'s tailored CV. The pdf mode names files cv-…-{slug}-….

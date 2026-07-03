@@ -5,7 +5,8 @@
  * Supports: add, list, done.
  */
 
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { dirname } from 'path';
 
 const INBOX_PATH = 'data/agent-inbox.md';
 const SKELETON = `# Agent Inbox
@@ -36,11 +37,17 @@ function getInboxTasks() {
   return tasks;
 }
 
+function sanitizeCell(text) {
+  return text.replace(/\|/g, '\\|').replace(/[\r\n]+/g, ' ');
+}
+
 function saveInboxTasks(tasks) {
   let content = SKELETON;
   for (const t of tasks) {
-    content += `| ${t.id} | ${t.added} | ${t.task} | ${t.status} |\n`;
+    content += `| ${t.id} | ${t.added} | ${sanitizeCell(t.task)} | ${t.status} |\n`;
   }
+  const dir = dirname(INBOX_PATH);
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(INBOX_PATH, content, 'utf-8');
 }
 

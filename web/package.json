@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "Official web experience for career-ops — local-first.",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
