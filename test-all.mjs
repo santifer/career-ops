@@ -847,7 +847,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md',
+  'interview.md', 'latex.md', 'add.md',
   'regional/eu-swe.md',
 ];
 
@@ -3217,6 +3217,113 @@ try {
 
 } catch (e) {
   fail(`teamtailor provider tests crashed: ${e.message}`);
+}
+
+// ── 14b. ADD-ENTRY (/career-ops add) ────────────────────────────────
+
+console.log('\n14b. add-entry.mjs (dedup + insertion)');
+
+try {
+  const addMod = await import(pathToFileURL(join(ROOT, 'add-entry.mjs')).href);
+  const { normalizeKey, locateSection, cvHasEntry, insertIntoCvSection, articleDigestHasEntry, applyAdd } = addMod;
+
+  if (normalizeKey('Fraud-Shield!') === 'fraudshield') pass('normalizeKey strips punctuation/case');
+  else fail(`normalizeKey => ${normalizeKey('Fraud-Shield!')}`);
+
+  const sampleCv = [
+    '# CV -- Test',
+    '',
+    '## Work Experience',
+    '',
+    '### Acme -- Remote',
+    '',
+    '**Engineer**',
+    '2020-2022',
+    '',
+    '- Did things',
+    '',
+    '## Projects',
+    '',
+    '- **Existing** (OSS) -- already here',
+    '',
+    '## Education',
+    '',
+    '- BS CS',
+    '',
+  ].join('\n');
+
+  // locateSection isolates the right block
+  const loc = locateSection(sampleCv, 'Projects');
+  if (loc && loc.body.includes('Existing') && !loc.body.includes('BS CS')) pass('locateSection isolates the Projects block');
+  else fail(`locateSection => ${JSON.stringify(loc && loc.body)}`);
+
+  // insertion appends within section and preserves later sections
+  const inserted = insertIntoCvSection(sampleCv, 'Projects', '- **FraudShield** (OSS) -- fraud detection');
+  if (inserted.includes('- **Existing**') && inserted.includes('- **FraudShield**') &&
+      inserted.indexOf('FraudShield') < inserted.indexOf('## Education') &&
+      inserted.includes('## Education')) {
+    pass('insertIntoCvSection appends under Projects and keeps Education intact');
+  } else {
+    fail('insertIntoCvSection placement wrong');
+  }
+
+  // missing section is created at EOF
+  const withPubs = insertIntoCvSection(sampleCv, 'Publications', '- **A Paper** (2026) -- venue');
+  if (withPubs.includes('## Publications') && withPubs.includes('- **A Paper**')) pass('insertIntoCvSection creates a missing section');
+  else fail('insertIntoCvSection did not create missing section');
+
+  // dedup detection is punctuation/case-insensitive
+  if (cvHasEntry(sampleCv, 'Projects', 'existing') && !cvHasEntry(sampleCv, 'Projects', 'FraudShield')) {
+    pass('cvHasEntry detects an existing entry and misses a new one');
+  } else {
+    fail('cvHasEntry dedup logic wrong');
+  }
+
+  // applyAdd: fresh add to cv + article-digest (article-digest absent → created)
+  const added = applyAdd(
+    {
+      cv: { section: 'Projects', dedupKey: 'FraudShield', entry: '- **FraudShield** (OSS) -- fraud detection' },
+      articleDigest: { dedupKey: 'FraudShield', entry: '## FraudShield -- Detection\n\n**Hero metrics:** 99.7%' },
+    },
+    { cvText: sampleCv, articleText: null },
+  );
+  if (added.result.cv.status === 'added' && added.result.articleDigest.status === 'created' &&
+      added.cv.includes('FraudShield') && added.articleDigest.includes('## FraudShield')) {
+    pass('applyAdd adds a new CV entry and creates article-digest.md when absent');
+  } else {
+    fail(`applyAdd fresh-add => ${JSON.stringify(added.result)}`);
+  }
+
+  // applyAdd: idempotent — same payload against updated files is a no-op
+  const again = applyAdd(
+    {
+      cv: { section: 'Projects', dedupKey: 'FraudShield', entry: '- **FraudShield** (OSS) -- fraud detection' },
+      articleDigest: { dedupKey: 'FraudShield', entry: '## FraudShield -- Detection\n\n**Hero metrics:** 99.7%' },
+    },
+    { cvText: added.cv, articleText: added.articleDigest },
+  );
+  if (again.result.cv.status === 'duplicate' && again.result.articleDigest.status === 'duplicate') {
+    pass('applyAdd is idempotent (duplicate/duplicate on re-run)');
+  } else {
+    fail(`applyAdd re-run => ${JSON.stringify(again.result)}`);
+  }
+
+  if (articleDigestHasEntry(added.articleDigest, 'fraud shield')) pass('articleDigestHasEntry matches normalized heading');
+  else fail('articleDigestHasEntry failed to match');
+
+  // guardrails: cv add against a missing cv.md throws; empty payload throws
+  let threwNoCv = false;
+  try { applyAdd({ cv: { section: 'Projects', dedupKey: 'X', entry: '- x' } }, { cvText: null }); } catch { threwNoCv = true; }
+  if (threwNoCv) pass('applyAdd refuses to add to a missing cv.md');
+  else fail('applyAdd should throw when cv.md is absent');
+
+  let threwEmpty = false;
+  try { applyAdd({}, { cvText: sampleCv }); } catch { threwEmpty = true; }
+  if (threwEmpty) pass('applyAdd rejects an empty payload');
+  else fail('applyAdd should reject an empty payload');
+
+} catch (e) {
+  fail(`add-entry tests crashed: ${e.message}`);
 }
 
 // ── 12. TRACKER REPORT LINK NORMALIZATION (#760) ────────────────

@@ -101,6 +101,7 @@ const SYSTEM_PATHS = [
   'verify-pipeline.mjs',
   'reconcile-pipeline.mjs',
   'dedup-tracker.mjs',
+  'add-entry.mjs',
   'role-matcher.mjs',
   'tracker-utils.mjs',
   'tracker-parse.mjs',
