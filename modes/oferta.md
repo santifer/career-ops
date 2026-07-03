@@ -46,6 +46,21 @@ Table with:
 - Team size (if mentioned)
 - TL;DR in 1 sentence
 
+### Geo-mismatch check
+
+After filling the Remote row, cross-check the posting's **structured location field** (the location/remote designation shown on the posting page or in ATS metadata — not the Remote row you just wrote) against the JD body:
+
+- **Contradiction** = the location field says remote, but the JD body states a **binding attendance requirement**: "hybrid", "X days per week/month" in office, "in-office", "onsite"/"on-site", mandatory office attendance, or a relocation requirement.
+- **Not a contradiction:** negations ("no onsite requirement"), optional or occasional in-person events ("quarterly offsites", "optional co-working space"), or generic benefits boilerplate.
+- If the JD body says nothing about location or attendance, emit no flag — silence is absence of signal, not agreement.
+- If the input has no structured location field (pasted JD text only), skip this check.
+
+On contradiction, add exactly one flag line at the top of Block B in the report, quoting the evidence **verbatim** (never paraphrase):
+
+`⚠️ **Geo-mismatch:** location field says remote, but JD body says "{verbatim JD line}"`
+
+The flag is an additive line only — Block B's existing content stays unchanged below it, and no flag line appears when there is no contradiction.
+
 ## Block B — Match with CV
 
 Read `cv.md`. Create a table with each JD requirement mapped to exact lines in the CV.
