@@ -17,7 +17,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 3. SEARCH      → Match against existing reports in reports/
 4. LOAD        → Read full report + Section G (if it exists)
 5. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
-5b. PRE-SCAN   → Scan page for knock-out questions (degree, experience, sponsorship)
+5b. PRE-SCAN   → Scan page for knock-out questions (degree, experience, work authorization/visa, sponsorship, salary floors)
 6. ANALYZE     → Identify ALL visible form questions
 7. GENERATE    → For each question, generate a personalized response
 8. PRESENT     → Show formatted responses for copy-paste
@@ -53,7 +53,7 @@ Read the entire page/form to scan for knock-out questions BEFORE generating full
    - Highlight the specific knock-out question to the candidate immediately.
    - Present a clear warning block:
      `⚠️ KNOCK-OUT WARNING: The form asks "[question text]". Based on your profile/CV, answering "[profile answer]" may trigger immediate automatic rejection by the ATS. How would you like to answer this, or do you want to skip applying?`
-   - Stop and wait for the candidate's confirmation on these knock-outs before drafting any of the standard essay/free-text questions.
+   - Stop and wait for the candidate's confirmation before drafting any further answers.
 4. If no knock-out questions are found, or the candidate resolves the warning, proceed to Step 6.
 
 **Applying to several roles in one sitting?** This preflight verifies the single form in front of you. Before a multi-role session — especially against scanner entries marked `**Verification:** unconfirmed (batch mode)` — run the `pipeline` mode **Liveness sweep** first (`node check-liveness.mjs --file <urls>`). It drops the dead postings from `data/pipeline.md` in one batch so you never open a tab on an expired role.
