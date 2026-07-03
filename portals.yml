@@ -491,6 +491,15 @@ tracked_companies:
     notes: "Berlin / Vilnius. C2C marketplace, data science. Private Ashby API — WebSearch only."
     enabled: false
 
+  # ── DACH healthcare / e-pharmacy ──
+
+  - name: Redcare Pharmacy
+    careers_url: https://www.redcare-pharmacy.com/careers/open-jobs
+    api: https://api.smartrecruiters.com/v1/companies/Redcare-Pharmacy/postings
+    api_provider: smartrecruiters
+    notes: "Cologne DE (HQ Sevenum NL). Europe's #1 e-pharmacy, 4600+ employees. Data & AI team, Retail Media. SmartRecruiters ATS."
+    enabled: true
+
 # -- Job boards (DACH-focused aggregators) --
 job_boards:
 
