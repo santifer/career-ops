@@ -114,11 +114,11 @@ WebSearch를 사용합니다.
 ```markdown
 # Evaluation : {Company} -- {Role}
 
-**Date :** {YYYY-MM-DD}
-**Archetype :** {detected}
-**Score :** {X/5}
-**URL :** {job URL}
-**PDF :** {path or pending}
+**Date:** {YYYY-MM-DD}
+**Archetype:** {detected}
+**Score:** {X/5}
+**URL:** {job URL}
+**PDF:** {path or pending}
 
 ---
 
@@ -149,20 +149,16 @@ WebSearch를 사용합니다.
 (ATS 최적화를 위한 공고 키워드 15-20개)
 ```
 
-### 2. tracker에 기록
+### 2. tracker 추가 항목 작성
 
-항상 `data/applications.md`에 기록합니다.
-- 다음 순차 번호
-- 오늘 날짜
-- 회사
-- 역할
-- Score: match 평균(1-5)
-- Status: `Evaluated`
-- PDF: no (또는 auto-pipeline이 PDF를 생성했다면 yes)
-- Report: report 파일 상대 링크 (예: `[001](reports/001-company-2026-01-01.md)`)
+새 tracker row를 위해 `data/applications.md`를 직접 수정하지 않습니다. 평가마다 `batch/tracker-additions/{num}-{company-slug}.tsv`에 TSV 한 줄을 쓰고, 이후 `node merge-tracker.mjs`로 병합합니다.
 
-**Tracker format:**
+**TSV format (status before score):**
 
-```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report |
+```text
+{num}\t{date}\t{company}\t{role}\tEvaluated\t{score}/5\t{pdf}\t[{num}](reports/{num}-{company-slug}-{date}.md)\t{note}
 ```
+
+- `pdf`는 PDF가 생성되면 `✅`, 아니면 `❌`
+- report 링크는 root-relative로 작성합니다: `[001](reports/001-company-2026-01-01.md)`
+- 이미 같은 company + role이 있으면 새 row를 만들지 말고 기존 entry 업데이트 흐름을 따릅니다.

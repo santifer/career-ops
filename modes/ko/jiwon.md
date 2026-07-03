@@ -103,7 +103,7 @@ Notes:
 ## Step 6 -- 지원 후 처리 (선택)
 
 후보자가 지원서를 제출했다고 확인하면:
-1. `applications.md`의 status를 "Evaluated"에서 "Applied"로 업데이트합니다.
+1. tracker status 변경은 `data/applications.md`를 직접 수정하지 않습니다. `batch/tracker-additions/`에 `Applied` 상태의 TSV update를 쓰고 `node merge-tracker.mjs`로 병합합니다.
 2. 최종 답변을 report의 블록 G에 업데이트합니다.
 3. 다음 단계로 `/career-ops contacto`를 제안해 hiring manager 또는 recruiter에게 LinkedIn outreach를 할 수 있게 합니다.
 

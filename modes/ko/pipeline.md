@@ -11,7 +11,7 @@
    c. URL에 접근할 수 없으면 note와 함께 `- [!]`로 표시하고 계속합니다.
    d. **전체 auto-pipeline 실행**: Evaluation A-F -> Report .md -> PDF(score >= 3.0이면) -> Tracker
    e. **"대기"에서 "처리 완료"로 이동**: `- [x] #NNN | URL | Company | Role | Score/5 | PDF yes/no`
-3. **대기 URL이 3개 이상이면**, 속도를 위해 agent를 병렬로 실행합니다(Agent tool with `run_in_background`).
+3. **대기 URL이 3개 이상이어도 Playwright-backed 처리는 직렬로 실행합니다.** Playwright browser instance를 공유하므로 여러 browser-backed agent를 동시에 띄우지 않습니다. 병렬화가 필요하면 Playwright를 쓰지 않는 non-browser 작업에만 제한합니다.
 4. **마지막에** 요약 표를 표시합니다.
 
 ```markdown
