@@ -201,10 +201,12 @@ top_strengths:
 risk_level: "{Low | Medium | High}"
 confidence: "{Low | Medium | High}"
 next_action: "{one concrete next step}"
+discard_reasons:
+  - "{predicted reason if final_decision is Skip/Consider}"
 ```
 
 Rules:
-- Use `[]` for `hard_stops`, `soft_gaps`, or `top_strengths` when empty.
+- Use `[]` for `hard_stops`, `soft_gaps`, `top_strengths`, or `discard_reasons` when empty.
 - `score` is numeric only, without `/5`.
 - `final_decision` must reflect the full evaluation, not only the CV match.
 - Do not invent missing data. If confidence is limited, set `confidence: "Low"` and explain the limitation in the human-readable sections.
@@ -251,6 +253,8 @@ top_strengths:
 risk_level: "{Low | Medium | High}"
 confidence: "{Low | Medium | High}"
 next_action: "{one concrete next step}"
+discard_reasons:
+  - "{predicted reason if final_decision is Skip/Consider, e.g. salary_too_low, hybrid_required, tech_stack_mismatch, seniority_mismatch, size_mismatch, or other specific reason}"
 ```
 
 ## A) Resumen del Rol

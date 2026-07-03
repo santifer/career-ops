@@ -42,6 +42,8 @@ const MACHINE_SUMMARY_FIELDS = new Set([
   'seniority',
   'remote',
   'team_size',
+  // Issue 1380: predicted skip/discard reasons from the agent.
+  'discard_reasons',
 ]);
 
 // --- CLI args ---
@@ -183,6 +185,7 @@ function parseReport(reportPath) {
     confidence: null,
     nextAction: null,
     topStrengths: [],
+    discardReasons: [],
     scores: {},
     gaps: [],
   };
@@ -203,6 +206,7 @@ function parseReport(reportPath) {
     report.confidence = normalizeScalar(machineSummary.confidence) || report.confidence;
     report.nextAction = normalizeScalar(machineSummary.next_action) || report.nextAction;
     report.topStrengths = normalizeList(machineSummary.top_strengths);
+    report.discardReasons = normalizeList(machineSummary.discard_reasons);
 
     if (typeof machineSummary.score === 'number') {
       report.scores.global = machineSummary.score;
@@ -492,6 +496,44 @@ function analyze() {
       : 'N/A',
   };
 
+  // --- Discard reason analysis (Issue 1380) ---
+  // Aggregates predicted reasons from Machine Summary `discard_reasons` lists
+  // plus any user-committed `DISCARD: <reason>` tags in the Notes column.
+  const discardReasonCounts = new Map();
+  for (const e of enriched) {
+    if (e.outcome !== 'self_filtered' && e.outcome !== 'negative') continue;
+    // From report's predicted reasons
+    for (const reason of (e.report?.discardReasons ?? [])) {
+      const key = reason.trim().toLowerCase();
+      if (key) discardReasonCounts.set(key, (discardReasonCounts.get(key) || 0) + 1);
+    }
+    // From tracker Notes column: "DISCARD: <reason>" or "SKIP: <reason>"
+    const notesMatch = (e.notes || '').match(/(?:DISCARD|SKIP):\s*([^,;\n]+)/gi);
+    if (notesMatch) {
+      for (const m of notesMatch) {
+        const key = m.replace(/^(?:DISCARD|SKIP):\s*/i, '').trim().toLowerCase();
+        if (key) discardReasonCounts.set(key, (discardReasonCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+  const discardReasonStats = [...discardReasonCounts.entries()]
+    .map(([reason, frequency]) => ({
+      reason,
+      frequency,
+      percentage: Math.round((frequency / enriched.length) * 100),
+    }))
+    .sort((a, b) => b.frequency - a.frequency);
+
+  // Recommend updating _custom.md when a single reason dominates
+  const topDiscardReason = discardReasonStats[0];
+  if (topDiscardReason && topDiscardReason.frequency >= Math.max(3, Math.ceil(enriched.length * 0.15))) {
+    recommendations.push({
+      action: `Add "${topDiscardReason.reason}" filter to modes/_custom.md to avoid wasting evaluation effort`,
+      reasoning: `"${topDiscardReason.reason}" is the most frequent discard reason (${topDiscardReason.frequency}x, ${topDiscardReason.percentage}% of all applications).`,
+      impact: 'high',
+    });
+  }
+
   // --- Tech stack gaps (from negative + self_filtered outcomes) ---
   const stackGapCounts = new Map();
   for (const e of enriched) {
@@ -590,6 +632,7 @@ function analyze() {
     companySizeBreakdown,
     scoreThreshold,
     techStackGaps,
+    discardReasonStats,
     recommendations,
   };
 }
@@ -601,7 +644,7 @@ function printSummary(result) {
     return;
   }
 
-  const { metadata, funnel, scoreComparison, archetypeBreakdown, blockerAnalysis, remotePolicy, scoreThreshold, techStackGaps, recommendations } = result;
+  const { metadata, funnel, scoreComparison, archetypeBreakdown, blockerAnalysis, remotePolicy, scoreThreshold, techStackGaps, discardReasonStats, recommendations } = result;
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`  Pattern Analysis — ${metadata.analysisDate}`);
@@ -650,6 +693,15 @@ function printSummary(result) {
     console.log('-'.repeat(40));
     for (const g of techStackGaps.slice(0, 10)) {
       console.log(`  ${g.skill.padEnd(20)} ${g.frequency}x`);
+    }
+  }
+
+  // Discard reasons
+  if (discardReasonStats && discardReasonStats.length > 0) {
+    console.log('\nTOP DISCARD / SKIP REASONS');
+    console.log('-'.repeat(40));
+    for (const d of discardReasonStats.slice(0, 10)) {
+      console.log(`  ${d.reason.padEnd(30)} ${String(d.frequency).padStart(2)}x (${d.percentage}%)`);
     }
   }
 

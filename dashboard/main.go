@@ -76,6 +76,15 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.reloadPipelineData()
 		return m, nil
 
+	case screens.PipelineUpdateStatusAndNotesMsg:
+		// Issue 1380: atomic status + notes write from the discard reason picker.
+		err := data.UpdateApplicationStatusAndNotes(msg.CareerOpsPath, msg.App, msg.NewStatus, msg.NotesAppend)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WARN: status+notes update failed: %v\n", err)
+		}
+		m.reloadPipelineData()
+		return m, nil
+
 	case screens.PipelineRefreshMsg:
 		m.reloadPipelineData()
 		return m, nil
