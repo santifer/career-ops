@@ -49,6 +49,10 @@ export type DiscoveredOffer = {
   source: string;
   /** which positive keyword matched the title (transparency, e.g. "ai" in "Nail") */
   matchedKeyword?: string;
+  /** optional free-text ranking signal preserved to pipeline.md by the canonical
+   *  writer (scan.mjs formatPipelineOffer). Generic and source-agnostic — an
+   *  importer can attach a note; the deterministic scan omits it. */
+  note?: string;
   // ── AI-search (modes/discover.md) additions — all optional, so the
   //    deterministic scan offer is unaffected (fields simply absent). ──
   /** present ONLY on AI offers → drives the "unverified" badge. AI finds can't be

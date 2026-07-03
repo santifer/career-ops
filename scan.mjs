@@ -637,8 +637,16 @@ export function formatPipelineOffer(offer) {
   const location = typeof offer.location === 'string' ? sanitizeMarkdownField(offer.location) : '';
   const compensation = formatCompensation(offer.salary);
   const base = `- [ ] ${url} | ${company} | ${title}`;
-  if (compensation) return `${base} | ${location} | ${compensation}`;
-  return location ? `${base} | ${location}` : base;
+  let line = base;
+  if (compensation) line = `${base} | ${location} | ${compensation}`;
+  else if (location) line = `${base} | ${location}`;
+  // Optional free-text ranking signal (e.g. a curated-list flag an importer
+  // attaches). Labeled — not positional like location/compensation — so it can
+  // ride on any row shape (bare URL, 3-, 4-, or 5-column) without a reader
+  // confusing it for a positional cell, and it stays generic: nothing here is
+  // source-specific, and an offer without `note` produces byte-identical output.
+  const note = typeof offer.note === 'string' ? sanitizeMarkdownField(offer.note) : '';
+  return note ? `${line} | note: ${note}` : line;
 }
 
 export function formatScanHistoryRow(offer, date, status = 'added') {

@@ -1123,6 +1123,28 @@ try {
   } else {
     fail(`scan.mjs compensation column wrong: "${compRange}" / "${compSingle}" / "${compNone}" / "${compZeroMin}" / "${withComp}" / "${compNoLoc}"`);
   }
+
+  // pipeline.md optional note (#1142): formatPipelineOffer preserves an optional
+  // free-text ranking signal as a labeled `| note: {text}` segment. It rides on
+  // any row shape, an absent/empty note is byte-identical to today's output, and
+  // the note is sanitized like every other field (a `|` can't inject a column).
+  const noteFull = formatPipelineOffer({ url: 'https://x/6', company: 'Acme', title: 'AI Eng', location: 'Remote', salary: { min: 180000, max: 220000, currency: 'USD' }, note: 'curated shortlist' });
+  const noteBare = formatPipelineOffer({ url: 'https://x/7', company: 'Acme', title: 'PM', note: 'Top pick' });
+  const noteAbsent = formatPipelineOffer({ url: 'https://x/8', company: 'Acme', title: 'PM' });
+  const noteEmpty = formatPipelineOffer({ url: 'https://x/8', company: 'Acme', title: 'PM', note: '' });
+  const noteNonString = formatPipelineOffer({ url: 'https://x/8', company: 'Acme', title: 'PM', note: 42 });
+  const notePipe = formatPipelineOffer({ url: 'https://x/9', company: 'Acme', title: 'PM', note: 'A | B' });
+  if (
+    noteFull === '- [ ] https://x/6 | Acme | AI Eng | Remote | 180000-220000 USD | note: curated shortlist' &&
+    noteBare === '- [ ] https://x/7 | Acme | PM | note: Top pick' &&
+    noteEmpty === noteAbsent &&
+    noteNonString === noteAbsent &&
+    notePipe === '- [ ] https://x/9 | Acme | PM | note: A / B'
+  ) {
+    pass('scan.mjs formatPipelineOffer preserves an optional labeled note (#1142; absent = byte-identical, sanitized)');
+  } else {
+    fail(`scan.mjs note segment wrong: "${noteFull}" / "${noteBare}" / "${noteEmpty}" / "${noteNonString}" / "${notePipe}"`);
+  }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
 }
