@@ -34,6 +34,7 @@ jds/*
 
 # Interview prep (accumulated STAR+R stories — user data)
 interview-prep/*
+!interview-prep/
 !interview-prep/.gitkeep
 # Session transcripts hold real interviewer names/companies — ignore content,
 # ship only the system-owned scaffold (README + .gitkeep). #1242
