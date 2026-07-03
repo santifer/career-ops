@@ -38,8 +38,18 @@ export function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const prevOpen = useRef(open);
   const { jobs } = useJobs();
   const running = jobs.filter((j) => j.status === "running").length;
+
+  // Restore focus to trigger when closing menu.
+  useEffect(() => {
+    if (!open && prevOpen.current) {
+      triggerRef.current?.focus();
+    }
+    prevOpen.current = open;
+  }, [open]);
 
   // Close on route change.
   useEffect(() => {
@@ -112,6 +122,7 @@ export function MobileNav() {
         <div className="ml-auto flex items-center gap-0.5">
           <ThemeToggle />
           <button
+            ref={triggerRef}
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Open menu"

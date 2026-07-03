@@ -55,14 +55,19 @@ export function PipelineView({
   // Search stays LOCAL for snappy typing; seeded from the URL and re-synced only
   // when the URL's q changes (i.e. the assistant set it) — never per keystroke.
   const [q, setQ] = useState(params.get("q") ?? "");
+  const [visibleCount, setVisibleCount] = useState(60);
   const lastUrlQ = useRef(params.get("q") ?? "");
   useEffect(() => {
     const urlQ = params.get("q") ?? "";
     if (urlQ !== lastUrlQ.current) {
-      lastUrlQ.current = urlQ;
       setQ(urlQ);
+      lastUrlQ.current = urlQ;
     }
   }, [params]);
+
+  useEffect(() => {
+    setVisibleCount(60);
+  }, [tab, q, minFilter]);
 
   const setParams = useCallback(
     (updates: Record<string, string | number | null>) => {
@@ -207,67 +212,78 @@ export function PipelineView({
       {tab === "INBOX" ? (
         /* ── Inbox: the action queue with worker triggers ── */
         filteredInbox.length > 0 ? (
-          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/40">
-            {filteredInbox.slice(0, 60).map((j, i) => {
-              const job = jobByUrl.get(j.url);
-              const processed = job?.status === "done";
-              const launch = () =>
-                startJob({ title: `Evaluate · ${j.company}`, subtitle: j.role, kind: "evaluate", input: j.url, page: "/pipeline" });
-              return (
-                <li
-                  key={`${j.url}-${i}`}
-                  className={cn(
-                    "flex items-center justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-surface-hover",
-                    processed && "opacity-60",
-                  )}
-                >
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <CompanyLogo name={j.company} size={20} />
-                    <span className="shrink-0 text-sm font-medium">{j.company}</span>
-                    <span className="truncate text-sm text-muted">{j.role}</span>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {job?.status === "running" ? (
-                      <Link
-                        href={`/jobs/${job.id}`}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-brand"
-                      >
-                        <Loader2 className="size-3.5 animate-spin" /> Evaluating…
-                      </Link>
-                    ) : job?.status === "done" ? (
-                      <Link href={`/jobs/${job.id}`} className="inline-flex items-center gap-1.5 text-xs">
-                        {job.result?.score != null && <Badge tone={job.result.tone}>{job.result.score}/5</Badge>}
-                        <span className="text-faint">processed</span>
-                      </Link>
-                    ) : job?.status === "error" ? (
-                      <button type="button" onClick={launch} className="text-xs text-red-400 transition-colors hover:underline">
-                        Retry
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={launch}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-surface-hover hover:text-brand"
-                        title="Evaluate this posting — spins up a worker on your CLI"
-                      >
-                        <Sparkles className="size-3.5" />
-                        <span className="hidden sm:inline">Evaluate</span>
-                      </button>
+          <>
+            <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/40">
+              {filteredInbox.slice(0, visibleCount).map((j, i) => {
+                const job = jobByUrl.get(j.url);
+                const processed = job?.status === "done";
+                const launch = () =>
+                  startJob({ title: `Evaluate · ${j.company}`, subtitle: j.role, kind: "evaluate", input: j.url, page: "/pipeline" });
+                return (
+                  <li
+                    key={`${j.url}-${i}`}
+                    className={cn(
+                      "flex items-center justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-surface-hover",
+                      processed && "opacity-60",
                     )}
-                    <a
-                      href={j.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-md p-1 text-faint transition-colors hover:text-brand"
-                      aria-label={`Open ${j.company} posting`}
-                    >
-                      <ExternalLink className="size-4" />
-                    </a>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <CompanyLogo name={j.company} size={20} />
+                      <span className="shrink-0 text-sm font-medium">{j.company}</span>
+                      <span className="truncate text-sm text-muted">{j.role}</span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {job?.status === "running" ? (
+                        <Link
+                          href={`/jobs/${job.id}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand"
+                        >
+                          <Loader2 className="size-3.5 animate-spin" /> Evaluating…
+                        </Link>
+                      ) : job?.status === "done" ? (
+                        <Link href={`/jobs/${job.id}`} className="inline-flex items-center gap-1.5 text-xs">
+                          {job.result?.score != null && <Badge tone={job.result.tone}>{job.result.score}/5</Badge>}
+                          <span className="text-faint">processed</span>
+                        </Link>
+                      ) : job?.status === "error" ? (
+                        <button type="button" onClick={launch} className="text-xs text-red-400 transition-colors hover:underline">
+                          Retry
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={launch}
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-surface-hover hover:text-brand"
+                          title="Evaluate this posting — spins up a worker on your CLI"
+                        >
+                          <Sparkles className="size-3.5" />
+                          <span className="hidden sm:inline">Evaluate</span>
+                        </button>
+                      )}
+                      <a
+                        href={j.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-md p-1 text-faint transition-colors hover:text-brand"
+                        aria-label={`Open ${j.company} posting`}
+                      >
+                        <ExternalLink className="size-4" />
+                      </a>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {filteredInbox.length > visibleCount && (
+              <button
+                type="button"
+                onClick={() => setVisibleCount((v) => v + 60)}
+                className="mt-4 text-xs text-brand hover:underline"
+              >
+                Show {Math.min(60, filteredInbox.length - visibleCount)} more
+              </button>
+            )}
+          </>
         ) : (
           <InboxEmpty count={pendingInbox.length} filtered={q.trim().length > 0} />
         )

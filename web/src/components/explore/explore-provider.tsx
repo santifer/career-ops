@@ -218,7 +218,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addToPipeline = useCallback(async (list: DiscoveredOffer[]) => {
-    const fresh = list.filter((o) => !added.has(o.url));
+    const fresh = list.filter((o) => !added.has(o.url) && !adding.has(o.url));
     if (fresh.length === 0) return 0;
     setAdding((s) => new Set([...s, ...fresh.map((o) => o.url)]));
     try {
@@ -239,7 +239,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     }
-  }, [added]);
+  }, [added, adding]);
 
   const applyPatch = useCallback((raw: Record<string, unknown>, opts?: { merge?: boolean; run?: boolean }) => {
     const next = parseExplorePatch(raw, filtersRef.current, opts?.merge ?? false);

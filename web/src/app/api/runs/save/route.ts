@@ -35,6 +35,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "mkdir failed" }, { status: 500 });
   }
   const safeId = String(b.id).replace(/[^a-z0-9_-]/gi, "");
+  if (!safeId) return NextResponse.json({ error: "invalid id" }, { status: 400 });
   const steps = (b.steps ?? []).map((s) => `- ${s.kind === "tool" ? `🔧 ${s.label}` : s.label}`).join("\n");
   const verdict = b.result?.score != null ? `${b.result.score}/5 — ${b.result.summary || ""}` : "—";
   const md = `# Web run · ${b.title || b.id}

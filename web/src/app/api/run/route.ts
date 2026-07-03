@@ -64,6 +64,15 @@ Posting URL: ${input}`;
 }
 
 export async function POST(req: Request) {
+  const origin = req.headers.get("origin");
+  const host = req.headers.get("host");
+  if (origin && host) {
+    const originUrl = new URL(origin);
+    if (originUrl.hostname !== "localhost" && originUrl.hostname !== "127.0.0.1") {
+      return new Response(JSON.stringify({ error: "forbidden origin" }), { status: 403 });
+    }
+  }
+
   let body: { kind?: string; input?: string; cliId?: string };
   try {
     body = await req.json();
@@ -74,6 +83,22 @@ export async function POST(req: Request) {
   if (!input || !cliId) {
     return new Response(JSON.stringify({ error: "input and cliId required" }), { status: 400 });
   }
+
+  let sanitizedInput = input;
+  if (kind === "fix-portal") {
+    sanitizedInput = input.replace(/[^a-zA-Z0-9_.-]/g, "");
+    if (!sanitizedInput) return new Response(JSON.stringify({ error: "invalid input" }), { status: 400 });
+  } else if (kind === "pdf") {
+    sanitizedInput = input.replace(/[^0-9]/g, "");
+    if (!sanitizedInput) return new Response(JSON.stringify({ error: "invalid application number" }), { status: 400 });
+  } else if (kind === "evaluate") {
+    try {
+      new URL(input);
+    } catch {
+      return new Response(JSON.stringify({ error: "invalid URL" }), { status: 400 });
+    }
+  }
+
   const resolved = resolveCli(cliId);
   if (!resolved) {
     return new Response(JSON.stringify({ error: `CLI '${cliId}' not found` }), {
@@ -106,7 +131,7 @@ export async function POST(req: Request) {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const prompt = buildPrompt(kind, input, readMemory(), today);
+  const prompt = buildPrompt(kind, sanitizedInput, readMemory(), today);
 
   const isClaude = cliId === "claude";
   // Tool scope by kind (comma-separated lists; disallowedTools is the hard
@@ -128,15 +153,15 @@ export async function POST(req: Request) {
   // For write-needing kinds, snapshot reports/ so we can verify the worker
   // actually persisted (non-Claude CLIs lack Write auth and silently no-op).
   const reportsDir = path.join(careerOpsRoot(), "reports");
-  const countReports = () => {
+  const getReports = (): Set<string> => {
     try {
-      return fs.readdirSync(reportsDir).filter((f) => f.endsWith(".md")).length;
+      return new Set(fs.readdirSync(reportsDir).filter((f) => f.endsWith(".md")));
     } catch {
-      return 0;
+      return new Set();
     }
   };
   const persists = kind === "evaluate";
-  const reportsBefore = persists ? countReports() : 0;
+  const reportsBefore = persists ? getReports() : new Set<string>();
 
   const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env });
   const enc = new TextEncoder();
@@ -208,10 +233,20 @@ export async function POST(req: Request) {
           send({ type: "error", msg: "The CLI exited with an error — is it installed and authenticated?" });
         } else if (!emittedText && !sawError) {
           send({ type: "error", msg: "The CLI produced no output — is it installed and authenticated? (career-ops is best on Claude Code.)" });
-        } else if (persists && countReports() <= reportsBefore) {
-          // The worker ran but never wrote the report/tracker row (e.g. a CLI
-          // without file-write authorization) — surface it instead of a fake score.
-          send({ type: "error", msg: "This evaluation didn't save a report, so it's not in your tracker. Full evaluation is verified on Claude Code." });
+        } else if (persists) {
+          const reportsAfter = getReports();
+          let hasNewReport = false;
+          for (const f of reportsAfter) {
+            if (!reportsBefore.has(f)) {
+              hasNewReport = true;
+              break;
+            }
+          }
+          if (!hasNewReport) {
+            send({ type: "error", msg: "This evaluation didn't save a report, so it's not in your tracker. Full evaluation is verified on Claude Code." });
+          } else {
+            send({ type: "done" });
+          }
         } else {
           send({ type: "done" });
         }

@@ -30,21 +30,23 @@ export function TodayDashboard({
   const [followups, setFollowups] = useState<FollowUp[]>([]);
   const [overdue, setOverdue] = useState(0);
   const [fresh, setFresh] = useState<DiscoveredOffer[]>([]);
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
   const router = useRouter();
   const dateLabel = useMemo(() => new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }), []);
 
   const refetch = useCallback(() => {
-    fetch("/api/followups")
+    const p1 = fetch("/api/followups")
       .then((r) => r.json())
       .then((d) => {
         setFollowups(Array.isArray(d.entries) ? d.entries : []);
         setOverdue(d.metadata?.overdue ?? d.entries?.length ?? 0);
       })
       .catch(() => {});
-    fetch("/api/whats-new")
+    const p2 = fetch("/api/whats-new")
       .then((r) => r.json())
       .then((d) => setFresh(Array.isArray(d.offers) ? d.offers : []))
       .catch(() => {});
+    Promise.allSettled([p1, p2]).then(() => setHasFetchedOnce(true));
   }, []);
 
   useEffect(() => {
@@ -79,7 +81,9 @@ export function TodayDashboard({
             <span className="text-faint">//</span> today · <span className="tabular-nums">{dateLabel}</span>
           </p>
           <h1 className={`${instrumentSerif.className} mt-3 text-4xl leading-[1.05] tracking-tight text-landing md:text-5xl`}>
-            {allClear ? (
+            {!hasFetchedOnce ? (
+              <span className="opacity-50">Checking your queue...</span>
+            ) : allClear ? (
               <>You&apos;re all caught up.</>
             ) : (
               <>
@@ -98,7 +102,11 @@ export function TodayDashboard({
             )}
           </h1>
           <p className="mt-4 max-w-xl text-sm text-muted">
-            {allClear ? "I'll keep scanning the market in the background and surface anything that fits." : "Your action queue for today — discovery and follow-ups, in one place."}
+            {!hasFetchedOnce
+              ? "Updating follow-ups and fresh matches."
+              : allClear
+              ? "I'll keep scanning the market in the background and surface anything that fits."
+              : "Your action queue for today — discovery and follow-ups, in one place."}
           </p>
           <div className="mt-6 flex flex-wrap gap-2.5">
             <Link href="/explore" className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground transition hover:bg-brand-200">

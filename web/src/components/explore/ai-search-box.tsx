@@ -58,6 +58,7 @@ export function AiSearchBox({
           ref={ref}
           rows={2}
           value={intent}
+          aria-label="Describe the role you're looking for"
           onChange={(e) => {
             onIntent(e.target.value);
             grow();

@@ -154,12 +154,18 @@ export function ExplorerView({
         <>
           {isResults ? (
             <div className="mb-6 rounded-xl border border-border bg-surface/30">
-              <button type="button" onClick={() => setRefineOpen((v) => !v)} className="flex w-full items-center gap-2 px-4 py-3 text-sm font-medium text-foreground">
+              <button
+                type="button"
+                aria-expanded={refineOpen}
+                aria-controls="refine-panel"
+                onClick={() => setRefineOpen((v) => !v)}
+                className="flex w-full items-center gap-2 px-4 py-3 text-sm font-medium text-foreground"
+              >
                 <Compass className="size-4 text-brand" /> Refine search
                 <ChevronDown className={cn("ml-auto size-4 text-muted transition-transform", refineOpen && "rotate-180")} />
               </button>
               {refineOpen && (
-                <div className="space-y-4 border-t border-border p-4">
+                <div id="refine-panel" className="space-y-4 border-t border-border p-4">
                   <FilterBuilder filters={filters} onChange={setFilters} seededFrom={seed.seededFrom} />
                   <DiscoverBar canDiscover={canDiscover} onDiscover={discover} label="Re-cast (free)" />
                 </div>

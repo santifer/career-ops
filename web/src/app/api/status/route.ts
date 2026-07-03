@@ -10,6 +10,8 @@ import { atomicWrite } from "@/lib/core/safe-write";
 // HARDENED: validate against the 8 canonical states (states.yml SSOT); reject any
 // value with table-breaking chars (| \r \n **) that would scramble the row; detect
 // the Status column from the header (8- and 9-col layouts); atomic write.
+let statusLock = Promise.resolve();
+
 export async function POST(req: Request) {
   let body: { n?: string; status?: string };
   try {
@@ -30,45 +32,56 @@ export async function POST(req: Request) {
   }
 
   const file = path.join(careerOpsRoot(), "data", "applications.md");
-  let md: string;
-  try {
-    md = fs.readFileSync(file, "utf8");
-  } catch {
-    return NextResponse.json({ error: "tracker not found" }, { status: 404 });
-  }
 
-  const lines = md.split("\n");
-  // Find the Status column index from the header row (robust to 8- vs 9-col).
-  let statusIdx = 6;
-  for (const l of lines) {
-    if (!l.trim().startsWith("|")) continue;
-    const cells = l.split("|").map((c) => c.trim().toLowerCase());
-    const idx = cells.findIndex((c) => c === "status");
-    if (idx > 0) {
-      statusIdx = idx;
-      break;
-    }
-    if (/^:?-{2,}:?$/.test(cells[1] ?? "")) break; // hit the separator → no header match, keep default
-  }
+  return new Promise<Response>((resolve) => {
+    statusLock = statusLock.then(async () => {
+      let md: string;
+      try {
+        md = fs.readFileSync(file, "utf8");
+      } catch {
+        resolve(NextResponse.json({ error: "tracker not found" }, { status: 404 }));
+        return;
+      }
 
-  let changed = false;
-  for (let i = 0; i < lines.length; i++) {
-    if (!lines[i].trim().startsWith("|")) continue;
-    const parts = lines[i].split("|");
-    if (parts.length < 8) continue;
-    if (parts[1].trim() !== String(n)) continue;
-    if (statusIdx >= parts.length - 1) continue; // guard malformed row
-    parts[statusIdx] = ` ${canon} `;
-    lines[i] = parts.join("|");
-    changed = true;
-    break;
-  }
-  if (!changed) return NextResponse.json({ error: "row not found" }, { status: 404 });
+      const lines = md.split("\n");
+      let statusIdx = 6;
+      for (const l of lines) {
+        if (!l.trim().startsWith("|")) continue;
+        const cells = l.split("|").map((c) => c.trim().toLowerCase());
+        const idx = cells.findIndex((c) => c === "status");
+        if (idx > 0) {
+          statusIdx = idx;
+          break;
+        }
+        if (/^:?-{2,}:?$/.test(cells[1] ?? "")) break;
+      }
 
-  try {
-    atomicWrite(file, lines.join("\n"));
-  } catch {
-    return NextResponse.json({ error: "write failed" }, { status: 500 });
-  }
-  return NextResponse.json({ ok: true, status: canon });
+      let changed = false;
+      for (let i = 0; i < lines.length; i++) {
+        if (!lines[i].trim().startsWith("|")) continue;
+        const parts = lines[i].split("|");
+        if (parts.length < 8) continue;
+        if (parts[1].trim() !== String(n)) continue;
+        if (statusIdx >= parts.length - 1) continue;
+        parts[statusIdx] = ` ${canon} `;
+        lines[i] = parts.join("|");
+        changed = true;
+        break;
+      }
+      if (!changed) {
+        resolve(NextResponse.json({ error: "row not found" }, { status: 404 }));
+        return;
+      }
+
+      try {
+        atomicWrite(file, lines.join("\n"));
+        resolve(NextResponse.json({ ok: true, status: canon }));
+      } catch {
+        resolve(NextResponse.json({ error: "write failed" }, { status: 500 }));
+      }
+    }).catch((err) => {
+      resolve(NextResponse.json({ error: err instanceof Error ? err.message : "lock error" }, { status: 500 }));
+    });
+  });
 }
+

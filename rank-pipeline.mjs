@@ -187,11 +187,13 @@ Provide ONLY the raw JSON array wrapped in a markdown \`\`\`json ... \`\`\` code
       for (const res of parsedBatch) {
         const job = batch[res.id];
         if (job) {
+          const score = Number(res.score);
+          if (!Number.isFinite(score)) continue;
           results.push({
             index: job.index,
             originalLine: job.originalLine,
-            score: res.score,
-            reason: res.reason
+            score: Math.max(0, Math.min(5, Math.round(score))),
+            reason: String(res.reason || '').replace(/\s+/g, ' ').replace(/[\[\]]/g, '').slice(0, 180).trim()
           });
         }
       }
@@ -207,7 +209,8 @@ Provide ONLY the raw JSON array wrapped in a markdown \`\`\`json ... \`\`\` code
 if (results.length > 0) {
   for (const res of results) {
     const cleanReason = String(res.reason || '').replace(/[\[\]]/g, '').trim();
-    lines[res.index] = `${res.originalLine} [Score: ${res.score}/5 — ${cleanReason}]`;
+    const applyNote = res.score < 4 ? ' Recommend against applying unless you have a specific reason to override.' : '';
+    lines[res.index] = `${res.originalLine} [Score: ${res.score}/5 — ${cleanReason}${applyNote}]`;
   }
   writeFileSync(PIPELINE_PATH, lines.join('\n'), 'utf-8');
   console.log(`\n🎉 Successfully annotated ${results.length} offer(s) with scores in ${PIPELINE_PATH}.`);

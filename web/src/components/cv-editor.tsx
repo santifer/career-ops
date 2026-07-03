@@ -13,6 +13,7 @@ export function CvEditor() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/cv")
@@ -26,6 +27,7 @@ export function CvEditor() {
 
   async function save() {
     setSaving(true);
+    setSaveError(null);
     try {
       const res = await fetch("/api/cv", {
         method: "POST",
@@ -37,7 +39,12 @@ export function CvEditor() {
         setExists(true);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setSaveError((d as { error?: string }).error ?? "Save failed");
       }
+    } catch {
+      setSaveError("Network error — save failed");
     } finally {
       setSaving(false);
     }
@@ -67,6 +74,7 @@ export function CvEditor() {
           {saving ? <Loader2 className="size-4 animate-spin" /> : saved ? <Check className="size-4" /> : null}
           {saved ? "Saved" : "Save"}
         </button>
+        {saveError && <p className="text-xs text-red-500">{saveError}</p>}
       </div>
 
       {!loaded ? (

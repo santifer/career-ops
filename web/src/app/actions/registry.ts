@@ -168,7 +168,9 @@ const ACTIONS: Record<string, ActionDef> = {
       const matches = ctx.inbox.filter((j) => {
         if (j.done) return false;
         const c = normCompany(j.company);
-        return c === target || c.includes(target) || target.includes(c);
+        if (c === target) return true;
+        // Guard against overly broad fuzzy matches on very short/ambiguous names.
+        return target.length >= 3 && (c.includes(target) || target.includes(c));
       });
       const pending = matches
         .filter((j) => {

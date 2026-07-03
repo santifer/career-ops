@@ -31,13 +31,17 @@ export function useCountUp(target: number): number {
   const [val, setVal] = useState(target);
   const raf = useRef(0);
   useEffect(() => {
+    let current = val;
     const tick = () => {
-      setVal((v) => {
-        const diff = target - v;
-        if (Math.abs(diff) < 0.5) return target;
-        raf.current = requestAnimationFrame(tick);
-        return v + diff * 0.18;
-      });
+      const diff = target - current;
+      if (Math.abs(diff) < 0.5) {
+        current = target;
+        setVal(target);
+        return;
+      }
+      current = current + diff * 0.18;
+      setVal(current);
+      raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);

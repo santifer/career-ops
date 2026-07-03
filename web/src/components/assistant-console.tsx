@@ -179,14 +179,17 @@ export function AssistantConsole() {
   }, []);
   useEffect(() => {
     if (!messages.length) return;
-    try {
-      const serializable = messages
-        .slice(-30)
-        .map((m) => ({ role: m.role, parts: m.parts.filter((p) => p.type !== "confirm" || p.state !== "pending") }));
-      localStorage.setItem(CHAT_KEY, JSON.stringify(serializable));
-    } catch {
-      /* ignore */
-    }
+    const t = window.setTimeout(() => {
+      try {
+        const serializable = messages
+          .slice(-30)
+          .map((m) => ({ role: m.role, parts: m.parts.filter((p) => p.type !== "confirm" || p.state !== "pending") }));
+        localStorage.setItem(CHAT_KEY, JSON.stringify(serializable));
+      } catch {
+        /* ignore */
+      }
+    }, 300);
+    return () => window.clearTimeout(t);
   }, [messages]);
 
   useEffect(() => {

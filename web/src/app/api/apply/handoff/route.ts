@@ -13,7 +13,9 @@ export async function POST(req: Request) {
   } catch {
     return Response.json({ error: "bad json" }, { status: 400 });
   }
-  if (!body.sessionId) return Response.json({ error: "sessionId required" }, { status: 400 });
+  if (typeof body.sessionId !== "string" || !body.sessionId.trim()) {
+    return Response.json({ error: "sessionId required" }, { status: 400 });
+  }
   try {
     await handoffSession(body.sessionId);
     return Response.json({ ok: true });

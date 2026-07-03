@@ -140,7 +140,7 @@ Drop every match silently (don't propose it), and reflect the count in the effor
 
 Emit each candidate as a **single-line** envelope the moment you're confident in it — stream them as you go, don't batch to the end. One JSON object per line, prefixed and suffixed exactly:
 
-```
+```text
 <<offer:{"url":"https://jobs.ashbyhq.com/acme/abc123","title":"AI Infrastructure Engineer","company":"Acme","location":"Remote (EU)","source":"ai-search","why":"ML platform role at a Series A climate startup; remote-EU — matches your intent","postedHint":"~5 days ago","ats":"ashby","verification":"unconfirmed"}>>
 ```
 
@@ -175,7 +175,7 @@ Example narration beats:
 
 For direct CLI use (`/career-ops discover "…"`), after the narration + envelopes, print a clean numbered list and offer to add. Envelopes are silent on the surface a human reads (the web parses them; the CLI shows the list), but they're still emitted on the stream — keep both.
 
-```
+```text
 Discover — "AI infra roles at climate startups, remote EU"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Searched: 5 queries · 14 found · 6 already known · 8 new candidates
@@ -232,12 +232,13 @@ This mode spends the user's **own** tokens (their configured CLI/key). Be honest
 7. Emit 8 `<<offer:...>>` envelopes (each `source:"ai-search"`, `verification:"unconfirmed"`), narrating as I go.
 
 **Tail (CLI):**
-```
+```text
 Searched: 5 queries · 3 fetched · 11 found · 3 already known · 8 new
 ⚠️  All 8 are AI-discovered and UNVERIFIED — verify on add or at evaluate.
   1. … 8. …
 Add which to your pipeline? (e.g. "1, 3, 5" · "all" · "none")
 ```
+
 User picks `1, 4, 7` → `appendToPipeline` + `appendToScanHistory(..., "added")` on those three only. → "Added 3. Run `/career-ops pipeline` to evaluate (Playwright-verified there)."
 
 ---

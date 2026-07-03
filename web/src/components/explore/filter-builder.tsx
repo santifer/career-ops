@@ -137,6 +137,7 @@ export function FilterBuilder({
               <button
                 key={r.days}
                 type="button"
+                aria-pressed={filters.sinceDays === r.days}
                 onClick={() => set({ sinceDays: r.days })}
                 className={cn(
                   "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
@@ -158,6 +159,7 @@ export function FilterBuilder({
                 <button
                   key={a}
                   type="button"
+                  aria-pressed={on}
                   onClick={() => toggleAts(a)}
                   className={cn(
                     "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
@@ -174,6 +176,8 @@ export function FilterBuilder({
 
       <button
         type="button"
+        aria-expanded={advanced}
+        aria-controls="advanced-location-scope-panel"
         onClick={() => setAdvanced((v) => !v)}
         className="inline-flex items-center gap-1.5 text-[12px] text-muted hover:text-foreground transition-colors"
       >
@@ -183,7 +187,7 @@ export function FilterBuilder({
       </button>
 
       {advanced && (
-        <div className="space-y-3 rounded-xl border border-border bg-surface/30 p-3">
+        <div id="advanced-location-scope-panel" className="space-y-3 rounded-xl border border-border bg-surface/30 p-3">
           <div className="flex items-center gap-1.5 text-[12px] text-muted">
             <MapPin className="size-3.5" /> Location
           </div>

@@ -1,15 +1,7 @@
 import Link from "next/link";
 import { instrumentSerif } from "@/lib/fonts";
 import { cn } from "@/lib/cn";
-
-// Stat tile with the home's resting gradient corner + lit edge + shadow. The
-// number is serif ONLY when `featured` (≤1 serif number per route); the rest
-// use Inter tabular-nums so numerals never form a serif wall.
-const CORNERS = {
-  br: "bg-gradient-to-br",
-  bl: "bg-gradient-to-bl",
-  tr: "bg-gradient-to-tr",
-} as const;
+import { CORNERS } from "@/lib/ui-corners";
 
 export function StatCard({
   href,

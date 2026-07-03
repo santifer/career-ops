@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Check, X, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { CompanyLogo } from "@/components/company-logo";
@@ -20,7 +21,8 @@ export function DecisionCard({ app }: { app: Application }) {
   const setStatus = async (status: "Applied" | "Discarded") => {
     setBusy(status);
     try {
-      await fetch("/api/status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ n: app.n, status }) });
+      const res = await fetch("/api/status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ n: app.n, status }) });
+      if (!res.ok) throw new Error("status update failed");
       setDone(status);
       router.refresh();
     } catch {
@@ -68,9 +70,9 @@ export function DecisionCard({ app }: { app: Application }) {
         >
           {busy === "Discarded" ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />} Skip
         </button>
-        <a href={`/pipeline/${app.n}`} title="Open report" className="shrink-0 rounded p-1.5 text-faint transition hover:text-brand">
+        <Link href={`/pipeline/${app.n}`} title="Open report" className="shrink-0 rounded p-1.5 text-faint transition hover:text-brand">
           <FileText className="size-4" />
-        </a>
+        </Link>
       </div>
     </div>
   );
