@@ -763,8 +763,15 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 
 	lines := strings.Split(string(content), "\n")
 	cols := resolveTrackerColumns(lines)
-	statusIdx := cols["status"]
-	notesIdx := cols["notes"]
+	statusIdx, statusOk := cols["status"]
+	if !statusOk {
+		return fmt.Errorf("status column not found in tracker")
+	}
+	notesIdx, notesOk := cols["notes"]
+	if notesAppend != "" && !notesOk {
+		return fmt.Errorf("notes column not found in tracker, cannot append notes")
+	}
+
 
 	found := false
 	for i, line := range lines {
@@ -796,6 +803,9 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 // disturbing any other cell. notesField is the 0-based column index returned
 // by resolveTrackerColumns.
 func appendNotesInLine(line, text string, notesField int) string {
+	if notesField < 0 {
+		return line
+	}
 	if strings.Contains(line, "\t") {
 		prefix, body, found := strings.Cut(line, "|")
 		if !found {

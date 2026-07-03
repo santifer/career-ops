@@ -92,6 +92,17 @@ type PipelineRefreshMsg struct{}
 // PipelineOpenProgressMsg is emitted when the progress screen should open.
 type PipelineOpenProgressMsg struct{}
 
+var canonicalDiscardReasons = []string{
+	"salary_too_low",
+	"hybrid_required",
+	"tech_stack_mismatch",
+	"seniority_mismatch",
+	"geo_restriction",
+	"size_mismatch",
+	"company_culture",
+}
+
+
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -201,8 +212,10 @@ type PipelineModel struct {
 	discardOptions      []string // predicted + canonical options shown to user
 	discardCustomInput  bool     // true when "Other…" is selected and user is typing
 	discardCustomText   string   // free-text typed for "Other…" reason
-	discardPendingApp   model.CareerApplication // app awaiting the reason pick
-	discardPendingStatus string                 // new status to commit with the reason
+	discardPendingApp    model.CareerApplication // app awaiting the reason pick
+	discardPendingStatus string                  // new status to commit with the reason
+	discardPredictedCount int                    // count of predicted reasons (from report)
+
 	// PDF picker sub-state — shown when one application matches several
 	// generated CVs (role variants from the same company).
 	pdfPicker  bool
@@ -373,24 +386,17 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 	case pipelineStartDiscardPickerMsg:
 		// Issue 1380: initialise the discard reason picker state.
 		// Merge predicted reasons (from report) with canonical fallback options.
-		canonical := []string{
-			"salary_too_low",
-			"hybrid_required",
-			"tech_stack_mismatch",
-			"seniority_mismatch",
-			"geo_restriction",
-			"size_mismatch",
-			"company_culture",
-		}
 		seen := make(map[string]bool)
 		var opts []string
+		numPredicted := 0
 		for _, r := range msg.predictedReasons {
 			if !seen[r] {
 				opts = append(opts, r)
 				seen[r] = true
+				numPredicted++
 			}
 		}
-		for _, c := range canonical {
+		for _, c := range canonicalDiscardReasons {
 			if !seen[c] {
 				opts = append(opts, c)
 				seen[c] = true
@@ -400,6 +406,7 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 		m.discardPicker = true
 		m.discardCursor = 0
 		m.discardOptions = opts
+		m.discardPredictedCount = numPredicted
 		m.discardCustomInput = false
 		m.discardCustomText = ""
 		m.discardPendingApp = msg.app
@@ -775,6 +782,13 @@ func (m PipelineModel) handleDiscardPicker(msg tea.KeyMsg) (PipelineModel, tea.C
 		switch msg.String() {
 		case "enter":
 			reason := strings.TrimSpace(m.discardCustomText)
+			reason = strings.ReplaceAll(reason, ",", " ")
+			reason = strings.ReplaceAll(reason, ";", " ")
+			reason = strings.ReplaceAll(reason, "\n", " ")
+			reason = strings.ReplaceAll(reason, "\r", " ")
+			reason = strings.ReplaceAll(reason, "\t", " ")
+			reason = strings.Join(strings.Fields(reason), " ")
+			reason = strings.TrimSpace(reason)
 			if reason == "" {
 				reason = "other"
 			}
@@ -1937,15 +1951,8 @@ func (m PipelineModel) overlayDiscardPicker(body string) string {
 		picker = append(picker, padStyle.Render(inputStyle.Render("> "+m.discardCustomText+cursor)))
 		picker = append(picker, padStyle.Render(hintStyle.Render("Enter: confirm   Esc: back")))
 	} else {
-		numPredicted := 0
-		for _, opt := range m.discardOptions {
-			if opt == "salary_too_low" || opt == "hybrid_required" || opt == "tech_stack_mismatch" ||
-				opt == "seniority_mismatch" || opt == "geo_restriction" || opt == "size_mismatch" ||
-				opt == "company_culture" || opt == "Other…" {
-				break
-			}
-			numPredicted++
-		}
+		numPredicted := m.discardPredictedCount
+
 
 		heading := "─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─"
 		picker = append(picker, padStyle.Render(titleStyle.Render(heading)))

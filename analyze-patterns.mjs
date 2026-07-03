@@ -496,7 +496,11 @@ function analyze() {
       : 'N/A',
   };
 
+  // --- Generate recommendations ---
+  const recommendations = [];
+
   // --- Discard reason analysis (Issue 1380) ---
+
   // Aggregates predicted reasons from Machine Summary `discard_reasons` lists
   // plus any user-committed `DISCARD: <reason>` tags in the Notes column.
   const discardReasonCounts = new Map();
@@ -554,9 +558,6 @@ function analyze() {
     .map(([skill, frequency]) => ({ skill, frequency }))
     .sort((a, b) => b.frequency - a.frequency)
     .slice(0, 15);
-
-  // --- Generate recommendations ---
-  const recommendations = [];
 
   // Geo-restriction recommendation
   const geoBlocker = blockerAnalysis.find(b => b.blocker === 'geo-restriction');
