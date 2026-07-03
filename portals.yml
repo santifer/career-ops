@@ -305,6 +305,10 @@ search_queries:
     query: 'site:jobs.lever.co "Data Engineer" OR "Data Scientist" OR "Analytics" Germany OR Berlin OR Munich'
     enabled: true
 
+  - name: SmartRecruiters — Data DACH
+    query: 'site:jobs.smartrecruiters.com "Data Engineer" OR "Data Scientist" OR "Data Analyst" OR "ML" Cologne OR Köln OR Berlin OR Munich OR Germany'
+    enabled: true
+
 # -- Tracked companies (DACH focus with Data/ML teams) --
 tracked_companies:
 
@@ -498,6 +502,52 @@ tracked_companies:
     api: https://api.smartrecruiters.com/v1/companies/Redcare-Pharmacy/postings
     api_provider: smartrecruiters
     notes: "Cologne DE (HQ Sevenum NL). Europe's #1 e-pharmacy, 4600+ employees. Data & AI team, Retail Media. SmartRecruiters ATS."
+    enabled: true
+
+  # ── SmartRecruiters — Cologne / NRW ──
+
+  - name: BarmeniaGothaer
+    careers_url: https://jobs.smartrecruiters.com/BarmeniaGothaerAG
+    api: https://api.smartrecruiters.com/v1/companies/BarmeniaGothaerAG/postings
+    api_provider: smartrecruiters
+    notes: "Cologne DE. Insurance group (Barmenia + Gothaer merger). 447 postings. Has Azure Databricks Platform Engineer role. SmartRecruiters ATS."
+    enabled: true
+
+  - name: Ströer
+    careers_url: https://jobs.smartrecruiters.com/StrerSECoKGaAStrerGruppe
+    api: https://api.smartrecruiters.com/v1/companies/StrerSECoKGaAStrerGruppe/postings
+    api_provider: smartrecruiters
+    notes: "Cologne DE. Out-of-home media & digital advertising. 183 postings. Data Engineering team. SmartRecruiters ATS."
+    enabled: true
+
+  - name: CHECK24
+    careers_url: https://jobs.smartrecruiters.com/CHECK24
+    api: https://api.smartrecruiters.com/v1/companies/CHECK24/postings
+    api_provider: smartrecruiters
+    notes: "Munich / Cologne DE. Germany's largest comparison portal. 234 postings. Strong tech/data teams. SmartRecruiters ATS."
+    enabled: true
+
+  # ── SmartRecruiters — DACH large industrials ──
+
+  - name: Continental
+    careers_url: https://jobs.smartrecruiters.com/Continental
+    api: https://api.smartrecruiters.com/v1/companies/Continental/postings
+    api_provider: smartrecruiters
+    notes: "Hannover DE / global. Automotive supplier. 1015 postings. Data/AI teams. SmartRecruiters ATS."
+    enabled: true
+
+  - name: Bosch Group
+    careers_url: https://jobs.smartrecruiters.com/BoschGroup
+    api: https://api.smartrecruiters.com/v1/companies/BoschGroup/postings
+    api_provider: smartrecruiters
+    notes: "Stuttgart DE / global. 4649 postings. Massive data/AI org. SmartRecruiters ATS. Use ?city=Cologne or ?country=de to filter."
+    enabled: true
+
+  - name: Delivery Hero (SR)
+    careers_url: https://jobs.smartrecruiters.com/DeliveryHero
+    api: https://api.smartrecruiters.com/v1/companies/DeliveryHero/postings
+    api_provider: smartrecruiters
+    notes: "Berlin DE. Delivery platform. 1113 postings. Also has Ashby (disabled). SmartRecruiters feed is active."
     enabled: true
 
 # -- Job boards (DACH-focused aggregators) --
