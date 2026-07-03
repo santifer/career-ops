@@ -132,6 +132,7 @@ const SYSTEM_PATHS = [
   'prepare-application.mjs',
   'providers/',
   'seeds/',
+  'tests/',
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
