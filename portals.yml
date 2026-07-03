@@ -1,0 +1,606 @@
+# Portal Scanner Configuration — DACH Data Jobs (broad)
+# Customized for broad "Data" role search across German/DACH market
+
+# -- Title filter --
+# Deliberately broad: any role with "Data" in the title passes,
+# plus common German-language equivalents and related ML/AI/Analytics roles.
+
+title_filter:
+  positive:
+    # -- Data roles (broad) --
+    - "Data"
+    - "Daten"
+    - "Analytics"
+    - "Analyst"
+    - "BI "
+    - "Business Intelligence"
+    - "ETL"
+    - "Data Engineer"
+    - "Data Scientist"
+    - "Data Analyst"
+    - "Data Architect"
+    - "Data Platform"
+    - "Data Warehouse"
+    - "Data Mesh"
+    - "Data Governance"
+    - "Data Quality"
+    - "Database"
+    - "Datenbank"
+    # -- ML/AI (overlaps with Data) --
+    - "AI"
+    - "ML"
+    - "Machine Learning"
+    - "KI"
+    - "Künstliche Intelligenz"
+    - "LLM"
+    - "MLOps"
+    - "NLP"
+    - "GenAI"
+    # -- Related engineering --
+    - "Platform Engineer"
+    - "Solutions Architect"
+  negative:
+    - "Intern"
+    - "Praktikant"
+    - "Werkstudent"
+    - ".NET"
+    - "iOS"
+    - "Android"
+    - "PHP"
+    - "Blockchain"
+    - "Web3"
+    - "Crypto"
+    - "COBOL"
+    - "Mainframe"
+    - "FPGA"
+    - "ASIC"
+    - "Embedded"
+    - "Firmware"
+  seniority_boost:
+    - "Senior"
+    - "Staff"
+    - "Principal"
+    - "Lead"
+    - "Head"
+    - "Director"
+    - "Manager"
+
+# -- Location filter (DACH) --
+location_filter:
+  always_allow:
+    - "Germany"
+    - "Deutschland"
+    - "Berlin"
+    - "München"
+    - "Munich"
+    - "Hamburg"
+    - "Frankfurt"
+    - "Köln"
+    - "Cologne"
+    - "Düsseldorf"
+    - "Stuttgart"
+    - "Austria"
+    - "Österreich"
+    - "Wien"
+    - "Vienna"
+    - "Switzerland"
+    - "Schweiz"
+    - "Zürich"
+    - "Zurich"
+  allow:
+    - "Remote"
+    - "Germany"
+    - "Deutschland"
+    - "DACH"
+    - "EMEA"
+    - "Europe"
+    - "Europa"
+    - "Austria"
+    - "Österreich"
+    - "Switzerland"
+    - "Schweiz"
+    - "Berlin"
+    - "München"
+    - "Munich"
+    - "Hamburg"
+    - "Frankfurt"
+    - "Köln"
+    - "Cologne"
+    - "Düsseldorf"
+    - "Stuttgart"
+    - "Heidelberg"
+    - "Freiburg"
+    - "Dresden"
+    - "Leipzig"
+    - "Nürnberg"
+    - "Nuremberg"
+    - "Hannover"
+    - "Dortmund"
+    - "Essen"
+    - "Bonn"
+    - "Karlsruhe"
+    - "Mannheim"
+    - "Göppingen"
+    - "Walldorf"
+    - "Wien"
+    - "Vienna"
+    - "Graz"
+    - "Linz"
+    - "Zürich"
+    - "Zurich"
+    - "Basel"
+    - "Bern"
+    - "Genf"
+    - "Geneva"
+  block:
+    - "India"
+    - "Bengaluru"
+    - "Singapore"
+    - "Japan"
+    - "Brazil"
+    - "Philippines"
+    - "Nigeria"
+    - "China"
+    - "Beijing"
+    - "Shanghai"
+
+# -- Search queries (DACH job portals & aggregators) --
+# These require WebSearch (agent mode). The scanner lists them as
+# "Agent/WebSearch handoff" — they run when you invoke the scan mode
+# through the AI agent, not in zero-token mode.
+search_queries:
+
+  # ══════════════════════════════════════════════
+  # StepStone (Germany's largest job board, New Work SE)
+  # ══════════════════════════════════════════════
+  - name: StepStone — Data Engineer
+    query: 'site:stepstone.de "Data Engineer" OR "Dateningenieur" OR "Data Platform"'
+    enabled: true
+
+  - name: StepStone — Data Scientist / ML
+    query: 'site:stepstone.de "Data Scientist" OR "Machine Learning" OR "Data Science" OR "ML Engineer"'
+    enabled: true
+
+  - name: StepStone — Data Analyst / BI
+    query: 'site:stepstone.de "Data Analyst" OR "Business Intelligence" OR "BI Analyst" OR "Analytics Engineer"'
+    enabled: true
+
+  - name: StepStone — Data Architect / Governance
+    query: 'site:stepstone.de "Data Architect" OR "Data Governance" OR "Data Warehouse" OR "Data Quality"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Indeed Germany
+  # ══════════════════════════════════════════════
+  - name: Indeed DE — Data Engineer
+    query: 'site:de.indeed.com "Data Engineer" OR "Data Platform" OR "Daten Engineer"'
+    enabled: true
+
+  - name: Indeed DE — Data Scientist / ML
+    query: 'site:de.indeed.com "Data Scientist" OR "Machine Learning Engineer" OR "ML Engineer"'
+    enabled: true
+
+  - name: Indeed DE — Data Analyst / BI
+    query: 'site:de.indeed.com "Data Analyst" OR "Business Intelligence" OR "Analytics Engineer"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # LinkedIn (Germany / DACH)
+  # ══════════════════════════════════════════════
+  - name: LinkedIn — Data Engineer Germany
+    query: 'site:linkedin.com/jobs "Data Engineer" Germany OR Deutschland OR Berlin OR München'
+    enabled: true
+
+  - name: LinkedIn — Data Scientist Germany
+    query: 'site:linkedin.com/jobs "Data Scientist" OR "ML Engineer" Germany OR Berlin OR München'
+    enabled: true
+
+  - name: LinkedIn — Data Analyst Germany
+    query: 'site:linkedin.com/jobs "Data Analyst" OR "Analytics Engineer" Germany OR Berlin OR München'
+    enabled: true
+
+  - name: LinkedIn — Data DACH Remote
+    query: 'site:linkedin.com/jobs "Data" remote Germany OR DACH OR "Remote - Germany" OR "Remote - Europe"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Glassdoor Germany
+  # ══════════════════════════════════════════════
+  - name: Glassdoor DE — Data Engineer
+    query: 'site:glassdoor.de "Data Engineer" OR "Data Platform Engineer"'
+    enabled: true
+
+  - name: Glassdoor DE — Data Scientist
+    query: 'site:glassdoor.de "Data Scientist" OR "Machine Learning Engineer"'
+    enabled: true
+
+  - name: Glassdoor DE — Data Analyst
+    query: 'site:glassdoor.de "Data Analyst" OR "Analytics Engineer" OR "BI Analyst"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # XING (now onlyfy/New Work SE, still relevant in DACH Mittelstand)
+  # ══════════════════════════════════════════════
+  - name: XING — Data Engineer
+    query: 'site:xing.com/jobs "Data Engineer" OR "Data Platform"'
+    enabled: true
+
+  - name: XING — Data Scientist / Analyst
+    query: 'site:xing.com/jobs "Data Scientist" OR "Data Analyst" OR "Business Intelligence"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Monster Germany
+  # ══════════════════════════════════════════════
+  - name: Monster DE — Data Roles
+    query: 'site:monster.de "Data Engineer" OR "Data Scientist" OR "Data Analyst" OR "BI"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Honeypot.io (European developer-focused, strong in DACH)
+  # ══════════════════════════════════════════════
+  - name: Honeypot — Data DACH
+    query: 'site:honeypot.io "Data Engineer" OR "Data Scientist" OR "Data Analyst" OR "ML" Germany OR Berlin OR Munich'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Join.com (German startup job board)
+  # ══════════════════════════════════════════════
+  - name: Join — Data Roles
+    query: 'site:join.com "Data Engineer" OR "Data Scientist" OR "Data Analyst" Germany OR Berlin OR München'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Heise Jobs (IT-focused German board)
+  # ══════════════════════════════════════════════
+  - name: Heise Jobs — Data
+    query: 'site:heise.de/jobs "Data Engineer" OR "Data Scientist" OR "Data Analyst" OR "Business Intelligence"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # t3n Jobs (German tech magazine job board)
+  # ══════════════════════════════════════════════
+  - name: t3n Jobs — Data
+    query: 'site:t3n.de/jobs "Data" OR "Analytics" OR "Machine Learning" OR "BI"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Berlin / Munich / Hamburg Startup Job Boards
+  # ══════════════════════════════════════════════
+  - name: Berlin Startup Jobs — Data
+    query: 'site:berlinstartupjobs.com "Data" OR "Analytics" OR "ML" OR "AI"'
+    enabled: true
+
+  - name: Munich Startup — Data
+    query: 'site:munichstartups.com OR site:startup.unternehmergeist.de "Data" OR "Analytics" OR "ML" Munich OR München'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Swiss / Austrian job boards
+  # ══════════════════════════════════════════════
+  - name: jobs.ch — Data Roles
+    query: 'site:jobs.ch "Data Engineer" OR "Data Scientist" OR "Data Analyst"'
+    enabled: true
+
+  - name: karriere.at — Data Roles
+    query: 'site:karriere.at "Data Engineer" OR "Data Scientist" OR "Data Analyst" OR "Business Intelligence"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Greenhouse / Ashby / Lever (ATS cross-portal DACH)
+  # ══════════════════════════════════════════════
+  - name: Greenhouse — Data Engineer DACH
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Data Engineer" OR "Data Platform" Berlin OR Munich OR Germany OR Remote'
+    enabled: true
+
+  - name: Greenhouse — Data Scientist DACH
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Data Scientist" OR "ML Engineer" Berlin OR Munich OR Germany OR Remote'
+    enabled: true
+
+  - name: Ashby — Data DACH
+    query: 'site:jobs.ashbyhq.com "Data Engineer" OR "Data Scientist" OR "Data Analyst" OR "Analytics" Germany OR Berlin OR Remote'
+    enabled: true
+
+  - name: Lever — Data DACH
+    query: 'site:jobs.lever.co "Data Engineer" OR "Data Scientist" OR "Analytics" Germany OR Berlin OR Munich'
+    enabled: true
+
+# -- Tracked companies (DACH focus with Data/ML teams) --
+tracked_companies:
+
+  # ── DACH AI labs & frontier model providers ──
+
+  - name: Aleph Alpha
+    careers_url: https://jobs.ashbyhq.com/AlephAlpha
+    notes: "Heidelberg DE. Sovereign European LLM provider."
+    enabled: true
+
+  - name: DeepL
+    careers_url: https://jobs.ashbyhq.com/DeepL
+    notes: "Cologne DE. Translation & language AI."
+    enabled: true
+
+  - name: Black Forest Labs
+    careers_url: https://job-boards.greenhouse.io/blackforestlabs
+    api: https://boards-api.greenhouse.io/v1/boards/blackforestlabs/jobs
+    notes: "Freiburg DE. FLUX image models."
+    enabled: true
+
+  - name: Helsing
+    careers_url: https://job-boards.greenhouse.io/helsing
+    api: https://boards-api.greenhouse.io/v1/boards/helsing/jobs
+    notes: "Munich / Berlin. Defence AI."
+    enabled: true
+
+  # ── DACH enterprise & SaaS ──
+
+  - name: Celonis
+    careers_url: https://job-boards.greenhouse.io/celonis
+    api: https://boards-api.greenhouse.io/v1/boards/celonis/jobs
+    notes: "Munich. Process intelligence, large data org."
+    enabled: true
+
+  - name: Contentful
+    careers_url: https://job-boards.greenhouse.io/contentful
+    api: https://boards-api.greenhouse.io/v1/boards/contentful/jobs
+    notes: "Berlin. Headless CMS."
+    enabled: true
+
+  - name: GetYourGuide
+    careers_url: https://job-boards.greenhouse.io/getyourguide
+    api: https://boards-api.greenhouse.io/v1/boards/getyourguide/jobs
+    notes: "Berlin. Travel marketplace, ML & data platform."
+    enabled: true
+
+  - name: HelloFresh
+    careers_url: https://job-boards.greenhouse.io/hellofresh
+    api: https://boards-api.greenhouse.io/v1/boards/hellofresh/jobs
+    notes: "Berlin. Large data/ML org."
+    enabled: true
+
+  - name: Personio
+    careers_url: https://personio.jobs.personio.de
+    notes: "Munich. HR-Tech unicorn."
+    enabled: true
+
+  - name: TeamViewer
+    careers_url: https://jobs.ashbyhq.com/teamviewer
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/teamviewer "Data" OR "AI" OR "Analytics" OR "ML"'
+    notes: "Göppingen DE. Remote access, AI features. Private Ashby API — WebSearch only."
+    enabled: false
+
+  # ── DACH fintech ──
+
+  - name: N26
+    careers_url: https://job-boards.greenhouse.io/n26
+    api: https://boards-api.greenhouse.io/v1/boards/n26/jobs
+    notes: "Berlin. Mobile bank, ML & risk."
+    enabled: true
+
+  - name: Trade Republic
+    careers_url: https://job-boards.greenhouse.io/traderepublicbank
+    api: https://boards-api.greenhouse.io/v1/boards/traderepublicbank/jobs
+    notes: "Berlin. Neobroker, platform & data."
+    enabled: true
+
+  - name: SumUp
+    careers_url: https://job-boards.greenhouse.io/sumup
+    api: https://boards-api.greenhouse.io/v1/boards/sumup/jobs
+    notes: "Berlin / London. Payments fintech."
+    enabled: true
+
+  - name: Scalable Capital
+    careers_url: https://jobs.ashbyhq.com/scalablecapital
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/scalablecapital "Data" OR "Analytics" OR "ML" OR "AI"'
+    notes: "Munich. Neobroker / Robo-Advisor. Private Ashby API — WebSearch only."
+    enabled: false
+
+  # ── DACH e-commerce / marketplace ──
+
+  - name: Zalando
+    careers_url: https://jobs.ashbyhq.com/zalando
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/zalando "Data" OR "Analytics" OR "ML" OR "AI"'
+    notes: "Berlin. Fashion e-commerce, large ML/Data org. Private Ashby API — WebSearch only."
+    enabled: false
+
+  - name: About You
+    careers_url: https://jobs.ashbyhq.com/aboutyou
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/aboutyou "Data" OR "Analytics" OR "ML" OR "AI"'
+    notes: "Hamburg. Fashion-tech, ML/personalization. Private Ashby API — WebSearch only."
+    enabled: false
+
+  - name: Delivery Hero
+    careers_url: https://jobs.ashbyhq.com/deliveryhero
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/deliveryhero "Data" OR "Analytics" OR "ML" OR "AI"'
+    notes: "Berlin. Delivery platform, 50+ data/ML roles. Private Ashby API — WebSearch only."
+    enabled: false
+
+  # ── DACH automotive / industrial ──
+
+  - name: FlixBus
+    careers_url: https://job-boards.greenhouse.io/flix
+    api: https://boards-api.greenhouse.io/v1/boards/flix/jobs
+    notes: "Munich. Mobility, data/ML."
+    enabled: true
+
+  # ── DACH automation / AI infra ──
+
+  - name: n8n
+    careers_url: https://jobs.ashbyhq.com/n8n
+    notes: "Berlin. Workflow automation."
+    enabled: true
+
+  - name: Langfuse
+    careers_url: https://langfuse.com/careers
+    scan_method: websearch
+    scan_query: '"langfuse" careers OR jobs "engineer" OR "data"'
+    notes: "Berlin. LLMOps / observability."
+    enabled: true
+
+  - name: Cognigy
+    careers_url: https://careers.cognigy.com
+    scan_method: websearch
+    scan_query: '"cognigy" careers "AI" OR "Data" OR "Engineer"'
+    notes: "Düsseldorf. Conversational AI enterprise."
+    enabled: true
+
+  - name: Parloa
+    careers_url: https://job-boards.eu.greenhouse.io/parloa
+    api: https://boards-api.greenhouse.io/v1/boards/parloa/jobs
+    notes: "Berlin. Voice AI enterprise."
+    enabled: true
+
+  # ── Switzerland ──
+
+  - name: Lakera
+    careers_url: https://jobs.ashbyhq.com/lakera.ai
+    notes: "Zurich. AI security & guardrails."
+    enabled: true
+
+  - name: Scandit
+    careers_url: https://job-boards.greenhouse.io/scandit
+    api: https://boards-api.greenhouse.io/v1/boards/scandit/jobs
+    notes: "Zurich. Computer vision / smart data capture."
+    enabled: true
+
+  # ── DACH logistics ──
+
+  - name: Forto
+    careers_url: https://jobs.ashbyhq.com/forto
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/forto "Data" OR "Analytics" OR "ML"'
+    notes: "Berlin. Digital freight forwarder. Private Ashby API — WebSearch only."
+    enabled: false
+
+  - name: Qonto
+    careers_url: https://jobs.lever.co/qonto
+    scan_method: websearch
+    scan_query: 'site:jobs.lever.co/qonto "Data" OR "Analytics" OR "ML"'
+    notes: "Berlin / Paris. SMB neobank, MLOps. Private Lever — WebSearch only."
+    enabled: false
+
+  - name: Vinted
+    careers_url: https://jobs.ashbyhq.com/vinted
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/vinted "Data" OR "Analytics" OR "ML"'
+    notes: "Berlin / Vilnius. C2C marketplace, data science. Private Ashby API — WebSearch only."
+    enabled: false
+
+# -- Job boards (DACH-focused aggregators) --
+job_boards:
+
+  # ── Arbeitsagentur (Bundesagentur für Arbeit) ──
+  - name: Arbeitsagentur — Data Engineer
+    provider: arbeitsagentur
+    arbeitsagentur:
+      keywords: ["Data Engineer", "Dateningenieur", "Data Platform Engineer"]
+      wo: ""
+      days: 30
+      size: 100
+    enabled: true
+
+  - name: Arbeitsagentur — Data Scientist
+    provider: arbeitsagentur
+    arbeitsagentur:
+      keywords: ["Data Scientist", "Machine Learning Engineer", "ML Engineer"]
+      wo: ""
+      days: 30
+      size: 100
+    enabled: true
+
+  - name: Arbeitsagentur — Data Analyst / BI
+    provider: arbeitsagentur
+    arbeitsagentur:
+      keywords: ["Data Analyst", "Business Intelligence", "BI Analyst", "Analytics Engineer"]
+      wo: ""
+      days: 30
+      size: 100
+    enabled: true
+
+  - name: Arbeitsagentur — Data Architect / Governance
+    provider: arbeitsagentur
+    arbeitsagentur:
+      keywords: ["Data Architect", "Data Governance", "Data Quality", "Data Warehouse"]
+      wo: ""
+      days: 30
+      size: 100
+    enabled: true
+
+  # ── Arbeitnow (EU/DACH-heavy board) ──
+  - name: Arbeitnow
+    provider: arbeitnow
+    max_pages: 5
+    enabled: true
+    notes: "EU/DACH-heavy job board, newest-first. Title filter gates on Data roles."
+
+  # ── The Hub (Nordic/EU startup board) ──
+  - name: The Hub
+    provider: thehub
+    max_pages: 5
+    enabled: true
+    notes: "Nordic/EU startup board. Title + location filter gate on DACH Data roles."
+
+  # ── Landing.jobs (European tech board) ──
+  - name: Landing.jobs
+    provider: landingjobs
+    enabled: true
+    notes: "Europe-focused tech board. Title + location filter gate on DACH Data roles."
+
+  # ── Himalayas (global remote jobs) ──
+  - name: Himalayas
+    provider: himalayas
+    enabled: true
+    notes: "Global remote jobs board. Location filter passes DACH/Remote/Europe."
+
+  # ── Remotive (remote jobs feed) ──
+  - name: Remotive
+    provider: remotive
+    enabled: true
+    notes: "Remote jobs feed. Title filter gates on Data roles, location allows DACH/Remote."
+
+  # ── RemoteOK (remote jobs) ──
+  - name: RemoteOK
+    provider: remoteok
+    enabled: true
+    notes: "Remote jobs board. Title filter gates on Data, location allows Remote/Europe."
+
+  # ── Jobicy (remote-first job board) ──
+  - name: Jobicy
+    provider: jobicy
+    enabled: true
+    notes: "Remote-first job board. Title + location filters gate for DACH Data roles."
+
+  # ── Working Nomads (remote jobs) ──
+  - name: Working Nomads
+    provider: workingnomads
+    enabled: true
+    notes: "Remote jobs aggregator. Title + location filters gate for Data roles."
+
+  # ── We Work Remotely (remote jobs RSS) ──
+  - name: We Work Remotely
+    provider: weworkremotely
+    enabled: true
+    notes: "Large remote jobs board (RSS feed). Title filter gates on Data roles."
+
+  # ── NoDesk (remote jobs RSS) ──
+  - name: NoDesk
+    provider: nodesk
+    enabled: true
+    notes: "Remote jobs board. Title filter gates on Data roles."
+
+  # ── Hacker News Who's Hiring ──
+  - name: Hacker News Who's Hiring
+    provider: hackernews
+    enabled: true
+    notes: "Monthly 'Ask HN: Who is hiring?' thread. Title + location filters apply."
+
+  # ── The Muse (global job board) ──
+  - name: The Muse
+    provider: themuse
+    enabled: true
+    notes: "Global job board with company profiles. Title + location filters gate."
