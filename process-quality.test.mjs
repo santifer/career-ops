@@ -14,6 +14,8 @@ import { parseActiveInterviews, extractFriction, aggregateProcessQuality } from 
 import { execFileSync } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 
 let passed = 0;
 let failed = 0;
@@ -293,15 +295,46 @@ ok('default has metadata', 'metadata' in defaultJson);
 ok('default has signals array', 'signals' in defaultJson && Array.isArray(defaultJson.signals));
 eq('default minThreshold = 1', defaultJson.metadata.minThreshold, 1);
 
-// Missing-file CLI behavior: data/active-interviews.md is candidate-authored
-// user data and is never present in a fresh repo checkout (it has no shipped
-// template, unlike applications.md/pipeline.md). Running the CLI here — a
-// checkout with no such file — exercises loadActiveInterviews()'s missing-path
-// branch for real, deterministically, without needing a temp-dir workaround
-// (the script resolves its data path relative to its own location, not cwd).
-ok('missing data/active-interviews.md: CLI does not throw', !!defaultOut);
-eq('missing data/active-interviews.md: totalRows = 0', defaultJson.metadata.totalRows, 0);
-eq('missing data/active-interviews.md: signals = []', defaultJson.signals, []);
+// Missing-file CLI behavior, isolated via --file pointing at a path that
+// deliberately does not exist inside a fresh temp dir. This must NOT depend
+// on whether the caller's real data/active-interviews.md happens to exist —
+// a contributor running this suite with real interview data in their own
+// workspace must get the same result as CI.
+const missingFileTmpDir = mkdtempSync(join(tmpdir(), 'process-quality-missing-'));
+const missingFilePath = join(missingFileTmpDir, 'does-not-exist.md');
+try {
+  const missingOut = execFileSync('node', [scriptPath, '--file', missingFilePath], {
+    encoding: 'utf-8', timeout: 10000,
+    cwd: dirname(scriptPath),
+  });
+  ok('missing --file path: CLI does not throw', !!missingOut);
+  const missingJson = JSON.parse(missingOut);
+  eq('missing --file path: totalRows = 0', missingJson.metadata.totalRows, 0);
+  eq('missing --file path: signals = []', missingJson.signals, []);
+} finally {
+  rmSync(missingFileTmpDir, { recursive: true, force: true });
+}
+
+// --file also works as a positive-path override: point it at a controlled
+// fixture file and confirm the CLI reads exactly that file, isolated from
+// whatever the caller's real workspace contains.
+const fixtureTmpDir = mkdtempSync(join(tmpdir(), 'process-quality-fixture-'));
+const fixturePath = join(fixtureTmpDir, 'active-interviews.md');
+try {
+  writeFileSync(fixturePath, table([
+    '| FixtureCo | Role | Prescreen | 2026-07-01 | Someone | Scheduled | [process-friction: fixture reason] |',
+  ]));
+  const fixtureOut = execFileSync('node', [scriptPath, '--file', fixturePath], {
+    encoding: 'utf-8', timeout: 10000,
+    cwd: dirname(scriptPath),
+  });
+  const fixtureJson = JSON.parse(fixtureOut);
+  eq('--file fixture: totalRows = 1', fixtureJson.metadata.totalRows, 1);
+  eq('--file fixture: 1 signal (FixtureCo)', fixtureJson.signals.length, 1);
+  eq('--file fixture: FixtureCo friction captured', fixtureJson.signals[0]?.reasons?.[0], 'fixture reason');
+} finally {
+  rmSync(fixtureTmpDir, { recursive: true, force: true });
+}
 
 const thresholdOut = execFileSync('node', [scriptPath, '--min-threshold', '3'], {
   encoding: 'utf-8', timeout: 10000,

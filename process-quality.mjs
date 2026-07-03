@@ -19,6 +19,7 @@
  * Run: node process-quality.mjs             (JSON to stdout)
  *      node process-quality.mjs --summary   (human-readable table)
  *      node process-quality.mjs --min-threshold 2  (min total interviews per company to report)
+ *      node process-quality.mjs --file path/to/active-interviews.md  (override the data path; test isolation)
  *      node process-quality.mjs --self-test
  *
  * Issue #1466 — github.com/santifer/career-ops
@@ -29,7 +30,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-const ACTIVE_INTERVIEWS_PATH = existsSync(join(CAREER_OPS, 'data/active-interviews.md'))
+const DEFAULT_ACTIVE_INTERVIEWS_PATH = existsSync(join(CAREER_OPS, 'data/active-interviews.md'))
   ? join(CAREER_OPS, 'data/active-interviews.md')
   : join(CAREER_OPS, 'active-interviews.md');
 
@@ -39,6 +40,14 @@ const FRICTION_TAG = /\[process-friction(?::\s*([^\]]+))?\]/i;
 const args = process.argv.slice(2);
 const summaryMode = args.includes('--summary');
 const selfTestMode = args.includes('--self-test');
+// --file overrides the data path — mirrors validate-portals.mjs / verify-portals.mjs's
+// --file convention. Primarily for test isolation: it lets tests point at a
+// controlled temp path instead of depending on whatever data/active-interviews.md
+// happens to exist (or not) in the caller's real workspace.
+const fileIdx = args.indexOf('--file');
+const ACTIVE_INTERVIEWS_PATH = fileIdx !== -1 && args[fileIdx + 1] !== undefined
+  ? args[fileIdx + 1]
+  : DEFAULT_ACTIVE_INTERVIEWS_PATH;
 const minThresholdIdx = args.indexOf('--min-threshold');
 const rawMinThreshold = minThresholdIdx !== -1 && args[minThresholdIdx + 1] !== undefined
   ? parseInt(args[minThresholdIdx + 1], 10)
