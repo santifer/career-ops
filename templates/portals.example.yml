@@ -495,6 +495,8 @@ search_queries:
 #   rippling        ats.rippling.com/<slug>/jobs
 #   jibeapply       <slug>.jibeapply.com/jobs  (or provider: jibeapply + api: for a branded host's own /jobs path)
 #   workday         <tenant>.wd<N>.myworkdayjobs.com[/<locale>]/<board>
+#   avature         <tenant>.avature.net  (branded host → provider: avature + api: the /careers/SearchJobs URL)
+#   amazon          amazon.jobs           (global board; provider: amazon + an amazon: filter block, see below)
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
@@ -543,6 +545,14 @@ search_queries:
 #                          # is logged if the cap truncates real results)
 #   enabled: true
 #
+# - name: Example Avature Co
+#   # Avature career site. Auto-detects any *.avature.net host; for a branded
+#   # host that proxies Avature, set provider: avature + api: the SearchJobs URL.
+#   careers_url: https://exampleco.avature.net/careers/SearchJobs
+#   max_pages: 50          # optional page cap (only 6 jobs/page — Avature's hard
+#                          # limit — so ~300 postings by default, max 200 pages)
+#   enabled: true
+#
 # - name: SolidJobs — Engineering
 #   # division path is required; one of:
 #   # it, engineering, marketing, sales, hr, logistics, finances, other
@@ -550,6 +560,15 @@ search_queries:
 #   enabled: true
 #
 # -- Job boards / aggregators (no careers_url; set provider: explicitly) --
+#
+# - name: Amazon / AWS                    # global amazon.jobs board
+#   provider: amazon
+#   amazon:                # keys pass straight through to the search.json API
+#     normalized_country_code: [DEU]   # array → facet filter (…[]=DEU); REQUIRED-ish,
+#                                       # the board is 100k+ postings otherwise
+#     base_query: machine learning      # optional keyword filter
+#     # loc_query: Berlin               # optional free-text location (fuzzy, not a hard filter)
+#   enabled: true
 #
 # - name: 4 Day Week                      # 4-day-week / reduced-hours roles
 #   provider: 4dayweek
