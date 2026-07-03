@@ -185,17 +185,21 @@ function normalizeKeywordList(value) {
 
 export function buildLocationFilter(locationFilter) {
   if (!locationFilter) return () => true;
-  const alwaysAllow = normalizeKeywordList(locationFilter.always_allow);
-  const allow = normalizeKeywordList(locationFilter.allow);
-  const block = normalizeKeywordList(locationFilter.block);
+  // compileKeyword gives 2-3 letter all-letter keywords (e.g. "PA", "NY", "US")
+  // word-boundary matching instead of a bare substring match — without it,
+  // "PA" would false-match inside "Japan" or "Spain". See title filter above
+  // for the same pattern.
+  const alwaysAllow = normalizeKeywordList(locationFilter.always_allow).map(compileKeyword);
+  const allow = normalizeKeywordList(locationFilter.allow).map(compileKeyword);
+  const block = normalizeKeywordList(locationFilter.block).map(compileKeyword);
 
   return (location) => {
     if (typeof location !== 'string' || location.trim() === '') return true;
     const lower = location.toLowerCase();
-    if (alwaysAllow.length > 0 && alwaysAllow.some(k => lower.includes(k))) return true;
-    if (block.length > 0 && block.some(k => lower.includes(k))) return false;
+    if (alwaysAllow.length > 0 && alwaysAllow.some(m => m(lower))) return true;
+    if (block.length > 0 && block.some(m => m(lower))) return false;
     if (allow.length === 0) return true;
-    return allow.some(k => lower.includes(k));
+    return allow.some(m => m(lower));
   };
 }
 
