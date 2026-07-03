@@ -9,7 +9,7 @@
 
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { loadRegistry, loadRegistryFiles, registryDirPath, validateRegistryEntry } from './plugins/_registry.mjs';
+import { loadRegistry, loadRegistryFiles, validateRegistryEntry } from './plugins/_registry.mjs';
 import { HOOK_KINDS, RESERVED_ENV } from './plugins/_engine.mjs';
 
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
@@ -22,11 +22,9 @@ export function validateRegistry(root) {
   // Per-plugin-file invariants: every file parses, and the filename equals the
   // entry's id — the filename IS the conflict-free uniqueness guarantee (two
   // plugins can't claim one id without touching the same file).
-  if (existsSync(registryDirPath(root))) {
-    for (const { file, entry } of loadRegistryFiles(root)) {
-      if (!entry || typeof entry !== 'object') { problems.push(`${file}: not a JSON object`); continue; }
-      if (entry.id && `${entry.id}.json` !== file) problems.push(`${file}: filename must equal "<id>.json" (id is "${entry.id}")`);
-    }
+  for (const { file, entry } of loadRegistryFiles(root)) {
+    if (!entry || typeof entry !== 'object') { problems.push(`${file}: not a JSON object`); continue; }
+    if (entry.id && `${entry.id}.json` !== file) problems.push(`${file}: filename must equal "<id>.json" (id is "${entry.id}")`);
   }
   const names = new Set(), ids = new Set();
   for (const e of reg.plugins) {
