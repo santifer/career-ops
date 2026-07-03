@@ -131,6 +131,7 @@ After the user reviews and says they've sent a follow-up, record it:
 
 1. If `data/follow-ups.md` doesn't exist, create it (this exact header — the
    same one the web UI writes; `followup-cadence.mjs` parses these columns):
+
    ```markdown
    # Follow-ups
 
@@ -157,7 +158,7 @@ After the user reviews and says they've sent a follow-up, record it:
 `data/follow-ups.md` also supports pin lines that override the computed
 schedule for a single application:
 
-```
+```text
 - next #42 2026-07-10 (set 2026-07-02)
 ```
 

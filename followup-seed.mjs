@@ -112,14 +112,24 @@ export function isValidCalendarDate(str) {
  * today. The tracker's `date` column is never consulted — it is usually the
  * evaluation date, not the submission date (see followup-cadence.mjs).
  *
- * @param {{notes?: string}} row - Parsed tracker row (or any object with `notes`).
+ * A notes date that isn't a real calendar date (e.g. "Applied 2026-02-31")
+ * throws rather than falling through: `parseDate` would return null for it and
+ * the pin would be written with a literal "null" next-date.
+ *
+ * @param {{num?: number, notes?: string}} row - Parsed tracker row (or any object with `notes`).
  * @param {string|null|undefined} explicitDate - `--date` value, already validated.
  * @returns {string} YYYY-MM-DD
+ * @throws {SeedError} INVALID_DATE when the notes carry an impossible date.
  */
 export function resolveAppliedDate(row, explicitDate) {
   if (explicitDate) return explicitDate;
   const notesDate = parseAppliedDate(row?.notes);
-  if (notesDate) return notesDate;
+  if (notesDate) {
+    if (!isValidCalendarDate(notesDate)) {
+      throw new SeedError('INVALID_DATE', `Application #${row?.num ?? '?'} notes carry an impossible "Applied ${notesDate}" date; fix the notes or pass --date`);
+    }
+    return notesDate;
+  }
   return todayStr();
 }
 
@@ -461,8 +471,16 @@ export async function seedBackfill(options = {}) {
     for (const row of appliedRows) {
       if (isAlreadySeeded(existingContent, row.num) && !options.force) {
         skipped.push({ appNum: row.num, reason: 'already-seeded' });
-      } else {
+        continue;
+      }
+      try {
         seeded.push({ ...planFor(row), dryRun: true });
+      } catch (err) {
+        if (err instanceof SeedError && err.code === 'INVALID_DATE') {
+          skipped.push({ appNum: row.num, reason: 'invalid-notes-date', detail: err.message });
+        } else {
+          throw err;
+        }
       }
     }
     return { seeded, skipped, dryRun: true };
@@ -486,7 +504,16 @@ export async function seedBackfill(options = {}) {
         skipped.push({ appNum: row.num, reason: 'already-seeded' });
         continue;
       }
-      const plan = planFor(row);
+      let plan;
+      try {
+        plan = planFor(row);
+      } catch (err) {
+        if (err instanceof SeedError && err.code === 'INVALID_DATE') {
+          skipped.push({ appNum: row.num, reason: 'invalid-notes-date', detail: err.message });
+          continue;
+        }
+        throw err;
+      }
       seeded.push(plan);
       newPins.push(plan.pin);
     }
@@ -531,6 +558,9 @@ function parseCliArgs(argv) {
   if (opts.backfill) {
     if (positionals.length !== 0) {
       throw new SeedError('USAGE', '--backfill does not take a positional appNum');
+    }
+    if (opts.date != null) {
+      throw new SeedError('USAGE', '--date cannot be combined with --backfill (each row resolves its own apply date from its notes)');
     }
   } else {
     if (positionals.length !== 1) {

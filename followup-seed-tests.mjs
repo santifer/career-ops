@@ -314,5 +314,60 @@ function cleanup(sandbox) {
   cleanup(sb);
 }
 
+// ── Test 11: impossible "Applied" date in notes → INVALID_DATE, no garbage pin ──
+{
+  const sb = makeSandbox();
+  writeTracker(sb, [trackerRow(1, '2026-05-01', 'Acme', 'Engineer', '4.0/5', 'Applied', 'Applied 2026-02-31. Bad date.')]);
+  const res = run(['1', '--json'], sb);
+  if (res.code === 1) pass('11. impossible notes date → exit 1');
+  else fail(`11. impossible notes date → exit 1 — got ${res.code}\n${res.stdout}${res.stderr}`);
+  if ((res.stdout + res.stderr).includes('impossible')) pass('11. error names the invalid date problem');
+  else fail(`11. error names the invalid date problem — got\n${res.stdout}${res.stderr}`);
+  // An explicit valid --date must rescue the row (notes date is skipped entirely).
+  const rescued = run(['1', '--date', '2026-06-20', '--json'], sb);
+  let rescuedOk = false;
+  try { rescuedOk = rescued.code === 0 && JSON.parse(rescued.stdout).seeded === true; } catch { /* fall through */ }
+  if (rescuedOk) pass('11. explicit --date rescues a row with bad notes date');
+  else fail(`11. explicit --date rescues — got code ${rescued.code}\n${rescued.stdout}${rescued.stderr}`);
+  cleanup(sb);
+}
+
+// ── Test 12: backfill skips (not aborts on) a row with an impossible notes date ──
+{
+  const sb = makeSandbox();
+  writeTracker(sb, [
+    trackerRow(1, '2026-05-01', 'Acme', 'Engineer', '4.0/5', 'Applied', 'Applied 2026-02-31. Bad date.'),
+    trackerRow(2, '2026-05-02', 'Globex', 'Engineer', '4.2/5', 'Applied', 'Applied 2026-06-20.'),
+  ]);
+  const res = run(['--backfill', '--json'], sb);
+  if (res.code === 0) pass('12. backfill with one bad-notes row exits 0');
+  else fail(`12. backfill with one bad-notes row exits 0 — got ${res.code}\n${res.stdout}${res.stderr}`);
+  try {
+    const out = JSON.parse(res.stdout);
+    if (out.seeded.length === 1 && out.seeded[0].appNum === 2) pass('12. good row still seeded');
+    else fail(`12. good row still seeded — got ${JSON.stringify(out.seeded)}`);
+    if (out.skipped.length === 1 && out.skipped[0].appNum === 1 && out.skipped[0].reason === 'invalid-notes-date') {
+      pass('12. bad row skipped with reason invalid-notes-date');
+    } else {
+      fail(`12. bad row skipped with reason invalid-notes-date — got ${JSON.stringify(out.skipped)}`);
+    }
+  } catch (e) {
+    fail(`12. backfill JSON parses — ${e.message}\n${res.stdout}`);
+  }
+  cleanup(sb);
+}
+
+// ── Test 13: --date combined with --backfill is a usage error ──
+{
+  const sb = makeSandbox();
+  writeTracker(sb, [trackerRow(1, '2026-05-01', 'Acme', 'Engineer', '4.0/5', 'Applied', 'Applied 2026-06-20.')]);
+  const res = run(['--backfill', '--date', '2026-06-20'], sb);
+  if (res.code === 1) pass('13. --backfill --date → exit 1');
+  else fail(`13. --backfill --date → exit 1 — got ${res.code}\n${res.stdout}${res.stderr}`);
+  if (res.stderr.includes('--date cannot be combined with --backfill')) pass('13. usage error explains the rejection');
+  else fail(`13. usage error explains the rejection — got\n${res.stderr}`);
+  cleanup(sb);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
