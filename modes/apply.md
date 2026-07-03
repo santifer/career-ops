@@ -38,7 +38,7 @@ Before generating any application answers, verify that the form still points to 
 5. If the posting appears closed, refuse to generate final copy unless the candidate explicitly overrides with a known reason.
 6. If liveness cannot be verified because the candidate only pasted questions or a screenshot, state that limitation and ask the candidate to confirm the company, role, and active posting before drafting.
 
-Do not continue to Step 5b/Step 6 until this preflight is resolved.
+Do not continue to Step 6 until this preflight is resolved.
 
 ## Step 5b — Pre-scan for knock-out questions
 
