@@ -1,9 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bug, X, ShieldCheck } from "lucide-react";
-import { collect, issueBody, issueUrl, type Diag } from "@/lib/report/report";
+import { useEffect, useRef, useState } from "react";
+import { Bug, X, ShieldCheck, ThumbsUp } from "lucide-react";
+import { collect, fingerprint, issueBody, issueUrl, type Diag } from "@/lib/report/report";
 import "@/lib/report/logbuf"; // install the client error ring-buffer (side-effect)
+
+type SimilarIssue = { number: number; title: string; url: string };
+
+// Dupe-deflection at write (the maintainer's #1 triage cost): search open
+// issues client-side via GitHub's public search API — no key, no server of
+// ours. Best-effort: rate-limited or offline → silently no suggestions.
+const searchCache = new Map<string, SimilarIssue[]>();
+async function searchIssues(q: string): Promise<SimilarIssue[]> {
+  const cached = searchCache.get(q);
+  if (cached) return cached;
+  try {
+    const res = await fetch(
+      `https://api.github.com/search/issues?per_page=4&q=${encodeURIComponent(`repo:santifer/career-ops is:issue is:open ${q}`)}`,
+      { headers: { Accept: "application/vnd.github+json" } },
+    );
+    if (!res.ok) return [];
+    const d = await res.json();
+    const items: SimilarIssue[] = (d.items || []).map((i: { number: number; title: string; html_url: string }) => ({
+      number: i.number,
+      title: i.title,
+      url: i.html_url,
+    }));
+    searchCache.set(q, items);
+    return items;
+  } catch {
+    return [];
+  }
+}
 
 // Beta/RC differentiator: a small version+channel pill (only on a pre-release
 // channel) + a one-click "Report a bug" that opens a PRE-FILLED GitHub issue. No
@@ -14,6 +42,23 @@ export function BetaBanner() {
   const [open, setOpen] = useState(false);
   const [desc, setDesc] = useState("");
   const [diag, setDiag] = useState<Diag | null>(null);
+  const [similar, setSimilar] = useState<SimilarIssue[]>([]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // While the user types, look for existing issues matching their words —
+  // debounced hard (GitHub search allows ~10 req/min unauthenticated).
+  useEffect(() => {
+    if (!open || desc.trim().split(/\s+/).length < 4) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const words = desc.trim().split(/\s+/).slice(0, 6).join(" ");
+      const found = await searchIssues(`label:web-alpha ${words}`);
+      setSimilar((prev) => (found.length ? found : prev));
+    }, 900);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [desc, open]);
 
   useEffect(() => {
     fetch("/api/version")
@@ -32,8 +77,14 @@ export function BetaBanner() {
   }, [open]);
 
   const openReport = async () => {
-    setDiag(await collect());
+    const d = await collect();
+    setDiag(d);
     setOpen(true);
+    // One exact-match search by fingerprint: same bug already filed → the
+    // strongest dedupe signal, shown before the user types a word.
+    searchIssues(`in:body "${fingerprint(d)}"`).then((found) => {
+      if (found.length) setSimilar(found);
+    });
   };
 
   if (!meta) return null;
@@ -72,6 +123,21 @@ export function BetaBanner() {
               <summary className="cursor-pointer select-none px-3 py-2 text-xs font-medium text-muted">Exactly what gets attached — review before sending ↓</summary>
               <pre className="max-h-52 overflow-auto whitespace-pre-wrap border-t border-border px-3 py-2 font-mono text-[11px] leading-relaxed text-muted">{issueBody(diag, desc)}</pre>
             </details>
+            {similar.length > 0 && (
+              <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">Already reported? A 👍 on an existing issue beats a duplicate:</p>
+                <ul className="mt-1.5 space-y-1">
+                  {similar.map((s) => (
+                    <li key={s.number}>
+                      <a href={s.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-foreground underline-offset-2 transition-colors hover:text-brand hover:underline">
+                        <ThumbsUp className="size-3 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <span className="font-mono">#{s.number}</span> {s.title.slice(0, 60)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <p className="mt-2 flex items-start gap-1.5 text-[11px] text-faint">
               <ShieldCheck className="mt-px size-3.5 shrink-0 text-emerald-500" /> Opens a GitHub issue you confirm — nothing is sent until you click. NEVER includes your CV, profile, application answers, or job URLs.
             </p>
