@@ -62,6 +62,11 @@ function warnSkip(label, reason) {
   console.warn(`⚠️  ${label}: skipping — ${reason}`);
 }
 
+function isWithinDirectory(rootAbs, candidateAbs) {
+  const rel = path.relative(rootAbs, candidateAbs);
+  return rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
+}
+
 /**
  * Resolve the config/plugins.yml path for a given project root.
  * @param {string} root
@@ -116,6 +121,7 @@ export async function loadPluginConfig(root) {
  */
 export function validateManifest(m, dir, dirName) {
   const label = dirName;
+  const dirAbs = path.resolve(dir);
   if (!m || typeof m !== 'object') { warnSkip(label, 'manifest.json is not an object'); return null; }
 
   if (typeof m.id !== 'string' || !ID_RE.test(m.id)) { warnSkip(label, `invalid id ${JSON.stringify(m.id)} (need ^[a-z0-9][a-z0-9-]*$)`); return null; }
@@ -155,8 +161,8 @@ export function validateManifest(m, dir, dirName) {
 
   const entry = typeof m.entry === 'string' && m.entry.trim() ? m.entry : 'index.mjs';
   if (!entry.endsWith('.mjs')) { warnSkip(label, `entry "${entry}" must be a .mjs file`); return null; }
-  const entryAbs = path.resolve(dir, entry);
-  if (entryAbs !== dir && !entryAbs.startsWith(dir + path.sep)) { warnSkip(label, `entry "${entry}" escapes the plugin directory`); return null; }
+  const entryAbs = path.resolve(dirAbs, entry);
+  if (!isWithinDirectory(dirAbs, entryAbs)) { warnSkip(label, `entry "${entry}" escapes the plugin directory`); return null; }
 
   // Optional companion skill (Open-Agent-Skill-Standard SKILL.md). Traversal-
   // guarded like entry. Surfaced on-demand via `plugins.mjs skill <id>`; never
@@ -164,8 +170,8 @@ export function validateManifest(m, dir, dirName) {
   let skill = null;
   if (m.skill !== undefined) {
     if (typeof m.skill !== 'string' || !m.skill.endsWith('.md')) { warnSkip(label, 'skill must be a relative .md path'); return null; }
-    const skillAbs = path.resolve(dir, m.skill);
-    if (skillAbs !== dir && !skillAbs.startsWith(dir + path.sep)) { warnSkip(label, `skill "${m.skill}" escapes the plugin directory`); return null; }
+    const skillAbs = path.resolve(dirAbs, m.skill);
+    if (!isWithinDirectory(dirAbs, skillAbs)) { warnSkip(label, `skill "${m.skill}" escapes the plugin directory`); return null; }
     if (!existsSync(skillAbs)) { warnSkip(label, `skill file not found: ${m.skill}`); return null; }
     skill = m.skill;
   }
