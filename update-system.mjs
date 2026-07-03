@@ -67,6 +67,7 @@ const SYSTEM_PATHS = [
   'interview-prep/sessions/README.md',
   'modes/patterns.md',
   'modes/update.md',
+  'modes/agent-inbox.md',
   'modes/ar/',
   'modes/da/',
   'modes/de/',
@@ -124,6 +125,7 @@ const SYSTEM_PATHS = [
   'detect-reposts.mjs',
   'followup-cadence.mjs',
   'followup-cadence.test.mjs',
+  'agent-inbox.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
   'openai-eval.mjs',
@@ -133,6 +135,7 @@ const SYSTEM_PATHS = [
   'test-salary-filter.mjs',
   'test-trust-validator.mjs',
   'tracker-columns-tests.mjs',
+  'agent-inbox-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
   'updater-migration-tests.mjs',
@@ -222,6 +225,7 @@ const USER_PATHS = [
   'config/plugins.yml',
   'plugins.local/',
   'plugins.lock',
+  '.claude/settings.json',
 ];
 
 function parseVersionFile(raw) {
@@ -634,7 +638,7 @@ async function apply() {
 
     // 3a. Keep bootstrap paths as a fallback for very old targets, but the
     // target updater's SYSTEM_PATHS is now the source of truth for new files.
-    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', '.antigravitycli/skills/', '.grok/skills/', '.kimi/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'tracker-utils.mjs', 'tracker-parse.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs', 'tracker-columns-tests.mjs', 'plugins/', 'plugins.mjs', 'plugins-registry.json', 'plugin-install.mjs', 'plugin-audit.mjs', 'validate-plugin-registry.mjs', 'config/plugins.example.yml'];
+    const BOOTSTRAP_PATHS = ['.agents/', '.opencode/skills/', '.antigravitycli/skills/', '.grok/skills/', '.kimi/skills/', 'providers/', 'liveness-browser.mjs', 'tracker-links.mjs', 'role-matcher.mjs', 'tracker-utils.mjs', 'tracker-parse.mjs', 'scaffolder/', 'reserve-report-num.mjs', 'updater-migration-tests.mjs', 'validate-portals.mjs', 'tracker-columns-tests.mjs', 'plugins/', 'plugins.mjs', 'plugins-registry.json', 'plugin-install.mjs', 'plugin-audit.mjs', 'validate-plugin-registry.mjs', 'config/plugins.example.yml', 'agent-inbox.mjs', 'agent-inbox-tests.mjs'];
     const updatePaths = mergePathLists(SYSTEM_PATHS, remoteSystemPaths, BOOTSTRAP_PATHS);
 
     for (const path of updatePaths) {

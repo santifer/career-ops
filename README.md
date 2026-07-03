@@ -85,6 +85,7 @@ Career-Ops ([career-ops.org](https://career-ops.org), also known as **careerops*
 - **Scans portals** automatically (Greenhouse, Ashby, Lever, company pages)
 - **Processes in batch** -- evaluate 10+ offers in parallel with sub-agents
 - **Tracks everything** in a single source of truth with integrity checks
+- **Researches companies and finds the right person to contact** -- applications get you in the queue; research gets you a conversation
 
 > **Important: This is NOT a spray-and-pray tool.** Career-ops is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
 
@@ -109,6 +110,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
 | **Human-in-the-Loop**    | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call               |
 | **Pipeline Integrity**   | Automated merge, dedup, status normalization, health checks                                                                              |
+| **Beyond the CV**        | Company research ([`deep`](modes/deep.md)) surfaces AI strategy, recent moves, engineering culture, and the angle your profile should take. Contact discovery ([`contacto`](modes/contacto.md)) identifies the hiring manager, recruiter, or team peer worth reaching out to and drafts a ≤300-character LinkedIn message tuned to each contact type. Applications get you in the queue; research gets you a conversation. |
 
 ## Quick Start
 
@@ -281,8 +283,8 @@ Career-ops uses a shared command router. In CLIs that register slash commands, i
 /career-ops tracker        → View application status
 /career-ops apply          → Fill application forms with AI
 /career-ops pipeline       → Process pending URLs
-/career-ops contacto       → LinkedIn outreach message
-/career-ops deep           → Deep company research
+/career-ops contacto       → Find hiring manager / recruiter / peer + draft a ≤300-char LinkedIn message per contact type
+/career-ops deep           → Generate a structured 6-axis research prompt (AI strategy, recent moves, culture, challenges, competitors, candidate angle)
 /career-ops training       → Evaluate a course/cert
 /career-ops project        → Evaluate a portfolio project
 ```
