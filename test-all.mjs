@@ -9628,6 +9628,103 @@ if (!fileExists('interview-prep/sessions/README.md')) {
   }
 }
 
+console.log('\n53. Provider — successfactors (SAP RMK tile parser)');
+
+try {
+  const sf = (await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href)).default;
+  const { parseTiles, cityFromSlug } = await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
+
+  if (sf.id === 'successfactors') pass('successfactors.id is "successfactors"');
+  else fail(`successfactors.id is ${JSON.stringify(sf.id)}`);
+
+  // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
+  // NOT (they carry no "successfactors" string and rely on explicit provider:).
+  if (sf.detect({ name: 'X', careers_url: 'https://acme.successfactors.eu/careers' })) {
+    pass('successfactors.detect() claims a *.successfactors.eu URL');
+  } else {
+    fail('successfactors.detect() should claim *.successfactors.eu');
+  }
+  if (sf.detect({ name: 'X', api: 'https://company.jobs2web.com/x' })) {
+    pass('successfactors.detect() claims a jobs2web.com URL');
+  } else {
+    fail('successfactors.detect() should claim jobs2web.com');
+  }
+  if (sf.detect({ name: 'ZF', careers_url: 'https://jobs.zf.com' }) === null) {
+    pass('successfactors.detect() returns null for a branded RMK host (needs explicit provider:)');
+  } else {
+    fail('successfactors.detect() must not auto-claim branded hosts');
+  }
+
+  // cityFromSlug — recover the city prefix from an RMK /job/{City}-{Title}-{code}/ slug.
+  if (cityFromSlug('/job/Hyderabad-Specialist-Low-Level-Driver-Development-TG-500032/1399717233/', 'Specialist -Low Level Driver Development') === 'Hyderabad') {
+    pass('cityFromSlug extracts a single-word city');
+  } else {
+    fail(`cityFromSlug single-word wrong: ${cityFromSlug('/job/Hyderabad-Specialist-Low-Level-Driver-Development-TG-500032/1399717233/', 'Specialist -Low Level Driver Development')}`);
+  }
+  // Multi-word city (Levallois-Perret) — anchoring on the title's first two
+  // words means the full city prefix survives, not just the first token.
+  if (cityFromSlug('/job/Levallois-Perret-Data-Management-Engagement-Architect-92300/1400945133/', 'Data Management Engagement Architect') === 'Levallois Perret') {
+    pass('cityFromSlug extracts a multi-word city');
+  } else {
+    fail(`cityFromSlug multi-word wrong: ${cityFromSlug('/job/Levallois-Perret-Data-Management-Engagement-Architect-92300/1400945133/', 'Data Management Engagement Architect')}`);
+  }
+  // Accented title (Ingénieur) — unicode word matching keeps the anchor intact.
+  if (cityFromSlug('/job/Massy-Ing%C3%A9nieur-Commercial-91743/1351400755/', 'Ingénieur Commercial') === 'Massy') {
+    pass('cityFromSlug handles accented (unicode) titles');
+  } else {
+    fail(`cityFromSlug accented wrong: ${cityFromSlug('/job/Massy-Ing%C3%A9nieur-Commercial-91743/1351400755/', 'Ingénieur Commercial')}`);
+  }
+
+  // parseTiles — a compact fragment covering the three things that bit during
+  // development: the city-value div (not its "City" label), an &amp; in the
+  // data-url path, a slug fallback when no city div is rendered, an entity in
+  // the title, desktop/mobile duplication collapsed to one <li>, and a
+  // title-less tile that must be dropped.
+  const jobBase = 'https://jobs.example.com';
+  const fragment = `
+    <ul>
+      <li class="job-tile job-id-111 job-row-index-1" data-url="/job/Schweinfurt-Ferienarbeiter-97421/111/">
+        <a class="jobTitle-link fontcolorx" href="/job/Schweinfurt-Ferienarbeiter-97421/111/">Ferienarbeiter (m&#47;w&#47;d)</a>
+        <div id="job-111-desktop-section-city" class="section-field city">
+          <span id="job-111-desktop-section-city-label" aria-describedby="job-111-desktop-section-city-value" class="section-label sr-only">City</span>
+          <div id="job-111-desktop-section-city-value">Schweinfurt                 </div>
+        </div>
+      </li>
+      <li class="job-tile job-id-222 job-row-index-2" data-url="/job/Palo-Alto-Program-&amp;-Release-Manager-CA-94304/222/">
+        <a class="jobTitle-link fontcolorx" href="/x">Program &amp; Release Manager</a>
+      </li>
+      <li class="job-tile job-id-333 job-row-index-3" data-url="/job/no-title/333/">
+      </li>
+    </ul>`;
+  const parsed = parseTiles(fragment, jobBase);
+
+  if (parsed.length === 2) pass('parseTiles returns 2 jobs (title-less tile dropped)');
+  else fail(`parseTiles returned ${parsed.length} jobs, expected 2`);
+
+  const j1 = parsed.find((j) => j.url.includes('/111/'));
+  if (j1 && j1.title === 'Ferienarbeiter (m/w/d)') pass('parseTiles decodes entity in title');
+  else fail(`parseTiles title wrong: ${JSON.stringify(j1 && j1.title)}`);
+  if (j1 && j1.location === 'Schweinfurt') pass('parseTiles reads the city-value div, not the "City" label');
+  else fail(`parseTiles city wrong: ${JSON.stringify(j1 && j1.location)}`);
+  if (j1 && j1.url === 'https://jobs.example.com/job/Schweinfurt-Ferienarbeiter-97421/111/') pass('parseTiles builds an absolute URL from data-url');
+  else fail(`parseTiles url wrong: ${JSON.stringify(j1 && j1.url)}`);
+
+  const j2 = parsed.find((j) => j.url.includes('/222/'));
+  if (j2 && j2.url === 'https://jobs.example.com/job/Palo-Alto-Program-&-Release-Manager-CA-94304/222/') {
+    pass('parseTiles decodes &amp; in the data-url path');
+  } else {
+    fail(`parseTiles &amp; url wrong: ${JSON.stringify(j2 && j2.url)}`);
+  }
+  if (j2 && j2.location === 'Palo Alto') pass('parseTiles falls back to slug city when no city div is present');
+  else fail(`parseTiles slug-fallback city wrong: ${JSON.stringify(j2 && j2.location)}`);
+
+  // Empty fragment (MTU's zero-req case) → no jobs, no throw.
+  if (parseTiles('<!DOCTYPE html>', jobBase).length === 0) pass('parseTiles returns [] for an empty fragment');
+  else fail('parseTiles should return [] for an empty fragment');
+} catch (err) {
+  fail(`successfactors provider test threw: ${err.message}`);
+}
+
 // ── match-star.mjs — fixture story-bank + top match assertion ───────────────
 
 console.log('\n🧪 Testing match-star.mjs keyword scorer...');
