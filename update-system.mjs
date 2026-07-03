@@ -130,6 +130,8 @@ const SYSTEM_PATHS = [
   'followup-cadence.mjs',
   'followup-cadence.test.mjs',
   'agent-inbox.mjs',
+  'followup-seed.mjs',
+  'followup-seed-tests.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
   'openai-eval.mjs',
