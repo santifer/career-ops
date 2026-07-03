@@ -5412,17 +5412,18 @@ try {
     fail('modes/_custom.template.md is NOT in SYSTEM_PATHS — the seed never updates (#1198)');
   }
 
-  // AGENTS.md MUST route custom rules to the file AND seed it on onboarding; CLAUDE.md imports it.
+  // AGENTS.md MUST route custom rules to the file AND seed it on onboarding.
+  // CLAUDE.md inherits this via its @AGENTS.md wrapper.
   const agentsMd = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
   const claudeMd = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf-8');
   if (
     agentsMd.includes('modes/_custom.md') &&
     agentsMd.includes('modes/_custom.template.md') &&
-    /^@(?:\.\/)?AGENTS\.md/m.test(claudeMd)
+    claudeMd.trim().startsWith('@AGENTS.md')
   ) {
-    pass('AGENTS.md routes custom rules to modes/_custom.md and CLAUDE.md imports it');
+    pass('AGENTS.md routes custom rules to modes/_custom.md + CLAUDE.md inherits via wrapper');
   } else {
-    fail('AGENTS.md does not reference modes/_custom.md / its template, or CLAUDE.md does not import AGENTS.md (#1198)');
+    fail('AGENTS.md does not reference modes/_custom.md / its template, or CLAUDE.md does not inherit it (#1198)');
   }
 } catch (e) {
   fail(`custom instructions test crashed: ${e.message}`);
