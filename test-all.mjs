@@ -862,8 +862,9 @@ try {
 }
 
 try {
-  const { appendToPipeline } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-missing-pipeline-'));
+  process.env.CAREER_OPS_ROOT = fixtureRoot;
+  const { appendToPipeline } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href + '?cachebust=' + Date.now());
   const originalCwd = process.cwd();
   try {
     mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
@@ -881,11 +882,13 @@ try {
     }
   } finally {
     process.chdir(originalCwd);
+    delete process.env.CAREER_OPS_ROOT;
     rmSync(fixtureRoot, { recursive: true, force: true });
   }
 } catch (err) {
   fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
 }
+
 
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
 if (
@@ -3285,7 +3288,6 @@ try {
   fail(`Cold-start trigger test crashed: ${e.message}`);
 }
 
-<<<<<<< HEAD
 // ── 15. TRACKER DERIVED INDEX (#918 phase 1) ────────────────────
 // applications.md is the source of truth; applications.db is a derived index
 // rebuilt from it. Round-trip md → db → md must be lossless for clean input
@@ -8325,21 +8327,23 @@ try {
   const dummyContent = `
 # Applications
 
-| Num | Date | Company | Role | Status | Score | PDF | Report | Notes |
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 2026-07-01 | TestCo | Engineer | **Applied** | 4.0 | ❌ | - | - |
+| 1 | 2026-07-01 | TestCo | Engineer | 4.0 | **Applied** | ❌ | - | - |
 `;
   writeFileSync(tempTracker, dummyContent, 'utf-8');
+
 
   try {
     process.env.CAREER_OPS_ROOT = tempRoot;
     run(NODE, ['normalize-statuses.mjs']);
     const updated = readFileSync(tempTracker, 'utf-8');
-    if (updated.includes('Aplicado') && !updated.includes('**Applied**')) {
+    if (updated.includes('| Applied |') && !updated.includes('**Applied**')) {
       pass('normalize-statuses.mjs respects CAREER_OPS_ROOT and modifies the correct tracker file');
     } else {
       fail(`normalize-statuses.mjs did not modify target tracker correctly, content: ${updated}`);
     }
+
   } finally {
     delete process.env.CAREER_OPS_ROOT;
     rmSync(tempRoot, { recursive: true, force: true });

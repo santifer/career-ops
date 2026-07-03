@@ -48,7 +48,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // ---------------------------------------------------------------------------
 // Paths
 // ---------------------------------------------------------------------------
-import { getCareerOpsRoot } from './path-resolver.mjs';
+import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 
 const CODE_ROOT = dirname(fileURLToPath(import.meta.url));
 const DATA_ROOT = getCareerOpsRoot();
@@ -63,9 +63,10 @@ const PATHS = {
   profile:     join(DATA_ROOT, 'modes', '_profile.md'),
   profileYml:  join(DATA_ROOT, 'config', 'profile.yml'),
   reports:     join(DATA_ROOT, 'reports'),
-  tracker:     join(DATA_ROOT, 'data', 'applications.md'),
+  tracker:     resolveTrackerPath(DATA_ROOT),
   trackerAdditions: join(DATA_ROOT, 'batch', 'tracker-additions'),
 };
+
 
 // ---------------------------------------------------------------------------
 // CLI argument parsing

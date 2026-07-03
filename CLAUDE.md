@@ -26,7 +26,8 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 - **NEVER** edit `modes/_shared.md`, `CLAUDE.md`, or any other system file for user-specific content — those get overwritten on update.
 
 **Path Resolution Override:**
-The User Layer location can be overridden using the `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` environment variables. If set, User Layer files are loaded and written relative to that path, while System Layer files remain relative to the repository. Precedence: `CAREER_OPS_TRACKER` overrides specific tracker file path over `CAREER_OPS_ROOT` directory.
+The User Layer location can be overridden using the `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` environment variables. If set, User Layer files are loaded and written relative to that path, while System Layer files remain relative to the repository.
+- **Precedence:** `CAREER_OPS_TRACKER` overrides the specific applications tracker file path, taking precedence over `CAREER_OPS_ROOT` / `CAREER_OPS_DATA_DIR`.
 
 
 ## Source-of-Truth Boundary (CRITICAL)

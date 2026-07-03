@@ -169,7 +169,7 @@ Levels are additive — they are executed in order, and results are merged and d
    d. Normalize each job to `{title, url, company, location}`.
    e. Resolve relative URLs against `careers_url`.
    f. If the parser fails, log the error, attempt fallback via the ATS API if it exists, and continue with the other companies (**do not** add to `local_parser_ok`).
-   g. If the parser completes successfully (steps c–e without fatal error), add `entry.name` to `local_parser_ok` and accumulate jobs in candidates.
+   g. If the parser completes successfully (steps c–e without fatal error), add the current company name to `local_parser_ok` and accumulate jobs in candidates.
 
 4. **Level 1 — Playwright Scan** (parallel in batches of 3-5):
    For each company in `tracked_companies` with `enabled: true`, a defined `careers_url`, and a **name not listed in `local_parser_ok`**:

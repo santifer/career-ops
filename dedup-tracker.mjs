@@ -15,6 +15,8 @@ import { fileURLToPath } from 'url';
 import { rebuildRow } from './tracker-utils.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
+import { roleFuzzyMatch } from './role-matcher.mjs';
+
 
 const CAREER_OPS = getCareerOpsRoot();
 const APPS_FILE = resolveTrackerPath(CAREER_OPS);

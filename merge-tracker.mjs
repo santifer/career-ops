@@ -23,6 +23,8 @@ import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 import { LEGACY_COLMAP, detectColumns } from './tracker-parse.mjs';
+import { roleFuzzyMatch } from './role-matcher.mjs';
+
 
 
 const CAREER_OPS = getCareerOpsRoot();

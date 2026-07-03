@@ -214,15 +214,42 @@ func (m appModel) View() string {
 	}
 }
 
+func getRepoRoot() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "."
+	}
+	if _, err := os.Stat(filepath.Join(cwd, "path-resolver.mjs")); err == nil {
+		return cwd
+	}
+	parent := filepath.Dir(cwd)
+	if _, err := os.Stat(filepath.Join(parent, "path-resolver.mjs")); err == nil {
+		return parent
+	}
+	return cwd
+}
+
+func resolveEnvPath(envVal string) string {
+	trimmed := strings.TrimSpace(envVal)
+	if trimmed == "" {
+		return ""
+	}
+	if filepath.IsAbs(trimmed) {
+		return filepath.Clean(trimmed)
+	}
+	return filepath.Clean(filepath.Join(getRepoRoot(), trimmed))
+}
+
 func main() {
 	defaultPath := "."
-	if envPath := os.Getenv("CAREER_OPS_ROOT"); envPath != "" {
+	if envPath := resolveEnvPath(os.Getenv("CAREER_OPS_ROOT")); envPath != "" {
 		defaultPath = envPath
-	} else if envPath := os.Getenv("CAREER_OPS_DATA_DIR"); envPath != "" {
+	} else if envPath := resolveEnvPath(os.Getenv("CAREER_OPS_DATA_DIR")); envPath != "" {
 		defaultPath = envPath
 	}
 	pathFlag := flag.String("path", defaultPath, "Path to career-ops directory")
 	flag.Parse()
+
 
 	careerOpsPath := *pathFlag
 
