@@ -34,6 +34,12 @@ jds/*
 # Interview prep (accumulated STAR+R stories — user data)
 interview-prep/*
 !interview-prep/.gitkeep
+# Session transcripts hold real interviewer names/companies — ignore content,
+# ship only the system-owned scaffold (README + .gitkeep). #1242
+!interview-prep/sessions/
+interview-prep/sessions/*
+!interview-prep/sessions/.gitkeep
+!interview-prep/sessions/README.md
 
 # Writing samples (user's personal files — never committed)
 writing-samples/*
@@ -86,6 +92,7 @@ data/model-blacklist.json
 career-dashboard
 career-dashboard.exe
 package-lock.json
+!web/package-lock.json
 
 # Playwright MCP server run artifacts (ephemeral, machine-local)
 .playwright-mcp/

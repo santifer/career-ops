@@ -15,12 +15,13 @@ Interactive mode for when the candidate is filling out an application form in Ch
 1. DETECT      → Read active Chrome tab (screenshot/URL/title)
 2. IDENTIFY    → Extract company + role from the page
 3. SEARCH      → Match against existing reports in reports/
-4. LOAD        → Read full report + Section G (if it exists)
+4. LOAD        → Read full report + Section H / Application Answers (if they exist)
 5. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
 5b. PRE-SCAN   → Scan page for knock-out questions (degree, experience, work authorization/visa, sponsorship, salary floors)
 6. ANALYZE     → Identify ALL visible form questions
 7. GENERATE    → For each question, generate a personalized response
 8. PRESENT     → Show formatted responses for copy-paste
+9. PERSIST     → Save the final filled/submitted answers into the report
 ```
 
 ## Step 5 — Preflight gate
@@ -72,7 +73,7 @@ Read the entire page/form to scan for knock-out questions BEFORE generating full
 1. Extract company name and role title from the page
 2. Search in `reports/` by company name (case-insensitive grep)
 3. If there is a match → load the full report
-4. If there is a Section G → load previous draft answers as a base
+4. If there is a Section H or `## Application Answers` → load previous answers as a base
 5. If there is NO match → notify and offer to run a quick auto-pipeline
 
 ## Step 3 — Detect changes in the role
@@ -80,7 +81,7 @@ Read the entire page/form to scan for knock-out questions BEFORE generating full
 If the role on screen differs from the one evaluated:
 - **Notify the candidate**: "The role has changed from [X] to [Y]. Do you want me to re-evaluate or adapt the responses to the new title?"
 - **If adapt**: Adjust responses to the new role without re-evaluating, only after the candidate explicitly accepts the mismatch
-- **If re-evaluate**: Execute full A-F evaluation, update report, regenerate Section G
+- **If re-evaluate**: Execute full A-F evaluation, update report, regenerate Section H
 - **Update tracker**: Change role title in applications.md if applicable
 
 ## Step 6 — Analyze form questions
@@ -93,7 +94,7 @@ Identify ALL visible questions:
 - Upload fields (resume, cover letter PDF)
 
 Classify each question:
-- **Already answered in Section G** → adapt the existing response
+- **Already answered in Section H or `## Application Answers`** → adapt the existing response
 - **New question** → generate response from the report + cv.md
 
 For each field, preserve the application form contract:
@@ -111,7 +112,7 @@ Never invent answers for legal, demographic, work-authorization, visa/sponsorshi
 For each question, generate the response following:
 
 1. **Report context**: Use proof points from block B, STAR stories from block F
-2. **Previous Section G**: If a draft response exists, use it as a base and refine
+2. **Previous Section H / Application Answers**: If a draft or final response exists, use it as a base and refine
 3. **"I'm choosing you" tone**: Same auto-pipeline framework
 4. **Specificity**: Reference something specific from the JD visible on screen
 5. **career-ops proof point**: Include in "Additional info" if there is a field for it
@@ -142,11 +143,31 @@ Notes:
 - [Personalization suggestions the candidate should review]
 ```
 
-## Step 8 — Post-apply (optional)
+## Step 8 — Persist application snapshot
+
+After the final answers are filled into the form or handed to the candidate for copy-paste, update the matched report with an additive `## Application Answers` section. If the candidate later confirms submission, update that same section from `filled` to `submitted`.
+
+The section must include:
+- `**Date:** YYYY-MM-DD`
+- `**State:** filled` or `**State:** submitted`
+- Free-text answers exactly as submitted
+- Dropdown/radio/checkbox selections made
+- Number or short-answer fields such as compensation, availability, start date, and work authorization
+- Files used, including CV, cover letter, portfolio, or other uploads with version/path when known
+
+Write the section at the end of the report, or replace only the existing `## Application Answers` section if it already exists. Do not rename, reorder, or edit the existing A-H report blocks or `## Keywords extracted`.
+
+Use `application-answers.mjs` when possible to format/upsert the section:
+
+```bash
+node application-answers.mjs --report reports/NNN-company-role-date.md --input answers.json --state filled
+```
+
+## Step 9 — Post-apply (optional)
 
 If the candidate confirms that they submitted the application:
 1. Update status in `applications.md` from "Evaluated" to "Applied"
-2. Update Section G of the report with the final responses
+2. Refresh the report's `## Application Answers` section with the final field values and `**State:** submitted`
 3. Suggest next step: run the `contacto` mode (`/career-ops contacto` where available) for LinkedIn outreach
 
 ## Scroll handling
@@ -155,3 +176,37 @@ If the form has more questions than the visible ones:
 - Ask the candidate to scroll and share another screenshot
 - Or paste the remaining questions
 - Process in iterations until the entire form is covered
+
+## Known ATS Quirks
+
+Field-tested across ~12 Playwright-driven applications (Ashby, Greenhouse, Lever, Workable). These quirks silently break an apply run if not accounted for.
+
+### Ashby — email-based candidate dedup
+
+- **Symptom:** Submitting a second application at the same company silently fails or merges into the existing candidate record. Ashby deduplicates by email per company.
+- **Agent:** Before filling the email field, check whether an earlier report for the same company already exists in `reports/`. If it does, warn the candidate and pre-fill a `+tag` alias (e.g., `user+teamname@domain.com`) as the suggested value.
+- **Candidate:** Confirms or changes the email before the form is submitted.
+
+### Lever — hCaptcha intercepts checkbox/radio clicks
+
+- **Symptom:** Programmatic `click()` on checkboxes or radio buttons triggers an hCaptcha challenge mid-form, blocking the rest of the fill.
+- **Agent:** Fill `<input type="text">`, `<textarea>`, and `<select>` fields only. Skip all checkboxes, radio buttons, and the captcha widget. List the skipped fields with their recommended values so the candidate can tick them.
+- **Candidate:** Completes the checkboxes, solves the captcha, and clicks Submit.
+
+### Workable — SPA re-renders break form refs
+
+- **Symptom:** Workable's SPA re-renders form components between fills, invalidating element references. Sequential `fill()` calls hit stale-element errors.
+- **Agent:** Copy each answer to the clipboard and present a numbered paste list. If Playwright is active, dispatch `Ctrl+V` per field with a fresh element query before each paste — do not cache refs across fields.
+- **Candidate:** Pastes remaining answers manually if clipboard dispatch fails, then submits.
+
+### React-select autocomplete widgets
+
+- **Symptom:** `react-select` (common in Greenhouse, Ashby, Lever for location/department fields) destroys and recreates its internal DOM on every keystroke. Cached refs go stale instantly.
+- **Agent:** Type character-by-character with short delays (~100 ms). Re-snapshot after every selection to pick up the new DOM state. Never cache element references across interactions.
+- **Candidate:** Verifies each selected value is correct before moving on; corrects any mis-selection inline.
+
+### Huge native `<select>` elements (1 000+ options)
+
+- **Symptom:** Country, university, or field-of-study dropdowns contain thousands of `<option>` entries. Snapshotting them floods context and stalls the agent.
+- **Agent:** Use `select_option` directly by value or visible label. Never snapshot the full option list. If the exact label is unknown, ask the candidate for the value instead of dumping options into context.
+- **Candidate:** Provides the correct label when the agent cannot infer it from `config/profile.yml`.
