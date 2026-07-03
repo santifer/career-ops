@@ -56,6 +56,30 @@ eq('exact "Northwind" match outranks the longer "Northwind Traders" partial matc
 const once = normalizeCompanyName('Acme Technologies Inc.');
 eq('normalizeCompanyName is idempotent', normalizeCompanyName(once), once);
 
+// A req ID that appears verbatim in a row's notes must outrank a same-name
+// row without it, even though both have identical name similarity — this is
+// the strongest disambiguation signal the matcher has, so it must actually
+// move the ranking, not just add a negligible tiebreaker.
+const reqIdRows = [
+  { num: 301, company: 'Fabrikam', role: 'Engineer', status: 'Applied', date: '2026-05-01', notes: '' },
+  { num: 302, company: 'Fabrikam', role: 'Engineer II', status: 'Applied', date: '2026-05-02', notes: 'req R-4821 mentioned' },
+];
+const reqIdResult = matchInvite({ company: 'Fabrikam', date: null, reqId: 'R-4821' }, reqIdRows);
+eq('row with matching reqId in notes outranks identical-name row without it', reqIdResult[0].appNumber, 302);
+
+// Two distinct companies that each end in a *different pair* of chained
+// generic descriptor words must not erode down to the same root — this is
+// the actual over-stripping bug raised on PR #1497: chaining generic-word
+// removal (not just legal-suffix removal) let "X Solutions Group" and
+// "X Technologies Holdings" both collapse all the way to "x". Limiting
+// generic-descriptor stripping to a single, non-chained pass stops at the
+// first strip instead of eating through both words.
+eq(
+  'chained generic descriptors ("Solutions Group" vs "Technologies Holdings") do not erode to the same key',
+  normalizeCompanyName('Northwind Solutions Group') === normalizeCompanyName('Northwind Technologies Holdings'),
+  false
+);
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {
   console.log('Failures:', failures.join(', '));

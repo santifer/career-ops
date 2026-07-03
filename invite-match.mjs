@@ -37,6 +37,10 @@ const args = process.argv.slice(2);
 const summaryMode = args.includes('--summary');
 const selfTestMode = args.includes('--self-test');
 const fileIdx = args.indexOf('--file');
+if (fileIdx !== -1 && args[fileIdx + 1] === undefined) {
+  console.error('invite-match: --file requires a path argument');
+  process.exit(1);
+}
 const filePathArg = fileIdx !== -1 ? args[fileIdx + 1] : null;
 
 // Statuses ranked above others when disambiguating same-company candidates —
@@ -61,21 +65,37 @@ function normalizeStatusKey(status) {
     .toLowerCase();
 }
 
-// Common corporate suffixes that vary between how a recruiter signs an email
-// ("Acme Corp") and how the tracker recorded the company ("Acme Inc.") —
-// stripped before comparison so they don't cause false negatives.
-const CORPORATE_SUFFIXES = [
+// True legal-entity suffixes, stripped repeatedly (chained) since a name can
+// legitimately carry more than one ("Acme Holdings Inc." → "acme holdings").
+// These are unambiguous enough that removing several in a row is safe.
+const LEGAL_SUFFIXES = [
   'incorporated', 'inc', 'corporation', 'corp', 'company', 'co',
-  'limited', 'ltd', 'llc', 'llp', 'lp', 'plc', 'group', 'holdings',
-  'technologies', 'technology', 'solutions', 'canada', 'international',
+  'limited', 'ltd', 'llc', 'llp', 'lp', 'plc',
+];
+
+// Generic business-descriptor words that vary between how a recruiter signs
+// an email and how the tracker recorded the company, but are common enough
+// as substantive parts of a name (e.g. "Data Solutions" vs "Data Corp") that
+// chaining their removal risks collapsing two different companies to the
+// same key. Stripped at most once, and only after legal suffixes are gone —
+// never chained with each other or with LEGAL_SUFFIXES.
+const GENERIC_DESCRIPTORS = [
+  'group', 'holdings', 'technologies', 'technology', 'solutions',
+  'canada', 'international',
 ];
 
 /**
  * Normalize a company name for matching: lowercase, strip punctuation and
- * parentheticals, collapse whitespace, and drop trailing corporate suffixes
- * one at a time (so "Acme Technologies Inc." reduces the same way as
- * "Acme"). Mirrors the normalization dedup-tracker.mjs applies to tracker
- * rows, so the same two names collapse to the same key on both sides.
+ * parentheticals, collapse whitespace, chain-strip trailing legal-entity
+ * suffixes (so "Acme Technologies Inc." reduces to "acme technologies"),
+ * then strip at most one trailing generic descriptor word. Mirrors the
+ * normalization dedup-tracker.mjs applies to tracker rows, so the same two
+ * names collapse to the same key on both sides.
+ *
+ * Generic descriptors are deliberately stripped only once (not chained) and
+ * only after legal suffixes, so two distinct companies that happen to both
+ * end in a generic word (e.g. "Data Solutions" vs "Data Corp") don't
+ * collapse to the same "data" key — see issue discussion on PR #1497.
  *
  * @param {string} name
  * @returns {string}
@@ -92,7 +112,7 @@ export function normalizeCompanyName(name) {
   let changed = true;
   while (changed) {
     changed = false;
-    for (const suffix of CORPORATE_SUFFIXES) {
+    for (const suffix of LEGAL_SUFFIXES) {
       const re = new RegExp(`\\s${suffix}$`);
       if (re.test(key)) {
         key = key.replace(re, '').trim();
@@ -100,6 +120,15 @@ export function normalizeCompanyName(name) {
       }
     }
   }
+
+  for (const word of GENERIC_DESCRIPTORS) {
+    const re = new RegExp(`\\s${word}$`);
+    if (re.test(key)) {
+      key = key.replace(re, '').trim();
+      break;
+    }
+  }
+
   return key;
 }
 
@@ -143,7 +172,7 @@ export function companySimilarity(a, b) {
 // the result, not this heuristic alone.
 const COMPANY_LINE_PATTERNS = [
   /(?:^|\n)\s*company\s*[:\-]\s*(.+)/i,
-  /interview(?:ing)?\s+(?:with|at)\s+([A-Z][\w.,&' -]{1,60}?)(?:[.,\n]|\s+for\s|\s+regarding\s|$)/,
+  /interview(?:ing)?\s+(?:with|at)\s+([A-Z][\w.,&' -]{1,60}?)(?:[.,\n]|\s+for\s|\s+regarding\s|$)/i,
   /(?:phone screen|screening|interview)\s*[-–—:]\s*([A-Z][\w.,&' -]{1,60}?)(?:\s+opportunity)?(?:[.,\n]|$)/i,
   /schedule your (?:phone screen|interview)\s*(?:[-–—:]\s*)?([A-Z][\w.,&' -]{1,60}?)\s*opportunity/i,
 ];
@@ -407,6 +436,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else {
     let text;
     if (filePathArg) {
+      if (!existsSync(filePathArg)) {
+        console.error(`invite-match: file not found: ${filePathArg}`);
+        process.exit(1);
+      }
       text = readFileSync(filePathArg, 'utf-8');
     } else {
       text = readFileSync(0, 'utf-8'); // stdin
