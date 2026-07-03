@@ -3336,6 +3336,13 @@ try {
   if (cvHasEntry(cvWithEmail, 'Projects', 'Mailer')) pass('cvHasEntry still matches the real bold identifier');
   else fail('cvHasEntry should match the bold entry name');
 
+  // Same collision guard for article-digest headings (name before the dash).
+  const adWithMailer = '# Article Digest\n\n---\n\n## Mailer -- Email digests\n\n**Hero metrics:** x\n';
+  if (!articleDigestHasEntry(adWithMailer, 'AI')) pass('articleDigestHasEntry does not false-match a short key against a heading');
+  else fail('articleDigestHasEntry should not match "AI" against the "Mailer -- Email digests" heading');
+  if (articleDigestHasEntry(adWithMailer, 'Mailer')) pass('articleDigestHasEntry matches the real heading name');
+  else fail('articleDigestHasEntry should match the heading name before the dash');
+
   // CLI wiring: --dry-run reports without writing; a real run writes and is then
   // idempotent. Exercised against isolated fixture files via env overrides.
   const cliTmp = mkdtempSync(join(tmpdir(), 'career-ops-add-cli-'));
