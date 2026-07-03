@@ -75,13 +75,26 @@ export function locateSection(md, section) {
   return null;
 }
 
+// The identifiers an entry can be recognized by within a section: bold spans
+// (**Name**) and any sub-headings (### / ####). Matching dedup against these
+// discrete names — not the raw section text — stops a short key like "AI" from
+// colliding with an unrelated substring (e.g. the "ai" inside "email").
+export function extractIdentifiers(body) {
+  const ids = [];
+  for (const m of body.matchAll(/\*\*([^*]+)\*\*/g)) ids.push(m[1]);
+  for (const m of body.matchAll(/^#{3,}\s+(.*\S)\s*$/gm)) ids.push(m[1]);
+  return ids;
+}
+
 // Does the named CV section already contain an entry matching dedupKey?
+// Compares the key against each entry's identifier (normalized equality), not a
+// substring of the whole section body.
 export function cvHasEntry(md, section, dedupKey) {
   const key = normalizeKey(dedupKey);
   if (!key) return false;
   const loc = locateSection(md, section);
   if (!loc) return false;
-  return normalizeKey(loc.body).includes(key);
+  return extractIdentifiers(loc.body).some(id => normalizeKey(id) === key);
 }
 
 // Insert a pre-formatted entry under `## <section>`, creating the section at
@@ -102,12 +115,19 @@ export function insertIntoCvSection(md, section, entry) {
   return rebuilt.replace(/\n{3,}/g, '\n\n');
 }
 
-// article-digest.md is a sequence of `## <name>` blocks separated by `---`.
+// article-digest.md is a sequence of `## <name> -- <tagline>` blocks separated
+// by `---`. Dedup on the name (the heading text before the dash), matched by
+// normalized equality or prefix so "## FraudShield -- Detection" matches the key
+// "FraudShield" without a short key colliding on unrelated heading text.
 export function articleDigestHasEntry(md, dedupKey) {
   const key = normalizeKey(dedupKey);
   if (!key) return false;
-  const headings = md.match(/^##\s+.*$/gm) || [];
-  return headings.some(h => normalizeKey(h).includes(key));
+  for (const m of md.matchAll(/^##\s+(.*\S)\s*$/gm)) {
+    const name = m[1].split(/\s+[—–-]{1,2}\s+/)[0];
+    const n = normalizeKey(name);
+    if (n === key || n.startsWith(key)) return true;
+  }
+  return false;
 }
 
 export function appendArticleDigest(md, entry) {
@@ -134,6 +154,9 @@ export function applyAdd(payload, { cvText = null, articleText = null } = {}) {
   if (payload.cv) {
     const { section, dedupKey, entry } = payload.cv;
     if (!section || !entry) throw new Error('payload.cv requires { section, entry }');
+    // dedupKey is what makes the insert idempotent — refuse to add without one
+    // rather than silently allowing duplicate re-runs.
+    if (!normalizeKey(dedupKey)) throw new Error('payload.cv requires a non-empty dedupKey (used for dedup/idempotency)');
     if (cvText === null) throw new Error(`cv.md not found — cannot add to a CV that does not exist`);
     if (cvHasEntry(cvText, section, dedupKey)) {
       result.cv = { status: 'duplicate', section };
@@ -146,6 +169,7 @@ export function applyAdd(payload, { cvText = null, articleText = null } = {}) {
   if (payload.articleDigest) {
     const { dedupKey, entry } = payload.articleDigest;
     if (!entry) throw new Error('payload.articleDigest requires { entry }');
+    if (!normalizeKey(dedupKey)) throw new Error('payload.articleDigest requires a non-empty dedupKey (used for dedup/idempotency)');
     // article-digest.md is optional; create it from a header when missing.
     const current = articleText === null
       ? '# Article Digest -- Proof Points\n\nCompact proof points from portfolio projects. Read by career-ops at evaluation time.\n'
@@ -200,13 +224,20 @@ async function main() {
   }
 
   if (!dryRun) {
+    // Track what actually landed so a failure on the second write reports which
+    // file was already mutated (the two writes aren't transactional).
+    const written = [];
     try {
-      if (payload.cv && out.result.cv?.status === 'added') writeFileSync(CV_FILE, out.cv);
+      if (payload.cv && out.result.cv?.status === 'added') {
+        writeFileSync(CV_FILE, out.cv);
+        written.push('cv.md');
+      }
       if (payload.articleDigest && (out.result.articleDigest?.status === 'added' || out.result.articleDigest?.status === 'created')) {
         writeFileSync(ARTICLE_DIGEST_FILE, out.articleDigest);
+        written.push('article-digest.md');
       }
     } catch (e) {
-      console.error(`add-entry: write failed: ${e.message}`);
+      console.error(`add-entry: write failed after writing [${written.join(', ') || 'nothing'}]: ${e.message}`);
       process.exit(1);
     }
   }

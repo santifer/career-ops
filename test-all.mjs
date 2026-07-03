@@ -3322,6 +3322,53 @@ try {
   if (threwEmpty) pass('applyAdd rejects an empty payload');
   else fail('applyAdd should reject an empty payload');
 
+  // dedupKey is required — idempotency depends on it, so a missing one fails fast.
+  let threwNoKey = false;
+  try { applyAdd({ cv: { section: 'Projects', entry: '- **X** -- y' } }, { cvText: sampleCv }); } catch { threwNoKey = true; }
+  if (threwNoKey) pass('applyAdd requires a dedupKey for a cv target');
+  else fail('applyAdd should throw when cv.dedupKey is missing');
+
+  // Short-key dedup must NOT collide with unrelated substrings (e.g. "ai" in a
+  // bullet that mentions "email"). Regression for the identifier-based matcher.
+  const cvWithEmail = '# CV\n\n## Projects\n\n- **Mailer** (OSS) -- sends email digests\n';
+  if (!cvHasEntry(cvWithEmail, 'Projects', 'AI')) pass('cvHasEntry does not false-match a short key against unrelated text');
+  else fail('cvHasEntry should not match "AI" against "email"');
+  if (cvHasEntry(cvWithEmail, 'Projects', 'Mailer')) pass('cvHasEntry still matches the real bold identifier');
+  else fail('cvHasEntry should match the bold entry name');
+
+  // CLI wiring: --dry-run reports without writing; a real run writes and is then
+  // idempotent. Exercised against isolated fixture files via env overrides.
+  const cliTmp = mkdtempSync(join(tmpdir(), 'career-ops-add-cli-'));
+  try {
+    const cvPath = join(cliTmp, 'cv.md');
+    const adPath = join(cliTmp, 'article-digest.md');
+    writeFileSync(cvPath, '# CV\n\n## Projects\n\n- **Existing** (OSS) -- here\n');
+    const payloadPath = join(cliTmp, 'p.json');
+    writeFileSync(payloadPath, JSON.stringify({
+      cv: { section: 'Projects', dedupKey: 'CliProj', entry: '- **CliProj** (OSS) -- desc' },
+      articleDigest: { dedupKey: 'CliProj', entry: '## CliProj -- Tagline\n\n**Hero metrics:** x' },
+    }));
+    const env = { ...process.env, CAREER_OPS_CV: cvPath, CAREER_OPS_ARTICLE_DIGEST: adPath };
+
+    execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath, '--dry-run'], { env, encoding: 'utf-8' });
+    if (!readFileSync(cvPath, 'utf-8').includes('CliProj') && !existsSync(adPath)) pass('add-entry CLI --dry-run writes nothing');
+    else fail('add-entry CLI --dry-run should not write');
+
+    const realOut = JSON.parse(execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath], { env, encoding: 'utf-8' }));
+    if (realOut.cv.status === 'added' && realOut.articleDigest.status === 'created' &&
+        readFileSync(cvPath, 'utf-8').includes('- **CliProj**') && readFileSync(adPath, 'utf-8').includes('## CliProj')) {
+      pass('add-entry CLI real run writes cv.md + creates article-digest.md');
+    } else {
+      fail(`add-entry CLI real run => ${JSON.stringify(realOut)}`);
+    }
+
+    const rerun = JSON.parse(execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath], { env, encoding: 'utf-8' }));
+    if (rerun.cv.status === 'duplicate' && rerun.articleDigest.status === 'duplicate') pass('add-entry CLI re-run is idempotent');
+    else fail(`add-entry CLI re-run => ${JSON.stringify(rerun)}`);
+  } finally {
+    rmSync(cliTmp, { recursive: true, force: true });
+  }
+
 } catch (e) {
   fail(`add-entry tests crashed: ${e.message}`);
 }

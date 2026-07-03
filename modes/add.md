@@ -54,9 +54,11 @@ If no source was given, ask the user for one.
    without an explicit yes.
 8. **Write via the helper.** Build the payload (schema below), write it to
    `/tmp/add-<slug>.json`, then run:
+
    ```bash
    node add-entry.mjs /tmp/add-<slug>.json
    ```
+
    (Add `--dry-run` first if the user wants to see the file-level change without
    writing.)
 9. **Report** the helper's JSON result. If a target comes back `duplicate`, tell
