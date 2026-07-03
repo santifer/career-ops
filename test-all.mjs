@@ -180,6 +180,7 @@ const scripts = [
   { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
+  { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'agent-inbox-tests.mjs', expectExit: 0 },
@@ -848,7 +849,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md',
+  'interview.md', 'latex.md', 'add.md',
   'regional/eu-swe.md',
 ];
 
@@ -3250,6 +3251,167 @@ try {
 
 } catch (e) {
   fail(`teamtailor provider tests crashed: ${e.message}`);
+}
+
+// ── 14b. ADD-ENTRY (/career-ops add) ────────────────────────────────
+
+console.log('\n14b. add-entry.mjs (dedup + insertion)');
+
+try {
+  const addMod = await import(pathToFileURL(join(ROOT, 'add-entry.mjs')).href);
+  const { normalizeKey, locateSection, cvHasEntry, insertIntoCvSection, articleDigestHasEntry, applyAdd } = addMod;
+
+  if (normalizeKey('Fraud-Shield!') === 'fraudshield') pass('normalizeKey strips punctuation/case');
+  else fail(`normalizeKey => ${normalizeKey('Fraud-Shield!')}`);
+
+  const sampleCv = [
+    '# CV -- Test',
+    '',
+    '## Work Experience',
+    '',
+    '### Acme -- Remote',
+    '',
+    '**Engineer**',
+    '2020-2022',
+    '',
+    '- Did things',
+    '',
+    '## Projects',
+    '',
+    '- **Existing** (OSS) -- already here',
+    '',
+    '## Education',
+    '',
+    '- BS CS',
+    '',
+  ].join('\n');
+
+  // locateSection isolates the right block
+  const loc = locateSection(sampleCv, 'Projects');
+  if (loc && loc.body.includes('Existing') && !loc.body.includes('BS CS')) pass('locateSection isolates the Projects block');
+  else fail(`locateSection => ${JSON.stringify(loc && loc.body)}`);
+
+  // insertion appends within section and preserves later sections
+  const inserted = insertIntoCvSection(sampleCv, 'Projects', '- **FraudShield** (OSS) -- fraud detection');
+  if (inserted.includes('- **Existing**') && inserted.includes('- **FraudShield**') &&
+      inserted.indexOf('FraudShield') < inserted.indexOf('## Education') &&
+      inserted.includes('## Education')) {
+    pass('insertIntoCvSection appends under Projects and keeps Education intact');
+  } else {
+    fail('insertIntoCvSection placement wrong');
+  }
+
+  // missing section is created at EOF
+  const withPubs = insertIntoCvSection(sampleCv, 'Publications', '- **A Paper** (2026) -- venue');
+  if (withPubs.includes('## Publications') && withPubs.includes('- **A Paper**')) pass('insertIntoCvSection creates a missing section');
+  else fail('insertIntoCvSection did not create missing section');
+
+  // dedup detection is punctuation/case-insensitive
+  if (cvHasEntry(sampleCv, 'Projects', 'existing') && !cvHasEntry(sampleCv, 'Projects', 'FraudShield')) {
+    pass('cvHasEntry detects an existing entry and misses a new one');
+  } else {
+    fail('cvHasEntry dedup logic wrong');
+  }
+
+  // applyAdd: fresh add to cv + article-digest (article-digest absent → created)
+  const added = applyAdd(
+    {
+      cv: { section: 'Projects', dedupKey: 'FraudShield', entry: '- **FraudShield** (OSS) -- fraud detection' },
+      articleDigest: { dedupKey: 'FraudShield', entry: '## FraudShield -- Detection\n\n**Hero metrics:** 99.7%' },
+    },
+    { cvText: sampleCv, articleText: null },
+  );
+  if (added.result.cv.status === 'added' && added.result.articleDigest.status === 'created' &&
+      added.cv.includes('FraudShield') && added.articleDigest.includes('## FraudShield')) {
+    pass('applyAdd adds a new CV entry and creates article-digest.md when absent');
+  } else {
+    fail(`applyAdd fresh-add => ${JSON.stringify(added.result)}`);
+  }
+
+  // applyAdd: idempotent — same payload against updated files is a no-op
+  const again = applyAdd(
+    {
+      cv: { section: 'Projects', dedupKey: 'FraudShield', entry: '- **FraudShield** (OSS) -- fraud detection' },
+      articleDigest: { dedupKey: 'FraudShield', entry: '## FraudShield -- Detection\n\n**Hero metrics:** 99.7%' },
+    },
+    { cvText: added.cv, articleText: added.articleDigest },
+  );
+  if (again.result.cv.status === 'duplicate' && again.result.articleDigest.status === 'duplicate') {
+    pass('applyAdd is idempotent (duplicate/duplicate on re-run)');
+  } else {
+    fail(`applyAdd re-run => ${JSON.stringify(again.result)}`);
+  }
+
+  if (articleDigestHasEntry(added.articleDigest, 'fraud shield')) pass('articleDigestHasEntry matches normalized heading');
+  else fail('articleDigestHasEntry failed to match');
+
+  // guardrails: cv add against a missing cv.md throws; empty payload throws
+  let threwNoCv = false;
+  try { applyAdd({ cv: { section: 'Projects', dedupKey: 'X', entry: '- x' } }, { cvText: null }); } catch { threwNoCv = true; }
+  if (threwNoCv) pass('applyAdd refuses to add to a missing cv.md');
+  else fail('applyAdd should throw when cv.md is absent');
+
+  let threwEmpty = false;
+  try { applyAdd({}, { cvText: sampleCv }); } catch { threwEmpty = true; }
+  if (threwEmpty) pass('applyAdd rejects an empty payload');
+  else fail('applyAdd should reject an empty payload');
+
+  // dedupKey is required — idempotency depends on it, so a missing one fails fast.
+  let threwNoKey = false;
+  try { applyAdd({ cv: { section: 'Projects', entry: '- **X** -- y' } }, { cvText: sampleCv }); } catch { threwNoKey = true; }
+  if (threwNoKey) pass('applyAdd requires a dedupKey for a cv target');
+  else fail('applyAdd should throw when cv.dedupKey is missing');
+
+  // Short-key dedup must NOT collide with unrelated substrings (e.g. "ai" in a
+  // bullet that mentions "email"). Regression for the identifier-based matcher.
+  const cvWithEmail = '# CV\n\n## Projects\n\n- **Mailer** (OSS) -- sends email digests\n';
+  if (!cvHasEntry(cvWithEmail, 'Projects', 'AI')) pass('cvHasEntry does not false-match a short key against unrelated text');
+  else fail('cvHasEntry should not match "AI" against "email"');
+  if (cvHasEntry(cvWithEmail, 'Projects', 'Mailer')) pass('cvHasEntry still matches the real bold identifier');
+  else fail('cvHasEntry should match the bold entry name');
+
+  // Same collision guard for article-digest headings (name before the dash).
+  const adWithMailer = '# Article Digest\n\n---\n\n## Mailer -- Email digests\n\n**Hero metrics:** x\n';
+  if (!articleDigestHasEntry(adWithMailer, 'AI')) pass('articleDigestHasEntry does not false-match a short key against a heading');
+  else fail('articleDigestHasEntry should not match "AI" against the "Mailer -- Email digests" heading');
+  if (articleDigestHasEntry(adWithMailer, 'Mailer')) pass('articleDigestHasEntry matches the real heading name');
+  else fail('articleDigestHasEntry should match the heading name before the dash');
+
+  // CLI wiring: --dry-run reports without writing; a real run writes and is then
+  // idempotent. Exercised against isolated fixture files via env overrides.
+  const cliTmp = mkdtempSync(join(tmpdir(), 'career-ops-add-cli-'));
+  try {
+    const cvPath = join(cliTmp, 'cv.md');
+    const adPath = join(cliTmp, 'article-digest.md');
+    writeFileSync(cvPath, '# CV\n\n## Projects\n\n- **Existing** (OSS) -- here\n');
+    const payloadPath = join(cliTmp, 'p.json');
+    writeFileSync(payloadPath, JSON.stringify({
+      cv: { section: 'Projects', dedupKey: 'CliProj', entry: '- **CliProj** (OSS) -- desc' },
+      articleDigest: { dedupKey: 'CliProj', entry: '## CliProj -- Tagline\n\n**Hero metrics:** x' },
+    }));
+    const env = { ...process.env, CAREER_OPS_CV: cvPath, CAREER_OPS_ARTICLE_DIGEST: adPath };
+
+    execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath, '--dry-run'], { env, encoding: 'utf-8' });
+    if (!readFileSync(cvPath, 'utf-8').includes('CliProj') && !existsSync(adPath)) pass('add-entry CLI --dry-run writes nothing');
+    else fail('add-entry CLI --dry-run should not write');
+
+    const realOut = JSON.parse(execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath], { env, encoding: 'utf-8' }));
+    if (realOut.cv.status === 'added' && realOut.articleDigest.status === 'created' &&
+        readFileSync(cvPath, 'utf-8').includes('- **CliProj**') && readFileSync(adPath, 'utf-8').includes('## CliProj')) {
+      pass('add-entry CLI real run writes cv.md + creates article-digest.md');
+    } else {
+      fail(`add-entry CLI real run => ${JSON.stringify(realOut)}`);
+    }
+
+    const rerun = JSON.parse(execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath], { env, encoding: 'utf-8' }));
+    if (rerun.cv.status === 'duplicate' && rerun.articleDigest.status === 'duplicate') pass('add-entry CLI re-run is idempotent');
+    else fail(`add-entry CLI re-run => ${JSON.stringify(rerun)}`);
+  } finally {
+    rmSync(cliTmp, { recursive: true, force: true });
+  }
+
+} catch (e) {
+  fail(`add-entry tests crashed: ${e.message}`);
 }
 
 // ── 12. TRACKER REPORT LINK NORMALIZATION (#760) ────────────────
