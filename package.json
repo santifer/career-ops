@@ -1,6 +1,6 @@
 {
   "name": "career-ops",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, OpenCode, Gemini, Codex, Qwen)",
   "private": true,
   "scripts": {
@@ -30,6 +30,7 @@
     "validate:portals": "node validate-portals.mjs",
     "verify:portals": "node verify-portals.mjs",
     "tracker": "node tracker.mjs",
+    "find": "node find.mjs",
     "patterns": "node analyze-patterns.mjs",
     "reposts": "node detect-reposts.mjs",
     "internship:scan": "node scripts/internship-scan.mjs",
@@ -39,6 +40,7 @@
     "openai:eval": "node openai-eval.mjs",
     "star": "node match-star.mjs",
     "archive": "node archive-posting.mjs",
+    "prepare:application": "node prepare-application.mjs",
     "build:dashboard": "node build-dashboard.mjs",
     "serve:dashboard": "cd dashboard && go run . --path ..",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps"
