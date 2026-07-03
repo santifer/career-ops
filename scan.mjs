@@ -40,6 +40,13 @@ import { buildTrustValidator } from './providers/_trust-validator.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
 import { classifyFetchError } from './verify-portals.mjs';
 
+try {
+  const { config } = await import('dotenv');
+  config();
+} catch {
+  // dotenv is optional — fall back to process.env if not installed
+}
+
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
