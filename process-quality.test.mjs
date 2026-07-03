@@ -107,6 +107,27 @@ const noSeparator = parseActiveInterviews(
 );
 ok('table without a separator row still parses the data row', noSeparator.length === 1);
 
+// A second, unrelated markdown table later in the document must not be
+// merged into the parsed rows — only the first contiguous table block is
+// scoped as "the" table (CodeRabbit review, PR #1467).
+const twoTables = parseActiveInterviews(
+  table(['| Acme | Backend Engineer | Prescreen | 2026-06-01 | Jane | Scheduled | ok |']) +
+  '\n\nSome unrelated section.\n\n' +
+  '| Foo | Bar |\n|-----|-----|\n| unrelated | table |\n'
+);
+eq('second markdown table later in the document is not merged in', twoTables.length, 1);
+ok('second-table columns (Foo/Bar) never leak into the result', !('Foo' in twoTables[0]));
+
+// A blank-line gap between two table blocks still stops at the first block
+// (blank lines are not pipe-formatted, so they naturally break contiguity).
+const gappedTables = parseActiveInterviews(
+  table(['| Acme | Backend Engineer | Prescreen | 2026-06-01 | Jane | Scheduled | ok |']) +
+  '\n\n' +
+  table(['| Beta | Coordinator | Round 1 | 2026-06-08 | HM | Scheduled | ok 2 |'])
+);
+eq('a gapped second table block is excluded, only first block parsed', gappedTables.length, 1);
+eq('first block company preserved', gappedTables[0].Company, 'Acme');
+
 // ============================================================================
 // 4. extractFriction
 // ============================================================================
@@ -271,6 +292,16 @@ ok('default produces valid JSON', typeof defaultJson === 'object');
 ok('default has metadata', 'metadata' in defaultJson);
 ok('default has signals array', 'signals' in defaultJson && Array.isArray(defaultJson.signals));
 eq('default minThreshold = 1', defaultJson.metadata.minThreshold, 1);
+
+// Missing-file CLI behavior: data/active-interviews.md is candidate-authored
+// user data and is never present in a fresh repo checkout (it has no shipped
+// template, unlike applications.md/pipeline.md). Running the CLI here — a
+// checkout with no such file — exercises loadActiveInterviews()'s missing-path
+// branch for real, deterministically, without needing a temp-dir workaround
+// (the script resolves its data path relative to its own location, not cwd).
+ok('missing data/active-interviews.md: CLI does not throw', !!defaultOut);
+eq('missing data/active-interviews.md: totalRows = 0', defaultJson.metadata.totalRows, 0);
+eq('missing data/active-interviews.md: signals = []', defaultJson.signals, []);
 
 const thresholdOut = execFileSync('node', [scriptPath, '--min-threshold', '3'], {
   encoding: 'utf-8', timeout: 10000,

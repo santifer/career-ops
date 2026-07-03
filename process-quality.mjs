@@ -40,9 +40,21 @@ const args = process.argv.slice(2);
 const summaryMode = args.includes('--summary');
 const selfTestMode = args.includes('--self-test');
 const minThresholdIdx = args.indexOf('--min-threshold');
-const MIN_THRESHOLD = minThresholdIdx !== -1 && args[minThresholdIdx + 1] !== undefined
-  ? (Number.isNaN(parseInt(args[minThresholdIdx + 1], 10)) ? 1 : parseInt(args[minThresholdIdx + 1], 10))
+const rawMinThreshold = minThresholdIdx !== -1 && args[minThresholdIdx + 1] !== undefined
+  ? parseInt(args[minThresholdIdx + 1], 10)
   : 1;
+// Clamped here (not just inside aggregateProcessQuality) so printSummary's
+// displayed threshold always matches the threshold actually applied.
+const MIN_THRESHOLD = Number.isFinite(rawMinThreshold) && rawMinThreshold >= 0 ? rawMinThreshold : 1;
+
+// Case-insensitive column lookup shared by extractFriction and
+// aggregateProcessQuality — the header wording comes from a candidate-edited
+// markdown file, so "Notes" vs "notes" vs " Notes " must all resolve the
+// same way. Centralized here so both call sites can never drift apart.
+function findColumn(row, name) {
+  const key = Object.keys(row || {}).find(k => k.trim().toLowerCase() === name);
+  return key ? String(row[key] ?? '') : '';
+}
 
 // --- Parse data/active-interviews.md ---
 //
@@ -51,13 +63,29 @@ const MIN_THRESHOLD = minThresholdIdx !== -1 && args[minThresholdIdx + 1] !== un
 // Only well-formed rows (same column count as the header) are kept; malformed
 // rows are silently dropped rather than crashing the parser.
 //
+// Only the FIRST contiguous block of pipe-formatted lines is parsed as the
+// table. This intentionally stops at the first non-table line rather than
+// collecting every pipe-formatted line in the file — a document with more
+// than one markdown table (e.g. a second table added later, or Landmines-
+// style tables from other files if ever concatenated) must not have its
+// unrelated rows merged into the active-interviews result.
+//
 // Exported so external tests can call parseActiveInterviews() directly on a
 // markdown string.
 export function parseActiveInterviews(content) {
   if (typeof content !== 'string' || !content.trim()) return [];
 
   const lines = content.split('\n');
-  const tableLines = lines.filter(line => /^\s*\|.*\|\s*$/.test(line));
+  const isTableLine = line => /^\s*\|.*\|\s*$/.test(line);
+
+  const startIdx = lines.findIndex(isTableLine);
+  if (startIdx === -1) return [];
+
+  const tableLines = [];
+  for (let i = startIdx; i < lines.length; i++) {
+    if (!isTableLine(lines[i])) break;
+    tableLines.push(lines[i]);
+  }
   if (tableLines.length < 2) return [];
 
   const splitRow = line =>
@@ -97,8 +125,7 @@ export function parseActiveInterviews(content) {
 // present without a detail string.
 export function extractFriction(row) {
   if (!row || typeof row !== 'object') return { hasFriction: false, reason: '' };
-  const notesKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'notes');
-  const notes = notesKey ? String(row[notesKey] ?? '') : '';
+  const notes = findColumn(row, 'notes');
   const match = notes.match(FRICTION_TAG);
   if (!match) return { hasFriction: false, reason: '' };
   return { hasFriction: true, reason: (match[1] || '').trim() };
@@ -118,11 +145,7 @@ export function aggregateProcessQuality(rows, minThreshold = 1) {
   if (!Array.isArray(rows)) return [];
   const threshold = Number.isFinite(minThreshold) && minThreshold >= 0 ? minThreshold : 1;
 
-  const companyKey = row => {
-    const keys = Object.keys(row || {});
-    const key = keys.find(k => k.trim().toLowerCase() === 'company');
-    return key ? String(row[key] ?? '').trim() : '';
-  };
+  const companyKey = row => findColumn(row, 'company').trim();
 
   const byCompany = new Map();
   for (const row of rows) {
@@ -255,6 +278,14 @@ function runSelfTest() {
   check(aggregateProcessQuality(null).length === 0, 'null input returns no signals (no crash)');
   check(parseActiveInterviews('').length === 0, 'empty markdown returns no rows');
   check(parseActiveInterviews(null).length === 0, 'non-string input returns no rows (no crash)');
+
+  // A second, unrelated table later in the same document must NOT be merged
+  // into the parsed rows — only the first contiguous table block is parsed.
+  const twoTablesMd = md + '\n\nSome other section.\n\n' +
+    '| Foo | Bar |\n|-----|-----|\n| unrelated | table |\n';
+  const twoTablesRows = parseActiveInterviews(twoTablesMd);
+  check(twoTablesRows.length === 5, 'a second markdown table later in the document is not merged in');
+  check(!twoTablesRows.some(r => r.Company === undefined && 'Foo' in r), 'second-table columns (Foo/Bar) never appear in the result');
 
   // Threshold filtering: companies with fewer interviews than minThreshold are excluded.
   const highThreshold = aggregateProcessQuality(rows, 2);
