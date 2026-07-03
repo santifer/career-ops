@@ -12,15 +12,19 @@ The agent prepares the responses, selects the options, and types out the text fi
 We have field-tested the auto-fill flow across several major ATS platforms (Ashby, Greenhouse, Lever, and Workable). The agent adapts its behavior to handle specific ATS quirks silently:
 
 ### Ashby
+
 - **Duplicate Prevention:** Ashby merges candidates based on their email. Before filling out the form, the agent checks if you've already applied to this company. If so, it warns you and suggests a modified email alias (like `you+teamname@domain.com`) to prevent silent failures or unintended profile merges.
 
 ### Lever
+
 - **Captcha Avoidance:** Lever often pops an hCaptcha challenge if checkboxes or radio buttons are clicked programmatically. To avoid this, the agent only auto-fills text, textareas, and standard select dropdowns. It will list any skipped checkboxes or radio buttons with recommended values so you can tick them manually and solve the captcha before submitting.
 
 ### Workable
+
 - **Stale DOM References:** Workable is a Single Page Application (SPA) that aggressively re-renders form components, which can break automated typing. The agent works around this by using direct clipboard dispatch (`Ctrl+V` pasting) and querying fresh elements right before every paste. If that fails, it will present a numbered list of answers for you to paste manually.
 
 ### Generic Quirks (React-Select)
+
 - Dropdowns powered by `react-select` (common across Greenhouse, Ashby, and Lever) recreate their DOM on every keystroke. The agent types character-by-character with short delays and re-snapshots the DOM to pick up changes instead of caching broken references.
 - For massive native dropdowns (like countries or universities with 1,000+ options), the agent won't dump them all into its context. Instead, it selects them directly by value or visible label, or asks you for the correct label.
 
