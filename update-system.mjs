@@ -161,6 +161,8 @@ const SYSTEM_PATHS = [
   'salary-gap.mjs',
   'followup-cadence.mjs',
   'followup-cadence.test.mjs',
+  'invite-match.mjs',
+  'invite-match.test.mjs',
   'agent-inbox.mjs',
   'followup-seed.mjs',
   'followup-seed-tests.mjs',
