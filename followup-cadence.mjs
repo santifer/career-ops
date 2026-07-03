@@ -236,7 +236,7 @@ export function computeNextFollowupDate(status, appDate, lastFollowupDate, follo
   }
   if (status === 'responded') {
     if (lastFollowupDate) return addDays(parseDate(lastFollowupDate), CADENCE.responded_subsequent);
-    return addDays(parseDate(appDate), CADENCE.responded_subsequent);
+    return addDays(parseDate(appDate), CADENCE.responded_initial);
   }
   if (status === 'interview') {
     return addDays(parseDate(appDate), CADENCE.interview_thankyou);

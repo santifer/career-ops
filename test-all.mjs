@@ -91,16 +91,38 @@ function run(cmd, args = [], opts = {}) {
  */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 
+const BASH = (() => {
+  if (process.platform !== 'win32') return 'bash';
+  try {
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
+    return 'bash';
+  } catch {}
+  const candidates = [
+    'C:\\Program Files\\Git\\bin\\bash.exe',
+    'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
+    'bash'
+  ];
+  for (const cmd of candidates) {
+    try {
+      execSync(`"${cmd}" -c "true"`, { stdio: 'ignore' });
+      return cmd;
+    } catch {}
+  }
+  return 'bash';
+})();
+
 function toBashPath(wpath) {
   if (process.platform !== 'win32') return wpath;
   try {
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
     const forwardSlashed = wpath.replace(/\\/g, '/');
     const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   try {
     const forwardSlashed = wpath.replace(/\\/g, '/');
-    const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const cygpathCmd = existsSync('C:\\Program Files\\Git\\usr\\bin\\cygpath.exe') ? '"C:\\Program Files\\Git\\usr\\bin\\cygpath.exe"' : 'cygpath';
+    const out = execSync(`${cygpathCmd} -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
@@ -273,7 +295,7 @@ try {
   // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
   // pure URL→API resolution + SSRF guard; the network fetch is conservative by
   // construction (only 404/410→expired, 200→active, else null→Playwright fallback).
-  const { resolveAtsApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
+  const { resolveAtsApi, classifyAshbyBoard, checkLivenessViaApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
   const ghApi = resolveAtsApi('https://boards.greenhouse.io/acme/jobs/4567890');
   if (ghApi?.ats === 'greenhouse' && ghApi.apiUrl === 'https://boards-api.greenhouse.io/v1/boards/acme/jobs/4567890') {
     pass('resolveAtsApi maps a Greenhouse posting to its per-job API URL');
@@ -296,6 +318,79 @@ try {
     pass('resolveAtsApi rejects non-numeric Greenhouse ids and non-https (SSRF guard)');
   } else {
     fail('resolveAtsApi guard failed (bad id or http accepted)');
+  }
+  // Ashby: org-level board endpoint. Ashby pages are JS-rendered, so the browser/
+  // static rung sees only nav/footer and false-reports live postings as expired —
+  // the API rung must resolve the org board and confirm the specific job id.
+  const AS_UUID = '00fd8024-7804-4278-a38b-c9d60d929dbb';
+  const asApi = resolveAtsApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
+  if (asApi?.ats === 'ashby'
+      && asApi.apiUrl === 'https://api.ashbyhq.com/posting-api/job-board/deepgram'
+      && asApi.parts?.jobId === AS_UUID
+      && typeof asApi.interpret === 'function') {
+    pass('resolveAtsApi maps an Ashby posting to its org job-board API URL');
+  } else {
+    fail(`Ashby API URL wrong: ${JSON.stringify(asApi)}`);
+  }
+  // The /application apply-link variant must resolve to the same org + job id.
+  const asApply = resolveAtsApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}/application`);
+  if (asApply?.ats === 'ashby' && asApply.parts?.org === 'deepgram' && asApply.parts?.jobId === AS_UUID) {
+    pass('resolveAtsApi handles the Ashby /application apply-link variant');
+  } else {
+    fail(`Ashby /application variant not resolved: ${JSON.stringify(asApply)}`);
+  }
+  // A bare board root (no job id) isn't a specific posting → null → Playwright.
+  if (resolveAtsApi('https://jobs.ashbyhq.com/deepgram') === null) {
+    pass('resolveAtsApi returns null for an Ashby board root (no job id)');
+  } else {
+    fail('resolveAtsApi should not treat an Ashby board root as a posting');
+  }
+  // classifyAshbyBoard — pure per-job liveness from the board payload.
+  const asListed = classifyAshbyBoard({ jobs: [{ id: AS_UUID, isListed: true }] }, AS_UUID);
+  const asAbsent = classifyAshbyBoard({ jobs: [{ id: 'other-id', isListed: true }] }, AS_UUID);
+  const asUnlisted = classifyAshbyBoard({ jobs: [{ id: AS_UUID, isListed: false }] }, AS_UUID);
+  const asBadShape = classifyAshbyBoard({ notJobs: [] }, AS_UUID);
+  if (asListed?.result === 'active'
+      && asAbsent?.result === 'expired'
+      && asUnlisted?.result === 'expired'
+      && asBadShape === null) {
+    pass('classifyAshbyBoard: listed→active, absent/unlisted→expired, bad shape→null');
+  } else {
+    fail(`classifyAshbyBoard wrong: listed=${JSON.stringify(asListed)} absent=${JSON.stringify(asAbsent)} unlisted=${JSON.stringify(asUnlisted)} badShape=${JSON.stringify(asBadShape)}`);
+  }
+  // checkLivenessViaApi — the fetch/Response orchestration around the pure helpers:
+  // a 200 with an org-level `interpret` (Ashby) is awaited and parsed, a per-job 200
+  // (Greenhouse) is live as-is, 404 is expired, and a rejected fetch (network error,
+  // or an aborted timeout — same code path) is inconclusive → null. Mock global.fetch
+  // so no network is hit; restore it in finally.
+  const origFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => ({ status: 200, json: async () => ({ jobs: [{ id: AS_UUID, isListed: true }] }) });
+    const cvAshbyLive = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
+    globalThis.fetch = async () => ({ status: 200, json: async () => ({ jobs: [] }) });
+    const cvAshbyGone = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
+    // 200 but a malformed board (no `jobs` array): interpret returns null, so the
+    // orchestration must fall through to null (→ Playwright), not a false verdict.
+    globalThis.fetch = async () => ({ status: 200, json: async () => ({}) });
+    const cvAshbyMalformed = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
+    globalThis.fetch = async () => ({ status: 200 });
+    const cvGhLive = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
+    globalThis.fetch = async () => ({ status: 404 });
+    const cvGone = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
+    globalThis.fetch = async () => { throw new Error('network down'); };
+    const cvErr = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
+    if (cvAshbyLive?.result === 'active' && cvAshbyLive?.code === 'ashby_api_ok'
+        && cvAshbyGone?.result === 'expired' && cvAshbyGone?.code === 'ashby_api_unlisted'
+        && cvAshbyMalformed === null
+        && cvGhLive?.result === 'active'
+        && cvGone?.result === 'expired'
+        && cvErr === null) {
+      pass('checkLivenessViaApi: 200→interpret (Ashby), malformed→null, greenhouse 200→active, 404→expired, fetch error→null');
+    } else {
+      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} malformed=${JSON.stringify(cvAshbyMalformed)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)}`);
+    }
+  } finally {
+    globalThis.fetch = origFetch;
   }
 
   // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
@@ -445,16 +540,37 @@ try {
 
 if (!QUICK) {
   console.log('\n4. Dashboard build');
-  const isWindows = process.platform === 'win32';
-  const outPath = isWindows ? 'career-dashboard-test.exe' : '/tmp/career-dashboard-test';
-  const goBuild = run(`cd dashboard && go build -o ${outPath} . 2>&1`);
-  if (goBuild !== null) {
-    pass('Dashboard compiles');
-    if (isWindows) {
-      try { rmSync(join(ROOT, 'dashboard', 'career-dashboard-test.exe'), { force: true }); } catch (e) {}
-    }
+  let hasGo = false;
+  try {
+    execSync('go version', { stdio: 'ignore' });
+    hasGo = true;
+  } catch {}
+  if (!hasGo) {
+    warn('Dashboard build skipped — go compiler not in env');
   } else {
-    fail('Dashboard build failed');
+    const isWindows = process.platform === 'win32';
+    const dashboardBuildTmp = mkdtempSync(join(tmpdir(), 'career-dashboard-build-'));
+    const outPath = join(dashboardBuildTmp, isWindows ? 'career-dashboard-test.exe' : 'career-dashboard-test');
+    const goEnv = { ...process.env };
+    if (isWindows && !goEnv.GOCACHE) {
+      goEnv.GOCACHE = join(tmpdir(), 'career-ops-go-build-cache');
+    }
+    if (goEnv.GOCACHE) {
+      try { mkdirSync(goEnv.GOCACHE, { recursive: true }); } catch (e) {}
+    }
+    const goBuild = run('go', ['build', '-o', outPath, '.'], {
+      cwd: join(ROOT, 'dashboard'),
+      env: goEnv,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 60000,
+    });
+    if (goBuild !== null) {
+      pass('Dashboard compiles');
+      try { rmSync(outPath, { force: true }); } catch (e) {}
+    } else {
+      fail('Dashboard build failed');
+    }
+    try { rmSync(dashboardBuildTmp, { recursive: true, force: true }); } catch (e) {}
   }
 } else {
   console.log('\n4. Dashboard build (skipped --quick)');
@@ -560,9 +676,8 @@ const leakPatterns = [
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
-
-  'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.zh-TW.md',
+  'README.md', 'README.ar.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.ja.md',
+  'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.ua.md', 'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
   'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'AGENTS.md', 'go.mod', 'test-all.mjs',
@@ -633,11 +748,48 @@ if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
 } else {
   fail('generate-pdf still waits for networkidle');
 }
-const renderHtmlToPdfCall = generatePdfScript.match(/renderHtmlToPdf\(html,\s*outputPath,\s*\{([\s\S]*?)\}\)/);
-if (renderHtmlToPdfCall && /\breportNum\b/.test(renderHtmlToPdfCall[1]) && /\binputPath\b/.test(renderHtmlToPdfCall[1])) {
+
+function extractRenderHtmlToPdfOptions(source) {
+  const call = /renderHtmlToPdf\s*\(\s*html\s*,\s*outputPath\s*,/g.exec(source);
+  if (!call) return '';
+  const objectStart = source.indexOf('{', call.index + call[0].length);
+  if (objectStart === -1) return '';
+
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  for (let i = objectStart; i < source.length; i += 1) {
+    const ch = source[i];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(objectStart + 1, i);
+    }
+  }
+  return '';
+}
+
+const renderHtmlToPdfOptions = extractRenderHtmlToPdfOptions(generatePdfScript);
+if (renderHtmlToPdfOptions && /\breportNum\b/.test(renderHtmlToPdfOptions) && /\binputPath\b/.test(renderHtmlToPdfOptions)) {
   pass('generate-pdf threads reportNum/inputPath into renderHtmlToPdf');
 } else {
   fail('generate-pdf does not pass reportNum/inputPath into renderHtmlToPdf');
+}
+const nestedRenderOptions = extractRenderHtmlToPdfOptions('return renderHtmlToPdf(html, outputPath, { format, metadata: { reportNum, inputPath } });');
+if (/\breportNum\b/.test(nestedRenderOptions) && /\binputPath\b/.test(nestedRenderOptions)) {
+  pass('generate-pdf renderHtmlToPdf option matcher handles nested object literals');
+} else {
+  fail('generate-pdf renderHtmlToPdf option matcher fails on nested object literals');
 }
 if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('opts.inputPath')) {
   pass('renderHtmlToPdf reads manifest metadata from opts');
@@ -739,6 +891,120 @@ if (
   pass('apply mode includes liveness and role-match preflight gate');
 } else {
   fail('apply mode missing liveness/role-match preflight gate');
+}
+
+if (
+  applyMode.includes('## Application Answers') &&
+  applyMode.includes('**State:** filled') &&
+  applyMode.includes('**State:** submitted') &&
+  applyMode.includes('Do not rename, reorder, or edit the existing A-H report blocks') &&
+  applyMode.includes('application-answers.mjs')
+) {
+  pass('apply mode persists filled/submitted answers in an additive report section');
+} else {
+  fail('apply mode missing additive Application Answers persistence instructions');
+}
+
+try {
+  const {
+    formatApplicationAnswersSection,
+    upsertApplicationAnswersSection,
+  } = await import(pathToFileURL(join(ROOT, 'application-answers.mjs')).href);
+
+  const snapshot = {
+    date: '2026-06-30',
+    state: 'submitted',
+    freeText: [
+      { question: 'Why this role?', answer: 'I want to apply production AI agent experience here.' },
+    ],
+    selections: [
+      { field: 'Technical areas', selected: ['Node.js', 'Go', 'LLM evaluation'] },
+    ],
+    fieldValues: [
+      { field: 'Compensation expectation', value: '$150k base' },
+    ],
+    files: [
+      { field: 'CV', path: 'output/acme-cv.pdf', version: 'v3' },
+      { field: 'Cover letter', path: 'output/acme-cover-letter.pdf' },
+    ],
+  };
+
+  const section = formatApplicationAnswersSection(snapshot);
+  if (
+    section.includes('## Application Answers') &&
+    section.includes('**Date:** 2026-06-30') &&
+    section.includes('**State:** submitted') &&
+    section.includes('Why this role?') &&
+    section.includes('Node.js, Go, LLM evaluation') &&
+    section.includes('Compensation expectation') &&
+    section.includes('output/acme-cv.pdf (v3)')
+  ) {
+    pass('application answers formatter captures free text, selections, field values, files, date, and state');
+  } else {
+    fail(`application answers formatter dropped expected data:\n${section}`);
+  }
+
+  const report = [
+    '# Evaluation: Acme - Staff Engineer',
+    '',
+    '## G) Posting Legitimacy',
+    'original G content',
+    '',
+    '## H) Draft Application Answers',
+    'draft H content',
+    '',
+    '## Keywords extracted',
+    'agentic systems, node, go',
+    '',
+  ].join('\n');
+  const updated = upsertApplicationAnswersSection(report, snapshot);
+  const existingBlocksPreserved =
+    updated.includes('## G) Posting Legitimacy\noriginal G content') &&
+    updated.includes('## H) Draft Application Answers\ndraft H content') &&
+    updated.includes('## Keywords extracted\nagentic systems, node, go');
+  const existingOrderPreserved =
+    updated.indexOf('## G) Posting Legitimacy') < updated.indexOf('## H) Draft Application Answers') &&
+    updated.indexOf('## H) Draft Application Answers') < updated.indexOf('## Keywords extracted') &&
+    updated.indexOf('## Keywords extracted') < updated.indexOf('## Application Answers');
+  if (existingBlocksPreserved && existingOrderPreserved) {
+    pass('application answers upsert appends without changing existing report blocks');
+  } else {
+    fail(`application answers upsert disturbed report blocks:\n${updated}`);
+  }
+
+  const refreshed = upsertApplicationAnswersSection([
+    report.trimEnd(),
+    '',
+    '## Application Answers',
+    '',
+    'old filled snapshot',
+    '',
+    '## Later Additive Section',
+    'later content',
+    '',
+  ].join('\n'), snapshot);
+  const applicationAnswerHeadings = refreshed.match(/^## Application Answers$/gm) || [];
+  if (
+    applicationAnswerHeadings.length === 1 &&
+    !refreshed.includes('old filled snapshot') &&
+    refreshed.includes('## Later Additive Section\nlater content') &&
+    refreshed.indexOf('## Application Answers') < refreshed.indexOf('## Later Additive Section')
+  ) {
+    pass('application answers upsert refreshes only the existing Application Answers section');
+  } else {
+    fail(`application answers upsert did not replace only its own section:\n${refreshed}`);
+  }
+} catch (e) {
+  fail(`application answers helper crashed: ${e.message}`);
+}
+
+if (
+  run(NODE, ['application-answers.mjs', '--report', '--input'], { stdio: ['pipe', 'pipe', 'pipe'] }) === null &&
+  run(NODE, ['application-answers.mjs', '--report', '--input', 'answers.json'], { stdio: ['pipe', 'pipe', 'pipe'] }) === null
+) {
+  pass('application-answers CLI rejects missing option values');
+} else {
+  fail('application-answers CLI accepted a missing option value');
 }
 
 const ofertaMode = readFile('modes/oferta.md');
@@ -1021,6 +1287,160 @@ try {
   else fail('scan-ats-full sampleCompanies behaves wrong');
 } catch (e) {
   fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
+}
+
+// ── VC Portfolio Seed Fetcher ────────────────────────────────────────
+// Tests the pure (no-network) parseSeedEntries(), parseYCPayload(),
+// parseA16zPayload(), toPortalEntry(), and the SEED_SOURCES registry.
+// Inline fixtures — no HTTP calls, CI-safe.
+
+console.log('\n9b. VC portfolio seed fetcher (seeds/vc-portfolios.mjs)');
+
+try {
+  const {
+    parseYCPayload,
+    parseA16zPayload,
+    parseSeedEntries,
+    toPortalEntry,
+    SEED_SOURCES,
+    SLUG_RE,
+  } = await import(pathToFileURL(join(ROOT, 'seeds/vc-portfolios.mjs')).href);
+
+  // ── 1. YC payload parsing ──────────────────────────────────────────
+  const ycFixture = {
+    companies: [
+      { name: 'Stripe', slug: 'stripe', website: 'https://stripe.com', batch: 'W11' },
+      { name: 'Airbnb', slug: 'airbnb', website: 'https://airbnb.com', batch: 'W09' },
+      { name: 'OpenAI', slug: 'openai', website: 'https://openai.com', batch: 'W16' },
+    ],
+  };
+  const ycEntries = parseYCPayload(ycFixture);
+  const ycOk =
+    ycEntries.length === 3 &&
+    ycEntries[0].name === 'Stripe' &&
+    ycEntries[0].slug === 'stripe' &&
+    ycEntries[0].url === 'https://stripe.com' &&
+    ycEntries[0].source === 'yc' &&
+    ycEntries[0].batch === 'W11' &&
+    ycEntries[1].slug === 'airbnb' &&
+    ycEntries[2].slug === 'openai';
+  if (ycOk) pass('parseYCPayload: parses companies array into SeedCompany[] with name/slug/url/source/batch');
+  else fail(`parseYCPayload: output wrong — ${JSON.stringify(ycEntries[0])}`);
+
+  // parseSeedEntries() is the universal entry point used by the issue acceptance criteria.
+  const viaGeneric = parseSeedEntries(ycFixture, 'yc');
+  if (viaGeneric.length === 3 && viaGeneric[0].slug === 'stripe') {
+    pass('parseSeedEntries(payload, "yc") delegates to parseYCPayload correctly');
+  } else {
+    fail('parseSeedEntries with source="yc" did not return expected entries');
+  }
+
+  // ── 2. a16z HTML parsing ───────────────────────────────────────────
+  // Sample HTML fixture with data-company-name attributes (the most reliable strategy).
+  const a16zHtml = `
+    <div class="portfolio-grid">
+      <a href="https://github.com" data-company-name="GitHub" data-company-url="https://github.com" class="portfolio-card"></a>
+      <a href="https://lyft.com" data-company-name="Lyft" data-company-url="https://lyft.com" class="portfolio-card"></a>
+      <a href="https://slack.com" data-company-name="Slack" data-company-url="https://slack.com" class="portfolio-card"></a>
+    </div>
+  `;
+  const a16zEntries = parseA16zPayload(a16zHtml);
+  const a16zOk =
+    a16zEntries.length === 3 &&
+    a16zEntries.some(e => e.name === 'GitHub' && e.source === 'a16z' && e.url === 'https://github.com') &&
+    a16zEntries.some(e => e.name === 'Lyft' && e.source === 'a16z') &&
+    a16zEntries.some(e => e.name === 'Slack' && e.source === 'a16z');
+  if (a16zOk) pass('parseA16zPayload: extracts companies from data-company-name HTML attributes');
+  else fail(`parseA16zPayload: output wrong — got ${a16zEntries.length} entries: ${JSON.stringify(a16zEntries.map(e => e.name))}`);
+
+  // parseSeedEntries() delegating to a16z.
+  const a16zViaGeneric = parseSeedEntries(a16zHtml, 'a16z');
+  if (a16zViaGeneric.length === 3 && a16zViaGeneric.some(e => e.slug === 'github')) {
+    pass('parseSeedEntries(html, "a16z") delegates to parseA16zPayload correctly');
+  } else {
+    fail('parseSeedEntries with source="a16z" did not return expected entries');
+  }
+
+  // ── 3. SLUG_RE validation — invalid slugs are dropped ─────────────
+  const badSlugFixture = {
+    companies: [
+      { name: 'Good Co', slug: 'good-co', website: 'https://good.co' },
+      { name: 'Bad Slash', slug: 'bad/slash', website: 'https://bad.com' },      // rejected: /
+      { name: 'Bad Space', slug: 'bad space', website: 'https://bad2.com' },     // rejected: space
+      { name: 'Bad Bang', slug: 'bad!bang', website: 'https://bad3.com' },       // rejected: !
+      { name: 'Also Good', slug: 'also.good_123', website: 'https://also.co' }, // valid: . _ digits
+    ],
+  };
+  const slugFiltered = parseYCPayload(badSlugFixture);
+  const slugOk =
+    slugFiltered.length === 2 &&
+    slugFiltered.some(e => e.slug === 'good-co') &&
+    slugFiltered.some(e => e.slug === 'also.good_123') &&
+    !slugFiltered.some(e => e.slug.includes('/') || e.slug.includes(' ') || e.slug.includes('!'));
+  if (slugOk) pass('SLUG_RE validation: entries with invalid slug characters (/, space, !) are dropped; valid slugs pass through');
+  else fail(`SLUG_RE validation wrong — got: ${JSON.stringify(slugFiltered.map(e => e.slug))}`);
+
+  // ── 4. toPortalEntry — explicit ATS hint ──────────────────────────
+  const withGreenhouse = toPortalEntry({ name: 'Stripe', slug: 'stripe', url: 'https://stripe.com', source: 'yc', ats: 'greenhouse', ats_id: 'stripe' });
+  const withLever = toPortalEntry({ name: 'Acme', slug: 'acme', url: 'https://acme.com', source: 'yc', ats: 'lever', ats_id: 'acme' });
+  const withAshby = toPortalEntry({ name: 'Beta', slug: 'beta', url: 'https://beta.com', source: 'yc', ats: 'ashby', ats_id: 'beta-corp' });
+  const atsHintOk =
+    withGreenhouse.careers_url === 'https://job-boards.greenhouse.io/stripe' &&
+    withGreenhouse.name === 'Stripe' &&
+    withGreenhouse.source === 'yc' &&
+    withLever.careers_url === 'https://jobs.lever.co/acme' &&
+    withAshby.careers_url === 'https://jobs.ashbyhq.com/beta-corp';
+  if (atsHintOk) pass('toPortalEntry: explicit ats+ats_id hint maps to correct Greenhouse/Lever/Ashby URL');
+  else fail(`toPortalEntry ATS hint wrong — greenhouse: ${withGreenhouse.careers_url}, lever: ${withLever.careers_url}`);
+
+  // ── 5. toPortalEntry — no ATS hint, slug-based fallback ───────────
+  const noHint = toPortalEntry({ name: 'NewCo', slug: 'newco', url: 'https://newco.io', source: 'yc' });
+  const noHintOk =
+    noHint.careers_url === 'https://job-boards.greenhouse.io/newco' && // Greenhouse is the default probe
+    noHint.name === 'NewCo';
+  if (noHintOk) pass('toPortalEntry: no ATS hint falls back to Greenhouse URL from slug (provider.detect() validates at scan time)');
+  else fail(`toPortalEntry fallback wrong — got: ${noHint.careers_url}`);
+
+  // ── 5b. toPortalEntry — website fallback when slug is empty ───────
+  const noSlug = toPortalEntry({ name: 'Custom', slug: '', url: 'https://custom.com', source: 'a16z' });
+  if (noSlug.careers_url === 'https://custom.com') {
+    pass('toPortalEntry: empty slug falls back to company website URL');
+  } else {
+    fail(`toPortalEntry website fallback wrong — got: ${noSlug.careers_url}`);
+  }
+
+  // ── 6. Dedup guard — duplicate slugs yield only one entry ─────────
+  const dupFixture = {
+    companies: [
+      { name: 'Stripe', slug: 'stripe', website: 'https://stripe.com' },
+      { name: 'Stripe Inc', slug: 'stripe', website: 'https://stripe.com/inc' }, // same slug → dropped
+      { name: 'Airbnb', slug: 'airbnb', website: 'https://airbnb.com' },
+    ],
+  };
+  const dedupd = parseYCPayload(dupFixture);
+  if (dedupd.length === 2 && dedupd.filter(e => e.slug === 'stripe').length === 1) {
+    pass('parseSeedEntries dedup: duplicate slugs produce only one entry (first one wins)');
+  } else {
+    fail(`parseSeedEntries dedup wrong — got ${dedupd.length} entries`);
+  }
+
+  // ── 7. SEED_SOURCES registry ───────────────────────────────────────
+  const registryOk =
+    typeof SEED_SOURCES === 'object' &&
+    SEED_SOURCES !== null &&
+    typeof SEED_SOURCES.yc === 'object' &&
+    typeof SEED_SOURCES.yc.fetch === 'function' &&
+    typeof SEED_SOURCES.yc.label === 'string' &&
+    typeof SEED_SOURCES.a16z === 'object' &&
+    typeof SEED_SOURCES.a16z.fetch === 'function' &&
+    typeof SEED_SOURCES.a16z.label === 'string' &&
+    Object.keys(SEED_SOURCES).includes('yc') &&
+    Object.keys(SEED_SOURCES).includes('a16z');
+  if (registryOk) pass('SEED_SOURCES registry: both "yc" and "a16z" keys exist with fetch function and label string');
+  else fail(`SEED_SOURCES registry malformed — keys: ${JSON.stringify(Object.keys(SEED_SOURCES || {}))}`);
+
+} catch (e) {
+  fail(`VC portfolio seed fetcher tests crashed: ${e.message}`);
 }
 
 // tracker.mjs delete: removeRowByNum removes the right row, preserves the rest.
@@ -2625,6 +3045,183 @@ try {
   fail(`recruitee provider tests crashed: ${e.message}`);
 }
 
+// ── 14. PROVIDERS — Teamtailor ──────────────────────────────────────
+
+console.log('\n14. Provider — teamtailor');
+
+try {
+  const teamtailor = (await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href)).default;
+  const { parseTeamtailorFeed } = await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href);
+
+  if (teamtailor.id === 'teamtailor') pass('teamtailor.id is "teamtailor"');
+  else fail(`teamtailor.id is ${JSON.stringify(teamtailor.id)}`);
+
+  // detect() — auto-detection from a <slug>.teamtailor.com careers_url, with
+  // any path normalized to /jobs.rss.
+  const hit = teamtailor.detect({ name: 'Podimo', careers_url: 'https://podimo.teamtailor.com/jobs' });
+  if (hit && hit.url === 'https://podimo.teamtailor.com/jobs.rss') {
+    pass('teamtailor.detect() resolves <slug>.teamtailor.com → /jobs.rss feed');
+  } else {
+    fail(`teamtailor.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  if (teamtailor.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('teamtailor.detect() returns null for non-teamtailor URLs');
+  } else {
+    fail('teamtailor.detect() should return null for non-teamtailor URLs');
+  }
+
+  // non-string careers_url → detect() returns null without crashing
+  if (teamtailor.detect({ name: 'X', careers_url: null }) === null && teamtailor.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('teamtailor.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('teamtailor.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: teamtailor.com in the PATH (not host) must not be detected.
+  if (teamtailor.detect({ name: 'Spoof', careers_url: 'https://evil.example/podimo.teamtailor.com/jobs' }) === null) {
+    pass('teamtailor.detect() rejects path-spoofed URLs');
+  } else {
+    fail('teamtailor.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // non-https careers_url is rejected
+  if (teamtailor.detect({ name: 'X', careers_url: 'http://podimo.teamtailor.com/jobs' }) === null) {
+    pass('teamtailor.detect() rejects non-https careers_url');
+  } else {
+    fail('teamtailor.detect() should reject non-https careers_url');
+  }
+
+  // parseTeamtailorFeed — RSS with tt: locations block and branded job link
+  const sampleXml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:tt="https://teamtailor.com/locations"><channel>',
+    '<title>Podimo</title>',
+    '<item>',
+    '  <title>Sales Director &amp; Lead</title>',
+    '  <link>https://careers.podimo.com/jobs/7950030-sales-director</link>',
+    '  <pubDate>Mon, 22 Jun 2026 13:45:57 +0200</pubDate>',
+    '  <remoteStatus>hybrid</remoteStatus>',
+    '  <tt:locations><tt:location><tt:city>Oslo</tt:city><tt:country>Norway</tt:country></tt:location></tt:locations>',
+    '</item>',
+    '<item>',
+    '  <title>Remote Engineer</title>',
+    '  <link>https://podimo.teamtailor.com/jobs/123-remote-engineer</link>',
+    '  <remoteStatus>fully</remoteStatus>',
+    '</item>',
+    '</channel></rss>',
+  ].join('\n');
+
+  const jobs = parseTeamtailorFeed(sampleXml, 'Podimo');
+  if (jobs.length === 2) pass('parseTeamtailorFeed extracts 2 jobs from 2-item feed');
+  else fail(`parseTeamtailorFeed returned ${jobs.length} jobs, expected 2`);
+
+  if (jobs[0]?.title === 'Sales Director & Lead' && jobs[0]?.company === 'Podimo' && jobs[0]?.url === 'https://careers.podimo.com/jobs/7950030-sales-director') {
+    pass('parseTeamtailorFeed decodes title entities, sets company, keeps branded-domain link');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.location === 'Oslo, Norway') {
+    pass('parseTeamtailorFeed builds location from tt:city + tt:country');
+  } else {
+    fail(`row 0 location = ${JSON.stringify(jobs[0]?.location)}, expected "Oslo, Norway"`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('Mon, 22 Jun 2026 13:45:57 +0200')) {
+    pass('parseTeamtailorFeed parses pubDate → postedAt epoch ms');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.location === 'Remote' && jobs[1]?.postedAt === undefined) {
+    pass('parseTeamtailorFeed falls back to "Remote" for fully-remote item with no place/date');
+  } else {
+    fail(`row 1 = ${JSON.stringify(jobs[1])}`);
+  }
+
+  // Robustness
+  if (parseTeamtailorFeed('', 'X').length === 0) pass('empty input → empty result');
+  else fail('empty input should yield empty result');
+
+  if (parseTeamtailorFeed(null, 'X').length === 0) pass('null input → empty result (no crash)');
+  else fail('null input should yield empty result without crashing');
+
+  // A well-formed item with no <link> is skipped, not emitted with a blank URL.
+  const noLink = parseTeamtailorFeed('<item><title>Ghost</title></item>', 'X');
+  if (noLink.length === 0) pass('item without <link> is dropped');
+  else fail(`item without <link> should be dropped, got ${JSON.stringify(noLink)}`);
+
+  // fetch() pins the request to the teamtailor.com host on the happy path and
+  // must pass redirect:'error' (asserting the SSRF guard, not just the URL).
+  const fetchJobs = await teamtailor.fetch(
+    { name: 'Podimo', careers_url: 'https://podimo.teamtailor.com/jobs' },
+    {
+      transport: 'http',
+      fetchText: async (url, options) => {
+        if (url !== 'https://podimo.teamtailor.com/jobs.rss') {
+          throw new Error(`fetchText called with unexpected URL: ${url}`);
+        }
+        if (options?.redirect !== 'error') {
+          throw new Error(`fetchText called without redirect:'error': ${JSON.stringify(options)}`);
+        }
+        return sampleXml;
+      },
+      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+    },
+  );
+  if (fetchJobs.length === 2) pass('teamtailor.fetch() hits /jobs.rss with redirect:error and returns parsed jobs');
+  else fail(`teamtailor.fetch() returned ${fetchJobs.length} jobs, expected 2`);
+
+  // Branded careers domain: auto-detection must NOT claim it (stays pinned to
+  // *.teamtailor.com), but an explicit `provider: teamtailor` entry may fetch
+  // the same /jobs.rss off the branded host the user configured.
+  if (teamtailor.detect({ name: 'Podimo', careers_url: 'https://careers.podimo.com/jobs' }) === null) {
+    pass('teamtailor.detect() does NOT auto-claim a branded (non-teamtailor.com) host');
+  } else {
+    fail('teamtailor.detect() must not auto-detect branded hosts');
+  }
+
+  const brandedJobs = await teamtailor.fetch(
+    { name: 'Podimo', provider: 'teamtailor', careers_url: 'https://careers.podimo.com/jobs' },
+    {
+      transport: 'http',
+      fetchText: async (url, options) => {
+        if (url !== 'https://careers.podimo.com/jobs.rss') {
+          throw new Error(`fetchText called with unexpected URL: ${url}`);
+        }
+        if (options?.redirect !== 'error') {
+          throw new Error(`fetchText called without redirect:'error': ${JSON.stringify(options)}`);
+        }
+        return sampleXml;
+      },
+      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+    },
+  );
+  if (brandedJobs.length === 2) pass('explicit provider:teamtailor fetches /jobs.rss off a branded careers host');
+  else fail(`branded-host fetch returned ${brandedJobs.length} jobs, expected 2`);
+
+  // A branded host WITHOUT the explicit provider opt-in must still be refused by fetch().
+  let brandedRefused = false;
+  try {
+    await teamtailor.fetch(
+      { name: 'Podimo', careers_url: 'https://careers.podimo.com/jobs' },
+      {
+        transport: 'http',
+        fetchText: async () => { throw new Error('fetchText should not be reached'); },
+        fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+      },
+    );
+  } catch {
+    brandedRefused = true;
+  }
+  if (brandedRefused) pass('teamtailor.fetch() refuses a branded host without explicit provider:teamtailor');
+  else fail('teamtailor.fetch() should refuse a branded host when not explicitly configured');
+
+} catch (e) {
+  fail(`teamtailor provider tests crashed: ${e.message}`);
+}
+
 // ── 12. TRACKER REPORT LINK NORMALIZATION (#760) ────────────────
 
 console.log('\n12. Tracker report-link normalization');
@@ -2724,6 +3321,82 @@ try {
   }
 } catch (e) {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
+}
+
+// ── VERIFY-PIPELINE REPORT CHECKS (#1425) ───────────────────────
+// Parallel evaluators can write two reports for the same company+role, and
+// tracker dedup can leave a report file with no tracker row. verify-pipeline
+// must surface both as warnings (not errors — re-evaluations are legitimate).
+console.log('\n🧪 Testing verify-pipeline duplicate/orphan report checks...');
+try {
+  const vpTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-reports-'));
+  try {
+    const vpReports = join(vpTmp, 'reports');
+    mkdirSync(vpReports, { recursive: true });
+    const vpTracker = join(vpTmp, 'applications.md');
+    const vpEnv = { ...process.env, CAREER_OPS_TRACKER: vpTracker, CAREER_OPS_REPORTS: vpReports };
+
+    const report = (company, role) =>
+      `# Evaluación: ${company} — ${role}\n\n## Machine Summary\n\n\`\`\`yaml\ncompany: "${company}"\nrole: "${role}"\nscore: 4.2\n\`\`\`\n`;
+
+    // #1 and #3 are the same role at Acme written by two concurrent workers;
+    // #2 is a different Acme role (must NOT be flagged as duplicate);
+    // #3 also has no tracker row (orphan — tracker dedup kept #1).
+    writeFileSync(join(vpReports, '001-acme-2026-01-04.md'), report('Acme', 'Staff AI Engineer'));
+    writeFileSync(join(vpReports, '002-acme-2026-01-05.md'), report('Acme', 'Platform Engineer'));
+    writeFileSync(join(vpReports, '003-acme-2026-01-05.md'), report('Acme', 'Staff AI Engineer'));
+
+    writeFileSync(vpTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | Acme | Staff AI Engineer | 4.2/5 | Evaluated | ❌ | [1](reports/001-acme-2026-01-04.md) | ok |\n' +
+      '| 2 | 2026-01-05 | Acme | Platform Engineer | 4.0/5 | Evaluated | ❌ | [2](reports/002-acme-2026-01-05.md) | ok |\n');
+
+    const vpOut = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (vpOut === null) {
+      fail('verify-pipeline crashed on duplicate/orphan report fixture');
+    } else {
+      if (vpOut.includes('Duplicate reports for same company+role') &&
+          vpOut.includes('001-acme-2026-01-04.md') && vpOut.includes('003-acme-2026-01-05.md')) {
+        pass('duplicate reports for the same company+role are flagged (#1425)');
+      } else {
+        fail('duplicate company+role reports not flagged');
+      }
+      if (vpOut.includes('002-acme-2026-01-05.md') && /Duplicate reports[^\n]*002-acme/.test(vpOut)) {
+        fail('different role at the same company falsely flagged as duplicate report');
+      } else {
+        pass('different role at the same company is not flagged as duplicate');
+      }
+      if (/Orphan report[^\n]*#3[^\n]*003-acme-2026-01-05\.md/.test(vpOut)) {
+        pass('orphan report with no tracker row is flagged (#1425)');
+      } else {
+        fail('orphan report not flagged');
+      }
+      if (/Orphan report[^\n]*(001|002)-acme/.test(vpOut)) {
+        fail('referenced report falsely flagged as orphan');
+      } else {
+        pass('referenced reports are not flagged as orphans');
+      }
+      // run() returns non-null only on exit 0 — warnings must not fail the check.
+      pass('duplicate/orphan report findings stay warning-level (exit 0)');
+    }
+
+    // Clean fixture: one row, one report — both checks must pass green.
+    rmSync(join(vpReports, '003-acme-2026-01-05.md'));
+    const vpClean = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (vpClean !== null &&
+        vpClean.includes('No duplicate reports for the same company+role') &&
+        vpClean.includes('No orphan reports')) {
+      pass('clean tracker+reports fixture passes both report checks');
+    } else {
+      fail('clean fixture did not pass duplicate/orphan report checks');
+    }
+  } finally {
+    rmSync(vpTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`verify-pipeline report checks crashed: ${e.message}`);
 }
 
 // ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
@@ -2941,6 +3614,72 @@ try {
   }
 } catch (e) {
   fail(`tracker-parse unit test crashed: ${e.message}`);
+}
+
+// #1431 "Apply to #13" is ambiguous: report numbers and tracker row numbers
+// diverge, and mapping company ↔ report# ↔ tracker# ↔ PDF used to require
+// opening three files. find.mjs resolves a report#, tracker#, or company/role
+// fragment to the full pipeline identity in one read-only lookup.
+console.log('\n🧪 Testing find.mjs pipeline identity lookup...');
+try {
+  const { parseTrackerRows, parsePdfIndex, findMatches } = await import(pathToFileURL(join(ROOT, 'find.mjs')).href);
+
+  // Tracker# and report# intentionally diverge: row 3 carries report 12, and a
+  // different row is numbered 12 — the exact friction the tool exists to solve.
+  const rows = parseTrackerRows([
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    '| 3 | 2026-06-01 | Acme Labs | Platform Engineer | 4.2/5 | **Applied** (2026-06-02) | ✅ | [12](reports/012-acme-labs-2026-06-01.md) | strong fit |',
+    '| 12 | 2026-06-10 | Globex | Data Engineer | 3.8/5 | Evaluated | ❌ | [15](reports/015-globex-2026-06-10.md) | — |',
+  ].join('\n'));
+  const pdfIndex = parsePdfIndex(
+    '# report\tpdf\thtml\tformat\tdate — written by generate-pdf.mjs, do not edit\n' +
+    '012\toutput/cv-acme-labs.pdf\toutput/cv-acme-labs.html\tats\t2026-06-01\n');
+
+  const byTracker = findMatches(rows, '3', pdfIndex);
+  if (byTracker.length === 1 && byTracker[0].company === 'Acme Labs' &&
+      byTracker[0].trackerNum === 3 && byTracker[0].reportNum === '12' &&
+      byTracker[0].reportPath === 'reports/012-acme-labs-2026-06-01.md' &&
+      byTracker[0].status === 'Applied' &&
+      byTracker[0].pdfPath === 'output/cv-acme-labs.pdf') {
+    pass('find.mjs resolves a tracker# to company, report#, canonical status, and PDF path');
+  } else {
+    fail(`find.mjs tracker# lookup wrong: ${JSON.stringify(byTracker)}`);
+  }
+
+  // "12" is both Acme's report# and Globex's tracker# — both rows must surface
+  // (with the zero-padded "012" report-link form treated as the same number).
+  const ambiguous = findMatches(rows, '012', pdfIndex);
+  const companies = ambiguous.map(m => m.company).sort();
+  if (ambiguous.length === 2 && companies[0] === 'Acme Labs' && companies[1] === 'Globex') {
+    pass('find.mjs surfaces report#/tracker# collisions as multiple matches (zero-pad normalized)');
+  } else {
+    fail(`find.mjs numeric collision lookup wrong: ${JSON.stringify(ambiguous)}`);
+  }
+
+  const byFragment = findMatches(rows, 'acme', pdfIndex);
+  if (byFragment.length === 1 && byFragment[0].company === 'Acme Labs') {
+    pass('find.mjs matches a case-insensitive company fragment');
+  } else {
+    fail(`find.mjs company fragment lookup wrong: ${JSON.stringify(byFragment)}`);
+  }
+
+  // Fuzzy multi-word lookup reuses role-matcher.mjs (stopwords like "remote"
+  // dropped) instead of reinventing matching.
+  const byFuzzy = findMatches(rows, 'remote data engineer', pdfIndex);
+  if (byFuzzy.length === 1 && byFuzzy[0].company === 'Globex' && byFuzzy[0].pdfPath === null) {
+    pass('find.mjs fuzzy-matches a role phrase via role-matcher and reports a missing PDF');
+  } else {
+    fail(`find.mjs fuzzy role lookup wrong: ${JSON.stringify(byFuzzy)}`);
+  }
+
+  if (findMatches(rows, 'no-such-company', pdfIndex).length === 0) {
+    pass('find.mjs returns zero matches cleanly for an unknown query');
+  } else {
+    fail('find.mjs matched a query that exists nowhere in the tracker');
+  }
+} catch (e) {
+  fail(`find.mjs unit test crashed: ${e.message}`);
 }
 
 // dedup-tracker reads AND writes by column; with a Location column its status
@@ -3274,15 +4013,47 @@ try {
   }
   rmSync(ready, { recursive: true, force: true });
 
+  // Auto-copy template: when modes/_profile.md or modes/_custom.md is missing but template exists,
+  // doctor --json auto-copies them, records them in autoCopied, and does not report them as missing (#1369).
+  const autoCopy = mkdtempSync(join(tmpdir(), 'co-autocopy-'));
+  mkdirSync(join(autoCopy, 'config'), { recursive: true });
+  mkdirSync(join(autoCopy, 'modes'), { recursive: true });
+  for (const f of ['cv.md', 'config/profile.yml', 'portals.yml']) {
+    writeFileSync(join(autoCopy, f), 'x');
+  }
+  writeFileSync(join(autoCopy, 'modes/_profile.template.md'), '# profile template\n');
+  writeFileSync(join(autoCopy, 'modes/_custom.template.md'), '# custom template\n');
+  const ac = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', autoCopy]) || '{}');
+  if (
+    ac.onboardingNeeded === false &&
+    Array.isArray(ac.missing) &&
+    ac.missing.length === 0 &&
+    Array.isArray(ac.autoCopied) &&
+    ac.autoCopied.includes('modes/_profile.md') &&
+    ac.autoCopied.includes('modes/_custom.md') &&
+    existsSync(join(autoCopy, 'modes/_profile.md')) &&
+    readFileSync(join(autoCopy, 'modes/_profile.md'), 'utf-8') === '# profile template\n' &&
+    existsSync(join(autoCopy, 'modes/_custom.md')) &&
+    readFileSync(join(autoCopy, 'modes/_custom.md'), 'utf-8') === '# custom template\n'
+  ) {
+    pass('Auto-copy template → modes/_profile.md and modes/_custom.md copied silently in --json mode (#1369)');
+  } else {
+    fail(`Auto-copy template failed in --json mode: ${JSON.stringify(ac)}`);
+  }
+  rmSync(autoCopy, { recursive: true, force: true });
+
   const claudeDoc = readFile('CLAUDE.md');
+  const agentsDoc = readFile('AGENTS.md');
   if (
     /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&
     /"warnings"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(agentsDoc) &&
     !/Does\s+`cv\.md`\s+exist\?/i.test(claudeDoc)
   ) {
-    pass('CLAUDE.md delegates onboarding state to doctor --json');
+    pass('CLAUDE.md and AGENTS.md delegate onboarding state and autoCopied to doctor --json');
   } else {
-    fail('CLAUDE.md still duplicates onboarding prerequisite checks');
+    fail('CLAUDE.md or AGENTS.md still duplicates onboarding prerequisite checks or misses autoCopied doc');
   }
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
@@ -3795,7 +4566,7 @@ try {
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+    try { execFileSync(BASH, ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
@@ -3814,13 +4585,13 @@ try {
     'exit 1',
   ].join('\n') + '\n');
   if (process.platform === 'win32') {
-    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+    try { execFileSync(BASH, ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
   }
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const out = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3839,7 +4610,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
+  const dry = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -3859,7 +4630,7 @@ try {
     '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
     '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
   ].join('\n') + '\n');
-  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+  const statusOnly = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -7940,12 +8711,14 @@ console.log('\n49. Plugin engine (contract + sandbox + firewall)');
 
 const __origWarn = console.warn;
 let __pluginTmp = null;
+let __manifestTmp = null;
 try {
   const eng = await import(pathToFileURL(join(ROOT, 'plugins/_engine.mjs')).href);
   const { validateManifest, discoverPlugins, pluginRoots, buildCtx, mergeProviderPlugins } = eng;
 
   const base = { id: 'x', apiVersion: 1, description: 'one line', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true };
-  const vm = (m, dirName = 'x') => validateManifest(m, join('/tmp', dirName), dirName);
+  __manifestTmp = mkdtempSync(join(tmpdir(), 'co-plugin-manifest-'));
+  const vm = (m, dirName = 'x') => validateManifest(m, join(__manifestTmp, dirName), dirName);
 
   // Manifest validation (warnings are expected here — suppress to keep output clean).
   console.warn = () => {};
@@ -8137,6 +8910,50 @@ try {
   if (reg.validateRegistryEntry({ ...goodEntry, requiredEnv: ['GEMINI_API_KEY'] }, regOpts).length > 0) pass('registry: a reserved/core env var is rejected');
   else fail('registry: reserved env should fail');
 
+  // Seed → successor: a bundled "reference" plugin can be superseded by a
+  // maintained community plugin of the same id — but ONLY when registry-approved
+  // AND installed at the exact pinned sha (the no-downgrade trust hinge).
+  if (reg.validateRegistryEntry({ ...goodEntry, supersedesBundled: true }, regOpts).length === 0) pass('registry: supersedesBundled:true is accepted');
+  else fail('registry: supersedesBundled:true should validate');
+  if (reg.validateRegistryEntry({ ...goodEntry, supersedesBundled: 'yes' }, regOpts).length > 0) pass('registry: supersedesBundled must be the boolean true (non-boolean rejected)');
+  else fail('registry: a non-boolean supersedesBundled should fail');
+
+  const succTmp = mkdtempSync(join(tmpdir(), 'co-succ-'));
+  const SUCC_SHA = 'b'.repeat(40);
+  mkdirSync(join(succTmp, 'plugins', 'gmail'), { recursive: true });
+  writeFileSync(join(succTmp, 'plugins', 'gmail', 'manifest.json'), JSON.stringify({ id: 'gmail', apiVersion: 1, description: 'bundled reference gmail', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true }));
+  writeFileSync(join(succTmp, 'plugins', 'gmail', 'index.mjs'), 'export default { ingest: async () => [] };');
+  mkdirSync(join(succTmp, 'plugins.local', 'gmail'), { recursive: true });
+  writeFileSync(join(succTmp, 'plugins.local', 'gmail', 'manifest.json'), JSON.stringify({ id: 'gmail', apiVersion: 1, description: 'community successor gmail', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true }));
+  writeFileSync(join(succTmp, 'plugins.local', 'gmail', 'index.mjs'), 'export default { ingest: async () => [] };');
+  writeFileSync(join(succTmp, 'plugins-registry.json'), JSON.stringify({ registryVersion: 1, plugins: [{ name: 'career-ops-plugin-gmail', id: 'gmail', repo: 'https://github.com/a/career-ops-plugin-gmail', author: 'a', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], license: 'MIT', version: '2.0.0', sha: SUCC_SHA, supersedesBundled: true }] }));
+  const bundledGmail = join(succTmp, 'plugins', 'gmail');
+  const localGmail = join(succTmp, 'plugins.local', 'gmail');
+
+  // (1) No install (no lock entry) → unverified local must NOT override the bundled reference.
+  if (!eng.resolveSuccessorIds(succTmp).has('gmail')) pass('successor: an unverified plugins.local/<id> (no lock) does NOT override the bundled reference (no-downgrade)');
+  else fail('successor: unverified local must not override bundled');
+  const disc0 = eng.discoverPlugins(eng.pluginRoots(succTmp), eng.resolveSuccessorIds(succTmp)).find(m => m.id === 'gmail');
+  if (disc0 && disc0.dir === bundledGmail) pass('successor: with no approved install, discovery returns the BUNDLED gmail');
+  else fail('successor: bundled should win without an approved successor install');
+
+  // (2) Installed but at the WRONG sha → off-registry, still no override (the pin invariant).
+  lockMod.writeLockEntry(succTmp, 'gmail', { source: 'local', sha: 'c'.repeat(40), version: '2.0.0', integrity: 'x', files: {}, consent: {} });
+  if (!eng.resolveSuccessorIds(succTmp).has('gmail')) pass('successor: an installed sha that differs from the registry pin does NOT override (off-registry never wins)');
+  else fail('successor: sha mismatch must not override');
+
+  // (3) Installed at the EXACT registry sha → the maintained successor wins.
+  lockMod.writeLockEntry(succTmp, 'gmail', { source: 'local', sha: SUCC_SHA, version: '2.0.0', integrity: 'x', files: {}, consent: {} });
+  const ids1 = eng.resolveSuccessorIds(succTmp);
+  if (ids1.has('gmail')) pass('successor: a registry-approved successor installed at the pinned sha is resolved as an override');
+  else fail('successor: approved+pinned successor should be resolved');
+  const disc1 = eng.discoverPlugins(eng.pluginRoots(succTmp), ids1).find(m => m.id === 'gmail');
+  if (disc1 && disc1.dir === localGmail) pass('successor: an approved+pinned successor overrides the bundled reference of the same id');
+  else fail('successor: approved successor should override the bundled reference');
+  if (reg.successorFor(succTmp, 'gmail')?.name === 'career-ops-plugin-gmail') pass('successor: successorFor() surfaces the maintained version of a bundled id');
+  else fail('successor: successorFor should return the registered successor');
+  rmSync(succTmp, { recursive: true, force: true });
+
   if (install.parseRepoArg('alice/career-ops-plugin-foo').id === 'foo') pass('install: owner/career-ops-plugin-foo parses to id "foo"');
   else fail('install: should parse owner/repo');
   let extRej = false; try { install.parseRepoArg('ext::sh -c whoami'); } catch { extRej = true; }
@@ -8199,6 +9016,14 @@ try {
   if (importOk) pass('every bundled plugin entry imports cleanly with a default hook export');
   else fail('a bundled plugin failed to import or lacks a default export');
 
+  const notionMod = await import(pathToFileURL(join(ROOT, 'plugins', 'notion', 'index.mjs')).href);
+  const notionParseScore = notionMod.parseScore || notionMod.default?.parseScore;
+  if (typeof notionParseScore === 'function' && notionParseScore('4.2/5') === 4.2 && notionParseScore('5/5') === 5 && notionParseScore('**4.2/5**') === 4.2) {
+    pass('notion plugin parseScore sanitizes slash-formatted scores cleanly (4.2/5 -> 4.2, 5/5 -> 5) (#1414)');
+  } else {
+    fail(`notion plugin parseScore broken: 4.2/5 -> ${notionParseScore?.('4.2/5')}, 5/5 -> ${notionParseScore?.('5/5')}`);
+  }
+
   // Recursively collect every .mjs under plugins/ (the deny-list must not be flat-only).
   const allPluginMjs = [];
   const walkMjs = (d) => {
@@ -8240,6 +9065,683 @@ try {
 } finally {
   console.warn = __origWarn;
   if (__pluginTmp) { try { rmSync(__pluginTmp, { recursive: true, force: true }); } catch {} }
+  if (__manifestTmp) { try { rmSync(__manifestTmp, { recursive: true, force: true }); } catch {} }
+}
+
+// -- 50. Provider - higheredjobs -----------------------------------------
+console.log('\n50. Provider - higheredjobs');
+
+try {
+  const hejModule = await import(pathToFileURL(join(ROOT, 'providers/higheredjobs.mjs')).href);
+  const higheredjobs = hejModule.default;
+  const { parseHigherEdJobsFeed } = hejModule;
+
+  if (higheredjobs.id === 'higheredjobs') pass('higheredjobs.id is "higheredjobs"');
+  else fail(`higheredjobs.id is ${JSON.stringify(higheredjobs.id)}`);
+
+  const hit = higheredjobs.detect({ name: 'HEJ', provider: 'higheredjobs', cat_id: 64 });
+  if (hit && hit.url === 'https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=64') {
+    pass('higheredjobs.detect() claims explicit provider config (returns URL with catID)');
+  } else {
+    fail(`higheredjobs.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  const hitDefault = higheredjobs.detect({ name: 'HEJ', provider: 'higheredjobs' });
+  if (hitDefault && hitDefault.url === 'https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=68') {
+    pass('higheredjobs.detect() with no cat_id returns default URL with catID=68');
+  } else {
+    fail(`higheredjobs.detect() default returned ${JSON.stringify(hitDefault)}`);
+  }
+
+  if (higheredjobs.detect({ name: 'Remote Board', provider: 'remoteok' }) === null) {
+    pass('higheredjobs.detect() ignores other provider ids');
+  } else {
+    fail('higheredjobs.detect() should only claim provider: higheredjobs');
+  }
+
+  const sample = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title><![CDATA[Director of AI Strategy]]></title>
+      <description><![CDATA[Curry College (Milton, MA)]]></description>
+      <link>https://www.higheredjobs.com/details.cfm?JobCode=17899012</link>
+      <pubDate>Thu, 13 Nov 2025 14:10:41 +0000</pubDate>
+      <guid>https://www.higheredjobs.com/details.cfm?JobCode=17899012</guid>
+    </item>
+    <item>
+      <title>Dean of Engineering &amp; Computing</title>
+      <description>State University System Office</description>
+      <link>https://www.higheredjobs.com/details.cfm?JobCode=17899044</link>
+      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
+      <guid>https://www.higheredjobs.com/details.cfm?JobCode=17899044</guid>
+    </item>
+    <item>
+      <title>Missing Link Role</title>
+      <description>Ghost College (Nowhere, ZZ)</description>
+      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Relative Link Role</title>
+      <description>Relative U (Somewhere, ST)</description>
+      <link>/details.cfm?JobCode=bad-relative</link>
+      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Off Host Role</title>
+      <description>Off Host Inst (Elsewhere, ST)</description>
+      <link>https://example.com/details.cfm?JobCode=off-host</link>
+      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>`;
+  const jobs = parseHigherEdJobsFeed(sample, 'HEJ Board');
+
+  if (jobs.length === 2) pass('parseHigherEdJobsFeed keeps 2 items (drops missing/relative/off-host links)');
+  else fail(`parseHigherEdJobsFeed returned ${jobs.length} jobs (expected 2)`);
+
+  if (jobs.every(({ url }) => {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'https:' && parsed.hostname === 'www.higheredjobs.com';
+    } catch {
+      return false;
+    }
+  })) pass('parseHigherEdJobsFeed only emits HTTPS URLs pinned to www.higheredjobs.com');
+  else fail('parseHigherEdJobsFeed emitted an off-host or non-HTTPS URL');
+
+  if (jobs[0]?.title === 'Director of AI Strategy' && jobs[0]?.company === 'Curry College' && jobs[0]?.location === 'Milton, MA') {
+    pass('parseHigherEdJobsFeed parses title + "Institution (City, ST)" description -> company/title/location');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.url === 'https://www.higheredjobs.com/details.cfm?JobCode=17899012') {
+    pass('parseHigherEdJobsFeed maps <link> to url');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (jobs[0]?.postedAt === Date.parse('Thu, 13 Nov 2025 14:10:41 +0000')) {
+    pass('parseHigherEdJobsFeed parses pubDate -> postedAt');
+  } else {
+    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[1]?.company === 'State University System Office' && jobs[1]?.location === '' && jobs[1]?.title === 'Dean of Engineering & Computing') {
+    pass('parseHigherEdJobsFeed falls back to whole description as company when no parens (empty location)');
+  } else {
+    fail(`row 1 = ${JSON.stringify(jobs[1])}`);
+  }
+
+  if (parseHigherEdJobsFeed('', 'X').length === 0 && parseHigherEdJobsFeed(null, 'X').length === 0) {
+    pass('parseHigherEdJobsFeed empty / non-string feed -> empty result (no crash)');
+  } else {
+    fail('parseHigherEdJobsFeed empty / non-string feed should yield empty result');
+  }
+
+  let capturedUrl = null;
+  let capturedOpts = null;
+  const fetched = await higheredjobs.fetch(
+    { name: 'HEJ Board', provider: 'higheredjobs', cat_id: 64 },
+    { fetchText: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
+  );
+
+  if (capturedUrl === 'https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=64') {
+    pass('higheredjobs.fetch() requests the feed URL for cat_id 64');
+  } else {
+    fail(`higheredjobs.fetch() requested ${JSON.stringify(capturedUrl)}`);
+  }
+
+  if (capturedOpts && capturedOpts.redirect === 'error') {
+    pass('higheredjobs.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail(`higheredjobs.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
+  }
+
+  if (fetched[0]?.company === 'Curry College' && fetched[0]?.title === 'Director of AI Strategy' && fetched[0]?.location === 'Milton, MA') {
+    pass('provider: higheredjobs config returns normalized jobs');
+  } else {
+    fail(`higheredjobs.fetch() normalized row = ${JSON.stringify(fetched[0])}`);
+  }
+} catch (e) {
+  fail(`higheredjobs provider tests crashed: ${e.message}`);
+}
+
+// ── 51. PROVIDERS — JibeApply ────────────────────────────────────
+
+console.log('\n51. Provider — jibeapply');
+
+try {
+  const jibeapply = (await import(pathToFileURL(join(ROOT, 'providers/jibeapply.mjs')).href)).default;
+  const { parseJibeapplyResponse } = await import(pathToFileURL(join(ROOT, 'providers/jibeapply.mjs')).href);
+
+  if (jibeapply.id === 'jibeapply') pass('jibeapply.id is "jibeapply"');
+  else fail(`jibeapply.id is ${JSON.stringify(jibeapply.id)}`);
+
+  // detect() — /jobs path → /api/jobs
+  const hit = jibeapply.detect({ name: 'Acme', careers_url: 'https://acme.jibeapply.com/jobs?location=Germany' });
+  if (hit && hit.url === 'https://acme.jibeapply.com/api/jobs?location=Germany') {
+    pass('jibeapply.detect() rewrites /jobs → /api/jobs');
+  } else {
+    fail(`jibeapply.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  // detect() — /api/jobs already present (idempotent)
+  const hitApi = jibeapply.detect({ name: 'X', careers_url: 'https://acme.jibeapply.com/api/jobs' });
+  if (hitApi && hitApi.url === 'https://acme.jibeapply.com/api/jobs') {
+    pass('jibeapply.detect() leaves already-correct /api/jobs URL unchanged');
+  } else {
+    fail(`jibeapply.detect(api) returned ${JSON.stringify(hitApi)}`);
+  }
+
+  // detect() — null cases
+  if (jibeapply.detect({ name: 'X', careers_url: 'https://example.com/jobs' }) === null) {
+    pass('jibeapply.detect() returns null for non-jibeapply URL');
+  } else {
+    fail('jibeapply.detect() should return null for non-jibeapply URL');
+  }
+
+  // Path-spoofed: jibeapply.com in path, not host
+  if (jibeapply.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.jibeapply.com/jobs' }) === null) {
+    pass('jibeapply.detect() rejects path-spoofed URL');
+  } else {
+    fail('jibeapply.detect() must NOT detect path-spoofed URLs');
+  }
+
+  // Non-string careers_url
+  if (jibeapply.detect({ name: 'X', careers_url: 42 }) === null) {
+    pass('jibeapply.detect() returns null for non-string careers_url');
+  } else {
+    fail('jibeapply.detect() should return null for non-string careers_url');
+  }
+
+  // HTTP (non-HTTPS) must not be detected
+  if (jibeapply.detect({ name: 'X', careers_url: 'http://acme.jibeapply.com/jobs' }) === null) {
+    pass('jibeapply.detect() rejects HTTP (non-HTTPS) URL');
+  } else {
+    fail('jibeapply.detect() should reject HTTP URLs');
+  }
+
+  // parseJibeapplyResponse — normalization
+  const entry = { name: 'Acme', careers_url: 'https://acme.jibeapply.com/jobs' };
+  const sampleJson = {
+    jobs: [
+      { title: 'Senior QA', slug: 'senior-qa-berlin', city: 'Berlin', country: 'Germany', hiring_organization: 'Acme GmbH' },
+      { title: 'Backend Dev', req_id: 'REQ-123', full_location: 'Remote, Germany' },
+      { data: { title: 'Wrapped Job', slug: 'wrapped-job', city: 'Munich', country: 'Germany' } },
+      { title: '', slug: 'no-title' },          // missing title — skip
+      { title: 'No Slug' },                      // missing slug/req_id — skip
+    ],
+  };
+  const parsedJibe = parseJibeapplyResponse(sampleJson, entry);
+
+  if (parsedJibe.length === 3) pass('parseJibeapplyResponse extracts 3 valid jobs');
+  else fail(`parseJibeapplyResponse returned ${parsedJibe.length} jobs, expected 3`);
+
+  if (parsedJibe[0].url === 'https://acme.jibeapply.com/jobs/senior-qa-berlin') {
+    pass('parseJibeapplyResponse builds URL from origin + /jobs/ + slug');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(parsedJibe[0].url)}`);
+  }
+
+  if (parsedJibe[0].location === 'Berlin, Germany') {
+    pass('parseJibeapplyResponse builds location from city/country');
+  } else {
+    fail(`row 0 location = ${JSON.stringify(parsedJibe[0].location)}`);
+  }
+
+  if (parsedJibe[0].company === 'Acme GmbH') {
+    pass('parseJibeapplyResponse uses hiring_organization when present');
+  } else {
+    fail(`row 0 company = ${JSON.stringify(parsedJibe[0].company)}`);
+  }
+
+  if (parsedJibe[1].url.includes('REQ-123') && parsedJibe[1].location === 'Remote, Germany') {
+    pass('parseJibeapplyResponse uses req_id and full_location');
+  } else {
+    fail(`row 1 = ${JSON.stringify(parsedJibe[1])}`);
+  }
+
+  if (parsedJibe[2].title === 'Wrapped Job') {
+    pass('parseJibeapplyResponse unwraps item.data');
+  } else {
+    fail(`row 2 title = ${JSON.stringify(parsedJibe[2].title)}`);
+  }
+
+  // parseJibeapplyResponse — falls back to entry.name when hiring_organization missing
+  const noOrg = parseJibeapplyResponse({ jobs: [{ title: 'Dev', slug: 'dev', city: 'Berlin', country: 'Germany' }] }, entry);
+  if (noOrg[0].company === 'Acme') {
+    pass('parseJibeapplyResponse falls back to entry.name when hiring_organization missing');
+  } else {
+    fail(`fallback company = ${JSON.stringify(noOrg[0].company)}`);
+  }
+
+  // parseJibeapplyResponse — empty input
+  if (parseJibeapplyResponse({}, entry).length === 0) pass('parseJibeapplyResponse({}) → empty result');
+  else fail('parseJibeapplyResponse({}) should be empty');
+
+  // parseJibeapplyResponse — falls back to entry.api's origin when careers_url
+  // can't be parsed, so job URLs stay absolute instead of degrading to "/jobs/<slug>"
+  const malformedCareersEntry = { name: 'Widget Co', careers_url: 'jobs.widgetco.com', api: 'https://jobs.widgetco.com/api/jobs' };
+  const apiOriginFallback = parseJibeapplyResponse({ jobs: [{ title: 'Dev', slug: 'dev-1' }] }, malformedCareersEntry);
+  if (apiOriginFallback[0]?.url === 'https://jobs.widgetco.com/jobs/dev-1') {
+    pass('parseJibeapplyResponse falls back to entry.api origin for a malformed careers_url');
+  } else {
+    fail(`parseJibeapplyResponse api-origin fallback: url = ${JSON.stringify(apiOriginFallback[0]?.url)}`);
+  }
+
+  // parseJibeapplyResponse — null/undefined entries in jobs must be skipped, not crash
+  const sparseJson = { jobs: [null, undefined, { title: 'Real Job', slug: 'real-job' }] };
+  try {
+    const parsedSparse = parseJibeapplyResponse(sparseJson, entry);
+    if (parsedSparse.length === 1 && parsedSparse[0].title === 'Real Job') {
+      pass('parseJibeapplyResponse skips null/undefined entries without crashing');
+    } else {
+      fail(`parseJibeapplyResponse sparse result = ${JSON.stringify(parsedSparse)}`);
+    }
+  } catch (e3) {
+    fail(`parseJibeapplyResponse should not throw on null/undefined entries: ${e3.message}`);
+  }
+
+  // fetch() pagination — 2 pages
+  let pageRequests = 0;
+  const fetchedJibe = await jibeapply.fetch(entry, {
+    transport: 'http',
+    fetchText: async () => { throw new Error('fetchText not expected'); },
+    fetchJson: async (url) => {
+      pageRequests++;
+      const u = new URL(url);
+      const page = parseInt(u.searchParams.get('page') || '1', 10);
+      if (page === 1) {
+        return { totalCount: 15, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
+      }
+      return { totalCount: 15, count: 10, jobs: Array.from({ length: 5 }, (_, i) => ({ title: `Job p2-${i}`, slug: `job-p2-${i}` })) };
+    },
+  });
+  if (pageRequests === 2 && fetchedJibe.length === 15) {
+    pass('jibeapply.fetch() paginates across 2 pages (10+5=15)');
+  } else {
+    fail(`jibeapply fetch pagination: requests=${pageRequests}, total=${fetchedJibe.length} (expected 2/15)`);
+  }
+
+  // fetch() pagination cap — an inflated totalCount must not trigger unbounded
+  // concurrent requests (MAX_PAGES = 50 in providers/jibeapply.mjs), and
+  // hitting the cap must be visible (console.error), not silent.
+  let hugeRequests = 0;
+  const jibeCapWarnings = [];
+  const originalConsoleError = console.error;
+  console.error = (msg) => jibeCapWarnings.push(msg);
+  let fetchedHuge;
+  try {
+    fetchedHuge = await jibeapply.fetch(entry, {
+      transport: 'http',
+      fetchText: async () => { throw new Error('fetchText not expected'); },
+      fetchJson: async () => {
+        hugeRequests++;
+        return { totalCount: 1_000_000, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
+      },
+    });
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (hugeRequests === 50 && fetchedHuge.length === 500) {
+    pass('jibeapply.fetch() caps pagination at MAX_PAGES despite an inflated totalCount');
+  } else {
+    fail(`jibeapply fetch pagination cap: requests=${hugeRequests}, total=${fetchedHuge.length} (expected 50/500)`);
+  }
+  if (jibeCapWarnings.some(w => /has more postings than max_pages allows/.test(w))) {
+    pass('jibeapply.fetch() warns (console.error) when the cap truncates real results');
+  } else {
+    fail(`jibeapply fetch cap: expected a truncation warning, got ${JSON.stringify(jibeCapWarnings)}`);
+  }
+
+  // fetch() pagination cap — entry.max_pages raises the cap for a genuinely
+  // large tenant (e.g. a Workday-scale Deutsche Bank equivalent on JibeApply)
+  let overriddenRequests = 0;
+  const bigEntry = { name: 'BigCo', careers_url: 'https://bigco.jibeapply.com/jobs', max_pages: 80 };
+  const fetchedOverridden = await jibeapply.fetch(bigEntry, {
+    transport: 'http',
+    fetchText: async () => { throw new Error('fetchText not expected'); },
+    fetchJson: async () => {
+      overriddenRequests++;
+      return { totalCount: 1_000_000, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
+    },
+  });
+  if (overriddenRequests === 80 && fetchedOverridden.length === 800) {
+    pass('jibeapply.fetch() honors entry.max_pages to raise the cap above the default');
+  } else {
+    fail(`jibeapply fetch max_pages override: requests=${overriddenRequests}, total=${fetchedOverridden.length} (expected 80/800)`);
+  }
+
+  // entry.max_pages is itself capped (MAX_PAGES_CAP = 500) — an absurd override
+  // can't turn this into an unbounded scan either
+  let cappedOverrideRequests = 0;
+  const absurdEntry = { name: 'AbsurdCo', careers_url: 'https://absurdco.jibeapply.com/jobs', max_pages: 100_000 };
+  const fetchedAbsurd = await jibeapply.fetch(absurdEntry, {
+    transport: 'http',
+    fetchText: async () => { throw new Error('fetchText not expected'); },
+    fetchJson: async () => {
+      cappedOverrideRequests++;
+      return { totalCount: 10_000_000, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
+    },
+  });
+  if (cappedOverrideRequests === 500 && fetchedAbsurd.length === 5000) {
+    pass('jibeapply.fetch() caps an absurd entry.max_pages at MAX_PAGES_CAP');
+  } else {
+    fail(`jibeapply fetch max_pages hard cap: requests=${cappedOverrideRequests}, total=${fetchedAbsurd.length} (expected 500/5000)`);
+  }
+
+  // fetch() pagination — a failure on a later page returns the jobs gathered
+  // so far instead of discarding everything (sequential, not Promise.all),
+  // and the failure itself is visible (console.error), not silent.
+  let flakyRequests = 0;
+  const jibeFlakyWarnings = [];
+  console.error = (msg) => jibeFlakyWarnings.push(msg);
+  let fetchedFlaky;
+  try {
+    fetchedFlaky = await jibeapply.fetch(entry, {
+      transport: 'http',
+      fetchText: async () => { throw new Error('fetchText not expected'); },
+      fetchJson: async (url) => {
+        flakyRequests++;
+        const u = new URL(url);
+        const page = parseInt(u.searchParams.get('page') || '1', 10);
+        if (page === 3) throw new Error('HTTP 503');
+        return { totalCount: 40, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job p${page}-${i}`, slug: `job-p${page}-${i}` })) };
+      },
+    });
+  } finally {
+    console.error = originalConsoleError;
+  }
+  if (flakyRequests === 3 && fetchedFlaky.length === 20) {
+    pass('jibeapply.fetch() returns partial results when a later page fails');
+  } else {
+    fail(`jibeapply fetch partial failure: requests=${flakyRequests}, total=${fetchedFlaky.length} (expected 3/20)`);
+  }
+  if (jibeFlakyWarnings.some(w => /page \d+ fetch failed/.test(w))) {
+    pass('jibeapply.fetch() warns (console.error) when a page fetch fails mid-pagination');
+  } else {
+    fail(`jibeapply fetch page failure: expected a fetch-failed warning, got ${JSON.stringify(jibeFlakyWarnings)}`);
+  }
+
+  // fetch() with explicit entry.api (non-jibeapply.com host)
+  let explicitApiUrl = null;
+  const brandedEntry = { name: 'Widget Co', careers_url: 'https://jobs.widgetco.com/jobs', api: 'https://jobs.widgetco.com/api/jobs?internal=false' };
+  await jibeapply.fetch(brandedEntry, {
+    transport: 'http',
+    fetchText: async () => { throw new Error('fetchText not expected'); },
+    fetchJson: async (url) => { explicitApiUrl = url; return { totalCount: 3, count: 3, jobs: [{ title: 'Dev', slug: 'dev-1' }] }; },
+  });
+  if (explicitApiUrl && explicitApiUrl.startsWith('https://jobs.widgetco.com/api/jobs')) {
+    pass('jibeapply.fetch() uses entry.api for non-jibeapply.com hosts');
+  } else {
+    fail(`jibeapply.fetch() with entry.api called url=${JSON.stringify(explicitApiUrl)}`);
+  }
+
+  // fetch() with entry.api — iCIMS-hosted JibeApply pattern: count === totalCount but jobs.length < count
+  let brandedRequests = 0;
+  const fetchedBranded = await jibeapply.fetch(brandedEntry, {
+    transport: 'http',
+    fetchText: async () => { throw new Error('fetchText not expected'); },
+    fetchJson: async (url) => {
+      brandedRequests++;
+      const u = new URL(url);
+      const page = parseInt(u.searchParams.get('page') || '1', 10);
+      // count === totalCount (iCIMS-hosted pattern), jobs only has page-worth of items
+      if (page === 1) return { totalCount: 15, count: 15, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `J${i}`, slug: `j-${i}` })) };
+      return { totalCount: 15, count: 15, jobs: Array.from({ length: 5 }, (_, i) => ({ title: `J2-${i}`, slug: `j2-${i}` })) };
+    },
+  });
+  if (brandedRequests === 2 && fetchedBranded.length === 15) {
+    pass('jibeapply.fetch() paginates when count===totalCount but jobs.length < count');
+  } else {
+    fail(`jibeapply fetch iCIMS pattern: requests=${brandedRequests}, total=${fetchedBranded.length} (expected 2/15)`);
+  }
+
+  // fetch() throws when both entry.api is HTTP and careers_url is non-jibeapply.com
+  // (no valid API URL can be derived from either source)
+  try {
+    await jibeapply.fetch({ name: 'X', careers_url: 'https://jobs.example.com/jobs', api: 'http://evil.com/api/jobs' }, {
+      fetchText: async () => '', fetchJson: async () => { throw new Error('should not reach'); },
+    });
+    fail('jibeapply.fetch() should throw when no valid API URL can be derived');
+  } catch (e2) {
+    if (/cannot derive API URL/i.test(e2.message)) pass('jibeapply.fetch() throws when HTTP entry.api and non-jibeapply careers_url');
+    else fail(`jibeapply.fetch() wrong error: ${e2.message}`);
+  }
+
+} catch (e) {
+  fail(`jibeapply provider tests crashed: ${e.message}`);
+}
+
+// ── 52. INTERVIEW SESSION PRODUCER (#956 / #1242 contract) ──────
+
+console.log('\n52. Interview session producer (#1242 transcript contract)');
+
+// Scaffold is system-owned and MUST ship (tracked) so the updater can deliver it.
+for (const f of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
+  if (!fileExists(f)) {
+    fail(`Missing session scaffold: ${f}`);
+  } else if (run('git', ['ls-files', f])) {
+    pass(`Session scaffold shipped (tracked): ${f}`);
+  } else {
+    fail(`Session scaffold exists but is NOT tracked (won't ship): ${f}`);
+  }
+}
+
+// Real session files contain real names/companies — they MUST be gitignored.
+{
+  const real = 'interview-prep/sessions/acme-corp-instructional-designer-behavioral-2026-06-01.md';
+  if (run('git', ['check-ignore', real])) {
+    pass('Real session files are gitignored (PII never committed)');
+  } else {
+    fail(`Real session file is NOT gitignored: ${real}`);
+  }
+}
+
+// ...but the scaffold itself must be force-included past that ignore rule.
+for (const f of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
+  if (run('git', ['check-ignore', f])) {
+    fail(`Session scaffold is gitignored (won't ship): ${f}`);
+  } else {
+    pass(`Session scaffold is force-included past the ignore rule: ${f}`);
+  }
+}
+
+// The scaffold must be in SYSTEM_PATHS (the updater delivers/refreshes it).
+{
+  const updater = readFile('update-system.mjs');
+  const sysBlock = (updater.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  for (const p of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
+    if (sysBlock.includes(`'${p}'`)) {
+      pass(`Session scaffold in SYSTEM_PATHS: ${p}`);
+    } else {
+      fail(`Session scaffold NOT in SYSTEM_PATHS (won't update): ${p}`);
+    }
+  }
+  // Never ship the directory itself — that would let an update wipe user sessions.
+  if (sysBlock.includes("'interview-prep/sessions/'")) {
+    fail("interview-prep/sessions/ dir is in SYSTEM_PATHS — an update could overwrite user sessions");
+  } else {
+    pass('interview-prep/sessions/ dir is NOT a SYSTEM_PATHS entry (user sessions safe)');
+  }
+}
+
+// Both producers must document writing a session transcript with competency tags.
+for (const mode of ['modes/interview/debrief.md', 'modes/interview/practice.md']) {
+  const body = readFile(mode);
+  if (body.includes('interview-prep/sessions/')) {
+    pass(`${mode} writes to interview-prep/sessions/`);
+  } else {
+    fail(`${mode} does not write a session transcript (producer missing)`);
+  }
+  if (body.includes('<!-- competency:')) {
+    pass(`${mode} emits the competency tag`);
+  } else {
+    fail(`${mode} does not emit the <!-- competency: --> tag`);
+  }
+}
+
+// The README is the consumer contract — it must document speaker labels + tag format.
+if (!fileExists('interview-prep/sessions/README.md')) {
+  fail('sessions/README.md missing — cannot verify the consumer contract');
+} else {
+  const readme = readFile('interview-prep/sessions/README.md');
+  if (readme.includes('**Interviewer:**') && readme.includes('**Candidate:**')) {
+    pass('sessions/README documents Interviewer/Candidate speaker labels');
+  } else {
+    fail('sessions/README missing speaker-label contract');
+  }
+  if (readme.includes('<!-- competency:')) {
+    pass('sessions/README documents the competency tag format');
+  } else {
+    fail('sessions/README missing competency tag format');
+  }
+}
+
+// ── match-star.mjs — fixture story-bank + top match assertion ───────────────
+
+console.log('\n🧪 Testing match-star.mjs keyword scorer...');
+
+try {
+  // Import the real production functions — tests exercise actual implementation
+  const { parseStories, tokenize, score } = await import(pathToFileURL(join(ROOT, 'match-star.mjs')).href);
+
+  // Inline fixture: two stories with distinct competency tags
+  const FIXTURE_MD = `
+### [Leadership] Led cross-functional rollout under deadline
+
+**Source:** Work
+**S (Situation):** Our team had 3 weeks to ship a platform migration affecting 6 departments.
+**T (Task):** I was asked to coordinate across engineering, ops, and comms with no formal authority.
+**A (Action):** I mapped dependencies, ran daily standups, and escalated blockers to leadership.
+**R (Result):** Shipped on time, zero downtime, positive feedback from all department leads.
+**Reflection:** Influence without authority is the real skill.
+**Best for questions about:** leadership, project management, cross-functional collaboration, deadline pressure
+
+### [Conflict] Resolved a data pipeline disagreement with a senior engineer
+
+**Source:** Work
+**S (Situation):** A senior engineer wanted to rewrite our ETL in Spark; I thought it was premature.
+**T (Task):** Present my case without creating a political problem.
+**A (Action):** I pulled query benchmarks and showed the bottleneck was upstream, not the pipeline itself.
+**R (Result):** Team agreed to a targeted fix; saved 6 weeks of rewrite work.
+**Reflection:** Data beats seniority.
+**Best for questions about:** conflict resolution, disagreement, data-driven decision making, stakeholder management
+`.trim();
+
+  const stories = parseStories(FIXTURE_MD);
+
+  if (stories.length === 2) {
+    pass('match-star fixture: parseStories returns 2 stories');
+  } else {
+    fail(`match-star fixture: expected 2 stories, got ${stories.length}`);
+  }
+
+  // Leadership question → should match story[0] (leadership/deadline tags)
+  const leadershipQ = tokenize('Tell me about a time you led a project under deadline pressure');
+  const leadershipScores = stories.map(s => score(s, leadershipQ, []));
+  if (leadershipScores[0] > leadershipScores[1]) {
+    pass('match-star scorer: leadership question surfaces the leadership story first');
+  } else {
+    fail(`match-star scorer: leadership question picked wrong story (scores: ${leadershipScores})`);
+  }
+
+  // Conflict question → should match story[1] (conflict/disagreement tags)
+  const conflictQ = tokenize('Describe a conflict or disagreement with a colleague');
+  const conflictScores = stories.map(s => score(s, conflictQ, []));
+  if (conflictScores[1] > conflictScores[0]) {
+    pass('match-star scorer: conflict question surfaces the conflict story first');
+  } else {
+    fail(`match-star scorer: conflict question picked wrong story (scores: ${conflictScores})`);
+  }
+
+  // Tag-match weight (3) should outweigh body-match weight (1) for a tag-exact token
+  const tagExactQ = tokenize('stakeholder management');
+  const tagExactScores = stories.map(s => score(s, tagExactQ, []));
+  if (tagExactScores[1] >= 6) {
+    pass('match-star scorer: tag-exact match yields ≥ 6 points (3 per token × 2 tokens)');
+  } else {
+    fail(`match-star scorer: tag-exact match score too low (got ${tagExactScores[1]})`);
+  }
+
+  // match-star.mjs file must exist (existsSync-guarded in the script itself)
+  if (existsSync(join(ROOT, 'match-star.mjs'))) {
+    pass('match-star.mjs: file present in repo root');
+  } else {
+    fail('match-star.mjs: file missing from repo root');
+  }
+
+} catch (e) {
+  fail(`match-star tests crashed: ${e.message}`);
+}
+
+// ── PREPARE-APPLICATION — ATS AUTO-FILL CONTRACT ────────────────
+
+console.log('\n prepare-application: ATS auto-fill contract');
+
+try {
+  const src = readFile('prepare-application.mjs');
+
+  // Must not make any network requests
+  if (!/\bfetch\s*\(/.test(src) && !/https?\.request/.test(src) && !/createConnection/.test(src)) {
+    pass('prepare-application.mjs makes no network requests');
+  } else {
+    fail('prepare-application.mjs calls a network API — must be prefill-only, no POST');
+  }
+
+  // Must have concrete handler functions for all three ATS
+  for (const fn of ['buildGreenhouseFields', 'buildAshbyFields', 'buildLeverFields']) {
+    if (new RegExp(`function ${fn}`).test(src)) {
+      pass(`prepare-application.mjs defines ${fn}`);
+    } else {
+      fail(`prepare-application.mjs missing concrete handler: ${fn}`);
+    }
+  }
+
+  // Must read config/profile.yml
+  if (/config\/profile\.yml/.test(src)) {
+    pass('prepare-application.mjs reads config/profile.yml');
+  } else {
+    fail('prepare-application.mjs does not read config/profile.yml');
+  }
+
+  // Must restrict PDF to output/ directory
+  if (/output[^'"`\n]*startsWith|startsWith.*output/.test(src)) {
+    pass('prepare-application.mjs restricts PDF path to output/');
+  } else {
+    fail('prepare-application.mjs missing output/ directory restriction for --pdf');
+  }
+
+  // Must enforce https-only
+  if (/protocol.*https:|https:.*protocol/.test(src)) {
+    pass('prepare-application.mjs enforces https-only URLs');
+  } else {
+    fail('prepare-application.mjs missing https enforcement');
+  }
+
+  // Must not reference old script name
+  if (!/submit-resume/.test(src)) {
+    pass('prepare-application.mjs does not reference old submit-resume name');
+  } else {
+    fail('prepare-application.mjs still references submit-resume');
+  }
+
+  // package.json must expose prepare:application, not submit:resume
+  const pkg = readFile('package.json');
+  if (/prepare.application.*prepare-application\.mjs/.test(pkg)) {
+    pass('package.json exposes prepare:application script');
+  } else {
+    fail('package.json missing prepare:application script pointing to prepare-application.mjs');
+  }
+  if (!/submit.resume/.test(pkg)) {
+    pass('package.json does not reference removed submit-resume.mjs');
+  } else {
+    fail('package.json still references removed submit-resume.mjs');
+  }
+} catch (e) {
+  fail(`prepare-application contract check crashed: ${e.message}`);
 }
 
 // ── 20. PATH RESOLUTION LAYER AND OVERRIDES ───────────────────

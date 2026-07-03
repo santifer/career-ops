@@ -5,7 +5,7 @@
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
@@ -362,6 +362,24 @@ async function main() {
 // a deterministic mechanism the agent runs (instead of re-deriving it from prose),
 // and `--target <dir>` lets the test suite point it at a simulated virgin env.
 function onboardingState(root) {
+  const autoCopied = [];
+  const templates = [
+    { target: 'modes/_profile.md', template: 'modes/_profile.template.md' },
+    { target: 'modes/_custom.md', template: 'modes/_custom.template.md' },
+  ];
+  for (const { target, template } of templates) {
+    const targetPath = join(root, ...target.split('/'));
+    const templatePath = join(root, ...template.split('/'));
+    if (!existsSync(targetPath) && existsSync(templatePath)) {
+      try {
+        copyFileSync(templatePath, targetPath);
+        autoCopied.push(target);
+      } catch {
+        // Gracefully handle read-only filesystems (e.g., CI/CD or containerized environments)
+        // by leaving the file uncopied and letting onboardingNeeded/prereq checks handle it.
+      }
+    }
+  }
   const missing = USER_LAYER_PREREQS
     .filter(({ path }) => !prereqPresent(root, path))
     .map(({ path }) => path);
@@ -374,7 +392,7 @@ function onboardingState(root) {
       return { id: m.id, hooks: m.hooks, enabled: s.enabled, missingEnv: s.missingEnv };
     });
   } catch { plugins = []; }
-  return { onboardingNeeded: missing.length > 0, missing, warnings, plugins };
+  return { onboardingNeeded: missing.length > 0, missing, warnings, autoCopied, plugins };
 }
 
 if (JSON_OUT) {

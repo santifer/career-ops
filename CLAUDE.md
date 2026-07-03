@@ -108,7 +108,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
-| `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
+| `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `data/follow-ups.md` | Follow-up history tracker |
 | `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
@@ -156,13 +156,9 @@ All `modes/*` files and prompt contexts are shared across Claude Code, OpenCode,
 node doctor.mjs --json
 ```
 
-Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...]}`, where `missing` lists whichever of `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml` are absent. `warnings` is reserved for non-blocking setup signals.
+Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "autoCopied": [...]}`, where `missing` lists whichever of `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml` are absent. `warnings` is reserved for non-blocking setup signals, and `autoCopied` lists user customization files (`modes/_profile.md` or `modes/_custom.md`) that `doctor.mjs` automatically copied from their `.template.md` equivalents during the check.
 
-If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently. This is the user's customization file — it will never be overwritten by updates.
-
-If `modes/_custom.md` is missing, copy from `modes/_custom.template.md` silently — it holds the user's house rules / custom workflows / automations and is likewise never overwritten by updates.
-
-**If, after that, `onboardingNeeded` is still true (any of `cv.md` / `config/profile.yml` / `portals.yml` is missing), enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
+**If `onboardingNeeded` is true (any of `cv.md` / `config/profile.yml` / `modes/_profile.md` / `portals.yml` is missing), enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
 
 #### Step 1: CV (required)
 If `cv.md` is missing, ask:
@@ -272,6 +268,9 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants interactive profile/CV onboarding | `interview` |
+| Wants a time-blocked prep plan for an upcoming interview | `interview/plan` |
+| Wants to run practice interview questions with feedback | `interview/practice` |
+| Wants to debrief after a real interview and close gaps | `interview/debrief` |
 | Wants to generate CV/PDF | `pdf` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
