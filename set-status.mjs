@@ -26,8 +26,9 @@
  * Status and Notes cells of the matched row change; every other byte of the
  * tracker round-trips untouched.
  *
- * Exit codes: 0 success (including no-op re-runs) · 1 usage error or
- * non-canonical state · 2 row not found · 3 ambiguous company match.
+ * Exit codes: 0 success (including no-op re-runs) · 1 usage error,
+ * non-canonical state, or unreadable states.yml · 2 row not found or
+ * unreadable tracker · 3 ambiguous company match · 4 tracker lock timeout.
  *
  * When the new status is Applied, the JSON output carries
  * `"followupSeedCandidate": true` — the hook point for seeding
@@ -51,6 +52,7 @@ const EXIT_OK = 0;
 const EXIT_USAGE = 1;
 const EXIT_NOT_FOUND = 2;
 const EXIT_AMBIGUOUS = 3;
+const EXIT_LOCK_TIMEOUT = 4;
 
 const USAGE = `Usage: node set-status.mjs <report#|company> <state> [--note "..."] [--role "..."] [--dry-run] [--json]
 
@@ -117,7 +119,12 @@ function failUsage(message) {
 
 // ── state validation (before anything touches the tracker) ──────
 
-const states = loadCanonicalStates(STATES_FILE);
+let states;
+try {
+  states = loadCanonicalStates(STATES_FILE);
+} catch (err) {
+  failWith(EXIT_USAGE, 'states-error', `Cannot load canonical states from ${STATES_FILE}: ${err.message}`);
+}
 const newStatus = resolveCanonicalState(stateInput, states);
 if (!newStatus) {
   const valid = states.map(s => s.label).join(' · ');
@@ -174,13 +181,30 @@ function resolveRow(rows) {
 // Dry-run never writes, so it must not hold the exclusive lock: a read-only
 // preview should not block (or be blocked by) merge-tracker or another
 // set-status writer. A stale read is acceptable for a preview.
-const lock = flags.dryRun ? null : await acquireTrackerLock(trackerLockDirFor(APPS_FILE), { tracker: APPS_FILE });
+let lock = null;
+if (!flags.dryRun) {
+  try {
+    lock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), {
+      timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+      retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
+      staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+      tracker: APPS_FILE,
+    });
+  } catch (err) {
+    failWith(EXIT_LOCK_TIMEOUT, 'lock-timeout', err.message);
+  }
+}
 // Safety net: failWith/failUsage/resolveRow call process.exit() directly and
 // skip the explicit release below. release() is idempotent, so both firing
 // on the happy path is fine.
 if (lock) process.once('exit', () => lock.release());
 
-const content = readFileSync(APPS_FILE, 'utf-8');
+let content;
+try {
+  content = readFileSync(APPS_FILE, 'utf-8');
+} catch (err) {
+  failWith(EXIT_NOT_FOUND, 'read-failure', `Cannot read tracker at ${APPS_FILE}: ${err.message}`);
+}
 const lines = content.split('\n');
 const colmap = resolveColumns(lines);
 

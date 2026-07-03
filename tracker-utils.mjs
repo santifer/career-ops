@@ -290,6 +290,15 @@ export async function acquireTrackerLock(lockDir, options = {}) {
         hasRecoverGuard = true;
       } catch (guardErr) {
         if (guardErr?.code !== 'EEXIST') throw guardErr;
+        // A process killed between creating the guard and its cleanup leaves
+        // the guard behind forever, permanently disabling stale-lock recovery
+        // for every future writer. The guard normally lives for milliseconds,
+        // so an old one is judged stale by the same age rule as a
+        // metadata-free lock and removed; the next loop iteration can then
+        // take the guard and run recovery.
+        if (lockCanRecover(recoverGuardDir, staleMs)) {
+          rmSync(recoverGuardDir, { recursive: true, force: true });
+        }
       }
 
       if (hasRecoverGuard) {

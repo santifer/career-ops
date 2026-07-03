@@ -21,10 +21,11 @@
  */
 
 import { execFileSync } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
+import { acquireTrackerLock } from './tracker-utils.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const NODE = process.execPath;
@@ -36,11 +37,12 @@ function fail(m) { console.error(`FAIL ${m}`); failed++; }
 
 // Run set-status.mjs with the tracker redirected to a sandbox. Returns
 // { code, stdout, stderr }.
-function runSetStatus(args, sandbox) {
+function runSetStatus(args, sandbox, extraEnv = {}) {
   const env = {
     ...process.env,
     CAREER_OPS_TRACKER: sandbox.tracker,
     CAREER_OPS_TRACKER_LOCK: sandbox.lock,
+    ...extraEnv,
   };
   try {
     const stdout = execFileSync(NODE, [join(ROOT, 'set-status.mjs'), ...args], {
@@ -312,6 +314,49 @@ const TRACKER_10 = `# Applications Tracker
     fail(`usage: code=${r.code}\n${r.stdout}${r.stderr}`);
   }
   rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 14. Lock timeout: structured exit 4, JSON error, no write ──
+{
+  const sb = makeSandbox(TRACKER_9);
+  const before = readTracker(sb);
+  // A live-owner lock (our own PID) can never be recovered, so the CLI must
+  // time out and fail through the structured error path instead of throwing.
+  mkdirSync(sb.lock, { recursive: true });
+  writeFileSync(join(sb.lock, 'owner.json'), JSON.stringify({ pid: process.pid, token: 'test', tracker: sb.tracker }));
+  const r = runSetStatus(['2', 'Applied', '--json'], sb, { CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS: '300' });
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout); } catch {}
+  if (r.code === 4 && parsed && parsed.code === 'lock-timeout' && readTracker(sb) === before) {
+    pass('lock-timeout: exit 4 with structured JSON error, tracker untouched');
+  } else {
+    fail(`lock-timeout: code=${r.code} (want 4)\n${r.stdout}${r.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 15. Orphaned recovery guard does not block stale-lock recovery ─
+{
+  const dir = mkdtempSync(join(tmpdir(), 'co-setstatus-guard-'));
+  const lockDir = join(dir, 'career-ops-merge-tracker-guardtest.lock');
+  // Stale lock: dead owner PID → recoverable.
+  mkdirSync(lockDir, { recursive: true });
+  writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({ pid: 999999999, token: 'dead', tracker: 'x' }));
+  // Orphaned guard left behind by a killed process (no owner.json → judged by age).
+  mkdirSync(`${lockDir}.recover`, { recursive: true });
+  await new Promise(r => setTimeout(r, 150));
+  try {
+    const lock = await acquireTrackerLock(lockDir, { timeoutMs: 3000, retryMs: 25, staleMs: 50, tracker: 'x' });
+    if (lock.staleRecovered) {
+      pass('recover-guard: orphaned guard is aged out and stale lock still recovers');
+    } else {
+      fail('recover-guard: lock acquired but stale recovery did not run');
+    }
+    lock.release();
+  } catch (e) {
+    fail(`recover-guard: acquisition failed — orphaned guard blocked recovery (${e.message})`);
+  }
+  rmSync(dir, { recursive: true, force: true });
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
