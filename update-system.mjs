@@ -749,6 +749,28 @@ async function apply() {
       }
     }
 
+    // tests/ is auto-discovered and EXECUTED (tests/**/*.test.mjs), so stale
+    // files left behind by upstream renames would run twice or crash the
+    // suite. `git checkout` never deletes upstream-removed files (see the
+    // limitation note in rollback below) — prune tracked extras against
+    // FETCH_HEAD. Only git-tracked files are removed: a user's untracked
+    // local experiments in tests/ are never touched.
+    try {
+      const remoteTests = new Set(
+        git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', 'tests/')
+          .split('\n').filter(Boolean).map((p) => p.replace(/\\/g, '/'))
+      );
+      const localTests = git('ls-files', '--', 'tests/').split('\n').filter(Boolean);
+      for (const f of localTests) {
+        if (!remoteTests.has(f.replace(/\\/g, '/'))) {
+          unlinkSync(join(ROOT, f));
+          updated.push(`${f} (pruned)`);
+        }
+      }
+    } catch {
+      // tests/ may not exist in older targets — nothing to prune.
+    }
+
     const materializedSkillEntrypoints = ensureSkillEntrypoints(ROOT);
     if (materializedSkillEntrypoints.length > 0) {
       for (const path of materializedSkillEntrypoints) {

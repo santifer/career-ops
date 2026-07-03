@@ -7,8 +7,20 @@
  * Tests: syntax, scripts, dashboard, data contract, personal data, paths.
  *
  * Usage:
- *   node test-all.mjs           # Run all tests
- *   node test-all.mjs --quick   # Skip dashboard build (faster)
+ *   node test-all.mjs                        # Run all tests
+ *   node test-all.mjs --quick                # Skip dashboard build (faster)
+ *   node test-all.mjs --only <substring>      # Run ONLY discovered tests/**\/*.test.mjs
+ *                                             # files whose path contains <substring>
+ *                                             # (e.g. --only providers/themuse).
+ *
+ *   LOUD WARNING: `--only` runs ONLY discovered tests/ files — every inline
+ *   core section above (syntax, scripts, dashboard, data contract, personal
+ *   data, paths, etc.) is SKIPPED. A green `--only` run is NOT a green
+ *   suite. Always run the full suite (no flags) before pushing.
+ *
+ * Provider tests live in tests/providers/{name}.test.mjs and are
+ * auto-discovered — no registration needed. To add a test for a new
+ * provider, create that one file; do not add a section to this file.
  */
 
 
@@ -5782,254 +5794,19 @@ try {
   fail(`_http.mjs error message tests crashed: ${e.message}`);
 }
 
-console.log('\n57. Provider — dassault (Exalead card_search_api XML parser)');
+console.log('\nTest layout guard (provider tests live in tests/providers/)');
 try {
-  const dassault = (await import(pathToFileURL(join(ROOT, 'providers/dassault.mjs')).href)).default;
-  const { parseHits, buildUrl } = await import(pathToFileURL(join(ROOT, 'providers/dassault.mjs')).href);
-
-  if (dassault.id === 'dassault') pass('dassault.id is "dassault"');
-  else fail(`dassault.id is ${JSON.stringify(dassault.id)}`);
-
-  // Build a minimal Exalead <Hit> block from field values.
-  const mkHit = (f) => {
-    const meta = (n, v) => (v === undefined ? '' : `<Meta name="${n}"><MetaString name="value">${v}</MetaString></Meta>`);
-    return `<Hit did="d" url="x">${'<groups>ignored</groups>'}<metas>` +
-      meta('content_title', f.title) +
-      meta('content_cta_1_url', f.cta1) +
-      meta('content_categories', f.cats) +
-      meta('card_id', f.id) +
-      meta('content_start_datetime', f.start) +
-      meta('card_update_timestamp', f.update) +
-      `</metas></Hit>`;
-  };
-
-  // Happy path — 2 distinct hits: entity decode, location parse, date fields.
-  const xmlA = `<Answer nhits="2"><hits>` +
-    mkHit({ id: '111', title: 'Software Engineer &amp; Data', cta1: 'https://www.3ds.com/careers/jobs/x-111?a=1&amp;b=2', cats: 'Category/R&amp;D Type/Regular Country/Germany City/Germany, Munich Products/CATIA Year/4 to 5 years', update: '2026/07/03 18:22:13' }) +
-    mkHit({ id: '222', title: 'Data Scientist', cta1: 'https://www.3ds.com/careers/jobs/y-222', cats: 'Category/Sales Type/Regular Country/France City/France, Vélizy-Villacoublay Products/DELMIA', start: '2026/06/01 09:00:00' }) +
-    `</hits></Answer>`;
-  const a = parseHits(xmlA, 'Dassault Systèmes');
-  if (a.length === 2) pass('dassault.parseHits() extracts 2 jobs');
-  else fail(`dassault.parseHits() returned ${a.length} jobs`);
-
-  if (a[0]?.title === 'Software Engineer & Data') pass('dassault.parseHits() decodes &amp; in title');
-  else fail(`title = ${JSON.stringify(a[0]?.title)}`);
-
-  if (a[0]?.url === 'https://www.3ds.com/careers/jobs/x-111?a=1&b=2') pass('dassault.parseHits() decodes &amp; in url');
-  else fail(`url = ${JSON.stringify(a[0]?.url)}`);
-
-  if (a[0]?.location === 'Germany, Munich') pass('dassault.parseHits() parses City from content_categories');
-  else fail(`location = ${JSON.stringify(a[0]?.location)}`);
-
-  if (a[0]?.company === 'Dassault Systèmes') pass('dassault.parseHits() sets company from entry name');
-  else fail(`company = ${JSON.stringify(a[0]?.company)}`);
-
-  // postedAt: hit 0 falls back to card_update_timestamp; hit 1 prefers content_start_datetime.
-  if (a[0]?.postedAt === Date.UTC(2026, 6, 3, 18, 22, 13)) pass('dassault.parseHits() postedAt falls back to card_update_timestamp');
-  else fail(`postedAt[0] = ${JSON.stringify(a[0]?.postedAt)}`);
-
-  if (a[1]?.postedAt === Date.UTC(2026, 5, 1, 9, 0, 0)) pass('dassault.parseHits() postedAt prefers content_start_datetime');
-  else fail(`postedAt[1] = ${JSON.stringify(a[1]?.postedAt)}`);
-
-  if (a[1]?.location === 'France, Vélizy-Villacoublay') pass('dassault.parseHits() parses multi-word City value');
-  else fail(`location[1] = ${JSON.stringify(a[1]?.location)}`);
-
-  // parseHits carries an internal _id for cross-page dedup; fetch() strips it (asserted below).
-  if ('_id' in a[0]) pass('dassault.parseHits() exposes internal _id for cross-page dedup');
-  else fail('dassault.parseHits() should carry _id for the fetch loop');
-
-  // Dedup by card_id — two hits with the same id collapse to one job.
-  const xmlDup = `<Answer><hits>` +
-    mkHit({ id: '333', title: 'Role A', cta1: 'https://www.3ds.com/careers/jobs/a-333' }) +
-    mkHit({ id: '333', title: 'Role A (dup)', cta1: 'https://www.3ds.com/careers/jobs/a-333' }) +
-    `</hits></Answer>`;
-  const dup = parseHits(xmlDup, 'Dassault Systèmes');
-  if (dup.length === 1) pass('dassault.parseHits() dedups by card_id');
-  else fail(`dassault.parseHits() dedup returned ${dup.length} jobs`);
-
-  // Safety net — a non-3ds.com posting (aggregated third-party content) is dropped.
-  const xmlForeign = `<Answer><hits>` +
-    mkHit({ id: '444', title: 'Real 3DS Job', cta1: 'https://www.3ds.com/careers/jobs/real-444' }) +
-    mkHit({ id: 'abc', title: 'External Aggregated Job', cta1: 'https://careers.bcit.ca/postings/10516' }) +
-    `</hits></Answer>`;
-  const foreign = parseHits(xmlForeign, 'Dassault Systèmes');
-  if (foreign.length === 1 && foreign[0].title === 'Real 3DS Job') pass('dassault.parseHits() drops non-3ds.com postings');
-  else fail(`dassault.parseHits() foreign filter returned ${JSON.stringify(foreign.map(j => j.title))}`);
-
-  // Empty / hit-less XML → []
-  if (parseHits('', 'X').length === 0 && parseHits('<Answer nhits="0"><hits></hits></Answer>', 'X').length === 0) {
-    pass('dassault.parseHits() returns [] for empty / hit-less XML');
+  const src = readFileSync(join(ROOT, 'test-all.mjs'), 'utf-8');
+  // Split markers so this guard never matches its own source.
+  const emDash = 'Provider ' + '—';
+  const hyphen = 'Provider ' + '- ';
+  if (!src.includes(emDash) && !src.includes(hyphen)) {
+    pass('no provider sections re-added to test-all.mjs');
   } else {
-    fail('dassault.parseHits() should return [] for empty / hit-less XML');
-  }
-
-  // buildUrl — both refinements + start offset, correctly encoded.
-  const u = buildUrl(20);
-  if (u.includes('start=20') && u.includes('card_content_type%2Fcareer') && u.includes('cards+language%2Fen')) {
-    pass('dassault.buildUrl() emits both refinements and the start offset');
-  } else {
-    fail(`dassault.buildUrl(20) = ${u}`);
-  }
-
-  // detect — *.3ds.com matches by host; spoofs and non-strings return null.
-  if (dassault.detect({ careers_url: 'https://www.3ds.com/careers/jobs' })) pass('dassault.detect() matches www.3ds.com');
-  else fail('dassault.detect() should match www.3ds.com');
-
-  if (dassault.detect({ api: 'https://talentacquisition.3ds.com/x' })) pass('dassault.detect() matches *.3ds.com subdomains');
-  else fail('dassault.detect() should match *.3ds.com');
-
-  if (dassault.detect({ careers_url: 'https://evil.com/x.3ds.com' }) === null) pass('dassault.detect() rejects path-spoofed host');
-  else fail('dassault.detect() should reject path-spoofed host');
-
-  if (dassault.detect({ careers_url: 'https://3ds.com.evil.com/x' }) === null) pass('dassault.detect() rejects suffix-spoofed host');
-  else fail('dassault.detect() should reject suffix-spoofed host');
-
-  if (dassault.detect({ careers_url: 42 }) === null && dassault.detect({}) === null) pass('dassault.detect() returns null for non-string / missing url');
-  else fail('dassault.detect() should return null for non-string / missing url');
-
-  // fetch — paginates via mock ctx, dedups across pages, stops on empty page.
-  const pages = [
-    `<Answer><hits>${mkHit({ id: 'p1', title: 'A', cta1: 'https://www.3ds.com/careers/jobs/a-p1' })}${mkHit({ id: 'p2', title: 'B', cta1: 'https://www.3ds.com/careers/jobs/b-p2' })}</hits></Answer>`,
-    `<Answer><hits>${mkHit({ id: 'p2', title: 'B dup', cta1: 'https://www.3ds.com/careers/jobs/b-p2' })}${mkHit({ id: 'p3', title: 'C', cta1: 'https://www.3ds.com/careers/jobs/c-p3' })}</hits></Answer>`,
-    `<Answer><hits></hits></Answer>`,
-  ];
-  let calls = 0;
-  const mockCtx = { fetchText: async () => pages[calls++] ?? '<Answer><hits></hits></Answer>' };
-  const fetched = await dassault.fetch({ name: 'Dassault Systèmes' }, mockCtx);
-  if (fetched.length === 3 && new Set(fetched.map(j => j.url)).size === 3) pass('dassault.fetch() paginates and dedups across pages');
-  else fail(`dassault.fetch() returned ${fetched.length} jobs (${JSON.stringify(fetched.map(j => j.title))})`);
-
-  if (fetched.every(j => !('_id' in j))) pass('dassault.fetch() strips the internal _id from returned jobs');
-  else fail('dassault.fetch() leaked _id into returned jobs');
-
-} catch (e) {
-  fail(`dassault provider tests crashed: ${e.message}`);
-}
-
-console.log('\n60. Provider — beesite (milch & zucker GJB search API)');
-try {
-  const beesite = (await import(pathToFileURL(join(ROOT, 'providers/beesite.mjs')).href)).default;
-  const { resolveConfig: beeConfig, buildSearchUrl, parseBeesiteDate, parseSearchResult } =
-    await import(pathToFileURL(join(ROOT, 'providers/beesite.mjs')).href);
-
-  if (beesite.id === 'beesite') pass('beesite.id is "beesite"');
-  else fail(`beesite.id is ${JSON.stringify(beesite.id)}`);
-
-  // resolveConfig — host-anchored, config block passthrough.
-  const bCfg = beeConfig({
-    api: 'https://mercedes-benz-beesite-production-gjb.app.beesite.de',
-    beesite: { languageCode: 'DE', searchCriteria: [{ CriterionName: 'PositionLocation.Country', CriterionValue: [329] }] },
-  });
-  if (bCfg && bCfg.searchApi === 'https://mercedes-benz-beesite-production-gjb.app.beesite.de/search' && bCfg.languageCode === 'DE' && bCfg.searchCriteria.length === 1) {
-    pass('beesite.resolveConfig() parses host and passes the beesite config block through');
-  } else {
-    fail(`beesite.resolveConfig() wrong: ${JSON.stringify(bCfg)}`);
-  }
-  if (beesite.detect({ careers_url: 'https://evil.com/x.beesite.de' }) === null && beesite.detect({ careers_url: 'https://beesite.de.evil.com/x' }) === null) {
-    pass('beesite.detect() rejects path- and suffix-spoofed hosts');
-  } else {
-    fail('beesite.detect() should reject spoofed hosts');
-  }
-
-  // buildSearchUrl — FirstItem lands in the encoded payload.
-  const bUrl = buildSearchUrl(bCfg, 101);
-  if (bUrl.startsWith(bCfg.searchApi + '?data=') && decodeURIComponent(bUrl).includes('"FirstItem":101') && decodeURIComponent(bUrl).includes('"CriterionValue":[329]')) {
-    pass('beesite.buildSearchUrl() encodes FirstItem and the pinned criteria');
-  } else {
-    fail(`beesite.buildSearchUrl() wrong: ${bUrl.slice(0, 140)}`);
-  }
-
-  if (parseBeesiteDate('2026-07-04') === Date.UTC(2026, 6, 4) && parseBeesiteDate('junk') === undefined) pass('beesite.parseBeesiteDate() reads YYYY-MM-DD, rejects junk');
-  else fail('beesite.parseBeesiteDate() wrong');
-
-  // parseSearchResult — id/title/absolute-URL required, cities joined.
-  const mkItem = (id, title, uri) => ({ MatchedObjectId: String(id), MatchedObjectDescriptor: { PositionID: `x${id}`, PositionTitle: title, PositionURI: uri, PositionLocation: [{ CityName: 'Bremen' }, { CityName: 'Berlin' }], PublicationStartDate: '2026-07-04' } });
-  const beeJson = { SearchResult: { SearchResultCount: 2, SearchResultCountAll: 42, SearchResultItems: [
-    mkItem(1, 'IT Architect', 'https://jobs.example.com/a-1'),
-    { MatchedObjectId: '2', MatchedObjectDescriptor: { PositionTitle: 'No URI — dropped', PositionURI: '/relative' } },
-  ] } };
-  const { total: beeTotal, rows: beeRows } = parseSearchResult(beeJson);
-  if (beeTotal === 42 && beeRows.length === 1 && beeRows[0].location === 'Bremen / Berlin' && beeRows[0].postedAt === Date.UTC(2026, 6, 4)) {
-    pass('beesite.parseSearchResult() maps items, joins cities, drops non-absolute URIs');
-  } else {
-    fail(`beesite.parseSearchResult() wrong: total=${beeTotal} rows=${JSON.stringify(beeRows)}`);
-  }
-
-  // fetch — paginates by FirstItem until SearchResultCountAll, dedups.
-  const beePage = (ids) => ({ SearchResult: { SearchResultCount: ids.length, SearchResultCountAll: 150, SearchResultItems: ids.map((i) => mkItem(i, `Job ${i}`, `https://jobs.example.com/j-${i}`)) } });
-  const beePages = [beePage(Array.from({ length: 100 }, (_, i) => i + 1)), beePage([100, 101, 102])];
-  let beeCalls = 0;
-  const beeSeen = [];
-  const beeCtx = { sleep: async () => {}, fetchJson: async (url) => { beeSeen.push(decodeURIComponent(url)); return beePages[beeCalls++] ?? beePage([]); } };
-  const beeJobs = await beesite.fetch({ name: 'MB', api: 'https://x.app.beesite.de' }, beeCtx);
-  if (beeJobs.length === 102 && beeCalls === 2 && beeSeen[1].includes('"FirstItem":101')) pass('beesite.fetch() paginates via FirstItem and dedups across pages');
-  else fail(`beesite.fetch() returned ${beeJobs.length} jobs after ${beeCalls} calls`);
-} catch (e) {
-  fail(`beesite provider tests crashed: ${e.message}`);
-}
-
-console.log('\n61. Provider — softgarden (hosted jobs widget parser)');
-try {
-  const softgarden = (await import(pathToFileURL(join(ROOT, 'providers/softgarden.mjs')).href)).default;
-  const { resolveWidgetUrl, parseSoftgardenDate, parseWidget } =
-    await import(pathToFileURL(join(ROOT, 'providers/softgarden.mjs')).href);
-
-  if (softgarden.id === 'softgarden') pass('softgarden.id is "softgarden"');
-  else fail(`softgarden.id is ${JSON.stringify(softgarden.id)}`);
-
-  // resolveWidgetUrl — widget URLs pass through, other tenant URLs default,
-  // spoofed hosts rejected.
-  if (resolveWidgetUrl({ api: 'https://renk-group.softgarden.io/de/widgets/jobs' }) === 'https://renk-group.softgarden.io/de/widgets/jobs') pass('softgarden.resolveWidgetUrl() keeps explicit widget URLs');
-  else fail('softgarden.resolveWidgetUrl() should keep the widget URL');
-  if (resolveWidgetUrl({ careers_url: 'https://acme.softgarden.io/en/vacancies' }) === 'https://acme.softgarden.io/en/widgets/jobs') pass('softgarden.resolveWidgetUrl() defaults other tenant URLs to the lang widget');
-  else fail(`softgarden.resolveWidgetUrl() default wrong: ${resolveWidgetUrl({ careers_url: 'https://acme.softgarden.io/en/vacancies' })}`);
-  if (softgarden.detect({ careers_url: 'https://evil.com/x.softgarden.io' }) === null && softgarden.detect({ careers_url: 'https://softgarden.io.evil.com/x' }) === null) {
-    pass('softgarden.detect() rejects path- and suffix-spoofed hosts');
-  } else {
-    fail('softgarden.detect() should reject spoofed hosts');
-  }
-
-  if (parseSoftgardenDate('04.07.26') === Date.UTC(2026, 6, 4) && parseSoftgardenDate('7/4/26') === Date.UTC(2026, 6, 4) && parseSoftgardenDate('junk') === undefined) {
-    pass('softgarden.parseSoftgardenDate() reads D.M.YY and M/D/YY, rejects junk');
-  } else {
-    fail('softgarden.parseSoftgardenDate() wrong');
-  }
-
-  // parseWidget — matchElement blocks; relative ../../job/ hrefs resolve
-  // against the widget path; entities decoded; multi-city joined.
-  const sgCard = (id, title, cities) =>
-    `<div class="matchElement" id="job_id_${id}">` +
-    `<div class="matchValue date">04.07.26</div>` +
-    `<div target="_blank" class="matchValue title"><a href="../../job/${id}/slug-${id}?jobDbPVId=9${id}&amp;l=de" target="_blank">${title}</a></div>` +
-    `<div class="matchValue audience">Berufserfahrene</div>` +
-    `<div class="matchValue ProjectGeoLocationCity"><div><div class="location-container">${cities.map((c) => `<span class="location-view-item">${c}</span>`).join('')}</div></div></div>` +
-    `</div>`;
-  const sgHtml = '<html>' + sgCard('111', 'Fachkraft (m/w/d) f&#252;r Export &amp; Zoll', ['Hannover']) + sgCard('222', 'SAP Consultant', ['Augsburg', 'M&#252;nchen']) + '</html>';
-  const sgRows = parseWidget(sgHtml, 'https://renk-group.softgarden.io/de/widgets/jobs');
-  if (sgRows.length === 2) pass('softgarden.parseWidget() yields one row per matchElement');
-  else fail(`softgarden.parseWidget() returned ${sgRows.length}, expected 2`);
-  if (sgRows[0]?.title === 'Fachkraft (m/w/d) für Export & Zoll') pass('softgarden.parseWidget() decodes entities in titles');
-  else fail(`softgarden.parseWidget() title wrong: ${JSON.stringify(sgRows[0]?.title)}`);
-  if (sgRows[0]?.url === 'https://renk-group.softgarden.io/job/111/slug-111?jobDbPVId=9111&l=de') pass('softgarden.parseWidget() resolves ../../job/ hrefs against the widget path');
-  else fail(`softgarden.parseWidget() url wrong: ${JSON.stringify(sgRows[0]?.url)}`);
-  if (sgRows[1]?.location === 'Augsburg / München' && sgRows[0]?.postedAt === Date.UTC(2026, 6, 4)) pass('softgarden.parseWidget() joins cities and parses the date');
-  else fail(`softgarden.parseWidget() fields wrong: ${JSON.stringify(sgRows[1])}`);
-  if (parseWidget('<html>none</html>', 'https://x.softgarden.io/de/widgets/jobs').length === 0 && parseWidget(undefined, 'https://x').length === 0) {
-    pass('softgarden.parseWidget() returns [] for card-less / non-string input');
-  } else {
-    fail('softgarden.parseWidget() should return [] without cards');
-  }
-
-  // fetch — single widget request, jobs normalized.
-  const sgCtx = { fetchText: async () => sgHtml };
-  const sgJobs = await softgarden.fetch({ name: 'Renk', api: 'https://renk-group.softgarden.io/de/widgets/jobs' }, sgCtx);
-  if (sgJobs.length === 2 && sgJobs[0].company === 'Renk' && sgJobs.every((j) => j.url.startsWith('https://renk-group.softgarden.io/job/'))) {
-    pass('softgarden.fetch() returns normalized jobs from one widget request');
-  } else {
-    fail(`softgarden.fetch() wrong: ${JSON.stringify(sgJobs)}`);
+    fail('provider test section found in test-all.mjs — add a tests/providers/{name}.test.mjs file instead (auto-discovered, no registration)');
   }
 } catch (e) {
-  fail(`softgarden provider tests crashed: ${e.message}`);
+  fail(`test layout guard: ${e.message}`);
 }
 
 await runDiscovered();
