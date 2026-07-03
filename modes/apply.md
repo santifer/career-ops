@@ -17,6 +17,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 3. SEARCH      → Match against existing reports in reports/
 4. LOAD        → Read full report + Section G (if it exists)
 5. PREFLIGHT   → Confirm posting liveness + company/role match before drafting
+5b. PRE-SCAN   → Scan page for knock-out questions (degree, experience, sponsorship)
 6. ANALYZE     → Identify ALL visible form questions
 7. GENERATE    → For each question, generate a personalized response
 8. PRESENT     → Show formatted responses for copy-paste
@@ -36,7 +37,24 @@ Before generating any application answers, verify that the form still points to 
 5. If the posting appears closed, refuse to generate final copy unless the candidate explicitly overrides with a known reason.
 6. If liveness cannot be verified because the candidate only pasted questions or a screenshot, state that limitation and ask the candidate to confirm the company, role, and active posting before drafting.
 
-Do not continue to Step 6 until this preflight is resolved.
+Do not continue to Step 5b/Step 6 until this preflight is resolved.
+
+## Step 5b — Pre-scan for knock-out questions
+
+Read the entire page/form to scan for knock-out questions BEFORE generating full responses. These are questions designed to automatically disqualify candidates who do not meet critical criteria.
+
+1. Common knock-out question areas to target:
+   - **Minimum years of experience** (e.g., "Do you have at least 5 years of professional software engineering experience?")
+   - **Degree requirements** (e.g., "Do you have a Bachelor's degree in Computer Science or a related field?")
+   - **Work authorization/Visa sponsorship** (e.g., "Will you now or in the future require visa sponsorship to work in the United States?")
+   - **Salary floors/expectations** (e.g., "What is your target salary / expectation?")
+2. Check these questions against the candidate's `config/profile.yml` or `cv.md` parameters.
+3. If a knock-out question is detected where the candidate's profile represents a potential mismatch (e.g., candidate needs sponsorship and the form automatically filters out sponsorship-needy applicants, or candidate's salary expectations mismatch the visible JD/form floors):
+   - Highlight the specific knock-out question to the candidate immediately.
+   - Present a clear warning block:
+     `⚠️ KNOCK-OUT WARNING: The form asks "[question text]". Based on your profile/CV, answering "[profile answer]" may trigger immediate automatic rejection by the ATS. How would you like to answer this, or do you want to skip applying?`
+   - Stop and wait for the candidate's confirmation on these knock-outs before drafting any of the standard essay/free-text questions.
+4. If no knock-out questions are found, or the candidate resolves the warning, proceed to Step 6.
 
 **Applying to several roles in one sitting?** This preflight verifies the single form in front of you. Before a multi-role session — especially against scanner entries marked `**Verification:** unconfirmed (batch mode)` — run the `pipeline` mode **Liveness sweep** first (`node check-liveness.mjs --file <urls>`). It drops the dead postings from `data/pipeline.md` in one batch so you never open a tab on an expired role.
 
