@@ -10564,6 +10564,112 @@ try {
   fail(`getonbrd provider tests crashed: ${e.message}`);
 }
 
+console.log('\n55. Provider — amazon (amazon.jobs search.json)');
+
+try {
+  const amazon = (await import(pathToFileURL(join(ROOT, 'providers/amazon.mjs')).href)).default;
+
+  if (amazon.id === 'amazon') pass('amazon.id is "amazon"');
+  else fail(`amazon.id is ${JSON.stringify(amazon.id)}`);
+
+  // detect() — host match, not path-spoof, https + non-string safe
+  if (amazon.detect({ name: 'X', careers_url: 'https://www.amazon.jobs/en/search' })) pass('amazon.detect() claims an amazon.jobs URL');
+  else fail('amazon.detect() should claim amazon.jobs');
+  if (amazon.detect({ name: 'X', careers_url: 'https://evil.example/www.amazon.jobs/x' }) === null) pass('amazon.detect() rejects a path-spoofed URL');
+  else fail('amazon.detect() must reject path-spoofed URLs');
+  if (amazon.detect({ name: 'X', careers_url: 42 }) === null) pass('amazon.detect() returns null for non-string careers_url');
+  else fail('amazon.detect() should return null for non-string careers_url');
+
+  // fetch() with a mock ctx — captures the request URL (to assert facet
+  // bracket-encoding) and returns a canned page, exercising the real mapping.
+  const calls = [];
+  const page1 = {
+    jobs: [
+      { title: '  Automation Engineer  ', job_path: '/en/jobs/111/automation-engineer', normalized_location: 'Erfurt, Thuringia, DEU', posted_date: 'July  1, 2026', updated_time: '10 minutes', company_name: 'Amazon' },
+      { title: 'SDE', job_path: 'https://www.amazon.jobs/en/jobs/222/sde', location: 'Berlin, DEU', posted_date: 'June 29, 2026' },
+      { title: 'No Path', normalized_location: 'X' }, // dropped — no job_path
+    ],
+  };
+  const mockCtx = {
+    transport: 'http',
+    async fetchJson(url) { calls.push(url); return calls.length === 1 ? page1 : { jobs: [] }; },
+    async fetchText() { return ''; },
+  };
+  const jobs = await amazon.fetch({ name: 'Amazon', amazon: { normalized_country_code: ['DEU'], base_query: 'engineer' } }, mockCtx);
+
+  if (jobs.length === 2) pass('amazon.fetch maps valid jobs, drops job_path-less entries');
+  else fail(`amazon.fetch returned ${jobs.length} jobs, expected 2`);
+  if (calls[0] && calls[0].includes('normalized_country_code%5B%5D=DEU')) pass('amazon.fetch bracket-encodes array facets (normalized_country_code[]=DEU)');
+  else fail(`amazon.fetch facet encoding wrong: ${calls[0]}`);
+  if (calls[0] && calls[0].includes('result_limit=100')) pass('amazon.fetch requests result_limit=100');
+  else fail('amazon.fetch should set result_limit=100');
+  const j1 = jobs.find((j) => j.url.includes('/111/'));
+  if (j1 && j1.title === 'Automation Engineer') pass('amazon.fetch trims the title');
+  else fail(`amazon.fetch title wrong: ${JSON.stringify(j1 && j1.title)}`);
+  if (j1 && j1.url === 'https://www.amazon.jobs/en/jobs/111/automation-engineer') pass('amazon.fetch builds an absolute URL from job_path');
+  else fail(`amazon.fetch url wrong: ${JSON.stringify(j1 && j1.url)}`);
+  if (j1 && j1.postedAt === Date.parse('July 1, 2026')) pass('amazon.fetch parses posted_date (ignores relative updated_time)');
+  else fail(`amazon.fetch postedAt wrong: ${JSON.stringify(j1 && j1.postedAt)}`);
+  const j2 = jobs.find((j) => j.url.includes('/222/'));
+  if (j2 && j2.url === 'https://www.amazon.jobs/en/jobs/222/sde') pass('amazon.fetch keeps an already-absolute job_path');
+  else fail(`amazon.fetch absolute url wrong: ${JSON.stringify(j2 && j2.url)}`);
+} catch (e) {
+  fail(`amazon provider tests crashed: ${e.message}`);
+}
+
+console.log('\n56. Provider — avature (career-site SearchJobs parser)');
+
+try {
+  const avature = (await import(pathToFileURL(join(ROOT, 'providers/avature.mjs')).href)).default;
+  const { parseArticles } = await import(pathToFileURL(join(ROOT, 'providers/avature.mjs')).href);
+
+  if (avature.id === 'avature') pass('avature.id is "avature"');
+  else fail(`avature.id is ${JSON.stringify(avature.id)}`);
+
+  if (avature.detect({ name: 'X', careers_url: 'https://acme.avature.net/careers/SearchJobs' })) pass('avature.detect() claims a *.avature.net URL');
+  else fail('avature.detect() should claim *.avature.net');
+  if (avature.detect({ name: 'X', careers_url: 'https://evil.example/x.avature.net/y' }) === null) pass('avature.detect() rejects a path-spoofed URL');
+  else fail('avature.detect() must reject path-spoofed URLs');
+
+  // parseArticles — a compact fragment: one article with a locale-prefixed
+  // JobDetail path + a posted date, one with no JobDetail link (dropped).
+  const origin = 'https://acme.avature.net';
+  const fragment = `
+    <article class="article article--result" id="article--1">
+      <div class="article__header"><div class="article__header__text">
+        <h3 class="title"><a class="link" href="https://acme.avature.net/careers/JobDetail/Senior-PLM-Engineer-17304/17304?businessTitle=PLM">Senior PLM Engineer &amp; Architect</a></h3>
+        <div class="article__header__text__subtitle"><span class="list-item-jobId">Job ID 17304</span><span class="list-item-posted">Posted 02-May-2026</span></div>
+      </div></div>
+    </article>
+    <article class="article article--result" id="article--2">
+      <h3 class="title"><a class="link" href="/en_US/searchjobs/JobDetail/Data-Engineer-900/900">Data Engineer</a></h3>
+      <span class="list-item-location">Munich, Germany</span>
+    </article>
+    <article class="article article--result" id="article--3">
+      <h3 class="title"><span>No link here</span></h3>
+    </article>`;
+  const arts = parseArticles(fragment, origin);
+
+  if (arts.length === 2) pass('parseArticles returns 2 articles (link-less one dropped)');
+  else fail(`parseArticles returned ${arts.length}, expected 2`);
+  const a1 = arts.find((a) => a.id === '17304');
+  if (a1 && a1.title === 'Senior PLM Engineer & Architect') pass('parseArticles decodes the title entity');
+  else fail(`parseArticles title wrong: ${JSON.stringify(a1 && a1.title)}`);
+  if (a1 && a1.url === 'https://acme.avature.net/careers/JobDetail/Senior-PLM-Engineer-17304/17304?businessTitle=PLM') pass('parseArticles keeps the absolute JobDetail URL');
+  else fail(`parseArticles url wrong: ${JSON.stringify(a1 && a1.url)}`);
+  if (a1 && a1.postedAt === Date.UTC(2026, 4, 2)) pass('parseArticles parses "Posted 02-May-2026"');
+  else fail(`parseArticles postedAt wrong: ${JSON.stringify(a1 && a1.postedAt)}`);
+  const a2 = arts.find((a) => a.id === '900');
+  if (a2 && a2.url === 'https://acme.avature.net/en_US/searchjobs/JobDetail/Data-Engineer-900/900') pass('parseArticles resolves a relative locale-prefixed JobDetail path');
+  else fail(`parseArticles relative url wrong: ${JSON.stringify(a2 && a2.url)}`);
+  if (a2 && a2.location === 'Munich, Germany') pass('parseArticles extracts a rendered location when present');
+  else fail(`parseArticles location wrong: ${JSON.stringify(a2 && a2.location)}`);
+  if (parseArticles('<div>no articles</div>', origin).length === 0) pass('parseArticles returns [] when no articles present');
+  else fail('parseArticles should return [] for markup with no articles');
+} catch (e) {
+  fail(`avature provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
