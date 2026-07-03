@@ -118,6 +118,8 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
+				m.reloadPipelineData()
+				return m, nil
 			}
 			m.state = viewPipeline
 			m.pipeline, _ = m.pipeline.StartHiredFlow(msg.App)

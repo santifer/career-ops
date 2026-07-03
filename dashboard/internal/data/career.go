@@ -655,42 +655,7 @@ func resolveTrackerColumns(lines []string) map[string]int {
 
 // UpdateApplicationStatus updates the status of an application in applications.md.
 func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, newStatus string) error {
-	filePath := filepath.Join(careerOpsPath, "applications.md")
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
-		content, err = os.ReadFile(filePath)
-		if err != nil {
-			return err
-		}
-	}
-
-	lines := strings.Split(string(content), "\n")
-	found := false
-
-	// Locate the Status column by header name so a customized layout (e.g. an
-	// inserted Location column) is written to the right cell. Falls back to the
-	// legacy fixed index when no header is present.
-	statusIdx := resolveTrackerColumns(lines)["status"]
-
-	for i, line := range lines {
-		if !strings.HasPrefix(strings.TrimSpace(line), "|") {
-			continue
-		}
-		// Match by report number
-		if app.ReportNumber != "" && strings.Contains(line, fmt.Sprintf("[%s]", app.ReportNumber)) {
-			// Replace the status field
-			lines[i] = replaceStatusInLine(line, app.Status, newStatus, statusIdx)
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("application not found: report %s", app.ReportNumber)
-	}
-
-	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
+	return UpdateApplicationStatusAndNotes(careerOpsPath, app, newStatus, "")
 }
 
 // replaceStatusInLine rewrites only the Status cell of a tracker row, leaving
@@ -758,7 +723,11 @@ func statusCellIndex(cells []string, canonicalIdx int, want string) int {
 func spliceCellValue(cell, newVal string) string {
 	trimmed := strings.TrimSpace(cell)
 	if trimmed == "" {
-		return cell
+		if len(cell) >= 2 {
+			half := len(cell) / 2
+			return cell[:half] + newVal + cell[half:]
+		}
+		return " " + newVal + " "
 	}
 	start := strings.Index(cell, trimmed)
 	return cell[:start] + newVal + cell[start+len(trimmed):]
@@ -937,8 +906,14 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 	found := false
 
 	colmap := resolveTrackerColumns(lines)
-	statusIdx := colmap["status"]
-	notesIdx := colmap["notes"]
+	statusIdx, statusOk := colmap["status"]
+	if newStatus != "" && !statusOk {
+		return fmt.Errorf("status column not found in tracker")
+	}
+	notesIdx, notesOk := colmap["notes"]
+	if newNotes != "" && !notesOk {
+		return fmt.Errorf("notes column not found in tracker, cannot append notes")
+	}
 
 	for i, line := range lines {
 		if !strings.HasPrefix(strings.TrimSpace(line), "|") {
@@ -966,6 +941,9 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 }
 
 func replaceNotesInLine(line, oldNotes, newNotes string, notesField int) string {
+	if notesField < 0 {
+		return line
+	}
 	if strings.Contains(line, "\t") {
 		prefix, body, found := strings.Cut(line, "|")
 		if !found {

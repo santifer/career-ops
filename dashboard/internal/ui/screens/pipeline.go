@@ -91,6 +91,8 @@ type reportSummary struct {
 	comp      string
 }
 
+const storyTemplateURL = "https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml"
+
 // Sort modes
 const (
 	sortScore    = "score"
@@ -753,10 +755,9 @@ func (m PipelineModel) handleHiredFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 	case 2: // story invite
 		switch msg.String() {
 		case "y", "Y":
-			url := "https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml"
 			m.hiredStep = 3
 			return m, func() tea.Msg {
-				return PipelineOpenURLMsg{URL: url}
+				return PipelineOpenURLMsg{URL: storyTemplateURL}
 			}
 		case "n", "N", "enter", "esc":
 			m.hiredStep = 3
@@ -765,7 +766,9 @@ func (m PipelineModel) handleHiredFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 		switch msg.String() {
 		case "y", "Y":
 			weeks := m.calculateWeeksToHire()
-			_ = data.SaveAnonymousStat(m.careerOpsPath, m.hiredApp.Role, weeks)
+			if err := data.SaveAnonymousStat(m.careerOpsPath, m.hiredApp.Role, weeks); err != nil {
+				m.flash = "Could not record anonymous stat: " + err.Error()
+			}
 			m.hiredStep = 0
 		case "n", "N", "enter", "esc":
 			m.hiredStep = 0
@@ -813,9 +816,10 @@ func (m PipelineModel) handleDiscardFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 		case "esc":
 			m.discardStep = 1
 			return m, nil
-		case "backspace":
-			if len(m.discardInputVal) > 0 {
-				m.discardInputVal = m.discardInputVal[:len(m.discardInputVal)-1]
+		case "backspace", "ctrl+h":
+			runes := []rune(m.discardInputVal)
+			if len(runes) > 0 {
+				m.discardInputVal = string(runes[:len(runes)-1])
 			}
 		case "enter":
 			reasonNotes := fmt.Sprintf("%s: %s", strings.ToUpper(m.discardStatus), strings.TrimSpace(m.discardInputVal))
@@ -829,8 +833,8 @@ func (m PipelineModel) handleDiscardFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 				}
 			}
 		default:
-			if len(msg.String()) == 1 {
-				m.discardInputVal += msg.String()
+			if len(msg.Runes) > 0 {
+				m.discardInputVal += string(msg.Runes)
 			}
 		}
 	}

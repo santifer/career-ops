@@ -60,4 +60,3 @@ states:
     aliases: [contratado, contratada, hired, accepted, accept]
     description: Offer accepted, job landed!
     dashboard_group: hired
-
