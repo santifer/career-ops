@@ -785,7 +785,11 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 		updated := replaceStatusInLine(line, app.Status, newStatus, statusIdx)
 		// Optionally append to notes
 		if notesAppend != "" {
-			updated = appendNotesInLine(updated, notesAppend, notesIdx)
+			var ok bool
+			updated, ok = appendNotesInLine(updated, notesAppend, notesIdx)
+			if !ok {
+				return fmt.Errorf("failed to append notes: notes column index %d out of bounds", notesIdx)
+			}
 		}
 		lines[i] = updated
 		found = true
@@ -802,14 +806,14 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 // appendNotesInLine appends text to the Notes cell of a tracker row without
 // disturbing any other cell. notesField is the 0-based column index returned
 // by resolveTrackerColumns.
-func appendNotesInLine(line, text string, notesField int) string {
+func appendNotesInLine(line, text string, notesField int) (string, bool) {
 	if notesField < 0 {
-		return line
+		return line, false
 	}
 	if strings.Contains(line, "\t") {
 		prefix, body, found := strings.Cut(line, "|")
 		if !found {
-			return line
+			return line, false
 		}
 		cells := strings.Split(body, "\t")
 		if notesField < len(cells) {
@@ -819,9 +823,9 @@ func appendNotesInLine(line, text string, notesField int) string {
 			} else {
 				cells[notesField] = " " + old + " " + text + " "
 			}
-			return prefix + "|" + strings.Join(cells, "\t")
+			return prefix + "|" + strings.Join(cells, "\t"), true
 		}
-		return line
+		return line, false
 	}
 
 	segments := strings.Split(line, "|")
@@ -832,9 +836,9 @@ func appendNotesInLine(line, text string, notesField int) string {
 		} else {
 			segments[notesField+1] = " " + old + " " + text + " "
 		}
-		return strings.Join(segments, "|")
+		return strings.Join(segments, "|"), true
 	}
-	return line
+	return line, false
 }
 
 // replaceStatusInLine rewrites only the Status cell of a tracker row, leaving

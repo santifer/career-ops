@@ -24,7 +24,7 @@
  * all reuse it with no prod-vs-test drift.
  */
 
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { resolveAndValidate } from './_net.mjs';
@@ -168,6 +168,17 @@ export function validateManifest(m, dir, dirName) {
     const skillAbs = path.resolve(dirAbs, m.skill);
     if (skillAbs !== dirAbs && !skillAbs.startsWith(dirAbs + path.sep)) { warnSkip(label, `skill "${m.skill}" escapes the plugin directory`); return null; }
     if (!existsSync(skillAbs)) { warnSkip(label, `skill file not found: ${m.skill}`); return null; }
+    try {
+      const skillReal = realpathSync(skillAbs);
+      const dirReal = realpathSync(dirAbs);
+      if (skillReal !== dirReal && !skillReal.startsWith(dirReal + path.sep)) {
+        warnSkip(label, `skill "${m.skill}" resolves to a path outside the plugin directory`);
+        return null;
+      }
+    } catch (err) {
+      warnSkip(label, `failed to resolve real path for skill: ${m.skill}`);
+      return null;
+    }
     skill = m.skill;
   }
 
