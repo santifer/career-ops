@@ -389,24 +389,32 @@ if (viaIssues === 0) ok('Via channels consistent');
 // to a second process. Read-only: this only surfaces drift, it does not write
 // a fix (tracker-sync-check.mjs is intentionally reporting-only for now — see
 // its module header).
-const syncResult = checkTrackerSync({ appsFile: APPS_FILE });
-const tier1Mismatches = syncResult.mismatches.filter(m => m.resolution === 'auto-tier1');
-const tier2Mismatches = syncResult.mismatches.filter(m => m.resolution === 'needs-review-tier2');
-const unmatchedRows = syncResult.mismatches.filter(m => m.resolution === 'unmatched');
+let syncResult;
+try {
+  syncResult = checkTrackerSync({ appsFile: APPS_FILE });
+} catch (err) {
+  warn(`Sync check could not run: ${err.message}`);
+}
 
-for (const m of tier1Mismatches) {
-  warn(`Sync drift (auto-resolvable): ${m.company} — ${m.role}: applications.md="${m.applicationsStatus}" vs active-interviews.md="${m.activeInterviewsStatus}" -> suggest "${m.suggestedStatus}" in ${m.staleIn} (run node tracker-sync-check.mjs for details)`);
-}
-for (const m of tier2Mismatches) {
-  warn(`Sync drift (needs human review): ${m.company} — ${m.role}: applications.md="${m.applicationsStatus}" (${m.applicationsLastModified || 'no blame info'}) vs active-interviews.md="${m.activeInterviewsStatus}" (${m.activeInterviewsLastModified || 'no blame info'})`);
-}
-for (const m of unmatchedRows) {
-  warn(`Sync check: active-interviews.md row for "${m.company}" — "${m.role}" could not be matched to a tracker row (${m.note})`);
-}
-if (tier1Mismatches.length === 0 && tier2Mismatches.length === 0 && unmatchedRows.length === 0) {
-  ok(syncResult.summary.total > 0
-    ? 'applications.md and active-interviews.md are in sync'
-    : 'No active-interviews.md rows to sync-check');
+if (syncResult) {
+  const tier1Mismatches = syncResult.mismatches.filter(m => m.resolution === 'auto-tier1');
+  const tier2Mismatches = syncResult.mismatches.filter(m => m.resolution === 'needs-review-tier2');
+  const unmatchedRows = syncResult.mismatches.filter(m => m.resolution === 'unmatched');
+
+  for (const m of tier1Mismatches) {
+    warn(`Sync drift (auto-resolvable): ${m.company} — ${m.role}: applications.md="${m.applicationsStatus}" vs active-interviews.md="${m.activeInterviewsStatus}" -> suggest "${m.suggestedStatus}" in ${m.staleIn} (run node tracker-sync-check.mjs for details)`);
+  }
+  for (const m of tier2Mismatches) {
+    warn(`Sync drift (needs human review): ${m.company} — ${m.role}: applications.md="${m.applicationsStatus}" (${m.applicationsLastModified || 'no blame info'}) vs active-interviews.md="${m.activeInterviewsStatus}" (${m.activeInterviewsLastModified || 'no blame info'})`);
+  }
+  for (const m of unmatchedRows) {
+    warn(`Sync check: active-interviews.md row for "${m.company}" — "${m.role}" could not be matched to a tracker row (${m.note})`);
+  }
+  if (tier1Mismatches.length === 0 && tier2Mismatches.length === 0 && unmatchedRows.length === 0) {
+    ok(syncResult.summary.total > 0
+      ? 'applications.md and active-interviews.md are in sync'
+      : 'No active-interviews.md rows to sync-check');
+  }
 }
 
 // --- Summary ---
