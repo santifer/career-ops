@@ -577,7 +577,7 @@ search_queries:
 # - name: Jobstreet — Indonesia          # SEEK aggregator
 #   provider: jobstreet
 #   searchKeywords: "Software Engineer"
-#   siteKey: ID-Main      # optional SEEK site key (default ID-Main)
+#   siteKey: ID-Main      # SEEK site key (ID-Main, SG-Main, MY-Main)
 #   searchLocation: ""    # optional location filter
 #   enabled: true
 #
@@ -1547,24 +1547,24 @@ job_boards:
 
   - name: Jobstreet Indonesia
     provider: jobstreet
-    api: https://id.jobstreet.com/api/chalice-search/v4/search
+    api: https://id.jobstreet.com/api/jobsearch/v5/search
     siteKey: ID-Main
     searchKeywords: "data scientist"
     searchLocation: "Jakarta"
     pageSize: 30
     maxPages: 3
     enabled: false
-    notes: "Indonesia's largest job board (SEEK group). Public JSON search API — zero tokens."
+    notes: "Indonesia's largest job board (SEEK group). Uses SEEK v5 JobSearch API — zero tokens."
 
   - name: Glints Indonesia
     provider: glints
-    api: https://glints.com/api/graphql
+    api: https://glints.com/api/v2-alc/graphql       # searchJobsV3 endpoint
     searchKeywords: "data scientist"
     countryCode: ID
     pageSize: 30
     maxPages: 3
     enabled: false
-    notes: "SEA job platform covering ID/SG/MY/VN. Undocumented public GraphQL API — adjust graphqlQuery if schema changes."
+    notes: "SEA job platform covering ID/SG/MY/VN. Uses searchJobsV3 GraphQL endpoint (v2-alc). WAF blocks non-browser requests — works best from Playwright context."
 
   # ── HigherEdJobs (university / higher-ed RSS) ────────────────────────
   # Public no-auth RSS category feed. cat_id selects the HigherEdJobs
