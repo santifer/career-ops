@@ -27,8 +27,9 @@
  * tracker round-trips untouched.
  *
  * Exit codes: 0 success (including no-op re-runs) · 1 usage error,
- * non-canonical state, or unreadable states.yml · 2 row not found or
- * unreadable tracker · 3 ambiguous company match · 4 tracker lock timeout.
+ * non-canonical state, unreadable states.yml, or non-retryable lock failure ·
+ * 2 row not found or unreadable tracker · 3 ambiguous company match ·
+ * 4 tracker lock timeout (busy — retry later).
  *
  * When the new status is Applied, the JSON output carries
  * `"followupSeedCandidate": true` — the hook point for seeding
@@ -191,7 +192,14 @@ if (!flags.dryRun) {
       tracker: APPS_FILE,
     });
   } catch (err) {
-    failWith(EXIT_LOCK_TIMEOUT, 'lock-timeout', err.message);
+    // Exit 4 means "lock is busy — retry later" and must stay reserved for
+    // the actual timeout. Filesystem/configuration failures (EACCES on the
+    // lock dir, unwritable owner.json, …) are not retryable and fail as a
+    // config error instead.
+    if (err?.code === 'LOCK_TIMEOUT') {
+      failWith(EXIT_LOCK_TIMEOUT, 'lock-timeout', err.message);
+    }
+    failWith(EXIT_USAGE, 'lock-error', `Cannot acquire tracker lock: ${err.message}`);
   }
 }
 // Safety net: failWith/failUsage/resolveRow call process.exit() directly and

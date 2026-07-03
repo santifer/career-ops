@@ -317,7 +317,11 @@ export async function acquireTrackerLock(lockDir, options = {}) {
     }
   }
 
-  throw new Error(`Timed out waiting for tracker lock at ${lockDir}`);
+  // Tag the timeout so callers can tell "lock is busy, retry later" apart
+  // from filesystem/configuration failures rethrown out of the loop above.
+  const timeoutErr = new Error(`Timed out waiting for tracker lock at ${lockDir}`);
+  timeoutErr.code = 'LOCK_TIMEOUT';
+  throw timeoutErr;
 }
 
 /**

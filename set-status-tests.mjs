@@ -335,6 +335,28 @@ const TRACKER_10 = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── 14b. Non-timeout lock failure is NOT reported as lock-timeout ─
+{
+  const sb = makeSandbox(TRACKER_9);
+  // Point the lock at a path whose parent is a regular FILE (inside tmpdir,
+  // with the required prefix, so trackerLockDirFor accepts it). mkdirSync
+  // then fails with ENOTDIR/ENOENT — a config error, not a busy lock — and
+  // must map to exit 1 / lock-error, keeping exit 4 reserved for retryable
+  // timeouts.
+  const blocker = join(sb.dir, 'career-ops-merge-tracker-blocker');
+  writeFileSync(blocker, 'not a directory');
+  const badLock = join(blocker, 'career-ops-merge-tracker-bad.lock');
+  const r = runSetStatus(['2', 'Applied', '--json'], { ...sb, lock: badLock });
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout); } catch {}
+  if (r.code === 1 && parsed && parsed.code === 'lock-error') {
+    pass('lock-error: filesystem lock failure exits 1, not lock-timeout');
+  } else {
+    fail(`lock-error: code=${r.code} (want 1) json=${parsed?.code}\n${r.stdout}${r.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 // ── 15. Orphaned recovery guard does not block stale-lock recovery ─
 {
   const dir = mkdtempSync(join(tmpdir(), 'co-setstatus-guard-'));
