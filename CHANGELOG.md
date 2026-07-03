@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.16.0](https://github.com/santifer/career-ops/compare/career-ops-v1.15.0...career-ops-v1.16.0) (2026-07-02)
+
+
+### Features
+
+* add interview skill modes — plan, practice, debrief ([#956](https://github.com/santifer/career-ops/issues/956)) ([e17a829](https://github.com/santifer/career-ops/commit/e17a829b0a69262fcf3eacab01791aadf1e42154))
+* **apply:** ATS auto-fill for Greenhouse / Ashby / Lever — prepare, don't submit ([#1248](https://github.com/santifer/career-ops/issues/1248)) ([215e6d1](https://github.com/santifer/career-ops/commit/215e6d12f51e3f677c834ee81494320cf887a570))
+* **discovery:** seed company universe from VC portfolios (YC / a16z)… ([#1375](https://github.com/santifer/career-ops/issues/1375)) ([9a816f5](https://github.com/santifer/career-ops/commit/9a816f5488e9bfbee616b51f7121441ed2be07c3))
+* **patterns:** ATS channel yield analysis — algorithmic-monoculture aware ([#1405](https://github.com/santifer/career-ops/issues/1405)) ([c3b5d9a](https://github.com/santifer/career-ops/commit/c3b5d9a815fdd5831d77c07a0c5767f4ae123a0c))
+* **plugins:** seed/successor model — community plugins can supersede a bundled reference ([fa61b0c](https://github.com/santifer/career-ops/commit/fa61b0cfcb84b16c01c07ea3ade0b03a0bae5061))
+* **providers:** add HigherEdJobs RSS provider ([#1350](https://github.com/santifer/career-ops/issues/1350)) ([d280a7d](https://github.com/santifer/career-ops/commit/d280a7dee24e9225c03f30cd0f47b78c56a14e76))
+* **providers:** add JibeApply provider ([#1400](https://github.com/santifer/career-ops/issues/1400)) ([311ed4a](https://github.com/santifer/career-ops/commit/311ed4a0319d8ad4e8437c5c906d4d97255317f1))
+* **providers:** add NoDesk provider ([#1330](https://github.com/santifer/career-ops/issues/1330)) ([7fca4dd](https://github.com/santifer/career-ops/commit/7fca4dd264d6ddbc58978cb079c25d63119bf744))
+* **providers:** add Teamtailor zero-auth RSS provider ([#1376](https://github.com/santifer/career-ops/issues/1376)) ([eea80e9](https://github.com/santifer/career-ops/commit/eea80e960a845645e7b68a5057227d26ff834713))
+* **registry:** add career-ops-plugin-obsidian v0.1.0 ([#1399](https://github.com/santifer/career-ops/issues/1399)) ([1b26648](https://github.com/santifer/career-ops/commit/1b26648b148fd4efc345ad098c5f46d261e81d83))
+* **registry:** add career-ops-plugin-tavily v0.1.0 ([#1348](https://github.com/santifer/career-ops/issues/1348)) ([b5aa464](https://github.com/santifer/career-ops/commit/b5aa464857ee141b03f376eb70c8614b2a24ca98))
+* **registry:** add google-calendar plugin v0.1.0 ([#1347](https://github.com/santifer/career-ops/issues/1347)) ([1ebc81f](https://github.com/santifer/career-ops/commit/1ebc81fe17087efd4d318345b7b90d627e0b3c27))
+* **scan:** add seniority-tier classifier with optional skip_tiers fi… ([#1361](https://github.com/santifer/career-ops/issues/1361)) ([db6cbce](https://github.com/santifer/career-ops/commit/db6cbce03e9290549488a801544ad4a74746c7b5))
+
+
+### Bug Fixes
+
+* **cv-template:** keep role titles from orphaning at page breaks ([#1366](https://github.com/santifer/career-ops/issues/1366)) ([cbde5c4](https://github.com/santifer/career-ops/commit/cbde5c4d5c5e6a0c420ad550bfadcdaf78a1e6ca))
+* **dashboard:** map tracker columns by header name ([#1327](https://github.com/santifer/career-ops/issues/1327)) ([#1328](https://github.com/santifer/career-ops/issues/1328)) ([8257f69](https://github.com/santifer/career-ops/commit/8257f697ef0c0d5b9e0804344cb0275c80075059))
+* **followup-cadence:** schedule first responded follow-up with responded_initial ([#1352](https://github.com/santifer/career-ops/issues/1352)) ([e30dd0b](https://github.com/santifer/career-ops/commit/e30dd0b3ec3a360dfa3d68f81f845c0269a8cf9a))
+* **liveness:** add Ashby API rung so live jobs.ashbyhq.com postings aren't false-expired ([#1372](https://github.com/santifer/career-ops/issues/1372)) ([b7bc6f3](https://github.com/santifer/career-ops/commit/b7bc6f38497ff423de3865f6ad729b0f511a8adf))
+* **pdf:** anchor the output path-traversal guard to the repo root, not cwd ([5ba3c83](https://github.com/santifer/career-ops/commit/5ba3c83))
+* **pdf:** keep a right gutter so right-aligned CV content isn't clipped ([#1341](https://github.com/santifer/career-ops/issues/1341)) ([#1351](https://github.com/santifer/career-ops/issues/1351)) ([37c0703](https://github.com/santifer/career-ops/commit/37c07033de3cf872a9f40cc2ca33f400a1192db7))
+* **pdf:** thread manifest metadata through render options ([#1367](https://github.com/santifer/career-ops/issues/1367)) ([c7e2439](https://github.com/santifer/career-ops/commit/c7e2439c1b7d2a031900404439dc2d27d93f1f88))
+
 ## [1.15.0](https://github.com/santifer/career-ops/compare/career-ops-v1.14.0...career-ops-v1.15.0) (2026-06-29)
 
 

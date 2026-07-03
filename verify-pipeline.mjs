@@ -10,6 +10,9 @@
  * 5. All rows have proper pipe-delimited format
  * 6. No pending TSVs in tracker-additions/ (only in merged/ or archived/)
  * 7. states.yml canonical IDs for cross-system consistency
+ * 8. Stale report-number reservation sentinels are garbage-collected
+ * 9. No two report files cover the same company+role (warning — see #1425)
+ * 10. Every report file has a tracker row referencing it (warning — see #1425)
  *
  * Run: node career-ops/verify-pipeline.mjs
  */
@@ -27,7 +30,8 @@ const APPS_FILE = process.env.CAREER_OPS_TRACKER
     ? join(CAREER_OPS, 'data/applications.md')
     : join(CAREER_OPS, 'applications.md');
 const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
-const REPORTS_DIR = join(CAREER_OPS, 'reports');
+// CAREER_OPS_REPORTS overrides the reports dir (used by tests, mirrors CAREER_OPS_TRACKER).
+const REPORTS_DIR = process.env.CAREER_OPS_REPORTS || join(CAREER_OPS, 'reports');
 const STATES_FILE = existsSync(join(CAREER_OPS, 'templates/states.yml'))
   ? join(CAREER_OPS, 'templates/states.yml')
   : join(CAREER_OPS, 'states.yml');
@@ -248,6 +252,86 @@ if (existsSync(REPORTS_DIR)) {
   }
 }
 if (staleSentinels === 0) ok('No stale reservation sentinels');
+
+// --- Check 9: Duplicate reports for the same company+role (#1425) ---
+// Two concurrent evaluators can each write a report for the same role.
+// merge-tracker dedups the TRACKER, but nothing watched reports/ itself.
+// Warning-level, not error: duplicates can be legitimate (re-evaluation
+// after a JD change).
+const REPORT_FILE_RE = /^(\d+)-(.+)-\d{4}-\d{2}-\d{2}\.md$/;
+const normalizeKey = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+// Role comes from the report body: the Machine Summary YAML fence when
+// present (field names are exact by contract), else the title line
+// "# Evaluación: {Company} — {Role}". Reports where neither parses are
+// skipped rather than grouped by company alone, which would false-positive
+// on two different roles at the same company.
+function extractRole(reportContent) {
+  const fence = reportContent.match(/##\s*Machine Summary\s*\n+```(?:yaml|yml|json)?\s*\n([\s\S]*?)\n```/i);
+  if (fence) {
+    const m = fence[1].match(/^role:\s*["']?(.+?)["']?\s*$/m);
+    if (m && m[1].trim()) return m[1].trim();
+  }
+  const title = reportContent.split('\n').find(l => l.startsWith('# '));
+  if (title) {
+    const parts = title.split(/[—–]/);
+    if (parts.length >= 2 && parts[parts.length - 1].trim()) return parts[parts.length - 1].trim();
+  }
+  return null;
+}
+
+const reportFiles = existsSync(REPORTS_DIR)
+  ? readdirSync(REPORTS_DIR).filter(f => REPORT_FILE_RE.test(f))
+  : [];
+
+let dupReports = 0;
+const reportsByRole = new Map();
+for (const name of reportFiles) {
+  const companySlug = name.match(REPORT_FILE_RE)[2];
+  let role = null;
+  try {
+    role = extractRole(readFileSync(join(REPORTS_DIR, name), 'utf-8'));
+  } catch {
+    // Unreadable report — the orphan check below still sees it.
+  }
+  if (!role) continue;
+  const key = normalizeKey(companySlug) + '::' + normalizeKey(role);
+  if (!reportsByRole.has(key)) reportsByRole.set(key, []);
+  reportsByRole.get(key).push(name);
+}
+for (const group of reportsByRole.values()) {
+  if (group.length > 1) {
+    warn(`Duplicate reports for same company+role: ${group.join(', ')}`);
+    dupReports++;
+  }
+}
+if (dupReports === 0) ok('No duplicate reports for the same company+role');
+
+// --- Check 10: Orphan reports with no tracker row (#1425) ---
+// Every reports/NNN-*.md should be referenced by a tracker row — by the row's
+// own number, the [NNN] link text, or the NNN- prefix of the linked filename.
+// A report none of them reference is usually the loser of a tracker dedup.
+const referencedNums = new Set();
+for (const e of entries) {
+  referencedNums.add(e.num);
+  const linkText = e.report.match(/\[(\d+)\]/);
+  if (linkText) referencedNums.add(parseInt(linkText[1], 10));
+  const linkTarget = e.report.match(/\]\(([^)]+)\)/);
+  if (linkTarget) {
+    const m = linkTarget[1].split('/').pop().match(/^(\d+)-/);
+    if (m) referencedNums.add(parseInt(m[1], 10));
+  }
+}
+
+let orphanReports = 0;
+for (const name of reportFiles) {
+  const num = parseInt(name.match(REPORT_FILE_RE)[1], 10);
+  if (!referencedNums.has(num)) {
+    warn(`Orphan report — no tracker row references #${num}: reports/${name}`);
+    orphanReports++;
+  }
+}
+if (orphanReports === 0) ok('No orphan reports');
 
 // --- Summary ---
 console.log('\n' + '='.repeat(50));

@@ -21,6 +21,12 @@
           "path": "VERSION"
         }
       ]
+    },
+    "web": {
+      "release-type": "node",
+      "package-name": "career-ops-web",
+      "component": "web",
+      "include-component-in-tag": true
     }
   }
 }
