@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, ExternalLink, ChevronsUpDown, Sparkles, Loader2, X } from "lucide-react";
 import type { Application, InboxJob } from "@/lib/career-ops";
 import { Badge } from "@/components/ui/badge";
+import { CostBadge } from "@/components/cost/cost-badge";
 import { useJobs } from "@/components/jobs/job-store";
 import { CompanyLogo } from "@/components/company-logo";
 import { canonStatus, scoreNum, scoreTone, statusDot } from "@/lib/format";
@@ -207,7 +208,13 @@ export function PipelineView({
       {tab === "INBOX" ? (
         /* ── Inbox: the action queue with worker triggers ── */
         filteredInbox.length > 0 ? (
-          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/40">
+          <>
+          {/* Cost cue ONCE for the whole inbox, not per row — teaches the free/
+              spend boundary (Explore's model) without stacking brand badges. */}
+          <p className="mt-4 flex items-center gap-1.5 px-1 text-xs text-faint">
+            <CostBadge kind="spend" size="xs" /> Evaluating a role runs your AI — the scan that filled this inbox was free.
+          </p>
+          <ul className="mt-2 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/40">
             {filteredInbox.slice(0, 60).map((j, i) => {
               const job = jobByUrl.get(j.url);
               const processed = job?.status === "done";
@@ -270,6 +277,7 @@ export function PipelineView({
               );
             })}
           </ul>
+          </>
         ) : (
           <InboxEmpty count={pendingInbox.length} filtered={q.trim().length > 0} />
         )

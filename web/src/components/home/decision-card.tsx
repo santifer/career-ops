@@ -52,11 +52,14 @@ export function DecisionCard({ app }: { app: Application }) {
         )}
       </div>
       <div className="flex items-center gap-2">
+        {/* Ghost, not a solid orange fill: a queue of decision cards would stack
+            6+ competing brand shouts (P5 — one shout per screen). Mirrors the
+            validated "Mark followed up" ghost; brand reveals on hover/intent. */}
         <button
           type="button"
           disabled={!!busy}
           onClick={() => setStatus("Applied")}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-surface-hover px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-brand-soft hover:text-brand disabled:opacity-60"
         >
           {busy === "Applied" ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} Mark applied
         </button>
