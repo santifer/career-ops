@@ -281,6 +281,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Fills out application form | `apply` |
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
+| Wants a fast first-pass filter before full evaluation | `triage` |
 | Batch processes offers | `batch` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
