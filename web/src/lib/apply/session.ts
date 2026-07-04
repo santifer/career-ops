@@ -397,7 +397,7 @@ export async function fillSession(
       if (!isResumeField(meta)) continue;
       let ok = false;
       try {
-        await s.frame.locator(`[data-co-field="${meta.id}"]`).first().setInputFiles(cvPath);
+        await s.frame.locator(`[data-co-field="${cssAttr(meta.id)}"]`).first().setInputFiles(cvPath);
         ok = true;
       } catch {
         // fallback: any file input inside the same field container
@@ -427,7 +427,7 @@ export async function fillSession(
     let ok = false;
     let gaveUp = false;
     try {
-      const loc = s.frame.locator(`[data-co-field="${fid}"]`).first();
+      const loc = s.frame.locator(`[data-co-field="${cssAttr(fid)}"]`).first();
       if (meta.combobox) {
         // react-select: open, type to filter, CLICK the matching option. We never
         // press Enter — in a form, Enter can submit. Clicking an option can't.
