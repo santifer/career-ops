@@ -195,9 +195,22 @@ export default {
     // one): bounded by `total` when the server reports it, always capped at
     // maxPages. When `total` is absent, only probe further pages if the first
     // one was full — a short first page already means there's nothing more.
-    const pagesToFetch = total !== null
+    let pagesToFetch = total !== null
       ? Math.min(Math.ceil(total / PAGE_SIZE), maxPages)
       : (firstPostings.length >= PAGE_SIZE ? maxPages : 1);
+
+    // Honor a context page cap — verify-portals' liveness probe sets
+    // `ctx.maxPages: 1` so it only needs to know a board is live, not its full
+    // count. Without this we'd fetch page 0, then request page 1 and trip the
+    // probe's second-request sentinel; fetchPageWithRetry treats that abort as
+    // transient and retries it MAX_RETRIES times (with backoff) before giving up
+    // — noisy in the logs and rude to the tenant. Capping here makes workday a
+    // "cooperating provider" that stops after one page and reports an exact
+    // first-page count. Kept separate from `maxPages` so the entry-cap warning
+    // below (pagesToFetch === maxPages) stays quiet. No effect on real scans,
+    // which don't set ctx.maxPages.
+    const ctxCap = typeof ctx?.maxPages === 'number' && ctx.maxPages > 0 ? ctx.maxPages : Infinity;
+    pagesToFetch = Math.min(pagesToFetch, ctxCap);
 
     // Why pagination stopped — drives which warning (if any) fires below.
     // 'fetch-error' must NOT produce the "raise max_pages" advice: that knob

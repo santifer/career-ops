@@ -11152,6 +11152,37 @@ try {
     fail(`fallback pagination: requests=${fallbackRequests}, jobs=${fallbackJobs.length} (expected 2/25)`);
   }
 
+  // fetch() honors ctx.maxPages — verify-portals' liveness probe sets maxPages:1.
+  // It must stop after the first page and NOT request page 2, which would trip
+  // the probe's second-request sentinel; fetchPageWithRetry treats that abort as
+  // transient and retries it MAX_RETRIES times (4 requests) plus a truncation
+  // warning. Even though total=173 implies 9 pages, the cap must win at 1.
+  let probeRequests = 0;
+  const probeWarnings = [];
+  const probeErr = console.error;
+  console.error = (m) => probeWarnings.push(m);
+  let probeJobs;
+  try {
+    probeJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+      probeRequests++;
+      // Simulate the probe sentinel: any request past the first throws.
+      if (JSON.parse(opts.body).offset > 0) throw new Error('probe budget: no second page');
+      return { total: 173, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
+    }, { maxPages: 1 }));
+  } finally {
+    console.error = probeErr;
+  }
+  if (probeRequests === 1 && probeJobs.length === 20) {
+    pass('workday.fetch() honors ctx.maxPages=1 — one request, no second-page retry storm');
+  } else {
+    fail(`workday probe cap: requests=${probeRequests} (expected 1), jobs=${probeJobs?.length} (expected 20)`);
+  }
+  if (!probeWarnings.some((w) => /truncated/.test(String(w)))) {
+    pass('workday.fetch() stays silent (no truncation warning) under the liveness probe cap');
+  } else {
+    fail(`workday probe should emit no warning, got: ${JSON.stringify(probeWarnings)}`);
+  }
+
 } catch (e) {
   fail(`workday provider tests crashed: ${e.message}`);
 }
