@@ -387,6 +387,7 @@ Failure:
   "company": "{company_or_unknown}",
   "role": "{role_or_unknown}",
   "score": null,
+  "legitimacy": null,
   "pdf": null,
   "report": "{report_path_if_any}",
   "error": "{error_description}"

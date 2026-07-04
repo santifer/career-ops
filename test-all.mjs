@@ -946,6 +946,7 @@ console.log('\n7d. Output language contract');
 
 const profileExample = readFile('config/profile.example.yml');
 const outputLanguageAgentsDoc = readFile('AGENTS.md');
+const outputLanguageClaudeDoc = readFile('CLAUDE.md');
 const careerOpsSkill = readFile('.agents/skills/career-ops/SKILL.md');
 const batchPrompt = readFile('batch/batch-prompt.md');
 
@@ -963,6 +964,19 @@ if (
   pass('AGENTS.md documents output language separately from market modes');
 } else {
   fail('AGENTS.md does not document the language.output vs modes_dir contract');
+}
+
+const marketModeDocs = [
+  ['AGENTS.md', outputLanguageAgentsDoc],
+  ['CLAUDE.md', outputLanguageClaudeDoc],
+];
+
+for (const [docName, docText] of marketModeDocs) {
+  if (/asks for (German|French|Arabic|Japanese|Turkish) output/i.test(docText)) {
+    fail(`${docName} treats output-language requests as market-mode selection`);
+  } else {
+    pass(`${docName} keeps output language separate from market-mode selection`);
+  }
 }
 
 if (/language\.output/.test(careerOpsSkill) && /human-facing output/i.test(careerOpsSkill)) {

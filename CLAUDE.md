@@ -276,32 +276,32 @@ These are two separate axes:
 
 **Composition rule:** `language.output` is authoritative for prose. `modes_dir` only supplies market context.
 
-**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
+**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or explicitly asks for German market modes. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
 2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
 3. You detect a German JD → suggest switching to German modes
 
-**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
+**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or explicitly asks for French market modes. Either:
 1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
 2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
 3. You detect a French JD → suggest switching to French modes
 
-**When to use Arabic modes:** If the user is targeting Arabic-language job postings, lives in the Middle East / Arab region, or asks for Arabic output. Either:
+**When to use Arabic modes:** If the user is targeting Arabic-language job postings, lives in the Middle East / Arab region, or explicitly asks for Arabic market modes. Either:
 1. User says "use Arabic modes" → read from `modes/ar/` instead of `modes/`
 2. User sets `language.modes_dir: modes/ar` in `config/profile.yml` → always use Arabic modes
 3. You detect an Arabic JD → suggest switching to Arabic modes
 
-**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
+**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or explicitly asks for Japanese market modes. Either:
 1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
 
-**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or asks for Turkish output. Either:
+**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or explicitly asks for Turkish market modes. Either:
 1. User says "use Turkish modes" → read from `modes/tr/` instead of `modes/`
 2. User sets `language.modes_dir: modes/tr` in `config/profile.yml` → always use Turkish modes
 3. You detect a Turkish JD → suggest switching to Turkish modes
 
-**When to use Hindi modes:** If the user is targeting Indian job postings, lives in India, or asks for Hindi output. Either:
+**When to use Hindi modes:** If the user is targeting Indian job postings, lives in India, or explicitly asks for Hindi market modes. Either:
 1. User says "use Hindi modes" → read from `modes/hi/` instead of `modes/`
 2. User sets `language.modes_dir: modes/hi` in `config/profile.yml` → always use Hindi modes
 3. You detect a Hindi JD → suggest switching to Hindi modes
