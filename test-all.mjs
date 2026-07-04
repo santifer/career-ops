@@ -11492,6 +11492,76 @@ try {
   const vNoClass = vArts.find((a) => a.id === '13672');
   if (vNoClass && vNoClass.title === 'Director Platform Engineering') pass('parseArticles falls back to a JobDetail anchor without class="link" (Rohde & Schwarz)');
   else fail(`parseArticles missed the no-class-link variant: ${JSON.stringify(vArts.map((a) => a.id))}`);
+
+  // Pagination key — default `jobOffset`, self-heals to `offset` for tenants
+  // that ignore it (Siemens). Mock fetchText with an article-less page so
+  // fetch() stops after one request and we can read the URL it built.
+  const captureFirstUrl = async (entry) => {
+    let firstUrl;
+    const ctx = { sleep: async () => {}, fetchText: async (url) => { if (firstUrl === undefined) firstUrl = url; return '<div>no articles</div>'; } };
+    await avature.fetch(entry, ctx);
+    return firstUrl;
+  };
+  const base = 'https://acme.avature.net/careers/SearchJobs';
+  if (await captureFirstUrl({ name: 'X', api: base }) === `${base}?jobOffset=0`) pass('avature.fetch() defaults pagination to ?jobOffset=N');
+  else fail('avature.fetch() should default to jobOffset');
+  if (await captureFirstUrl({ name: 'X', api: base, offset_param: 'offset' }) === `${base}?offset=0`) pass('avature.fetch() honours offset_param override (Siemens: ?offset=N)');
+  else fail('avature.fetch() should use offset_param when set');
+  if (await captureFirstUrl({ name: 'X', api: base, offset_param: '  ' }) === `${base}?jobOffset=0`) pass('avature.fetch() falls back to jobOffset for a blank offset_param');
+  else fail('avature.fetch() should ignore a blank offset_param');
+
+  // Self-heal — jobOffset→offset when the primary key is inert.
+  const originB = 'https://acme.avature.net';
+  const mkHtml = (ids) => ids.map((id) =>
+    `<article class="article article--result"><h3 class="title"><a class="link" href="${originB}/careers/JobDetail/Role-${id}/${id}">Role ${id}</a></h3></article>`).join('');
+  // Build a ctx whose fetchText answers from a {param: (pageIndex)=>ids} map.
+  const mkCtx = () => {
+    const calls = [];
+    let sleeps = 0;
+    const ctx = {
+      sleep: async () => { sleeps += 1; },
+      fetchText: async (url) => {
+        calls.push(url);
+        const u = new URL(url);
+        const jo = u.searchParams.get('jobOffset');
+        const of = u.searchParams.get('offset');
+        if (jo !== null) return mkHtml([1, 2, 3, 4, 5, 6]); // jobOffset inert: always page 0
+        if (of !== null) {
+          const n = Number(of) / 6;
+          if (n === 0) return mkHtml([1, 2, 3, 4, 5, 6]);
+          if (n === 1) return mkHtml([7, 8, 9, 10, 11, 12]); // offset advances
+          if (n === 2) return mkHtml([13, 14]); // partial → last page
+          return mkHtml([]);
+        }
+        return '<div>no articles</div>';
+      },
+    };
+    return { ctx, calls, sleeps: () => sleeps };
+  };
+  const heal = mkCtx();
+  const healed = await avature.fetch({ name: 'X', api: base }, heal.ctx);
+  if (healed.length === 14) pass('avature.fetch() self-heals jobOffset→offset and walks the full board (14 jobs)');
+  else fail(`avature.fetch() self-heal wrong count: ${healed.length} (expected 14)`);
+  if (heal.calls.some((u) => /[?&]offset=/.test(u))) pass('avature.fetch() self-heal retries with ?offset=N');
+  else fail('avature.fetch() self-heal should retry with offset');
+  if (heal.sleeps() > 0) pass('avature.fetch() throttles between pages (sleep called)');
+  else fail('avature.fetch() should sleep between pages');
+
+  // No self-heal when jobOffset works: offset= must never be requested.
+  const workingCtx = {
+    calls: [],
+    sleep: async () => {},
+    fetchText: async function (url) {
+      this.calls.push(url);
+      const n = Number(new URL(url).searchParams.get('jobOffset')) / 6;
+      if (n === 0) return mkHtml([1, 2, 3, 4, 5, 6]);
+      if (n === 1) return mkHtml([7, 8, 9, 10, 11, 12]);
+      return mkHtml([13, 14]); // last (partial)
+    },
+  };
+  const worked = await avature.fetch({ name: 'X', api: base }, workingCtx);
+  if (worked.length === 14 && workingCtx.calls.every((u) => /[?&]jobOffset=/.test(u))) pass('avature.fetch() does not self-heal when jobOffset already advances');
+  else fail(`avature.fetch() spurious self-heal: ${worked.length} jobs, calls ${JSON.stringify(workingCtx.calls.map((u) => u.split('?')[1]))}`);
 } catch (e) {
   fail(`avature provider tests crashed: ${e.message}`);
 }
