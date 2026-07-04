@@ -67,14 +67,25 @@ function isWithinDirectory(rootAbs, candidateAbs) {
   return rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
 }
 
+function nearestExistingPath(absPath) {
+  let current = path.resolve(absPath);
+  while (!existsSync(current)) {
+    const parent = path.dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+  return current;
+}
+
 function isSafePluginPath(rootAbs, candidateAbs) {
   const rootResolved = path.resolve(rootAbs);
   const candidateResolved = path.resolve(candidateAbs);
   if (!isWithinDirectory(rootResolved, candidateResolved)) return false;
 
-  if (!existsSync(candidateResolved)) return true;
+  const nearestExisting = nearestExistingPath(candidateResolved);
+  if (!nearestExisting) return false;
   try {
-    return isWithinDirectory(realpathSync(rootResolved), realpathSync(candidateResolved));
+    return isWithinDirectory(realpathSync(rootResolved), realpathSync(nearestExisting));
   } catch {
     return false;
   }

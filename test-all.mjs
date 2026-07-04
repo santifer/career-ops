@@ -9190,6 +9190,7 @@ try {
 
   const base = { id: 'x', apiVersion: 1, description: 'one line', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true };
   __manifestTmp = mkdtempSync(join(tmpdir(), 'co-plugin-manifest-'));
+  mkdirSync(join(__manifestTmp, 'x'), { recursive: true });
   const vm = (m, dirName = 'x') => validateManifest(m, join(__manifestTmp, dirName), dirName);
 
   // Manifest validation (warnings are expected here — suppress to keep output clean).
@@ -9208,16 +9209,19 @@ try {
   else fail('valid keyed manifest should be accepted');
   if (vm({ ...base, entry: '../../scan.mjs' }) === null) pass('entry escaping the plugin directory is rejected (traversal guard)');
   else fail('entry traversal should be rejected');
-  mkdirSync(join(__manifestTmp, 'x'), { recursive: true });
   writeFileSync(join(__manifestTmp, 'outside.mjs'), 'export default {};');
   writeFileSync(join(__manifestTmp, 'outside.md'), '# outside\n');
+  mkdirSync(join(__manifestTmp, 'outside-dir'), { recursive: true });
   try {
     symlinkSync(join(__manifestTmp, 'outside.mjs'), join(__manifestTmp, 'x', 'linked-entry.mjs'));
     symlinkSync(join(__manifestTmp, 'outside.md'), join(__manifestTmp, 'x', 'linked-skill.md'));
+    symlinkSync(join(__manifestTmp, 'outside-dir'), join(__manifestTmp, 'x', 'linked-dir'), 'dir');
     if (vm({ ...base, entry: 'linked-entry.mjs' }) === null) pass('entry symlink escaping the plugin directory is rejected');
     else fail('entry symlink traversal should be rejected');
     if (vm({ ...base, skill: 'linked-skill.md' }) === null) pass('skill symlink escaping the plugin directory is rejected');
     else fail('skill symlink traversal should be rejected');
+    if (vm({ ...base, entry: 'linked-dir/missing-entry.mjs' }) === null) pass('missing entry under an escaping symlink directory is rejected');
+    else fail('missing entry under symlink traversal should be rejected');
   } catch (e) {
     warn(`symlink traversal test skipped: ${e.message}`);
   }
