@@ -38,6 +38,14 @@ import yaml from 'js-yaml';
 import { makeHttpCtx } from './providers/_http.mjs';
 import { buildTrustValidator } from './providers/_trust-validator.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
+import { classifyFetchError } from './verify-portals.mjs';
+
+try {
+  const { config } = await import('dotenv');
+  config();
+} catch {
+  // dotenv is optional — fall back to process.env if not installed
+}
 
 const parseYaml = yaml.load;
 
@@ -637,8 +645,16 @@ export function formatPipelineOffer(offer) {
   const location = typeof offer.location === 'string' ? sanitizeMarkdownField(offer.location) : '';
   const compensation = formatCompensation(offer.salary);
   const base = `- [ ] ${url} | ${company} | ${title}`;
-  if (compensation) return `${base} | ${location} | ${compensation}`;
-  return location ? `${base} | ${location}` : base;
+  let line = base;
+  if (compensation) line = `${base} | ${location} | ${compensation}`;
+  else if (location) line = `${base} | ${location}`;
+  // Optional free-text ranking signal (e.g. a curated-list flag an importer
+  // attaches). Labeled — not positional like location/compensation — so it can
+  // ride on any row shape (bare URL, 3-, 4-, or 5-column) without a reader
+  // confusing it for a positional cell, and it stays generic: nothing here is
+  // source-specific, and an offer without `note` produces byte-identical output.
+  const note = typeof offer.note === 'string' ? sanitizeMarkdownField(offer.note) : '';
+  return note ? `${line} | note: ${note}` : line;
 }
 
 export function formatScanHistoryRow(offer, date, status = 'added') {
@@ -1002,6 +1018,7 @@ async function main() {
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
+  const emptyTargets = [];
 
   const tasks = targets.map(company => async () => {
     let provider = company._provider;
@@ -1027,6 +1044,9 @@ async function main() {
         throw new Error(`${provider.id}: fetch() did not return an array`);
       }
       totalFound += jobs.length;
+      if (!company._isBoard && jobs.length === 0) {
+        emptyTargets.push(company.name);
+      }
 
       for (const job of jobs) {
         // Trust enrichment — runs before filters, never drops
@@ -1088,7 +1108,11 @@ async function main() {
         });
       }
     } catch (err) {
-      errors.push({ company: company.name, error: err.message });
+      errors.push({
+        company: company.name,
+        error: err.message,
+        kind: classifyFetchError(err),
+      });
     }
   });
 
@@ -1223,9 +1247,26 @@ async function main() {
     }
   }
 
-  if (errors.length > 0) {
-    console.log(`\nErrors (${errors.length}):`);
-    for (const e of errors) {
+  const unreachableTargets = errors.filter((e) => e.kind === 'slug_gone');
+  const networkTargets = errors.filter((e) => e.kind === 'network');
+  const otherErrors = errors.filter((e) => e.kind !== 'slug_gone' && e.kind !== 'network');
+
+  if (unreachableTargets.length > 0) {
+    const names = unreachableTargets.map((e) => e.company).join(', ');
+    console.log(`\n⚠️  ${unreachableTargets.length} target(s) unreachable (slug?): ${names} — run: node verify-portals.mjs`);
+  }
+  if (emptyTargets.length > 0) {
+    console.log(`🟡 ${emptyTargets.length} target(s) live but empty: ${emptyTargets.join(', ')}`);
+  }
+  if (networkTargets.length > 0) {
+    console.log(`\nNetwork errors (${networkTargets.length}):`);
+    for (const e of networkTargets) {
+      console.log(`  ✗ ${e.company}: ${e.error}`);
+    }
+  }
+  if (otherErrors.length > 0) {
+    console.log(`\nErrors (${otherErrors.length}):`);
+    for (const e of otherErrors) {
       console.log(`  ✗ ${e.company}: ${e.error}`);
     }
   }

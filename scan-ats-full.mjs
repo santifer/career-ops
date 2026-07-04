@@ -376,7 +376,12 @@ async function main() {
   log(`Reverse ATS scan — ${sourcesSummary} | since ${opts.sinceDays}d${opts.limit < Infinity ? ` | limit ${opts.limit}/ats` : ''}${opts.shuffle ? ' | shuffled' : ''}${opts.includeUndated ? ' | +undated' : ''}${opts.liveness ? ' | liveness' : ''}${opts.dryRun ? ' | DRY RUN' : ''}`);
 
   const { seen: seenUrls } = loadSeenUrls();
-  const ctx = makeHttpCtx();
+  // sinceMs and includeUndated let providers (currently only workday.mjs)
+  // stop paginating a tenant early instead of always walking to max_pages:
+  // sinceMs once postings are confidently past the --since window, and
+  // includeUndated (when false) for a tenant that exposes no postedOn at
+  // all, since its postings would all be dropped as undated below anyway.
+  const ctx = { ...makeHttpCtx(), sinceMs: cutoff, includeUndated: opts.includeUndated };
   const date = new Date().toISOString().slice(0, 10);
 
   const newOffers = [];
@@ -385,6 +390,12 @@ async function main() {
   let totalErrors = 0;
   let droppedNoDate = 0;
   let capHit = false;
+  // Aggregated from providers/workday.mjs's jobs.workdayNoDateSkip tag — see
+  // there for why this is a counter instead of a per-company console.error
+  // (thousands of tenants hit this on a full directory scan; one line each
+  // would just be the same message repeated thousands of times).
+  let noDateSkipCompanies = 0;
+  let noDateSkipJobs = 0;
   const datasetStatus = {};
 
   for (const name of opts.ats) {
@@ -402,6 +413,7 @@ async function main() {
     await parallelEach(entries, CONCURRENCY, async (entry) => {
       try {
         const jobs = await source.provider.fetch(entry, ctx);
+        if (jobs.workdayNoDateSkip) { noDateSkipCompanies++; noDateSkipJobs += jobs.length; }
         for (const job of jobs) {
           if (!job.url || !job.title) continue;
           // Confirmed-stale postings are always dropped. Undated postings are
@@ -453,7 +465,16 @@ async function main() {
   log(`${'━'.repeat(45)}`);
   log(`Companies scanned:  ${totalCompaniesScanned}${capHit ? ` of ${totalCompaniesAvailable} (capped)` : ''}`);
   log(`Unreachable boards: ${totalErrors}`);
-  if (droppedNoDate) log(`Undated dropped:    ${droppedNoDate}${opts.includeUndated ? '' : ' (use --include-undated to keep)'}`);
+  // noDateSkipJobs is a subset of droppedNoDate, not a separate pool: every
+  // no-postedOn workday posting counted here also hits the per-job undated
+  // filter in the scan loop above and gets dropped there too. Report it as
+  // a breakdown, not a second count — the two aren't additive.
+  if (droppedNoDate) {
+    const breakdown = noDateSkipCompanies
+      ? ` (incl. ${noDateSkipJobs} from ${noDateSkipCompanies} workday companies with no postedOn)`
+      : '';
+    log(`Undated dropped: ${droppedNoDate}${breakdown}${opts.includeUndated ? '' : '. Use --include-undated to keep'}`);
+  }
   log(`New matches:        ${offers.length}`);
 
   if (offers.length) {

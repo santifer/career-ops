@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, ExternalLink, ChevronsUpDown, Sparkles, Loader2, X } from "lucide-react";
+import { Search, ExternalLink, ChevronsUpDown, Sparkles, Loader2, X, Compass, ArrowRight } from "lucide-react";
 import type { Application, InboxJob } from "@/lib/career-ops";
 import { Badge } from "@/components/ui/badge";
+import { CostBadge } from "@/components/cost/cost-badge";
 import { useJobs } from "@/components/jobs/job-store";
 import { CompanyLogo } from "@/components/company-logo";
 import { canonStatus, scoreNum, scoreTone, statusDot } from "@/lib/format";
@@ -207,7 +208,13 @@ export function PipelineView({
       {tab === "INBOX" ? (
         /* ── Inbox: the action queue with worker triggers ── */
         filteredInbox.length > 0 ? (
-          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/40">
+          <>
+          {/* Cost cue ONCE for the whole inbox, not per row — teaches the free/
+              spend boundary (Explore's model) without stacking brand badges. */}
+          <p className="mt-4 flex items-center gap-1.5 px-1 text-xs text-faint">
+            <CostBadge kind="spend" size="xs" /> Evaluating a role runs your AI — the scan that filled this inbox was free.
+          </p>
+          <ul className="mt-2 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/40">
             {filteredInbox.slice(0, 60).map((j, i) => {
               const job = jobByUrl.get(j.url);
               const processed = job?.status === "done";
@@ -270,6 +277,7 @@ export function PipelineView({
               );
             })}
           </ul>
+          </>
         ) : (
           <InboxEmpty count={pendingInbox.length} filtered={q.trim().length > 0} />
         )
@@ -330,7 +338,8 @@ export function PipelineView({
   );
 }
 
-// Empty inbox = the app's terminal-card cue (CLI heritage spent once, honestly).
+// Empty inbox. Self-sufficient for the mainstream user (a primary in-web action),
+// honest for devs (the CLI/file path stays, demoted to progressive transparency).
 function InboxEmpty({ count, filtered }: { count: number; filtered: boolean }) {
   if (filtered) {
     return (
@@ -346,26 +355,29 @@ function InboxEmpty({ count, filtered }: { count: number; filtered: boolean }) {
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
-        <span className="ml-3 font-mono text-xs tracking-wide text-muted">
-          <span className="text-foreground/40">&gt;_</span> career-ops scan
-        </span>
+        <span className="ml-3 font-mono text-xs tracking-wide text-muted">career-ops · inbox</span>
       </div>
-      <div className="px-6 py-12 text-center">
+      <div className="px-6 py-10 text-center">
         <p className="font-display text-lg">
           Your <span className="text-brand">inbox</span> is empty.
         </p>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-          {count > 0
-            ? "Nothing pending right now."
-            : "Run a scan or drop job URLs into data/pipeline.md to fill it."}
-        </p>
-        <p className="mt-4 font-mono text-xs text-faint">
-          $ career-ops scan
-          <span
-            aria-hidden="true"
-            className="cli-cursor ml-0.5 inline-block h-[1em] w-[0.35em] bg-current align-middle"
-          />
-        </p>
+        {count > 0 ? (
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">Nothing pending right now.</p>
+        ) : (
+          <>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-muted">Find roles that match your CV — free, no tokens spent.</p>
+            <Link
+              href="/explore?run=1"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm transition-all duration-200 hover:bg-brand-200 hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <Compass className="size-4" /> Run your first free scan <ArrowRight className="size-4" />
+            </Link>
+            <p className="mx-auto mt-4 max-w-sm text-xs text-muted">
+              Prefer the terminal? Run <code className="rounded bg-surface-hover px-1 py-0.5 font-mono">career-ops scan</code>, or add job URLs to{" "}
+              <code className="rounded bg-surface-hover px-1 py-0.5 font-mono">data/pipeline.md</code>.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

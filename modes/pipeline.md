@@ -44,6 +44,7 @@ This complements — does not replace — the per-URL liveness gate in `auto-pip
 - [ ] https://boards.greenhouse.io/company/jobs/456 | Company Inc | Senior PM
 - [ ] https://jobs.ashbyhq.com/acme/789 | Acme Corp | Solutions Architect | Remote (US)
 - [ ] https://jobs.ashbyhq.com/acme/790 | Acme Corp | AI Engineer | Remote (US) | 180000-220000 USD
+- [ ] https://jobs.ashbyhq.com/acme/791 | Acme Corp | Staff PM | note: curated shortlist
 - [!] https://private.url/job — Error: login required
 
 ## Processed
@@ -61,6 +62,14 @@ maximum (canonical) shape, not the only one. The columns are positional, so a ro
 carrying compensation always includes the location cell (empty if unknown); a row
 with only a location stays 4 columns. Existing shorter rows remain valid and are
 read as having empty values for the missing trailing columns.
+
+One further trailing segment is optional and **labeled**, not positional:
+`| note: {text}`. Unlike the positional cells above, it can ride on any row shape
+(`- [ ] {url} | {company} | {title} | note: curated shortlist` is valid), because
+the `note:` prefix identifies it regardless of column position. It carries a
+free-text ranking signal an importer attached to the offer (the deterministic
+scanner never sets it). Treat it as a hint when triaging; it does not change how
+you process the URL.
 
 ## Intelligent JD detection from URL
 

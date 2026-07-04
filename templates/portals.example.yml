@@ -494,6 +494,11 @@ search_queries:
 #   pinpoint        <slug>.pinpointhq.com
 #   rippling        ats.rippling.com/<slug>/jobs
 #   jibeapply       <slug>.jibeapply.com/jobs  (or provider: jibeapply + api: for a branded host's own /jobs path)
+#   workday         <tenant>.wd<N>.myworkdayjobs.com[/<locale>]/<board>
+#   avature         <tenant>.avature.net  (branded host → provider: avature + api: the /careers/SearchJobs URL)
+#   amazon          amazon.jobs           (global board; provider: amazon + an amazon: filter block, see below)
+#   successfactors  *.successfactors.(eu|com) / *.jobs2web.com  (SAP SF Recruiting Marketing / RMK boards;
+#                   branded hosts like jobs.<company>.com need provider: successfactors + api: <board origin>)
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
@@ -501,7 +506,7 @@ search_queries:
 #
 # Some providers are job boards / aggregators with no per-company careers
 # URL to detect, so they must be selected with an explicit `provider:`
-# field: 4dayweek, arbeitnow, arbeitsagentur, glints, himalayas, ibm, jobicy,
+# field: 4dayweek, arbeitnow, arbeitsagentur, getonbrd, glints, himalayas, ibm, jobicy,
 # jobstreet, justjoin, landingjobs, nofluffjobs, remoteok, remotive, thehub,
 # weworkremotely, workingnomads. Examples for every built-in provider are below.
 
@@ -535,6 +540,32 @@ search_queries:
 #                          # is logged if the cap truncates real results)
 #   enabled: true
 #
+# - name: Example Workday Co
+#   careers_url: https://exampleco.wd5.myworkdayjobs.com/en-US/exampleco-careers  # any <tenant>.wd<N>.myworkdayjobs.com
+#   max_pages: 100         # optional page cap (20 jobs/page, default 100, max 1500) —
+#                          # raise it for a tenant with 2000+ open postings (a warning
+#                          # is logged if the cap truncates real results)
+#   enabled: true
+#
+# - name: Example Avature Co
+#   # Avature career site. Auto-detects any *.avature.net host; for a branded
+#   # host that proxies Avature, set provider: avature + api: the SearchJobs URL.
+#   careers_url: https://exampleco.avature.net/careers/SearchJobs
+#   max_pages: 50          # optional page cap (only 6 jobs/page — Avature's hard
+#                          # limit — so ~300 postings by default, max 200 pages)
+#   enabled: true
+#
+# - name: Example SuccessFactors Co
+#   # SAP SuccessFactors Recruiting Marketing (RMK, ex-jobs2web) branded board —
+#   # what many large industrials run at their own domain (jobs.<company>.com).
+#   # Branded hosts carry no "successfactors" string, so set provider: explicitly
+#   # and point api: at the board origin (host only, no path). The provider pulls
+#   # the public /tile-search-results fragment (zero-token, no auth).
+#   careers_url: https://www.exampleco.com/careers   # public/branded careers page
+#   provider: successfactors
+#   api: https://jobs.exampleco.com                  # RMK board origin
+#   enabled: true
+#
 # - name: SolidJobs — Engineering
 #   # division path is required; one of:
 #   # it, engineering, marketing, sales, hr, logistics, finances, other
@@ -542,6 +573,15 @@ search_queries:
 #   enabled: true
 #
 # -- Job boards / aggregators (no careers_url; set provider: explicitly) --
+#
+# - name: Amazon / AWS                    # global amazon.jobs board
+#   provider: amazon
+#   amazon:                # keys pass straight through to the search.json API
+#     normalized_country_code: [DEU]   # array → facet filter (…[]=DEU); REQUIRED-ish,
+#                                       # the board is 100k+ postings otherwise
+#     base_query: machine learning      # optional keyword filter
+#     # loc_query: Berlin               # optional free-text location (fuzzy, not a hard filter)
+#   enabled: true
 #
 # - name: 4 Day Week                      # 4-day-week / reduced-hours roles
 #   provider: 4dayweek
@@ -577,7 +617,7 @@ search_queries:
 # - name: Jobstreet — Indonesia          # SEEK aggregator
 #   provider: jobstreet
 #   searchKeywords: "Software Engineer"
-#   siteKey: ID-Main      # optional SEEK site key (default ID-Main)
+#   siteKey: ID-Main      # SEEK site key (ID-Main, SG-Main, MY-Main)
 #   searchLocation: ""    # optional location filter
 #   enabled: true
 #
@@ -587,6 +627,11 @@ search_queries:
 #     country: Germany                      # optional facet filter
 #     categories: ["Software Engineering"]  # optional facet filter
 #   enabled: true
+#
+# - name: Dassault Systèmes              # single-company; Exalead card_search_api
+#   careers_url: https://www.3ds.com/careers/jobs   # auto-detects on *.3ds.com
+#   provider: dassault                    # optional — 3ds.com host also auto-detects
+#   enabled: true                         # ~445 English postings (zero-token XML)
 #
 # -- Remote-job feeds (no careers_url, no extra fields) --
 # title_filter / location_filter defined above still apply.
@@ -603,6 +648,10 @@ search_queries:
 #
 # - name: Remotive
 #   provider: remotive
+#   enabled: true
+#
+# - name: Get on Board
+#   provider: getonbrd
 #   enabled: true
 #
 # - name: NoDesk
@@ -1543,24 +1592,24 @@ job_boards:
 
   - name: Jobstreet Indonesia
     provider: jobstreet
-    api: https://id.jobstreet.com/api/chalice-search/v4/search
+    api: https://id.jobstreet.com/api/jobsearch/v5/search
     siteKey: ID-Main
     searchKeywords: "data scientist"
     searchLocation: "Jakarta"
     pageSize: 30
     maxPages: 3
     enabled: false
-    notes: "Indonesia's largest job board (SEEK group). Public JSON search API — zero tokens."
+    notes: "Indonesia's largest job board (SEEK group). Uses SEEK v5 JobSearch API — zero tokens."
 
   - name: Glints Indonesia
     provider: glints
-    api: https://glints.com/api/graphql
+    api: https://glints.com/api/v2-alc/graphql       # searchJobsV3 endpoint
     searchKeywords: "data scientist"
     countryCode: ID
     pageSize: 30
     maxPages: 3
     enabled: false
-    notes: "SEA job platform covering ID/SG/MY/VN. Undocumented public GraphQL API — adjust graphqlQuery if schema changes."
+    notes: "SEA job platform covering ID/SG/MY/VN. Uses searchJobsV3 GraphQL endpoint (v2-alc). WAF blocks non-browser requests — works best from Playwright context."
 
   # ── HigherEdJobs (university / higher-ed RSS) ────────────────────────
   # Public no-auth RSS category feed. cat_id selects the HigherEdJobs

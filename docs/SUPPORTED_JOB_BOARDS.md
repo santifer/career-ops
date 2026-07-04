@@ -13,6 +13,7 @@ are shared helpers and are not loaded as providers.
 | BambooHR | API | Auto-detects `<tenant>.bamboohr.com` careers pages, reads `/careers/list`, and follows public detail endpoints for job URLs. |
 | Breezy HR | API | Auto-detects `<tenant>.breezy.hr` boards and reads the public JSON position feed. |
 | Comeet / Spark Hire Recruit | API | Uses Comeet's public careers API. Provide the full API URL with `api:` or `careers_url`; it cannot derive the endpoint from a branded careers page. |
+| Get on Board | API | Reads the public `https://www.getonbrd.com/api/v0/categories/programming/jobs` JSON:API feed (remote/LatAm-heavy tech roles). Configure with `provider: getonbrd`; paginates `?page=N` up to `max_pages` (default 3) over the programming category (`expand[]=company`), then scanner filters apply. |
 | Glints | API | Uses Glints' public GraphQL job search endpoint. Configure with `provider: glints`; query and filters can be set on the portal entry. |
 | Greenhouse | API | Handles explicit `api:` URLs and auto-detects public Greenhouse board URLs for the boards API. |
 | HigherEdJobs | RSS | Reads the public `https://www.higheredjobs.com/rss/categoryFeed.cfm?catID={catID}` feed and parses it in-process. Configure with `provider: higheredjobs` and optional `cat_id` (default 68 = Higher Education). Not auto-detected — requires explicit `provider:` config. |
@@ -35,7 +36,7 @@ are shared helpers and are not loaded as providers.
 | The Hub | API | Reads the board-wide `https://thehub.io/api/jobs` JSON feed (Nordic/EU startups). Configure with `provider: thehub`; paginates `?page=N` up to `max_pages` (default 3), then scanner filters apply. |
 | We Work Remotely | RSS | Reads the public `https://weworkremotely.com/remote-jobs.rss` feed and parses it in-process. |
 | Workable | Parser | Auto-detects `https://apply.workable.com/<slug>` and parses Workable's public markdown jobs feed. |
-| Workday | API | Auto-detects Workday `myworkdayjobs.com` careers URLs and posts to the public CXS jobs endpoint. |
+| Workday | API | Auto-detects `<tenant>.<instance>.myworkdayjobs.com[/<locale>]/<site>` careers URLs and posts to the public CXS jobs endpoint; paginates via offset up to `max_pages` (default 100), warning if a tenant's postings exceed the cap. |
 | Working Nomads | API | Reads the board-wide `https://www.workingnomads.com/api/exposed_jobs/` JSON feed, then applies scanner filters. |
 
 When adding a new provider, add a new non-helper module under `providers/` and
