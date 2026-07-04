@@ -373,7 +373,8 @@ function onboardingState(root) {
   ];
   for (const { target, template } of templates) {
     const targetPath = join(root, ...target.split('/'));
-    const templatePath = join(__dirname, ...template.split('/'));
+    const rootTemplatePath = join(root, ...template.split('/'));
+    const templatePath = existsSync(rootTemplatePath) ? rootTemplatePath : join(__dirname, ...template.split('/'));
     if (!existsSync(targetPath) && existsSync(templatePath)) {
       try {
         copyFileSync(templatePath, targetPath);
