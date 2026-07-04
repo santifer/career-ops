@@ -90,6 +90,39 @@ export async function collect(): Promise<Diag> {
   };
 }
 
+/** Stable error CLASS from a ring entry: strip the volatile bits (urls, ids,
+ *  numbers, quoted values) so the same underlying bug yields the same class
+ *  across sessions and machines. */
+function errorClass(log: string): string {
+  return (log || "")
+    .replace(/https?:\/\/\S+/g, "<url>")
+    .replace(/["'`][^"'`]{0,80}["'`]/g, "<v>")
+    .replace(/\d+/g, "<n>")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+}
+
+/** Deterministic short fingerprint (djb2 → base36) of route + newest error
+ *  class + structural degradation flags. Same bug → same fingerprint, across
+ *  sessions and users — the dedupe key for issue search, the glow, and the
+ *  maintainer's triage Action. Contract: web/src/lib/report/FORMAT.md (v1). */
+export function fingerprint(d: Diag): string {
+  const route = d.route.split("?")[0];
+  const err = errorClass(d.logs[d.logs.length - 1] || "");
+  const flags = [
+    d.followupsAvailable === false ? "fu-degraded" : "",
+    (d.shape?.data?.inbox?.parsed ?? 0) < (d.shape?.data?.inbox?.candidates ?? 0) ? "inbox-gap" : "",
+    (d.shape?.data?.tracker?.parsed ?? 0) < (d.shape?.data?.tracker?.candidates ?? 0) ? "tracker-gap" : "",
+  ]
+    .filter(Boolean)
+    .join(",");
+  const s = `${route}|${err}|${flags}`;
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return `co-web-${h.toString(36)}`;
+}
+
 /** The EXACT markdown body the user reviews and that becomes the GitHub issue. */
 export function issueBody(d: Diag, description: string): string {
   const s = d.shape;
@@ -115,13 +148,14 @@ export function issueBody(d: Diag, description: string): string {
     `- **Screen:** \`${d.route}\``,
     `- **Browser:** ${scrub(d.ua)}`,
     `- **Viewport:** ${d.viewport}`,
+    `- **Fingerprint:** \`${fingerprint(d)}\``,
     "",
     ...shapeLines,
     "## Recent errors",
     d.logs.length ? "```\n" + d.logs.join("\n") + "\n```" : "_(none captured)_",
     "",
     "---",
-    "_Filed from the in-app bug reporter. Contains NO CV, profile, application answers, or job URLs._",
+    "_Filed from the in-app bug reporter (report-format: v1). Contains NO CV, profile, application answers, or job URLs._",
   ]
     .join("\n")
     .slice(0, 6000);

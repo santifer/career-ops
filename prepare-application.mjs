@@ -19,7 +19,7 @@
  */
 
 import { readFileSync, existsSync, statSync } from 'fs';
-import { basename, resolve, dirname } from 'path';
+import { basename, resolve, dirname, relative, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -52,7 +52,8 @@ if (!applyUrl || !pdfPath) {
 const outputDir = resolve(ROOT, 'output');
 const absPdf    = resolve(ROOT, pdfPath);
 
-if (!absPdf.startsWith(outputDir + '/') && absPdf !== outputDir) {
+const relPdf = relative(outputDir, absPdf);
+if (relPdf === '' || relPdf.startsWith('..') || isAbsolute(relPdf)) {
   console.error(`Error: --pdf must point to a file inside output/ (got ${pdfPath})`);
   process.exit(1);
 }

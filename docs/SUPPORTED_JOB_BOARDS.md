@@ -7,12 +7,15 @@ are shared helpers and are not loaded as providers.
 | Board | Type (API / RSS / parser) | Notes |
 | --- | --- | --- |
 | 4 Day Week | API | Reads the public `https://4dayweek.io/api/jobs` JSON feed (4-day-week / reduced-hours roles). Configure with `provider: 4dayweek`; paginates `?page=N` up to `max_pages` (default 3), drops expired postings, then scanner filters apply. |
+| Amazon / AWS | API | Auto-detects `amazon.jobs` careers URLs and queries the public amazon.jobs search API. The board is one global endpoint, so narrow it with an `amazon:` config block (`loc_query`, `base_query`, `category`, …) whose keys pass through as query params. Configure with `provider: amazon`. |
 | Arbeitnow | API | Reads the public `https://www.arbeitnow.com/api/job-board-api` JSON feed (EU/DACH-heavy, newest-first). Configure with `provider: arbeitnow`; paginates `?page=N` up to `max_pages` (default 3), then scanner filters apply. |
 | Arbeitsagentur | API | Uses the public Bundesagentur fuer Arbeit Jobsuche REST API. Configure with `provider: arbeitsagentur`; title, location, and dedup filters run after fetch. |
 | Ashby | API | Auto-detects `https://jobs.ashbyhq.com/<slug>` boards and uses Ashby's public posting API. |
+| Avature | Parser | Auto-detects `<tenant>.avature.net` career sites and parses the public server-rendered job list (`/careers/SearchJobs?jobOffset=N`, 6 results/page). A branded custom domain that proxies Avature needs `provider: avature` + `api:` pointing at the Avature origin. Paginates up to `max_pages` (default 50). |
 | BambooHR | API | Auto-detects `<tenant>.bamboohr.com` careers pages, reads `/careers/list`, and follows public detail endpoints for job URLs. |
 | Breezy HR | API | Auto-detects `<tenant>.breezy.hr` boards and reads the public JSON position feed. |
 | Comeet / Spark Hire Recruit | API | Uses Comeet's public careers API. Provide the full API URL with `api:` or `careers_url`; it cannot derive the endpoint from a branded careers page. |
+| Get on Board | API | Reads the public `https://www.getonbrd.com/api/v0/categories/programming/jobs` JSON:API feed (remote/LatAm-heavy tech roles). Configure with `provider: getonbrd`; paginates `?page=N` up to `max_pages` (default 3) over the programming category (`expand[]=company`), then scanner filters apply. |
 | Glints | API | Uses Glints' public GraphQL job search endpoint. Configure with `provider: glints`; query and filters can be set on the portal entry. |
 | Greenhouse | API | Handles explicit `api:` URLs and auto-detects public Greenhouse board URLs for the boards API. |
 | HigherEdJobs | RSS | Reads the public `https://www.higheredjobs.com/rss/categoryFeed.cfm?catID={catID}` feed and parses it in-process. Configure with `provider: higheredjobs` and optional `cat_id` (default 68 = Higher Education). Not auto-detected — requires explicit `provider:` config. |
@@ -29,13 +32,14 @@ are shared helpers and are not loaded as providers.
 | RemoteOK | API | Reads the board-wide `https://remoteok.com/api` JSON feed; scanner filters decide which rows are relevant. |
 | Remotive | API | Reads the board-wide `https://remotive.com/api/remote-jobs` JSON feed, then applies local scanner filters. |
 | Rippling | API | Auto-detects `https://ats.rippling.com/<slug>/jobs` careers pages and reads the public zero-auth board API (`api.rippling.com/platform/api/ats/v1/board/<slug>/jobs`). |
+| SAP SuccessFactors | Parser | Reads SF Recruiting Marketing (RMK) career sites — branded boards like `jobs.sap.com`, `jobs.zf.com`, `jobs.schaeffler.com` — via the public no-auth `/tile-search-results/?startrow=N` HTML fragment. Branded hosts carry no "successfactors" string, so select with `provider: successfactors` + `api:` the board origin. |
 | SmartRecruiters | API | Auto-detects SmartRecruiters careers URLs or uses `provider: smartrecruiters` for branded custom domains. |
 | SolidJobs | API | Auto-detects `https://solid.jobs/public-api/offers/<division>` and reads the public offers API. |
 | Teamtailor | RSS | Auto-detects `<slug>.teamtailor.com` career sites and reads the public zero-auth `/jobs.rss` per-tenant feed. For a branded careers domain, set `provider: teamtailor` and it reads `/jobs.rss` off that host. Job links may point at a branded custom domain; location comes from the `tt:` city/country tags, falling back to `Remote` when a posting carries no `tt:city`/`tt:country` but its `remoteStatus` is remote (`fully` or `temporary`). |
 | The Hub | API | Reads the board-wide `https://thehub.io/api/jobs` JSON feed (Nordic/EU startups). Configure with `provider: thehub`; paginates `?page=N` up to `max_pages` (default 3), then scanner filters apply. |
 | We Work Remotely | RSS | Reads the public `https://weworkremotely.com/remote-jobs.rss` feed and parses it in-process. |
 | Workable | Parser | Auto-detects `https://apply.workable.com/<slug>` and parses Workable's public markdown jobs feed. |
-| Workday | API | Auto-detects Workday `myworkdayjobs.com` careers URLs and posts to the public CXS jobs endpoint. |
+| Workday | API | Auto-detects `<tenant>.<instance>.myworkdayjobs.com[/<locale>]/<site>` careers URLs and posts to the public CXS jobs endpoint; paginates via offset up to `max_pages` (default 100), warning if a tenant's postings exceed the cap. |
 | Working Nomads | API | Reads the board-wide `https://www.workingnomads.com/api/exposed_jobs/` JSON feed, then applies scanner filters. |
 
 When adding a new provider, add a new non-helper module under `providers/` and

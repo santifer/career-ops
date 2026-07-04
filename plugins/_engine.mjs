@@ -62,6 +62,35 @@ function warnSkip(label, reason) {
   console.warn(`⚠️  ${label}: skipping — ${reason}`);
 }
 
+function isWithinDirectory(rootAbs, candidateAbs) {
+  const rel = path.relative(rootAbs, candidateAbs);
+  return rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
+}
+
+function nearestExistingPath(absPath) {
+  let current = path.resolve(absPath);
+  while (!existsSync(current)) {
+    const parent = path.dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+  return current;
+}
+
+function isSafePluginPath(rootAbs, candidateAbs) {
+  const rootResolved = path.resolve(rootAbs);
+  const candidateResolved = path.resolve(candidateAbs);
+  if (!isWithinDirectory(rootResolved, candidateResolved)) return false;
+
+  const nearestExisting = nearestExistingPath(candidateResolved);
+  if (!nearestExisting) return false;
+  try {
+    return isWithinDirectory(realpathSync(rootResolved), realpathSync(nearestExisting));
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Resolve the config/plugins.yml path for a given project root.
  * @param {string} root
@@ -153,11 +182,10 @@ export function validateManifest(m, dir, dirName) {
     if (isLoopback && !allowsLocalhost) { warnSkip(label, `allowedHosts contains a loopback host without allowsLocalhost: ${h}`); return null; }
   }
 
-  const dirAbs = path.resolve(dir);
   const entry = typeof m.entry === 'string' && m.entry.trim() ? m.entry : 'index.mjs';
   if (!entry.endsWith('.mjs')) { warnSkip(label, `entry "${entry}" must be a .mjs file`); return null; }
-  const entryAbs = path.resolve(dirAbs, entry);
-  if (entryAbs !== dirAbs && !entryAbs.startsWith(dirAbs + path.sep)) { warnSkip(label, `entry "${entry}" escapes the plugin directory`); return null; }
+  const entryAbs = path.resolve(dir, entry);
+  if (!isSafePluginPath(dir, entryAbs)) { warnSkip(label, `entry "${entry}" escapes the plugin directory`); return null; }
 
   // Optional companion skill (Open-Agent-Skill-Standard SKILL.md). Traversal-
   // guarded like entry. Surfaced on-demand via `plugins.mjs skill <id>`; never
@@ -165,20 +193,9 @@ export function validateManifest(m, dir, dirName) {
   let skill = null;
   if (m.skill !== undefined) {
     if (typeof m.skill !== 'string' || !m.skill.endsWith('.md')) { warnSkip(label, 'skill must be a relative .md path'); return null; }
-    const skillAbs = path.resolve(dirAbs, m.skill);
-    if (skillAbs !== dirAbs && !skillAbs.startsWith(dirAbs + path.sep)) { warnSkip(label, `skill "${m.skill}" escapes the plugin directory`); return null; }
+    const skillAbs = path.resolve(dir, m.skill);
+    if (!isSafePluginPath(dir, skillAbs)) { warnSkip(label, `skill "${m.skill}" escapes the plugin directory`); return null; }
     if (!existsSync(skillAbs)) { warnSkip(label, `skill file not found: ${m.skill}`); return null; }
-    try {
-      const skillReal = realpathSync(skillAbs);
-      const dirReal = realpathSync(dirAbs);
-      if (skillReal !== dirReal && !skillReal.startsWith(dirReal + path.sep)) {
-        warnSkip(label, `skill "${m.skill}" resolves to a path outside the plugin directory`);
-        return null;
-      }
-    } catch (err) {
-      warnSkip(label, `failed to resolve real path for skill: ${m.skill}`);
-      return null;
-    }
     skill = m.skill;
   }
 
