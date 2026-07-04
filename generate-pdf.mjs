@@ -179,6 +179,20 @@ function validateCvSectionOrder(html, cvMarkdown) {
 }
 
 /**
+ * Convert a path to a repo-relative manifest entry, or blank if it is unknown
+ * or outside the career-ops repository.
+ *
+ * @param {string} pathValue - Absolute or cwd-relative filesystem path.
+ * @returns {string} Repo-relative path using forward slashes, or an empty string.
+ */
+export function repoRelativeManifestPath(pathValue) {
+  if (!pathValue) return '';
+  const rel = relative(__dirname, resolve(pathValue));
+  if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return '';
+  return rel.split(sep).join('/');
+}
+
+/**
  * Record a generated PDF in data/pdf-index.tsv so tools can map a tracker
  * report number to the exact PDF (and its source HTML for regeneration).
  *
@@ -192,7 +206,7 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
   const manifestPath = resolve(__dirname, 'data', 'pdf-index.tsv');
   const toRel = (p) => relative(__dirname, p).split(sep).join('/');
   const relPDF = toRel(pdfPath);
-  const relHTML = toRel(htmlPath);
+  const relHTML = repoRelativeManifestPath(htmlPath);
   const date = new Date().toISOString().slice(0, 10);
   // "008" and "8" are the same report — zero-padded report-link form vs
   // unpadded tracker-# form. Normalize so replacement rows match.
@@ -220,6 +234,12 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
   return relPDF;
 }
 
+/**
+ * CLI entrypoint that reads an HTML file, applies ATS-safe normalization, and
+ * renders the PDF while preserving report/source metadata for the manifest.
+ *
+ * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
+ */
 async function generatePDF() {
   const args = process.argv.slice(2);
 
@@ -253,7 +273,10 @@ async function generatePDF() {
 
   // Path-traversal guard: keep the PDF write inside the project directory so a
   // crafted output argument (e.g. "../../etc/cron.d/x") can't escape the repo.
-  const relOut = relative(process.cwd(), outputPath);
+  // Anchored to the repo root (__dirname), not process.cwd(): running the script
+  // from outside the repo used to falsely refuse in-repo outputs — and, worse,
+  // would have allowed writes anywhere under an arbitrary cwd.
+  const relOut = relative(__dirname, outputPath);
   if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
     console.error(`Refusing to write the PDF outside the project directory: ${outputPath}`);
     process.exit(1);
@@ -288,7 +311,7 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath) });
+  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath });
 }
 
 /**
@@ -344,12 +367,14 @@ export async function inlineLocalFonts(html) {
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
- * @param {{format?: 'a4'|'letter', baseDir?: string}} [opts]
+ * @param {{format?: 'a4'|'letter', baseDir?: string, reportNum?: string, inputPath?: string}} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
  */
 export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const format = opts.format || 'a4';
   const baseDir = opts.baseDir || process.cwd();
+  const reportNum = opts.reportNum || '';
+  const inputPath = opts.inputPath || '';
 
   mkdirSync(dirname(outputPath), { recursive: true });
 

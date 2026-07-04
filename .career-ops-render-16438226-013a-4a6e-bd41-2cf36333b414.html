@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cover Letter — Joanna Chang</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Disable fi/fl/ffi ligatures. Headless Chromium substitutes these letter
+       pairs with the Unicode glyphs U+FB01/FB02/FB03 at PDF layout time, and PDF
+       text extractors (what ATS systems read) decode them back to those
+       codepoints, so "verification" becomes "veriﬁcation" and a literal keyword
+       search misses it. Required ligatures (rlig) stay on. */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #1a1a1a;
+    background: #ffffff;
+    /* Disable ligatures here as well; see the * rule above. */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
+  }
+
+  .name {
+    font-weight: 700;
+    font-size: 14pt;
+    margin-bottom: 3pt;
+  }
+
+  .contact, .credentials {
+    font-size: 9pt;
+    color: #666666;
+    line-height: 1.3;
+    margin-bottom: 2pt;
+  }
+
+  .contact a, .credentials a, .footnotes a {
+    color: #1a56a0;
+    text-decoration: none;
+  }
+
+  .divider {
+    border: none;
+    border-top: 0.5pt solid #cccccc;
+    margin: 6pt 0 8pt;
+  }
+
+  .role-title {
+    font-weight: 700;
+    font-size: 11pt;
+    margin-top: 10pt;
+    margin-bottom: 2pt;
+  }
+
+  .dateline {
+    font-size: 9pt;
+    color: #666666;
+    margin-bottom: 12pt;
+  }
+
+  .greeting {
+    margin-bottom: 8pt;
+  }
+
+  p {
+    margin-bottom: 8pt;
+  }
+
+  .achievements {
+    list-style: none;
+    margin-bottom: 4pt;
+  }
+
+  .achievements li {
+    margin-bottom: 5pt;
+    padding-left: 14pt;
+    position: relative;
+  }
+
+  .achievements li::before {
+    content: "\2022";
+    position: absolute;
+    left: 0;
+  }
+
+  .language-closing {
+    font-style: italic;
+    margin-top: 4pt;
+    margin-bottom: 8pt;
+  }
+
+  .footnotes {
+    margin-top: 10pt;
+    padding-top: 4pt;
+    border-top: 0.5pt solid #cccccc;
+  }
+
+  .footnotes p {
+    font-size: 8pt;
+    color: #888888;
+    line-height: 1.3;
+    margin-bottom: 3pt;
+  }
+</style>
+</head>
+<body>
+  <div class="name">Joanna Chang</div>
+  <div class="contact">Pittsburgh, PA &nbsp;|&nbsp; <a href="mailto:joannachang1028@gmail.com">joannachang1028@gmail.com</a> &nbsp;|&nbsp; +1-412-844-1892 &nbsp;|&nbsp; <a href="https://www.linkedin.com/in/chiao-ting-joanna-chang/">LinkedIn</a> &nbsp;|&nbsp; <a href="https://github.com/joannachang1028">github.com/joannachang1028</a></div>
+  <div class="credentials">MS, Health Care Analytics &amp; Information Technology &nbsp;|&nbsp; AWS Certified Solutions Architect - Associate</div>
+  <hr class="divider">
+
+  <div class="role-title">Cover Letter: Forward Deployed Product Manager - AI</div>
+  <div class="dateline">Iterative Health &nbsp;&nbsp; Cambridge, MA / New York, NY &nbsp;&nbsp; July 1, 2026</div>
+
+  <p class="greeting">Dear Hiring Team,</p>
+  <p>Iterative Health&#39;s work connecting AI with clinical research operations matches the problems I want to solve: understanding how teams work, finding high-value use cases, and turning them into AI-powered workflows that people adopt. Your expansion into new therapeutic areas following the recent Series C makes this role especially timely.</p>
+  <p>I bring 8+ years of experience across payer, pharmaceutical, and MedTech environments, supported by hands-on work in large language models, retrieval-augmented generation, evaluation frameworks, Python, and production machine learning. My work has consistently placed me between end users and technical teams, translating healthcare workflows into requirements, decision tools, and implementation plans.</p>
+
+  <ul class="achievements">
+    <li><b>AI workflow discovery,</b> Led customer discovery workshops with operational public sector stakeholders to identify pain points, document current-state workflows, and prioritize 10+ AI automation opportunities.</li>
+    <li><b>Oncology workflow adoption,</b> Led consultative discovery sessions with oncology stakeholders to identify workflow inefficiencies, translate clinical needs into treatment solutions, and drive 32% adoption growth across oncology centers.</li>
+    <li><b>CRM rollout and adoption,</b> Partnered cross-functionally with Business Excellence and commercial teams to analyze CRM engagement data, identify adoption barriers, and improve customer engagement strategies, increasing Salesforce adoption by 25%.</li>
+    <li><b>Clinical technology implementation,</b> Served as the primary technical advisor during solution evaluations, delivering 100+ product demonstrations and clinician training sessions across 2 major medical centers for 390+ clinical and executive stakeholders, translating surgical technologies into measurable clinical value.</li>
+    <li><b>Healthcare decision support,</b> Designed an end-to-end healthcare analytics platform that enabled business stakeholders to explore 2.5M+ claims records and identify $5M-$15M in operational savings opportunities.</li>
+  </ul>
+
+  <p>At Iterative Health, I would begin by working beside clinical and operational teams and mapping their roles, tasks, decisions, and data flows with BPMN swimlanes. I would then rank potential use cases by business value, feasibility, risk, and organizational readiness before testing a focused proof of concept with clear operational and quality measures. This approach would help the team move useful AI workflows into production and identify patterns that can become reusable platform capabilities.</p>
+  <p>I am open to relocating for the hybrid Boston or New York work model. I would welcome the opportunity to discuss how my healthcare experience, technical fluency, and workflow-first approach could contribute to Iterative Health&#39;s clinical research network.</p>
+  
+  
+</body>
+</html>
