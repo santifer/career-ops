@@ -227,30 +227,48 @@ async function discoverAlternates(name, { fetchJson }) {
 /**
  * A liveness probe must never paginate an entire board — that is slow and rude
  * to the careers site (many rate-limit or bot-block aggressively). We signal
- * this sentinel when a provider tries to fetch a second page; the probe reads it
- * as "the first page came back fine → the endpoint is live", we just don't learn
- * the exact total. Distinct from a real HTTP error, which means a broken board.
+ * this sentinel when a provider exhausts its request budget; the probe reads it
+ * as "the budgeted pages came back fine → the endpoint is live", we just don't
+ * learn the exact total. Distinct from a real HTTP error (a broken board).
  */
 class ProbePageBudgetReached extends Error {}
 
 /**
- * Wrap an http context so a provider gets exactly ONE successful list request.
+ * A handful of requests, not one: some providers must spend requests before
+ * the first job can arrive — SuccessFactors CSB does a locale-discovery GET,
+ * then one POST per advertised locale until it hits the job-bearing one. A
+ * 1-request budget would misreport every such tenant as 'empty'.
+ */
+const PROBE_REQUEST_BUDGET = 4;
+
+/**
+ * Wrap an http context so a provider gets a bounded number of successful list
+ * requests (PROBE_REQUEST_BUDGET).
  *
  * Cooperating providers also see `maxPages: 1` and stop on their own (we then
- * learn the first-page count). Providers that ignore the hint are cut off at
- * their second request via the sentinel above — so the probe is bounded for
- * every provider, whether or not it honors `maxPages`.
+ * learn the first-page count). Providers that ignore the hint are cut off via
+ * the sentinel above — so the probe is bounded for every provider, whether or
+ * not it honors `maxPages`. `wasTripped()` reports a cut-off even when the
+ * provider swallowed the sentinel internally (e.g. a per-locale try/catch).
  *
  * @param {import('./providers/_types.js').Context} base
+ * @returns {{ctx: import('./providers/_types.js').Context, wasTripped: () => boolean}}
  */
 function boundedProbeCtx(base) {
   let used = 0;
+  let tripped = false;
   const guard = (fn) => async (url, opts) => {
-    if (used >= 1) throw new ProbePageBudgetReached();
+    if (used >= PROBE_REQUEST_BUDGET) {
+      tripped = true;
+      throw new ProbePageBudgetReached();
+    }
     used += 1;
     return fn(url, opts);
   };
-  return { ...base, maxPages: 1, fetchJson: guard(base.fetchJson), fetchText: guard(base.fetchText) };
+  return {
+    ctx: { ...base, maxPages: 1, fetchJson: guard(base.fetchJson), fetchText: guard(base.fetchText) },
+    wasTripped: () => tripped,
+  };
 }
 
 /**
@@ -262,15 +280,21 @@ function boundedProbeCtx(base) {
  * @returns {Promise<{provider,status,jobCount?,partial?,httpStatus?,errorKind?,reason?}>}
  *   status is 'live' (postings found), 'empty' (endpoint OK, no postings), or
  *   'missing' (the board 404s/errors — the company would silently drop from
- *   every scan). `partial` marks a live board whose exact count the one-page
+ *   every scan). `partial` marks a live board whose exact count the bounded
  *   probe didn't measure.
  */
 export async function probeProvider(entry, provider, baseCtx) {
-  const ctx = boundedProbeCtx(baseCtx);
+  const { ctx, wasTripped } = boundedProbeCtx(baseCtx);
   try {
     const jobs = await provider.fetch(entry, ctx);
     const count = Array.isArray(jobs) ? jobs.length : 0;
-    return { provider: provider.id, status: count > 0 ? 'live' : 'empty', jobCount: count };
+    if (count > 0) return { provider: provider.id, status: 'live', jobCount: count };
+    // Zero jobs but the budget guard fired: the provider swallowed the sentinel
+    // (per-locale/per-page try/catch) after its budgeted requests all came back
+    // fine — the endpoint is reachable, we just never reached a job-bearing
+    // page. Same verdict as the propagated-sentinel case below.
+    if (wasTripped()) return { provider: provider.id, status: 'live', partial: true };
+    return { provider: provider.id, status: 'empty', jobCount: 0 };
   } catch (err) {
     if (err instanceof ProbePageBudgetReached) {
       return { provider: provider.id, status: 'live', partial: true };
@@ -293,7 +317,7 @@ export async function probeProvider(entry, provider, baseCtx) {
  *      with cross-probe suggestions when a slug 404s.
  *   2. Everything else is routed through the SAME provider plugins the scanner
  *      uses (Workday, SuccessFactors, SmartRecruiters, Avature, …), bounded to
- *      the first page. This catches broken non-ATS boards that used to be
+ *      a few requests. This catches broken non-ATS boards that used to be
  *      reported as an un-actionable "skipped".
  * A company reaches `skipped` only when no provider claims it. Probing is
  * sequential to stay gentle on rate limits.

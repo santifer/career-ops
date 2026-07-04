@@ -1724,7 +1724,7 @@ try {
   }
 
   // Tier 2: non-ATS companies are probed through the scanner's provider layer,
-  // bounded to the first page. Fake providers stand in for Workday/SF/etc.
+  // bounded to a few requests. Fake providers stand in for Workday/SF/etc.
   const fakeCtx = { transport: 'http', fetchJson: async () => ({}), fetchText: async () => ['x'] };
   const fakeProviders = new Map([
     ['fakeats', {
@@ -1741,7 +1741,7 @@ try {
     }],
     ['pager', {
       // Ignores maxPages and paginates forever; the probe's request budget must
-      // still cut it off after the first page and classify it live.
+      // still cut it off after the budgeted pages and classify it live.
       id: 'pager',
       detect: (e) => (/pager\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
       fetch: async (e, ctx) => {
@@ -1750,12 +1750,27 @@ try {
         return jobs;
       },
     }],
+    ['swallower', {
+      // Mimics SuccessFactors CSB: burns the whole budget on discovery/locale
+      // requests that yield no jobs, swallowing every fetch error internally
+      // (per-locale try/catch). The probe must read "budget tripped + 0 jobs"
+      // as live/partial — the endpoint answered fine — never as 'empty'.
+      id: 'swallower',
+      detect: (e) => (/swallower\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
+      fetch: async (e, ctx) => {
+        for (let p = 0; p < 50; p++) {
+          try { await ctx.fetchJson(`u?p=${p}`); } catch { break; }
+        }
+        return [];
+      },
+    }],
   ]);
   const provResults = await verifyCompanies([
     { name: 'PFull', careers_url: 'https://fakeats.io/full' },
     { name: 'PEmpty', careers_url: 'https://fakeats.io/empty' },
     { name: 'PDead', careers_url: 'https://fakeats.io/dead' },
     { name: 'PPager', careers_url: 'https://pager.io/board' },
+    { name: 'PSwallow', careers_url: 'https://swallower.io/board' },
     { name: 'NoProv', careers_url: 'https://unknown.example/careers' },
   ], { fetchJson: mockFetch, providers: fakeProviders, httpCtx: fakeCtx });
   const pv = Object.fromEntries(provResults.map((r) => [r.name, r]));
@@ -1764,9 +1779,10 @@ try {
     pv.PEmpty?.status === 'empty' &&
     pv.PDead?.status === 'missing' && pv.PDead?.errorKind === 'slug_gone' &&
     pv.PPager?.status === 'live' && pv.PPager?.partial === true &&
+    pv.PSwallow?.status === 'live' && pv.PSwallow?.partial === true &&
     pv.NoProv?.status === 'skipped'
   ) {
-    pass('verify-portals probes non-ATS boards via providers, bounded to first page');
+    pass('verify-portals probes non-ATS boards via providers, bounded to a request budget');
   } else {
     fail(`verify-portals provider-fallback wrong: ${JSON.stringify(pv)}`);
   }
@@ -10431,6 +10447,71 @@ try {
   // Empty fragment (MTU's zero-req case) → no jobs, no throw.
   if (parseTiles('<!DOCTYPE html>', jobBase).length === 0) pass('parseTiles returns [] for an empty fragment');
   else fail('parseTiles should return [] for an empty fragment');
+
+  // ── CSB (Career Site Builder) strategy — JSON jobs API ────────────────────
+  const { extractLocales, parseCsbDate, cleanCsbLocation, parseCsbJobs } =
+    await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
+
+  // extractLocales — pull the language-switcher locales from a /search/ page,
+  // deduped and priority-ordered (de_DE, en_US first; then alphabetical).
+  const switcherHtml =
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=fr_FR">FR</a>' +
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=en_US">EN</a>' +
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=de_DE">DE</a>' +
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=de_DE">DE dup</a>';
+  const locs = extractLocales(switcherHtml);
+  if (JSON.stringify(locs) === JSON.stringify(['de_DE', 'en_US', 'fr_FR'])) {
+    pass('extractLocales dedups and priority-orders (de_DE, en_US, then alpha)');
+  } else {
+    fail(`extractLocales wrong: ${JSON.stringify(locs)}`);
+  }
+  if (extractLocales('<p>no locales here</p>').length === 0) pass('extractLocales returns [] when the page carries none');
+  else fail('extractLocales should return [] for a page with no locale links');
+
+  // parseCsbDate — locale-dependent short date; separator infers field order.
+  if (parseCsbDate('6/18/26') === Date.UTC(2026, 5, 18)) pass('parseCsbDate reads US M/D/YY');
+  else fail(`parseCsbDate US wrong: ${parseCsbDate('6/18/26')}`);
+  if (parseCsbDate('20.11.23') === Date.UTC(2023, 10, 20)) pass('parseCsbDate reads European D.M.YY (dots)');
+  else fail(`parseCsbDate DE wrong: ${parseCsbDate('20.11.23')}`);
+  if (parseCsbDate('garbage') === undefined && parseCsbDate('13/40/99') === undefined && parseCsbDate('') === undefined) {
+    pass('parseCsbDate returns undefined for junk / out-of-range / empty');
+  } else {
+    fail('parseCsbDate should reject junk, out-of-range, and empty input');
+  }
+
+  // cleanCsbLocation — array of "City, CC, ZIP<br/>" strings → joined, stripped.
+  if (cleanCsbLocation(['Karlovy Vary, CZE, 36004<br/>']) === 'Karlovy Vary, CZE, 36004') pass('cleanCsbLocation strips trailing <br/>');
+  else fail(`cleanCsbLocation single wrong: ${JSON.stringify(cleanCsbLocation(['Karlovy Vary, CZE, 36004<br/>']))}`);
+  if (cleanCsbLocation(['Munich<br/>', 'Berlin<br/>']) === 'Munich / Berlin') pass('cleanCsbLocation joins multiple locations with " / "');
+  else fail(`cleanCsbLocation multi wrong: ${JSON.stringify(cleanCsbLocation(['Munich<br/>', 'Berlin<br/>']))}`);
+  if (cleanCsbLocation(undefined) === '' && cleanCsbLocation([]) === '') pass('cleanCsbLocation tolerates missing/empty location');
+  else fail('cleanCsbLocation should return "" for missing/empty input');
+
+  // parseCsbJobs — map the {response:{…}} records; build {id}-{locale} URLs and
+  // sanitize the cosmetic slug (HTML entities, URL-structural chars).
+  const csbJson = {
+    totalJobs: 3,
+    jobSearchResult: [
+      { response: { id: '31099', unifiedStandardTitle: 'Analytical Lab Technician', unifiedUrlTitle: 'Analytical-Lab-Technician', jobLocationShort: ['Anyang, KOR, 14058<br/>'], unifiedStandardStart: '6/18/26' } },
+      { response: { id: '1283', unifiedStandardTitle: 'Senior Expert Mergers & Acquisitions (m/f/d)', unifiedUrlTitle: 'Senior-Expert-Mergers-&amp;-Acquisitions-%28mfd%29', jobLocationShort: ['Munich<br/>'], unifiedStandardStart: '4/21/26' } },
+      { response: { id: '', unifiedStandardTitle: 'No ID — dropped', unifiedUrlTitle: 'x' } },
+      { response: { id: '999', unifiedStandardTitle: '', unifiedUrlTitle: 'no-title-dropped' } },
+    ],
+  };
+  const csbCfg = { origin: 'https://jobs.example.com' };
+  const csbJobs = parseCsbJobs(csbJson, csbCfg, 'en_US');
+  if (csbJobs.length === 2) pass('parseCsbJobs drops records missing id or title');
+  else fail(`parseCsbJobs returned ${csbJobs.length}, expected 2`);
+  const c1 = csbJobs[0];
+  if (c1 && c1.url === 'https://jobs.example.com/job/Analytical-Lab-Technician/31099-en_US') pass('parseCsbJobs builds {origin}/job/{slug}/{id}-{locale}');
+  else fail(`parseCsbJobs url wrong: ${JSON.stringify(c1 && c1.url)}`);
+  if (c1 && c1.location === 'Anyang, KOR, 14058') pass('parseCsbJobs cleans jobLocationShort');
+  else fail(`parseCsbJobs location wrong: ${JSON.stringify(c1 && c1.location)}`);
+  if (c1 && c1.postedAt === Date.UTC(2026, 5, 18)) pass('parseCsbJobs sets postedAt from unifiedStandardStart');
+  else fail(`parseCsbJobs postedAt wrong: ${JSON.stringify(c1 && c1.postedAt)}`);
+  const c2 = csbJobs[1];
+  if (c2 && !/[?#&]|&amp;/.test(new URL(c2.url).pathname)) pass('parseCsbJobs sanitizes &amp; / URL-structural chars out of the slug');
+  else fail(`parseCsbJobs slug not sanitized: ${JSON.stringify(c2 && c2.url)}`);
 } catch (err) {
   fail(`successfactors provider test threw: ${err.message}`);
 }
