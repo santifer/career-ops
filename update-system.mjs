@@ -760,11 +760,19 @@ async function apply() {
         git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', 'tests/')
           .split('\n').filter(Boolean).map((p) => p.replace(/\\/g, '/'))
       );
-      const localTests = git('ls-files', '--', 'tests/').split('\n').filter(Boolean);
-      for (const f of localTests) {
-        if (!remoteTests.has(f.replace(/\\/g, '/'))) {
-          unlinkSync(join(ROOT, f));
-          updated.push(`${f} (pruned)`);
+      // An empty set means FETCH_HEAD has no tests/ at all (older target, or
+      // ls-tree quietly returning nothing) — pruning against it would delete
+      // every local test file. Only prune when the remote actually ships tests/.
+      if (remoteTests.size > 0) {
+        const localTests = git('ls-files', '--', 'tests/').split('\n').filter(Boolean);
+        for (const f of localTests) {
+          if (!remoteTests.has(f.replace(/\\/g, '/'))) {
+            unlinkSync(join(ROOT, f));
+            // Raw path only: `updated` entries are reused as git pathspecs by
+            // revertPaths() and the scoped commit below.
+            updated.push(f);
+            console.log(`Pruned stale test file: ${f}`);
+          }
         }
       }
     } catch {

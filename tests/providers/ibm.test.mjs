@@ -5,8 +5,6 @@ import { pathToFileURL } from 'url';
 
 console.log('\nProvider — ibm');
 
-console.log('\n24. Provider — ibm');
-
 try {
   const ibm = (await import(pathToFileURL(join(ROOT, 'providers/ibm.mjs')).href)).default;
   const { parseIbmResponse, buildPostFilter } = await import(pathToFileURL(join(ROOT, 'providers/ibm.mjs')).href);
