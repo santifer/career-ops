@@ -39,6 +39,17 @@ title_filter:
     # -- Related engineering --
     - "Platform Engineer"
     - "Solutions Architect"
+    # -- Sports analytics / football --
+    - "Sports Data"
+    - "Sports Analyst"
+    - "Sports Analytics"
+    - "Performance Analyst"
+    - "Match Analyst"
+    - "Football Analyst"
+    - "Spielanalyse"
+    - "Datenscout"
+    - "Datenscouting"
+    - "Fußball"
   negative:
     - "Intern"
     - "Praktikant"
@@ -309,6 +320,41 @@ search_queries:
     query: 'site:jobs.smartrecruiters.com "Data Engineer" OR "Data Scientist" OR "Data Analyst" OR "ML" Cologne OR Köln OR Berlin OR Munich OR Germany'
     enabled: true
 
+  # ══════════════════════════════════════════════
+  # Sports Analytics — Football / Tennis / General
+  # ══════════════════════════════════════════════
+  - name: LinkedIn — Sports Analytics Germany
+    query: 'site:linkedin.com/jobs "Sports Data" OR "Sports Analytics" OR "Football Analytics" OR "Performance Analyst" Germany OR Berlin OR Munich OR Cologne'
+    enabled: true
+
+  - name: LinkedIn — Bundesliga Data
+    query: 'site:linkedin.com/jobs "Bundesliga" OR "Fußball" "Data" OR "Analyst" OR "Engineer" OR "Datenscout" Germany'
+    enabled: true
+
+  - name: Futboljobs — Data Germany
+    query: 'site:futboljobs.com "Data Engineer" OR "Data Analyst" OR "Data Scientist" Germany'
+    enabled: true
+
+  - name: SportsTechJobs — Data Germany
+    query: 'site:sportstechjobs.com "Data" OR "Analytics" OR "ML" Germany OR Munich OR Berlin OR Cologne'
+    enabled: true
+
+  - name: GlobalSportsJobs — Data Germany
+    query: 'site:globalsportsjobs.com "Data" OR "Analytics" OR "Engineer" Germany'
+    enabled: true
+
+  - name: Greenhouse — Sports Data
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "sports" OR "football" OR "Fußball" "data" OR "analytics" OR "engineer" Germany OR Remote'
+    enabled: true
+
+  - name: LinkedIn — Tennis Data Europe
+    query: 'site:linkedin.com/jobs "tennis" "data" OR "analyst" OR "engineer" OR "scientist" Europe OR London OR Germany'
+    enabled: true
+
+  - name: SportsTechJobs — Tennis
+    query: 'site:sportstechjobs.com "tennis" OR "TennisViz" data OR analytics OR engineer'
+    enabled: true
+
 # -- Tracked companies (DACH focus with Data/ML teams) --
 tracked_companies:
 
@@ -494,6 +540,159 @@ tracked_companies:
     scan_query: 'site:jobs.ashbyhq.com/vinted "Data" OR "Analytics" OR "ML"'
     notes: "Berlin / Vilnius. C2C marketplace, data science. Private Ashby API — WebSearch only."
     enabled: false
+
+  # ── Sports tech companies ──
+
+  - name: Sportradar
+    careers_url: https://sportradar.breezy.hr/
+    notes: "Leipzig / Munich DE. Global sports data & betting tech. 2300+ employees. Breezy ATS."
+    enabled: true
+
+  - name: Kinexon
+    careers_url: https://kinexon.com/jobs
+    api: https://boards-api.greenhouse.io/v1/boards/kinexon/jobs
+    notes: "Munich DE. Player/ball tracking for FIFA, Bundesliga, NBA. C++/Python focus. Greenhouse ATS."
+    enabled: true
+
+  - name: Stats Perform
+    careers_url: https://statsperform.teamtailor.com/jobs
+    notes: "Munich / global. Opta data, AI sports analytics, FIFA partner. Teamtailor ATS."
+    enabled: true
+
+  - name: Sportec Solutions
+    careers_url: https://sportec-solutions.jobs.personio.de
+    notes: "Munich/Unterföhring DE. DFL + Deltatre JV. Bundesliga Match Facts, VAR, tracking data. Personio ATS."
+    enabled: true
+
+  - name: Hawk-Eye Innovations
+    careers_url: https://careers.hawkeyeinnovations.com/
+    scan_method: websearch
+    scan_query: '"Hawk-Eye" OR "hawkeyeinnovations" careers jobs "Data" OR "Engineer" OR "Analyst"'
+    notes: "Basingstoke UK + Budapest HU. Ball tracking for tennis (Hawk-Eye Live), football (VAR). Sony subsidiary."
+    enabled: true
+
+  # ── Tennis-specific data companies ──
+
+  - name: TennisViz / Ellipse
+    careers_url: https://ellipsedata.com/jobs/
+    scan_method: websearch
+    scan_query: 'site:ellipsedata.com/jobs OR "TennisViz" OR "Ellipse Data" jobs "Data Scientist" OR "Engineer" OR "Analyst"'
+    notes: "London/Leeds UK. World leader in tennis tracking data analytics. Also FootballViz, CricViz. Python/ML/SQL."
+    enabled: true
+
+  - name: Smartodds
+    careers_url: https://smartodds.applytojob.com/
+    scan_method: websearch
+    scan_query: 'site:smartodds.applytojob.com OR "Smartodds" jobs "Tennis" OR "Quant" OR "Data" OR "Analyst"'
+    notes: "London UK. Quantitative sports analysis for betting. Tennis + football + horse racing. Statistical modeling."
+    enabled: true
+
+  - name: DraftKings (Sports Modeling)
+    careers_url: https://careers.draftkings.com/
+    scan_method: websearch
+    scan_query: '"DraftKings" jobs "Tennis" OR "Sports Modeling" OR "Data Scientist" London OR Europe'
+    notes: "London UK / Boston US. Sports modeling for Sportsbook. Tennis-specific DS roles. Python/ML."
+    enabled: true
+
+  - name: Sportradar (Vienna)
+    careers_url: https://sportradar.breezy.hr/
+    scan_method: websearch
+    scan_query: '"Sportradar" jobs "Data Scientist" OR "Data Engineer" OR "Software Engineer" Vienna OR Austria'
+    notes: "Vienna AT. Senior Data Scientist + Sr. SW Engineer - Data (Python, AWS, Redshift, Spark). Covers tennis."
+    enabled: true
+
+  # ── Bundesliga & German football clubs ──
+
+  - name: 1. FC Köln
+    careers_url: https://fc-koeln.de/jobs
+    scan_method: websearch
+    scan_query: 'site:fc-koeln.de/jobs OR "1. FC Köln" jobs "Data" OR "Daten" OR "Analyst" OR "Engineer" OR "Digital" OR "IT"'
+    notes: "Cologne DE. HOME CLUB. Data Engineer role was recently open (now closed). Monitor closely."
+    enabled: true
+
+  - name: Alemannia Aachen
+    careers_url: https://www.alemannia-aachen.de/business/stellenanzeigen/
+    scan_method: websearch
+    scan_query: '"Alemannia Aachen" jobs OR Stellenanzeigen "Data" OR "Daten" OR "Analyst" OR "IT"'
+    notes: "Aachen DE. 3. Liga, recently promoted. Small staff, rare data roles. Close to Cologne."
+    enabled: true
+
+  - name: Bayer 04 Leverkusen
+    careers_url: https://www.bayer04.de/de-de/page/stellenangebote
+    scan_method: websearch
+    scan_query: '"Bayer 04 Leverkusen" OR site:bayer04.de jobs "Data" OR "Daten" OR "Analyst" OR "Engineer" OR "IT" OR "Digital"'
+    notes: "Leverkusen DE (NRW, commutable from Cologne). Bundesliga champion 2024."
+    enabled: true
+
+  - name: Borussia Mönchengladbach
+    careers_url: https://www.borussia.de
+    scan_method: websearch
+    scan_query: '"Borussia Mönchengladbach" jobs "Data" OR "Daten" OR "Analyst" OR "Engineer" OR "IT"'
+    notes: "Mönchengladbach DE (NRW, commutable from Cologne). Bundesliga."
+    enabled: true
+
+  - name: Borussia Dortmund
+    careers_url: https://karriere.bvb.de/
+    scan_method: websearch
+    scan_query: 'site:karriere.bvb.de OR "Borussia Dortmund" jobs "Data" OR "Daten" OR "AWS" OR "Analyst" OR "Engineer" OR "Sport-IT"'
+    notes: "Dortmund DE. Has Data Scientists and Sport-IT team (AWS). Previously hired AWS Data Engineers."
+    enabled: true
+
+  - name: FC Bayern München
+    careers_url: https://fcbayern.com/de/karriere
+    scan_method: websearch
+    scan_query: 'site:fcbayern.com/de/karriere OR "FC Bayern" jobs "Data" OR "Daten" OR "Analyst" OR "Engineer" OR "IT"'
+    notes: "Munich DE. Match Analysis & Innovation dept with Data Scientists. Large org (591 employees)."
+    enabled: true
+
+  - name: RB Leipzig
+    careers_url: https://www.rbleipzig.com
+    scan_method: websearch
+    scan_query: '"RB Leipzig" OR "RasenBallsport Leipzig" jobs "Data" OR "Daten" OR "Analytics" OR "Digital" OR "IT"'
+    notes: "Leipzig DE. Has Data & Analytics team. Digital Analytics & Audience Manager recently open."
+    enabled: true
+
+  - name: Eintracht Frankfurt
+    careers_url: https://jobs.eintracht-frankfurt.de/de
+    scan_method: websearch
+    scan_query: 'site:jobs.eintracht-frankfurt.de OR "Eintracht Frankfurt" jobs "Data" OR "Daten" OR "Analyst" OR "IT"'
+    notes: "Frankfurt DE. Personio ATS for Eintracht Frankfurt Fußball AG."
+    enabled: true
+
+  - name: VfB Stuttgart
+    careers_url: https://www.vfb.de
+    scan_method: websearch
+    scan_query: '"VfB Stuttgart" jobs "Data" OR "Daten" OR "Analyst" OR "Engineer" OR "Data Science"'
+    notes: "Stuttgart DE. Has Data Science team (AWS, Python, Django). See vfb.de jobs section."
+    enabled: true
+
+  - name: HSV
+    careers_url: https://hsv-fussball-ag-ap.jobs.personio.de
+    scan_method: websearch
+    scan_query: 'site:hsv-fussball-ag-ap.jobs.personio.de OR "HSV" "Hamburger SV" jobs "Data" OR "Daten" OR "Analyst"'
+    notes: "Hamburg DE. Currently has Pflichtpraktikant Datenanalyse NLZ. Personio ATS."
+    enabled: true
+
+  - name: SC Freiburg
+    careers_url: https://www.scfreiburg.com
+    scan_method: websearch
+    scan_query: '"SC Freiburg" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer"'
+    notes: "Freiburg DE. Bundesliga, known for analytics-driven scouting."
+    enabled: true
+
+  - name: TSG Hoffenheim
+    careers_url: https://www.tsg-hoffenheim.de
+    scan_method: websearch
+    scan_query: '"TSG Hoffenheim" OR "TSG 1899" jobs "Data" OR "Daten" OR "Analyst" OR "IT"'
+    notes: "Sinsheim DE. SAP-backed, strong tech/data infrastructure. Bundesliga."
+    enabled: true
+
+  - name: VfL Wolfsburg
+    careers_url: https://www.vfl-wolfsburg.de
+    scan_method: websearch
+    scan_query: '"VfL Wolfsburg" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer"'
+    notes: "Wolfsburg DE. Volkswagen-backed, strong tech infrastructure. Bundesliga."
+    enabled: true
 
   # ── DACH healthcare / e-pharmacy ──
 
