@@ -182,6 +182,7 @@ export default {
       if (jobs.length >= MAX_JOBS) break;
       startrow += tiles.length;
     }
-    return jobs;
+    // The cap is checked between pages, so the last page can overshoot it.
+    return jobs.slice(0, MAX_JOBS);
   },
 };

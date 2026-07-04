@@ -260,7 +260,7 @@ export async function openSession(url: string, cliId?: string, forceAgent?: bool
     // session open and hand off to the STREAMED drive route, so the user watches
     // the agent reach the form live (/api/apply/drive). Otherwise abort.
     if (cliId && why.code === "no-form") {
-      const id = `apply-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
+      const id = `apply-${crypto.randomUUID()}`;
       const title = form.title || (await page.title().catch(() => "")) || "Application";
       SESSIONS.set(id, { id, url, title, fields: [], context, page, frame, createdAt: Date.now(), formShot: shots[shots.length - 1] });
       return { id, title, fields: [], shots, issues: [], needsDrive: true };
@@ -277,7 +277,7 @@ export async function openSession(url: string, cliId?: string, forceAgent?: bool
   if (aiInterpreted) issues.push({ level: "info", code: "ai-interpreted", message: "This form had an uncommon layout, so AI read its fields live — give them an extra check before submitting." });
   if (unlabeled > 0) issues.push({ level: "warn", code: "unlabeled-fields", message: `${unlabeled} field${unlabeled > 1 ? "s" : ""} couldn't be labelled cleanly — double-check ${unlabeled > 1 ? "them" : "it"} before submitting.` });
 
-  const id = `apply-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
+  const id = `apply-${crypto.randomUUID()}`;
   SESSIONS.set(id, { id, url, title: form.title, fields: form.fields, context, page, frame, createdAt: Date.now(), formShot: shots[shots.length - 1] });
   return { id, title: form.title, fields: form.fields, shots, issues };
 }

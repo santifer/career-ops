@@ -649,8 +649,8 @@ if (tsvFiles.length === 0) {
 
 // Sort files numerically for deterministic processing
 tsvFiles.sort((a, b) => {
-  const numA = parseInt(a.replace(/\D/g, '')) || 0;
-  const numB = parseInt(b.replace(/\D/g, '')) || 0;
+  const numA = parseInt(/^(\d+)/.exec(a)?.[1] ?? '', 10) || 0;
+  const numB = parseInt(/^(\d+)/.exec(b)?.[1] ?? '', 10) || 0;
   return numA - numB;
 });
 

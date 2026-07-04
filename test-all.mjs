@@ -10213,8 +10213,9 @@ try {
     fail('prepare-application.mjs does not read config/profile.yml');
   }
 
-  // Must restrict PDF to output/ directory
-  if (/output[^'"`\n]*startsWith|startsWith.*output/.test(src)) {
+  // Must restrict PDF to output/ directory — either the legacy startsWith
+  // prefix check or the path.relative() containment guard counts.
+  if (/output[^'"`\n]*startsWith|startsWith.*output|relative\(outputDir/.test(src)) {
     pass('prepare-application.mjs restricts PDF path to output/');
   } else {
     fail('prepare-application.mjs missing output/ directory restriction for --pdf');
