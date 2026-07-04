@@ -116,7 +116,10 @@ function pageIsPastWindow(pageJobs, sinceMs) {
 }
 
 function resolveEndpoint(entry) {
-  const url = entry.careers_url || '';
+  // entry.api takes precedence over careers_url (mirrors greenhouse/ashby) so a
+  // branded page (e.g. https://www.ptc.com/en/careers) can stay as careers_url
+  // while the Workday tenant URL is pinned via api: in portals.yml.
+  const url = entry.api || entry.careers_url || '';
   const m = url.match(/^https:\/\/([\w-]+)\.(wd[\w-]*)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([^/?#]+)/);
   if (!m) return null;
   const [, tenant, instance, site] = m;
