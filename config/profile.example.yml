@@ -118,6 +118,17 @@ cover_letter:
       # Only trigger this entry when the JD location is in one of these countries.
       countries: [Spain, Mexico, Argentina, Colombia, Chile]
 
+# ── Outreach / greeting ─────────────────────────────────────────────────────
+#
+# Used by the greeting variant of `/career-ops contacto` (the short first-touch
+# message for BOSS Zhipin 打招呼, job-board chat, or a cold-email opener).
+#
+# greeting_max_chars is the hard character budget for that message. Default when
+# the key is absent: 150 (BOSS Zhipin's greeting limit). Raise or lower it to
+# match the platform you're messaging on.
+# outreach:
+#   greeting_max_chars: 150
+
 # ── Auto-PDF threshold ──────────────────────────────────────────────────────
 #
 # Auto-PDF threshold during evaluation (used by `/career-ops pipeline` and
