@@ -215,6 +215,8 @@ const SYSTEM_PATHS = [
   'plugin-audit.mjs',
   'validate-plugin-registry.mjs',
   'config/plugins.example.yml',
+  'modes/discover.md',
+  'rank-pipeline.mjs',
 ];
 
 // User layer paths — NEVER touch these (safety check)

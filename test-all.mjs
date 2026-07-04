@@ -13,7 +13,7 @@
 
 
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -91,45 +91,16 @@ function run(cmd, args = [], opts = {}) {
  */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 
-const BASH = (() => {
-  if (process.platform !== 'win32') return 'bash';
-  try {
-    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
-    return 'bash';
-  } catch {}
-  const candidates = [
-    'C:\\Program Files\\Git\\bin\\bash.exe',
-    'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
-    'bash'
-  ];
-  for (const cmd of candidates) {
-    try {
-      execSync(`"${cmd}" -c "true"`, { stdio: 'ignore' });
-      return cmd;
-    } catch {}
-  }
-  return 'bash';
-})();
-
 function toBashPath(wpath) {
   if (process.platform !== 'win32') return wpath;
-  const forwardSlashed = wpath.replace(/\\/g, '/');
-  // Try cygpath first: it ships with Git for Windows, which is also what
-  // provides `bash` on PATH on most Windows dev machines (see BASH const
-  // above). cygpath emits /c/... paths that match Git Bash's mount scheme.
-  // wslpath emits /mnt/c/... paths, which only resolve inside WSL's own
-  // bash -- if WSL happens to be installed but `bash` on PATH still
-  // resolves to Git Bash, a wslpath-first order silently produces a path
-  // Git Bash can't find (see #1409). Only fall back to wslpath (and only
-  // pay the cost of booting the WSL VM) when cygpath is unavailable.
   try {
-    const cygpathCmd = existsSync('C:\\Program Files\\Git\\usr\\bin\\cygpath.exe') ? '"C:\\Program Files\\Git\\usr\\bin\\cygpath.exe"' : 'cygpath';
-    const out = execSync(`${cygpathCmd} -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const forwardSlashed = wpath.replace(/\\/g, '/');
+    const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   try {
-    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
-    const out = execSync(`wsl wslpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+    const forwardSlashed = wpath.replace(/\\/g, '/');
+    const out = execSync(`cygpath -u "${forwardSlashed}"`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
     if (out) return out;
   } catch {}
   return wpath.replace(/^[A-Za-z]:/, m => '/' + m[0].toLowerCase()).replace(/\\/g, '/');
@@ -187,11 +158,8 @@ const scripts = [
   { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
-  { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
-  { name: 'agent-inbox-tests.mjs', expectExit: 0 },
-  { name: 'followup-seed-tests.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs', expectExit: 0 },
@@ -305,7 +273,7 @@ try {
   // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
   // pure URL→API resolution + SSRF guard; the network fetch is conservative by
   // construction (only 404/410→expired, 200→active, else null→Playwright fallback).
-  const { resolveAtsApi, classifyAshbyBoard, checkLivenessViaApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
+  const { resolveAtsApi } = await import(pathToFileURL(join(ROOT, 'liveness-api.mjs')).href);
   const ghApi = resolveAtsApi('https://boards.greenhouse.io/acme/jobs/4567890');
   if (ghApi?.ats === 'greenhouse' && ghApi.apiUrl === 'https://boards-api.greenhouse.io/v1/boards/acme/jobs/4567890') {
     pass('resolveAtsApi maps a Greenhouse posting to its per-job API URL');
@@ -328,79 +296,6 @@ try {
     pass('resolveAtsApi rejects non-numeric Greenhouse ids and non-https (SSRF guard)');
   } else {
     fail('resolveAtsApi guard failed (bad id or http accepted)');
-  }
-  // Ashby: org-level board endpoint. Ashby pages are JS-rendered, so the browser/
-  // static rung sees only nav/footer and false-reports live postings as expired —
-  // the API rung must resolve the org board and confirm the specific job id.
-  const AS_UUID = '00fd8024-7804-4278-a38b-c9d60d929dbb';
-  const asApi = resolveAtsApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
-  if (asApi?.ats === 'ashby'
-      && asApi.apiUrl === 'https://api.ashbyhq.com/posting-api/job-board/deepgram'
-      && asApi.parts?.jobId === AS_UUID
-      && typeof asApi.interpret === 'function') {
-    pass('resolveAtsApi maps an Ashby posting to its org job-board API URL');
-  } else {
-    fail(`Ashby API URL wrong: ${JSON.stringify(asApi)}`);
-  }
-  // The /application apply-link variant must resolve to the same org + job id.
-  const asApply = resolveAtsApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}/application`);
-  if (asApply?.ats === 'ashby' && asApply.parts?.org === 'deepgram' && asApply.parts?.jobId === AS_UUID) {
-    pass('resolveAtsApi handles the Ashby /application apply-link variant');
-  } else {
-    fail(`Ashby /application variant not resolved: ${JSON.stringify(asApply)}`);
-  }
-  // A bare board root (no job id) isn't a specific posting → null → Playwright.
-  if (resolveAtsApi('https://jobs.ashbyhq.com/deepgram') === null) {
-    pass('resolveAtsApi returns null for an Ashby board root (no job id)');
-  } else {
-    fail('resolveAtsApi should not treat an Ashby board root as a posting');
-  }
-  // classifyAshbyBoard — pure per-job liveness from the board payload.
-  const asListed = classifyAshbyBoard({ jobs: [{ id: AS_UUID, isListed: true }] }, AS_UUID);
-  const asAbsent = classifyAshbyBoard({ jobs: [{ id: 'other-id', isListed: true }] }, AS_UUID);
-  const asUnlisted = classifyAshbyBoard({ jobs: [{ id: AS_UUID, isListed: false }] }, AS_UUID);
-  const asBadShape = classifyAshbyBoard({ notJobs: [] }, AS_UUID);
-  if (asListed?.result === 'active'
-      && asAbsent?.result === 'expired'
-      && asUnlisted?.result === 'expired'
-      && asBadShape === null) {
-    pass('classifyAshbyBoard: listed→active, absent/unlisted→expired, bad shape→null');
-  } else {
-    fail(`classifyAshbyBoard wrong: listed=${JSON.stringify(asListed)} absent=${JSON.stringify(asAbsent)} unlisted=${JSON.stringify(asUnlisted)} badShape=${JSON.stringify(asBadShape)}`);
-  }
-  // checkLivenessViaApi — the fetch/Response orchestration around the pure helpers:
-  // a 200 with an org-level `interpret` (Ashby) is awaited and parsed, a per-job 200
-  // (Greenhouse) is live as-is, 404 is expired, and a rejected fetch (network error,
-  // or an aborted timeout — same code path) is inconclusive → null. Mock global.fetch
-  // so no network is hit; restore it in finally.
-  const origFetch = globalThis.fetch;
-  try {
-    globalThis.fetch = async () => ({ status: 200, json: async () => ({ jobs: [{ id: AS_UUID, isListed: true }] }) });
-    const cvAshbyLive = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
-    globalThis.fetch = async () => ({ status: 200, json: async () => ({ jobs: [] }) });
-    const cvAshbyGone = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
-    // 200 but a malformed board (no `jobs` array): interpret returns null, so the
-    // orchestration must fall through to null (→ Playwright), not a false verdict.
-    globalThis.fetch = async () => ({ status: 200, json: async () => ({}) });
-    const cvAshbyMalformed = await checkLivenessViaApi(`https://jobs.ashbyhq.com/deepgram/${AS_UUID}`);
-    globalThis.fetch = async () => ({ status: 200 });
-    const cvGhLive = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
-    globalThis.fetch = async () => ({ status: 404 });
-    const cvGone = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
-    globalThis.fetch = async () => { throw new Error('network down'); };
-    const cvErr = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
-    if (cvAshbyLive?.result === 'active' && cvAshbyLive?.code === 'ashby_api_ok'
-        && cvAshbyGone?.result === 'expired' && cvAshbyGone?.code === 'ashby_api_unlisted'
-        && cvAshbyMalformed === null
-        && cvGhLive?.result === 'active'
-        && cvGone?.result === 'expired'
-        && cvErr === null) {
-      pass('checkLivenessViaApi: 200→interpret (Ashby), malformed→null, greenhouse 200→active, 404→expired, fetch error→null');
-    } else {
-      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} malformed=${JSON.stringify(cvAshbyMalformed)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)}`);
-    }
-  } finally {
-    globalThis.fetch = origFetch;
   }
 
   // Headed-fallback-on-challenge path (liveness-browser.mjs). Fake Playwright
@@ -550,37 +445,16 @@ try {
 
 if (!QUICK) {
   console.log('\n4. Dashboard build');
-  let hasGo = false;
-  try {
-    execSync('go version', { stdio: 'ignore' });
-    hasGo = true;
-  } catch {}
-  if (!hasGo) {
-    warn('Dashboard build skipped — go compiler not in env');
+  const isWindows = process.platform === 'win32';
+  const outPath = isWindows ? 'career-dashboard-test.exe' : '/tmp/career-dashboard-test';
+  const goBuild = run(`cd dashboard && go build -o ${outPath} . 2>&1`);
+  if (goBuild !== null) {
+    pass('Dashboard compiles');
+    if (isWindows) {
+      try { rmSync(join(ROOT, 'dashboard', 'career-dashboard-test.exe'), { force: true }); } catch (e) {}
+    }
   } else {
-    const isWindows = process.platform === 'win32';
-    const dashboardBuildTmp = mkdtempSync(join(tmpdir(), 'career-dashboard-build-'));
-    const outPath = join(dashboardBuildTmp, isWindows ? 'career-dashboard-test.exe' : 'career-dashboard-test');
-    const goEnv = { ...process.env };
-    if (isWindows && !goEnv.GOCACHE) {
-      goEnv.GOCACHE = join(tmpdir(), 'career-ops-go-build-cache');
-    }
-    if (goEnv.GOCACHE) {
-      try { mkdirSync(goEnv.GOCACHE, { recursive: true }); } catch (e) {}
-    }
-    const goBuild = run('go', ['build', '-o', outPath, '.'], {
-      cwd: join(ROOT, 'dashboard'),
-      env: goEnv,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 60000,
-    });
-    if (goBuild !== null) {
-      pass('Dashboard compiles');
-      try { rmSync(outPath, { force: true }); } catch (e) {}
-    } else {
-      fail('Dashboard build failed');
-    }
-    try { rmSync(dashboardBuildTmp, { recursive: true, force: true }); } catch (e) {}
+    fail('Dashboard build failed');
   }
 } else {
   console.log('\n4. Dashboard build (skipped --quick)');
@@ -686,8 +560,8 @@ const leakPatterns = [
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.ar.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.ja.md',
-  'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.ua.md', 'README.zh-TW.md',
+  'README.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.ja.md', 'README.ko-KR.md',
+  'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
   'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'AGENTS.md', 'go.mod', 'test-all.mjs',
@@ -758,48 +632,11 @@ if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
 } else {
   fail('generate-pdf still waits for networkidle');
 }
-
-function extractRenderHtmlToPdfOptions(source) {
-  const call = /renderHtmlToPdf\s*\(\s*html\s*,\s*outputPath\s*,/g.exec(source);
-  if (!call) return '';
-  const objectStart = source.indexOf('{', call.index + call[0].length);
-  if (objectStart === -1) return '';
-
-  let depth = 0;
-  let quote = '';
-  let escaped = false;
-  for (let i = objectStart; i < source.length; i += 1) {
-    const ch = source[i];
-    if (quote) {
-      if (escaped) escaped = false;
-      else if (ch === '\\') escaped = true;
-      else if (ch === quote) quote = '';
-      continue;
-    }
-    if (ch === '"' || ch === "'" || ch === '`') {
-      quote = ch;
-      continue;
-    }
-    if (ch === '{') depth += 1;
-    else if (ch === '}') {
-      depth -= 1;
-      if (depth === 0) return source.slice(objectStart + 1, i);
-    }
-  }
-  return '';
-}
-
-const renderHtmlToPdfOptions = extractRenderHtmlToPdfOptions(generatePdfScript);
-if (renderHtmlToPdfOptions && /\breportNum\b/.test(renderHtmlToPdfOptions) && /\binputPath\b/.test(renderHtmlToPdfOptions)) {
+const renderHtmlToPdfCall = generatePdfScript.match(/renderHtmlToPdf\(html,\s*outputPath,\s*\{([\s\S]*?)\}\)/);
+if (renderHtmlToPdfCall && /\breportNum\b/.test(renderHtmlToPdfCall[1]) && /\binputPath\b/.test(renderHtmlToPdfCall[1])) {
   pass('generate-pdf threads reportNum/inputPath into renderHtmlToPdf');
 } else {
   fail('generate-pdf does not pass reportNum/inputPath into renderHtmlToPdf');
-}
-const nestedRenderOptions = extractRenderHtmlToPdfOptions('return renderHtmlToPdf(html, outputPath, { format, metadata: { reportNum, inputPath } });');
-if (/\breportNum\b/.test(nestedRenderOptions) && /\binputPath\b/.test(nestedRenderOptions)) {
-  pass('generate-pdf renderHtmlToPdf option matcher handles nested object literals');
-} else {
-  fail('generate-pdf renderHtmlToPdf option matcher fails on nested object literals');
 }
 if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('opts.inputPath')) {
   pass('renderHtmlToPdf reads manifest metadata from opts');
@@ -857,7 +694,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md', 'email.md', 'add.md',
+  'interview.md', 'latex.md',
   'regional/eu-swe.md',
 ];
 
@@ -888,39 +725,6 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
   } else {
     fail(`${skillPath} does not expose /career-ops latex in discovery menu`);
   }
-  if (
-    skill.includes('email') &&
-    skill.includes('| `email` | `email` |') &&
-    skill.includes('/career-ops email') &&
-    /Standalone modes[\s\S]*Applies to:[^\n]*`email`/.test(skill)
-  ) {
-    pass(`${skillPath} exposes /career-ops email in routing, discovery, and standalone loading`);
-  } else {
-    fail(`${skillPath} does not fully expose /career-ops email`);
-  }
-}
-
-const emailMode = readFile('modes/email.md');
-if (
-  emailMode.includes('Application Email Drafts') &&
-  emailMode.includes('Never submit') &&
-  emailMode.includes('Never send email') &&
-  emailMode.includes('Never click send') &&
-  emailMode.includes('hr_application') &&
-  emailMode.includes('referral_request') &&
-  emailMode.includes('cold_application') &&
-  emailMode.includes('Attachment checklist') &&
-  emailMode.includes('candidate.wechat') &&
-  emailMode.includes('data/pdf-index.tsv') &&
-  emailMode.includes('voice-dna.md') &&
-  emailMode.includes('cv.md') &&
-  emailMode.includes('article-digest.md') &&
-  emailMode.includes('config/profile.yml') &&
-  emailMode.includes('modes/_profile.md')
-) {
-  pass('email mode covers formal drafts, no-send safety, variants, attachments, contact fields, and source boundaries');
-} else {
-  fail('email mode missing required application-email behavior');
 }
 
 const applyMode = readFile('modes/apply.md');
@@ -934,120 +738,6 @@ if (
   pass('apply mode includes liveness and role-match preflight gate');
 } else {
   fail('apply mode missing liveness/role-match preflight gate');
-}
-
-if (
-  applyMode.includes('## Application Answers') &&
-  applyMode.includes('**State:** filled') &&
-  applyMode.includes('**State:** submitted') &&
-  applyMode.includes('Do not rename, reorder, or edit the existing A-H report blocks') &&
-  applyMode.includes('application-answers.mjs')
-) {
-  pass('apply mode persists filled/submitted answers in an additive report section');
-} else {
-  fail('apply mode missing additive Application Answers persistence instructions');
-}
-
-try {
-  const {
-    formatApplicationAnswersSection,
-    upsertApplicationAnswersSection,
-  } = await import(pathToFileURL(join(ROOT, 'application-answers.mjs')).href);
-
-  const snapshot = {
-    date: '2026-06-30',
-    state: 'submitted',
-    freeText: [
-      { question: 'Why this role?', answer: 'I want to apply production AI agent experience here.' },
-    ],
-    selections: [
-      { field: 'Technical areas', selected: ['Node.js', 'Go', 'LLM evaluation'] },
-    ],
-    fieldValues: [
-      { field: 'Compensation expectation', value: '$150k base' },
-    ],
-    files: [
-      { field: 'CV', path: 'output/acme-cv.pdf', version: 'v3' },
-      { field: 'Cover letter', path: 'output/acme-cover-letter.pdf' },
-    ],
-  };
-
-  const section = formatApplicationAnswersSection(snapshot);
-  if (
-    section.includes('## Application Answers') &&
-    section.includes('**Date:** 2026-06-30') &&
-    section.includes('**State:** submitted') &&
-    section.includes('Why this role?') &&
-    section.includes('Node.js, Go, LLM evaluation') &&
-    section.includes('Compensation expectation') &&
-    section.includes('output/acme-cv.pdf (v3)')
-  ) {
-    pass('application answers formatter captures free text, selections, field values, files, date, and state');
-  } else {
-    fail(`application answers formatter dropped expected data:\n${section}`);
-  }
-
-  const report = [
-    '# Evaluation: Acme - Staff Engineer',
-    '',
-    '## G) Posting Legitimacy',
-    'original G content',
-    '',
-    '## H) Draft Application Answers',
-    'draft H content',
-    '',
-    '## Keywords extracted',
-    'agentic systems, node, go',
-    '',
-  ].join('\n');
-  const updated = upsertApplicationAnswersSection(report, snapshot);
-  const existingBlocksPreserved =
-    updated.includes('## G) Posting Legitimacy\noriginal G content') &&
-    updated.includes('## H) Draft Application Answers\ndraft H content') &&
-    updated.includes('## Keywords extracted\nagentic systems, node, go');
-  const existingOrderPreserved =
-    updated.indexOf('## G) Posting Legitimacy') < updated.indexOf('## H) Draft Application Answers') &&
-    updated.indexOf('## H) Draft Application Answers') < updated.indexOf('## Keywords extracted') &&
-    updated.indexOf('## Keywords extracted') < updated.indexOf('## Application Answers');
-  if (existingBlocksPreserved && existingOrderPreserved) {
-    pass('application answers upsert appends without changing existing report blocks');
-  } else {
-    fail(`application answers upsert disturbed report blocks:\n${updated}`);
-  }
-
-  const refreshed = upsertApplicationAnswersSection([
-    report.trimEnd(),
-    '',
-    '## Application Answers',
-    '',
-    'old filled snapshot',
-    '',
-    '## Later Additive Section',
-    'later content',
-    '',
-  ].join('\n'), snapshot);
-  const applicationAnswerHeadings = refreshed.match(/^## Application Answers$/gm) || [];
-  if (
-    applicationAnswerHeadings.length === 1 &&
-    !refreshed.includes('old filled snapshot') &&
-    refreshed.includes('## Later Additive Section\nlater content') &&
-    refreshed.indexOf('## Application Answers') < refreshed.indexOf('## Later Additive Section')
-  ) {
-    pass('application answers upsert refreshes only the existing Application Answers section');
-  } else {
-    fail(`application answers upsert did not replace only its own section:\n${refreshed}`);
-  }
-} catch (e) {
-  fail(`application answers helper crashed: ${e.message}`);
-}
-
-if (
-  run(NODE, ['application-answers.mjs', '--report', '--input'], { stdio: ['pipe', 'pipe', 'pipe'] }) === null &&
-  run(NODE, ['application-answers.mjs', '--report', '--input', 'answers.json'], { stdio: ['pipe', 'pipe', 'pipe'] }) === null
-) {
-  pass('application-answers CLI rejects missing option values');
-} else {
-  fail('application-answers CLI accepted a missing option value');
 }
 
 const ofertaMode = readFile('modes/oferta.md');
@@ -1079,17 +769,6 @@ if (
   pass('eval modes bound company/comp research to a non-recursive query budget (#1235)');
 } else {
   fail('eval modes do not bound company/comp research against recursive fanout (#1235)');
-}
-
-if (
-  ofertaMode.includes('### Geo-mismatch check') &&
-  ofertaMode.includes('binding attendance requirement') &&
-  ofertaMode.includes('⚠️ **Geo-mismatch:** location field says remote, but JD body says') &&
-  ofertaMode.includes('silence is absence of signal, not agreement')
-) {
-  pass('oferta cross-checks the remote location field against JD-body signals (#1433)');
-} else {
-  fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
 const pipelineMode = readFile('modes/pipeline.md');
@@ -1176,28 +855,6 @@ try {
     pass('scan.mjs formatPipelineOffer appends compensation column (forces empty location cell when needed)');
   } else {
     fail(`scan.mjs compensation column wrong: "${compRange}" / "${compSingle}" / "${compNone}" / "${compZeroMin}" / "${withComp}" / "${compNoLoc}"`);
-  }
-
-  // pipeline.md optional note (#1142): formatPipelineOffer preserves an optional
-  // free-text ranking signal as a labeled `| note: {text}` segment. It rides on
-  // any row shape, an absent/empty note is byte-identical to today's output, and
-  // the note is sanitized like every other field (a `|` can't inject a column).
-  const noteFull = formatPipelineOffer({ url: 'https://x/6', company: 'Acme', title: 'AI Eng', location: 'Remote', salary: { min: 180000, max: 220000, currency: 'USD' }, note: 'curated shortlist' });
-  const noteBare = formatPipelineOffer({ url: 'https://x/7', company: 'Acme', title: 'PM', note: 'Top pick' });
-  const noteAbsent = formatPipelineOffer({ url: 'https://x/8', company: 'Acme', title: 'PM' });
-  const noteEmpty = formatPipelineOffer({ url: 'https://x/8', company: 'Acme', title: 'PM', note: '' });
-  const noteNonString = formatPipelineOffer({ url: 'https://x/8', company: 'Acme', title: 'PM', note: 42 });
-  const notePipe = formatPipelineOffer({ url: 'https://x/9', company: 'Acme', title: 'PM', note: 'A | B' });
-  if (
-    noteFull === '- [ ] https://x/6 | Acme | AI Eng | Remote | 180000-220000 USD | note: curated shortlist' &&
-    noteBare === '- [ ] https://x/7 | Acme | PM | note: Top pick' &&
-    noteEmpty === noteAbsent &&
-    noteNonString === noteAbsent &&
-    notePipe === '- [ ] https://x/9 | Acme | PM | note: A / B'
-  ) {
-    pass('scan.mjs formatPipelineOffer preserves an optional labeled note (#1142; absent = byte-identical, sanitized)');
-  } else {
-    fail(`scan.mjs note segment wrong: "${noteFull}" / "${noteBare}" / "${noteEmpty}" / "${noteNonString}" / "${notePipe}"`);
   }
 } catch (err) {
   fail(`scan.mjs formatPipelineOffer import failed: ${err.message}`);
@@ -1362,160 +1019,6 @@ try {
   fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
 }
 
-// ── VC Portfolio Seed Fetcher ────────────────────────────────────────
-// Tests the pure (no-network) parseSeedEntries(), parseYCPayload(),
-// parseA16zPayload(), toPortalEntry(), and the SEED_SOURCES registry.
-// Inline fixtures — no HTTP calls, CI-safe.
-
-console.log('\n9b. VC portfolio seed fetcher (seeds/vc-portfolios.mjs)');
-
-try {
-  const {
-    parseYCPayload,
-    parseA16zPayload,
-    parseSeedEntries,
-    toPortalEntry,
-    SEED_SOURCES,
-    SLUG_RE,
-  } = await import(pathToFileURL(join(ROOT, 'seeds/vc-portfolios.mjs')).href);
-
-  // ── 1. YC payload parsing ──────────────────────────────────────────
-  const ycFixture = {
-    companies: [
-      { name: 'Stripe', slug: 'stripe', website: 'https://stripe.com', batch: 'W11' },
-      { name: 'Airbnb', slug: 'airbnb', website: 'https://airbnb.com', batch: 'W09' },
-      { name: 'OpenAI', slug: 'openai', website: 'https://openai.com', batch: 'W16' },
-    ],
-  };
-  const ycEntries = parseYCPayload(ycFixture);
-  const ycOk =
-    ycEntries.length === 3 &&
-    ycEntries[0].name === 'Stripe' &&
-    ycEntries[0].slug === 'stripe' &&
-    ycEntries[0].url === 'https://stripe.com' &&
-    ycEntries[0].source === 'yc' &&
-    ycEntries[0].batch === 'W11' &&
-    ycEntries[1].slug === 'airbnb' &&
-    ycEntries[2].slug === 'openai';
-  if (ycOk) pass('parseYCPayload: parses companies array into SeedCompany[] with name/slug/url/source/batch');
-  else fail(`parseYCPayload: output wrong — ${JSON.stringify(ycEntries[0])}`);
-
-  // parseSeedEntries() is the universal entry point used by the issue acceptance criteria.
-  const viaGeneric = parseSeedEntries(ycFixture, 'yc');
-  if (viaGeneric.length === 3 && viaGeneric[0].slug === 'stripe') {
-    pass('parseSeedEntries(payload, "yc") delegates to parseYCPayload correctly');
-  } else {
-    fail('parseSeedEntries with source="yc" did not return expected entries');
-  }
-
-  // ── 2. a16z HTML parsing ───────────────────────────────────────────
-  // Sample HTML fixture with data-company-name attributes (the most reliable strategy).
-  const a16zHtml = `
-    <div class="portfolio-grid">
-      <a href="https://github.com" data-company-name="GitHub" data-company-url="https://github.com" class="portfolio-card"></a>
-      <a href="https://lyft.com" data-company-name="Lyft" data-company-url="https://lyft.com" class="portfolio-card"></a>
-      <a href="https://slack.com" data-company-name="Slack" data-company-url="https://slack.com" class="portfolio-card"></a>
-    </div>
-  `;
-  const a16zEntries = parseA16zPayload(a16zHtml);
-  const a16zOk =
-    a16zEntries.length === 3 &&
-    a16zEntries.some(e => e.name === 'GitHub' && e.source === 'a16z' && e.url === 'https://github.com') &&
-    a16zEntries.some(e => e.name === 'Lyft' && e.source === 'a16z') &&
-    a16zEntries.some(e => e.name === 'Slack' && e.source === 'a16z');
-  if (a16zOk) pass('parseA16zPayload: extracts companies from data-company-name HTML attributes');
-  else fail(`parseA16zPayload: output wrong — got ${a16zEntries.length} entries: ${JSON.stringify(a16zEntries.map(e => e.name))}`);
-
-  // parseSeedEntries() delegating to a16z.
-  const a16zViaGeneric = parseSeedEntries(a16zHtml, 'a16z');
-  if (a16zViaGeneric.length === 3 && a16zViaGeneric.some(e => e.slug === 'github')) {
-    pass('parseSeedEntries(html, "a16z") delegates to parseA16zPayload correctly');
-  } else {
-    fail('parseSeedEntries with source="a16z" did not return expected entries');
-  }
-
-  // ── 3. SLUG_RE validation — invalid slugs are dropped ─────────────
-  const badSlugFixture = {
-    companies: [
-      { name: 'Good Co', slug: 'good-co', website: 'https://good.co' },
-      { name: 'Bad Slash', slug: 'bad/slash', website: 'https://bad.com' },      // rejected: /
-      { name: 'Bad Space', slug: 'bad space', website: 'https://bad2.com' },     // rejected: space
-      { name: 'Bad Bang', slug: 'bad!bang', website: 'https://bad3.com' },       // rejected: !
-      { name: 'Also Good', slug: 'also.good_123', website: 'https://also.co' }, // valid: . _ digits
-    ],
-  };
-  const slugFiltered = parseYCPayload(badSlugFixture);
-  const slugOk =
-    slugFiltered.length === 2 &&
-    slugFiltered.some(e => e.slug === 'good-co') &&
-    slugFiltered.some(e => e.slug === 'also.good_123') &&
-    !slugFiltered.some(e => e.slug.includes('/') || e.slug.includes(' ') || e.slug.includes('!'));
-  if (slugOk) pass('SLUG_RE validation: entries with invalid slug characters (/, space, !) are dropped; valid slugs pass through');
-  else fail(`SLUG_RE validation wrong — got: ${JSON.stringify(slugFiltered.map(e => e.slug))}`);
-
-  // ── 4. toPortalEntry — explicit ATS hint ──────────────────────────
-  const withGreenhouse = toPortalEntry({ name: 'Stripe', slug: 'stripe', url: 'https://stripe.com', source: 'yc', ats: 'greenhouse', ats_id: 'stripe' });
-  const withLever = toPortalEntry({ name: 'Acme', slug: 'acme', url: 'https://acme.com', source: 'yc', ats: 'lever', ats_id: 'acme' });
-  const withAshby = toPortalEntry({ name: 'Beta', slug: 'beta', url: 'https://beta.com', source: 'yc', ats: 'ashby', ats_id: 'beta-corp' });
-  const atsHintOk =
-    withGreenhouse.careers_url === 'https://job-boards.greenhouse.io/stripe' &&
-    withGreenhouse.name === 'Stripe' &&
-    withGreenhouse.source === 'yc' &&
-    withLever.careers_url === 'https://jobs.lever.co/acme' &&
-    withAshby.careers_url === 'https://jobs.ashbyhq.com/beta-corp';
-  if (atsHintOk) pass('toPortalEntry: explicit ats+ats_id hint maps to correct Greenhouse/Lever/Ashby URL');
-  else fail(`toPortalEntry ATS hint wrong — greenhouse: ${withGreenhouse.careers_url}, lever: ${withLever.careers_url}`);
-
-  // ── 5. toPortalEntry — no ATS hint, slug-based fallback ───────────
-  const noHint = toPortalEntry({ name: 'NewCo', slug: 'newco', url: 'https://newco.io', source: 'yc' });
-  const noHintOk =
-    noHint.careers_url === 'https://job-boards.greenhouse.io/newco' && // Greenhouse is the default probe
-    noHint.name === 'NewCo';
-  if (noHintOk) pass('toPortalEntry: no ATS hint falls back to Greenhouse URL from slug (provider.detect() validates at scan time)');
-  else fail(`toPortalEntry fallback wrong — got: ${noHint.careers_url}`);
-
-  // ── 5b. toPortalEntry — website fallback when slug is empty ───────
-  const noSlug = toPortalEntry({ name: 'Custom', slug: '', url: 'https://custom.com', source: 'a16z' });
-  if (noSlug.careers_url === 'https://custom.com') {
-    pass('toPortalEntry: empty slug falls back to company website URL');
-  } else {
-    fail(`toPortalEntry website fallback wrong — got: ${noSlug.careers_url}`);
-  }
-
-  // ── 6. Dedup guard — duplicate slugs yield only one entry ─────────
-  const dupFixture = {
-    companies: [
-      { name: 'Stripe', slug: 'stripe', website: 'https://stripe.com' },
-      { name: 'Stripe Inc', slug: 'stripe', website: 'https://stripe.com/inc' }, // same slug → dropped
-      { name: 'Airbnb', slug: 'airbnb', website: 'https://airbnb.com' },
-    ],
-  };
-  const dedupd = parseYCPayload(dupFixture);
-  if (dedupd.length === 2 && dedupd.filter(e => e.slug === 'stripe').length === 1) {
-    pass('parseSeedEntries dedup: duplicate slugs produce only one entry (first one wins)');
-  } else {
-    fail(`parseSeedEntries dedup wrong — got ${dedupd.length} entries`);
-  }
-
-  // ── 7. SEED_SOURCES registry ───────────────────────────────────────
-  const registryOk =
-    typeof SEED_SOURCES === 'object' &&
-    SEED_SOURCES !== null &&
-    typeof SEED_SOURCES.yc === 'object' &&
-    typeof SEED_SOURCES.yc.fetch === 'function' &&
-    typeof SEED_SOURCES.yc.label === 'string' &&
-    typeof SEED_SOURCES.a16z === 'object' &&
-    typeof SEED_SOURCES.a16z.fetch === 'function' &&
-    typeof SEED_SOURCES.a16z.label === 'string' &&
-    Object.keys(SEED_SOURCES).includes('yc') &&
-    Object.keys(SEED_SOURCES).includes('a16z');
-  if (registryOk) pass('SEED_SOURCES registry: both "yc" and "a16z" keys exist with fetch function and label string');
-  else fail(`SEED_SOURCES registry malformed — keys: ${JSON.stringify(Object.keys(SEED_SOURCES || {}))}`);
-
-} catch (e) {
-  fail(`VC portfolio seed fetcher tests crashed: ${e.message}`);
-}
-
 // tracker.mjs delete: removeRowByNum removes the right row, preserves the rest.
 try {
   const { removeRowByNum } = await import(pathToFileURL(join(ROOT, 'tracker.mjs')).href);
@@ -1657,31 +1160,14 @@ tracked_companies:
 console.log('\n10b. Portal slug validator');
 
 try {
-  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies, classifyFetchError } =
+  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies } =
     await import(pathToFileURL(join(ROOT, 'verify-portals.mjs')).href);
 
   const slugs = deriveSlugCandidates('Acme Corp!');
-  const baseSlugs = ['acmecorp', 'acme-corp', 'acme_corp', 'acme'];
-  if (baseSlugs.every((s) => slugs.includes(s)) && slugs.includes('acmeai') && slugs.includes('acme.tech')) {
+  if (JSON.stringify(slugs) === JSON.stringify(['acmecorp', 'acme-corp', 'acme_corp', 'acme'])) {
     pass('verify-portals derives slug candidates from a company name');
   } else {
     fail(`verify-portals slug candidates wrong: ${JSON.stringify(slugs)}`);
-  }
-
-  if (deriveSlugCandidates('Deepset').includes('deepsetai')) {
-    pass('verify-portals derives common slug suffixes (e.g. deepsetai)');
-  } else {
-    fail('verify-portals missing deepsetai suffix for Deepset');
-  }
-
-  if (
-    classifyFetchError({ status: 404 }) === 'slug_gone' &&
-    classifyFetchError({ name: 'AbortError' }) === 'network' &&
-    classifyFetchError({ status: 503 }) === 'server'
-  ) {
-    pass('verify-portals classifies fetch errors by kind');
-  } else {
-    fail('verify-portals classifyFetchError misclassified HTTP errors');
   }
 
   if (
@@ -1697,90 +1183,26 @@ try {
 
   // Mock fetchJson: 200+jobs → live, 200+empty → empty, otherwise 404 → missing.
   const mockFetch = async (url) => {
-    if (url.includes('/boards/live/jobs')) return { jobs: [{}, {}] };
-    if (url.includes('/boards/empty/jobs')) return { jobs: [] };
-    if (url.includes('/posting-api/job-board/deepsetai')) return { jobs: [{}] };
+    if (url.includes('/boards/live/')) return { jobs: [{}, {}] };
+    if (url.includes('/boards/empty/')) return { jobs: [] };
     const err = new Error('HTTP 404'); err.status = 404; throw err;
   };
   const results = await verifyCompanies([
     { name: 'Live', careers_url: 'https://job-boards.greenhouse.io/live' },
     { name: 'Empty', careers_url: 'https://job-boards.greenhouse.io/empty' },
     { name: 'Typo', careers_url: 'https://job-boards.greenhouse.io/nope' },
-    { name: 'Deepset', careers_url: 'https://job-boards.greenhouse.io/deepset' },
     { name: 'Branded', careers_url: 'https://acme.com/careers' },
     { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
   ], { fetchJson: mockFetch });
-  const byName = Object.fromEntries(results.map((r) => [r.name, r]));
+  const byName = Object.fromEntries(results.map((r) => [r.name, r.status]));
   if (
-    results.length === 5 &&
-    byName.Live.status === 'live' && byName.Empty.status === 'empty' &&
-    byName.Typo.status === 'missing' && byName.Typo.errorKind === 'slug_gone' &&
-    byName.Branded.status === 'skipped' &&
-    byName.Deepset.suggested?.ats === 'ashby' && byName.Deepset.suggested?.slug === 'deepsetai'
+    results.length === 4 &&
+    byName.Live === 'live' && byName.Empty === 'empty' &&
+    byName.Typo === 'missing' && byName.Branded === 'skipped'
   ) {
     pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
   } else {
     fail(`verify-portals classification wrong: ${JSON.stringify(byName)} (${results.length} rows)`);
-  }
-
-  // Tier 2: non-ATS companies are probed through the scanner's provider layer,
-  // bounded to the first page. Fake providers stand in for Workday/SF/etc.
-  const fakeCtx = { transport: 'http', fetchJson: async () => ({}), fetchText: async () => ['x'] };
-  const fakeProviders = new Map([
-    ['fakeats', {
-      id: 'fakeats',
-      detect: (e) => (/fakeats\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
-      fetch: async (e, ctx) => {
-        // The probe MUST bound pagination — a provider is never asked to walk a
-        // whole board for a health check.
-        if (ctx.maxPages !== 1) throw new Error('probe did not pass maxPages=1');
-        if (e.careers_url.includes('/full')) return [{ title: 'A' }, { title: 'B' }];
-        if (e.careers_url.includes('/empty')) return [];
-        const err = new Error('HTTP 404'); err.status = 404; throw err;
-      },
-    }],
-    ['pager', {
-      // Ignores maxPages and paginates forever; the probe's request budget must
-      // still cut it off after the first page and classify it live.
-      id: 'pager',
-      detect: (e) => (/pager\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
-      fetch: async (e, ctx) => {
-        const jobs = [];
-        for (let p = 0; p < 50; p++) jobs.push(...(await ctx.fetchText(`u?p=${p}`)));
-        return jobs;
-      },
-    }],
-  ]);
-  const provResults = await verifyCompanies([
-    { name: 'PFull', careers_url: 'https://fakeats.io/full' },
-    { name: 'PEmpty', careers_url: 'https://fakeats.io/empty' },
-    { name: 'PDead', careers_url: 'https://fakeats.io/dead' },
-    { name: 'PPager', careers_url: 'https://pager.io/board' },
-    { name: 'NoProv', careers_url: 'https://unknown.example/careers' },
-  ], { fetchJson: mockFetch, providers: fakeProviders, httpCtx: fakeCtx });
-  const pv = Object.fromEntries(provResults.map((r) => [r.name, r]));
-  if (
-    pv.PFull?.status === 'live' && pv.PFull?.jobCount === 2 &&
-    pv.PEmpty?.status === 'empty' &&
-    pv.PDead?.status === 'missing' && pv.PDead?.errorKind === 'slug_gone' &&
-    pv.PPager?.status === 'live' && pv.PPager?.partial === true &&
-    pv.NoProv?.status === 'skipped'
-  ) {
-    pass('verify-portals probes non-ATS boards via providers, bounded to first page');
-  } else {
-    fail(`verify-portals provider-fallback wrong: ${JSON.stringify(pv)}`);
-  }
-
-  // Without a providers map, non-ATS entries must stay skipped (unchanged CLI
-  // behavior for the ATS-only unit path).
-  const noProv = await verifyCompanies(
-    [{ name: 'X', careers_url: 'https://fakeats.io/full' }],
-    { fetchJson: mockFetch },
-  );
-  if (noProv[0]?.status === 'skipped') {
-    pass('verify-portals stays skipped for non-ATS when no providers are supplied');
-  } else {
-    fail(`verify-portals should skip non-ATS without providers: ${JSON.stringify(noProv)}`);
   }
 } catch (e) {
   fail(`portal slug validator tests crashed: ${e.message}`);
@@ -2211,8 +1633,9 @@ console.log('\n14. Version file');
 if (fileExists('VERSION')) {
   // VERSION may carry a release-please marker, e.g. "1.9.0 # x-release-please-version".
   // Validate the first whitespace-delimited token, mirroring update-system.mjs parseVersionFile().
+  // Accept full SemVer 2.0.0 incl. optional prerelease (e.g. 2.0.0-rc.1) and build (+meta) suffixes.
   const version = readFile('VERSION').trim().split(/\s+/)[0];
-  if (/^\d+\.\d+\.\d+$/.test(version)) {
+  if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) {
     pass(`VERSION is valid semver: ${version}`);
   } else {
     fail(`VERSION is not valid semver: "${version}"`);
@@ -3199,344 +2622,6 @@ try {
   fail(`recruitee provider tests crashed: ${e.message}`);
 }
 
-// ── 14. PROVIDERS — Teamtailor ──────────────────────────────────────
-
-console.log('\n14. Provider — teamtailor');
-
-try {
-  const teamtailor = (await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href)).default;
-  const { parseTeamtailorFeed } = await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href);
-
-  if (teamtailor.id === 'teamtailor') pass('teamtailor.id is "teamtailor"');
-  else fail(`teamtailor.id is ${JSON.stringify(teamtailor.id)}`);
-
-  // detect() — auto-detection from a <slug>.teamtailor.com careers_url, with
-  // any path normalized to /jobs.rss.
-  const hit = teamtailor.detect({ name: 'Podimo', careers_url: 'https://podimo.teamtailor.com/jobs' });
-  if (hit && hit.url === 'https://podimo.teamtailor.com/jobs.rss') {
-    pass('teamtailor.detect() resolves <slug>.teamtailor.com → /jobs.rss feed');
-  } else {
-    fail(`teamtailor.detect() returned ${JSON.stringify(hit)}`);
-  }
-
-  if (teamtailor.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
-    pass('teamtailor.detect() returns null for non-teamtailor URLs');
-  } else {
-    fail('teamtailor.detect() should return null for non-teamtailor URLs');
-  }
-
-  // non-string careers_url → detect() returns null without crashing
-  if (teamtailor.detect({ name: 'X', careers_url: null }) === null && teamtailor.detect({ name: 'X', careers_url: 7 }) === null) {
-    pass('teamtailor.detect() returns null for non-string careers_url (null and 7)');
-  } else {
-    fail('teamtailor.detect() should treat non-string careers_url as missing');
-  }
-
-  // SSRF: teamtailor.com in the PATH (not host) must not be detected.
-  if (teamtailor.detect({ name: 'Spoof', careers_url: 'https://evil.example/podimo.teamtailor.com/jobs' }) === null) {
-    pass('teamtailor.detect() rejects path-spoofed URLs');
-  } else {
-    fail('teamtailor.detect() must NOT misdetect path-spoofed URLs');
-  }
-
-  // non-https careers_url is rejected
-  if (teamtailor.detect({ name: 'X', careers_url: 'http://podimo.teamtailor.com/jobs' }) === null) {
-    pass('teamtailor.detect() rejects non-https careers_url');
-  } else {
-    fail('teamtailor.detect() should reject non-https careers_url');
-  }
-
-  // parseTeamtailorFeed — RSS with tt: locations block and branded job link
-  const sampleXml = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<rss version="2.0" xmlns:tt="https://teamtailor.com/locations"><channel>',
-    '<title>Podimo</title>',
-    '<item>',
-    '  <title>Sales Director &amp; Lead</title>',
-    '  <link>https://careers.podimo.com/jobs/7950030-sales-director</link>',
-    '  <pubDate>Mon, 22 Jun 2026 13:45:57 +0200</pubDate>',
-    '  <remoteStatus>hybrid</remoteStatus>',
-    '  <tt:locations><tt:location><tt:city>Oslo</tt:city><tt:country>Norway</tt:country></tt:location></tt:locations>',
-    '</item>',
-    '<item>',
-    '  <title>Remote Engineer</title>',
-    '  <link>https://podimo.teamtailor.com/jobs/123-remote-engineer</link>',
-    '  <remoteStatus>fully</remoteStatus>',
-    '</item>',
-    '</channel></rss>',
-  ].join('\n');
-
-  const jobs = parseTeamtailorFeed(sampleXml, 'Podimo');
-  if (jobs.length === 2) pass('parseTeamtailorFeed extracts 2 jobs from 2-item feed');
-  else fail(`parseTeamtailorFeed returned ${jobs.length} jobs, expected 2`);
-
-  if (jobs[0]?.title === 'Sales Director & Lead' && jobs[0]?.company === 'Podimo' && jobs[0]?.url === 'https://careers.podimo.com/jobs/7950030-sales-director') {
-    pass('parseTeamtailorFeed decodes title entities, sets company, keeps branded-domain link');
-  } else {
-    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
-  }
-
-  if (jobs[0]?.location === 'Oslo, Norway') {
-    pass('parseTeamtailorFeed builds location from tt:city + tt:country');
-  } else {
-    fail(`row 0 location = ${JSON.stringify(jobs[0]?.location)}, expected "Oslo, Norway"`);
-  }
-
-  if (jobs[0]?.postedAt === Date.parse('Mon, 22 Jun 2026 13:45:57 +0200')) {
-    pass('parseTeamtailorFeed parses pubDate → postedAt epoch ms');
-  } else {
-    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
-  }
-
-  if (jobs[1]?.location === 'Remote' && jobs[1]?.postedAt === undefined) {
-    pass('parseTeamtailorFeed falls back to "Remote" for fully-remote item with no place/date');
-  } else {
-    fail(`row 1 = ${JSON.stringify(jobs[1])}`);
-  }
-
-  // Robustness
-  if (parseTeamtailorFeed('', 'X').length === 0) pass('empty input → empty result');
-  else fail('empty input should yield empty result');
-
-  if (parseTeamtailorFeed(null, 'X').length === 0) pass('null input → empty result (no crash)');
-  else fail('null input should yield empty result without crashing');
-
-  // A well-formed item with no <link> is skipped, not emitted with a blank URL.
-  const noLink = parseTeamtailorFeed('<item><title>Ghost</title></item>', 'X');
-  if (noLink.length === 0) pass('item without <link> is dropped');
-  else fail(`item without <link> should be dropped, got ${JSON.stringify(noLink)}`);
-
-  // fetch() pins the request to the teamtailor.com host on the happy path and
-  // must pass redirect:'error' (asserting the SSRF guard, not just the URL).
-  const fetchJobs = await teamtailor.fetch(
-    { name: 'Podimo', careers_url: 'https://podimo.teamtailor.com/jobs' },
-    {
-      transport: 'http',
-      fetchText: async (url, options) => {
-        if (url !== 'https://podimo.teamtailor.com/jobs.rss') {
-          throw new Error(`fetchText called with unexpected URL: ${url}`);
-        }
-        if (options?.redirect !== 'error') {
-          throw new Error(`fetchText called without redirect:'error': ${JSON.stringify(options)}`);
-        }
-        return sampleXml;
-      },
-      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
-    },
-  );
-  if (fetchJobs.length === 2) pass('teamtailor.fetch() hits /jobs.rss with redirect:error and returns parsed jobs');
-  else fail(`teamtailor.fetch() returned ${fetchJobs.length} jobs, expected 2`);
-
-  // Branded careers domain: auto-detection must NOT claim it (stays pinned to
-  // *.teamtailor.com), but an explicit `provider: teamtailor` entry may fetch
-  // the same /jobs.rss off the branded host the user configured.
-  if (teamtailor.detect({ name: 'Podimo', careers_url: 'https://careers.podimo.com/jobs' }) === null) {
-    pass('teamtailor.detect() does NOT auto-claim a branded (non-teamtailor.com) host');
-  } else {
-    fail('teamtailor.detect() must not auto-detect branded hosts');
-  }
-
-  const brandedJobs = await teamtailor.fetch(
-    { name: 'Podimo', provider: 'teamtailor', careers_url: 'https://careers.podimo.com/jobs' },
-    {
-      transport: 'http',
-      fetchText: async (url, options) => {
-        if (url !== 'https://careers.podimo.com/jobs.rss') {
-          throw new Error(`fetchText called with unexpected URL: ${url}`);
-        }
-        if (options?.redirect !== 'error') {
-          throw new Error(`fetchText called without redirect:'error': ${JSON.stringify(options)}`);
-        }
-        return sampleXml;
-      },
-      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
-    },
-  );
-  if (brandedJobs.length === 2) pass('explicit provider:teamtailor fetches /jobs.rss off a branded careers host');
-  else fail(`branded-host fetch returned ${brandedJobs.length} jobs, expected 2`);
-
-  // A branded host WITHOUT the explicit provider opt-in must still be refused by fetch().
-  let brandedRefused = false;
-  try {
-    await teamtailor.fetch(
-      { name: 'Podimo', careers_url: 'https://careers.podimo.com/jobs' },
-      {
-        transport: 'http',
-        fetchText: async () => { throw new Error('fetchText should not be reached'); },
-        fetchJson: async () => { throw new Error('fetchJson should not be called'); },
-      },
-    );
-  } catch {
-    brandedRefused = true;
-  }
-  if (brandedRefused) pass('teamtailor.fetch() refuses a branded host without explicit provider:teamtailor');
-  else fail('teamtailor.fetch() should refuse a branded host when not explicitly configured');
-
-} catch (e) {
-  fail(`teamtailor provider tests crashed: ${e.message}`);
-}
-
-// ── 14b. ADD-ENTRY (/career-ops add) ────────────────────────────────
-
-console.log('\n14b. add-entry.mjs (dedup + insertion)');
-
-try {
-  const addMod = await import(pathToFileURL(join(ROOT, 'add-entry.mjs')).href);
-  const { normalizeKey, locateSection, cvHasEntry, insertIntoCvSection, articleDigestHasEntry, applyAdd } = addMod;
-
-  if (normalizeKey('Fraud-Shield!') === 'fraudshield') pass('normalizeKey strips punctuation/case');
-  else fail(`normalizeKey => ${normalizeKey('Fraud-Shield!')}`);
-
-  const sampleCv = [
-    '# CV -- Test',
-    '',
-    '## Work Experience',
-    '',
-    '### Acme -- Remote',
-    '',
-    '**Engineer**',
-    '2020-2022',
-    '',
-    '- Did things',
-    '',
-    '## Projects',
-    '',
-    '- **Existing** (OSS) -- already here',
-    '',
-    '## Education',
-    '',
-    '- BS CS',
-    '',
-  ].join('\n');
-
-  // locateSection isolates the right block
-  const loc = locateSection(sampleCv, 'Projects');
-  if (loc && loc.body.includes('Existing') && !loc.body.includes('BS CS')) pass('locateSection isolates the Projects block');
-  else fail(`locateSection => ${JSON.stringify(loc && loc.body)}`);
-
-  // insertion appends within section and preserves later sections
-  const inserted = insertIntoCvSection(sampleCv, 'Projects', '- **FraudShield** (OSS) -- fraud detection');
-  if (inserted.includes('- **Existing**') && inserted.includes('- **FraudShield**') &&
-      inserted.indexOf('FraudShield') < inserted.indexOf('## Education') &&
-      inserted.includes('## Education')) {
-    pass('insertIntoCvSection appends under Projects and keeps Education intact');
-  } else {
-    fail('insertIntoCvSection placement wrong');
-  }
-
-  // missing section is created at EOF
-  const withPubs = insertIntoCvSection(sampleCv, 'Publications', '- **A Paper** (2026) -- venue');
-  if (withPubs.includes('## Publications') && withPubs.includes('- **A Paper**')) pass('insertIntoCvSection creates a missing section');
-  else fail('insertIntoCvSection did not create missing section');
-
-  // dedup detection is punctuation/case-insensitive
-  if (cvHasEntry(sampleCv, 'Projects', 'existing') && !cvHasEntry(sampleCv, 'Projects', 'FraudShield')) {
-    pass('cvHasEntry detects an existing entry and misses a new one');
-  } else {
-    fail('cvHasEntry dedup logic wrong');
-  }
-
-  // applyAdd: fresh add to cv + article-digest (article-digest absent → created)
-  const added = applyAdd(
-    {
-      cv: { section: 'Projects', dedupKey: 'FraudShield', entry: '- **FraudShield** (OSS) -- fraud detection' },
-      articleDigest: { dedupKey: 'FraudShield', entry: '## FraudShield -- Detection\n\n**Hero metrics:** 99.7%' },
-    },
-    { cvText: sampleCv, articleText: null },
-  );
-  if (added.result.cv.status === 'added' && added.result.articleDigest.status === 'created' &&
-      added.cv.includes('FraudShield') && added.articleDigest.includes('## FraudShield')) {
-    pass('applyAdd adds a new CV entry and creates article-digest.md when absent');
-  } else {
-    fail(`applyAdd fresh-add => ${JSON.stringify(added.result)}`);
-  }
-
-  // applyAdd: idempotent — same payload against updated files is a no-op
-  const again = applyAdd(
-    {
-      cv: { section: 'Projects', dedupKey: 'FraudShield', entry: '- **FraudShield** (OSS) -- fraud detection' },
-      articleDigest: { dedupKey: 'FraudShield', entry: '## FraudShield -- Detection\n\n**Hero metrics:** 99.7%' },
-    },
-    { cvText: added.cv, articleText: added.articleDigest },
-  );
-  if (again.result.cv.status === 'duplicate' && again.result.articleDigest.status === 'duplicate') {
-    pass('applyAdd is idempotent (duplicate/duplicate on re-run)');
-  } else {
-    fail(`applyAdd re-run => ${JSON.stringify(again.result)}`);
-  }
-
-  if (articleDigestHasEntry(added.articleDigest, 'fraud shield')) pass('articleDigestHasEntry matches normalized heading');
-  else fail('articleDigestHasEntry failed to match');
-
-  // guardrails: cv add against a missing cv.md throws; empty payload throws
-  let threwNoCv = false;
-  try { applyAdd({ cv: { section: 'Projects', dedupKey: 'X', entry: '- x' } }, { cvText: null }); } catch { threwNoCv = true; }
-  if (threwNoCv) pass('applyAdd refuses to add to a missing cv.md');
-  else fail('applyAdd should throw when cv.md is absent');
-
-  let threwEmpty = false;
-  try { applyAdd({}, { cvText: sampleCv }); } catch { threwEmpty = true; }
-  if (threwEmpty) pass('applyAdd rejects an empty payload');
-  else fail('applyAdd should reject an empty payload');
-
-  // dedupKey is required — idempotency depends on it, so a missing one fails fast.
-  let threwNoKey = false;
-  try { applyAdd({ cv: { section: 'Projects', entry: '- **X** -- y' } }, { cvText: sampleCv }); } catch { threwNoKey = true; }
-  if (threwNoKey) pass('applyAdd requires a dedupKey for a cv target');
-  else fail('applyAdd should throw when cv.dedupKey is missing');
-
-  // Short-key dedup must NOT collide with unrelated substrings (e.g. "ai" in a
-  // bullet that mentions "email"). Regression for the identifier-based matcher.
-  const cvWithEmail = '# CV\n\n## Projects\n\n- **Mailer** (OSS) -- sends email digests\n';
-  if (!cvHasEntry(cvWithEmail, 'Projects', 'AI')) pass('cvHasEntry does not false-match a short key against unrelated text');
-  else fail('cvHasEntry should not match "AI" against "email"');
-  if (cvHasEntry(cvWithEmail, 'Projects', 'Mailer')) pass('cvHasEntry still matches the real bold identifier');
-  else fail('cvHasEntry should match the bold entry name');
-
-  // Same collision guard for article-digest headings (name before the dash).
-  const adWithMailer = '# Article Digest\n\n---\n\n## Mailer -- Email digests\n\n**Hero metrics:** x\n';
-  if (!articleDigestHasEntry(adWithMailer, 'AI')) pass('articleDigestHasEntry does not false-match a short key against a heading');
-  else fail('articleDigestHasEntry should not match "AI" against the "Mailer -- Email digests" heading');
-  if (articleDigestHasEntry(adWithMailer, 'Mailer')) pass('articleDigestHasEntry matches the real heading name');
-  else fail('articleDigestHasEntry should match the heading name before the dash');
-
-  // CLI wiring: --dry-run reports without writing; a real run writes and is then
-  // idempotent. Exercised against isolated fixture files via env overrides.
-  const cliTmp = mkdtempSync(join(tmpdir(), 'career-ops-add-cli-'));
-  try {
-    const cvPath = join(cliTmp, 'cv.md');
-    const adPath = join(cliTmp, 'article-digest.md');
-    writeFileSync(cvPath, '# CV\n\n## Projects\n\n- **Existing** (OSS) -- here\n');
-    const payloadPath = join(cliTmp, 'p.json');
-    writeFileSync(payloadPath, JSON.stringify({
-      cv: { section: 'Projects', dedupKey: 'CliProj', entry: '- **CliProj** (OSS) -- desc' },
-      articleDigest: { dedupKey: 'CliProj', entry: '## CliProj -- Tagline\n\n**Hero metrics:** x' },
-    }));
-    const env = { ...process.env, CAREER_OPS_CV: cvPath, CAREER_OPS_ARTICLE_DIGEST: adPath };
-
-    execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath, '--dry-run'], { env, encoding: 'utf-8' });
-    if (!readFileSync(cvPath, 'utf-8').includes('CliProj') && !existsSync(adPath)) pass('add-entry CLI --dry-run writes nothing');
-    else fail('add-entry CLI --dry-run should not write');
-
-    const realOut = JSON.parse(execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath], { env, encoding: 'utf-8' }));
-    if (realOut.cv.status === 'added' && realOut.articleDigest.status === 'created' &&
-        readFileSync(cvPath, 'utf-8').includes('- **CliProj**') && readFileSync(adPath, 'utf-8').includes('## CliProj')) {
-      pass('add-entry CLI real run writes cv.md + creates article-digest.md');
-    } else {
-      fail(`add-entry CLI real run => ${JSON.stringify(realOut)}`);
-    }
-
-    const rerun = JSON.parse(execFileSync(NODE, [join(ROOT, 'add-entry.mjs'), payloadPath], { env, encoding: 'utf-8' }));
-    if (rerun.cv.status === 'duplicate' && rerun.articleDigest.status === 'duplicate') pass('add-entry CLI re-run is idempotent');
-    else fail(`add-entry CLI re-run => ${JSON.stringify(rerun)}`);
-  } finally {
-    rmSync(cliTmp, { recursive: true, force: true });
-  }
-
-} catch (e) {
-  fail(`add-entry tests crashed: ${e.message}`);
-}
-
 // ── 12. TRACKER REPORT LINK NORMALIZATION (#760) ────────────────
 
 console.log('\n12. Tracker report-link normalization');
@@ -3638,234 +2723,6 @@ try {
   fail(`tracker-link normalization tests crashed: ${e.message}`);
 }
 
-// ── RESERVE-REPORT-NUM RANGE RESERVATION (#1426) ────────────────
-// Manual multi-agent fan-outs need N report numbers up front. --count N
-// reserves a contiguous range (per-slot atomic sentinels); tests run against
-// a temp dir via the CAREER_OPS_REPORTS_DIR override.
-console.log('\n🧪 Testing reserve-report-num env override and range reservation...');
-try {
-  const RESERVE = join(ROOT, 'reserve-report-num.mjs');
-  const reserveRun = (args, dir) => execFileSync(NODE, [RESERVE, ...args], {
-    encoding: 'utf-8',
-    env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir },
-  }).trim();
-
-  const reserveTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-'));
-  const single = reserveRun([], reserveTmp);
-  if (single === '001' && existsSync(join(reserveTmp, '001-RESERVED.md'))) {
-    pass('CAREER_OPS_REPORTS_DIR override redirects sentinel to temp dir');
-  } else {
-    fail(`env override failed: stdout=${single}, sentinel in tmp=${existsSync(join(reserveTmp, '001-RESERVED.md'))}`);
-  }
-  rmSync(reserveTmp, { recursive: true, force: true });
-
-  // --count N: contiguous range from an empty dir.
-  const rangeTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-range-'));
-  const range = reserveRun(['--count', '3'], rangeTmp);
-  const rangeSentinels = ['001', '002', '003']
-    .every(n => existsSync(join(rangeTmp, `${n}-RESERVED.md`)));
-  if (range === '001-003' && rangeSentinels) {
-    pass('--count 3 reserves contiguous range and prints START-END');
-  } else {
-    fail(`--count 3 produced stdout=${range}, all sentinels=${rangeSentinels}`);
-  }
-
-  // --count N continues after existing reports.
-  writeFileSync(join(rangeTmp, '007-acme-2026-07-02.md'), '# stub');
-  const afterExisting = reserveRun(['--count', '2'], rangeTmp);
-  if (afterExisting === '008-009') {
-    pass('--count starts range after highest existing slot');
-  } else {
-    fail(`--count after existing report produced ${afterExisting}, expected 008-009`);
-  }
-
-  // --count 1 keeps the single-number output format (backwards compatible).
-  const countOne = reserveRun(['--count', '1'], rangeTmp);
-  if (countOne === '010') {
-    pass('--count 1 prints single number without dash');
-  } else {
-    fail(`--count 1 produced ${countOne}, expected 010`);
-  }
-  rmSync(rangeTmp, { recursive: true, force: true });
-
-  // Collision mid-range: pre-place a sentinel at 007 with existing max 005.
-  // maxSlot() counts RESERVED sentinels as occupied, so a foreign sentinel at
-  // 007 bases the range past it (008-) — no slot below is ever attempted.
-  // (The rollback path is exercised by the next test, not this one.)
-  const collideTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-collide-'));
-  writeFileSync(join(collideTmp, '005-acme-2026-07-02.md'), '# stub');
-  writeFileSync(join(collideTmp, '007-RESERVED.md'), '');
-  const collided = reserveRun(['--count', '3'], collideTmp);
-  const leaked006 = existsSync(join(collideTmp, '006-RESERVED.md'));
-  const foreign007 = existsSync(join(collideTmp, '007-RESERVED.md'));
-  if (collided === '008-010' && !leaked006 && foreign007) {
-    pass('--count treats a foreign sentinel as occupied and bases the range past it');
-  } else {
-    fail(`sentinel-as-occupied: stdout=${collided} (want 008-010), 006 sentinel=${leaked006}, foreign 007 kept=${foreign007}`);
-  }
-  rmSync(collideTmp, { recursive: true, force: true });
-
-  // Mid-range collision → rollback. reserveRange must claim a partial range,
-  // fail on a later slot, release the partial claims, and restart past the
-  // collision. A blocker visible to maxSlot() can't trigger this (it bumps the
-  // base instead, as the previous test pins), so plant one maxSlot() can't
-  // see: its /^(\d{3})-/ regex skips 4-digit names, while claimSlot's
-  // occupancy check matches any numeric prefix. Seeding max=999 puts the base
-  // at 1000; "1001-taken.md" then collides mid-range exactly like a slot
-  // claimed by a racing process after the base was computed.
-  const rollbackTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-rollback-'));
-  writeFileSync(join(rollbackTmp, '999-acme-2026-07-02.md'), '# stub');
-  writeFileSync(join(rollbackTmp, '1001-taken.md'), '# stub');
-  const rolledBack = reserveRun(['--count', '3'], rollbackTmp);
-  const released1000 = !existsSync(join(rollbackTmp, '1000-RESERVED.md'));
-  const blocker1001 = existsSync(join(rollbackTmp, '1001-taken.md'));
-  const restarted = ['1002', '1003', '1004']
-    .every(n => existsSync(join(rollbackTmp, `${n}-RESERVED.md`)));
-  if (rolledBack === '1002-1004' && released1000 && blocker1001 && restarted) {
-    pass('mid-range collision releases partially claimed slots and restarts past it');
-  } else {
-    fail(`rollback: stdout=${rolledBack} (want 1002-1004), 1000 released=${released1000}, blocker kept=${blocker1001}, restarted sentinels=${restarted}`);
-  }
-  rmSync(rollbackTmp, { recursive: true, force: true });
-
-  // Range-vs-range: two concurrent --count 4 reservations must not overlap.
-  // Terminates by construction: each restart strictly advances the base.
-  const concTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-conc-'));
-  const spawnReserve = () => new Promise(resolve => {
-    const child = spawn(NODE, [RESERVE, '--count', '4'], {
-      env: { ...process.env, CAREER_OPS_REPORTS_DIR: concTmp },
-    });
-    let stdout = '';
-    child.stdout.on('data', chunk => { stdout += chunk; });
-    child.on('close', () => resolve(stdout.trim()));
-  });
-  const [rangeX, rangeY] = await Promise.all([spawnReserve(), spawnReserve()]);
-  const toNums = r => {
-    const [s, e] = r.split('-').map(Number);
-    return Array.from({ length: e - s + 1 }, (_, i) => s + i);
-  };
-  const overlap = toNums(rangeX).filter(n => toNums(rangeY).includes(n));
-  if (rangeX && rangeY && overlap.length === 0) {
-    pass(`concurrent --count 4 reservations are disjoint (${rangeX} vs ${rangeY})`);
-  } else {
-    fail(`concurrent ranges overlap: ${rangeX} vs ${rangeY} share [${overlap}]`);
-  }
-  rmSync(concTmp, { recursive: true, force: true });
-
-  // --release with a range deletes every sentinel in it.
-  const reserveRunFail = (args, dir) => {
-    try {
-      execFileSync(NODE, [RESERVE, ...args], {
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir },
-      });
-      return null;
-    } catch (err) {
-      return err.status;
-    }
-  };
-  const relTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-release-'));
-  reserveRun(['--count', '4'], relTmp); // reserves 001-004
-  reserveRun(['--release', '001-004'], relTmp);
-  const anyLeft = ['001', '002', '003', '004']
-    .some(n => existsSync(join(relTmp, `${n}-RESERVED.md`)));
-  if (!anyLeft) {
-    pass('--release NNN-MMM deletes all sentinels in range');
-  } else {
-    fail('--release range left sentinels behind');
-  }
-
-  // Invalid inputs exit non-zero.
-  const badCount = reserveRunFail(['--count', '0'], relTmp);
-  const hugeCount = reserveRunFail(['--count', '999'], relTmp);
-  const badRelease = reserveRunFail(['--release', '009-004'], relTmp);
-  if (badCount === 1 && hugeCount === 1 && badRelease === 1) {
-    pass('invalid --count and inverted --release range exit 1');
-  } else {
-    fail(`validation exits: count0=${badCount}, count999=${hugeCount}, inverted=${badRelease}`);
-  }
-  rmSync(relTmp, { recursive: true, force: true });
-} catch (e) {
-  fail(`reserve-report-num tests crashed: ${e.message}`);
-}
-
-// ── VERIFY-PIPELINE REPORT CHECKS (#1425) ───────────────────────
-// Parallel evaluators can write two reports for the same company+role, and
-// tracker dedup can leave a report file with no tracker row. verify-pipeline
-// must surface both as warnings (not errors — re-evaluations are legitimate).
-console.log('\n🧪 Testing verify-pipeline duplicate/orphan report checks...');
-try {
-  const vpTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-reports-'));
-  try {
-    const vpReports = join(vpTmp, 'reports');
-    mkdirSync(vpReports, { recursive: true });
-    const vpTracker = join(vpTmp, 'applications.md');
-    const vpEnv = { ...process.env, CAREER_OPS_TRACKER: vpTracker, CAREER_OPS_REPORTS: vpReports };
-
-    const report = (company, role) =>
-      `# Evaluación: ${company} — ${role}\n\n## Machine Summary\n\n\`\`\`yaml\ncompany: "${company}"\nrole: "${role}"\nscore: 4.2\n\`\`\`\n`;
-
-    // #1 and #3 are the same role at Acme written by two concurrent workers;
-    // #2 is a different Acme role (must NOT be flagged as duplicate);
-    // #3 also has no tracker row (orphan — tracker dedup kept #1).
-    writeFileSync(join(vpReports, '001-acme-2026-01-04.md'), report('Acme', 'Staff AI Engineer'));
-    writeFileSync(join(vpReports, '002-acme-2026-01-05.md'), report('Acme', 'Platform Engineer'));
-    writeFileSync(join(vpReports, '003-acme-2026-01-05.md'), report('Acme', 'Staff AI Engineer'));
-
-    writeFileSync(vpTracker,
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 1 | 2026-01-04 | Acme | Staff AI Engineer | 4.2/5 | Evaluated | ❌ | [1](reports/001-acme-2026-01-04.md) | ok |\n' +
-      '| 2 | 2026-01-05 | Acme | Platform Engineer | 4.0/5 | Evaluated | ❌ | [2](reports/002-acme-2026-01-05.md) | ok |\n');
-
-    const vpOut = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
-    if (vpOut === null) {
-      fail('verify-pipeline crashed on duplicate/orphan report fixture');
-    } else {
-      if (vpOut.includes('Duplicate reports for same company+role') &&
-          vpOut.includes('001-acme-2026-01-04.md') && vpOut.includes('003-acme-2026-01-05.md')) {
-        pass('duplicate reports for the same company+role are flagged (#1425)');
-      } else {
-        fail('duplicate company+role reports not flagged');
-      }
-      if (vpOut.includes('002-acme-2026-01-05.md') && /Duplicate reports[^\n]*002-acme/.test(vpOut)) {
-        fail('different role at the same company falsely flagged as duplicate report');
-      } else {
-        pass('different role at the same company is not flagged as duplicate');
-      }
-      if (/Orphan report[^\n]*#3[^\n]*003-acme-2026-01-05\.md/.test(vpOut)) {
-        pass('orphan report with no tracker row is flagged (#1425)');
-      } else {
-        fail('orphan report not flagged');
-      }
-      if (/Orphan report[^\n]*(001|002)-acme/.test(vpOut)) {
-        fail('referenced report falsely flagged as orphan');
-      } else {
-        pass('referenced reports are not flagged as orphans');
-      }
-      // run() returns non-null only on exit 0 — warnings must not fail the check.
-      pass('duplicate/orphan report findings stay warning-level (exit 0)');
-    }
-
-    // Clean fixture: one row, one report — both checks must pass green.
-    rmSync(join(vpReports, '003-acme-2026-01-05.md'));
-    const vpClean = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
-    if (vpClean !== null &&
-        vpClean.includes('No duplicate reports for the same company+role') &&
-        vpClean.includes('No orphan reports')) {
-      pass('clean tracker+reports fixture passes both report checks');
-    } else {
-      fail('clean fixture did not pass duplicate/orphan report checks');
-    }
-  } finally {
-    rmSync(vpTmp, { recursive: true, force: true });
-  }
-} catch (e) {
-  fail(`verify-pipeline report checks crashed: ${e.message}`);
-}
-
 // ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
 // dedup-tracker.mjs used to ship an older fuzzy role matcher than
 // merge-tracker.mjs. That weaker matcher collapsed sibling roles at the same
@@ -3912,15 +2769,7 @@ try {
       '| 27 | 2026-01-08 | Acme | Solutions Engineer, Revenue | 3.0/5 | Applied | ❌ | [27](../reports/027-revenue-applied.md) | applied exact-title row |\n' +
       '| 28 | 2026-01-09 | Acme | Solutions Engineer, Revenue | 4.6/5 | Evaluated | ❌ | [28](../reports/028-revenue-eval.md) | evaluated exact-title row |\n' +
       '| 29 | 2026-01-08 | Acme | Data Engineer, Search | 3.1/5 | Applied | ❌ | [29](../reports/029-search-old.md) | malformed duplicate-number old row |\n' +
-      '| 29 | 2026-01-09 | Acme | Data Engineer, Search | 4.1/5 | Evaluated | ❌ | [30](../reports/030-search-new.md) | malformed duplicate-number new row |\n' +
-      // Distinct sibling roles at one company that the old fuzzy matcher
-      // false-merged (shared [software, engineer, infrastructure] → Jaccard 0.6).
-      // Exact company+title matching must keep both openings.
-      '| 31 | 2026-01-10 | Cohere | Software Engineer, Data Infrastructure | 3.4/5 | Evaluated | ❌ | [31](../reports/013-cohere-data-infra.md) | distinct role — must survive |\n' +
-      '| 32 | 2026-01-10 | Cohere | Senior Software Engineer, Agent Infrastructure | 4.0/5 | Evaluated | ❌ | [32](../reports/014-cohere-agent-infra.md) | distinct role — higher score |\n' +
-      // Exact company+role duplicate of #32 (same title, both Evaluated) — must
-      // collapse to one, keeping the higher score.
-      '| 33 | 2026-01-11 | Cohere | Senior Software Engineer, Agent Infrastructure | 3.7/5 | Evaluated | ❌ | [33](../reports/033-cohere-agent-dup.md) | exact-title duplicate |\n');
+      '| 29 | 2026-01-09 | Acme | Data Engineer, Search | 4.1/5 | Evaluated | ❌ | [30](../reports/030-search-new.md) | malformed duplicate-number new row |\n');
 
     const dedupResult = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker } });
     if (dedupResult === null) {
@@ -3959,24 +2808,6 @@ try {
         pass('dedup-tracker handles duplicate tracker numbers using row-local line indexes');
       } else {
         fail(`dedup-tracker duplicate-number handling broken: ${searchRows.length} Search rows`);
-      }
-
-      // Regression: the old fuzzy matcher scored "Software Engineer, Data
-      // Infrastructure" and "Senior Software Engineer, Agent Infrastructure" at
-      // Jaccard 0.6 and deleted the lower-scored distinct role. Exact
-      // company+title matching must keep both openings.
-      const cohereDataInfra = deduped.split('\n').filter(l => l.includes('| Software Engineer, Data Infrastructure |'));
-      if (cohereDataInfra.length === 1) {
-        pass('dedup-tracker keeps distinct same-company Cohere role (Data Infrastructure) — no fuzzy false-merge');
-      } else {
-        fail(`dedup-tracker false-merged the distinct Cohere Data Infrastructure role: ${cohereDataInfra.length} rows`);
-      }
-
-      const cohereAgentInfra = deduped.split('\n').filter(l => l.includes('| Senior Software Engineer, Agent Infrastructure |'));
-      if (cohereAgentInfra.length === 1 && cohereAgentInfra[0].includes('4.0/5')) {
-        pass('dedup-tracker merges an exact company+role duplicate to one (keeps highest score)');
-      } else {
-        fail(`dedup-tracker exact-duplicate handling broken: ${cohereAgentInfra.length} Cohere Agent Infrastructure rows`);
       }
     }
   } finally {
@@ -4109,72 +2940,6 @@ try {
   fail(`tracker-parse unit test crashed: ${e.message}`);
 }
 
-// #1431 "Apply to #13" is ambiguous: report numbers and tracker row numbers
-// diverge, and mapping company ↔ report# ↔ tracker# ↔ PDF used to require
-// opening three files. find.mjs resolves a report#, tracker#, or company/role
-// fragment to the full pipeline identity in one read-only lookup.
-console.log('\n🧪 Testing find.mjs pipeline identity lookup...');
-try {
-  const { parseTrackerRows, parsePdfIndex, findMatches } = await import(pathToFileURL(join(ROOT, 'find.mjs')).href);
-
-  // Tracker# and report# intentionally diverge: row 3 carries report 12, and a
-  // different row is numbered 12 — the exact friction the tool exists to solve.
-  const rows = parseTrackerRows([
-    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
-    '|---|------|---------|------|-------|--------|-----|--------|-------|',
-    '| 3 | 2026-06-01 | Acme Labs | Platform Engineer | 4.2/5 | **Applied** (2026-06-02) | ✅ | [12](reports/012-acme-labs-2026-06-01.md) | strong fit |',
-    '| 12 | 2026-06-10 | Globex | Data Engineer | 3.8/5 | Evaluated | ❌ | [15](reports/015-globex-2026-06-10.md) | — |',
-  ].join('\n'));
-  const pdfIndex = parsePdfIndex(
-    '# report\tpdf\thtml\tformat\tdate — written by generate-pdf.mjs, do not edit\n' +
-    '012\toutput/cv-acme-labs.pdf\toutput/cv-acme-labs.html\tats\t2026-06-01\n');
-
-  const byTracker = findMatches(rows, '3', pdfIndex);
-  if (byTracker.length === 1 && byTracker[0].company === 'Acme Labs' &&
-      byTracker[0].trackerNum === 3 && byTracker[0].reportNum === '12' &&
-      byTracker[0].reportPath === 'reports/012-acme-labs-2026-06-01.md' &&
-      byTracker[0].status === 'Applied' &&
-      byTracker[0].pdfPath === 'output/cv-acme-labs.pdf') {
-    pass('find.mjs resolves a tracker# to company, report#, canonical status, and PDF path');
-  } else {
-    fail(`find.mjs tracker# lookup wrong: ${JSON.stringify(byTracker)}`);
-  }
-
-  // "12" is both Acme's report# and Globex's tracker# — both rows must surface
-  // (with the zero-padded "012" report-link form treated as the same number).
-  const ambiguous = findMatches(rows, '012', pdfIndex);
-  const companies = ambiguous.map(m => m.company).sort();
-  if (ambiguous.length === 2 && companies[0] === 'Acme Labs' && companies[1] === 'Globex') {
-    pass('find.mjs surfaces report#/tracker# collisions as multiple matches (zero-pad normalized)');
-  } else {
-    fail(`find.mjs numeric collision lookup wrong: ${JSON.stringify(ambiguous)}`);
-  }
-
-  const byFragment = findMatches(rows, 'acme', pdfIndex);
-  if (byFragment.length === 1 && byFragment[0].company === 'Acme Labs') {
-    pass('find.mjs matches a case-insensitive company fragment');
-  } else {
-    fail(`find.mjs company fragment lookup wrong: ${JSON.stringify(byFragment)}`);
-  }
-
-  // Fuzzy multi-word lookup reuses role-matcher.mjs (stopwords like "remote"
-  // dropped) instead of reinventing matching.
-  const byFuzzy = findMatches(rows, 'remote data engineer', pdfIndex);
-  if (byFuzzy.length === 1 && byFuzzy[0].company === 'Globex' && byFuzzy[0].pdfPath === null) {
-    pass('find.mjs fuzzy-matches a role phrase via role-matcher and reports a missing PDF');
-  } else {
-    fail(`find.mjs fuzzy role lookup wrong: ${JSON.stringify(byFuzzy)}`);
-  }
-
-  if (findMatches(rows, 'no-such-company', pdfIndex).length === 0) {
-    pass('find.mjs returns zero matches cleanly for an unknown query');
-  } else {
-    fail('find.mjs matched a query that exists nowhere in the tracker');
-  }
-} catch (e) {
-  fail(`find.mjs unit test crashed: ${e.message}`);
-}
-
 // dedup-tracker reads AND writes by column; with a Location column its status
 // promotion must target the Status cell, not fixed parts[6].
 console.log('\n🧪 Testing dedup-tracker with an inserted Location column...');
@@ -4282,98 +3047,6 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
-// ── MERGE-TRACKER TSV COLUMN-ORDER TOLERANCE (#1427) ─────────────
-// Batch TSVs write (status, score); applications.md is (score, status). A
-// generator that swaps the two must not merge silently — the score column is
-// identified by content pattern, and an undecidable pair is skipped loudly.
-console.log('\n🧪 Testing merge-tracker TSV column-order tolerance (#1427)...');
-try {
-  const { resolveScoreStatus, looksLikeScoreCell } = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
-
-  // Unit: content-pattern discriminator
-  if (looksLikeScoreCell('4.2/5') && looksLikeScoreCell('5/5') && looksLikeScoreCell('N/A') && looksLikeScoreCell('DUP') && looksLikeScoreCell('**3.5/5**')) {
-    pass('looksLikeScoreCell accepts score cells (incl. N/A, DUP, bolded)');
-  } else {
-    fail('looksLikeScoreCell rejected a valid score cell');
-  }
-  if (!looksLikeScoreCell('Evaluated') && !looksLikeScoreCell('Applied') && !looksLikeScoreCell('')) {
-    pass('looksLikeScoreCell rejects status labels and blanks');
-  } else {
-    fail('looksLikeScoreCell matched a non-score cell');
-  }
-
-  const std = resolveScoreStatus('Evaluated', '4.2/5');
-  const swp = resolveScoreStatus('4.2/5', 'Evaluated');
-  if (std && std.score === '4.2/5' && std.status === 'Evaluated' &&
-      swp && swp.score === '4.2/5' && swp.status === 'Evaluated') {
-    pass('resolveScoreStatus maps both column orders to the same result');
-  } else {
-    fail(`resolveScoreStatus order handling: std=${JSON.stringify(std)} swp=${JSON.stringify(swp)}`);
-  }
-  if (resolveScoreStatus('Evaluated', 'Applied') === null && resolveScoreStatus('4.2/5', '5/5') === null) {
-    pass('resolveScoreStatus returns null when neither or both cells look like a score');
-  } else {
-    fail('resolveScoreStatus should be undecidable for two statuses or two scores');
-  }
-
-  // End-to-end: a swapped-column TSV merges correctly; an undecidable one is skipped.
-  const colTmp = mkdtempSync(join(tmpdir(), 'career-ops-colorder-'));
-  try {
-    mkdirSync(join(colTmp, 'data'));
-    mkdirSync(join(colTmp, 'reports'));
-    const additionsDir = join(colTmp, 'additions');
-    mkdirSync(additionsDir);
-    const tracker = join(colTmp, 'data', 'applications.md');
-    writeFileSync(tracker,
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 1 | 2026-01-04 | AnchorCo | Platform Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-anchorco-2026-01-04.md) | existing |\n');
-    for (const n of ['001-anchorco-2026-01-04', '002-swapco-2026-01-05', '003-ambigco-2026-01-05', '004-boldco-2026-01-05']) {
-      writeFileSync(join(colTmp, 'reports', `${n}.md`), '# fixture\n');
-    }
-    // Swapped order: score BEFORE status (4.6/5 then Evaluated).
-    writeFileSync(join(additionsDir, '002-swapco.tsv'),
-      '2\t2026-01-05\tSwapCo\tData Engineer\t4.6/5\tEvaluated\t❌\t[2](reports/002-swapco-2026-01-05.md)\tswapped cols\n');
-    // Undecidable: two status-like cells, no score → must be skipped, not merged.
-    writeFileSync(join(additionsDir, '003-ambigco.tsv'),
-      '3\t2026-01-05\tAmbigCo\tAnalyst\tEvaluated\tApplied\t❌\t[3](reports/003-ambigco-2026-01-05.md)\tno score\n');
-    // Bold score cell → detected AND persisted write-canonical (unbolded).
-    writeFileSync(join(additionsDir, '004-boldco.tsv'),
-      '4\t2026-01-05\tBoldCo\tSRE\tEvaluated\t**4.7/5**\t❌\t[4](reports/004-boldco-2026-01-05.md)\tbold score\n');
-
-    const mergeResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
-    if (mergeResult === null) {
-      fail('merge-tracker.mjs crashed during column-order test');
-    } else {
-      const merged = readFileSync(tracker, 'utf-8');
-      const swapRow = merged.split('\n').find(l => l.includes('SwapCo')) || '';
-      // buildRow writes `| … | score | status | … |`, so the score must land in the
-      // score column and status in the status column despite the swapped input.
-      if (swapRow.includes('| 4.6/5 | Evaluated |')) {
-        pass('swapped-column TSV merges with score and status in the correct columns');
-      } else {
-        fail(`swapped TSV mis-merged: "${swapRow.trim()}"`);
-      }
-      if (!merged.includes('AmbigCo')) {
-        pass('undecidable score/status row is skipped, not merged (no silent swap)');
-      } else {
-        fail('undecidable row was merged instead of skipped');
-      }
-      const boldRow = merged.split('\n').find(l => l.includes('BoldCo')) || '';
-      if (boldRow.includes('| 4.7/5 | Evaluated |') && !boldRow.includes('**')) {
-        pass('bold score cell is persisted write-canonical (unbolded) in the merged row');
-      } else {
-        fail(`bold score not canonicalized on write: "${boldRow.trim()}"`);
-      }
-    }
-  } finally {
-    rmSync(colTmp, { recursive: true, force: true });
-  }
-} catch (e) {
-  fail(`merge-tracker column-order tests crashed: ${e.message}`);
-}
-
 // ── MERGE-TRACKER REPORT-NUMBER COLLISION (#912) ─────────────────
 // The report-number dedup check was not company-guarded: a TSV for NewCo
 // with report [1] would find the existing tracker row [1] for OtherCo and
@@ -4434,103 +3107,6 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker report-number collision test crashed: ${e.message}`);
-}
-
-// ── MERGE-TRACKER REQ/JOB-NUMBER DEDUP GUARD (#1524) ─────────────────────
-// Tier-3 dedup (company + fuzzy role match) had no req/job-number awareness:
-// two distinct postings at the same company with similarly-worded titles were
-// silently collapsed into one row whenever a req/job number in the Notes
-// column was the only thing distinguishing them. Covers: (a) same-looking
-// titles + different req numbers → NOT a duplicate, (b) same-looking titles +
-// same req number → still a duplicate, (c) no req number on either side →
-// existing fuzzy-match behavior unchanged, (d) req number on only one side →
-// falls back to fuzzy-match behavior (can't prove a mismatch without both).
-console.log('\n🧪 Testing merge-tracker req/job-number dedup guard (#1524)...');
-try {
-  const reqTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-1524-'));
-  try {
-    mkdirSync(join(reqTmp, 'data'));
-    mkdirSync(join(reqTmp, 'reports'));
-    const reqAdditions = join(reqTmp, 'additions');
-    mkdirSync(reqAdditions);
-    const reqTracker = join(reqTmp, 'data', 'applications.md');
-    writeFileSync(reqTracker,
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 1 | 2026-01-01 | Fabrikam | Learning Development Designer III | 3.8/5 | Evaluated | ❌ | [1](../reports/001-fabrikam-2026-01-01.md) | Req R_1000001 |\n' +
-      '| 2 | 2026-01-01 | Fabrikam | Curriculum Program Coordinator | 3.5/5 | Evaluated | ❌ | [2](../reports/002-fabrikam-2026-01-01.md) | no req number here |\n' +
-      '| 3 | 2026-01-01 | Northwind | Operations Analyst | 3.6/5 | Evaluated | ❌ | [3](../reports/003-northwind-2026-01-01.md) | Job 2026-55501 |\n');
-    for (const n of [
-      '001-fabrikam-2026-01-01', '002-fabrikam-2026-01-01', '003-northwind-2026-01-01',
-      '004-fabrikam-2026-01-02', '005-fabrikam-2026-01-02', '006-fabrikam-2026-01-02', '007-northwind-2026-01-02',
-    ]) {
-      writeFileSync(join(reqTmp, 'reports', `${n}.md`), '# fixture\n');
-    }
-
-    // (a) Same-looking title, DIFFERENT req number → must NOT be treated as a duplicate.
-    writeFileSync(join(reqAdditions, '004-fabrikam.tsv'),
-      '4\t2026-01-02\tFabrikam\tLearning Development Curriculum Designer\tEvaluated\t4.5/5\t❌\t[4](reports/004-fabrikam-2026-01-02.md)\tReq R_1000002 — distinct posting (#1524)\n');
-    // (b) Same-looking title, SAME req number → still a duplicate (lower score → skipped, row untouched).
-    writeFileSync(join(reqAdditions, '005-fabrikam.tsv'),
-      '5\t2026-01-02\tFabrikam\tLearning Development Designer III (Repost)\tEvaluated\t3.0/5\t❌\t[5](reports/005-fabrikam-2026-01-02.md)\tReq R_1000001 — same posting repost\n');
-    // (c) No req number on either side → existing fuzzy-match behavior unchanged (still deduped).
-    writeFileSync(join(reqAdditions, '006-fabrikam.tsv'),
-      '6\t2026-01-02\tFabrikam\tCurriculum Program Coordinator II\tEvaluated\t3.9/5\t❌\t[6](reports/006-fabrikam-2026-01-02.md)\tno req number, higher score\n');
-    // (d) Req number on only one side → can't prove a mismatch, falls back to fuzzy-match (still deduped).
-    writeFileSync(join(reqAdditions, '007-northwind.tsv'),
-      '7\t2026-01-02\tNorthwind\tOperations Analyst\tEvaluated\t3.2/5\t❌\t[7](reports/007-northwind-2026-01-02.md)\tno req number on this side\n');
-
-    const reqResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: reqTracker, CAREER_OPS_ADDITIONS: reqAdditions } });
-    if (reqResult === null) {
-      fail('merge-tracker.mjs crashed during req/job-number dedup guard test (#1524)');
-    } else {
-      const reqMerged = readFileSync(reqTracker, 'utf-8');
-      const reqRows = reqMerged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
-
-      // (a) Different req numbers: distinct posting added as a NEW row, existing #1 left untouched.
-      const distinctRow = reqRows.find(r => r.includes('Learning Development Curriculum Designer'));
-      const originalRow1 = reqRows.find(r => r.includes('Learning Development Designer III') && !r.includes('(Repost)') && !r.includes('Curriculum Designer'));
-      if (distinctRow && originalRow1 && originalRow1.includes('3.8/5') && originalRow1.includes('R_1000001')) {
-        pass('(#1524a) different req numbers on similar titles → NOT deduped, both rows present');
-      } else {
-        fail('(#1524a) different req numbers on similar titles were incorrectly deduped');
-      }
-
-      // (b) Same req number: still recognized as a duplicate — no separate "(Repost)" row,
-      // and since the new score (3.0) is lower than the existing (3.8), the existing row is left as-is.
-      const repostRow = reqRows.find(r => r.includes('(Repost)'));
-      if (!repostRow && originalRow1 && originalRow1.includes('3.8/5')) {
-        pass('(#1524b) same req number on similar titles → still deduped (skipped, lower score)');
-      } else {
-        fail('(#1524b) same req number should have been deduped away, not added as a new row');
-      }
-
-      // (c) No req number on either side: existing fuzzy-match-only behavior preserved — deduped and
-      // updated in place (higher score), not appended as a new row.
-      const coordinatorRows = reqRows.filter(r => r.includes('Curriculum Program Coordinator'));
-      if (coordinatorRows.length === 1 && coordinatorRows[0].includes('3.9/5')) {
-        pass('(#1524c) no req number on either side → fuzzy-match behavior unchanged (updated in place)');
-      } else {
-        fail(`(#1524c) fuzzy-match-only behavior regressed: expected 1 'Curriculum Program Coordinator' row at 3.9/5, got ${coordinatorRows.length}`);
-      }
-
-      // (d) Req number on only one side (existing row has "Job 2026-55501", addition has none):
-      // can't prove a mismatch without both numbers, so falls back to fuzzy match → still deduped
-      // into exactly one row. The addition's score (3.2) is lower than the existing (3.6), so the
-      // existing row is left as-is rather than updated.
-      const opsAnalystRows = reqRows.filter(r => r.includes('Operations Analyst'));
-      if (opsAnalystRows.length === 1 && opsAnalystRows[0].includes('3.6/5')) {
-        pass('(#1524d) req number on only one side → falls back to fuzzy match, still deduped');
-      } else {
-        fail(`(#1524d) one-sided req number should fall back to fuzzy match: expected 1 'Operations Analyst' row at 3.6/5, got ${opsAnalystRows.length}`);
-      }
-    }
-  } finally {
-    rmSync(reqTmp, { recursive: true, force: true });
-  }
-} catch (e) {
-  fail(`merge-tracker req/job-number dedup guard test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
@@ -4695,47 +3271,15 @@ try {
   }
   rmSync(ready, { recursive: true, force: true });
 
-  // Auto-copy template: when modes/_profile.md or modes/_custom.md is missing but template exists,
-  // doctor --json auto-copies them, records them in autoCopied, and does not report them as missing (#1369).
-  const autoCopy = mkdtempSync(join(tmpdir(), 'co-autocopy-'));
-  mkdirSync(join(autoCopy, 'config'), { recursive: true });
-  mkdirSync(join(autoCopy, 'modes'), { recursive: true });
-  for (const f of ['cv.md', 'config/profile.yml', 'portals.yml']) {
-    writeFileSync(join(autoCopy, f), 'x');
-  }
-  writeFileSync(join(autoCopy, 'modes/_profile.template.md'), '# profile template\n');
-  writeFileSync(join(autoCopy, 'modes/_custom.template.md'), '# custom template\n');
-  const ac = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', autoCopy]) || '{}');
-  if (
-    ac.onboardingNeeded === false &&
-    Array.isArray(ac.missing) &&
-    ac.missing.length === 0 &&
-    Array.isArray(ac.autoCopied) &&
-    ac.autoCopied.includes('modes/_profile.md') &&
-    ac.autoCopied.includes('modes/_custom.md') &&
-    existsSync(join(autoCopy, 'modes/_profile.md')) &&
-    readFileSync(join(autoCopy, 'modes/_profile.md'), 'utf-8') === '# profile template\n' &&
-    existsSync(join(autoCopy, 'modes/_custom.md')) &&
-    readFileSync(join(autoCopy, 'modes/_custom.md'), 'utf-8') === '# custom template\n'
-  ) {
-    pass('Auto-copy template → modes/_profile.md and modes/_custom.md copied silently in --json mode (#1369)');
-  } else {
-    fail(`Auto-copy template failed in --json mode: ${JSON.stringify(ac)}`);
-  }
-  rmSync(autoCopy, { recursive: true, force: true });
-
   const claudeDoc = readFile('CLAUDE.md');
-  const agentsDoc = readFile('AGENTS.md');
   if (
     /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&
     /"warnings"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
-    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
-    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(agentsDoc) &&
     !/Does\s+`cv\.md`\s+exist\?/i.test(claudeDoc)
   ) {
-    pass('CLAUDE.md and AGENTS.md delegate onboarding state and autoCopied to doctor --json');
+    pass('CLAUDE.md delegates onboarding state to doctor --json');
   } else {
-    fail('CLAUDE.md or AGENTS.md still duplicates onboarding prerequisite checks or misses autoCopied doc');
+    fail('CLAUDE.md still duplicates onboarding prerequisite checks');
   }
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
@@ -5117,18 +3661,17 @@ try {
   fail(`solidjobs provider tests crashed: ${e.message}`);
 }
 
-// ── 16. SSRF redirect hardening (lever / ashby) ──────────────────
+// ── 16. SSRF redirect hardening (lever / ashby / workday) ───────
 // _http.mjs defaults to redirect:'follow', so a server-side redirect from any
 // of these ATS APIs to an internal address is an SSRF vector. Every other GET
-// provider passes redirect:'error'; these two were missing it.
-// (workday's redirect:'error' coverage lives in its own "Provider — workday"
-// section below, checked across every paginated request, not just the first.)
+// provider passes redirect:'error'; these three were missing it.
 
-console.log('\n16. Provider — SSRF redirect hardening (lever / ashby)');
+console.log('\n16. Provider — SSRF redirect hardening (lever / ashby / workday)');
 
 try {
   const lever = (await import(pathToFileURL(join(ROOT, 'providers/lever.mjs')).href)).default;
   const ashby = (await import(pathToFileURL(join(ROOT, 'providers/ashby.mjs')).href)).default;
+  const workday = (await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href)).default;
 
   let leverOpts = null;
   await lever.fetch(
@@ -5145,6 +3688,14 @@ try {
   );
   if (ashbyOpts && ashbyOpts.redirect === 'error') pass('ashby.fetch() passes redirect:"error"');
   else fail(`ashby.fetch() should pass redirect:"error", got ${JSON.stringify(ashbyOpts)}`);
+
+  let workdayOpts = null;
+  await workday.fetch(
+    { name: 'W', careers_url: 'https://example.wd5.myworkdayjobs.com/careers' },
+    { transport: 'http', fetchJson: async (_u, opts) => { workdayOpts = opts; return { jobPostings: [] }; }, fetchText: async () => '' },
+  );
+  if (workdayOpts && workdayOpts.redirect === 'error') pass('workday.fetch() passes redirect:"error"');
+  else fail(`workday.fetch() should pass redirect:"error", got ${JSON.stringify(workdayOpts)}`);
 } catch (e) {
   fail(`SSRF redirect hardening tests crashed: ${e.message}`);
 }
@@ -5241,7 +3792,7 @@ try {
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
   if (process.platform === 'win32') {
-    try { execFileSync(BASH, ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+    try { execFileSync('bash', ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
@@ -5260,13 +3811,13 @@ try {
     'exit 1',
   ].join('\n') + '\n');
   if (process.platform === 'win32') {
-    try { execFileSync(BASH, ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+    try { execFileSync('bash', ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
   } else {
     execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
   }
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const out = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -5285,7 +3836,7 @@ try {
     '1\thttps://example.com/one\tpaused_rate_limit\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t001\t-\tsession-limit; paused\t0',
     '2\thttps://example.com/two\tfailed\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\t-\tworker-crash\t1',
   ].join('\n') + '\n');
-  const dry = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
+  const dry = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--resume-paused', '--dry-run'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -5305,7 +3856,7 @@ try {
     '2\thttps://example.com/two\tcompleted\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t002\tbad);system("oops")\t-\t0',
     '3\thttps://example.com/three\tskipped\t2026-01-01T00:00:00Z\t2026-01-01T00:00:01Z\t003\t3.5\tbelow-min-score\t0',
   ].join('\n') + '\n');
-  const statusOnly = run(BASH, [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
+  const statusOnly = run('bash', [toBashPath(join(batchDir, 'batch-runner.sh')), '--status'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -5613,7 +4164,7 @@ try {
   fail(`CJK rendering test crashed: ${e.message}`);
 }
 
-// ── 22. PROVIDERS — Jobstreet (SEEK v5 JobSearch API) ────────────
+// ── 22. PROVIDERS — Jobstreet ──────────────────────────────────────
 
 console.log('\n22. Provider — jobstreet');
 
@@ -5632,62 +4183,56 @@ try {
     fail('jobstreet.detect() should return null for any URL');
   }
 
-  // parseJobstreetItem — valid item (v5 API shape)
+  // parseJobstreetItem — valid item
   const sampleItem = {
-    id: '92996157',
-    title: 'Facility Engineer',
-    advertiser: { id: '60960115', description: 'PT YOFC International Indonesia' },
-    companyName: 'YOFC International',
-    locations: [{ label: 'Karawang, West Java', countryCode: 'ID' }],
-    listingDate: '2026-06-29T02:53:00Z',
+    id: 123456,
+    title: 'Senior Data Scientist',
+    branding: { companyName: 'TechCorp Indonesia' },
+    location: 'Jakarta Selatan',
+    listingDate: '2026-06-15T00:00:00Z',
+    jobUrl: '/id/job/123456',
   };
   const parsed = parseJobstreetItem(sampleItem, 'https://id.jobstreet.com', 'FallbackCo');
-  if (parsed && parsed.title === 'Facility Engineer'
-      && parsed.url === 'https://id.jobstreet.com/id/job/92996157'
-      && parsed.company === 'PT YOFC International Indonesia'
-      && parsed.location === 'Karawang, West Java'
+  if (parsed && parsed.title === 'Senior Data Scientist'
+      && parsed.url === 'https://id.jobstreet.com/id/job/123456'
+      && parsed.company === 'TechCorp Indonesia'
+      && parsed.location === 'Jakarta Selatan'
       && parsed.postedAt != null) {
     pass('parseJobstreetItem extracts title, url, company, location, postedAt correctly');
   } else {
     fail(`parseJobstreetItem returned ${JSON.stringify(parsed)}`);
   }
 
-  // parseJobstreetItem — uses companyName fallback when advertiser.description is absent
-  const noAdvertiserItem = {
-    id: '2',
-    title: 'Data Scientist',
-    companyName: 'TechCorp',
-    locations: [{ label: 'Jakarta' }],
-    listingDate: '2026-06-01T00:00:00Z',
-  };
-  const noAdvParsed = parseJobstreetItem(noAdvertiserItem, 'https://id.jobstreet.com', 'Fallback');
-  if (noAdvParsed && noAdvParsed.company === 'TechCorp') {
-    pass('parseJobstreetItem falls back to companyName when advertiser.description is absent');
+  // parseJobstreetItem — resolves absolute URL without modification
+  const absItem = { id: 1, title: 'Role', jobUrl: 'https://id.jobstreet.com/id/job/999' };
+  const absParsed = parseJobstreetItem(absItem, 'https://id.jobstreet.com', 'Co');
+  if (absParsed && absParsed.url === 'https://id.jobstreet.com/id/job/999') {
+    pass('parseJobstreetItem preserves absolute URLs');
   } else {
-    fail(`parseJobstreetItem companyName fallback: ${JSON.stringify(noAdvParsed)}`);
+    fail(`parseJobstreetItem absolute URL: ${JSON.stringify(absParsed)}`);
   }
 
   // parseJobstreetItem — rejects items without title
-  if (parseJobstreetItem({ id: '1' }, 'https://id.jobstreet.com', 'Co') === null) {
+  if (parseJobstreetItem({ jobUrl: '/id/job/1' }, 'https://id.jobstreet.com', 'Co') === null) {
     pass('parseJobstreetItem returns null for items without title');
   } else {
     fail('parseJobstreetItem should return null for title-less items');
   }
 
-  // parseJobstreetItem — rejects items without id (URL cannot be built)
+  // parseJobstreetItem — rejects items without url
   if (parseJobstreetItem({ title: 'Role' }, 'https://id.jobstreet.com', 'Co') === null) {
-    pass('parseJobstreetItem returns null for items without id');
+    pass('parseJobstreetItem returns null for items without jobUrl');
   } else {
-    fail('parseJobstreetItem should return null for items without id');
+    fail('parseJobstreetItem should return null for URL-less items');
   }
 
-  // parseJobstreetItem — rejects off-domain base URLs
+  // parseJobstreetItem — rejects off-domain URLs
   const offDomain = parseJobstreetItem(
-    { id: '1', title: 'Role', locations: [{ label: 'Remote' }] },
-    'https://evil.example.com', 'Co'
+    { title: 'Role', jobUrl: 'https://evil.example.com/jobs/1' },
+    'https://id.jobstreet.com', 'Co'
   );
-  if (offDomain === null) pass('parseJobstreetItem rejects off-domain base URLs');
-  else fail(`parseJobstreetItem should reject off-domain base URLs, got ${JSON.stringify(offDomain)}`);
+  if (offDomain === null) pass('parseJobstreetItem rejects off-domain job URLs');
+  else fail(`parseJobstreetItem should reject off-domain URLs, got ${JSON.stringify(offDomain)}`);
 
   // parseJobstreetItem — handles null/malformed input safely
   if (parseJobstreetItem(null, 'https://id.jobstreet.com', 'Co') === null) pass('parseJobstreetItem(null) → null');
@@ -5695,48 +4240,26 @@ try {
   if (parseJobstreetItem(7, 'https://id.jobstreet.com', 'Co') === null) pass('parseJobstreetItem(7) → null');
   else fail('parseJobstreetItem(number) should return null');
 
-  // parseJobstreetItem — uses fallback company when both advertiser and companyName are missing
-  const noCompany = parseJobstreetItem(
-    { id: '99', title: 'Engineer', locations: [{ label: 'Remote' }] },
+  // parseJobstreetItem — fallback company when branding is missing
+  const noBrand = parseJobstreetItem(
+    { id: 1, title: 'Engineer', jobUrl: '/id/job/42' },
     'https://id.jobstreet.com', 'PortalFallback'
   );
-  if (noCompany && noCompany.company === 'PortalFallback') {
-    pass('parseJobstreetItem uses fallback company when all company fields are missing');
+  if (noBrand && noBrand.company === 'PortalFallback') {
+    pass('parseJobstreetItem uses fallback company when branding is absent');
   } else {
-    fail(`parseJobstreetItem fallback company: ${JSON.stringify(noCompany)}`);
+    fail(`parseJobstreetItem fallback company: ${JSON.stringify(noBrand)}`);
   }
 
-  // parseJobstreetItem — handles empty locations gracefully
-  const noLocItem = {
-    id: '42',
-    title: 'Remote Engineer',
-    advertiser: { description: 'RemoteCo' },
-    listingDate: '2026-06-15T00:00:00Z',
-  };
-  const noLocParsed = parseJobstreetItem(noLocItem, 'https://id.jobstreet.com', 'Fallback');
-  if (noLocParsed && noLocParsed.location === '') {
-    pass('parseJobstreetItem handles missing locations gracefully');
-  } else {
-    fail(`parseJobstreetItem empty location: ${JSON.stringify(noLocParsed)}`);
-  }
-
-  // fetch() — happy path with mock context (v5 API response shape)
+  // fetch() — happy path with mock context
   const mockCtx = {
     transport: 'http',
     fetchJson: async (url) => {
-      if (!url.startsWith('https://id.jobstreet.com/api/jobsearch/v5/search')) throw new Error('Unexpected URL');
+      if (!url.startsWith('https://id.jobstreet.com/')) throw new Error('Unexpected URL');
       return {
         data: [
-          {
-            id: '92884969',
-            title: 'AI Engineer',
-            advertiser: { id: '14025083', description: 'Capgemini' },
-            companyName: 'Capgemini',
-            locations: [{ label: 'Jakarta, Indonesia', countryCode: 'ID' }],
-            listingDate: '2026-06-23T03:55:20Z',
-          },
+          { id: 1, title: 'AI Engineer', branding: { companyName: 'TestCo' }, location: 'Remote', listingDate: '2026-01-01T00:00:00Z', jobUrl: '/id/job/1' },
         ],
-        totalCount: 1,
       };
     },
     fetchText: async () => { throw new Error('should not be called'); },
@@ -5745,13 +4268,13 @@ try {
     { name: 'Jobstreet ID', provider: 'jobstreet', searchKeywords: 'AI' },
     mockCtx,
   );
-  if (jobs.length === 1 && jobs[0].title === 'AI Engineer') pass('jobstreet.fetch() returns parsed jobs via v5 API');
+  if (jobs.length === 1 && jobs[0].title === 'AI Engineer') pass('jobstreet.fetch() returns parsed jobs');
   else fail(`jobstreet.fetch() returned ${JSON.stringify(jobs)}`);
 
   // fetch() — handles empty results
   const emptyCtx = {
     transport: 'http',
-    fetchJson: async () => ({ data: [], totalCount: 0 }),
+    fetchJson: async () => ({ data: [] }),
     fetchText: async () => { throw new Error('should not be called'); },
   };
   const emptyJobs = await jobstreet.fetch(
@@ -5765,7 +4288,7 @@ try {
   let hostRejected = false;
   try {
     await jobstreet.fetch(
-      { name: 'Bad', provider: 'jobstreet', api: 'https://evil.example.com/api/jobsearch/v5/search' },
+      { name: 'Bad', provider: 'jobstreet', api: 'https://evil.example.com/api/search' },
       { transport: 'http', fetchJson: async () => ({}), fetchText: async () => '' },
     );
   } catch (e) {
@@ -5792,7 +4315,7 @@ try {
   fail(`jobstreet provider tests crashed: ${e.message}`);
 }
 
-// ── 23. PROVIDERS — Glints (v2-alc / searchJobsV3) ────────────────
+// ── 23. PROVIDERS — Glints ─────────────────────────────────────────
 
 console.log('\n23. Provider — glints');
 
@@ -5811,18 +4334,18 @@ try {
     fail('glints.detect() should return null for any URL');
   }
 
-  // parseGlintsItem — valid item (new searchJobsV3 shape)
+  // parseGlintsItem — valid item
   const sampleItem = {
     id: 'abc123',
     title: 'Backend Engineer',
-    company: { name: 'StartupCorp', brandName: 'StartupCorp Brand' },
-    city: { name: 'Jakarta, Indonesia' },
-    country: { code: 'ID', name: 'Indonesia' },
-    createdAt: '2026-06-10T00:00:00Z',
+    company: { name: 'StartupCorp' },
+    location: 'Jakarta, Indonesia',
+    postedAt: '2026-06-10T00:00:00Z',
+    url: 'https://glints.com/id/jobs/backend-engineer/abc123',
   };
   const parsed = parseGlintsItem(sampleItem, 'https://glints.com', 'FallbackCo');
   if (parsed && parsed.title === 'Backend Engineer'
-      && parsed.url === 'https://glints.com/id/opportunities/jobs/abc123'
+      && parsed.url === 'https://glints.com/id/jobs/backend-engineer/abc123'
       && parsed.company === 'StartupCorp'
       && parsed.location === 'Jakarta, Indonesia'
       && parsed.postedAt != null) {
@@ -5831,42 +4354,47 @@ try {
     fail(`parseGlintsItem returned ${JSON.stringify(parsed)}`);
   }
 
-  // parseGlintsItem — uses brandName when name is absent
-  const brandItem = {
-    id: 'def456',
-    title: 'Data Scientist',
-    company: { brandName: 'BrandCorp' },
-    city: { name: 'Singapore' },
-    createdAt: '2026-06-15T00:00:00Z',
-  };
-  const brandParsed = parseGlintsItem(brandItem, 'https://glints.com', 'FallbackCo');
-  if (brandParsed && brandParsed.company === 'BrandCorp') {
-    pass('parseGlintsItem falls back to brandName when company.name is missing');
+  // parseGlintsItem — resolves relative URL
+  const relItem = { id: 'x', title: 'Dev', url: '/id/jobs/dev/x' };
+  const relParsed = parseGlintsItem(relItem, 'https://glints.com', 'Co');
+  if (relParsed && relParsed.url === 'https://glints.com/id/jobs/dev/x') {
+    pass('parseGlintsItem resolves relative URLs');
   } else {
-    fail(`parseGlintsItem brandName fallback: ${JSON.stringify(brandParsed)}`);
+    fail(`parseGlintsItem relative URL: ${JSON.stringify(relParsed)}`);
   }
 
   // parseGlintsItem — rejects items without title
-  if (parseGlintsItem({ id: '1' }, 'https://glints.com', 'Co') === null) {
+  if (parseGlintsItem({ url: 'https://glints.com/job/1' }, 'https://glints.com', 'Co') === null) {
     pass('parseGlintsItem returns null for title-less items');
   } else {
     fail('parseGlintsItem should return null for items without title');
   }
 
-  // parseGlintsItem — rejects items without id (URL cannot be built)
+  // parseGlintsItem — rejects items without url
   if (parseGlintsItem({ title: 'Role' }, 'https://glints.com', 'Co') === null) {
-    pass('parseGlintsItem returns null for items without id');
+    pass('parseGlintsItem returns null for URL-less items');
   } else {
-    fail('parseGlintsItem should return null for items without id');
+    fail('parseGlintsItem should return null for items without URL');
   }
 
-  // parseGlintsItem — rejects off-domain via URL validation
+  // parseGlintsItem — rejects off-domain URLs
   const offDomain = parseGlintsItem(
-    { id: '1', title: 'Role' },
-    'https://evil.example.com', 'Co'
+    { title: 'Role', url: 'https://evil.example.com/jobs/1' },
+    'https://glints.com', 'Co'
   );
-  if (offDomain === null) pass('parseGlintsItem rejects off-domain base URLs');
-  else fail(`parseGlintsItem should reject off-domain base URLs, got ${JSON.stringify(offDomain)}`);
+  if (offDomain === null) pass('parseGlintsItem rejects off-domain URLs');
+  else fail(`parseGlintsItem should reject off-domain URLs, got ${JSON.stringify(offDomain)}`);
+
+  // parseGlintsItem — allows subdomains of glints.com
+  const subdomainItem = parseGlintsItem(
+    { title: 'Role', url: 'https://www.glints.com/id/jobs/role/1' },
+    'https://glints.com', 'Co'
+  );
+  if (subdomainItem && subdomainItem.url === 'https://www.glints.com/id/jobs/role/1') {
+    pass('parseGlintsItem accepts www.glints.com subdomain URLs');
+  } else {
+    fail(`parseGlintsItem subdomain URL rejected: ${JSON.stringify(subdomainItem)}`);
+  }
 
   // parseGlintsItem — handles null/malformed input
   if (parseGlintsItem(null, 'https://glints.com', 'Co') === null) pass('parseGlintsItem(null) → null');
@@ -5874,52 +4402,31 @@ try {
   if (parseGlintsItem(42, 'https://glints.com', 'Co') === null) pass('parseGlintsItem(number) → null');
   else fail('parseGlintsItem(number) should return null');
 
-  // parseGlintsItem — fallback company when both company.name and brandName are missing
+  // parseGlintsItem — fallback company when company.name is missing
   const noCompany = parseGlintsItem(
-    { id: '99', title: 'Engineer' },
+    { title: 'Engineer', url: 'https://glints.com/id/jobs/eng/1' },
     'https://glints.com', 'PortalName'
   );
   if (noCompany && noCompany.company === 'PortalName') {
-    pass('parseGlintsItem uses fallback company when company info is absent');
+    pass('parseGlintsItem uses fallback company when company.name is absent');
   } else {
     fail(`parseGlintsItem fallback company: ${JSON.stringify(noCompany)}`);
   }
 
-  // parseGlintsItem — parseGlintsItem allows www.glints.com subdomain via baseUrl
-  const wwwItem = parseGlintsItem(
-    { id: 'x', title: 'Role' },
-    'https://www.glints.com', 'Co'
-  );
-  if (wwwItem && wwwItem.url.startsWith('https://www.glints.com/')) {
-    pass('parseGlintsItem accepts www.glints.com base URL (subdomain)');
-  } else {
-    fail(`parseGlintsItem www subdomain: ${JSON.stringify(wwwItem)}`);
-  }
-
-  // fetch() — happy path with mock context (searchJobsV3 response shape)
+  // fetch() — happy path with mock context
   const mockCtx = {
     transport: 'http',
     fetchJson: async (url, opts) => {
       if (opts?.method !== 'POST') throw new Error('Expected POST');
       const body = JSON.parse(opts.body || '{}');
       if (!body.query) throw new Error('Expected GraphQL query');
-      if (body.operationName !== 'searchJobsV3') throw new Error('Expected searchJobsV3 operation');
       return {
         data: {
-          searchJobsV3: {
-            jobsInPage: [
-              {
-                id: 'job1',
-                title: 'AI PM',
-                company: { name: 'TechCo', brandName: 'TechCo Brand' },
-                city: { name: 'Remote' },
-                country: { code: 'ID', name: 'Indonesia' },
-                salaries: [],
-                createdAt: '2026-01-01T00:00:00Z',
-              },
+          opportunities: {
+            data: [
+              { title: 'AI PM', company: { name: 'TechCo' }, location: 'Remote', postedAt: '2026-01-01T00:00:00Z', url: 'https://glints.com/id/jobs/ai-pm/1' },
             ],
-            expInfo: null,
-            hasMore: false,
+            totalCount: 1,
           },
         },
       };
@@ -5930,13 +4437,13 @@ try {
     { name: 'Glints ID', provider: 'glints', searchKeywords: 'AI' },
     mockCtx,
   );
-  if (jobs.length === 1 && jobs[0].title === 'AI PM') pass('glints.fetch() returns parsed jobs via searchJobsV3');
+  if (jobs.length === 1 && jobs[0].title === 'AI PM') pass('glints.fetch() returns parsed jobs via GraphQL');
   else fail(`glints.fetch() returned ${JSON.stringify(jobs)}`);
 
   // fetch() — handles empty results
   const emptyCtx = {
     transport: 'http',
-    fetchJson: async () => ({ data: { searchJobsV3: { jobsInPage: [], hasMore: false } } }),
+    fetchJson: async () => ({ data: { opportunities: { data: [], totalCount: 0 } } }),
     fetchText: async () => { throw new Error('should not be called'); },
   };
   const emptyJobs = await glints.fetch(
@@ -5946,18 +4453,24 @@ try {
   if (emptyJobs.length === 0) pass('glints.fetch() handles empty results');
   else fail(`glints.fetch() should return empty array for no results, got ${emptyJobs.length}`);
 
-  // fetch() — stops when hasMore is false (single page)
-  const singlePageCtx = {
+  // fetch() — handles flat opportunities array (alternative response shape)
+  const flatCtx = {
     transport: 'http',
-    fetchJson: async () => ({ data: { searchJobsV3: { jobsInPage: [{ id: '1', title: 'Dev' }], hasMore: false } } }),
+    fetchJson: async () => ({
+      data: {
+        opportunities: [
+          { title: 'Dev', company: { name: 'Co' }, location: 'Remote', url: 'https://glints.com/id/jobs/dev/1' },
+        ],
+      },
+    }),
     fetchText: async () => { throw new Error('should not be called'); },
   };
-  const singleJobs = await glints.fetch(
+  const flatJobs = await glints.fetch(
     { name: 'Glints ID', provider: 'glints', searchKeywords: 'dev' },
-    singlePageCtx,
+    flatCtx,
   );
-  if (singleJobs.length === 1) pass('glints.fetch() stops when hasMore is false');
-  else fail(`glints.fetch() single page: ${JSON.stringify(singleJobs)}`);
+  if (flatJobs.length === 1) pass('glints.fetch() handles flat opportunities array response');
+  else fail(`glints.fetch() flat array: ${JSON.stringify(flatJobs)}`);
 
   // fetch() — rejects invalid hostname
   let hostRejected = false;
@@ -5973,7 +4486,7 @@ try {
   if (hostRejected) pass('glints.fetch() rejects untrusted hostnames');
   else fail('glints.fetch() should reject non-glints hostnames');
 
-  // fetch() — throws on missing searchJobsV3 in response
+  // fetch() — throws on missing opportunities in response
   let missingThrew = false;
   try {
     await glints.fetch(
@@ -5986,10 +4499,10 @@ try {
     );
   } catch (e) {
     if (e.message.includes('unexpected API response')) missingThrew = true;
-    else fail(`glints.fetch() missing searchJobsV3 wrong error: ${e.message}`);
+    else fail(`glints.fetch() missing opportunities wrong error: ${e.message}`);
   }
   if (missingThrew) pass('glints.fetch() throws on unexpected API response shape');
-  else fail('glints.fetch() should throw when searchJobsV3 is missing');
+  else fail('glints.fetch() should throw when opportunities is missing');
 
 } catch (e) {
   fail(`glints provider tests crashed: ${e.message}`);
@@ -6675,14 +5188,6 @@ try {
     pass('modes/_custom.md is in USER_PATHS (custom rules survive update-system.mjs)');
   } else {
     fail('modes/_custom.md is NOT in USER_PATHS — custom instructions would be wiped on update (#1198)');
-  }
-
-  // .claude/settings.json holds user-configured permissions and hooks (e.g. auto-backup).
-  // It must be in USER_PATHS so the updater never overwrites it (#1408).
-  if (userBlock.includes("'.claude/settings.json'")) {
-    pass('.claude/settings.json is in USER_PATHS (user harness config protected from update-system.mjs)');
-  } else {
-    fail('.claude/settings.json is NOT in USER_PATHS — user harness config would be wiped on update (#1408)');
   }
 
   // The template MUST be in SYSTEM_PATHS so updates deliver/refresh it.
@@ -9432,15 +7937,12 @@ console.log('\n49. Plugin engine (contract + sandbox + firewall)');
 
 const __origWarn = console.warn;
 let __pluginTmp = null;
-let __manifestTmp = null;
 try {
   const eng = await import(pathToFileURL(join(ROOT, 'plugins/_engine.mjs')).href);
   const { validateManifest, discoverPlugins, pluginRoots, buildCtx, mergeProviderPlugins } = eng;
 
   const base = { id: 'x', apiVersion: 1, description: 'one line', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true };
-  __manifestTmp = mkdtempSync(join(tmpdir(), 'co-plugin-manifest-'));
-  mkdirSync(join(__manifestTmp, 'x'), { recursive: true });
-  const vm = (m, dirName = 'x') => validateManifest(m, join(__manifestTmp, dirName), dirName);
+  const vm = (m, dirName = 'x') => validateManifest(m, join('/tmp', dirName), dirName);
 
   // Manifest validation (warnings are expected here — suppress to keep output clean).
   console.warn = () => {};
@@ -9458,22 +7960,6 @@ try {
   else fail('valid keyed manifest should be accepted');
   if (vm({ ...base, entry: '../../scan.mjs' }) === null) pass('entry escaping the plugin directory is rejected (traversal guard)');
   else fail('entry traversal should be rejected');
-  writeFileSync(join(__manifestTmp, 'outside.mjs'), 'export default {};');
-  writeFileSync(join(__manifestTmp, 'outside.md'), '# outside\n');
-  mkdirSync(join(__manifestTmp, 'outside-dir'), { recursive: true });
-  try {
-    symlinkSync(join(__manifestTmp, 'outside.mjs'), join(__manifestTmp, 'x', 'linked-entry.mjs'));
-    symlinkSync(join(__manifestTmp, 'outside.md'), join(__manifestTmp, 'x', 'linked-skill.md'));
-    symlinkSync(join(__manifestTmp, 'outside-dir'), join(__manifestTmp, 'x', 'linked-dir'), 'dir');
-    if (vm({ ...base, entry: 'linked-entry.mjs' }) === null) pass('entry symlink escaping the plugin directory is rejected');
-    else fail('entry symlink traversal should be rejected');
-    if (vm({ ...base, skill: 'linked-skill.md' }) === null) pass('skill symlink escaping the plugin directory is rejected');
-    else fail('skill symlink traversal should be rejected');
-    if (vm({ ...base, entry: 'linked-dir/missing-entry.mjs' }) === null) pass('missing entry under an escaping symlink directory is rejected');
-    else fail('missing entry under symlink traversal should be rejected');
-  } catch (e) {
-    warn(`symlink traversal test skipped: ${e.message}`);
-  }
   if (validateManifest({ ...base, id: 'y' }, '/tmp/x', 'x') === null) pass('manifest id must equal the directory name');
   else fail('id != dirname should be rejected');
   if (vm({ ...base, apiVersion: 2 }) === null) pass('unknown apiVersion is rejected (forward-compat gate)');
@@ -9648,50 +8134,6 @@ try {
   if (reg.validateRegistryEntry({ ...goodEntry, requiredEnv: ['GEMINI_API_KEY'] }, regOpts).length > 0) pass('registry: a reserved/core env var is rejected');
   else fail('registry: reserved env should fail');
 
-  // Seed → successor: a bundled "reference" plugin can be superseded by a
-  // maintained community plugin of the same id — but ONLY when registry-approved
-  // AND installed at the exact pinned sha (the no-downgrade trust hinge).
-  if (reg.validateRegistryEntry({ ...goodEntry, supersedesBundled: true }, regOpts).length === 0) pass('registry: supersedesBundled:true is accepted');
-  else fail('registry: supersedesBundled:true should validate');
-  if (reg.validateRegistryEntry({ ...goodEntry, supersedesBundled: 'yes' }, regOpts).length > 0) pass('registry: supersedesBundled must be the boolean true (non-boolean rejected)');
-  else fail('registry: a non-boolean supersedesBundled should fail');
-
-  const succTmp = mkdtempSync(join(tmpdir(), 'co-succ-'));
-  const SUCC_SHA = 'b'.repeat(40);
-  mkdirSync(join(succTmp, 'plugins', 'gmail'), { recursive: true });
-  writeFileSync(join(succTmp, 'plugins', 'gmail', 'manifest.json'), JSON.stringify({ id: 'gmail', apiVersion: 1, description: 'bundled reference gmail', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true }));
-  writeFileSync(join(succTmp, 'plugins', 'gmail', 'index.mjs'), 'export default { ingest: async () => [] };');
-  mkdirSync(join(succTmp, 'plugins.local', 'gmail'), { recursive: true });
-  writeFileSync(join(succTmp, 'plugins.local', 'gmail', 'manifest.json'), JSON.stringify({ id: 'gmail', apiVersion: 1, description: 'community successor gmail', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true }));
-  writeFileSync(join(succTmp, 'plugins.local', 'gmail', 'index.mjs'), 'export default { ingest: async () => [] };');
-  writeFileSync(join(succTmp, 'plugins-registry.json'), JSON.stringify({ registryVersion: 1, plugins: [{ name: 'career-ops-plugin-gmail', id: 'gmail', repo: 'https://github.com/a/career-ops-plugin-gmail', author: 'a', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], license: 'MIT', version: '2.0.0', sha: SUCC_SHA, supersedesBundled: true }] }));
-  const bundledGmail = join(succTmp, 'plugins', 'gmail');
-  const localGmail = join(succTmp, 'plugins.local', 'gmail');
-
-  // (1) No install (no lock entry) → unverified local must NOT override the bundled reference.
-  if (!eng.resolveSuccessorIds(succTmp).has('gmail')) pass('successor: an unverified plugins.local/<id> (no lock) does NOT override the bundled reference (no-downgrade)');
-  else fail('successor: unverified local must not override bundled');
-  const disc0 = eng.discoverPlugins(eng.pluginRoots(succTmp), eng.resolveSuccessorIds(succTmp)).find(m => m.id === 'gmail');
-  if (disc0 && disc0.dir === bundledGmail) pass('successor: with no approved install, discovery returns the BUNDLED gmail');
-  else fail('successor: bundled should win without an approved successor install');
-
-  // (2) Installed but at the WRONG sha → off-registry, still no override (the pin invariant).
-  lockMod.writeLockEntry(succTmp, 'gmail', { source: 'local', sha: 'c'.repeat(40), version: '2.0.0', integrity: 'x', files: {}, consent: {} });
-  if (!eng.resolveSuccessorIds(succTmp).has('gmail')) pass('successor: an installed sha that differs from the registry pin does NOT override (off-registry never wins)');
-  else fail('successor: sha mismatch must not override');
-
-  // (3) Installed at the EXACT registry sha → the maintained successor wins.
-  lockMod.writeLockEntry(succTmp, 'gmail', { source: 'local', sha: SUCC_SHA, version: '2.0.0', integrity: 'x', files: {}, consent: {} });
-  const ids1 = eng.resolveSuccessorIds(succTmp);
-  if (ids1.has('gmail')) pass('successor: a registry-approved successor installed at the pinned sha is resolved as an override');
-  else fail('successor: approved+pinned successor should be resolved');
-  const disc1 = eng.discoverPlugins(eng.pluginRoots(succTmp), ids1).find(m => m.id === 'gmail');
-  if (disc1 && disc1.dir === localGmail) pass('successor: an approved+pinned successor overrides the bundled reference of the same id');
-  else fail('successor: approved successor should override the bundled reference');
-  if (reg.successorFor(succTmp, 'gmail')?.name === 'career-ops-plugin-gmail') pass('successor: successorFor() surfaces the maintained version of a bundled id');
-  else fail('successor: successorFor should return the registered successor');
-  rmSync(succTmp, { recursive: true, force: true });
-
   if (install.parseRepoArg('alice/career-ops-plugin-foo').id === 'foo') pass('install: owner/career-ops-plugin-foo parses to id "foo"');
   else fail('install: should parse owner/repo');
   let extRej = false; try { install.parseRepoArg('ext::sh -c whoami'); } catch { extRej = true; }
@@ -9754,14 +8196,6 @@ try {
   if (importOk) pass('every bundled plugin entry imports cleanly with a default hook export');
   else fail('a bundled plugin failed to import or lacks a default export');
 
-  const notionMod = await import(pathToFileURL(join(ROOT, 'plugins', 'notion', 'index.mjs')).href);
-  const notionParseScore = notionMod.parseScore || notionMod.default?.parseScore;
-  if (typeof notionParseScore === 'function' && notionParseScore('4.2/5') === 4.2 && notionParseScore('5/5') === 5 && notionParseScore('**4.2/5**') === 4.2) {
-    pass('notion plugin parseScore sanitizes slash-formatted scores cleanly (4.2/5 -> 4.2, 5/5 -> 5) (#1414)');
-  } else {
-    fail(`notion plugin parseScore broken: 4.2/5 -> ${notionParseScore?.('4.2/5')}, 5/5 -> ${notionParseScore?.('5/5')}`);
-  }
-
   // Recursively collect every .mjs under plugins/ (the deny-list must not be flat-only).
   const allPluginMjs = [];
   const walkMjs = (d) => {
@@ -9803,1821 +8237,6 @@ try {
 } finally {
   console.warn = __origWarn;
   if (__pluginTmp) { try { rmSync(__pluginTmp, { recursive: true, force: true }); } catch {} }
-  if (__manifestTmp) { try { rmSync(__manifestTmp, { recursive: true, force: true }); } catch {} }
-}
-
-// -- 50. Provider - higheredjobs -----------------------------------------
-console.log('\n50. Provider - higheredjobs');
-
-try {
-  const hejModule = await import(pathToFileURL(join(ROOT, 'providers/higheredjobs.mjs')).href);
-  const higheredjobs = hejModule.default;
-  const { parseHigherEdJobsFeed } = hejModule;
-
-  if (higheredjobs.id === 'higheredjobs') pass('higheredjobs.id is "higheredjobs"');
-  else fail(`higheredjobs.id is ${JSON.stringify(higheredjobs.id)}`);
-
-  const hit = higheredjobs.detect({ name: 'HEJ', provider: 'higheredjobs', cat_id: 64 });
-  if (hit && hit.url === 'https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=64') {
-    pass('higheredjobs.detect() claims explicit provider config (returns URL with catID)');
-  } else {
-    fail(`higheredjobs.detect() returned ${JSON.stringify(hit)}`);
-  }
-
-  const hitDefault = higheredjobs.detect({ name: 'HEJ', provider: 'higheredjobs' });
-  if (hitDefault && hitDefault.url === 'https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=68') {
-    pass('higheredjobs.detect() with no cat_id returns default URL with catID=68');
-  } else {
-    fail(`higheredjobs.detect() default returned ${JSON.stringify(hitDefault)}`);
-  }
-
-  if (higheredjobs.detect({ name: 'Remote Board', provider: 'remoteok' }) === null) {
-    pass('higheredjobs.detect() ignores other provider ids');
-  } else {
-    fail('higheredjobs.detect() should only claim provider: higheredjobs');
-  }
-
-  const sample = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <item>
-      <title><![CDATA[Director of AI Strategy]]></title>
-      <description><![CDATA[Curry College (Milton, MA)]]></description>
-      <link>https://www.higheredjobs.com/details.cfm?JobCode=17899012</link>
-      <pubDate>Thu, 13 Nov 2025 14:10:41 +0000</pubDate>
-      <guid>https://www.higheredjobs.com/details.cfm?JobCode=17899012</guid>
-    </item>
-    <item>
-      <title>Dean of Engineering &amp; Computing</title>
-      <description>State University System Office</description>
-      <link>https://www.higheredjobs.com/details.cfm?JobCode=17899044</link>
-      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
-      <guid>https://www.higheredjobs.com/details.cfm?JobCode=17899044</guid>
-    </item>
-    <item>
-      <title>Missing Link Role</title>
-      <description>Ghost College (Nowhere, ZZ)</description>
-      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Relative Link Role</title>
-      <description>Relative U (Somewhere, ST)</description>
-      <link>/details.cfm?JobCode=bad-relative</link>
-      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Off Host Role</title>
-      <description>Off Host Inst (Elsewhere, ST)</description>
-      <link>https://example.com/details.cfm?JobCode=off-host</link>
-      <pubDate>Fri, 02 Jan 2026 09:00:00 +0000</pubDate>
-    </item>
-  </channel>
-</rss>`;
-  const jobs = parseHigherEdJobsFeed(sample, 'HEJ Board');
-
-  if (jobs.length === 2) pass('parseHigherEdJobsFeed keeps 2 items (drops missing/relative/off-host links)');
-  else fail(`parseHigherEdJobsFeed returned ${jobs.length} jobs (expected 2)`);
-
-  if (jobs.every(({ url }) => {
-    try {
-      const parsed = new URL(url);
-      return parsed.protocol === 'https:' && parsed.hostname === 'www.higheredjobs.com';
-    } catch {
-      return false;
-    }
-  })) pass('parseHigherEdJobsFeed only emits HTTPS URLs pinned to www.higheredjobs.com');
-  else fail('parseHigherEdJobsFeed emitted an off-host or non-HTTPS URL');
-
-  if (jobs[0]?.title === 'Director of AI Strategy' && jobs[0]?.company === 'Curry College' && jobs[0]?.location === 'Milton, MA') {
-    pass('parseHigherEdJobsFeed parses title + "Institution (City, ST)" description -> company/title/location');
-  } else {
-    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
-  }
-
-  if (jobs[0]?.url === 'https://www.higheredjobs.com/details.cfm?JobCode=17899012') {
-    pass('parseHigherEdJobsFeed maps <link> to url');
-  } else {
-    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
-  }
-
-  if (jobs[0]?.postedAt === Date.parse('Thu, 13 Nov 2025 14:10:41 +0000')) {
-    pass('parseHigherEdJobsFeed parses pubDate -> postedAt');
-  } else {
-    fail(`row 0 postedAt = ${JSON.stringify(jobs[0]?.postedAt)}`);
-  }
-
-  if (jobs[1]?.company === 'State University System Office' && jobs[1]?.location === '' && jobs[1]?.title === 'Dean of Engineering & Computing') {
-    pass('parseHigherEdJobsFeed falls back to whole description as company when no parens (empty location)');
-  } else {
-    fail(`row 1 = ${JSON.stringify(jobs[1])}`);
-  }
-
-  if (parseHigherEdJobsFeed('', 'X').length === 0 && parseHigherEdJobsFeed(null, 'X').length === 0) {
-    pass('parseHigherEdJobsFeed empty / non-string feed -> empty result (no crash)');
-  } else {
-    fail('parseHigherEdJobsFeed empty / non-string feed should yield empty result');
-  }
-
-  let capturedUrl = null;
-  let capturedOpts = null;
-  const fetched = await higheredjobs.fetch(
-    { name: 'HEJ Board', provider: 'higheredjobs', cat_id: 64 },
-    { fetchText: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
-  );
-
-  if (capturedUrl === 'https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=64') {
-    pass('higheredjobs.fetch() requests the feed URL for cat_id 64');
-  } else {
-    fail(`higheredjobs.fetch() requested ${JSON.stringify(capturedUrl)}`);
-  }
-
-  if (capturedOpts && capturedOpts.redirect === 'error') {
-    pass('higheredjobs.fetch() passes redirect:"error" to fetchText');
-  } else {
-    fail(`higheredjobs.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
-  }
-
-  if (fetched[0]?.company === 'Curry College' && fetched[0]?.title === 'Director of AI Strategy' && fetched[0]?.location === 'Milton, MA') {
-    pass('provider: higheredjobs config returns normalized jobs');
-  } else {
-    fail(`higheredjobs.fetch() normalized row = ${JSON.stringify(fetched[0])}`);
-  }
-} catch (e) {
-  fail(`higheredjobs provider tests crashed: ${e.message}`);
-}
-
-// ── 51. PROVIDERS — JibeApply ────────────────────────────────────
-
-console.log('\n51. Provider — jibeapply');
-
-try {
-  const jibeapply = (await import(pathToFileURL(join(ROOT, 'providers/jibeapply.mjs')).href)).default;
-  const { parseJibeapplyResponse } = await import(pathToFileURL(join(ROOT, 'providers/jibeapply.mjs')).href);
-
-  if (jibeapply.id === 'jibeapply') pass('jibeapply.id is "jibeapply"');
-  else fail(`jibeapply.id is ${JSON.stringify(jibeapply.id)}`);
-
-  // detect() — /jobs path → /api/jobs
-  const hit = jibeapply.detect({ name: 'Acme', careers_url: 'https://acme.jibeapply.com/jobs?location=Germany' });
-  if (hit && hit.url === 'https://acme.jibeapply.com/api/jobs?location=Germany') {
-    pass('jibeapply.detect() rewrites /jobs → /api/jobs');
-  } else {
-    fail(`jibeapply.detect() returned ${JSON.stringify(hit)}`);
-  }
-
-  // detect() — /api/jobs already present (idempotent)
-  const hitApi = jibeapply.detect({ name: 'X', careers_url: 'https://acme.jibeapply.com/api/jobs' });
-  if (hitApi && hitApi.url === 'https://acme.jibeapply.com/api/jobs') {
-    pass('jibeapply.detect() leaves already-correct /api/jobs URL unchanged');
-  } else {
-    fail(`jibeapply.detect(api) returned ${JSON.stringify(hitApi)}`);
-  }
-
-  // detect() — null cases
-  if (jibeapply.detect({ name: 'X', careers_url: 'https://example.com/jobs' }) === null) {
-    pass('jibeapply.detect() returns null for non-jibeapply URL');
-  } else {
-    fail('jibeapply.detect() should return null for non-jibeapply URL');
-  }
-
-  // Path-spoofed: jibeapply.com in path, not host
-  if (jibeapply.detect({ name: 'Spoof', careers_url: 'https://evil.example/acme.jibeapply.com/jobs' }) === null) {
-    pass('jibeapply.detect() rejects path-spoofed URL');
-  } else {
-    fail('jibeapply.detect() must NOT detect path-spoofed URLs');
-  }
-
-  // Non-string careers_url
-  if (jibeapply.detect({ name: 'X', careers_url: 42 }) === null) {
-    pass('jibeapply.detect() returns null for non-string careers_url');
-  } else {
-    fail('jibeapply.detect() should return null for non-string careers_url');
-  }
-
-  // HTTP (non-HTTPS) must not be detected
-  if (jibeapply.detect({ name: 'X', careers_url: 'http://acme.jibeapply.com/jobs' }) === null) {
-    pass('jibeapply.detect() rejects HTTP (non-HTTPS) URL');
-  } else {
-    fail('jibeapply.detect() should reject HTTP URLs');
-  }
-
-  // parseJibeapplyResponse — normalization
-  const entry = { name: 'Acme', careers_url: 'https://acme.jibeapply.com/jobs' };
-  const sampleJson = {
-    jobs: [
-      { title: 'Senior QA', slug: 'senior-qa-berlin', city: 'Berlin', country: 'Germany', hiring_organization: 'Acme GmbH' },
-      { title: 'Backend Dev', req_id: 'REQ-123', full_location: 'Remote, Germany' },
-      { data: { title: 'Wrapped Job', slug: 'wrapped-job', city: 'Munich', country: 'Germany' } },
-      { title: '', slug: 'no-title' },          // missing title — skip
-      { title: 'No Slug' },                      // missing slug/req_id — skip
-    ],
-  };
-  const parsedJibe = parseJibeapplyResponse(sampleJson, entry);
-
-  if (parsedJibe.length === 3) pass('parseJibeapplyResponse extracts 3 valid jobs');
-  else fail(`parseJibeapplyResponse returned ${parsedJibe.length} jobs, expected 3`);
-
-  if (parsedJibe[0].url === 'https://acme.jibeapply.com/jobs/senior-qa-berlin') {
-    pass('parseJibeapplyResponse builds URL from origin + /jobs/ + slug');
-  } else {
-    fail(`row 0 url = ${JSON.stringify(parsedJibe[0].url)}`);
-  }
-
-  if (parsedJibe[0].location === 'Berlin, Germany') {
-    pass('parseJibeapplyResponse builds location from city/country');
-  } else {
-    fail(`row 0 location = ${JSON.stringify(parsedJibe[0].location)}`);
-  }
-
-  if (parsedJibe[0].company === 'Acme GmbH') {
-    pass('parseJibeapplyResponse uses hiring_organization when present');
-  } else {
-    fail(`row 0 company = ${JSON.stringify(parsedJibe[0].company)}`);
-  }
-
-  if (parsedJibe[1].url.includes('REQ-123') && parsedJibe[1].location === 'Remote, Germany') {
-    pass('parseJibeapplyResponse uses req_id and full_location');
-  } else {
-    fail(`row 1 = ${JSON.stringify(parsedJibe[1])}`);
-  }
-
-  if (parsedJibe[2].title === 'Wrapped Job') {
-    pass('parseJibeapplyResponse unwraps item.data');
-  } else {
-    fail(`row 2 title = ${JSON.stringify(parsedJibe[2].title)}`);
-  }
-
-  // parseJibeapplyResponse — falls back to entry.name when hiring_organization missing
-  const noOrg = parseJibeapplyResponse({ jobs: [{ title: 'Dev', slug: 'dev', city: 'Berlin', country: 'Germany' }] }, entry);
-  if (noOrg[0].company === 'Acme') {
-    pass('parseJibeapplyResponse falls back to entry.name when hiring_organization missing');
-  } else {
-    fail(`fallback company = ${JSON.stringify(noOrg[0].company)}`);
-  }
-
-  // parseJibeapplyResponse — empty input
-  if (parseJibeapplyResponse({}, entry).length === 0) pass('parseJibeapplyResponse({}) → empty result');
-  else fail('parseJibeapplyResponse({}) should be empty');
-
-  // parseJibeapplyResponse — falls back to entry.api's origin when careers_url
-  // can't be parsed, so job URLs stay absolute instead of degrading to "/jobs/<slug>"
-  const malformedCareersEntry = { name: 'Widget Co', careers_url: 'jobs.widgetco.com', api: 'https://jobs.widgetco.com/api/jobs' };
-  const apiOriginFallback = parseJibeapplyResponse({ jobs: [{ title: 'Dev', slug: 'dev-1' }] }, malformedCareersEntry);
-  if (apiOriginFallback[0]?.url === 'https://jobs.widgetco.com/jobs/dev-1') {
-    pass('parseJibeapplyResponse falls back to entry.api origin for a malformed careers_url');
-  } else {
-    fail(`parseJibeapplyResponse api-origin fallback: url = ${JSON.stringify(apiOriginFallback[0]?.url)}`);
-  }
-
-  // parseJibeapplyResponse — null/undefined entries in jobs must be skipped, not crash
-  const sparseJson = { jobs: [null, undefined, { title: 'Real Job', slug: 'real-job' }] };
-  try {
-    const parsedSparse = parseJibeapplyResponse(sparseJson, entry);
-    if (parsedSparse.length === 1 && parsedSparse[0].title === 'Real Job') {
-      pass('parseJibeapplyResponse skips null/undefined entries without crashing');
-    } else {
-      fail(`parseJibeapplyResponse sparse result = ${JSON.stringify(parsedSparse)}`);
-    }
-  } catch (e3) {
-    fail(`parseJibeapplyResponse should not throw on null/undefined entries: ${e3.message}`);
-  }
-
-  // fetch() pagination — 2 pages
-  let pageRequests = 0;
-  const fetchedJibe = await jibeapply.fetch(entry, {
-    transport: 'http',
-    fetchText: async () => { throw new Error('fetchText not expected'); },
-    fetchJson: async (url) => {
-      pageRequests++;
-      const u = new URL(url);
-      const page = parseInt(u.searchParams.get('page') || '1', 10);
-      if (page === 1) {
-        return { totalCount: 15, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
-      }
-      return { totalCount: 15, count: 10, jobs: Array.from({ length: 5 }, (_, i) => ({ title: `Job p2-${i}`, slug: `job-p2-${i}` })) };
-    },
-  });
-  if (pageRequests === 2 && fetchedJibe.length === 15) {
-    pass('jibeapply.fetch() paginates across 2 pages (10+5=15)');
-  } else {
-    fail(`jibeapply fetch pagination: requests=${pageRequests}, total=${fetchedJibe.length} (expected 2/15)`);
-  }
-
-  // fetch() pagination cap — an inflated totalCount must not trigger unbounded
-  // concurrent requests (MAX_PAGES = 50 in providers/jibeapply.mjs), and
-  // hitting the cap must be visible (console.error), not silent.
-  let hugeRequests = 0;
-  const jibeCapWarnings = [];
-  const originalConsoleError = console.error;
-  console.error = (msg) => jibeCapWarnings.push(msg);
-  let fetchedHuge;
-  try {
-    fetchedHuge = await jibeapply.fetch(entry, {
-      transport: 'http',
-      fetchText: async () => { throw new Error('fetchText not expected'); },
-      fetchJson: async () => {
-        hugeRequests++;
-        return { totalCount: 1_000_000, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
-      },
-    });
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (hugeRequests === 50 && fetchedHuge.length === 500) {
-    pass('jibeapply.fetch() caps pagination at MAX_PAGES despite an inflated totalCount');
-  } else {
-    fail(`jibeapply fetch pagination cap: requests=${hugeRequests}, total=${fetchedHuge.length} (expected 50/500)`);
-  }
-  if (jibeCapWarnings.some(w => /has more postings than max_pages allows/.test(w))) {
-    pass('jibeapply.fetch() warns (console.error) when the cap truncates real results');
-  } else {
-    fail(`jibeapply fetch cap: expected a truncation warning, got ${JSON.stringify(jibeCapWarnings)}`);
-  }
-
-  // fetch() pagination cap — entry.max_pages raises the cap for a genuinely
-  // large tenant (e.g. a Workday-scale Deutsche Bank equivalent on JibeApply)
-  let overriddenRequests = 0;
-  const bigEntry = { name: 'BigCo', careers_url: 'https://bigco.jibeapply.com/jobs', max_pages: 80 };
-  const fetchedOverridden = await jibeapply.fetch(bigEntry, {
-    transport: 'http',
-    fetchText: async () => { throw new Error('fetchText not expected'); },
-    fetchJson: async () => {
-      overriddenRequests++;
-      return { totalCount: 1_000_000, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
-    },
-  });
-  if (overriddenRequests === 80 && fetchedOverridden.length === 800) {
-    pass('jibeapply.fetch() honors entry.max_pages to raise the cap above the default');
-  } else {
-    fail(`jibeapply fetch max_pages override: requests=${overriddenRequests}, total=${fetchedOverridden.length} (expected 80/800)`);
-  }
-
-  // entry.max_pages is itself capped (MAX_PAGES_CAP = 500) — an absurd override
-  // can't turn this into an unbounded scan either
-  let cappedOverrideRequests = 0;
-  const absurdEntry = { name: 'AbsurdCo', careers_url: 'https://absurdco.jibeapply.com/jobs', max_pages: 100_000 };
-  const fetchedAbsurd = await jibeapply.fetch(absurdEntry, {
-    transport: 'http',
-    fetchText: async () => { throw new Error('fetchText not expected'); },
-    fetchJson: async () => {
-      cappedOverrideRequests++;
-      return { totalCount: 10_000_000, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job ${i}`, slug: `job-${i}` })) };
-    },
-  });
-  if (cappedOverrideRequests === 500 && fetchedAbsurd.length === 5000) {
-    pass('jibeapply.fetch() caps an absurd entry.max_pages at MAX_PAGES_CAP');
-  } else {
-    fail(`jibeapply fetch max_pages hard cap: requests=${cappedOverrideRequests}, total=${fetchedAbsurd.length} (expected 500/5000)`);
-  }
-
-  // fetch() pagination — a failure on a later page returns the jobs gathered
-  // so far instead of discarding everything (sequential, not Promise.all),
-  // and the failure itself is visible (console.error), not silent.
-  let flakyRequests = 0;
-  const jibeFlakyWarnings = [];
-  console.error = (msg) => jibeFlakyWarnings.push(msg);
-  let fetchedFlaky;
-  try {
-    fetchedFlaky = await jibeapply.fetch(entry, {
-      transport: 'http',
-      fetchText: async () => { throw new Error('fetchText not expected'); },
-      fetchJson: async (url) => {
-        flakyRequests++;
-        const u = new URL(url);
-        const page = parseInt(u.searchParams.get('page') || '1', 10);
-        if (page === 3) throw new Error('HTTP 503');
-        return { totalCount: 40, count: 10, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `Job p${page}-${i}`, slug: `job-p${page}-${i}` })) };
-      },
-    });
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (flakyRequests === 3 && fetchedFlaky.length === 20) {
-    pass('jibeapply.fetch() returns partial results when a later page fails');
-  } else {
-    fail(`jibeapply fetch partial failure: requests=${flakyRequests}, total=${fetchedFlaky.length} (expected 3/20)`);
-  }
-  if (jibeFlakyWarnings.some(w => /page \d+ fetch failed/.test(w))) {
-    pass('jibeapply.fetch() warns (console.error) when a page fetch fails mid-pagination');
-  } else {
-    fail(`jibeapply fetch page failure: expected a fetch-failed warning, got ${JSON.stringify(jibeFlakyWarnings)}`);
-  }
-
-  // fetch() with explicit entry.api (non-jibeapply.com host)
-  let explicitApiUrl = null;
-  const brandedEntry = { name: 'Widget Co', careers_url: 'https://jobs.widgetco.com/jobs', api: 'https://jobs.widgetco.com/api/jobs?internal=false' };
-  await jibeapply.fetch(brandedEntry, {
-    transport: 'http',
-    fetchText: async () => { throw new Error('fetchText not expected'); },
-    fetchJson: async (url) => { explicitApiUrl = url; return { totalCount: 3, count: 3, jobs: [{ title: 'Dev', slug: 'dev-1' }] }; },
-  });
-  if (explicitApiUrl && explicitApiUrl.startsWith('https://jobs.widgetco.com/api/jobs')) {
-    pass('jibeapply.fetch() uses entry.api for non-jibeapply.com hosts');
-  } else {
-    fail(`jibeapply.fetch() with entry.api called url=${JSON.stringify(explicitApiUrl)}`);
-  }
-
-  // fetch() with entry.api — iCIMS-hosted JibeApply pattern: count === totalCount but jobs.length < count
-  let brandedRequests = 0;
-  const fetchedBranded = await jibeapply.fetch(brandedEntry, {
-    transport: 'http',
-    fetchText: async () => { throw new Error('fetchText not expected'); },
-    fetchJson: async (url) => {
-      brandedRequests++;
-      const u = new URL(url);
-      const page = parseInt(u.searchParams.get('page') || '1', 10);
-      // count === totalCount (iCIMS-hosted pattern), jobs only has page-worth of items
-      if (page === 1) return { totalCount: 15, count: 15, jobs: Array.from({ length: 10 }, (_, i) => ({ title: `J${i}`, slug: `j-${i}` })) };
-      return { totalCount: 15, count: 15, jobs: Array.from({ length: 5 }, (_, i) => ({ title: `J2-${i}`, slug: `j2-${i}` })) };
-    },
-  });
-  if (brandedRequests === 2 && fetchedBranded.length === 15) {
-    pass('jibeapply.fetch() paginates when count===totalCount but jobs.length < count');
-  } else {
-    fail(`jibeapply fetch iCIMS pattern: requests=${brandedRequests}, total=${fetchedBranded.length} (expected 2/15)`);
-  }
-
-  // fetch() throws when both entry.api is HTTP and careers_url is non-jibeapply.com
-  // (no valid API URL can be derived from either source)
-  try {
-    await jibeapply.fetch({ name: 'X', careers_url: 'https://jobs.example.com/jobs', api: 'http://evil.com/api/jobs' }, {
-      fetchText: async () => '', fetchJson: async () => { throw new Error('should not reach'); },
-    });
-    fail('jibeapply.fetch() should throw when no valid API URL can be derived');
-  } catch (e2) {
-    if (/cannot derive API URL/i.test(e2.message)) pass('jibeapply.fetch() throws when HTTP entry.api and non-jibeapply careers_url');
-    else fail(`jibeapply.fetch() wrong error: ${e2.message}`);
-  }
-
-} catch (e) {
-  fail(`jibeapply provider tests crashed: ${e.message}`);
-}
-
-// ── 52. INTERVIEW SESSION PRODUCER (#956 / #1242 contract) ──────
-
-console.log('\n52. Interview session producer (#1242 transcript contract)');
-
-// Scaffold is system-owned and MUST ship (tracked) so the updater can deliver it.
-for (const f of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
-  if (!fileExists(f)) {
-    fail(`Missing session scaffold: ${f}`);
-  } else if (run('git', ['ls-files', f])) {
-    pass(`Session scaffold shipped (tracked): ${f}`);
-  } else {
-    fail(`Session scaffold exists but is NOT tracked (won't ship): ${f}`);
-  }
-}
-
-// Real session files contain real names/companies — they MUST be gitignored.
-{
-  const real = 'interview-prep/sessions/acme-corp-instructional-designer-behavioral-2026-06-01.md';
-  if (run('git', ['check-ignore', real])) {
-    pass('Real session files are gitignored (PII never committed)');
-  } else {
-    fail(`Real session file is NOT gitignored: ${real}`);
-  }
-}
-
-// ...but the scaffold itself must be force-included past that ignore rule.
-for (const f of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
-  if (run('git', ['check-ignore', f])) {
-    fail(`Session scaffold is gitignored (won't ship): ${f}`);
-  } else {
-    pass(`Session scaffold is force-included past the ignore rule: ${f}`);
-  }
-}
-
-// The scaffold must be in SYSTEM_PATHS (the updater delivers/refreshes it).
-{
-  const updater = readFile('update-system.mjs');
-  const sysBlock = (updater.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
-  for (const p of ['interview-prep/sessions/.gitkeep', 'interview-prep/sessions/README.md']) {
-    if (sysBlock.includes(`'${p}'`)) {
-      pass(`Session scaffold in SYSTEM_PATHS: ${p}`);
-    } else {
-      fail(`Session scaffold NOT in SYSTEM_PATHS (won't update): ${p}`);
-    }
-  }
-  // Never ship the directory itself — that would let an update wipe user sessions.
-  if (sysBlock.includes("'interview-prep/sessions/'")) {
-    fail("interview-prep/sessions/ dir is in SYSTEM_PATHS — an update could overwrite user sessions");
-  } else {
-    pass('interview-prep/sessions/ dir is NOT a SYSTEM_PATHS entry (user sessions safe)');
-  }
-}
-
-// Both producers must document writing a session transcript with competency tags.
-for (const mode of ['modes/interview/debrief.md', 'modes/interview/practice.md']) {
-  const body = readFile(mode);
-  if (body.includes('interview-prep/sessions/')) {
-    pass(`${mode} writes to interview-prep/sessions/`);
-  } else {
-    fail(`${mode} does not write a session transcript (producer missing)`);
-  }
-  if (body.includes('<!-- competency:')) {
-    pass(`${mode} emits the competency tag`);
-  } else {
-    fail(`${mode} does not emit the <!-- competency: --> tag`);
-  }
-}
-
-// The README is the consumer contract — it must document speaker labels + tag format.
-if (!fileExists('interview-prep/sessions/README.md')) {
-  fail('sessions/README.md missing — cannot verify the consumer contract');
-} else {
-  const readme = readFile('interview-prep/sessions/README.md');
-  if (readme.includes('**Interviewer:**') && readme.includes('**Candidate:**')) {
-    pass('sessions/README documents Interviewer/Candidate speaker labels');
-  } else {
-    fail('sessions/README missing speaker-label contract');
-  }
-  if (readme.includes('<!-- competency:')) {
-    pass('sessions/README documents the competency tag format');
-  } else {
-    fail('sessions/README missing competency tag format');
-  }
-}
-
-console.log('\n53. Provider — successfactors (SAP RMK tile parser)');
-
-try {
-  const sf = (await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href)).default;
-  const { parseTiles, cityFromSlug } = await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
-
-  if (sf.id === 'successfactors') pass('successfactors.id is "successfactors"');
-  else fail(`successfactors.id is ${JSON.stringify(sf.id)}`);
-
-  // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
-  // NOT (they carry no "successfactors" string and rely on explicit provider:).
-  if (sf.detect({ name: 'X', careers_url: 'https://acme.successfactors.eu/careers' })) {
-    pass('successfactors.detect() claims a *.successfactors.eu URL');
-  } else {
-    fail('successfactors.detect() should claim *.successfactors.eu');
-  }
-  if (sf.detect({ name: 'X', api: 'https://company.jobs2web.com/x' })) {
-    pass('successfactors.detect() claims a jobs2web.com URL');
-  } else {
-    fail('successfactors.detect() should claim jobs2web.com');
-  }
-  if (sf.detect({ name: 'ZF', careers_url: 'https://jobs.zf.com' }) === null) {
-    pass('successfactors.detect() returns null for a branded RMK host (needs explicit provider:)');
-  } else {
-    fail('successfactors.detect() must not auto-claim branded hosts');
-  }
-
-  // cityFromSlug — recover the city prefix from an RMK /job/{City}-{Title}-{code}/ slug.
-  if (cityFromSlug('/job/Hyderabad-Specialist-Low-Level-Driver-Development-TG-500032/1399717233/', 'Specialist -Low Level Driver Development') === 'Hyderabad') {
-    pass('cityFromSlug extracts a single-word city');
-  } else {
-    fail(`cityFromSlug single-word wrong: ${cityFromSlug('/job/Hyderabad-Specialist-Low-Level-Driver-Development-TG-500032/1399717233/', 'Specialist -Low Level Driver Development')}`);
-  }
-  // Multi-word city (Levallois-Perret) — anchoring on the title's first two
-  // words means the full city prefix survives, not just the first token.
-  if (cityFromSlug('/job/Levallois-Perret-Data-Management-Engagement-Architect-92300/1400945133/', 'Data Management Engagement Architect') === 'Levallois Perret') {
-    pass('cityFromSlug extracts a multi-word city');
-  } else {
-    fail(`cityFromSlug multi-word wrong: ${cityFromSlug('/job/Levallois-Perret-Data-Management-Engagement-Architect-92300/1400945133/', 'Data Management Engagement Architect')}`);
-  }
-  // Accented title (Ingénieur) — unicode word matching keeps the anchor intact.
-  if (cityFromSlug('/job/Massy-Ing%C3%A9nieur-Commercial-91743/1351400755/', 'Ingénieur Commercial') === 'Massy') {
-    pass('cityFromSlug handles accented (unicode) titles');
-  } else {
-    fail(`cityFromSlug accented wrong: ${cityFromSlug('/job/Massy-Ing%C3%A9nieur-Commercial-91743/1351400755/', 'Ingénieur Commercial')}`);
-  }
-
-  // parseTiles — a compact fragment covering the three things that bit during
-  // development: the city-value div (not its "City" label), an &amp; in the
-  // data-url path, a slug fallback when no city div is rendered, an entity in
-  // the title, desktop/mobile duplication collapsed to one <li>, and a
-  // title-less tile that must be dropped.
-  const jobBase = 'https://jobs.example.com';
-  const fragment = `
-    <ul>
-      <li class="job-tile job-id-111 job-row-index-1" data-url="/job/Schweinfurt-Ferienarbeiter-97421/111/">
-        <a class="jobTitle-link fontcolorx" href="/job/Schweinfurt-Ferienarbeiter-97421/111/">Ferienarbeiter (m&#47;w&#47;d)</a>
-        <div id="job-111-desktop-section-city" class="section-field city">
-          <span id="job-111-desktop-section-city-label" aria-describedby="job-111-desktop-section-city-value" class="section-label sr-only">City</span>
-          <div id="job-111-desktop-section-city-value">Schweinfurt                 </div>
-        </div>
-      </li>
-      <li class="job-tile job-id-222 job-row-index-2" data-url="/job/Palo-Alto-Program-&amp;-Release-Manager-CA-94304/222/">
-        <a class="jobTitle-link fontcolorx" href="/x">Program &amp; Release Manager</a>
-      </li>
-      <li class="job-tile job-id-333 job-row-index-3" data-url="/job/no-title/333/">
-      </li>
-    </ul>`;
-  const parsed = parseTiles(fragment, jobBase);
-
-  if (parsed.length === 2) pass('parseTiles returns 2 jobs (title-less tile dropped)');
-  else fail(`parseTiles returned ${parsed.length} jobs, expected 2`);
-
-  const j1 = parsed.find((j) => j.url.includes('/111/'));
-  if (j1 && j1.title === 'Ferienarbeiter (m/w/d)') pass('parseTiles decodes entity in title');
-  else fail(`parseTiles title wrong: ${JSON.stringify(j1 && j1.title)}`);
-  if (j1 && j1.location === 'Schweinfurt') pass('parseTiles reads the city-value div, not the "City" label');
-  else fail(`parseTiles city wrong: ${JSON.stringify(j1 && j1.location)}`);
-  if (j1 && j1.url === 'https://jobs.example.com/job/Schweinfurt-Ferienarbeiter-97421/111/') pass('parseTiles builds an absolute URL from data-url');
-  else fail(`parseTiles url wrong: ${JSON.stringify(j1 && j1.url)}`);
-
-  const j2 = parsed.find((j) => j.url.includes('/222/'));
-  if (j2 && j2.url === 'https://jobs.example.com/job/Palo-Alto-Program-&-Release-Manager-CA-94304/222/') {
-    pass('parseTiles decodes &amp; in the data-url path');
-  } else {
-    fail(`parseTiles &amp; url wrong: ${JSON.stringify(j2 && j2.url)}`);
-  }
-  if (j2 && j2.location === 'Palo Alto') pass('parseTiles falls back to slug city when no city div is present');
-  else fail(`parseTiles slug-fallback city wrong: ${JSON.stringify(j2 && j2.location)}`);
-
-  // Empty fragment (MTU's zero-req case) → no jobs, no throw.
-  if (parseTiles('<!DOCTYPE html>', jobBase).length === 0) pass('parseTiles returns [] for an empty fragment');
-  else fail('parseTiles should return [] for an empty fragment');
-} catch (err) {
-  fail(`successfactors provider test threw: ${err.message}`);
-}
-
-// ── match-star.mjs — fixture story-bank + top match assertion ───────────────
-
-console.log('\n🧪 Testing match-star.mjs keyword scorer...');
-
-try {
-  // Import the real production functions — tests exercise actual implementation
-  const { parseStories, tokenize, score } = await import(pathToFileURL(join(ROOT, 'match-star.mjs')).href);
-
-  // Inline fixture: two stories with distinct competency tags
-  const FIXTURE_MD = `
-### [Leadership] Led cross-functional rollout under deadline
-
-**Source:** Work
-**S (Situation):** Our team had 3 weeks to ship a platform migration affecting 6 departments.
-**T (Task):** I was asked to coordinate across engineering, ops, and comms with no formal authority.
-**A (Action):** I mapped dependencies, ran daily standups, and escalated blockers to leadership.
-**R (Result):** Shipped on time, zero downtime, positive feedback from all department leads.
-**Reflection:** Influence without authority is the real skill.
-**Best for questions about:** leadership, project management, cross-functional collaboration, deadline pressure
-
-### [Conflict] Resolved a data pipeline disagreement with a senior engineer
-
-**Source:** Work
-**S (Situation):** A senior engineer wanted to rewrite our ETL in Spark; I thought it was premature.
-**T (Task):** Present my case without creating a political problem.
-**A (Action):** I pulled query benchmarks and showed the bottleneck was upstream, not the pipeline itself.
-**R (Result):** Team agreed to a targeted fix; saved 6 weeks of rewrite work.
-**Reflection:** Data beats seniority.
-**Best for questions about:** conflict resolution, disagreement, data-driven decision making, stakeholder management
-`.trim();
-
-  const stories = parseStories(FIXTURE_MD);
-
-  if (stories.length === 2) {
-    pass('match-star fixture: parseStories returns 2 stories');
-  } else {
-    fail(`match-star fixture: expected 2 stories, got ${stories.length}`);
-  }
-
-  // Leadership question → should match story[0] (leadership/deadline tags)
-  const leadershipQ = tokenize('Tell me about a time you led a project under deadline pressure');
-  const leadershipScores = stories.map(s => score(s, leadershipQ, []));
-  if (leadershipScores[0] > leadershipScores[1]) {
-    pass('match-star scorer: leadership question surfaces the leadership story first');
-  } else {
-    fail(`match-star scorer: leadership question picked wrong story (scores: ${leadershipScores})`);
-  }
-
-  // Conflict question → should match story[1] (conflict/disagreement tags)
-  const conflictQ = tokenize('Describe a conflict or disagreement with a colleague');
-  const conflictScores = stories.map(s => score(s, conflictQ, []));
-  if (conflictScores[1] > conflictScores[0]) {
-    pass('match-star scorer: conflict question surfaces the conflict story first');
-  } else {
-    fail(`match-star scorer: conflict question picked wrong story (scores: ${conflictScores})`);
-  }
-
-  // Tag-match weight (3) should outweigh body-match weight (1) for a tag-exact token
-  const tagExactQ = tokenize('stakeholder management');
-  const tagExactScores = stories.map(s => score(s, tagExactQ, []));
-  if (tagExactScores[1] >= 6) {
-    pass('match-star scorer: tag-exact match yields ≥ 6 points (3 per token × 2 tokens)');
-  } else {
-    fail(`match-star scorer: tag-exact match score too low (got ${tagExactScores[1]})`);
-  }
-
-  // match-star.mjs file must exist (existsSync-guarded in the script itself)
-  if (existsSync(join(ROOT, 'match-star.mjs'))) {
-    pass('match-star.mjs: file present in repo root');
-  } else {
-    fail('match-star.mjs: file missing from repo root');
-  }
-
-} catch (e) {
-  fail(`match-star tests crashed: ${e.message}`);
-}
-
-// ── PREPARE-APPLICATION — ATS AUTO-FILL CONTRACT ────────────────
-
-console.log('\n prepare-application: ATS auto-fill contract');
-
-try {
-  const src = readFile('prepare-application.mjs');
-
-  // Must not make any network requests
-  if (!/\bfetch\s*\(/.test(src) && !/https?\.request/.test(src) && !/createConnection/.test(src)) {
-    pass('prepare-application.mjs makes no network requests');
-  } else {
-    fail('prepare-application.mjs calls a network API — must be prefill-only, no POST');
-  }
-
-  // Must have concrete handler functions for all three ATS
-  for (const fn of ['buildGreenhouseFields', 'buildAshbyFields', 'buildLeverFields']) {
-    if (new RegExp(`function ${fn}`).test(src)) {
-      pass(`prepare-application.mjs defines ${fn}`);
-    } else {
-      fail(`prepare-application.mjs missing concrete handler: ${fn}`);
-    }
-  }
-
-  // Must read config/profile.yml
-  if (/config\/profile\.yml/.test(src)) {
-    pass('prepare-application.mjs reads config/profile.yml');
-  } else {
-    fail('prepare-application.mjs does not read config/profile.yml');
-  }
-
-  // Must restrict PDF to output/ directory — either the legacy startsWith
-  // prefix check or the path.relative() containment guard counts.
-  if (/output[^'"`\n]*startsWith|startsWith.*output|relative\(outputDir/.test(src)) {
-    pass('prepare-application.mjs restricts PDF path to output/');
-  } else {
-    fail('prepare-application.mjs missing output/ directory restriction for --pdf');
-  }
-
-  // Must enforce https-only
-  if (/protocol.*https:|https:.*protocol/.test(src)) {
-    pass('prepare-application.mjs enforces https-only URLs');
-  } else {
-    fail('prepare-application.mjs missing https enforcement');
-  }
-
-  // Must not reference old script name
-  if (!/submit-resume/.test(src)) {
-    pass('prepare-application.mjs does not reference old submit-resume name');
-  } else {
-    fail('prepare-application.mjs still references submit-resume');
-  }
-
-  // package.json must expose prepare:application, not submit:resume
-  const pkg = readFile('package.json');
-  if (/prepare.application.*prepare-application\.mjs/.test(pkg)) {
-    pass('package.json exposes prepare:application script');
-  } else {
-    fail('package.json missing prepare:application script pointing to prepare-application.mjs');
-  }
-  if (!/submit.resume/.test(pkg)) {
-    pass('package.json does not reference removed submit-resume.mjs');
-  } else {
-    fail('package.json still references removed submit-resume.mjs');
-  }
-} catch (e) {
-  fail(`prepare-application contract check crashed: ${e.message}`);
-}
-
-// ── 53. PROVIDER — WORKDAY ────────────────────────────────────────
-
-console.log('\n53. Provider — workday');
-
-try {
-  const workday = (await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href)).default;
-  const { parseWorkdayResponse } = await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href);
-
-  // Shared mock ctx shape for workday.fetch() calls below — only fetchJson varies per test.
-  // sleep is a no-op so retry-backoff delays don't slow the test suite down.
-  const mkWorkdayCtx = (fetchJson, extra = {}) => ({
-    transport: 'http',
-    fetchText: async () => { throw new Error('fetchText should not be called'); },
-    fetchJson,
-    sleep: async () => {},
-    ...extra,
-  });
-
-  if (workday.id === 'workday') pass('workday.id is "workday"');
-  else fail(`workday.id is ${JSON.stringify(workday.id)}`);
-
-  // detect() — valid Workday URLs
-  const hitUs = workday.detect({ name: 'Acme', careers_url: 'https://acme.wd12.myworkdayjobs.com/en-US/acme-jobs' });
-  if (hitUs && hitUs.url === 'https://acme.wd12.myworkdayjobs.com/wday/cxs/acme/acme-jobs/jobs') {
-    pass('workday.detect() resolves wd12 URL to CXS API endpoint');
-  } else {
-    fail(`workday.detect(wd12) returned ${JSON.stringify(hitUs)}`);
-  }
-
-  const hitNoLocale = workday.detect({ name: 'Test', careers_url: 'https://test.wd5.myworkdayjobs.com/TestBoard' });
-  if (hitNoLocale && hitNoLocale.url === 'https://test.wd5.myworkdayjobs.com/wday/cxs/test/TestBoard/jobs') {
-    pass('workday.detect() works without locale segment in path');
-  } else {
-    fail(`workday.detect(no-locale) returned ${JSON.stringify(hitNoLocale)}`);
-  }
-
-  // detect() — null cases
-  if (workday.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
-    pass('workday.detect() returns null for non-Workday URL');
-  } else {
-    fail('workday.detect() should return null for non-Workday URL');
-  }
-
-  // Path-spoofed URL: myworkdayjobs.com in path, not hostname
-  if (workday.detect({ name: 'Spoof', careers_url: 'https://evil.example/test.wd5.myworkdayjobs.com/en-US/board' }) === null) {
-    pass('workday.detect() rejects path-spoofed URL');
-  } else {
-    fail('workday.detect() must NOT detect path-spoofed URLs');
-  }
-
-  // Non-string careers_url
-  if (workday.detect({ name: 'X', careers_url: null }) === null && workday.detect({ name: 'X' }) === null) {
-    pass('workday.detect() returns null for null / missing careers_url');
-  } else {
-    fail('workday.detect() should return null for non-string careers_url');
-  }
-
-  // parseWorkdayResponse — normalization
-  const sampleJson = {
-    jobPostings: [
-      { title: 'Senior QA Engineer', externalPath: '/job/board/Senior-QA-Engineer_JR001', locationsText: 'Berlin, Germany', postedOn: 'Posted 2 Days Ago' },
-      { title: 'Lead Developer', externalPath: '/job/board/Lead-Developer_JR002', locationsText: 'Remote' },
-      { title: '', externalPath: '/job/board/No-Title_JR003' },          // no title — skip
-      { title: 'No Path Role', externalPath: '' },                        // no externalPath — skip
-      { title: 'Also No Path' },                                          // undefined externalPath — skip
-    ],
-  };
-  const entry = { name: 'Acme', careers_url: 'https://acme.wd12.myworkdayjobs.com/en-US/acme-jobs' };
-  const parsed = parseWorkdayResponse(sampleJson, entry);
-
-  if (parsed.length === 2) pass('parseWorkdayResponse extracts 2 valid jobs (skips missing title/path)');
-  else fail(`parseWorkdayResponse returned ${parsed.length} jobs, expected 2`);
-
-  if (parsed[0].title === 'Senior QA Engineer' && parsed[0].location === 'Berlin, Germany') {
-    pass('parseWorkdayResponse maps title and location');
-  } else {
-    fail(`row 0 = ${JSON.stringify(parsed[0])}`);
-  }
-
-  if (parsed[0].url.includes('acme-jobs') && parsed[0].url.includes('/job/board/Senior-QA-Engineer_JR001')) {
-    pass('parseWorkdayResponse builds URL from jobBase + externalPath');
-  } else {
-    fail(`row 0 url = ${JSON.stringify(parsed[0].url)}`);
-  }
-
-  if (parsed[0].company === 'Acme') pass('parseWorkdayResponse sets company from entry.name');
-  else fail(`parseWorkdayResponse company = ${JSON.stringify(parsed[0].company)}`);
-
-  // parseWorkdayResponse — location fallback from URL path
-  const noLocEntry = { name: 'Globex', careers_url: 'https://globex.wd103.myworkdayjobs.com/globexcareers' };
-  const noLocJson = {
-    jobPostings: [
-      { title: 'Quality Engineer', externalPath: '/job/Mumbai/Quality-Engineer_ATCI-123' },           // no locationsText
-      { title: 'Test Lead', externalPath: '/job/Remote-Poland/Test-Lead_ATCI-456', locationsText: '' }, // empty locationsText
-      { title: 'QA Analyst', externalPath: '/job/Remote-Hungary/QA-Analyst_ATCI-789', locationsText: 'Remote, Hungary' }, // has locationsText — use it
-    ],
-  };
-  const noLocParsed = parseWorkdayResponse(noLocJson, noLocEntry);
-  if (noLocParsed[0]?.location === 'Mumbai') pass('parseWorkdayResponse falls back to URL path location when locationsText absent');
-  else fail(`parseWorkdayResponse path fallback: expected "Mumbai", got ${JSON.stringify(noLocParsed[0]?.location)}`);
-  if (noLocParsed[1]?.location === 'Remote Poland') pass('parseWorkdayResponse falls back to URL path location when locationsText empty');
-  else fail(`parseWorkdayResponse path fallback empty: expected "Remote Poland", got ${JSON.stringify(noLocParsed[1]?.location)}`);
-  if (noLocParsed[2]?.location === 'Remote, Hungary') pass('parseWorkdayResponse prefers locationsText over URL path when present');
-  else fail(`parseWorkdayResponse locationsText priority: expected "Remote, Hungary", got ${JSON.stringify(noLocParsed[2]?.location)}`);
-
-  // parseWorkdayResponse — malformed percent-encoding in the URL path segment
-  // must not throw (decodeURIComponent) and must not abort processing of
-  // other job records in the same response.
-  const malformedPathJson = {
-    jobPostings: [
-      { title: 'Broken Encoding', externalPath: '/job/%E0%A4%A/Broken-Encoding_JR1' },
-      { title: 'Fine Job', externalPath: '/job/Berlin/Fine-Job_JR2' },
-    ],
-  };
-  try {
-    const malformedParsed = parseWorkdayResponse(malformedPathJson, entry);
-    if (malformedParsed.length === 2 && malformedParsed[1].location === 'Berlin') {
-      pass('parseWorkdayResponse tolerates malformed percent-encoding without dropping other records');
-    } else {
-      fail(`parseWorkdayResponse malformed encoding result = ${JSON.stringify(malformedParsed)}`);
-    }
-  } catch (e4) {
-    fail(`parseWorkdayResponse should not throw on malformed percent-encoding: ${e4.message}`);
-  }
-
-  // parseWorkdayResponse — empty / malformed input
-  if (parseWorkdayResponse({}, entry).length === 0) pass('parseWorkdayResponse({}) → empty result');
-  else fail('parseWorkdayResponse({}) should be empty');
-
-  if (parseWorkdayResponse({ jobPostings: null }, entry).length === 0) {
-    pass('parseWorkdayResponse handles null jobPostings');
-  } else {
-    fail('parseWorkdayResponse null jobPostings should be empty');
-  }
-
-  // fetch() with mock ctx — uses total field to bound sequential pagination
-  let postRequests = 0;
-  const capturedRedirects = [];
-  const fetchedJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
-    postRequests++;
-    capturedRedirects.push(opts?.redirect);
-    const body = JSON.parse(opts.body);
-    if (body.offset === 0) {
-      return { total: 30, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job P1-${i}`, externalPath: `/job/board/p1-${i}` })) };
-    }
-    return { total: 30, jobPostings: Array.from({ length: 10 }, (_, i) => ({ title: `Job P2-${i}`, externalPath: `/job/board/p2-${i}` })) };
-  }));
-  if (postRequests === 2 && fetchedJobs.length === 30) {
-    pass('workday.fetch() uses total field to fetch exact pages sequentially (20+10=30)');
-  } else {
-    fail(`fetch pagination: requests=${postRequests}, total=${fetchedJobs.length} (expected 2 requests / 30 jobs)`);
-  }
-
-  if (capturedRedirects.length === 2 && capturedRedirects.every(r => r === 'error')) {
-    pass('workday.fetch() passes redirect:"error" on every page (SSRF guard)');
-  } else {
-    fail(`workday.fetch() redirect opts across pages = ${JSON.stringify(capturedRedirects)}`);
-  }
-
-  // parseWorkdayResponse — null/undefined entries in jobPostings must be
-  // skipped, not crash
-  const sparseWorkday = { jobPostings: [null, undefined, { title: 'Real Job', externalPath: '/job/board/real-job' }] };
-  try {
-    const parsedSparseWorkday = parseWorkdayResponse(sparseWorkday, entry);
-    if (parsedSparseWorkday.length === 1 && parsedSparseWorkday[0].title === 'Real Job') {
-      pass('parseWorkdayResponse skips null/undefined entries without crashing');
-    } else {
-      fail(`parseWorkdayResponse sparse result = ${JSON.stringify(parsedSparseWorkday)}`);
-    }
-  } catch (e2) {
-    fail(`parseWorkdayResponse should not throw on null/undefined entries: ${e2.message}`);
-  }
-
-  // fetch() pagination cap — an inflated `total` must not trigger unbounded
-  // requests (DEFAULT_MAX_PAGES = 100 in providers/workday.mjs), and hitting
-  // the cap must be visible (console.error), not silent — real tenants
-  // (Dollar Tree, total=23,609; CVS Health, total=16,974) already exceed the
-  // 100-page/2000-job default.
-  let hugeWorkdayRequests = 0;
-  const capturedWarnings = [];
-  const originalConsoleError = console.error;
-  console.error = (msg) => capturedWarnings.push(msg);
-  let fetchedHugeWorkday;
-  try {
-    fetchedHugeWorkday = await workday.fetch(entry, mkWorkdayCtx(async () => {
-      hugeWorkdayRequests++;
-      return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
-    }));
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (hugeWorkdayRequests === 100 && fetchedHugeWorkday.length === 2000) {
-    pass('workday.fetch() caps pagination at DEFAULT_MAX_PAGES despite an inflated total');
-  } else {
-    fail(`workday fetch pagination cap: requests=${hugeWorkdayRequests}, total=${fetchedHugeWorkday.length} (expected 100/2000)`);
-  }
-  if (capturedWarnings.some(w => /truncated at max_pages=\d+/.test(w))) {
-    pass('workday.fetch() warns (console.error) when the cap truncates real results');
-  } else {
-    fail(`workday fetch cap: expected a truncation warning, got ${JSON.stringify(capturedWarnings)}`);
-  }
-
-  // fetch() pagination cap — entry.max_pages raises the cap for a genuinely
-  // large tenant (e.g. Deutsche Bank-scale postings)
-  let overriddenWorkdayRequests = 0;
-  const bigWorkdayEntry = { name: 'BigCo', careers_url: 'https://bigco.wd5.myworkdayjobs.com/careers', max_pages: 80 };
-  const fetchedOverriddenWorkday = await workday.fetch(bigWorkdayEntry, mkWorkdayCtx(async () => {
-    overriddenWorkdayRequests++;
-    return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
-  }));
-  if (overriddenWorkdayRequests === 80 && fetchedOverriddenWorkday.length === 1600) {
-    pass('workday.fetch() honors entry.max_pages to raise the cap above the default');
-  } else {
-    fail(`workday fetch max_pages override: requests=${overriddenWorkdayRequests}, total=${fetchedOverriddenWorkday.length} (expected 80/1600)`);
-  }
-
-  // entry.max_pages is itself capped (MAX_PAGES_CAP = 1500) — an absurd
-  // override can't turn this into an unbounded scan either.
-  let absurdWorkdayRequests = 0;
-  const absurdWorkdayEntry = { name: 'AbsurdCo', careers_url: 'https://absurdco.wd5.myworkdayjobs.com/careers', max_pages: 100_000 };
-  const fetchedAbsurdWorkday = await workday.fetch(absurdWorkdayEntry, mkWorkdayCtx(async () => {
-    absurdWorkdayRequests++;
-    return { total: 10_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
-  }));
-  if (absurdWorkdayRequests === 1500 && fetchedAbsurdWorkday.length === 30_000) {
-    pass('workday.fetch() caps an absurd entry.max_pages at MAX_PAGES_CAP');
-  } else {
-    fail(`workday fetch max_pages hard cap: requests=${absurdWorkdayRequests}, total=${fetchedAbsurdWorkday.length} (expected 1500/30000)`);
-  }
-
-  // Invalid max_pages values (negative, zero, non-numeric) fall back to
-  // DEFAULT_MAX_PAGES, same as omitting max_pages entirely.
-  for (const invalidMaxPages of [-5, 0, 'abc', NaN, null]) {
-    let invalidRequests = 0;
-    const invalidEntry = { name: 'InvalidCo', careers_url: 'https://invalidco.wd5.myworkdayjobs.com/careers', max_pages: invalidMaxPages };
-    const fetchedInvalid = await workday.fetch(invalidEntry, mkWorkdayCtx(async () => {
-      invalidRequests++;
-      return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
-    }));
-    // Number.isNaN(NaN) is true but JSON.stringify(NaN) === 'null', which would
-    // be indistinguishable from the literal `null` case in the log below.
-    const label = Number.isNaN(invalidMaxPages) ? 'NaN' : JSON.stringify(invalidMaxPages);
-    if (invalidRequests === 100 && fetchedInvalid.length === 2000) {
-      pass(`workday.fetch() falls back to DEFAULT_MAX_PAGES for invalid max_pages=${label}`);
-    } else {
-      fail(`workday fetch invalid max_pages=${label}: requests=${invalidRequests}, total=${fetchedInvalid.length} (expected 100/2000)`);
-    }
-  }
-
-  // fetch() pagination — a failure that persists across every retry attempt
-  // on a later page returns the jobs gathered so far instead of discarding
-  // everything (sequential, not Promise.all), retries MAX_RETRIES+1=4 times
-  // on that page before giving up, and the failure itself is visible
-  // (console.error), not silent. The truncation ("raise max_pages") warning
-  // must NOT also fire — that knob does nothing for a rate-limited tenant.
-  let flakyWorkdayRequests = 0;
-  const flakyWarnings = [];
-  console.error = (msg) => flakyWarnings.push(msg);
-  let flakyWorkdayJobs;
-  try {
-    flakyWorkdayJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
-      flakyWorkdayRequests++;
-      const body = JSON.parse(opts.body);
-      const page = body.offset / 20; // PAGE_SIZE in providers/workday.mjs
-      if (page === 2) { const err = new Error('HTTP 503'); err.status = 503; throw err; }
-      return { total: 80, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job p${page}-${i}`, externalPath: `/job/board/p${page}-${i}` })) };
-    }));
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (flakyWorkdayRequests === 6 && flakyWorkdayJobs.length === 40) {
-    pass('workday.fetch() retries a failing page 4x then returns partial results');
-  } else {
-    fail(`workday fetch partial failure: requests=${flakyWorkdayRequests}, total=${flakyWorkdayJobs.length} (expected 6/40)`);
-  }
-  if (flakyWarnings.some(w => /truncated at \d+ of \d+ pages after 4 attempts/.test(w))) {
-    pass('workday.fetch() warns (console.error) when a page fetch fails after exhausting retries, with the attempt count');
-  } else {
-    fail(`workday fetch page failure: expected a fetch-failed warning, got ${JSON.stringify(flakyWarnings)}`);
-  }
-  // The failure message must show scale — which page out of how many were
-  // planned, and how many jobs came back out of the tenant's real total —
-  // not just "page 3, 40 jobs" with no sense of how much was actually lost.
-  // Same "truncated at ... (N of M jobs)" shape as the cap-hit warning below,
-  // so the two read consistently.
-  if (flakyWarnings.some(w => /truncated at 3 of 4 pages after 4 attempts \(40 of 80 jobs\): HTTP 503/.test(w))) {
-    pass('workday.fetch() fetch-failure warning reports scale (page X of Y, N of total jobs)');
-  } else {
-    fail(`workday fetch-failure warning missing scale context: ${JSON.stringify(flakyWarnings)}`);
-  }
-  if (!flakyWarnings.some(w => /raise max_pages/.test(w))) {
-    pass('workday.fetch() does NOT fire the "raise max_pages" warning on a fetch-error stop');
-  } else {
-    fail(`workday fetch-error stop should not also warn about max_pages: ${JSON.stringify(flakyWarnings)}`);
-  }
-
-  // fetch() retry — a 429 that succeeds on a later attempt is transparent to
-  // the caller (no jobs lost, no error surfaced) and respects Retry-After.
-  let retrySleepCalls = [];
-  let retryAttempts = 0;
-  const retryEntry = { name: 'RetryCo', careers_url: 'https://retryco.wd5.myworkdayjobs.com/careers' };
-  const retryJobs = await workday.fetch(retryEntry, mkWorkdayCtx(async () => {
-    retryAttempts++;
-    if (retryAttempts === 1) { const err = new Error('HTTP 429'); err.status = 429; err.retryAfter = '1'; throw err; }
-    return { total: 1, jobPostings: [{ title: 'Recovered Job', externalPath: '/job/board/recovered' }] };
-  }, { sleep: async (ms) => { retrySleepCalls.push(ms); } }));
-  if (retryAttempts === 2 && retryJobs.length === 1 && retryJobs[0].title === 'Recovered Job') {
-    pass('workday.fetch() retries a 429 and recovers transparently');
-  } else {
-    fail(`workday 429 retry: attempts=${retryAttempts}, jobs=${JSON.stringify(retryJobs)}`);
-  }
-  if (retrySleepCalls[0] === 1000) {
-    pass('workday.fetch() honors Retry-After header for backoff delay');
-  } else {
-    fail(`workday retry-after: expected first backoff delay 1000ms, got ${JSON.stringify(retrySleepCalls)}`);
-  }
-
-  // fetch() retry — a hostile or misconfigured Retry-After (e.g. 86400s = a
-  // full day) must not be honored verbatim: it's clamped to
-  // RETRY_MAX_DELAY_MS * 4 (32s) so a single bad header can't stall a
-  // tenant's fetch indefinitely, defeating the point of a bounded backoff.
-  let hostileRetrySleepCalls = [];
-  let hostileRetryAttempts = 0;
-  const hostileRetryEntry = { name: 'HostileRetryCo', careers_url: 'https://hostileretryco.wd5.myworkdayjobs.com/careers' };
-  await workday.fetch(hostileRetryEntry, mkWorkdayCtx(async () => {
-    hostileRetryAttempts++;
-    if (hostileRetryAttempts === 1) { const err = new Error('HTTP 429'); err.status = 429; err.retryAfter = '86400'; throw err; }
-    return { total: 0, jobPostings: [] };
-  }, { sleep: async (ms) => { hostileRetrySleepCalls.push(ms); } }));
-  if (hostileRetrySleepCalls[0] === 32_000) {
-    pass('workday.fetch() clamps an oversized Retry-After to RETRY_MAX_DELAY_MS * 4');
-  } else {
-    fail(`workday retry-after clamp: expected 32000ms, got ${JSON.stringify(hostileRetrySleepCalls)}`);
-  }
-
-  // fetch() retry — a non-retryable 4xx (e.g. malformed request) breaks
-  // immediately, without wasting retry attempts.
-  let non429Attempts = 0;
-  const non429Warnings = [];
-  console.error = (msg) => non429Warnings.push(msg);
-  let non429Jobs;
-  try {
-    non429Jobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
-      non429Attempts++;
-      const body = JSON.parse(opts.body);
-      if (body.offset === 0) return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
-      const err = new Error('HTTP 400: bad request'); err.status = 400; throw err;
-    }));
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (non429Attempts === 2 && non429Jobs.length === 20) {
-    pass('workday.fetch() does not retry a non-retryable 4xx error');
-  } else {
-    fail(`workday non-retryable 4xx: attempts=${non429Attempts}, jobs=${non429Jobs.length} (expected 2/20)`);
-  }
-
-  // fetch() early-stop — once a page's postings are all clearly past
-  // ctx.sinceMs, pagination stops without hitting max_pages, and the
-  // "raise max_pages" warning does NOT fire (this isn't a cap hit).
-  const SINCE_DAYS = 3; // mirrors scan-ats-full.mjs's --since default
-  const nowMs = Date.now();
-  const sinceMs = nowMs - SINCE_DAYS * 86_400_000;
-  let earlyStopRequests = 0;
-  const earlyStopWarnings = [];
-  console.error = (msg) => earlyStopWarnings.push(msg);
-  let earlyStopJobs;
-  try {
-    earlyStopJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
-      earlyStopRequests++;
-      const body = JSON.parse(opts.body);
-      const page = body.offset / 20;
-      if (page === 0) {
-        // Page 0: fresh postings, well within the window.
-        return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Fresh ${i}`, externalPath: `/job/board/fresh-${i}`, postedOn: 'Posted Today' })) };
-      }
-      // Every later page: clearly stale (well past sinceMs - margin) — if
-      // early-stop didn't work, this mock would be asked for 100 pages.
-      return { total: 1_000_000, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Stale ${i}`, externalPath: `/job/board/stale-${i}`, postedOn: 'Posted 20 Days Ago' })) };
-    }, { sinceMs }));
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (earlyStopRequests === 2 && earlyStopJobs.length === 40) {
-    pass('workday.fetch() stops paginating once a page is past --since (early-stop)');
-  } else {
-    fail(`workday early-stop: requests=${earlyStopRequests}, jobs=${earlyStopJobs.length} (expected 2/40)`);
-  }
-  if (!earlyStopWarnings.some(w => /truncated at/.test(w))) {
-    pass('workday.fetch() does NOT warn about max_pages when it stopped early on --since');
-  } else {
-    fail(`workday early-stop should not warn about max_pages: ${JSON.stringify(earlyStopWarnings)}`);
-  }
-
-  // fetch() early-stop — a wide --since window (>= 30 days) never triggers
-  // early-stop off the unbounded "30+ Days Ago" bucket; pagination still
-  // proceeds until max_pages/total, as before. includeUndated: true isolates
-  // this from the no-date-skip optimization tested separately below — every
-  // posting here is undated ("30+"), which would otherwise short-circuit
-  // after page 1 regardless of --since width.
-  const WIDE_SINCE_DAYS = 90; // >= 30 — past the "30+ Days Ago" bucket's ambiguity threshold
-  const wideSinceMs = nowMs - WIDE_SINCE_DAYS * 86_400_000;
-  let wideRequests = 0;
-  const wideJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
-    wideRequests++;
-    const body = JSON.parse(opts.body);
-    if (body.offset === 0) {
-      return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Old ${i}`, externalPath: `/job/board/old-${i}`, postedOn: 'Posted 30+ Days Ago' })) };
-    }
-    return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Old2 ${i}`, externalPath: `/job/board/old2-${i}`, postedOn: 'Posted 30+ Days Ago' })) };
-  }, { sinceMs: wideSinceMs, includeUndated: true }));
-  if (wideRequests === 2 && wideJobs.length === 40) {
-    pass('workday.fetch() never early-stops off the unbounded "30+ Days Ago" bucket');
-  } else {
-    fail(`workday wide-since: requests=${wideRequests}, jobs=${wideJobs.length} (expected 2/40)`);
-  }
-
-  // fetch() cap-hit warning — reverse-scan context (ctx.sinceMs set, as
-  // scan-ats-full.mjs always does) where entries are synthesized from an
-  // external dataset, not portals.yml: there's no portal entry to edit, and
-  // — per the "no fixed cap can guarantee full coverage" conclusion — no
-  // fix to advise at all, so the message is just the short fact, with
-  // neither "raise max_pages" nor a portals.yml edit suggested.
-  // includeUndated: true forces this past the no-date-skip short-circuit
-  // (tested separately below) so the fetch actually reaches the cap.
-  const noDateSinceMs = nowMs - SINCE_DAYS * 86_400_000;
-  const noDateWarnings = [];
-  console.error = (msg) => noDateWarnings.push(msg);
-  try {
-    await workday.fetch(entry, mkWorkdayCtx(async () => ({
-      total: 1_000_000,
-      jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `NoDate ${i}`, externalPath: `/job/board/nodate-${i}` })), // no postedOn
-    }), { sinceMs: noDateSinceMs, includeUndated: true }));
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (noDateWarnings.some(w => /truncated at \d+ pages/.test(w))) {
-    pass('workday.fetch() cap-hit warning fires in reverse-scan context (tenant has no dates, includeUndated on)');
-  } else {
-    fail(`workday no-date cap warning missing: ${JSON.stringify(noDateWarnings)}`);
-  }
-  if (!noDateWarnings.some(w => /raise max_pages|portal entry|portals\.yml/.test(w))) {
-    pass('workday.fetch() reverse-scan cap warning gives no inactionable advice (no portal entry to edit)');
-  } else {
-    fail(`workday reverse-scan cap warning should not suggest editing a portal entry: ${JSON.stringify(noDateWarnings)}`);
-  }
-
-  // fetch() no-date-skip — the default case (includeUndated NOT set, as
-  // scan-ats-full.mjs leaves it by default): a tenant whose first page has
-  // zero dated postings stops right there instead of grinding through up to
-  // maxPages requests whose results would all be dropped as 'undated'
-  // downstream anyway. Only 1 request should fire, not maxPages (100).
-  const skipSinceMs = nowMs - SINCE_DAYS * 86_400_000;
-  let skipRequests = 0;
-  const skipWarnings = [];
-  console.error = (msg) => skipWarnings.push(msg);
-  let skipJobs;
-  try {
-    skipJobs = await workday.fetch(entry, mkWorkdayCtx(async () => {
-      skipRequests++;
-      return {
-        total: 1_000_000,
-        jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `NoDate ${i}`, externalPath: `/job/board/skip-${i}` })), // no postedOn
-      };
-    }, { sinceMs: skipSinceMs })); // includeUndated intentionally omitted — the default, falsy case
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (skipRequests === 1 && skipJobs.length === 20) {
-    pass('workday.fetch() skips pagination after page 1 when includeUndated is off and the tenant has no dated postings');
-  } else {
-    fail(`workday no-date-skip: requests=${skipRequests}, jobs=${skipJobs.length} (expected 1/20)`);
-  }
-  // A full-directory scan hits this on a large fraction of tenants — a
-  // console.error per occurrence would just be the same line thousands of
-  // times, so the signal is a tag on the returned array instead (aggregated
-  // by scan-ats-full.mjs into one summary line at the end of the run).
-  if (skipJobs.workdayNoDateSkip === true) {
-    pass('workday.fetch() tags the returned jobs array for no-date-skip aggregation');
-  } else {
-    fail(`workday no-date-skip tag missing: jobs.workdayNoDateSkip = ${JSON.stringify(skipJobs.workdayNoDateSkip)}`);
-  }
-  if (skipWarnings.length === 0) {
-    pass('workday.fetch() does not console.error per-company on a no-date-skip (aggregated instead)');
-  } else {
-    fail(`workday no-date-skip should not log anything directly: ${JSON.stringify(skipWarnings)}`);
-  }
-
-  // fetch() no-date-skip — does NOT trigger when includeUndated is true (the
-  // "hit the cap while genuinely undated" scenario above already covers that
-  // the fetch continues in that case); this just re-confirms the gate.
-  let noSkipWithIncludeUndatedRequests = 0;
-  const noSkipJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
-    noSkipWithIncludeUndatedRequests++;
-    const body = JSON.parse(opts.body);
-    if (body.offset === 0) return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `ND ${i}`, externalPath: `/job/board/nd-${i}` })) };
-    return { total: 40, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `ND2 ${i}`, externalPath: `/job/board/nd2-${i}` })) };
-  }, { sinceMs: skipSinceMs, includeUndated: true }));
-  if (noSkipWithIncludeUndatedRequests === 2 && noSkipJobs.length === 40) {
-    pass('workday.fetch() does not no-date-skip when includeUndated is true');
-  } else {
-    fail(`workday no-date-skip gate: requests=${noSkipWithIncludeUndatedRequests}, jobs=${noSkipJobs.length} (expected 2/40)`);
-  }
-
-  // fetch() cap-hit warning — reverse-scan context, tenant genuinely has
-  // more within --since than the cap allows (total far above the window,
-  // e.g. cvshealth-scale): short line, no suspect-cap tag.
-  const datedCapSinceMs = nowMs - SINCE_DAYS * 86_400_000;
-  const datedCapWarnings = [];
-  console.error = (msg) => datedCapWarnings.push(msg);
-  try {
-    await workday.fetch(entry, mkWorkdayCtx(async () => ({
-      total: 1_000_000,
-      jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Fresh ${i}`, externalPath: `/job/board/fresh-${i}`, postedOn: 'Posted Today' })),
-    }), { sinceMs: datedCapSinceMs }));
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (datedCapWarnings.some(w => /truncated at \d+ pages \(2000 of 1000000 jobs\)/.test(w))) {
-    pass('workday.fetch() cap-hit warning reports the short "truncated at N pages" form');
-  } else {
-    fail(`workday dated cap-hit warning mismatch: ${JSON.stringify(datedCapWarnings)}`);
-  }
-  if (!datedCapWarnings.some(w => /Workday-capped/.test(w))) {
-    pass('workday.fetch() cap-hit warning omits the suspected-Workday-cap tag when total is far above the window');
-  } else {
-    fail(`workday cap-hit warning should not suspect a Workday-side cap here (total=1,000,000, window=2,000): ${JSON.stringify(datedCapWarnings)}`);
-  }
-
-  // fetch() cap-hit warning — Workday's own CXS backend has been observed
-  // reporting `total` as exactly maxPages*PAGE_SIZE even when the real count
-  // is far higher (verified live: dickssportinggoods reported total=2000 but
-  // its public careers page listed 7,120 openings, and offset=2000/4000
-  // requests returned the same first posting as offset=0 instead of new
-  // results). This exact-match case must carry a distinct, short tag.
-  const suspectCapSinceMs = nowMs - SINCE_DAYS * 86_400_000;
-  const suspectCapWarnings = [];
-  console.error = (msg) => suspectCapWarnings.push(msg);
-  try {
-    await workday.fetch(entry, mkWorkdayCtx(async () => ({
-      total: 2000, // === DEFAULT_MAX_PAGES (100) * PAGE_SIZE (20)
-      jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Suspect ${i}`, externalPath: `/job/board/suspect-${i}`, postedOn: 'Posted Today' })),
-    }), { sinceMs: suspectCapSinceMs }));
-  } finally {
-    console.error = originalConsoleError;
-  }
-  if (suspectCapWarnings.some(w => /\(total may be Workday-capped, not real\)/.test(w))) {
-    pass('workday.fetch() cap-hit warning flags a suspected Workday-side total cap when total === maxPages*PAGE_SIZE');
-  } else {
-    fail(`workday suspected-cap tag missing: ${JSON.stringify(suspectCapWarnings)}`);
-  }
-
-  // Verify POST method was used
-  let capturedMethod = null;
-  await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => { capturedMethod = opts?.method; return { total: 0, jobPostings: [] }; }));
-  if (capturedMethod === 'POST') pass('workday.fetch() uses POST method');
-  else fail(`workday.fetch() method is ${JSON.stringify(capturedMethod)}, expected POST`);
-
-  // Fallback: no total field — paginate sequentially until short page
-  let fallbackRequests = 0;
-  const fallbackJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
-    fallbackRequests++;
-    const body = JSON.parse(opts.body);
-    if (body.offset === 0) return { jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `FB P1-${i}`, externalPath: `/job/board/fb-${i}` })) };
-    return { jobPostings: Array.from({ length: 5 }, (_, i) => ({ title: `FB P2-${i}`, externalPath: `/job/board/fb2-${i}` })) };
-  }));
-  if (fallbackRequests === 2 && fallbackJobs.length === 25) {
-    pass('workday.fetch() fallback (no total): paginates sequentially, stops on short page (20+5=25)');
-  } else {
-    fail(`fallback pagination: requests=${fallbackRequests}, jobs=${fallbackJobs.length} (expected 2/25)`);
-  }
-
-} catch (e) {
-  fail(`workday provider tests crashed: ${e.message}`);
-}
-
-// ── 54. _http.mjs — error messages are status code + reason phrase only ──
-// WAF challenge pages (seen live: Workday 429s) carry no actionable text —
-// whether it's raw HTML markup or a human-readable challenge page ("Security
-// Check ... Support ID: ... Client IP: ..."), neither tells the caller
-// anything useful. The status code and its standard reason phrase carry the
-// signal instead; the raw body is still attached as err.body for callers
-// that parse it (providers/glints.mjs does, for its own error detail
-// extraction).
-
-console.log('\n54. _http.mjs — error message is status + reason phrase only');
-
-try {
-  const { fetchJson } = await import(pathToFileURL(join(ROOT, 'providers/_http.mjs')).href);
-  const originalFetch = globalThis.fetch;
-
-  const mockFetch = (status, statusText, body, headers = {}) => async () => ({
-    ok: false,
-    status,
-    statusText,
-    text: async () => body,
-    headers: { get: (name) => headers[name.toLowerCase()] ?? null },
-  });
-
-  try {
-    globalThis.fetch = mockFetch(429, 'Too Many Requests', '<!DOCTYPE html><html><body><style>body{color:red}</style>Security Check Enable JavaScript and cookies to continue Support ID: 0000000000000000 – Client IP: 203.0.113.42</body></html>', { 'content-type': 'text/html; charset=utf-8' });
-    let err;
-    try { await fetchJson('https://example.com/api'); } catch (e2) { err = e2; }
-    if (err?.message === 'HTTP 429 Too Many Requests') {
-      pass('_http.mjs builds the error message from status + reason phrase only');
-    } else {
-      fail(`error message = ${JSON.stringify(err?.message)}, expected "HTTP 429 Too Many Requests"`);
-    }
-    if (err && !/Security Check|Support ID|Client IP|<style>|<html/i.test(err.message)) {
-      pass('_http.mjs excludes the response body from the error message entirely (HTML or plain text)');
-    } else {
-      fail(`error message should not contain any body text: ${JSON.stringify(err?.message)}`);
-    }
-    if (err?.status === 429) pass('_http.mjs sets err.status from the response');
-    else fail(`err.status = ${JSON.stringify(err?.status)}, expected 429`);
-    if (err?.body?.includes('Support ID')) {
-      pass('_http.mjs still attaches the raw body as err.body for callers that need it (e.g. providers/glints.mjs)');
-    } else {
-      fail(`err.body missing or altered: ${JSON.stringify(err?.body)}`);
-    }
-
-    // No statusText available (some mocked/edge responses omit it) — falls
-    // back to just the status code, no trailing space or "undefined".
-    globalThis.fetch = mockFetch(503, '', 'irrelevant body');
-    let noReasonErr;
-    try { await fetchJson('https://example.com/api'); } catch (e2) { noReasonErr = e2; }
-    if (noReasonErr?.message === 'HTTP 503') {
-      pass('_http.mjs falls back to just the status code when statusText is empty');
-    } else {
-      fail(`error message = ${JSON.stringify(noReasonErr?.message)}, expected "HTTP 503"`);
-    }
-
-    // Retry-After header is captured onto the error for callers (workday.mjs) to use.
-    globalThis.fetch = mockFetch(429, 'Too Many Requests', '', { 'retry-after': '7' });
-    let retryAfterErr;
-    try { await fetchJson('https://example.com/api'); } catch (e2) { retryAfterErr = e2; }
-    if (retryAfterErr?.retryAfter === '7') pass('_http.mjs captures the Retry-After header onto the error');
-    else fail(`err.retryAfter = ${JSON.stringify(retryAfterErr?.retryAfter)}, expected "7"`);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-} catch (e) {
-  fail(`_http.mjs error message tests crashed: ${e.message}`);
-}
-
-// ── 52. Provider — getonbrd ─────────────────────────────────────
-console.log('\n52. Provider — getonbrd');
-
-try {
-  const getonbrdModule = await import(pathToFileURL(join(ROOT, 'providers/getonbrd.mjs')).href);
-  const getonbrd = getonbrdModule.default;
-
-  if (getonbrd.id === 'getonbrd') pass('getonbrd.id is "getonbrd"');
-  else fail(`getonbrd.id is ${JSON.stringify(getonbrd.id)}`);
-
-  // Deterministic JSON:API sample — no network. Two valid jobs plus two dropped
-  // (empty title, non-absolute url).
-  const sample = {
-    data: [
-      {
-        attributes: {
-          title: 'Staff AI Engineer',
-          remote: true,
-          countries: 'Remote',
-          company: { data: { attributes: { name: 'Acme Corp' } } },
-        },
-        links: { public_url: 'https://www.getonbrd.com/jobs/acme-staff-ai-engineer' },
-      },
-      {
-        attributes: {
-          title: '  Platform Engineer  ',                  // leading/trailing space → trimmed
-          remote: false,
-          countries: ['Chile'],                            // live API sends an array of country names
-          published_at: 1700000000,                        // epoch seconds → postedAt in ms
-          company: { data: { attributes: { name: '' } } }, // empty → falls back to entry.name
-        },
-        links: { public_url: '  https://www.getonbrd.com/jobs/beta-platform-engineer  ' },
-      },
-      {
-        attributes: { title: '', company: { data: { attributes: { name: 'Bad Co' } } } }, // dropped: empty title
-        links: { public_url: 'https://www.getonbrd.com/jobs/bad-empty-title' },
-      },
-      {
-        attributes: { title: 'Relative URL Role', remote: true },                          // dropped: non-absolute url
-        links: { public_url: '/jobs/relative' },
-      },
-    ],
-  };
-
-  let capturedUrl = null;
-  let capturedOpts = null;
-  const fetched = await getonbrd.fetch(
-    { name: 'GetOnBoard Feed', provider: 'getonbrd' },
-    { fetchJson: async (url, opts) => { capturedUrl = url; capturedOpts = opts; return sample; } },
-  );
-
-  if (capturedUrl === 'https://www.getonbrd.com/api/v0/categories/programming/jobs?per_page=100&expand[]=company&page=1')
-    pass('getonbrd.fetch() requests the board-wide category feed URL (page 1)');
-  else fail(`getonbrd.fetch() requested ${JSON.stringify(capturedUrl)}`);
-
-  if (capturedOpts && capturedOpts.redirect === 'error')
-    pass('getonbrd.fetch() passes redirect:"error" to fetchJson (SSRF guard)');
-  else fail(`getonbrd.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
-
-  if (fetched.length === 2)
-    pass('getonbrd.fetch() keeps 2 valid jobs (drops empty-title + non-absolute-url rows)');
-  else fail(`getonbrd.fetch() returned ${fetched.length} jobs (expected 2)`);
-
-  if (fetched[0] && Object.keys(fetched[0]).sort().join(',') === 'company,location,title,url')
-    pass('getonbrd.fetch() returns the normalized { title, url, company, location } shape');
-  else fail(`getonbrd.fetch() row 0 keys = ${JSON.stringify(fetched[0] && Object.keys(fetched[0]))}`);
-
-  if (fetched[0]?.title === 'Staff AI Engineer'
-      && fetched[0]?.url === 'https://www.getonbrd.com/jobs/acme-staff-ai-engineer'
-      && fetched[0]?.company === 'Acme Corp'
-      && fetched[0]?.location === 'Remote')
-    pass('getonbrd.fetch() maps title/url/company and uses "Remote" when remote===true');
-  else fail(`getonbrd.fetch() row 0 = ${JSON.stringify(fetched[0])}`);
-
-  if (fetched[1]?.title === 'Platform Engineer'
-      && fetched[1]?.url === 'https://www.getonbrd.com/jobs/beta-platform-engineer')
-    pass('getonbrd.fetch() trims whitespace from title and url');
-  else fail(`getonbrd.fetch() row 1 title/url = ${JSON.stringify({ title: fetched[1]?.title, url: fetched[1]?.url })}`);
-
-  if (fetched[1]?.company === 'GetOnBoard Feed')
-    pass('getonbrd.fetch() falls back to entry.name when the company name is empty');
-  else fail(`getonbrd.fetch() row 1 company = ${JSON.stringify(fetched[1]?.company)}`);
-
-  if (fetched[1]?.location === 'Chile')
-    pass('getonbrd.fetch() joins the countries array into location when not remote');
-  else fail(`getonbrd.fetch() row 1 location = ${JSON.stringify(fetched[1]?.location)}`);
-
-  if (fetched[1]?.postedAt === 1700000000 * 1000)
-    pass('getonbrd.fetch() maps published_at (epoch seconds) to postedAt in ms');
-  else fail(`getonbrd.fetch() row 1 postedAt = ${JSON.stringify(fetched[1]?.postedAt)}`);
-
-  const noName = await getonbrd.fetch(
-    {},
-    { fetchJson: async () => ({ data: [{ attributes: { title: 'Role', remote: true }, links: { public_url: 'https://www.getonbrd.com/jobs/x' } }] }) },
-  );
-  if (noName[0]?.company === 'Get on Board')
-    pass('getonbrd.fetch() defaults company to "Get on Board" when name and entry.name are both missing');
-  else fail(`getonbrd.fetch() default company = ${JSON.stringify(noName[0]?.company)}`);
-
-  let badResponseThrew = false;
-  try {
-    await getonbrd.fetch(
-      { name: 'X', provider: 'getonbrd' },
-      { fetchJson: async () => ({ wrong: true }) },
-    );
-  } catch (e) {
-    badResponseThrew = /unexpected API response/.test(e.message);
-  }
-  if (badResponseThrew) pass('getonbrd.fetch() throws on unexpected API response shape');
-  else fail('getonbrd.fetch() should throw when the data array is absent');
-
-  // Pagination: a full first page (=per_page) is followed until a short page.
-  const mkJob = i => ({ attributes: { title: `Role ${i}`, remote: true }, links: { public_url: `https://www.getonbrd.com/jobs/role-${i}` } });
-  const fullPage = { data: Array.from({ length: 100 }, (_, i) => mkJob(i)) };
-  const shortPage = { data: [mkJob(999)] };
-
-  const pageCalls = [];
-  const paged = await getonbrd.fetch(
-    { name: 'GOB', provider: 'getonbrd' },
-    { fetchJson: async (url, opts) => { pageCalls.push({ url, opts }); return pageCalls.length === 1 ? fullPage : shortPage; } },
-  );
-  const pageUrls = pageCalls.map((c) => c.url);
-  if (pageCalls.length === 2 && /[?&]page=1(?:&|$)/.test(pageUrls[0]) && /[?&]page=2(?:&|$)/.test(pageUrls[1]))
-    pass('getonbrd.fetch() paginates ?page=N until a short page is returned');
-  else fail(`getonbrd.fetch() page URLs = ${JSON.stringify(pageUrls)}`);
-
-  if (pageCalls.length > 1 && pageCalls.every((c) => c.opts && c.opts.redirect === 'error'))
-    pass('getonbrd.fetch() passes redirect:"error" on every paginated request (not just page 1)');
-  else fail(`getonbrd.fetch() paginated opts = ${JSON.stringify(pageCalls.map((c) => c.opts))}`);
-
-  if (paged.length === 101)
-    pass('getonbrd.fetch() accumulates jobs across pages (100 + 1)');
-  else fail(`getonbrd.fetch() paginated total = ${paged.length} (expected 101)`);
-
-  const capCalls = [];
-  await getonbrd.fetch(
-    { name: 'GOB', max_pages: 1 },
-    { fetchJson: async (url) => { capCalls.push(url); return fullPage; } },
-  );
-  if (capCalls.length === 1)
-    pass('getonbrd.fetch() respects the max_pages override (stops after 1 page)');
-  else fail(`getonbrd.fetch() max_pages=1 made ${capCalls.length} page calls`);
-
-} catch (e) {
-  fail(`getonbrd provider tests crashed: ${e.message}`);
-}
-
-console.log('\n55. Provider — amazon (amazon.jobs search.json)');
-
-try {
-  const amazon = (await import(pathToFileURL(join(ROOT, 'providers/amazon.mjs')).href)).default;
-
-  if (amazon.id === 'amazon') pass('amazon.id is "amazon"');
-  else fail(`amazon.id is ${JSON.stringify(amazon.id)}`);
-
-  // detect() — host match, not path-spoof, https + non-string safe
-  if (amazon.detect({ name: 'X', careers_url: 'https://www.amazon.jobs/en/search' })) pass('amazon.detect() claims an amazon.jobs URL');
-  else fail('amazon.detect() should claim amazon.jobs');
-  if (amazon.detect({ name: 'X', careers_url: 'https://evil.example/www.amazon.jobs/x' }) === null) pass('amazon.detect() rejects a path-spoofed URL');
-  else fail('amazon.detect() must reject path-spoofed URLs');
-  if (amazon.detect({ name: 'X', careers_url: 42 }) === null) pass('amazon.detect() returns null for non-string careers_url');
-  else fail('amazon.detect() should return null for non-string careers_url');
-
-  // fetch() with a mock ctx — captures the request URL (to assert facet
-  // bracket-encoding) and returns a canned page, exercising the real mapping.
-  const calls = [];
-  const page1 = {
-    jobs: [
-      { title: '  Automation Engineer  ', job_path: '/en/jobs/111/automation-engineer', normalized_location: 'Erfurt, Thuringia, DEU', posted_date: 'July  1, 2026', updated_time: '10 minutes', company_name: 'Amazon' },
-      { title: 'SDE', job_path: 'https://www.amazon.jobs/en/jobs/222/sde', location: 'Berlin, DEU', posted_date: 'June 29, 2026' },
-      { title: 'No Path', normalized_location: 'X' }, // dropped — no job_path
-    ],
-  };
-  const mockCtx = {
-    transport: 'http',
-    async fetchJson(url) { calls.push(url); return calls.length === 1 ? page1 : { jobs: [] }; },
-    async fetchText() { return ''; },
-  };
-  const jobs = await amazon.fetch({ name: 'Amazon', amazon: { normalized_country_code: ['DEU'], base_query: 'engineer' } }, mockCtx);
-
-  if (jobs.length === 2) pass('amazon.fetch maps valid jobs, drops job_path-less entries');
-  else fail(`amazon.fetch returned ${jobs.length} jobs, expected 2`);
-  if (calls[0] && calls[0].includes('normalized_country_code%5B%5D=DEU')) pass('amazon.fetch bracket-encodes array facets (normalized_country_code[]=DEU)');
-  else fail(`amazon.fetch facet encoding wrong: ${calls[0]}`);
-  if (calls[0] && calls[0].includes('result_limit=100')) pass('amazon.fetch requests result_limit=100');
-  else fail('amazon.fetch should set result_limit=100');
-  const j1 = jobs.find((j) => j.url.includes('/111/'));
-  if (j1 && j1.title === 'Automation Engineer') pass('amazon.fetch trims the title');
-  else fail(`amazon.fetch title wrong: ${JSON.stringify(j1 && j1.title)}`);
-  if (j1 && j1.url === 'https://www.amazon.jobs/en/jobs/111/automation-engineer') pass('amazon.fetch builds an absolute URL from job_path');
-  else fail(`amazon.fetch url wrong: ${JSON.stringify(j1 && j1.url)}`);
-  if (j1 && j1.postedAt === Date.parse('July 1, 2026')) pass('amazon.fetch parses posted_date (ignores relative updated_time)');
-  else fail(`amazon.fetch postedAt wrong: ${JSON.stringify(j1 && j1.postedAt)}`);
-  const j2 = jobs.find((j) => j.url.includes('/222/'));
-  if (j2 && j2.url === 'https://www.amazon.jobs/en/jobs/222/sde') pass('amazon.fetch keeps an already-absolute job_path');
-  else fail(`amazon.fetch absolute url wrong: ${JSON.stringify(j2 && j2.url)}`);
-} catch (e) {
-  fail(`amazon provider tests crashed: ${e.message}`);
-}
-
-console.log('\n56. Provider — avature (career-site SearchJobs parser)');
-
-try {
-  const avature = (await import(pathToFileURL(join(ROOT, 'providers/avature.mjs')).href)).default;
-  const { parseArticles } = await import(pathToFileURL(join(ROOT, 'providers/avature.mjs')).href);
-
-  if (avature.id === 'avature') pass('avature.id is "avature"');
-  else fail(`avature.id is ${JSON.stringify(avature.id)}`);
-
-  if (avature.detect({ name: 'X', careers_url: 'https://acme.avature.net/careers/SearchJobs' })) pass('avature.detect() claims a *.avature.net URL');
-  else fail('avature.detect() should claim *.avature.net');
-  if (avature.detect({ name: 'X', careers_url: 'https://evil.example/x.avature.net/y' }) === null) pass('avature.detect() rejects a path-spoofed URL');
-  else fail('avature.detect() must reject path-spoofed URLs');
-
-  // parseArticles — a compact fragment: one article with a locale-prefixed
-  // JobDetail path + a posted date, one with no JobDetail link (dropped).
-  const origin = 'https://acme.avature.net';
-  const fragment = `
-    <article class="article article--result" id="article--1">
-      <div class="article__header"><div class="article__header__text">
-        <h3 class="title"><a class="link" href="https://acme.avature.net/careers/JobDetail/Senior-PLM-Engineer-17304/17304?businessTitle=PLM">Senior PLM Engineer &amp; Architect</a></h3>
-        <div class="article__header__text__subtitle"><span class="list-item-jobId">Job ID 17304</span><span class="list-item-posted">Posted 02-May-2026</span></div>
-      </div></div>
-    </article>
-    <article class="article article--result" id="article--2">
-      <h3 class="title"><a class="link" href="/en_US/searchjobs/JobDetail/Data-Engineer-900/900">Data Engineer</a></h3>
-      <span class="list-item-location">Munich, Germany</span>
-    </article>
-    <article class="article article--result" id="article--3">
-      <h3 class="title"><span>No link here</span></h3>
-    </article>`;
-  const arts = parseArticles(fragment, origin);
-
-  if (arts.length === 2) pass('parseArticles returns 2 articles (link-less one dropped)');
-  else fail(`parseArticles returned ${arts.length}, expected 2`);
-  const a1 = arts.find((a) => a.id === '17304');
-  if (a1 && a1.title === 'Senior PLM Engineer & Architect') pass('parseArticles decodes the title entity');
-  else fail(`parseArticles title wrong: ${JSON.stringify(a1 && a1.title)}`);
-  if (a1 && a1.url === 'https://acme.avature.net/careers/JobDetail/Senior-PLM-Engineer-17304/17304?businessTitle=PLM') pass('parseArticles keeps the absolute JobDetail URL');
-  else fail(`parseArticles url wrong: ${JSON.stringify(a1 && a1.url)}`);
-  if (a1 && a1.postedAt === Date.UTC(2026, 4, 2)) pass('parseArticles parses "Posted 02-May-2026"');
-  else fail(`parseArticles postedAt wrong: ${JSON.stringify(a1 && a1.postedAt)}`);
-  const a2 = arts.find((a) => a.id === '900');
-  if (a2 && a2.url === 'https://acme.avature.net/en_US/searchjobs/JobDetail/Data-Engineer-900/900') pass('parseArticles resolves a relative locale-prefixed JobDetail path');
-  else fail(`parseArticles relative url wrong: ${JSON.stringify(a2 && a2.url)}`);
-  if (a2 && a2.location === 'Munich, Germany') pass('parseArticles extracts a rendered location when present');
-  else fail(`parseArticles location wrong: ${JSON.stringify(a2 && a2.location)}`);
-  if (parseArticles('<div>no articles</div>', origin).length === 0) pass('parseArticles returns [] when no articles present');
-  else fail('parseArticles should return [] for markup with no articles');
-
-  // Tenant markup variants: Siemens appends a position index to the result
-  // class ("article--result 1"); Rohde & Schwarz renders the title anchor with
-  // no class="link". Both must still parse. (Regressions found on live tenants.)
-  const variants = `
-    <article class="article article--result 1" id="article--1">
-      <h3 class="title"><a class="link" href="https://acme.avature.net/en_US/externaljobs/JobDetail/Head-of-PLM/511918">Head of PLM</a></h3>
-    </article>
-    <article class="article article--result" id="article--2">
-      <h3 class="title"><a href="https://acme.avature.net/en_US/careers/JobDetail/Director-Platform/13672">Director Platform Engineering</a></h3>
-    </article>`;
-  const vArts = parseArticles(variants, origin);
-  const vSuffix = vArts.find((a) => a.id === '511918');
-  if (vSuffix && vSuffix.title === 'Head of PLM') pass('parseArticles handles the "article--result 1" class suffix (Siemens)');
-  else fail(`parseArticles missed the class-suffix variant: ${JSON.stringify(vArts.map((a) => a.id))}`);
-  const vNoClass = vArts.find((a) => a.id === '13672');
-  if (vNoClass && vNoClass.title === 'Director Platform Engineering') pass('parseArticles falls back to a JobDetail anchor without class="link" (Rohde & Schwarz)');
-  else fail(`parseArticles missed the no-class-link variant: ${JSON.stringify(vArts.map((a) => a.id))}`);
-} catch (e) {
-  fail(`avature provider tests crashed: ${e.message}`);
-}
-
-console.log('\n57. Provider — dassault (Exalead card_search_api XML parser)');
-try {
-  const dassault = (await import(pathToFileURL(join(ROOT, 'providers/dassault.mjs')).href)).default;
-  const { parseHits, buildUrl } = await import(pathToFileURL(join(ROOT, 'providers/dassault.mjs')).href);
-
-  if (dassault.id === 'dassault') pass('dassault.id is "dassault"');
-  else fail(`dassault.id is ${JSON.stringify(dassault.id)}`);
-
-  // Build a minimal Exalead <Hit> block from field values.
-  const mkHit = (f) => {
-    const meta = (n, v) => (v === undefined ? '' : `<Meta name="${n}"><MetaString name="value">${v}</MetaString></Meta>`);
-    return `<Hit did="d" url="x">${'<groups>ignored</groups>'}<metas>` +
-      meta('content_title', f.title) +
-      meta('content_cta_1_url', f.cta1) +
-      meta('content_categories', f.cats) +
-      meta('card_id', f.id) +
-      meta('content_start_datetime', f.start) +
-      meta('card_update_timestamp', f.update) +
-      `</metas></Hit>`;
-  };
-
-  // Happy path — 2 distinct hits: entity decode, location parse, date fields.
-  const xmlA = `<Answer nhits="2"><hits>` +
-    mkHit({ id: '111', title: 'Software Engineer &amp; Data', cta1: 'https://www.3ds.com/careers/jobs/x-111?a=1&amp;b=2', cats: 'Category/R&amp;D Type/Regular Country/Germany City/Germany, Munich Products/CATIA Year/4 to 5 years', update: '2026/07/03 18:22:13' }) +
-    mkHit({ id: '222', title: 'Data Scientist', cta1: 'https://www.3ds.com/careers/jobs/y-222', cats: 'Category/Sales Type/Regular Country/France City/France, Vélizy-Villacoublay Products/DELMIA', start: '2026/06/01 09:00:00' }) +
-    `</hits></Answer>`;
-  const a = parseHits(xmlA, 'Dassault Systèmes');
-  if (a.length === 2) pass('dassault.parseHits() extracts 2 jobs');
-  else fail(`dassault.parseHits() returned ${a.length} jobs`);
-
-  if (a[0]?.title === 'Software Engineer & Data') pass('dassault.parseHits() decodes &amp; in title');
-  else fail(`title = ${JSON.stringify(a[0]?.title)}`);
-
-  if (a[0]?.url === 'https://www.3ds.com/careers/jobs/x-111?a=1&b=2') pass('dassault.parseHits() decodes &amp; in url');
-  else fail(`url = ${JSON.stringify(a[0]?.url)}`);
-
-  if (a[0]?.location === 'Germany, Munich') pass('dassault.parseHits() parses City from content_categories');
-  else fail(`location = ${JSON.stringify(a[0]?.location)}`);
-
-  if (a[0]?.company === 'Dassault Systèmes') pass('dassault.parseHits() sets company from entry name');
-  else fail(`company = ${JSON.stringify(a[0]?.company)}`);
-
-  // postedAt: hit 0 falls back to card_update_timestamp; hit 1 prefers content_start_datetime.
-  if (a[0]?.postedAt === Date.UTC(2026, 6, 3, 18, 22, 13)) pass('dassault.parseHits() postedAt falls back to card_update_timestamp');
-  else fail(`postedAt[0] = ${JSON.stringify(a[0]?.postedAt)}`);
-
-  if (a[1]?.postedAt === Date.UTC(2026, 5, 1, 9, 0, 0)) pass('dassault.parseHits() postedAt prefers content_start_datetime');
-  else fail(`postedAt[1] = ${JSON.stringify(a[1]?.postedAt)}`);
-
-  if (a[1]?.location === 'France, Vélizy-Villacoublay') pass('dassault.parseHits() parses multi-word City value');
-  else fail(`location[1] = ${JSON.stringify(a[1]?.location)}`);
-
-  // parseHits carries an internal _id for cross-page dedup; fetch() strips it (asserted below).
-  if ('_id' in a[0]) pass('dassault.parseHits() exposes internal _id for cross-page dedup');
-  else fail('dassault.parseHits() should carry _id for the fetch loop');
-
-  // Dedup by card_id — two hits with the same id collapse to one job.
-  const xmlDup = `<Answer><hits>` +
-    mkHit({ id: '333', title: 'Role A', cta1: 'https://www.3ds.com/careers/jobs/a-333' }) +
-    mkHit({ id: '333', title: 'Role A (dup)', cta1: 'https://www.3ds.com/careers/jobs/a-333' }) +
-    `</hits></Answer>`;
-  const dup = parseHits(xmlDup, 'Dassault Systèmes');
-  if (dup.length === 1) pass('dassault.parseHits() dedups by card_id');
-  else fail(`dassault.parseHits() dedup returned ${dup.length} jobs`);
-
-  // Safety net — a non-3ds.com posting (aggregated third-party content) is dropped.
-  const xmlForeign = `<Answer><hits>` +
-    mkHit({ id: '444', title: 'Real 3DS Job', cta1: 'https://www.3ds.com/careers/jobs/real-444' }) +
-    mkHit({ id: 'abc', title: 'External Aggregated Job', cta1: 'https://careers.bcit.ca/postings/10516' }) +
-    `</hits></Answer>`;
-  const foreign = parseHits(xmlForeign, 'Dassault Systèmes');
-  if (foreign.length === 1 && foreign[0].title === 'Real 3DS Job') pass('dassault.parseHits() drops non-3ds.com postings');
-  else fail(`dassault.parseHits() foreign filter returned ${JSON.stringify(foreign.map(j => j.title))}`);
-
-  // Empty / hit-less XML → []
-  if (parseHits('', 'X').length === 0 && parseHits('<Answer nhits="0"><hits></hits></Answer>', 'X').length === 0) {
-    pass('dassault.parseHits() returns [] for empty / hit-less XML');
-  } else {
-    fail('dassault.parseHits() should return [] for empty / hit-less XML');
-  }
-
-  // buildUrl — both refinements + start offset, correctly encoded.
-  const u = buildUrl(20);
-  if (u.includes('start=20') && u.includes('card_content_type%2Fcareer') && u.includes('cards+language%2Fen')) {
-    pass('dassault.buildUrl() emits both refinements and the start offset');
-  } else {
-    fail(`dassault.buildUrl(20) = ${u}`);
-  }
-
-  // detect — *.3ds.com matches by host; spoofs and non-strings return null.
-  if (dassault.detect({ careers_url: 'https://www.3ds.com/careers/jobs' })) pass('dassault.detect() matches www.3ds.com');
-  else fail('dassault.detect() should match www.3ds.com');
-
-  if (dassault.detect({ api: 'https://talentacquisition.3ds.com/x' })) pass('dassault.detect() matches *.3ds.com subdomains');
-  else fail('dassault.detect() should match *.3ds.com');
-
-  if (dassault.detect({ careers_url: 'https://evil.com/x.3ds.com' }) === null) pass('dassault.detect() rejects path-spoofed host');
-  else fail('dassault.detect() should reject path-spoofed host');
-
-  if (dassault.detect({ careers_url: 'https://3ds.com.evil.com/x' }) === null) pass('dassault.detect() rejects suffix-spoofed host');
-  else fail('dassault.detect() should reject suffix-spoofed host');
-
-  if (dassault.detect({ careers_url: 42 }) === null && dassault.detect({}) === null) pass('dassault.detect() returns null for non-string / missing url');
-  else fail('dassault.detect() should return null for non-string / missing url');
-
-  // fetch — paginates via mock ctx, dedups across pages, stops on empty page.
-  const pages = [
-    `<Answer><hits>${mkHit({ id: 'p1', title: 'A', cta1: 'https://www.3ds.com/careers/jobs/a-p1' })}${mkHit({ id: 'p2', title: 'B', cta1: 'https://www.3ds.com/careers/jobs/b-p2' })}</hits></Answer>`,
-    `<Answer><hits>${mkHit({ id: 'p2', title: 'B dup', cta1: 'https://www.3ds.com/careers/jobs/b-p2' })}${mkHit({ id: 'p3', title: 'C', cta1: 'https://www.3ds.com/careers/jobs/c-p3' })}</hits></Answer>`,
-    `<Answer><hits></hits></Answer>`,
-  ];
-  let calls = 0;
-  const mockCtx = { fetchText: async () => pages[calls++] ?? '<Answer><hits></hits></Answer>' };
-  const fetched = await dassault.fetch({ name: 'Dassault Systèmes' }, mockCtx);
-  if (fetched.length === 3 && new Set(fetched.map(j => j.url)).size === 3) pass('dassault.fetch() paginates and dedups across pages');
-  else fail(`dassault.fetch() returned ${fetched.length} jobs (${JSON.stringify(fetched.map(j => j.title))})`);
-
-  if (fetched.every(j => !('_id' in j))) pass('dassault.fetch() strips the internal _id from returned jobs');
-  else fail('dassault.fetch() leaked _id into returned jobs');
-
-} catch (e) {
-  fail(`dassault provider tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
