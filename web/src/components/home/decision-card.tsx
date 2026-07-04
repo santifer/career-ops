@@ -52,14 +52,15 @@ export function DecisionCard({ app }: { app: Application }) {
         )}
       </div>
       <div className="flex items-center gap-2">
-        {/* Ghost, not a solid orange fill: a queue of decision cards would stack
-            6+ competing brand shouts (P5 — one shout per screen). Mirrors the
-            validated "Mark followed up" ghost; brand reveals on hover/intent. */}
+        {/* brand-soft AT REST (not a solid fill, not hover-only): a calm-but-
+            affirmative primary — a queue of these reads as gentle brand, not 6
+            solid shouts (P5), while staying visibly the positive action next to
+            the neutral Skip even on touch (no hover). */}
         <button
           type="button"
           disabled={!!busy}
           onClick={() => setStatus("Applied")}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-surface-hover px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-brand-soft hover:text-brand disabled:opacity-60"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-brand-soft px-2.5 py-1.5 text-xs font-medium text-brand transition hover:bg-brand/15 disabled:opacity-60"
         >
           {busy === "Applied" ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} Mark applied
         </button>
