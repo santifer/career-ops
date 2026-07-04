@@ -1,37 +1,12 @@
-// Standalone test for cleanChips() using Node's built-in test runner.
-// The web package has no test runner (no vitest/jest), so we use `node:test`.
-// cleanChips() is re-implemented inline from src/lib/explore.ts since .ts
-// can't be imported directly without a compiler/runner. The source is pure
-// JS with no external deps, so this mirror stays in sync by inspection.
+// Tests for cleanChips() using Node's built-in test runner.
+// Imports directly from clean-chips.mjs (the single source of truth) so the
+// test and production code can never drift out of sync.
 //
 // Run:  node --test test-clean-chips.mjs
-//
-// NOTE: When editing cleanChips in explore.ts, keep this copy in sync.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-
-const CHIP_CAP = 16;
-
-/** Trim, drop empties, de-dupe case-insensitively, cap length. */
-function cleanChips(v) {
-  if (v == null) return [];
-  const arr = Array.isArray(v) ? v : [v];
-  const seen = new Set();
-  const out = [];
-  for (const item of arr) {
-    if (typeof item !== "string") continue;
-    const k = item.trim();
-    if (!k) continue;
-    if (!/[\p{L}\p{N}]/u.test(k)) continue; // drop punctuation-only junk
-    const key = k.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(k);
-    if (out.length >= CHIP_CAP) break;
-  }
-  return out;
-}
+import { cleanChips } from "./src/lib/clean-chips.mjs";
 
 /** Split a raw input string the same way filter-builder's commit() does —
  *  on unambiguous item separators only (never bare spaces). */
@@ -71,11 +46,8 @@ test("carriage-return-separated → 3 chips", () => {
 
 test("mixed delimiters → 3 chips", () => {
   const parts = split("Afghanistan, Albania\nAlgeria; Algeria");
-  // "Algeria" and "Algeria" collide on last — wait, that's a typo in the
-  // spec example. The real expectation is 3 unique: Afghanistan, Albania,
-  // Algeria. The trailing "Algeria" is a duplicate of "Algeria" earlier in
-  // the string. But actually the string is "Afghanistan, Albania\nAlgeria;
-  // Algeria" — "Algeria" appears once. Re-reading: the spec says 3 chips.
+  // "Algeria" is duplicated (case-insensitive dedupe collapses it to 1),
+  // leaving 3 unique chips: Afghanistan, Albania, Algeria.
   assert.deepEqual(cleanChips(parts), ["Afghanistan", "Albania", "Algeria"]);
 });
 

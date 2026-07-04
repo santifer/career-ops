@@ -74,7 +74,12 @@ function KeywordField({
         onPaste={(e) => {
           e.preventDefault();
           const text = e.clipboardData.getData("text");
-          commit(draft + text);
+          const merged = draft + text;
+          // Only commit to chips when the paste contains item separators.
+          // A plain-text paste (e.g. pasting "-EMEA" after typing "Remote")
+          // stays in the input field so the user can keep editing.
+          if (/[,;\n\t\r]/.test(text)) commit(merged);
+          else setDraft(merged);
         }}
         onBlur={() => draft.trim() && commit(draft)}
         placeholder={values.length ? "" : placeholder}
