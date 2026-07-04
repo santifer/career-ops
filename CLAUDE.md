@@ -103,6 +103,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
+| `upskill.mjs` | Aggregate skill-gap analyzer — weighted gap map from tracked reports, known skills from `cv.md`/`config/profile.yml` excluded (JSON output) |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `followup-seed.mjs` | Seeds `data/follow-ups.md` with a pinned first follow-up date when a row turns Applied (JSON output) |
 | `data/follow-ups.md` | Follow-up history tracker |
@@ -139,6 +140,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 * `project` — Evaluate portfolio project idea
 * `batch` — Run parallel batch evaluations
 * `patterns` — Analyze rejection patterns
+* `upskill` — Aggregate skill-gap analysis from evaluated reports
 * `followup` — Update and calculate follow-ups
 * `update` — Update system files
 
@@ -277,6 +279,7 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
+| Asks what skills to learn, wants a skill-gap analysis of their pipeline | `upskill` |
 | Asks about follow-ups or application cadence | `followup` |
 
 ### CV Source of Truth

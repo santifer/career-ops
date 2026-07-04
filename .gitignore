@@ -11,6 +11,7 @@ data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
 data/cache/ats-companies/
+data/upskill/
 reports/*.md
 !reports/.gitkeep
 output/*

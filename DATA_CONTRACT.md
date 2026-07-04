@@ -26,6 +26,7 @@ These files contain your personal data, customizations, and work product. Update
 | `data/pipeline.md` | Your URL inbox |
 | `data/scan-history.tsv` | Your scan history |
 | `data/follow-ups.md` | Your follow-up history |
+| `data/upskill/*` | Your skill-gap analysis reports (written by the `upskill` mode) |
 | `writing-samples/*` | Your personal writing samples for style calibration (except `writing-samples/README.md`, which is system-owned documentation delivered by updates) |
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
@@ -55,6 +56,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/tracker.md` | Tracker instructions |
 | `modes/training.md` | Training evaluation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
+| `modes/upskill.md` | Skill-gap analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
 | `modes/interview/*` | Interview prep planning, practice, and debrief skills |
 | `modes/de/*` | German language modes |
