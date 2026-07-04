@@ -223,7 +223,7 @@ one short line directly under the contact block naming that preference, e.g.:
 Contact:
 Email: jane@example.com
 Phone: +1-555-0123
-(Prefers email first -- happy to schedule a call from there.)
+(Prefers email first.)
 ```
 
 If `contact_preferences.note` is set, use its wording (or a close paraphrase)
