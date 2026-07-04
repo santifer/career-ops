@@ -4228,6 +4228,103 @@ try {
   fail(`merge-tracker report-number collision test crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER REQ/JOB-NUMBER DEDUP GUARD (#1524) ─────────────────────
+// Tier-3 dedup (company + fuzzy role match) had no req/job-number awareness:
+// two distinct postings at the same company with similarly-worded titles were
+// silently collapsed into one row whenever a req/job number in the Notes
+// column was the only thing distinguishing them. Covers: (a) same-looking
+// titles + different req numbers → NOT a duplicate, (b) same-looking titles +
+// same req number → still a duplicate, (c) no req number on either side →
+// existing fuzzy-match behavior unchanged, (d) req number on only one side →
+// falls back to fuzzy-match behavior (can't prove a mismatch without both).
+console.log('\n🧪 Testing merge-tracker req/job-number dedup guard (#1524)...');
+try {
+  const reqTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-1524-'));
+  try {
+    mkdirSync(join(reqTmp, 'data'));
+    mkdirSync(join(reqTmp, 'reports'));
+    const reqAdditions = join(reqTmp, 'additions');
+    mkdirSync(reqAdditions);
+    const reqTracker = join(reqTmp, 'data', 'applications.md');
+    writeFileSync(reqTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-01 | Fabrikam | Learning Development Designer III | 3.8/5 | Evaluated | ❌ | [1](../reports/001-fabrikam-2026-01-01.md) | Req R_1000001 |\n' +
+      '| 2 | 2026-01-01 | Fabrikam | Curriculum Program Coordinator | 3.5/5 | Evaluated | ❌ | [2](../reports/002-fabrikam-2026-01-01.md) | no req number here |\n' +
+      '| 3 | 2026-01-01 | Northwind | Operations Analyst | 3.6/5 | Evaluated | ❌ | [3](../reports/003-northwind-2026-01-01.md) | Job 2026-55501 |\n');
+    for (const n of [
+      '001-fabrikam-2026-01-01', '002-fabrikam-2026-01-01', '003-northwind-2026-01-01',
+      '004-fabrikam-2026-01-02', '005-fabrikam-2026-01-02', '006-fabrikam-2026-01-02', '007-northwind-2026-01-02',
+    ]) {
+      writeFileSync(join(reqTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+
+    // (a) Same-looking title, DIFFERENT req number → must NOT be treated as a duplicate.
+    writeFileSync(join(reqAdditions, '004-fabrikam.tsv'),
+      '4\t2026-01-02\tFabrikam\tLearning Development Curriculum Designer\tEvaluated\t4.5/5\t❌\t[4](reports/004-fabrikam-2026-01-02.md)\tReq R_1000002 — distinct posting (#1524)\n');
+    // (b) Same-looking title, SAME req number → still a duplicate (lower score → skipped, row untouched).
+    writeFileSync(join(reqAdditions, '005-fabrikam.tsv'),
+      '5\t2026-01-02\tFabrikam\tLearning Development Designer III (Repost)\tEvaluated\t3.0/5\t❌\t[5](reports/005-fabrikam-2026-01-02.md)\tReq R_1000001 — same posting repost\n');
+    // (c) No req number on either side → existing fuzzy-match behavior unchanged (still deduped).
+    writeFileSync(join(reqAdditions, '006-fabrikam.tsv'),
+      '6\t2026-01-02\tFabrikam\tCurriculum Program Coordinator II\tEvaluated\t3.9/5\t❌\t[6](reports/006-fabrikam-2026-01-02.md)\tno req number, higher score\n');
+    // (d) Req number on only one side → can't prove a mismatch, falls back to fuzzy-match (still deduped).
+    writeFileSync(join(reqAdditions, '007-northwind.tsv'),
+      '7\t2026-01-02\tNorthwind\tOperations Analyst\tEvaluated\t3.2/5\t❌\t[7](reports/007-northwind-2026-01-02.md)\tno req number on this side\n');
+
+    const reqResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: reqTracker, CAREER_OPS_ADDITIONS: reqAdditions } });
+    if (reqResult === null) {
+      fail('merge-tracker.mjs crashed during req/job-number dedup guard test (#1524)');
+    } else {
+      const reqMerged = readFileSync(reqTracker, 'utf-8');
+      const reqRows = reqMerged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
+
+      // (a) Different req numbers: distinct posting added as a NEW row, existing #1 left untouched.
+      const distinctRow = reqRows.find(r => r.includes('Learning Development Curriculum Designer'));
+      const originalRow1 = reqRows.find(r => r.includes('Learning Development Designer III') && !r.includes('(Repost)') && !r.includes('Curriculum Designer'));
+      if (distinctRow && originalRow1 && originalRow1.includes('3.8/5') && originalRow1.includes('R_1000001')) {
+        pass('(#1524a) different req numbers on similar titles → NOT deduped, both rows present');
+      } else {
+        fail('(#1524a) different req numbers on similar titles were incorrectly deduped');
+      }
+
+      // (b) Same req number: still recognized as a duplicate — no separate "(Repost)" row,
+      // and since the new score (3.0) is lower than the existing (3.8), the existing row is left as-is.
+      const repostRow = reqRows.find(r => r.includes('(Repost)'));
+      if (!repostRow && originalRow1 && originalRow1.includes('3.8/5')) {
+        pass('(#1524b) same req number on similar titles → still deduped (skipped, lower score)');
+      } else {
+        fail('(#1524b) same req number should have been deduped away, not added as a new row');
+      }
+
+      // (c) No req number on either side: existing fuzzy-match-only behavior preserved — deduped and
+      // updated in place (higher score), not appended as a new row.
+      const coordinatorRows = reqRows.filter(r => r.includes('Curriculum Program Coordinator'));
+      if (coordinatorRows.length === 1 && coordinatorRows[0].includes('3.9/5')) {
+        pass('(#1524c) no req number on either side → fuzzy-match behavior unchanged (updated in place)');
+      } else {
+        fail(`(#1524c) fuzzy-match-only behavior regressed: expected 1 'Curriculum Program Coordinator' row at 3.9/5, got ${coordinatorRows.length}`);
+      }
+
+      // (d) Req number on only one side (existing row has "Job 2026-55501", addition has none):
+      // can't prove a mismatch without both numbers, so falls back to fuzzy match → still deduped
+      // into exactly one row. The addition's score (3.2) is lower than the existing (3.6), so the
+      // existing row is left as-is rather than updated.
+      const opsAnalystRows = reqRows.filter(r => r.includes('Operations Analyst'));
+      if (opsAnalystRows.length === 1 && opsAnalystRows[0].includes('3.6/5')) {
+        pass('(#1524d) req number on only one side → falls back to fuzzy match, still deduped');
+      } else {
+        fail(`(#1524d) one-sided req number should fall back to fuzzy match: expected 1 'Operations Analyst' row at 3.6/5, got ${opsAnalystRows.length}`);
+      }
+    }
+  } finally {
+    rmSync(reqTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker req/job-number dedup guard test crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
 // Report-number reservation is atomic now (#803), but tracker merges are a
 // separate read/modify/write step. If two merge-tracker processes read the same
