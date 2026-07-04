@@ -194,14 +194,16 @@ export default {
     for (let page = 0; page < maxPages; page++) {
       if (page > 0) await sleep(INTER_PAGE_DELAY_MS);
       let articles = await getPage(offsetParam, page);
-      if (articles.length === 0) break; // ran off the end
       let fresh = absorb(articles);
 
-      // Self-heal: the first paginated page came back identical to page 0
-      // (nothing fresh) → the primary key is inert. Retry this page once with
-      // the fallback key; if it advances, adopt it for the remainder. Only on
-      // page 1 — inert pagination manifests immediately, so a later all-dup
-      // page is a genuine end-of-board, not a key mismatch.
+      // Self-heal: the first paginated page didn't advance — either it repeated
+      // page 0 (all-dup) or came back empty because the primary key is inert
+      // (some tenants echo page 0 for an unknown param, others return nothing).
+      // Retry this page once with the fallback key; if it advances, adopt it for
+      // the remainder. Only on page 1 — inert pagination manifests immediately,
+      // so a later non-advancing page is a genuine end-of-board, not a mismatch.
+      // NOTE: fresh === 0 must be evaluated before the empty-page break below,
+      // or an inert key that returns an empty page 1 would exit without healing.
       if (fresh === 0 && canHeal && page === 1) {
         canHeal = false;
         await sleep(INTER_PAGE_DELAY_MS);
@@ -214,7 +216,7 @@ export default {
         }
       }
 
-      if (fresh === 0) break; // looped / offset ignored / last page
+      if (fresh === 0) break; // empty page / looped / offset ignored / last page
       if (articles.length < PAGE_SIZE) break; // last page
     }
     return jobs;

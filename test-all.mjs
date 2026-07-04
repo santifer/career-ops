@@ -11562,6 +11562,30 @@ try {
   const worked = await avature.fetch({ name: 'X', api: base }, workingCtx);
   if (worked.length === 14 && workingCtx.calls.every((u) => /[?&]jobOffset=/.test(u))) pass('avature.fetch() does not self-heal when jobOffset already advances');
   else fail(`avature.fetch() spurious self-heal: ${worked.length} jobs, calls ${JSON.stringify(workingCtx.calls.map((u) => u.split('?')[1]))}`);
+
+  // Self-heal must fire even when the inert primary key returns an EMPTY page 1
+  // (not a repeat of page 0) — the empty-page break must not pre-empt the heal.
+  const emptyP1Ctx = {
+    calls: [],
+    sleep: async () => {},
+    fetchText: async function (url) {
+      this.calls.push(url);
+      const u = new URL(url);
+      const jo = u.searchParams.get('jobOffset');
+      const of = u.searchParams.get('offset');
+      if (jo !== null) return Number(jo) === 0 ? mkHtml([1, 2, 3, 4, 5, 6]) : mkHtml([]); // page 1+ empty
+      if (of !== null) {
+        const n = Number(of) / 6;
+        if (n === 1) return mkHtml([7, 8, 9, 10, 11, 12]);
+        if (n === 2) return mkHtml([13, 14]);
+        return mkHtml([]);
+      }
+      return '<div>no articles</div>';
+    },
+  };
+  const emptyHealed = await avature.fetch({ name: 'X', api: base }, emptyP1Ctx);
+  if (emptyHealed.length === 14 && emptyP1Ctx.calls.some((u) => /[?&]offset=/.test(u))) pass('avature.fetch() self-heals when the inert key returns an empty page 1');
+  else fail(`avature.fetch() failed to heal empty page 1: ${emptyHealed.length} jobs`);
 } catch (e) {
   fail(`avature provider tests crashed: ${e.message}`);
 }
