@@ -6,6 +6,7 @@ data/follow-ups.md
 data/pipeline.md
 data/scan-history.tsv
 data/pdf-index.tsv
+data/agent-inbox.md
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
@@ -33,6 +34,7 @@ jds/*
 
 # Interview prep (accumulated STAR+R stories — user data)
 interview-prep/*
+!interview-prep/
 !interview-prep/.gitkeep
 # Session transcripts hold real interviewer names/companies — ignore content,
 # ship only the system-owned scaffold (README + .gitkeep). #1242

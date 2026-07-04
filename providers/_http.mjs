@@ -17,10 +17,15 @@ async function fetchWithTimeout(url, { timeoutMs = DEFAULT_TIMEOUT_MS, headers =
     });
     if (!res.ok) {
       const responseText = await res.text().catch(() => '');
-      const snippet = responseText.replace(/\s+/g, ' ').trim().slice(0, 300);
-      const err = new Error(snippet ? `HTTP ${res.status}: ${snippet}` : `HTTP ${res.status}`);
+      // WAF/CDN challenge pages (seen live: Workday 429s) carry no actionable
+      // text — HTML markup or a generic interstitial message, not worth
+      // parsing or displaying. The status code and its standard reason
+      // phrase are what a log line needs; the raw body is still attached as
+      // err.body for callers that want to inspect it.
+      const err = new Error(`HTTP ${res.status}${res.statusText ? ` ${res.statusText}` : ''}`);
       err.status = res.status;
       err.body = responseText;
+      err.retryAfter = res.headers.get('retry-after');
       throw err;
     }
     return res;
