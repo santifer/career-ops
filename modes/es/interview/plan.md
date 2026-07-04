@@ -32,29 +32,34 @@ Sé honesto. Una carencia es una carencia — márcala claramente para que el ti
 ## Step 2 — Inteligencia de la Ronda
 
 Identifica qué está evaluando realmente esta ronda basándote en:
+
 - Rol del entrevistador (manager = comunicación + pasión + fundamentos; practitioner = profundidad + criterio)
 - Etiqueta de la ronda (filtro, técnico/dominio, diseño/caso de estudio, final)
 - Señales de la JD (qué enfatizan)
 
 **Filtro del reclutador (Recruiter screen):**
+
 - Verificación de requisitos: ajuste, alineación de compensación, logística, comunicación
 - No es una prueba técnica — las preguntas de profundidad vienen en las rondas con el HM (Hiring Manager) y posteriores
 - Probable: presentación de background, "por qué nosotros/por qué este rol", expectativa salarial, plazos, una pregunta de logística
 - Trata esto como el punto de control fácil; usa el tiempo de preparación para construir la base de lo que viene después
 
 **Filtro del Hiring Manager:**
+
 - Comunicación, pasión, ajuste — además de filosofía de liderazgo y criterio
 - Fundamentos de la habilidad central de la JD — no aspectos internos profundos
 - 1–2 historias conductuales
 - Probable: background, "por qué nosotros", un concepto central de la JD, una historia de liderazgo, pregunta situacional con visión de futuro
 
 **Inmersión técnica / de dominio con un practitioner:**
+
 - Profundidad en la habilidad central de la JD (ej. internals del runtime para ingeniería, opciones de modelado para datos, métodos de valoración para finanzas)
 - Escenarios aplicados del día a día del rol
 - Es posible un ejercicio en vivo o un recorrido guiado
 - Las historias se usan como evidencia, no como el evento principal
 
 **Panel de diseño / caso de estudio:**
+
 - Solución completa — restricciones, componentes, compensaciones (trade-offs), modos de fallo
 - Las dimensiones de calidad que enfatiza la JD (ej. escalabilidad, cumplimiento, medibilidad)
 - Nivel senior: establecer restricciones, hacer preguntas aclaratorias, dirigir la conversación
