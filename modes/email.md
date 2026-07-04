@@ -109,7 +109,7 @@ never fabricate.
 If a report has a score:
 - `>= 4.5`: confident, priority application.
 - `4.0-4.4`: good match, worth applying.
-- `< 4.0`: restrained; do not oversell. If below 3.5, warn the user before
+- `< 4.0`: restrained; do not oversell. If below 4.0, warn the user before
   drafting that career-ops normally recommends against applying.
 
 ---
@@ -190,18 +190,18 @@ Use:
 
 ```text
 联系方式：
-微信：{candidate.wechat}
-手机号：{candidate.phone}
-邮箱：{candidate.email or application_email.default_sender_note}
+{if candidate.wechat}微信：{candidate.wechat}{/if}
+{if candidate.phone}手机号：{candidate.phone}{/if}
+{if candidate.email or application_email.default_sender_note}邮箱：{candidate.email or application_email.default_sender_note}{/if}
 ```
 
 For English:
 
 ```text
 Contact:
-WeChat: {candidate.wechat}
-Phone: {candidate.phone}
-Email: {candidate.email or application_email.default_sender_note}
+{if candidate.wechat}WeChat: {candidate.wechat}{/if}
+{if candidate.phone}Phone: {candidate.phone}{/if}
+{if candidate.email or application_email.default_sender_note}Email: {candidate.email or application_email.default_sender_note}{/if}
 ```
 
 If `application_email.default_sender_note` is set in `config/profile.yml` to a

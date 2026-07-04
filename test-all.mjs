@@ -897,6 +897,7 @@ if (
   emailMode.includes('Application Email Drafts') &&
   emailMode.includes('Never submit') &&
   emailMode.includes('Never send email') &&
+  emailMode.includes('Never click send') &&
   emailMode.includes('hr_application') &&
   emailMode.includes('referral_request') &&
   emailMode.includes('cold_application') &&
