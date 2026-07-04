@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, FileText, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileText, ExternalLink, ChevronDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Application } from "@/lib/career-ops";
@@ -12,17 +12,58 @@ import { GeneratePdfButton } from "@/components/generate-pdf-button";
 import { ApplyButton } from "@/components/apply-button";
 import { DeleteFromTracker } from "@/components/delete-from-tracker";
 
+// Progressive disclosure of the report. The core writes prose blocks
+// "## F) Verdict (lead)", "## A) Role Summary", "## B) Match with CV", then
+// C–G + machine artifacts (Machine Summary YAML, Application Answers, submit
+// log). A mainstream user deciding "should I apply?" needs the verdict + fit;
+// the rest is depth-on-demand. We lead with F/A/B expanded and collapse the
+// tail — and strip the bare "F)" author-letters from the visible headings
+// (native <details>, no client JS — this stays a server component).
+const PRIMARY = new Set(["F", "A", "B"]);
+
+type Section = { heading: string; letter: string | null; content: string };
+
+function cleanHeading(h: string): string {
+  const stripped = h
+    .replace(/^\s*(?:Block\s+)?[A-G][).:]\s*/i, "")
+    .replace(/\s*\((?:lead|verdict)\)\s*$/i, "")
+    .trim();
+  return stripped || h.trim();
+}
+
+function splitSections(body: string): { intro: string; sections: Section[] } {
+  const intro: string[] = [];
+  const sections: Section[] = [];
+  let cur: { heading: string; letter: string | null; lines: string[] } | null = null;
+  for (const line of body.split("\n")) {
+    const h = line.match(/^##\s+(.*)$/);
+    if (h) {
+      if (cur) sections.push({ heading: cur.heading, letter: cur.letter, content: cur.lines.join("\n").trim() });
+      const heading = h[1].trim();
+      const letter = heading.match(/^(?:Block\s+)?([A-G])[).:\s]/i)?.[1]?.toUpperCase() ?? null;
+      cur = { heading, letter, lines: [] };
+    } else if (cur) {
+      cur.lines.push(line);
+    } else {
+      intro.push(line);
+    }
+  }
+  if (cur) sections.push({ heading: cur.heading, letter: cur.letter, content: cur.lines.join("\n").trim() });
+  return { intro: intro.join("\n").trim(), sections };
+}
+
 export function ReportView({
   id,
   app,
   report,
-  file,
   canDelete = false,
 }: {
   id: string;
   app: Application | null;
   report: string | null;
-  file: string | null;
+  /** kept in the props contract (the page passes it) but no longer surfaced —
+   *  the raw .md filename is a dev artifact, not header content. */
+  file?: string | null;
   canDelete?: boolean;
 }) {
   const meta = report ? parseReport(report) : null;
@@ -42,10 +83,7 @@ export function ReportView({
       </Link>
 
       <header className="mt-5">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-faint">
-          #{id}
-          {file ? ` · ${file}` : ""}
-        </p>
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-faint">#{id}</p>
         <div className="mt-2 flex items-center gap-3">
           <CompanyLogo name={app?.company ?? meta?.title ?? `Report #${id}`} size={40} />
           <h1 className="font-display text-3xl tracking-tight text-landing">
@@ -88,9 +126,51 @@ export function ReportView({
 
       {report ? (
         <>
-          <article className="report-prose mt-8">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{meta?.body ?? report}</ReactMarkdown>
-          </article>
+          {(() => {
+            const { intro, sections } = splitSections(meta?.body ?? report);
+            // Tolerant fallback: unrecognized layout → render the whole body as
+            // before, so an old/odd report never loses content.
+            if (sections.length === 0) {
+              return (
+                <article className="report-prose mt-8">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{meta?.body ?? report}</ReactMarkdown>
+                </article>
+              );
+            }
+            const hasPrimary = sections.some((s) => s.letter && PRIMARY.has(s.letter));
+            return (
+              <div className="mt-8">
+                {intro && (
+                  <article className="report-prose">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{intro}</ReactMarkdown>
+                  </article>
+                )}
+                {sections.map((s, i) => {
+                  // Lead with the verdict + fit (F/A/B). If a report has none of
+                  // those, keep the first section open so something always shows.
+                  const primary = s.letter ? PRIMARY.has(s.letter) : !hasPrimary && i === 0;
+                  if (primary) {
+                    return (
+                      <article key={i} className="report-prose mt-6">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{`## ${cleanHeading(s.heading)}\n\n${s.content}`}</ReactMarkdown>
+                      </article>
+                    );
+                  }
+                  return (
+                    <details key={i} className="group mt-3 overflow-hidden rounded-xl border border-border bg-surface/30">
+                      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-hover">
+                        {cleanHeading(s.heading)}
+                        <ChevronDown className="ml-auto size-4 shrink-0 text-faint transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="report-prose border-t border-border px-4 py-3">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{s.content}</ReactMarkdown>
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            );
+          })()}
           <ScoreMethodology />
         </>
       ) : (
