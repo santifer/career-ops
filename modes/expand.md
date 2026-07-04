@@ -12,7 +12,7 @@ Fetch public sources linked in the user's `config/profile.yml` (e.g., GitHub use
 ## Input
 
 `$mode` after `expand` should be empty. Do not parse raw URLs or usernames from the prompt.
-1. Read `config/profile.yml` to locate the user's GitHub username (`contact.github`) or portfolio URL (`contact.portfolio`).
+1. Read `config/profile.yml` to locate the user's GitHub username (`candidate.github`) or portfolio URL (`candidate.portfolio_url`).
 2. If neither is present, prompt the user to add them to their profile config first.
 
 ## Pipeline
@@ -38,7 +38,7 @@ Fetch public sources linked in the user's `config/profile.yml` (e.g., GitHub use
    printf '%s' "$PAYLOAD" | node add-entry.mjs --stdin --dry-run
    ```
    Filter out any items that return `"status": "duplicate"`.
-5. **Preview & Confirm Gate.** Show the user the newly discovered, non-duplicate entries. You **must halt** and ask the user to approve, edit, or cancel. Do **not** proceed without an explicit yes.
+5. **Preview & Confirm Gate.** Show the user the newly discovered, non-duplicate entries. You MUST output your final proposal as a Markdown table containing exactly three columns: | skill | evidence | section |. You **must halt** and ask the user to approve, edit, or cancel. Do **not** proceed without an explicit yes.
 6. **Write via the helper.** For each approved entry, pass the exactly identical stored payload to the final write, avoiding re-derivation:
    ```bash
    printf '%s' "$PAYLOAD" | node add-entry.mjs --stdin
