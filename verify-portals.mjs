@@ -288,7 +288,11 @@ export async function probeProvider(entry, provider, baseCtx) {
   try {
     const jobs = await provider.fetch(entry, ctx);
     const count = Array.isArray(jobs) ? jobs.length : 0;
-    if (count > 0) return { provider: provider.id, status: 'live', jobCount: count };
+    if (count > 0) {
+      const result = { provider: provider.id, status: 'live', jobCount: count };
+      if (wasTripped()) result.partial = true;
+      return result;
+    }
     // Zero jobs but the budget guard fired: the provider swallowed the sentinel
     // (per-locale/per-page try/catch) after its budgeted requests all came back
     // fine — the endpoint is reachable, we just never reached a job-bearing

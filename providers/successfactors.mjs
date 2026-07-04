@@ -293,7 +293,7 @@ function resolveCsbMaxPages(entry) {
 async function fetchCsb(entry, cfg, ctx) {
   let locales = CSB_DEFAULT_LOCALES;
   try {
-    const html = await ctx.fetchText(cfg.searchPage, { headers: { accept: 'text/html' } });
+    const html = await ctx.fetchText(cfg.searchPage, { redirect: 'error', headers: { accept: 'text/html' } });
     const discovered = extractLocales(html);
     if (discovered.length) locales = discovered;
   } catch {
