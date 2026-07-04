@@ -19,13 +19,14 @@ Fetch public sources linked in the user's `config/profile.yml` (e.g., GitHub use
 
 1. **Load context.** Read `cv.md` (its existing section names and formatting are the template to match) and `article-digest.md` if present.
 2. **Fetch the sources (zero-key):**
-   - **GitHub** → the public REST API (`https://api.github.com/users/<username>/repos` for repositories list) **plus** the READMEs via WebFetch.
+   - **GitHub** → the profile page, the public REST API (`https://api.github.com/users/<username>/repos` for repositories list) **plus** the READMEs via WebFetch.
    - **Portfolio** → WebFetch. Only fall back to Playwright if the page is JS-rendered and WebFetch returns nothing useful.
+   - **Kaggle / Google Scholar** (if linked) → WebFetch to identify publications, preprints, or datasets.
 3. **Extract structured facts** actually present in the source: name, dates, tech stack, role, concrete outcomes. Leave anything unstated **blank**.
 4. **Build and Dry-Run Dedup.** For each payload, safely serialize the unstructured text and capture it in a bash variable to guarantee payload identity between the dry-run and write phases. Pipe a quoted, collision-resistant heredoc (e.g., `'EOF_EXPAND_PAYLOAD'`) into `node -e`:
    ```bash
    PAYLOAD=$(node -e '
-     const entry = require("fs").readFileSync(0, "utf-8").trim();
+     const entry = require("fs").readFileSync(0, "utf-8");
      process.stdout.write(JSON.stringify({
        cv: { section: "Projects", dedupKey: "...", entry: entry }
      }));

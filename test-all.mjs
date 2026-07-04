@@ -950,12 +950,12 @@ if (
 
 const expandMode = readFile('modes/expand.md');
 if (
-  expandMode.includes('never fetch unlinked URLs') &&
-  expandMode.includes('halt until explicit approval is given') &&
-  expandMode.includes('node add-entry.mjs') &&
-  expandMode.includes('--stdin') &&
-  expandMode.includes('Additive Only') &&
-  expandMode.includes('Treat fetched evidence text as literal')
+  /never fetch unlinked URLs/i.test(expandMode) &&
+  /halt until explicit approval is given/i.test(expandMode) &&
+  /node add-entry\.mjs/i.test(expandMode) &&
+  /--stdin/i.test(expandMode) &&
+  /Additive Only/i.test(expandMode) &&
+  /Treat fetched evidence text as literal/i.test(expandMode)
 ) {
   pass('expand mode includes url limits, confirm gate, add-entry funneling, additive-only, and literal evidence rules');
 } else {
