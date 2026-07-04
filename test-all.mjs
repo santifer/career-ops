@@ -1699,6 +1699,66 @@ try {
   } else {
     fail(`verify-portals classification wrong: ${JSON.stringify(byName)} (${results.length} rows)`);
   }
+
+  // Tier 2: non-ATS companies are probed through the scanner's provider layer,
+  // bounded to the first page. Fake providers stand in for Workday/SF/etc.
+  const fakeCtx = { transport: 'http', fetchJson: async () => ({}), fetchText: async () => ['x'] };
+  const fakeProviders = new Map([
+    ['fakeats', {
+      id: 'fakeats',
+      detect: (e) => (/fakeats\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
+      fetch: async (e, ctx) => {
+        // The probe MUST bound pagination — a provider is never asked to walk a
+        // whole board for a health check.
+        if (ctx.maxPages !== 1) throw new Error('probe did not pass maxPages=1');
+        if (e.careers_url.includes('/full')) return [{ title: 'A' }, { title: 'B' }];
+        if (e.careers_url.includes('/empty')) return [];
+        const err = new Error('HTTP 404'); err.status = 404; throw err;
+      },
+    }],
+    ['pager', {
+      // Ignores maxPages and paginates forever; the probe's request budget must
+      // still cut it off after the first page and classify it live.
+      id: 'pager',
+      detect: (e) => (/pager\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
+      fetch: async (e, ctx) => {
+        const jobs = [];
+        for (let p = 0; p < 50; p++) jobs.push(...(await ctx.fetchText(`u?p=${p}`)));
+        return jobs;
+      },
+    }],
+  ]);
+  const provResults = await verifyCompanies([
+    { name: 'PFull', careers_url: 'https://fakeats.io/full' },
+    { name: 'PEmpty', careers_url: 'https://fakeats.io/empty' },
+    { name: 'PDead', careers_url: 'https://fakeats.io/dead' },
+    { name: 'PPager', careers_url: 'https://pager.io/board' },
+    { name: 'NoProv', careers_url: 'https://unknown.example/careers' },
+  ], { fetchJson: mockFetch, providers: fakeProviders, httpCtx: fakeCtx });
+  const pv = Object.fromEntries(provResults.map((r) => [r.name, r]));
+  if (
+    pv.PFull?.status === 'live' && pv.PFull?.jobCount === 2 &&
+    pv.PEmpty?.status === 'empty' &&
+    pv.PDead?.status === 'missing' && pv.PDead?.errorKind === 'slug_gone' &&
+    pv.PPager?.status === 'live' && pv.PPager?.partial === true &&
+    pv.NoProv?.status === 'skipped'
+  ) {
+    pass('verify-portals probes non-ATS boards via providers, bounded to first page');
+  } else {
+    fail(`verify-portals provider-fallback wrong: ${JSON.stringify(pv)}`);
+  }
+
+  // Without a providers map, non-ATS entries must stay skipped (unchanged CLI
+  // behavior for the ATS-only unit path).
+  const noProv = await verifyCompanies(
+    [{ name: 'X', careers_url: 'https://fakeats.io/full' }],
+    { fetchJson: mockFetch },
+  );
+  if (noProv[0]?.status === 'skipped') {
+    pass('verify-portals stays skipped for non-ATS when no providers are supplied');
+  } else {
+    fail(`verify-portals should skip non-ATS without providers: ${JSON.stringify(noProv)}`);
+  }
 } catch (e) {
   fail(`portal slug validator tests crashed: ${e.message}`);
 }
