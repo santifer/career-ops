@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, ExternalLink, ChevronsUpDown, Sparkles, Loader2, X } from "lucide-react";
+import { Search, ExternalLink, ChevronsUpDown, Sparkles, Loader2, X, Compass, ArrowRight } from "lucide-react";
 import type { Application, InboxJob } from "@/lib/career-ops";
 import { Badge } from "@/components/ui/badge";
 import { useJobs } from "@/components/jobs/job-store";
@@ -330,7 +330,8 @@ export function PipelineView({
   );
 }
 
-// Empty inbox = the app's terminal-card cue (CLI heritage spent once, honestly).
+// Empty inbox. Self-sufficient for the mainstream user (a primary in-web action),
+// honest for devs (the CLI/file path stays, demoted to progressive transparency).
 function InboxEmpty({ count, filtered }: { count: number; filtered: boolean }) {
   if (filtered) {
     return (
@@ -347,25 +348,30 @@ function InboxEmpty({ count, filtered }: { count: number; filtered: boolean }) {
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
         <span className="ml-3 font-mono text-xs tracking-wide text-muted">
-          <span className="text-foreground/40">&gt;_</span> career-ops scan
+          <span className="text-foreground/40">&gt;_</span> career-ops
         </span>
       </div>
       <div className="px-6 py-12 text-center">
         <p className="font-display text-lg">
           Your <span className="text-brand">inbox</span> is empty.
         </p>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-          {count > 0
-            ? "Nothing pending right now."
-            : "Run a scan or drop job URLs into data/pipeline.md to fill it."}
-        </p>
-        <p className="mt-4 font-mono text-xs text-faint">
-          $ career-ops scan
-          <span
-            aria-hidden="true"
-            className="cli-cursor ml-0.5 inline-block h-[1em] w-[0.35em] bg-current align-middle"
-          />
-        </p>
+        {count > 0 ? (
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">Nothing pending right now.</p>
+        ) : (
+          <>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-muted">Find roles that match your CV — free, no tokens spent.</p>
+            <Link
+              href="/explore?run=1"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm transition-colors hover:bg-brand-200"
+            >
+              <Compass className="size-4" /> Run your first free scan <ArrowRight className="size-4" />
+            </Link>
+            <p className="mx-auto mt-4 max-w-sm text-xs text-faint">
+              Prefer the terminal? Run <code className="rounded bg-surface-hover px-1 py-0.5 font-mono">career-ops scan</code>, or add job URLs to{" "}
+              <code className="rounded bg-surface-hover px-1 py-0.5 font-mono">data/pipeline.md</code>.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
