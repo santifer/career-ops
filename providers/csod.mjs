@@ -77,6 +77,7 @@ export function parseCsodDate(raw) {
   const year = Number(m[3]);
   if (month < 1 || month > 12 || day < 1 || day > 31) return undefined;
   const ms = Date.UTC(year, month - 1, day);
+  if (new Date(ms).getUTCDate() !== day) return undefined; // catches 4/31, 2/30, etc.
   return Number.isFinite(ms) ? ms : undefined;
 }
 
