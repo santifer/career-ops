@@ -2855,6 +2855,19 @@ try {
     fail('smartrecruiters.detect() should return null for non-SR URLs');
   }
 
+  // entry.api precedence: a branded careers_url is kept while the SR slug is
+  // pinned via api: (mirrors greenhouse/ashby).
+  const hitApi = sr.detect({
+    name: 'Continental',
+    careers_url: 'https://jobs.continental.com',
+    api: 'https://careers.smartrecruiters.com/Continental',
+  });
+  if (hitApi && hitApi.url.startsWith('https://api.smartrecruiters.com/v1/companies/Continental/postings')) {
+    pass('smartrecruiters.detect() honors api: over a branded careers_url');
+  } else {
+    fail(`smartrecruiters.detect(api-pinned) returned ${JSON.stringify(hitApi)}`);
+  }
+
   // parseSmartRecruitersResponse
   const sample = {
     content: [
@@ -10331,6 +10344,32 @@ try {
     pass('workday.detect() returns null for non-Workday URL');
   } else {
     fail('workday.detect() should return null for non-Workday URL');
+  }
+
+  // entry.api precedence: a branded careers_url is kept while the Workday tenant
+  // is pinned via api: (mirrors greenhouse/ashby).
+  const hitApiWd = workday.detect({
+    name: 'PTC',
+    careers_url: 'https://www.ptc.com/en/careers',
+    api: 'https://ptc.wd1.myworkdayjobs.com/PTC',
+  });
+  if (hitApiWd && hitApiWd.url === 'https://ptc.wd1.myworkdayjobs.com/wday/cxs/ptc/PTC/jobs') {
+    pass('workday.detect() honors api: over a branded careers_url');
+  } else {
+    fail(`workday.detect(api-pinned) returned ${JSON.stringify(hitApiWd)}`);
+  }
+
+  // A non-Workday api: must not shadow a valid Workday careers_url — resolution
+  // falls through to the next candidate instead of returning null.
+  const hitFallthrough = workday.detect({
+    name: 'Acme',
+    api: 'https://acme.com/careers',
+    careers_url: 'https://acme.wd12.myworkdayjobs.com/en-US/acme-jobs',
+  });
+  if (hitFallthrough && hitFallthrough.url === 'https://acme.wd12.myworkdayjobs.com/wday/cxs/acme/acme-jobs/jobs') {
+    pass('workday.detect() falls through a non-Workday api: to a valid careers_url');
+  } else {
+    fail(`workday.detect(fallthrough) returned ${JSON.stringify(hitFallthrough)}`);
   }
 
   // Path-spoofed URL: myworkdayjobs.com in path, not hostname
