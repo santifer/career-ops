@@ -156,6 +156,7 @@ Dalam lowongan dan negosiasi di Indonesia, beberapa istilah tidak ada di pasar E
 - Skor 1.0 hanya jika lowongan eksplisit menyebut "wajib hadir 4-5 hari/minggu, tanpa kecuali"
 
 ### Prioritas time-to-offer
+
 - Demo yang berfungsi + metrik > kesempurnaan
 - Lamar cepat > belajar lebih banyak
 - Pendekatan 80/20, semuanya timebox

@@ -9,7 +9,7 @@ Mode interaktif untuk saat kandidat mengisi formulir lamaran di Chrome. Membaca 
 
 ## Alur kerja
 
-```
+```text
 1. DETEKSI      -> Baca tab Chrome yang aktif (tangkapan layar/URL/judul)
 2. IDENTIFIKASI -> Ekstrak perusahaan + role dari halaman
 3. CARI         -> Cocokkan dengan report yang ada di reports/
@@ -77,7 +77,7 @@ Untuk tiap pertanyaan, susun jawaban mengikuti skema ini:
 
 **Format keluaran:**
 
-```
+```text
 ## Jawaban untuk [Perusahaan] -- [Role]
 
 Dasar: Report #NNN | Score: X.X/5 | Arketipe: [tipe]

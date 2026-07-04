@@ -14,7 +14,7 @@ Memproses URL lowongan yang menumpuk di `data/pipeline.md`. Kandidat menambahkan
 3. **Jika ada 3+ URL menunggu**, jalankan agen paralel (Agent tool dengan `run_in_background`) untuk memaksimalkan kecepatan.
 4. **Di akhir**, tampilkan tabel ringkasan:
 
-```
+```text
 | # | Perusahaan | Role | Score | PDF | Tindakan yang disarankan |
 ```
 
