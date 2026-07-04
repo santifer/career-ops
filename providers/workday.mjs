@@ -209,7 +209,7 @@ export default {
     // first-page count. Kept separate from `maxPages` so the entry-cap warning
     // below (pagesToFetch === maxPages) stays quiet. No effect on real scans,
     // which don't set ctx.maxPages.
-    const ctxCap = typeof ctx?.maxPages === 'number' && ctx.maxPages > 0 ? ctx.maxPages : Infinity;
+    const ctxCap = Number.isInteger(ctx?.maxPages) && ctx.maxPages > 0 ? ctx.maxPages : Infinity;
     pagesToFetch = Math.min(pagesToFetch, ctxCap);
 
     // Why pagination stopped — drives which warning (if any) fires below.
