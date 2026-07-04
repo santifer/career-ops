@@ -138,7 +138,7 @@ export function PipelineView({
   }, [applications, tab, q, sort, minFilter]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="mx-auto max-w-6xl px-6 py-8 max-sm:pb-24">
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl tracking-tight text-landing">Pipeline</h1>
@@ -256,7 +256,7 @@ export function PipelineView({
                       <button
                         type="button"
                         onClick={launch}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-surface-hover hover:text-brand"
+                        className="inline-flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-surface-hover hover:text-brand max-sm:min-h-[44px] max-sm:min-w-[44px]"
                         title="Evaluate this posting — spins up a worker on your CLI"
                       >
                         <Sparkles className="size-3.5" />
@@ -267,7 +267,7 @@ export function PipelineView({
                       href={j.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-md p-1 text-faint transition-colors hover:text-brand"
+                      className="inline-flex items-center justify-center rounded-md p-1 text-faint transition-colors hover:text-brand max-sm:min-h-[44px] max-sm:min-w-[44px]"
                       aria-label={`Open ${j.company} posting`}
                     >
                       <ExternalLink className="size-4" />

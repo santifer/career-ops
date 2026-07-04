@@ -116,7 +116,7 @@ export function MobileNav() {
             onClick={() => setOpen(true)}
             aria-label="Open menu"
             aria-expanded={open}
-            className="relative inline-flex items-center justify-center rounded-md p-2 text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+            className="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
           >
             <Menu className="size-5" />
             {running > 0 && <span aria-hidden className="co-pulse absolute right-1.5 top-1.5 size-2 rounded-full bg-brand ring-2 ring-surface" />}
@@ -143,7 +143,7 @@ export function MobileNav() {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close menu"
-            className="rounded-md p-1.5 text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-1.5 text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
           >
             <X className="size-5" />
           </button>
