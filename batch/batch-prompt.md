@@ -1,5 +1,7 @@
 # career-ops Batch Worker — Complete Evaluation + PDF + Tracker Line
 
+Canonical base language: English.
+
 You are a batch worker evaluating one job offer for the candidate. Read the candidate name and preferences from `config/profile.yml`.
 
 You receive a job URL plus a local JD text file and must produce:
@@ -224,7 +226,6 @@ advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"
 
 Rules:
 
-- Use `[]` for empty `hard_stops`, `soft_gaps`, or `top_strengths`.
 - `score` is numeric only, without `/5`.
 - `final_decision` must reflect the full evaluation, not only the CV match.
 - `advertised_comp` is the JD's **own** figure, verbatim; `null` when the JD states nothing — never estimate it and never substitute researched market data (Block D research stays in Block D). Batch workers never write `data/salary-observations.tsv` — the report itself is the advertised observation (`salary-gap.mjs` reads it).
@@ -250,7 +251,7 @@ Report header:
 **Score:** {X.X/5}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **URL:** {{URL}}
-**PDF:** {output/cv-candidate-{company-slug}-{{DATE}}.pdf if score >= resolved auto_pdf_score_threshold, otherwise `not generated — run /career-ops pdf {company-slug} to create on demand`}
+**PDF:** {output/cv-candidate-{company-slug}-{{DATE}}.pdf if score >= resolved auto_pdf_score_threshold, otherwise a localized equivalent of `not generated — run /career-ops pdf {company-slug} to create on demand` in `language.output`}
 **Batch ID:** {{ID}}
 ```
 
@@ -275,7 +276,7 @@ Read `config/profile.yml` and resolve `auto_pdf_score_threshold`. If absent, def
 Only generate the PDF when the score from Step 2 is greater than or equal to the threshold. If the score is below the threshold:
 
 - Skip PDF generation.
-- In the report header, write: `**PDF:** not generated — run /career-ops pdf {company-slug} to create on demand`.
+- In the report header, write a localized equivalent of `**PDF:** not generated — run /career-ops pdf {company-slug} to create on demand` in `language.output`.
 - In Step 5, use `pdf_emoji` = `❌`.
 - In Step 6, set `"pdf": null`.
 

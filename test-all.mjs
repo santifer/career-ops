@@ -977,7 +977,7 @@ if (/Language Rule/i.test(batchPrompt) && /language\.output/.test(batchPrompt) &
   fail('batch prompt does not honor language.output for worker prose');
 }
 
-if (/^# career-ops Batch Worker — Complete Evaluation \+ PDF \+ Tracker Line/m.test(batchPrompt)) {
+if (/Canonical base language:\s*English\./.test(batchPrompt)) {
   pass('batch prompt uses an English canonical base');
 } else {
   fail('batch prompt canonical base is not English');
