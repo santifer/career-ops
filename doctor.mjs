@@ -238,7 +238,11 @@ async function checkPortalSlugs(root) {
       pass: false,
       label: `${unresolved.length} ATS slug(s) in portals.yml do not resolve`,
       fix: [
-        ...unresolved.map((r) => `${r.name}: ${r.ats || '?'}/${r.slug || '?'} — ${r.reason || 'unresolved'}`),
+        ...unresolved.map((r) => {
+          let line = `${r.name}: ${r.ats || '?'}/${r.slug || '?'} — ${r.reason || 'unresolved'}`;
+          if (r.suggested) line += ` → try ${r.suggested.ats}/${r.suggested.slug}`;
+          return line;
+        }),
         'Probe variants with: node verify-portals.mjs --add "<company>"',
       ],
     };
@@ -369,7 +373,7 @@ function onboardingState(root) {
   ];
   for (const { target, template } of templates) {
     const targetPath = join(root, ...target.split('/'));
-    const templatePath = join(root, ...template.split('/'));
+    const templatePath = join(__dirname, ...template.split('/'));
     if (!existsSync(targetPath) && existsSync(templatePath)) {
       try {
         copyFileSync(templatePath, targetPath);

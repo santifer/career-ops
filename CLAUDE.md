@@ -27,12 +27,12 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **Path Resolution Override:**
 The User Layer location can be overridden using the `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` environment variables. If set, User Layer files are loaded and written relative to that path, while System Layer files remain relative to the repository.
-- **Precedence:** `CAREER_OPS_TRACKER` overrides the specific applications tracker file path, taking precedence over `CAREER_OPS_ROOT` / `CAREER_OPS_DATA_DIR`.
+- **Precedence:** `CAREER_OPS_TRACKER` overrides the specific applications tracker file path, taking precedence over `CAREER_OPS_ROOT` / `CAREER_OPS_DATA_DIR`. Relative paths in `CAREER_OPS_TRACKER` are resolved relative to the repository root directory (`__dirname`), not from `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR`.
 
 
 ## Source-of-Truth Boundary (CRITICAL)
 
-User-facing content (CV, cover letters, form answers, recruiter outreach, application form responses) is generated **exclusively** from these files plus statements the user makes directly in the current conversation:
+User-facing content (CV, cover letters, application emails, form answers, recruiter outreach, application form responses) is generated **exclusively** from these files plus statements the user makes directly in the current conversation:
 
 - `cv.md`
 - `article-digest.md`
@@ -110,6 +110,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
+| `followup-seed.mjs` | Seeds `data/follow-ups.md` with a pinned first follow-up date when a row turns Applied (JSON output) |
 | `data/follow-ups.md` | Follow-up history tracker |
 | `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
 | `check-liveness.mjs` | Job posting liveness checker |
@@ -135,6 +136,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 * `pdf` — Generate ATS-optimized CV PDF
 * `latex` — Export CV as LaTeX/Overleaf .tex
 * `cover` — Generate cover letter
+* `email` — Draft formal application email only; never sends, submits, or clicks
 * `interview-prep` — Generate interview preparation guide
 * `interview` — Onboarding/on-demand interview
 * `contacto` — Generate LinkedIn outreach message
@@ -265,6 +267,7 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Asks to evaluate offer | `oferta` |
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` |
+| Wants a formal application email | `email` — draft-only; never sends, submits, or clicks anything |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants interactive profile/CV onboarding | `interview` |
@@ -279,7 +282,7 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
-| Asks about rejection patterns or wants to improve targeting | `patterns` |
+| Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
 
 ### CV Source of Truth

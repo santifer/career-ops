@@ -8,13 +8,20 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { fileURLToPath } from 'url';
+
+const CODEBASE_ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
 export function registryPath(root) {
   return path.join(root, 'plugins-registry.json');
 }
 
 /** Load the curated registry. Fail-open to an empty registry. */
 export function loadRegistry(root) {
-  const f = registryPath(root);
+  let f = registryPath(root);
+  if (!existsSync(f)) {
+    f = registryPath(CODEBASE_ROOT);
+  }
   if (!existsSync(f)) return { registryVersion: 1, plugins: [] };
   try {
     const p = JSON.parse(readFileSync(f, 'utf8'));
@@ -27,7 +34,13 @@ export function loadRegistry(root) {
 /** Find a registry entry by bare id, full name, or `career-ops-plugin-<id>`. */
 export function findInRegistry(root, nameOrId) {
   const reg = loadRegistry(root);
-  return reg.plugins.find(p =>
+  const found = reg.plugins.find(p =>
+    p.id === nameOrId || p.name === nameOrId || p.name === `career-ops-plugin-${nameOrId}`) || null;
+  if (found) return found;
+
+  // Fallback to codebase root registry if not found
+  const baseReg = loadRegistry(CODEBASE_ROOT);
+  return baseReg.plugins.find(p =>
     p.id === nameOrId || p.name === nameOrId || p.name === `career-ops-plugin-${nameOrId}`) || null;
 }
 
@@ -42,7 +55,8 @@ export function findInRegistry(root, nameOrId) {
  * @returns {'bundled'|'approved'|'off-registry'|'unverified'}
  */
 export function classifySource(manifest, root, lockEntry) {
-  if (manifest.dir.startsWith(path.join(root, 'plugins') + path.sep)) return 'bundled';
+  if (manifest.dir.startsWith(path.join(root, 'plugins') + path.sep) ||
+      manifest.dir.startsWith(path.join(CODEBASE_ROOT, 'plugins') + path.sep)) return 'bundled';
   const reg = findInRegistry(root, manifest.id);
   if (!reg) return 'unverified';
   if (lockEntry && lockEntry.sha && reg.sha && lockEntry.sha !== reg.sha) return 'off-registry';

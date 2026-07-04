@@ -195,7 +195,8 @@ function validateCvSectionOrder(html, cvMarkdown) {
  */
 export function repoRelativeManifestPath(pathValue) {
   if (!pathValue) return '';
-  const rel = relative(__dirname, resolve(pathValue));
+  const dataRoot = getCareerOpsRoot();
+  const rel = relative(dataRoot, resolve(pathValue));
   if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return '';
   return rel.split(sep).join('/');
 }
@@ -211,8 +212,9 @@ export function repoRelativeManifestPath(pathValue) {
  * gitignored output/ artifacts and is meaningless on another machine.
  */
 function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
-  const manifestPath = resolve(__dirname, 'data', 'pdf-index.tsv');
-  const toRel = (p) => relative(__dirname, p).split(sep).join('/');
+  const dataRoot = getCareerOpsRoot();
+  const manifestPath = resolve(dataRoot, 'data', 'pdf-index.tsv');
+  const toRel = (p) => relative(dataRoot, p).split(sep).join('/');
   const relPDF = toRel(pdfPath);
   const relHTML = repoRelativeManifestPath(htmlPath);
   const date = new Date().toISOString().slice(0, 10);
@@ -284,7 +286,8 @@ async function generatePDF() {
   // Anchored to the repo root (__dirname), not process.cwd(): running the script
   // from outside the repo used to falsely refuse in-repo outputs — and, worse,
   // would have allowed writes anywhere under an arbitrary cwd.
-  const relOut = relative(__dirname, outputPath);
+  const dataRoot = getCareerOpsRoot();
+  const relOut = relative(dataRoot, outputPath);
   if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
     console.error(`Refusing to write the PDF outside the project directory: ${outputPath}`);
     process.exit(1);

@@ -91,6 +91,13 @@
  * @property {('http')} transport
  * @property {(url: string, opts?: FetchOptions) => Promise<string>}  fetchText
  * @property {(url: string, opts?: FetchOptions) => Promise<unknown>} fetchJson
+ * @property {number} [maxPages] Optional pagination hint. When set (verify-portals.mjs's
+ *                              health probe passes 1), a paginating provider SHOULD stop
+ *                              after this many pages — the probe only needs the first page
+ *                              to tell a live board from a broken one, and must not walk an
+ *                              entire careers site. Providers that ignore it stay correct:
+ *                              the probe caps their requests defensively via the context's
+ *                              own fetch functions.
  */
 
 /**
