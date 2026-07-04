@@ -13,7 +13,7 @@
 
 
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -9208,6 +9208,19 @@ try {
   else fail('valid keyed manifest should be accepted');
   if (vm({ ...base, entry: '../../scan.mjs' }) === null) pass('entry escaping the plugin directory is rejected (traversal guard)');
   else fail('entry traversal should be rejected');
+  mkdirSync(join(__manifestTmp, 'x'), { recursive: true });
+  writeFileSync(join(__manifestTmp, 'outside.mjs'), 'export default {};');
+  writeFileSync(join(__manifestTmp, 'outside.md'), '# outside\n');
+  try {
+    symlinkSync(join(__manifestTmp, 'outside.mjs'), join(__manifestTmp, 'x', 'linked-entry.mjs'));
+    symlinkSync(join(__manifestTmp, 'outside.md'), join(__manifestTmp, 'x', 'linked-skill.md'));
+    if (vm({ ...base, entry: 'linked-entry.mjs' }) === null) pass('entry symlink escaping the plugin directory is rejected');
+    else fail('entry symlink traversal should be rejected');
+    if (vm({ ...base, skill: 'linked-skill.md' }) === null) pass('skill symlink escaping the plugin directory is rejected');
+    else fail('skill symlink traversal should be rejected');
+  } catch (e) {
+    warn(`symlink traversal test skipped: ${e.message}`);
+  }
   if (validateManifest({ ...base, id: 'y' }, '/tmp/x', 'x') === null) pass('manifest id must equal the directory name');
   else fail('id != dirname should be rejected');
   if (vm({ ...base, apiVersion: 2 }) === null) pass('unknown apiVersion is rejected (forward-compat gate)');
