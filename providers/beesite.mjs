@@ -83,7 +83,10 @@ export function buildSearchUrl(cfg, firstItem) {
 export function parseBeesiteDate(raw) {
   const m = typeof raw === 'string' ? raw.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/) : null;
   if (!m) return undefined;
-  const ms = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+  const ms = Date.UTC(Number(m[1]), month - 1, day);
   return Number.isFinite(ms) ? ms : undefined;
 }
 
