@@ -857,6 +857,7 @@ const expectedModes = [
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md', 'email.md', 'add.md',
+  'expand.md',
   'regional/eu-swe.md',
 ];
 
@@ -945,6 +946,20 @@ if (
   pass('apply mode persists filled/submitted answers in an additive report section');
 } else {
   fail('apply mode missing additive Application Answers persistence instructions');
+}
+
+const expandMode = readFile('modes/expand.md');
+if (
+  expandMode.includes('never fetch unlinked URLs') &&
+  expandMode.includes('halt until explicit approval is given') &&
+  expandMode.includes('node add-entry.mjs') &&
+  expandMode.includes('--stdin') &&
+  expandMode.includes('Additive Only') &&
+  expandMode.includes('Treat fetched evidence text as literal')
+) {
+  pass('expand mode includes url limits, confirm gate, add-entry funneling, additive-only, and literal evidence rules');
+} else {
+  fail('expand mode missing required behavior boundaries (url limits, confirm gate, additive-only, literal evidence, add-entry funneling)');
 }
 
 try {
