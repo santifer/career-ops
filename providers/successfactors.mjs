@@ -322,8 +322,13 @@ async function fetchCsb(entry, cfg, ctx) {
       if (total === null) {
         total = typeof json?.totalJobs === 'number' ? json.totalJobs : null;
       }
+      // Page-fullness checks below use the raw response count, not rows.length:
+      // parseCsbJobs drops id/title-less records, and a full API page with a
+      // few dropped records would otherwise look "short" and stop pagination
+      // before reaching later pages that still hold valid jobs.
+      const rawCount = Array.isArray(json?.jobSearchResult) ? json.jobSearchResult.length : 0;
+      if (rawCount === 0) break;
       const rows = parseCsbJobs(json, cfg, locale);
-      if (rows.length === 0) break;
 
       for (const row of rows) {
         if (seen.has(row.id)) continue;
@@ -336,7 +341,7 @@ async function fetchCsb(entry, cfg, ctx) {
       if (jobs.length >= MAX_JOBS) break;
       // Stop once we've covered the reported total, or on a short page.
       if (total !== null && (page + 1) * CSB_PAGE_SIZE >= total) break;
-      if (rows.length < CSB_PAGE_SIZE) break;
+      if (rawCount < CSB_PAGE_SIZE) break;
     }
   }
   return jobs;
