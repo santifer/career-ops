@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Application } from "@/lib/career-ops";
 import { Badge } from "@/components/ui/badge";
-import { scoreTone, legitimacyTone, parseReport } from "@/lib/format";
+import { scoreTone, scoreNum, legitimacyTone, parseReport } from "@/lib/format";
 import { StatusSelect } from "@/components/status-select";
 import { CompanyLogo } from "@/components/company-logo";
 import { ScoreMethodology } from "@/components/score-methodology";
@@ -16,10 +16,10 @@ import { DeleteFromTracker } from "@/components/delete-from-tracker";
 // "## F) Verdict (lead)", "## A) Role Summary", "## B) Match with CV", then
 // C–G + machine artifacts (Machine Summary YAML, Application Answers, submit
 // log). A mainstream user deciding "should I apply?" needs the verdict + fit;
-// the rest is depth-on-demand. We lead with F/A/B expanded and collapse the
-// tail — and strip the bare "F)" author-letters from the visible headings
+// the rest is depth-on-demand. We lead with the verdict as a callout, keep A/B
+// expanded, collapse C–G as content, and drop machine artifacts to a dimmer
+// "Technical" tier — and strip the bare "F)" author-letters from headings
 // (native <details>, no client JS — this stays a server component).
-const PRIMARY = new Set(["F", "A", "B"]);
 
 type Section = { heading: string; letter: string | null; content: string };
 
@@ -29,6 +29,25 @@ function cleanHeading(h: string): string {
     .replace(/\s*\((?:lead|verdict)\)\s*$/i, "")
     .trim();
   return stripped || h.trim();
+}
+
+// Machine artifacts (collapsed because they're for devs, not the mainstream) vs
+// human content C–G (collapsed only for length) — ux's "honest for devs" tier.
+function isMachine(heading: string): boolean {
+  return /machine summary|submitted|submit[-\s]?log/i.test(heading);
+}
+
+// A one-line teaser for a collapsed content section — drops the interaction cost
+// of "what's in here?" without defeating the collapse.
+function preview(md: string): string {
+  const text = md
+    .replace(/^#+\s.*$/gm, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/[*_`>#|]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const sentence = text.split(/(?<=[.!?])\s/)[0] ?? text;
+  return sentence.length > 96 ? sentence.slice(0, 96).trimEnd() + "…" : sentence;
 }
 
 function splitSections(body: string): { intro: string; sections: Section[] } {
@@ -94,6 +113,13 @@ export function ReportView({
 
         <div className="mt-4 flex flex-wrap items-center gap-2.5">
           {score && <Badge tone={scoreTone(score)}>{score}</Badge>}
+          {/* Verdict-first: the score's apply/don't-apply call (4.0 is the line,
+              per the public methodology) as a <2s-scannable chip. */}
+          {(() => {
+            const n = scoreNum(score ?? "");
+            if (Number.isNaN(n)) return null;
+            return n >= 4.0 ? <Badge tone="good">Recommended</Badge> : <Badge tone="muted">Below the apply line</Badge>;
+          })()}
           {meta?.legitimacy && <Badge tone={legitimacyTone(meta.legitimacy)}>{meta.legitimacy}</Badge>}
           {app && <StatusSelect n={id} current={app.status} />}
           <GeneratePdfButton n={id} company={app?.company ?? meta?.title ?? id} pdfReady={(app?.pdf ?? "").includes("✅")} />
@@ -137,7 +163,15 @@ export function ReportView({
                 </article>
               );
             }
-            const hasPrimary = sections.some((s) => s.letter && PRIMARY.has(s.letter));
+            // Verdict (F) leads as a highlighted callout with no competing heading —
+            // it's THE answer. A/B stay expanded (fit detail); C–G collapse as
+            // content (with a 1-line preview); machine artifacts drop to a dimmer
+            // "Technical" tier so the CLI-DNA is present-but-clearly-secondary.
+            const verdict = sections.find((s) => s.letter === "F");
+            const rest = sections.filter((s) => s !== verdict);
+            const machine = rest.filter((s) => isMachine(s.heading));
+            const mainSections = rest.filter((s) => !isMachine(s.heading));
+            const anyAB = mainSections.some((s) => s.letter === "A" || s.letter === "B");
             return (
               <div className="mt-8">
                 {intro && (
@@ -145,11 +179,19 @@ export function ReportView({
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{intro}</ReactMarkdown>
                   </article>
                 )}
-                {sections.map((s, i) => {
-                  // Lead with the verdict + fit (F/A/B). If a report has none of
-                  // those, keep the first section open so something always shows.
-                  const primary = s.letter ? PRIMARY.has(s.letter) : !hasPrimary && i === 0;
-                  if (primary) {
+
+                {verdict && (
+                  <div className="rounded-2xl border border-brand/25 bg-brand-soft/50 px-5 py-4">
+                    <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.16em] text-brand/80">Verdict</p>
+                    <article className="report-prose [&_p]:font-medium [&_p]:text-foreground">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{verdict.content}</ReactMarkdown>
+                    </article>
+                  </div>
+                )}
+
+                {mainSections.map((s, i) => {
+                  const expanded = s.letter === "A" || s.letter === "B" || (!anyAB && i === 0);
+                  if (expanded) {
                     return (
                       <article key={i} className="report-prose mt-6">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{`## ${cleanHeading(s.heading)}\n\n${s.content}`}</ReactMarkdown>
@@ -158,8 +200,9 @@ export function ReportView({
                   }
                   return (
                     <details key={i} className="group mt-3 overflow-hidden rounded-xl border border-border bg-surface/30">
-                      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-hover">
-                        {cleanHeading(s.heading)}
+                      <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 px-4 py-3 transition-colors hover:bg-surface-hover">
+                        <span className="text-sm font-medium">{cleanHeading(s.heading)}</span>
+                        <span className="hidden truncate text-xs text-faint sm:inline">{preview(s.content)}</span>
                         <ChevronDown className="ml-auto size-4 shrink-0 text-faint transition-transform group-open:rotate-180" />
                       </summary>
                       <div className="report-prose border-t border-border px-4 py-3">
@@ -168,6 +211,27 @@ export function ReportView({
                     </details>
                   );
                 })}
+
+                {machine.length > 0 && (
+                  <>
+                    <div className="mt-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.14em] text-faint">
+                      <span className="h-px flex-1 bg-border" />
+                      Technical details · for developers
+                      <span className="h-px flex-1 bg-border" />
+                    </div>
+                    {machine.map((s, i) => (
+                      <details key={i} className="group mt-2 overflow-hidden rounded-xl border border-border/60 bg-surface/20">
+                        <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 px-4 py-3 font-mono text-xs text-muted transition-colors hover:bg-surface-hover">
+                          {cleanHeading(s.heading)}
+                          <ChevronDown className="ml-auto size-4 shrink-0 text-faint transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="report-prose border-t border-border/60 px-4 py-3 opacity-80">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{s.content}</ReactMarkdown>
+                        </div>
+                      </details>
+                    ))}
+                  </>
+                )}
               </div>
             );
           })()}
