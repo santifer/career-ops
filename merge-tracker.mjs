@@ -523,7 +523,9 @@ function parseTsvContent(content, filename) {
       date: parts[1],
       company: parts[2],
       role: parts[3],
-      score: resolved.score,
+      // Write-canonical: the tracker stores scores unbolded (verify-pipeline
+      // rejects bold scores), so strip any markdown bold from the incoming cell.
+      score: resolved.score.replace(/\*\*/g, '').trim(),
       status: validateStatus(resolved.status),
       pdf: parts[6],
       report: parts[7],
@@ -554,7 +556,9 @@ function parseTsvContent(content, filename) {
       company: parts[2],
       role: parts[3],
       status: validateStatus(resolved.status),
-      score: resolved.score,
+      // Write-canonical: strip any markdown bold so the stored score stays
+      // unbolded (verify-pipeline rejects bold scores).
+      score: resolved.score.replace(/\*\*/g, '').trim(),
       pdf: parts[6],
       report: parts[7],
       notes: parts[8] || '',

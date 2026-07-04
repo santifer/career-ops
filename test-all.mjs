@@ -4269,7 +4269,7 @@ try {
       '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
       '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
       '| 1 | 2026-01-04 | AnchorCo | Platform Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-anchorco-2026-01-04.md) | existing |\n');
-    for (const n of ['001-anchorco-2026-01-04', '002-swapco-2026-01-05', '003-ambigco-2026-01-05']) {
+    for (const n of ['001-anchorco-2026-01-04', '002-swapco-2026-01-05', '003-ambigco-2026-01-05', '004-boldco-2026-01-05']) {
       writeFileSync(join(colTmp, 'reports', `${n}.md`), '# fixture\n');
     }
     // Swapped order: score BEFORE status (4.6/5 then Evaluated).
@@ -4278,6 +4278,9 @@ try {
     // Undecidable: two status-like cells, no score → must be skipped, not merged.
     writeFileSync(join(additionsDir, '003-ambigco.tsv'),
       '3\t2026-01-05\tAmbigCo\tAnalyst\tEvaluated\tApplied\t❌\t[3](reports/003-ambigco-2026-01-05.md)\tno score\n');
+    // Bold score cell → detected AND persisted write-canonical (unbolded).
+    writeFileSync(join(additionsDir, '004-boldco.tsv'),
+      '4\t2026-01-05\tBoldCo\tSRE\tEvaluated\t**4.7/5**\t❌\t[4](reports/004-boldco-2026-01-05.md)\tbold score\n');
 
     const mergeResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
     if (mergeResult === null) {
@@ -4296,6 +4299,12 @@ try {
         pass('undecidable score/status row is skipped, not merged (no silent swap)');
       } else {
         fail('undecidable row was merged instead of skipped');
+      }
+      const boldRow = merged.split('\n').find(l => l.includes('BoldCo')) || '';
+      if (boldRow.includes('| 4.7/5 | Evaluated |') && !boldRow.includes('**')) {
+        pass('bold score cell is persisted write-canonical (unbolded) in the merged row');
+      } else {
+        fail(`bold score not canonicalized on write: "${boldRow.trim()}"`);
       }
     }
   } finally {
