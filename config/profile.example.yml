@@ -121,6 +121,19 @@ cover_letter:
       # Only trigger this entry when the JD location is in one of these countries.
       countries: [Spain, Mexico, Argentina, Colombia, Chile]
 
+# ── Contact Preferences ──────────────────────────────────────────────────────
+#
+# Used by `/career-ops contacto` (outreach CTA) and `/career-ops email` (contact
+# block) to steer drafted messages toward how you actually want to be reached.
+# Optional. Omit the whole block, or set preferred_channel to "either", to keep
+# today's behavior unchanged (no channel steering).
+#
+# contact_preferences:
+#   preferred_channel: "email"   # email | phone | either — default "either" if omitted
+#   # Optional. Surfaced near the contact block in `/career-ops email` drafts and
+#   # can inform the CTA wording in `/career-ops contacto`. Keep it one line.
+#   note: "Screens unknown numbers — please email or text first to schedule a call"
+
 # ── Outreach / greeting ─────────────────────────────────────────────────────
 #
 # Used by the greeting variant of `/career-ops contacto` (the short first-touch

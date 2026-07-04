@@ -74,6 +74,8 @@ Use these optional fields when present:
 - `application_email.include_contact_block`
 - `application_email.include_attachment_checklist`
 - `application_email.signature_name`
+- `contact_preferences.preferred_channel`
+- `contact_preferences.note`
 
 If `candidate.wechat` is absent, omit WeChat. Do not invent one.
 
@@ -210,6 +212,23 @@ a concrete email address.
 
 If `application_email.include_contact_block` is `false`, use a normal signature
 only.
+
+**Contact channel preference:** If `application_email.include_contact_block` is
+`true` (or absent/default), check `contact_preferences.preferred_channel` in
+`config/profile.yml`. If it is absent or set to `"either"`, the contact block
+stays exactly as above — no change. If it is set to `"email"` or `"phone"`, add
+one short line directly under the contact block naming that preference, e.g.:
+
+```text
+Contact:
+Email: jane@example.com
+Phone: +1-555-0123
+(Prefers email first -- happy to schedule a call from there.)
+```
+
+If `contact_preferences.note` is set, use its wording (or a close paraphrase)
+for that line instead of a generic phrase. Keep it to one line, no bold, no
+extra emphasis -- it should read as a practical note, not a demand.
 
 ---
 
