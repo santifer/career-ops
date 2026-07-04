@@ -4222,6 +4222,89 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER TSV COLUMN-ORDER TOLERANCE (#1427) ─────────────
+// Batch TSVs write (status, score); applications.md is (score, status). A
+// generator that swaps the two must not merge silently — the score column is
+// identified by content pattern, and an undecidable pair is skipped loudly.
+console.log('\n🧪 Testing merge-tracker TSV column-order tolerance (#1427)...');
+try {
+  const { resolveScoreStatus, looksLikeScoreCell } = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
+
+  // Unit: content-pattern discriminator
+  if (looksLikeScoreCell('4.2/5') && looksLikeScoreCell('5/5') && looksLikeScoreCell('N/A') && looksLikeScoreCell('DUP') && looksLikeScoreCell('**3.5/5**')) {
+    pass('looksLikeScoreCell accepts score cells (incl. N/A, DUP, bolded)');
+  } else {
+    fail('looksLikeScoreCell rejected a valid score cell');
+  }
+  if (!looksLikeScoreCell('Evaluated') && !looksLikeScoreCell('Applied') && !looksLikeScoreCell('')) {
+    pass('looksLikeScoreCell rejects status labels and blanks');
+  } else {
+    fail('looksLikeScoreCell matched a non-score cell');
+  }
+
+  const std = resolveScoreStatus('Evaluated', '4.2/5');
+  const swp = resolveScoreStatus('4.2/5', 'Evaluated');
+  if (std && std.score === '4.2/5' && std.status === 'Evaluated' &&
+      swp && swp.score === '4.2/5' && swp.status === 'Evaluated') {
+    pass('resolveScoreStatus maps both column orders to the same result');
+  } else {
+    fail(`resolveScoreStatus order handling: std=${JSON.stringify(std)} swp=${JSON.stringify(swp)}`);
+  }
+  if (resolveScoreStatus('Evaluated', 'Applied') === null && resolveScoreStatus('4.2/5', '5/5') === null) {
+    pass('resolveScoreStatus returns null when neither or both cells look like a score');
+  } else {
+    fail('resolveScoreStatus should be undecidable for two statuses or two scores');
+  }
+
+  // End-to-end: a swapped-column TSV merges correctly; an undecidable one is skipped.
+  const colTmp = mkdtempSync(join(tmpdir(), 'career-ops-colorder-'));
+  try {
+    mkdirSync(join(colTmp, 'data'));
+    mkdirSync(join(colTmp, 'reports'));
+    const additionsDir = join(colTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(colTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | AnchorCo | Platform Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-anchorco-2026-01-04.md) | existing |\n');
+    for (const n of ['001-anchorco-2026-01-04', '002-swapco-2026-01-05', '003-ambigco-2026-01-05']) {
+      writeFileSync(join(colTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+    // Swapped order: score BEFORE status (4.6/5 then Evaluated).
+    writeFileSync(join(additionsDir, '002-swapco.tsv'),
+      '2\t2026-01-05\tSwapCo\tData Engineer\t4.6/5\tEvaluated\t❌\t[2](reports/002-swapco-2026-01-05.md)\tswapped cols\n');
+    // Undecidable: two status-like cells, no score → must be skipped, not merged.
+    writeFileSync(join(additionsDir, '003-ambigco.tsv'),
+      '3\t2026-01-05\tAmbigCo\tAnalyst\tEvaluated\tApplied\t❌\t[3](reports/003-ambigco-2026-01-05.md)\tno score\n');
+
+    const mergeResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    if (mergeResult === null) {
+      fail('merge-tracker.mjs crashed during column-order test');
+    } else {
+      const merged = readFileSync(tracker, 'utf-8');
+      const swapRow = merged.split('\n').find(l => l.includes('SwapCo')) || '';
+      // buildRow writes `| … | score | status | … |`, so the score must land in the
+      // score column and status in the status column despite the swapped input.
+      if (swapRow.includes('| 4.6/5 | Evaluated |')) {
+        pass('swapped-column TSV merges with score and status in the correct columns');
+      } else {
+        fail(`swapped TSV mis-merged: "${swapRow.trim()}"`);
+      }
+      if (!merged.includes('AmbigCo')) {
+        pass('undecidable score/status row is skipped, not merged (no silent swap)');
+      } else {
+        fail('undecidable row was merged instead of skipped');
+      }
+    }
+  } finally {
+    rmSync(colTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker column-order tests crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER REPORT-NUMBER COLLISION (#912) ─────────────────
 // The report-number dedup check was not company-guarded: a TSV for NewCo
 // with report [1] would find the existing tracker row [1] for OtherCo and

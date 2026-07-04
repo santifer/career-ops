@@ -22,7 +22,7 @@ import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
-import { LEGACY_COLMAP, detectColumns } from './tracker-parse.mjs';
+import { LEGACY_COLMAP, detectColumns, resolveScoreStatus } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -511,13 +511,20 @@ function parseTsvContent(content, filename) {
       return null;
     }
     // Format: num | date | company | role | score | status | pdf | report | notes [| location]
+    // Identify score vs status by content, not position, so a swapped row can't
+    // merge silently (#1427).
+    const resolved = resolveScoreStatus(parts[4], parts[5]);
+    if (!resolved) {
+      console.warn(`⚠️  Skipping ${filename}: cannot tell score from status in columns 5–6 ("${parts[4]}" | "${parts[5]}") — refusing to merge a possible column swap`);
+      return null;
+    }
     addition = {
       num: parseInt(parts[0]),
       date: parts[1],
       company: parts[2],
       role: parts[3],
-      score: parts[4],
-      status: validateStatus(parts[5]),
+      score: resolved.score,
+      status: validateStatus(resolved.status),
       pdf: parts[6],
       report: parts[7],
       notes: parts[8] || '',
@@ -531,28 +538,14 @@ function parseTsvContent(content, filename) {
       return null;
     }
 
-    // Detect column order: some TSVs have (status, score), others have (score, status)
-    // Heuristic: if col4 looks like a score and col5 looks like a status, they're swapped
-    const col4 = parts[4].trim();
-    const col5 = parts[5].trim();
-    const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
-    const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
-    const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
-
-    let statusCol, scoreCol;
-    if (col4LooksLikeStatus && !col4LooksLikeScore) {
-      // Standard format: col4=status, col5=score
-      statusCol = col4; scoreCol = col5;
-    } else if (col4LooksLikeScore && col5LooksLikeStatus) {
-      // Swapped format: col4=score, col5=status
-      statusCol = col5; scoreCol = col4;
-    } else if (col5LooksLikeScore && !col4LooksLikeScore) {
-      // col5 is definitely score → col4 must be status
-      statusCol = col4; scoreCol = col5;
-    } else {
-      // Default: standard format (status before score)
-      statusCol = col4; scoreCol = col5;
+    // Column order varies: batch TSVs write (status, score), applications.md is
+    // (score, status). Identify each by content — the score cell is recognizable
+    // by pattern, a status never is — so a reordered TSV merges correctly and an
+    // undecidable row is skipped loudly instead of merging swapped data (#1427).
+    const resolved = resolveScoreStatus(parts[4].trim(), parts[5].trim());
+    if (!resolved) {
+      console.warn(`⚠️  Skipping ${filename}: cannot tell score from status in columns 5–6 ("${parts[4].trim()}" | "${parts[5].trim()}") — refusing to merge a possible column swap`);
+      return null;
     }
 
     addition = {
@@ -560,8 +553,8 @@ function parseTsvContent(content, filename) {
       date: parts[1],
       company: parts[2],
       role: parts[3],
-      status: validateStatus(statusCol),
-      score: scoreCol,
+      status: validateStatus(resolved.status),
+      score: resolved.score,
       pdf: parts[6],
       report: parts[7],
       notes: parts[8] || '',
