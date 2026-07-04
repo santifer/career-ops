@@ -47,6 +47,7 @@ const SYSTEM_PATHS = [
   'modes/oferta.md',
   'modes/pdf.md',
   'modes/cover.md',
+  'modes/email.md',
   'modes/add.md',
   'modes/scan.md',
   'modes/batch.md',

@@ -849,7 +849,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md', 'add.md',
+  'interview.md', 'latex.md', 'email.md', 'add.md',
   'regional/eu-swe.md',
 ];
 
@@ -880,6 +880,38 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
   } else {
     fail(`${skillPath} does not expose /career-ops latex in discovery menu`);
   }
+  if (
+    skill.includes('email') &&
+    skill.includes('| `email` | `email` |') &&
+    skill.includes('/career-ops email') &&
+    /Standalone modes[\s\S]*Applies to:[^\n]*`email`/.test(skill)
+  ) {
+    pass(`${skillPath} exposes /career-ops email in routing, discovery, and standalone loading`);
+  } else {
+    fail(`${skillPath} does not fully expose /career-ops email`);
+  }
+}
+
+const emailMode = readFile('modes/email.md');
+if (
+  emailMode.includes('Application Email Drafts') &&
+  emailMode.includes('Never submit') &&
+  emailMode.includes('Never send email') &&
+  emailMode.includes('hr_application') &&
+  emailMode.includes('referral_request') &&
+  emailMode.includes('cold_application') &&
+  emailMode.includes('Attachment checklist') &&
+  emailMode.includes('candidate.wechat') &&
+  emailMode.includes('data/pdf-index.tsv') &&
+  emailMode.includes('voice-dna.md') &&
+  emailMode.includes('cv.md') &&
+  emailMode.includes('article-digest.md') &&
+  emailMode.includes('config/profile.yml') &&
+  emailMode.includes('modes/_profile.md')
+) {
+  pass('email mode covers formal drafts, no-send safety, variants, attachments, contact fields, and source boundaries');
+} else {
+  fail('email mode missing required application-email behavior');
 }
 
 const applyMode = readFile('modes/apply.md');
