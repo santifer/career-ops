@@ -215,6 +215,7 @@ Mezcla al menos 2 preguntas situacionales / con visión de futuro del siguiente 
 - "¿En qué áreas sigues creciendo en tu rol?"
 
 ### Technical / Domain-Specific (practitioner, 45–60 min)
+
 1. [Internals fundamentales de la principal herramienta o método de la disciplina — ej., internals del runtime para ingeniería, modelos de atribución para marketing, métodos de valoración para finanzas]
 2. [Patrón o marco de trabajo establecido relevante para el rol — extraído de la JD]
 3. [Profundización en un bloque de construcción fundamental — ej., una estructura de datos, una prueba estadística, un principio contable]
@@ -223,12 +224,14 @@ Mezcla al menos 2 preguntas situacionales / con visión de futuro del siguiente 
 6. ¿Cómo elevas el estándar de calidad en un equipo?
 
 ### Design / Case Study (45–60 min)
+
 1. Diseña [un sistema, proceso, campaña o producto relevante para el rol].
 2. [Pregunta de restricción — ¿cómo se comporta tu diseño cuando algo falla, escala 10x o pierde presupuesto?]
 3. [Pregunta de calidad/confiabilidad — ¿cómo garantizas la corrección o mides el éxito?]
 4. Explícame cómo sabrías que está funcionando después del lanzamiento.
 
 ### Behavioral Panel
+
 1. Háblame de una vez que lideraste a un equipo a través de una entrega difícil.
 2. Describe un fallo importante en producción o en el mercado — ¿qué sucedió y qué cambió después?
 3. Háblame de una vez que influiste en la dirección de varios equipos o partes interesadas (stakeholders).

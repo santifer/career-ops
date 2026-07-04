@@ -71,7 +71,7 @@ Antes de dimensionar los bloques, revisa `interview-prep/question-bank.md` (si e
 
 **Plantilla (ajusta el tamaño de los bloques según el total de horas disponibles):**
 
-```
+```text
 Block 1 — Fija tu narrativa (primero, siempre)
   - Escribe la cronología de tu background explícitamente
   - Prepara "por qué esta empresa" con una conexión específica a tu historia
