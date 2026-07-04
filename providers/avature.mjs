@@ -82,13 +82,21 @@ function parseLocation(block) {
 /** @param {string} htmlText @param {string} origin */
 export function parseArticles(htmlText, origin) {
   const out = [];
-  const re = /<article class="article article--result"[\s\S]*?<\/article>/g;
+  // Tenants vary the result class: Synopsys uses `article--result`, Siemens
+  // appends a position index (`article--result 1`). Accept any suffix.
+  const re = /<article class="article article--result[^"]*"[\s\S]*?<\/article>/g;
   let a;
   while ((a = re.exec(htmlText)) !== null) {
     const block = a[0];
     // JobDetail path may or may not sit under /careers/ (branded tenants vary),
-    // so anchor on JobDetail/ itself rather than a fixed prefix.
-    const urlM = block.match(/<a[^>]*class="link"[^>]*href="([^"]*\/JobDetail\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/);
+    // so anchor on JobDetail/ itself rather than a fixed prefix. Prefer the
+    // `class="link"` title anchor (most tenants); fall back to any JobDetail
+    // anchor for tenants (e.g. Rohde & Schwarz) whose title link carries no
+    // class. Share/mailto buttons url-encode the path (%2FJobDetail%2F) so they
+    // never match the literal `/JobDetail/` and can't be mistaken for the title.
+    const urlM =
+      block.match(/<a[^>]*class="link"[^>]*href="([^"]*\/JobDetail\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/) ||
+      block.match(/<a[^>]*href="([^"]*\/JobDetail\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/);
     if (!urlM) continue;
     const title = clean(urlM[2]);
     if (!title) continue;

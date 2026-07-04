@@ -11184,6 +11184,24 @@ try {
   else fail(`parseArticles location wrong: ${JSON.stringify(a2 && a2.location)}`);
   if (parseArticles('<div>no articles</div>', origin).length === 0) pass('parseArticles returns [] when no articles present');
   else fail('parseArticles should return [] for markup with no articles');
+
+  // Tenant markup variants: Siemens appends a position index to the result
+  // class ("article--result 1"); Rohde & Schwarz renders the title anchor with
+  // no class="link". Both must still parse. (Regressions found on live tenants.)
+  const variants = `
+    <article class="article article--result 1" id="article--1">
+      <h3 class="title"><a class="link" href="https://acme.avature.net/en_US/externaljobs/JobDetail/Head-of-PLM/511918">Head of PLM</a></h3>
+    </article>
+    <article class="article article--result" id="article--2">
+      <h3 class="title"><a href="https://acme.avature.net/en_US/careers/JobDetail/Director-Platform/13672">Director Platform Engineering</a></h3>
+    </article>`;
+  const vArts = parseArticles(variants, origin);
+  const vSuffix = vArts.find((a) => a.id === '511918');
+  if (vSuffix && vSuffix.title === 'Head of PLM') pass('parseArticles handles the "article--result 1" class suffix (Siemens)');
+  else fail(`parseArticles missed the class-suffix variant: ${JSON.stringify(vArts.map((a) => a.id))}`);
+  const vNoClass = vArts.find((a) => a.id === '13672');
+  if (vNoClass && vNoClass.title === 'Director Platform Engineering') pass('parseArticles falls back to a JobDetail anchor without class="link" (Rohde & Schwarz)');
+  else fail(`parseArticles missed the no-class-link variant: ${JSON.stringify(vArts.map((a) => a.id))}`);
 } catch (e) {
   fail(`avature provider tests crashed: ${e.message}`);
 }
