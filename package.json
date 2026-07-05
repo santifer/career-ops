@@ -65,9 +65,8 @@
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.0.0",
     "js-yaml": "^4.1.1",
-    "playwright": "1.61.1"
-  },
-  "devDependencies": {
-    "marked": "^18.0.5"
+    "marked": "^18.0.5",
+    "playwright": "1.61.1",
+    "sanitize-html": "^2.17.5"
   }
 }
