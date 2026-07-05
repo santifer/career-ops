@@ -48,35 +48,49 @@ const LOW_FIT_SCORE = 4.0;
 // Skill tokenizer. Superset of the tech regex in analyze-patterns.mjs
 // (deliberately duplicated — see #1520 discussion: extracting a shared module
 // from a tested core script is a follow-up once both call sites are stable).
+const SKILL_TOKENS = [
+  // Languages
+  'JavaScript', 'TypeScript', 'Python', 'Ruby', 'Java', 'Golang', 'Rust', 'PHP',
+  'Kotlin', 'Swift', 'Scala', 'Elixir', 'C\\+\\+', 'C#', '\\.NET', 'SQL',
+  // Frontend / frameworks
+  'React Native', 'React', 'Angular', 'Vue\\.?js', 'Svelte', 'Next\\.?js',
+  'Django', 'Flask', 'FastAPI', 'Rails', 'Laravel', 'Symfony', 'Spring',
+  'Node\\.?js', 'NodeJS',
+  // Data stores
+  'MongoDB', 'MySQL', 'PostgreSQL', 'Postgres', 'Redis', 'Elasticsearch',
+  'Snowflake', 'BigQuery', 'Databricks', 'DynamoDB', 'Cassandra',
+  // APIs / messaging
+  'GraphQL', 'gRPC', 'Kafka', 'RabbitMQ',
+  // Cloud / infra
+  'AWS', 'GCP', 'Azure', 'Docker', 'Kubernetes', 'k8s', 'Terraform',
+  'Ansible', 'Helm', 'Jenkins', 'GitHub Actions', 'GitLab CI', 'CI/CD',
+  'Prometheus', 'Grafana', 'Datadog', 'Supabase', 'Inngest',
+  // Data / ML / AI
+  'PyTorch', 'TensorFlow', 'scikit-learn', 'Pandas', 'NumPy', 'Spark',
+  'Airflow', 'dbt', 'MLOps', 'MLflow', 'LangChain', 'LlamaIndex',
+  'Hugging Face', 'RAG', 'LLMs?', 'Prompt Engineering', 'Fine-?tuning',
+  'Computer Vision', 'NLP',
+  // Analytics / enterprise
+  'Tableau', 'Power BI', 'Looker', 'Salesforce', 'SAP',
+];
+
+// \b fails at symbol edges (\bC\+\+\b needs a word char AFTER the +, \b\.NET
+// needs one BEFORE the dot), so C++/C#/.NET would never match standalone.
+// (?<!\w)/(?!\w) are equivalent to \b for word-char edges and correct for
+// symbol edges.
 const SKILL_PATTERN = new RegExp(
-  '\\b(' +
-  [
-    // Languages
-    'JavaScript', 'TypeScript', 'Python', 'Ruby', 'Java', 'Golang', 'Rust', 'PHP',
-    'Kotlin', 'Swift', 'Scala', 'Elixir', 'C\\+\\+', 'C#', '\\.NET', 'SQL',
-    // Frontend / frameworks
-    'React Native', 'React', 'Angular', 'Vue\\.?js', 'Svelte', 'Next\\.?js',
-    'Django', 'Flask', 'FastAPI', 'Rails', 'Laravel', 'Symfony', 'Spring',
-    'Node\\.?js', 'NodeJS',
-    // Data stores
-    'MongoDB', 'MySQL', 'PostgreSQL', 'Postgres', 'Redis', 'Elasticsearch',
-    'Snowflake', 'BigQuery', 'Databricks', 'DynamoDB', 'Cassandra',
-    // APIs / messaging
-    'GraphQL', 'gRPC', 'Kafka', 'RabbitMQ',
-    // Cloud / infra
-    'AWS', 'GCP', 'Azure', 'Docker', 'Kubernetes', 'k8s', 'Terraform',
-    'Ansible', 'Helm', 'Jenkins', 'GitHub Actions', 'GitLab CI', 'CI/CD',
-    'Prometheus', 'Grafana', 'Datadog', 'Supabase', 'Inngest',
-    // Data / ML / AI
-    'PyTorch', 'TensorFlow', 'scikit-learn', 'Pandas', 'NumPy', 'Spark',
-    'Airflow', 'dbt', 'MLOps', 'MLflow', 'LangChain', 'LlamaIndex',
-    'Hugging Face', 'RAG', 'LLMs?', 'Prompt Engineering', 'Fine-?tuning',
-    'Computer Vision', 'NLP',
-    // Analytics / enterprise
-    'Tableau', 'Power BI', 'Looker', 'Salesforce', 'SAP',
-  ].join('|') +
-  ')\\b',
+  '(?<!\\w)(?:' + SKILL_TOKENS.join('|') + ')(?!\\w)',
   'gi'
+);
+
+// lowercase → canonical display casing, derived from SKILL_TOKENS by stripping
+// regex syntax ('Vue\\.?js' → 'Vue.js'). Keeps case-insensitive matches like
+// "graphql" resolving to the same key ("GraphQL") as the CV-known-skills set.
+const DISPLAY = Object.fromEntries(
+  SKILL_TOKENS.map(t => {
+    const display = t.replace(/\\/g, '').replace(/\?/g, '');
+    return [display.toLowerCase(), display];
+  })
 );
 
 // Exact-alias canonicalization ONLY (lowercased match → display name).
@@ -109,14 +123,10 @@ const CANONICAL = {
 
 function canonicalize(token) {
   const key = token.toLowerCase();
-  if (CANONICAL[key]) return CANONICAL[key];
-  // Preserve casing conventions for plain matches (JavaScript, PyTorch, ...):
-  // the pattern list already carries display casing, so title-case fallback
-  // only fires for all-lower matches like "python".
-  if (token === token.toLowerCase()) {
-    return token.charAt(0).toUpperCase() + token.slice(1);
-  }
-  return token;
+  // Alias map first (k8s → Kubernetes), then display casing from the token
+  // list (graphql → GraphQL, pytorch → PyTorch) — never title-case, which
+  // manufactures keys like "Graphql" that miss the known-skills set.
+  return CANONICAL[key] || DISPLAY[key] || token;
 }
 
 /** Extract the set of canonical skill names present in a free-text blob. */
@@ -345,6 +355,19 @@ function runSelfTest() {
   const s1 = extractSkills('Needs k8s, golang and Postgres experience; NodeJS a plus');
   for (const expected of ['Kubernetes', 'Go', 'PostgreSQL', 'Node.js']) {
     if (!s1.has(expected)) failures.push(`extractSkills missing canonical ${expected} (got ${[...s1].join(',')})`);
+  }
+
+  // Symbol-terminated skills: \b-style boundaries would drop all three
+  const s1b = extractSkills('Requires C++ and C# on .NET, plus SQL.');
+  for (const expected of ['C++', 'C#', '.NET', 'SQL']) {
+    if (!s1b.has(expected)) failures.push(`extractSkills missing symbol skill ${expected} (got ${[...s1b].join(',')})`);
+  }
+
+  // Lowercase mentions of mixed-case skills must resolve to canonical casing,
+  // or knownSkills.has() misses them (Graphql !== GraphQL)
+  const s1c = extractSkills('familiar with graphql, pytorch and postgresql');
+  for (const expected of ['GraphQL', 'PyTorch', 'PostgreSQL']) {
+    if (!s1c.has(expected)) failures.push(`extractSkills lowercase mention not canonical ${expected} (got ${[...s1c].join(',')})`);
   }
 
   // Over-suppression guard: cv "Java" must NOT swallow a "JavaScript" gap,
