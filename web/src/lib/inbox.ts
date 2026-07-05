@@ -5,7 +5,10 @@
 
 import type { AtsSource } from "@/lib/explore";
 
-/** Which ATS a posting lives on, derived from its URL host (0 tokens, no network). */
+/** Which ATS a posting lives on, derived from its URL host (0 tokens, no network).
+ *  Matches on the registrable domain anchored at a dot boundary (host === base OR
+ *  host ends with ".base") — never a bare substring, so "greenhouse.io.evil.com"
+ *  or "notlever.co" can't be misread as that ATS. */
 export function sourceFromUrl(url: string): AtsSource | null {
   let host = "";
   try {
@@ -13,10 +16,11 @@ export function sourceFromUrl(url: string): AtsSource | null {
   } catch {
     return null;
   }
-  if (host.includes("greenhouse.io")) return "greenhouse";
-  if (host.includes("lever.co")) return "lever";
-  if (host.includes("ashbyhq.com")) return "ashby";
-  if (host.includes("myworkdayjobs.com") || host.includes("workday")) return "workday";
+  const domainIs = (base: string) => host === base || host.endsWith(`.${base}`);
+  if (domainIs("greenhouse.io")) return "greenhouse";
+  if (domainIs("lever.co")) return "lever";
+  if (domainIs("ashbyhq.com")) return "ashby";
+  if (domainIs("myworkdayjobs.com") || domainIs("workday.com")) return "workday";
   return null;
 }
 
