@@ -1792,15 +1792,15 @@ try {
   }
 
   const leverSlug = parseAtsSlug('https://jobs.lever.co/acme');
-  if (leverSlug?.ats === 'lever' && leverSlug?.slug === 'acme') {
+  if (leverSlug?.ats === 'lever' && leverSlug?.slug === 'acme' && !leverSlug?.eu) {
     pass('verify-portals parseAtsSlug extracts lever slug from jobs.lever.co URL');
   } else {
     fail(`verify-portals parseAtsSlug lever: ${JSON.stringify(leverSlug)}`);
   }
 
   const leverEuSlug = parseAtsSlug('https://jobs.eu.lever.co/acme-eu');
-  if (leverEuSlug?.ats === 'lever-eu' && leverEuSlug?.slug === 'acme-eu') {
-    pass('verify-portals parseAtsSlug extracts lever-eu slug from jobs.eu.lever.co URL');
+  if (leverEuSlug?.ats === 'lever' && leverEuSlug?.slug === 'acme-eu' && leverEuSlug?.eu === true) {
+    pass('verify-portals parseAtsSlug extracts lever-eu slug and sets eu:true from jobs.eu.lever.co URL');
   } else {
     fail(`verify-portals parseAtsSlug lever-eu: ${JSON.stringify(leverEuSlug)}`);
   }
@@ -10764,11 +10764,17 @@ try {
 
   // EU Lever instance must be allowlisted in both the top-level host gate and
   // detectAts()'s LEV set — missing either one silently drops EU apply URLs.
-  const leverEuMentions = (src.match(/jobs\.eu\.lever\.co/g) || []).length;
-  if (leverEuMentions >= 2) {
-    pass('prepare-application.mjs allowlists jobs.eu.lever.co in ALLOWED_HOSTS and detectAts()');
+  // Inspect the actual literals, not a raw source-wide substring count, so a
+  // duplicate elsewhere (or a comment) can't mask a missing entry in either one.
+  const allowedHostsLiteral = src.match(/const ALLOWED_HOSTS = new Set\(\[([\s\S]*?)\]\)/)?.[1] || '';
+  const levLiteral = src.match(/const LEV = new Set\(\[([^\]]*)\]\)/)?.[1] || '';
+  const allowedHostsOk = /jobs\.eu\.lever\.co/.test(allowedHostsLiteral);
+  const levOk = /jobs\.eu\.lever\.co/.test(levLiteral);
+  if (allowedHostsOk && levOk) {
+    pass('prepare-application.mjs allowlists jobs.eu.lever.co in ALLOWED_HOSTS and detectAts() LEV set');
   } else {
-    fail(`prepare-application.mjs jobs.eu.lever.co mentions: expected >= 2, got ${leverEuMentions}`);
+    const missing = [!allowedHostsOk && 'ALLOWED_HOSTS', !levOk && 'LEV'].filter(Boolean).join(', ');
+    fail(`prepare-application.mjs missing jobs.eu.lever.co from: ${missing}`);
   }
 
   // Must read config/profile.yml

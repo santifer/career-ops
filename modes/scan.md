@@ -127,7 +127,7 @@ For companies with a public API or structured feed **that are not in `local_pars
 - **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
 - **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR**: list `https://{company}.bamboohr.com/careers/list`; job details `https://{company}.bamboohr.com/careers/{id}/detail`
-- **Lever**: `https://api.(eu.)?lever.co/v0/postings/{company}?mode=json`
+- **Lever**: `https://api.(eu.)?lever.co/v0/postings/{company}`
 - **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 - **Breezy**: `https://{company}.breezy.hr/json`
@@ -321,7 +321,7 @@ Fallback: if you only have the direct ATS URL, navigate first to the company's w
 **API/Feed Patterns by Platform:**
 - **Ashby API:** `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR API:** list `https://{company}.bamboohr.com/careers/list`; detail `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
-- **Lever API:** `https://api.(eu.)?lever.co/v0/postings/{company}?mode=json`
+- **Lever API:** `https://api.(eu.)?lever.co/v0/postings/{company}`
 - **Teamtailor RSS:** `https://{company}.teamtailor.com/jobs.rss`
 - **Workday API:** `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 

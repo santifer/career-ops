@@ -6,11 +6,17 @@
 
 /** @param {import('./_types.js').PortalEntry} entry */
 function resolveApiUrl(entry) {
-  const url = entry.careers_url || '';
-  const match = url.match(/jobs\.(eu\.)?lever\.co\/([^/?#]+)/);
-  if (!match) return null;
-  const [, region, slug] = match;
-  return `https://api.${region || ''}lever.co/v0/postings/${slug}`;
+  let url;
+  try {
+    url = new URL(entry.careers_url || '');
+  } catch {
+    return null;
+  }
+  const host = url.hostname.match(/^jobs\.((?:eu\.)?lever\.co)$/);
+  if (!host) return null;
+  const slug = url.pathname.split('/').filter(Boolean)[0];
+  if (!slug) return null;
+  return `https://api.${host[1]}/v0/postings/${slug}`;
 }
 
 /** @type {Provider} */
