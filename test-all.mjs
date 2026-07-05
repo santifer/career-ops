@@ -183,6 +183,7 @@ const scripts = [
   // tests inside their active career-ops workspace.
   { name: 'normalize-statuses.mjs --dry-run', expectExit: 0 },
   { name: 'dedup-tracker.mjs --dry-run', expectExit: 0 },
+  { name: 'set-status.mjs --help', expectExit: 0 },
   { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
@@ -4292,6 +4293,104 @@ try {
   }
 } catch (e) {
   fail(`find.mjs unit test crashed: ${e.message}`);
+}
+
+// #1428: agents were hand-editing applications.md to move rows through
+// Applied/Rejected/etc., which is fragile once trackers grow and columns drift.
+// set-status.mjs is the canonical write path: header-aware, status-validated,
+// ambiguity-safe, and note-preserving.
+console.log('\n🧪 Testing set-status.mjs canonical tracker updates...');
+try {
+  const statusTmp = mkdtempSync(join(tmpdir(), 'career-ops-set-status-'));
+  try {
+    mkdirSync(join(statusTmp, 'data'));
+    const tracker = join(statusTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|----------|-------|--------|-----|--------|-------|\n' +
+      '| 7 | 2026-06-01 | Acme Labs | Platform Product Manager | London | 4.2/5 | Evaluated | ❌ | [142](reports/142-acme-labs-2026-06-01.md) | Warm lead |\n' +
+      '| 8 | 2026-06-02 | Fabrikam | Data Product Manager | Remote | 3.6/5 | Evaluated | ❌ | [143](reports/143-fabrikam-2026-06-02.md) | — |\n');
+
+    const okRun = run(NODE, ['set-status.mjs', '142', 'Applied', '--note', 'Applied | via ATS'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: tracker },
+    });
+    if (okRun === null) {
+      fail('set-status.mjs crashed on a valid report-number update');
+    } else {
+      const out = readFileSync(tracker, 'utf-8');
+      const acme = out.split('\n').find(l => l.includes('| 7 |'));
+      if (acme && acme.includes('| London | 4.2/5 | Applied |') &&
+          acme.includes('Warm lead. Applied / via ATS') &&
+          existsSync(`${tracker}.bak`)) {
+        pass('set-status.mjs updates by report#, preserves inserted columns, appends notes, and writes a backup');
+      } else {
+        fail(`set-status.mjs wrote the wrong row/content: "${acme}"`);
+      }
+    }
+
+    const dryRun = run(NODE, ['set-status.mjs', 'fabrikam', 'Rejected', '--dry-run', '--json'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: tracker },
+    });
+    const afterDryRun = readFileSync(tracker, 'utf-8');
+    if (dryRun !== null && JSON.parse(dryRun).dryRun === true && afterDryRun.includes('| 8 | 2026-06-02 | Fabrikam | Data Product Manager | Remote | 3.6/5 | Evaluated |')) {
+      pass('set-status.mjs supports dry-run JSON output without modifying applications.md');
+    } else {
+      fail('set-status.mjs dry-run changed the tracker or emitted invalid JSON');
+    }
+
+    let invalidRejected = false;
+    try {
+      execFileSync(NODE, ['set-status.mjs', '143', 'Sent'], {
+        cwd: ROOT,
+        env: { ...process.env, CAREER_OPS_TRACKER: tracker },
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } catch {
+      invalidRejected = true;
+    }
+    if (invalidRejected && readFileSync(tracker, 'utf-8').includes('| 8 | 2026-06-02 | Fabrikam | Data Product Manager | Remote | 3.6/5 | Evaluated |')) {
+      pass('set-status.mjs rejects non-canonical statuses and leaves the tracker untouched');
+    } else {
+      fail('set-status.mjs accepted a non-canonical status or mutated the tracker after rejection');
+    }
+  } finally {
+    rmSync(statusTmp, { recursive: true, force: true });
+  }
+
+  const ambiguousTmp = mkdtempSync(join(tmpdir(), 'career-ops-set-status-ambiguous-'));
+  try {
+    mkdirSync(join(ambiguousTmp, 'data'));
+    const tracker = join(ambiguousTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 7 | 2026-06-01 | Acme Labs | Platform Product Manager | 4.2/5 | Evaluated | ❌ | [12](reports/012-acme-labs-2026-06-01.md) | — |\n' +
+      '| 12 | 2026-06-02 | Globex | Data Product Manager | 3.6/5 | Evaluated | ❌ | [13](reports/013-globex-2026-06-02.md) | — |\n');
+    const before = readFileSync(tracker, 'utf-8');
+    let ambiguousRejected = false;
+    try {
+      execFileSync(NODE, ['set-status.mjs', '12', 'Applied'], {
+        cwd: ROOT,
+        env: { ...process.env, CAREER_OPS_TRACKER: tracker },
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } catch {
+      ambiguousRejected = true;
+    }
+    if (ambiguousRejected && readFileSync(tracker, 'utf-8') === before) {
+      pass('set-status.mjs refuses ambiguous report#/tracker# collisions without writing');
+    } else {
+      fail('set-status.mjs did not fail closed on an ambiguous numeric query');
+    }
+  } finally {
+    rmSync(ambiguousTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`set-status.mjs regression tests crashed: ${e.message}`);
 }
 
 // dedup-tracker reads AND writes by column; with a Location column its status

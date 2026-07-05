@@ -10,6 +10,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run verify` | `verify-pipeline.mjs` | Check pipeline data integrity |
 | `npm run normalize` | `normalize-statuses.mjs` | Fix non-canonical statuses |
 | `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
+| `npm run set-status` | `set-status.mjs` | Safely update one tracker row's canonical status |
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
 | `npm run build:latex` | `build-cv-latex.mjs` | Build .tex from structured JSON payload |
@@ -79,6 +80,21 @@ npm run dedup -- --dry-run  # preview without writing
 Creates a `.bak` backup before writing.
 
 **Exit codes:** `0` always.
+
+---
+
+## set-status
+
+Updates one `applications.md` row's status through a canonical write path. The command resolves a row by report number, tracker number, or company/role fragment, refuses ambiguous matches, validates the target state against `templates/states.yml`, and appends an optional note without replacing existing context.
+
+```bash
+npm run set-status -- 371 Rejected --note "Rejected after R1; feedback captured"
+npm run set-status -- "Acme" Applied --dry-run
+```
+
+Creates a `.bak` backup and writes atomically. Use `--dry-run` to preview without writing.
+
+**Exit codes:** `0` update applied or no change needed, `1` invalid status, no match, ambiguous match, or missing tracker.
 
 ---
 
