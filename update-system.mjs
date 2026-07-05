@@ -38,15 +38,16 @@ const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/
 // Anchoring on `(?:^|-)` lets the releases-API fallback parse our tags,
 // which Release Please always prefixes with the component name.
 export const SEMVER_RE = /(?:^|-)v?(\d+\.\d+\.\d+)$/i;
-const DEFAULT_GIT_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_GIT_TIMEOUT_MS, 30000);
-const DEFAULT_GIT_FETCH_TIMEOUT_MS = parsePositiveInt(
+export const DEFAULT_GIT_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_GIT_TIMEOUT_MS, 30000);
+export const DEFAULT_GIT_FETCH_TIMEOUT_MS = parsePositiveInt(
   process.env.CAREER_OPS_GIT_FETCH_TIMEOUT_MS,
   Math.max(DEFAULT_GIT_TIMEOUT_MS, 300000),
 );
-const NPM_INSTALL_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_NPM_INSTALL_TIMEOUT_MS, 60000);
-const PLAYWRIGHT_INSTALL_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_PLAYWRIGHT_INSTALL_TIMEOUT_MS, 120000);
-const DASHBOARD_REBUILD_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_DASHBOARD_REBUILD_TIMEOUT_MS, 60000);
-const UPDATE_PATH_CHECKOUT_BUDGET_MS = parsePositiveInt(process.env.CAREER_OPS_UPDATE_PATH_CHECKOUT_BUDGET_MS, 5000);
+export const NPM_INSTALL_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_NPM_INSTALL_TIMEOUT_MS, 60000);
+export const PLAYWRIGHT_INSTALL_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_PLAYWRIGHT_INSTALL_TIMEOUT_MS, 120000);
+export const DASHBOARD_REBUILD_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_DASHBOARD_REBUILD_TIMEOUT_MS, 60000);
+export const UPDATE_PATH_CHECKOUT_BUDGET_MS = parsePositiveInt(process.env.CAREER_OPS_UPDATE_PATH_CHECKOUT_BUDGET_MS, 5000);
+export const REEXEC_BUFFER_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_REEXEC_BUFFER_TIMEOUT_MS, 60000);
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
@@ -344,7 +345,7 @@ export function reexecTimeoutMs(updatePathCount = SYSTEM_PATHS.length + BOOTSTRA
       NPM_INSTALL_TIMEOUT_MS +
       PLAYWRIGHT_INSTALL_TIMEOUT_MS +
       DASHBOARD_REBUILD_TIMEOUT_MS +
-      60000,
+      REEXEC_BUFFER_TIMEOUT_MS,
   );
 }
 
@@ -693,6 +694,7 @@ async function apply() {
     git('fetch', CANONICAL_REPO, 'main');
 
     if (!isReexec) {
+      const timeout = reexecTimeoutMs();
       try {
         // The re-exec runs the TARGET updater, so every local module it imports
         // at load time must exist first. Resolve the fetched update-system.mjs's
@@ -700,7 +702,6 @@ async function apply() {
         // new top-level import can't reintroduce the self-reexec crash (#1245).
         const reexecFiles = resolveReexecCheckout('FETCH_HEAD', 'update-system.mjs');
         git('checkout', 'FETCH_HEAD', '--', ...reexecFiles);
-        const timeout = reexecTimeoutMs();
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',
@@ -714,7 +715,7 @@ async function apply() {
         return;
       } catch (err) {
         if (isTimeoutLikeError(err)) {
-          console.error(`Updater self-reexec timed out after ${timeoutSeconds(reexecTimeoutMs())}s.`);
+          console.error(`Updater self-reexec timed out after ${timeoutSeconds(timeout)}s.`);
           throw err;
         }
         console.error(`Updater self-reexec failed: ${err.message}`);

@@ -849,29 +849,34 @@ if (updateSystemScript.includes("'CODEX.md'")) {
   fail('update-system does not preserve CODEX.md');
 }
 
-if (
-  updateSystemScript.includes('CAREER_OPS_GIT_TIMEOUT_MS') &&
-  updateSystemScript.includes('CAREER_OPS_GIT_FETCH_TIMEOUT_MS') &&
-  updateSystemScript.includes('CAREER_OPS_NPM_INSTALL_TIMEOUT_MS') &&
-  updateSystemScript.includes('CAREER_OPS_PLAYWRIGHT_INSTALL_TIMEOUT_MS') &&
-  updateSystemScript.includes('CAREER_OPS_DASHBOARD_REBUILD_TIMEOUT_MS') &&
-  /args\[0\]\s*===\s*['"]fetch['"]/.test(updateSystemScript) &&
-  /gitTimeoutEnvVar\(args\)/.test(updateSystemScript) &&
-  updateSystemScript.includes('timed out after') &&
-  updateSystemScript.includes('const timeout = reexecTimeoutMs()') &&
-  updateSystemScript.includes('Updater self-reexec timed out after')
-) {
-  pass('update-system gives fetch/reexec/install/build configurable timeouts with readable failures');
-} else {
-  fail('update-system still risks hardcoded timeout failures (#1393)');
-}
-
 try {
-  const { gitTimeoutMs, reexecTimeoutMs } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+  const {
+    DASHBOARD_REBUILD_TIMEOUT_MS,
+    NPM_INSTALL_TIMEOUT_MS,
+    PLAYWRIGHT_INSTALL_TIMEOUT_MS,
+    REEXEC_BUFFER_TIMEOUT_MS,
+    UPDATE_PATH_CHECKOUT_BUDGET_MS,
+    gitTimeoutMs,
+    parsePositiveInt,
+    reexecTimeoutMs,
+  } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
   const fetchTimeout = gitTimeoutMs(['fetch']);
   const gitCommandTimeout = gitTimeoutMs(['checkout']);
   const updatePathCount = 100;
-  const minimumReexecBudget = fetchTimeout + gitCommandTimeout * 3 + updatePathCount * 5000 + 60000 + 120000 + 60000 + 60000;
+  const minimumReexecBudget =
+    fetchTimeout +
+    gitCommandTimeout * 3 +
+    updatePathCount * UPDATE_PATH_CHECKOUT_BUDGET_MS +
+    NPM_INSTALL_TIMEOUT_MS +
+    PLAYWRIGHT_INSTALL_TIMEOUT_MS +
+    DASHBOARD_REBUILD_TIMEOUT_MS +
+    REEXEC_BUFFER_TIMEOUT_MS;
+
+  if (parsePositiveInt('42', 7) === 42 && parsePositiveInt('-1', 7) === 7 && parsePositiveInt('nope', 7) === 7) {
+    pass('update-system timeout parser accepts only positive integer overrides');
+  } else {
+    fail('update-system timeout parser does not preserve fallback semantics');
+  }
 
   if (gitTimeoutMs(['fetch']) > gitTimeoutMs(['checkout'])) {
     pass('update-system gives fetch a larger timeout than ordinary git commands');
