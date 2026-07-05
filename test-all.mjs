@@ -833,6 +833,13 @@ try {
     fail('PDF renderer does not inject CSS page size/margins into the document head');
   }
 
+  const mixedCasePageCss = injectPrintPageCss('<html><head></head><body></body></html>', 'Letter');
+  if (mixedCasePageCss.includes('@page { size: Letter; margin: 0.6in; }')) {
+    pass('PDF renderer treats page format case-insensitively');
+  } else {
+    fail('PDF renderer falls back to A4 for mixed-case letter format');
+  }
+
   const doctypeNoHead = injectPrintPageCss('<!doctype html><html lang="en"><body></body></html>');
   if (
     doctypeNoHead.startsWith('<!doctype html>') &&

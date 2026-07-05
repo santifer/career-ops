@@ -194,7 +194,8 @@ export function repoRelativeManifestPath(pathValue) {
 }
 
 export function injectPrintPageCss(html, format = 'a4') {
-  const pageSize = format === 'letter' ? 'Letter' : 'A4';
+  const normalizedFormat = String(format || 'a4').toLowerCase();
+  const pageSize = normalizedFormat === 'letter' ? 'Letter' : 'A4';
   const pageStyle = `<style id="career-ops-page-setup">\n@page { size: ${pageSize}; margin: ${PDF_PAGE_MARGIN}; }\n</style>`;
 
   if (/<\/head>/i.test(html)) {
