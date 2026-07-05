@@ -73,10 +73,14 @@ const ATS_URL_PATTERNS = [
   { ats: 'greenhouse', re: /boards\.greenhouse\.io\/([^/?#]+)/ },
   { ats: 'ashby', re: /api\.ashbyhq\.com\/posting-api\/job-board\/([^/?#]+)/ },
   { ats: 'ashby', re: /jobs\.ashbyhq\.com\/([^/?#]+)/ },
-  { ats: 'lever', re: /api\.eu\.lever\.co\/v0\/postings\/([^/?#]+)/, eu: true },
-  { ats: 'lever', re: /jobs\.eu\.lever\.co\/([^/?#]+)/, eu: true },
-  { ats: 'lever', re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
-  { ats: 'lever', re: /jobs\.lever\.co\/([^/?#]+)/ },
+  // Lever entries pin an exact `host` (checked via new URL(), like
+  // providers/lever.mjs's resolveApiUrl) instead of matching the hostname as a
+  // loose substring anywhere in the URL — otherwise a crafted
+  // https://evil.com/jobs.lever.co/x careers_url would falsely resolve as Lever.
+  { ats: 'lever', host: 'api.eu.lever.co', re: /^\/v0\/postings\/([^/?#]+)/, eu: true },
+  { ats: 'lever', host: 'jobs.eu.lever.co', re: /^\/([^/?#]+)/, eu: true },
+  { ats: 'lever', host: 'api.lever.co', re: /^\/v0\/postings\/([^/?#]+)/ },
+  { ats: 'lever', host: 'jobs.lever.co', re: /^\/([^/?#]+)/ },
 ];
 
 /**
@@ -89,7 +93,20 @@ const ATS_URL_PATTERNS = [
  */
 export function parseAtsSlug(url) {
   const text = String(url || '');
-  for (const { ats, re, eu } of ATS_URL_PATTERNS) {
+  let hostname = null;
+  let pathname = null;
+  try {
+    ({ hostname, pathname } = new URL(text));
+  } catch {
+    // Not a parseable absolute URL — host-scoped patterns below simply won't match.
+  }
+  for (const { ats, re, eu, host } of ATS_URL_PATTERNS) {
+    if (host) {
+      if (hostname !== host) continue;
+      const m = pathname.match(re);
+      if (m && m[1]) return eu ? { ats, slug: m[1], eu: true } : { ats, slug: m[1] };
+      continue;
+    }
     const m = text.match(re);
     if (m && m[1]) return eu ? { ats, slug: m[1], eu: true } : { ats, slug: m[1] };
   }
@@ -222,9 +239,15 @@ async function discoverAlternates(name, { fetchJson }) {
   let bestEmpty = null;
   for (const slug of deriveSlugCandidates(name)) {
     for (const ats of Object.keys(ATS)) {
-      const r = await probeSlug(ats, slug, { fetchJson });
-      if (r.status === 'live') return r;
-      if (r.status === 'empty' && !bestEmpty) bestEmpty = r;
+      // Lever no longer has a separate 'lever-eu' registry key (unified into a
+      // single 'lever' + eu flag), so both instances must be probed explicitly
+      // here or EU-only tenants become undiscoverable via --add.
+      const euVariants = ats === 'lever' ? [false, true] : [false];
+      for (const eu of euVariants) {
+        const r = await probeSlug(ats, slug, { fetchJson, eu });
+        if (r.status === 'live') return r;
+        if (r.status === 'empty' && !bestEmpty) bestEmpty = r;
+      }
     }
   }
   return bestEmpty;

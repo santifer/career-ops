@@ -1812,6 +1812,7 @@ try {
     if (url.includes('/posting-api/job-board/deepsetai')) return { jobs: [{}] };
     if (url.includes('api.lever.co/v0/postings/acme-lv')) return [{}];
     if (url.includes('api.eu.lever.co/v0/postings/acme-eu')) return [{}, {}, {}];
+    if (url === 'https://api.eu.lever.co/v0/postings/diabolocom') return [{}, {}];
     const err = new Error('HTTP 404'); err.status = 404; throw err;
   };
   const results = await verifyCompanies([
@@ -1823,16 +1824,20 @@ try {
     { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
     { name: 'Lever Live', careers_url: 'https://jobs.lever.co/acme-lv' },
     { name: 'Lever EU Live', careers_url: 'https://jobs.eu.lever.co/acme-eu' },
+    { name: 'Diabolocom EU Discovery', careers_url: 'https://job-boards.greenhouse.io/does-not-exist-diabolocom' },
   ], { fetchJson: mockFetch });
   const byName = Object.fromEntries(results.map((r) => [r.name, r]));
   if (
-    results.length === 7 &&
+    results.length === 8 &&
     byName.Live.status === 'live' && byName.Empty.status === 'empty' &&
     byName.Typo.status === 'missing' && byName.Typo.errorKind === 'slug_gone' &&
     byName.Branded.status === 'skipped' &&
     byName['Lever Live'].status === 'live' &&
     byName['Lever EU Live'].status === 'live' &&
-    byName.Deepset.suggested?.ats === 'ashby' && byName.Deepset.suggested?.slug === 'deepsetai'
+    byName.Deepset.suggested?.ats === 'ashby' && byName.Deepset.suggested?.slug === 'deepsetai' &&
+    byName['Diabolocom EU Discovery'].suggested?.ats === 'lever' &&
+    byName['Diabolocom EU Discovery'].suggested?.slug === 'diabolocom' &&
+    byName['Diabolocom EU Discovery'].suggested?.url === 'https://api.eu.lever.co/v0/postings/diabolocom'
   ) {
     pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
   } else {
