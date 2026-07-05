@@ -51,9 +51,21 @@ const BULLET_LINE_RE = /^\s*[-*•]\s*(.+)$/;
 // the whole bullet as one skill string (JD bullets are often full sentences).
 const SKILL_TOKEN_RE = /\b([A-Z][A-Za-z0-9+.#]{1,30}(?:\.[a-z]{2,4})?)\b/g;
 
+// Deliberately broad: this list exists specifically to stop generic
+// capitalized nouns/adjectives from JD bullets (e.g. "Bachelor's degree
+// required", "3+ years of experience") from being misreported as missing
+// "skills" — the exact failure mode this file's design note warns against.
 const STOPWORDS = new Set([
-  'the', 'and', 'for', 'with', 'you', 'your', 'our', 'this', 'that',
-  'must', 'able', 'strong', 'excellent', 'proven', 'a', 'an',
+  'the', 'and', 'for', 'with', 'you', 'your', 'our', 'this', 'that', 'these', 'those',
+  'must', 'able', 'ability', 'strong', 'excellent', 'proven', 'a', 'an', 'or', 'in', 'of', 'to', 'as', 'is', 'are',
+  // degree / education boilerplate
+  'bachelor', 'bachelors', 'master', 'masters', 'degree', 'diploma', 'certification', 'certificate',
+  // experience / seniority boilerplate
+  'experience', 'years', 'year', 'senior', 'junior', 'entry', 'level', 'minimum', 'preferred', 'required',
+  // generic sentence-starters that show up capitalized at the start of a bullet
+  'candidates', 'candidate', 'applicants', 'applicant', 'ideal', 'successful',
+  'knowledge', 'understanding', 'familiarity', 'exposure', 'background',
+  'skills', 'skill', 'communication', 'team', 'teams', 'work', 'working',
 ]);
 
 /**
@@ -107,6 +119,49 @@ function skillMentionedInText(skill, text) {
   return re.test(text);
 }
 
+// ── Skills-section split ─────────────────────────────────────────────
+//
+// Line-scan instead of a single regex: JS regex has no `\Z`-style
+// end-of-string anchor (unlike Python, where this pattern was designed),
+// so a lookahead built on `\Z` either fails to match a trailing Skills
+// section at all or matches a literal "Z" character later in the text.
+// Scanning line-by-line for the next heading avoids the anchor entirely.
+
+const SKILLS_HEADING_RE = /^#{1,4}\s*Skills\s*$/i;
+const ANY_HEADING_RE = /^#{1,4}\s/;
+
+/**
+ * Split cv.md into its named "Skills" section (if any) and the remaining
+ * prose, without relying on a Python-style end-of-string regex anchor.
+ * @param {string} cvText
+ * @returns {{namedSkillsText: string, proseText: string}}
+ */
+function splitSkillsSection(cvText) {
+  const lines = cvText.split('\n');
+  let start = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (SKILLS_HEADING_RE.test(lines[i])) {
+      start = i + 1;
+      break;
+    }
+  }
+  if (start === -1) {
+    return { namedSkillsText: '', proseText: cvText };
+  }
+
+  let end = lines.length;
+  for (let i = start; i < lines.length; i++) {
+    if (ANY_HEADING_RE.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+
+  const namedSkillsText = lines.slice(start, end).join('\n');
+  const proseText = lines.slice(0, start - 1).concat(lines.slice(end)).join('\n');
+  return { namedSkillsText, proseText };
+}
+
 // ── Classification ───────────────────────────────────────────────────
 
 /**
@@ -116,11 +171,7 @@ function skillMentionedInText(skill, text) {
  * @returns {{existing: string[], supportedByResume: string[], gap: string[]}}
  */
 function classifySkillGaps(jdSkills, cvText) {
-  const skillsSectionMatch = cvText.match(/^#{1,4}\s*Skills\s*$([\s\S]*?)(?=^#{1,4}\s|\Z)/im);
-  const namedSkillsText = skillsSectionMatch ? skillsSectionMatch[1] : '';
-  const proseText = skillsSectionMatch
-    ? cvText.slice(0, skillsSectionMatch.index) + cvText.slice(skillsSectionMatch.index + skillsSectionMatch[0].length)
-    : cvText;
+  const { namedSkillsText, proseText } = splitSkillsSection(cvText);
 
   const existing = [];
   const supportedByResume = [];
@@ -187,6 +238,41 @@ Deployed services onto Kubernetes clusters and wrote FastAPI endpoints for inter
   eq('Kubernetes classified as supportedByResume (prose only)', result.supportedByResume.includes('Kubernetes'), true);
   eq('FastAPI classified as supportedByResume (prose only)', result.supportedByResume.includes('FastAPI'), true);
   eq('Rust classified as a real gap', result.gap.includes('Rust'), true);
+
+  // Regression: a Skills section that is the LAST section in cv.md, with no
+  // trailing heading after it. The original draft used a Python-style `\Z`
+  // end-of-string anchor, which JS regex has no equivalent for — it either
+  // failed to match this case at all, or matched a literal "Z" character
+  // later in the text. This fixture is that exact shape (Skills is last,
+  // and the text contains a "Z"-adjacent word to catch the literal-match
+  // failure mode too).
+  const trailingSkillsCv = `
+# Experience
+Worked with Rust in a prior role.
+
+# Skills
+Python, Docker, Zookeeper
+`;
+  const trailingResult = classifySkillGaps(['Python', 'Zookeeper'], trailingSkillsCv);
+  eq(
+    'trailing Skills section (last in doc, contains a "Z" word) is still captured as named skills',
+    trailingResult.existing.includes('Zookeeper'),
+    true
+  );
+
+  // Regression: generic JD boilerplate must not be misreported as a skill gap.
+  const boilerplateJd = `
+# Role
+
+## Requirements
+- Bachelor's degree required
+- 5+ years of experience
+- Strong communication skills
+`;
+  const boilerplateSkills = extractJdSkills(boilerplateJd);
+  eq('does not extract "Bachelor" as a skill', boilerplateSkills.includes('Bachelor'), false);
+  eq('does not extract "Experience" as a skill', boilerplateSkills.includes('Experience'), false);
+  eq('does not extract "Communication" as a skill', boilerplateSkills.includes('Communication'), false);
 
   console.log(`\njd-skill-gap self-test: ${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
