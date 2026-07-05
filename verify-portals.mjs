@@ -57,6 +57,10 @@ export const ATS = {
     probeUrl: (slug) => `https://api.lever.co/v0/postings/${slug}`,
     jobCount: (json) => (Array.isArray(json) ? json.length : null),
   },
+  'lever-eu': {
+    probeUrl: (slug) => `https://api.eu.lever.co/v0/postings/${slug}`,
+    jobCount: (json) => (Array.isArray(json) ? json.length : null),
+  },
 };
 
 // Recognize an ATS + slug from a careers_url OR an `api:` URL. The careers_url
@@ -73,6 +77,8 @@ const ATS_URL_PATTERNS = [
   { ats: 'ashby', re: /jobs\.ashbyhq\.com\/([^/?#]+)/ },
   { ats: 'lever', re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
   { ats: 'lever', re: /jobs\.lever\.co\/([^/?#]+)/ },
+  { ats: 'lever-eu', re: /api\.eu\.lever\.co\/v0\/postings\/([^/?#]+)/ },
+  { ats: 'lever-eu', re: /jobs\.eu\.lever\.co\/([^/?#]+)/ },
 ];
 
 /**

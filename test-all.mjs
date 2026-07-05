@@ -318,6 +318,12 @@ try {
   } else {
     fail(`Lever API URL wrong: ${JSON.stringify(lvApi)}`);
   }
+  const lvEuApi = resolveAtsApi('https://jobs.eu.lever.co/acme-eu/abc-123-def');
+  if (lvEuApi?.ats === 'lever' && lvEuApi.apiUrl === 'https://api.eu.lever.co/v0/postings/acme-eu/abc-123-def') {
+    pass('resolveAtsApi maps an EU Lever posting to api.eu.lever.co');
+  } else {
+    fail(`Lever EU API URL wrong: ${JSON.stringify(lvEuApi)}`);
+  }
   if (resolveAtsApi('https://example.com/jobs/123') === null) {
     pass('resolveAtsApi returns null for non-ATS URLs (→ Playwright fallback)');
   } else {
@@ -1785,11 +1791,27 @@ try {
     fail('verify-portals parseAtsSlug misclassified an ATS or branded URL');
   }
 
+  const leverSlug = parseAtsSlug('https://jobs.lever.co/acme');
+  if (leverSlug?.ats === 'lever' && leverSlug?.slug === 'acme') {
+    pass('verify-portals parseAtsSlug extracts lever slug from jobs.lever.co URL');
+  } else {
+    fail(`verify-portals parseAtsSlug lever: ${JSON.stringify(leverSlug)}`);
+  }
+
+  const leverEuSlug = parseAtsSlug('https://jobs.eu.lever.co/acme-eu');
+  if (leverEuSlug?.ats === 'lever-eu' && leverEuSlug?.slug === 'acme-eu') {
+    pass('verify-portals parseAtsSlug extracts lever-eu slug from jobs.eu.lever.co URL');
+  } else {
+    fail(`verify-portals parseAtsSlug lever-eu: ${JSON.stringify(leverEuSlug)}`);
+  }
+
   // Mock fetchJson: 200+jobs → live, 200+empty → empty, otherwise 404 → missing.
   const mockFetch = async (url) => {
     if (url.includes('/boards/live/jobs')) return { jobs: [{}, {}] };
     if (url.includes('/boards/empty/jobs')) return { jobs: [] };
     if (url.includes('/posting-api/job-board/deepsetai')) return { jobs: [{}] };
+    if (url.includes('api.lever.co/v0/postings/acme-lv')) return [{}];
+    if (url.includes('api.eu.lever.co/v0/postings/acme-eu')) return [{}, {}, {}];
     const err = new Error('HTTP 404'); err.status = 404; throw err;
   };
   const results = await verifyCompanies([
@@ -1799,13 +1821,17 @@ try {
     { name: 'Deepset', careers_url: 'https://job-boards.greenhouse.io/deepset' },
     { name: 'Branded', careers_url: 'https://acme.com/careers' },
     { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
+    { name: 'Lever Live', careers_url: 'https://jobs.lever.co/acme-lv' },
+    { name: 'Lever EU Live', careers_url: 'https://jobs.eu.lever.co/acme-eu' },
   ], { fetchJson: mockFetch });
   const byName = Object.fromEntries(results.map((r) => [r.name, r]));
   if (
-    results.length === 5 &&
+    results.length === 7 &&
     byName.Live.status === 'live' && byName.Empty.status === 'empty' &&
     byName.Typo.status === 'missing' && byName.Typo.errorKind === 'slug_gone' &&
     byName.Branded.status === 'skipped' &&
+    byName['Lever Live'].status === 'live' &&
+    byName['Lever EU Live'].status === 'live' &&
     byName.Deepset.suggested?.ats === 'ashby' && byName.Deepset.suggested?.slug === 'deepsetai'
   ) {
     pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
@@ -2338,6 +2364,7 @@ for (const [url, expected] of [
   ['https://boards.greenhouse.io/openai/jobs/123', 'openai'],
   ['https://jobs.ashbyhq.com/ElevenLabs/abc',      'elevenlabs'],
   ['https://jobs.lever.co/retool/xyz',              'retool'],
+  ['https://jobs.eu.lever.co/retool-eu/xyz',         'retool-eu'],
 ]) {
   const out = run(NODE, ['archive-posting.mjs', '--dry-run', url]);
   const { hostname } = new URL(url);
@@ -5249,13 +5276,29 @@ try {
   const lever = (await import(pathToFileURL(join(ROOT, 'providers/lever.mjs')).href)).default;
   const ashby = (await import(pathToFileURL(join(ROOT, 'providers/ashby.mjs')).href)).default;
 
-  let leverOpts = null;
+  // Each instance must hit its own host with redirect:'error' — a wrong host
+  // silently returns another tenant's (or no) postings instead of erroring.
+  let leverUrl = null, leverOpts = null;
   await lever.fetch(
     { name: 'L', careers_url: 'https://jobs.lever.co/example' },
-    { transport: 'http', fetchJson: async (_u, opts) => { leverOpts = opts; return []; }, fetchText: async () => '' },
+    { transport: 'http', fetchJson: async (u, opts) => { leverUrl = u; leverOpts = opts; return []; }, fetchText: async () => '' },
   );
-  if (leverOpts && leverOpts.redirect === 'error') pass('lever.fetch() passes redirect:"error"');
-  else fail(`lever.fetch() should pass redirect:"error", got ${JSON.stringify(leverOpts)}`);
+  if (leverUrl === 'https://api.lever.co/v0/postings/example' && leverOpts?.redirect === 'error') {
+    pass('lever.fetch() hits api.lever.co and passes redirect:"error"');
+  } else {
+    fail(`lever.fetch() default instance: url=${leverUrl}, opts=${JSON.stringify(leverOpts)}`);
+  }
+
+  let leverEuUrl = null, leverEuOpts = null;
+  await lever.fetch(
+    { name: 'L EU', careers_url: 'https://jobs.eu.lever.co/example-eu' },
+    { transport: 'http', fetchJson: async (u, opts) => { leverEuUrl = u; leverEuOpts = opts; return []; }, fetchText: async () => '' },
+  );
+  if (leverEuUrl === 'https://api.eu.lever.co/v0/postings/example-eu' && leverEuOpts?.redirect === 'error') {
+    pass('lever.fetch() hits api.eu.lever.co and passes redirect:"error"');
+  } else {
+    fail(`lever.fetch() EU instance: url=${leverEuUrl}, opts=${JSON.stringify(leverEuOpts)}`);
+  }
 
   let ashbyOpts = null;
   await ashby.fetch(
@@ -10717,6 +10760,15 @@ try {
     } else {
       fail(`prepare-application.mjs missing concrete handler: ${fn}`);
     }
+  }
+
+  // EU Lever instance must be allowlisted in both the top-level host gate and
+  // detectAts()'s LEV set — missing either one silently drops EU apply URLs.
+  const leverEuMentions = (src.match(/jobs\.eu\.lever\.co/g) || []).length;
+  if (leverEuMentions >= 2) {
+    pass('prepare-application.mjs allowlists jobs.eu.lever.co in ALLOWED_HOSTS and detectAts()');
+  } else {
+    fail(`prepare-application.mjs jobs.eu.lever.co mentions: expected >= 2, got ${leverEuMentions}`);
   }
 
   // Must read config/profile.yml

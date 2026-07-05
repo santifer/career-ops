@@ -2,13 +2,15 @@
 /** @typedef {import('./_types.js').Provider} Provider */
 
 // Lever provider — hits the public postings endpoint.
-// Auto-detects from careers_url pattern `https://jobs.lever.co/<slug>`.
+// Auto-detects from careers_url via jobs.(eu.)?lever.co/<slug>.
 
+/** @param {import('./_types.js').PortalEntry} entry */
 function resolveApiUrl(entry) {
   const url = entry.careers_url || '';
-  const match = url.match(/jobs\.lever\.co\/([^/?#]+)/);
+  const match = url.match(/jobs\.(eu\.)?lever\.co\/([^/?#]+)/);
   if (!match) return null;
-  return `https://api.lever.co/v0/postings/${match[1]}`;
+  const [, region, slug] = match;
+  return `https://api.${region || ''}lever.co/v0/postings/${slug}`;
 }
 
 /** @type {Provider} */
