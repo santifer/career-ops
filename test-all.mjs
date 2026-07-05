@@ -849,6 +849,45 @@ if (updateSystemScript.includes("'CODEX.md'")) {
   fail('update-system does not preserve CODEX.md');
 }
 
+if (
+  updateSystemScript.includes('CAREER_OPS_GIT_TIMEOUT_MS') &&
+  updateSystemScript.includes('CAREER_OPS_GIT_FETCH_TIMEOUT_MS') &&
+  updateSystemScript.includes('CAREER_OPS_NPM_INSTALL_TIMEOUT_MS') &&
+  updateSystemScript.includes('CAREER_OPS_PLAYWRIGHT_INSTALL_TIMEOUT_MS') &&
+  updateSystemScript.includes('CAREER_OPS_DASHBOARD_REBUILD_TIMEOUT_MS') &&
+  /args\[0\]\s*===\s*['"]fetch['"]/.test(updateSystemScript) &&
+  /gitTimeoutEnvVar\(args\)/.test(updateSystemScript) &&
+  updateSystemScript.includes('timed out after') &&
+  updateSystemScript.includes('const timeout = reexecTimeoutMs()') &&
+  updateSystemScript.includes('Updater self-reexec timed out after')
+) {
+  pass('update-system gives fetch/reexec/install/build configurable timeouts with readable failures');
+} else {
+  fail('update-system still risks hardcoded timeout failures (#1393)');
+}
+
+try {
+  const { gitTimeoutMs, reexecTimeoutMs } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+  const fetchTimeout = gitTimeoutMs(['fetch']);
+  const gitCommandTimeout = gitTimeoutMs(['checkout']);
+  const updatePathCount = 100;
+  const minimumReexecBudget = fetchTimeout + gitCommandTimeout * 3 + updatePathCount * 5000 + 60000 + 120000 + 60000 + 60000;
+
+  if (gitTimeoutMs(['fetch']) > gitTimeoutMs(['checkout'])) {
+    pass('update-system gives fetch a larger timeout than ordinary git commands');
+  } else {
+    fail('update-system fetch timeout is not larger than ordinary git command timeout');
+  }
+
+  if (reexecTimeoutMs(updatePathCount) >= minimumReexecBudget) {
+    pass('update-system sizes self-reexec timeout for downstream fetch/git/install/rebuild work');
+  } else {
+    fail('update-system self-reexec timeout budget is too small for downstream apply work');
+  }
+} catch (e) {
+  fail(`update-system timeout helper test crashed: ${e.message}`);
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
