@@ -550,7 +550,7 @@ console.log('\n5. Data contract validation');
 // Check system files exist
 const systemFiles = [
   'CLAUDE.md', 'CODEX.md', 'OPENCODE.md', 'VERSION', 'DATA_CONTRACT.md', 'docs/CODEX.md',
-  'modes/_shared.md', 'modes/_profile.template.md',
+  'modes/_shared.md', 'modes/_profile.template.md', 'modes/_custom.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
   'modes/heuristics/recruiter-side.md',
   'templates/states.yml', 'templates/cv-template.html',
@@ -571,7 +571,7 @@ for (const f of systemFiles) {
 
 // Check user files are NOT tracked (gitignored)
 const userFiles = [
-  'config/profile.yml', 'modes/_profile.md', 'portals.yml',
+  'config/profile.yml', 'modes/_profile.md', 'modes/_custom.md', 'portals.yml',
 ];
 for (const f of userFiles) {
   const tracked = run('git', ['ls-files', f]);
@@ -945,7 +945,7 @@ try {
 console.log('\n8. Mode file integrity');
 
 const expectedModes = [
-  '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
+  '_shared.md', '_profile.template.md', '_custom.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md', 'email.md', 'add.md', 'titles.md',
@@ -973,7 +973,7 @@ if (shared.includes('_profile.md')) {
 const pdfModeCustom = readFile('modes/pdf.md');
 if (
   shared.includes('| _custom.md | `modes/_custom.md` (if exists) |') &&
-  shared.includes('Read _custom.md (if it exists) AFTER this file and honor its house rules in every mode') &&
+  shared.includes('Read _custom.md (if it exists) AFTER _profile.md and honor its house rules in every mode') &&
   shared.includes('does not expire between sessions or between items in a batch') &&
   pdfModeCustom.includes('read `modes/_custom.md` (if it exists) and apply its formatting/content house rules')
 ) {
@@ -1026,6 +1026,55 @@ if (
   pass('email mode covers formal drafts, no-send safety, variants, attachments, contact fields, and source boundaries');
 } else {
   fail('email mode missing required application-email behavior');
+}
+
+for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+  if (!fileExists(skillPath)) {
+    fail(`${skillPath} is missing`);
+    continue;
+  }
+  const skill = readFile(skillPath);
+  const sectionOrder = (sectionStart, sectionEnd, markers) => {
+    const start = skill.indexOf(sectionStart);
+    if (start === -1) return false;
+    const end = sectionEnd ? skill.indexOf(sectionEnd, start + sectionStart.length) : -1;
+    const section = skill.slice(start, end === -1 ? undefined : end);
+    let cursor = -1;
+    for (const marker of markers) {
+      const idx = section.indexOf(marker, cursor + 1);
+      if (idx === -1 || idx <= cursor) return false;
+      cursor = idx;
+    }
+    return true;
+  };
+
+  const sharedModeOrder = sectionOrder(
+    '### Modes that require `_shared.md` + their mode file:',
+    '### Standalone modes',
+    ['modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
+  );
+  const standaloneModeOrder = sectionOrder(
+    '### Standalone modes',
+    '### Modes delegated to subagent:',
+    ['modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
+  );
+  const delegatedModeOrder = sectionOrder(
+    '### Modes delegated to subagent:',
+    'Execute the instructions from the loaded mode file.',
+    ['content of modes/_profile.md if exists', 'content of modes/_custom.md if exists', 'content of modes/{mode}.md'],
+  );
+
+  if (
+    skill.includes('modes/_custom.md') &&
+    skill.includes('[content of modes/_custom.md if exists]') &&
+    sharedModeOrder &&
+    standaloneModeOrder &&
+    delegatedModeOrder
+  ) {
+    pass(`${skillPath} loads modes/_custom.md after _profile.md and before the selected mode for direct and delegated modes`);
+  } else {
+    fail(`${skillPath} does not load modes/_custom.md in the required _profile → _custom → mode order (#1388)`);
+  }
 }
 
 const applyMode = readFile('modes/apply.md');
@@ -5461,6 +5510,13 @@ try {
     pass('CLAUDE.md routes custom rules to modes/_custom.md + seeds it from the template');
   } else {
     fail('CLAUDE.md does not reference modes/_custom.md / its template — agents will not use it (#1198)');
+  }
+
+  const agentsMd = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
+  if (agentsMd.includes('modes/_custom.md') && agentsMd.includes('modes/_custom.template.md')) {
+    pass('AGENTS.md routes procedural customizations to modes/_custom.md');
+  } else {
+    fail('AGENTS.md does not document modes/_custom.md as a user-layer customization file (#1388)');
   }
 } catch (e) {
   fail(`custom instructions test crashed: ${e.message}`);
