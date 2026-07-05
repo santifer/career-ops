@@ -48,16 +48,16 @@ export function FollowUpCard({ followup, onLogged }: { followup: FollowUp; onLog
           type="button"
           disabled={state === "logging"}
           onClick={log}
-          className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-surface-hover px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-brand-soft hover:text-brand")}
+          className={cn("inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-surface-hover px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-brand-soft hover:text-brand max-sm:min-h-[44px]")}
         >
           {state === "logging" ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} <span className="hidden sm:inline">Mark followed up</span><span className="sm:hidden">Followed up</span>
         </button>
         {followup.num != null && (
-          <a href={`/pipeline/${followup.num}`} title="Open report" className="shrink-0 rounded p-1 text-faint transition hover:text-brand">
+          <a href={`/pipeline/${followup.num}`} title="Open report" className="inline-flex shrink-0 items-center justify-center rounded p-1 text-faint transition hover:text-brand max-sm:min-h-[44px] max-sm:min-w-[44px]">
             <FileText className="size-4" />
           </a>
         )}
-        <button type="button" onClick={() => setState("snoozed")} className="shrink-0 text-[11px] text-faint transition hover:text-foreground">
+        <button type="button" onClick={() => setState("snoozed")} className="inline-flex shrink-0 items-center justify-center text-[11px] text-faint transition hover:text-foreground max-sm:min-h-[44px] max-sm:min-w-[44px]">
           Snooze
         </button>
       </div>
