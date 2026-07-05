@@ -5,9 +5,8 @@
 //
 // Every Teamtailor career site exposes a zero-auth XML jobs feed at
 // `https://<slug>.teamtailor.com/jobs.rss`. The feed is public and no-auth, so
-// it is parsed in-process with the same tiny tag extractor as
-// providers/nodesk.mjs / providers/personio.mjs rather than adding an XML
-// dependency.
+// it is parsed in-process via the shared _rss.mjs helpers rather than adding
+// an XML dependency.
 //
 // Auto-detects `https://<slug>.teamtailor.com/...` careers URLs. Many tenants
 // front the same feed on a branded domain (e.g. careers.acme.com also serves
@@ -20,6 +19,8 @@
 // explicit `provider: teamtailor`. Either way the fetch is HTTPS-only with
 // `redirect: 'error'`. Job `<link>`s (branded domains) are emitted as-is and
 // never fetched.
+
+import { tagText, toEpochMs, cleanHttpsUrl, splitItems } from './_rss.mjs';
 
 const TEAMTAILOR_HOST_RE = /^([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.teamtailor\.com$/i;
 
@@ -44,10 +45,6 @@ function assertFeedUrl(url, { explicit = false } = {}) {
   return url;
 }
 
-// Derive the RSS feed URL from a tracked_companies entry by normalizing any
-// path on the configured host to /jobs.rss. Auto-detection (explicit=false)
-// only claims *.teamtailor.com hosts; an explicit `provider: teamtailor` entry
-// (explicit=true) may use a branded careers host. Returns null otherwise.
 /**
  * @param {import('./_types.js').PortalEntry} entry
  * @param {{ explicit?: boolean }} [opts]
@@ -93,62 +90,6 @@ export default {
   },
 };
 
-function fromCodePoint(cp) {
-  try {
-    return String.fromCodePoint(cp);
-  } catch {
-    return '';
-  }
-}
-
-// Decode the XML entities that appear in RSS text: numeric (&#38; / &#x27;)
-// and the named five. Numeric forms are decoded first; &amp; is decoded LAST
-// so a literal "&amp;lt;" yields "&lt;" rather than over-decoding to "<".
-function decodeXmlEntities(s) {
-  return s
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => fromCodePoint(parseInt(d, 10)))
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&');
-}
-
-// Resolve a tag's inner text: unwrap a CDATA section, else decode entities.
-function extractText(inner) {
-  const cdata = inner.match(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/);
-  if (cdata) return cdata[1].trim();
-  return decodeXmlEntities(inner).trim();
-}
-
-// Extract the text of the first <tag>...</tag> in a block. Returns '' when
-// absent. Tag names may contain a namespace colon (e.g. tt:city).
-function tagText(block, tag) {
-  const m = block.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'i'));
-  return m ? extractText(m[1]) : '';
-}
-
-// NaN-safe Date.parse — `|| undefined` would also coerce a valid epoch 0.
-function toEpochMs(value) {
-  if (!value) return undefined;
-  const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? undefined : parsed;
-}
-
-// Keep only absolute HTTPS links. Teamtailor job URLs frequently live on a
-// branded custom domain, so — unlike the feed host — the link host is not
-// pinned; we only require a well-formed https URL.
-function cleanUrl(value) {
-  if (!value) return '';
-  try {
-    const parsed = new URL(value.trim());
-    return parsed.protocol === 'https:' ? parsed.href : '';
-  } catch {
-    return '';
-  }
-}
-
 // Build a human location from the first <tt:location> (city, country). Falls
 // back to "Remote" when the posting carries no place but is flagged remote.
 function resolveLocation(item) {
@@ -176,10 +117,10 @@ export function parseTeamtailorFeed(xml, defaultCompany = 'Teamtailor') {
   if (typeof xml !== 'string') return [];
   const company = typeof defaultCompany === 'string' && defaultCompany.trim() ? defaultCompany.trim() : 'Teamtailor';
   const jobs = [];
-  const blocks = xml.match(/<item\b[^>]*>[\s\S]*?<\/item>/gi) || [];
+  const blocks = splitItems(xml);
 
   for (const item of blocks) {
-    const url = cleanUrl(tagText(item, 'link'));
+    const url = cleanHttpsUrl(tagText(item, 'link'));
     if (!url) continue;
 
     const title = tagText(item, 'title');

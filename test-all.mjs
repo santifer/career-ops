@@ -12081,6 +12081,205 @@ try {
   fail(`softgarden provider tests crashed: ${e.message}`);
 }
 
+console.log('\n61. Provider — Wellfound (RSS feed parser)');
+try {
+  const {
+    default: wellfound,
+    parseWellfoundFeed,
+    splitWellfoundTitle,
+  } = await import(pathToFileURL(join(ROOT, 'providers/wellfound.mjs')).href);
+
+  // id
+  if (wellfound.id === 'wellfound') {
+    pass('wellfound.id is "wellfound"');
+  } else {
+    fail(`wellfound.id is "${wellfound.id}"`);
+  }
+
+  // detect() — explicit provider config
+  if (wellfound.detect({ provider: 'wellfound' })?.url === 'https://wellfound.com/jobs.rss') {
+    pass('wellfound.detect() claims explicit provider config');
+  } else {
+    fail('wellfound.detect() did not return expected URL');
+  }
+
+  // detect() — ignores other providers
+  if (wellfound.detect({ provider: 'other' }) === null && wellfound.detect({}) === null) {
+    pass('wellfound.detect() ignores other provider ids');
+  } else {
+    fail('wellfound.detect() should return null for non-wellfound entries');
+  }
+
+  // splitWellfoundTitle — canonical "Role at Company"
+  {
+    const { role, company } = splitWellfoundTitle('Senior Software Engineer at Stripe');
+    if (role === 'Senior Software Engineer' && company === 'Stripe') {
+      pass('splitWellfoundTitle splits canonical "Role at Company"');
+    } else {
+      fail(`splitWellfoundTitle canonical: role=${JSON.stringify(role)} company=${JSON.stringify(company)}`);
+    }
+  }
+
+  // splitWellfoundTitle — ambiguous title with multiple " at "
+  {
+    const { role, company } = splitWellfoundTitle('Staff Engineer at Scale at Acme Corp');
+    if (role === 'Staff Engineer at Scale' && company === 'Acme Corp') {
+      pass('splitWellfoundTitle splits on the LAST " at " for ambiguous titles');
+    } else {
+      fail(`splitWellfoundTitle last-at: role=${JSON.stringify(role)} company=${JSON.stringify(company)}`);
+    }
+  }
+
+  // splitWellfoundTitle — no " at " → full title, empty company
+  {
+    const { role, company } = splitWellfoundTitle('Just a plain title');
+    if (role === 'Just a plain title' && company === '') {
+      pass('splitWellfoundTitle returns empty company when no " at " found');
+    } else {
+      fail(`splitWellfoundTitle no-at: role=${JSON.stringify(role)} company=${JSON.stringify(company)}`);
+    }
+  }
+
+  // parseWellfoundFeed — realistic RSS sample
+  const SAMPLE_RSS = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Wellfound Jobs</title>
+    <item>
+      <title>Senior Backend Engineer at Stripe</title>
+      <link>https://wellfound.com/jobs/123456-senior-backend-engineer</link>
+      <author>Stripe</author>
+      <pubDate>Mon, 02 Jun 2025 10:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Staff Engineer at Scale at Acme &amp; Co</title>
+      <link>https://wellfound.com/jobs/234567-staff-engineer</link>
+      <author>Acme &amp; Co</author>
+      <pubDate>Mon, 02 Jun 2025 11:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Product Designer</title>
+      <link>https://wellfound.com/jobs/345678-product-designer</link>
+      <author>Beta Labs</author>
+      <pubDate>Mon, 02 Jun 2025 12:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Ghost Role</title>
+      <link>https://evil.example.com/jobs/999</link>
+      <author>Bad Actor</author>
+      <pubDate>Mon, 02 Jun 2025 13:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <link>https://wellfound.com/jobs/000000-no-title</link>
+      <author>Orphan</author>
+    </item>
+  </channel>
+</rss>`;
+
+  const jobs = parseWellfoundFeed(SAMPLE_RSS, 'Wellfound');
+
+  // count — off-domain and no-title items dropped
+  if (jobs.length === 3) {
+    pass('parseWellfoundFeed returns 3 jobs (off-domain URL and no-title item dropped)');
+  } else {
+    fail(`parseWellfoundFeed count: ${jobs.length} (expected 3)`);
+  }
+
+  // job 0 — canonical split
+  if (jobs[0]?.title === 'Senior Backend Engineer' && jobs[0]?.company === 'Stripe') {
+    pass('parseWellfoundFeed splits "Role at Company" title correctly');
+  } else {
+    fail(`parseWellfoundFeed job 0: ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.url === 'https://wellfound.com/jobs/123456-senior-backend-engineer') {
+    pass('parseWellfoundFeed maps job URL correctly');
+  } else {
+    fail(`parseWellfoundFeed url: ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (Number.isInteger(jobs[0]?.postedAt)) {
+    pass('parseWellfoundFeed parses pubDate to postedAt epoch ms');
+  } else {
+    fail(`parseWellfoundFeed postedAt: ${JSON.stringify(jobs[0]?.postedAt)}`);
+  }
+
+  if (jobs[0]?.location === '') {
+    pass('parseWellfoundFeed leaves location empty (not in feed)');
+  } else {
+    fail(`parseWellfoundFeed location should be empty, got: ${JSON.stringify(jobs[0]?.location)}`);
+  }
+
+  // job 1 — last-" at "-split + HTML entity decode in company
+  if (jobs[1]?.title === 'Staff Engineer at Scale' && jobs[1]?.company === 'Acme & Co') {
+    pass('parseWellfoundFeed handles last-" at " split and decodes &amp; in company');
+  } else {
+    fail(`parseWellfoundFeed job 1: title=${JSON.stringify(jobs[1]?.title)} company=${JSON.stringify(jobs[1]?.company)}`);
+  }
+
+  // job 2 — no " at " in title → falls back to <author>
+  if (jobs[2]?.title === 'Product Designer' && jobs[2]?.company === 'Beta Labs') {
+    pass('parseWellfoundFeed falls back to <author> when title has no " at "');
+  } else {
+    fail(`parseWellfoundFeed job 2 fallback: ${JSON.stringify(jobs[2])}`);
+  }
+
+  // CDATA title
+  const CDATA_RSS = `<rss><channel>
+    <item>
+      <title><![CDATA[Engineering Manager at CDATA Corp]]></title>
+      <link>https://wellfound.com/jobs/cdata-999</link>
+      <pubDate>Mon, 02 Jun 2025 14:00:00 +0000</pubDate>
+    </item>
+  </channel></rss>`;
+  const cdataJobs = parseWellfoundFeed(CDATA_RSS, 'Wellfound');
+  if (cdataJobs[0]?.title === 'Engineering Manager' && cdataJobs[0]?.company === 'CDATA Corp') {
+    pass('parseWellfoundFeed unwraps CDATA sections in title');
+  } else {
+    fail(`parseWellfoundFeed CDATA: ${JSON.stringify(cdataJobs[0])}`);
+  }
+
+  // empty / null input
+  if (parseWellfoundFeed('', 'X').length === 0 && parseWellfoundFeed(null, 'X').length === 0) {
+    pass('parseWellfoundFeed returns [] for empty / null input');
+  } else {
+    fail('parseWellfoundFeed should return [] for empty/null input');
+  }
+
+  // fetch() — integration with mock ctx
+  let fetchedUrl = null;
+  let fetchedOpts = null;
+  const mockCtx = {
+    async fetchText(url, opts) {
+      fetchedUrl = url;
+      fetchedOpts = opts;
+      return SAMPLE_RSS;
+    },
+  };
+  const fetched = await wellfound.fetch({ name: 'Wellfound', provider: 'wellfound' }, mockCtx);
+
+  if (fetchedUrl === 'https://wellfound.com/jobs.rss') {
+    pass('wellfound.fetch() requests the pinned RSS feed URL');
+  } else {
+    fail(`wellfound.fetch() fetched: ${JSON.stringify(fetchedUrl)}`);
+  }
+
+  if (fetchedOpts?.redirect === 'error') {
+    pass('wellfound.fetch() passes redirect:"error" to fetchText');
+  } else {
+    fail(`wellfound.fetch() redirect option: ${JSON.stringify(fetchedOpts?.redirect)}`);
+  }
+
+  if (fetched.length === 3) {
+    pass('wellfound.fetch() returns normalized jobs array');
+  } else {
+    fail(`wellfound.fetch() returned ${fetched.length} jobs (expected 3)`);
+  }
+
+} catch (e) {
+  fail(`wellfound provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

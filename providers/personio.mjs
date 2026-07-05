@@ -8,7 +8,10 @@
 // SSRF defence is an anchored host regex rather than a static allowlist.
 //
 // The feed is a flat, well-defined XML document, so it is parsed in-process
-// with a tiny tag extractor (no new dependency — the repo ships none for XML).
+// via the shared _rss.mjs helpers (no new dependency — the repo ships none
+// for XML).
+
+import { extractText, tagText, toEpochMs } from './_rss.mjs';
 
 const PERSONIO_HOST_RE = /^[a-z0-9][a-z0-9-]*\.jobs\.personio\.(de|com)$/;
 
@@ -45,13 +48,6 @@ function resolveHost(entry) {
   return parsed.hostname;
 }
 
-// NaN-safe Date.parse — `|| undefined` would also coerce a valid epoch 0.
-function toEpochMs(value) {
-  if (!value) return undefined;
-  const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? undefined : parsed;
-}
-
 /** @type {Provider} */
 export default {
   id: 'personio',
@@ -72,41 +68,6 @@ export default {
     return parsePersonioXml(text, entry.name, host);
   },
 };
-
-function fromCodePoint(cp) {
-  try {
-    return String.fromCodePoint(cp);
-  } catch {
-    return '';
-  }
-}
-
-// Decode the XML entities that appear in Personio job text: numeric (&#38; /
-// &#x27;) and the named five. Numeric forms are decoded first; &amp; is decoded
-// LAST so a literal "&amp;lt;" yields "&lt;" rather than over-decoding to "<".
-function decodeXmlEntities(s) {
-  return s
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => fromCodePoint(parseInt(d, 10)))
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&');
-}
-
-// Resolve a tag's inner text: unwrap a CDATA section, else decode entities.
-function extractText(inner) {
-  const cdata = inner.match(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/);
-  if (cdata) return cdata[1].trim();
-  return decodeXmlEntities(inner).trim();
-}
-
-// Extract the text of the first <tag>…</tag> in a block. Returns '' when absent.
-function tagText(block, tag) {
-  const m = block.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`));
-  return m ? extractText(m[1]) : '';
-}
 
 /**
  * Parse Personio's public XML jobs feed. Exported for unit tests.
