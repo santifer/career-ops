@@ -22,6 +22,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 const QUICK = process.argv.includes('--quick');
 const NODE = process.execPath;
+const CHILD_TIMEOUT_MS = 30000;
 
 let passed = 0;
 let failed = 0;
@@ -75,9 +76,9 @@ function warn(msg) { console.log(`  ⚠️  ${msg}`); warnings++; }
 function run(cmd, args = [], opts = {}) {
   try {
     if (Array.isArray(args) && args.length > 0) {
-      return execFileSync(cmd, args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
+      return execFileSync(cmd, args, { cwd: ROOT, encoding: 'utf-8', timeout: CHILD_TIMEOUT_MS, ...opts }).trim();
     }
-    return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
+    return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: CHILD_TIMEOUT_MS, ...opts }).trim();
   } catch (e) {
     return null;
   }
@@ -183,7 +184,6 @@ const scripts = [
   // tests inside their active career-ops workspace.
   { name: 'normalize-statuses.mjs --dry-run', expectExit: 0 },
   { name: 'dedup-tracker.mjs --dry-run', expectExit: 0 },
-  { name: 'set-status.mjs --help', expectExit: 0 },
   { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
@@ -213,6 +213,34 @@ for (const { name, allowFail } of scripts) {
   } else {
     fail(`${name} crashed`);
   }
+}
+
+const missingStatusTmp = mkdtempSync(join(tmpdir(), 'career-ops-set-status-missing-'));
+try {
+  const missingTracker = join(missingStatusTmp, 'data', 'applications.md');
+  let rejected = false;
+  let stderr = '';
+  try {
+    execFileSync(NODE, ['set-status.mjs', '1', 'Applied'], {
+      cwd: ROOT,
+      env: { ...process.env, CAREER_OPS_TRACKER: missingTracker },
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: CHILD_TIMEOUT_MS,
+    });
+  } catch (err) {
+    rejected = true;
+    stderr = String(err.stderr || '');
+  }
+  if (rejected &&
+      stderr.includes('not found - nothing to update.') &&
+      !stderr.includes('\n    at ')) {
+    pass('set-status.mjs reports missing applications.md cleanly');
+  } else {
+    fail(`set-status.mjs missing-tracker path was not graceful: ${stderr.trim() || 'no stderr'}`);
+  }
+} finally {
+  rmSync(missingStatusTmp, { recursive: true, force: true });
 }
 
 // ── 3. LIVENESS CLASSIFICATION ──────────────────────────────────
@@ -4346,6 +4374,7 @@ try {
         env: { ...process.env, CAREER_OPS_TRACKER: tracker },
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: CHILD_TIMEOUT_MS,
       });
     } catch {
       invalidRejected = true;
@@ -4377,6 +4406,7 @@ try {
         env: { ...process.env, CAREER_OPS_TRACKER: tracker },
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: CHILD_TIMEOUT_MS,
       });
     } catch {
       ambiguousRejected = true;

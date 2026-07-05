@@ -319,6 +319,12 @@ function main() {
   try {
     const text = readFileSync(TRACKER_PATH, 'utf-8');
     const result = updateTrackerStatus(text, args.query, args.status, args.note);
+
+    if (!args.dryRun && result.changed) {
+      copyFileSync(TRACKER_PATH, `${TRACKER_PATH}.bak`);
+      atomicWriteFile(TRACKER_PATH, result.lines.join('\n'));
+    }
+
     if (args.json) {
       console.log(JSON.stringify({
         changed: result.changed,
@@ -339,14 +345,11 @@ function main() {
       console.log(`Status: ${result.oldStatus || '-'} -> ${result.status}`);
       if (args.note) console.log(`Note: ${result.notes}`);
       if (!result.changed) console.log('No changes needed.');
-    }
-
-    if (!args.dryRun && result.changed) {
-      copyFileSync(TRACKER_PATH, `${TRACKER_PATH}.bak`);
-      atomicWriteFile(TRACKER_PATH, result.lines.join('\n'));
-      if (!args.json) console.log(`Written to ${TRACKER_PATH} (backup: ${TRACKER_PATH}.bak)`);
-    } else if (args.dryRun && !args.json) {
-      console.log('(dry-run - no changes written)');
+      if (!args.dryRun && result.changed) {
+        console.log(`Written to ${TRACKER_PATH} (backup: ${TRACKER_PATH}.bak)`);
+      } else if (args.dryRun) {
+        console.log('(dry-run - no changes written)');
+      }
     }
   } catch (err) {
     console.error(`Error: ${err.message}`);
