@@ -75,7 +75,7 @@ async function main() {
   const expToken = '___EXPERIENCE___';
   templateHtml = templateHtml.replace('{{EXPERIENCE}}', expToken);
   templateHtml = templateHtml.replace(/\{\{[^}]+\}\}/g, '');
-  templateHtml = templateHtml.replace(expToken, parsedHtml);
+  templateHtml = templateHtml.replace(expToken, () => parsedHtml);
 
   // Determine output path based on filename regex: reports/NNN-company-YYYY-MM-DD.md
   const base = basename(mdPath);
