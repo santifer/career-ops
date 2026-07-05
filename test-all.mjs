@@ -807,7 +807,7 @@ if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('
   fail('renderHtmlToPdf does not read manifest metadata from opts');
 }
 try {
-  const { repoRelativeManifestPath } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const { repoRelativeManifestPath, injectPrintPageCss } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
   const insideHtmlPath = join(ROOT, 'templates', 'cv-template.html');
   const outsideHtmlPath = join(dirname(ROOT), 'outside-cv-template.html');
 
@@ -821,6 +821,45 @@ try {
     pass('PDF manifest leaves HTML column blank when source HTML is missing or outside the repo');
   } else {
     fail('PDF manifest mishandles missing or external source HTML paths');
+  }
+
+  const injectedPageCss = injectPrintPageCss('<html><head><title>CV</title></head><body></body></html>', 'letter');
+  if (
+    injectedPageCss.includes('@page { size: Letter; margin: 0.6in; }') &&
+    injectedPageCss.indexOf('career-ops-page-setup') < injectedPageCss.indexOf('</head>')
+  ) {
+    pass('PDF renderer injects CSS page size and margins before rendering');
+  } else {
+    fail('PDF renderer does not inject CSS page size/margins into the document head');
+  }
+
+  const doctypeNoHead = injectPrintPageCss('<!doctype html><html lang="en"><body></body></html>');
+  if (
+    doctypeNoHead.startsWith('<!doctype html>') &&
+    doctypeNoHead.includes('<html lang="en">\n<head>\n<style id="career-ops-page-setup">') &&
+    doctypeNoHead.indexOf('<head>') < doctypeNoHead.indexOf('<body>')
+  ) {
+    pass('PDF renderer preserves doctype when injecting page CSS into full HTML without head');
+  } else {
+    fail('PDF renderer may insert page CSS before doctype for full HTML without head');
+  }
+
+  const fragmentPageCss = injectPrintPageCss('<section>CV</section>');
+  if (fragmentPageCss.startsWith('<style id="career-ops-page-setup">')) {
+    pass('PDF renderer still prepends page CSS for HTML fragments');
+  } else {
+    fail('PDF renderer no longer handles HTML fragments with fallback CSS injection');
+  }
+
+  if (
+    generatePdfScript.includes('preferCSSPageSize: true') &&
+    generatePdfScript.includes("right: '0'") &&
+    generatePdfScript.includes('injectPrintPageCss(html, format)') &&
+    !/page\.pdf\(\{\s*format:/s.test(generatePdfScript)
+  ) {
+    pass('PDF renderer uses CSS @page margins instead of Playwright margins');
+  } else {
+    fail('PDF renderer may clip right-aligned content by ignoring CSS page sizing (#1341)');
   }
 } catch (e) {
   fail(`PDF manifest path helper test crashed: ${e.message}`);
