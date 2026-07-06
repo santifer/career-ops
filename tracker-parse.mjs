@@ -25,6 +25,41 @@ export const HEADER_ALIASES = {
 };
 
 /**
+ * A score cell in the tracker: `N/5` or `N.N/5` (any precision), or the
+ * sentinels `N/A` / `DUP`. Markdown bold is stripped first. A status label
+ * never matches this, which is what makes it a reliable discriminator between
+ * the score and status columns regardless of their order (#1427).
+ */
+export const SCORE_CELL_RE = /^\d+(?:\.\d+)?\/5$/;
+
+/** @param {string} v @returns {boolean} whether the cell reads as a score. */
+export function looksLikeScoreCell(v) {
+  const t = String(v ?? '').replace(/\*\*/g, '').trim();
+  return SCORE_CELL_RE.test(t) || t === 'N/A' || t === 'DUP';
+}
+
+/**
+ * Given the two adjacent cells that carry score and status in EITHER order,
+ * identify which is which by content — the score cell is recognizable by
+ * pattern (`looksLikeScoreCell`), statuses never are. This lets TSV ingestion
+ * tolerate the two known column orders (batch TSV writes status-then-score;
+ * `applications.md` is score-then-status) instead of trusting position.
+ *
+ * Returns null when the order is undecidable — neither cell, or BOTH cells, look
+ * like a score — so callers can fail loudly rather than merge a silent swap.
+ *
+ * @param {string} a - first of the two cells
+ * @param {string} b - second of the two cells
+ * @returns {{score: string, status: string}|null}
+ */
+export function resolveScoreStatus(a, b) {
+  const aScore = looksLikeScoreCell(a);
+  const bScore = looksLikeScoreCell(b);
+  if (aScore === bScore) return null; // ambiguous: neither, or both
+  return aScore ? { score: a, status: b } : { score: b, status: a };
+}
+
+/**
  * Scan the table for a header row and build a field-name → column-index map.
  * Indexing matches `line.split('|')`. Returns null — caller should fall back to
  * LEGACY_COLMAP — unless the essential columns are all present, so a stray pipe

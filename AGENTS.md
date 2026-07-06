@@ -106,6 +106,7 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
+| `stats.mjs` | Lifetime pipeline stats aggregator (JSON or `--summary`) — tracker roll-up, canonical `ever*` funnel, lifetime scan totals, portal coverage, follow-up compliance |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `followup-seed.mjs` | Seeds `data/follow-ups.md` with a pinned first follow-up date when a row turns Applied (JSON output) |
 | `set-status.mjs` | Canonical CLI to update a tracker row: `node set-status.mjs <report#\|company> <State> [--note]` — strict states.yml validation, shared tracker lock, atomic write |
@@ -286,6 +287,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
 | Wants to update the system | `update` |
+| Wants to queue a request for later / check the inbox between sessions | `agent-inbox` — append-only checklist the agent drains at the start of the next session; nothing auto-submits |
 
 ### CV Source of Truth
 

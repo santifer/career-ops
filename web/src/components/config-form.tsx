@@ -87,26 +87,26 @@ export function ConfigForm() {
     <div className="mx-auto max-w-2xl px-6 py-10">
       <h1 className="font-display text-2xl tracking-tight text-landing">Config</h1>
       <p className="mt-1 text-sm text-muted">
-        career-ops is CLI-agnostic — it runs on your own AI, locally. Nothing leaves your machine.
+        Run career-ops on your own AI, right on your computer. Your CV and data never leave your machine.
       </p>
 
       {/* Engine mode */}
       <label className="mt-8 mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-        Engine
+        AI Engine
       </label>
       <div className="grid gap-2 sm:grid-cols-3">
         <ModeCard
           active={mode === "cli"}
           onClick={() => setMode("cli")}
           icon={Terminal}
-          title="Installed CLI"
+          title="Use an AI tool you have"
           hint="Recommended"
         />
         <ModeCard
           active={mode === "key"}
           onClick={() => setMode("key")}
           icon={KeyRound}
-          title="API key"
+          title="Paste an AI key"
           hint="Coming soon"
           disabled
         />
@@ -114,7 +114,7 @@ export function ConfigForm() {
           active={mode === "manual"}
           onClick={() => setMode("manual")}
           icon={TerminalSquare}
-          title="Keyless"
+          title="No setup needed"
           hint="Coming soon"
           disabled
         />
@@ -123,13 +123,20 @@ export function ConfigForm() {
       <div className="mt-6">
         {mode === "cli" && (
           <div>
-            <p className="mb-3 text-sm text-muted">
-              career-ops runs through whichever AI coding CLI you already use — already authenticated,
-              your own tokens, nothing to paste. Detected on this machine:
+            <p className="mb-1 text-sm text-muted">
+              career-ops uses an AI tool you already have — signed in, your own usage, nothing to paste.
             </p>
+            <p className="mb-3 text-xs text-faint">Works with Claude Code, Codex, OpenCode and more — free ones work great.</p>
             {clis === null ? (
               <div className="flex items-center gap-2 text-sm text-muted">
-                <Loader2 className="size-4 animate-spin" /> Scanning your PATH…
+                <Loader2 className="size-4 animate-spin" /> Checking what&apos;s on your computer…
+              </div>
+            ) : installed.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-surface/30 p-4 text-sm text-muted">
+                No AI tool yet? Free options like <span className="text-foreground">OpenCode</span> with Qwen or GLM work great.{" "}
+                <a href="https://career-ops.org/docs/free-ai-engine" target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-brand hover:underline">
+                  Get one free <ExternalLink className="size-3" />
+                </a>
               </div>
             ) : (
               <div className="space-y-2">
@@ -227,9 +234,10 @@ export function ConfigForm() {
               </div>
             </div>
             <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                API key
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                Paste an AI key
               </label>
+              <p className="mb-2 text-xs text-faint">Bring a key from OpenAI, Anthropic, and others.</p>
               <input
                 type="password"
                 value={apiKey}
@@ -247,8 +255,7 @@ export function ConfigForm() {
 
         {mode === "manual" && (
           <div className="rounded-xl border border-dashed border-border bg-surface/30 p-4 text-sm text-muted">
-            Keyless mode: career-ops generates the prompts and you paste them into whichever AI tool
-            you already use, then paste the result back. Zero keys, zero cost beyond what you already pay.
+            The easiest way in — no keys, nothing to set up. On the roadmap.
           </div>
         )}
       </div>
@@ -293,7 +300,7 @@ export function ConfigForm() {
           {saved ? <Check className="size-4" /> : null}
           {saved ? "Saved" : "Save config"}
         </button>
-        <span className="text-xs text-faint">Local-first · on the #156 roadmap</span>
+        <span className="text-xs text-faint">Local-first · on our roadmap</span>
       </div>
     </div>
   );

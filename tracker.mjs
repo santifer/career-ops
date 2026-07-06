@@ -143,7 +143,7 @@ function normalizeStatus(raw, states) {
   return states.byKey.get(cleaned) || null;
 }
 
-const SCORE_RE = /^\*{0,2}(\d(?:\.\d)?\/5)\*{0,2}$/;
+const SCORE_RE = /^\*{0,2}(\d+(?:\.\d+)?\/5)\*{0,2}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // Mojibake left by a UTF-8 → GBK → UTF-8 round trip: an em-dash cell becomes
