@@ -400,5 +400,66 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── Test 13: dedup — unknown-employer rows key on Via + role + 90-day window ─
+{
+  const BLIND_TRACKER = `# Applications Tracker
+
+| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|-----|------|-------|--------|-----|--------|-------|
+| 1 | 2026-01-05 | ? | Hays | Data Engineer | 4.2/5 | Evaluated | ✅ | — | fintech, Leeds |
+| 2 | 2026-01-20 | ? | Hays | Data Engineer | 4.3/5 | Evaluated | ✅ | — | re-blast of same listing |
+| 3 | 2026-01-06 | ? | Randstad | Data Engineer | 4.0/5 | Evaluated | ✅ | — | different channel |
+| 4 | 2026-01-10 | ? | Hays | Platform Engineer | 3.9/5 | Evaluated | ✅ | — | old listing |
+| 5 | 2026-06-01 | ? | Hays | Platform Engineer | 4.4/5 | Evaluated | ✅ | — | far outside window |
+`;
+  const sb = makeSandbox(BLIND_TRACKER);
+  const res = runScript('dedup-tracker.mjs', [], sb);
+  const rows = dataRows(sb.tracker);
+  const dataEng = rows.filter(l => l.includes('Data Engineer'));
+  const platform = rows.filter(l => l.includes('Platform Engineer'));
+  if (res.code === 0 && dataEng.length === 2 && dataEng.some(l => l.includes('Randstad')) && dataEng.some(l => l.includes('4.3/5'))) {
+    pass('dedup: same-agency re-blast within 90d deduped; other agency kept');
+  } else {
+    fail(`dedup: blind keying — ${dataEng.length} Data Engineer rows:\n${dataEng.join('\n')}\n${res.stdout}`);
+  }
+  if (platform.length === 2) {
+    pass('dedup: same agency+role >90 days apart NOT deduped');
+  } else {
+    fail(`dedup: window — ${platform.length} Platform Engineer rows\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 14: verify-pipeline Via checks ─────────────────────────────────────
+{
+  const VIA_ISSUES = `# Applications Tracker
+
+| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|-----|------|-------|--------|-----|--------|-------|
+| 1 | 2026-01-05 | ? | — | Data Engineer | 4.2/5 | Evaluated | ✅ | — | blind row, no agency |
+| 2 | 2026-01-06 | Confidential | Hays | ML Engineer | 4.0/5 | Evaluated | ✅ | — | word placeholder |
+| 3 | 2026-01-07 | Acme | Hays | Backend Engineer | 4.1/5 | Applied | ✅ | — | via agency |
+| 4 | 2026-01-08 | Acme | — | Backend Engineer | 4.1/5 | Applied | ✅ | — | direct too |
+`;
+  const sb = makeSandbox(VIA_ISSUES);
+  const res = runScript('verify-pipeline.mjs', [], sb);
+  if (/unknown employer \(\?\) with no Via/.test(res.stdout)) {
+    pass('verify: ? row with no Via channel is an error');
+  } else {
+    fail(`verify: ?-without-via\n${res.stdout}`);
+  }
+  if (/looks like a confidentiality placeholder/.test(res.stdout)) {
+    pass('verify: localized confidentiality word linted toward ?');
+  } else {
+    fail(`verify: confidentiality lint\n${res.stdout}`);
+  }
+  if (/Cross-channel duplicate/.test(res.stdout)) {
+    pass('verify: same company+role via different channels warned');
+  } else {
+    fail(`verify: cross-channel warning\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

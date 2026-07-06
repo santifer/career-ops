@@ -108,6 +108,7 @@ for (const line of lines) {
     num,
     date: parts[COLMAP.date],
     company: parts[COLMAP.company],
+    via: COLMAP.via != null ? parts[COLMAP.via] : '',
     role: parts[COLMAP.role],
     location: COLMAP.location != null ? parts[COLMAP.location] : '',
     score: parts[COLMAP.score],
@@ -331,6 +332,49 @@ for (const name of reportFiles) {
   }
 }
 if (orphanReports === 0) ok('No orphan reports');
+
+// --- Check 11: Via channel consistency (#1596) ---
+// The Via column records the intermediary (agency/recruiter firm; `—` when the
+// application was direct). Unknown employers use the structural marker `?` in
+// Company — never a word like "Confidential", which is locale-dependent and can
+// collide with a real firm name.
+let viaIssues = 0;
+const CONFIDENTIAL_WORD_RE = /^(confidential|vertraulich|confidentiel|confidencial|riservato|gizli|機密|سري)$/i;
+for (const e of entries) {
+  const company = String(e.company || '').trim();
+  const via = String(e.via || '').trim();
+  if (company === '?') {
+    if (COLMAP.via == null) {
+      warn(`#${e.num}: unknown employer (?) but the tracker has no Via column — add it with: node merge-tracker.mjs --migrate-via`);
+      viaIssues++;
+    } else if (!via || via === '—') {
+      error(`#${e.num}: unknown employer (?) with no Via channel — record the agency/recruiter firm`);
+      viaIssues++;
+    }
+  }
+  if (CONFIDENTIAL_WORD_RE.test(company)) {
+    warn(`#${e.num}: company "${company}" looks like a confidentiality placeholder — use the structural marker ? (locale-invariant, can't collide with a real firm)`);
+    viaIssues++;
+  }
+}
+// Same company+role reached through different channels: both submissions are
+// real, so this is a warning to the human (double-submission risk), never an
+// auto-merge.
+const channelsByRole = new Map();
+for (const e of entries) {
+  const company = String(e.company || '').trim();
+  if (!company || company === '?') continue;
+  const key = `${company.toLowerCase()}::${String(e.role || '').trim().toLowerCase()}`;
+  if (!channelsByRole.has(key)) channelsByRole.set(key, new Map());
+  channelsByRole.get(key).set(String(e.via || '').trim() || '—', e.num);
+}
+for (const [key, vias] of channelsByRole) {
+  if (vias.size > 1) {
+    warn(`Cross-channel duplicate — ${key.replace('::', ' / ')} reached via ${[...vias.keys()].join(' AND ')} (rows ${[...vias.values()].map(n => `#${n}`).join(', ')}) — double-submission risk, resolve by hand`);
+    viaIssues++;
+  }
+}
+if (viaIssues === 0) ok('Via channels consistent');
 
 // --- Summary ---
 console.log('\n' + '='.repeat(50));
