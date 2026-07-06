@@ -5928,6 +5928,23 @@ try {
     fail('fingerprintText should refuse short texts');
   }
 
+  // Degenerate case: passes the min-length gate but normalizes to <3 tokens
+  // (e.g. an unspaced CJK body — one giant token), so no shingle is ever
+  // hashed. Must return '' like other unfingerprintable inputs, not an
+  // all-zero hash that would score 1.0 against every other degenerate body.
+  const unspacedCjkJd = '当社は分散システムの構築と運用を担うシニアデータエンジニアを募集しています信頼性と可観測性に強いオーナーシップを持ちインジェストパイプラインを設計実装運用できる方を歓迎します'.repeat(3);
+  const unrelatedBlob = 'x'.repeat(FINGERPRINT_MIN_TEXT + 50);
+  if (fingerprintText(unspacedCjkJd) === '' && fingerprintText(unrelatedBlob) === '') {
+    pass("fingerprintText returns '' when normalized text has <3 tokens (no shingles → no signal)");
+  } else {
+    fail(`fingerprintText emitted a fingerprint with <3 tokens: ${JSON.stringify(fingerprintText(unspacedCjkJd))}`);
+  }
+  if (similarity(fingerprintText(unspacedCjkJd), fingerprintText(unrelatedBlob)) < 0.92) {
+    pass('two degenerate <3-token bodies never score as cross-listings');
+  } else {
+    fail('degenerate <3-token bodies matched each other at similarity ≥ 0.92');
+  }
+
   // Agency re-post: same body, minor cosmetic edits (intro swapped, HTML added).
   const agencyJd = '<p>Our client, a market leader, is hiring!</p>' + baseJd.replace('requirement 3', 'requirement three');
   const simNear = similarity(fp, fingerprintText(agencyJd));

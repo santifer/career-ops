@@ -60,6 +60,11 @@ export function fingerprintText(text) {
   const normalized = normalizeJdText(text);
   if (normalized.length < FINGERPRINT_MIN_TEXT) return '';
   const tokens = normalized.split(' ');
+  // Length alone can pass on <3 tokens (e.g. an unspaced CJK body normalizes
+  // to one giant token). No shingle would ever be hashed, leaving an all-zero
+  // hash that similarity() would score 1.0 against every other degenerate
+  // body — treat it as unfingerprintable instead.
+  if (tokens.length < 3) return '';
   const weights = new Array(64).fill(0);
   for (let i = 0; i <= tokens.length - 3; i++) {
     const shingle = `${tokens[i]} ${tokens[i + 1]} ${tokens[i + 2]}`;
