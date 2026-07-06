@@ -95,7 +95,7 @@ export function BetaBanner() {
           <span className="size-1.5 animate-pulse rounded-full bg-brand" /> {meta.version} · {meta.channel}
         </span>
         {meta.sha && <span className="hidden font-mono text-faint sm:inline">{meta.sha}</span>}
-        <button onClick={openReport} className="ml-1 inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 font-medium text-brand-text transition-colors hover:bg-brand/15">
+        <button onClick={openReport} className="ml-1 inline-flex items-center justify-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 font-medium text-brand-text transition-colors hover:bg-brand/15 max-sm:min-h-[44px]">
           <Bug className="size-3" /> Report a bug
         </button>
       </div>
