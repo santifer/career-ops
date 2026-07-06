@@ -398,6 +398,8 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 
 **IMPORTANTE:** El orden TSV tiene status ANTES de score (col 5→status, col 6→score). En applications.md el orden es inverso (col 5→score, col 6→status). merge-tracker.mjs maneja la conversión.
 
+**Campos opcionales (col ≥ 10):** si la oferta llega vía agencia/recruiter (#1596), añade un campo etiquetado `via={Agencia}` (ej. `via=Hays`) — NUNCA posicional, la etiqueta es obligatoria. Un campo extra SIN etiqueta se interpreta como la location legacy. Si el empleador final es desconocido, usa `?` como company y añade el descriptor en notes (ej. `fintech, Leeds`). merge-tracker.mjs rechaza filas con extras ambiguos (dos campos sin etiqueta, o dos `via=`).
+
 **Estados canónicos válidos:** `Evaluada`, `Aplicado`, `Respondido`, `Entrevista`, `Oferta`, `Rechazado`, `Descartado`, `NO APLICAR`
 
 Donde `{next_num}` se calcula leyendo la última línea de `data/applications.md`.
