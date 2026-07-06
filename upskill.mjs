@@ -83,6 +83,13 @@ const SKILL_PATTERN = new RegExp(
   'gi'
 );
 
+// "Go" is an everyday English word, so it can't join the case-insensitive
+// token list ("go the extra mile" would register a skill). Match it in a
+// separate CASE-SENSITIVE pass: only the exact standalone token "Go" counts
+// as the language; prose "go"/"GO" never do. "Golang" still resolves to "Go"
+// via the main pattern + CANONICAL.
+const GO_SKILL_PATTERN = /(?<!\w)Go(?!\w)/;
+
 // lowercase → canonical display casing, derived from SKILL_TOKENS by stripping
 // regex syntax ('Vue\\.?js' → 'Vue.js'). Keeps case-insensitive matches like
 // "graphql" resolving to the same key ("GraphQL") as the CV-known-skills set.
@@ -136,6 +143,7 @@ export function extractSkills(text) {
   for (const m of text.matchAll(SKILL_PATTERN)) {
     found.add(canonicalize(m[0]));
   }
+  if (GO_SKILL_PATTERN.test(text)) found.add('Go');
   return found;
 }
 
@@ -362,6 +370,14 @@ function runSelfTest() {
   for (const expected of ['C++', 'C#', '.NET', 'SQL']) {
     if (!s1b.has(expected)) failures.push(`extractSkills missing symbol skill ${expected} (got ${[...s1b].join(',')})`);
   }
+
+  // Standalone "Go" is matched case-SENSITIVELY: a capitalized token in a
+  // skills list counts, but prose "go"/"GO" must never register as a skill
+  // (the global pattern is case-insensitive, so Go lives outside it).
+  const s1d = extractSkills('Skills: Go, Rust, TypeScript');
+  if (!s1d.has('Go')) failures.push(`extractSkills missing standalone Go (got ${[...s1d].join(',')})`);
+  const s1e = extractSkills('willing to go the extra mile; ready to GO live');
+  if (s1e.has('Go')) failures.push('prose "go"/"GO" wrongly matched as Go skill');
 
   // Lowercase mentions of mixed-case skills must resolve to canonical casing,
   // or knownSkills.has() misses them (Graphql !== GraphQL)
