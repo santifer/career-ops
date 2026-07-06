@@ -5917,6 +5917,52 @@ try {
   } else {
     fail('provider test section found in test-all.mjs — add a tests/providers/{name}.test.mjs file instead (auto-discovered, no registration)');
   }
+
+  // Scan-run persistence (#1604 PR-2): appender writes header once, one row per run.
+  const { appendScanRunSummary, SCAN_RUNS_HEADER } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const runsTmp = mkdtempSync(join(tmpdir(), 'scanruns-'));
+  const runsFile = join(runsTmp, 'scan-runs.tsv');
+  const counters = {
+    timestamp: '2026-07-03T14:02:11Z', status: 'completed', companies: 45, boards: 3, found: 120,
+    filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredSalary: 2,
+    filteredContent: 6, filteredCooldown: 1, dupes: 38, newAdded: 8, errors: 0,
+  };
+  appendScanRunSummary(counters, runsFile);
+  appendScanRunSummary({ ...counters, timestamp: '2026-07-04T09:00:00Z' }, runsFile);
+  const runRows = readFileSync(runsFile, 'utf-8').trim().split('\n');
+  if (runRows[0] === SCAN_RUNS_HEADER.trim() && runRows.length === 3
+      && runRows[1].startsWith('2026-07-03T14:02:11Z\tcompleted\t45\t3\t120\t')
+      && runRows[2].startsWith('2026-07-04T09:00:00Z\t')) {
+    pass('appendScanRunSummary writes the header once, appends one row per run');
+  } else {
+    fail(`appendScanRunSummary wrong file contents: ${JSON.stringify(runRows)}`);
+  }
+  rmSync(runsTmp, { recursive: true, force: true });
+
+  // computeRunStats: header-name parsing, torn rows skipped, failed runs
+  // excluded from averages.
+  const runsTsv = [
+    'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors',
+    '2026-07-01T08:00:00Z\tcompleted\t45\t3\t100\t30\t5\t20\t2\t6\t1\t30\t6\t0',
+    '2026-07-03T08:00:00Z\tcompleted\t45\t3\t140\t50\t5\t20\t2\t6\t1\t46\t10\t1',
+    '2026-07-03T09:00:00Z\tfailed\t45\t3\t0\t0\t0\t0\t0\t0\t0\t0\t0\t1',
+    '2026-07-03T10:0', // torn row from a crashed append — must be skipped, not crash
+  ].join('\r\n');
+  const r = stats.computeRunStats(runsTsv);
+  // filtered row1 = 30+5+20+2+6+1 = 64; row2 = 50+5+20+2+6+1 = 84; sum 148
+  // found sum (completed only) = 240 → filterRemovalPct = 148/240 = 61.7
+  // avgFound = 240/2 = 120; avgNew = (6+10)/2 = 8; failed run excluded from averages
+  if (r.totalRuns === 3 && r.failedRuns === 1 && r.lastRunDate === '2026-07-03'
+      && r.avgFoundPerRun === 120 && r.avgNewPerRun === 8 && r.filterRemovalPct === 61.7) {
+    pass('computeRunStats aggregates scan-runs.tsv by header name, skips torn rows (CRLF input)');
+  } else {
+    fail(`computeRunStats wrong output: ${JSON.stringify(r)}`);
+  }
+  if (stats.computeRunStats('timestamp\tstatus\n') === null && stats.computeRunStats('') === null) {
+    pass('computeRunStats returns null for empty/unknown-schema files');
+  } else {
+    fail('computeRunStats should return null for empty/unknown-schema input');
+  }
 } catch (e) {
   fail(`test layout guard: ${e.message}`);
 }
