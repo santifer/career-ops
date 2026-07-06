@@ -377,6 +377,27 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── Test 11b: legacy 9-col tracker — via= tag dropped WITHOUT breaking dedup ─
+// The tracker has no Via column, so existing rows parse with via=''. The
+// addition's via must be cleared before duplicate matching, or the
+// cross-channel guard would see 'Hays' ≠ '' and add a second ? row instead of
+// updating the same-agency re-blast.
+{
+  const FIRST = '2\t2026-02-02\t?\tData Engineer\tApplied\t4.1/5\t✅\t—\tblind listing\tvia=Hays\n';
+  const REBLAST = '3\t2026-02-10\t?\tData Engineer\tApplied\t4.3/5\t✅\t—\tre-blast, higher score\tvia=Hays\n';
+  const sb = makeSandbox(HEADER_9, { '2-first.tsv': FIRST });
+  const res1 = runScript('merge-tracker.mjs', [], sb);
+  writeFileSync(join(sb.additions, '3-reblast.tsv'), REBLAST);
+  const res2 = runScript('merge-tracker.mjs', [], sb);
+  const blind = dataRows(sb.tracker).filter(l => l.includes('Data Engineer'));
+  if (res1.code === 0 && res2.code === 0 && blind.length === 1 && blind[0].includes('4.3/5') && /1 updated/.test(res2.stdout)) {
+    pass('merge: legacy 9-col tracker — via= re-blast UPDATES the ? row (no duplicate)');
+  } else {
+    fail(`merge: legacy via= dedup — ${blind.length} rows: ${blind.join(' / ')}\n${res2.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 // ── Test 12: --migrate-via inserts the column, idempotently ─────────────────
 {
   const sb = makeSandbox(HEADER_9);

@@ -359,18 +359,24 @@ for (const e of entries) {
 }
 // Same company+role reached through different channels: both submissions are
 // real, so this is a warning to the human (double-submission risk), never an
-// auto-merge.
+// auto-merge. Channel identity is normalized the same way merge-tracker.mjs
+// normalizes companies (strip non-alphanumerics, lowercase), so "Hays" and
+// "HAYS " read as one channel; the raw spelling is kept for the message.
+const normalizeChannel = (v) => String(v ?? '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'direct';
 const channelsByRole = new Map();
 for (const e of entries) {
   const company = String(e.company || '').trim();
   if (!company || company === '?') continue;
   const key = `${company.toLowerCase()}::${String(e.role || '').trim().toLowerCase()}`;
   if (!channelsByRole.has(key)) channelsByRole.set(key, new Map());
-  channelsByRole.get(key).set(String(e.via || '').trim() || '—', e.num);
+  const channels = channelsByRole.get(key);
+  const norm = normalizeChannel(e.via);
+  if (!channels.has(norm)) channels.set(norm, { raw: String(e.via || '').trim() || '—', num: e.num });
 }
 for (const [key, vias] of channelsByRole) {
   if (vias.size > 1) {
-    warn(`Cross-channel duplicate — ${key.replace('::', ' / ')} reached via ${[...vias.keys()].join(' AND ')} (rows ${[...vias.values()].map(n => `#${n}`).join(', ')}) — double-submission risk, resolve by hand`);
+    const list = [...vias.values()];
+    warn(`Cross-channel duplicate — ${key.replace('::', ' / ')} reached via ${list.map(v => v.raw).join(' AND ')} (rows ${list.map(v => `#${v.num}`).join(', ')}) — double-submission risk, resolve by hand`);
     viaIssues++;
   }
 }

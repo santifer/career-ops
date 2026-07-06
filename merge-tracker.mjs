@@ -767,9 +767,13 @@ for (const file of tsvFiles) {
   if (!addition) { skipped++; continue; }
 
   // A via= tag can only be stored if the tracker has a Via column — warn
-  // instead of dropping the channel silently (#1596).
+  // instead of dropping the channel silently (#1596). Clear the value too:
+  // existing rows parse with via='' on this layout, so a set addition.via would
+  // make the cross-channel duplicate guard see a channel mismatch and add a
+  // second ? row instead of updating the same-agency re-blast.
   if (addition.via && COLMAP.via == null) {
     console.warn(`⚠️  ${file}: carries via=${addition.via} but the tracker has no Via column — value dropped. Add it with: node merge-tracker.mjs --migrate-via`);
+    addition.via = '';
   }
 
   // Normalize the report link to be relative to the tracker file's directory.
