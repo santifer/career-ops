@@ -103,15 +103,30 @@ export function buildTitleFilter(titleFilter) {
   };
 }
 
+// Compiled-matcher cache for matchedTitleKeywords(), keyed by the
+// `title_filter.positive` array reference. The scan loop calls this once per
+// job with the same titleFilter config object, so caching avoids recompiling
+// every keyword (compileKeyword()) on every single job.
+const compiledPositiveCache = new WeakMap();
+
+function compiledPositiveMatchers(positiveList) {
+  if (compiledPositiveCache.has(positiveList)) return compiledPositiveCache.get(positiveList);
+  const compiled = positiveList
+    .filter(k => typeof k === 'string' && k.trim().length > 0)
+    .map(k => ({ raw: k, match: compileKeyword(k.trim().toLowerCase()) }));
+  compiledPositiveCache.set(positiveList, compiled);
+  return compiled;
+}
+
 // Returns the raw (as-written in portals.yml) `title_filter.positive` keywords
 // that matched a given title — used to scope `content_filter.by_title_keyword`
 // overrides to only the categories that opted into a stricter content check.
 export function matchedTitleKeywords(title, titleFilter) {
   const raw = Array.isArray(titleFilter?.positive) ? titleFilter.positive : [];
   const lower = (title || '').toLowerCase();
-  return raw
-    .filter(k => typeof k === 'string' && k.trim().length > 0)
-    .filter(k => compileKeyword(k.trim().toLowerCase())(lower));
+  return compiledPositiveMatchers(raw)
+    .filter(({ match }) => match(lower))
+    .map(({ raw: kw }) => kw);
 }
 
 // ── Location filter ─────────────────────────────────────────────────
@@ -190,7 +205,7 @@ export function buildContentFilter(contentFilter) {
   const negative = normalizeKeywordList(contentFilter.negative);
 
   const byTitleKeyword = new Map();
-  if (contentFilter.by_title_keyword && typeof contentFilter.by_title_keyword === 'object') {
+  if (contentFilter.by_title_keyword && typeof contentFilter.by_title_keyword === 'object' && !Array.isArray(contentFilter.by_title_keyword)) {
     for (const [kw, rule] of Object.entries(contentFilter.by_title_keyword)) {
       if (typeof kw !== 'string' || !kw.trim()) continue;
       byTitleKeyword.set(kw.trim().toLowerCase(), {
@@ -200,11 +215,11 @@ export function buildContentFilter(contentFilter) {
     }
   }
 
-  return (description, matchedTitleKeywords = []) => {
+  return (description, matchedKeywords = []) => {
     if (typeof description !== 'string' || description.trim() === '') return true;
     const lower = description.toLowerCase();
 
-    const overrides = matchedTitleKeywords
+    const overrides = matchedKeywords
       .filter(k => typeof k === 'string')
       .map(k => byTitleKeyword.get(k.trim().toLowerCase()))
       .filter(Boolean);

@@ -1592,6 +1592,7 @@ try {
   const emptyKeywordPath = join(tmp, 'empty-keyword.yml');
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
   const badContentFilterPath = join(tmp, 'bad-content-filter.yml');
+  const deadByTitleKeywordPath = join(tmp, 'dead-by-title-keyword.yml');
 
   writeFileSync(validPath, `
 title_filter:
@@ -1641,6 +1642,21 @@ tracked_companies:
     careers_url: "https://jobs.lever.co/acme"
 `, 'utf-8');
 
+  // by_title_keyword.<kw> that doesn't match any title_filter.positive entry
+  // (typo, or a keyword later removed from title_filter) is dead config — it
+  // will never fire. Should warn, not error (#1636 CodeRabbit follow-up).
+  writeFileSync(deadByTitleKeywordPath, `
+title_filter:
+  positive: ["AI Engineer"]
+content_filter:
+  by_title_keyword:
+    "AI Enginer":
+      positive: ["gpt"]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
   const validResult = run(NODE, ['validate-portals.mjs', '--file', validPath]);
   if (validResult !== null && validResult.includes('0 errors')) {
     pass('validate-portals accepts a minimal valid portals file');
@@ -1681,6 +1697,13 @@ tracked_companies:
     pass('validate-portals rejects empty content_filter keywords');
   } else {
     fail('validate-portals should reject empty content_filter keywords');
+  }
+
+  const deadByTitleKeywordResult = run(NODE, ['validate-portals.mjs', '--file', deadByTitleKeywordPath]);
+  if (deadByTitleKeywordResult !== null && deadByTitleKeywordResult.includes('1 warning')) {
+    pass('validate-portals warns on a by_title_keyword entry with no matching title_filter.positive keyword');
+  } else {
+    fail('validate-portals should warn (not error) on a dead by_title_keyword entry');
   }
 
   rmSync(tmp, { recursive: true, force: true });
@@ -2688,6 +2711,22 @@ try {
     pass('content_filter global negative still applies to jobs without a matching override');
   } else {
     fail('content_filter global negative should still gate jobs with no by_title_keyword override');
+  }
+
+  // A malformed by_title_keyword (an array instead of an object) must not be
+  // silently iterated via Object.entries as if it were a keyed map — it
+  // should be treated as absent (no overrides), same as the validator rejects it.
+  const arrayGuardCf = buildContentFilter({
+    positive: ['rust'],
+    by_title_keyword: ['not', 'an', 'object'],
+  });
+  if (
+    arrayGuardCf('We write everything in Rust', ['AI Engineer']) === true &&
+    arrayGuardCf('A Python and Go team', ['AI Engineer']) === false
+  ) {
+    pass('content_filter.by_title_keyword as an array is ignored (falls back to global rule), not silently iterated');
+  } else {
+    fail('content_filter.by_title_keyword array should be ignored, not treated as a keyed override map');
   }
 
 } catch (e) {

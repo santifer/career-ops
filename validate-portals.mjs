@@ -138,8 +138,16 @@ export async function validatePortalsConfig(config, { providerIds = new Set() } 
         if (!isObject(config.content_filter.by_title_keyword)) {
           add(errors, 'content_filter.by_title_keyword', 'by_title_keyword must be an object keyed by title_filter.positive keyword');
         } else {
+          const titlePositive = new Set(
+            (Array.isArray(config.title_filter?.positive) ? config.title_filter.positive : [])
+              .filter(k => typeof k === 'string')
+              .map(k => k.trim().toLowerCase())
+          );
           for (const [kw, rule] of Object.entries(config.content_filter.by_title_keyword)) {
             const path = `content_filter.by_title_keyword.${kw}`;
+            if (!titlePositive.has(kw.trim().toLowerCase())) {
+              add(warnings, path, `"${kw}" does not match any title_filter.positive keyword and will never apply`);
+            }
             if (!isObject(rule)) {
               add(errors, path, 'must be an object with positive/negative keyword lists');
               continue;
