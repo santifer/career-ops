@@ -81,6 +81,9 @@ reports/*-RESERVED.md
 # OpenRouter runner — generated data (personal, never commit)
 data/model-blacklist.json
 
+# Personal repo-evaluation catalogue (Sajith's VP-of-infra repo verdicts)
+repo-evals.*
+
 # OS
 .DS_Store
 *.mov
