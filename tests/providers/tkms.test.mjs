@@ -24,6 +24,12 @@ try {
     fail('tkms.detect() should reject spoofed hosts');
   }
 
+  // resolveConfig — HTTPS-only. The API fetch uses redirect: 'error', so a
+  // plain-HTTP origin would both send the request in cleartext and hard-fail
+  // on any HTTPS redirect; reject it up front instead.
+  if (tkConfig({ api: 'http://jobs.tkmsgroup.com/en' }) === null) pass('tkms.resolveConfig() rejects a plain-HTTP origin');
+  else fail('tkms.resolveConfig() should reject http:');
+
   if (tkSlug('Systemingenieur IT (m/w/d)') === 'Systemingenieur-IT-m-w-d') pass('tkms.slugify() builds a clean slug');
   else fail(`tkms.slugify() wrong: ${tkSlug('Systemingenieur IT (m/w/d)')}`);
 

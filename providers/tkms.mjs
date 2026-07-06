@@ -34,7 +34,7 @@ export function resolveConfig(entry) {
   } catch {
     return null;
   }
-  if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+  if (u.protocol !== 'https:') return null;
   const host = u.host.toLowerCase();
   if (host !== 'jobs.tkmsgroup.com') return null;
   const block = entry.tkms && typeof entry.tkms === 'object' ? entry.tkms : {};
