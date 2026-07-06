@@ -201,6 +201,8 @@ top_strengths:
 risk_level: "{Low | Medium | High}"
 confidence: "{Low | Medium | High}"
 next_action: "{one concrete next step}"
+via: {agency/recruiter firm as a quoted string, or null for direct applications}
+company_confidential: {true when the end employer is unknown (company is "?"), else false}
 ```
 
 Rules:
@@ -251,6 +253,8 @@ top_strengths:
 risk_level: "{Low | Medium | High}"
 confidence: "{Low | Medium | High}"
 next_action: "{one concrete next step}"
+via: {agency/recruiter firm as a quoted string, or null for direct applications}
+company_confidential: {true when the end employer is unknown (company is "?"), else false}
 ```
 
 ## A) Resumen del Rol
