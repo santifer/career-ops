@@ -74,6 +74,17 @@ try {
   const partialJobs = await radancy.fetch({ name: 'Munich Re', api: 'https://careers.munichre.com/en/search-jobs' }, partialCtx);
   if (partialJobs.length === 2 && partialCalls === 2) pass('radancy.fetch() preserves jobs from earlier pages when a later page fetch throws');
   else fail(`radancy.fetch() partial-failure handling wrong: ${partialJobs.length} jobs after ${partialCalls} calls`);
+
+  // fetch — stops on a page whose ids are all already-seen (server clamped
+  // ?p= to the last page, or looped), NOT just on a literally empty page.
+  // fresh === 0 must halt pagination without appending duplicate jobs.
+  const dupPage = '<html>' + card('40548453568', 'Innendienst f&#252;r Versicherungsagentur', 'Bingen am Rhein, Germany') + '</html>';
+  const dupPages = [html, dupPage, '<html>' + card('999', 'Never reached', 'X') + '</html>'];
+  let dupCalls = 0;
+  const dupCtx = { sleep: async () => {}, fetchText: async () => dupPages[dupCalls++] ?? '<html></html>' };
+  const dupJobs = await radancy.fetch({ name: 'Munich Re', api: 'https://careers.munichre.com/en/search-jobs' }, dupCtx);
+  if (dupJobs.length === 2 && dupCalls === 2) pass('radancy.fetch() stops when a page brings only already-seen ids (fresh === 0), without appending duplicates');
+  else fail(`radancy.fetch() duplicate-page stop wrong: ${dupJobs.length} jobs after ${dupCalls} calls`);
 } catch (e) {
   fail(`radancy provider tests crashed: ${e.message}`);
 }

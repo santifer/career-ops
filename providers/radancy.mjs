@@ -74,8 +74,9 @@ export function parseResults(html, origin) {
     const link = block.match(/search-results-list__job-link[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/);
     if (!link) continue;
     const href = decodeEntities(link[1]);
-    const idM = block.match(/data-job-id="([^"]+)"/) || href.match(/\/(\d+)(?:[/?#]|$)/);
-    const id = idM ? idM[1] : href;
+    const dataIdM = block.match(/data-job-id="([^"]+)"/);
+    const hrefIds = [...href.matchAll(/\/(\d+)(?=[/?#]|$)/g)];
+    const id = dataIdM ? dataIdM[1] : (hrefIds.length ? hrefIds[hrefIds.length - 1][1] : href);
     if (seen.has(id)) continue;
     const title = clean(link[2]);
     if (!title) continue;
