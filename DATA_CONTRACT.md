@@ -55,6 +55,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/tracker.md` | Tracker instructions |
 | `modes/training.md` | Training evaluation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
+| `modes/titles.md` | Adjacent job-title suggestion instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
 | `modes/interview/*` | Interview prep planning, practice, and debrief skills |
 | `modes/de/*` | German language modes |

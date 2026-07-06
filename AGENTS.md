@@ -284,6 +284,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
+| Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |
 | Asks about follow-ups or application cadence | `followup` |
 | Wants to update the system | `update` |
 | Wants to queue a request for later / check the inbox between sessions | `agent-inbox` — append-only checklist the agent drains at the start of the next session; nothing auto-submits |

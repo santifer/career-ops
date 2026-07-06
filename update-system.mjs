@@ -78,6 +78,7 @@ const SYSTEM_PATHS = [
   'interview-prep/sessions/.gitkeep',
   'interview-prep/sessions/README.md',
   'modes/patterns.md',
+  'modes/titles.md',
   'modes/update.md',
   'modes/agent-inbox.md',
   'modes/ar/',
