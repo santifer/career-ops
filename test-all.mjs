@@ -1942,6 +1942,88 @@ for (const section of requiredSections) {
   }
 }
 
+// CLAUDE.md duplicates the Language Modes / Skill Modes tables from AGENTS.md
+// (see #1337) rather than pointing at them, so drift is only prevented by
+// checking both directions — a row added to one file and not the other has
+// bitten this project before in both directions (CLAUDE.md missing new
+// locales, AGENTS.md missing a mode CLAUDE.md already had).
+/**
+ * Extract the set of values inside a markdown section, matched by a regex.
+ *
+ * @param {string} content - Full file text to search within.
+ * @param {string} startMarker - Heading text marking the section start.
+ * @param {string} endMarker - Heading text marking the section end.
+ * @param {RegExp} pattern - Global regex whose first capture group is collected.
+ * @returns {string[]} Sorted, de-duplicated list of captured values.
+ */
+function extractSection(content, startMarker, endMarker, pattern) {
+  const start = content.indexOf(startMarker);
+  const end = content.indexOf(endMarker, start);
+  if (start === -1 || end === -1) return [];
+  const section = content.slice(start, end);
+  return [...new Set([...section.matchAll(pattern)].map((m) => m[1]))].sort();
+}
+
+/**
+ * Extract the mode identifier from the last cell of each Skill Modes table
+ * row. Anchoring to the last cell (rather than matching any backtick-wrapped
+ * token in the section) avoids two failure modes: a command reference in the
+ * description column being mistaken for a mode, and a mode's own row being
+ * missed when it carries trailing prose after the identifier (e.g.
+ * `` `contacto` — identifies hiring manager... ``).
+ *
+ * @param {string} content - Full file text to search within.
+ * @param {string} startMarker - Heading text marking the table's start.
+ * @param {string} endMarker - Heading text marking the table's end.
+ * @returns {string[]} Sorted, de-duplicated list of mode identifiers.
+ */
+function extractSkillModeIdentifiers(content, startMarker, endMarker) {
+  const start = content.indexOf(startMarker);
+  const end = content.indexOf(endMarker, start);
+  if (start === -1 || end === -1) return [];
+  const section = content.slice(start, end);
+  const identifiers = new Set();
+  for (const line of section.split('\n')) {
+    const row = line.trim();
+    if (!row.startsWith('|') || !row.endsWith('|')) continue;
+    if (/^\|[\s|-]+\|$/.test(row)) continue; // header separator row
+    const cells = row.slice(1, -1).split('|');
+    const lastCell = cells[cells.length - 1].trim();
+    const match = lastCell.match(/`([a-z][a-z0-9/_-]*)`/);
+    if (match) identifiers.add(match[1]);
+  }
+  return [...identifiers].sort();
+}
+
+function diffSets(a, b) {
+  return { onlyInA: a.filter((x) => !b.includes(x)), onlyInB: b.filter((x) => !a.includes(x)) };
+}
+
+const claudeMdForModes = readFile('CLAUDE.md');
+const langDirPattern = /`(modes\/[a-z]{2}\/)`/g;
+
+const claudeModes = extractSkillModeIdentifiers(claudeMdForModes, '### Skill Modes', '### CV Source of Truth');
+const agentsModes = extractSkillModeIdentifiers(agents, '### Skill Modes', '### CV Source of Truth');
+const modesDiff = diffSets(claudeModes, agentsModes);
+if (modesDiff.onlyInA.length === 0 && modesDiff.onlyInB.length === 0) {
+  pass('CLAUDE.md and AGENTS.md Skill Modes tables are in sync');
+} else {
+  fail(
+    `Skill Modes tables drifted — only in CLAUDE.md: [${modesDiff.onlyInA.join(', ')}], only in AGENTS.md: [${modesDiff.onlyInB.join(', ')}]`
+  );
+}
+
+const claudeLangs = extractSection(claudeMdForModes, '### Language Modes', '### Skill Modes', langDirPattern);
+const agentsLangs = extractSection(agents, '### Language Modes', '### Skill Modes', langDirPattern);
+const langsDiff = diffSets(claudeLangs, agentsLangs);
+if (langsDiff.onlyInA.length === 0 && langsDiff.onlyInB.length === 0) {
+  pass('CLAUDE.md and AGENTS.md Language Modes tables are in sync');
+} else {
+  fail(
+    `Language Modes tables drifted — only in CLAUDE.md: [${langsDiff.onlyInA.join(', ')}], only in AGENTS.md: [${langsDiff.onlyInB.join(', ')}]`
+  );
+}
+
 // ── 11. CLI WRAPPER FILE INTEGRITY ──────────────────────────
 
 console.log('\n11. CLI wrapper file integrity');
