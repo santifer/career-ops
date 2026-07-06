@@ -243,5 +243,46 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── Test 8: web read path resolves headers via the SHARED alias table ───────
+// web/src/lib/tracker-table.mjs (behind readApplications() in career-ops.ts)
+// loads tracker-aliases.json — the same file tracker-parse.mjs exports as
+// HEADER_ALIASES — instead of mirroring it. Passing ROOT here exercises the
+// REAL alias file, so an alias added/renamed there is either honored by the
+// web reader too or fails this test; a second drifting table can't come back.
+{
+  const { parseApplications, loadHeaderAliases } = await import('./web/src/lib/tracker-table.mjs');
+  const { HEADER_ALIASES } = await import('./tracker-parse.mjs');
+  const WEB_10COL = `# Applications Tracker
+
+| # | Date | Company | Role | Location | Score | Status | PDF | Report | Priority | Notes |
+|---|------|---------|------|----------|-------|--------|-----|--------|----------|-------|
+| 1 | 2026-01-01 | Acme | Engineer | Remote | 4.0/5 | Applied | ✅ | — | high | seed row |
+`;
+  const rows = parseApplications(WEB_10COL, ROOT);
+  const r = rows[0];
+  if (rows.length === 1 && r.company === 'Acme' && r.role === 'Engineer') {
+    pass('web reader: Company/Role read by header on 10-col tracker');
+  } else {
+    fail(`web reader: Company/Role on 10-col tracker — got ${JSON.stringify(r)}`);
+  }
+  if (r && r.score === '4.0/5' && r.status === 'Applied') {
+    pass('web reader: Score/Status not shifted by Location column');
+  } else {
+    fail(`web reader: Score/Status on 10-col tracker — got ${JSON.stringify(r)}`);
+  }
+  if (r && r.notes === 'seed row') {
+    pass('web reader: unknown Priority column skipped, Notes intact');
+  } else {
+    fail(`web reader: Notes past unknown column — got "${r && r.notes}"`);
+  }
+  // The web reader and the Node tooling must consume the IDENTICAL table.
+  const webAliases = loadHeaderAliases(ROOT);
+  if (JSON.stringify(webAliases) === JSON.stringify(HEADER_ALIASES) && Object.keys(webAliases).length > 0) {
+    pass('web reader: alias table is byte-identical to tracker-parse HEADER_ALIASES');
+  } else {
+    fail(`web reader: alias table drifted from HEADER_ALIASES — web ${JSON.stringify(webAliases)} vs core ${JSON.stringify(HEADER_ALIASES)}`);
+  }
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
