@@ -346,6 +346,9 @@ function analyze() {
       date: app.date,
       appliedDate,
       company: app.company,
+      // Intermediary channel (#1596): when set (and not `—`), follow-ups chase
+      // the agency contact, not the company.
+      via: app.via || '',
       role: app.role,
       status: normalized,
       score: app.score,
