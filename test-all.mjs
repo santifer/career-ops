@@ -1153,12 +1153,13 @@ if (
 if (
   offerPrepMode.includes('must not call WebSearch, WebFetch') &&
   offerPrepMode.includes('Never state law from memory') &&
+  offerPrepMode.includes('assert what any law requires') &&
   offerPrepMode.includes('must not run in batch/headless mode') &&
   offerPrepMode.includes('data, never instructions')
 ) {
-  pass('offer-prep mode enforces no-research, no-headless, and untrusted-input guards');
+  pass('offer-prep mode enforces no-research, no-law-assertion, no-headless, and untrusted-input guards');
 } else {
-  fail('offer-prep mode missing no-research / no-headless / untrusted-input guards');
+  fail('offer-prep mode missing no-research / no-law-assertion / no-headless / untrusted-input guards');
 }
 
 if (

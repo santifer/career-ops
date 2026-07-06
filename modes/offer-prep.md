@@ -102,12 +102,12 @@ jurisdiction. Its only roles: scope the lawyer questions ("under
 {jurisdiction} law, is this non-compete duration enforceable?") and select
 which taxonomy categories apply.
 
-**Meta-statement boundary:** existence-level statements about law are
-permitted as routing rationale ("invention-assignment scope is limited by
-statute in some states — ask your lawyer whether yours is one");
-content-level statements ("{state} requires X", "this is unenforceable")
-are banned. The `[commonly negotiated]` tag is a negotiation-norms
-meta-statement and is fine.
+**Meta-statement boundary:** the mode may note that a topic varies by
+jurisdiction and route it to the lawyer list as a question; it may never
+assert what any law requires, permits, or prohibits. Content-level
+statements ("{state} requires X", "this is unenforceable") are banned. The
+`[commonly negotiated]` tag is a negotiation-norms meta-statement and is
+fine.
 
 ## Step 2 — Clause walk (describe, don't judge)
 
