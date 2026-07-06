@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { atomicWrite } from "@/lib/core/safe-write";
+import { parseApplications } from "@/lib/tracker-table.mjs";
 
 /**
  * Resolve the career-ops "home" — the directory holding the user's sibling
@@ -111,25 +112,15 @@ export type Application = {
 
 /**
  * Parse data/applications.md — the tracker table (source of truth).
- * Column order: # | Date | Company | Role | Score | Status | PDF | Report | Notes
- * (note: score BEFORE status, per the core data contract).
+ * The header-aware parsing lives in tracker-table.mjs, which resolves headers
+ * through the SAME alias table the Node tooling uses (tracker-aliases.json,
+ * exported by tracker-parse.mjs as HEADER_ALIASES) — one shared source, no
+ * web-side mirror to drift (#954, PR #1598 review).
  */
 export function readApplications(): Application[] {
   const md = read("data/applications.md");
   if (!md) return [];
-  const rows: Application[] = [];
-  for (const raw of md.split("\n")) {
-    const line = raw.trim();
-    if (!line.startsWith("|")) continue;
-    const cells = line.split("|").slice(1, -1).map((c) => c.trim());
-    // Tolerate both layouts: the current 9-col tracker and older variants
-    // where the Notes column is absent (8 cells). Score is always before Status.
-    if (cells.length < 8) continue;
-    if (cells[0] === "#" || /^:?-{2,}:?$/.test(cells[0])) continue; // header / separator
-    const [n, date, company, role, score, status, pdf, report, ...rest] = cells;
-    rows.push({ n, date, company, role, score, status, pdf, report, notes: rest.join(" | ") });
-  }
-  return rows;
+  return parseApplications(md, careerOpsRoot());
 }
 
 /**
