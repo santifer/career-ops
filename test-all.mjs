@@ -1182,11 +1182,12 @@ if (
   offerPrepMode.includes('Notable absences') &&
   offerPrepMode.includes('incorporates by reference') &&
   offerPrepMode.includes('Questions for your lawyer') &&
+  offerPrepMode.includes('This is an AI-generated reading companion') &&
   offerPrepMode.includes('Apache-2.0')
 ) {
-  pass('offer-prep mode has extraction/language gates, promises file, absences + referenced-docs handling, lawyer list, attribution');
+  pass('offer-prep mode has extraction/language gates, promises file, absences + referenced-docs handling, lawyer list, fixed disclaimer, attribution');
 } else {
-  fail('offer-prep mode missing gates, promises file, absences/referenced-docs handling, lawyer list, or attribution');
+  fail('offer-prep mode missing gates, promises file, absences/referenced-docs handling, lawyer list, fixed disclaimer, or attribution');
 }
 
 const pipelineMode = readFile('modes/pipeline.md');
