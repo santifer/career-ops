@@ -24,7 +24,7 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 ## Source-of-Truth Boundary (CRITICAL)
 
-User-facing content (CV, cover letters, form answers, recruiter outreach, application form responses) is generated **exclusively** from these files plus statements the user makes directly in the current conversation:
+User-facing content (CV, cover letters, application emails, form answers, recruiter outreach, application form responses) is generated **exclusively** from these files plus statements the user makes directly in the current conversation:
 
 - `cv.md`
 - `article-digest.md`
@@ -106,7 +106,9 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
+| `stats.mjs` | Lifetime pipeline stats aggregator (JSON or `--summary`) — tracker roll-up, canonical `ever*` funnel, lifetime scan totals, portal coverage, follow-up compliance |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
+| `followup-seed.mjs` | Seeds `data/follow-ups.md` with a pinned first follow-up date when a row turns Applied (JSON output) |
 | `detect-reposts.mjs` | Repost detector — flags roles re-listed 2+ times in 90 days from scan-history.tsv (JSON or `--summary` table output) |
 | `process-quality.mjs` | Recruiting-process friction aggregator — parses `[process-friction]` tags candidates add to `data/active-interviews.md` Notes and reports per-company friction rate (JSON or `--summary` table output) |
 | `data/follow-ups.md` | Follow-up history tracker |
@@ -267,6 +269,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks to evaluate offer | `oferta` |
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` — identifies hiring manager, recruiter, or team peers via web search; drafts a ≤300-char message tailored to the contact type (recruiter / hiring manager / peer / interviewer) |
+| Wants a formal application email | `email` — draft-only subject, body, attachment checklist, and contact block from a report or JD; never sends, submits, or clicks anything |
 | Asks for company research | `deep` — generates a structured 6-axis research prompt covering AI strategy, recent moves, engineering culture, likely challenges, competitors, and the candidate's angle given their profile |
 | Preps for interview at specific company | `interview-prep` |
 | Wants a time-blocked prep plan for an upcoming interview | `interview/plan` |
@@ -283,6 +286,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
 | Wants to update the system | `update` |
+| Wants to queue a request for later / check the inbox between sessions | `agent-inbox` — append-only checklist the agent drains at the start of the next session; nothing auto-submits |
 
 ### CV Source of Truth
 

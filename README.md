@@ -105,12 +105,13 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Negotiation Scripts**  | Salary negotiation frameworks, geographic discount pushback, competing offer leverage                                                    |
 | **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
 | **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via the same HTML + Playwright pipeline as CVs. Auto-drafts on every evaluation; complete and generate on demand via `/career-ops cover` |
+| **Application Email Drafts** | Formal recruiter/referral/cold application emails from a report or pasted JD, with subject line, attachment checklist, source-backed fit points, and a profile-driven contact block. Draft-only -- career-ops never sends, submits, or clicks anything. |
 | **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing**     | Parallel evaluation with headless CLI workers (`claude -p` / `opencode run`)                                                             |
 | **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
 | **Human-in-the-Loop**    | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call               |
 | **Pipeline Integrity**   | Automated merge, dedup, status normalization, health checks                                                                              |
-| **Beyond the CV**        | Company research ([`deep`](modes/deep.md)) surfaces AI strategy, recent moves, engineering culture, and the angle your profile should take. Contact discovery ([`contacto`](modes/contacto.md)) identifies the hiring manager, recruiter, or team peer worth reaching out to and drafts a ≤300-character LinkedIn message tuned to each contact type. Applications get you in the queue; research gets you a conversation. |
+| **Beyond the CV**        | Company research ([`deep`](modes/deep.md)) surfaces AI strategy, recent moves, engineering culture, and the angle your profile should take. Contact discovery ([`contacto`](modes/contacto.md)) identifies the hiring manager, recruiter, or team peer worth reaching out to and drafts a ≤300-character LinkedIn message tuned to each contact type. Formal application email drafts ([`email`](modes/email.md)) turn an evaluated report or pasted JD into a subject line, body, and attachment checklist without sending, submitting, or clicking anything. Applications get you in the queue; research gets you a conversation. |
 
 ## Quick Start
 
@@ -174,7 +175,7 @@ claude   # or codex / opencode / gemini / qwen / agy / grok
 
 > **The system is designed to be customized by your AI coding CLI itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask it to change them. It reads the same files it uses, so it knows exactly what to edit.
 
-See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for instructions on running career-ops cheaply using custom or local models, and [docs/FAQ.md](docs/FAQ.md) for answers to common setup questions.
+See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for instructions on running career-ops cheaply using custom or local models, [docs/APPLY_AUTOFILL.md](docs/APPLY_AUTOFILL.md) for details on the ATS auto-fill flow, and [docs/FAQ.md](docs/FAQ.md) for answers to common setup questions.
 
 ## Antigravity CLI Integration
 
@@ -264,6 +265,7 @@ npm install
 # 3. Evaluate a job description
 node gemini-eval.mjs "We are looking for a Senior AI Engineer..."
 node gemini-eval.mjs --file ./jds/my-job.txt
+node agent-inbox.mjs add "..."   # queue a request for the next session
 npm run gemini:eval -- "JD text here"
 ```
 
@@ -279,6 +281,7 @@ Career-ops uses a shared command router. In CLIs that register slash commands, i
 /career-ops scan           → Scan portals for new offers
 /career-ops pdf            → Generate ATS-optimized CV
 /career-ops cover          → Cover letter generator (paste JD or /career-ops cover {slug})
+/career-ops email          → Formal application email draft (draft-only; never sends, submits, or clicks)
 /career-ops batch          → Batch evaluate multiple offers
 /career-ops tracker        → View application status
 /career-ops apply          → Fill application forms with AI
@@ -364,11 +367,12 @@ career-ops/
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
 │   └── profile.example.yml      # Template for your profile
-├── modes/                       # 15 skill modes
+├── modes/                       # Skill modes
 │   ├── _shared.md               # Shared context (customize this)
 │   ├── oferta.md                # Single evaluation
 │   ├── pdf.md                   # PDF generation
 │   ├── cover.md                 # Cover letter generation
+│   ├── email.md                 # Formal application email drafts
 │   ├── scan.md                  # Portal scanner
 │   ├── batch.md                 # Batch processing
 │   └── ...

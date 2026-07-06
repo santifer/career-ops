@@ -40,7 +40,7 @@ function KeywordField({
   // bare spaces, which are legitimate inside multi-word entries ("AI platform",
   // "New York", "Costa Rica"). A space-only paste stays one chip on purpose (#1147).
   const commit = (text: string) => {
-    const parts = text.split(/[,\n;]+/);
+    const parts = text.split(/[,\n;\t\r]+/);
     const next = cleanChips([...values, ...parts]);
     onChange(next);
     setDraft("");
@@ -60,7 +60,7 @@ function KeywordField({
         value={draft}
         onChange={(e) => {
           const val = e.target.value;
-          if (/[,\n;]$/.test(val)) commit(val);
+          if (/[,\n;\t\r]$/.test(val)) commit(val);
           else setDraft(val);
         }}
         onKeyDown={(e) => {
@@ -72,11 +72,14 @@ function KeywordField({
           }
         }}
         onPaste={(e) => {
+          e.preventDefault();
           const text = e.clipboardData.getData("text");
-          if (/[,\n;]/.test(text)) {
-            e.preventDefault();
-            commit(draft + text);
-          }
+          const merged = draft + text;
+          // Only commit to chips when the paste contains item separators.
+          // A plain-text paste (e.g. pasting "-EMEA" after typing "Remote")
+          // stays in the input field so the user can keep editing.
+          if (/[,;\n\t\r]/.test(text)) commit(merged);
+          else setDraft(merged);
         }}
         onBlur={() => draft.trim() && commit(draft)}
         placeholder={values.length ? "" : placeholder}

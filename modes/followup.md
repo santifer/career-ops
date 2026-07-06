@@ -131,6 +131,7 @@ After the user reviews and says they've sent a follow-up, record it:
 
 1. If `data/follow-ups.md` doesn't exist, create it (this exact header — the
    same one the web UI writes; `followup-cadence.mjs` parses these columns):
+
    ```markdown
    # Follow-ups
 
@@ -152,21 +153,26 @@ After the user reviews and says they've sent a follow-up, record it:
 
 **IMPORTANT:** Only record follow-ups the user confirms they actually sent. Never record a draft as sent.
 
-### Pinning a custom next follow-up date
+### Pinned next dates & automatic seeding
 
-If the user wants to override the computed cadence for one application ("remind
-me on the 10th", "push this one out a week"), append a pin line to
-`data/follow-ups.md`:
+`data/follow-ups.md` also supports pin lines that override the computed
+schedule for a single application:
 
-```markdown
+```text
 - next #42 2026-07-10 (set 2026-07-02)
 ```
 
 `#42` is the application number, the first date is the pinned NEXT follow-up
-date, and `(set …)` is today. The pin takes precedence over the computed
-schedule (it even revives a cold application) until a follow-up is logged on or
-after the set-date, which resumes the normal cadence. The latest pin line per
-application wins; remove the line to clear the pin.
+date, and `(set …)` is the day the pin was made. Pins take precedence over
+the computed schedule until a follow-up is logged on or after the set-date;
+the latest pin per application wins; deleting the line clears the pin.
+
+Pins may be seeded AUTOMATICALLY when an application turns Applied —
+`node followup-seed.mjs <num>` (run by the `apply` mode's Step 9) appends a
+pin scheduling the first follow-up at apply date + the `applied_first`
+cadence. Seeding is idempotent, and a stale pin left behind by a later
+Rejected/Discarded transition is harmless because the cadence analysis
+ignores non-actionable statuses.
 
 ## Step 6 — Summary
 
