@@ -1312,6 +1312,47 @@ if (
   fail('offer-prep missing from data contract / gitignore / SYSTEM_PATHS');
 }
 
+if (
+  ofertaMode.includes('Company type classification (required)') &&
+  ofertaMode.includes('Growth-stage startup / VC-backed startup') &&
+  ofertaMode.includes('Early-stage startup / pre-revenue startup') &&
+  ofertaMode.includes('Open-source community / education community') &&
+  ofertaMode.includes('actual contract / hiring entity') &&
+  ofertaMode.includes('default compensation reliability to the conservative canonical tier: `Low`') &&
+  ofertaMode.includes('Compensation reliability (required)') &&
+  ofertaMode.includes('If no advertised number exists, collapse this section to exactly two concise lines') &&
+  ofertaMode.includes('skip component split, detailed market rows, and HR verification questions') &&
+  ofertaMode.includes('Advertised range') &&
+  ofertaMode.includes('Likely guaranteed base') &&
+  ofertaMode.includes('Variable / conditional cash components') &&
+  ofertaMode.includes('Expected stable cash') &&
+  ofertaMode.includes('Non-cash benefits') &&
+  ofertaMode.includes('Required HR verification questions when a salary figure exists') &&
+  ofertaMode.includes('Do not present advertised compensation as real take-home pay')
+) {
+  pass('oferta requires company-type-driven compensation reliability checks');
+} else {
+  fail('oferta missing durable company-type compensation reliability instructions');
+}
+
+if (
+  shared.includes('## Company Type and Compensation Reliability') &&
+  shared.includes('Company type taxonomy') &&
+  shared.includes('Growth-stage startup / VC-backed startup') &&
+  shared.includes('Early-stage startup / pre-revenue startup') &&
+  shared.includes('Open-source community / education community') &&
+  shared.includes('actual contract / hiring entity') &&
+  shared.includes('default compensation reliability to the conservative canonical tier: `Low`') &&
+  shared.includes('Compensation reliability tiers') &&
+  shared.includes('collapse compensation analysis to two concise lines: company type and reliability tier') &&
+  shared.includes('advertised range, likely guaranteed base, variable / conditional cash components, expected stable cash, and non-cash benefits') &&
+  shared.includes('Never present advertised compensation as real take-home pay')
+) {
+  pass('_shared.md defines the canonical company-type compensation reliability framework');
+} else {
+  fail('_shared.md missing canonical company-type compensation reliability framework');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
