@@ -1,4 +1,4 @@
-// tests/providers/html-entities.test.mjs — direct coverage for the shared
+// tests/providers/_html-entities.test.mjs — direct coverage for the shared
 // entity decoder (providers/_html-entities.mjs), extracted out of
 // successfactors.mjs / dassault.mjs / softgarden.mjs / rheinmetall.mjs so the
 // numeric-entity guard can't drift out of sync between copies again (#1639).
@@ -15,6 +15,9 @@ try {
 
   if (decodeEntities('f&#252;r Z&#xfc;rich') === 'für Zürich') pass('decodeEntities decodes decimal and hex numeric entities');
   else fail(`numeric entity wrong: ${JSON.stringify(decodeEntities('f&#252;r Z&#xfc;rich'))}`);
+
+  if (decodeEntities('Z&#Xfc;rich') === 'Zürich') pass('decodeEntities decodes an uppercase hex marker (&#X..;)');
+  else fail(`uppercase hex entity wrong: ${JSON.stringify(decodeEntities('Z&#Xfc;rich'))}`);
 
   // A numeric entity above 0x10FFFF is the one that actually throws
   // RangeError out of String.fromCodePoint; a lone surrogate half
