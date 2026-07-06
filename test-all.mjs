@@ -2605,7 +2605,7 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 7 &&
+    historyColumns.length === 8 && // 7 metadata columns + fingerprint (#1597)
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -12079,6 +12079,105 @@ try {
   }
 } catch (e) {
   fail(`softgarden provider tests crashed: ${e.message}`);
+}
+
+console.log('\n62. Fingerprint core — JD cross-listing detection (#1597)');
+try {
+  const { fingerprintText, similarity, findCrossListings, normalizeJdText, FINGERPRINT_MIN_TEXT } =
+    await import(pathToFileURL(join(ROOT, 'fingerprint-core.mjs')).href);
+
+  // A realistic-length JD body (well past FINGERPRINT_MIN_TEXT).
+  const baseJd = Array.from({ length: 40 }, (_, i) =>
+    `requirement ${i}: build and operate distributed ingestion pipelines with strong ownership of reliability and observability`
+  ).join('. ');
+
+  const fp = fingerprintText(baseJd);
+  if (/^[0-9a-f]{16}$/.test(fp)) pass('fingerprintText returns 16 hex chars for a real JD body');
+  else fail(`fingerprintText returned ${JSON.stringify(fp)}`);
+  if (fingerprintText(baseJd) === fp) pass('fingerprintText is deterministic');
+  else fail('fingerprintText should be deterministic');
+
+  if (fingerprintText('too short to mean anything') === '') {
+    pass(`fingerprintText returns '' under ${FINGERPRINT_MIN_TEXT} normalized chars (no body → no signal)`);
+  } else {
+    fail('fingerprintText should refuse short texts');
+  }
+
+  // Agency re-post: same body, minor cosmetic edits (intro swapped, HTML added).
+  const agencyJd = '<p>Our client, a market leader, is hiring!</p>' + baseJd.replace('requirement 3', 'requirement three');
+  const simNear = similarity(fp, fingerprintText(agencyJd));
+  if (simNear >= 0.92) pass(`near-verbatim re-post scores ≥ 0.92 (got ${simNear.toFixed(3)})`);
+  else fail(`near-verbatim re-post scored ${simNear.toFixed(3)}, expected ≥ 0.92`);
+
+  const otherJd = Array.from({ length: 40 }, (_, i) =>
+    `duty ${i}: design compensation frameworks and partner with regional HR leadership on annual review cycles`
+  ).join('. ');
+  const simFar = similarity(fp, fingerprintText(otherJd));
+  if (simFar < 0.85) pass(`unrelated JD scores below threshold (got ${simFar.toFixed(3)})`);
+  else fail(`unrelated JD scored ${simFar.toFixed(3)}, expected < 0.85`);
+
+  if (similarity(fp, '') === 0 && similarity('', '') === 0 && similarity(fp, 'zzzz') === 0) {
+    pass('similarity treats empty/malformed fingerprints as non-matching');
+  } else {
+    fail('similarity should return 0 for empty/malformed fingerprints');
+  }
+
+  if (normalizeJdText('<b>Senior&nbsp;Engineer</b> https://x.co — (m/f/d)!') === 'senior engineer m f d') {
+    pass('normalizeJdText strips tags, entities, URLs, punctuation');
+  } else {
+    fail(`normalizeJdText wrong: ${JSON.stringify(normalizeJdText('<b>Senior&nbsp;Engineer</b> https://x.co — (m/f/d)!'))}`);
+  }
+
+  // findCrossListings: different company within window matches; same company
+  // (re-post, detect-reposts territory) and stale rows do not.
+  const offers = [{ url: 'https://agency.example/j/1', company: 'Hays', title: 'Data Engineer', fingerprint: fp }];
+  const history = [
+    { url: 'https://acme.example/careers/9', dateStr: '2026-06-20', company: 'Acme', title: 'Data Engineer', fingerprint: fingerprintText(agencyJd) },
+    { url: 'https://hays.example/j/0', dateStr: '2026-06-25', company: 'Hays', title: 'Data Engineer', fingerprint: fp },
+    { url: 'https://old.example/j/2', dateStr: '2025-01-01', company: 'Globex', title: 'Data Engineer', fingerprint: fp },
+    { url: 'https://nofp.example/j/3', dateStr: '2026-06-25', company: 'Initech', title: 'Data Engineer', fingerprint: '' },
+  ];
+  const found = findCrossListings(offers, history, { today: '2026-07-06' });
+  if (found.length === 1 && found[0].row.company === 'Acme' && found[0].score >= 0.92) {
+    pass('findCrossListings flags a different-company near-duplicate within the window');
+  } else {
+    fail(`findCrossListings returned ${JSON.stringify(found.map(m => ({ c: m.row.company, s: m.score })))}`);
+  }
+  if (findCrossListings([{ url: 'x', company: 'Hays', title: 't', fingerprint: '' }], history, { today: '2026-07-06' }).length === 0) {
+    pass('findCrossListings skips offers without a fingerprint');
+  } else {
+    fail('findCrossListings should skip fingerprint-less offers');
+  }
+} catch (e) {
+  fail(`fingerprint core tests crashed: ${e.message}`);
+}
+
+console.log('\n63. Scan history — fingerprint column (#1597)');
+try {
+  const { formatScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const longJd = Array.from({ length: 40 }, (_, i) => `requirement ${i}: build reliable pipelines with observability`).join('. ');
+  const withBody = formatScanHistoryRow(
+    { url: 'https://x.example/j/1', source: 'lever', title: 'Data Engineer', company: 'Acme', location: 'Remote', description: longJd },
+    '2026-07-06',
+  );
+  const cols = withBody.split('\t');
+  if (cols.length === 8 && /^[0-9a-f]{16}$/.test(cols[7])) {
+    pass('formatScanHistoryRow appends a fingerprint column for described offers');
+  } else {
+    fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
+  }
+  const withoutBody = formatScanHistoryRow(
+    { url: 'https://x.example/j/2', source: 'greenhouse', title: 'Data Engineer', company: 'Acme', location: '' },
+    '2026-07-06',
+  );
+  const cols2 = withoutBody.split('\t');
+  if (cols2.length === 8 && cols2[7] === '') {
+    pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
+  } else {
+    fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);
+  }
+} catch (e) {
+  fail(`scan-history fingerprint tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

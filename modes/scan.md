@@ -223,6 +223,12 @@ Levels are additive — they are executed in order, and results are merged and d
    - `applications.md` → normalized company + role already evaluated
    - `pipeline.md` → exact URL already in pending or processed list
 
+7.1. **Cross-listing check (#1597)** — automatic in `scan.mjs`, warn only:
+   - Each new offer's JD body (when the provider's list API ships one, e.g. Lever) is fingerprinted (64-bit SimHash, stored as the 8th `scan-history.tsv` column).
+   - A near-identical body seen within 90 days under a **different company** is flagged in the scan summary — the usual cause is an agency re-posting a direct listing with the employer name stripped, which URL and company+role dedup both miss.
+   - Nothing is dropped automatically. If one side is an agency, apply through ONE channel only (see the Via channel workflow, #1596) — a double submission burns the candidate with both parties.
+   - Offers without a usable description get no fingerprint and are never flagged (no body → no signal, no false positives).
+
 7.5. **Verify Liveness of WebSearch Results (Level 3)** — BEFORE adding to pipeline:
 
    WebSearch results can be outdated (Google caches results for weeks or months). To avoid evaluating expired offers, verify every new URL coming from Level 3 using Playwright. Levels 1 and 2 are inherently real-time and do not require this verification.
