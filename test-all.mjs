@@ -318,6 +318,12 @@ try {
   } else {
     fail(`Lever API URL wrong: ${JSON.stringify(lvApi)}`);
   }
+  const lvEuApi = resolveAtsApi('https://jobs.eu.lever.co/acme-eu/abc-123-def');
+  if (lvEuApi?.ats === 'lever' && lvEuApi.apiUrl === 'https://api.eu.lever.co/v0/postings/acme-eu/abc-123-def') {
+    pass('resolveAtsApi maps an EU Lever posting to api.eu.lever.co');
+  } else {
+    fail(`Lever EU API URL wrong: ${JSON.stringify(lvEuApi)}`);
+  }
   if (resolveAtsApi('https://example.com/jobs/123') === null) {
     pass('resolveAtsApi returns null for non-ATS URLs (→ Playwright fallback)');
   } else {
@@ -1785,11 +1791,28 @@ try {
     fail('verify-portals parseAtsSlug misclassified an ATS or branded URL');
   }
 
+  const leverSlug = parseAtsSlug('https://jobs.lever.co/acme');
+  if (leverSlug?.ats === 'lever' && leverSlug?.slug === 'acme' && !leverSlug?.eu) {
+    pass('verify-portals parseAtsSlug extracts lever slug from jobs.lever.co URL');
+  } else {
+    fail(`verify-portals parseAtsSlug lever: ${JSON.stringify(leverSlug)}`);
+  }
+
+  const leverEuSlug = parseAtsSlug('https://jobs.eu.lever.co/acme-eu');
+  if (leverEuSlug?.ats === 'lever' && leverEuSlug?.slug === 'acme-eu' && leverEuSlug?.eu === true) {
+    pass('verify-portals parseAtsSlug extracts lever-eu slug and sets eu:true from jobs.eu.lever.co URL');
+  } else {
+    fail(`verify-portals parseAtsSlug lever-eu: ${JSON.stringify(leverEuSlug)}`);
+  }
+
   // Mock fetchJson: 200+jobs → live, 200+empty → empty, otherwise 404 → missing.
   const mockFetch = async (url) => {
     if (url.includes('/boards/live/jobs')) return { jobs: [{}, {}] };
     if (url.includes('/boards/empty/jobs')) return { jobs: [] };
     if (url.includes('/posting-api/job-board/deepsetai')) return { jobs: [{}] };
+    if (url.includes('api.lever.co/v0/postings/acme-lv')) return [{}];
+    if (url.includes('api.eu.lever.co/v0/postings/acme-eu')) return [{}, {}, {}];
+    if (url === 'https://api.eu.lever.co/v0/postings/diabolocom') return [{}, {}];
     const err = new Error('HTTP 404'); err.status = 404; throw err;
   };
   const results = await verifyCompanies([
@@ -1799,14 +1822,22 @@ try {
     { name: 'Deepset', careers_url: 'https://job-boards.greenhouse.io/deepset' },
     { name: 'Branded', careers_url: 'https://acme.com/careers' },
     { name: 'Off', enabled: false, careers_url: 'https://job-boards.greenhouse.io/live' },
+    { name: 'Lever Live', careers_url: 'https://jobs.lever.co/acme-lv' },
+    { name: 'Lever EU Live', careers_url: 'https://jobs.eu.lever.co/acme-eu' },
+    { name: 'Diabolocom EU Discovery', careers_url: 'https://job-boards.greenhouse.io/does-not-exist-diabolocom' },
   ], { fetchJson: mockFetch });
   const byName = Object.fromEntries(results.map((r) => [r.name, r]));
   if (
-    results.length === 5 &&
+    results.length === 8 &&
     byName.Live.status === 'live' && byName.Empty.status === 'empty' &&
     byName.Typo.status === 'missing' && byName.Typo.errorKind === 'slug_gone' &&
     byName.Branded.status === 'skipped' &&
-    byName.Deepset.suggested?.ats === 'ashby' && byName.Deepset.suggested?.slug === 'deepsetai'
+    byName['Lever Live'].status === 'live' &&
+    byName['Lever EU Live'].status === 'live' &&
+    byName.Deepset.suggested?.ats === 'ashby' && byName.Deepset.suggested?.slug === 'deepsetai' &&
+    byName['Diabolocom EU Discovery'].suggested?.ats === 'lever' &&
+    byName['Diabolocom EU Discovery'].suggested?.slug === 'diabolocom' &&
+    byName['Diabolocom EU Discovery'].suggested?.url === 'https://api.eu.lever.co/v0/postings/diabolocom'
   ) {
     pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
   } else {
@@ -2338,6 +2369,7 @@ for (const [url, expected] of [
   ['https://boards.greenhouse.io/openai/jobs/123', 'openai'],
   ['https://jobs.ashbyhq.com/ElevenLabs/abc',      'elevenlabs'],
   ['https://jobs.lever.co/retool/xyz',              'retool'],
+  ['https://jobs.eu.lever.co/retool-eu/xyz',         'retool-eu'],
 ]) {
   const out = run(NODE, ['archive-posting.mjs', '--dry-run', url]);
   const { hostname } = new URL(url);
@@ -5249,13 +5281,29 @@ try {
   const lever = (await import(pathToFileURL(join(ROOT, 'providers/lever.mjs')).href)).default;
   const ashby = (await import(pathToFileURL(join(ROOT, 'providers/ashby.mjs')).href)).default;
 
-  let leverOpts = null;
+  // Each instance must hit its own host with redirect:'error' — a wrong host
+  // silently returns another tenant's (or no) postings instead of erroring.
+  let leverUrl = null, leverOpts = null;
   await lever.fetch(
     { name: 'L', careers_url: 'https://jobs.lever.co/example' },
-    { transport: 'http', fetchJson: async (_u, opts) => { leverOpts = opts; return []; }, fetchText: async () => '' },
+    { transport: 'http', fetchJson: async (u, opts) => { leverUrl = u; leverOpts = opts; return []; }, fetchText: async () => '' },
   );
-  if (leverOpts && leverOpts.redirect === 'error') pass('lever.fetch() passes redirect:"error"');
-  else fail(`lever.fetch() should pass redirect:"error", got ${JSON.stringify(leverOpts)}`);
+  if (leverUrl === 'https://api.lever.co/v0/postings/example' && leverOpts?.redirect === 'error') {
+    pass('lever.fetch() hits api.lever.co and passes redirect:"error"');
+  } else {
+    fail(`lever.fetch() default instance: url=${leverUrl}, opts=${JSON.stringify(leverOpts)}`);
+  }
+
+  let leverEuUrl = null, leverEuOpts = null;
+  await lever.fetch(
+    { name: 'L EU', careers_url: 'https://jobs.eu.lever.co/example-eu' },
+    { transport: 'http', fetchJson: async (u, opts) => { leverEuUrl = u; leverEuOpts = opts; return []; }, fetchText: async () => '' },
+  );
+  if (leverEuUrl === 'https://api.eu.lever.co/v0/postings/example-eu' && leverEuOpts?.redirect === 'error') {
+    pass('lever.fetch() hits api.eu.lever.co and passes redirect:"error"');
+  } else {
+    fail(`lever.fetch() EU instance: url=${leverEuUrl}, opts=${JSON.stringify(leverEuOpts)}`);
+  }
 
   let ashbyOpts = null;
   await ashby.fetch(
@@ -10719,6 +10767,21 @@ try {
     }
   }
 
+  // EU Lever instance must be allowlisted in both the top-level host gate and
+  // detectAts()'s LEV set — missing either one silently drops EU apply URLs.
+  // Inspect the actual literals, not a raw source-wide substring count, so a
+  // duplicate elsewhere (or a comment) can't mask a missing entry in either one.
+  const allowedHostsLiteral = src.match(/const ALLOWED_HOSTS = new Set\(\[([\s\S]*?)\]\)/)?.[1] || '';
+  const levLiteral = src.match(/const LEV = new Set\(\[([^\]]*)\]\)/)?.[1] || '';
+  const allowedHostsOk = /jobs\.eu\.lever\.co/.test(allowedHostsLiteral);
+  const levOk = /jobs\.eu\.lever\.co/.test(levLiteral);
+  if (allowedHostsOk && levOk) {
+    pass('prepare-application.mjs allowlists jobs.eu.lever.co in ALLOWED_HOSTS and detectAts() LEV set');
+  } else {
+    const missing = [!allowedHostsOk && 'ALLOWED_HOSTS', !levOk && 'LEV'].filter(Boolean).join(', ');
+    fail(`prepare-application.mjs missing jobs.eu.lever.co from: ${missing}`);
+  }
+
   // Must read config/profile.yml
   if (/config\/profile\.yml/.test(src)) {
     pass('prepare-application.mjs reads config/profile.yml');
@@ -11953,6 +12016,172 @@ try {
 
 } catch (e) {
   fail(`dassault provider tests crashed: ${e.message}`);
+}
+
+console.log('\n58. Provider — csod (Cornerstone OnDemand career-site API)');
+try {
+  const csod = (await import(pathToFileURL(join(ROOT, 'providers/csod.mjs')).href)).default;
+  const { resolveConfig, extractToken, parseCsodDate, cleanLocations, parseRequisitions } =
+    await import(pathToFileURL(join(ROOT, 'providers/csod.mjs')).href);
+
+  if (csod.id === 'csod') pass('csod.id is "csod"');
+  else fail(`csod.id is ${JSON.stringify(csod.id)}`);
+
+  // resolveConfig — tenant/siteId/corpName out of the careersite URL.
+  const cfg = resolveConfig({ api: 'https://career-ohb.csod.com/ux/ats/careersite/4/home?c=career-ohb' });
+  if (
+    cfg && cfg.siteId === 4 && cfg.corpName === 'career-ohb' &&
+    cfg.searchApi === 'https://career-ohb.csod.com/services/x/career-site/v1/search' &&
+    cfg.homeUrl === 'https://career-ohb.csod.com/ux/ats/careersite/4/home?c=career-ohb'
+  ) {
+    pass('csod.resolveConfig() parses origin, siteId, corpName, endpoints');
+  } else {
+    fail(`csod.resolveConfig() wrong: ${JSON.stringify(cfg)}`);
+  }
+  if (resolveConfig({ api: 'https://career-x.csod.com/other/path' }) === null) pass('csod.resolveConfig() rejects non-careersite paths');
+  else fail('csod.resolveConfig() should reject non-careersite paths');
+
+  // detect — host-anchored, path-shape required; spoofs return null.
+  if (csod.detect({ careers_url: 'https://career-ohb.csod.com/ux/ats/careersite/4/home?c=career-ohb' })) pass('csod.detect() matches *.csod.com careersite URLs');
+  else fail('csod.detect() should match a careersite URL');
+  if (csod.detect({ careers_url: 'https://evil.com/x.csod.com/ux/ats/careersite/4/home' }) === null) pass('csod.detect() rejects path-spoofed host');
+  else fail('csod.detect() should reject path-spoofed host');
+  if (csod.detect({ careers_url: 'https://csod.com.evil.com/ux/ats/careersite/4/home' }) === null) pass('csod.detect() rejects suffix-spoofed host');
+  else fail('csod.detect() should reject suffix-spoofed host');
+
+  // extractToken — anonymous JWT embedded in the bootstrap home page.
+  if (extractToken('x{"token":"eyJab.c-d_e"}y') === 'eyJab.c-d_e') pass('csod.extractToken() pulls the bearer token');
+  else fail(`csod.extractToken() wrong: ${JSON.stringify(extractToken('x{"token":"eyJab.c-d_e"}y'))}`);
+  if (extractToken('<html>no token</html>') === '' && extractToken(undefined) === '') pass('csod.extractToken() returns "" when absent');
+  else fail('csod.extractToken() should return "" when absent');
+
+  // parseCsodDate — US M/D/YYYY; junk → undefined.
+  if (parseCsodDate('7/3/2026') === Date.UTC(2026, 6, 3)) pass('csod.parseCsodDate() reads M/D/YYYY');
+  else fail(`csod.parseCsodDate() wrong: ${parseCsodDate('7/3/2026')}`);
+  if (parseCsodDate('13/40/2026') === undefined && parseCsodDate('garbage') === undefined && parseCsodDate(null) === undefined) {
+    pass('csod.parseCsodDate() rejects junk and out-of-range dates');
+  } else {
+    fail('csod.parseCsodDate() should reject junk / out-of-range input');
+  }
+
+  // cleanLocations — city+country per location, " / " join, dedup, tolerant.
+  if (cleanLocations([{ city: 'Bremen', state: 'Bremen', country: 'DE' }]) === 'Bremen, DE') pass('csod.cleanLocations() renders "City, CC"');
+  else fail(`csod.cleanLocations() wrong: ${JSON.stringify(cleanLocations([{ city: 'Bremen', country: 'DE' }]))}`);
+  if (cleanLocations([{ city: 'A', country: 'DE' }, { city: 'B', country: 'AT' }]) === 'A, DE / B, AT') pass('csod.cleanLocations() joins multiple locations');
+  else fail('csod.cleanLocations() should join multiple locations with " / "');
+  if (cleanLocations(undefined) === '' && cleanLocations([null]) === '') pass('csod.cleanLocations() tolerates missing/null input');
+  else fail('csod.cleanLocations() should return "" for missing input');
+
+  // parseRequisitions — id/title required; detail URL from origin+siteId+corp.
+  const reqJson = {
+    data: {
+      totalCount: 3,
+      requisitions: [
+        { requisitionId: 8410, postingEffectiveDate: '7/3/2026', displayJobTitle: 'IT Specialist (m/w/d)', locations: [{ city: 'Bremen', country: 'DE' }] },
+        { requisitionId: null, displayJobTitle: 'No id — dropped' },
+        { requisitionId: 99, displayJobTitle: '' },
+      ],
+    },
+  };
+  const reqs = parseRequisitions(reqJson, { origin: 'https://career-ohb.csod.com', siteId: 4, corpName: 'career-ohb' });
+  if (reqs.length === 1) pass('csod.parseRequisitions() drops records missing id or title');
+  else fail(`csod.parseRequisitions() returned ${reqs.length}, expected 1`);
+  if (reqs[0]?.url === 'https://career-ohb.csod.com/ux/ats/careersite/4/home/requisition/8410?c=career-ohb') pass('csod.parseRequisitions() builds the requisition detail URL');
+  else fail(`csod.parseRequisitions() url wrong: ${JSON.stringify(reqs[0]?.url)}`);
+  if (reqs[0]?.postedAt === Date.UTC(2026, 6, 3) && reqs[0]?.location === 'Bremen, DE') pass('csod.parseRequisitions() maps postedAt and location');
+  else fail(`csod.parseRequisitions() fields wrong: ${JSON.stringify(reqs[0])}`);
+
+  // fetch — token from page 1, then paginates the search API; totalCount stops
+  // the loop; dedup across pages. Pages are full-size (25) like the live API —
+  // a short page legitimately means "last page" to the provider.
+  const mkReq = (id, title) => ({ requisitionId: id, displayJobTitle: title, postingEffectiveDate: '7/3/2026', locations: [] });
+  const fullPage = Array.from({ length: 25 }, (_, i) => mkReq(i + 1, `Job ${i + 1}`));
+  const searchPages = [
+    { data: { totalCount: 27, requisitions: fullPage } },
+    { data: { totalCount: 27, requisitions: [mkReq(25, 'Job 25 dup'), mkReq(26, 'Job 26'), mkReq(27, 'Job 27')] } },
+  ];
+  let searchCalls = 0;
+  let sawAuth = '';
+  const mockCtx = {
+    sleep: async () => {},
+    fetchText: async () => '{"token":"tok.abc"}',
+    fetchJson: async (url, opts) => {
+      sawAuth = opts?.headers?.authorization || '';
+      const body = JSON.parse(opts.body);
+      if (body.pageSize !== 25 || body.pageNumber !== searchCalls + 1) throw new Error('unexpected paging body');
+      return searchPages[searchCalls++] ?? { data: { totalCount: 27, requisitions: [] } };
+    },
+  };
+  const fetched = await csod.fetch({ name: 'OHB', api: 'https://career-ohb.csod.com/ux/ats/careersite/4/home?c=career-ohb' }, mockCtx);
+  if (fetched.length === 27 && new Set(fetched.map((j) => j.url)).size === 27 && searchCalls === 2) pass('csod.fetch() paginates via totalCount and dedups across pages');
+  else fail(`csod.fetch() returned ${fetched.length} jobs after ${searchCalls} calls`);
+  if (sawAuth === 'Bearer tok.abc') pass('csod.fetch() sends the extracted anonymous bearer token');
+  else fail(`csod.fetch() auth header wrong: ${JSON.stringify(sawAuth)}`);
+
+  // Token missing → hard error (never a silent empty scan).
+  let tokenErr = '';
+  await csod.fetch({ name: 'X', api: 'https://x.csod.com/ux/ats/careersite/1/home?c=x' }, { ...mockCtx, fetchText: async () => '<html/>' }).catch((e) => { tokenErr = e.message; });
+  if (/no anonymous token/.test(tokenErr)) pass('csod.fetch() throws when the home page carries no token');
+  else fail(`csod.fetch() should throw on missing token, got: ${JSON.stringify(tokenErr)}`);
+} catch (e) {
+  fail(`csod provider tests crashed: ${e.message}`);
+}
+
+console.log('\n59. Provider — rheinmetall (SSR vacancy-list parser)');
+try {
+  const rheinmetall = (await import(pathToFileURL(join(ROOT, 'providers/rheinmetall.mjs')).href)).default;
+  const { resolveListUrl, parseVacancies } = await import(pathToFileURL(join(ROOT, 'providers/rheinmetall.mjs')).href);
+
+  if (rheinmetall.id === 'rheinmetall') pass('rheinmetall.id is "rheinmetall"');
+  else fail(`rheinmetall.id is ${JSON.stringify(rheinmetall.id)}`);
+
+  // resolveListUrl — keeps an explicit vacancies URL, defaults everything else
+  // on the rheinmetall.com host to /en, rejects foreign hosts.
+  if (resolveListUrl({ api: 'https://www.rheinmetall.com/de/career/vacancies' }) === 'https://www.rheinmetall.com/de/career/vacancies') pass('rheinmetall.resolveListUrl() keeps an explicit locale list URL');
+  else fail('rheinmetall.resolveListUrl() should keep /de/career/vacancies');
+  if (resolveListUrl({ careers_url: 'https://www.rheinmetall.com/en/career' }) === 'https://www.rheinmetall.com/en/career/vacancies') pass('rheinmetall.resolveListUrl() defaults non-list URLs to /en/career/vacancies');
+  else fail('rheinmetall.resolveListUrl() should default to the EN list');
+  if (resolveListUrl({ careers_url: 'https://evil.com/x.rheinmetall.com' }) === null) pass('rheinmetall.resolveListUrl() rejects path-spoofed host');
+  else fail('rheinmetall.resolveListUrl() should reject path-spoofed host');
+  if (rheinmetall.detect({ careers_url: 'https://rheinmetall.com.evil.com/en/career/vacancies' }) === null) pass('rheinmetall.detect() rejects suffix-spoofed host');
+  else fail('rheinmetall.detect() should reject suffix-spoofed host');
+
+  // parseVacancies — the tricky part is that ONE card holds THREE anchors to
+  // the same job; a cross-card regex would pair card A's trailing anchor with
+  // card B's title. Fixture mirrors the live markup shape.
+  const card = (id, title, org) =>
+    '<div class="flex gap-0.5 group">' +
+    `<a href="/en/job/slug_${id}/${id}" target="_blank">img</a>` +
+    `<div><a href="/en/job/slug_${id}/${id}"><div class="text-sm font-bold md:text-xl mb-2">${title}</div></a>` +
+    `<div class="flex flex-wrap mr-6"> ${org} </div></div>` +
+    `<a href="/en/job/slug_${id}/${id}">arrow</a>` +
+    '</div>';
+  const pageHtml = '<html>' + card('111', 'Fertigungssteuerer (m/w/d)', 'Rheinmetall Landsysteme GmbH | Kassel') + card('222', 'Softwareentwickler &amp; Architekt', 'Rheinmetall Air Defence AG | Z&#252;rich') + '</html>';
+  const rows = parseVacancies(pageHtml, 'https://www.rheinmetall.com');
+  if (rows.length === 2) pass('rheinmetall.parseVacancies() yields one row per card (3 anchors collapse)');
+  else fail(`rheinmetall.parseVacancies() returned ${rows.length}, expected 2`);
+  if (rows[0]?.title === 'Fertigungssteuerer (m/w/d)' && rows[1]?.title === 'Softwareentwickler & Architekt') pass('rheinmetall.parseVacancies() pairs each id with ITS OWN title (no cross-card bleed)');
+  else fail(`rheinmetall.parseVacancies() titles wrong: ${JSON.stringify(rows.map((r) => r.title))}`);
+  if (rows[0]?.location === 'Kassel' && rows[1]?.location === 'Zürich') pass('rheinmetall.parseVacancies() extracts the city from "Company | City" (entities decoded)');
+  else fail(`rheinmetall.parseVacancies() locations wrong: ${JSON.stringify(rows.map((r) => r.location))}`);
+  if (rows[0]?.url === 'https://www.rheinmetall.com/en/job/slug_111/111') pass('rheinmetall.parseVacancies() builds absolute job URLs');
+  else fail(`rheinmetall.parseVacancies() url wrong: ${JSON.stringify(rows[0]?.url)}`);
+  if (parseVacancies('<html>no cards</html>', 'https://x').length === 0 && parseVacancies(undefined, 'https://x').length === 0) pass('rheinmetall.parseVacancies() returns [] for card-less / non-string input');
+  else fail('rheinmetall.parseVacancies() should return [] without cards');
+
+  // fetch — paginates ?page=N, stops when a page brings no fresh ids (the
+  // server clamps past-the-end pages to the last page).
+  const rhmPages = [pageHtml, '<html>' + card('333', 'C', 'X GmbH | Kiel') + '</html>', '<html>' + card('333', 'C', 'X GmbH | Kiel') + '</html>'];
+  let rhmCalls = 0;
+  const rhmSeen = [];
+  const rhmCtx = { sleep: async () => {}, fetchText: async (url) => { rhmSeen.push(url); return rhmPages[rhmCalls++] ?? rhmPages[2]; } };
+  const rhmJobs = await rheinmetall.fetch({ name: 'Rheinmetall', api: 'https://www.rheinmetall.com/en/career/vacancies' }, rhmCtx);
+  if (rhmJobs.length === 3 && rhmCalls === 3) pass('rheinmetall.fetch() paginates and stops on a clamped (no-fresh-ids) page');
+  else fail(`rheinmetall.fetch() returned ${rhmJobs.length} jobs after ${rhmCalls} calls`);
+  if (rhmSeen[0]?.endsWith('?page=1') && rhmSeen[1]?.endsWith('?page=2')) pass('rheinmetall.fetch() pages via ?page=N (1-based)');
+  else fail(`rheinmetall.fetch() paged wrong: ${JSON.stringify(rhmSeen)}`);
+} catch (e) {
+  fail(`rheinmetall provider tests crashed: ${e.message}`);
 }
 
 console.log('\n60. Provider — beesite (milch & zucker GJB search API)');
