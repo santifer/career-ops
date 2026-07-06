@@ -15,6 +15,7 @@
 import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve, basename } from 'path';
+import { pathToFileURL } from 'url';
 import { buildManifest } from './lib/latex-content.mjs';
 
 async function main() {
@@ -56,4 +57,6 @@ async function main() {
   process.exit(manifest.supported ? 0 : 1);
 }
 
-main();
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  main();
+}

@@ -16,6 +16,7 @@
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve, dirname } from 'path';
+import { pathToFileURL } from 'url';
 import { applyPatches } from './lib/latex-content.mjs';
 
 async function main() {
@@ -80,4 +81,6 @@ async function main() {
   console.log(JSON.stringify(report, null, 2));
 }
 
-main();
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  main();
+}
