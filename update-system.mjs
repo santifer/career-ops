@@ -83,10 +83,12 @@ const SYSTEM_PATHS = [
   'modes/ar/',
   'modes/da/',
   'modes/de/',
+  'modes/de/interview/',
   'modes/fr/',
   'modes/fr/interview/',
   'modes/es/',
   'modes/es/interview/',
+  'modes/id/',
   'modes/it/',
   'modes/ja/',
   'modes/ko/',
@@ -121,6 +123,7 @@ const SYSTEM_PATHS = [
   'role-matcher.mjs',
   'tracker-utils.mjs',
   'tracker-parse.mjs',
+  'tracker-aliases.json',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
@@ -132,12 +135,14 @@ const SYSTEM_PATHS = [
   'prepare-application.mjs',
   'providers/',
   'seeds/',
+  'tests/',
   'doctor.mjs',
   'check-liveness.mjs',
   'liveness-core.mjs',
   'liveness-api.mjs',
   'liveness-browser.mjs',
   'analyze-patterns.mjs',
+  'stats.mjs',
   'detect-reposts.mjs',
   'fingerprint-core.mjs',
   'process-quality.mjs',
@@ -161,6 +166,8 @@ const SYSTEM_PATHS = [
   'verify-portals.mjs',
   'updater-migration-tests.mjs',
   'validate-system-paths-coverage.mjs',
+  'reply-matcher.mjs',
+  'reply-matcher.test.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/README.md',
@@ -210,6 +217,7 @@ const SYSTEM_PATHS = [
   'TRADEMARK.md',
   'LICENSE',
   'CITATION.cff',
+  '.editorconfig',
   '.github/',
   'package.json',
   'build-cv-latex.mjs',
@@ -240,6 +248,7 @@ const BOOTSTRAP_PATHS = [
   'role-matcher.mjs',
   'tracker-utils.mjs',
   'tracker-parse.mjs',
+  'tracker-aliases.json',
   'scaffolder/',
   'reserve-report-num.mjs',
   'updater-migration-tests.mjs',
@@ -747,6 +756,51 @@ async function apply() {
       } catch {
         // File may not exist in remote (new additions), skip
       }
+    }
+
+    // tests/ is auto-discovered and EXECUTED (tests/**/*.test.mjs), so stale
+    // files left behind by upstream renames would run twice or crash the
+    // suite. `git checkout` never deletes upstream-removed files (see the
+    // limitation note in rollback below) — prune tracked extras against
+    // FETCH_HEAD. Only git-tracked files are removed: a user's untracked
+    // local experiments in tests/ are never touched.
+    try {
+      let remoteTests = new Set();
+      try {
+        remoteTests = new Set(
+          git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', 'tests/')
+            .split('\n').filter(Boolean).map((p) => p.replace(/\\/g, '/'))
+        );
+      } catch {
+        // tests/ may not exist in older targets (ls-tree throws) — nothing to
+        // prune. This is the only expected-and-silent failure in this block.
+      }
+      // An empty set means FETCH_HEAD has no tests/ at all (older target, or
+      // ls-tree quietly returning nothing) — pruning against it would delete
+      // every local test file. Only prune when the remote actually ships tests/.
+      if (remoteTests.size > 0) {
+        const localTests = git('ls-files', '--', 'tests/').split('\n').filter(Boolean);
+        for (const f of localTests) {
+          if (!remoteTests.has(f.replace(/\\/g, '/'))) {
+            // Per-file isolation: one failed unlink (locked file, permissions)
+            // must not abort pruning the rest.
+            try {
+              unlinkSync(join(ROOT, f));
+              // Raw path only: `updated` entries are reused as git pathspecs by
+              // revertPaths() and the scoped commit below. Pushed only after a
+              // successful unlink so failed deletions never enter `updated`.
+              updated.push(f);
+              console.log(`Pruned stale test file: ${f}`);
+            } catch (err) {
+              console.error(`Failed to prune stale test file ${f}: ${err.message}`);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // Unexpected failure (e.g. ls-files threw) — surface it instead of
+      // silently skipping the prune step.
+      console.error(`Stale-test prune step failed: ${err.message}`);
     }
 
     const materializedSkillEntrypoints = ensureSkillEntrypoints(ROOT);

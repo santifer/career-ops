@@ -482,7 +482,7 @@ search_queries:
 #
 #   greenhouse      job-boards(.eu)?.greenhouse.io/<slug>  (or api: field)
 #   ashby           jobs.ashbyhq.com/<slug>
-#   lever           jobs.lever.co/<slug>
+#   lever           jobs.(eu.)?lever.co/<slug>
 #   workable        apply.workable.com/<slug>
 #   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
 #   recruitee       <slug>.recruitee.com
@@ -1218,6 +1218,11 @@ tracked_companies:
   - name: Pigment
     careers_url: https://jobs.lever.co/pigment
     notes: "Paris FR / NYC / London. AI-powered FP&A planning platform."
+    enabled: true
+
+  - name: Diabolocom
+    careers_url: https://jobs.eu.lever.co/diabolocom
+    notes: "Paris FR. AI-native contact center (CCaaS) platform — Frost & Sullivan 2026 AI CX Leader in Europe; hybrid LLM/SLM architecture powering Agent Assist, Voice Analytics, and automated QA."
     enabled: true
 
   # -- UK & Ireland AI (EU-friendly hiring) --

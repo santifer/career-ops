@@ -41,6 +41,7 @@ import { loadProviders, resolveProvider } from './providers/_registry.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
 import { classifyFetchError } from './verify-portals.mjs';
 import { fingerprintText, findCrossListings } from './fingerprint-core.mjs';
+import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -503,17 +504,20 @@ export function loadSeenUrls(policy = {}) {
   return { seen, recheckEligible };
 }
 
-function loadSeenCompanyRoles() {
+export function loadSeenCompanyRoles(appsPath = APPLICATIONS_PATH) {
   const seen = new Set();
-  if (existsSync(APPLICATIONS_PATH)) {
-    const text = readFileSync(APPLICATIONS_PATH, 'utf-8');
-    // Parse markdown table rows: | # | Date | Company | Role | ...
-    for (const match of text.matchAll(/\|[^|]+\|[^|]+\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|/g)) {
-      const company = match[1].trim().toLowerCase();
-      const role = match[2].trim().toLowerCase();
-      if (company && role && company !== 'company') {
-        seen.add(`${company}::${role}`);
-      }
+  if (existsSync(appsPath)) {
+    // Header-aware parse (tracker-parse.mjs, #954) — the old positional regex
+    // captured the wrong cells on customized layouts (e.g. with a Location
+    // column), so the seen-set keyed on garbage and dedup misfired.
+    const lines = readFileSync(appsPath, 'utf-8').split('\n');
+    const colmap = resolveColumns(lines);
+    for (const line of lines) {
+      const row = parseTrackerRow(line, colmap);
+      if (!row) continue;
+      const company = row.company.trim().toLowerCase();
+      const role = row.role.trim().toLowerCase();
+      if (company && role) seen.add(`${company}::${role}`);
     }
   }
   return seen;
