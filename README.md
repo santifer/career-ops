@@ -106,6 +106,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
 | **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via the same HTML + Playwright pipeline as CVs. Auto-drafts on every evaluation; complete and generate on demand via `/career-ops cover` |
 | **Application Email Drafts** | Formal recruiter/referral/cold application emails from a report or pasted JD, with subject line, attachment checklist, source-backed fit points, and a profile-driven contact block. Draft-only -- career-ops never sends, submits, or clicks anything. |
+| **Reply Watch**        | Read-only employer reply digest that classifies interview invites, human replies, rejections, action requests, and auto-confirmations. It recommends tracker updates, but only applies them after review. |
 | **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing**     | Parallel evaluation with headless CLI workers (`claude -p` / `opencode run`)                                                             |
 | **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
@@ -281,6 +282,7 @@ Career-ops uses a shared command router. In CLIs that register slash commands, i
 /career-ops pdf            → Generate ATS-optimized CV
 /career-ops cover          → Cover letter generator (paste JD or /career-ops cover {slug})
 /career-ops email          → Formal application email draft (draft-only; never sends, submits, or clicks)
+/career-ops reply-watch    → Employer reply digest (read-only; tracker updates require review)
 /career-ops batch          → Batch evaluate multiple offers
 /career-ops tracker        → View application status
 /career-ops apply          → Fill application forms with AI
@@ -372,6 +374,7 @@ career-ops/
 │   ├── pdf.md                   # PDF generation
 │   ├── cover.md                 # Cover letter generation
 │   ├── email.md                 # Formal application email drafts
+│   ├── reply-watch.md           # Employer reply digest
 │   ├── scan.md                  # Portal scanner
 │   ├── batch.md                 # Batch processing
 │   └── ...

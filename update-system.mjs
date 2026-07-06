@@ -58,6 +58,7 @@ const SYSTEM_PATHS = [
   'modes/pdf.md',
   'modes/cover.md',
   'modes/email.md',
+  'modes/reply-watch.md',
   'modes/add.md',
   'modes/scan.md',
   'modes/batch.md',

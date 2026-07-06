@@ -131,6 +131,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 * `latex` — Export CV as LaTeX/Overleaf .tex
 * `cover` — Generate cover letter
 * `email` — Draft formal application email only; never sends, submits, or clicks
+* `reply-watch` — Summarize employer inbox replies; read-only unless tracker updates are confirmed
 * `interview-prep` — Generate interview preparation guide
 * `interview` — Onboarding/on-demand interview
 * `contacto` — Generate LinkedIn outreach message
@@ -262,6 +263,7 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` |
 | Wants a formal application email | `email` — draft-only; never sends, submits, or clicks anything |
+| Wants to know whether employers/recruiters replied by email | `reply-watch` — read-only employer reply digest; tracker changes require confirmation |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants interactive profile/CV onboarding | `interview` |

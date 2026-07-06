@@ -111,6 +111,7 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `detect-reposts.mjs` | Repost detector — flags roles re-listed 2+ times in 90 days from scan-history.tsv (JSON or `--summary` table output) |
 | `process-quality.mjs` | Recruiting-process friction aggregator — parses `[process-friction]` tags candidates add to `data/active-interviews.md` Notes and reports per-company friction rate (JSON or `--summary` table output) |
 | `data/follow-ups.md` | Follow-up history tracker |
+| `modes/reply-watch.md` | Employer reply digest instructions |
 | `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
 | `check-liveness.mjs` | Job posting liveness checker |
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
@@ -269,6 +270,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` — identifies hiring manager, recruiter, or team peers via web search; drafts a ≤300-char message tailored to the contact type (recruiter / hiring manager / peer / interviewer) |
 | Wants a formal application email | `email` — draft-only subject, body, attachment checklist, and contact block from a report or JD; never sends, submits, or clicks anything |
+| Wants to know whether employers/recruiters replied by email | `reply-watch` — read-only employer reply digest; classifies interview invites, human replies, rejections, action requests, and auto-confirmations; tracker changes require confirmation |
 | Asks for company research | `deep` — generates a structured 6-axis research prompt covering AI strategy, recent moves, engineering culture, likely challenges, competitors, and the candidate's angle given their profile |
 | Preps for interview at specific company | `interview-prep` |
 | Wants a time-blocked prep plan for an upcoming interview | `interview/plan` |
