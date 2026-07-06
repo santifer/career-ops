@@ -138,6 +138,7 @@ const SYSTEM_PATHS = [
   'liveness-api.mjs',
   'liveness-browser.mjs',
   'analyze-patterns.mjs',
+  'stats.mjs',
   'detect-reposts.mjs',
   'process-quality.mjs',
   'process-quality.test.mjs',
