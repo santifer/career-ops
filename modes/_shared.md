@@ -54,7 +54,7 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 2. Actively look for evidence in the JD + Block G company research: team size mentions, org-chart depth/manager layers, meeting-culture language ("daily standups," "cross-functional alignment," "stakeholder management" as a core duty), company size/stage, async vs. sync-heavy language.
 3. **If 2+ of the 3 `require` criteria have positive evidence** → score 4-5.
 4. **If 1 criterion has positive evidence, none contradicted** → score 3.
-5. **If evidence points the other way (large corporate, heavy management layers, explicit politics/stakeholder-heavy language) or `deprioritize_if_absent: true` and no evidence either way** → **cap this dimension at 2/5**, and add an explicit line to Block A's Culture Screen field (see `oferta.md`) naming what's missing or contradicted. Do not let a strong CV-match score silently compensate for this — surface it, don't bury it.
+5. **If evidence points the other way (large corporate, heavy management layers, explicit politics/stakeholder-heavy language) or `culture_screen.deprioritize_if_absent: true` and no evidence either way** → **cap this dimension at 2/5**, and add an explicit line to Block A's Culture Screen field (see `oferta.md`) naming what's missing or contradicted. Do not let a strong CV-match score silently compensate for this — surface it, don't bury it.
 6. A role scoring 4.5+ overall but 2 or below on Cultural signals must carry an explicit warning in the report: "High technical fit, unconfirmed/poor culture fit — verify before applying."
 
 ## Posting Legitimacy (Block G)

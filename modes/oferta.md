@@ -44,7 +44,7 @@ Table with:
 - Seniority
 - Remote (full/hybrid/onsite)
 - Team size (if mentioned)
-- **Culture screen** (see `_shared.md` § Culture Screen): pass / caution / fail, with the specific evidence found or missing — not just a score, name what you saw
+- **Culture screen** (see `_shared.md` § Scoring System): pass / caution / fail, with the specific evidence found or missing — not just a score, name what you saw
 - TL;DR in 1 sentence
 
 ### Geo-mismatch check
