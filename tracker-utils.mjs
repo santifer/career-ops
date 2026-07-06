@@ -260,12 +260,22 @@ export async function acquireTrackerLock(lockDir, options = {}) {
     attempts++;
     try {
       mkdirSync(lockDir);
-      writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
-        pid: process.pid,
-        token,
-        started_at: new Date().toISOString(),
-        tracker: options.tracker ?? '',
-      }, null, 2));
+      try {
+        writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
+          pid: process.pid,
+          token,
+          started_at: new Date().toISOString(),
+          tracker: options.tracker ?? '',
+        }, null, 2));
+      } catch (ownerErr) {
+        // We created the dir but could not record ownership. An empty,
+        // owner-less lock dir would block every future locker until the
+        // staleMs age-out — remove what we just created before rethrowing.
+        // Scoped to the owner write only: the mkdir EEXIST contention path
+        // is still handled by the outer catch.
+        rmSync(lockDir, { recursive: true, force: true });
+        throw ownerErr;
+      }
 
       let released = false;
       return {
