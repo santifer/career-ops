@@ -1194,11 +1194,13 @@ const routerSkill = readFile('.agents/skills/career-ops/SKILL.md');
 if (
   /argument-hint:.*offer-prep/.test(routerSkill) &&
   routerSkill.includes('| `offer-prep` | `offer-prep` |') &&
-  routerSkill.includes('/career-ops offer-prep')
+  routerSkill.includes('/career-ops offer-prep') &&
+  /Applies to:.*`offer-prep`/.test(routerSkill) &&
+  !/Modes delegated to subagent[\s\S]*offer-prep/.test(routerSkill)
 ) {
-  pass('router skill registers offer-prep (argument-hint, routing table, menu)');
+  pass('router skill registers offer-prep (argument-hint, routing table, menu, standalone list; never subagent-delegated)');
 } else {
-  fail('router skill missing offer-prep registration');
+  fail('router skill missing offer-prep registration (or offer-prep leaked into the subagent-delegated section)');
 }
 
 const claudeMdDoc = readFile('CLAUDE.md');
@@ -1218,7 +1220,8 @@ const updaterSrc = readFile('update-system.mjs');
 if (
   dataContractDoc.includes('data/offers/') &&
   dataContractDoc.includes('modes/offer-prep.md') &&
-  gitignoreDoc.includes('data/offers/') &&
+  gitignoreDoc.includes('data/offers/*') &&
+  gitignoreDoc.includes('!data/offers/.gitkeep') &&
   updaterSrc.includes("'modes/offer-prep.md'")
 ) {
   pass('offer-prep registered in data contract, gitignore, and updater manifest');
