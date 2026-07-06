@@ -4401,6 +4401,61 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER CROSS-CHANNEL VIA GUARD: NON-LATIN AGENCIES (#1603) ─────
+// normalizeCompany() strips [^a-z0-9], so two different non-Latin agency
+// names both collapse to '' and the #1596 cross-channel guard treated them
+// as the same channel — silently merging two real submissions. The via
+// comparison must use a Unicode-aware key.
+console.log('\n🧪 Testing merge-tracker via guard with non-Latin agencies (#1603)...');
+try {
+  const viaTmp = mkdtempSync(join(tmpdir(), 'career-ops-via-'));
+  try {
+    mkdirSync(join(viaTmp, 'data'));
+    mkdirSync(join(viaTmp, 'reports'));
+    const additionsDir = join(viaTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(viaTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|-----|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | ? | リクルート | Backend Engineer, Payments Platform | 4.0/5 | Evaluated | ❌ | [1](../reports/001-unknown-2026-01-04.md) | agency listing |\n');
+    for (const n of ['001-unknown-2026-01-04', '002-unknown-2026-01-05', '003-unknown-2026-01-06']) {
+      writeFileSync(join(viaTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+    // Same role, unknown employer, DIFFERENT non-Latin agency → a real second
+    // submission that must be ADDED as its own row. (Role carries a
+    // discriminating token — roleFuzzyMatch rejects baseline-only titles.)
+    writeFileSync(join(additionsDir, '002-unknown.tsv'),
+      '2\t2026-01-05\t?\tBackend Engineer, Payments Platform\tEvaluated\t4.1/5\t❌\t[2](reports/002-unknown-2026-01-05.md)\tsecond agency\tvia=パーソル\n');
+    // Same role, SAME agency re-blasting the listing → duplicate, update in place.
+    writeFileSync(join(additionsDir, '003-unknown.tsv'),
+      '3\t2026-01-06\t?\tBackend Engineer, Payments Platform\tEvaluated\t4.2/5\t❌\t[3](reports/003-unknown-2026-01-06.md)\tre-blast\tvia=リクルート\n');
+
+    const viaResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    if (viaResult === null) {
+      fail('merge-tracker.mjs crashed during non-Latin via guard test (#1603)');
+    } else {
+      const merged = readFileSync(tracker, 'utf-8');
+      if (merged.includes('パーソル') && merged.includes('リクルート')) {
+        pass('distinct non-Latin agencies kept as separate rows (#1603)');
+      } else {
+        fail('distinct non-Latin agencies were merged — via key collapsed to the same empty string (#1603)');
+      }
+      const recruitRows = merged.split('\n').filter(l => l.includes('リクルート'));
+      if (recruitRows.length === 1 && recruitRows[0].includes('4.2/5')) {
+        pass('same-agency re-blast still updates the existing row in place (#1603)');
+      } else {
+        fail(`same-agency re-blast handling broken: ${recruitRows.length} リクルート rows, expected 1 updated to 4.2/5`);
+      }
+    }
+  } finally {
+    rmSync(viaTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`non-Latin via guard tests crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER TSV COLUMN-ORDER TOLERANCE (#1427) ─────────────
 // Batch TSVs write (status, score); applications.md is (score, status). A
 // generator that swaps the two must not merge silently — the score column is

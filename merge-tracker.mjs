@@ -394,6 +394,23 @@ function normalizeCompany(name) {
 }
 
 /**
+ * Unicode-aware key for Via (agency) comparison.
+ *
+ * normalizeCompany() strips everything outside [a-z0-9], so non-Latin agency
+ * names (リクルート, パーソル, …) all collapse to the same empty key — which
+ * made the #1596 cross-channel guard treat two different agencies as one
+ * channel and silently merge two real submissions. Keep letters and digits of
+ * any script instead; NFKC first so full-width/half-width variants compare
+ * equal.
+ *
+ * @param {string} name - Raw Via cell or via= tag value.
+ * @returns {string} Case-folded, punctuation-free, script-preserving key.
+ */
+function normalizeVia(name) {
+  return String(name).normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+/**
  * Extract the bracketed report number from a Markdown report link.
  *
  * Report-number equality is an exact duplicate signal, but only after company
@@ -825,8 +842,10 @@ for (const file of tsvFiles) {
       // agencies is two real submissions — merging them silently is exactly
       // the double-submission hazard the Via column exists to surface. Only
       // the same channel (the agency re-blasting one listing) is a duplicate.
+      // Via comparison is Unicode-aware (#1603): normalizeCompany() would
+      // collapse distinct non-Latin agency names to the same empty key.
       if ((String(addition.company).trim() === '?' || String(app.company).trim() === '?')
-          && normalizeCompany(addition.via || '') !== normalizeCompany(app.via || '')) return false;
+          && normalizeVia(addition.via || '') !== normalizeVia(app.via || '')) return false;
       // Req/job-number guard (#1524): a similarly-worded title at the same
       // company can still be a genuinely distinct posting when a req/job
       // number in the Notes column proves it (employers like TD commonly run
