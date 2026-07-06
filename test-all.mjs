@@ -12432,6 +12432,232 @@ try {
   fail(`stats.mjs tests crashed: ${e.message}`);
 }
 
+console.log('\n63. Providers — mixed source pack (Google, Apple, Microsoft, YC, UN)');
+
+try {
+  const googleModule = await import(pathToFileURL(join(ROOT, 'providers/google-careers.mjs')).href);
+  const appleModule = await import(pathToFileURL(join(ROOT, 'providers/apple-careers.mjs')).href);
+  const microsoftModule = await import(pathToFileURL(join(ROOT, 'providers/microsoft-careers.mjs')).href);
+  const ycModule = await import(pathToFileURL(join(ROOT, 'providers/yc-jobs.mjs')).href);
+  const unModule = await import(pathToFileURL(join(ROOT, 'providers/un-careers.mjs')).href);
+
+  const google = googleModule.default;
+  const apple = appleModule.default;
+  const microsoft = microsoftModule.default;
+  const yc = ycModule.default;
+  const unCareers = unModule.default;
+
+  if (google.id === 'google-careers' && apple.id === 'apple-careers' && microsoft.id === 'microsoft-careers' && yc.id === 'yc-jobs' && unCareers.id === 'un-careers') {
+    pass('mixed source providers expose stable provider ids');
+  } else {
+    fail(`mixed source provider ids wrong: ${JSON.stringify([google.id, apple.id, microsoft.id, yc.id, unCareers.id])}`);
+  }
+
+  if (google.detect({ careers_url: 'https://www.google.com/about/careers/applications/jobs/results/' }) && google.detect({ careers_url: 'https://evil.example/www.google.com/about/careers/applications/jobs/results/' }) === null) {
+    pass('google-careers.detect() claims the official host and rejects path spoofing');
+  } else {
+    fail('google-careers.detect() host validation wrong');
+  }
+
+  const googleHtml = `
+    <ul>
+      <li class="lLd3Je">
+        <h3 class="QJPWVe">Staff Software Engineer &amp; Tech Lead</h3>
+        <span class="r0wTof ">London, UK</span>
+        <a href="jobs/results/111-staff-software-engineer">View role</a>
+      </li>
+      <li class="lLd3Je">
+        <h3 class="QJPWVe">Forward Deployed Engineer</h3>
+        <span class="r0wTof ">Remote eligible</span>
+        <a href="/about/careers/applications/jobs/results/222-forward-deployed-engineer">View role</a>
+      </li>
+    </ul>`;
+  const googleRows = googleModule.parseGoogleCareersHtml(googleHtml);
+  if (googleRows.length === 2 && googleRows[0].title === 'Staff Software Engineer & Tech Lead') pass('parseGoogleCareersHtml() extracts and decodes Google job cards');
+  else fail(`parseGoogleCareersHtml() rows = ${JSON.stringify(googleRows)}`);
+
+  let googleFetchUrl = '';
+  const googleFetched = await google.fetch(
+    { name: 'Google', google: { query: 'product engineer' } },
+    { fetchText: async (url, opts) => { googleFetchUrl = url; if (opts?.redirect !== 'error') throw new Error('missing redirect guard'); return googleHtml; } },
+  );
+  if (googleFetchUrl.includes('q=product+engineer') && googleFetched.length === 2) pass('google-careers.fetch() builds the query URL and normalizes parsed rows');
+  else fail(`google-careers.fetch() url/jobs wrong: ${googleFetchUrl} ${JSON.stringify(googleFetched)}`);
+
+  const appleHtml = `
+    <ul id="search-job-list">
+      <li data-core-accordion-item>
+        <a href="/en-us/details/2001/software-engineer?team=SFTWR">Software Engineer</a>
+        <span id="search-store-name-container-1">Cupertino</span>
+        <span class="job-posted-date">Jul 02, 2026</span>
+      </li>
+      <li data-core-accordion-item>
+        <a href="/en-us/details/2002/ai-ml-engineer">AI/ML Engineer</a>
+        <span id="search-store-name-container-2">London</span>
+      </li>
+    </ul>`;
+  const appleRows = appleModule.parseAppleCareersHtml(appleHtml);
+  if (appleRows.length === 2 && appleRows[0].location === 'Cupertino' && appleRows[0].postedAt === Date.parse('Jul 02, 2026')) {
+    pass('parseAppleCareersHtml() extracts Apple job links, location, and posted date');
+  } else {
+    fail(`parseAppleCareersHtml() rows = ${JSON.stringify(appleRows)}`);
+  }
+
+  let appleFetchUrl = '';
+  const appleFetched = await apple.fetch(
+    { name: 'Apple', apple: { search: 'ai engineer', sort: 'recent' } },
+    { fetchText: async (url, opts) => { appleFetchUrl = url; if (opts?.redirect !== 'error') throw new Error('missing redirect guard'); return appleHtml; } },
+  );
+  if (appleFetchUrl.includes('search=ai+engineer') && appleFetchUrl.includes('sort=recent') && appleFetched.length === 2) {
+    pass('apple-careers.fetch() builds search/sort params and normalizes rows');
+  } else {
+    fail(`apple-careers.fetch() url/jobs wrong: ${appleFetchUrl} ${JSON.stringify(appleFetched)}`);
+  }
+
+  if (microsoft.detect({ careers_url: 'https://jobs.careers.microsoft.com/global/en/search' }) && microsoft.detect({ careers_url: 'https://evil.example/jobs.careers.microsoft.com/global/en/search' }) === null) {
+    pass('microsoft-careers.detect() claims the official host and rejects path spoofing');
+  } else {
+    fail('microsoft-careers.detect() host validation wrong');
+  }
+
+  const microsoftPayload = {
+    props: {
+      results: [
+        {
+          display_job_id: '178001',
+          title: 'Principal Software Engineer',
+          canonicalPositionUrl: 'https://jobs.careers.microsoft.com/global/en/job/178001/principal-software-engineer',
+          locations: [{ displayName: 'Redmond, Washington, United States' }],
+          postedDate: '2026-07-01',
+        },
+        { title: 'Marketing page', url: '/global/en/life-at-microsoft' },
+      ],
+    },
+  };
+  const microsoftHtml = `<html><code id="pcsx-data">${JSON.stringify(microsoftPayload).replace(/"/g, '&#34;')}</code></html>`;
+  const microsoftRows = microsoftModule.parseMicrosoftCareersHtml(microsoftHtml);
+  if (microsoftRows.length === 1 && microsoftRows[0].title === 'Principal Software Engineer' && microsoftRows[0].location === 'Redmond, Washington, United States') {
+    pass('parseMicrosoftCareersHtml() extracts jobs from the pcsx-data payload');
+  } else {
+    fail(`parseMicrosoftCareersHtml() rows = ${JSON.stringify(microsoftRows)}`);
+  }
+
+  const microsoftJson = {
+    status: 200,
+    data: {
+      positions: [
+        {
+          id: 1970393556869024,
+          displayJobId: '200038289',
+          name: 'Software Engineer/Sr Software Engineer',
+          locations: ['United States, Washington, Redmond'],
+          postedTs: 1780069158,
+          positionUrl: '/careers/job/1970393556869024',
+        },
+      ],
+    },
+  };
+  const microsoftApiRows = microsoftModule.parseMicrosoftSearchResponse(microsoftJson);
+  if (microsoftApiRows.length === 1 && microsoftApiRows[0].url === 'https://apply.careers.microsoft.com/careers/job/1970393556869024' && microsoftApiRows[0].postedAt === 1780069158 * 1000) {
+    pass('parseMicrosoftSearchResponse() extracts jobs from the public PCS search API');
+  } else {
+    fail(`parseMicrosoftSearchResponse() rows = ${JSON.stringify(microsoftApiRows)}`);
+  }
+
+  let microsoftFetchUrl = '';
+  let microsoftFetchOpts = null;
+  const microsoftFetched = await microsoft.fetch(
+    { name: 'Microsoft', microsoft: { query: 'software engineer' } },
+    { fetchJson: async (url, opts) => { microsoftFetchUrl = url; microsoftFetchOpts = opts; return microsoftJson; } },
+  );
+  if (microsoftFetchUrl.includes('/api/pcsx/search') && microsoftFetchUrl.includes('query=software+engineer') && microsoftFetchOpts?.redirect === 'error' && microsoftFetched.length === 1) {
+    pass('microsoft-careers.fetch() uses the public PCS search API and normalizes rows');
+  } else {
+    fail(`microsoft-careers.fetch() url/opts/jobs wrong: ${JSON.stringify({ microsoftFetchUrl, microsoftFetchOpts, microsoftFetched })}`);
+  }
+
+  if (yc.detect({ careers_url: 'https://www.ycombinator.com/jobs/' }) && yc.detect({ careers_url: 'https://evil.example/ycombinator.com/jobs' }) === null) {
+    pass('yc-jobs.detect() claims official YC jobs and rejects path spoofing');
+  } else {
+    fail('yc-jobs.detect() host validation wrong');
+  }
+
+  const ycPayload = {
+    component: 'WaasLandingPage',
+    props: {
+      jobPostings: [
+        {
+          id: 1,
+          title: 'Founding AI Engineer',
+          url: '/companies/acme/jobs/founding-ai-engineer',
+          companyName: 'Acme AI',
+          location: 'Remote',
+          createdAt: '2026-07-03T00:00:00Z',
+        },
+        {
+          id: 2,
+          title: 'Product Engineer',
+          url: 'https://www.ycombinator.com/companies/beta/jobs/product-engineer',
+          companyName: 'Beta Labs',
+        },
+      ],
+    },
+  };
+  const ycHtml = `<div id="app" data-page="${JSON.stringify(ycPayload).replace(/"/g, '&#34;')}"></div>`;
+  const ycRows = ycModule.parseYcJobsHtml(ycHtml);
+  if (ycRows.length === 2 && ycRows[0].company === 'Acme AI' && ycRows[0].url === 'https://www.ycombinator.com/companies/acme/jobs/founding-ai-engineer') {
+    pass('parseYcJobsHtml() extracts embedded YC startup jobs and resolves relative URLs');
+  } else {
+    fail(`parseYcJobsHtml() rows = ${JSON.stringify(ycRows)}`);
+  }
+
+  const ycFetched = await yc.fetch(
+    { name: 'YC Work at a Startup' },
+    { fetchText: async (_url, opts) => { if (opts?.redirect !== 'error') throw new Error('missing redirect guard'); return ycHtml; } },
+  );
+  if (ycFetched.length === 2 && ycFetched[1].company === 'Beta Labs') pass('yc-jobs.fetch() normalizes startup-company rows from the public page');
+  else fail(`yc-jobs.fetch() rows = ${JSON.stringify(ycFetched)}`);
+
+  if (unCareers.detect({ careers_url: 'https://careers.un.org/jobopening?language=en' }) && unCareers.detect({ careers_url: 'https://evil.example/careers.un.org/jobopening' }) === null) {
+    pass('un-careers.detect() claims careers.un.org and rejects path spoofing');
+  } else {
+    fail('un-careers.detect() host validation wrong');
+  }
+
+  const unJson = {
+    status: 1,
+    data: [
+      {
+        jobId: 279640,
+        postingTitle: 'Associate Administrative Officer, P2',
+        dutyStation: [{ description: 'NAIROBI' }],
+        startDate: '2026-07-04T00:00:00Z',
+      },
+      { jobId: null, postingTitle: 'Missing URL' },
+    ],
+  };
+  const unRows = unModule.parseUnCareersResponse(unJson, { language: 'en', company: 'United Nations' });
+  if (unRows.length === 1 && unRows[0].company === 'United Nations' && unRows[0].location === 'NAIROBI' && unRows[0].url.includes('jobId')) {
+    pass('parseUnCareersResponse() extracts active UN jobs and builds jobopening URLs');
+  } else {
+    fail(`parseUnCareersResponse() rows = ${JSON.stringify(unRows)}`);
+  }
+
+  let unFetchUrl = '';
+  let unFetchOpts = null;
+  const unFetched = await unCareers.fetch(
+    { name: 'United Nations', un: { language: 'en' } },
+    { fetchJson: async (url, opts) => { unFetchUrl = url; unFetchOpts = opts; return unJson; } },
+  );
+  if (unFetchUrl.includes('/api/public/opening/jo/activeJo') && unFetchOpts?.redirect === 'error' && /application\/json/.test(unFetchOpts?.headers?.accept || '') && unFetched.length === 1) {
+    pass('un-careers.fetch() uses the public API with JSON headers and redirect guard');
+  } else {
+    fail(`un-careers.fetch() url/opts/jobs wrong: ${JSON.stringify({ unFetchUrl, unFetchOpts, unFetched })}`);
+  }
+} catch (e) {
+  fail(`mixed source provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
