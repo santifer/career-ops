@@ -242,7 +242,7 @@ function DiscoverBar({ canDiscover, onDiscover, label }: { canDiscover: boolean;
         type="button"
         disabled={!canDiscover}
         onClick={onDiscover}
-        className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition-all hover:brightness-110 disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition-all hover:brightness-110 disabled:opacity-50 max-sm:min-h-[44px]"
       >
         <Compass className="size-4" /> {label}
       </button>
