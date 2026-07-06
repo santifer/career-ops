@@ -314,7 +314,7 @@ const HEADER_VIA = `# Applications Tracker
   }
 }
 
-// ── Test 9: TSV `via=` tagged field merges into the Via column ──────────────
+// ── Test 10: TSV `via=` tagged field merges into the Via column ──────────────
 // The batch TSV is header-less and positional; Via travels as a tagged extra
 // field (`via=Hays`) instead of another positional slot, so a stale writer
 // omitting the empty-location pad can't silently shift columns.
@@ -333,7 +333,7 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 10: ambiguous TSV extras are rejected loudly, never merged ─────────
+// ── Test 11: ambiguous TSV extras are rejected loudly, never merged ─────────
 {
   const TWO_UNTAGGED = '4\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tSingapore\tHays\n';
   const TWO_TAGS = '5\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tvia=Hays\tvia=Randstad\n';
@@ -350,7 +350,7 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 11: cross-channel guard — ? rows never fuzzy-merge across agencies ─
+// ── Test 12: cross-channel guard — ? rows never fuzzy-merge across agencies ─
 // Two blind listings for the same role via DIFFERENT agencies are distinct
 // submissions (#1596): merging them silently is exactly the double-submission
 // hazard the Via column exists to surface. Same agency + same role IS the
@@ -377,7 +377,7 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 11b: legacy 9-col tracker — via= tag dropped WITHOUT breaking dedup ─
+// ── Test 12b: legacy 9-col tracker — via= tag dropped WITHOUT breaking dedup ─
 // The tracker has no Via column, so existing rows parse with via=''. The
 // addition's via must be cleared before duplicate matching, or the
 // cross-channel guard would see 'Hays' ≠ '' and add a second ? row instead of
@@ -398,7 +398,7 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 12: --migrate-via inserts the column, idempotently ─────────────────
+// ── Test 13: --migrate-via inserts the column, idempotently ─────────────────
 {
   const sb = makeSandbox(HEADER_9);
   const first = runScript('merge-tracker.mjs', ['--migrate-via'], sb);
@@ -421,7 +421,7 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 13: dedup — unknown-employer rows key on Via + role + 90-day window ─
+// ── Test 14: dedup — unknown-employer rows key on Via + role + 90-day window ─
 {
   const BLIND_TRACKER = `# Applications Tracker
 
@@ -451,7 +451,7 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 14: verify-pipeline Via checks ─────────────────────────────────────
+// ── Test 15: verify-pipeline Via checks ─────────────────────────────────────
 {
   const VIA_ISSUES = `# Applications Tracker
 
