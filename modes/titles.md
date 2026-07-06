@@ -93,14 +93,16 @@ When the user accepts one or more suggestions:
    before touching anything.
 5. **Never write to `portals.yml` without explicit user confirmation.**
    "Show me the diff" is not a yes. Silence is not a yes.
-6. `portals.yml` (user layer) is **the only file this mode ever writes**. This
-   mode proposes no negative keywords — precision guards for noisy keywords
-   are deferred to #1353's seniority-tier helper.
-7. If the user asks, accepted titles can additionally become `fit: adjacent`
-   archetypes in `config/profile.yml` (an existing schema field — see
-   `config/profile.example.yml`). Mention that this is possible, but do it
-   **only if the user asks** — never write archetypes by default, and show
-   that diff and confirm separately too.
+6. `portals.yml` (user layer) is **the only file this mode writes by
+   default**. This mode proposes no negative keywords — precision guards for
+   noisy keywords are deferred to #1353's seniority-tier helper.
+7. **Separately-confirmed exception:** accepted titles can additionally become
+   `fit: adjacent` archetypes in `config/profile.yml` (an existing schema
+   field — see `config/profile.example.yml`). Mention that this is possible,
+   but do it **only if the user asks** — never write archetypes by default.
+   When the user does ask, that write gets its **own YAML diff and its own
+   separate confirmation**; never bundle the `portals.yml` and
+   `config/profile.yml` writes into one confirmation.
 
 ## After the Write
 
@@ -115,5 +117,9 @@ When the user accepts one or more suggestions:
 - `portals.yml` missing, or `title_filter.positive` empty → offer to create it
   from `templates/portals.example.yml` first, then re-run this mode. (An empty
   positive list means the scanner matches everything — nothing to broaden.)
-- `config/profile.yml` / `modes/_profile.md` missing → proceed from `cv.md`
-  alone, but say the deal-breaker filter could not be applied.
+- `config/profile.yml` or `modes/_profile.md` missing → **hard stop**: do not
+  generate suggestions. Point at onboarding (`node doctor.mjs --json`) and
+  stop, then re-run this mode once both files exist — the same
+  fix-first-then-re-run behavior as a missing `portals.yml` above.
+  Deal-breakers live in `modes/_profile.md` — suggestions generated without
+  them can propose exactly what the user excluded.

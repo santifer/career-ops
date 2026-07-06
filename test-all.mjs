@@ -5916,6 +5916,8 @@ console.log('\n56. Titles mode (#1632)');
 
 try {
   const titlesMode = readFile('modes/titles.md');
+  // Whitespace-normalized view so pinned phrases survive markdown re-wrapping.
+  const titlesFlat = titlesMode.replace(/\s+/g, ' ');
 
   if (
     titlesMode.includes('**Lateral**') &&
@@ -5941,12 +5943,12 @@ try {
   if (
     titlesMode.includes('exact YAML diff') &&
     titlesMode.includes('Never write to `portals.yml` without explicit user confirmation') &&
-    titlesMode.includes('the only file this mode ever writes') &&
+    titlesFlat.includes('the only file this mode writes by default') &&
     titlesMode.includes('keywords, not raw titles')
   ) {
-    pass('titles mode confirm gate: exact YAML diff, explicit confirmation, portals.yml-only, keywords not raw titles');
+    pass('titles mode confirm gate: exact YAML diff, explicit confirmation, portals.yml default-only, keywords not raw titles');
   } else {
-    fail('titles mode missing the confirm-gate contract (diff preview / explicit confirmation / portals.yml-only / keywords)');
+    fail('titles mode missing the confirm-gate contract (diff preview / explicit confirmation / portals.yml default-only / keywords)');
   }
 
   if (
@@ -5986,6 +5988,25 @@ try {
     pass('titles mode offers fit: adjacent archetypes only on explicit user request (no default profile write)');
   } else {
     fail('titles mode missing the ask-first rule for fit: adjacent archetype writes');
+  }
+
+  if (
+    titlesFlat.includes('Separately-confirmed exception') &&
+    titlesFlat.includes('own YAML diff and its own separate confirmation') &&
+    titlesFlat.includes('never bundle the `portals.yml` and `config/profile.yml` writes into one confirmation')
+  ) {
+    pass('titles mode gates config/profile.yml archetype writes behind a separate diff + confirmation (never bundled)');
+  } else {
+    fail('titles mode missing the separately-confirmed exception for config/profile.yml archetype writes');
+  }
+
+  if (
+    titlesFlat.includes('`config/profile.yml` or `modes/_profile.md` missing → **hard stop**: do not generate suggestions') &&
+    titlesFlat.includes('can propose exactly what the user excluded')
+  ) {
+    pass('titles mode hard-stops on missing config/profile.yml or modes/_profile.md (deal-breakers unavailable)');
+  } else {
+    fail('titles mode should hard stop (not best-effort from cv.md) when config/profile.yml or modes/_profile.md is missing');
   }
 
   if (titlesMode.includes('#1353')) {
