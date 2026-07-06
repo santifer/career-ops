@@ -50,6 +50,12 @@ title_filter:
     - "Datenscout"
     - "Datenscouting"
     - "Fußball"
+    - "Sportinformatik"
+    - "Video Analyst"
+    - "Videoanalyst"
+    - "Scouting"
+    - "Scout"
+    - "Datenanalyse"
   negative:
     - "Intern"
     - "Praktikant"
@@ -347,6 +353,22 @@ search_queries:
 
   - name: Greenhouse — Sports Data
     query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "sports" OR "football" OR "Fußball" "data" OR "analytics" OR "engineer" Germany OR Remote'
+    enabled: true
+
+  - name: Softgarden — Football Clubs Data
+    query: 'site:career.softgarden.de "Data" OR "Daten" OR "Analyst" OR "Scouting" OR "Video" OR "Performance" Sport OR Fußball'
+    enabled: true
+
+  - name: Personio — Football Clubs Data
+    query: 'site:jobs.personio.de "Data" OR "Daten" OR "Analyst" OR "Scouting" Fußball OR Sport OR Bundesliga'
+    enabled: true
+
+  - name: Spobis Jobs — Sport Analytics
+    query: 'site:spobis.com "Analyst" OR "Data" OR "Analytics" OR "Scouting" OR "Performance" OR "Digital"'
+    enabled: true
+
+  - name: Bundesliga Clubs — Datenanalyst
+    query: '"Datenanalyst" OR "Datenanalyse" Fußball OR Bundesliga OR "Sport" Freiburg OR München OR Dortmund OR Leipzig OR Berlin OR Köln'
     enabled: true
 
   - name: LinkedIn — Tennis Data Europe
@@ -676,10 +698,10 @@ tracked_companies:
     enabled: true
 
   - name: SC Freiburg
-    careers_url: https://www.scfreiburg.com
+    careers_url: https://jobs.scfreiburg.com/de
     scan_method: websearch
-    scan_query: '"SC Freiburg" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer"'
-    notes: "Freiburg DE. Bundesliga, known for analytics-driven scouting."
+    scan_query: 'site:jobs.scfreiburg.com OR "SC Freiburg" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer" OR "Software"'
+    notes: "Freiburg DE. Bundesliga, known for analytics-driven scouting. Custom ATS at jobs.scfreiburg.com."
     enabled: true
 
   - name: TSG Hoffenheim
@@ -690,10 +712,45 @@ tracked_companies:
     enabled: true
 
   - name: VfL Wolfsburg
-    careers_url: https://www.vfl-wolfsburg.de
+    careers_url: https://jobs.volkswagen-group.com/VWVFL
     scan_method: websearch
-    scan_query: '"VfL Wolfsburg" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer"'
-    notes: "Wolfsburg DE. Volkswagen-backed, strong tech infrastructure. Bundesliga."
+    scan_query: 'site:jobs.volkswagen-group.com/VWVFL OR "VfL Wolfsburg" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer"'
+    notes: "Wolfsburg DE. Volkswagen-backed, strong tech infrastructure. Bundesliga. VW Group job portal."
+    enabled: true
+
+  - name: SV Werder Bremen
+    careers_url: https://www.werder.de/karriere
+    scan_method: websearch
+    scan_query: '"Werder Bremen" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer" OR "Digital"'
+    notes: "Bremen DE. Bundesliga. Uses Rexx Systems HR. Recently hired Junior Data Analyst."
+    enabled: true
+
+  - name: 1. FC Union Berlin
+    careers_url: https://www.fc-union-berlin.de/de/jobs
+    scan_method: websearch
+    scan_query: 'site:fc-union-berlin.de OR "Union Berlin" jobs "Data" OR "Daten" OR "Analyst" OR "IT" OR "Engineer"'
+    notes: "Berlin DE. Bundesliga."
+    enabled: true
+
+  - name: Onefootball
+    careers_url: https://onefootball.com/en/careers
+    scan_method: websearch
+    scan_query: '"OneFootball" OR "onefootball" jobs "Data" OR "Analyst" OR "Engineer" OR "ML" OR "Product" Berlin'
+    notes: "Berlin DE. Football media platform. Data & Insights team (Python, AWS Redshift, dbt, Airflow)."
+    enabled: true
+
+  - name: DFL (Deutsche Fußball Liga)
+    careers_url: https://www.dfl.de/de/jobs
+    scan_method: websearch
+    scan_query: 'site:dfl.de OR "Deutsche Fußball Liga" jobs "Data" OR "Daten" OR "Analyst" OR "Technology" OR "Digital"'
+    notes: "Frankfurt DE. Organizes Bundesliga. Data/tech roles for league operations."
+    enabled: true
+
+  - name: DFB (Deutscher Fußball-Bund)
+    careers_url: https://www.dfb.de/die-mannschaft/jobs
+    scan_method: websearch
+    scan_query: '"DFB" OR "Deutscher Fußball-Bund" jobs "Data" OR "Daten" OR "Analyst" OR "Technology" OR "Scouting"'
+    notes: "Frankfurt DE. German FA. National team analytics, technology, scouting roles."
     enabled: true
 
   # ── DACH healthcare / e-pharmacy ──
@@ -786,6 +843,34 @@ job_boards:
     provider: arbeitsagentur
     arbeitsagentur:
       keywords: ["Data Architect", "Data Governance", "Data Quality", "Data Warehouse"]
+      wo: ""
+      days: 30
+      size: 100
+    enabled: true
+
+  # ── Arbeitsagentur — Sport Analytics ──
+  - name: Arbeitsagentur — Datenanalyst Sport
+    provider: arbeitsagentur
+    arbeitsagentur:
+      keywords: ["Datenanalyst Sport", "Datenanalyst Fußball", "Sport Data Analyst"]
+      wo: ""
+      days: 30
+      size: 100
+    enabled: true
+
+  - name: Arbeitsagentur — Sportanalyst / Performance
+    provider: arbeitsagentur
+    arbeitsagentur:
+      keywords: ["Sportanalyst", "Performance Analyst Sport", "Spielanalyst", "Sportinformatik"]
+      wo: ""
+      days: 30
+      size: 100
+    enabled: true
+
+  - name: Arbeitsagentur — Scouting / Video Analyst
+    provider: arbeitsagentur
+    arbeitsagentur:
+      keywords: ["Scouting Analyst", "Video Analyst Fußball", "Datenscout"]
       wo: ""
       days: 30
       size: 100
