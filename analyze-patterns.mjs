@@ -124,6 +124,48 @@ function parseMachineSummary(content) {
   }
 }
 
+// --- Via channel analysis (#1596 follow-up) ---
+// Pure: group submitted applications by their Via channel (agency/recruiter
+// firm) and compute per-agency advance rates, plus the agency-vs-direct
+// aggregate. Channel identity is normalized like the tracker tooling
+// (lowercase alphanumerics) so "Hays" and "HAYS " land in one bucket; the
+// first raw spelling seen is kept for display.
+function buildViaChannelAnalysis(submitted, isAdvanced, minSample = MIN_VENDOR_N) {
+  const viaOf = (e) => String(e.via ?? '').trim();
+  const isDirect = (v) => v === '—' || v === '-';
+  const agencySubmitted = submitted.filter(e => { const v = viaOf(e); return v !== '' && !isDirect(v); });
+  const directSubmitted = submitted.filter(e => isDirect(viaOf(e)));
+  const rate = (arr) => (arr.length > 0 ? Math.round((arr.filter(isAdvanced).length / arr.length) * 100) : 0);
+
+  const byAgency = new Map();
+  for (const e of agencySubmitted) {
+    const raw = viaOf(e);
+    const key = raw.toLowerCase().replace(/[^a-z0-9]/g, '') || raw.toLowerCase();
+    if (!byAgency.has(key)) byAgency.set(key, { agency: raw, total: 0, advanced: 0 });
+    const entry = byAgency.get(key);
+    entry.total++;
+    if (isAdvanced(e)) entry.advanced++;
+  }
+  const breakdown = [...byAgency.values()]
+    .map(d => ({
+      agency: d.agency,
+      total: d.total,
+      advanced: d.advanced,
+      advanceRate: d.total > 0 ? Math.round((d.advanced / d.total) * 100) : 0,
+      sufficientSample: d.total >= minSample,
+    }))
+    .sort((a, b) => b.total - a.total);
+
+  return {
+    minSampleForClaim: minSample,
+    agencySubmitted: agencySubmitted.length,
+    directSubmitted: directSubmitted.length,
+    agencyAdvanceRate: rate(agencySubmitted),
+    directAdvanceRate: rate(directSubmitted),
+    breakdown,
+  };
+}
+
 function runSelfTest() {
   const summary = parseMachineSummary(`
 ## Machine Summary
@@ -171,12 +213,37 @@ next_action: "Follow up on ticket #42 with tailored CV"
     if (got !== expected) failures.push(`detectVendor(${JSON.stringify(url)}) → ${JSON.stringify(got)}, expected ${JSON.stringify(expected)}`);
   }
 
+  // Via channel analysis (#1596): agency vs direct yield, normalized buckets.
+  const advanced = new Set(['responded', 'interview', 'offer']);
+  const viaRows = [
+    { via: 'Hays', normalizedStatus: 'interview' },
+    { via: 'HAYS ', normalizedStatus: 'rejected' },   // same bucket as Hays
+    { via: 'Randstad', normalizedStatus: 'rejected' },
+    { via: '—', normalizedStatus: 'responded' },       // direct
+    { via: '—', normalizedStatus: 'rejected' },        // direct
+    { via: '', normalizedStatus: 'applied' },          // no Via column → neither bucket
+  ];
+  const viaResult = buildViaChannelAnalysis(viaRows, (e) => advanced.has(e.normalizedStatus), 2);
+  if (viaResult.agencySubmitted !== 3) failures.push(`via: agencySubmitted → ${viaResult.agencySubmitted}, expected 3`);
+  if (viaResult.directSubmitted !== 2) failures.push(`via: directSubmitted → ${viaResult.directSubmitted}, expected 2`);
+  if (viaResult.directAdvanceRate !== 50) failures.push(`via: directAdvanceRate → ${viaResult.directAdvanceRate}, expected 50`);
+  const hays = viaResult.breakdown.find(a => a.agency === 'Hays');
+  if (!hays || hays.total !== 2 || hays.advanceRate !== 50) {
+    failures.push(`via: Hays bucket wrong (case/space variants must merge) → ${JSON.stringify(hays)}`);
+  }
+  if (!hays?.sufficientSample) failures.push('via: Hays should meet the n=2 sample bar');
+  const randstad = viaResult.breakdown.find(a => a.agency === 'Randstad');
+  if (randstad?.sufficientSample) failures.push('via: Randstad (n=1) must be flagged as too small for a claim');
+  if (buildViaChannelAnalysis([], () => false).breakdown.length !== 0) {
+    failures.push('via: empty input must produce an empty breakdown');
+  }
+
   if (failures.length > 0) {
     console.error(`analyze-patterns self-test failed: ${failures.join('; ')}`);
     process.exit(1);
   }
 
-  console.log('analyze-patterns self-test OK (Machine Summary parser + vendor detection)');
+  console.log('analyze-patterns self-test OK (Machine Summary parser + vendor detection + via channel analysis)');
   process.exit(0);
 }
 
@@ -603,6 +670,14 @@ function analyze() {
     citation: 'Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026 (arXiv:2605.27371)',
   };
 
+  // --- Via channel analysis (#1596 follow-up): per-agency advance rate ---
+  // Same honesty rules as the vendor analysis above: this reports CHANNEL
+  // YIELD. In an agency-mediated search the highest-leverage decision is which
+  // recruiter relationships to invest in — this shows which ones convert.
+  // Rows only carry `via` when the tracker has the optional Via column
+  // (#1596); without it every bucket is empty and nothing is claimed.
+  const viaChannelAnalysis = buildViaChannelAnalysis(submitted, isAdvanced);
+
   // --- Score threshold analysis ---
   const positiveScores = scoresByOutcome.positive.filter(s => s > 0);
   const minPositiveScore = positiveScores.length > 0 ? Math.min(...positiveScores) : 0;
@@ -729,6 +804,20 @@ function analyze() {
     });
   }
 
+  // Best-converting agency (#1596 follow-up): with a sufficient sample and a
+  // clear lead over the overall pipeline, that recruiter relationship is worth
+  // prioritizing. One recommendation at most — the breakdown shows the rest.
+  const topAgency = viaChannelAnalysis.breakdown
+    .filter(a => a.sufficientSample && a.advanced > 0 && a.advanceRate >= overallAdvanceRate + 10)
+    .sort((a, b) => b.advanceRate - a.advanceRate)[0];
+  if (topAgency) {
+    recommendations.push({
+      action: `Prioritize roles via ${topAgency.agency} -- ${topAgency.advanceRate}% advance rate across ${topAgency.total} submissions (overall: ${overallAdvanceRate}%)`,
+      reasoning: `${topAgency.advanced}/${topAgency.total} applications through ${topAgency.agency} advanced past screening, well above your overall rate. In an agency-mediated search the highest-leverage decision is which recruiter relationships to invest in -- this one converts. Channel yield, not a causal claim.`,
+      impact: 'medium',
+    });
+  }
+
   // Date range
   const dates = enriched.map(e => e.date).filter(Boolean).sort();
 
@@ -751,6 +840,7 @@ function analyze() {
     remotePolicy,
     companySizeBreakdown,
     vendorAnalysis,
+    viaChannelAnalysis,
     scoreThreshold,
     techStackGaps,
     recommendations,
@@ -827,6 +917,19 @@ function printSummary(result) {
       console.log(`  ${v.vendor.padEnd(12)} ${String(v.total).padStart(3)} apps  ${String(v.sharePct).padStart(3)}% share  ${String(v.advanceRate).padStart(3)}% advance${flag}`);
     }
     console.log('  Channel yield, not discrimination — see Bommasani et al., FAccT 2026.');
+  }
+
+  // Via channel analysis (#1596): which recruiter relationships convert
+  const via = result.viaChannelAnalysis;
+  if (via && (via.breakdown.length > 0 || via.directSubmitted > 0)) {
+    console.log('\nVIA CHANNEL ANALYSIS (agency vs direct, #1596)');
+    console.log('-'.repeat(40));
+    console.log(`  direct  ${String(via.directSubmitted).padStart(3)} apps  ${String(via.directAdvanceRate).padStart(3)}% advance`);
+    console.log(`  agency  ${String(via.agencySubmitted).padStart(3)} apps  ${String(via.agencyAdvanceRate).padStart(3)}% advance`);
+    for (const a of via.breakdown) {
+      const flag = a.sufficientSample ? '' : '  (n too small for a claim)';
+      console.log(`    ${a.agency.padEnd(16)} ${String(a.total).padStart(3)} apps  ${String(a.advanceRate).padStart(3)}% advance${flag}`);
+    }
   }
 
   // Score threshold
