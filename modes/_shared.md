@@ -50,7 +50,7 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 - Below 3.5 → Recommend against applying (see Ethical Use in AGENTS.md)
 
 **How to score the "Cultural signals" dimension:**
-1. Read `culture_screen.require` from `config/profile.yml` (flat hierarchy, async-first/remote-native, small team).
+1. Read `culture_screen.require` from `config/profile.yml` (flat hierarchy, async-first/remote-native, small team). If `culture_screen` is missing or empty, skip the structural capping and score the dimension qualitatively based on company size, remote policy, and stability.
 2. Actively look for evidence in the JD + Block G company research: team size mentions, org-chart depth/manager layers, meeting-culture language ("daily standups," "cross-functional alignment," "stakeholder management" as a core duty), company size/stage, async vs. sync-heavy language.
 3. **If 2+ of the 3 `require` criteria have positive evidence** → score 4-5.
 4. **If 1 criterion has positive evidence, none contradicted** → score 3.
