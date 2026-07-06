@@ -127,7 +127,7 @@ For companies with a public API or structured feed **that are not in `local_pars
 - **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
 - **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR**: list `https://{company}.bamboohr.com/careers/list`; job details `https://{company}.bamboohr.com/careers/{id}/detail`
-- **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
+- **Lever**: `https://api.(eu.)?lever.co/v0/postings/{company}`
 - **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 - **Breezy**: `https://{company}.breezy.hr/json`
@@ -141,9 +141,13 @@ For companies with a public API or structured feed **that are not in `local_pars
 - `workday`: `jobPostings[]`/`jobPostings` (based on tenant) → `title`, `externalPath` or URL built from the host
 - `breezy`: top-level array `[]` → `name`, `url` (absolute), `location.name` (or city/state/country + `is_remote`), `published_date`
 
+> **Caution — do not infer absence from a truncated read.** Careers SPAs paginate and lazy-load; a `browser_snapshot` or WebFetch of the page (and any LLM summary of that HTML) can silently drop rows, showing only the first screen of roles. Never conclude "role X is not posted" or "only N roles exist" from such a read. When the company has a public ATS API, hit it directly (append `?content=true` where the provider supports it) before making any presence/absence claim — the API returns the full board in one structured response.
+
 ### Level 3 — WebSearch Queries (BROAD DISCOVERY)
 
 The `search_queries` with `site:` filters cover portals transversally (all Ashby, all Greenhouse, etc.). Useful for discovering NEW companies that are not yet in `tracked_companies`, but results might be outdated. After filtering out hits from companies in `local_parser_ok`, the remaining results are deduplicated with Levels 0–2.
+
+> **Caution — Level-3 hits can be weeks stale.** WebSearch is fed by a search index that lags the live board, so a result can describe a posting that has already closed. Treat every Level-3 hit as unverified: before adding it to `data/pipeline.md` or evaluating it, confirm liveness against the real posting (`node check-liveness.mjs <url>` for ATS-hosted pages, or Playwright for non-ATS pages). Unlike the real-time ATS responses in Level 2, a Level-3 snippet is never proof a role is still open.
 
 **Execution Priority:**
 1. Level 0: Local Parser → companies with a configured `parser:` and existing script; build `local_parser_ok`
@@ -184,7 +188,7 @@ Levels are additive — they are executed in order, and results are merged and d
 5. **Level 2 — ATS APIs / Feeds** (parallel):
    For each company in `tracked_companies` with a defined `api:`, `enabled: true`, and a **name not listed in `local_parser_ok`**:
    a. WebFetch the API/feed URL.
-   b. If `api_provider` is defined, use its parser; if undefined, infer by domain (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`, `*.breezy.hr`).
+   b. If `api_provider` is defined, use its parser; if undefined, infer by domain (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.(eu.)?lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`, `*.breezy.hr`).
    c. For **Ashby**, send a POST request with:
       - `operationName: ApiJobBoardWithTeams`
       - `variables.organizationHostedJobsPageName: {company}`
@@ -312,7 +316,7 @@ Fallback: if you only have the direct ATS URL, navigate first to the company's w
 **Known Patterns by Platform:**
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`
 - **Greenhouse:** `https://job-boards.greenhouse.io/{slug}` or `https://job-boards.eu.greenhouse.io/{slug}`
-- **Lever:** `https://jobs.lever.co/{slug}`
+- **Lever:** `https://jobs.(eu.)?lever.co/{slug}`
 - **BambooHR:** list `https://{company}.bamboohr.com/careers/list`; detail `https://{company}.bamboohr.com/careers/{id}/detail`
 - **Teamtailor:** `https://{company}.teamtailor.com/jobs`
 - **Workday:** `https://{company}.{shard}.myworkdayjobs.com/{site}`
@@ -321,7 +325,7 @@ Fallback: if you only have the direct ATS URL, navigate first to the company's w
 **API/Feed Patterns by Platform:**
 - **Ashby API:** `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
 - **BambooHR API:** list `https://{company}.bamboohr.com/careers/list`; detail `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
-- **Lever API:** `https://api.lever.co/v0/postings/{company}?mode=json`
+- **Lever API:** `https://api.(eu.)?lever.co/v0/postings/{company}`
 - **Teamtailor RSS:** `https://{company}.teamtailor.com/jobs.rss`
 - **Workday API:** `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
