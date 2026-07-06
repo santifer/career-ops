@@ -761,10 +761,16 @@ async function apply() {
     // FETCH_HEAD. Only git-tracked files are removed: a user's untracked
     // local experiments in tests/ are never touched.
     try {
-      const remoteTests = new Set(
-        git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', 'tests/')
-          .split('\n').filter(Boolean).map((p) => p.replace(/\\/g, '/'))
-      );
+      let remoteTests = new Set();
+      try {
+        remoteTests = new Set(
+          git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', 'tests/')
+            .split('\n').filter(Boolean).map((p) => p.replace(/\\/g, '/'))
+        );
+      } catch {
+        // tests/ may not exist in older targets (ls-tree throws) — nothing to
+        // prune. This is the only expected-and-silent failure in this block.
+      }
       // An empty set means FETCH_HEAD has no tests/ at all (older target, or
       // ls-tree quietly returning nothing) — pruning against it would delete
       // every local test file. Only prune when the remote actually ships tests/.
@@ -772,16 +778,25 @@ async function apply() {
         const localTests = git('ls-files', '--', 'tests/').split('\n').filter(Boolean);
         for (const f of localTests) {
           if (!remoteTests.has(f.replace(/\\/g, '/'))) {
-            unlinkSync(join(ROOT, f));
-            // Raw path only: `updated` entries are reused as git pathspecs by
-            // revertPaths() and the scoped commit below.
-            updated.push(f);
-            console.log(`Pruned stale test file: ${f}`);
+            // Per-file isolation: one failed unlink (locked file, permissions)
+            // must not abort pruning the rest.
+            try {
+              unlinkSync(join(ROOT, f));
+              // Raw path only: `updated` entries are reused as git pathspecs by
+              // revertPaths() and the scoped commit below. Pushed only after a
+              // successful unlink so failed deletions never enter `updated`.
+              updated.push(f);
+              console.log(`Pruned stale test file: ${f}`);
+            } catch (err) {
+              console.error(`Failed to prune stale test file ${f}: ${err.message}`);
+            }
           }
         }
       }
-    } catch {
-      // tests/ may not exist in older targets — nothing to prune.
+    } catch (err) {
+      // Unexpected failure (e.g. ls-files threw) — surface it instead of
+      // silently skipping the prune step.
+      console.error(`Stale-test prune step failed: ${err.message}`);
     }
 
     const materializedSkillEntrypoints = ensureSkillEntrypoints(ROOT);
