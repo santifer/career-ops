@@ -95,7 +95,11 @@ function decodeEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, body) => {
     if (body[0] === '#') {
       const code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+      // String.fromCodePoint throws RangeError outside 0..0x10FFFF or on a lone
+      // surrogate half — a malformed/adversarial entity must degrade to the
+      // original text, never crash the whole parse.
+      const valid = Number.isFinite(code) && code >= 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff);
+      return valid ? String.fromCodePoint(code) : m;
     }
     return NAMED_ENTITIES[body.toLowerCase()] ?? m;
   });

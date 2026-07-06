@@ -99,6 +99,22 @@ try {
   if (parseTiles('<!DOCTYPE html>', jobBase).length === 0) pass('parseTiles returns [] for an empty fragment');
   else fail('parseTiles should return [] for an empty fragment');
 
+  // decodeEntities (exercised via parseTiles) — a malformed/out-of-range
+  // numeric entity (a lone surrogate half) must degrade to the literal text,
+  // never throw RangeError and abort the whole parse.
+  const badEntityFragment = `
+    <ul>
+      <li class="job-tile job-id-444 job-row-index-4" data-url="/job/no-city/444/">
+        <a class="jobTitle-link fontcolorx" href="/x">Bad&#xD800;Entity</a>
+      </li>
+    </ul>`;
+  const badRows = parseTiles(badEntityFragment, jobBase);
+  if (badRows.length === 1 && badRows[0].title === 'Bad&#xD800;Entity') {
+    pass('parseTiles tolerates an invalid numeric entity (no RangeError crash)');
+  } else {
+    fail(`parseTiles should degrade a malformed entity to literal text, got: ${JSON.stringify(badRows)}`);
+  }
+
   // ── CSB (Career Site Builder) strategy — JSON jobs API ────────────────────
   const { extractLocales, parseCsbDate, cleanCsbLocation, parseCsbJobs } = successfactorsModule;
 
