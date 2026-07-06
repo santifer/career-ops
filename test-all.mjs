@@ -893,7 +893,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md', 'email.md', 'add.md',
+  'interview.md', 'latex.md', 'email.md', 'add.md', 'titles.md',
   'regional/eu-swe.md',
 ];
 
@@ -5904,6 +5904,163 @@ try {
   }
 } catch (e) {
   fail(`core↔web contract freeze section crashed: ${e.message}`);
+}
+
+// ── 56. TITLES MODE (#1632) ─────────────────────────────────────
+// CV → adjacent job-title suggestions → confirm-gated portals.yml writes.
+// The mode is judgment-only (no script), so these checks pin the behavioral
+// contract: evidence-required suggestions, the confirm gate, user-layer-only
+// writes, and dedup that mirrors the scan.mjs matcher.
+
+console.log('\n56. Titles mode (#1632)');
+
+try {
+  const titlesMode = readFile('modes/titles.md');
+
+  if (
+    titlesMode.includes('**Lateral**') &&
+    titlesMode.includes('**Stretch**') &&
+    titlesMode.includes('**Pivot**')
+  ) {
+    pass('titles mode defines the Lateral / Stretch / Pivot axes');
+  } else {
+    fail('titles mode missing one of the Lateral / Stretch / Pivot axis definitions');
+  }
+
+  if (
+    titlesMode.includes('quoted verbatim') &&
+    titlesMode.includes('gap note') &&
+    titlesMode.includes('Market-reality note') &&
+    titlesMode.includes('Never invent experience')
+  ) {
+    pass('titles mode requires verbatim CV evidence, gap + market-reality notes, and forbids invention');
+  } else {
+    fail('titles mode missing the evidence-required output contract (verbatim quotes / gap note / market-reality note / never invent)');
+  }
+
+  if (
+    titlesMode.includes('exact YAML diff') &&
+    titlesMode.includes('Never write to `portals.yml` without explicit user confirmation') &&
+    titlesMode.includes('the only file this mode ever writes') &&
+    titlesMode.includes('keywords, not raw titles')
+  ) {
+    pass('titles mode confirm gate: exact YAML diff, explicit confirmation, portals.yml-only, keywords not raw titles');
+  } else {
+    fail('titles mode missing the confirm-gate contract (diff preview / explicit confirmation / portals.yml-only / keywords)');
+  }
+
+  if (
+    titlesMode.includes('breadth warning') &&
+    titlesMode.includes('"Solutions Architect", never bare "Architect"')
+  ) {
+    pass('titles mode warns about substring-dangerous keywords (Solutions Architect vs bare Architect)');
+  } else {
+    fail('titles mode missing the substring-breadth warning for proposed keywords');
+  }
+
+  if (
+    titlesMode.includes('scan.mjs') &&
+    titlesMode.includes('case-insensitive substring') &&
+    titlesMode.includes('deal-breakers') &&
+    titlesMode.includes('modes/_profile.md')
+  ) {
+    pass('titles mode dedups against existing keywords via scan.mjs semantics and filters by _profile.md deal-breakers');
+  } else {
+    fail('titles mode missing the scan.mjs-mirroring dedup rule or the deal-breaker filter');
+  }
+
+  if (
+    titlesMode.includes('cv.md') &&
+    titlesMode.includes('config/profile.yml') &&
+    titlesMode.includes('title_filter.positive')
+  ) {
+    pass('titles mode reads cv.md, profile archetypes, and the current title_filter.positive');
+  } else {
+    fail('titles mode missing required inputs (cv.md / config/profile.yml / title_filter.positive)');
+  }
+
+  if (
+    titlesMode.includes('fit: adjacent') &&
+    titlesMode.includes('only if the user asks')
+  ) {
+    pass('titles mode offers fit: adjacent archetypes only on explicit user request (no default profile write)');
+  } else {
+    fail('titles mode missing the ask-first rule for fit: adjacent archetype writes');
+  }
+
+  if (titlesMode.includes('#1353')) {
+    pass('titles mode defers negative-keyword precision guards to #1353');
+  } else {
+    fail('titles mode should state it proposes no negative keywords (deferred to #1353)');
+  }
+
+  if (
+    titlesMode.includes('/career-ops scan') &&
+    titlesMode.includes('upskill')
+  ) {
+    pass('titles mode suggests scan after the filter grows and upskill against a stretch title');
+  } else {
+    fail('titles mode missing follow-up suggestions (scan / upskill)');
+  }
+
+  if (
+    titlesMode.includes('onboarding') &&
+    titlesMode.includes('templates/portals.example.yml')
+  ) {
+    pass('titles mode handles missing cv.md (onboarding) and missing portals.yml (create from template)');
+  } else {
+    fail('titles mode missing error handling for absent cv.md / portals.yml');
+  }
+} catch (e) {
+  fail(`modes/titles.md missing or unreadable: ${e.message}`);
+}
+
+for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+  if (!fileExists(skillPath)) continue; // existence already checked in section 8
+  const skill = readFile(skillPath);
+  if (
+    /argument-hint:[^\n]*titles/.test(skill) &&
+    skill.includes('| `titles` | `titles` |') &&
+    skill.includes('/career-ops titles') &&
+    /Standalone modes[\s\S]*Applies to:[^\n]*`titles`/.test(skill)
+  ) {
+    pass(`${skillPath} exposes /career-ops titles in argument-hint, routing, discovery, and standalone loading`);
+  } else {
+    fail(`${skillPath} does not fully expose /career-ops titles`);
+  }
+}
+
+try {
+  const claudeMdDoc = readFile('CLAUDE.md');
+  const agentsMdDoc = readFile('AGENTS.md');
+  const titlesRow = '| Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |';
+  if (claudeMdDoc.includes('* `titles` —') && claudeMdDoc.includes(titlesRow)) {
+    pass('CLAUDE.md registers the titles subcommand and Skill Modes row');
+  } else {
+    fail('CLAUDE.md missing the titles subcommand bullet or Skill Modes row');
+  }
+  if (agentsMdDoc.includes(titlesRow)) {
+    pass('AGENTS.md registers the titles Skill Modes row');
+  } else {
+    fail('AGENTS.md missing the titles Skill Modes row');
+  }
+
+  const updaterSrc = readFile('update-system.mjs');
+  const titlesSysBlock = (updaterSrc.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  if (titlesSysBlock.includes("'modes/titles.md'")) {
+    pass('modes/titles.md is in update-system.mjs SYSTEM_PATHS (shipped + updatable)');
+  } else {
+    fail('modes/titles.md is NOT in SYSTEM_PATHS — updates would never deliver it');
+  }
+
+  const dataContract = readFile('DATA_CONTRACT.md');
+  if (dataContract.includes('modes/titles.md')) {
+    pass('DATA_CONTRACT.md lists modes/titles.md as a system-layer file');
+  } else {
+    fail('DATA_CONTRACT.md missing the modes/titles.md system-layer row');
+  }
+} catch (e) {
+  fail(`titles mode registration checks crashed: ${e.message}`);
 }
 
 console.log('\nTest layout guard (provider tests live in tests/providers/)');
