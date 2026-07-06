@@ -59,6 +59,7 @@ export default {
       .map(r => ({
         title: r.title,
         url: r.link,
+        // Fallback to 'Organic Result' if the company isn't cleanly parsed
         company: entry.name || 'Organic Result',
         location: '',
         description: r.snippet || '',
