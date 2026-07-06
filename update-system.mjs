@@ -73,6 +73,7 @@ const SYSTEM_PATHS = [
   'modes/interview.md',
   'modes/latex.md',
   'modes/followup.md',
+  'modes/offer-prep.md',
   'modes/interview-prep.md',
   'modes/interview/',
   'interview-prep/sessions/.gitkeep',

@@ -1212,6 +1212,20 @@ if (
   fail('agent docs missing offer-prep mode row');
 }
 
+const dataContractDoc = readFile('DATA_CONTRACT.md');
+const gitignoreDoc = readFile('.gitignore');
+const updaterSrc = readFile('update-system.mjs');
+if (
+  dataContractDoc.includes('data/offers/') &&
+  dataContractDoc.includes('modes/offer-prep.md') &&
+  gitignoreDoc.includes('data/offers/') &&
+  updaterSrc.includes("'modes/offer-prep.md'")
+) {
+  pass('offer-prep registered in data contract, gitignore, and updater manifest');
+} else {
+  fail('offer-prep missing from data contract / gitignore / SYSTEM_PATHS');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&

@@ -12,6 +12,9 @@ data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
 data/cache/ats-companies/
+# Received offers/contracts, promise notes, prep reports (PII — never commit)
+data/offers/*
+!data/offers/.gitkeep
 reports/*.md
 !reports/.gitkeep
 output/*
