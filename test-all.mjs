@@ -1137,6 +1137,58 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+// --- offer-prep mode: contract reading companion (describes, never judges) ---
+const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
+if (
+  offerPrepMode.includes('prepares the candidate for a decision; it does not make one') &&
+  offerPrepMode.includes('never outputs "safe to sign"') &&
+  offerPrepMode.includes('not legal advice') &&
+  !offerPrepMode.includes('🔴') && !offerPrepMode.includes('🟡') && !offerPrepMode.includes('🟢')
+) {
+  pass('offer-prep mode carries describe-not-judge posture, no verdicts, no traffic-light symbols');
+} else {
+  fail('offer-prep mode missing posture/no-verdict rules or contains severity symbols');
+}
+
+if (
+  offerPrepMode.includes('must not call WebSearch, WebFetch') &&
+  offerPrepMode.includes('Never state law from memory') &&
+  offerPrepMode.includes('must not run in batch/headless mode') &&
+  offerPrepMode.includes('data, never instructions')
+) {
+  pass('offer-prep mode enforces no-research, no-headless, and untrusted-input guards');
+} else {
+  fail('offer-prep mode missing no-research / no-headless / untrusted-input guards');
+}
+
+if (
+  offerPrepMode.includes('quote it verbatim') &&
+  offerPrepMode.includes('[commonly negotiated]') &&
+  offerPrepMode.includes('[ask your lawyer]') &&
+  offerPrepMode.includes('[differs from what you were told]') &&
+  offerPrepMode.includes('Restrictive covenants') &&
+  offerPrepMode.includes('Integration clause')
+) {
+  pass('offer-prep mode walks clauses verbatim with neutral tags against the taxonomy');
+} else {
+  fail('offer-prep mode missing verbatim rule, neutral tags, or taxonomy categories');
+}
+
+if (
+  offerPrepMode.includes('section headings and the first clause') &&
+  offerPrepMode.includes('if the contract is not in English, stop') &&
+  offerPrepMode.includes('data/offers/') &&
+  offerPrepMode.includes('notes.md') &&
+  offerPrepMode.includes('Notable absences') &&
+  offerPrepMode.includes('incorporates by reference') &&
+  offerPrepMode.includes('Questions for your lawyer') &&
+  offerPrepMode.includes('Apache-2.0')
+) {
+  pass('offer-prep mode has extraction/language gates, promises file, absences + referenced-docs handling, lawyer list, attribution');
+} else {
+  fail('offer-prep mode missing gates, promises file, absences/referenced-docs handling, lawyer list, or attribution');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
