@@ -285,14 +285,14 @@ https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 ## Output Summary
 
 ```text
-Portal Scan — {YYYY-MM-DD}
+Portal Taraması — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-Queries executed: N
-Offers found: N total
-Filtered by title: N relevant
-Duplicates: N (already evaluated or in pipeline)
-Expired discarded: N (dead links, Level 3)
-New added to pipeline.md: N
+Çalıştırılan sorgular: N
+Bulunan ilanlar: N total
+Başlığa göre filtrelenen: N relevant
+Kopyalar: N (already evaluated or in pipeline)
+Süresi dolanlar (atıldı): N (dead links, Level 3)
+pipeline.md dosyasına yeni eklenenler: N
 
   + {company} | {title} | {query_name}
   ...
