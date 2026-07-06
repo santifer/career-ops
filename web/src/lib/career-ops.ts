@@ -101,6 +101,8 @@ export type Application = {
   n: string;
   date: string;
   company: string;
+  /** Intermediary channel (#1596): agency/recruiter firm, "—" for direct, "" when the tracker has no Via column. */
+  via: string;
   role: string;
   score: string;
   status: string;
@@ -116,7 +118,7 @@ export type Application = {
  */
 const TRACKER_ALIASES: Record<string, keyof Application | "location"> = {
   "#": "n", num: "n", date: "date", company: "company", empresa: "company",
-  role: "role", puesto: "role", location: "location", score: "score",
+  via: "via", role: "role", puesto: "role", location: "location", score: "score",
   status: "status", pdf: "pdf", report: "report", notes: "notes",
 };
 
@@ -169,7 +171,7 @@ export function readApplications(): Application[] {
       const at = (k: keyof Application) => cells[map[k] as number] ?? "";
       if (!/^\d+$/.test(at("n"))) continue; // header / separator / malformed
       rows.push({
-        n: at("n"), date: at("date"), company: at("company"), role: at("role"),
+        n: at("n"), date: at("date"), company: at("company"), via: at("via"), role: at("role"),
         score: at("score"), status: at("status"), pdf: at("pdf"), report: at("report"),
         notes: at("notes"),
       });
@@ -177,7 +179,7 @@ export function readApplications(): Application[] {
       // Legacy fixed order; tolerate the 8-cell variant where Notes is absent.
       if (!/^\d+$/.test(cells[0])) continue; // header / separator / malformed
       const [n, date, company, role, score, status, pdf, report, ...rest] = cells;
-      rows.push({ n, date, company, role, score, status, pdf, report, notes: rest.join(" | ") });
+      rows.push({ n, date, company, via: "", role, score, status, pdf, report, notes: rest.join(" | ") });
     }
   }
   return rows;
