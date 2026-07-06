@@ -29,30 +29,40 @@ const WEB_FIELD = {
   score: "score", status: "status", pdf: "pdf", report: "report", notes: "notes",
 };
 
-/** @type {Map<string, Record<string, string>>} */
+/** @type {Map<string, {mtimeMs: number, size: number, aliases: Record<string, string>}>} */
 const aliasCache = new Map();
 
 /**
  * Load the shared header-alias table (lowercased header text → canonical field)
- * from `{rootDir}/tracker-aliases.json`. Cached per root — it is a system file
- * that only changes on a system update. A missing/corrupt file (core checkout
- * predating the JSON) yields an empty table: no header row is then detected and
- * parseApplications falls back to the legacy fixed column order.
+ * from `{rootDir}/tracker-aliases.json`. Cached per resolved file path so the
+ * request-time read path (readApplications runs on every API route / page
+ * render) doesn't re-read and re-parse the JSON each call — but the cache is
+ * keyed on the file's mtime+size (one statSync per call, no full read), so a
+ * system update that rewrites the alias table is picked up on the next request
+ * instead of after a server restart. Failures are NEVER cached: a
+ * missing/corrupt file (core checkout predating the JSON) yields an empty
+ * table — no header row is then detected and parseApplications falls back to
+ * the legacy fixed column order — and the cache entry is cleared so a later
+ * recovered file is loaded immediately.
  * @param {string} rootDir - career-ops root (careerOpsRoot() on the web side).
  * @returns {Record<string, string>}
  */
 export function loadHeaderAliases(rootDir) {
-  const cached = aliasCache.get(rootDir);
-  if (cached) return cached;
-  /** @type {Record<string, string>} */
-  let aliases = {};
+  const file = path.resolve(rootDir, "tracker-aliases.json");
   try {
-    aliases = JSON.parse(fs.readFileSync(path.join(rootDir, "tracker-aliases.json"), "utf8"));
+    const { mtimeMs, size } = fs.statSync(file);
+    const cached = aliasCache.get(file);
+    if (cached && cached.mtimeMs === mtimeMs && cached.size === size) return cached.aliases;
+    const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+    // Guard non-object JSON (null, arrays, scalars) — treat like corrupt.
+    /** @type {Record<string, string>} */
+    const aliases = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    aliasCache.set(file, { mtimeMs, size, aliases });
+    return aliases;
   } catch {
-    aliases = {};
+    aliasCache.delete(file); // never cache failure — recovery must not need a restart
+    return {};
   }
-  aliasCache.set(rootDir, aliases);
-  return aliases;
 }
 
 /**
