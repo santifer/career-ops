@@ -83,7 +83,10 @@ function resolveApiUrl(entry) {
   return `https://api.ashbyhq.com/posting-api/job-board/${match[1]}?includeCompensation=true`;
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function sleep(ms, ctx) {
+  if (typeof ctx?.sleep === 'function') return ctx.sleep(ms);
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 // NaN-safe Date.parse — `|| undefined` would also coerce a valid epoch 0.
 function toEpochMs(value) {
@@ -135,7 +138,7 @@ export default {
       if (attempt > 0) {
         // exponential backoff + jitter — spaces out retries to dodge Ashby rate-limiting
         const backoff = 1000 * 2 ** (attempt - 1) + Math.floor(Math.random() * 500);
-        await sleep(backoff);
+        await sleep(backoff, ctx);
       }
       try {
         const json = /** @type {any} */ (await ctx.fetchJson(apiUrl, { timeoutMs: ASHBY_TIMEOUT_MS, redirect: 'error' }));

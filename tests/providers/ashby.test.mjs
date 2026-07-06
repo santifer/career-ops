@@ -171,20 +171,23 @@ try {
 
   // Retry loop — a transient failure on the first attempt recovers
   // transparently on the second (ASHBY_RETRIES=2 allows up to 3 attempts).
-  // Note: the backoff uses a real setTimeout (~1s here), not ctx.sleep.
+  // ctx.sleep replaces the real backoff setTimeout so the suite doesn't wait.
   let recoverAttempts = 0;
+  const recoverSleeps = [];
   const recovered = await ashby.fetch(
     { name: 'Acme', careers_url: 'https://jobs.ashbyhq.com/acme' },
-    { fetchJson: async () => {
+    { sleep: async (ms) => { recoverSleeps.push(ms); },
+      fetchJson: async () => {
         recoverAttempts++;
         if (recoverAttempts === 1) throw new Error('HTTP 429');
         return { jobs: [{ title: 'Recovered Role', jobUrl: 'https://jobs.ashbyhq.com/acme/r1' }] };
       } },
   );
-  if (recoverAttempts === 2 && recovered.length === 1 && recovered[0].title === 'Recovered Role') {
-    pass('ashby.fetch() retries a failed request and recovers transparently (2 attempts)');
+  if (recoverAttempts === 2 && recovered.length === 1 && recovered[0].title === 'Recovered Role'
+      && recoverSleeps.length === 1 && recoverSleeps[0] >= 1000) {
+    pass('ashby.fetch() retries a failed request and recovers transparently (2 attempts, 1 backoff via ctx.sleep)');
   } else {
-    fail(`ashby.fetch() retry recovery: attempts=${recoverAttempts}, jobs=${JSON.stringify(recovered)}`);
+    fail(`ashby.fetch() retry recovery: attempts=${recoverAttempts}, sleeps=${JSON.stringify(recoverSleeps)}, jobs=${JSON.stringify(recovered)}`);
   }
 
   // Retry loop — persistent failure exhausts all 3 attempts and rethrows the
@@ -193,7 +196,8 @@ try {
   try {
     await ashby.fetch(
       { name: 'Acme', careers_url: 'https://jobs.ashbyhq.com/acme' },
-      { fetchJson: async () => { exhaustAttempts++; throw new Error(`boom #${exhaustAttempts}`); } },
+      { sleep: async () => {},
+        fetchJson: async () => { exhaustAttempts++; throw new Error(`boom #${exhaustAttempts}`); } },
     );
     fail('ashby.fetch() should rethrow after exhausting retries');
   } catch (e) {
