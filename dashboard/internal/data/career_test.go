@@ -282,3 +282,16 @@ func TestResolveTrackerColumnsVia(t *testing.T) {
 		t.Errorf("status index = %d, want 6", cols["status"])
 	}
 }
+
+// A duplicated header name resolves to its LAST occurrence, matching
+// detectColumns in tracker-parse.mjs — the JS and Go readers must map an
+// identical header row identically.
+func TestResolveTrackerColumnsDuplicateHeaderLastWins(t *testing.T) {
+	dup := strings.Split(`| # | Notes | Company | Role | Score | Status | PDF | Report | Notes |
+|---|-------|---------|------|-------|--------|-----|--------|-------|
+| 1 | stray | Acme | Engineer | 4.0/5 | Applied | ✅ | — | real note |`, "\n")
+	cols := resolveTrackerColumns(dup)
+	if cols["notes"] != 8 {
+		t.Errorf("notes index = %d, want 8 (last occurrence wins, like tracker-parse.mjs)", cols["notes"])
+	}
+}
