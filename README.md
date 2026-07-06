@@ -144,6 +144,7 @@ npx playwright install chromium   # only needed for PDF generation
 
 # 2. Check setup
 npm run doctor                     # Validates all prerequisites
+node agent-inbox.mjs add "..."      # Queue a request between sessions; appends to the inbox the agent drains next session, and nothing auto-submits
 
 # 3. Configure
 cp config/profile.example.yml config/profile.yml  # Edit with your details

@@ -281,6 +281,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Fills out application form | `apply` |
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
+| Queues something for later or checks the inbox | `agent-inbox` — append-only checklist for requests between sessions; the agent drains it at the start of the next session, and nothing auto-submits |
 | Batch processes offers | `batch` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
