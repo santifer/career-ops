@@ -5,8 +5,9 @@ import { pathToFileURL } from 'url';
 
 console.log('\nProvider — dassault (Exalead card_search_api XML parser)');
 try {
-  const dassault = (await import(pathToFileURL(join(ROOT, 'providers/dassault.mjs')).href)).default;
-  const { parseHits, buildUrl } = await import(pathToFileURL(join(ROOT, 'providers/dassault.mjs')).href);
+  const dassaultModule = await import(pathToFileURL(join(ROOT, 'providers/dassault.mjs')).href);
+  const dassault = dassaultModule.default;
+  const { parseHits, buildUrl } = dassaultModule;
 
   if (dassault.id === 'dassault') pass('dassault.id is "dassault"');
   else fail(`dassault.id is ${JSON.stringify(dassault.id)}`);

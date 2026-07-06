@@ -7,8 +7,9 @@ console.log('\nProvider — comeet');
 
 
 try {
-  const comeet = (await import(pathToFileURL(join(ROOT, 'providers/comeet.mjs')).href)).default;
-  const { parseComeetResponse } = await import(pathToFileURL(join(ROOT, 'providers/comeet.mjs')).href);
+  const comeetModule = await import(pathToFileURL(join(ROOT, 'providers/comeet.mjs')).href);
+  const comeet = comeetModule.default;
+  const { parseComeetResponse } = comeetModule;
 
   if (comeet.id === 'comeet') pass('comeet.id is "comeet"');
   else fail(`comeet.id is ${JSON.stringify(comeet.id)}`);

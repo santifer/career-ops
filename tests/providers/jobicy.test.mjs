@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — jobicy');
 
 try {
-  const jobicy = (await import(pathToFileURL(join(ROOT, 'providers/jobicy.mjs')).href)).default;
-  const { parseJobicyResponse } = await import(pathToFileURL(join(ROOT, 'providers/jobicy.mjs')).href);
+  const jobicyModule = await import(pathToFileURL(join(ROOT, 'providers/jobicy.mjs')).href);
+  const jobicy = jobicyModule.default;
+  const { parseJobicyResponse } = jobicyModule;
 
   if (jobicy.id === 'jobicy') pass('jobicy.id is "jobicy"');
   else fail(`jobicy.id is ${JSON.stringify(jobicy.id)}`);

@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — justjoin');
 
 try {
-  const jj = (await import(pathToFileURL(join(ROOT, 'providers/justjoin.mjs')).href)).default;
-  const { parseJustJoinResponse } = await import(pathToFileURL(join(ROOT, 'providers/justjoin.mjs')).href);
+  const justjoinModule = await import(pathToFileURL(join(ROOT, 'providers/justjoin.mjs')).href);
+  const jj = justjoinModule.default;
+  const { parseJustJoinResponse } = justjoinModule;
 
   if (jj.id === 'justjoin') pass('justjoin.id is "justjoin"');
   else fail(`justjoin.id is ${JSON.stringify(jj.id)}`);

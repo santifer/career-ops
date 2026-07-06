@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — bamboohr');
 
 try {
-  const bamboohr = (await import(pathToFileURL(join(ROOT, 'providers/bamboohr.mjs')).href)).default;
-  const { parseBambooHRResponse } = await import(pathToFileURL(join(ROOT, 'providers/bamboohr.mjs')).href);
+  const bamboohrModule = await import(pathToFileURL(join(ROOT, 'providers/bamboohr.mjs')).href);
+  const bamboohr = bamboohrModule.default;
+  const { parseBambooHRResponse } = bamboohrModule;
 
   if (bamboohr.id === 'bamboohr') pass('bamboohr.id is "bamboohr"');
   else fail(`bamboohr.id is ${JSON.stringify(bamboohr.id)}`);

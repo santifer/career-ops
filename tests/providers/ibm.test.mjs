@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — ibm');
 
 try {
-  const ibm = (await import(pathToFileURL(join(ROOT, 'providers/ibm.mjs')).href)).default;
-  const { parseIbmResponse, buildPostFilter } = await import(pathToFileURL(join(ROOT, 'providers/ibm.mjs')).href);
+  const ibmModule = await import(pathToFileURL(join(ROOT, 'providers/ibm.mjs')).href);
+  const ibm = ibmModule.default;
+  const { parseIbmResponse, buildPostFilter } = ibmModule;
 
   if (ibm.id === 'ibm') pass('ibm.id is "ibm"');
   else fail(`ibm.id is ${JSON.stringify(ibm.id)}`);

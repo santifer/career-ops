@@ -6,9 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — hackernews');
 
 try {
-  const hn = (await import(pathToFileURL(join(ROOT, 'providers/hackernews.mjs')).href)).default;
-  const { parseHnComment, resolveLatestThreadId } =
-    await import(pathToFileURL(join(ROOT, 'providers/hackernews.mjs')).href);
+  const hackernewsModule = await import(pathToFileURL(join(ROOT, 'providers/hackernews.mjs')).href);
+  const hn = hackernewsModule.default;
+  const { parseHnComment, resolveLatestThreadId } = hackernewsModule;
 
   // resolveLatestThreadId ─ happy path
   const fakeSearch = {

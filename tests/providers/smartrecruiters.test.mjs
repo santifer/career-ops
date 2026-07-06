@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — smartrecruiters');
 
 try {
-  const sr = (await import(pathToFileURL(join(ROOT, 'providers/smartrecruiters.mjs')).href)).default;
-  const { parseSmartRecruitersResponse } = await import(pathToFileURL(join(ROOT, 'providers/smartrecruiters.mjs')).href);
+  const smartrecruitersModule = await import(pathToFileURL(join(ROOT, 'providers/smartrecruiters.mjs')).href);
+  const sr = smartrecruitersModule.default;
+  const { parseSmartRecruitersResponse } = smartrecruitersModule;
 
   if (sr.id === 'smartrecruiters') pass('smartrecruiters.id is "smartrecruiters"');
   else fail(`smartrecruiters.id is ${JSON.stringify(sr.id)}`);

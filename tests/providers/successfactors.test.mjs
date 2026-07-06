@@ -7,8 +7,9 @@ console.log('\nProvider — successfactors (SAP RMK tile parser)');
 
 
 try {
-  const sf = (await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href)).default;
-  const { parseTiles, cityFromSlug } = await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
+  const successfactorsModule = await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
+  const sf = successfactorsModule.default;
+  const { parseTiles, cityFromSlug } = successfactorsModule;
 
   if (sf.id === 'successfactors') pass('successfactors.id is "successfactors"');
   else fail(`successfactors.id is ${JSON.stringify(sf.id)}`);
@@ -99,8 +100,7 @@ try {
   else fail('parseTiles should return [] for an empty fragment');
 
   // ── CSB (Career Site Builder) strategy — JSON jobs API ────────────────────
-  const { extractLocales, parseCsbDate, cleanCsbLocation, parseCsbJobs } =
-    await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
+  const { extractLocales, parseCsbDate, cleanCsbLocation, parseCsbJobs } = successfactorsModule;
 
   // extractLocales — pull the language-switcher locales from a /search/ page,
   // deduped and priority-ordered (de_DE, en_US first; then alphabetical).

@@ -5,8 +5,9 @@ import { pathToFileURL } from 'url';
 
 console.log('\nProvider — rheinmetall (SSR vacancy-list parser)');
 try {
-  const rheinmetall = (await import(pathToFileURL(join(ROOT, 'providers/rheinmetall.mjs')).href)).default;
-  const { resolveListUrl, parseVacancies } = await import(pathToFileURL(join(ROOT, 'providers/rheinmetall.mjs')).href);
+  const rheinmetallModule = await import(pathToFileURL(join(ROOT, 'providers/rheinmetall.mjs')).href);
+  const rheinmetall = rheinmetallModule.default;
+  const { resolveListUrl, parseVacancies } = rheinmetallModule;
 
   if (rheinmetall.id === 'rheinmetall') pass('rheinmetall.id is "rheinmetall"');
   else fail(`rheinmetall.id is ${JSON.stringify(rheinmetall.id)}`);

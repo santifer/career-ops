@@ -7,8 +7,9 @@ console.log('\nProvider — personio');
 
 
 try {
-  const personio = (await import(pathToFileURL(join(ROOT, 'providers/personio.mjs')).href)).default;
-  const { parsePersonioXml } = await import(pathToFileURL(join(ROOT, 'providers/personio.mjs')).href);
+  const personioModule = await import(pathToFileURL(join(ROOT, 'providers/personio.mjs')).href);
+  const personio = personioModule.default;
+  const { parsePersonioXml } = personioModule;
 
   if (personio.id === 'personio') pass('personio.id is "personio"');
   else fail(`personio.id is ${JSON.stringify(personio.id)}`);

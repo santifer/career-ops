@@ -7,8 +7,9 @@ console.log('\nProvider — workday');
 
 
 try {
-  const workday = (await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href)).default;
-  const { parseWorkdayResponse } = await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href);
+  const workdayModule = await import(pathToFileURL(join(ROOT, 'providers/workday.mjs')).href);
+  const workday = workdayModule.default;
+  const { parseWorkdayResponse } = workdayModule;
 
   // Shared mock ctx shape for workday.fetch() calls below — only fetchJson varies per test.
   // sleep is a no-op so retry-backoff delays don't slow the test suite down.

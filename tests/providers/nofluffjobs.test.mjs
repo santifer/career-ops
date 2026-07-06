@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — nofluffjobs');
 
 try {
-  const nfj = (await import(pathToFileURL(join(ROOT, 'providers/nofluffjobs.mjs')).href)).default;
-  const { parseNoFluffJobsResponse } = await import(pathToFileURL(join(ROOT, 'providers/nofluffjobs.mjs')).href);
+  const nofluffjobsModule = await import(pathToFileURL(join(ROOT, 'providers/nofluffjobs.mjs')).href);
+  const nfj = nofluffjobsModule.default;
+  const { parseNoFluffJobsResponse } = nofluffjobsModule;
 
   if (nfj.id === 'nofluffjobs') pass('nofluffjobs.id is "nofluffjobs"');
   else fail(`nofluffjobs.id is ${JSON.stringify(nfj.id)}`);

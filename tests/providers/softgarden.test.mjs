@@ -5,9 +5,9 @@ import { pathToFileURL } from 'url';
 
 console.log('\nProvider — softgarden (hosted jobs widget parser)');
 try {
-  const softgarden = (await import(pathToFileURL(join(ROOT, 'providers/softgarden.mjs')).href)).default;
-  const { resolveWidgetUrl, parseSoftgardenDate, parseWidget } =
-    await import(pathToFileURL(join(ROOT, 'providers/softgarden.mjs')).href);
+  const softgardenModule = await import(pathToFileURL(join(ROOT, 'providers/softgarden.mjs')).href);
+  const softgarden = softgardenModule.default;
+  const { resolveWidgetUrl, parseSoftgardenDate, parseWidget } = softgardenModule;
 
   if (softgarden.id === 'softgarden') pass('softgarden.id is "softgarden"');
   else fail(`softgarden.id is ${JSON.stringify(softgarden.id)}`);

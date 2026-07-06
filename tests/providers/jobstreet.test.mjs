@@ -7,8 +7,9 @@ console.log('\nProvider — jobstreet');
 
 
 try {
-  const jobstreet = (await import(pathToFileURL(join(ROOT, 'providers/jobstreet.mjs')).href)).default;
-  const { parseJobstreetItem } = await import(pathToFileURL(join(ROOT, 'providers/jobstreet.mjs')).href);
+  const jobstreetModule = await import(pathToFileURL(join(ROOT, 'providers/jobstreet.mjs')).href);
+  const jobstreet = jobstreetModule.default;
+  const { parseJobstreetItem } = jobstreetModule;
 
   // id check
   if (jobstreet.id === 'jobstreet') pass('jobstreet.id is "jobstreet"');

@@ -5,9 +5,9 @@ import { pathToFileURL } from 'url';
 
 console.log('\nProvider — csod (Cornerstone OnDemand career-site API)');
 try {
-  const csod = (await import(pathToFileURL(join(ROOT, 'providers/csod.mjs')).href)).default;
-  const { resolveConfig, extractToken, parseCsodDate, cleanLocations, parseRequisitions } =
-    await import(pathToFileURL(join(ROOT, 'providers/csod.mjs')).href);
+  const csodModule = await import(pathToFileURL(join(ROOT, 'providers/csod.mjs')).href);
+  const csod = csodModule.default;
+  const { resolveConfig, extractToken, parseCsodDate, cleanLocations, parseRequisitions } = csodModule;
 
   if (csod.id === 'csod') pass('csod.id is "csod"');
   else fail(`csod.id is ${JSON.stringify(csod.id)}`);

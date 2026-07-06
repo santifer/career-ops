@@ -7,8 +7,9 @@ console.log('\nProvider — avature (career-site SearchJobs parser)');
 
 
 try {
-  const avature = (await import(pathToFileURL(join(ROOT, 'providers/avature.mjs')).href)).default;
-  const { parseArticles } = await import(pathToFileURL(join(ROOT, 'providers/avature.mjs')).href);
+  const avatureModule = await import(pathToFileURL(join(ROOT, 'providers/avature.mjs')).href);
+  const avature = avatureModule.default;
+  const { parseArticles } = avatureModule;
 
   if (avature.id === 'avature') pass('avature.id is "avature"');
   else fail(`avature.id is ${JSON.stringify(avature.id)}`);

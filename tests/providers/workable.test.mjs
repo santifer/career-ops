@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — workable');
 
 try {
-  const workable = (await import(pathToFileURL(join(ROOT, 'providers/workable.mjs')).href)).default;
-  const { parseWorkableMarkdown } = await import(pathToFileURL(join(ROOT, 'providers/workable.mjs')).href);
+  const workableModule = await import(pathToFileURL(join(ROOT, 'providers/workable.mjs')).href);
+  const workable = workableModule.default;
+  const { parseWorkableMarkdown } = workableModule;
 
   // detect() — auto-detection from careers_url
   if (workable.id === 'workable') pass('workable.id is "workable"');

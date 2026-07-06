@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — jibeapply');
 
 try {
-  const jibeapply = (await import(pathToFileURL(join(ROOT, 'providers/jibeapply.mjs')).href)).default;
-  const { parseJibeapplyResponse } = await import(pathToFileURL(join(ROOT, 'providers/jibeapply.mjs')).href);
+  const jibeapplyModule = await import(pathToFileURL(join(ROOT, 'providers/jibeapply.mjs')).href);
+  const jibeapply = jibeapplyModule.default;
+  const { parseJibeapplyResponse } = jibeapplyModule;
 
   if (jibeapply.id === 'jibeapply') pass('jibeapply.id is "jibeapply"');
   else fail(`jibeapply.id is ${JSON.stringify(jibeapply.id)}`);

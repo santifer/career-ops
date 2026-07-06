@@ -7,8 +7,9 @@ console.log('\nProvider — glints');
 
 
 try {
-  const glints = (await import(pathToFileURL(join(ROOT, 'providers/glints.mjs')).href)).default;
-  const { parseGlintsItem } = await import(pathToFileURL(join(ROOT, 'providers/glints.mjs')).href);
+  const glintsModule = await import(pathToFileURL(join(ROOT, 'providers/glints.mjs')).href);
+  const glints = glintsModule.default;
+  const { parseGlintsItem } = glintsModule;
 
   // id check
   if (glints.id === 'glints') pass('glints.id is "glints"');

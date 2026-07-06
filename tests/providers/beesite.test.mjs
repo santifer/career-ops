@@ -5,9 +5,9 @@ import { pathToFileURL } from 'url';
 
 console.log('\nProvider — beesite (milch \& zucker GJB search API)');
 try {
-  const beesite = (await import(pathToFileURL(join(ROOT, 'providers/beesite.mjs')).href)).default;
-  const { resolveConfig: beeConfig, buildSearchUrl, parseBeesiteDate, parseSearchResult } =
-    await import(pathToFileURL(join(ROOT, 'providers/beesite.mjs')).href);
+  const beesiteModule = await import(pathToFileURL(join(ROOT, 'providers/beesite.mjs')).href);
+  const beesite = beesiteModule.default;
+  const { resolveConfig: beeConfig, buildSearchUrl, parseBeesiteDate, parseSearchResult } = beesiteModule;
 
   if (beesite.id === 'beesite') pass('beesite.id is "beesite"');
   else fail(`beesite.id is ${JSON.stringify(beesite.id)}`);

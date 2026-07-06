@@ -6,9 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — arbeitsagentur');
 
 try {
-  const aa = (await import(pathToFileURL(join(ROOT, 'providers/arbeitsagentur.mjs')).href)).default;
-  const { parseArbeitsagenturConfig, buildLocation, normalizeJob } =
-    await import(pathToFileURL(join(ROOT, 'providers/arbeitsagentur.mjs')).href);
+  const arbeitsagenturModule = await import(pathToFileURL(join(ROOT, 'providers/arbeitsagentur.mjs')).href);
+  const aa = arbeitsagenturModule.default;
+  const { parseArbeitsagenturConfig, buildLocation, normalizeJob } = arbeitsagenturModule;
 
   if (aa.id === 'arbeitsagentur') pass('arbeitsagentur.id is "arbeitsagentur"');
   else fail(`arbeitsagentur.id is ${JSON.stringify(aa.id)}`);

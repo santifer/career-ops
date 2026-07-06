@@ -7,8 +7,9 @@ console.log('\nProvider — recruitee');
 
 
 try {
-  const recruitee = (await import(pathToFileURL(join(ROOT, 'providers/recruitee.mjs')).href)).default;
-  const { parseRecruiteeResponse } = await import(pathToFileURL(join(ROOT, 'providers/recruitee.mjs')).href);
+  const recruiteeModule = await import(pathToFileURL(join(ROOT, 'providers/recruitee.mjs')).href);
+  const recruitee = recruiteeModule.default;
+  const { parseRecruiteeResponse } = recruiteeModule;
 
   if (recruitee.id === 'recruitee') pass('recruitee.id is "recruitee"');
   else fail(`recruitee.id is ${JSON.stringify(recruitee.id)}`);
