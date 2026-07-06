@@ -12,10 +12,12 @@ export type FollowUp = { num?: number; company: string; role?: string; status?: 
 // "Snooze" is a client dismiss. The cadence is the core's — we just surface + record.
 export function FollowUpCard({ followup, onLogged }: { followup: FollowUp; onLogged?: () => void }) {
   const [state, setState] = useState<"idle" | "logging" | "done" | "snoozed" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   if (state === "snoozed" || state === "done") return null;
 
   const log = async () => {
     setState("logging");
+    setErrorMsg(null);
     try {
       const res = await fetch("/api/followups/log", {
         method: "POST",
@@ -29,8 +31,15 @@ export function FollowUpCard({ followup, onLogged }: { followup: FollowUp; onLog
         }),
       });
       // A 4xx/5xx means nothing was written — showing "done" would silently
-      // drop the log and the nag would just come back next visit.
-      if (!res.ok) throw new Error(String(res.status));
+      // drop the log and the nag would just come back next visit. Surface the
+      // server's error detail so a validation reject reads differently from a
+      // transient failure (same j.error contract as next-date-dialog).
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        setErrorMsg(typeof j.error === "string" ? j.error : `HTTP ${res.status}`);
+        setState("error"); // keep the row visible so the user can retry
+        return;
+      }
       onLogged?.();
       setState("done");
     } catch {
@@ -57,13 +66,14 @@ export function FollowUpCard({ followup, onLogged }: { followup: FollowUp; onLog
           type="button"
           disabled={state === "logging"}
           onClick={log}
+          title={state === "error" && errorMsg ? errorMsg : undefined}
           className={cn(
             "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-surface-hover px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-brand-soft hover:text-brand max-sm:min-h-[44px]",
             state === "error" && "text-red-500 hover:text-red-400",
           )}
         >
           {state === "logging" ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}{" "}
-          <span className="hidden sm:inline">{state === "error" ? "Failed — retry" : "Mark followed up"}</span>
+          <span className="hidden max-w-48 truncate sm:inline">{state === "error" ? `${errorMsg ?? "Failed"} — retry` : "Mark followed up"}</span>
           <span className="sm:hidden">{state === "error" ? "Retry" : "Followed up"}</span>
         </button>
         {followup.num != null && (
