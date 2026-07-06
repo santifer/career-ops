@@ -132,6 +132,15 @@ const scripts = [
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'agent-inbox-tests.mjs', expectExit: 0 },
   { name: 'followup-seed-tests.mjs', expectExit: 0 },
+  // Root-level standalone suites shipped in SYSTEM_PATHS but previously never
+  // executed by CI (issue #1624). All are fast (<0.5s each), so they run in
+  // both quick and full mode like their siblings above.
+  { name: 'test-trust-validator.mjs', expectExit: 0 },
+  { name: 'test-salary-filter.mjs', expectExit: 0 },
+  { name: 'detect-reposts.test.mjs', expectExit: 0 },
+  { name: 'followup-cadence.test.mjs', expectExit: 0 },
+  { name: 'process-quality.test.mjs', expectExit: 0 },
+  { name: 'reply-matcher.test.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs', expectExit: 0 },
