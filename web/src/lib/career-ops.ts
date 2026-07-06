@@ -44,7 +44,7 @@ function read(rel: string): string | null {
   }
 }
 
-export type InboxJob = { url: string; company: string; role: string; location?: string; compensation?: string; done: boolean };
+export type InboxJob = { url: string; company: string; role: string; location?: string; compensation?: string; done: boolean; postedAt?: string };
 
 /** Parse data/pipeline.md — `- [ ] URL | Company | Role [| Location [| Compensation]]`.
  *  Positional split (NOT a greedy trailing group): the optional 4th `location`
@@ -69,6 +69,32 @@ export function readInbox(): InboxJob[] {
     });
   }
   return jobs;
+}
+
+/**
+ * Read data/scan-history.tsv → Map<url, first_seen(YYYY-MM-DD)>. The scanner
+ * already stamps every discovered posting with the date it was first seen
+ * (col 2), so we derive the inbox's freshness signal here WITHOUT touching the
+ * core (see the inbox-triage build: freshness = option A, no scanner change).
+ * Tolerant by construction: no file → empty map (freshness facet just hides);
+ * a malformed row is skipped, never thrown (missing ≠ corrupt).
+ */
+export function readScanDates(): Map<string, string> {
+  const tsv = read("data/scan-history.tsv");
+  const dates = new Map<string, string>();
+  if (!tsv) return dates;
+  const lines = tsv.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line || (i === 0 && line.startsWith("url\t"))) continue; // skip header
+    const tab = line.indexOf("\t");
+    if (tab < 1) continue;
+    const url = line.slice(0, tab);
+    const firstSeen = line.slice(tab + 1).split("\t")[0]?.trim();
+    // keep the EARLIEST first_seen if a url recurs (it's "first" seen, after all)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(firstSeen) && !dates.has(url)) dates.set(url, firstSeen);
+  }
+  return dates;
 }
 
 export type Application = {
@@ -162,10 +188,13 @@ export type PipelineSummary = {
 
 export function pipelineSummary(): PipelineSummary {
   const root = careerOpsRoot();
+  const scanDates = readScanDates();
   return {
     root,
     rootExists: fs.existsSync(root),
-    inbox: readInbox(),
+    // join the freshness date (first_seen) onto each raw posting — the inbox's
+    // triage view orders/faceted-filters on it entirely client-side.
+    inbox: readInbox().map((j) => ({ ...j, postedAt: scanDates.get(j.url) })),
     applications: readApplications(),
   };
 }

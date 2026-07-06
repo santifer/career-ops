@@ -26,13 +26,18 @@
  */
 
 import { existsSync, readFileSync } from 'fs';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
-import { fetchJson as defaultFetchJson } from './providers/_http.mjs';
+import { fetchJson as defaultFetchJson, makeHttpCtx } from './providers/_http.mjs';
+import { loadProviders, resolveProvider } from './providers/_registry.mjs';
 
 const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
+
+// The core providers/ directory — the SAME plugins the scanner loads. Resolved
+// from this file's location so it's independent of the caller's cwd.
+const PROVIDERS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), 'providers');
 
 // How to turn a slug into a probe URL, and where the job list lives in the
 // response, for each supported ATS. Greenhouse/Ashby wrap jobs in `{ jobs }`;
@@ -220,20 +225,116 @@ async function discoverAlternates(name, { fetchJson }) {
 }
 
 /**
- * Verify the ATS slug of each enabled tracked company.
+ * A liveness probe must never paginate an entire board — that is slow and rude
+ * to the careers site (many rate-limit or bot-block aggressively). We signal
+ * this sentinel when a provider exhausts its request budget; the probe reads it
+ * as "the budgeted pages came back fine → the endpoint is live", we just don't
+ * learn the exact total. Distinct from a real HTTP error (a broken board).
+ */
+class ProbePageBudgetReached extends Error {}
+
+/**
+ * A handful of requests, not one: some providers must spend requests before
+ * the first job can arrive — SuccessFactors CSB does a locale-discovery GET,
+ * then one POST per advertised locale until it hits the job-bearing one. A
+ * 1-request budget would misreport every such tenant as 'empty'.
+ */
+const PROBE_REQUEST_BUDGET = 4;
+
+/**
+ * Wrap an http context so a provider gets a bounded number of successful list
+ * requests (PROBE_REQUEST_BUDGET).
  *
- * Companies whose careers_url/api is not a recognized ATS (branded pages,
- * Workday, job boards, websearch) are reported as `skipped` — out of scope for
- * slug probing, not failures. Probing is sequential to stay gentle on Ashby's
- * rate limit.
+ * Cooperating providers also see `maxPages: 1` and stop on their own (we then
+ * learn the first-page count). Providers that ignore the hint are cut off via
+ * the sentinel above — so the probe is bounded for every provider, whether or
+ * not it honors `maxPages`. `wasTripped()` reports a cut-off even when the
+ * provider swallowed the sentinel internally (e.g. a per-locale try/catch).
+ *
+ * @param {import('./providers/_types.js').Context} base
+ * @returns {{ctx: import('./providers/_types.js').Context, wasTripped: () => boolean}}
+ */
+function boundedProbeCtx(base) {
+  let used = 0;
+  let tripped = false;
+  const guard = (fn) => async (url, opts) => {
+    if (used >= PROBE_REQUEST_BUDGET) {
+      tripped = true;
+      throw new ProbePageBudgetReached();
+    }
+    used += 1;
+    return fn(url, opts);
+  };
+  return {
+    ctx: { ...base, maxPages: 1, fetchJson: guard(base.fetchJson), fetchText: guard(base.fetchText) },
+    wasTripped: () => tripped,
+  };
+}
+
+/**
+ * Probe one non-ATS company through the provider plugin the scanner would use.
+ *
+ * @param {object} entry - tracked_companies entry.
+ * @param {import('./providers/_types.js').Provider} provider
+ * @param {import('./providers/_types.js').Context} baseCtx
+ * @returns {Promise<{provider,status,jobCount?,partial?,httpStatus?,errorKind?,reason?}>}
+ *   status is 'live' (postings found), 'empty' (endpoint OK, no postings), or
+ *   'missing' (the board 404s/errors — the company would silently drop from
+ *   every scan). `partial` marks a live board whose exact count the bounded
+ *   probe didn't measure.
+ */
+export async function probeProvider(entry, provider, baseCtx) {
+  const { ctx, wasTripped } = boundedProbeCtx(baseCtx);
+  try {
+    const jobs = await provider.fetch(entry, ctx);
+    const count = Array.isArray(jobs) ? jobs.length : 0;
+    if (count > 0) {
+      const result = { provider: provider.id, status: 'live', jobCount: count };
+      if (wasTripped()) result.partial = true;
+      return result;
+    }
+    // Zero jobs but the budget guard fired: the provider swallowed the sentinel
+    // (per-locale/per-page try/catch) after its budgeted requests all came back
+    // fine — the endpoint is reachable, we just never reached a job-bearing
+    // page. Same verdict as the propagated-sentinel case below.
+    if (wasTripped()) return { provider: provider.id, status: 'live', partial: true };
+    return { provider: provider.id, status: 'empty', jobCount: 0 };
+  } catch (err) {
+    if (err instanceof ProbePageBudgetReached) {
+      return { provider: provider.id, status: 'live', partial: true };
+    }
+    return {
+      provider: provider.id,
+      status: 'missing',
+      errorKind: classifyFetchError(err),
+      httpStatus: err?.status,
+      reason: err?.message || String(err),
+    };
+  }
+}
+
+/**
+ * Verify each enabled tracked company's board is reachable.
+ *
+ * Two tiers, cheapest first:
+ *   1. Greenhouse/Ashby/Lever slugs are probed directly (one JSON request each),
+ *      with cross-probe suggestions when a slug 404s.
+ *   2. Everything else is routed through the SAME provider plugins the scanner
+ *      uses (Workday, SuccessFactors, SmartRecruiters, Avature, …), bounded to
+ *      a few requests. This catches broken non-ATS boards that used to be
+ *      reported as an un-actionable "skipped".
+ * A company reaches `skipped` only when no provider claims it. Probing is
+ * sequential to stay gentle on rate limits.
  *
  * @param {Array<object>} companies - tracked_companies entries.
- * @param {{fetchJson?: Function}} [deps]
+ * @param {{fetchJson?: Function, providers?: Map, httpCtx?: object}} [deps]
+ *   `providers`/`httpCtx` enable tier 2; omit them (as the ATS unit tests do) to
+ *   get tier-1-only behavior where non-ATS entries stay `skipped`.
  * @returns {Promise<Array<object>>} One result row per company.
  */
 export async function verifyCompanies(
   companies,
-  { fetchJson = defaultFetchJson } = {},
+  { fetchJson = defaultFetchJson, providers = null, httpCtx = null } = {},
 ) {
   const list = Array.isArray(companies) ? companies : [];
   const results = [];
@@ -243,28 +344,41 @@ export async function verifyCompanies(
     const name = typeof company.name === 'string' ? company.name : '(unnamed)';
     const match =
       parseAtsSlug(company.api) || parseAtsSlug(company.careers_url);
-    if (!match) {
-      results.push({
-        name,
-        status: 'skipped',
-        reason: 'no Greenhouse/Ashby/Lever slug in careers_url or api',
-      });
-      continue;
-    }
-    const probe = await probeSlug(match.ats, match.slug, { fetchJson });
-    if (probe.status === 'live' || probe.status === 'empty') {
+    if (match) {
+      const probe = await probeSlug(match.ats, match.slug, { fetchJson });
+      if (probe.status === 'live' || probe.status === 'empty') {
+        results.push({ name, ...probe });
+        continue;
+      }
+      // Wrong slug or ATS migration — cross-probe only for slug/unknown failures.
+      if (probe.errorKind === 'slug_gone' || probe.errorKind === 'unknown') {
+        const suggested = await discoverAlternates(name, { fetchJson });
+        if (suggested) {
+          results.push({ name, ...probe, suggested });
+          continue;
+        }
+      }
       results.push({ name, ...probe });
       continue;
     }
-    // Wrong slug or ATS migration — cross-probe only for slug/unknown failures.
-    if (probe.errorKind === 'slug_gone' || probe.errorKind === 'unknown') {
-      const suggested = await discoverAlternates(name, { fetchJson });
-      if (suggested) {
-        results.push({ name, ...probe, suggested });
+
+    // Tier 2: hand the entry to the scanner's provider layer. Skip the
+    // local-parser provider — a health check must stay network-only and never
+    // execute a configured local command.
+    if (providers && providers.size > 0) {
+      const resolved = resolveProvider(company, providers, { skipIds: ['local-parser'] });
+      if (resolved && resolved.provider) {
+        const probe = await probeProvider(company, resolved.provider, httpCtx || makeHttpCtx());
+        results.push({ name, ...probe });
         continue;
       }
     }
-    results.push({ name, ...probe });
+
+    results.push({
+      name,
+      status: 'skipped',
+      reason: 'no provider matched careers_url or api',
+    });
   }
   return results;
 }
@@ -279,14 +393,14 @@ export async function verifyCompanies(
  */
 export async function verifyPortalsFile(
   filePath,
-  { fetchJson = defaultFetchJson } = {},
+  { fetchJson = defaultFetchJson, providers = null, httpCtx = null } = {},
 ) {
   if (!existsSync(filePath)) return { found: false, results: [] };
   const config = yaml.load(readFileSync(filePath, 'utf-8'));
   const companies = Array.isArray(config?.tracked_companies)
     ? config.tracked_companies
     : [];
-  const results = await verifyCompanies(companies, { fetchJson });
+  const results = await verifyCompanies(companies, { fetchJson, providers, httpCtx });
   return { found: true, results };
 }
 
@@ -303,14 +417,16 @@ const ERROR_KIND_LABEL = {
 function printResults(results) {
   for (const r of results) {
     const icon = ICON[r.status] || '?';
+    // ATS rows carry ats/slug; provider-layer rows carry the provider id.
+    const source = r.ats ? `${r.ats}/${r.slug}` : (r.provider || '?');
     let detail;
     if (r.status === 'live') {
-      detail = `${r.ats}/${r.slug} (${r.jobCount} live)`;
+      detail = r.partial ? `${source} (first page live)` : `${source} (${r.jobCount} live)`;
     } else if (r.status === 'empty') {
-      detail = `${r.ats}/${r.slug} (live but empty)`;
+      detail = `${source} (live but empty)`;
     } else if (r.status === 'missing') {
       const kind = ERROR_KIND_LABEL[r.errorKind] || 'unresolved';
-      detail = `${r.ats || '?'}/${r.slug || '?'} (${kind}) — ${r.reason || 'unresolved'}`;
+      detail = `${source} (${kind}) — ${r.reason || 'unresolved'}`;
       if (r.suggested) {
         detail += ` → try ${r.suggested.ats}/${r.suggested.slug}`;
       }
@@ -373,7 +489,12 @@ async function main() {
     fileFlag === -1 ? DEFAULT_PORTALS_PATH : args[fileFlag + 1] || '',
   );
 
-  const { found, results } = await verifyPortalsFile(filePath, { fetchJson });
+  // Load the scanner's provider plugins so non-ATS boards (Workday,
+  // SuccessFactors, SmartRecruiters, …) get a real reachability probe instead
+  // of an un-actionable "skipped".
+  const providers = await loadProviders(PROVIDERS_DIR);
+  const httpCtx = makeHttpCtx();
+  const { found, results } = await verifyPortalsFile(filePath, { fetchJson, providers, httpCtx });
   if (!found) {
     // Graceful no-op: fresh setups (and CI, which ships no portals.yml) have
     // nothing to verify. Not an error.
@@ -402,7 +523,7 @@ async function main() {
     .map(([k, n]) => `${n} ${ERROR_KIND_LABEL[k]}`)
     .join(', ');
   console.log(
-    `\n${live} live, ${empty} live-but-empty, ${missing.length} unresolved${breakdown ? ` (${breakdown})` : ''}, ${skipped} non-ATS (skipped)`,
+    `\n${live} live, ${empty} live-but-empty, ${missing.length} unresolved${breakdown ? ` (${breakdown})` : ''}, ${skipped} no-provider (skipped)`,
   );
 
   if (strict && missing.length > 0) {

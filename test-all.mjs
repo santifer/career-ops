@@ -13,7 +13,7 @@
 
 
 import { execSync, execFileSync, spawn } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -807,7 +807,7 @@ if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('
   fail('renderHtmlToPdf does not read manifest metadata from opts');
 }
 try {
-  const { repoRelativeManifestPath } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const { repoRelativeManifestPath, injectPrintPageCss } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
   const insideHtmlPath = join(ROOT, 'templates', 'cv-template.html');
   const outsideHtmlPath = join(dirname(ROOT), 'outside-cv-template.html');
 
@@ -821,6 +821,52 @@ try {
     pass('PDF manifest leaves HTML column blank when source HTML is missing or outside the repo');
   } else {
     fail('PDF manifest mishandles missing or external source HTML paths');
+  }
+
+  const injectedPageCss = injectPrintPageCss('<html><head><title>CV</title></head><body></body></html>', 'letter');
+  if (
+    injectedPageCss.includes('@page { size: Letter; margin: 0.6in; }') &&
+    injectedPageCss.indexOf('career-ops-page-setup') < injectedPageCss.indexOf('</head>')
+  ) {
+    pass('PDF renderer injects CSS page size and margins before rendering');
+  } else {
+    fail('PDF renderer does not inject CSS page size/margins into the document head');
+  }
+
+  const mixedCasePageCss = injectPrintPageCss('<html><head></head><body></body></html>', 'Letter');
+  if (mixedCasePageCss.includes('@page { size: Letter; margin: 0.6in; }')) {
+    pass('PDF renderer treats page format case-insensitively');
+  } else {
+    fail('PDF renderer falls back to A4 for mixed-case letter format');
+  }
+
+  const doctypeNoHead = injectPrintPageCss('<!doctype html><html lang="en"><body></body></html>');
+  if (
+    doctypeNoHead.startsWith('<!doctype html>') &&
+    doctypeNoHead.includes('<html lang="en">\n<head>\n<style id="career-ops-page-setup">') &&
+    doctypeNoHead.indexOf('<head>') < doctypeNoHead.indexOf('<body>')
+  ) {
+    pass('PDF renderer preserves doctype when injecting page CSS into full HTML without head');
+  } else {
+    fail('PDF renderer may insert page CSS before doctype for full HTML without head');
+  }
+
+  const fragmentPageCss = injectPrintPageCss('<section>CV</section>');
+  if (fragmentPageCss.startsWith('<style id="career-ops-page-setup">')) {
+    pass('PDF renderer still prepends page CSS for HTML fragments');
+  } else {
+    fail('PDF renderer no longer handles HTML fragments with fallback CSS injection');
+  }
+
+  if (
+    generatePdfScript.includes('preferCSSPageSize: true') &&
+    generatePdfScript.includes("right: '0'") &&
+    generatePdfScript.includes('injectPrintPageCss(html, format)') &&
+    !/page\.pdf\(\{\s*format:/s.test(generatePdfScript)
+  ) {
+    pass('PDF renderer uses CSS @page margins instead of Playwright margins');
+  } else {
+    fail('PDF renderer may clip right-aligned content by ignoring CSS page sizing (#1341)');
   }
 } catch (e) {
   fail(`PDF manifest path helper test crashed: ${e.message}`);
@@ -847,6 +893,50 @@ if (updateSystemScript.includes("'CODEX.md'")) {
   pass('update-system preserves CODEX.md as a system-layer wrapper');
 } else {
   fail('update-system does not preserve CODEX.md');
+}
+
+try {
+  const {
+    DASHBOARD_REBUILD_TIMEOUT_MS,
+    NPM_INSTALL_TIMEOUT_MS,
+    PLAYWRIGHT_INSTALL_TIMEOUT_MS,
+    REEXEC_BUFFER_TIMEOUT_MS,
+    UPDATE_PATH_CHECKOUT_BUDGET_MS,
+    gitTimeoutMs,
+    parsePositiveInt,
+    reexecTimeoutMs,
+  } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+  const fetchTimeout = gitTimeoutMs(['fetch']);
+  const gitCommandTimeout = gitTimeoutMs(['checkout']);
+  const updatePathCount = 100;
+  const minimumReexecBudget =
+    fetchTimeout +
+    gitCommandTimeout * 3 +
+    updatePathCount * UPDATE_PATH_CHECKOUT_BUDGET_MS +
+    NPM_INSTALL_TIMEOUT_MS +
+    PLAYWRIGHT_INSTALL_TIMEOUT_MS +
+    DASHBOARD_REBUILD_TIMEOUT_MS +
+    REEXEC_BUFFER_TIMEOUT_MS;
+
+  if (parsePositiveInt('42', 7) === 42 && parsePositiveInt('-1', 7) === 7 && parsePositiveInt('nope', 7) === 7) {
+    pass('update-system timeout parser accepts only positive integer overrides');
+  } else {
+    fail('update-system timeout parser does not preserve fallback semantics');
+  }
+
+  if (gitTimeoutMs(['fetch']) > gitTimeoutMs(['checkout'])) {
+    pass('update-system gives fetch a larger timeout than ordinary git commands');
+  } else {
+    fail('update-system fetch timeout is not larger than ordinary git command timeout');
+  }
+
+  if (reexecTimeoutMs(updatePathCount) >= minimumReexecBudget) {
+    pass('update-system sizes self-reexec timeout for downstream fetch/git/install/rebuild work');
+  } else {
+    fail('update-system self-reexec timeout budget is too small for downstream apply work');
+  }
+} catch (e) {
+  fail(`update-system timeout helper test crashed: ${e.message}`);
 }
 
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
@@ -1721,6 +1811,82 @@ try {
     pass('verify-portals classifies live / empty / unresolved / non-ATS (disabled excluded)');
   } else {
     fail(`verify-portals classification wrong: ${JSON.stringify(byName)} (${results.length} rows)`);
+  }
+
+  // Tier 2: non-ATS companies are probed through the scanner's provider layer,
+  // bounded to a few requests. Fake providers stand in for Workday/SF/etc.
+  const fakeCtx = { transport: 'http', fetchJson: async () => ({}), fetchText: async () => ['x'] };
+  const fakeProviders = new Map([
+    ['fakeats', {
+      id: 'fakeats',
+      detect: (e) => (/fakeats\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
+      fetch: async (e, ctx) => {
+        // The probe MUST bound pagination — a provider is never asked to walk a
+        // whole board for a health check.
+        if (ctx.maxPages !== 1) throw new Error('probe did not pass maxPages=1');
+        if (e.careers_url.includes('/full')) return [{ title: 'A' }, { title: 'B' }];
+        if (e.careers_url.includes('/empty')) return [];
+        const err = new Error('HTTP 404'); err.status = 404; throw err;
+      },
+    }],
+    ['pager', {
+      // Ignores maxPages and paginates forever; the probe's request budget must
+      // still cut it off after the budgeted pages and classify it live.
+      id: 'pager',
+      detect: (e) => (/pager\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
+      fetch: async (e, ctx) => {
+        const jobs = [];
+        for (let p = 0; p < 50; p++) jobs.push(...(await ctx.fetchText(`u?p=${p}`)));
+        return jobs;
+      },
+    }],
+    ['swallower', {
+      // Mimics SuccessFactors CSB: burns the whole budget on discovery/locale
+      // requests that yield no jobs, swallowing every fetch error internally
+      // (per-locale try/catch). The probe must read "budget tripped + 0 jobs"
+      // as live/partial — the endpoint answered fine — never as 'empty'.
+      id: 'swallower',
+      detect: (e) => (/swallower\.io/.test(e.careers_url || '') ? { url: e.careers_url } : null),
+      fetch: async (e, ctx) => {
+        for (let p = 0; p < 50; p++) {
+          try { await ctx.fetchJson(`u?p=${p}`); } catch { break; }
+        }
+        return [];
+      },
+    }],
+  ]);
+  const provResults = await verifyCompanies([
+    { name: 'PFull', careers_url: 'https://fakeats.io/full' },
+    { name: 'PEmpty', careers_url: 'https://fakeats.io/empty' },
+    { name: 'PDead', careers_url: 'https://fakeats.io/dead' },
+    { name: 'PPager', careers_url: 'https://pager.io/board' },
+    { name: 'PSwallow', careers_url: 'https://swallower.io/board' },
+    { name: 'NoProv', careers_url: 'https://unknown.example/careers' },
+  ], { fetchJson: mockFetch, providers: fakeProviders, httpCtx: fakeCtx });
+  const pv = Object.fromEntries(provResults.map((r) => [r.name, r]));
+  if (
+    pv.PFull?.status === 'live' && pv.PFull?.jobCount === 2 &&
+    pv.PEmpty?.status === 'empty' &&
+    pv.PDead?.status === 'missing' && pv.PDead?.errorKind === 'slug_gone' &&
+    pv.PPager?.status === 'live' && pv.PPager?.partial === true &&
+    pv.PSwallow?.status === 'live' && pv.PSwallow?.partial === true &&
+    pv.NoProv?.status === 'skipped'
+  ) {
+    pass('verify-portals probes non-ATS boards via providers, bounded to a request budget');
+  } else {
+    fail(`verify-portals provider-fallback wrong: ${JSON.stringify(pv)}`);
+  }
+
+  // Without a providers map, non-ATS entries must stay skipped (unchanged CLI
+  // behavior for the ATS-only unit path).
+  const noProv = await verifyCompanies(
+    [{ name: 'X', careers_url: 'https://fakeats.io/full' }],
+    { fetchJson: mockFetch },
+  );
+  if (noProv[0]?.status === 'skipped') {
+    pass('verify-portals stays skipped for non-ATS when no providers are supplied');
+  } else {
+    fail(`verify-portals should skip non-ATS without providers: ${JSON.stringify(noProv)}`);
   }
 } catch (e) {
   fail(`portal slug validator tests crashed: ${e.message}`);
@@ -2876,6 +3042,19 @@ try {
     pass('smartrecruiters.detect() returns null for non-SR URLs');
   } else {
     fail('smartrecruiters.detect() should return null for non-SR URLs');
+  }
+
+  // entry.api precedence: a branded careers_url is kept while the SR slug is
+  // pinned via api: (mirrors greenhouse/ashby).
+  const hitApi = sr.detect({
+    name: 'Continental',
+    careers_url: 'https://jobs.continental.com',
+    api: 'https://careers.smartrecruiters.com/Continental',
+  });
+  if (hitApi && hitApi.url.startsWith('https://api.smartrecruiters.com/v1/companies/Continental/postings')) {
+    pass('smartrecruiters.detect() honors api: over a branded careers_url');
+  } else {
+    fail(`smartrecruiters.detect(api-pinned) returned ${JSON.stringify(hitApi)}`);
   }
 
   // parseSmartRecruitersResponse
@@ -4222,6 +4401,98 @@ try {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER TSV COLUMN-ORDER TOLERANCE (#1427) ─────────────
+// Batch TSVs write (status, score); applications.md is (score, status). A
+// generator that swaps the two must not merge silently — the score column is
+// identified by content pattern, and an undecidable pair is skipped loudly.
+console.log('\n🧪 Testing merge-tracker TSV column-order tolerance (#1427)...');
+try {
+  const { resolveScoreStatus, looksLikeScoreCell } = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
+
+  // Unit: content-pattern discriminator
+  if (looksLikeScoreCell('4.2/5') && looksLikeScoreCell('5/5') && looksLikeScoreCell('N/A') && looksLikeScoreCell('DUP') && looksLikeScoreCell('**3.5/5**')) {
+    pass('looksLikeScoreCell accepts score cells (incl. N/A, DUP, bolded)');
+  } else {
+    fail('looksLikeScoreCell rejected a valid score cell');
+  }
+  if (!looksLikeScoreCell('Evaluated') && !looksLikeScoreCell('Applied') && !looksLikeScoreCell('')) {
+    pass('looksLikeScoreCell rejects status labels and blanks');
+  } else {
+    fail('looksLikeScoreCell matched a non-score cell');
+  }
+
+  const std = resolveScoreStatus('Evaluated', '4.2/5');
+  const swp = resolveScoreStatus('4.2/5', 'Evaluated');
+  if (std && std.score === '4.2/5' && std.status === 'Evaluated' &&
+      swp && swp.score === '4.2/5' && swp.status === 'Evaluated') {
+    pass('resolveScoreStatus maps both column orders to the same result');
+  } else {
+    fail(`resolveScoreStatus order handling: std=${JSON.stringify(std)} swp=${JSON.stringify(swp)}`);
+  }
+  if (resolveScoreStatus('Evaluated', 'Applied') === null && resolveScoreStatus('4.2/5', '5/5') === null) {
+    pass('resolveScoreStatus returns null when neither or both cells look like a score');
+  } else {
+    fail('resolveScoreStatus should be undecidable for two statuses or two scores');
+  }
+
+  // End-to-end: a swapped-column TSV merges correctly; an undecidable one is skipped.
+  const colTmp = mkdtempSync(join(tmpdir(), 'career-ops-colorder-'));
+  try {
+    mkdirSync(join(colTmp, 'data'));
+    mkdirSync(join(colTmp, 'reports'));
+    const additionsDir = join(colTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(colTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | AnchorCo | Platform Engineer | 4.0/5 | Evaluated | ❌ | [1](../reports/001-anchorco-2026-01-04.md) | existing |\n');
+    for (const n of ['001-anchorco-2026-01-04', '002-swapco-2026-01-05', '003-ambigco-2026-01-05', '004-boldco-2026-01-05']) {
+      writeFileSync(join(colTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+    // Swapped order: score BEFORE status (4.6/5 then Evaluated).
+    writeFileSync(join(additionsDir, '002-swapco.tsv'),
+      '2\t2026-01-05\tSwapCo\tData Engineer\t4.6/5\tEvaluated\t❌\t[2](reports/002-swapco-2026-01-05.md)\tswapped cols\n');
+    // Undecidable: two status-like cells, no score → must be skipped, not merged.
+    writeFileSync(join(additionsDir, '003-ambigco.tsv'),
+      '3\t2026-01-05\tAmbigCo\tAnalyst\tEvaluated\tApplied\t❌\t[3](reports/003-ambigco-2026-01-05.md)\tno score\n');
+    // Bold score cell → detected AND persisted write-canonical (unbolded).
+    writeFileSync(join(additionsDir, '004-boldco.tsv'),
+      '4\t2026-01-05\tBoldCo\tSRE\tEvaluated\t**4.7/5**\t❌\t[4](reports/004-boldco-2026-01-05.md)\tbold score\n');
+
+    const mergeResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    if (mergeResult === null) {
+      fail('merge-tracker.mjs crashed during column-order test');
+    } else {
+      const merged = readFileSync(tracker, 'utf-8');
+      const swapRow = merged.split('\n').find(l => l.includes('SwapCo')) || '';
+      // buildRow writes `| … | score | status | … |`, so the score must land in the
+      // score column and status in the status column despite the swapped input.
+      if (swapRow.includes('| 4.6/5 | Evaluated |')) {
+        pass('swapped-column TSV merges with score and status in the correct columns');
+      } else {
+        fail(`swapped TSV mis-merged: "${swapRow.trim()}"`);
+      }
+      if (!merged.includes('AmbigCo')) {
+        pass('undecidable score/status row is skipped, not merged (no silent swap)');
+      } else {
+        fail('undecidable row was merged instead of skipped');
+      }
+      const boldRow = merged.split('\n').find(l => l.includes('BoldCo')) || '';
+      if (boldRow.includes('| 4.7/5 | Evaluated |') && !boldRow.includes('**')) {
+        pass('bold score cell is persisted write-canonical (unbolded) in the merged row');
+      } else {
+        fail(`bold score not canonicalized on write: "${boldRow.trim()}"`);
+      }
+    }
+  } finally {
+    rmSync(colTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker column-order tests crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER REPORT-NUMBER COLLISION (#912) ─────────────────
 // The report-number dedup check was not company-guarded: a TSV for NewCo
 // with report [1] would find the existing tracker row [1] for OtherCo and
@@ -4282,6 +4553,103 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker report-number collision test crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER REQ/JOB-NUMBER DEDUP GUARD (#1524) ─────────────────────
+// Tier-3 dedup (company + fuzzy role match) had no req/job-number awareness:
+// two distinct postings at the same company with similarly-worded titles were
+// silently collapsed into one row whenever a req/job number in the Notes
+// column was the only thing distinguishing them. Covers: (a) same-looking
+// titles + different req numbers → NOT a duplicate, (b) same-looking titles +
+// same req number → still a duplicate, (c) no req number on either side →
+// existing fuzzy-match behavior unchanged, (d) req number on only one side →
+// falls back to fuzzy-match behavior (can't prove a mismatch without both).
+console.log('\n🧪 Testing merge-tracker req/job-number dedup guard (#1524)...');
+try {
+  const reqTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-1524-'));
+  try {
+    mkdirSync(join(reqTmp, 'data'));
+    mkdirSync(join(reqTmp, 'reports'));
+    const reqAdditions = join(reqTmp, 'additions');
+    mkdirSync(reqAdditions);
+    const reqTracker = join(reqTmp, 'data', 'applications.md');
+    writeFileSync(reqTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-01 | Fabrikam | Learning Development Designer III | 3.8/5 | Evaluated | ❌ | [1](../reports/001-fabrikam-2026-01-01.md) | Req R_1000001 |\n' +
+      '| 2 | 2026-01-01 | Fabrikam | Curriculum Program Coordinator | 3.5/5 | Evaluated | ❌ | [2](../reports/002-fabrikam-2026-01-01.md) | no req number here |\n' +
+      '| 3 | 2026-01-01 | Northwind | Operations Analyst | 3.6/5 | Evaluated | ❌ | [3](../reports/003-northwind-2026-01-01.md) | Job 2026-55501 |\n');
+    for (const n of [
+      '001-fabrikam-2026-01-01', '002-fabrikam-2026-01-01', '003-northwind-2026-01-01',
+      '004-fabrikam-2026-01-02', '005-fabrikam-2026-01-02', '006-fabrikam-2026-01-02', '007-northwind-2026-01-02',
+    ]) {
+      writeFileSync(join(reqTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+
+    // (a) Same-looking title, DIFFERENT req number → must NOT be treated as a duplicate.
+    writeFileSync(join(reqAdditions, '004-fabrikam.tsv'),
+      '4\t2026-01-02\tFabrikam\tLearning Development Curriculum Designer\tEvaluated\t4.5/5\t❌\t[4](reports/004-fabrikam-2026-01-02.md)\tReq R_1000002 — distinct posting (#1524)\n');
+    // (b) Same-looking title, SAME req number → still a duplicate (lower score → skipped, row untouched).
+    writeFileSync(join(reqAdditions, '005-fabrikam.tsv'),
+      '5\t2026-01-02\tFabrikam\tLearning Development Designer III (Repost)\tEvaluated\t3.0/5\t❌\t[5](reports/005-fabrikam-2026-01-02.md)\tReq R_1000001 — same posting repost\n');
+    // (c) No req number on either side → existing fuzzy-match behavior unchanged (still deduped).
+    writeFileSync(join(reqAdditions, '006-fabrikam.tsv'),
+      '6\t2026-01-02\tFabrikam\tCurriculum Program Coordinator II\tEvaluated\t3.9/5\t❌\t[6](reports/006-fabrikam-2026-01-02.md)\tno req number, higher score\n');
+    // (d) Req number on only one side → can't prove a mismatch, falls back to fuzzy-match (still deduped).
+    writeFileSync(join(reqAdditions, '007-northwind.tsv'),
+      '7\t2026-01-02\tNorthwind\tOperations Analyst\tEvaluated\t3.2/5\t❌\t[7](reports/007-northwind-2026-01-02.md)\tno req number on this side\n');
+
+    const reqResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: reqTracker, CAREER_OPS_ADDITIONS: reqAdditions } });
+    if (reqResult === null) {
+      fail('merge-tracker.mjs crashed during req/job-number dedup guard test (#1524)');
+    } else {
+      const reqMerged = readFileSync(reqTracker, 'utf-8');
+      const reqRows = reqMerged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
+
+      // (a) Different req numbers: distinct posting added as a NEW row, existing #1 left untouched.
+      const distinctRow = reqRows.find(r => r.includes('Learning Development Curriculum Designer'));
+      const originalRow1 = reqRows.find(r => r.includes('Learning Development Designer III') && !r.includes('(Repost)') && !r.includes('Curriculum Designer'));
+      if (distinctRow && originalRow1 && originalRow1.includes('3.8/5') && originalRow1.includes('R_1000001')) {
+        pass('(#1524a) different req numbers on similar titles → NOT deduped, both rows present');
+      } else {
+        fail('(#1524a) different req numbers on similar titles were incorrectly deduped');
+      }
+
+      // (b) Same req number: still recognized as a duplicate — no separate "(Repost)" row,
+      // and since the new score (3.0) is lower than the existing (3.8), the existing row is left as-is.
+      const repostRow = reqRows.find(r => r.includes('(Repost)'));
+      if (!repostRow && originalRow1 && originalRow1.includes('3.8/5')) {
+        pass('(#1524b) same req number on similar titles → still deduped (skipped, lower score)');
+      } else {
+        fail('(#1524b) same req number should have been deduped away, not added as a new row');
+      }
+
+      // (c) No req number on either side: existing fuzzy-match-only behavior preserved — deduped and
+      // updated in place (higher score), not appended as a new row.
+      const coordinatorRows = reqRows.filter(r => r.includes('Curriculum Program Coordinator'));
+      if (coordinatorRows.length === 1 && coordinatorRows[0].includes('3.9/5')) {
+        pass('(#1524c) no req number on either side → fuzzy-match behavior unchanged (updated in place)');
+      } else {
+        fail(`(#1524c) fuzzy-match-only behavior regressed: expected 1 'Curriculum Program Coordinator' row at 3.9/5, got ${coordinatorRows.length}`);
+      }
+
+      // (d) Req number on only one side (existing row has "Job 2026-55501", addition has none):
+      // can't prove a mismatch without both numbers, so falls back to fuzzy match → still deduped
+      // into exactly one row. The addition's score (3.2) is lower than the existing (3.6), so the
+      // existing row is left as-is rather than updated.
+      const opsAnalystRows = reqRows.filter(r => r.includes('Operations Analyst'));
+      if (opsAnalystRows.length === 1 && opsAnalystRows[0].includes('3.6/5')) {
+        pass('(#1524d) req number on only one side → falls back to fuzzy match, still deduped');
+      } else {
+        fail(`(#1524d) one-sided req number should fall back to fuzzy match: expected 1 'Operations Analyst' row at 3.6/5, got ${opsAnalystRows.length}`);
+      }
+    }
+  } finally {
+    rmSync(reqTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker req/job-number dedup guard test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER CONCURRENT WRITES (#781 follow-up) ─────────────────────
@@ -9190,6 +9558,7 @@ try {
 
   const base = { id: 'x', apiVersion: 1, description: 'one line', hooks: ['ingest'], requiredEnv: [], allowedHosts: [], humanInTheLoop: true };
   __manifestTmp = mkdtempSync(join(tmpdir(), 'co-plugin-manifest-'));
+  mkdirSync(join(__manifestTmp, 'x'), { recursive: true });
   const vm = (m, dirName = 'x') => validateManifest(m, join(__manifestTmp, dirName), dirName);
 
   // Manifest validation (warnings are expected here — suppress to keep output clean).
@@ -9208,6 +9577,22 @@ try {
   else fail('valid keyed manifest should be accepted');
   if (vm({ ...base, entry: '../../scan.mjs' }) === null) pass('entry escaping the plugin directory is rejected (traversal guard)');
   else fail('entry traversal should be rejected');
+  writeFileSync(join(__manifestTmp, 'outside.mjs'), 'export default {};');
+  writeFileSync(join(__manifestTmp, 'outside.md'), '# outside\n');
+  mkdirSync(join(__manifestTmp, 'outside-dir'), { recursive: true });
+  try {
+    symlinkSync(join(__manifestTmp, 'outside.mjs'), join(__manifestTmp, 'x', 'linked-entry.mjs'));
+    symlinkSync(join(__manifestTmp, 'outside.md'), join(__manifestTmp, 'x', 'linked-skill.md'));
+    symlinkSync(join(__manifestTmp, 'outside-dir'), join(__manifestTmp, 'x', 'linked-dir'), 'dir');
+    if (vm({ ...base, entry: 'linked-entry.mjs' }) === null) pass('entry symlink escaping the plugin directory is rejected');
+    else fail('entry symlink traversal should be rejected');
+    if (vm({ ...base, skill: 'linked-skill.md' }) === null) pass('skill symlink escaping the plugin directory is rejected');
+    else fail('skill symlink traversal should be rejected');
+    if (vm({ ...base, entry: 'linked-dir/missing-entry.mjs' }) === null) pass('missing entry under an escaping symlink directory is rejected');
+    else fail('missing entry under symlink traversal should be rejected');
+  } catch (e) {
+    warn(`symlink traversal test skipped: ${e.message}`);
+  }
   if (validateManifest({ ...base, id: 'y' }, '/tmp/x', 'x') === null) pass('manifest id must equal the directory name');
   else fail('id != dirname should be rejected');
   if (vm({ ...base, apiVersion: 2 }) === null) pass('unknown apiVersion is rejected (forward-compat gate)');
@@ -10165,6 +10550,71 @@ try {
   // Empty fragment (MTU's zero-req case) → no jobs, no throw.
   if (parseTiles('<!DOCTYPE html>', jobBase).length === 0) pass('parseTiles returns [] for an empty fragment');
   else fail('parseTiles should return [] for an empty fragment');
+
+  // ── CSB (Career Site Builder) strategy — JSON jobs API ────────────────────
+  const { extractLocales, parseCsbDate, cleanCsbLocation, parseCsbJobs } =
+    await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
+
+  // extractLocales — pull the language-switcher locales from a /search/ page,
+  // deduped and priority-ordered (de_DE, en_US first; then alphabetical).
+  const switcherHtml =
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=fr_FR">FR</a>' +
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=en_US">EN</a>' +
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=de_DE">DE</a>' +
+    '<a href="/search/?q=&amp;startrow=0&amp;locale=de_DE">DE dup</a>';
+  const locs = extractLocales(switcherHtml);
+  if (JSON.stringify(locs) === JSON.stringify(['de_DE', 'en_US', 'fr_FR'])) {
+    pass('extractLocales dedups and priority-orders (de_DE, en_US, then alpha)');
+  } else {
+    fail(`extractLocales wrong: ${JSON.stringify(locs)}`);
+  }
+  if (extractLocales('<p>no locales here</p>').length === 0) pass('extractLocales returns [] when the page carries none');
+  else fail('extractLocales should return [] for a page with no locale links');
+
+  // parseCsbDate — locale-dependent short date; separator infers field order.
+  if (parseCsbDate('6/18/26') === Date.UTC(2026, 5, 18)) pass('parseCsbDate reads US M/D/YY');
+  else fail(`parseCsbDate US wrong: ${parseCsbDate('6/18/26')}`);
+  if (parseCsbDate('20.11.23') === Date.UTC(2023, 10, 20)) pass('parseCsbDate reads European D.M.YY (dots)');
+  else fail(`parseCsbDate DE wrong: ${parseCsbDate('20.11.23')}`);
+  if (parseCsbDate('garbage') === undefined && parseCsbDate('13/40/99') === undefined && parseCsbDate('') === undefined) {
+    pass('parseCsbDate returns undefined for junk / out-of-range / empty');
+  } else {
+    fail('parseCsbDate should reject junk, out-of-range, and empty input');
+  }
+
+  // cleanCsbLocation — array of "City, CC, ZIP<br/>" strings → joined, stripped.
+  if (cleanCsbLocation(['Karlovy Vary, CZE, 36004<br/>']) === 'Karlovy Vary, CZE, 36004') pass('cleanCsbLocation strips trailing <br/>');
+  else fail(`cleanCsbLocation single wrong: ${JSON.stringify(cleanCsbLocation(['Karlovy Vary, CZE, 36004<br/>']))}`);
+  if (cleanCsbLocation(['Munich<br/>', 'Berlin<br/>']) === 'Munich / Berlin') pass('cleanCsbLocation joins multiple locations with " / "');
+  else fail(`cleanCsbLocation multi wrong: ${JSON.stringify(cleanCsbLocation(['Munich<br/>', 'Berlin<br/>']))}`);
+  if (cleanCsbLocation(undefined) === '' && cleanCsbLocation([]) === '') pass('cleanCsbLocation tolerates missing/empty location');
+  else fail('cleanCsbLocation should return "" for missing/empty input');
+
+  // parseCsbJobs — map the {response:{…}} records; build {id}-{locale} URLs and
+  // sanitize the cosmetic slug (HTML entities, URL-structural chars).
+  const csbJson = {
+    totalJobs: 3,
+    jobSearchResult: [
+      { response: { id: '31099', unifiedStandardTitle: 'Analytical Lab Technician', unifiedUrlTitle: 'Analytical-Lab-Technician', jobLocationShort: ['Anyang, KOR, 14058<br/>'], unifiedStandardStart: '6/18/26' } },
+      { response: { id: '1283', unifiedStandardTitle: 'Senior Expert Mergers & Acquisitions (m/f/d)', unifiedUrlTitle: 'Senior-Expert-Mergers-&amp;-Acquisitions-%28mfd%29', jobLocationShort: ['Munich<br/>'], unifiedStandardStart: '4/21/26' } },
+      { response: { id: '', unifiedStandardTitle: 'No ID — dropped', unifiedUrlTitle: 'x' } },
+      { response: { id: '999', unifiedStandardTitle: '', unifiedUrlTitle: 'no-title-dropped' } },
+    ],
+  };
+  const csbCfg = { origin: 'https://jobs.example.com' };
+  const csbJobs = parseCsbJobs(csbJson, csbCfg, 'en_US');
+  if (csbJobs.length === 2) pass('parseCsbJobs drops records missing id or title');
+  else fail(`parseCsbJobs returned ${csbJobs.length}, expected 2`);
+  const c1 = csbJobs[0];
+  if (c1 && c1.url === 'https://jobs.example.com/job/Analytical-Lab-Technician/31099-en_US') pass('parseCsbJobs builds {origin}/job/{slug}/{id}-{locale}');
+  else fail(`parseCsbJobs url wrong: ${JSON.stringify(c1 && c1.url)}`);
+  if (c1 && c1.location === 'Anyang, KOR, 14058') pass('parseCsbJobs cleans jobLocationShort');
+  else fail(`parseCsbJobs location wrong: ${JSON.stringify(c1 && c1.location)}`);
+  if (c1 && c1.postedAt === Date.UTC(2026, 5, 18)) pass('parseCsbJobs sets postedAt from unifiedStandardStart');
+  else fail(`parseCsbJobs postedAt wrong: ${JSON.stringify(c1 && c1.postedAt)}`);
+  const c2 = csbJobs[1];
+  if (c2 && !/[?#&]|&amp;/.test(new URL(c2.url).pathname)) pass('parseCsbJobs sanitizes &amp; / URL-structural chars out of the slug');
+  else fail(`parseCsbJobs slug not sanitized: ${JSON.stringify(c2 && c2.url)}`);
 } catch (err) {
   fail(`successfactors provider test threw: ${err.message}`);
 }
@@ -10276,8 +10726,9 @@ try {
     fail('prepare-application.mjs does not read config/profile.yml');
   }
 
-  // Must restrict PDF to output/ directory
-  if (/output[^'"`\n]*startsWith|startsWith.*output/.test(src)) {
+  // Must restrict PDF to output/ directory — either the legacy startsWith
+  // prefix check or the path.relative() containment guard counts.
+  if (/output[^'"`\n]*startsWith|startsWith.*output|relative\(outputDir/.test(src)) {
     pass('prepare-application.mjs restricts PDF path to output/');
   } else {
     fail('prepare-application.mjs missing output/ directory restriction for --pdf');
@@ -10354,6 +10805,32 @@ try {
     pass('workday.detect() returns null for non-Workday URL');
   } else {
     fail('workday.detect() should return null for non-Workday URL');
+  }
+
+  // entry.api precedence: a branded careers_url is kept while the Workday tenant
+  // is pinned via api: (mirrors greenhouse/ashby).
+  const hitApiWd = workday.detect({
+    name: 'PTC',
+    careers_url: 'https://www.ptc.com/en/careers',
+    api: 'https://ptc.wd1.myworkdayjobs.com/PTC',
+  });
+  if (hitApiWd && hitApiWd.url === 'https://ptc.wd1.myworkdayjobs.com/wday/cxs/ptc/PTC/jobs') {
+    pass('workday.detect() honors api: over a branded careers_url');
+  } else {
+    fail(`workday.detect(api-pinned) returned ${JSON.stringify(hitApiWd)}`);
+  }
+
+  // A non-Workday api: must not shadow a valid Workday careers_url — resolution
+  // falls through to the next candidate instead of returning null.
+  const hitFallthrough = workday.detect({
+    name: 'Acme',
+    api: 'https://acme.com/careers',
+    careers_url: 'https://acme.wd12.myworkdayjobs.com/en-US/acme-jobs',
+  });
+  if (hitFallthrough && hitFallthrough.url === 'https://acme.wd12.myworkdayjobs.com/wday/cxs/acme/acme-jobs/jobs') {
+    pass('workday.detect() falls through a non-Workday api: to a valid careers_url');
+  } else {
+    fail(`workday.detect(fallthrough) returned ${JSON.stringify(hitFallthrough)}`);
   }
 
   // Path-spoofed URL: myworkdayjobs.com in path, not hostname
@@ -10885,6 +11362,37 @@ try {
     fail(`fallback pagination: requests=${fallbackRequests}, jobs=${fallbackJobs.length} (expected 2/25)`);
   }
 
+  // fetch() honors ctx.maxPages — verify-portals' liveness probe sets maxPages:1.
+  // It must stop after the first page and NOT request page 2, which would trip
+  // the probe's second-request sentinel; fetchPageWithRetry treats that abort as
+  // transient and retries it MAX_RETRIES times (4 requests) plus a truncation
+  // warning. Even though total=173 implies 9 pages, the cap must win at 1.
+  let probeRequests = 0;
+  const probeWarnings = [];
+  const probeErr = console.error;
+  console.error = (m) => probeWarnings.push(m);
+  let probeJobs;
+  try {
+    probeJobs = await workday.fetch(entry, mkWorkdayCtx(async (_url, opts) => {
+      probeRequests++;
+      // Simulate the probe sentinel: any request past the first throws.
+      if (JSON.parse(opts.body).offset > 0) throw new Error('probe budget: no second page');
+      return { total: 173, jobPostings: Array.from({ length: 20 }, (_, i) => ({ title: `Job ${i}`, externalPath: `/job/board/${i}` })) };
+    }, { maxPages: 1 }));
+  } finally {
+    console.error = probeErr;
+  }
+  if (probeRequests === 1 && probeJobs.length === 20) {
+    pass('workday.fetch() honors ctx.maxPages=1 — one request, no second-page retry storm');
+  } else {
+    fail(`workday probe cap: requests=${probeRequests} (expected 1), jobs=${probeJobs?.length} (expected 20)`);
+  }
+  if (!probeWarnings.some((w) => /truncated/.test(String(w)))) {
+    pass('workday.fetch() stays silent (no truncation warning) under the liveness probe cap');
+  } else {
+    fail(`workday probe should emit no warning, got: ${JSON.stringify(probeWarnings)}`);
+  }
+
 } catch (e) {
   fail(`workday provider tests crashed: ${e.message}`);
 }
@@ -11207,6 +11715,118 @@ try {
   else fail(`parseArticles location wrong: ${JSON.stringify(a2 && a2.location)}`);
   if (parseArticles('<div>no articles</div>', origin).length === 0) pass('parseArticles returns [] when no articles present');
   else fail('parseArticles should return [] for markup with no articles');
+
+  // Tenant markup variants: Siemens appends a position index to the result
+  // class ("article--result 1"); Rohde & Schwarz renders the title anchor with
+  // no class="link". Both must still parse. (Regressions found on live tenants.)
+  const variants = `
+    <article class="article article--result 1" id="article--1">
+      <h3 class="title"><a class="link" href="https://acme.avature.net/en_US/externaljobs/JobDetail/Head-of-PLM/511918">Head of PLM</a></h3>
+    </article>
+    <article class="article article--result" id="article--2">
+      <h3 class="title"><a href="https://acme.avature.net/en_US/careers/JobDetail/Director-Platform/13672">Director Platform Engineering</a></h3>
+    </article>`;
+  const vArts = parseArticles(variants, origin);
+  const vSuffix = vArts.find((a) => a.id === '511918');
+  if (vSuffix && vSuffix.title === 'Head of PLM') pass('parseArticles handles the "article--result 1" class suffix (Siemens)');
+  else fail(`parseArticles missed the class-suffix variant: ${JSON.stringify(vArts.map((a) => a.id))}`);
+  const vNoClass = vArts.find((a) => a.id === '13672');
+  if (vNoClass && vNoClass.title === 'Director Platform Engineering') pass('parseArticles falls back to a JobDetail anchor without class="link" (Rohde & Schwarz)');
+  else fail(`parseArticles missed the no-class-link variant: ${JSON.stringify(vArts.map((a) => a.id))}`);
+
+  // Pagination key — default `jobOffset`, self-heals to `offset` for tenants
+  // that ignore it (Siemens). Mock fetchText with an article-less page so
+  // fetch() stops after one request and we can read the URL it built.
+  const captureFirstUrl = async (entry) => {
+    let firstUrl;
+    const ctx = { sleep: async () => {}, fetchText: async (url) => { if (firstUrl === undefined) firstUrl = url; return '<div>no articles</div>'; } };
+    await avature.fetch(entry, ctx);
+    return firstUrl;
+  };
+  const base = 'https://acme.avature.net/careers/SearchJobs';
+  if (await captureFirstUrl({ name: 'X', api: base }) === `${base}?jobOffset=0`) pass('avature.fetch() defaults pagination to ?jobOffset=N');
+  else fail('avature.fetch() should default to jobOffset');
+  if (await captureFirstUrl({ name: 'X', api: base, offset_param: 'offset' }) === `${base}?offset=0`) pass('avature.fetch() honours offset_param override (Siemens: ?offset=N)');
+  else fail('avature.fetch() should use offset_param when set');
+  if (await captureFirstUrl({ name: 'X', api: base, offset_param: '  ' }) === `${base}?jobOffset=0`) pass('avature.fetch() falls back to jobOffset for a blank offset_param');
+  else fail('avature.fetch() should ignore a blank offset_param');
+
+  // Self-heal — jobOffset→offset when the primary key is inert.
+  const originB = 'https://acme.avature.net';
+  const mkHtml = (ids) => ids.map((id) =>
+    `<article class="article article--result"><h3 class="title"><a class="link" href="${originB}/careers/JobDetail/Role-${id}/${id}">Role ${id}</a></h3></article>`).join('');
+  // Build a ctx whose fetchText answers from a {param: (pageIndex)=>ids} map.
+  const mkCtx = () => {
+    const calls = [];
+    let sleeps = 0;
+    const ctx = {
+      sleep: async () => { sleeps += 1; },
+      fetchText: async (url) => {
+        calls.push(url);
+        const u = new URL(url);
+        const jo = u.searchParams.get('jobOffset');
+        const of = u.searchParams.get('offset');
+        if (jo !== null) return mkHtml([1, 2, 3, 4, 5, 6]); // jobOffset inert: always page 0
+        if (of !== null) {
+          const n = Number(of) / 6;
+          if (n === 0) return mkHtml([1, 2, 3, 4, 5, 6]);
+          if (n === 1) return mkHtml([7, 8, 9, 10, 11, 12]); // offset advances
+          if (n === 2) return mkHtml([13, 14]); // partial → last page
+          return mkHtml([]);
+        }
+        return '<div>no articles</div>';
+      },
+    };
+    return { ctx, calls, sleeps: () => sleeps };
+  };
+  const heal = mkCtx();
+  const healed = await avature.fetch({ name: 'X', api: base }, heal.ctx);
+  if (healed.length === 14) pass('avature.fetch() self-heals jobOffset→offset and walks the full board (14 jobs)');
+  else fail(`avature.fetch() self-heal wrong count: ${healed.length} (expected 14)`);
+  if (heal.calls.some((u) => /[?&]offset=/.test(u))) pass('avature.fetch() self-heal retries with ?offset=N');
+  else fail('avature.fetch() self-heal should retry with offset');
+  if (heal.sleeps() > 0) pass('avature.fetch() throttles between pages (sleep called)');
+  else fail('avature.fetch() should sleep between pages');
+
+  // No self-heal when jobOffset works: offset= must never be requested.
+  const workingCtx = {
+    calls: [],
+    sleep: async () => {},
+    fetchText: async function (url) {
+      this.calls.push(url);
+      const n = Number(new URL(url).searchParams.get('jobOffset')) / 6;
+      if (n === 0) return mkHtml([1, 2, 3, 4, 5, 6]);
+      if (n === 1) return mkHtml([7, 8, 9, 10, 11, 12]);
+      return mkHtml([13, 14]); // last (partial)
+    },
+  };
+  const worked = await avature.fetch({ name: 'X', api: base }, workingCtx);
+  if (worked.length === 14 && workingCtx.calls.every((u) => /[?&]jobOffset=/.test(u))) pass('avature.fetch() does not self-heal when jobOffset already advances');
+  else fail(`avature.fetch() spurious self-heal: ${worked.length} jobs, calls ${JSON.stringify(workingCtx.calls.map((u) => u.split('?')[1]))}`);
+
+  // Self-heal must fire even when the inert primary key returns an EMPTY page 1
+  // (not a repeat of page 0) — the empty-page break must not pre-empt the heal.
+  const emptyP1Ctx = {
+    calls: [],
+    sleep: async () => {},
+    fetchText: async function (url) {
+      this.calls.push(url);
+      const u = new URL(url);
+      const jo = u.searchParams.get('jobOffset');
+      const of = u.searchParams.get('offset');
+      if (jo !== null) return Number(jo) === 0 ? mkHtml([1, 2, 3, 4, 5, 6]) : mkHtml([]); // page 1+ empty
+      if (of !== null) {
+        const n = Number(of) / 6;
+        if (n === 1) return mkHtml([7, 8, 9, 10, 11, 12]);
+        if (n === 2) return mkHtml([13, 14]);
+        return mkHtml([]);
+      }
+      return '<div>no articles</div>';
+    },
+  };
+  const emptyHealed = await avature.fetch({ name: 'X', api: base }, emptyP1Ctx);
+  if (emptyHealed.length === 14 && emptyP1Ctx.calls.some((u) => /[?&]offset=/.test(u))) pass('avature.fetch() self-heals when the inert key returns an empty page 1');
+  else fail(`avature.fetch() failed to heal empty page 1: ${emptyHealed.length} jobs`);
 } catch (e) {
   fail(`avature provider tests crashed: ${e.message}`);
 }
@@ -11333,6 +11953,132 @@ try {
 
 } catch (e) {
   fail(`dassault provider tests crashed: ${e.message}`);
+}
+
+console.log('\n60. Provider — beesite (milch & zucker GJB search API)');
+try {
+  const beesite = (await import(pathToFileURL(join(ROOT, 'providers/beesite.mjs')).href)).default;
+  const { resolveConfig: beeConfig, buildSearchUrl, parseBeesiteDate, parseSearchResult } =
+    await import(pathToFileURL(join(ROOT, 'providers/beesite.mjs')).href);
+
+  if (beesite.id === 'beesite') pass('beesite.id is "beesite"');
+  else fail(`beesite.id is ${JSON.stringify(beesite.id)}`);
+
+  // resolveConfig — host-anchored, config block passthrough.
+  const bCfg = beeConfig({
+    api: 'https://mercedes-benz-beesite-production-gjb.app.beesite.de',
+    beesite: { languageCode: 'DE', searchCriteria: [{ CriterionName: 'PositionLocation.Country', CriterionValue: [329] }] },
+  });
+  if (bCfg && bCfg.searchApi === 'https://mercedes-benz-beesite-production-gjb.app.beesite.de/search' && bCfg.languageCode === 'DE' && bCfg.searchCriteria.length === 1) {
+    pass('beesite.resolveConfig() parses host and passes the beesite config block through');
+  } else {
+    fail(`beesite.resolveConfig() wrong: ${JSON.stringify(bCfg)}`);
+  }
+  if (beesite.detect({ careers_url: 'https://evil.com/x.beesite.de' }) === null && beesite.detect({ careers_url: 'https://beesite.de.evil.com/x' }) === null) {
+    pass('beesite.detect() rejects path- and suffix-spoofed hosts');
+  } else {
+    fail('beesite.detect() should reject spoofed hosts');
+  }
+
+  // buildSearchUrl — FirstItem lands in the encoded payload.
+  const bUrl = buildSearchUrl(bCfg, 101);
+  if (bUrl.startsWith(bCfg.searchApi + '?data=') && decodeURIComponent(bUrl).includes('"FirstItem":101') && decodeURIComponent(bUrl).includes('"CriterionValue":[329]')) {
+    pass('beesite.buildSearchUrl() encodes FirstItem and the pinned criteria');
+  } else {
+    fail(`beesite.buildSearchUrl() wrong: ${bUrl.slice(0, 140)}`);
+  }
+
+  if (parseBeesiteDate('2026-07-04') === Date.UTC(2026, 6, 4) && parseBeesiteDate('junk') === undefined) pass('beesite.parseBeesiteDate() reads YYYY-MM-DD, rejects junk');
+  else fail('beesite.parseBeesiteDate() wrong');
+
+  // parseSearchResult — id/title/absolute-URL required, cities joined.
+  const mkItem = (id, title, uri) => ({ MatchedObjectId: String(id), MatchedObjectDescriptor: { PositionID: `x${id}`, PositionTitle: title, PositionURI: uri, PositionLocation: [{ CityName: 'Bremen' }, { CityName: 'Berlin' }], PublicationStartDate: '2026-07-04' } });
+  const beeJson = { SearchResult: { SearchResultCount: 2, SearchResultCountAll: 42, SearchResultItems: [
+    mkItem(1, 'IT Architect', 'https://jobs.example.com/a-1'),
+    { MatchedObjectId: '2', MatchedObjectDescriptor: { PositionTitle: 'No URI — dropped', PositionURI: '/relative' } },
+  ] } };
+  const { total: beeTotal, rows: beeRows } = parseSearchResult(beeJson);
+  if (beeTotal === 42 && beeRows.length === 1 && beeRows[0].location === 'Bremen / Berlin' && beeRows[0].postedAt === Date.UTC(2026, 6, 4)) {
+    pass('beesite.parseSearchResult() maps items, joins cities, drops non-absolute URIs');
+  } else {
+    fail(`beesite.parseSearchResult() wrong: total=${beeTotal} rows=${JSON.stringify(beeRows)}`);
+  }
+
+  // fetch — paginates by FirstItem until SearchResultCountAll, dedups.
+  const beePage = (ids) => ({ SearchResult: { SearchResultCount: ids.length, SearchResultCountAll: 150, SearchResultItems: ids.map((i) => mkItem(i, `Job ${i}`, `https://jobs.example.com/j-${i}`)) } });
+  const beePages = [beePage(Array.from({ length: 100 }, (_, i) => i + 1)), beePage([100, 101, 102])];
+  let beeCalls = 0;
+  const beeSeen = [];
+  const beeCtx = { sleep: async () => {}, fetchJson: async (url) => { beeSeen.push(decodeURIComponent(url)); return beePages[beeCalls++] ?? beePage([]); } };
+  const beeJobs = await beesite.fetch({ name: 'MB', api: 'https://x.app.beesite.de' }, beeCtx);
+  if (beeJobs.length === 102 && beeCalls === 2 && beeSeen[1].includes('"FirstItem":101')) pass('beesite.fetch() paginates via FirstItem and dedups across pages');
+  else fail(`beesite.fetch() returned ${beeJobs.length} jobs after ${beeCalls} calls`);
+} catch (e) {
+  fail(`beesite provider tests crashed: ${e.message}`);
+}
+
+console.log('\n61. Provider — softgarden (hosted jobs widget parser)');
+try {
+  const softgarden = (await import(pathToFileURL(join(ROOT, 'providers/softgarden.mjs')).href)).default;
+  const { resolveWidgetUrl, parseSoftgardenDate, parseWidget } =
+    await import(pathToFileURL(join(ROOT, 'providers/softgarden.mjs')).href);
+
+  if (softgarden.id === 'softgarden') pass('softgarden.id is "softgarden"');
+  else fail(`softgarden.id is ${JSON.stringify(softgarden.id)}`);
+
+  // resolveWidgetUrl — widget URLs pass through, other tenant URLs default,
+  // spoofed hosts rejected.
+  if (resolveWidgetUrl({ api: 'https://renk-group.softgarden.io/de/widgets/jobs' }) === 'https://renk-group.softgarden.io/de/widgets/jobs') pass('softgarden.resolveWidgetUrl() keeps explicit widget URLs');
+  else fail('softgarden.resolveWidgetUrl() should keep the widget URL');
+  if (resolveWidgetUrl({ careers_url: 'https://acme.softgarden.io/en/vacancies' }) === 'https://acme.softgarden.io/en/widgets/jobs') pass('softgarden.resolveWidgetUrl() defaults other tenant URLs to the lang widget');
+  else fail(`softgarden.resolveWidgetUrl() default wrong: ${resolveWidgetUrl({ careers_url: 'https://acme.softgarden.io/en/vacancies' })}`);
+  if (softgarden.detect({ careers_url: 'https://evil.com/x.softgarden.io' }) === null && softgarden.detect({ careers_url: 'https://softgarden.io.evil.com/x' }) === null) {
+    pass('softgarden.detect() rejects path- and suffix-spoofed hosts');
+  } else {
+    fail('softgarden.detect() should reject spoofed hosts');
+  }
+
+  if (parseSoftgardenDate('04.07.26') === Date.UTC(2026, 6, 4) && parseSoftgardenDate('7/4/26') === Date.UTC(2026, 6, 4) && parseSoftgardenDate('junk') === undefined) {
+    pass('softgarden.parseSoftgardenDate() reads D.M.YY and M/D/YY, rejects junk');
+  } else {
+    fail('softgarden.parseSoftgardenDate() wrong');
+  }
+
+  // parseWidget — matchElement blocks; relative ../../job/ hrefs resolve
+  // against the widget path; entities decoded; multi-city joined.
+  const sgCard = (id, title, cities) =>
+    `<div class="matchElement" id="job_id_${id}">` +
+    `<div class="matchValue date">04.07.26</div>` +
+    `<div target="_blank" class="matchValue title"><a href="../../job/${id}/slug-${id}?jobDbPVId=9${id}&amp;l=de" target="_blank">${title}</a></div>` +
+    `<div class="matchValue audience">Berufserfahrene</div>` +
+    `<div class="matchValue ProjectGeoLocationCity"><div><div class="location-container">${cities.map((c) => `<span class="location-view-item">${c}</span>`).join('')}</div></div></div>` +
+    `</div>`;
+  const sgHtml = '<html>' + sgCard('111', 'Fachkraft (m/w/d) f&#252;r Export &amp; Zoll', ['Hannover']) + sgCard('222', 'SAP Consultant', ['Augsburg', 'M&#252;nchen']) + '</html>';
+  const sgRows = parseWidget(sgHtml, 'https://renk-group.softgarden.io/de/widgets/jobs');
+  if (sgRows.length === 2) pass('softgarden.parseWidget() yields one row per matchElement');
+  else fail(`softgarden.parseWidget() returned ${sgRows.length}, expected 2`);
+  if (sgRows[0]?.title === 'Fachkraft (m/w/d) für Export & Zoll') pass('softgarden.parseWidget() decodes entities in titles');
+  else fail(`softgarden.parseWidget() title wrong: ${JSON.stringify(sgRows[0]?.title)}`);
+  if (sgRows[0]?.url === 'https://renk-group.softgarden.io/job/111/slug-111?jobDbPVId=9111&l=de') pass('softgarden.parseWidget() resolves ../../job/ hrefs against the widget path');
+  else fail(`softgarden.parseWidget() url wrong: ${JSON.stringify(sgRows[0]?.url)}`);
+  if (sgRows[1]?.location === 'Augsburg / München' && sgRows[0]?.postedAt === Date.UTC(2026, 6, 4)) pass('softgarden.parseWidget() joins cities and parses the date');
+  else fail(`softgarden.parseWidget() fields wrong: ${JSON.stringify(sgRows[1])}`);
+  if (parseWidget('<html>none</html>', 'https://x.softgarden.io/de/widgets/jobs').length === 0 && parseWidget(undefined, 'https://x').length === 0) {
+    pass('softgarden.parseWidget() returns [] for card-less / non-string input');
+  } else {
+    fail('softgarden.parseWidget() should return [] without cards');
+  }
+
+  // fetch — single widget request, jobs normalized.
+  const sgCtx = { fetchText: async () => sgHtml };
+  const sgJobs = await softgarden.fetch({ name: 'Renk', api: 'https://renk-group.softgarden.io/de/widgets/jobs' }, sgCtx);
+  if (sgJobs.length === 2 && sgJobs[0].company === 'Renk' && sgJobs.every((j) => j.url.startsWith('https://renk-group.softgarden.io/job/'))) {
+    pass('softgarden.fetch() returns normalized jobs from one widget request');
+  } else {
+    fail(`softgarden.fetch() wrong: ${JSON.stringify(sgJobs)}`);
+  }
+} catch (e) {
+  fail(`softgarden provider tests crashed: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
