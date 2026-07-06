@@ -139,7 +139,7 @@ function detectColumnMap(lines: string[]): Partial<Record<keyof Application | "l
     const m: Partial<Record<keyof Application | "location", number>> = {};
     cells.forEach((c, i) => {
       const k = TRACKER_ALIASES[c.toLowerCase()];
-      if (k && m[k] == null) m[k] = i;
+      if (k) m[k] = i; // unconditional: last occurrence wins, same as detectColumns
     });
     if ((["n", "company", "role", "score", "status"] as const).every((k) => m[k] != null)) return m;
   }
