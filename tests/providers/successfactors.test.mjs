@@ -99,18 +99,24 @@ try {
   if (parseTiles('<!DOCTYPE html>', jobBase).length === 0) pass('parseTiles returns [] for an empty fragment');
   else fail('parseTiles should return [] for an empty fragment');
 
-  // decodeEntities (exercised via parseTiles) — a malformed/out-of-range
-  // numeric entity (a lone surrogate half) must degrade to the literal text,
-  // never throw RangeError and abort the whole parse.
+  // decodeEntities (exercised via parseTiles) — a numeric entity above
+  // 0x10FFFF is the one that actually throws RangeError out of
+  // String.fromCodePoint and must degrade to literal text instead of
+  // aborting the whole parse. A lone surrogate half (0xD800-0xDFFF) does NOT
+  // throw by itself (per spec, it's a valid — if not scalar — codepoint) but
+  // is still rejected defensively so we never emit an ill-formed string.
   const badEntityFragment = `
     <ul>
       <li class="job-tile job-id-444 job-row-index-4" data-url="/job/no-city/444/">
         <a class="jobTitle-link fontcolorx" href="/x">Bad&#xD800;Entity</a>
       </li>
+      <li class="job-tile job-id-555 job-row-index-5" data-url="/job/no-city/555/">
+        <a class="jobTitle-link fontcolorx" href="/x">Huge&#x110000;Entity</a>
+      </li>
     </ul>`;
   const badRows = parseTiles(badEntityFragment, jobBase);
-  if (badRows.length === 1 && badRows[0].title === 'Bad&#xD800;Entity') {
-    pass('parseTiles tolerates an invalid numeric entity (no RangeError crash)');
+  if (badRows.length === 2 && badRows[0].title === 'Bad&#xD800;Entity' && badRows[1].title === 'Huge&#x110000;Entity') {
+    pass('parseTiles tolerates a lone surrogate and an out-of-range numeric entity (no RangeError crash)');
   } else {
     fail(`parseTiles should degrade a malformed entity to literal text, got: ${JSON.stringify(badRows)}`);
   }

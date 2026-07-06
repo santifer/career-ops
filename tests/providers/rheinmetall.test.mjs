@@ -46,13 +46,16 @@ try {
   if (parseVacancies('<html>no cards</html>', 'https://x').length === 0 && parseVacancies(undefined, 'https://x').length === 0) pass('rheinmetall.parseVacancies() returns [] for card-less / non-string input');
   else fail('rheinmetall.parseVacancies() should return [] without cards');
 
-  // decodeEntities (exercised via parseVacancies) — a malformed/out-of-range
-  // numeric entity (a lone surrogate half) must degrade to the literal text,
-  // never throw RangeError and abort the whole parse.
-  const badEntityHtml = '<html>' + card('444', 'Bad&#xD800;Entity', 'X GmbH | Berlin') + '</html>';
+  // decodeEntities (exercised via parseVacancies) — a numeric entity above
+  // 0x10FFFF is the one that actually throws RangeError out of
+  // String.fromCodePoint and must degrade to literal text instead of
+  // aborting the whole parse. A lone surrogate half (0xD800-0xDFFF) does NOT
+  // throw by itself (per spec, it's a valid — if not scalar — codepoint) but
+  // is still rejected defensively so we never emit an ill-formed string.
+  const badEntityHtml = '<html>' + card('444', 'Bad&#xD800;Entity', 'X GmbH | Berlin') + card('555', 'Huge&#x110000;Entity', 'X GmbH | Berlin') + '</html>';
   const badRows = parseVacancies(badEntityHtml, 'https://www.rheinmetall.com');
-  if (badRows.length === 1 && badRows[0].title === 'Bad&#xD800;Entity') {
-    pass('rheinmetall.parseVacancies() tolerates an invalid numeric entity (no RangeError crash)');
+  if (badRows.length === 2 && badRows[0].title === 'Bad&#xD800;Entity' && badRows[1].title === 'Huge&#x110000;Entity') {
+    pass('rheinmetall.parseVacancies() tolerates a lone surrogate and an out-of-range numeric entity (no RangeError crash)');
   } else {
     fail(`rheinmetall.parseVacancies() should degrade a malformed entity to literal text, got: ${JSON.stringify(badRows)}`);
   }

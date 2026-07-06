@@ -85,15 +85,19 @@ try {
     fail('dassault.parseHits() should return [] for empty / hit-less XML');
   }
 
-  // decodeEntities (exercised via parseHits) — a malformed/out-of-range
-  // numeric entity (a lone surrogate half) must degrade to the literal text,
-  // never throw RangeError and abort the whole parse.
+  // decodeEntities (exercised via parseHits) — a numeric entity above
+  // 0x10FFFF is the one that actually throws RangeError out of
+  // String.fromCodePoint and must degrade to literal text instead of
+  // aborting the whole parse. A lone surrogate half (0xD800-0xDFFF) does NOT
+  // throw by itself (per spec, it's a valid — if not scalar — codepoint) but
+  // is still rejected defensively so we never emit an ill-formed string.
   const xmlBadEntity = `<Answer><hits>` +
     mkHit({ id: '555', title: 'Bad&#xD800;Entity', cta1: 'https://www.3ds.com/careers/jobs/z-555' }) +
+    mkHit({ id: '666', title: 'Huge&#x110000;Entity', cta1: 'https://www.3ds.com/careers/jobs/z-666' }) +
     `</hits></Answer>`;
   const badRows = parseHits(xmlBadEntity, 'Dassault Systèmes');
-  if (badRows.length === 1 && badRows[0].title === 'Bad&#xD800;Entity') {
-    pass('dassault.parseHits() tolerates an invalid numeric entity (no RangeError crash)');
+  if (badRows.length === 2 && badRows[0].title === 'Bad&#xD800;Entity' && badRows[1].title === 'Huge&#x110000;Entity') {
+    pass('dassault.parseHits() tolerates a lone surrogate and an out-of-range numeric entity (no RangeError crash)');
   } else {
     fail(`dassault.parseHits() should degrade a malformed entity to literal text, got: ${JSON.stringify(badRows)}`);
   }
