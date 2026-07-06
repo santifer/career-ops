@@ -1190,6 +1190,17 @@ if (
   fail('offer-prep mode missing gates, promises file, absences/referenced-docs handling, lawyer list, fixed disclaimer, or attribution');
 }
 
+const routerSkill = readFile('.agents/skills/career-ops/SKILL.md');
+if (
+  /argument-hint:.*offer-prep/.test(routerSkill) &&
+  routerSkill.includes('| `offer-prep` | `offer-prep` |') &&
+  routerSkill.includes('/career-ops offer-prep')
+) {
+  pass('router skill registers offer-prep (argument-hint, routing table, menu)');
+} else {
+  fail('router skill missing offer-prep registration');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
