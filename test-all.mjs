@@ -1353,6 +1353,32 @@ if (
   fail('_shared.md missing canonical company-type compensation reliability framework');
 }
 
+const zhShared = readFile('modes/zh/_shared.md');
+const zhOferta = readFile('modes/zh/oferta.md');
+if (
+  zhShared.includes('## 公司类型与薪资可信度') &&
+  zhShared.includes('成长期创业公司 / 已融资创业公司') &&
+  zhShared.includes('早期初创企业 / 未盈利创业公司') &&
+  zhShared.includes('开源社区 / 教育社区') &&
+  zhShared.includes('实际合同主体 / 用工主体') &&
+  zhShared.includes('薪资可信度默认使用保守的正式等级：`低`') &&
+  zhShared.includes('薪资分析压缩为两行：公司类型和薪资可信度') &&
+  zhOferta.includes('公司类型分类（必填）') &&
+  zhOferta.includes('薪资可信度（必填）') &&
+  zhOferta.includes('若 JD 没有公开薪资数字，本节在需求趋势后只输出两行') &&
+  zhOferta.includes('跳过薪资组成拆分、详细市场数据表和 HR 核验问题') &&
+  zhOferta.includes('公开薪资区间') &&
+  zhOferta.includes('可能的合同固定 base') &&
+  zhOferta.includes('浮动 / 条件性现金组成') &&
+  zhOferta.includes('非现金福利') &&
+  zhOferta.includes('当 JD 明确写出薪资数字时，必须给出 3-6 个 HR 核验问题') &&
+  zhOferta.includes('不要把招聘广告薪资当作真实到手')
+) {
+  pass('Chinese modes include company-type compensation reliability checks');
+} else {
+  fail('Chinese modes missing company-type compensation reliability checks');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
