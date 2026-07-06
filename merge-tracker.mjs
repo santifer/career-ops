@@ -22,7 +22,7 @@ import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
-import { LEGACY_COLMAP, detectColumns, resolveScoreStatus } from './tracker-parse.mjs';
+import { LEGACY_COLMAP, detectColumns, resolveScoreStatus, normalizeVia } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -393,22 +393,9 @@ function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-/**
- * Unicode-aware key for Via (agency) comparison.
- *
- * normalizeCompany() strips everything outside [a-z0-9], so non-Latin agency
- * names (リクルート, パーソル, …) all collapse to the same empty key — which
- * made the #1596 cross-channel guard treat two different agencies as one
- * channel and silently merge two real submissions. Keep letters and digits of
- * any script instead; NFKC first so full-width/half-width variants compare
- * equal.
- *
- * @param {string} name - Raw Via cell or via= tag value.
- * @returns {string} Case-folded, punctuation-free, script-preserving key.
- */
-function normalizeVia(name) {
-  return String(name).normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-}
+// normalizeVia (Unicode-aware Via/agency key, #1596/#1603) now lives in
+// tracker-parse.mjs so merge-tracker and analyze-patterns share ONE normalizer
+// and agency identity can't drift between scripts.
 
 /**
  * Extract the bracketed report number from a Markdown report link.

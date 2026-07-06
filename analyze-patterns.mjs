@@ -17,7 +17,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
-import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
@@ -127,9 +127,15 @@ function parseMachineSummary(content) {
 // --- Via channel analysis (#1596 follow-up) ---
 // Pure: group submitted applications by their Via channel (agency/recruiter
 // firm) and compute per-agency advance rates, plus the agency-vs-direct
-// aggregate. Channel identity is normalized like the tracker tooling
-// (lowercase alphanumerics) so "Hays" and "HAYS " land in one bucket; the
-// first raw spelling seen is kept for display.
+// aggregate. Channel identity uses the SAME normalizeVia key as the
+// merge-tracker dedup guard (tracker-parse.mjs): NFKC + Unicode letters/digits,
+// so "Hays" / "HAYS " / full-width "ＨＡＹＳ" land in one bucket while distinct
+// non-Latin agencies (リクルートAgent vs パーソルAgent) stay separate. The
+// first raw spelling seen is kept for display. Rows in `submitted` whose Via
+// cell is empty (legacy tracker without the column, or a blank cell — as
+// opposed to the explicit `—` direct marker) belong to neither bucket; they
+// are counted as `unknownVia` so agencySubmitted + directSubmitted can't
+// silently undershoot the submitted total.
 function buildViaChannelAnalysis(submitted, isAdvanced, minSample = MIN_VENDOR_N) {
   const viaOf = (e) => String(e.via ?? '').trim();
   const isDirect = (v) => v === '—' || v === '-';
@@ -140,7 +146,10 @@ function buildViaChannelAnalysis(submitted, isAdvanced, minSample = MIN_VENDOR_N
   const byAgency = new Map();
   for (const e of agencySubmitted) {
     const raw = viaOf(e);
-    const key = raw.toLowerCase().replace(/[^a-z0-9]/g, '') || raw.toLowerCase();
+    // All-symbol names (e.g. "***") normalize to '' — fall back to the
+    // NFKC-lowercased raw string so DISTINCT all-symbol names stay distinct
+    // buckets instead of merging into one shared empty key.
+    const key = normalizeVia(raw) || raw.normalize('NFKC').toLowerCase();
     if (!byAgency.has(key)) byAgency.set(key, { agency: raw, total: 0, advanced: 0 });
     const entry = byAgency.get(key);
     entry.total++;
@@ -160,6 +169,10 @@ function buildViaChannelAnalysis(submitted, isAdvanced, minSample = MIN_VENDOR_N
     minSampleForClaim: minSample,
     agencySubmitted: agencySubmitted.length,
     directSubmitted: directSubmitted.length,
+    // Coverage honesty: submitted rows with an empty Via cell (no `—` marker)
+    // that fall into neither bucket. Non-zero means the agency/direct split
+    // covers only a subset of submissions.
+    unknownVia: submitted.length - agencySubmitted.length - directSubmitted.length,
     agencyAdvanceRate: rate(agencySubmitted),
     directAdvanceRate: rate(directSubmitted),
     breakdown,
@@ -218,20 +231,29 @@ next_action: "Follow up on ticket #42 with tailored CV"
   const viaRows = [
     { via: 'Hays', normalizedStatus: 'interview' },
     { via: 'HAYS ', normalizedStatus: 'rejected' },   // same bucket as Hays
+    { via: 'ＨＡＹＳ', normalizedStatus: 'rejected' }, // full-width → same bucket as Hays (NFKC)
     { via: 'Randstad', normalizedStatus: 'rejected' },
+    { via: 'リクルートAgent', normalizedStatus: 'interview' }, // non-Latin: distinct agency...
+    { via: 'パーソルAgent', normalizedStatus: 'rejected' },    // ...must NOT merge with the one above
     { via: '—', normalizedStatus: 'responded' },       // direct
     { via: '—', normalizedStatus: 'rejected' },        // direct
-    { via: '', normalizedStatus: 'applied' },          // no Via column → neither bucket
+    { via: '', normalizedStatus: 'applied' },          // no Via column → unknownVia, neither bucket
   ];
   const viaResult = buildViaChannelAnalysis(viaRows, (e) => advanced.has(e.normalizedStatus), 2);
-  if (viaResult.agencySubmitted !== 3) failures.push(`via: agencySubmitted → ${viaResult.agencySubmitted}, expected 3`);
+  if (viaResult.agencySubmitted !== 6) failures.push(`via: agencySubmitted → ${viaResult.agencySubmitted}, expected 6`);
   if (viaResult.directSubmitted !== 2) failures.push(`via: directSubmitted → ${viaResult.directSubmitted}, expected 2`);
+  if (viaResult.unknownVia !== 1) failures.push(`via: unknownVia → ${viaResult.unknownVia}, expected 1 (submitted row with empty Via must be counted, not silently dropped)`);
   if (viaResult.directAdvanceRate !== 50) failures.push(`via: directAdvanceRate → ${viaResult.directAdvanceRate}, expected 50`);
   const hays = viaResult.breakdown.find(a => a.agency === 'Hays');
-  if (!hays || hays.total !== 2 || hays.advanceRate !== 50) {
-    failures.push(`via: Hays bucket wrong (case/space variants must merge) → ${JSON.stringify(hays)}`);
+  if (!hays || hays.total !== 3 || hays.advanceRate !== 33) {
+    failures.push(`via: Hays bucket wrong (case/space/full-width variants must merge) → ${JSON.stringify(hays)}`);
   }
   if (!hays?.sufficientSample) failures.push('via: Hays should meet the n=2 sample bar');
+  const recruit = viaResult.breakdown.find(a => a.agency === 'リクルートAgent');
+  const persol = viaResult.breakdown.find(a => a.agency === 'パーソルAgent');
+  if (!recruit || !persol || recruit.total !== 1 || persol.total !== 1) {
+    failures.push(`via: distinct non-Latin agencies must stay separate buckets → リクルートAgent=${JSON.stringify(recruit)}, パーソルAgent=${JSON.stringify(persol)}`);
+  }
   const randstad = viaResult.breakdown.find(a => a.agency === 'Randstad');
   if (randstad?.sufficientSample) failures.push('via: Randstad (n=1) must be flagged as too small for a claim');
   if (buildViaChannelAnalysis([], () => false).breakdown.length !== 0) {
@@ -926,6 +948,9 @@ function printSummary(result) {
     console.log('-'.repeat(40));
     console.log(`  direct  ${String(via.directSubmitted).padStart(3)} apps  ${String(via.directAdvanceRate).padStart(3)}% advance`);
     console.log(`  agency  ${String(via.agencySubmitted).padStart(3)} apps  ${String(via.agencyAdvanceRate).padStart(3)}% advance`);
+    if (via.unknownVia > 0) {
+      console.log(`  unknown ${String(via.unknownVia).padStart(3)} apps  (no Via recorded — not counted in either channel)`);
+    }
     for (const a of via.breakdown) {
       const flag = a.sufficientSample ? '' : '  (n too small for a claim)';
       console.log(`    ${a.agency.padEnd(16)} ${String(a.total).padStart(3)} apps  ${String(a.advanceRate).padStart(3)}% advance${flag}`);

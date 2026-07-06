@@ -151,3 +151,23 @@ export function parseTrackerRow(line, colmap = LEGACY_COLMAP) {
   if (colmap.via != null) row.via = at('via');
   return row;
 }
+
+/**
+ * Unicode-aware key for Via (agency) comparison.
+ *
+ * normalizeCompany()-style keys strip everything outside [a-z0-9], so
+ * non-Latin agency names (リクルート, パーソル, …) all collapse to the same
+ * empty key — which made the #1596 cross-channel guard treat two different
+ * agencies as one channel and silently merge two real submissions. Keep
+ * letters and digits of any script instead; NFKC first so full-width/
+ * half-width variants compare equal.
+ *
+ * Shared by every Via consumer (merge-tracker dedup guard, analyze-patterns
+ * channel buckets) so agency identity can't drift between scripts.
+ *
+ * @param {string} name - Raw Via cell or via= tag value.
+ * @returns {string} Case-folded, punctuation-free, script-preserving key.
+ */
+export function normalizeVia(name) {
+  return String(name).normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+}
