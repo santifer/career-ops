@@ -1,4 +1,4 @@
-# Mode: email — Application Email Drafts
+# Mod: email — Başvuru E-posta Taslakları
 
 Adayın (candidate) e-posta istemcisine yapıştırabileceği resmi bir başvuru e-postası gövdesi (body) oluştur. Bu mod; doğrudan başvuru e-postaları, CV eklenmiş işe alım uzmanı (recruiter) takip e-postaları (follow-up), referans talebi e-postaları ve soğuk başvuru e-postaları (cold application emails) içindir.
 
@@ -11,7 +11,7 @@ Adayın (candidate) e-posta istemcisine yapıştırabileceği resmi bir başvuru
 
 ---
 
-## Invocation
+## Çağrı (Invocation)
 
 Desteklenen girdiler (inputs):
 
@@ -31,7 +31,7 @@ Desteklenen girdiler (inputs):
 
 ---
 
-## Step 1 — Load Context
+## Adım 1 — Bağlamı Yükle
 
 Şunları oku:
 - `config/profile.yml`
@@ -47,7 +47,7 @@ Desteklenen girdiler (inputs):
 
 `voice-dna.md` dosyasını yalnızca bir yazım bariyeri/kılavuzu (writing guardrail) olarak kullan. Asla somut iddialar eklememelidir.
 
-### Profile fields
+### Profil alanları
 
 Mevcut olduğunda bu isteğe bağlı (optional) alanları kullan:
 - `candidate.full_name`
@@ -70,7 +70,7 @@ Eğer `candidate.wechat` yoksa WeChat'i atla (omit). Yeni bir tane uydurma.
 
 ---
 
-## Step 2 — Classify Email Type
+## Adım 2 — E-posta Türünü Sınıflandır
 
 Kullanıcının ifadelerinden veya bağlamdan üç varyanttan birini seç:
 
@@ -84,7 +84,7 @@ Eğer net değilse, `hr_application` varsayılanını kullan.
 
 ---
 
-## Step 3 — Extract Fit Points
+## Adım 3 — Uygunluk Noktalarını (Fit Points) Çıkar
 
 Rapordan/JD'den ve tek-gerçek-kaynak (source-of-truth) dosyalarından 2-3 uygunluk noktası (fit points) seç:
 
@@ -101,7 +101,7 @@ Eğer raporun bir puanı (score) varsa:
 
 ---
 
-## Step 4 — Attachment Checklist
+## Adım 4 — Eklenti (Attachment) Kontrol Listesi
 
 Taslaktan önce, şunu çıktı ver:
 
@@ -118,7 +118,7 @@ Kurallar:
 
 ---
 
-## Step 5 — Draft Structure
+## Adım 5 — Taslak Yapısı
 
 Daima şunu çıktı ver:
 
@@ -128,7 +128,7 @@ Konu (Subject): {subject}
 {email body}
 ```
 
-### HR application structure
+### İK başvuru yapısı
 
 1. Selamlama (Greeting)
 2. Rol niyeti ve eklenti (attachment) cümlesi
@@ -136,7 +136,7 @@ Konu (Subject): {subject}
 4. JD dilini kullanarak bu rolün neden alakalı olduğu
 5. İletişim bloğu ve imza
 
-### Referral request structure
+### Referans talebi yapısı
 
 1. Selamlama (Greeting)
 2. Tek satırlık bağlam: rol ve şirket
@@ -144,7 +144,7 @@ Konu (Subject): {subject}
 4. Düşük baskılı istek (Low-pressure ask): "Eğer bu uygun görünüyorsa, bana referans olmanız veya beni doğru kişiye yönlendirmeniz mümkün olur mu?"
 5. İletişim bloğu ve imza
 
-### Cold application structure
+### Soğuk başvuru yapısı
 
 1. Selamlama (Greeting)
 2. Önce değer teklifi (Value proposition first), "İş arıyorum" değil
@@ -154,7 +154,7 @@ Konu (Subject): {subject}
 
 ---
 
-## Language
+## Dil (Language)
 
 - JD/rapor diliyle eşleştir.
 - Eğer JD Çince ise, Basitleştirilmiş Çince (Simplified Chinese) kullan.
@@ -163,7 +163,7 @@ Konu (Subject): {subject}
 
 ---
 
-## Contact Block
+## İletişim Bloğu (Contact Block)
 
 Varsayılan davranış (Default behavior):
 - Doğrudan başvuru e-postaları için iletişim bloğunu dahil et.
@@ -204,7 +204,7 @@ Eğer `contact_preferences.note` ayarlanmışsa, genel geçer bir ifade yerine o
 
 ---
 
-## Style Rules
+## Stil Kuralları (Style Rules)
 
 - Kurumsal dil (Corporate-speak) yok.
 - "Passionate about", "perfect fit", "unique opportunity" veya muğlak övgüler (vague praise) yok.
@@ -216,7 +216,7 @@ Eğer `contact_preferences.note` ayarlanmışsa, genel geçer bir ifade yerine o
 
 ---
 
-## Output
+## Çıktı (Output)
 
 Şu sırayla (order) döndür (Return):
 

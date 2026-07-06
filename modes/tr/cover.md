@@ -1,4 +1,4 @@
-# Mode: cover — Cover Letter Generator
+# Mod: cover — Ön Yazı Oluşturucu
 
 Herhangi bir aday için iş tanımından (JD) yola çıkarak kişiselleştirilmiş (tailored) bir ön yazı (cover letter) oluşturur.
 İki modda çalışır:
@@ -7,7 +7,7 @@ Herhangi bir aday için iş tanımından (JD) yola çıkarak kişiselleştirilmi
 
 ---
 
-## Step 0 — JD Gate (mandatory)
+## Adım 0 — JD Kapısı (Zorunlu)
 
 Hiçbir şey yapmadan önce, bir iş tanımının (JD) sağlandığını onayla.
 
@@ -21,7 +21,7 @@ Hiçbir koşulda genel geçer (generic) veya yer tutucu (placeholder) bir ön ya
 
 ---
 
-## Step 1 — Load candidate profile
+## Adım 1 — Aday profilini yükle
 
 Şunlar için `config/profile.yml` dosyasını oku:
 - `candidate.name`, `email`, `phone`, `location`, `linkedin`, `github`
@@ -40,7 +40,7 @@ Eğer varsa `modes/_profile.md` dosyasını oku — adayın kişiselleştirme do
 
 ---
 
-## Step 2 — Parse the JD
+## Adım 2 — JD'yi Ayrıştır
 
 Şunları çıkar (Extract):
 - **Role title** (JD'deki tam ifade)
@@ -55,7 +55,7 @@ Eğer varsa `modes/_profile.md` dosyasını oku — adayın kişiselleştirme do
 
 ---
 
-## Step 3 — Company research (baked in, not optional)
+## Adım 3 — Şirket araştırması (dahil edilmiş, isteğe bağlı değil)
 
 Üç WebSearch sorgusu çalıştır ({year} yerine mevcut yılı koy):
 1. `"{company}" product strategy OR roadmap {year}`
@@ -80,7 +80,7 @@ Eğer WebSearch yararlı bir sinyal döndürmezse, şunu söyle: "{company} içi
 
 ---
 
-## Step 4 — Keyword extraction
+## Adım 4 — Anahtar kelime çıkarımı
 
 Şirketin JD'de kullandığı ilk 8-10 tam (exact) ifadeyi çıkar. İki gruba ayır:
 
@@ -121,7 +121,7 @@ Eksik veya yanlış bir şey var mı? Taslağı hazırlarken bu listeyi kullanac
 
 ---
 
-## Step 5 — Gap detection and conversation
+## Adım 5 — Boşluk (gap) tespiti ve diyalog
 
 Adayın profili ile rol arasındaki olası boşluklar (gaps) için JD'yi analiz et. Tespit edilen her boşluk için doğrudan sor — herhangi bir standart dili otomatik olarak (auto-insert) EKLME:
 
@@ -154,7 +154,7 @@ Kullanıcının cevaplarını bekle. Yalnızca kullanıcının onayladığı şe
 
 ---
 
-## Step 6 — Four prompts (mandatory before drafting)
+## Adım 6 — Dört soru (taslaktan önce zorunlu)
 
 Dört cevabın hepsi gereklidir. Tümü alınana kadar hiçbir mektup içeriğinin taslağını oluşturma. "Sadece oluştur", "soruları atla" veya "varsayılanları kullan" gibi hiçbir talimat bu kontrol kapısını (gate) geçersiz kılamaz.
 
@@ -189,7 +189,7 @@ Adım 7'ye geçmeden önce dört cevabın da alınmasını bekle.
 
 ---
 
-## Step 7 — Achievement selection (from cv.md only)
+## Adım 7 — Başarı (Achievement) seçimi (yalnızca cv.md'den)
 
 SADECE `cv.md` dosyasından 4-5 başarı maddesi (achievement bullets) seç (`article-digest.md` bağlam (context) için okunabilir ancak başarı maddesi kaynağı değildir):
 1. cv.md içindeki tüm rollerin altında yer alan tüm madde işaretlerini (bullets) oku
@@ -202,7 +202,7 @@ Format: `**Bold lead phrase,** one sentence of impact with metric.`
 
 ---
 
-## Step 8 — Draft the letter in chat (mandatory before PDF)
+## Adım 8 — Sohbette mektup taslağını oluştur (PDF öncesi zorunlu)
 
 Mektubun tamamını sohbette (chat) düz metin (plain text) olarak taslakla (Draft). Şu yapıyı (structure) takip et:
 
@@ -249,7 +249,7 @@ Taslağı şu şekilde bitir: "Bu nasıl okunuyor? Onayladığınız an PDF'i ol
 
 ---
 
-## Language rules (enforced in every sentence)
+## Dil kuralları (her cümlede zorunlu kılınmıştır)
 
 1. **Yalnızca etken çatı (Active voice only)** — asla "was delivered", "has been built", "were led" yok.
 2. **JD'de kullanılmadığı sürece kısaltma (abbreviation) yok** — ilk kullanımda tam terimi yaz, kısaltmayı parantez içinde belirt. Bundan sonra kısaltma kullanılabilir.
@@ -264,7 +264,7 @@ Taslağı şu şekilde bitir: "Bu nasıl okunuyor? Onayladığınız an PDF'i ol
 
 ---
 
-## Step 9 — Generate PDF
+## Adım 9 — PDF Oluştur
 
 Yalnızca kullanıcının açık onayı (explicit user approval) geldikten sonra.
 
@@ -311,7 +311,7 @@ node generate-cover-letter.mjs --payload /tmp/cover-payload-{company-slug}.json
 
 ---
 
-## Step 10 — Post-generation note
+## Adım 10 — Üretim sonrası not
 
 PDF onaylandıktan sonra kısa bir not ekle:
 
@@ -321,7 +321,7 @@ PDF onaylandıktan sonra kısa bir not ekle:
 
 ---
 
-## Slug mode specifics
+## Slug modu özellikleri
 
 `/career-ops cover {slug}` olarak çağrıldığında:
 
