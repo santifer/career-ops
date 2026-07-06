@@ -41,6 +41,7 @@ const ALL_PATHS = [...SYSTEM_PATHS, ...USER_PATHS];
 
 const EXCLUDES = [
   '.coderabbit.yaml',
+  '.editorconfig',
   '.envrc',
   '.gitignore',
   '.npmignore',

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { atomicWrite } from "@/lib/core/safe-write";
+import { parseApplications } from "@/lib/tracker-table.mjs";
 
 /**
  * Resolve the career-ops "home" — the directory holding the user's sibling
@@ -112,77 +113,16 @@ export type Application = {
 };
 
 /**
- * Header text (lowercased) → Application field. Mirrors HEADER_ALIASES in
- * tracker-parse.mjs (#954) so the web read path tolerates the same customized
- * layouts (e.g. an inserted Location column) as the Node tracker tooling.
- */
-const TRACKER_ALIASES: Record<string, keyof Application | "location"> = {
-  "#": "n", num: "n", date: "date", company: "company", empresa: "company",
-  via: "via", role: "role", puesto: "role", location: "location", score: "score",
-  status: "status", pdf: "pdf", report: "report", notes: "notes",
-};
-
-/** Split a tracker line into trimmed cells (outer pipes removed). */
-function trackerCells(line: string): string[] {
-  return line.split("|").slice(1, -1).map((c) => c.trim());
-}
-
-/**
- * Pre-scan for the header row and build the column map, exactly like
- * detectColumns in tracker-parse.mjs: ANY row whose cells resolve the essential
- * columns counts as the header (so alias headers like "Num" work too, not just
- * "#"). Returns null when no recognizable header exists.
- */
-function detectColumnMap(lines: string[]): Partial<Record<keyof Application | "location", number>> | null {
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line.startsWith("|")) continue;
-    const cells = trackerCells(line);
-    const m: Partial<Record<keyof Application | "location", number>> = {};
-    cells.forEach((c, i) => {
-      const k = TRACKER_ALIASES[c.toLowerCase()];
-      if (k) m[k] = i; // unconditional: last occurrence wins, same as detectColumns
-    });
-    if ((["n", "company", "role", "score", "status"] as const).every((k) => m[k] != null)) return m;
-  }
-  return null;
-}
-
-/**
  * Parse data/applications.md — the tracker table (source of truth).
- * Columns are mapped by header name; the legacy fixed order
- * (# | Date | Company | Role | Score | Status | PDF | Report | Notes)
- * is the fallback when no recognizable header row is present.
- * Rows without a numeric # cell (header, separator, stray pipes) are skipped,
- * mirroring parseTrackerRow in tracker-parse.mjs.
+ * The header-aware parsing lives in tracker-table.mjs, which resolves headers
+ * through the SAME alias table the Node tooling uses (tracker-aliases.json,
+ * exported by tracker-parse.mjs as HEADER_ALIASES) — one shared source, no
+ * web-side mirror to drift (#954, PR #1598 review).
  */
 export function readApplications(): Application[] {
   const md = read("data/applications.md");
   if (!md) return [];
-  const lines = md.split("\n");
-  const map = detectColumnMap(lines);
-  const rows: Application[] = [];
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line.startsWith("|")) continue;
-    const cells = trackerCells(line);
-    if (cells.length < 8) continue;
-    if (map) {
-      const at = (k: keyof Application) => cells[map[k] as number] ?? "";
-      if (!/^\d+$/.test(at("n"))) continue; // header / separator / malformed
-      rows.push({
-        n: at("n"), date: at("date"), company: at("company"), via: at("via"), role: at("role"),
-        score: at("score"), status: at("status"), pdf: at("pdf"), report: at("report"),
-        notes: at("notes"),
-      });
-    } else {
-      // Legacy fixed order; tolerate the 8-cell variant where Notes is absent.
-      if (!/^\d+$/.test(cells[0])) continue; // header / separator / malformed
-      const [n, date, company, role, score, status, pdf, report, ...rest] = cells;
-      rows.push({ n, date, company, via: "", role, score, status, pdf, report, notes: rest.join(" | ") });
-    }
-  }
-  return rows;
+  return parseApplications(md, careerOpsRoot());
 }
 
 /**
