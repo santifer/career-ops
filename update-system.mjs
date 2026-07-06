@@ -163,6 +163,8 @@ const SYSTEM_PATHS = [
   'verify-portals.mjs',
   'updater-migration-tests.mjs',
   'validate-system-paths-coverage.mjs',
+  'reply-matcher.mjs',
+  'reply-matcher.test.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/README.md',
