@@ -82,12 +82,12 @@ async function checkPlaywright() {
   }
 }
 
-// The browser tools (`browser_navigate` / `browser_snapshot`) that scan / pipeline /
-// apply rely on are provided by the Playwright MCP server, usually registered through a
-// project-level MCP config (for example `.mcp.json`, `.claude/settings.json`, or
-// `.claude/settings.local.json`). When no common config is detected, SPA job boards can
-// silently return empty or stale content (#522), so doctor surfaces a non-fatal warning
-// instead of letting it fail invisibly.
+// Interactive browser tools (`browser_navigate` / `browser_snapshot`) for SPA discovery
+// and JD extraction are provided by the Playwright MCP server, usually registered
+// through a project-level MCP config (for example `.mcp.json`,
+// `.claude/settings.json`, or `.claude/settings.local.json`). Repository-local
+// liveness checks do not require MCP: check-liveness.mjs uses ATS APIs and falls back
+// to its own Playwright browser. Doctor keeps this warning non-fatal.
 const PLAYWRIGHT_MCP_WARNING = 'Playwright MCP tools not detected';
 
 function playwrightMcpConfigured(root) {
@@ -117,9 +117,10 @@ function checkPlaywrightMcp(root) {
     warn: true,
     label: PLAYWRIGHT_MCP_WARNING,
     fix: [
-      'Browser-driven JD fetching and liveness checks (scan / pipeline / apply) need the',
+      'Interactive browser tools for SPA career-page discovery and JD extraction need a',
       'Playwright MCP server. No project-level MCP config was detected in `.mcp.json`',
-      'or `.claude/settings*.json`, so SPA job boards may return empty or stale content.',
+      'or `.claude/settings*.json`. Use `node check-liveness.mjs <url>` for repository-local',
+      'verification; check-liveness.mjs remains available via ATS APIs and local Playwright.',
       'Tracking: https://github.com/santifer/career-ops/issues/506',
     ],
   };

@@ -309,12 +309,14 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ## Offer Verification -- MANDATORY
 
-**NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Playwright:
-1. `browser_navigate` to the URL
-2. `browser_snapshot` to read content
-3. Only footer/navbar without JD = closed. Title + description + Apply = active.
+Verify a posting is still live before applying, using the cheapest conclusive check:
 
-**Exception for batch workers (headless mode):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
+1. **Standard liveness gate:** run `node check-liveness.mjs <url>`. The checker uses a public ATS API when supported and falls back to repository-local Playwright when needed.
+2. **Interactive inspection:** when browser tools are available and JD content must be inspected, use `browser_navigate` and `browser_snapshot`. Only footer/navbar without JD means closed; title + description + Apply means active.
+
+**NEVER decide liveness from a bare WebSearch/WebFetch snippet.** Accept only a conclusive checker or interactive-browser verdict. Keep `uncertain` results unconfirmed; never reinterpret them as expired.
+
+**Exception for batch workers (headless mode):** The ATS API rung still works. If a non-ATS page cannot launch local Playwright, use WebFetch only to extract content and mark the report header with `**Verification:** unconfirmed (batch mode)`.
 
 ---
 

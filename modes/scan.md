@@ -229,21 +229,23 @@ Levels are additive — they are executed in order, and results are merged and d
 
 7.5. **Verify Liveness of WebSearch Results (Level 3)** — BEFORE adding to pipeline:
 
-   WebSearch results can be outdated (Google caches results for weeks or months). To avoid evaluating expired offers, verify every new URL coming from Level 3 using Playwright. Levels 1 and 2 are inherently real-time and do not require this verification.
+   WebSearch results can be outdated. Verify every new Level 3 URL with the repository-local liveness gate. Levels 1 and 2 are inherently real-time and do not require this verification.
 
-   For each new Level 3 URL (sequential — NEVER parallel Playwright):
-   a. `browser_navigate` to the URL.
-   b. `browser_snapshot` to read the content.
-   c. Classify:
-      - **Active**: visible job title + role description + visible Apply/Submit/Apply Now control inside the main content area. Do not count generic header/navbar/footer text.
-      - **Expired** (any of these signals):
-        - Final URL contains `?error=true` (Greenhouse redirects here when an offer is closed).
-        - Page contains: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found".
-        - Only navbar and footer are visible, with no JD content (content < ~300 characters).
-   d. If expired: record in `scan-history.tsv` with status `skipped_expired` and discard.
-   e. If active: continue to step 8.
+   For each new Level 3 URL, sequentially run:
 
-   **Do not interrupt the entire scan if a single URL fails.** If `browser_navigate` errors (timeout, 403, etc.), mark as `skipped_expired` and continue with the next one.
+   ```bash
+   node check-liveness.mjs <url>
+   ```
+
+   The checker tries a public ATS API first and launches local Playwright only when the API is unavailable or inconclusive.
+
+   - **Active:** continue to step 8.
+   - **Expired:** record `skipped_expired` in `scan-history.tsv` and discard.
+   - **Uncertain or checker failure:** record `skipped_unconfirmed`, keep the URL out of `pipeline.md`, report it for later confirmation, and never reinterpret `uncertain` as expired.
+
+   Direct `browser_navigate` + `browser_snapshot` remains valid when interactive browser tools are available and the agent needs to inspect the JD. It is not required solely for liveness.
+
+   If the managed sandbox blocks Chromium launch, request approval for the narrowly scoped `node check-liveness.mjs` command and retry. Do not interrupt the entire scan when one URL remains unconfirmed.
 
 8. **For each new verified offer that passes filters**:
    a. Add to the `pipeline.md` "Pending" section: `- [ ] {url} | {company} | {title}`
@@ -252,6 +254,7 @@ Levels are additive — they are executed in order, and results are merged and d
 9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`.
 10. **Duplicate offers**: record with status `skipped_dup`.
 11. **Expired offers (Level 3)**: record with status `skipped_expired`.
+12. **Unconfirmed offers (Level 3)**: record with status `skipped_unconfirmed`.
 
 ## Extraction of Title and Company from WebSearch Results
 
