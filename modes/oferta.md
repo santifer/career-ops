@@ -162,6 +162,25 @@ Analyze the job posting for signals that indicate whether this is a real, active
 - Does the role make sense for this company's business?
 - Is the seniority level one that legitimately takes longer to fill?
 
+**6. Employment Classification Risk** (from JD text; jurisdiction from `config/profile.yml` → `location.country`):
+
+Every jurisdiction splits work into two buckets under different names: an "employment contract" carrying statutory protections and benefits, vs. a "service/labour/consulting contract" that doesn't — even when the day-to-day work looks identical from the outside. Candidates routinely can't tell which one a JD is offering until tax time or until a benefit they assumed they had turns out not to exist. Check the JD text for jurisdiction-specific terms:
+- **Canada:** "T4A", "independent contractor", "self-employed", "invoice for services"
+- **US:** "1099", "independent contractor", "W-2 not provided"
+- **UK:** "self-employed", "umbrella company", "outside IR35" / "inside IR35"
+- **Other jurisdictions:** "labour contract" vs "employment contract" phrasing, "service agreement", "consulting agreement" (e.g., 劳务合同 vs 劳动合同 in China)
+
+Plus jurisdiction-agnostic structural signals:
+- "Contract position" combined with **absence** of benefits language, vacation/PTO mention, a defined end date, or standard employment-standards phrasing
+- No mention of statutory deductions/withholding where a fixed-term "contract" might otherwise imply a fixed-term *employee*
+- Role explicitly asks the candidate to "invoice" or operate as a "consultant"/"freelancer" rather than being "hired"/"employed"
+
+If any of these are present, append a short, non-alarmist note to the report (this is descriptive, never prescriptive — never tell the user to refuse a role):
+
+> ⚠️ **Employment classification signal:** This posting uses language associated with contractor/services status rather than standard employee status — e.g. "{specific phrase found}". If eligibility for programs like CEC/PR depends on employee status, or if you want statutory benefits, deductions, and protections, confirm classification directly with the employer before accepting.
+
+This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
+
 ### Output format:
 
 **Assessment:** One of three tiers:
