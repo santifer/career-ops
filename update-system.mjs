@@ -226,6 +226,10 @@ const SYSTEM_PATHS = [
   'plugin-audit.mjs',
   'validate-plugin-registry.mjs',
   'config/plugins.example.yml',
+  'eslint.config.mjs',
+  'fix-slugs.mjs',
+  'verify-posting.mjs',
+  'provider-registry.mjs',
 ];
 
 const BOOTSTRAP_PATHS = [

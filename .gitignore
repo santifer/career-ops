@@ -104,3 +104,10 @@ package-lock.json
 
 # Planning (local scratchpad)
 plan/
+
+# Local scratch output and personal tooling (not part of career-ops)
+tmp/
+cv-*-temp.html
+repomix-output.md
+repomix.config.json
+sajithkumarswaminathan-design/
