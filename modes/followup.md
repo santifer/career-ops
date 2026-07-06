@@ -58,6 +58,8 @@ For each **overdue** or **urgent** entry only:
 2. Read `cv.md` for proof points
 3. Read `config/profile.yml` for candidate name and identity
 
+**Agency-mediated applications (#1596):** when the entry's `via` field is set and not `—`, the chase target is the **agency contact** (recruiter named in the notes/contacts), not the company — the recruiter owns the client relationship and has their own incentive to respond. Reference the role by the agency's framing; if the end employer is still unknown (company `?`), ask the recruiter for the client name as part of the follow-up — that reveal is what unlocks cross-channel dedup in the tracker.
+
 ### Email Follow-up Framework (first follow-up, followupCount == 0)
 
 Generate a 3-4 sentence email:
