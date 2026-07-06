@@ -21,7 +21,7 @@
  */
 
 import { execFileSync } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, chmodSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
@@ -211,6 +211,40 @@ const TRACKER_10 = `# Applications Tracker
   } else {
     fail('note: pipe not sanitized');
   }
+  // A literal newline would split the row into two lines and break the table:
+  // the stored row must stay a single line with the newline collapsed.
+  runSetStatus(['2', 'Applied', '--note', 'first line\nsecond line'], sb);
+  const after4 = readTracker(sb);
+  const row2 = after4.split('\n').filter(l => /^\| 2 \|/.test(l));
+  if (row2.length === 1 && row2[0].includes('first line second line')) {
+    pass('note: literal newline sanitized to a single table row');
+  } else {
+    fail(`note: newline broke the row\n${after4}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 7b. Note dedup is delimiter-aware, not substring ────────────
+{
+  const sb = makeSandbox(TRACKER_9);
+  // Row 1 notes: "strong infra fit". A note that is a mere substring of an
+  // existing entry is NOT a duplicate — only whole "; "-delimited entries
+  // (or the entire field) count.
+  const r = runSetStatus(['1', 'Applied', '--note', 'infra'], sb);
+  if (r.code === 0 && /\| strong infra fit; infra \|/.test(readTracker(sb))) {
+    pass('note-dedup: substring of an existing entry still appends');
+  } else {
+    fail(`note-dedup: substring wrongly suppressed\n${readTracker(sb)}`);
+  }
+  // The exact same note re-added must still be suppressed. "infra" appears
+  // twice after the append (inside "infra fit" + the new entry); a duplicate
+  // append would make it three.
+  runSetStatus(['1', 'Applied', '--note', 'infra'], sb);
+  if ((readTracker(sb).match(/infra/g) || []).length === 2) {
+    pass('note-dedup: exact retry still idempotent');
+  } else {
+    fail(`note-dedup: exact retry duplicated\n${readTracker(sb)}`);
+  }
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
@@ -316,6 +350,53 @@ const TRACKER_10 = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── 13b. --note/--role must not eat a following flag as their value ─
+{
+  const sb = makeSandbox(TRACKER_9);
+  const before = readTracker(sb);
+  // "--note --dry-run" once consumed "--dry-run" as the note text — silently
+  // disabling dry-run and turning a preview into a real write. It must be a
+  // usage error, and nothing may be written.
+  const r = runSetStatus(['2', 'Applied', '--note', '--dry-run'], sb);
+  if (r.code === 1 && readTracker(sb) === before) {
+    pass('flag-eating: --note followed by a flag exits 1 without writing');
+  } else {
+    fail(`flag-eating: code=${r.code} (want 1) written=${readTracker(sb) !== before}\n${r.stdout}${r.stderr}`);
+  }
+  // Missing value at the end of argv is the same usage error.
+  const r2 = runSetStatus(['2', 'Applied', '--role'], sb);
+  if (r2.code === 1 && /--role/.test(r2.stderr) && readTracker(sb) === before) {
+    pass('flag-eating: trailing --role without value exits 1');
+  } else {
+    fail(`flag-eating trailing: code=${r2.code}\n${r2.stdout}${r2.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 13c. Usage errors honor --json with a structured payload ────
+{
+  const sb = makeSandbox(TRACKER_9);
+  const r = runSetStatus(['--json'], sb);
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout); } catch {}
+  if (r.code === 1 && parsed && parsed.code === 'usage' && typeof parsed.error === 'string') {
+    pass('json usage: structured usage-error payload on stdout');
+  } else {
+    fail(`json usage: code=${r.code} stdout=${r.stdout}\n${r.stderr}`);
+  }
+  // failUsage can fire mid-parse ("--note --json" fails before --json is
+  // reached), so JSON mode must be detected from the raw argv.
+  const r2 = runSetStatus(['2', 'Applied', '--note', '--json'], sb);
+  let parsed2 = null;
+  try { parsed2 = JSON.parse(r2.stdout); } catch {}
+  if (r2.code === 1 && parsed2 && parsed2.code === 'usage') {
+    pass('json usage: --json detected even when parsing fails mid-argv');
+  } else {
+    fail(`json usage mid-parse: code=${r2.code} stdout=${r2.stdout}\n${r2.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 // ── 14. Lock timeout: structured exit 4, JSON error, no write ──
 {
   const sb = makeSandbox(TRACKER_9);
@@ -379,6 +460,44 @@ const TRACKER_10 = `# Applications Tracker
     fail(`recover-guard: acquisition failed — orphaned guard blocked recovery (${e.message})`);
   }
   rmSync(dir, { recursive: true, force: true });
+}
+
+// ── 16. Write failure surfaces as a structured error, not a stack ─
+{
+  if (process.platform !== 'win32' && process.getuid?.() === 0) {
+    pass('write-failure: skipped (running as root — directory permissions are not enforced)');
+  } else {
+    const dir = mkdtempSync(join(tmpdir(), 'co-setstatus-wf-'));
+    const roDir = join(dir, 'ro');
+    mkdirSync(roDir);
+    const tracker = join(roDir, 'applications.md');
+    writeFileSync(tracker, TRACKER_9);
+    const lock = join(dir, 'career-ops-merge-tracker-wf.lock');
+    // Make the tracker's directory readable but unwritable, so the atomic
+    // temp-file write fails after a successful read. On Windows, directory
+    // read-only bits don't block file creation — deny write-data/append-data
+    // for Everyone (*S-1-1-0) via icacls instead.
+    const denyWrite = () => process.platform === 'win32'
+      ? execFileSync('icacls', [roDir, '/deny', '*S-1-1-0:(WD,AD)'])
+      : chmodSync(roDir, 0o555);
+    const restore = () => process.platform === 'win32'
+      ? execFileSync('icacls', [roDir, '/remove:d', '*S-1-1-0'])
+      : chmodSync(roDir, 0o755);
+    denyWrite();
+    try {
+      const r = runSetStatus(['2', 'Applied', '--json'], { tracker, lock });
+      let parsed = null;
+      try { parsed = JSON.parse(r.stdout); } catch {}
+      if (r.code === 1 && parsed && parsed.code === 'write-failure') {
+        pass('write-failure: structured JSON error instead of a raw stack');
+      } else {
+        fail(`write-failure: code=${r.code} json=${parsed?.code}\n${r.stdout}${r.stderr}`);
+      }
+    } finally {
+      restore();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -27,7 +27,7 @@
  * tracker round-trips untouched.
  *
  * Exit codes: 0 success (including no-op re-runs) · 1 usage error,
- * non-canonical state, unreadable states.yml, or non-retryable lock failure ·
+ * non-canonical state, unreadable states.yml, or non-retryable lock/write failure ·
  * 2 row not found or unreadable tracker · 3 ambiguous company match ·
  * 4 tracker lock timeout (busy — retry later).
  *
@@ -72,8 +72,16 @@ const flags = { note: null, role: null, dryRun: false, json: false };
 
 for (let i = 0; i < rawArgs.length; i++) {
   const a = rawArgs[i];
-  if (a === '--note') { flags.note = rawArgs[++i] ?? ''; }
-  else if (a === '--role') { flags.role = rawArgs[++i] ?? ''; }
+  if (a === '--note' || a === '--role') {
+    // Never consume a following flag as the value: "--note --dry-run" would
+    // silently disable dry-run and turn a preview into a real write.
+    const value = rawArgs[i + 1];
+    if (value === undefined || value.startsWith('--')) {
+      failUsage(`Missing value for ${a}`);
+    }
+    flags[a === '--note' ? 'note' : 'role'] = value;
+    i++;
+  }
   else if (a === '--dry-run') { flags.dryRun = true; }
   else if (a === '--json') { flags.json = true; }
   else if (a.startsWith('--')) { failUsage(`Unknown flag: ${a}`); }
@@ -109,12 +117,23 @@ function failWith(exitCode, code, message, extra = {}) {
 /**
  * Print usage (plus an optional specific complaint) and exit 1.
  *
+ * With --json a structured usage-error payload goes to stdout (same shape as
+ * failWith) so machine callers always parse one stream. failUsage can fire
+ * mid-argv-parse — before flags.json is settled — so JSON mode is detected
+ * from the raw argv directly.
+ *
  * @param {string|null} message - What was wrong with the invocation, if known.
  * @returns {never}
  */
 function failUsage(message) {
-  if (message) console.error(`❌ ${message}\n`);
-  console.error(USAGE);
+  const msg = message ?? 'Expected 2 arguments: <report#|company> <state>';
+  if (rawArgs.includes('--json')) {
+    console.log(JSON.stringify({ error: msg, code: 'usage' }));
+    console.error(`❌ ${msg}`);
+  } else {
+    if (message) console.error(`❌ ${message}\n`);
+    console.error(USAGE);
+  }
   process.exit(EXIT_USAGE);
 }
 
@@ -243,9 +262,16 @@ if (note) {
     failWith(EXIT_USAGE, 'no-notes-column', 'Tracker has no Notes column — cannot apply --note');
   }
   const existing = parts[colmap.notes] ?? '';
-  // Substring check keeps retries idempotent even when the note itself
-  // contains "; " — a segment-wise comparison would re-append it forever.
-  const hasNote = existing.includes(note);
+  // Delimiter-aware idempotency: the note counts as already present only when
+  // it appears as a whole "; "-delimited entry (or as the entire field) — a
+  // bare substring of a longer entry ("sent" inside "sent CV") must not
+  // suppress a genuinely new note. Matching the full note text at entry
+  // boundaries (instead of splitting the field into segments) keeps retries
+  // idempotent even when the note itself contains "; ".
+  const hasNote = existing === note
+    || existing.startsWith(`${note}; `)
+    || existing.endsWith(`; ${note}`)
+    || existing.includes(`; ${note}; `);
   if (!hasNote) {
     parts[colmap.notes] = existing && existing !== '—' && existing !== '-' ? `${existing}; ${note}` : note;
     noteChanged = true;
@@ -256,7 +282,13 @@ const changed = statusChanged || noteChanged;
 
 if (changed && !flags.dryRun) {
   lines[target.lineIdx] = rebuildRow(parts);
-  writeFileAtomic(APPS_FILE, lines.join('\n'));
+  try {
+    writeFileAtomic(APPS_FILE, lines.join('\n'));
+  } catch (err) {
+    // Same structured error contract as every other failure path — a raw
+    // stack trace on stdout/stderr would break --json consumers.
+    failWith(EXIT_USAGE, 'write-failure', `Cannot write tracker at ${APPS_FILE}: ${err.message}`);
+  }
 }
 lock?.release();
 
