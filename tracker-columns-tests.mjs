@@ -314,5 +314,91 @@ const HEADER_VIA = `# Applications Tracker
   }
 }
 
+// ── Test 9: TSV `via=` tagged field merges into the Via column ──────────────
+// The batch TSV is header-less and positional; Via travels as a tagged extra
+// field (`via=Hays`) instead of another positional slot, so a stale writer
+// omitting the empty-location pad can't silently shift columns.
+{
+  const TSV_VIA = '3\t2026-02-02\t?\tPlatform Engineer\tApplied\t4.1/5\t✅\t—\tblind agency listing\tvia=Hays\n';
+  const sb = makeSandbox(HEADER_VIA, { '3-blind.tsv': TSV_VIA });
+  const res = runScript('merge-tracker.mjs', [], sb);
+  const row = dataRows(sb.tracker).find(l => l.includes('Platform Engineer'));
+  const cells = row ? row.split('|').map(s => s.trim()) : [];
+  // cells: ['', num, date, company, via, role, score, status, pdf, report, notes, '']
+  if (res.code === 0 && cells[3] === '?' && cells[4] === 'Hays' && cells[6] === '4.1/5' && cells[7] === 'Applied') {
+    pass('merge: via= tag lands in the Via column, ? company preserved');
+  } else {
+    fail(`merge: via= tag (code ${res.code}) row: ${row}\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 10: ambiguous TSV extras are rejected loudly, never merged ─────────
+{
+  const TWO_UNTAGGED = '4\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tSingapore\tHays\n';
+  const TWO_TAGS = '5\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tvia=Hays\tvia=Randstad\n';
+  const sb = makeSandbox(HEADER_VIA, { '4-a.tsv': TWO_UNTAGGED, '5-b.tsv': TWO_TAGS });
+  const res = runScript('merge-tracker.mjs', [], sb);
+  const rows = dataRows(sb.tracker);
+  // Rejection is loud on stderr; runScript only captures stdout on success, so
+  // assert via the merge summary (2 skipped) plus the tracker staying clean.
+  if (!rows.some(l => l.includes('Globex')) && /2 skipped/.test(res.stdout)) {
+    pass('merge: ambiguous extras (two untagged / duplicate via=) rejected, not merged');
+  } else {
+    fail(`merge: ambiguous extras — rows: ${rows.length}\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 11: cross-channel guard — ? rows never fuzzy-merge across agencies ─
+// Two blind listings for the same role via DIFFERENT agencies are distinct
+// submissions (#1596): merging them silently is exactly the double-submission
+// hazard the Via column exists to surface. Same agency + same role IS the
+// re-blast duplicate and must still merge/update.
+{
+  const OTHER_AGENCY = '6\t2026-02-02\t?\tData Engineer\tApplied\t4.5/5\t✅\t—\tsame role, other agency\tvia=Randstad\n';
+  const SAME_AGENCY = '7\t2026-02-03\t?\tData Engineer\tApplied\t4.6/5\t✅\t—\tre-blast, higher score\tvia=Hays\n';
+  const sb = makeSandbox(HEADER_VIA, { '6-other.tsv': OTHER_AGENCY });
+  const res1 = runScript('merge-tracker.mjs', [], sb);
+  const rowsAfter1 = dataRows(sb.tracker).filter(l => l.includes('Data Engineer'));
+  if (res1.code === 0 && rowsAfter1.length === 2 && rowsAfter1.some(l => l.includes('Randstad'))) {
+    pass('merge: ? row via a different agency added as a NEW row (no cross-channel merge)');
+  } else {
+    fail(`merge: cross-channel guard — ${rowsAfter1.length} Data Engineer rows\n${res1.stdout}`);
+  }
+  writeFileSync(join(sb.additions, '7-same.tsv'), SAME_AGENCY);
+  const res2 = runScript('merge-tracker.mjs', [], sb);
+  const hays = dataRows(sb.tracker).filter(l => l.includes('Hays') && l.includes('Data Engineer'));
+  if (res2.code === 0 && hays.length === 1 && hays[0].includes('4.6/5')) {
+    pass('merge: same-agency re-blast updates the existing ? row (Via preserved)');
+  } else {
+    fail(`merge: same-agency update — ${hays.length} Hays rows: ${hays.join(' / ')}\n${res2.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 12: --migrate-via inserts the column, idempotently ─────────────────
+{
+  const sb = makeSandbox(HEADER_9);
+  const first = runScript('merge-tracker.mjs', ['--migrate-via'], sb);
+  const content = readFileSync(sb.tracker, 'utf-8');
+  const header = content.split('\n').find(l => l.includes('Company'));
+  const seed = content.split('\n').find(l => l.includes('Acme'));
+  const headCells = header ? header.split('|').map(s => s.trim()) : [];
+  const seedCells = seed ? seed.split('|').map(s => s.trim()) : [];
+  if (first.code === 0 && headCells[4] === 'Via' && headCells[3] === 'Company' && seedCells[4] === '—' && seedCells[6] === '4.0/5') {
+    pass('--migrate-via: Via column inserted after Company, rows padded with —');
+  } else {
+    fail(`--migrate-via: header "${header}" seed "${seed}"\n${first.stdout}`);
+  }
+  const second = runScript('merge-tracker.mjs', ['--migrate-via'], sb);
+  if (second.code === 0 && readFileSync(sb.tracker, 'utf-8') === content) {
+    pass('--migrate-via: idempotent (second run changes nothing)');
+  } else {
+    fail(`--migrate-via: not idempotent\n${second.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
