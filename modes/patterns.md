@@ -73,6 +73,8 @@ When you narrate this to the user:
 - Respect `sufficientSample`: if false, mention the vendor only as an observation
   ("too few to conclude"), never as a recommendation.
 - Always state coverage (`coveragePct`) so the user knows the stats cover a subset.
+- The `recommendations` array already contains the `high`-impact channel action
+  when one qualifies — surface it verbatim rather than inventing a stronger claim.
 
 ### `viaChannelAnalysis` — per-agency advance rate (#1596)
 
@@ -80,14 +82,19 @@ Groups **submitted** applications by their `Via` channel (the recruiter/agency
 firm; requires the optional Via column, #1596 — trackers without it produce
 empty buckets and nothing is claimed). `—` rows count as `direct`; the
 `breakdown` lists each agency with total/advanced/`advanceRate`/`sufficientSample`.
+Submitted rows with an *empty* Via cell (legacy tracker or blank cell, as
+opposed to the explicit `—` direct marker) belong to neither bucket and are
+counted in `unknownVia` — when it's non-zero, state it so the user knows the
+agency/direct split covers a subset of submissions.
 In an agency-mediated search the highest-leverage decision is which recruiter
 relationships to invest in — this shows which ones actually convert.
 
 Same causal-humility rules as `vendorAnalysis`: report channel yield, never a
 causal claim; respect `sufficientSample`; a strong agency is *"prioritize roles
 via X — it converts"*, a weak one is an observation, not an accusation.
-- The `recommendations` array already contains the `high`-impact channel action
-  when one qualifies — surface it verbatim rather than inventing a stronger claim.
+- The `recommendations` array already contains the `medium`-impact
+  best-converting-agency action when one qualifies — surface it verbatim rather
+  than inventing a stronger claim.
 
 ## Step 1b — Session-Content Targeting Signal (optional)
 
