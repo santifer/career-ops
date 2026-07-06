@@ -106,6 +106,11 @@ cv:
 #   # If false (or absent), lack of evidence defaults to a neutral 3/5.
 #   deprioritize_if_absent: true
 
+# Optional user-owned LaTeX CV for `/career-ops latex-tex` (opt-in tailoring in place).
+# cv.md remains the default source of truth for evaluations and auto-pipeline.
+# latex:
+#   source: resume.tex
+
 # ── Cover Letter Settings ──────────────────────────────────────────────────
 #
 # Used by `/career-ops cover` and the cover letter sub-flow in `/career-ops pdf`.

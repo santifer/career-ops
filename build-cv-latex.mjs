@@ -5,50 +5,11 @@ import { existsSync } from 'fs';
 import { resolve, dirname, basename, join } from 'path';
 import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
+import { escapeLatex, sanitizeUrl } from './lib/latex-escape.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_PATH = resolve(__dirname, 'templates', 'cv-template.tex');
 const PLACEHOLDER_RE = /\{\{[A-Z_]+\}\}/g;
-
-function escapeLatex(text, mode = 'text') {
-  if (typeof text !== 'string') return '';
-  if (mode === 'url') return text;
-  const out = [];
-  for (const ch of text) {
-    switch (ch) {
-      case '\\': out.push('\\textbackslash{}'); break;
-      case '{': case '}': out.push('\\' + ch); break;
-      case '^': out.push('\\textasciicircum{}'); break;
-      case '~': out.push('\\textasciitilde{}'); break;
-      case '_': out.push('\\_'); break;
-      case '&': out.push('\\&'); break;
-      case '%': out.push('\\%'); break;
-      case '$': out.push('\\$'); break;
-      case '#': out.push('\\#'); break;
-      case '\u00B1': out.push('$\\pm$'); break;
-      case '\u2192': out.push('$\\rightarrow$'); break;
-      default: out.push(ch);
-    }
-  }
-  return out.join('');
-}
-
-function sanitizeUrl(url) {
-  if (typeof url !== 'string') return '';
-  url = url.trim();
-  if (!url) return '';
-  const allowedSchemes = ['mailto:', 'http:', 'https:'];
-  const hasScheme = allowedSchemes.some(s => url.toLowerCase().startsWith(s));
-  if (!hasScheme) {
-    if (url.includes('@') && !url.includes('/')) {
-      url = 'mailto:' + url;
-    } else {
-      url = 'https://' + url;
-    }
-  }
-  url = url.replace(/[{}%$#\\~^]/g, '');
-  return url;
-}
 
 function buildEducation(entries) {
   if (!Array.isArray(entries) || entries.length === 0) return '';
