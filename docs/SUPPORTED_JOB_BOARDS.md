@@ -8,6 +8,7 @@ are shared helpers and are not loaded as providers.
 | --- | --- | --- |
 | 4 Day Week | API | Reads the public `https://4dayweek.io/api/jobs` JSON feed (4-day-week / reduced-hours roles). Configure with `provider: 4dayweek`; paginates `?page=N` up to `max_pages` (default 3), drops expired postings, then scanner filters apply. |
 | Amazon / AWS | API | Auto-detects `amazon.jobs` careers URLs and queries the public amazon.jobs search API. The board is one global endpoint, so narrow it with an `amazon:` config block (`loc_query`, `base_query`, `category`, …) whose keys pass through as query params. Configure with `provider: amazon`. |
+| Adzuna | API | Uses the official Adzuna Jobs API. Configure with `provider: adzuna` and an `adzuna:` block (`country`, `what`, `where`, `results_per_page`). Requires `ADZUNA_APP_ID` and `ADZUNA_APP_KEY`, so example entries are disabled by default. |
 | Apple Jobs | Parser | Parses public `jobs.apple.com/en-us/search` results. Configure with `provider: apple-careers` and optional `apple.search` / `apple.sort` values. |
 | Arbeitnow | API | Reads the public `https://www.arbeitnow.com/api/job-board-api` JSON feed (EU/DACH-heavy, newest-first). Configure with `provider: arbeitnow`; paginates `?page=N` up to `max_pages` (default 3), then scanner filters apply. |
 | Arbeitsagentur | API | Uses the public Bundesagentur fuer Arbeit Jobsuche REST API. Configure with `provider: arbeitsagentur`; title, location, and dedup filters run after fetch. |
@@ -16,14 +17,18 @@ are shared helpers and are not loaded as providers.
 | BambooHR | API | Auto-detects `<tenant>.bamboohr.com` careers pages, reads `/careers/list`, and follows public detail endpoints for job URLs. |
 | Breezy HR | API | Auto-detects `<tenant>.breezy.hr` boards and reads the public JSON position feed. |
 | Comeet / Spark Hire Recruit | API | Uses Comeet's public careers API. Provide the full API URL with `api:` or `careers_url`; it cannot derive the endpoint from a branded careers page. |
+| EURES | API | Guarded EURES provider for European Employment Services search responses. Configure with `provider: eures`; examples are disabled by default because the public endpoint shape should be verified before enabling. |
 | Get on Board | API | Reads the public `https://www.getonbrd.com/api/v0/categories/programming/jobs` JSON:API feed (remote/LatAm-heavy tech roles). Configure with `provider: getonbrd`; paginates `?page=N` up to `max_pages` (default 3) over the programming category (`expand[]=company`), then scanner filters apply. |
 | Glints | API | Uses Glints' public GraphQL job search endpoint. Configure with `provider: glints`; query and filters can be set on the portal entry. |
 | Google Careers | Parser | Parses public Google Careers search results at `www.google.com/about/careers/applications/jobs/results/`. Configure with `provider: google-careers` and optional `google.query`. |
 | Greenhouse | API | Handles explicit `api:` URLs and auto-detects public Greenhouse board URLs for the boards API. |
+| Gupy | API | Uses a configurable Gupy jobs API response shape for Brazil/LatAm ATS postings. Configure with `provider: gupy`; examples require `GUPY_API_TOKEN` unless a public tenant endpoint is explicitly configured with `requires_token: false`. |
 | HigherEdJobs | RSS | Reads the public `https://www.higheredjobs.com/rss/categoryFeed.cfm?catID={catID}` feed and parses it in-process. Configure with `provider: higheredjobs` and optional `cat_id` (default 68 = Higher Education). Not auto-detected — requires explicit `provider:` config. |
 | IBM Careers | API | Posts to IBM's public careers search API and supports optional IBM facet filters in the portal entry. |
+| iCIMS Job Portal | API | Uses a configured official iCIMS Job Portal API endpoint. Configure per company with `provider: icims` and `api:`; requires `ICIMS_USERNAME` and `ICIMS_PASSWORD` unless a tenant explicitly supports no-auth access. |
 | JibeApply | API | Auto-detects `https://<slug>.jibeapply.com/jobs` careers URLs (rewriting `/jobs` to the public `/api/jobs` endpoint); paginates `?page=N` up to `max_pages` (default 50), warning if a tenant's postings exceed the cap. Also supports branded/iCIMS-hosted sites at their own `/jobs` path via an explicit `provider: jibeapply` + `api:` URL. |
 | Jobstreet / SEEK | API | Uses the public SEEK chalice-search JSON API for Jobstreet and SEEK sites. Configure explicitly with `provider: jobstreet`. |
+| Jooble | API | Uses Jooble's REST API with a POST search body. Configure with `provider: jooble` and a `jooble:` block (`keywords`, `location`). Requires `JOOBLE_API_KEY`, so example entries are disabled by default. |
 | Landing.jobs | API | Reads the board-wide `https://landing.jobs/api/v1/jobs` JSON feed (tech, Europe). Configure with `provider: landingjobs`; company is derived from the posting URL slug. |
 | Lever | API | Auto-detects `https://jobs.(eu.)?lever.co/<slug>` boards and uses Lever's public postings endpoint. |
 | Local parser | Parser | Runs an in-repo parser command from `portals.yml`. Use this for stable SSR or HTML pages that need a custom extractor. |
@@ -32,6 +37,7 @@ are shared helpers and are not loaded as providers.
 | Personio | RSS | Auto-detects `<slug>.jobs.personio.de` or `.com` hosts and parses the public XML jobs feed. |
 | Pinpoint | API | Auto-detects `<slug>.pinpointhq.com` boards and reads the public zero-auth `/postings.json` per-tenant feed. |
 | Recruitee | API | Auto-detects `<slug>.recruitee.com` boards and uses the public per-tenant offers API. |
+| Reed.co.uk | API | Uses Reed's official Jobseeker API. Configure with `provider: reed` and a `reed:` block (`keywords`, `locationName`, `resultsToTake`). Requires `REED_API_KEY`, so example entries are disabled by default. |
 | RemoteOK | API | Reads the board-wide `https://remoteok.com/api` JSON feed; scanner filters decide which rows are relevant. |
 | Remotive | API | Reads the board-wide `https://remotive.com/api/remote-jobs` JSON feed, then applies local scanner filters. |
 | Rippling | API | Auto-detects `https://ats.rippling.com/<slug>/jobs` careers pages and reads the public zero-auth board API (`api.rippling.com/platform/api/ats/v1/board/<slug>/jobs`). |
@@ -40,6 +46,7 @@ are shared helpers and are not loaded as providers.
 | SolidJobs | API | Auto-detects `https://solid.jobs/public-api/offers/<division>` and reads the public offers API. |
 | Teamtailor | RSS | Auto-detects `<slug>.teamtailor.com` career sites and reads the public zero-auth `/jobs.rss` per-tenant feed. For a branded careers domain, set `provider: teamtailor` and it reads `/jobs.rss` off that host. Job links may point at a branded custom domain; location comes from the `tt:` city/country tags, falling back to `Remote` when a posting carries no `tt:city`/`tt:country` but its `remoteStatus` is remote (`fully` or `temporary`). |
 | The Hub | API | Reads the board-wide `https://thehub.io/api/jobs` JSON feed (Nordic/EU startups). Configure with `provider: thehub`; paginates `?page=N` up to `max_pages` (default 3), then scanner filters apply. |
+| USAJOBS | API | Uses the official USAJOBS search API. Configure with `provider: usajobs` and a `usajobs:` block (`keyword`, `location`, `remote`). Requires `USAJOBS_USER_AGENT` and `USAJOBS_API_KEY`, so example entries are disabled by default. |
 | UN Careers | API | Reads the public `careers.un.org/api/public/opening/jo/activeJo` active job openings feed. Configure with `provider: un-careers` and optional `un.language`. |
 | We Work Remotely | RSS | Reads the public `https://weworkremotely.com/remote-jobs.rss` feed and parses it in-process. |
 | Workable | Parser | Auto-detects `https://apply.workable.com/<slug>` and parses Workable's public markdown jobs feed. |
@@ -60,6 +67,25 @@ The mixed source pack includes these handoff-only sources:
 - LinkedIn Jobs.
 - Indeed.
 - Welcome to the Jungle / Otta.
+- ZipRecruiter.
+- Dice.
+- Built In.
+- Wellfound.
+- Glassdoor.
+- FlexJobs.
+- Monster / CareerBuilder.
+
+## Keyed Provider Sources
+
+The expanded source pack also includes keyed/provider-first sources that are
+safe to keep disabled until credentials are present:
+
+- USAJOBS: `USAJOBS_USER_AGENT`, `USAJOBS_API_KEY`.
+- Adzuna: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`.
+- Reed.co.uk: `REED_API_KEY`.
+- Jooble: `JOOBLE_API_KEY`.
+- Gupy: `GUPY_API_TOKEN` unless a configured tenant endpoint is public.
+- iCIMS: per-company `api:` plus `ICIMS_USERNAME` / `ICIMS_PASSWORD`, unless a tenant explicitly supports no-auth access.
 
 When adding a new provider, add a new non-helper module under `providers/` and
 update this table in the same PR.

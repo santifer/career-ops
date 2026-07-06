@@ -449,6 +449,34 @@ search_queries:
     query: 'site:welcometothejungle.com/en/jobs OR site:app.welcometothejungle.com "Forward Deployed" OR "AI Engineer" OR "Product Engineer" OR "Solutions Engineer" remote'
     enabled: true
 
+  - name: ZipRecruiter — Remote Tech
+    query: 'site:ziprecruiter.com/jobs "AI Engineer" OR "Software Engineer" OR "Solutions Engineer" remote'
+    enabled: true
+
+  - name: Dice — Tech AI / Software
+    query: 'site:dice.com/job-detail "AI Engineer" OR "Software Engineer" OR "Solutions Architect" remote'
+    enabled: true
+
+  - name: Built In — AI / Product Engineering
+    query: 'site:builtin.com/jobs "AI Engineer" OR "Product Engineer" OR "Forward Deployed" remote'
+    enabled: true
+
+  - name: Wellfound — Startup AI / Product Engineering
+    query: 'site:wellfound.com/jobs "AI Engineer" OR "Product Engineer" OR "Founding Engineer" remote'
+    enabled: true
+
+  - name: Glassdoor — Remote Tech
+    query: 'site:glassdoor.com/job-listing "AI Engineer" OR "Software Engineer" OR "Solutions Engineer" remote'
+    enabled: true
+
+  - name: FlexJobs — Remote Tech
+    query: 'site:flexjobs.com/jobs "AI Engineer" OR "Software Engineer" OR "Solutions Engineer" remote'
+    enabled: true
+
+  - name: Monster / CareerBuilder — Remote Tech
+    query: 'site:monster.com/job-openings OR site:careerbuilder.com/job "AI Engineer" OR "Software Engineer" OR "Solutions Engineer" remote'
+    enabled: true
+
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, local_parser
@@ -521,9 +549,10 @@ search_queries:
 #
 # Some providers are job boards / aggregators with no per-company careers
 # URL to detect, so they must be selected with an explicit `provider:`
-# field: 4dayweek, arbeitnow, arbeitsagentur, getonbrd, glints, himalayas, ibm, jobicy,
-# jobstreet, justjoin, landingjobs, nofluffjobs, remoteok, remotive, thehub,
-# weworkremotely, workingnomads. Examples for every built-in provider are below.
+# field: 4dayweek, adzuna, arbeitnow, arbeitsagentur, eures, getonbrd, glints,
+# gupy, himalayas, ibm, icims, jobicy, jobstreet, jooble, justjoin, landingjobs,
+# nofluffjobs, reed, remoteok, remotive, thehub, usajobs, weworkremotely,
+# workingnomads. Examples for every built-in provider are below.
 
 # ── Built-in provider examples ────────────────────────────────────
 # Commented config for each provider in providers/. Copy a stanza into
@@ -635,6 +664,58 @@ search_queries:
 #   siteKey: ID-Main      # SEEK site key (ID-Main, SG-Main, MY-Main)
 #   searchLocation: ""    # optional location filter
 #   enabled: true
+#
+# - name: USAJOBS                        # US federal official API
+#   provider: usajobs
+#   usajobs:
+#     keyword: "software engineer"
+#     location: "Remote"
+#     remote: true
+#   enabled: true         # requires USAJOBS_USER_AGENT + USAJOBS_API_KEY
+#
+# - name: Adzuna                         # broad jobs API
+#   provider: adzuna
+#   adzuna:
+#     country: us
+#     what: "software engineer"
+#     where: "remote"
+#   enabled: true         # requires ADZUNA_APP_ID + ADZUNA_APP_KEY
+#
+# - name: Reed.co.uk                     # UK official Jobseeker API
+#   provider: reed
+#   reed:
+#     keywords: "software engineer"
+#     locationName: "remote"
+#   enabled: true         # requires REED_API_KEY
+#
+# - name: Jooble                         # broad jobs API
+#   provider: jooble
+#   jooble:
+#     keywords: "software engineer"
+#     location: "remote"
+#   enabled: true         # requires JOOBLE_API_KEY
+#
+# - name: Gupy Brazil                    # Brazil/LatAm ATS/API
+#   provider: gupy
+#   gupy:
+#     query: "software engineer"
+#     requires_token: true
+#   enabled: true         # requires GUPY_API_TOKEN unless using a public tenant endpoint
+#
+# - name: EURES                          # European employment portal
+#   provider: eures
+#   eures:
+#     query: "software engineer"
+#     method: POST
+#   enabled: true         # verify endpoint shape before enabling
+#
+# - name: Example iCIMS Company          # per-company iCIMS Job Portal API
+#   careers_url: https://careers.example.com
+#   provider: icims
+#   api: https://api.icims.com/customers/123/search/jobportal/456
+#   icims:
+#     query: "software engineer"
+#   enabled: true         # requires ICIMS_USERNAME + ICIMS_PASSWORD unless requires_auth:false
 #
 # - name: IBM — Germany SWE              # IBM global careers
 #   provider: ibm
@@ -1632,6 +1713,69 @@ job_boards:
     provider: yc-jobs
     enabled: true
     notes: "Public YC Work at a Startup embedded jobs data."
+
+  # -- Keyed/direct provider source pack --
+  # Disabled by default because these sources need credentials or per-tenant API setup.
+
+  - name: USAJOBS
+    provider: usajobs
+    usajobs:
+      keyword: "software engineer"
+      location: "Remote"
+      remote: true
+      results_per_page: 50
+    max_pages: 1
+    enabled: false
+    notes: "Official USAJOBS API. Requires USAJOBS_USER_AGENT and USAJOBS_API_KEY."
+
+  - name: Adzuna
+    provider: adzuna
+    adzuna:
+      country: us
+      what: "software engineer"
+      where: "remote"
+      results_per_page: 50
+    max_pages: 1
+    enabled: false
+    notes: "Official Adzuna Jobs API. Requires ADZUNA_APP_ID and ADZUNA_APP_KEY."
+
+  - name: Reed.co.uk
+    provider: reed
+    reed:
+      keywords: "software engineer"
+      locationName: "remote"
+      resultsToTake: 100
+    max_pages: 1
+    enabled: false
+    notes: "Official Reed Jobseeker API. Requires REED_API_KEY."
+
+  - name: Jooble
+    provider: jooble
+    jooble:
+      keywords: "software engineer"
+      location: "remote"
+    max_pages: 1
+    enabled: false
+    notes: "Official Jooble REST API. Requires JOOBLE_API_KEY."
+
+  - name: Gupy Brazil
+    provider: gupy
+    gupy:
+      query: "software engineer"
+      requires_token: true
+    max_pages: 1
+    enabled: false
+    notes: "Gupy API provider for Brazil/LatAm postings. Requires GUPY_API_TOKEN unless configured against a public tenant endpoint."
+
+  - name: EURES
+    provider: eures
+    eures:
+      query: "software engineer"
+      method: POST
+      page_size: 50
+    max_pages: 1
+    enabled: false
+    notes: "Guarded EURES provider. Enable only after verifying the configured public endpoint shape."
 
   # ── SolidJobs (Polish market) ──────────────────────────────────────
   # Public API — no auth needed. Division in URL path, campaign=career-ops for tracking.

@@ -12658,6 +12658,237 @@ try {
   fail(`mixed source provider tests crashed: ${e.message}`);
 }
 
+console.log('\n63. Providers — expanded source pack');
+
+try {
+  const withEnv = async (vars, fn) => {
+    const old = {};
+    for (const key of Object.keys(vars)) old[key] = process.env[key];
+    Object.assign(process.env, vars);
+    try {
+      return await fn();
+    } finally {
+      for (const key of Object.keys(vars)) {
+        if (old[key] === undefined) delete process.env[key];
+        else process.env[key] = old[key];
+      }
+    }
+  };
+
+  const usajobsMod = await import(pathToFileURL(join(ROOT, 'providers/usajobs.mjs')).href);
+  const usajobs = usajobsMod.default;
+  if (usajobs.id === 'usajobs') pass('usajobs.id is "usajobs"');
+  else fail(`usajobs.id is ${JSON.stringify(usajobs.id)}`);
+  const usaRows = usajobsMod.parseUsajobsResponse({
+    SearchResult: {
+      SearchResultItems: [
+        {
+          MatchedObjectDescriptor: {
+            PositionTitle: 'Software Engineer',
+            PositionURI: 'https://www.usajobs.gov/job/1',
+            OrganizationName: 'NASA',
+            PositionLocation: [{ LocationName: 'Remote' }],
+            PublicationStartDate: '2026-07-01T00:00:00Z',
+          },
+        },
+        { MatchedObjectDescriptor: { PositionTitle: '', PositionURI: 'https://www.usajobs.gov/job/2' } },
+      ],
+    },
+  });
+  if (usaRows.length === 1 && usaRows[0].company === 'NASA' && usaRows[0].location === 'Remote') {
+    pass('parseUsajobsResponse() normalizes USAJOBS descriptors');
+  } else {
+    fail(`parseUsajobsResponse() rows = ${JSON.stringify(usaRows)}`);
+  }
+  await withEnv({ USAJOBS_USER_AGENT: 'career-ops-test@example.com', USAJOBS_API_KEY: 'test-key' }, async () => {
+    const built = new URL(usajobsMod.buildUsajobsUrl({ usajobs: { keyword: 'AI', location: 'Remote', remote: true } }, 2));
+    if (built.searchParams.get('Keyword') === 'AI' && built.searchParams.get('RemoteIndicator') === 'true' && built.searchParams.get('Page') === '2') {
+      pass('buildUsajobsUrl() maps keyword/location/remote/page params');
+    } else {
+      fail(`buildUsajobsUrl() params = ${built.search}`);
+    }
+    let fetchOpts = null;
+    const fetched = await usajobs.fetch(
+      { name: 'USAJOBS', usajobs: { keyword: 'AI' } },
+      { maxPages: 1, fetchJson: async (_url, opts) => { fetchOpts = opts; return { SearchResult: { SearchResultItems: [{ MatchedObjectDescriptor: { PositionTitle: 'AI Role', PositionURI: 'https://www.usajobs.gov/job/3' } }] } }; } },
+    );
+    if (fetched.length === 1 && fetchOpts?.headers?.['Authorization-Key'] === 'test-key' && fetchOpts?.redirect === 'error') {
+      pass('usajobs.fetch() sends auth headers and redirect guard');
+    } else {
+      fail(`usajobs.fetch() result = ${JSON.stringify({ fetched, fetchOpts })}`);
+    }
+  });
+
+  const adzunaMod = await import(pathToFileURL(join(ROOT, 'providers/adzuna.mjs')).href);
+  const adzuna = adzunaMod.default;
+  if (adzuna.id === 'adzuna') pass('adzuna.id is "adzuna"');
+  else fail(`adzuna.id is ${JSON.stringify(adzuna.id)}`);
+  await withEnv({ ADZUNA_APP_ID: 'app-id', ADZUNA_APP_KEY: 'app-key' }, async () => {
+    const built = new URL(adzunaMod.buildAdzunaUrl({ adzuna: { country: 'gb', what: 'AI', where: 'London' } }, 3));
+    if (built.pathname.endsWith('/gb/search/3') && built.searchParams.get('what') === 'AI' && built.searchParams.get('app_id') === 'app-id') {
+      pass('buildAdzunaUrl() builds country/page/query URL with credentials');
+    } else {
+      fail(`buildAdzunaUrl() = ${built.toString()}`);
+    }
+    const rows = adzunaMod.parseAdzunaResponse({
+      results: [{ title: 'ML Engineer', redirect_url: 'https://adzuna.example/job/1', company: { display_name: 'Acme' }, location: { display_name: 'Remote' }, created: '2026-07-02T00:00:00Z' }],
+    });
+    if (rows.length === 1 && rows[0].company === 'Acme' && rows[0].location === 'Remote') {
+      pass('parseAdzunaResponse() normalizes Adzuna rows');
+    } else {
+      fail(`parseAdzunaResponse() rows = ${JSON.stringify(rows)}`);
+    }
+  });
+
+  const reedMod = await import(pathToFileURL(join(ROOT, 'providers/reed.mjs')).href);
+  const reed = reedMod.default;
+  if (reed.id === 'reed') pass('reed.id is "reed"');
+  else fail(`reed.id is ${JSON.stringify(reed.id)}`);
+  await withEnv({ REED_API_KEY: 'reed-key' }, async () => {
+    const built = new URL(reedMod.buildReedUrl({ reed: { keywords: 'AI', locationName: 'remote', resultsToTake: 25 } }, 2));
+    if (built.searchParams.get('keywords') === 'AI' && built.searchParams.get('resultsToSkip') === '25') {
+      pass('buildReedUrl() builds paginated Reed search params');
+    } else {
+      fail(`buildReedUrl() params = ${built.search}`);
+    }
+    const rows = reedMod.parseReedResponse({
+      results: [{ jobTitle: 'Backend Engineer', jobUrl: 'https://reed.co.uk/jobs/1', employerName: 'Acme', locationName: 'Remote', date: '/Date(1783296000000)/' }],
+    });
+    if (rows.length === 1 && rows[0].company === 'Acme' && String(rows[0].postedAt).includes('2026')) {
+      pass('parseReedResponse() normalizes Reed rows and Microsoft JSON dates');
+    } else {
+      fail(`parseReedResponse() rows = ${JSON.stringify(rows)}`);
+    }
+  });
+
+  const joobleMod = await import(pathToFileURL(join(ROOT, 'providers/jooble.mjs')).href);
+  const jooble = joobleMod.default;
+  if (jooble.id === 'jooble') pass('jooble.id is "jooble"');
+  else fail(`jooble.id is ${JSON.stringify(jooble.id)}`);
+  await withEnv({ JOOBLE_API_KEY: 'jooble-key' }, async () => {
+    const body = joobleMod.buildJoobleBody({ jooble: { keywords: 'AI', location: 'Remote' } }, 4);
+    if (body.keywords === 'AI' && body.location === 'Remote' && body.page === 4) pass('buildJoobleBody() maps keywords/location/page');
+    else fail(`buildJoobleBody() = ${JSON.stringify(body)}`);
+    let request = null;
+    const fetched = await jooble.fetch(
+      { name: 'Jooble', jooble: { keywords: 'AI' } },
+      { maxPages: 1, fetchJson: async (url, opts) => { request = { url, opts }; return { jobs: [{ title: 'AI Engineer', link: 'https://jooble.example/job/1', company: 'Acme', location: 'Remote' }] }; } },
+    );
+    if (fetched.length === 1 && request.url.endsWith('/jooble-key') && request.opts?.method === 'POST') {
+      pass('jooble.fetch() posts search body to keyed API URL');
+    } else {
+      fail(`jooble.fetch() = ${JSON.stringify({ fetched, request })}`);
+    }
+  });
+
+  const icimsMod = await import(pathToFileURL(join(ROOT, 'providers/icims.mjs')).href);
+  const icims = icimsMod.default;
+  if (icims.id === 'icims') pass('icims.id is "icims"');
+  else fail(`icims.id is ${JSON.stringify(icims.id)}`);
+  const icimsRows = icimsMod.parseIcimsResponse({
+    searchResults: [
+      { fields: { jobTitle: 'Forward Deployed Engineer', portalUrl: 'https://careers.example/jobs/1', city: 'Sao Paulo', country: 'Brazil' } },
+      { fields: { jobTitle: '', portalUrl: 'https://careers.example/jobs/2' } },
+    ],
+  }, { name: 'Example iCIMS' });
+  if (icimsRows.length === 1 && icimsRows[0].company === 'Example iCIMS' && icimsRows[0].location === 'Sao Paulo, Brazil') {
+    pass('parseIcimsResponse() normalizes generic iCIMS field payloads');
+  } else {
+    fail(`parseIcimsResponse() rows = ${JSON.stringify(icimsRows)}`);
+  }
+  await withEnv({ ICIMS_USERNAME: 'user', ICIMS_PASSWORD: 'pass' }, async () => {
+    const built = new URL(icimsMod.buildIcimsUrl({ api: 'https://api.icims.com/customers/1/search/jobportal/2', icims: { query: 'AI', search_json: { filters: [] } } }, 2));
+    if (built.searchParams.get('page') === '2' && built.searchParams.get('q') === 'AI' && built.searchParams.has('searchJson')) {
+      pass('buildIcimsUrl() appends pagination, query, and searchJson');
+    } else {
+      fail(`buildIcimsUrl() params = ${built.search}`);
+    }
+    let opts = null;
+    const fetched = await icims.fetch(
+      { name: 'Example iCIMS', api: 'https://api.icims.com/customers/1/search/jobportal/2' },
+      { maxPages: 1, fetchJson: async (_url, fetchOpts) => { opts = fetchOpts; return { results: [{ title: 'AI Role', url: 'https://careers.example/jobs/3' }] }; } },
+    );
+    if (fetched.length === 1 && /^Basic /.test(opts?.headers?.Authorization || '') && opts?.redirect === 'error') {
+      pass('icims.fetch() sends Basic auth and redirect guard');
+    } else {
+      fail(`icims.fetch() = ${JSON.stringify({ fetched, opts })}`);
+    }
+  });
+
+  const gupyMod = await import(pathToFileURL(join(ROOT, 'providers/gupy.mjs')).href);
+  const gupy = gupyMod.default;
+  if (gupy.id === 'gupy') pass('gupy.id is "gupy"');
+  else fail(`gupy.id is ${JSON.stringify(gupy.id)}`);
+  const gupyRows = gupyMod.parseGupyResponse({
+    data: [{ name: 'Product Engineer', jobUrl: 'https://gupy.example/jobs/1', companyName: 'Acme BR', workplace: { city: 'Sao Paulo', country: 'Brazil' }, publishedDate: '2026-07-03T00:00:00Z' }],
+  });
+  if (gupyRows.length === 1 && gupyRows[0].company === 'Acme BR' && gupyRows[0].location === 'Sao Paulo, Brazil') {
+    pass('parseGupyResponse() normalizes Gupy rows');
+  } else {
+    fail(`parseGupyResponse() rows = ${JSON.stringify(gupyRows)}`);
+  }
+  await withEnv({ GUPY_API_TOKEN: 'gupy-token' }, async () => {
+    const built = new URL(gupyMod.buildGupyUrl({ gupy: { query: 'AI' } }, 5));
+    if (built.searchParams.get('name') === 'AI' && built.searchParams.get('page') === '5') pass('buildGupyUrl() maps query and page params');
+    else fail(`buildGupyUrl() params = ${built.search}`);
+    let opts = null;
+    const fetched = await gupy.fetch(
+      { name: 'Gupy Brazil', gupy: { query: 'AI' } },
+      { maxPages: 1, fetchJson: async (_url, fetchOpts) => { opts = fetchOpts; return { results: [{ title: 'AI Engineer', url: 'https://gupy.example/jobs/2' }] }; } },
+    );
+    if (fetched.length === 1 && opts?.headers?.Authorization === 'Bearer gupy-token') pass('gupy.fetch() sends bearer auth when configured');
+    else fail(`gupy.fetch() = ${JSON.stringify({ fetched, opts })}`);
+  });
+
+  const euresMod = await import(pathToFileURL(join(ROOT, 'providers/eures.mjs')).href);
+  const eures = euresMod.default;
+  if (eures.id === 'eures') pass('eures.id is "eures"');
+  else fail(`eures.id is ${JSON.stringify(eures.id)}`);
+  const euresRows = euresMod.parseEuresResponse({
+    content: [{ id: '123', title: 'Software Engineer', companyName: 'EU Employer', location: { city: 'Lisbon', country: 'Portugal' }, publicationDate: '2026-07-04T00:00:00Z' }],
+  });
+  if (euresRows.length === 1 && euresRows[0].url.includes('/jv-details/123') && euresRows[0].location === 'Lisbon, Portugal') {
+    pass('parseEuresResponse() normalizes EURES rows and builds detail URLs');
+  } else {
+    fail(`parseEuresResponse() rows = ${JSON.stringify(euresRows)}`);
+  }
+  const euresBody = euresMod.buildEuresBody({ eures: { query: 'AI', locationCodes: ['BR'] } }, 6);
+  if (euresBody.keywords === 'AI' && euresBody.page === 6 && euresBody.locationCodes[0] === 'BR') {
+    pass('buildEuresBody() maps query/location/page');
+  } else {
+    fail(`buildEuresBody() = ${JSON.stringify(euresBody)}`);
+  }
+  let euresRequest = null;
+  const euresFetched = await eures.fetch(
+    { name: 'EURES', eures: { query: 'AI' } },
+    { maxPages: 1, fetchJson: async (url, opts) => { euresRequest = { url, opts }; return { jobs: [{ title: 'AI Engineer', url: 'https://europa.eu/job/1', employerName: 'EU Co' }] }; } },
+  );
+  if (euresFetched.length === 1 && euresRequest.opts?.method === 'POST' && euresRequest.opts?.redirect === 'error') {
+    pass('eures.fetch() posts guarded JSON requests');
+  } else {
+    fail(`eures.fetch() = ${JSON.stringify({ euresFetched, euresRequest })}`);
+  }
+
+  await withEnv({ ADZUNA_APP_ID: 'app-id', ADZUNA_APP_KEY: 'app-key', JOOBLE_API_KEY: 'jooble-key' }, async () => {
+    let guardHits = 0;
+    for (const probe of [
+      () => usajobsMod.buildUsajobsUrl({ api: 'https://evil.example/api' }),
+      () => adzunaMod.buildAdzunaUrl({ api: 'https://evil.example/api' }),
+      () => reedMod.buildReedUrl({ api: 'https://evil.example/api' }),
+      () => joobleMod.buildJoobleUrl({ api: 'https://evil.example/api' }),
+      () => icimsMod.buildIcimsUrl({ api: 'https://evil.example/api' }),
+      () => gupyMod.buildGupyUrl({ api: 'https://evil.example/api' }),
+      () => euresMod.buildEuresUrl({ api: 'https://evil.example/api' }),
+    ]) {
+      try { probe(); } catch { guardHits++; }
+    }
+    if (guardHits === 7) pass('expanded source providers reject untrusted API hosts');
+    else fail(`expanded source provider SSRF guard hits = ${guardHits}/7`);
+  });
+} catch (e) {
+  fail(`expanded source provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
