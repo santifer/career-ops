@@ -20,7 +20,7 @@ const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp:
 
 /** @param {string} s */
 export function decodeEntities(s) {
-  return s.replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);/g, (m, body) => {
+  return s.replace(/&(#[xX][0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);/g, (m, body) => {
     if (body[0] === '#') {
       const isHex = body[1] === 'x' || body[1] === 'X';
       const code = parseInt(body.slice(isHex ? 2 : 1), isHex ? 16 : 10);
