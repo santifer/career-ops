@@ -141,6 +141,7 @@ You can invoke the command center or any of its modes directly within your CLI:
 * `project` — Evaluate portfolio project idea
 * `batch` — Run parallel batch evaluations
 * `patterns` — Analyze rejection patterns
+* `offer-prep` — Read a received offer/contract with the candidate: clause walk + lawyer questions (not legal advice)
 * `followup` — Update and calculate follow-ups
 * `update` — Update system files
 
@@ -279,6 +280,7 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
+| Receives an offer/contract and wants help understanding it before signing | `offer-prep` — clause walk with neutral tags + lawyer question list; describes, never judges; no verdicts, no online research |
 | Asks about follow-ups or application cadence | `followup` |
 
 ### CV Source of Truth

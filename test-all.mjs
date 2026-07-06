@@ -1201,6 +1201,17 @@ if (
   fail('router skill missing offer-prep registration');
 }
 
+const claudeMdDoc = readFile('CLAUDE.md');
+const agentsMdDoc = readFile('AGENTS.md');
+if (
+  claudeMdDoc.includes('`offer-prep`') &&
+  agentsMdDoc.includes('`offer-prep`')
+) {
+  pass('CLAUDE.md and AGENTS.md document the offer-prep mode');
+} else {
+  fail('agent docs missing offer-prep mode row');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
