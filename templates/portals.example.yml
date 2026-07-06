@@ -670,6 +670,10 @@ search_queries:
 #   provider: jobicy
 #   enabled: true
 #
+# - name: EchoJobs                        # tech jobs aggregated from company ATS boards
+#   provider: echojobs
+#   enabled: true
+#
 # - name: Hacker News "Who is hiring?"    # monthly "Ask HN: Who is hiring?" thread
 #   provider: hackernews
 #   enabled: true
