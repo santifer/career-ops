@@ -50,6 +50,16 @@ function runScript(script, args, sandbox) {
   }
 }
 
+// Sync the sandbox tracker into the tracker.mjs index and return one parsed
+// row by company name (row is null when sync/query fails or the row is absent).
+function syncAndQueryRow(sb, company) {
+  const sync = runScript('tracker.mjs', ['sync'], sb);
+  const query = runScript('tracker.mjs', ['query', '--json'], sb);
+  let row = null;
+  try { row = JSON.parse(query.stdout).find(r => r.company === company) ?? null; } catch { /* malformed output → null */ }
+  return { sync, query, row };
+}
+
 // Create a sandbox dir holding a tracker file and an additions dir.
 function makeSandbox(trackerContent, additions = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'co-cols-'));
@@ -148,10 +158,7 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
 // Score into Status and folded the real Notes cell away.
 {
   const sb = makeSandbox(HEADER_10);
-  const sync = runScript('tracker.mjs', ['sync'], sb);
-  const query = runScript('tracker.mjs', ['query', '--json'], sb);
-  let row = null;
-  try { row = JSON.parse(query.stdout).find(r => r.company === 'Acme'); } catch { /* fall through */ }
+  const { sync, query, row } = syncAndQueryRow(sb, 'Acme');
   if (sync.code === 0 && query.code === 0 && row) {
     if (row.role === 'Engineer') pass('tracker.mjs: Role read from Role column on 10-col tracker');
     else fail(`tracker.mjs: Role on 10-col tracker — got "${row.role}"`);
@@ -218,10 +225,7 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
     fail(`contract: verify-pipeline on unknown-column tracker (code ${verify.code})\n${verify.stdout}`);
   }
 
-  const sync = runScript('tracker.mjs', ['sync'], sb);
-  const query = runScript('tracker.mjs', ['query', '--json'], sb);
-  let row = null;
-  try { row = JSON.parse(query.stdout).find(r => r.company === 'Acme'); } catch { /* fall through */ }
+  const { sync, row } = syncAndQueryRow(sb, 'Acme');
   if (sync.code === 0 && row && row.role === 'Engineer' && row.score === '4.0/5' && row.status === 'Applied') {
     pass('contract: tracker.mjs skips an unknown extra column');
   } else {
