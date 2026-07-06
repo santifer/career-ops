@@ -199,7 +199,7 @@ d. Report: PDF dosya yolu, dosya boyutu, Canva tasarım URL'si (manuel ince ayar
 CV PDF'sini ürettikten sonra, kullanıcıya bir ön yazı (cover letter) oluşturmayı teklif et:
 
 ```text
-CV PDF generated: output/{path}
+CV PDF oluşturuldu: output/{path}
 
 Bu rol için bir ön yazı (cover letter) da ister misiniz?
 - Hemen bir tane oluşturmak için "yes" (evet) veya "cover letter" (ön yazı) deyin
