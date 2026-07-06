@@ -288,16 +288,16 @@ https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 Portal Taraması — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Çalıştırılan sorgular: N
-Bulunan ilanlar: N total
-Başlığa göre filtrelenen: N relevant
-Kopyalar: N (already evaluated or in pipeline)
-Süresi dolanlar (atıldı): N (dead links, Level 3)
+Bulunan ilanlar: N toplam
+Başlığa göre filtrelenen: N uygun
+Kopyalar: N (zaten değerlendirilmiş veya ardışık düzende)
+Süresi dolanlar (atıldı): N (ölü bağlantılar, Seviye 3)
 pipeline.md dosyasına yeni eklenenler: N
 
   + {company} | {title} | {query_name}
   ...
 
-→ Run the `pipeline` mode to evaluate the new offers (varsa `/career-ops pipeline` çalıştır veya ajandan `pipeline` çalıştırmasını iste).
+→ Yeni teklifleri değerlendirmek için `pipeline` modunu çalıştır (varsa `/career-ops pipeline` çalıştır veya ajandan `pipeline` çalıştırmasını iste).
 ```
 
 ## Managing careers_url
