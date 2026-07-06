@@ -100,6 +100,36 @@ try {
     fail(`URL validation: row0=${JSON.stringify(offerUrlOffers[0]?.url)}, row1=${JSON.stringify(offerUrlOffers[1]?.url)}, row2=${JSON.stringify(offerUrlOffers[2]?.url)}, row3=${JSON.stringify(offerUrlOffers[3]?.url)}`);
   }
 
+  // fetch() — derives the API URL, forwards the SSRF guard (redirect:'error'),
+  // and returns parsed offers.
+  let fetchedUrl = null;
+  let fetchedOpts = null;
+  const fetchJobs = await recruitee.fetch(
+    { name: 'Channable', careers_url: 'https://channable.recruitee.com/' },
+    { fetchJson: async (url, opts) => { fetchedUrl = url; fetchedOpts = opts; return { offers: [{ title: 'Senior PM', careers_url: 'https://channable.recruitee.com/o/senior-pm' }] }; } },
+  );
+  if (fetchedUrl === 'https://channable.recruitee.com/api/offers/' && fetchedOpts?.redirect === 'error' && fetchJobs.length === 1) {
+    pass('recruitee.fetch() hits /api/offers/ with redirect:"error" and returns parsed offers');
+  } else {
+    fail(`recruitee.fetch() url=${JSON.stringify(fetchedUrl)} opts=${JSON.stringify(fetchedOpts)} jobs=${fetchJobs.length}`);
+  }
+
+  // fetch() refuses entries whose careers_url can't derive a trusted
+  // <slug>.recruitee.com API URL — the guard chain must run before any request.
+  try {
+    await recruitee.fetch(
+      { name: 'Evil', careers_url: 'https://evil.example.com/careers' },
+      { fetchJson: async () => { throw new Error('must not be called'); } },
+    );
+    fail('recruitee.fetch() should throw for an untrusted careers_url');
+  } catch (e) {
+    if (/cannot derive API URL for Evil/.test(e.message)) {
+      pass('recruitee.fetch() throws before fetching when the host is untrusted');
+    } else {
+      fail(`recruitee.fetch() threw the wrong error: ${e.message}`);
+    }
+  }
+
 } catch (e) {
   fail(`recruitee provider tests crashed: ${e.message}`);
 }

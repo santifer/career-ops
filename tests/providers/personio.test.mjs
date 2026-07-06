@@ -176,6 +176,21 @@ try {
     fail(`personio.fetch() should pass redirect:"error", got: ${JSON.stringify(capturedOpts)}`);
   }
 
+  // fetch() throws when no feed URL can be derived (non-personio careers_url).
+  try {
+    await personio.fetch(
+      { name: 'NoFeed', careers_url: 'https://example.com/careers' },
+      { fetchText: async () => { throw new Error('must not be called'); } },
+    );
+    fail('personio.fetch() should throw when the feed URL cannot be derived');
+  } catch (e) {
+    if (/cannot derive feed URL for NoFeed/.test(e.message)) {
+      pass('personio.fetch() throws "cannot derive feed URL" for underivable entries');
+    } else {
+      fail(`personio.fetch() threw the wrong error: ${e.message}`);
+    }
+  }
+
 } catch (e) {
   fail(`personio provider tests crashed: ${e.message}`);
 }

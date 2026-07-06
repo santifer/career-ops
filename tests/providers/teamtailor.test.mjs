@@ -6,8 +6,9 @@ import { pathToFileURL } from 'url';
 console.log('\nProvider — teamtailor');
 
 try {
-  const teamtailor = (await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href)).default;
-  const { parseTeamtailorFeed } = await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href);
+  const teamtailorModule = await import(pathToFileURL(join(ROOT, 'providers/teamtailor.mjs')).href);
+  const teamtailor = teamtailorModule.default;
+  const { parseTeamtailorFeed } = teamtailorModule;
 
   if (teamtailor.id === 'teamtailor') pass('teamtailor.id is "teamtailor"');
   else fail(`teamtailor.id is ${JSON.stringify(teamtailor.id)}`);

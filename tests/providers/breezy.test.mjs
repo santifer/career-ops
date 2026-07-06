@@ -7,8 +7,9 @@ console.log('\nProvider — breezy');
 
 
 try {
-  const breezy = (await import(pathToFileURL(join(ROOT, 'providers/breezy.mjs')).href)).default;
-  const { parseBreezyResponse } = await import(pathToFileURL(join(ROOT, 'providers/breezy.mjs')).href);
+  const breezyModule = await import(pathToFileURL(join(ROOT, 'providers/breezy.mjs')).href);
+  const breezy = breezyModule.default;
+  const { parseBreezyResponse } = breezyModule;
 
   if (breezy.id === 'breezy') pass('breezy.id is "breezy"');
   else fail(`breezy.id is ${JSON.stringify(breezy.id)}`);
