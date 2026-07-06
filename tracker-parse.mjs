@@ -20,7 +20,7 @@ export const LEGACY_COLMAP = {
 /** Header text (lowercased) → canonical field name. Includes ES aliases. */
 export const HEADER_ALIASES = {
   '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
-  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
+  'via': 'via', 'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
   'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
 };
 
@@ -119,5 +119,6 @@ export function parseTrackerRow(line, colmap = LEGACY_COLMAP) {
     raw: line,
   };
   if (colmap.location != null) row.location = at('location');
+  if (colmap.via != null) row.via = at('via');
   return row;
 }

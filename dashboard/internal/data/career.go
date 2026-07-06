@@ -595,7 +595,7 @@ func splitTrackerRow(line string) []string {
 var trackerHeaderAliases = map[string]string{
 	"#": "num", "num": "num", "date": "date",
 	"company": "company", "empresa": "company",
-	"role": "role", "puesto": "role",
+	"via": "via", "role": "role", "puesto": "role",
 	"location": "location", "score": "score", "status": "status",
 	"pdf": "pdf", "report": "report", "notes": "notes",
 }

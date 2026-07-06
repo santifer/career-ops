@@ -264,3 +264,21 @@ func TestResolveTrackerColumns(t *testing.T) {
 		t.Errorf("fallback status index = %d, want 5 (legacy layout)", fallback["status"])
 	}
 }
+
+// A Via column (intermediary channel, #1596) between Company and Role maps by
+// header name; later columns keep their correct indices.
+func TestResolveTrackerColumnsVia(t *testing.T) {
+	viaTracker := strings.Split(`| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|-----|------|-------|--------|-----|--------|-------|
+| 1 | 2026-01-05 | ? | Hays | Data Engineer | 4.2/5 | Applied | ✅ | — | fintech, Leeds |`, "\n")
+	cols := resolveTrackerColumns(viaTracker)
+	if cols["via"] != 3 {
+		t.Errorf("via index = %d, want 3", cols["via"])
+	}
+	if cols["role"] != 4 {
+		t.Errorf("role index = %d, want 4 (shifted by Via column)", cols["role"])
+	}
+	if cols["status"] != 6 {
+		t.Errorf("status index = %d, want 6", cols["status"])
+	}
+}
