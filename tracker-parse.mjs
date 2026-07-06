@@ -140,5 +140,6 @@ export function parseTrackerRow(line, colmap = LEGACY_COLMAP) {
     raw: line,
   };
   if (colmap.location != null) row.location = at('location');
+  if (colmap.via != null) row.via = at('via');
   return row;
 }

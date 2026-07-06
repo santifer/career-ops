@@ -284,5 +284,35 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
   }
 }
 
+// ═══ Stage 2 (#1596): Via column ════════════════════════════════════════════
+
+const HEADER_VIA = `# Applications Tracker
+
+| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|-----|------|-------|--------|-----|--------|-------|
+| 1 | 2026-01-01 | Acme | — | Engineer | 4.0/5 | Applied | ✅ | — | direct seed row |
+| 2 | 2026-01-05 | ? | Hays | Data Engineer | 4.2/5 | Applied | ✅ | — | fintech, Leeds |
+`;
+
+// ── Test 9: parseTrackerRow surfaces the Via column ─────────────────────────
+{
+  const { resolveColumns, parseTrackerRow } = await import('./tracker-parse.mjs');
+  const lines = HEADER_VIA.split('\n');
+  const colmap = resolveColumns(lines);
+  const rows = lines.map(l => parseTrackerRow(l, colmap)).filter(Boolean);
+  const direct = rows.find(r => r.num === 1);
+  const blind = rows.find(r => r.num === 2);
+  if (direct && direct.via === '—' && direct.role === 'Engineer' && direct.score === '4.0/5') {
+    pass('parseTrackerRow: Via column mapped, later columns not shifted');
+  } else {
+    fail(`parseTrackerRow: Via layout — got ${JSON.stringify(direct)}`);
+  }
+  if (blind && blind.company === '?' && blind.via === 'Hays' && blind.status === 'Applied') {
+    pass('parseTrackerRow: unknown-employer (?) row carries via');
+  } else {
+    fail(`parseTrackerRow: ? row — got ${JSON.stringify(blind)}`);
+  }
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
