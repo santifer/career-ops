@@ -5941,6 +5941,7 @@ try {
 
   // computeRunStats: header-name parsing, torn rows skipped, failed runs
   // excluded from averages.
+  const stats = await import(pathToFileURL(join(ROOT, 'stats.mjs')).href);
   const runsTsv = [
     'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors',
     '2026-07-01T08:00:00Z\tcompleted\t45\t3\t100\t30\t5\t20\t2\t6\t1\t30\t6\t0',
