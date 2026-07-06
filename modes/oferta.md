@@ -314,5 +314,11 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Tracker format:**
 
 ```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report |
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+```
+
+With the optional Via column (intermediary channel, #1596) after Company:
+
+```markdown
+| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
 ```
