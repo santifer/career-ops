@@ -2637,6 +2637,59 @@ try {
     fail('content_filter should be case-insensitive');
   }
 
+  // ── content_filter.by_title_keyword (#1636) ──
+  const { matchedTitleKeywords } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // matchedTitleKeywords returns the raw positive keywords that matched a title.
+  const tf = { positive: ['AI Engineer', 'Instructional Designer'] };
+  if (
+    JSON.stringify(matchedTitleKeywords('Senior AI Engineer', tf)) === JSON.stringify(['AI Engineer']) &&
+    matchedTitleKeywords('Instructional Designer II', tf).length === 1 &&
+    matchedTitleKeywords('HR Coordinator', tf).length === 0
+  ) {
+    pass('matchedTitleKeywords returns the title_filter.positive keyword(s) that matched');
+  } else {
+    fail('matchedTitleKeywords did not return expected matches');
+  }
+
+  const scopedCf = buildContentFilter({
+    by_title_keyword: {
+      'AI Engineer': { positive: ['gpt', 'llm', 'claude'] },
+    },
+  });
+
+  // A job matched via "AI Engineer" is held to the stricter override — no
+  // AI-tool mention in the description → rejected, even with no global positive set.
+  if (
+    scopedCf('Build internal tools, no ML involved', ['AI Engineer']) === false &&
+    scopedCf('Fine-tune LLM pipelines with GPT-4', ['AI Engineer']) === true
+  ) {
+    pass('content_filter.by_title_keyword applies its stricter rule only to jobs matched via that keyword');
+  } else {
+    fail('content_filter.by_title_keyword override did not gate AI Engineer jobs correctly');
+  }
+
+  // A job matched via a keyword with NO override (e.g. Instructional Designer)
+  // must NOT inherit the AI Engineer override — falls back to the global rule
+  // (absent here, so it passes).
+  if (scopedCf('Designs onboarding curricula', ['Instructional Designer']) === true) {
+    pass('content_filter.by_title_keyword does not leak onto unrelated title keywords');
+  } else {
+    fail('content_filter.by_title_keyword leaked its override onto an unrelated keyword');
+  }
+
+  // Global negative still applies as a backstop even when overrides exist,
+  // for jobs whose matched keyword has no override entry.
+  const scopedCfWithGlobal = buildContentFilter({
+    negative: ['wordpress'],
+    by_title_keyword: { 'AI Engineer': { positive: ['gpt'] } },
+  });
+  if (scopedCfWithGlobal('WordPress plugin maintenance', ['Instructional Designer']) === false) {
+    pass('content_filter global negative still applies to jobs without a matching override');
+  } else {
+    fail('content_filter global negative should still gate jobs with no by_title_keyword override');
+  }
+
 } catch (e) {
   fail(`always_allow tests crashed: ${e.message}`);
 }

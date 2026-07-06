@@ -145,6 +145,22 @@
 #   negative:
 #     - "php"
 #     - "wordpress"
+#
+# by_title_keyword (optional): scope a stricter positive/negative pair to only
+# the jobs matched via a specific title_filter.positive keyword, instead of
+# applying it to every scanned job. Useful when a title keyword is broad
+# enough to need extra confirmation from the description (e.g. "AI Engineer"
+# roles where you want the JD to actually mention a concrete AI tool) without
+# that same requirement leaking onto unrelated categories (Instructional
+# Designer, HR Coordinator, ...). Jobs matched via a keyword with no entry
+# here fall back to the global positive/negative pair above.
+# content_filter:
+#   by_title_keyword:
+#     "AI Engineer":
+#       positive:
+#         - "gpt"
+#         - "llm"
+#         - "claude"
 
 # -- Title filter --
 # The scanner uses these keywords to decide if a title is relevant.

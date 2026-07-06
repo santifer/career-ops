@@ -103,6 +103,17 @@ export function buildTitleFilter(titleFilter) {
   };
 }
 
+// Returns the raw (as-written in portals.yml) `title_filter.positive` keywords
+// that matched a given title — used to scope `content_filter.by_title_keyword`
+// overrides to only the categories that opted into a stricter content check.
+export function matchedTitleKeywords(title, titleFilter) {
+  const raw = Array.isArray(titleFilter?.positive) ? titleFilter.positive : [];
+  const lower = (title || '').toLowerCase();
+  return raw
+    .filter(k => typeof k === 'string' && k.trim().length > 0)
+    .filter(k => compileKeyword(k.trim().toLowerCase())(lower));
+}
+
 // ── Location filter ─────────────────────────────────────────────────
 // Optional. If `location_filter` is absent from portals.yml, all locations pass.
 // Semantics (case-insensitive substring, in this order):
@@ -158,6 +169,16 @@ export function buildLocationFilter(locationFilter) {
 //   - `positive` empty → pass (already cleared negatives)
 //   - `positive` non-empty → at least one keyword must be present
 //
+// `content_filter.by_title_keyword` (optional): scopes a stricter positive/
+// negative pair to only the jobs whose title matched a specific
+// `title_filter.positive` keyword, so e.g. an "AI Engineer" title-match can
+// require the description to actually mention a concrete AI tool, without
+// that requirement leaking onto unrelated categories like "Instructional
+// Designer". When one or more of a job's matched title keywords has an
+// override, the overrides govern (any override passing is enough); the
+// global `positive`/`negative` pair is the fallback for jobs whose matched
+// keyword(s) have no override entry.
+//
 // Provider support: only providers whose list API ships the description for
 // free (no extra per-job request, which would break the zero-token design)
 // populate `job.description`. Lever (`descriptionPlain`) does today; others
@@ -168,9 +189,34 @@ export function buildContentFilter(contentFilter) {
   const positive = normalizeKeywordList(contentFilter.positive);
   const negative = normalizeKeywordList(contentFilter.negative);
 
-  return (description) => {
+  const byTitleKeyword = new Map();
+  if (contentFilter.by_title_keyword && typeof contentFilter.by_title_keyword === 'object') {
+    for (const [kw, rule] of Object.entries(contentFilter.by_title_keyword)) {
+      if (typeof kw !== 'string' || !kw.trim()) continue;
+      byTitleKeyword.set(kw.trim().toLowerCase(), {
+        positive: normalizeKeywordList(rule?.positive),
+        negative: normalizeKeywordList(rule?.negative),
+      });
+    }
+  }
+
+  return (description, matchedTitleKeywords = []) => {
     if (typeof description !== 'string' || description.trim() === '') return true;
     const lower = description.toLowerCase();
+
+    const overrides = matchedTitleKeywords
+      .filter(k => typeof k === 'string')
+      .map(k => byTitleKeyword.get(k.trim().toLowerCase()))
+      .filter(Boolean);
+
+    if (overrides.length > 0) {
+      return overrides.some(rule => {
+        if (rule.negative.length > 0 && rule.negative.some(k => lower.includes(k))) return false;
+        if (rule.positive.length === 0) return true;
+        return rule.positive.some(k => lower.includes(k));
+      });
+    }
+
     if (negative.length > 0 && negative.some(k => lower.includes(k))) return false;
     if (positive.length === 0) return true;
     return positive.some(k => lower.includes(k));
@@ -1013,7 +1059,7 @@ async function main() {
           totalFilteredSalary++;
           continue;
         }
-        if (!contentFilter(job.description)) {
+        if (!contentFilter(job.description, matchedTitleKeywords(job.title, config.title_filter))) {
           totalFilteredContent++;
           continue;
         }
