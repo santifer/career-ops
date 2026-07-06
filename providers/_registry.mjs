@@ -54,7 +54,10 @@ export async function loadProviders(dir) {
  * Resolve which provider handles a tracked_companies entry.
  *   1. Explicit `provider:` field wins (skips detect()).
  *   2. local-parser when parser.command + script are configured (before API detect).
- *   3. Otherwise each provider's detect() runs in load order; first hit wins.
+ *   3. Specific (URL/shape-based) detect() runs first, in load order; first hit wins.
+ *   4. Generic catch-alls (providers with isFallback: true, e.g. serper's bare
+ *      scan_method:websearch match) only run if no specific provider claimed the
+ *      entry — otherwise a careers_url that's actually a known free ATS gets shadowed.
  *
  * @param {object} entry - tracked_companies entry.
  * @param {Map<string, object>} providers - id→provider Map from loadProviders().
@@ -79,8 +82,20 @@ export function resolveProvider(entry, providers, { skipIds = [] } = {}) {
     }
   }
 
+  const fallbacks = [];
   for (const p of providers.values()) {
     if (skipIds.includes(p.id)) continue;
+    if (p.isFallback) { fallbacks.push(p); continue; }
+    let hit;
+    try {
+      hit = p.detect?.(entry);
+    } catch (err) {
+      console.error(`⚠️  ${p.id}: detect() threw for "${entry.name}" — ${err.message}`);
+      continue;
+    }
+    if (hit) return { provider: p };
+  }
+  for (const p of fallbacks) {
     let hit;
     try {
       hit = p.detect?.(entry);

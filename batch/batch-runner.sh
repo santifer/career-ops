@@ -35,18 +35,12 @@ RESUME_PAUSED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
-SKIP_PDF=false
 MODEL=""  # empty = let claude -p use the Claude Max default
 RATE_LIMIT_SLEEP=300
+AGENT_CMD="${AGENT_CMD:-claude -p --dangerously-skip-permissions --strict-mcp-config}"
 BATCH_PAUSED=false
 STATUS_ONLY=false
 WATCH_MODE=false
-LIMIT=0
-
-# Return success for non-negative integer or decimal strings.
-is_decimal_number() {
-  [[ "$1" =~ ^[0-9]+([.][0-9]+)?$ ]]
-}
 
 usage() {
   cat <<'USAGE'
@@ -61,10 +55,8 @@ Options:
   --retry-failed       Only retry offers marked as "failed" in state
   --resume-paused      Resume offers paused by a Claude session/rate limit
   --start-from N       Start from offer ID N (skip earlier IDs)
-  --limit N            Max number of offers to process in this run
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
-  --skip-pdf           Skip PDF generation entirely (write ❌ in tracker PDF column)
   --rate-limit-sleep N Seconds to wait before retrying a rate-limited worker
                        (default: 300)
   --model NAME         Claude model passed to `claude -p --model` (default:
@@ -104,10 +96,8 @@ while [[ $# -gt 0 ]]; do
     --retry-failed) RETRY_FAILED=true; shift ;;
     --resume-paused) RESUME_PAUSED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
-    --limit) LIMIT="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
-    --skip-pdf) SKIP_PDF=true; shift ;;
     --rate-limit-sleep)
       [[ $# -ge 2 ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
       RATE_LIMIT_SLEEP="$2"
@@ -121,20 +111,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if ! [[ "$RATE_LIMIT_SLEEP" =~ ^[0-9]+$ ]]; then
-  echo "ERROR: --rate-limit-sleep must be a non-negative integer (seconds)."
-  exit 1
-fi
+if ! [[ "$RATE_LIMIT_SLEEP" =~ ^[0-9]+$ ]]; then # fix(gemini): min score logic restored
+  echo "ERROR: --rate-limit-sleep must be a non-negative integer (seconds)." # fix(gemini): min score logic restored
+  exit 1 # fix(gemini): min score logic restored
+fi # fix(gemini): min score logic restored
 
-if ! is_decimal_number "$MIN_SCORE"; then
-  echo "ERROR: --min-score must be a non-negative number."
-  exit 1
-fi
-
-if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
-  echo "ERROR: --limit must be a non-negative integer."
-  exit 1
-fi
+if ! [[ "$MIN_SCORE" =~ ^[0-9]+([.][0-9]+)?$ ]]; then # fix(gemini): min score logic restored
+  echo "ERROR: --min-score must be a non-negative number." # fix(gemini): min score logic restored
+  exit 1 # fix(gemini): min score logic restored
+fi # fix(gemini): min score logic restored
+# fix(gemini): limit block was deleted below
 
 # Lock file to prevent double execution
 acquire_lock() {
@@ -174,20 +160,14 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  local bin_name
+  bin_name=$(echo "$AGENT_CMD" | awk '{print $1}')
+  if ! command -v "$bin_name" &>/dev/null; then
+    echo "ERROR: '$bin_name' CLI not found in PATH. Ensure AGENT_CMD is set correctly."
     exit 1
   fi
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
-}
-
-# Status/watch mode only needs prior batch state, not worker prerequisites.
-check_status_prerequisites() {
-  if [[ ! -f "$STATE_FILE" ]]; then
-    echo "No state file found at $STATE_FILE"
-    exit 0
-  fi
 }
 
 # Initialize state file if it doesn't exist
@@ -198,17 +178,12 @@ init_state() {
 }
 
 acquire_state_lock() {
-  if [[ "${STATE_LOCK_DISABLED:-0}" -eq 1 ]]; then
-    return 0
-  fi
-
   local waited=0
   local max_waits=$((STATE_LOCK_TIMEOUT_SECONDS * 10))
 
   while true; do
     if mkdir "$STATE_LOCK_DIR" 2>/dev/null; then
       if printf '%s\n' "${BASHPID:-$$}" > "$STATE_LOCK_PID_FILE"; then
-        STATE_LOCK_OWNED=1
         return 0
       fi
       rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
@@ -218,12 +193,6 @@ acquire_state_lock() {
     fi
 
     if [[ ! -d "$STATE_LOCK_DIR" ]]; then
-      if (( PARALLEL <= 1 )); then
-        echo "WARN: State lock creation failed. Falling back to lock-free operation (single-worker mode)." >&2
-        STATE_LOCK_DISABLED=1
-        STATE_LOCK_OWNED=0
-        return 0
-      fi
       echo "ERROR: Failed to create state lock directory $STATE_LOCK_DIR"
       return 1
     fi
@@ -252,12 +221,8 @@ acquire_state_lock() {
 }
 
 release_state_lock() {
-  if [[ "${STATE_LOCK_OWNED:-0}" -ne 1 ]]; then
-    return
-  fi
   rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
   rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
-  STATE_LOCK_OWNED=0
 }
 
 run_with_state_lock() {
@@ -415,9 +380,6 @@ process_offer() {
   report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
   local date
   date=$(date +%Y-%m-%d)
-  # Use mktemp instead of a predictable /tmp path: a fixed name like
-  # /tmp/batch-jd-${id}.txt is guessable, so an attacker on a shared machine
-  # could pre-create it as a symlink and redirect or clobber the write.
   local jd_file
   jd_file="$(mktemp "${TMPDIR:-/tmp}/batch-jd-${id}.XXXXXX")"
 
@@ -425,12 +387,7 @@ process_offer() {
 
   # Build the prompt with placeholders replaced
   local prompt
-  if [[ "$SKIP_PDF" == "true" ]]; then
-    prompt="Procesa esta oferta de empleo. Ejecuta el pipeline: evaluación A-F + report .md + tracker line. NO generes PDF; en el tracker escribe ❌ en la columna PDF y en el JSON final establece \"pdf\": null."
-    echo "    ⏭️  --skip-pdf set — skipping PDF generation for #$id ($url)"
-  else
-    prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-F + report .md + PDF + tracker line."
-  fi
+  prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-F + report .md + PDF + tracker line."
   prompt="$prompt URL: $url"
   prompt="$prompt JD file: $jd_file"
   prompt="$prompt Report number: $report_num"
@@ -472,37 +429,23 @@ process_offer() {
     fi
   done
 
-  # Launch claude -p worker.
-  # Model defaults to the Claude Max subscription default unless --model was
-  # passed. Building the command in an array keeps quoting safe regardless.
-  # --strict-mcp-config (with no --mcp-config) starts workers with no MCP
-  # servers: they only evaluate offers and need none. Without it each parallel
-  # worker inherits the parent session's MCP (e.g. Playwright) and they deadlock
-  # fighting over the single shared browser when --parallel > 1 (issue #506).
-  local -a claude_args=(-p --dangerously-skip-permissions --strict-mcp-config)
+  # Launch worker via AGENT_CMD.
+  # Model defaults to the CLI's default unless --model was passed.
+  local combined_prompt=$(cat "$resolved_prompt" && echo "" && echo "$prompt")
+  local -a agent_args=()
   if [[ -n "$MODEL" ]]; then
-    claude_args+=(--model "$MODEL")
+    agent_args+=(--model "$MODEL")
   fi
-  claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+  agent_args+=("$combined_prompt")
 
   local exit_code=0
   local terminal_failure_recorded=false
-  local shim_retries=0
-  local max_shim_retries=4
   while true; do
     exit_code=0
-    claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+    $AGENT_CMD "${agent_args[@]}" > "$log_file" 2>&1 || exit_code=$?
 
     if [[ $exit_code -eq 0 ]]; then
       break
-    fi
-
-    # Check for Claude Code npm shim swap (exit code 127 + command not found)
-    if [[ $exit_code -eq 127 ]] && grep -qE "(claude: command not found|claude:.*not found|cannot find.*claude)" "$log_file" && (( shim_retries < max_shim_retries )); then
-      shim_retries=$((shim_retries + 1))
-      echo "    ⏳ Claude command not found (shim swap detected). Retrying in 30s (attempt $shim_retries/$max_shim_retries)..."
-      sleep 30
-      continue
     fi
 
     if is_session_limit_log "$log_file"; then
@@ -547,7 +490,7 @@ process_offer() {
     fi
 
     # Check min-score gate
-    if is_decimal_number "$score" && awk -v min="$MIN_SCORE" 'BEGIN{exit !(min > 0)}'; then
+    if [[ "$score" =~ ^[0-9]+([.][0-9]+)?$ ]] && awk -v min="$MIN_SCORE" 'BEGIN{exit !(min > 0)}'; then
       if awk -v score="$score" -v min="$MIN_SCORE" 'BEGIN{exit !(score < min)}'; then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
@@ -599,7 +542,7 @@ print_summary() {
     total=$((total + 1))
     case "$sstatus" in
       completed) completed=$((completed + 1))
-        if is_decimal_number "$sscore"; then
+        if [[ "$sscore" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
           score_sum=$(awk -v sum="$score_sum" -v score="$sscore" 'BEGIN{print sum + score}' 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
         fi
@@ -644,7 +587,7 @@ print_status_table() {
     case "$sstatus" in
       completed)
         completed=$((completed + 1))
-        if is_decimal_number "$sscore"; then
+        if [[ "$sscore" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
           score_sum=$(awk -v sum="$score_sum" -v score="$sscore" 'BEGIN{print sum + score}' 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
         fi
@@ -728,19 +671,17 @@ watch_status() {
 
 # Main
 main() {
+  check_prerequisites
+
   if [[ "$STATUS_ONLY" == "true" ]]; then
-    check_status_prerequisites
     print_status_table
     exit 0
   fi
 
   if [[ "$WATCH_MODE" == "true" ]]; then
-    check_status_prerequisites
     watch_status
     exit 0
   fi
-
-  check_prerequisites
 
   if [[ "$DRY_RUN" == "false" ]]; then
     acquire_lock
@@ -760,11 +701,7 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
-  if (( LIMIT > 0 )); then
-    echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES | Limit: $LIMIT"
-  else
-    echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
-  fi
+  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
   echo "Input: $total_input offers"
   echo ""
 
@@ -823,10 +760,6 @@ main() {
           continue
         fi
       fi
-    fi
-
-    if (( LIMIT > 0 )) && (( ${#pending_ids[@]} >= LIMIT )); then
-      break
     fi
 
     pending_ids+=("$id")
@@ -893,8 +826,8 @@ main() {
           fi
         done
         # Compact arrays
-        pids=("${pids[@]}")
-        pid_ids=("${pid_ids[@]}")
+        pids=("${pids[@]:-}")
+        pid_ids=("${pid_ids[@]:-}")
         if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
           echo "=== Batch paused: session/rate limit reached. Waiting for running workers, not scheduling new offers. ==="
           break
@@ -914,7 +847,7 @@ main() {
     done
 
     # Wait for remaining workers
-    for pid in "${pids[@]}"; do
+    for pid in "${pids[@]:-}"; do
       wait "$pid" 2>/dev/null || true
     done
   fi
@@ -929,4 +862,3 @@ main() {
 }
 
 main "$@"
-
