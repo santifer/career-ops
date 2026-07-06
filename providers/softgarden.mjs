@@ -1,5 +1,6 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
+import { decodeEntities } from './_html-entities.mjs';
 
 // softgarden provider — the hosted job widgets at
 // https://{tenant}.softgarden.io/{lang}/widgets/jobs (e.g. RENK:
@@ -24,24 +25,6 @@
 // slashes M/D/YY) — same heuristic as the successfactors CSB parser.
 
 const MAX_JOBS = 1000; // cap postings taken from one widget page
-
-// Minimal HTML entity decoder — titles carry named (&amp;) and numeric
-// (&#252; / &#xfc;) entities. Mirrors successfactors.mjs / dassault.mjs.
-const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
-/** @param {string} s */
-function decodeEntities(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, body) => {
-    if (body[0] === '#') {
-      const code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
-      // String.fromCodePoint throws RangeError outside 0..0x10FFFF or on a lone
-      // surrogate half — a malformed/adversarial entity must degrade to the
-      // original text, never crash the whole parse.
-      const valid = Number.isFinite(code) && code >= 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff);
-      return valid ? String.fromCodePoint(code) : m;
-    }
-    return NAMED_ENTITIES[body.toLowerCase()] ?? m;
-  });
-}
 
 /** @param {string} s */
 function clean(s) {

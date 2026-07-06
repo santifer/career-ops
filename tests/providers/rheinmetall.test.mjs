@@ -46,6 +46,17 @@ try {
   if (parseVacancies('<html>no cards</html>', 'https://x').length === 0 && parseVacancies(undefined, 'https://x').length === 0) pass('rheinmetall.parseVacancies() returns [] for card-less / non-string input');
   else fail('rheinmetall.parseVacancies() should return [] without cards');
 
+  // decodeEntities (exercised via parseVacancies) — a malformed/out-of-range
+  // numeric entity (a lone surrogate half) must degrade to the literal text,
+  // never throw RangeError and abort the whole parse.
+  const badEntityHtml = '<html>' + card('444', 'Bad&#xD800;Entity', 'X GmbH | Berlin') + '</html>';
+  const badRows = parseVacancies(badEntityHtml, 'https://www.rheinmetall.com');
+  if (badRows.length === 1 && badRows[0].title === 'Bad&#xD800;Entity') {
+    pass('rheinmetall.parseVacancies() tolerates an invalid numeric entity (no RangeError crash)');
+  } else {
+    fail(`rheinmetall.parseVacancies() should degrade a malformed entity to literal text, got: ${JSON.stringify(badRows)}`);
+  }
+
   // fetch — paginates ?page=N, stops when a page brings no fresh ids (the
   // server clamps past-the-end pages to the last page).
   const rhmPages = [pageHtml, '<html>' + card('333', 'C', 'X GmbH | Kiel') + '</html>', '<html>' + card('333', 'C', 'X GmbH | Kiel') + '</html>'];
