@@ -1,4 +1,4 @@
-# Mode: scan — Portal Scanner (Job Discovery)
+# Mod: scan — Portal Tarayıcı (İş Keşfi)
 
 Yapılandırılmış iş portallarını tara, başlık ilgisine göre filtrele ve yeni iş ilanlarını sonradan değerlendirilmek üzere ardışık düzene (pipeline) ekle.
 
@@ -6,7 +6,7 @@ Yapılandırılmış iş portallarını tara, başlık ilgisine göre filtrele v
 >
 > **Kural (v1.8+):** Bir şirketin yerel ayrıştırıcısı Seviye 0'da başarıyla tamamlanırsa, ajan o şirketi Playwright (Seviye 1) veya API (Seviye 2) içinde **tekrarlamamalıdır**. Seviye 3'te genel sorgular aktif kalır, ancak halihazırda bir ayrıştırıcı tarafından kapsanmış olan şirketlerden gelen sonuçlar reddedilir. Bkz: [Kural: Başarılı Yerel Ayrıştırıcı](#rule-successful-local-parser--no-expensive-scraping-repetition).
 
-## Recommended Execution
+## Önerilen Çalıştırma (Recommended Execution)
 
 Ana etkileşimli bağlamı (interactive context) tüketmekten kaçınmak için, eğer komut satırı arayüzünüz (CLI) destekliyorsa bunu bir çalışan (worker) / alt ajan (subagent) olarak yürütün:
 
@@ -20,7 +20,7 @@ Agent(
 
 Oluşturulan alt ajan bir **tek geçişli çalışandır** (single-pass worker): aşağıda adlandırılan ayrıştırıcılar (parsers)/API'ler/Playwright/WebSearch ile taramayı doğrudan çalıştırır. Başka alt ajanlar oluşturmamalı veya diğer becerileri (skills) çağırmamalıdır (bkz. `modes/_shared.md` → Subagent delegation). Tarama işlemi `portals.yml` ile sınırlandırılmıştır; asla açık uçlu bir araştırma görevi değildir.
 
-## Configuration
+## Yapılandırma (Configuration)
 
 Şunları içeren `portals.yml` dosyasını oku:
 - `search_queries`: Portal bazında `site:` filtrelerine sahip WebSearch sorguları listesi (geniş keşif).
@@ -28,9 +28,9 @@ Oluşturulan alt ajan bir **tek geçişli çalışandır** (single-pass worker):
 - `tracked_companies[].parser`: SSR sayfaları veya kararlı HTML için isteğe bağlı yerel ayrıştırıcı.
 - `title_filter`: İş unvanlarını filtrelemek için anahtar kelimeler (olumlu/olumsuz/kıdem_artışı).
 
-## Discovery Strategy (4 Levels)
+## Keşif Stratejisi (4 Seviye)
 
-### Level 0 — Local Parser (CHEAPEST)
+### Seviye 0 — Yerel Ayrıştırıcı (EN UCUZ)
 
 **Yapılandırılmış bir `parser` değerine sahip `tracked_companies` içindeki her şirket için:** `portals.yml` içinde tanımlanan yerel ayrıştırıcıyı (local parser) yürüt. Bu seviye, kariyer sayfası SSR veya kararlı HTML kullandığında ve halihazırda ajan yardımı olmadan iş ilanlarını çıkaran yerel bir JavaScript, Python veya başka bir çalışma zamanı betiği (runtime script) olduğunda idealdir.
 
@@ -83,7 +83,7 @@ Dizi (Array) formatı:
 
 Tarayıcının (scanner) stdout okunduktan sonra tam JSON'u kalıcı olarak saklamasına gerek yoktur. Bir ayrıştırıcı denetim (auditing) veya hata ayıklama için ayrıca bir yapı (artifact) oluşturursa, bunu `data/parser-output/{company}/` altına kaydedin ve git haricinde tutun (`.gitignore` içindeki JSON dosyaları; dizin yapısını korumak için `.gitkeep` dosyaları git'te tutulur).
 
-### Rule: Successful Local Parser — No Expensive Scraping Repetition
+### Kural: Başarılı Yerel Ayrıştırıcı — Pahalı Kazıma Tekrarı Yok
 
 `scan_method: local_parser` işleminin amacı **jeton sayısını azaltmaktır** (reduce tokens): LLM'nin aynı şirketi Playwright veya gereksiz API'ler kullanarak tekrar taramasını (rescraping) engellemek.
 
@@ -107,7 +107,7 @@ Ajanın taraması sırasında, **`local_parser_ok`** kümesini bellekte tut. Bu 
 
 **Önerilen Seviye 0:** Tüm sıfır jetonluk (zero-token) yerel ayrıştırıcıları + API'leri tek adımda kapsamak için ajan iş akışının en başında `node scan.mjs` (veya `npm run scan`) komutunu çalıştır ve `local-parser` yöntemini başarıyla kullanan şirketleri geri döndür.
 
-### Level 1 — Direct Playwright (PRIMARY)
+### Seviye 1 — Doğrudan Playwright (BİRİNCİL)
 
 **`local_parser_ok` içinde bulunmayan `tracked_companies` listesindeki her bir şirket için:** Playwright ile ilgili şirketin `careers_url` adresine git (`browser_navigate` + `browser_snapshot`), GÖRÜNÜR durumdaki tüm iş ilanlarını (job listings) oku ve her biri için başlık (title) + URL'yi çıkar. Bu en güvenilir yöntemdir, çünkü:
 - Sayfayı eşzamanlı olarak görüntüler (önbelleğe alınmış Google sonuçlarını değil)
@@ -117,7 +117,7 @@ Ajanın taraması sırasında, **`local_parser_ok`** kümesini bellekte tut. Bu 
 
 **Her şirketin portals.yml dosyasında bir `careers_url` tanımlaması OLMALIDIR.** Eğer yoksa, bir kez ara, kaydet ve gelecekteki taramalarda kullan.
 
-### Level 2 — ATS APIs / Feeds (COMPLEMENTARY)
+### Seviye 2 — ATS API'leri / Akışları (TAMAMLAYICI)
 
 Açık bir API'si veya yapılandırılmış akışı (feed) olan ve **`local_parser_ok` içinde bulunmayan** şirketler için, Seviye 1'e hızlı bir tamamlayıcı olarak JSON/XML yanıtını kullan. Bu yöntem Playwright'tan daha hızlıdır ve görsel kazıma (scraping) hatalarını azaltır.
 
@@ -143,7 +143,7 @@ Açık bir API'si veya yapılandırılmış akışı (feed) olan ve **`local_par
 
 > **Dikkat — kırpılmış bir okumadan yola çıkarak ilanın bulunmadığı çıkarımını yapma.** Kariyer amaçlı SPA'lar sayfalandırma (pagination) ve tembel yükleme (lazy-load) kullanır; bir sayfanın `browser_snapshot` veya WebFetch çıktısı (ve o HTML'in herhangi bir LLM özeti), satırları sessizce düşürerek yalnızca ilk sayfadaki rolleri gösterebilir. Asla böyle bir okumadan yola çıkarak "X rolü yayında değil" veya "sadece N rol mevcut" sonucuna varma. Şirketin açık bir ATS API'si varsa, herhangi bir varlık/yokluk (presence/absence) iddiasında bulunmadan önce doğrudan bu API'yi vur (sağlayıcının desteklediği yerlerde `?content=true` ekleyerek) — API tüm ilan tahtasını yapılandırılmış tek bir yanıtla döndürür.
 
-### Level 3 — WebSearch Queries (BROAD DISCOVERY)
+### Seviye 3 — WebSearch Sorguları (GENİŞ KEŞİF)
 
 `site:` filtreleriyle donatılmış `search_queries`, portalları çaprazlama (transversally - tüm Ashby, tüm Greenhouse, vb.) kapsar. Henüz `tracked_companies` içinde olmayan YENİ şirketleri keşfetmek için kullanışlıdır, ancak sonuçlar eski (outdated) olabilir. `local_parser_ok` içindeki şirketlere ait sonuçlar filtrelendikten sonra, kalan sonuçlar Seviye 0–2 verileriyle tekilleştirilir (deduplicated).
 
@@ -157,7 +157,7 @@ Açık bir API'si veya yapılandırılmış akışı (feed) olan ve **`local_par
 
 Seviyeler eklenebilirdir (additive) — sırasıyla çalıştırılırlar ve sonuçlar birleştirilerek tekilleştirilir. `local_parser_ok` içindeki şirketler Seviye 1 veya 2'den **geçmez**; Seviye 3'te sadece çapraz keşfe (aynı portaldaki diğer şirketler) katkı sağlarlar.
 
-## Workflow
+## İş Akışı (Workflow)
 
 1. **Read Configuration**: `portals.yml`
 2. **Read History**: `data/scan-history.tsv` → daha önce görülmüş URL'ler
@@ -256,7 +256,7 @@ Seviyeler eklenebilirdir (additive) — sırasıyla çalıştırılırlar ve son
 10. **Duplicate offers**: `skipped_dup` durumuyla kaydet.
 11. **Expired offers (Level 3)**: `skipped_expired` durumuyla kaydet.
 
-## Extraction of Title and Company from WebSearch Results
+## WebSearch Sonuçlarından Başlık ve Şirket Çıkarımı
 
 WebSearch sonuçları genellikle şu formatlarda gelir: `"Job Title @ Company"`, `"Job Title | Company"` veya `"Job Title — Company"`.
 
@@ -267,13 +267,13 @@ Portal bazında çıkarım (extraction) kalıpları:
 
 Jenerik regex: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
 
-## Private URLs
+## Özel (Private) URL'ler
 
 Kamuya açık (publicly accessible) olmayan bir URL bulunursa:
 1. JD metnini `jds/{company}-{role-slug}.md` içine kaydet.
 2. `pipeline.md` içine şu şekilde ekle: `- [ ] local:jds/{company}-{role-slug}.md | {company} | {title}`
 
-## Scan History
+## Tarama Geçmişi (Scan History)
 
 `data/scan-history.tsv` görülen TÜM URL'leri takip eder:
 
@@ -282,7 +282,7 @@ url	first_seen	portal	title	company	status
 https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 ```
 
-## Output Summary
+## Çıktı Özeti (Output Summary)
 
 ```text
 Portal Taraması — {YYYY-MM-DD}
@@ -300,7 +300,7 @@ pipeline.md dosyasına yeni eklenenler: N
 → Yeni teklifleri değerlendirmek için `pipeline` modunu çalıştır (varsa `/career-ops pipeline` çalıştır veya ajandan `pipeline` çalıştırmasını iste).
 ```
 
-## Managing careers_url
+## careers_url Yönetimi
 
 `tracked_companies` altındaki her şirket mutlaka bir `careers_url`'ye (ilanlar sayfasına giden doğrudan URL) sahip olmalıdır. Bu, adresi her defasında arama zahmetinden kurtarır.
 
@@ -343,7 +343,7 @@ Bir şirket için **`careers_url` bulunmuyorsa**:
 2. Yedek yöntem olarak `scan_query` kullanmayı dene.
 3. Manuel güncelleme yapılması için işaretle.
 
-## Maintenance of portals.yml
+## portals.yml Bakımı
 
 - Yeni bir şirket eklerken **DAİMA `careers_url`'yi kaydet**.
 - İlgi çekici portallar veya roller keşfedildikçe yeni sorgular ekle.

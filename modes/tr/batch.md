@@ -1,8 +1,8 @@
-# Mode: batch — Mass Processing of Jobs
+# Mod: batch — İşlerin Toplu İşlenmesi
 
 İki kullanım modu vardır: **conductor --chrome** (portallarda gerçek zamanlı gezinir) veya **standalone** (önceden toplanmış URL'ler için betik).
 
-## Architecture
+## Mimari
 
 ```text
 Conductor (headed browser mode)
@@ -21,7 +21,7 @@ Conductor (headed browser mode)
 
 Her bir çalışan (worker), temiz bir 200K jetonluk (token) bağlama sahip olan başsız (headless) bir alt süreçtir (child process). Yönlendirici (conductor) sadece orkestrasyon yapar. İlgili CLI komutları için `AGENTS.md` içerisindeki **Headless / Batch Mode** tablosunu incele.
 
-## Files
+## Dosyalar
 
 ```text
 batch/
@@ -33,7 +33,7 @@ batch/
   tracker-additions/            # Takipçi satırları (git'ten yoksayılır)
 ```
 
-## Mode A: Conductor --chrome
+## Mod A: Conductor --chrome
 
 1. **Read state**: `batch/batch-state.tsv` → neyin halihazırda işlendiğini tespit et.
 2. **Navigate portal**: Chrome → arama URL'sine git.
@@ -55,7 +55,7 @@ batch/
 5. **Pagination**: Eğer başka iş yoksa → "Next" (İleri) tıkla → tekrar et.
 6. **End**: `tracker-additions/` klasörünü → `applications.md` + özet ile birleştir.
 
-### What to watch during a run
+### Bir çalışma sırasında neleri izlemeli
 
 Bir conductor çalışması (run) esnasında, operatörün izlemesi gereken iki temel canlı arayüz vardır:
 1. **Başlıklı (headed) Chrome penceresi:** Tarayıcının portallarda gezinmesini, oturumlara giriş yapmasını ve iş tanımı sayfalarıyla gerçek zamanlı etkileşime girmesini izle.
@@ -63,7 +63,7 @@ Bir conductor çalışması (run) esnasında, operatörün izlemesi gereken iki 
 
 Bireysel çalışan görevleri (worker tasks) arka planda başsız olarak oluşturulur ve stdout/stderr günlüklerini istendiğinde incelenebilecek şekilde `batch/logs/{report_num}-{id}.log` içine yazar.
 
-### Manual multi-agent fan-out
+### Manuel çoklu-ajan dağılımı
 
 N adet paralel değerlendiriciyi (evaluators) el ile mi yönetiyorsunuz (birden fazla ajan penceresi / alt ajanlar, `batch-runner.sh` dışında)? ÖNCE tüm aralığı (range) rezerve et, ardından her çalışana kendi numarasını ver — çalışanların (workers) `max+1` işlemini kendilerinin hesaplamasına asla izin verme:
 
@@ -83,7 +83,7 @@ node reserve-report-num.mjs --release 042-049
 - **4-saatlik koruma penceresi.** 4 saatten daha eski işaretçiler (sentinels) çöp toplayıcı tarafından temizlenir (`verify-pipeline.mjs` bunu tetikler). Aralığı (range), uzun bir oturumun başında değil, hemen çalışanları (workers) oluşturmadan önce rezerve et. Bir çalışan gerçek raporunu yazdığında o slot kalıcı olarak güvendedir — 4 saat sonra sadece yavaş kalmış veya hiç başlatılmamış slotlar risk altındadır.
 - **Boşluklar normaldir.** Bir rezervasyon çarpışır ve yeniden başlarsa, atlanan numaralar (örn. `006`) bir daha asla kullanılmaz. Rapor numaraları şeffaf olmayan (opaque) kimliklerdir (ID'lerdir); numara atlanması bir veri bozulması (corruption) anlamına gelmez.
 
-## Mode B: Standalone script
+## Mod B: Bağımsız (Standalone) betik
 
 ```bash
 batch/batch-runner.sh [OPTIONS]
@@ -99,7 +99,7 @@ Seçenekler (Options):
 - `--max-retries N` — iş başına deneme sayısı (varsayılan: 2)
 - `--rate-limit-sleep N` — anlık rate-limit engeline takılan bir çalışanı yeniden denemeden önce beklenecek saniye (varsayılan: 300; yığını hemen duraklatmak için 0 kullanın)
 
-## batch-state.tsv Format
+## batch-state.tsv Formatı
 
 ```text
 id	url	status	started_at	completed_at	report_num	score	error	retries
@@ -114,13 +114,13 @@ Geçerli durumlar (statuses) şunlardır: `pending`, `processing`, `completed`, 
 
 `paused_rate_limit`, bir çalışanın Claude oturumu/kullanım sınırına ulaştığı anlamına gelir. Çalıştırıcı (runner) yeni teklifler planlamayı durdurur, yeniden deneme (retry) sayısını korur ve yalnızca açıkça `--resume-paused` ile çağrıldığında devam eder.
 
-## Resumability
+## Devam Edilebilirlik
 
 - Eğer çökerse → yeniden çalıştır (re-run) → `batch-state.tsv` okunur → tamamlanan işleri atlar (skip).
 - Kilit dosyası (`batch-runner.pid`) çifte çalıştırmayı (double execution) önler.
 - Her bir çalışan (worker) bağımsızdır: 47 numaralı işte yaşanan bir hata, diğerlerini etkilemez.
 
-## Workers (headless mode)
+## Çalışanlar (başsız mod)
 
 Her çalışan `batch-prompt.md` dosyasını sistem istemi (system prompt) olarak alır. Kendi içinde tutarlıdır (self-contained). CLI'nıza ait başsız (headless) komutu kullanın — `AGENTS.md` içindeki **Headless / Batch Mode** tablosunu incele.
 
@@ -130,7 +130,7 @@ Her çalışan `batch-prompt.md` dosyasını sistem istemi (system prompt) olara
 3. `batch/tracker-additions/{id}.tsv` içinde takipçi satırı (tracker line).
 4. stdout üzerinden Sonuç JSON'u (Result JSON).
 
-## Error handling
+## Hata yönetimi
 
 | Hata (Error) | Kurtarma (Recovery) |
 |-------|----------|
