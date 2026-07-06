@@ -243,205 +243,7 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ═══ Stage 2 (#1596): Via column ════════════════════════════════════════════
-
-const HEADER_VIA = `# Applications Tracker
-
-| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|-----|------|-------|--------|-----|--------|-------|
-| 1 | 2026-01-01 | Acme | — | Engineer | 4.0/5 | Applied | ✅ | — | direct seed row |
-| 2 | 2026-01-05 | ? | Hays | Data Engineer | 4.2/5 | Applied | ✅ | — | fintech, Leeds |
-`;
-
-// ── Test 8: parseTrackerRow surfaces the Via column ─────────────────────────
-{
-  const { resolveColumns, parseTrackerRow } = await import('./tracker-parse.mjs');
-  const lines = HEADER_VIA.split('\n');
-  const colmap = resolveColumns(lines);
-  const rows = lines.map(l => parseTrackerRow(l, colmap)).filter(Boolean);
-  const direct = rows.find(r => r.num === 1);
-  const blind = rows.find(r => r.num === 2);
-  if (direct && direct.via === '—' && direct.role === 'Engineer' && direct.score === '4.0/5') {
-    pass('parseTrackerRow: Via column mapped, later columns not shifted');
-  } else {
-    fail(`parseTrackerRow: Via layout — got ${JSON.stringify(direct)}`);
-  }
-  if (blind && blind.company === '?' && blind.via === 'Hays' && blind.status === 'Applied') {
-    pass('parseTrackerRow: unknown-employer (?) row carries via');
-  } else {
-    fail(`parseTrackerRow: ? row — got ${JSON.stringify(blind)}`);
-  }
-}
-
-// ── Test 9: TSV `via=` tagged field merges into the Via column ──────────────
-// The batch TSV is header-less and positional; Via travels as a tagged extra
-// field (`via=Hays`) instead of another positional slot, so a stale writer
-// omitting the empty-location pad can't silently shift columns.
-{
-  const TSV_VIA = '3\t2026-02-02\t?\tPlatform Engineer\tApplied\t4.1/5\t✅\t—\tblind agency listing\tvia=Hays\n';
-  const sb = makeSandbox(HEADER_VIA, { '3-blind.tsv': TSV_VIA });
-  const res = runScript('merge-tracker.mjs', [], sb);
-  const row = dataRows(sb.tracker).find(l => l.includes('Platform Engineer'));
-  const cells = row ? row.split('|').map(s => s.trim()) : [];
-  // cells: ['', num, date, company, via, role, score, status, pdf, report, notes, '']
-  if (res.code === 0 && cells[3] === '?' && cells[4] === 'Hays' && cells[6] === '4.1/5' && cells[7] === 'Applied') {
-    pass('merge: via= tag lands in the Via column, ? company preserved');
-  } else {
-    fail(`merge: via= tag (code ${res.code}) row: ${row}\n${res.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
-
-// ── Test 10: ambiguous TSV extras are rejected loudly, never merged ─────────
-{
-  const TWO_UNTAGGED = '4\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tSingapore\tHays\n';
-  const TWO_TAGS = '5\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tvia=Hays\tvia=Randstad\n';
-  const sb = makeSandbox(HEADER_VIA, { '4-a.tsv': TWO_UNTAGGED, '5-b.tsv': TWO_TAGS });
-  const res = runScript('merge-tracker.mjs', [], sb);
-  const rows = dataRows(sb.tracker);
-  // Rejection is loud on stderr; runScript only captures stdout on success, so
-  // assert via the merge summary (2 skipped) plus the tracker staying clean.
-  if (!rows.some(l => l.includes('Globex')) && /2 skipped/.test(res.stdout)) {
-    pass('merge: ambiguous extras (two untagged / duplicate via=) rejected, not merged');
-  } else {
-    fail(`merge: ambiguous extras — rows: ${rows.length}\n${res.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
-
-// ── Test 11: cross-channel guard — ? rows never fuzzy-merge across agencies ─
-// Two blind listings for the same role via DIFFERENT agencies are distinct
-// submissions (#1596): merging them silently is exactly the double-submission
-// hazard the Via column exists to surface. Same agency + same role IS the
-// re-blast duplicate and must still merge/update.
-{
-  const OTHER_AGENCY = '6\t2026-02-02\t?\tData Engineer\tApplied\t4.5/5\t✅\t—\tsame role, other agency\tvia=Randstad\n';
-  const SAME_AGENCY = '7\t2026-02-03\t?\tData Engineer\tApplied\t4.6/5\t✅\t—\tre-blast, higher score\tvia=Hays\n';
-  const sb = makeSandbox(HEADER_VIA, { '6-other.tsv': OTHER_AGENCY });
-  const res1 = runScript('merge-tracker.mjs', [], sb);
-  const rowsAfter1 = dataRows(sb.tracker).filter(l => l.includes('Data Engineer'));
-  if (res1.code === 0 && rowsAfter1.length === 2 && rowsAfter1.some(l => l.includes('Randstad'))) {
-    pass('merge: ? row via a different agency added as a NEW row (no cross-channel merge)');
-  } else {
-    fail(`merge: cross-channel guard — ${rowsAfter1.length} Data Engineer rows\n${res1.stdout}`);
-  }
-  writeFileSync(join(sb.additions, '7-same.tsv'), SAME_AGENCY);
-  const res2 = runScript('merge-tracker.mjs', [], sb);
-  const hays = dataRows(sb.tracker).filter(l => l.includes('Hays') && l.includes('Data Engineer'));
-  if (res2.code === 0 && hays.length === 1 && hays[0].includes('4.6/5')) {
-    pass('merge: same-agency re-blast updates the existing ? row (Via preserved)');
-  } else {
-    fail(`merge: same-agency update — ${hays.length} Hays rows: ${hays.join(' / ')}\n${res2.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
-
-// ── Test 11b: legacy 9-col tracker — via= tag dropped WITHOUT breaking dedup ─
-// The tracker has no Via column, so existing rows parse with via=''. The
-// addition's via must be cleared before duplicate matching, or the
-// cross-channel guard would see 'Hays' ≠ '' and add a second ? row instead of
-// updating the same-agency re-blast.
-{
-  const FIRST = '2\t2026-02-02\t?\tData Engineer\tApplied\t4.1/5\t✅\t—\tblind listing\tvia=Hays\n';
-  const REBLAST = '3\t2026-02-10\t?\tData Engineer\tApplied\t4.3/5\t✅\t—\tre-blast, higher score\tvia=Hays\n';
-  const sb = makeSandbox(HEADER_9, { '2-first.tsv': FIRST });
-  const res1 = runScript('merge-tracker.mjs', [], sb);
-  writeFileSync(join(sb.additions, '3-reblast.tsv'), REBLAST);
-  const res2 = runScript('merge-tracker.mjs', [], sb);
-  const blind = dataRows(sb.tracker).filter(l => l.includes('Data Engineer'));
-  if (res1.code === 0 && res2.code === 0 && blind.length === 1 && blind[0].includes('4.3/5') && /1 updated/.test(res2.stdout)) {
-    pass('merge: legacy 9-col tracker — via= re-blast UPDATES the ? row (no duplicate)');
-  } else {
-    fail(`merge: legacy via= dedup — ${blind.length} rows: ${blind.join(' / ')}\n${res2.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
-
-// ── Test 12: --migrate-via inserts the column, idempotently ─────────────────
-{
-  const sb = makeSandbox(HEADER_9);
-  const first = runScript('merge-tracker.mjs', ['--migrate-via'], sb);
-  const content = readFileSync(sb.tracker, 'utf-8');
-  const header = content.split('\n').find(l => l.includes('Company'));
-  const seed = content.split('\n').find(l => l.includes('Acme'));
-  const headCells = header ? header.split('|').map(s => s.trim()) : [];
-  const seedCells = seed ? seed.split('|').map(s => s.trim()) : [];
-  if (first.code === 0 && headCells[4] === 'Via' && headCells[3] === 'Company' && seedCells[4] === '—' && seedCells[6] === '4.0/5') {
-    pass('--migrate-via: Via column inserted after Company, rows padded with —');
-  } else {
-    fail(`--migrate-via: header "${header}" seed "${seed}"\n${first.stdout}`);
-  }
-  const second = runScript('merge-tracker.mjs', ['--migrate-via'], sb);
-  if (second.code === 0 && readFileSync(sb.tracker, 'utf-8') === content) {
-    pass('--migrate-via: idempotent (second run changes nothing)');
-  } else {
-    fail(`--migrate-via: not idempotent\n${second.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
-
-// ── Test 13: dedup — unknown-employer rows key on Via + role + 90-day window ─
-{
-  const BLIND_TRACKER = `# Applications Tracker
-
-| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|-----|------|-------|--------|-----|--------|-------|
-| 1 | 2026-01-05 | ? | Hays | Data Engineer | 4.2/5 | Evaluated | ✅ | — | fintech, Leeds |
-| 2 | 2026-01-20 | ? | Hays | Data Engineer | 4.3/5 | Evaluated | ✅ | — | re-blast of same listing |
-| 3 | 2026-01-06 | ? | Randstad | Data Engineer | 4.0/5 | Evaluated | ✅ | — | different channel |
-| 4 | 2026-01-10 | ? | Hays | Platform Engineer | 3.9/5 | Evaluated | ✅ | — | old listing |
-| 5 | 2026-06-01 | ? | Hays | Platform Engineer | 4.4/5 | Evaluated | ✅ | — | far outside window |
-`;
-  const sb = makeSandbox(BLIND_TRACKER);
-  const res = runScript('dedup-tracker.mjs', [], sb);
-  const rows = dataRows(sb.tracker);
-  const dataEng = rows.filter(l => l.includes('Data Engineer'));
-  const platform = rows.filter(l => l.includes('Platform Engineer'));
-  if (res.code === 0 && dataEng.length === 2 && dataEng.some(l => l.includes('Randstad')) && dataEng.some(l => l.includes('4.3/5'))) {
-    pass('dedup: same-agency re-blast within 90d deduped; other agency kept');
-  } else {
-    fail(`dedup: blind keying — ${dataEng.length} Data Engineer rows:\n${dataEng.join('\n')}\n${res.stdout}`);
-  }
-  if (platform.length === 2) {
-    pass('dedup: same agency+role >90 days apart NOT deduped');
-  } else {
-    fail(`dedup: window — ${platform.length} Platform Engineer rows\n${res.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
-
-// ── Test 14: verify-pipeline Via checks ─────────────────────────────────────
-{
-  const VIA_ISSUES = `# Applications Tracker
-
-| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|-----|------|-------|--------|-----|--------|-------|
-| 1 | 2026-01-05 | ? | — | Data Engineer | 4.2/5 | Evaluated | ✅ | — | blind row, no agency |
-| 2 | 2026-01-06 | Confidential | Hays | ML Engineer | 4.0/5 | Evaluated | ✅ | — | word placeholder |
-| 3 | 2026-01-07 | Acme | Hays | Backend Engineer | 4.1/5 | Applied | ✅ | — | via agency |
-| 4 | 2026-01-08 | Acme | — | Backend Engineer | 4.1/5 | Applied | ✅ | — | direct too |
-`;
-  const sb = makeSandbox(VIA_ISSUES);
-  const res = runScript('verify-pipeline.mjs', [], sb);
-  if (/unknown employer \(\?\) with no Via/.test(res.stdout)) {
-    pass('verify: ? row with no Via channel is an error');
-  } else {
-    fail(`verify: ?-without-via\n${res.stdout}`);
-  }
-  if (/looks like a confidentiality placeholder/.test(res.stdout)) {
-    pass('verify: localized confidentiality word linted toward ?');
-  } else {
-    fail(`verify: confidentiality lint\n${res.stdout}`);
-  }
-  if (/Cross-channel duplicate/.test(res.stdout)) {
-    pass('verify: same company+role via different channels warned');
-  } else {
-    fail(`verify: cross-channel warning\n${res.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
-
-// ── Test 15: web read path resolves headers via the SHARED alias table ──────
+// ── Test 8: web read path resolves headers via the SHARED alias table ───────
 // web/src/lib/tracker-table.mjs (behind readApplications() in career-ops.ts)
 // loads tracker-aliases.json — the same file tracker-parse.mjs exports as
 // HEADER_ALIASES — instead of mirroring it. Passing ROOT here exercises the
@@ -480,6 +282,204 @@ const HEADER_VIA = `# Applications Tracker
   } else {
     fail(`web reader: alias table drifted from HEADER_ALIASES — web ${JSON.stringify(webAliases)} vs core ${JSON.stringify(HEADER_ALIASES)}`);
   }
+}
+
+// ═══ Stage 2 (#1596): Via column ════════════════════════════════════════════
+
+const HEADER_VIA = `# Applications Tracker
+
+| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|-----|------|-------|--------|-----|--------|-------|
+| 1 | 2026-01-01 | Acme | — | Engineer | 4.0/5 | Applied | ✅ | — | direct seed row |
+| 2 | 2026-01-05 | ? | Hays | Data Engineer | 4.2/5 | Applied | ✅ | — | fintech, Leeds |
+`;
+
+// ── Test 9: parseTrackerRow surfaces the Via column ─────────────────────────
+{
+  const { resolveColumns, parseTrackerRow } = await import('./tracker-parse.mjs');
+  const lines = HEADER_VIA.split('\n');
+  const colmap = resolveColumns(lines);
+  const rows = lines.map(l => parseTrackerRow(l, colmap)).filter(Boolean);
+  const direct = rows.find(r => r.num === 1);
+  const blind = rows.find(r => r.num === 2);
+  if (direct && direct.via === '—' && direct.role === 'Engineer' && direct.score === '4.0/5') {
+    pass('parseTrackerRow: Via column mapped, later columns not shifted');
+  } else {
+    fail(`parseTrackerRow: Via layout — got ${JSON.stringify(direct)}`);
+  }
+  if (blind && blind.company === '?' && blind.via === 'Hays' && blind.status === 'Applied') {
+    pass('parseTrackerRow: unknown-employer (?) row carries via');
+  } else {
+    fail(`parseTrackerRow: ? row — got ${JSON.stringify(blind)}`);
+  }
+}
+
+// ── Test 10: TSV `via=` tagged field merges into the Via column ──────────────
+// The batch TSV is header-less and positional; Via travels as a tagged extra
+// field (`via=Hays`) instead of another positional slot, so a stale writer
+// omitting the empty-location pad can't silently shift columns.
+{
+  const TSV_VIA = '3\t2026-02-02\t?\tPlatform Engineer\tApplied\t4.1/5\t✅\t—\tblind agency listing\tvia=Hays\n';
+  const sb = makeSandbox(HEADER_VIA, { '3-blind.tsv': TSV_VIA });
+  const res = runScript('merge-tracker.mjs', [], sb);
+  const row = dataRows(sb.tracker).find(l => l.includes('Platform Engineer'));
+  const cells = row ? row.split('|').map(s => s.trim()) : [];
+  // cells: ['', num, date, company, via, role, score, status, pdf, report, notes, '']
+  if (res.code === 0 && cells[3] === '?' && cells[4] === 'Hays' && cells[6] === '4.1/5' && cells[7] === 'Applied') {
+    pass('merge: via= tag lands in the Via column, ? company preserved');
+  } else {
+    fail(`merge: via= tag (code ${res.code}) row: ${row}\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 11: ambiguous TSV extras are rejected loudly, never merged ─────────
+{
+  const TWO_UNTAGGED = '4\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tSingapore\tHays\n';
+  const TWO_TAGS = '5\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\tnote\tvia=Hays\tvia=Randstad\n';
+  const sb = makeSandbox(HEADER_VIA, { '4-a.tsv': TWO_UNTAGGED, '5-b.tsv': TWO_TAGS });
+  const res = runScript('merge-tracker.mjs', [], sb);
+  const rows = dataRows(sb.tracker);
+  // Rejection is loud on stderr; runScript only captures stdout on success, so
+  // assert via the merge summary (2 skipped) plus the tracker staying clean.
+  if (!rows.some(l => l.includes('Globex')) && /2 skipped/.test(res.stdout)) {
+    pass('merge: ambiguous extras (two untagged / duplicate via=) rejected, not merged');
+  } else {
+    fail(`merge: ambiguous extras — rows: ${rows.length}\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 12: cross-channel guard — ? rows never fuzzy-merge across agencies ─
+// Two blind listings for the same role via DIFFERENT agencies are distinct
+// submissions (#1596): merging them silently is exactly the double-submission
+// hazard the Via column exists to surface. Same agency + same role IS the
+// re-blast duplicate and must still merge/update.
+{
+  const OTHER_AGENCY = '6\t2026-02-02\t?\tData Engineer\tApplied\t4.5/5\t✅\t—\tsame role, other agency\tvia=Randstad\n';
+  const SAME_AGENCY = '7\t2026-02-03\t?\tData Engineer\tApplied\t4.6/5\t✅\t—\tre-blast, higher score\tvia=Hays\n';
+  const sb = makeSandbox(HEADER_VIA, { '6-other.tsv': OTHER_AGENCY });
+  const res1 = runScript('merge-tracker.mjs', [], sb);
+  const rowsAfter1 = dataRows(sb.tracker).filter(l => l.includes('Data Engineer'));
+  if (res1.code === 0 && rowsAfter1.length === 2 && rowsAfter1.some(l => l.includes('Randstad'))) {
+    pass('merge: ? row via a different agency added as a NEW row (no cross-channel merge)');
+  } else {
+    fail(`merge: cross-channel guard — ${rowsAfter1.length} Data Engineer rows\n${res1.stdout}`);
+  }
+  writeFileSync(join(sb.additions, '7-same.tsv'), SAME_AGENCY);
+  const res2 = runScript('merge-tracker.mjs', [], sb);
+  const hays = dataRows(sb.tracker).filter(l => l.includes('Hays') && l.includes('Data Engineer'));
+  if (res2.code === 0 && hays.length === 1 && hays[0].includes('4.6/5')) {
+    pass('merge: same-agency re-blast updates the existing ? row (Via preserved)');
+  } else {
+    fail(`merge: same-agency update — ${hays.length} Hays rows: ${hays.join(' / ')}\n${res2.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 12b: legacy 9-col tracker — via= tag dropped WITHOUT breaking dedup ─
+// The tracker has no Via column, so existing rows parse with via=''. The
+// addition's via must be cleared before duplicate matching, or the
+// cross-channel guard would see 'Hays' ≠ '' and add a second ? row instead of
+// updating the same-agency re-blast.
+{
+  const FIRST = '2\t2026-02-02\t?\tData Engineer\tApplied\t4.1/5\t✅\t—\tblind listing\tvia=Hays\n';
+  const REBLAST = '3\t2026-02-10\t?\tData Engineer\tApplied\t4.3/5\t✅\t—\tre-blast, higher score\tvia=Hays\n';
+  const sb = makeSandbox(HEADER_9, { '2-first.tsv': FIRST });
+  const res1 = runScript('merge-tracker.mjs', [], sb);
+  writeFileSync(join(sb.additions, '3-reblast.tsv'), REBLAST);
+  const res2 = runScript('merge-tracker.mjs', [], sb);
+  const blind = dataRows(sb.tracker).filter(l => l.includes('Data Engineer'));
+  if (res1.code === 0 && res2.code === 0 && blind.length === 1 && blind[0].includes('4.3/5') && /1 updated/.test(res2.stdout)) {
+    pass('merge: legacy 9-col tracker — via= re-blast UPDATES the ? row (no duplicate)');
+  } else {
+    fail(`merge: legacy via= dedup — ${blind.length} rows: ${blind.join(' / ')}\n${res2.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 13: --migrate-via inserts the column, idempotently ─────────────────
+{
+  const sb = makeSandbox(HEADER_9);
+  const first = runScript('merge-tracker.mjs', ['--migrate-via'], sb);
+  const content = readFileSync(sb.tracker, 'utf-8');
+  const header = content.split('\n').find(l => l.includes('Company'));
+  const seed = content.split('\n').find(l => l.includes('Acme'));
+  const headCells = header ? header.split('|').map(s => s.trim()) : [];
+  const seedCells = seed ? seed.split('|').map(s => s.trim()) : [];
+  if (first.code === 0 && headCells[4] === 'Via' && headCells[3] === 'Company' && seedCells[4] === '—' && seedCells[6] === '4.0/5') {
+    pass('--migrate-via: Via column inserted after Company, rows padded with —');
+  } else {
+    fail(`--migrate-via: header "${header}" seed "${seed}"\n${first.stdout}`);
+  }
+  const second = runScript('merge-tracker.mjs', ['--migrate-via'], sb);
+  if (second.code === 0 && readFileSync(sb.tracker, 'utf-8') === content) {
+    pass('--migrate-via: idempotent (second run changes nothing)');
+  } else {
+    fail(`--migrate-via: not idempotent\n${second.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 14: dedup — unknown-employer rows key on Via + role + 90-day window ─
+{
+  const BLIND_TRACKER = `# Applications Tracker
+
+| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|-----|------|-------|--------|-----|--------|-------|
+| 1 | 2026-01-05 | ? | Hays | Data Engineer | 4.2/5 | Evaluated | ✅ | — | fintech, Leeds |
+| 2 | 2026-01-20 | ? | Hays | Data Engineer | 4.3/5 | Evaluated | ✅ | — | re-blast of same listing |
+| 3 | 2026-01-06 | ? | Randstad | Data Engineer | 4.0/5 | Evaluated | ✅ | — | different channel |
+| 4 | 2026-01-10 | ? | Hays | Platform Engineer | 3.9/5 | Evaluated | ✅ | — | old listing |
+| 5 | 2026-06-01 | ? | Hays | Platform Engineer | 4.4/5 | Evaluated | ✅ | — | far outside window |
+`;
+  const sb = makeSandbox(BLIND_TRACKER);
+  const res = runScript('dedup-tracker.mjs', [], sb);
+  const rows = dataRows(sb.tracker);
+  const dataEng = rows.filter(l => l.includes('Data Engineer'));
+  const platform = rows.filter(l => l.includes('Platform Engineer'));
+  if (res.code === 0 && dataEng.length === 2 && dataEng.some(l => l.includes('Randstad')) && dataEng.some(l => l.includes('4.3/5'))) {
+    pass('dedup: same-agency re-blast within 90d deduped; other agency kept');
+  } else {
+    fail(`dedup: blind keying — ${dataEng.length} Data Engineer rows:\n${dataEng.join('\n')}\n${res.stdout}`);
+  }
+  if (platform.length === 2) {
+    pass('dedup: same agency+role >90 days apart NOT deduped');
+  } else {
+    fail(`dedup: window — ${platform.length} Platform Engineer rows\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 15: verify-pipeline Via checks ─────────────────────────────────────
+{
+  const VIA_ISSUES = `# Applications Tracker
+
+| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|-----|------|-------|--------|-----|--------|-------|
+| 1 | 2026-01-05 | ? | — | Data Engineer | 4.2/5 | Evaluated | ✅ | — | blind row, no agency |
+| 2 | 2026-01-06 | Confidential | Hays | ML Engineer | 4.0/5 | Evaluated | ✅ | — | word placeholder |
+| 3 | 2026-01-07 | Acme | Hays | Backend Engineer | 4.1/5 | Applied | ✅ | — | via agency |
+| 4 | 2026-01-08 | Acme | — | Backend Engineer | 4.1/5 | Applied | ✅ | — | direct too |
+`;
+  const sb = makeSandbox(VIA_ISSUES);
+  const res = runScript('verify-pipeline.mjs', [], sb);
+  if (/unknown employer \(\?\) with no Via/.test(res.stdout)) {
+    pass('verify: ? row with no Via channel is an error');
+  } else {
+    fail(`verify: ?-without-via\n${res.stdout}`);
+  }
+  if (/looks like a confidentiality placeholder/.test(res.stdout)) {
+    pass('verify: localized confidentiality word linted toward ?');
+  } else {
+    fail(`verify: confidentiality lint\n${res.stdout}`);
+  }
+  if (/Cross-channel duplicate/.test(res.stdout)) {
+    pass('verify: same company+role via different channels warned');
+  } else {
+    fail(`verify: cross-channel warning\n${res.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
