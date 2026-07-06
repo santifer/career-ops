@@ -110,24 +110,55 @@ export type Application = {
 };
 
 /**
+ * Header text (lowercased) → Application field. Mirrors HEADER_ALIASES in
+ * tracker-parse.mjs (#954) so the web read path tolerates the same customized
+ * layouts (e.g. an inserted Location column) as the Node tracker tooling.
+ */
+const TRACKER_ALIASES: Record<string, keyof Application | "location"> = {
+  "#": "n", num: "n", date: "date", company: "company", empresa: "company",
+  role: "role", puesto: "role", location: "location", score: "score",
+  status: "status", pdf: "pdf", report: "report", notes: "notes",
+};
+
+/**
  * Parse data/applications.md — the tracker table (source of truth).
- * Column order: # | Date | Company | Role | Score | Status | PDF | Report | Notes
- * (note: score BEFORE status, per the core data contract).
+ * Columns are mapped by header name; the legacy fixed order
+ * (# | Date | Company | Role | Score | Status | PDF | Report | Notes)
+ * is the fallback when no recognizable header row is present.
  */
 export function readApplications(): Application[] {
   const md = read("data/applications.md");
   if (!md) return [];
   const rows: Application[] = [];
+  let map: Partial<Record<keyof Application | "location", number>> | null = null;
   for (const raw of md.split("\n")) {
     const line = raw.trim();
     if (!line.startsWith("|")) continue;
     const cells = line.split("|").slice(1, -1).map((c) => c.trim());
-    // Tolerate both layouts: the current 9-col tracker and older variants
-    // where the Notes column is absent (8 cells). Score is always before Status.
     if (cells.length < 8) continue;
-    if (cells[0] === "#" || /^:?-{2,}:?$/.test(cells[0])) continue; // header / separator
-    const [n, date, company, role, score, status, pdf, report, ...rest] = cells;
-    rows.push({ n, date, company, role, score, status, pdf, report, notes: rest.join(" | ") });
+    if (cells[0] === "#") {
+      // Header row → build the column map (first occurrence of each name wins).
+      const m: Partial<Record<keyof Application | "location", number>> = {};
+      cells.forEach((c, i) => {
+        const k = TRACKER_ALIASES[c.toLowerCase()];
+        if (k && m[k] == null) m[k] = i;
+      });
+      if ((["n", "company", "role", "score", "status"] as const).every((k) => m[k] != null)) map = m;
+      continue;
+    }
+    if (/^:?-{2,}:?$/.test(cells[0])) continue; // separator
+    if (map) {
+      const at = (k: keyof Application) => cells[map![k] as number] ?? "";
+      rows.push({
+        n: at("n"), date: at("date"), company: at("company"), role: at("role"),
+        score: at("score"), status: at("status"), pdf: at("pdf"), report: at("report"),
+        notes: at("notes"),
+      });
+    } else {
+      // Legacy fixed order; tolerate the 8-cell variant where Notes is absent.
+      const [n, date, company, role, score, status, pdf, report, ...rest] = cells;
+      rows.push({ n, date, company, role, score, status, pdf, report, notes: rest.join(" | ") });
+    }
   }
   return rows;
 }
