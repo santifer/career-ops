@@ -752,6 +752,49 @@ if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('
 } else {
   fail('renderHtmlToPdf does not read manifest metadata from opts');
 }
+
+if (generatePdfScript.includes('--allow-reorder')) {
+  pass('generate-pdf documents --allow-reorder in its usage strings');
+} else {
+  fail('generate-pdf is missing --allow-reorder from its usage strings');
+}
+
+try {
+  const { validateCvSectionOrder } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const cvMarkdown = '# Education\ntext\n# Work Experience\ntext\n# Projects\ntext';
+  const reorderedHtml = '<div class="section-title">Projects</div><div class="section-title">Education</div>';
+
+  let threw = false;
+  try {
+    validateCvSectionOrder(reorderedHtml, cvMarkdown);
+  } catch {
+    threw = true;
+  }
+  if (threw) {
+    pass('validateCvSectionOrder throws on a reordered CV by default (--allow-reorder unset)');
+  } else {
+    fail('validateCvSectionOrder should throw by default when section order diverges from cv.md');
+  }
+
+  const originalWarn = console.warn;
+  let warned = false;
+  console.warn = () => { warned = true; };
+  let threwWithFlag = false;
+  try {
+    validateCvSectionOrder(reorderedHtml, cvMarkdown, { allowReorder: true });
+  } catch {
+    threwWithFlag = true;
+  } finally {
+    console.warn = originalWarn;
+  }
+  if (!threwWithFlag && warned) {
+    pass('validateCvSectionOrder({ allowReorder: true }) warns instead of throwing on a reordered CV');
+  } else {
+    fail('validateCvSectionOrder({ allowReorder: true }) should warn, not throw, and should not silently do neither');
+  }
+} catch (e) {
+  fail(`validateCvSectionOrder allowReorder tests crashed: ${e.message}`);
+}
 try {
   const { repoRelativeManifestPath, injectPrintPageCss } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
   const insideHtmlPath = join(ROOT, 'templates', 'cv-template.html');
