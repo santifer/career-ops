@@ -102,7 +102,10 @@ export function resolveColumns(lines) {
 export function parseTrackerRow(line, colmap = LEGACY_COLMAP) {
   if (typeof line !== 'string' || !line.startsWith('|')) return null;
   const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
+  // Dynamic guard (mirrors merge-tracker parseAppLine): the row must cover the
+  // highest mapped index, so a truncated row on a layout with optional columns
+  // (Via, Location) is rejected instead of silently reading '' for the tail.
+  if (parts.length <= Math.max(...Object.values(colmap))) return null;
   const num = parseInt(parts[colmap.num], 10);
   if (isNaN(num)) return null;
   const at = (k) => (colmap[k] != null ? (parts[colmap[k]] ?? '') : '');
