@@ -11,7 +11,7 @@ console.log('\nbrowser-extract.mjs (config + normalizers)');
 
 try {
   const mod = await import(pathToFileURL(join(ROOT, 'browser-extract.mjs')).href);
-  const { resolveExtractorMode, compactText, normalizeJd, normalizeListing } = mod;
+  const { resolveExtractorMode, compactText, normalizeJd, normalizeListing, parseArgs } = mod;
 
   // resolveExtractorMode — default mcp, explicit cli, garbage → mcp, missing → mcp
   const tmp = mkdtempSync(join(tmpdir(), 'career-ops-extractor-'));
@@ -27,9 +27,25 @@ try {
     else fail('resolveExtractorMode should fall back to mcp on garbage');
     if (resolveExtractorMode(join(tmp, 'does-not-exist.yml')) === 'mcp') pass('resolveExtractorMode returns mcp when the profile is missing');
     else fail('resolveExtractorMode should return mcp for a missing file');
+    if (resolveExtractorMode(write('malformed.yml', 'scan:\n  extractor: [cli\n')) === 'mcp') pass('resolveExtractorMode falls back to mcp on malformed YAML (catch branch)');
+    else fail('resolveExtractorMode should return mcp when the YAML is invalid');
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
+
+  // parseArgs — index-based: a flag value is never mistaken for the URL, and 0 is honored
+  const flagsFirst = parseArgs(['--mode', 'listing', 'https://x/careers']);
+  if (flagsFirst.url === 'https://x/careers' && flagsFirst.mode === 'listing') pass('parseArgs finds the URL even when flags precede it');
+  else fail(`parseArgs flags-first => ${JSON.stringify(flagsFirst)}`);
+  const urlFirst = parseArgs(['https://x/1', '--mode', 'jd', '--max', '5']);
+  if (urlFirst.url === 'https://x/1' && urlFirst.mode === 'jd' && urlFirst.max === 5) pass('parseArgs handles url-first with flags');
+  else fail(`parseArgs url-first => ${JSON.stringify(urlFirst)}`);
+  const zeroMax = parseArgs(['https://x/1', '--max', '0']);
+  if (zeroMax.max === 0) pass('parseArgs honors --max 0 (not silently replaced by the default)');
+  else fail(`parseArgs --max 0 => ${zeroMax.max}`);
+  const badMax = parseArgs(['https://x/1', '--max', 'abc']);
+  if (badMax.max === 200) pass('parseArgs falls back to the default for a non-integer --max');
+  else fail(`parseArgs --max abc => ${badMax.max}`);
 
   // compactText — collapse whitespace + cap length
   if (compactText('a   b\t\tc') === 'a b c') pass('compactText collapses runs of whitespace');

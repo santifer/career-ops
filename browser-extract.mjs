@@ -119,6 +119,34 @@ export function normalizeListing(anchors, finalUrl, max = DEFAULT_LISTING_MAX) {
   return { url: finalUrl, jobs };
 }
 
+/**
+ * Parse CLI args into { url, mode, max, timeout }. Index-based so a flag value
+ * (e.g. the `listing` in `--mode listing`) is never mistaken for the URL, and an
+ * explicit `0` is honored instead of being silently replaced by the default.
+ * Exported for tests.
+ * @param {string[]} argv - process.argv.slice(2)
+ */
+export function parseArgs(argv) {
+  const FLAGS = new Set(['--mode', '--max', '--timeout']);
+  let url;
+  let mode = 'jd';
+  let max = DEFAULT_LISTING_MAX;
+  let timeout = DEFAULT_TIMEOUT_MS;
+  for (let i = 0; i < argv.length; i++) {
+    const tok = argv[i];
+    if (FLAGS.has(tok)) {
+      const val = argv[++i]; // consume the next token as this flag's value
+      const n = Number(val);
+      if (tok === '--mode' && val != null) mode = val;
+      else if (tok === '--max' && Number.isInteger(n) && n >= 0) max = n;
+      else if (tok === '--timeout' && Number.isInteger(n) && n > 0) timeout = n;
+    } else if (!tok.startsWith('--') && url === undefined) {
+      url = tok;
+    }
+  }
+  return { url, mode, max, timeout };
+}
+
 // Read the raw DOM inside the page: title, main visible text, and visible
 // anchors. Runs in the browser context; returns plain data only.
 async function readDom(page) {
@@ -149,11 +177,7 @@ async function readDom(page) {
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  const url = args.find((a) => !a.startsWith('--'));
-  const mode = (args[args.indexOf('--mode') + 1] && args.includes('--mode')) ? args[args.indexOf('--mode') + 1] : 'jd';
-  const max = args.includes('--max') ? parseInt(args[args.indexOf('--max') + 1], 10) || DEFAULT_LISTING_MAX : DEFAULT_LISTING_MAX;
-  const timeout = args.includes('--timeout') ? parseInt(args[args.indexOf('--timeout') + 1], 10) || DEFAULT_TIMEOUT_MS : DEFAULT_TIMEOUT_MS;
+  const { url, mode, max, timeout } = parseArgs(process.argv.slice(2));
 
   if (!url) {
     console.error(JSON.stringify({ error: 'usage: browser-extract.mjs <url> [--mode jd|listing] [--max N]', code: 'no_url' }));
@@ -182,10 +206,26 @@ async function main() {
   try {
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext(LIVENESS_CONTEXT_OPTIONS);
+    // Block every request (main navigation, redirect hop, or subresource) to a
+    // private/loopback/link-local or non-http(s) host. Guarding only the initial
+    // URL isn't enough once we return page CONTENT: a server-side redirect could
+    // otherwise steer the browser at internal infrastructure (SSRF).
+    await context.route('**/*', (route) => {
+      if (rejectPrivateOrInvalid(route.request().url())) return route.abort('blockedbyclient');
+      return route.continue();
+    });
     const page = await context.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
     await page.waitForTimeout(HYDRATION_WAIT_MS); // let SPAs hydrate
+
+    // Belt-and-suspenders: never emit content read from a private final URL.
     const finalUrl = page.url();
+    const finalGuard = rejectPrivateOrInvalid(finalUrl);
+    if (finalGuard) {
+      console.error(JSON.stringify({ error: `blocked final URL: ${finalGuard.reason}`, code: finalGuard.code }));
+      process.exitCode = 1;
+      return;
+    }
     const raw = await readDom(page);
 
     const result = mode === 'listing'
