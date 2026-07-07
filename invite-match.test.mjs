@@ -67,6 +67,13 @@ const reqIdRows = [
 const reqIdResult = matchInvite({ company: 'Fabrikam', date: null, reqId: 'R-4821' }, reqIdRows);
 eq('row with matching reqId in notes outranks identical-name row without it', reqIdResult[0].appNumber, 302);
 
+// The req-ID boost must be case-insensitive: the invite and the tracker
+// notes may case the same ID differently ("r-4821" vs "R-4821"), and a
+// casing mismatch silently dropping the strongest signal is exactly the
+// kind of regression this suite exists to catch.
+const reqIdCaseResult = matchInvite({ company: 'Fabrikam', date: null, reqId: 'r-4821' }, reqIdRows);
+eq('reqId boost still applies when invite cases the ID differently than the notes', reqIdCaseResult[0].appNumber, 302);
+
 // Two distinct companies that each end in a *different pair* of chained
 // generic descriptor words must not erode down to the same root — this is
 // the actual over-stripping bug raised on PR #1497: chaining generic-word
