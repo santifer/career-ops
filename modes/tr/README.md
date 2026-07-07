@@ -45,8 +45,12 @@ Ardından ilk oturumda Claude'a bu ayarı hatırlat ("profile.yml'e baktım, `la
 | `is-ilani.md` | `modes/oferta.md` (ES) | Tek bir ilanın tam değerlendirmesi (Bloklar A-G) |
 | `basvuru.md` | `modes/apply.md` (EN) | Başvuru formu için canlı asistan |
 | `pipeline.md` | `modes/pipeline.md` (ES) | URL gelen kutusu / biriktirilmiş ilanlar için ikinci beyin |
+| `project.md` | `modes/project.md` (EN) | Portfolyo projesi değerlendirmesi |
+| `training.md` | `modes/training.md` (EN) | Eğitim ve kurs değerlendirmesi |
+| `tracker.md` | `modes/tracker.md` (EN) | Başvuru takipçisi |
+| `auto-pipeline.md` | `modes/auto-pipeline.md` (EN) | Tam otomatik süreç (ilan çıkarma, değerlendirme, pdf, yanıt taslağı) |
 
-Diğer modlar (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `contacto`, `ofertas`, `project`, `training`) İngilizce/İspanyolca orijinalleriyle çalışmaya devam eder — içerikleri büyük ölçüde araç komutları, dosya yolları ve yapılandırma talimatlarından oluştuğundan dilden bağımsız kalmaları tercih edilmiştir.
+Diğer modlar (scan, batch, pdf, deep, contacto, ofertas) İngilizce/İspanyolca orijinalleriyle çalışmaya devam eder — içerikleri büyük ölçüde araç komutları, dosya yolları ve yapılandırma talimatlarından oluştuğundan dilden bağımsız kalmaları tercih edilmiştir.
 
 ## Türkiye'ye Özgü Piyasa Kapsamı
 
