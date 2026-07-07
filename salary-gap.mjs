@@ -140,6 +140,7 @@ export function fold(observations, apps, profileDesired) {
 
   const applications = [];
   const orphans = [];
+  const currencyMismatches = [];
   const unparseable = observations
     .filter(o => o.parsed === null && o.amount && o.amount !== '?')
     .map(o => ({ num: o.num, type: o.type, raw: o.amount }));
@@ -155,11 +156,19 @@ export function fold(observations, apps, profileDesired) {
     const desired = pickEffective('desired', profileObs ? [...obs, profileObs] : obs);
     const advertised = pickEffective('advertised', obs);
     const actual = pickEffective('actual', obs);
+    // Gap pcts only compare like currencies — no FX conversion, so a cross-currency
+    // pct would be meaningless. Strict string equality; UNKNOWN === UNKNOWN counts
+    // as a match (we can't disprove a match we can't see). Skips are reported in
+    // quality.currencyMismatches, never dropped silently.
+    const advComparable = advertised && actual && advertised.currency === actual.currency;
+    const desComparable = desired && actual && desired.currency === actual.currency;
+    if (advertised && actual && !advComparable) currencyMismatches.push({ num, comparison: 'advertised-vs-actual', currencies: [advertised.currency, actual.currency] });
+    if (desired && actual && !desComparable) currencyMismatches.push({ num, comparison: 'desired-vs-actual', currencies: [desired.currency, actual.currency] });
     applications.push({
       num, company: apps[num].company, role: apps[num].role,
       desired, advertised, actual, trail,
-      advToActPct: advertised && actual ? pctDelta(advertised.value, actual.value) : null,
-      desiredToActPct: desired && actual ? pctDelta(desired.value, actual.value) : null,
+      advToActPct: advComparable ? pctDelta(advertised.value, actual.value) : null,
+      desiredToActPct: desComparable ? pctDelta(desired.value, actual.value) : null,
     });
   }
   // apps with no observations at all but a profile desired still get the default
@@ -184,11 +193,13 @@ export function fold(observations, apps, profileDesired) {
     const agg = byCurrency[cur];
     agg.confirmed += 1;
     agg.newestActual = [agg.newestActual, a.actual.date].filter(Boolean).sort().pop();
-    if (a.advertised) {
+    // pct !== null implies both sides exist AND currencies match (see fold above),
+    // so cross-currency pairs are excluded from gap lists and at/above counts alike.
+    if (a.advToActPct !== null) {
       agg.advGaps.push(a.advToActPct);
       if (a.actual.value >= a.advertised.value) agg.atOrAboveAdvertised += 1;
     }
-    if (a.desired && a.actual.value >= a.desired.value) agg.atOrAboveDesired += 1;
+    if (a.desiredToActPct !== null && a.actual.value >= a.desired.value) agg.atOrAboveDesired += 1;
 
     const key = `${a.company}|${a.role}`;
     byCompanyRole[key] ??= { company: a.company, role: a.role, confirmed: 0, advToActPcts: [] };
@@ -204,7 +215,11 @@ export function fold(observations, apps, profileDesired) {
   return {
     applications,
     aggregates: { byCurrency, byCompanyRole },
-    quality: { orphans, unparseable, withoutActual: applications.filter(a => !a.actual).length, latestObservation: today },
+    quality: {
+      orphans, unparseable,
+      currencyMismatches: currencyMismatches.sort((a, b) => a.num.localeCompare(b.num)),
+      withoutActual: applications.filter(a => !a.actual).length, latestObservation: today,
+    },
   };
 }
 
@@ -239,6 +254,17 @@ company: "Globex"
 role: "Data Eng"
 score: 3.9
 advertised_comp: "100k EUR"
+\`\`\`
+`;
+const REPORT_FIXTURE_004 = `# Eval: Umbrella — AI Eng
+
+## Machine Summary
+
+\`\`\`yaml
+company: "Umbrella"
+role: "AI Eng"
+score: 4.1
+advertised_comp: "100k USD"
 \`\`\`
 `;
 const REPORT_FIXTURE_003 = `# Eval: Initech — Platform
@@ -290,12 +316,16 @@ function selfTest() {
     '001': { company: 'Acme', role: 'ML Eng' },
     '002': { company: 'Globex', role: 'Data Eng' },
     '003': { company: 'Initech', role: 'Platform' },
+    '004': { company: 'Umbrella', role: 'AI Eng' },
   };
   const reportObs = [
     { num: '001', ...reportToObservation(REPORT_FIXTURE_001, '001', '2026-06-20').observation },
     { num: '002', ...reportToObservation(REPORT_FIXTURE_002, '002', '2026-06-25').observation },
+    { num: '004', ...reportToObservation(REPORT_FIXTURE_004, '004', '2026-06-27').observation },
   ];
-  const result = fold([...obs, ...reportObs], apps, { amount: '90k', currency: 'EUR' });
+  // cross-currency fixture: advertised USD (report) + actual GBP + desired EUR (profile)
+  const crossCurrencyObs = parseObservations('004\t2026-06-30\tactual\t88k\tGBP\toffer-letter\tcross-currency on purpose');
+  const result = fold([...obs, ...reportObs, ...crossCurrencyObs], apps, { amount: '90k', currency: 'EUR' });
 
   const a1 = result.applications.find(a => a.num === '001');
   // trust precedence: contract 86k (2026-07-05) wins over offer-letter 84k even though
@@ -313,9 +343,24 @@ function selfTest() {
   assert(a2.actual.source === 'recruiter-verbal', '002 actual from verbal');
   assert(a2.desired.source === 'profile' && a2.desired.value === 90000, '002 desired falls back to profile');
 
+  // cross-currency guard: advertised USD vs actual GBP, desired EUR vs actual GBP
+  const a4 = result.applications.find(a => a.num === '004');
+  assert(a4.advertised.currency === 'USD' && a4.actual.currency === 'GBP', '004 mixed currencies folded');
+  assert(a4.advToActPct === null, `004 cross-currency adv->act pct must be null, got ${a4.advToActPct}`);
+  assert(a4.desiredToActPct === null, `004 cross-currency desired->act pct must be null, got ${a4.desiredToActPct}`);
+  const gbp = result.aggregates.byCurrency.GBP;
+  assert(gbp.confirmed === 1 && gbp.meanAdvToActPct === null && gbp.atOrAboveAdvertised === 0 && gbp.atOrAboveDesired === 0,
+    'GBP aggregates exclude cross-currency comparisons');
+
   // data quality
   assert(result.quality.orphans.length === 1 && result.quality.orphans[0].num === '007', 'orphan 007 reported');
   assert(result.quality.unparseable.length === 1 && result.quality.unparseable[0].raw === '9ok', 'typo 9ok reported');
+  const mm = result.quality.currencyMismatches;
+  assert(mm.length === 2, `2 currency mismatches reported, got ${mm.length}`);
+  assert(mm.some(m => m.num === '004' && m.comparison === 'advertised-vs-actual' && m.currencies[0] === 'USD' && m.currencies[1] === 'GBP'),
+    'advertised-vs-actual mismatch reported for 004');
+  assert(mm.some(m => m.num === '004' && m.comparison === 'desired-vs-actual' && m.currencies[0] === 'EUR' && m.currencies[1] === 'GBP'),
+    'desired-vs-actual mismatch reported for 004');
 
   // aggregates (EUR: 001 +1.18%, 002 -12%) grouped per currency
   const eur = result.aggregates.byCurrency.EUR;
@@ -326,7 +371,7 @@ function selfTest() {
   // (company, role) grouping exists
   assert(result.aggregates.byCompanyRole['Acme|ML Eng'].confirmed === 1, 'company+role grouping');
 
-  console.log('salary-gap self-test OK (parser + report extraction + fold + aggregates)');
+  console.log('salary-gap self-test OK (parser + report extraction + fold + aggregates + currency guard)');
 }
 
 // --- Real sources ---
@@ -433,6 +478,12 @@ function printSummary(result) {
     for (const o of quality.orphans) console.log(`      #${o.num} (${o.count} observation${o.count === 1 ? '' : 's'})`);
   } else {
     console.log('  orphaned observations: none');
+  }
+  if (quality.currencyMismatches.length) {
+    console.log(`  ⚠ ${quality.currencyMismatches.length} cross-currency comparison${quality.currencyMismatches.length === 1 ? '' : 's'} skipped (no FX conversion — excluded from all gap math):`);
+    for (const m of quality.currencyMismatches) console.log(`      #${m.num} ${m.comparison}: ${m.currencies[0]} vs ${m.currencies[1]}`);
+  } else {
+    console.log('  cross-currency comparisons skipped: none');
   }
   const currencies = Object.entries(result.aggregates.byCurrency);
   if (currencies.length) {
