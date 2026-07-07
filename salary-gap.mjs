@@ -191,7 +191,7 @@ export function fold(observations, apps, profileDesired) {
     if (a.desired && a.actual.value >= a.desired.value) agg.atOrAboveDesired += 1;
 
     const key = `${a.company}|${a.role}`;
-    byCompanyRole[key] ??= { confirmed: 0, advToActPcts: [] };
+    byCompanyRole[key] ??= { company: a.company, role: a.role, confirmed: 0, advToActPcts: [] };
     byCompanyRole[key].confirmed += 1;
     if (a.advToActPct !== null) byCompanyRole[key].advToActPcts.push(a.advToActPct);
   }
@@ -413,9 +413,9 @@ function printSummary(result) {
     const companyRoles = Object.entries(aggregates.byCompanyRole);
     if (companyRoles.length) {
       console.log('\n  By (company, role):');
-      for (const [key, agg] of companyRoles) {
+      for (const [, agg] of companyRoles) {
         const gaps = agg.advToActPcts.length ? `, advertised→actual ${agg.advToActPcts.map(fmtPct).join(' / ')}` : '';
-        console.log(`  ${key.replace('|', ' — ')}: ${agg.confirmed} confirmed actual${agg.confirmed === 1 ? '' : 's'}${gaps}`);
+        console.log(`  ${agg.company} — ${agg.role}: ${agg.confirmed} confirmed actual${agg.confirmed === 1 ? '' : 's'}${gaps}`);
       }
     }
   }
