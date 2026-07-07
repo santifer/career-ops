@@ -49,6 +49,8 @@ It is NOT:
    into `data/offers/{company-slug}/`
 3. `/career-ops offer-prep` — ask for the document
 4. Proactively: when a tracker row is being set to `Offer`, suggest this mode.
+5. `/career-ops offer-prep reply {company-slug}` — Step 8 on demand: draft
+   the negotiation reply email from an existing prep report.
 
 If the candidate asks "should I sign?": run the mode, and state plainly that
 that question belongs to the candidate and their lawyer — the output is the
@@ -244,6 +246,57 @@ already; Notes column links the prep file relative to the tracker
 (`offers/{company-slug}/prep-{date}.md`). Canonical states per
 `templates/states.yml`.
 
+## Step 8 — Reply draft (optional, on request)
+
+After delivering the prep report, offer once: "Want me to draft the reply
+email that raises these items with the employer?" Also runs on demand later
+(invocation 5, or the candidate asking in conversation). Never auto-generate
+— the candidate must ask or accept the offer.
+
+**Input gate (hard):** an existing `data/offers/{company-slug}/prep-{date}.md`
+is required — no prep report, no reply draft; run the prep first. Use the
+most recent prep file for the company unless the candidate points at another.
+
+**Traceability (hard):** every raised item in the draft must
+trace back to a line in the prep report's "Items to raise with the employer"
+section, plus anything the candidate adds in this conversation. Nothing new
+is introduced. If the candidate wants to raise something that isn't in the
+report, add it to that section first, then draft.
+
+**Posture (inherited from the hard guards above — each still absolute):**
+
+- Questions and topics, never demands: "Could we discuss the exercise
+  window?", never "I require…".
+- **Never submit. Never send email. Never click send.** Draft only — same
+  posture as `email` mode. The candidate reviews and sends manually.
+- No legal claims and no cited law in the reply — legal questions stay in
+  the lawyer list; the employer email never argues law.
+- No verdict or severity language — the draft raises items; it does not
+  characterize the contract.
+- `voice-dna.md` may inform tone if present (style only — it never
+  introduces factual claims).
+- Source-of-truth boundary applies: content comes exclusively from the prep
+  report, in-scope user files, and the current conversation.
+
+Write `data/offers/{company-slug}/reply-draft-{YYYY-MM-DD}.md`:
+
+```markdown
+# Reply Draft — {Company} — {Role}
+**Date:** {date} · **Source:** prep-{date}.md · draft only — review and send manually
+
+Subject: {subject}
+
+{email body — greeting; thanks and continued interest; each item as a
+question or topic, one short paragraph or bullet; collaborative close;
+signature}
+
+## Before you send
+- [ ] Every item is one you actually want to raise, phrased in your words
+- [ ] Lawyer questions answered first where the answer would change an ask
+- [ ] Names, dates, and figures checked against the contract
+- [ ] Sent from your own email client — this file sends nothing
+```
+
 ## Error handling
 
 - **No contract, only "I got an offer"** → run Steps 3–4 against notes.md /
@@ -254,3 +307,5 @@ already; Notes column links the prep file relative to the tracker
 - **Candidate pushes for a verdict** ("just tell me if it's fine") → restate
   the posture in one line and point at the two lists. Do not soften into an
   implied verdict.
+- **Reply draft requested, no prep report exists** → the Step 8 gate applies:
+  say so and offer to run the prep first. Never draft from the raw contract.

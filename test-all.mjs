@@ -1192,6 +1192,23 @@ if (
   fail('offer-prep mode missing gates, promises file, absences/referenced-docs handling, lawyer list, fixed disclaimer, or attribution');
 }
 
+// --- offer-prep reply-draft step (#1663): opt-in, prep-gated, draft-only ---
+if (
+  offerPrepMode.includes('Step 8 — Reply draft (optional, on request)') &&
+  offerPrepMode.includes('Never auto-generate') &&
+  offerPrepMode.includes('no prep report, no reply draft') &&
+  offerPrepMode.includes('data/offers/{company-slug}/reply-draft-{YYYY-MM-DD}.md') &&
+  offerPrepMode.includes('trace back to a line in the prep report') &&
+  offerPrepMode.includes('Never submit. Never send email. Never click send.') &&
+  offerPrepMode.includes('never demands') &&
+  offerPrepMode.includes('No legal claims and no cited law in the reply') &&
+  offerPrepMode.includes('Before you send')
+) {
+  pass('offer-prep reply-draft step is opt-in, prep-report-gated, traceable, questions-not-demands, draft-only, and law-free (#1663)');
+} else {
+  fail('offer-prep reply-draft step missing (or lost its prep-report gate, reply-draft path, traceability rule, never-send guard, questions-not-demands framing, no-legal-claims rule, or checklist) (#1663)');
+}
+
 const routerSkill = readFile('.agents/skills/career-ops/SKILL.md');
 if (
   /argument-hint:.*offer-prep/.test(routerSkill) &&
