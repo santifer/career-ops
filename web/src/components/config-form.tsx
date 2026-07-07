@@ -165,7 +165,7 @@ export function ConfigForm() {
                         disabled={!c.installed}
                         onClick={() => setCliId(c.id)}
                         className={cn(
-                          "flex flex-1 items-center gap-2 text-left",
+                          "flex flex-1 items-center gap-2 text-left max-sm:min-h-[44px]",
                           c.installed ? "" : "cursor-default",
                         )}
                       >
@@ -188,7 +188,7 @@ export function ConfigForm() {
                           href={c.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1 text-xs text-brand hover:underline"
+                          className="inline-flex shrink-0 items-center justify-center gap-1 text-xs text-brand hover:underline max-sm:min-h-[44px]"
                         >
                           Install <ExternalLink className="size-3" />
                         </a>
@@ -298,7 +298,7 @@ export function ConfigForm() {
         <button
           type="button"
           onClick={save}
-          className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-200"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-200 max-sm:min-h-[44px]"
         >
           {saved ? <Check className="size-4" /> : null}
           {saved ? "Saved" : "Save config"}

@@ -40,6 +40,7 @@ import { buildTrustValidator } from './providers/_trust-validator.mjs';
 import { loadProviders, resolveProvider } from './providers/_registry.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
 import { classifyFetchError } from './verify-portals.mjs';
+import { fingerprintText, findCrossListings } from './fingerprint-core.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 
 try {
@@ -608,7 +609,36 @@ export function formatScanHistoryRow(offer, date, status = 'added') {
     offer.company,
     status,
     offer.location || '',
+    // JD-content fingerprint (#1597): 16 hex chars when the provider's list
+    // API shipped a usable description, '' otherwise. Lets later scans flag
+    // the same body re-posted under a different company (agency cross-listing)
+    // without storing the body. All readers tolerate the extra column.
+    offer.fingerprint ?? fingerprintText(offer.description),
   ].map(sanitizeTsvField).join('\t');
+}
+
+/**
+ * Read scan-history.tsv rows that carry a fingerprint, for the cross-listing
+ * check. Older rows without the 8th column simply never match.
+ *
+ * @param {string} [historyPath] - Override for tests.
+ * @returns {Array<{url: string, dateStr: string, company: string, title: string, fingerprint: string}>}
+ */
+export function loadFingerprintHistory(historyPath = SCAN_HISTORY_PATH) {
+  if (!existsSync(historyPath)) return [];
+  const rows = [];
+  for (const line of readFileSync(historyPath, 'utf-8').split('\n')) {
+    const cols = line.split('\t');
+    if (cols.length < 8 || !cols[7].trim()) continue;
+    rows.push({
+      url: (cols[0] || '').trim(),
+      dateStr: (cols[1] || '').trim(),
+      title: (cols[3] || '').trim(),
+      company: (cols[4] || '').trim(),
+      fingerprint: cols[7].trim(),
+    });
+  }
+  return rows;
 }
 
 // Standard skeleton created on fresh install — matches the format documented
@@ -675,6 +705,28 @@ export function appendToScanHistory(offers, date, status = 'added') {
   const lines = offers.map(o => formatScanHistoryRow(o, date, status)).join('\n') + '\n';
 
   appendFileSync(SCAN_HISTORY_PATH, lines, 'utf-8');
+}
+
+// ── Scan-run persistence (#1604) ────────────────────────────────────
+
+const SCAN_RUNS_PATH = 'data/scan-runs.tsv';
+
+// One row of run counters per non-dry scan — today these numbers are printed
+// once in the summary and lost when the terminal scrolls. Full ISO timestamp
+// (two scans in one day must not collapse). `status` is reserved: always
+// 'completed' in v1; a follow-up wires failure-path writes so trend stats can
+// exclude survivorship bias. Consumers MUST parse by header name, never by
+// position — columns may be appended in later versions.
+export const SCAN_RUNS_HEADER = 'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors\n';
+
+export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
+  if (!existsSync(filePath)) writeFileSync(filePath, SCAN_RUNS_HEADER, 'utf-8');
+  const row = [
+    c.timestamp, c.status ?? 'completed', c.companies, c.boards, c.found,
+    c.filteredTitle, c.filteredTier, c.filteredLocation, c.filteredSalary,
+    c.filteredContent, c.filteredCooldown, c.dupes, c.newAdded, c.errors,
+  ].join('\t') + '\n';
+  appendFileSync(filePath, row, 'utf-8');
 }
 
 // ── Parallel fetch with concurrency limit ───────────────────────────
@@ -1080,6 +1132,16 @@ async function main() {
     }
   }
 
+  // 5.7. Cross-listing check (#1597): fingerprint each new offer's JD body and
+  // compare against recent history rows from a DIFFERENT company — the same
+  // requirements text under two names is usually an agency re-post of a direct
+  // listing (or vice versa), which URL and company+role dedup both miss.
+  // Fingerprints are computed once here and reused by appendToScanHistory.
+  for (const offer of verifiedOffers) {
+    offer.fingerprint = fingerprintText(offer.description);
+  }
+  const crossListings = findCrossListings(verifiedOffers, loadFingerprintHistory());
+
   // 6. Write results
   if (!dryRun && verifiedOffers.length > 0) {
     appendToPipeline(verifiedOffers);
@@ -1147,6 +1209,16 @@ async function main() {
     console.log(`Filtered by cooldown:  ${totalFilteredCooldown} removed`);
   }
   console.log(`Duplicates:            ${totalDupes} skipped`);
+  if (crossListings.length > 0) {
+    console.log(`\n⚠️  Possible cross-listings (same JD text, different company) — warn only, nothing was dropped:`);
+    for (const { offer, row, score } of crossListings) {
+      console.log(`  - ${offer.company} — ${offer.title}`);
+      console.log(`    ≈ ${Math.round(score * 100)}% of ${row.company} — ${row.title} (seen ${row.dateStr})`);
+      console.log(`    ${offer.url}`);
+      console.log(`    vs ${row.url}`);
+    }
+    console.log(`  If one side is an agency, apply through ONE channel only — a double submission burns both (#1596).`);
+  }
   if (historyPolicy.recheckAfterDays != null) {
     console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);
   }
@@ -1226,6 +1298,19 @@ async function main() {
     } else {
       console.log(`\nResults saved to ${PIPELINE_PATH} and ${SCAN_HISTORY_PATH}`);
     }
+  }
+
+  // Persist this run's counters (#1604) — guarded exactly like the other
+  // writes; a --dry-run must leave no trace.
+  if (!dryRun) {
+    appendScanRunSummary({
+      timestamp: new Date().toISOString(), status: 'completed',
+      companies: summaryCompanies, boards: summaryBoards, found: totalFound,
+      filteredTitle: totalFilteredTitle, filteredTier: totalFilteredTier,
+      filteredLocation: totalFilteredLocation, filteredSalary: totalFilteredSalary,
+      filteredContent: totalFilteredContent, filteredCooldown: totalFilteredCooldown,
+      dupes: totalDupes, newAdded: verifiedOffers.length, errors: errors.length,
+    });
   }
 
   console.log(`\n→ Run /career-ops pipeline to evaluate new offers.`);
