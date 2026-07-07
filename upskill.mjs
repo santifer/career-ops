@@ -87,8 +87,10 @@ const SKILL_PATTERN = new RegExp(
 // token list ("go the extra mile" would register a skill). Match it in a
 // separate CASE-SENSITIVE pass: only the exact standalone token "Go" counts
 // as the language; prose "go"/"GO" never do. "Golang" still resolves to "Go"
-// via the main pattern + CANONICAL.
-const GO_SKILL_PATTERN = /(?<!\w)Go(?!\w)/;
+// via the main pattern + CANONICAL. A trailing hyphen also disqualifies:
+// capitalized business phrases like "Go-to-market" and "Go-live" are not the
+// language (punctuation like "Go," "Go/Rust" "(Go)" still counts).
+const GO_SKILL_PATTERN = /(?<!\w)Go(?![\w-])/;
 
 // lowercase → canonical display casing, derived from SKILL_TOKENS by stripping
 // regex syntax ('Vue\\.?js' → 'Vue.js'). Keeps case-insensitive matches like
@@ -378,6 +380,12 @@ function runSelfTest() {
   if (!s1d.has('Go')) failures.push(`extractSkills missing standalone Go (got ${[...s1d].join(',')})`);
   const s1e = extractSkills('willing to go the extra mile; ready to GO live');
   if (s1e.has('Go')) failures.push('prose "go"/"GO" wrongly matched as Go skill');
+  // Capitalized hyphenated business phrases must not register as the language
+  const s1f = extractSkills('Own the Go-to-market strategy and Go-live support');
+  if (s1f.has('Go')) failures.push('hyphenated "Go-to-market"/"Go-live" wrongly matched as Go skill');
+  // ...but ordinary punctuation after the token still counts
+  const s1g = extractSkills('Backend in Go/Rust (Go preferred). We ship Go.');
+  if (!s1g.has('Go')) failures.push('punctuation-adjacent standalone Go missed');
 
   // Lowercase mentions of mixed-case skills must resolve to canonical casing,
   // or knownSkills.has() misses them (Graphql !== GraphQL)
