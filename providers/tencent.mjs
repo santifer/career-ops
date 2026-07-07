@@ -108,9 +108,19 @@ export default {
       for (let page = 1; page <= maxPages; page++) {
         if (firstRequest) firstRequest = false;
         else await sleep(INTER_PAGE_DELAY_MS);
-        const json = /** @type {any} */ (
-          await ctx.fetchJson(buildUrl(keyword, page), { redirect: 'error' })
-        );
+        let json;
+        try {
+          json = /** @type {any} */ (
+            await ctx.fetchJson(buildUrl(keyword, page), { redirect: 'error' })
+          );
+        } catch (err) {
+          // A dead board should still read as a failure, but a mid-run blip
+          // must not discard what's already collected (same idiom as
+          // workday/jobstreet/glints).
+          if (seen.size === 0) throw err;
+          console.error(`  ⚠ tencent: keyword "${keyword}" page ${page} failed (${err.message}) — keeping the ${seen.size} jobs collected so far`);
+          return [...seen.values()];
+        }
         const { jobs, total } = parseTencentResponse(json, entry.name || '腾讯');
         if (jobs.length === 0) break;
 

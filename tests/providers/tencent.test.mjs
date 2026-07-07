@@ -202,6 +202,28 @@ try {
   } else {
     fail(`tencent.fetch() ctx.maxPages=1: ${probe.calls.length} requests, keyword=${JSON.stringify(probe.calls[0] && probe.calls[0].keyword)}`);
   }
+
+  const blip = mkCtx(({ keyword }) => {
+    if (keyword === '大模型') throw new Error('HTTP 503');
+    return { Code: 200, Data: { Count: 1, Posts: [mkPost(7, '幸存岗位')] } };
+  });
+  const blipJobs = await tencent.fetch({ name: '腾讯', careers_url: TENCENT_URL, keywords: ['AI', '大模型'] }, blip.ctx);
+  if (blipJobs.length === 1 && blipJobs[0].title === '幸存岗位') {
+    pass('tencent.fetch() keeps already-collected jobs when a later request fails');
+  } else {
+    fail(`tencent.fetch() partial results on failure: ${JSON.stringify(blipJobs.map(j => j.title))}`);
+  }
+
+  let firstFailThrew = false;
+  const dead = mkCtx(() => { throw new Error('HTTP 500'); });
+  try {
+    await tencent.fetch({ name: '腾讯', careers_url: TENCENT_URL, keywords: ['AI'] }, dead.ctx);
+  } catch { firstFailThrew = true; }
+  if (firstFailThrew) {
+    pass('tencent.fetch() still throws when the very first request fails (dead board reads as failure)');
+  } else {
+    fail('tencent.fetch() swallowed a first-request failure');
+  }
 } catch (e) {
   fail(`tencent provider tests crashed: ${e.message}`);
 }
