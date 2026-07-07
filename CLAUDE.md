@@ -255,10 +255,11 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | German | `modes/de/` | DACH (Germany, Austria, Switzerland) |
 | French | `modes/fr/` | France, Belgium, Switzerland, Luxembourg, Quebec |
 | Japanese | `modes/ja/` | Japan |
+| Hindi | `modes/hi/` | India |
 
 **When to use a `{lang}` mode** — if any holds: the user says "use {lang} modes"; `config/profile.yml` sets `language.modes_dir: modes/{lang}`; or you detect a {lang} JD (then suggest switching). Read from `modes/{lang}/` instead of `modes/`.
 
-**When NOT to:** if the user applies to English-language roles — even at French, German, or Japanese companies — use the default English modes.
+**When NOT to:** if the user applies to English-language roles — even at French, German, Japanese, or Indian companies — use the default English modes.
 
 ### Skill Modes
 
@@ -284,7 +285,7 @@ Default modes are in `modes/` (English). Language-specific modes live in `modes/
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
-| Receives an offer/contract and wants help understanding it before signing | `offer-prep` — clause walk with neutral tags + lawyer question list; describes, never judges; no verdicts, no online research |
+| Receives an offer/contract and wants help understanding it before signing | `offer-prep` — clause walk with neutral tags + lawyer question list; describes, never judges; no verdicts, no online research; optional draft-only negotiation reply email from the "Items to raise" list |
 | Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |
 | Asks about follow-ups or application cadence | `followup` |
 
