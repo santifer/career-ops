@@ -48,7 +48,11 @@ const TRUST = {
 export function parseAmount(raw) {
   let s = String(raw ?? '').trim();
   if (!s || s === '?' || s === '-' || /^(n\/?a|null)$/i.test(s)) return null;
-  s = s.replace(/^[€$£¥]\s*/, '').replace(/\s*(EUR|USD|GBP|JPY|CHF|AUD|CAD)\s*$/i, '').trim();
+  // Strip a leading currency symbol and a trailing 3-letter ISO-4217-style alpha
+  // token (any case — "450k SEK", "80-90k eur"). Exactly three letters, so the
+  // lone "k" magnitude suffix ("80k") is never eaten, and prose ("competitive")
+  // still fails the numeric match below even after losing its last three letters.
+  s = s.replace(/^[€$£¥]\s*/, '').replace(/\s*[A-Za-z]{3}\s*$/, '').trim();
   const toNum = (numStr, kFlag) => {
     const n = parseFloat(numStr.replace(/,/g, ''));
     return Number.isNaN(n) ? null : (kFlag ? n * 1000 : n);
@@ -112,7 +116,12 @@ export function reportToObservation(content, num, date) {
   const company = yamlStr(body, 'company');
   const role = yamlStr(body, 'role');
   const adv = yamlStr(body, 'advertised_comp');
-  const currencyGuess = adv ? (adv.match(/\b(EUR|USD|GBP|JPY|CHF|AUD|CAD)\b/i)?.[1]?.toUpperCase() ?? 'UNKNOWN') : null;
+  // Currency = first standalone UPPERCASE 3-letter token, case-SENSITIVE on
+  // purpose: lowercase 3-letter English words in sloppy values ("per", "and")
+  // must not register as currencies. Tradeoff: a lowercase "100k eur" yields
+  // UNKNOWN (excluded from gap math, surfaced in currencyMismatches) — acceptable;
+  // a corrective TSV observation with an explicit currency overrides it.
+  const currencyGuess = adv ? (adv.match(/\b[A-Z]{3}\b/)?.[0] ?? 'UNKNOWN') : null;
   return {
     company, role,
     observation: adv === null ? null : {
@@ -131,7 +140,9 @@ const median = (nums) => {
 
 function pickEffective(type, candidates) {
   const tiers = TRUST[type];
-  const usable = candidates.filter(o => o.type === type && o.parsed !== null && o.source in tiers);
+  // Object.hasOwn, not `in`: a TSV source like "toString" would pass an `in`
+  // check via Object.prototype and poison the trust sort with a function value.
+  const usable = candidates.filter(o => o.type === type && o.parsed !== null && Object.hasOwn(tiers, o.source));
   if (!usable.length) return null;
   usable.sort((a, b) => (tiers[b.source] - tiers[a.source]) || (a.date < b.date ? 1 : -1));
   const top = usable[0];
@@ -157,7 +168,7 @@ export function fold(observations, apps, profileDesired) {
   // dropped. Report-derived obs are always `jd` and profile obs `profile`, so in
   // practice only TSV lines can land here.
   const invalidSources = observations
-    .filter(o => TRUST[o.type] && !(o.source in TRUST[o.type]))
+    .filter(o => TRUST[o.type] && !Object.hasOwn(TRUST[o.type], o.source))
     .map(o => ({ num: o.num, type: o.type, source: o.source }));
 
   const profileObs = profileDesired?.amount ? {
@@ -222,8 +233,15 @@ export function fold(observations, apps, profileDesired) {
     }
     if (a.desiredToActPct !== null && a.actual.value >= a.desired.value) agg.atOrAboveDesired += 1;
 
-    const key = `${a.company}|${a.role}`;
-    byCompanyRole[key] ??= { company: a.company, role: a.role, confirmed: 0, advToActPcts: [] };
+    // Legacy reports (no Machine Summary) fold with null company/role — without
+    // a fallback every legacy row would collapse into one shared "null|null"
+    // bucket. Key those per application instead, with display fields that render
+    // meaningfully in printSummary.
+    const legacy = !a.company && !a.role;
+    const key = legacy ? `#${a.num}` : `${a.company}|${a.role}`;
+    byCompanyRole[key] ??= legacy
+      ? { company: `report #${a.num}`, role: '(no Machine Summary)', confirmed: 0, advToActPcts: [] }
+      : { company: a.company, role: a.role, confirmed: 0, advToActPcts: [] };
     byCompanyRole[key].confirmed += 1;
     if (a.advToActPct !== null) byCompanyRole[key].advToActPcts.push(a.advToActPct);
   }
@@ -252,6 +270,7 @@ const OBS_FIXTURE = [
   '001\t2026-07-05\tactual\t86k\tEUR\tcontract\tsigned',
   '002\t2026-06-25\tactual\t88k\tEUR\trecruiter-verbal\t',
   '002\t2026-06-29\tactual\t99k\tEUR\trecruiter_verbal\tunderscore typo on purpose',
+  '002\t2026-06-30\tactual\t120k\tEUR\ttoString\tprototype key on purpose',
   '007\t2026-06-25\tactual\t70k\tEUR\trecruiter-verbal\torphan - no report',
   '003\t2026-06-26\tactual\t9ok\tUSD\trecruiter-verbal\ttypo on purpose',
   '005\t2026-07-01\tactual\t92k\tUNKNOWN\toffer-letter\tcurrency not stated',
@@ -330,10 +349,12 @@ function selfTest() {
   assert(parseAmount('') === null, 'blank -> null');
   assert(parseAmount('competitive') === null, 'prose -> null');
   assert(parseAmount('9ok') === null, 'typo -> null');
+  assert(parseAmount('450k SEK')?.mid === 450000, 'generic trailing ISO token stripped (450k SEK)');
+  assert(parseAmount('80-90k eur')?.mid === 85000, 'lowercase trailing ISO token stripped');
 
   // parseObservations
   const obs = parseObservations(OBS_FIXTURE);
-  assert(obs.length === 9, `9 observations, got ${obs.length}`);
+  assert(obs.length === 10, `10 observations, got ${obs.length}`);
   assert(obs[0].num === '001' && obs[0].type === 'desired' && obs[0].source === 'user', 'fields mapped');
   assert(parseObservations('').length === 0, 'empty log');
   const blankCur = parseObservations('008\t2026-07-01\tactual\t91k\t\toffer-letter\tblank currency cell');
@@ -348,6 +369,14 @@ function selfTest() {
   assert(reportToObservation('no machine summary', '009', '2026-06-01') === null, 'no fence -> null');
   const jsonReport = '# Eval: JsonCo — Eng\n\n## Machine Summary\n\n```json\n{"company": "JsonCo", "role": "Eng", "advertised_comp": "100k EUR"}\n```\n';
   assert(reportToObservation(jsonReport, '010', '2026-06-30') === null, 'json fence rejected (yamlStr cannot extract from JSON — see FENCE_RE comment)');
+  // generic ISO detection: any uppercase 3-letter token, not a hardcoded allowlist
+  const plnReport = '# Eval: PlnCo — Eng\n\n## Machine Summary\n\n```yaml\ncompany: "PlnCo"\nrole: "Eng"\nadvertised_comp: "450-500k PLN"\n```\n';
+  const rPln = reportToObservation(plnReport, '011', '2026-07-01');
+  assert(rPln.observation.currency === 'PLN' && rPln.observation.parsed.min === 450000, 'non-allowlist currency PLN detected, amount parsed');
+  // case-SENSITIVE detection: lowercase "eur" is UNKNOWN (see currencyGuess comment)
+  const lowerReport = '# Eval: LowCo — Eng\n\n## Machine Summary\n\n```yaml\ncompany: "LowCo"\nrole: "Eng"\nadvertised_comp: "100k eur"\n```\n';
+  const rLow = reportToObservation(lowerReport, '012', '2026-07-01');
+  assert(rLow.observation.currency === 'UNKNOWN' && rLow.observation.parsed.mid === 100000, 'lowercase currency token -> UNKNOWN, amount still parsed');
 
   // fold — golden test
   const apps = {
@@ -380,9 +409,10 @@ function selfTest() {
   assert(a1.trail.filter(t => t.type === 'actual').length === 3, '001 keeps full actual trail');
 
   const a2 = result.applications.find(a => a.num === '002');
-  // the later recruiter_verbal (underscore typo) 99k must NOT become effective —
-  // unrecognized sources are excluded from pickEffective and reported instead
-  assert(a2.actual.source === 'recruiter-verbal' && a2.actual.value === 88000, '002 actual from verbal 88k, typo source ignored');
+  // the later recruiter_verbal (underscore typo) 99k and toString (prototype key)
+  // 120k must NOT become effective — unrecognized sources are excluded from
+  // pickEffective (Object.hasOwn, not `in`) and reported instead
+  assert(a2.actual.source === 'recruiter-verbal' && a2.actual.value === 88000, '002 actual from verbal 88k, typo + prototype-key sources ignored');
   assert(a2.desired.source === 'profile' && a2.desired.value === 90000, '002 desired falls back to profile');
 
   // cross-currency guard: advertised USD vs actual GBP, desired EUR vs actual GBP
@@ -397,11 +427,13 @@ function selfTest() {
   // data quality
   assert(result.quality.orphans.length === 1 && result.quality.orphans[0].num === '007', 'orphan 007 reported');
   assert(result.quality.unparseable.length === 1 && result.quality.unparseable[0].raw === '9ok', 'typo 9ok reported');
-  assert(result.quality.invalidSources.length === 1
-    && result.quality.invalidSources[0].num === '002'
-    && result.quality.invalidSources[0].type === 'actual'
-    && result.quality.invalidSources[0].source === 'recruiter_verbal',
+  assert(result.quality.invalidSources.length === 2, `2 invalid sources reported, got ${result.quality.invalidSources.length}`);
+  assert(result.quality.invalidSources.some(s => s.num === '002' && s.type === 'actual' && s.source === 'recruiter_verbal'),
     'unrecognized source recruiter_verbal reported in invalidSources');
+  // prototype-key source: `'toString' in tiers` is true via Object.prototype, so an
+  // `in` check would let it through and poison the trust sort — must land here instead
+  assert(result.quality.invalidSources.some(s => s.num === '002' && s.type === 'actual' && s.source === 'toString'),
+    'prototype-key source toString reported in invalidSources, not treated as trusted');
   // unparseable profile target must be reported, not silently dropped
   const badProfile = fold([], {}, { amount: 'competitive', currency: 'EUR' });
   assert(badProfile.quality.unparseable.some(u => u.num === '*' && u.type === 'desired' && u.raw === 'competitive' && u.source === 'profile'),
@@ -435,6 +467,22 @@ function selfTest() {
   assert(eur.atOrAboveDesired === 0, 'EUR none at/above desired');
   // (company, role) grouping exists
   assert(result.aggregates.byCompanyRole['Acme|ML Eng'].confirmed === 1, 'company+role grouping');
+
+  // legacy reports (no Machine Summary -> null company/role) must NOT collapse
+  // into a single shared "null|null" bucket — each keys per application
+  const legacyApps = { '101': { company: null, role: null }, '102': { company: null, role: null } };
+  const legacyObs = parseObservations([
+    '101\t2026-07-01\tactual\t80k\tEUR\toffer-letter\tlegacy report',
+    '102\t2026-07-02\tactual\t85k\tEUR\tcontract\tlegacy report',
+  ].join('\n'));
+  const legacy = fold(legacyObs, legacyApps, null);
+  const legacyKeys = Object.keys(legacy.aggregates.byCompanyRole);
+  assert(!legacyKeys.includes('null|null'), 'no null|null bucket for legacy reports');
+  assert(legacyKeys.includes('#101') && legacyKeys.includes('#102'), `legacy apps get per-application buckets, got ${legacyKeys.join(',')}`);
+  assert(legacy.aggregates.byCompanyRole['#101'].confirmed === 1 && legacy.aggregates.byCompanyRole['#102'].confirmed === 1,
+    'each legacy bucket counts its own confirmed actual');
+  assert(legacy.aggregates.byCompanyRole['#101'].company === 'report #101' && legacy.aggregates.byCompanyRole['#101'].role !== null,
+    'legacy bucket display fields render without null');
 
   console.log('salary-gap self-test OK (parser + report extraction + fold + aggregates + currency guard)');
 }
