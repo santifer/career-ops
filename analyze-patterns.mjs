@@ -43,6 +43,7 @@ const MACHINE_SUMMARY_FIELDS = new Set([
   'seniority',
   'remote',
   'team_size',
+  'advertised_comp',
 ]);
 
 // --- CLI args ---
