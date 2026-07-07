@@ -257,6 +257,7 @@ const SYSTEM_PATHS = [
   '.github/',
   'package.json',
   'build-cv-latex.mjs',
+  'build-cv-html.mjs',
   'cv-templates.mjs',
   'test/cv-templates.test.mjs',
   'scaffolder/',
