@@ -159,11 +159,24 @@ node openai-eval.mjs \
 - **Output:** ~1,000 tokens (The A-G evaluation report)
 - **Cost:** ~4,500 tokens total. At DeepSeek V3 prices (~$0.14/1M input, ~$0.28/1M output), this costs **less than $0.001** per evaluation.
 
-### Step 4: Generate ATS-Optimized PDF (0 Tokens)
-Once you have the evaluation report, the PDF generator uses Playwright to compile your local HTML/CSS into a tailored CV.
+### Step 4: Tailor the CV HTML (~3,000 Tokens)
+Now, use the headless tailor to inject JD keywords, reorder experience, and build the customized HTML for the role.
 
 ```bash
-node generate-pdf.mjs
+OPENAI_API_KEY="sk-or-your_openrouter_key" \
+node openai-tailor.mjs \
+  --url https://openrouter.ai/api/v1 \
+  --model deepseek/deepseek-chat \
+  --jd ./jds/my-target-role.txt \
+  --report reports/001-companyname-2026-07-07.md
+```
+**Cost:** ~3,000 tokens (less than $0.001). This outputs a customized HTML file in the `output/` directory.
+
+### Step 5: Generate ATS-Optimized PDF (0 Tokens)
+Once you have the tailored HTML file, the PDF generator uses Playwright to compile it into a tailored CV PDF.
+
+```bash
+node generate-pdf.mjs output/cv-candidate-companyname.html output/cv-candidate-companyname-2026-07-07.pdf --format=letter --report=001
 ```
 **Cost:** 0 tokens, $0.00.
 
